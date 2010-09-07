@@ -6,13 +6,17 @@
 *
 * %I
 * Written by: Tobias Panzner
-* Date: 02/12/2009
-* Version: $Revision: 1.0 $
+* Date: 07/08/2010
+* Version: $Revision: 1.1 $
 * Release: McStas 1.9
 * Origin: PSI
 *
-* %D
-*  This component models a guide with elliptic, parabolic or straight shaped side walls.
+*
+*  This component models a guide with four side walls.
+*  As user you can controll the properties of every wall separatly. All togther you have up to 
+*  8 walls: 4 inner walls and 4 outer walls.
+* 
+*  Every single wall can have a elliptic, parabolic or straight shape.
 *  All four sides of the guide are independent from each other.
 *  In the elliptic case the side wall shape follows the equation x^2/b^2+(z+z0)^2/a^2=1
 *  (the center of the ellipse is located at (0,-z0)).
@@ -39,11 +43,11 @@
 *          2.)The exit width parameters (w2r, w2l, h2u,h2d) are only taken into account if the 
 *             walls have a linear shape. In the ellitic or parabolic case they will be ignored.
 *
-*  The outer walls of each side is calculated by the component in depentence of the wallthickness 
-*  and the shape of the inner walls.
+*  For the inner channel: the outer side of each wall is calculated by the component in depentence 
+*  of the wallthickness and the shape of the inner side.
 *
-*  Each of the 8 walls (one INNER and one OUTER for every side) can have a own indepenting 
-*  reflecting layer or it can be a absorber or it can be transparent.
+*  Each of walls can have a own indepenting reflecting layer (defined by an input file) 
+*  or it can be a absorber or it can be transparent.
 *
 *  The reflectivity properties can be given by an input file (Format [q(Angs-1) R(0-1)]) or by 
 *  parameters (Qc, alpha, m, W).
@@ -54,7 +58,15 @@
 * This component does not work correctly in GROUP-modus.
 *
 * %P
-* INPUT PARAMETERS (62) :
+* INPUT PARAMETERS:
+*
+* GENERAL PARAMETERS (VALID FOR ALL SIDES):
+*
+* l:       [m]    length of guide (DEFAULT = 0)
+*
+* R0:      [1]    Low-angle reflectivity (DEFAULT = 0.99)
+*
+* THE INNER WALLS OF THE INLAY ARE DEFINED BY:
 *
 * w1r:     [m]    Width at the right guide entry   (negative x-axis)
 *                 (DEFAULT = 0)
@@ -103,11 +115,6 @@
 *
 * louthu   [m]    upper vertical wall: distance of 2nd focal point
 *                 and guide exit (DEFAULT = 0)
-*
-*
-* l:       [m]    length of guide (DEFAULT = 0)
-*
-* R0:      [1]    Low-angle reflectivity (DEFAULT = 0.99)
 *
 * RIreflect: (str)  Name of relfectivity file for the right inner wall.
 *                   Format [q(Angs-1) R(0-1)]  (DEFAULT : no file)
@@ -185,7 +192,7 @@
 *
 * dwallthick: [m]   thickness of the bottom wall(DEFAULT = 0.001 m)
 *
-*  IF NEUTRONS HIT THE WALLS FROM OUTSIDE, THE OUTER WALLS CAN BE DEFINED BY
+*   THE OUTER WALLS OF THE INLAY ARE DEFINED BY: 
 *
 * ROreflect: (str)  Name of relfectivity file for the right outer wall.
 *                   Format [q(Angs-1) R(0-1)]  (DEFAULT : no file)
@@ -262,10 +269,10 @@
 
 DEFINE COMPONENT Guide_four_side
 DEFINITION PARAMETERS(string RIreflect=0, LIreflect=0, UIreflect=0, DIreflect=0, ROreflect=0, LOreflect=0, UOreflect=0, DOreflect=0)
-SETTING PARAMETERS (w1l=0,w2l=0,linwl=0,loutwl=0,
-                    w1r=0,w2r=0,linwr=0,loutwr=0,
-                    h1u=0,h2u=0,linhu=0,louthu=0,
-                    h1d=0,h2d=0,linhd=0,louthd=0,
+SETTING PARAMETERS (w1l=0.002,w2l=0.002,linwl=0,loutwl=0,
+                    w1r=0.002,w2r=0.002,linwr=0.0,loutwr=0,
+                    h1u=0.002,h2u=0.002,linhu=0.0,louthu=0,
+                    h1d=0.002,h2d=0.002,linhd=0.0,louthd=0,
                     l=0, R0=0.99,
                     Qcxl=0.0217,Qcxr=0.0217,Qcyu=0.0217, Qcyd=0.0217,
                     alphaxl=6.07, alphaxr=6.07, alphayu=6.07, alphayd=6.07,
@@ -276,45 +283,42 @@ SETTING PARAMETERS (w1l=0,w2l=0,linwl=0,loutwl=0,
                     WxrOW=0.003,WxlOW=0.003,WyuOW=0.003,WydOW=0.003,
                     mxrOW=0, mxlOW=0, myuOW=0, mydOW=0,
 		    rwallthick=0.001,lwallthick=0.001,uwallthick=0.001,dwallthick=0.001)
+
 OUTPUT PARAMETERS(w1rwt,w1lwt,h1uwt,h1dwt,w2rwt,w2lwt,h2uwt,h2dwt,
                   pawr,pawl,pbwr,pbwl,pahu,pahd,pbhu,pbhd,
                   awl,bwl,awr,bwr,ahu,bhu,ahd,bhd,
                   awlwt,bwlwt,awrwt,bwrwt,ahuwt,bhuwt,ahdwt,bhdwt,
                   pawrwt,pawlwt,pbwrwt,pbwlwt,pahuwt,pahdwt,pbhuwt,pbhdwt,
-                  t1,t2w1r,t2w2r,t2w1l,t2w2l,t2h1u,t2h2u,t2h1d,t2h2d,
-                  t2w1rwt,t2w2rwt,t2w1lwt,t2w2lwt,t2h1uwt,t2h2uwt,t2h1dwt,t2h2dwt,
-                  a2wlwt,b2wlwt,a2wrwt,b2wrwt,a2huwt,b2huwt,a2hdwt,b2hdwt,
+                  t1,t2w1r,t2w1l,t2h1u,t2h1d,
+                  t2w1rwt,t2w1lwt,t2h1uwt,t2h1dwt,
+
+		  a2wlwt,b2wlwt,a2wrwt,b2wrwt,a2huwt,b2huwt,a2hdwt,b2hdwt,
                   a2wl,b2wl,a2wr,b2wr,a2hu,b2hu,a2hd,b2hd,
                   mru1,mru2,nru1,nru2,mrd1,mrd2,nrd1,nrd2,mlu1,mlu2,nlu1,nlu2,mld1,mld2,nld1,nld2,
                   z0wr,z0wl,z0hu,z0hd,
-                  lbwl,lbwr,lbhu,lbhd,
+		
+
                   p2parawr,p2parawl,p2parahu,p2parahd,
-                  u1wl,u2wl,u1wr,u2wr,u1hu,u2hu,u1hd,u2h,
-                  DIV1wl,DIV1wr,DIV1hu,DIV1hd,
                   p2parawrwt,p2parawlwt,p2parahuwt,p2parahdwt,
-                  DIV1wlwt,DIV1wrwt,DIV1huwt,DIV1hdwt,
-                  u1wrwt,u2wrwt,u1wlwt,u2wlwt,u1huwt,u2huwt,u1hdwt,u2hdwt,
-                  dxwr,dzwr,dxwl,dzwl,dyhu,dzhu,dyhd,dzhd,
-                  zw1r,zw2r,zw1l,zw2l,zh1u,zh2u,zh1d,zh2d,m,n,
-                  pwr,qwr,pwl,qwl,phu,qhu,phd,qhd,
+
+                  m,n,
                   nz,nx,ny,n2,
                   pf,
                   vxin,vyin,vzin,
                   q,
-                  xintersecwr,xintersecwl,yintersechd,yintersechu,
-                  xlimitr,xlimitrwt,xlimitl,xlimitlwt,ylimitd,ylimitdwt,ylimitu,ylimituwt,
                   xtest,ytest,
-                  pwrwt,qwrwt,pwlwt,qwlwt,phuwt,qhuwt,phdwt,qhdwt,
-                  zw1rwt,zw2rwt,zw1lwt,zw2lwt,zh1uwt,zh2uwt,zh1dwt,zh2dwt,
-                  xintersecwrwt,xintersecwlwt,yintersechdwt,yintersechuwt,
+
                   riTable, liTable, uiTable, diTable,
-                  roTable, loTable, uoTable, doTable)
+                  roTable, loTable, uoTable, doTable
+)
+
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,p)
 
 SHARE
-%{
+%{	
 %include "read_table-lib"
 %}
+
 
 DECLARE
 %{
@@ -323,38 +327,496 @@ DECLARE
   double awl,bwl,awr,bwr,ahu,bhu,ahd,bhd;							/* long and short axis a and b auf the ellipses (INNER walls)*/
   double awlwt,bwlwt,awrwt,bwrwt,ahuwt,bhuwt,ahdwt,bhdwt;					/* long and short axis a and b auf the ellipses (OUTER walls)*/
   double pawrwt,pawlwt,pbwrwt,pbwlwt,pahuwt,pahdwt,pbhuwt,pbhdwt;				/* parameter a and b of the parabolic curves for the OUTER wall*/
-  double t1,t2w1r,t2w2r,t2w1l,t2w2l,t2h1u,t2h2u,t2h1d,t2h2d;					/* time variables (INNER walls)*/
-  double t2w1rwt,t2w2rwt,t2w1lwt,t2w2lwt,t2h1uwt,t2h2uwt,t2h1dwt,t2h2dwt;			/* time variables (OUTER walls)*/
+  double t1,t2w1r,t2w1l,t2h1u,t2h1d;								/* time variables (INNER walls)*/
+  double t2w1rwt,t2w1lwt,t2h1uwt,t2h1dwt;							/* time variables (OUTER walls)*/
+
 
   double a2wlwt,b2wlwt,a2wrwt,b2wrwt,a2huwt,b2huwt,a2hdwt,b2hdwt;				/* square of long and short axis a and b auf the ellipses (OUTER walls) */
   double a2wl,b2wl,a2wr,b2wr,a2hu,b2hu,a2hd,b2hd;						/* square of long and short axis a and b auf the ellipses (INNER walls)*/
   double mru1,mru2,nru1,nru2,mrd1,mrd2,nrd1,nrd2,mlu1,mlu2,nlu1,nlu2,mld1,mld2,nld1,nld2;	/* variables the calculated the guide geometrie in the entrance and exit plane (absorbing mask given by the walls)*/
-  double z0wr,z0wl,z0hu,z0hd;
+  double z0wr,z0wl,z0hu,z0hd;									/* z-component of the center of the ellipse (x-component is allways zero) */
 
-  double lbwl,lbwr,lbhu,lbhd;									/* length between focal points , needed for elliptic case */
   double p2parawr,p2parawl,p2parahu,p2parahd;							/* help variables to calculate the parabolic curve parameters a and b (INNER walls)*/
-  double u1wl,u2wl,u1wr,u2wr,u1hu,u2hu,u1hd,u2hd;						/* help variables to calculate the long axis a of the ellipse (INNER walls)*/
-  double DIV1wl,DIV1wr,DIV1hu,DIV1hd;								/* help variables (INNER walls)*/
   double p2parawrwt,p2parawlwt,p2parahuwt,p2parahdwt;						/* help variables to calculate the parabolic curve parameters a and b for (OUTER wall)*/
-  double DIV1wlwt,DIV1wrwt,DIV1huwt,DIV1hdwt;							/* help variables (OUTER wall) */
-  double u1wrwt,u2wrwt,u1wlwt,u2wlwt,u1huwt,u2huwt,u1hdwt,u2hdwt;				/* help variables to calculate the long axis a of the ellipse (OUTER walls)*/
-  double dxwr,dzwr,dxwl,dzwl,dyhu,dzhu,dyhd,dzhd;						/* help variables to calculate the entrance and exit witdh of the OUTER walls*/
 
-  double zw1r,zw2r,zw1l,zw2l,zh1u,zh2u,zh1d,zh2d,m,n;						/* zcomponent of the intersection point of the neutron trajectory and the ellipse (INNER walls)*/
-  double pwr,qwr,pwl,qwl,phu,qhu,phd,qhd;							/* parameters for the quadratic equations for the intersection points or the intersection time (INNER walls)*/
+
+  double m,n;											/* zcomponent of the intersection point of the neutron trajectory and the ellipse (INNER walls)*/
   double nz,nx,ny,n2;										/* component and length of the surfaces normal vector at the intersection point */
   double pf;											/* prefactor to calculate the velocity vector after the interaction */
   double vxin,vyin,vzin;									/* velocity vector components before the interaction*/
   double q;											/* q-vector for the interaction */
-  double xintersecwr,xintersecwl,yintersechd,yintersechu;					/* intersection point crosscheck variables (INNER walls) */
   double xlimitr,xlimitrwt,xlimitl,xlimitlwt,ylimitd,ylimitdwt,ylimitu,ylimituwt;		/* limit variables to determine the interaction position given by the time relative to the guide walls*/
   double xtest,ytest;										/* interaction position of the neutron given by the interaction time; crosscheck with limit variables*/
-  double pwrwt,qwrwt,pwlwt,qwlwt,phuwt,qhuwt,phdwt,qhdwt;					/* parameters for the quadratic equations for the intersection points or the intersection time (OUTER walls)*/
-  double zw1rwt,zw2rwt,zw1lwt,zw2lwt,zh1uwt,zh2uwt,zh1dwt,zh2dwt;				/* zcomponent of the intersection point of the neutron trajectory and the ellipse (OUTER walls)*/
-  double xintersecwrwt,xintersecwlwt,yintersechdwt,yintersechuwt;				/* intersection point crosscheck variables (OUTER walls) */
+
 
   t_Table riTable,liTable,uiTable,diTable;
   t_Table roTable,loTable,uoTable,doTable;
+
+
+
+
+void TEST_INPUT(char name[20])
+  {
+    fprintf(stderr,"Component: %s (Guide_four_side) %s should  \n", NAME_CURRENT_COMP, name);
+    fprintf(stderr,"           NOT be negative \n");
+    fprintf(stderr,"           (for negative values use the global guide position !) \n");
+    exit(-1);
+ };
+
+void TEST_INPUT_1(char name[20])
+ {
+  fprintf(stderr,"Component: %s (Guide_four_side) %s must \n", NAME_CURRENT_COMP, name);
+    fprintf(stderr,"           be -1 (transperent) or \n");
+    fprintf(stderr,"           be  0 (absorbing) or \n");
+    fprintf(stderr,"           be  > 0 (reflecting) \n");
+    exit(-1);
+ };
+
+void TEST_INPUT_2(char name[20])
+ {
+    fprintf(stderr,"Component: %s (Guide_four_side) %s can  \n", NAME_CURRENT_COMP, name);
+    fprintf(stderr,"           NOT be negative \n");
+    exit(-1);
+ };
+
+void TEST_INPUT_3(char name[20])
+ {
+    fprintf(stderr,"Component: %s (Guide_four_side) %sr must \n", NAME_CURRENT_COMP, name);
+    fprintf(stderr,"           be positive\n");
+    exit(-1);
+  };
+
+void TEST_INPUT_4(char name[20],char name1[20], double inputname, double inputname1)
+ {
+    fprintf(stderr,"Component: %s (Guide_four_side) \n", NAME_CURRENT_COMP);
+    fprintf(stderr,"           %s have to be bigger or equal %s  \n", name, name1);
+    printf(" %s = %f \n",name, inputname );
+    printf(" %s = %f \n",name1, inputname1  );
+    fprintf(stderr,"           check curve parameter and wallthicknesses! \n");
+    exit(-1);
+ };
+
+
+												/* function to calculate the needed parameters for an elliptic wall*/
+
+  void ELLIPSE(double w1,double length, double lin, double lout, double wallthick, double *a, double *b, double *a2, double *b2, double *z0, double *w2, double *awt, double *a2wt, double *bwt, double *b2wt, double *w2wt, double *w1wt)
+   { 
+     double DIV1, lb, u1, u2, u1wt, u2wt, dx, dz;
+     lb=lin+length+lout;									/* lenght between the two focal points of the wall */
+    *z0=(lin-length-lout)/2.0;
+     u1=sqrt((lin*lin)+(w1*w1));								/* length between entrance focal point and starting point of the wall (INNER side)*/
+     u2=sqrt((w1*w1)+((length+lout)*(length+lout)));						/* length between exit focal point and end point of the  wall (INNER side) */
+    *a=(u1+u2)/2.0;										/* long half axis a of the ellipse (INNER  side)*/
+    *a2=*a*(*a);										/* square of the long axis a (INNER side)*/
+    *b=sqrt(*a2-(lb*(lb)/4.0));									/* short half axis b of the ellipse  (INNER side)*/
+    *b2=*b*(*b);										/* square of short half axis b of the ellipse  (INNER side)*/
+    DIV1=sqrt(1.0-((lb/2.0-lout)*(lb/2.0-lout)/(*a2)));						/* help variable to calculated the exit width (INNER side)*/
+    *w2=*b*(DIV1);										/* exit width (INNER side)*/
+    if(length<(lb)/2-lout){									/* if the maximum opening of the guide is smaller than the small half axis b, the OUTER side is defined by: */
+         dx=wallthick * sin(atan(*a2 * w1/(*b2 * (*z0))));
+         dz=wallthick * cos(atan(*a2 * w1/(*b2 * (*z0))));
+    	 u1wt=sqrt(((lin+dz)*(lin+dz))+((w1+dx)*(w1+dx)));					/* length between entrance focal point and starting point of the wall (OUTER side)*/
+    	 u2wt=sqrt(((w1+dx)*(w1+dx))+((length+lout-dz)*(length+lout-dz)));			/* length between exit focal point and end point of the wall (OUTER side) */
+    	*awt=(u1wt+u2wt)/2.0;									/* long half axis a of the ellipse  (OUTER side)*/
+    	*a2wt=*awt*(*awt);									/* square of the long axis a (OUTER side)*/
+    	*bwt=sqrt(*a2wt-(lb*lb/4.0));								/* short half axis b of the ellipse  (OUTER side)*/
+    	*b2wt=*bwt*(*bwt);									/* square of short half axis b of the ellipse  (OUTER side)*/
+    	*w2wt=*bwt*sqrt(1.0-((lb/2.0-lout)*(lb/2.0-lout)/(*a2wt)));				/* exit width for OUTER side */
+        *w1wt=*bwt*sqrt(1.0-((lb/2.0-lout-length)*(lb/2.0-lout-length)/(*a2wt)));		/* entrance width for OUTER side */
+    }else{											/* if the maximum opening of the guide is the small half axis b the OUTER wall is defined by:*/
+	*bwt=*b+wallthick;									/* short half axis b of the ellipse  (OUTER side)*/
+        *b2wt=*bwt*(*bwt);									/* square of the long axis a (OUTER side)*/
+        *awt=sqrt(*b2wt+(lb*lb/4.0));								/* long half axis a of the ellipse  (OUTER  side)*/
+        *a2wt=*b2wt+(lb*lb/4.0);								/* square of short half axis b of the ellipse  (OUTER side)*/
+        *w2wt=*bwt*sqrt(1.0-((lb/2.0-lout)*(lb/2.0-lout)/(*a2wt)));				/* exit width for OUTER side */
+        *w1wt=*bwt*sqrt(1.0-((lb/2.0-lin)*(lb/2.0-lin)/(*a2wt)));				/* entrance width for OUTER side */
+    }
+  }
+
+											 	/* function to calculate the needed parameters for a parabolical focusing wall*/
+
+  void PARABEL_FOCUS(double w1,double length , double lout, double wallthick, double *p2para, double *w2, double *pb , double *pa, double *p2parawt, double *pbwt, double *pawt, double *w2wt, double *w1wt)
+  {
+     double DIV1,DIV1wt, dx, dz;													
+     DIV1=(length+lout)*(length+lout);								/* help variable to calculate the curve parameters (INNER side) */
+    *p2para=2.0*(sqrt(DIV1+(w1*w1))-sqrt(DIV1));						/* help variable to calculate the curve parameters (INNER side) */
+    *w2=sqrt(*p2para*(lout+*p2para/4.0));							/* exit width (INNER side) */
+    *pb=length+lout+*p2para/4.0;								/* parameter b for parabolic equation to define the wall (INNER side)*/
+    *pa=1.0/(*p2para);										/* parameter a for parabolic equation to define the wall (INNER side)*/
+     dx= wallthick*sin(atan(w1*2*(*pa)));							/* help variable dx; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
+     dz= wallthick*cos(atan(w1*2*(*pa)));							/* help variable dz; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
+     DIV1wt=(length+lout-dz)*(length+lout-dz);							/* help variable to calculate the curve parameters (OUTER side) */
+    *p2parawt=2.0*(sqrt(DIV1wt+((w1+dx)*(w1+dx)))-sqrt(DIV1wt));				/* help variable to calculate the curve parameters (OUTER side) */
+    *pbwt=length+lout+*p2parawt/4.0;								/* parameter b for parabolic equation to define the wall (OUTER side)*/
+    *pawt=1.0/(*p2parawt);									/* parameter a for parabolic equation to define the wall (OUTER side)*/
+    *w2wt=sqrt(*p2parawt*(lout+ *p2parawt/4.0));						/* exit width (OUTER side) */
+    *w1wt=sqrt(*p2parawt*(lout+l+ *p2parawt/4.0));						/* entrance width (OUTER side) */
+   }
+
+
+											 	/* function to calculate the needed parameters for a parabolical defocusing wall*/
+
+  void PARABEL_DEFOCUS(double w1,double length, double lin, double wallthick, double *p2para, double *w2, double *pb , double *pa, double *p2parawt, double *pbwt, double *pawt, double *w2wt, double *w1wt)
+      {
+       double DIV1,DIV1wt, dx, dz;
+       DIV1=lin*lin;										/* help variable to calculate the curve parameters (INNER side) */
+      *p2para=2.0*(sqrt(DIV1+(w1*w1))-sqrt(DIV1));						/* help variable to calculate the curve parameters (INNER side) */
+      *w2=sqrt(*p2para*(length+lin+*p2para/4.0));						/* exit width (INNER side) */
+      *pb=-(lin+*p2para/4.0);									/* parameter b for parabolic equation to define the wall (INNER side)*/
+      *pa=-1.0/(*p2para);									/* parameter a for parabolic equation to define the wall (INNER side)*/
+       dx=wallthick*sin(atan(-*w2*2*(*pa)));							/* help variable dx; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
+       dz=wallthick*cos(atan(-*w2*2*(*pa)));							/* help variable dz; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
+       DIV1wt=(lin+length-dz)*(lin+length-dz);							/* help variable to calculate the curve parameters (OUTER side) */
+      *p2parawt=2.0*(sqrt(DIV1wt+((*w2+dx)*(*w2+dx)))-sqrt(DIV1wt));				/* help variable to calculate the curve parameters (OUTER side) */
+      *w1wt=sqrt(*p2parawt*(lin+*p2parawt/4.0));						/* entrance width for right focusing parabolic wall (OUTER side) */
+      *w2wt=sqrt(*p2parawt*(lin+length+*p2parawt/4.0));						/* exit width (OUTER side) */
+      *pbwt=-(lin+*p2parawt/4.0);								/* parameter b for parabolic equation to define the wall (OUTER side)*/
+      *pawt=-1.0/(*p2parawt);									/* parameter a for parabolic equation to define the wall (OUTER side)*/
+    }
+
+
+												/* function to calculate the needed parameters for a linear wall*/
+
+  void LINEAR(double w1, double w2, double length, double wallthick, double *w1wt, double *w2wt)
+  {										
+    *w1wt=w1+wallthick/(cos(atan((w1-w2)/length)));						/* entrance width (OUTER side) */
+    *w2wt=w2+wallthick/(cos(atan((w1-w2)/length)));						/* exit width  (OUTER side) */
+    }
+
+
+										/* function to calculate the intersection time with a linear wall at an negative axis*/
+
+  void TIME_LINEAR(double t1in, double w1, double w2, double length, double xin, double zin, double vxin1, double vzin1, double w1wt, double *t2, double *t2wt)
+  { 
+   double anstieg;
+   anstieg=(-w2+w1)/length;
+  *t2=(anstieg*zin-w1-xin)/(vxin1-anstieg*vzin1);				/* time untill next interaction with this wall (INNER side)*/
+  *t2wt=(anstieg*zin-w1wt-xin)/(vxin1-anstieg*vzin1);			/* time untill next interaction with this wall (OUTER side)*/
+   if(*t2<1e-15)								/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
+    *t2=t1in+2.0;								/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
+   if(*t2wt<1e-15)								/* see comments above*/
+    *t2wt=t1in+2.0; 
+  }
+
+
+										/* function to calculate the intersection time with a linear wall at an positive axis*/
+
+  void TIME_LINEAR_1(double t1in, double w1, double w2, double length, double xin, double zin, double vxin1, double vzin1, double w1wt, double *t2, double *t2wt)
+  { 
+   double anstieg;
+   anstieg=(w2-w1)/length;
+  *t2=(anstieg*zin+w1-xin)/(vxin1-anstieg*vzin1);
+  *t2wt=(anstieg*zin+w1wt-xin)/(vxin1-anstieg*vzin1);
+   if(*t2<1e-15)
+    *t2=t1in+2.0;
+   if(*t2wt<1e-15)
+    *t2wt=t1in+2.0; 
+  }
+
+
+										/* function to calculate the intersection time with an elliptical wall at a negative axis*/
+
+  void TIME_ELLIPSE(double vxin, double vzin, double xin, double zin, double a2, double b2, double z0, double t1in, double a2wt, double b2wt, double *t2w1, double *t2w1wt)
+    { 										
+										/* solving the elliptic equation in respect to z and the straight neutron trajectoty, only two z values possible! */
+
+     double m,n,q,p,z1,z2,qwt,pwt, xintersec, z1wt, z2wt, xintersecwt,t2w2,t2w2wt; 
+
+     m=vxin/vzin;								/* m parameter of the neutron trajectory*/
+     n=-m*zin+xin;								/* n parameter of the neutron trajectory */
+     p=2.0*(a2*m*n+b2*z0)/(a2*m*m+b2);						/* p parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (INNER side)*/
+     q=(a2*n*n+b2*z0*z0-a2*b2)/(a2*m*m+b2);					/* q parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (INNER side)*/ 
+    if ((p*p/4.0)-q<0){							
+    *t2w1=t1in+2.0;								/* if the neutron never touch the ellipse the time is set to be bigger than the time (t1) needed to pass the component */
+    }else{
+         z1=-p/2.0+sqrt(((p)*(p)/4.0)-q);					/* first solution for z (INNER side)*/
+         z2=-p/2.0-sqrt(((p)*(p)/4.0)-q);					/* second solution for z (INNER side)*/
+        *t2w1=(z1-zin)/vzin;							/* interaction time for first z value (INNER side)*/
+         t2w2=(z2-zin)/vzin;							/* interactime time for second z value (INNER side)*/
+        if(*t2w1<1e-15)								/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
+        *t2w1=t1in+2.0;								/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
+        if(t2w2<1e-15)								/* see comments above*/
+        t2w2=t1in+2.0;
+        if(t2w2<*t2w1)								/* choosing the smaller positive time solution (INNER side)*/
+        *t2w1=t2w2;
+         xintersec=m*(vzin*(*t2w1)+zin)+n;					/* crosscheck of the x-coordinate of the intersection point */
+        if (xintersec>0)							/* for the right wall x-coordinate of the intersection point have to be negative */
+        *t2w1=t1in+2.0;								/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
+        }
+    pwt=2.0*(a2wt*m*n+b2wt*z0)/(a2wt*m*m+b2wt);					/* p parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (OUTER side)*/
+    qwt=(a2wt*n*n+b2wt*z0*z0-a2wt*b2wt)/(a2wt*m*m+b2wt);			/* q parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (OUTER side)*/
+    if ((pwt*pwt/4.0)-qwt<0){							
+    *t2w1wt=t1in+2.0;								/* if the neutron never touch the ellipse the time is set bigger than need to pass the component */
+    }else{
+         z1wt=-pwt/2.0+sqrt((pwt*pwt/4.0)-qwt);					/* first solution for z (OUTER side) */
+         z2wt=-pwt/2.0-sqrt((pwt*pwt/4.0)-qwt);					/* second solution for z (OUTER side)*/
+        *t2w1wt=(z1wt-zin)/vzin;						/* interaction time for first z value (OUTER side)*/
+         t2w2wt=(z2wt-zin)/vzin;							/* interactime time for second z value (OUTER side)*/
+        if(*t2w1wt<1e-15)							/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
+        *t2w1wt=t1in+2.0;							/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
+        if(t2w2wt<1e-15)							/* see comments above*/
+         t2w2wt=t1in+2.0;
+        if(t2w2wt<*t2w1wt)							/* choosing the smaller positive time solution (OUTER side)*/
+        *t2w1wt=t2w2wt;
+         xintersecwt=m*(vzin*(*t2w1wt)+zin)+n;					/* crosscheck of the x-coordinate of the intersection point */
+        if (xintersecwt>0)							/* x-coordinate of the intersection point have to be negative */
+        *t2w1wt=t1in+2.0;							/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
+        }
+    };
+
+
+
+										/* function to calculate the intersection time with an elliptical wall at a positive  axis*/
+
+void TIME_ELLIPSE_1(double vxin, double vzin, double xin, double zin, double a2, double b2, double z0, double t1in, double a2wt, double b2wt, double *t2w1, double *t2w1wt)
+{ 
+     double m,n,q,p,z1,z2,qwt,pwt, xintersec, z1wt, z2wt, xintersecwt,t2w2,t2w2wt; 
+   
+     m=vxin/vzin;
+     n=-m*zin+xin;
+     p=2.0*(a2*m*n+b2*z0)/(a2*m*m+b2);
+     q=(a2*n*n+b2*z0*z0-a2*b2)/(a2*m*m+b2);
+    if ((p*p/4.0)-q<0){	
+    *t2w1=t1in+2.0;
+    }else{
+         z1=-p/2.0+sqrt(((p)*(p)/4.0)-q);
+         z2=-p/2.0-sqrt(((p)*(p)/4.0)-q);
+        *t2w1=(z1-zin)/vzin;
+         t2w2=(z2-zin)/vzin;
+        if(*t2w1<1e-15)
+        *t2w1=t1in+2.0;
+        if(t2w2<1e-15)
+         t2w2=t1in+2.0;
+        if(t2w2<*t2w1)
+        *t2w1=t2w2;
+         xintersec=m*(vzin*(*t2w1)+zin)+n;
+        if (xintersec<0){
+        *t2w1=t1in+2.0;}
+        }
+    pwt=2.0*(a2wt*m*n+b2wt*z0)/(a2wt*m*m+b2wt);
+    qwt=(a2wt*n*n+b2wt*z0*z0-a2wt*b2wt)/(a2wt*m*m+b2wt);
+    if ((pwt*pwt/4.0)-qwt<0){
+    *t2w1wt=t1in+2.0;
+    }else{
+         z1wt=-pwt/2.0+sqrt((pwt*pwt/4.0)-qwt);
+         z2wt=-pwt/2.0-sqrt((pwt*pwt/4.0)-qwt);
+        *t2w1wt=(z1wt-zin)/vzin;
+         t2w2wt=(z2wt-zin)/vzin;	
+        if(*t2w1wt<1e-15)
+        *t2w1wt=t1in+2.0;
+        if(t2w2wt<1e-15)
+         t2w2wt=t1in+2.0;
+        if(t2w2wt<*t2w1wt)
+        *t2w1wt=t2w2wt;
+         xintersecwt=m*(vzin*(*t2w1wt)+zin)+n;
+        if (xintersecwt<0)
+        *t2w1wt=t1in+2.0;
+        }
+  }
+
+
+
+									/* function to calculate the intersection time with a parabolical wall at an negative axis*/
+
+   void TIME_PARABEL(double vxin, double vzin, double xin, double zin, double pa, double pb, double t1in, double pawt, double pbwt, double *t2w1, double *t2w1wt)
+   {
+    double m,n,p,q,z1,z2,t2w2,xintersec,pwt,qwt,t2w2wt,z1wt,z2wt,xintersecwt;
+
+    m=vxin/vzin;							/* m parameter of the neutron trajectory*/
+    n=-m*zin+xin;							/* n parameter of the neutron trajectory */
+    p=(2.0*m*n*pa+1.0)/(pa*m*m);					/* p parameter of quadratic equation (INNER side) */
+    q=n*n/(m*m)-pb/(pa*m*m);						/* q parameter of quadratic equation (INNER side) */
+    if(q>0 && q>(p*p/4)) {						/* in the very special case of no intersection the quadratic equation has no solution (negative square root) the time is set to t1+2.0 */
+    *t2w1=t1in+2.0;
+    }else{
+    if(vxin==0)								/* in the special case of vx = 0 is x a constant */
+    {
+      if(xin<0){							/* only neutron with a negativ x-component can hit the RIGHT wall (INNER side)*/
+      *t2w1=(pb-pa*xin*xin-zin)/vzin;
+      }else{
+      *t2w1=t1in+2.0; 							/* the time solution for neutron with a positive x component is set to a time long behind the exit of the guide */
+									/* (means will not  scatter with the right wall)*/
+      }
+    }else{								/* if vx is not zero and x is a real variable*/
+      z1=-p/2.0+sqrt(p*p/4.0-q);					/* first z-solution for intersection (INNER side)*/
+      z2=-p/2.0-sqrt(p*p/4.0-q);					/* second z-solution for intersection (INNER side)*/
+      *t2w1=(z1-zin)/vzin;						/* first time solution (INNER side)*/
+      t2w2=(z2-zin)/vzin;						/* second time solution (INNER side)*/
+      if(*t2w1<1e-15)							/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
+      *t2w1=t1in+2.0;							/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
+      if(t2w2<1e-15)							/* see comments above*/
+      t2w2=t1in+2.0;
+      if(t2w2<*t2w1)							/* choosing the smaller positive time solution (INNER side)*/	
+      *t2w1=t2w2;
+    }
+    xintersec=m*(vzin*(*t2w1)+zin)+n;					/* crosscheck of the x-coordinate of the intersection point */
+    if (xintersec>0){							/* the x-coordinate of the intersection point have to be negative */
+    *t2w1=t1in+2.0;}							/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
+    }
+    pwt=(2.0*m*n*pawt+1.0)/(pawt*m*m);					/* p parameter of quadratic equation (OUTER side)*/
+    qwt=n*n/(m*m)-pbwt/(pawt*m*m);					/* q parameter of quadratic equation (OUTER side)*/
+    if(qwt>0 && qwt>(pwt*pwt/4)){					/* in the very special case of no intersection the quadratic equation has no solution (negative square root) and the time is set to t1+2.0 */
+    *t2w1wt=t1in+2.0;
+    }else{
+    if(vxin==0)								/* in the special case of vx = 0 is x a constant */
+    {
+      if(xin<0){
+      *t2w1wt=(pbwt-pawt*xin*xin-zin)/vzin;				/* only neutron with a negativ x-component can hit the RIGHT wall (OUTER wall)*/
+      }else{
+      *t2w1wt=t1in+2.0; 
+      }
+    }else{								/* if vx is not zero */
+      z1wt=-pwt/2.0+sqrt(pwt*pwt/4.0-qwt);				/* first z-solution for intersection (OUTER side)*/
+      z2wt=-pwt/2.0-sqrt(pwt*pwt/4.0-qwt);				/* second z-solution for intersection (OUTER side)*/
+      *t2w1wt=(z1wt-zin)/vzin;						/* first time solution (OUTER side)*/
+      t2w2wt=(z2wt-zin)/vzin;						/* second time solution (OUTER side)*/
+      if(*t2w1wt<1e-15)							/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
+      *t2w1wt=t1in+2.0;							/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
+      if(t2w2wt<1e-15)							/* see comments above*/
+      t2w2wt=t1in+2.0;
+      if(t2w2wt<*t2w1wt)						/* choosing the smaller positive time solution (OUTER wall)*/
+      *t2w1wt=t2w2wt;
+    }
+    xintersecwt=m*(vzin*(*t2w1wt)+zin)+n;				/* crosscheck of the x-coordinate of the intersection point */
+    if (xintersecwt>0)							/* x-coordinate of the intersection point have to be negative */
+    *t2w1wt=t1in+2.0;							/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
+  }
+  };
+
+
+									/* function to calculate the intersection time with a parabolical wall at an positive axis*/
+
+ void TIME_PARABEL_1(double vxin, double vzin, double xin, double zin, double pa, double pb, double t1in, double pawt, double pbwt, double *t2w1, double *t2w1wt)
+   {
+    double m,n,p,q,z1,z2,t2w2,xintersec,pwt,qwt,t2w2wt,z1wt,z2wt,xintersecwt;
+
+    m=vxin/vzin;
+    n=-m*zin+xin;
+    p=(2.0*m*n*pa+1.0)/(pa*m*m);
+    q=n*n/(m*m)-pb/(pa*m*m);
+    if(q>0 && q>(p*p/4)) {
+    *t2w1=t1in+2.0;
+    }else{
+    if(vxin==0)
+    {
+      if(xin<0){
+      *t2w1=(pb-pa*xin*xin-zin)/vzin;
+      }else{
+      *t2w1=t1in+2.0;
+      }
+    }else{
+      z1=-p/2.0+sqrt(p*p/4.0-q);
+      z2=-p/2.0-sqrt(p*p/4.0-q);
+      *t2w1=(z1-zin)/vzin;
+      t2w2=(z2-zin)/vzin;
+      if(*t2w1<1e-15)
+      *t2w1=t1in+2.0;
+      if(t2w2<1e-15)
+      t2w2=t1in+2.0;
+      if(t2w2<*t2w1)
+      *t2w1=t2w2;
+    }
+    xintersec=m*(vzin*(*t2w1)+zin)+n;
+    if (xintersec<0){
+    *t2w1=t1in+2.0;}
+    }
+    pwt=(2.0*m*n*pawt+1.0)/(pawt*m*m);
+    qwt=n*n/(m*m)-pbwt/(pawt*m*m);
+    if(qwt>0 && qwt>(pwt*pwt/4)){
+    *t2w1wt=t1in+2.0;
+    }else{
+    if(vxin==0)
+    {
+      if(xin<0){
+      *t2w1wt=(pbwt-pawt*xin*xin-zin)/vzin;
+      }else{
+      *t2w1wt=t1in+2.0; 
+      }
+    }else{
+      z1wt=-pwt/2.0+sqrt(pwt*pwt/4.0-qwt);
+      z2wt=-pwt/2.0-sqrt(pwt*pwt/4.0-qwt);
+      *t2w1wt=(z1wt-zin)/vzin;
+       t2w2wt=(z2wt-zin)/vzin;
+      if(*t2w1wt<1e-15) *t2w1wt=t1in+2.0;
+      if(t2w2wt<1e-15) t2w2wt=t1in+2.0;
+      if(t2w2wt<*t2w1wt) *t2w1wt=t2w2wt;
+    }
+    xintersecwt=m*(vzin*(*t2w1wt)+zin)+n;
+    if (xintersecwt<0) *t2w1wt=t1in+2.0;
+  }
+  };
+
+
+													/* test if the left or right scattered neutron in the upper and lower limits defined by TOP und BOTTOM walls */
+
+void TEST_UP_DOWN(double t,double vzin, double zin,double vyin,double yin, double length,
+                  double linhdin, double louthdin, double linhuin, double louthuin,
+                  double h2din, double h1din, double h2uin, double h1uin,
+                  double bhdin, double z0hdin, double a2hdin,double bhuin, double z0huin, double a2huin,
+                  double pbhdin, double pahdin, double pbhuin, double pahuin,
+                  double *ylimitd, double *ylimitu, double *ytest)
+{											
+   if(linhdin==0 && louthdin==0)
+   {
+      *ylimitd=(-h2din+h1din)/length*(vzin*t+zin)-h1din;						/* calculation of the lower y-limit given by a linear bottom wall and the interaction time*/
+    }else{
+      if(linhdin!=0 && louthdin!=0)
+      {
+      *ylimitd=-bhdin*sqrt(1-((z0hdin+(vzin*t+zin))*(z0hdin+(vzin*t+zin)))/a2hdin);			/* calculation of the lower y-limit given by a elliptic bottom wall and the interaction time*/
+      }else{
+      *ylimitd=-sqrt(((vzin*t+zin)-pbhdin)/-pahdin);							/* calculation of the lower y-limit given by a parabolic bottom wall and the interaction time*/
+      }
+   }
+   if(linhuin==0 && louthuin==0)
+    {
+     *ylimitu=(h2uin-h1uin)/length*(vzin*t+zin)+h1uin;							/* calculation of the upper y-limit given by a linear top wall and the interaction time*/
+    }
+    else{
+     if(linhuin!=0 && louthuin!=0)
+     {
+     *ylimitu=bhuin*sqrt(1-((z0huin+(vzin*t+zin))*(z0huin+(vzin*t+zin)))/a2huin);			/* calculation of the upper y-limit given by a elliptic top wall and the interaction time*/
+     }else{
+     *ylimitu=sqrt(((vzin*t+zin)-pbhuin)/-pahuin);							/* calculation of the upper y-limit given by a parabolic top wall and the interaction time*/
+    }
+    }
+  *ytest=vyin*t+yin;											/* calculation of the y coordinate of the neutron at the interaction time */
+  };
+
+
+													/* test if the up or down scattered neutron in the right and left limits defined by RIGHT und LEFT walls */
+
+void TEST_LEFT_RIGHT(double t,double vzin, double zin,double vxin,double xin, double length,
+                     double linwrin, double loutwrin, double linwlin, double loutwlin,
+                     double w2rin, double w1rin, double w2lin, double w1lin,
+                     double bwrin, double z0wrin, double a2wrin,double bwlin, double z0wlin, double a2wlin,
+                     double pbwrin, double pawrin, double pbwlin, double pawlin,
+                     double *xlimitr, double *xlimitl, double *xtest)
+{											
+  if(linwrin==0 && loutwrin==0)
+  {
+    *xlimitr=(-w2rin+w1rin)/length*(vzin*t+zin)-w1rin;
+  }else{
+    if(linwrin!=0 && loutwrin!=0)
+    {
+    *xlimitr=-bwrin*sqrt(1-((z0wrin+(vzin*t+zin))*(z0wrin+(vzin*t+zin)))/a2wrin);
+    }else{
+    *xlimitr=-sqrt(((vzin*t+zin)-pbwrin)/-pawrin);
+    }
+  }
+  if(linwlin==0 && loutwlin == 0)
+   {
+     *xlimitl=(w2lin-w1lin)/length*(vzin*t+zin)+w1lin;
+   }else{
+      if(linwlin!=0 && loutwlin != 0)
+      {
+      *xlimitl=bwlin*sqrt(1-((z0wlin+(vzin*t+zin))*(z0wlin+(vzin*t+zin)))/a2wlin);
+      }else{
+      *xlimitl=sqrt(((vzin*t+zin)-pbwlin)/-pawlin);
+      }
+   }
+  *xtest=vxin*t+xin;
+};
+
 %}
 
 
@@ -362,6 +824,7 @@ INITIALIZE
 %{
 
  int i;
+
 
 if (RIreflect && strlen(RIreflect)) {
     if (Table_Read(&riTable, RIreflect, 1) <= 0) 							/* read 1st block data from file into pTable */
@@ -403,252 +866,94 @@ if (DOreflect && strlen(DOreflect)) {
       exit(fprintf(stderr,"botton outer Wall: %s: can not read file %s\n", NAME_CURRENT_COMP, DOreflect));
   }
 
-if (w1r < 0)											/* Ceckup for the input variables */
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) w1r should  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    fprintf(stderr,"           (for negative values use the global guide position !) \n");
-    exit(-1);
-  }
+if (w1r < 0) TEST_INPUT("w1r");
 
-if (w1l < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) w1l should  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    fprintf(stderr,"           (for negative values use the global guide position !) \n");
-    exit(-1);
-  }
+if (w1l < 0) TEST_INPUT("w1l");
 
-if (h1u < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) h1u should  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    fprintf(stderr,"           (for negative values use the global guide position !) \n");
-    exit(-1);
-  }
+if (h1u < 0) TEST_INPUT("h1u");
 
-if (h1d < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) h1d should  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    fprintf(stderr,"           (for negative values use the global guide position !) \n");
-    exit(-1);
-  }
+if (h1d < 0) TEST_INPUT("h1d");
 
-if (w2r < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) w2r should  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    fprintf(stderr,"           (for negative values use the global guide position !) \n");
-    exit(-1);
-  }
+if (w2r < 0) TEST_INPUT("w2r");
 
-if (w2l < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) w2l should  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    fprintf(stderr,"           (for negative values use the global guide position !) \n");
-    exit(-1);
-  }
+if (w2l < 0) TEST_INPUT("w2l");
 
-if (h2u < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) h2u should  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    fprintf(stderr,"           (for negative values use the global guide position !) \n");
-    exit(-1);
-  }
+if (h2u < 0) TEST_INPUT("h2u");
 
-if (h2d < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) h2d should  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    fprintf(stderr,"           (for negative values use the global guide position !) \n");
-    exit(-1);
-  }
+if (h2d < 0) TEST_INPUT("h2d");
 
-if (mxrOW !=-1 && mxrOW < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) mxrOW must \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           be -1 (transperent) or \n");
-    fprintf(stderr,"           be  0 (absorbing) or \n");
-    fprintf(stderr,"           be  > 0 (reflecting) \n");
-    exit(-1);
-  }
+if (mxrOW !=-1 && mxrOW < 0) TEST_INPUT_1("mxrOW");
 
-if (mxlOW !=-1 && mxlOW<0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) mxlOW must \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           be -1 (transperent) or \n");
-    fprintf(stderr,"           be  0 (absorbing) or \n");
-    fprintf(stderr,"           be  > 0 (reflecting) \n");
-    exit(-1);
-  }
+if (mxlOW !=-1 && mxlOW < 0) TEST_INPUT_1("mxlOW");
 
-if (myuOW !=-1 && myuOW<0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) myuOW must \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           be -1 (transperent) or \n");
-    fprintf(stderr,"           be  0 (absorbing) or \n");
-    fprintf(stderr,"           be  > 0 (reflecting) \n");
-    exit(-1);
-  }
+if (myuOW !=-1 && myuOW < 0) TEST_INPUT_1("myuOW");
 
-if (mydOW !=-1 && mydOW<0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) mydOW must \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           be -1 (transperent) or \n");
-    fprintf(stderr,"           be  0 (absorbing) or \n");
-    fprintf(stderr,"           be  > 0 (reflecting) \n");
-    exit(-1);
-  }
+if (mydOW !=-1 && mydOW < 0) TEST_INPUT_1("mydOW");
 
-if (Qcxl < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) Qcxl can  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    exit(-1);
-  }
+if (mxr < 0 && mxr!=-1) TEST_INPUT_1("mxr");
 
-if (Qcxr < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) Qcxr can  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    exit(-1);
-  }
+if (mxl < 0 && mxl!=-1) TEST_INPUT_1("mxl");
 
-if (Qcyu < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) Qcyu can  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    exit(-1);
-  }
+if (myu < 0 && myu!=-1) TEST_INPUT_1("myu");
 
-if (Qcyd < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) Qcyd can  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    exit(-1);
-  }
+if (myd < 0 && myd!=-1) TEST_INPUT_1("myd");
 
-if (alphaxl < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) alphaxl can  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    exit(-1);
-  }
+if (Qcxl < 0) TEST_INPUT_2("Qcxl");
 
-if (alphaxr < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) alphaxr can  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    exit(-1);
-  }
+if (Qcxr < 0) TEST_INPUT_2("Qcxr");
 
-if (alphayu < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) alphayu can  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    exit(-1);
-  }
+if (Qcyu < 0) TEST_INPUT_2("Qcyu");
 
-if (alphayd < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) alphayd can  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    exit(-1);
-  }
+if (Qcyd < 0) TEST_INPUT_2("Qcyd");
 
-if (rwallthick < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) rwallthick can  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    exit(-1);
-  }
+if (alphaxl < 0) TEST_INPUT_2("alphaxl");
 
-if (lwallthick < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) lwallthick can  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    exit(-1);
-  }
-if (uwallthick < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) uwallthick can  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    exit(-1);
-  }
+if (alphaxr < 0) TEST_INPUT_2("alphaxr");
 
-if (dwallthick < 0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) dwallthick can  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           NOT be negative \n");
-    exit(-1);
-  }
+if (alphayu < 0) TEST_INPUT_2("alphayu");
 
-if (mxr < 0 && mxr!=-1)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) mxr must  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           be -1 (transperent) or \n");
-    fprintf(stderr,"           be  0 (absorbing) or \n");
-    fprintf(stderr,"           be  > 0 (reflecting) \n");
-    exit(-1);
-  }
+if (alphayd < 0) TEST_INPUT_2("alphayd");
 
-if (mxl < 0 && mxl!=-1)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) mxl must  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           be -1 (transperent) or \n");
-    fprintf(stderr,"           be  0 (absorbing) or \n");
-    fprintf(stderr,"           be  > 0 (reflecting) \n");
-    exit(-1);
-  }
+if (QcxlOW < 0) TEST_INPUT_2("QcxlOW");
 
-if (myu < 0 && myu!=-1)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) myu must  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           be -1 (transperent) or \n");
-    fprintf(stderr,"           be  0 (absorbing) or \n");
-    fprintf(stderr,"           be  > 0 (reflecting) \n");
-    exit(-1);
-  }
+if (QcxrOW < 0) TEST_INPUT_2("QcxrOW");
 
-if (myd < 0 && myd!=-1)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) myd must  \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           be -1 (transperent) or \n");
-    fprintf(stderr,"           be  0 (absorbing) or \n");
-    fprintf(stderr,"           be  > 0 (reflecting) \n");
-    exit(-1);
-  }
+if (QcyuOW < 0) TEST_INPUT_2("QcyuOW");
 
-if (Wxr <=0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) Wxr must \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           be positive\n");
-    exit(-1);
-  }
+if (QcydOW < 0) TEST_INPUT_2("QcydOW");
 
-if (Wxl <=0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) Wxl must \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           be positive\n");
-    exit(-1);
-  }
+if (alphaxlOW < 0) TEST_INPUT_2("alphaxlOW");
 
-if (Wyu <=0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) Wyu must \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           be positive\n");
-    exit(-1);
-  }
+if (alphaxrOW < 0) TEST_INPUT_2("alphaxrOW");
 
-if (Wyd <=0)
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) Wyd must \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           be positive\n");
-    exit(-1);
-  }
+if (alphayuOW < 0) TEST_INPUT_2("alphayuOW");
+
+if (alphaydOW < 0) TEST_INPUT_2("alphaydOW");
+
+if (rwallthick < 0) TEST_INPUT_2("rwallthick");
+
+if (lwallthick < 0) TEST_INPUT_2("lwallthick");
+
+if (uwallthick < 0) TEST_INPUT_2("uwallthick");
+
+if (dwallthick < 0) TEST_INPUT_2("dwallthick");
+
+
+if (Wxr <=0) TEST_INPUT_3("Wxr");
+
+if (Wxl <=0) TEST_INPUT_3("Wxl");
+
+if (Wyu <=0) TEST_INPUT_3("Wyu");
+
+if (Wyd <=0) TEST_INPUT_3("Wyd");
+
+if (WxrOW <=0) TEST_INPUT_3("WxrOW");
+
+if (WxlOW <=0) TEST_INPUT_3("WxlOW");
+
+if (WyuOW <=0) TEST_INPUT_3("WyuOW");
+
+if (WydOW <=0) TEST_INPUT_3("WydOW");
 
 if (l <= 0)
   {
@@ -664,926 +969,260 @@ if (mcgravitation) fprintf(stderr,"WARNING: Guide_four_side: %s: "
     NAME_CURRENT_COMP);
 
 
-
+													/* Calculation of curve-parameters for the right side wall - negative x-axis */
 
 													/* Calculation of curve-parameters for the right side wall - negative x-axis */
 
-													/* elliptic right side wall */
-
-lbwr=linwr+l+loutwr;											/* lenght between the two focal points for the right wall */
-z0wr=(linwr-l-loutwr)/2.0;										/* calculation of the z-component of the center of the ellipse for the right wall (with opposite sign)*/
-
-if(loutwr!=0 && linwr!=0)										/* ? elliptic shape ? */
-  { 
-    u1wr=sqrt((linwr*linwr)+(w1r*w1r));									/* length between entrance focal point and starting point of the elliptic wall (INNER wall)*/
-    u2wr=sqrt((w1r*w1r)+((l+loutwr)*(l+loutwr)));							/* length between exit focal point and end point of the elliptic wall (INNER wall) */
-    awr=(u1wr+u2wr)/2.0;										/* long half axis a of the ellipse (INNER  wall)*/
-    a2wr=awr*awr;											/* square of the long axis a (INNER wall)*/
-    bwr=sqrt(a2wr-(lbwr*lbwr/4.0));									/* short half axis b of the ellipse  (INNER wall)*/
-    b2wr=bwr*bwr;											/* square of short half axis b of the ellipse  (INNER wall)*/
-    DIV1wr=sqrt(1.0-((lbwr/2.0-loutwr)*(lbwr/2.0-loutwr)/a2wr));					/* help variable to calculated the exit width (INNER wall)*/
-    w2r=bwr*DIV1wr;											/* exit width (INNER wall)*/
-    if(l<lbwr/2-loutwr){										/* if the maximum opening of  the guide is smaller than the small half axis b, the OUTER wall is defined by: */
-        dxwr=rwallthick*sin(atan(a2wr*w1r/(b2wr*z0wr)));						/* help variable dx; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
-        dzwr=rwallthick*cos(atan(a2wr*w1r/(b2wr*z0wr)));						/* help variable dz; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
-    	u1wrwt=sqrt(((linwr+dzwr)*(linwr+dzwr))+((w1r+dxwr)*(w1r+dxwr)));				/* length between entrance focal point and starting point of the elliptic wall (OUTER wall)*/
-    	u2wrwt=sqrt(((w1r+dxwr)*(w1r+dxwr))+((l+loutwr-dzwr)*(l+loutwr-dzwr)));				/* length between exit focal point and end point of the elliptic wall (OUTER wall) */
-    	awrwt=(u1wrwt+u2wrwt)/2.0;									/* long half axis a of the ellipse  (OUTER wall)*/
-    	a2wrwt=awrwt*awrwt;										/* square of the long axis a (OUTER wall)*/
-    	bwrwt=sqrt(a2wrwt-(lbwr*lbwr/4.0));								/* short half axis b of the ellipse  (OUTER wall)*/
-    	b2wrwt=bwrwt*bwrwt;										/* square of short half axis b of the ellipse  (OUTER wall)*/
-    	w2rwt=bwrwt*sqrt(1.0-((lbwr/2.0-loutwr)*(lbwr/2.0-loutwr)/a2wrwt));				/* exit width for OUTER right elliptic wall */
-        w1rwt=bwrwt*sqrt(1.0-((lbwr/2.0-loutwr-l)*(lbwr/2.0-loutwr-l)/a2wrwt));				/* entrance width for OUTER right elliptic wall */
-    }else{												/* if the maximum opening of  the guide is the small half axis bthe OUTER wall is defined by:*/
-	bwrwt=bwr+rwallthick;										/* short half axis b of the ellipse  (OUTER wall)*/
-        b2wrwt=bwrwt*bwrwt;										/* square of the long axis a (OUTER wall)*/
-        awrwt=sqrt(b2wrwt+(lbwr*lbwr/4.0));								/* long half axis a of the ellipse  (OUTER  wall)*/
-        a2wrwt=b2wrwt+(lbwr*lbwr/4.0);									/* square of short half axis b of the ellipse  (OUTER wall)*/
-        w2rwt=bwrwt*sqrt(1.0-((lbwr/2.0-loutwr)*(lbwr/2.0-loutwr)/a2wrwt));				/* exit width for OUTER right elliptic wall */
-        w1rwt=bwrwt*sqrt(1.0-((lbwr/2.0-linwr)*(lbwr/2.0-linwr)/a2wrwt));				/* entrance width for OUTER right elliptic wall */
-    }
+if(loutwr!=0 && linwr!=0)										/* elliptic right side wall */
+   { 
+     ELLIPSE(w1r, l, linwr, loutwr, rwallthick, &awr, &bwr, &a2wr, &b2wr, &z0wr, &w2r, &awrwt, &a2wrwt, &bwrwt, &b2wrwt, &w2rwt, &w1rwt);
    }
 
-													/* parabolic focusing right side wall */
 
-if(linwr==0 && loutwr!=0){										/* ? parabolic focusing shape ? */
-    DIV1wr=(l+loutwr)*(l+loutwr);									/* help variable to calculate the curve parameters (INNER wall) */
-    p2parawr=2.0*(sqrt(DIV1wr+(w1r*w1r))-sqrt(DIV1wr));							/* help variable to calculate the curve parameters (INNER wall) */
-    w2r=sqrt(p2parawr*(loutwr+p2parawr/4.0));								/* exit width for right focusing parabolic wall (INNER wall) */
-    pbwr=l+loutwr+p2parawr/4.0;										/* parameter b for parabolic equation to define the wall (INNER wall)*/
-    pawr=1.0/p2parawr;											/* parameter a for parabolic equation to define the wall (INNER wall)*/
-    dxwr=rwallthick*sin(atan(w1r*2*pawr));								/* help variable dx; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
-    dzwr=rwallthick*cos(atan(w1r*2*pawr));								/* help variable dz; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
-    DIV1wrwt=(l+loutwr-dzwr)*(l+loutwl-dzwr);								/* help variable to calculate the curve parameters (OUTER wall) */
-    p2parawrwt=2.0*(sqrt(DIV1wrwt+((w1r+dxwr)*(w1r+dxwr)))-sqrt(DIV1wrwt));				/* help variable to calculate the curve parameters (OUTER wall) */
-    pbwrwt=l+loutwr+p2parawrwt/4.0;									/* parameter b for parabolic equation to define the wall (OUTER wall)*/
-    pawrwt=1.0/p2parawrwt;										/* parameter a for parabolic equation to define the wall (OUTER wall)*/
-    w2rwt=sqrt(p2parawrwt*(loutwr+p2parawrwt/4.0));							/* exit width for right focusing parabolic wall (OUTER wall) */
-    w1rwt=sqrt(p2parawrwt*(loutwr+l+p2parawrwt/4.0));							/* entrance width for right focusing parabolic wall (OUTER wall) */
+if(linwr==0 && loutwr!=0)										/* parabolic focusing right side wall */
+   {
+     PARABEL_FOCUS( w1r,l ,loutwr, rwallthick, &p2parawr, &w2r, &pbwr , &pawr, &p2parawrwt, &pbwrwt, &pawrwt, &w2rwt, &w1rwt);
    }
 
-													/* parabolic defocusing right side wall */
-
-if (linwr!=0 && loutwr==0)										/* ? parabolic defocusing shape ? */
+if (linwr!=0 && loutwr==0)										/* parabolic defocusing right side wall  */
     {
-      DIV1wr=linwr*linwr;										/* help variable to calculate the curve parameters (INNER wall) */
-      p2parawr=2.0*(sqrt(DIV1wr+(w1r*w1r))-sqrt(DIV1wr));						/* help variable to calculate the curve parameters (INNER wall) */
-      w2r=sqrt(p2parawr*(l+linwr+p2parawr/4.0));							/* exit width for right focusing parabolic wall (INNER wall) */
-      pbwr=-(linwr+p2parawr/4.0);									/* parameter b for parabolic equation to define the wall (INNER wall)*/
-      pawr=-1.0/p2parawr;										/* parameter a for parabolic equation to define the wall (INNER wall)*/
-      dxwr=rwallthick*sin(atan(-w2r*2*pawr));								/* help variable dx; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
-      dzwr=rwallthick*cos(atan(-w2r*2*pawr));								/* help variable dz; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
-      DIV1wrwt=(linwr+l-dzwr)*(linwr+l-dzwr);								/* help variable to calculate the curve parameters (OUTER wall) */
-      p2parawrwt=2.0*(sqrt(DIV1wrwt+((w2r+dxwr)*(w2r+dxwr)))-sqrt(DIV1wrwt));				/* help variable to calculate the curve parameters (OUTER wall) */
-      w1rwt=sqrt(p2parawrwt*(linwr+p2parawrwt/4.0));							/* entrance width for right focusing parabolic wall (OUTER wall) */
-      w2rwt=sqrt(p2parawrwt*(linwr+l+p2parawrwt/4.0));							/* exit width for right focusing parabolic wall (OUTER wall) */
-      pbwrwt=-(linwr+p2parawrwt/4.0);									/* parameter b for parabolic equation to define the wall (OUTER wall)*/
-      pawrwt=-1.0/p2parawrwt;										/* parameter a for parabolic equation to define the wall (OUTER wall)*/
+      PARABEL_DEFOCUS( w1r,l ,linwr, rwallthick, &p2parawr, &w2r, &pbwr , &pawr, &p2parawrwt, &pbwrwt, &pawrwt, &w2rwt, &w1rwt);
     }
 
-													/* straight right side wall */
-
-if(linwr==0 && loutwr==0){										/* ? linear shape ? */
-    w1rwt=w1r+rwallthick/(cos(atan((w1r-w2r)/l)));							/* entrance width for right focusing parabolic wall (OUTER wall) */
-    w2rwt=w2r+rwallthick/(cos(atan((w1r-w2r)/l)));							/* exit width for right focusing parabolic wall (OUTER wall) */
+if(linwr==0 && loutwr==0)										/* straight right side wall */
+    {
+      LINEAR(w1r, w2r, l, rwallthick, &w1rwt, &w2rwt);
     }
 
 
 													/* Calculation of curve-parameters for the left side wall - positive x-axis - analog to right side*/
 
-lbwl=linwl+l+loutwl;
-z0wl=(linwl-l-loutwl)/2.0;
-
 if((linwl!=0) && (loutwl!=0) ) 										/* elleptic left side wall */
   { 
-    u1wl=sqrt((linwl*linwl)+(w1l*w1l));
-    u2wl=sqrt((w1l*w1l)+((l+loutwl)*(l+loutwl)));
-    awl=(u1wl+u2wl)/2.0;
-    a2wl=awl*awl;
-    bwl=sqrt(a2wl-(lbwl*lbwl/4.0));
-    b2wl=bwl*bwl;
-    DIV1wl=sqrt(1.0-((lbwl/2.0-loutwl)*(lbwl/2.0-loutwl)/a2wl));
-    w2l=bwl*DIV1wl;
-    if(l<lbwl/2-loutwl){
-        dxwl=lwallthick*sin(atan(a2wl*w1l/(b2wl*z0wl)));
-        dzwl=lwallthick*cos(atan(a2wl*w1l/(b2wl*z0wl)));
-    	u1wlwt=sqrt(((linwl+dzwl)*(linwl+dzwl))+((w1l+dxwl)*(w1l+dxwl)));								
-    	u2wlwt=sqrt(((w1l+dxwl)*(w1l+dxwl))+((l+loutwl-dzwl)*(l+loutwl-dzwl)));	
-    	awlwt=(u1wlwt+u2wlwt)/2.0;
-    	a2wlwt=awlwt*awlwt;
-    	bwlwt=sqrt(a2wlwt-(lbwl*lbwl/4.0));
-    	b2wlwt=bwlwt*bwlwt;
-    	w2lwt=bwlwt*sqrt(1.0-((lbwl/2.0-loutwl)*(lbwl/2.0-loutwl)/a2wlwt));
-        w1lwt=bwlwt*sqrt(1.0-((lbwl/2.0-loutwl-l)*(lbwl/2.0-loutwl-l)/a2wlwt));
-    }else{
-	bwlwt=bwl+lwallthick;
-        b2wlwt=bwlwt*bwlwt;
-        awlwt=sqrt(b2wlwt+(lbwl*lbwl/4.0));
-        a2wlwt=b2wlwt+(lbwl*lbwl/4.0);
-        w2lwt=bwlwt*sqrt(1.0-((lbwl/2.0-loutwl)*(lbwl/2.0-loutwl)/a2wlwt));
-        w1lwt=bwlwt*sqrt(1.0-((lbwl/2.0-linwl)*(lbwl/2.0-linwl)/a2wlwt));
-    }
+    ELLIPSE(w1l, l, linwl, loutwl, lwallthick, &awl, &bwl, &a2wl, &b2wl, &z0wl, &w2l, &awlwt, &a2wlwt, &bwlwt, &b2wlwt, &w2lwt, &w1lwt);
    }
-
 
 if(linwl==0 && loutwl!=0)										/* parabolic focusing left side wall */
    {
-    DIV1wl=(l+loutwl)*(l+loutwl);
-    p2parawl=2.0*(sqrt(DIV1wl+(w1l*w1l))-sqrt(DIV1wl));
-    w2l=sqrt(p2parawl*(loutwl+p2parawl/4.0));
-    pbwl=l+loutwl+p2parawl/4.0;
-    pawl=1.0/p2parawl;
-    dxwl=lwallthick*sin(atan(w1l*2*pawl));
-    dzwl=lwallthick*cos(atan(w1l*2*pawl));
-    DIV1wlwt=(l+loutwl-dzwl)*(l+loutwl-dzwl);
-    p2parawlwt=2.0*(sqrt(DIV1wlwt+((w1l+dxwl)*(w1l+dxwl)))-sqrt(DIV1wlwt));
-    pbwlwt=l+loutwl+p2parawlwt/4.0;
-    pawlwt=1.0/p2parawlwt;
-    w2lwt=sqrt(p2parawlwt*(loutwl+p2parawlwt/4.0));
-    w1lwt=sqrt(p2parawlwt*(loutwl+l+p2parawlwt/4.0));
+     PARABEL_FOCUS( w1l,l ,loutwl, lwallthick, &p2parawl, &w2l, &pbwl , &pawl, &p2parawlwt, &pbwlwt, &pawlwt, &w2lwt, &w1lwt);
    }
 
-if (linwl!=0 && loutwl==0)										/* parabolic defocusing left side wall */
+if (linwl!=0 && loutwl==0)										/* parabolic defocusing left side wall  */
     {
-      DIV1wl=linwl*linwl;
-      p2parawl=2.0*(sqrt(DIV1wl+(w1l*w1l))-sqrt(DIV1wl));
-      w2l=sqrt(p2parawl*(l+linwl+p2parawl/4.0));
-      pbwl=-(linwl+p2parawl/4.0);
-      pawl=-1.0/p2parawl;
-      dxwl=lwallthick*sin(atan(-w2l*2*pawl));
-      dzwl=lwallthick*cos(atan(-w2l*2*pawl));
-      DIV1wlwt=(linwl+l-dzwl)*(linwl+l-dzwl);
-      p2parawlwt=2.0*(sqrt(DIV1wlwt+((w2l+dxwl)*(w2l+dxwl)))-sqrt(DIV1wlwt));
-      w1lwt=sqrt(p2parawlwt*(linwl+p2parawlwt/4.0));
-      w2lwt=sqrt(p2parawlwt*(linwl+l+p2parawlwt/4.0));
-      pbwlwt=-(linwl+p2parawlwt/4.0);
-      pawlwt=-1.0/p2parawlwt;
+      PARABEL_DEFOCUS( w1l,l ,linwl, lwallthick, &p2parawl, &w2l, &pbwl , &pawl, &p2parawlwt, &pbwlwt, &pawlwt, &w2lwt, &w1lwt);
     }
 
-if(linwl==0 && loutwl==0){
-    w1lwt=w1l+lwallthick/(cos(atan((w2l-w1l)/l)));
-    w2lwt=w2l+lwallthick/(cos(atan((w2l-w1l)/l)));
+if(linwl==0 && loutwl==0)										/* straight left side wall */
+    {
+      LINEAR(w1l, w2l, l, lwallthick, &w1lwt, &w2lwt);
     }
 
 
 													/* Calculation of curve-parameters for the top wall - positive y-axis - analog  right wall*/
 
-lbhu=linhu+l+louthu;
-z0hu=lbhu/2.0-l-louthu;	
 
 if (linhu != 0 && louthu !=0)										/* elliptic top wall */
-   {
-    u1hu=sqrt((linhu*linhu)+(h1u*h1u));
-    u2hu=sqrt((h1u*h1u)+((l+louthu)*(l+louthu)));
-    ahu=(u1hu+u2hu)/2.0;
-    bhu=sqrt(ahu*ahu-(lbhu*lbhu/4.0));
-    a2hu=ahu*ahu;
-    b2hu=bhu*bhu;
-    DIV1hu=sqrt(1.0-((lbhu/2.0-louthu)*(lbhu/2.0-louthu)/a2hu));
-    h2u=bhu*DIV1hu;
-    if(l<lbhu/2-louthu){
-        dyhu=uwallthick*sin(atan(a2hu*h1u/(b2hu*z0hu)));
-        dzhu=uwallthick*cos(atan(a2hu*h1u/(b2hu*z0hu)));
-    	u1huwt=sqrt(((linhu+dzhu)*(linhu+dzhu))+((h1u+dyhu)*(h1u+dyhu)));								
-    	u2huwt=sqrt(((h1u+dyhu)*(h1u+dyhu))+((l+louthu-dzhu)*(l+louthu-dzhu)));	
-    	ahuwt=(u1huwt+u2huwt)/2.0;
-    	a2huwt=ahuwt*ahuwt;
-    	bhuwt=sqrt(a2huwt-(lbhu*lbhu/4.0));
-    	b2huwt=bhuwt*bhuwt;
-    	h2uwt=bhuwt*sqrt(1.0-((lbhu/2.0-louthu)*(lbhu/2.0-louthu)/a2huwt));
-        h1uwt=bhuwt*sqrt(1.0-((lbhu/2.0-louthu-l)*(lbhu/2.0-louthu-l)/a2huwt));
-    }else{
-	bhuwt=bhu+uwallthick;
-        b2huwt=bhuwt*bhuwt;
-        ahuwt=sqrt(b2huwt+(lbhu*lbhu/4.0));
-        a2huwt=b2huwt+(lbhu*lbhu/4.0);
-        h2uwt=bhuwt*sqrt(1.0-((lbhu/2.0-louthu)*(lbhu/2.0-louthu)/a2huwt));
-        h1uwt=bhuwt*sqrt(1.0-((lbhu/2.0-linhu)*(lbhu/2.0-linhu)/a2huwt));
+    {
+      ELLIPSE(h1u, l, linhu, louthu, uwallthick, &ahu, &bhu, &a2hu, &b2hu, &z0hu , &h2u, &ahuwt, &a2huwt, &bhuwt, &b2huwt, &h2uwt, &h1uwt); 
     }
-  }
 
 if(linhu==0 && louthu!=0)										/* parabolic focusing top wall */
-   { 	
-    DIV1hu=(l+louthu)*(l+louthu);
-    p2parahu=2.0*(sqrt(DIV1hu+(h1u*h1u))-sqrt(DIV1hu));
-    h2u=sqrt(p2parahu*(louthu+p2parahu/4.0));
-    pbhu=l+louthu+p2parahu/4.0;
-    pahu=1.0/p2parahu;
-    dyhu=uwallthick*sin(atan(h1u*2*pahu));
-    dzhu=uwallthick*cos(atan(h1u*2*pahu));
-    DIV1huwt=(l+louthu-dzhu)*(l+louthu-dzhu);
-    p2parahuwt=2.0*(sqrt(DIV1huwt+((h1u+dyhu)*(h1u+dyhu)))-sqrt(DIV1huwt));
-    pbhuwt=l+louthu+p2parahuwt/4.0;
-    pahuwt=1.0/p2parahuwt;
-    h2uwt=sqrt(p2parahuwt*(louthu+p2parahuwt/4.0));
-    h1uwt=sqrt(p2parahuwt*(louthu+l+p2parahuwt/4.0));
-   } 
+    { 	
+      PARABEL_FOCUS( h1u,l ,louthu, uwallthick, &p2parahu, &h2u, &pbhu , &pahu, &p2parahuwt, &pbhuwt, &pahuwt, &h2uwt, &h1uwt);
+    } 
 
 if (linhu!=0 && louthu==0)										/* parabolic defocusing top wall */
     {
-      DIV1hu=linhu*linhu;
-      p2parahu=2.0*(sqrt(DIV1hu+(h1u*h1u))-sqrt(DIV1hu));
-      h2u=sqrt(p2parahu*(l+linhu+p2parahu/4.0));
-      pbhu=-(linhu+p2parahu/4.0);
-      pahu=-1.0/p2parahu;
-      dyhu=uwallthick*sin(atan(-h2u*2*pahu));
-      dzhu=uwallthick*cos(atan(-h2u*2*pahu));
-      DIV1huwt=(linhu+l-dzhu)*(linhu+l-dzhu);
-      p2parahuwt=2.0*(sqrt(DIV1huwt+((h2u+dyhu)*(h2u+dyhu)))-sqrt(DIV1huwt));
-      h1uwt=sqrt(p2parahuwt*(linhu+p2parahuwt/4.0));
-      h2uwt=sqrt(p2parahuwt*(linhu+l+p2parahuwt/4.0));
-      pbhuwt=-(linhu+p2parahuwt/4.0);
-      pahuwt=-1.0/p2parahuwt;
+      PARABEL_DEFOCUS( h1u,l ,linhu, uwallthick, &p2parahu, &h2u, &pbhu , &pahu, &p2parahuwt, &pbhuwt, &pahuwt, &h2uwt, &h1uwt);
     }
 
-if(linhu==0 && louthu==0){
-    h1uwt=h1u+uwallthick/(cos(atan((h2u-h1u)/l)));
-    h2uwt=h2u+uwallthick/(cos(atan((h2u-h1u)/l)));
+if(linhu==0 && louthu==0)
+    {
+      LINEAR(h1u, h2u, l, uwallthick, &h1uwt, &h2uwt);
     }
 
 
 													/* Calculation of curve-parameters for the bottom wall - negative y-axis - analog right wall */
-lbhd=linhd+l+louthd;
-z0hd=lbhd/2.0-l-louthd;
 
 if (linhd != 0 && louthd !=0)										/* elliptic bottom wall */
-   {
-    u1hd=sqrt((linhd*linhd)+(h1d*h1d));
-    u2hd=sqrt((h1d*h1d)+((l+louthd)*(l+louthd)));
-    ahd=(u1hd+u2hd)/2.0;
-    bhd=sqrt(ahd*ahd-(lbhd*lbhd/4.0));
-    a2hd=ahd*ahd;
-    b2hd=bhd*bhd;
-    DIV1hd=sqrt(1.0-((lbhd/2.0-louthd)*(lbhd/2.0-louthd)/a2hd));
-    h2d=bhd*DIV1hd;
-    if(l<lbhd/2-louthd){
-        dyhd=dwallthick*sin(atan(a2hd*h1d/(b2hd*z0hd)));
-        dzhd=dwallthick*cos(atan(a2hd*h1d/(b2hd*z0hd)));
-    	u1hdwt=sqrt(((linhd+dzhd)*(linhd+dzhd))+((h1d+dyhd)*(h1d+dyhd)));	
-    	u2hdwt=sqrt(((h1d+dyhd)*(h1d+dyhd))+((l+louthd-dzhd)*(l+louthd-dzhd)));
-    	ahdwt=(u1hdwt+u2hdwt)/2.0;
-    	a2hdwt=ahdwt*ahdwt;
-    	bhdwt=sqrt(a2hdwt-(lbhd*lbhd/4.0));
-    	b2hdwt=bhdwt*bhdwt;
-    	h2dwt=bhdwt*sqrt(1.0-((lbhd/2.0-louthd)*(lbhd/2.0-louthd)/a2hdwt));
-        h1dwt=bhdwt*sqrt(1.0-((lbhd/2.0-louthd-l)*(lbhd/2.0-louthd-l)/a2hdwt));
-    }else{
-	bhdwt=bhd+dwallthick;
-        b2hdwt=bhdwt*bhdwt;
-        ahdwt=sqrt(b2hdwt+(lbhd*lbhd/4.0));
-        a2hdwt=b2hdwt+(lbhd*lbhd/4.0);
-        h2dwt=bhdwt*sqrt(1.0-((lbhd/2.0-louthd)*(lbhd/2.0-louthd)/a2hdwt));
-        h1dwt=bhdwt*sqrt(1.0-((lbhd/2.0-linhd)*(lbhd/2.0-linhd)/a2hdwt));
+    {
+      ELLIPSE(h1d, l, linhd, louthd, dwallthick, &ahd, &bhd, &a2hd, &b2hd, &z0hd, &h2d, &ahdwt, &a2hdwt, &bhdwt, &b2hdwt, &h2dwt, &h1dwt);
     }
-  }
 
 if(linhd==0 && louthd!=0)										/* parabolic focusing bottom wall */
    {	
-    DIV1hd=(l+louthd)*(l+louthd);
-    p2parahd=2.0*(sqrt(DIV1hd+(h1d*h1d))-sqrt(DIV1hd));
-    h2d=sqrt(p2parahd*(louthd+p2parahd/4.0));
-    pbhd=l+louthd+p2parahd/4.0;
-    pahd=1.0/p2parahd;
-    dyhd=dwallthick*sin(atan(h1d*2*pahd));
-    dzhd=dwallthick*cos(atan(h1d*2*pahd));
-    DIV1hdwt=(l+louthd-dzhd)*(l+louthd-dzhd);
-    p2parahdwt=2.0*(sqrt(DIV1hdwt+((h1d+dyhd)*(h1d+dyhd)))-sqrt(DIV1hdwt));
-    pbhdwt=l+louthd+p2parahdwt/4.0;
-    pahdwt=1.0/p2parahdwt;
-    h2dwt=sqrt(p2parahdwt*(louthd+p2parahdwt/4.0));
-    h1dwt=sqrt(p2parahdwt*(louthd+l+p2parahdwt/4.0));
+     PARABEL_FOCUS( h1d,l ,louthd, dwallthick, &p2parahd, &h2d, &pbhd , &pahd, &p2parahdwt, &pbhdwt, &pahdwt, &h2dwt, &h1dwt);
    }
 
 if (linhd!=0 && louthd==0)										/* parabolic defocusing bottom wall */
     {
-      DIV1hd=linhd*linhd;
-      p2parahd=2.0*(sqrt(DIV1hd+(h1d*h1d))-sqrt(DIV1hd));
-      h2d=sqrt(p2parahd*(l+linhd+p2parahd/4.0));
-      pbhd=-(linhd+p2parahd/4.0);
-      pahd=-1.0/p2parahd;
-      dyhd=dwallthick*sin(atan(-h2d*2*pahd));
-      dzhd=dwallthick*cos(atan(-h2d*2*pahd));
-      DIV1hdwt=(linhd+l-dzhd)*(linhd+l-dzhd);
-      p2parahdwt=2.0*(sqrt(DIV1hdwt+((h2d+dyhd)*(h2d+dyhd)))-sqrt(DIV1hdwt));
-      h1dwt=sqrt(p2parahdwt*(linhd+p2parahdwt/4.0));
-      h2dwt=sqrt(p2parahdwt*(linhd+l+p2parahdwt/4.0));
-      pbhdwt=-(linhd+p2parahdwt/4.0);
-      pahdwt=-1.0/p2parahdwt;
+      PARABEL_DEFOCUS( h1d,l ,linhd, dwallthick, &p2parahd, &h2d, &pbhd , &pahd, &p2parahdwt, &pbhdwt, &pahdwt, &h2dwt, &h1dwt);
     }
 
-if(linhd==0 && louthd==0){
-    h1dwt=h1d+dwallthick/(cos(atan((h2d-h1d)/l)));
-    h2dwt=h2d+dwallthick/(cos(atan((h2d-h1d)/l)));
+if(linhd==0 && louthd==0)
+    {
+      LINEAR(h1d, h2d, l, dwallthick, &h1dwt, &h2dwt);
     }
 
 
 
 mru1=(h1uwt-h1u)/(w1r-w1rwt);										/* calculation for entrance and exit absorbing mask for the right upper corner*/
 nru1=h1u-mru1*(-w1r);
-mru2=(h2uwt-h2u)/(w2r-w2rwt);
-nru2=h2u-mru2*(-w2r);
 
 mrd1=(-h1dwt+h1d)/(w1r-w1rwt);										/* calculation for entrance and exit absorbing mask for the right lower corner*/
 nrd1=-h1d-mrd1*(-w1r);
-mrd2=(-h2dwt+h2d)/(w2r-w2rwt);
-nrd2=-h2d-mrd2*(-w2r);
 
 mlu1=(h1uwt-h1u)/(-w1l+w1lwt);										/* calculation for entrance and exit absorbing mask for the left upper corner*/
 nlu1=h1u-mlu1*w1l;
-mlu2=(h2uwt-h2u)/(-w2l+w2lwt);
-nlu2=h2u-mlu2*w2l;
 
 mld1=(-h1dwt+h1d)/(-w1l+w1lwt);										/* calculation for entrance and exit absorbing mask for the left lower corner*/
 nld1=-h1d-mld1*w1l;
-mld2=(-h2dwt+h2d)/(-w2l+w2lwt);
+
+
+mru2=(h2u-h2uwt)/(-w2r+w2rwt);										/* calculation for exit absorbing mask for the right upper corner*/
+nru2=h2u-mru2*(-w2r);
+
+mrd2=(-h2d+h2dwt)/(-w2r+w2rwt);										/* calculation for exit absorbing mask for the right lower corner*/
+nrd2=-h2d-mrd2*(-w2r);
+
+mlu2=(h2u-h2uwt)/(w2l-w2lwt);										/* calculation for exit absorbing mask for the left upper corner*/
+nlu2=h2u-mlu2*w2l;
+
+mld2=(h2dwt-h2d)/(w2l-w2lwt);										/* calculation for exit absorbing mask for the left lower corner*/
 nld2=-h2d-mld2*w2l;
+
 
 %}
 
 
+
 TRACE
 %{
-  
+
   int i;
 
   PROP_Z0;												/* Propagate neutron to guide entrance. */ 
 
 
-  if(x <= -w1r && x >= -w1rwt && y <= mru1*x+nru1 && y>= mrd1*x+nrd1 && mxr!=-1 && mxrOW!=-1){		/* absorbing the neutron if it hit the RIGHT entrance wall and the wall is not transparent*/
+  if(x <= -w1r && x >= -w1rwt && y <= mru1*x+nru1 && y>= mrd1*x+nrd1 && mxr!=-1 && mxrOW!=-1)		/* absorbing the neutron if it hit the RIGHT entrance wall and the wall is not transparent*/
       ABSORB;
-    }
-  if(x >= w1l && x <=  w1lwt && y <= mlu1*x+nlu1 && y>= mld1*x+nld1 && mxl!=-1 && mxlOW!=-1 ){ 		/* absorbing the neutron if it hit the LEFT entrance wall and the wall is not transparent*/
+  if(x >= w1l && x <=  w1lwt && y <= mlu1*x+nlu1 && y>= mld1*x+nld1 && mxl!=-1 && mxlOW!=-1 ) 		/* absorbing the neutron if it hit the LEFT entrance wall and the wall is not transparent*/
       ABSORB;
-     }
-  if(y<=-h1d && y >=-h1dwt && x <= (y-nld1)/mld1 && x>= (y-nrd1)/mrd1 && myd!=-1 && mydOW!=-1){		/* absorbing the neutron if it hit the BOTTOM entrance wall and the wall is not transparent*/
+  if(y<=-h1d && y >=-h1dwt && x <= (y-nld1)/mld1 && x>= (y-nrd1)/mrd1 && myd!=-1 && mydOW!=-1)		/* absorbing the neutron if it hit the BOTTOM entrance wall and the wall is not transparent*/
       ABSORB;
-     }
-  if(y>=h1u && y <= h1uwt && x <= (y-nlu1)/mlu1 && x>= (y-nru1)/mru1 && myu!=-1 && myuOW!=-1){		/* absorbing the neutron if it hit the TOP entrance wall and the wall is not transparent*/
+  if(y>=h1u && y <= h1uwt && x <= (y-nlu1)/mlu1 && x>= (y-nru1)/mru1 && myu!=-1 && myuOW!=-1)		/* absorbing the neutron if it hit the TOP entrance wall and the wall is not transparent*/
     ABSORB; 
-    }
+
+
+
 
 
 do{										/* start the propagation loop inside the guide */
   t1=(l-z)/vz;									/* needed time to pass the guide (or rest of the guide without any interaction)*/
 
-  if(loutwr==0 && linwr==0)							/* for a straight right wall */
-  {
-  m=(-w2r+w1r)/l;
-  t2w1r=(m*z+(-w1r)-x)/(vx-m*vz);						/* time untill next interaction with this wall (INNER wall)*/
-  t2w1rwt=(m*z+(-w1rwt)-x)/(vx-m*vz);						/* time untill next interaction with this wall (OUTER wall)*/
-  if(t2w1r<1e-15)								/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
-    t2w1r=t1+2.0;								/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
-  if(t2w1rwt<1e-15)								/* see comments above*/
-    t2w1rwt=t1+2.0; 
-  }
 
-
-  if(loutwr!=0 && linwr!=0)							/* for a elliptic right wall */
-  { 										/* solving the elliptic equation in respect to z and the straight neutron trajectoty, only two z values possible! */
-    m=vx/vz;									/* m parameter of the neutron trajectory*/
-    n=-m*z+x;									/* n parameter of the neutron trajectory */
-    pwr=2.0*(a2wr*m*n+b2wr*z0wr)/(a2wr*m*m+b2wr);				/* p parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (INNER wall)*/
-    qwr=(a2wr*n*n+b2wr*z0wr*z0wr-a2wr*b2wr)/(a2wr*m*m+b2wr);			/* q parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (INNER wall)*/ 
-    if ((pwr*pwr/4.0)-qwr<0){							
-    t2w1r=t1+2.0;								/* if the neutron never touch the ellipse the time is set to be bigger than the time (t1) needed to pass the component */
-    }else{
-        zw1r=-pwr/2.0+sqrt((pwr*pwr/4.0)-qwr);					/* first solution for z (INNER wall)*/
-        zw2r=-pwr/2.0-sqrt((pwr*pwr/4.0)-qwr);					/* second solution for z (INNER wall)*/
-        t2w1r=(zw1r-z)/vz;							/* interaction time for first z value (INNER wall)*/
-        t2w2r=(zw2r-z)/vz;							/* interactime time for second z value (INNER wall)*/
-        if(t2w1r<1e-15)								/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
-        t2w1r=t1+2.0;								/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
-        if(t2w2r<1e-15)								/* see comments above*/
-        t2w2r=t1+2.0;
-        if(t2w2r<t2w1r)								/* choosing the smaller positive time solution (INNER wall)*/
-        t2w1r=t2w2r;
-        xintersecwr=m*(vz*t2w1r+z)+n;						/* crosscheck of the x-coordinate of the intersection point */
-        if (xintersecwr>0){							/* for the right wall x-coordinate of the intersection point have to be negative */
-        t2w1r=t1+2.0;}								/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
-        }
-    pwrwt=2.0*(a2wrwt*m*n+b2wrwt*z0wr)/(a2wrwt*m*m+b2wrwt);			/* p parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (OUTER wall)*/
-    qwrwt=(a2wrwt*n*n+b2wrwt*z0wr*z0wr-a2wrwt*b2wrwt)/(a2wrwt*m*m+b2wrwt);	/* q parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (OUTER wall)*/
-    if ((pwrwt*pwrwt/4.0)-qwrwt<0){							
-    t2w1rwt=t1+2.0;								/* if the neutron never touch the ellipse the time is set bigger than need to pass the component */
-    }else{
-        zw1rwt=-pwrwt/2.0+sqrt((pwrwt*pwrwt/4.0)-qwrwt);			/* first solution for z (OUTER wall) */
-        zw2rwt=-pwrwt/2.0-sqrt((pwrwt*pwrwt/4.0)-qwrwt);			/* second solution for z (OUTER wall)*/
-        t2w1rwt=(zw1rwt-z)/vz;							/* interaction time for first z value (OUTER wall)*/
-        t2w2rwt=(zw2rwt-z)/vz;							/* interactime time for second z value (OUTER wall)*/
-        if(t2w1rwt<1e-15)							/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
-        t2w1rwt=t1+2.0;								/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
-        if(t2w2rwt<1e-15)							/* see comments above*/
-        t2w2rwt=t1+2.0;
-        if(t2w2rwt<t2w1rwt)							/* choosing the smaller positive time solution (OUTER wall)*/
-        t2w1rwt=t2w2rwt;
-        xintersecwrwt=m*(vz*t2w1rwt+z)+n;					/* crosscheck of the x-coordinate of the intersection point */
-        if (xintersecwrwt>0){							/* for the right wall x-coordinate of the intersection point have to be negative */
-        t2w1rwt=t1+2.0;}							/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
-        }
-    }
-
-  if((loutwr!=0 && linwr==0)|| (loutwr==0 && linwr!=0))				/* for a parabolic focusing or defocusing right wall*/
-  {										/* solving the elliptic equation in respect to the straight neutron trajectoty to get the interaction time*/
-    m=vx/vz;									/* m parameter of the neutron trajectory*/
-    n=-m*z+x;									/* n parameter of the neutron trajectory */
-    pwr=(2.0*m*n*pawr+1.0)/(pawr*m*m);						/* p parameter of quadratic equation (INNER wall)*/
-    qwr=n*n/(m*m)-pbwr/(pawr*m*m);						/* q parameter of quadratic equation (INNER wall)*/
-    if(qwr>0 && qwr>(pwr*pwr/4)){						/* in the very special case of no intersection the quadratic equation has no solution (negative square root) the time is set to t1+2.0 */
-    t2w1r=t1+2.0;
-    }else{
-    if(vx==0)									/* in the special case of vx = 0 is x a constant */
+if(loutwr==0 && linwr==0)							
     {
-      if(x<0){									/* only neutron with a negativ x-component can hit the RIGHT wall (INNER wall)*/
-      t2w1r=(pbwr-pawr*x*x-z)/vz;
-      }else{
-      t2w1r=t1+2.0; 								/* the time solution for neutron with a positive x component is set to a time long behind the exit of the guide */
-										/* (means will not  scatter with the right wall)*/
-      }
-    }else{									/* if vx is not zero and x is a real variable*/
-      zw1r=-pwr/2.0+sqrt(pwr*pwr/4.0-qwr);					/* first z-solution for intersection (INNER wall)*/
-      zw2r=-pwr/2.0-sqrt(pwr*pwr/4.0-qwr);					/* second z-solution for intersection (INNER wall)*/
-      t2w1r=(zw1r-z)/vz;							/* first time solution (INNER wall)*/
-      t2w2r=(zw2r-z)/vz;							/* second time solution (INNER wall)*/
-      if(t2w1r<1e-15)								/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
-      t2w1r=t1+2.0;								/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
-      if(t2w2r<1e-15)								/* see comments above*/
-      t2w2r=t1+2.0;
-      if(t2w2r<t2w1r)								/* choosing the smaller positive time solution (INNER wall)*/	
-      t2w1r=t2w2r;
+      TIME_LINEAR(t1, w1r, w2r, l, x, z, vx, vz, w1rwt, &t2w1r, &t2w1rwt); 
     }
-    xintersecwr=m*(vz*t2w1r+z)+n;						/* crosscheck of the x-coordinate of the intersection point */
-    if (xintersecwr>0){								/* for the right wall the x-coordinate of the intersection point have to be negative */
-    t2w1r=t1+2.0;}								/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
-    }
-    pwrwt=(2.0*m*n*pawrwt+1.0)/(pawrwt*m*m);					/* p parameter of quadratic equation (OUTER wall)*/
-    qwrwt=n*n/(m*m)-pbwrwt/(pawrwt*m*m);					/* q parameter of quadratic equation (OUTER wall)*/
-    if(qwrwt>0 && qwrwt>(pwrwt*pwrwt/4)){					/* in the very special case of no intersection the quadratic equation has no solution (negative square root) and the time is set to t1+2.0 */
-    t2w1rwt=t1+2.0;
-    }else{
-    if(vx==0)									/* in the special case of vx = 0 is x a constant */
-    {
-      if(x<0){
-      t2w1rwt=(pbwrwt-pawrwt*x*x-z)/vz;						/* only neutron with a negativ x-component can hit the RIGHT wall (OUTER wall)*/
-      }else{
-      t2w1rwt=t1+2.0; 
-      }
-    }else{									/* if vx is not zero */
-      zw1rwt=-pwrwt/2.0+sqrt(pwrwt*pwrwt/4.0-qwrwt);				/* first z-solution for intersection (OUTER wall)*/
-      zw2rwt=-pwrwt/2.0-sqrt(pwrwt*pwrwt/4.0-qwrwt);				/* second z-solution for intersection (OUTER wall)*/
-      t2w1rwt=(zw1rwt-z)/vz;							/* first time solution (OUTER wall)*/
-      t2w2rwt=(zw2rwt-z)/vz;							/* second time solution (OUTER wall)*/
-      if(t2w1rwt<1e-15)								/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
-      t2w1rwt=t1+2.0;								/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
-      if(t2w2rwt<1e-15)								/* see comments above*/
-      t2w2rwt=t1+2.0;
-      if(t2w2rwt<t2w1rwt)							/* choosing the smaller positive time solution (OUTER wall)*/
-      t2w1rwt=t2w2rwt;
-    }
-    xintersecwrwt=m*(vz*t2w1rwt+z)+n;						/* crosscheck of the x-coordinate of the intersection point */
-    if (xintersecwrwt>0){							/* for the right wall the x-coordinate of the intersection point have to be negative */
-    t2w1rwt=t1+2.0;}								/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
-  }
-  }
 
-  if(loutwl==0 && linwl==0)							/* comments for the left wall are same like for the right wall*/
-  {
-  m=(w2l-w1l)/l;
-  t2w1l=(m*z+(w1l)-x)/(vx-m*vz);
-  t2w1lwt=(m*z+(w1lwt)-x)/(vx-m*vz);
-  if(t2w1l<1e-15)
-  t2w1l=t1+2.0;
-  if(t2w1lwt<1e-15)
-  t2w1lwt=t1+2.0;
-  };
+  if(loutwr!=0 && linwr!=0)							
+    { 										
+      TIME_ELLIPSE(vx, vz, x, z, a2wr, b2wr, z0wr, t1, a2wrwt, b2wrwt, &t2w1r, &t2w1rwt);
+    }
+
+  if((loutwr!=0 && linwr==0)|| (loutwr==0 && linwr!=0))				
+    {										
+      TIME_PARABEL(vx, vz, x, z, pawr, pbwr, t1, pawrwt, pbwrwt, &t2w1r, &t2w1rwt);
+    }
+
+  if(loutwl==0 && linwl==0)
+    {
+      TIME_LINEAR_1(t1, w1l, w2l, l, x, z, vx, vz, w1lwt, &t2w1l, &t2w1lwt); 
+    }
 
   if(loutwl!=0 && linwl!=0)
-  { 
-    m=vx/vz;
-    n=-m*z+x;
-    pwl=2.0*(a2wl*m*n+b2wl*z0wl)/(a2wl*m*m+b2wl);
-    qwl=(a2wl*n*n+b2wl*z0wl*z0wl-a2wl*b2wl)/(a2wl*m*m+b2wl);
-    if((pwl*pwl/4.0)-qwl<0){
-    t2w1l=t1+2.0;
-    }else{
-        zw1l=-pwl/2.0+sqrt((pwl*pwl/4.0)-qwl);
-        zw2l=-pwl/2.0-sqrt((pwl*pwl/4.0)-qwl);
-        t2w1l=(zw1l-z)/vz;
-        t2w2l=(zw2l-z)/vz;
-        if(t2w1l<1e-15)
-        t2w1l=t1+2.0;
-        if(t2w2l<1e-15)
-        t2w2l=t1+2.0;
-        if(t2w2l<t2w1l)
-        t2w1l=t2w2l;
-        xintersecwl=m*(vz*t2w1l+z)+n;
-        if (xintersecwl<0){
-        t2w1l=t1+2.0;}
-        }
-    pwlwt=2.0*(a2wlwt*m*n+b2wlwt*z0wl)/(a2wlwt*m*m+b2wlwt);
-    qwlwt=(a2wlwt*n*n+b2wlwt*z0wl*z0wl-a2wlwt*b2wlwt)/(a2wlwt*m*m+b2wlwt);
-    if((pwlwt*pwlwt/4.0)-qwlwt<0){
-    t2w1lwt=t1+2.0;
-    }else{
-        zw1lwt=-pwlwt/2.0+sqrt((pwlwt*pwlwt/4.0)-qwlwt);
-        zw2lwt=-pwlwt/2.0-sqrt((pwlwt*pwlwt/4.0)-qwlwt);
-        t2w1lwt=(zw1lwt-z)/vz;
-        t2w2lwt=(zw2lwt-z)/vz;
-        if(t2w1lwt<1e-15)
-        t2w1lwt=t1+2.0;
-        if(t2w2lwt<1e-15)
-        t2w2lwt=t1+2.0;
-        if(t2w2lwt<t2w1lwt)
-        t2w1lwt=t2w2lwt;
-        xintersecwlwt=m*(vz*t2w1lwt+z)+n;
-        if (xintersecwlwt<0){
-        t2w1lwt=t1+2.0;}
-        }
-  }
+    { 
+      TIME_ELLIPSE_1(vx, vz, x, z, a2wl, b2wl, z0wl, t1, a2wlwt, b2wlwt, &t2w1l, &t2w1lwt);
+    }
+
 
   if((loutwl!=0 && linwl==0) || (loutwl==0 && linwl!=0))
-  {
-    m=vx/vz;
-    n=-m*z+x;
-    pwl=(2.0*m*n*pawl+1.0)/(pawl*m*m);
-    qwl=n*n/(m*m)-pbwl/(pawl*m*m);
-    if(qwl>0 && qwl>(pwl*pwl/4)){
-    t2w1l=t1+2.0;
-    }else{
-    if(vx==0)
     {
-      if(x>0){
-      t2w1l=(pbwl-pawl*x*x-z)/vz;
-      }else{
-      t2w1l=t1+2.0;
-      }
-    }else{
-      zw1l=-pwl/2.0+sqrt(pwl*pwl/4.0-qwl);
-      zw2l=-pwl/2.0-sqrt(pwl*pwl/4.0-qwl);
-      t2w1l=(zw1l-z)/vz;
-      t2w2l=(zw2l-z)/vz;
-      if(t2w1l<1e-15)
-      t2w1l=t1+2.0;
-      if(t2w2l<1e-15)
-      t2w2l=t1+2.0;
-      if(t2w2l<t2w1l)
-      t2w1l=t2w2l;
+      TIME_PARABEL_1(vx, vz, x, z, pawl, pbwl, t1, pawlwt, pbwlwt, &t2w1l, &t2w1lwt);
     }
-    }
-    xintersecwl=m*(vz*t2w1l+z)+n;
-    if (xintersecwl<0){
-    t2w1l=t1+2.0;}
-    pwlwt=(2.0*m*n*pawlwt+1.0)/(pawlwt*m*m);
-    qwlwt=n*n/(m*m)-pbwlwt/(pawlwt*m*m);
-    if(qwlwt>0 && qwlwt>(pwlwt*pwlwt/4)){
-    t2w1lwt=t1+2.0;
-    }else{
-    if(vx==0)
-    {
-      if(x>0){
-      t2w1lwt=(pbwlwt-pawlwt*x*x-z)/vz;
-      }else{
-      t2w1lwt=t1+2.0;
-      }
-    }else{
-      zw1lwt=-pwlwt/2.0+sqrt(pwlwt*pwlwt/4.0-qwlwt);
-      zw2lwt=-pwlwt/2.0-sqrt(pwlwt*pwlwt/4.0-qwlwt);
-      t2w1lwt=(zw1lwt-z)/vz;
-      t2w2lwt=(zw2lwt-z)/vz;
-      if(t2w1lwt<1e-15)
-      t2w1lwt=t1+2.0;
-      if(t2w2lwt<1e-15)
-      t2w2lwt=t1+2.0;
-      if(t2w2lwt<t2w1lwt)
-      t2w1lwt=t2w2lwt;
-    }
-    xintersecwlwt=m*(vz*t2w1lwt+z)+n;
-    if (xintersecwlwt<0){
-    t2w1lwt=t1+2.0;}
-  }
-  }
 
-  if(louthu==0 && linhu==0)							/* comments for the top wall are same like for the right wall (only the ralation between left and right become relation between up and down)*/
-  {
-  m=(h2u-h1u)/l;
-  t2h1u=(m*z+(h1u)-y)/(vy-m*vz);
-  t2h1uwt=(m*z+(h1uwt)-y)/(vy-m*vz);
-  if(t2h1u<1e-15)
-  t2h1u=t1+2.0;
-  if(t2h1uwt<1e-15)
-  t2h1uwt=t1+2.0;
-  }
+
+  if(louthu==0 && linhu==0)							
+    {
+      TIME_LINEAR_1(t1, h1u, h2u, l, y, z, vy, vz, h1uwt, &t2h1u, &t2h1uwt); 
+    }
 
 
   if(louthu!=0 && linhu!=0)
-  { 
-    m=vy/vz;
-    n=-m*z+y;
-    phu=2.0*(a2hu*m*n+b2hu*z0hu)/(a2hu*m*m+b2hu);
-    qhu=(a2hu*n*n+b2hu*z0hu*z0hu-a2hu*b2hu)/(a2hu*m*m+b2hu);
-    if((phu*phu/4.0)-qhu<0){
-    t2h1u=t1+2.0;
-    }else{
-        zh1u=-phu/2.0+sqrt((phu*phu/4.0)-qhu);
-        zh2u=-phu/2.0-sqrt((phu*phu/4.0)-qhu);
-        t2h1u=(zh1u-z)/vz;
-        t2h2u=(zh2u-z)/vz;
-        if(t2h1u<1e-15)
-        t2h1u=t1+2.0;
-        if(t2h2u<1e-15)
-        t2h2u=t1+2.0;
-        if(t2h2u<t2h1u)
-        t2h1u=t2h2u;
-        yintersechu=m*(vz*t2h1u+z)+n;
-        if (yintersechu<0){
-        t2h1u=t1+2.0;}
-        }
-    phuwt=2.0*(a2huwt*m*n+b2huwt*z0hu)/(a2huwt*m*m+b2huwt);
-    qhuwt=(a2huwt*n*n+b2huwt*z0hu*z0hu-a2huwt*b2huwt)/(a2huwt*m*m+b2huwt);
-    if((phuwt*phuwt/4.0)-qhuwt<0){
-    t2h1uwt=t1+2.0;
-    }else{
-        zh1uwt=-phuwt/2.0+sqrt((phuwt*phuwt/4.0)-qhuwt);
-        zh2uwt=-phuwt/2.0-sqrt((phuwt*phuwt/4.0)-qhuwt);
-        t2h1uwt=(zh1uwt-z)/vz;
-        t2h2uwt=(zh2uwt-z)/vz;
-        if(t2h1uwt<1e-15)
-        t2h1uwt=t1+2.0;
-        if(t2h2uwt<1e-15)
-        t2h2uwt=t1+2.0;
-        if(t2h2uwt<t2h1uwt)
-        t2h1uwt=t2h2uwt;
-        yintersechuwt=m*(vz*t2h1uwt+z)+n;
-        if (yintersechuwt<0){
-        t2h1uwt=t1+2.0;}
-        }
-  }
+    { 
+      TIME_ELLIPSE_1(vy, vz, y, z, a2hu, b2hu, z0hu, t1, a2huwt, b2huwt, &t2h1u, &t2h1uwt);
+    }
 
 
   if((louthu!=0 && linhu==0)|| (louthu==0 && linhu!=0))
-  {
-    m=vy/vz;
-    n=-m*z+y;
-    phu=(2.0*m*n*pahu+1.0)/(pahu*m*m);	
-    qhu=n*n/(m*m)-pbhu/(pahu*m*m);
-    if(qhu>0 && qhu>(phu*phu/4)){
-    t2h1u=t1+2.0;
-    }else{
-    if(vy==0)
     {
-      if(y>0){
-      t2h1u=(pbhu-pahu*y*y-z)/vz;
-      }else{
-      t2h1u=t1+2.0;
-      }
-    }else{
-      zh1u=-phu/2.0+sqrt(phu*phu/4.0-qhu);
-      zh2u=-phu/2.0-sqrt(phu*phu/4.0-qhu);
-      t2h1u=(zh1u-z)/vz;
-      t2h2u=(zh2u-z)/vz;
-      if(t2h1u<1e-15)
-      t2h1u=t1+2.0;
-      if(t2h2u<1e-15)
-      t2h2u=t1+2.0;
-      if(t2h2u<t2h1u)
-      t2h1u=t2h2u;
+      TIME_PARABEL_1(vy, vz, y, z, pahu, pbhu, t1, pahuwt, pbhuwt, &t2h1u, &t2h1uwt);
     }
-    yintersechu=m*(vz*t2h1u+z)+n;
-    if (yintersechu<0){
-    t2h1u=t1+2.0;}
-  }
-    phuwt=(2.0*m*n*pahuwt+1.0)/(pahuwt*m*m);						
-    qhuwt=n*n/(m*m)-pbhuwt/(pahuwt*m*m);
-    if(qhuwt>0 && qhuwt>(phuwt*phuwt/4)){
-    t2h1uwt=t1+2.0;
-    }else{
-    if(vy==0)
-    {
-      if(y>0){
-      t2h1uwt=(pbhuwt-pahuwt*y*y-z)/vz;
-      }else{
-      t2h1uwt=t1+2.0;
-      }
-    }else{
-      zh1uwt=-phuwt/2.0+sqrt(phuwt*phuwt/4.0-qhuwt);
-      zh2uwt=-phuwt/2.0-sqrt(phuwt*phuwt/4.0-qhuwt);
-      t2h1uwt=(zh1uwt-z)/vz;
-      t2h2uwt=(zh2uwt-z)/vz;
-      if(t2h1uwt<1e-15)
-      t2h1uwt=t1+2.0;
-      if(t2h2uwt<1e-15)
-      t2h2uwt=t1+2.0;
-      if(t2h2uwt<t2h1uwt)
-      t2h1uwt=t2h2uwt;
-    }
-    yintersechuwt=m*(vz*t2h1uwt+z)+n;
-    if (yintersechuwt<0){
-    t2h1uwt=t1+2.0;}
-  }
-  }
 
-  if(louthd==0 && linhd==0)							/* comments for the down wall are same like for the right wall (only the relation between left and right become relation between up and down)*/	
-  {
-  m=(-h2d+h1d)/l;
-  t2h1d=(m*z+(-h1d)-y)/(vy-m*vz);
-  t2h1dwt=(m*z+(-h1dwt)-y)/(vy-m*vz);
-  if(t2h1d<1e-15)
-  t2h1d=t1+2.0;
-  if(t2h1dwt<1e-15)
-  t2h1dwt=t1+2.0;
-  }
+
+  if(louthd==0 && linhd==0)	
+    {
+      TIME_LINEAR(t1, h1d, h2d, l, y, z, vy, vz, h1dwt, &t2h1d, &t2h1dwt); 
+    }
 
   if(louthd!=0 && linhd!=0)
-  { 
-    m=vy/vz;
-    n=-m*z+y;
-    phd=2.0*(a2hd*m*n+b2hd*z0hd)/(a2hd*m*m+b2hd);
-    qhd=(a2hd*n*n+b2hd*z0hd*z0hd-a2hd*b2hd)/(a2hd*m*m+b2hd);
-    if((phd*phd/4.0)-qhd<0){
-    t2h1d=t1+2.0;
-    }else{
-        zh1d=-phd/2.0+sqrt((phd*phd/4.0)-qhd);
-        zh2d=-phd/2.0-sqrt((phd*phd/4.0)-qhd);
-        t2h1d=(zh1d-z)/vz;
-        t2h2d=(zh2d-z)/vz;
-        if(t2h1d<1e-15)
-        t2h1d=t1+2.0;
-        if(t2h2d<1e-15)
-        t2h2d=t1+2.0;
-        if(t2h2d<t2h1d)
-        t2h1d=t2h2d;
-        yintersechd=m*(vz*t2h1d+z)+n;
-        if (yintersechd>0){
-        t2h1d=t1+2.0;}
-        }
-    phdwt=2.0*(a2hdwt*m*n+b2hdwt*z0hd)/(a2hdwt*m*m+b2hdwt);
-    qhdwt=(a2hdwt*n*n+b2hdwt*z0hd*z0hd-a2hdwt*b2hdwt)/(a2hdwt*m*m+b2hdwt);
-    if((phdwt*phdwt/4.0)-qhdwt<0){
-    t2h1dwt=t1+2.0;
-    }else{
-        zh1dwt=-phdwt/2.0+sqrt((phdwt*phdwt/4.0)-qhdwt);
-        zh2dwt=-phdwt/2.0-sqrt((phdwt*phdwt/4.0)-qhdwt);
-        t2h1dwt=(zh1dwt-z)/vz;
-        t2h2dwt=(zh2dwt-z)/vz;
-        if(t2h1dwt<1e-15)
-        t2h1dwt=t1+2.0;
-        if(t2h2dwt<1e-15)
-        t2h2dwt=t1+2.0;
-        if(t2h2dwt<t2h1dwt)
-        t2h1dwt=t2h2dwt;
-        yintersechdwt=m*(vz*t2h1dwt+z)+n;
-        if (yintersechdwt>0){
-        t2h1dwt=t1+2.0;}
-        }
-  }
+    {
+       TIME_ELLIPSE(vy, vz, y, z, a2hd, b2hd, z0hd, t1, a2hdwt, b2hdwt, &t2h1d, &t2h1dwt);
+    }
 
   if((louthd!=0 && linhd==0)|| (louthd==0 && linhd!=0))
-  {
-    m=vy/vz;
-    n=-m*z+y;
-    phd=(2.0*m*n*pahd+1.0)/(pahd*m*m);
-    qhd=n*n/(m*m)-pbhd/(pahd*m*m);
-    if(qhd>0 && qhd>(phd*phd/4)){
-    t2h1d=t1+2.0;
-    }else{
-    if(vy==0)
     {
-      if(y<0){
-      t2h1d=(pbhd-pahd*y*y-z)/vz;
-      }else{
-      t2h1d=t1+2.0;
-      }
-    }else{
-      zh1d=-phd/2.0+sqrt(phd*phd/4.0-qhd);
-      zh2d=-phd/2.0-sqrt(phd*phd/4.0-qhd);
-      t2h1d=(zh1d-z)/vz;
-      t2h2d=(zh2d-z)/vz;
-      if(t2h1d<1e-15)
-      t2h1d=t1+2.0;
-      if(t2h2d<1e-15)
-      t2h2d=t1+2.0;
-      if(t2h2d<t2h1d)
-      t2h1d=t2h2d;
+      TIME_PARABEL(vy, vz, y, z, pahd, pbhd, t1, pahdwt, pbhdwt, &t2h1d, &t2h1dwt);
     }
-    yintersechd=m*(vz*t2h1d+z)+n;
-    if (yintersechd>0){
-    t2h1d=t1+2.0;}
-  }
-    phdwt=(2.0*m*n*pahdwt+1.0)/(pahdwt*m*m);
-    qhdwt=n*n/(m*m)-pbhdwt/(pahdwt*m*m);
-    if(qhdwt>0 && qhdwt>(phdwt*phdwt/4)){
-    t2h1dwt=t1+2.0;
-    }else{
-    if(vy==0)
-    {
-      if(y<0){
-      t2h1dwt=(pbhdwt-pahdwt*y*y-z)/vz;
-      }else{
-      t2h1dwt=t1+2.0;
-      }
-    }else{
-      zh1dwt=-phdwt/2.0+sqrt(phdwt*phdwt/4.0-qhdwt);
-      zh2dwt=-phdwt/2.0-sqrt(phdwt*phdwt/4.0-qhdwt);
-      t2h1dwt=(zh1dwt-z)/vz;
-      t2h2dwt=(zh2dwt-z)/vz;
-      if(t2h1dwt<1e-15)
-      t2h1dwt=t1+2.0;
-      if(t2h2dwt<1e-15)
-      t2h2dwt=t1+2.0;
-      if(t2h2dwt<t2h1dwt)
-      t2h1dwt=t2h2dwt;
-    }
-    yintersechdwt=m*(vz*t2h1dwt+z)+n;
-    if (yintersechdwt>0){
-    t2h1dwt=t1+2.0;}
-  }
-  }
+
+
 
 													/* TEST OF THE INNER INTERSECTION - TIMES */
 													/* possible interactions outside the guide have to be eliminated*/
 
 if(t2w1r<t1+2.0){											/* test of RIGHT INNER wall interaction time*/
-if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1r+z)-h1d;								/* calculation of the lower y-limit given by a linear bottom wall and the interaction time*/
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhd*sqrt(1-((z0hd+(vz*t2w1r+z))*(z0hd+(vz*t2w1r+z)))/a2hd);				/* calculation of the lower y-limit given by a elliptic bottom wall and the interaction time*/
-      }else{
-      ylimitd=-sqrt(((vz*t2w1r+z)-pbhd)/-pahd);							/* calculation of the lower y-limit given by a parabolic bottom wall and the interaction time*/
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1r+z)+h1u;								/* calculation of the upper y-limit given by a linear top wall and the interaction time*/
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhu*sqrt(1-((z0hu+(vz*t2w1r+z))*(z0hu+(vz*t2w1r+z)))/a2hu);				/* calculation of the upper y-limit given by a elliptic top wall and the interaction time*/
-     }else{
-     ylimitu=sqrt(((vz*t2w1r+z)-pbhu)/-pahu);							/* calculation of the upper y-limit given by a parabolic top wall and the interaction time*/
-    }
-    }
-  ytest=vy*t2w1r+y;											/* calculation of the y coordinate of the neutron at the interaction time */
-  if (ytest<ylimitd || ytest>ylimitu){									/* if the neutron is below or above the outer bottom or top wall of the guide NO interaction is possible!*/
+  TEST_UP_DOWN(t2w1r,vz, z,vy,y, l,
+               linhd, louthd, linhu, louthu,
+               h2d, h1d,h2u, h1u,
+               bhd, z0hd, a2hd,bhu, z0hu, a2hu,
+               pbhd, pahd, pbhu, pahu,
+               &ylimitd, &ylimitu, &ytest);
+  if (ytest<ylimitd || ytest>ylimitu){	
   t2w1r=t1+2.0;
   }
   }
 
-
 if(t2w1l<t1+2.0){											/* test of LEFT INNER wall interaction time - analog to right wall*/
-  if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1l+z)-h1d;
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhd*sqrt(1-((z0hd+(vz*t2w1l+z))*(z0hd+(vz*t2w1l+z)))/a2hd);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1l+z)-pbhd)/-pahd);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1l+z)+h1u;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhu*sqrt(1-((z0hu+(vz*t2w1l+z))*(z0hu+(vz*t2w1l+z)))/a2hu);
-     }else{
-     ylimitu=sqrt(((vz*t2w1l+z)-pbhu)/-pahu);
-    }
-    }
-  ytest=vy*t2w1l+y;
+  TEST_UP_DOWN(t2w1l,vz, z,vy,y,l,
+               linhd, louthd, linhu, louthu,
+               h2d, h1d,h2u, h1u,
+               bhd, z0hd, a2hd,bhu, z0hu, a2hu,
+               pbhd, pahd, pbhu, pahu,
+               &ylimitd, &ylimitu, &ytest);
   if (ytest<ylimitd || ytest>ylimitu){
   t2w1l=t1+2.0;
   }
   }
 
+
 if(t2h1u<t1+2.0){											/* test of TOP INNER wall interaction time - analog to right wall*/
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1u+z)-w1r;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwr*sqrt(1-((z0wr+(vz*t2h1u+z))*(z0wr+(vz*t2h1u+z)))/a2wr);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1u+z)-pbwr)/-pawr);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1u+z)+w1l;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwl*sqrt(1-((z0wl+(vz*t2h1u+z))*(z0wl+(vz*t2h1u+z)))/a2wl);
-      }else{
-      xlimitl=sqrt(((vz*t2h1u+z)-pbwl)/-pawl);
-      }
-   }
-  xtest=vx*t2h1u+x;
+  TEST_LEFT_RIGHT(t2h1u,vz,z,vx,x, l,
+                 linwr,loutwr,linwl,loutwl,
+                 w2r, w1r,w2l,w1l,
+                 bwr, z0wr,a2wr,bwl, z0wl, a2wl,
+                 pbwr, pawr, pbwl, pawl,
+                 &xlimitr, &xlimitl, &xtest);
   if (xtest<xlimitr || xtest>xlimitl){
   t2h1u=t1+2.0;
   }
@@ -1591,29 +1230,12 @@ if(t2h1u<t1+2.0){											/* test of TOP INNER wall interaction time - analog 
 
 
 if(t2h1d<t1+2.0){											/* test of BOTTOM INNER wall interaction time - analog to right wall*/
-if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1d+z)-w1r;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwr*sqrt(1-((z0wr+(vz*t2h1d+z))*(z0wr+(vz*t2h1d+z)))/a2wr);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1d+z)-pbwr)/-pawr);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1d+z)+w1l;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwl*sqrt(1-((z0wl+(vz*t2h1d+z))*(z0wl+(vz*t2h1d+z)))/a2wl);
-      }else{
-      xlimitl=sqrt(((vz*t2h1d+z)-pbwl)/-pawl);
-      }
-   }
-  xtest=vx*t2h1d+x;
+  TEST_LEFT_RIGHT(t2h1d,vz,z,vx,x,l,
+                 linwr,loutwr,linwl,loutwl,
+                 w2r, w1r,w2l,w1l,
+                 bwr, z0wr,a2wr,bwl, z0wl, a2wl,
+                 pbwr, pawr, pbwl, pawl, 
+                 &xlimitr, &xlimitl, &xtest);
   if (xtest<xlimitr || xtest>xlimitl)
   {
   t2h1d=t1+2.0;
@@ -1624,29 +1246,12 @@ if(linwr==0 && loutwr==0)
 													/* TEST OF THE OUTER INTERSECTION - TIMES */
 
 if(t2w1rwt<t1+2.0){											/* test of RIGHT OUTER wall interaction time - analog inner wall*/
-if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1rwt+z)-h1dwt;
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhdwt*sqrt(1-((z0hd+(vz*t2w1rwt+z))*(z0hd+(vz*t2w1rwt+z)))/a2hdwt);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1rwt+z)-pbhdwt)/-pahdwt);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1rwt+z)+h1uwt;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhuwt*sqrt(1-((z0hu+(vz*t2w1rwt+z))*(z0hu+(vz*t2w1rwt+z)))/a2huwt);
-     }else{
-     ylimitu=sqrt(((vz*t2w1rwt+z)-pbhuwt)/-pahuwt);
-    }
-    }
-  ytest=vy*t2w1rwt+y;
+  TEST_UP_DOWN(t2w1rwt,vz, z,vy,y, l,
+               linhd, louthd, linhu, louthu,
+               h2dwt, h1dwt,h2uwt, h1uwt,
+               bhdwt, z0hd, a2hdwt,bhuwt, z0hu, a2huwt,
+               pbhdwt, pahdwt, pbhuwt, pahuwt,
+               &ylimitd, &ylimitu, &ytest);
   if (ytest<ylimitd || ytest>ylimitu){
   t2w1rwt=t1+2.0;
   }
@@ -1654,58 +1259,24 @@ if(linhd==0 && louthd==0)
 
 
 if(t2w1lwt<t1+2.0){											/* test of LEFT OUTER wall interaction time - analog inner wall*/
-if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1lwt+z)-h1dwt;
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhdwt*sqrt(1-((z0hd+(vz*t2w1lwt+z))*(z0hd+(vz*t2w1lwt+z)))/a2hdwt);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1lwt+z)-pbhdwt)/-pahdwt);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1lwt+z)+h1uwt;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhuwt*sqrt(1-((z0hu+(vz*t2w1lwt+z))*(z0hu+(vz*t2w1lwt+z)))/a2huwt);
-     }else{
-     ylimitu=sqrt(((vz*t2w1lwt+z)-pbhuwt)/-pahuwt);
-    }
-    }
-  ytest=vy*t2w1lwt+y;
+  TEST_UP_DOWN(t2w1lwt,vz, z,vy,y,l,
+               linhd, louthd, linhu, louthu,
+               h2dwt, h1dwt,h2uwt, h1uwt,
+               bhdwt, z0hd, a2hdwt,bhuwt, z0hu, a2huwt,
+               pbhdwt, pahdwt, pbhuwt, pahuwt,
+               &ylimitd, &ylimitu, &ytest);
   if (ytest<ylimitd || ytest>ylimitu){
   t2w1lwt=t1+2.0;
   }
   }
 
 if(t2h1uwt<t1+2.0){											/* test of TOP OUTER wall interaction time - analog inner wall*/
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1uwt+z)-w1rwt;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwrwt*sqrt(1-((z0wr+(vz*t2h1uwt+z))*(z0wr+(vz*t2h1uwt+z)))/a2wrwt);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1uwt+z)-pbwrwt)/-pawrwt);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1uwt+z)+w1lwt;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwlwt*sqrt(1-((z0wl+(vz*t2h1uwt+z))*(z0wl+(vz*t2h1uwt+z)))/a2wlwt);
-      }else{
-      xlimitl=sqrt(((vz*t2h1uwt+z)-pbwlwt)/-pawlwt);
-      }
-   }
-  xtest=vx*t2h1uwt+x;
+  TEST_LEFT_RIGHT(t2h1uwt,vz,z,vx,x,l, 
+                 linwr,loutwr,linwl,loutwl,
+                 w2rwt, w1rwt,w2lwt,w1lwt,
+                 bwrwt, z0wr,a2wrwt,bwlwt, z0wl, a2wlwt,
+                 pbwrwt, pawrwt, pbwlwt, pawlwt,
+                 &xlimitr, &xlimitl, &xtest);
   if (xtest<xlimitr || xtest>xlimitl){
   t2h1uwt=t1+2.0;
   }
@@ -1713,999 +1284,151 @@ if(t2h1uwt<t1+2.0){											/* test of TOP OUTER wall interaction time - analo
 
 
 if(t2h1dwt<t1+2.0){											/* test of BOTTOM OUTER wall interaction time - analog inner wall*/
-if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1dwt+z)-w1rwt;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwrwt*sqrt(1-((z0wr+(vz*t2h1dwt+z))*(z0wr+(vz*t2h1dwt+z)))/a2wrwt);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1dwt+z)-pbwrwt)/-pawrwt);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1dwt+z)+w1lwt;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwlwt*sqrt(1-((z0wl+(vz*t2h1dwt+z))*(z0wl+(vz*t2h1dwt+z)))/a2wlwt);
-      }else{
-      xlimitl=sqrt(((vz*t2h1dwt+z)-pbwlwt)/-pawlwt);
-      }
-   }
-  xtest=vx*t2h1dwt+x;
+ TEST_LEFT_RIGHT(t2h1dwt,vz,z,vx,x,l, 
+                 linwr,loutwr,linwl,loutwl,
+                 w2rwt, w1rwt,w2lwt,w1lwt,
+                 bwrwt, z0wr,a2wrwt,bwlwt, z0wl, a2wlwt,
+                 pbwrwt, pawrwt, pbwlwt, pawlwt,
+                 &xlimitr, &xlimitl, &xtest);
   if (xtest<xlimitr || xtest>xlimitl)
   {
   t2h1dwt=t1+2.0;
   }
   }
 
-
-/* printf("t1 = %f \n",t1);
-printf("t2w1r = %f \n",t2w1r);
-printf("t2w1l = %f \n",t2w1l);
-printf("t2h1u = %f \n",t2h1u);
-printf("t2h1d = %f \n",t2h1d);
-*/
-/*
- printf("t1 = %f \n",t1);
-printf("t2w1rwt = %f \n",t2w1rwt);
-printf("t2w1lwt = %f \n",t2w1lwt);
-printf("t2h1uwt = %f \n",t2h1uwt);
-printf("t2h1dwt = %f \n",t2h1dwt);
-*/
-/*
-printf("vx = %f \n",vx);
-printf("x = %f \n",x); */
-
-/*printf("mxr = %f \n", mxr);
-printf("mxl = %f \n", mxl);
-printf("myu = %f \n", myu);
-printf("myd = %f \n", myd);*/
-
 																				/* which wall is hit first? which geometry? */
 
-  if (t1 < t2w1r && t1 < t2w1l && t1 < t2h1u && t1 < t2h1d && t1 < t2w1rwt && t1 < t2w1lwt && t1 < t2h1uwt && t1 < t2h1dwt){					/* neutron pass the guide without interaction*/
+  if (t1 < t2w1r && t1 < t2w1l && t1 < t2h1u && t1 < t2h1d && t1 < t2w1rwt && t1 < t2w1lwt && t1 < t2h1uwt && t1 < t2h1dwt){
   i=1;
   }
 
 													/* neutron interacts with the INNER elliptic right wall and this wall is NOT transparent*/
 
-  if (mxr!=-1 && t2w1r > 0 && t2w1r < t1 && t2w1r<t2w1l && t2w1r < t2h1u && t2w1r < t2h1d && t2w1r < t2w1rwt && t2w1r<t2w1lwt && t2w1r < t2h1uwt && t2w1r < t2h1dwt && ((linwr!=0) && (loutwr!=0) )) {	
-    if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1r+z)-h1d;								/* calculation of the lower y-limit given by a linear INNER bottom wall and the interaction time*/
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhd*sqrt(1-((z0hd+(vz*t2w1r+z))*(z0hd+(vz*t2w1r+z)))/a2hd);				/* calculation of the lower y-limit given by a elliptic INNER bottom wall and the interaction time*/
-      }else{
-      ylimitd=-sqrt(((vz*t2w1r+z)-pbhd)/-pahd);								/* calculation of the lower y-limit given by a parabolic INNER bottom wall and the interaction time*/
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1r+z)+h1u;								/* calculation of the upper y-limit given by a linear INNER top wall and the interaction time*/
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhu*sqrt(1-((z0hu+(vz*t2w1r+z))*(z0hu+(vz*t2w1r+z)))/a2hu);				/* calculation of the upper y-limit given by a elliptic INNER top wall and the interaction time*/
-     }else{
-     ylimitu=sqrt(((vz*t2w1r+z)-pbhu)/-pahu);								/* calculation of the upper y-limit given by a parabolic INNER top wall and the interaction time*/
-    }
-    }
-  ytest=vy*t2w1r+y;											/* calculation of y-coordinate of the neutron at the interaction time*/
-  xlimitr=bwr*sqrt(1-((vz*t2w1r+z)+z0wr)*((vz*t2w1r+z)+z0wr)/a2wr);					/* calculation of right INNER limit given by a elliptic shape of the wall*/
-  xtest=vx*t2w1r+x;											/* calculation of x-coordinate of the neutron at the interaction time*/
-  if (ytest>=ylimitd && ytest<=ylimitu && x>=-xlimitr && mxr > 0){					/* only if the neutron is realy inside the guide (testet by the limits) and the wall is reflecting*/
-  i=2;													/* the neutron will be reflected*/
-  }else{
-  i=18;													/* otherwise it will be absorbed*/
-  }
-  }
-
-													/* neutron interacts with the parabolic right INNER wall - comments are analog to inner elliptic right wall */
-
-  if (mxr!=-1 && t2w1r > 0 && t2w1r < t1 && t2w1r<t2w1l && t2w1r < t2h1u && t2w1r < t2h1d && t2w1r < t2w1rwt && t2w1r<t2w1lwt && t2w1r < t2h1uwt && t2w1r < t2h1dwt && ((loutwr!=0 && linwr==0) || (loutwr==0 && linwr!=0))){
-  if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1r+z)-h1d;
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhd*sqrt(1-((z0hd+(vz*t2w1r+z))*(z0hd+(vz*t2w1r+z)))/a2hd);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1r+z)-pbhd)/-pahd);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1r+z)+h1u;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhu*sqrt(1-((z0hu+(vz*t2w1r+z))*(z0hu+(vz*t2w1r+z)))/a2hu);
-     }else{
-     ylimitu=sqrt(((vz*t2w1r+z)-pbhu)/-pahu);
-    }
-    }
-  ytest=vy*t2w1r+y;
-  xtest=vx*t2w1r+x;
-  xlimitr=-sqrt(pbwr-(vz*t2w1r+z)/pawr);
-  if (ytest>ylimitd && ytest<ylimitu && x>=xlimitr && mxr > 0){
-  i=3;
-  }else{
-  i=18;}
-  }
-
-													/* neutron interacts with the straight right INNER wall - comments are analog to inner elliptic right wall*/
-
-  if (mxr!=-1 && t2w1r > 0 && t2w1r < t1 && t2w1r<t2w1l && t2w1r < t2h1u && t2w1r < t2h1d && t2w1r < t2w1rwt && t2w1r<t2w1lwt && t2w1r < t2h1uwt && t2w1r < t2h1dwt && (loutwr==0 && linwr==0)){
-  if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1r+z)-h1d;
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhd*sqrt(1-((z0hd+(vz*t2w1r+z))*(z0hd+(vz*t2w1r+z)))/a2hd);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1r+z)-pbhd)/-pahd);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1r+z)+h1u;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhu*sqrt(1-((z0hu+(vz*t2w1r+z))*(z0hu+(vz*t2w1r+z)))/a2hu);
-     }else{
-     ylimitu=sqrt(((vz*t2w1r+z)-pbhu)/-pahu);
-    }
-    }
-  ytest=vy*t2w1r+y;
-  xtest=vx*t2w1r+x;
-  xlimitr=-(w2r+w1r)*(vz*t2w1r+z)/l-w1r;
-  if (ytest>=ylimitd && ytest<=ylimitu && x>=xlimitr && mxr>0){
-  i=4;
-  }else{
-  i=18;
-  }
-  }
+  if (t2w1r > 0 && t2w1r < t1 
+     && t2w1r < t2w1l && t2w1r < t2h1u && t2w1r < t2h1d && t2w1r < t2w1rwt && t2w1r < t2w1lwt && t2w1r < t2h1uwt && t2w1r < t2h1dwt) 
+    {	
+     if (mxr == 0) i = 18;
+     else{
+     if (mxr ==-1) i = 14; 
+     else{
+     if ((linwr!=0) && (loutwr!=0))i=2;															/* the neutron will be reflected*/
+     else{
+     if ((loutwr!=0 && linwr==0) || (loutwr==0 && linwr!=0)) i=3;
+     else{
+     if (loutwr==0 && linwr==0) i=4;
+    }}}}}
 
 													/* neutron interacts with the elliptic left INNER wall - comments are analog to inner elliptic right wall*/
 
-  if (mxl!=-1 && t2w1l > 0 && t2w1l < t1 && t2w1l<t2w1r && t2w1l < t2h1u && t2w1l < t2h1d && t2w1l < t2w1lwt && t2w1l<t2w1rwt && t2w1l < t2h1uwt && t2w1l < t2h1dwt && ((linwl!=0) && (loutwl!=0) )){
-  if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1l+z)-h1d;
-    }else{
-      if(linhd!=0 && louthd!=0)
+  if (t2w1l > 0 && t2w1l < t1 
+      && t2w1l < t2w1r  && t2w1l < t2h1u && t2w1l < t2h1d && t2w1l < t2w1rwt && t2w1l < t2w1lwt && t2w1l < t2h1uwt && t2w1l < t2h1dwt)
       {
-      ylimitd=-bhd*sqrt(1-((z0hd+(vz*t2w1l+z))*(z0hd+(vz*t2w1l+z)))/a2hd);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1l+z)-pbhd)/-pahd);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1l+z)+h1u;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhu*sqrt(1-((z0hu+(vz*t2w1l+z))*(z0hu+(vz*t2w1l+z)))/a2hu);
-     }else{
-     ylimitu=sqrt(((vz*t2w1l+z)-pbhu)/-pahu);
-    }
-    }
-  ytest=vy*t2w1l+y;
-  xlimitl=bwl*sqrt(1-((vz*t2w1l+z)+z0wl)*((vz*t2w1l+z)+z0wl)/a2wl);
-  if (ytest>=ylimitd && ytest<=ylimitu && x<=xlimitl && mxl>0){
-  i=5;
-  }else{
-  i=19;
-  }
-  }
-
-													/* neutron interacts with the parabolic left INNER wall - comments are analog to inner elliptic right wall*/
-
-  if (mxl!=-1 && t2w1l > 0 && t2w1l < t1 && t2w1l<t2w1r && t2w1l < t2h1u && t2w1l < t2h1d && t2w1l < t2w1lwt && t2w1l<t2w1rwt && t2w1l < t2h1uwt && t2w1l < t2h1dwt && ((loutwl!=0 && linwl==0) || (loutwl==0 && linwl!=0))){
-  if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1l+z)-h1d;
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhd*sqrt(1-((z0hd+(vz*t2w1l+z))*(z0hd+(vz*t2w1l+z)))/a2hd);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1l+z)-pbhd)/-pahd);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1l+z)+h1u;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhu*sqrt(1-((z0hu+(vz*t2w1l+z))*(z0hu+(vz*t2w1l+z)))/a2hu);
-     }else{
-     ylimitu=sqrt(((vz*t2w1l+z)-pbhu)/-pahu);
-    }
-    }
-  ytest=vy*t2w1l+y;
-  xlimitl=sqrt(pbwl-(vz*t2w1l+z)/pawl);
-  if (ytest>=ylimitd && ytest<=ylimitu && x<=xlimitl && mxl>0){
-  i=6;
-  }else{
-  i=19;
-  }
-  }
-
-														/* neutron interacts with the straight left INNER wall - comments are analog to inner elliptic right wall*/
-
-  if (mxl!=-1 && t2w1l > 0 && t2w1l < t1 && t2w1l<t2w1r && t2w1l < t2h1u && t2w1l < t2h1d && t2w1l < t2w1lwt && t2w1l < t2w1rwt && t2w1l < t2h1uwt && t2w1l < t2h1dwt && (loutwl==0 && linwl==0)){
- if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1l+z)-h1d;
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhd*sqrt(1-((z0hd+(vz*t2w1l+z))*(z0hd+(vz*t2w1l+z)))/a2hd);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1l+z)-pbhd)/-pahd);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1l+z)+h1u;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhu*sqrt(1-((z0hu+(vz*t2w1l+z))*(z0hu+(vz*t2w1l+z)))/a2hu);
-     }else{
-     ylimitu=sqrt(((vz*t2w1l+z)-pbhu)/-pahu);
-    }
-    }
-  ytest=vy*t2w1l+y;
-  xlimitl=(w2l-w1l)*(vz*t2w1l+z)/l+w1l;
-  if (ytest>=ylimitd && ytest<=ylimitu && x<=xlimitl && mxl>0){
-  i=7;
-  }else{
-  i=19;
-  }
-  }
+      if (mxl == 0) i = 19;
+      else{
+      if (mxl == -1) i = 15;
+      else{
+      if ((linwl!=0) && (loutwl!=0) ) i=5;
+      else{
+      if ((loutwl!=0 && linwl==0) || (loutwl==0 && linwl!=0)) i=6;
+      else{ 
+      if (loutwl==0 && linwl==0)  i=7;
+      }}}}}
 
 														/* neutron interacts with the elliptic top INNER wall - comments are analog to inner elliptic right wall*/
 
-  if (myu!=-1 && t2h1u > 0 && t2h1u < t1 && t2h1u < t2w1r && t2h1u < t2w1l && t2h1u < t2h1d && t2h1u < t2h1uwt && t2h1u < t2w1rwt && t2h1u < t2w1lwt && t2h1u < t2h1dwt && (louthu !=0 && linhu!=0)){
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1u+z)-w1r;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwr*sqrt(1-((z0wr+(vz*t2h1u+z))*(z0wr+(vz*t2h1u+z)))/a2wr);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1u+z)-pbwr)/-pawr);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1u+z)+w1l;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwl*sqrt(1-((z0wl+(vz*t2h1u+z))*(z0wl+(vz*t2h1u+z)))/a2wl);
-      }else{
-      xlimitl=sqrt(((vz*t2h1u+z)-pbwl)/-pawl);
-      }
-   }
-  xtest=vx*t2h1u+x;
-  ylimitu=bhu*sqrt(1-((vz*t2h1u+z)+z0hu)*((vz*t2h1u+z)+z0hu)/a2hu);
-  if (xtest>=xlimitr && xtest<=xlimitl && y<=ylimitu && myu>0 ){
-  i=8;
-  }else{
-  i=20;
-  }
-  }
-	
-														/* neutron interacts with the parabolic top INNER wall - comments are analog to inner elliptic right wall*/
+ if (t2h1u > 0 && t2h1u < t1 
+      && t2h1u < t2w1r && t2h1u < t2w1l && t2h1u < t2h1d && t2h1u < t2w1rwt && t2h1u < t2w1lwt && t2h1u < t2h1uwt && t2h1u < t2h1dwt){
+        if (myu == 0) i = 20;
+        else{
+        if (myu == -1) i = 16;
+        else{
+        if (louthu !=0 && linhu!=0) i=8;
+        else{
+        if ((louthu!=0 && linhu==0) || (louthu==0 && linhu!=0)) i=9;
+        else{
+        if (louthu == 0 && linhu == 0) i=10;
+     }}}}}
 
-  if (myu!=-1 && t2h1u > 0 && t2h1u < t1 && t2h1u < t2w1r && t2h1u < t2w1l && t2h1u < t2h1d && t2h1u < t2h1uwt && t2h1u < t2w1rwt && t2h1u < t2w1lwt && t2h1u < t2h1dwt && ((louthu!=0 && linhu==0) || (louthu==0 && linhu!=0))){
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1u+z)-w1r;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwr*sqrt(1-((z0wr+(vz*t2h1u+z))*(z0wr+(vz*t2h1u+z)))/a2wr);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1u+z)-pbwr)/-pawr);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1u+z)+w1l;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwl*sqrt(1-((z0wl+(vz*t2h1u+z))*(z0wl+(vz*t2h1u+z)))/a2wl);
-      }else{
-      xlimitl=sqrt(((vz*t2h1u+z)-pbwl)/-pawl);
-      }
-   }
-  xtest=vx*t2h1u+x;
-  ylimitu=sqrt(pbhu-(vz*t2h1u+z)/pahu);
-  if (xtest>=xlimitr && xtest<=xlimitl && y<=ylimitu && myu>0){
-  i=9;
-  }else{
-  i=20;
-  }
-  }
+		/* neutron interacts with the elliptic down INNER wall - comments are analog to inner elliptic right wall*/
 
+if (t2h1d > 0 && t2h1d < t1 
+      && t2h1d < t2w1r && t2h1d < t2w1l && t2h1d < t2h1u && t2h1d < t2w1rwt && t2h1d < t2w1lwt && t2h1d < t2h1uwt && t2h1d < t2h1dwt){
+      if (myd == 0) i= 21;
+      else{
+      if (myd == -1) i= 17; 
+      else{
+      if (louthd !=0 && linhd!=0) i=11;
+      else{
+      if ((louthd !=0 && linhd==0) || (louthd ==0 && linhd!=0)) i=12;
+      else{
+      if (louthd == 0 && linhd == 0) i=13;
+      }}}}}
 
-															/* neutron interacts with the straight top INNER wall - comments are analog to inner elliptic right wall*/
-
-  if (myu!=-1 && t2h1u > 0 && t2h1u < t1 && t2h1u < t2w1r && t2h1u < t2w1l && t2h1u < t2h1d && t2h1u < t2h1uwt && t2h1u < t2w1rwt && t2h1u < t2w1lwt && t2h1u < t2h1dwt && (louthu == 0 && linhu == 0)){
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1u+z)-w1r;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwr*sqrt(1-((z0wr+(vz*t2h1u+z))*(z0wr+(vz*t2h1u+z)))/a2wr);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1u+z)-pbwr)/-pawr);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1u+z)+w1l;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwl*sqrt(1-((z0wl+(vz*t2h1u+z))*(z0wl+(vz*t2h1u+z)))/a2wl);
-      }else{
-      xlimitl=sqrt(((vz*t2h1u+z)-pbwl)/-pawl);
-      }
-   }
-  xtest=vx*t2h1u+x;
-  ylimitu=(h2u-h1u)*(vz*t2h1u+z)/l+h1u;
-  if (xtest>=xlimitr && xtest<=xlimitl && y<=ylimitu && myu>0 ){
-  i=10;
-  }else{
-  i=20;
-  }
-  }
-
-															/* neutron interacts with the elliptic down INNER wall - comments are analog to inner elliptic right wall*/
-
-  if (myd!=-1 && t2h1d > 0 && t2h1d < t1 && t2h1d < t2w1r && t2h1d < t2w1l && t2h1d < t2h1u  && t2h1d < t2h1dwt && t2h1d < t2w1rwt && t2h1d < t2w1lwt && t2h1d < t2h1uwt  && (louthd !=0 && linhd!=0)){
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1d+z)-w1r;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwr*sqrt(1-((z0wr+(vz*t2h1d+z))*(z0wr+(vz*t2h1d+z)))/a2wr);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1d+z)-pbwr)/-pawr);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1d+z)+w1l;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwl*sqrt(1-((z0wl+(vz*t2h1d+z))*(z0wl+(vz*t2h1d+z)))/a2wl);
-      }else{
-      xlimitl=sqrt(((vz*t2h1d+z)-pbwl)/-pawl);
-      }
-   }
-  xtest=vx*t2h1d+x;
-  ylimitd=-bhd*sqrt(1-((vz*t2h1d+z)+z0hd)*((vz*t2h1d+z)+z0hd)/a2hd);
-  if (xtest>=xlimitr && xtest<=xlimitl && y>=ylimitd && myd>0){
-  i=11;
-  }else{
-  i=21;
-  }
-  }
-
-															/* neutron interacts with the parabolic down INNER wall - comments are analog to inner elliptic right wall*/
-
-  if (myd!=-1 && t2h1d > 0 && t2h1d < t1 && t2h1d < t2w1r && t2h1d < t2w1l && t2h1d < t2h1u  && t2h1d < t2h1dwt && t2h1d < t2w1rwt && t2h1d < t2w1lwt && t2h1d < t2h1uwt  && ((louthd !=0 && linhd==0) || (louthd ==0 && linhd!=0))){
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1d+z)-w1r;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwr*sqrt(1-((z0wr+(vz*t2h1d+z))*(z0wr+(vz*t2h1d+z)))/a2wr);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1d+z)-pbwr)/-pawr);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1d+z)+w1l;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwl*sqrt(1-((z0wl+(vz*t2h1d+z))*(z0wl+(vz*t2h1d+z)))/a2wl);
-      }else{
-      xlimitl=sqrt(((vz*t2h1d+z)-pbwl)/-pawl);
-      }
-   }
-  xtest=vx*t2h1d+x;
-  ylimitd=-sqrt(pbhd-(vz*t2h1d+z)/pahd);
-  if (xtest>=xlimitr && xtest<=xlimitl && y>=ylimitd && myd>0 ){
-  i=12;
-  }else{
-  i=21;
-  }
-  }
-
-															/* neutron interacts with the straight down INNER wall - comments are analog to inner elliptic right wall*/
-
-  if (myd!=-1 && t2h1d > 0 && t2h1d < t1 && t2h1d < t2w1r && t2h1d < t2w1l && t2h1d < t2h1u  && t2h1d < t2h1dwt && t2h1d < t2w1rwt && t2h1d < t2w1lwt && t2h1d < t2h1uwt  && (louthd == 0 && linhd == 0)){
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1d+z)-w1r;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwr*sqrt(1-((z0wr+(vz*t2h1d+z))*(z0wr+(vz*t2h1d+z)))/a2wr);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1d+z)-pbwr)/-pawr);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1d+z)+w1l;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwl*sqrt(1-((z0wl+(vz*t2h1d+z))*(z0wl+(vz*t2h1d+z)))/a2wl);
-      }else{
-      xlimitl=sqrt(((vz*t2h1d+z)-pbwl)/-pawl);
-      }
-   }
-  xtest=vx*t2h1d+x;
-  ylimitd=(-h2d+h1d)*(vz*t2h1d+z)/l-h1d;
-  if (xtest>=xlimitr && xtest<=xlimitl && y>=ylimitd && myd>0 ){
-  i=13;
-  }else{
-  i=21;
-  }
-  }
-
-   /* SAME INTERACTIONS BUT TRANSPERENT INNER WALLS - in these cases no limit check up is needed , because will neutrons will pass unchanged anyway*/
-
-  if (mxr==-1 && t2w1r > 0 && t2w1r < t1 && t2w1r<t2w1l  && t2w1r < t2h1u && t2w1r < t2h1d && t2w1r < t2w1rwt && t2w1r<t2w1lwt  && t2w1r < t2h1uwt && t2w1r < t2h1dwt && ((linwr!=0) && (loutwr!=0) )) {
-  i=14;
-  }
-
-  if (mxr==-1 && t2w1r > 0 && t2w1r < t1 && t2w1r<t2w1l  && t2w1r < t2h1u && t2w1r < t2h1d && t2w1r < t2w1rwt && t2w1r<t2w1lwt  && t2w1r < t2h1uwt && t2w1r < t2h1dwt && ((loutwr!=0 && linwr==0) || (loutwr==0 && linwr!=0))){
-  i=14;
-  }
-
-  if (mxr==-1 && t2w1r > 0 && t2w1r < t1 && t2w1r<t2w1l  && t2w1r < t2h1u && t2w1r < t2h1d && t2w1r < t2w1rwt && t2w1r<t2w1lwt  && t2w1r < t2h1uwt && t2w1r < t2h1dwt && (loutwr==0 && linwr==0)){
-  i=14;
-  }
-
-  if (mxl==-1 && t2w1l > 0 && t2w1l < t1 && ( t2w1l<t2w1r ) && t2w1l < t2h1u && t2w1l < t2h1d && t2w1l < t2w1lwt && t2w1l<t2w1rwt && t2w1l < t2h1uwt && t2w1l < t2h1dwt && ((linwl!=0) && (loutwl!=0) )){
-  i=15;
-  }
-
-  if (mxl==-1 && t2w1l > 0 && t2w1l < t1 && ( t2w1l<t2w1r ) && t2w1l < t2h1u && t2w1l < t2h1d && t2w1l < t2w1lwt && t2w1l<t2w1rwt && t2w1l < t2h1uwt && t2w1l < t2h1dwt &&  ((loutwl!=0 && linwl==0) || (loutwl==0 && linwl!=0))){
-  i=15;
-  }
-
-  if (mxl==-1 && t2w1l > 0 && t2w1l < t1 && ( t2w1l<t2w1r ) && t2w1l < t2h1u && t2w1l < t2h1d && t2w1l < t2w1lwt && t2w1l<t2w1rwt && t2w1l < t2h1uwt && t2w1l < t2h1dwt && (loutwl==0 && linwl==0)){
-  i=15;
-  }
-
-  if (myu==-1 && t2h1u > 0 && t2h1u < t1 && t2h1u < t2w1r && t2h1u < t2w1l && t2h1u < t2h1d  && t2h1u < t2h1uwt && t2h1u < t2w1rwt && t2h1u < t2w1lwt && t2h1u < t2h1dwt  && (louthu !=0 && linhu!=0)){
-  i=16;
-  }
-
-  if (myu==-1 && t2h1u > 0 && t2h1u < t1 && t2h1u < t2w1r && t2h1u < t2w1l && t2h1u < t2h1d  && t2h1u < t2h1uwt && t2h1u < t2w1rwt && t2h1u < t2w1lwt && t2h1u < t2h1dwt  && ((louthu!=0 && linhu==0) || (louthu==0 && linhu!=0))){
-  i=16;
-  }
-
-  if (myu==-1 && t2h1u > 0 && t2h1u < t1 && t2h1u < t2w1r && t2h1u < t2w1l && t2h1u < t2h1d  && t2h1u < t2h1uwt && t2h1u < t2w1rwt && t2h1u < t2w1lwt && t2h1u < t2h1dwt  && (louthu == 0 && linhu == 0)){
-  i=16;
-  }
-
-  if (myd==-1 && t2h1d > 0 && t2h1d < t1 && t2h1d < t2w1r && t2h1d < t2w1l && t2h1d < t2h1u  && t2h1d < t2h1dwt && t2h1d < t2w1rwt && t2h1d < t2w1lwt && t2h1d < t2h1uwt  && (louthd !=0 && linhd!=0)){
-  i=17;
-  }
-
-  if (myd==-1 && t2h1d > 0 && t2h1d < t1 && t2h1d < t2w1r && t2h1d < t2w1l && t2h1d < t2h1u  && t2h1d < t2h1dwt && t2h1d < t2w1rwt && t2h1d < t2w1lwt && t2h1d < t2h1uwt  && ((louthd !=0 && linhd==0) || (louthd ==0 && linhd!=0))){
-  i=17;
-  }
-
-  if (myd==-1 && t2h1d > 0 && t2h1d < t1 && t2h1d < t2w1r && t2h1d < t2w1l && t2h1d < t2h1u  && t2h1d < t2h1dwt && t2h1d < t2w1rwt && t2h1d < t2w1lwt && t2h1d < t2h1uwt  && (louthd == 0 && linhd == 0)){
-  i=17;
-  }
-
+  
    
-												/* EVERTHING AGAIN FOR THE OUTER WALLS */
+						/* EVERTHING AGAIN FOR THE OUTER WALLS */
 
-												/* neutron interacts with the elliptic right OUTER wall - comments are analog to inner elliptic right wall*/
+						/* neutron interacts with the elliptic right OUTER wall - comments are analog to inner elliptic right wall*/
 
-  if (mxrOW!=-1 && t2w1rwt > 0 && t2w1rwt < t1 && t2w1rwt < t2w1r && t2w1rwt <t2w1l && t2w1rwt < t2h1u && t2w1rwt < t2h1d &&  t2w1rwt <t2w1lwt && t2w1rwt < t2h1uwt && t2w1rwt < t2h1dwt && ((linwr!=0) && (loutwr!=0) )){	
-   if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1rwt+z)-h1dwt;
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhdwt*sqrt(1-((z0hd+(vz*t2w1rwt+z))*(z0hd+(vz*t2w1rwt+z)))/a2hdwt);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1rwt+z)-pbhdwt)/-pahdwt);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1rwt+z)+h1uwt;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhuwt*sqrt(1-((z0hu+(vz*t2w1rwt+z))*(z0hu+(vz*t2w1rwt+z)))/a2huwt);
-     }else{
-     ylimitu=sqrt(((vz*t2w1rwt+z)-pbhuwt)/-pahuwt);
-    }
-    }
-  ytest=vy*t2w1rwt+y;
-  xtest=vx*t2w1rwt+x;
-  xlimitrwt=-bwrwt*sqrt(1-((vz*t2w1rwt+z)+z0wr)*((vz*t2w1rwt+z)+z0wr)/a2wrwt);
-  if (ytest>=ylimitd && ytest<=ylimitu && xtest<=xlimitr && mxrOW > 0){
-  i=22;
-  }
-  else{
-  i=34;
-  }
-  }
+  if (t2w1rwt > 0 && t2w1rwt < t1 
+  && t2w1rwt < t2w1r && t2w1rwt < t2w1l && t2w1rwt < t2h1u && t2w1rwt < t2h1d && t2w1rwt <t2w1lwt && t2w1rwt < t2h1uwt && t2w1rwt < t2h1dwt){	
+   if (mxrOW == 0) i =34;
+   else{
+   if (mxrOW == -1) i= 38;
+   else{
+   if (linwr!=0 && loutwr!=0) i= 22;
+   else{
+   if ((loutwr!=0 && linwr==0) || (loutwr==0 && linwr!=0)) i = 23;
+   else{
+   if (loutwr==0 && linwr==0) i= 24;
+  }}}}}
 
-													/* neutron interacts with the parabolic right OUTER wall - comments are analog to inner elliptic right wall*/
+/* neutron interacts with the elliptic left OUTER wall - comments are analog to inner elliptic right wall*/
 
-  if (mxrOW!=-1 && t2w1rwt > 0 && t2w1rwt < t1 && t2w1rwt < t2w1r && t2w1rwt <t2w1l && t2w1rwt < t2h1u && t2w1rwt < t2h1d &&  t2w1rwt <t2w1lwt && t2w1rwt < t2h1uwt && t2w1rwt < t2h1dwt && ((loutwr!=0 && linwr==0) || (loutwr==0 && linwr!=0))){
-  if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1rwt+z)-h1dwt;
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhdwt*sqrt(1-((z0hd+(vz*t2w1rwt+z))*(z0hd+(vz*t2w1rwt+z)))/a2hdwt);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1rwt+z)-pbhdwt)/-pahdwt);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1rwt+z)+h1uwt;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhuwt*sqrt(1-((z0hu+(vz*t2w1rwt+z))*(z0hu+(vz*t2w1rwt+z)))/a2huwt);
-     }else{
-     ylimitu=sqrt(((vz*t2w1rwt+z)-pbhuwt)/-pahuwt);
-    }
-    }
-  ytest=vy*t2w1rwt+y;
-  xtest=vx*t2w1rwt+x;
-  xlimitr=-sqrt((pbwrwt-(vz*t2w1rwt+z))/pawrwt);
-  if (ytest>ylimitd && ytest<ylimitu && xtest<=xlimitr && mxrOW > 0){
-  i=23; 
-  }else{
-  i=34;}
-  }
+  if (t2w1lwt > 0 && t2w1lwt < t1 
+  && t2w1lwt < t2w1r && t2w1lwt < t2w1l && t2w1lwt < t2h1u && t2w1lwt < t2h1d && t2w1lwt <t2w1rwt && t2w1lwt < t2h1uwt && t2w1lwt < t2h1dwt){
+    if (mxlOW == 0) i = 35;
+    else{
+    if (mxlOW == -1) i = 39;
+    else{
+    if (linwl!=0 && loutwl!=0) i=25;
+    else{
+    if ((loutwl!=0 && linwl==0) || (loutwl==0 && linwl!=0)) i= 26;
+    else{
+    if (loutwl==0 && linwl==0) i=27;
+  }}}}}
 
-													/* neutron interacts with the straight right OUTER wall - comments are analog to inner elliptic right wall */
+/* neutron interacts with the elliptic top OUTER wall - comments are analog to inner elliptic right wall*/
 
-  if (mxrOW!=-1 && t2w1rwt > 0 && t2w1rwt < t1 && t2w1rwt < t2w1r && t2w1rwt <t2w1l && t2w1rwt < t2h1u && t2w1rwt < t2h1d &&  t2w1rwt <t2w1lwt && t2w1rwt < t2h1uwt && t2w1rwt < t2h1dwt && (loutwr==0 && linwr==0)){
-  if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1rwt+z)-h1dwt;
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhdwt*sqrt(1-((z0hd+(vz*t2w1rwt+z))*(z0hd+(vz*t2w1rwt+z)))/a2hdwt);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1rwt+z)-pbhdwt)/-pahdwt);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1rwt+z)+h1uwt;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhuwt*sqrt(1-((z0hu+(vz*t2w1rwt+z))*(z0hu+(vz*t2w1rwt+z)))/a2huwt);
-     }else{
-     ylimitu=sqrt(((vz*t2w1rwt+z)-pbhuwt)/-pahuwt);
-    }
-    }
-  ytest=vy*t2w1rwt+y; 
-  xtest=vx*t2w1rwt+x;
-  xlimitr=-(-w2r+w1r)*(vz*t2w1rwt+z)/l-w1rwt;
-  if(ytest>=ylimitd && ytest<=ylimitu && xtest<=xlimitr && mxrOW>0){
-  i=24;
-  }else{
-  i=34;
-  }
-  }
+   if (t2h1uwt > 0 && t2h1uwt < t1 
+  && t2h1uwt < t2w1r && t2h1uwt < t2w1l && t2h1uwt < t2h1u && t2h1uwt < t2h1d && t2h1uwt < t2w1rwt && t2h1uwt < t2w1lwt && t2h1uwt < t2h1dwt){
+   if (myuOW == 0) i = 36;
+   else{
+   if (myuOW == -1) i = 40;
+   else{
+   if (louthu !=0 && linhu!=0) i=28;
+   else{
+   if ((louthu!=0 && linhu==0) || (louthu==0 && linhu!=0)) i = 29;
+   else{
+   if (louthu == 0 && linhu == 0) i =30;
+  }}}}}
 
-													/* neutron interacts with the elliptic left OUTER wall - comments are analog to inner elliptic right wall*/
-
-  if (mxlOW!=-1 && t2w1lwt > 0 && t2w1lwt < t1 && t2w1lwt < t2w1r && t2w1lwt <t2w1l && t2w1lwt < t2h1u && t2w1lwt < t2h1d &&  t2w1lwt <t2w1rwt && t2w1lwt < t2h1uwt && t2w1lwt < t2h1dwt && ((linwl!=0) && (loutwl!=0) )){
-  if(linhd==0 && louthd==0)
-   if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1lwt+z)-h1dwt;
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhdwt*sqrt(1-((z0hd+(vz*t2w1lwt+z))*(z0hd+(vz*t2w1lwt+z)))/a2hdwt);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1lwt+z)-pbhdwt)/-pahdwt);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1lwt+z)+h1uwt;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhuwt*sqrt(1-((z0hu+(vz*t2w1lwt+z))*(z0hu+(vz*t2w1lwt+z)))/a2huwt);
-     }else{
-     ylimitu=sqrt(((vz*t2w1lwt+z)-pbhuwt)/-pahuwt);
-    }
-    }
-  ytest=vy*t2w1lwt+y;
-  xtest=vx*t2w1lwt+x;
-  xlimitlwt=-bwlwt*sqrt(1-((vz*t2w1lwt+z)+z0wl)*((vz*t2w1lwt+z)+z0wl)/a2wlwt);
-  if (ytest>=ylimitd && ytest<=ylimitu && xtest>=xlimitl && mxlOW>0){
-  i=25;
-  }else{
-  i=35;
-  }
-  }
-
-													/* neutron interacts with the parabolic left OUTER wall - comments are analog to inner elliptic right wall */
-
-  if (mxlOW!=-1 && t2w1lwt > 0 && t2w1lwt < t1 && t2w1lwt < t2w1r && t2w1lwt <t2w1l && t2w1lwt < t2h1u && t2w1lwt < t2h1d &&  t2w1lwt <t2w1rwt && t2w1lwt < t2h1uwt && t2w1lwt < t2h1dwt && ((loutwl!=0 && linwl==0) || (loutwl==0 && linwl!=0))){
-  if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1lwt+z)-h1dwt;
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhdwt*sqrt(1-((z0hd+(vz*t2w1lwt+z))*(z0hd+(vz*t2w1lwt+z)))/a2hdwt);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1lwt+z)-pbhdwt)/-pahdwt);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1lwt+z)+h1uwt;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhuwt*sqrt(1-((z0hu+(vz*t2w1lwt+z))*(z0hu+(vz*t2w1lwt+z)))/a2huwt);
-     }else{
-     ylimitu=sqrt(((vz*t2w1lwt+z)-pbhuwt)/-pahuwt);
-    }
-    }
-  ytest=vy*t2w1lwt+y;
-  xtest=vx*t2w1lwt+x;
-  xlimitl=-sqrt((pbwlwt-(vz*t2w1lwt+z))/pawlwt);
-  if (ytest>=ylimitd && ytest<=ylimitu && xtest>=xlimitl && mxlOW>0){
-  i=26;
-  }else{
-  i=35;
-  }
-  }
-
-														/* neutron interacts with the straight left OUTER wall - comments are analog to inner elliptic right wall*/
-
-  if (mxlOW!=-1 && t2w1lwt > 0 && t2w1lwt < t1 && t2w1lwt < t2w1r && t2w1lwt <t2w1l && t2w1lwt < t2h1u && t2w1lwt < t2h1d &&  t2w1lwt <t2w1rwt && t2w1lwt < t2h1uwt && t2w1lwt < t2h1dwt && (loutwl==0 && linwl==0)){
-  if(linhd==0 && louthd==0)
-   {
-      ylimitd=(-h2d+h1d)/l*(vz*t2w1lwt+z)-h1dwt;
-    }else{
-      if(linhd!=0 && louthd!=0)
-      {
-      ylimitd=-bhdwt*sqrt(1-((z0hd+(vz*t2w1lwt+z))*(z0hd+(vz*t2w1lwt+z)))/a2hdwt);
-      }else{
-      ylimitd=-sqrt(((vz*t2w1lwt+z)-pbhdwt)/-pahdwt);
-      }
-   }
-   if(linhu==0 && louthu==0)
-    {
-     ylimitu=(h2u-h1u)/l*(vz*t2w1lwt+z)+h1uwt;
-    }else{
-     if(linhu!=0 && louthu!=0)
-     {
-     ylimitu=bhuwt*sqrt(1-((z0hu+(vz*t2w1lwt+z))*(z0hu+(vz*t2w1lwt+z)))/a2huwt);
-     }else{
-     ylimitu=sqrt(((vz*t2w1lwt+z)-pbhuwt)/-pahuwt);
-    }
-    }
-  ytest=vy*t2w1lwt+y; 
-  xtest=vx*t2w1lwt+x;
-  xlimitl=(w2l-w1l)*(vz*t2w1lwt+z)/l+w1lwt;
-  if (ytest>=ylimitd && ytest<=ylimitu && xtest>=xlimitl && mxlOW>0){
-  i=27;
-  }else{
-  i=35;
-  }
-  }
-
-															/* neutron interacts with the elliptic top OUTER wall - comments are analog to inner elliptic right wall*/
-
-  if (myuOW!=-1 && t2h1uwt > 0 && t2h1uwt < t1 && t2h1uwt < t2w1r && t2h1uwt < t2w1l && t2h1uwt < t2h1d && t2h1uwt < t2h1u && t2h1uwt < t2w1rwt && t2h1uwt < t2w1lwt && t2h1uwt < t2h1dwt && (louthu !=0 && linhu!=0)){
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1uwt+z)-w1rwt;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwrwt*sqrt(1-((z0wr+(vz*t2h1uwt+z))*(z0wr+(vz*t2h1uwt+z)))/a2wrwt);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1uwt+z)-pbwrwt)/-pawrwt);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1uwt+z)+w1lwt;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwlwt*sqrt(1-((z0wl+(vz*t2h1uwt+z))*(z0wl+(vz*t2h1uwt+z)))/a2wlwt);
-      }else{
-      xlimitl=sqrt(((vz*t2h1uwt+z)-pbwlwt)/-pawlwt);
-      }
-   }
-  xtest=vx*t2h1uwt+x;
-  ytest=vy*t2w1lwt+y;
-  ylimitu=bhuwt*sqrt(1-((vz*t2h1uwt+z)+z0hu)*((vz*t2h1uwt+z)+z0hu)/a2huwt);
-  if (xtest>=xlimitr && xtest<=xlimitl && ytest>=ylimitu && myuOW>0 ){
-  i=28;
-  }else{
-  i=36;
-  }
-  }
-	
-															/* neutron interacts with the parabolic top OUTER wall - comments are analog to inner elliptic right wall */
-
-  if (myuOW!=-1 && t2h1uwt > 0 && t2h1uwt < t1 && t2h1uwt < t2w1r && t2h1uwt < t2w1l && t2h1uwt < t2h1d && t2h1uwt < t2h1u && t2h1uwt < t2w1rwt && t2h1uwt < t2w1lwt && t2h1uwt < t2h1dwt && ((louthu!=0 && linhu==0) || (louthu==0 && linhu!=0))){
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1uwt+z)-w1rwt;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwrwt*sqrt(1-((z0wr+(vz*t2h1uwt+z))*(z0wr+(vz*t2h1uwt+z)))/a2wrwt);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1uwt+z)-pbwrwt)/-pawrwt);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1uwt+z)+w1lwt;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwlwt*sqrt(1-((z0wl+(vz*t2h1uwt+z))*(z0wl+(vz*t2h1uwt+z)))/a2wlwt);
-      }else{
-      xlimitl=sqrt(((vz*t2h1uwt+z)-pbwlwt)/-pawlwt);
-      }
-   }
-  xtest=vx*t2h1uwt+x;
-  ytest=vy*t2w1lwt+y;
-  ylimitu=sqrt((pbhuwt-(vz*t2h1uwt+z))/pahuwt);
-  if (xtest>=xlimitr && xtest<=xlimitl && ytest>=ylimitu && myuOW>0){
-  i=29;
-  }else{
-  i=36;
-  }
-  }
-
-
-															/* neutron interacts with the straight top OUTER wall - comments are analog to inner elliptic right wall*/
-
-  if (myuOW!=-1 && t2h1uwt > 0 && t2h1uwt < t1 && t2h1uwt < t2w1r && t2h1uwt < t2w1l && t2h1uwt < t2h1d && t2h1uwt < t2h1u && t2h1uwt < t2w1rwt && t2h1uwt < t2w1lwt && t2h1uwt < t2h1dwt && (louthu == 0 && linhu == 0)){
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1uwt+z)-w1rwt;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwrwt*sqrt(1-((z0wr+(vz*t2h1uwt+z))*(z0wr+(vz*t2h1uwt+z)))/a2wrwt);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1uwt+z)-pbwrwt)/-pawrwt);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1uwt+z)+w1lwt;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwlwt*sqrt(1-((z0wl+(vz*t2h1uwt+z))*(z0wl+(vz*t2h1uwt+z)))/a2wlwt);
-      }else{
-      xlimitl=sqrt(((vz*t2h1uwt+z)-pbwlwt)/-pawlwt);
-      }
-   }
-  xtest=vx*t2h1uwt+x;
-  ytest=vy*t2w1lwt+y;
-  ylimitu=(h2u-h1u)*(vz*t2h1uwt+z)/l+h1uwt;
-  if (xtest>=xlimitr && xtest<=xlimitl && ytest>=ylimitu && myuOW>0 ){
-  i=30;
-  }else{
-  i=36;
-  }
-  }
 
 															/* neutron interacts with the elliptic down OUTER wall - comments are analog to inner elliptic right wall*/
 
-  if (mydOW!=-1 && t2h1dwt > 0 && t2h1dwt < t1 && t2h1dwt < t2w1r && t2h1dwt < t2w1l && t2h1dwt < t2h1u  && t2h1dwt < t2h1d && t2h1dwt < t2w1rwt && t2h1dwt < t2w1lwt && t2h1dwt < t2h1uwt  && (louthd !=0 && linhd!=0)){
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1dwt+z)-w1rwt;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwrwt*sqrt(1-((z0wr+(vz*t2h1dwt+z))*(z0wr+(vz*t2h1dwt+z)))/a2wrwt);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1dwt+z)-pbwrwt)/-pawrwt);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1dwt+z)+w1lwt;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwlwt*sqrt(1-((z0wl+(vz*t2h1dwt+z))*(z0wl+(vz*t2h1dwt+z)))/a2wlwt);
-      }else{
-      xlimitl=sqrt(((vz*t2h1dwt+z)-pbwlwt)/-pawlwt);
-      }
-   }
-  xtest=vx*t2h1dwt+x;
-  ytest=vy*t2w1lwt+y;
-  ylimitd=-bhdwt*sqrt(1-((vz*t2h1dwt+z)+z0hd)*((vz*t2h1dwt+z)+z0hd)/a2hdwt);
-  if (xtest>=xlimitr && xtest<=xlimitl && ytest<=ylimitd && mydOW>0){
-  i=31;
-  }else{
-  i=37;
-  }
-  }
+  if (t2h1dwt > 0 && t2h1dwt < t1 
+  && t2h1dwt < t2w1r && t2h1dwt < t2w1l && t2h1dwt < t2h1u && t2h1dwt < t2h1d && t2h1dwt < t2w1rwt && t2h1dwt < t2w1lwt && t2h1dwt < t2h1uwt){
+   if ( mydOW == 0 ) i=37;
+   else{
+   if ( mydOW == -1) i=41;
+   else{
+   if (louthd !=0 && linhd!=0)  i=31;
+   else{
+   if ((louthd !=0 && linhd==0) || (louthd ==0 && linhd!=0)) i=32;
+   else{
+   if (louthd == 0 && linhd == 0) i =33;
+  }}}}}
 
-															/* neutron interacts with the parabolic down OUTER wall - comments are analog to inner elliptic right wall */
-
-  if (mydOW!=-1 && t2h1dwt > 0 && t2h1dwt < t1 && t2h1dwt < t2w1r && t2h1dwt < t2w1l && t2h1dwt < t2h1u  && t2h1dwt < t2h1d && t2h1dwt < t2w1rwt && t2h1dwt < t2w1lwt && t2h1dwt < t2h1uwt  && ((louthd !=0 && linhd==0) || (louthd ==0 && linhd!=0))){
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1dwt+z)-w1rwt;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwrwt*sqrt(1-((z0wr+(vz*t2h1dwt+z))*(z0wr+(vz*t2h1dwt+z)))/a2wrwt);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1dwt+z)-pbwrwt)/-pawrwt);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-     xlimitl=(w2l-w1l)/l*(vz*t2h1dwt+z)+w1lwt;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwlwt*sqrt(1-((z0wl+(vz*t2h1dwt+z))*(z0wl+(vz*t2h1dwt+z)))/a2wlwt);
-      }else{
-      xlimitl=sqrt(((vz*t2h1dwt+z)-pbwlwt)/-pawlwt);
-      }
-   }
-  xtest=vx*t2h1dwt+x;
-  ytest=vy*t2w1lwt+y;
-  ylimitd=-sqrt((pbhdwt-(vz*t2h1dwt+z))/pahdwt);
-  if (xtest>=xlimitr && xtest<=xlimitl && ytest<=ylimitd && mydOW>0 ){
-  i=32;
-  }else{
-  i=37;
-  }
-  }
-
-															/* neutron interacts with the straight down OUTER wall - comments are analog to inner elliptic right wall*/
-
-  if (mydOW!=-1 && t2h1dwt > 0 && t2h1dwt < t1 && t2h1dwt < t2w1r && t2h1dwt < t2w1l && t2h1dwt < t2h1u  && t2h1dwt < t2h1d && t2h1dwt < t2w1rwt && t2h1dwt < t2w1lwt && t2h1dwt < t2h1uwt  && (louthd == 0 && linhd == 0)){
-  if(linwr==0 && loutwr==0)
-  {
-    xlimitr=(-w2r+w1r)/l*(vz*t2h1dwt+z)-w1rwt;
-  }else{
-    if(linwr!=0 && loutwr!=0)
-    {
-    xlimitr=-bwrwt*sqrt(1-((z0wr+(vz*t2h1dwt+z))*(z0wr+(vz*t2h1dwt+z)))/a2wrwt);
-    }else{
-    xlimitr=-sqrt(((vz*t2h1dwt+z)-pbwrwt)/-pawrwt);
-    }
-  }
-  if(linwl==0 && loutwl == 0)
-   {
-      xlimitl=(w2l-w1l)/l*(vz*t2h1dwt+z)+w1lwt;
-   }else{
-      if(linwl!=0 && loutwl != 0)
-      {
-      xlimitl=bwlwt*sqrt(1-((z0wl+(vz*t2h1dwt+z))*(z0wl+(vz*t2h1dwt+z)))/a2wlwt);
-      }else{
-      xlimitl=sqrt(((vz*t2h1dwt+z)-pbwlwt)/-pawlwt);
-      }
-   }
-  xtest=vx*t2h1dwt+x;
-  ytest=vy*t2w1lwt+y;
-  ylimitd=(-h2d+h1d)*(vz*t2h1dwt+z)/l-h1dwt;
-  if (xtest>=xlimitr && xtest<=xlimitl && ytest<=ylimitd && mydOW>0 ){
-  i=33;
-  }else{
-  i=37;
-  }
-  }
-
-   /* SAME INTERACTIONS BUT TRANSPERENT OUTER WALLS */
-
-  if (mxrOW==-1 && t2w1rwt > 0 && t2w1rwt < t1 && t2w1rwt < t2w1r && t2w1rwt <t2w1l && t2w1rwt < t2h1u && t2w1rwt < t2h1d &&  t2w1rwt <t2w1lwt && t2w1rwt < t2h1uwt && t2w1rwt < t2h1dwt && ((linwr!=0) && (loutwr!=0) )) {
-  i=38;
-  }
-
-  if (mxrOW==-1 && t2w1rwt > 0 && t2w1rwt < t1 && t2w1rwt < t2w1r && t2w1rwt <t2w1l && t2w1rwt < t2h1u && t2w1rwt < t2h1d &&  t2w1rwt <t2w1lwt && t2w1rwt < t2h1uwt && t2w1rwt < t2h1dwt && ((loutwr!=0 && linwr==0) || (loutwr==0 && linwr!=0))){
-  i=38;
-  }
-
-  if (mxrOW==-1 && t2w1rwt > 0 && t2w1rwt < t1 && t2w1rwt < t2w1r && t2w1rwt <t2w1l && t2w1rwt < t2h1u && t2w1rwt < t2h1d &&  t2w1rwt <t2w1lwt && t2w1rwt < t2h1uwt && t2w1rwt < t2h1dwt && (loutwr==0 && linwr==0)){
-  i=38;
-  }
-
-  if (mxlOW==-1 && t2w1lwt > 0 && t2w1lwt < t1 && t2w1lwt <t2w1r && t2w1lwt < t2w1l && t2w1lwt < t2h1u && t2w1lwt < t2h1d &&  t2w1lwt < t2w1rwt && t2w1lwt < t2h1uwt && t2w1lwt < t2h1dwt && ((linwl!=0) && (loutwl!=0) )){
-  i=39;
-  }
-
-  if (mxlOW==-1 && t2w1lwt > 0 && t2w1lwt < t1 && t2w1lwt <t2w1r && t2w1lwt < t2w1l && t2w1lwt < t2h1u && t2w1lwt < t2h1d &&  t2w1lwt < t2w1rwt && t2w1lwt < t2h1uwt && t2w1lwt < t2h1dwt &&  ((loutwl!=0 && linwl==0) || (loutwl==0 && linwl!=0))){
-  i=39;
-  }
-
-  if (mxlOW==-1 && t2w1lwt > 0 && t2w1lwt < t1 && t2w1lwt <t2w1r && t2w1lwt < t2w1l && t2w1lwt < t2h1u && t2w1lwt < t2h1d &&  t2w1lwt < t2w1rwt && t2w1lwt < t2h1uwt && t2w1lwt < t2h1dwt && (loutwl==0 && linwl==0)){
-  i=39;
-  }
-
-  if (myuOW==-1 && t2h1uwt > 0 && t2h1uwt < t1 && t2h1uwt < t2w1r && t2h1uwt < t2w1l && t2h1uwt < t2h1d && t2h1uwt < t2h1u && t2h1uwt < t2w1rwt && t2h1uwt < t2w1lwt && t2h1uwt < t2h1dwt && (louthu !=0 && linhu!=0)){
-  i=40;
-  }
-
-  if (myuOW==-1 && t2h1uwt > 0 && t2h1uwt < t1 && t2h1uwt < t2w1r && t2h1uwt < t2w1l && t2h1uwt < t2h1d && t2h1uwt < t2h1u && t2h1uwt < t2w1rwt && t2h1uwt < t2w1lwt && t2h1uwt < t2h1dwt && ((louthu!=0 && linhu==0) || (louthu==0 && linhu!=0))){
-  i=40;
-  }
-
-  if (myuOW==-1 && t2h1uwt > 0 && t2h1uwt < t1 && t2h1uwt < t2w1r && t2h1uwt < t2w1l && t2h1uwt < t2h1d && t2h1uwt < t2h1u && t2h1uwt < t2w1rwt && t2h1uwt < t2w1lwt && t2h1uwt < t2h1dwt && (louthu == 0 && linhu == 0)){
-  i=40;
-  }
-
-  if (mydOW==-1 && t2h1dwt > 0 && t2h1dwt < t1 && t2h1dwt < t2w1r && t2h1dwt < t2w1l && t2h1dwt < t2h1u  && t2h1dwt < t2h1d && t2h1dwt < t2w1rwt && t2h1dwt < t2w1lwt && t2h1dwt < t2h1uwt  && (louthd !=0 && linhd!=0)){
-  i=41;
-  }
-
-  if (mydOW==-1 && t2h1dwt > 0 && t2h1dwt < t1 && t2h1dwt < t2w1r && t2h1dwt < t2w1l && t2h1dwt < t2h1u  && t2h1dwt < t2h1d && t2h1dwt < t2w1rwt && t2h1dwt < t2w1lwt && t2h1dwt < t2h1uwt  && ((louthd !=0 && linhd==0) || (louthd ==0 && linhd!=0))){
-  i=41;
-  }
-
-  if (mydOW==-1 && t2h1dwt > 0 && t2h1dwt < t1 && t2h1dwt < t2w1r && t2h1dwt < t2w1l && t2h1dwt < t2h1u  && t2h1dwt < t2h1d && t2h1dwt < t2w1rwt && t2h1dwt < t2w1lwt && t2h1dwt < t2h1uwt  && (louthd == 0 && linhd == 0)){
-  i=41;
-  }
 
 
 
@@ -3132,7 +1855,7 @@ switch(i){ /* the principal for the calculation is in every case the same: 1.) o
 
 
 
-  if (((i==2) ||(i==3) || (i == 4 ))){								/* calculating the the probability that the neutron is reflected at the RIGHT INNER wall*/
+ if (((i==2) ||(i==3) || (i == 4 ))){								/* calculating the the probability that the neutron is reflected at the RIGHT INNER wall*/
           if (RIreflect && strlen(RIreflect))
               {
                p=Table_Value(riTable, q, 1);
@@ -3178,7 +1901,7 @@ switch(i){ /* the principal for the calculation is in every case the same: 1.) o
                }
           }
 
-  if (((i==25) || (i==26) || (i==27 )) && mxlOW >0 && q > QcxlOW ){				/* calculating the the probability that the neutron is reflected at the LEFT OUTER wall*/
+  if (((i==25) || (i==26) || (i==27 ))){				/* calculating the the probability that the neutron is reflected at the LEFT OUTER wall*/
          if (LOreflect && strlen(LOreflect))
               {
                p=Table_Value(loTable, q, 1);
@@ -3258,7 +1981,7 @@ switch(i){ /* the principal for the calculation is in every case the same: 1.) o
   p *= R0;
   SCATTER;
 
-}while(z<l);												/* repeat the interaction loop untill the neutron pass the end of guide */
+} while (z<l);												/* repeat the interaction loop untill the neutron pass the end of guide */
 
 
   if(x <= -w2r && x >= -w2rwt && y <= mru2*x+nru2 && y >= mrd2*x+nrd2 && mxr!=-1 && mxrOW!=-1)		/* absorbing the neutron if it hit the RIGHT exit wall and the wall is not transparent*/
@@ -3277,18 +2000,24 @@ switch(i){ /* the principal for the calculation is in every case the same: 1.) o
 
 FINALLY
 %{
-printf("w2r = %f \n", w2r);
-printf("w2l = %f \n", w2l);
-printf("h2u = %f \n", h2u);
-printf("h2d = %f \n", h2d);
+
 %}
 
 MCDISPLAY
 %{
   int i,imax;
-  double x,y,z,x1,y1,z1,z0wr,z0wl,z0hu,z0hd,xwt,ywt,x1wt,y1wt;
+  double x1,y1,z,x2,y2,z1,z0wr,z0wl,z0hu,z0hd,xwt,ywt,x1wt,y1wt;
   double mr,ml,mu,md,nr1,nl1,nu1,nd1,nr2,nl2,nu2,nd2;
   double lbwl,lbwr,lbhu,lbhd;								/* length between focal points , needed for elliptic case */
+
+  double x11,y11,x21,y21,z11,z0wr1,z0wl1,z0hu1,z0hd1,xwt1,ywt1,x1wt1,y1wt1;
+  double mr1,ml1,mu1,md1,nr11,nl11,nu11,nd11,nr21,nl21,nu21,nd21;
+  double lbwl1,lbwr1,lbhu1,lbhd1;
+
+  double x12,y12,x22,y22,z12,z0wr2,z0wl2,z0hu2,z0hd2,xwt2,ywt2,x1wt2,y1wt2;
+  double mr2,ml2,mu2,md2,nr12,nl12,nu12,nd12,nr22,nl22,nu22,nd22;
+  double lbwl2,lbwr2,lbhu2,lbhd2;
+
 
   magnify("xy");
 
@@ -3299,6 +2028,8 @@ MCDISPLAY
   lbwl=linwl+l+loutwl;
   lbhu=linhu+l+louthu;
   lbhd=linhd+l+louthd;
+
+
 
   if (linwr==0 && loutwr==0){
    mr=(-w2r+w1r)/l;
@@ -3333,6 +2064,7 @@ if (linhd == 0 && louthd==0)
   z0wl=(linwl-l-loutwl)/2.0;
   z0hu=lbhu/2.0-l-louthu;
   z0hd=lbhd/2.0-l-louthd;
+
 
   if(myd!=-1) line(w1l, -h1d, 0.0, -w1r, -h1d, 0.0);							/* entrance window given by the INNER walls*/
   if(myu!=-1)line(w1l, h1u, 0.0, -w1r, h1u, 0.0);
@@ -3369,33 +2101,33 @@ for(i=0;i<imax;i++){											/* calculation of the points for the INNER LEFT B
    z1=(i+1)*l/imax;
   if(linwl==0 && loutwl == 0)
    {
-     x=ml*z+nl1;
-     x1=ml*z1+nl1;
+     x1=ml*z+nl1;
+     x2=ml*z1+nl1;
    }else{
       if(linwl!=0 && loutwl != 0)
       {
-      x=bwl*sqrt(1-((z0wl+z)*(z0wl+z))/(awl*awl));
-      x1=bwl*sqrt(1-((z0wl+z1)*(z0wl+z1))/(awl*awl));
+      x1=bwl*sqrt(1-((z0wl+z)*(z0wl+z))/(awl*awl));
+      x2=bwl*sqrt(1-((z0wl+z1)*(z0wl+z1))/(awl*awl));
       }else{
-      x=sqrt((z-pbwl)/-pawl);
-      x1=sqrt((z1-pbwl)/-pawl);
+      x1=sqrt((z-pbwl)/-pawl);
+      x2=sqrt((z1-pbwl)/-pawl);
       }
    }
   if(linhd==0 && louthd==0)
    {
-     y=md*z+nd1;
-     y1=md*z1+nd1;
+     y1=md*z+nd1;
+     y2=md*z1+nd1;
     }else{
       if(linhd!=0 && louthd!=0)
       {
-      y=-bhd*sqrt(1-((z0hd+z)*(z0hd+z))/(ahd*ahd));
-      y1=-bhd*sqrt(1-((z0hd+z1)*(z0hd+z1))/(ahd*ahd));
+      y1=-bhd*sqrt(1-((z0hd+z)*(z0hd+z))/(ahd*ahd));
+      y2=-bhd*sqrt(1-((z0hd+z1)*(z0hd+z1))/(ahd*ahd));
       }else{
-      y=-sqrt((z-pbhd)/-pahd);
-      y1=-sqrt((z1-pbhd)/-pahd);
+      y1=-sqrt((z-pbhd)/-pahd);
+      y2=-sqrt((z1-pbhd)/-pahd);
       }
    }
-  if(mxl!=-1 || myd!=-1)line((double)x, (double)y, (double)z, (double)x1, (double)y1, (double)z1); 
+  if(mxl!=-1 || myd!=-1)line((double)x1, (double)y1, (double)z, (double)x2, (double)y2, (double)z1); 
  }
 
 for(i=0;i<imax;i++){											/* calculation of the points for the INNER RIGHT BOTTOM line */
@@ -3403,33 +2135,33 @@ for(i=0;i<imax;i++){											/* calculation of the points for the INNER RIGHT 
   z1=(i+1)*l/imax;
   if(linwr==0 && loutwr==0)
   {
-    x=mr*z+nr1;
-    x1=mr*z1+nr1;
+    x1=mr*z+nr1;
+    x2=mr*z1+nr1;
   }else{
     if(linwr!=0 && loutwr!=0)
     {
-    x=-bwr*sqrt(1-((z0wr+z)*(z0wr+z))/(awr*awr));
-    x1=-bwr*sqrt(1-((z0wr+z1)*(z0wr+z1))/(awr*awr));
+    x1=-bwr*sqrt(1-((z0wr+z)*(z0wr+z))/(awr*awr));
+    x2=-bwr*sqrt(1-((z0wr+z1)*(z0wr+z1))/(awr*awr));
     }else{
-    x=-sqrt((z-pbwr)/-pawr);
-    x1=-sqrt((z1-pbwr)/-pawr);
+    x1=-sqrt((z-pbwr)/-pawr);
+    x2=-sqrt((z1-pbwr)/-pawr);
     }
   }
   if(linhd==0 && louthd==0)
   {
-    y=md*z+nd1;
-    y1=md*z1+nd1;
+    y1=md*z+nd1;
+    y2=md*z1+nd1;
   }else{
     if(linhd!=0 && louthd!=0)
     {
-    y=-bhd*sqrt(1-((z0hd+z)*(z0hd+z))/(ahd*ahd));
-    y1=-bhd*sqrt(1-((z0hd+z1)*(z0hd+z1))/(ahd*ahd));
+    y1=-bhd*sqrt(1-((z0hd+z)*(z0hd+z))/(ahd*ahd));
+    y2=-bhd*sqrt(1-((z0hd+z1)*(z0hd+z1))/(ahd*ahd));
     }else{
-    y=-sqrt((z-pbhd)/-pahd);
-    y1=-sqrt((z1-pbhd)/-pahd);
+    y1=-sqrt((z-pbhd)/-pahd);
+    y2=-sqrt((z1-pbhd)/-pahd);
     }
   }
-  if(mxr!=-1 || myd!=-1) line((double)x, (double)y, (double)z, (double)x1, (double)y1, (double)z1); 
+  if(mxr!=-1 || myd!=-1) line((double)x1, (double)y1, (double)z, (double)x2, (double)y2, (double)z1); 
 }
 
 
@@ -3438,32 +2170,32 @@ for(i=0;i<imax;i++){											/* calculation of the points for the INNER RIGHT 
   z1=(i+1)*l/imax;
   if(linwr==0 && loutwr==0)
   {
-    x=mr*z+nr1;
-    x1=mr*z1+nr1;
+    x1=mr*z+nr1;
+    x2=mr*z1+nr1;
    }else{
      if(linwr!=0 && loutwr!=0){
-     x=-bwr*sqrt(1-((z0wr+z)*(z0wr+z))/(awr*awr));
-     x1=-bwr*sqrt(1-((z0wr+z1)*(z0wr+z1))/(awr*awr));
+     x1=-bwr*sqrt(1-((z0wr+z)*(z0wr+z))/(awr*awr));
+     x2=-bwr*sqrt(1-((z0wr+z1)*(z0wr+z1))/(awr*awr));
      }else{
-     x=-sqrt((z-pbwr)/-pawr);
-     x1=-sqrt((z1-pbwr)/-pawr);
+     x1=-sqrt((z-pbwr)/-pawr);
+     x2=-sqrt((z1-pbwr)/-pawr);
      }
    }
    if(linhu==0 && louthu==0)
   {
-    y=mu*z+nu1;
-    y1=mu*z1+nu1;
+    y1=mu*z+nu1;
+    y2=mu*z1+nu1;
   }else{
     if(linhu!=0 && louthu!=0)
     {
-    y=bhu*sqrt(1-((z0hu+z)*(z0hu+z))/(ahu*ahu));
-    y1=bhu*sqrt(1-((z0hu+z1)*(z0hu+z1))/(ahu*ahu));
+    y1=bhu*sqrt(1-((z0hu+z)*(z0hu+z))/(ahu*ahu));
+    y2=bhu*sqrt(1-((z0hu+z1)*(z0hu+z1))/(ahu*ahu));
     }else{
-    y=sqrt((z-pbhu)/-pahu);
-    y1=sqrt((z1-pbhu)/-pahu);
+    y1=sqrt((z-pbhu)/-pahu);
+    y2=sqrt((z1-pbhu)/-pahu);
     }
   }
-  if(mxr!=-1 || myu!=-1)line((double)x, (double)y, (double)z, (double)x1, (double)y1, (double)z1); 
+  if(mxr!=-1 || myu!=-1)line((double)x1, (double)y1, (double)z, (double)x2, (double)y2, (double)z1); 
 }
 
 for(i=0;i<imax;i++){											/* calculation of the points for the INNER LEFT TOP line */
@@ -3471,33 +2203,33 @@ for(i=0;i<imax;i++){											/* calculation of the points for the INNER LEFT T
   z1=(i+1)*l/imax;
   if(linwl==0 && loutwl==0)
   {
-    x=ml*z+nl1;
-    x1=ml*z1+nl1;
+    x1=ml*z+nl1;
+    x2=ml*z1+nl1;
    }else{
      if(linwl!=0 && loutwl!=0)
      {
-     x=bwl*sqrt(1-((z0wl+z)*(z0wl+z))/(awl*awl));
-     x1=bwl*sqrt(1-((z0wl+z1)*(z0wl+z1))/(awl*awl));
+     x1=bwl*sqrt(1-((z0wl+z)*(z0wl+z))/(awl*awl));
+     x2=bwl*sqrt(1-((z0wl+z1)*(z0wl+z1))/(awl*awl));
      }else{
-     x=sqrt((z-pbwl)/-pawl);
-     x1=sqrt((z1-pbwl)/-pawl);
+     x1=sqrt((z-pbwl)/-pawl);
+     x2=sqrt((z1-pbwl)/-pawl);
      }
    }
    if(linhu==0 && louthu==0)
   {
-    y=mu*z+nu1;
-    y1=mu*z1+nu1;
+    y1=mu*z+nu1;
+    y2=mu*z1+nu1;
   }else{
     if(linhu!=0 && louthu!=0)
     {
-    y=bhu*sqrt(1-((z0hu+z)*(z0hu+z))/(ahu*ahu));
-    y1=bhu*sqrt(1-((z0hu+z1)*(z0hu+z1))/(ahu*ahu));
+    y1=bhu*sqrt(1-((z0hu+z)*(z0hu+z))/(ahu*ahu));
+    y2=bhu*sqrt(1-((z0hu+z1)*(z0hu+z1))/(ahu*ahu));
     }else{
-    y=sqrt((z-pbhu)/-pahu);
-    y1=sqrt((z1-pbhu)/-pahu);
+    y1=sqrt((z-pbhu)/-pahu);
+    y2=sqrt((z1-pbhu)/-pahu);
     }
   }
-  if(mxl!=-1 || myu!=-1)line((double)x, (double)y, (double)z, (double)x1, (double)y1, (double)z1); 
+  if(mxl!=-1 || myu!=-1)line((double)x1, (double)y1, (double)z, (double)x2, (double)y2, (double)z1); 
 }																	/* END INNER LINES*/
 
 
@@ -3638,10 +2370,8 @@ for(i=0;i<imax;i++){											/* calculation of the points for the OUTER LEFT T
 }
 
 
-
 %}
 
 END
-
 
 
