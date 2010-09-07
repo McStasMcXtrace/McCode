@@ -12,7 +12,7 @@
 # sigma_abs 0.1714  absorption scattering cross section for SiO2 in [barn]
 # density   2.65    in [g/cm^3]
 # weight    60.08   in [g/mol] for SiO2
-# multiplicity 3    in [atoms/unit cell]
+# multiplicity 3    in [SiO2/unit cell]
 # Vc        112.35  volume of unit cell in [A^3]
 # T_m       846     melting temperature in [K]
 # T_b       2503    boiling temperature in [K]

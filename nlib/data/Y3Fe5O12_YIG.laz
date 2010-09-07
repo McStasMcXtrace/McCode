@@ -15,7 +15,7 @@
 # sigma_abs 16.64   absorption scattering cross section for Y3Fe5O12 in [barn]
 # density   5.17    in [g/cm^3]
 # weight    737.9   in [g/mol] for Y3Fe5O12
-# multiplicity 8  in [atoms/unit cell]
+# multiplicity 8  in [Y3Fe5O12/unit cell]
 # Vc        1895.57 volume of unit cell in [A^3]
 # T_m       1828    melting temperature in [K]
 # lattice_a 12.376  lattice parameter a in [Angs]
