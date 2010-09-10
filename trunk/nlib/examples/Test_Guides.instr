@@ -111,7 +111,7 @@ EXTEND %{
 %}
 
 COMPONENT GuideR = Guide_curved(
-    w1 = 0.05, h1 = 0.05, l = 1.0, R0 = 0.99, m=1, r=10000)
+    w1 = 0.05, h1 = 0.05, l = 1.0, R0 = 0.99, m=1, curvature=10000)
   WHEN (Guide == 5)
   AT (0, 0, 0) RELATIVE Guide_Position
 EXTEND %{
