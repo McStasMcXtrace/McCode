@@ -753,7 +753,7 @@ INITIALIZE
       
   hkl_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-	  if (off_init(geometry, xwidth, yheight, zdepth, &offdata)) {
+	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
       hkl_info.shape=3; 
     }
   }
