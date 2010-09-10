@@ -109,7 +109,7 @@ Pol_bender(xwidth = 0.08, yheight = 0.08, length = guideLength,
      WHEN (randomSwitch > 1.0/3 && randomSwitch <= 2.0/3) AT (0, 0, 1.2) RELATIVE Origin
 
 COMPONENT guide = 
-Guide_curved(w1 = 0.08, h1 = 0.08, l = guideLength, r = guideRadius)
+Guide_curved(w1 = 0.08, h1 = 0.08, l = guideLength, curvature = guideRadius)
      WHEN (randomSwitch > 2.0/3) AT (0, 0, 1.2) RELATIVE Origin
 
 COMPONENT armlambdaStop1 = Arm()

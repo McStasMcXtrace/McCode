@@ -179,7 +179,7 @@ EXTEND
 
 /* ALPHA3 radial collimator */
 COMPONENT collimador_radial = Collimator_radial(
-    w1=0.015, h1=.3, w2=0.015, h2=.3, length=.30,
+    xwidth=0.015, yheight=.3, length=.30,
     divergence=ALPHA3,transmission=1,
     theta_min=-10, theta_max=160, radius=L3-0.3-0.01)
   WHEN (ALPHA3>0)

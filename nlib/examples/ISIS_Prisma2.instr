@@ -130,8 +130,8 @@ END
 /* Modified from TOF_monitor.comp to bin neutrons according to their
    "color". */
 DEFINE COMPONENT TOF_monitor_color
-DEFINITION PARAMETERS (filename)
-SETTING PARAMETERS (xmin, xmax, ymin, ymax, int nchan, dt, int maxcolor)
+DEFINITION PARAMETERS (filename, int nchan, int maxcolor)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, dt)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
