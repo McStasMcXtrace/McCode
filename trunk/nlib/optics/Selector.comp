@@ -23,7 +23,7 @@
 * The origin is at the ENTRANCE of the selector.
 *
 * Example: Selector(xmin=-0.015,  xmax=0.015,  ymin=-0.025, ymax=0.025, length=0.25,
-*            nslit=72,width=0.0004, radius=0.12, alpha=48.298, nu=500)
+*            nslit=72,d=0.0004, radius=0.12, alpha=48.298, nu=500)
 * These are values for the D11@ILL Dornier 'Dolores' Velocity Selector (NVS 023)
 *
 * %VALIDATION
