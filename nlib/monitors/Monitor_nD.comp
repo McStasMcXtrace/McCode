@@ -218,6 +218,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 SHARE
 %{
   %include "monitor_nd-lib"
+  %include "read_table-lib"
   %include "interoff-lib"
 %}
 
@@ -309,7 +310,7 @@ TRACE
   if (geometry && strlen(geometry))
   {
     /* determine intersections with object */
-    intersect = off_intersect(&t0, &t1, NULL, NULL
+    intersect = off_intersect(&t0, &t1, NULL, NULL,
        x,y,z, vx, vy, vz, offdata );
   }
   else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
