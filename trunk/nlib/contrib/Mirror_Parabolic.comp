@@ -51,7 +51,8 @@ OUTPUT PARAMETERS (beta1, gamma1, err,nom,vz_neg,p_0, delta, angle,pTable)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 SHARE
 %{
-%include "read_table-lib"
+  %include "read_table-lib"
+  %include "ref-lib"
 %}
 
 DECLARE
