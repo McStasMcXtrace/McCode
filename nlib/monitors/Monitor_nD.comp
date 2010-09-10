@@ -257,9 +257,10 @@ INITIALIZE
     xwidth = zdepth = 2*radius;
     if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana")) 
       strcat(Vars.option, " banana");
-    else if (!yheight && !strstr(Vars.option ,"sphere"))
+    else if (!yheight && !strstr(Vars.option ,"sphere")) {
       strcat(Vars.option, " sphere");
       yheight=2*radius;
+    }
   }
   
   if (geometry && strlen(geometry))
@@ -269,8 +270,8 @@ INITIALIZE
       strcpy(geometry, "");
     }
   
-  if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax && !strstr(Vars.option, "previous"))
-    exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous).\n", NAME_CURRENT_COMP));
+  if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax && !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
+    exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax);
 
