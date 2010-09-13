@@ -51,7 +51,7 @@
 
 DEFINE COMPONENT E_monitor
 DEFINITION PARAMETERS (string filename=0)
-SETTING PARAMETERS (ne=20, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
+SETTING PARAMETERS (nE=20, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
   xwidth=0, yheight=0, Emin, Emax, restore_xray=0)
 OUTPUT PARAMETERS (E_N, E_p, E_p2)
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
