@@ -197,7 +197,7 @@ TRACE
   
   k=sqrt(kx*kx+ky*ky+kz*kz); 
  
-  e=K2E/1000*k;  /*Energy in KeV, same unit as datafile */
+  e=K2E/k;  /*Energy in KeV, same unit as datafile */
 
 /*Interpolation of Table Values*/
 

@@ -28,8 +28,8 @@
 * dist:   [m]   Distance to target along z axis.
 * focus_xw:[m]  Width of target
 * focus_yh:[m]  Height of target
-* E0:     [meV] Mean energy of neutrons.
-* dE:     [meV] Energy half spread of neutrons (flat or gaussian sigma).
+* E0:     [keV] Mean energy of neutrons.
+* dE:     [keV] Energy half spread of neutrons (flat or gaussian sigma).
 * lambda0:[AA]  Mean wavelength of neutrons.
 * dlambda:[AA]  Wavelength half spread of neutrons.
 * gauss:  [1]   Gaussian (1) or Flat (0) energy/wavelength distribution

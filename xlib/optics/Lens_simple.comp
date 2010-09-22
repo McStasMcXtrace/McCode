@@ -85,7 +85,7 @@ INITIALIZE
   int i;
   for (i=0;i<t.rows;i++){
     prms->E[i]=t.data[i*t.columns]*1e3;
-    prms->delta[i]=pow(2*M_PI/(t.data[i*t.columns]*1e3*E2K),2)*1e-20 * t.data[1+i*t.columns] * prms->rho/prms->At*1e6 * RE * NA* 0.5*M_1_PI;
+    prms->delta[i]=pow(2*M_PI/(t.data[i*t.columns]*E2K),2)*1e-20 * t.data[1+i*t.columns] * prms->rho/prms->At*1e6 * RE * NA* 0.5*M_1_PI;
   }
 
   prms->E[t.rows]=-1.0;
@@ -123,6 +123,7 @@ TRACE
     alpha=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
     delta=(1-alpha)*prms->delta[i-1] + alpha*prms->delta[i];
     F=radius/2/delta/N;
+//    printf("%.12e %12e\n",delta,F);
     /*Only focusing in the y-direction for now.*/
     /*auxiliary vector s*/ 
     sx=0;sy=-y;sz=F;
@@ -139,8 +140,13 @@ TRACE
     sx=kx;
     sy=ky*R[1][1]+kz*R[1][2];
     sz=ky*R[2][1]+kz*R[2][2];
-    
-    kx=sx;ky=sy;kz=sz;
+   /* printf("theta=%e\n",theta);    
+    printf("R=|%.12e %.12e %.12e|",R[0][0],R[0][1],R[0][2]);
+    printf("R=|%.12e %.12e %.12e|",R[1][0],R[1][1],R[1][2]);
+    printf("R=|%.12e %.12e %.12e|\n",R[2][0],R[2][1],R[2][2]);
+printf("(%.12g %.12g %.12g)->",kx,ky,kz);
+*/    kx=sx;ky=sy;kz=sz;
+//    printf("(%.12g %.12g %.12g)\n",kx,ky,kz);
   }
   else{
     ABSORB;
@@ -150,8 +156,18 @@ TRACE
 
 MCDISPLAY
 %{
+  double delta;
+  int N=8,i;
   magnify("xy");
-  rectangle(0,0,0,xwidth,yheight,0);
+  rectangle("xy",0,0,0,xwidth,yheight);
+  if (yheight<xwidth){
+    delta=yheight/N;
+  } else {
+    delta=xwidth/N;
+  }
+  for (i=1;i<=N;i++){
+    circle("xy",0,0,0,sqrt(delta*i));
+  }
 %}
 
 END
