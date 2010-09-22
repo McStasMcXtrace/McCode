@@ -144,7 +144,9 @@ typedef struct {
     q=(Knorm/Nnorm)*((1/M)*cos_theta1-s*cos_theta);
     
     k_new[0]=q*Nx+s*k[0];k_new[1]=q*Ny+s*k[1];k_new[2]=q*Nz+s*k[2];
-  
+    for(i=0;i<3;i++) { 
+      result.k[i]=k_new[i]; 
+    }   
     return result; 
   }
 
@@ -165,7 +167,7 @@ INITIALIZE
   char **header_parsed;
   header_parsed=Table_ParseHeader(t.header,"Z=","Ar=","rho=");
   prms=calloc(1,sizeof(struct datastruct));
-  if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10)
+  if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
   if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
   if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
   prms->E=malloc(sizeof(double)*(t.rows+1));
