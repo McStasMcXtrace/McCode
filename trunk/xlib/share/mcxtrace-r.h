@@ -40,8 +40,8 @@
 
 #define CELE     1.602176487e-19   /* [C] Elementary charge CODATA 2006*/
 #define M_C      299792458         /* [m/s] speed of light CODATA 2006*/
-#define E2K      5.06773091264796e-04 /* Convert k[1/AA] to E [eV] (CELE/(HBAR*M_C)*1e-10)*/
-#define K2E      1973.26972808327  /*Convert E[eV] to k[1/AA] (1e10*M_C*HBAR/CELE) */ 
+#define E2K      0.506773091264796 /* Convert k[1/AA] to E [keV] (CELE/(HBAR*M_C)*1e-10)*1e3 */
+#define K2E      1.97326972808327  /*Convert E[keV] to k[1/AA] (1e10*M_C*HBAR/CELE)/1e3 */ 
 
 #define SCATTER do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlkx, mcnlky, mcnlkz, \
     mcnlphi, mcnlEx,mcnlEy,mcnlEz, mcnlp); mcScattered++;} while(0)
