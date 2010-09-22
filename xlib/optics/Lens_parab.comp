@@ -23,12 +23,13 @@
 * %P
 * Input parameters:
 * r - radius of the profile;
-* w - parabola parameter, constraining it along the propagation axis, i.e. "depth" of the parabola;
-* d - distance between two apices of the lens along the propagation axis;
+* w - parabola parameter, constraining it along the propagation axis;
+* d - distance between two surfaces of the lens along the propagation axis;
 * N - amount of single lenses in a stack.
 * T - transmission of the lens
 * 
-* linear attenuation coefficient mu with a scattering factor f are taken from the NIST database.
+* attenuation coefficient mu is taken from the NIST database and 
+* Be_data.txt
 *
 *
 *******************************************************************************/
@@ -44,6 +45,7 @@ SHARE
 %{
   %include "read_table-lib"
   struct datastruct{
+    int Z;
     double Ar, rho;
     double *E, *mu, *f;
   }; 
@@ -77,24 +79,22 @@ typedef struct {
     M=b.constants[3]; Sign=b.constants[4];
   
     if (knorm[0]*knorm[0]*w+knorm[1]*knorm[1]*w == 0){
-     //printf("72: Solving linear equation\n");
-     t[0]=(-p[0]*p[0]*w-p[1]*p[1]*w+Sign*p[2]*r*r-Sign*d*r*r)/(2.0*p[0]*knorm[0]*w+2*p[1]*knorm[1]*w-Sign*knorm[2]*r*r);
-        for(i=0; i<=2; i++){
-	  result.coord[i]=p[i]+t[0]*knorm[i];
-          }
+      /*incident k-vector is parallel (exactly) to the z-axis. Thus, the eq. becomes linear*/
+      t[0]=(-p[0]*p[0]*w-p[1]*p[1]*w+Sign*p[2]*r*r-Sign*d*r*r)/(2.0*p[0]*knorm[0]*w+2*p[1]*knorm[1]*w-Sign*knorm[2]*r*r);
+      for(i=0; i<=2; i++){
+        result.coord[i]=p[i]+t[0]*knorm[i];
       }
-    else {
-      //printf("79:Solving quadratic equation\n");
+    } else {
       A=knorm[0]*knorm[0]*w + knorm[1]*knorm[1]*w; 
       B=2.0*p[0]*knorm[0]*w + 2.0*p[1]*knorm[1]*w - Sign*r*r*knorm[2]; 
       C=p[0]*p[0]*w + p[1]*p[1]*w - Sign*r*r*p[2] + Sign*r*r*d; 
       D=B*B-4.0*A*C;      
       if (D<0) {
-      //printf("Line does not intersect the parabola\n");
+        /*ray does not intersect the parabola*/
         return result;
       }
       else {
-	if(A==0){ fprintf(stderr, "line 89: Division by zero\n"); return; }	  
+        if(A==0){ fprintf(stderr, "Division by zero in %s\n",NAME_CURRENT_COMP); return; }	  
         double qq;
         if (B<0){
           qq=-0.5*(B-sqrt(D));
@@ -127,39 +127,27 @@ typedef struct {
     Nnorm=sqrt(Nx*Nx+Ny*Ny+Nz*Nz);
     N[0]=Nx/Nnorm; N[1]=Ny/Nnorm; N[2]=Nz/Nnorm; 
         
-      /* Calculating the angle between two vectors, applying Snell's law & getting the new k vector */
+    /* Calculating the angle between two vectors, applying Snell's law & getting the new k vector */
     cos_theta=N[0]*knorm[0]+N[1]*knorm[1]+N[2]*knorm[2]; 
     
-    Arg=1.0-M*M*(1.0-cos_theta*cos_theta); cos_theta1=sqrt(Arg); // cos-sin transitions
+    Arg=1.0-M*M*(1.0-cos_theta*cos_theta);
+    cos_theta1=sqrt(Arg); // cos-sin transitions
         
     if (cos_theta<0) {
       cos_theta1=-sqrt(Arg);
     }
-    // new kvector
+    /* new k vector */
     if ((1.0-cos_theta*cos_theta)==0) {
        fprintf(stderr,"line 134: Division by zero\n"); return; }
-    Arg1=(1.0-cos_theta1*cos_theta1)/(1.0-cos_theta*cos_theta); s=(1/M)*sqrt(Arg1); q=(Knorm/Nnorm)*((1/M)*cos_theta1-s*cos_theta);
+    Arg1=(1.0-cos_theta1*cos_theta1)/(1.0-cos_theta*cos_theta);
+    s=(1/M)*sqrt(Arg1);
+    q=(Knorm/Nnorm)*((1/M)*cos_theta1-s*cos_theta);
     
     k_new[0]=q*Nx+s*k[0];k_new[1]=q*Ny+s*k[1];k_new[2]=q*Nz+s*k[2];
   
-    s1=-(M*sqrt(Arg1)); q1=(Knorm/Nnorm)*(M*cos_theta1-s1*cos_theta); 
-    k_new1[0]=q1*Nx+s1*k[0];k_new1[1]=q1*Ny+s1*k[1]; k_new1[2]=q1*Nz+s1*k[2];
-      // Choosing one vector, closest to the initial 
-    
-        alpha=(k[0]*k_new[0]+k[1]*k_new[1]+k[2]*k_new[2])/(M*Knorm*Knorm);
-        beta=(k[0]*k_new1[0]+k[1]*k_new1[1]+k[2]*k_new1[2])/(M*Knorm*Knorm); 
-	  if (acos(alpha)<acos(beta)) {
-	    for(i=0;i<=2;i++) {
-	      result.k[i]=k_new[i];
-	    }
-	  }
-	  else if (acos(alpha)>acos(beta)) {
-	    for(i=0;i<=2;i++) {
-	      result.k[i]=k_new1[i];
-	    }
-	  }
-       return result; 
-   }
+    return result; 
+  }
+
   const double Re=2.8179402894e-5;     /* Thomson Scattering length [Angstrom] */
   const double Na=6.02214179e23;       /* Avogadro's number [atoms per gram-mole]*/
 %}
@@ -175,8 +163,9 @@ INITIALIZE
   t_Table t;
   Table_Read(&t, material_datafile,0);
   char **header_parsed;
-  header_parsed=Table_ParseHeader(t.header,"Ar=","rho=");
+  header_parsed=Table_ParseHeader(t.header,"Z=","Ar=","rho=");
   prms=calloc(1,sizeof(struct datastruct));
+  if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10)
   if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
   if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
   prms->E=malloc(sizeof(double)*(t.rows+1));
@@ -229,7 +218,6 @@ TRACE
   rhoel= f*Na*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
 
   delta= 2.0*M_PI*Re*rhoel/(k*k);
-
   //delta=((2.0*M_PI*Re)/pow(k,2))*((Na/prms->Ar)*prms->rho*(prms->Z+f)*1e-24); 
  
   //printf("223: Ar=%g, rho=%g, Z=%d, k=%g\n", prms->Ar, prms->rho, prms->Z,k);
@@ -246,14 +234,13 @@ TRACE
 
   incid.k[0]=kx; incid.k[1]=ky; incid.k[2]=kz; 
   incid.coord[0]=x; incid.coord[1]=y; incid.coord[2]=z;
-  
-  for (nr=0;nr<=(2*N-1);nr++){
+  for (nr=0;nr<=(N-1);nr++){
     parab.constants[2]=nr*d+nr*2*w;
     parab.constants[3]=1.0/Refractive_Index_Re;
     parab.constants[4]=-1.0;
     
     refr=intersection(incid,parab);
- 	if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue;   
+    if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue;   
     dl=sqrt( (refr.coord[0]-x)*(refr.coord[0]-x) + (refr.coord[1]-y)*(refr.coord[1]-y) + (refr.coord[2]-z)*(refr.coord[2]-z) );
     PROP_DL(dl);
     SCATTER;	
@@ -274,18 +261,19 @@ TRACE
    // transmission calculation
    if (T==0)
       ABSORB;
-      else 
-	T=exp(-mu*d*N); 
-	p*=T;
+   else 
+     T=exp(-mu*d*N);
+   p*=T;
+
 %}
 
 MCDISPLAY
 %{
-  /* A bit ugly; hard-coded dimensions. */
-  magnify("");
-  line(0,0,0,0.2,0,0);
-  line(0,0,0,0,0.2,0);
-  line(0,0,0,0,0,0.2);
+  magnify("xy");
+  double z_c,zdepth;
+  zdepth=N*(2*w+d);
+  z_c=zdepth/2.0-w;
+  box(0,0,z_c,r,r,zdepth);
 %}
 
 END
