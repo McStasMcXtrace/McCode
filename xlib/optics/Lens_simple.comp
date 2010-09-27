@@ -61,7 +61,8 @@ INITIALIZE
 %{
   const double RE=2.8179402894e-15;
   const double NA=6.02214179e23;
-  
+  int status=0;
+ 
   if(!xwidth || !yheight){
     fprintf(stderr,"%s: Lens has zero effective area\n",NAME_CURRENT_COMP);
     exit(0);
@@ -72,7 +73,10 @@ INITIALIZE
   ymin=-ymax;
 
   t_Table t;
-  Table_Read(&t,material_datafile,0);
+  if ( (status=Table_Read(&t,material_datafile,0))==-1){
+    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
+    exit(-1);
+  }
   char **header_parsed;
   header_parsed=Table_ParseHeader(t.header,"Z","A[r]","rho","sigma[a]");
   prms=calloc(1,sizeof(struct mat_prms));

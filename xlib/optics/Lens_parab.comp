@@ -162,8 +162,12 @@ DECLARE
 
 INITIALIZE 
 %{
+  int status=0;
   t_Table t;
-  Table_Read(&t, material_datafile,0);
+  if ( (status=Table_Read(&t,material_datafile,0))==-1){
+    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
+    exit(-1);
+  }
   char **header_parsed;
   header_parsed=Table_ParseHeader(t.header,"Z=","Ar=","rho=");
   prms=calloc(1,sizeof(struct datastruct));
