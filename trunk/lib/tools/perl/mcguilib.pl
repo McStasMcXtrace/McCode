@@ -522,12 +522,13 @@ sub plot_dialog {
     # Platform checks. Assumption: Either unix type os / Win32.
     my $prefix          = $MCSTAS::mcstas_config{'PREFIX'};
     my $suffix          = $MCSTAS::mcstas_config{'SUFFIX'};
+    my $plotcmd         = $MCSTAS::mcstas_config{'PLOTCMD'};
 
     my @plot_cmd = ();
     if ($Config{'osname'} ne 'MSWin32') { # change spaces into \spaces
       $sim_file_name =~ s! !\ !g;
     }
-    push @plot_cmd, "mcplot$suffix";
+    push @plot_cmd, "$plotcmd$suffix";
     push @plot_cmd, $sim_file_name;
     my $cmd=join(' ',@plot_cmd);
     spawn_external($w, $cmd);
@@ -994,7 +995,7 @@ sub comp_select_dialog {
 sub sitemenu_build {
     my ($w,$menu) = @_;
     my $sites;
-    my $sitemenu = $menu->Menubutton(-text => 'Neutron site', -underline => 0);
+    my $sitemenu = $menu->Menubutton(-text => $MCSTAS::mcstas_config{'PARTICLE'}.' site', -underline => 0);
     $sitemenu->pack(-side=>'left');
 
     # Scan each .instr file in the examples folder, find out which
