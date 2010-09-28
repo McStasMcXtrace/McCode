@@ -51,6 +51,7 @@ void StdReflecFunc(double mc_pol_q, double *mc_pol_par, double *mc_pol_r) {
     double alpha = mc_pol_par[2];
     double m     = mc_pol_par[3];
     double W     = mc_pol_par[4];
+    mc_pol_q     = fabs(mc_pol_q);
     double arg   = W > 0 ? (mc_pol_q - m*Qc)/W : 11;
     
     if (arg > 10 || m <= 0 || Qc <=0 || R0 <= 0) {
