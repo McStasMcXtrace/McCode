@@ -1,4 +1,5 @@
 # TITLE *-B4C-[R3-MH] Clark, H.K.;Hoard, J.L.[1943] [Black diamond, boron carbide]
+# WARNING: the cross sections have been reported to be wrong. Please use the B4C.laz
 # CELL 5.620000 5.620000 12.140000 90.000000 90.000000 120.000000
 # SPCGRP R -3 M   TRIGONAL STRUCTURE
 # ATOM B 1 0.166700 -0.166700 0.360000
