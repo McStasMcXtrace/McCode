@@ -467,13 +467,17 @@ MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
 #endif
 
 /* send MCDISPLAY message to stdout to show gemoetry */
-void mcdis_magnify(char *);
-void mcdis_line(double, double, double, double, double, double);
-void mcdis_dashed_line(double, double, double, double, double, double, int);
-void mcdis_multiline(int, ...);
-void mcdis_rectangle(char *, double, double, double, double, double);
-void mcdis_box(double, double, double, double, double, double);
-void mcdis_circle(char *, double, double, double, double);
+void mcdis_magnify(char *what);
+void mcdis_line(double x1, double y1, double z1,
+                double x2, double y2, double z2);
+void mcdis_dashed_linemcdis_dashed_line(double x1, double y1, double z1,
+		       double x2, double y2, double z2, int n);
+void mcdis_multiline(int count, ...);
+void mcdis_rectangle(char* plane, double x, double y, double z,
+		     double width, double height);
+void mcdis_box(double x, double y, double z,
+	       double width, double height, double length);
+void mcdis_circle(char *plane, double x, double y, double z, double r);
 
 /* selection of random number generator. default is MT */
 #ifndef MC_RAND_ALG
