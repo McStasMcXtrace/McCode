@@ -1,0 +1,67 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Test_Selectors
+*
+* %Identification
+* Written by: E. Farhi [farhi@ill.fr]
+* Date: Sept 28th, 2010
+* Origin: ILL
+* Release: McStas 1.12
+* Version: $Revision: 1.2 $
+* %INSTRUMENT_SITE: Tests_optics
+*
+* Cross comparison of velocity selector components
+*
+* %Description
+* Cross comparison of Selector components, using McStas and
+* contributed components. It shows that all implementations are equivalent.
+*
+* %Example: selector=1 Detector: VS_Mon_I=0.00841807
+* %Example: selector=2 Detector: VS_Mon_I=0.00841807
+*
+* %Parameters
+* selector:  [1]    Choice of the velocity selector to test, with
+*                   1=V_selector
+*                   2=Selector
+* lambda:    [Angs] neutron wavelength selected by the velocity selector
+* phi:       [deg]  velocity selector twist angle
+* d_vs:      [m]    velocity selector rotating drum length
+* %End
+************************************************************************************************/
+DEFINE INSTRUMENT Test_Selectors(int selector=1, lambda=4, phi=48.3, d_vs=0.25)
+
+INITIALIZE
+%{
+  printf("\n%s: ", NAME_CURRENT_COMP);
+  switch (selector) {
+  case 1:
+    printf("Using V_selector\n"); break;
+  case 2:
+    printf("Using Selector\n"); break;  
+  }
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+  
+COMPONENT Source = Source_simple(dist=1, radius=0.03, xw=0.03, yh=0.05, 
+                                 Lambda0=lambda, dLambda=lambda*0.15)
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT VS1   = V_selector(width=0.03, height=0.05, l0=0.30, r0=0.12, phi=phi,
+           l1=d_vs, tb=0.0004, rot=3956*phi*DEG2RAD/(2*PI*lambda*d_vs)*60, nb=72)
+  WHEN (selector == 1)
+  AT (0, 0, 1+0.3/2) RELATIVE Source 
+
+COMPONENT VS2   = Selector(xmin=-0.015,  xmax=0.015,  ymin=-0.025, ymax=0.025, len=d_vs,
+           num=72,width=0.0004, radius=0.12, alfa=phi, feq=3956*phi*DEG2RAD/(2*PI*lambda*d_vs))
+  WHEN (selector == 2)
+  AT (0, 0, 1) RELATIVE Source
+
+COMPONENT VS_Mon= Monitor_nD(xwidth=0.064, yheight=0.05, options="auto wavelength")
+  AT (0,0,1+d_vs+0.1) RELATIVE Source
+END
+
