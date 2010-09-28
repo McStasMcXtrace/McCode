@@ -257,7 +257,7 @@ sub menu_spawn_mcplot {
     my ($w) = @_;
     my $file = $w->getOpenFile(-title => "Select simulation file", -initialdir => getcwd());
     if ($file == 0) {
-	my $cmd = "mcplot$suffix $file";
+	my $cmd = "$MCSTAS::mcstas_config{'PLOTCMD'}$suffix $file";
 	spawn_external($w,$cmd);
     }
 }
