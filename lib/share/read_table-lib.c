@@ -912,7 +912,7 @@ long Table_Init(t_Table *Table, long rows, long columns)
   } /* end Table_Info_Array */
 
 /******************************************************************************
-* char **Table_ParseHeaderchar *header, symbol1, symbol2, ..., NULL)
+* char **Table_ParseHeader(char *header, symbol1, symbol2, ..., NULL)
 *    ACTION: search for char* symbols in header and return their value or NULL
 *            Last argument MUST be NULL
 *    return: array of char* with line following each symbol, or NULL if not found
@@ -921,7 +921,7 @@ long Table_Init(t_Table *Table, long rows, long columns)
 #define MyNL_ARGMAX 50
 #endif
 
-char **Table_ParseHeader(char *header, ...){
+char **Table_ParseHeader_backend(char *header, ...){
   va_list ap;
   char exit_flag=0;
   int counter   =0;

@@ -100,7 +100,10 @@ long     Table_Info_Array(t_Table *Table);
 int      Table_SetElement(t_Table *Table, long i, long j, double value);
 long     Table_Init(t_Table *Table, long rows, long columns);
 
-char **Table_ParseHeader(char *header, ...);
+#define Table_ParseHeader(header, ...) \
+  Table_ParseHeader_backend(header,__VA_ARGS__,NULL);
+
+char **Table_ParseHeader_backend(char *header, ...);
 
 /* private functions */
 
