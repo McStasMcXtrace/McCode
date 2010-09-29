@@ -29,7 +29,7 @@
 
 DEFINE COMPONENT Source_pt
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (focus_xw=0,focus_yh=0,flux=1,distance=1,gamma=0,E0=0, dE=0, lambda=-1,dlambda=-1,phase=-1)
+SETTING PARAMETERS (focus_xw=0,focus_yh=0,flux=1,distance=1,gamma=0,E0=0, dE=0, lambda=-1,dlambda=-1,phase=-1,randomphase=0)
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
@@ -46,28 +46,29 @@ INITIALIZE
   if (focus_xw)
     fi_x=atan(focus_xw/2.0/distance);
   else {
-    printf("Source_pt (%s): Target area unmeaningful! (negative dist / focus_xw / focus_yh)\n ERROR - Exiting\n",
+    printf("Source_pt (%s): Target area unmeaningful! (negative distance / focus_xw / focus_yh)\n ERROR - Exiting\n",
            NAME_CURRENT_COMP);
     exit(0);
   }
   if (focus_yh)
     fi_y=atan(focus_yh/2.0/distance);
   else {
-    printf("Source_pt (%s): Target area unmeaningful! (negative dist / focus_xw / focus_yh)\n ERROR - Exiting\n",
+    printf("Source_pt (%s): Target area unmeaningful! (negative distance / focus_xw / focus_yh)\n ERROR - Exiting\n",
            NAME_CURRENT_COMP);
     exit(0);
   }
   /*fractional solid angle subtended by the target*/
   t_ome=(sin(fi_y))*fi_x/M_PI;
 
-  if (E && dE){
+  if (E0 && dE){
     lambda=E0;
     dlambda=dE;
-  }else if (!lambda || !dlambda){
+  }else if (!lambda){
     fprintf(stderr,"Source_pt (%s): Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP); 
     exit(0);  
   }
 
+  printf("got phase %g from outsde\n",phase);
   /*calculate the X-ray weight from the flux*/
   if (flux){
     pmul=flux;
@@ -79,31 +80,35 @@ INITIALIZE
 
 TRACE
 %{
-  /*point source*/
+  double k,l;
+  /*point source*
+  p=pmul;
+%}/
   x=0;y=0;z=0;
   
   /*draw random coordinates in the acceptance window*/
-  kx= (xwidth /2.0 * randpm1() -x)/distance;
-  ky= (yheight/2.0 * randpm1() -y)/distance;
+  kx= (focus_xw/2.0 * randpm1());
+  ky= (focus_yh/2.0 * randpm1());
   kz= distance;
   NORM(kx,ky,kz);  
-
+  //printf("%g %g %g\n",kx,ky,kz);
   /*sample wavelength - for now - do it uniformly in the window*/
-  l=randpm1()*dlambda*0.5 + lambda;
+  if (dlambda){
+    l=randpm1()*dlambda*0.5 + lambda;
+  }else{
+    l=lambda;
+  }
   k=2*M_PI/l;
-  kx/=k;
-  ky/=k;
-  kz/=k;
+  kx*=k;
+  ky*=k;
+  kz*=k;
   
-  /*randomly pick phase*/
-  if (phase==-1){
+  /*randomly pick phase or set to something rea*/
+  if (randomphase){
     phi=rand01()*2*M_PI;
   }else{
     phi=phase;
   }
-
-  randvec_target_rect_real(&xf, &yf, &rf, &pdir,
-			  0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
 
   /*set polarrization vector*/
   Ex=0;Ey=0;Ez=0;
@@ -113,10 +118,7 @@ TRACE
 
 MCDISPLAY
 %{
-  double radius;
-  if (sig_x<sig_y) radius=sig_x;
-  else radius=sig_y; 
-
+  double radius=0.05;
   magnify("xy");
   circle("xy",0,0,0,radius);
 %}
