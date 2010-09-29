@@ -85,11 +85,6 @@
 *           reflections="", absorption=5.08, incoherent=4.935,
 *           ax=3.0282, by=3.0282, cz=3.0282/2)
 *
-* %BUGS:
-* The component is known not to work properly as a Bragg monochromator. The 
-* reason is likely to relate to the internal definition of reciprocal space 
-* orientation. Investigation undergoing. 
-*
 * Also, always use a non-zero value of delta_d_d.
 *
 * %VALIDATION:
@@ -102,16 +97,28 @@
 * yheight:   Height of crystal [m]
 * zthick:    Thickness of crystal (no extinction simulated) [m]
 * geometry:   Name of an Object File Format (OFF) file for complex geometry. 
-*               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
+*               The OFF file may be generated from XYZ coordinates using 
+*            qhull/powercrust [str]
 * delta_d_d: Lattice spacing variance, gaussian RMS [1]
-* mosaic:    Crystal mosaic (isotropic), gaussian RMS. Puts the crystal in the isotropic mosaic model state, thus disregarding other mosaicity parameters. [arc minutes]
-* mosaic_a:  Horizontal (rotation around lattice vector a) mosaic (anisotropic), gaussian RMS. 
+* mosaic:    Crystal mosaic (isotropic), gaussian RMS. Puts the crystal in the 
+*            isotropic mosaic model state, thus disregarding other mosaicity 
+*            parameters. [arc minutes]
+* mosaic_a:  Horizontal (rotation around lattice vector a) mosaic (anisotropic), 
+*            gaussian RMS. 
 * Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity
 * through rotation around the crystal lattice vectors. Has precedence over
 * in-plane mosaic model. [arc minutes]
-* mosaic_b:  Vertical (rotation around lattice vector b) mosaic (anisotropic), gaussian RMS. [arc minutes]
-* mosaic_c:  Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), gaussian RMS [arc minutes]
-* mosaic_AB: In Plane mosaic rotation and plane vectors (anisotropic), mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l, input as a {}-delimited, 8-element vector. Puts the component in the in-plane mosaic state. Vectors A and B define plane in which the crystal roation is defined, and mosaic_A, mosaic_B, denotes the resp. mosaicities (gaussian RMS) with respect to the the two reflections chosen by A and B (Miller indices). [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]
+* mosaic_b:  Vertical (rotation around lattice vector b) mosaic (anisotropic), 
+*            gaussian RMS. [arc minutes]
+* mosaic_c:  Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), 
+*            gaussian RMS [arc minutes]
+* mosaic_AB: In Plane mosaic rotation and plane vectors (anisotropic), mosaic_A, mosaic_B,
+*            A_h,A_k,A_l, B_h,B_k,B_l, input as a {}-delimited, 8-element vector. 
+*            Puts the component in the in-plane mosaic state. Vectors A and B define 
+*            plane in which the crystal roation is defined, and mosaic_A, mosaic_B, 
+*            denotes the resp. mosaicities (gaussian RMS) with respect to the the 
+*            two reflections chosen by A and B (Miller indices). 
+*            [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]
 * 
 * recip_cell: Choice of direct/reciprocal (0/1) unit cell definition [1]
 * ax:        
@@ -363,24 +370,25 @@ SHARE
     }
 
     /* special cases for the structure definition */
-    if (info->m_ax || info->m_ay || info->m_az) info->m_a=0;
+    if (info->m_ax || info->m_ay || info->m_az) info->m_a=0; /* means we specify by hand the vectors */
     if (info->m_bx || info->m_by || info->m_bz) info->m_b=0;
     if (info->m_cx || info->m_cy || info->m_cz) info->m_c=0;
 
+    /* compute the norm from vector a if missing */
     if (info->m_ax || info->m_ay || info->m_az) {
       double as=sqrt(info->m_ax*info->m_ax+info->m_ay*info->m_ay+info->m_az*info->m_az);
       if (!info->m_bx && !info->m_by && !info->m_bz) info->m_a=info->m_b=as;
       if (!info->m_cx && !info->m_cy && !info->m_cz) info->m_a=info->m_c=as;
     }
-
     if (info->m_a && !info->m_b) info->m_b=info->m_a;
     if (info->m_b && !info->m_c) info->m_c=info->m_b;
-
+    
+    /* compute the lattive angles if not set from data file. Not used when in vector mode. */
     if (info->m_a && !info->m_aa) info->m_aa=90;
-
     if (info->m_aa && !info->m_bb) info->m_bb=info->m_aa;
     if (info->m_bb && !info->m_cc) info->m_cc=info->m_bb;
-
+    
+    /* parameters consistency checks */
     if (!info->m_ax && !info->m_ay && !info->m_az && !info->m_a) {
       fprintf(stderr,
               "Single_crystal: Error:Wrong a lattice vector definition\n");
@@ -413,14 +421,14 @@ SHARE
       if (info->m_c) cs = info->m_c;
       else cs =  sqrt(info->m_cx*info->m_cx+info->m_cy*info->m_cy+info->m_cz*info->m_cz);
 
-      info->m_ax = as; info->m_ay = 0; info->m_az = 0;
-      info->m_bx = bs*cos(info->m_cc*DEG2RAD);
-      info->m_by = bs*sin(info->m_cc*DEG2RAD);
-      info->m_bz = 0;
-      info->m_cx = cs*cos(info->m_bb*DEG2RAD);
+      info->m_bz = as; info->m_by = 0; info->m_bx = 0;
+      info->m_az = bs*cos(info->m_cc*DEG2RAD);
+      info->m_ay = bs*sin(info->m_cc*DEG2RAD);
+      info->m_ax = 0;
+      info->m_cz = cs*cos(info->m_bb*DEG2RAD);
       info->m_cy = cs*(cos(info->m_aa*DEG2RAD)-cos(info->m_cc*DEG2RAD)*cos(info->m_bb*DEG2RAD))
                      /sin(info->m_cc*DEG2RAD);
-      info->m_cz = sqrt(cs*cs - info->m_cx*info->m_cx - info->m_cy*info->m_cy);
+      info->m_cx = sqrt(cs*cs - info->m_cz*info->m_cz - info->m_cy*info->m_cy);
 
       printf("Single_crystal: %s structure a=%g b=%g c=%g aa=%g bb=%g cc=%g ",
         (flag ? "INC" : SC_file), as, bs, cs, info->m_aa, info->m_bb, info->m_cc);
