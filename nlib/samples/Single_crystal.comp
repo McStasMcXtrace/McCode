@@ -143,6 +143,8 @@
 * bb:         unit cell angles alpha, beta and gamma. Then uses norms of
 *               vectors a,b and c as lattice parameters [deg]
 * cc:         [deg].
+* barns:      Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. 
+*             barns=1 for laz, barns=0 for lau type files [1]
 *
 * OUTPUT PARAMETERS:
 *
@@ -227,7 +229,7 @@ SETTING PARAMETERS(string reflections=0, string geometry=0,
             bx = 0, by = 0, bz = 0,
             cx = 0, cy = 0, cz = 0,
             p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
-            aa=0, bb=0, cc=0, order=0, powder=0)
+            aa=0, bb=0, cc=0, order=0)
 OUTPUT PARAMETERS(hkl_info, offdata)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 SHARE
@@ -372,24 +374,25 @@ SHARE
     if (nb_atoms > 1) { info->sigma_a *= nb_atoms; info->sigma_i *= nb_atoms; }
 
     /* special cases for the structure definition */
-    if (info->m_ax || info->m_ay || info->m_az) info->m_a=0;
+    if (info->m_ax || info->m_ay || info->m_az) info->m_a=0; /* means we specify by hand the vectors */
     if (info->m_bx || info->m_by || info->m_bz) info->m_b=0;
     if (info->m_cx || info->m_cy || info->m_cz) info->m_c=0;
 
+    /* compute the norm from vector a if missing */
     if (info->m_ax || info->m_ay || info->m_az) {
       double as=sqrt(info->m_ax*info->m_ax+info->m_ay*info->m_ay+info->m_az*info->m_az);
       if (!info->m_bx && !info->m_by && !info->m_bz) info->m_a=info->m_b=as;
       if (!info->m_cx && !info->m_cy && !info->m_cz) info->m_a=info->m_c=as;
     }
-
     if (info->m_a && !info->m_b) info->m_b=info->m_a;
     if (info->m_b && !info->m_c) info->m_c=info->m_b;
-
+    
+    /* compute the lattive angles if not set from data file. Not used when in vector mode. */
     if (info->m_a && !info->m_aa) info->m_aa=90;
-
     if (info->m_aa && !info->m_bb) info->m_bb=info->m_aa;
     if (info->m_bb && !info->m_cc) info->m_cc=info->m_bb;
-
+    
+    /* parameters consistency checks */
     if (!info->m_ax && !info->m_ay && !info->m_az && !info->m_a) {
       fprintf(stderr,
               "Single_crystal: Error:Wrong a lattice vector definition\n");
@@ -422,14 +425,14 @@ SHARE
       if (info->m_c) cs = info->m_c;
       else cs =  sqrt(info->m_cx*info->m_cx+info->m_cy*info->m_cy+info->m_cz*info->m_cz);
 
-      info->m_ax = as; info->m_ay = 0; info->m_az = 0;
-      info->m_bx = bs*cos(info->m_cc*DEG2RAD);
-      info->m_by = bs*sin(info->m_cc*DEG2RAD);
-      info->m_bz = 0;
-      info->m_cx = cs*cos(info->m_bb*DEG2RAD);
+      info->m_bz = as; info->m_by = 0; info->m_bx = 0;
+      info->m_az = bs*cos(info->m_cc*DEG2RAD);
+      info->m_ay = bs*sin(info->m_cc*DEG2RAD);
+      info->m_ax = 0;
+      info->m_cz = cs*cos(info->m_bb*DEG2RAD);
       info->m_cy = cs*(cos(info->m_aa*DEG2RAD)-cos(info->m_cc*DEG2RAD)*cos(info->m_bb*DEG2RAD))
                      /sin(info->m_cc*DEG2RAD);
-      info->m_cz = sqrt(cs*cs - info->m_cx*info->m_cx - info->m_cy*info->m_cy);
+      info->m_cx = sqrt(cs*cs - info->m_cz*info->m_cz - info->m_cy*info->m_cy);
 
       printf("Single_crystal: %s structure a=%g b=%g c=%g aa=%g bb=%g cc=%g ",
         (flag ? "INC" : SC_file), as, bs, cs, info->m_aa, info->m_bb, info->m_cc);
@@ -833,8 +836,13 @@ TRACE
     abs_xsect = hkl_info.sigma_a*2200/v;
     inc_xsect = hkl_info.sigma_i;
     V0= hkl_info.V0;
-    abs_xlen  = 1e2*abs_xsect/V0;
-    inc_xlen  = 1e2*inc_xsect/V0;
+    abs_xlen  = abs_xsect/V0;
+    inc_xlen  = inc_xsect/V0;
+    if (barns) { 
+      /*If cross sections are given in barns, we need a scaling factor of 100 
+        to get scattering lengths in m, since V0 is assumed to be in AA*/
+      abs_xlen *= 100; inc_xlen *= 100; 
+    } /* else assume fm^2 */
     L = hkl_info.list;
     T = hkl_info.tau_list;
     
@@ -863,17 +871,10 @@ TRACE
       l_full = t2*v;
 
       /* (1). Compute incoming wave vector ki */
-      if (powder) { /* orientation of crystallite is random */
-        double nvx, nvy, nvz;
-        randvec_target_circle(&nvx, &nvy, &nvz, NULL, vx, vy, vz, 0);
-        kix = V2K*nvx;
-        kiy = V2K*nvy;
-        kiz = V2K*nvz;
-      } else {
-        kix = V2K*vx;
-        kiy = V2K*vy;
-        kiz = V2K*vz;
-      }
+      
+      kix = V2K*vx;
+      kiy = V2K*vy;
+      kiz = V2K*vz;
 
       /* (2). Intersection of Ewald sphere with reciprocal lattice points */
 
@@ -972,8 +973,11 @@ TRACE
       /* Cross-sections are in barns = 10**-28 m**2, and unit cell volumes are
          in AA**3 = 10**-30 m**2. Hence a factor of 100 is used to convert
          scattering lengths to m**-1 */
-      coh_xlen = 1e2*coh_xsect/V0;
-      tot_xlen = 1e2*tot_xsect/V0;
+      coh_xlen = coh_xsect/V0;
+      tot_xlen = tot_xsect/V0;
+      if (barns) {
+        coh_xlen *= 100; tot_xlen *= 100;
+      } /* else assume fm^2 */
 
       /* (5). Transmission */
       p_trans = exp(-tot_xlen*l_full);
