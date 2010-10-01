@@ -29,7 +29,7 @@
 
 DEFINE COMPONENT Source_pt
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (focus_xw=0,focus_yh=0,flux=1,distance=1,gamma=0,E0=0, dE=0, lambda=-1,dlambda=-1,phase=-1,randomphase=0)
+SETTING PARAMETERS (focus_xw=0,focus_yh=0,flux=1,distance=1,gamma=0,E0=0, dE=0, lambda=0,dlambda=0,phase=-1,randomphase=0)
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
@@ -81,9 +81,8 @@ INITIALIZE
 TRACE
 %{
   double k,l;
-  /*point source*
+  /*point source*/
   p=pmul;
-%}/
   x=0;y=0;z=0;
   
   /*draw random coordinates in the acceptance window*/
@@ -91,7 +90,6 @@ TRACE
   ky= (focus_yh/2.0 * randpm1());
   kz= distance;
   NORM(kx,ky,kz);  
-  //printf("%g %g %g\n",kx,ky,kz);
   /*sample wavelength - for now - do it uniformly in the window*/
   if (dlambda){
     l=randpm1()*dlambda*0.5 + lambda;
@@ -110,7 +108,7 @@ TRACE
     phi=phase;
   }
 
-  /*set polarrization vector*/
+  /*set polarization vector*/
   Ex=0;Ey=0;Ez=0;
 
   p=pmul;
