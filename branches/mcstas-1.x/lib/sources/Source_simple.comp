@@ -19,7 +19,7 @@
 * A circular neutron source with flat energy spectrum and arbitrary flux
 *
 * %D
-* The routine is a circular neutron source, which aims at a square target
+* The routine is a circular or rectangular neutron source, which aims at a square target
 * centered at the beam (in order to improve MC-acceptance rate).  The angular
 * divergence is then given by the dimensions of the target.
 * The neutron energy is uniformly distributed between E0-dE and E0+dE.
@@ -137,7 +137,7 @@ TRACE
    if (!gauss) {
      Lambda=Lambda0+dLambda*randpm1();
    } else {
-     Lambda=randnorm()*dLambda;
+     Lambda=Lambda0+randnorm()*dLambda;
    }
    v = K2V*(2*PI/Lambda);
  }
