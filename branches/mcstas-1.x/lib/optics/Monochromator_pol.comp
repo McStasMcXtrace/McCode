@@ -180,7 +180,9 @@ TRACE
       
       SCATTER;
     } /* End MC choice to reflect or transmit neutron */
-  } /* End intersect the crystal */
+  } else { /* End intersect the crystal */
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
   
   %}
 
