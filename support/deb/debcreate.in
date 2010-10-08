@@ -3,7 +3,7 @@ export BUILDDIR="/build/@MCCODE_TARNAME@-@MCCODE_VERSION@"
 export SRCDIR="/build/@MCCODE_TARNAME@-@MCCODE_VERSION@-srcdir"
 export MACHINETYPE=`uname -m`
 
-apt-get -y --force-yes install perl-tk pdl gcc libc6-dev g77 libx11-dev xorg-dev libxt-dev lintian
+apt-get -y --force-yes install perl-tk pdl gcc libc6-dev g77 libx11-dev xorg-dev libxt-dev lintian gnuplot
 
 rm -rf /build/*
 rm -rf /usr/local/lib/*

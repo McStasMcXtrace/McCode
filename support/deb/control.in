@@ -1,7 +1,7 @@
 Package: mcstas
 Version: @MCCODE_STRING@
 Architecture: i386
-Depends: perl, perl-tk, gcc, libc6-dev, libg2c0, pdl
+Depends: perl, perl-tk, gcc, libc6-dev, libg2c0, pdl, gnuplot
 Suggests: scilab, freewrl, mpich-bin, libmpich1.0-dev, openmpi-common, openmpi-bin, libopenmpi-dev
 Conflicts: pgplot5
 Replaces: pgplot5
