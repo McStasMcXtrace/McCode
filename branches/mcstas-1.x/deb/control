@@ -1,7 +1,7 @@
 Package: mcstas
 Version: MCSTAS_VERSION
 Architecture: any
-Depends: perl, perl-tk, gcc, libc6-dev, pdl, libgfortran3, pgplot5, libpgplot-perl
+Depends: perl, perl-tk, gcc, libc6-dev, pdl, libgfortran3, pgplot5, libpgplot-perl, gnuplot
 Suggests: scilab, freewrl, openmpi-bin, libopenmpi-dev
 Installed-Size: 31120
 Maintainer: McStas Team <mcstas@risoe.dk>
