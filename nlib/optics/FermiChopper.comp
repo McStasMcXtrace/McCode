@@ -393,7 +393,7 @@ TRACE
   if (cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, yheight))
   {
     if (t1 <= 0) { /* Neutron started inside the cylinder */
-      if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron started inside the cylinder, t1=%8.3g (enter).\n", 
+      if (verbose > 2 && FCVars.absorb_alreadyinside<FermiChopper_MAXITER) printf("FermiChopper: %s: ABSORB Neutron started inside the cylinder, t1=%8.3g (enter).\n", 
         NAME_CURRENT_COMP, t1);
       FCVars.absorb_alreadyinside++; 
       ABSORB; 
@@ -463,17 +463,17 @@ TRACE
 
     /* Propagating to the slit package entrance */
     PROP_DT(t3);
-    dt -= t3; /* remaining time to exit of cylinder */
-    xp1 = FC_xrot(x,z, t, FCVars);
+    dt -= t3; /* remaining time from slit pack entry to exit of cylinder */
+    xp1 = FC_xrot(x,z, t, FCVars); /* should be slit_input */
+    zp1 = FC_zrot(x,z, t, FCVars);
     if (mcdotrace) {
-      zp1 = FC_zrot(x,z, t, FCVars);
       /* indicate position of neutron in mcdisplay */
       xp2 = x; zp2 = z; x = xp1; z=zp1; SCATTER; x=xp2; z=zp2;
     } else SCATTER;
     
     if (verbose > 2)
-      printf("FermiChopper: %s: PROP_DT t3=%8.3g dt=%8.3g xyz=[%8.3g %8.3g %8.3g] length=%g (slit enter).\n",
-           NAME_CURRENT_COMP, t3, dt, x,y,z, slit_input);
+      printf("FermiChopper: %s: PROP_DT t3=%8.3g dt=%8.3g xyz=[%8.3g %8.3g %8.3g] length=%g (slit enter) z'=%g.\n",
+           NAME_CURRENT_COMP, t3, dt, x,y,z, slit_input, zp1);
 
     /* must have X'< slit package width at package Z'=slit_input */
     if (fabs(xp1) >= nslit*w/2) { 
@@ -536,7 +536,7 @@ TRACE
 
       /* absolute time at tangent intersection, changed to time shift below */
       dt_to_tangent = (vxp1 - vxp2 ? ((xp2 - xp1) + (t*vxp1 - (t+dt)*vxp2))/(vxp1 - vxp2) - t
-                        : -1);
+                                   : -1);
 
       /* If algorithm fails, take the middle of the interval*/
       if((dt_to_tangent < 0)||(dt_to_tangent > dt)) dt_to_tangent=dt*0.5; 
@@ -629,13 +629,13 @@ TRACE
 
         /* Propagate to slit wall point (t+t3) on slit n3 wall */
         PROP_DT(t3); dt -= t3; /* dt: time remaining to slit exit after propagation */
+        zp1 = FC_zrot(x,z, t, FCVars); /* Z'(t+t3) */
         
         if (verbose > 2)
-          printf("FermiChopper: %s: PROP_DT t3=%8.3g dt=%8.3g xyz=[%8.3g %8.3g %8.3g] (on wall).\n",
-           NAME_CURRENT_COMP, t3, dt, x,y,z);
+          printf("FermiChopper: %s: PROP_DT t3=%8.3g dt=%8.3g xyz=[%8.3g %8.3g %8.3g] (on wall). z'=%g\n",
+           NAME_CURRENT_COMP, t3, dt, x,y,z, zp1);
         
         /* check if intersection point is still in the slit package, else exit loop */
-        zp1 = FC_zrot(x,z, t, FCVars); /* Z'(t+t3) */
         if (fabs(zp1) > length/2) {
           if (verbose > 2) 
             printf("FermiChopper: %s: Neutron is outside slit pack (on slit wall).\n", 
@@ -746,9 +746,12 @@ TRACE
     PROP_DT(t2);
     SCATTER;
     
+    xp1 = FC_xrot(x,z, t,FCVars);
+    zp1 = FC_zrot(x,z, t,FCVars);
+    
     if (verbose > 2)
-      printf("FermiChopper: %s: t1=%8.3g PROP_DT t2=%8.3g xyz=[%8.3g %8.3g %8.3g] (OUT cyl).\n",
-           NAME_CURRENT_COMP, t1, t2, x,y,z);
+      printf("FermiChopper: %s: t1=%8.3g PROP_DT t2=%8.3g xyz=[%8.3g %8.3g %8.3g] (OUT cyl). z'=%g\n",
+           NAME_CURRENT_COMP, t1, t2, x,y,z, zp1);
 
     /* Check if the neutron left the cylinder by its top or bottom */
     if (fabs(y) >= yheight/2) { 
@@ -759,7 +762,6 @@ TRACE
 
 
     /* must have X'< slit package width at package Z'=cylinder output */
-    xp1 = FC_xrot(x,z, t,FCVars);
     if (fabs(xp1) >= nslit*w/2) { 
       if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron X is outside slit package cylinder, xp1=%8.3g (exiting).\n", 
         NAME_CURRENT_COMP, xp1);
