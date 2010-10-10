@@ -28,7 +28,7 @@
 * component, respectively. The dist parameter should then be set as the distance
 * from the moderator to the first component.
 * (2) This component works purely by interpolation. Therefore be sure that Emin and
-* Emax are within the limits of the moderator filename
+* Emax are within the limits of the moderator file.
 *
 * Example: SNS_source(filename="source_sct091_tu_02_1.dat",
 *                        xwidth=0.1, yheight=0.12,
