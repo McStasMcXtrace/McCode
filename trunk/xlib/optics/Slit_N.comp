@@ -70,7 +70,6 @@ TRACE
 %{
   PROP_Z0;
   double xx=-((N-1)/2.0)*d;
-  double N_2=N/2.0;
   int i=0;
   while(x>xx && i<N){
     i++;
@@ -103,7 +102,6 @@ MCDISPLAY
       double xw, yh;
       xw = (xmax - xmin)/2.0;
       yh = (ymax - ymin)/2.0;
-      printf("%g %g %g %d %g\n",xw,yh,xx,i,N);
       multiline(3, xmin+xx-xw, (double)ymax, 0.0,
           (double)xmin+xx, (double)ymax, 0.0,
           (double)xmin+xx, ymax+yh, 0.0);
