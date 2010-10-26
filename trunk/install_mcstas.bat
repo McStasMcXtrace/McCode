@@ -77,13 +77,14 @@
 @mkdir %MCSTAS_SITE%\lib
 :inst
 @echo Copying in the files...
-@copy mcstas.exe %MCSTAS_SITE%\bin
-@copy mcformat.exe %MCSTAS_SITE%\bin
-@copy mpicc.bat %MCSTAS_SITE%\bin
-@copy support\Win32\which.exe %MCSTAS_SITE%\bin
-@copy *.pl %MCSTAS_SITE%\bin
-@copy support\pgplot_win32\*.* %MCSTAS_SITE%\bin
+@copy src\mcstas.exe %MCSTAS_SITE%\bin
+@copy src\mcformat.exe %MCSTAS_SITE%\bin
+@copy src\mpicc.bat %MCSTAS_SITE%\bin
+@copy support\Win32\install\which.exe %MCSTAS_SITE%\bin
+@copy src\*.pl %MCSTAS_SITE%\bin
+@copy support\Win32\pgplot\*.* %MCSTAS_SITE%\bin
 @xcopy /e /y /q /i lib %MCSTAS_SITE%\lib
+@xcopy /e /y /q /i nlib %MCSTAS_SITE%\lib
 @echo Done
 @echo Doing doc update using mcdoc...
 @set PATH=%PATH%;%MCSTAS_SITE%\bin
