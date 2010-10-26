@@ -77,18 +77,19 @@
 @mkdir %MCXTRACE_SITE%\lib
 :inst
 @echo Copying in the files...
-@copy mcxtrace.exe %MCXTRACE_SITE%\bin
-@copy mcformat.exe %MCXTRACE_SITE%\bin
-@copy mpicc.bat %MCXTRACE_SITE%\bin
-@copy support\Win32\which.exe %MCXTRACE_SITE%\bin
-@copy *.pl %MCXTRACE_SITE%\bin
-@copy support\pgplot_win32\*.* %MCXTRACE_SITE%\bin
+@copy src\mcxtrace.exe %MCXTRACE_SITE%\bin
+@copy src\mxformat.exe %MCXTRACE_SITE%\bin
+@copy src\mpicc.bat %MCXTRACE_SITE%\bin
+@copy support\Win32\install\which.exe %MCXTRACE_SITE%\bin
+@copy src\*.pl %MCXTRACE_SITE%\bin
+@copy support\Win32\pgplot\*.* %MCXTRACE_SITE%\bin
 @xcopy /e /y /q /i lib %MCXTRACE_SITE%\lib
+@xcopy /e /y /q /i xlib %MCXTRACE_SITE%\lib
 @echo Done
 @echo Doing doc update using mcdoc...
 @set PATH=%PATH%;%MCXTRACE_SITE%\bin
 @set MCSTAS=%MCXTRACE_SITE%\lib
-@mcdoc.pl --text
+@mxdoc.pl --text
 @echo Placing Mcstas.pm in perl tree....
 @support\win32\perlinst.pl Tk\CodeText\Bash.pm support\Tk-CodeText-0.3.4\CodeText\McStas.pm
 @echo ...............................................................
