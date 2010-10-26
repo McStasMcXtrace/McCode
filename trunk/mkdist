@@ -133,7 +133,8 @@ fi
 cd $DIST
 
 # Create configure (which will itself create mccode_config.perl and mccode_reconfigure)
-autoconf -o configure $CONFIGURE_IN
+autoconf 
+#-o configure $CONFIGURE_IN
 
 # run lex, yacc (assuming linux - flex -i & bison -v -d)
 cd src
@@ -197,8 +198,9 @@ flex -i instrument.l
 bison -v -d instrument.y
 cd ..
 ./configure
-sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
-sed 's/DONSIS="0"/DONSIS="1"/' build.bat.new > build.bat
+# build.bat is obsolete?
+#sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
+#sed 's/DONSIS="0"/DONSIS="1"/' build.bat.new > build.bat
 cp support/Win32/install/which.exe .
 cd ..
 tar cfz $PW/../$MCCODE_TARNAME-$MCCODE_VERSION-Win32-src.tar.gz $MCCODE_TARNAME-$MCCODE_VERSION
@@ -210,15 +212,15 @@ if [ `which makensis` ]; then
     ./configure
     # Make sure we default to PGPLOT plotter
     make pgplot
-    make mcstas.win32
-    cp mcstas.ini ..
-    cp mcstas.nsi ..
-    cp mcstas.bmp ..
-    cp LICENSE.rtf ..
+    make $MCCODE_TARNAME.win32
+    cp support/Win32/install/$MCCODE_TARNAME.ini ..
+    cp support/Win32/install/$MCCODE_TARNAME.nsi ..
+    cp support/Win32/install/$MCCODE_TARNAME.bmp ..
+    cp support/Win32/install/LICENSE.rtf ..
     cd ..
     zip -r $MCCODE_TARNAME-$MCCODE_VERSION-i686-Intel-Win32.zip $MCCODE_TARNAME-$MCCODE_VERSION
     cp winsupport/* .
-    makensis mcstas.nsi
+    makensis $MCCODE_TARNAME.nsi
     echo Created Win32 binary packages: `ls *zip *exe`
 else
     echo Binary versions for Win32 NOT created

@@ -1,4 +1,4 @@
-#    This file is part of the McStas neutron ray-trace simulation package
+#    This file is part of the McXtrace X-ray ray-trace simulation package
 #    Copyright (C) 1997-2004, All rights reserved
 #    Risoe National Laborartory, Roskilde, Denmark
 #    Institut Laue Langevin, Grenoble, France
@@ -16,7 +16,7 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-#    mcstas.nsi: input file for the McStas NullSoft installer
+#    mcxtrace.nsi: input file for the McXtrace NullSoft installer
 #
 
 !define TEMP1 $R0
@@ -29,22 +29,22 @@
 !include MUI.nsh
 !include Sections.nsh
  
-Name "McStas plus tools"
-OutFile "McStas-${VERSION}-i686-Win32.exe"
+Name "McXtrace plus tools"
+OutFile "McXtrace-${VERSION}-i686-Win32.exe"
 
 ##===========================================================================
 ## Modern UI Pages
 ##===========================================================================
 
-!define MUI_WELCOMEFINISHPAGE_BITMAP "mcstas.bmp" 
+!define MUI_WELCOMEFINISHPAGE_BITMAP "mcxtrace.bmp" 
 !define MUI_WELCOMEPAGE_TEXT "This wizard will guide you through the installation of \
-McStas release ${VERSION} on Win32 systems.\
-\n\nMcStas is a ray-tracing Monte Carlo neutron simulator (see <http://www.mcstas.org>).\
-\n\nThis installer will set up McStas and support tools on your computer.\
-\n\nThis release is NOT backward compatible with McStas 1.x.\
-\n\nNOTE: If you have a previous, working installation of McStas on your machine, you should be able\
-to skip installation of the 'support tools' (skip by unchecking everything but McStas when prompted).\
-\n\nNOTE: Please install all software on C:\ and do NOT USE SPACES in the McStas installation\
+McXtrace release ${VERSION} on Win32 systems.\
+\n\nMcXtrace is a ray-tracing Monte Carlo neutron simulator (see <http://www.mcxtrace.org>).\
+\n\nThis installer will set up McXtrace and support tools on your computer.\
+\n\nThis release is NOT backward compatible with McXtrace 1.x.\
+\n\nNOTE: If you have a previous, working installation of McXtrace on your machine, you should be able\
+to skip installation of the 'support tools' (skip by unchecking everything but McXtrace when prompted).\
+\n\nNOTE: Please install all software on C:\ and do NOT USE SPACES in the McXtrace installation\
 directory name."
 
 
@@ -85,7 +85,7 @@ Page custom SetCustom
 LangString NoSectionsSelected ${LANG_ENGLSH} "You haven't selected any sections!"
  
 LangString MUI_DIRECTORYPAGE_TEXT_TOP_B ${LANG_ENGLSH} "Setup will install \
-McStas in the following folder... WARNING: Spaces and specials chars are unsupported here!"
+McXtrace in the following folder... WARNING: Spaces and specials chars are unsupported here!"
  
 ##===========================================================================
 ## Start sections
@@ -125,14 +125,14 @@ SectionEnd
 SectionGroupEnd
  
 ## Sections Group 2
-SectionGroup /e "McStas" PROG2
+SectionGroup /e "McXtrace" PROG2
   
-Section "McStas ${VERSION} (required)" MCSTAS
+Section "McXtrace ${VERSION} (required)" MCXTRACE
   ; Start by going to the temp folder...
   SetOutPath "$TEMP"
 
-  File mcstas-${VERSION}-i686-Intel-Win32.zip
-  ZipDLL::extractall "mcstas-${VERSION}-i686-Intel-Win32.zip" ""
+  File mcxtrace-${VERSION}-i686-Intel-Win32.zip
+  ZipDLL::extractall "mcxtrace-${VERSION}-i686-Intel-Win32.zip" ""
   SectionIn RO
   
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("NSIS", "AUTO").r0'
@@ -140,12 +140,12 @@ Section "McStas ${VERSION} (required)" MCSTAS
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("DEVLIB", "$5").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("PERLBIN",  "$3").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("SCIBIN", "$6").r0'
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCSTAS_SITE", "$INSTDIR").r0'
+  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCXTRACE_SITE", "$INSTDIR").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCVERSION", "${VERSION}").r0'
       
 
   ; Execute batch installer
-  ExecWait "$TEMP\mcstas-${VERSION}\install_mcstas.bat"
+  ExecWait "$TEMP\mcxtrace-${VERSION}\install_mcxtrace.bat"
  
 SectionEnd
 
@@ -155,22 +155,22 @@ Section "Windows setup" WIN
    SetShellVarContext all
    
    ; Create desktop and SM link for mcgui.pl
-   CreateShortCut "$DESKTOP\McStas.lnk" "$INSTDIR\bin\mcgui.pl" "" "$INSTDIR\bin\mcgui.pl" 0
-   CreateDirectory "$SMPROGRAMS\McStas"
-   CreateShortCut "$SMPROGRAMS\McStas\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-   CreateShortCut "$SMPROGRAMS\McStas\McStas.lnk" "$INSTDIR\bin\mcgui.pl" "" "$INSTDIR\bin\mcgui.pl" 0
+   CreateShortCut "$DESKTOP\McXtrace.lnk" "$INSTDIR\bin\mcgui.pl" "" "$INSTDIR\bin\mcgui.pl" 0
+   CreateDirectory "$SMPROGRAMS\McXtrace"
+   CreateShortCut "$SMPROGRAMS\McXtrace\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
+   CreateShortCut "$SMPROGRAMS\McXtrace\McXtrace.lnk" "$INSTDIR\bin\mcgui.pl" "" "$INSTDIR\bin\mcgui.pl" 0
   
    ; Write the installation path into the registry
-   WriteRegStr HKLM SOFTWARE\McStas "Install_Dir" "$INSTDIR"
+   WriteRegStr HKLM SOFTWARE\McXtrace "Install_Dir" "$INSTDIR"
 
    ; Write the uninstall keys for Windows
-   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "DisplayName" "McStas"
-   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "UninstallString" '"$INSTDIR\uninstall.exe"'
-   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "NoModify" 1
-   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "NoRepair" 1
+   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McXtrace" "DisplayName" "McXtrace"
+   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McXtrace" "UninstallString" '"$INSTDIR\uninstall.exe"'
+   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McXtrace" "NoModify" 1
+   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McXtrace" "NoRepair" 1
    WriteUninstaller "uninstall.exe"
 
-   messagebox mb_ok "McStas install complete! Please log off to complete configuration."
+   messagebox mb_ok "McXtrace install complete! Please log off to complete configuration."
 
 SectionEnd
  
@@ -184,7 +184,7 @@ SectionGroupEnd
 !define PROG1_StartIndex ${PROG1}
 !define PROG1_EndIndex   ${CORT}
  
-!define PROG2_InstDir "C:\McStas"
+!define PROG2_InstDir "C:\McXtrace"
 !define PROG2_StartIndex ${PROG2}
 !define PROG2_EndIndex   ${WIN}
  
@@ -199,7 +199,7 @@ Function .onInit
   ;$PLUGINSDIR will automatically be removed when the installer closes
   
   InitPluginsDir
-  File /oname=$PLUGINSDIR\mcstas.ini "mcstas.ini"
+  File /oname=$PLUGINSDIR\mcxtrace.ini "mcxtrace.ini"
   
 FunctionEnd
 
@@ -207,13 +207,13 @@ Function SetCustom
   !insertmacro MUI_HEADER_TEXT "Support app location" ""
   ;Display the InstallOptions dialog
   Push ${TEMP1}
-    InstallOptions::dialog "$PLUGINSDIR\mcstas.ini"
+    InstallOptions::dialog "$PLUGINSDIR\mcxtrace.ini"
   Pop ${TEMP1}
 
-    ReadINIStr $3 "$PLUGINSDIR\mcstas.ini" "Field 3" "State"
-    ReadINIStr $4 "$PLUGINSDIR\mcstas.ini" "Field 5" "State"
-    ReadINIStr $5 "$PLUGINSDIR\mcstas.ini" "Field 7" "State"
-    ReadINIStr $6 "$PLUGINSDIR\mcstas.ini" "Field 9" "State"
+    ReadINIStr $3 "$PLUGINSDIR\mcxtrace.ini" "Field 3" "State"
+    ReadINIStr $4 "$PLUGINSDIR\mcxtrace.ini" "Field 5" "State"
+    ReadINIStr $5 "$PLUGINSDIR\mcxtrace.ini" "Field 7" "State"
+    ReadINIStr $6 "$PLUGINSDIR\mcxtrace.ini" "Field 9" "State"
 
 FunctionEnd
 
@@ -390,18 +390,18 @@ Section "Uninstall"
    SetShellVarContext all  
 
   ; Remove registry keys
-  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas"
-  DeleteRegKey HKLM SOFTWARE\McStas
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McXtrace"
+  DeleteRegKey HKLM SOFTWARE\McXtrace
 
   ; Remove files and uninstaller
   Delete $INSTDIR\uninstall.exe
 
   ; Remove shortcuts, if any
-  Delete "$SMPROGRAMS\McStas\*.*"
+  Delete "$SMPROGRAMS\McXtrace\*.*"
 
   ; Remove directories and files used
-  Delete "$DESKTOP\McStas.lnk"
-  RMDir "$SMPROGRAMS\McStas"
+  Delete "$DESKTOP\McXtrace.lnk"
+  RMDir "$SMPROGRAMS\McXtrace"
   RMDir /R "$INSTDIR"
   
 
