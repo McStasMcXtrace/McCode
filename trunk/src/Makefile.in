@@ -134,12 +134,12 @@ mcxtrace: $(OBJECTS_mcxtrace)
 	@echo "Building" $(CC) -o mcxtrace $(CFLAGS) $(LDFLAGS) ... $(OBJECTS_mcxtrace) -lm
 	@$(CC) -o mcxtrace $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS_mcxtrace) -lm
 
-mcstas.win32: $(COBJECTS)
-	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(USE_NEXUS)
+mcstas.win32: $(COBJECTS_mcstas)
+	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(USE_NEXUS) -UHAVE_STRCASESTR=1
 	$(MINGW) -o mcformat.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(USE_NEXUS)
 
-mcxtrace.win32: $(CMXOBJECTS)
-	$(MINGW) -o mcxtrace.exe -DMCSTAS='"C:\\McXtrace\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(CMXOBJECTS) -lm $(USE_NEXUS)
+mcxtrace.win32: $(CMXOBJECTS_mcxtrace)
+	$(MINGW) -o mcxtrace.exe -DMCSTAS='"C:\\McXtrace\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS_mcxtrace) -lm $(USE_NEXUS) -UHAVE_STRCASESTR=1
 	$(MINGW) -o mxformat.exe -DMCSTAS='"C:\\McXtrace\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(USE_NEXUS)
 
 
