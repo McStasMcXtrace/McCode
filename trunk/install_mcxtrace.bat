@@ -62,7 +62,7 @@
 @set ORIGPATH=%PATH%
 @set PATH=%PERLBIN%;%SCIBIN%;%DEVBIN%;%DEVLIB%;%PATH%
 @echo Trying to guess your plotter and configuration...
-@mcconfig.pl
+@src\mcconfig.pl
 @echo Installing in MCXTRACE_SITE=%MCXTRACE_SITE%
 @if exist %MCXTRACE_SITE% move %MCXTRACE_SITE% "%MCXTRACE_SITE%.%DATE%"
 @echo Creating directory %MCXTRACE_SITE%
@@ -91,7 +91,7 @@
 @set MCSTAS=%MCXTRACE_SITE%\lib
 @mxdoc.pl --text
 @echo Placing Mcstas.pm in perl tree....
-@support\win32\perlinst.pl Tk\CodeText\Bash.pm support\Tk-CodeText-0.3.4\CodeText\McStas.pm
+@support\Win32\install\perlinst.pl support\common\Tk-CodeText-0.3.4\CodeText\McStas.pm
 @echo ...............................................................
 @echo Modifying Windows registry for MCSTAS and PATH system variables
 @echo ...............................................................
