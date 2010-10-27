@@ -87,6 +87,9 @@ all: @MCCODE_TARNAME@
 @MCCODE_TARNAME@: $(OBJECTS)
 	cd src/ && $(MAKE)
 
+@MCCODE_TARNAME@.win32: $(OBJECTS)
+	cd src/ && $(MAKE) @MCCODE_TARNAME@.win32
+
 clean:
 	cd src/ && $(MAKE) clean
 	rm -f src/config.cache config.cache
