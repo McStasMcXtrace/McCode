@@ -16,7 +16,7 @@ our $vrmlview;
 
 if ($Config{'osname'} eq "MSWin32") {
     my $failed;
-    my $which="support\\Win32\\which.exe";
+    my $which="support\\Win32\\install\which.exe";
     if (not -f $which) { $which="which.exe"; }
 
     print STDOUT "\nConfiguring McStas on Win32\n\n";
@@ -226,20 +226,19 @@ close(WRITE);
 copy("$file2", "$file");
 print STDOUT "Updating: $file2 $file\n";
 
-chdir("support\\ppds");
 print STDOUT "Installing Tk extension (ppm)\n";
-system("ppm install Tk.ppd");
+system("ppm install support\\Win32\\Perl\\Tk.ppd");
 print STDOUT "Installing Tk-CodeText extension (ppm)\n";
-system("ppm install Syntax-Highlight-Perl.ppd");
-system("ppm install Tk-CodeText.ppd");
+system("ppm install support\\Win32\\Perl\\Syntax-Highlight-Perl.ppd");
+system("ppm install support\\Win32\\Perl\\Tk-CodeText.ppd");
 print STDOUT "Installing Math-Amoeba extension (ppm)\n";
-system("ppm install Math-Amoeba.ppd");
+system("ppm install support\\Win32\\Perl\\Math-Amoeba.ppd");
 print STDOUT "Installing PDL and PGPLOT extensions (ppm)\n";
-system("ppm install PGPLOT.ppd");
-system("ppm install Parse-RecDescent.ppd");
-system("ppm install Inline.ppd");
-system("ppm install Astro-FITS-Header.ppd");
-system("ppm install PDL.ppd");
+system("ppm install support\\Win32\\Perl\\PGPLOT.ppd");
+system("ppm install support\\Win32\\Perl\\Parse-RecDescent.ppd");
+system("ppm install support\\Win32\\Perl\\Inline.ppd");
+system("ppm install support\\Win32\\Perl\\Astro-FITS-Header.ppd");
+system("ppm install support\\Win32\\Perl\\PDL.ppd");
 
 
 sub locate {
