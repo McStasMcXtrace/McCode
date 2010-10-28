@@ -216,7 +216,7 @@ if [ `which makensis` ]; then
     cp support/Win32/install/$MCCODE_TARNAME.ini ..
     cp support/Win32/install/$MCCODE_TARNAME.nsi ..
     cp support/Win32/install/$MCCODE_TARNAME.bmp ..
-    cp support/Win32/install/LICENSE.rtf ..
+    cp support/Win32/install/LICENSE_$MCCODE_TARNAME.rtf ..
     cd ..
     zip -r $MCCODE_TARNAME-$MCCODE_VERSION-i686-Intel-Win32.zip $MCCODE_TARNAME-$MCCODE_VERSION
     cp winsupport/* .
