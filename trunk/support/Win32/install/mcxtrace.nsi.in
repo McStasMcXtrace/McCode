@@ -49,7 +49,7 @@ directory name."
 
 
 !insertmacro MUI_PAGE_WELCOME 
-!insertmacro MUI_PAGE_LICENSE "LICENSE.rtf"
+!insertmacro MUI_PAGE_LICENSE "LICENSE_mcxtrace.rtf"
  
 !define MUI_PAGE_CUSTOMFUNCTION_PRE SelectFilesCheck
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE ComponentsLeave
