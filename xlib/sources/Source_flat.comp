@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: Source_simple
+* Component: Source_flat
 *
 * %I
 * Written by:Erik Knudsen
@@ -19,11 +19,11 @@
 * %D
 *
 * %P
-* radius: [m]   Radius of circle in (x,y,0) plane where neutrons
+* radius: [m]   Radius of circle in (x,y,0) plane where x-rays
 *               are generated.
-* yheight [m]   Height of rectangle in (x,y,0) plane where neutrons
+* yheight [m]   Height of rectangle in (x,y,0) plane where x-rays
 *               are generated.
-* xwidth  [m]   Width of rectangle in (x,y,0) plane where neutrons
+* xwidth  [m]   Width of rectangle in (x,y,0) plane where x-rays
 *               are generated.
 * dist:   [m]   Distance to target along z axis.
 * focus_xw:[m]  Width of target
