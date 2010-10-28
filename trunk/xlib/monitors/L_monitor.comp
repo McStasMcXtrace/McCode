@@ -37,7 +37,7 @@
 * Lmax:     Maximum wavelength to detect (AA)
 * nL:       Number of wavelength channels (1)
 * filename: Name of file in which to store the detector image (text)
-* restore_xray: If set, the monitor does not influence the neutron state (1)
+* restore_xray: If set, the monitor does not influence the x-ray state (1)
 *
 * OUTPUT PARAMETERS:
 *
