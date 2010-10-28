@@ -31,21 +31,30 @@ use POSIX qw(_exit);
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
 BEGIN {
-    # default configuration (for all high level perl scripts)
+  # default configuration (for all high level perl scripts)
   if($ENV{"MCSTAS"}) {
     $MCSTAS::sys_dir = $ENV{"MCSTAS"};
   } else {
-    if ($Config{'osname'} eq 'MSWin32') {
-      $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+    if ($0 =~ m/mcgui/) {
+      if ($Config{'osname'} eq 'MSWin32') {
+	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
+      } else {
+	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+      }
     } else {
-      $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+      if ($Config{'osname'} eq 'MSWin32') {
+	$MCSTAS::sys_dir = "c:\\mcxtrace\\lib";
+      } else {
+	$MCSTAS::sys_dir = "/usr/local/lib/mcxtrace";
+      }
     }
   }
   $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
-
+  
   # custom configuration (this script)
   $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
-  }
+}
+
 use lib $MCSTAS::perl_dir;
 use lib $MCSTAS::perl_modules;
 require "mccode_config.perl";
@@ -55,13 +64,6 @@ if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mcco
   print "mcgui: reading local $MCSTAS::mcstas_config{'MCCODE'} configuration from " . $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl\n";
   require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl";
 }
-
-# In case of mcxtrace, redefine mcrun command to mxrun
-# if ($MCSTAS::mcstas_config{'MCCODE'} eq 'mcxtrace') {
-#   $MCSTAS::mcstas_config{'MCRUN'}='mxrun';
-# } else {
-#   $MCSTAS::mcstas_config{'MCRUN'}='mcrun';
-# }
 
 use strict;
 use FileHandle;
@@ -1017,7 +1019,7 @@ sub menu_run_simulation {
         # Check 'Mode' setting if a scan/trace/optim is
         # requested
         if ($newsi->{'Mode'} == 1) {
-	    push @command, "mcdisplay$suffix";
+	    push @command, "$MCSTAS::mcstas_config{'TRACECMD'}$suffix";
             if ($plotter =~ /PGPLOT|McStas/i) {
               push @command, "--plotter=PGPLOT";
               # Selection of PGPLOT 3-pane view from config menu only.

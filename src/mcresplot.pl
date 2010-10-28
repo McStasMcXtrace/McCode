@@ -33,12 +33,25 @@ use PDL::Graphics::PGPLOT;
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
 BEGIN {
-    if($ENV{"MCSTAS"}) {
-        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
+  # default configuration (for all high level perl scripts)
+  if($ENV{"MCSTAS"}) {
+    $MCSTAS::sys_dir = $ENV{"MCSTAS"};
+  } else {
+    if ($0 =~ m/mcgui/) {
+      if ($Config{'osname'} eq 'MSWin32') {
+	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
+      } else {
+	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+      }
     } else {
-        $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+      if ($Config{'osname'} eq 'MSWin32') {
+	$MCSTAS::sys_dir = "c:\\mcxtrace\\lib";
+      } else {
+	$MCSTAS::sys_dir = "/usr/local/lib/mcxtrace";
+      }
     }
-    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl"
+  }
+  $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
 }
 use lib $MCSTAS::perl_dir;
 

@@ -44,10 +44,18 @@ BEGIN {
   if($ENV{"MCSTAS"}) {
     $MCSTAS::sys_dir = $ENV{"MCSTAS"};
   } else {
-    if ($Config{'osname'} eq 'MSWin32') {
-      $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+    if ($0 =~ m/mcgui/) {
+      if ($Config{'osname'} eq 'MSWin32') {
+	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
+      } else {
+	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+      }
     } else {
-      $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+      if ($Config{'osname'} eq 'MSWin32') {
+	$MCSTAS::sys_dir = "c:\\mcxtrace\\lib";
+      } else {
+	$MCSTAS::sys_dir = "/usr/local/lib/mcxtrace";
+      }
     }
   }
   $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
