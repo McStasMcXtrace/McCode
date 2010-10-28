@@ -154,11 +154,11 @@ Section "Windows setup" WIN
    ; Create desktop link etc. for all users:
    SetShellVarContext all
    
-   ; Create desktop and SM link for mcgui.pl
-   CreateShortCut "$DESKTOP\McXtrace.lnk" "$INSTDIR\bin\mcgui.pl" "" "$INSTDIR\bin\mcgui.pl" 0
+   ; Create desktop and SM link for mxgui.pl
+   CreateShortCut "$DESKTOP\McXtrace.lnk" "$INSTDIR\bin\mxgui.pl" "" "$INSTDIR\bin\mxgui.pl" 0
    CreateDirectory "$SMPROGRAMS\McXtrace"
    CreateShortCut "$SMPROGRAMS\McXtrace\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-   CreateShortCut "$SMPROGRAMS\McXtrace\McXtrace.lnk" "$INSTDIR\bin\mcgui.pl" "" "$INSTDIR\bin\mcgui.pl" 0
+   CreateShortCut "$SMPROGRAMS\McXtrace\McXtrace.lnk" "$INSTDIR\bin\mxgui.pl" "" "$INSTDIR\bin\mxgui.pl" 0
   
    ; Write the installation path into the registry
    WriteRegStr HKLM SOFTWARE\McXtrace "Install_Dir" "$INSTDIR"
