@@ -81,7 +81,16 @@
 @copy src\mxformat.exe %MCXTRACE_SITE%\bin
 @copy src\mpicc.bat %MCXTRACE_SITE%\bin
 @copy support\Win32\install\which.exe %MCXTRACE_SITE%\bin
-@copy src\*.pl %MCXTRACE_SITE%\bin
+@copy src\mcconvert.pl %MCXTRACE_SITE%\bin\mxconvert.pl
+@copy src\mcdaemon.pl %MCXTRACE_SITE%\bin\mxdaemon.pl
+@copy src\mcdisplay.pl %MCXTRACE_SITE%\bin\mxdisplay.pl
+@copy src\mcdoc.pl %MCXTRACE_SITE%\bin\mxdoc.pl
+@copy src\mcformat.pl %MCXTRACE_SITE%\bin\mxformat.pl
+@copy src\mcformatgui.pl %MCXTRACE_SITE%\bin\mxformatgui.pl
+@copy src\mcgui.pl %MCXTRACE_SITE%\bin\mxgui.pl
+@copy src\mcplot.pl %MCXTRACE_SITE%\bin\mxplot.pl
+@copy src\mcresplot.pl %MCXTRACE_SITE%\bin\mxresplot.pl
+@copy src\mcrun.pl %MCXTRACE_SITE%\bin\mxrun.pl
 @copy support\Win32\pgplot\*.* %MCXTRACE_SITE%\bin
 @xcopy /e /y /q /i lib %MCXTRACE_SITE%\lib
 @xcopy /e /y /q /i xlib %MCXTRACE_SITE%\lib
