@@ -90,6 +90,7 @@
 @copy src\mcplot.pl %MCXTRACE_SITE%\bin\mxplot.pl
 @copy src\mcresplot.pl %MCXTRACE_SITE%\bin\mxresplot.pl
 @copy src\mcrun.pl %MCXTRACE_SITE%\bin\mxrun.pl
+@copy src\safewrap.pl %MCXTRACE_SITE%\bin\safewrap.pl
 @copy support\Win32\pgplot\*.* %MCXTRACE_SITE%\bin
 @xcopy /e /y /q /i lib %MCXTRACE_SITE%\lib
 @xcopy /e /y /q /i xlib %MCXTRACE_SITE%\lib
