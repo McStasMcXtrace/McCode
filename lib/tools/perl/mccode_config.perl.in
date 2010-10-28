@@ -85,6 +85,7 @@ use Config;
      PREFIX => '',
      SUFFIX => '',
      PLOTTER => 'PGPLOT',
+     RUNCMD => '@MCCODE_PREFIX@'.'run',
      PLOTCMD=> '@MCCODE_PREFIX@'.'plot',
      TRACECMD=> '@MCCODE_PREFIX@'.'display',
      EDITOR => 1,

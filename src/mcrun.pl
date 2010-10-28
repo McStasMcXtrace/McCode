@@ -426,7 +426,7 @@ sub exec_sim {
       push @opt, map("$_=$vals{$_}", @params);
       push @opt, "--format=PGPLOT";
       push @opt, "--ncount=$hostncount";
-      my $cmd="mcrun$MCSTAS::mcstas_config{'SUFFIX'} --slave=$hostnames[$j] $out_file --dir=$datadirs[$j]  @opt > $griddir/$hostnames[$j]_$j.log";
+      my $cmd="$MCSTAS::mcstas_config{'RUNCMD'}$MCSTAS::mcstas_config{'SUFFIX'} --slave=$hostnames[$j] $out_file --dir=$datadirs[$j]  @opt > $griddir/$hostnames[$j]_$j.log";
       if ($ncount) {
         $pids[$j]->Proc::Simple::start($cmd);  # asynchronous exec
       }
@@ -575,11 +575,11 @@ sub exec_sim_host {
 		# make distant tmpdir (ssh)
 		if ($MCSTAS::mcstas_config{'TEMP'} ne "no") {
 		  my $fh;
-			($fh, $tmpname) = File::Temp::tempfile("mcrun_$slave"."_XXXXX", UNLINK => 1); # throw file handle
+			($fh, $tmpname) = File::Temp::tempfile("$MCSTAS::mcstas_config{'RUNCMD'}_$slave"."_XXXXX", UNLINK => 1); # throw file handle
 			unlink $fh;
 		} else {
 		  $tmpname = int(rand(99999));
-			$tmpname = "mcrun_$slave"."_$tmpname";
+			$tmpname = "$MCSTAS::mcstas_config{'RUNCMD'}_$slave"."_$tmpname";
 		}
 		print STDERR "Sending simulation $sim_def and local data files to $slave:$tmpname\n";
 		host_ssh($slave, "mkdir $tmpname");
@@ -1026,7 +1026,7 @@ sub do_scan {
             our $pid;
             if ($Config{'osname'} eq 'MSWin32') {
                 # Win32 needs all possible parameters here, since we can not open(SIM,"-|");
-                my @cmdlist = ("mcrun$MCSTAS::mcstas_config{'SUFFIX'}",
+                my @cmdlist = ("$MCSTAS::mcstas_config{'RUNCMD'}$MCSTAS::mcstas_config{'SUFFIX'}",
                               $out_file, "--ncount=$ncount", @options, map("$_=$vals{$_}", @params),
                               $force_compile && ($multi >= 1 || $slave ne 0) ? "--force-compile" : "",
                 							$output_opt ? "--dir=$output_opt" : "--no-output-files",

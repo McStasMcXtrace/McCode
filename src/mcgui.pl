@@ -57,11 +57,11 @@ if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mcco
 }
 
 # In case of mcxtrace, redefine mcrun command to mxrun
-if ($MCSTAS::mcstas_config{'MCCODE'} eq 'mcxtrace') {
-  $MCSTAS::mcstas_config{'MCRUN'}='mxrun';
-} else {
-  $MCSTAS::mcstas_config{'MCRUN'}='mcrun';
-}
+# if ($MCSTAS::mcstas_config{'MCCODE'} eq 'mcxtrace') {
+#   $MCSTAS::mcstas_config{'MCRUN'}='mxrun';
+# } else {
+#   $MCSTAS::mcstas_config{'MCRUN'}='mcrun';
+# }
 
 use strict;
 use FileHandle;
@@ -886,7 +886,7 @@ sub dialog_get_out_file {
 		if (defined($mcrunflag) && $mcrunflag == 1) {
 		  $type = 'FINISHED';
 		  $success=1;
-		  &$printer("Please wait for $MCSTAS::mcstas_config{'MCRUN'} window to exit.");
+		  &$printer("Please wait for $MCSTAS::mcstas_config{'RUNCMD'} window to exit.");
 		  last;
 		}
                 unless($success) {
@@ -1110,7 +1110,7 @@ sub menu_run_simulation {
             # push @command, "--save";
         } # end Mode=Trace mcdisplay
         elsif ($newsi->{'Mode'} == 2) { # optimize
-          push @command, "$MCSTAS::mcstas_config{'prefix'}$MCSTAS::mcstas_config{'MCRUN'}$suffix";
+          push @command, "$MCSTAS::mcstas_config{'prefix'}$MCSTAS::mcstas_config{'RUNCMD'}$suffix";
           if (not ($newsi->{'Last'} || $newsi->{'Inspect'} || $newsi->{'First'})) {
             putmsg($cmdwin, "Warning: No criteria/monitor selected\n
          Global optimization using all monitors\n");
@@ -1123,7 +1123,7 @@ sub menu_run_simulation {
 	  push @command, "--optim-prec=$MCSTAS::mcstas_config{'PREC'}" if $MCSTAS::mcstas_config{'PREC'};
         } # end Mode=Optimize
         elsif ($newsi->{'Mode'} == 0) { # simulate
-	    push @command, "$MCSTAS::mcstas_config{'prefix'}$MCSTAS::mcstas_config{'MCRUN'}$suffix";
+	    push @command, "$MCSTAS::mcstas_config{'prefix'}$MCSTAS::mcstas_config{'RUNCMD'}$suffix";
         } # end Mode=simulate
         push @command, "$out_name";
         my ($OutDir,$OutDirBak);
