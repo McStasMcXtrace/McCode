@@ -36,7 +36,7 @@
 
 
 DEFINE COMPONENT Lens_parab
-DEFINITION PARAMETERS (string material_datafile="Be_data.txt")
+DEFINITION PARAMETERS (string material_datafile="Be.txt")
 SETTING PARAMETERS (r=0.42e-3,w=0.46e-3,d=0.2e-4,T=1,N=1)
 OUTPUT PARAMETERS (prms,parab)
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
@@ -169,7 +169,7 @@ INITIALIZE
     exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(t.header,"Z=","Ar=","rho=");
+  header_parsed=Table_ParseHeader(t.header,"Z","A[r]","rho",NULL);
   prms=calloc(1,sizeof(struct datastruct));
   if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
   if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
@@ -180,8 +180,8 @@ INITIALIZE
   int i;
   for(i=0;i<t.rows;i++){
       prms->E[i]=t.data[i*t.columns]; 
-      prms->mu[i]=t.data[1+i*t.columns]*1e2;     /*mu is now in SI, [m^-1]*/          
-      prms->f[i]=t.data[2+i*t.columns];
+      prms->mu[i]=t.data[5+i*t.columns]*prms->rho*1e2;     /*mu is now in SI, [m^-1]*/          
+      prms->f[i]=t.data[1+i*t.columns];
   }
   Table_Free(&t);
 %}
