@@ -41,7 +41,6 @@ OutFile "McXtrace-${VERSION}-i686-Win32.exe"
 McXtrace release ${VERSION} on Win32 systems.\
 \n\nMcXtrace is a ray-tracing Monte Carlo neutron simulator (see <http://www.mcxtrace.org>).\
 \n\nThis installer will set up McXtrace and support tools on your computer.\
-\n\nThis release is NOT backward compatible with McXtrace 1.x.\
 \n\nNOTE: If you have a previous, working installation of McXtrace on your machine, you should be able\
 to skip installation of the 'support tools' (skip by unchecking everything but McXtrace when prompted).\
 \n\nNOTE: Please install all software on C:\ and do NOT USE SPACES in the McXtrace installation\
