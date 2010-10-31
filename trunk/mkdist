@@ -134,6 +134,7 @@ cd $DIST
 
 # Create configure (which will itself create mccode_config.perl and mccode_reconfigure)
 autoconf 
+
 #-o configure $CONFIGURE_IN
 
 # run lex, yacc (assuming linux - flex -i & bison -v -d)
@@ -141,6 +142,7 @@ cd src
 flex -i instrument.l
 bison -v -d instrument.y
 cd ..
+
 
 # Set the INSTALL environment variable to make the src archive
 # default to ./install-sh in the contributed Makefile.
@@ -150,6 +152,13 @@ export INSTALL="./install-sh -c"
 # Also, do a ./configure to create Makefile and mccode_config.perl
 # These will be dependent on this system, ofcourse...
 ./configure
+
+cd lib/tools/perl
+autoconf mccode_reconfigure > ${MCCODE_TARNAME}_reconfigure
+chmod a+x ${MCCODE_TARNAME}_reconfigure
+cd -
+
+
 # Select scilab as default plotter
 make pgplot
 

@@ -3,5 +3,7 @@
 echo Configuring documentation
 cd /usr/local/lib/@MCCODE_TARNAME@
 mcdoc --text
-
+cd tools/perl
+chmod 0755 @MCCODE_TARNAME@_reconfigure
+./@MCCODE_TARNAME@_reconfigure
 
