@@ -1,7 +1,7 @@
 #!/bin/sh
-# postinst config of McStas
-echo Configuring McStas
+# postinst config
+echo Configuring documentation
 cd /usr/local/lib/@MCCODE_TARNAME@
 mcdoc --text
-cd /usr/local/lib/@MCCODE_TARNAME@/tools/perl/
-./mccode_reconfigure
+
+
