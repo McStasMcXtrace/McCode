@@ -1,0 +1,19 @@
+#!/bin/sh
+# postinst config of McStas
+echo Configuring McStas
+cd /usr/local/lib/@MCCODE_TARNAME@
+mcdoc --text
+cd /usr/local/lib/@MCCODE_TARNAME@/tools/perl/
+./@MCCODE_TARNAME@_reconfigure
+echo Install entry in Applications menu
+cp /usr/local/lib/@MCCODE_TARNAME@/tools/@MCCODE_TARNAME@.desktop /usr/share/applications/
+echo Instal gedit/kate preferences for syntax highlight
+if [ -d /usr/share/gtksourceview-1.0/ ]; then \
+  cp /usr/local/lib/@MCCODE_TARNAME@/editors/@MCCODE_TARNAME@1.lang /usr/share/gtksourceview-1.0/language-specs/;
+fi;
+if [ -d /usr/share/gtksourceview-2.0/ ]; then \
+  cp /usr/local/lib/@MCCODE_TARNAME@/editors/@MCCODE_TARNAME@2.lang /usr/share/gtksourceview-2.0/language-specs/;
+fi;
+if [ -d /usr/share/apps/katepart/syntax/ ]; then \
+  cp /usr/local/lib/@MCCODE_TARNAME@/editors/@MCCODE_TARNAME@.xml /usr/share/apps/katepart/syntax/;
+fi;

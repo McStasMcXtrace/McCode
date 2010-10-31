@@ -1,10 +1,8 @@
-Package: mcstas
-Version: @MCCODE_STRING@
-Architecture: i386
-Depends: perl, perl-tk, gcc, libc6-dev, libg2c0, pdl, gnuplot
+Package: @MCCODE_TARNAME@
+Version: @MCCODE_VERSION@
+Architecture: any
+Depends: perl, perl-tk, gcc, libc6-dev, pdl, libgfortran3, pgplot5, libpgplot-perl, gnuplot
 Suggests: scilab, freewrl, mpich-bin, libmpich1.0-dev, openmpi-common, openmpi-bin, libopenmpi-dev
-Conflicts: pgplot5
-Replaces: pgplot5
 Installed-Size: 31120
 Maintainer: McStas Team <mcstas-support@mcstas.org>
 Description: McStas is a computer program (written in C) that enables

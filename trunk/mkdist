@@ -282,25 +282,51 @@ fi
 # (.rpm was tried using alien - did not work too well)
 if [ -e /etc/debian_version ]
 then
-  if [ -e etch-chroot ]
+  if [ -e build-chroot-i386 ]
   then
-    echo Proceeding to .deb build
+    echo Proceeding to i386 .deb build
     # First, clean up in case of previous McStas installs in the chrooot
-    sudo mkdir -p etch-chroot/build
-    sudo rm -f etch-chroot/usr/local/bin/*
-    sudo rm -rf etch-chroot/usr/local/lib/*
-    sudo rm -rf etch-chroot/usr/local/pgplot
-    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION/deb/debcreate etch-chroot/root
-    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION-src.tar.gz etch-chroot/root
-    sudo chroot etch-chroot /root/debcreate
+    sudo rm -f build-chroot-i386/usr/local/bin/*
+    sudo rm -rf build-chroot-i386/usr/local/lib/*
+    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION/support/deb/debcreate build-chroot-i386/root
+#    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION/support/deb/sources.list build-chroot-i386/etc/apt/
+    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION-src.tar.gz build-chroot-i386/root
+    sudo mkdir build-chroot-i386/build
+    sudo chroot build-chroot-i386 apt-get update
+    sudo chroot build-chroot-i386 /root/debcreate $1 i386
     echo
     echo
     echo Build packages created:
     echo
-    cp etch-chroot/build/*deb .
-    ls -lf $MCCODE_TARNAME-$MCCODE_VERSION*.*
+    cp build-chroot-i386/build/*deb .
+    ls -lf $MCCODE_TARNAME-$MCCODE_VERSION*.* $MCCODE_TARNAME-$MCCODE_VERSION*.*
     echo
   else
-    echo You need a chroot environment based on debootstrap in etch-chroot before building deb packages
+    echo You need a chroot environment based on debootstrap in build-chroot-i386 before building the i386 deb package - create using something like
+    echo sudo debootstrap --arch i386 karmic build-chroot
+  fi  
+  if [ -e build-chroot-x86_64 ]
+  then
+    echo Proceeding to .deb build
+    # First, clean up in case of previous McStas installs in the chrooot
+    sudo rm -f build-chroot-x86_64/usr/local/bin/*
+    sudo rm -rf build-chroot-x86_64/usr/local/lib/*
+    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION/support/deb/debcreate build-chroot-x86_64/root
+#    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION/support/deb/sources.list build-chroot-x86_64/etc/apt/
+    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION-src.tar.gz build-chroot-x86_64/root
+    sudo mkdir build-chroot-x86_64/build
+    sudo chroot build-chroot-x86_64 apt-get update
+    sudo chroot build-chroot-x86_64 /root/debcreate $1 amd64
+    echo
+    echo
+    echo Build packages created:
+    echo
+    cp build-chroot-x86_64/build/*deb .
+    ls -lf $MCCODE_TARNAME-$MCCODE_VERSION*.* $MCCODE_TARNAME-$MCCODE_VERSION*.*
+    echo
+  else
+    echo You need a chroot environment based on debootstrap in build-chroot-x86_64 before building the x86_64 deb package - create using something like
+    echo sudo debootstrap --arch x86_64 karmic build-chroot-x86_64
   fi
 fi
+
