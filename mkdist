@@ -298,10 +298,11 @@ then
     sudo rm -f build-chroot-i386/usr/local/bin/*
     sudo rm -rf build-chroot-i386/usr/local/lib/*
     sudo cp $MCCODE_TARNAME-$MCCODE_VERSION/support/deb/debcreate build-chroot-i386/root
-#    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION/support/deb/sources.list build-chroot-i386/etc/apt/
+    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION/support/deb/sources.list build-chroot-i386/etc/apt/
     sudo cp $MCCODE_TARNAME-$MCCODE_VERSION-src.tar.gz build-chroot-i386/root
     sudo mkdir build-chroot-i386/build
     sudo chroot build-chroot-i386 apt-get update
+    sudo chmod u+x build-chroot-i386/root/debcreate
     sudo chroot build-chroot-i386 /root/debcreate $1 i386
     echo
     echo
@@ -321,10 +322,11 @@ then
     sudo rm -f build-chroot-x86_64/usr/local/bin/*
     sudo rm -rf build-chroot-x86_64/usr/local/lib/*
     sudo cp $MCCODE_TARNAME-$MCCODE_VERSION/support/deb/debcreate build-chroot-x86_64/root
-#    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION/support/deb/sources.list build-chroot-x86_64/etc/apt/
+    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION/support/deb/sources.list build-chroot-x86_64/etc/apt/
     sudo cp $MCCODE_TARNAME-$MCCODE_VERSION-src.tar.gz build-chroot-x86_64/root
     sudo mkdir build-chroot-x86_64/build
     sudo chroot build-chroot-x86_64 apt-get update
+    sudo chmod u+x build-chroot-x86_64/root/debcreate
     sudo chroot build-chroot-x86_64 /root/debcreate $1 amd64
     echo
     echo
@@ -335,7 +337,7 @@ then
     echo
   else
     echo You need a chroot environment based on debootstrap in build-chroot-x86_64 before building the x86_64 deb package - create using something like
-    echo sudo debootstrap --arch x86_64 karmic build-chroot-x86_64
+    echo sudo debootstrap --arch amd64 karmic build-chroot-x86_64
   fi
 fi
 
