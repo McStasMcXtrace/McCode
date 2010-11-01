@@ -108,13 +108,6 @@ Section "Dev-cpp"
    messagebox mb_ok "Dev-CPP installation complete!"
 SectionEnd
 
-Section "Scilab 4.0"
-   SetOutPath "$TEMP"
-   File scilab-4.0.exe
-   ExecWait "scilab-4.0.exe"
-   messagebox mb_ok "Scilab installation complete!"
-SectionEnd
-
 Section "Cortona VRML" CORT
    SetOutPath "$TEMP"
    File cortvrml.exe
@@ -139,7 +132,6 @@ Section "McStas ${VERSION} (required)" MCSTAS
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("DEVBIN", "$4").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("DEVLIB", "$5").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("PERLBIN",  "$3").r0'
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("SCIBIN", "$6").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCSTAS_SITE", "$INSTDIR").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCVERSION", "${VERSION}").r0'
       
@@ -213,7 +205,6 @@ Function SetCustom
     ReadINIStr $3 "$PLUGINSDIR\mcstas.ini" "Field 3" "State"
     ReadINIStr $4 "$PLUGINSDIR\mcstas.ini" "Field 5" "State"
     ReadINIStr $5 "$PLUGINSDIR\mcstas.ini" "Field 7" "State"
-    ReadINIStr $6 "$PLUGINSDIR\mcstas.ini" "Field 9" "State"
 
 FunctionEnd
 
