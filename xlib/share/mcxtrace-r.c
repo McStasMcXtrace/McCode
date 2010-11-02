@@ -126,7 +126,7 @@ int box_intersect(double *dl_in, double *dl_out,
 
   double k, l,lx,ly,lz, l_[6],dx_2,dy_2,dz_2;
   double ab[2];
-  unsigned int count;
+  unsigned int count=0;
   k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
   dx_2=dx/2.0;dy_2=dy/2.0;dz_2=dz/2.0;
  
