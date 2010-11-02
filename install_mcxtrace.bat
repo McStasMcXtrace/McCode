@@ -92,7 +92,9 @@
 @copy src\mcrun.pl %MCXTRACE_SITE%\bin\mxrun.pl
 @copy support\Win32\Perl\safewrap.pl %MCXTRACE_SITE%\bin
 @copy support\Win32\pgplot\*.* %MCXTRACE_SITE%\bin
-@xcopy /e /y /q /i support\Win32\gnuplot\*.* %MCSTAS_SITE%\bin
+@copy support\Win32\gnuplot\*.* %MCXTRACE_SITE%\bin
+@xcopy /e /y /q /i support\Win32\gnuplot\share %MCXTRACE_SITE%\bin\share
+@xcopy /e /y /q /i support\Win32\gnuplot\etc %MCXTRACE_SITE%\bin\etc
 @xcopy /e /y /q /i lib %MCXTRACE_SITE%\lib
 @xcopy /e /y /q /i xlib %MCXTRACE_SITE%\lib
 @echo Done
