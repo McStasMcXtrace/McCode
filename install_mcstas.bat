@@ -84,6 +84,7 @@
 @copy src\*.pl %MCSTAS_SITE%\bin
 @copy support\Win32\Perl\safewrap.pl %MCXTRACE_SITE%\bin
 @copy support\Win32\pgplot\*.* %MCSTAS_SITE%\bin
+@xcopy /e /y /q /i support\Win32\gnuplot\*.* %MCSTAS_SITE%\bin
 @xcopy /e /y /q /i lib %MCSTAS_SITE%\lib
 @xcopy /e /y /q /i nlib %MCSTAS_SITE%\lib
 @echo Done
