@@ -1,0 +1,319 @@
+#!/bin/sh
+#
+# Simple script for setting up a mcstas distribution package.
+#
+# To be called with one input parameter - distribution tail filename, e.g.
+#
+# ./mkdist 1.7.3c -> ../mcstas-1.7.3c.tar.gz
+#
+# Assumes you have write access to ..
+#
+# PW, risoe, 20030123
+#
+#   This file is part of the McStas neutron ray-trace simulation package
+#   Copyright (C) 1997-2006, All rights reserved
+#   Risoe National Laborartory, Roskilde, Denmark
+#   Institut Laue Langevin, Grenoble, France
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; version 2 of the License.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+# Create temporary workdir:
+TMPDIR='..'
+PW=`pwd`
+DIST=$TMPDIR/mcstas-$1
+
+# Create the doc's from tex
+cd $PW/../tex
+./build $1
+mv *.ps.gz $PW/..
+mv *.pdf $PW/..
+
+# Copy current PW checkout to DIST
+cd $PW
+cp -rp $PW $DIST
+# copy the doc in DIST/lib/doc
+cp $PW/../mcstas-$1-manual.ps.gz $DIST/lib/doc/mcstas-manual.ps.gz
+cp $PW/../mcstas-$1-manual.pdf $DIST/lib/doc/mcstas-manual.pdf
+cp $PW/../mcstas-$1-components.ps.gz $DIST/lib/doc/mcstas-components.ps.gz
+cp $PW/../mcstas-$1-components.pdf $DIST/lib/doc/mcstas-components.pdf
+
+# Go in DIST, clean up CVS and svn information
+cd $DIST
+find . -name CVS -exec rm -r \{\} \; 2> /dev/null
+find . -name .svn -exec rm -r \{\} \; 2> /dev/null
+# Remove other unneeded stuff
+rm -rf support/Syntax-Highlight-Perl-1.0
+rm -rf preCVStest*
+# Make sure that all comps and instrs have unix linefeeds
+find . -name \*.comp -exec dos2unix \{\} \;
+find . -name \*.instr -exec dos2unix \{\} \;
+
+# Put in new version info:
+find . -wholename './setversion' -prune -o -type d -o -exec ./setversion \{\} $1 \;
+find . -wholename './setyear' -prune -o -type d -o -exec ./setyear \{\} \;
+
+sed 's/MCSTAS_VERSION/'$1'/' build.bat > build.bat.new
+mv build.bat.new build.bat
+sed 's/MCSTAS_VERSION/'$1'/' mcstas.nsi > mcstas.nsi.new
+mv mcstas.nsi.new mcstas.nsi
+sed 's/MCSTAS_VERSION/'$1'/' deb/control > deb/control.new
+mv deb/control.new deb/control
+
+# Create ps/pdf/html based install info
+cd install_docs/tex
+latex install
+latex install
+dvips -o install.ps install.dvi
+whichdvipdf=`which dvipdf`
+if [ -e "$whichdvipdf" ] ;
+then
+  echo "Generate install PDF files using dvipdf (better quality than ps2pdf)"
+  dvipdf install.dvi install.pdf
+else
+  echo "Generate install PDF files using ps2pdf"
+  ps2pdf install.ps install.pdf
+fi
+
+gzip install.ps
+mkdir ../html
+latex2html -local_icons -dir ../html install.tex
+# clean up
+rm install.aux
+rm install.log
+cd ../..
+# Update the tutorial files
+cd lib/doc/tutorial
+./update
+rm update
+cd ../../..
+
+# A bit ugly with seperate date commands..
+MONTH=`date +"%b"`
+DAY=`date +"%d"`
+YEAR=`date +"%Y"`
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcstas.h > mcstas.h.tmp
+cat mcstas.h.tmp > mcstas.h
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcformat.c > mcformat.c.tmp
+cat mcformat.c.tmp > mcformat.c
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcstas.1 > mcstas.1.tmp
+cat mcstas.1.tmp > mcstas.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcrun.1 > mcrun.1.tmp
+cat mcrun.1.tmp  > mcrun.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcdoc.1  > mcdoc.1.tmp
+cat mcdoc.1.tmp > mcdoc.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcgui.1  > mcgui.1.tmp
+cat mcgui.1.tmp > mcgui.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcplot.1 > mcplot.1.tmp
+cat mcplot.1.tmp > mcplot.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcdisplay.1 > mcdisplay.1.tmp
+cat mcdisplay.1.tmp > mcdisplay.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcconvert.1 > mcconvert.1.tmp
+cat mcconvert.1.tmp > mcconvert.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcformat.1 > mcformat.1.tmp
+cat mcformat.1.tmp > mcformat.1
+sed 's/X.Y.Z/'$1'/' configure.in > configure.in.tmp
+cat configure.in.tmp > configure.in
+sed 's/@RELEASE@/'$1'/' deb/debcreate > deb/debcreate.new
+mv deb/debcreate.new deb/debcreate
+chmod a+x deb/debcreate
+
+# Create configure
+autoconf configure.in > configure
+chmod a+x configure
+autoconf lib/tools/perl/mcstas_reconfigure.in > lib/tools/perl/mcstas_reconfigure
+chmod a+x lib/tools/perl/mcstas_reconfigure
+chmod a+w lib/tools/perl/mcstas_config.perl
+
+# run lex, yacc (assuming linux - flex -i & bison -v -d)
+flex -i instrument.l
+bison -v -d instrument.y
+
+# Set the INSTALL environment variable to make the src archive
+# default to ./install-sh in the contributed Makefile.
+# Note: the -c is needed to preserve mcdoc.fixpl which is run at make install
+export INSTALL="./install-sh -c"
+
+# Also, do a ./configure to create Makefile and mcstas_config.perl
+# These will be dependent on this system, ofcourse...
+./configure
+# Select scilab as default plotter
+make pgplot
+
+# Clean up
+rm TODO.txt
+rm mkdist
+rm setversion
+rm setyear
+rm header
+# Make new runs of configure not dependent of this system...
+rm config.*
+cd ..
+
+# Create tar archive
+tar cfz $PW/../mcstas-$1-src.tar.gz mcstas-$1
+
+# Do a 'make' for creation of binary version (should apply to 'any' Unix)
+cd $PW
+cd $DIST
+
+# Default again to Linux' /usr/bin/install -c (or whatever ./configure finds)
+export INSTALL=
+./configure
+# Select pgplot as default plotter
+make pgplot
+
+make
+UNAME=`uname`
+MACH=`uname -m`
+# Up to now, this is always done on intel...
+PROC=Intel
+cd ..
+
+# Create tar archive
+tar cfz $PW/../mcstas-$1-$MACH-$PROC-$UNAME.tar.gz mcstas-$1
+
+# Remove temporary dir
+# rm -rf $TMPDIR
+
+# Create .tar.gz archive for building a binary Windows version
+cd $PW
+cd $DIST
+make clean
+flex -i instrument.l
+bison -v -d instrument.y
+./configure
+sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
+sed 's/DONSIS="0"/DONSIS="1"/' build.bat.new > build.bat
+cp support/Win32/which.exe .
+cd ..
+tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
+if [ `which makensis` ]; then
+    cd -
+    ./configure
+    # Make sure we default to PGPLOT plotter
+    make pgplot
+    make mcstas.win32
+    cp mcstas.ini ..
+    cp mcstas.nsi ..
+    cp mcstas.bmp ..
+    cp LICENSE.rtf ..
+    cd ..
+    zip -r mcstas-$1-i686-Intel-Win32.zip mcstas-$1
+    cp winsupport/* .
+    makensis mcstas.nsi
+    echo Created Win32 binary packages: `ls *zip *exe`
+else
+    echo Binary versions for Win32 NOT created
+fi
+echo
+echo
+echo Your mcstas dist packages are placed in
+echo ../mcstas-$1-src.tar.gz
+echo ../mcstas-$1-$MACH-$PROC-$UNAME.tar.gz
+echo ../mcstas-$1-Win32-src.tar.gz
+echo
+echo NOTE: Win32 version must be built using \'build.bat\' of the Win32-src package
+echo
+echo Your mcstas doc packages are placed in
+echo ../mcstas-$1-manual.ps.gz
+echo ../mcstas-$1-manual.pdf
+echo ../mcstas-$1-components.ps.gz
+echo ../mcstas-$1-components.pdf
+echo
+echo WARNING: Please install to a test system and run the following tools
+echo before release:
+echo
+echo compiletest.sh \(check if all examples compile\)
+echo mcrun --test \(validation test of selected instruments\)
+echo
+echo Follow instructions in ../adm to publish on the web.
+echo
+
+# In case of mkfs.hfsplus available in /sbin we'll create the
+# DMG file for Mac OS X
+if [ -e /sbin/mkfs.hfsplus ]
+then
+    # Note: DMG file needs enough space to hold the support tools plus
+    # our own code. April 2008 this is about 120 megs...
+    dd if=/dev/zero of=./McStas-$1.dmg bs=1M count=120
+    /sbin/mkfs.hfsplus -v 'McStas' ./McStas-$1.dmg
+    # Likely needs root level access:
+    sudo mkdir /mnt/dmg
+    sudo mount -t hfsplus -o loop ./McStas-$1.dmg /mnt/dmg
+    # Copy the ./adm/OSX/DMG stuff to the mountpoint
+    sudo cp -rp ./adm/OSX/DMG/Applications /mnt/dmg
+    sudo cp ./adm/OSX/DMG/README.TXT /mnt/dmg
+    # Clear out CVS stuff
+    sudo find /mnt/dmg -type d -name CVS -exec rm -rf \{\} \;
+    # Copy McStas there
+    sudo cp ./mcstas-$1-src.tar.gz /mnt/dmg/Applications
+    # Unmount
+    sudo umount /mnt/dmg
+    sudo rm -rf /mnt/dmg
+    ls -l ./McStas-$1.dmg
+fi
+
+
+# In case of a debian build host, we also build an .deb
+# (.rpm was tried using alien - did not work too well)
+if [ -e /etc/debian_version ]
+then
+  if [ -e build-chroot-i386 ]
+  then
+    echo Proceeding to i386 .deb build
+    # First, clean up in case of previous McStas installs in the chrooot
+    sudo rm -f build-chroot-i386/usr/local/bin/*
+    sudo rm -rf build-chroot-i386/usr/local/lib/*
+    sudo cp mcstas-$1/deb/debcreate build-chroot-i386/root
+    sudo cp mcstas-$1/deb/sources.list build-chroot-i386/etc/apt/
+    sudo cp mcstas-$1-src.tar.gz build-chroot-i386/root
+    sudo mkdir build-chroot-i386/build
+    sudo chroot build-chroot-i386 apt-get update
+    sudo chroot build-chroot-i386 /root/debcreate $1 i386
+    echo
+    echo
+    echo Build packages created:
+    echo
+    cp build-chroot-i386/build/*deb .
+    ls -lf mcstas-$1*.* McStas-$1*.*
+    echo
+  else
+    echo You need a chroot environment based on debootstrap in build-chroot-i386 before building the i386 deb package - create using something like
+    echo sudo debootstrap --arch i386 karmic build-chroot
+  fi  
+  if [ -e build-chroot-x86_64 ]
+  then
+    echo Proceeding to .deb build
+    # First, clean up in case of previous McStas installs in the chrooot
+    sudo rm -f build-chroot-x86_64/usr/local/bin/*
+    sudo rm -rf build-chroot-x86_64/usr/local/lib/*
+    sudo cp mcstas-$1/deb/debcreate build-chroot-x86_64/root
+    sudo cp mcstas-$1/deb/sources.list build-chroot-x86_64/etc/apt/
+    sudo cp mcstas-$1-src.tar.gz build-chroot-x86_64/root
+    sudo mkdir build-chroot-x86_64/build
+    sudo chroot build-chroot-x86_64 apt-get update
+    sudo chroot build-chroot-x86_64 /root/debcreate $1 amd64
+    echo
+    echo
+    echo Build packages created:
+    echo
+    cp build-chroot-x86_64/build/*deb .
+    ls -lf mcstas-$1*.* McStas-$1*.*
+    echo
+  else
+    echo You need a chroot environment based on debootstrap in build-chroot-x86_64 before building the x86_64 deb package - create using something like
+    echo sudo debootstrap --arch x86_64 karmic build-chroot-x86_64
+  fi
+fi

@@ -1,0 +1,106 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: SANS
+*
+* %Identification
+* Written by: <a href="mailto:kim.lefmann@risoe.dk">Kim Lefmann</a>
+* Date: 19th Dec 2003.
+* Origin: <a href="http://www.risoe.dk">Risoe</a>
+* Release: McStas 1.12
+* Version: $Revision: 1.8 $
+* %INSTRUMENT_SITE: tests
+*
+* Test instrument for the Sans_spheres component. No guide / velocity selector
+* etc. Will be developed further at at later time.
+*
+* %Description
+* Very simple test instrument for the Sans_spheres component
+*
+* Example: mcrun SANS.instr r=100, PHI=1e-3, Delta_Rho=0.6, Sigma_a=50, Qmax=0.3
+*
+* %Parameters
+* INPUT PARAMETERS:
+* Lambda    : Mean wavelength of neutrons      [AA]
+* D_lambda  : Wavelength spread of neutrons    [AA]
+* r   : Radius of scattering hard spheres [AA]
+* PHI   : Particle volume fraction [1]
+* Delta_Rho : Excess scattering length density (fm/AA^3)
+* Sigma_a : Absorption cross section at 2200 m/s [barns]
+* Qmax    : Maximum momentum transfer [AA^-1]
+*
+* %Link
+* *
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Risoe_sans(Lambda=6, D_lambda=0.05, r=100, PHI=1e-3, Delta_Rho=0.6, Sigma_a=0.5, Qmax=0.3)
+DECLARE
+%{
+%}
+INITIALIZE
+%{
+%}
+TRACE
+
+COMPONENT a1 = Arm()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT arm = Arm(
+    )
+  AT (0, 0, 0) ABSOLUTE
+
+COMPONENT source = Source_flux_lambda(
+    radius = 0.02, dist = 3, xw = 0.01, yh = 0.01,
+    lambda_0 = Lambda, d_lambda = D_lambda, flux = 1e8)
+  AT (0, 0, 0) RELATIVE arm
+
+COMPONENT coll1 = Slit(
+    radius = 0.005)
+  AT (0, 0, 3) RELATIVE arm
+
+COMPONENT coll2 = Slit(
+    radius = 0.005)
+  AT (0, 0, 6) RELATIVE arm
+
+COMPONENT sample = Sans_spheres(R=r, Phi=PHI, Delta_rho=Delta_Rho, sigma_a=Sigma_a, qmax=Qmax)
+   AT (0,0,0.2) RELATIVE coll2
+
+
+COMPONENT STOP = Beamstop(
+    radius = 0.02)
+  AT (0, 0, 2.9) RELATIVE sample
+
+
+COMPONENT detector = PSD_monitor(
+    nx = 128, ny = 128, filename = "PSD.dat", xmin = -0.3,
+    xmax = 0.3, ymin = -0.3, ymax = 0.3)
+  AT (0, 0, 3) RELATIVE sample
+
+COMPONENT Ldetector = L_monitor(
+    nchan = 1000, filename = "Edet.dat", xmin = -0.3,
+    xmax = 0.3, ymin = -0.3, ymax = 0.3, Lmin = 5.5,
+    Lmax = 6.5)
+  AT (0, 0, 3.01) RELATIVE sample
+
+
+COMPONENT PSDrad = PSD_monitor_rad(
+    filename = "psd2.dat", filename_av = "psd2_av.dat", rmax = 0.3)
+  AT (0, 0, 3.02) RELATIVE sample
+
+
+
+
+
+
+FINALLY
+%{
+%}
+END
+
+
+
+

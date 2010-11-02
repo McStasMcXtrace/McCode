@@ -1,0 +1,223 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component: Source_lab
+*
+* %I
+*
+* Written by; Erik Knudsen 
+* Date: Octatober 2010
+* Version: 1.0
+* Release: McXtrace 1.0rc1
+* Origin: Risoe
+*
+* Laboratory X-ray Source 
+*
+* %D
+* Model of a laboratory X-ray tube, Generating X-rays by bombarding a target by electrons.
+* Given a input energy E0 of the electron beam, x-rays are emitted from the accesible absorption edges
+* taken from the header of the datafile "material_datafile" (Similar to the refractive lens components).
+* The geometry of the tube is assumed to be:
+*  The electron beam hits the material surface at a at a right angle illuminating an area of x0 by y0.
+*  A Be-window is situated at the origin of the component, which is at an angle take_off wrt. the surface plane. 
+*
+* %P
+* Input parameters:
+*
+* (none)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Source_lab
+DEFINITION PARAMETERS (sigma=NULL)
+SETTING PARAMETERS (mu=1e-3,x0=0,z0=0,E0=20,xwidth=0,yheight=0,take_off=6,wd=1,string material_datafile="Be.txt")
+  OUTPUT PARAMETERS (edge,edgc,edg_sigma,O_xray_gen,R_xray_gen,R_xray_geni)
+STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
+
+SHARE
+%{
+  %include "read_table-lib"
+%}
+
+DECLARE
+%{
+  double edge[12];
+  double edg_sigma[]=sigma;
+  int edgc;
+  Rotation R_xray_gen,R_xray_geni;
+  Coords O_xray_gen;
+
+%}
+
+INITIALIZE
+%{
+  int status;
+  if (E0<=0){
+    fprintf(stderr,"Error %s: Impinging electron energy (E0) must be >0, was %g\n",NAME_CURRENT_COMP, E0);
+    exit(-1);
+  }
+
+  t_Table t;
+  if ( (status=Table_Read(&t,material_datafile,0))==-1){
+    fprintf(stderr,"Error %s: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,material_datafile);
+    exit(-1);
+  }
+  char **header_parsed;
+  header_parsed=Table_ParseHeader(t.header,"K","L I","L II","L III",NULL);
+  int i=0;
+  double e;
+  while (header_parsed[i]){
+    e=strtod(header_parsed[i],NULL);
+    if (e<E0){
+      edge[i]=e;
+      printf("edge[%d] = %g keV (l=%g AA)\n",i,edge[i],2*M_PI/(edge[i]*E2K));
+      i++;
+    }
+  }
+  edgc=i;
+  
+  O_xray_gen=coords_set(0,0,-wd);
+  rot_set_rotation(R_xray_gen,-take_off*DEG2RAD,0,0);
+  rot_set_rotation(R_xray_geni,take_off*DEG2RAD,0,0);
+  printf("O_xray_gen=%g %g %g\n",O_xray_gen.x,O_xray_gen.y,O_xray_gen.z);
+%}
+
+TRACE
+%{
+  double x1,y1,z1,x2,y2,z2,r,e,k,pdir;
+
+  /* pick a point in the generating volume*/
+  x1=rand01()*x0-x0/2.0;
+  z1=rand01()*z0-z0/2.0;
+  /* y is the absorption depth of the electron getting converted to an xray*/
+  y1=log(rand01())*mu;
+
+  double px,py,pz; 
+  /* transform initial coords to ones relative to the exit window which is our reference point*/
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+
+  /*set a scatter pt at the generation pt*/
+  x=x1;y=y1;z=z1;
+  SCATTER;
+
+  /*randvec_target_rect_real computes a target point and a solid angle correction factor, hence the k-vector has to be computed from
+    generation point and target point. The (0,0,1) location of the target is due to a silent assumption in randvec() that
+    the target cannot be situated in the origin.*/
+  randvec_target_rect_real(&px,&py,&pz,&pdir,0,0,1,xwidth,yheight, R_xray_gen,x1,y1,z1,2);
+  /*k is parallell to the line between generation and target points*/
+  kx=px-x1;
+  ky=py-y1;
+  kz=-z1;
+
+  /*randomly select a wavelength from edges*/
+  int i;
+  r=rand01()*edgc;
+  i=(int) trunc(r);
+  if (i>=edgc) i--;/*protect against rounding error*/
+  e=randnorm()*edg_sigma[i] + edge[i];
+  k=E2K*e;
+  /*scale k accordingly*/
+  NORM(kx,ky,kz);
+  kx*=k;ky*=k;kz*=k;
+  
+  /*set the x-ray weight to something sensible(?)*/
+  p=1*pdir;
+  
+  /*set a random phase - and propagate to the exit window*/
+  phi=0;//rand01()*2*M_PI;
+  PROP_Z0;
+  SCATTER;
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  double x1,y1,z1,x2,y2,z2,x0_2,z0_2,px,py,pz;
+  x0_2=x0/2.0;
+  z0_2=z0/2.0;
+  x1=-x0_2;y1=0;z1=-z0_2;
+  x2=-x0_2;y2=0;z2= z0_2;
+  printf("%g %g %g\n",x1,y1,z1);
+  printf("%g %g %g\n",x2,y2,z2);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  printf("%g %g %g\n",x1,y1,z1);
+  printf("%g %g %g %g \n",x2,y2,z2,mu);
+  line(x1,y1,z1,x2,y2,z2);
+
+  x1=x0_2;y1=0;z1=z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  line(x2,y2,z2,x1,y1,z1);
+  
+  x2=x0_2;y2=0;z2=-z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  line(x1,y1,z1,x2,y2,z2);
+
+  x1=-x0_2;y1=0;z1=-z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  line(x2,y2,z2,x1,y1,z1);
+
+  /*this is the mean penetration depth of electron that get converted to x-rays*/  
+  x1=-x0_2;y1=-mu;z1=-z0_2;
+  x2=-x0_2;y2=-mu;z2= z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  dashed_line(x1,y1,z1,x2,y2,z2,5);
+  x1=x0_2;y1=-mu;z1=z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  dashed_line(x2,y2,z2,x1,y1,z1,5);
+  x2= x0_2;y2=-mu;z2=-z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  dashed_line(x1,y1,z1,x2,y2,z2,5);
+  x1=-x0_2;y1=-mu;z1=-z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  dashed_line(x2,y2,z2,x1,y1,z1,5);
+  /* add another set of lines line at 2 mean penetration depth*/
+  x1=-x0_2;y1=-2*mu;z1=-z0_2;
+  x2=-x0_2;y2=-2*mu;z2= z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  dashed_line(x1,y1,z1,x2,y2,z2,5);
+  x1=x0_2;y1=-2*mu;z1=z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  dashed_line(x2,y2,z2,x1,y1,z1,5);
+  x2= x0_2;y2=-2*mu;z2=-z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  dashed_line(x1,y1,z1,x2,y2,z2,5);
+  x1=-x0_2;y1=-2*mu;z1=-z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  dashed_line(x2,y2,z2,x1,y1,z1,5);
+
+  x1=-x0_2;y1=-2*mu;z1=-z0_2;
+  x2=-x0_2;y2=0;z2=-z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  line(x2,y2,z2,x1,y1,z1);
+  x1=x0_2;y1=-2*mu;z1=-z0_2;
+  x2=x0_2;y2=0;z2=-z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  line(x2,y2,z2,x1,y1,z1);
+  x1=-x0_2;y1=-2*mu;z1=z0_2;
+  x2=-x0_2;y2=0;z2=z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  line(x2,y2,z2,x1,y1,z1);
+  x1=x0_2;y1=-2*mu;z1=z0_2;
+  x2=x0_2;y2=0;z2=z0_2;
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  line(x2,y2,z2,x1,y1,z1);
+
+
+  /*now draw "exit" window*/
+  rectangle("xy",0,0,0,xwidth,yheight);
+%}
+
+END

@@ -1,0 +1,161 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Source_simple
+*
+* %I
+* Written by: Kim Lefmann
+* Date: October 30, 1997
+* Modified by: KL, October 4, 2001
+* Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
+* Version: $Revision: 1.9 $
+* Origin: Risoe
+* Release: McStas 1.6
+*
+* A circular neutron source with flat energy spectrum and arbitrary flux
+*
+* %D
+* The routine is a circular or rectangular neutron source, which aims at a square target
+* centered at the beam (in order to improve MC-acceptance rate).  The angular
+* divergence is then given by the dimensions of the target.
+* The neutron energy is uniformly distributed between E0-dE and E0+dE.
+*
+* This component replaces Source_flat, Source_flat_lambda,
+* Source_flux and Source_flux_lambda.
+*
+* Example: Source_simple(radius=0.1, dist=2, xw=.1, yh=.1, E0=14, dE=2)
+*
+* %P
+* radius: [m]   Radius of circle in (x,y,0) plane where neutrons
+*               are generated.
+* height  [m]   Height of rectangle in (x,y,0) plane where neutrons
+*               are generated.
+* width   [m]   Width of rectangle in (x,y,0) plane where neutrons
+*               are generated.
+* dist:   [m]   Distance to target along z axis.
+* xw:     [m]   Width(x) of target
+* yh:     [m]   Height(y) of target
+* E0:     [meV] Mean energy of neutrons.
+* dE:     [meV] Energy spread of neutrons (flat or gaussian sigma).
+* Lambda0:[AA]  Mean wavelength of neutrons.
+* dLambda:[AA]  Wavelength spread of neutrons.
+* flux:   [1/(s*cm**2*st)] Energy integrated flux
+* gauss:  [1]   Gaussian (1) or Flat (0) energy/wavelength distribution
+* compat: [1]   Apply weighting/sampling as now obsolete Source_flat component
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Source_simple
+DEFINITION PARAMETERS ()
+  SETTING PARAMETERS (radius=0, height=0, width=0, dist, xw, yh, E0=0, dE=0, Lambda0=0, dLambda=0, flux=1, gauss=0, compat=0)
+OUTPUT PARAMETERS (pmul)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+  double pmul, srcArea;
+  int square;
+%}
+INITIALIZE
+%{
+  square = 0;
+  /* Determine source area: */
+  if (!radius == 0 && height == 0 && width == 0) {
+    square = 0;
+    srcArea = PI*radius*radius;
+  } else if(radius == 0 && !height ==0 && !width==0) {
+    square = 1;
+    srcArea = width * height;
+  }
+  
+  if (!compat) {
+    pmul=flux*1e4*srcArea/mcget_ncount();
+  } else {
+    gauss = 0;
+    pmul=1.0/(mcget_ncount()*4*PI);
+  }
+  if (srcArea <= 0) {
+    printf("Source_simple: %s: Source area is <= 0 !\n ERROR - Exiting\n",
+           NAME_CURRENT_COMP);
+    exit(0);
+  }
+  if (dist < 0 || xw < 0 || yh < 0) {
+    printf("Source_simple: %s: Target area unmeaningful! (negative dist / xw / yh)\n ERROR - Exiting\n",
+           NAME_CURRENT_COMP);
+    exit(0);
+  }
+  
+  if ((!Lambda0 && !E0 && !dE && !dLambda)) {
+    printf("Source_simple: %s: You must specify either a wavelength or energy range!\n ERROR - Exiting\n",
+           NAME_CURRENT_COMP);
+    exit(0);
+  }
+  if ((!Lambda0 && !dLambda && (E0 <= 0 || dE < 0 || E0-dE <= 0))
+    || (!E0 && !dE && (Lambda0 <= 0 || dLambda < 0 || Lambda0-dLambda <= 0))) {
+    printf("Source_simple: %s: Unmeaningful definition of wavelength or energy range!\n ERROR - Exiting\n",
+           NAME_CURRENT_COMP);
+      exit(0);
+  }
+%}
+TRACE
+%{
+ double chi,E,Lambda,v,r, xf, yf, rf, dx, dy, pdir;
+
+ t=0;
+ z=0;
+ 
+ if (square == 1) {
+   x = width * (rand01() - 0.5);
+   y = height * (rand01() - 0.5);
+ } else {
+   chi=2*PI*rand01();                          /* Choose point on source */
+   r=sqrt(rand01())*radius;                    /* with uniform distribution. */
+   x=r*cos(chi);
+   y=r*sin(chi);
+ }
+ randvec_target_rect_real(&xf, &yf, &rf, &pdir,
+			  0, 0, dist, xw, yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+
+ dx = xf-x;
+ dy = yf-y;
+ rf = sqrt(dx*dx+dy*dy+dist*dist);
+
+ p = pdir*pmul;
+
+ if(Lambda0==0) {
+   if (!gauss) {
+     E=E0+dE*randpm1();              /*  Choose from uniform distribution */
+   } else {
+     E=E0+randnorm()*dE;
+   }
+   v=sqrt(E)*SE2V;
+ } else {
+   if (!gauss) {
+     Lambda=Lambda0+dLambda*randpm1();
+   } else {
+     Lambda=Lambda0+randnorm()*dLambda;
+   }
+   v = K2V*(2*PI/Lambda);
+ }
+
+ vz=v*dist/rf;
+ vy=v*dy/rf;
+ vx=v*dx/rf;
+%}
+
+MCDISPLAY
+%{
+  if (square == 1) {
+    magnify("xy");
+    rectangle("xy",0,0,0,width,height);
+  } else {
+    magnify("xy");
+    circle("xy",0,0,0,radius);
+  }
+%}
+
+END

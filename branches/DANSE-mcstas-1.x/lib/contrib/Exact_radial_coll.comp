@@ -1,0 +1,280 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2006, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Exact_radial_coll
+*
+* %I
+* Written by: Roland Schedler <roland.schedler at hmi.de>
+* Modified by: using Collimator_radial Component
+* Date: October 2006
+* Version: $Revision: 1.1 $
+* Origin: HMI
+* Release: McStas 1.9
+*
+* An exact radial Soller collimator.
+*
+* %D
+* Radial Soller collimator with rectangular opening, specified length and
+* specified foil thickness.
+* The collimator is made of many trapezium shaped channels stacked radially.
+* The channels are separated by absorbing foils, the whole stuff is inside
+* an absorbing housing.
+* The component should be positioned at the radius center. The model is exact.
+* The neutron beam outside the collimator area is transmitted unaffected.
+*
+* Example: Exact_radial_coll(theta_mini=-5, theta_maxi=5, channels=100,
+*          in_radius=1.0, length=.3, h_in=.2, h_out=.3, foil_thick=0.0001)
+*
+*
+* %P
+* INPUT PARAMETERS:
+*
+* theta_mini:  (deg)        Minimum Theta angle for the radial setting
+* theta_maxi:  (deg)        Maximum Theta angle for the radial setting
+* channels:    (1)          Number of channels in the theta range
+* in_radius:   (m)          Inner radius (focus point to foil start point).
+* length:      (m)          Length of the foils / collimator
+* h_in:        (m)          Input  window height
+* h_out:       (m)          Output window height
+* foil_thick   (m)          Thickness of the absorbing foils
+* verbose:     (0/1)        Gives additional information
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Exact_radial_coll
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (theta_mini=-5, theta_maxi=5, channels=100,
+                    in_radius=1.0, length=.5, h_in=.3, h_out=.4,
+                    foil_thick=0.0001, verbose=1)
+OUTPUT PARAMETERS (alpha_in, alpha_out, out_radius, beta_in, beta_out, divergence)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double alpha_in, alpha_out, beta_in, beta_out, theta;
+  double out_radius, iw, ow, divergence;
+%}
+INITIALIZE
+%{
+  /* check for input parameters */
+  if (in_radius <= 0) exit(printf("Exact_radial_coll: %s: radius must be positiv\n", NAME_CURRENT_COMP));
+  if (h_in <= 0) exit(printf("Exact_radial_coll: %s: h_in must be positiv\n", NAME_CURRENT_COMP));
+  if (h_out <= 0) exit(printf("Exact_radial_coll: %s: h_out must be positiv\n", NAME_CURRENT_COMP));
+  if (foil_thick <= 0) exit(printf("Exact_radial_coll: %s: foil_thick must be positiv\n", NAME_CURRENT_COMP));
+  if (channels <= 0)  exit(printf("Exact_radial_coll: %s: number of channels must be positiv\n", NAME_CURRENT_COMP));
+  if ((channels - floor (channels)) > 0) exit(printf("Exact_radial_coll: %s: number of channels must be an integer\n", NAME_CURRENT_COMP));
+  if (length <= 0)    exit(printf("Exact_radial_coll: %s: collimator length must be positiv\n", NAME_CURRENT_COMP));
+  if (theta_maxi <= theta_mini) exit(printf("Exact_radial_coll: %s: theta_maxi must be greater than theta_mini\n", NAME_CURRENT_COMP));
+
+  theta_maxi *= DEG2RAD;
+  theta_mini *= DEG2RAD;
+  theta = theta_maxi - theta_mini;
+  out_radius = in_radius + length;
+  beta_in =  2*asin(foil_thick / (2 * in_radius));
+  beta_out=  2*asin(foil_thick / (2 * out_radius));
+  if (theta < channels*beta_in) exit(printf("Exact_radial_coll: %s: the %6.0f foils of %g [meter]\n"
+                                             "do not fit within the angular range theta = %4.2f [deg]\n",
+                                             NAME_CURRENT_COMP, channels, foil_thick, theta*RAD2DEG));
+  alpha_in = (theta - channels*beta_in)/channels;
+  alpha_out = (theta - channels*beta_out)/channels;
+  iw = 2*in_radius*sin((alpha_in/2));
+  ow = 2*out_radius*sin((alpha_out/2));
+  divergence=(iw+ow)/(sqrt(4*length*length-(ow-iw)*(ow-iw)));
+
+  if (verbose) {
+    printf("Collimator_radial: %s: foil thickness is %.2g [millimeter]\n", NAME_CURRENT_COMP, foil_thick*1000);
+    printf("                  opening each  input slit [%.3g:%.0f] [millimeter]\n", iw*1000, h_in*1000);
+    printf("                  opening each output slit [%.3g:%.0f] [millimeter]\n", ow*1000, h_out*1000);
+    printf("                  divergence per channel is %g [min] \n", divergence*RAD2MIN);
+  }
+%}
+
+TRACE
+%{
+  double phi, t0, t1, t2, t3;
+  int    intersect;
+  long   input_chan,  output_chan;
+  double input_theta, output_theta;
+  double input_center,output_center;
+  double window_theta;
+  char   ok=0;
+
+  /* first compute intersection time with input cylinder */
+  intersect=cylinder_intersect(&t0,&t3,x,y,z,vx,vy,vz,in_radius,h_in);
+  if (!intersect) ABSORB;
+  else if (t3 > t0) t0 = t3;
+
+  intersect=cylinder_intersect(&t1,&t2,x,y,z,vx,vy,vz,out_radius,h_out);
+  if (!intersect) ABSORB;
+  else if (t2 > t1) t1 = t2;
+
+  /* get index of input slit */
+  if (t0 > 0 && t1 > t0) {
+      PROP_DT(t0);
+      input_theta = atan2(x, z);
+     /* channel number (start at 0) */
+      window_theta = (theta_maxi - theta_mini)/channels;
+      input_chan  = floor((input_theta - theta_mini)/window_theta);
+      if (input_chan >= 0 && input_chan < channels && fabs(y) < h_in/2) ok=1;
+    if (ok) {
+        input_center= theta_mini + input_chan*window_theta + (window_theta)/2;
+        /* are we outside the soller or in the foil? */
+        phi = input_theta - input_center;
+        if (fabs(phi) > alpha_in/2) ABSORB; /* inside the foil*/
+        SCATTER;
+
+      /* propagate to output radius */
+      PROP_DT(t1-t0);
+      SCATTER;
+        output_theta = atan2(x, z);
+        /* channel number (start at 0) */
+        output_chan  = floor((output_theta - theta_mini)/window_theta);
+        /* did we change channel ? */
+        if (output_chan != input_chan) ABSORB; /* changed slit */
+        output_center= theta_mini + output_chan*window_theta
+                    + (window_theta)/2;
+        /* are we outside the soller */
+        phi = output_theta -output_center;
+        if (fabs(phi) > alpha_out/2 || fabs(y) > h_out/2) ABSORB; /* outside output slit */
+
+    } /* else we pass aside the entrance window of radial collimator */
+    else {
+      /* propagate to output radius */
+      PROP_DT(t1-t0);
+      SCATTER;
+        output_theta = atan2(x, z);
+        /* channel number (start at 0) */
+        output_chan  = floor((output_theta - theta_mini)/window_theta);
+       /* are we come from outside into the soller or in the foil?*/
+        if (output_chan >= 0 || output_chan < channels) ABSORB;
+    } /* else we pass aside the exit window of radial collimator */
+  }   /* else did not encounter collimator */
+
+%}
+
+MCDISPLAY
+%{
+  int i;
+  double theta1, theta2, theta3, theta4;
+  double x_in_l,  z_in_l,  x_in_r,  z_in_r;
+  double x_out_l, z_out_l, x_out_r, z_out_r;
+  double window_theta, y1, y2;
+
+  magnify("xy");
+  window_theta = alpha_in + beta_in;
+  y1 = h_in/2;
+  y2 = h_out/2;
+
+  theta1 = theta_mini;
+  theta3 = theta1+beta_in/2;
+  theta4 = theta1+beta_out/2;
+
+  z_in_l = in_radius*cos(theta1);
+  x_in_l = in_radius*sin(theta1);
+  z_in_r = in_radius*cos(theta3);
+  x_in_r = in_radius*sin(theta3);
+
+  z_out_l = out_radius*cos(theta1);
+  x_out_l = out_radius*sin(theta1);
+  z_out_r = out_radius*cos(theta4);
+  x_out_r = out_radius*sin(theta4);
+
+    multiline(5,
+      x_in_l, -y1, z_in_l,
+      x_in_l,  y1, z_in_l,
+      x_out_l, y2, z_out_l,
+      x_out_l,-y2, z_out_l,
+      x_in_l, -y1, z_in_l);
+
+   line(x_in_l,   y1, z_in_l,  x_in_r,  y1, z_in_r);
+   line(x_in_l,  -y1, z_in_l,  x_in_r, -y1, z_in_r);
+   line(x_out_l,  y2, z_out_l, x_out_r, y2, z_out_r);
+   line(x_out_l, -y2, z_out_l, x_out_r,-y2, z_out_r);
+
+   multiline(5,
+      x_in_r, -y1, z_in_r,
+      x_in_r,  y1, z_in_r,
+      x_out_r, y2, z_out_r,
+      x_out_r,-y2, z_out_r,
+      x_in_r, -y1, z_in_r);
+
+  for (i = 1; i < channels; i++) {
+    theta1 = i*window_theta+theta_mini-beta_in/2;
+    theta2 = i*window_theta+theta_mini+beta_in/2;
+    theta3 = i*window_theta+theta_mini-beta_out/2;
+    theta4 = i*window_theta+theta_mini+beta_out/2;
+
+    z_in_l = in_radius*cos(theta1);
+    x_in_l = in_radius*sin(theta1);
+    z_in_r = in_radius*cos(theta2);
+    x_in_r = in_radius*sin(theta2);
+
+    z_out_l = out_radius*cos(theta3);
+    x_out_l = out_radius*sin(theta3);
+    z_out_r = out_radius*cos(theta4);
+    x_out_r = out_radius*sin(theta4);
+    /* left side */
+    multiline(5,
+      x_in_l, -y1, z_in_l,
+      x_in_l,  y1, z_in_l,
+      x_out_l, y2, z_out_l,
+      x_out_l,-y2, z_out_l,
+      x_in_l, -y1, z_in_l);
+   /* left -> right lines */
+   line(x_in_l,   y1, z_in_l,  x_in_r,  y1, z_in_r);
+   line(x_in_l,  -y1, z_in_l,  x_in_r, -y1, z_in_r);
+   line(x_out_l,  y2, z_out_l, x_out_r, y2, z_out_r);
+   line(x_out_l, -y2, z_out_l, x_out_r,-y2, z_out_r);
+   /* right side */
+   multiline(5,
+      x_in_r, -y1, z_in_r,
+      x_in_r,  y1, z_in_r,
+      x_out_r, y2, z_out_r,
+      x_out_r,-y2, z_out_r,
+      x_in_r, -y1, z_in_r);
+  }
+
+  /* remaining bits */
+
+  theta1 = theta_maxi;
+  theta3 = theta1-beta_in/2;
+  theta4 = theta1-beta_out/2;
+
+  z_in_l = in_radius*cos(theta1);
+  x_in_l = in_radius*sin(theta1);
+  z_in_r = in_radius*cos(theta3);
+  x_in_r = in_radius*sin(theta3);
+
+  z_out_l = out_radius*cos(theta1);
+  x_out_l = out_radius*sin(theta1);
+  z_out_r = out_radius*cos(theta4);
+  x_out_r = out_radius*sin(theta4);
+
+    multiline(5,
+      x_in_l, -y1, z_in_l,
+      x_in_l,  y1, z_in_l,
+      x_out_l, y2, z_out_l,
+      x_out_l,-y2, z_out_l,
+      x_in_l, -y1, z_in_l);
+
+   line(x_in_l,   y1, z_in_l,  x_in_r,  y1, z_in_r);
+   line(x_in_l,  -y1, z_in_l,  x_in_r, -y1, z_in_r);
+   line(x_out_l,  y2, z_out_l, x_out_r, y2, z_out_r);
+   line(x_out_l, -y2, z_out_l, x_out_r,-y2, z_out_r);
+
+   multiline(5,
+      x_in_r, -y1, z_in_r,
+      x_in_r,  y1, z_in_r,
+      x_out_r, y2, z_out_r,
+      x_out_r,-y2, z_out_r,
+      x_in_r, -y1, z_in_r);
+
+%}
+
+END

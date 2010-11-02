@@ -1,0 +1,7 @@
+#!/bin/sh
+# postinst config of McStas
+echo Configuring McStas
+cd /usr/local/lib/mcstas
+mcdoc --text
+cd /usr/local/lib/mcstas/tools/perl/
+./mcstas_reconfigure

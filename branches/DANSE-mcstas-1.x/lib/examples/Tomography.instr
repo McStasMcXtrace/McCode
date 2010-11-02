@@ -1,0 +1,70 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Tomography
+*
+* %Identification
+* Written by: Peter Willendrup, based on work by Reynald ARNERIN
+* Date: June 20th, 2008
+* Origin: Risoe
+* Release: McStas CVS_080624
+* Version: $Revision: 1.4 $
+* %INSTRUMENT_SITE: Templates
+*
+* Instrument to study tomographic imaging by means of the new V_sample feature of OFF shape samples.
+*
+* %Description
+* Instrument to study tomographic imaging by means of the new V_sample feature of OFF shape samples.
+*
+* Example: mcrun Tomography.instr offfile=bunny.off -n1e4 -N18 omega=0,340 -d TomoScan
+* (Note that to achieve proper statistics for tomographic reconstruction, MUCH higher ncounts
+*  are needed)
+*
+* Use the provided Matlab tomo_recon.m function (requires imaging toolbox, PGPLOT output data
+* and a Unix/Mac) in the tools/matlab folder to reconstruct a 3D volume of the object. Use e.g. 
+* isosurface to do thresholding for extraction of the object surface.
+*
+* %Parameters
+* offfile:    [string] Name of the OFF file describing the sample shape
+* omega:      [deg] Sample rotation around y 
+* sigma_abs:  [barn] Sample absorption xs
+* frac_scatt: [1] Fraction of neutrons to scatter in the sample
+* div_v:      [deg] Source vertical divergence
+* div_h:      [deg] Source horisontal divergence
+* source_w:   [m] Source width
+* source_h:   [m] Source height
+* det_w:      [m] Detector width
+* det_h:      [m] Detector height
+* opts:       [string] Detector Monitor_nD options
+*
+* %Link
+* http://shape.cs.princeton.edu/benchmark/documentation/off_format.html
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Tomography(string offfile="bunny.off", 
+			     omega = 0, sigma_abs=100, frac_scatt = 0, 
+			     div_v = 0, div_h = 0, source_w = 0.4, source_h = 0.2, 
+			     det_w = 0.4, det_h = 0.2, string opts="x bins=80 y bins=40")
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_div(width = source_w, height = source_h, hdiv=div_h, vdiv=div_v, E0=14, dE=.5)
+AT (0, 0, 0) RELATIVE Origin 
+
+COMPONENT samplearm = Arm()
+AT (0,0,1+0) RELATIVE Origin
+ROTATED (0,omega,0) RELATIVE Origin
+
+COMPONENT sample=V_sample(frac = frac_scatt, offfile = offfile, yheight=0.1, sig_a=sigma_abs,
+			  focus_xw=det_w, focus_yh=det_h, target_index=1)
+AT (0,0,0) RELATIVE samplearm 
+
+COMPONENT monitor = Monitor_nD(xwidth=det_w,yheight=det_h,options=opts)
+AT (0, 0, 2) RELATIVE source
+
+END
+

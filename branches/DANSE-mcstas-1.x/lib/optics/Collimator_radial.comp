@@ -1,0 +1,293 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Collimator_radial
+*
+* %I
+* Written by: Emmanuel Farhi <farhi@ill.fr>
+* Date: July 2005
+* Version: $Revision: 1.11 $
+* Origin: ILL
+* Release: McStas 1.9
+*
+* A radial Soller collimator.
+*
+* %D
+* Radial Soller collimator with rectangular opening and specified length.
+* The collimator is made of many rectangular channels stacked radially.
+* Each channel is a set of transmitting layers (nslit), separated by an absorbing
+* material (infinitely thin), the whole stuff is inside an absorbing housing. 
+* When using zero as the number of channels (nchan), the collimator is continuous, 
+* whithout shadowing effect.
+* The component should be positioned at the radius center.
+* The component can be made oscillating (usual on diffractometers and TOF
+* machines) with the 'roc' parameter.
+* The neutron beam outside the collimator angular area is transmitted unaffected.
+*
+* Example: Channelled radial collimator with shadow parts
+*        Collimator_radial(xwidth=0.015, yheight=.3, length=.35,
+*                   divergence=40,transmission=1,
+*                   theta_min=5, theta_max=165, nchan=128, radius=0.9)
+*   A continuous radial collimator
+*        Collimator_radial(yheight=.3, length=.35,
+*                   divergence=40,transmission=1,
+*                   theta_min=5, theta_max=165, radius=0.9)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xwidth:     (m)          Soller  window width, filled with nslit slits. 
+*                            Use 0 value for continuous collimator.
+* yheight:    (m)          Collimator height.
+* length:     (m)          Length/Distance between inner and outer slits.
+* divergence: (min of arc) Divergence angle. May also be specified with the
+*                            nslit parameter. A zero value unactivates component.
+* theta_min:  (deg)        Minimum Theta angle for the radial setting.
+* theta_max:  (deg)        Maximum Theta angle for the radial setting.
+* nchan:      (1)          Number of Soller channels in the theta range.
+*                            Use 0 value for continuous collimator.
+* radius:     (m)          Radius of the collimator (to entry window).
+*
+* Optional parameters
+* transmission:(1)         Transmission of Soller (0<=t<=1).
+* nslit:       (1)         Number of blades composing each Soller. Overrides
+*                            the divergence parameter.
+* roc:         (deg)       Amplitude of oscillation of collimator. 0=fixed.
+* verbose:     (0/1)       Gives additional information.
+* approx:      (0/1)       Use Soller triangular transmission approximation.
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT Collimator_radial
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xwidth=0, yheight=.3, length=.35,
+                    divergence=0,transmission=1,
+                    theta_min=5, theta_max=165, nchan=0, radius=1.3, nslit=0,
+                    roc=0, verbose=0, approx=0)
+OUTPUT PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,p)
+DECLARE
+%{
+  double width_of_slit=0, width_of_Soller=0, slit_theta=0;
+%}
+INITIALIZE
+%{
+  if (radius <= 0)
+    exit(printf("Collimator_radial: %s: incorrect radius=%g\n", 
+      NAME_CURRENT_COMP, radius));
+  if (length <= 0)
+    exit(printf("Collimator_radial: %s: invalid collimator length=%g\n", 
+      NAME_CURRENT_COMP, length));
+  if (transmission <= 0 || transmission >1)
+    exit(printf("Collimator_radial: %s: invalid transmission=%g\n", 
+      NAME_CURRENT_COMP, transmission));
+  
+  theta_max *= DEG2RAD;
+  theta_min *= DEG2RAD;
+  roc       *= DEG2RAD;
+  divergence*= MIN2RAD;
+  
+  if (xwidth && !nchan)
+    nchan  = ceil(radius*fabs(theta_max-theta_min)/xwidth);
+  else if (!xwidth && nchan)
+    xwidth = radius*fabs(theta_max-theta_min)/nchan;
+  
+  /* determine total width [m] of Soller channels, containing nslit in xwidth */
+  if (nchan) width_of_Soller = radius*fabs(theta_max-theta_min)/nchan;
+  else       width_of_Soller = 0;
+  
+  if (!nchan || !xwidth || xwidth > width_of_Soller)
+    nchan=xwidth=width_of_Soller=0; /* continuous collimator */
+  
+  /* determine width [m] of slits */
+  if (divergence) {
+    width_of_slit = length*tan(divergence);
+    if (xwidth)           /* Soller */
+      nslit = ceil(xwidth/width_of_slit);
+    else if (!nchan)      /* continuous collimator */
+      nslit = ceil(radius*fabs(theta_max-theta_min)/width_of_slit);
+  } else {
+    if (!nchan && nslit)  /* continuous collimator */
+      width_of_slit = radius*fabs(theta_max-theta_min)/nslit;
+    else if (nchan && nslit)  /* Soller */
+      width_of_slit = xwidth/nslit;
+    divergence = atan2(width_of_slit,length);
+  }
+  
+  if (nslit <= 0)
+    printf("Collimator_radial: %s: number of channels must be positive nslit=%g.\n"
+                "WARNING            Specify alternatively divergence, xwidth and nchan.\n", 
+                NAME_CURRENT_COMP, nslit);
+  
+  if (verbose && nslit && width_of_slit) {
+    printf("Collimator_radial: %s: divergence %g [min] %s"
+           ". Total opening [%g:%g] [deg]\n",
+           NAME_CURRENT_COMP, divergence*RAD2MIN,
+           (roc ? "oscillating" : ""),
+           theta_min*RAD2DEG, theta_max*RAD2DEG);
+    if (approx)
+      printf("    Using triangular approximation model");
+    else if (!nchan)
+      printf("    Using continuous model");
+    else
+      printf("    Using %i Soller channels of width %g [cm]", 
+        (int)nchan, width_of_Soller*100);
+
+    printf(" with %i slits of width %g [mm] pitch %g [deg].\n", 
+      (int)nslit, width_of_slit*1000, atan2(width_of_slit, radius)*RAD2DEG);
+  }
+
+%}
+
+TRACE
+%{
+  double intersect=0;
+  double t0, t1, t2, t3;
+  
+  if (width_of_slit && nslit) {
+    /* determine intersection with inner and outer cylinders */
+    intersect=cylinder_intersect(&t0,&t3,x,y,z,vx,vy,vz,radius,yheight);
+    if (!intersect) ABSORB;
+    else if (t3 > t0) t0 = t3;
+
+    intersect=cylinder_intersect(&t1,&t2,x,y,z,vx,vy,vz,radius+length,yheight);
+    if (!intersect) ABSORB;
+    else if (t2 > t1) t1 = t2;
+    
+    /* propagate/determine neutron position at inner cylinder */
+    if (t0 > 0 && t1 > t0) {
+      double input_chan=0;
+      double input_theta=0, output_theta=0;
+      double roc_theta=0;
+      double input_slit=0,  output_slit=0;
+      
+      PROP_DT(t0);
+    
+      /* apply ROC oscillation with a linear random distribution */
+      if (roc) roc_theta = roc*randpm1()/2; else roc_theta=0;
+      
+      /* angle on inner cylinder */
+      input_theta = atan2(x, z) + roc_theta;  
+      
+      /* check if we are within min/max collimator input bounds */
+      if (input_theta >= theta_min && input_theta <= theta_max) {
+        SCATTER;
+        /* input Soller channel index */
+        if (width_of_Soller) {
+          input_chan = radius*(input_theta-theta_min)/width_of_Soller;
+          input_chan = input_chan-floor(input_chan); /* position within Soller [0:1] */
+          
+          /* check if we hit an absorbing housing (between Sollers): ABSORB
+           *   total Soller aperture is width_of_Soller, 
+           *   containg a slit pack  of aperture xwidth 
+           */
+          if (input_chan < (1-xwidth/width_of_Soller)/2 
+           || input_chan > (1+xwidth/width_of_Soller)/2) ABSORB;
+        }
+
+        /* determine input slit index */
+        input_slit = floor(input_theta*radius/width_of_slit);
+        
+      } else /* neutron missed collimator input range */
+        input_theta=4*PI;
+    
+      /* propagate to outer cylinder */
+      PROP_DT(t1-t0);
+      
+      /* angle on outer cylinder */
+      output_theta = atan2(x, z) + roc_theta;
+      
+      /* check if we are within min/max collimator output bounds */
+      if (output_theta >= theta_min && output_theta <= theta_max) {
+        /* check if we come from sides:   ABSORB */
+        if (input_theta > 2*PI) ABSORB; /* input_theta=4*PI when missed input */
+        
+        if (approx) {
+          double phi=atan2(x, z)-atan2(vx, vz); /* difference between positional slit angle and velocity */
+          if (fabs(phi) > divergence) 
+            ABSORB; /* get outside transmission */
+          else
+            p *= (1.0 - phi/divergence);
+        } else {
+          /* check if we have changed slit: ABSORB */
+          /* slits are considered radial so that their output size is:
+             width_of_slit*(radius+length)/radius and it turns out this the same exp as for input
+           */
+          output_slit = floor(output_theta*radius/width_of_slit);
+          if (input_slit != output_slit) ABSORB;
+        }
+        SCATTER;
+        p *= transmission;
+        
+      } /* else neutron missed collimator output range */
+    
+    } /* else did not encounter collimator cylinders */
+  } /* if nslit */
+
+%}
+
+MCDISPLAY
+%{
+  double Soller_theta;
+  double height=yheight/2;
+  double theta1, theta2;
+  double x_in_l,  z_in_l,  x_in_r,  z_in_r;
+  double x_out_l, z_out_l, x_out_r, z_out_r;
+  int i;
+  
+  /* display collimator radial geometry:
+     in order to avoid too many lines, we shown main housing and channels
+     but no slit */
+     
+  if (!nchan || nchan > 20)     nchan=20;
+  if (nchan > 64)               nchan=64;
+  Soller_theta=fabs(theta_max-theta_min)/nchan; /* angular width of Soller */
+  
+  /* draw all channels, which also show housing */
+  magnify("xy");
+  for (i = 0; i < nchan; i++) {
+    
+    theta1 = i*Soller_theta+theta_min;
+    theta2 = theta1+Soller_theta;
+
+    z_in_l = radius*cos(theta1);
+    x_in_l = radius*sin(theta1);
+    z_in_r = radius*cos(theta2);
+    x_in_r = radius*sin(theta2);
+
+    z_out_l = (radius+length)*cos(theta1);
+    x_out_l = (radius+length)*sin(theta1);
+    z_out_r = (radius+length)*cos(theta2);
+    x_out_r = (radius+length)*sin(theta2);
+    /* left side */
+    multiline(6,
+      x_in_l, -height, z_in_l,
+      x_in_l,  height, z_in_l,
+      x_out_l, height, z_out_l,
+      x_out_l,-height, z_out_l,
+      x_in_l, -height, z_in_l,
+      x_in_r, -height, z_in_r);
+   /* left -> right lines */
+   line(x_in_l,   height, z_in_l,  x_in_r,  height, z_in_r);
+   line(x_out_l,  height, z_out_l, x_out_r, height, z_out_r);
+   line(x_out_l, -height, z_out_l, x_out_r,-height, z_out_r);
+  }
+  /* remaining bits */
+  theta1 = nchan*Soller_theta+theta_min;
+  z_in_l = radius*cos(theta1);
+  x_in_l = radius*sin(theta1);
+  z_out_l = (radius+length)*cos(theta1);
+  x_out_l = (radius+length)*sin(theta1);
+  multiline(5,
+      x_in_l, -height, z_in_l,
+      x_in_l,  height, z_in_l,
+      x_out_l, height, z_out_l,
+      x_out_l,-height, z_out_l,
+      x_in_l, -height, z_in_l);
+%}
+
+END

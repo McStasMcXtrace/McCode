@@ -1,0 +1,60 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: testoff (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Reynald ARNERIN
+* Date: June 12th, 2008
+* Origin: ILL
+* Release: McStas CVS-080208
+* Version: $Revision: 1.2 $
+* %INSTRUMENT_SITE: tests
+*
+* Instrument to demonstrate the usage of OFF shape samples with totaly absorbing material.
+*
+* %Description
+* Instrument to demonstrate the usage of OFF shape samples with totaly absorbing material.
+* The V_sample component is here used with a description file. The shape may be scaled
+* forcing the size of the bounding box
+*
+* Example: mcrun Test_V_sample_off.instr
+*
+* %Parameters
+* offfile: [string] Name of the OFF file describing the sample shape
+*
+* %Link
+* http://shape.cs.princeton.edu/benchmark/documentation/off_format.html
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Test_V_sample_off(string offfile="bunny.off")
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_gen(
+    radius = 0.05, dist = 1, xw = .1, yh = .1, E0 = 14, dE = .5)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT sample=V_sample(offfile=offfile, xwidth=0, yheight=0, zthick=0.15,
+	focus_xw=1, focus_yh=1, target_index=1)
+AT (0,0,1.5) RELATIVE source /*ROTATED (0,90,0) RELATIVE source*/
+
+COMPONENT monitor = Monitor_nD(xwidth=1,yheight=1,options="x y, all bins=300")
+  AT (0, 0, 2) RELATIVE source
+
+EXTEND
+%{
+	if(SCATTERED) ABSORB;
+%}
+
+END
+
+
+
+
+

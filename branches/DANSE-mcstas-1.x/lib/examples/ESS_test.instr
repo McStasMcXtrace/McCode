@@ -1,0 +1,118 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Peter Willendrup & Morten Sales
+* Date: 201007
+* Origin: Risoe/KU
+* Release: McStas 1.12b
+* Version: 0.1
+* %INSTRUMENT_SITE: Tests
+*
+* Test instrument for ESS_moderator_long
+*
+* %Description
+* Test instrument for ESS_moderator_long. Produces wavelength and TOF plots similar to those from Mezei notes.
+*
+* Cold moderator at baseline 16 + 2/3 Hz and 2 ms:
+*   mcrun ESS_test mode=0
+*
+* Thermal moderator at baseline 16 + 2/3 Hz and 2 ms:
+*   mcrun ESS_test mode=1
+*
+* Multiply intensity on wavelength monitor by 1e2 to achieve units of the Mezei note.
+*
+* %Parameters
+* Freq: [Hz] ESS moderator frequency
+* pulselength [ms] ESS pulse length
+* mode [1] Cold (0) or Thermal (1) moderator
+* * %Link
+* 
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT ESS_test(Freq=16.666667,pulselength=2,mode=0)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+  double T_,tau_,tau1_,tau2_,chi2_,I0_,I2_,branch1_,branch2_,branch_tail_;
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  if (mode) { /* Thermal */
+    T_=325;
+    tau_=80e-6;
+    tau1_=400e-6;
+    tau2_=12e-6;
+    chi2_=2.5; 
+    I0_=13.5e11; 
+    I2_=27.6e10; 
+    branch1_=0.5; 
+    branch2_=0.5;
+    branch_tail_=0.04;
+  } else {
+    T_=50;
+    tau_=287e-6;
+    tau1_=0; 
+    tau2_=20e-6; 
+    chi2_=0.9; 
+    I0_=6.9e11;
+    I2_=27.6e10;
+    branch1_=0;
+    branch2_=0.5;
+    branch_tail_=0.143;
+  }
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+
+COMPONENT Source = ESS_moderator_long(size = 0.12, l_low = 0.1, l_high = 10.1, dist = 1, xw = 0.1 ,yh = 0.1,
+                                      freq = Freq, T=T_, tau=tau_, tau1=tau1_, tau2=tau2_, n=20, n2=5, 
+				      d=pulselength*1e-3, chi2=chi2_, I0=I0_, I2=I2_, 
+				      branch1=branch1_, branch2=branch2_, branch_tail=branch_tail_)
+AT (0, 0, 0) RELATIVE Origin
+
+
+COMPONENT TOFsource = TOF_monitor(
+    nchan = 1000, filename = "TOFsource", xwidth = 0.12,
+    yheight = 0.12, t0 = 0, t1 = 4000, restore_neutron = 1)
+  AT (0, 0, 1e-9) RELATIVE Source
+
+
+COMPONENT Lmonsource = L_monitor(
+     nchan = 1440, filename = "Lmon", restore_neutron = 1,
+     xwidth = 0.1, yheight = 0.1, Lmin = 0.1, Lmax = 10.1)
+   AT (0, 0, 1) RELATIVE Source
+
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+

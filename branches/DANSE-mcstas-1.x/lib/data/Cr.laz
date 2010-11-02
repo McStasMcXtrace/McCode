@@ -1,0 +1,46 @@
+# TITLE *-Cr-[IM3-M] Straumanis, M.E.;Weng, C.C.[1963] [alpha phase]
+# CELL 2.884940 2.884940 2.884940 90.000000 90.000000 90.000000
+# SPCGRP I M 3 M   CUBIC STRUCTURE
+# ATOM CR 1 0.000000 0.000000 0.000000
+# SCATTERING FACTOR  COEFFICIENTS: CR     F= 0.364 CM-12
+# Reference: Zeitschrift fuer Kristallographie (1983) 162, 151-153
+#
+# Physical parameters:
+# sigma_coh 1.660   coherent scattering cross section in [barn]
+# sigma_inc 1.83    incoherent scattering cross section in [barn]
+# sigma_abs 3.05    absorption scattering cross section in [barn]
+# density   7.15    in [g/cm^3]
+# weight    51.99   in [g/mol]
+# nb_atoms  2       in [atoms/unit cell]
+# v_sound   5940    in [m/s]
+# T_m       2180    melting temperature in [K]
+# T_b       2944    boiling temperature in [K]
+# At_number 24      atomic number Z
+# lattice_a 2.88494 lattice parameter a in [Angs]
+#
+# Format parameters: Lazy format <http://icsd.ill.fr>
+# column_j 17 multiplicity 'j'
+# column_d 6  d-spacing 'd' in [Angs]
+# column_F 13 norm of scattering factor |F| in [barn^0.5]
+# column_h 1
+# column_k 2
+# column_l 3
+#
+# H  K  L  THETA  2THETA D VALUE  1/D**2 SIN2*1000  H  K  L INTENSITY         /F(HKL)/       A(HKL)      B(HKL) PHA.ANG. MULT   LPG
+  1  1  0  14.19  28.38   2.0400  0.2403    60.08   1  1  0    1000.0              0.7         0.69         0.00    0.00 12  17.17
+  2  0  0  20.28  40.56   1.4425  0.4806   120.15   2  0  0     229.1              0.6         0.65         0.00    0.00  6   8.87
+  2  1  1  25.12  50.24   1.1778  0.7209   180.23   2  1  1     561.4              0.6         0.61         0.00    0.00 24   6.13
+  2  2  0  29.35  58.71   1.0200  0.9612   240.30   2  2  0     193.9              0.6         0.57         0.00    0.00 12   4.77
+  3  1  0  33.23  66.47   0.9123  1.2015   300.38   3  1  0     286.7              0.5         0.54         0.00    0.00 24   3.98
+  2  2  2  36.90  73.79   0.8328  1.4418   360.45   2  2  2      73.9              0.5         0.51         0.00    0.00  8   3.47
+  3  2  1  40.43  80.85   0.7710  1.6821   420.53   3  2  1     353.9              0.5         0.48         0.00    0.00 48   3.12
+  4  0  0  43.89  87.78   0.7212  1.9224   480.60   4  0  0      36.3              0.5         0.45         0.00    0.00  6   2.89
+  3  3  0  47.33  94.67   0.6800  2.1627   540.68   3  3  0      60.8              0.4         0.42         0.00    0.00 12   2.73
+  4  1  1  47.33  94.67   0.6800  2.1627   540.68   4  1  1     121.6              0.4         0.42         0.00    0.00 24   2.73
+  4  2  0  50.81 101.63   0.6451  2.4030   600.75   4  2  0     104.1              0.4         0.40         0.00    0.00 24   2.63
+  3  3  2  54.38 108.76   0.6151  2.6433   660.83   3  3  2      91.0              0.4         0.38         0.00    0.00 24   2.60
+  4  2  2  58.11 116.22   0.5889  2.8836   720.90   4  2  2      81.6              0.4         0.35         0.00    0.00 24   2.63
+  4  3  1  62.10 124.19   0.5658  3.1239   780.98   4  3  1     150.7              0.3         0.33         0.00    0.00 48   2.74
+  5  1  0  62.10 124.19   0.5658  3.1239   780.98   5  1  0      75.4              0.3         0.33         0.00    0.00 24   2.74
+  5  2  1  71.67 143.35   0.5267  3.6045   901.13   5  2  1     152.9              0.3         0.30         0.00    0.00 48   3.53
+  4  4  0  78.64 157.28   0.5100  3.8448   961.21   4  4  0      50.7              0.3         0.28         0.00    0.00 12   5.28

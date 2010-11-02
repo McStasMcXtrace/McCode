@@ -1,0 +1,64 @@
+#!/bin/sh
+export RELEASE=$1
+export BUILDDIR="/build/mcstas-$RELEASE"
+export SRCDIR="/build/mcstas-$RELEASE-srcdir"
+export MACHINETYPE=$2
+
+apt-get -y --force-yes install perl-tk pdl gcc libc6-dev gfortran libx11-dev xorg-dev libxt-dev lintian pgplot5 libpgplot-perl gnuplot
+
+rm -rf /build/*
+rm -rf /usr/local/lib/*
+
+echo Performing mcstas install to /usr/local
+
+cd /build
+tar xzf /root/mcstas-${RELEASE}-src.tar.gz
+mv mcstas-${RELEASE} mcstas-${RELEASE}-srcdir
+cd mcstas-${RELEASE}-srcdir
+
+./configure
+
+make pgplot
+
+make
+make install
+make install-apps
+cd /build
+rm -rf /usr/local/lib/mcstas.*
+
+
+
+mkdir ${BUILDDIR}
+mkdir ${BUILDDIR}/DEBIAN
+mkdir ${BUILDDIR}/usr/
+mkdir ${BUILDDIR}/usr/local/
+mkdir ${BUILDDIR}/usr/local/lib
+mkdir ${BUILDDIR}/usr/share
+mkdir ${BUILDDIR}/usr/share/doc
+mkdir ${BUILDDIR}/usr/share/doc/mcstas
+
+cp -rp /usr/local/bin ${BUILDDIR}/usr/local
+cp -rp /usr/local/lib/* ${BUILDDIR}/usr/local/lib
+
+cp mcstas-${RELEASE}-srcdir/deb/control ${BUILDDIR}/DEBIAN
+cp mcstas-${RELEASE}-srcdir/deb/prerm ${BUILDDIR}/DEBIAN
+cp mcstas-${RELEASE}-srcdir/deb/postinst ${BUILDDIR}/DEBIAN
+
+sed -i "s/any/$2/g" ${BUILDDIR}/DEBIAN/control
+
+find ${BUILDDIR} -type d -exec chmod 0755 \{\} \;
+
+chmod 0755 ${BUILDDIR}/DEBIAN/prerm
+chmod 0755 ${BUILDDIR}/DEBIAN/postinst
+
+cp ${SRCDIR}/CHANGES ${BUILDDIR}/usr/share/doc/mcstas/changelog
+cp ${SRCDIR}/CHANGES ${BUILDDIR}/usr/share/doc/mcstas/changelog.Debian
+cp ${SRCDIR}/COPYING ${BUILDDIR}/usr/share/doc/mcstas/copyright
+
+dpkg-deb --build mcstas-${RELEASE}
+
+mv mcstas-${RELEASE}.deb mcstas-${RELEASE}-${MACHINETYPE}.deb
+
+rm -rf $BUILDDIR
+
+

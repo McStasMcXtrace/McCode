@@ -1,0 +1,56 @@
+TODO list for mcstas june 2008
+***************************************
+Next is the 2.0 release (not all from here, priority items marked by (*)
+
+Components:
+(*) Uniform parameter naming for the component classes; Sources, Samples, Monitors, Guides, etc.
+(*) DiskChopper bug - rotation by PI in N=2 situation changes time structure?! (Asked Uwe, no response yet)
+Robert McGreevy 4D- S(Q,w) - Analytical
+(*) Single_crystal, new approaches / validation still..
+(*) Focusing lenses ala VitESS
+Single crystal / powder with magnetic order / polarisation / spin wave comp
+Refraction?
+(*) Kill very old comps in obsolete (all? - will then allow "refill during 2.0 series)
+(*) Checkup - use of PROP_DT in all comps?
+monochromator_reflect (Lucia Alianelli) + resolving IDL dependency
+(*) monochromator_ ... (Lucia Alianelli) full monte carlo
+
+
+Instruments:
+(*) Laue_diff in examples
+(*) max parm Lucia vs. Monitor_nD (FIXED by _ hack)
+(*) IN22_sample - wrong direction / rotation of samle 2\theta mono ?
+(*) Guide_test.instr ; Source_test.instr; Monochromator_test; etc...
+
+Metalanguage / runtime
+New grammar(s) for 'Metacomponents' or 'Multicomponents' : 
+(*) ARRAY positions=filename COMPONENT MyComp = Comp()
+/* SEQUENCE positions=filename COMPONENT MyComp = Comp()
+DISTRIBUTION Gauss parms sizes COMPONENT MyComp = Comp() */
+(*) GROUP should jump to first member if SCATTERED (allows for multiple scattering, many-mirror setups etc.) Related: Remove ABSORB in samples when t0 < 0!!
+component initiated SPLIT (Transmit/Reflect)
+
+Tools/platform:
+mcresplot widths? FWHM vs. Sigma?  mcresplot port to Matlab/Scilab ?
+(*) mcstas2vitess, only supports double parms, should also do ones with explicit type.
+(*) mcrun --test with automatic compilation for all existing comps, plus all instruments
+Update mcrun --test=compatible to include --test=FP6 (etc)
+(*) gfortran update for PGPLOT build
+SWARM / Genetic algo? 
+(*) Scan over 'strings' filename=whatever.dat;whatever2.dat;whatever3.dat -N 3  (incl optim?)
+(N)2D-scans?
+mcgnuplot: DONE (almost)
+Scan evolvement' plot of psd's (Pick PSD data from scan, plot together) / mcplot opens scan steps in PGPLOT arrow keys
+(*) mcgui signal handling in case of compilation / mpi
+(*) mcrun --test uses new information in instrument header to execute the test
+    %TEST: h8_test.instr Lambda=2.359
+    %VALIDATION: D7_SC3_In_I 3.11e-11
+
+Infrastructure:
+(*) cvs machine / webserver / bugzilla update... 
+Ruby on rails based mcweb?
+
+Polarisation, magnetic fields: (Mainly Erik)
+Magnetic field calculations from V. Hugovieux thesis work (cvs-01) - Freefem call in INITIALIZE %{%}
+(*) More Pol comps
+(*) Pol example instrs

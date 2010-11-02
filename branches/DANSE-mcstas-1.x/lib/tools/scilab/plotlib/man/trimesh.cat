@@ -1,0 +1,16 @@
+ TRIMESH Triangular surface mesh 
+ 
+    trimesh(TRI,X,Y,Z) displays the triangles defined in the 3-by-M
+    face matrix TRI as a mesh.  A row of TRI contains indexes into
+    the X,Y, and Z vertex vectors to define a single triangular face.
+    
+    See mesh for other possible settings.
+
+    example :
+    
+    load(PLOTLIB+'tridem.dat')
+    trimesh(nodes,xy(1,:),xy(2,:),P(:,1),'view',[135 60], ...
+            'hidden','off','edgecolor',[1 1 0])
+
+    See also mesh, trisurf, trisurfl.
+                                          

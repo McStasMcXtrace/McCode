@@ -1,0 +1,100 @@
+/**********************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Source_flux
+*
+* %Identification
+* Written by: Kristian Nielsen
+* Date: 1998
+* Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
+* Modified by: KL, April, 10, 2005. Upgraded to Source_simple
+* Version: $Revision: 1.2 $
+* Origin: Risoe
+* Release: McStas 1.6
+*
+* An old variant of the official <b>Source_flux_lambda</b> component.
+*
+* %Description
+* Models a reactor source with a flat energy distribution and a
+* given neutron flux.
+* This is useful for simulations where the absolute value of neutron flux,
+* detector counts, etc. is needed for comparison with real instruments and
+* experiments.
+* OBSOLETE: rather use sources/Source_simple
+*
+* Example: Source_flat(radius=0.1, dist=2, xw=.1, yh=.1, E0=14, dE=2, flux=1e13)
+*
+* %Parameters
+* INPUT PARAMETERS
+*
+* radius: (m)   Radius of circle in (x,y,0) plane where neutrons
+*               are generated.
+* dist:   (m)   Distance to target along z axis.
+* xw:     (m)   Width(x) of target
+* yh:     (m)   Height(y) of target
+* E0:     (meV) Mean energy of neutrons.
+* dE:     (meV) Energy spread of neutrons.
+* flux:   (n/s/cm^2/Angs) Neutron flux
+*
+* %End
+***********************************************************************/
+
+DEFINE COMPONENT Source_flux
+DEFINITION PARAMETERS (radius=0.1, dist=2.33, xw=0.05, yh=0.1, E0=14.68, dE=2, flux=1e13)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (p_in)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+ double p_in,pdir;
+%}
+INITIALIZE
+%{
+  double factor, lambda_min, lambda_max, delta_lambda, source_area;
+
+  lambda_min = sqrt(81.81/(E0+dE)); /* AAngstroem */
+  lambda_max = sqrt(81.81/(E0-dE));
+  delta_lambda = lambda_max - lambda_min;
+  source_area = radius*radius*PI*1e4; /* cm^2 */
+  p_in = flux/mcget_ncount()*delta_lambda*source_area;
+%}
+
+TRACE
+%{
+ double chi,v,r, E;
+ double xf, yf, dx, dy, rf;
+
+ z=0;
+
+ chi=2*PI*rand01();                          /* Choose point on source */
+ r=sqrt(rand01())*radius;                    /* with uniform distribution. */
+ x=r*cos(chi);
+ y=r*sin(chi);
+
+ randvec_target_rect(&xf, &yf, &rf, &pdir,
+        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP);
+
+ dx = xf-x;
+ dy = yf-y;
+ rf = sqrt(dx*dx+dy*dy+dist*dist);
+ p = pdir*p_in;
+
+ E=E0+dE*randpm1();                  /* Assume linear distribution */
+ v=sqrt(E)*SE2V;
+
+ vz=v*dist/rf;
+ vy=v*dy/rf;
+ vx=v*dx/rf;
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  circle("xy",0,0,0,radius);
+%}
+
+END

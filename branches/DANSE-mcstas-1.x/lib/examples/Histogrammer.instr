@@ -1,0 +1,163 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Histogrammer
+*
+* %Identification
+* Written by: Peter Willendrup (peter.willendrup@risoe.dk)
+* Date: 2007-03-19
+* Origin: Risoe
+* Release: McStas CVS_080624
+* Version: $Revision: 1.4 $
+* %INSTRUMENT_SITE: Tools
+*
+* Takes eventfile input (Virtual_input/Vitess/MCNP/Tripoli4 formats) and applies Monitor_nD to generate
+* histograms. Histograms can be chosen freely using the Options string, see mcdoc Monitor_nD.comp
+*
+*
+* %Description
+*
+* Takes any possible  McStas eventfile inputs (Virtual_input/Vitess/MCNP/Tripoli4 formats) and applies
+* Monitor_nD to generate user-selectable neutron histograms.
+*
+* Example: mcrun Histogrammer.instr MODE=0
+*   - Gives information on the input parameters
+*
+* Example: mcrun Histogrammer.instr FileName="events.dat" MODE=1 Options="sphere theta phi outgoing previous" Type="text"
+*   - Reads a Virtual_output generated event file and applies a spherical PSD
+*
+* %Parameters
+* MODE:    [int]    Input file mode/format - 0 for help on usage
+*                   1=McStas,2=Vitess,3=MCNP,4=Tripoli4
+* FileName [string] Specifies input event file
+* Options  [string] Specifies the histogramming rules used by Monitor_nD.
+*                   It <b>MUST</b> contain the 'previous' word - see mcdoc page
+* Type     [string] Virtual_input event files, 'type' parameter(text/float/double) - see mcdoc page
+* BufSize  [int]    Vitess_input 'buffersize' parameter - see mcdoc page
+*
+* %BUGS
+* The Options string currently does not work with commas (mcrun interprets this as scan parms)
+*
+* %Link
+* <a href="../sources/Virtual_input.html">Virtual_input</a> component (McStas event file)
+* %Link
+* <a href="../misc/Vitess_input.html">Vitess_input</a> component (Vitess event file)
+* %Link
+* <a href="../contrib/Virtual_mcnp_input.html">Virtual_mcnp_input</a> component (MCNP PTRAC event file)
+* %Link
+* <a href="../contrib/Virtual_tripoli4_input.html">Virtual_tripoli4_input</a> component (Tripoli4 BATCH event file)
+* %Link
+* <a href="../monitors/Monitor_nD.html">Monitor_nD</a> component (detector/histogrammer)
+*
+* %End
+*******************************************************************************/
+
+/* Name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Histogrammer(string FileName, int MODE=0 , string Options="sphere theta phi outgoing previous", string Type="text", int BufSize=10000)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+   int file_mode;
+   char *emptyfile = "";
+   char *VirtualI_filename;
+   char *Vitess_filename;
+   char *Tripoli_filename;
+   char *MCNP_filename;
+
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+   file_mode = MODE;
+   /* Set all filenames empty */
+   VirtualI_filename = emptyfile;
+   Vitess_filename   = emptyfile;
+   Tripoli_filename  = emptyfile;
+   MCNP_filename     = emptyfile;
+   if (file_mode == 0) {
+	printf("\nHistogrammer.instr usage:\n'FileName' input event file (in Virtual_input/Vitess/MCNP/Tripoli4 formats)\n");
+	printf("'MODE':\n");
+	printf("  0 - Print this help and exit)\n");
+	printf("  1 - Virtual_input event file\n");
+	printf("  2 - Vitess event file\n");
+	printf("  3 - MCNP p-trac event file\n");
+	printf("  4 - Tripoli4 event file\n");
+	printf("'Options' - options string for Monitor_nD, see mcdoc Monitor_nD.comp\n\n");
+	printf("'Type' string parameter only relevant for Virtual_input (MODE==1), see mcdoc Virtual_input.comp\n");
+	printf("'BufSize' parameter only relevant for Vitess_input (MODE==2), see mcdoc Vitess_input.comp\n\n");
+
+	exit(0);
+   } else if (file_mode == 1) {
+        printf("Mode is 1 (Virtual_input event file)\n");
+	VirtualI_filename = FileName;
+   } else if (file_mode == 2) {
+   	printf("Mode is 2 (Vitess_input event file)\n");
+	if (!strcmp(FileName,"stdin")) {
+	  Vitess_filename = 0;
+	} else {
+	  Vitess_filename = FileName;
+	}
+   } else if (file_mode == 3) {
+        printf("Mode is 3 (MCNP p-trac event file)\n");
+        MCNP_filename = FileName;
+   } else if (file_mode == 4) {
+        printf("Mode is 4 (Tripoli4 event file)\n");
+        Tripoli_filename = FileName;
+   }
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT Virtualinput = Virtual_input(file=VirtualI_filename, type=Type)
+WHEN (file_mode ==1)  AT (0, 0, 0) RELATIVE Origin
+
+
+COMPONENT VITESSinput = Vitess_input(file=Vitess_filename, bufsize=BufSize)
+WHEN (file_mode ==2)  AT (0, 0, 0) RELATIVE Origin
+
+
+COMPONENT MCNPinput = Virtual_mcnp_input(file=MCNP_filename, verbose=1, smooth=0, surface_id=-1)
+WHEN (file_mode ==3)  AT (0, 0, 0) RELATIVE Origin
+
+
+COMPONENT TRIPOLI4input = Virtual_tripoli4_input(file=Tripoli_filename, verbose=1, smooth=0)
+WHEN (file_mode ==4)  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT Sphere = PSD_monitor_4PI(
+    nx = 360, ny = 360, filename = "kugle.dat", radius = 1)
+    AT (0, 0, 0) RELATIVE Origin 
+
+
+COMPONENT Monitor = Monitor_nD(options=Options)
+  AT (0, 0, 0) RELATIVE Origin
+
+
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+
+
+

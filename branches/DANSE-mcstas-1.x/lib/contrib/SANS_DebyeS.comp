@@ -1,0 +1,148 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Sans_DebyeS
+*
+* %I
+* Written by: Henrich Frielinghaus
+* Date:       Sept 2004
+* Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
+* Version:    $Revision: 1.5 $
+* Release:    McStas 1.12
+*
+* Sample for Small Angle Neutron Scattering: Debye-Scherrer Ring
+*
+* %D
+* Debye-Scherrer Ring: Model for highly ordered diblock copolymer.
+* This example is highly simple.
+* Multiple scattering neglected, but could be incorporated.
+* Sample that only produces a DebyeSherrer ring.
+* Advantages:  Transmitted beam is simulated.
+*              Intensities still in flux units.
+* Minor point: Absolute scattering probability given by transmission.
+*
+* Sample components leave the units of flux for the probability
+* of the individual paths. That is more consitent than the
+* Sans_spheres routine. Furthermore one can simulate the
+* transmitted beam. This allows to determine the needed size of
+* the beam stop. Only absorption has not been included yet to
+* these sample-components. But thats really nothing.
+*
+* Example: SANS_DebyeS(transm=0.5, qDS=0.008, xwidth=0.01, yheight=0.01, zthick=0.001)
+*
+* %P
+*
+* INPUT PARAMETERS
+*
+* transm  (1): coherent transmission of sample for the optical path "zthick"
+* qDS  (AA-1): Scattering vector of Debye-Sherrer ring
+* xwidth  (m): horiz. dimension of sample, as a width (m)
+* yheight (m): vert.. dimension of sample, as a height (m)
+* zthick  (m): thickness of sample (m)
+*
+* %Link
+* Sans_spheres component
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT SANS_DebyeS
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (transm=0.5, qDS=0.008, xwidth=0.01, yheight=0.01, zthick=0.001)
+OUTPUT PARAMETERS (q_v)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double q_v;
+%}
+
+INITIALIZE
+%{
+    if (!xwidth || !yheight || !zthick) {
+  exit(fprintf(stderr,"SANS_DebyeS: %s:  sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+    }
+%}
+
+TRACE
+%{
+  double transmr, t0, t1, v, l_full, l, dt, d_phi, theta;
+  double axis_x, axis_y, axis_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+  char   intersect=0;
+
+
+  transmr = transm;                      /* real transmission */
+  if (transmr<1e-10) transmr = 1e-10;
+  if (transmr>1e0  ) transmr = 1e0;
+
+  intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+  if(intersect)
+  {
+    if(t0 < 0) ABSORB;                   /* Neutron enters at t=t0. */
+
+    v = sqrt(vx*vx + vy*vy + vz*vz);
+    l_full = v * (t1 - t0);              /* Length of full path through sample */
+    transmr = exp(log(transmr)*l_full/zthick);  /* real transmission */
+
+    dt = rand01()*(t1 - t0) + t0;        /* Time of scattering */
+    PROP_DT(dt);                         /* Point of scattering */
+    l = v*dt;                            /* Penetration in sample */
+
+    q_v = qDS*K2V;                       /* scattering possible ??? */
+    arg = q_v/(2.0*v);
+
+    if(arg<1.0 && rand01()>transmr)
+    {
+    theta = asin(arg);                   /* Bragg scattering law */
+    d_phi = 2*PI*rand01();
+
+    vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, 0, 1, 0);
+    rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, 2*theta, axis_x, axis_y, axis_z);
+    rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, d_phi, vx, vy, vz);
+
+    vx = vout_x;
+    vy = vout_y;
+    vz = vout_z;
+
+    if(!box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick))    fprintf(stderr, "SANS_DebyeS: FATAL ERROR: Did not hit box from inside.\n");
+    }
+
+    SCATTER;
+  }
+%}
+
+MCDISPLAY
+%{
+  double radius = 0;
+  double h = 0;
+  magnify("xyz");
+  {
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zthick;
+    double zmax =  0.5*zthick;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+
+%}
+END

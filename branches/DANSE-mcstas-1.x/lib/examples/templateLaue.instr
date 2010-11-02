@@ -1,0 +1,61 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: templateLaue
+*
+* %Identification
+* Written by: K. Nielsen
+* Date: June 2nd, 2010
+* Origin: ILL
+* Release: McStas CVS-080208
+* Version: $Revision: 1.8 $
+* Modified by: EF, 
+* %INSTRUMENT_SITE: Templates
+*
+* A simple Laue diffractometer
+*
+* %Description
+* A single crystal sample is illuminated with a white cold beam.
+* Based on a Laue tutorial written by K. Nielsen, Feb 7, 2000.
+*
+* Example: mcrun templateLaue.instr
+*
+* %Parameters
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT templateLaue()
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_simple(
+  radius=0.02, xw=0.01, yh=0.01, dist=5,
+  Lambda0=7, dLambda=5, flux=1e12)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT slit = Slit(
+  xmin=-0.01, ymin=-0.01, xmax=0.01, ymax=0.01)
+AT (0,0,5) RELATIVE source
+
+COMPONENT sample = Single_crystal(
+          xwidth=0.01, yheight=0.01, zthick=0.01,
+          delta_d_d=1e-4, mosaic = 5,
+          ax = 3.8186, ay = 0,      az = 0,
+          bx = 0,      by = 3.8843, bz = 0,
+          cx = 0,      cy = 0,      cz = 11.6777,
+          reflections="YBaCuO.lau")
+AT (0,0,0.10) RELATIVE slit
+EXTEND %{
+  if (!SCATTERED) ABSORB; /* perfect beam stop */
+%}
+
+COMPONENT det= PSD_monitor_4PI(radius=1, nx=360,ny=180,filename="psd")
+AT (0,0,0) RELATIVE sample
+
+END
+

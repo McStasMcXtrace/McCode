@@ -1,0 +1,133 @@
+/***************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: He3_cell
+*
+* %Identification
+* Written by: Trefor Roberts
+* Date: March 1999
+* Origin: ILL
+* version: 1.0
+* Release: McStas 1.6
+*
+* Polarised 3He cell
+*
+* %Description
+* Simple cylindrical polarised 3He neutron spin filter cell.
+* The glass container for the cell is not included in the model.
+*
+* Example: He3_cell(radius=0.1,length=.2,pressure=3,p3he=0.7,bx=0,by=1e-3,bz=0)
+*
+* %Parameters
+* Input parameters:
+*
+* radius:    radius of the cylinder [m]
+* length:    length of the cylinder [m]
+* pressure:  pressure of the gas in the cell [bar]
+* p3he:      polarisation of the 3He gas [-1 to +1]
+* bx:        x component of field at the cell [tesla]
+* by:        y component of field at the cell [tesla]
+* bz:        z component of field at the cell [tesla]
+*
+* %Link
+* <a href="http://www.ill.fr/tas/mcstas/>The McStas ILL page, and the instrument section</a>
+*
+* %End
+***************************************************************************/
+
+DEFINE COMPONENT He3_cell
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius,length,pressure=3,p3he=0.7,bx=0,by=1e-3,bz=0)
+OUTPUT PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
+DECLARE
+%{
+#ifndef opac_cnv
+#define opac_cnv    7.33     /* opacity conversion factor so that
+                                the opacity can be expressed in
+                                bar.m.angstroms */
+#define gyro        1.832e8  /* absolute value of the gyromagnetic
+                                ratio of the neutron (s-1T-1) */
+#endif
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+%{
+
+  double t0,t1;        /* time that neutron enters and leaves gas (s) */
+  double v,lambda;      /* neutron velocity and wavelength (ms-1, Anstroms) */
+  double l_full;       /* path length of neutron through gas (m) */
+  double dt0;          /* time neutron spends in the gas (s) */
+  double opacity;      /* opacity of the gas for this neutron (dimless) */
+  double omega;        /* angle through which polarisation precesses
+                          over the path through the cell (radians) */
+  double px,py,pz;     /* components of propagated polarisation (-1 to +1) */
+
+/* calculate the intersection times with the volume of gas, if the neutron
+goes through the cell, continue with calculation otherwise all done.
+Note that y and z are swapped - this is because the cylindrical axis of
+a 3He cell lies along the beam. */
+
+  if(cylinder_intersect(&t0,&t1,x,z,y,vx,vz,vy,radius,length))
+  {
+
+/* Calculate the neutron velocity and wavelength */
+
+    v=sqrt(vx*vx+vy*vy+vz*vz);
+    lambda=2*PI/(V2K*v);
+
+/* Calculate the path length of the neutron through the gas */
+
+    dt0=t1-t0;
+    l_full=v*dt0;
+
+/* Calculate the opacity of the cell for the path length travelled */
+
+    opacity=pressure*l_full*lambda*opac_cnv;
+
+/* propagate the polarisation accross the cell (assuming a constant
+magnetic field).  The actual interaction point is not taken into account
+as only the parallel and perpendicular components are important. */
+
+    omega=dt0*gyro*sqrt(bx*bx+by*by+bz*bz);
+    rotate(px,py,pz,sx,sy,sz,omega,bx,by,bz);
+    sx=px;
+    sy=py;
+    sz=pz;
+
+/* adjust the neutron weight according to spin state relative to the
+3He nuclei - antiparallel spins are as good as absorbed, whereas parallel
+spins are transmitted (depending upon degree of polarisation of gas */
+
+    if(scalar_prod(sx,sy,sz,bx,by,bz)>0)
+    {
+      p*=0.5*exp(-opacity*(1.0-p3he));
+    } else {
+      p*=0.5*exp(-opacity*(1.0+p3he));
+    }
+    SCATTER;
+  }
+%}
+
+MCDISPLAY
+%{
+  magnify("xyz");
+  circle("xy",0.0,0.0,-length/2.0,radius);
+  circle("xy",0.0,0.0,length/2.0,radius);
+  line(0.0,radius,-length/2.0,0.0,radius,length/2.0);
+  line(radius,0.0,-length/2.0,radius,0.0,length/2.0);
+  line(0.0,-radius,-length/2.0,0.0,-radius,length/2.0);
+  line(-radius,0.0,-length/2.0,-radius,0.0,length/2.0);
+%}
+
+END

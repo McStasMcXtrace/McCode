@@ -1,0 +1,153 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Template monochromator Diffractometer
+*
+* %Identification
+* Written by: E. Farhi
+* Date: 13 Apr 2006
+* Origin: LLB/ILL
+* Release: McStas CVS_080624
+* Version: $Revision: 1.3 $
+* %INSTRUMENT_SITE: Templates
+*
+* Simple monochromator Diffractometer for powders
+*
+* %Description
+* A template powder diffractometer used as a tutorial at LLB.
+* Default geometry is from D20@ILL.
+*
+* Usual values for monochromator d-spacing
+* PG       002 DM=3.355 AA (Highly Oriented Pyrolythic Graphite)
+* PG       004 DM=1.607 AA
+* Heusler  111 DM=3.362 AA (Cu2MnAl)
+* CoFe         DM=1.771 AA (Co0.92Fe0.08)
+* Ge       111 DM=3.266 AA
+* Ge       311 DM=1.714 AA
+* Ge       511 DM=1.089 AA
+* Ge       533 DM=0.863 AA
+* Si       111 DM=3.135 AA
+* Cu       111 DM=2.087 AA
+* Cu       002 DM=1.807 AA
+* Cu       220 DM=1.278 AA
+*
+* Example: mcrun templateDIFF.instr lambda=1 RV=-1
+*
+* %Parameters
+* lambda: [Angs] Wavelength at monochromator
+* DM:     [Angs] d-spacing of monochromator
+* RV:     [m]    Monochromator vertical curvature, 0 for flat, -1 for automatic setting
+* L1:     [m]    Source-Monochromator distance
+* L2:     [m]    Monochromator-Sample distance
+* L3:     [m]    Sample-Detector distance
+* Powder: [str]  File name for powder description
+* verbose:[1]    Print DIF configuration. 0 to be quiet
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT templateDIFF(lambda=1, DM=3.355,
+  string Powder="Al2O3_sapphire.laz", RV=0,
+  L1=17, L2=3.2, L3=1.471,
+  verbose=1)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+double A1; /* rotation of monok and d-spacing */
+double RV; /* vertical curvature of monochromator */
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+double L;
+double KI, Vi, EI;
+
+A1 =asin(lambda/(2*DM))*RAD2DEG;
+L = 1/(1/L1+1/L2); 
+if (RV < 0) RV=2*L*sin(DEG2RAD*A1);
+KI=2*PI/lambda;
+Vi = K2V*fabs(KI);
+EI = VS2E*Vi*Vi;
+
+if (verbose) {
+  printf("%s: Detailed DIF configuration\n", NAME_CURRENT_COMP);
+  printf("* Incoming beam: lambda=%.4g [Angs] EI=%.4g [meV]  KI=%.4g [Angs-1] Vi=%g [m/s]\n",
+    lambda, EI, KI, Vi);
+  printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off A1=%.4g [deg]\n",
+    DM, RV, (!RV ? "flat" : "curved"), A1);
+}
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* source with constant flux */
+COMPONENT Source = Source_simple(
+    radius = 0.05, dist = L1, xw = 0.1, yh = 0.1,
+    Lambda0 = lambda, dLambda = lambda*0.01)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT PSD = PSD_monitor(
+     nx = 20, ny = 20, filename = "PSD1", xwidth = 0.03,
+     yheight = 0.03)
+   AT (0, 0, 1) RELATIVE Source
+
+COMPONENT Lmon1 = L_monitor(
+    nchan = 50, filename = "Lmon1", xwidth = 0.1, yheight = 0.1,
+    Lmin = lambda*0.95, Lmax = lambda*1.05)
+  AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+/* TIP: monochromator cradle */
+COMPONENT mono_cradle = Arm()
+  AT (0, 0, L1) RELATIVE Origin
+  ROTATED (0, A1, 0) RELATIVE Origin
+
+/* TIP: could use curved monochromator with NH>1 NV>1 et RH>0 RV>0 */
+SPLIT COMPONENT Monok = Monochromator_curved(
+    width = 0.1, height = 0.1, NH = 1, NV = 11, RV=RV,
+    mosaich = 30, mosaicv = 30, DM = DM)
+  AT (0, 0, 0) RELATIVE mono_cradle
+
+/* TIP: positing diffraction direction for monok (order 1) */
+COMPONENT mono_out = Arm()
+  AT (0, 0, 0) RELATIVE mono_cradle
+  ROTATED (0, 2*A1, 0) RELATIVE Origin
+
+COMPONENT Lmon2 = L_monitor(
+    nchan = 50, filename = "Lmon2", xwidth = 0.1, yheight = 0.1,
+    Lmin = lambda*0.95, Lmax = lambda*1.05)
+  AT (0, 0, 0.2) RELATIVE mono_out
+
+SPLIT COMPONENT Sample = PowderN(
+    reflections = Powder, radius = 0.005,
+    yheight = 0.1)
+  AT (0, 0, L2) RELATIVE mono_out
+EXTEND
+%{
+if (!SCATTERED) ABSORB; /* TIP: perfect beamstop */
+%}
+
+/* perfect detector: 1D(theta) */
+COMPONENT BananaTheta = Monitor_nD(
+    options = "banana, theta limits=[-10 160], bins=340",
+    xwidth = L3*2, yheight = 0.15)
+  AT (0, 0, 0) RELATIVE Sample
+
+/* perfect detector: 2D(theta,y) to see diffraction rings */
+COMPONENT BananaPSD = Monitor_nD(
+    options = "banana, theta limits=[-10 160] bins=170, y bins=25",
+    xwidth = L3*2*1.005, yheight = 0.5)
+  AT (0, 0, 0) RELATIVE Sample
+
+/* The END token marks the instrument definition end */
+END
+
