@@ -124,72 +124,75 @@ int box_intersect(double *dl_in, double *dl_out,
                   double dx, double dy, double dz)
 {
 
-  double k, l,lx,ly,lz, l_[6],dx_2,dy_2,dz_2;
+  double k, l,xf,yf,zf, l_[6],dx_2,dy_2,dz_2;
   double ab[2];
   unsigned int count=0;
   k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
-  dx_2=dx/2.0;dy_2=dy/2.0;dz_2=dz/2.0;
- 
+  dx_2=dx/2.0;dy_2=dy/2.0;dz_2=dz/2.0; 
   /*we really don't need to store the 6 intersects as only two are possible. i.e. should remove that.*/
   if (kx) {
-    l=(-dx_2-x)/kx;
-    ly=l*ky;lz=l*kz;
-    if(ly > -dy_2 && ly<dy_2 && lz > -dz_2 && lz<dz_2){
-      l_[0]=l*k;
+    l=(-dx_2-x)/kx*k;
+    yf=l*ky/k+y;zf=l*kz/k+z;
+    if(yf > -dy_2 && yf<dy_2 && zf > -dz_2 && zf<dz_2){
+      l_[0]=l;
       ab[count++]=l_[0];
     }else{
       l_[0]=0;
     }
-    l=(dx_2-x)/kx;
-    ly=l*ky;lz=l*kz;
-    if(ly > -dy_2 && ly<dy_2 && lz > -dz_2 && lz<dz_2){
-      l_[1]=l*k;
+    l=(dx_2-x)/kx*k;
+    yf=l*ky/k+y;zf=l*kz/k+z;
+    if(yf > -dy_2 && yf<dy_2 && zf > -dz_2 && zf<dz_2){
+      l_[1]=l;
       ab[count++]=l_[1];
     }else{
       l_[1]=0;
     }
   }
   if (ky) {
-    l=(-dy_2-y)/ky;
-    lx=l*kx;lz=l*kz;
-    if(lx > -dx_2 && lx<dx_2 && lz > -dz_2 && lz<dz_2){
-      l_[2]=l*k;
+    l=(-dy_2-y)/ky*k;
+    xf=l*kx/k+x;zf=l*kz/k+z;
+    if(xf > -dx_2 && xf<dx_2 && zf > -dz_2 && zf<dz_2){
+      l_[2]=l;
       ab[count++]=l_[2];
     }else{
       l_[2]=0;
     } 
-    l=(dy_2-y)/ky;
-    lx=l*kx;lz=l*kz;
-    if(lx > -dx_2 && lx<dx_2 && lz > -dz_2 && lz<dz_2){
-      l_[3]=l*k;
+    l=(dy_2-y)/ky*k;
+    xf=l*kx/k+x;zf=l*kz/k+z;
+    if(xf > -dx_2 && xf<dx_2 && zf > -dz_2 && zf<dz_2){
+      l_[3]=l;
       ab[count++]=l_[3];
     }else{
       l_[3]=0;
     }
   }
   if (kz) {
-    l=(-dz_2-z)/kz;
-    lx=l*kx;ly=l*ky;
-    if(lx > -dx_2 && lx<dx_2 && ly > -dy_2 && ly<dy_2){
-      l_[4]=l*k;
+    l=(-dz_2-z)/kz*k;
+    xf=l*kx/k+x; yf=l*ky/k+y;
+    if(xf > -dx_2 && xf<dx_2 && yf > -dy_2 && yf<dy_2){
+      l_[4]=l;
       ab[count++]=l_[4];
     }else{
       l_[4]=0;
     }
-    l=(dz_2-z)/kz;
-    lx=l*kx;ly=l*ky;
-    if(lx > -dx_2 && lx<dx_2 && ly > -dy_2 && ly<dy_2){
-      l_[5]=l*k;
+    l=(dz_2-z)/kz*k;
+    xf=l*kx/k+x; yf=l*ky/k+y;
+    if(xf > -dx_2 && xf<dx_2 && yf > -dy_2 && yf<dy_2){
+      l_[5]=l;
       ab[count++]=l_[5];
     }else{
       l_[5]=0;
     }
   }
   /*check validity of intersects*/
+  if (count>2){
+    fprintf(stderr,"box_instersect: xray hitting box more than twice\n");
+  }
   if (!count){
     *dl_in=0;*dl_out=0;
     return 0;
   }
+
   if (ab[0]<ab[1]){
     *dl_in=ab[0];*dl_out=ab[1];
     return 1;
