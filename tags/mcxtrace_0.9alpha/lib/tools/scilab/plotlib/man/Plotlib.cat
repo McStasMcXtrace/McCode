@@ -1,0 +1,54 @@
+PLOTLIB overview of functions
+
+General functions
+
+    axis - set/get the axis limits and type
+    background - change background
+    clf - clear a figure
+    caxis - set/get the color axis
+    colorbar - adds a colorbar to the plot              
+    delete - deletes a window                      
+    fig - creates/activates a figure         
+    foreground - change foreground
+    gcw - get current active window number     
+    hold - holds/releases current plot             
+    legend - adds a legend         
+    plotlibver - returns Plotlib version
+    subplot -  Create axes in tiled positions.     
+    shading - changes the shading type
+    shg - brings a window on the foreground
+    title - adds a title on top of a graph         
+    whitebg - Set the default color scheme
+
+2D functions
+
+    bar - draws vertical bargraph
+    plot - generic plot function.
+    pcolor - 2D pseudo color patches
+    semilogx - plot with logarihtmic x scale
+    semilogy - plot with logarihtmic y scale
+    loglog - plot with logarihtmic x andy scale
+    tripcolor - 2D pseudo color patches based on a triangulation
+    xlabel - adds a label on x axis                
+    ylabel - adds a label on y axis       
+    grid - add a grid on a 2D graph
+
+
+3D functions
+
+    plot3 - Plot lines and points in 3-D space.
+    mesh - 3D mesh surface.
+    surf - 3D colored surface.
+    surfl- 3D surface with lighting
+    trimesh - 3D surface mesh based on a triangulation
+    trisurf - 3D colored surface based on a triangulation
+    trisurfl - 3D surface based on a triangulation, with lightning
+    view - sets the view point
+
+Colormaps
+
+    caxis - set/get color axis
+    colormap - Set/get the colormap of currently active figure
+    colorbar - Adds a colorbar
+
+    
