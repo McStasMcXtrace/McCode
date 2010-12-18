@@ -1,0 +1,146 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Source_Maxwell_3
+*
+* %I
+* Written by: Kim Lefmann
+* Date: March 2001
+* Version: $Revision: 1.16 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* Source with up to three Maxwellian distributions
+*
+* %D
+* A parametrised continuous source for modelling a (cubic) source
+* with (up to) 3 Maxwellian distributions.
+* The source produces a continuous spectrum.
+* The sampling of the neutrons is uniform in lambda.
+*
+* Units of flux: neutrons/cm^2/second/ster
+* (McStas units are in general neutrons/second)
+*
+* Example:  PSI cold source T1=150.42 K / 2.51 AA     I1 = 3.67 E11
+*                           T2=38.74 K / 4.95 AA      I2 = 3.64 E11
+*                           T3=14.84 K / 9.5 AA       I3 = 0.95 E11
+*
+* %P
+* Input parameters:
+*
+* height: (m)    Height of rectangular source
+* width:  (m)    Width of rectangular source
+* l_low:  (AA)   Lower edge of lambda distribution
+* l_high: (AA)   Upper edge of lambda distribution
+* dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
+* xw:     (m)    Width of focusing rectangle
+* yh:     (m)    Height of focusing rectangle
+* T1:     (K)    1st temperature of thermal distribution
+* I1:     (*)    l-integrated flux, 1 (in flux units, see above)
+*
+* Optional parameters:
+* T2:     (K)    2nd temperature of thermal distribution
+* T3:     (K)    3nd temperature of  - - -
+* I2:     (*)    l-integrated flux, 2 (in flux units, see above)
+* I3:     (*)    l-integrated flux, 3  - - -
+* size:   (m)    Edge of cube shaped source (for backward compatibility)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Source_Maxwell_3
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (size=0, height=0, width=0, l_low, l_high, dist, xw, yh,
+                    T1, T2=300, T3=300, I1, I2=0, I3=0)
+OUTPUT PARAMETERS (M,l_range,w_mult,w_source,h_source)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double l_range, w_mult;
+  double w_source, h_source;
+
+  double M(double l, double temp)
+/* A normalised Maxwellian distribution : Integral over all l = 1 */
+/* TODO: Should go into the kernel */
+    {
+      double a=949.0/temp;
+      return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
+    }
+
+%}
+
+INITIALIZE
+%{
+  if (size>0) {
+    w_source = h_source = size;
+  } else {
+    w_source = width;
+    h_source = height;
+  }
+  l_range = l_high-l_low;
+  w_mult = w_source*h_source*1.0e4;     /* source area correction */
+  w_mult *= l_range;            /* wavelength range correction */
+  w_mult *= 1/mcget_ncount();   /* correct for # neutron rays */
+
+  if (w_source <0 || h_source < 0 || l_low <= 0 || l_high <= 0 || dist <= 0 || T1 <= 0 || T2 <= 0|| T3 <= 0) {
+      printf("Source_Maxwell_3: %s: Error in input parameter values!\n"
+             "ERROR          Exiting\n",
+           NAME_CURRENT_COMP);
+      exit(0);
+  }
+%}
+
+TRACE
+%{
+  double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus;
+
+  t=0;
+  z=0;
+  x = 0.5*w_source*randpm1();
+  y = 0.5*h_source*randpm1();         /* Choose initial position */
+
+  randvec_target_rect(&xf, &yf, &r, &w_focus,
+        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP);
+
+  dx = xf-x;
+  dy = yf-y;
+  r = sqrt(dx*dx+dy*dy+dist*dist);
+
+  lambda = l_low+l_range*rand01();    /* Choose from uniform distribution */
+  k = 2*PI/lambda;
+  v = K2V*k;
+
+  vz = v*dist/r;
+  vy = v*dy/r;
+  vx = v*dx/r;
+
+
+/*  printf("pos0 (%g %g %g), pos1 (%g %g %g), r: %g, v (%g %g %g), v %g\n",
+  x,y,z,xf,yf,dist,r,vx,vy,vz, v);
+  printf("l %g, w_focus %g \n", lambda, w_focus);  */
+
+    p *= w_mult*w_focus;                /* Correct for target focusing etc */
+    p *= I1*M(lambda,T1)+I2*M(lambda,T2)+I3*M(lambda,T3);
+                                        /* Calculate true intensity */
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, -(double)xw/2.0, -(double)yh/2.0, 0.0,
+                (double)xw/2.0, -(double)yh/2.0, 0.0,
+                (double)xw/2.0,  (double)yh/2.0, 0.0,
+               -(double)xw/2.0,  (double)yh/2.0, 0.0,
+               -(double)xw/2.0, -(double)yh/2.0, 0.0);
+%}
+
+END
+
+
+
+

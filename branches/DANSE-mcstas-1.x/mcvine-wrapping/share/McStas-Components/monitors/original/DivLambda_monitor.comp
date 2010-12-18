@@ -1,0 +1,130 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: DivLambda_monitor
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: 1999
+* Version: $Revision: 1.18 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* Divergence/wavelength monitor.
+*
+* %Description
+* 2D detector for intensity as a function of both horizontal divergence
+* and wavelength.
+*
+* Example: DivLambda_monitor(nlam=20, ndiv=20, filename="Output.div",
+*           xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+*           maxdiv=2, lambda_0=2, lambda_1=10)
+*
+* %Parameters
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
+* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
+* nlam:     Number of bins in wavelength (1)
+* ndiv:     Number of bins in divergence (1)
+* maxdiv:   Maximal horizontal divergence detected (degrees)
+* lambda_0: Minimum wavelength detected (AA)
+* lambda_1: Maximum wavelength detected (AA)
+* filename: Name of file in which to store the detector image (string)
+*
+* OUTPUT PARAMETERS:
+*
+* Div_N:    Array of neutron counts
+* Div_p:    Array of neutron weight counts
+* Div_p2:   Array of second moments
+*
+* %End
+*******************************************************************************/
+
+DEFINE COMPONENT DivLambda_monitor
+DEFINITION PARAMETERS (nlam=20, ndiv=20, string filename)
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, maxdiv=2, lambda_0, lambda_1)
+OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    double Div_N[nlam][ndiv];
+    double Div_p[nlam][ndiv];
+    double Div_p2[nlam][ndiv];
+  %}
+INITIALIZE
+  %{
+    int i,j;
+
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("DivLambda_monitor: %s: Null detection area !\n"
+                   "ERROR              (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
+
+    for (i=0; i<nlam; i++)
+     for (j=0; j<ndiv; j++)
+     {
+      Div_N[i][j] = 0;
+      Div_p[i][j] = 0;
+      Div_p2[i][j] = 0;
+     }
+  %}
+TRACE
+  %{
+    int i,j;
+    double div;
+    double lambda;
+
+    PROP_Z0;
+    lambda = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
+    if (x>xmin && x<xmax && y>ymin && y<ymax &&
+        lambda > lambda_0 && lambda < lambda_1)
+    {
+      div = RAD2DEG*atan2(vx,vz);
+      if (div < maxdiv && div > -maxdiv)
+      {
+        i = floor((lambda - lambda_0)*nlam/(lambda_1 - lambda_0));
+        j = floor((div + maxdiv)*ndiv/(2.0*maxdiv));
+        Div_N[i][j]++;
+        Div_p[i][j] += p;
+        Div_p2[i][j] += p*p;
+        SCATTER;
+      }
+    }
+  %}
+SAVE
+  %{
+    DETECTOR_OUT_2D(
+        "Wavelength-divergence monitor",
+        "Wavelength [AA]",
+        "divergence [deg]",
+        lambda_0, lambda_1, -maxdiv, maxdiv,
+        nlam, ndiv,
+        &Div_N[0][0],&Div_p[0][0],&Div_p2[0][0],
+        filename);
+  %}
+
+MCDISPLAY
+  %{
+    magnify("xy");
+    multiline(5, (double)xmin, (double)ymin, 0.0,
+                 (double)xmax, (double)ymin, 0.0,
+                 (double)xmax, (double)ymax, 0.0,
+                 (double)xmin, (double)ymax, 0.0,
+                 (double)xmin, (double)ymin, 0.0);
+%}
+
+END

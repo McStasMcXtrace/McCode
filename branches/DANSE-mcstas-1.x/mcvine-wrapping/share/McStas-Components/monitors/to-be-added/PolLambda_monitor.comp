@@ -1,0 +1,147 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: PolLambda_monitor
+*
+* %I
+* Written by: Peter Christiansen
+* Date: July 2006
+* Version: $Revision: 1.1 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* Polarisation and wavelength sensitive monitor.
+*
+* %D A square single monitor that measures the projection of the
+* polarisation along a given normalized m-vector (mx, my, mz) as a
+* function of wavelength.
+*
+* Example: PolLambda_monitor(xw=0.1, yh=0.1, npol=11, 
+                             mx=0, my=1, mz=0, filename="pollambdaMon.data")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xw:       Width/diameter of detector (m). 
+* yh:       Height of detector (m). 
+* mx:       X-component of monitor vector (can be negative) (1)
+* my:       Y-component of monitor vector (can be negative) (1)
+* mz:       Z-component of monitor vector (can be negative) (1)
+* nlam:     Number of bins in wavelength (1)
+* npol:     Number of bins in Pol (1)
+* Lmin:     Minimum wavelength detected (AA)
+* Lmax:     Maximum wavelength detected (AA)
+* filename: Name of file in which to store the data (text)
+*
+* OUTPUT PARAMETERS:
+*
+* PolL_N:      Array of neutron counts
+* PolL_p:      Array of neutron weight counts
+* PolL_p2:     Array of second moments
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT PolLambda_monitor
+DEFINITION PARAMETERS (xw=0, yh=0, nlam=20, npol=21, string filename)
+SETTING PARAMETERS (mx=0, my=0, mz=0, Lmin, Lmax)
+OUTPUT PARAMETERS (PolL_N, PolL_p, PolL_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+PolARISATION PARAMETERS (sx,sy,sz)
+     
+DECLARE
+%{  
+  double PolL_N[nlam][npol];
+  double PolL_p[nlam][npol];
+  double PolL_p2[nlam][npol];
+  %}
+
+INITIALIZE
+%{
+  int i, j;
+  
+  // Check that input parameteters makes sense
+  
+  if (Lmax<=Lmin) {
+    fprintf(stderr, "Pol_monitor: %s: l1 <= l0!\n"
+	   "ERROR. Exiting",
+           NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  if (mx==0 && my==0 && mz==0) {
+    fprintf(stderr, "Pol_monitor: %s: NULL vector defined!\n"
+	   "ERROR      (mx, my, mz). Exiting",
+           NAME_CURRENT_COMP);
+    exit(1);
+  }
+
+  if ((xw<=0) || (yh <= 0)) {
+    fprintf(stderr, "Pol_monitor: %s: Null detection area !\n"
+	   "ERROR      (xw,yh). Exiting",
+           NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  // Initialize variables 
+
+  NORM(mx, my, mz);
+  
+  for (i=0; i<npol; i++) {
+    for (j=0; j<nlam; j++) {
+      
+      PolL_N[j][i] = 0;
+      PolL_p[j][i] = 0;
+      PolL_p2[j][i] = 0;
+    }
+  }
+  %}
+
+TRACE
+%{
+  int i, j;
+  double pol_proj;
+  double lambda;
+  
+  PROP_Z0;
+  lambda = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
+  
+  if (inside_rectangle(x, y, xw, yh) &&
+      lambda > Lmin && lambda < Lmax) {
+    
+    pol_proj = scalar_prod(mx, my, mz, sx, sy, sz);
+    
+    if (pol_proj==1.0)
+      i = npol-1;
+    else 
+      i = floor((pol_proj+1.0)*npol/2.0);
+    j = floor((lambda - Lmin)*nlam/(Lmax - Lmin));
+    
+    PolL_N[j][i]++;
+    PolL_p[j][i] += p;
+    PolL_p2[j][i] += p*p;
+    SCATTER;
+  }
+  %}
+
+SAVE
+%{
+  DETECTOR_OUT_2D("Pol-wavelength monitor",
+		  "Wavelength [AA]", "Polarisation projection", 
+		  Lmin, Lmax, -1.0, 1.0, 
+		  nlam, npol,
+		  &PolL_N[0][0],&PolL_p[0][0],&PolL_p2[0][0],
+		  filename);
+  %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  rectangle("xy", 0, 0, 0, xw, yh);
+  %}
+
+END

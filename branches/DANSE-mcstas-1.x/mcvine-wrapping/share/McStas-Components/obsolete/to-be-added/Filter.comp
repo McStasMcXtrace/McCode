@@ -1,0 +1,96 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Filter
+*
+* %I
+* Written by: Kim Lefmann and Kristian Nielsen
+* Date: Sept. 14 1998
+* Version: $Revision: 494 $
+* Origin:Risoe
+* Release: McStas 1.6
+*
+* A simple cut-off neutron filter.
+*
+* %D
+* Be-type filter defined by two identical rectangular opening apertures.
+* The transmission is interpolated liniearly between the high- and low-energy
+* transmissions beyond the upper and lower cut-off energies.
+*
+* Example: Filter(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+*           len=0.05, T0=0.9, T1=0.1, Emin=4.64, Emax=5)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin: Lower x bound (m)
+* xmax: Upper x bound (m)
+* ymin: Lower y bound (m)
+* ymax: Upper y bound (m)
+* len:  Distance between apertures (m)
+* T0:   Transmittance of low energy neutrons (1)
+* T1:   Transmittance of high energy neutrons (1)
+* Emin: Lower cut-off energy (meV)
+* Emax: Upper cut-off energy (meV)
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Filter
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+           len=0.05, T0=0.9, T1=0.1, Emin=4.64, Emax=5)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+TRACE
+%{
+    double E;
+    double dt;
+    
+    PROP_Z0;
+    E=VS2E*(vx*vx+vy*vy+vz*vz);
+    if (x<xmin || x>xmax || y<ymin || y>ymax)
+      ABSORB;
+    dt = len/vz;
+    PROP_DT(dt);
+    if (x<xmin || x>xmax || y<ymin || y>ymax)
+      ABSORB;
+
+    if(E>=Emax)
+      if(T1==0)
+        ABSORB;
+      else
+        p*=T1;
+    else if(E<=Emin)
+      if(T0==0)
+        ABSORB;
+      else
+        p*=T0;
+    else
+      p*= T1+(T0-T1)*(Emax-E)/(Emax-Emin);
+    SCATTER;
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+  multiline(5, (double)xmin, (double)ymin, (double)len,
+               (double)xmax, (double)ymin, (double)len,
+               (double)xmax, (double)ymax, (double)len,
+               (double)xmin, (double)ymax, (double)len,
+               (double)xmin, (double)ymin, (double)len);
+  line(xmin, ymin, 0.0, xmin, ymin, len);
+  line(xmax, ymin, 0.0, xmax, ymin, len);
+  line(xmin, ymax, 0.0, xmin, ymax, len);
+  line(xmax, ymax, 0.0, xmax, ymax, len);
+%}
+END

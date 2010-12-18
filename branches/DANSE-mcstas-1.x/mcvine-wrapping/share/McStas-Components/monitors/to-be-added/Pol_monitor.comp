@@ -1,0 +1,139 @@
+/**************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Pol_monitor
+*
+* %I
+* Written by: Peter Christiansen
+* Date: July 2006
+* Version: $Revision: 1.1 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* Polarisation sensitive monitor.
+*
+* %D A square single monitor that measures the projection of the
+* polarisation along a given normalized m-vector (mx, my, mz).
+* The measured quantity is: sx*mx+sy*my+mz*sz
+*
+* Example: Pol_monitor(xw=0.1, yh=0.1, nchan=11, 
+*                      mx=0, my=1, mz=0, filename="polMon.data")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xw:       Width/diameter of detector (m). 
+* yh:       Height of detector (m). 
+* mx:       X-component of monitor vector (can be negative) (1)
+* my:       Y-component of monitor vector (can be negative) (1)
+* mz:       Z-component of monitor vector (can be negative) (1)
+* npol:     Number of channels (1)
+* filename: Name of file in which to store the detector output (text)
+*
+* OUTPUT PARAMETERS:
+*
+* Pol_N:      Array of neutron counts
+* Pol_p:      Array of neutron weight counts
+* Pol_p2:     Array of second moments
+*
+* %E
+*************************************************************************/
+
+DEFINE COMPONENT Pol_monitor
+DEFINITION PARAMETERS (xw=0, yh=0, npol=20, string filename)
+SETTING PARAMETERS (mx=0, my=0, mz=0)
+OUTPUT PARAMETERS (Pol_N, Pol_p, Pol_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+PolARISATION PARAMETERS (sx,sy,sz)
+     
+DECLARE
+%{
+  double Pol_N[npol];
+  double Pol_p[npol];
+  double Pol_p2[npol];
+  %}
+
+INITIALIZE
+%{
+  int i;
+  
+  // Check that input parameteters makes sense
+  
+  if (mx==0 && my==0 && mz==0) {
+    fprintf(stderr, "Pol_monitor: %s: NULL vector defined!\n"
+	    "ERROR      (mx, my, mz). Exiting",
+	    NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  if ((xw<=0) || (yh <= 0)) {
+    fprintf(stderr, "Pol_monitor: %s: Null detection area !\n"
+	    "ERROR      (xw,yh). Exiting",
+	    NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  // Initialize variables 
+ 
+  NORM(mx, my, mz);
+  
+  for (i=0; i<npol; i++) {
+    
+    Pol_N[i] = 0;
+    Pol_p[i] = 0;
+    Pol_p2[i] = 0;
+  }
+  %}
+
+TRACE
+%{
+  int i;
+  double pol_proj;
+  
+  PROP_Z0;
+  if (inside_rectangle(x, y, xw, yh)){
+    
+    pol_proj = scalar_prod(mx, my, mz, sx, sy, sz);
+    
+    if(abs(pol_proj>1)) {
+      fprintf(stderr, "Pol_monitor: %s: Pol vector longer than 1",
+	      NAME_CURRENT_COMP);
+      exit(1);
+    }
+    
+    i = floor((pol_proj+1.0)*npol/2.0);
+    
+    // To take care of the case when m.s=1
+    if(i==npol)
+      i--;
+    
+    if(i >= 0 && i < npol) {
+	Pol_N[i]++;
+	Pol_p[i] += p;
+	Pol_p2[i] += p*p;
+	SCATTER;
+    }
+  }
+  %}
+
+SAVE
+%{
+  DETECTOR_OUT_1D("Polarisation monitor",
+		  "Polarisation projection",
+		  "Intensity",
+		  "Pol", -1.0, 1.0, npol,
+		  &Pol_N[0],&Pol_p[0],&Pol_p2[0],
+		  filename);
+  %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  rectangle("xy", 0, 0, 0, xw, yh);
+  %}
+
+END

@@ -1,0 +1,275 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Monitor_Optimizer
+*
+* %Identification
+* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
+* Date: 17 Sept 1999
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>
+* Release: McStas 1.11
+* Version: $Revision: 1.6 $
+* Modified by: EF, (Feb 2000)
+* Modified by: EF, Mar 10th, 2000 : now uses struct
+* Modified by: EF, Oct 12th, 2000 ; optim divergence (0.08)
+*
+* To be used after the <b>Source_Optimizer</b> component
+*
+* %Description
+* A component that optimizes the neutron flux passing through the
+* <b>Source_Optimizer</b> in order to have the maximum flux at the
+* Monitor_Optimizer position(s).
+* <b>Source_optimizer</b> should be placed just after the source.
+* Monitor_Optimizer should be placed at the position to optimize.
+* I prefer to put one just before the sample.
+*
+* See <a href="Source_Optimizer.html">Source_Optimizer</a> for
+* usage example and additional informations.
+*
+* %Parameters
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* optim_comp: name of the Source_Optimizer component in the
+*           instrument definition. Do not use quotes (no quotes)
+*
+* OUTPUT PARAMETERS:
+*
+* none (see <b>Source_Optimizer.comp</b>)
+*
+* %Link
+* <a href="http://www.ill.fr/tas/mcstas/">McStas at ILL</a>
+* %Link
+* <a href="Source_Optimizer.html">Source_Optimizer</a>
+*
+* %End
+*******************************************************************************/
+
+DEFINE COMPONENT Monitor_Optimizer
+DEFINITION PARAMETERS (optim_comp)
+SETTING PARAMETERS (xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
+OUTPUT PARAMETERS (This_Monitor_id)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx, sy, sz)
+
+DECLARE
+%{
+#ifndef Source_Optimizer_Here
+#error McStas : Source_Optimizer component has to be used before Monitor_Optimizer
+#endif
+
+int This_Monitor_id;
+
+%}
+
+INITIALIZE
+%{
+  struct Optim_Variables *Vars = &(MC_GETPAR(optim_comp, Vars));
+
+  Vars->Monitor_Number++;
+  This_Monitor_id = Vars->Monitor_Number;
+
+%}
+
+TRACE
+%{
+  struct Optim_Defines *DEFS = &(MC_GETPAR(optim_comp, DEFS));
+  struct Optim_Variables *Vars = &(MC_GETPAR(optim_comp, Vars));
+
+  PROP_Z0;
+  if ((Vars->Phase != DEFS->PHASE_UNACTIVATE)
+&& (x>xmin && x<xmax && y>ymin && y<ymax))
+  {
+
+    Vars->cur_p = p;
+
+    Vars->Monitor_Counts++; /* initialized to 0 in DEFS->PHASE_SET_REF */
+    if (Vars->Flag_Smooth )
+    { /* to evaluate correctly the un-optimized flux, we restore original weight in these phases */
+      if ((Vars->Phase == DEFS->PHASE_GET_REF) || (Vars->Phase == DEFS->PHASE_GET_LIMITS))
+             Vars->cur_p /= Vars->dkeep;
+    }
+    if (This_Monitor_id == 1)  /* only count flux once !!  */
+    {
+      Vars->Monitor_Flux += Vars->cur_p;
+    }
+
+    Vars->Total_Monitor_Counts++;
+
+    if (Vars->Flag_Auto
+    && (Vars->Phase == DEFS->PHASE_GET_REF))
+      {
+      if (((Vars->Reference_Counts > mcget_ncount()*Vars->dstep) && (Vars->Monitor_Counts >= Vars->nbins*10))
+      || (Vars->Monitor_Counts >= Vars->nbins*100) || (Vars->Reference_Counts > 2*mcget_ncount()*Vars->dstep))
+      {
+        Vars->Phase_Counts_R = 0;        /* enough counts on monitor */
+        if (Vars->Flag_Verbose)
+        {
+          printf(">> AUTO monitor has reached %.1f counts (non optimized",Vars->Monitor_Counts);
+          if (Vars->Flag_Smooth) printf(", smoothed");
+          printf(")\n");
+        }
+        Vars->Phase_Counts = (Vars->Reference_Counts+Vars->Limits_Counts);
+        Vars->dstep = (double)Vars->Phase_Counts/(double)mcget_ncount();
+
+/*        Vars->dkeep = Vars->nbins*10/Vars->Monitor_Counts;
+        if (Vars->dkeep < Vars->dkeep_target) Vars->dkeep = Vars->dkeep_target;
+        if (Vars->dkeep > .9) Vars->dkeep = 0.9; */
+
+        if (Vars->Monitor_Counts < 3*Vars->nbins)
+        {
+          printf("Source_Optimizer: monitor only reached %.1f counts. \n", Vars->Monitor_Counts);
+          printf("* WARNING *       You'd better unactivate it or increase number of neutrons\n");
+        }
+      }
+    }
+
+   if ((Vars->Phase == DEFS->PHASE_GET_REF)
+    || ((Vars->Phase == DEFS->PHASE_OPTIM) && (Vars->Flag_Continuous) ))        /* build the Optimized Source distributions */
+   {
+     if (Vars->vx_max-Vars->vx_min)
+       Vars->index = (int)rint(Vars->nbins * (Vars->dvx -Vars->vx_min)/(Vars->vx_max-Vars->vx_min));
+     else
+       Vars->index = 0;
+     if (Vars->index < 0)     Vars->index = 0;
+     if (Vars->index >= Vars->nbins) Vars->index = Vars->nbins - 1;
+     Vars->New_Source_vx[Vars->index]++;
+
+     if (Vars->vy_max-Vars->vy_min)
+       Vars->index = (int)rint(Vars->nbins * (Vars->dvy -Vars->vy_min)/(Vars->vy_max-Vars->vy_min));
+     else
+       Vars->index = 0;
+     if (Vars->index < 0)     Vars->index = 0;
+     if (Vars->index >= Vars->nbins) Vars->index = Vars->nbins - 1;
+     Vars->New_Source_vy[Vars->index]++;
+
+     if (Vars->vz_max-Vars->vz_min)
+       Vars->index = (int)rint(Vars->nbins * (Vars->dvz -Vars->vz_min)/(Vars->vz_max-Vars->vz_min));
+     else
+       Vars->index = 0;
+     if (Vars->index < 0)     Vars->index = 0;
+     if (Vars->index >= Vars->nbins) Vars->index = Vars->nbins - 1;
+     Vars->New_Source_vz[Vars->index]++;
+
+     if (Vars->x_max-Vars->x_min)
+       Vars->index = (int)rint(Vars->nbins * (Vars->cur_x -Vars->x_min)/(Vars->x_max-Vars->x_min));
+     else
+       Vars->index = 0;
+     if (Vars->index < 0)     Vars->index = 0;
+     if (Vars->index >= Vars->nbins) Vars->index = Vars->nbins - 1;
+     Vars->New_Source_x[Vars->index]++;
+
+     if (Vars->y_max-Vars->y_min)
+       Vars->index = (int)rint(Vars->nbins * (Vars->cur_y -Vars->y_min)/(Vars->y_max-Vars->y_min));
+     else
+       Vars->index = 0;
+     if (Vars->index < 0)     Vars->index = 0;
+     if (Vars->index >= Vars->nbins) Vars->index = Vars->nbins - 1;
+     Vars->New_Source_y[Vars->index]++;
+
+     if (Vars->sx_max-Vars->sx_min)
+       Vars->index = (int)rint(Vars->nbins * (Vars->dsx -Vars->sx_min)/(Vars->sx_max-Vars->sx_min));
+     else
+       Vars->index = 0;
+     if (Vars->index < 0)     Vars->index = 0;
+     if (Vars->index >= Vars->nbins) Vars->index = Vars->nbins - 1;
+     Vars->New_Source_sx[Vars->index]++;
+
+     if (Vars->sy_max-Vars->sy_min)
+       Vars->index = (int)rint(Vars->nbins * (Vars->dsy -Vars->sy_min)/(Vars->sy_max-Vars->sy_min));
+     else
+       Vars->index = 0;
+     if (Vars->index < 0)     Vars->index = 0;
+     if (Vars->index >= Vars->nbins) Vars->index = Vars->nbins - 1;
+     Vars->New_Source_sy[Vars->index]++;
+
+     if (Vars->sz_max-Vars->sz_min)
+       Vars->index = (int)rint(Vars->nbins * (Vars->dsz -Vars->sz_min)/(Vars->sz_max-Vars->sz_min));
+     else
+       Vars->index = 0;
+     if (Vars->index < 0)     Vars->index = 0;
+     if (Vars->index >= Vars->nbins) Vars->index = Vars->nbins - 1;
+     Vars->New_Source_sz[Vars->index]++;
+
+   } /* end if Vars->Phase */
+
+  } /* end if xy in optimizer */
+/* end trace */
+%}
+
+FINALLY
+%{
+  struct Optim_Variables *Vars = &(MC_GETPAR(optim_comp, Vars));
+
+  if (Vars->Monitor_Number == 0)
+  {
+  /* initial Reference distribution arrays (for weights) */
+    free(Vars->Reference_x);
+    free(Vars->Reference_y);
+    free(Vars->Reference_vx);
+    free(Vars->Reference_vy);
+    free(Vars->Reference_vz);
+    free(Vars->Reference_sx);
+    free(Vars->Reference_sy);
+    free(Vars->Reference_sz);
+
+  /* optimized Source distribution arrays (to reach) */
+    free(Vars->Source_x);
+    free(Vars->Source_y);
+    free(Vars->Source_vx);
+    free(Vars->Source_vy);
+    free(Vars->Source_vz);
+    free(Vars->Source_sx);
+    free(Vars->Source_sy);
+    free(Vars->Source_sz);
+
+  /* optimized New_Source distribution arrays (to reach in next step, passed to Source) */
+    free(Vars->New_Source_x);
+    free(Vars->New_Source_y);
+    free(Vars->New_Source_vx);
+    free(Vars->New_Source_vy);
+    free(Vars->New_Source_vz);
+    free(Vars->New_Source_sx);
+    free(Vars->New_Source_sy);
+    free(Vars->New_Source_sz);
+
+  /* Passing distribution arrays (should grow to reach Source) */
+    free(Vars->Passing_x);
+    free(Vars->Passing_y);
+    free(Vars->Passing_vx);
+    free(Vars->Passing_vy);
+    free(Vars->Passing_vz);
+    free(Vars->Passing_sx);
+    free(Vars->Passing_sy);
+    free(Vars->Passing_sz);
+
+    Vars->Monitor_Number = 1;  /* to only free once */
+  }
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END
+
+
+
+
+
+
+
+

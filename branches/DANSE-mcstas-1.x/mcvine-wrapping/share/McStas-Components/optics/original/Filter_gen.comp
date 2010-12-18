@@ -1,0 +1,215 @@
+/***********************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Filter_gen
+* %I
+* Written by: EF (from Flux_adapter)
+* Date: Dec, 15th, 2002
+* Version: $Revision: 1.5 $
+* Origin: ILL
+* Release: McStas 1.11
+*
+* This components may either set the flux or change it (filter-like), using
+* an external data file.
+*
+*%D
+* This component changes the neutron flux (weight) in order to match
+* a reference table in a file.
+* Typically you may set the neutron flux (source-like), or multiply it
+* using a transmission table (filter-like).
+* The component may be placed after a source, in order to e.g.
+* simulate a real source from a reference table, or used as a filter (BeO)
+, or as a window (Al). The behaviour of the component is
+* specified using the 'options' parameter, or from the file itself (see below)
+* If the thickness for the transmission data file D was t0, and a different
+* thickness t1 would be required, then the resulting transmission is:
+*   D^(t1/t0).
+* You may use the 'thickness' and 'scaling' parameter for that purpose.
+*
+* <b>File format:</b>
+* This file may be of any 2-columns free format (k[Angs-1],p), (omega[meV],p)
+* and (lambda[Angs],p) where p is the weight. The type of the file may be
+* written explicitely in the file, as a comment, or using the 'options'
+* parameter.
+* Non mumerical content in file is treated as comment (e.g. lines starting
+* with '#' character).
+* A table rebinning and linear interpolation are performed.
+*
+* EXAMPLE : in order to simulate a PG filter, using the lib/data/HOPG.trm file
+*      Filter_gen(xmin = -0.1, xmax = 0.1,
+*       ymin = -0.1, ymax = 0.1,
+*       file="HOPG.trm")
+*
+* in this file, the comment line
+*     # wavevector multiply
+* sets the behaviour of the component. One may as well have used
+*     options="wavevector multiply"
+* in the component instance parameters.
+*
+*%P
+* file:    [str] name of the file to look at (first two columns data)
+*           data D should rather be sorted (ascending order) and monotonic
+*           file may contain options (see below) as comment
+* options: [str] string that can contain:
+*          "[ k p ]"      or "wavector" for file type,
+*          "[ omega p]"   or "energy",
+*          "[ lambda p ]" or "wavelength",
+*          "set"          to set the weight according to the table,
+*          "multiply"     to multiply (instead of set) the weight by factor,
+*          "add"          to add to current flux,
+*          "verbose"      to display additional informations.
+* thickness: [1] relative thickness. D = D^(thickness).
+* scaling: [1] scaling factor. D = D*scaling.
+* xmin:    [m] dimension of filter
+* xmax:    [m] dimension of filter
+* ymin:    [m] dimension of filter
+* ymax:    [m] dimension of filter
+*
+* %L
+* <a href="../data/HOPG.trm">HOPG.trm</a> file as an example.
+*%E
+***********************************************************************/
+DEFINE COMPONENT Filter_gen
+DEFINITION PARAMETERS (file=0, string options=0)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, thickness=1, scaling=1)
+OUTPUT PARAMETERS (pTable, Mode_Table, Type_Table)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+
+SHARE
+%{
+#ifndef FILTER_GEN
+#define FILTER_GEN "1.0"
+#define UNKNOWN_TABLE    0
+#define ENERGY_TABLE     1
+#define WAVEVECTOR_TABLE 2
+#define WAVELENGTH_TABLE 3
+#define FLUX_ADAPT_SET   0
+#define FLUX_ADAPT_MULT  1
+#define FLUX_ADAPT_ADD   2
+
+char FilterGen_Mode(char *str, char *Mode, char *Type, char *verbose)
+{
+  long i;
+  char *c;
+  if (!str || !strlen(str)) return(0);
+  c = malloc(strlen(str));
+  for (i=0; i<strlen(str); i++) c[i] = tolower(str[i]);
+  /* setup options */
+  if (strstr(str," k ") || strstr(str," q ") || strstr(str,"wavevector"))
+    *Type = WAVEVECTOR_TABLE;
+  if (strstr(str,"omega") || strstr(str," e ") || strstr(str,"energy"))
+    *Type = ENERGY_TABLE;
+  if (strstr(str,"lambda") || strstr(str,"wavelength") || strstr(str," L "))
+    *Type = WAVELENGTH_TABLE;
+  if (strstr(str,"set")) *Mode  = FLUX_ADAPT_SET;
+  if (strstr(str,"add")) *Mode  = FLUX_ADAPT_ADD;
+  if (strstr(str,"multiply")) *Mode  = FLUX_ADAPT_MULT;
+  if (strstr(str,"verbose")) *verbose = 1;
+
+  return(*Mode);
+}
+
+%include "read_table-lib"
+
+#endif
+
+%}
+
+DECLARE
+%{
+  char   Mode_Table  = FLUX_ADAPT_MULT;
+  char   Type_Table  = UNKNOWN_TABLE;
+  t_Table pTable;
+%}
+
+INITIALIZE
+%{
+  char verbose = 0;
+
+  FilterGen_Mode(options, &Mode_Table, &Type_Table, &verbose);
+  if (file != NULL)
+  {
+    if (Table_Read(&pTable, file, 1) <= 0) /* read 1st block data from file into pTable */
+      exit(fprintf(stderr,"Filter_gen: %s: can not read file %s\n", NAME_CURRENT_COMP, file));
+
+    Table_Rebin(&pTable);         /* rebin as evenly, increasing array */
+    if (pTable.rows < 2 || !pTable.step_x) Table_Free(&pTable);
+    if (pTable.data)
+    {
+      FilterGen_Mode(pTable.header, &Mode_Table, &Type_Table, &verbose);
+      if (verbose)
+      {
+        Table_Info(pTable);
+        printf("Filter_gen : %s : Filter data [", NAME_CURRENT_COMP);
+        if (Type_Table == ENERGY_TABLE) printf("Energy");
+        if (Type_Table == WAVEVECTOR_TABLE) printf("Wavevector");
+        if (Type_Table == WAVELENGTH_TABLE) printf("Wavelength");
+        if (Type_Table == UNKNOWN_TABLE) printf("UNKNOWN (not used)");
+        printf(", Flux] in ");
+        if (Mode_Table == FLUX_ADAPT_MULT) printf("multiply");
+        else if (Mode_Table == FLUX_ADAPT_ADD) printf("add");
+        else printf("set");
+        printf(" mode\n");
+      }
+    }
+
+  } else pTable.data = NULL;
+%}
+
+TRACE
+%{
+  double v2, K, L, E, X, new_p;
+
+  PROP_Z0;
+  if (Type_Table && (x>xmin && x<xmax && y>ymin && y<ymax))
+  {
+    v2 = (vx*vx + vy*vy + vz*vz);
+    K = V2K*sqrt(v2);        /* k */
+    L = (2*PI/K);        /* lambda */
+    E = VS2E*v2;        /* energy */
+    if (Type_Table == ENERGY_TABLE)     X=E;
+    if (Type_Table == WAVEVECTOR_TABLE) X=K;
+    if (Type_Table == WAVELENGTH_TABLE) X=L;
+    /* table look up */
+    if (pTable.data != NULL)
+    {
+      double y1, y2, x1;
+      long   Index;
+      Index = floor((X - pTable.min_x)/pTable.step_x);
+      y1 = Table_Index(pTable, Index,   1); /* 2nd column */
+      x1 = Table_Index(pTable, Index,   0); /* 1st column */
+      y2 = Table_Index(pTable, Index+1, 1); /* 2nd column */
+      new_p = scaling*(y1+(X - x1)*(y2-y1)/pTable.step_x); /* 2nd column */
+      if (thickness != 1) new_p = pow(new_p, thickness);
+    }
+    else new_p = 1;
+
+    if (Mode_Table == FLUX_ADAPT_MULT) p *= new_p;
+    else p = new_p;
+    SCATTER;
+  }
+  else
+    if (Type_Table) ABSORB;
+%}
+
+FINALLY
+%{
+  Table_Free(&pTable);
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END

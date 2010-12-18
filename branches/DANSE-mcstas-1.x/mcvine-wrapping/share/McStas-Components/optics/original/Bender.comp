@@ -1,0 +1,318 @@
+  /*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Bender
+*
+* %Identification
+* Written by: Philipp Bernhardt
+* Date: Februar 7 1999
+* Origin: Uni. Erlangen (Germany)
+* Release: McStas 1.11
+* Version: $Revision: 1.14 $
+*
+* Models a curved neutron guide.
+*
+* %Description
+* Models a curved neutron guide with cylindrical walls.
+*
+* Bender radius, entrance width and height are necessary input data. To define
+* the bender, you may either enter the deviation angle 'Win' or the length 'l'.
+* The bender may consist of 'k' vertical channels, separated by partitioning walls
+* of thickness 'd'. Three different reflectivity profiles can be given: for outer
+* walls, for inner walls and for the top and bottom walls. The partitioning walls
+* have the same coating as the exterior walls.
+*
+* The entrance lies in the X-Y plane, centered on the Z axis. The neutrons will
+* also leave the bender in the X-Y plane at the z-value l=r*Win, i.e. they are
+* centred on (0,0,r*Win); they have an (average) flight direction along the z-axis.
+* Therefore, the following component is adjacent, if positioned AT (0,0,r*Win)
+* <b>without</b> rotation.
+* So, seen from outside, it behaves like a straight guide along the Z axis. As a
+* consequence, it is shown straight in 'mcdisplay'.
+* This behaviour results from a co-ordinate transformation inside the component.
+* It is done to facilitate its use. Neither rotation nor shift along the x-axis
+* need to be calculated; a new arm is not necessary. Internally, the bender is
+* bent to the negative X axis;
+*
+* Example:
+* Bender of 120 mm height, 50 mm width, 250 m radius and 0.04 rad (or 2.292 deg) curvature
+* not channeled, with a standard m=2 coating on
+*
+* Bender(w=0.05,h=0.12,r=250,Win=0.04,
+*        R0a=0.99,Qca=0.021,alphaa=6.07,ma=2,Wa=0.003,
+*        R0i=0.99,Qci=0.021,alphai=6.07,mi=2,Wi=0.003,
+*        R0s=0.99,Qcs=0.021,alphas=6.07,ms=2,Ws=0.003)
+*
+* %BUGS
+* Some users have reported potentially strange behaviours with this component.
+* This component does not work with gravitation on.
+*
+* %Parameters
+* INPUT PARAMETERS:
+*
+* w:       (m)          Width at the bender entry and exit
+* h:       (m)          Height at the bender entry and exit
+* r:       (m)          Radius of the bender
+* Win:     (rad)        Angle of the deflection of the whole bender
+* k:       (1)          Number of channels inside the bender
+* d:       (m)          Thickness of one blade separating the channels
+* R0a:     (1)          Low-angle reflectivity at the <b>outer</b> side of the bender
+* Qca:     (AA-1)       Critical scattering vector
+* alphaa:  (AA)         Slope of reflectivity
+* ma:      (1)          m-value of material
+* Wa:      (AA-1)       Width of supermirror cut-off
+* R0i:     (1)          Low-angle reflectivity at the <b>inner</b> side of the bender
+* Qci:     (AA-1)       Critical scattering vector
+* alphai:  (AA)         Slope of reflectivity
+* mi:      (1)          m-value of material
+* Wi:      (AA-1)       Width of supermirror cut-off
+* R0s:     (1)          Low-angle reflectivity at the <b>top and bottom</b> side of the bender
+* Qcs:     (AA-1)       Critical scattering vector
+* alphas:  (AA)         Slope of reflectivity
+* ms:      (1)          m-value of material
+* Ws:      (AA-1)       Width of supermirror cut-off
+*
+* Optional parameters:
+* l:       (m)          length of bender l=r*Win
+*
+* OUTPUT PARAMETERS:
+* bk:      (m)          Width of 1 channel + 1 separating blade
+* mWin:    (rad)        Angle of the deflection of the whole bender
+*
+* %L
+* <a href="../contrib/Guide_curved.comp.html>Guide_curved</a> (contributed)
+* %L
+* See also <a href="http://mailman.risoe.dk/pipermail/neutron-mc/1999q1/000052.html">Additional note</a> from <a href="mailto:philipp.bernhardt@siemens.com">Philipp Bernhardt</a>.
+*
+* %End
+*******************************************************************************/
+
+DEFINE COMPONENT Bender
+DEFINITION PARAMETERS
+(w,h,r,Win=0.04,k=1,d=0.001,R0a=0.99,Qca=0.021,alphaa=6.07,ma=2,Wa=0.003,R0i=0.99,Qci=0.021,alphai=6.07,mi=2,Wi=0.003,R0s=0.99,Qcs=0.021,alphas=6.07,ms=2,Ws=0.003,l=0)
+
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (bk, mWin)
+STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
+
+SHARE
+ %{
+#ifndef BENDER_DECLARE
+#define BENDER_DECLARE
+    double bd_sgn(double x) {
+      if (x>=0)
+         return 1.0;
+      else
+         return -1.0; }
+#endif
+ %}
+
+DECLARE
+ %{
+      double bk, mWin;
+ %}
+
+INITIALIZE
+ %{
+      if (r <0)
+      { fprintf(stderr,"Bender: error: %s: to bend in the other direction\n", NAME_CURRENT_COMP);
+        fprintf(stderr,"        rotate comp on z-axis by 180 deg.\n"); exit(-1); }
+
+      if (k*d > w)
+      { fprintf(stderr,"Bender: error: %s has (k*d > w).\n", NAME_CURRENT_COMP);
+        exit(-1); }
+      if (w*h*r*Win*k == 0)
+      { fprintf(stderr,"Bender: error: %s has one of w,h,r,Win,k null.\n", NAME_CURRENT_COMP);
+        exit(-1); }
+      /* width of one channel + thickness d of partition */
+      mWin = Win;
+      if (l!= 0 && r != 0) mWin = (double)l/(double)r;
+      bk=(w+d)/k;
+      if (mcgravitation) fprintf(stderr,"WARNING: Bender: %s: "
+        "This component produces wrong results with gravitation !\n",
+        NAME_CURRENT_COMP);
+ %}
+
+TRACE
+ %{
+    int i,num,numa,numi;
+    double dru,ab,dab,R,Q,arg,arga,argi,Ta,vpl;
+    double einmWin,ausmWin,zykmWin,aeumWin,innmWin,ref,innref,aeuref;
+    double einzei,auszei,zykzei;
+
+    /* does the neutron hit the bender at the entrance? */
+    PROP_Z0;
+    if ((fabs(x)<w/2) && (fabs(y)<h/2))
+    {
+      /*** reflections in the XZ-plane ***/
+
+      /* distance between neutron and concave side of the channel at the entrance */
+      dru=floor((w/2-x)/bk)*bk;
+      ab=w/2.0-x-dru;
+
+      /* radius of the channel */
+      R=r-dru;
+
+      /* does the neutron hit the partition at the entrance? */
+      if (ab<bk-d)
+      {
+        /* velocity in the XZ-plane */
+        vpl=sqrt(vx*vx+vz*vz);
+
+        /* divergence of the neutron at the entrance */
+        einmWin=atan(vx/vz);
+
+        /* maximal distance between neutron and concave side of the channel */
+        dab=R-cos(einmWin)*(R-ab);
+
+        /* reflection angle at the concave side */
+        aeumWin=acos((R-dab)/R);
+
+        /* reflection coefficient at the concave side */
+        arga=0.0;
+        Q=2.0*V2K*vpl*sin(aeumWin);
+        if (Q<=Qca)
+           aeuref=R0a;
+        else {
+           arga=(Q-ma*Qca)/Wa;
+           aeuref=0.5*R0a*(1.0-tanh(arga))*(1.0-alphaa*(Q-Qca)); }
+
+        /* does the neutron hit the convex side of the channel? */
+        innmWin=0.0;
+        innref=1.0;
+        argi=0.0;
+        if (dab>bk-d)
+        {
+           /* reflection coefficient at the convex side */
+           innmWin=acos((R-dab)/(R-bk+d));
+           Q=2.0*V2K*vpl*sin(innmWin);
+           if (Q<=Qci)
+              innref=R0i;
+           else {
+              argi=(Q-mi*Qci)/Wi;
+              innref=0.5*R0i*(1.0-tanh(argi))*(1.0-alphai*(Q-Qci)); }
+        }
+
+        /* divergence of the neutron at the exit */
+        zykmWin=2.0*(aeumWin-innmWin);
+        ausmWin=fmod(mWin+einmWin+aeumWin-innmWin
+          *(1.0+bd_sgn(einmWin)),zykmWin)-zykmWin/2.0;
+        ausmWin+=innmWin*bd_sgn(ausmWin);
+
+        /* number of reflections at the concave side */
+        numa=(mWin+einmWin+aeumWin-innmWin*(1.0+bd_sgn(einmWin)))/zykmWin;
+
+        /* number of reflections at the convex side */
+        numi=numa;
+        if (ausmWin*einmWin<0)
+        {
+           if (ausmWin-einmWin>0)
+              numi++;
+           else
+              numi--;
+        }
+
+        /* is the reflection coefficient too small? */
+        if (((numa>0) && (arga>10.0)) || ((numi>0) && (argi>10.0)))
+           ABSORB;
+
+        /* calculation of the neutron probability weight p */
+        for (i=1;i<=numa;i++)
+            p*=aeuref;
+        for (i=1;i<=numi;i++)
+            p*=innref;
+
+        /* time to cross the bender */
+        Ta=(2*numa*(tan(aeumWin)-tan(innmWin))
+          +tan(ausmWin)-tan(einmWin)
+          -tan(innmWin)*(bd_sgn(ausmWin)-bd_sgn(einmWin)))
+          *(R-dab)/vpl;
+        t+=Ta;
+
+        /* distance between neutron and concave side of channel at the exit */
+        ab=R-(R-dab)/cos(ausmWin);
+
+        /* calculation of the exit coordinates in the XZ-plane */
+        x=w/2.0-ab-dru;
+        z=r*mWin;
+        vx=sin(ausmWin)*vpl;
+        vz=cos(ausmWin)*vpl;
+
+        /*** reflections at top and bottom side (Y axis) ***/
+
+        if (vy!=0.0)
+        {
+          /* reflection coefficent at the top and bottom side */
+          Q=2.0*V2K*fabs(vy);
+          if (Q<=Qcs) {
+             ref=R0s; arg=0; }
+          else {
+             arg=(Q-ms*Qcs)/Ws;
+             ref=0.5*R0s*(1.0-tanh(arg))*(1.0-alphas*(Q-Qcs)); }
+
+          /* number of reflections at top and bottom */
+          einzei=h/2.0/fabs(vy)+y/vy;
+          zykzei=h/fabs(vy);
+          num=(Ta+einzei)/zykzei;
+
+          /* time between the last reflection and the exit */
+          auszei=fmod(Ta+einzei,zykzei);
+
+          /* is the reflection coefficient too small? */
+          if ((num>0) && (arg>10.0))
+             ABSORB;
+
+          /* calculation of the probability weight p */
+          for (i=1;i<=num;i++) {
+               p*=ref;
+               vy*=-1.0; }
+
+          /* calculation of the exit coordinate */
+          y=auszei*vy-vy*h/fabs(vy)/2.0;
+        } /* if (vy!=0.0) */
+        SCATTER;
+      } /* if (dab>bk-d)  */
+      else
+        ABSORB; /* hit separating walls */
+    }
+    else /* if ((fabs(x)<w/2) && (fabs(y)<h/2))   */
+      ABSORB; /* miss entry window */
+
+ %}
+
+MCDISPLAY
+%{
+  int i;
+  double w1c, w2c, h1, h2, L, w1, w2;
+
+  w1c = (w + d)/(double)k;
+  w2c = w1c; h1 = h; h2 = h;
+  L = r*mWin; w1 = w; w2 = w;
+
+  magnify("xy");
+  for(i = 0; i < k; i++)
+  {
+    multiline(5,
+              i*w1c - w1/2.0, -h1/2.0, 0.0,
+              i*w2c - w2/2.0, -h2/2.0, (double)L,
+              i*w2c - w2/2.0,  h2/2.0, (double)L,
+              i*w1c - w1/2.0,  h1/2.0, 0.0,
+              i*w1c - w1/2.0, -h1/2.0, 0.0);
+    multiline(5,
+              (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0,
+              (i+1)*w2c - d - w2/2.0, -h2/2.0, (double)L,
+              (i+1)*w2c - d - w2/2.0,  h2/2.0, (double)L,
+              (i+1)*w1c - d - w1/2.0,  h1/2.0, 0.0,
+              (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0);
+  }
+  line(-w1/2.0, -h1/2.0, 0.0, w1/2.0, -h1/2.0, 0.0);
+  line(-w2/2.0, -h2/2.0, (double)L, w2/2.0, -h2/2.0, (double)L);
+%}
+
+END
+
+

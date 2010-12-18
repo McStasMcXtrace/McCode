@@ -1,0 +1,33 @@
+# -*- Makefile -*-
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+#                               Michael A.G. Aivazis
+#                        California Institute of Technology
+#                        (C) 1998-2004  All Rights Reserved
+#
+# <LicenseText>
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+
+#
+# Local (project) definitions
+#
+
+# C++
+
+    PROJ_CXX_FLAGS += $(CXX_SOFLAGS)
+    PROJ_LCXX_FLAGS += $(LCXX_SARFLAGS)
+
+ PROJ_CXX_FLAGS += "-D_FORTIFY_SOURCE=1"
+ifeq (Win32, ${findstring Win32, $(PLATFORM_ID)})
+
+   EXTERNAL_DEFINES += WIN32
+
+endif
+
+# version
+# $Id: local.def 622 2010-10-11 19:00:22Z linjiao $
+
+# End of file

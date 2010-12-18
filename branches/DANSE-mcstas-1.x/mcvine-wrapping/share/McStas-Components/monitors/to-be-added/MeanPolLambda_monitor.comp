@@ -1,0 +1,162 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: MeanPolLambda_monitor
+*
+* %I
+* Written by: Peter Christiansen
+* Date: July 2006
+* Version: $Revision: 1.1 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* Polarisation and wavelength sensitive monitor.
+*
+* %D A square single monitor that measures the MEAN projection of the
+* polarisation along a given normalized m-vector (mx, my, mz) as a
+* function of wavelength.
+*
+* Example: MeanPolLambda_monitor(xw=0.1, yh=0.1, npol=11, 
+*                                my=1, filename="meanpollambdaMon.data")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xw:       Width/diameter of detector (m) 
+* yh:       Height of detector (m)
+* mx:       X-component of monitor vector (can be negative) (1)
+* my:       Y-component of monitor vector (can be negative) (1)
+* mz:       Z-component of monitor vector (can be negative) (1)
+* nlam:     Number of bins in wavelength (1)
+* Lmin:     Minimum wavelength detected (AA)
+* Lmax:     Maximum wavelength detected (AA)
+* filename: Name of file in which to store the data (text)
+*
+* OUTPUT PARAMETERS:
+*
+* PolL_N:      Array of neutron counts (1)
+* PolL_p:      Array of neutron weight counts (1)
+* PolL_p2:     Array of second moments (1)
+* HelpArray:   Array of weight counts used for normalization (1)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT MeanPolLambda_monitor
+DEFINITION PARAMETERS (xw=0, yh=0, nlam=20, string filename)
+SETTING PARAMETERS (mx=0, my=0, mz=0, Lmin, Lmax)
+OUTPUT PARAMETERS (PolL_N, PolL_p, PolL_p2, HelpArray)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+PolARISATION PARAMETERS (sx,sy,sz)
+     
+DECLARE
+%{  
+  double PolL_N[nlam];
+  double PolL_p[nlam];
+  double PolL_p2[nlam];
+  double HelpArray[nlam];
+  %}
+
+INITIALIZE
+%{
+  int i;
+  
+  // Check that input parameteters makes sense
+  
+  if (Lmax<=Lmin) {
+    fprintf(stderr, "Pol_monitor: %s: l1 <= l0!\n"
+	   "ERROR. Exiting",
+           NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  if (mx==0 && my==0 && mz==0) {
+    fprintf(stderr, "Pol_monitor: %s: NULL vector defined!\n"
+	   "ERROR      (mx, my, mz). Exiting",
+           NAME_CURRENT_COMP);
+    exit(1);
+  }
+
+  if ((xw<=0) || (yh <= 0)) {
+    fprintf(stderr, "Pol_monitor: %s: Null detection area !\n"
+	   "ERROR      (xw,yh). Exiting",
+           NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  // Initialize variables 
+
+  NORM(mx, my, mz);
+  
+  for (i=0; i<nlam; i++) {
+      
+      PolL_N[i] = 0;
+      PolL_p[i] = 0;
+      PolL_p2[i] = 0;
+      HelpArray[i] = 0;
+  }
+  %}
+
+TRACE
+%{
+  int i;
+  double pol_proj;
+  double lambda;
+  
+  PROP_Z0;
+  lambda = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
+  
+  if (inside_rectangle(x, y, xw, yh) &&
+      lambda > Lmin && lambda < Lmax) {
+    
+    pol_proj = scalar_prod(mx, my, mz, sx, sy, sz);
+    
+    i= floor((lambda - Lmin)*nlam/(Lmax - Lmin));
+
+    PolL_N[i]++;
+    HelpArray[i] += p;
+    PolL_p[i]    += pol_proj*p; 
+    PolL_p2[i]   += pol_proj*pol_proj*p;
+
+    SCATTER;
+  }
+  %}
+
+SAVE
+%{
+  int i;
+
+  // Average output
+  for (i=0; i<nlam; i++) {
+    
+    if(HelpArray[i] == 0)
+      continue;
+    
+    PolL_p[i]  /= HelpArray[i];
+    // Mcstas uses the error sigma**2=sum p_i**2 for intensities
+    // But here we have the mean so the error**2 should be VAR/N:
+    // sigma**2 = [sum s_i*s_i*p_i/sum p_i - (sum s_i*p_i/sum p_i)**2]/N
+    PolL_p2[i] /= HelpArray[i];
+    PolL_p2[i] -= PolL_p[i]*PolL_p[i];
+    PolL_p2[i] /= PolL_N[i];
+  }
+  
+  DETECTOR_OUT_1D("Pol-wavelength monitor", 
+		  "Wavelength [AA]",
+		  "Mean Polarisation", 
+		  "Wavelength", Lmin, Lmax, nlam,
+		  &PolL_N[0],&PolL_p[0],&PolL_p2[0],
+		  filename);
+  %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  rectangle("xy", 0, 0, 0, xw, yh);
+  %}
+
+END

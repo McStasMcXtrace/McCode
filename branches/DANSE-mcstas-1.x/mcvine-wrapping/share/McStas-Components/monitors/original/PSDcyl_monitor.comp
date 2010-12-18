@@ -1,0 +1,125 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* %I
+* Written by: Kim Lefmann
+* Date: October 26, 2000
+* Version: $Revision: 1.14 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* A 2D Position-sensitive monitor. The shape is cylindrical with
+the axis vertical. The monitor covers the whole cylinder (360 degrees).
+*
+* %D
+* An (n times m) pixel PSD monitor with cylinder shape,
+* vertical axis, centered at (0,0,0).
+*
+* Example: PSDcyl_monitor(nr=20, ny=20, filename="Output.cyl",
+*           height=0.2, radius=0.1)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* height:   Height of detector (m)
+* radius:   Radius of detector (m)
+* nr:       Number of pixel (radial) columns (1)
+* ny:       Number of pixel rows (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N:    Array of neutron counts
+* PSD_p:    Array of neutron weight counts
+* PSD_p2:   Array of second moments
+*
+* %E
+******************************************************************************/
+
+
+DEFINE COMPONENT PSDcyl_monitor
+DEFINITION PARAMETERS (nr, ny, string filename)
+SETTING PARAMETERS (height, radius)
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    double PSD_N[nr][ny];
+    double PSD_p[nr][ny];
+    double PSD_p2[nr][ny];
+  %}
+INITIALIZE
+  %{
+    int i,j;
+
+    for (i=0; i<nr; i++)
+     for (j=0; j<ny; j++)
+     {
+      PSD_N[i][j] = 0;
+      PSD_p[i][j] = 0;
+      PSD_p2[i][j] = 0;
+     }
+  %}
+TRACE
+  %{
+    int i,j;
+    double t0,t1,phi;
+
+    if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, height))
+     {
+      if(t0>0)
+       {
+         printf("FATAL ERROR: Did not come from within cylinder.\n");
+         exit(1);
+       };
+      if(t1<0)
+       {
+         printf("FATAL ERROR: Did not hit cylinder from inside.\n");
+         exit(1);
+       }
+      else
+       {
+        PROP_DT(t1);
+                     /* Calculate pixel */
+        if (fabs(y)<(height- 1e-10))
+         {
+          phi=atan2(x,z);
+          i=(int)floor((phi/(2*PI))*nr);
+          j=(int)floor((y/height)*ny);
+          PSD_N[i][j]++;
+          PSD_p[i][j] += p;
+          PSD_p2[i][j] += p*p;
+         }
+        else
+          ABSORB;  /* Should not be necessary */
+       }
+     }
+    else
+     {
+      ABSORB;
+     }
+  %}
+SAVE
+  %{
+    DETECTOR_OUT_2D(
+        "PSD cylindrical monitor",
+        "radial position [deg]",
+        "height [m]",
+        -180, 180, -height/2.0, height/2.0,
+        nr, ny,
+        &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+        filename);
+  %}
+
+MCDISPLAY
+%{
+  magnify("xz");
+  circle("xz", 0, 0, 0, radius );
+
+%}
+
+END

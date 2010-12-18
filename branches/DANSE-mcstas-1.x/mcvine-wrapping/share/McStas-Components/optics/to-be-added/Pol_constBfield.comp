@@ -1,0 +1,161 @@
+/**************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Pol_constBfield
+*
+* %I
+* Written by: Peter Christiansen
+* Date: July 2006
+* Version: $Revision: 1.2 $
+* Origin: RISOE
+* Release: McStas 1.11
+*
+* Constant magnetic field.
+*
+* %D 
+*
+* Rectangular box with constant B field along y-axis (up). The
+* component can be rotated to make either a guide field or a spin
+* flipper. A neutron hitting outside the box opening or the box sides
+* is absorbed.
+*
+* Example: Pol_constBfield(xw=0.1, yh=0.1, length=0.2, fliplambda=5.0)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xw:         Width of opening (m). 
+* yh:         Height of opening (m). 
+* length:     Length of field (m).
+* B:          Magnetic field along y-direction (Gauss)
+* fliplambda: Lambda for calculating B field
+* flipangle:  Angle flipped for lambda = fliplambda
+*             fliplambda and flipangle overrides B so a neutron with s
+*             = (1, 0, 0) and v = (0, 0, v(fliplambda)) will have s =
+*             (cos(flipangle), sin(flipangle), 0) after the section.
+*            
+*
+* OUTPUT PARAMETERS:
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Pol_constBfield
+DEFINITION PARAMETERS (xw, yh, length)
+SETTING PARAMETERS (B=0, fliplambda=0, flipangle=180)
+OUTPUT PARAMETERS(omegaL)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+     
+SHARE
+%{
+  double IntersectWall(double pos, double vel, double wallpos) {
+    /* Function to calculate where the neutron hit the wall */
+
+    if(vel==0)
+      return -1;
+    
+    if(vel>0)
+      return (wallpos-pos)/vel;
+    else 
+      return (-wallpos-pos)/vel;
+  }
+  %}
+
+
+DECLARE
+%{
+  /*   Larmor frequency */
+  double omegaL = 0;  
+  %}
+
+INITIALIZE
+%{
+  double velocity = 0, time = 0;
+  
+  if ((xw<=0) || (yh<=0) || (length<=0)) {
+    fprintf(stderr, "Pol_filter: %s: Null or negative volume!\n"
+	    "ERROR      (xw, yh, length). Exiting\n",
+	    NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  // neutron Larmor frequency: omegaL=29.16 MHz/Tesla * B(Neutron Data Booklet)
+  // omegaL/B = -2*mu_n/hbar = -2.0*1.913*5.051e-27/1.055e-34
+  omegaL = -2 * PI * 29.16e6 * B * 1e-4; // B is in Gauss
+  
+  if(fliplambda>0) {
+    
+    velocity = K2V*2*PI/fliplambda;
+    time = length/velocity;
+    
+    // omegaL*time = flipangle
+    omegaL = flipangle*DEG2RAD/time;
+    
+    // omegaL = 2*PI*29.16 MHz/T*B
+    B = omegaL / -2 / 29.16e6 / PI / 1e-4; // Gauss
+    
+    printf("Pol_constBfield: %s: Magnetic field set to B=%f Gauss\n",
+           NAME_CURRENT_COMP, B);
+  }
+  
+  
+  %}
+
+TRACE
+%{
+  double deltaT, deltaTx, deltaTy, sx_in, sz_in;
+  
+  PROP_Z0;
+  if (!inside_rectangle(x, y, xw, yh))
+    ABSORB;
+  
+  // Time spent in B-field
+  deltaT = length/vz;
+  
+  // check that track goes throgh without hitting the walls
+  if (!inside_rectangle(x+vx*deltaT, y+vy*deltaT, xw, yh)) {
+    
+    // Propagate to the wall and absorb
+    deltaTx = IntersectWall(x, vx, xw/2);
+    deltaTy = IntersectWall(y, vy, yh/2);
+
+    if (deltaTx>=0 && deltaTx<deltaTy)
+      deltaT = deltaTx;
+    else
+      deltaT = deltaTy;
+    
+    PROP_DT(deltaT);  
+    
+    ABSORB;
+  }  
+  
+  PROP_DT(deltaT);  
+  
+  // The solution to neutron precession in a constant field along the
+  // z-axis is:  
+  // sx(deltaT) = cos(omegaL*deltaT)*sx(0) - sin(omegaL*deltaT)*sy(0)
+  // sy(deltaT) = sin(omegaL*deltaT)*sx(0) + cos(omegaL*deltaT)*sy(0)
+  // sz(deltaT) = sz(0)
+  // see e.g. W. Gavin Willams "Polarized Neutrons", page 18.
+  // In our geometry (x', y', z') where y' = z we get x' = y and z'= x 
+  
+  sx_in = sx;
+  sz_in = sz;
+  
+  sz = cos(omegaL*deltaT)*sz_in - sin(omegaL*deltaT)*sx_in;
+  sx = sin(omegaL*deltaT)*sz_in + cos(omegaL*deltaT)*sx_in;
+  %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  
+  box(0, 0, length/2, xw, yh, length);
+  %}
+
+END

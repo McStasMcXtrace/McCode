@@ -1,0 +1,156 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Mirror
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: August 1998
+* Version: $Revision: 1.23 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* Single mirror plate.
+*
+* %D
+* Single mirror plate (used to build guides in compound components).
+* The component Mirror models a single rectangular neutron mirror plate.
+* It can be used as a sample component or to e.g. assemble a complete neutron
+* guide by putting multiple mirror components at appropriate locations and
+* orientations in the instrument deﬁnition, much like a real guide is build
+* from individual mirrors.
+* Additionally, it may be centered in order to be used as a sample or
+* monochromator plate, else it starts from AT position.
+* Reflectivity is either defined by an analytical model (see Component Manual)
+* or from a two-columns file with q [Angs-1] as first and R [0-1] as second.
+* In the local coordinate system, the mirror lies in the first quadrant of the
+* x-y plane, with one corner at (0, 0, 0). Plane is thus perpendicular to the
+* incoming beam, and should usually be rotated.
+*
+* Example: Mirror(xlength=.1, yheight=.1,R0=0.99,Qc=0.021,alpha=6.1,m=2,W=0.003)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xlength: (m)    length of mirror plate
+* yheight: (m)    height of mirror plate
+* R0:      (1)    Low-angle reflectivity
+* Qc:      (AA-1) Critical scattering vector
+* alpha:   (AA)   Slope of reflectivity
+* m:       (1)    m-value of material. Zero means completely absorbing.
+* W:       (AA-1) Width of supermirror cut-off
+* reflect: (str)  Name of relfectivity file. Format [q(Angs-1) R(0-1)]
+* transmit:(1)    When true, non reflected neutrons are transmitted through
+*                 the mirror, instead of being absorbed.
+* center:  (1)    if true (1), the Mirror is centered arount AT position.
+*
+* %D
+* Example values: m=4 Qc=0.02 W=1/300 alpha=6.49 R0=1
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Mirror
+DEFINITION PARAMETERS (string reflect=0)
+SETTING PARAMETERS (xlength, yheight,R0=0.99,Qc=0.021,alpha=6.07,m=2,W=0.003, center=0, transmit=0)
+OUTPUT PARAMETERS (pTable)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+SHARE
+%{
+%include "read_table-lib"
+%}
+
+DECLARE
+%{
+  t_Table pTable;
+%}
+
+INITIALIZE
+%{
+  if (reflect && strlen(reflect)) {
+    if (Table_Read(&pTable, reflect, 1) <= 0) /* read 1st block data from file into pTable */
+      exit(fprintf(stderr,"Mirror: %s: can not read file %s\n", NAME_CURRENT_COMP, reflect));
+  }
+%}
+
+TRACE
+%{
+  double dt, q, B;
+  char intersect=0;
+
+  /* First check if neutron has the right direction. */
+  if(vz != 0.0 && (dt = -z/vz) >= 0)
+  {
+    double old_x = x, old_y = y;
+    x += vx*dt;
+    y += vy*dt;
+    /* Now check if neutron intersects mirror. */
+    intersect = (center == 0 ?
+      x >= 0 && x <= xlength && y >= 0 && y <= yheight :
+      x>= -xlength/2 && x<=xlength/2 && y >= -yheight/2 && y <= yheight/2);
+    if (intersect) {
+      z = 0;
+      t += dt;
+      q = fabs(2*vz*V2Q);
+      vz = -vz;
+      /* Reflectivity (see component Guide). */
+      if(m == 0)
+        ABSORB;
+      if (reflect && strlen(reflect))
+         B=Table_Value(pTable, q, 1);
+      else {
+          B = R0;
+          if(q > Qc)
+          {
+            double arg = (q-m*Qc)/W;
+            if(arg < 10)
+              B *= .5*(1-tanh(arg))*(1-alpha*(q-Qc));
+            else  B=0;
+          }
+      }
+      if (B < 0) B=0;
+      else if (B > 1) B=1;
+      /* now handle either probability when transmit or weight */
+      if (!transmit) {
+        if (!B) ABSORB;
+        p *= B;
+        SCATTER;
+      } else {
+        /* transmit when rand > B: restore original vz */
+        if (B == 0 || rand01() >= B) { vz = -vz; }
+        SCATTER;
+      }
+    }
+
+    if (!intersect) {
+      /* No intersection: restore neutron position. */
+      x = old_x;
+      y = old_y;
+    }
+  }
+%}
+
+MCDISPLAY
+%{
+  double xmax, xmin, ymax, ymin;
+  magnify("xy");
+
+  if (center == 0) {
+    xmax= xlength; xmin=0;
+    ymax= yheight; ymin=0;
+  } else {
+    xmax= xlength/2; xmin=-xmax;
+    ymax= yheight/2; ymin=-ymax;
+  }
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+END

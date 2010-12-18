@@ -1,0 +1,392 @@
+/****************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Pol_guide_vmirror
+*
+* %I
+* Written by: Peter Christiansen
+* Date: July 2006
+* Version: $Revision: 1.1 $
+* Origin: RISOE
+* Release: McStas 1.11
+*
+* Polarising guide with two supermirros sitting in a v-shape inside.
+*
+* %D
+* Models a rectangular guide with entrance centered on the Z axis and
+* with two supermirros sitting in a v-shape inside.
+* The entrance lies in the X-Y plane.  Draws a true depiction
+* of the guide with mirrors, and trajectories.
+* The polarisation is handled similar to in Monochromator_pol.
+* The reflec functions are handled similar to Pol_mirror.
+* The up direction is hardcoded to be along the y-axis (0, 1, 0)
+*
+* GRAVITY: YES
+* POLARISATION: YES
+*
+* %BUGS 
+* No absorption by mirror.
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xw:        [m]    Width at the guide entry
+* yh:        [m]    Height at the guide entry
+* length:    [m]    length of guide
+* rFunc:     [1]    Guide Reflection function
+* rPar:      [1]    Guide Parameters for rFunc
+* rUpFunc:   [1]    Mirror Reflection function for spin up
+* rUpPar:    [1]    Mirror Parameters for rUpFunc
+* rDownFunc: [1]    Mirror Reflection function for spin down
+* rDownPar:  [1]    Mirror Parameters for rDownFunc
+* option:    [1]    Option for guide
+* useTables: [1]    Parameters are 0: Values, 1: Table names 
+* debug:     [1]    if debug > 0 print out some internal runtime parameters
+*
+* OUTPUT PARAMETERS:
+*
+* localG:       Gravity vector in guide reference system (m/s/s)
+* normalTop:    One of several normal vectors used for defining the geometry (1)
+* pointTop:     One of several points used for defining the geometry (1)
+* rParPtr:      One of several pointers to reflection parameters used with the ref. functions. (*)
+* 
+*
+* %L
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Pol_guide_vmirror
+DEFINITION PARAMETERS (xw, yh, length,
+		       rFunc=StdReflecFunc, rUpFunc=StdReflecFunc, 
+		       rDownFunc=StdReflecFunc, rPar, rUpPar, rDownPar,
+		       useTables=0)
+SETTING PARAMETERS (int debug=0)
+OUTPUT PARAMETERS (localG, 
+		   normalTop, normalBot, normalLeft, normalRight, normalInOut,
+		   pointTop, pointBot, pointLeft, pointRight,
+		   pointIn, pointOut, 
+		   rParPtr, rUpParPtr, rDownParPtr)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
+SHARE
+%{
+#include <assert.h>
+%include "pol-lib"
+%include "ref-lib"
+   %}
+
+DECLARE
+%{  
+  Coords localG; 
+  Coords normalTop, normalBot, normalLeft, normalRight, normalInOut; 
+  Coords pointTop, pointBot, pointLeft, pointRight, pointIn, pointOut; 
+  
+#if (useTables)
+  t_Table *rParPtr     = 0;
+  t_Table *rUpParPtr   = 0;
+  t_Table *rDownParPtr = 0;
+#else 
+  double rParPtr[]     = rPar;
+  double rUpParPtr[]   = rUpPar;
+  double rDownParPtr[] = rDownPar;
+#endif
+  %}
+
+INITIALIZE
+%{
+#if (useTables)
+  rParPtr     = (t_Table*) malloc(sizeof(t_Table));
+  rUpParPtr   = (t_Table*) malloc(sizeof(t_Table));
+  rDownParPtr = (t_Table*) malloc(sizeof(t_Table));
+  if (Table_Read(rParPtr, rPar, 1) <= 0) {
+    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+	    NAME_CURRENT_COMP, rPar);
+    exit(1);
+  }
+  if (Table_Read(rUpParPtr, rUpPar, 1) <= 0) {
+    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+	    NAME_CURRENT_COMP, rUpPar);
+    exit(1);
+  }
+  if (Table_Read(rDownParPtr, rDownPar, 1) <= 0) { 
+    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+	    NAME_CURRENT_COMP, rDownPar);
+    exit(1);
+  }
+#endif
+  
+  if ((xw<=0) || (yh<= 0) || (length<=0)) {
+    fprintf(stderr, "POL_guide: %s: NULL or negative length scale!\n"
+	    "ERROR      (xw,yh,length). Exiting\n",
+	    NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  if (mcgravitation) {
+    
+    localG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0));
+    fprintf(stdout,"Pol_guide %s: Gravity is on!\n",
+	    NAME_CURRENT_COMP);
+  } else
+    localG = coords_set(0, 0, 0);
+  
+  // To be able to handle the situation properly where a component of
+  // the gravity is along the z-axis we also define entrance (in) and
+  // exit (out) planes 
+  // The entrance and exit plane are defined by the normal vector 
+  // (0, 0, 1) 
+  // and the two points pointIn=(0, 0, 0) and pointOut=(0, 0, length)
+  
+  normalInOut = coords_set(0, 0, 1);
+  pointIn   = coords_set(0, 0, 0);
+  pointOut  = coords_set(0, 0, length);
+  
+  // Top plane (+y dir) can be spanned by (1, 0, 0) & (0, 0, 1)
+  // and the point (0, yh/2, 0)
+  // A normal vector is (0, 1, 0)
+  normalTop  = coords_set(0, 1, 0);
+  pointTop = coords_set(0, yh/2, 0);
+  
+  // Bottom plane (-y dir) can be spanned by (1, 0, 0) & (0, 0, 1)
+  // and the point (0, -yh/2, 0)
+  // A normal vector is (0, 1, 0)
+  normalBot  = coords_set(0, 1, 0);
+  pointBot = coords_set(0, -yh/2, 0);
+  
+  // Left plane (+x dir) can be spanned by (0, 1, 0) & (0, 0, 1)
+  // and the point (xw/2, 0, 0)
+  // A normal vector is (1, 0, 0)
+  normalLeft  = coords_set(1, 0, 0);
+  pointLeft = coords_set(xw/2, 0, 0);
+  
+  // Right plane (-x dir) can be spanned by (0, 1, 0) & (0, 0, 1)
+  // and the point (-xw/2, 0, 0)
+  // A normal vector is (1, 0, 0)
+  normalRight  = coords_set(1, 0, 0);
+  pointRight = coords_set(-xw/2, 0, 0);
+  
+  %}
+
+TRACE
+%{
+  /* time threshold */
+  const double tThreshold = 1e-10/sqrt(vx*vx + vy*vy + vz*vz); 
+  const double xwhalf = xw/2;
+  const double norm = 1.0/sqrt(xwhalf*xwhalf + length*length);
+  double R;
+  
+  Coords normalMirror, pointMirror;
+  Coords* normalPointer = 0;
+
+  // Pol variables
+  double FN, FM, Rup, Rdown, refWeight;
+  
+  /* Propagate neutron to guide entrance. */
+  PROP_Z0;
+  
+  if (!inside_rectangle(x, y, xw, yh))
+    ABSORB;  
+
+  if(x>0) {
+    // "left" opening
+    normalMirror  = coords_set(norm*length, 0, -norm*xwhalf);
+    pointMirror = coords_set(0, 0, 0);    
+  } else {
+    
+    // "right" opening
+    normalMirror  = coords_set(norm*length, 0, norm*xwhalf);
+    pointMirror = coords_set(0, 0, 0);    
+  }
+  
+  for(;;) {
+    double tLeft, tRight, tTop, tBot, tIn, tOut, tMirror;
+    double tUp, tSide, time, endtime;
+    double Q; //, dummy1, dummy2, dummy3;
+    Coords vVec, xVec;
+    int mirrorReflect;
+    
+    mirrorReflect = 0;
+    xVec = coords_set(x, y, z);
+    vVec = coords_set(vx, vy, vz);
+    
+    solve_2nd_order(&tTop, 0.5*coords_sp(normalTop,localG), 
+		    coords_sp(normalTop, vVec),
+		    coords_sp(normalTop, coords_sub(xVec, pointTop)));
+    
+    solve_2nd_order(&tBot, 0.5*coords_sp(normalBot,localG), 
+		    coords_sp(normalBot, vVec),
+		    coords_sp(normalBot, coords_sub(xVec, pointBot)));
+    
+    solve_2nd_order(&tRight, 0.5*coords_sp(normalRight,localG), 
+		    coords_sp(normalRight, vVec),
+		    coords_sp(normalRight, coords_sub(xVec, pointRight)));
+    
+    solve_2nd_order(&tLeft, 0.5*coords_sp(normalLeft,localG), 
+		    coords_sp(normalLeft, vVec),
+		    coords_sp(normalLeft, coords_sub(xVec, pointLeft)));
+
+    solve_2nd_order(&tIn, 0.5*coords_sp(normalInOut,localG), 
+		    coords_sp(normalInOut, vVec),
+		    coords_sp(normalInOut, coords_sub(xVec, pointIn)));
+
+    solve_2nd_order(&tOut, 0.5*coords_sp(normalInOut,localG), 
+		    coords_sp(normalInOut, vVec),
+		    coords_sp(normalInOut, coords_sub(xVec, pointOut)));
+
+    solve_2nd_order(&tMirror, 0.5*coords_sp(normalMirror,localG), 
+		    coords_sp(normalMirror, vVec),
+		    coords_sp(normalMirror, coords_sub(xVec, pointMirror)));
+    
+    /* Choose appropriate reflection time */
+    if (tTop>tThreshold && (tTop<tBot || tBot<=tThreshold))
+      tUp=tTop;
+    else
+      tUp=tBot;
+
+    if (tLeft>tThreshold && (tLeft<tRight || tRight<=tThreshold))
+      tSide=tLeft;
+    else
+      tSide=tRight;
+
+    if (tUp>tThreshold && (tUp<tSide || tSide<=tThreshold))
+      time=tUp;
+    else
+      time=tSide;
+
+    if (tMirror>tThreshold && tMirror<time) {
+      
+      time=tMirror;
+      mirrorReflect = 1; // flag to show which reflection function to use
+    }
+
+    if (time<=tThreshold)
+      fprintf(stdout, "tTop: %f, tBot:%f, tRight: %f, tLeft: %f\n"
+	      "tUp: %f, tSide: %f, time: %f\n",
+	      tTop, tBot, tRight, tLeft, tUp, tSide, time);
+
+    /* Has neutron left the guide? */
+    if (tOut>tThreshold && (tOut<tIn || tIn<=tThreshold))
+      endtime=tOut;
+    else
+      endtime=tIn;
+
+    if (time > endtime)
+      break;
+
+    if(time <= tThreshold) {
+      
+      printf("Time below threshold!\n");
+      fprintf(stdout, "tTop: %f, tBot:%f, tRight: %f, tLeft: %f\n"
+	      "tUp: %f, tSide: %f, time: %f\n",
+	      tTop, tBot, tRight, tLeft, tUp, tSide, time);
+      break;
+    }
+      
+    if(debug>0 && time==tLeft) {
+      
+      fprintf(stdout, "\nLeft side hit: x, v, normal, point, gravity\n");
+      coords_print(xVec);
+      coords_print(vVec);
+      coords_print(normalLeft);
+      coords_print(pointLeft);
+      coords_print(localG);
+      
+      fprintf(stdout, "\nA: %f, B: %f, C: %f, tLeft: %f\n",
+	      0.5*coords_sp(normalLeft,localG),coords_sp(normalLeft, vVec), 
+	      coords_sp(normalLeft, coords_sub(xVec, pointLeft)), tLeft);  
+    }
+    
+    if(debug>0)
+      fprintf(stdout, "tTop: %f, tBot:%f, tRight: %f, tLeft: %f\n"
+	      "tUp: %f, tSide: %f, time: %f\n",
+	      tTop, tBot, tRight, tLeft, tUp, tSide, time);
+    
+    if(debug>0)
+      fprintf(stdout, "Start v: (%f, %f, %f)\n", vx, vy, vz);
+
+    PROP_DT(time);
+    if (mcgravitation)
+      vVec = coords_set(vx, vy, vz);
+    SCATTER;
+    
+    if(time==tTop)
+      normalPointer = &normalTop;
+    else if(time==tBot)
+      normalPointer = &normalBot;
+    else if(time==tRight)
+      normalPointer = &normalRight;
+    else if(time==tLeft)
+      normalPointer = &normalLeft;
+    else if(time==tMirror)
+      normalPointer = &normalMirror;
+    else
+      fprintf(stderr, "This should never happen!!!!\n");
+
+    Q = 2*coords_sp(vVec, *normalPointer)*V2K;
+    
+    if(!mirrorReflect) {
+      // we have hit one of the sides. Always reflect.
+      vVec = coords_add(vVec, coords_scale(*normalPointer, -Q*K2V));
+      rFunc(fabs(Q), rParPtr, &refWeight);
+      p *= refWeight;
+      
+    } else {
+      // we have hit one of the mirrors
+      rUpFunc(fabs(Q), rUpParPtr, &Rup);
+      rDownFunc(fabs(Q), rDownParPtr, &Rdown);
+      assert(Rup>=0 && Rup<=1 && Rdown>=0 && Rdown<=1); 
+
+      GetMonoPolFNFM(Rup, Rdown, &FN, &FM);
+      GetMonoPolRefProb(FN, FM, sy, &refWeight);
+      assert(refWeight>=0 && refWeight<=1); // check that refWeight is meaningfull
+      
+      if (rand01()<refWeight) {
+	//reflect 
+	
+	vVec = coords_add(vVec, coords_scale(*normalPointer, -Q*K2V));
+	SetMonoPolRefOut(FN, FM, refWeight, &sx, &sy, &sz);
+      } else {
+	// transmit
+	
+	SetMonoPolTransOut(FN, FM, refWeight, &sx, &sy, &sz);
+      }
+
+      assert(sx*sx+sy*sy+sz*sz<=1); // check that polarisation is meaningfull
+    }
+
+    if(p==0) {
+      ABSORB;
+      break;
+    }
+
+    // set new velocity vector
+    coords_get(vVec, &vx, &vy, &vz);    
+    
+    if(debug>0)
+      fprintf(stdout, "End v: (%f, %f, %f)\n", vx, vy, vz);
+  }
+  
+  %}
+
+MCDISPLAY
+%{
+  int i, j;
+  
+  magnify("xy");
+  
+  // draw box 
+  box(0, 0, length/2, xw, yh, length);
+  
+  for(i = -1; i<=1; i+=2)
+    for(j = -1; j<=1; j+=2)
+      line(0, j*yh/2, 0, i*xw/2, j*yh/2, length);
+  
+  %}
+
+END

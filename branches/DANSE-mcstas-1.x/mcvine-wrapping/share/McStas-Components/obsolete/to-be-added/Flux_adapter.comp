@@ -1,0 +1,317 @@
+/***********************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Flux_adapter
+* %I
+* Written by: EF
+* Date: Oct 14, 1999, Rev Nov 17, 1999
+* Version: 1.0
+* Origin: ILL
+* Release: McStas 1.6
+*
+*%D
+* The routine changes the neutron flux (weight) in order to match
+* a reference source table on disk. This file can be on format
+* (k[Angs-1],p), (omega[meV],p), (lambda[Angs],p) where p is the weight
+* A linear interpolation is performed during simulation.
+* This component should be placed after a source, in order to 
+* simulate a real source.
+*
+* This component is OBSOLETE, please rather use the Filter_gen.
+*
+* EXAMPLE : 
+*      (xmin = -0.1, xmax = 0.1,
+*       ymin = -0.1, ymax = 0.1,
+*       file="source.flux",
+*        options="")
+* With file "source.flux" beeing something like
+*       # energy multiply
+*       # [ meV flux_factor ]
+*        0   1
+*        2   1.2
+*        10  1.5
+*        100 1
+*
+*%P
+* file:    name of the file to look at (two columns data)
+*           data should be sorted (ascending order) and monotonic
+*           file can contain options (see below) as comment
+* options: string that can contain (str)
+*          "[ k p ]"      or "wavector" for file type 
+*          "[ omega p]"   or "energy" 
+*          "[ lambda p ]" or "wavelength"
+*          "set"          to set the weight according to the table
+*          "multiply"     to multiply (instead of set) the weight by factor
+*          "add"          to add to current flux
+*          "unactivate"   to unactivate flux_adapter (in flux file for test)
+*          "verbose"      to display additional informations
+*
+*%E
+***********************************************************************/
+DEFINE COMPONENT Flux_adapter
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (char *file="", char *options="",
+   xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
+OUTPUT PARAMETERS (KE_Table,Weight_Table,Type_table,Mode_Table,Length_Table,Step_Table)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+#define LINE_MAX_LENGTH  1024
+#define UNKNOWN_TABLE    0
+#define ENERGY_TABLE     1
+#define WAVEVECTOR_TABLE 2
+#define WAVELENGTH_TABLE 3
+#define FLUX_ADAPT_SET   0
+#define FLUX_ADAPT_MULT  1
+#define FLUX_ADAPT_ADD   2
+
+
+    FILE *hfile;        /* id for data file */
+    char  line[LINE_MAX_LENGTH];
+    long  line_count_in_file  = 0;
+    long  line_count_in_array = 0;
+    long  malloc_size         = 100;
+    char  flag_exit_loop      = 0;
+    char  flag_in_array       = 0;
+    char  Type_Table          = UNKNOWN_TABLE;
+    double X,P;
+    double *Weight_Table, *tmp_weight;
+    double *KE_Table, *tmp_ke;
+    long   Length_Table=0;
+    double Step_Table=0;
+    long   tmp_length  =0;
+    long   tmp;
+    char   Mode_Table  = FLUX_ADAPT_SET;
+    char   verbose=0;
+    int    i;
+    double v2,K,L,E,new_p,slope;
+    double X1,X2,Y1,Y2,step;
+    /* end of declare */
+%} 
+
+INITIALIZE
+%{
+    tmp_ke       = (double*)malloc(malloc_size*sizeof(double));
+    tmp_weight   = (double*)malloc(malloc_size*sizeof(double));
+    hfile = fopen(file, "r");
+    if(!hfile)
+    {
+       fprintf(stderr, "Error: %s : could not open input file '%s'\n", NAME_CURRENT_COMP, file);
+    }
+    else /* now look for the data */
+    {
+      /* initialize data array */
+      if (strstr(options," k") 
+       || strstr(options," K ") 
+       || strstr(options,"wavevector"))
+              Type_Table = WAVEVECTOR_TABLE;
+      if (strstr(options,"omega") 
+       || strstr(options," e ") 
+       || strstr(options," E ") 
+       || strstr(options,"energy"))
+              Type_Table = ENERGY_TABLE;
+      if (strstr(options,"lambda") 
+       || strstr(options,"wavelength")
+       || strstr(options," L "))
+              Type_Table = WAVELENGTH_TABLE;
+      if (strstr(options,"set"))
+        Mode_Table  = FLUX_ADAPT_SET;
+      if (strstr(options,"add"))
+        Mode_Table  = FLUX_ADAPT_ADD;
+      if (strstr(options,"multiply"))
+        Mode_Table  = FLUX_ADAPT_MULT;
+      if (strstr(options,"verbose"))
+        verbose = 1;
+    /* do main loop */
+      while (!flag_exit_loop)
+      {
+        if (fgets(line, LINE_MAX_LENGTH, hfile) != NULL)
+        { /* tries to read some informations */
+          line_count_in_file++;
+          for (i=0; (i < strlen(line)) && (i < LINE_MAX_LENGTH); i++) { line[i] = tolower(line[i]); }
+          if (strstr(line," k ") 
+           || strstr(line,"wavevector"))        /* overrides options */
+            Type_Table = WAVEVECTOR_TABLE;
+          if (strstr(line," e ") 
+           || strstr(line,"omega") 
+           || strstr(line,"energy"))
+                Type_Table = ENERGY_TABLE;
+          if (strstr(line,"lambda") 
+           || strstr(line," l ")
+           || strstr(line,"wavelength"))
+                Type_Table = WAVELENGTH_TABLE;
+          if (strstr(line,"set"))
+            Mode_Table  = FLUX_ADAPT_SET;
+          if (strstr(line,"multiply"))
+            Mode_Table  = FLUX_ADAPT_MULT;
+          if (strstr(line,"add"))
+            Mode_Table  = FLUX_ADAPT_ADD;
+          if (strstr(line,"unactivate"))
+            Type_Table  = UNKNOWN_TABLE;;           
+          if (strstr(line,"verbose"))
+        verbose = 1;
+          /* tries to read 2 numbers */
+          if (sscanf(line,"%lg %lg",&X,&P) == 2)
+          {
+          /* if succeed and not in array : initialize array */
+            if (!flag_in_array)
+            {
+              flag_in_array       = 1;
+              line_count_in_array = 0;
+              malloc_size         = 0;
+            }
+          /* if succeed and in array : add (and realloc if necessary) */
+            if (line_count_in_array+100 > malloc_size)
+            {
+              malloc_size += 100;
+              tmp_ke     = (double*)realloc(KE_Table,malloc_size*sizeof(double));
+              tmp_weight = (double*)realloc(Weight_Table,malloc_size*sizeof(double));
+            }
+            tmp_ke[line_count_in_array]     = X;
+            tmp_weight[line_count_in_array] = P;
+            line_count_in_array++;
+          }
+          else
+          /* if does not succeed : set 'not in array' flag */
+          {
+             flag_in_array = 0;
+          }
+        }
+        else
+          flag_exit_loop = 1;
+        /* else : end of file */
+        
+      }
+      Length_Table = line_count_in_array;
+      if (Length_Table < 2) Type_Table = UNKNOWN_TABLE;        /* not enough points */
+      if (verbose) 
+      {
+        printf("Flux : %i points in %s\n",Length_Table, file);
+        printf("Flux : data is [ ");
+        if (Type_Table == ENERGY_TABLE) printf("Energy");
+        if (Type_Table == WAVEVECTOR_TABLE) printf("Wavevector");
+        if (Type_Table == WAVELENGTH_TABLE) printf("Wavelength");
+        if (Type_Table == UNKNOWN_TABLE) printf("UNKNOWN (not used)");
+        printf(", Flux ]");
+        if (Mode_Table == FLUX_ADAPT_MULT) printf(" in multiply mode");
+        printf("\n");
+      }
+      fclose(hfile);
+      tmp_length   = line_count_in_array;
+      /* now re-sample with minimal step found in file */
+      step = fabs(tmp_ke[1] - tmp_ke[0]); /* minimal step in KE */
+      tmp = tmp_length;
+      for (i=0; i < tmp_length - 1; i++)
+      {
+        X2 = fabs(tmp_ke[i+1] - tmp_ke[i]);
+        if (X2 < step)  step = X2; 
+        else tmp--;
+      } /* for */
+      Step_Table = step;
+      if (tmp > 0) /* table was not already evenly sampled */
+      {
+        Length_Table = ceil(fabs(tmp_ke[tmp_length-1] - tmp_ke[0])/step);
+        KE_Table     = (double*)malloc(Length_Table*sizeof(double));
+        Weight_Table = (double*)malloc(Length_Table*sizeof(double));
+        for (i=0; i < Length_Table; i++)
+        {
+          X = tmp_ke[0] + i*step;
+          KE_Table[i] = X;
+          /* look for number just after X in table tmp_ke */
+          line_count_in_array=1;
+          while ((line_count_in_array < tmp_length-1) && (tmp_ke[line_count_in_array] < X)) line_count_in_array++;
+          X2 = tmp_ke[line_count_in_array];
+          X1 = tmp_ke[line_count_in_array-1];
+          Y2 = tmp_weight[line_count_in_array];
+          Y1 = tmp_weight[line_count_in_array-1];
+          if (X2-X1)
+          {    
+          /* linear interpolation */
+            slope = (Y2-Y1)/(X2-X1);
+            new_p = Y1+slope*(X-X1);
+            Weight_Table[i] = new_p;
+          }
+          else
+            Weight_Table[i] = tmp_weight[line_count_in_array];
+        } /* for */
+        if (verbose) 
+        {
+          printf("Flux : resampled as %i points\n",Length_Table);
+        }
+      } /* if tmp */
+      else
+      {
+        Length_Table = tmp_length;
+        KE_Table     = (double*)malloc(Length_Table*sizeof(double));
+        Weight_Table = (double*)malloc(Length_Table*sizeof(double));
+        for (i=0; i < tmp_length; i++)
+        {
+          KE_Table[i]     = tmp_ke[i];
+          Weight_Table[i] = tmp_weight[i];
+        }
+      }
+    } /* if hfile */
+            
+    free(tmp_ke);
+    free(tmp_weight);
+%}
+
+TRACE
+%{
+  PROP_Z0;
+  if (Type_Table && (x>xmin && x<xmax && y>ymin && y<ymax))
+  {
+    v2 = (vx*vx + vy*vy + vz*vz);
+    K = V2K*sqrt(v2);        /* k */
+    L = (2*PI/K);        /* lambda */
+    E = VS2E*v2;        /* energy */
+    if (Type_Table == ENERGY_TABLE)     X=E;
+    if (Type_Table == WAVEVECTOR_TABLE) X=K;
+    if (Type_Table == WAVELENGTH_TABLE) X=L;
+    /* table look up */
+    
+    /* look for number just after X in table */
+    line_count_in_array = (X - KE_Table[0])/Step_Table;
+    if (line_count_in_array < 1) line_count_in_array = 1;
+    if (line_count_in_array >= Length_Table -1) line_count_in_array = Length_Table-1;
+    X2 = KE_Table[line_count_in_array];
+    X1 = KE_Table[line_count_in_array-1];
+    Y2 = Weight_Table[line_count_in_array];
+    Y1 = Weight_Table[line_count_in_array-1];
+    if (X2-X1)
+    {    
+    /* linear interpolation */
+      slope = (Y2-Y1)/(X2-X1);
+      new_p = Y1+slope*(X-X1);
+      if (Mode_Table == FLUX_ADAPT_MULT) p *= new_p;
+      else p = new_p;
+      SCATTER;
+    }
+    else
+      ABSORB;
+  }
+  else
+    if (Type_Table) ABSORB;
+%}
+
+FINALLY
+%{
+  free(KE_Table);
+  free(Weight_Table);
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END

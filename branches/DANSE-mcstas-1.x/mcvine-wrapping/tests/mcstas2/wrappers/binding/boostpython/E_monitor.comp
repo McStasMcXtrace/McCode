@@ -1,0 +1,120 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: E_monitor
+*
+* %I
+* Written by: Kristian Nielsen and Kim Lefmann
+* Date: April 20, 1998
+* Version: $Revision: 480 $
+* Origin: Risoe
+* Release: McStas 1.6
+*
+* Energy-sensitive monitor.
+*
+* %D
+* A square single monitor that measures the energy of the incoming neutrons.
+*
+* Example: E_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, 
+*                 Emin=1, Emax=50, nchan=20, filename="Output.nrj")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* Emin:     Minimum energy to detect (meV)
+* Emax:     Maximum energy to detect (meV)
+* nchan:    Number of energy channels (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* E_N:      Array of neutron counts
+* E_p:      Array of neutron weight counts
+* E_p2:     Array of second moments
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT E_monitor
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (int nchan=20, char *filename="e.dat", xmin=-0.2, xmax=0.2, ymin=-0.2, ymax=0.2, Emin=50, Emax=60)
+OUTPUT PARAMETERS () //(E_N, E_p, E_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    double *E_N, *E_p, *E_p2;
+  %}
+INITIALIZE
+  %{
+    int i;
+    E_N = (double *)malloc(nchan*sizeof(double));
+    E_p = (double *)malloc(nchan*sizeof(double));
+    E_p2 = (double *)malloc(nchan*sizeof(double));
+
+    for (i=0; i<nchan; i++)
+    {
+      E_N[i] = 0;
+      E_p[i] = 0;
+      E_p2[i] = 0;
+    }
+  %}
+TRACE
+  %{
+    int i;
+    double E;
+
+    PROP_Z0;
+    if (x>xmin && x<xmax && y>ymin && y<ymax)
+    {
+      E = VS2E*(vx*vx + vy*vy + vz*vz);
+
+      i = floor((E-Emin)*nchan/(Emax-Emin));
+      if(i >= 0 && i < nchan)
+      {
+        E_N[i]++;
+        E_p[i] += p;
+        E_p2[i] += p*p;
+        SCATTER;
+      }
+    }
+  %}
+SAVE
+  %{
+    DETECTOR_OUT_1D(
+        "Energy monitor",
+        "Energy [meV]",
+        "Intensity",
+        "E", Emin, Emax, nchan,
+        &E_N[0],&E_p[0],&E_p2[0],
+        filename);
+  %}
+
+FINALLY
+%{
+#ifdef DEBUG
+printf("free: E_N = %p, E_p = %p, E_p2 = %p\n", E_N, E_p, E_p2);
+#endif
+free(E_N); free(E_p); free(E_p2);
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END
+
+//pointer=[{'type':'double *', 'size_expr':'self.nchan', 'name':'E_p'},{'type':'double *', 'size_expr':'self.nchan', 'name':'E_p2'},{'type':'double *','size_expr':'self.nchan', 'name':'E_N'}]

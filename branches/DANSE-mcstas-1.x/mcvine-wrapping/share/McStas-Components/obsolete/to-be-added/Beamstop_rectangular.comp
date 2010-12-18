@@ -1,0 +1,55 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package: Beamstop_rectangular component
+*         Copyright 2000-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Beamstop_rectangular
+*
+* %ID
+*
+* Written by: Kristian Nielsen
+* Date: January 2000
+* Origin: McStas 1.5 (Obsolete)
+* Version: $Revision: 494 $
+*
+* Rectangular beam stop.
+*
+* %D
+* A simple rectangular beam stop. Infinitely thin and infinitely absorbing.
+* OBSOLETE:rather use optics/Beamstop
+*
+* %PAR
+*
+* INPUT PARAMETERS
+*
+* xmin: Lower x bound (m)
+* xmax: Upper x bound (m)
+* ymin: Lower y bound (m)
+* ymax: Upper y bound (m)
+*
+* %END
+*******************************************************************************/
+
+DEFINE COMPONENT Beamstop_rectangular
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+TRACE
+%{
+    PROP_Z0;
+    if (!(x<xmin || x>xmax || y<ymin || y>ymax))
+      ABSORB;
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin,
+            (double)xmin, (double)ymax,
+            (double)xmax, (double)ymax,
+            (double)xmax, (double)ymin,
+            (double)xmin, (double)ymin);
+%}
+
+END

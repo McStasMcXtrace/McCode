@@ -1,0 +1,137 @@
+category      type                   problem
+---------------------------------------------------------------------
+optics        Arm                    no (already there)
+optics        Bender                 no
+optics        Beamstop               expected TRACE						Polarizations?
+optics        Collimator_linear      no
+optics        Collimator_radial      no (after fixing)
+optics        DiskChopper            no
+optics        FermiChopper           header.componentname == info.name	mcdotrace?
+optics        Filter_gen             t_Table does not name a type				good now
+optics        Guide                  no (already there)
+optics        Guide_gravity          Gravity_guide_Vars_type and t_Table		gravity
+                                     do not name types
+optics        Guide_wavy             no (after fixing)
+optics        Mirror                 t_Table does not name a type				good now
+optics        Monochromator_curved   expected TRACE   	     				
+optics        Monochromator_flat     missing characters (see below)
+optics        Monochromator_pol      expected TRACE
+optics        Pol_bender             stdReflecFunc and others
+optics        Pol_constBfield        expected TRACE
+optics        Pol_guide_vmirror      stdReflecFunc
+optics        Pol_mirror             stdReflecFunc and others
+optics        Pol_simpleBfield       expected TRACE
+optics        Selector               no
+optics        Slit                   no (already there)
+optics        Vitess_ChopperFermi    expected TRACE
+optics        V_selector             no
+
+monitors      Divergence_monitor     nh, nv
+monitors      DivLambda_monitor      nlam, ndiv
+monitors      DivPos_monitor         same as above
+monitors      E_monitor              no (already there)
+monitors      EPSD_monitor           header.componentname == info.name
+monitors      Hdiv_monitor           nh
+monitors      IQE_monitor            no (already there)
+monitors      L_monitor              nchan
+monitors      MeanPolLambda_monitor  expected TRACE
+monitors      Monitor_4PI            can't parse parameters... 
+monitors      Monitor                Monitor.cc:74: error: 
+                                     expected ‘)’ before ‘const_cast’
+monitors      Monitor_nD             user1=FLT_MAX
+monitors      PolLambda_monitor      expected TRACE
+monitors      Pol_monitor            expected TRACE
+monitors      PreMonitor_nD          expected TRACE
+monitors      PSDcyl_monitor         problems with parseHeaderOfHeader
+monitors      PSDlin_monitor         problems with parseHeaderOfHeader
+monitors      PSD_monitor_4PI        no (already there)
+monitors      Res_monitor            expected TRACE
+monitors      TOF_monitors2          no (already there)
+monitors      TOF2E_monitor          nchan
+monitors      TOF_cylPSD_monitor     nt, nphi
+monitors      TOFLambda_monitor      problems with parseHeaderOfHeader
+monitors      TOFlog_mon             header.componentname == info.name
+monitors      TOF_monitor            nchan
+
+samples       Isotropic_Sqw          no (already there)
+samples       Phonon_simple          parseHeaderOfHeader
+samples       Powder1                no (after fixing)
+samples       Res_sample             missing characters (after fixing typo)
+samples       Sans_spheres           no (after fixing)
+samples       Single_crystal         no (already there)
+samples       TOFRes_sample          missing characters (after fixing typo)
+samples       Tunneling_sample       expected TRACE
+samples       V_sample               no (already there)
+
+sources       Adapt_check            needs Source_adapt component? see below
+sources       ESS_moderator_long     declaration issues
+sources       ESS_moderator_short    declaration issues
+sources       Moderator              no (already there)
+sources       Monitor_Optimizer      expected TRACE
+sources       Source_adapt           header.componentname == info.name
+sources       Source_div             empty definition parameters?
+sources       Source_gen             missing characters (after fixing)
+sources       Source_Maxwell_3       declaration issues
+sources       Source_Optimizer       expected TRACE
+sources       Source_simple          no (already there)
+sources       Virtual_input          expected TRACE
+sources       Virtual_output         expected TRACE
+
+
+
+1) example of missing characters error message:
+/root/buildInelast/mcvine/tmp/build/tmp/Linux-2.0_x86-shared,opt/mcstas2/components/optics/to-be-added/Monochromator_flatboostpythonmodule/wrap.o wrap.cc
+In file included from wrap.cc:3:
+Monochromator_flat.h:44:9: warning: "/*" within comment
+wrap.cc:46:11: warning: missing terminating " character
+wrap.cc:46: error: missing terminating " character
+wrap.cc:47:19: warning: missing terminating " character
+wrap.cc:47: error: missing terminating " character
+wrap.cc:8: error: expected initializer before ‘-’ token
+wrap.cc:50: error: expected ‘}’ at end of input
+
+2) example of file that gives stdReflecFunc error:
+DEFINITION PARAMETERS (rUpFunc=StdReflecFunc, rDownFunc=rUpFunc,
+                       rUpPar={0.99,0.0219,6.07,2.0,0.003}, rDownPar=rUpPar,
+                       useTables=0, zw, yh)
+
+3) example of monitor nh, ndiv error:
+/root/buildInelast/mcvine/tmp/build/tmp/Linux-2.0_x86-shared,opt/mcstas2/components/monitors/to-be-added/Divergence_monitorboostpythonmodule/wrap.o wrap.cc
+In file included from wrap.cc:3:
+Divergence_monitor.h:24: error: invalid use of non-static data member ‘mcstas2::Divergence_monitor::nh’
+Divergence_monitor.h:35: error: from this location
+Divergence_monitor.h:35: error: array bound is not an integer constant
+Divergence_monitor.h:25: error: invalid use of non-static data member ‘mcstas2::Divergence_monitor::nv’
+Divergence_monitor.h:35: error: from this location
+Divergence_monitor.h:35: error: array bound is not an integer constant
+Divergence_monitor.h:24: error: invalid use of non-static data member ‘mcstas2::Divergence_monitor::nh’
+Divergence_monitor.h:36: error: from this location
+Divergence_monitor.h:36: error: array bound is not an integer constant
+Divergence_monitor.h:25: error: invalid use of non-static data member ‘mcstas2::Divergence_monitor::nv’
+Divergence_monitor.h:36: error: from this location
+Divergence_monitor.h:36: error: array bound is not an integer constant
+Divergence_monitor.h:24: error: invalid use of non-static data member ‘mcstas2::Divergence_monitor::nh’
+Divergence_monitor.h:37: error: from this location
+Divergence_monitor.h:37: error: array bound is not an integer constant
+Divergence_monitor.h:25: error: invalid use of non-static data member ‘mcstas2::Divergence_monitor::nv’
+Divergence_monitor.h:37: error: from this location
+Divergence_monitor.h:37: error: array bound is not an integer constant
+wrap.cc: In function ‘void wrap_Divergence_monitor()’:
+wrap.cc:38: error: ‘Div_N’ is not a member of ‘wrap_Divergence_monitor()::w_t’
+wrap.cc:38: error: ‘nh’ was not declared in this scope
+wrap.cc:38: error: ‘nv’ was not declared in this scope
+wrap.cc:39: error: ‘Div_p’ is not a member of ‘wrap_Divergence_monitor()::w_t’
+wrap.cc:40: error: ‘Div_p2’ is not a member of ‘wrap_Divergence_monitor()::w_t’
+
+which come from the file Monitor.comp, for example: DEFINITION PARAMETERS (nh=20, nv=20, string filename)
+DECLARE
+  %{
+    double Div_N[nh][nv];
+    double Div_p[nh][nv];
+    double Div_p2[nh][nv];
+  %}
+
+4) source/Adapt_check error:
+Adapt_check.h:26:2: error: #error Adapt_check : needs Source_adapt component and %include "adapt_tree-lib"
+
+

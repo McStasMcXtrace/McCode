@@ -1,0 +1,166 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: TOF_cylPSD_monitor
+*
+* %I
+* Written by:  Kim Lefmann
+* Date: October 2000
+* Version: $Revision: 1.13 $
+* Origin: Risoe
+* Release: McStas 1.11
+* Modified by: Kim Lefmann, October 9, 2001
+*
+* Cylindrical (2pi) PSD Time-of-flight monitor.
+*
+* %P
+* INPUT PARAMETERS:
+*
+* radius:   Cylinder radius (m)
+* height:   Cylinder height (m)
+* nt:    Number of time bins (1)
+* t_0:      Beginning of time window (mu-s)
+* t_1:      End of time window (mu-s)
+* nphi:     Number of angular bins (deg)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* TOF_N:    Array of neutron counts
+* TOF_p:    Array of neutron weight counts
+* TOF_p2:   Array of second moments
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT TOF_cylPSD_monitor
+DEFINITION PARAMETERS (nt, string filename, nphi)
+SETTING PARAMETERS (radius, height, t_0, t_1)
+OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    double TOF_N[nt][nphi];
+    double TOF_p[nt][nphi];
+    double TOF_p2[nt][nphi];
+    double binphi, tt_0, tt_1;
+  %}
+INITIALIZE
+  %{
+    int i,j;
+
+    tt_0=t_0*1e-6;
+    tt_1=t_1*1e-6;
+    for (i=0; i<nt; i++)
+      for (j=0; j<nphi; j++)
+      {
+        TOF_N[i][j] = 0;
+        TOF_p[i][j] = 0;
+        TOF_p2[i][j] = 0;
+      }
+    binphi=360.0/(double)nphi;
+
+  %}
+TRACE
+  %{
+    int i,j;
+    double cyl_t0,cyl_t1,dt,phi;
+
+    if(!cylinder_intersect(&cyl_t0, &cyl_t1, x,y,z,vx,vy,vz, radius, height))
+     /* No hit */
+      ABSORB;
+    if(cyl_t0>0)  /* Neutron hits cylinder from the outside */
+      ABSORB;
+    dt=cyl_t1;
+    PROP_DT(dt);
+    if(y>=height/2 || y<= -height/2)
+      ABSORB;  /* Neutron hits cylinder ends; no detectors here */
+
+    i = floor((t-tt_0)*nt/(tt_1-tt_0));              /* Bin number */
+
+    if (i < 0 || i >= nt)        /* Do not detect */
+    {
+    }
+    else
+     {
+      phi = atan2(x,z);
+      j = floor((double)nphi/2.0 + RAD2DEG*phi/(double)binphi);
+      TOF_N[i][j]++;
+      TOF_p[i][j] += p;
+      TOF_p2[i][j] += p*p;
+     }
+  %}
+SAVE
+  %{
+    DETECTOR_OUT_2D(
+        "Cylindrical Time-of-flight PSD monitor",
+        "Time-of-flight [\\gms]",
+        "Angle [deg]",
+        t_0, t_1, -180, 180,
+        nt, nphi,
+        &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
+        filename);
+  %}
+
+MCDISPLAY
+%{
+  magnify("y");
+  circle("xz", 0,0,0,radius);
+%}
+
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

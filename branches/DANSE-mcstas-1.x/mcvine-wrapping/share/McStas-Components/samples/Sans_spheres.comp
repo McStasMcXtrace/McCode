@@ -1,0 +1,155 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Sans_spheres
+*
+* %I
+* Written by: P. Willendrup, K. Lefmann, L. Arleth
+* Date: 19.12.2003
+* Version: $Revision: 1.10 $
+* Origin: Risoe
+* Release: McStas 1.11
+* Modified by: KL, 7 June 2005
+*
+* Sample for Small Angle Neutron Scattering - hard spheres in thin solution, mono disperse.
+*
+* %D
+* Sample for use in a SANS instrument, models hard, mono disperse spheres in thin solution.
+* The shape of the sample may be a cylinder of given radius or a box with dimensions
+* xwidth, yheight, zthick. qmax defines a cutoff in q.
+*
+* Example: Sans_spheres(R = 100, Phi = 1e-3, Delta_rho = 0.6, sigma_a = 50, qmax = 0.3 ,xwidth=0.01, yheight=0.01, zthick=0.005)
+*
+* %BUGS
+* This component does NOT simulate absolute intensities. This latter depends on the detector parameters.
+*
+* %P
+*
+* INPUT PARAMETERS
+*
+* R:         Radius of scattering hard spheres (AA)
+* Phi:       Particle volume fraction (1)
+* Delta_rho: Excess scattering length density (fm/AA^3)
+* sigma_a:   Absorption cross section density at 2200 m/s (m^-1)
+* qmax:      Maximum momentum transfer (AA^-1)
+* Rdet:      Detector (disk-shaped) radius (m)
+* dist:      Distance from sample to detector (m)
+* xwidth:    horiz. dimension of sample, as a width (m)
+* yheight:   vert . dimension of sample, as a height (m)
+* zthick:    thickness of sample (m)
+*
+* Variables calculated in the component
+*
+* my_s: Attenuation factor due to scattering (m^-1)
+* my_a: Attenuation factor due to absorbtion (m^-1)
+*
+* %Link
+* The test/example instrument <a href="../examples/SANS.instr">SANS.instr</a>.
+%L
+* Some alternative implementations exist as contributed components.
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Sans_spheres
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (R=100, Phi=1e-3, Delta_rho=0.6, sigma_a=50, dist=6, Rdet=0.5 ,xwidth=0.01, yheight=0.01, zthick=0.005, qmax=0)
+OUTPUT PARAMETERS (my_s_v2, my_a_v)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double my_s_pre, my_a_v, q_v, q;
+%}
+INITIALIZE
+%{
+    if (!xwidth || !yheight || !zthick) {
+  exit(fprintf(stderr,"Sans_spheres: %s:   sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+  if (qmax) printf("Sans_spheres: %s: Parameter qmax is not used anymore. Ignoring.\n", NAME_CURRENT_COMP);
+    }
+
+  my_a_v = sigma_a*2200*100;           /* Is not yet divided by v. 100: Convert barns -> fm^2 */
+
+  my_s_pre = Phi * 4*PI*R*R*R/3 * Delta_rho*Delta_rho;
+
+%}
+TRACE
+%{
+  double t0, t1, v, l_full, l, l_1, dt, d_phi, theta, my_s;
+  double aim_x, aim_y, aim_z, axis_x, axis_y, axis_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+  double f, solid_angle, vx_i, vy_i, vz_i, qx, qy, qz;
+  char   intersect=0;
+
+  intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+  if(intersect)
+  {
+    if(t0 < 0)
+      ABSORB;
+    /* Neutron enters at t=t0. */
+    v = sqrt(vx*vx + vy*vy + vz*vz);
+    l_full = v * (t1 - t0);             /* Length of full path through sample */
+    dt = rand01()*(t1 - t0) + t0; /* Time of scattering */
+    PROP_DT(dt);                  /* Point of scattering */
+    l = v*(dt-t0);                /* Penetration in sample */
+
+    vx_i=vx;
+    vy_i=vy;
+    vz_i=vz;
+    randvec_target_circle(&vx, &vy, &vz, &solid_angle, 0, 0, dist, Rdet);
+/*    printf("solid angle %g \n",solid_angle); */
+    NORM(vx, vy, vz);
+    vx *= v;
+    vy *= v;
+    vz *= v;
+    qx = V2K*(vx_i-vx);
+    qy = V2K*(vy_i-vy);
+    qz = V2K*(vz_i-vz);
+    q = sqrt(qx*qx+qy*qy+qz*qz);
+
+    f = 3 * (sin(q*R) - q*R*cos(q*R))/(q*R*q*R*q*R);
+
+
+    if(!box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick))    fprintf(stderr, "Sans_spheres: FATAL ERROR: Did not hit box from inside.\n");
+
+
+    l_1 = v*t1;
+/*    fprintf(stderr, "l_full: %g, qmax: %g p: %g my_s_pre: %g, f: %g, my_a_v/v: %g\n",l_full,qmax,p,my_s_pre,f,my_a_v/v);*/
+    p *= l_full*solid_angle/(4*PI)*my_s_pre*f*f*exp(-my_a_v*(l+l_1)/v);
+    SCATTER;
+  }
+%}
+
+MCDISPLAY
+%{
+  double radius = 0;
+  double h = 0;
+  magnify("xyz");
+  {
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zthick;
+    double zmax =  0.5*zthick;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+
+%}
+END

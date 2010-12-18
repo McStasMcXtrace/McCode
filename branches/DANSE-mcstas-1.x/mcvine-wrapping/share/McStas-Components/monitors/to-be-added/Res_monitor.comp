@@ -1,0 +1,227 @@
+/*******************************************************************************
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Res_monitor
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: 1999
+* Version: $Revision: 1.25 $
+* Origin: Risoe
+* Release: McStas 1.11
+* Modified by: EF, 16th Apr 2003: imported from Monitor_nD to enable many shapes
+*
+* Monitor for resolution calculations
+*
+* %D
+* A single detector/monitor, used together with the Res_sample component to
+* compute instrument resolution functions. Outputs a list of neutron
+* scattering events in the sample along with their intensities in the
+* detector. The output file may be analyzed with the mcresplot front-end.
+*
+* Example: Res_monitor(filename="Output.res", res_sample_comp=RSample,
+*           xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
+*
+* Setting the monitor geometry.
+*   The optional parameter 'options' may be set as a string with the
+*   following keywords. Default is rectangular ('square'):
+*     box                       Box of size xwidth, yheight, zthick
+*     cylinder                  To get a cylindrical monitor
+*                                (diameter is xwidth, height is yheight).
+*     banana                    Same as cylinder, without top/bottom,
+*                                on restricted angular area
+*     disk                      Disk flat xy monitor. radius is xwidth.
+*     sphrere                   To get a spherical monitor (e.g. a 4PI)
+*                                (diameter is xwidth).
+*     square                    Square flat xy monitor (xwidth, yheight)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin:          Lower x bound of detector opening (m)
+* xmax:          Upper x bound of detector opening (m)
+* ymin:          Lower y bound of detector opening (m)
+* ymax:          Upper y bound of detector opening (m)
+* zmin:          Lower z bound of detector opening (m)
+* zmax:          Upper z bound of detector opening (m)
+* filename:      Name of output file. If unset, use automatic name (string)
+* res_sample_comp: Name of Res_sample component in the instrument
+*                    definition [no quotes]
+* bufsize:       Number of events to store. Use 0 to store all [1]
+*
+* OPTIONAL PARAMETERS (derived from Monitor_nD)
+*
+* xwidth:  (m)  Width/diameter of detector (x)
+* yheight: (m)  Height of detector (y)
+* zthick:  (m)  Thichness of detector (z)
+* options: (str)  String that specifies the geometry of the monitor</br>
+*
+* OUTPUT PARAMETERS:
+*
+* DEFS: structure containing Monitor_nD Defines (struct)
+* Vars: structure containing Monitor_nD variables (struct)
+* buffer_index: number of recorded events (long)
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Res_monitor
+DEFINITION PARAMETERS (string filename=0, string options=0, res_sample_comp)
+SETTING PARAMETERS (xwidth=.1, yheight=.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=10000)
+/* these are protected C variables */
+OUTPUT PARAMETERS (DEFS, Vars, buffer_index)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
+SHARE
+%{
+%include "monitor_nd-lib"
+%}
+
+DECLARE
+%{
+  MonitornD_Defines_type DEFS;
+  MonitornD_Variables_type Vars;
+  long   buffer_index=0;
+%}
+
+INITIALIZE
+%{
+  int i;
+  char tmp[1024];
+  strcpy(Vars.compcurname, NAME_CURRENT_COMP);
+
+  if (options != NULL)
+    strncpy(tmp, options, 1024);
+  else
+    strcpy(tmp, "");
+
+  if (strstr(tmp, "list"))
+    exit(fprintf(stderr, "Res_monitor: %s: Error: Only use geometry keywords (remove list from 'option').\n", NAME_CURRENT_COMP));
+  if (!bufsize)
+    sprintf(Vars.option, "%s list all, x vx sx y vy sy z vz sz t ", tmp);
+  else
+    sprintf(Vars.option, "%s list=%f, x vx sx y vy sy z vz sz t ", tmp, bufsize);
+
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
+
+  if (Vars.Coord_Number != 10) exit(fprintf(stderr,"Res_monitor: %s: Error: Invalid number of variables to monitor (%d).\n", NAME_CURRENT_COMP, Vars.Coord_Number+1));
+  /* set the labels */
+  /* we have to record ki_x ki_y ki_z kf_x kf_y kf_z x y z p_i p_f */
+  strcpy(tmp,"ki_x"); strcpy(Vars.Coord_Label[0],tmp);strcpy(Vars.Coord_Var[0],tmp);
+  strcpy(tmp,"ki_y"); strcpy(Vars.Coord_Label[1],tmp);strcpy(Vars.Coord_Var[1],tmp);
+  strcpy(tmp,"ki_z"); strcpy(Vars.Coord_Label[2],tmp);strcpy(Vars.Coord_Var[2],tmp);
+  strcpy(tmp,"kf_x"); strcpy(Vars.Coord_Label[3],tmp);strcpy(Vars.Coord_Var[3],tmp);
+  strcpy(tmp,"kf_y"); strcpy(Vars.Coord_Label[4],tmp);strcpy(Vars.Coord_Var[4],tmp);
+  strcpy(tmp,"kf_z"); strcpy(Vars.Coord_Label[5],tmp);strcpy(Vars.Coord_Var[5],tmp);
+  strcpy(tmp,"x");    strcpy(Vars.Coord_Label[6],tmp);strcpy(Vars.Coord_Var[6],tmp);
+  strcpy(tmp,"y");    strcpy(Vars.Coord_Label[7],tmp);strcpy(Vars.Coord_Var[7],tmp);
+  strcpy(tmp,"z");    strcpy(Vars.Coord_Label[8],tmp);strcpy(Vars.Coord_Var[8],tmp);
+  strcpy(tmp,"p_i");  strcpy(Vars.Coord_Label[9],tmp);strcpy(Vars.Coord_Var[9],tmp);
+  strcpy(tmp,"p_f");  strcpy(Vars.Coord_Label[10],tmp);strcpy(Vars.Coord_Var[10],tmp);
+
+  if (filename != NULL)
+    strncpy(Vars.Mon_File, filename, 128);
+%}
+
+TRACE
+%{
+  double  t0 = 0;
+  double  t1 = 0;
+  int     intersect   = 0;
+
+  if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
+  {
+    PROP_Z0;
+    intersect = (x>=Vars.mxmin && x<=Vars.mxmax && y>=Vars.mymin && y<=Vars.mymax);
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK)   /* disk xy */
+  {
+    PROP_Z0;
+    intersect = ((x*x + y*y) <= Vars.Sphere_Radius*Vars.Sphere_Radius);
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) /* sphere */
+  {
+    intersect = sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius);
+  /*      intersect = (intersect && t0 > 0); */
+  }
+  else if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)) /* cylinder */
+  {
+    intersect = cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius, Vars.Cylinder_Height);
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) intersect = 0; /* remove top/bottom for banana */
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) /* box */
+  {
+    intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, fabs(Vars.mxmax-Vars.mxmin), fabs(Vars.mymax-Vars.mymin), fabs(Vars.mzmax-Vars.mzmin));
+  }
+
+  if (intersect)
+  {
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA))
+    {
+      if (t0 < 0 && t1 > 0)
+        t0 = t;  /* neutron was already inside ! */
+      if (t1 < 0 && t0 > 0) /* neutron exit before entering !! */
+        t1 = t;
+      /* t0 is now time of incoming intersection with the sphere. */
+      if ((Vars.Flag_Shape < 0) && (t1 > 0))
+        PROP_DT(t1); /* t1 outgoing beam */
+      else
+        PROP_DT(t0); /* t0 incoming beam */
+    }
+
+    /* total intensity received */
+    Vars.Nsum++;
+    Vars.psum += p;
+    Vars.p2sum += p*p;
+    /* Now fetch data from the Res_sample. */
+    if(p && (!bufsize || buffer_index<bufsize))
+    {
+      struct Res_sample_struct *s =
+        &(MC_GETPAR(res_sample_comp, res_struct));
+      if(s->pi != 0)
+      {
+        Vars.cp  = s->ki_x;
+        Vars.cx  = s->ki_y;
+        Vars.cvx = s->ki_z;
+        Vars.csx = s->kf_x;
+        Vars.cy  = s->kf_y;
+        Vars.cvy = s->kf_z;
+        Vars.csy = s->rx;
+        Vars.cz  = s->ry;
+        Vars.cvz = s->rz;
+        Vars.csz = s->pi;
+        Vars.ct  = p/s->pi;
+        Monitor_nD_Trace(&DEFS, &Vars);
+      } /* if s->pi */
+      SCATTER;
+    } /* if p */
+
+  } /* end if intersection */
+
+%}
+
+SAVE
+%{
+  /* save results, but do not free pointers */
+  Monitor_nD_Save(&DEFS, &Vars);
+%}
+
+FINALLY
+%{
+
+  /* free pointers */
+  Monitor_nD_Finally(&DEFS, &Vars);
+
+%}
+
+MCDISPLAY
+%{
+  Monitor_nD_McDisplay(&DEFS, &Vars);
+%}
+
+END

@@ -1,0 +1,258 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package: Channeled_guide.comp
+*         Copyright 2000-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Channeled_guide
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: 1999
+* Version: $Revision: 494 $
+* Origin: McStas 1.5
+*
+* Neutron guide with channels (bender section).
+*
+* %D
+* Models a rectangular guide tube centered on the Z axis. The entrance lies
+* in the X-Y plane.
+* The guide may be tapered, and may have vertical subdivisions (used for
+* bender devices).
+* OBSOLETE: rather use optics/Guide_channeled
+*
+* Example: Channeled_guide(w1=0.1, h1=0.1, w2=0.1, h2=0.1, l=2.0,
+*  R0=0.99, Qcx=0.021, Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003, k=1,
+* d=0.0005, mx=1, my=1)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* w1:      (m)    Width at the guide entry
+* h1:      (m)    Height at the guide entry
+* w2:      (m)    Width at the guide exit
+* h2:      (m)    Height at the guide exit
+* l:       (m)    Length of guide
+* d:       (m)    Thickness of subdividing walls
+* k:       (1)    Number of channels in the guide (>= 1)
+* R0:      (1)    Low-angle reflectivity
+* Qcx:     (AA-1) Critical scattering vector for left and right vertical
+*                 mirrors in each channel
+* Qcy:     (AA-1) Critical scattering vector for top and bottom mirrors
+* alphax:  (AA)   Slope of reflectivity for left and right vertical
+*                 mirrors in each channel
+* alphay:  (AA)   Slope of reflectivity for top and bottom mirrors
+* mx:      (1)    m-value of material for left and right vertical mirrors
+*                 in each channel. Zero means completely absorbing.
+* my:      (1)    m-value of material for top and bottom mirrors. Zero
+*                 means completely absorbing.
+* W:       (AA-1) Width of supermirror cut-off for all mirrors
+*
+* %D
+* Example values: mx=4 my=2 Qcx=Qcy=0.02 W=1/300 alphax=alphay=6.49 R0=1
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Channeled_guide_copysg
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (w1=0.1, h1=0.12, w2=0.02, h2=0.02, l=2.0,
+  R0=0.99, Qcx=0.021, Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003, k=1, d=0.0005, mx=1, my=1)
+OUTPUT PARAMETERS (w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double w1c;
+  double w2c;
+  double ww, hh;
+  double whalf, hhalf;
+  double lwhalf, lhhalf;
+%}
+
+INITIALIZE
+%{
+  
+  if (k <= 0 || W <=0) 
+  { fprintf(stderr,"Channeled_guide: %s: k abd W must be positive\n", NAME_CURRENT_COMP);
+    exit(-1); }
+  w1c = (w1 + d)/(double)k;
+  w2c = (w2 + d)/(double)k;
+  ww = .5*(w2c - w1c);
+  hh = .5*(h2 - h1);
+  whalf = .5*(w1c - d);
+  hhalf = .5*h1;
+  lwhalf = l*whalf;
+  lhhalf = l*hhalf;
+  
+  if ((k > 1) && (w1 != w2))
+  {
+    fprintf(stderr,"Channeled_guide: This component does not work with\n");
+    fprintf(stderr,"                 multichannel focusing guide\n");
+    fprintf(stderr,"                 Use Gravity_guide for that.\n");
+    exit(-1);
+  }
+  printf("Channeled_guide: ");
+  printf("w1=%g, h1=%g,   w2=%g,   h2=%g,   l=%g\n",w1,h1,w2,h2,l);
+  printf("R0=%g,   Qcx=%g,    Qcy=%g,    alphax=%g\n",R0,Qcx,Qcy,alphax);
+  printf("alphay=%g,   W=%g,    k=%g,d=%g,     mx=%g,my=%g\n",
+   alphay, W, k, d, mx, my);
+%}
+
+TRACE
+%{
+  double t1,t2;                                 /* Intersection times. */
+  double av,ah,bv,bh,cv1,cv2,ch1,ch2,dd;        /* Intermediate values */
+  double vdotn_v1,vdotn_v2,vdotn_h1,vdotn_h2;   /* Dot products. */
+  int i;                                        /* Which mirror hit? */
+  double q;                                     /* Q [1/AA] of reflection */
+  double vlen2,nlen2;                           /* Vector lengths squared */
+  double edge;
+  double hadj;                                  /* Channel displacement */
+
+  //int count = 0;
+  //count ++; 
+  //printf("count = %d\n", count);
+  /* Propagate neutron to guide entrance. */
+  PROP_Z0;
+  if(x <= w1/-2.0 || x >= w1/2.0 || y <= -hhalf || y >= hhalf)
+    ABSORB;
+  /* Shift origin to center of channel hit (absorb if hit dividing walls) */
+  x += w1/2.0;
+  edge = floor(x/w1c)*w1c;
+  if(x - edge > w1c - d)
+  {
+    x -= w1/2.0; /* Re-adjust origin */
+    ABSORB;
+  }
+  x -= (edge + (w1c - d)/2.0);
+  hadj = edge + (w1c - d)/2.0 - w1/2.0;
+  for(;;)
+  {
+    /* Compute the dot products of v and n for the four mirrors. */
+    av = l*vx; bv = ww*vz;
+    ah = l*vy; bh = hh*vz;
+    vdotn_v1 = bv + av;         /* Left vertical */
+    vdotn_v2 = bv - av;         /* Right vertical */
+    vdotn_h1 = bh + ah;         /* Lower horizontal */
+    vdotn_h2 = bh - ah;         /* Upper horizontal */
+    /* Compute the dot products of (O - r) and n as c1+c2 and c1-c2 */
+    cv1 = -whalf*l - z*ww; cv2 = x*l;
+    ch1 = -hhalf*l - z*hh; ch2 = y*l;
+    /* Compute intersection times. */
+    t1 = (l - z)/vz;
+    i = 0;
+    if(vdotn_v1 < 0 && (t2 = (cv1 - cv2)/vdotn_v1) < t1)
+    {
+      t1 = t2;
+      i = 1;
+    }
+    if(vdotn_v2 < 0 && (t2 = (cv1 + cv2)/vdotn_v2) < t1)
+    {
+      t1 = t2;
+      i = 2;
+    }
+    if(vdotn_h1 < 0 && (t2 = (ch1 - ch2)/vdotn_h1) < t1)
+    {
+      t1 = t2;
+      i = 3;
+    }
+    if(vdotn_h2 < 0 && (t2 = (ch1 + ch2)/vdotn_h2) < t1)
+    {
+      t1 = t2;
+      i = 4;
+    }
+    if(i == 0)
+      break;                    /* Neutron left guide. */
+    PROP_DT(t1);
+    switch(i)
+    {
+      case 1:                   /* Left vertical mirror */
+        nlen2 = l*l + ww*ww;
+        q = V2Q*(-2)*vdotn_v1/sqrt(nlen2);
+        dd = 2*vdotn_v1/nlen2;
+        vx = vx - dd*l;
+        vz = vz - dd*ww;
+        break;
+      case 2:                   /* Right vertical mirror */
+        nlen2 = l*l + ww*ww;
+        q = V2Q*(-2)*vdotn_v2/sqrt(nlen2);
+        dd = 2*vdotn_v2/nlen2;
+        vx = vx + dd*l;
+        vz = vz - dd*ww;
+        break;
+      case 3:                   /* Lower horizontal mirror */
+        nlen2 = l*l + hh*hh;
+        q = V2Q*(-2)*vdotn_h1/sqrt(nlen2);
+        dd = 2*vdotn_h1/nlen2;
+        vy = vy - dd*l;
+        vz = vz - dd*hh;
+        break;
+      case 4:                   /* Upper horizontal mirror */
+        nlen2 = l*l + hh*hh;
+        q = V2Q*(-2)*vdotn_h2/sqrt(nlen2);
+        dd = 2*vdotn_h2/nlen2;
+        vy = vy + dd*l;
+        vz = vz - dd*hh;
+        break;
+    }
+    /* Now compute reflectivity. */
+    if((i <= 2 && mx == 0) || (i > 2 && my == 0))
+    {
+      x += hadj; /* Re-adjust origin */
+      ABSORB;
+    }
+    if((i <= 2 && q > Qcx) || (i > 2 && q > Qcy))
+    {
+      if (i <= 2) 
+      {
+        double arg = (q - mx*Qcx)/W;
+        if(arg < 10)
+          p *= .5*(1-tanh(arg))*(1-alphax*(q-Qcx));
+        else
+        {
+          x += hadj; /* Re-adjust origin */
+          ABSORB;                               /* Cutoff ~ 1E-10 */
+        }
+      } else {
+        double arg = (q - my*Qcy)/W;
+        if(arg < 10)
+          p *= .5*(1-tanh(arg))*(1-alphay*(q-Qcy));
+        else
+        {
+          x += hadj; /* Re-adjust origin */
+          ABSORB;                               /* Cutoff ~ 1E-10 */
+        }
+      }
+    }
+    p *= R0;
+    x += hadj; SCATTER; x -= hadj;
+  }
+  x += hadj; /* Re-adjust origin */
+%}
+
+MCDISPLAY
+%{
+  double x;
+  int i;
+
+  magnify("xy");
+  for(i = 0; i < k; i++)
+  {
+    multiline(5,
+              i*w1c - w1/2.0, -h1/2.0, 0.0,
+              i*w2c - w2/2.0, -h2/2.0, (double)l,
+              i*w2c - w2/2.0,  h2/2.0, (double)l,
+              i*w1c - w1/2.0,  h1/2.0, 0.0,
+              i*w1c - w1/2.0, -h1/2.0, 0.0);
+    multiline(5,
+              (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0,
+              (i+1)*w2c - d - w2/2.0, -h2/2.0, (double)l,
+              (i+1)*w2c - d - w2/2.0,  h2/2.0, (double)l,
+              (i+1)*w1c - d - w1/2.0,  h1/2.0, 0.0,
+              (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0);
+  }
+  line(-w1/2.0, -h1/2.0, 0.0, w1/2.0, -h1/2.0, 0.0);
+  line(-w2/2.0, -h2/2.0, (double)l, w2/2.0, -h2/2.0, (double)l);
+%}
+
+END

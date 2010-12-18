@@ -1,0 +1,70 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Adapt_check
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: 1999
+* Version: $Revision: 1.22 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* Optimization specifier for the Source_adapt component.
+*
+* %D
+* This components works together with the Source_adapt component, and
+* is used to define the criteria for selecting which neutrons are
+* considered "good" in the adaptive algorithm. The name of the
+* associated Source_adapt component in the instrument definition is
+* given as parameter. The component is special in that its position
+* does not matter; all neutrons that have not been absorbed prior to
+* the component are considered "good".
+*
+* Example: Adapt_check(source_comp=MySource)
+*
+* %P
+* source_comp: [no quotes] The name of the Source_adapt component in the
+*                instrument definition.
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Adapt_check
+DEFINITION PARAMETERS (source_comp)
+SETTING PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+#ifndef ADAPT_TREE_LIB_H
+#error Adapt_check : needs Source_adapt component and %include "adapt_tree-lib"
+#endif
+%}
+
+TRACE
+%{
+  double new_v, psi;
+  struct source_adapt *adpt = &(MC_GETPAR(source_comp, adpt));
+
+  if(p == 0)
+    ABSORB;
+  psi = p/adpt->pi;
+  adpt->psi[adpt->idx] += psi;
+  adpt->psi_tot += psi/adpt->n[adpt->idx];
+  new_v = (1 - adpt->a_beta)*adpt->factor*adpt->psi[adpt->idx]/
+                (adpt->n[adpt->idx]*adpt->psi_tot) +
+          adpt->a_beta/adpt->num;
+  adapt_tree_add(adpt->atree, adpt->idx, new_v - adpt->atree->v[adpt->idx]);
+%}
+
+MCDISPLAY
+%{
+  magnify("");
+%}
+
+END

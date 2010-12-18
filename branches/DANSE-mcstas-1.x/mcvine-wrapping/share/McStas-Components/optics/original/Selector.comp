@@ -1,0 +1,182 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Selector
+*
+* %Identification
+* Written by: Peter Link, <a href="mailto:Andreas.Ostermann@frm2.tum.de">Andreas Ostermann</a>
+* Date: MARCH 1999
+* Origin: Uni. Gottingen (Germany)
+* Version: $Revision: 1.9 $
+* Release: McStas 1.11
+*
+* velocity selector (helical lamella type) such as <b>V_selector</b> component
+*
+* %Description
+* Velocity selector consisting of rotating Soller-like blades
+* defining a helically twisted passage.
+* Geometry is defined by two identical apertures at 12 o'clock position, 
+* The origin is at the ENTRANCE of the selector.
+*
+* Example: Selector(xmin=-0.015,  xmax=0.015,  ymin=-0.025, ymax=0.025, len=0.25,
+*            num=72,width=0.0004, radius=0.12, alfa=48.298, feq=500)
+* These are values for the D11@ILL Dornier 'Dolores' Velocity Selector (NVS 023)
+*
+* %VALIDATION
+* Jun 2005: extensive external test, one minor problem 
+* Jan 2006: problem solved (for McStas 1.11)
+* Validated by: K. Lieutenant
+*
+* %BUGS
+* for transmission calculation, each neutron is supposed to be in the guide centre
+*
+* %Parameters
+* INPUT PARAMETERS:
+*
+* xmin:        Lower x bound of entry aperture (m)
+* xmax:        Upper x bound of entry aperture (m)
+* ymin:        Lower y bound of entry aperture (m)
+* ymax:        Upper y bound of entry aperture (m)
+* len:         rotor length  (m)
+* num:         number of spokes/lamella (1)
+* width:       width of spokes at beam-center (m)
+* radius:      radius of beam-center (m)
+* alfa:        angle of torsion (deg)
+* feq:         frequency of rotation (1/s)
+*
+* %Links
+* See also Additional notes <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q1/000134.html">March 1999</a> and <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q2/000136.html">Jan 2000</a>.
+*
+* %End
+*******************************************************************************/
+
+
+DEFINE COMPONENT Selector
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xmin=-0.015, xmax=0.015, ymin=-0.025, ymax=0.025, len=0.25, num=72,width=0.0004,radius=0.12,alfa=48.298,feq=500)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+TRACE
+%{
+  double E;
+  double dt;
+  double open_angle,closed_angle,n_angle_in,n_angle_out;
+  double sel_phase,
+         act_radius;       /* distance between neutron and selector axle */
+
+  PROP_Z0;
+  E=VS2E*(vx*vx+vy*vy+vz*vz);
+  if (x<xmin || x>xmax || y<ymin || y>ymax)
+    ABSORB;                                  /* because outside frame */
+  dt = len/vz;
+  /* get phase angle of selector rotor as MonteCarlo choice
+   only the free space between two neighboring spokes is taken
+   p is adjusted to transmission for parallel beam
+  */
+  n_angle_in = atan2( x,y+radius)*RAD2DEG;
+  act_radius = sqrt(x*x + pow(radius+y,2));
+  closed_angle = width/act_radius*RAD2DEG;
+  open_angle = 360/num-closed_angle;
+  sel_phase = open_angle*rand01();
+  p *= (open_angle/(closed_angle+open_angle));
+
+  PROP_DT(dt);
+
+  if (x<xmin || x>xmax || y<ymin || y>ymax)
+    ABSORB;                                  /* because outside frame */
+  /* now let's look whether the neutron is still
+ between the same two spokes or absorbed meanwhile */
+
+  n_angle_out = atan2(x,y+radius)*RAD2DEG;  /* neutron beam might be divergent */
+
+  sel_phase = sel_phase + feq*dt*360 - alfa;  /* rotor turned, but spokes are torsaded */
+
+  if (n_angle_out<(n_angle_in-sel_phase) || n_angle_out>(n_angle_in-sel_phase+open_angle) )
+    ABSORB;              /* because must have passed absorber */
+  else
+    SCATTER;
+%}
+
+MCDISPLAY
+%{
+  double phi, r0, Width, height, l0, l1;
+  double r;
+  double x0;
+  double x1;
+  double y0;
+  double y1;
+  double z0;
+  double z1;
+  double z2;
+  double z3;
+  double a;
+  double xw, yh;
+
+  phi = alfa;
+  Width  = (xmax-xmin)/2;
+  height = (ymax-ymin)/2;
+  x0 = xmin; x1 = xmax;
+  y0 = ymin; y1 = ymax;
+  l0 = len; l1 = l0;
+  r0 = radius;
+
+  r = r0 + height;
+  x0 = -Width/2.0;
+  x1 =  Width/2.0;
+  y0 = -height/2.0;
+  y1 =  height/2.0;
+  z0 = -l0/2.0;
+  z1 = -l1/2.0;
+  z2 =  l1/2.0;
+  z3 =  l0/2.0;
+
+  magnify("xy");
+  xw = Width/2.0;
+  yh = height/2.0;
+  /* Draw apertures */
+  for(a = z0;;)
+  {
+    multiline(3, x0-xw, (double)y1, a,
+              (double)x0, (double)y1, a,
+              (double)x0, y1+yh, a);
+    multiline(3, x1+xw, (double)y1, a,
+              (double)x1, (double)y1, a,
+              (double)x1, y1+yh, a);
+    multiline(3, x0-xw, (double)y0, a,
+              (double)x0, (double)y0, a,
+              (double)x0, y0-yh, a);
+    multiline(3, x1+xw, (double)y0, a,
+              (double)x1, (double)y0, a,
+              (double)x1, y0-yh, a);
+    if(a == z3)
+      break;
+    else
+      a = z3;
+  }
+
+  /* Draw cylinder. */
+  circle("xy", 0, -r0, z1, r);
+  circle("xy", 0, -r0, z2, r);
+  line(0, -r0, z1, 0, -r0, z2);
+  for(a = 0; a < 2*PI; a += PI/8)
+  {
+    multiline(4,
+              0.0, -r0, z1,
+              r*cos(a), r*sin(a) - r0, z1,
+              r*cos(a + DEG2RAD*phi), r*sin(a + DEG2RAD*phi) - r0, z2,
+              0.0, -r0, z2);
+  }
+  /*
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0); */
+%}
+
+END
+

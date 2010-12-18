@@ -1,0 +1,135 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Monochromator
+*
+* %I
+* Written by: Kim Lefmann and Henrik M. Roennow
+* Date: June 16, 1997
+* Version: $Revision: 494 $
+* Origin: McStas 1.5
+*
+* Monochromator/analyzer crystal (OBSOLETE).
+*
+* %D
+* NOTE: This component is obsolete. Use the component Mosaic_anisotropic
+* instead, which has the same parameters. For a more detailed monochromator
+* simulation, use the component Single_crystal.
+*
+* Flat monochromator which uses a small-mosaicity approximation as well as
+* the approximation vy^2 << vz^2 + vx^2.
+* Second order scattering is neglected.
+* For an unrotated monochromator component, the crystal plane lies in the y-z
+* plane (ie. parallel to the beam).
+* OBSOLETE: rather use optics/Mosaic_anisotropic.comp
+*
+* Example: Monochromator(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+*           mosaich=30, mosaicv=30, r0=0.7, Q=1.8734)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* zmin:    Lower z-bound of crystal (m)
+* zmax:    Upper z-bound of crystal (m)
+* ymin:    Lower y-bound of crystal (m)
+* ymax:    Upper y-bound of crystal (m)
+* mosaich: Horisontal mosaic (FWHM) (arc minutes)
+* mosaicv: Vertical mosaic (FWHM) (arc minutes)
+* r0:      Maximum reflectivity (1)
+* Q:       Scattering vector (AA-1)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Monochromator
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (zmin=-0.1, zmax=0.1, ymin=-0.1, ymax=0.1,
+           mosaich=30, mosaicv=30, r0=0.7, Q=1.8734)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+  %{
+#ifndef DIV_CUTOFF
+#define DIV_CUTOFF 2            /* ~ 10^-5 cutoff. */
+#endif
+  %}
+
+TRACE
+  %{
+    double dphi,tmp1,tmp2,tmp3,vratio,phi,theta0,theta,v,cs,sn;
+    double old_x = x, old_y = y, old_z = z, old_t = t;
+    double dt;
+
+    if(vx != 0.0 && (dt = -x/vx) >= 0.0)
+    {
+      y += vy*dt; z += vz*dt; t += dt; x = 0.0;
+
+    if (z>zmin && z<zmax && y>ymin && y<ymax)
+    {
+      /* First: scattering in plane */
+
+      theta0 = atan2(vx,vz);           /* neutron angle to slab */
+      v = sqrt(vx*vx+vy*vy+vz*vz);
+      tmp1 = Q2V*Q/(2.0*v);
+      if(tmp1 > 1)
+      {
+        x = old_x; y = old_y; z = old_z; t = old_t;
+      }
+      else
+      {
+        theta = asin(tmp1);              /* Bragg's law */
+        if(theta0 < 0)
+          theta = -theta;
+        tmp3 = (theta-theta0)/(MIN2RAD*mosaich);
+        if(fabs(tmp3) > DIV_CUTOFF)
+        {
+          x = old_x; y = old_y; z = old_z; t = old_t;
+        }
+        else
+        {
+          p *= r0*exp(-tmp3*tmp3*4*log(2)); /* Use mosaics */
+          tmp1 = 2*theta;
+          cs = cos(tmp1);
+          sn = sin(tmp1);
+          tmp2 = cs*vx - sn*vz; 
+          vy = vy;
+          vz = cs*vz + sn*vx; 
+          vx = tmp2;
+
+          /* Second: scatering out of plane. 
+             Approximation is that Debye-Scherrer cone is a plane */
+
+          phi = atan2(vy,vz);                            /* out-of plane angle */
+          dphi = (MIN2RAD*mosaicv)/(2*sqrt(2*log(2)))*randnorm();  /* MC choice: */
+          /* Vertical angle of the crystallite */
+          vy = vz*tan(phi+2*dphi*sin(theta));
+          vratio = v/sqrt(vx*vx+vy*vy+vz*vz);
+          vz = vz*vratio;
+          vy = vy*vratio;                             /* Renormalize v */
+          vx = vx*vratio;
+          SCATTER;
+        }
+      }
+    }
+    else
+    {
+      x = old_x; y = old_y; z = old_z; t = old_t;
+    }
+    }
+  %}
+
+MCDISPLAY
+%{
+  magnify("zy");
+  multiline(5, 0.0, (double)ymin, (double)zmin,
+               0.0, (double)ymax, (double)zmin,
+               0.0, (double)ymax, (double)zmax,
+               0.0, (double)ymin, (double)zmax,
+               0.0, (double)ymin, (double)zmin);
+%}
+
+END

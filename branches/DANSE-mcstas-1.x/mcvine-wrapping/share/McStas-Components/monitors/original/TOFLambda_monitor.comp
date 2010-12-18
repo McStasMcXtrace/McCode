@@ -1,0 +1,128 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* %I
+* Written by: KL
+* Date: September 28, 2001
+* Version: $Revision: 1.12 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* Time-of-flight/wavelength monitor.
+*
+* %D
+* 2D detector for intensity as a function of both time-of-flight
+* and wavelength.
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
+* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
+* nlam:     Number of bins in wavelength (1)
+* nt:       Number of bins in TOF (1)
+* t_0:      Minimum time (us)
+* t_1:      Maximum time (us)
+* lambda_0: Minimum wavelength detected (AA)
+* lambda_1: Maximum wavelength detected (AA)
+* filename: Name of file in which to store the detector image (string)
+*
+* OUTPUT PARAMETERS:
+*
+* Div_N:    Array of neutron counts
+* Div_p:    Array of neutron weight counts
+* Div_p2:   Array of second moments
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT TOFLambda_monitor
+DEFINITION PARAMETERS (nlam, nt, string filename, t_0, t_1)
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, lambda_0, lambda_1)
+OUTPUT PARAMETERS (tt_0, tt_1, TOFL_N, TOFL_p, TOFL_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    double TOFL_N[nt][nlam];
+    double TOFL_p[nt][nlam];
+    double TOFL_p2[nt][nlam];
+    double tt_0, tt_1;
+  %}
+INITIALIZE
+  %{
+    int i,j;
+
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("TOFLambda_monitor: %s: Null detection area !\n"
+                   "ERROR              (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
+
+    tt_0 = t_0*1e-6;
+    tt_1 = t_1*1e-6;
+    for (i=0; i<nlam; i++)
+     for (j=0; j<nt; j++)
+     {
+      TOFL_N[j][i] = 0;
+      TOFL_p[j][i] = 0;
+      TOFL_p2[j][i] = 0;
+     }
+  %}
+TRACE
+  %{
+    int i,j;
+    double div;
+    double lambda;
+
+    PROP_Z0;
+    lambda = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
+    if (x>xmin && x<xmax && y>ymin && y<ymax &&
+        lambda > lambda_0 && lambda < lambda_1)
+    {
+      if (t < tt_1 && t > tt_0)
+      {
+        i = floor((lambda - lambda_0)*nlam/(lambda_1 - lambda_0));
+        j = floor((t-tt_0)*nt/(tt_1-tt_0));
+/*  printf("tt_0, tt_1, nt %g %g %i t j %g %i \n",tt_0,tt_1,nt,t,j);
+*/        TOFL_N[j][i]++;
+        TOFL_p[j][i] += p;
+        TOFL_p2[j][i] += p*p;
+      }
+    }
+  %}
+SAVE
+  %{
+    DETECTOR_OUT_2D(
+        "TOF-wavelength monitor",
+        "Time-of-flight [\\gms]", "Wavelength [AA]",
+        t_0, t_1, lambda_0, lambda_1,
+        nt, nlam,
+        &TOFL_N[0][0],&TOFL_p[0][0],&TOFL_p2[0][0],
+        filename);
+  %}
+
+MCDISPLAY
+  %{
+    magnify("xy");
+    multiline(5, (double)xmin, (double)ymin, 0.0,
+                 (double)xmax, (double)ymin, 0.0,
+                 (double)xmax, (double)ymax, 0.0,
+                 (double)xmin, (double)ymax, 0.0,
+                 (double)xmin, (double)ymin, 0.0);
+%}
+
+END
+
+

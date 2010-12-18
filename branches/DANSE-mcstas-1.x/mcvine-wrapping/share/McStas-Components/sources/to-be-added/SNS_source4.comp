@@ -1,0 +1,843 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+*
+*Component: SNS_source4
+*
+* %I
+* Written by: F. Gallmeier
+* Date: August 2009
+* Version: $Revision: 1.0 $
+* Origin: SNS Oak Ridge National Laboratory
+*
+* A source that produces a time and energy distribution from the SNS moderator files  
+*
+* %D
+* Produces a time-of-flight spectrum from SNS moderator files
+* moderator files can be obtained from the author
+* The output units of this component are N/pulse
+* Notes:
+* (1) the raw moderator files are per Sr.  The focusing parameters provide the solid
+* angle accepted by the guide to remove the Sr dependence from the output. Therefore 
+* the best practice is to set xw and yh to the width and height of the next beam 
+* component, respectively. The dist parameter should then be set as the distance 
+* from the moderator to the first component.
+* (2) Be sure that Emin and Emax are within the limits of 1e-5 to 100 eV
+* (3) the proton pulse length T determines short- and long-pulse mode 
+*
+* %P
+* Input parameters:
+* S_filename:   Filename of source data 
+* width:  (m)   width of moderator
+* height: (m)   height of moderator
+* dist:   (m)   Distance from source to the focusing rectangle
+* xw:     (m)   Width of focusing rectangle
+* yh:     (m)   Height of focusing rectangle
+* Emin: (meV)   minimum energy of neutron to generate
+* Emax: (meV)   maximum energy of neutron to generate
+* tinmin:(us)   minimum time of neutron to generate
+* tinmax:(us)   maximum time of neutron to generate
+* sample_E:     sample energy uniformly over: 0="energy", 1="lambda", 2="lethary"
+* sample_t:     0="sample t uniformly over t-range; 
+*               1= determine t from picking probability and determine t from cumulative distribution
+* proton_T:(us) proton pulse length
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT SNS_source4
+DEFINITION PARAMETERS (S_filename)
+SETTING PARAMETERS (width, height, dist, xw, yh, Emin, Emax, tinmin, tinmax, sample_E, sample_t, proton_T)
+OUTPUT PARAMETERS (hdiv,vdiv,p_in)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
+DECLARE
+%{
+  double hdiv, vdiv;   
+  double p_in, CL, CU;
+  double para_sp[14];
+  double para_a[10];
+  double para_b[10];
+  double para_R[10];
+  double para_to[10];
+
+/*############################################################################################
+#
+#      slowing-down spectrum and two Maxwellians joined by a modified Wescott function
+# 
+#      I(E) = I * exp(-c/sqrt(E))
+#                * ( R1*E/(kT1)**2*exp(-E/kT1) + R2*E/(kT2)**2*exp(-E/kT2)
+#                    + R3*E/(kT3)**2*exp(-(E/kT3)**b) + D(E)*rho(E)/E**(1-a) )
+#      with 
+#      D(E) = 1/(1+(Ecut/E)**s)    
+#      rho(E) = 1 + delta*exp(-x)(1 + x +0.5*x**2)
+#      x(E) = g*(E-2B); for E>2B
+#           = 0;        for E<=2B
+#
+#      constants:
+#      k = 1.3805e-23 J/K = 8.617e-5 eV/K
+#      B = 7.36e-3 eV
+#     
+#      parameters:
+#      I1
+#      c
+#      R1
+#      T1
+#      R2
+#      T2
+#      R3
+#      T3
+#      a
+#      Ecut
+#      delta
+#      g
+#*/   
+double spectral_function( double para[14], double E )
+{
+  double c, R1, T1, R2, T2, R3, T3, a, b, Ecut, s, delta, g, Io;
+  double D, x, B, k, rho, arg1, arg2, arg3, arg4, arg5, arg6;
+ 
+  /* constants */
+  k =  8.617e-5;
+  B =  7.36e-3;
+
+  /* initialization of parameters */
+  c    = para[0];     ;
+  R1   = para[1];   
+  T1   = para[2];   
+  R2   = para[3];   
+  T2   = para[4];   
+  R3   = para[5];   
+  T3   = para[6];   
+  a    = para[7];   
+  b    = para[8];   
+  Ecut = para[9];   
+  s    = para[10];  
+  delta= para[11];  
+  g    = para[12];  
+  Io   = para[13];  
+
+  /* evaluation of spectral function */
+  D  = 1.0/(1+pow(Ecut/E,s));
+  x = 0.0;
+  if(E>2.0*B) {x = g*(E-2.0*B);}
+  rho = 1.0 + delta*exp(-x)*(1 + x +0.5*x*x);
+  arg1 = Io*1.0e12 * exp(-c/sqrt(E));
+  arg2 = R1*E/pow(k*T1,2) *exp(-E/(k*T1));
+  arg3 = R2*E/pow(k*T2,2) *exp(-E/(k*T2));
+  arg4 = R3*E/pow(k*T3,2) *exp(-pow(E/(k*T3),b));
+  arg5 = D*rho/pow(E,1-a);
+  arg6 =(arg1 * ( arg2 + arg3 + arg4 + arg5 ));
+  return(arg6);
+}
+
+/*#############################################################################################
+#
+#      fitting function for energy-time brightness functions spectra
+# 
+#        f(E,t) = a/2 *( (1-R)(a*t)**2 *exp(-a*t) 
+#               +2*R*a**2*b/(a-b)**3 *[ exp(-b*t) - exp(-a*t)*(1+(a-b)*t+0.5*(a-b)**2*t**2) ] }
+#      with 
+#
+#        t=t-to
+#     
+#      parameters:
+#      
+#        a
+#        b
+#        R
+#        to
+#*/
+double ikeda_carpenter_function_sp (double para[4], double t) 
+{
+  double a, b, R, to;
+  double tt, eat, ebt, arg1, arg2, arg3, arg4;
+  a = para[0];
+  b = para[1];
+  R = para[2];
+  to= para[3];
+    
+  tt = t - to*10.0;
+  if(tt<0.0) {tt=0.0;}
+  eat  = exp(-a*tt);
+  ebt  = exp(-b*tt);
+  arg1 = (1-R) *pow(a*tt,2) *eat;
+  arg2 = 2*R*a*a *b/pow(a-b,3);
+  arg3 = 1 + (a-b)*tt + 0.5*pow(a-b,2) *tt*tt;
+  arg4 = 0.5*a *( arg1 + arg2 *( ebt - eat*arg3 ) );
+
+  /*
+  printf("t=%e a=%e b=%e R=%e to=%e\n", t, a, b, R, to);
+  printf("eat=%e ebt=%e arg1=%e arg2=%e arg3=%e arg4=%e\n", eat, ebt, arg1, arg2, arg3, arg4);
+  */
+  return(arg4);
+}
+
+
+/*#############################################################################################
+#
+#      fitting function for culumative time brightness functions for short-pulse sources
+#      with delayed emission
+#      convoluted with long pulse (Heavyside function)
+#
+#      derived from Ikeada Carpenter Function
+# 
+#      F(t) = (1-R)*(1-(gamma*exp(-a*(t-to)))                        for t-to >0
+#             *R *(1-delta *(exp(-b*(t-to)) -exp(-a*(t-to)) *(b/a) 
+#              *(1 + (a-b)/a *(a*(t-to) +1) +((a-b)/a)**2 *gamma))
+#           = 0                                                      for t-to <=0  
+#             
+#      with 
+#         gamma = 0.5*((a*(t-to))**2 +a*(t-to) +1          
+#         delta = a**3/(a-b)**3
+#         tm = max(to,(t-T))
+#
+#      I(t) = F(tm) -F(t)
+#     
+#      parameters:
+#         a  = proportial to scattering cross section
+#         b  = decay constant of longest living flux eigenfunction
+#         R  = fraction of slowing down term
+#         to = delay time
+#         T  = proton pulse length
+#*/
+double ikeda_carpenter_function_sp_find_t (double para[4], double tmin, double tmax, double randd)
+{
+  double a, b, R, to;
+  double eat, ebt, arg1, arg2, arg3;
+  double t, ttmin, ttmax, tm, tp, fm, fp, renorm, Imin, Imax;
+  double delta, gt, ambda, ambda2;
+  int n, flag;
+  double diff, eps;
+
+  eps = 1.0e-4;
+
+  a = para[0];
+  b = para[1];
+  R = para[2];
+  to= para[3];
+    
+  ttmin=tmin-to*10.0;
+  if(ttmin<0.0) {ttmin=0.0;}
+  ttmax=tmax-to*10.0;
+  if(ttmax<0.0) {ttmax=0.0;}
+  if(ttmin==ttmax) {
+    printf("tmax-to and tmin-to are zero!\n");
+    abort();
+  }
+   
+  ambda = (a-b)/a;
+  ambda2= ambda*ambda; 
+  delta = pow(1/ambda,3);
+
+  eat  = exp(-a*ttmax);
+  ebt  = exp(-b*ttmax);
+  gt   = 0.5*pow(a*ttmax,2) + a*ttmax + 1.0;        
+  arg1  = 1.0-gt*eat;
+  arg2  = 1.0 -delta*(ebt - eat*b/a*(1.0 + ambda*(a*ttmax+1.0) + ambda2*gt));
+  Imax  = (1.0-R)*arg1 + R*arg2;
+  /* 
+    printf(" eatm=%e",eat);
+    printf(" ebtm=%e",ebt);
+    printf(" gtm=%e",gt);
+    printf(" arg1=%e",arg1);
+    printf(" arg2=%e",arg2);
+    printf(" Imax=%e",Imax);
+    printf("\n");
+  */
+  eat  = exp(-a*ttmin);
+  ebt  = exp(-b*ttmin);
+  gt   = 0.5*pow(a*ttmin,2) + a*ttmin + 1.0;        
+  arg1  = 1.0-gt*eat;
+  arg2  = 1.0 -delta*(ebt - eat*b/a*(1.0 + ambda*(a*ttmin+1.0) + ambda2*gt));
+  Imin  = (1.0-R)*arg1 + R*arg2;
+  /* 
+    printf(" eatm=%e",eat);
+    printf(" ebtm=%e",ebt);
+    printf(" gtm=%e",gt);
+    printf(" arg1=%e",arg1);
+    printf(" arg2=%e",arg2);
+    printf(" Imin=%e",Imin);
+    printf("\n");
+  */
+  renorm = 1.0 /(Imax-Imin);
+  tm = ttmin;
+  fm = 0.0;
+  tp = ttmax;
+  fp = Imax;
+  flag = 1;
+  n = 0;
+
+  diff = 1.0;
+  while(fabs(diff)>eps) {
+    n++;
+    if(n<10) {
+      t = 0.5*(tp+tm);
+    }
+    else {
+      t   = tm +(tp-tm)/(fp-fm)*(randd-fm);
+    }
+    gt  = 0.5*pow(a*t,2) + a*t + 1.0;        
+    eat = exp(-a*t);
+    ebt = exp(-b*t);
+    arg1  = 1.0-gt*eat;
+    arg2  = 1.0 -delta*(ebt - eat*b/a*(1.0 + ambda*(a*t+1.0) + ambda2*gt));
+    arg3  = (1.0-R)*arg1 + R*arg2; 
+    arg3  = (arg3 -Imin)*renorm;
+ 
+    diff = arg3 - randd;
+    if(n<50){
+    /*
+    printf(" t=%e",t);
+    printf(" tm=%e",tm);
+    printf(" tp=%e",tp);
+    printf(" rand=%e",randd);
+    printf(" fm=%e",fm);
+    printf(" fp=%e",fp);
+    printf(" arg3=%e", arg3);
+    printf(" diff=%e", diff);
+    printf("\n");
+   */
+   }
+   else {
+    printf(" ikeda_carpenter_function_find_t used 50 iterations!\n");
+    abort();
+   }
+   if(arg3<randd) {
+       tm = t;
+       fm = arg3;
+    }
+    else if(arg3>randd) {
+       tp = t;
+       fp = arg3;
+    }
+  } 
+  /* printf("tmin=%f tmax=%f Imin=%e Imax=%e t=%e n=%d\n", ttmin, ttmax, Imin, Imax, t, n); */
+  return(t+to*10.0);
+}
+
+
+
+
+/*#############################################################################################
+#
+#      fitting function for time brightness functions for long-pulse sources
+#      with delayed emission
+#      proton pulse is a atep function with pulse length T (Heavyside function)
+#
+#      derived from Ikeada Carpenter Function
+# 
+#      F(t) = (-1/T)*(1-R)*(gamma*exp(-a*(t-to))                     for t-to >0
+#             (-1/T)*delta *(exp(-b*(t-to)) -exp(-a*(t-to)) *(b/a) 
+#              *(1 + (a-b)/a *(a*(t-to) +1) +((a-b)/a)**2 *gamma)
+#           = 0                                                      for t-to <=0  
+#             
+#      with 
+#         gamma = 0.5*((a*(t-to))**2 +a*(t-to) +1          
+#         delta = R*a**3/(a-b)**3
+#         tm = max(to,(t-T))
+#
+#      I(t) = F(tm) - F(t)
+#     
+#      parameters:
+#         a  = proportial to scattering cross section
+#         b  = decay constant of longest living flux eigenfunction
+#         R  = fraction of slowing down term
+#         to = delay time
+#         T  = proton pulse length
+#*/
+double ikeda_carpenter_function_lp (double para[4], double t, double T)
+{
+  double a, b, R, to;
+  double tt, eat, ebt, arg1, arg2, Imax, Imin, Itot, delta, ambda, ambda2, gt;
+  a = para[0];
+  b = para[1];
+  R = para[2];
+  to= para[3];
+    
+  ambda = (a-b)/a;
+  ambda2= ambda*ambda; 
+  delta = pow(ambda,-3);
+
+  /* upper time boundary */
+  tt = t - to*10.0;
+  if(tt<0.0) {tt=0.0;}
+  eat  = exp(-a*tt);
+  ebt  = exp(-b*tt);
+  gt   = 0.5*pow(a*tt,2) + a*tt + 1.0;        
+  arg1  = gt*eat;
+  arg2  = delta*(ebt - eat*b/a*(1.0 + ambda*(a*tt+1.0) + ambda2*gt));
+  Imax  = (1.0-R)*arg1 + R*arg2;
+/*
+    printf(" tt  =%e",tt);
+    printf(" eatm=%e",eat);
+    printf(" ebtm=%e",ebt);
+    printf(" gtm=%e",gt);
+    printf(" arg1=%e",arg1);
+    printf(" arg2=%e",arg2);
+    printf(" Imax=%e",Imax);
+    printf("\n");
+*/
+  /* lower time boundary */
+  tt = tt - T;
+  if(tt<0.0) {tt=0.0;}
+  eat  = exp(-a*tt);
+  ebt  = exp(-b*tt);
+  gt   = 0.5*pow(a*tt,2) + a*tt + 1.0;        
+  arg1  = gt*eat;
+  arg2  = delta*(ebt - eat*b/a*(1.0 + ambda*(a*tt+1.0) + ambda2*gt));
+  Imin  = (1.0-R)*arg1 + R*arg2;
+
+  Itot = (Imin - Imax)/T;
+/*
+    printf(" tto =%e",tt);
+    printf(" eat =%e",eat);
+    printf(" ebt =%e",ebt);
+    printf(" gt =%e",gt);
+    printf(" arg1=%e",arg1);
+    printf(" arg2=%e",arg2);
+    printf(" Imin=%e",Imin);
+    printf(" Itot=%e",Itot);
+    printf("\n");
+*/
+  return(Itot);
+}
+
+
+
+double intint_ikecar (double para[4], double t, double T)
+{
+  double a, b, R, to;
+  double eat, ebt, arg1, arg2, arg3, arg4;
+  double tt, delta, gamma, ambda, ambda2;
+
+  a = para[0];
+  b = para[1];
+  R = para[2];
+  to= para[3];
+  tt = t - to*10.0;
+  if(tt<0.0) {tt=0.0;}
+  ambda  = (a-b)/a;
+  ambda2 = ambda*ambda;
+  delta = pow(ambda,-3);
+ 
+  /* integrate 0 to T */
+  eat   = exp(-a*tt);
+  ebt   = exp(-b*tt);
+  gamma = 0.5*pow(a*tt,2) + 2.0*a*tt + 3.0;       
+  arg1  = gamma/a*eat;
+  arg2  = delta/b*ebt;
+  arg3  = delta*b/a/a*(1.0+2.0*ambda+ambda*a*tt+ambda2*gamma)*eat;
+  arg4  = ((1.0-R)*arg1 + R*arg2 +R*arg3)/T;
+  /*
+  printf(" t=%e", t);
+  printf(" eatm=%e",eat);
+  printf(" ebtm=%e",ebt);
+  printf(" gtm=%e",gamma);
+  printf(" arg1=%e",arg1);
+  printf(" arg2=%e",arg2);
+  printf(" arg3=%e",arg3);
+  printf(" arg4=%e",arg4);
+  printf("\n");
+  */
+  return(arg4);
+}
+
+
+
+/*#############################################################################################
+#
+#      find t between tmin and Tmax such that Integral_Tmin^t(I(t)/Integral_Tmin^Tmax(I(t)-randd
+#      uses function of culumative time brightness functions CI(t) for long-pulse sources
+#      integrated analytically:
+# 
+#      FF(t) = (-1/T)*(1-R)*(-1/a)*gamma*exp(-a*(t-to))                     for t-to >0
+#             +(-1/T)*R*delta*(-1/b)*(exp(-b*(t-to)) 
+#             +(-1/T)*R*delta*(b/a**2)
+#                        *(1+2*ambda + ambda*a*t + ambda**2*gamma)
+#                        *exp(-a*(t-to))
+#           = 0                                                      for t-to <=0  
+#             
+#      with 
+#         gamma = 0.5*(a*(t-to))**2 +2*a*(t-to) +3          
+#         ambda =(a-b)/a
+#         delta = ambda**(-3)
+#         tm = max(to,(t-T))
+#
+#      remember:
+#         F(t) = integral(f(t))          f(t)=short-pulse emission time distribution
+#         I(t) = integral_(T-t^t(f(t))
+#              = (F(t)-F((t-T))/T
+#      hence:
+#         FF(t) = integral(F(t)   
+#         CI(t) = integral_0^t(I(t))
+#               = FF(t) - FF(0) - FF(t-T) + FF(0)
+#               = FF(t) - FF(t-T)   
+#      parameters:
+#         a  = proportial to scattering cross section
+#         b  = decay constant of longest living flux eigenfunction
+#         R  = fraction of slowing down term
+#         to = delay time
+#         T  = proton pulse length
+#*/
+double ikeda_carpenter_function_lp_find_t (double para[4], double tmin, double tmax, double T, double randd)
+{
+  double a, b, R, to;
+  double eat, ebt, arg1, arg2, arg3, arg4, arg5;
+  double t, tt, ttmin, ttmax, tm, tp, fm, fp, renorm, CImin, CImax;
+  double delta, gamma, ambda, ambda2;
+  int n, flag;
+  double diff, eps;
+
+  eps = 1.0e-4;
+
+  a = para[0];
+  b = para[1];
+  R = para[2];
+  to= para[3];
+
+  ambda  = (a-b)/a;
+  ambda2 = ambda*ambda;
+  delta = pow(ambda,-3);
+
+  /* test loop 
+  t=0.0;
+  while(t<1100.0) {
+    tt=t-to*10;
+    if(tt<0.0) {tt=0.0;}
+    arg1 = 1.0/T*(tt - 3.0/a);
+    arg2 = delta/T*(tt -1.0/b);
+    arg3 = delta/T*(-b/a*(1.0+ambda+ambda2)*tt + b/a/a*(1.0+2.0*ambda+3.0*ambda2));
+    arg4 = intint_ikecar(para,t,T);
+    arg5 = (1.0-R)*arg1 + R*(arg2+arg3) +arg4;
+    if(tt>=T) { 
+       arg1 += 1.0/T*((T-tt) + 3.0/a);
+       arg2 += delta/T*((T-tt) + 1.0/b);
+       arg3 += delta/T*(-b/a*(1.0+ambda+ambda2)*(T-tt) + b/a/a*(1.0+2.0*ambda+3.0*ambda2));
+       arg4 += -intint_ikecar(para,t-T,T);  
+       arg5 = (1.0-R)*arg1 + R*(arg2+arg3) +arg4;  
+    }
+    printf("tt=%8.2f arg1=%10.3e arg2=%10.3e arg3=%10.3e arg4=%10.3e arg5=%10.3e\n", 
+            tt, arg1, arg2, arg3, arg4, arg5);  
+    t += 1.0; 
+  }
+  */
+  tt=tmax-to*10.;
+  if(tt<0.0) {tt=0.0;} 
+  CImax  = (1.0-R)/T*(tt - 3.0/a) 
+            + R*delta/T*(tt -1.0/b - b/a*(1.0+ambda+ambda2)*tt + b/a/a*(1.0+2.0*ambda+3.0*ambda2)) 
+            + intint_ikecar(para,tmax,T);
+  if(tt>=T) { 
+    CImax += (1.0-R)/T*((T-tt) + 3.0/a) 
+             + R*delta/T*((T-tt) + 1.0/b - b/a*(1.0+ambda+ambda2)*(T-tt) + b/a/a*(1.0+2.0*ambda+3.0*ambda2)) 
+             - intint_ikecar(para,tmax-T,T);  
+  }
+  /* printf("tt=%e CImax=%e\n", tt, CImax); */
+
+  tt=tmin-to*10.;
+  if(tt<0.0) {tt=0.0;}
+  CImin  = (1.0-R)/T*(tt - 3.0/a) 
+           + R*delta/T*(tt -1.0/b - b/a*(1.0+ambda+ambda2)*tt + b/a/a*(1.0+2.0*ambda+3.0*ambda2)) 
+           + intint_ikecar(para,tmin,T);
+  if(tt>=T) {
+     CImin += (1.0-R)/T*((T-tt) + 3.0/a) 
+              + R*delta/T*((tt-T) + 1.0/b - b/a*(1.0+ambda+ambda2)*(T-tt) + b/a/a*(1.0+2.0*ambda+3.0*ambda2)) 
+              - intint_ikecar(para,tmin-T,T);  
+  }
+  /* printf("tt=%e CImin=%e\n", tt, CImin); */
+  renorm = 1.0 /(CImax-CImin);
+  tm = tmin;
+  fm = 0.0;
+  tp = tmax;
+  fp = CImax;
+  flag = 1;
+  n = 0;
+
+  diff = 1.0;
+  while(fabs(diff)>eps) {
+    n++;
+    if(n<10) {
+      t = 0.5*(tp+tm);
+    }
+    else {
+      t = tm +(tp-tm)/(fp-fm)*(randd-fm);
+    }
+    tt=t-to*10.;
+    if(tt<0.0) {tt=0.0;}
+    arg4  = (1.0-R)/T*(tt - 3.0/a) 
+            + R*delta/T*(tt -1.0/b - b/a*(1.0+ambda+ambda2)*tt + b/a/a*(1.0+2.0*ambda+3.0*ambda2)) 
+            + intint_ikecar(para,t,T);
+    if(tt>=T) {
+      arg4 += (1.0-R)/T*((T-tt) + 3.0/a) 
+              + R*delta/T*((T-tt) + 1.0/b - b/a*(1.0+ambda+ambda2)*(T-tt) + b/a/a*(1.0+2.0*ambda+3.0*ambda2)) 
+              - intint_ikecar(para,t-T,T);  
+    }
+    /* printf("tt=%e arg4=%e\n", tt, arg4); */
+    arg4  = (arg4 -CImin)*renorm;
+    diff = arg4 - randd;
+    if(n<50){
+    /*
+    printf(" t=%e",t);
+    printf(" tm=%e",tm);
+    printf(" tp=%e",tp);
+    printf(" rand=%e",randd);
+    printf(" fm=%e",fm);
+    printf(" fp=%e",fp);
+    printf(" arg4=%e", arg4);
+    printf(" diff=%e", diff);
+    printf("\n");
+    */
+   }
+   else {
+    printf(" ikeda_carpenter_function_find_t used 50 iterations!\n");
+    abort();
+   }
+   if(arg4<randd) {
+       tm = t;
+       fm = arg4;
+    }
+    else if(arg4>randd) {
+       tp = t;
+       fp = arg4;
+    }
+  } 
+  /* printf("tmin=%f tmax=%f Imin=%e Imax=%e t=%e n=%d\n", ttmin, ttmax, CImin, CImax, t, n); */
+  return(t+to*10.0);
+}
+/*#############################################################################################
+#
+#      Pade type fitting function
+# 
+#      f(x) = log(a*x**b*(1+c*x+d*x**2+(x/f)**g)/(1+h*x+i*x**2+(x/j)**k))
+#               
+#      with 
+#      a,b,c,d,f,g,h,i,j,k
+#
+#
+#*/
+double pade_function (double para[10], double E)
+{
+  double a, b, c, d, f, g, h, i, j, k;
+ 
+    a = para[0];
+    b = para[1];
+    c = para[2];
+    d = para[3];
+    f = para[4];
+    g = para[5];
+    h = para[6];
+    i = para[7];
+    j = para[8];
+    k = para[9];
+   
+    return(a*pow(E,b)*(1+c*E+d*E*E+pow(E/f,g))/(1+h*E+i*E*E+pow(E/j,k)));
+}
+%}
+INITIALIZE
+%{  
+  char line[1000];
+  int linelength=1000;
+  int k, kk;
+
+  FILE *fp, *fopen();
+
+  fp = fopen(S_filename,"r");
+  if (fp==NULL){
+    printf("Error opening file\n");
+  }
+  else {
+    printf("%s\n","File opened...");
+ }
+  /* spectral parameters */
+  while( (fgets(line,linelength,fp) != NULL) && (strchr(line,'#') != NULL) ){
+    printf("%s",line);
+  }
+  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le %le %le %le %le", &para_sp[0], &para_sp[1], &para_sp[2], 
+	    &para_sp[3], &para_sp[4], &para_sp[5], &para_sp[6], &para_sp[7], &para_sp[8], &para_sp[9], &para_sp[10],
+            &para_sp[11], &para_sp[12], &para_sp[13]);
+
+  /* a parameter of emission time distribuation */ 
+  while( (fgets(line,linelength,fp) != NULL) && (strchr(line,'#') != NULL) ){
+    printf("%s",line);
+  }
+  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le", &para_a[0], &para_a[1], &para_a[2], 
+	    &para_a[3], &para_a[4], &para_a[5], &para_a[6], &para_a[7], &para_a[8], &para_a[9]);
+  if(kk!=10) {
+    printf("para_a: insufficient number of data entries read\n");
+    abort();
+  }
+
+  /* b parameter of emission time distribuation */ 
+  while((fgets(line,linelength,fp)!=NULL)&&(strchr(line,'#')!=NULL)){ 
+    printf("%s",line);
+  }
+  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le", &para_b[0], &para_b[1], &para_b[2], 
+	    &para_b[3], &para_b[4], &para_b[5], &para_b[6], &para_b[7], &para_b[8], &para_b[9]);
+  if(kk!=10) {
+    printf("para_b: insufficient number of data entries read\n");
+    abort();
+  }
+
+  /* R parameter of emission time distribuation */ 
+  while((fgets(line,linelength,fp)!=NULL)&&(strchr(line,'#')!=NULL)){
+    printf("%s",line);
+  }
+  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le", &para_R[0], &para_R[1], &para_R[2], 
+	    &para_R[3], &para_R[4], &para_R[5], &para_R[6], &para_R[7], &para_R[8], &para_R[9]);
+  if(kk!=10) {
+    printf("para_R: kk=%d  insufficient number of data entries read\n"), kk;
+    abort();
+  }
+
+  /* to parameter of emission time distribuation */ 
+  while((fgets(line,linelength,fp)!=NULL)&&(strchr(line,'#')!=NULL)){
+    printf("%s",line);
+  }
+  kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le", &para_to[0], &para_to[1], &para_to[2], 
+	    &para_to[3], &para_to[4], &para_to[5], &para_to[6], &para_to[7], &para_to[8], &para_to[9]);
+  if(kk!=10) {
+    printf("para_R: insufficient number of data entries read\n");
+    abort();
+  }
+
+  printf("\n");
+  for(k=0; k<14; k++){
+    printf("   para_sp(%d)=%e\n",k,para_sp[k]);
+  }
+  printf("\n");
+  for(k=0; k<10; k++){
+    printf("   para_a(%d)=%e\n",k,para_a[k]);
+  }
+  printf("\n");
+  for(k=0; k<10; k++){
+    printf("   para_b(%d)=%e\n",k,para_b[k]);
+  }
+  printf("\n");
+  for(k=0; k<8; k++){
+    printf("   para_R(%d)=%e\n",k,para_R[k]);
+  }
+  printf("\n");
+  for(k=0; k<10; k++){
+    printf("   para_to(%d)=%e\n",k,para_to[k]);
+  }
+  /* Calculate solid Angle */
+  p_in = xw*yh/(dist*dist);
+  CL = (1.0/sqrt(Emin*1e-3)-1.0/sqrt(Emax*1e-3))/(Emax-Emin)*1e3;
+  CU = (log(Emax*1e-3)-log(Emin*1e-3))/(Emax-Emin)*1e3;
+
+%}
+TRACE
+%{    
+  double theta,phi,v,E,Eval,tval;
+  double hdivmin,hdivmax,vdivmin,vdivmax;
+  double p_E, p_t, para_t[4], p_sa, randd, ttmax;
+  int k;
+  p=p_in;
+  z=0;
+  x = (rand01()-0.5)*width; /* choose points uniformly distributed on the source */
+  y = (rand01()-0.5)*height;
+  hdivmax=atan((xw/2.0-x)/dist);
+  hdivmin=atan(-(xw/2.0+x)/dist);
+  vdivmax=atan((yh/2.0-y)/dist);
+  vdivmin=atan(-(yh/2.0+y)/dist);
+  theta = hdivmin + (hdivmax-hdivmin)*rand01(); /* Small angle approx. */ 
+  phi = vdivmin + (vdivmax-vdivmin)*rand01();
+  hdiv=theta;
+  vdiv=phi;
+  /* find E value corresponding to randomly in E range
+     sample_E=0 draws uniformly in energy range
+     sample_E=1 draws uniformly from wavelength range
+     sample_E=2 draws uniformly from lethargy range
+  */
+  if(sample_E==0){
+    Eval=(Emin+(Emax-Emin)*rand01())*1e-3;
+    p_sa = 1.0;   
+    /* printf("sample=0: Eval=%e p_sa=%e\n", Eval, p_sa); */
+  }
+  else if(sample_E==1) {
+    Eval = pow(1.0/(1.0/sqrt(Emax) +(1.0/sqrt(Emin)-1.0/sqrt(Emax))*rand01()),2)*1e-3;
+    p_sa = CL*2.0*pow(Eval,1.5);
+    /* printf("sample=1: Eval=%e p_sa=%e\n", Eval, p_sa); */
+  }
+  else if(sample_E==2) { 
+    Eval = exp(log(Emin) +(log(Emax)-log(Emin))*rand01())*1e-3;
+    p_sa = CU*Eval;
+    /* printf("sample=2: Eval=%e p_sa=%e\n", Eval, p_sa); */
+  }
+  else {
+    printf("sample_E allows only values 0, 1, or 2!\n");
+  }  
+  /* calculate probability of neutron in Eval and tval */
+  
+  /* printf("Eval=%e\n",Eval); */
+  
+  p_E = spectral_function(para_sp, Eval);
+  para_t[0] = pade_function(para_a, Eval);
+  para_t[1] = pade_function(para_b, Eval);
+  para_t[2] = pade_function(para_R, Eval);
+  para_t[3] = pade_function(para_to, Eval);
+  if(sample_t==0) {
+  /* find t value corresponding to random probability */
+    randd = rand01();
+    if(proton_T<=0.0) {
+      ttmax = 6.0/para_t[1];
+      if(ttmax>tinmax) {ttmax=tinmax;}
+      tval = ikeda_carpenter_function_sp_find_t (para_t, tinmin, ttmax, randd);
+    }
+    else {
+      ttmax = proton_T+6.0/para_t[1];
+      if(ttmax>tinmax) {ttmax=tinmax;}
+      tval = ikeda_carpenter_function_lp_find_t (para_t, tinmin, ttmax, proton_T, randd);
+    }
+    p_t = 1.0;
+  }
+  else if(sample_t==1) {
+  /* pick tval uniformly from range [tinmin,5/para_t[1]] with para_t[1]=beta 
+     for long-pulse mode add proton pulse length */ 
+    if(proton_T<=0.0) {
+      ttmax = 5.0/para_t[1];
+      if(ttmax>tinmax) {ttmax=tinmax;}
+      tval=tinmin+(ttmax-tinmin)*rand01();
+      p_t = ikeda_carpenter_function_sp (para_t, tval);
+    }
+    else {
+      ttmax = proton_T+5.0/para_t[1];
+      if(ttmax>tinmax) {ttmax=tinmax;}
+      tval=tinmin+(ttmax-tinmin)*rand01();
+      p_t = ikeda_carpenter_function_lp (para_t, tval, proton_T);
+    }
+    p_t *= (ttmax-tinmin);
+  }
+  else {
+    printf("sample_t allows only values 0 or 1!\n");
+  }  
+
+  E = Eval*1000.0;  /* Convert Energy from Ev to meV */
+  t = tval*1e-6;      /* Convert time from mus to S */  
+  v = SE2V*sqrt(E);
+  /* Calculate components of velocity vector such that the neutron is within the focusing rectangle */
+  vz = v*cos(phi)*cos(theta);   /* Small angle approx. */
+  vy = v*sin(phi);
+  vx = v*cos(phi)*sin(theta);
+  /*
+  printf("para1=%f para_b=%f para_R=%f para_to=%f\n", para_t[0], para_t[1], para_t[2], para_t[3]);
+  */
+  p*=p_E*p_sa*p_t/mcget_ncount();
+  /* printf("Eval=%e tval=%e p_E=%e p_t=%e p_sa=%e p=%e\n", Eval, tval, p_E, p_t, p_sa, p); */
+%}
+FINALLY
+%{
+  
+%}
+
+MCDISPLAY
+%{
+  double x1,y1,x2,y2;
+  x1=-width/2.0;y1=-height/2.0;x2=width/2.0;y2=height/2.0;
+  multiline(4,(double)x1,(double)y1,0.0,(double)x1,(double)y2,0.0,(double)x2,(double)y2,0.0,(double)x2,(double)y1,0.0,(double)x1,(double)y1,0.0);
+%}
+
+END

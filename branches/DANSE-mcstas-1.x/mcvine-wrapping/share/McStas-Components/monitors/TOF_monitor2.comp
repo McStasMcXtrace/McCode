@@ -1,0 +1,118 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: TOF_monitor2
+*
+* %I
+* Written by:  KN, M. Hagan
+* Date: August 1998
+* Version: $Revision: 494 $
+* Origin: McStas release
+* Modified by: GG, November 22, 2000 Oak Ridge National Laboratory
+*
+* Rectangular Time-of-flight monitor.
+*
+* %D
+* Rectangular Time-of-flight monitor.
+* 
+* %P
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* tmin:     lower t bound of detector (s)
+* tmax:     upper t bound of detector (s)
+* nchan:    number of time bins (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* TOF_N:    Array of neutron counts
+* TOF_p:    Array of neutron weight counts
+* TOF_p2:   Array of second moments
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT TOF_monitor2
+DEFINITION PARAMETERS () 
+SETTING PARAMETERS (int nchan=100, xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, tmin=0.0, tmax=0.00005,char *filename="tof.dat")
+OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2) 
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    double *TOF_N;
+    double *TOF_p;
+    double *TOF_p2;
+  %}
+INITIALIZE
+  %{
+    int i;
+
+    TOF_N = (double *)malloc(nchan*sizeof(double));
+    TOF_p = (double *)malloc(nchan*sizeof(double));
+    TOF_p2 = (double *)malloc(nchan*sizeof(double));
+
+    for (i=0; i<nchan; i++)
+    {
+      TOF_N[i] = 0;
+      TOF_p[i] = 0;
+      TOF_p2[i] = 0;
+    }
+  %}
+TRACE
+  %{
+    int i;
+     double dt;
+     dt=(tmax-tmin)/nchan;
+    PROP_Z0;
+//    if (x>xmin && x<xmax && y>ymin && y<ymax && t>=tmin && t<=tmax)
+    if (x>xmin && x<xmax && y>ymin && y<ymax )
+    {
+    /* printf("dt %g\n",dt);*/
+      i = floor((t-tmin)/dt);              /* Bin number */
+      if(i >= nchan) i = nchan - 1;
+      if(i < 0)
+      {
+        //printf("FATAL ERROR: negative time-of-flight.\n");
+        //exit(1);
+	i = 0;
+      }
+      TOF_N[i]++;
+      TOF_p[i] += p;
+      TOF_p2[i] += p*p;
+      SCATTER;
+    }
+  %}
+SAVE
+  %{
+    double dt;
+     dt=(tmax-tmin)/nchan;
+    DETECTOR_OUT_1D(
+        "Time-of-flight monitor",
+        "Time-of-flight [\\gms]",
+        "Intensity",
+        "t", tmin*1.0e6, (tmin+nchan*(double)dt)*1.0e6, nchan,
+        &TOF_N[0],&TOF_p[0],&TOF_p2[0],
+        filename);
+  %}
+FINALLY
+  %{
+    free(TOF_N); free(TOF_p); free(TOF_p2);
+  %}
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END

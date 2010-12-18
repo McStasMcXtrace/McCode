@@ -1,0 +1,242 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: DiskChopper
+*
+* %I
+* Written by: Peter Willendrup
+* Date: March 9 2006
+* Version: $Revision: 1.9 $
+* Origin: Risoe
+* Release: McStas 1.11
+* Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
+* Kaspar Hewitt Klenoe (jan 2006), adjustments by Rob Bewey (march 2006)
+* 
+*
+* %D
+* Models a disc chopper with n identical slits, which are symmetrically disposed
+* on the disc. At time t=0, the centre of the first slit opening will be situated at the
+* vertical axis.
+*
+* Possibly, the slits can have central absorbing inserts ('beamstops'). 
+*
+* For more complicated gemometries, see component manual example of DiskChopper GROUPing.
+*
+* If the chopper is the 1st chopper of the instrument, it sets t time with phase
+* - Only relevant for when using continuous source modules.
+*
+* Example: DiskChopper(R=0.2, theta_0=10, omega=2500.0, n=3, t_0=0, IsFirst=1) First chopper
+*          DiskChopper(R=0.2, theta_0=10, omega=2500.0, n=3, t_0=0, IsFirst=0)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* theta_0: (deg)    Angular width of the slits.
+* h:       (m)      Slit height (if = 0, equal to R). Auto centering of beam at h/2.
+* R:       (m)      Radius of the disc
+* omega:   (rad/s)  Angular frequency of the Chopper
+*                   (algebraic sign defines the direction of rotation)
+* n:       (1)      Number of slits
+*
+* Optional parameters:
+* IsFirst: (0/1)    Set it to 1 for the first chopper position in a cw source
+*                   (it then spreads the neutron time distribution)
+* n_pulse: (1)      Number of pulses (Only if IsFirst)
+* j        (s)      Jitter in the phase
+* theta_1: (deg)    Angular width of optional beamstop in chopper windows
+* abs_out: (0/1)    Absorb neutrons hitting outside of chopper radius?
+* t_0:     (s)      Time 'delay'.
+* phi_0:   (deg)    Angular 'delay' (suppresses t_0)
+* w:       (m)      'width' of slits for compatibility with Chopper.comp
+* wc:      (m)      'width' of beamstops for compatibility with Chopper.comp
+* compat:  (1)      Chopper placement compatible with original Chopper.comp
+*
+* %D
+* Example values: theta_0=10 h=0.2 R=0.5 omega=2500 n=3 t_0=0 n_pulse=1 j=0 wc=0
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT DiskChopper
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (theta_0, R, h=0, omega, n=3, j=0, theta_1=0, t_0=0, IsFirst=0, n_pulse=1, abs_out=1, phi_0=0, w=0, wc=0, compat=0)
+OUTPUT PARAMETERS (Tg, T, To, Tc, delta_y, height)
+STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
+
+DECLARE
+ %{
+  double Tg,To,Tc,delta_y,height;
+ %}
+
+INITIALIZE
+ %{
+      /* If slit height 'unset', assume full opening */
+      if (h == 0) {
+	height=R;
+      } else {
+	height=h;
+      }
+      /* Compatibility with old Chopper.comp interface */
+      if (w) {
+	theta_0=2*RAD2DEG*asin((w/2)/R);
+      }
+      if (wc) {
+	theta_1=2*RAD2DEG*asin((wc/2)/R);
+      }
+      if (compat) {
+	delta_y = R;
+      } else {
+	delta_y = R-height/2;
+      }
+      
+      if (n<=0 || theta_0 < 0 || R <=0)
+      { fprintf(stderr,"DiskChopper: %s: n, theta_0 and R must be > 0\n", NAME_CURRENT_COMP);
+        exit(-1); }
+      if (n*theta_0 >= 360)
+      { fprintf(stderr,"DiskChopper: %s: n * theta_0 exceeds 2PI\n", NAME_CURRENT_COMP);
+        exit(-1); }
+      if (theta_1 >= theta_0)
+      { fprintf(stderr,"DiskChopper: %s: theta_1 must me lower than theta_0\n", NAME_CURRENT_COMP);
+        exit(-1); }
+      if (h && h>R) {
+	fprintf(stderr,"DiskChopper: %s: h must be < R\n", NAME_CURRENT_COMP);
+        exit(-1); }
+      if (IsFirst && n_pulse <=0)
+      { fprintf(stderr,"DiskChopper: %s: wrong First chopper pulse number (n_pulse)\n", NAME_CURRENT_COMP);
+        exit(-1); }
+      if (!omega) {
+	fprintf(stderr,"DiskChopper: %s WARNING: chopper frequency is 0!\n", NAME_CURRENT_COMP);
+	omega = 1e-15; /* We should actually use machine epsilon here... */
+      }
+      if (!(abs_out==1)) {
+	fprintf(stderr,"DiskChopper: %s WARNING: chopper will NOT absorb neutrons outside radius R\n", NAME_CURRENT_COMP);
+	abs_out=0;
+      }
+      if (IsFirst && theta_1) {
+	fprintf(stderr,"DiskChopper: %s WARNING: Options IsFirst and beamstops not compatible. Beamstops removed.\n", NAME_CURRENT_COMP);
+	theta_1=0;
+      }
+      
+      theta_0*=DEG2RAD;
+      theta_1*=DEG2RAD;
+
+      
+      /* Calulate t_0 from phi_0 and vice versa, 'direction' moderated by sign of omega */
+      t_0 *=omega/fabs(omega);
+      if (phi_0) {
+	if (t_0) {
+	  fprintf(stderr,"DiskChopper: %s WARNING: t_0 AND phi_0 specified. Using phi_0 setting\n", NAME_CURRENT_COMP);  
+	}
+	phi_0*=DEG2RAD;
+	/* 'Delay' should always be a delay, taking rotation direction into account: */
+	t_0=omega*phi_0/(omega*omega);
+      } else {
+	phi_0=t_0*omega;
+      } 
+      
+      /* Time from opening of slit to next opening of slit */
+      Tg=2*PI/fabs(omega)/n;
+      
+      /* How long can neutrons pass the Chopper at a single point */
+      To=theta_0/fabs(omega);
+      
+      /* How long are neutrons absorbed by beamstop in chopper windows? */
+      Tc=theta_1/fabs(omega);
+ %}
+
+TRACE
+ %{
+    double toff;
+    double yprime;
+
+    yprime = y+delta_y;
+    PROP_Z0;
+    
+    /* Is neutron outside the vertical slit range and should we absorb? */
+    if ((x*x+yprime*yprime)>R*R && abs_out==1) {
+      ABSORB;
+    }
+    /* Does neutron hit inner solid part of chopper in case of h!=R? */
+    if ((x*x+yprime*yprime)<(R-height)*(R-height)) {
+      ABSORB;
+    }
+    
+    
+    if (IsFirst)
+      {
+	t=atan2(x,yprime)/omega + To*randpm1()/2.0 - t_0 + j*randnorm() + floor(n_pulse*rand01())*Tg;
+	p*=n*theta_0/2/PI;
+      }
+    else 
+      {
+	toff=fabs(t-atan2(x,yprime)/omega - t_0 + j*randnorm());
+	/* does neutron hit beamstop? */
+	if (fmod(toff+Tc/2.0,Tg)<Tc) ABSORB;
+	/* does neutron hit outside slit? */
+	if (fmod(toff+To/2.0,Tg)>To) ABSORB; 
+      }
+    SCATTER;
+    
+ %}
+
+MCDISPLAY
+%{
+  
+  int j,k,l,kmin,kmax;
+  /* Arrays for storing geometry of slit/beamstop */
+  double X[5];
+  double Y[5];
+  double thetas[4];
+  double Radius;
+  double theta;
+  magnify("xy");
+  circle("xy", 0, -delta_y, 0, R);
+  /* Drawing the slit(s)/internal beamstop(s): */
+  
+  for (j=0; j<n; j++) {
+    /* Angular start/end of slit */
+    thetas[0] = j*(theta_0+(Tg-To)*omega) - theta_0/2 + phi_0;
+    thetas[3] = j*(theta_0+(Tg-To)*omega) + theta_0/2 + phi_0;
+    /* Angular start/end of beamstop (possibly identical) */
+    thetas[1] = thetas[0] + (theta_0 - theta_1)/2;
+    thetas[2] = thetas[1] + theta_1;
+    /* Draw two 'multilines' from start of slit to start of beamstop
+       and end of beamstop to end of slit. */
+    for (l=0; l<2; l++) {
+      for (k=0; k<5; k++) {
+	if (k==0) {
+	  theta = thetas[2*l];
+	  if (l==1 && (!theta_1)) {
+	    Radius = R-height;
+	  } else {
+	    Radius = R;
+	  }
+	} else if (k==4) {
+	  theta = thetas[2*l+1];
+	  if (l==0 && (!theta_1)) {
+	    Radius = R-height;
+	  } else {
+	    Radius = R;
+	  }
+	} else {
+	  theta = thetas[2*l]+(k-1)*(thetas[2*l+1]-thetas[2*l])/2;
+	  Radius = R-height;
+	}
+	X[k] = Radius * sin(theta);
+	Y[k] = Radius * cos(theta)-delta_y;
+      }
+      multiline(5, 
+		(double)X[0], (double)Y[0], (double)0,
+		(double)X[1], (double)Y[1], (double)0,
+		(double)X[2], (double)Y[2], (double)0,
+		(double)X[3], (double)Y[3], (double)0,
+		(double)X[4], (double)Y[4], (double)0);
+    }
+  }
+%}
+
+END

@@ -1,0 +1,224 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package: Mosaic_simple.comp
+*         Copyright 1999-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Mosaic_simple
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: 1999
+* Version: $Revision: 494 $
+* Origin: McStas 1.5 (Obsolete)
+*
+* Mosaic crystal, possibly off-cut.
+*
+* %D
+* Flat, infinitely thin mosaic crystal, useful as a monochromator or analyzer.
+* The mosaic is isotropic gaussian, with a given FWHM perpendicular to the
+* scattering vector.
+* For an unrotated monochromator component, the crystal plane lies in the y-z
+* plane (ie. parallel to the beam).
+* OBSOLETE: rather use optics/Mosaic_anisotropic
+*
+* Example: Mosaic_simple(zmin=-0.1, zmax=0.1, ymin=-0.1, ymax=0.1,
+*           mosaic=30, r0=0.7, Qx=1.8734, Qy=0, Qz=0)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* zmin:    Lower z-bound of crystal (m)
+* zmax:    Upper z-bound of crystal (m)
+* ymin:    Lower y-bound of crystal (m)
+* ymax:    Upper y-bound of crystal (m)
+* mosaic:  Mosaic (FWHM) (arc minutes)
+* r0:      Maximum reflectivity (1)
+* Qx:      X coordinate of scattering vector (AA-1)
+* Qy:      Y coordinate of scattering vector (AA-1)
+* Qz:      Z coordinate of scattering vector (AA-1)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Mosaic_simple
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (zmin=-0.1, zmax=0.1, ymin=-0.1, ymax=0.1,
+           mosaic=30, r0=0.7, Qx=1.8734, Qy=0, Qz=0)
+OUTPUT PARAMETERS (Q,mos_rms,q0ux, q0uy, q0uz)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+SHARE
+%{
+#ifndef GAUSS
+  /* Define these arrays only once for all instances. */
+  /* Values for Gauss quadrature. Taken from Brice Carnahan, H. A. Luther and
+     James O Wilkes, "Applied numerical methods", Wiley, 1996, page 103. */
+  double Gauss_X[] = {-0.987992518020485, 0.937273392400706, 0.848206583410427,
+                0.724417731360170, 0.570972172608539, 0.394151347077563,
+                0.201194093997435, 0, 0.201194093997435,
+                0.394151347077563, 0.570972172608539, 0.724417731360170,
+                0.848206583410427, 0.937273392400706, 0.987992518020485};
+  double Gauss_W[] = {0.030753241996117, 0.070366047488108, 0.107159220467172,
+                0.139570677926154, 0.166269205816994, 0.186161000115562,
+                0.198431485327111, 0.202578241925561, 0.198431485327111,
+                0.186161000115562, 0.166269205816994, 0.139570677926154,
+                0.107159220467172, 0.070366047488108, 0.030753241996117};
+  
+
+#define GAUSS(x,mean,rms) \
+  (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)))
+#endif
+%}
+
+DECLARE
+%{
+  double Q;                     /* Length of scattering vector */
+  double q0ux, q0uy, q0uz;      /* Unit vector parrallel to nominal Q */
+  double mos_rms;               /* root-mean-square of mosaic, in radians */
+
+%}
+
+INITIALIZE
+%{
+  
+  Q = sqrt(Qx*Qx + Qy*Qy + Qz*Qz);
+  q0ux = Qx/Q;
+  q0uy = Qy/Q;
+  q0uz = Qz/Q;
+  mos_rms = MIN2RAD*mosaic/sqrt(8*log(2));
+%}
+
+TRACE
+%{
+  double y1,z1,t1,dt,kix,kiy,kiz,ratio,order,q0x,q0y,q0z,k,q0,theta;
+  double bx,by,bz,kux,kuy,kuz,ax,ay,az,phi;
+  double cos_2theta,k_sin_2theta,cos_phi,sin_phi,kfx,kfy,kfz,q_x,q_y,q_z;
+  double delta,p_reflect,total,c1x,c1y,c1z,width,tmp,ds_factor;
+  int i;
+
+  if(vx != 0.0 && (dt = -x/vx) >= 0.0)
+  {                             /* Moving towards crystal? */
+    y1 = y + vy*dt;             /* Propagate to crystal plane */
+    z1 = z + vz*dt;
+    t1 = t + dt;
+    if (z1>zmin && z1<zmax && y1>ymin && y1<ymax)
+    {                           /* Intersect the crystal? */
+      kix = V2K*vx;             /* Initial wave vector */
+      kiy = V2K*vy;
+      kiz = V2K*vz;
+      /* Get reflection order and corresponding nominal scattering vector q0
+         of correct length and direction. Only the order with the closest
+         scattering vector is considered */
+      ratio = -2*(kix*Qx + kiy*Qy + kiz*Qz)/(Q*Q);
+      order = floor(ratio + .5);
+      if(order == 0.0)
+        order = ratio < 0 ? -1 : 1;
+      /* Order will be negative when the neutron enters from the back, in
+         which case the direction of Q0 is flipped. */
+      if(order < 0)
+        order = -order;
+      /* Make sure the order is small enough to allow Bragg scattering at the
+         given neutron wavelength */
+      k = sqrt(kix*kix + kiy*kiy + kiz*kiz);
+      kux = kix/k;              /* Unit vector along ki */
+      kuy = kiy/k;
+      kuz = kiz/k;
+      if(order > 2*k/Q)
+        order--;
+      if(order > 0)             /* Bragg scattering possible? */
+      {
+        q0x = order*Qx;
+        q0y = order*Qy;
+        q0z = order*Qz;
+        if(ratio < 0)
+        {
+          q0x = -q0x; q0y = -q0y; q0z = -q0z;
+        }
+        q0 = order*Q;
+        theta = asin(q0/(2*k)); /* Actual bragg angle */
+        /* Make MC choice: reflect or transmit? */
+        delta = asin(-(kux*q0x + kuy*q0y + kuz*q0z)/q0) - theta;
+        p_reflect = r0*exp(-delta*delta/(2*mos_rms*mos_rms));
+        if(rand01() < p_reflect)
+        {                       /* Reflect */
+          cos_2theta = cos(2*theta);
+          k_sin_2theta = k*sin(2*theta);
+          /* Get unit normal to plane containing ki and most probable kf */
+          vec_prod(bx, by, bz, kix, kiy, kiz, q0x, q0y, q0z);
+          NORM(bx,by,bz);
+          bx *= k_sin_2theta;
+          by *= k_sin_2theta;
+          bz *= k_sin_2theta;
+          /* Get unit vector normal to ki and b */
+          vec_prod(ax, ay, az, bx, by, bz, kux, kuy, kuz);
+          /* Compute the total scattering probability at this ki */
+          total = 0;
+          /* Choose integration limits, using Gaussian tail cut-off at 5 times
+	   * sigma. The radius of the Debye-Scherrer cone is smaller by a
+	   * factor 1/cos(theta) than the radius of the (partial) sphere
+	   * describing the possible orientations of Q due to mosaicity, so we
+	   * must use an integration width 1/cos(theta) greater than 5 times
+	   * the mosaic. */
+          ds_factor = 1/cos(theta);
+          width = 5*mos_rms*ds_factor;
+          c1x = kix*(cos_2theta-1);
+          c1y = kiy*(cos_2theta-1);
+          c1z = kiz*(cos_2theta-1);
+          for(i = 0; i < (sizeof(Gauss_X)/sizeof(double)); i++)
+          {
+            phi = width*Gauss_X[i];
+            cos_phi = cos(phi);
+            sin_phi = sin(phi);
+            q_x = c1x + cos_phi*ax + sin_phi*bx;
+            q_y = c1y + cos_phi*ay + sin_phi*by;
+            q_z = c1z + cos_phi*az + sin_phi*bz;
+            tmp = (q_x*q0x + q_y*q0y + q_z*q0z)/
+                  (sqrt(q_x*q_x + q_y*q_y + q_z*q_z)*q0);
+            delta = tmp < 1 ? acos(tmp) : 0; /* Avoid rounding errors */
+            p_reflect = GAUSS(delta,0,mos_rms);
+            total += Gauss_W[i]*p_reflect;
+          }
+          total *= width;
+          /* Choose point on Debye-Scherrer cone. Sample from a Gaussian of
+	   * width 1/cos(theta) greater than the mosaic and correct for any
+	   * error by adjusting the neutron weight later. */
+          phi = ds_factor*mos_rms*randnorm();
+          /* Compute final wave vector kf and scattering vector q = ki - kf */
+          cos_phi = cos(phi);
+          sin_phi = sin(phi);
+          q_x = c1x + cos_phi*ax + sin_phi*bx;
+          q_y = c1y + cos_phi*ay + sin_phi*by;
+          q_z = c1z + cos_phi*az + sin_phi*bz;
+          tmp = (q_x*q0x + q_y*q0y + q_z*q0z)/
+                (sqrt(q_x*q_x + q_y*q_y + q_z*q_z)*q0);
+          delta = tmp < 1 ? acos(tmp) : 0; /* Avoid rounding errors */
+          p_reflect = GAUSS(delta,0,mos_rms);
+          x = 0;
+          y = y1;
+          z = z1;
+          t = t1;
+          vx = K2V*(kix+q_x);
+          vy = K2V*(kiy+q_y);
+          vz = K2V*(kiz+q_z);
+          p *= p_reflect/(total*GAUSS(phi,0,ds_factor*mos_rms));
+          SCATTER;
+        } /* End MC choice to reflect or transmit neutron */
+      } /* End bragg scattering possible */
+    } /* End intersect the crystal */
+  } /* End neutron moving towards crystal */
+%}
+
+MCDISPLAY
+%{
+  double len = 0.5*sqrt((ymax-ymin)*(ymax-ymin) + (zmax-zmin)*(zmax-zmin));
+  magnify("zy");
+  multiline(5, 0.0, (double)ymin, (double)zmin,
+               0.0, (double)ymax, (double)zmin,
+               0.0, (double)ymax, (double)zmax,
+               0.0, (double)ymin, (double)zmax,
+               0.0, (double)ymin, (double)zmin);
+  line(0, 0, 0,                 /* Draw Q0 vector */
+       (double)Qx/Q*len, (double)Qy/Q*len, (double)Qz/Q*len);
+%}
+
+END

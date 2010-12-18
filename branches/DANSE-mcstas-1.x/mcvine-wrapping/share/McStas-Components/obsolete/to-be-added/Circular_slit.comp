@@ -1,0 +1,41 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package: Circular_slit.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: August 1998
+* Version: $Revision: 494 $
+* Origin: McStas 1.5 (Obsolete)
+*
+* Circular slit.
+* OBSOLETE: rather use optics/Slit
+*
+* %P
+* INPUT PARAMETERS
+*
+* radius: Radius of slit in the z=0 plane, centered at Origo (m)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Circular_slit
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius=0.01)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+TRACE
+%{
+  PROP_Z0;
+  if(x*x + y*y > radius*radius)
+    ABSORB;
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  circle("xy", 0, 0, 0, radius);
+%}
+
+END

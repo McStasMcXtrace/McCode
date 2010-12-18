@@ -1,0 +1,781 @@
+/*****************************************************************************
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: PowderN
+*
+* %I
+* Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
+* Date: 4.2.98
+* Version: $Revision: 1.35 $
+* Origin: McStas release
+* Modified by: KL, KN 20.03.98   (rewrite)
+* Modified by: KL,    28.09.01   (two lines)
+* Modified by: KL,    22.05.03   (background)
+* Modified by: KL, PW 01.05.05   (N lines)
+* Modified by: PW, LC 04.10.05   (Merge with Chapon Powder_multi)
+* Modified by: PW, KL 05.06.07   (Concentricity)
+*
+* General powder sample (N lines, single scattering, incoherent scattering)
+*
+* %D
+* General powder sample with
+*         many scattering vectors
+*         possibility for intrinsic line broadening
+*         incoherent backgorund ratio is specified by user.
+*         No multiple scattering. No secondary extinction.
+*
+* Based on Powder1/Powder2/Single_crystal.
+* Geometry is a powder filled cylinder or a box.
+* Incoherent scattering is only provided here to account for a background
+* The efficient is highly improved when restricting the vertical scattering
+* range on the Debye-Scherrer cone (with 'd_phi').
+* The unit cell volume Vc may also be computed when giving the density,
+* the atomic/molecular weight and the number of atoms per unit cell.
+*
+* Example: PowderN(reflections = "c60.lau", d_phi = 15 , radius = 0.01,
+*   yheight = 0.05, Vc = 1076.89, sigma_abs = 0, Delta_d=0, DW=1,
+*   format=Crystallographica)
+*
+* <b>Powder definition and file format</b>
+*
+* Powder structure is specified with an ascii data file 'reflections'.
+* The powder data are free-text column based files.
+* Lines begining by '#' are read as comments (ignored) but they may contain
+* the following keywords (in the header):
+*   #Vc           <value of unit cell volume Vc [Angs^3]>
+*   #sigma_abs    <value of Absorption cross section [barns]>
+*   #sigma_inc    <value of Incoherent cross section [barns]>
+*   #Debye_Waller <value of Debye-Waller factor DW>
+*   #Delta_d/d    <value of Detla_d/d width for all lines>
+* These values are not read if entered as component parameters (Vc=...)
+*
+* The signification of the columns in the numerical block may be
+* set using the 'format' parameter. Built-in formats are:
+*   format=Crystallographica
+*   format=Fullprof
+*   format=Lazy
+* and these specifications it is important NOT to use quotes, as shown.
+*
+* An other possibility to define other formats is to set directly
+* the signification of the columns as a vector of indexes in the order
+*   format={j,d,F2,DW,Delta_d/d,1/2d,q,F}
+* Signification of the symbols is given below. Indexes start at 1.
+* Indexes with zero means that the column is not present, so that:
+*   Crystallographica={ 4,5,7,0,0,0,0,0 }
+*   Fullprof         ={ 4,0,8,0,0,5,0,0 }
+*   Lazy             ={17,6,0,0,0,0,0,13}
+* Here again, NO quotes should be around the 'format' value.
+*
+* At last, the format may be overridden by direct definition of the
+* column indexes in the file itself by using the following keywords
+* in the header (e.g. '#column_j 4'):
+*   #column_j     <index of the multiplicity 'j' column>
+*   #column_d     <index of the d-spacing 'd' column [Angs]>
+*   #column_F2    <index of the squared str. factor '|F|^2' column [b]>
+*   #column_F     <index of the structure factor norm '|F|' column>
+*   #column_DW    <index of the Debye-Waller factor 'DW' column>
+*   #column_Dd    <index of the relative line width Delta_d/d 'Dd' column>
+*   #column_inv2d <index of the 1/2d=sin(theta)/lambda 'inv2d' column>
+*   #column_q     <index of the scattering wavevector 'q' column [Angs-1]>
+*
+* %P
+* INPUT PARAMETERS
+*
+* d_phi:    Angle corresponding to the vertical angular range
+*             to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
+* radius:   Outer radius of sample in (x,z) plane [m]
+* radius_i:  Radius of optional inner hollow [m]
+* yheight:  Height of sample y direction [m]
+* Vc:       Volume of unit cell=nb atoms per cell/density of atoms [AA^3]
+* sigma_abs:Absorption cross section per unit cell at 2200 m/s [barns]
+* sigma_inc:Incoherent cross section per unit cell [barns]
+* reflections: Input file for reflections.
+*                Use only incoherent scattering if NULL or "" [string]
+* format:   name of the format, or list of column indexes
+              (see Description). [no quotes]
+*
+* Optional parameters:
+* xwidth:  horiz. dimension of sample, as a width [m]
+* zthick:  thickness of sample [m]
+* xwidth_i: horiz. dimension of optional inner hollow when in cubic geometry [m]
+* yheight_i: vertical dimension of optional innher hollow in cubic and cyl geometry. If zero assumed == h. [m]
+* zthick_i:  thickness of optional innner hollow when in cubic geometry [m]
+* h:       the same as yheight [m]
+* Delta_d:  global relative Delta_d/d spreading when the 'w' column
+*             is not available. Use 0 if ideal. [Angs]
+* DW:       global Debey-Waller factor when the 'DW' column
+*             is not available. Use 1 if included in F2 [1]
+* frac:     Fraction of incoherently scattered neutron rays [1]
+* tfrac:    Fraction of transmitted (only attenuated) neutron rays [1]
+* pack:     Packing factor [1]
+* weight:   atomic/molecular weight of material [g/mol]
+* density:  density of material. V_rho=density/weight/1e24*N_A. [g/cm^3]
+* nb_atoms: number of atoms per unit cell [1]
+* barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2 (barns=1 for laz, barns=0 for lau type files).[1]
+* concentric: Flag to indicate if sample is 'concentric' [1] 
+*
+* %L
+* See also: Powder1, Powder2 and PowderN
+* %L
+* See <a href="http://icsd.ill.fr">ICSD</a> Inorganic Crystal Structure Database
+* %L
+* Cross sections for single elements: http://www.ncnr.nist.gov/resources/n-lengths/
+* %L
+* Cross sections for compounds:       http://www.ncnr.nist.gov/resources/sldcalc.html
+* %L
+* Fullprof powder refinement:         http://www-llb.cea.fr/fullweb/fp2k/fp2k.htm
+* %L
+* Web Elements                        http://www.webelements.com/
+*
+* %E
+*****************************************************************************/
+DEFINE COMPONENT PowderN
+DEFINITION PARAMETERS (string reflections)
+SETTING PARAMETERS (d_phi=0, radius=0.01, radius_i=0, yheight=0.05,
+		    pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, frac=0, tfrac=0.1,
+		    xwidth=0, zthick=0, xwidth_i=0, yheight_i=0, zthick_i=0, h=0, DW=0, nb_atoms=1, 
+		    concentric=0, density=0, weight=0, barns=1,
+		    int format = 0)
+OUTPUT PARAMETERS (line_info, Nq, my_s_v2, 
+  my_s_v2_sum, my_a_v, my_inc, q_v, w_v, isrect, columns)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+SHARE
+%{
+// ----------- added by Jiao Lin --------
+// ----------  header for SHARE ----------
+// ----------- added by Jiao Lin --------
+
+  /* used for reading data table from file */
+  %include "read_table-lib"
+/* Declare structures and functions only once in each instrument. */
+#ifndef POWDERN_DECL
+#define POWDERN_DECL
+/* format definitions in the order {j d F2 DW Dd inv2d q F} */
+#ifndef XTALDATAFORMATS
+#define XTALDATAFORMATS
+     enum XtalDataFormat{
+       Undefined  = 0,
+       Crystallographica = 1,
+       Fullprof = 2,
+       Lazy = 3
+     };
+
+  const int XtalDataFormat_Undefined[8] =   { 0,0,0,0,0,0,0,0 };
+  const int XtalDataFormat_Crystallographica[8] = { 4,5,7,0,0,0,0,0 };
+  const int XtalDataFormat_Fullprof[8] =    { 4,0,8,0,0,5,0,0 };
+  const int XtalDataFormat_Lazy[8] =        {17,6,0,0,0,0,0,13 };
+
+  const int * const XtalData_formats[4] = { 
+    XtalDataFormat_Undefined,
+    XtalDataFormat_Crystallographica, 
+    XtalDataFormat_Fullprof,
+    XtalDataFormat_Lazy
+  };
+#endif
+
+    struct line_data
+    {
+      double F2;                  /* Value of structure factor */
+      double q;                   /* Qvector */
+      int j;                      /* Multiplicity */
+      double DWfactor;            /* Debye-Waller factor */
+      double w;                   /* Intrinsic line width */
+    };
+
+  struct line_info_struct
+    {
+      struct line_data *list;     /* Reflection array */
+      int  count;                  /* Number of reflections */
+      double Dd;
+      double DWfactor;
+      double V_0;
+      double rho;
+      double at_weight;
+      double at_nb;
+      double sigma_a;
+      double sigma_i;
+      char   compname[256];
+      int    column_order[8]; /* column signification */
+    };
+
+#endif /* !POWDERN_DECL */
+
+// ----------- added by Jiao Lin --------
+// ----------  implementation for SHARE ----------
+// ----------- added by Jiao Lin --------
+
+  int read_line_data(char *SC_file, struct line_info_struct *info)
+  {
+    struct line_data *list = NULL;
+    int    size = 0;
+    t_Table sTable; /* sample data table structure from SC_file */
+    int    i=0;
+    int    mult_count  =0;
+    char   flag=0;
+    double q_count=0, j_count=0, F2_count=0;
+    char **parsing;
+    int    list_count=0;
+
+    if (!SC_file || !strlen(SC_file) || !strcmp(SC_file, "NULL")) {
+      printf("PowderN: %s: Using incoherent elastic scattering only\n",
+          info->compname);
+      info->count = 0;
+      return(0);
+    }
+    Table_Read(&sTable, SC_file, 1); /* read 1st block data from SC_file into sTable*/
+
+    /* parsing of header */
+    parsing = Table_ParseHeader(sTable.header,
+      "Vc","V_0",
+      "sigma_abs","sigma_a ",
+      "sigma_inc","sigma_i ",
+      "column_j",
+      "column_d",
+      "column_F2",
+      "column_DW",
+      "column_Dd",
+      "column_inv2d", "column_1/2d", "column_sintheta/lambda",
+      "column_q", /* 14 */
+      "DW", "Debye_Waller",
+      "Detla_d/d",
+      "column_F ",
+      "V_rho",
+      "density",
+      "weight",
+      "nb_atoms",
+      NULL);
+
+    if (parsing) {
+      if (parsing[0] && !info->V_0)     info->V_0    =atof(parsing[0]);
+      if (parsing[1] && !info->V_0)     info->V_0    =atof(parsing[1]);
+      if (parsing[2] && !info->sigma_a) info->sigma_a=atof(parsing[2]);
+      if (parsing[3] && !info->sigma_a) info->sigma_a=atof(parsing[3]);
+      if (parsing[4] && !info->sigma_i) info->sigma_i=atof(parsing[4]);
+      if (parsing[5] && !info->sigma_i) info->sigma_i=atof(parsing[5]);
+      if (parsing[6])                   info->column_order[0]=atoi(parsing[6]);
+      if (parsing[7])                   info->column_order[1]=atoi(parsing[7]);
+      if (parsing[8])                   info->column_order[2]=atoi(parsing[8]);
+      if (parsing[9])                   info->column_order[3]=atoi(parsing[9]);
+      if (parsing[10])                  info->column_order[4]=atoi(parsing[10]);
+      if (parsing[11])                  info->column_order[5]=atoi(parsing[11]);
+      if (parsing[12])                  info->column_order[5]=atoi(parsing[12]);
+      if (parsing[13])                  info->column_order[5]=atoi(parsing[13]);
+      if (parsing[14])                  info->column_order[6]=atoi(parsing[14]);
+      if (parsing[15] && info->DWfactor<=0)    info->DWfactor=atof(parsing[15]);
+      if (parsing[16] && info->DWfactor<=0)    info->DWfactor=atof(parsing[16]);
+      if (parsing[17] && info->Dd <0)          info->Dd      =atof(parsing[17]);
+      if (parsing[18])                  info->column_order[7]=atoi(parsing[18]);
+      if (parsing[19] && !info->V_0)    info->V_0    =1/atof(parsing[19]);
+      if (parsing[20] && !info->rho)    info->rho    =atof(parsing[20]);
+      if (parsing[21] && !info->at_weight)     info->at_weight    =atof(parsing[21]);
+      if (parsing[22] && info->at_nb <= 1)  info->at_nb    =atof(parsing[22]);
+      for (i=0; i<=22; i++) if (parsing[i]) free(parsing[i]);
+      free(parsing);
+    }
+
+    if (!sTable.rows)
+      exit(fprintf(stderr, "PowderN: %s: Error: The number of rows in %s "
+       "should be at least %d\n", info->compname, SC_file, 1));
+    else size = sTable.rows;
+    Table_Info(sTable);
+    printf("PowderN: %s: Reading %d rows from %s\n",
+          info->compname, size, SC_file);
+    /* allocate line_data array */
+    list = (struct line_data*)malloc(size*sizeof(struct line_data));
+
+    for (i=0; i<size; i++)
+    {
+      /*      printf("Reading in line %i\n",i);*/
+      double j=0, d=0, w=0, q=0, DWfactor=0, F2=0;
+      int index;
+
+      if (info->Dd >= 0)      w         = info->Dd;
+      if (info->DWfactor > 0) DWfactor  = info->DWfactor;
+
+      /* get data from table using columns {j d F2 DW Dd inv2d q F} */
+      /* column indexes start at 1, thus need to substract 1 */
+      if (info->column_order[0] >0)
+        j = Table_Index(sTable, i, info->column_order[0]-1);
+      if (info->column_order[1] >0)
+        d = Table_Index(sTable, i, info->column_order[1]-1);
+      if (info->column_order[2] >0)
+        F2 = Table_Index(sTable, i, info->column_order[2]-1);
+      if (info->column_order[3] >0)
+        DWfactor = Table_Index(sTable, i, info->column_order[3]-1);
+      if (info->column_order[4] >0)
+        w = Table_Index(sTable, i, info->column_order[4]-1);
+      if (info->column_order[5] >0)
+        { d = Table_Index(sTable, i, info->column_order[5]-1);
+          d = (d > 0? 1/d/2 : 0); }
+      if (info->column_order[6] >0)
+        { q = Table_Index(sTable, i, info->column_order[6]-1);
+          d = (q > 0 ? 2*PI/q : 0); }
+      if (info->column_order[7] >0  && !F2)
+        { F2 = Table_Index(sTable, i, info->column_order[7]-1); F2 *= F2; }
+
+      /* assign and check values */
+      j = (j > 0 ? j : 0);
+      q = (d > 0 ? 2*PI/d : 0); /* this is q */
+      DWfactor = (DWfactor > 0 ? DWfactor : 1);
+      w = (w>0 ? w : 0); /* this is q and d relative spreading */
+      F2 = (F2 >= 0 ? F2 : 0);
+      if (j == 0 || q == 0) {
+        printf("PowderN: %s: line %i has invalid definition\n"
+               "         (mult=0 or q=0 or d=0)\n", info->compname, i);
+        continue;
+      }
+      list[list_count].j = j;
+      list[list_count].q = q;
+      list[list_count].DWfactor = DWfactor;
+      list[list_count].w = w;
+      list[list_count].F2= F2;
+
+      /* adjust multiplicity if j-column + multiple d-spacing lines */
+      /* if  d = previous d, increase line duplication index */
+      if (!q_count)     q_count = q;
+      if (!j_count)     j_count = j;
+      if (!F2_count)     F2_count = F2;
+      if (fabs(q_count-q) < 0.0001*fabs(q)
+       && fabs(F2_count-F2) < 0.0001*fabs(F2) && j_count == j) {
+       mult_count++; flag=0; }
+      else flag=1;
+      if (i == size-1) flag=1;
+      /* else if d != previous d : just passed equivalent lines */
+      if (flag) {
+        if (i == size-1) list_count++;
+      /*   if duplication index == previous multiplicity */
+      /*      set back multiplicity of previous lines to 1 */
+        if (mult_count == list[list_count-1].j
+        || (mult_count == list[list_count].j && i == size-1)) {
+          printf("PowderN: %s: Set multiplicity to 1 for lines [%i:%i]\n"
+                  "         (d-spacing %g is duplicated %i times)\n",
+            info->compname, list_count-mult_count, list_count-1, list[list_count-1].q, mult_count);
+          for (index=list_count-mult_count; index<list_count; list[index++].j = 1);
+          mult_count   = 1;
+          q_count = q;
+          j_count = j;
+          F2_count = F2;
+        }
+        if (i == size-1) list_count--;
+        flag=0;
+      }
+      list_count++;
+    } /* end for */
+    printf("PowderN: %s: File %s done (%i valid lines).\n", info->compname, SC_file, list_count);
+    Table_Free(&sTable);
+    info->list  = list;
+    info->count = list_count;
+
+    return(list_count);
+  }
+
+%}
+
+DECLARE
+%{
+  struct line_info_struct line_info;
+  int Nq;
+  double my_s_v2_sum;
+  double my_a_v, my_inc;
+  double *w_v,*q_v, *my_s_v2;
+  char   isrect;
+  const int    *columns;
+  double XsectionFactor;
+%}
+INITIALIZE
+%{
+  Nq = 0;
+  isrect = 0;
+  columns = XtalData_formats[ format ];
+  int i;
+  struct line_data *L;
+  line_info.Dd       = Delta_d;
+  line_info.DWfactor = DW;
+  line_info.V_0      = Vc;
+  line_info.rho      = density;
+  line_info.at_weight= weight;
+  line_info.at_nb    = nb_atoms;
+  line_info.sigma_a  = sigma_abs;
+  line_info.sigma_i  = sigma_inc;
+  for (i=0; i< 8; i++) line_info.column_order[i] = columns[i];
+  strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
+  
+  if (!radius || !yheight) {
+    if (!xwidth || !yheight || !zthick) exit(fprintf(stderr,"PowderN: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+    else isrect=1; }
+  
+  if (!yheight_i) {
+    yheight_i = yheight;
+  }
+  
+  if ((isrect && ((zthick_i > zthick) || (xwidth_i > xwidth) || (yheight_i > yheight))) || (!isrect && (radius_i > radius) || (yheight_i > yheight))) {
+    exit(fprintf(stderr,"PowderN: %s: Inner hollow exeeds sample volume\n", NAME_CURRENT_COMP));
+  }
+  
+  if (frac + tfrac > 1) {
+    exit(fprintf(stderr,"PowderN: %s: You have requested an unmeaningful choice of the 'frac' and 'tfrac' parameters (sum is %g, exeeding 1)\n", 
+		 NAME_CURRENT_COMP, frac+tfrac));
+  } else if (frac + tfrac == 1) {
+    printf("PowderN %s WARNING: You have requested all neutrons be attenuated or incoherently scattered!\n", NAME_CURRENT_COMP);
+  }
+
+  if (concentric) {
+    printf("PowderN %s WARNING: Concentric mode - remember to include the 'opposite' copy of this component!\n", NAME_CURRENT_COMP);
+    if (tfrac == 0) {
+      printf("PowderN %s WARNING: Concentric mode and tfrac==0 !? Don't you want any transmitted neutrons?\n", NAME_CURRENT_COMP);
+    }
+  }
+  
+  i = read_line_data(reflections, &line_info);
+
+  if (!line_info.V_0 && line_info.at_nb > 0
+    && line_info.at_weight > 0 && line_info.rho > 0) {
+    /* molar volume [cm^3/mol] = weight [g/mol] / density [g/cm^3] */
+    /* atom density per Angs^3 = [mol/cm^3] * N_Avogadro *(1e-8)^3 */
+    line_info.V_0 = line_info.at_nb
+      /(line_info.rho/line_info.at_weight/1e24*6.02214199e23);
+  }
+
+  if (line_info.V_0 <= 0)
+    exit(fprintf(stderr,"PowderN: %s: density/unit cell volume is NULL (Vc)\n", NAME_CURRENT_COMP));
+
+  if (barns) { /* Factor 100 to convert from barns to fm^2 */
+    XsectionFactor = 100;
+  } else {
+    XsectionFactor = 1;
+  }
+  
+  if (i) {
+    L = line_info.list;
+
+    Nq  = line_info.count;
+    q_v = (double *)malloc(Nq*sizeof(double));
+    w_v = (double *)malloc(Nq*sizeof(double));
+    my_s_v2 = (double *)malloc(Nq*sizeof(double));
+    if (!q_v || !w_v || !my_s_v2)
+      exit(fprintf(stderr,"PowderN: %s: ERROR allocating memory (init)\n", NAME_CURRENT_COMP));
+    for(i=0; i<Nq; i++)
+    {
+      my_s_v2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
+                 /(line_info.V_0*line_info.V_0*V2K*V2K)
+                 *(L[i].j * L[i].F2 / L[i].q)*XsectionFactor;
+      /* Is not yet divided by v^2 */
+      /* Squires [3.103] */
+      my_s_v2_sum+=my_s_v2[i];
+      q_v[i] = L[i].q*K2V;
+      w_v[i] = L[i].w;
+    }
+  }
+
+  /* Is not yet divided by v */
+  my_a_v = pack*line_info.sigma_a/line_info.V_0*2200*100;   // Factor 100 to convert from barns to fm^2
+  my_inc = pack*line_info.sigma_i/line_info.V_0*100;   // Factor 100 to convert from barns to fm^2
+
+  printf("PowderN: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn]\n",
+    NAME_CURRENT_COMP, line_info.V_0, line_info.sigma_a, line_info.sigma_i);
+
+%}
+TRACE
+%{
+  double t0, t1, t2, t3, v, v1,l_full, l, l_1, dt, alpha0, alpha, theta, my_s, my_s_n;
+  double solid_angle, neutrontype;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z,pmul=1;
+  int    line;
+  char   intersect=0;
+  char   intersecti=0;
+
+  if (isrect) {
+    intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+    intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zthick_i);
+  } else {
+    intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
+    intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
+  }
+  
+  if(intersect && t3 >0)
+    {
+      
+      if (concentric) {
+	/* Set up for concentric case */
+	/* 'Remove' the backside of this comp */
+	if (!intersecti) {
+	  t1 = (t3 + t0) /2;
+	}
+	t2 = t1;
+	t3 = t1;
+	dt = -1.0*rand01(); /* In case of scattering we will scatter on 'forward' part of sample */
+      } else {
+	if (!intersecti) {
+	  t1 = (t3 + t0) /2;
+	  t2 = t1;
+	}
+	dt = randpm1(); /* Possibility to scatter at all points in line of sight */
+      }
+      
+      /* Neutron enters at t=t0. */
+      if(t0 < 0) t0=0; /* already in sample */
+      if(t1 < 0) t1=0; /* already in inner hollow */
+      if(t2 < 0) t2=0; /* already past inner hollow */
+      v = sqrt(vx*vx + vy*vy + vz*vz);
+      l_full = v * (t3 - t2 + t1 - t0);
+  	
+      if (t3 < 0) {
+	t3=0; /* Already past sample?! */
+	printf("PowderN %s Warning: Neutron has already passed us? (Skipped)\n", NAME_CURRENT_COMP);
+      } else {
+	if (dt<0) { /* Calculate scattering point position */
+	  dt = fabs(dt)*(t1 - t0); /* 'Forward' part */
+	} else {
+	  dt = dt * (t3 - t2) + (t2-t0) ; /* Possibly also 'backside' part */
+	}
+	
+	my_s = my_s_v2_sum/(v*v)+my_inc;
+	/* Total attenuation from scattering */
+	
+	neutrontype = rand01();
+	/* How to handle this one? Transmit (1) / Incoherent (2) / Coherent (3) ? */
+	if (neutrontype < tfrac) {
+	  neutrontype = 1; 
+	  l = l_full; /* Passing through, full length */
+	  PROP_DT(t3); 
+	} else if (neutrontype >= tfrac && neutrontype < (tfrac + frac)) {
+	  neutrontype = 2;
+	  l = v*dt;       /* Penetration in sample */
+	  PROP_DT(dt+t0); /* Point of scattering */
+	  SCATTER;
+	} else if (neutrontype >= tfrac + frac) {
+	  neutrontype = 3;
+	  l = v*dt;       /* Penetration in sample */
+	  PROP_DT(dt+t0); /* Point of scattering */
+	  SCATTER;
+	} else {
+	  exit(fprintf(stderr,"PowderN %s: DEAD - this shouldn't happen!\n", NAME_CURRENT_COMP));
+	}
+	
+	if (neutrontype == 3)
+	  { /* Make coherent scattering event */
+	    
+	    if (line_info.count > 0) {
+	      /* choose line */
+	      if (Nq > 1) line=floor(Nq*rand01());  /* Select between Nq powder lines */
+	      else line = 0;
+	      if (w_v[line])
+		arg = q_v[line]*(1+w_v[line]*randnorm())/(2.0*v);
+	      else
+		arg = q_v[line]/(2.0*v);
+	      my_s_n = my_s_v2[line]/(v*v);
+	      if(fabs(arg) > 1)
+		ABSORB;                   /* No bragg scattering possible*/
+	      theta = asin(arg);          /* Bragg scattering law */
+	      
+	      /* Choose point on Debye-Scherrer cone */
+	      if (d_phi)
+		{ /* relate height of detector to the height on DS cone */
+		  arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
+		  /* If full Debye-Scherrer cone is within d_phi, don't focus */
+		  if (arg < -1 || arg > 1) d_phi = 0;
+		  /* Otherwise, determine alpha to rotate from scattering plane
+		     into d_phi focusing area*/
+		  else alpha = 2*asin(arg);
+		}
+	      if (d_phi) {
+		/* Focusing */
+		alpha = fabs(alpha);
+		/* Trick to get scattering for pos/neg theta's */
+		alpha0= 2*rand01()*alpha;
+		if (alpha0 > alpha) {
+		  alpha0=PI+(alpha0-1.5*alpha);
+		} else {
+		  alpha0=alpha0-0.5*alpha;
+		}
+	      }
+	      else
+		alpha0 = PI*randpm1();
+	      
+	      /* now find a nearly vertical rotation axis:
+	       *  (v along Z) x (X axis) -> nearly Y axis
+	       */
+	      vec_prod(tmp_vx,tmp_vy,tmp_vz, vx,vy,vz, 1,0,0);
+	      
+	      /* handle case where v and aim are parallel */
+	      if (!tmp_vx && !tmp_vy && !tmp_vz) { tmp_vx=tmp_vz=0; tmp_vy=1; }
+	      
+	      /* v_out = rotate 'v' by 2*theta around tmp_v: Bragg angle */
+	      rotate(vout_x,vout_y,vout_z, vx,vy,vz, 2*theta, tmp_vx,tmp_vy,tmp_vz);
+	      
+	      /* tmp_v = rotate v_out by alpha0 around 'v' (Debye-Scherrer cone) */
+	      rotate(tmp_vx,tmp_vy,tmp_vz, vout_x,vout_y,vout_z, alpha0, vx, vy, vz);
+	      vx = tmp_vx;
+	      vy = tmp_vy;
+	      vz = tmp_vz;
+	      
+	      /* Since now scattered and new direction given, calculate path to exit */
+	      if (isrect) {
+		intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+		intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zthick_i);
+	      } else {
+		intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
+		intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
+	      }
+	      
+	      if (!intersect) {
+		/* Strange error: did not hit cylinder */
+		fprintf(stderr, "PowderN: FATAL ERROR: Did not hit sample from inside.\n");
+		ABSORB;
+	      }
+	      
+	      if (!intersecti) {
+		t1 = (t3 + t0) /2;
+		t2 = t1;
+	      }
+	      
+	      if (concentric && intersecti) {
+		/* In case of concentricity, 'remove' backward wall of sample */
+		t2 = t1;
+		t3 = t1;
+	      }
+	      
+	      if(t0 < 0) t0=0; /* already in sample */
+	      if(t1 < 0) t1=0; /* already in inner hollow */
+	      if(t2 < 0) t2=0; /* already past inner hollow */
+	      
+
+	      l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
+	      
+	      pmul  = Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-(frac+tfrac));
+	      /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
+	      if (d_phi) pmul *= alpha/PI;
+	    } /* else transmit <-- No powder lines in file */
+	  }  /* Coherent scattering event */
+	else if (neutrontype == 2)
+	  {  /* Make incoherent scattering event */
+	    if(d_phi) {
+	      randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
+					  0, 0, 1,
+					  2*PI, d_phi*DEG2RAD, ROT_A_CURRENT_COMP);
+	    } else {
+	      randvec_target_circle(&vx, &vy, &vz,
+				    &solid_angle, 0, 0, 1, 0);
+	    }
+	    v1 = sqrt(vx*vx+vy*vy+vz*vz);
+	    vx *= v/v1;
+	    vy *= v/v1;
+	    vz *= v/v1;
+	    
+	    /* Since now scattered and new direction given, calculate path to exit */
+	    if (isrect) {
+	      intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+	      intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zthick_i);
+	    } else {
+	      intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
+	      intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
+	    }
+	    
+	    if (!intersect) {
+	      /* Strange error: did not hit cylinder */
+	      fprintf(stderr, "PowderN: FATAL ERROR: Did not hit sample from inside.\n");
+	      ABSORB;
+	    }  
+	      
+	    if (!intersecti) {
+	      t1 = (t3 + t0) /2;
+	      t2 = t1;
+	    }
+	      
+	    if (concentric && intersecti) {
+	      /* In case of concentricity, 'remove' backward wall of sample */
+	      t2 = t1;
+	      t3 = t1;
+	    }
+	      
+	    if(t0 < 0) t0=0; /* already in sample */
+	    if(t1 < 0) t1=0; /* already in inner hollow */
+	    if(t2 < 0) t2=0; /* already past inner hollow */
+	      
+
+	    l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
+	    
+	    pmul = l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(frac);
+	    pmul *= solid_angle/(4*PI);
+	    
+	  }  /* Incoherent scattering event */
+	else if (neutrontype == 1) {
+	  /* Make transmitted (absorption-corrected) event */
+	  /* No coodinate changes here, simply change neutron weight */
+	  pmul = exp(-(my_a_v/v+my_s)*(l))/(tfrac);
+        }
+	p *= pmul;
+      } /* Neutron leaving since it has passed already */
+    } /* else transmit non interacting neutrons */
+  
+%}
+
+MCDISPLAY
+%{
+  double h;
+  h=yheight;
+  magnify("xyz");
+  if (!isrect) {
+    circle("xz", 0,  h/2.0, 0, radius);
+    circle("xz", 0, -h/2.0, 0, radius);
+    line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
+    line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
+    line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
+    line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
+    if (radius_i) {
+      h=yheight_i;
+      circle("xz", 0,  h/2.0, 0, radius_i);
+      circle("xz", 0, -h/2.0, 0, radius_i);
+      line(-radius_i, -h/2.0, 0, -radius_i, +h/2.0, 0);
+      line(+radius_i, -h/2.0, 0, +radius_i, +h/2.0, 0);
+      line(0, -h/2.0, -radius_i, 0, +h/2.0, -radius_i);
+      line(0, -h/2.0, +radius_i, 0, +h/2.0, +radius_i);
+    }
+  } else {
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zthick;
+    double zmax =  0.5*zthick;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+    if (zthick_i) {
+      xmin = -0.5*xwidth_i;
+      xmax =  0.5*xwidth_i;
+      ymin = -0.5*yheight_i;
+      ymax =  0.5*yheight_i;
+      zmin = -0.5*zthick_i;
+      zmax =  0.5*zthick_i;
+      multiline(5, xmin, ymin, zmin,
+		xmax, ymin, zmin,
+		xmax, ymax, zmin,
+		xmin, ymax, zmin,
+		xmin, ymin, zmin);
+      multiline(5, xmin, ymin, zmax,
+		xmax, ymin, zmax,
+		xmax, ymax, zmax,
+		xmin, ymax, zmax,
+		xmin, ymin, zmax);
+      line(xmin, ymin, zmin, xmin, ymin, zmax);
+      line(xmax, ymin, zmin, xmax, ymin, zmax);
+      line(xmin, ymax, zmin, xmin, ymax, zmax);
+      line(xmax, ymax, zmin, xmax, ymax, zmax);
+    }
+  }
+%}
+END

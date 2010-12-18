@@ -1,0 +1,168 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: IQE_monitor
+*
+* %I
+* Written by:  Jiao Lin@caltech
+* Date: August 2004
+* Version: $Revision: 475 $
+* Release: McStas 1.8
+*
+* a fake monitor recording I(scalar Q,E)
+*
+* %D
+* a fake monitor recording I(scalar Q,E)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* Ei:       incident energy of neutron(meV)
+* Qmin:     lower Q bound(AA-1)
+* Qmax:     upper Q bound(AA-1)
+* nQ:       number of Q bins
+* Emin:     lower E bound(meV)
+* Emax:     upper E bound(meV)
+* nE:       number of E bins
+* max_angle_out_of_plane:  maximum out-of-plane scattering angle allowed. plane means the horizontal plane define centered at the sample position
+* min_angle_out_of_plane:  minimum out-of-plane scattering angle allowed. plane means the horizontal plane define centered at the sample position
+* max_angle_in_plane:      maximum in-plane scattering angle allowed. plane means the horizontal plane define centered at the sample position
+* min_angle_in_plane:      minimum in-plane scattering angle allowed. plane means the horizontal plane define centered at the sample position
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT IQE_monitor
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (Ei=60, Qmin=0, Qmax=10, Emin=-45, Emax=45, int nQ=100, int nE=90, max_angle_in_plane = 120, min_angle_in_plane = 0, 
+max_angle_out_of_plane = 30, min_angle_out_of_plane = -30, char *filename = "iqe_monitor.dat")
+OUTPUT PARAMETERS (IQE_N, IQE_p, IQE_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+  %{
+
+    double *IQE_N;
+    double *IQE_p;
+    double *IQE_p2;
+
+  %}
+INITIALIZE
+  %{
+    int i;
+    int n;
+
+    n = nQ*nE;
+    IQE_N = new double[n];
+    IQE_p = new double[n];
+    IQE_p2 = new double[n];
+
+    for (i=0; i<n; i++)
+    {
+      IQE_N[i] = 0;
+      IQE_p[i] = 0;
+      IQE_p2[i] = 0;
+    }
+
+  %}
+
+TRACE
+  %{
+    int ii,jj, index1;
+    double vi=sqrt(Ei)*SE2V;
+    double Q, E;
+    double angle_in_plane, angle_out_of_plane, theta;
+
+    angle_in_plane = atan2( vx,vz )/PI*180.;
+    if (vy!=0) {
+      theta = atan( sqrt(vx*vx+vz*vz)/vy )/PI*180.;
+      if (vy>0) angle_out_of_plane = 90.-theta;
+      else angle_out_of_plane = 90. + theta;
+    }
+    else angle_out_of_plane = 0.;
+
+//  printf("vx,vy,vz=%g,%g,%g\n", vx,vy,vz);
+//  printf("angle_in_paln, angle_out_of_plane=%g,%g\n", angle_in_plane, angle_out_of_plane);
+
+    if ( min_angle_in_plane < angle_in_plane 
+	 && angle_in_plane < max_angle_in_plane 
+	 && min_angle_out_of_plane < angle_out_of_plane
+	 && angle_out_of_plane < max_angle_out_of_plane ) {
+
+      // determine Q and E
+      Q = sqrt( vx*vx + vy*vy + (vz-vi)*(vz-vi) )*V2Q;
+      E = Ei - (vx*vx+vy*vy+vz*vz) * VS2E;
+      // find out the bin numbers
+      // bin number of Q
+      ii = -1;
+      if (Q>=Qmin && Q<Qmax) {
+	//ii=(int) floor( (Q-Qmin)/(Qmax-Qmin)*nQ );
+	ii=(int) floor( (Q-Qmin)/(Qmax-Qmin)*nQ );
+      }
+      // bin number of E
+      jj = -1;
+      if (E>=Emin && E<Emax) {
+	jj=(int) floor( (E-Emin)/(Emax-Emin)*nE );
+      }
+
+      /*
+	printf("In file %s, line %d, Q=%g, E=%g\n",
+	__FILE__, __LINE__, Q, E);
+      */
+      
+      if (ii!=-1 && jj!=-1) {
+
+	index1=ii*nE+jj;
+	IQE_N[index1]++;
+	IQE_p[index1]+=p;
+	IQE_p2[index1]+=p*p;
+	//printf("%d,%d,%d,%d,%d\n",i,j,k,ii,jj);
+	//printf("%d,%d\n", index, index1);
+
+      }  
+
+    }
+
+    SCATTER;
+
+
+  %}
+
+SAVE
+  %{
+    DETECTOR_OUT_2D(
+        "I(Q,E) monitor",
+	"Q [AA-1]",
+        "E [meV]",
+        Qmin, Qmax,
+        Emin, Emax,
+        nQ, nE,
+        IQE_N,IQE_p,IQE_p2,
+        filename);
+
+  %}
+
+FINALLY
+  %{
+    delete [] IQE_N;
+    delete [] IQE_p;
+    delete [] IQE_p2;
+  %}
+
+
+MCDISPLAY
+%{
+%}
+
+END
+
+//pointer=[{'type':'double *', 'size_expr':'self.nQ*self.nE', 'name':'IQE_p'},{'type':'double *', 'size_expr':'self.nQ*self.nE', 'name':'IQE_p2'}]
+
+// $Id: IQE_monitor.comp 602 2010-10-04 05:19:34Z linjiao $

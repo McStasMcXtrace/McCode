@@ -1,0 +1,7 @@
+The following components are not ported yet. Aug26, 2004
+
+PSD_bidim.comp            Soller.comp
+PSD_curved.comp           Soller_trans.comp
+PSD_monitor_4PI_log.comp  Source_Maxwell.comp
+Powder0.comp              Source_file.comp
+Powder_filter.comp        window.comp

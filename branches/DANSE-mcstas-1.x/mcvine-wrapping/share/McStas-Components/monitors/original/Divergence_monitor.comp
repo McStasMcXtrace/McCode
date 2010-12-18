@@ -1,0 +1,129 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Divergence_monitor
+*
+* %I
+* Written by: Kim Lefmann
+* Date: Nov. 11, 1998
+* Version: $Revision: 1.22 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* Horizontal+vertical divergence monitor.
+*
+* %D
+* A divergence sensitive monitor. The counts are distributed in
+* (n times m) pixels.
+*
+* Example: Divergence_monitor(nh=20, nv=20, filename="Outout.pos",
+*           xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+*           h_maxdiv=2, v_maxdiv=2)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
+* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
+* nv:       Number of pixel columns (1)
+* nh:       Number of pixel rows (1)
+* v_maxdiv: Maximal vertical divergence detected (degrees)
+* h_maxdiv: Maximal vertical divergence detected (degrees)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* Div_N:    Array of neutron counts
+* Div_p:    Array of neutron weight counts
+* Div_p2:   Array of second moments
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Divergence_monitor
+DEFINITION PARAMETERS (nh=20, nv=20, string filename)
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, h_maxdiv=2, v_maxdiv=2)
+OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    double Div_N[nh][nv];
+    double Div_p[nh][nv];
+    double Div_p2[nh][nv];
+  %}
+INITIALIZE
+  %{
+    int i,j;
+
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("Divergence_monitor: %s: Null detection area !\n"
+                   "ERROR               (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
+
+    for (i=0; i<nh; i++)
+     for (j=0; j<nv; j++)
+     {
+      Div_N[i][j] = 0;
+      Div_p[i][j] = 0;
+      Div_p2[i][j] = 0;
+     }
+  %}
+TRACE
+  %{
+    int i,j;
+    double h_div, v_div;
+
+    PROP_Z0;
+    if (x>xmin && x<xmax && y>ymin && y<ymax)
+    {
+      h_div = RAD2DEG*atan2(vx,vz);
+      v_div = RAD2DEG*atan2(vy,vz);
+      if (h_div < h_maxdiv && h_div > -h_maxdiv &&
+          v_div < v_maxdiv && v_div > -v_maxdiv)
+      {
+        i = floor((h_div + h_maxdiv)*nh/(2.0*h_maxdiv));
+        j = floor((v_div + v_maxdiv)*nv/(2.0*v_maxdiv));
+        Div_N[i][j]++;
+        Div_p[i][j] += p;
+        Div_p2[i][j] += p*p;
+        SCATTER;
+      }
+    }
+  %}
+SAVE
+  %{
+    DETECTOR_OUT_2D(
+        "Divergence monitor",
+        "X divergence [deg]",
+        "Y divergence [deg]",
+        -h_maxdiv, h_maxdiv, -v_maxdiv, v_maxdiv,
+        nh, nv,
+        &Div_N[0][0],&Div_p[0][0],&Div_p2[0][0],
+        filename);
+  %}
+
+MCDISPLAY
+  %{
+    magnify("xy");
+    multiline(5, (double)xmin, (double)ymin, 0.0,
+                 (double)xmax, (double)ymin, 0.0,
+                 (double)xmax, (double)ymax, 0.0,
+                 (double)xmin, (double)ymax, 0.0,
+                 (double)xmin, (double)ymin, 0.0);
+%}
+
+END

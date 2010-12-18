@@ -1,0 +1,271 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: TOFRes_sample
+*
+* %I
+* Modified from Res_sample, written by: Kristian Nielsen
+* Date: 1999
+* Written by: KL, 10 October 2004
+* Version: $Revision: 1.2 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* Sample for TOF resolution function calculation.
+*
+* %D
+* An inelastic sample with completely uniform scattering in both solid angle
+* and energy. This sample is used together with the TOFRes_monitor component
+* and (optionally) the mcresplot front-end to compute the resolution
+* function of all time-of-flight instruments.
+* The method of time focusing is used to optimize the simulations.
+*
+* The shape of the sample is either a hollow cylinder or a rectangular box. The
+* hollow cylinder shape is specified with an inner and outer radius.
+* The box is specified with dimensions xwidth, yheight, zthick.
+*
+* The scattered neutrons will have directions towards a given target and
+* energies between E0-dE and E0+dE, where E0 is calculated from the position
+* and width of the time bin.
+* This target area is default disk shaped, but may also be rectangular
+* if specified focus_xw and focus_yh
+* or focus_aw and focus_ah, respectively in meters and degrees.
+* The target itself is either situated according to given coordinates (x,y,z),
+* or setting the relative target_index of the component to focus at
+* (next is +1). This target position will be set to its AT position.
+* When targeting to centered components, such as spheres or cylinders,
+* define an Arm component where to focus at.
+*
+* Example: TOFRes_sample(radius_i=0.001, radius_o=0.01, h=0.04,
+      focus_xw=0.025, focus_yh=0.025,
+*     E0=14.6,dE=2, target_x=0, target_y=0, target_z=1)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* radius_i: Inner radius of hollow cylinder in (x,z) plane, or width of
+*             box along X (m)
+* radius_o: Outer radius of hollow cylinder (m)
+* h:        Height of box or cylinder along Y (m)
+* focus_r:  Radius of sphere containing target. (m)
+* target_x:
+* target_y: position of target to focus at (m)
+* target_z:
+* time_bin: position of time bin (us)
+* time_width: width of time bin (us)
+*
+* Optional parameters
+* xwidth:   horiz. dimension of sample, as a width (m)
+* yheight:  vert.  dimension of sample, as a height (m)
+* zthick:   thickness of sample (m)
+* focus_xw: horiz. dimension of a rectangular area (m)
+* focus_yh: vert.  dimension of a rectangular area (m)
+* focus_aw: horiz. angular dimension of a rectangular area (deg)
+* focus_ah: vert.  angular dimension of a rectangular area (deg)
+* target_index: relative index of component to focus at, e.g. next is +1 (1)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT TOFRes_sample
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius_i=0,radius_o=0.01,h=0.05,focus_r=0.05,
+    time_bin=20000, time_width=10,
+    target_x=0, target_y=0, target_z=.5, focus_xw=0, focus_yh=0,
+    focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, int target_index=0)
+OUTPUT PARAMETERS (res_struct)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double f, E0, dE;
+  struct Res_sample_struct
+    {
+      double ki_x,ki_y,ki_z,kf_x,kf_y,kf_z;
+      double rx,ry,rz,pi;
+      char   isrect;      /* true when sample is a box */
+      double distance;    /* when non zero, gives rect target distance */
+      double aw,ah;       /* rectangular angular dimensions */
+      double xw,yh;       /* rectangular metrical dimensions */
+      double tx,ty,tz;    /* target coords */
+    } res_struct;
+%}
+
+INITIALIZE
+%{
+
+  f = 50;
+  if (!radius_o || !h) {
+    if (!xwidth || !yheight || !zthick) exit(fprintf(stderr,"Res_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+    else res_struct.isrect=1; }
+  else res_struct.isrect=0;
+
+  /* now compute target coords if a component index is supplied */
+  if (target_index)
+  {
+    Coords ToTarget;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &res_struct.tx, &res_struct.ty, &res_struct.tz);
+  }
+  else
+  { res_struct.tx = target_x; res_struct.ty = target_y; res_struct.tz = target_z; }
+
+  res_struct.distance=sqrt(res_struct.tx*res_struct.tx
+      +res_struct.ty*res_struct.ty+res_struct.tz*res_struct.tz);
+  /* different ways of setting rectangular area */
+  res_struct.aw  = res_struct.ah = 0;
+  if (focus_xw) {
+    res_struct.xw = focus_xw;
+  }
+  if (focus_yh) {
+    res_struct.yh = focus_yh;
+  }
+  if (focus_aw) {
+    res_struct.aw = DEG2RAD*focus_aw;
+  }
+  if (focus_ah) {
+    res_struct.ah = DEG2RAD*focus_ah;
+  }
+%}
+
+TRACE
+%{
+  double t0, t3;                /* Entry/exit time for outer cylinder */
+  double t1, t2;                /* Entry/exit time for inner cylinder */
+  double v;                     /* Neutron velocity */
+  double E;
+  double l_full;                /* Flight path length for non-scattered neutron */
+  double flight_time;           /* Calculated time-of-flight from source to target (detector) */
+  double dt0, dt1, dt2, dt;     /* Flight times through sample */
+  double solid_angle=0;         /* Solid angle of target as seen from scattering point */
+  double aim_x, aim_y, aim_z, aim_length;
+                                /* Position of target relative to scattering point */
+  double scat_factor;           /* Simple cross-section model */
+  int    intersect=0;
+
+
+  if(res_struct.isrect)
+    intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+  else
+    intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h);
+
+  if(intersect)
+  {
+    if(t0 < 0) ABSORB;
+    if(res_struct.isrect) { t1 = t2 = t3; scat_factor = 2*zthick; } /* box sample */
+    else {  /* Hollow cylinder sample */
+      /* Neutron enters at t=t0. */
+      if(!cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h))
+        t1 = t2 = t3;
+      scat_factor = 2*radius_o; }
+    dt0 = t1-t0;                  /* Time in sample, ingoing */
+    dt1 = t2-t1;                  /* Time in hole */
+    dt2 = t3-t2;                  /* Time in sample, outgoing */
+    v = sqrt(vx*vx + vy*vy + vz*vz);
+    l_full = v * (dt0 + dt2);     /* Length of full path through sample */
+    p *= l_full/scat_factor;      /* Scattering probability */
+    dt = rand01()*(dt0+dt2);      /* Time of scattering (relative to t0) */
+    if (dt > dt0)
+      dt += dt1;
+
+    PROP_DT(dt+t0);             /* Point of scattering */
+
+    /* Store initial neutron state. */
+    if(p == 0) ABSORB;
+    res_struct.pi = p;
+    res_struct.ki_x = V2K*vx;
+    res_struct.ki_y = V2K*vy;
+    res_struct.ki_z = V2K*vz;
+    res_struct.rx = x;
+    res_struct.ry = y;
+    res_struct.rz = z;
+
+    aim_x = res_struct.tx-x;       /* Vector pointing at target (anal./det.) */
+    aim_y = res_struct.ty-y;
+    aim_z = res_struct.tz-z;
+    aim_length = sqrt(aim_x*aim_x+aim_y*aim_y+aim_z*aim_z);
+    if(res_struct.aw && res_struct.ah) {
+      randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
+        aim_x, aim_y, aim_z, res_struct.aw, res_struct.ah, ROT_A_CURRENT_COMP);
+    } else if(res_struct.xw && res_struct.yh) {
+      randvec_target_rect(&vx, &vy, &vz, &solid_angle,
+        aim_x, aim_y, aim_z, res_struct.xw, res_struct.yh, ROT_A_CURRENT_COMP);
+    } else {
+        randvec_target_circle(&vx, &vy, &vz, &solid_angle,
+          aim_x, aim_y, aim_z, focus_r);
+    }
+    NORM(vx, vy, vz);
+    flight_time = -t + 1e-6*(time_bin + time_width * randpm1());
+/* Correct for too large or negative flight_times */
+/* Should perhaps be done more cleanly (more user choices) ?! */
+    for (; flight_time<0; flight_time += 1/f);
+    for (; flight_time>1/f; flight_time -= 1/f);
+    v = aim_length / flight_time;
+/* !! Remember later to correct for Jacobian in MC choice, t to V !! */
+
+/*    E=E0+dE*randpm1();
+    v=sqrt(E)*SE2V; */
+
+    vx *= v;
+    vy *= v;
+    vz *= v;
+    SCATTER;
+
+      /* Store final neutron state. */
+    res_struct.kf_x = V2K*vx;
+    res_struct.kf_y = V2K*vy;
+    res_struct.kf_z = V2K*vz;
+
+/* printf("vf= (%g,%g,%g), kf=(%g,%g,%g) \n",vx,vy,vz,
+  res_struct.kf_x,res_struct.kf_y,res_struct.kf_z); */
+  }
+%}
+
+MCDISPLAY
+%{
+  magnify("xyz");
+  if(res_struct.isrect)
+  {                             /* Flat sample. */
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double len = zthick/2;
+    multiline(5, xmin, ymin, -len,
+                 xmax, ymin, -len,
+                 xmax, ymax, -len,
+                 xmin, ymax, -len,
+                 xmin, ymin, -len);
+    multiline(5, xmin, ymin, len,
+                 xmax, ymin, len,
+                 xmax, ymax, len,
+                 xmin, ymax, len,
+                 xmin, ymin, len);
+    line(xmin, ymin, -len, xmin, ymin, len);
+    line(xmax, ymin, -len, xmax, ymin, len);
+    line(xmin, ymax, -len, xmin, ymax, len);
+    line(xmax, ymax, -len, xmax, ymax, len);
+  }
+  else
+  {
+    circle("xz", 0,  h/2.0, 0, radius_i);
+    circle("xz", 0,  h/2.0, 0, radius_o);
+    circle("xz", 0, -h/2.0, 0, radius_i);
+    circle("xz", 0, -h/2.0, 0, radius_o);
+    line(-radius_i, -h/2.0, 0, -radius_i, +h/2.0, 0);
+    line(+radius_i, -h/2.0, 0, +radius_i, +h/2.0, 0);
+    line(0, -h/2.0, -radius_i, 0, +h/2.0, -radius_i);
+    line(0, -h/2.0, +radius_i, 0, +h/2.0, +radius_i);
+    line(-radius_o, -h/2.0, 0, -radius_o, +h/2.0, 0);
+    line(+radius_o, -h/2.0, 0, +radius_o, +h/2.0, 0);
+    line(0, -h/2.0, -radius_o, 0, +h/2.0, -radius_o);
+    line(0, -h/2.0, +radius_o, 0, +h/2.0, +radius_o);
+  }
+%}
+
+END

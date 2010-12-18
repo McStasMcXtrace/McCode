@@ -1,0 +1,303 @@
+/**************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Pol_simpleBfield
+*
+* %I
+* Written by: Peter Christiansen and Peter Willendrup
+* Date: August 2006
+* Version: $Revision: 1.1 $
+* Origin: RISOE
+* Release: McStas 1.11
+*
+* Magnetic field component.
+*
+* %D 
+*
+* Rectangular box with a definable B field.
+*
+* The component is concentric. It means that it requires a 
+*
+* // START MAGNETIC FIELD
+* COMPONENT msf =
+* Pol_simpleBfield(xw=0.08, yh=0.08, length=0.2, Bx=0, By=-0.678332e-4, Bz=0)
+*      AT (0, 0, 0) RELATIVE armMSF
+*
+* // HERE CAN BE OTHER COMPONENTS INSIDE THE MAGNETIC FIELD
+*
+* // STOP MAGNETIC FIELD
+* COMPONENT msfCp = COPY(msf)
+*      AT (0, 0, 0) RELATIVE armMSF
+*
+* In between the two component instances the propagation routine
+* PROP_DT also handles the spin propagation.
+* The current algorithm used for spin propagation is:
+* SimpleNumMagnetPrecession
+* in pol-lib.
+* and does not handle gravity.
+*
+* GRAVITY: NO
+* POLARISATION: YES
+*
+* Example: Pol_simpleBfield(xw=0.1, yh=0.1, length=0.2, Bx=0, By=1, Bz=0)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xw:      [m]       Width of opening. 
+* yh:      [m]       Height of opening. 
+* length:  [m]       Length of field.
+* Bx:      [T]       Parameter used for x composant of field.
+* By:      [T]       Parameter used for y composant of field.
+* Bz:      [T]       Parameter used for z composant of field.
+* nx:      [1]       Number of field points to draw along x axis.
+* ny:      [1]       Number of field points to draw along y axis.
+* nz:      [1]       Number of field points to draw along z axis.
+* fieldFunction [pointer] Function describing the magnetic field.
+*
+* OUTPUT PARAMETERS:
+*
+* gz:             z-component of gravity (m/s/s)
+* parPtr:         Pointer to component magnet parameters (pointer)
+*
+* %E
+****************************************************************************/
+
+DEFINE COMPONENT Pol_simpleBfield
+DEFINITION PARAMETERS (xw, yh, length,
+		       Bx, By, Bz,
+		       int nx=5, int ny=5, int nz=5,
+		       fieldFunction=const_magnetic_field)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS(gz, parPtr)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
+SHARE
+%{
+  double fmax(double, double);
+  double fmin(double, double);
+
+  %include "pol-lib"
+  
+  // mcMagnetData[i]:
+  // i=0: Bx parameter 
+  // i=1: By parameter
+  // i=2: Bz parameter
+  // i=3: Magnet width
+  // i=4: Magnet height
+  // i=5: Magnet length
+  // in principle more parameters could be stored here
+
+  //
+  // Example field functions
+  // The functions are made available to PROP_MAGNET in mcstas-r.h
+  //
+  
+  void const_magnetic_field(double x, double y, double z, double t,
+			    double *bx, double *by, double *bz) {
+    // Constant field
+    *bx =  mcMagnetData[0];
+    *by =  mcMagnetData[1];
+    *bz =  mcMagnetData[2];
+  }
+
+  void rot_magnetic_field(double x, double y, double z, double t,
+			  double *bx, double *by, double *bz) {
+    // Field of magnitude By that rotates to x
+    const double Bmagnitude   = mcMagnetData[1];
+    const double magnetLength = mcMagnetData[5];
+    *bx =  Bmagnitude * sin(PI/2*z/magnetLength);
+    *by =  Bmagnitude * cos(PI/2*z/magnetLength);
+    *bz =  0;
+  }
+  
+  void majorana_magnetic_field(double x, double y, double z, double t,
+			       double *bx, double *by, double *bz) {
+    // Large linearly decreasing (from +Bx to -Bx) component along x axis, 
+    // small constant component along y axis 
+    const double Blarge       = mcMagnetData[0];
+    const double Bsmall       = mcMagnetData[1];
+    const double magnetLength = mcMagnetData[5];
+    *bx =  Blarge -2*Blarge*z/magnetLength;
+    *by =  Bsmall;
+    *bz =  0;
+  }
+
+  %}
+
+
+DECLARE
+%{
+  /*   Larmor frequency and scalar product threshold*/
+  double gz;
+  double* parPtr = NULL;
+
+  %}
+
+INITIALIZE
+%{  
+  double gx, gy;
+  Coords localG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0));
+
+  if(mcMagnet==0) {
+    
+    parPtr = (double*) malloc(6*sizeof(double));
+    parPtr[0] = Bx; 
+    parPtr[1] = By;
+    parPtr[2] = Bz;
+    parPtr[3] = xw;
+    parPtr[4] = yh;
+    parPtr[5] = length;
+    MAGNET_ON;
+  } else {    
+    MAGNET_OFF;
+  }
+
+  coords_get(localG, &gx, &gy, &gz);
+  if(!mcgravitation)
+    gz = 0;
+  
+  if ((xw<=0) || (yh<=0) || (length<=0)) {
+    fprintf(stderr, "Pol_filter: %s: Null or negative volume!\n"
+	    "ERROR      (xw, yh, length). Exiting\n",
+	    NAME_CURRENT_COMP);
+    exit(1);
+  }  
+  %}
+
+TRACE
+%{
+  double dt = 0;
+  
+  if(mcMagnet==0) {
+    
+    // enter
+    PROP_Z0;
+    MAGNET_ON;
+    mcMagneticField = fieldFunction;
+    mcMagnetPrecession = &SimpleNumMagnetPrecession;
+    mcMagnetData = parPtr;
+
+    rot_copy(mcMagnetRot, ROT_A_CURRENT_COMP);
+    mcMagnetPos = coords_scale(POS_A_CURRENT_COMP, 1.0);
+
+    // i=0: Bx parameter 
+    // i=1: By parameter
+    // i=2: Bz parameter
+    // i=3: Magnet width
+    // i=4: Magnet height
+    // i=5: Magnet length
+    
+  } else {
+    
+    // exit
+    solve_2nd_order(&dt, -gz/2, -vz, length-z);
+    PROP_DT(dt);
+    MAGNET_OFF;
+    mcMagneticField = NULL;
+    mcMagnetPrecession = NULL;
+    mcMagnetData = NULL;
+    // Here, we ought to clean up mcMagnet(Rot,Pos)
+  }
+
+  //  printf("Exit z: %f, mcmagnet: %d\n", z, mcmagnet);
+
+  %}
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+  if(mcMagnet==0) {
+    
+    free(parPtr);
+    MAGNET_ON;
+  } else {    
+    MAGNET_OFF;
+  }
+  %}
+
+
+MCDISPLAY
+%{
+  const double dx = xw/nx;
+  const double dy = yh/ny;
+  const double dz = length/nz;
+  const int nDash = 10;
+  int i, j, k;
+  double xpos, ypos, zpos;
+  double xposend, yposend, zposend;
+  double BxValue, ByValue, BzValue;
+  double norm;
+  double dscale = 0.5*fmin(dx, fmin(dy, dz));
+  double Bscale = fmax(fabs(Bx), fmax(fabs(By), fabs(Bz)));
+  
+  if(mcMagnet) {
+    
+    // we have already drawn
+    MAGNET_OFF;   
+    mcMagneticField = NULL;
+    mcMagnetData    = NULL;
+  } else {
+    
+    // we draw and set flag on
+    MAGNET_ON;   
+    mcMagneticField = fieldFunction;
+    mcMagnetData    = parPtr;
+    
+    magnify("xy");
+    
+    // entrance
+    dashed_line(-xw/2, -yh/2, 0,  xw/2, -yh/2, 0, nDash);
+    dashed_line(-xw/2, -yh/2, 0, -xw/2,  yh/2, 0, nDash);
+    dashed_line( xw/2,  yh/2, 0, -xw/2,  yh/2, 0, nDash);
+    dashed_line( xw/2,  yh/2, 0,  xw/2, -yh/2, 0, nDash);
+    
+    // exit
+    dashed_line(-xw/2, -yh/2, length,  xw/2, -yh/2, length, nDash);
+    dashed_line(-xw/2, -yh/2, length, -xw/2,  yh/2, length, nDash);
+    dashed_line( xw/2,  yh/2, length, -xw/2,  yh/2, length, nDash);
+    dashed_line( xw/2,  yh/2, length,  xw/2, -yh/2, length, nDash);
+    
+    // 4 lines to make a box
+    dashed_line(-xw/2, -yh/2, 0, -xw/2, -yh/2, length, nDash);
+    dashed_line(-xw/2,  yh/2, 0, -xw/2,  yh/2, length, nDash);
+    dashed_line( xw/2, -yh/2, 0,  xw/2, -yh/2, length, nDash);
+    dashed_line( xw/2,  yh/2, 0,  xw/2,  yh/2, length, nDash);
+    
+    // draw magnetic field
+    for(i = 0; i < nx; i++) { 
+      for(j = 0; j < ny; j++) {
+	for(k = 0; k < nz; k++) {
+	  
+	  xpos = -xw/2.0 + (i+0.5)*dx;
+	  ypos = -yh/2.0 + (j+0.5)*dy;
+	  zpos = (k+0.5)*dz;
+	  mcMagneticField(xpos, ypos, zpos, 0, &BxValue, &ByValue, &BzValue);
+	  norm = sqrt(BxValue*BxValue + ByValue*ByValue + BzValue*BzValue); 
+	  norm *= dscale/Bscale;
+	  NORM(BxValue, ByValue, BzValue);
+	  line(xpos, ypos, zpos, xpos+BxValue*norm, ypos+ByValue*norm, zpos+BzValue*norm);
+	  xpos += BxValue*norm;
+	  ypos += ByValue*norm;
+	  zpos += BzValue*norm;
+	  xposend = xpos - BxValue*0.25*norm;
+	  yposend = ypos - ByValue*0.25*norm;
+	  zposend = zpos - BzValue*0.25*norm;
+	  line(xpos, ypos, zpos, xposend, yposend, zpos);
+	  line(xpos, ypos, zpos, xpos, yposend, zposend);
+	  line(xpos, ypos, zpos, xposend, ypos, zposend);
+	  printf("Pos: (%f, %f, %f), B: (%f, %f, %f)\n",
+		 xpos, ypos, zpos, BxValue, ByValue, BzValue);
+	}
+      }
+    }
+  }
+  %}
+
+END

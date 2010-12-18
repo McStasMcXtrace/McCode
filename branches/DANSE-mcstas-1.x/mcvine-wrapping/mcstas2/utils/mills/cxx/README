@@ -1,0 +1,13 @@
+the renderers here try to construct header files and implementation files
+of cpp classes. It is intended to be used as a generic cpp class
+factory.
+
+it is created because of the need to convert McStas components to
+cpp classes. The idea is, McStas component is written by using 
+a META language with c codes, why not just create a  c++ class
+out of that compnent? Then we should be able to use that c++ class
+as we will.
+
+The c++ class renderer here should not have any limit to be used
+only by mcstas wrapper. But it ended up here because it is
+still in its experiment stage.

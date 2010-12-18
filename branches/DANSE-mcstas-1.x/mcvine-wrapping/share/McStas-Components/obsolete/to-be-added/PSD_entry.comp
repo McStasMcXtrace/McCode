@@ -1,0 +1,169 @@
+/***********************************************************************
+*
+* McStas, version 1.2 released February 2000
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* %IDENTIFICATION
+*
+* Author: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
+* Date: 07 March 2000
+* Version: $Revision: 494 $
+* Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>) (Obsolete)
+*
+* Entry window of a curved linear gaschamber PSD
+*
+* %DESCRIPTION
+*
+* Aluminium entry window for a curved linear position sensitive detector (PSD),
+* as used in constant wavelength neutron powder diffraction (ILL Grenoble: D20).
+* Normally, this component is always used in front of a <a href="PSD_curved.html">PSD_curved</a> component.
+* OBSOLETE: rather use monitors/Monitor_nD with options="... cylinder ..."
+*
+*
+* %PARAMETERS
+*
+* INPUT PARAMETERS:
+*
+* radius:	(m)		Outer radius of detector entry window (=radius-gap in <a href="PSD_curved.html">PSD_curved</a>)		(1.418)
+* height:	(m)		Height of detector (=height in <a href="PSD_curved.html">PSD_curved</a>)				(0.15)
+* nd:   	(1)		Number of cells	(=nd in <a href="PSD_curved.html">PSD_curved</a>)					(1536)
+* pitch:	(deg)		angular pitch (=pitch in <a href="PSD_curved.html">PSD_curved</a>)					(0.1)
+* gap:		(m)		Thickness of entry window 										(0.007)
+* tt0:		(deg)		detection angle of first cell (=tt0 in <a href="PSD_curved.html">PSD_curved</a>)			(0)
+* pack:		(1)		Packing density of window material
+* Vc:		(AA**3)		Unit cell volume of window material
+* sigma_a:	(barn)		Absorption cross section
+* q:		(1/AA)		Wavevector
+* j:		(1)		Multiplicity
+* F2:		(fm**2)		Structure factor
+* DW:		(1/AA**2)	Debye-Waller factor
+* period:	(1)		Number of cells on one MSGC plate (=period in <a href="PSD_curved.html">PSD_curved</a>)			(32)
+* sign:		(1)		Chirality of 1st diffractometer axis=sign[takeoff of <a href="../d20adapt.instr">d20adapt.instr]</a>	(-1)
+*
+* OUTPUT PARAMETERS:
+*
+* my_s_v2:	(m/s**2)	Attenuation factor due to elastic coherent scattering, multiplied by neutron velocity**2
+* my_a_v:	(1/s)		Attenuation factor due to absorption, multiplied by neutron velocity
+* q_v:		(m/s)		Corresponding velocity of wavevector Q
+*
+* %LINKS
+* <a href="../d20adapt.instr">Source code of d20adapt.instr</a>, where this component is used
+* %LINKS
+* The corresponding detector <a href="PSD_curved.html">PSD_curved.comp</<a>
+* 
+* %END
+*
+***********************************************************************/
+
+
+DEFINE COMPONENT PSD_entry
+DEFINITION PARAMETERS(radius,height,nd,pitch,gap,tt0,pack,Vc,sigma_a,q,j,F2,DW,period,sign)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (my_s_v2, my_a_v, q_v)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+  double my_s_v2, my_a_v, q_v;
+%}
+INITIALIZE
+%{
+  my_a_v = sigma_a/Vc*2200;           /* Is not yet divided by v */
+  my_s_v2 = PI*PI*PI*pack*j*F2*DW/(Vc*Vc*V2K*V2K*q);  
+  q_v = q*K2V;
+
+%}
+TRACE
+%{
+  double t0, t1, t2, t3, twotheta, d_phi, phi,eff,p_transmission;
+  double my, l_full, dt, aim_x, aim_y, aim_z, axis_x, axis_y, axis_z;
+  double l, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z,v;
+  int i;
+  if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius-gap, height) && t1 > 0)
+  {
+    if(t0 < 0) t0 = t1;
+    PROP_DT(t0);
+    /*SCATTER;*/
+    twotheta = -atan2(x,z);
+    /*printf("%lf\n",twotheta);*/
+    if (((double)sign*twotheta>=tt0-pitch/2.0) && ((double)sign*twotheta<=tt0+(double)nd*pitch+pitch/2.0))
+    {
+      /*SCATTER;*/
+      cylinder_intersect(&t2, &t3, x, y, z, vx, vy, vz, radius, height);
+      if(t2 < 0) t2 = t3;
+      v = sqrt(vx*vx + vy*vy + vz*vz);
+      l_full = v * (t2);             /* Length of full path through PSD entry window of Al */
+      my=my_s_v2/v/v+my_a_v/v;
+      p_transmission=exp(-my*l_full);
+      if (rand01() > p_transmission)
+      {
+        eff=1.0-exp(-my_s_v2/v/v*l_full);
+        dt =(t2)*-log(rand01()*(eff)+1.0-eff);
+        PROP_DT(dt);                		      /* Point of diffraction */
+        l = v*dt;                   		      /* Penetration in entry window */
+        p*=(eff)/(1-p_transmission);         /* a not detected (=captured) neutron may continue the flightpath!) */
+        d_phi = 360.0*DEG2RAD/2.0*randpm1();
+        twotheta = 2.0*asin(q_v/(2.0*v));  		/* Bragg scattering law */
+        aim_x = sin(twotheta)-x;       		/* Vector pointing at target (anal./det.) */
+        aim_y = -y ;/* + PSD_h/2*randpm1() ; doppelt wg. d_phi?*/
+        aim_z = cos(twotheta)-z;
+        vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, aim_x, aim_y, aim_z);
+        rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, twotheta, axis_x, axis_y, axis_z);
+        rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, d_phi, vx, vy, vz);
+        vx = vout_x;
+        vy = vout_y;
+        vz = vout_z;
+      } 
+      else 
+      {
+      	PROP_DT(t2);
+	/*SCATTER;*/
+      }
+    }
+    else ABSORB;
+  }
+  else ABSORB; 
+  /* Yes, ABSORB is a good idea for non-detectedable neutrons, as they do not interest anymore, and to use Check_adapt afterwards! */
+%}
+FINALLY
+%{
+%}
+
+MCDISPLAY
+%{
+  double R2, twotheta,x0,z0,x1,z1;
+  int cell;
+  
+  magnify("xyz");
+  R2=radius-gap;
+  twotheta=(tt0-pitch/2.0)*PI/180.0;
+  z0=cos(twotheta)*R2;
+  x0=sin(twotheta)*R2;
+  line(x0, -height/2.0,z0,x0, height/2.0,z0);
+  for (cell=1;cell<=ceil((double)nd/(double)period)*period;cell++)
+  {
+  	twotheta=(tt0-pitch/2.0+pitch*cell)*PI/180.0;
+	z1=cos(twotheta)*R2;
+	x1=sin(twotheta)*R2;
+	line(x0, -height/2.0,z0,x1, -height/2.0,z1);
+	line(x0,  height/2.0,z0,x1,  height/2.0,z1);
+  	x0=x1; z0=z1;
+  }
+  line(x0, -height/2.0,z0,x0, height/2.0,z0);
+/* Circles are too roughly drawn for curved detector presentations */
+/*
+  circle("xz", 0,  height/2.0, 0, radius);
+  circle("xz", 0, -height/2.0, 0, radius);
+  line(-radius, -height/2.0, 0, -radius, +height/2.0, 0);
+  line(+radius, -height/2.0, 0, +radius, +height/2.0, 0);
+  line(0, -height/2.0, -radius, 0, +height/2.0, -radius);
+  line(0, -height/2.0, +radius, 0, +height/2.0, +radius);
+  circle("xz", 0,  height/2.0, 0, (radius-gap));
+  circle("xz", 0, -height/2.0, 0, (radius-gap));
+  line(-(radius-gap), -height/2.0, 0, -(radius-gap), +height/2.0, 0);
+  line(+(radius-gap), -height/2.0, 0, +(radius-gap), +height/2.0, 0);
+  line(0, -height/2.0, -(radius-gap), 0, +height/2.0, -(radius-gap));
+  line(0, -height/2.0, +(radius-gap), 0, +height/2.0, +(radius-gap));
+*/
+%}
+END

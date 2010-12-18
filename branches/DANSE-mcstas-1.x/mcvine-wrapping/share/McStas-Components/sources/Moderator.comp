@@ -1,0 +1,108 @@
+/*******************************************************************************
+*
+* Mcstas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Moderator
+*
+* %I
+* Written by: KN, M.Hagen
+* Date: August 1998
+* Version: $Revision: 1.26 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* A simple pulsed source for time-of-flight.
+*
+* %D
+* Produces a simple time-of-flight spectrum, with a flat energy distribution
+*
+* Example: Moderator(radius = 0.0707, dist = 9.035, xw = 0.021, yh = 0.021,
+*                    E0 = 10, E1 = 15, Ec = 9.0, t0 = 37.15, gam = 39.1)
+*
+* %P
+* Input parameters:
+*
+* radius: (m)   Radius of source
+* E0:     (meV) Lower edge of energy distribution
+* E1:     (meV) Upper edge of energy distribution
+* dist:   (m)   Distance from source to the focusing rectangle
+* xw:     (m)   Width of focusing rectangle
+* yh:     (m)   Height of focusing rectangle
+* t0:     (mus) decay constant for low-energy neutrons
+* Ec:     (meV) Critical energy, below which the flux decay is constant
+* gam:    (meV) energy dependence of decay time
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Moderator
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius, E0, E1, dist, xw, yh, t0=37.15, Ec=9.0, gam=39.1)
+OUTPUT PARAMETERS (p_in)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double p_in;
+%}
+INITIALIZE
+%{
+  p_in = 1.0/(4*PI);
+  if (radius < 0 || E0 < 0 || E1 < 0 || dist <= 0 || xw < 0 || yh < 0 || Ec < 0 || gam <= 0) {
+      printf("Moderator: %s: Error in input parameter values!\n"
+             "ERROR          Exiting\n",
+           NAME_CURRENT_COMP);
+      exit(0);
+  }
+%}
+TRACE
+%{
+   double chi,v,r,tauv,E, xf, yf, rf, dx, dy, pdir;
+
+   p=p_in;
+   z=0;
+
+   chi = 2*PI*rand01();          /* Choose point on source */
+   r = sqrt(rand01())*radius;    /* with uniform distribution. */
+   x = r*cos(chi);
+   y = r*sin(chi);
+
+   randvec_target_rect(&xf, &yf, &rf, &pdir,
+        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP);
+
+   dx = xf-x;
+   dy = yf-y;
+   rf = sqrt(dx*dx+dy*dy+dist*dist);
+
+   p = pdir*p_in;
+
+   E = E0+(E1-E0)*rand01();      /* Assume linear distribution */
+   v = SE2V*sqrt(E);
+
+   vz=v*dist/rf;
+   vy=v*dy/rf;
+   vx=v*dx/rf;
+
+   if(E < Ec)
+   {
+     tauv = t0;
+   }
+   else
+   {
+     double tmp = ((E - Ec) / gam);
+     tauv = t0 / (1 + (tmp*tmp));
+   }
+   t = -tauv*log(rand01())*1E-6;
+   SCATTER;
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  circle("xy",0,0,0,radius);
+%}
+
+END

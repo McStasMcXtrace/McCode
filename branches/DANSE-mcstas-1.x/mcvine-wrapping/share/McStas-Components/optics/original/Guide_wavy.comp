@@ -1,0 +1,294 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Guide_wavy
+*
+* %I
+* Written by: Kim Lefmann
+* Version: $Revision: 1.12 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* Neutron guide with gaussian waviness.
+*
+* %D
+* Models a rectangular guide tube centered on the Z axis. The entrance lies
+* in the X-Y plane.
+* For details on the geometry calculation see the description in the McStas
+* reference manual.
+*
+* %BUGS
+* This component does not work with gravitation on. Use component Guide_gravity then.
+*
+* %P
+* INPUT PARAMETERS:
+*
+* w1:      (m)    Width at the guide entry
+* h1:      (m)    Height at the guide entry
+* w2:      (m)    Width at the guide exit
+* h2:      (m)    Height at the guide exit
+* l:       (m)    length of guide
+* R0:      (1)    Low-angle reflectivity
+* Qc:      (AA-1) Critical scattering vector
+* alpha1:   (AA)   Slope of reflectivity
+* m1:       (1)    m-value of material, left
+* W1:       (AA-1) Width of supermirror cut-off
+* alpha2:   (AA)   Slope of reflectivity
+* m2:       (1)    m-value of material, right.
+* W2:       (AA-1) Width of supermirror cut-off
+* alpha3:   (AA)   Slope of reflectivity
+* m3:       (1)    m-value of material, top.
+* W3:       (AA-1) Width of supermirror cut-off
+* alpha4:   (AA)   Slope of reflectivity
+* m4:       (1)    m-value of material, bottom.
+* W4:       (AA-1) Width of supermirror cut-off
+* wavy_z:  (deg)  Waviness in the z-(flight-)direction
+* wavy_xy: (deg)  Waviness in the transverse direction
+*
+* %D
+* Example values: m=2 Qc=0.0218 (nat. Ni) W=1/300 alpha=4.38 R0=0.995
+*                 (given by Daniel Clemens, PSI)
+
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT Guide_wavy
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (w1, h1, w2, h2, l, R0, Qc,
+alpha1, m1, W1,
+alpha2, m2, W2,
+alpha3, m3, W3,
+alpha4, m4, W4,
+wavy_z, wavy_xy)
+OUTPUT PARAMETERS (whalf,hhalf, lwhalf, lhhalf, norm_nv, norm_nh, f_h, f_v, eta_z, eta_xy)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+ double whalf,hhalf, lwhalf, lhhalf, norm_nv, norm_nh, f_h, f_v, eta_z, eta_xy;
+%}
+
+INITIALIZE
+%{
+  f_h = 0.5*(w2 - w1), f_v = 0.5*(h2 - h1);
+  whalf = 0.5*w1, hhalf = 0.5*h1;
+  lwhalf = l*whalf, lhhalf = l*hhalf;
+  norm_nv = sqrt(l*l+f_v*f_v);
+  norm_nh = sqrt(l*l+f_h*f_h);
+  eta_z = wavy_z/(sqrt(8*log(2)));   /* Convert from FWHM to Gaussian sigma */
+  eta_xy = wavy_xy/(sqrt(8*log(2)));
+
+  if (mcgravitation) fprintf(stderr,"WARNING: Guide_wavy: %s: "
+    "This component produces wrong results with gravitation !\n"
+    "Use Guide_gravity.\n",
+    NAME_CURRENT_COMP);
+%}
+
+TRACE
+%{
+  double t_min,t_tmp;                           /* Intersection times. */
+  double av,ah,bv,bh,cv1,cv2,ch1,ch2,d;         /* Intermediate values */
+  double vdotn_v1,vdotn_v2,vdotn_h1,vdotn_h2;   /* Dot products. */
+  double vdotn;
+  double d_xy, d_z;                             /* Random angles */
+  double m, alpha, W;
+  int i;                                        /* Which mirror hit? */
+  double q;                                     /* Q [1/AA] of reflection */
+  double dvx, dvy, dvz;                         /* Velocity change */
+  double vlen2,nlen2, norm_n2;                  /* Vector lengths squared */
+  double nperp,pz,nxy;                          /* for dot products */
+  double R;                                     /* Reflectivity */
+
+  /* Propagate neutron to guide entrance. */
+  PROP_Z0;
+  /* Scatter here to ensure that fully transmitted neutrons will not be
+     absorbed in a GROUP construction, e.g. all neutrons - even the 
+     later absorbed ones are scattered at the guide entry. */
+  SCATTER;
+  if(x <= -whalf || x >= whalf || y <= -hhalf || y >= hhalf)
+    ABSORB;
+  for(;;)
+  {
+    /* Compute the dot products of v and n for the four mirrors. */
+    av = -l*vx ; bv = f_h*vz;
+    ah = -l*vy ; bh = f_v*vz;
+    vdotn_v1 = bv + av;         /* Left vertical */
+    vdotn_v2 = bv - av;         /* Right vertical */
+    vdotn_h1 = bh + ah;         /* Lower horizontal */
+    vdotn_h2 = bh - ah;         /* Upper horizontal */
+    /* Compute the dot products of (O - r) and n as c1+c2 and c1-c2 */
+    cv1 = -whalf*l - z*f_h; cv2 = x*l;
+    ch1 = -hhalf*l - z*f_v; ch2 = y*l;
+    /* Compute intersection times. */
+    t_min = (l - z)/vz;
+  /*  printf(" (x,y,z)=(%g %g %g) (vx,vy,vz)=(%g %g %g) Exit time : %g \n",
+       x,y,z,vx,vy,vz,t_min); */
+    i = 0;
+    if(vdotn_v1 < 0 && (t_tmp = (cv1 + cv2)/vdotn_v1) < t_min)
+    {
+      t_min = t_tmp;
+      i = 1;
+/*      printf("Left vertical: t=%g \n",t_min); */
+    }
+    if(vdotn_v2 < 0 && (t_tmp = (cv1 - cv2)/vdotn_v2) < t_min)
+    {
+      t_min = t_tmp;
+      i = 2;
+/*      printf("Right vertical: t=%g \n",t_min); */
+    }
+    if(vdotn_h1 < 0 && (t_tmp = (ch1 + ch2)/vdotn_h1) < t_min)
+    {
+      t_min = t_tmp;
+      i = 3;
+/*      printf("Lower horizontal: t=%g \n",t_min); */
+    }
+    if(vdotn_h2 < 0 && (t_tmp = (ch1 - ch2)/vdotn_h2) < t_min)
+    {
+      t_min = t_tmp;
+      i = 4;
+/*      printf("Upper horizontal: t=%g \n",t_min); */
+    }
+    if(i == 0)
+      break;                    /* Neutron left guide. */
+    PROP_DT(t_min);
+
+/* ******* Recalculate dot products ********* */
+
+    d_z=DEG2RAD*eta_z*randnorm();
+    d_xy=DEG2RAD*eta_xy*randnorm();
+
+/* Now the normal vector is rotated. To 1st order in waviness and 2nd order
+  in f=(w2-w1)/l and (f times waviness) the rotation matrix for
+  the left vertical mirror is:
+
+  {  1     d_xy      d_z      }
+  { -d_xy  1         d_xy f_h }   (for the right vertical mirror the )
+  {  d_z  -d_xy f_h  1        }   (terms d_xy f_h changes sign )
+
+the left vertical normal vector is  { -l,  0,  f_h }
+
+giving the rotated normal vector  { -l + f_h d_z,  l d_xy,  f_h - l d_z }
+
+for the right vertical mirror the normal vector is { l,  0,  f_h }
+
+and the rotated right normal vector is { l + f_h d_z,  -l d_xy,  f_h + l d_z }
+
+
+The top horizontal mirror must be (something like)
+
+  {  1        -d_xy  d_xy f_h }
+  {  d_xy      1     d_z      }   (for the bottom horizontal mirror the )
+  { -d_xy f_h  d_z   1        }   (terms d_xy f_h changes sign )
+
+The top horizontal normal vector is { 0,  -l,  f_v}
+
+giving the rotated normal vector  { l d_xy,  -l + f_v d_z,  f_v - l d_z }
+
+for the bottom mirror the normal vector is { 0,  l,  f_h }
+
+and the rotated bottom normal vector is { -l d_xy,  l + f_v d_z,  f_v + l d_z }
+
+*/
+
+    switch(i)
+    {
+      case 1:                   /* Left vertical mirror */
+        m=m1; W=W1; alpha=alpha1;
+        norm_n2 =  (-l+d_z*f_h)*(-l+d_z*f_h)+(d_xy*l)*(d_xy*l)
+                  +(f_h-d_z*l)*(f_h-d_z*l); /* Square of length of n vector */
+        vdotn = (vx*(-l+f_h*d_z)+ vy*(l*d_xy)+ vz*(f_h-l*d_z) );
+        q = 2 * V2Q * fabs(vdotn) / sqrt(norm_n2);
+        dvx = -2*(-l+f_h*d_z)*vdotn/norm_n2;
+        dvy = -2*(l*d_xy)*vdotn/norm_n2;
+        dvz = -2*(f_h-l*d_z)*vdotn/norm_n2;
+        break;
+      case 2:                   /* Right vertical mirror */
+        m=m2; W=W2; alpha=alpha2;
+        norm_n2 =  (l+d_z*f_h)*(l+d_z*f_h)+(-d_xy*l)*(-d_xy*l)
+                  +(f_h+d_z*l)*(f_h+d_z*l); /* Square of length of n vector */
+        vdotn = (vx*(l+f_h*d_z)+ vy*(-l*d_xy)+ vz*(f_h+l*d_z) );
+        q = 2 * V2Q * fabs(vdotn) / sqrt(norm_n2);
+        dvx = -2*(l+f_h*d_z)*vdotn/norm_n2;
+        dvy = -2*(-l*d_xy)*vdotn/norm_n2;
+        dvz = -2*(f_h+l*d_z)*vdotn/norm_n2;
+        break;
+      case 3:                   /* Lower horizontal mirror */
+        m=m3; W=W3; alpha=alpha3;
+        norm_n2 =  (d_xy*l)*(d_xy*l)+(-l+d_z*f_v)*(-l+d_z*f_v)
+                  +(f_v-d_z*l)*(f_v-d_z*l); /* Square of length of n vector */
+        vdotn = (vx*(l*d_xy)+ vy*(-l+f_v*d_z)+ vz*(f_v-l*d_z) );
+        q = 2 * V2Q * fabs(vdotn) / sqrt(norm_n2);
+        dvx = -2*(l*d_xy)*vdotn/norm_n2;
+        dvy = -2*(-l+f_v*d_z)*vdotn/norm_n2;
+        dvz = -2*(f_v-l*d_z)*vdotn/norm_n2;
+        break;
+      case 4:                   /* Upper horizontal mirror */
+        m=m4; W=W4; alpha=alpha4;
+        norm_n2 =  (-d_xy*l)*(-d_xy*l)+(l+d_z*f_v)*(l+d_z*f_v)
+                  +(f_v+d_z*l)*(f_v+d_z*l); /* Square of length of n vector */
+        vdotn = (vx*(-l*d_xy)+ vy*(l+f_v*d_z)+ vz*(f_v+l*d_z) );
+        q = 2 * V2Q * fabs(vdotn) / sqrt(norm_n2);
+        dvx = -2*(-l*d_xy)*vdotn/norm_n2;
+        dvy = -2*(l+f_v*d_z)*vdotn/norm_n2;
+        dvz = -2*(f_v+l*d_z)*vdotn/norm_n2;
+        break;
+      default:
+        printf("Fatal error: No guide wall hit");
+        exit(1);
+    }
+    /* Now compute reflectivity. */
+    if(m == 0)
+      ABSORB;
+    if(q > Qc)
+    {
+      double arg = (q-m*Qc)/W;
+      if(arg < 10)
+      {
+        R = .5*(1-tanh(arg))*(1-alpha*(q-Qc));
+        p *= R;
+        /* printf("q,Qc,alpha,arg,R: %g %g %g %g %g \n",q,Qc,alpha,arg,R); */
+      }
+      else
+        ABSORB;                               /* Cutoff ~ 1E-10 */
+    }
+    p *= R0;               /* Correct for max. reflectivity for both cases */
+    vx += dvx;
+    vy += dvy;
+    vz += dvz;
+    SCATTER;
+  }
+%}
+
+MCDISPLAY
+%{
+  double x;
+  int i;
+
+  magnify("xy");
+  multiline(5,
+            -w1/2.0, -h1/2.0, 0.0,
+             w1/2.0, -h1/2.0, 0.0,
+             w1/2.0,  h1/2.0, 0.0,
+            -w1/2.0,  h1/2.0, 0.0,
+            -w1/2.0, -h1/2.0, 0.0);
+  multiline(5,
+            -w2/2.0, -h2/2.0, (double)l,
+             w2/2.0, -h2/2.0, (double)l,
+             w2/2.0,  h2/2.0, (double)l,
+            -w2/2.0,  h2/2.0, (double)l,
+            -w2/2.0, -h2/2.0, (double)l);
+  line(-w1/2.0, -h1/2.0, 0, -w2/2.0, -h2/2.0, (double)l);
+  line( w1/2.0, -h1/2.0, 0,  w2/2.0, -h2/2.0, (double)l);
+  line( w1/2.0,  h1/2.0, 0,  w2/2.0,  h2/2.0, (double)l);
+  line(-w1/2.0,  h1/2.0, 0, -w2/2.0,  h2/2.0, (double)l);
+%}
+
+END
+
+
+
+

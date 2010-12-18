@@ -1,0 +1,110 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: EPSD_monitor.comp
+*
+* %I
+* Written by: Kim Lefmann
+* Date: 16.4.00
+* Version: $Revision: 1.16 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* A monitor measuring neutron intensity vs. position, x, and neutron energy, E
+*
+* %D
+*
+* A monitor measuring neutron intensity vs. position, x, and neutron energy, E
+*
+* Example: EPSD_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+*           Emin=1, Emax=50, nx=20, nE=20, filename="Output.poe")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
+* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
+* Emin:     Lower bound of energy (meV)
+* Emax:     Upper bound of energy (meV)
+* nx:       Number of pixel columns in scattering plane (1)
+* nE:       Number of energy bins (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N:    Array of neutron counts
+* PSD_p:    Array of neutron weight counts
+* PSD_p2:   Array of second moments
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT EPSD_monitor
+DEFINITION PARAMETERS (string filename, nx=20, nE=20)
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, Emin, Emax)
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    double PSD_N[nx][nE];
+    double PSD_p[nx][nE];
+    double PSD_p2[nx][nE];
+  %}
+INITIALIZE
+  %{
+    int i,j;
+
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("EPSD_monitor: %s: Null detection area !\n"
+                   "ERROR         (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
+
+    for (i=0; i<nx; i++)
+     for (j=0; j<nE; j++)
+     {
+      PSD_N[i][j] = 0;
+      PSD_p[i][j] = 0;
+      PSD_p2[i][j] = 0;
+     }
+  %}
+TRACE
+  %{
+    int i,j;
+    double E,v;
+
+    PROP_Z0;
+    v=vx*vx+vy*vy+vz*vz;
+    E=VS2E*(vx*vx+vy*vy+vz*vz);
+/*      printf("(x,y,E,v,p) = (%g, %g, %g, %g, %g)\n",x,y,E,v,p); */
+    if (x>xmin && x<xmax && y>ymin && y<ymax && E>Emin && E<Emax)
+    {
+      i = floor((x - xmin)*nx/(xmax - xmin));
+      j = floor((E - Emin)*nE/(Emax - Emin));
+      PSD_N[i][j]++;
+      PSD_p[i][j] += p;
+      PSD_p2[i][j] += p*p;
+    }
+  %}
+SAVE
+  %{
+    DETECTOR_OUT_2D("EPSD monitor", "Position [m]", "Energy [meV]",
+        xmin, xmax, Emin, Emax, nx, nE,
+        &PSD_N[0][0], &PSD_p[0][0], &PSD_p2[0][0],
+        filename);
+  %}
+
+END
+

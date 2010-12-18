@@ -1,0 +1,79 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Beamstop
+*
+* %ID
+*
+* Written by: Kristian Nielsen
+* Date: January 2000
+* Release: McStas 1.11
+* Origin: Risoe
+* Version: $Revision: 1.11 $
+*
+* Rectangular/circular beam stop.
+*
+* %D
+* A simple rectangular or circular beam stop.
+* Infinitely thin and infinitely absorbing.
+* The beam stop is by default rectangular. You may either
+* specify the radius (circular shape), or the rectangular bounds.
+*
+* Example: Beamstop(xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05)
+*          Beamstop(radius=0.1)
+*
+* %PAR
+*
+* INPUT PARAMETERS
+*
+* radius: radius of the beam stop in the z=0 plane, centered at Origo (m)
+* xmin:   Lower x bound (m)
+* xmax:   Upper x bound (m)
+* ymin:   Lower y bound (m)
+* ymax:   Upper y bound (m)
+*
+* %END
+*******************************************************************************/
+
+DEFINE COMPONENT Beamstop
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0,radius=0)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS(sx, sy, sz)
+
+INITIALIZE
+%{
+  if (xmin == 0 && xmax == 0 && ymin == 0 & ymax == 0 && radius == 0)
+    { fprintf(stderr,"Beamstop: %s: Error: give geometry\n", NAME_CURRENT_COMP); exit(-1); }
+
+%}
+
+TRACE
+%{
+    ALLOW_BACKPROP;
+    PROP_Z0;
+    if (((radius!=0) && (x*x + y*y <= radius*radius))
+    || ((radius==0) && (x>xmin && x<xmax && y>ymin && y<ymax)))
+      ABSORB;
+    else
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  if (radius != 0)
+    circle("xy", 0, 0, 0, radius);
+  else
+    multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END

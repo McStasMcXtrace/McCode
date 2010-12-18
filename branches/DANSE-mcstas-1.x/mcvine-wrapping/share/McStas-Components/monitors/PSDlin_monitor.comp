@@ -1,0 +1,130 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: PSDlin_monitor
+* 
+* %I
+* Written by:  Kim Lefmann
+* Date: May 7, 2001
+* Version: $Revision: 1.15 $
+ Origin: Risoe
+* Release: McStas 1.11
+*
+* Rectangular 1D PSD, measuring intensity vs. vertical position, x
+
+* %D
+*
+* Example: PSDlin_monitor(nx=20, filename="Output.x",
+*          xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
+* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
+* nx:       Number of x bins (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* PSDlin_N:    Array of neutron counts
+* PSDlin_p:    Array of neutron weight counts
+* PSDlin_p2:   Array of second moments
+*
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT PSDlin_monitor
+DEFINITION PARAMETERS (nx=20, string filename)
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0)
+OUTPUT PARAMETERS (PSDlin_N, PSDlin_p, PSDlin_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+
+DECLARE
+  %{
+    double *PSDlin_N;
+    double *PSDlin_p;
+    double *PSDlin_p2;
+  %}
+INITIALIZE
+  %{
+    PSDlin_N = (double *)malloc(nx*sizeof(double));
+    PSDlin_p = (double *)malloc(nx*sizeof(double));
+    PSDlin_p2 = (double *)malloc(nx*sizeof(double));
+
+    int i;
+
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("PSDlin_monitor: %s: Null detection area !\n"
+                   "ERROR           (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
+
+    for (i=0; i<nx; i++)
+    {
+      PSDlin_N[i] = 0;
+      PSDlin_p[i] = 0;
+      PSDlin_p2[i] = 0;
+    }
+  %}
+TRACE
+  %{
+    int i;
+
+    PROP_Z0;
+    if (x>xmin && x<xmax && y>ymin && y<ymax)
+    {
+      i = floor(nx*(x-xmin)/(xmax-xmin));              /* Bin number */
+      if((i >= nx) || (i<0))
+      {
+        printf("FATAL ERROR: wrong positioning in linear PSD. i= %i \n",i);
+        exit(1);
+      }
+      PSDlin_N[i]++;
+      PSDlin_p[i] += p;
+      PSDlin_p2[i] += p*p;
+    }
+  %}
+SAVE
+  %{
+    DETECTOR_OUT_1D(
+        "Linear PSD monitor",
+        "x-Position [m]",
+        "Intensity",
+        "x", xmin, xmax, nx,
+        &PSDlin_N[0],&PSDlin_p[0],&PSDlin_p2[0],
+        filename);
+  %}
+
+FINALLY
+  %{
+    free(PSDlin_N); free(PSDlin_p); free(PSDlin_p2);
+  %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END
+
+
+

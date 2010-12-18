@@ -1,0 +1,110 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Collimator_linear
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: August 1998
+* Version: $Revision: 1.15 $
+* Origin: Risoe
+* Release: McStas 1.11
+* Modified by: GA, June 1999, added transmission
+*
+* A simple analytical Soller collimator (with triangular transmission).
+*
+* %D
+* Soller collimator with rectangular opening and specified length. The
+* transmission function is an average and does not utilize knowledge of the
+* actual neutron trajectory. A zero divergence disables collimation (then the
+* component works as a double slit).
+*
+* Example: Collimator_linear(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+*           len=0.25, divergence=40,transmission=0.7)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin:       (m)              Lower x bound on slits
+* xmax:       (m)              Upper x bound on slits
+* ymin:       (m)              Lower y bound on slits
+* ymax:       (m)              Upper y bound on slits
+* len:        (m)              Distance between slits
+* divergence: (minutes of arc) Divergence horizontal angle (calculated as atan(d/len),
+*                              where d is the blade spacing)
+*
+* Optional parameters
+* transmission:(1)              Transmission of Soller (0<=t<=1)
+* divergenceV: (minutes of arc) Divergence vertical angle
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Collimator_linear
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, len, divergence=40,transmission=1, divergenceV=0)
+OUTPUT PARAMETERS (slope, slopeV)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double slope, slopeV;
+%}
+INITIALIZE
+%{
+  slope = tan(MIN2RAD*divergence);
+  slopeV= tan(MIN2RAD*divergenceV);
+%}
+TRACE
+%{
+    double phi, dt;
+
+    PROP_Z0;
+    if (x<xmin || x>xmax || y<ymin || y>ymax)
+      ABSORB;
+    dt = len/vz;
+    PROP_DT(dt);
+    if (x<xmin || x>xmax || y<ymin || y>ymax)
+      ABSORB;
+
+    if(slope > 0.0)
+    {
+      phi = fabs(vx/vz);
+      if (phi > slope)
+        ABSORB;
+      else
+        p *= transmission*(1.0 - phi/slope);
+      SCATTER;
+    }
+    if (slopeV > 0) {
+      phi = fabs(vy/vz);
+      if (phi > slopeV)
+        ABSORB;
+      else
+        p *= transmission*(1.0 - phi/slopeV);
+      SCATTER;
+    }
+%}
+
+MCDISPLAY
+%{
+  double x;
+  int i;
+
+  magnify("xy");
+  for(x = xmin, i = 0; i <= 3; i++, x += (xmax - xmin)/3.0)
+    multiline(5, x, (double)ymin, 0.0, x, (double)ymax, 0.0,
+              x, (double)ymax, (double)len, x, (double)ymin, (double)len,
+              x, (double)ymin, 0.0);
+  line(xmin, ymin, 0,   xmax, ymin, 0);
+  line(xmin, ymax, 0,   xmax, ymax, 0);
+  line(xmin, ymin, len, xmax, ymin, len);
+  line(xmin, ymax, len, xmax, ymax, len);
+%}
+
+END

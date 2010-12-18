@@ -1,0 +1,222 @@
+/****************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Pol_mirror
+*
+* %I
+* Written by: Peter Christiansen
+* Date: July 2006
+* Version: $Revision: 1.4 $
+* Origin: RISOE
+* Release: McStas 1.11
+*
+* Polarising mirror.
+*
+* %D
+* This component models a rectangular infinitely thin mirror.
+* For an unrotated component, the mirror surface lies in the Y-Z
+* plane (ie. parallel to the beam).
+* It relies on similar physics as the Monochromator_pol.
+* The reflec function (see e.g. share/ref-lib for examples) and parameters 
+* are passed to this component to give a bigger freedom. 
+* The up direction is hardcoded to be along the y-axis (0, 1, 0)
+* For now we assume:
+* P(Transmit|Q) = 1 - P(Reflect|Q)
+* i.e. NO ABSORPTION!
+*
+* There are 3 options:
+* 1) Reflect and transmit (randomly choose) [default]
+* 2) Only reflect (reduce weight)
+* 3) Only transmit (reduce weight)
+*
+* The parameters can either be 
+* double pointer initializations (e.g. {1.0, 0.0219, 6.07, 2.0, 0.003}) 
+* or table names (e.g."supermirror_m2.rfl" AND useTables=1).
+* NB! This might cause warnings by the compiler that can be ignored.
+*
+* Examples:
+* Reflection function parametrization 
+* Pol_mirror(zw = 0.40, yh = 0.40, option=1,
+*	     rUpFunc=StdReflecFunc, rUpPar={1.0, 0.0219, 6.07, 2.0, 0.003})
+*
+* Table function 
+* Pol_mirror(zw = 0.40, yh = 0.40, option=2, 
+*	     rUpFunc=TableReflecFunc, rUpPar="supermirror_m2.rfl",
+*	     rDownFunc=TableReflecFunc, rDownPar="supermirror_m3.rfl", 
+*	     useTables=1)
+*
+* See also the example instrument Test_Pol_Mirror (under tests).  
+*
+* GRAVITY: YES
+* POLARISATION: YES
+*
+* %BUGS 
+* NO ABSORPTION
+*
+* %P
+* INPUT PARAMETERS:
+*
+* zw:        Width of the mirror (m)
+* yh:        Height of the mirror (m)
+* rUpFunc:   Reflection function for spin up (q, *par, *r) (1)
+* rUpPar:    Parameters for rUpFunc (1)
+* rDownFunc: Reflection function for spin down (q, *par, *r)(1)
+* rDownPar:  Parameters for rDownFunc (1)
+* useTables: Parameters are 0: Values, 1: Table names (1) 
+* option:    1:Reflect/trasmit, 2:Reflect only, 3:Transmit only (1)
+*
+* OUTPUT PARAMETERS:
+*
+* %L
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Pol_mirror
+DEFINITION PARAMETERS (rUpFunc=StdReflecFunc, rDownFunc=rUpFunc, 
+		       rUpPar={0.99,0.0219,6.07,2.0,0.003}, rDownPar=rUpPar, 
+		       useTables=0, zw, yh)
+SETTING PARAMETERS (int option=1)
+OUTPUT PARAMETERS (rUpParPtr, rDownParPtr)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
+SHARE
+%{
+#include <assert.h>
+  %include "pol-lib"
+  %include "ref-lib"
+     %}
+
+DECLARE
+%{
+#if (useTables)
+  t_Table *rUpParPtr   = 0;
+  t_Table *rDownParPtr = 0;
+#else 
+  double rUpParPtr[]   = rUpPar;
+  double rDownParPtr[] = rDownPar;
+#endif
+  %}
+
+INITIALIZE
+%{
+#if (useTables)
+  rUpParPtr   = (t_Table*) malloc(sizeof(t_Table));
+  rDownParPtr = (t_Table*) malloc(sizeof(t_Table));
+  if (Table_Read(rUpParPtr, rUpPar, 1) <= 0) {
+    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+	    NAME_CURRENT_COMP, rUpPar);
+    exit(1);
+  }
+  if (Table_Read(rDownParPtr, rDownPar, 1) <= 0) { 
+    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+	    NAME_CURRENT_COMP, rDownPar);
+    exit(1);
+  }
+#endif
+
+  if ((zw<=0) || (yh <= 0)) {
+    fprintf(stderr, "Pol_mirror: %s: NULL or negative length scale!\n"
+	    "ERROR      (zw,yh). Exiting\n",
+	    NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  if (option<1 || option>3) {
+    fprintf(stderr, "Pol_mirror: %s: Option %d not supported. Exiting.\n",
+	    NAME_CURRENT_COMP, option);
+    exit(1);
+  }  
+  %}
+
+TRACE
+%{
+  double Q, Rup, Rdown, FN, FM, refWeight;
+  int reflect = -1;
+  int isPolarising = 0;
+  
+  // propagate to mirror plane
+  PROP_X0;
+
+  if (inside_rectangle(z, y, zw, yh)) {/* Intersect the crystal? */
+    
+    // calculate scattering vector magnitude
+    Q = fabs(2*vx*V2K); 
+    assert(Q>=0);
+    
+    // calculate reflection probability
+    rUpFunc(Q, rUpParPtr, &Rup);
+    rDownFunc(Q, rDownParPtr, &Rdown);
+    
+    if(Rup != Rdown) {
+      
+      isPolarising = 1;
+      GetMonoPolFNFM(Rup, Rdown, &FN, &FM);
+      GetMonoPolRefProb(FN, FM, sy, &refWeight);
+    } else
+      refWeight = Rup;
+    
+    // check that refWeight is meaningfull
+    assert(refWeight>=0 && refWeight<=1); 
+    
+    // find out if neutrons is reflected or transmitted
+    if (option==1) { // reflect OR transmit
+      
+      if (rand01()<refWeight) //reflect 
+	reflect = 1;
+      else
+	reflect = 0;
+      
+    } else if (option==2) { // reflect ONLY
+      
+      if(refWeight==0) // only transmission
+	ABSORB;
+      
+      reflect = 1;
+      p *= refWeight;
+      
+    } else if (option==3) { // transmit ONLY
+      
+      if(refWeight==1) // only reflection
+	ABSORB;
+      
+      reflect = 0;
+      p *= (1-refWeight);
+      
+    } 
+
+    assert(reflect==0 || reflect==1);
+
+    // set outgoing velocity and polarisation
+    if (reflect==1) { // reflect
+      
+      vx = -vx;
+      if(isPolarising)
+	SetMonoPolRefOut(FN, FM, refWeight, &sx, &sy, &sz);    
+      
+    } else { // transmit
+      
+      if(isPolarising)
+	SetMonoPolTransOut(FN, FM, refWeight, &sx, &sy, &sz);    
+      
+    } 
+    
+    if(isPolarising)
+      assert(sx*sx+sy*sy+sz*sz<=1); // check that polarisation is meaningfull
+    
+    SCATTER;
+  } /* End intersect the mirror */
+  %}
+
+MCDISPLAY
+%{
+  magnify("zy");
+  rectangle("yz", 0, 0, 0, zw, yh);
+  %}
+
+END

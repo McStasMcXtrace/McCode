@@ -1,0 +1,272 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Source_adapt.comp
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: 1999
+* Version: $Revision: 1.30 $
+* Origin: Risoe
+* Release: McStas 1.11
+* Modified by: Revised by: <a href="mailto:percival@physics.queensu.ca">Aaron M. Percival</a>
+* Modified by: 2007
+* Modified by: <a href="http://www.physics.queensu.ca">Queen's University Department of Physics</a>
+* Modified by: Added the option of having an initial distribution that is uniform in wavelength
+*
+* Neutron source with adaptive importance sampling
+*
+*
+*
+* %D
+* Rectangular source with flat energy or wavelength distribution that
+* uses adaptive importance sampling to improve simulation efficiency.
+* Works together with the Adapt_check component.
+*
+* The source divides the three-dimensional phase space of (energy,
+* horizontal position, horizontal divergence) into a number of
+* rectangular bins. The probability for selecting neutrons from each
+* bin is adjusted so that neutrons that reach the Adapt_check
+* component with high weights are emitted more frequently than those
+* with low weights. The adjustment is made so as to attemt to make
+* the weights at the Adapt_check components equal.
+*
+* Focusing is achieved by only emitting neutrons towards a rectangle
+* perpendicular to and placed at a certain distance along the Z axis.
+* Focusing is only approximate (for simplicity); neutrons are also
+* emitted to pass slightly above and below the focusing rectangle,
+* more so for wider focusing.
+*
+* In order to prevent false learning, a parameter beta sets a
+* fraction of the neutrons that are emitted uniformly, without regard
+* to the adaptive distribution. The parameter alpha sets an initial
+* fraction of neutrons that are emitted with low weights; this is
+* done to prevent early neutrons with rare initial parameters but
+* high weight to ruin the statistics before the component adapts its
+* distribution to the problem at hand. Good general-purpose values
+* for these parameters are alpha = beta = 0.25.
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin:    (m)          Left edge of rectangular source
+* xmax:    (m)          Right edge
+* ymin:    (m)          Lower edge
+* ymax:    (m)          Upper edge
+* dist:    (m)          Distance to target rectangle along z axis
+* xw:      (m)          Width(x) of target
+* yh:      (m)          Height(y) of target
+* E0:      (meV)        Mean energy of neutrons
+* dE:      (meV)        Energy spread (energy range is from E0-dE to E0+dE)
+* lambda0: (AA)         Mean wavelength of neutrons (if energy not specified)
+* dlambda: (AA)         Wavelength spread
+* flux:    (1/(cm**2*AA**st)) Absolute source flux
+* N_E:     (1)          Number of bins in energy (or wavelength) dimension
+* N_xpos:  (1)          Number of bins in horizontal position
+* N_xdiv:  (1)          Number of bins in horizontal divergence
+* alpha:   (1)          Learning cut-off factor (0 < alpha <= 1)
+* beta:    (1)          Aggressiveness of adaptive algorithm (0 < beta <= 1)
+* filename: (string)   Optional filename for adaptive distribution output
+*
+* OUTPUT PARAMETERS:
+*
+* p_in:  Internal, holds initial neutron weight
+* y_0:   Internal
+* C:     Internal
+* r_0:   Internal
+* count: Internal, counts neutrons emitted
+* adpt:  Internal structure shared with the Adapt_check component
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Source_adapt
+DEFINITION PARAMETERS (N_E=20, N_xpos=20, N_xdiv=20, alpha=0.25, beta=0.25, string filename=0)
+SETTING PARAMETERS (xmin,xmax,ymin,ymax, dist=2.33, xw=0.05, yh=0.1, E0=0, dE=0, lambda0=0, dlambda=0, flux=1e13)
+OUTPUT PARAMETERS (p_in, y_0, C, r_0, count, adpt)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+SHARE
+%{
+%include "adapt_tree-lib"
+%}
+
+DECLARE
+%{
+  struct source_adapt
+    {
+      struct adapt_tree *atree; /* Adaptive search tree */
+      int idx;                  /* Index of current bin */
+      double *psi, *n;          /* Arrays of weight sums, neutron counts */
+      double psi_tot;           /* Total weight sum */
+      double pi, num;           /* Initial p, number of bins in tree */
+      double factor;            /* Adaption quality factor */
+      double a_beta;            /* Adaption agression factor */
+    } adpt;
+  double count;                 /* Neutron counter */
+  double y_0, C, r_0;
+  double p_in;
+%}
+INITIALIZE
+%{
+  int i;
+  double a, lambda_min, lambda_max, delta_lambda, source_area;
+
+  adpt.num = N_E*N_xpos*N_xdiv;
+  adpt.a_beta = beta;
+  
+  if (E0 == 0) {
+	lambda_min = lambda0 - dlambda; /* AAngstroem */
+	lambda_max = lambda0 + dlambda;
+	delta_lambda = dlambda;
+  }
+  else {
+  	lambda_min = sqrt(81.81/(E0+dE)); /* AAngstroem */
+  	lambda_max = sqrt(81.81/(E0-dE));
+	delta_lambda = lambda_max - lambda_min;
+  }
+
+  source_area = (xmax - xmin)*(ymax - ymin)*1e4; /* cm^2 */
+  p_in = flux/mcget_ncount()*delta_lambda*source_area;
+  adpt.atree = adapt_tree_init(adpt.num);
+  adpt.psi = malloc(adpt.num*sizeof(*adpt.psi));
+  adpt.n = malloc(adpt.num*sizeof(*adpt.n));
+  if(!(adpt.psi && adpt.n))
+  {
+    fprintf(stderr, "Fatal error: out of memory.\n");
+    exit(1);
+  }
+  for(i = 0; i < adpt.num; i++)
+  {
+    adapt_tree_add(adpt.atree, i, 1.0/adpt.num);
+    adpt.psi[i] = adpt.n[i] = 0;
+  }
+  adpt.psi_tot = 0;
+  count = 0;
+  y_0 = adpt.num > 8 ? 2.0/adpt.num : 0.25;
+  r_0 = 1/(double)alpha*log((1 - y_0)/y_0)/(double)mcget_ncount();
+  C = 1/(1 + log(y_0 + (1 - y_0)*exp(-r_0*mcget_ncount()))/(r_0*mcget_ncount()));
+%}
+TRACE
+%{
+  double thmin,thmax,phmin,phmax,theta,phi,v,r,E,lambda;
+  double new_v;
+  int i_E, i_xpos, i_xdiv;
+
+  /* Randomly select a bin in the current distribution */
+  r = rand01();
+  adpt.idx = adapt_tree_search(adpt.atree, adpt.atree->total*r);
+  if(adpt.idx >= adpt.num)
+  {
+    fprintf(stderr,
+            "Hm, idx is %d, num is %d, r is %g, atree->total is %g\n",
+            adpt.idx, (int)adpt.num, r, adpt.atree->total);
+    adpt.idx = adpt.num - 1;
+  }
+  /* Now find the bin coordinates. */
+  i_xdiv = adpt.idx % (int)N_xdiv;
+  i_xpos = (adpt.idx / (int)N_xdiv) % (int)N_xpos;
+  i_E = (adpt.idx / (int)N_xdiv) / (int)N_xpos;
+  /* Compute the initial neutron parameters, selecting uniformly randomly
+     within each bin dimension. */
+  x = xmin + (i_xpos + rand01())*((xmax - xmin)/(double)N_xpos);
+  y = ymin + rand01()*(ymax - ymin);
+  z=0;
+  thmin = atan2(-xw/2.0 - x, dist);
+  thmax = atan2( xw/2.0 - x, dist);
+  theta = thmin + (i_xdiv + rand01())*((thmax - thmin)/(double)N_xdiv);
+  phmin = atan2(-yh/2.0 - y, dist);
+  phmax = atan2( yh/2.0 - y, dist);
+  phi = phmin + rand01()*(phmax - phmin);
+  
+  if(E0 == 0) {
+  	lambda = lambda0 - dlambda + (i_E + rand01())*(2.0*dlambda/(double)N_E);
+	v = 3.956E3/lambda;
+	vy = v*sin(phi);
+  	vx = v*cos(phi)*sin(theta);
+	vz = v*cos(phi)*cos(theta);
+  	
+  }
+  else {
+  	E = E0 - dE + (i_E + rand01())*(2.0*dE/(double)N_E);
+  	v = sqrt(E)*SE2V;
+  	vy = v*sin(phi);
+  	vx = v*cos(phi)*sin(theta);
+  	vz = v*cos(phi)*cos(theta);	
+  }
+
+  t = 0;
+  /* Adjust neutron weight. */
+  p = p_in;
+  adpt.factor = y_0/(y_0 + (1 - y_0)*exp(-r_0*count));
+  count++;
+  p /= adpt.atree->v[adpt.idx]/(adpt.atree->total/adpt.num);
+  p *= C*adpt.factor*(thmax - thmin)*(sin(phmax) - sin(phmin));
+  SCATTER;
+  /* Update distribution, assuming absorbtion. */
+  if(adpt.n[adpt.idx] > 0)
+    adpt.psi_tot -= adpt.psi[adpt.idx]/
+      (adpt.n[adpt.idx]*(adpt.n[adpt.idx] + 1));
+  adpt.n[adpt.idx]++;
+  if(adpt.psi_tot != 0)
+  {
+    new_v = (1 - adpt.a_beta)*adpt.factor*adpt.psi[adpt.idx]/
+                (adpt.n[adpt.idx]*adpt.psi_tot) +
+            adpt.a_beta/adpt.num;
+    adapt_tree_add(adpt.atree, adpt.idx, new_v - adpt.atree->v[adpt.idx]);
+  }
+  /* Remember initial neutron weight. */
+  adpt.pi = p;
+%}
+
+FINALLY
+%{
+  double *p1 = NULL;
+  int i;
+
+  if(filename)
+  {
+    p1 = malloc(adpt.num*sizeof(double));
+    if(!p1)
+      fprintf(stderr, "Warning: Source_adapt: "
+              "not enough memory to write distribution.\n");
+  }
+  if(p1)
+  {
+    for(i = 0; i < adpt.num; i++)
+      p1[i] = adpt.atree->v[i]/adpt.atree->total;
+    
+    if(E0 == 0) {
+    	DETECTOR_OUT_1D("Adaptive source Wavelength distribution",
+        	    "Wavelength [AA]",
+                    "Probability",
+                    "lambda", lambda0 - dlambda, lambda0 + dlambda, adpt.num,
+    	            NULL, p1, NULL, filename);	    
+    }
+    else { 	
+    	DETECTOR_OUT_1D("Adaptive source energy distribution",
+                    "Energy [meV]",
+                    "Probability",
+                    "E", E0 - dE, E0 + dE, adpt.num,
+                    NULL, p1, NULL, filename);
+    }
+
+    free(p1);
+  }
+  adapt_tree_free(adpt.atree);
+%}
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END

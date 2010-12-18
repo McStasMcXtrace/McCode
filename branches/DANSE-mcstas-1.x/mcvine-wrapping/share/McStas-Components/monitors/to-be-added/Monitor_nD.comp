@@ -1,0 +1,392 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Monitor_nD
+*
+* %Identification
+* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
+* Date: 14th Feb 2000.
+* Origin: <a href="http://www.ill.fr">ILL</a>
+* Release: McStas 1.11
+* Version: $Revision: 1.36 $
+* Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
+* Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
+* Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
+* Modified by: EF, 23th Jul 2001 : log of signal, init arrays to 0, box (0.15)
+* Modified by: EF, 04th Sep 2001 : log/abs of variables (0.16)
+* Modified by: EF, 24th Oct 2001 : capture flux  [p*lambda/1.7985] (0.16.3)
+* Modified by: EF, 27th Aug 2002 : monitor a variable in place of I (0.16.5)
+* Modified by: EF, 25th Oct 2002 : banana, and auto for each variable (0.16.5)
+*
+* This component is a general Monitor that can output 0/1/2D signals
+* (Intensity or signal vs. [something] and vs. [something] ...)
+*
+* %Description
+* This component is a general Monitor that can output 0/1/2D signals
+* It can produce many 1D signals (one for any variable specified in
+* option list), or a single 2D output (two variables correlation).
+* Also, an additional 'list' of neutron events can be produced.
+* By default, monitor is square (in x/y plane). A disk shape is also possible
+* The 'cylinder' and 'banana' option will change that for a banana shape
+* The 'sphere' option simulates spherical detector. The 'box' is a box.
+* The cylinder, sphere and banana should be centered on the scattering point.
+* The monitored flux may be per monitor unit area, and weighted by
+* a lambda/lambda(2200m/s) factor to obtain standard integrated capture flux.
+* In normal configuration, the Monitor_nD measures the current parameters
+* of the neutron that is beeing detected. But a PreMonitor_nD component can
+* be used in order to study correlations between a neutron being detected in
+* a Monitor_nD place, and given parameters that are monitored elsewhere
+* (at <b>PreMonitor_nD</b>).
+* The monitor can also act as a 3He gas detector, taking into account the
+* detection efficiency.
+*
+* The 'bins' and 'limits' modifiers are to be used after each variable,
+* and 'auto','log' and 'abs' come before it. (eg: auto abs log hdiv bins=10
+* limits=[-5 5]) When placed after all variables,  these two latter modifiers
+* apply to the signal (e.g. intensity). Unknown keywords are ignored.
+*
+* In the case of multiple components at the same position, the 'parallel'
+* keyword must be used in each instance instead of defining a GROUP.
+*
+* <b>Possible options are</b>
+* Variables to record:
+*     kx ky kz k wavevector [Angs-1] (    usually axis are
+*     vx vy vz v            [m/s]         x=horz., y=vert., z=on axis)
+*     x y z                 [m]      Distance, Position
+*     kxy vxy xy radius     [m]      Radial wavevector, velocity and position
+*     t time                [s]      Time of Flight
+*     energy omega          [meV]
+*     lambda wavelength     [Angs]
+*     p intensity flux      [n/s] or [n/cm^2/s]
+*     ncounts               [1]
+*     sx sy sz              [1]      Spin
+*     vdiv ydiv dy          [deg]    vertical divergence (y)
+*     hdiv divergence xdiv  [deg]    horizontal divergence (x)
+*     angle                 [deg]    divergence from <z> direction
+*     theta longitude       [deg]    longitude (x/z) [for sphere and cylinder]
+*     phi   lattitude       [deg]    lattitude (y/z) [for sphere and cylinder]
+*
+*     user user1            will monitor the [Mon_Name]_Vars.UserVariable{1|2}
+*     user2                 to be assigned in an other component (see below)
+*
+* <b>Other options keywords are:</b>
+*     abs                       Will monitor the abs of the following variable
+*                               or of the signal (if used after all variables)
+*     auto                      Automatically set detector limits for one/all
+*     all  {limits|bins|auto}   To set all limits or bins values or auto mode
+*     binary {float|double}     with 'source' option, saves in compact files
+*     bins=[bins=20]            Number of bins in the detector along dimension
+*     borders                   To also count off-limits neutrons
+*                                (X < min or X > max)
+*     capture                   weight by lambda/lambda(2200m/s) capture flux
+*     exclusive                 absorb neutrons out of monitor limits
+*     file=string               Detector image file name. default is component
+*                                name, plus date and variable extension.
+*     incoming                  Monitor incoming beam in non flat det
+*     intermediate=[5 in %]     Save ALL results every n% steps in simulation
+*     limits=[min max]          Lower/Upper limits for axes
+*                                (see up for the variable unit)
+*     list=[counts=1000] or all For a long file of neutron characteristics
+*                                with [counts] or all events
+*     log                       Will monitor the log of the following variable
+*                               or of the signal (if used after all variables)
+*     min=[min_value]           Same as limits, but only sets the min or max
+*     max=[max_value]
+*     multiple                  Create multiple independant 1D monitors files
+*     no or not                 Revert next option
+*     outgoing                  Monitor outgoing beam (default)
+*     parallel                  Use this option when the next component is at
+*                                the same position (parallel components)
+*     per cm2                   Intensity will be per cm^2
+*     per steradian             Intensity will be per steradian (requires auto)
+*     premonitor                Will monitor neutron parameters stored
+*                                previously with <b>PreMonitor_nD</b>.
+*     signal=[var]              Will monitor [var] instead of usual intensity
+*     slit or absorb            Absorb neutrons that are out detector
+*     source                    The monitor will save neutron states
+*     unactivate                To unactivate detector (0D detector)
+*     verbose                   To display additional informations
+*     3He_pressure=[3 in bars]  The 3He gas pressure in detector.
+*                               3He_pressure=0 is perfect detector (default)
+*
+* Detector shape options (specified as xwidth,yheight,zthick or x/y/z/min/max)
+*     box                       Box of size xwidth, yheight, zthick.
+*     cylinder                  To get a cylindrical monitor
+*                                (diameter is xwidth, height is yheight).
+*     banana                    Same as cylinder, without top/bottom,
+*                                on restricted angular area; use theta
+*                                variable with limits to define arc.
+*                                (diameter is xwidth, height is yheight).
+*     disk                      Disk flat xy monitor. radius is xwidth.
+*     sphere                    To get a spherical monitor (e.g. a 4PI)
+*                                (diameter is xwidth).
+*     square                    Square flat xy monitor (xwidth, yheight).
+*     previous                  The monitor uses PREVIOUS component as detector
+*                               surface.
+*
+* <b>EXAMPLES:</b>
+* MyMon = Monitor_nD(
+*   xwidth = 0.1, yheight = 0.1, zthick = 0,
+*   options = "intensity per cm2 angle,limits=[-5 5] bins=10,with
+*              borders, file = mon1");
+*                  will monitor neutron angle from [z] axis, between -5
+*                  and 5 degrees, in 10 bins, into "mon1.A" output 1D file
+*   options = "sphere theta phi outgoing"  for a sphere PSD detector (out
+*                  beam)  and saves into file "MyMon_[Date_ID].th_ph"
+*   options = "banana, theta limits=[10,130], bins=120, y" a theta/height
+         banana detector
+*   options = "angle radius all auto"   is a 2D monitor with automatic limits
+*   options = "list=1000 kx ky kz energy" records 1000 neutron event in a file
+*   options = "multiple kx ky kz, auto abs log t, and list all neutrons"
+*        makes 4 output 1D files and produces a complete list for all neutrons
+*        and monitor log(abs(tof)) within automatic limits (for t)
+
+*
+* <b>How to monitor any instrument/component variable into a Monitor_nD</b>
+* Suppose you want to monitor a variable 'age' which you assign somwhere in
+* the instrument:
+*      COMPONENT MyMonitor = Monitor_nD(
+*       xwidth = 0.1, yheight = 0.1,
+*       user1=age, username1="Age of the Captain [years]",
+*       options="user1, auto")
+*      AT ...
+*
+* See also the example in <a href="PreMonitor_nD.html">PreMonitor_nD</a> to
+* monitor neutron parameters cross-correlations.
+*
+* %Parameters
+* INPUT PARAMETERS:
+*
+* xwidth:  [m]  Width/diameter of detector (x). Default is 10 cm.
+* yheight: [m]  Height of detector (y). Default is 10 cm.
+* zthick:  [m]  Thichness of detector (z).
+* options: [str]  String that specifies the configuration of the monitor
+*                 The general syntax is "[x] options..." (see <b>Descr.</b>).
+*
+* Optional input parameters (override xwidth yheight zthick):
+* xmin:   [m]    Lower x bound of opening
+* xmax:   [m]    Upper x bound of opening
+* ymin:   [m]    Lower y bound of opening
+* ymax:   [m]    Upper y bound of opening
+* zmin:   [m]    Lower z bound of opening
+* zmax:   [m]    Upper z bound of opening
+* filename:[str] Output file name (overrides file=XX option).
+* bins:   [1]    Number of bins to force for all variables.
+*                Use 'bins' keyword in 'options' for heterogeneous bins
+* min:    [u]    Minimum range value to force for all variables
+*                Use 'min' or 'limits' keyword in 'options' for other limits
+* max:    [u]    Maximum range value to force for all variables
+*                Use 'max' or 'limits' keyword in 'options' for other limits
+* user1 [variable] Variable assigned to User1
+* user2 [variable] Variable assigned to User2
+* username1  [str] Name assigned to User1
+* username2  [str] Name assigned to User2
+*
+* OUTPUT PARAMETERS:
+*
+* DEFS: structure containing Monitor_nD Defines [struct]
+* Vars: structure containing Monitor_nD variables [struct]
+*
+* %Link
+* <a href="http://www.ill.fr/tas/mcstas/">McStas at ILL</a>
+* %L
+* <a href="PreMonitor_nD.html">PreMonitor_nD</a>
+*
+* %End
+******************************************************************************/
+DEFINE COMPONENT Monitor_nD
+DEFINITION PARAMETERS (string options=0, string filename=0, user1=FLT_MAX, user2=FLT_MAX, username1=0, username2=0)
+SETTING PARAMETERS (xwidth=0.1, yheight=0.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40)
+/* these are protected C variables */
+OUTPUT PARAMETERS (DEFS, Vars)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
+SHARE
+%{
+%include "monitor_nd-lib"
+%}
+
+DECLARE
+%{
+  MonitornD_Defines_type DEFS;
+  MonitornD_Variables_type Vars;
+%}
+
+INITIALIZE
+%{
+  char tmp[256];
+  strcpy(Vars.compcurname, NAME_CURRENT_COMP);
+  if (options != NULL)
+    strncpy(Vars.option, options, 1024);
+  else {
+    strcpy(Vars.option, "x y");
+    printf("Monitor_nD: %s has no option specified. Setting to PSD ('x y') monitor.\n", NAME_CURRENT_COMP);
+  }
+  Vars.compcurpos = POS_A_CURRENT_COMP;
+
+  if (strstr(Vars.option, "source"))
+    strcat(Vars.option, " list, x y z vx vy vz t sx sy sz ");
+
+  if (bins) { sprintf(tmp, " all bins=%ld ", (long)bins); strcat(Vars.option, tmp); }
+  if (min > -FLT_MAX && max < FLT_MAX) { sprintf(tmp, " all limits=[%g %g]", min, max); strcat(Vars.option, tmp); }
+  else if (min > -FLT_MAX) { sprintf(tmp, " all min=%g", min); strcat(Vars.option, tmp); }
+  else if (max <  FLT_MAX) { sprintf(tmp, " all max=%g", max); strcat(Vars.option, tmp); }
+
+  strncpy(Vars.UserName1, username1 && strlen(username1) ? username1 : "", 32);
+  strncpy(Vars.UserName2, username2 && strlen(username2) ? username2 : "", 32);
+
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
+
+  if (filename != NULL) strncpy(Vars.Mon_File, filename, 128);
+
+  /* check if user given filename with ext will be used more than once */
+  if ( ((Vars.Flag_Multiple && Vars.Coord_Number > 1) || Vars.Flag_List) && strchr(Vars.Mon_File,'.') )
+  { char *XY; XY = strrchr(Vars.Mon_File,'.'); *XY='_'; }
+%}
+
+TRACE
+%{
+  double  XY=0;
+  double  t0 = 0;
+  double  t1 = 0;
+  double  pp;
+  int     intersect   = 0;
+  char    Flag_Restore = 0;
+
+  if (user1 != FLT_MAX) Vars.UserVariable1 = user1;
+  if (user2 != FLT_MAX) Vars.UserVariable2 = user2;
+
+  /* this is done automatically
+    STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  */
+
+  if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
+  {
+    PROP_Z0;
+    intersect = (x>=Vars.mxmin && x<=Vars.mxmax && y>=Vars.mymin && y<=Vars.mymax);
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK)   /* disk xy */
+  {
+    PROP_Z0;
+    intersect = ((x*x + y*y) <= Vars.Sphere_Radius*Vars.Sphere_Radius);
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) /* sphere */
+  {
+    intersect = sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius);
+  /*      intersect = (intersect && t0 > 0); */
+  }
+  else if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)) /* cylinder */
+  {
+    intersect = cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius, Vars.Cylinder_Height);
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) intersect = 0; /* remove top/bottom for banana */
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) /* box */
+  {
+    intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, fabs(Vars.mxmax-Vars.mxmin), fabs(Vars.mymax-Vars.mymin), fabs(Vars.mzmax-Vars.mzmin));
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_PREVIOUS) /* previous comp */
+  { intersect = 1; }
+
+  if (intersect)
+  {
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA))
+    {
+      if (t0 < 0 && t1 > 0)
+        t0 = t;  /* neutron was already inside ! */
+      if (t1 < 0 && t0 > 0) /* neutron exit before entering !! */
+        t1 = t;
+      /* t0 is now time of incoming intersection with the sphere. */
+      if ((Vars.Flag_Shape < 0) && (t1 > 0))
+        PROP_DT(t1); /* t1 outgoing beam */
+      else
+        PROP_DT(t0); /* t0 incoming beam */
+    }
+
+    /* Now get the data to monitor: current or keep from PreMonitor */
+    if (Vars.Flag_UsePreMonitor != 1)
+    {
+      Vars.cp = p;
+      Vars.cx = x;
+      Vars.cvx = vx;
+      Vars.csx = sx;
+      Vars.cy = y;
+      Vars.cvy = vy;
+      Vars.csy = sy;
+      Vars.cz = z;
+      Vars.cvz = vz;
+      Vars.csz = sz;
+      Vars.ct = t;
+    }
+
+    if ((Vars.He3_pressure > 0) && (t1 != t0) && ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX)))
+    {
+      XY = exp(-7.417*Vars.He3_pressure*fabs(t1-t0)*2*PI*K2V);
+      /* will monitor the absorbed part */
+      Vars.cp *= 1-XY;
+      /* and modify the neutron weight after monitor, only remains 1-p_detect */
+      p *= XY;
+    }
+
+    if (Vars.Flag_capture)
+    {
+      XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);
+      XY *= V2K;
+      if (XY != 0) XY = 2*PI/XY; /* lambda. lambda(2200 m/2) = 1.7985 Angs  */
+      Vars.cp *= XY/1.7985;
+    }
+
+    pp = Monitor_nD_Trace(&DEFS, &Vars);
+    if (pp==0.0)
+    { ABSORB;
+    }
+    else
+    { Vars.Nsum++;
+      Vars.psum += pp;
+      Vars.p2sum += pp*pp;
+      SCATTER;
+    }
+
+    /* now handles intermediate results saving */
+    if ((Vars.Intermediate > 0) && (mcget_run_num() > Vars.IntermediateCnts))
+    {
+      Vars.IntermediateCnts += Vars.Intermediate*mcget_ncount();
+      /* save results for all monitors in the simulation */
+      mcsave(NULL);
+    }
+    if (Vars.Flag_parallel) /* back to neutron state before detection */
+      Flag_Restore = 1;
+  } /* end if intersection */
+  else {
+    if (Vars.Flag_Absorb && !Vars.Flag_parallel) ABSORB;
+    else Flag_Restore = 1;  /* no intersection, back to previous state */
+  }
+
+  if (Flag_Restore)
+  {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+
+SAVE
+%{
+  /* save results, but do not free pointers */
+  Monitor_nD_Save(&DEFS, &Vars);
+%}
+
+FINALLY
+%{
+  /* free pointers */
+  Monitor_nD_Finally(&DEFS, &Vars);
+%}
+
+MCDISPLAY
+%{
+  Monitor_nD_McDisplay(&DEFS, &Vars);
+%}
+
+END

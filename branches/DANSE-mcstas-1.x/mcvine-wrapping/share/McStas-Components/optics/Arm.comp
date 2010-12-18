@@ -1,0 +1,50 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Arm
+*
+* %I
+*
+* Written by: Kim Lefmann and Kristian Nielsen
+* Date: September 1997
+* Version: $Revision: 1.20 $
+* Release: McStas 1.11
+* Origin: Risoe
+*
+* Arm/optical bench
+*
+* %D
+* An arm does not actually do anything, it is just there to set
+* up a new coordinate system.
+*
+* %P
+* Input parameters:
+*
+* (none)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Arm
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+TRACE
+%{
+%}
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. */
+  magnify("");
+  line(0,0,0,0.2,0,0);
+  line(0,0,0,0,0.2,0);
+  line(0,0,0,0,0,0.2);
+%}
+
+END

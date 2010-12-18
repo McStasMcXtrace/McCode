@@ -1,0 +1,137 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Source_div
+*
+* %I
+* Written by: KL
+* Date: November 20, 1998
+* Modified by: KL, 8 October 2001
+* Version: $Revision: 1.22 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* Neutron source with Gaussian or uniform divergence
+*
+* %D
+* The routine is a rectangular neutron source, which has a gaussian or uniform
+* divergent output in the forward direction.
+* The neutron energy is uniformly distributed between E0-dE and E0+dE or
+* a wavelength is uniformly distributed between Lambda0-dLambda and Lambda0+dLambda.
+* If energy and wavelength are given, energy is used.
+* In the case of uniform distribution (gauss=0), angles are uniformly distributed
+* between -hdiv and +hdiv as well as -vdiv and +vdiv. For Gaussian distribution
+* (gauss=1), 'hdiv' and 'vdiv' define the FWHM of a Gauss'schen distribution,
+*
+* Example: Source_div(width=0.1, height=0.1, hdiv=2, vdiv=2, E0=14, dE=2, gauss=0)
+*
+* %VALIDATION
+* Feb 2005: tested by Kim Lefmann    (o.k.)
+* Apr 2005: energy distribution used in external tests of Fermi choppers (o.k.)
+* Jun 2005: wavelength distribution used in external tests of velocity selectors (o.k.)
+* Validated by: K. Lieutenant
+*
+* %BUGS
+* distribution is uniform in (hor. and vert.) angle (relative to moderator normal),
+* therefore not suited for large angles
+*
+* %P
+* width:    (m)  Width of source
+* height:   (m)  Height of source
+* hdiv:    (deg) FWHM (Gaussian) or maximal (uniform) horizontal divergence
+* vdiv:    (deg) FWHM (Gaussian) or maximal (uniform) vertical divergence
+* E0:      (meV) Mean energy of neutrons.
+* dE:      (meV) Energy spread of neutrons.
+* Lambda0: (Ang) Mean wavelength of neutrons (only relevant for E0=0)
+* dLambda: (Ang) Wavelength spread of neutrons.
+* gauss:    (-)  Criterion: 0: uniform, 1: Gaussian distribution (default)
+*
+* OUTPUT PARAMETERS:
+* sigmah:  (rad) parameter 'sigma' of the Gaussian distribution for horizontal divergence
+* sigmav:  (rad) parameter 'sigma' of the Gaussian distribution for vertical divergence
+* p_init:   (-)  normalisation factor 1/'neutron_count'
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Source_div
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (width, height, hdiv, vdiv, E0=0.0, dE=0.0, Lambda0=0.0, dLambda=0.0, gauss=1)
+OUTPUT PARAMETERS (sigmah, sigmav, p_init)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+  double thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init;
+%}
+INITIALIZE
+%{
+  sigmah = DEG2RAD*hdiv/(2.0*sqrt(2.0*log(2.0)));
+  sigmav = DEG2RAD*vdiv/(2.0*sqrt(2.0*log(2.0)));
+  p_init = 1.0/mcget_ncount();
+
+  if (width < 0 || height < 0 || hdiv < 0 || vdiv < 0
+    || (!Lambda0 && !dLambda && (E0 <= 0 || dE < 0 || E0-dE <= 0))
+    || (!E0 && !dE && (Lambda0 <= 0 || dLambda < 0 || Lambda0-dLambda <= 0))) {
+      printf("Source_div: %s: Error in input parameter values!\n"
+             "ERROR          Exiting\n",
+           NAME_CURRENT_COMP);
+      exit(0);
+  }
+%}
+TRACE
+%{
+ double E,lambda,v;
+
+ p=p_init;
+ z=0;
+ t=0;
+
+ x=randpm1()*width/2.0;
+ y=randpm1()*height/2.0;
+
+ if (E0 > 0.0 && E0 > fabs(dE))
+ { E=E0+dE*randpm1();                    /* Assume linear distribution */
+   v=sqrt(E)*SE2V;
+ }
+ else if (Lambda0 > 0.0 && Lambda0 > fabs(dLambda))
+ { lambda = Lambda0+dLambda*randpm1();   /* Assume linear distribution */
+   v      = 3956.036 / lambda;
+ }
+ else
+ { printf ("wrong energy and wavelength parameters in 'Source_div'");
+   exit(-1);
+ }
+
+ if (gauss==1)
+ { thetah = randnorm()*sigmah;
+   thetav = randnorm()*sigmav;
+ }
+ else
+ { thetah = randpm1()*hdiv*DEG2RAD;
+   thetav = randpm1()*vdiv*DEG2RAD;
+ }
+
+ tan_h = tan(thetah);
+ tan_v = tan(thetav);
+
+ /* Perform the correct treatment - no small angle approx. here! */
+ vz = v / sqrt(1 + tan_v*tan_v + tan_h*tan_h);
+ vy = tan_v * vz;
+ vx = tan_h * vz;
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, -width/2.0, -height/2.0, 0.0,
+                width/2.0, -height/2.0, 0.0,
+                width/2.0,  height/2.0, 0.0,
+               -width/2.0,  height/2.0, 0.0,
+               -width/2.0, -height/2.0, 0.0);
+%}
+
+END

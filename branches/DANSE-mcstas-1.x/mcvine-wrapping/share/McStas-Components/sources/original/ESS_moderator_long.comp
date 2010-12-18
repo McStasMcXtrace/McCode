@@ -1,0 +1,253 @@
+/*******************************************************************************
+*
+* Mcstas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: ESS_moderator_long
+*
+* %I
+* Written by: KL, February 2001
+* Modified by: KL, 18 November 2001
+* Version: $Revision: 1.22 $
+* Origin: Risoe
+* Release: McStas 1.11
+*
+* A parametrised pulsed source for modelling ESS long pulses.
+*
+* %D
+* Produces a time-of-flight spectrum, from the ESS parameters
+* Chooses evenly in lambda, evenly/exponentially decaying in time
+* Adapted from Moderator by: KN, M.Hagen, August 1998
+*
+* Units of flux: n/cm^2/s/AA/ster
+* (McStas units are in general neutrons/second)
+*
+* Example general parameters (general):
+*          size=0.12 l_low=0.1 l_high=10 dist=1.6 xw=0.19 yh=0.15 freq=16.67
+*          branchframe=0.5
+*
+* Example moderator specific parameters
+* (From F. Mezei, "ESS reference moderator characteristics for ...", 4/12/00:
+*  Defining the normalised Maxwellian
+*     M(lam,T) = 2 a^2 lam^-5 exp(-a/lam^2); a=949/T; lam in AA; T in K,
+*   the "pulse integral" function
+*     iexp(t,tau,d) = 0                              ; t<0
+*                     tau (1-exp(-t/tau))            ; 0<t<d
+*                     tau (exp(d/tau)-1) exp(-t/tau) ; t>d ,
+*   and the long pulse shape function
+*     I(t,tau,n,d) = (iexp(t,tau,d)-iexp(t,tau/n,d)) n/(n-1)/tau/d ,
+*
+*   the flux distribution is given as
+*     Phi(t,lam) =  I0 M(lam,T) F(t,tau,n)
+*                 + I2/(1+exp(chi2 lam-2.2))/lam*F(t,tau2*lam,n2)  )
+*
+*   c1: Ambient H20, long pulse, coupled
+*          T=325 tau=80e-6 tau1=400e-6 tau2=12e-6 n=20 n2=5 d=2e-3 chi2=2.5
+*          I0=13.5e11 I2=27.6e10    branch1=0.5 branch2=0.5
+*
+*   c2: Liquid H2, long pulse, coupled
+*          T=50 tau=287e-6 tau1=0 tau2=20e-6 n=20 n2=5 d=2e-3 chi2=0.9
+*          I0=6.9e11 I2=27.6e10    branch1=0 branch2=0.5
+*
+* Debugged intensively against Mezei note (4/12 2000) and VitESS @ Rencurel 2006.
+* The output is now neutrons / second, not as previously neutrons / pulse.
+*
+* %VALIDATION 
+* Validated against VitESS and Mezei note (4/12 2000) @ Rencurel 2006
+*
+* %P
+* Input parameters:
+*
+* size:   (m)    Edge of cube shaped source
+* l_low:  (AA)   Lower edge of lambda distribution
+* l_high: (AA)   Upper edge of energy distribution
+* dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
+* xw:     (m)    Width of focusing rectangle
+* yh:     (m)    Height of focusing rectangle
+* freq:   (Hz)   Frequency of pulses
+* T:      (K)    Temperature of source
+* tau:    (s)    long time decay constant for pulse tail 1a
+* tau1:   (s)    long time decay constant for pulse tail 1b
+* tau2:   (s)    long time decay constant for pulse, 2
+* d:      (s)    pulse length
+* n:      (1)    pulse shape parameter, 1
+* n2:     (1)    pulse shape parameter, 2
+* chi2:   (1/AA) lambda-distribution parameter in pulse 2
+* I0:     (flux) integrated flux, 1 (in flux units, see above)
+* I2:     (flux) Flux, 2 (in flux units, see above)
+* branch1: (1)   limit for switching between two time structures in
+                 distribution 1 (only for coupled water, else = 1)
+* branch2: (1)   limit for switching between distribution 1 and 2.
+*                (default value 0.5)
+* branch_tail: (1)   limit for switching between pulse and tail
+*                (suggested value: tau/d - default defined this way)
+* branchframe: (1) limit for switching between 1st and 2nd pulse
+*                  (if only one pulse wanted: 1)
+*
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT ESS_moderator_long
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (size=0.12, l_low, l_high, dist, xw, yh, freq=50.0/3.0,
+                    T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2e-3, n=20,
+		    n2=5, chi2=0.9, I0=6.9e11, I2=27.6e10,
+                    branch1=1, branch2=0.5, branch_tail=0.14350, branchframe=0)
+OUTPUT PARAMETERS (M, F, l_range, w_mult)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double l_range, w_mult;
+
+  double M(double l, double temp)
+    {
+      double a=949.0/temp;
+      return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
+    }
+
+  double F(double t, double tau, int n)
+    {
+      return (exp(-t/tau)-exp(-n*t/tau))*n/(n-1)/tau;
+    }
+%}
+
+INITIALIZE
+%{
+  if (n == 1 || n2 == 1 || l_low<=0 || l_high <=0 || dist == 0
+    || branch2 == 0 || branch_tail == 0 || tau == 0)
+  {
+    printf("ESS_moderator_long: %s: Check parameters (lead to Math Error).\n Avoid 0 value for {l_low l_high dist d tau branch1/2/tail} and 1 value for {n n2 branch1/2/tail}\n", NAME_CURRENT_COMP);
+    exit(-1);
+  }
+
+  if (tau1==0 && !(branch1==1)) {
+    branch1=1;
+    printf("ESS_moderator_long: %s: WARNING: Setting tau1 to zero implies branch 1=1.\n", NAME_CURRENT_COMP);
+  }
+
+  l_range = l_high-l_low;
+  w_mult = size*size*1.0e4;     /* source area correction */
+  w_mult *= l_range;            /* wavelength range correction */
+  w_mult *= 1/mcget_ncount();   /* Correct for number of rays */
+  w_mult *= freq;               /* Correct for frequency */
+%}
+TRACE
+%{
+  double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag;
+
+  z=0;
+
+  x = 0.5*size*randpm1();
+  y = 0.5*size*randpm1();         /* Choose initial position */
+
+  randvec_target_rect(&xf, &yf, &r, &w_focus,
+        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP);
+
+  dx = xf-x;
+  dy = yf-y;
+  r = sqrt(dx*dx+dy*dy+dist*dist);
+
+  lambda = l_low+l_range*rand01();    /* Choose from uniform distribution */
+  k = 2*PI/lambda;
+  v = K2V*k;
+
+  vz = v*dist/r;
+  vy = v*dy/r;
+  vx = v*dx/r;
+
+
+/*  printf("pos0 (%g %g %g), pos1 (%g %g %g), r: %g, v (%g %g %g), v %g\n",
+  x,y,z,xf,yf,dist,r,vx,vy,vz, v);
+  printf("l %g, w_focus %g \n", lambda, w_focus);  */
+
+  tail_flag = (rand01()<branch_tail);   /* Choose tail/bulk */
+ if (tail_flag)
+ {
+  if (rand01() < branch2)
+  {
+    if (tau1>0)
+      if (rand01() < branch1)     /* Quick and dirty non-general solution */
+      {  /* FIRST CASE a */
+        tau_l = tau;
+        p = 1/(branch1*branch2*branch_tail); /* Correct for switching prob. */
+      }
+      else
+      {  /* FIRST CASE b */
+        tau_l = tau1;
+        p = 1/((1-branch1)*branch2*branch_tail); /* Correct for switching prob. */
+      }
+    else
+      {
+        tau_l = tau;
+        p = 1/(branch2*branch_tail); /* Correct for switching prob. */
+      }
+    t = -tau_l*log(1e-12+rand01());       /* Sample from long-time tail a */
+ /* Correct for true pulse shape */
+    p *= w_focus;                         /* Correct for target focusing */
+    p *= tau_l/d;                         /* Correct for tail part */
+    p *= I0*w_mult*M(lambda,T);           /* Calculate true intensity */
+  }
+  else
+  {
+    /* SECOND CASE */
+    tau_l = tau2*lambda;
+    t = -tau_l*log(1e-12+rand01());       /* Sample from long-time tail */
+    p = n2/(n2-1)*((1-exp(-d/tau_l))-(1-exp(-n2*d/tau_l))*exp(-(n2-1)*t/tau_l)/n);
+                                          /* Correct for true pulse shape */
+    p /= (1-branch2)*branch_tail;          /* Correct for switching prob. */
+    p *= tau_l/d;                         /* Correct for tail part */
+    p *= w_focus;                         /* Correct for target focusing */
+    p *= I2*w_mult/(1+exp(chi2*lambda-2.2))/lambda;
+                                          /* Calculate true intensity */
+  }
+  t += d;                                 /* Add pulse length */
+ }
+ else
+ {
+  t = d*rand01();                        /* Sample from bulk pulse */
+  if (rand01() < branch2)
+  {
+    if (rand01() < branch1)     /* Quick and dirty non-general solution */
+    {  /* FIRST CASE a */
+      tau_l = tau;
+      p = 1/(branch1*branch2*(1-branch_tail)); /* Correct for switching prob. */
+    }
+    else
+    {  /* FIRST CASE b */
+      tau_l = tau1;
+      p = 1/((1-branch1)*branch2*(1-branch_tail)); /* Correct for switching prob. */
+    }
+    p *= 1-n/(n-1)*(exp(-t/tau_l)-exp(-n*t/tau_l)/n); /* Correct for true pulse shape */
+    p *= w_focus;                         /* Correct for target focusing */
+    p *= I0*w_mult*M(lambda,T);           /* Calculate true intensity */
+  }
+  else
+  {
+    /* SECOND CASE */
+    tau_l = tau2*lambda;
+    p = 1-n2/(n2-1)*(exp(-t/tau_l)-exp(-n2*t/tau_l)/n2); /* Correct for true pulse shape */
+    p /= (1-branch2)*(1-branch_tail);      /* Correct for switching prob. */
+    p *= w_focus;                         /* Correct for target focusing */
+    p *= I2*w_mult/(1+exp(chi2*lambda-2.2))/lambda;
+                                          /* Calculate true intensity */
+  }
+ }
+ if (rand01()<branchframe)
+   {
+     t+=1/freq;
+     p/=(branchframe);
+   }
+ else
+   p/=(1-branchframe);
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  rectangle("xy", 0, 0, 0, size, size);
+%}
+
+END

@@ -1,0 +1,8 @@
+files under this directory are derived from mcstas sources. see file COPYING for copy right.
+
+
+The sources here are used to implement some methods in geometry/visitors.
+It should be replaced later.
+
+
+Unlike other directories here, this libary is standalone. This makes it eaiser for us to remove it later.

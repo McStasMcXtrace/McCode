@@ -1,0 +1,276 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Collimator_radial
+*
+* %I
+* Written by: Emmanuel Farhi <farhi@ill.fr>
+* Date: July 2005
+* Version: $Revision: 1.10 $
+* Origin: ILL
+* Release: McStas 1.11
+*
+* A radial Soller collimator.
+*
+* %D
+* Radial Soller collimator with rectangular opening and specified length.
+* The collimator is made of many rectangular channels stacked radially.
+* Each channel is a set of transmitting layers, separated by an absorbing
+* material, the whole stuff is inside an absorbing housing.
+* The component should be positioned at the radius center.
+* When specifying the divergence parameter, the transmission function is an
+* average (triangular approximation) and does not utilize knowledge of
+* the actual neutron trajectory.
+* On the other hand, when specifying the number of blades, model is exact,
+* but statistics is lowered by a factor 2.
+* A zero divergence disables collimation (then the component works as a double
+* slit). If the input/output (w1, w2) width are 0, then a perfect collimator
+* is assumed (no slit check except for the total angular range and height).
+* The component can be made oscillating (usual on diffractometers and TOF
+* machines) with the 'roc' parameter.
+* The neutron beam outside the collimator area is transmitted unaffected.
+*
+* Example: Contains shadow parts due to radial geometry
+*        Collimator_radial(w1=0.015, h1=.3, w2=0.015, h2=.3, len=.35,
+*                   divergence=40,transmission=1,
+*                   theta_min=5, theta_max=165, nchan=128, radius=0.9)
+*
+* Ideal: Collimator_radial(w1=0, h1=.3, w2=0, h2=.3, len=.35,
+*                   divergence=40,transmission=1,
+*                   theta_min=5, theta_max=165, radius=0.9)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* w1:         (m)          Input  window width
+* w2:         (m)          Output window width
+* h1:         (m)          Input  window height
+* h2:         (m)          Output window height
+* len:        (m)          Length/Distance between slits
+* divergence: (min of arc) Divergence angle. May also be specified with the
+*                            nblades parameter
+* theta_min:  (deg)        Minimum Theta angle for the radial setting
+* theta_max:  (deg)        Maximum Theta angle for the radial setting
+* nchan:      (1)          Number of channels in the theta range
+* radius:     (m)          Radius of the collimator (to entry window)
+*
+* Optional parameters
+* transmission:(1)         Transmission of Soller (0<=t<=1)
+* nblades:     (1)         Number of blades composing each Soller. Overrides
+*                            the divergence parameter
+* roc:         (1)         Enable oscillation of collimator with an amplitude
+*                            of 'roc' times a single soller size (w1).
+* verbose:     (0/1)       Gives additional information
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Collimator_radial
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (w1=0.015, h1=0.3, w2=0.015, h2=0.3, len=0.35,
+                    divergence=40,transmission=1,
+                    theta_min=5, theta_max=165, nchan=128, radius=0, nblades=0, roc=0, verbose=0)
+OUTPUT PARAMETERS (soller_theta1, soller_theta2, window_theta,
+                   use_approx, ideal)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double soller_theta1, soller_theta2, window_theta;
+  char   use_approx=1;
+  char   ideal     =0;
+%}
+INITIALIZE
+%{
+  double blades_thick;
+  /* check for input parameters */
+  if (radius <= 0) exit(printf("Collimator_radial: %s: incorrect radius\n", NAME_CURRENT_COMP));
+  if (nchan <= 0)  exit(printf("Collimator_radial: %s: incorrect number of channels\n", NAME_CURRENT_COMP));
+  nchan = ceil(nchan);
+  if (len <= 0)    exit(printf("Collimator_radial: %s: invalid collimator length\n", NAME_CURRENT_COMP));
+
+  theta_max *= DEG2RAD;
+  theta_min *= DEG2RAD;
+
+  if (!w1 && !w2) { ideal=1; nblades=0; }
+  else {
+    soller_theta1  = atan2(fabs(w1), radius    );
+    soller_theta2  = atan2(fabs(w2), radius+len);
+    window_theta   = fabs(theta_max-theta_min)/nchan;
+
+    if (soller_theta1 > window_theta || soller_theta2 > window_theta)
+      exit(printf("Collimator_radial: %s: the %f channels of size %f [deg]\n"
+                "                   do not fit within the angular range %g [deg]\n",
+      NAME_CURRENT_COMP, nchan, soller_theta1*RAD2DEG, window_theta*RAD2DEG));
+  }
+
+  if (divergence && !nblades) {
+    divergence *= MIN2RAD;
+    blades_thick= len*tan(divergence);
+    nblades     = fabs(floor(w1/blades_thick));
+    nchan       =ceil(fabs(theta_max-theta_min)/divergence);
+    window_theta=divergence;
+    use_approx  = 1;
+  } else if (nblades) {
+    blades_thick = w1/nblades;
+    divergence   = fabs(atan2(blades_thick,len));
+    use_approx   = 0;
+  } else { divergence = 0; nblades = 0; }
+  if (verbose) {
+    printf("Collimator_radial: %s: divergence %g [min] %s\n"
+             "    Total opening [%.2g:%.2g] [deg] in %g channels",
+             NAME_CURRENT_COMP, divergence*RAD2MIN,
+             (roc ? "oscillating" : ""),
+              theta_min*RAD2DEG, theta_max*RAD2DEG, nchan);
+    if (!ideal)
+      printf(" as %g channels of %.2g layers %s\n"
+           "    Channel Window=%g [deg] Soller=%g [deg]\n",
+           nchan, nblades, (use_approx ? "(approx)" : ""),
+           window_theta*RAD2DEG, soller_theta1*RAD2DEG);
+    else printf(" (ideal)\n");
+  }
+
+%}
+TRACE
+%{
+  double phi, t0, t1, t2, t3;
+  int    intersect;
+  long   input_chan,  output_chan;
+  long   input_blade, output_blade;
+  double input_theta, output_theta;
+  double input_center,output_center;
+  char   ok=0;
+  double roc_theta=0;
+
+  /* first compute intersection time with input cylinder */
+  intersect=cylinder_intersect(&t0,&t3,x,y,z,vx,vy,vz,radius,h1);
+  if (!intersect) ABSORB;
+  else if (t3 > t0) t0 = t3;
+
+  intersect=cylinder_intersect(&t1,&t2,x,y,z,vx,vy,vz,radius+len,h2);
+  if (!intersect) ABSORB;
+  else if (t2 > t1) t1 = t2;
+
+  /* get index of input Soller */
+  if (t0 > 0 && t1 > t0) {
+    PROP_DT(t0);
+    if (!ideal) {
+      if (roc) roc_theta = roc*randpm1()*soller_theta1/2;
+
+      input_theta = atan2(x, z) + roc_theta;
+    /* channel number (start at 0) */
+      input_chan  = floor((input_theta - theta_min)/window_theta);
+      if (input_chan >= 0 && input_chan < nchan && fabs(y) <= h1/2) ok=1;
+    } else if (fabs(y) < h1/2) ok = 1;
+
+    if (ok) {
+      if (ideal)
+        input_center=atan2(x,z);
+      else {
+        input_center= theta_min + input_chan*window_theta
+                  + (window_theta)/2;
+        /* are we outside the soller ? */
+        phi = input_theta - input_center;
+
+        if (fabs(phi) > soller_theta1/2) ABSORB; /* outside input soller */
+      /* get blade number in soller */
+        input_blade = floor(phi/soller_theta1*nblades);
+      }
+      SCATTER;
+
+      /* propagate to output radius */
+      PROP_DT(t1-t0);
+      SCATTER;
+      if (!ideal) {
+        output_theta = atan2(x, z) + roc_theta;
+        /* channel number (start at 0) */
+        output_chan  = floor((output_theta - theta_min)/window_theta);
+        /* did we change channel ? */
+        if (output_chan != input_chan) ABSORB; /* changed soller */
+        output_center= theta_min + output_chan*window_theta
+                    + (window_theta)/2;
+        /* are we outside the soller */
+        phi = output_theta -output_center;
+        if (fabs(phi) > soller_theta2/2 || fabs(y) > h2/2) ABSORB; /* outside output soller */
+        /* get blade number in soller */
+        output_blade = floor(phi/soller_theta2*nblades);
+      } else if (fabs(y) > h2/2) ABSORB;
+
+      /* now handle blades or triangular approximation */
+      if (divergence) {
+        if (use_approx)
+        {
+          phi = fabs(atan2(vx,vz) - input_center); /* deviation from center */
+          if (phi > divergence)
+            ABSORB; /* get outside transmission */
+          else
+            p *= transmission*(1.0 - phi/divergence);
+          SCATTER;
+        } else {
+          if (input_blade != output_blade) ABSORB; /* blade number has changed */
+          p *= transmission;
+          SCATTER;
+        }
+      }
+    } /* else we pass aside radial collimator */
+  } /* else did not encounter collimator */
+
+%}
+
+MCDISPLAY
+%{
+  int i;
+  double theta1, theta2;
+  double x_in_l,  z_in_l,  x_in_r,  z_in_r;
+  double x_out_l, z_out_l, x_out_r, z_out_r;
+  double y1, y2;
+
+  magnify("xy");
+  y1 = h1/2;
+  y2 = h2/2;
+  for (i = 0; i < nchan; i++) {
+    theta1 = i*window_theta+theta_min;
+    theta2 = theta1+window_theta;
+
+    z_in_l = radius*cos(theta1);
+    x_in_l = radius*sin(theta1);
+    z_in_r = radius*cos(theta2);
+    x_in_r = radius*sin(theta2);
+
+    z_out_l = (radius+len)*cos(theta1);
+    x_out_l = (radius+len)*sin(theta1);
+    z_out_r = (radius+len)*cos(theta2);
+    x_out_r = (radius+len)*sin(theta2);
+    /* left side */
+    multiline(6,
+      x_in_l, -y1, z_in_l,
+      x_in_l,  y1, z_in_l,
+      x_out_l, y2, z_out_l,
+      x_out_l,-y2, z_out_l,
+      x_in_l, -y1, z_in_l,
+      x_in_r, -y1, z_in_r);
+   /* left -> right lines */
+   line(x_in_l,   y1, z_in_l,  x_in_r,  y1, z_in_r);
+   line(x_out_l,  y2, z_out_l, x_out_r, y2, z_out_r);
+   line(x_out_l, -y2, z_out_l, x_out_r,-y2, z_out_r);
+  }
+  /* remaining bits */
+  theta1 = nchan*window_theta+theta_min;
+  z_in_l = radius*cos(theta1);
+  x_in_l = radius*sin(theta1);
+  z_out_l = (radius+len)*cos(theta1);
+  x_out_l = (radius+len)*sin(theta1);
+  multiline(5,
+      x_in_l, -y1, z_in_l,
+      x_in_l,  y1, z_in_l,
+      x_out_l, y2, z_out_l,
+      x_out_l,-y2, z_out_l,
+      x_in_l, -y1, z_in_l);
+%}
+
+END
