@@ -33,7 +33,7 @@ BEGIN {
   if($ENV{"MCSTAS"}) {
     $MCSTAS::sys_dir = $ENV{"MCSTAS"};
   } else {
-    if ($0 =~ m/mcgui/) {
+    if ($0 =~ /mcrun/i) {
       if ($Config{'osname'} eq 'MSWin32') {
 	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
       } else {
