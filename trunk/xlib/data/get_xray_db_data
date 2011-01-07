@@ -1,0 +1,22 @@
+#!/usr/bin/bash
+
+url=http://physics.nist.gov/cgi-bin/ffast/ffast.pl
+
+if [[ -z "$1" ]]
+then 
+  echo "what material are you trying to get data for? please supply atomic number."
+  echo "usage: get_xray_db_data ATOMNO [output file]"
+fi
+
+Z=$1
+
+range=S
+
+modifiers="?Z=$Z&Formula=&gtype=4&range=$range&lower=0&upper=500&density=&frames=noframes"
+
+if [[ -n "$2" ]]
+then
+  wget "$url$modifiers" -O $2
+else
+  wget "$url$modifiers" -O -
+fi
