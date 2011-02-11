@@ -48,7 +48,7 @@ COMPONENT Origin = Progress_bar()
 AT (0,0,0) ABSOLUTE
 
 COMPONENT id11_source=Source_div(
-    xwidth=source_h,yheight=source_v,focus_aw=source_div_h,focus_ah=source_div_v, E0=30e3, dE=900, gauss=1
+    xwidth=source_h,yheight=source_v,focus_aw=source_div_h,focus_ah=source_div_v, E0=30, dE=0.9, gauss=1
 
 )
 WHEN (SOURCE==0) AT (0,0,0) RELATIVE PREVIOUS
