@@ -1,0 +1,12 @@
+# Cu (Z = 29) Atomic weight: Ar = 63.54600 g mol-1 Nominal #density:  ρ (g cm-3) = 8.9400
+#    σa(barns/atom) = [μ/ρ](cm2 g-1)  ×  1.05521E+02 
+#    E(eV) [μ/ρ](cm2 g-1) = f2(e atom-1)  ×  6.62202E+05 
+#    9 edges. Edge energies (keV):
+#
+#     
+#      K      8.97890E+00  L I    1.09610E+00  L II   9.51000E-01  L III  9.31100E-01 
+#      M I    1.19800E-01  M II   7.36000E-02  M III  7.36000E-02  M IV   1.60000E-03 
+#      M V    1.60000E-03 
+#
+#    Relativistic correction estimate frel (H82,3/5CL) = -1.4003E-01, -8.7600E-02 e atom-1 
+#    Nuclear Thomson correction fNT = -7.2602E-03 e atom-1 
