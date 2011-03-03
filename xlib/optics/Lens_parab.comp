@@ -29,7 +29,7 @@
 * T - transmission of the lens
 * 
 * attenuation coefficient mu is taken from the NIST database and 
-* Be_data.txt
+* Be.txt
 *
 *
 *******************************************************************************/
@@ -159,7 +159,6 @@ DECLARE
   struct datastruct *prms;
 %} 
 
-
 INITIALIZE 
 %{
   int status=0;
@@ -175,8 +174,8 @@ INITIALIZE
   if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
   if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
   prms->E=malloc(sizeof(double)*(t.rows+1));
-  prms->mu=malloc(sizeof(double)*(t.rows+1));
   prms->f=malloc(sizeof(double)*(t.rows+1));
+  prms->mu=malloc(sizeof(double)*(t.rows+1));
   int i;
   for(i=0;i<t.rows;i++){
       prms->E[i]=t.data[i*t.columns]; 
@@ -216,27 +215,20 @@ TRACE
   E=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
   mu=(1-E)*prms->mu[i-1]+E*prms->mu[i];
   mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
-  f=(1-E)*prms->f[i-1]+E*prms->f[i]; //printf("221: f=%g\n", f);
-
-
-/*Calculation of Refractive Index */
+  f=(1-E)*prms->f[i-1]+E*prms->f[i]; 
+  
+  /*Calculation of Refractive Index */
 
   rhoel= f*Na*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
 
   delta= 2.0*M_PI*Re*rhoel/(k*k);
-  //delta=((2.0*M_PI*Re)/pow(k,2))*((Na/prms->Ar)*prms->rho*(prms->Z+f)*1e-24); 
- 
-  //printf("223: Ar=%g, rho=%g, Z=%d, k=%g\n", prms->Ar, prms->rho, prms->Z,k);
   
   beta=mu/(2.0*k);          /*mu and k in  A^-1*/
   
-  /*n=1.0-delta; printf("225: delta=%g, beta=%g, n=%e\n", delta, beta, n);  /* before it was n=1.0-delta-beta; -> Wrong !!! */
-
-  Refractive_Index_Re = 1.0-delta; //printf("225: delta=%g, beta=%g, Re(n)=%e\n", delta, beta, Refractive_Index_Re);  /* before it was n=1.0-delta-beta; -> Wrong !!! */
-
+  Refractive_Index_Re = 1.0-delta; 
   Refractive_Index_Im = beta; 
 
-/*Ray Tracing*/
+  /*Ray Tracing*/
 
   incid.k[0]=kx; incid.k[1]=ky; incid.k[2]=kz; 
   incid.coord[0]=x; incid.coord[1]=y; incid.coord[2]=z;
@@ -252,7 +244,6 @@ TRACE
     SCATTER;	
     //alter parabolic input to match second parabola
     kx=refr.k[0]; ky=refr.k[1]; kz=refr.k[2];
-    //printf("266: kx=%g, ky=%g, kz=%g\n", kx,ky,kz);
     parab.constants[2]=(nr+1)*d+nr*2*w;
     parab.constants[3]=Refractive_Index_Re;
     parab.constants[4]=1.0; 
