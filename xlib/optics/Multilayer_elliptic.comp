@@ -48,7 +48,7 @@
 DEFINE COMPONENT Multilayer_elliptic
 DEFINITION PARAMETERS (string reflectivity_datafile="reflectivity.txt")
 SETTING PARAMETERS (theta=1.2,s1,s2,length=0.5,width=0.2)
-OUTPUT PARAMETERS (prms)
+OUTPUT PARAMETERS (prms_m)
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
 SHARE 
@@ -85,7 +85,7 @@ SHARE
 DECLARE
 %{
   double a,b,c,M,Z0,Y0,xi,cost0;
-  struct prms_multilayer_elliptic *prms;
+  struct prms_multilayer_elliptic *prms_m;
     
 %}
 
@@ -111,17 +111,17 @@ INITIALIZE
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",reflectivity_datafile,NAME_CURRENT_COMP);
     exit(-1);
   }
-  prms=malloc(sizeof(struct prms_multilayer_elliptic));
-  (prms->R)=malloc(sizeof(double *)*(t.rows));
-  (prms->Q)=malloc(sizeof(double)*(t.rows));
+  prms_m=malloc(sizeof(struct prms_multilayer_elliptic));
+  (prms_m->R)=malloc(sizeof(double *)*(t.rows));
+  (prms_m->Q)=malloc(sizeof(double)*(t.rows));
     int i,j;
   for (i=0;i<t.rows;i++){
-    prms->R[i]=malloc(sizeof(double)*(t.columns-1));
+    prms_m->R[i]=malloc(sizeof(double)*(t.columns-1));
   }
   for(i=0;i<t.rows;i++){
-      prms->Q[i]=t.data[i*t.columns];
+      prms_m->Q[i]=t.data[i*t.columns];
       for(j=0;j<t.columns-1;j++){
-	  prms->R[i][j]=t.data[i*t.columns+j+1];
+	  prms_m->R[i][j]=t.data[i*t.columns+j+1];
       }
     }
   Table_Free(&t);
@@ -209,12 +209,12 @@ TRACE
 	  
 	  int r=0;
 	  while (r<=6000){
-	    if(Q<(prms->Q[r])) break;
+	    if(Q<(prms_m->Q[r])) break;
 	    r++;
 	  } 
 	  double Ref;
 	  //for now just take the mean, should really interpolate
-	  Ref=(prms->R[r-1][c-1] + prms->R[r-1][c] + prms->R[r][c-1] + prms->R[r][c])/4; 
+	  Ref=(prms_m->R[r-1][c-1] + prms_m->R[r-1][c] + prms_m->R[r][c-1] + prms_m->R[r][c])/4; 
 	  
 	  // apply reflectivity
 	  p*=Ref; 
