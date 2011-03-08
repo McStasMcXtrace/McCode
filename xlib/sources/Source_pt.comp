@@ -97,9 +97,9 @@ INITIALIZE
     }
     printf("Source_pt(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
     if(E0) printf("Source_pt(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
-  }else if (E0 && dE){
-    lambda0=1/(E0*E2K);
-    dlambda=1/(dE*E2K);
+  }else if (E0){
+    lambda0=2*M_PI/(E0*E2K);
+    if (dE){dlambda=2*M_PI/(E2K*E0*E0)*dE;}
   }else if (!lambda0){
     fprintf(stderr,"Source_pt(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP); 
     exit(0);  
