@@ -114,9 +114,9 @@ INITIALIZE
     }
     printf("Source_flat(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
     if(E0) printf("Source_flat(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
-  }else if (E0 && dE){
+  }else if (E0){
     lambda0=2*M_PI/(E0*E2K);
-    dlambda=2*M_PI/(dE*E2K);
+    if (dE){dlambda=2*M_PI/(E2K*E0*E0)*dE;}
   }else if (!lambda0){
     fprintf(stderr,"Source_flat(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP); 
     exit(0);  
@@ -159,6 +159,7 @@ TRACE
 
   if (spectrum_file){
     double pp=0;
+    int j;
     while (pp<=0){ 
       l=prms.t.data[0]+ (prms.t.data[(prms.t.rows-1)*prms.t.columns] -prms.t.data[0])*rand01();
       pp=Table_Value(prms.t,l,1);
@@ -178,11 +179,10 @@ TRACE
     l=lambda0;
   }
 
-  k = (2*PI/l);
+  k = (2*M_PI/l);
   ky=k*dy/rf;
   kx=k*dx/rf;
   kz=k*dist/rf;
-
   /*randomly pick phase or set to something real*/
   if (incoherent){
     phi=rand01()*2*M_PI;
