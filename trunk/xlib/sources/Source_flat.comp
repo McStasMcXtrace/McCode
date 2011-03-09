@@ -159,7 +159,6 @@ TRACE
 
   if (spectrum_file){
     double pp=0;
-    int j;
     while (pp<=0){ 
       l=prms.t.data[0]+ (prms.t.data[(prms.t.rows-1)*prms.t.columns] -prms.t.data[0])*rand01();
       pp=Table_Value(prms.t,l,1);
