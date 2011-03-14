@@ -53,8 +53,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_div
-DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xwidth, yheight, focus_xw=0,focus_yh=0,focus_aw, focus_ah, E0=0.0, dE=0.0, lambda0=0.0, dlambda=0.0, gauss=0, flux=1)
+DEFINITION PARAMETERS (string spectrum_file=NULL)
+SETTING PARAMETERS (xwidth, yheight, focus_xw=0,focus_yh=0,focus_aw, focus_ah, 
+  E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0)
 OUTPUT PARAMETERS (prms,thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh)
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
@@ -63,14 +64,17 @@ SHARE
 #ifndef MX_COHERENT
 #define MX_COHERENT 0
 #endif
+
 %}
 
 DECLARE
 %{
   double thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh;
   struct {
-    double K,dK,xmin,xmax,xw_2,focus_xw_2,ymin,ymax,yh_2,focus_yh_2;
+    double K,dK,xmin,xmax,xw_2,focus_xw_2,ymin,ymax,yh_2,focus_yh_2,pmul;
   } prms;
+
+
 %}
 
 INITIALIZE
@@ -93,12 +97,20 @@ INITIALIZE
   prms.xmax=xwidth/2.0;
   prms.ymax=yheight/2.0;
 
+  /*calculate the X-ray weight from the flux*/
+  if (flux){
+    prms.pmul=flux;
+  }else{
+    prms.pmul=1;
+  }
+  prms.pmul*=1/mcget_ncount();
+
 %}
 
 TRACE
 %{
   double kk,theta_x,theta_y;
-
+  p=prms.pmul;
   if (!gauss){ 
     theta_x=(rand01()-0.5)*focus_aw;
     if(focus_xw!=0.0){
