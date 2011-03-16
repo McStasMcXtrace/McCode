@@ -48,7 +48,7 @@
 DEFINE COMPONENT Multilayer_elliptic
 DEFINITION PARAMETERS (string reflectivity_datafile="reflectivity.txt")
 SETTING PARAMETERS (theta=1.2,s1,s2,length=0.5,width=0.2)
-OUTPUT PARAMETERS (prms_m)
+OUTPUT PARAMETERS (prms_m, a,b,c,M,Z0,Y0,xi,cost0)
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
 SHARE 
@@ -170,7 +170,6 @@ TRACE
     if (y_int>=0 && fabs(x_int)<=width/2){
 	dist=sqrt((x_el-x_int)*(x_el-x_int)+(y_el-y_int)*(y_el-y_int)+(z_el-z_int)*(z_el-z_int));
 	PROP_DL(dist); 
-	SCATTER;
 	
 	if (fabs(z)<=length/2) { /*finally in business on the mirror! YAY! */
 	  nx=0;
