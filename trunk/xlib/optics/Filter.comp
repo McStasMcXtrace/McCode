@@ -26,7 +26,7 @@
 * xwidth: Width of block. (m) 
 * yheight: Height of block. (m)
 * zdepth:  Thickness of block. (m)
-material_datafile: file where the material parameters for the lens may be found. Format is similar to what may be found off the NISP website. [Be.txt] 
+* material_datafile: file where the material parameters for the filter may be found. Format is similar to what may be found off the NISP website. [Be.txt] 
 *
 * %E
 *******************************************************************************/
