@@ -48,20 +48,17 @@ STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 SHARE
 %{
   %include "read_table-lib"
-#ifndef source_prms_T
-  typedef struct {
-    double l0,dl;
-    double pmul,pint;
-    t_Table t;
-  } source_prms_T; 
-#endif
 %}
 
 
 DECLARE
 %{
   double e,l;
-  source_prms_T prms;
+  struct {
+    double l0,dl;
+    double pmul,pint;
+    t_Table t;
+  } prms;
 
 %}
 
@@ -78,8 +75,8 @@ INITIALIZE
   fi_y=atan(focus_yh/2.0/distance);
   
   /*fractional solid angle subtended by the target*/
-  t_ome=(sin(fi_y))*fi_x/M_PI;
-
+  t_ome=asin(sin(fi_y)*sin(fi_x))/M_PI;
+  
   if (spectrum_file){
     /*read spectrum from file*/
     int status=0;
