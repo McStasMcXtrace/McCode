@@ -51,31 +51,28 @@ DEFINITION PARAMETERS (string spectrum_file=NULL)
 SETTING PARAMETERS (radius=0, yheight=0, xwidth=0, 
   dist=0, focus_xw=.045, focus_yh=.12, 
   E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0)
-OUTPUT PARAMETERS (prms)
+OUTPUT PARAMETERS (prms,square)
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi, Ex,Ey,Ez,p)
 
 SHARE
 %{
   %include "read_table-lib"
-#ifndef source_prms_T
-  typedef struct {
-    double l0,dl;
-    double pmul,pint;
-    t_Table t;
-  } source_prms_T; 
-#endif
 %}
 
 DECLARE
 %{
   double pmul, srcArea;
   int square;
-  source_prms_T prms;
+  struct {
+    double l0,dl;
+    double pmul,pint;
+    t_Table t;
+  } prms;
 %}
 
 INITIALIZE
 %{
-  square = 0;
+  square = 0;srcArea=0;
   /* Determine source area */
   if (radius && !yheight && !xwidth ) {
     square = 0;
@@ -137,7 +134,6 @@ TRACE
 
   phi=0;
   z=0;
-
   if (square == 1) {
     x = xwidth * (rand01() - 0.5);
     y = yheight * (rand01() - 0.5);
@@ -153,9 +149,8 @@ TRACE
   dx = xf-x;
   dy = yf-y;
   rf = sqrt(dx*dx+dy*dy+dist*dist);
-
-  /*pdir contains the solid angle weighting*/
-  p = pdir*prms.pmul;
+  /*pdir contains the unnormalized solid angle weighting */
+  p = prms.pmul*pdir/(4*M_PI);
 
   if (spectrum_file){
     double pp=0;
