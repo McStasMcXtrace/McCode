@@ -47,7 +47,7 @@
 
 DEFINE COMPONENT Multilayer_elliptic
 DEFINITION PARAMETERS (string reflectivity_datafile="reflectivity.txt")
-SETTING PARAMETERS (theta=1.2,s1,s2,length=0.5,width=0.2)
+SETTING PARAMETERS (theta=1.2,s1,s2,length=0.5,width=0.2,R0=1)
 OUTPUT PARAMETERS (prms_m, a,b,c,M,Z0,Y0,xi,cost0)
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
@@ -68,7 +68,6 @@ SHARE
    *x_el=x0;
    *y_el=cos(xi_mir)*y0+sin(xi_mir)*z0+Ymir;
    *z_el=-sin(xi_mir)*y0+cos(xi_mir)*z0+Zmir;
-       
   }
   
   void CoordTransEM(double *x_gen, double *y_gen,double *z_gen,
@@ -77,7 +76,6 @@ SHARE
    *x_gen=x0;
    *y_gen=cos(xi_mir)*(y0-Ymir)-sin(xi_mir)*(z0-Zmir);
    *z_gen=sin(xi_mir)*(y0-Ymir)+cos(xi_mir)*(z0-Zmir);
-       
   }
   
 %}
@@ -177,8 +175,8 @@ TRACE
 	      ny=1;
 	      nz=0;
 	  } else {
-	  ny=(a*a*y_int)/(b*b*z_int);
-	  nz=1.0;
+            ny=(a*a*y_int)/(b*b*z_int);
+            nz=1.0;
 	  }
 	  NORM(nx,ny,nz);
 	  vink=scalar_prod(nx,ny,nz,kx_el,ky_el,kz_el); 
@@ -205,15 +203,22 @@ TRACE
 	      if (E<(7+c*0.05)) break;
 	      c++;
 	  } 
-	  
-	  int r=0;
-	  while (r<=6000){
-	    if(Q<(prms_m->Q[r])) break;
-	    r++;
-	  } 
-	  double Ref;
-	  //for now just take the mean, should really interpolate
-	  Ref=(prms_m->R[r-1][c-1] + prms_m->R[r-1][c] + prms_m->R[r][c-1] + prms_m->R[r][c])/4; 
+           
+          int r=0;
+          while (r<=6000){
+            if(Q<(prms_m->Q[r])) break;
+            r++;
+          } 
+          
+          double Ref;
+          /*check for table index overrruns*/
+          if (c<1)c=1;
+          else if (c>60) c=60;
+          if (r<1)r=1;
+          else if (r>6000) r=6000;
+          //for now just take the mean, should really interpolate
+          
+          Ref=(prms_m->R[r-1][c-1] + prms_m->R[r-1][c] + prms_m->R[r][c-1] + prms_m->R[r][c])/4; 
 	  
 	  // apply reflectivity
 	  p*=Ref; 
