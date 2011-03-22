@@ -128,6 +128,7 @@
   do{ \
     if( dl <0 && mcallowbackprop == 0) { (mcAbsorbProp[INDEX_CURRENT_COMP])++; ABSORB; }; \
     mcPROP_DL(dl); \
+    DISALLOW_BACKPROP;\
   } while (0)
 
 #define PROP_DT(dt) \
