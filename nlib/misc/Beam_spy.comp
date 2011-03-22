@@ -72,13 +72,13 @@ TRACE
   if (z  < min_z)  min_z  = z;
   if (vx < min_vx) min_vx = vx;
   if (vy < min_vy) min_vy = vy;
-  if (vz < min_vz) min_vz = z;
+  if (vz < min_vz) min_vz = vz;
   if (x  > max_x)  max_x  = x;
   if (y  > max_y)  max_y  = y;
   if (z  > max_z)  max_z  = z;
   if (vx > max_vx) max_vx = vx;
   if (vy > max_vy) max_vy = vy;
-  if (vz > max_vz) max_vz = z;
+  if (vz > max_vz) max_vz = vz;
   n_neutrons++;
   n_neutrons_p  += p;
   n_neutrons_p2 += p*p;
