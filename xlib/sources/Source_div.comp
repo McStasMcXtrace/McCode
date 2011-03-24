@@ -54,8 +54,8 @@
 
 DEFINE COMPONENT Source_div
 DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (xwidth, yheight, focus_xw=0,focus_yh=0,focus_aw, focus_ah, 
-  E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0)
+SETTING PARAMETERS (xwidth, yheight, focus_xw=0,focus_yh=0,dist=0,focus_aw, focus_ah, 
+    E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0)
 OUTPUT PARAMETERS (prms,thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh)
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
@@ -64,14 +64,15 @@ SHARE
 #ifndef MX_COHERENT
 #define MX_COHERENT 0
 #endif
-
+  %include "read_table-lib"
 %}
 
 DECLARE
 %{
   double thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh;
   struct {
-    double K,dK,xmin,xmax,xw_2,focus_xw_2,ymin,ymax,yh_2,focus_yh_2,pmul;
+    double K,dK,xmin,xmax,xw_2,focus_xw_2,ymin,ymax,yh_2,focus_yh_2,pmul,pint;
+    t_Table t;
   } prms;
 
 
@@ -79,16 +80,6 @@ DECLARE
 
 INITIALIZE
 %{
-  if (E0==0 && lambda0==0){
-    fprintf(stderr,"Error in %s, must specify energy or wavelength\n",NAME_CURRENT_COMP);exit(0);
-  }
-  if (lambda0==0){
-    prms.K=E2K*E0;
-    prms.dK=E2K*dE;
-  }else{
-    prms.K=2*M_PI/lambda0;
-    prms.dK=2*M_PI/dlambda;
-  }
 
   prms.focus_xw_2=focus_xw/2.0;
   prms.focus_yh_2=focus_yh/2.0;
@@ -96,6 +87,31 @@ INITIALIZE
   prms.ymin=-yheight/2.0;
   prms.xmax=xwidth/2.0;
   prms.ymax=yheight/2.0;
+  
+  if (spectrum_file){
+    /*read spectrum from file*/
+    int status=0;
+    if ( (status=Table_Read(&(prms.t),spectrum_file,0))==-1){
+      fprintf(stderr,"Source_flat(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file);
+      exit(-1);
+    }
+    /*data is now in table t*/
+    /*integrate to get total flux, assuming raw numbers have been corrected for measuring aperture*/
+    int i;
+    prms.pint=0;
+    t_Table *t=&(prms.t);
+    for (i=0;i<prms.t.rows-1;i++){
+      prms.pint+=((t->data[i*t->columns+1]+t->data[(i+1)*t->columns+1])/2.0)*(t->data[(i+1)*t->columns]-t->data[i*t->columns]); 
+    }
+    printf("Source_flat(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
+    if(E0) printf("Source_flat(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
+  }else if (E0){
+    lambda0=2*M_PI/(E0*E2K);
+    if (dE){dlambda=2*M_PI/(E2K*E0*E0)*dE;}
+  }else if (!lambda0){
+    fprintf(stderr,"Source_flat(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP); 
+    exit(0);  
+  }  
 
   /*calculate the X-ray weight from the flux*/
   if (flux){
@@ -109,7 +125,7 @@ INITIALIZE
 
 TRACE
 %{
-  double kk,theta_x,theta_y;
+  double kk,theta_x,theta_y,l,k;
   p=prms.pmul;
   if (!gauss){ 
     theta_x=(rand01()-0.5)*focus_aw;
@@ -139,20 +155,36 @@ TRACE
     y=prms.ymin+rand01()*yheight;
   }
 
+  if (spectrum_file){
+    double pp=0;
+    while (pp<=0){ 
+      l=prms.t.data[0]+ (prms.t.data[(prms.t.rows-1)*prms.t.columns] -prms.t.data[0])*rand01();
+      pp=Table_Value(prms.t,l,1);
+    }
+    p*=pp;
+    /*if E0!=0 convert the tabled value to wavelength*/
+    if (E0) {
+      l=2*M_PI/(l*E2K);
+    }
+  }else if (dlambda){
+    if (gauss){
+      l=lambda0+dlambda*randnorm();
+    }else{
+      l=randpm1()*dlambda*0.5 + lambda0;
+    }
+  }else{
+    l=lambda0;
+  }
+
   kx=tan(theta_x);
   ky=tan(theta_y);
   kz=1;
   NORM(kx,ky,kz);
 
-  if (prms.dK!=0){
-    kk=prms.K+rand01()*prms.dK;
-  }else{
-    kk=prms.K;
-  }
-
-  kx*=kk;
-  ky*=kk;
-  kz*=kk;
+  k= (2*M_PI/l);
+  kx*=k;
+  ky*=k;
+  kz*=k;
 
   /*set polarization and phase to something known*/
   Ex=0;Ey=0;Ez=0;
@@ -161,6 +193,10 @@ TRACE
   }else{
     phi=rand01()*M_2_PI;
   }
+
+  /*set polarization vector*/
+  Ex=0;Ey=0;Ez=0;
+
 %}
 
 MCDISPLAY
