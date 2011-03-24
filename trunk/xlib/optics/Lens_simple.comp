@@ -20,6 +20,15 @@
 * Models a refractive lens, with a radius of curvature radius
 * a numerical transmission of 0<T<=1
 * the theoretical lens plane is in the X-Y plane at Z=0
+WHEN (!simple && BEin) AT(0,0,0) RELATIVE ivt_mntpt
+
+COMPONENT CRL_Al_simple=Lens_simple(radius=0.2e-3,xwidth=0.5e-3,yheight=0.5e-3,N=AlN,material_datafile="Al.txt")
+WHEN (simple && ALin) AT(0,0,Al_zc+0.082) RELATIVE ivt_mntpt
+
+COMPONENT CRL_Al = Lens_parab(r=0.5e-3, w=Al_w, d=50e-6,N=AlN, material_datafile="Al.txt")
+WHEN (!simple && ALin) AT(0,0,0.082) RELATIVE ivt_mntpt
+
+
 *
 * %P
 * INPUT PARAMETERS
@@ -88,7 +97,7 @@ INITIALIZE
 
   int i;
   for (i=0;i<t.rows;i++){
-    prms->E[i]=t.data[i*t.columns]*1e3;
+    prms->E[i]=t.data[i*t.columns];
     prms->delta[i]=pow(2*M_PI/(t.data[i*t.columns]*E2K),2)*1e-20 * t.data[1+i*t.columns] * prms->rho/prms->At*1e6 * RE * NA* 0.5*M_1_PI;
   }
 
@@ -127,7 +136,6 @@ TRACE
     alpha=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
     delta=(1-alpha)*prms->delta[i-1] + alpha*prms->delta[i];
     F=radius/2/delta/N;
-//    printf("%.12e %12e\n",delta,F);
     /*Only focusing in the y-direction for now.*/
     /*auxiliary vector s*/ 
     sx=0;sy=-y;sz=F;
@@ -140,17 +148,11 @@ TRACE
     R[0][0]=1; R[0][1]=0;R[0][2]=0;
     R[1][0]=0; R[1][1]=cos(theta); R[1][2]=-sin(theta);
     R[2][0]=0; R[2][1]=sin(theta); R[2][2]=cos(theta);
-    /*reuse the vector s as temp sotrage*/
+    /*reuse the vector s as temp storage*/
     sx=kx;
     sy=ky*R[1][1]+kz*R[1][2];
     sz=ky*R[2][1]+kz*R[2][2];
-   /* printf("theta=%e\n",theta);    
-    printf("R=|%.12e %.12e %.12e|",R[0][0],R[0][1],R[0][2]);
-    printf("R=|%.12e %.12e %.12e|",R[1][0],R[1][1],R[1][2]);
-    printf("R=|%.12e %.12e %.12e|\n",R[2][0],R[2][1],R[2][2]);
-printf("(%.12g %.12g %.12g)->",kx,ky,kz);
-*/    kx=sx;ky=sy;kz=sz;
-//    printf("(%.12g %.12g %.12g)\n",kx,ky,kz);
+    kx=sx;ky=sy;kz=sz;
   }
   else{
     ABSORB;
