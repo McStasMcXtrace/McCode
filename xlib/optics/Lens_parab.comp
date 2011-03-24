@@ -202,7 +202,7 @@ TRACE
   
   k=sqrt(kx*kx+ky*ky+kz*kz); 
  
-  e=K2E/k;  /*Energy in KeV, same unit as datafile */
+  e=K2E*k;  /*Energy in KeV, same unit as datafile */
 
 /*Interpolation of Table Values*/
 
@@ -222,7 +222,6 @@ TRACE
   rhoel= f*Na*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
 
   delta= 2.0*M_PI*Re*rhoel/(k*k);
-  
   beta=mu/(2.0*k);          /*mu and k in  A^-1*/
   
   Refractive_Index_Re = 1.0-delta; 
