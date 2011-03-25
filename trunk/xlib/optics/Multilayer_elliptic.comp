@@ -57,8 +57,8 @@ SHARE
    struct prms_multilayer_elliptic{
      double *Q;
      double **R; //reflectivity
-     //double Emin,Emax,Estep;
-   }  ;
+     double Emin,Emax,Estep;
+   };
   
   /*something that would be relevant for ALL elliptical mirrors*/
   /* coordinate transformation McXtrace-Ellipse (ME) and Ellipse-McXtrace(EM) functions */
@@ -117,13 +117,43 @@ INITIALIZE
     prms_m->R[i]=malloc(sizeof(double)*(t.columns-1));
   }
   for(i=0;i<t.rows;i++){
-      prms_m->Q[i]=t.data[i*t.columns];
-      for(j=0;j<t.columns-1;j++){
-	  prms_m->R[i][j]=t.data[i*t.columns+j+1];
-      }
+    prms_m->Q[i]=t.data[i*t.columns];
+    for(j=0;j<t.columns-1;j++){
+      prms_m->R[i][j]=t.data[i*t.columns+j+1];
     }
+  }
+  /*now parse the header to find boundaries*/
+  char **header_parsed;
+  header_parsed=Table_ParseHeader(t.header,"E","Lambda",NULL);
+  if (header_parsed[0] || header_parsed[1]){
+    char *p;
+    if (header_parsed[0]) p=strchr(header_parsed[0],'[');
+    else if (header_parsed[1]) p=strchr(header_parsed[1],'[');
+  
+    prms_m->Emin=strtod(p+1,NULL);
+    p=strchr(p,':');
+    prms_m->Estep=strtod(p+1,NULL);
+    p=strchr(p+1,':');
+    prms_m->Emax=strtod(p+1,NULL);
+    
+    if (header_parsed[1]){
+      /*reflectivity is a fucntion of wavelength*/
+      prms_m->Emin=K2E*2*M_PI/prms_m->Emin;
+      prms_m->Estep=K2E*2*M_PI/prms_m->Estep;
+      prms_m->Emax=K2E*2*M_PI/prms_m->Emax;
+    }
+    /*check values*/
+    if (prms_m->Estep>fabs(prms_m->Emax-prms_m->Emin) || prms_m->Estep<0){
+      fprintf(stderr,"Error: Multilayer_elliptic(%s): Nonsensical energy interval read from file %s\n",NAME_CURRENT_COMP,reflectivity_datafile);
+      exit(-1);
+    }
+    if (prms_m->Emin>prms_m->Emax){
+      double tmp=prms_m->Emin;
+      prms_m->Emin=prms_m->Emax;prms_m->Emax=tmp;
+    }
+  }
+  
   Table_Free(&t);
-
 %}
 
 TRACE
@@ -199,10 +229,7 @@ TRACE
 	  E=K*K2E; 
 	  //interpolate in table
 	  int c=0;
-	  while (c<=61){
-	      if (E<(7+c*0.05)) break;
-	      c++;
-	  } 
+	  while (E>(prms_m->Emin+c*prms_m->Estep)) c++;
            
           int r=0;
           while (r<=6000){
