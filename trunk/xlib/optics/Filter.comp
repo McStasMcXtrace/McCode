@@ -85,7 +85,7 @@ INITIALIZE
 
   int i;
   for (i=0;i<t.rows;i++){
-    prms->E[i]=t.data[i*t.columns]*1e3;
+    prms->E[i]=t.data[i*t.columns];
     prms->mu[i]=t.data[5+i*t.columns]*prms->rho*1e2;     /*mu is now in SI, [m^-1]*/ 
   }
 
@@ -97,23 +97,27 @@ INITIALIZE
 
 TRACE
 %{
-  double e,mu;
+  double alpha,e,k,mu;
   double l0,l1;
-  if (box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zthick)){
+  int i;
+  if (box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth)){
     PROP_DL(l0);
     /*table interpolation*/
+    k=sqrt(kx*kx+ky*ky+kz*kz);
+    e=k*K2E;
     while (e>prms->E[i]){
       i++;
       if (prms->E[i]==-1){
-        fprintf(stderr,"Photon energy (%g keV) is outside the filter's material data\n",k); ABSORB;
+        fprintf(stderr,"Photon energy (%g keV) is outside the filter's material data\n",e); ABSORB;
       }
     }
-    E=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
-    mu=(1-E)*prms->mu[i-1]+E*prms->mu[i];
-    mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
+    alpha=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
+    mu=(1-alpha)*prms->mu[i-1]+alpha*prms->mu[i];
+    //mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
     
     l1-=l0; 
     p*=exp(-mu*l1);
+
     PROP_DL(l1);
   }
 %}
