@@ -144,6 +144,9 @@ INITIALIZE
   double gx, gy;
   Coords localG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0));
 
+  if(!mcMagnetPrecession) 
+    mcMagnetPrecession = &SimpleNumMagnetPrecession;
+
   if(mcMagnet==0) {
     
     parPtr = (double*) malloc(6*sizeof(double));
@@ -153,9 +156,9 @@ INITIALIZE
     parPtr[3] = xw;
     parPtr[4] = yh;
     parPtr[5] = length;
-    MAGNET_ON;
+    //MAGNET_ON;
   } else {    
-    MAGNET_OFF;
+    //MAGNET_OFF;
   }
 
   coords_get(localG, &gx, &gy, &gz);
@@ -180,19 +183,9 @@ TRACE
     PROP_Z0;
     MAGNET_ON;
     mcMagneticField = fieldFunction;
-    mcMagnetPrecession = &SimpleNumMagnetPrecession;
     mcMagnetData = parPtr;
-
     rot_copy(mcMagnetRot, ROT_A_CURRENT_COMP);
     mcMagnetPos = coords_scale(POS_A_CURRENT_COMP, 1.0);
-
-    // i=0: Bx parameter 
-    // i=1: By parameter
-    // i=2: Bz parameter
-    // i=3: Magnet width
-    // i=4: Magnet height
-    // i=5: Magnet length
-    
   } else {
     
     // exit
@@ -200,17 +193,11 @@ TRACE
     PROP_DT(dt);
     MAGNET_OFF;
     mcMagneticField = NULL;
-    mcMagnetPrecession = NULL;
     mcMagnetData = NULL;
     // Here, we ought to clean up mcMagnet(Rot,Pos)
   }
+%}
 
-  //  printf("Exit z: %f, mcmagnet: %d\n", z, mcmagnet);
-
-  %}
-
-/* This section is executed when the simulation ends (C code). Other    */
-/* optional sections are : SAVE                                         */
 FINALLY
 %{
   if(mcMagnet==0) {
