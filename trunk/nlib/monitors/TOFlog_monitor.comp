@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: TOFlog_mon.comp
+* Component: TOFlog_monitor.comp
 *
 * %I
 * Written by:  Kim Lefmann
@@ -45,7 +45,7 @@
 * %E
 *******************************************************************************/
 
-DEFINE COMPONENT TOFlog_mon
+  DEFINE COMPONENT TOFlog_monitor
 DEFINITION PARAMETERS (tmin, tmax, ndec=10)
 SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
     xwidth=0, yheight=0, restore_neutron=0)
