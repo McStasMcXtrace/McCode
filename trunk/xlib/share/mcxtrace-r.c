@@ -282,7 +282,7 @@ sphere_intersect(double *l0, double *l1, double x, double y, double z,
 {
   double B, C, D, k;
 
-  k = sqrt(kx*kx + ky*ky + kz*kz);
+  k = kx*kx + ky*ky + kz*kz;
   B = (x*kx + y*ky + z*kz);
   C = x*x + y*y + z*z - r*r;
   D = B*B - k*C;
