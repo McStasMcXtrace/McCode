@@ -32,8 +32,8 @@
 
 DEFINE COMPONENT Source_gaussian
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (sig_x=1,sig_y=0,focus_xw=0,focus_yh=0,flux=1,distance=1,gamma=0,E0=0, dE=0, lambda=0,dlambda=-1,phase=-1)
-OUTPUT PARAMETERS ()
+  SETTING PARAMETERS (sig_x=1,sig_y=0,focus_xw=0,focus_yh=0,flux=1,distance=1,gamma=0,E0=0, dE=0, lambda=0,dlambda=-1,phase=-1)
+OUTPUT PARAMETERS (pmul)
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
 DECLARE
@@ -65,7 +65,7 @@ INITIALIZE
   if (E0){
     lambda=2*M_PI/(E0*E2K);
     if (dE){dlambda=2*M_PI/(E2K*E0*E0)*dE;}
-    else dLambda=0;
+    else dlambda=0;
   }else if (!lambda) {
     fprintf(stderr,"Source_gaussian (%s): Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
     exit(0);
@@ -95,9 +95,10 @@ TRACE
   y=yy*sig_y;
   z=0;
 
+
   /*draw random coordinates in the acceptance window*/
-  kx= (focus_xw /2.0 * randpm1() -x)/distance;
-  ky= (focus_yh/2.0 * randpm1() -y)/distance;
+  kx= (focus_xw/2.0 * randpm1() -x);
+  ky= (focus_yh/2.0 * randpm1() -y);
   kz= distance;
   NORM(kx,ky,kz);
 
