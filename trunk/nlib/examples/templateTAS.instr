@@ -540,14 +540,14 @@ AT (0,0,0) ABSOLUTE
 REMOVABLE COMPONENT Source = Source_gen(
   radius  = 0.10,
   dist = machine_hkl.l1,
-  focus_xw = 0.1, focus_yh = 0.08,
+  focus_xw = WM, focus_yh = HM,
   E0 = machine_hkl.ei,
   dE = machine_hkl.ei*0.03)
 AT (0,0,0) ABSOLUTE
 
 REMOVABLE COMPONENT SC1 = Collimator_linear(
-  xmin =-0.08/2, ymin =-0.11/2,
-  xmax = 0.08/2, ymax = 0.11/2,
+  xmin =-WM/2, ymin =-HM/2,
+  xmax = WM/2, ymax = HM/2,
   length = 5.34,
   divergence=ALF1,
   divergenceV=BET1)
