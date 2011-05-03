@@ -695,7 +695,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Sphere_Radius = fabs(Vars->mxmax - Vars->mxmin)/2;
     if ((abs(Vars->Flag_Shape) == DEFS->SHAPE_DISK) || (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE))
     {
-      Vars->area = PI*Vars->Sphere_Radius*Vars->Sphere_Radius; /* disk shapes */
+      Vars->area = PI*Vars->Sphere_Radius*Vars->Sphere_Radius*1E4; /* disk shapes */
     }
     if (Vars->area == 0 && abs(Vars->Flag_Shape) != DEFS->SHAPE_PREVIOUS) 
       Vars->Coord_Number = 0;
