@@ -789,7 +789,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_Vars->Sphere_Radius = fabs(mc_mn_Vars->mxmax - mc_mn_Vars->mxmin)/2;
     if ((abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_DISK) || (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_SPHERE))
     {
-      mc_mn_Vars->area = PI*mc_mn_Vars->Sphere_Radius*mc_mn_Vars->Sphere_Radius*1E4 /* disk shapes */
+      mc_mn_Vars->area = PI*mc_mn_Vars->Sphere_Radius*mc_mn_Vars->Sphere_Radius*1E4; /* disk shapes */
     }
     if (mc_mn_Vars->area == 0) mc_mn_Vars->Coord_Number = 0;
     if (mc_mn_Vars->Coord_Number == 0 && mc_mn_Vars->Flag_Verbose)

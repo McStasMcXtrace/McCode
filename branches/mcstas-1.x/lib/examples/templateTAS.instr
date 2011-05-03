@@ -529,7 +529,7 @@ ROTATED (0, machine_real.a1, 0) RELATIVE Mono_Cradle
 /*                                on mono, pointing towards sample */
 COMPONENT Mono_Out = Arm()
   AT (0,0,0) RELATIVE Mono_Cradle
-  ROTATED (0, machine_real.a2, 0) RELATIVE Source
+  ROTATED (0, machine_real.a2, 0) RELATIVE Mono_Cradle
 
 COMPONENT SC2 = Collimator_linear(
   xmin =-0.04/2, ymin =-0.07/2,
