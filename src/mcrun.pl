@@ -310,7 +310,7 @@ sub parse_args {
    --optim-file=FILENAME      Defines filename for storing optim results.
                                 (Defaults to \"mcoptim_XXXX.dat\")
    --test                     Execute McStas selftest and generate report
-   --nocflags                 Does not use CFLAGS for faster compilation
+   --no-cflags                Does not use CFLAGS for faster compilation
   Instr options:
    -s SEED   --seed=SEED      Set random seed (must be != 0)
    -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.
