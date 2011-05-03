@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2008, All rights reserved
+*         Copyright (C) 1997-2010, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,7 +11,7 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas 1.12
+* Release: McStas 1.12b
 * Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: Templates
 *
@@ -440,8 +440,8 @@ machine_hkl.bet3= BET3;
 machine_hkl.bet4= BET4;
 
 /* geometry tests w/r to collimator lengths */
-if (machine_hkl.l1 <= 5.34)
-  exit(fprintf(stderr, "%s: ERROR: L1 too short. Min=5.34\n", NAME_CURRENT_COMP));
+if (machine_hkl.l1 <= 1)
+  exit(fprintf(stderr, "%s: ERROR: L1 too short. Min=1\n", NAME_CURRENT_COMP));
 
 if (machine_hkl.l2 <= 0.35)
   exit(fprintf(stderr, "%s: ERROR: L2 too short. Min=0.35\n", NAME_CURRENT_COMP));
@@ -462,11 +462,11 @@ if (!anglemode) {
 /* compute optimal curvatures */
 double L;
 L = 1/(1/L1+1/L2);
-if (RMV < 0) machine_real.rmv = 2*L*sin(DEG2RAD*machine_real.a1);
-if (RMH < 0) machine_real.rmh = 2*L/sin(DEG2RAD*machine_real.a1);
+if (RMV < 0) machine_real.rmv = fabs(2*L*sin(DEG2RAD*machine_real.a1));
+if (RMH < 0) machine_real.rmh = fabs(2*L/sin(DEG2RAD*machine_real.a1));
 L = 1/(1/L3+1/L4);
-if (RAV < 0) machine_real.rav = 2*L*sin(DEG2RAD*machine_real.a5);
-if (RAH < 0) machine_real.rah = 2*L/sin(DEG2RAD*machine_real.a5);
+if (RAV < 0) machine_real.rav = fabs(2*L*sin(DEG2RAD*machine_real.a5));
+if (RAH < 0) machine_real.rah = fabs(2*L/sin(DEG2RAD*machine_real.a5));
 
 if (verbose) {
   printf("* Transfert:     EN=%g [meV] QM=%g [Angs-1]\n", EN, machine_real.qm);
@@ -480,6 +480,7 @@ if (verbose) {
   printf("Analyzer:      DA=%.4g [Angs] RAH=%.4g [m] RAV=%.4g [m] %s\n",
     machine_hkl.da, machine_real.rah, machine_real.rav,
     (!machine_real.rah && !machine_real.rav ? "flat" : "curved"));
+
 }
 %}
 /* end of INITIALIZE */
@@ -487,8 +488,11 @@ if (verbose) {
 TRACE
 /* Source description */
 
+INSTRUMENT COMPONENT Origin=Progress_bar()
+AT (0,0,0) ABSOLUTE
+
 /* a flat constant source */
-COMPONENT Source = Source_gen(
+INSTRUMENT COMPONENT Source = Source_gen(
   radius  = 0.10,
   dist = machine_hkl.l1,
   xw = 0.1, yh = 0.08,
@@ -496,26 +500,31 @@ COMPONENT Source = Source_gen(
   dE = machine_hkl.ei*0.03)
 AT (0,0,0) ABSOLUTE
 
-COMPONENT SC1 = Collimator_linear(
+INSTRUMENT COMPONENT SC1 = Collimator_linear(
   xmin =-0.08/2, ymin =-0.11/2,
   xmax = 0.08/2, ymax = 0.11/2,
-  len = 5.34,
+  len = machine_hkl.l1 > 6.34 ? 5.34 : machine_hkl.l1/2,
   divergence=ALF1,
   divergenceV=BET1)
-AT (0, 0, (machine_hkl.l1-5.34)/2) RELATIVE Source
+WHEN (ALF1 && BET1)
+AT (0, 0, (machine_hkl.l1-5.34)/2) ABSOLUTE
+
+INSTRUMENT COMPONENT Guide_out=Arm()
+AT (0, 0, machine_hkl.l1) ABSOLUTE
 
 COMPONENT Mono_Cradle = Arm()
-  AT (0, 0, machine_hkl.l1) RELATIVE Source
-  ROTATED (0, machine_real.a1, 0) RELATIVE Source
-
+  AT (0, 0, 0) RELATIVE PREVIOUS
+  
 SPLIT COMPONENT PG1Xtal = Monochromator_curved(
   width  = 0.10,
   height = 0.12,
   NH=1, NV=9,
   RV=machine_real.rmv, RH=machine_real.rmh,
-  mosaich = machine_hkl.etam, mosaicv = machine_hkl.etam,
-  r0 = 0.7, DM=machine_hkl.dm)
+  DM=machine_hkl.dm, mosaich = machine_hkl.etam, mosaicv = machine_hkl.etam,
+  r0 = (fabs(machine_hkl.dm-3.355) < 0.2 ? 1: 0.7), 
+  reflect=(fabs(machine_hkl.dm-3.355) < 0.2 ? "HOPG.rfl" : ""))
 AT (0, 0, 0) RELATIVE Mono_Cradle
+ROTATED (0, machine_real.a1, 0) RELATIVE Mono_Cradle
 
 /*                                on mono, pointing towards sample */
 COMPONENT Mono_Out = Arm()

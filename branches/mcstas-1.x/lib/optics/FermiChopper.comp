@@ -393,6 +393,8 @@ TRACE
       double mean_t, mean_phase;
       mean_t     = FCVars.sum_t/FCVars.sum_N;
       mean_phase = fmod(mean_t*nu*2*PI, 2*PI);
+      /* now we shift the phase so that the neutron pulse is centered on the slit pack */
+      mean_phase+=radius/vxp1*2*PI*nu;
       FCVars.ph0 = -mean_phase;
     }
 
@@ -643,8 +645,9 @@ SAVE
     mean_w = VS2E*mean_v*mean_v;
     /* base opening time */
     double div, mean_phase;
-    div        = atan(w/length);
+    div        = atan2(w,length)/PI*180;
     mean_phase = fmod(mean_t*nu*360, 360);
+    mean_phase+=radius/mean_v*360*nu;
     if (mean_phase > 180) mean_phase -= 360;
 
     if (!FCVars.sum_N_pass)
@@ -655,12 +658,15 @@ SAVE
            "              Mean wavelength   lambda= %g [Angs]\n"
            "              Mean energy       omega = %g [meV]\n"
            "              Mean arrival time t     = %g [s]\n"
-           "              Mean phase              = %g [deg] (negate to optimize transmission)\n"
+           "              Mean phase              = %g [deg] (%s)\n"
+           "              Slit pack divergence    = %g [deg] (full width)\n"
            "              Opening time      dt    = %g [s]\n"
            "              Intensity reaching FC   = %g [n/s]\n"
            "              Intensity passing  FC   = %g [n/s]\n"
            , NAME_CURRENT_COMP,
            mean_v, mean_L, mean_w, mean_t, mean_phase,
+           (zero_time > 1 ? "set automatically" : "use phase=-(this value) to optimize"),
+           2*div,
            (nu ? div/PI/nu : 1),
            FCVars.sum_N,
            FCVars.sum_N_pass);

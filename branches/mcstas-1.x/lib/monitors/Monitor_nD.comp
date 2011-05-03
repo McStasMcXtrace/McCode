@@ -120,7 +120,7 @@
 *                                on restricted angular area; use theta
 *                                variable with limits to define arc.
 *                                (diameter is xwidth, height is yheight).
-*     disk                      Disk flat xy monitor. radius is xwidth.
+*     disk                      Disk flat xy monitor. diameter is xwidth.
 *     sphere                    To get a spherical monitor (e.g. a 4PI)
 *                                (diameter is xwidth).
 *     square                    Square flat xy monitor (xwidth, yheight).
