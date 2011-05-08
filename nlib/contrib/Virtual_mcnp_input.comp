@@ -497,7 +497,7 @@ TRACE
         fprintf(stderr, "MCNP_input: %s: Error: Can not repeat MCNP file (fseek error at repeat %d). \n",NAME_CURRENT_COMP, rep);
         exit_flag = 1;
       } else {
-        if (verbose) printf("MCNP_input: %s: Start Neutron Number %d (iteration %d)\n",NAME_CURRENT_COMP,begin_neutrons, rep);
+        if (verbose) printf("MCNP_input: %s: Start Neutron Number %ld (iteration %d)\n",NAME_CURRENT_COMP,begin_neutrons, rep);
         exit_flag=0;
       }
     }
