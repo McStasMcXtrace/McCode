@@ -41,7 +41,8 @@
 * alpha:     (deg) Twist angle along the cylinder
 * length:    (m)   Length of cylinder/rotor (less than zdepth)
 * d:         (m)   Thickness of blades
-* nu:        (Hz)  Cylinder rotation speed, counter-clockwise
+* nu:        (Hz)  Cylinder rotation speed, counter-clockwise, 
+*                  which is ideally 3956*alpha*DEG2RAD/2/PI/lambda/length
 * nslit:     (1)   Number of Soller blades
 *
 * %E
