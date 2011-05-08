@@ -48,7 +48,7 @@
 * d:           width of spokes at beam-center (m)
 * radius:      radius of beam-center (m)
 * alpha:       angle of torsion (deg)
-* nu:          frequency of rotation (1/s)
+* nu:          frequency of rotation, which is ideally 3956*alpha*DEG2RAD/2/PI/lambda/length (Hz)
 *
 * %Links
 * See also Additional notes <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q1/000134.html">March 1999</a> and <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q2/000136.html">Jan 2000</a>.
