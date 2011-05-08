@@ -63,14 +63,10 @@
 DEFINE COMPONENT Shape
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string geometry=0, radius=0, xwidth=0, yheight=0, zdepth=0, thickness=0)
-OUTPUT PARAMETERS(StructVarsInc, VarsInc, offdata)
+OUTPUT PARAMETERS(VarsInc, offdata)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
-SHARE
-%{
-  %include "read_table-lib"
-  %include "interoff-lib"
-%}
+SHARE COPY Incoherent
 
 DECLARE COPY Incoherent
 
