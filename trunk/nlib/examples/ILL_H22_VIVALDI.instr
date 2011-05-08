@@ -27,24 +27,31 @@
 * spectrum can be accepted without detrimental overlap of reflections for
 * primitive unit cells up to 25 Angs on edge. 
 *
+* This model include a cryostat and container description, with a crystal sample.
+*
+* %Example: lambda=3 Detector: PSD_Vivaldi_I=1.81407e+10
+*
 * Input parameters:
 * m: [1]   m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
 * lambda:    [AA]  mean incident wavelength.
 * dlambda:   [AA]  wavelength full width.
-* powder:    [str] File name for powder description, LAZ/LAU/Fullprof
+* crystal:   [str] File name for crystal description (LAU)
+* verbose:   [1]   Print DIF configuration. 0 to be quiet
 *   
 * %End      
 *******************************************************************************/  
 
 DEFINE INSTRUMENT ILL_H22_VIVALDI(lambda=3, dlambda=2.2, 
-  string powder="Na2Ca3Al2F14.laz", string container="V.laz")
+  string crystal="YBaCuO.lau", string container="V.laz", verbose=1)
 
 /* The DECLARE section allows us to declare variables or  small      */       
 /* functions in C syntax. These may be used in the whole instrument. */       
 DECLARE     
 %{
 /* flags to separate scattering processes */
-double flag_container,flag_sample,flag_env;
+double flag_container,flag_sample,flag_env;
+double L2=5.5;  /* sample position wrt last guide element entry [m] */
+double L3=0.32; /* detector diameter */
 %}  
 
 /* The INITIALIZE section is executed when the simulation starts     */       
@@ -56,7 +63,7 @@ if (verbose) {
   printf("%s: Detailed VIVALDI configuration\n", NAME_CURRENT_COMP);
   printf("* Incoming beam: lambda=%.4g-%.4g [Angs]\n",   
     lambda-dlambda, lambda+dlambda);  
-  printf("* Sample: '%s' in Al cryostat.\n", powder);    
+  printf("* Sample: '%s' in Al cryostat.\n", crystal);    
 }   
 
 %}  
@@ -72,7 +79,7 @@ TRACE
 /* gap 0.5 m for D1A/D1B */
 COMPONENT D2B_Mono_Dx = Monitor_nD(
   xwidth=0.03, yheight=0.2, restore_neutron=1,
-  options="dx, all auto, per cm2, slit", restore_neutron=1)     
+  options="dx, all auto, per cm2, slit")     
 AT (0, 0, 0.25) RELATIVE PREVIOUS     
 
 COMPONENT H22_7 = Guide_gravity(
@@ -93,10 +100,11 @@ COMPONENT H22_8 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=1, W=gW)
 AT (0, 0, 0.25) RELATIVE PREVIOUS
 
-/* sample after .5 m */
+/* sample after .5 m */
+
 /* sample position ********************************************************** */
 SPLIT COMPONENT SamplePos=Arm()
-AT (0, 0, L2) RELATIVE mono_out
+AT (0, 0, L2) RELATIVE PREVIOUS
 EXTEND %{
   flag_container=flag_sample=flag_env=0;
 %}
@@ -122,7 +130,7 @@ COMPONENT Sample=Single_crystal(
   xwidth = 0.01, yheight = 0.01, zdepth = 0.01, 
   delta_d_d = 1e-4, mosaic = 5, 
   ax = 3.8186, ay = 0, az = 0, bx = 0, by = 3.8843, bz = 0,
-  cx = 0, cy = 0, cz = 11.6777, reflections = "YBaCuO.lau", p_transmit=-1)
+  cx = 0, cy = 0, cz = 11.6777, reflections = crystal, p_transmit=-1)
 AT (0, 0, 0) RELATIVE SamplePos
 EXTEND %{
   if (SCATTERED)
@@ -142,8 +150,8 @@ EXTEND %{
 %}
 
 COMPONENT PSD_Vivaldi = Monitor_nD(
- xwidth=0.16,
- ymin = -0.2, ymax = 0.2,
+ xwidth= L3,
+ ymin = -0.25, ymax = 0.25,
  options="theta limits=[-180 180], y, all bins=180, cylinder")
 AT (0, 0, 0) RELATIVE SamplePos
 

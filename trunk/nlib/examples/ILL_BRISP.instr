@@ -30,7 +30,7 @@
 * Time-of-Flight technique: for an efficient data collection allowing also for 
 *   accurate neutron measurements as a function of external parameters such as 
 *   temperature, pressure and magnetic field.
-* Careful optimization of monochromator-collimators-Fermi chopper:  leading to 
+* Carefull optimization of monochromator-collimators-Fermi chopper:  leading to 
 *   0.5 meV energy resolution and 0.02 Å-1 Q resolution in a typical 
 *   configuration (20 meV incident energy and 4 m sample-detector distance), 
 *   along with acceptable counting rates (flux at the sample 104 n s-1 cm-2). 
@@ -70,15 +70,17 @@
 * In this model, the sample is a plate of thickness e=4 mm, surrounded by an 
 * Al or Nb container, inside an Al shield (phi=10 cm).
 *
+* %Example: coh="V.laz" Detector: Detector_I=1.24911
+*
 * %Parameters
-* DM: [Angs] Monochromator d-spacing. 
-*             Use 3.355 for PG002, 1.677 for PG004 and 2.087 for Cu111.
-* coh:[str]  Sample coherent specification (use laz, lau or Sqw file, 
-*             or NULL to disable). Sample is a 5x5 cm plate, e=4 mm.
-* inc:[str]  Sample incoherent specification (use laz, lau or Sqw file, or NULL to 
-*             scatter isotropically, using cross sections read from the coherent file)
-* container:  [str] sample container material. Thickness is .2 mm. Use NULL, Al or Nb.
-* LSD [m]    Distance sample-detector  
+* DM:        [Angs] Monochromator d-spacing. 
+*                  Use 3.355 for PG002, 1.677 for PG004 and 2.087 for Cu111.
+* coh:       [str] Sample coherent specification (use laz, lau or Sqw file, 
+*                  or NULL to disable). Sample is a 5x5 cm plate, e=4 mm.
+* inc:       [str] Sample incoherent specification (use laz, lau or Sqw file, or NULL to 
+*                  scatter isotropically, using cross sections read from the coherent file)
+* container: [str] sample container material. Thickness is .2 mm. Use NULL, Al or Nb.
+* LSD:       [m]   Distance sample-detector  
 *
 * %Link
 * The BRISP spectrometer at the ILL <a href="www.ill.fr/brisp">BRISP</a>
@@ -88,7 +90,7 @@
 
 /* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT ILL_BRISP(DM=3.355, 
-  string coh="NULL", string inc="V.laz",
+  string coh="V.laz", string inc="NULL",
   string container="NULL", LSD=4.5)
 
 /* The DECLARE section allows us to declare variables or  small      */

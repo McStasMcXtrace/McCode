@@ -17,7 +17,8 @@
 * D4 Diffractometer for liquids at the ILL, installed on the hot source.
 *
 * The dedicated liquid and amorphous instrument D4 is a two-axis diffractometer
-* equipped with nine 1D position sensitive microstrip detectors.
+* equipped with nine 1D position sensitive microstrip detectors. In this model,
+* a PSD banana detector is also present.
 *
 * The monochromator take-off angle is 2Theta_M ~ 20-25 deg, variable. The available 
 * monochromators are all vertically focusing, Cu (200) for 0.7 Angs, Cu (220) 
@@ -26,6 +27,7 @@
 * Cu       002 DM=1.807 AA
 * Cu       220 DM=1.278 AA
 * 
+* %Example: lambda=0.7 Detector: BananaTheta_I=1.29042e+06
 *
 * %Parameters
 * lambda: [Angs] Wavelength at monochromator
@@ -45,7 +47,7 @@
 
 /* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT ILL_D4(lambda=0.7, DM=1.807 ,
-  string sample="SiO2.qSq", RV=-1,
+  string sample="SiO2_liq.qSq", RV=-1,
   L1=6.4, L2=2.61, L3=1.148,
   verbose=1)
 
