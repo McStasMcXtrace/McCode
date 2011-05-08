@@ -19,7 +19,7 @@
 *  enter a different tube are absorbed).
 *
 * %Example: lambda=4.5 Detector: Det_sample_t_I=3.4043e+07
-* %Example: lambda=4.5 Detector: Det_PSD_I=3946
+* %Example: lambda=4.5 Detector: Det_PSD_I=852130 
 *
 * %Parameters
 * lambda:   [AA]     mean incident wavelength

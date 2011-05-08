@@ -43,7 +43,7 @@
 *
 * This instrument is installed on the H22 guide.
 *
-* Example: mcrun ILL_H22_D1A.instr lambda=1.911
+* %Example: lambda=1.911 Detector: BananaPSD_I=63002
 *
 * %Parameters
 * m:      [1]    m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
@@ -186,7 +186,7 @@ EXTEND %{
 
 /* sample position (end) **************************************************** */
 
-COMPONENT Collimator=Collimator_radial(w1=0, h1=.25, w2=0, h2=.25, length=.2,
+COMPONENT Collimator=Collimator_radial(xwidth=0, yheight=.25, length=.2,
     divergence=40,transmission=1, nchan=27,
     theta_min=0, theta_max=160, radius=0.25)
   AT (0, 0, 0) RELATIVE SamplePos

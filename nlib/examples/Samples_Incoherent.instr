@@ -47,10 +47,10 @@
 * %Example: SAMPLE=3 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.97939e+06
 * %Example: SAMPLE=4 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.98697e+06
 * %Example: SAMPLE=5 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.98777e+06
-* %Example: SAMPLE=6 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.84719e+06
-* %Example: SAMPLE=7 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.98377e+06
-* %Example: SAMPLE=8 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.98491e+06
-* %Example: SAMPLE=9 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.98586e+06
+* %Example: SAMPLE=6 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.84719e+06
+* %Example: SAMPLE=7 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.98377e+06
+* %Example: SAMPLE=8 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.98491e+06
+* %Example: SAMPLE=9 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.98586e+06
 * 
 * %Parameters
 * L_min:    [AA] Minimum wavelength of neutrons

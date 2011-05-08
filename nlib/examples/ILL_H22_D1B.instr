@@ -35,7 +35,9 @@
 * obtained by scanning the temperature. A complete thermal variation of the
 * diffraction patterns (1.5 - 300 K) can be achieved in few hours (3-5h).
 *
-* Input parameters:
+* %Example: lambda=2.52 Detector: D1B_BananaTheta_I=5097.25
+*
+* %Parameters:
 * m: [1]   m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
 * lambda:    [AA]  mean incident wavelength.
 * dlambda:   [AA]  wavelength full width.
@@ -76,7 +78,8 @@ DEFINE INSTRUMENT ILL_H22_D1B(lambda=2.52, dlambda=0.03, DM=0,
 DECLARE     
 %{
 /* flags to separate scattering processes */
-double flag_sample=0, flag_env=0;     
+double flag_sample=0, flag_env=0;     
+
 %}  
 
 /* The INITIALIZE section is executed when the simulation starts     */       
@@ -125,7 +128,8 @@ TRACE
 COMPONENT D2B_Mono_Dx = Monitor_nD(
   xwidth=0.03, yheight=0.2, restore_neutron=1,
   options="dx, all auto, per cm2, slit", restore_neutron=1)     
-AT (0, 0, L1) RELATIVE PREVIOUS     
+AT (0, 0, L1) RELATIVE PREVIOUS     
+
 /* TIP: monochromator cradle */      
 SPLIT COMPONENT mono_cradle = Arm()  
   AT (TRAS_X, 0, TRAS_Z) RELATIVE D2B_Mono_Dx
@@ -135,7 +139,8 @@ COMPONENT Monok = Monochromator_curved(
     width = 0.060, height = 0.15, NH = 1, NV = 3, RV=RV,
     mosaich = 20, mosaicv = 20, DM = DM)    
 AT (0, 0, 0) RELATIVE mono_cradle
-ROTATED (0, THETA_M+TILT, 0) RELATIVE mono_cradle
+ROTATED (0, THETA_M+TILT, 0) RELATIVE mono_cradle
+
 /* TIP: positioning diffraction direction for monok (order 1) */   
 COMPONENT mono_out = Arm()
 AT (0, 0, 0) RELATIVE D2B_Mono_Dx
@@ -183,7 +188,8 @@ COMPONENT ventana_2 = Slit(
 COMPONENT ventana_3 = Slit(   
   xmin = -0.025, xmax = 0.025,
   ymin = -0.056, ymax = 0.056)
-  AT (0, 0, 1.753) RELATIVE mono_out
+  AT (0, 0, 1.753) RELATIVE mono_out
+
 /* Monitor de control que coincide con las cuentas de monitor del D1B. Se ha introducido el comando SPLIT en los dos siguientes */
 COMPONENT monitor_D1B = Monitor_nD(   
      options="auto lambda", bins=50, xwidth = 0.100,
@@ -295,7 +301,8 @@ COMPONENT collimador_radial = Exact_radial_coll(
      nslit=ceil(128/R_pitch), radius=R_ri, length=R_ro-R_ri, h_in=R_h, h_out=R_h,
      theta_min=R_ttmin, theta_max=R_ttmax, verbose=1) 
   WHEN (R_present)
-	AT (0, 0, 0) RELATIVE Sample
+	AT (0, 0, 0) RELATIVE Sample
+
 /* perfect detector: 1D(theta). Se ha modificado los limites. Originalm ~ [-4 -130]*/     
 COMPONENT D1B_BananaTheta = Monitor_nD(   
     options = "banana, theta limits=[-130 -2], bins=1280",      

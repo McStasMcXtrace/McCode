@@ -19,6 +19,8 @@
 * non diverging beam (ideal case). A set of PSD monitors is positioned
 * around the focusing point to show the beam spot.
 *
+* %Example: lambda=10 Detector: PSD_mon_39_I=1.9071e-18
+*
 * %Parameters
 * INPUT PARAMETERS:
 * lambda: Source wavelength   [Angs]
@@ -111,7 +113,7 @@ COMPONENT COPY(L11) = COPY (L11)
    AT (0,0,0.0071987) RELATIVE PREVIOUS
 
 COMPONENT PSD_mon = Monitor_nD(
-    xwidth=0.01, yheight = 0.01, options="x y, auto",bins=100,restore_neutron=1)
+    xwidth=0.01, yheight = 0.01, options="x y, auto, per cm2",bins=100,restore_neutron=1)
   AT (0, 0, position_PSD) RELATIVE PREVIOUS
 
 COMPONENT COPY(PSD_mon) = COPY(PSD_mon)

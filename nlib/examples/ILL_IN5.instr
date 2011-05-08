@@ -18,7 +18,7 @@
 *  with angle restriction (neutrons that scatter in Fe in front of a tube and 
 *  enter a different tube are absorbed). This model does not include the H16 guide.
 *
-* %Example: lambda=4.5 Detector: Det_PSD_I=4387
+* %Example: lambda=4.5 Detector: Det_PSD_I=1e6
 *
 * %Parameters
 * lambda:   [AA]     mean incident wavelength
@@ -249,7 +249,7 @@ AT (0,0,2.55) RELATIVE PREVIOUS
 COMPONENT Chopper0  = DiskChopper(
   theta_0 = 20.222, radius = Ch_mean_R[0], yheight = 0.2,
   nu  = Ch_Vp[0]/2/PI, nslit = disk_N, delay = Ch_phase[0], isfirst=1) 
-AT (0,0,0.0001) RELATIVE PREVIOUS
+AT (0,0,0.2) RELATIVE PREVIOUS
 ///////////////////////////////////////////////////////////////////////////
 
 /*-------------------------*/

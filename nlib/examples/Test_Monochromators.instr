@@ -81,7 +81,7 @@ INITIALIZE
   case 2:
     printf("Using Monochromator_pol\n"); break;
   case 3:
-    printf("Using Monochromator_pol (with 1\% events reflected)\n"); break;
+    printf("Using Monochromator_pol (with 1%% events reflected)\n"); break;
   case 4:
     printf("Using Monochromator_curved (flat mode)\n"); break;
   case 5:

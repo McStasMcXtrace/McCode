@@ -573,7 +573,7 @@ COMPONENT GuideOut = Arm() AT (0,0,0.01) RELATIVE PREVIOUS
 COMPONENT GuideOut_xy = Monitor_nD(
   xwidth=0.03, yheight=gH, restore_neutron=1,
   options="x y, per cm2, slit")
-AT (0,0,0.01) RELATIVE PREVIOUS
+AT (0,0,0.1) RELATIVE PREVIOUS
 
 COMPONENT GuideOut_dxdy = Monitor_nD(
   xwidth=0.03, yheight=gH, restore_neutron=1,

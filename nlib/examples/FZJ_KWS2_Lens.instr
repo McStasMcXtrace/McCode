@@ -15,33 +15,27 @@
 *
 * Notice effect of gravitation on the final beam.
 *
-* Example: mcrun FZJ_KWS2_Lens.instr lambda=3.4
+* %Example: lambda=20.15 Detector: detector_I=40.8393
 *
 * %Parameters
 * INPUT PARAMETERS:
-* lam  : Mean wavelength of neutrons            [AA]
-* dlam : Wavelength spread of neutrons (fwhm)   [AA]
-* FLUX : Source flux normalization constant     [1]
-* NGblen : Defining source radius (is \sqrt(2)*NGblen) [1]
-* Cblen : Dimension of rectangular guide        [m]
-* Clen : Distance source-guide                  [m] 
-* Dlen : Placement of final detector            [m]
-* Rlense : Radius of lense                      [m]
+* lambda: Mean wavelength of neutrons                 [AA]
+* dlambda:Wavelength spread of neutrons (fwhm)        [AA]
+* FLUX:   Source flux normalization constant          [1]
+* NGblen: Defining source radius (is \sqrt(2)*NGblen) [1]
+* Cblen:  Dimension of rectangular guide              [m]
+* Clen:   Distance source-guide                       [m] 
+* Dlen:   Placement of final detector                 [m]
+* Rlense: Radius of lens                              [m]
 *
 * %Link
 * The Lens_simple component
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT FZJ_KWS2_Lens(lam=20.15, dlam=2.015, FLUX=1e8,
+DEFINE INSTRUMENT FZJ_KWS2_Lens(lambda=20.15, dlambda=2.015, FLUX=1e8,
      NGblen=0.03, Cblen=0.005,
      Clen = 20.0, Dlen = 20.0, Rlense=0.025)
 
-DECLARE
-%{
-%}
-INITIALIZE
-%{
-%}
 TRACE
 
 
@@ -52,18 +46,18 @@ EXTEND %{
 %}
 
 COMPONENT source = Source_simple(
-    radius = sqrt(2)*NGblen, dist = Clen, xw = Cblen, yh = Cblen,
-    Lambda0 = lam, dLambda = dlam*1.5, flux = FLUX)
+    radius = sqrt(2)*NGblen, dist = Clen, focus_xw = Cblen, focus_yh = Cblen,
+    lambda0 = lambda, dlambda = dlambda*1.5, flux = FLUX)
   AT (0, 0, 0) RELATIVE origin
 
 COMPONENT guide = Guide(w1=Cblen, h1=Cblen, w2=Cblen, h2=Cblen, l=20.0,
                         R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003)
   AT (0, 0, Clen) RELATIVE source
 
-COMPONENT select= V_selector(width=Cblen, height=Cblen, l0=0.30, r0=0.12,
-                             phi=48.298, l1=0.25, tb=0.0004,
-                             rot=60*DEG2RAD*48.298/(V2Q*lam*0.25),
-                             nb=PI/fabs(PI*48.298/180.0*0.5*dlam/lam
+COMPONENT select= V_selector(xwidth=Cblen, yheight=Cblen, zdepth=0.30, radius=0.12,
+                             alpha=48.298, length=0.25, d=0.0004,
+                             nu=DEG2RAD*48.298/(V2Q*lambda*0.25),
+                             nslit=PI/fabs(PI*48.298/180.0*0.5*dlambda/lambda
                                        - atan(0.5*Cblen/10.0) )
                             )
   AT (0,0, 20.151) RELATIVE guide
