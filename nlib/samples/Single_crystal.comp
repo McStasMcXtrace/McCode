@@ -220,7 +220,7 @@
  */
 
 DEFINE COMPONENT Single_crystal
-DEFINITION PARAMETERS(mosaic_AB={0,0, 0,0,0, 0,0,0})
+DEFINITION PARAMETERS(mosaic_AB=Mosaic_AB_Undefined)
 SETTING PARAMETERS(string reflections=0, string geometry=0,
             xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
             mosaic = -1, mosaic_a = -1, mosaic_b = -1, mosaic_c = -1,
@@ -240,6 +240,10 @@ SHARE
 /* Declare structures and functions only once in each instrument. */
 #ifndef SINGLE_CRYSTAL_DECL
 #define SINGLE_CRYSTAL_DECL
+
+#ifndef Mosaic_AB_Undefined
+#define Mosaic_AB_Undefined {0,0, 0,0,0, 0,0,0}
+#endif
 
     struct hkl_data
     {
