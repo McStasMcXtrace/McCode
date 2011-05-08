@@ -307,7 +307,7 @@ INITIALIZE
       if (is_neutron(word)) {  /* if key word NEUTRON is found */
 	double x,y,z,vx,vy,vz,t,p,sx,sy,sz;
 	if (tripoli_create_neutron(hfile,&x,&y,&z,&vx,&vy,&vz,&t,&sx,&sy,&sz,&p)) {
-	  fprintf(stderr, "Tripoli4_input: %s: Error: Cannot get neutron %d in batch %d.\n",NAME_CURRENT_COMP,n_neutrons,begin_batch);
+	  fprintf(stderr, "Tripoli4_input: %s: Error: Cannot get neutron %g in batch %ld.\n",NAME_CURRENT_COMP,n_neutrons,begin_batch);
 	  exit_flag = 1;
 	} else {
 	  double v,w;
@@ -382,7 +382,7 @@ INITIALIZE
 	mean_k = V2K*mean_v;
 	if (mean_k) mean_L = 2*PI/mean_k;
 	mean_w = VS2E*mean_v*mean_v;
-	printf("Tripoli4 file %s\nContains %s%g neutrons in %d batches of size %d\n",
+	printf("Tripoli4 file %s\nContains %s%g neutrons in %ld batches of size %ld\n",
 	       filename, T4_ANALYSE ? "about " : "",
 	       n_count_extrapolated, (long)nbatch_extrapolated, nsize);
 	if (n_count_extrapolated > mcget_ncount())
@@ -480,7 +480,7 @@ TRACE
 
   if (is_neutron(word)) {  /* if key word NEUTRON is found */
     if (tripoli_create_neutron(hfile,&x,&y,&z,&vx,&vy,&vz,&t,&sx,&sy,&sz,&p)) {
-      fprintf(stderr, "Virtual_tripoli4_input: %s: Error: Cannot create neutron in batch %d.\n",NAME_CURRENT_COMP,begin_batch);
+      fprintf(stderr, "Virtual_tripoli4_input: %s: Error: Cannot create neutron in batch %ld.\n",NAME_CURRENT_COMP,begin_batch);
       fprintf(stderr,"  Finishing simulation\n");
       exit_flag = 1;
     } else {
@@ -514,11 +514,11 @@ TRACE
       end_batch=strtol(word,NULL,0);
       if (end_batch!=begin_batch && begin_batch) {
         /* finishing batch does not match the one we were reading ! */
-        fprintf(stderr, "Tripoli4_input: %s: Warning: inconsistent batch numbers between END(%d) and BEGIN(%d).\n", NAME_CURRENT_COMP, end_batch,begin_batch);
+        fprintf(stderr, "Tripoli4_input: %s: Warning: inconsistent batch numbers between END(%ld) and BEGIN(%ld).\n", NAME_CURRENT_COMP, end_batch,begin_batch);
       } else nbatch++;
     }
     else {
-      fprintf(stderr, "Tripoli4_input: %s: Expect 'END_OF_BATCH', found '%s' (after batch %d).", NAME_CURRENT_COMP, word, begin_batch);
+      fprintf(stderr, "Tripoli4_input: %s: Expect 'END_OF_BATCH', found '%s' (after batch %ld).", NAME_CURRENT_COMP, word, begin_batch);
       exit_flag = 1;
     }
   }
@@ -528,7 +528,7 @@ TRACE
       begin_batch=strtol(word,NULL,0);
     }
     else {
-      fprintf(stderr, "Tripoli4_input: %s: Expect 'BEGIN_OF_BATCH', found '%s' (after batch %d).", NAME_CURRENT_COMP, word, begin_batch);
+      fprintf(stderr, "Tripoli4_input: %s: Expect 'BEGIN_OF_BATCH', found '%s' (after batch %ld).", NAME_CURRENT_COMP, word, begin_batch);
       exit_flag = 1;
     }
   }
@@ -559,7 +559,7 @@ TRACE
       }
       result_read = tripoli_read_word(hfile,word); /* should be batch start */
       begin_batch=strtol(word,NULL,0);
-      if (verbose) printf("Tripoli4_input: %s: Start Batch Number %d (iteration %d)\n",NAME_CURRENT_COMP,begin_batch, rep);
+      if (verbose) printf("Tripoli4_input: %s: Start Batch Number %ld (iteration %d)\n",NAME_CURRENT_COMP,begin_batch, rep);
     }
     else exit_flag=1;
   }
@@ -582,7 +582,7 @@ FINALLY
     if (verbose) {
       printf("Tripoli4_input: %s: \n", NAME_CURRENT_COMP);
       printf("                %g neutrons generated\n", mcget_ncount());
-      printf("                %d read batch (B) of intial %d neutrons (N)\n",nbatch, nsize);
+      printf("                %ld read batch (B) of intial %ld neutrons (N)\n",nbatch, nsize);
       if (nbatch && nsize && intensity && !intensity_extrapolated)
 	printf("* Normalisation factor Intensity/N/B = %g [n/s]\n", intensity/nbatch/nsize);
     }
