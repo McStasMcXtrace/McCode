@@ -191,7 +191,7 @@ TRACE
         /* end of simulation if ... */
         if (repeat_number > repeat_cnt) {
           if (verbose)
-            printf("Virtual_input: %s: Ending after %g events (%i repeat count)\n", NAME_CURRENT_COMP, mcget_run_num(), (long)repeat_cnt);
+            printf("Virtual_input: %s: Ending after %g events (%li repeat count)\n", NAME_CURRENT_COMP, mcget_run_num(), (long)repeat_cnt);
           read_block=0; mcset_ncount(mcget_run_num()); pos=0;
           end_reading = 1;
         }
