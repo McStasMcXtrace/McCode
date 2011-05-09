@@ -70,11 +70,11 @@ typedef struct off_struct {
 * INPUT: 'offfile' OFF file to read
 *        'xwidth,yheight,zdepth' if given as non-zero, apply bounding box. 
 *           Specifying only one of these will also use the same ratio on all axes
-*        'center' center the object to the (0,0,0) position in local frame when set to non-zero
+*        'notcenter' center the object to the (0,0,0) position in local frame when set to zero
 * RETURN: number of polyhedra and 'data' OFF structure 
 *******************************************************************************/
 long off_init(  char *offfile, double xwidth, double yheight, double zdepth, 
-                int center, off_struct* data);
+                int notcenter, off_struct* data);
 
 /*******************************************************************************
 * int off_intersect(double* t0, double* t3, 
