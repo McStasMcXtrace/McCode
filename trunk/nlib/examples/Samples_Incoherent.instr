@@ -104,7 +104,7 @@ COMPONENT PowN = PowderN(reflections="", d_phi=0, Vc = 13.827, p_transmit = 0.5,
 WHEN (SAMPLE==2) AT (0, 0, 0) RELATIVE Coord
 
 COMPONENT SX = Single_crystal(reflections="", order=Order, ax=3.0282, by=3.0282, cz=3.0282/2,
-  sigma_abs=ABS, sigma_inc=INC, 
+  sigma_abs=ABS, sigma_inc=INC, barns=1,
   xwidth=0.005, yheight=0.005, zdepth=0.005)
 WHEN (SAMPLE==3) AT (0, 0, 0) RELATIVE Coord
 
@@ -118,7 +118,6 @@ COMPONENT IncS = Incoherent(order=Order,
   xwidth=0.005, yheight=0.005, zdepth=0.005)
 WHEN (SAMPLE==5) AT (0, 0, 0) RELATIVE Coord
 
-
 /* set of samples with OFF geometry ********************************************/
 
 COMPONENT PowNg = PowderN(reflections="", d_phi=0, Vc = 13.827, p_transmit = 0.5, p_inc = 0.5,
@@ -127,7 +126,7 @@ COMPONENT PowNg = PowderN(reflections="", d_phi=0, Vc = 13.827, p_transmit = 0.5
 WHEN (SAMPLE==6) AT (0, 0, 0) RELATIVE Coord
 
 COMPONENT SXg = Single_crystal(reflections="", order=Order, ax=3.0282, by=3.0282, cz=3.0282/2,
-  sigma_abs=ABS, sigma_inc=INC, 
+  sigma_abs=ABS, sigma_inc=INC, barns=1,
   geometry="cube.off", xwidth=0.005)
 WHEN (SAMPLE==7) AT (0, 0, 0) RELATIVE Coord
 

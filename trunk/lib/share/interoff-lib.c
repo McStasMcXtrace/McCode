@@ -476,11 +476,11 @@ int off_cleanInOut(intersection* t, int* t_size)
 * INPUT: 'offfile' OFF file to read
 *        'xwidth,yheight,zdepth' if given as non-zero, apply bounding box. 
 *           Specifying only one of these will also use the same ratio on all axes
-*        'center' center the object to the (0,0,0) position in local frame when set to non-zero
+*        'notcenter' center the object to the (0,0,0) position in local frame when set to zero
 * RETURN: number of polyhedra and 'data' OFF structure 
 *******************************************************************************/
 long off_init(  char *offfile, double xwidth, double yheight, double zdepth, 
-                int center, off_struct* data)
+                int notcenter, off_struct* data)
 {
   //data to be initialized
   long faceSize=0, vtxSize =0, polySize=0, vtxIndex=0, faceIndex=0;  
@@ -529,7 +529,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
 
   //resizing and repositioning params
   double centerx=0, centery=0, centerz=0;
-  if (center) {
+  if (!notcenter) {
     centerx=(minx+maxx)*0.5;
     centery=(miny+maxy)*0.5;
     centerz=(minz+maxz)*0.5;
@@ -569,9 +569,9 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   //center and resize the object 
   for (i=0; i<vtxSize; ++i)
   {
-    vtxArray[i].x=(vtxArray[i].x-centerx)*ratiox+(center ? 0 : centerx);
-    vtxArray[i].y=(vtxArray[i].y-centery)*ratioy+(center ? 0 : centery);
-    vtxArray[i].z=(vtxArray[i].z-centerz)*ratioz+(center ? 0 : centerz);        
+    vtxArray[i].x=(vtxArray[i].x-centerx)*ratiox+(!notcenter ? 0 : centerx);
+    vtxArray[i].y=(vtxArray[i].y-centery)*ratioy+(!notcenter ? 0 : centery);
+    vtxArray[i].z=(vtxArray[i].z-centerz)*ratioz+(!notcenter ? 0 : centerz);        
   }
 
 

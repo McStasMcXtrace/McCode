@@ -78,7 +78,7 @@ DECLARE
 INITIALIZE
 %{
   /* initialize OFF object from the file(s) */
-  if (!off_init( geometry, xwidth, yheight, zdepth, center, &offdata )) exit(-1);
+  if (!off_init( geometry, xwidth, yheight, zdepth, !center, &offdata )) exit(-1);
   
   /* optionally initialize reflectivity curves */
   if (reflect && strlen(reflect)) {

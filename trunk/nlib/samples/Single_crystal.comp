@@ -144,7 +144,8 @@
 *               vectors a,b and c as lattice parameters [deg]
 * cc:         [deg].
 * barns:      Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. 
-*             barns=1 for laz, barns=0 for lau type files [1]
+*             barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), 
+*             barns=0 for lau type files [1]
 *
 * OUTPUT PARAMETERS:
 *
@@ -190,7 +191,7 @@
        the four events absorption, coherent scattering, incoherent
        scattering, and transmission.
 
-  (4). sigma_abs is never simulated explicitly, just incorporated in
+  (4). absorption is never simulated explicitly, just incorporated in
        the neutron weight.
 
   (5). Transmission in the first event is selected with the Monte
