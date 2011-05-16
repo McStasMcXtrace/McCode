@@ -4809,6 +4809,11 @@ randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_angle
     tmp = rot_apply(A, tmp);
     coords_get(tmp, &*xo, &*yo, &*zo);
 
+    /* Go back to local coordinate system */
+    tmp = coords_set(xi, yi, zi);
+    tmp = rot_apply(A, tmp);
+    coords_get(tmp, &xi, &yi, &zi);
+
     if (solid_angle) {
       /* Calculate vector from local point to remote random point */
       lx = *xo - lx;
