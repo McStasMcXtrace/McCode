@@ -19,9 +19,9 @@
 #
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(McStas, 1.12b, www.mcstas.org)
+AC_INIT(McStas, 1.12c, www.mcstas.org)
 AC_REVISION($Revision: 1.58 $)
-AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
+AC_COPYRIGHT([Copyright (C) 1997-2011  Copyright (C) 1997-2011, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
 Institut Laue Langevin, Grenoble, France
 This software is covered by the GNU LESSER GENERAL PUBLIC LICENSE

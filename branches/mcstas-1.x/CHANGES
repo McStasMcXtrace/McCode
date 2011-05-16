@@ -11,7 +11,7 @@
 * Written by: KN, KL, PEO, EF, PW
 * Date: 1997
 * Origin: Risoe DTU, ILL, Uni Copenhagen, PSI
-* Release: McStas 1.12b
+* Release: McStas 1.12c
 * Version: $Revision: 1.49 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
@@ -29,11 +29,24 @@
 * Modified by: PW, EF, EK May 8th 2008: version 1.12
 * Modified by: PW, EF, EK April 2nd 2009: version 1.12a
 * Modified by: PW, EF, EK June/July 2010: version 1.12b
+* Modified by: PW May 2011: version 1.12c
 *
-* This file is part of McStas  version 1.12b, released June 15th, 2010.
+* This file is part of McStas  version 1.12c, released May 17th, 2011.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v1.12c, May 17th, 2011
+
+ McStas 1.12c is bugfix release.
+
+ Bugfixes include:
+
+  Runtime
+  - Fix of a bug in the rectangular focusing routine, reported to mcstas-users by Markos Skoulatos, HZB
+    (see http://mailman.mcstas.org/pipermail/mcstas-users/2010q4/000845.html)
+ 
+
+
 Changes in McStas v1.12b, July 15th, 2010
 
  McStas 1.12b is mostly a bugfix release, and the VERY last release in the 1.x series.
