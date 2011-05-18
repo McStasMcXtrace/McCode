@@ -516,9 +516,9 @@ static int mpi_node_count;
  *  no footer: omit the format footer
  */
 
-void   mcset_ncount(double count);
-double mcget_ncount(void);
-double mcget_run_num(void);
+void   mcset_ncount(unsigned long long int count);
+unsigned long long int mcget_ncount(void);
+unsigned long long int mcget_run_num(void);
 double mcdetector_out(char *cname, double p0, double p1, double p2, char *filename);
 double mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos);
 double mcdetector_out_1D(char *t, char *xl, char *yl,

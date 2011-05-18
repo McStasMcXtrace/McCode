@@ -741,8 +741,8 @@ void (*mcMagnetPrecession) (double, double, double, double, double, double,
 
 /* Number of neutron histories to simulate. */
 #ifndef DANSE
-mcstatic double mcncount             = 1e6;
-mcstatic double mcrun_num            = 0;
+mcstatic unsigned long long int mcncount             = 1e6;
+mcstatic unsigned long long int mcrun_num            = 0;
 #endif
 
 /* parameters handling ====================================================== */
@@ -922,19 +922,19 @@ double mcestimate_error(double N, double p1, double p2)
 }
 
 /* mcset_ncount: set total number of neutrons to generate */
-void mcset_ncount(double count)
+void mcset_ncount(unsigned long long int count)
 {
   mcncount = count;
 }
 
 /* mcget_ncount: get total number of neutrons to generate */
-double mcget_ncount(void)
+unsigned long long int mcget_ncount(void)
 {
   return mcncount;
 }
 
 /* mcget_run_num: get curent number of neutrons in TRACE */
-double mcget_run_num(void)
+unsigned long long int mcget_run_num(void)
 {
   return mcrun_num;
 }
@@ -4871,7 +4871,7 @@ void extend_list(int count, void **list, int *size, size_t elemsize)
 static void
 mcsetn_arg(char *arg)
 {
-  mcset_ncount(strtod(arg, NULL));
+  mcset_ncount((long long int) strtod(arg, NULL));
 }
 
 /* mcsetseed: set the random generator seed from a string argument */
@@ -5280,7 +5280,7 @@ void sighandler(int sig)
     printf("(0 %%)\n" );
   else
   {
-    printf("%.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
+    printf("%.2f %% (%10.1f/%10.1f)\n", 100.0*mcget_run_num()/mcget_ncount(), 1.0*mcget_run_num(), 1.0*mcget_ncount());
   }
   t0 = (time_t)mcstartdate;
   t1 = time(NULL);
