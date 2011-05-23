@@ -555,12 +555,12 @@ sub preferences_dialog {
     }  elsif ($plotter =~ /NeXus|HDF/i) {
       $formatchoice_val='NeXus/HDF file'; }
     if ($MCSTAS::mcstas_config{'NEXUS'} ne "") {
-      $opts = ['PGPLOT (original McStas)',
+      $opts = ['PGPLOT (original McStas)','Gnuplot (-"-)',
         'Matlab (requires Matlab)', 'Matlab scriptfile',
         'Scilab (requires Scilab)', 'Scilab scriptfile',
         'HTML/VRML document','NeXus/HDF file'];
     } else {
-      $opts = ['PGPLOT (original McStas)',
+      $opts = ['PGPLOT (original McStas)','Gnuplot (-"-)',
         'Matlab (requires Matlab)', 'Matlab scriptfile',
         'Scilab (requires Scilab)', 'Scilab scriptfile',
         'HTML/VRML document'];
