@@ -31,11 +31,11 @@
 * Modified by: PW, EF, EK June/July 2010: version 1.12b
 * Modified by: PW May 2011: version 1.12c
 *
-* This file is part of McStas  version 1.12c, released May 17th, 2011.
+* This file is part of McStas  version 1.12c, released May 23rd, 2011.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v1.12c, May 17th, 2011
+Changes in McStas v1.12c, May 23rd, 2011
 
  McStas 1.12c is bugfix release.
 
@@ -44,7 +44,26 @@ Changes in McStas v1.12c, May 17th, 2011
   Runtime
   - Fix of a bug in the rectangular focusing routine, reported to mcstas-users by Markos Skoulatos, HZB
     (see http://mailman.mcstas.org/pipermail/mcstas-users/2010q4/000845.html)
- 
+  - Introduction of --ncount as unsigned long long int in place of double. Could potentially lead simulations to "hang"
+
+  Tools
+  - If gnuplot is available at installation time, mcplot and mcgui can use this in place of PGPLOT
+
+  Components
+  - Lens.comp, typo in author name corrected
+  - Guide_four_side.comp (and other similar), by Tobias Panzner updated
+  - Single_crystal.comp, corrected initialization when providing lattice consts and angles
+  - Source_simple.comp, corrected centering-bug when using gaussian wavelength distribution
+  - Monochromator_pol.comp, now works properly in GROUPS/multi-slab configurations
+  - Pol_simpleBfield.comp, potential polarisation exit-state bug corrected
+  - FermiChopper.comp, fixed error when computing automatic phase 
+  - Monitor_nD.comp, fixed geometry bugs reported by Lambert van Eijck
+  
+  
+  Example instruments
+  - ESS_IN5_reprate.instr, parameter naming change in ESS_moderator_long component was not accomodated.
+  - templateTAS.instr, fixes relating to inclusion in other instrument files
+  
 
 
 Changes in McStas v1.12b, July 15th, 2010
