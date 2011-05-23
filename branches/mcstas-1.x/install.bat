@@ -83,6 +83,7 @@
 @copy support\Win32\which.exe %MCSTAS_SITE%\bin
 @copy *.pl %MCSTAS_SITE%\bin
 @copy support\pgplot_win32\*.* %MCSTAS_SITE%\bin
+@xcopy /e /y /q /i support\Win32\gnuplot\*.* %MCSTAS_SITE%\bin
 @xcopy /e /y /q /i lib %MCSTAS_SITE%\lib
 @echo Done
 @echo Doing doc update using mcdoc...

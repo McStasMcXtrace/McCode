@@ -311,14 +311,15 @@ sub simulation_dialog {
     }
     my $formatchoice_val;
     if ($plotter =~ /McStas|PGPLOT/i)  { $formatchoice_val= 'PGPLOT'; }
+    if ($plotter =~ /Gnuplot/i)  { $formatchoice_val= 'Gnuplot'; } 
     if ($plotter =~ /Matlab/i)  { $formatchoice_val= 'Matlab'; }
     if ($plotter =~ /Scilab/i) { $formatchoice_val= 'Scilab'; }
     if ($plotter =~ /HTML|VRML/) { $formatchoice_val='HTML/VRML'; }
     if ($plotter =~ /NeXus|HDF/) { $formatchoice_val='NeXus/HDF'; }
     if ($MCSTAS::mcstas_config{'NEXUS'} ne "") {
-      $opts = ['PGPLOT','Matlab','Scilab','HTML/VRML','NeXus/HDF'];
+      $opts = ['PGPLOT','Gnuplot','Matlab','Scilab','HTML/VRML','NeXus/HDF']; 
     } else {
-      $opts = ['PGPLOT','Matlab','Scilab','HTML/VRML'];
+      $opts = ['PGPLOT','Gnuplot','Matlab','Scilab','HTML/VRML'];
     }
     my $formatchoice_orig=$formatchoice_val;
     $formatchoice = $line->Optionmenu (
@@ -423,7 +424,7 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
     if ($res eq 'Start') {
       # update Plotter in case of change in this dialog (instead of Preferences)
       if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
-      elsif ($formatchoice_val =~ /McStas|PGPLOT/i)  { $plotter= 'PGPLOT'; }
+      elsif ($formatchoice_val =~ /McStas|PGPLOT|Gnuplot/i)  { $plotter= 'PGPLOT'; }
       elsif ($formatchoice_val =~ /Scilab/i)    { $plotter= 'Scilab'; }
       elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
       elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }
@@ -542,6 +543,7 @@ sub preferences_dialog {
     )->pack(-fill => 'x');
     $b->attach($plotopt, -balloonmsg => "Select output format/plotter");
     if ($plotter =~ /McStas|PGPLOT/i)  { $formatchoice_val= 'PGPLOT (original McStas)'; }
+    elsif ($plotter =~ /Gnuplot/i) { $formatchoice_val= 'Gnuplot'; }
     elsif ($plotter =~ /Matlab/i) {
       $formatchoice_val= 'Matlab' . ($plotter =~ /scriptfile/ ?
         ' scriptfile' : ' (requires Matlab)');
@@ -653,7 +655,7 @@ sub preferences_dialog {
     my $res = $dlg->Show;
 
     if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
-      elsif ($formatchoice_val =~ /McStas|PGPLOT/i)  { $plotter= 'PGPLOT'; }
+      elsif ($formatchoice_val =~ /McStas|PGPLOT|Gnuplot/i)  { $plotter= 'PGPLOT'; }
       elsif ($formatchoice_val =~ /Scilab/i)    { $plotter= 'Scilab'; }
       elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
       elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }

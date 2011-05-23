@@ -996,7 +996,7 @@ sub menu_run_simulation {
         # requested
         if ($newsi->{'Mode'} == 1) {
 	    push @command, "mcdisplay$suffix";
-            if ($plotter =~ /PGPLOT|McStas/i) {
+            if ($plotter =~ /PGPLOT|McStas|Gnuplot/i) {
               push @command, "--plotter=PGPLOT";
               # Selection of PGPLOT 3-pane view from config menu only.
 	      # Default is to NOT use 3-pane view.
@@ -1278,7 +1278,7 @@ sub menu_run_simulation {
         $inf_sim=$newsi;
         return unless $success;
         my $ext;
-        if ($plotter =~ /PGPLOT|McStas/i) { $ext="sim"; }
+        if ($plotter =~ /PGPLOT|McStas|Gnuplot/i) { $ext="sim"; }
         elsif ($plotter =~ /Matlab/i)     { $ext="m"; }
         elsif ($plotter =~ /Scilab/i)     { $ext="sci"; }
         elsif ($plotter =~ /HTML/i)       { $ext="html"; }
@@ -1757,6 +1757,7 @@ sub setup_cmdwin {
     if ($MCSTAS::mcstas_config{'SCILAB'} ne "no")   { $text .= "Scilab "; }
     if ($MCSTAS::mcstas_config{'MATLAB'} ne "no")   { $text .= "Matlab "; }
     if ($MCSTAS::mcstas_config{'PGPLOT'} ne "no")   { $text .= "PGPLOT/McStas "; }
+    if ($MCSTAS::mcstas_config{'GNUPLOT'} ne "no")   { $text .= "Gnuplot "; } 
     if ($MCSTAS::mcstas_config{'BROWSER'} ne "no")  { $text .= "HTML "; }
     if ($MCSTAS::mcstas_config{'VRMLVIEW'} ne "no") { $text .= "VRML "; }
     if ($MCSTAS::mcstas_config{'NEXUS'} ne "") { $text .= "NeXus "; }
