@@ -6,7 +6,6 @@ use File::Copy;
 our $scilab;
 our $tcltk;
 our $matlab;
-our $gnuplot;
 our $cc;
 our $mpirun;
 our $mpicc;
@@ -54,13 +53,6 @@ if ($Config{'osname'} eq "MSWin32") {
       if ($failed) { $scilab = "runscilab.exe"; }
 
     print STDOUT "$scilab\n";
-
-    print STDOUT "Checking for gnuplot: ";
-
-      $failed=system("$which pgnuplot.exe");
-      $gnuplot = (not $failed) ? "pgnuplot.exe" : "no";
-
-    print STDOUT "$gnuplot\n";
     
     print STDOUT "Checking for SSH: ";
 
@@ -178,7 +170,7 @@ while (<READ>) {
     } elsif (/\w*MATLAB \=\w*/) {
         print WRITE "     MATLAB => '$matlab',\n";
     } elsif (/\w*GNUPLOT \=\w*/) {
-        print WRITE "     GNUPLOT => '$gnuplot',\n";
+        print WRITE "     GNUPLOT => 'gnuplot.exe',\n";
     } elsif (/\w*TCLTK \=\w*/) {
         print WRITE "     TCLTK => '$tcltk',\n";
     } elsif (/\w*SSH \=\w*/) {
