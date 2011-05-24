@@ -47,7 +47,10 @@ Changes in McStas v1.12c, May 24rd, 2011
   - Introduction of --ncount as unsigned long long int in place of double. Could potentially lead simulations to "hang"
 
   Tools
-  - If gnuplot is available at installation time, mcplot and mcgui can use this in place of PGPLOT
+  - If gnuplot is available at installation time, mcplot and mcgui can use this in place of PGPLOT.
+    To use gnuplot, either
+    - edit your mcstas_config.perl and put      PLOTTER => 'Gnuplot',
+    - set the enviroment variable MCSTAS_FORMAT to Gnuplot
 
   Components
   - Lens.comp, typo in author name corrected
