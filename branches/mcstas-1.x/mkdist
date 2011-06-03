@@ -248,7 +248,7 @@ then
     # Note: DMG file needs enough space to hold the support tools plus
     # our own code. April 2008 this is about 120 megs...
     dd if=/dev/zero of=./McStas-$1-OSX.dmg bs=1M count=120
-    /sbin/mkfs.hfsplus -v 'McStas' ./McStas-$1.dmg
+    /sbin/mkfs.hfsplus -v 'McStas' ./McStas-$1-OSX.dmg
     # Likely needs root level access:
     sudo mkdir /mnt/dmg
     sudo mount -t hfsplus -o loop ./McStas-$1-OSX.dmg /mnt/dmg
