@@ -877,7 +877,7 @@ INITIALIZE
     dist=sqrt(tx*tx+ty*ty+tz*tz);
   }
   
-  Nsim=mcget_ncount();
+  Nsim=(double)mcget_ncount();
   Bcnt=0;
   // CH4 face 1 (north)
   strcpy(Olist[Bcnt].Name,"mari"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;

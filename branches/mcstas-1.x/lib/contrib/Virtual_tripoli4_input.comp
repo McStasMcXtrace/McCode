@@ -386,7 +386,7 @@ INITIALIZE
 	       file, T4_ANALYSE ? "about " : "",
 	       n_count_extrapolated, (long)nbatch_extrapolated, nsize);
 	if (n_count_extrapolated > mcget_ncount())
-	  printf("    (will use only %.3g %% of file)\n", 100*mcget_ncount()/n_count_extrapolated);
+	  printf("    (will use only %.3g %% of file)\n", 100.0*mcget_ncount()/n_count_extrapolated);
 	else
 	  printf("    (limiting simulation to %g neutrons)\n", n_count_extrapolated*repeat_count);
 	printf("  Source size (full width in [m]):      ");
@@ -581,7 +581,7 @@ FINALLY
     if (hfile) fclose(hfile);
     if (verbose) {
       printf("Tripoli4_input: %s: \n", NAME_CURRENT_COMP);
-      printf("                %g neutrons generated\n", mcget_ncount());
+      printf("                %g neutrons generated\n", (double)mcget_ncount());
       printf("                %d read batch (B) of intial %d neutrons (N)\n",nbatch, nsize);
       if (nbatch && nsize && intensity && !intensity_extrapolated)
 	printf("* Normalisation factor Intensity/N/B = %g [n/s]\n", intensity/nbatch/nsize);

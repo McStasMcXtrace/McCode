@@ -539,8 +539,8 @@ INITIALIZE
   {
     if (Vars.nbins*10 < Vars.Phase_Counts) Vars.Phase_Counts_L = Vars.nbins*100;        /* need at least 10 counts per bin for Limits */
     else Vars.Phase_Counts_L = (long)(mcget_ncount() * Vars.dstep / 4);
-    Vars.Phase_Counts_R   = mcget_ncount();
-    Vars.Phase_Counts     = mcget_ncount();
+    Vars.Phase_Counts_R   = (double)mcget_ncount();
+    Vars.Phase_Counts     = (double)mcget_ncount();
     Vars.keep_target = Vars.dkeep;
     Vars.dkeep = 0.5;
   }
@@ -1424,7 +1424,7 @@ FINALLY
       printf("Source_Optimizer: End of optimization (%s)\n", NAME_CURRENT_COMP);
       printf("Source_Optimizer: Vars.Normal_Monitor_Counts = %i, Vars.Total_Monitor_Counts = %i \n",Vars.Normal_Monitor_Counts, Vars.Total_Monitor_Counts);
       if (Vars.Normal_Monitor_Counts != 0)
-         printf("Source_Optimizer: Optimizer speedup : %.3g \n", (double)(Vars.Total_Monitor_Counts/(Vars.Normal_Monitor_Counts*mcget_ncount()/Vars.Phase_Counts)));
+	printf("Source_Optimizer: Optimizer speedup : %.3g \n", (double)(Vars.Total_Monitor_Counts/(Vars.Normal_Monitor_Counts*(double)mcget_ncount()/Vars.Phase_Counts)));
       printf("Source_Optimizer: Number of redirections : %i\n",Vars.n_redirect);
       printf("Counts : reference = %i, passing = %i, monitor = %.1f\n", Vars.Reference_Counts, Vars.Passing_Counts, Vars.Monitor_Counts);
       printf("Flux   : reference = %.2g, passing = %.2g, monitor = %.2g\n", Vars.Reference_Flux, Vars.Passing_Flux, Vars.Monitor_Flux);
@@ -1469,7 +1469,7 @@ FINALLY
        fprintf(hfile,"# xlabel: 'Distributions'\n");
        fprintf(hfile,"# ylabel: 'Counts'\n");
        if (Vars.Normal_Monitor_Counts != 0)
-                 fprintf(hfile,"# Optimizer speedup estimate: %.3g [Monitor Normal counts %i (extrapolated), Optimized %i ]\n", (double)(Vars.Total_Monitor_Counts/(Vars.Normal_Monitor_Counts*mcget_ncount()/Vars.Phase_Counts)),(long)ceil(Vars.Normal_Monitor_Counts*mcget_ncount()/Vars.Phase_Counts), Vars.Total_Monitor_Counts);
+	 fprintf(hfile,"# Optimizer speedup estimate: %.3g [Monitor Normal counts %i (extrapolated), Optimized %i ]\n", (double)(Vars.Total_Monitor_Counts/(Vars.Normal_Monitor_Counts*(double)mcget_ncount()/Vars.Phase_Counts)),(long)ceil(Vars.Normal_Monitor_Counts*(double)mcget_ncount()/Vars.Phase_Counts), Vars.Total_Monitor_Counts);
 
        fprintf(hfile,"# Optimizer options: ");
        if (Vars.Flag_Continuous) fprintf(hfile,"continuous "); else fprintf(hfile,"fixed ");
@@ -1485,7 +1485,7 @@ FINALLY
 
        fprintf(hfile,"\n");
 
-       fprintf(hfile,"# Redirected neutrons: %i (%.2f %%)\n",Vars.n_redirect,(double)(100*Vars.n_redirect/mcget_ncount()));
+       fprintf(hfile,"# Redirected neutrons: %i (%.2f %%)\n",Vars.n_redirect,(double)(100.0*Vars.n_redirect/mcget_ncount()));
        fprintf(hfile,"# data: Optimized Source (%.1f Counts, Flux %.4g)\n", Vars.Monitor_Counts, Vars.Monitor_Flux);
        for (Vars.index = 0; Vars.index < Vars.nbins; Vars.index++)
        {

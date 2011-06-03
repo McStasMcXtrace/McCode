@@ -311,13 +311,13 @@ FINALLY
            NAME_CURRENT_COMP, file);
   } else {
     double tmp;
-    tmp = mcget_ncount()/file_ncount;
+    tmp = (double)mcget_ncount()/file_ncount;
     if (fabs(rint(tmp)/tmp-1) > 0.02)
       printf("Warning: Virtual_input: %s: simulation finished in the middle of file '%s'\n"
              "               ncount=%g but file contains %g events\n"
              "               Intensities may be wrong.\n"
              "               Increase ncount value to %g or higher.\n",
-           NAME_CURRENT_COMP, file, mcget_ncount(), file_ncount, file_ncount*repeat_cnt);
+	     NAME_CURRENT_COMP, file, (double)mcget_ncount(), file_ncount, file_ncount*repeat_cnt);
     if (mcget_ncount() < file_ncount*repeat_cnt)
       printf("Warning: Virtual_input: %s: not all source %s repetitions were generated.\n"
              "               Intensities may be wrong.\n"

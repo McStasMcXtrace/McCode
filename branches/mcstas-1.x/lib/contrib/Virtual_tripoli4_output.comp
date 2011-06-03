@@ -116,7 +116,7 @@ INITIALIZE
   fprintf(hfile,"NB_BATCH   1\n");
   fprintf(hfile,"TAILLE     Unknown\n");
   fprintf(hfile,"PARTICULE  NEUTRON\n");
-  fprintf(hfile,"INTENSITE  %g\n",mcget_ncount());
+  fprintf(hfile,"INTENSITE  %g\n",(double)mcget_ncount());
   fprintf(hfile,"SIMULATION PROTECTION\n");
   fprintf(hfile,"Following lines are: type, energy in MeV, position = (x,y,z) in cm, direction = (u,v,w), statistical weight\n");
 #endif

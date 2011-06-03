@@ -85,7 +85,7 @@ INITIALIZE
   l_range = l_high-l_low;
   w_mult = w_source*h_source*1.0e4;     /* source area correction */
   w_mult *= l_range;            /* wavelength range correction */
-  w_mult *= 1/mcget_ncount();   /* correct for # neutron rays */
+  w_mult *= 1.0/mcget_ncount();   /* correct for # neutron rays */
 
   if (w_source <0 || h_source < 0 || l_low <= 0 || l_high <= 0 || dist <= 0 || T1 <= 0 || T2 <= 0|| T3 <= 0) {
       printf("Source_Maxwell_3: %s: Error in input parameter values!\n"

@@ -79,7 +79,7 @@ TRACE
     CurrentTime = NowTime;
     if (difftime(NowTime,StartTime) > 10) { /* wait 10 sec before writing ETA */
       EndTime = StartTime + (time_t)(difftime(NowTime,StartTime)
-                           *mcget_ncount()/ncount);
+				     *(double)mcget_ncount()/ncount);
       IntermediateCnts = 0;
       fprintf(stdout, "\nTrace ETA ");
       if (difftime(EndTime,StartTime) < 60.0)
@@ -96,7 +96,7 @@ TRACE
     (    (minutes && difftime(NowTime,CurrentTime) > minutes*60)
       || (percent && !minutes && ncount >= IntermediateCnts))   )
   {
-    fprintf(stdout, "%d ", (int)(ncount*100/mcget_ncount())); fflush(stdout);
+    fprintf(stdout, "%d ", (int)(ncount*100.0/mcget_ncount())); fflush(stdout);
     CurrentTime = NowTime;
     IntermediateCnts = ncount + percent*mcget_ncount()/100;
     if (IntermediateCnts >= mcget_ncount()) fprintf(stdout, "\n");

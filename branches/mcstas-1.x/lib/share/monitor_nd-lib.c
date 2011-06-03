@@ -798,7 +798,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
 
     if (mc_mn_Vars->Intermediate < 0) mc_mn_Vars->Intermediate = 0;
     if (mc_mn_Vars->Intermediate > 1) mc_mn_Vars->Intermediate /= 100;
-    mc_mn_Vars->IntermediateCnts = mc_mn_Vars->Intermediate*mcget_ncount();
+    mc_mn_Vars->IntermediateCnts = mc_mn_Vars->Intermediate*(double)mcget_ncount();
 
     if (mc_mn_Vars->Flag_Verbose)
     {
@@ -1118,7 +1118,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
     char    mc_mn_label[1024];
     double  mc_mn_ratio;
 
-    mc_mn_ratio = 100*mcget_run_num()/mcget_ncount();
+    mc_mn_ratio = 100.0*mcget_run_num()/mcget_ncount();
     if (mc_mn_Vars->Flag_per_cm2 && mc_mn_Vars->area && mc_mn_Vars->Flag_Verbose)
       printf("Monitor_nD: %s: detector area is %g [cm2]\n",
         mc_mn_Vars->compcurname, mc_mn_Vars->area);

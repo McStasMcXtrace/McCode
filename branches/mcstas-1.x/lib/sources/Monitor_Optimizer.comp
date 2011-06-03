@@ -106,8 +106,8 @@ TRACE
     if (Vars->Flag_Auto
     && (Vars->Phase == DEFS->PHASE_GET_REF))
       {
-      if (((Vars->Reference_Counts > mcget_ncount()*Vars->dstep) && (Vars->Monitor_Counts >= Vars->nbins*10))
-      || (Vars->Monitor_Counts >= Vars->nbins*100) || (Vars->Reference_Counts > 2*mcget_ncount()*Vars->dstep))
+	if (((Vars->Reference_Counts > (double)mcget_ncount()*Vars->dstep) && (Vars->Monitor_Counts >= Vars->nbins*10))
+      || (Vars->Monitor_Counts >= Vars->nbins*100) || (Vars->Reference_Counts > 2.0*mcget_ncount()*Vars->dstep))
       {
         Vars->Phase_Counts_R = 0;        /* enough counts on monitor */
         if (Vars->Flag_Verbose)

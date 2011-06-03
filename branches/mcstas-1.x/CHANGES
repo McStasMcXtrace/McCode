@@ -29,13 +29,13 @@
 * Modified by: PW, EF, EK May 8th 2008: version 1.12
 * Modified by: PW, EF, EK April 2nd 2009: version 1.12a
 * Modified by: PW, EF, EK June/July 2010: version 1.12b
-* Modified by: PW May 2011: version 1.12c
+* Modified by: PW May-June 2011: version 1.12c (re-release)
 *
-* This file is part of McStas  version 1.12c, released May 24th, 2011.
+* This file is part of McStas  version 1.12c, released June 3rd, 2011.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v1.12c, May 24rd, 2011
+Changes in McStas v1.12c, June 3rd, 2011
 
  McStas 1.12c is bugfix release.
 
@@ -44,7 +44,9 @@ Changes in McStas v1.12c, May 24rd, 2011
   Runtime
   - Fix of a bug in the rectangular focusing routine, reported to mcstas-users by Markos Skoulatos, HZB
     (see http://mailman.mcstas.org/pipermail/mcstas-users/2010q4/000845.html)
-  - Introduction of --ncount as unsigned long long int in place of double. Could potentially lead simulations to "hang"
+  - Introduction of --ncount as unsigned long long int in place of double. Using double could potentially lead 
+    simulations to "hang". A re-release of McStas 1.12c was done due to bugs in components related to the new
+    type returned from mcget_ncount.
 
   Tools
   - If gnuplot is available at installation time, mcplot and mcgui can use this in place of PGPLOT.

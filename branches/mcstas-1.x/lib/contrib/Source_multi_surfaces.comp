@@ -286,7 +286,7 @@ INITIALIZE
   xw = fabs(xw); yh=fabs(yh); dist=fabs(dist);
 
   /*generate p_in*/
-  p_in = 1/mcget_ncount();
+  p_in = 1.0/mcget_ncount();
   
 %}
 TRACE

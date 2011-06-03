@@ -129,7 +129,7 @@ INITIALIZE
   l_range = l_high-l_low;
   w_mult = size*size*1.0e4;     /* source area correction */
   w_mult *= l_range;            /* wavelength range correction */
-  w_mult *= 1/mcget_ncount();  /* Flux value */
+  w_mult *= 1.0/mcget_ncount();  /* Flux value */
 %}
 
 TRACE
