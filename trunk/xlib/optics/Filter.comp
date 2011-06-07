@@ -75,18 +75,20 @@ INITIALIZE
     exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(t.header,"Z","A[r]","rho","sigma[a]");
+  header_parsed=Table_ParseHeader(t.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
   prms=calloc(1,sizeof(struct mat_prms));
-  if (!prms->At) prms->At=strtod(header_parsed[1],NULL);
-  if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
-  if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
   prms->E=malloc(sizeof(double)*(t.rows+1));
   prms->mu=malloc(sizeof(double)*(t.rows+1));
+  if(header_parsed[2]){prms->rho=strtod(header_parsed[2],NULL);}
+  else{fprintf(stderr,"Warning(%s): %s found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",material_datafile);prms->rho=1;}
+  /*which columns holds the mus*/
+  int mu_c=5;
+  if (t.columns==3) mu_c=1;
 
   int i;
   for (i=0;i<t.rows;i++){
     prms->E[i]=t.data[i*t.columns];
-    prms->mu[i]=t.data[5+i*t.columns]*prms->rho*1e2;     /*mu is now in SI, [m^-1]*/ 
+    prms->mu[i]=t.data[mu_c+i*t.columns]*prms->rho*1e2;     /*mu is now in SI, [m^-1]*/ 
   }
 
   prms->E[t.rows]=-1.0;
