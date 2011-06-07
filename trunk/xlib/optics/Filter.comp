@@ -105,6 +105,7 @@ TRACE
     /*table interpolation*/
     k=sqrt(kx*kx+ky*ky+kz*kz);
     e=k*K2E;
+    i=0;
     while (e>prms->E[i]){
       i++;
       if (prms->E[i]==-1){
