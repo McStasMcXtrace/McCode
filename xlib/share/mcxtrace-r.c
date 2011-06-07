@@ -274,7 +274,7 @@ cylinder_intersect(double *l0, double *l1, double x, double y, double z,
 /*******************************************************************************
  * sphere_intersect: Calculate intersection between a line and a sphere.
  * returns 0 when no intersection is found
- *      or 1 in case of intersection with resulting times t0 and t1 
+ *      or 1 in case of intersection with resulting lengths l0 and l1 
  *******************************************************************************/
 int
 sphere_intersect(double *l0, double *l1, double x, double y, double z,
@@ -289,10 +289,58 @@ sphere_intersect(double *l0, double *l1, double x, double y, double z,
   if(D < 0)
     return 0;
   D = sqrt(D);
-  *l0 = (-B - D) / k;
-  *l1 = (-B + D) / k;
+  *l0 = (-B - D) / sqrt(k);
+  *l1 = (-B + D) / sqrt(k);
   return 1;
 } /* sphere_intersect */
+
+/******************************************************************************
+ * elliosoid_intersect: Calculate intersection between a line and an ellipsoid.
+ * They ellisoid is fixed by a set of half-axis (a,b,c) and a matrix Q, with the
+ * columns of Q being the (orthogonal) vectors along which the half-axis lie.
+ * This allows for complete freedom in orienting th eellipsoid.
+ * returns 0 when no intersection is found
+ *      or 1 when they are found with resulting lemngths l0 and l1.
+ *****************************************************************************/
+int
+ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
+    double kx, double ky, double kz, double a, double b, double c,
+    Rotation Q)
+{
+  Rotation A,Gamma,Q_t,Tmp;
+  double u,v,w;
+
+  Gamma[0][0]=1/(a*a);Gamma[0][1]=Gamma[0][2]=0;
+  Gamma[1][1]=1/(b*b);Gamma[1][0]=Gamma[1][2]=0;
+  Gamma[2][2]=1/(c*c);Gamma[2][0]=Gamma[2][1]=0;
+
+  rot_transpose(Q,Q_t);
+  rot_mul(Gamma,Q_t,Tmp);
+  rot_mul(Q,Tmp,A);
+
+  /*to get the solutions as lengths in m use unit vector along k*/
+  double ex,ey,ez,k;
+  k=sqrt(kx*kx+ky*ky+kz*kz);
+  ex=kx/k;
+  ey=ky/k;
+  ez=kz/k;
+
+  u=ex*(A[0][0]*ex + A[1][0]*ey + A[2][0]*ez) + ey*( A[0][1]*ex + A[1][1]*ey + A[2][1]*ez) + ez*(A[0][2]*ex + A[1][2]*ey + A[2][2]*ez);
+  v=x *(A[0][0]*ex + A[1][0]*ey + A[2][0]*ez) + ex*(A[0][0]*x + A[1][0]*y + A[2][0]*z) +
+    y *(A[0][1]*ex + A[1][1]*ey + A[2][1]*ez) + ey*(A[0][1]*x + A[1][1]*y + A[2][1]*z) +
+    z *(A[0][2]*ex + A[1][2]*ey + A[2][2]*ez) + ez*(A[0][2]*x + A[1][2]*y + A[2][2]*z);
+  w=x*(A[0][0]*x + A[1][0]*y + A[2][0]*z) + y*(A[0][1]*x + A[1][1]*y + A[2][1]*z) + z*(A[0][2]*x + A[1][2]*y + A[2][2]*z);
+
+  double D=v*v-4*u*w+4*u;
+  if (D<0) return 0;
+
+  D=sqrt(D);
+
+  *l0=(-v-D) / (2*u);
+  *l1=(-v+D) / (2*u);
+  return 1;
+}
+
 
 /*******************************************************************************
  * plane_intersect: Calculate intersection between a plane (with normal n including the point w)
