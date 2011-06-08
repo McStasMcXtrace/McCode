@@ -191,8 +191,7 @@ install_mcstas: installdirs $(BINOBJS_mcstas)
 	cd $(topdir)/lib && $(MAKE) install 
 	cd $(topdir)/nlib && $(MAKE) install
 	@echo "Create component documentation..."
-	MCSTAS=$(libdir_mccode)
-	export MCSTAS
+	export MCSTAS=$(libdir_mccode)
 	$(topdir)/src/mcdoc.fixpl --text; 
 
 # documentation with mxdoc is broken, as it uses MCSTAS location and env
