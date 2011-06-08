@@ -419,9 +419,13 @@ TRACE
 %}
 
 MCDISPLAY
-%{		
+%{
   magnify("xyz");
-  if (!geometry && radius > 0 &&  yheight) {	/* cylinder */
+  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
+    off_display(offdata);
+  }
+  else if (radius > 0 &&  yheight) {	/* cylinder */
+    printf("cylinder\n");
     circle("xz", 0,  yheight/2.0, 0, radius);
     circle("xz", 0, -yheight/2.0, 0, radius);
     line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
@@ -438,7 +442,7 @@ MCDISPLAY
       line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
     }
   }
-  else if (!geometry && xwidth && yheight && zdepth) { 	/* box */
+  else if (xwidth && yheight && zdepth) { 	/* box */
     double xmin = -0.5*xwidth;
     double xmax =  0.5*xwidth;
     double ymin = -0.5*yheight;
@@ -460,14 +464,12 @@ MCDISPLAY
     line(xmin, ymax, zmin, xmin, ymax, zmax);
     line(xmax, ymax, zmin, xmax, ymax, zmax);
   }
-  else if (!geometry && radius > 0 && !yheight) {	/* sphere */
+  else if (radius > 0 && !yheight) {	/* sphere */
     circle("xy", 0,  0.0, 0, radius);
     circle("xz", 0,  0.0, 0, radius);
     circle("yz", 0,  0.0, 0, radius);        
   }
-  else if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {	/* OFF file */
-    off_display(offdata);
-  }
 %}
+
 
 END
