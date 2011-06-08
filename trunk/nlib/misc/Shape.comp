@@ -63,12 +63,28 @@
 DEFINE COMPONENT Shape
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string geometry=0, radius=0, xwidth=0, yheight=0, zdepth=0, thickness=0)
-OUTPUT PARAMETERS(VarsInc, offdata)
+OUTPUT PARAMETERS(offdata)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
-SHARE COPY Incoherent
+SHARE
+%{
+  %include "interoff-lib"
+%}
 
-DECLARE COPY Incoherent
+DECLARE
+%{
+  off_struct offdata;
+%}
+
+INITIALIZE
+%{
+  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
+	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
+      thickness=0;
+    }
+  }
+%}
+
 
 TRACE %{
   /* component Shape does nothing */

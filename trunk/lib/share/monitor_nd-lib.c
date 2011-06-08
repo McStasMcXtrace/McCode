@@ -1510,7 +1510,7 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
         hdiv_max = vdiv_max = angle;
         restricted = 1; }
     }
-
+    /* full sphere */
     if ((!restricted && (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE))
     || abs(Vars->Flag_Shape) == DEFS->SHAPE_PREVIOUS)
     {
@@ -1519,7 +1519,11 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
       mcdis_circle("xz",0,0,0,radius);
       mcdis_circle("yz",0,0,0,radius);
     }
-    else if (restricted && ((abs(Vars->Flag_Shape) == DEFS->SHAPE_CYLIND) || (abs(Vars->Flag_Shape) == DEFS->SHAPE_BANANA) || (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE)))
+    /* banana/cylinder/sphere portion */
+    else 
+    if (restricted && ((abs(Vars->Flag_Shape) == DEFS->SHAPE_CYLIND) 
+                    || (abs(Vars->Flag_Shape) == DEFS->SHAPE_BANANA) 
+                    || (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE)))
     {
       int NH=24, NV=24;
       int ih, iv;
@@ -1527,7 +1531,8 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
       int issphere;
       issphere = (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE);
       width = (hdiv_max-hdiv_min)/NH;
-      height= (vdiv_max-vdiv_min)/NV;
+      if (!issphere) NV=1;
+      else height= (vdiv_max-vdiv_min)/NV;
       mcdis_magnify("xyz");
       for(ih = 0; ih < NH; ih++)
         for(iv = 0; iv < NV; iv++)
@@ -1538,20 +1543,20 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
           phi1 = (hdiv_min+ width*(ih+1))*DEG2RAD;
           if (issphere)
           {
-            theta0= (90-vdiv_min+height*iv)*DEG2RAD;
+            theta0= (90-vdiv_min+height* iv)   *DEG2RAD;
             theta1= (90-vdiv_min+height*(iv+1))*DEG2RAD;
-          } else
-          {
-            theta0= theta1 = PI/2;
-            ymin  = ymin+(ymax-ymin)*(iv/NV);
-            ymax  = ymin+(ymax-ymin)*((iv+1)/NV);
+            y0    = radius*cos(theta0);
+            y1    = radius*cos(theta1);
+          } else {
+            y0 = ymin;
+            y1 = ymax;
+            theta0=theta1=90*DEG2RAD;
           }
+
           z0 = radius*sin(theta0)*cos(phi0);
           x0 = radius*sin(theta0)*sin(phi0);
-          if (issphere) y0 = radius*cos(theta0); else y0 = ymin;
           z1 = radius*sin(theta1)*cos(phi0);
           x1 = radius*sin(theta1)*sin(phi0);
-          if (issphere) y1 = radius*cos(theta1); else y1 = ymax;
           z2 = radius*sin(theta1)*cos(phi1);
           x2 = radius*sin(theta1)*sin(phi1);
           y2 = y1;
@@ -1566,12 +1571,14 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
             x0,y0,z0);
         }
     }
+    /* disk (circle) */
     else
     if (abs(Vars->Flag_Shape) == DEFS->SHAPE_DISK)
     {
       mcdis_magnify("");
       mcdis_circle("xy",0,0,0,radius);
     }
+    /* rectangle (square) */
     else
     if (abs(Vars->Flag_Shape) == DEFS->SHAPE_SQUARE)
     {
@@ -1582,6 +1589,7 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
              (double)xmin, (double)ymax, 0.0,
              (double)xmin, (double)ymin, 0.0);
     }
+    /* full cylinder/banana */
     else
     if (!restricted && ((abs(Vars->Flag_Shape) == DEFS->SHAPE_CYLIND) || (abs(Vars->Flag_Shape) == DEFS->SHAPE_BANANA)))
     {
@@ -1594,6 +1602,7 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
       mcdis_line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
     }
     else
+    /* box */
     if (abs(Vars->Flag_Shape) == DEFS->SHAPE_BOX)
     {
       mcdis_magnify("xyz");
