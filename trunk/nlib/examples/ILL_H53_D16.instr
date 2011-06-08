@@ -52,7 +52,7 @@
 
 DEFINE INSTRUMENT ILL_H53_D16(lambda=4.7, DM=3.355, dlambda=0.05,
   string Powder="Na2Ca3Al2F14.laz", RV=-1,
-  L1=0.2, L2=2.8, L3=1.0, THETA_M=44.46, 
+  L1=0.1, L2=2.8, L3=1.0, THETA_M=44.46, 
   TwoTheta=0, RadiusDet=0.36, DetEthick=.01, DetEgap=0.08, DetVthick=5e-3,
   verbose=1, TILT=0)
 
