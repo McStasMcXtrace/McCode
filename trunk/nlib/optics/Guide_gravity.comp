@@ -352,8 +352,6 @@ INITIALIZE
     if (W < 0 || R0 < 0 || Qc < 0)
     { fprintf(stderr,"Guide_gravity: %s: W R0 Qc must be >0.\n", NAME_CURRENT_COMP);
       exit(-1); }
-    if (m < 1 && m != 0) fprintf(stderr,"WARNING: Guide_gravity: %s: m < 1 behaves as if m=1.\n",
-      NAME_CURRENT_COMP);
   }
 
   if (nslit <= 0 || nhslit <= 0)
