@@ -287,6 +287,7 @@
                     <keyword>OUTPUT</keyword>
                     <keyword>INSTRUMENT</keyword>
                     <keyword>%include</keyword>
+                    <keyword>REMOVABLE</keyword>
                 </context>
                 
                 <!-- McStas keywords (grammar) -->
