@@ -422,71 +422,13 @@ AT (0,0,L_H53_P5+gGap) RELATIVE PREVIOUS
 
 /* D16 position. Gap .200 */
 
-/* H53-P6: Carter Poutre6 L=4.3 m in 3 elements Rh=0 m */
-
-COMPONENT H53_P6 = Arm()
-AT (0,0,0.2+Al_Thickness) RELATIVE PREVIOUS
-
-COMPONENT H53_P6_In = Al_window(thickness=Al_Thickness)
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT H53_P6_1 = Guide_gravity(
-  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_P6,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
-AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P6,0) RELATIVE PREVIOUS
-
-COMPONENT H53_P6_2 = COPY(PREVIOUS)
-AT (0,0,L_H53_P6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P6,0) RELATIVE PREVIOUS
-
-COMPONENT H53_P6_3 = COPY(PREVIOUS)
-AT (0,0,L_H53_P6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P6,0) RELATIVE PREVIOUS
-
-COMPONENT H53_P6_Out = Al_window(thickness=Al_Thickness)
-AT (0,0,L_H53_P6+gGap) RELATIVE PREVIOUS
+/* H53-P6: Carter Poutre6 L=4.295x0.120x0.060 m in 3 elements Rh=0 m */
 
 /* ADAM position. gap .524 */
 
-/* H53-P6: Carter Poutre7 L=.552 m in 3 elements Rh=0 m */
-
-COMPONENT H53_P7 = Arm()
-AT (0,0,0.524+Al_Thickness) RELATIVE PREVIOUS
-
-COMPONENT H53_P7_In = Al_window(thickness=Al_Thickness)
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT H53_P7_1 = Guide_gravity(
-  w1=0.06, h1=0.12, w2=0.06, h2=0.12, l=L_H53_P7,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
-AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P7,0) RELATIVE PREVIOUS
-
-COMPONENT H53_P7_Out = Al_window(thickness=Al_Thickness)
-AT (0,0,L_H53_P7+gGap) RELATIVE PREVIOUS
+/* H53-P7: Carter Poutre7 L=.552x0.120x0.060 m in 3 elements Rh=0 m */
 
 /* PF1a/CRYO-EDM position. gap .156 */
 
-COMPONENT H53_P8 = Arm()
-AT (0,0,0.156+Al_Thickness) RELATIVE PREVIOUS
-
-COMPONENT GuideOut_xy = Monitor_nD(
-  xwidth=0.06, yheight=0.12, restore_neutron=1,
-  options="x y, per cm2, slit")
-AT (0,0,0.01) RELATIVE PREVIOUS
-
-COMPONENT GuideOut_dxdy = Monitor_nD(
-  xwidth=0.06, yheight=0.12, restore_neutron=1,
-  options="dx dy, all auto, per cm2, slit")
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT GuideOut_Phic = Monitor_nD(
-  xwidth=0.06, yheight=0.12, restore_neutron=1,
-  options="per cm2, capture, slit")
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT GuideOut_L = Monitor_nD(
-  xwidth=0.06, yheight=0.12, restore_neutron=1,
-  options="lambda, limits=[1 21] bins=20, per cm2, slit")
-AT (0,0,0) RELATIVE PREVIOUS
-
-/* The END token marks the instrument definition end */
 END
 
