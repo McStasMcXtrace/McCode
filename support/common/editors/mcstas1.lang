@@ -161,6 +161,7 @@
                       <keyword>ITERATE</keyword>
                       <keyword>SPLIT</keyword>
                       <keyword>COPY</keyword>
+                      <keyword>REMOVABLE</keyword>
         </keyword-list>
 
         <keyword-list _name = "mcstas_runtime" style = "Others 3" case-sensitive="TRUE">
