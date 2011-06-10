@@ -51,6 +51,7 @@
 * normalTop:    One of several normal vectors used for defining the geometry (1)
 * pointTop:     One of several points used for defining the geometry (1)
 * rParPtr:      One of several pointers to reflection parameters used with the ref. functions. (*)
+* SCATTERED:    is 1 for reflected, and 2 for transmited neutrons
 * 
 *
 * %L
@@ -344,14 +345,14 @@ TRACE
       assert(refWeight>=0 && refWeight<=1); // check that refWeight is meaningfull
       
       if (rand01()<refWeight) {
-	//reflect 
-	
-	vVec = coords_add(vVec, coords_scale(*normalPointer, -Q*K2V));
-	SetMonoPolRefOut(FN, FM, refWeight, &sx, &sy, &sz);
+	      //reflect: SCATTERED==1 for reflection
+	      
+	      vVec = coords_add(vVec, coords_scale(*normalPointer, -Q*K2V));
+	      SetMonoPolRefOut(FN, FM, refWeight, &sx, &sy, &sz);
       } else {
-	// transmit
-	
-	SetMonoPolTransOut(FN, FM, refWeight, &sx, &sy, &sz);
+	      // transmit: SCATTERED==2 for transmission
+	      SCATTER;
+	      SetMonoPolTransOut(FN, FM, refWeight, &sx, &sy, &sz);
       }
 
       if (sx*sx+sy*sy+sz*sz>1.000001) { // check that polarisation is meaningfull

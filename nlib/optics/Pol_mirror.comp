@@ -69,6 +69,7 @@
 * option:    1:Reflect/transmit, 2:Reflect only, 3:Transmit only (1)
 *
 * OUTPUT PARAMETERS:
+* SCATTERED:    is 1 for reflected, and 2 for transmited neutrons
 *
 * %L
 *
@@ -198,7 +199,7 @@ TRACE
 	SetMonoPolRefOut(FN, FM, refWeight, &sx, &sy, &sz);    
       
     } else { // transmit
-      
+      SCATTER;
       if(isPolarising)
 	SetMonoPolTransOut(FN, FM, refWeight, &sx, &sy, &sz);    
       
