@@ -425,7 +425,6 @@ MCDISPLAY
     off_display(offdata);
   }
   else if (radius > 0 &&  yheight) {	/* cylinder */
-    printf("cylinder\n");
     circle("xz", 0,  yheight/2.0, 0, radius);
     circle("xz", 0, -yheight/2.0, 0, radius);
     line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
@@ -442,7 +441,7 @@ MCDISPLAY
       line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
     }
   }
-  else if (xwidth && yheight && zdepth) { 	/* box */
+  else if (radius <=0 && ( (xwidth>0)+(yheight>0)+(zdepth>0) >= 2) ) { 	/* box: at least two dimensions given */
     double xmin = -0.5*xwidth;
     double xmax =  0.5*xwidth;
     double ymin = -0.5*yheight;
