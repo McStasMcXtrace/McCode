@@ -22,7 +22,7 @@
 * %D
 * A Double-cylinder shaped incoherent scatterer (like Vanadium)
 *   with both elastic and quasielastic (Lorentzian) components.
-* No multiple scattering (but approximation available). Absorbtion included.
+* No multiple scattering (but approximation available). Absorption included.
 * <b>Sample focusing:</b>
 *   The area to scatter to is a disk of radius 'focus_r' situated at the target.
 *   This target area may also be rectangular if specified focus_xw and focus_yh
@@ -74,7 +74,7 @@
 * focus_yh:   vert.  dimension of a rectangular area [m]
 * focus_aw:   horiz. angular dimension of a rectangular area [deg]
 * focus_ah:   vert.  angular dimension of a rectangular area [deg]
-* sigma_abs:  Absorbtion cross section pr. unit cell at 2200 m/s [barns]
+* sigma_abs:  Absorption cross section pr. unit cell at 2200 m/s [barns]
 * sigma_inc:  Incoherent scattering cross section pr. unit cell [barns]
 * Vc:         Unit cell volume [AA^3]
 * f_QE:       Fraction of quasielastic scattering (rest is elastic) [1]
@@ -425,6 +425,7 @@ MCDISPLAY
     off_display(offdata);
   }
   else if (radius > 0 &&  yheight) {	/* cylinder */
+    printf("cylinder\n");
     circle("xz", 0,  yheight/2.0, 0, radius);
     circle("xz", 0, -yheight/2.0, 0, radius);
     line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
@@ -441,7 +442,7 @@ MCDISPLAY
       line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
     }
   }
-  else if (radius <=0 && ( (xwidth>0)+(yheight>0)+(zdepth>0) >= 2) ) { 	/* box: at least two dimensions given */
+  else if (xwidth && yheight) { 	/* box/rectangle XY */
     double xmin = -0.5*xwidth;
     double xmax =  0.5*xwidth;
     double ymin = -0.5*yheight;

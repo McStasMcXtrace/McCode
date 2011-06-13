@@ -783,15 +783,17 @@ long Table_Init(t_Table *Table, long rows, long columns)
       if (X < min_x) min_x = X;
       if (X > max_x) max_x = X;
     } /* for */
+    /* test for monotonicity and constant step if the table is an XY or single vector */
     if (n > 1) {
       /* mean step */
       step = (max_x - min_x)/(n-1);
       /* now test if table is monotonic on first column, and get minimal step size */
       for (i=0; i < n-1; i++) {
         double X, diff;;
-        X = (row ? Table_Index(*Table,i  ,0)
-                            : Table_Index(*Table,0, i));
-        diff         = Table_Index(*Table,i+1,0) - X;
+        X    = (row ? Table_Index(*Table,i  ,0)
+                    : Table_Index(*Table,0,  i));
+        diff = (row ? Table_Index(*Table,i+1,0)
+                    : Table_Index(*Table,0,  i+1)) - X;
         if (fabs(diff) < fabs(step)) step = diff;
         /* change sign ? */
         if ((Table->max_x - Table->min_x)*diff < 0 && monotonic)
@@ -801,11 +803,12 @@ long Table_Init(t_Table *Table, long rows, long columns)
       if (monotonic) {
       for (i=0; i < n-1; i++) {
         double X, diff;
-        X = (row ? Table_Index(*Table,i  ,0)
-                            : Table_Index(*Table,0, i));
-        diff         = Table_Index(*Table,i+1,0) - X;
-        if ( !(fabs(step)*(1-READ_TABLE_STEPTOL) < fabs(diff)
-               && fabs(diff) < fabs(step)*(1+READ_TABLE_STEPTOL)) )
+        X    = (row ? Table_Index(*Table,i  ,0)
+                    : Table_Index(*Table,0,  i));
+        diff = (row ? Table_Index(*Table,i+1,0)
+                    : Table_Index(*Table,0,  i+1)) - X;
+        if ( step && !(fabs(step)*(1-READ_TABLE_STEPTOL) < fabs(diff)
+            && fabs(diff)                        < fabs(step)*(1+READ_TABLE_STEPTOL)) )
         { constantstep = 0; break; }
       }
 }
