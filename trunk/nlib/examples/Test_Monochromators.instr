@@ -23,6 +23,7 @@
 * %Example: Mono=3 Detector: psd1_I=8.95371e-05
 * %Example: Mono=4 Detector: psd1_I=8.95851e-05
 * %Example: Mono=5 Detector: psd1_I=8.98186e-05
+* %Example: Mono=6 Detector: psd1_I=9.21295e-05
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -32,6 +33,7 @@
 *         3=Monochromator_pol (forcing 1% events to be reflected)
 *         4=Monochromator_curved (in flat mode)
 *         5=Monochromator_2foc (contrib, flat mode)
+*         6=Single_crystal
 * lambda: Source wavelength   [Angs]
 * Moz:    Mosaicity           [Arc minutes]
 *
@@ -86,6 +88,8 @@ INITIALIZE
     printf("Using Monochromator_curved (flat mode)\n"); break;
   case 5:
     printf("Using Monochromator_2foc (contrib, flat mode)\n"); break;
+  case 6:
+    printf("Using Single_crystal\n"); break;
   }
   %}
 /* end of INITIALIZE */
@@ -143,7 +147,16 @@ COMPONENT Mono5 =
 Monochromator_2foc(width = 0.10, height = 0.10,
 		   mosaich = Moz, mosaicv = Moz,
 		   r0 = 0.9, Q=mono_q, gap=0)
-     WHEN (Mono == 5) AT (0, 0, 0) RELATIVE Mono_Arm     
+     WHEN (Mono == 5) AT (0, 0, 0) RELATIVE Mono_Arm
+
+COMPONENT Mono6 = Single_crystal( 
+  xwidth = 0.002, yheight = 0.1, zdepth = 0.1, 
+  mosaic = 30, reflections = "C_graphite.lau", barns=0,
+  ax=0,      ay=2.14,   az=-1.24,
+  bx = 0,    by = 0,    bz =  2.47,
+  cx = 6.71, cy = 0,    cz =  0, 
+  sigma_abs = 0.014, sigma_inc = 0.004) 
+     WHEN (Mono == 6) AT (0, 0, 0) RELATIVE Mono_Arm          
 
 COMPONENT lam1 = 
 L_monitor(nL = 200, filename = "lambda1.dat", xwidth = 0.10,
