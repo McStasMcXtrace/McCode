@@ -575,7 +575,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           strncat(Vars->Coord_Label[0], "/st", 30);
         else
           printf("Monitor_nD: %s: Flux per steradian requires Auto limits mode\n"
-                 "WARNING     use options='... auto ...'\n", Vars->compcurname);
+                 "WARNING     use options=\"... auto ...\". Unactivating this option.\n", Vars->compcurname);
       }
       if (XY > 1 && Vars->Coord_Number)
         strncat(Vars->Coord_Label[0], "/bin", 30);
@@ -731,7 +731,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
   {
     /* auto limits case : get limits in Buffer for each variable */
           /* Dim : (Vars->Coord_Number+1)*Vars->Buffer_Block matrix (for p, dp) */
-    if (Vars->Flag_Verbose) printf("Monitor_nD: %s getting %li Auto Limits from List (%li).\n", Vars->compcurname, Vars->Coord_Number, Vars->Buffer_Counter);
+    if (Vars->Flag_Verbose) printf("Monitor_nD: %s getting %li Auto Limits from List (%li) in TRACE.\n", Vars->compcurname, Vars->Coord_Number, Vars->Buffer_Counter);
     for (i = 1; i <= Vars->Coord_Number; i++)
     {
       if (Vars->Coord_Type[i] & DEFS->COORD_AUTO)
@@ -747,7 +747,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
       }
     } 
     Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step (read Buffer and generate new events to store in histograms) */
-  }
+  } /* end if Flag_Auto_Limits == 1 */
 
   /* manage realloc for 'list all' if Buffer size exceeded: flush Buffer to file */
   if ((Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_List >= 2))
@@ -767,7 +767,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
             { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double)); Vars->Flag_List = 1; }
       else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = Vars->Neutron_Counter+Vars->Buffer_Block; }
     }
-  }
+  } /* end if Buffer realloc */
 
   while (!While_End)
   { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) or passing neutron */
@@ -806,31 +806,31 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         { /* Dim : (Vars->Coord_Number+1)*Vars->Buffer_Block matrix (for p, p2) */
           free(Vars->Mon2D_Buffer); Vars->Mon2D_Buffer = NULL;
         }
+        if (Vars->Flag_Verbose) printf("Monitor_nD: %s flushed %li Auto Limits from List (%li) in TRACE.\n", Vars->compcurname, Vars->Coord_Number, Vars->Buffer_Counter);
       }
     }
-    else /* Vars->Flag_Auto_Limits == 0 (no auto limits/list) or 1 (store events into Buffer) */
+    if (Vars->Flag_Auto_Limits != 2 || !Vars->Coord_Number) /* Vars->Flag_Auto_Limits == 0 (no auto limits/list) or 1 (store events into Buffer) */
     {
       /* automatically compute area and steradian solid angle when in AUTO mode */
-      if (Vars->Flag_Auto_Limits==1) {
-        double v;
-        v=sqrt(Vars->cvx*Vars->cvx
-              +Vars->cvy*Vars->cvy
-              +Vars->cvz*Vars->cvz);
-        if (Vars->min_x > Vars->cx) Vars->min_x = Vars->cx;
-        if (Vars->max_x < Vars->cx) Vars->max_x = Vars->cx;
-        if (Vars->min_y > Vars->cy) Vars->min_y = Vars->cy;
-        if (Vars->max_y < Vars->cy) Vars->max_y = Vars->cy;
-        Vars->mean_p  += Vars->cp;
-        if (v) {
-          Vars->mean_dx += Vars->cp*fabs(Vars->cvx/v);
-          Vars->mean_dy += Vars->cp*fabs(Vars->cvy/v);
-        }
-        Vars->area =(Vars->max_x-Vars->min_x)
-                         *(Vars->max_y-Vars->min_y)*1E4; /* cm2 */
-        if (Vars->Flag_per_st)
-        Vars->steradian = 2*fabs(2*atan(Vars->mean_dx/Vars->mean_p)
-                                  *sin(2*atan(Vars->mean_dy/Vars->mean_p)/2));
+      /* compute the steradian solid angle incoming on the monitor */
+      double v;
+      v=sqrt(Vars->cvx*Vars->cvx
+            +Vars->cvy*Vars->cvy
+            +Vars->cvz*Vars->cvz);
+      if (Vars->min_x > Vars->cx) Vars->min_x = Vars->cx;
+      if (Vars->max_x < Vars->cx) Vars->max_x = Vars->cx;
+      if (Vars->min_y > Vars->cy) Vars->min_y = Vars->cy;
+      if (Vars->max_y < Vars->cy) Vars->max_y = Vars->cy;
+      Vars->mean_p  += Vars->cp;
+      if (v) {
+        Vars->mean_dx += Vars->cp*fabs(Vars->cvx/v);
+        Vars->mean_dy += Vars->cp*fabs(Vars->cvy/v);
       }
+      Vars->area =(Vars->max_x-Vars->min_x)
+                       *(Vars->max_y-Vars->min_y)*1E4; /* cm2 */
+      if (Vars->Flag_per_st)
+      Vars->steradian = 2*fabs(2*atan(Vars->mean_dx/Vars->mean_p)
+                                *sin(2*atan(Vars->mean_dy/Vars->mean_p)/2));
         
       for (i = 0; i <= Vars->Coord_Number; i++)
       { /* handle current neutron : last while */
@@ -957,7 +957,8 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
       Vars->Neutron_Counter++;
     } /* end (Vars->Flag_Auto_Limits != 2) */
 
-    /* store n1d/2d section from Buffer (Auto_Limits == 2) or current neutron in while */
+    /* ====================================================================== */
+    /* store n1d/2d neutron from Buffer (Auto_Limits == 2) or current neutron in while */
     if (Vars->Flag_Auto_Limits != 1) /* not when storing auto limits Buffer */
     {
       /* apply per cm2 or per st */
@@ -1099,6 +1100,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
         {
           Vars->Flag_Auto_Limits = 0;
           While_End = 1;
+          if (Vars->Flag_Verbose) printf("Monitor_nD: %s flushed %li Auto Limits from List (%li).\n", Vars->compcurname, Vars->Coord_Number, Vars->Buffer_Counter);
         }
 
         /* store n1d/2d section from Buffer */
