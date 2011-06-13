@@ -27,7 +27,7 @@
 #ifndef READ_TABLE_LIB_H
 #define READ_TABLE_LIB_H "$Revision: 1.21 $"
 
-#define READ_TABLE_STEPTOL  0.02 /* tolerancy for constant step approx */
+#define READ_TABLE_STEPTOL  0.04 /* tolerancy for constant step approx */
 
 #ifndef MC_PATHSEP_C
 #ifdef WIN32
