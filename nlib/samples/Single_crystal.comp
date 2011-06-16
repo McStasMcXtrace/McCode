@@ -152,21 +152,23 @@
 * hkl_info: Internal [structure]
 *
 * %L
-* See <a href="icsd.ill.fr">ICSD</a> powder diffraction data base
+* See <a href="http://icsd.ill.fr">ICSD</a> Inorganic Crystal Structure Database
 * %L
-* Cross sections for single elements: http://www.ncnr.nist.gov/resources/n-lengths/
+* <a href="http://www.ncnr.nist.gov/resources/n-lengths/">Cross sections for single elements</a> 
 * %L
-* Cross sections for compounds:       http://www.ncnr.nist.gov/resources/sldcalc.html
+* <a href="http://www.ncnr.nist.gov/resources/sldcalc.html>Cross sections for compounds</a>
 * %L
-* Fullprof powder refinement:         http://www.ill.eu/sites/fullprof/index.html
+* <a href="http://www.webelements.com/">Web Elements</a>
 * %L
-* Crystallographica software:         http://www.crystallographica.com/
+* <a href="http://www.ill.eu/sites/fullprof/index.html">Fullprof</a> powder refinement
 * %L
-* Geomview and Object File Format (OFF) <http://www.geomview.org>
+* <a href="http://www.crystallographica.com/">Crystallographica</a> software
 * %L
-* Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/> 
+* <a href="http://www.geomview.org">Geomview and Object File Format (OFF)</a>
 * %L
-* Powercrust/qhull <http://qhull.org>
+* Java version of Geomview (display only) <a href="http://www.holmes3d.net/graphics/roffview/">jroff.jar</a>
+* %L
+* <a href="http://qhull.org">powercrust/qhull</a>
 *
 * %E
 ****************************************************************************/
