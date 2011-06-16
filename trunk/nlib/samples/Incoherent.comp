@@ -92,6 +92,12 @@
 * target_z:
 *
 * %L
+* <a href="http://www.ncnr.nist.gov/resources/n-lengths/">Cross sections for single elements</a> 
+* %L
+* <a href="http://www.ncnr.nist.gov/resources/sldcalc.html>Cross sections for compounds</a>
+* %L
+* <a href="http://www.webelements.com/">Web Elements</a>
+* %L
 * <A HREF="http://neutron.risoe.dk/mcstas/components/tests/Incoherent/">Test
 * results</A> (not up-to-date).
 * %L
@@ -99,11 +105,11 @@
 * %L
 * The test/example instrument <a href="../examples/QENS_test.instr">QENS_test.instr</a>.
 * %L
-* Geomview and Object File Format (OFF) <http://www.geomview.org>
+* <a href="http://www.geomview.org">Geomview and Object File Format (OFF)</a>
 * %L
-* Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/> 
+* Java version of Geomview (display only) <a href="http://www.holmes3d.net/graphics/roffview/">jroff.jar</a>
 * %L
-* Powercrust/qhull <http://qhull.org>
+* <a href="http://qhull.org">powercrust/qhull</a>
 *
 * %E
 *******************************************************************************/
