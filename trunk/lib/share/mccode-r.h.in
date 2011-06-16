@@ -529,12 +529,8 @@ void mcdisplay(void);
 inline void vec_prod_func(double *x, double *y, double *z,
 		double x1, double y1, double z1, double x2, double y2, double z2);
 
-void coord_vector_product(Coords* ret, Coords* a, Coords* b); /* ret = a x b */
-
 inline double scalar_prod(
 		double x1, double y1, double z1, double x2, double y2, double z2);
-
-inline double coord_scalar_product(Coords* a, Coords* b);
 
 #define NORM(x,y,z) \
 	norm_func(&x, &y, &z)
@@ -547,8 +543,6 @@ inline void norm_func(double *x, double *y, double *z) {
 		*z /= temp;
 	}
 }
-
-inline void coord_norm(Coords* c);
 
 void normal_vec(double *nx, double *ny, double *nz,
     double x, double y, double z);
@@ -607,6 +601,7 @@ Coords coords_scale(Coords b, double scale);
 double coords_sp(Coords a, Coords b);
 Coords coords_xp(Coords b, Coords c);
 void   coords_print(Coords a);
+inline void coords_norm(Coords* c);
 
 void rot_set_rotation(Rotation t, double phx, double phy, double phz);
 int  rot_test_identity(Rotation t);

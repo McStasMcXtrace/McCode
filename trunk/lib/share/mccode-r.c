@@ -3325,6 +3325,19 @@ void coords_print(Coords a) {
   return;
 }
 
+inline void coords_norm(Coords* c) {
+	double temp = coords_sp(*c,*c);
+
+	// Skip if we will end dividing by zero
+	if (temp == 0) return;
+
+	temp = sqrt(temp);
+
+	c->x /= temp;
+	c->y /= temp;
+	c->z /= temp;
+}
+
 /*******************************************************************************
 * The Rotation type implements a rotation transformation of a coordinate
 * system in the form of a double[3][3] matrix.
@@ -3464,7 +3477,7 @@ rot_apply(Rotation t, Coords a)
 /**
  * Pretty-printing of rotation matrices.
  */
-void rotation_print(Rotation rot) {
+void rot_print(Rotation rot) {
 	printf("[ %4.2f %4.2f %4.2f ]\n",
 			rot[0][0], rot[0][1], rot[0][2]);
 	printf("[ %4.2f %4.2f %4.2f ]\n",
@@ -3474,7 +3487,7 @@ void rotation_print(Rotation rot) {
 }
 
 /**
- * Vector product.
+ * Vector product: used by vec_prod (mccode-r.h). Use coords_xp for Coords.
  */
 inline void vec_prod_func(double *x, double *y, double *z,
 		double x1, double y1, double z1,
@@ -3485,42 +3498,12 @@ inline void vec_prod_func(double *x, double *y, double *z,
 }
 
 /**
- * Do vector product of a and b, saved into ret.
- */
-void coord_vector_product(Coords* ret, Coords* a, Coords* b) {
-	ret->x = (a->y * b->z) - (b->y * a->z);
-	ret->y = (a->z * b->x) - (b->z * a->x);
-	ret->z = (a->x * b->y) - (b->x * a->y);
-}
-
-/**
- * Scalar product
+ * Scalar product: use coords_sp for Coords.
  */
 inline double scalar_prod(
 		double x1, double y1, double z1,
 		double x2, double y2, double z2) {
 	return ((x1 * x2) + (y1 * y2) + (z1 * z2));
-}
-
-/**
- * Scalar products for coords.
- */
-double coord_scalar_product(Coords* a, Coords* b) {
-	return ((a->x * b->x) + (a->y * b->y) + (a->z * b->z));
-}
-
-inline void coord_norm(Coords* c) {
-	double temp = (c->x * c->x) + 
-		(c->y * c->y) + (c->z * c->z);
-
-	// Skip if we will end dividing by zero
-	if (temp == 0) return;
-
-	temp = sqrt(temp);
-
-	c->x /= temp;
-	c->y /= temp;
-	c->z /= temp;
 }
 
 /*******************************************************************************
