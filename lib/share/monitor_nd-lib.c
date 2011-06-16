@@ -410,7 +410,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
         if (!strcmp(token, "kxz"))
           { Set_Vars_Coord_Type = DEFS->COORD_KXZ; strcpy(Set_Vars_Coord_Label,"Radial Wavevector (xz) [Angs-1]"); strcpy(Set_Vars_Coord_Var,"Kxz"); lmin = 0; lmax = 2; }
         if (!strcmp(token, "angle") || !strcmp(token, "a"))
-          { Set_Vars_Coord_Type = DEFS->COORD_ANGLE; strcpy(Set_Vars_Coord_Label,"Angle [deg]"); strcpy(Set_Vars_Coord_Var,"A"); lmin = -5; lmax = 5; }
+          { Set_Vars_Coord_Type = DEFS->COORD_ANGLE; strcpy(Set_Vars_Coord_Label,"Angle [deg]"); strcpy(Set_Vars_Coord_Var,"A"); lmin = -50; lmax = 50; }
         if (!strcmp(token, "hdiv")|| !strcmp(token, "divergence") || !strcmp(token, "xdiv") || !strcmp(token, "hd") || !strcmp(token, "dx"))
           { Set_Vars_Coord_Type = DEFS->COORD_HDIV; strcpy(Set_Vars_Coord_Label,"Hor. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"hd"); lmin = -5; lmax = 5; }
         if (!strcmp(token, "vdiv") || !strcmp(token, "ydiv") || !strcmp(token, "vd") || !strcmp(token, "dy"))
@@ -493,7 +493,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
        strcpy(Short_Label[i],"Position");
       else
       if ((Set_Vars_Coord_Type == DEFS->COORD_THETA)
-       || (Set_Vars_Coord_Type == DEFS->COORD_PHI))
+       || (Set_Vars_Coord_Type == DEFS->COORD_PHI)
+       || (Set_Vars_Coord_Type == DEFS->COORD_ANGLE))
        strcpy(Short_Label[i],"Angle");
       else
       if ((Set_Vars_Coord_Type == DEFS->COORD_XY)
@@ -526,8 +527,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
        strcpy(Short_Label[i],"Spin");
       else
       if ((Set_Vars_Coord_Type == DEFS->COORD_HDIV)
-       || (Set_Vars_Coord_Type == DEFS->COORD_VDIV)
-       || (Set_Vars_Coord_Type == DEFS->COORD_ANGLE))
+       || (Set_Vars_Coord_Type == DEFS->COORD_VDIV))
        strcpy(Short_Label[i],"Divergence");
       else
       if (Set_Vars_Coord_Type == DEFS->COORD_ENERGY)
@@ -736,7 +736,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
     {
       if (Vars->Coord_Type[i] & DEFS->COORD_AUTO)
       {
-        Vars->Coord_Min[i] = FLT_MAX;
+        Vars->Coord_Min[i] =  FLT_MAX;
         Vars->Coord_Max[i] = -FLT_MAX;
         for (j = 0; j < Vars->Buffer_Block; j++)
         {
@@ -871,13 +871,16 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_V) XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_RADIUS) XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy+Vars->cz*Vars->cz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_RADIUS) 
+          XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy+Vars->cz*Vars->cz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_XY) XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy);
+        if (Set_Vars_Coord_Type == DEFS->COORD_XY) 
+          XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy)*(Vars->cx > 0 ? 1 : -1);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_YZ) XY = sqrt(Vars->cy*Vars->cy+Vars->cz*Vars->cz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_XZ) XY = sqrt(Vars->cx*Vars->cx+Vars->cz*Vars->cz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_XZ) 
+          XY = sqrt(Vars->cx*Vars->cx+Vars->cz*Vars->cz);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_VXY) XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy);
         else
@@ -902,9 +905,8 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         if (Set_Vars_Coord_Type == DEFS->COORD_ANGLE)
         {  XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy);
            if (Vars->cvz != 0)
-           {
-             XY= RAD2DEG*atan2(XY,Vars->cvz);
-           } else XY = 0;
+                XY = RAD2DEG*atan2(XY,Vars->cvz)*(Vars->cx > 0 ? 1 : -1);
+           else XY = 0;
         }
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_THETA)  { if (Vars->cz != 0) XY = RAD2DEG*atan2(Vars->cx,Vars->cz); }
