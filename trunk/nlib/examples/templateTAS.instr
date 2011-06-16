@@ -33,12 +33,18 @@
 * PG       002 DM=3.355 AA (Highly Oriented Pyrolythic Graphite)
 * Ge       311 DM=1.714 AA
 *
-* IN22 configuration: 
+* IN22 configuration (at H25 thermal m=2 guide end): 
 *     KI=3.84, QM=1.0, EN=0.0, verbose=1,
 *     WM=0.15, HM=0.12,    NHM=1, NVM=9, RMV=-1,
 *     WA=0.20, HA=0.10,  NHA=11, NVA=3, RAV=-1, RAH=-1, 
 *     SM=-1, SS=1, SA=-1,
 *     L1=10.0, L2=1.7, L3=1.0, L4=0.8
+*
+* IN8 Configuration: with Copper optics
+*     KF=5, KI=0, QM=0.5, EN=5, verbose=1
+*     WM=0.23, HM=0.19, RMH=-1, RMV=-1, DM=1.807, NHM=15, NVM=15,
+*     WA=0.16, HA=0.08, RAH=-1, RAV=-1, DA=2.087, NHA=15, NVA=15,
+*     L1=2.33
 *
 * %Example: QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=5.07236e-05
 * %Example: QM=1 Sqw_coh=V.laz Detector: He3H_I=5.00081e-11
