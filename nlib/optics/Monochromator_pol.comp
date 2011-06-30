@@ -100,8 +100,6 @@ SHARE
 
 DECLARE
 %{
-#include <assert.h>
-
   double mos_rms; /* root-mean-square of mosaic, in radians */
   double d_rms;   /* root-mean-square of d-spread, in AA */
   double mono_Q;
@@ -190,7 +188,9 @@ TRACE
       if(debug > 0)
 	printf("S_out: (%f, %f, %f)\n", sx, sy, sz);
       
-      assert(sx*sx+sy*sy+sz*sz <= 1);
+      if(sx*sx+sy*sy+sz*sz>1) 
+        fprintf(stderr,"Pol_mirror: %s: Warning: polarisation |s| = %g > 1\n", 
+	      NAME_CURRENT_COMP, sx*sx+sy*sy+sz*sz); // check that polarisation is meaningfull
       
       SCATTER;
     } /* End MC choice to reflect or transmit neutron */
