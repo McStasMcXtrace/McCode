@@ -34,20 +34,20 @@
 * 3) Only transmit (reduce weight)
 *
 * The parameters can either be 
-* double pointer initializations (e.g. {1.0, 0.0219, 6.07, 2.0, 0.003}) 
+* double pointer initializations (e.g. {R0, Qc, alpha, m, W}) 
 * or table names (e.g."supermirror_m2.rfl" AND useTables=1).
 * NB! This might cause warnings by the compiler that can be ignored.
 *
 * Examples:
 * Reflection function parametrization 
 * Pol_mirror(zwidth = 0.40, yheight = 0.40, option=1,
-*	     rUpFunc=StdReflecFunc, rUpPar={1.0, 0.0219, 6.07, 2.0, 0.003})
+*             rUpFunc=StdReflecFunc, rUpPar={1.0, 0.0219, 6.07, 2.0, 0.003})
 *
 * Table function 
 * Pol_mirror(zwidth = 0.40, yheight = 0.40, option=2, 
-*	     rUpFunc=TableReflecFunc, rUpPar="supermirror_m2.rfl",
-*	     rDownFunc=TableReflecFunc, rDownPar="supermirror_m3.rfl", 
-*	     useTables=1)
+*             rUpFunc=TableReflecFunc, rUpPar="supermirror_m2.rfl",
+*             rDownFunc=TableReflecFunc, rDownPar="supermirror_m3.rfl", 
+*             useTables=1)
 *
 * See also the example instrument Test_Pol_Mirror (under tests).  
 *
@@ -66,10 +66,14 @@
 * rDownFunc: Reflection function for spin down (q, *par, *r)(1)
 * rDownPar:  Parameters for rDownFunc (1)
 * useTables: Parameters are 0: Values, 1: Table names (1) 
-* option:    1:Reflect/transmit, 2:Reflect only, 3:Transmit only (1)
+* p_reflect: Proportion of reflected events. Use 0 to only get the transmitted
+*            beam, and 1 to get only the reflected beam. Use -1 to use the
+*            mirror reflectivity.
+*            This value is purely computational and is not related to the actual
+*            reflectivity (1)
 *
 * OUTPUT PARAMETERS:
-* SCATTERED:    is 1 for reflected, and 2 for transmited neutrons
+* SCATTERED:    is 1 for reflected, and 2 for transmitted neutrons
 *
 * %L
 *
@@ -78,18 +82,17 @@
 
 DEFINE COMPONENT Pol_mirror
 DEFINITION PARAMETERS (rUpFunc=StdReflecFunc, rDownFunc=rUpFunc, 
-		       rUpPar={0.99,0.0219,6.07,2.0,0.003}, rDownPar=rUpPar, 
+                       rUpPar={0.99,0.0219,6.07,2.0,0.003}, rDownPar=rUpPar, 
                        useTables=0, zwidth, yheight)
-SETTING PARAMETERS (int option=1)
+SETTING PARAMETERS (p_reflect=-1)
 OUTPUT PARAMETERS (rUpParPtr, rDownParPtr)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 SHARE
 %{
-#include <assert.h>
   %include "pol-lib"
   %include "ref-lib"
-     %}
+%}
 
 DECLARE
 %{
@@ -100,7 +103,7 @@ DECLARE
   double rUpParPtr[]   = rUpPar;
   double rDownParPtr[] = rDownPar;
 #endif
-  %}
+%}
 
 INITIALIZE
 %{
@@ -108,30 +111,25 @@ INITIALIZE
   rUpParPtr   = (t_Table*) malloc(sizeof(t_Table));
   rDownParPtr = (t_Table*) malloc(sizeof(t_Table));
   if (Table_Read(rUpParPtr, rUpPar, 1) <= 0) {
-    fprintf(stderr,"Guide: %s: can not read file %s\n", 
-	    NAME_CURRENT_COMP, rUpPar);
+    fprintf(stderr,"Pol_mirror: %s: can not read file %s\n", 
+            NAME_CURRENT_COMP, rUpPar);
     exit(1);
   }
   if (Table_Read(rDownParPtr, rDownPar, 1) <= 0) { 
-    fprintf(stderr,"Guide: %s: can not read file %s\n", 
-	    NAME_CURRENT_COMP, rDownPar);
+    fprintf(stderr,"Pol_mirror: %s: can not read file %s\n", 
+            NAME_CURRENT_COMP, rDownPar);
     exit(1);
   }
 #endif
 
   if ((zwidth<=0) || (yheight <= 0)) {
     fprintf(stderr, "Pol_mirror: %s: NULL or negative length scale!\n"
-	    "ERROR      (zwidth,yheight). Exiting\n",
-	    NAME_CURRENT_COMP);
+            "ERROR      (zwidth=%g,yheight=%g). Exiting\n",
+            NAME_CURRENT_COMP, zwidth, yheight);
     exit(1);
   }
   
-  if (option<1 || option>3) {
-    fprintf(stderr, "Pol_mirror: %s: Option %d not supported. Exiting.\n",
-	    NAME_CURRENT_COMP, option);
-    exit(1);
-  }  
-  %}
+%}
 
 TRACE
 %{
@@ -146,7 +144,6 @@ TRACE
     
     // calculate scattering vector magnitude
     Q = fabs(2*vx*V2K); 
-    assert(Q>=0);
     
     // calculate reflection probability
     rUpFunc(Q, rUpParPtr, &Rup);
@@ -161,59 +158,52 @@ TRACE
       refWeight = Rup;
     
     // check that refWeight is meaningfull
-    assert(refWeight>=0 && refWeight<=1); 
+    if (refWeight <  0) ABSORB; 
+    if (refWeight >  1) refWeight =1 ;
     
     // find out if neutrons is reflected or transmitted
-    if (option==1) { // reflect OR transmit
+    if (p_reflect < 0 || p_reflect > 1) { // reflect OR transmit using mirror reflectivity
       
       if (rand01()<refWeight) //reflect 
-	reflect = 1;
+        reflect = 1;
       else
-	reflect = 0;
+        reflect = 0;
       
-    } else if (option==2) { // reflect ONLY
+    } else { // reflect OR transmit using a specified weighting
       
-      if(refWeight==0) // only transmission
-	ABSORB;
-      
-      reflect = 1;
-      p *= refWeight;
-      
-    } else if (option==3) { // transmit ONLY
-      
-      if(refWeight==1) // only reflection
-	ABSORB;
-      
-      reflect = 0;
-      p *= (1-refWeight);
-      
-    } 
-
-    assert(reflect==0 || reflect==1);
+      if (rand01()<p_reflect) { 
+        reflect = 1;          // reflect 
+        p *= refWeight/p_reflect;
+      } else {
+        reflect = 0;          // transmit
+        p *= (1-refWeight)/(1-p_reflect);
+      }
+    }
 
     // set outgoing velocity and polarisation
-    if (reflect==1) { // reflect
+    if (reflect==1) { // reflect: SCATTERED==1 for reflection
       
       vx = -vx;
       if(isPolarising)
-	SetMonoPolRefOut(FN, FM, refWeight, &sx, &sy, &sz);    
+        SetMonoPolRefOut(FN, FM, refWeight, &sx, &sy, &sz);    
       
-    } else { // transmit
-      SCATTER;
+    } else {         // transmit: SCATTERED==2 for transmission
       if(isPolarising)
-	SetMonoPolTransOut(FN, FM, refWeight, &sx, &sy, &sz);    
-      
-    } 
+        SetMonoPolTransOut(FN, FM, refWeight, &sx, &sy, &sz);    
+      SCATTER;
+    }
     
     if(isPolarising)
-      assert(sx*sx+sy*sy+sz*sz<=1); // check that polarisation is meaningfull
+      if(sx*sx+sy*sy+sz*sz>1.000001) 
+        fprintf(stderr,"Pol_mirror: %s: Warning: polarisation |s| = %g > 1\n", 
+              NAME_CURRENT_COMP, sx*sx+sy*sy+sz*sz); // check that polarisation is meaningfull
     
     SCATTER;
   
   } /* End intersect the mirror */
   else
   {
-    /*neutron will miss the mirror, so don't propagate i.e restore it*/
+    /* neutron will miss the mirror, so don't propagate i.e restore it */
     RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   }  
 %}
@@ -222,6 +212,6 @@ MCDISPLAY
 %{
   magnify("zy");
   rectangle("yz", 0, 0, 0, zwidth, yheight);
-  %}
+%}
 
 END

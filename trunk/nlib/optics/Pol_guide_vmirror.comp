@@ -25,6 +25,11 @@
 * The reflec functions are handled similar to Pol_mirror.
 * The up direction is hardcoded to be along the y-axis (0, 1, 0)
 *
+* The parameters can either be 
+* double pointer initializations (e.g. {R0, Qc, alpha, m, W}) 
+* or table names (e.g."supermirror_m2.rfl" AND useTables=1).
+* NB! This might cause warnings by the compiler that can be ignored.
+*
 * GRAVITY: YES
 *
 * %BUGS 
@@ -51,7 +56,7 @@
 * normalTop:    One of several normal vectors used for defining the geometry (1)
 * pointTop:     One of several points used for defining the geometry (1)
 * rParPtr:      One of several pointers to reflection parameters used with the ref. functions. (*)
-* SCATTERED:    is 1 for reflected, and 2 for transmited neutrons
+* SCATTERED:    is 1 for reflected, and 2 for transmitted neutrons
 * 
 *
 * %L
@@ -62,7 +67,10 @@
 DEFINE COMPONENT Pol_guide_vmirror
 DEFINITION PARAMETERS (xwidth, yheight, length,
 		       rFunc=StdReflecFunc, rUpFunc=StdReflecFunc, 
-		       rDownFunc=StdReflecFunc, rPar, rUpPar, rDownPar,
+		       rDownFunc=StdReflecFunc, 
+		       rPar    ={1.0, 0.0219, 4.07, 3.2, 0.003}, 
+		       rUpPar  ={1.0, 0.0219, 4.07, 3.2, 0.003}, 
+		       rDownPar={0.1, 0.0219, 4.07, 3.2, 0.003},
 		       useTables=0)
 SETTING PARAMETERS (int debug=0)
 OUTPUT PARAMETERS (localG, 
@@ -74,7 +82,6 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 SHARE
 %{
-#include <assert.h>
 %include "pol-lib"
 %include "ref-lib"
    %}
@@ -338,11 +345,16 @@ TRACE
       // we have hit one of the mirrors
       rUpFunc(fabs(Q), rUpParPtr, &Rup);
       rDownFunc(fabs(Q), rDownParPtr, &Rdown);
-      assert(Rup>=0 && Rup<=1 && Rdown>=0 && Rdown<=1); 
+      if (Rup <  0)   ABSORB; 
+      if (Rup >  1)   Rup =1 ;
+      if (Rdown <  0) ABSORB; 
+      if (Rdown >  1) Rdown =1 ;
 
       GetMonoPolFNFM(Rup, Rdown, &FN, &FM);
       GetMonoPolRefProb(FN, FM, sy, &refWeight);
-      assert(refWeight>=0 && refWeight<=1); // check that refWeight is meaningfull
+      // check that refWeight is meaningfull
+      if (refWeight <  0) ABSORB; 
+      if (refWeight >  1) refWeight =1 ;
       
       if (rand01()<refWeight) {
 	      //reflect: SCATTERED==1 for reflection

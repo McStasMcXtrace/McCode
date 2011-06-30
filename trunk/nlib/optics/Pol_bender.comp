@@ -37,7 +37,8 @@
 * The reflection functions and parameters defaults as follows:
 * Bot defaults to Top, Left defaults to Top, Right defaults to left.
 * Down defaults to down and up defaults to up for all functions and 
-* Top(Up and Down) defaults to StdReflecFunc and  {0.99,0.0219,6.07,2.0,0.003}
+* Top(Up and Down) defaults to StdReflecFunc and {0.99,0.0219,6.07,2.0,0.003}
+* which stands for {R0, Qc, alpha, m, W}.
 *
 * Example: 
 * Pol_bender(xwidth = 0.08, yheight = 0.08, length = 1.0, radius= 10.0, 
@@ -106,7 +107,6 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 SHARE
 %{
-#include <assert.h>
 %include "pol-lib"
 %include "ref-lib"
    %}
@@ -152,49 +152,49 @@ INITIALIZE
   rRightUpParPtr   = (t_Table*) malloc(sizeof(t_Table));
   rRightDownParPtr = (t_Table*) malloc(sizeof(t_Table));
   if (Table_Read(rTopUpParPtr, rTopUpPar, 1) <= 0) {
-    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
 	    NAME_CURRENT_COMP, rTopUpPar);
     exit(1);
   }
   if (Table_Read(rTopDownParPtr, rTopDownPar, 1) <= 0) { 
-    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
 	    NAME_CURRENT_COMP, rTopDownPar);
     exit(1);
   }
   if (Table_Read(rBotUpParPtr, rBotUpPar, 1) <= 0) {
-    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
 	    NAME_CURRENT_COMP, rBotUpPar);
     exit(1);
   }
   if (Table_Read(rBotDownParPtr, rBotDownPar, 1) <= 0) { 
-    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
 	    NAME_CURRENT_COMP, rBotDownPar);
     exit(1);
   }
   if (Table_Read(rLeftUpParPtr, rLeftUpPar, 1) <= 0) {
-    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
 	    NAME_CURRENT_COMP, rLeftUpPar);
     exit(1);
   }
   if (Table_Read(rLeftDownParPtr, rLeftDownPar, 1) <= 0) { 
-    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
 	    NAME_CURRENT_COMP, rLeftDownPar);
     exit(1);
   }
   if (Table_Read(rRightUpParPtr, rRightUpPar, 1) <= 0) {
-    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
 	    NAME_CURRENT_COMP, rRightUpPar);
     exit(1);
   }
   if (Table_Read(rRightDownParPtr, rRightDownPar, 1) <= 0) { 
-    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_bender: %s: can not read file %s\n", 
 	    NAME_CURRENT_COMP, rRightDownPar);
     exit(1);
   }
 #endif
   
   if ((xwidth<=0) || (yheight <= 0) || (length<=0) || (radius==0)) {
-    fprintf(stderr, "POL_bender: %s: NULL or negative length scale!\n"
+    fprintf(stderr, "Pol_bender: %s: NULL or negative length scale!\n"
 	    "ERROR      (xwidth,yheight,length, radius). Exiting\n",
 	    NAME_CURRENT_COMP);
     exit(1);
@@ -442,10 +442,15 @@ TRACE
 	     Rup, Rdown, weight);
     
     // check that refWeight is meaningfull
-    assert(weight>=0 && weight<=1); 
+    if (weight <= 0) ABSORB; 
+    if (weight >  1) weight =1 ;
 
-    if(isPolarising)
-      SetMonoPolRefOut(FN, FM, weight, &sx, &sy, &sz);    
+    if(isPolarising) {
+      SetMonoPolRefOut(FN, FM, weight, &sx, &sy, &sz);
+      if(sx*sx+sy*sy+sz*sz>1.000001) 
+        fprintf(stderr,"Pol_bender: %s: Warning: polarisation |s| = %g > 1\n", 
+              NAME_CURRENT_COMP, sx*sx+sy*sy+sz*sz); // check that polarisation is meaningfull
+    }
 
     p *= weight;
 
@@ -466,10 +471,13 @@ MCDISPLAY
   int j = 1;
   const double lengthOfGuide = sin(length/radius)*radius; 
   const double slitWidth = xwidth/nslit; 
-  assert(lengthOfGuide>0);
   double R = 0; /* radius of arc */
   int nSlitsMax = nslit;
   int nMax      = n;
+  
+  if (lengthOfGuide<=0) 
+    exit(fprintf(stdout,"Pol_bender: %s: Negative guide length ! lengthOfGuide=%g\n",
+	    NAME_CURRENT_COMP, lengthOfGuide));
   
   if (drawOption==2) {
     
