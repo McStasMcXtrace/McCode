@@ -1,6 +1,24 @@
-# TITLE *Leucine C6H13NO2
-# L-Leucine: 'P 21' (4) monoclinic
+# TITLE *L-Leucine C6H13NO2
+# 2-Amino-4-methyl-pentanoic acid 'P 21' (4) monoclinic 
 # a=9.562, b=5.301, c=14.519; aa=cc=90, bb=94.20;
+# Reference: M. Coll et al, Acta Crystallogr. C, 42, (1986), 599
+#
+# Physical parameters:
+# sigma_coh 75.6    coherent scattering cross section for Al2O3 in [barn]
+# sigma_inc 1043.9  incoherent scattering cross section for Al2O3 in [barn]
+# sigma_abs 6.256   absorption scattering cross section for Al2O3 in [barn]
+# density   1.165   in [g/cm^3]
+# weight    131.17  in [g/mol] for Al2O3
+# Vc        748.17  volume of unit cell in [A^3]
+# multiplicity 4    in [C6H13NO2/unit cell]
+# T_m       486     melting temperature in [K]
+# T_b       619     boiling temperature in [K]
+# lattice_a 14.66   lattice parameter a in [Angs]
+# lattice_b 5.324   lattice parameter b in [Angs]
+# lattice_c 9.606   lattice parameter c in [Angs]
+# lattice_aa 90     lattice angle alpha in [deg]
+# lattice_bb 94.06  lattice angle alpha in [deg]
+# lattice_cc 90     lattice angle alpha in [deg]
 #
 # Format parameters: Crystallographica format
 # column_j  4 multiplicity 'j'

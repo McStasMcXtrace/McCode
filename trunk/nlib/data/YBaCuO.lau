@@ -1,5 +1,18 @@
-# YBaCuO: cubic
-# a=b=3.8186, c=11.6777; 90 deg
+# TITLE *YBa2Cu3O7 yttrium barium cuprate
+# SPCGRP Pmmm   orthorhombic (perovskite)
+# Reference: Bednorz J G, Müller K A 1986 Z. Phys. B 64 189
+#
+# Physical parameters:
+# sigma_coh 66.06   coherent scattering cross section (single atom) in [barn]
+# sigma_inc 2.105   incoherent scattering cross section (single atom)in [barn]
+# sigma_abs 14.82   absorption scattering cross section (single atom) in [barn]
+# density   6.3     in [g/cm^3]
+# weight    666.1   in [g/mol] (single atom)
+# multiplicity 1    in [atoms/unit cell]
+# Vc        173.28  volume of unit cell in [A^3]
+# lattice_a 3.8186  lattice parameter a in [Angs]
+# lattice_b 3.886   lattice parameter b in [Angs]
+# lattice_c 11.6777 lattice parameter c in [Angs]
 #
 # Format parameters: Crystallographica format
 # column_j  4 multiplicity 'j'
