@@ -1,8 +1,18 @@
-# TITLE *Adrenaline C9H13NO3
-# Adrenaline: P 21 (4) monoclinic
+# TITLE *Adrenaline C9H13NO3 (epinephrine, (R)-4-(1-hydroxy-2-(méthylamino)éthyl)benzène-1,2-dio)
+# L-Adrenaline: P 21 (4) monoclinic
 # a=7.873, b=6.790, c=8.638; aa=cc=90, bb=98.02;
+# Reference: A.M. Anderson; Acta Chem.Scand.Ser.B, 29, (1975), 239
 #
 # Physical parameters:
+# sigma_coh 15.683  coherent scattering cross section for Al2O3 in [barn]
+# sigma_inc 1043.9  incoherent scattering cross section for Al2O3 in [barn]
+# sigma_abs 6.256   absorption scattering cross section for Al2O3 in [barn]
+# density   1.33    in [g/cm^3]
+# weight    183.20  in [g/mol] for Al2O3
+# Vc        457.25  volume of unit cell in [A^3]
+# multiplicity 2    in [C9H13NO3/unit cell]
+# T_m       486     melting temperature in [K]
+# T_b       619     boiling temperature in [K]
 # lattice_a 7.873   lattice parameter a in [Angs]
 # lattice_b 6.790   lattice parameter b in [Angs]
 # lattice_c 8.638   lattice parameter c in [Angs]
