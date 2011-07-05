@@ -230,7 +230,7 @@ if [ `which makensis` ]; then
     cd ..
     zip -r $MCCODE_TARNAME-$MCCODE_VERSION-i686-Intel-Win32.zip $MCCODE_TARNAME-$MCCODE_VERSION
     cp winsupport/* .
-    makensis $MCCODE_TARNAME.nsi
+    makensis -X"SetCompressor /FINAL lzma" $MCCODE_TARNAME.nsi
     echo Created Win32 binary packages: `ls *zip *exe`
 else
     echo Binary versions for Win32 NOT created
