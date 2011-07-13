@@ -220,6 +220,66 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
       }
 ;
 
+/* SHARE component block included once. Toggle comp_inst_number sign from neg to pos in cogen.c */
+share:    /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "SHARE" codeblock
+      {
+        $$ = $2;
+      }
+    | "SHARE" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->share_code;
+      }
+    | "SHARE" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->share_code->filename;
+        cb->quoted_filename = def->share_code->quoted_filename;
+        cb->linenum         = def->share_code->linenum;
+        list_cat(cb->lines, def->share_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
+      }
+
+;
+
+trace: /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "TRACE" codeblock
+      {
+        $$ = $2;
+      }
+    | "TRACE" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->trace_code;
+      }
+    | "TRACE" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->trace_code->filename;
+        cb->quoted_filename = def->trace_code->quoted_filename;
+        cb->linenum         = def->trace_code->linenum;
+        list_cat(cb->lines, def->trace_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
+      }
+;
+
 parameters:   def_par set_par out_par state_par
       {
         $$.def = $1;
@@ -386,6 +446,153 @@ comp_iformal:  TOK_ID TOK_ID
         $$ = formal;
       }
 ;
+
+/* INSTRUMENT and COMPONENT C code keywords ********************************* */
+declare:    /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "DECLARE" codeblock
+      {
+        $$ = $2;
+      }
+    | "DECLARE" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->decl_code;
+      }
+    | "DECLARE" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def   *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->decl_code->filename;
+        cb->quoted_filename = def->decl_code->quoted_filename;
+        cb->linenum         = def->decl_code->linenum;
+        list_cat(cb->lines, def->decl_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
+      }
+;
+
+initialize:   /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "INITIALIZE" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->init_code;
+      }
+    | "INITIALIZE" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def   *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->init_code->filename;
+        cb->quoted_filename = def->init_code->quoted_filename;
+        cb->linenum         = def->init_code->linenum;
+        list_cat(cb->lines, def->init_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
+      }
+    | "INITIALIZE" codeblock
+      {
+        $$ = $2;
+      }
+;
+
+save:   /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "SAVE" codeblock
+      {
+        $$ = $2;
+      }
+    | "SAVE" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->save_code;
+      }
+    | "SAVE" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->save_code->filename;
+        cb->quoted_filename = def->save_code->quoted_filename;
+        cb->linenum         = def->save_code->linenum;
+        list_cat(cb->lines, def->save_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
+      }
+;
+
+finally:    /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "FINALLY" codeblock
+      {
+        $$ = $2;
+      }
+    | "FINALLY" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->finally_code;
+      }
+    | "FINALLY" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->finally_code->filename;
+        cb->quoted_filename = def->finally_code->quoted_filename;
+        cb->linenum         = def->finally_code->linenum;
+        list_cat(cb->lines, def->finally_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
+      }
+;
+
+mcdisplay:    /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "MCDISPLAY" codeblock
+      {
+        $$ = $2;
+      }
+    | "MCDISPLAY" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->mcdisplay_code;
+      }
+    | "MCDISPLAY" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->mcdisplay_code->filename;
+        cb->quoted_filename = def->mcdisplay_code->quoted_filename;
+        cb->linenum         = def->mcdisplay_code->linenum;
+        list_cat(cb->lines, def->mcdisplay_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
+      }
+;
+
 
 /* INSTRUMENT grammar ************************************************************* */
 
@@ -568,212 +775,7 @@ hdfversion: /* empty: default HDF version */
       }
 ;
 
-
-declare:    /* empty */
-      {
-        $$ = codeblock_new();
-      }
-    | "DECLARE" codeblock
-      {
-        $$ = $2;
-      }
-    | "DECLARE" "COPY" TOK_ID
-      {
-        struct comp_def *def;
-        def = read_component($3);
-        $$ = def->decl_code;
-      }
-    | "DECLARE" "COPY" TOK_ID "EXTEND" codeblock
-      {
-        struct comp_def   *def;
-        struct code_block *cb;
-        cb = codeblock_new();
-        def = read_component($3);
-        cb->filename        = def->decl_code->filename;
-        cb->quoted_filename = def->decl_code->quoted_filename;
-        cb->linenum         = def->decl_code->linenum;
-        list_cat(cb->lines, def->decl_code->lines);
-        list_cat(cb->lines, $5->lines);
-        $$ = cb;
-      }
-;
-
-initialize:   /* empty */
-      {
-        $$ = codeblock_new();
-      }
-    | "INITIALIZE" "COPY" TOK_ID
-      {
-        struct comp_def *def;
-        def = read_component($3);
-        $$ = def->init_code;
-      }
-    | "INITIALIZE" "COPY" TOK_ID "EXTEND" codeblock
-      {
-        struct comp_def   *def;
-        struct code_block *cb;
-        cb = codeblock_new();
-        def = read_component($3);
-        cb->filename        = def->init_code->filename;
-        cb->quoted_filename = def->init_code->quoted_filename;
-        cb->linenum         = def->init_code->linenum;
-        list_cat(cb->lines, def->init_code->lines);
-        list_cat(cb->lines, $5->lines);
-        $$ = cb;
-      }
-    | "INITIALIZE" codeblock
-      {
-        $$ = $2;
-      }
-;
-
-/* SHARE component block included once. Toggle comp_inst_number sign from neg to pos in cogen.c */
-share:    /* empty */
-      {
-        $$ = codeblock_new();
-      }
-    | "SHARE" codeblock
-      {
-        $$ = $2;
-      }
-    | "SHARE" "COPY" TOK_ID
-      {
-        struct comp_def *def;
-        def = read_component($3);
-        $$ = def->share_code;
-      }
-    | "SHARE" "COPY" TOK_ID "EXTEND" codeblock
-      {
-        struct comp_def *def;
-        struct code_block *cb;
-        cb = codeblock_new();
-        def = read_component($3);
-        cb->filename        = def->share_code->filename;
-        cb->quoted_filename = def->share_code->quoted_filename;
-        cb->linenum         = def->share_code->linenum;
-        list_cat(cb->lines, def->share_code->lines);
-        list_cat(cb->lines, $5->lines);
-        $$ = cb;
-      }
-
-;
-
-
-trace: /* empty */
-      {
-        $$ = codeblock_new();
-      }
-    | "TRACE" codeblock
-      {
-        $$ = $2;
-      }
-    | "TRACE" "COPY" TOK_ID
-      {
-        struct comp_def *def;
-        def = read_component($3);
-        $$ = def->trace_code;
-      }
-    | "TRACE" "COPY" TOK_ID "EXTEND" codeblock
-      {
-        struct comp_def *def;
-        struct code_block *cb;
-        cb = codeblock_new();
-        def = read_component($3);
-        cb->filename        = def->trace_code->filename;
-        cb->quoted_filename = def->trace_code->quoted_filename;
-        cb->linenum         = def->trace_code->linenum;
-        list_cat(cb->lines, def->trace_code->lines);
-        list_cat(cb->lines, $5->lines);
-        $$ = cb;
-      }
-;
-
-save:   /* empty */
-      {
-        $$ = codeblock_new();
-      }
-    | "SAVE" codeblock
-      {
-        $$ = $2;
-      }
-    | "SAVE" "COPY" TOK_ID
-      {
-        struct comp_def *def;
-        def = read_component($3);
-        $$ = def->save_code;
-      }
-    | "SAVE" "COPY" TOK_ID "EXTEND" codeblock
-      {
-        struct comp_def *def;
-        struct code_block *cb;
-        cb = codeblock_new();
-        def = read_component($3);
-        cb->filename        = def->save_code->filename;
-        cb->quoted_filename = def->save_code->quoted_filename;
-        cb->linenum         = def->save_code->linenum;
-        list_cat(cb->lines, def->save_code->lines);
-        list_cat(cb->lines, $5->lines);
-        $$ = cb;
-      }
-;
-
-finally:    /* empty */
-      {
-        $$ = codeblock_new();
-      }
-    | "FINALLY" codeblock
-      {
-        $$ = $2;
-      }
-    | "FINALLY" "COPY" TOK_ID
-      {
-        struct comp_def *def;
-        def = read_component($3);
-        $$ = def->finally_code;
-      }
-    | "FINALLY" "COPY" TOK_ID "EXTEND" codeblock
-      {
-        struct comp_def *def;
-        struct code_block *cb;
-        cb = codeblock_new();
-        def = read_component($3);
-        cb->filename        = def->finally_code->filename;
-        cb->quoted_filename = def->finally_code->quoted_filename;
-        cb->linenum         = def->finally_code->linenum;
-        list_cat(cb->lines, def->finally_code->lines);
-        list_cat(cb->lines, $5->lines);
-        $$ = cb;
-      }
-;
-
-mcdisplay:    /* empty */
-      {
-        $$ = codeblock_new();
-      }
-    | "MCDISPLAY" codeblock
-      {
-        $$ = $2;
-      }
-    | "MCDISPLAY" "COPY" TOK_ID
-      {
-        struct comp_def *def;
-        def = read_component($3);
-        $$ = def->mcdisplay_code;
-      }
-    | "MCDISPLAY" "COPY" TOK_ID "EXTEND" codeblock
-      {
-        struct comp_def *def;
-        struct code_block *cb;
-        cb = codeblock_new();
-        def = read_component($3);
-        cb->filename        = def->mcdisplay_code->filename;
-        cb->quoted_filename = def->mcdisplay_code->quoted_filename;
-        cb->linenum         = def->mcdisplay_code->linenum;
-        list_cat(cb->lines, def->mcdisplay_code->lines);
-        list_cat(cb->lines, $5->lines);
-        $$ = cb;
-      }
-;
+/* INSTRUMENT TRACE grammar ******************************************************* */
 
 instr_trace:    "TRACE" complist
 ;
@@ -896,8 +898,6 @@ removable:    /* empty */
         $$ = instrument_definition->has_included_instr; /* ignore comp if included from other instrument */
       }
 ;
-
-/* INSTRUMENT TRACE grammar ******************************************************* */
 
 component: removable split "COMPONENT" instname '=' instref when place orientation groupref extend jumps
       {
@@ -1227,7 +1227,7 @@ jumpname: "PREVIOUS"
     }
 ;
 
-/* C expressions used to give component actual parameters.
+/* C expressions used to give component actual parameters **********************
    Top-level comma (',') operator NOT allowed. */
 exp:      { $<linenum>$ = instr_current_line; } topexp
       {
@@ -1251,7 +1251,20 @@ topexp:     topatexp
 
 /* An atomic top-level C expression: either a parenthesized expression, or a
    single token that is NOT comma (','). */
-topatexp:   TOK_ID
+topatexp:   "PREVIOUS"
+      {
+        if (previous_comp) {
+          $$ = exp_ctoken(previous_comp->name);
+        } else {
+          print_error(NULL, "Found invalid PREVIOUS reference at line %s:%d. Please fix (add a component instance before).\n", instr_current_filename, instr_current_line);
+        }
+      }
+    | "MYSELF"
+      {
+        $$ = exp_ctoken("mccompcurname");
+      }
+    
+    | TOK_ID
       {
         List_handle liter=NULL;
         struct instr_formal *formal;
@@ -1376,6 +1389,8 @@ genatexp:   topatexp
       }
 ;
 
+
+/* C code blocks ************************************************************ */
 codeblock:    TOK_CODE_START code TOK_CODE_END
       {
         $2->filename = instr_current_filename;
@@ -1398,6 +1413,8 @@ code:     /* empty */
 ;
 
 %%
+
+/* end of grammar *********************************************************** */
 
 static Pool parser_pool = NULL; /* Pool of parser allocations. */
 
