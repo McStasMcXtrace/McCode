@@ -68,6 +68,8 @@
 *   It supports the OFF and NOFF file format but not COFF (colored faces). 
 *   Such files may be generated from XYZ data using:
 *     qhull < coordinates.xyz Qx Qv Tv o > geomview.off 
+*   or
+*     powercrust coordinates.xyz
 *   and viewed with geomview or java -jar jroff.jar (see below).
 *   The default size of the object depends of the OFF file data, but its 
 *   bounding box may be resized using xwidth,yheight and zdepth.
@@ -252,7 +254,9 @@
 * %L
 * Java version of Geomview (display only) <a href="http://www.holmes3d.net/graphics/roffview/">jroff.jar</a>
 * %L
-* <a href="http://qhull.org">powercrust/qhull</a>
+* <a href="http://qhull.org">qhull</a>
+* %L
+* <a href="http://www.cs.ucdavis.edu/~amenta/powercrust.html">powercrust</a>
 * %E
 *****************************************************************************/
 
