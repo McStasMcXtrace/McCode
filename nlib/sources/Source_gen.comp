@@ -577,10 +577,14 @@ MCDISPLAY
   double ymin;
   double ymax;
 
-  if ((yheight == 0) || (xwidth == 0))
+  if (radius)
   {
     magnify("xy");
     circle("xy",0,0,0,radius);
+    if (zdepth) {
+      circle("xy",0,0,-zdepth/2,radius);
+      circle("xy",0,0, zdepth/2,radius);
+    }
   }
   else
   {
@@ -593,6 +597,18 @@ MCDISPLAY
              (double)xmax, (double)ymax, 0.0,
              (double)xmin, (double)ymax, 0.0,
              (double)xmin, (double)ymin, 0.0);
+    if (zdepth) {
+      multiline(5, (double)xmin, (double)ymin, -zdepth/2,
+             (double)xmax, (double)ymin, -zdepth/2,
+             (double)xmax, (double)ymax, -zdepth/2,
+             (double)xmin, (double)ymax, -zdepth/2,
+             (double)xmin, (double)ymin, -zdepth/2);
+      multiline(5, (double)xmin, (double)ymin, zdepth/2,
+             (double)xmax, (double)ymin, zdepth/2,
+             (double)xmax, (double)ymax, zdepth/2,
+             (double)xmin, (double)ymax, zdepth/2,
+             (double)xmin, (double)ymin, zdepth/2);
+    }
   }
   if (dist) {
     if (focus_aw) focus_xw=dist*tan(focus_aw*DEG2RAD);
