@@ -810,11 +810,18 @@ cogen_init(struct instr_def *instr)
   last = NULL;
   coutf("    %sDEBUG_INSTR()", ID_PRE);
 
+  /* Initialization of component position, rotation 
+     setting parameters and user initialization code. */
+  cout("  /* Component initializations. */");
+  liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
   {
     struct comp_inst *relcomp; /* Component relative to. */
     char *x, *y, *z;
-
+    
+    List_handle setpar;        /* component parameters */
+    struct comp_iformal *par;
+    
     coutf("    /* Component %s. */", comp->name);
     coutf("    SIG_MESSAGE(\"%s (Init:Place/Rotate)\");", comp->name); /* signal handler message */
 
@@ -927,17 +934,6 @@ cogen_init(struct instr_def *instr)
     coutf("    %sAbsorbProp[%i]= 0;", ID_PRE, comp->index);
 
     last = comp;
-  }
-  list_iterate_end(liter);
-
-  /* Initialization of component setting parameters and user initialization
-     code. */
-  cout("  /* Component initializations. */");
-  liter = list_iterate(instr->complist);
-  while((comp = list_next(liter)) != NULL)
-  {
-    List_handle setpar;
-    struct comp_iformal *par;
 
     coutf("  /* Initializations for component %s. */", comp->name);
     coutf("  SIG_MESSAGE(\"%s (Init)\");", comp->name); /* signal handler message */
@@ -971,7 +967,7 @@ cogen_init(struct instr_def *instr)
       cogen_comp_scope(comp, 0, (void (*)(void *))codeblock_out_brace,
                             comp->def->init_code);
     cout("");
-  }
+  } /* end while instr->complist */
   list_iterate_end(liter);
 
   /* Output graphics representation of components. */
