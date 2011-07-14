@@ -42,6 +42,7 @@
 #define M_C      299792458         /* [m/s] speed of light CODATA 2006*/
 #define E2K      0.506773091264796 /* Convert k[1/AA] to E [keV] (CELE/(HBAR*M_C)*1e-10)*1e3 */
 #define K2E      1.97326972808327  /*Convert E[keV] to k[1/AA] (1e10*M_C*HBAR/CELE)/1e3 */ 
+#define RE       2.8179402894e-5   /*[AA] Thomson scattering length*/
 
 #define SCATTER do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlkx, mcnlky, mcnlkz, \
     mcnlphi, mcnlEx,mcnlEy,mcnlEz, mcnlp); mcScattered++;} while(0)
@@ -104,7 +105,7 @@
     mcnlx += (dl)*mcnlkx/k;\
     mcnly += (dl)*mcnlky/k;\
     mcnlz += (dl)*mcnlkz/k;\
-    mcnlphi += k*(dl);\
+    mcnlphi += 1e10*k*(dl);\
   }while (0)
 
 /*gravity not an issue with x-rays*/
