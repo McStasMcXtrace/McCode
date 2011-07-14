@@ -18,12 +18,13 @@
 * Origin: NBI
 *
 * %D
-* A simple X-ray compound refractive lens (CRL) with a parabolic profile simulates the photons' movement on passing through it.
+* A simple X-ray compound refractive lens (CRL) with a profile of the parabola in rotation simulates the photons' movement on passing through it. The CRL focuses in 2D
 *
 * %P
 * Input parameters:
-* r - radius of the profile;
-* w - parabola parameter, constraining it along the propagation axis;
+* r - raduis of curvature (circular approximation at the tip of the profile) [mm];
+* yheight - the CRL's dimensions along Y, aka aperture[mm];
+* xwidth - the CRL's dimensions along X [mm];
 * d - distance between two surfaces of the lens along the propagation axis;
 * N - amount of single lenses in a stack.
 * T - transmission of the lens
@@ -37,7 +38,7 @@
 
 DEFINE COMPONENT Lens_parab
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (r=0.42e-3,w=0.46e-3,d=0.2e-4,T=1,N=1)
+SETTING PARAMETERS (r=0.45e-3,yheight=1.4e-3,xwidth=1.4e-3,d=.1e-3,T=1,N=1,deltaN=0)
 OUTPUT PARAMETERS (prms,parab)
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
@@ -54,18 +55,19 @@ SHARE
   double k[3];
   } incom;
 typedef struct {
-  double constants[5];
+  double constants[6];
 } lens;
   
   incom intersection(incom a,lens b){
     incom result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};  
     int i;
-    double A,B,C,D,r,w;
+    double A,B,C,D,r;
     double t[2],p[3],knorm[3],k[3],pos1_tmp[3],pos_tmp[3];
   
     double N[3],Nx,Ny,Nz,Nnorm,Knorm;
     double cos_theta,cos_theta1,Arg,Arg1,s,q,s1,q1,alpha,beta;
     double k_new[3],k_new1[3],M,Sign,d;
+    double yheight,xwidth;
   
     for(i=0;i<=2;i++){
       k[i]=a.k[i];
@@ -75,19 +77,20 @@ typedef struct {
     Knorm=sqrt(k[0]*k[0]+k[1]*k[1]+k[2]*k[2]);
     knorm[0]=k[0]/Knorm; knorm[1]=k[1]/Knorm; knorm[2]=k[2]/Knorm;
     
-    r=b.constants[0]; w=b.constants[1]; d=b.constants[2]; 
-    M=b.constants[3]; Sign=b.constants[4];
+    r=b.constants[0]; yheight=b.constants[1]; xwidth=b.constants[2]; 
+    d=b.constants[3]; M=b.constants[4]; Sign=b.constants[5];
   
-    if (knorm[0]*knorm[0]*w+knorm[1]*knorm[1]*w == 0){
+    
+    if (knorm[0]*knorm[0]+knorm[1]*knorm[1] == 0){
       /*incident k-vector is parallel (exactly) to the z-axis. Thus, the eq. becomes linear*/
-      t[0]=(-p[0]*p[0]*w-p[1]*p[1]*w+Sign*p[2]*r*r-Sign*d*r*r)/(2.0*p[0]*knorm[0]*w+2*p[1]*knorm[1]*w-Sign*knorm[2]*r*r);
+      t[0]=(Sign*p[2]*2*r-Sign*d*2*r-p[0]*p[0]-p[1]*p[1])/(2*p[0]*knorm[0]+2*p[1]*knorm[1]-Sign*knorm[2]*r);
       for(i=0; i<=2; i++){
         result.coord[i]=p[i]+t[0]*knorm[i];
       }
     } else {
-      A=knorm[0]*knorm[0]*w + knorm[1]*knorm[1]*w; 
-      B=2.0*p[0]*knorm[0]*w + 2.0*p[1]*knorm[1]*w - Sign*r*r*knorm[2]; 
-      C=p[0]*p[0]*w + p[1]*p[1]*w - Sign*r*r*p[2] + Sign*r*r*d; 
+      A=knorm[0]*knorm[0]+knorm[1]*knorm[1]; 
+      B= 2.0*(p[0]*knorm[0]+p[1]*knorm[1] - Sign*r*knorm[2]); 
+      C=p[0]*p[0]+p[1]*p[1] - Sign*2*r*p[2] + Sign*r*2*d; 
       D=B*B-4.0*A*C;      
       if (D<0) {
         /*ray does not intersect the parabola*/
@@ -107,43 +110,46 @@ typedef struct {
         for(i=0;i<=2;i++){
 	  pos_tmp[i]=p[i]+t[0]*knorm[i]; 
 	  pos1_tmp[i]=p[i]+t[1]*knorm[i];
-	}
-	if ((pos_tmp[0]*pos_tmp[0]+pos_tmp[1]*pos_tmp[1])<(r*r)){
+	} 
+	if ((pos_tmp[0]*pos_tmp[0]+pos_tmp[1]*pos_tmp[1])<( (yheight/2)*(xwidth/2) )){
 	  for(i=0;i<=2;i++){
 	  result.coord[i]=pos_tmp[i];
 	  }
 	}
-	else if ((pos1_tmp[0]*pos1_tmp[0]+pos1_tmp[1]*pos1_tmp[1])<(r*r)){
+	else if ((pos1_tmp[0]*pos1_tmp[0]+pos1_tmp[1]*pos1_tmp[1])<( (yheight/2)*(xwidth/2) )){
 	  for(i=0;i<=2;i++){
 	    result.coord[i]=pos1_tmp[i];
 	  }
 	}
-	else return result;
+	else return result; 
       }     
     }
     
-      /* Calculating normal */
-    Nx=(2.0*result.coord[0])/(r*r); Ny=(2.0*result.coord[1])/(r*r); Nz=-Sign/w;
+      /* Calculating tangential vector  */
+    Nx=(Sign*result.coord[0])/r;
+    Ny=(Sign*result.coord[1])/r;
+    Nz=1;      
+      
     Nnorm=sqrt(Nx*Nx+Ny*Ny+Nz*Nz);
-    N[0]=Nx/Nnorm; N[1]=Ny/Nnorm; N[2]=Nz/Nnorm; 
+    N[0]=Nx/Nnorm; 
+    N[1]=Ny/Nnorm; 
+    N[2]=Nz/Nnorm; 
         
     /* Calculating the angle between two vectors, applying Snell's law & getting the new k vector */
     cos_theta=N[0]*knorm[0]+N[1]*knorm[1]+N[2]*knorm[2]; 
-    
-    Arg=1.0-M*M*(1.0-cos_theta*cos_theta);
-    cos_theta1=sqrt(Arg); // cos-sin transitions
-        
-    if (cos_theta<0) {
-      cos_theta1=-sqrt(Arg);
-    }
+    cos_theta1=M*cos_theta; // Snell's law
+
     /* new k vector */
     if ((1.0-cos_theta*cos_theta)==0) {
        fprintf(stderr,"line 134: Division by zero\n"); return; }
-    Arg1=(1.0-cos_theta1*cos_theta1)/(1.0-cos_theta*cos_theta);
-    s=(1/M)*sqrt(Arg1);
+    Arg=(1.0-cos_theta1*cos_theta1)/(1.0-cos_theta*cos_theta);
+    s=(1/M)*sqrt(Arg);
     q=(Knorm/Nnorm)*((1/M)*cos_theta1-s*cos_theta);
     
-    k_new[0]=q*Nx+s*k[0];k_new[1]=q*Ny+s*k[1];k_new[2]=q*Nz+s*k[2];
+    k_new[0]=q*Nx+s*k[0];
+    k_new[1]=q*Ny+s*k[1];
+    k_new[2]=q*Nz+s*k[2];
+    
     for(i=0;i<3;i++) { 
       result.k[i]=k_new[i]; 
     }   
@@ -193,15 +199,16 @@ TRACE
   incom incid,refr,outg;
   lens parab;
 
-  double E,mu,f,rhoel,dl,e,k,delta,beta,Refractive_Index_Re,Refractive_Index_Im; 
+  double E,mu,f,rhoel,dl,e,k,delta,beta,Refractive_Index_Re,Refractive_Index_Im,w; 
 
   int i=0,nr;
   
   parab.constants[0]=r;
-  parab.constants[1]=w;
+  parab.constants[1]=yheight;
+  parab.constants[2]=xwidth;
   
+  w=(yheight*yheight)/(8.0*r);
   k=sqrt(kx*kx+ky*ky+kz*kz); 
- 
   e=K2E*k;  /*Energy in KeV, same unit as datafile */
 
 /*Interpolation of Table Values*/
@@ -220,8 +227,10 @@ TRACE
   /*Calculation of Refractive Index */
 
   rhoel= f*Na*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
-
-  delta= 2.0*M_PI*Re*rhoel/(k*k);
+  
+  if (deltaN==0){
+    delta= 2.0*M_PI*Re*rhoel/(k*k);
+  } else delta=deltaN;
   beta=mu/(2.0*k);          /*mu and k in  A^-1*/
   
   Refractive_Index_Re = 1.0-delta; 
@@ -229,24 +238,38 @@ TRACE
 
   /*Ray Tracing*/
 
-  incid.k[0]=kx; incid.k[1]=ky; incid.k[2]=kz; 
-  incid.coord[0]=x; incid.coord[1]=y; incid.coord[2]=z;
+  incid.k[0]=kx;
+  incid.k[1]=ky; 
+  incid.k[2]=kz;
+  
+  incid.coord[0]=x; 
+  incid.coord[1]=y; 
+  incid.coord[2]=z;
+  
   for (nr=0;nr<=(N-1);nr++){
-    parab.constants[2]=nr*d+nr*2*w;
-    parab.constants[3]=1.0/Refractive_Index_Re;
-    parab.constants[4]=-1.0;
+    parab.constants[3]=nr*d+nr*2*w; // d constant
+    parab.constants[4]=1.0/Refractive_Index_Re; // M constant
+    parab.constants[5]=-1.0; // Sign constant
     
     refr=intersection(incid,parab);
-    if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue;   
+    
+    if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue; 
+    
     dl=sqrt( (refr.coord[0]-x)*(refr.coord[0]-x) + (refr.coord[1]-y)*(refr.coord[1]-y) + (refr.coord[2]-z)*(refr.coord[2]-z) );
     PROP_DL(dl);
     SCATTER;	
-    //alter parabolic input to match second parabola
-    kx=refr.k[0]; ky=refr.k[1]; kz=refr.k[2];
-    parab.constants[2]=(nr+1)*d+nr*2*w;
-    parab.constants[3]=Refractive_Index_Re;
-    parab.constants[4]=1.0; 
+    
+    kx=refr.k[0]; 
+    ky=refr.k[1]; 
+    kz=refr.k[2];
+     //alter parabolic input to match second parabola
+     
+    parab.constants[3]=(nr+1)*d+nr*2*w;
+    parab.constants[4]=Refractive_Index_Re;
+    parab.constants[5]=1.0; 
+    
     outg=intersection(refr,parab);
+    
     dl=sqrt( (outg.coord[0]-x)*(outg.coord[0]-x) + (outg.coord[1]-y)*(outg.coord[1]-y) + (outg.coord[2]-z)*(outg.coord[2]-z) );
     PROP_DL(dl);
     SCATTER;
@@ -266,10 +289,11 @@ TRACE
 MCDISPLAY
 %{
   magnify("xy");
-  double z_c,zdepth;
+  double z_c,zdepth,w;
+  w=(yheight*yheight)/(8*r);
   zdepth=N*(2*w+d);
   z_c=zdepth/2.0-w;
-  box(0,0,z_c,r,r,zdepth);
+  box(0,0,z_c,yheight/2,yheight/2,zdepth);
 %}
 
 END
