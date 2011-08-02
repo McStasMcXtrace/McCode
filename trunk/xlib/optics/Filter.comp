@@ -56,8 +56,6 @@ DECLARE
 
 INITIALIZE
 %{
-  const double RE=2.8179402894e-15;
-  const double NA=6.02214179e23;
   int status=0;
  
   if(!xwidth || !yheight){
