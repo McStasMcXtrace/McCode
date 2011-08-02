@@ -179,7 +179,7 @@ TRACE
 
       if (!nrows) { /* nrows is 0 if end of filename/no filename */
         if (!filename_ncount) {
-          filename_ncount = mcget_run_num();  /* ncount in filename */
+          filename_ncount = (double)mcget_run_num();  /* ncount in filename */
           if (verbose)
             printf("Virtual_input: %s: filename '%s' contains %g events\n", NAME_CURRENT_COMP, filename, filename_ncount);
           /* set ncount from filename length */
@@ -191,7 +191,7 @@ TRACE
         /* end of simulation if ... */
         if (repeat_number > repeat_cnt) {
           if (verbose)
-            printf("Virtual_input: %s: Ending after %g events (%li repeat count)\n", NAME_CURRENT_COMP, mcget_run_num(), (long)repeat_cnt);
+            printf("Virtual_input: %s: Ending after %g events (%li repeat count)\n", NAME_CURRENT_COMP, (double)mcget_run_num(), (long)repeat_cnt);
           read_block=0; mcset_ncount(mcget_run_num()); pos=0;
           end_reading = 1;
         }
@@ -312,13 +312,13 @@ FINALLY
            NAME_CURRENT_COMP, filename);
   } else {
     double tmp;
-    tmp = mcget_ncount()/filename_ncount;
+    tmp = (double)mcget_ncount()/filename_ncount;
     if (fabs(rint(tmp)/tmp-1) > 0.02)
       printf("Warning: Virtual_input: %s: simulation finished in the middle of filename '%s'\n"
              "               ncount=%g but filename contains %g events\n"
              "               Intensities may be wrong.\n"
              "               Increase ncount value to %g or higher.\n",
-           NAME_CURRENT_COMP, filename, mcget_ncount(), filename_ncount, filename_ncount*repeat_cnt);
+	     NAME_CURRENT_COMP, filename, (double)mcget_ncount(), filename_ncount, filename_ncount*repeat_cnt);
     if (mcget_ncount() < filename_ncount*repeat_cnt)
       printf("Warning: Virtual_input: %s: not all source %s repetitions were generated.\n"
              "               Intensities may be wrong.\n"

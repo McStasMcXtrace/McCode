@@ -81,7 +81,7 @@ TRACE
     CurrentTime = NowTime;
     if (difftime(NowTime,StartTime) > 10) { /* wait 10 sec before writing ETA */
       EndTime = StartTime + (time_t)(difftime(NowTime,StartTime)
-                           *mcget_ncount()/ncount);
+				     *(double)mcget_ncount()/ncount);
       IntermediateCnts = 0;
       fprintf(stdout, "\nTrace ETA ");
       if (difftime(EndTime,StartTime) < 60.0)

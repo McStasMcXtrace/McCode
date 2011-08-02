@@ -142,7 +142,7 @@ INITIALIZE
   l_range = Lmax-Lmin;
   w_mult = size*size*1.0e4;     /* source area correction */
   w_mult *= l_range;            /* wavelength range correction */
-  w_mult *= 1/mcget_ncount();   /* Correct for number of rays */
+  w_mult *= 1.0/mcget_ncount();   /* Correct for number of rays */
   w_mult *= nu;               /* Correct for frequency */
 %}
 TRACE

@@ -109,7 +109,7 @@ INITIALIZE
   }else{
     prms.pmul=1;
   }
-  prms.pmul*=t_ome/mcget_ncount();
+  prms.pmul*=t_ome/(double)mcget_ncount();
 %}
 
 TRACE

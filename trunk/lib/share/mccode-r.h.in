@@ -307,9 +307,9 @@ struct mcdetector_struct {
 
 typedef struct mcdetector_struct MCDETECTOR;
 
-void   mcset_ncount(double count);    /* wrapper to get mcncount */
-double mcget_ncount(void);            /* wrapper to set mcncount */
-double mcget_run_num(void);           /* wrapper to get mcrun_num=0:mcncount */
+void   mcset_ncount(unsigned long long count);    /* wrapper to get mcncount */
+unsigned long long int mcget_ncount(void);            /* wrapper to set mcncount */
+unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:mcncount */
 char *mcfull_file(char *name, char *ext); /* builds "name+ext" */
 
 /* output functions */
