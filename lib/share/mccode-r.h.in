@@ -10,7 +10,7 @@
 * %Identification
 * Written by: KN
 * Date:    Aug 29, 1997
-* Release: McStas X.Y
+* Release: @MCCODE_NAME@ @MCCODE_VERSION@
 * Version: $Revision: 1.112 $
 *
 * Runtime system header for McStas.
@@ -380,6 +380,7 @@ MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
 #define HBAR     1.05457168e-34    /* [Js] h bar Planck constant CODATA 2002 */
 #define MNEUTRON 1.67492728e-27    /* [kg] mass of neutron CODATA 2002 */
 #define GRAVITY  9.81              /* [m/s^2] gravitational acceleration */
+#define NA       6.02214179e23     /* [#atoms/g .mole] Avogadro's number*/
 
 #ifndef PI
 # ifdef M_PI
