@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2007, All rights reserved
+*         Copyright 1997-2010, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %Identification
 * Written by: KN, KL, PEO, EF, PW
 * Date: 1997
-* Origin: Risoe, ILL, ANSTO
-* Release: McStas 1.8
-* Version: $Revision: 1.48 $
+* Origin: Risoe DTU, ILL, Uni Copenhagen, PSI
+* Release: McStas 1.12c
+* Version: $Revision: 1.49 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -27,11 +27,189 @@
 * Modified by: PW, EF, December 4th 2006: version 1.10
 * Modified by: PW, EF, July 3rd 2007: version 1.11
 * Modified by: PW, EF, EK May 8th 2008: version 1.12
+* Modified by: PW, EF, EK April 2nd 2009: version 1.12a
+* Modified by: PW, EF, EK June/July 2010: version 1.12b
+* Modified by: PW May-June 2011: version 1.12c (re-release)
 *
-* This file is part of McStas  version 1.12, released May 8th, 2008.
+* This file is part of McStas  version 1.12c, released June 3rd, 2011.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v1.12c, June 3rd, 2011
+
+ McStas 1.12c is bugfix release.
+
+ Bugfixes include:
+
+  Runtime
+  - Fix of a bug in the rectangular focusing routine, reported to mcstas-users by Markos Skoulatos, HZB
+    (see http://mailman.mcstas.org/pipermail/mcstas-users/2010q4/000845.html)
+  - Introduction of --ncount as unsigned long long int in place of double. Using double could potentially lead 
+    simulations to "hang". A re-release of McStas 1.12c was done due to bugs in components related to the new
+    type returned from mcget_ncount.
+
+  Tools
+  - If gnuplot is available at installation time, mcplot and mcgui can use this in place of PGPLOT.
+    To use gnuplot, either
+    - edit your mcstas_config.perl and put      PLOTTER => 'Gnuplot',
+    - set the enviroment variable MCSTAS_FORMAT to Gnuplot
+
+  Components
+  - Lens.comp, typo in author name corrected
+  - Guide_four_side.comp (and other similar), by Tobias Panzner updated
+  - Single_crystal.comp, corrected initialization when providing lattice consts and angles
+  - Source_simple.comp, corrected centering-bug when using gaussian wavelength distribution
+  - Monochromator_pol.comp, now works properly in GROUPS/multi-slab configurations
+  - Pol_simpleBfield.comp, potential polarisation exit-state bug corrected
+  - FermiChopper.comp, fixed error when computing automatic phase 
+  - Monitor_nD.comp, fixed geometry bugs reported by Lambert van Eijck
+  
+  
+  Example instruments
+  - ESS_IN5_reprate.instr, parameter naming change in ESS_moderator_long component was not accomodated.
+  - templateTAS.instr, fixes relating to inclusion in other instrument files
+  
+
+
+Changes in McStas v1.12b, July 15th, 2010
+
+ McStas 1.12b is mostly a bugfix release, and the VERY last release in the 1.x series.
+ - A few extra features and contributions have been included.
+
+ McStas 2.0 will be released late 2010 and will introduce new features that
+ could break ceartain backward compatibility, hence we move from the 1.x series.
+
+ Bugfixes include:
+
+  Runtime
+  - Further adjustments to the MPI implementation, solves problems of hanging processes on large cluster runs.
+  - Threading support completely removed.
+
+  Components
+  - New contributions
+    - Multilayer_Sample.comp (Robert Dalgliesh, ISIS)
+      Multilayer Reflecting sample using matrix Formula. Requires GSL (GNU Scientific Library)
+    - Lens.comp (C. Monzat/E. Farhi/S. Desert/G.Euzin, ILL/LLB)
+      Refractive lens with absorption, incoherent scattering and surface imperfection.
+    - Lens_simple.comp (Henrich Frielinghaus, FZ Juelich)
+      Rectangular/circular slit with parabolic/spherical LENS
+    - Guide_four_side.comp (Tobias Panzner, PSI)
+      Models a guide with elliptic, parabolic or straight shaped side walls. 
+    - Guide_four_side_2_shells.comp (Tobias Panzner, PSI)
+      Models a guide with elliptic, parabolic or straight shaped side walls. 
+      As -"- with 2 outer mirror layer shells.
+    - Guide_four_side_10_shells.comp (Tobias Panzner, PSI)
+      Models a guide with elliptic, parabolic or straight shaped side walls.
+      As -"- with 10 outer mirror layer shells.
+    - Pol_FieldBox (Peter Willendrup)
+      Easier to use precession area. Corresponds to a set of Pol_simpleBfield's plus slits.
+    - Sapphire_Filter (Jonas O Birk, Uni CPH). Filter component, defaulting to saphire material properties
+
+  - New component features
+    - Addition of high-energy tail to Source_gen.comp (edits by Uwe Filges, PSI)  
+    - Single_crystal.comp extended for anisotropic mosaicity (EXPERIMENTAL), (edits by Erik Knudsen, Risoe DTU)
+
+  - Various minor bugfixes to
+    - Guide_curved.comp
+    - DiskChopper.comp
+    - SNS_source.comp
+    - ESS_moderator_long.comp
+   
+  Example instruments
+  - New examples
+    - ISIS_CRISP.instr, CRISP reflectometer from ISIS, test instrument for Multilayer_Sample.comp above
+    - Test_Lens.instr, test instrument for Lens.comp above
+    - FZJ_KWS2_Lens.instr, KWS2 SANS from FZJ, test instrument for Lens_simple.comp above
+    - templateTOF.instr (Was ILL_TOF_Env before)
+    - templateLaue.instr (Derived from the old tutorial Laue instrument)
+    - SE_example.instr and SE_example2.instr, simplistic Spin-Echo machines for illustrating use of Pol options
+    - template.instr ("Void" instrument skeleton - like Insert->Instrument Template)
+    - Test_shellguides.instr, test instrument for contributions from Tobias Panzner and Jonas O Birk.
+
+  - Minor improvements to
+    - templateDIFF.instr (SPLIT improves statistics)
+    - templateTAS.instr (SPLIT improves statistics)
+    - SNS_test.instr (Cleanup)
+    
+  Datafiles
+  - Added SNS moderator input file source_sct091_tu_02_1.dat
+  - Added ISIS moderator input file h.crisp
+
+  Licensing
+  - We have decided to distribute the components and the other runtime code under the LGPL license (see the LGPL
+    file under lib/ . This allows to link (unmodified) code from that directory with other software and achieve
+    non-GPL binaries.
+ 
+  Platform support/Tools
+  - Mac OS X 10.3 Panther, 10.4 Tiger, 10.5 Leopard, 10.6 Snow Leopard (PPC/Intel, 32/64bit)  
+    - Fix for problems with multiple perl installs, currently locked to perl 5.8.
+    - Instructions for using Matlab visualisation in the .dmg README file
+  - Windows XP 32/64bit, Windows Vista 32/64bit, Windows 7 32/64bit
+    - Note that we provide only a 32 bit package, but shown to work on 64 bit
+    - Fixed mcrun / mcgui for Windows for missing transfer of mpi parameters
+    - Fixed mcplot for Windows, foreground color is now black, not cyan
+  - Linux: Ubuntu is now our only "reference" Linux (Debian does not provide perl-pgplot)
+    - Ubuntu .deb's for 32 and 64bit, work for both for 9.10 Karmic Koala and 10.04 Lucid Lynx
+    - The .deb's require PGPLOT and perl-pgplot from Ubuntu Universe/Multiverse repositories
+
+  Parallelisation
+  - Improved stability of MPI simulations
+ 
+  Various
+  - A number of unlisted minor bugs ironed out, both in components, runtime code and tools.
+
+
+ McStas 1.12a is essentially a bugfix release, and the last release in the 1.x series.
+
+ McStas 2.0 will be released late 2009 / early 2010 and will introduce new features that
+ could break ceartain backward compatibility, hence we move from the 1.x series.
+
+ Bugfixes include:
+
+  Runtime
+  - Adjustments to the MPI implementation, solves problems of hanging processes on large cluster runs.
+
+  Components
+  - Various minor bugfixes to
+    - Isotropic_sqw.comp
+    - Vitess_input.comp
+    - Pol_bender.comp
+    - Pol_monitor.comp
+    - PolLambda_monitor.comp
+    - SNS_source.comp
+    - ISIS_moderator.comp
+    - FermiChopper_ILL.comp
+    - Progress_bar.comp
+    - TOFRes_sample.comp
+    - Virtual_tripoli4_output.comp
+    - Guide_honeycomb.comp
+   
+  Example instruments
+  - Minor improvements to
+    - PSI_DMC.instr (source-guide focusing corrected)
+    - templateDIFF.instr (SPLIT improves statistics)
+    - templateTAS.instr (SPLIT improves statistics)
+    - SNS_test.instr (Cleanup)
+
+  Datafiles
+  - Added SNS moderator input file source_sct091_tu_02_1.dat
+
+  Tools
+  - Fixed mcrun / mcgui for Win32 for 'fixed --ncount at 1e6' when scanning/optimizing
+ 
+  Platform support
+  - Mac OS X, fix for problems with multiple perl install
+  - Windows XP,  Windows Vista - see Tools section
+  - Linux, pgplot and pgperl now builds using gfortran (replacing g77)
+  
+  Parallelisation
+  - Improved stability of MPI simulations
+  - Preference for OpenMPI (standard on Ubuntu and Mac OS X)
+
+  Various
+  - A number of unlisted minor bugs ironed out, both in components, runtime code and tools.
+
+
 Changes in McStas v1.12, May 8th, 2008
 
   Metalanguage

@@ -1041,7 +1041,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
     
     MCDETECTOR detector;
 
-    ratio = 100*mcget_run_num()/mcget_ncount();
+    ratio = 100.0*mcget_run_num()/mcget_ncount();
     if (Vars->Flag_per_cm2 && Vars->area && Vars->Flag_Verbose)
       printf("Monitor_nD: %s: detector area is %g [cm2]\n",
         Vars->compcurname, Vars->area);

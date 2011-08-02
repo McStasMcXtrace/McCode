@@ -63,8 +63,8 @@ long     mcDetectorArray_size        = 0;         /* allocated detector array si
 long     mcDetectorArray_index       = 0;         /* current detector length (number of detectors so far) */
 
 /* Number of particule histories to simulate. */
-mcstatic double mcncount             = 1e6;
-mcstatic double mcrun_num            = 0;
+mcstatic unsigned long long int mcncount             = 1e6;
+mcstatic unsigned long long int mcrun_num            = 0;
 
 /* I/O structures */
 mcstatic struct mcformats_struct mcformat;
@@ -1752,9 +1752,9 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   detector.date_l = date_l;
   
   if (!mcget_run_num() || mcget_run_num() >= mcget_ncount())
-    snprintf(detector.ncount, CHAR_BUF_LENGTH, "%g", mcget_ncount());
+    snprintf(detector.ncount, CHAR_BUF_LENGTH, "%g", (double)mcget_ncount());
   else 
-    snprintf(detector.ncount, CHAR_BUF_LENGTH, "%g/%g", mcget_run_num(), mcget_ncount());
+    snprintf(detector.ncount, CHAR_BUF_LENGTH, "%g/%g", (double)mcget_run_num(), (double)mcget_ncount());
     
   detector.p0         = p0; detector.p0_orig=p0;
   detector.p1         = p1; detector.p1_orig=p1;
@@ -3050,19 +3050,19 @@ static void mcuse_file(char *file)
 /*******************************************************************************
 * mcset_ncount: set total number of rays to generate 
 *******************************************************************************/
-void mcset_ncount(double count)
+void mcset_ncount(unsigned long long int count)
 {
   mcncount = count;
 }
 
 /* mcget_ncount: get total number of rays to generate */
-double mcget_ncount(void)
+unsigned long long int mcget_ncount(void)
 {
   return mcncount;
 }
 
 /* mcget_run_num: get curent number of rays in TRACE */
-double mcget_run_num(void)
+unsigned long long int mcget_run_num(void)
 {
   return mcrun_num;
 }
@@ -3071,7 +3071,7 @@ double mcget_run_num(void)
 static void
 mcsetn_arg(char *arg)
 {
-  mcset_ncount(strtod(arg, NULL));
+  mcset_ncount((long long int) strtod(arg, NULL)); 
 }
 
 /* mcsetseed: set the random generator seed from a string argument */
@@ -4726,7 +4726,7 @@ void sighandler(int sig)
     printf("(0 %%)\n" );
   else
   {
-    printf("%.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
+    printf("%.2f %% (%10.1f/%10.1f)\n", 100.0*mcget_run_num()/mcget_ncount(), 1.0*mcget_run_num(), 1.0*mcget_ncount()); 
   }
   t0 = (time_t)mcstartdate;
   t1 = time(NULL);

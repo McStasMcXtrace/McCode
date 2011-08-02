@@ -1162,7 +1162,7 @@ int mcformat_convert(char *name)
     mcdirname = upper_dir;
   } else {
     /* process the current file */
-    if (mcverbose) printf("mcformat: reading %s (%ld bytes)\n", name, stbuf.st_size);
+    if (mcverbose) printf("mcformat: reading %s (%ld bytes)\n", name, (long int)stbuf.st_size);
     McStasFile = mcformat_read_mcstas(name);
 
     if (!McStasFile.p1) {
@@ -1176,7 +1176,7 @@ int mcformat_convert(char *name)
       if (mcverbose) mcformat_print_mcstas_struct(McStasFile); fflush(stdout);
       if (mcformat_output(McStasFile))
         if (mcverbose) {
-          printf("mcformat: converting %s (%ld bytes) ", name, stbuf.st_size);
+          printf("mcformat: converting %s (%ld bytes) ", name, (long int)stbuf.st_size);
           printf("into %s%s ", mcdirname ? mcdirname : ".", mcdirname ? MC_PATHSEP_S : "");
           if (mctestmode) printf(" (--test mode)\n"); else printf("\n");
         }
