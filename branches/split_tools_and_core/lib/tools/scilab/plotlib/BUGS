@@ -1,0 +1,90 @@
+01/13/2000
+----------
+
+Fixed bugs :
+
+- In the plot function, the '2o' property now also changes the size of the marker 
+- A xlabel or ylabel caused a clipping and e.g. title produced nothing.
+- Pb with global variables (see fig.sci) : must say global twice !
+- A surf() (or mesh, or plot3d, ...) in a subwindow (after a call
+to subplot) cleared all the window.
+
+06/07/2000 v0.14
+----------
+
+Fixed bugs :
+
+- problem of colormap initialization when a window is created with
+xset('window,n')
+
+- I fixed the help files for mesh,surf and surfl. The case of
+equal sized X,Y,Z was told to be not supported (although the syntax
+is mentioned earlier in the file).
+
+25/10/2000 v0.15
+----------
+
+Fixed bugs :
+
+- The Y axis did not behave like the X axis, concerning the automatic
+labels generations (pretty axis graduation was not activated, and 
+the behaviour was as if 'axis','tightY' was systematicaly added). This
+is now fixed. 
+
+27/11/2000 v0.16
+----------
+
+Fixed bugs (installation step) :
+
+Simon Bridger said :
+
+-  The install didn't work under WIN98, so I made the changes below...
+ The main reason is that under windows, the batch file keeps executing
+ before any windows programs have finished executing. This means that
+ SCILAB.STAR can get replaced, before scilab has executed it...
+
+I have retained his solution.
+
+Other bugs :
+
+- Problem with colormaps. After a colormap(cmap) call then a 
+subsequent pcolor(), surf() or other used the previous colormap
+(before the colormap call). Fixed
+
+04/07/2001 v0.17b1
+------------------
+
+Fixed bugs :
+
+- Better zooming for 2D functions. Now the background of the plot is
+correctly displayed when zooming.
+
+18/07/2002 v0.17
+----------------
+
+Fixed bugs :
+
+- Behaviour of legends and labels when zooming was
+really strange. Now everything remains OK, after a
+rewrite of some functions (process2DPrelim.sci,
+processLegend.sci, processColorbar.sci, ...)
+- Colorbars only appear after a redraw of the window (bug
+under Windows) 
+
+18/07/2002 v0.18b1
+------------------
+
+Installation bugs have disappeared since the adoption
+of the builder.sce/loader.sce system.
+
+10/11/2003 v0.18
+------------------
+
+-Problems with b/w export, the background was black (fixed)
+-Problem with superposition of previous and current tick
+marks and such, when a window got an "expose" event (under unix),
+and at anytime (under windows) -> fixed also
+
+There are still redrawing problems (background painting) under
+windows for suplot plots under windows, but they are not due
+to the Plotlib !
