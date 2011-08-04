@@ -148,7 +148,6 @@ install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
 	for pgm in $(MXPERLBIN); do \
 	  $(INSTALL_PROGRAM) $$pgm.mxfixpl $(bindir)/$$pgm; \
 	done
-	fi
 	$(topdir)/mkinstalldirs $(libdir_mccode)
 	cd $(topdir)/mccode-legacy-tools/lib && $(MAKE) install 
 	@echo "Create component documentation..."
