@@ -1,0 +1,61 @@
+SHELL = /bin/sh
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+srcdir = @srcdir@
+topdir = ../..
+libdir = @libdir@
+mandir = @mandir@
+PWD = `pwd`
+
+INSTALL=@INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+
+libdir_mccode = $(libdir)/@MCCODE_TARNAME@
+
+install: install_@MCCODE_TARNAME@
+
+install_@MCCODE_TARNAME@: installdirs
+	$(topdir)/mkinstalldirs $(libdir_mccode)
+	cd $(topdir) && for file in `cd mccode-legacy-tools/lib; ls | grep -v .svn| grep -v Make`; do \
+	  if [ -d mccode-legacy-tools/lib/$$file ]; then \
+	    ./mkinstalldirs $(libdir_mccode)/$$file; \
+	    for comp in `cd mccode-legacy-tools/lib/$$file; ls | grep -v .svn`; do \
+	      if [ -f $(libdir_mccode)/$$file/$$comp ]; then \
+	        echo "Renaming old library element version $(libdir_mccode)/$$file/$$comp to $(libdir_mccode)/$$file/$$comp.old"; \
+	         mv -f $(libdir_mccode)/$$file/$$comp $(libdir_mccode)/$$file/$$comp.old; \
+	      fi; \
+	      if [ -d mccode-legacy-tools/lib/$$file/$$comp ]; then \
+	        ./mkinstalldirs $(libdir_mccode)/$$file/$$comp; \
+	        for tool in `cd mccode-legacy-tools/lib/$$file/$$comp; ls | grep -v .svn`; do \
+	      if [ -d mccode-legacy-tools/lib/$$file/$$comp/$$tool ]; then \
+	        ./mkinstalldirs $(libdir_mccode)/$$file/$$comp/$$tool ; \
+	        for subtool in `cd mccode-legacy-tools/lib/$$file/$$comp/$$tool; ls | grep -v .svn`; do \
+		  if [ -d mccode-legacy-tools/lib/$$file/$$comp/$$tool/$$subtool ]; then \
+		     ./mkinstalldirs $(libdir_mccode)/$$file/$$comp/$$tool/$$subtool ; \
+	             for subsubtool in `cd mccode-legacy-tools/lib/$$file/$$comp/$$tool/$$subtool; ls | grep -v .svn`; do \
+	                     $(INSTALL_DATA) mccode-legacy-tools/lib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(libdir_mccode)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
+	                   done \
+		  else \
+	                  $(INSTALL_DATA) mccode-legacy-tools/lib/$$file/$$comp/$$tool/$$subtool $(libdir_mccode)/$$file/$$comp/$$tool/$$subtool; \
+		  fi; \
+	              done \
+	            else \
+	              $(INSTALL_DATA) mccode-legacy-tools/lib/$$file/$$comp/$$tool $(libdir_mccode)/$$file/$$comp/$$tool; \
+	      fi; \
+	        done \
+	      else \
+	        $(INSTALL_DATA) mccode-legacy-tools/lib/$$file/$$comp $(libdir_mccode)/$$file/$$comp; \
+	      fi; \
+	    done \
+	  else \
+	    $(INSTALL_DATA) mccode-legacy-tools/lib/$$file $(libdir_mccode)/$$file; \
+	  fi \
+	done
+
+
+installdirs:
+	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_@MCCODE_TARNAME@) $(mandir)/man1
+
