@@ -189,9 +189,9 @@ else
   AC_DEFINE([HAVE_NEXUS], [])
 fi
 
-AC_OUTPUT(Makefile src/Makefile src/port.h src/cogen.c lib/Makefile nlib/Makefile xlib/Makefile lib/tools/perl/mccode_config.perl lib/tools/perl/mccode_reconfigure support/common/Makefile support/common/pgplot/Makefile support/common/pgplot/makehtml support/common/pgplot/maketex src/mccode.h lib/share/mccode-r.h src/mcformat.c doc/man/mcconvert.1 doc/man/mcdisplay.1 doc/man/mcdoc.1 doc/man/mcformat.1 doc/man/mcgui.1 doc/man/mcplot.1 doc/man/mcrun.1 doc/man/mcstas.1 doc/man/mcxtrace.1 doc/man/mxconvert.1 doc/man/mxdisplay.1 doc/man/mxdoc.1 doc/man/mxformat.1 doc/man/mxgui.1 doc/man/mxplot.1 doc/man/mxrun.1 support/deb/debcreate support/deb/postinst support/deb/control support/Win32/install/mcstas.nsi support/Win32/install/mcxtrace.nsi build.bat)
+AC_OUTPUT(mccode-core/Makefile mccode-legacy-tools/Makefile mccode-core/src/Makefile mccode-legacy-tools/src/Makefile mccode-core/src/port.h mccode-core/src/cogen.c mccode-core/lib/Makefile mccode-legacy-tools/lib/Makefile mccode-core/nlib/Makefile mccode-core/xlib/Makefile mccode-legacy-tools/lib/tools/perl/mccode_config.perl mccode-legacy-tools/lib/tools/perl/mccode_reconfigure mccode-legacy-tools/support/common/Makefile mccode-legacy-tools/support/common/pgplot/Makefile mccode-legacy-tools/support/common/pgplot/makehtml mccode-legacy-tools/support/common/pgplot/maketex mccode-core/src/mccode.h mccode-core/lib/share/mccode-r.h mccode-core/src/mcformat.c doc/man/mcconvert.1 doc/man/mcdisplay.1 doc/man/mcdoc.1 doc/man/mcformat.1 doc/man/mcgui.1 doc/man/mcplot.1 doc/man/mcrun.1 doc/man/mcstas.1 doc/man/mcxtrace.1 doc/man/mxconvert.1 doc/man/mxdisplay.1 doc/man/mxdoc.1 doc/man/mxformat.1 doc/man/mxgui.1 doc/man/mxplot.1 doc/man/mxrun.1  mccode-legacy-tools/support/deb/debcreate  mccode-legacy-tools/support/deb/postinst  mccode-legacy-tools/support/deb/control  mccode-legacy-tools/support/Win32/install/mcstas.nsi  mccode-legacy-tools/support/Win32/install/mcxtrace.nsi build.bat)
 
-chmod a+x lib/tools/perl/mccode_reconfigure
+chmod a+x mccode-legacy-tools/lib/tools/perl/mccode_reconfigure
 
 # warnings and errors
 if test "$USE_PIC" != "no" ; then

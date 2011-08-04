@@ -44,7 +44,7 @@ SCIREL=scilab-$REL
 SCIFILE=$SCIREL.bin.linux-i686.tar.gz
 	
 perl-modules:
-	$(srcdir)/../../mkinstalldirs  $(mc_libdir)/tools/perl/modules
+	mkdir -p $(mc_libdir)/tools/perl/modules \
 	# install Proc-Simple
 	cd $(srcdir)/Perl/Proc-Simple-1.19 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
 	# install Tk-CodeText
@@ -54,7 +54,7 @@ perl-modules:
 	@echo "Installed Proc-Simple Tk-CodeText Math-Amoeba perl modules in @prefix@/lib/@MCCODE_TARNAME@/tools/perl/modules"
 
 perl-PGPLOT:
-	$(srcdir)/../../mkinstalldirs  $(mc_libdir)/tools/perl/modules
+	mkdir -p $(srcdir)/../../../mkinstalldirs  $(mc_libdir)/tools/perl/modules \
 	# install F77 
 	cd $(srcdir)/Perl/ExtUtils-F77-1.16 && perl Makefile.PL PREFIX=@prefix@/lib/@MCCODE_TARNAME@/tools/perl/modules LIB=@prefix@/lib/@MCCODE_TARNAME@/tools/perl/modules && make && make install
 	# install perl-PGPLOT
