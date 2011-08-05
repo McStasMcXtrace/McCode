@@ -1,0 +1,5 @@
+#!/bin/sh
+p4 edit $1
+ned $1
+
+

@@ -1,0 +1,145 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::Error - Method invoked to process background errors
+
+=for category Binding Events and Callbacks
+
+=head1 SYNOPSIS
+
+Customization:
+
+    require Tk::ErrorDialog;
+
+or
+
+    sub Tk::Error
+    {
+      my ($widget,$error,@locations) = @_;
+      ...
+
+    }
+
+=head1 DESCRIPTION
+
+The B<Tk::Error> method is invoked by perl/Tk when a background
+error occurs. Two possible implementations are provided in the
+distribution and individual applications or users can (re)define a B<Tk::Error>
+method (e.g. as a perl sub) if they wish to handle background
+errors in some other manner.
+
+A background error is one that occurs in a command that didn't
+originate with the application.  For example, if an error occurs
+while executing a L<callback|Tk::callbacks> specified with a
+L<bind|Tk::bind> or a L<after|Tk::after>
+command, then it is a background error.  For a non-background error,
+the error can simply be returned up through nested subroutines
+until it reaches the top-level code in the application;
+then the application can report the error in whatever way it
+wishes.  When a background error occurs, the unwinding ends in
+the Tk library and there is no obvious way for Tk to report
+the error.
+
+When Tk detects a background error, it saves information about the
+error and invokes the B<Tk::Error> method later when Tk is idle.
+
+B<Tk::Error> is invoked by perl/Tk as if by the perl code:
+
+S<    >I<$mainwindow>-E<gt>B<Tk::Error>(I<"error message">, I<location ...>);
+
+I<$mainwindow> is the B<MainWindow> associated with widget which
+detected the error, I<"error message"> is a string describing the error
+that has been detected, I<location> is a list of one or more "locations"
+which describe the call sequence at the point the error was detected.
+
+The locations are a typically a mixture of perl location reports giving
+script name and line number, and simple strings describing locations in
+core Tk or perl/Tk C code.
+
+Tk will ignore any result returned by the B<Tk::Error> method.
+If another error occurs within the B<Tk::Error> method
+(for example if it calls B<die>) then Tk reports this error
+itself by writing a message to stderr (this is to avoid infinite loops
+due to any bugs in B<Tk::Error>).
+
+If several background errors accumulate before B<Tk::Error>
+is invoked to process them, B<Tk::Error> will be invoked once
+for each error, in the order they occurred.
+However, if B<Tk::Error> calls B<Tk-E<gt>break>, then
+any remaining errors are skipped without calling B<Tk::Error>.
+
+The B<Tk> module includes a default B<Tk::Error> subroutine
+that simply reports the error on stderr.
+
+=head1 Tk::ErrorDialog
+
+An alternate definition is provided via:
+
+S<    >C<require Tk::ErrorDialog;>
+
+that posts a dialog box containing the error message and offers
+the user a chance to see a stack trace showing where the
+error occurred.
+
+This is an OO implementation of the Tcl/Tk command B<bgerror>, with a
+twist: since there is only one B<ErrorDialog> widget, you aren't required
+to invoke the constructor to create it; it will be created
+automatically when the first background error occurs.  However, in
+order to configure the I<-cleanupcode> and I<-appendtraceback>
+B<ErrorDialog> options you must call the constructor and create it
+manually.
+
+The B<ErrorDialog> object essentially consists of two subwidgets: a
+B<Dialog> widget to display the background error and a B<Text> widget
+for the traceback information.  If required, you can invoke various
+widget methods to customize these subwidgets - their advertised names
+are described below.
+
+S<    >I<$mw>-E<gt>B<ErrorDialog>(-cleanupcode => I<code>, -appendtraceback => I<bool>);
+
+$mw is a window reference.
+
+I<code> is a CODE reference if special post-background error
+processing is required (default is undefined). The callback subroutine
+is called with @_ having the same arguments that B<Tk::Error> was
+invoked with.
+
+I<bool> is a boolean indicating whether or not to append successive
+tracebacks (default is 1, do append).
+
+=head2 Advertised ErrorDialog widgets
+
+I<error_dialog> is the Dialog widget reference.
+
+I<text> is the Text widget reference containing the traceback information.
+
+=head1 BUGS
+
+If B<after> or B<fileevent> are not invoked as methods of a widget
+then perl/Tk is unable to provide a I<$mainwindow> argument.
+To support such code from earlier versions of perl/Tk
+perl/Tk therefore calls B<Tk::Error> with string 'Tk' instead:
+B<Tk-E<gt>Tk::Error\(...\)>.
+In this case the B<Tk::Error> in B<Tk::ErrorDialog> and similar
+implementations cannot "popup" a window as they don't know which display
+to use.  A mechanism to supply I<the> B<MainWindow> in applications
+which only have one (a very common case) should be provided.
+
+=head1 SEE ALSO
+
+L<Tk::bind|Tk::bind>
+L<Tk::after|Tk::after>
+L<Tk::fileevent|Tk::fileevent>
+
+=head1 KEYWORDS
+
+background error, reporting
+
+=cut
+

@@ -1,0 +1,91 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#  @(#) DoWhenIdle.3 1.11 95/05/06 15:29:19
+#
+
+=head1 NAME
+
+Tk_DoWhenIdle, Tk_CancelIdleCall - invoke a procedure when there are no pending events
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_DoWhenIdle>(I<proc, clientData>)
+
+B<Tk_CancelIdleCall>(I<proc, clientData>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_IdleProc *proc (in)
+
+Procedure to invoke.
+
+=item ClientData clientData (in)
+
+Arbitrary one-word value to pass to I<proc>.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_DoWhenIdle> arranges for I<proc> to be invoked
+when the application becomes idle.  The application is
+considered to be idle when B<Tk_DoOneEvent> has been
+called, it couldn't find any events to handle, and it is about
+to go to sleep waiting for an event to occur.  At this
+point all pending B<Tk_DoWhenIdle> handlers are
+invoked.  For each call to B<Tk_DoWhenIdle> there will
+be a single call to I<proc>;  after I<proc> is
+invoked the handler is automatically removed.
+B<Tk_DoWhenIdle> is only useable in programs that
+use B<Tk_DoOneEvent> to dispatch events.
+
+I<Proc> should have arguments and result that match the
+type B<Tk_IdleProc>:
+
+=over 4
+
+typedef void Tk_IdleProc(ClientData I<clientData>);
+
+=back
+
+The I<clientData> parameter to I<proc> is a copy of the I<clientData>
+argument given to B<Tk_DoWhenIdle>.  Typically, I<clientData>
+points to a data structure containing application-specific information about
+what I<proc> should do.
+
+B<Tk_CancelIdleCall>
+may be used to cancel one or more previous
+calls to B<Tk_DoWhenIdle>:  if there is a B<Tk_DoWhenIdle>
+handler registered for I<proc> and I<clientData>, then it
+is removed without invoking it.  If there is more than one
+handler on the idle list that refers to I<proc> and I<clientData>,
+all of the handlers are removed.  If no existing handlers match
+I<proc> and I<clientData> then nothing happens.
+
+B<Tk_DoWhenIdle> is most useful in situations where
+(a) a piece of work will have to be done but (b) it's
+possible that something will happen in the near future
+that will change what has to be done, or require something
+different to be done.  B<Tk_DoWhenIdle> allows the
+actual work to be deferred until all pending events have
+been processed.  At this point the exact work to be done
+will presumably be known and it can be done exactly once.
+
+For example, B<Tk_DoWhenIdle> might be used by an editor
+to defer display updates until all pending commands have
+been processed.  Without this feature, redundant redisplays
+might occur in some situations, such as the processing of
+a command file.
+
+=head1 KEYWORDS
+
+callback, defer, handler, idle

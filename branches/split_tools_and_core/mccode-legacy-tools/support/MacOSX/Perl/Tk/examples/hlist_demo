@@ -1,0 +1,42 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+require Tk::HList;
+
+$mw = MainWindow->new;
+
+my $hl = $mw->Scrolled('HList', -separator => '.', -width => 25,
+                        -drawbranch => 1,
+                        -selectmode => 'extended', -columns => 2,
+                        -indent => 10);
+
+$hl->configure( -command => [ sub
+                               {
+                                my $hl = shift;
+                                my $ent = shift;
+                                my $data = $hl->info('data',$ent);
+                                foreach ($hl,$ent,$data)
+                                 {
+                                  print ref($_) ? "ref $_\n" : "string $_\n";
+                                 }
+                                print "\n";
+                               }, $hl
+                             ]
+               );
+
+$hl->pack(-expand => 1, -fill => 'both');
+
+@list = qw(one two three);
+
+my $i = 0;
+foreach my $item (@list)
+ {
+  $hl->add($item, -itemtype => 'text', -text => $item, -data => {});
+  my $subitem;
+  foreach $subitem (@list)
+   {
+    $hl->addchild($item, -itemtype => 'text', -text => $subitem, -data => []);
+   }
+ }
+
+MainLoop;

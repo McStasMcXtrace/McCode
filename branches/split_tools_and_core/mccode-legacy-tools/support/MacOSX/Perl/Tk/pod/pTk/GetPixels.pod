@@ -1,0 +1,98 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::pTk::GetPixels, Tk::pTk::GetScreenMM - translate between strings and screen units
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+int
+B<Tk_GetPixels(>I<interp, tkwin, string, intPtr>B<)>
+
+int
+B<Tk_GetScreenMM(>I<interp, tkwin, string, doublePtr>B<)>
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter to use for error reporting.
+
+=item Tk_Window tkwin (in)
+
+Window whose screen geometry determines the conversion between absolute
+units and pixels.
+
+=item char *string (in)
+
+String that specifies a distance on the screen.
+
+=item int *intPtr (out)
+
+Pointer to location in which to store converted distance in pixels.
+
+=item double *doublePtr (out)
+
+Pointer to location in which to store converted distance in millimeters.
+
+=back
+
+=head1 DESCRIPTION
+
+These two procedures take as argument a specification of distance on
+the screen (I<string>) and compute the corresponding distance
+either in integer pixels or floating-point millimeters.
+In either case, I<string> specifies a screen distance as a
+floating-point number followed by one of the following characters
+that indicates units:
+
+=over 4
+
+=item E<lt>noneE<gt>
+
+The number specifies a distance in pixels.
+
+=item B<c>
+
+The number specifies a distance in centimeters on the screen.
+
+=item B<i>
+
+The number specifies a distance in inches on the screen.
+
+=item B<m>
+
+The number specifies a distance in millimeters on the screen.
+
+=item B<p>
+
+The number specifies a distance in printer's points (1/72 inch)
+on the screen.
+
+B<Tk_GetPixels> converts I<string> to the nearest even
+number of pixels and stores that value at I<*intPtr>.
+B<Tk_GetScreenMM> converts I<string> to millimeters and
+stores the double-precision floating-point result at I<*doublePtr>.
+
+Both procedures return B<TCL_OK> under normal circumstances.
+If an error occurs (e.g. I<string> contains a number followed
+by a character that isn't one of the ones above) then
+B<TCL_ERROR> is returned and an error message is left
+in I<interp-E<gt>result>.
+
+=back
+
+=head1 KEYWORDS
+
+centimeters, convert, inches, millimeters, pixels, points, screen units

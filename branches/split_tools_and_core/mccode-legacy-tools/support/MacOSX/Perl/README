@@ -1,0 +1,4 @@
+This folder contains a re-distribution of Perl-Tk from CPAN (as is version Tk-804.029_500).
+
+An easy build/install script called MacInstall.command has been added to build using perl5.10 only 
+(to be binary-compatible with the current release of SciPDL found elsewhere in the support/MacOSX folder)

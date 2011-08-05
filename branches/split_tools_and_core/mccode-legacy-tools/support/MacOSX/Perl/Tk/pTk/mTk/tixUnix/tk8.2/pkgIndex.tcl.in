@@ -1,0 +1,7 @@
+# Tcl package index file, version 1.0
+#
+# $Id: pkgIndex.tcl.in,v 1.1.2.1 2001/11/04 05:00:43 idiscovery Exp $
+#
+package ifneeded Tix @TIX_VERSION_PKG@ [list load "@TIX_PKG_FILE@" Tix]
+@TIX_SAM_PACKAGE_IFNEEDED@
+package ifneeded wm_default 1.0 [list source [file join $dir pref WmDefault.tcl]]

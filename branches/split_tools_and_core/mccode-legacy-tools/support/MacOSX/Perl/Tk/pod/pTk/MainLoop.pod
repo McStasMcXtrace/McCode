@@ -1,0 +1,31 @@
+#  Copyright (c) 1990-1992 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_MainLoop - loop for events until all windows are deleted
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_MainLoop>()
+
+=head1 DESCRIPTION
+
+B<Tk_MainLoop> is a procedure that loops repeatedly calling
+B<Tcl_DoOneEvent>.  It returns only when there are no applications
+left in this process (i.e. no main windows exist anymore).  Most
+windowing applications will call B<Tk_MainLoop> after
+initialization; the main execution of the application will consist
+entirely of callbacks invoked via B<Tcl_DoOneEvent>.
+
+=head1 KEYWORDS
+
+application, event, main loop

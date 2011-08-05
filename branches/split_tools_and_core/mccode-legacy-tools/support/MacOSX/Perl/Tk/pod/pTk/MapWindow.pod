@@ -1,0 +1,58 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1997 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_MapWindow, Tk_UnmapWindow - map or unmap a window
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Tk_Window
+B<Tk_MapWindow>(I<tkwin>)
+
+B<Tk_UnmapWindow>(I<tkwin>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_Window tkwin (in)
+
+Token for window.
+
+=back
+
+=head1 DESCRIPTION
+
+These procedures may be used to map and unmap windows
+managed by Tk.  B<Tk_MapWindow> maps the window given
+by I<tkwin>, and also creates an X window corresponding
+to I<tkwin> if it doesn't already exist.  See the
+B<Tk_CreateWindow> manual entry for information on
+deferred window creation.
+B<Tk_UnmapWindow> unmaps I<tkwin>'s window
+from the screen.
+
+If I<tkwin> is a child window (i.e. B<Tk_CreateChildWindow> was
+used to create it), then event handlers interested in map and unmap events
+are invoked immediately.  If I<tkwin> isn't an internal window,
+then the event handlers will be invoked later, after X has seen
+the request and returned an event for it.
+
+These procedures should be used in place of the X procedures
+B<XMapWindow> and B<XUnmapWindow>, since they update
+Tk's local data structure for I<tkwin>.  Applications
+using Tk should not invoke B<XMapWindow> and B<XUnmapWindow>
+directly.
+
+=head1 KEYWORDS
+
+map, unmap, window

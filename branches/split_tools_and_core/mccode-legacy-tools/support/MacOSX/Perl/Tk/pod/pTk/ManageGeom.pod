@@ -1,0 +1,103 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_ManageGeometry - arrange to handle geometry requests for a window
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_ManageGeometry>(I<tkwin, mgrPtr, clientData>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_Window tkwin (in)
+
+Token for window to be managed.
+
+=item Tk_GeomMgr *mgrPtr (in)
+
+Pointer to data structure containing information about the
+geometry manager, or NULL to indicate that I<tkwin>'s geometry
+shouldn't be managed anymore.
+The data structure pointed to by I<mgrPtr> must be static:
+Tk keeps a reference to it as long as the window is managed.
+
+=item ClientData clientData (in)
+
+Arbitrary one-word value to pass to geometry manager callbacks.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_ManageGeometry> arranges for a particular geometry manager,
+described by the I<mgrPtr> argument, to control the geometry
+of a particular slave window, given by I<tkwin>.
+If I<tkwin> was previously managed by some other geometry manager,
+the previous manager loses control in favor of the new one.
+If I<mgrPtr> is NULL, geometry management is cancelled for
+I<tkwin>.
+
+The structure pointed to by I<mgrPtr> contains information about
+the geometry manager:
+
+ typedef struct {
+ 	char *name;
+ 	Tk_GeomRequestProc *requestProc;
+ 	Tk_GeomLostSlaveProc *lostSlaveProc;
+ } Tk_GeomMgr;
+
+The I<name> field is the textual name for the geometry manager,
+such as B<pack> or B<place>;  this value will be returned
+by the command B<winfo manager>.
+
+I<requestProc> is a procedure in the geometry manager that
+will be invoked whenever B<Tk_GeometryRequest> is called by the
+slave to change its desired geometry.
+I<requestProc> should have arguments and results that match the
+type B<Tk_GeomRequestProc>:
+
+ typedef void Tk_GeomRequestProc(
+ 	ClientData clientData,
+ 	Tk_Window tkwin);
+
+The parameters to I<requestProc> will be identical to the
+corresponding parameters passed to B<Tk_ManageGeometry>.
+I<clientData> usually points to a data
+structure containing application-specific information about
+how to manage I<tkwin>'s geometry.
+
+The I<lostSlaveProc> field of I<mgrPtr> points to another
+procedure in the geometry manager.
+Tk will invoke I<lostSlaveProc> if some other manager
+calls B<Tk_ManageGeometry> to claim
+I<tkwin> away from the current geometry manager.
+I<lostSlaveProc> is not invoked if B<Tk_ManageGeometry> is
+called with a NULL value for I<mgrPtr> (presumably the current
+geometry manager has made this call, so it already knows that the
+window is no longer managed), nor is it called if I<mgrPtr>
+is the same as the window's current geometry manager.
+I<lostSlaveProc> should have
+arguments and results that match the following prototype:
+
+ typedef void Tk_GeomLostSlaveProc(
+ 	ClientData clientData,
+ 	Tk_Window tkwin);
+
+The parameters to I<lostSlaveProc> will be identical to the
+corresponding parameters passed to B<Tk_ManageGeometry>.
+
+=head1 KEYWORDS
+
+callback, geometry, managed, request, unmanaged

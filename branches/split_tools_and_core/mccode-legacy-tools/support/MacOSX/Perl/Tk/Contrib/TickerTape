@@ -1,0 +1,49 @@
+#!/usr/local/bin/perl
+
+=head1 NAME
+
+TickerTape - Display long message in Tk
+
+=head1 SYNOPSIS
+
+TickerTape Message
+
+=head1 DESCRIPTION
+
+For everyone with a case of Browser envy after using Microsoft's Internet
+Explorer, here's a perl/tk script only slightly more useful than a script
+to do <BLINK>. Don't know why I wrote it. Don't know why you'd run it.
+Maybe if you were writing a ticker tape application. Or had a weird thing
+for Times Square. Anyway....
+
+tog
+Terry Greenlaw (on-site @ Lockheed Martin)               Encompass Technologies
+z50816@mip.lasc.lockheed.com                             terry@encompass.is.net
+
+=cut
+
+
+use Tk;
+
+$top = MainWindow->new;
+
+$message= (@ARGV) ? join(' ',@ARGV) : "THIS IS A VERY LONG SCROLLING MESSAGE...      ";
+$l1 = $top->Label(-fg=>'White',-text=>'This is the top of the screen');
+$l1->pack( -fill => 'both', -expand => 1 );
+$m1 = $top->Label(-fg=>'Red', -bg=>'black',
+                 -textvariable => \$message, -width => 15 );
+$m1->pack();
+$m2 = $top->Label(-wrap=>1, -fg=>'Green', -bg=>'black',
+                 -textvariable => \$message2, -width=>1, -height=>8 );
+$m2->pack(-anchor=>'w');
+$l2 = $top->Label(-fg=>'White',-text=>'This is the bottom of the screen');
+$l2->pack( -fill => 'both', -expand => 1 );
+after(100, \&scroll_it);
+$top->MainLoop;
+
+sub scroll_it {
+$message =~ /(.)(.*)/;
+$message="$2$1";
+($message2 = $message) =~ s/ /  /g;
+$top->after(200, \&scroll_it);
+}
