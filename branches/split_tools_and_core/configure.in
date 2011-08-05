@@ -19,6 +19,7 @@
 #
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(@MCCODE_NAME@, @MCCODE_VERSION@, @MCCODE_TARNAME@-support@@MCCODE_TARNAME@.org)
+AM_INIT_AUTOMAKE
 AC_REVISION($Revision: 1.1$)
 AC_COPYRIGHT([Copyright (C) Copyright, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
@@ -33,7 +34,7 @@ MCCODE_VERSION=$PACKAGE_VERSION
 MCCODE_STRING=$PACKAGE_STRING
 MCCODE_BUGREPORT=$PACKAGE_BUGREPORT
 MCCODE_DATE="@MCCODE_DATE@"
-
+AM_INIT_AUTOMAKE
 AC_PREFIX_DEFAULT(/usr/local)
 test "x$prefix" = xNONE && prefix=$ac_default_prefix
 
@@ -133,7 +134,7 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS(strcasecmp fdopen qsort strcasestr)
-
+AC_CANONICAL_BUILD
 AC_PATH_PROGS(PERL,   [perl perl5], no, /usr/bin:/usr/local/bin:$PATH)
 AC_PATH_PROGS(SCILAB, [scilab runscilab scilex], no, /usr/local/bin:/usr/lib/scilab/bin:/lib/scilab/bin:$PATH)
 AC_PATH_PROGS(MATLAB, [matlab], no, /usr/local/bin:$PATH)
@@ -189,13 +190,13 @@ else
   AC_DEFINE([HAVE_NEXUS], [])
 fi
 
-AC_OUTPUT(mccode-core/Makefile mccode-legacy-tools/Makefile mccode-core/src/Makefile mccode-legacy-tools/src/Makefile mccode-core/src/port.h mccode-core/src/cogen.c mccode-core/lib/Makefile mccode-legacy-tools/lib/Makefile mccode-core/nlib/Makefile mccode-core/xlib/Makefile mccode-legacy-tools/lib/tools/perl/mccode_config.perl mccode-legacy-tools/lib/tools/perl/mccode_reconfigure mccode-legacy-tools/support/common/Makefile mccode-legacy-tools/support/common/pgplot/Makefile mccode-legacy-tools/support/common/pgplot/makehtml mccode-legacy-tools/support/common/pgplot/maketex mccode-core/src/mccode.h mccode-core/lib/share/mccode-r.h mccode-core/src/mcformat.c doc/man/mcconvert.1 doc/man/mcdisplay.1 doc/man/mcdoc.1 doc/man/mcformat.1 doc/man/mcgui.1 doc/man/mcplot.1 doc/man/mcrun.1 doc/man/mcstas.1 doc/man/mcxtrace.1 doc/man/mxconvert.1 doc/man/mxdisplay.1 doc/man/mxdoc.1 doc/man/mxformat.1 doc/man/mxgui.1 doc/man/mxplot.1 doc/man/mxrun.1  mccode-legacy-tools/support/deb/debcreate  mccode-legacy-tools/support/deb/postinst  mccode-legacy-tools/support/deb/control  mccode-legacy-tools/support/Win32/install/mcstas.nsi  mccode-legacy-tools/support/Win32/install/mcxtrace.nsi build.bat)
+AC_OUTPUT(Makefile mccode-core/Makefile mccode-legacy-tools/Makefile mccode-core/src/Makefile mccode-legacy-tools/src/Makefile mccode-core/src/port.h mccode-core/src/cogen.c mccode-core/lib/Makefile mccode-legacy-tools/lib/Makefile mccode-core/nlib/Makefile mccode-core/xlib/Makefile mccode-legacy-tools/lib/tools/perl/mccode_config.perl mccode-legacy-tools/lib/tools/perl/mccode_reconfigure mccode-legacy-tools/support/common/Makefile mccode-legacy-tools/support/common/pgplot/Makefile mccode-legacy-tools/support/common/pgplot/makehtml mccode-legacy-tools/support/common/pgplot/maketex mccode-core/src/mccode.h mccode-core/lib/share/mccode-r.h mccode-core/src/mcformat.c doc/man/mcconvert.1 doc/man/mcdisplay.1 doc/man/mcdoc.1 doc/man/mcformat.1 doc/man/mcgui.1 doc/man/mcplot.1 doc/man/mcrun.1 doc/man/mcstas.1 doc/man/mcxtrace.1 doc/man/mxconvert.1 doc/man/mxdisplay.1 doc/man/mxdoc.1 doc/man/mxformat.1 doc/man/mxgui.1 doc/man/mxplot.1 doc/man/mxrun.1  mccode-legacy-tools/support/deb/debcreate  mccode-legacy-tools/support/deb/postinst  mccode-legacy-tools/support/deb/control  mccode-legacy-tools/support/Win32/install/mcstas.nsi  mccode-legacy-tools/support/Win32/install/mcxtrace.nsi build.bat)
 
 chmod a+x mccode-legacy-tools/lib/tools/perl/mccode_reconfigure
 
 # warnings and errors
 if test "$USE_PIC" != "no" ; then
-echo "Activating PIC compilation for: make install-pgplot"
+echo "Activating PIC compilation for in pgplot part of mccode-legacy-tools"
 fi
 if test "x$HAVE_NEXUS" != "x" ; then
 echo "Activating NeXus support in $MCCODE_STRING ($HAVE_NEXUS)"
@@ -206,68 +207,54 @@ if test "$MAKE" = "no" ; then
 fi
 
 if test "$PERL" = "no" ; then
-  echo "WARNING: No Perl executable could be found !"
+  echo "WARNING: No Perl executable could be found! This could mean a non-functional mccode-legacy-tools"
   echo "The commands mcrun and mcgui won't be available. You will have to use:"
   echo "   $MCCODE_TARNAME <file>.instr"
   echo "   $CC -o <file>.out <file>.instr -lm"
   echo "   <file>.out [simulation parameters]"
+  echo " "
+  echo "On Debian/Ubuntu systems, please install perl:"
+  echo "  # sudo apt-get install perl
 fi
 if test "$TCLTK" = "no" ; then
   echo "WARNING: No Tcl/Tk installation could be found !"
-  echo "You might not be able to use McGUI interface"
+  echo "You might not be able to use mccode-legacye-tools McGUI interface"
+  echo " "
+  echo "On Debian/Ubuntu systems, please install perl-tk:"
+  echo "  # sudo apt-get install perl-tk
 fi
 if test "$BROWSER" = "no" ; then
   echo "WARNING: No HTML browser could be found !"
+  echo " "
+  echo "Please re-run ./configure --enable-$MCCODE_STRING BROWSER=/some/path/to/a/browser/of/choice"
+  echo " "
 fi
 if test "$SCILAB" = "no" && test "$MATLAB" = "no" && test "$PGPLOT" = "no" && test "$VRMLVIEW" = "no" ; then
-  echo "WARNING: No Plotter (Matlab, Scilab, PGPLOT, VRML) could be found !"
+  echo "WARNING: No Plotter (Matlab, Scilab, PGPLOT, VRML) could be found for the tool layer!"
 fi
 
 # final message at end of configure
 echo ""
 if test "$PGPLOT" = "no" ; then
-  echo "To install PGPLOT for $MCCODE_STRING, you need:"
+  echo "To install the PGPLOT or Gnuplot based mccode-legacy-tools for $MCCODE_STRING,"
+  echo "you will need a few extra packages:
+  echo " "
+  echo " On Debian/Ubuntu systems, use:"
+  echo "   # sudo apt-get install libx11-dev libxt-dev gfortran pdl"  
+  echo " "
+  echo " On Mac OS X, please install SciPDL via http://pdl.perl.org/"
+  ecch " "
+  echo " On other systems, please install these packages: (or see what http://pdl.perl.org/ offers"
   echo "  = perl-PDL (perldl, pdl)"
   echo "  = a fortran compiler (g77, gfortran)"
   echo "  = X11-dev libraries/includes (libx11-dev, xserver-xorg-dev, libxt-dev)"
-  echo "On Debian/Ubuntu systems, use:"
-  echo "  # sudo apt-get install libx11-dev libxt-dev gfortran pdl"
+  echo " "
+  echo " A semi-configured \"safe\"/minimal pgplot, perl-Extutils-F77 and perl-PGPLOT "
+  echo " build system can be found in:"
+  echo "   mccode-legacy-tools/support/common/pgplot (use make safe there),"  
+  echo "   mccode-legacy-tools/support/common/perl/ExtUtils-F77-1.16/ and"
+  echo "   mccode-legacy-tools/support/common/perl/PGPLOT-2.20"
 fi
-if test "$PGPLOT" = "no" && test "$PERLDL" != "no" && test "$G77" != "no" ; then
-  echo "PGPLOT install: you may try our automatic pgplot5 installation AFTER installing @MCCODE_STRING@"
-  echo "  # make install-pgplot"
-  echo "  # make reconfigure"
-else if test "$PGPLOT" = "no" ; then
-  echo "To use PGPLOT, install these packages and re-run $MCCODE_STRING installation ./configure"
-  fi
-fi
-echo ""
-if test "$SCILAB" = "no" && test "$WGET" != no ; then
-  echo "Scilab install: you may try our automatic Scilab installation with"
-  echo "  # make install-scilab; ./configure; make; make install"
-  echo "    (requires Linux/Intel, wget and root priviliges)"
-fi
-if test "$SCILAB" = "no" ; then
-  echo "On Debian/Ubuntu systems, use:"
-  echo "  # sudo apt-get install scilab"
-fi
-echo ""
-echo "To setup the plotting environment, execute either"
-echo "  # make plotter (automatically selects plotter, "
-echo "         prefers PGPLOT before Matlab before Scilab before VRML)"
-if test "$SCILAB" != "no" ; then
-echo "  # make scilab (selects scilab)"
-fi
-if test "$MATLAB" != "no" ; then
-echo "  # make matlab (selects matlab)"
-fi
-if test "$PGPLOT" != "no" ; then
-echo "  # make pgplot (selects pgplot and installs perl-PGPLOT)"
-fi
-if test "$VRMLVIEW" != "no" ; then
-echo "  # make vrml   (selects vrml)"
-fi
-echo ""
 if test "$DASH" != "no" ; then
 echo
 echo WARNING: Your system includes the $DASH shell which is known to cause problems.
@@ -277,7 +264,7 @@ echo "and say 'no' to install dash as /bin/sh"
 fi
 echo ""
 echo "After (optional) plotter config, build and install $MCCODE_STRING by executing"
-echo "  # make; make install"
+echo "  # cd mccode-core && make && make install"
 echo "will install $MCCODE_STRING into $prefix"
 echo ""
 
