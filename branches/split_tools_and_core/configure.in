@@ -237,7 +237,7 @@ if test "$PGPLOT" = "no" ; then
   echo "you will need a few extra packages:
   echo " "
   echo " On Debian/Ubuntu systems, use:"
-  echo "   # sudo apt-get install libx11-dev libxt-dev gfortran pdl"  
+  echo "   # sudo apt-get install pdl libgfortran pgplot5 libpgplot-perl gnuplot"  
   echo " "
   echo " On Mac OS X, please install SciPDL via http://pdl.perl.org/"
   ecch " "

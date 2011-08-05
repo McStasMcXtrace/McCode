@@ -30,4 +30,12 @@ IMPORTANT: To build the "other" package, please follow these steps:
   make distclean
   ./configure --enable-theotherpackage
    
-   
+
+Platform notes, regarding build/install of tools:
+
+  Debian/Ubuntu: Get these packages before attempting to build/install the tools:
+  sudo apt-get install perl perl-tk pdl libgfortran pgplot5 libpgplot-perl gnuplot
+
+  Mac OS X: Please install SciPDL via http://pdl.perl.org/" for pdl, pgplot, perl-pgplot.
+  You will likely need to ./configure --enable-wantedpackage PERL=/usr/bin/perl5.10
+  For Tk, install Perl::Tk from CPAN <-- We should include Perl::Tk somewhere here...
