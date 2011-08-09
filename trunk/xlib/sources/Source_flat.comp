@@ -31,7 +31,9 @@
 * yheight [m]   Height of rectangle in (x,y,0) plane where x-rays
 *               are generated.
 * xwidth  [m]   Width of rectangle in (x,y,0) plane where x-rays
-*               are generated.
+*               are generated. Overrides xmin and xmax.
+* xmax    [m]   upper bound of x-interval where photons are generated. 
+* xmin    [m]   Lower bound of x-interval where photons are generated.
 * dist:   [m]   Distance to target along z axis.
 * focus_xw:[m]  Width of target
 * focus_yh:[m]  Height of target
@@ -48,7 +50,7 @@
 
 DEFINE COMPONENT Source_flat
 DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (radius=0, yheight=0, xwidth=0, 
+  SETTING PARAMETERS (radius=0, yheight=0, xwidth=0,xmin=0,xmax=0, 
   dist=0, focus_xw=.045, focus_yh=.12, 
   E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0)
 OUTPUT PARAMETERS (prms,square)
@@ -74,6 +76,11 @@ INITIALIZE
 %{
   square = 0;srcArea=0;
   /* Determine source area */
+
+  if (xmin && xmax && !xwidth){
+    xwidth=xmax-xmin;
+  }
+
   if (radius && !yheight && !xwidth ) {
     square = 0;
     srcArea = PI*radius*radius;
@@ -124,7 +131,7 @@ INITIALIZE
   }else{
     prms.pmul=1;
   }
-  prms.pmul*=1.0/mcget_ncount();
+  prms.pmul*=1/mcget_ncount();
 %}
 
 
@@ -135,7 +142,11 @@ TRACE
   phi=0;
   z=0;
   if (square == 1) {
-    x = xwidth * (rand01() - 0.5);
+    if (xmin && xmax){
+      x+=xmin + xwidth*rand01();;
+    }else{
+      x = xwidth * (rand01() - 0.5);
+    }
     y = yheight * (rand01() - 0.5);
   } else {
     chi=2*PI*rand01();                          /* Choose point on source */
