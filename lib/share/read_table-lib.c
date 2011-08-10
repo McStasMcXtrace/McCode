@@ -803,7 +803,6 @@ long Table_Init(t_Table *Table, long rows, long columns)
       if(!step){
         /*means there's a disconitnuity -> not constantstep*/
         constantstep=0;
-        printf("hello\n");
       }else if (monotonic) {
         for (i=0; i < n-1; i++) {
           double X, diff;
