@@ -800,18 +800,22 @@ long Table_Init(t_Table *Table, long rows, long columns)
           monotonic = 0;
       } /* end for */
       /* now test if steps are constant within READ_TABLE_STEPTOL */
-      if (monotonic) {
-      for (i=0; i < n-1; i++) {
-        double X, diff;
-        X    = (row ? Table_Index(*Table,i  ,0)
-                    : Table_Index(*Table,0,  i));
-        diff = (row ? Table_Index(*Table,i+1,0)
-                    : Table_Index(*Table,0,  i+1)) - X;
-        if ( step && !(fabs(step)*(1-READ_TABLE_STEPTOL) < fabs(diff)
-            && fabs(diff)                        < fabs(step)*(1+READ_TABLE_STEPTOL)) )
-        { constantstep = 0; break; }
+      if(!step){
+        /*means there's a disconitnuity -> not constantstep*/
+        constantstep=0;
+        printf("hello\n");
+      }else if (monotonic) {
+        for (i=0; i < n-1; i++) {
+          double X, diff;
+          X    = (row ? Table_Index(*Table,i  ,0)
+              : Table_Index(*Table,0,  i));
+          diff = (row ? Table_Index(*Table,i+1,0)
+              : Table_Index(*Table,0,  i+1)) - X;
+          if ( fabs(step)*(1-READ_TABLE_STEPTOL) < fabs(diff) ||
+                fabs(diff) < fabs(step)*(1+READ_TABLE_STEPTOL) )
+          { constantstep = 0; break; }
+        }
       }
-}
     }
     Table->step_x= step;
     Table->max_x = max_x;
