@@ -110,9 +110,9 @@ TRACE
       
 
       if (prmsp && !R0){
-        /*compute reflecticity from material data*/
+        /*compute reflectivity from material data*/
 
-        /*adjust p accoring to reflectivity*/
+        /*adjust p according to reflectivity*/
         double Qc,Q,f1,f2,delta,beta,na,e,k2,rho;
         /*length of wavevector transfer may be compute from s and n_ above*/
         Q=fabs(2*s*sqrt(nx*nx+nz*nz));
@@ -149,6 +149,8 @@ TRACE
           /*and from this compute the reflectivity*/
           R=cabs((q-qp)/(q+qp));
           p*=R;
+          /*now also set the phase*/
+          phi+=carg((q-qp)/(q+qp));
           //printf("R=%g\n",R);
         }
       }else{
