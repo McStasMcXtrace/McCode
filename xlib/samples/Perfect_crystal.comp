@@ -1,0 +1,286 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component: PerfectCrystal
+*
+* %I
+*
+* Written by: Anette Vickery, Andrea Prodi, Erik Knudsen
+* Date: April 2011
+* Version: 1.0
+* Release: McXtrace 0.1
+* Origin: NBI
+*
+* Perfect crystal with diamond or zincblende structure 
+* 
+* Reads atomic formfactors from a data input file.
+* The PerfectCrystal code reflects ray in an ideal geometry, does not include surface imperfections or mosaicity
+*
+* The crystal is positioned such that the long axis of the crystal surface coincides with
+* z-axis. The angle between the Bragg planes and the crystal surface is alpha
+* 
+* %D
+* The algorithm:
+*  Incoming photon's coordinates and direction (k-vector) are transformed into an elliptical reference frame 
+* (elliptical parameters are calculated according to the mirror's position and its focusing distances and the  * incident angle), the intersection point is then defined. 
+* A new, reflected photon is then starting at the point of intersection.
+* Notation follows Tadashi Matsushita and Hiro-O Hashizume, X-RAY MONOCHROMATORS. Handbook on Synchrotron Radiation,North-Holland Publishing Company, 1:263–274, 1983.
+*
+* %P
+* Input parameters:
+* length [m] 			length of the crystal (along z-axia)
+* width [m] 			width of the crystal (along x-axis)
+* Material 			Si, Ge (maybe also GaAs?)	
+* V [Å^3]			unit cell volume
+* h,k,l				indices of reflection (111)(220)(400)
+* alpha [rad]			asymmetry angle (alpha=0 for symmetric reflection, ie the Bragg planes are parallel to the crystal surface)
+* 
+* (none)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Perfect_crystal
+  DEFINITION PARAMETERS (string form_factors="FormFactors.txt", string material="Si.txt") 
+SETTING PARAMETERS (length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0.0)
+/* OUTPUT PARAMETERS (prms_m, a,b,c,M,Z0,Y0,xi,cost0) */
+OUTPUT PARAMETERS (prms)
+STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
+
+SHARE 
+%{
+  %include "read_table-lib"  
+
+/* something that would be relevant for ALL crystals */
+  void DarwinReflectivity(double *R, double *Thetah, double *Theta0, double *DeltaTheta0,
+			  double f00, double f0h, double fp, double fpp, double V, double alpha, double h, double k, double l, double M, double E, double Thetain, int pol )
+  {
+
+    double r0,lambda,theta,theta0,DeltaThetas,a,d,b,C,W,kappa,g,L;
+    double F0r,F0i,Fhr,Fhi,psi0r,psi0i,psihr,psihi;
+
+    r0 = 2.82e-5;				/* Thomson scattering length in Å */
+    lambda = 12.398/E;  			/* wavelength in Å, E in keV    */
+    a = cbrt(V); 				/* side length of unit cubic cell (Å)*/
+    d = a/sqrt(h*h + k*k + l*l); 		/* d-spacing (Å)*/ 
+    theta = asin(lambda/(2*d));  		/* kinematical bragg angle (rad) */
+    b = sin(theta - alpha)/sin(theta + alpha);  /* asymmetry factor */
+    
+    *Theta0 = Thetain + alpha; 			/* (rad) angle between Bragg planes and incident ray */ 
+    *Thetah = b*(*Theta0 - theta) + theta;   	/* (rad) Angle betweeb Bragg planes and reflected ray */
+    
+    /* Define polarization factor: */
+    switch(pol){
+      case 0:
+	C = (1 + fabs(cos(2*theta)))/2;         	/* unpolarized */
+	break;
+      case 1:
+	C = fabs(cos(2*theta));  		/* polarization in the scattering plane */
+	break;
+      case 2:
+	C = 1;                          	/* polarization perpendicular to the scattering plane*/
+	break;
+    }
+
+    /* STRUCTURE FACTOR CALCULATION: */
+    /* NOTE: these structurefactors are valid for single atom structures like Si or Ge only: */
+    F0r = 8*(f00 + fp);				/* Q=0, real part of structure factor for forward scattering */
+    F0i = 8*(fpp); 				/* Q=0, imag part of structure factor for forward scattering */
+
+    if (h==1 && k==1 && l==1){ 		/* (111) reflection */
+      Fhr = sqrt(17)*(f0h + fp); 	/* |(4-i)| = sqrt(17) */
+      Fhi = sqrt(17)*(fpp); 		/* |(4-i)| = sqrt(17) */   
+      }
+    if (h==2 && k==2 && l==0){ 		/* (220) reflection */
+      Fhr = 8*(f0h + fp); 	
+      Fhi = 8*(fpp); 		
+      }
+    if (h==4 && k==0 && l==0){ 		/* (400) reflection */
+      Fhr = 8*(f0h + fp); 	
+      Fhi = 8*(fpp); 		
+      }
+
+    psi0r = fabs(F0r*exp(-M)*r0*lambda*lambda/(PI*V)); 
+    psi0i = (-1)*fabs(F0i*exp(-M)*r0*lambda*lambda/(PI*V)); /* here multiplied by (1-) to compensate for the fabs throwing away the minus sign*/  
+    psihr = fabs(Fhr*exp(-M)*r0*lambda*lambda/(PI*V));  /* Eq 23*/
+    psihi = (-1)*fabs(Fhi*exp(-M)*r0*lambda*lambda/(PI*V));  /*here multiplied by (-1) to compensate for the fabs throwing away the minus sign...*/
+    
+    W = 0.5 * (sqrt(b) + 1/sqrt(b)) * psi0r/(C * psihr) +  sqrt(b)*sin(2*theta)*(theta - *Theta0)/(C * psihr); /* eq 28*/
+    kappa = psihi/psihr;                                              	/* eq 22 */
+    g = 0.5*(sqrt(b) + 1/sqrt(b))*psi0i/(C*psihr);               	/* eq 21 */
+    L = (1/(1 + kappa*kappa))*( W*W + g*g + sqrt(SQR(W*W - g*g - 1 + kappa*kappa) + 4*SQR(g*W - kappa)));
+    *R = L - sqrt(L*L - 1);
+    DeltaThetas = r0*(lambda*lambda)*F0r/(sin(2*theta)*PI*V);               	/* eq 32 */
+/*    printf("E,lambda= %f , %f \n",E,lambda);
+    printf("theta= %f \n",theta*180/PI);
+    printf("sqrt(b)= %f \n",sqrt(b));
+    printf("1/sqrt(b)= %f \n",1/sqrt(b));
+    printf("sqrt(b)*sin(2*theta)= %f \n",sqrt(b)*sin(2*theta));
+    printf("C * psihr= %f \n",C * psihr);
+    printf("W= %f \n",W);
+    printf("kappa= %f \n",kappa);
+    printf("g= %f \n",g);
+    printf("L= %f \n",L);
+    printf("R= %f \n",*R);						*/
+   // printf("DeltaThetas %f \n",3600*DeltaThetas*180/PI);				
+
+    *DeltaTheta0 = 0.5*(1 + 1/b)*DeltaThetas;                        	/* center of reflectivity curve is at theta + DeltaTheta0 eq 31 */ 
+  }
+
+%}
+
+DECLARE
+%{
+  struct {
+    int Z;
+    double rho,At,f_rel,f_nt;
+    t_Table t;
+    t_Table f0_t;
+  }prms;
+  
+%}
+
+INITIALIZE
+%{
+  int status;
+  if (material){
+    if (status=Table_Read(&(prms.t),material,0)==-1){
+      fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,material);
+      exit(-1);
+    }
+    char **header_parsed;
+    header_parsed=Table_ParseHeader(prms.t.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+    if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
+    if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
+    if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
+  }else{
+    fprintf(stderr,"Error(%s): No material file specified\n",NAME_CURRENT_COMP,material);
+  }
+  if(form_factors){
+    if (status=Table_Read(&(prms.f0_t),form_factors,0)==-1){
+      fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,form_factors);
+      exit(-1);
+    }
+  }
+%}
+
+TRACE
+%{
+  int pol;                              // beam polarization:: pol=0, umpolarized; pol=1, vert pol; pol=2 
+  double E;				// (keV) x-ray energy 
+  double K; 				// length of k-vector
+  double kxout,kyout,kzout;		// unit vector in the direction of the reflected ray
+  double kxu,kyu,kzu;			// unit vector in the direction of k-vector.
+  double tin;				// 'time' of intersection of ray with y=0 plane (which include the crystal surface)
+  double x_int,y_int,z_int;		// intersection with the y=0 plane
+  double dist;				// distance from position at t=0 to the y=0 plane
+  double M;		// volume of unit cell (Å^3), asymmetry angle (rad), indices of reflection and a temperature factor
+  double f00, f0h, fp, fpp;		// atomic form factors for Q=0 is (f00 + fp + i*fpp) and for Q= ha*+kb*+lc* it is (f0h + fp + i*fpp).
+  double Thetain;			// (rad) angle between the crstal surface and the incident ray
+  double Theta0;			// (rad) angle between the Bragg planes and the incident ray
+  double Thetah;			// (rad) angle between the Bragg planes and the reflected ray
+  double Thetaout;			// (rad) angle between the crystal surface and the reflected ray
+  double DeltaTheta0;			// (rad) the center of the reflectivity curve is at asin(n*lambda/(2*d)) + DeltaTheta0
+  double R;                             // Reflectivity value calculated by DarwinReflectivity() function for each incoming photon
+
+  /* let's assume umpolarized beam */
+  pol = 0;
+  /* temperature factor for perfect crystal */
+  M = 0.0;
+
+
+  /* get the photon's kvector and energy */
+  K=sqrt(kx*kx+ky*ky+kz*kz);
+  E = 12.398/(2*PI/K);  
+  /* make unit vector in the direction of k :*/
+  kxu = kx; kyu = ky; kzu = kz;
+  NORM(kxu,kyu,kzu);
+/*  printf("incoming kx,ky,kz: %f %f %f: \n", kx,ky,kz);*/
+  
+  /*intersection calculation*/
+  tin = -y/kyu;
+  if (tin>=0){
+    /* check whether our intersection lies within the boundaries of the crystal*/
+    x_int=x+kxu*tin;
+    y_int=y+kyu*tin;V,
+    z_int=z+kzu*tin;
+    
+    if (fabs(x_int)<=width/2 && fabs(z_int)<=length/2){
+        dist=sqrt(SQR(x-x_int)+SQR(y-y_int)+SQR(z-z_int));
+	PROP_DL(dist); 			/* now the photon is on the mirror surface, ready to be reflected... */ 
+        SCATTER;
+
+        Thetain = atan(kyu/kzu); 	/* (rad )The angle of incidence*/
+        
+        /* for a start, just define the value of atomic form factors for Si(111) at E = 8.04778keV */
+        double d=cbrt(V)/(sqrt(h*h+k*k+l*l));/*this is valid only for cubic structures*/
+        f00 = prms.Z;
+        f0h = Table_Value(prms.f0_t,1/(2*d),prms.Z);
+        fp  = Table_Value(prms.t,E,1)-prms.Z;
+        fpp = Table_Value(prms.t,E,2);
+//        printf("%g %g %g %g\n",f00,f0h,fp,fpp);    
+/*	printf("Thetain for this ray is: %g: \n",Thetain);*/
+	DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha, h, k, l, M, E, Thetain,pol);
+	Thetaout = Thetah + alpha; 	/* (rad) the angle between the crystal surface and the reflected ray */
+/*	printf("Thetaout for this ray is: %g: \n", Thetaout);*/
+
+	/* The direction of the reflected ray: */
+	kxout = kxu;
+	kyout = -sqrt(kyu*kyu + kzu*kzu)*sin(Thetaout);
+	kzout = sqrt(kyu*kyu + kzu*kzu)*cos(Thetaout);
+
+	NORM(kxout,kyout,kzout); 
+        kx=K*kxout;
+	ky=K*kyout;
+	kz=K*kzout;
+	  	  
+        /* apply reflectivity */
+	p*=R; 
+//	printf("Darwin reflectivity for this ray is: %g: \n", R);
+/*	printf("outgoing kx,ky,kz: %f %f %f: \n", kx,ky,kz);*/
+
+	} else {
+	  RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, Ex, Ey, Ez, p);
+	} 
+  }
+  
+  
+%}
+
+MCDISPLAY
+%{
+  /*magnify("");
+  rectangle("xz",0,0,0,width,length); */
+/*  int i,j,N=10;
+  double x0,y0,z0;
+  double x1,y1,z1,z_el,y_el;
+  
+  x0=-width/2.0;
+    
+  for (i=0;i<=N;i++){
+    z0=-length/2.0; 
+    z_el=cos(xi)*z0+Z0; //transformation to EL reference frame
+    y_el=b*sqrt(1.0-((z_el*z_el)/(a*a)));
+    y0=cos(xi)*(y_el-Y0)-sin(xi)*(z_el-Z0);
+    line(-width/2,y0,z0,width/2,y0,z0);
+    for (j=0;j<=N;j++){
+      z1=z0+length/N;
+      z_el=cos(xi)*z0+Z0;
+      y_el=b*sqrt(1.0-((z_el*z_el)/(a*a))); 
+      y1=cos(xi)*(y_el-Y0)-sin(xi)*(z_el-Z0); 
+      line(x0,y0,z0,x0,y1,z1);
+      y0=y1;
+      z0=z1;
+      line(-width/2,y1,z1,width/2,y1,z1);
+    }
+    x0=x0+width/N;
+  }   */
+ 
+%}
+
+END
