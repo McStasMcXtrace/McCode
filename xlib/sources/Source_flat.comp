@@ -143,7 +143,7 @@ TRACE
   z=0;
   if (square == 1) {
     if (xmin && xmax){
-      x+=xmin + xwidth*rand01();;
+      x = xmin + xwidth*rand01();
     }else{
       x = xwidth * (rand01() - 0.5);
     }
