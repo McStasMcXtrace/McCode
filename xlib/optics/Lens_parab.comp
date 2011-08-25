@@ -264,7 +264,7 @@ TRACE
   while (e>prms->E[i]){
     i++;
     if (prms->E[i]==-1){
-      fprintf(stderr,"Photon energy (%g keV) is outside of the lens' material data\n",k); ABSORB;
+      fprintf(stderr,"Photon energy (%g keV) is outside of the lens' material data\n",e); ABSORB;
     }
   }
   E=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
