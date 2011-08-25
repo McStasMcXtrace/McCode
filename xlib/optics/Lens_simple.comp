@@ -96,7 +96,7 @@ INITIALIZE
   int i;
   for (i=0;i<t.rows;i++){
     prms->E[i]=t.data[i*t.columns];
-    prms->delta[i]=pow(2*M_PI/(t.data[i*t.columns]*E2K),2)*1e-20 * t.data[1+i*t.columns] * prms->rho/prms->At*1e6 * RE * NA* 0.5*M_1_PI;
+    prms->delta[i]=pow(2*M_PI/(t.data[i*t.columns]*E2K),2)*1e-20 * t.data[1+i*t.columns] * prms->rho/prms->At*1e6 * RE *1e-10 * NA* 0.5*M_1_PI;
   }
 
   prms->E[t.rows]=-1.0;
@@ -127,7 +127,7 @@ TRACE
     {
       i++;
       if (prms->E[i]==-1) {
-        fprintf(stderr,"Photon energy (%g keV) outside Lens data range",e*1e-3);ABSORB;
+        fprintf(stderr,"Photon energy (%g keV) outside Lens data range",e);ABSORB;
       } 
     }
     /*protect against out of range errors*/
@@ -140,7 +140,6 @@ TRACE
     s=sqrt(scalar_prod(sx,sy,sz,sx,sy,sz));
     theta=acos(scalar_prod(sx,sy,sz,0,0,1)/s);
     if (y<0)theta=-theta; /*if y is negative rotation should be ccw*/
-    
     /*apply the rotation around the x-axis to focus in y*/
     Rotation R;
     R[0][0]=1; R[0][1]=0;R[0][2]=0;
