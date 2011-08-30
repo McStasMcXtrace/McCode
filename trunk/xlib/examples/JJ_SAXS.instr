@@ -23,7 +23,7 @@
 * sample_pos:[m] distance from 3rd pinhole to sample
 * detector_pos: [m] distance from 3rd pinhole to detector 
 *
-* %Example: pin2_pos=0.2 pin3_pos=0.4 optic_L=0.1 sample_pos=0.2 detector_pos=2 Detector: psd1_I=777961
+* %Example: pin2_pos=0.2 pin3_pos=0.4 optic_L=0.1 sample_pos=0.2 detector_pos=2 Detector: psd1_I=7.8629e-05 
 *
 * %Link
 * A reference/HTML link for more information
@@ -47,19 +47,23 @@ COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT apparent_source=Source_flat(
-    xwidth=8e-3,yheight=.04e-3,dist=0.1,focus_yh=0.01,focus_xw=0.02,lambda0=1.54,dlambda=0.1
+    xwidth=8e-3,yheight=.04e-3,dist=0.1,focus_yh=0.001,focus_xw=0.01,lambda0=1.54,dlambda=0.1
 )
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT psd00=PSD_monitor(
-    filename="psd00.dat",xwidth=0.2,yheight=0.2
+    filename="psd00.dat",xwidth=0.2,yheight=0.2,restore_xray=1
 )
   AT(0,0,0.0999) RELATIVE PREVIOUS
 
+  COMPONENT optic_arm=Arm()
+AT(0,0,0.1) RELATIVE apparent_source
+ROTATED(0,0,-90) RELATIVE apparent_source
+
 COMPONENT optic=Mirror_curved(
-    radius=1,length=0.2)
-AT(0,0.02,0.1) RELATIVE apparent_source
-ROTATED(0,0,90) RELATIVE apparent_source
+    radius=20,length=0.2)
+AT(0,0,0) RELATIVE optic_arm
+ROTATED(0,2.75,0) RELATIVE optic_arm
 EXTEND
 %{
   if (!SCATTERED) ABSORB;
@@ -70,7 +74,7 @@ AT(0,0,0.1) RELATIVE apparent_source
 ROTATED (5.5,0,0) RELATIVE Origin
 
 COMPONENT pinhole1=Slit(xwidth=0.1,yheight=0.1)
-  AT(0,0,0.1) RELATIVE beam_tube_axis
+  AT(0,0,0.15) RELATIVE beam_tube_axis
 
 COMPONENT psd01=PSD_monitor(
     filename="psd01.dat",xwidth=0.2,yheight=0.2,restore_xray=1
