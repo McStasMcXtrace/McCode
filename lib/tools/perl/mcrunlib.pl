@@ -434,7 +434,7 @@ sub do_test {
       $index++;
       # check command
       if ($this_cmd !~ m/$base/) { $this_cmd = "$base $this_cmd"; } # only parameters ?
-      if ($this_cmd !~ m/$MCSTAS::mcstas_config{'RUNCMD'}/ && $this_cmd !~ m/$MCSTAS::mcstas_config{'PLOTCMD'}/ && $this_cmd !~ m/$MCSTAS::mcstas_config{'DISPLAYCMD'}/) 
+      if ($this_cmd !~ m/$MCSTAS::mcstas_config{'RUNCMD'}/ && $this_cmd !~ m/$MCSTAS::mcstas_config{'PLOTCMD'}/ && $this_cmd !~ m/$MCSTAS::mcstas_config{'TRACECMD'}/) 
                                  { $this_cmd = "$MCSTAS::mcstas_config{'RUNCMD'} $this_cmd"; } # omitted $MCSTAS::mcstas_config{'RUNCMD'} ?
       if ($this_cmd !~ m/mpi/ && $mpi) { $this_cmd .= $mpi; }              # add mpi
       if ($this_cmd !~ m/-n/ && $this_cmd !~ m/--ncount/) { $this_cmd.= " -n $n_single"; }
