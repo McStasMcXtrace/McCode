@@ -40,7 +40,7 @@ DEFINE COMPONENT Lens_parab
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
 SETTING PARAMETERS (r=0.5e-3,yheight=1.4e-3,xwidth=1.4e-3,d=.1e-3,T=1,N=1,deltaN=0)
 OUTPUT PARAMETERS (prms,parab)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
+STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
 
 SHARE
 %{
@@ -216,27 +216,27 @@ DECLARE
 INITIALIZE 
 %{
   int status=0;
-  t_Table t;
-  if ( (status=Table_Read(&t,material_datafile,0))==-1){
+  t_Table T;
+  if ( (status=Table_Read(&T,material_datafile,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
     exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(t.header,"Z","A[r]","rho",NULL);
+  header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho",NULL);
   prms=calloc(1,sizeof(struct datastruct));
   if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
   if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
   if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
-  prms->E=malloc(sizeof(double)*(t.rows+1));
-  prms->f=malloc(sizeof(double)*(t.rows+1));
-  prms->mu=malloc(sizeof(double)*(t.rows+1));
+  prms->E=malloc(sizeof(double)*(T.rows+1));
+  prms->f=malloc(sizeof(double)*(T.rows+1));
+  prms->mu=malloc(sizeof(double)*(T.rows+1));
   int i;
-  for(i=0;i<t.rows;i++){
-      prms->E[i]=t.data[i*t.columns]; 
-      prms->mu[i]=t.data[5+i*t.columns]*prms->rho*1e2;     /*mu is now in SI, [m^-1]*/          
-      prms->f[i]=t.data[1+i*t.columns];
+  for(i=0;i<T.rows;i++){
+      prms->E[i]=T.data[i*T.columns]; 
+      prms->mu[i]=T.data[5+i*T.columns]*prms->rho*1e2;     /*mu is now in SI, [m^-1]*/          
+      prms->f[i]=T.data[1+i*T.columns];
   }
-  Table_Free(&t);
+  Table_Free(&T);
 %}
 
 

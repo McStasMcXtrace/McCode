@@ -38,7 +38,7 @@ DEFINE COMPONENT Source_lab
 DEFINITION PARAMETERS (sigma=NULL)
 SETTING PARAMETERS (mu=1e-3,x0=1e-3,z0=1e-3,E0=20,xwidth=5e-3,yheight=5e-3,take_off=6,wd=0.01,string material_datafile="Cu.txt")
   OUTPUT PARAMETERS (edge,edgc,edg_sigma,O_xray_gen,R_xray_gen,R_xray_geni)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
+STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
 
 SHARE
 %{
@@ -63,13 +63,13 @@ INITIALIZE
     exit(-1);
   }
 
-  t_Table t;
-  if ( (status=Table_Read(&t,material_datafile,0))==-1){
+  t_Table T;
+  if ( (status=Table_Read(&T,material_datafile,0))==-1){
     fprintf(stderr,"Error %s: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,material_datafile);
     exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(t.header,"K","L I","L II","L III","M I","M II","M III","M IV","M V",NULL);
+  header_parsed=Table_ParseHeader(T.header,"K","L I","L II","L III","M I","M II","M III","M IV","M V",NULL);
   int i=0;
   double e;
   while (header_parsed[i]){

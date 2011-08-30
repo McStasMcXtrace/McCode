@@ -46,7 +46,7 @@ DEFINE COMPONENT Lens_simple
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
 SETTING PARAMETERS (xwidth,yheight,T=1,radius=0.3e-3,N=1) 
 OUTPUT PARAMETERS (prms)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
+STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
 
 SHARE
 %{
@@ -79,30 +79,30 @@ INITIALIZE
   ymax=yheight/2.0;
   ymin=-ymax;
 
-  t_Table t;
-  if ( (status=Table_Read(&t,material_datafile,0))==-1){
+  t_Table T;
+  if ( (status=Table_Read(&T,material_datafile,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
     exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(t.header,"Z","A[r]","rho","sigma[a]");
+  header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho","sigma[a]");
   prms=calloc(1,sizeof(struct mat_prms));
   if (!prms->At) prms->At=strtod(header_parsed[1],NULL);
   if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
   if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
-  prms->E=malloc(sizeof(double)*(t.rows+1));
-  prms->delta=malloc(sizeof(double)*(t.rows+1));
+  prms->E=malloc(sizeof(double)*(T.rows+1));
+  prms->delta=malloc(sizeof(double)*(T.rows+1));
 
   int i;
-  for (i=0;i<t.rows;i++){
-    prms->E[i]=t.data[i*t.columns];
-    prms->delta[i]=pow(2*M_PI/(t.data[i*t.columns]*E2K),2)*1e-20 * t.data[1+i*t.columns] * prms->rho/prms->At*1e6 * RE *1e-10 * NA* 0.5*M_1_PI;
+  for (i=0;i<T.rows;i++){
+    prms->E[i]=T.data[i*T.columns];
+    prms->delta[i]=pow(2*M_PI/(T.data[i*T.columns]*E2K),2)*1e-20 * T.data[1+i*T.columns] * prms->rho/prms->At*1e6 * RE *1e-10 * NA* 0.5*M_1_PI;
   }
 
-  prms->E[t.rows]=-1.0;
-  prms->delta[t.rows]=-FLT_MAX;
+  prms->E[T.rows]=-1.0;
+  prms->delta[T.rows]=-FLT_MAX;
   
-  Table_Free(&t);
+  Table_Free(&T);
 %}
 
 TRACE

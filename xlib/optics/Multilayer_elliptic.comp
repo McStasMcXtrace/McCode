@@ -49,7 +49,7 @@ DEFINE COMPONENT Multilayer_elliptic
 DEFINITION PARAMETERS (string reflectivity_datafile="reflectivity.txt")
 SETTING PARAMETERS (theta=1.2,s1,s2,length=0.5,width=0.2,R0=1)
 OUTPUT PARAMETERS (prms_m, a,b,c,M,Z0,Y0,xi,cost0)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
+STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
 
 SHARE 
 %{
@@ -104,27 +104,27 @@ INITIALIZE
  
  // reflectivity datafile parsing
   int status=0;
-  t_Table t;
-  if ( (status=Table_Read(&t,reflectivity_datafile,0))==-1){
+  t_Table T;
+  if ( (status=Table_Read(&T,reflectivity_datafile,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",reflectivity_datafile,NAME_CURRENT_COMP);
     exit(-1);
   }
   prms_m=malloc(sizeof(struct prms_multilayer_elliptic));
-  (prms_m->R)=malloc(sizeof(double *)*(t.rows));
-  (prms_m->Q)=malloc(sizeof(double)*(t.rows));
+  (prms_m->R)=malloc(sizeof(double *)*(T.rows));
+  (prms_m->Q)=malloc(sizeof(double)*(T.rows));
     int i,j;
-  for (i=0;i<t.rows;i++){
-    prms_m->R[i]=malloc(sizeof(double)*(t.columns-1));
+  for (i=0;i<T.rows;i++){
+    prms_m->R[i]=malloc(sizeof(double)*(T.columns-1));
   }
-  for(i=0;i<t.rows;i++){
-    prms_m->Q[i]=t.data[i*t.columns];
-    for(j=0;j<t.columns-1;j++){
-      prms_m->R[i][j]=t.data[i*t.columns+j+1];
+  for(i=0;i<T.rows;i++){
+    prms_m->Q[i]=T.data[i*T.columns];
+    for(j=0;j<T.columns-1;j++){
+      prms_m->R[i][j]=T.data[i*T.columns+j+1];
     }
   }
   /*now parse the header to find boundaries*/
   char **header_parsed;
-  header_parsed=Table_ParseHeader(t.header,"E","Lambda",NULL);
+  header_parsed=Table_ParseHeader(T.header,"E","Lambda",NULL);
   if (header_parsed[0] || header_parsed[1]){
     char *p;
     if (header_parsed[0]) p=strchr(header_parsed[0],'[');
@@ -153,7 +153,7 @@ INITIALIZE
     }
   }
   
-  Table_Free(&t);
+  Table_Free(&T);
 %}
 
 TRACE
@@ -252,7 +252,7 @@ TRACE
 	  SCATTER;
 	  
 	} else {
-	  RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, Ex, Ey, Ez, p);
+	  RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
 	} 
     }
   }

@@ -4890,7 +4890,7 @@ int mccode_main(int argc, char *argv[])
 /* main particule event loop */
 while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
   {
-    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+    mcgenstate();
     /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
     mcraytrace();
     mcrun_num++;
