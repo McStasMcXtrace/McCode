@@ -11,7 +11,7 @@
 * Version: $Revision: 1.0 $
 * %INSTRUMENT_SITE: None
 *
-* Be-lens Bending Magnet, Low Budget Monochromtic X-ray beamline
+* Be-lens Bending Magnet, Low Budget Monochromatic (pink) X-ray beamline
 *
 * %Description
 * This is a proof of concept beamline to test an idea of how to build a low-cost
@@ -48,10 +48,8 @@ COMPONENT Origin = Progress_bar()
 AT (0,0,0) ABSOLUTE
 
 COMPONENT generic_source=Source_gaussian(
-    lambda=0.413, dlambda=0.412,
-    sig_x=0.08e-3, sig_y=0.08e-3, 
-    focus_xw=1,focus_yh=0.5, dist=L1
-
+    lambda0=0.413, dlambda=0.412,
+    sig_x=0.08e-3, sig_y=0.08e-3, dist=L1
 )
 AT (0,0,0) RELATIVE PREVIOUS
 
