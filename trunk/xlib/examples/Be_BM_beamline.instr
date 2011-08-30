@@ -50,7 +50,7 @@ AT (0,0,0) ABSOLUTE
 COMPONENT generic_source=Source_gaussian(
     lambda=0.413, dlambda=0.412,
     sig_x=0.08e-3, sig_y=0.08e-3, 
-    focus_xw=1,focus_yh=0.5, distance=L1
+    focus_xw=1,focus_yh=0.5, dist=L1
 
 )
 AT (0,0,0) RELATIVE PREVIOUS

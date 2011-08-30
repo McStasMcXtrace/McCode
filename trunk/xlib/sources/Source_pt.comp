@@ -24,7 +24,7 @@
 * as opposed to wavelength (in Å). Wavelength is the default. 
 * Flux is given in the unit photons/s
 * 
-* Example: Source_pt(distance=1,focus_xw=0.1,focus_yh=0.1, lamda=0.231, dlambda=0.002)
+* Example: Source_pt(dist=1,focus_xw=0.1,focus_yh=0.1, lamda=0.231, dlambda=0.002)
 *
 *
 * %P
@@ -41,7 +41,7 @@
 
 DEFINE COMPONENT Source_pt
 DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (focus_xw=0,focus_yh=0,flux=0,distance=1,gamma=0,E0=0, dE=0, lambda0=0,dlambda=0,phase=-1,randomphase=0,gauss=0)
+SETTING PARAMETERS (focus_xw=0,focus_yh=0,flux=0,dist=1,gamma=0,E0=0, dE=0, lambda0=0,dlambda=0,phase=-1,randomphase=0,gauss=0)
 OUTPUT PARAMETERS (prms)
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
@@ -66,13 +66,13 @@ INITIALIZE
 %{
   double fi_x,fi_y,t_ome;
   /*input logic*/
-  if(distance<=0 || focus_yh<=0 || focus_xw<=0){
-    fprintf(stderr,"Source_pt (%s): Error: Target area unmeaningful! (negative distance / focus_xw / focus_yh)\n",
+  if(dist<=0 || focus_yh<=0 || focus_xw<=0){
+    fprintf(stderr,"Source_pt (%s): Error: Target area unmeaningful! (negative dist / focus_xw / focus_yh)\n",
            NAME_CURRENT_COMP);
     exit(0);
   }
-  fi_x=atan(focus_xw/2.0/distance);
-  fi_y=atan(focus_yh/2.0/distance);
+  fi_x=atan(focus_xw/2.0/dist);
+  fi_y=atan(focus_yh/2.0/dist);
   
   /*fractional solid angle subtended by the target*/
   t_ome=asin(sin(fi_y)*sin(fi_x))/M_PI;
@@ -122,7 +122,7 @@ TRACE
   /*draw random coordinates in the acceptance window*/
   kx= (focus_xw/2.0 * randpm1());
   ky= (focus_yh/2.0 * randpm1());
-  kz= distance;
+  kz= dist;
   NORM(kx,ky,kz);  
   /*sample wavelength*/
   if (spectrum_file){
