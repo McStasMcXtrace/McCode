@@ -10,13 +10,13 @@
 *
 * %I
 *
-* Written by; Erik Knudsen 
+* Written by: Erik Knudsen 
 * Date: Octatober 2010
 * Version: 1.0
-* Release: McXtrace 1.0rc1
+* Release: McXtrace 1.0
 * Origin: Risoe
 *
-* Laboratory X-ray Source 
+* Laboratory X-ray Source.
 *
 * %D
 * Model of a laboratory X-ray tube, Generating X-rays by bombarding a target by electrons.

@@ -12,10 +12,11 @@
 * Date: Feb 11, 2010
 * Version: $Revision$
 * Origin: Risoe
-* Release: McXtrace 0.1
+* Release: McXtrace 1.0
 *
-* Idelized elliptic mirror
+* Idealized elliptic mirror.
 * 
+* %D 
 * Takes a reflectivity (default=1) as input and reflects rays in a ideal geometry
 * elliptic mirror.
 * The mirror is positioned such that the long axis of the mirror ellipsoid is on the
