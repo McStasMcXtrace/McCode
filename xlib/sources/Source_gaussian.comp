@@ -76,9 +76,9 @@ INITIALIZE
   }
   /*calculate the X-ray weight from the flux*/
   if (flux){//pmul=flux;
-    pmul=flux*1.0/mcget_ncount(); 
+    pmul=flux*1.0/((double) mcget_ncount()); 
   }else{
-    pmul=1.0/mcget_ncount();
+    pmul=1.0/((double) mcget_ncount());
   }
 
   
