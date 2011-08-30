@@ -9,7 +9,6 @@
 *
 * %I
 * Written by: Erik Knudsen
-* Based on neutron component written by Kim Lefmann
 * Date: June 22, 2009
 * Version: $Revision: $
 * Origin: Risoe
@@ -18,7 +17,8 @@
 * Position-sensitive wattage monitor.
 *
 * %D
-* An (n times m) pixel PSD wattage monitor. This component may also be used as a beam
+* Based on neutron PSD component written by Kim Lefmann
+* An n times m pixel PSD wattage monitor. This component may also be used as a beam
 * detector.
 *
 * Example: PSD_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,

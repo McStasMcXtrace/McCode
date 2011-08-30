@@ -9,7 +9,6 @@
 *
 * %I
 * Written by: Erik Knudsen
-* Based on neutron component written by Kim Lefmann
 * Date: June 22, 2009
 * Version: $Revision: $
 * Origin: Risoe
@@ -18,6 +17,7 @@
 * Position-sensitive monitor.
 *
 * %D
+* Based on neutron component written by Kim Lefmann
 * An (n times m) pixel PSD monitor. This component may also be used as a beam
 * detector.
 *

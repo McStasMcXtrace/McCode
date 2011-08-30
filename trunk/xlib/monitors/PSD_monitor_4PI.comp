@@ -9,7 +9,6 @@
 *
 * %I
 * Written by: Erik Knudsen
-* Based on neutron component by Kim Lefmann and Kristian Nielsen
 * Date: June 23rd, 2009
 * Version: $Revision: $
 * Origin: Risoe
@@ -18,6 +17,7 @@
 * Spherical position-sensitive detector.
 *
 * %D
+* Based on neutron component by Kim Lefmann and Kristian Nielsen
 * An (n times m) pixel spherical PSD monitor using a cylindrical projection.
 * Mostly for test and debugging purposes.
 *

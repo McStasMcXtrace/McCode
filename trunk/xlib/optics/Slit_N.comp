@@ -9,7 +9,6 @@
 *
 * %I
 * Written by: Erik Knudsen
-* Based on Slit-comp by Kim Lefmann and Henrik Roennow
 * Date: June 16, 2009
 * Version: $Revision: 1.0$
 * Origin: Risoe
@@ -18,6 +17,7 @@
 * Rectangular/circular slit
 *
 * %D
+* Based on Slit-comp by Kim Lefmann and Henrik Roennow
 * A simple rectangular or circular slit. You may either
 * specify the radius (circular shape), which takes precedence,
 * or the rectangular bounds.
