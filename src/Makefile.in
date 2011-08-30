@@ -100,7 +100,7 @@ PERLBIN=mcdisplay mcplot mcresplot mcrun mcgui mcdoc mcstas2vitess mcconvert mcd
 BINOBJS_mcstas=$(PERLOBJ) mcstas mcformat
 
 MXPERLOBJ=mcdisplay.mxfixpl mcplot.mxfixpl mcresplot.mxfixpl mcrun.mxfixpl \
-        mcgui.mxfixpl mcdoc.mxfixpl mcconvert.mxfixpl mcdaemon.mxfixpl mcformatgui.mxfixpl
+        mxgui.mxfixpl mcdoc.mxfixpl mcconvert.mxfixpl mcdaemon.mxfixpl mcformatgui.mxfixpl
 MXPERLBIN=mxdisplay mxplot mxresplot mxrun mxgui mxdoc mxconvert mxdaemon mxformatgui
 BINOBJS_mcxtrace=$(MXPERLOBJ) mcxtrace mxformat
 
