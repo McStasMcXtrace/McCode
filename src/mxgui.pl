@@ -438,15 +438,15 @@ sub mcdoc_about {
   P. Willendrup, E. Farhi and K. Lefmann, Physica B, 350 (2004) 735.\n
   K. Lefmann and K. Nielsen, Neutron News 10, 20, (1999).\n
   $version
-  Please visit <http://www.mcstas.org/>";
+  Please visit <http://www.mcxtrace.org/>";
   if ($Config{'osname'} eq 'MSWin32') {
     $w->messageBox(-message =>$msg,
-                                 -title => "McGUI: About McXtrace",
+                                 -title => "MxGUI: About McXtrace",
                                  -type => 'OK',
                                  -icon => 'info');
   } else {
     $w->messageBox(-message =>$msg,
-                                 -title => "McGUI: About McXtrace",
+                                 -title => "MxGUI: About McXtrace",
                                  -type => 'OK',
                                  -font => 'small',
                                  -icon => 'info');
@@ -1692,7 +1692,7 @@ sub setup_menu {
 			   -command => sub {tools_dsa($w)});
     }
 
-    my $helpmenu = $menu->Menubutton(-text => 'Help (McDoc)', -underline => 0);
+    my $helpmenu = $menu->Menubutton(-text => "Help ($MCSTAS::mcstas_config{'DOCCMD'})", -underline => 0);
 
     $helpmenu->command(-label => 'McXtrace User manual',
                        -command => sub {mcdoc_manual()});
