@@ -1,14 +1,13 @@
 /*****************************************************************************
-*         McStas instrument definition URL=http://www.mcstas.org
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
 * Instrument: Test_Monochromators
 *
 * %Identification
-* Written by: Peter Christiansen
-* Date: July 2006.
-* Origin: RISOE.
-* Release: McStas CVS_080624
-* Version: $Revision: 1.7 $
+* Written by: A. Vickery, A. Prodi and E. Knudsen
+* Date: July 2011.
+* Origin: NBI.
+* Release: McXtrace 1.0
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Compares intensities of Monochromator components.
@@ -18,22 +17,15 @@
 * Very simple setup to compare intensities diffracted by Monochromators. 
 * It shows that implementations are equivalent.
 *
-* %Example: Mono=1 Detector: psd1_I=8.97959e-05
-* %Example: Mono=2 Detector: psd1_I=8.96391e-05
-* %Example: Mono=3 Detector: psd1_I=8.95371e-05
-* %Example: Mono=4 Detector: psd1_I=8.95851e-05
-* %Example: Mono=5 Detector: psd1_I=8.98186e-05
+* %Example: Mono=1 Detector: emon_I=6.97053e-16
 *
 * %Parameters
 * INPUT PARAMETERS:
-* Mono:   Choice of Monochromator component to use, with
-*         1=Monochromator_flat
-*         2=Monochromator_pol
-*         3=Monochromator_pol (forcing 1% events to be reflected)
-*         4=Monochromator_curved (in flat mode)
-*         5=Monochromator_2foc (contrib, flat mode)
+* Mono:   Unused (here for compatibility reasons)
 * lambda: Source wavelength   [Angs]
-* Moz:    Mosaicity           [Arc minutes]
+* L1 [m]: distance from source to monochromator
+* OMM [deg]: rotation angle of monochromator, i.e. angle of incidence
+* TTM [deg]: scattering angle at which to put the detector
 *
 * %Link
 *
