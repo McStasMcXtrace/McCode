@@ -27,7 +27,7 @@
 *******************************************************************************/
 void
 mcstore_xray(MCNUM *s, int index, double x, double y, double z,
-               double kx, double ky, double kz, double phi,
+               double kx, double ky, double kz, double phi, double t,
                double Ex, double Ey, double Ez, double p)
 {
     double *dptr = &s[11*index];
@@ -38,6 +38,7 @@ mcstore_xray(MCNUM *s, int index, double x, double y, double z,
     *dptr++  = ky;
     *dptr++  = kz;
     *dptr++  = phi;
+    *dptr++  = t;
     *dptr++  = Ex;
     *dptr++  = Ey;
     *dptr++  = Ez;
@@ -49,7 +50,7 @@ mcstore_xray(MCNUM *s, int index, double x, double y, double z,
 *******************************************************************************/
 void
 mcrestore_xray(MCNUM *s, int index, double *x, double *y, double *z,
-               double *kx, double *ky, double *kz, double *phi,
+               double *kx, double *ky, double *kz, double *phi, double *t,
                double *Ex, double *Ey, double *Ez, double *p)
 {
     double *dptr = &s[11*index];
@@ -60,6 +61,7 @@ mcrestore_xray(MCNUM *s, int index, double *x, double *y, double *z,
     *ky =  *dptr++;
     *kz =  *dptr++;
     *phi=  *dptr++;
+    *t  =  *dptr++;
     *Ex =  *dptr++;
     *Ey =  *dptr++;
     *Ez =  *dptr++;
@@ -67,14 +69,14 @@ mcrestore_xray(MCNUM *s, int index, double *x, double *y, double *z,
 } /* mcrestore_xray */
 
 /*******************************************************************************
-* mcsetstate: transfer parameters into global McStas variables 
+* mcsetstate: transfer parameters into global McXtrace variables 
 *******************************************************************************/
 void
 mcsetstate(double x, double y, double z, double kx, double ky, double kz,
-           double phi, double Ex, double Ey, double Ez, double p)
+           double phi, double t, double Ex, double Ey, double Ez, double p)
 {
   extern double mcnx, mcny, mcnz, mcnkx, mcnky, mcnkz;
-  extern double mcnphi, mcnEx, mcnEy, mcnEz, mcnp;
+  extern double mcnphi, mcnt, mcnEx, mcnEy, mcnEz, mcnp;
 
   mcnx = x;
   mcny = y;
@@ -83,6 +85,7 @@ mcsetstate(double x, double y, double z, double kx, double ky, double kz,
   mcnky = ky;
   mcnkz = kz;
   mcnphi = phi;
+  mcnt = t;
   mcnEx = Ex;
   mcnEy = Ey;
   mcnEz = Ez;
@@ -95,7 +98,7 @@ mcsetstate(double x, double y, double z, double kx, double ky, double kz,
 void
 mcgenstate(void)
 {
-  mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+  mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1);
   /* old initialisation: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
 }
 

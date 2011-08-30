@@ -34,7 +34,7 @@
 #ifndef MCXTRACE_R_H
 #define MCXTRACE_R_H "$Revision: $"
 
-/* Following part is only embedded when not redundent with mcstas.h ========= */
+/* Following part is only embedded when not redundant with mcstas.h ========= */
 
 #ifndef MCCODE_H
 
@@ -45,14 +45,14 @@
 #define RE       2.8179402894e-5   /*[AA] Thomson scattering length*/
 
 #define SCATTER do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlkx, mcnlky, mcnlkz, \
-    mcnlphi, mcnlEx,mcnlEy,mcnlEz, mcnlp); mcScattered++;} while(0)
+    mcnlphi, mcnlt, mcnlEx,mcnlEy,mcnlEz, mcnlp); mcScattered++;} while(0)
 #define ABSORB do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlkx, mcnlky, mcnlkz, \
-    mcnlphi, mcnlEx,mcnlEy,mcnlEz, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
+    mcnlphi, mcnlt, mcnlEx,mcnlEy,mcnlEz, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
 
-#define STORE_XRAY(index, x,y,z, kx,ky,kz, phi, Ex,Ey,Ez, p) \
-  mcstore_xray(mccomp_storein,index, x,y,z, kx,ky,kz, phi, Ex,Ey,Ez, p);
-#define RESTORE_XRAY(index, x,y,z, kx,ky,kz, phi, Ex,Ey,Ez, p) \
-  mcrestore_xray(mccomp_storein,index, &x,&y,&z, &kx,&ky,&kz, &phi, &Ex,&Ey,&Ez, &p);
+#define STORE_XRAY(index, x,y,z, kx,ky,kz, phi, t, Ex,Ey,Ez, p) \
+  mcstore_xray(mccomp_storein,index, x,y,z, kx,ky,kz, phi, t, Ex,Ey,Ez, p);
+#define RESTORE_XRAY(index, x,y,z, kx,ky,kz, phi, t, Ex,Ey,Ez, p) \
+  mcrestore_xray(mccomp_storein,index, &x,&y,&z, &kx,&ky,&kz, &phi, &t, &Ex,&Ey,&Ez, &p);
 
 /*magnet stuff is probably redundant*/
 #define MAGNET_ON \
@@ -106,6 +106,7 @@
     mcnly += (dl)*mcnlky/k;\
     mcnlz += (dl)*mcnlkz/k;\
     mcnlphi += 1e10*k*(dl);\
+    mcnlt += (dl)/((double)M_C);\
   }while (0)
 
 /*gravity not an issue with x-rays*/
@@ -162,13 +163,16 @@
     PROP_DL(mc_dl);\
   } while(0)
 
+void mcsetstate(double x, double y, double z, double kx, double ky, double kz,
+    double phi, double t, double Ex, double Ey, double Ez, double p);
+
 #ifdef DEBUG
-#define mcDEBUG_STATE(x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p) if(!mcdotrace); else \
-  printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
-      x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p);
-#define mcDEBUG_SCATTER(x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p) if(!mcdotrace); else \
-  printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
-      x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p);
+#define mcDEBUG_STATE(x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) if(!mcdotrace); else \
+  printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
+      x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p);
+#define mcDEBUG_SCATTER(x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) if(!mcdotrace); else \
+  printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
+      x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p);
 #endif
 
 void mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,

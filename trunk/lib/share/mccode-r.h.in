@@ -614,8 +614,10 @@ Coords rot_apply(Rotation t, Coords a);
 double mcestimate_error(double N, double p1, double p2);
 void mcreadparams(void);
 
-void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
+/* this is now in mcstas-r.h and mcxtrace-r.h as the number of state parameters is no longer equal*/
+/* void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
                 double t, double sx, double sy, double sz, double p);
+*/
 void mcgenstate(void);
 
 /* trajectory/shape intersection routines */

@@ -48,7 +48,7 @@ DEFINE COMPONENT PSD_monitor_4PI
 DEFINITION PARAMETERS (nx=90, ny=90, string filename=0)
 SETTING PARAMETERS (radius=1, restore_xray=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
+STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
 
 DECLARE
 %{
@@ -97,7 +97,7 @@ TRACE
     SCATTER;
   }
   if (restore_xray) {
-    RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, Ex, Ey, Ez, p);
+    RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
   }
 %}
 

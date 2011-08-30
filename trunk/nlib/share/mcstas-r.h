@@ -202,6 +202,10 @@
     DISALLOW_BACKPROP; \
   } while(0)
 
+/*moved from mccode-r.h*/
+void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
+                double t, double sx, double sy, double sz, double p);
+
 #ifdef DEBUG
 #define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,sx,sy,sz,p) if(!mcdotrace); else \
   printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
