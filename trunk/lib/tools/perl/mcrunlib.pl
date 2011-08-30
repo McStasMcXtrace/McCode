@@ -355,7 +355,7 @@ sub do_test {
   if ($mpi) {
       &$printer("# MPI enabled, spawning $mpi compute nodes");
   }
-  &$printer(`mcstas --version`);
+  &$printer(`$MCSTAS_:mcstas_config{'MCCODE'} --version`);
   # create selftest direcory
   require File::Temp; # for tempdir
   $tmpdir = File::Temp::tempdir( 'selftest_XXXX' ) || return "$MCSTAS::mcstas_config{'RUNCMD'}: Couldn't create 'selftest': $@\n";
@@ -393,7 +393,9 @@ sub do_test {
   # Initialize test
   my $now = localtime;
   my $start_sec = time();
-  my $n_single=int($ncount);
+  my $n_single;
+  if (!$ncount) {$n_single=1000000;}
+  else {$n_single=int($ncount);}
   &$printer("# Counts:        $n_single");
   &$printer("# Output format: $plotter");
   &$printer("# Start Date:    $now");

@@ -67,6 +67,7 @@ use Config;
      CFLAGS => '@CFLAGS@',
      LDFLAGS => '@LDFLAGS@',
      MCCODE => '@MCCODE_TARNAME@',
+     PKGNAME => '@MCCODE_NAME@',
      PARTICLE=> '@MCCODE_PARTICULE@',
      CC => '@CC@',
      AT => '@AT@',
