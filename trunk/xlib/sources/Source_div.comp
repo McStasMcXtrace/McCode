@@ -119,7 +119,7 @@ INITIALIZE
   }else{
     prms.pmul=1;
   }
-  prms.pmul*=1.0/mcget_ncount();
+  prms.pmul*=1.0/((double) mcget_ncount());
 
 %}
 
