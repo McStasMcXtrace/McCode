@@ -52,7 +52,7 @@ AT(0,0,0) ABSOLUTE
 
 
 COMPONENT Source=Source_pt(
-    lambda0=L0,dlambda=DL,  focus_xw=0.1, focus_yh=0.1, distance=1
+    lambda0=L0,dlambda=DL,  focus_xw=0.1, focus_yh=0.1, dist=1
 )
 AT (0,0,0) RELATIVE Origin
 

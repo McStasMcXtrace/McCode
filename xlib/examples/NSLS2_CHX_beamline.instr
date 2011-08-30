@@ -50,7 +50,7 @@ TRACE
 COMPONENT Origin = Progress_bar()
 AT (0,0,0) ABSOLUTE
 
-COMPONENT Source = Source_gaussian(sig_x=source_h,sig_y=source_v,sigPr_x=div_h,sigPr_y=div_v,E0=Energy,dE=0,distance=L,flux=4e18)
+COMPONENT Source = Source_gaussian(sig_x=source_h,sig_y=source_v,sigPr_x=div_h,sigPr_y=div_v,E0=Energy,dE=0,dist=L,flux=4e18)
    AT (0, 0, 0) RELATIVE Origin
 
    

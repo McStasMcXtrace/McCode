@@ -56,7 +56,7 @@ WHEN (SOURCE==0) AT (0,0,0) RELATIVE PREVIOUS
 COMPONENT generic_source=Source_gaussian(
     lambda0=0.413, dlambda=0.412,
     sig_x=0.057e-3, sig_y=0.01e-3, 
-    sigPr_x=0.6e-3,sigPr_y=0.6e-3, distance=29
+    sigPr_x=0.6e-3,sigPr_y=0.6e-3, dist=29
 )
 WHEN (SOURCE==1) AT (0,0,0) RELATIVE PREVIOUS
 
