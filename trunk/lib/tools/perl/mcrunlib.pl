@@ -1,6 +1,6 @@
-# Library of McStas runtime perl functions
+# Library of McStas/McXtrace runtime perl functions
 #
-#   This file is part of the McStas neutron ray-trace simulation package
+#   This file is part of the McStas/McXtrace neutron/xray ray-trace simulation package
 #   Copyright (C) 1997-2008, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
@@ -27,8 +27,9 @@ use Cwd;
 require "mccode_config.perl";
 
 # Overload with user's personal config
-if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.mcstas/mccode_config.perl") {
-  require $ENV{"HOME"}."/.mcstas/mccode_config.perl";
+if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl") {
+  print "$0: reading local $MCSTAS::mcstas_config{'MCCODE'} configuration from " . $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl\n";
+  require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl";
 }
 
 require "mcfrontlib.pl";
@@ -76,7 +77,7 @@ sub read_instrument_info {
                     push @$parms, $1;
                     $parmtypes->{$1} = 'double'; # Default is double
                 } else {
-                    die "mcrun: Invalid parameter specification:\n'$p'";
+                    die "$MCSTAS::mcstas_config{'RUNCMD'}: Invalid parameter specification:\n'$p'";
                 }
             }
             $inf->{'Parameters'} = $parms;
@@ -115,7 +116,7 @@ sub get_sim_info {
     }
     use FileHandle;
     my $h = new FileHandle;
-    open $h, "$cmdstring |" or die "mcrun: Could not run simulation.";
+    open $h, "$cmdstring |" or die "$MCSTAS::mcstas_config{'RUNCMD'}: Could not run simulation.";
     my $inf = read_instrument_info($h);
     my $sinf= read_simulation_info($h);
     close $h;
@@ -133,12 +134,12 @@ sub get_sim_info {
 #
 sub get_out_file_init {
     my ($inname, $force, $mpi, $cflags, @ccopts) = @_;
-    return (undef, "mcrun: No simulation filename given") unless $inname;
+    return (undef, "$MCSTAS::mcstas_config{'RUNCMD'}: No simulation filename given") unless $inname;
     # Add a default extension of ".instr" if given name does not exist
     # as file.
     my $sim_def = $inname;
     $sim_def .= ".instr" if(! (-e $sim_def) && (-e "$sim_def.instr"));
-    return(undef, "mcrun: Simulation '$sim_def' not found") unless -e $sim_def;
+    return(undef, "$MCSTAS::mcstas_config{'RUNCMD'}: Simulation '$sim_def' not found") unless -e $sim_def;
     my $file_type = MCSTAS;
     my $base_name = $sim_def;
     # Different executable suffixes on Win32 vs. unix
@@ -307,7 +308,7 @@ sub get_out_file_next {
     $v->{'stage'} = FINISHED;
     return (FINISHED, $out_name);
   } else {
-    die "mcrun: Internal: get_out_file_next: $stage";
+    die "$MCSTAS::mcstas_config{'RUNCMD'}: Internal: get_out_file_next: $stage";
   }
 }
 
@@ -340,24 +341,24 @@ sub get_out_file {
             print STDERR "$value\n";
             return (undef,$v);
         } elsif(!($status eq CONTINUE)) {
-            die "mcrun: Internal: get_out_file";
+            die "$MCSTAS::mcstas_config{'RUNCMD'}: Internal: get_out_file";
         }
     }
 }
 
-# McStas selftest procedure: copy LIB/examples and execute
+# McStas/McXtrace selftest procedure: copy LIB/examples and execute
 sub do_test {
   my ($printer,$force, $plotter, $exec_test, $mpi, $ncount, $sim_def) = @_;
   my $pwd=getcwd;
 
-  &$printer( "# McStas self-test (mcrun --test)");
+  &$printer( "# $MCSTAS::mcstas_config{'MCCODE'} self-test ($MCSTAS::mcstas_config{'RUNCMD'} --test)");
   if ($mpi) {
       &$printer("# MPI enabled, spawning $mpi compute nodes");
   }
   &$printer(`mcstas --version`);
   # create selftest direcory
   require File::Temp; # for tempdir
-  $tmpdir = File::Temp::tempdir( 'selftest_XXXX' ) || return "mcrun: Couldn't create 'selftest': $@\n";
+  $tmpdir = File::Temp::tempdir( 'selftest_XXXX' ) || return "$MCSTAS::mcstas_config{'RUNCMD'}: Couldn't create 'selftest': $@\n";
   &$printer("# Installing '$tmpdir' directory in $pwd");
   # copy all instruments
   my @paths=();
@@ -385,9 +386,9 @@ sub do_test {
       }
     }
   }
-  if (!@paths) { return "mcrun: no test instruments found. Aborting.\n"; }
+  if (!@paths) { return "$MCSTAS::mcstas_config{'RUNCMD'}: no test instruments found. Aborting.\n"; }
   # go into the selftest directory
-  chdir($tmpdir) or return "mcrun: Can not go into $tmpdir: $!\n";
+  chdir($tmpdir) or return "$MCSTAS::mcstas_config{'RUNCMD'}: Can not go into $tmpdir: $!\n";
   
   # Initialize test
   my $now = localtime;
@@ -416,7 +417,7 @@ sub do_test {
     my $k;
     if (!@val_par) { 
     	&$printer("Instrument without test: $base"); 
-    	my $this_cmd = "mcrun -c -n0 --no-cflags $base";
+    	my $this_cmd = "$MCSTAS::mcstas_config{'RUNCMD'} -c -n0 --no-cflags $base";
     	&$printer("Executing: $this_cmd");
     	my $res = qx/$this_cmd/;
     	if ($child_error_code) {
@@ -433,14 +434,14 @@ sub do_test {
       $index++;
       # check command
       if ($this_cmd !~ m/$base/) { $this_cmd = "$base $this_cmd"; } # only parameters ?
-      if ($this_cmd !~ m/mcrun/ && $this_cmd !~ m/mcplot/ && $this_cmd !~ m/mcdisplay/) 
-                                 { $this_cmd = "mcrun $this_cmd"; } # omitted mcrun ?
+      if ($this_cmd !~ m/$MCSTAS::mcstas_config{'RUNCMD'}/ && $this_cmd !~ m/$MCSTAS::mcstas_config{'PLOTCMD'}/ && $this_cmd !~ m/$MCSTAS::mcstas_config{'DISPLAYCMD'}/) 
+                                 { $this_cmd = "$MCSTAS::mcstas_config{'RUNCMD'} $this_cmd"; } # omitted $MCSTAS::mcstas_config{'RUNCMD'} ?
       if ($this_cmd !~ m/mpi/ && $mpi) { $this_cmd .= $mpi; }              # add mpi
       if ($this_cmd !~ m/-n/ && $this_cmd !~ m/--ncount/) { $this_cmd.= " -n $n_single"; }
       if ($this_cmd !~ m/--format/) { $this_cmd.= " --format=$plotter"; }
       if ($this_cmd !~ m/-d/ && $this_cmd !~ m/--dir/) { $this_cmd.= " -d $base" . "_$index"; }
       
-      if ($this_cmd =~ m/mcrun/) { $this_cmd .= " --no-cflags"; }
+      if ($this_cmd =~ m/$MCSTAS::mcstas_config{'RUNCMD'}/) { $this_cmd .= " --no-cflags"; }
       &$printer("Executing: $this_cmd");
       my $res = qx/$this_cmd/;
       my $child_error_text = $!;
@@ -500,7 +501,7 @@ sub do_test {
   &$printer($test_abstract);
   if ($error_flag) {
     &$printer("# Execution check:    FAILED. $error_flag instrument(s) did not compile/execute.");
-    &$printer("# >> Check instruments and McStas installation.");
+    &$printer("# >> Check instruments and $MCSTAS::mcstas_config{'MCCODE'} installation.");
   } else {
     &$printer("# Execution check:    OK.     Computing time: $elapsed_sec [sec] for $index tests.");
     if ($accuracy_flag > 2) {
@@ -513,7 +514,7 @@ sub do_test {
   }
 
   &$printer("# End Date: $now");
-  chdir($pwd) or return "mcrun: Can not come back to $pwd: $!\n";; # come back to initial directory
+  chdir($pwd) or return "$MCSTAS::mcstas_config{'RUNCMD'}: Can not come back to $pwd: $!\n";; # come back to initial directory
   return undef;
 }
 
@@ -659,7 +660,7 @@ sub parse_header {
             if($s =~ /^\s*((.|\n)*\S)\s*$/) {
                 $text = $1;
             } else {
-                $s =~ /^\s*$/ || die "mcrun: Internal: parse_header match 1";
+                $s =~ /^\s*$/ || die "$MCSTAS::mcstas_config{'RUNCMD'}: Internal: parse_header match 1";
                 $text = "$s";
             }
         }
@@ -669,15 +670,15 @@ sub parse_header {
     return $d;
 }
 
-# This sub gets component information by parsing the McStas
-# metalanguage. For now this is a regexp hack, later the real mcstas
+# This sub gets component information by parsing the McStas/McXtrace
+# metalanguage. For now this is a regexp hack, later the real mcstas/mcxtrace
 # parser will be used.
 sub get_comp_info {
     my ($name, $d) = @_;
     my $file = new FileHandle;
     my ($cname, $decl, $init, $trace, $finally, $disp, $typ);
     my (@dpar, @spar, @ipar, @opar);
-    open($file, $name)  || die "mcrun: Could not open file $name\n";
+    open($file, $name)  || die "$MCSTAS::mcstas_config{'RUNCMD'}: Could not open file $name\n";
     local $/ = undef;                # Read the whole file in one go.
     my $s = <$file>;
     close($file);

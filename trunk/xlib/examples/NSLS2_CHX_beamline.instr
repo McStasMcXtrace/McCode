@@ -1,5 +1,5 @@
 /*******************************************************************************
-*         McStas instrument definition URL=http://www.mcstas.org
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
 * Instrument: test (rename also the example and DEFINE lines below)
 *
@@ -7,9 +7,10 @@
 * Written by: Jana Baltser
 * Date: March 2011
 * Origin: NBI, BNL
-* Release: McStas CVS-080208
+* Release: McXtrace 1.0
 * Version: 0.2
-* %INSTRUMENT_SITE: Institution_name_as_a_single word
+* %INSTRUMENT_SITE: NSLS2
+*
 * This is a lay-out of the coherent hard x-ray (CHX) beamline at NSLS-II.
 * Since the ray-tracing method doesn't allow to account for partial coherence of the
 * undulator source, the best approximation was to use the gaussian photon beam and to neglect
