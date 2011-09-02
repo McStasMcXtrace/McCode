@@ -209,6 +209,9 @@ install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
 	$(topdir)/mkinstalldirs $(libdir_mccode)
 	cd $(topdir)/lib && $(MAKE) install 
 	cd $(topdir)/xlib && $(MAKE) install 
+	@echo "Create component documentation..."
+	export MCSTAS=$(libdir_mccode)
+	$(topdir)/src/mxdoc.mxfixpl --text; 
 
 installdirs:
 	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_mccode) $(mandir)/man1
