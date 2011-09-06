@@ -1,0 +1,158 @@
+/************************************************************************'
+ * 
+ * McXtrace X-ray tracing software
+ * Copyright, All Rights Reserved
+ * Risoe-DTU, Roskilde, Denmark
+ *
+ *
+ * Component: Source_gaussian
+ *
+ * %I
+ * Written by: Jana Baltser & Erik Knudsen
+ * Date: April, 2011.
+ * Version: 1.0 
+ * Origin: NBI
+ * Release: McXtrace 0.1
+ *
+ * Gaussian cross-section source 
+ * %D
+ * A simple source model emitting photons from a gaussian distribution in the X-Y plane with the specified
+ * standard deviations (in mm). A square target centered on the beam (Z-axis)
+ restricts the beam to that aperture.
+ * Further, the beam is restricted to emit photons between E0+-dE keV, or lambda0+-dlambda, whichever is given.
+ * Flux is given in the unit 
+ * 
+ * Example: Source_gaussian(sig_x=10e-6,sig_y=10e-6,dist=15,sigPr_x=9e-6, sigPr_y=9e-6,E0=sensible, dE=sensible)
+ * sig_x - Horizontal source size [microns]
+ * sig_y - Vertical source size [microns]
+ * dist [meters]
+ * sigPr_x - sigmaPrime - angular divergence Horizontal [microrad]
+ * sigPr_y - sigmaPrime - angular divergence Vertical [microrad]
+ * %P
+ * 
+ * 
+ */
+
+DEFINE COMPONENT Source_gaussian
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (sig_x=1,sig_y=0,sigPr_x=0,sigPr_y=0,flux=1,dist=1,gamma=0,E0=0, dE=0, lambda0=0,dlambda=-1,phase=-1)
+OUTPUT PARAMETERS ()
+STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+
+SHARE
+%{
+  double Gauss2D(double sigmaX, double sigmaY, double x, double y, double A){
+    double F;
+    F=A*exp(-(((x*x)/(2.0*sigmaX*sigmaX))+((y*y)/(2.0*sigmaY*sigmaY))));
+    return F;
+  }
+%}
+
+DECLARE
+%{
+ double l, pmul;
+%}
+
+
+INITIALIZE
+%{
+  if (!sig_y) sig_y=sig_x;
+  
+  if (!sigPr_x || !sigPr_y){
+    fprintf(stderr,"Source_gaussian_J (%s): Must define horizontal and vertical angular divergences \n",NAME_CURRENT_COMP);
+    exit(0);
+  }
+        
+  if (E0){
+    lambda0=2*M_PI/(E0*E2K);
+    if (dE) {
+      dlambda=2*M_PI/(E2K*E0*E0)*dE;
+    } else {
+      dlambda=0;
+    }
+  }else if (!lambda0) {
+    fprintf(stderr,"Source_gaussian (%s): Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
+    exit(0);
+  }
+  /*calculate the X-ray weight from the flux*/
+  if (flux){//pmul=flux;
+    pmul=flux*1.0/((double) mcget_ncount()); 
+  }else{
+    pmul=1.0/((double) mcget_ncount());
+  }
+
+  
+  
+%}
+
+
+TRACE
+%{
+  double xx,yy,spX,spY,x1,y1,z1;
+  double k;
+  double F1,F2;
+  double dx,dy,dz;
+  
+  // initial source area
+  xx=randnorm();
+  yy=randnorm();
+  x=xx*sig_x;
+  y=yy*sig_y;
+  z=0;
+ 
+  // Gaussian distribution at origin
+  F1=Gauss2D(sig_x,sig_y,x,y,pmul);
+  
+  if (dlambda){
+    l=lambda0+dlambda*randnorm();
+  }else{
+    l=lambda0;
+  }
+
+  k=(2*M_PI/l); 
+  
+  // Beam's footprint at a dist calculation
+  spX=sqrt(sig_x*sig_x+sigPr_x*sigPr_x*dist*dist);
+  spY=sqrt(sig_y*sig_y+sigPr_y*sigPr_y*dist*dist);
+  
+  // targeted area calculation
+  x1=randnorm()*spX;
+  y1=randnorm()*spY;
+  z1=dist;
+  
+  dx=x1-x;
+  dy=y1-y;
+  dz=sqrt(dx*dx+dy*dy+dist*dist);
+  
+  kx=(k*dx)/dz;
+  ky=(k*dy)/dz;
+  kz=(k*dist)/dz;
+  
+  // Guassian distribution at a distance
+  F2=Gauss2D(spX,spY,x1,y1,F1);
+  
+    /*randomly pick phase*/
+  if (phase==-1){
+    phi=rand01()*2*M_PI;
+  }else{
+    phi=phase;
+  }
+
+  /*set polarization vector*/
+  Ex=0;Ey=0;Ez=0;
+  
+  p*=erf(F2)*pmul;  
+  
+%}
+
+MCDISPLAY
+%{
+  double radius;
+  if (sig_x<sig_y) radius=sig_x;
+  else radius=sig_y; 
+
+  magnify("xy");
+  circle("xy",0,0,0,radius);
+%}
+
+END
