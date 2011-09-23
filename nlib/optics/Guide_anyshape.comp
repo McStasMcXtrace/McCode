@@ -102,7 +102,7 @@ INITIALIZE
   /* optionally initialize reflectivity curves */
   if (reflect && strlen(reflect)) {
     if (Table_Read(&pTable, reflect, 1) <= 0) /* read 1st block data from file into pTable */
-      exit(fprintf(stderr,"Guide_anyshape: %s: can not read file %s. Aborting coating used.\n", NAME_CURRENT_COMP, (char*)reflect));
+      exit(fprintf(stderr,"Guide_anyshape: %s: can not read file %s. Aborting.\n", NAME_CURRENT_COMP, reflect));
     else 
       Table_Rebin(&pTable);         /* rebin as evenly, increasing array */
   }
