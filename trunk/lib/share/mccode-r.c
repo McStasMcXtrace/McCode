@@ -4899,7 +4899,9 @@ while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
 #ifdef USE_MPI
  /* merge run_num from MPI nodes */
   if (mpi_node_count > 1) {
-  mc_MPI_Sum(&mcrun_num, 1);
+    double ncount=(double)mcrun_num;
+    mc_MPI_Sum(&ncount, 1);
+    mcrun_num = (long long)ncount;
   }
 #endif
 
