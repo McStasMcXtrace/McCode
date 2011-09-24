@@ -19,7 +19,7 @@
 * non diverging beam (ideal case). A set of PSD monitors is positioned
 * around the focusing point to show the beam spot.
 *
-* %Example: lambda=10 Detector: PSD_mon_39_I=1.9071e-18
+* %Example: lambda=10 Detector: PSD_mon_41_I=4.2e-19
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -34,7 +34,7 @@ DEFINE INSTRUMENT Test_Lens(lambda=10,position_PSD=8.2)
 
 TRACE
 
-COMPONENT base=Arm() at (0,0,0) ABSOLUTE
+COMPONENT base=Progress_bar() at (0,0,0) ABSOLUTE
 
 COMPONENT source1 = Source_div(
   xwidth=0.026, yheight=0.026, 

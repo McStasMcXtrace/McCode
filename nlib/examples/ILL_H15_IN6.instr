@@ -48,7 +48,7 @@
 * with multiple scattering, customized monitors, and the SPLIT mechanism to
 * improve the statistics.
 *
-* %Example: lambda=4.14 Detector: M_theta_t_all_I=173
+* %Example: lambda=4.14 Detector: M_theta_t_all_I=88.5
 *
 * %Parameters
 * INPUT PARAMETERS:

@@ -42,8 +42,8 @@
 * This model uses two Si111 monochromator and analyzers (unpolarized
 * configuration).
 *
-* %Example: QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=5.07236e-05
-* %Example: QM=1 Sqw_coh=V.laz Detector: He3H_I=5.00081e-11
+* %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: D7_SC3_1D_I=6.0819e-05
+* %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: He3H_I=3.0e-11
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -124,7 +124,7 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT ILL_H13_IN20(
-  KF=3, KI=0, QM=0.5, EN=5, verbose=1,
+  KF=3, KI=0, QM=0.5, EN=0, verbose=1,
   WM=0.20, HM=0.19, RMH=-1, RMV=-1, DM=3.155, NHM=15, NVM=15,
   WA=0.16, HA=0.08, RAH=-1, RAV=-1, DA=3.155, NHA=15, NVA=15,
   L1=2.33,

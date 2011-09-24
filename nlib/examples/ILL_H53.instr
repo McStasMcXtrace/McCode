@@ -16,7 +16,7 @@
 * %Description
 * The H53 curved cold guide at the ILL feeding IN14, IN16, D16, ADAM, CRYO-EDM
 *
-* %Example: m=1.2 dlambda=8.5 Detector: GuideOut_Phic_I=1.47529e+10
+* %Example: m=1.2 dlambda=8.5 Detector: H53_P5_Out_Phic_I=1.8081e+10
 *
 * %Parameters
 * m:          (1)  m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
@@ -419,6 +419,9 @@ AT (0,0,L_H53_P5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H53_P5,0) RELATIVE PREVIO
 
 COMPONENT H53_P5_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H53_P5+gGap) RELATIVE PREVIOUS
+
+COMPONENT H53_P5_Out_Phic = Monitor_nD(options="capture per cm2", xwidth=0.06, yheight=0.12)
+AT (0,0,0.005) RELATIVE PREVIOUS
 
 /* D16 position. Gap .200 */
 
