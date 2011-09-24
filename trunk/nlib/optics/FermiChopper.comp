@@ -95,7 +95,7 @@ SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
   zero_time=0, xwidth=0, verbose=0, yheight=0.08,
   curvature=0,time=0)
 OUTPUT PARAMETERS(FCVars)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,p)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 SHARE
 %{
 %include "ref-lib"
@@ -802,9 +802,9 @@ SAVE
     if (mean_phase > 180) mean_phase -= 360;
 
     if (!FCVars.sum_N_pass)
-    printf("FermiChopper: %s: No neutron can pass the chopper.\n", NAME_CURRENT_COMP);
+      printf("FermiChopper: %s: No neutron can pass the chopper.\n", NAME_CURRENT_COMP);
     if (!FCVars.sum_N_pass || verbose)
-    printf("FermiChopper: %s\n"
+      printf("FermiChopper: %s\n"
            "              Mean velocity     v     = %g [m/s]\n"
            "              Mean wavelength   lambda= %g [Angs]\n"
            "              Mean energy       omega = %g [meV]\n"
@@ -857,6 +857,8 @@ SAVE
         FCVars.warn_notreachslitoutput);
     }
 
+  } else {
+    printf("FermiChopper: %s: No neutron can reach the chopper.\n", NAME_CURRENT_COMP);
   }
 %}
 
