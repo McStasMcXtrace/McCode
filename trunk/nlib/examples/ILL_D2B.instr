@@ -39,7 +39,7 @@
 * Ge       511 DM=1.089 AA
 * Ge       533 DM=0.863 AA
 *
-* %Example: lambda=1 Detector: BananaPSD_I=2.46226e-09
+* %Example: lambda=1 Detector: D2B_BananaPSD_I=13364.4
 *
 * %Parameters
 * lambda: [Angs] Wavelength at monochromator, computed from DM and THETA_M if left as 0.
@@ -112,7 +112,7 @@ if (!THETA_M || !DM || !lambda) exit(fprintf(stderr,
 /* perform additional computations */
 if (!L1)    L = L2;
 else        L = 1/(1/L1+1/L2);
-if (RV < 0) RV=2*fabs(L*sin(DEG2RAD*THETA_M));
+if (RV < 0) RV=2*L*sin(DEG2RAD*THETA_M);
 KI = 2*PI/lambda;
 Vi = K2V*fabs(KI);
 EI = VS2E*Vi*Vi;

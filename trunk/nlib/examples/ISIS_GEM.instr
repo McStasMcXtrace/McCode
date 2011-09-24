@@ -24,7 +24,7 @@
 * perform high intensity, high resolution experiments to study the structure of
 * disordered materials and crystalline powders.
 *
-* %Example: sample="Y2O3.laz" Detector: monzns_I=0.894995
+* %Example: sample="Y2O3.laz" Detector: monzns_I=18.2817
 *
 * %Link
 * The <a href="http://essworkshop.org">ESS Instrument workshops</a> website.
@@ -50,12 +50,12 @@ AT (0,0,0) ABSOLUTE
 
 COMPONENT Source = ISIS_moderator(
     Face = "gem", Emin = emin, Emax = emax, target_index=1, focus_xw = 0.008,
-    focus_yh = 0.04, xwidth = 0.09, yheight = 0.084, CAngle = 0,
+    focus_yh = 0.04, xwidth = 0.09, yheight = 0.084, CAngle = 0,dist=0,
     SAC = 1)
 AT (0, 0, 0) ABSOLUTE
 
 SPLIT COMPONENT Sample = PowderN(
-    yheight=0.04, radius=8e-3/2,
+    yheight=0.04, radius=8e-3/2,p_interact=1,
     reflections = sample,d_phi=atan(.20/dist)*RAD2DEG)
 AT (0, 0, 17.00) RELATIVE Source
 EXTEND %{

@@ -70,7 +70,7 @@
 * In this model, the sample is a plate of thickness e=4 mm, surrounded by an 
 * Al or Nb container, inside an Al shield (phi=10 cm).
 *
-* %Example: coh="V.laz" Detector: Detector_I=1.24911
+* %Example: coh="V.laz" Detector: Detector_I=1.76995
 *
 * %Parameters
 * DM:        [Angs] Monochromator d-spacing. 
