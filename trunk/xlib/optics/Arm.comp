@@ -35,7 +35,7 @@ DEFINE COMPONENT Arm
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS ()
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 TRACE
 %{

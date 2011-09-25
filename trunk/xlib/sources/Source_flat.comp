@@ -54,7 +54,7 @@ DEFINITION PARAMETERS (string spectrum_file=NULL)
   dist=0, focus_xw=.045, focus_yh=.12, 
   E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0)
 OUTPUT PARAMETERS (prms,square)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{

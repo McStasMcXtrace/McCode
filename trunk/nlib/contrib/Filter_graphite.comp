@@ -48,7 +48,7 @@ DEFINE COMPONENT Filter_graphite
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=-0.16, xmax=0.16, ymin=-0.16, ymax=0.16, length=0.05, xwidth=0, yheight=0)
 OUTPUT PARAMETERS ()
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 INITIALIZE
 %{
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }

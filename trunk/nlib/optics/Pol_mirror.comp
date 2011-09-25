@@ -86,7 +86,7 @@ DEFINITION PARAMETERS (rUpFunc=StdReflecFunc, rDownFunc=rUpFunc,
                        useTables=0, zwidth, yheight)
 SETTING PARAMETERS (p_reflect=-1)
 OUTPUT PARAMETERS (rUpParPtr, rDownParPtr)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
 %{

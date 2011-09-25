@@ -232,7 +232,7 @@ SETTING PARAMETERS(string reflections=0, string geometry=0,
             p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
             aa=0, bb=0, cc=0, order=0)
 OUTPUT PARAMETERS(hkl_info, offdata)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 SHARE
 %{
   /* used for reading data table from file */

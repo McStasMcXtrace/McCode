@@ -196,7 +196,7 @@ DEFINITION PARAMETERS (format=Undefined)
 OUTPUT PARAMETERS (line_info, Nq, my_s_k2, XsectionFactor,
   my_s_k2_sum, my_a_k, my_inc, my_q, my_w, columns, 
   radius_i, xwidth_i, yheight_i, zdepth_i, offdata)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 SHARE
 %{
   /* used for reading data table from file */

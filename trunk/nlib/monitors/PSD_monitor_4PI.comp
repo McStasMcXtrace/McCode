@@ -50,7 +50,7 @@ DEFINE COMPONENT PSD_monitor_4PI
 DEFINITION PARAMETERS (nx=90, ny=90)
 SETTING PARAMETERS (string filename=0, radius=1, restore_neutron=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 DECLARE
 %{

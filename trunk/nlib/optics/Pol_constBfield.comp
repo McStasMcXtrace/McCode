@@ -48,7 +48,7 @@ DEFINE COMPONENT Pol_constBfield
 DEFINITION PARAMETERS (xwidth, yheight, length)
 SETTING PARAMETERS (B=0, fliplambda=0, flipangle=180)
 OUTPUT PARAMETERS(omegaL)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
      
 SHARE
 %{

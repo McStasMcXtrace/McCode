@@ -99,7 +99,7 @@ SETTING PARAMETERS (r1=0,r2=0,focus1=0,focus2=0,phiy1=0,phiy2=0,
   density=3.148,weight=62.3018,
   p_interact=0.1,focus_aw=10,focus_ah=10,RMS=0)
 OUTPUT PARAMETERS (rho, bc, my_s, my_a_v, mean_n, events)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
 %{

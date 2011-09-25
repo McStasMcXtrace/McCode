@@ -108,7 +108,7 @@ SETTING PARAMETERS (string option=0, w1=0,h1=0,l,linw=0,loutw=0,linh=0,louth=0, 
 OUTPUT PARAMETERS(w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf,h1_in,h2_out,w1_in,w2_out,l_seg,seg,
 		  h12, h2, w12, w2, a_ell_q, b_ell_q, lbw, lbh, mxi ,u1 ,u2 ,div1, p2_para,
 		  test,Div1, i,ii,seg, fu, pos, file_name, ep, num, rotation_h,rotation_v)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
 %{

@@ -199,7 +199,7 @@ SETTING PARAMETERS (string reflections=0, string geometry=0,
 OUTPUT PARAMETERS (line_info, Nq, my_s_v2, XsectionFactor,
   my_s_v2_sum, my_a_v, my_inc, q_v, w_v, columns, 
   radius_i, xwidth_i, yheight_i, zdepth_i, offdata)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{
   /* used for reading data table from file */

@@ -103,7 +103,7 @@ OUTPUT PARAMETERS (localG, normTopBot, normIn, normOut,
 		   rBotUpParPtr, rBotDownParPtr,
 		   rLeftUpParPtr, rLeftDownParPtr, 
 		   rRightUpParPtr, rRightDownParPtr)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
 %{

@@ -40,7 +40,7 @@ DEFINE COMPONENT Lens_parab_Cyl
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
 SETTING PARAMETERS (r=.5e-3,yheight=1.2e-3,xwidth=1.2e-3,d=.1e-3,T=.99,N=1,deltaN=0)
 OUTPUT PARAMETERS (prms,parab)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{

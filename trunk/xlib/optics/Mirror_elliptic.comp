@@ -38,7 +38,7 @@
 DEFINITION PARAMETERS ()
   SETTING PARAMETERS (R=1, a=0, b=0, c=1, xwidth=1,yheight=1,zdepth=1)
 OUTPUT PARAMETERS ()
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
 %{

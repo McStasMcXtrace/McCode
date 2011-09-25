@@ -51,7 +51,7 @@ DEFINITION PARAMETERS (nL=20, nt=128, tmin, tmax)
 SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
   xwidth=0, yheight=0, Lmin, Lmax, restore_neutron=0)
 OUTPUT PARAMETERS (tt_0, tt_1, TOFL_N, TOFL_p, TOFL_p2)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
   %{
     double TOFL_N[nt][nL];

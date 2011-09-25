@@ -271,7 +271,7 @@ SETTING PARAMETERS(string Sqw_coh=0, string Sqw_inc=0, string geometry=0,
     powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
     p_interact=-1, auto_norm=0, powder_barns=1)
 OUTPUT PARAMETERS (VarSqw, columns, offdata)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 /*****************************************************************************/
 /*****************************************************************************/
 

@@ -37,7 +37,7 @@ DEFINE COMPONENT Source_gaussian
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (sig_x=1,sig_y=0,sigPr_x=0,sigPr_y=0,flux=1,dist=1,gamma=0,E0=0, dE=0, lambda0=0,dlambda=-1,phase=-1)
 OUTPUT PARAMETERS ()
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{

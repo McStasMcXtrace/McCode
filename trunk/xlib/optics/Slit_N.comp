@@ -47,7 +47,7 @@ DEFINE COMPONENT Slit_N
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius=0, cut=0, xwidth=0, yheight=0, N=2, d=0)
   OUTPUT PARAMETERS (xmax,ymax,xmin,ymin)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
 %{

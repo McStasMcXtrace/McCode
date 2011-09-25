@@ -45,7 +45,7 @@ DEFINE COMPONENT StatisticalChopper_Monitor COPY Monitor_nD
 DEFINITION PARAMETERS (comp)
 SETTING PARAMETERS (tmin=0.0,tmax=0.0)
 OUTPUT PARAMETERS()
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 DECLARE COPY Monitor_nD
 

@@ -43,7 +43,7 @@ DEFINE COMPONENT Al_window
 DEFINITION PARAMETERS (thickness=0.001)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS ()
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{
 /* ToDo: Should be component local names. */

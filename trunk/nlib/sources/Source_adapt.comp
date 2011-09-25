@@ -95,7 +95,7 @@ SETTING PARAMETERS (xmin=0,xmax=0,ymin=0,ymax=0, xwidth=0, yheight=0, string fil
   dist=0, focus_xw=0.05, focus_yh=0.1, 
   E0=0, dE=0, lambda0=0, dlambda=0, flux=1e13, int target_index=+1, alpha=0.25, beta=0.25)
 OUTPUT PARAMETERS (p_in, y_0, C, r_0, count, adpt)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{
 %include "adapt_tree-lib"

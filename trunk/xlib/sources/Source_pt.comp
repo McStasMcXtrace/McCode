@@ -43,7 +43,7 @@ DEFINE COMPONENT Source_pt
 DEFINITION PARAMETERS (string spectrum_file=NULL)
 SETTING PARAMETERS (focus_xw=0,focus_yh=0,flux=0,dist=1,gamma=0,E0=0, dE=0, lambda0=0,dlambda=0,phase=-1,randomphase=0,gauss=0)
 OUTPUT PARAMETERS (prms)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{

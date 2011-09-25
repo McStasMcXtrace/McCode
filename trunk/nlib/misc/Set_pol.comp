@@ -41,7 +41,7 @@
 DEFINE COMPONENT Set_pol
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (px=0, py=0, pz=0, randomOn=0)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
      
 DECLARE
 %{

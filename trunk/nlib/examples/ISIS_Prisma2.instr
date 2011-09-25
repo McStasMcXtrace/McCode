@@ -54,7 +54,7 @@
 DEFINE COMPONENT Monochromator_color
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (zmin, zmax, ymin, ymax, mosaich, mosaicv, r0, Q, color)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+//  (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
 #define DIV_CUTOFF 2            /* ~ 10^-5 cutoff. */
@@ -133,7 +133,7 @@ DEFINE COMPONENT TOF_monitor_color
 DEFINITION PARAMETERS (filename, int nchan, int maxcolor)
 SETTING PARAMETERS (xmin, xmax, ymin, ymax, dt)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+//  (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
     double TOF_N[maxcolor+1][nchan];

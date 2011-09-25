@@ -61,7 +61,7 @@ OUTPUT PARAMETERS (hdiv,vdiv,p_in,
   EPmax, EPmin,INorm,INorm2,
   ntvals,idxstart,idxstop,tidxstart,tidxstop,nEvals,
   xonly,Pfunc,txonly,tPfunc)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
 %{
   double xonly(double);
