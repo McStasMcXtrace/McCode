@@ -1207,7 +1207,7 @@ cogen_trace(struct instr_def *instr)
         coutf("  { %s(%i,", restore, comp->index); /* RESTORE */
         for(i = 0; i < NUM_STATE_PARS; i++)
           if (i < NUM_STATE_PARS-1) coutf("      %snl%s,", ID_PRE, statepars_all[i]);
-          else                      coutf("      %snl%s);",ID_PRE, statepars_all[i]);
+          else                      coutf("      %snl%s); }",ID_PRE, statepars_all[i]);
       } else {
         /* last comp of GROUP: restore default ABSORB */
         coutf("/* end of GROUP %s */", comp->group->name);
