@@ -214,11 +214,6 @@ void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
   printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
          x,y,z,vx,vy,vz,t,sx,sy,sz,p);
 #endif
-
-void mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
-    double *vx, double *vy, double *vz);
-void mccoordschange_polarisation(Rotation t,
-    double *sx, double *sy, double *sz);
     
 #endif /* !MCCODE_H */
 
