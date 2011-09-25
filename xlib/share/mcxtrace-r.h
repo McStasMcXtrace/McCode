@@ -175,11 +175,6 @@ void mcsetstate(double x, double y, double z, double kx, double ky, double kz,
       x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p);
 #endif
 
-void mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
-    double *kx, double *ky, double *kz);
-void mccoordschange_polarisation(Rotation t,
-    double *sx, double *sy, double *sz);
-
 #endif /* !MCCODE_H */
 
 #endif /* MCXTRACE_R_H */
