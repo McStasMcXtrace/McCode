@@ -56,7 +56,7 @@ DEFINE COMPONENT Monitor_Optimizer
 DEFINITION PARAMETERS (optim_comp)
 SETTING PARAMETERS (xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, xwidth=0, yheight=0)
 OUTPUT PARAMETERS (This_Monitor_id)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 DECLARE
 %{

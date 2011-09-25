@@ -40,7 +40,7 @@ DEFINE COMPONENT He3_cell
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius,length,pressure=3,p3he=0.7,bx=0,by=1e-3,bz=0)
 OUTPUT PARAMETERS ()
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 DECLARE
 %{

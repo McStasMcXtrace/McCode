@@ -95,7 +95,7 @@ SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
   zero_time=0, xwidth=0, verbose=0, yheight=0.08,
   curvature=0,time=0)
 OUTPUT PARAMETERS(FCVars)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{
 %include "ref-lib"

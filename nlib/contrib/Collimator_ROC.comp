@@ -63,7 +63,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (ROC_pitch=1, ROC_ri=0.4, ROC_ro=1.2, ROC_h=0.153,
   ROC_ttmin=0, ROC_ttmax=100, ROC_sign=1)
 OUTPUT PARAMETERS ()
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 INITIALIZE
 %{
   if (ROC_pitch <= 0 || ROC_ri > ROC_ro || ROC_ro <= 0

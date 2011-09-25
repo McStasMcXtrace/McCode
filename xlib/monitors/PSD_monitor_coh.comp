@@ -49,7 +49,7 @@ DEFINE COMPONENT PSD_monitor_coh
 DEFINITION PARAMETERS (nx=90, ny=90)
   SETTING PARAMETERS (string filename=0, restore_xray=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2,PSD_phi)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
+//  (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
 DECLARE
   %{

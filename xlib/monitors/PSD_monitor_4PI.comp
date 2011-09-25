@@ -48,7 +48,7 @@ DEFINE COMPONENT PSD_monitor_4PI
 DEFINITION PARAMETERS (nx=90, ny=90, string filename=0)
 SETTING PARAMETERS (radius=1, restore_xray=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
 %{

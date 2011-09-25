@@ -57,7 +57,7 @@ DEFINITION PARAMETERS (string spectrum_file=NULL)
 SETTING PARAMETERS (xwidth, yheight, focus_xw=0,focus_yh=0,dist=0,focus_aw, focus_ah, 
     E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0)
 OUTPUT PARAMETERS (prms,thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{

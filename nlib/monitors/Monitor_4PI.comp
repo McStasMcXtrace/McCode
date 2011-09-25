@@ -41,7 +41,7 @@ DEFINE COMPONENT Monitor_4PI
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS(Nsum, psum, p2sum)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
   %{
     double Nsum;

@@ -35,7 +35,7 @@ DEFINE COMPONENT SiC
 DEFINITION PARAMETERS (xlength, yheight)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS(ScatGrad)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
 %{
   double ScatGrad[85];

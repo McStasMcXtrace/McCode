@@ -53,7 +53,7 @@
 DEFINE COMPONENT PreMonitor_nD
 DEFINITION PARAMETERS (monitor_comp)
 SETTING PARAMETERS ()
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 /* Flag will be set to 1 automatically */
 /* unset by user in Monitor_nD if required (with 'not') */
