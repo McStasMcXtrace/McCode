@@ -391,7 +391,7 @@ struct comp_def
     char *name;                     /* Component name. */
     char *source;                   /*  Name of source file for definition */
     int  comp_inst_number;          /* Number of this comp in the instrument  */
-    List def_par, set_par, out_par, state_par; /* Formal parameters. */
+    List def_par, set_par, out_par; /* Formal parameters. */
     struct code_block *share_code;  /* Unique Declaration code (shared). */
     struct code_block *decl_code;   /* Declaration code. */
     struct code_block *init_code;   /* Initializeation code. */
