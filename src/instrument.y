@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
+* McStas/McXtrace, neutron ray-tracing package
 *         Copyright (C) 1997-2007, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
@@ -54,7 +54,7 @@
   struct instr_formal *iformal; /* Single formal instrument parameter */
   struct comp_iformal *cformal; /* Single formal component input parameter */
   Symtab actuals;   /* Values for formal parameters */
-  struct {List def, set, out, state; } parms;  /* Parameter lists */
+  struct {List def, set, out; } parms;  /* Parameter lists */
   struct instr_def *instrument; /* Instrument definition */
   struct comp_inst *instance; /* Component instance */
   struct comp_place place;  /* Component place */
@@ -86,21 +86,20 @@
 %token TOK_ROTATED    "ROTATED"
 %token TOK_PREVIOUS   "PREVIOUS"
 %token TOK_SETTING    "SETTING"
-%token TOK_STATE      "STATE"
 %token TOK_TRACE      "TRACE"
 %token TOK_SHARE      "SHARE"
 %token TOK_EXTEND     "EXTEND"
-%token TOK_GROUP      "GROUP"   /* extended McStas grammar */
+%token TOK_GROUP      "GROUP"   /* extended McCode grammar */
 %token TOK_SAVE       "SAVE"
 %token TOK_NEXUS      "NEXUS"   /* optional */
-%token TOK_JUMP       "JUMP"    /* extended McStas grammar */
-%token TOK_WHEN       "WHEN"    /* extended McStas grammar */
-%token TOK_NEXT       "NEXT"    /* extended McStas grammar */
-%token TOK_ITERATE    "ITERATE" /* extended McStas grammar */
-%token TOK_MYSELF     "MYSELF"  /* extended McStas grammar */
-%token TOK_COPY       "COPY"    /* extended McStas grammar */
-%token TOK_SPLIT      "SPLIT"   /* extended McStas grammar */
-%token TOK_REMOVABLE  "REMOVABLE" /* extended McStas grammar with include */
+%token TOK_JUMP       "JUMP"    /* extended McCode grammar */
+%token TOK_WHEN       "WHEN"    /* extended McCode grammar */
+%token TOK_NEXT       "NEXT"    /* extended McCode grammar */
+%token TOK_ITERATE    "ITERATE" /* extended McCode grammar */
+%token TOK_MYSELF     "MYSELF"  /* extended McCode grammar */
+%token TOK_COPY       "COPY"    /* extended McCode grammar */
+%token TOK_SPLIT      "SPLIT"   /* extended McCode grammar */
+%token TOK_REMOVABLE  "REMOVABLE" /* extended McCode grammar with include */
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -123,7 +122,7 @@
 %type <actuals> actuallist actuals actuals1
 %type <comp_iformals> comp_iformallist comp_iformals comp_iformals1
 %type <cformal> comp_iformal
-%type <formals> formallist formals formals1 def_par set_par out_par state_par
+%type <formals> formallist formals formals1 def_par set_par out_par
 %type <iformals> instrpar_list instr_formals instr_formals1
 %type <iformal> instr_formal
 %type <parms>   parameters
@@ -158,7 +157,6 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         c->def_par = $4.def;
         c->set_par = $4.set;
         c->out_par = $4.out;
-        c->state_par = $4.state;
         c->share_code = $5;
         c->decl_code = $6;
         c->init_code = $7;
@@ -172,9 +170,6 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         check_comp_formals(c->def_par, c->set_par, c->name);
         /* Put component definition in table. */
         symtab_add(read_components, c->name, c);
-        /* checks */
-        if (!list_len(c->state_par)) print_error("No particule state parameters defined in component "
-          "%s at line %s:%d.\n", $3, instr_current_filename, instr_current_line);
         if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
       }
     | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters share declare initialize trace save finally mcdisplay "END"
@@ -197,8 +192,6 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
         if (list_len($6.out)) list_cat(c->out_par,$6.out);
 
-        c->state_par = (list_len($6.state) ? $6.state : def->state_par); /* includes polarisation par */
-
         c->share_code = ($7->linenum ?  $7  : def->share_code);
         c->decl_code  = ($8->linenum ?  $8  : def->decl_code);
         c->init_code  = ($9->linenum ?  $9  : def->init_code);
@@ -212,9 +205,6 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         check_comp_formals(c->def_par, c->set_par, c->name);
         /* Put component definition in table. */
         symtab_add(read_components, c->name, c);
-        /* checks */
-        if (!list_len(c->state_par)) print_error("No particule state parameters defined in (copied) component "
-          "%s at line %s:%d.\n", $3, instr_current_filename, instr_current_line);
         if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
 
       }
@@ -280,12 +270,11 @@ trace: /* empty */
       }
 ;
 
-parameters:   def_par set_par out_par state_par
+parameters:   def_par set_par out_par
       {
         $$.def = $1;
         $$.set = $2;
         $$.out = $3;
-        $$.state = $4;
       }
 ;
 
@@ -315,16 +304,6 @@ out_par:    /* empty */
         $$ = list_create();
       }
     | "OUTPUT" "PARAMETERS" formallist
-      {
-        $$ = $3;
-      }
-;
-
-state_par:    /* empty */
-      {
-        $$ = list_create();
-      }
-    | "STATE" "PARAMETERS" formallist
       {
         $$ = $3;
       }
@@ -1482,7 +1461,7 @@ print_usage(void)
   fprintf(stderr, "      -o FILE --output-file=FILE Place C output in file FILE.\n");
   fprintf(stderr, "      -I DIR  --search-dir=DIR   Append DIR to the component search list. \n");
   fprintf(stderr, "      -t      --trace            Enable 'trace' mode for instrument display.\n");
-  fprintf(stderr, "      -v      --version          Prints McStas version.\n");
+  fprintf(stderr, "      -v      --version          Prints " MCCODE_NAME " version.\n");
   fprintf(stderr, "      --no-main                  Do not create main(), for external embedding.\n");
   fprintf(stderr, "      --no-runtime               Do not embed run-time libraries.\n");
   fprintf(stderr, "      --verbose                  Display compilation process steps.\n");
@@ -1491,14 +1470,14 @@ print_usage(void)
   fprintf(stderr, "    them (.c -> .o) before assembling the program.\n");
   fprintf(stderr, "  The default component search list is usually defined by the environment\n");
   fprintf(stderr, "    variable 'MCSTAS' (default is " MCSTAS ") \n");
-  fprintf(stderr, "  Use 'mcrun' to both run mcstas and the C compiler.\n");
-  fprintf(stderr, "  Use 'mcgui' to run the McStas GUI.\n");  
+  fprintf(stderr, "  Use 'mcrun' to both run " MCCODE_NAME " and the C compiler.\n");
+  fprintf(stderr, "  Use 'mcgui' to run the " MCCODE_NAME " GUI.\n");  
   fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui, mcformat, mcdoc\n");
   fprintf(stderr, "DOC:      Please visit " MCCODE_BUGREPORT "\n");
   exit(1);
 }
 
-/* Print McStas version and copyright. */
+/* Print McCode version and copyright. */
 static void
 print_version(void)
 { 
