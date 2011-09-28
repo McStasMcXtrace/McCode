@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Template TAS instrument
+* Instrument: ILL_H10_IN8
 *
 * %Identification
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
@@ -44,8 +44,8 @@
 * In this TAS configuration, Cu200 is used as monochromator and Cu111 as 
 * analyser, with a single type detector.
 *
-* %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: D7_SC3_1D_I=3.93806e-05
-* %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: He3H_I=1.9e-11
+* %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: D7_SC3_1D_I=1.82621e+09
+* %Example: QM=1 EN=0 Sqw_coh=V.laz -n 1e6 Detector: He3H_I=1069.05
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -139,11 +139,12 @@ TRACE
 REMOVABLE COMPONENT Origin=Progress_bar()
 AT (0,0,0) ABSOLUTE
 
-/* a flat constant source */
+/* a flat constant source: tube H10 is twice as brilliant as H12 */
 REMOVABLE COMPONENT Source = Source_gen(
   radius  = 0.10,
   dist = machine_hkl.l1,
-  focus_xw = WM, focus_yh = HM,
+  focus_xw = fabs(WM*sin(machine_real.a1*DEG2RAD)), focus_yh = HM,
+  T1 = 683.7, I1 = 2*0.5874e13, T2 = 257.7, I2 = 2*2.5094e13, T3 =  16.7, I3 = 2*0.10343e13,
   E0 = machine_hkl.ei,
   dE = machine_hkl.ei*0.03)
 AT (0,0,0) ABSOLUTE

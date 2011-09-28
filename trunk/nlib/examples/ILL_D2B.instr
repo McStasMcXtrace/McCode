@@ -148,6 +148,8 @@ if (verbose) {
   printf("                  Normalized Intensity L0=%g [min^3]\n", L0);
 }
 
+RV = fabs(RV)*SM;
+
 
 %}
 
@@ -159,7 +161,7 @@ COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 /* source with constant flux. Directly send neutron events to monochromator area */
-COMPONENT Source = Source_gen(dist = 11, focus_xw = 0.05*fabs(sin(DEG2RAD*THETA_M)), focus_yh = 0.3, radius=0.11, 
+COMPONENT Source = Source_gen(dist = 11, focus_xw = fabs(0.05*fabs(sin(DEG2RAD*THETA_M))), focus_yh = 0.3, radius=0.11, 
 	lambda0 = lambda, dlambda = lambda*0.01,
 	T1 = 683.7, I1 = 0.5874e13, T2 = 257.7, I2 = 2.5094e13, T3 =  16.7, I3 = 0.10343e13)
   AT (0, 0, 0) RELATIVE Origin
