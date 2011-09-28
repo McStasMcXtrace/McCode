@@ -357,7 +357,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
             if (Vars->Flag_per_cm2) strncat(Set_Vars_Coord_Label, "/cm2", 30);
             if (Vars->Flag_per_st) {
               if (Vars->Flag_Auto_Limits)
-                strncat(Set_Vars_Coord_Label, "/st", 30);
+                strncat(Set_Vars_Coord_Label, "/sr", 30);
             }
             if (XY > 1 && Vars->Coord_Number)
               strncat(Set_Vars_Coord_Label, "/bin", 30);
@@ -572,7 +572,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
       if (Vars->Flag_per_cm2) strncat(Vars->Coord_Label[0], "/cm2", 30);
       if (Vars->Flag_per_st) {
         if (Vars->Flag_Auto_Limits)
-          strncat(Vars->Coord_Label[0], "/st", 30);
+          strncat(Vars->Coord_Label[0], "/sr", 30);
         else
           printf("Monitor_nD: %s: Flux per steradian requires Auto limits mode\n"
                  "WARNING     use options=\"... auto ...\". Unactivating this option.\n", Vars->compcurname);

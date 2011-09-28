@@ -782,7 +782,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "title \"%SRC/%FIL simulation Data\"\n"
       "info [ \"URL:    http://www.mccode.org/\"\n"
       "       \"Editor: %USR\"\n"
-      "       \"Creator:%SRC simulation (McStas)\"\n"
+      "       \"Creator:%SRC simulation (" MCCODE_STRING ")\"\n"
       "       \"Date:   Simulation started (%DATL) %DAT\"\n"
       "       \"File:   %FIL\" ]\n}\n"
       "Background { skyAngle [ 1.57 1.57] skyColor [0 0 1, 1 1 1, 0.1 0 0] }\n",
@@ -4897,9 +4897,9 @@ while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
 #ifdef USE_MPI
  /* merge run_num from MPI nodes */
   if (mpi_node_count > 1) {
-    double ncount=(double)mcrun_num;
-    mc_MPI_Sum(&ncount, 1);
-    mcrun_num = (long long)ncount;
+  double mcrun_num_double = (double)mcrun_num;
+  mc_MPI_Sum(&mcrun_num_double, 1);
+  mcrun_num = (unsigned long long)mcrun_num_double;
   }
 #endif
 
