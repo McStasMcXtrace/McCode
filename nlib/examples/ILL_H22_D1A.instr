@@ -41,9 +41,9 @@
 * The sample is a powder, in a container can, all positioned in an
 * Al environment (e.g. cryostat/furnace shield).
 *
-* This instrument is installed on the H22 guide.
+* This instrument was installed on the H22 guide.
 *
-* %Example: lambda=1.911 Detector: BananaPSD_I=63002
+* %Example: lambda=1.911 Detector: BananaPSD_I=436746
 *
 * %Parameters
 * m:      [1]    m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
@@ -102,6 +102,8 @@ INITIALIZE
       DM, RV, (!RV ? "flat" : "curved"), 2*A1);
     printf("* Sample: %s in %s cylinder container\n", powder, container);
   }
+  
+  RV = -fabs(RV);
 %}
 
 TRACE

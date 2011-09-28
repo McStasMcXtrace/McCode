@@ -22,7 +22,7 @@
 * installed at the end of the H25 supermirror thermal guide.
 *
 * %Example: KI=3.84 QM=1 Sqw_coh=V.laz Detector: Sample_Cradle_I=1.3915e+08
-* %Example: KI=3.84 QM=1 Sqw_coh=V.laz Detector: He3H_I=656.863
+* %Example: KI=3.84 QM=1 Sqw_coh=V.laz -n 1e6 Detector: He3H_I=550
 *
 * %Parameters
 * m:         m-value of guide coating (H14/H142) [1]

@@ -57,8 +57,8 @@
 *     WA=0.16, HA=0.08, RAH=-1, RAV=-1, DA=2.087, NHA=15, NVA=15,
 *     L1=2.33 
 *
-* %Example: QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=5.07236e-05
-* %Example: QM=1 Sqw_coh=V.laz Detector: He3H_I=5.00081e-11
+* %Example: QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=2.55907e+08
+* %Example: QM=1 Sqw_coh=V.laz Detector: He3H_I=249.736
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -517,11 +517,11 @@ if (!anglemode) {
 /* compute optimal curvatures */
 double L;
 L = 1/(1/L1+1/L2);
-if (RMV < 0) machine_real.rmv = 2*L*sin(DEG2RAD*machine_real.a1);
-if (RMH < 0) machine_real.rmh = 2*L/sin(DEG2RAD*machine_real.a1);
+if (RMV < 0) machine_real.rmv = fabs(2*L*sin(DEG2RAD*machine_real.a1));
+if (RMH < 0) machine_real.rmh = fabs(2*L/sin(DEG2RAD*machine_real.a1));
 L = 1/(1/L3+1/L4);
-if (RAV < 0) machine_real.rav = 2*L*sin(DEG2RAD*machine_real.a5);
-if (RAH < 0) machine_real.rah = 2*L/sin(DEG2RAD*machine_real.a5);
+if (RAV < 0) machine_real.rav = fabs(2*L*sin(DEG2RAD*machine_real.a5));
+if (RAH < 0) machine_real.rah = fabs(2*L/sin(DEG2RAD*machine_real.a5));
 
 if (verbose) {
   printf("* Transfer:     EN=%g [meV] QM=%g [Angs-1]\n", EN, machine_real.qm);
@@ -544,6 +544,12 @@ if (verbose) {
     if (strstr(Sqw_coh, ".laz") || strstr(Sqw_coh, ".lau"))
       printf("Powder %s\n", Sqw_coh);
 }
+
+machine_real.rmv = fabs(machine_real.rmv)*machine_hkl.sm;
+machine_real.rmh = fabs(machine_real.rmh)*machine_hkl.sm;
+machine_real.rav = fabs(machine_real.rav)*machine_hkl.sa;
+machine_real.rah = fabs(machine_real.rah)*machine_hkl.sa;
+
 %}
 /* end of INITIALIZE */
 
@@ -557,7 +563,8 @@ AT (0,0,0) ABSOLUTE
 REMOVABLE COMPONENT Source = Source_gen(
   radius  = 0.10,
   dist = machine_hkl.l1,
-  focus_xw = WM, focus_yh = HM,
+  focus_xw = fabs(WM*sin(machine_real.a1*DEG2RAD)), focus_yh = HM,
+  T1 = 683.7, I1 = 0.5874e13, T2 = 257.7, I2 = 2.5094e13, T3 =  16.7, I3 = 0.10343e13,
   E0 = machine_hkl.ei,
   dE = machine_hkl.ei*0.03)
 AT (0,0,0) ABSOLUTE

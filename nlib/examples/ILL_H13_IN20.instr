@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Template TAS instrument
+* Instrument: ILL_H13_IN20
 *
 * %Identification
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
@@ -42,8 +42,8 @@
 * This model uses two Si111 monochromator and analyzers (unpolarized
 * configuration).
 *
-* %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: D7_SC3_1D_I=6.0819e-05
-* %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: He3H_I=3.0e-11
+* %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: D7_SC3_1D_I=4.83869e+08
+* %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: He3H_I=267.069
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -141,7 +141,8 @@ AT (0,0,0) ABSOLUTE
 REMOVABLE COMPONENT Source = Source_gen(
   radius  = 0.10,
   dist = machine_hkl.l1,
-  focus_xw = WM, focus_yh = HM,
+  focus_xw = fabs(WM*sin(machine_real.a1*DEG2RAD)), focus_yh = HM,
+  T1 = 683.7, I1 = 0.5874e13, T2 = 257.7, I2 = 2.5094e13, T3 =  16.7, I3 = 0.10343e13,
   E0 = machine_hkl.ei,
   dE = machine_hkl.ei*0.03)
 AT (0,0,0) ABSOLUTE
