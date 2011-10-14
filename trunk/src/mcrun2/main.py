@@ -230,7 +230,6 @@ def main():
 
     # Parse options
     (options, args) = parser.parse_args()
-    parser.destroy()
     expand_options(options)
 
     if options.verbose:
@@ -238,7 +237,9 @@ def main():
 
     # Extract instrument and parameters
     if len(args) == 0:
-        raise OptionValueError('No instrument file specified.')
+        print parser.get_usage()
+        #raise OptionValueError('No instrument file specified.')
+        parser.exit()
     options.instr = args[0]
     options.params = args[1:]
 
