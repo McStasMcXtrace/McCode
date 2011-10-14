@@ -79,7 +79,7 @@ class McStas:
         # Setup paths
         self.dir = tempfile.mkdtemp(prefix='mcstas-')
         self.cpath = '%s/%s.c' % (self.dir, self.name)
-        self.binpath = '%s/%s.out' % (dirname(self.path), self.name)
+        self.binpath = '%s/%s.out' % (dirname(self.path) or '.', self.name)
 
         # Remove temporary files at exit
         atexit.register(self.cleanup)
