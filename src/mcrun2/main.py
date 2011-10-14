@@ -177,7 +177,7 @@ def main():
     ''' Main routine '''
 
     # Setup logging
-    formatter = logging.Formatter('%(asctime)s - %(message)s')
+    formatter = logging.Formatter('%(created)s, %(levelname)8s: %(message)s')
 
     handler = logging.StreamHandler()
     handler.setLevel(logging.INFO)
