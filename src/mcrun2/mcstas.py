@@ -1,11 +1,14 @@
 
-import tempfile
 import atexit
-import os
 import logging
+import os
+import re
+import tempfile
+import yaml
 
 from os.path import isfile, dirname, basename, splitext
 from subprocess import Popen, PIPE
+from decimal import Decimal
 
 
 LOG = logging.getLogger('mcstas.mcstas')
@@ -30,6 +33,7 @@ class ProcessException(Exception):
                                                     self.executable,
                                                     ' '.join(self.args))
 
+
 class Process:
     ''' An external process '''
 
@@ -47,7 +51,7 @@ class Process:
         pipe = pipe and PIPE or None
 
         # Run executable
-        LOG.debug('CMD: %s %s', self.executable, args)
+        LOG.debug('CMD: %s %s', self.executable, ' '.join(args))
         fid = Popen([self.executable] + args,
                     stdout=pipe,
                     stderr=pipe)
@@ -80,11 +84,9 @@ class McStas:
         # Remove temporary files at exit
         atexit.register(self.cleanup)
 
-
-    def setParameter(self, key, value):
+    def set_parameter(self, key, value):
         ''' Set the value of an experiment parameter '''
         self.params[key] = value
-
 
     def prepare(self, options):
         ''' Prepare for simultation run '''
@@ -113,9 +115,7 @@ class McStas:
 
         # Compiler optimisation
         args = ['-o', self.binpath] + cflags + [self.cpath]
-
         Process(options.cc).run(args)
-
 
     def run(self, pipe=False):
         ''' Run simulation '''
@@ -139,18 +139,21 @@ class McStas:
                 args.append('--%s' % opt)
 
         # Add parameters last
-        args += [ '%s=%s' % (key, value) for key, value in self.params.items() ]
+        args += ['%s=%s' % (key, value)
+                 for key, value in self.params.items()]
 
         # Run McStas
         if not mpi:
             LOG.info('Running: %s', self.binpath)
-            Process(self.binpath).run(args, pipe=pipe)
+            return Process(self.binpath).run(args, pipe=pipe)
         else:
             LOG.info('Running via MPI: %s', self.binpath)
             mpi_args = ['-np', str(options.mpi), self.binpath]
             mpi_args += args
-            Process(options.mpirun).run(mpi_args, pipe=pipe)
+            return Process(options.mpirun).run(mpi_args, pipe=pipe)
 
+    def get_info(self):
+        return McStasInfo(Process(self.binpath).run(['--info'], pipe=True))
 
     def cleanup(self):
         ''' Remove temporary files '''
@@ -162,3 +165,103 @@ class McStas:
 
         os.rmdir(self.dir)
 
+
+class Detector(object):
+    ''' A detector '''
+    def __init__(self, name, intensity, error, count, path):
+        self.name = name
+        self.intensity = Decimal(intensity)
+        self.error = Decimal(error)
+        self.count = Decimal(count)
+        self.path = path
+
+
+class McStasInfo:
+    ''' Parsing McStas experiment information (--info) '''
+
+    PARAMETERS_RE = re.compile(r'^\s*Parameters:(.*)', flags=re.MULTILINE)
+    SEPERATOR_RE = re.compile(r'^([^:]+):\s*')
+    QUOTE_RE = re.compile(r'^(\s*[^:]+):\s*([^\[\s].*)$', flags=re.MULTILINE)
+    GROUP_RE = re.compile(r'begin ([^\s]+)(.+)end \1', flags=re.DOTALL)
+    PARAM_RE = re.compile(r'^\s*Param:\s+"', flags=re.MULTILINE)
+
+    def __init__(self, data):
+        self.data = data
+        self.info = self._parse_info()
+
+    def _parse_info(self):
+        """
+        Parse the raw McStas info output
+        The output resembles YAML but not quite.
+        It's converted to YAML by:
+          0. Ensuring a space after 'key:' -> 'key: '
+          1. Adding qoutes 'key: value' -> 'key: "value"'
+          2. Changing 'begin foobar\n ...\n end foobar' -> 'foobar:\n'
+          3. Add unique suffix number to each param:
+               Param: lambda=0.7
+               Param: DM=1.8
+               -->
+               Param0: lambda=0.7
+               Param1: DM=1.8
+          4. Split up 'Parameters' to form a list
+        """
+
+        def escape(line):
+            ''' Escape \ and " '''
+            return line.replace('\\', '\\\\').replace('"', r'\"')
+
+        def quote(match):
+            ''' Quote a value '''
+            return '%s: "%s"' % (match.group(1), escape(match.group(2)))
+
+        def param_number(match):
+            ''' Assign unique number to each param '''
+            param_number.prev_param_number += 1
+            return match.group(0).replace('Param',
+                                          'Param%i' % param_number.prev_param_number)
+        # start count at 0 (previous is -1)
+        setattr(param_number, 'prev_param_number', -1)
+
+        def parameters_to_list(match):
+            old_str = match.group(1)
+            if old_str.strip():
+                new_str = ' [%s]' % ','.join(match.group(1).split())
+                return match.group(0).replace(old_str, new_str)
+            return match.group(0).strip() + ' []'
+
+        yaml_str = self.data
+        yaml_str = self.PARAMETERS_RE.sub(parameters_to_list, yaml_str)
+        yaml_str = self.SEPERATOR_RE.sub(r'\1: ', yaml_str)
+        yaml_str = self.QUOTE_RE.sub(quote, yaml_str)
+        yaml_str = self.GROUP_RE.sub(r'\1:\2', yaml_str)
+        yaml_str = self.PARAM_RE.sub(param_number, yaml_str)
+
+        return yaml.load(yaml_str)
+
+    def get(self, key):
+        return self.info[key]
+
+    def get_simulation(self):
+        return self.get('simulation')
+
+    def get_instrument(self):
+        return self.get('instrument')
+
+
+class McStasResult:
+    ''' Parsing of McStas experiment output '''
+
+    DETECTOR_RE = r'Detector: ([^\s]+)_I=([^ ]+) \1_ERR=([^\s]+) \1_N=([^ ]+) "(\1[^"]+)"'
+
+    def __init__(self, data):
+        self.data = data
+        self.detectors = None
+
+    def get_detectors(self):
+        ''' Extract detector information '''
+        if self.detectors is not None:
+            return self.detectors
+        res = re.findall(self.DETECTOR_RE, self.data)
+
+        return [Detector(name, intensity, error, count, path)
+                for name, intensity, error, count, path in res]
