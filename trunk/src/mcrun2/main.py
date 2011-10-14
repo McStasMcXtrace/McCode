@@ -134,7 +134,7 @@ def add_mcstas_options(parser):
 
     add('-d', '--dir',
         metavar='DIR', type=str,
-        action='callback', callback=check_dir,
+        action='callback', callback=check_file(exist=False),
         help='put all data files in directory DIR')
 
     add('-f', '--file',
