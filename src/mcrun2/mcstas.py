@@ -36,17 +36,21 @@ class Process:
     def __init__(self, executable):
         self.executable = executable
 
-    def run(self, args=None):
+    def run(self, args=None, pipe=False):
         ''' Run external process with args '''
 
+        # Unsafe to use [] as default (reference)
         if args is None:
             args = []
+
+        # Redirect stdout and stderr?
+        pipe = pipe and PIPE or None
 
         # Run executable
         LOG.debug('CMD: %s %s' % (self.executable, args))
         fid = Popen([self.executable] + args,
-                    stdout=None,
-                    stderr=None)
+                    stdout=pipe,
+                    stderr=pipe)
         stdout, stderr = fid.communicate()
 
         # Check if process terminated correctly
@@ -108,12 +112,10 @@ class McStas:
         Process(options.cc).run(args)
 
 
-    def run(self):
+    def run(self, pipe=False):
         ''' Run simulation '''
         args = []
         options = self.options
-        print repr(options)
-
         mpi = self.options.use_mpi
 
         # Handle proxy options with values
@@ -137,12 +139,12 @@ class McStas:
         # Run McStas
         if not mpi:
             LOG.info('Running: %s' % self.binpath)
-            Process(self.binpath).run(args)
+            Process(self.binpath).run(args, pipe=pipe)
         else:
             LOG.info('Running via MPI: %s' % self.binpath)
             mpi_args = ['-np', str(options.mpi), self.binpath]
             mpi_args += args
-            Process('mpirun').run(mpi_args)
+            Process(options.mpirun).run(mpi_args, pipe=pipe)
 
 
     def cleanup(self):
