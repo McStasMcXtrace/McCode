@@ -1,18 +1,25 @@
 #!/usr/bin/env python2.6
 
-from os import path
+import os.path
+import logging
+
+from os.path import isfile, isdir, abspath, dirname, basename
 from optparse import OptionParser, OptionGroup, OptionValueError
+
+from mcstas import McStas
+
+LOG = logging.getLogger('mcstas')
 
 
 # Helper functions
-def build_checker(accept, update, msg='Invalid value'):
-    ''' Build checker from accept() and update() functions '''
+def build_checker(accept, msg='Invalid value'):
+    ''' Build checker from accept() function '''
     def checker(option, _opt_str, value, parser):
         ''' value must be acceptable '''
         if not accept(value):
             raise OptionValueError('option %s: %s (was: "%s")' % (option, msg, value))
         # Update parser with accepted value
-        update(parser.values, value)
+        setattr(parser.values, option.dest, value)
     return checker
 
 
@@ -76,6 +83,10 @@ def add_mcrun_options(parser):
         action='store_true', default=False,
         help='disable optimising compiler flags for faster compilation')
 
+    add('--verbose',
+        action='store_true', default=False,
+        help='enable verbose output')
+
     parser.add_option_group(opt)
 
 
@@ -88,7 +99,6 @@ def add_mcstas_options(parser):
 
     # Misc options
     check_seed = build_checker(lambda seed: seed != 0,
-                               lambda vs, seed: setattr(vs, 'seed', seed),
                                'SEED cannot be 0')
 
     add('-s', '--seed',
@@ -108,24 +118,28 @@ def add_mcstas_options(parser):
         help='enable gravitation for all trajectories')
 
     # Data options
-    def check_path(opt_name, is_valid):
-        ''' Build function for checking existence of a path
-            provided for option opt_name '''
-        return build_checker(is_valid,
-                             lambda vs, path: setattr(vs, opt_name, path),
-                             'invalid path')
-
-    check_dir = lambda opt: check_path(opt, path.isdir)
-    check_file = lambda opt: check_path(opt, path.isfile)
+    dir_exists = lambda path: isdir(abspath(path))
+    check_dir = build_checker(dir_exists, 'invalid path')
+    def check_file(exist=True):
+        ''' Validate the path to a file '''
+        if exist:
+            is_valid = isfile
+        else:
+            def is_valid(path):
+                ''' Ensure that path to file exists and filename is provided '''
+                if not dir_exists(dirname(path)):
+                    return False
+                return not isdir(abspath(path))
+        return build_checker(is_valid, 'invalid path')
 
     add('-d', '--dir',
         metavar='DIR', type=str,
-        action='callback', callback=check_dir('dir'),
+        action='callback', callback=check_dir,
         help='put all data files in directory DIR')
 
     add('-f', '--file',
         metavar='FILE', type=str,
-        action='callback', callback=check_file('file'),
+        action='callback', callback=check_file(exist=False),
         help='put all data in a single file')
 
     add('-a', '--data-only',
@@ -152,11 +166,21 @@ def add_mcstas_options(parser):
 def main():
     ''' Main routine '''
 
+    # Setup logging
+    formatter = logging.Formatter('%(asctime)s - %(message)s')
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(formatter)
+
+    LOG.setLevel(logging.DEBUG)
+    LOG.addHandler(ch)
+
+    # Add options
     usage = ('usage: %prog [-cpnN] Instr [-sndftgahi] '
              'params={val|min,max|min,guess,max}...')
     parser = OptionParser(usage, version='mcrun 0.1')
 
-    # Add options
     add_mcrun_options(parser)
     add_mcstas_options(parser)
 
@@ -164,8 +188,19 @@ def main():
     (options, args) = parser.parse_args()
     parser.destroy()
 
-    print options
-    print args
+    if options.verbose:
+        ch.setLevel(logging.DEBUG)
+
+    # Extract instrument and parameters
+    if len(args) == 0:
+        raise OptionValueError('No instrument file specified.')
+    instr = args[0]
+    params = args[1:]
+
+    # Run McStas
+    mcstas = McStas(instr)
+    mcstas.prepare(options)
+    mcstas.run(options)
 
 
 if __name__ == '__main__':
