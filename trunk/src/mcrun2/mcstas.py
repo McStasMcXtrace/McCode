@@ -93,9 +93,9 @@ class McStas:
         print repr(options)
 
         # Handle proxy options, pass through
-        proxy_opts_val = ['seed', 'ncount', 'dir', 'file']
+        proxy_opts_val = ['seed', 'ncount', 'dir', 'file', 'format']
         proxy_opts_flags = ['trace', 'gravitation', 'data-only',
-                            'no-output-files', 'info', 'format']
+                            'no-output-files', 'info']
 
         for opt in proxy_opts_val:
             val = getattr(options, opt.replace('-', '_'))
