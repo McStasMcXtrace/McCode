@@ -210,6 +210,15 @@ def main():
 
     # Run McStas
     mcstas = McStas(options.instr)
+
+    # Set parameters
+    for param in options.params:
+        if '=' in param:
+            key, value = param.split('=', 1)
+            mcstas.setParameter(key, value)
+        else:
+            LOG.warning('Ignoring invalid parameter: "%s"', param)
+
     mcstas.prepare(options)
     mcstas.run()
 
