@@ -47,7 +47,7 @@ class Process:
         pipe = pipe and PIPE or None
 
         # Run executable
-        LOG.debug('CMD: %s %s' % (self.executable, args))
+        LOG.debug('CMD: %s %s', self.executable, args)
         fid = Popen([self.executable] + args,
                     stdout=pipe,
                     stderr=pipe)
@@ -92,9 +92,9 @@ class McStas:
         # Check if instrument code has changed
         if not options.force_compile and isfile(self.binpath) \
                and modified(self.path) < modified(self.binpath):
-            LOG.info('Using existing binary: %s' % self.binpath)
+            LOG.info('Using existing binary: %s', self.binpath)
             return  # skip
-        LOG.info('Recompiling: %s' % self.binpath)
+        LOG.info('Recompiling: %s', self.binpath)
 
         # Generate C-code
         Process('mcstas').run(['-o', self.cpath, self.path])
@@ -138,10 +138,10 @@ class McStas:
 
         # Run McStas
         if not mpi:
-            LOG.info('Running: %s' % self.binpath)
+            LOG.info('Running: %s', self.binpath)
             Process(self.binpath).run(args, pipe=pipe)
         else:
-            LOG.info('Running via MPI: %s' % self.binpath)
+            LOG.info('Running via MPI: %s', self.binpath)
             mpi_args = ['-np', str(options.mpi), self.binpath]
             mpi_args += args
             Process(options.mpirun).run(mpi_args, pipe=pipe)
