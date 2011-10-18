@@ -106,9 +106,8 @@ long     Table_Init(t_Table *Table, long rows, long columns);
 char **Table_ParseHeader_backend(char *header, ...);
 
 /* private functions */
-
 void Table_Free(t_Table *Table);
-long Table_Read_Handle(t_Table *Table, FILE *fid, long block_number, long max_lines);
+long Table_Read_Handle(t_Table *Table, FILE *fid, long block_number, long max_lines, char *name);
 static void Table_Stat(t_Table *Table);
 double Table_Interp1d(double x, double x1, double y1, double x2, double y2);
 double Table_Interp1d_nearest(double x, double x1, double y1, double x2, double y2);
