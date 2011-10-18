@@ -16,7 +16,6 @@
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
-* Variable names have prefix '' for 'McStas Read Table' to avoid conflicts
 *
 * Usage: within SHARE
 * %include "read_table-lib"
@@ -67,6 +66,7 @@
     long  nelements;
     long  begin;
     long  filesize=0;
+    char  name[256];
     struct stat stfile;
 
     if (!Table) return(-1);
@@ -122,11 +122,13 @@
     stat(File,&stfile); filesize = stfile.st_size;
     if (offset && *offset) fseek(hfile, *offset, SEEK_SET);
     begin     = ftell(hfile);
-    nelements = Table_Read_Handle(Table, hfile, block_number, max_lines);
-    strncpy(Table->filename, File, 128);
+    if (offset && *offset) sprintf(name, "%s@%li", File, *offset);
+    else                   strncpy(name, File, 128);
+    nelements = Table_Read_Handle(Table, hfile, block_number, max_lines, name);
     Table->begin = begin;
     Table->end   = ftell(hfile);
     Table->filesize = (filesize>0 ? filesize : 0);
+    Table_Stat(Table);
     if (offset) *offset=Table->end;
     fclose(hfile);
     return(nelements);
@@ -261,7 +263,7 @@
   } /* end Table_Read_Offset_Binary */
 
 /*******************************************************************************
-* long Read_Table_Handle(t_Table *Table, FILE *fid, int block_number, long max_lines)
+* long Table_Read_Handle(t_Table *Table, FILE *fid, int block_number, long max_lines, char *name)
 *   ACTION: read a single Table from a text file handle (private)
 *   input   Table:pointer to a t_Table structure
 *           fid:  pointer to FILE handle
@@ -278,7 +280,7 @@
 * Data block may be rebined with Table_Rebin (also sort in ascending order)
 *******************************************************************************/
   long Table_Read_Handle(t_Table *Table, FILE *hfile,
-                         long block_number, long max_lines)
+                         long block_number, long max_lines, char *name)
   { /* reads all/a data block from 'file' handle and returns a Table structure  */
     double *Data;
     char *Header;
@@ -293,6 +295,7 @@
 
     if (!Table) return(-1);
     Table_Init(Table, 0, 0);
+    if (name && strlen(name)) strcpy(Table->filename, name);
 
     if(!hfile) {
        fprintf(stderr, "Error: File handle is NULL (Table_Read_Handle).\n");
@@ -453,7 +456,6 @@
     Table->rows         = Rows;
     Table->columns      = Columns;
 
-    Table_Stat(Table);
     return (count_in_array);
 
   } /* end Table_Read_Handle */
@@ -773,7 +775,6 @@ long Table_Init(t_Table *Table, long rows, long columns)
     max_x = -FLT_MAX;
     min_x =  FLT_MAX;
     n     = (row ? Table->rows : Table->columns);
-
     /* get min and max of first column/vector */
     for (i=0; i < n; i++)
     {
@@ -796,7 +797,7 @@ long Table_Init(t_Table *Table, long rows, long columns)
                     : Table_Index(*Table,0,  i+1)) - X;
         if (fabs(diff) < fabs(step)) step = diff;
         /* change sign ? */
-        if ((Table->max_x - Table->min_x)*diff < 0 && monotonic)
+        if ((max_x - min_x)*diff < 0 && monotonic)
           monotonic = 0;
       } /* end for */
       /* now test if steps are constant within READ_TABLE_STEPTOL */
@@ -810,8 +811,8 @@ long Table_Init(t_Table *Table, long rows, long columns)
               : Table_Index(*Table,0,  i));
           diff = (row ? Table_Index(*Table,i+1,0)
               : Table_Index(*Table,0,  i+1)) - X;
-          if ( fabs(step)*(1-READ_TABLE_STEPTOL) < fabs(diff) ||
-                fabs(diff) < fabs(step)*(1+READ_TABLE_STEPTOL) )
+          if ( fabs(step)*(1+READ_TABLE_STEPTOL) < fabs(diff) ||
+                fabs(diff) < fabs(step)*(1-READ_TABLE_STEPTOL) )
           { constantstep = 0; break; }
         }
       }
@@ -851,8 +852,7 @@ long Table_Init(t_Table *Table, long rows, long columns)
       t_Table Table;
 
       /* access file at offset and get following block */
-      nelements = Table_Read_Offset(&Table, File, 1,
-      &offset,0);
+      nelements = Table_Read_Offset(&Table, File, 1, &offset,0);
       /* if ok, set t_Table block number else exit loop */
       block_number++;
       Table.block_number = block_number;
@@ -869,6 +869,7 @@ long Table_Init(t_Table *Table, long rows, long columns)
         }
       }
       /* store it into t_Table array */
+      sprintf(Table.filename, "%s#%li", File, block_number-1);
       Table_Array[block_number-1] = Table;
       /* continues until we find an empty block */
     }

@@ -806,7 +806,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     if (Sqw->verbose_output > 0) printf("Isotropic_Sqw: %s: Computing scattering unit density V_rho=%g [AA^-3] from file %s\n", Sqw->compname, Sqw->rho, file);
   }
   
-  /* the scattering unit cross sections are the chemical formula onces 
+  /* the scattering unit cross sections are the chemical formula ones 
    * times the nb of chemical formulae in the scattering element */
   if (mat_at_nb > 0) { 
     Sqw->s_abs *= mat_at_nb; Sqw->s_inc *= mat_at_nb; Sqw->s_coh *= mat_at_nb; 
@@ -843,6 +843,10 @@ struct Sqw_Data_struct *Sqw_readfile(
       "               File must contain 3 blocks for [q,w,sqw] or Powder file\n");
     return(Sqw_Data);
   }
+  
+  sprintf(Table_Array[0].filename, "%s#q", file);
+  sprintf(Table_Array[1].filename, "%s#w", file);
+  sprintf(Table_Array[2].filename, "%s#sqw", file);
 
   /* restrict gridding range to q and omega min/max */
   for (i=0; i< 2; i++) { /* i=[q,w] */
