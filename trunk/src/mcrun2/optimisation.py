@@ -110,6 +110,11 @@ class Scanner:
                 LOG.debug("%s: %s", key, point[key])
                 par_values.append(point[key])
 
+            is_decimal = lambda x: type(x) == Decimal
+            to_string = lambda x: is_decimal(x) and '%.4f' % x \
+                                                or x
+            LOG.info(', '.join('%s: %s' % (a, to_string(b))
+                               for (a, b) in point.items()))
             out = self.mcstas.run(pipe=True)
             dets = sorted(McStasResult(out).get_detectors(),
                           key=lambda x: x.name)
