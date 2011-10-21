@@ -144,10 +144,10 @@ class McStas:
 
         # Run McStas
         if not mpi:
-            LOG.info('Running: %s', self.binpath)
+            LOG.debug('Running: %s', self.binpath)
             return Process(self.binpath).run(args, pipe=pipe)
         else:
-            LOG.info('Running via MPI: %s', self.binpath)
+            LOG.debug('Running via MPI: %s', self.binpath)
             mpi_args = ['-np', str(options.mpi), self.binpath]
             mpi_args += args
             return Process(options.mpirun).run(mpi_args, pipe=pipe)
