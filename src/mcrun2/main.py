@@ -238,7 +238,6 @@ def main():
     # Extract instrument and parameters
     if len(args) == 0:
         print parser.get_usage()
-        #raise OptionValueError('No instrument file specified.')
         parser.exit()
     options.instr = args[0]
     options.params = args[1:]
