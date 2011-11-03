@@ -34,13 +34,14 @@
  */
 
 DEFINE COMPONENT Source_gaussian
-DEFINITION PARAMETERS ()
-SETTING PARAMETERS (sig_x=1,sig_y=0,sigPr_x=0,sigPr_y=0,flux=1,dist=1,gamma=0,E0=0, dE=0, lambda0=0,dlambda=-1,phase=-1)
+DEFINITION PARAMETERS (string spectrum_file=NULL)
+SETTING PARAMETERS (sig_x=1,sig_y=0,sigPr_x=0,sigPr_y=0,flux=1,dist=1,gauss=0,gamma=0,E0=0, dE=0, lambda0=0,dlambda=-1,phase=-1)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
+  %include "read_table-lib"
   double Gauss2D(double sigmaX, double sigmaY, double x, double y, double A){
     double F;
     F=A*exp(-(((x*x)/(2.0*sigmaX*sigmaX))+((y*y)/(2.0*sigmaY*sigmaY))));
@@ -50,7 +51,11 @@ SHARE
 
 DECLARE
 %{
- double l, pmul;
+  struct {
+    double l0,dl;
+    double pmul,pint;
+    t_Table T;
+  } prms;
 %}
 
 
@@ -62,11 +67,28 @@ INITIALIZE
     fprintf(stderr,"Source_gaussian_J (%s): Must define horizontal and vertical angular divergences \n",NAME_CURRENT_COMP);
     exit(0);
   }
-        
-  if (E0){
-    lambda0=2*M_PI/(E0*E2K);
+
+ if (spectrum_file){
+    /*read spectrum from file*/
+    int status=0;
+    if ( (status=Table_Read(&(prms.T),spectrum_file,0))==-1){
+      fprintf(stderr,"Source_gaussian(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file);
+      exit(-1);
+    }
+    /*data is now in table t*/
+    /*integrate to get total flux, assuming numbers have been corrected for measuring aperture*/
+    int i;
+    prms.pint=0;
+    t_Table *T=&(prms.T);
+    for (i=0;i<prms.T.rows-1;i++){
+      prms.pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
+    }
+    printf("Source_gaussian(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
+    if(E0) printf("Source_gaussian(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
+  } else if (E0){
+    lambda0=2*M_PI/E2K * (E0/(E0*E0-dE*dE));
     if (dE) {
-      dlambda=2*M_PI/(E2K*E0*E0)*dE;
+      dlambda=2*M_PI/E2K * (dE/(E0*E0-dE*dE));
     } else {
       dlambda=0;
     }
@@ -76,20 +98,17 @@ INITIALIZE
   }
   /*calculate the X-ray weight from the flux*/
   if (flux){//pmul=flux;
-    pmul=flux*1.0/((double) mcget_ncount()); 
+    prms.pmul=flux*1.0/(double)mcget_ncount(); 
   }else{
-    pmul=1.0/((double) mcget_ncount());
+    prms.pmul=1.0/(double)mcget_ncount();
   }
-
-  
-  
 %}
 
 
 TRACE
 %{
   double xx,yy,spX,spY,x1,y1,z1;
-  double k;
+  double k,e,l;
   double F1,F2;
   double dx,dy,dz;
   
@@ -101,16 +120,31 @@ TRACE
   z=0;
  
   // Gaussian distribution at origin
-  F1=Gauss2D(sig_x,sig_y,x,y,pmul);
-  
-  if (dlambda){
-    l=lambda0+dlambda*randnorm();
+  F1=Gauss2D(sig_x,sig_y,x,y,prms.pmul);
+
+  if (spectrum_file){
+    double pp=0;
+    //while (pp<=0){ 
+    l=prms.T.data[0]+ (prms.T.data[(prms.T.rows-1)*prms.T.columns] -prms.T.data[0])*rand01();
+    pp=Table_Value(prms.T,l,2);
+    //}
+    p*=pp;
+    /*if E0!=0 convert the tabled value to wavelength*/
+    if (E0) {
+      l=2*M_PI/(l*1e-3*E2K);
+    }
+  }else if (dlambda){
+    if (gauss){
+      l=lambda0+dlambda*randnorm();
+    }else{
+      l=randpm1()*dlambda*0.5 + lambda0;
+    }
   }else{
     l=lambda0;
   }
 
   k=(2*M_PI/l); 
-  
+
   // Beam's footprint at a dist calculation
   spX=sqrt(sig_x*sig_x+sigPr_x*sigPr_x*dist*dist);
   spY=sqrt(sig_y*sig_y+sigPr_y*sigPr_y*dist*dist);
@@ -141,7 +175,7 @@ TRACE
   /*set polarization vector*/
   Ex=0;Ey=0;Ez=0;
   
-  p*=erf(F2)*pmul;  
+  p*=erf(F2)*prms.pmul;  
   
 %}
 
