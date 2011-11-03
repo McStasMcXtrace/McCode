@@ -741,11 +741,9 @@ TRACE
       type = rand01();
       p_inc=0; /*is turned off till we fix the Compton scattering code*/
       /* How to handle this one? Transmit (1) / Incoherent (2) / Coherent (3) ? */
-      printf("xi,yi,zi=%g %g %g\n",x,y,z);
       if (type < p_transmit) {
         type = 1; 
         l = l_full; /* Passing through, full length */
-        printf("passing through %g\n",l3);
         PROP_DL(l3); 
 //      } else if (type >= p_transmit && type < (p_transmit + p_inc)) {
 //        type = 2;
@@ -756,11 +754,9 @@ TRACE
         type = 3;
         PROP_DL(dl+l0); /* Point of scattering */
         SCATTER;
-        printf("scattering at %g\n",dl+l0);
       } else {
         exit(fprintf(stderr,"PowderN %s: DEAD - this shouldn't happen!\n", NAME_CURRENT_COMP));
       }
-      printf("xf,yf,zf=%g %g %g\n",x,y,z);
         
       if (type == 3) { /* Make coherent scattering event */
         if (line_info.count > 0) {
@@ -819,11 +815,9 @@ TRACE
           
           /* tmp_k = rotate k_out by alpha0 around 'k' (Debye-Scherrer cone) */
           rotate(tmp_kx,tmp_ky,tmp_kz, kout_x,kout_y,kout_z, alpha0, kx, ky, kz);
-          printf("ki=%g %g %g\n",kx,ky,kz);
           kx = tmp_kx;
           ky = tmp_ky;
           kz = tmp_kz;
-          printf("kf=%g %g %g tth=%g\n",kx,ky,kz,theta*RAD2DEG);
           /* Since now scattered and new direction given, calculate path to exit */
           if (line_info.shape == 1) {
             intersect  = box_intersect(&l0, &l3, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
