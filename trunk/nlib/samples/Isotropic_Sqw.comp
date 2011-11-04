@@ -194,7 +194,8 @@
 * d_phi:      [deg] scattering vertical angular spreading (usually the height
 *                     of the next component/detector). Use 0 for full space.
 *                     This is only relevant for single scattering (order=1).
-* save_sqw:     [1] When set to 1, saves S(q), S(w) and S(q,w) as monitors.
+* save_sqw:     [1] When set to 1, saves S(q), S(w) and S(q,w) as monitors. This option 
+*                     is not available under Windows platforms.
 * weight:   [g/mol] atomic/molecular weight of material
 * density: [g/cm^3] density of material. V_rho=density/weight/1e24*N_A
 * qmin:    [Angs-1] Minimum Q value to use in S(q,w).
@@ -1384,6 +1385,10 @@ INITIALIZE
   VarSqw.w_min     = (wmin > 0 ? wmin : 0);
   VarSqw.q_max     = (qmax > 0 ? qmax : 0);
   VarSqw.q_min     = (qmin > 0 ? qmin : 0);
+  
+#ifdef WIN32
+  save_sqw=0; /* SAVE Sqw generates mem error under windows (probably dynamic memory allocation) */
+#endif
 /* end INITIALIZE */
 %}
 
@@ -1978,6 +1983,9 @@ if (SCATTERED) {
 SAVE
 %{
   int  k;
+  
+  /* save_sqw=0 forced under Windows 
+     SAVE Sqw generates mem error under windows (probably dynamic memory allocation) */
 
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0)
   for (k=0; k < 2; k++) {
@@ -1992,7 +2000,7 @@ SAVE
     strcpy(ext, (k == 0 ? "coh" : "inc"));
     Data_sqw =  (k == 0 ? VarSqw.Data_coh : VarSqw.Data_inc);
 
-    if (save_sqw && Data_sqw.intensity) {
+    if (save_sqw && Data_sqw.intensity && Data_sqw.nb_q && Data_sqw.nb_w) {
       double SW[Data_sqw.nb_w];
       double SQW[Data_sqw.nb_q][Data_sqw.nb_w];
       long   i,j;
