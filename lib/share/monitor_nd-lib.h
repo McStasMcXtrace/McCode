@@ -95,7 +95,7 @@
 
   typedef struct MonitornD_Variables
   {
-    double area, steradian;
+    double area;
     double Sphere_Radius     ;
     double Cylinder_Height   ;
     char   Flag_With_Borders ;   /* 2 means xy borders too */
@@ -107,7 +107,6 @@
     char   Flag_Absorb       ;   /* monitor is also a slit */
     char   Flag_Exclusive    ;   /* absorb neutrons out of monitor limits */
     char   Flag_per_cm2      ;   /* flux is per cm2 */
-    char   Flag_per_st       ;   /* flux is per steradian */
     char   Flag_log          ;   /* log10 of the flux */
     char   Flag_parallel     ;   /* set neutron state back after detection (parallel components) */
     char   Flag_Binary_List  ;

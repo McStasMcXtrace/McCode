@@ -139,7 +139,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Flag_Absorb       = 0;   /* monitor is also a slit */
     Vars->Flag_Exclusive    = 0;   /* absorb neutrons out of monitor limits */
     Vars->Flag_per_cm2      = 0;   /* flux is per cm2 */
-    Vars->Flag_per_st       = 0;   /* flux is per steradian (in Auto mode only) */
     Vars->Flag_log          = 0;   /* log10 of the flux */
     Vars->Flag_parallel     = 0;   /* set neutron state back after detection (parallel components) */
     Vars->Flag_Binary_List  = 0;   /* save list as a binary file (smaller) */
@@ -156,7 +155,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->mean_dx=Vars->mean_dy=0;
     Vars->min_x = Vars->max_x  =0;
     Vars->min_y = Vars->max_y  =0;
-    Vars->steradian=0;
 
     Set_Vars_Coord_Type = DEFS->COORD_NONE;
     Set_Coord_Mode = DEFS->COORD_VAR;
@@ -204,7 +202,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     }
 
     if (strstr(Vars->option, "cm2") || strstr(Vars->option, "cm^2")) Vars->Flag_per_cm2 = 1;
-    if (strstr(Vars->option, "steradian")) Vars->Flag_per_st = 1;
 
     if (strstr(Vars->option, "binary") || strstr(Vars->option, "float"))
       Vars->Flag_Binary_List  = 1;
@@ -355,10 +352,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
             strcpy(Set_Vars_Coord_Label,"Intensity");
             strncat(Set_Vars_Coord_Label, " [n/s", 30);
             if (Vars->Flag_per_cm2) strncat(Set_Vars_Coord_Label, "/cm2", 30);
-            if (Vars->Flag_per_st) {
-              if (Vars->Flag_Auto_Limits)
-                strncat(Set_Vars_Coord_Label, "/sr", 30);
-            }
             if (XY > 1 && Vars->Coord_Number)
               strncat(Set_Vars_Coord_Label, "/bin", 30);
             strncat(Set_Vars_Coord_Label, "]", 30);
@@ -570,13 +563,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     if ((Vars->Coord_Type[0] & (DEFS->COORD_LOG-1)) == DEFS->COORD_P) {
       strncat(Vars->Coord_Label[0], " [n/s", 30);
       if (Vars->Flag_per_cm2) strncat(Vars->Coord_Label[0], "/cm2", 30);
-      if (Vars->Flag_per_st) {
-        if (Vars->Flag_Auto_Limits)
-          strncat(Vars->Coord_Label[0], "/sr", 30);
-        else
-          printf("Monitor_nD: %s: Flux per steradian requires Auto limits mode\n"
-                 "WARNING     use options=\"... auto ...\". Unactivating this option.\n", Vars->compcurname);
-      }
+      
       if (XY > 1 && Vars->Coord_Number)
         strncat(Vars->Coord_Label[0], "/bin", 30);
       strncat(Vars->Coord_Label[0], "]", 30);
@@ -826,11 +813,6 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         Vars->mean_dx += Vars->cp*fabs(Vars->cvx/v);
         Vars->mean_dy += Vars->cp*fabs(Vars->cvy/v);
       }
-      Vars->area =(Vars->max_x-Vars->min_x)
-                       *(Vars->max_y-Vars->min_y)*1E4; /* cm2 */
-      if (Vars->Flag_per_st)
-      Vars->steradian = 2*fabs(2*atan(Vars->mean_dx/Vars->mean_p)
-                                *sin(2*atan(Vars->mean_dy/Vars->mean_p)/2));
         
       for (i = 0; i <= Vars->Coord_Number; i++)
       { /* handle current neutron : last while */
@@ -966,8 +948,6 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
       /* apply per cm2 or per st */
       if (Vars->Flag_per_cm2 && Vars->area      != 0)
         pp /= Vars->area;
-      if (Vars->Flag_per_st  && Vars->steradian != 0)
-        pp /= Vars->steradian;
 
       /* 1D and n1D case : Vars->Flag_Multiple */
       if (Vars->Flag_Multiple)
@@ -1042,14 +1022,17 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
     MCDETECTOR detector;
 
     ratio = 100.0*mcget_run_num()/mcget_ncount();
-    if (Vars->Flag_per_cm2 && Vars->area && Vars->Flag_Verbose)
-      printf("Monitor_nD: %s: detector area is %g [cm2]\n",
-        Vars->compcurname, Vars->area);
-    if (Vars->Flag_per_st && Vars->steradian && Vars->Flag_Verbose)
-      printf("Monitor_nD: %s: beam solid angle is %g [st] (%g x %g [deg2])\n",
-        Vars->compcurname, Vars->steradian,
+    if (Vars->Flag_Verbose || Vars->Flag_per_cm2) {
+      printf("Monitor_nD: %s: active flat detector area is %g [cm^2], total area is %g [cm^2]\n",
+        Vars->compcurname, (Vars->max_x-Vars->min_x)
+                          *(Vars->max_y-Vars->min_y)*1E4, Vars->area);
+      printf("Monitor_nD: %s: beam solid angle is %g [st] (%g x %g [deg^2])\n",
+        Vars->compcurname, 
+        2*fabs(2*atan(Vars->mean_dx/Vars->mean_p)
+         *sin(2*atan(Vars->mean_dy/Vars->mean_p)/2)),
         atan(Vars->mean_dx/Vars->mean_p)*RAD2DEG,
         atan(Vars->mean_dy/Vars->mean_p)*RAD2DEG);
+    }
 
     /* check Buffer flush when end of simulation reached */
     if ((Vars->Buffer_Counter <= Vars->Buffer_Block) && Vars->Flag_Auto_Limits && Vars->Mon2D_Buffer && Vars->Buffer_Counter)
@@ -1111,8 +1094,6 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
         /* apply per cm2 or per st */
         if (Vars->Flag_per_cm2 && Vars->area      != 0)
           pp /= Vars->area;
-        if (Vars->Flag_per_st  && Vars->steradian != 0)
-          pp /= Vars->steradian;
 
         /* 1D and n1D case : Vars->Flag_Multiple */
         if (Vars->Flag_Multiple)
