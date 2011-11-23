@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.6
 
 import logging
+from log import McRunException
 
 from os.path import isfile, isdir, abspath, dirname
 from optparse import OptionParser, OptionGroup, OptionValueError
@@ -320,6 +321,8 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        exit(1)
-    except Exception, e:
+        LOG.fatal('User interrupt.')
+    except OptionValueError, e:
+        LOG.fatal(str(e))
+    except McRunException, e:
         LOG.fatal(str(e))
