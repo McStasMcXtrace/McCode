@@ -102,6 +102,10 @@ class Scanner:
     def run(self):
         LOG.info('Running Scanner, result file is "%s"' % self.outfile)
 
+        if len(self.intervals) == 0:
+            LOG.fatal('No intervals specified! (e.g. lambda=1.0,5.0)')
+            exit(1)
+
         fid = open(self.outfile, 'w')
         wrote_header = False
 
