@@ -99,7 +99,7 @@ class McStas:
         # Check if instrument code has changed
         if not options.force_compile and isfile(self.binpath) \
                and modified(self.path) < modified(self.binpath):
-            LOG.info('Using existing binary: %s', self.binpath)
+            LOG.info('Using existing binary: %s', basename(self.binpath))
             return  # skip
         LOG.info('Recompiling: %s', self.binpath)
 
@@ -117,16 +117,20 @@ class McStas:
         args = ['-o', self.binpath] + cflags + [self.cpath]
         Process(options.cc).run(args)
 
-    def run(self, pipe=False):
+    def run(self, pipe=False, extra_opts=None):
         ''' Run simulation '''
         args = []
+        extra_opts = extra_opts or {}
+
         options = self.options
         mpi = self.options.use_mpi
 
         # Handle proxy options with values
         proxy_opts_val = ['seed', 'ncount', 'dir', 'file', 'format']
         for opt in proxy_opts_val:
-            val = getattr(options, opt.replace('-', '_'))
+            # try extra_opts before options
+            default = getattr(options, opt.replace('-', '_'))
+            val = extra_opts.get(opt, default)
             if val is not None:
                 args.extend(['--%s' % opt, str(val)])
 
@@ -134,7 +138,9 @@ class McStas:
         proxy_opts_flags = ['trace', 'gravitation', 'data-only',
                             'no-output-files', 'info']
         for opt in proxy_opts_flags:
-            val = getattr(options, opt.replace('-', '_'))
+            # try extra_opts before optionts
+            default = getattr(options, opt.replace('-', '_'))
+            val = extra_opts.get(opt, default)
             if val:
                 args.append('--%s' % opt)
 
