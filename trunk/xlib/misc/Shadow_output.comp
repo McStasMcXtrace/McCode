@@ -1,0 +1,181 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright (C), All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Shadow_output
+*
+* %I
+* Written by: Andrea Prodi
+* Date: November 21, 2011
+* Version: $Revision $
+* Origin: Risoe/ILL
+* Release: McXtrace 0.1
+*
+* Write x-ray state parameters to SHADOW x-ray event file.
+*
+* %D
+* Detector-like component writing x-ray state parameters to a
+* SHADOW x-ray file. Used to interface McXtrace components or
+* simulations into SHADOW. Each neutron is 104 bytes.
+*
+* Note that when standard output is used, as is the default, no
+* monitors or other components that produce terminal output must be
+* used, or the x-ray output from this component will become
+* corrupted.
+*
+* Example: Shadow_output(file="MySource.vit", bufsize = 10000, progress = 1)
+*
+* %P
+* INPUT PARAMETERS
+*
+* file:     Filename of x-ray file to write. Default is standard
+*           output [string]
+* bufsize:  Size of x-ray output buffer [records]
+* progress: If not zero, output dots as progress indicator [flag]
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Shadow_output
+DEFINITION PARAMETERS (string file = 0, int bufsize = 1000)
+SETTING PARAMETERS (int progress = 0)
+OUTPUT PARAMETERS (hfile, obuf, pos, p_out, p2_out)
+STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+
+SHARE
+%{
+%include "shadow-lib"
+%}
+
+DECLARE
+%{
+char *filename;                 /* path + filename             */
+FILE *hfile;			/* X-ray output file handle    */
+Ray *obuf;			/* X-ray output buffer         */
+int pos;			/* Current position in buffer  */
+int reclen;                     /* Fortran binary unformatted sequential record head/tail */
+int ncol = 18;                  /* num column fixed at 18 for McXtrace->Shadow */
+int i, iflag = 0;               /* Shadow flag must be set to zero !!! */ 
+double p_out;                   /* sum of output weight        */
+double p2_out;                  /* square sum of output weight */
+%}
+
+INITIALIZE
+%{
+  /* Open x-ray output file. */
+  if (file==NULL)
+  {
+    hfile = stdout;
+  }
+  else if
+ (!strcmp(file, "no_file"))
+  {
+    hfile = NULL;
+  }
+  else
+  {
+    hfile = fopen((filename=FullParName(file)), "wb");
+    if(!hfile)
+    {
+      fprintf(stderr, "Shadow_output: Error: Cannot open output file %s.\n", filename);
+      exit(1);
+    }
+  }
+#ifdef WIN32
+  if(hfile==stdout)
+  { if(_setmode(_fileno( stdout ), _O_BINARY ) == -1)
+    { fprintf(stderr,"Can't set stdout to binary mode\n");
+      exit(1);
+    }
+  }
+#endif
+  /* Write header for Shadow data file. */
+  reclen = 3*sizeof(int);
+  fwrite(&reclen, sizeof(int), 1, hfile);
+  fwrite(&ncol, sizeof(int), 1, hfile);
+  fwrite(&bufsize, sizeof(int), 1, hfile);
+  fwrite(&iflag, sizeof(int), 1, hfile);
+  fwrite(&reclen, sizeof(int), 1, hfile);
+
+  /* Allocate x-ray output buffer. */
+  reclen = ncol * sizeof(double);
+  obuf = calloc(bufsize, reclen + 2*sizeof(int));
+
+  if(!obuf)
+  {
+    fprintf(stderr, "Shadow_output: Error: Cannot allocate x-ray buffer.\n");
+    exit(1);
+  }
+  /* Initialize buffer. */
+  pos = 0;
+%}
+
+TRACE
+%{
+  int count;
+
+  /* Flush output buffer if full. */
+  if(hfile && pos >= bufsize)
+  { count = fwrite(obuf, sizeof(Ray), bufsize, hfile);
+    if(progress)
+    {
+      fputc('.', stderr);	/* Output progress indicator. */
+      fflush(stderr);
+    }
+    if(count != bufsize)
+    {
+      fprintf(stderr, "Shadow_output: Error during write of x-ray file.\n");
+      exit(1);
+    }
+    else
+    {
+      pos = 0;			/* Reposition at start of buffer */
+    }
+  }
+/* the variable mcrun_num is used as ray index for Shadow */
+  obuf[pos] = mcxtrace2shadow(x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p,mcrun_num); /*pos instead of mcrun_num?*/
+
+  p_out  += p;
+  p2_out += p*p;
+
+  ++pos;
+%}
+FINALLY
+%{
+  int count, dum;
+
+  /* Flush output buffer if necessary. */
+  if(hfile && pos > 0)
+  {
+
+ /*  count = fwrite(obuf, sizeof(Ray), pos, hfile); */
+    for(i=0;i<pos;i++){
+      fwrite(&reclen, sizeof(int), 1, hfile);
+      dum = fwrite(&obuf[i], sizeof(Ray), 1, hfile);
+      fwrite(&reclen, sizeof(int), 1, hfile);
+      count += dum;
+    }
+
+    if(count != pos)
+    {
+      fprintf(stderr, "Shadow_output: Error during write of x-ray event file.\n");
+      exit(1);
+    }
+  }
+  if(progress)
+    fprintf(stderr, ".\n");	/* Output final progress indicator. */
+  if(obuf)
+    free(obuf);
+  if(hfile && file)
+    fclose(hfile);
+%}
+MCDISPLAY
+%{
+  /* Invisible component. */
+%}
+
+END
