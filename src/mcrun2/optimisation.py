@@ -2,8 +2,8 @@ from os import mkdir
 
 from log import McRunException
 
-import logging
-LOG = logging.getLogger('mcstas.optimisation')
+from log import getLogger
+LOG = getLogger('optimisation')
 
 from datetime import datetime
 from decimal import Decimal

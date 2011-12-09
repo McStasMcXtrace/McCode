@@ -1,8 +1,5 @@
 #!/usr/bin/env python2.6
 
-import logging
-from log import McRunException
-
 from os.path import isfile, isdir, abspath, dirname
 from optparse import OptionParser, OptionGroup, OptionValueError
 from decimal import Decimal, InvalidOperation
@@ -11,7 +8,9 @@ from datetime import datetime
 from mcstas import McStas
 from optimisation import Scanner, LinearInterval, MultiInterval
 
-LOG = logging.getLogger('mcstas')
+from log import getLogger, setupLogger, setLogLevel, McRunException
+from log import DEBUG
+LOG = getLogger('main')
 
 # File path friendly date format (avoid ':' and white space)
 DATE_FORMAT_PATH = "%Y%d%m_%H%M%S"
@@ -226,16 +225,7 @@ def get_parameters(options):
 
 def main():
     ''' Main routine '''
-
-    # Setup logging
-    formatter = logging.Formatter('%(created).2f, %(levelname)8s: %(message)s')
-
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.INFO)
-    handler.setFormatter(formatter)
-
-    LOG.setLevel(logging.DEBUG)
-    LOG.addHandler(handler)
+    setupLogger()
 
     # Add options
     usage = ('usage: %prog [-cpnN] Instr [-sndftgahi] '
@@ -250,7 +240,7 @@ def main():
     expand_options(options)
 
     if options.verbose:
-        handler.setLevel(logging.DEBUG)
+        setLogLevel(DEBUG)
 
     # Inform user of what is happening
     # TODO: More info?
