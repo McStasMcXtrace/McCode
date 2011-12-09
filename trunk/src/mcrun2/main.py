@@ -9,7 +9,7 @@ from decimal import Decimal, InvalidOperation
 from datetime import datetime
 
 from mcstas import McStas
-from optimisation import Scanner, LinearInterval
+from optimisation import Scanner, LinearInterval, MultiInterval
 
 LOG = logging.getLogger('mcstas')
 
@@ -52,6 +52,10 @@ def add_mcrun_options(parser):
     add('-L', '--list',
         action='store_true',
         help='use a fixed list of points for linear scanning')
+
+    add('-M', '--multi',
+        action='store_true',
+        help='run a multi-dimensional scan')
 
     # Multiprocessing
     add('--mpi',
@@ -275,13 +279,13 @@ def main():
         mcstas.set_parameter(key, value)
 
     # Check for linear scanning
-    linear_interval = None
+    interval_points = None
 
     # Can't both do list and interval scanning
     if options.list and options.numpoints:
         raise OptionValueError('--numpoints cannot be used with --list')
 
-    elif options.list:
+    if options.list:
         if len(intervals) == 0:
             raise OptionValueError(
                 '--list was chosen but no lists was presented.')
@@ -289,15 +293,16 @@ def main():
         if not(all(map(lambda i: len(i) == points, intervals.values()))):
             raise OptionValueError(
                 'All variables much have an equal amount of points.')
-        linear_interval = LinearInterval.from_list(
+        interval_points = LinearInterval.from_list(
             points, intervals)
 
-    elif options.numpoints is not None:
-        if options.numpoints < 2:
-            raise OptionValueError(
-                ('Cannot scan variable(s) %s using only one data point. '
-                 'Please use -N to specify the number of points.') % \
-                ', '.join(intervals.keys()))
+    scan = options.multi or options.numpoints
+    if ((options.numpoints is not None and options.numpoints < 2)
+        or (scan and options.numpoints is None)):
+        raise OptionValueError(
+            ('Cannot scan variable(s) %s using only one data point. '
+             'Please use -N to specify the number of points.') % \
+            ', '.join(intervals.keys()))
         # Check that input is valid decimals
         if not all(map(lambda i:
                        len(i) == 2 and
@@ -305,13 +310,18 @@ def main():
             raise OptionValueError('Could not parse intervals -- result: %s'
                                    % str(intervals))
 
-        linear_interval = LinearInterval.from_range(
+    if options.multi is not None:
+        interval_points = MultiInterval.from_range(
+            options.numpoints, intervals)
+
+    elif options.numpoints is not None:
+        interval_points = LinearInterval.from_range(
             options.numpoints, intervals)
 
     # Parameters for linear scanning present
-    if linear_interval:
+    if interval_points:
         scanner = Scanner(mcstas, intervals)
-        scanner.set_points(linear_interval)
+        scanner.set_points(interval_points)
         scanner.run()
     else:
         mcstas.run()
