@@ -1,6 +1,5 @@
 
 import atexit
-import logging
 import os
 import re
 import tempfile
@@ -10,8 +9,8 @@ from os.path import isfile, dirname, basename, splitext
 from subprocess import Popen, PIPE
 from decimal import Decimal
 
-
-LOG = logging.getLogger('mcstas.mcstas')
+from log import getLogger
+LOG = getLogger('mcstas')
 
 
 def modified(path):
