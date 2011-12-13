@@ -37,15 +37,10 @@
 * length [m] 			length of the crystal (along z-axia)
 * width [m] 			width of the crystal (along x-axis)
 * Material 			Si, Ge (maybe also GaAs?)	
-<<<<<<< HEAD
-* V [Å^3]			unit cell volume
-* h,k,l				indices of reflection (111)(220)(400)
-=======
 * V [Å^3]			unit cell volume160.1826
 * h []                          Miller index of reflection
 * k []                          Miller index of reflection
 * l []                          Miller index of reflection
->>>>>>> Perfect crystal now works for any hkl
 * alpha [rad]			asymmetry angle (alpha=0 for symmetric reflection, ie the Bragg planes are parallel to the crystal surface)
 * R0 []                         Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging. 
 * 
@@ -79,12 +74,6 @@ SHARE
     d = a/sqrt(h*h + k*k + l*l); 		/* d-spacing (Å)*/ 
     theta = asin(lambda/(2*d));  		/* kinematical bragg angle (rad) */
     b = sin(theta - alpha)/sin(theta + alpha);  /* asymmetry factor */
-    
-<<<<<<< HEAD
-    *Theta0 = Thetain + alpha; 			/* (rad) angle between Bragg planes and incident ray */ 
-    *Thetah = b*(*Theta0 - theta) + theta;   	/* (rad) Angle betweeb Bragg planes and reflected ray */
-=======
-    b = sin(theta + alpha)/sin(theta - alpha);  /* asymmetry factor */
 
     *Theta0 = Thetain - alpha; 			/* (rad) angle between Bragg planes and incident ray */ 
     *Thetah = b*(*Theta0 - theta) + theta;   	/* (rad) Angle betweeb Bragg planes and reflected ray */
@@ -93,7 +82,6 @@ SHARE
       *R=0;
       *DeltaTheta0 = -1; /*to mark it irrelevant*/
     }
->>>>>>> Perfect crystal now works for any hkl
     
     /* Define polarization factor: */
     switch(pol){
@@ -240,15 +228,9 @@ TRACE
         dist=sqrt(SQR(x-x_int)+SQR(y-y_int)+SQR(z-z_int));
 	PROP_DL(dist); 			/* now the photon is on the mirror surface, ready to be reflected... */ 
         SCATTER;
-<<<<<<< HEAD
-
-        Thetain = atan(kyu/kzu); 	/* (rad )The angle of incidence*/
-        
-=======
         /*Check which quadrant the k vector is in to determine sense of alpha. This to allow for hitting the crystal from behind.*/
         int quadrant;
         Thetain=fabs(atan(ky/kz));
->>>>>>> Perfect crystal now works for any hkl
         /* for a start, just define the value of atomic form factors for Si(111) at E = 8.04778keV */
         double d=cbrt(V)/(sqrt(h*h+k*k+l*l));/*this is valid only for cubic structures*/
         f00 = prms.Z;
@@ -256,13 +238,6 @@ TRACE
         fp  = Table_Value(prms.m_t,E,1)-prms.Z;
         fpp = Table_Value(prms.m_t,E,2);
 //        printf("%g %g %g %g\n",f00,f0h,fp,fpp);    
-<<<<<<< HEAD
-/*	printf("Thetain for this ray is: %g: \n",Thetain);*/
-	DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha, h, k, l, M, E, Thetain,pol);
-	Thetaout = Thetah + alpha; 	/* (rad) the angle between the crystal surface and the reflected ray */
-/*	printf("Thetaout for this ray is: %g: \n", Thetaout);*/
-
-=======
 	//printf("Thetain for this ray is: %g: \n",Thetain);
         if (ky<0 && kz>0){
           /*4th quadrant - forward hit from above. No change.*/ 
@@ -293,20 +268,9 @@ TRACE
           ky=ky-2*vny;
           kz=kz-2*vnz;
         }while(0);
->>>>>>> Perfect crystal now works for any hkl
 	/* The direction of the reflected ray: */
        // printf("kout: %g %g %g\n",kx,ky,kz);
 
-<<<<<<< HEAD
-	NORM(kxout,kyout,kzout); 
-        kx=K*kxout;
-	ky=K*kyout;
-	kz=K*kzout;
-	  	  
-        /* apply reflectivity */
-	p*=R; 
-
-=======
         /* apply Darwin reflectivity if not is supplied from outside*/
         if (!R0){
           p*=R;
@@ -315,10 +279,9 @@ TRACE
         } 
         /*catch dead rays*/
         if (p==0) ABSORB;
->>>>>>> Perfect crystal now works for any hkl
-	} else {
-	  RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
-	} 
+    } else {
+      RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+    } 
   }
   
   
