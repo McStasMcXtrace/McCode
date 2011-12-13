@@ -191,8 +191,7 @@ install_mcstas: installdirs $(BINOBJS_mcstas)
 	cd $(topdir)/lib && $(MAKE) install 
 	cd $(topdir)/nlib && $(MAKE) install
 	@echo "Create component documentation..."
-	export MCSTAS=$(libdir_mccode)
-	$(topdir)/src/mcdoc.fixpl --text; 
+	MCSTAS=$(libdir_mccode) $(topdir)/src/mcdoc.fixpl --text; 
 
 # documentation with mxdoc is broken, as it uses MCSTAS location and env
 install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
@@ -210,8 +209,7 @@ install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
 	cd $(topdir)/lib && $(MAKE) install 
 	cd $(topdir)/xlib && $(MAKE) install 
 	@echo "Create component documentation..."
-	export MCSTAS=$(libdir_mccode)
-	$(topdir)/src/mxdoc.mxfixpl --text; 
+	MCSTAS=$(libdir_mccode) $(topdir)/src/mxdoc.mxfixpl --text; 
 
 installdirs:
 	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_mccode) $(mandir)/man1
