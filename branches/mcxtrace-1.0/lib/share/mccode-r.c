@@ -2343,7 +2343,7 @@ int mcfile_data(MCDETECTOR detector, char *part)
         {
           long index   = !detector.istransposed ? i*detector.n*detector.p + j : i+j*detector.m;
           double value = this_p1[index];
-          fprintf(detector.file_handle, "%g", value);
+          fprintf(detector.file_handle, "%.12g", value);
           fprintf(detector.file_handle, "%s",
             (isIDL || isPython) && ((i+1)*(j+1) < detector.m*detector.n*detector.p) ?
             "," : " ");

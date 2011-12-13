@@ -37,9 +37,17 @@
 * length [m] 			length of the crystal (along z-axia)
 * width [m] 			width of the crystal (along x-axis)
 * Material 			Si, Ge (maybe also GaAs?)	
+<<<<<<< HEAD
 * V [Å^3]			unit cell volume
 * h,k,l				indices of reflection (111)(220)(400)
+=======
+* V [Å^3]			unit cell volume160.1826
+* h []                          Miller index of reflection
+* k []                          Miller index of reflection
+* l []                          Miller index of reflection
+>>>>>>> Perfect crystal now works for any hkl
 * alpha [rad]			asymmetry angle (alpha=0 for symmetric reflection, ie the Bragg planes are parallel to the crystal surface)
+* R0 []                         Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging. 
 * 
 * (none)
 *
@@ -47,7 +55,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Perfect_crystal
-  DEFINITION PARAMETERS (string form_factors="FormFactors.txt", string material="Si.txt") 
+  DEFINITION PARAMETERS (string form_factors="FormFactors.txt", string material="Si.txt",R0=0) 
 SETTING PARAMETERS (length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0.0)
 /* OUTPUT PARAMETERS (prms_m, a,b,c,M,Z0,Y0,xi,cost0) */
 OUTPUT PARAMETERS (prms)
@@ -72,8 +80,20 @@ SHARE
     theta = asin(lambda/(2*d));  		/* kinematical bragg angle (rad) */
     b = sin(theta - alpha)/sin(theta + alpha);  /* asymmetry factor */
     
+<<<<<<< HEAD
     *Theta0 = Thetain + alpha; 			/* (rad) angle between Bragg planes and incident ray */ 
     *Thetah = b*(*Theta0 - theta) + theta;   	/* (rad) Angle betweeb Bragg planes and reflected ray */
+=======
+    b = sin(theta + alpha)/sin(theta - alpha);  /* asymmetry factor */
+
+    *Theta0 = Thetain - alpha; 			/* (rad) angle between Bragg planes and incident ray */ 
+    *Thetah = b*(*Theta0 - theta) + theta;   	/* (rad) Angle betweeb Bragg planes and reflected ray */
+    /*check if Bragg angle is less than alpha. If so return 0 reflectivity*/
+    if (theta<alpha) {
+      *R=0;
+      *DeltaTheta0 = -1; /*to mark it irrelevant*/
+    }
+>>>>>>> Perfect crystal now works for any hkl
     
     /* Define polarization factor: */
     switch(pol){
@@ -117,19 +137,24 @@ SHARE
     L = (1/(1 + kappa*kappa))*( W*W + g*g + sqrt(SQR(W*W - g*g - 1 + kappa*kappa) + 4*SQR(g*W - kappa)));
     *R = L - sqrt(L*L - 1);
     DeltaThetas = r0*(lambda*lambda)*F0r/(sin(2*theta)*PI*V);               	/* eq 32 */
-/*    printf("E,lambda= %f , %f \n",E,lambda);
+#ifdef MCDEBUG
+    printf("E,lambda= %f , %f \n",E,lambda);
     printf("theta= %f \n",theta*180/PI);
-    printf("sqrt(b)= %f \n",sqrt(b));
+    printf("Theta0= %f \n",*Theta0*180/PI);
+    printf("theta = %g rad, alpha=%g rad.\n",theta,alpha);
+    printf("b,sqrt(b)= %f %f\n",b,sqrt(b));
     printf("1/sqrt(b)= %f \n",1/sqrt(b));
-    printf("sqrt(b)*sin(2*theta)= %f \n",sqrt(b)*sin(2*theta));
-    printf("C * psihr= %f \n",C * psihr);
+    printf("Fhr, Fhi, F0r, F0i= %g %g %g %g\n",Fhr, Fhi, F0r, F0i);
+    printf("psihr, psihi, psi0r, psi0i= %g %g %g %g\n",psihr, psihi, psi0r, psi0i);
+    printf("sqrt(b)*sin(2*theta)= %g \n",sqrt(b)*sin(2*theta));
+    printf("C, pis0r,C * psihr= %g %g %g\n",C, psi0r,C * psihr);
     printf("W= %f \n",W);
     printf("kappa= %f \n",kappa);
     printf("g= %f \n",g);
     printf("L= %f \n",L);
-    printf("R= %f \n",*R);						*/
-   // printf("DeltaThetas %f \n",3600*DeltaThetas*180/PI);				
-
+    printf("R= %f \n",*R);						
+    printf("DeltaThetas %f \n",3600*DeltaThetas*180/PI);				
+#endif
     *DeltaTheta0 = 0.5*(1 + 1/b)*DeltaThetas;                        	/* center of reflectivity curve is at theta + DeltaTheta0 eq 31 */ 
   }
 
@@ -182,7 +207,7 @@ TRACE
   double dist;				// distance from position at t=0 to the y=0 plane
   double M;		// volume of unit cell (Å^3), asymmetry angle (rad), indices of reflection and a temperature factor
   double f00, f0h, fp, fpp;		// atomic form factors for Q=0 is (f00 + fp + i*fpp) and for Q= ha*+kb*+lc* it is (f0h + fp + i*fpp).
-  double Thetain;			// (rad) angle between the crstal surface and the incident ray
+  double Thetain;			// (rad) angle between the crystal surface and the incident ray
   double Theta0;			// (rad) angle between the Bragg planes and the incident ray
   double Thetah;			// (rad) angle between the Bragg planes and the reflected ray
   double Thetaout;			// (rad) angle between the crystal surface and the reflected ray
@@ -215,9 +240,15 @@ TRACE
         dist=sqrt(SQR(x-x_int)+SQR(y-y_int)+SQR(z-z_int));
 	PROP_DL(dist); 			/* now the photon is on the mirror surface, ready to be reflected... */ 
         SCATTER;
+<<<<<<< HEAD
 
         Thetain = atan(kyu/kzu); 	/* (rad )The angle of incidence*/
         
+=======
+        /*Check which quadrant the k vector is in to determine sense of alpha. This to allow for hitting the crystal from behind.*/
+        int quadrant;
+        Thetain=fabs(atan(ky/kz));
+>>>>>>> Perfect crystal now works for any hkl
         /* for a start, just define the value of atomic form factors for Si(111) at E = 8.04778keV */
         double d=cbrt(V)/(sqrt(h*h+k*k+l*l));/*this is valid only for cubic structures*/
         f00 = prms.Z;
@@ -225,16 +256,48 @@ TRACE
         fp  = Table_Value(prms.m_t,E,1)-prms.Z;
         fpp = Table_Value(prms.m_t,E,2);
 //        printf("%g %g %g %g\n",f00,f0h,fp,fpp);    
+<<<<<<< HEAD
 /*	printf("Thetain for this ray is: %g: \n",Thetain);*/
 	DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha, h, k, l, M, E, Thetain,pol);
 	Thetaout = Thetah + alpha; 	/* (rad) the angle between the crystal surface and the reflected ray */
 /*	printf("Thetaout for this ray is: %g: \n", Thetaout);*/
 
+=======
+	//printf("Thetain for this ray is: %g: \n",Thetain);
+        if (ky<0 && kz>0){
+          /*4th quadrant - forward hit from above. No change.*/ 
+          DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha, h, k, l, M, E, Thetain,pol);
+        }else if(ky<0 && kz<0){
+          /*3rd quadrant - backward hit from above. Sense of alpha is reversed.*/
+          DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, -alpha, h, k, l, M, E, Thetain,pol);
+        }else if(ky>0 && kz>0){
+          /*1st quadrant - forward hit from below. Sense of alpha is reversed.*/
+          DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha, h, k, l, M, E, Thetain,pol);
+        }else if(ky>0 && kz<0){
+          /*2nd quadrant - backward hit from below. No change.*/
+          DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, -alpha, h, k, l, M, E, Thetain,pol);
+        }
+	Thetaout = Thetah - alpha; 	/* (rad) the angle between the crystal surface and the reflected ray */
+	//printf("Thetaout for this ray is: %g: ref=%g\n", Thetaout, R);
+        
+        /*reflect ray in normal to crystal planes*/
+        //printf("kin: %g %g %g\n",kx,ky,kz);
+        do {
+          double ax,ay,az,vnx,vny,vnz;
+          ax=0;ay=-sin(alpha);az=cos(alpha);
+          vnx=kx-scalar_prod(kx,ky,kz,ax,ay,az)*ax;
+          vny=ky-scalar_prod(kx,ky,kz,ax,ay,az)*ay;
+          vnz=kz-scalar_prod(kx,ky,kz,ax,ay,az)*az;
+          //printf("a=[ %g %g %g ] vn=[ %g %g %g ]\n",ax,ay,az,vnx,vny,vnz);
+          kx=kx-2*vnx;
+          ky=ky-2*vny;
+          kz=kz-2*vnz;
+        }while(0);
+>>>>>>> Perfect crystal now works for any hkl
 	/* The direction of the reflected ray: */
-	kxout = kxu;
-	kyout = -sqrt(kyu*kyu + kzu*kzu)*sin(Thetaout);
-	kzout = sqrt(kyu*kyu + kzu*kzu)*cos(Thetaout);
+       // printf("kout: %g %g %g\n",kx,ky,kz);
 
+<<<<<<< HEAD
 	NORM(kxout,kyout,kzout); 
         kx=K*kxout;
 	ky=K*kyout;
@@ -243,6 +306,16 @@ TRACE
         /* apply reflectivity */
 	p*=R; 
 
+=======
+        /* apply Darwin reflectivity if not is supplied from outside*/
+        if (!R0){
+          p*=R;
+        }else{
+         p*=R0;
+        } 
+        /*catch dead rays*/
+        if (p==0) ABSORB;
+>>>>>>> Perfect crystal now works for any hkl
 	} else {
 	  RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
 	} 
