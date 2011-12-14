@@ -231,7 +231,6 @@ TRACE
         /*Check which quadrant the k vector is in to determine sense of alpha. This to allow for hitting the crystal from behind.*/
         int quadrant;
         Thetain=fabs(atan(ky/kz));
-        /* for a start, just define the value of atomic form factors for Si(111) at E = 8.04778keV */
         double d=cbrt(V)/(sqrt(h*h+k*k+l*l));/*this is valid only for cubic structures*/
         f00 = prms.Z;
         f0h = Table_Value(prms.f0_t,1/(2*d),prms.Z);
