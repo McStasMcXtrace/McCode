@@ -59,7 +59,7 @@ STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
 SHARE 
 %{
   %include "read_table-lib"  
-
+#include <complex.h>
 /* something that would be relevant for ALL crystals */
   void DarwinReflectivity(double *R, double *Thetah, double *Theta0, double *DeltaTheta0,
 			  double f00, double f0h, double fp, double fpp, double V, double alpha, double h, double k, double l, double M, double E, double Thetain, int pol )
@@ -97,7 +97,10 @@ SHARE
     }
 
     /* STRUCTURE FACTOR CALCULATION: */
-    /* NOTE: these structurefactors are valid for single atom structures like Si or Ge only: */
+    /* NOTE: these structurefactors are valid for single atom diamond lattice structures like Si or Ge only: */
+    
+
+
     F0r = 8*(f00 + fp);				/* Q=0, real part of structure factor for forward scattering */
     F0i = 8*(fpp); 				/* Q=0, imag part of structure factor for forward scattering */
 
@@ -105,14 +108,21 @@ SHARE
       Fhr = sqrt(17)*(f0h + fp); 	/* |(4-i)| = sqrt(17) */
       Fhi = sqrt(17)*(fpp); 		/* |(4-i)| = sqrt(17) */   
       }
-    if (h==2 && k==2 && l==0){ 		/* (220) reflection */
+    else if (h==2 && k==2 && l==0){ 		/* (220) reflection */
       Fhr = 8*(f0h + fp); 	
       Fhi = 8*(fpp); 		
       }
-    if (h==4 && k==0 && l==0){ 		/* (400) reflection */
+    else if (h==4 && k==0 && l==0){ 		/* (400) reflection */
       Fhr = 8*(f0h + fp); 	
       Fhi = 8*(fpp); 		
       }
+    else {
+      complex double f_hkl=(1+cexp(I*M_PI*(h+k))+cexp(I*M_PI*(k+l)) + cexp(I*M_PI*(h+l)))*(1+cexp(I*M_PI*(h/4.0 + k/4.0 + l/4.0)));
+      Fhr = cabs(f_hkl)*(f0h + fp);
+      Fhi = cabs(f_hkl)*(fpp);
+      F0r = cabs(f_hkl)*(f00 + fp);				/* Q=0, real part of structure factor for forward scattering */
+      F0i = cabs(f_hkl)*(fpp); 				/* Q=0, imag part of structure factor for forward scattering */
+    }
 
     psi0r = fabs(F0r*exp(-M)*r0*lambda*lambda/(PI*V)); 
     psi0i = (-1)*fabs(F0i*exp(-M)*r0*lambda*lambda/(PI*V)); /* here multiplied by (1-) to compensate for the fabs throwing away the minus sign*/  
@@ -226,7 +236,7 @@ TRACE
     
     if (fabs(x_int)<=width/2 && fabs(z_int)<=length/2){
         dist=sqrt(SQR(x-x_int)+SQR(y-y_int)+SQR(z-z_int));
-	PROP_DL(dist); 			/* now the photon is on the mirror surface, ready to be reflected... */ 
+	PROP_DL(dist); 			/* now the photon is on the crystal surface, ready to be reflected... */ 
         SCATTER;
         /*Check which quadrant the k vector is in to determine sense of alpha. This to allow for hitting the crystal from behind.*/
         int quadrant;
@@ -246,10 +256,10 @@ TRACE
           DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, -alpha, h, k, l, M, E, Thetain,pol);
         }else if(ky>0 && kz>0){
           /*1st quadrant - forward hit from below. Sense of alpha is reversed.*/
-          DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha, h, k, l, M, E, Thetain,pol);
+          DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, -alpha, h, k, l, M, E, Thetain,pol);
         }else if(ky>0 && kz<0){
           /*2nd quadrant - backward hit from below. No change.*/
-          DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, -alpha, h, k, l, M, E, Thetain,pol);
+          DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha, h, k, l, M, E, Thetain,pol);
         }
 	Thetaout = Thetah - alpha; 	/* (rad) the angle between the crystal surface and the reflected ray */
 	//printf("Thetaout for this ray is: %g: ref=%g\n", Thetaout, R);
