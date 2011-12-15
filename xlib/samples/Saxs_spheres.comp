@@ -6,7 +6,7 @@
 *         Institut Laue Langevin, Grenoble, France
 *         University of Copenhagen, Copenhagen, Denmark
 *
-* Component: Sans_spheres
+* Component: Saxs_spheres
 *
 * %I
 * Written by: E. Knudsen, P. Willendrup, K. Lefmann, L. Arleth
@@ -61,7 +61,7 @@
 * %E
 *******************************************************************************/
 
-DEFINE COMPONENT Sans_spheres
+DEFINE COMPONENT Saxs_spheres
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (R=100, Phi=1e-3, Delta_rho=0.6, sigma_abs=0, 
 xwidth=0, yheight=0, zdepth=0, radius=0,
@@ -95,7 +95,7 @@ INITIALIZE
   }
 
   if (!(target_x || target_y || target_z)) {
-    printf("Sans_spheres: %s: The target is not defined. Using direct beam (Z-axis).\n",
+    printf("Saxs_spheres: %s: The target is not defined. Using direct beam (Z-axis).\n",
       NAME_CURRENT_COMP);
     target_z=1;
   }
