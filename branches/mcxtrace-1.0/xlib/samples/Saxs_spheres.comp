@@ -81,7 +81,7 @@ INITIALIZE
   else if (radius > 0 && !yheight)  shape=2; /* sphere */
 
   if (shape < 0) 
-    exit(fprintf(stderr,"Sans_spheres: %s: sample has invalid dimensions.\n"
+    exit(fprintf(stderr,"Saxs_spheres: %s: sample has invalid dimensions.\n"
                         "ERROR     Please check parameter values.\n", NAME_CURRENT_COMP));
   
   /* now compute target coords if a component index is supplied */
