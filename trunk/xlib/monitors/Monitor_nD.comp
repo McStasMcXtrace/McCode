@@ -194,7 +194,7 @@
 * username1:  [str] Name assigned to User1
 * username2:  [str] Name assigned to User2
 * username3:  [str] Name assigned to User3
-* restore_neutron: [0|1] If set, the monitor does not influence the neutron state.
+* restore_xray: [0|1] If set, the monitor does not influence the neutron state.
 *                        Equivalent to setting the 'parallel' option.
 * geometry:   [str] Name of an OFF file to specify a complex geometry detector
 *
@@ -211,7 +211,7 @@
 DEFINE COMPONENT Monitor_nD
 DEFINITION PARAMETERS (string options=0, string filename=0,string geometry=0, 
   user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX, username1=0, username2=0,username3=0)
-SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0, radius=0)
+SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_xray=0, radius=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, detector)
   /* Xray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -345,15 +345,15 @@ TRACE
      || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)
      || (geometry && strlen(geometry)) )
     {
-      if (t0 < 0 && t1 > 0)
-        t0 = t;  /* neutron was already inside ! */
-      if (t1 < 0 && t0 > 0) /* neutron exit before entering !! */
-        t1 = l;
+      if (l0 < 0 && l1 > 0)
+        l0 = 0;  /* photon was already inside ! */
+      if (l1 < 0 && l0 > 0) /* photon exit before entering !! */
+        l1 = 0;
       /* t0 is now time of incoming intersection with the sphere. */
-      if ((Vars.Flag_Shape < 0) && (t1 > 0))
-        PROP_DL(l1); /* t1 outgoing beam */
+      if ((Vars.Flag_Shape < 0) && (l1 > 0))
+        PROP_DL(l1); /* l1 outgoing beam */
       else
-        PROP_DL(l0); /* t0 incoming beam */
+        PROP_DL(l0); /* l0 incoming beam */
     }
 
     /* Now get the data to monitor: current or keep from PreMonitor */
@@ -374,23 +374,23 @@ TRACE
     }
 
     /*this is probably irrelevant for xrays*/
-    if ((Vars.He3_pressure > 0) && (t1 != t0) && ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX)))
-    {
-      XY = exp(-7.417*Vars.He3_pressure*fabs(t1-t0)*2*PI*K2V);
+//    if ((Vars.He3_pressure > 0) && (l1 != l0) && ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX)))
+//    {
+//      XY = exp(-7.417*Vars.He3_pressure*fabs(l1-l0)*2*PI*K2V);
       /* will monitor the absorbed part */
-      Vars.cp *= 1-XY;
+//      Vars.cp *= 1-XY;
       /* and modify the neutron weight after monitor, only remains 1-p_detect */
-      p *= XY;
-    }
+//      p *= XY;
+//    }
 
     /*this is probably irrelevant for xrays*/
-    if (Vars.Flag_capture)
-    {
-      XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);
-      XY *= V2K;
-      if (XY != 0) XY = 2*PI/XY; /* lambda. lambda(2200 m/2) = 1.7985 Angs  */
-      Vars.cp *= XY/1.7985;
-    }
+ //   if (Vars.Flag_capture)
+//    {
+//      XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);
+//      XY *= V2K;
+//      if (XY != 0) XY = 2*PI/XY; /* lambda. lambda(2200 m/2) = 1.7985 Angs  */
+//      Vars.cp *= XY/1.7985;
+//    }
 
     pp = Monitor_nD_Trace(&DEFS, &Vars);
     if (pp==0.0)
