@@ -129,8 +129,10 @@
 
     double cx,cy,cz;
     double cvx, cvy, cvz;
+    double ckx, cky, ckz;
     double csx, csy, csz;
-    double cs1, cs2, ct, cp;
+    double cEx, cEy, cEz;
+    double cs1, cs2, ct, cphi, cp;
     double He3_pressure;
     char   Flag_UsePreMonitor    ;   /* use a previously stored neutron parameter set */
     char   UserName1[128];
