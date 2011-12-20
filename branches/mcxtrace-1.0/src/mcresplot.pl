@@ -37,7 +37,7 @@ BEGIN {
   if($ENV{"MCSTAS"}) {
     $MCSTAS::sys_dir = $ENV{"MCSTAS"};
   } else {
-    if ($0 =~ /mcresplot/i) {
+    if ($0 =~ /m[xc]resplot/i) {
       if ($Config{'osname'} eq 'MSWin32') {
 	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
       } else {

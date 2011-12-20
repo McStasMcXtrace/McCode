@@ -44,7 +44,7 @@ BEGIN {
   if($ENV{"MCSTAS"}) {
     $MCSTAS::sys_dir = $ENV{"MCSTAS"};
   } else {
-    if ($0 =~ /mcdisplay/i) {
+    if ($0 =~ /m[xc]display/i) {
       if ($Config{'osname'} eq 'MSWin32') {
 	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
       } else {
