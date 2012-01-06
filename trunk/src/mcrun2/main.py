@@ -256,8 +256,6 @@ def main():
     # Run McStas
     mcstas = McStas(options.instr)
     mcstas.prepare(options)
-    instrs = mcstas.get_info().get_instrument()
-    LOG.debug('info: %s', instrs)
 
     (fixed_params, intervals) = get_parameters(options)
 
