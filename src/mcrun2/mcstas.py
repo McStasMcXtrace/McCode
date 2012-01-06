@@ -122,7 +122,6 @@ class McStas:
         extra_opts = extra_opts or {}
 
         options = self.options
-        mpi = self.options.use_mpi
 
         # Handle proxy options with values
         proxy_opts_val = ['seed', 'ncount', 'dir', 'file', 'format']
@@ -147,18 +146,20 @@ class McStas:
         args += ['%s=%s' % (key, value)
                  for key, value in self.params.items()]
 
-        # Run McStas
-        if not mpi:
-            LOG.debug('Running: %s', self.binpath)
-            return Process(self.binpath).run(args, pipe=pipe)
-        else:
+        return self.runMPI(args, pipe)
+
+    def runMPI(self, args, pipe=False):
+        """ Run McStas, possible via mpi """
+        binpath = self.binpath
+        mpi = self.options.use_mpi
+        if mpi:
             LOG.debug('Running via MPI: %s', self.binpath)
-            mpi_args = ['-np', str(options.mpi), self.binpath]
-            mpi_args += args
-            return Process(options.mpirun).run(mpi_args, pipe=pipe)
+            binpath = self.options.mpirun
+            args = ['-np', str(self.options.mpi), self.binpath] + args
+        return Process(binpath).run(args, pipe=pipe)
 
     def get_info(self):
-        return McStasInfo(Process(self.binpath).run(['--info'], pipe=True))
+        return McStasInfo(self.runMPI(['--info'], pipe=True))
 
     def cleanup(self):
         ''' Remove temporary files '''
