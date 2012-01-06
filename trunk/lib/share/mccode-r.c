@@ -4375,13 +4375,7 @@ mcinfo(void)
     exit(fprintf(stderr,"Error: Can not display instrument information in NeXus binary format\n"));
   mcsiminfo_init(stdout);
   mcsiminfo_close();
-#ifdef USE_MPI
-#undef exit
-#endif
   exit(0);
-#ifdef USE_MPI
-#define exit(code) MPI_Abort(MPI_COMM_WORLD, code)
-#endif
 } /* mcinfo */
 
 /*******************************************************************************
