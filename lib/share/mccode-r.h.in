@@ -234,7 +234,10 @@ int mc_MPI_Sum(double* buf, long count);
 int mc_MPI_Send(void *sbuf, long count, MPI_Datatype dtype, int dest);
 int mc_MPI_Recv(void *rbuf, long count, MPI_Datatype dtype, int source);
 
-#define exit(code) MPI_Abort(MPI_COMM_WORLD, code)
+#define exit(code) do {                                   \
+    MPI_Finalize();                                       \
+    exit(code);                                           \
+  } while(0)
 
 #else /* !USE_MPI */
 #define MPI_MASTER(instr) instr
