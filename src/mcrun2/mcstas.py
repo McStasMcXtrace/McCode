@@ -42,7 +42,7 @@ class Process:
     def run(self, args=None, pipe=False):
         ''' Run external process with args '''
 
-        # Unsafe to use [] as default (reference)
+        # Unsafe to use [] as default (pass by reference)
         if args is None:
             args = []
 
