@@ -262,6 +262,11 @@ def main():
     # Indicate end of setup / start of computations
     LOG.info('===')
 
+    if options.info:
+        print 'info!'
+        mcstas.run(override_mpi=False)
+        exit()
+
     # Set fixed parameters
     for key, value in fixed_params.items():
         mcstas.set_parameter(key, value)
