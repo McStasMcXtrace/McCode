@@ -184,6 +184,9 @@ def expand_options(options):
         options.cc = 'mpicc'
         options.mpirun = 'mpirun'
     else:
+        if not options.mpi is None:
+            LOG.warning('Ignoring MPI flag: not enough nodes (%d).',
+                        options.mpi)
         options.use_mpi = False
         options.cc = 'gcc'
     # Output DIR
