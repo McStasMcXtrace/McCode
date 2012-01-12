@@ -116,7 +116,7 @@ class McStas:
         args = ['-o', self.binpath] + cflags + [self.cpath]
         Process(options.cc).run(args)
 
-    def run(self, pipe=False, extra_opts=None):
+    def run(self, pipe=False, extra_opts=None, override_mpi=None):
         ''' Run simulation '''
         args = []
         extra_opts = extra_opts or {}
@@ -146,13 +146,13 @@ class McStas:
         args += ['%s=%s' % (key, value)
                  for key, value in self.params.items()]
 
-        return self.runMPI(args, pipe)
+        return self.runMPI(args, pipe, override_mpi)
 
-    def runMPI(self, args, pipe=False):
+    def runMPI(self, args, pipe=False, override_mpi=None):
         """ Run McStas, possible via mpi """
         binpath = self.binpath
         mpi = self.options.use_mpi
-        if mpi:
+        if override_mpi or override_mpi is None and mpi:
             LOG.debug('Running via MPI: %s', self.binpath)
             binpath = self.options.mpirun
             args = ['-np', str(self.options.mpi), self.binpath] + args
