@@ -102,6 +102,10 @@ INITIALIZE
   }else{
     prms.pmul=1.0/(double)mcget_ncount();
   }
+  if (dist!=1){
+    fprintf(stderr,"Source_gaussian (%s): parameter dist is superfluous and is ignored. It will be removed in future releases of McXtrace - please update your instrument file.\n");
+  } 
+
 %}
 
 
@@ -146,21 +150,21 @@ TRACE
   k=(2*M_PI/l); 
 
   // Beam's footprint at a dist calculation
-  spX=sqrt(sig_x*sig_x+sigPr_x*sigPr_x*dist*dist);
-  spY=sqrt(sig_y*sig_y+sigPr_y*sigPr_y*dist*dist);
+  spX=sqrt(sig_x*sig_x+sigPr_x*sigPr_x);
+  spY=sqrt(sig_y*sig_y+sigPr_y*sigPr_y);
   
   // targeted area calculation
   x1=randnorm()*spX;
   y1=randnorm()*spY;
-  z1=dist;
+  z1=1;
   
   dx=x1-x;
   dy=y1-y;
-  dz=sqrt(dx*dx+dy*dy+dist*dist);
+  dz=sqrt(dx*dx+dy*dy+1);
   
   kx=(k*dx)/dz;
   ky=(k*dy)/dz;
-  kz=(k*dist)/dz;
+  kz=(k)/dz;
   
   // Guassian distribution at a distance
   F2=Gauss2D(spX,spY,x1,y1,F1);
