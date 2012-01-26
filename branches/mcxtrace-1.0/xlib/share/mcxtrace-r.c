@@ -313,13 +313,29 @@ ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
   Rotation A,Gamma,Q_t,Tmp;
   double u,v,w;
 
-  Gamma[0][0]=1/(a*a);Gamma[0][1]=Gamma[0][2]=0;
-  Gamma[1][1]=1/(b*b);Gamma[1][0]=Gamma[1][2]=0;
-  Gamma[2][2]=1/(c*c);Gamma[2][0]=Gamma[2][1]=0;
+  Gamma[0][0]=Gamma[0][1]=Gamma[0][2]=0;
+  Gamma[1][1]=Gamma[1][0]=Gamma[1][2]=0;
+  Gamma[2][2]=Gamma[2][0]=Gamma[2][1]=0;
+  /*now set diagonal to ellipsoid half axis if non-zero.
+   * This way a zero value mean the sllipsoid extends infinitely along that axis,
+   * which is useful for objects only curved in one direction*/ 
+  if (a!=0){
+    Gamma[0][0]=1/(a*a);
+  }
+  if (b!=0){
+    Gamma[1][1]=1/(b*b);
+  }
+  if (c!=0){
+    Gamma[2][2]=1/(c*c);
+  }
 
-  rot_transpose(Q,Q_t);
-  rot_mul(Gamma,Q_t,Tmp);
-  rot_mul(Q,Tmp,A);
+  if (Q!=NULL){
+    rot_transpose(Q,Q_t);
+    rot_mul(Gamma,Q_t,Tmp);
+    rot_mul(Q,Tmp,A);
+  }else{
+    rot_copy(A,Gamma);
+  }
 
   /*to get the solutions as lengths in m use unit vector along k*/
   double ex,ey,ez,k;
