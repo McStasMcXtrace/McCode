@@ -167,6 +167,7 @@ def expand_options(options):
     if options.mpi > 0:
         options.use_mpi = True
         options.cc = 'mpicc'
+        options.mpirun = 'mpirun'
     else:
         options.use_mpi = False
         options.cc = 'gcc'
