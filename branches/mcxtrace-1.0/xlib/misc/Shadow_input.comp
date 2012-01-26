@@ -43,7 +43,7 @@ DEFINE COMPONENT Shadow_input
 DEFINITION PARAMETERS (string file = 0)
 SETTING PARAMETERS (int bufsize = 10000, repeat_count = 1)
 OUTPUT PARAMETERS (hfile, ibuf, size, pos, rep, finished)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray: parameters (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 SHARE
 %{
 %include "shadow-lib"
