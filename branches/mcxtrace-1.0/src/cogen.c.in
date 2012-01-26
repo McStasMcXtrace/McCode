@@ -1026,50 +1026,43 @@ cogen_trace(struct instr_def *instr)
   List_handle liter;
   struct comp_inst *comp;
   struct group_inst *group;
+  int i;
 
   if (verbose) fprintf(stderr, "Writing instrument and components TRACE\n");
+  
+  static char *statepars_all[NUM_STATE_PARS] =
+  { /* these particle state parameter names are used for all calls */
+#if MCCODE_PROJECT == 1     /* neutron */
+        "x", "y", "z", "vx", "vy", "vz",
+        "t", "sx", "sy", "sz", "p"
+#elif MCCODE_PROJECT == 2   /* xray */
+        "x", "y", "z", "kx", "ky", "kz",
+        "phi", "t", "Ex", "Ey","Ez", "p"
+#endif
+  };
+  static char *statepars_change[9] =
+  { /* these particle state parameter names are used for coordinate change only */
+#if MCCODE_PROJECT == 1     /* neutron */
+        "x", "y", "z", "vx", "vy", "vz", "sx", "sy", "sz"
+#elif MCCODE_PROJECT == 2   /* xray */
+        "x", "y", "z", "kx", "ky", "kz", "Ex", "Ey","Ez"
+#endif
+  };
 
   /* Output the function header. */
   coutf("void %sraytrace(void) {", ID_PRE);
   /* Local @MCCODE_PARTICULE@ state. */
   cout("  /* Copy @MCCODE_PARTICULE@ state to local variables. */");
-  coutf("  MCNUM %snlx = %snx;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snly = %sny;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlz = %snz;", ID_PRE, ID_PRE);
-#if MCCODE_PROJECT == 1     /* neutron */
-  coutf("  MCNUM %snlvx = %snvx;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlvy = %snvy;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlvz = %snvz;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlt = %snt;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlsx = %snsx;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlsy = %snsy;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlsz = %snsz;", ID_PRE, ID_PRE);
-#elif MCCODE_PROJECT == 2   /* xray */
-  coutf("  MCNUM %snlkx = %snkx;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlky = %snky;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlkz = %snkz;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlphi = %snphi;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlt = %snt;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlEx = %snEx;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlEy = %snEy;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlEz = %snEz;", ID_PRE, ID_PRE);
-#endif    
-  coutf("  MCNUM %snlp = %snp;", ID_PRE, ID_PRE);
+  for(i = 0; i < NUM_STATE_PARS; i++)
+    coutf("  MCNUM %snl%s = %sn%s;", ID_PRE, statepars_all[i], ID_PRE, statepars_all[i]);
   cout("");
 
   /* Debugging (initial state). */
   coutf("  %sDEBUG_ENTER()", ID_PRE);
-#if MCCODE_PROJECT == 1     /* neutron */
-  coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-        " %snlt, %snlsx,%snlsy,%snlsz, %snlp)",
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-#elif MCCODE_PROJECT == 2   /* xray */
-  coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlkx, %snlky, %snlkz,"
-        "%snlphi,%snlt, %snlEx,%snlEy,%snlEz, %snlp)",
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-#endif
+  coutf("  %sDEBUG_STATE(" , ID_PRE);
+  for(i = 0; i < NUM_STATE_PARS; i++)
+    if (i < NUM_STATE_PARS-1) coutf("    %snl%s,", ID_PRE, statepars_all[i]);
+    else                      coutf("    %snl%s)", ID_PRE, statepars_all[i]);
 
   /* Set group flags */
   if (list_len(instr->grouplist) > 0)
@@ -1121,43 +1114,16 @@ cogen_trace(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
   {
-
-    char *statepars[NUM_STATE_PARS];
-    static char *statepars_names[NUM_STATE_PARS] =
-      {
-#if MCCODE_PROJECT == 1     /* neutron */
-        "nlx", "nly", "nlz", "nlvx", "nlvy", "nlvz",
-        "nlt", "nlsx", "nlsy", "nlsz", "nlp"
-#elif MCCODE_PROJECT == 2   /* xray */
-        "nlx", "nly", "nlz", "nlkx", "nlky", "nlkz",
-        "nlphi", "nlt", "nlEx", "nlEy","nlEz", "nlp"
-#endif
-      };
-    int i;
     List_handle statepars_handle;
 
     coutf("  /* TRACE Component %s [%i] */", comp->name, comp->index);
 
-    /* Change of coordinates to local frame. */
+    /* Change of coordinates to local frame, including spin. */
     coutf("  %scoordschange(%sposr%s, %srotr%s,", ID_PRE, ID_PRE, comp->name,
           ID_PRE, comp->name);
-    coutf("    &%snlx, &%snly, &%snlz,", ID_PRE, ID_PRE, ID_PRE);
-#if MCCODE_PROJECT == 1     /* neutron */
-    coutf("    &%snlvx, &%snlvy, &%snlvz);", ID_PRE, ID_PRE, ID_PRE);
-#elif MCCODE_PROJECT == 2   /* xray */
-    coutf("    &%snlkx, &%snlky, &%snlkz);", ID_PRE, ID_PRE, ID_PRE);
-//    coutf("    &%snlphi, &%snlEx, &%snlEy);", ID_PRE, ID_PRE, ID_PRE);
-#endif
-
-    /* Change of spin to local frame. */
-    coutf("  %scoordschange_polarisation("
-#if MCCODE_PROJECT == 1     /* neutron */
-          "%srotr%s, &%snlsx, &%snlsy, &%snlsz);",
-#elif MCCODE_PROJECT == 2   /* xray */
-          "%srotr%s, &%snlEx, &%snlEy, &%snlEz);",
-#endif
-          ID_PRE, ID_PRE, comp->name, ID_PRE, ID_PRE, ID_PRE);
-
+    for(i = 0; i < 9; i++)
+      if (i < 9-1) coutf("    &%snl%s,",  ID_PRE, statepars_change[i]);
+      else         coutf("    &%snl%s);", ID_PRE, statepars_change[i]);
     
     /* JUMP RELATIVE comp */
     coutf("  /* define label inside component %s (without coords transformations) */", comp->name);
@@ -1166,76 +1132,43 @@ cogen_trace(struct instr_def *instr)
     coutf("  SIG_MESSAGE(\"%s (Trace)\");", comp->name); /* signal handler message */
     coutf("  %sDEBUG_COMP(\"%s\")", ID_PRE, comp->name);
     /* Debugging (entry into component). */
+    coutf("  %sDEBUG_STATE(", ID_PRE);
+    for(i = 0; i < NUM_STATE_PARS; i++)
+      if (i < NUM_STATE_PARS-1) coutf("    %snl%s,", ID_PRE, statepars_all[i]);
+      else                      coutf("    %snl%s)", ID_PRE, statepars_all[i]);
+    
+    for(i = 0; i < NUM_STATE_PARS; i++)  
+      coutf("#define %s %snl%s", statepars_all[i], ID_PRE, statepars_all[i]);
+      
 #if MCCODE_PROJECT == 1     /* neutron */
-    coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-          "%snlt, %snlsx,%snlsy,%snlsz, %snlp)",
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+    static char *store  ="STORE_NEUTRON";
+    static char *restore="RESTORE_NEUTRON";
 #elif MCCODE_PROJECT == 2   /* xray */
-    coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlkx, %snlky, %snlkz,"
-          "%snlphi,%snlt,%snlEx,%snlEy,%snlEz, %snlp)",
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+    static char *store  ="STORE_XRAY";
+    static char *restore="RESTORE_XRAY";
 #endif
 
-    /* Trace code. */
-    for(i = 0; i < NUM_STATE_PARS; i++)
-      statepars[i] = NULL;
-    statepars_handle = list_iterate(comp->def->state_par);
-    for(i = 0; i < NUM_STATE_PARS; i++)
-    {
-      statepars[i] = list_next(statepars_handle);
-      if(statepars[i] == NULL)
-        break;
-    }
-    list_iterate_end(statepars_handle);
-    for(i = 0; i < NUM_STATE_PARS; i++)
-    {
-      if(statepars[i] != NULL)
-        coutf("#define %s %s%s", statepars[i], ID_PRE, statepars_names[i]);
-      else
-        break;
-    }
     /* store @MCCODE_PARTICULE@ state in mccomp_storein */
-    if (!comp->split)
-#if MCCODE_PROJECT == 1     /* neutron */
-    coutf("  STORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
-          "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp);",
-          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-#elif MCCODE_PROJECT == 2   /* xray */
-    coutf("  STORE_XRAY(%i,%snlx, %snly, %snlz, %snlkx,"
-         "%snlky,%snlkz,%snlphi,%snlt, %snlEx,%snlEy, %snlEz, %snlp);",
-          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-#endif
-
-    else {
+    if (!comp->split) {
+      coutf("  %s(%i,", store, comp->index); /* STORE */
+      for(i = 0; i < NUM_STATE_PARS; i++)
+        if (i < NUM_STATE_PARS-1) coutf("    %snl%s,", ID_PRE, statepars_all[i]);
+        else                      coutf("    %snl%s);",ID_PRE, statepars_all[i]);
+    } else {
       /* spliting: store first time, then restore @MCCODE_PARTICULE@ */
       char *exp=exp_tostring(comp->split); /* number of splits */
       coutf("  if (!%sSplit_%s) {                   /* STORE only the first time */", ID_PRE, comp->name);
       coutf("    if (floor(%s) > 1) p /= floor(%s); /* adapt weight for SPLITed @MCCODE_PARTICULE@ */", exp, exp);
-#if MCCODE_PROJECT == 1     /* neutron */
-      coutf("    STORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
-          "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp);",
-          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+      coutf("    %s(%i,", store, comp->index); /* STORE */
+      for(i = 0; i < NUM_STATE_PARS; i++)
+        if (i < NUM_STATE_PARS-1) coutf("      %snl%s,", ID_PRE, statepars_all[i]);
+        else                      coutf("      %snl%s);",ID_PRE, statepars_all[i]);
       coutf("  } else {");
-      coutf("    RESTORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
-          "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp); }",
-          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-#elif MCCODE_PROJECT == 2   /* xray */
-      coutf("    STORE_XRAY(%i,%snlx, %snly, %snlz, %snlkx,"
-          "%snlky,%snlkz,%snlphi,%snlt, %snlEx,%snlEy, %snlEz, %snlp);",
-          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-      coutf("  } else {");
-      coutf("    RESTORE_XRAY(%i,%snlx, %snly, %snlz, %snlkx,"
-          "%snlky,%snlkz,%snlphi,%snlt, %snlEx,%snlEy, %snlEz, %snlp); }",
-          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-#endif
+      coutf("    %s(%i,", restore, comp->index); /* RESTORE */
+      for(i = 0; i < NUM_STATE_PARS; i++)
+        if (i < NUM_STATE_PARS-1) coutf("      %snl%s,", ID_PRE, statepars_all[i]);
+        else                      coutf("      %snl%s);",ID_PRE, statepars_all[i]);
+      cout ("  }");
       coutf("  %sSplit_%s++; /* SPLIT number */", ID_PRE, comp->name);
       str_free(exp);
     } /* SPLIT handling */
@@ -1271,17 +1204,10 @@ cogen_trace(struct instr_def *instr)
       if (strcmp(comp->name, comp->group->last_comp)) {
         /* not the last comp of GROUP: check if SCATTERED */
         coutf("  if (!%sGroup%s) /* restore @MCCODE_PARTICULE@ if was not scattered in GROUP yet */", ID_PRE, comp->group->name);
-#if MCCODE_PROJECT == 1     /* neutron */
-        coutf("    { RESTORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
-              "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp); }",
-          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-#elif MCCODE_PROJECT == 2   /* xray */
-        coutf("    { RESTORE_XRAY(%i,%snlx, %snly, %snlz, %snlkx,"
-              "%snlky,%snlkz,%snlphi,%snlt, %snlEx,%snlEy, %snlEz, %snlp); }",
-          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-#endif
+        coutf("  { %s(%i,", restore, comp->index); /* RESTORE */
+        for(i = 0; i < NUM_STATE_PARS; i++)
+          if (i < NUM_STATE_PARS-1) coutf("      %snl%s,", ID_PRE, statepars_all[i]);
+          else                      coutf("      %snl%s);",ID_PRE, statepars_all[i]);
       } else {
         /* last comp of GROUP: restore default ABSORB */
         coutf("/* end of GROUP %s */", comp->group->name);
@@ -1290,22 +1216,12 @@ cogen_trace(struct instr_def *instr)
     } /* GROUP */
 
     for(i = NUM_STATE_PARS-1; i >= 0; i--)
-    {
-      if(statepars[i] != NULL)
-        coutf("#undef %s", statepars[i]);
-    }
+      coutf("#undef %s", statepars_all[i]);
     /* Debugging (exit from component). */
-#if MCCODE_PROJECT == 1     /* neutron */
-    coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-          "%snlt, %snlsx,%snlsy,%snlsz, %snlp)",
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-#elif MCCODE_PROJECT == 2   /* xray */
-    coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlkx, %snlky, %snlkz,"
-          "%snlphi,%snlt, %snlEx,%snlEy,%snlEz, %snlp)",
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-#endif
+    coutf("  %sDEBUG_STATE(", ID_PRE);
+    for(i = 0; i < NUM_STATE_PARS; i++)
+      if (i < NUM_STATE_PARS-1) coutf("%snl%s,", ID_PRE, statepars_all[i]);
+      else                      coutf("%snl%s)", ID_PRE, statepars_all[i]);
     cout("");
   } /* while comp */
   list_iterate_end(liter);
@@ -1345,44 +1261,18 @@ cogen_trace(struct instr_def *instr)
 
   /* Debugging (final state). */
   coutf("  %sDEBUG_LEAVE()", ID_PRE);
-#if MCCODE_PROJECT == 1     /* neutron */
-  coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-        "%snlt, %snlsx,%snlsy,%snlsz, %snlp)",
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-#elif MCCODE_PROJECT == 2   /* xray */
-  coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlkx, %snlky, %snlkz,"
-        "%snlphi,%snlt, %snlEx,%snlEy,%snlEz, %snlp)",
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-#endif
+  coutf("  %sDEBUG_STATE(", ID_PRE);
+  for(i = 0; i < NUM_STATE_PARS; i++)
+    if (i < NUM_STATE_PARS-1) coutf("%snl%s,", ID_PRE, statepars_all[i]);
+    else                      coutf("%snl%s)", ID_PRE, statepars_all[i]);
 
   /* Copy back @MCCODE_PARTICULE@ state to global variables. */
   /* ToDo: Currently, this will be in the local coordinate system of the last
      component - should be transformed back into the global system. */
   cout("  /* Copy @MCCODE_PARTICULE@ state to global variables. */");
-  coutf("  %snx = %snlx;", ID_PRE, ID_PRE);
-  coutf("  %sny = %snly;", ID_PRE, ID_PRE);
-  coutf("  %snz = %snlz;", ID_PRE, ID_PRE);
-#if MCCODE_PROJECT == 1     /* neutron */
-  coutf("  %snvx = %snlvx;", ID_PRE, ID_PRE);
-  coutf("  %snvy = %snlvy;", ID_PRE, ID_PRE);
-  coutf("  %snvz = %snlvz;", ID_PRE, ID_PRE);
-  coutf("  %snt = %snlt;", ID_PRE, ID_PRE);
-  coutf("  %snsx = %snlsx;", ID_PRE, ID_PRE);
-  coutf("  %snsy = %snlsy;", ID_PRE, ID_PRE);
-  coutf("  %snsz = %snlsz;", ID_PRE, ID_PRE);
-#elif MCCODE_PROJECT == 2   /* xray */
-  coutf("  %snkx = %snlkx;", ID_PRE, ID_PRE);
-  coutf("  %snky = %snlky;", ID_PRE, ID_PRE);
-  coutf("  %snkz = %snlkz;", ID_PRE, ID_PRE);
-  coutf("  %snphi = %snlphi;", ID_PRE, ID_PRE);
-  coutf("  %snt = %snlt;", ID_PRE, ID_PRE);
-  coutf("  %snEx = %snlEx;", ID_PRE, ID_PRE);
-  coutf("  %snEy = %snlEy;", ID_PRE, ID_PRE);
-  coutf("  %snEz = %snlEz;", ID_PRE, ID_PRE);
-#endif
-  coutf("  %snp = %snlp;", ID_PRE, ID_PRE);
+  for(i = 0; i < NUM_STATE_PARS; i++)
+    coutf("  %sn%s = %snl%s;", ID_PRE, statepars_all[i], ID_PRE, statepars_all[i]);
+  cout("");
 
   /* Function end. */
   cout("} /* end trace */");
@@ -1687,4 +1577,5 @@ cogen(char *output_name, struct instr_def *instr)
   cogen_save(instr);
   cogen_finally(instr);
   cogen_mcdisplay(instr);
+  coutf("/* end of generated C code %s */", output_name);
 } /* cogen */
