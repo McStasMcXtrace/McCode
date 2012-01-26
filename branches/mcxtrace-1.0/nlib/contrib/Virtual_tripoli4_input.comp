@@ -102,7 +102,7 @@ OUTPUT PARAMETERS (hfile,head,nl,rep,begin_of_filename,begin_batch,do_rotate,do_
                    bx,by,bz,angle2z,nbatch,nsize,mean_x, mean_y, mean_z, intensity_extrapolated,
                    min_x, min_y, min_z,    max_x , max_y , max_z ,
                    min_vx, min_vy, min_vz, max_vx, max_vy, max_vz, n_count_extrapolated, repeat_cnt)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
 %{

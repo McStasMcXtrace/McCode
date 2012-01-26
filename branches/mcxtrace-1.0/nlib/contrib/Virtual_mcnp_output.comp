@@ -56,7 +56,7 @@ DEFINE COMPONENT Virtual_mcnp_output
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0)
 OUTPUT PARAMETERS (hfile)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
 %{

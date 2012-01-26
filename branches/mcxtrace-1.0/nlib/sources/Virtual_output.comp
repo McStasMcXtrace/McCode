@@ -70,7 +70,7 @@ DEFINE COMPONENT Virtual_output
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, string type=0, bufsize=0)
 OUTPUT PARAMETERS (DEFS, Vars, mcformat_sim, mcformat_vo, mcformat_override)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
 %{

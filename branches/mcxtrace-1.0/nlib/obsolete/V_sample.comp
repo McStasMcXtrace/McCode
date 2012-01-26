@@ -95,7 +95,7 @@ SETTING PARAMETERS (radius=0, thickness=0, zdepth=0, Vc=13.827, sigma_abs=5.08, 
   target_x = 0, target_y = 0, target_z = 0, focus_xw=0, focus_yh=0,
   focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, rad_sphere=0, sig_a=0, sig_i=0, V0=0, int target_index=0, multiples=1)
 OUTPUT PARAMETERS(StructVarsV, VarsV)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 DECLARE
 %{

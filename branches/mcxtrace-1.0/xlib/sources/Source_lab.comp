@@ -38,7 +38,7 @@ DEFINE COMPONENT Source_lab
 DEFINITION PARAMETERS (sigma=NULL)
 SETTING PARAMETERS (mu=1e-3,x0=1e-3,z0=1e-3,E0=20,xwidth=5e-3,yheight=5e-3,take_off=6,wd=0.01,string material_datafile="Cu.txt")
   OUTPUT PARAMETERS (edge,edgc,edg_sigma,O_xray_gen,R_xray_gen,R_xray_geni)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
@@ -100,7 +100,7 @@ TRACE
 
   double px,py,pz; 
   /* transform initial coords to ones relative to the exit window which is our reference point*/
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL);
 
   /*set a scatter pt at the generation pt*/
   x=x1;y=y1;z=z1;
@@ -138,81 +138,81 @@ TRACE
 MCDISPLAY
 %{
   magnify("xy");
-  double x1,y1,z1,x2,y2,z2,x0_2,z0_2,px,py,pz;
+  double x1,y1,z1,x2,y2,z2,x0_2,z0_2;
   x0_2=x0/2.0;
   z0_2=z0/2.0;
   x1=-x0_2;y1=0;z1=-z0_2;
   x2=-x0_2;y2=0;z2= z0_2;
   printf("%g %g %g\n",x1,y1,z1);
   printf("%g %g %g\n",x2,y2,z2);
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   printf("%g %g %g\n",x1,y1,z1);
   printf("%g %g %g %g \n",x2,y2,z2,mu);
   line(x1,y1,z1,x2,y2,z2);
 
   x1=x0_2;y1=0;z1=z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
   
   x2=x0_2;y2=0;z2=-z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x1,y1,z1,x2,y2,z2);
 
   x1=-x0_2;y1=0;z1=-z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
 
   /*this is the mean penetration depth of electron that get converted to x-rays*/  
   x1=-x0_2;y1=-mu;z1=-z0_2;
   x2=-x0_2;y2=-mu;z2= z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x1,y1,z1,x2,y2,z2,5);
   x1=x0_2;y1=-mu;z1=z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x2,y2,z2,x1,y1,z1,5);
   x2= x0_2;y2=-mu;z2=-z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x1,y1,z1,x2,y2,z2,5);
   x1=-x0_2;y1=-mu;z1=-z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x2,y2,z2,x1,y1,z1,5);
   /* add another set of lines line at 2 mean penetration depth*/
   x1=-x0_2;y1=-2*mu;z1=-z0_2;
   x2=-x0_2;y2=-2*mu;z2= z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x1,y1,z1,x2,y2,z2,5);
   x1=x0_2;y1=-2*mu;z1=z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x2,y2,z2,x1,y1,z1,5);
   x2= x0_2;y2=-2*mu;z2=-z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x1,y1,z1,x2,y2,z2,5);
   x1=-x0_2;y1=-2*mu;z1=-z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x2,y2,z2,x1,y1,z1,5);
 
   x1=-x0_2;y1=-2*mu;z1=-z0_2;
   x2=-x0_2;y2=0;z2=-z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
   x1=x0_2;y1=-2*mu;z1=-z0_2;
   x2=x0_2;y2=0;z2=-z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
   x1=-x0_2;y1=-2*mu;z1=z0_2;
   x2=-x0_2;y2=0;z2=z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
   x1=x0_2;y1=-2*mu;z1=z0_2;
   x2=x0_2;y2=0;z2=z0_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&px,&py,&pz);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&px,&py,&pz);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
 
 

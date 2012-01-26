@@ -73,7 +73,7 @@ SETTING PARAMETERS (xwidth, yheight,zdepth,
 		       Bx, By, Bz,
 		       int nx=5, int ny=5, int nz=5)
   OUTPUT PARAMETERS(gz, magnet, parPtr)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
 %{

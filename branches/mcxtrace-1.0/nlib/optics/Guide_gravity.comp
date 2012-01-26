@@ -123,7 +123,7 @@ SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
   nu=0, phase=0, string reflect=0)
 OUTPUT PARAMETERS (GVars, pTable)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{
 %include "ref-lib"

@@ -34,7 +34,7 @@ DEFINE COMPONENT Filter
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
 SETTING PARAMETERS (xwidth,yheight,zdepth) 
 OUTPUT PARAMETERS (prms)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{

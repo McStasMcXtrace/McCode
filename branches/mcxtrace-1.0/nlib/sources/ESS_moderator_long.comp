@@ -98,7 +98,7 @@ SETTING PARAMETERS (size=0.12, Lmin, Lmax, dist=0, focus_xw, focus_yh, nu=50.0/3
                     n2=5, chi2=0.9, I0=6.9e11, I2=27.6e10, int target_index=+1,
                     branch1=1, branch2=0.5, branch_tail=0.14350, branchframe=0)
 OUTPUT PARAMETERS (M, F, l_range, w_mult)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
 %{
   double l_range, w_mult;

@@ -54,7 +54,7 @@ DEFINE COMPONENT Perfect_crystal
 SETTING PARAMETERS (length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0.0)
 /* OUTPUT PARAMETERS (prms_m, a,b,c,M,Z0,Y0,xi,cost0) */
 OUTPUT PARAMETERS (prms)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE 
 %{

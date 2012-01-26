@@ -71,7 +71,7 @@ DEFINE COMPONENT Pol_simpleBfield_stop
 DEFINITION PARAMETERS (magnet_comp_stop)
 SETTING PARAMETERS ()
   OUTPUT PARAMETERS()
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
 %{

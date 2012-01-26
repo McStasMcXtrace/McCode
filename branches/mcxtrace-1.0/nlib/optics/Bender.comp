@@ -99,7 +99,7 @@ DEFINITION PARAMETERS(w,h,r,Win=0.04,k=1,d=0.001,l=0,
 
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (bk, mWin)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
  %{
 %include "ref-lib"

@@ -69,7 +69,7 @@ SETTING PARAMETERS (xwidth=0, yheight=.3, length=.35,
                     theta_min=5, theta_max=165, nchan=0, radius=1.3, nslit=0,
                     roc=0, verbose=0, approx=0)
 OUTPUT PARAMETERS ()
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
 %{
   double width_of_slit=0, width_of_Soller=0, slit_theta=0;
