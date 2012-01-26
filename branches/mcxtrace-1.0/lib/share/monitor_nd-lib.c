@@ -797,8 +797,9 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
       }
     }
     if (Vars->Flag_Auto_Limits != 2 || !Vars->Coord_Number) /* Vars->Flag_Auto_Limits == 0 (no auto limits/list) or 1 (store events into Buffer) */
-#if MCCODE_PARTICULE==neutron
-    {/*{{{*/
+    {
+#if defined ( RESTORE_NEUTRON )
+    /*{{{*/
       /* automatically compute area and steradian solid angle when in AUTO mode */
       /* compute the steradian solid angle incoming on the monitor */
       double v;
@@ -925,10 +926,10 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         } /* else will get Index later from Buffer when Flag_Auto_Limits == 2 */
       } /* end for i */
       While_End = 1;
-    }/* end else if Vars->Flag_Auto_Limits == 2 *//*}}}*/
-#elif MCCODE_PARTICULE==Xray
+      /*}}}*/    
+#elif defined ( RESTORE_XRAY )
       /* compute values - this is somewhat different for xrays in some cases.*/
-    {/*{{{*/
+      /*{{{*/
       /* automatically compute area and steradian solid angle when in AUTO mode */
       /* compute the steradian solid angle incoming on the monitor */
       double k;
@@ -940,9 +941,9 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
       if (Vars->min_y > Vars->cy) Vars->min_y = Vars->cy;
       if (Vars->max_y < Vars->cy) Vars->max_y = Vars->cy;
       Vars->mean_p  += Vars->cp;
-      if (v) {
-        Vars->mean_dx += Vars->cp*fabs(Vars->cvx/v);
-        Vars->mean_dy += Vars->cp*fabs(Vars->cvy/v);
+      if (k) {
+        Vars->mean_dx += Vars->cp*fabs(Vars->ckx/k);
+        Vars->mean_dy += Vars->cp*fabs(Vars->cky/k);
       }
       Vars->area =(Vars->max_x-Vars->min_x)
                        *(Vars->max_y-Vars->min_y)*1E4; /* cm2 */
@@ -1059,9 +1060,10 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
           }
         } /* else will get Index later from Buffer when Flag_Auto_Limits == 2 */
       } /* end for i */
+      /*}}}*/
       While_End = 1;
-    }/* end else if Vars->Flag_Auto_Limits == 2 *//*}}}*/
 #endif
+    }/* end else if Vars->Flag_Auto_Limits == 2 */
 
     if (Vars->Flag_Auto_Limits != 2) /* not when reading auto limits Buffer */
     { /* now store Coord into Buffer (no index needed) if necessary (list or auto limits) */
