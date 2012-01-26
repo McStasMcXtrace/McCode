@@ -3507,35 +3507,33 @@ inline double scalar_prod(
 }
 
 /*******************************************************************************
-* mccoordschange: applies rotation to (x y z) and (vx vy vz). Spin unchanged
+* mccoordschange: applies rotation to (x y z) and (vx vy vz) and Spin (sx,sy,sz)
 *******************************************************************************/
 void
 mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
-               double *vx, double *vy, double *vz)
+               double *vx, double *vy, double *vz, double *sx, double *sy, double *sz)
 {
   Coords b, c;
 
-  b.x = *x;
-  b.y = *y;
-  b.z = *z;
-  c = rot_apply(t, b);
-  b = coords_add(c, a);
-  *x = b.x;
-  *y = b.y;
-  *z = b.z;
+  if (x != NULL && y != NULL && z != NULL) {
+    b.x = *x;
+    b.y = *y;
+    b.z = *z;
+    c = rot_apply(t, b);
+    b = coords_add(c, a);
+    *x = b.x;
+    *y = b.y;
+    *z = b.z;
+  }
+  
+  if (vx != NULL && vy != NULL && vz != NULL) mccoordschange_polarisation(t, vx, vy, vz);
+  
+  if (sx != NULL && sy != NULL && sz != NULL) mccoordschange_polarisation(t, sx, sy, sz);
 
-  b.x = *vx;
-  b.y = *vy;
-  b.z = *vz;
-  c = rot_apply(t, b);
-  *vx = c.x;
-  *vy = c.y;
-  *vz = c.z;
-  /* spin handled with mccoordschange_polarisation */
 }
 
 /*******************************************************************************
-* mccoordschange_polarisation: applies rotation to (sx sy sz)
+* mccoordschange_polarisation: applies rotation to vector (sx sy sz)
 *******************************************************************************/
 void
 mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz)
