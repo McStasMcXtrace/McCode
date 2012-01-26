@@ -70,6 +70,7 @@ class McStas:
         self.path = instrument_file
         self.name = splitext(basename(self.path))[0]
         self.options = None
+        self.params = {}
 
         # Setup paths
         self.dir = tempfile.mkdtemp(prefix='mcstas-')
@@ -80,13 +81,17 @@ class McStas:
         atexit.register(self.cleanup)
 
 
+    def setParameter(self, key, value):
+        ''' Set the value of an experiment parameter '''
+        self.params[key] = value
+
+
     def prepare(self, options):
         ''' Prepare for simultation run '''
         self.options = options
 
         # Use mpi?
         mpi = options.use_mpi
-
         self.binpath += (mpi and '-mpi' or '')
 
         # Check if instrument code has changed
@@ -134,7 +139,7 @@ class McStas:
                 args.append('--%s' % opt)
 
         # Add parameters last
-        args += options.params
+        args += [ '%s=%s' % (key, value) for key, value in self.params.items() ]
 
         # Run McStas
         if not mpi:
