@@ -287,7 +287,7 @@ INITIALIZE
 #ifdef USE_MPI
   if (strstr(Vars.option, "auto") && mpi_node_count > 1)
     printf("Monitor_nD: %s is using automatic limits option 'auto' together with MPI.\n"
-           "WARNING     this will probably create incorrect output\n", NAME_CURRENT_COMP);
+           "WARNING     this may create incorrect distributions (but integrated flux will be right).\n", NAME_CURRENT_COMP);
 #endif
 %}
 
