@@ -1,4 +1,7 @@
 from os import mkdir
+
+from log import McRunException
+
 import logging
 LOG = logging.getLogger('mcstas.optimisation')
 
@@ -86,6 +89,10 @@ class LinearInterval:
             yield dict((key, intervals[key][step]) for key in intervals)
 
 
+class InvalidInterval(McRunException):
+    pass
+
+
 class Scanner:
     def __init__(self, mcstas, intervals):
         self.mcstas = mcstas
@@ -103,8 +110,7 @@ class Scanner:
         LOG.info('Running Scanner, result file is "%s"' % self.outfile)
 
         if len(self.intervals) == 0:
-            LOG.fatal('No intervals specified! (e.g. lambda=1.0,5.0)')
-            exit(1)
+            raise InvalidInterval('No interval range specified')
 
         fid = open(self.outfile, 'w')
         wrote_header = False
