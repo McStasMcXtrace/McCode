@@ -175,7 +175,7 @@ TRACE
   /*set polarization vector*/
   Ex=0;Ey=0;Ez=0;
   
-  p*=erf(F2)*prms.pmul;  
+  p*=prms.pmul;  
   
 %}
 
