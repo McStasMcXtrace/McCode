@@ -411,11 +411,14 @@ def display(this_File, comment):
     if this_File =="":
         # No filename given, assume mcstas.sim in current dir
         this_File = "mcstas.sim"
+
+    # FIX: make the path to this_File absolute to always get a non-empty dirname.
+    this_File = os.path.abspath(this_File)
     
     if os.path.isdir(this_File)==1:
         # dirname given, assume mcstas.sim in that dir.
         this_File = os.path.join(this_File,'mcstas.sim')
- 
+
     if os.path.dirname(this_File) != '':
         pwd = os.getcwd()
         os.chdir(os.path.dirname(this_File))

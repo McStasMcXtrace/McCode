@@ -149,6 +149,10 @@ TRACE
     }
 
     if (R <= 0) ABSORB;
+    if (R > 1) {
+      fprintf(stderr,"Guide_anyshape: %s: Warning: Reflectivity R=%g > 1 lowered to R=1.\n", NAME_CURRENT_COMP, R);
+      R=1;
+    }
 
     /* now handle either probability when transmit or reflect */
     if (!transmit) {

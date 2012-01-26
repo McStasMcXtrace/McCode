@@ -181,7 +181,7 @@ INITIALIZE
 
   if (reflect != NULL && r0 && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0"))
   {
-    if (verbose) fprintf(stdout, "Monochromator_curved : %s : Reflectivity data (k, R) from %s\n", NAME_CURRENT_COMP, reflect);
+    if (verbose) fprintf(stdout, "Monochromator_curved: %s: Reflectivity data (k, R) from %s\n", NAME_CURRENT_COMP, reflect);
     Table_Read(&rTable, reflect, 1); /* read 1st block data from file into rTable */
     Table_Rebin(&rTable);         /* rebin as evenly, increasing array */
     if (rTable.rows < 2) Table_Free(&rTable);
@@ -190,7 +190,7 @@ INITIALIZE
 
   if (transmit != NULL && strlen(transmit) && strcmp(transmit,"NULL") && strcmp(transmit,"0"))
   {
-    if (verbose) fprintf(stdout, "Monochromator_curved : %s : Transmission data (k, T) from %s\n", NAME_CURRENT_COMP, transmit);
+    if (verbose) fprintf(stdout, "Monochromator_curved: %s: Transmission data (k, T) from %s\n", NAME_CURRENT_COMP, transmit);
     Table_Read(&tTable, transmit, 1); /* read 1st block data from file into rTable */
     Table_Rebin(&tTable);         /* rebin as evenly, increasing array */
     if (tTable.rows < 2) Table_Free(&tTable);
@@ -383,7 +383,10 @@ TRACE
             vx = K2V*(kix+q_x);
             vy = K2V*(kiy+q_y);
             vz = K2V*(kiz+q_z);
-            p *= p_reflect/(total*GAUSS(phi,0,mos_sample));
+            p_reflect /= total*GAUSS(phi,0,mos_sample);
+            if (p_reflect <= 0) ABSORB;
+            if (p_reflect > 1)  p_reflect = 1;
+            p *= p_reflect;
 
             SCATTER;
           } /* End MC choice to reflect or transmit neutron (if tmp<p_reflect) */

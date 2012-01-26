@@ -155,7 +155,7 @@ TRACE
     
     // calculate deltalambda squared and sigmaLambda squared
     dlambda2 = (lambda-lambdaBragg)*(lambda-lambdaBragg);
-    // The sigmaLambda is propagated by differentiating thge bragg 
+    // The sigmaLambda is propagated by differentiating the Bragg 
     // condition: lambda = 2*d*sinTheta
     sigmaLambda2 = 2.0*2.0 * sinTheta*sinTheta * d_rms*d_rms+
       2.0*2.0 * DM*DM * (1.0-sinTheta*sinTheta) * mos_rms*mos_rms;

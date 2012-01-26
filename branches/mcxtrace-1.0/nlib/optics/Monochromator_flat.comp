@@ -242,7 +242,10 @@ TRACE
           vx = K2V*(kix+q_x);
           vy = K2V*(kiy+q_y);
           vz = K2V*(kiz+q_z);
-          p *= p_reflect/(total*GAUSS(phi,0,mos_sample));
+          p_reflect /= total*GAUSS(phi,0,mos_sample);
+          if (p_reflect <= 0) ABSORB;
+          if (p_reflect > 1)  p_reflect = 1;
+          p *= p_reflect;
           SCATTER;
         } /* End MC choice to reflect or transmit neutron */
       } /* End bragg scattering possible */

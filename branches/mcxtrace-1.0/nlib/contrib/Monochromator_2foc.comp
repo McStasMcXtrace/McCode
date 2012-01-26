@@ -132,7 +132,7 @@ INITIALIZE
 
   if (reflect != NULL)
   {
-    if (verbose) fprintf(stdout, "Monochromator_2foc : %s : Reflectivity data (k, R)\n", NAME_CURRENT_COMP);
+    if (verbose) fprintf(stdout, "Monochromator_2foc: %s : Reflectivity data (k, R)\n", NAME_CURRENT_COMP);
     Table_Read(&rTable, reflect, 1); /* read 1st block data from file into rTable */
     Table_Rebin(&rTable);         /* rebin as evenly, increasing array */
     if (rTable.rows < 2) Table_Free(&rTable);
@@ -213,20 +213,27 @@ TRACE
         else my_r0 = r0;
         if (my_r0 >= 1)
         {
-          if (verbose) fprintf(stdout, "Warning: Monochromator_2foc : lowered reflectivity from %f to 0.99 (k=%f)\n", my_r0, k);
+          if (verbose) fprintf(stdout, "Warning: Monochromator_2foc: %s: lowered reflectivity from %f to 0.99 (k=%f)\n", 
+            NAME_CURRENT_COMP, my_r0, k);
           my_r0=0.99;
         }
         if (my_r0 < 0)
         {
-          if (verbose) fprintf(stdout, "Warning: Monochromator_2foc : raised reflectivity from %f to 0 (k=%f)\n", my_r0, k);
+          if (verbose) fprintf(stdout, "Warning: Monochromator_2foc: %s: raised reflectivity from %f to 0 (k=%f)\n", 
+          NAME_CURRENT_COMP, my_r0, k);
           my_r0=0;
         }
         x = 0.0;
         y = y1;
         z = z1;
         t = t1;
-
-        p *= fabs(my_r0)*exp(-tmp3*tmp3*4*log(2)); /* Use mosaics */
+        
+        /* reflectivity */
+        t1 = fabs(my_r0)*exp(-tmp3*tmp3*4*log(2));
+        if (t1 <= 0) ABSORB;
+        if (t1 > 1)  t1 = 1;
+        p *= t1; /* Use mosaics */
+        
         tmp1 = 2*theta;
         cs = cos(tmp1);
         sn = sin(tmp1);
