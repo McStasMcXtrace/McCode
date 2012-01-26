@@ -4613,8 +4613,10 @@ mcparseoptions(int argc, char *argv[])
     else if(argv[i][0] == '-') {
       fprintf(stderr, "Error: unrecognized option argument %s (mcparseoptions). Ignored.\n", argv[i++]);
     }
-    else
+    else {
+      fprintf(stderr, "Error: unrecognized argument %s (mcparseoptions). Aborting.\n", argv[i]);
       mcusage(argv[0]);
+    }
   }
   if (!mcascii_only) {
     if (strstr(mcformat.Name,"binary")) fprintf(stderr, "Warning: %s files will contain text headers.\n         Use -a option to clean up.\n", mcformat.Name);
