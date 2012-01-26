@@ -943,9 +943,9 @@ cogen_init(struct instr_def *instr)
 
     last = comp;
 
-    coutf("  /* Initializations for component %s. */", comp->name);
-    coutf("  SIG_MESSAGE(\"%s (Init)\");", comp->name); /* signal handler message */
-    /* Initialization of the component setting parameters. */
+    coutf("  /* Setting parameters for component %s. */", comp->name);
+    coutf("  SIG_MESSAGE(\"%s (Init:SetPar)\");", comp->name); /* signal handler message */
+    /* Setting parameters of the component setting parameters. */
     setpar = list_iterate(comp->def->set_par);
     while((par = list_next(setpar)) != NULL)
     {
@@ -970,12 +970,26 @@ cogen_init(struct instr_def *instr)
       code_reset_source();
     cout("");
 
+  } /* end while instr->complist */
+  list_iterate_end(liter);
+  
+  /* Initialization of component and user initialization code. */
+  cout("  /* Component initializations. */");
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL)
+  {
+    List_handle setpar;
+    struct comp_iformal *par;
+
+    coutf("  /* Initializations for component %s. */", comp->name);
+    coutf("  SIG_MESSAGE(\"%s (Init)\");", comp->name); /* signal handler message */
+
     /* Users initializations. */
     if(list_len(comp->def->init_code->lines) > 0)
       cogen_comp_scope(comp, 0, (void (*)(void *))codeblock_out_brace,
                             comp->def->init_code);
     cout("");
-  } /* end while instr->complist */
+  }
   list_iterate_end(liter);
 
   /* Output graphics representation of components. */
