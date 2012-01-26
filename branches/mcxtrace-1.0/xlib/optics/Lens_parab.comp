@@ -336,12 +336,47 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xy");
   double z_c,zdepth,w;
   w=(yheight*yheight)/(8*r);
   zdepth=N*(2*w+d);
   z_c=zdepth/2.0-w;
-  box(0,0,z_c,yheight/2,yheight/2,zdepth);
+  box(0,0,z_c,xwidth,yheight,zdepth);
+
+  /*draw individiual lenses*/
+  /*draw a circle at the maximal aperture and a parabola along x and y*/
+  int i,j=0;
+  printf("%g %g\n",N,(N<20?N:20));
+  for (j=0;j<(N<20?N:20);j++){
+    circle("xy",0,0,-w+j*(d+2*w),yheight/2.0);
+    circle("xy",0,0,d+w+j*(d+2*w),yheight/2.0);
+    double zz0,zz1,yy0,yy1,dz,s;
+    yy0=yheight/2.0;
+    zz0=zz1=-w;
+    dz=w/(64.0-1.0);
+    s=j*(d+2*w);
+    printf("%d %g\n",j,s);
+    /*first parabola*/
+    while(zz1<=0){
+      zz1+=dz;
+      yy1=sqrt(2*r*fabs(zz1));
+      line(0,yy0,s+zz0,0,yy1,s+zz1);
+      line(0,-yy0,s+zz0,0,-yy1,s+zz1);
+      line(yy0,0,s+zz0,yy1,0,s+zz1);
+      line(-yy0,0,s+zz0,-yy1,0,s+zz1);
+      zz0=zz1;yy0=yy1;
+    }
+    zz0=0;zz1=0;yy0=0;
+    /*2nd parabola*/
+    while(zz1<=w){
+      zz1+=dz;
+      yy1=sqrt(2*r*fabs(zz1));
+      line(0,yy0,d+s+zz0,0,yy1,d+s+zz1);
+      line(0,-yy0,d+s+zz0,0,-yy1,d+s+zz1);
+      line(yy0,0,d+s+zz0,yy1,0,d+s+zz1);
+      line(-yy0,0,d+s+zz0,-yy1,0,d+s+zz1);
+      zz0=zz1;yy0=yy1;
+    }
+  }
 %}
 
 END
