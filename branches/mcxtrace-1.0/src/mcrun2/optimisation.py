@@ -1,4 +1,4 @@
-
+from os import mkdir
 import logging
 LOG = logging.getLogger('mcstas.optimisation')
 
@@ -100,8 +100,15 @@ class Scanner:
         self.outfile = path
 
     def run(self):
+        LOG.info('Running Scanner, result file is "%s"' % self.outfile)
+
         fid = open(self.outfile, 'w')
         wrote_header = False
+
+        # create top level
+        # each run will be in "dir/1", "dir/2", ...
+        mcstas_dir = self.mcstas.options.dir
+        mkdir(mcstas_dir)
 
         for i, point in enumerate(self.points):
             par_values = []
@@ -111,11 +118,16 @@ class Scanner:
                 par_values.append(point[key])
 
             is_decimal = lambda x: type(x) == Decimal
-            to_string = lambda x: is_decimal(x) and '%.4f' % x \
-                                                or x
+            to_string = (lambda x: is_decimal(x)
+                         and '%.4f' % x or x)
+
             LOG.info(', '.join('%s: %s' % (a, to_string(b))
                                for (a, b) in point.items()))
-            out = self.mcstas.run(pipe=True)
+
+            # Change sub-directory as an extra option (dir/1 -> dir/2)
+            current_dir = '%s/%i' % (mcstas_dir, i)
+            out = self.mcstas.run(pipe=True, extra_opts={'dir': current_dir})
+
             dets = sorted(McStasResult(out).get_detectors(),
                           key=lambda x: x.name)
 

@@ -5,11 +5,15 @@ import logging
 from os.path import isfile, isdir, abspath, dirname
 from optparse import OptionParser, OptionGroup, OptionValueError
 from decimal import Decimal, InvalidOperation
+from datetime import datetime
 
 from mcstas import McStas
 from optimisation import Scanner, LinearInterval
 
 LOG = logging.getLogger('mcstas')
+
+# File path friendly date format (avoid ':' and white space)
+DATE_FORMAT_PATH = "%Y%d%m_%H%M%S"
 
 
 # Helper functions
@@ -76,7 +80,7 @@ def add_mcrun_options(parser):
         help='relative requested accuracy of criteria (default: 1e-3)')
 
     add('--optimise-file',
-        metavar='FILE', default='mcstas.dat',
+        metavar='FILE', default='./mcstas.dat',
         help='store optimisation results in FILE '
              '(defaults to: "mcstas.dat")')
 
@@ -170,6 +174,7 @@ def add_mcstas_options(parser):
 
 def expand_options(options):
     ''' Add extra options based on previous choices '''
+    # MPI
     if options.mpi > 0:
         options.use_mpi = True
         options.cc = 'mpicc'
@@ -177,6 +182,13 @@ def expand_options(options):
     else:
         options.use_mpi = False
         options.cc = 'gcc'
+    # Output DIR
+    if options.dir is None:
+        # use unique directory when unspecified
+        options.dir = "./mcstas-%s" % (datetime.strftime(datetime.now(),
+                                                         DATE_FORMAT_PATH))
+        # alert the user
+        LOG.info('No output directory specified (--dir)')
 
 
 def is_decimal(string):
@@ -235,6 +247,10 @@ def main():
     if options.verbose:
         handler.setLevel(logging.DEBUG)
 
+    # Inform user of what is happening
+    # TODO: More info?
+    LOG.info('Using directory: "%s"' % options.dir)
+
     # Extract instrument and parameters
     if len(args) == 0:
         print parser.get_usage()
@@ -249,6 +265,9 @@ def main():
     LOG.debug('info: %s', instrs)
 
     (fixed_params, intervals) = get_parameters(options)
+
+    # Indicate end of setup / start of computations
+    LOG.info('<')
 
     # Set fixed parameters
     for key, value in fixed_params.items():
