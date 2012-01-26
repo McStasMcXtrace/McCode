@@ -19,8 +19,6 @@
 * non diverging beam (ideal case). A set of PSD monitors is positioned
 * around the focusing point to show the beam spot.
 *
-* %Example: lambda=10 Detector: PSD_mon_41_I=4.2e-19
-*
 * %Parameters
 * INPUT PARAMETERS:
 * lambda: Source wavelength   [Angs]

@@ -46,8 +46,8 @@
 * In this TAS configuration, Cu220 are used as monochromator and analyser, 
 * with a single type detector.
 *
-* %Example: QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=3.39e-05
-* %Example: QM=1 Sqw_coh=V.laz Detector: He3H_I=4.02e-11
+* %Example: QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=1.06671e+09
+* %Example: QM=1 Sqw_coh=V.laz Detector: He3H_I=1397.33
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -145,9 +145,10 @@ AT (0,0,0) ABSOLUTE
 REMOVABLE COMPONENT Source = Source_gen(
   radius  = 0.10,
   dist = machine_hkl.l1,
-  focus_xw = WM, focus_yh = HM,
+  focus_xw = fabs(WM*sin(machine_real.a1*DEG2RAD)), focus_yh = HM,
   E0 = machine_hkl.ei,
-  dE = machine_hkl.ei*0.03)
+  dE = machine_hkl.ei*0.03,
+  T1=1695,I1=1.74e13,T2=708,I2=3.9e12)
 AT (0,0,0) ABSOLUTE
 
 REMOVABLE COMPONENT SC1 = Collimator_linear(

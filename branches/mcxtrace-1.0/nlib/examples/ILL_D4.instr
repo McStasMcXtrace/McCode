@@ -81,6 +81,7 @@ if (verbose) {
   printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off A1=%.4g [deg]\n",
     DM, RV, (!RV ? "flat" : "curved"), A1);
 }
+ RV = -fabs(RV);;
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -92,7 +93,7 @@ COMPONENT Origin = Progress_bar()
 
 /* Hot source at the ILL */
 COMPONENT Source = Source_gen(
-    xwidth = 0.05, yheight=0.20, dist = L1, focus_xw = 0.18*sin(A1*DEG2RAD), focus_yh = 0.20,
+    xwidth = 0.05, yheight=0.20, dist = L1, focus_xw = fabs(0.18*sin(A1*DEG2RAD)), focus_yh = 0.20,
     lambda0 = lambda, dlambda = lambda*0.03,
     T1=1695,I1=1.74e13,T2=708,I2=3.9e12)
   AT (0, 0, 0) RELATIVE Origin

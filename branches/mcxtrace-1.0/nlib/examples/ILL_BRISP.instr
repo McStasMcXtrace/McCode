@@ -70,7 +70,7 @@
 * In this model, the sample is a plate of thickness e=4 mm, surrounded by an 
 * Al or Nb container, inside an Al shield (phi=10 cm).
 *
-* %Example: coh="V.laz" Detector: Detector_I=1.76995
+* %Example: coh="V.laz" Detector: Detector_I=29.8614
 *
 * %Parameters
 * DM:        [Angs] Monochromator d-spacing. 
@@ -170,7 +170,8 @@ COMPONENT Origin = Progress_bar()
 /* thermal tube IH3 17.5 deg inclinaison */
 COMPONENT ThermalSource = Source_gen(
     radius = 0.1, focus_xw = 0.06, focus_yh = 0.06, dist=6,
-    lambda0 = lambda, dlambda = lambda*0.01, I1 = 0.5874e+13, T1 = 683.7)
+    lambda0 = lambda, dlambda = lambda*0.01, 
+    T1=683.7,I1=0.5874e+13,T2=257.7,I2=2.5099e+13,T3=16.7 ,I3=1.0343e+12)
   AT (0, 0, 0) RELATIVE Origin
 
 /* Soller Collimator                alpha1 = 0.4°

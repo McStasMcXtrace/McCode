@@ -87,7 +87,7 @@ if (!THETA_M || !DM || !lambda) exit(fprintf(stderr,
 
 if (L1<1.1) L = L2;
 else        L = 1/(1/L1+1/L2);
-if (RV < 0) RV=2*L*sin(DEG2RAD*THETA_M);
+if (RV < 0) RV=fabs(2*L*sin(DEG2RAD*THETA_M));
 KI=2*PI/lambda;
 Vi = K2V*fabs(KI);
 EI = VS2E*Vi*Vi;
@@ -104,6 +104,9 @@ if (verbose) {
   printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off THETA_M=%.4g [deg]\n",
     DM, RV, (!RV ? "flat" : "curved"), THETA_M*2);
 }
+
+RV = fabs(RV)*SM;
+
 %}
 
 /* Here comes the TRACE section, where the actual      */
