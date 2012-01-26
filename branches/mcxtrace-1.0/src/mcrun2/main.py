@@ -267,7 +267,7 @@ def main():
     (fixed_params, intervals) = get_parameters(options)
 
     # Indicate end of setup / start of computations
-    LOG.info('<')
+    LOG.info('===')
 
     # Set fixed parameters
     for key, value in fixed_params.items():
@@ -301,7 +301,8 @@ def main():
         if not all(map(lambda i:
                        len(i) == 2 and
                        all(map(is_decimal, i)), intervals.values())):
-            raise OptionValueError('Could not parse intervals.')
+            raise OptionValueError('Could not parse intervals -- result: %s'
+                                   % str(intervals))
 
         linear_interval = LinearInterval.from_range(
             options.numpoints, intervals)
@@ -316,4 +317,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        exit(1)
+    except Exception, e:
+        LOG.fatal(str(e))
