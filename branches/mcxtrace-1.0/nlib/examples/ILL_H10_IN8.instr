@@ -44,8 +44,8 @@
 * In this TAS configuration, Cu200 is used as monochromator and Cu111 as 
 * analyser, with a single type detector.
 *
-* %Example: QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=5.07236e-05
-* %Example: QM=1 Sqw_coh=V.laz Detector: He3H_I=5.00081e-11
+* %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: D7_SC3_1D_I=3.93806e-05
+* %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: He3H_I=1.9e-11
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -126,7 +126,7 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT ILL_H10_IN8(
-  KF=5, KI=0, QM=0.5, EN=5, verbose=1,
+  KF=5, KI=0, QM=0.5, EN=0, verbose=1,
   WM=0.233, HM=0.197, RMH=-1, RMV=-1, DM=1.807, NHM=15, NVM=15,
   WA=0.16, HA=0.08, RAH=-1,   RAV=-1, DA=2.087, NHA=15, NVA=15,
   L1=2.3,

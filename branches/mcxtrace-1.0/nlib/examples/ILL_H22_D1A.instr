@@ -88,7 +88,7 @@ INITIALIZE
     exit(printf("%s: ERROR: wavelength and DM are unset. Exit.\n", NAME_CURRENT_COMP));
 
   L = L2; /* assume guide exit L1=Inf */
-  if (RV < 0) RV=abs(2*L*sin(DEG2RAD*A1));
+  if (RV < 0) RV=2*L*sin(DEG2RAD*A1);
   KI=2*PI/lambda;
   Vi = K2V*fabs(KI);
   EI = VS2E*Vi*Vi;

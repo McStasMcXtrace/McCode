@@ -101,7 +101,7 @@ if (!THETA_M || !DM || !lambda) exit(fprintf(stderr,
       "%s: ERROR: Monochromator take-off, d-spacing or wavelength is null (THETA_M=%g, DM=%g, lambda=%g). Abort.\n",
       NAME_CURRENT_COMP, THETA_M, DM, lambda));
   
-if (RV < 0) RV=2*L2*fabs(sin(DEG2RAD*THETA_M));   
+if (RV < 0) RV=2*L2*sin(DEG2RAD*THETA_M);
 KI = 2*PI/lambda;   
 Vi = K2V*fabs(KI);
 EI = VS2E*Vi*Vi;  

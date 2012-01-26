@@ -87,7 +87,7 @@ if (!THETA_M || !DM || !lambda) exit(fprintf(stderr,
 
 if (L1<1.1) L = L2;
 else        L = 1/(1/L1+1/L2);
-if (RV < 0) RV=2*fabs(L*sin(DEG2RAD*THETA_M));
+if (RV < 0) RV=2*L*sin(DEG2RAD*THETA_M);
 KI=2*PI/lambda;
 Vi = K2V*fabs(KI);
 EI = VS2E*Vi*Vi;

@@ -35,7 +35,7 @@
 * In this TAS configuration, PG002 is used as monochromator analyser, 
 * with a single type detector.
 *
-* %Example: KI=1.55 QM=1 Detector: Sample_Cradle_I=9.85568e+07
+* %Example: KI=1.55 QM=1 Sqw_coh=V.laz Detector: Sample_Cradle_I=3.53099e+07
 *
 * %Parameters
 * m:         m-value of guide coating (H14/H142) [1]

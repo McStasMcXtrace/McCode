@@ -72,7 +72,7 @@ L_monitor(nL = 30, filename = "lambdaStart.dat",
      AT (0, 0, 0.5) RELATIVE Origin
 
 COMPONENT mirror =
-Pol_mirror(zwidth = 0.40, yheight = 0.40, option=mirrorOption,
+Pol_mirror(zwidth = 0.40, yheight = 0.40, p_reflect=mirrorOption,
 	   rUpPar={1.0, 0.0219, 6.07, 2.0, 0.003},
 	   rDownPar={0.1, 0.0219, 6.07, 2.0, 0.003})
      AT (0, 0, 1.0) RELATIVE Origin ROTATED (0, 2, 0) RELATIVE Origin

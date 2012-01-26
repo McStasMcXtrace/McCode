@@ -517,16 +517,11 @@ if (!anglemode) {
 /* compute optimal curvatures */
 double L;
 L = 1/(1/L1+1/L2);
-if (RMV < 0) machine_real.rmv = 2*L*sin(DEG2RAD*fabs(machine_real.a1));
-if (RMH < 0) machine_real.rmh = 2*L/sin(DEG2RAD*fabs(machine_real.a1));
+if (RMV < 0) machine_real.rmv = 2*L*sin(DEG2RAD*machine_real.a1);
+if (RMH < 0) machine_real.rmh = 2*L/sin(DEG2RAD*machine_real.a1);
 L = 1/(1/L3+1/L4);
-if (RAV < 0) machine_real.rav = 2*L*sin(DEG2RAD*fabs(machine_real.a5));
-if (RAH < 0) machine_real.rah = 2*L/sin(DEG2RAD*fabs(machine_real.a5));
-
-machine_real.rmv = fabs(machine_real.rmv)*machine_hkl.sm;
-machine_real.rav = fabs(machine_real.rav)*machine_hkl.sa;
-machine_real.rmh = fabs(machine_real.rmh)*machine_hkl.sm;
-machine_real.rah = fabs(machine_real.rah)*machine_hkl.sa;
+if (RAV < 0) machine_real.rav = 2*L*sin(DEG2RAD*machine_real.a5);
+if (RAH < 0) machine_real.rah = 2*L/sin(DEG2RAD*machine_real.a5);
 
 if (verbose) {
   printf("* Transfer:     EN=%g [meV] QM=%g [Angs-1]\n", EN, machine_real.qm);

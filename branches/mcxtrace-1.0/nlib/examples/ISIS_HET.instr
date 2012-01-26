@@ -24,7 +24,7 @@
 * Andrew Garret which comes with no guarantees as to its accuracy in modelling the
 * Fermi Chopper.
 *
-* %Example: Emin=443 Detector: cyl_I=0.714158
+* %Example: Emin=443 Detector: cyl_I=0.75
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -84,7 +84,7 @@ COMPONENT monFC = Monitor_nD(
   AT (0, 0, 9.8) RELATIVE a1
 
 COMPONENT FC = FermiChopper(
-  radius=0.05, nu=-nu_chop, yheight=c_h,
+  radius=0.05, nu=nu_chop, yheight=c_h,
   w=chan_w, nslit=nslits, curvature=1.0/roc, verbose=1, zero_time=2)
 AT (0,0,10) RELATIVE ts1_mod
 
