@@ -23,11 +23,11 @@
  * Flux is given in the unit 
  * 
  * Example: Source_gaussian(sig_x=10e-6,sig_y=10e-6,dist=15,sigPr_x=9e-6, sigPr_y=9e-6,E0=sensible, dE=sensible)
- * sig_x - Horizontal source size [microns]
- * sig_y - Vertical source size [microns]
+ * sig_x - Horizontal source size [m]
+ * sig_y - Vertical source size [m]
  * dist [meters]
- * sigPr_x - sigmaPrime - angular divergence Horizontal [microrad]
- * sigPr_y - sigmaPrime - angular divergence Vertical [microrad]
+ * sigPr_x - sigmaPrime - angular divergence Horizontal [rad]
+ * sigPr_y - sigmaPrime - angular divergence Vertical [rad]
  * %P
  * 
  * 
