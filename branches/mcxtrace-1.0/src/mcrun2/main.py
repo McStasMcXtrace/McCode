@@ -1,9 +1,8 @@
 #!/usr/bin/env python2.6
 
-import os.path
 import logging
 
-from os.path import isfile, isdir, abspath, dirname, basename
+from os.path import isfile, isdir, abspath, dirname
 from optparse import OptionParser, OptionGroup, OptionValueError
 
 from mcstas import McStas
@@ -17,7 +16,8 @@ def build_checker(accept, msg='Invalid value'):
     def checker(option, _opt_str, value, parser):
         ''' value must be acceptable '''
         if not accept(value):
-            raise OptionValueError('option %s: %s (was: "%s")' % (option, msg, value))
+            raise OptionValueError('option %s: %s (was: "%s")' % \
+                                   (option, msg, value))
         # Update parser with accepted value
         setattr(parser.values, option.dest, value)
     return checker
@@ -119,7 +119,6 @@ def add_mcstas_options(parser):
 
     # Data options
     dir_exists = lambda path: isdir(abspath(path))
-    check_dir = build_checker(dir_exists, 'invalid path')
     def check_file(exist=True):
         ''' Validate the path to a file '''
         if exist:
@@ -163,18 +162,28 @@ def add_mcstas_options(parser):
     parser.add_option_group(opt)
 
 
+def expand_options(options):
+    ''' Add extra options based on previous choices '''
+    if options.mpi > 0:
+        options.use_mpi = True
+        options.cc = 'mpicc'
+    else:
+        options.use_mpi = False
+        options.cc = 'gcc'
+
+
 def main():
     ''' Main routine '''
 
     # Setup logging
     formatter = logging.Formatter('%(asctime)s - %(message)s')
 
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    ch.setFormatter(formatter)
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.INFO)
+    handler.setFormatter(formatter)
 
     LOG.setLevel(logging.DEBUG)
-    LOG.addHandler(ch)
+    LOG.addHandler(handler)
 
     # Add options
     usage = ('usage: %prog [-cpnN] Instr [-sndftgahi] '
@@ -187,20 +196,21 @@ def main():
     # Parse options
     (options, args) = parser.parse_args()
     parser.destroy()
+    expand_options(options)
 
     if options.verbose:
-        ch.setLevel(logging.DEBUG)
+        handler.setLevel(logging.DEBUG)
 
     # Extract instrument and parameters
     if len(args) == 0:
         raise OptionValueError('No instrument file specified.')
-    instr = args[0]
-    params = args[1:]
+    options.instr = args[0]
+    options.params = args[1:]
 
     # Run McStas
-    mcstas = McStas(instr)
+    mcstas = McStas(options.instr)
     mcstas.prepare(options)
-    mcstas.run(options)
+    mcstas.run()
 
 
 if __name__ == '__main__':
