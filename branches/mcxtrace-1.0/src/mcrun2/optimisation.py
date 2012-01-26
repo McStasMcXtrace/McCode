@@ -70,23 +70,44 @@ def build_header(options, params, intervals, detectors):
     return (template % values) + '\n'
 
 
+def point_at(N, key, minmax, step):
+    """ Helper to compute the point for key at step """
+    low, high = map(Decimal, minmax)
+    return step * (high - low) / Decimal(N - 1) + low
+
+
 class LinearInterval:
     """ Intervals for linear scanning """
 
     @staticmethod
     def from_range(N, intervals):
-
-        def point_at(key, step):
-            low, high = map(Decimal, intervals[key])
-            return step * (high - low) / Decimal(N - 1) + low
-
         for step in xrange(N):
-            yield dict((key, point_at(key, step)) for key in intervals)
+            yield dict((key, point_at(N, key, intervals[key], step))
+                       for key in intervals)
 
     @staticmethod
     def from_list(N, intervals):
         for step in xrange(N):
             yield dict((key, intervals[key][step]) for key in intervals)
+
+
+class MultiInterval:
+    """ Points for multi-dimensional scanning """
+
+    @staticmethod
+    def from_range(N, intervals):
+        # base case: no intervals yields empty dict
+        if len(intervals) == 0:
+            yield {}
+            return
+        # recursively generate the multi dict
+        intervals = intervals.copy()
+        key, minmax = intervals.popitem()
+        for step in xrange(N):
+            point = point_at(N, key, minmax, step)
+            for dic in MultiInterval.from_range(N, intervals):
+                dic[key] = point
+                yield dic
 
 
 class InvalidInterval(McRunException):
