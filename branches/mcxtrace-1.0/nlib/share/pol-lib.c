@@ -382,8 +382,7 @@ void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
   // change coordinates from current local system to lab system
   mccoordschange(mc_pol_posLM, mc_pol_rotLM,
 		 &mc_pol_x, &mc_pol_y, &mc_pol_z, 
-		 &mc_pol_vx, &mc_pol_vy, &mc_pol_vz);
-  mccoordschange_polarisation(mc_pol_rotLM, mc_pol_sx, mc_pol_sy, mc_pol_sz);
+		 &mc_pol_vx, &mc_pol_vy, &mc_pol_vz, mc_pol_sx, mc_pol_sy, mc_pol_sz);
   //printf("pos_at_labaftertranformation(xyz)( %g %g %g )\n", mc_pol_x,mc_pol_y,mc_pol_z);
   
   // get initial B-field value
