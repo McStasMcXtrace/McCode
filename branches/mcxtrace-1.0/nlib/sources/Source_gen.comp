@@ -62,14 +62,19 @@
 *   %}
 *
 * <b>Some sources parameters:</b>
-* PSI cold source T1= 296.16, I1=8.5E11, T2=40.68, I2=5.2E11
-* ILL VCS cold source T1=216.8,I1=1.24e+13,T2=33.9,I2=1.02e+13
-*        (H1)         T3=16.7 ,I3=3.0423e+12
-* ILL HCS cold source T1=413.5,I1=10.22e12,T2=145.8,I2=3.44e13
-*        (H5)         T3=40.1 ,I3=2.78e13
-* ILL Thermal tube    T1=683.7,I1=0.5874e+13,T2=257.7,I2=2.5099e+13
-*        (H12)        T3=16.7 ,I3=1.0343e+12
-* ILL Hot source      T1=1695,I1=1.74e13,T2=708,I2=3.9e12
+* PSI cold source     T1=296.2,I1=8.5E11, T2=40.68,I2=5.2E11
+* ILL VCS cold source T1=362.7,I1=7.95e12,T2=168.9,I2=1.23e+13,
+*        (H1)         T3=34.4 ,I3=1.12e13,yheight=0.22,xwidth=0.14,
+* ILL HCS cold source T1=311.9,I1=1.52e13,T2=131.7,I2=1.30e13,
+*        (H5)         T3=35.8 ,I3=1.27e13,radius=0.105
+* ILL Thermal tube    T1=229.6,I1=5.32e13,T2=1102, I2=4.37e12,
+*        (H12)        T3=437.1,I3=3.84e13,radius=0.1
+* ILL Hot source      T1=1695, I1=1.74e13,T2=708,  I2=3.9e12
+* HZB cold source     T1=43.7 ,I1=1.4e12, T2=137.2,I2=2.08e12,radius=.155
+* HZB bi-spectral     T1=43.7, I1=1.4e12, T2=137.2,I2=2.08e12,T3=293.0,I3=1.77e12
+* HZB thermal tube    T1=293.0,I1=2.64e12
+* FRM2 cold           T1=35.0, I1=9.38e12,T2=547.5,I2=2.23e12,T3=195.4,I3=1.26e13
+* FRM2 thermal        T1=285.6,I1=3.06e13,T2=3000, I2=1.68e12,T3=429.9,I3=6.77e12
 *
 * %VALIDATION
 * Feb 2005: output cross-checked for 3 Maxwellians against VITESS source
@@ -103,12 +108,12 @@
 * focus_aw: (deg) maximal (uniform) horz. width divergence
 * focus_ah: (deg) maximal (uniform) vert. height divergence
 * T1:       [K]   Temperature of the Maxwellian source, 0=none
-* I1:       [1/(cm**2*st*AA)] Source flux per solid angle, area and Angstrom
+* I1:       [1/(cm**2*sr*AA)] Source flux per solid angle, area and Angstrom
 *                 if I1=0, the source emits 1 in 4*PI whole space.
 * T2:       [K]   Second Maxwellian source Temperature, 0=none
-* I2:       [1/(cm**2*st*AA)] Second Maxwellian Source flux
+* I2:       [1/(cm**2*sr*AA)] Second Maxwellian Source flux
 * T3:       [K]   Third Maxwellian source Temperature, 0=none
-* I3:       [1/(cm**2*st*AA)] Third Maxwellian Source flux
+* I3:       [1/(cm**2*sr*AA)] Third Maxwellian Source flux
 * flux_file:[str] Name of a two columns [lambda flux] text file that contains
 *                 the wavelength distribution of the flux in [1/(s*cm**2*st*AA)].
 *                 Comments (#) and further columns are ignored. Format is
@@ -384,7 +389,7 @@ INITIALIZE
   { lambda0 = (Lmax+Lmin)/2;
     dlambda = (Lmax-Lmin)/2;
   }
-  if ((lambda0 < dlambda) || (dlambda < 0))
+  if (lambda0 <= 0 || (lambda0 < dlambda) || (dlambda < 0))
   { fprintf(stderr,"Source_gen: %s: Error: Wavelength range %.3f +/- %.3f AA calculated \n",
       NAME_CURRENT_COMP, lambda0, dlambda);
     fprintf(stderr,"- whole wavelength range must be >= 0 \n");
