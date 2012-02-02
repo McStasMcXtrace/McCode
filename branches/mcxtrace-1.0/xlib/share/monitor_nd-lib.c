@@ -112,7 +112,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     DEFS->COORD_DIM    =3;    /* next token is a bin value */
     DEFS->COORD_FIL    =4;    /* next token is a filename */
     DEFS->COORD_EVNT   =5;    /* next token is a buffer size value */
-    DEFS->COORD_3HE    =6;    /* next token is a 3He pressure value */
+    //DEFS->COORD_3HE    =6;    /* next token is a 3He pressure value */
     DEFS->COORD_LOG    =64;   /* next variable will be in log scale */
     DEFS->COORD_ABS    =128;  /* next variable will be in abs scale */
     DEFS->COORD_SIGNAL =256;  /* next variable will be the signal var */
@@ -144,7 +144,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Flag_Binary_List  = 0;   /* save list as a binary file (smaller) */
     Vars->Coord_Number      = 0;   /* total number of variables to monitor, plus intensity (0) */
     Vars->Buffer_Block      = 10000;     /* Buffer size for list or auto limits */
-    Vars->Neutron_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
+    Vars->Photon_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
     Vars->Buffer_Counter    = 0;   /* index in Buffer size (for realloc) */
     Vars->Buffer_Size       = 0;
     Vars->UserVariable1     = 0;
@@ -274,11 +274,11 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
             Vars->Flag_List = 1; }
           Set_Coord_Mode = DEFS->COORD_VAR; Flag_All = 0;
         }
-        if (Set_Coord_Mode == DEFS->COORD_3HE)  /* pressure=%g */
-        {
-            Vars->He3_pressure = atof(token);
-            Set_Coord_Mode = DEFS->COORD_VAR; Flag_All = 0;
-        }
+        //if (Set_Coord_Mode == DEFS->COORD_3HE)  /* pressure=%g */
+        //{
+        //    Vars->He3_pressure = atof(token);
+        //    Set_Coord_Mode = DEFS->COORD_VAR; Flag_All = 0;
+        //}
 
         /* now look for general option keywords */
         if (!strcmp(token, "borders"))  {Vars->Flag_With_Borders = 1; iskeyword=1; }
@@ -373,12 +373,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           { Set_Vars_Coord_Type = DEFS->COORD_KY; strcpy(Set_Vars_Coord_Label,"ky [Angs-1]"); strcpy(Set_Vars_Coord_Var,"ky"); lmin = -1; lmax = 1; }
         if (!strcmp(token, "kz"))
           { Set_Vars_Coord_Type = DEFS->COORD_KZ; strcpy(Set_Vars_Coord_Label,"kz [Angs-1]"); strcpy(Set_Vars_Coord_Var,"kz"); lmin = -10; lmax = 10; }
-        if (!strcmp(token, "sx"))
-          { Set_Vars_Coord_Type = DEFS->COORD_SX; strcpy(Set_Vars_Coord_Label,"sx [1]"); strcpy(Set_Vars_Coord_Var,"sx"); lmin = -1; lmax = 1; }
-        if (!strcmp(token, "sy"))
-          { Set_Vars_Coord_Type = DEFS->COORD_SY; strcpy(Set_Vars_Coord_Label,"sy [1]"); strcpy(Set_Vars_Coord_Var,"sy"); lmin = -1; lmax = 1; }
-        if (!strcmp(token, "sz"))
-          { Set_Vars_Coord_Type = DEFS->COORD_SZ; strcpy(Set_Vars_Coord_Label,"sz [1]"); strcpy(Set_Vars_Coord_Var,"sz"); lmin = -1; lmax = 1; }
         if (!strcmp(token, "Ex"))
           { Set_Vars_Coord_Type = DEFS->COORD_EX; strcpy(Set_Vars_Coord_Label,"Ex [1]"); strcpy(Set_Vars_Coord_Var,"Ex"); lmin = -1; lmax = 1; }
         if (!strcmp(token, "Ey"))
@@ -421,7 +415,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
         if (!strcmp(token, "phi") || !strcmp(token, "latitude") || !strcmp(token, "ph"))
           { Set_Vars_Coord_Type = DEFS->COORD_PHI; strcpy(Set_Vars_Coord_Label,"Latitude [deg]"); strcpy(Set_Vars_Coord_Var,"ph"); lmin = -180; lmax = 180; }
         if (!strcmp(token, "ncounts") || !strcmp(token, "n"))
-          { Set_Vars_Coord_Type = DEFS->COORD_NCOUNT; strcpy(Set_Vars_Coord_Label,"Neutrons [1]"); strcpy(Set_Vars_Coord_Var,"n"); lmin = 0; lmax = 1e10; }
+          { Set_Vars_Coord_Type = DEFS->COORD_NCOUNT; strcpy(Set_Vars_Coord_Label,"Photons [1]"); strcpy(Set_Vars_Coord_Var,"n"); lmin = 0; lmax = 1e10; }
         if (!strcmp(token, "user") || !strcmp(token, "user1") || !strcmp(token, "u1"))
           { Set_Vars_Coord_Type = DEFS->COORD_USER1; strncpy(Set_Vars_Coord_Label,Vars->UserName1,30); strcpy(Set_Vars_Coord_Var,"U1"); lmin = -1e10; lmax = 1e10; }
         if (!strcmp(token, "user2") || !strcmp(token, "u2"))
@@ -526,11 +520,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
        || (Set_Vars_Coord_Type == DEFS->COORD_EY)
        || (Set_Vars_Coord_Type == DEFS->COORD_EZ))
         strcpy(Short_Label[i],"Polarisation");
-      else
-      if ((Set_Vars_Coord_Type == DEFS->COORD_SX)
-       || (Set_Vars_Coord_Type == DEFS->COORD_SY)
-       || (Set_Vars_Coord_Type == DEFS->COORD_SZ))
-       strcpy(Short_Label[i],"Spin");
       else
       if ((Set_Vars_Coord_Type == DEFS->COORD_HDIV)
        || (Set_Vars_Coord_Type == DEFS->COORD_VDIV))
@@ -761,14 +750,14 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
       Vars->Flag_List = 3;
       Vars->Buffer_Block = Vars->Buffer_Size;
       Vars->Buffer_Counter  = 0;
-      Vars->Neutron_Counter = 0;
+      Vars->Photon_Counter = 0;
     }
     else
     {
-      Vars->Mon2D_Buffer  = (double *)realloc(Vars->Mon2D_Buffer, (Vars->Coord_Number+1)*(Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double));
+      Vars->Mon2D_Buffer  = (double *)realloc(Vars->Mon2D_Buffer, (Vars->Coord_Number+1)*(Vars->Photon_Counter+Vars->Buffer_Block)*sizeof(double));
       if (Vars->Mon2D_Buffer == NULL)
-            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double)); Vars->Flag_List = 1; }
-      else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = Vars->Neutron_Counter+Vars->Buffer_Block; }
+            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (Vars->Photon_Counter+Vars->Buffer_Block)*sizeof(double)); Vars->Flag_List = 1; }
+      else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = Vars->Photon_Counter+Vars->Buffer_Block; }
     }
   } /* end if Buffer realloc */
 
@@ -831,11 +820,6 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         Vars->mean_dx += Vars->cp*fabs(Vars->ckx/k);
         Vars->mean_dy += Vars->cp*fabs(Vars->cky/k);
       }
-      Vars->area =(Vars->max_x-Vars->min_x)
-                       *(Vars->max_y-Vars->min_y)*1E4; /* cm2 */
-      if (Vars->Flag_per_st)
-      Vars->steradian = 2*fabs(2*atan(Vars->mean_dx/Vars->mean_p)
-                                *sin(2*atan(Vars->mean_dy/Vars->mean_p)/2));
         
       for (i = 0; i <= Vars->Coord_Number; i++)
       { /* handle current neutron : last while */
@@ -859,12 +843,6 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         if (Set_Vars_Coord_Type == DEFS->COORD_KY) XY = Vars->cky;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_KZ) XY = Vars->ckz;
-        else
-        if (Set_Vars_Coord_Type == DEFS->COORD_SX) XY = Vars->csx;
-        else
-        if (Set_Vars_Coord_Type == DEFS->COORD_SY) XY = Vars->csy;
-        else
-        if (Set_Vars_Coord_Type == DEFS->COORD_SZ) XY = Vars->csz;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_PHASE) XY = Vars->cphi;
         else
@@ -958,12 +936,12 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
       {
         for (i = 0; i <= Vars->Coord_Number; i++)
         {
-          Vars->Mon2D_Buffer[i + Vars->Neutron_Counter*(Vars->Coord_Number+1)] = Coord[i];
+          Vars->Mon2D_Buffer[i + Vars->Photon_Counter*(Vars->Coord_Number+1)] = Coord[i];
         }
         Vars->Buffer_Counter++;
         if (Vars->Flag_Verbose && (Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_List == 1)) printf("Monitor_nD: %s %li neutrons stored in List.\n", Vars->compcurname, Vars->Buffer_Counter);
       }
-      Vars->Neutron_Counter++;
+      Vars->Photon_Counter++;
     } /* end (Vars->Flag_Auto_Limits != 2) */
 
     /* ====================================================================== */
@@ -1172,9 +1150,9 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
         char formatName[256];
         char *formatName_orig;
 
-        if (Vars->Flag_List >= 2) Vars->Buffer_Size = Vars->Neutron_Counter;
-        if (Vars->Buffer_Size >= Vars->Neutron_Counter)
-          Vars->Buffer_Size = Vars->Neutron_Counter;
+        if (Vars->Flag_List >= 2) Vars->Buffer_Size = Vars->Photon_Counter;
+        if (Vars->Buffer_Size >= Vars->Photon_Counter)
+          Vars->Buffer_Size = Vars->Photon_Counter;
         strcpy(fname,Vars->Mon_File);
         if (strchr(Vars->Mon_File,'.') == NULL) strcat(fname, "_list");
 
