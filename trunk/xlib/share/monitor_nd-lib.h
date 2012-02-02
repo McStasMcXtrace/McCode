@@ -40,9 +40,9 @@
     int COORD_V     ;
     int COORD_T     ;
     int COORD_P     ;
-    int COORD_SX    ;
-    int COORD_SY    ;
-    int COORD_SZ    ;
+    int COORD_EX    ;
+    int COORD_EY    ;
+    int COORD_EZ    ;
     int COORD_KX    ;
     int COORD_KY    ;
     int COORD_KZ    ;
