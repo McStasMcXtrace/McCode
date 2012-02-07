@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.6
 
+from os import mkdir
 from os.path import isfile, isdir, abspath, dirname
 from optparse import OptionParser, OptionGroup, OptionValueError
 from decimal import Decimal, InvalidOperation
@@ -84,7 +85,7 @@ def add_mcrun_options(parser):
         help='relative requested accuracy of criteria (default: 1e-3)')
 
     add('--optimise-file',
-        metavar='FILE', default='./mcstas.dat',
+        metavar='FILE',
         help='store optimisation results in FILE '
              '(defaults to: "mcstas.dat")')
 
@@ -189,13 +190,23 @@ def expand_options(options):
                         options.mpi)
         options.use_mpi = False
         options.cc = 'gcc'
-    # Output DIR
+    # Output dir
     if options.dir is None:
         # use unique directory when unspecified
         options.dir = "./mcstas-%s" % (datetime.strftime(datetime.now(),
                                                          DATE_FORMAT_PATH))
-        # alert the user
+        # alert user
         LOG.info('No output directory specified (--dir)')
+        # create dir
+        try:
+            mkdir(options.dir)
+        except OSError:
+            pass  # dir exists
+    # Output file
+    if options.optimise_file is None:
+        # use mcstas.dat when unspecified
+        options.optimise_file = '%s/mcstas.dat' % options.dir
+
 
 
 def is_decimal(string):

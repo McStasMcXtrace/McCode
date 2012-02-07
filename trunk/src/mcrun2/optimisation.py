@@ -1,4 +1,4 @@
-from os import mkdir
+from os.path import basename
 
 from log import McRunException
 
@@ -63,7 +63,7 @@ def build_header(options, params, intervals, detectors):
         'xmin': xmin,
         'xmax': xmax,
 
-        'filename': options.optimise_file or 'mcstas.dat',
+        'filename': basename(options.optimise_file) or 'mcstas.dat',
         'variables': ' '.join(variables),
     }
 
@@ -136,10 +136,8 @@ class Scanner:
         fid = open(self.outfile, 'w')
         wrote_header = False
 
-        # create top level
         # each run will be in "dir/1", "dir/2", ...
         mcstas_dir = self.mcstas.options.dir
-        mkdir(mcstas_dir)
 
         for i, point in enumerate(self.points):
             par_values = []
