@@ -392,7 +392,7 @@ TRACE
 %{
   if (l > 0 && nelements > 0) {
     double B, C, dt;
-    int    ret, bounces = 0;
+    int    ret, bounces = 0, i=0;
     double this_width, this_height;
     double angle=0;
 
@@ -414,6 +414,8 @@ TRACE
       RX = rot_apply(R, X);
       coords_get(RX, &vx, &vy, &vz);
     }
+    
+    for (i=0; i<7; GVars->N_reflection[i++] = 0);
 
     /* propagate to box input (with gravitation) in comp local coords */
     /* A = 0.5 n.g; B = n.v; C = n.(r-W); */
