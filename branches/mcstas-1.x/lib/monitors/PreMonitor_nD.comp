@@ -23,6 +23,8 @@
 * correlations between a given parameter in one place of the instrument
 * and an other position in the instrument.
 *
+* The  neutron state is monitored at the previous component location.
+*
 * <b>EXAMPLES:</b>
 * Here follows a Phase-Space correlation diagram detector
 * (used for guides for instance)
@@ -74,8 +76,6 @@ TRACE
 %{
     struct MonitornD_Variables *Vars = &(MC_GETPAR(comp, Vars));
     /* directly act on MonitornD_Variables pointer, do not need to update */
-
-    PROP_Z0;
 
     if (Vars->Flag_UsePreMonitor == 1)
     {
