@@ -102,8 +102,8 @@
 *     outgoing                  Monitor outgoing beam (default)
 *     parallel                  Use this option when the next component is at
 *                                the same position (parallel components)
-*     per cm2                   Intensity will be per cm^2
-*     per steradian             Intensity will be per steradian (requires auto)
+*     per cm2                   Intensity will be per cm^2 (detector area). Displays beam section.
+*     per steradian             Displays beam solid angle in steradian
 *     premonitor                Will monitor neutron parameters stored
 *                                previously with <b>PreMonitor_nD</b>.
 *     signal=[var]              Will monitor [var] instead of usual intensity
