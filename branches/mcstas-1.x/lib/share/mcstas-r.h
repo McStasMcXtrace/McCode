@@ -495,7 +495,10 @@ int mc_MPI_Reduce(void* sbuf, void* rbuf,
                   int count, MPI_Datatype dtype,
                   MPI_Op op, int root, MPI_Comm comm);
 
-#define exit(code) MPI_Abort(MPI_COMM_WORLD, code)
+#define exit(code) do {                                   \
+    MPI_Finalize();                                       \
+    exit(code);                                           \
+  } while(0) 
 
 #else /* !USE_MPI */
 #define MPI_MASTER(instr) instr

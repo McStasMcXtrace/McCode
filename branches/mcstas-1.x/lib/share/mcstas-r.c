@@ -4957,13 +4957,7 @@ static void
 mcshowhelp(char *pgmname)
 {
   mchelp(pgmname);
-#ifdef USE_MPI
-#undef exit
-#endif
   exit(0);
-#ifdef USE_MPI
-#define exit(code) MPI_Abort(MPI_COMM_WORLD, code)
-#endif
 }
 
 /* mcusage: display usage when error in input arguments and exit with 1 */
