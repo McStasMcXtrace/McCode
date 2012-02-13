@@ -1,2 +1,0 @@
-#!/bin/sh
-nm -p "$@" | grep ' [A-TV-Z] '

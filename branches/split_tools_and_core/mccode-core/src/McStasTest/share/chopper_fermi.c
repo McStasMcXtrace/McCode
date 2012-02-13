@@ -1,1 +1,0 @@
-../../../nlib/share/chopper_fermi.c
