@@ -1,0 +1,52 @@
+ BAR   Plot vertical bar graph
+
+bar(Y)
+bar(x,Y)
+bar(...,width)
+bar(...,'style')
+
+DESCRIPTION
+
+A bar graph displays the values in a vector or matrix as vertical bars.
+
+bar(Y) draws one bar for each element in Y. If Y is a matrix, bar groups the bars produced by the elements in each row. The x-axis scale ranges from 1 up to length(Y) when Y is a vector, and 1 to size(Y,1), which is the number of rows, when Y is a matrix. 
+
+bar(x,Y) draws a bar for each element in Y at locations specified in x, where x is a vector defining the x-axis intervals for the vertical bars. The x-values can be nonmonotonic, but cannot contain duplicate values. If Y is a matrix, bar groups the elements of each row in Y at corresponding locations in x.
+
+bar(...,width) sets the relative bar width and controls the separation of bars within a group. The default width is 0.8, so if you do not specify x, the bars within a group have a slight separation. If width is 1, the bars within a group touch one another.
+
+bar(...,'style') specifies the style of the bars. 'style' is 'group' or 'stack'. 'group' is the default mode of display.
+
+'group' displays m groups of n vertical bars, where m is the number of rows and n is the number of columns in Y. The group contains one bar per column in Y.
+'stack' displays one bar for each row in Y. The bar height is the sum of the elements in the row. Each bar is multicolored, with colors corresponding to distinct elements and showing the relative contribution each row element makes to the total sum.
+
+bar(...,'bar_color') displays all bars using the color specified by the single-letter abbreviation 'r', 'g', 'b', 'c', 'm', 'y', 'k', or 'w'.
+
+bar(...,'facecolor',[r,g,b]) displays bars with facecolor given by the RGB
+triple [r,g,b] 
+
+bar(...,'facecolor','none') displays only the edges of bars
+
+bar(...,'edgecolor',[r,g,b]) allows to choose the color ob bar edges
+
+bar(...,'edgecolor','none') displays bars without edges.
+
+The color scheme uses the current colormap. Use
+
+colormap colormap_name
+
+to change the color scheme
+
+EXAMPLES
+
+bar(rand(5,3),'legend','intake','exhaust','collapse')
+colormap blue
+
+bar(rand(5,3),'stack','legend','intake','exhaust','collapse')
+colormap jet
+
+x = -2.9:0.2:2.9;
+bar(x,exp(-x.*x/2)/sqrt(2*%pi),'r')
+
+
+

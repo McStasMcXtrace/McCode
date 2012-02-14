@@ -1,0 +1,258 @@
+# Makefile for @MCCODE_NAME@.
+#
+#   This file is part of the @MCCODE_NAME@ ray-trace simulation package
+#   Copyright (C) 1997-2008, All rights reserved
+#   Risoe National Laborartory, Roskilde, Denmark
+#   Institut Laue Langevin, Grenoble, France
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; version 2 of the License.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# Available methods for installation
+# make                 normal build
+# make install         normal installation
+# make install-pgplot  build and install PGPLOT
+# make clean           clean distro
+# make test            distro self-test
+# make plotter         best plotter choice
+# make reconfigure     reconfigure @MCCODE_TARNAME@ installation (after software update)
+
+
+SHELL = /bin/sh
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+srcdir = @srcdir@
+topdir = ..
+libdir = @libdir@
+mandir = @mandir@
+PWD = `pwd`
+
+
+DEBUG = -DDEBUG=0
+libdir_mccode = $(libdir)/@MCCODE_TARNAME@
+
+CC = @CC@
+MINGW = @MINGW@
+CFLAGS = @CFLAGS@
+LDFLAGS= @LDFLAGS@
+
+USE_NEXUS = @HAVE_NEXUS@
+
+DEFS = @DEFS@ $(DEBUG)
+LIBS = @LIBS@
+
+PERL = @PERL@
+
+FLEX = @FLEX@
+FLEXFLAGS=-i
+
+BISON = @BISON@
+BISONFLAGS = -v -d
+
+SCILAB = @SCILAB@
+MATLAB = @MATLAB@
+PGPLOT = @PGPLOT@
+VRML = @VRMLVIEW@
+
+WGET = @WGET@
+
+XTERM = @TERM@
+
+INSTALL=@INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+
+
+#
+# End of configuration section.
+#
+
+OBJECTS_mcstas=instrument.tab.o lex.yy.o debug.o \
+	memory.o list.o symtab.o coords.o cexp.o \
+	file.o cogen.o port.o
+COBJECTS_mcstas=instrument.tab.c lex.yy.c debug.c \
+	memory.c list.c symtab.c coords.c cexp.c \
+	file.c cogen.c port.c
+
+OBJECTS_mcxtrace=instrument.tab.o lex.yy.o debug.o \
+	memory.o list.o symtab.o coords.o cexp.o \
+	file.o cogen.o port.o
+COBJECTS_mcxtrace=instrument.tab.c lex.yy.c debug.c \
+	memory.c list.c symtab.c coords.c cexp.c \
+	file.c cogen.c port.c
+
+
+PERLOBJ=mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl mcrun.fixpl \
+        mcgui.fixpl mcdoc.fixpl mcstas2vitess.fixpl mcconvert.fixpl mcdaemon.fixpl mcformatgui.fixpl
+PERLBIN=mcdisplay mcplot mcresplot mcrun mcgui mcdoc mcstas2vitess mcconvert mcdaemon mcformatgui
+BINOBJS_mcstas=$(PERLOBJ) mcstas mcformat
+
+MXPERLOBJ=mcdisplay.mxfixpl mcplot.mxfixpl mcresplot.mxfixpl mcrun.mxfixpl \
+        mxgui.mxfixpl mcdoc.mxfixpl mcconvert.mxfixpl mcdaemon.mxfixpl mcformatgui.mxfixpl
+MXPERLBIN=mxdisplay mxplot mxresplot mxrun mxgui mxdoc mxconvert mxdaemon mxformatgui
+BINOBJS_mcxtrace=$(MXPERLOBJ) mcxtrace mxformat
+
+.SUFFIXES: .c .o .pl .fixpl .mxfixpl
+
+.c.o:
+	@echo "Building" $(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_mccode)'"' ... $<
+	@$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_mccode)'"' $(DEFS) $<
+
+.pl.fixpl:
+	@echo "Fixing PERL dirs:" $< "->" $@
+	@sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
+	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(libdir_mccode)'"+' \
+	    < $< > $@
+	@chmod +x $@
+
+.pl.mxfixpl:
+	@echo "Fixing PERL dirs:" $< "->" $(subst mc,mx,$@)
+	@sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
+	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(libdir_mccode)'"+' \
+	    < $< > $(subst mc,mx,$@)
+	@chmod +x $(subst mc,mx,$@)
+
+all: $(BINOBJS_@MCCODE_TARNAME@)
+
+mcstas: $(OBJECTS_mcstas)
+	@echo "Building" $(CC) -o mcstas $(CFLAGS) $(LDFLAGS) ... $(OBJECTS_mcstas) -lm
+	@$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS_mcstas) -lm
+
+mcxtrace: $(OBJECTS_mcxtrace)
+	@echo "Building" $(CC) -o mcxtrace $(CFLAGS) $(LDFLAGS) ... $(OBJECTS_mcxtrace) -lm
+	@$(CC) -o mcxtrace $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS_mcxtrace) -lm
+
+mcstas.win32: $(COBJECTS_mcstas)
+	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(USE_NEXUS) -UHAVE_STRCASESTR=1
+	$(MINGW) -o mcformat.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(USE_NEXUS)
+
+mcxtrace.win32: $(CMXOBJECTS_mcxtrace)
+	$(MINGW) -o mcxtrace.exe -DMCSTAS='"C:\\McXtrace\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS_mcxtrace) -lm $(USE_NEXUS) -UHAVE_STRCASESTR=1
+	$(MINGW) -o mxformat.exe -DMCSTAS='"C:\\McXtrace\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(USE_NEXUS)
+
+
+mcformat:
+	@echo "Building" $(CC) -o mcformat $(CFLAGS) $(LDFLAGS) ... mcformat.c -lm $(LIBS) $(USE_NEXUS)
+	@$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(LIBS) $(USE_NEXUS)
+
+mxformat:
+	@echo "Building" $(CC) -o mxformat $(CFLAGS) $(LDFLAGS) ... mcformat.c -lm $(LIBS) $(USE_NEXUS)
+	@$(CC) -o mxformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(LIBS) $(USE_NEXUS)
+
+
+clean:
+	rm -f $(BINOBJS_mcstas) $(BINOBJS_mcxtrace) $(OBJECTS_mcstas) $(OBJECTS_mcxtrace) $(PERLOBJ) $(MXPERLOBJ) *.fixpl *.mxfixpl *.o port.h TAGS
+	rm -rf selftest_* selftest/
+
+distclean: clean
+	rm -f instrument.tab.c instrument.tab.h instrument.output lex.yy.c 
+
+TAGS:
+	etags *.[chly]
+
+install: install_@MCCODE_TARNAME@
+	$(INSTALL_DATA) $(topdir)/doc/man/*.1 $(mandir)/man1
+	chmod a+x $(libdir_mccode)/tools/perl/mccode_reconfigure
+	@echo "Install additional Perl modules..."
+	mkdir $(libdir_mccode)/tools/perl/modules
+	cd $(topdir)/support/common && $(MAKE) perl-modules
+	@echo "================================================================"
+	@echo "Installation of @MCCODE_STRING@ finished."
+	@echo "  library  in MCSTAS=$(libdir_mccode)"
+	@echo "  binaries in        $(bindir)"
+	@echo "Thanks for using @MCCODE_NAME@"	
+	@echo "================================================================"
+
+# TODO: currently, all Perl scripts use MCSTAS env. Should be changed in the future.
+install_mcstas: installdirs $(BINOBJS_mcstas)
+	@echo "Install mcstas executables..."
+	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
+	$(INSTALL_PROGRAM) mcformat $(bindir)/mcformat
+	for pgm in $(PERLBIN); do \
+	  $(INSTALL_PROGRAM) $$pgm.fixpl $(bindir)/$$pgm; \
+	done
+	if [ -d $(libdir_mccode) ]; then \
+	  echo "Moving your old library dir $(libdir_mccode) to $(libdir_mccode).`date +%Y%m%d_%H.%M`"; \
+	  mv -f $(libdir_mccode) $(libdir_mccode).`date +%Y%m%d_%H.%M`;\
+	fi
+	$(topdir)/mkinstalldirs $(libdir_mccode)
+	cd $(topdir)/lib && $(MAKE) install 
+	cd $(topdir)/nlib && $(MAKE) install
+	@echo "Create component documentation..."
+	MCSTAS=$(libdir_mccode) $(topdir)/src/mcdoc.fixpl --text; 
+
+# documentation with mxdoc is broken, as it uses MCSTAS location and env
+install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
+	@echo "Install mcxtrace executables..."
+	$(INSTALL_PROGRAM) mcxtrace $(bindir)/mcxtrace
+	$(INSTALL_PROGRAM) mxformat $(bindir)/mxformat
+	for pgm in $(MXPERLBIN); do \
+	  $(INSTALL_PROGRAM) $$pgm.mxfixpl $(bindir)/$$pgm; \
+	done
+	if [ -d $(libdir_mccode) ]; then \
+	  echo "Moving your old library dir $(libdir_mccode) to $(libdir_mccode).`date +%Y%m%d_%H.%M`"; \
+	  mv -f $(libdir_mccode) $(libdir_mccode).`date +%Y%m%d_%H.%M`;\
+	fi
+	$(topdir)/mkinstalldirs $(libdir_mccode)
+	cd $(topdir)/lib && $(MAKE) install 
+	cd $(topdir)/xlib && $(MAKE) install 
+	@echo "Create component documentation..."
+	MCSTAS=$(libdir_mccode) $(topdir)/src/mxdoc.mxfixpl --text; 
+
+installdirs:
+	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_mccode) $(mandir)/man1
+
+instrument.tab.o: mccode.h
+lex.yy.o: mccode.h instrument.tab.h
+debug.o: mccode.h
+memory.o: mccode.h
+symtab.o: mccode.h
+list.o: mccode.h
+coords.o: mccode.h
+cexp.o: mccode.h
+file.o: mccode.h
+cogen.o: mccode.h
+port.o: port.h
+mcformat.o: mccode.h
+
+instrument.tab.c instrument.tab.h: instrument.y
+	$(BISON) $(BISONFLAGS) instrument.y
+
+lex.yy.c: instrument.l
+	$(FLEX) $(FLEXFLAGS) instrument.l
+
+test: test_@MCCODE_TARNAME@
+
+test_mcstas: mcrun.fixpl
+	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McStasTest; export PERL5LIB=../lib/tools/perl; ln -s mcrun.fixpl mcrun; ./mcrun.fixpl --test; rm mcrun
+
+test_mcxtrace: mxrun.mxfixpl
+	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McXtraceTest; export PERL5LIB=../lib/tools/perl; ln -s mxrun.fixpl mcrun; ./mxrun.mxfixpl --test; rm mcrun
+
+uninstall: uninstall_@MCCODE_TARNAME@
+	rm -rf $(libdir_mccode)
+
+uninstall_mcstas: 
+	cd $(bindir); rm -f $(BINOBJS_@MCCODE_TARNAME@)
+	rm -f $(PERLBIN)
+
+uninstall_mcxtrace: 
+	cd $(bindir); rm -f $(BINOBJS_@MCCODE_TARNAME@)
+	rm -f $(MXPERLBIN)
+
+reconfigure:
+	cd $(libdir_mccode)/tools/perl/
+	$(libdir_mccode)/tools/perl/mccode_reconfigure
+
