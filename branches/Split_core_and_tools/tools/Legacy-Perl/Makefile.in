@@ -1,0 +1,178 @@
+# Makefile for @MCCODE_NAME@.
+#
+#   This file is part of the @MCCODE_NAME@ ray-trace simulation package
+#   Copyright (C) 1997-2008, All rights reserved
+#   Risoe National Laborartory, Roskilde, Denmark
+#   Institut Laue Langevin, Grenoble, France
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; version 2 of the License.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# Available methods for installation
+# make                 normal build
+# make install         normal installation
+# make install-pgplot  build and install PGPLOT
+# make clean           clean distro
+# make test            distro self-test
+# make plotter         best plotter choice
+# make reconfigure     reconfigure @MCCODE_TARNAME@ installation (after software update)
+
+
+SHELL = /bin/sh
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+srcdir = @srcdir@
+topdir = .
+rootdir = ../../
+libdir = @libdir@
+mandir = @mandir@
+PWD = `pwd`
+
+
+DEBUG = -DDEBUG=0
+libdir_mccode = $(libdir)/@MCCODE_TARNAME@
+
+CC = @CC@
+MINGW = @MINGW@
+CFLAGS = @CFLAGS@
+LDFLAGS= @LDFLAGS@
+
+USE_NEXUS = @HAVE_NEXUS@
+
+DEFS = @DEFS@ $(DEBUG)
+LIBS = @LIBS@
+
+PERL = @PERL@
+
+FLEX = @FLEX@
+FLEXFLAGS=-i
+
+BISON = @BISON@
+BISONFLAGS = -v -d
+
+SCILAB = @SCILAB@
+MATLAB = @MATLAB@
+PGPLOT = @PGPLOT@
+VRML = @VRMLVIEW@
+
+WGET = @WGET@
+
+XTERM = @TERM@
+
+INSTALL=@INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+
+
+#
+# End of configuration section.
+#
+
+PERLOBJ=mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl mcrun.fixpl \
+        mcgui.fixpl mcdoc.fixpl mcstas2vitess.fixpl mcconvert.fixpl mcdaemon.fixpl mcformatgui.fixpl
+PERLBIN=mcdisplay mcplot mcresplot mcrun mcgui mcdoc mcstas2vitess mcconvert mcdaemon mcformatgui
+BINOBJS_mcstas=$(PERLOBJ)
+
+MXPERLOBJ=mcdisplay.mxfixpl mcplot.mxfixpl mcresplot.mxfixpl mcrun.mxfixpl \
+        mxgui.mxfixpl mcdoc.mxfixpl mcconvert.mxfixpl mcdaemon.mxfixpl mcformatgui.mxfixpl
+MXPERLBIN=mxdisplay mxplot mxresplot mxrun mxgui mxdoc mxconvert mxdaemon mxformatgui
+BINOBJS_mcxtrace=$(MXPERLOBJ)
+
+.SUFFIXES: .pl .fixpl .mxfixpl
+
+.pl.fixpl:
+	@echo "Fixing PERL dirs:" $< "->" $@
+	@sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
+	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(libdir_mccode)'"+' \
+	    < $< > $@
+	@chmod +x $@
+
+.pl.mxfixpl:
+	@echo "Fixing PERL dirs:" $< "->" $(subst mc,mx,$@)
+	@sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
+	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(libdir_mccode)'"+' \
+	    < $< > $(subst mc,mx,$@)
+	@chmod +x $(subst mc,mx,$@)
+
+all: $(BINOBJS_@MCCODE_TARNAME@)
+
+
+clean:
+	rm -f $(BINOBJS_mcstas) $(BINOBJS_mcxtrace) $(PERLOBJ) $(MXPERLOBJ) *.fixpl *.mxfixpl
+	rm -rf selftest_* selftest/
+
+distclean: clean
+	rm -f instrument.tab.c instrument.tab.h instrument.output lex.yy.c 
+
+install: install_@MCCODE_TARNAME@
+	$(INSTALL_DATA) $(topdir)/doc/man/*.1 $(mandir)/man1
+	chmod a+x $(libdir_mccode)/tools/perl/mccode_reconfigure
+	@echo "Install additional Perl modules..."
+	cd $(topdir)/support/common && $(MAKE) perl-modules
+	@echo "================================================================"
+	@echo "Installation of @MCCODE_STRING@ finished."
+	@echo "  library  in MCSTAS=$(libdir_mccode)"
+	@echo "  binaries in        $(bindir)"
+	@echo "Thanks for using @MCCODE_NAME@"	
+	@echo "================================================================"
+
+# TODO: currently, all Perl scripts use MCSTAS env. Should be changed in the future.
+install_mcstas: installdirs $(BINOBJS_mcstas)
+	@echo "Install mcstas tools..."
+	for pgm in $(PERLBIN); do \
+	  $(INSTALL_PROGRAM) $$pgm.fixpl $(bindir)/$$pgm; \
+	done
+	$(rootdir)/mkinstalldirs $(libdir_mccode)
+	cd $(topdir)/lib && $(MAKE) install 
+	@echo "Create component documentation..."
+	MCSTAS=$(libdir_mccode) $(topdir)/mcdoc.fixpl --text; 
+
+# documentation with mxdoc is broken, as it uses MCSTAS location and env
+install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
+	@echo "Install mcxtrace tools..."
+	for pgm in $(MXPERLBIN); do \
+	  $(INSTALL_PROGRAM) $$pgm.mxfixpl $(bindir)/$$pgm; \
+	done
+	$(rootdir)/mkinstalldirs $(libdir_mccode)
+	cd $(topdir)/lib && $(MAKE) install 
+	@echo "Create component documentation..."
+	MCSTAS=$(libdir_mccode) $(topdir)/mxdoc.mxfixpl --text; 
+
+installdirs:
+	$(rootdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_mccode) $(mandir)/man1
+
+test: test_@MCCODE_TARNAME@
+
+test_mcstas: mcrun.fixpl
+	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McStasTest; export PERL5LIB=../lib/tools/perl; ln -s mcrun.fixpl mcrun; ./mcrun.fixpl --test; rm mcrun
+
+test_mcxtrace: mxrun.mxfixpl
+	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McXtraceTest; export PERL5LIB=../lib/tools/perl; ln -s mxrun.fixpl mcrun; ./mxrun.mxfixpl --test; rm mcrun
+
+uninstall: uninstall_@MCCODE_TARNAME@
+	rm -rf $(libdir_mccode)
+
+uninstall_mcstas: 
+	cd $(bindir); rm -f $(BINOBJS_@MCCODE_TARNAME@)
+	rm -f $(PERLBIN)
+
+uninstall_mcxtrace: 
+	cd $(bindir); rm -f $(BINOBJS_@MCCODE_TARNAME@)
+	rm -f $(MXPERLBIN)
+
+reconfigure:
+	cd $(libdir_mccode)/tools/perl/
+	$(libdir_mccode)/tools/perl/mccode_reconfigure
+
