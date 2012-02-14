@@ -64,19 +64,9 @@ FLEXFLAGS=-i
 BISON = bison
 BISONFLAGS = -v -d
 
-SCILAB = @SCILAB@
-MATLAB = @MATLAB@
-PGPLOT = @PGPLOT@
-VRML = @VRMLVIEW@
-
-WGET = @WGET@
-
-XTERM = @TERM@
-
 INSTALL=@INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
-
 
 #
 # End of configuration section.
@@ -101,39 +91,6 @@ distclean:
 install: 
 	cd src/ && $(MAKE) install
 
-# Prefer Scilab over Matlab over PGPLOT
-config: plotter
-plotter:
-	if [ $(VRML) != no ]; then \
-		$(MAKE) vrml; \
-	fi; \
-	if [ $(SCILAB) != no ]; then \
-		$(MAKE) scilab; \
-	fi; \
-	if [ $(MATLAB) != no ]; then \
-		$(MAKE) matlab; \
-	fi; \
-	if [ $(PGPLOT) != no ]; then \
-		$(MAKE) pgplot; \
-	fi;
-
-scilab:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'Scilab'\,/" lib/tools/perl/mccode_config.perl > lib/tools/perl/mccode_config.perl.tmp
-	mv lib/tools/perl/mccode_config.perl.tmp lib/tools/perl/mccode_config.perl
-matlab:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'Matlab'\,/" lib/tools/perl/mccode_config.perl > lib/tools/perl/mccode_config.perl.tmp
-	mv lib/tools/perl/mccode_config.perl.tmp lib/tools/perl/@MCCODE_TARNAME@_config.perl
-pgplot:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'McStas'\,/" lib/tools/perl/mccode_config.perl > lib/tools/perl/mccode_config.perl.tmp
-	mv lib/tools/perl/mccode_config.perl.tmp lib/tools/perl/mccode_config.perl
-vrml:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/mccode_config.perl > lib/tools/perl/mccode_config.perl.tmp
-	mv lib/tools/perl/mccode_config.perl.tmp lib/tools/perl/mccode_config.perl
-PGPLOT: pgplot
-Matlab: matlab
-Scilab: scilab
-VRML: vrml
-
 test:
 	cd src && $(MAKE) test
 
@@ -143,32 +100,4 @@ uninstall:
 reconfigure:
 	cd $(libdir_@MCCODE_TARNAME@)/tools/perl/
 	$(libdir_@MCCODE_TARNAME@)/tools/perl/mccode_reconfigure
-
-# Optional auto install of patched perl-Tk, scilab and pgplot5 libs
-install-pgplot:
-	cd support/common && $(MAKE) install-pgplot
-	cd support/common && $(MAKE) perl-PGPLOT
-	make pgplot
-	@echo "@MCCODE_NAME@: pgplot installed, run 'make reconfigure'"
-
-install-scilab:
-	cd support/common && $(MAKE) compile-scilab && echo "@MCCODE_NAME@: run './configure; make; make install' again"
-
-install-apps:
-	if [ -d /usr/share/applications/ ]; then \
-	  cp support/common/Desktop/McStas.desktop /usr/share/applications/; \
-	fi;
-	if [ -d /usr/share/pixmaps/ ]; then \
-	  cp support/common/Desktop/mcstas-icon.png /usr/share/pixmaps/; \
-	fi;
-	if [ -d /usr/share/gtksourceview-1.0/ ]; then \
-	  cp support/common/editors/mcstas1.lang /usr/share/gtksourceview-1.0/language-specs/; \
-	fi;
-	if [ -d /usr/share/gtksourceview-2.0/ ]; then \
-	  cp support/common/editors/mcstas2.lang /usr/share/gtksourceview-2.0/language-specs/; \
-	fi;
-	if [ -d /usr/share/apps/katepart/syntax/ ]; then \
-	  cp support/common/editors/mcstas.xml /usr/share/apps/katepart/syntax/; \
-	fi;
-
 

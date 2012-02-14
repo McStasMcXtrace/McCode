@@ -189,9 +189,7 @@ else
   AC_DEFINE([HAVE_NEXUS], [])
 fi
 
-AC_OUTPUT(Makefile src/Makefile src/port.h src/cogen.c lib/Makefile nlib/Makefile xlib/Makefile lib/tools/perl/mccode_config.perl lib/tools/perl/mccode_reconfigure support/common/Makefile support/common/pgplot/Makefile support/common/pgplot/makehtml support/common/pgplot/maketex src/mccode.h lib/share/mccode-r.h src/mcformat.c doc/man/mcconvert.1 doc/man/mcdisplay.1 doc/man/mcdoc.1 doc/man/mcformat.1 doc/man/mcgui.1 doc/man/mcplot.1 doc/man/mcrun.1 doc/man/mcstas.1 doc/man/mcxtrace.1 doc/man/mxconvert.1 doc/man/mxdisplay.1 doc/man/mxdoc.1 doc/man/mxformat.1 doc/man/mxgui.1 doc/man/mxplot.1 doc/man/mxrun.1 support/deb/debcreate support/deb/postinst support/deb/control support/Win32/install/mcstas.nsi support/Win32/install/mcxtrace.nsi build.bat)
-
-chmod a+x lib/tools/perl/mccode_reconfigure
+AC_OUTPUT(Makefile src/Makefile src/port.h src/mccode.h src/cogen.c lib/Makefile xlib/Makefile lib/share/mccode-r.h src/mcformat.c doc/man/mcxtrace.1 doc/man/mxformat.1)
 
 # warnings and errors
 if test "$USE_PIC" != "no" ; then
