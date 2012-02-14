@@ -1,0 +1,68 @@
+#
+#   This file is part of the McStas/McXtrace @MCCODE_STRING@ neutron ray-trace simulation package
+#   Copyright (C) 1997-2010, All rights reserved
+#   Risoe National Laborartory, Roskilde, Denmark
+#   Institut Laue Langevin, Grenoble, France
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; version 2 of the License.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(pgplot-minimal, 0.1, mccode-support@mccode.org)
+AC_REVISION($Revision: 1.1$)
+AC_COPYRIGHT([Copyright (C) Copyright, All rights reserved
+Risoe National Laborartory, Roskilde, Denmark
+Institut Laue Langevin, Grenoble, France
+This software is covered by the GNU LESSER GENERAL PUBLIC LICENSE
+see file COPYING for further information])
+
+AC_PREFIX_DEFAULT(/usr/local)
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
+
+AC_ARG_WITH([cc], AC_HELP_STRING([--with-cc=c compiler], [Specify name of C compiler]),
+        [with_cc=$withval], [with_cc=yes])
+if test x"$with_cc" != x"no" ; then
+        if test x"$with_cc" != x"yes" ; then CC="$with_cc"; fi
+        AC_PROG_CC
+else
+        AC_MSG_ERROR([You need a C compiler to compile this package])
+fi
+
+AC_PROG_INSTALL
+AC_FUNC_MALLOC
+AC_FUNC_REALLOC
+AC_FUNC_STRTOD
+AC_CHECK_FUNCS(strcasecmp fdopen qsort strcasestr)
+
+AC_PATH_PROGS(PERL,   [perl perl5], no, /usr/bin:/usr/local/bin:$PATH)
+AC_PATH_PROGS(G77, [g77 f77 gfortran g95 f95], no)
+AC_PATH_PROGS(MAKE,   [make gmake], no)
+# handle PIC options
+AC_ARG_WITH([pic],
+  [AS_HELP_STRING([--with-pic],
+     [enable support for PIC libraries (required to compile PGPLOT on some systems)])],
+  [USE_PIC=$withval],
+  [USE_PIC=no])
+AC_SUBST(USE_PIC)
+
+AC_OUTPUT(Makefile configure makehtml maketex)
+
+if test "$USE_PIC" != "no" ; then
+echo "Activating PIC compilation for pgplot"
+fi
+if test "$MAKE" = "no" ; then
+  echo "Installation requires 'make' or 'gmake'"
+  exit
+fi
+
+
