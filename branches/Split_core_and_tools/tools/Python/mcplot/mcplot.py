@@ -56,6 +56,7 @@ import sys
 import os
 import string
 import matplotlib
+matplotlib.use('TkAgg');
 
 FSlist      = list()
 options     = 0
