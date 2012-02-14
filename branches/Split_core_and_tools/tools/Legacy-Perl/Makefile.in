@@ -114,7 +114,12 @@ clean:
 	rm -rf selftest_* selftest/
 
 distclean: clean
-	rm -f instrument.tab.c instrument.tab.h instrument.output lex.yy.c 
+	rm -f lib/tools/perl/mccode_config.perl
+	rm -f lib/tools/perl/mccode_reconfigure
+	rm configure Makefile lib/Makefile support/common/Makefile
+	cd support/common/Perl/Proc-Simple-1.19/ && make distclean
+	cd support/common/Perl/Math-Amoeba-0.04/ && make distclean
+	cd support/common/Perl/Tk-CodeText-0.3.4/ && make distclean
 
 install: install_@MCCODE_TARNAME@
 	$(INSTALL_DATA) $(topdir)/doc/man/*.1 $(mandir)/man1
