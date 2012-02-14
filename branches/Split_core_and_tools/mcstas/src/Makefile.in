@@ -35,6 +35,7 @@ exec_prefix = @exec_prefix@
 bindir = @bindir@
 srcdir = @srcdir@
 topdir = ..
+rootdir = ../../
 libdir = @libdir@
 mandir = @mandir@
 PWD = `pwd`
@@ -61,19 +62,9 @@ FLEXFLAGS=-i
 BISON = @BISON@
 BISONFLAGS = -v -d
 
-SCILAB = @SCILAB@
-MATLAB = @MATLAB@
-PGPLOT = @PGPLOT@
-VRML = @VRMLVIEW@
-
-WGET = @WGET@
-
-XTERM = @TERM@
-
 INSTALL=@INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
-
 
 #
 # End of configuration section.
@@ -94,35 +85,15 @@ COBJECTS_mcxtrace=instrument.tab.c lex.yy.c debug.c \
 	file.c cogen.c port.c
 
 
-PERLOBJ=mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl mcrun.fixpl \
-        mcgui.fixpl mcdoc.fixpl mcstas2vitess.fixpl mcconvert.fixpl mcdaemon.fixpl mcformatgui.fixpl
-PERLBIN=mcdisplay mcplot mcresplot mcrun mcgui mcdoc mcstas2vitess mcconvert mcdaemon mcformatgui
-BINOBJS_mcstas=$(PERLOBJ) mcstas mcformat
+BINOBJS_mcstas=mcstas mcformat
 
-MXPERLOBJ=mcdisplay.mxfixpl mcplot.mxfixpl mcresplot.mxfixpl mcrun.mxfixpl \
-        mxgui.mxfixpl mcdoc.mxfixpl mcconvert.mxfixpl mcdaemon.mxfixpl mcformatgui.mxfixpl
-MXPERLBIN=mxdisplay mxplot mxresplot mxrun mxgui mxdoc mxconvert mxdaemon mxformatgui
-BINOBJS_mcxtrace=$(MXPERLOBJ) mcxtrace mxformat
+BINOBJS_mcxtrace=mcxtrace mxformat
 
-.SUFFIXES: .c .o .pl .fixpl .mxfixpl
+.SUFFIXES: .c .o 
 
 .c.o:
 	@echo "Building" $(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_mccode)'"' ... $<
 	@$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_mccode)'"' $(DEFS) $<
-
-.pl.fixpl:
-	@echo "Fixing PERL dirs:" $< "->" $@
-	@sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
-	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(libdir_mccode)'"+' \
-	    < $< > $@
-	@chmod +x $@
-
-.pl.mxfixpl:
-	@echo "Fixing PERL dirs:" $< "->" $(subst mc,mx,$@)
-	@sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
-	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(libdir_mccode)'"+' \
-	    < $< > $(subst mc,mx,$@)
-	@chmod +x $(subst mc,mx,$@)
 
 all: $(BINOBJS_@MCCODE_TARNAME@)
 
@@ -164,10 +135,6 @@ TAGS:
 
 install: install_@MCCODE_TARNAME@
 	$(INSTALL_DATA) $(topdir)/doc/man/*.1 $(mandir)/man1
-	chmod a+x $(libdir_mccode)/tools/perl/mccode_reconfigure
-	@echo "Install additional Perl modules..."
-	mkdir $(libdir_mccode)/tools/perl/modules
-	cd $(topdir)/support/common && $(MAKE) perl-modules
 	@echo "================================================================"
 	@echo "Installation of @MCCODE_STRING@ finished."
 	@echo "  library  in MCSTAS=$(libdir_mccode)"
@@ -180,39 +147,21 @@ install_mcstas: installdirs $(BINOBJS_mcstas)
 	@echo "Install mcstas executables..."
 	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
 	$(INSTALL_PROGRAM) mcformat $(bindir)/mcformat
-	for pgm in $(PERLBIN); do \
-	  $(INSTALL_PROGRAM) $$pgm.fixpl $(bindir)/$$pgm; \
-	done
-	if [ -d $(libdir_mccode) ]; then \
-	  echo "Moving your old library dir $(libdir_mccode) to $(libdir_mccode).`date +%Y%m%d_%H.%M`"; \
-	  mv -f $(libdir_mccode) $(libdir_mccode).`date +%Y%m%d_%H.%M`;\
-	fi
-	$(topdir)/mkinstalldirs $(libdir_mccode)
+	$(rootdir)/mkinstalldirs $(libdir_mccode)
 	cd $(topdir)/lib && $(MAKE) install 
 	cd $(topdir)/nlib && $(MAKE) install
-	@echo "Create component documentation..."
-	MCSTAS=$(libdir_mccode) $(topdir)/src/mcdoc.fixpl --text; 
 
 # documentation with mxdoc is broken, as it uses MCSTAS location and env
 install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
 	@echo "Install mcxtrace executables..."
 	$(INSTALL_PROGRAM) mcxtrace $(bindir)/mcxtrace
 	$(INSTALL_PROGRAM) mxformat $(bindir)/mxformat
-	for pgm in $(MXPERLBIN); do \
-	  $(INSTALL_PROGRAM) $$pgm.mxfixpl $(bindir)/$$pgm; \
-	done
-	if [ -d $(libdir_mccode) ]; then \
-	  echo "Moving your old library dir $(libdir_mccode) to $(libdir_mccode).`date +%Y%m%d_%H.%M`"; \
-	  mv -f $(libdir_mccode) $(libdir_mccode).`date +%Y%m%d_%H.%M`;\
-	fi
-	$(topdir)/mkinstalldirs $(libdir_mccode)
+	$(rootdir)/mkinstalldirs $(libdir_mccode)
 	cd $(topdir)/lib && $(MAKE) install 
 	cd $(topdir)/xlib && $(MAKE) install 
-	@echo "Create component documentation..."
-	MCSTAS=$(libdir_mccode) $(topdir)/src/mxdoc.mxfixpl --text; 
 
 installdirs:
-	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_mccode) $(mandir)/man1
+	$(rootdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_mccode) $(mandir)/man1
 
 instrument.tab.o: mccode.h
 lex.yy.o: mccode.h instrument.tab.h
@@ -232,14 +181,6 @@ instrument.tab.c instrument.tab.h: instrument.y
 
 lex.yy.c: instrument.l
 	$(FLEX) $(FLEXFLAGS) instrument.l
-
-test: test_@MCCODE_TARNAME@
-
-test_mcstas: mcrun.fixpl
-	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McStasTest; export PERL5LIB=../lib/tools/perl; ln -s mcrun.fixpl mcrun; ./mcrun.fixpl --test; rm mcrun
-
-test_mcxtrace: mxrun.mxfixpl
-	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McXtraceTest; export PERL5LIB=../lib/tools/perl; ln -s mxrun.fixpl mcrun; ./mxrun.mxfixpl --test; rm mcrun
 
 uninstall: uninstall_@MCCODE_TARNAME@
 	rm -rf $(libdir_mccode)
