@@ -162,6 +162,11 @@
 * density:  Density of material. rho=density/weight/1e24*N_A. [g/cm^3]
 * nb_atoms: Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell [1]
 *
+* OUTPUT PARAMETERS:
+* line_info:      internal structure containing many members/info [struct]
+* line_info.type: interaction type of event 1=Transmit, 2=Incoherent, 3=Coherent [double]
+* line_info.dq:   wavevector transfer of last coherent scattering event [Angs-1]
+*
 * %L
 * “Validation of a realistic powder sample using data from DMC at PSI” Willendrup P, Filges U, Keller L, Farhi E, Lefmann K, Physica B-Cond Matt 385 (2006) 1032.  
 * %L
@@ -198,7 +203,7 @@ SETTING PARAMETERS (string reflections=0, string geometry=0,
                     concentric=0, density=0, weight=0, barns=1)
 OUTPUT PARAMETERS (line_info, Nq, my_s_v2, XsectionFactor,
   my_s_v2_sum, my_a_v, my_inc, q_v, w_v, columns, 
-  radius_i, xwidth_i, yheight_i, zdepth_i, offdata)
+  radius_i, xwidth_i, yheight_i, zdepth_i, offdata, neutrontype)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{
@@ -242,6 +247,8 @@ SHARE
       int    shape; /* 0 cylinder, 1 box, 2 sphere, 3 OFF file */
       int    column_order[8]; /* column signification */
       int    flag_warning;
+      double type;  /* interaction type of event 1=Transmit, 2=Incoherent, 3=Coherent */
+      double dq;    /* wavevector transfer [Angs-1] */
     };
     
   off_struct offdata;
@@ -698,6 +705,8 @@ TRACE
       } else {
         exit(fprintf(stderr,"PowderN %s: DEAD - this shouldn't happen!\n", NAME_CURRENT_COMP));
       }
+      
+      line_info.type=neutrontype;
         
       if (neutrontype == 3) { /* Make coherent scattering event */
         if (line_info.count > 0) {
@@ -803,6 +812,7 @@ TRACE
           pmul  = Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
           /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
           if (d_phi) pmul *= alpha/PI;
+          line_info.dq = q_v[line];
         } /* else transmit <-- No powder lines in file */
       }  /* Coherent scattering event */
       else if (neutrontype == 2) {  /* Make incoherent scattering event */

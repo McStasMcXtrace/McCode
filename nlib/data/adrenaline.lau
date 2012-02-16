@@ -4,11 +4,11 @@
 # Reference: A.M. Anderson; Acta Chem.Scand.Ser.B, 29, (1975), 239
 #
 # Physical parameters:
-# sigma_coh 15.683  coherent scattering cross section for Al2O3 in [barn]
-# sigma_inc 1043.9  incoherent scattering cross section for Al2O3 in [barn]
-# sigma_abs 6.256   absorption scattering cross section for Al2O3 in [barn]
+# sigma_coh 96.53   coherent scattering cross section for C9H13NO3 in [barn]
+# sigma_inc 1043.9  incoherent scattering cross section for C9H13NO3 in [barn]
+# sigma_abs 6.256   absorption scattering cross section for C9H13NO3 in [barn]
 # density   1.33    in [g/cm^3]
-# weight    183.20  in [g/mol] for Al2O3
+# weight    183.20  in [g/mol] for C9H13NO3
 # Vc        457.25  volume of unit cell in [A^3]
 # multiplicity 2    in [C9H13NO3/unit cell]
 # T_m       486     melting temperature in [K]
