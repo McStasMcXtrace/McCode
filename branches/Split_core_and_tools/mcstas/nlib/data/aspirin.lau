@@ -4,13 +4,13 @@
 # Reference: Y. Kim et al, Chem. Pharm. Bull. 33, (1985), 2641
 #
 # Physical parameters:
-# sigma_coh 80.95   coherent scattering cross section for Al2O3 in [barn]
-# sigma_inc 642.09  incoherent scattering cross section for Al2O3 in [barn]
-# sigma_abs 2.693   absorption scattering cross section for Al2O3 in [barn]
+# sigma_coh 80.95   coherent scattering cross section for aspirin in [barn]
+# sigma_inc 642.09  incoherent scattering cross section for aspirin in [barn]
+# sigma_abs 2.693   absorption scattering cross section for aspirin in [barn]
 # density   1.4     in [g/cm^3]
-# weight    180.15  in [g/mol] for Al2O3
+# weight    180.15  in [g/mol] for aspirin
 # Vc        854.23  volume of unit cell in [A^3]
-# multiplicity 4    in [C9H13NO3/unit cell]
+# multiplicity 4    in [C9H8O4/unit cell]
 # T_m       408     melting temperature in [K]
 # T_b       413     boiling temperature in [K]
 # lattice_a 8.457   lattice parameter a in [Angs]
