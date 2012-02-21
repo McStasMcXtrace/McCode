@@ -145,7 +145,11 @@
 *   options = "multiple kx ky kz, auto abs log t, and list all neutrons"
 *        makes 4 output 1D files and produces a complete list for all neutrons
 *        and monitor log(abs(tof)) within automatic limits (for t)
-
+*
+* To dynamically define a number of bins, or limits:
+*   Use in DECLARE:    char op[256]; 
+*   Use in INITIALIZE: sprintf(op, "lambda limits=[%g %g], bins=%i", lmin, lmax, lbin);
+*   Use in TRACE:      Monitor_nD(... options=op ...)
 *
 * <b>How to monitor any instrument/component variable into a Monitor_nD</b>
 * Suppose you want to monitor a variable 'age' which you assign somwhere in
