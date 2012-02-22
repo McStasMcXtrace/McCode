@@ -17,7 +17,7 @@
 # T_m       1211.4  melting temperature in [K]
 # T_b       3093    boiling temperature in [K]
 # At_number 32      atomic number Z
-# lattice_a 657906  lattice parameter a in [Angs]
+# lattice_a 5.657906 lattice parameter a in [Angs]
 #
 # Format parameters: Lazy format <http://icsd.ill.fr>
 # column_j 17 multiplicity 'j'
