@@ -197,16 +197,10 @@ def expand_options(options):
                                                          DATE_FORMAT_PATH))
         # alert user
         LOG.info('No output directory specified (--dir)')
-        # create dir
-        try:
-            mkdir(options.dir)
-        except OSError:
-            pass  # dir exists
     # Output file
     if options.optimise_file is None:
         # use mcstas.dat when unspecified
         options.optimise_file = '%s/mcstas.dat' % options.dir
-
 
 
 def is_decimal(string):
