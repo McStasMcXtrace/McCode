@@ -152,6 +152,10 @@
 * OUTPUT PARAMETERS:
 *
 * hkl_info: Internal [structure]
+* hkl_info.type: interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]
+* hkl_info.h:   
+* hkl_info.k: wavevector indices of last coherent scattering event [Angs-1]
+* hkl_info.l:
 *
 * %L
 * See <a href="http://icsd.ill.fr">ICSD</a> Inorganic Crystal Structure Database
@@ -290,6 +294,8 @@ SHARE
       int    recip;               /* Flag to indicate if recip or direct cell axes given */
       int    shape;               /* 0:cylinder, 1:box, 2:sphere 3:any shape*/
       int    flag_warning;        /* number of warnings */
+      char   type;                /* type of last event: t=transmit,c=coherent or i=incoherent */
+      int    h,k,l;               /* last coherent scattering momentum transfer indices */
     };
 
   struct tau_data
@@ -759,6 +765,11 @@ INITIALIZE
   /* Read in structure factors, and do some pre-calculations. */
   if (!read_hkl_data(reflections, &hkl_info, mosaic, mosaic_a, mosaic_b, mosaic_c, mosaic_ABin))
     exit(0);
+    
+    
+  if (hkl_info.sigma_a<0) hkl_info.sigma_a=0;
+  if (hkl_info.sigma_i<0) hkl_info.sigma_i=0;
+  
   if (hkl_info.count)
     printf("Single_crystal: %s: Read %d reflections from file '%s'\n",
       NAME_CURRENT_COMP, hkl_info.count, reflections);
@@ -856,6 +867,7 @@ TRACE
     } /* else assume fm^2 */
     L = hkl_info.list;
     T = hkl_info.tau_list;
+    hkl_info.type = '\0';
     
     do {  /* Loop over multiple scattering events */
     
@@ -997,6 +1009,7 @@ TRACE
       } else {
         mc_trans = p_trans;
       }
+      hkl_info.type = 't';
       mc_interact = 1 - mc_trans;
       if(mc_trans > 0 && (mc_trans >= 1 || rand01() < mc_trans))  /* Transmit */
       {
@@ -1035,6 +1048,7 @@ TRACE
         vx = kix; /* ki vector is used as tmp var with norm v */
         vy = kiy;
         vz = kiz; /* Go for next scattering event */
+        hkl_info.type = 'i';
       } else {
         /* 7. Coherent scattering. Select reciprocal lattice point. */
         if(coh_refl <= 0){
@@ -1074,6 +1088,10 @@ TRACE
         vx = K2V*(L[i].u1x*kfx + L[i].u2x*kfy + L[i].u3x*kfz);
         vy = K2V*(L[i].u1y*kfx + L[i].u2y*kfy + L[i].u3y*kfz);
         vz = K2V*(L[i].u1z*kfx + L[i].u2z*kfy + L[i].u3z*kfz);
+        hkl_info.type = 'c';
+        hkl_info.h    = L[i].h;
+        hkl_info.k    = L[i].k;
+        hkl_info.l    = L[i].l;
       }
       SCATTER;
       /* exit if multiple scattering order has been reached */

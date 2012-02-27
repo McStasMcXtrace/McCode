@@ -28,11 +28,14 @@
 *
 * Based on Powder1/Powder2/Single_crystal.
 * Geometry is a powder filled cylinder or a box.
-* Incoherent scattering is only provided here to account for a background
+* Incoherent scattering is only provided here to account for a background.
 * The efficient is highly improved when restricting the vertical scattering
-* range on the Debye-Scherrer cone (with 'd_phi').
+*   range on the Debye-Scherrer cone (with 'd_phi').
 * The unit cell volume Vc may also be computed when giving the density,
-* the atomic/molecular weight and the number of atoms per unit cell.
+*   the atomic/molecular weight and the number of atoms per unit cell.
+* A simple strain handling is available by mean of either a global Strain parameter,
+*   or a column with a strain value per Bragg reflection. The strain values are
+*   specified in ppm (1e-6).
 *
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or any other shape.
@@ -84,12 +87,12 @@
 *
 * An other possibility to define other formats is to set directly
 * the signification of the columns as a vector of indexes in the order
-*   format={j,d,F2,DW,Delta_d/d,1/2d,q,F}
-* Signification of the symbols is given below. Indexes start at 1.
-* Indexes with zero means that the column is not present, so that:
-*   Crystallographica={ 4,5,7,0,0,0,0,0 }
-*   Fullprof         ={ 4,0,8,0,0,5,0,0 }
-*   Lazy             ={17,6,0,0,0,0,0,13}
+*   format={j,d,F2,DW,Delta_d/d,1/2d,q,F,Strain}
+* Signification of the symbols is given below. Indices start at 1.
+* Indices with zero means that the column are not present, so that:
+*   Crystallographica={ 4,5,7,0,0,0,0,0,0 }
+*   Fullprof         ={ 4,0,8,0,0,5,0,0,0 }
+*   Lazy             ={17,6,0,0,0,0,0,13,0}
 * Here again, NO quotes should be around the 'format' value.
 *
 * At last, the format may be overridden by direct definition of the
@@ -100,9 +103,10 @@
 *   #column_F2    <index of the squared str. factor '|F|^2' column [b]>
 *   #column_F     <index of the structure factor norm '|F|' column>
 *   #column_DW    <index of the Debye-Waller factor 'DW' column>
-*   #column_Dd    <index of the relative line width Delta_d/d 'Dd' column>
+*   #column_Dd    <index of the relative line width Delta_d/d broadening 'Dd' column>
 *   #column_inv2d <index of the 1/2d=sin(theta)/lambda 'inv2d' column>
 *   #column_q     <index of the scattering wavevector 'q' column [Angs-1]>
+*   #column_strain <index of the strain line shift Delta/d [ppm]>
 *
 * <b>Concentricity</b>
 *
@@ -123,6 +127,7 @@
 *
 * (The second instance of the cryostat component can also be written out completely
 *  using PowderN(...). In both cases, this second instance needs concentric = 0.)
+* The concentric arrangment can not be used with OFF geometry specification.
 *
 * %P
 * INPUT PARAMETERS
@@ -141,6 +146,8 @@
 * pack:     Packing factor [1]
 * Delta_d:  Global relative Delta_d/d spreading when the 'w' column
 *             is not available. Use 0 if ideal. [Angs]
+* Strain:   Global relative Delta_d/d shift when the 'Strain' column
+*             is not available. Use 0 if ideal. [ppm]
 * format:   Name of the format, or list of column indexes
 *             (see Description). [no quotes]
 * p_inc:    Fraction of incoherently scattered neutron rays [1]
@@ -153,8 +160,8 @@
 *               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
 * barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2 
 *             (barns=1 for laz, barns=0 for lau type files).[1]
-* sigma_abs:Absorption cross section per unit cell at 2200 m/s [barns]
-* sigma_inc:Incoherent cross section per unit cell [barns]
+* sigma_abs:Absorption cross section per unit cell at 2200 m/s. Use a negative value to unactivate it  [barns]
+* sigma_inc:Incoherent cross section per unit cell. Use a negative value to unactivate it [barns]
 * Vc:       Volume of unit cell=nb atoms per cell/density of atoms [AA^3]
 * DW:       Global Debey-Waller factor when the 'DW' column
 *             is not available. Use 1 if included in F2 [1]
@@ -164,11 +171,11 @@
 *
 * OUTPUT PARAMETERS:
 * line_info:      internal structure containing many members/info [struct]
-* line_info.type: interaction type of event 1=Transmit, 2=Incoherent, 3=Coherent [double]
+* line_info.type: interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]
 * line_info.dq:   wavevector transfer of last coherent scattering event [Angs-1]
 *
 * %L
-* “Validation of a realistic powder sample using data from DMC at PSI” Willendrup P, Filges U, Keller L, Farhi E, Lefmann K, Physica B-Cond Matt 385 (2006) 1032.  
+* "Validation of a realistic powder sample using data from DMC at PSI" Willendrup P, Filges U, Keller L, Farhi E, Lefmann K, Physica B-Cond Matt 385 (2006) 1032.  
 * %L
 * See also: Powder1, Powder2 and PowderN
 * %L
@@ -182,7 +189,7 @@
 * %L
 * <a href="http://www.ill.eu/sites/fullprof/index.html">Fullprof</a> powder refinement
 * %L
-* <a href="http://www.crystallographica.com/">Crystallographica</a> software
+* <a href="http://www.crystallographica.com/">Crystallographica</a> software (free license)
 * %L
 * <a href="http://www.geomview.org">Geomview and Object File Format (OFF)</a>
 * %L
@@ -200,10 +207,10 @@ SETTING PARAMETERS (string reflections=0, string geometry=0,
                     radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
                     pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
                     DW=0, nb_atoms=1, d_phi=0, p_interact=0,
-                    concentric=0, density=0, weight=0, barns=1)
+                    concentric=0, density=0, weight=0, barns=1, Strain=0)
 OUTPUT PARAMETERS (line_info, Nq, my_s_v2, XsectionFactor,
   my_s_v2_sum, my_a_v, my_inc, q_v, w_v, columns, 
-  radius_i, xwidth_i, yheight_i, zdepth_i, offdata, neutrontype)
+  radius_i, xwidth_i, yheight_i, zdepth_i, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{
@@ -215,10 +222,10 @@ SHARE
 #define POWDERN_DECL
 /* format definitions in the order {j d F2 DW Dd inv2d q F} */
 #ifndef Crystallographica
-#define Crystallographica { 4,5,7,0,0,0,0,0 }
-#define Fullprof          { 4,0,8,0,0,5,0,0 }
-#define Lazy              {17,6,0,0,0,0,0,13 }
-#define Undefined         { 0,0,0,0,0,0,0,0 }
+#define Crystallographica { 4,5,7,0,0,0,0,0,0 }
+#define Fullprof          { 4,0,8,0,0,5,0,0,0 }
+#define Lazy              {17,6,0,0,0,0,0,13,0 }
+#define Undefined         { 0,0,0,0,0,0,0,0,0 }
 #endif
 
   struct line_data
@@ -228,6 +235,7 @@ SHARE
       int j;                      /* Multiplicity */
       double DWfactor;            /* Debye-Waller factor */
       double w;                   /* Intrinsic line width */
+      double Epsilon;             /* Strain=Delta_d/d shift in ppm */
     };
 
   struct line_info_struct
@@ -245,10 +253,11 @@ SHARE
       char   compname[256];
       double flag_barns;
       int    shape; /* 0 cylinder, 1 box, 2 sphere, 3 OFF file */
-      int    column_order[8]; /* column signification */
+      int    column_order[9]; /* column signification */
       int    flag_warning;
-      double type;  /* interaction type of event 1=Transmit, 2=Incoherent, 3=Coherent */
+      char   type;  /* interaction type of event t=Transmit, i=Incoherent, c=Coherent */
       double dq;    /* wavevector transfer [Angs-1] */
+      double Epsilon; /* global strain in ppm */
     };
     
   off_struct offdata;
@@ -291,7 +300,8 @@ SHARE
       "V_rho",
       "density",
       "weight",
-      "nb_atoms","multiplicity",
+      "nb_atoms","multiplicity", /* 23 */
+      "column_ppm","column_strain",
       NULL);
 
     if (parsing) {
@@ -319,7 +329,9 @@ SHARE
       if (parsing[21] && !info->at_weight)     info->at_weight    =atof(parsing[21]);
       if (parsing[22] && info->at_nb <= 1)  info->at_nb    =atof(parsing[22]);
       if (parsing[23] && info->at_nb <= 1)  info->at_nb    =atof(parsing[23]);
-      for (i=0; i<=23; i++) if (parsing[i]) free(parsing[i]);
+      if (parsing[24])                  info->column_order[8]=atoi(parsing[24]);
+      if (parsing[25])                  info->column_order[8]=atoi(parsing[25]);
+      for (i=0; i<=25; i++) if (parsing[i]) free(parsing[i]);
       free(parsing);
     }
 
@@ -345,11 +357,12 @@ SHARE
     for (i=0; i<size; i++)
     {
       /*      printf("Reading in line %i\n",i);*/
-      double j=0, d=0, w=0, q=0, DWfactor=0, F2=0;
+      double j=0, d=0, w=0, q=0, DWfactor=0, F2=0, Epsilon=0;
       int index;
 
       if (info->Dd >= 0)      w         = info->Dd;
       if (info->DWfactor > 0) DWfactor  = info->DWfactor;
+      if (!info->Epsilon)     Epsilon   = info->Epsilon*1e-6;
 
       /* get data from table using columns {j d F2 DW Dd inv2d q F} */
       /* column indexes start at 1, thus need to substract 1 */
@@ -371,13 +384,18 @@ SHARE
           d = (q > 0 ? 2*PI/q : 0); }
       if (info->column_order[7] >0  && !F2)
         { F2 = Table_Index(sTable, i, info->column_order[7]-1); F2 *= F2; }
+      if (info->column_order[8] >0  && !Epsilon)
+        { Epsilon = Table_Index(sTable, i, info->column_order[8]-1)*1e-6; }
 
       /* assign and check values */
-      j = (j > 0 ? j : 0);
-      q = (d > 0 ? 2*PI/d : 0); /* this is q */
+      j        = (j > 0 ? j : 0);
+      q        = (d > 0 ? 2*PI/d : 0); /* this is q */
+      if (Epsilon && fabs(Epsilon) < 1e6) {
+        q     -= Epsilon*q; /* dq/q = -Delta_d/d = -Epsilon */
+      }
       DWfactor = (DWfactor > 0 ? DWfactor : 1);
-      w = (w>0 ? w : 0); /* this is q and d relative spreading */
-      F2 = (F2 >= 0 ? F2 : 0);
+      w        = (w>0 ? w : 0); /* this is q and d relative spreading */
+      F2       = (F2 >= 0 ? F2 : 0);
       if (j == 0 || q == 0) {
         printf("PowderN: %s: line %i has invalid definition\n"
                "         (mult=0 or q=0 or d=0)\n", info->compname, i);
@@ -388,11 +406,12 @@ SHARE
       list[list_count].DWfactor = DWfactor;
       list[list_count].w = w;
       list[list_count].F2= F2;
+      list[list_count].Epsilon = Epsilon;
 
       /* adjust multiplicity if j-column + multiple d-spacing lines */
       /* if  d = previous d, increase line duplication index */
-      if (!q_count)     q_count = q;
-      if (!j_count)     j_count = j;
+      if (!q_count)      q_count  = q;
+      if (!j_count)      j_count  = j;
       if (!F2_count)     F2_count = F2;
       if (fabs(q_count-q) < 0.0001*fabs(q)
        && fabs(F2_count-F2) < 0.0001*fabs(F2) && j_count == j) {
@@ -411,10 +430,10 @@ SHARE
                   "         (d-spacing %g is duplicated %i times)\n",
             info->compname, list_count-mult_count, list_count-1, list[list_count-1].q, mult_count);
           for (index=list_count-mult_count; index<list_count; list[index++].j = 1);
-          mult_count   = 1;
-          q_count = q;
-          j_count = j;
-          F2_count = F2;
+          mult_count = 1;
+          q_count   = q;
+          j_count   = j;
+          F2_count  = F2;
         }
         if (i == size-1) list_count--;
         flag=0;
@@ -439,7 +458,7 @@ DECLARE
   double my_s_v2_sum=0;
   double my_a_v=0, my_inc=0;
   double *w_v,*q_v, *my_s_v2;
-  int    columns[8] = format;
+  int    columns[9] = format;
   double XsectionFactor;
   double radius_i=0, xwidth_i=0, yheight_i=0, zdepth_i=0;
   
@@ -460,6 +479,7 @@ INITIALIZE
   line_info.flag_barns=barns;
   line_info.shape    = 0;
   line_info.flag_warning=0;
+  line_info.Epsilon  = Strain;
   for (i=0; i< 8; i++) line_info.column_order[i] = columns[i];
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
   
@@ -537,7 +557,8 @@ INITIALIZE
   }
 
   if (concentric) {
-    printf("PowderN: %s WARNING: Concentric mode - remember to include the 'opposite' copy of this component !\n (The equivalent, 'opposite' comp should have concentric=0)\n", NAME_CURRENT_COMP);
+    printf("PowderN: %s: Concentric mode - remember to include the 'opposite' copy of this component !\n"
+           "WARNING  The equivalent, 'opposite' comp should have concentric=0\n", NAME_CURRENT_COMP);
     if (p_transmit == 0) {
       printf("PowderN: %s: Concentric mode and p_transmit==0 !?\n"
              "WARNING  Don't you want any transmitted neutrons?\n", NAME_CURRENT_COMP);
@@ -548,7 +569,7 @@ INITIALIZE
     i = read_line_data(reflections, &line_info);
     if (i == 0)
       exit(fprintf(stderr,"PowderN: %s: reflection file %s is not valid.\n"
-                        "ERROR    Please check file format (laz or lau).\n", NAME_CURRENT_COMP, reflections));
+                          "ERROR    Please check file format (laz or lau).\n", NAME_CURRENT_COMP, reflections));
   }
 
   /* compute the scattering unit density from material weight and density */
@@ -567,6 +588,9 @@ INITIALIZE
   if (line_info.at_nb > 0) { 
     line_info.sigma_a *= line_info.at_nb; line_info.sigma_i *= line_info.at_nb;
   }
+  
+  if (line_info.sigma_a<0) line_info.sigma_a=0;
+  if (line_info.sigma_i<0) line_info.sigma_i=0;
 
   if (line_info.V_0 <= 0)
     fprintf(stderr,"PowderN: %s: density/unit cell volume is NULL (Vc). Unactivating component.\n", NAME_CURRENT_COMP);
@@ -619,6 +643,8 @@ TRACE
   int    line;
   char   intersect=0;
   char   intersecti=0;
+  
+  line_info.type = '\0';
   
   if (line_info.V_0 && (Nq || my_inc)) {
     if (line_info.shape == 1) {
@@ -705,8 +731,6 @@ TRACE
       } else {
         exit(fprintf(stderr,"PowderN %s: DEAD - this shouldn't happen!\n", NAME_CURRENT_COMP));
       }
-      
-      line_info.type=neutrontype;
         
       if (neutrontype == 3) { /* Make coherent scattering event */
         if (line_info.count > 0) {
@@ -812,7 +836,9 @@ TRACE
           pmul  = Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
           /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
           if (d_phi) pmul *= alpha/PI;
-          line_info.dq = q_v[line];
+          
+          line_info.type = 'c';
+          line_info.dq = L[line].q;
         } /* else transmit <-- No powder lines in file */
       }  /* Coherent scattering event */
       else if (neutrontype == 2) {  /* Make incoherent scattering event */
@@ -872,12 +898,16 @@ TRACE
         
         pmul = l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(p_inc);
         pmul *= solid_angle/(4*PI);
+        
+        line_info.type = 'i';
             
       }  /* Incoherent scattering event */
       else if (neutrontype == 1) {
         /* Make transmitted (absorption-corrected) event */
         /* No coodinate changes here, simply change neutron weight */
         pmul = exp(-(my_a_v/v+my_s)*(l))/(p_transmit);
+        
+        line_info.type = 't';
       }
       p *= pmul;
     } /* Neutron leaving since it has passed already */
