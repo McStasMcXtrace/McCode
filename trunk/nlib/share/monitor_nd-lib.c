@@ -1021,7 +1021,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
     MCDETECTOR detector;
 
     ratio = 100.0*mcget_run_num()/mcget_ncount();
-    if (Vars->Flag_Verbose || Vars->Flag_per_cm2) {
+    if (Vars->Flag_Verbose && Vars->Flag_per_cm2) {
       printf("Monitor_nD: %s: active flat detector area is %g [cm^2], total area is %g [cm^2]\n",
         Vars->compcurname, (Vars->max_x-Vars->min_x)
                           *(Vars->max_y-Vars->min_y)*1E4, Vars->area);
