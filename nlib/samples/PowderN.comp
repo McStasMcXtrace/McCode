@@ -23,11 +23,11 @@
 * General powder sample with
 *         many scattering vectors
 *         possibility for intrinsic line broadening
-*         incoherent backgorund ratio is specified by user.
+*         incoherent elastic background ratio is specified by user
 *         No multiple scattering. No secondary extinction.
 *
 * Based on Powder1/Powder2/Single_crystal.
-* Geometry is a powder filled cylinder or a box.
+* Geometry is a powder filled cylinder, sphere, box or any shape from an OFF file.
 * Incoherent scattering is only provided here to account for a background.
 * The efficient is highly improved when restricting the vertical scattering
 *   range on the Debye-Scherrer cone (with 'd_phi').
@@ -144,7 +144,7 @@
 * d_phi:    Angle corresponding to the vertical angular range
 *             to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
 * pack:     Packing factor [1]
-* Delta_d:  Global relative Delta_d/d spreading when the 'w' column
+* Delta_d:  Global relative Delta_d/d broadening when the 'w' column
 *             is not available. Use 0 if ideal. [Angs]
 * Strain:   Global relative Delta_d/d shift when the 'Strain' column
 *             is not available. Use 0 if ideal. [ppm]
@@ -208,7 +208,7 @@ SETTING PARAMETERS (string reflections=0, string geometry=0,
                     pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
                     DW=0, nb_atoms=1, d_phi=0, p_interact=0,
                     concentric=0, density=0, weight=0, barns=1, Strain=0)
-OUTPUT PARAMETERS (line_info, Nq, my_s_v2, XsectionFactor,
+OUTPUT PARAMETERS (line_info, my_s_v2, XsectionFactor,
   my_s_v2_sum, my_a_v, my_inc, q_v, w_v, columns, 
   radius_i, xwidth_i, yheight_i, zdepth_i, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
@@ -454,7 +454,6 @@ SHARE
 DECLARE
 %{
   struct line_info_struct line_info;
-  int Nq=0;
   double my_s_v2_sum=0;
   double my_a_v=0, my_inc=0;
   double *w_v,*q_v, *my_s_v2;
@@ -480,7 +479,7 @@ INITIALIZE
   line_info.shape    = 0;
   line_info.flag_warning=0;
   line_info.Epsilon  = Strain;
-  for (i=0; i< 8; i++) line_info.column_order[i] = columns[i];
+  for (i=0; i< 9; i++) line_info.column_order[i] = columns[i];
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
   
   line_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
@@ -608,13 +607,12 @@ INITIALIZE
   if (line_info.V_0 && i) {
     L = line_info.list;
 
-    Nq  = line_info.count;
-    q_v = malloc(Nq*sizeof(double));
-    w_v = malloc(Nq*sizeof(double));
-    my_s_v2 = malloc(Nq*sizeof(double));
+    q_v = malloc(line_info.count*sizeof(double));
+    w_v = malloc(line_info.count*sizeof(double));
+    my_s_v2 = malloc(line_info.count*sizeof(double));
     if (!q_v || !w_v || !my_s_v2)
       exit(fprintf(stderr,"PowderN: %s: ERROR allocating memory (init)\n", NAME_CURRENT_COMP));
-    for(i=0; i<Nq; i++)
+    for(i=0; i<line_info.count; i++)
     {
       my_s_v2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
                  /(line_info.V_0*line_info.V_0*V2K*V2K)
@@ -640,13 +638,13 @@ TRACE
   double t0, t1, t2, t3, v, v1,l_full, l, l_1, dt, alpha0, alpha, theta, my_s, my_s_n;
   double solid_angle, neutrontype;
   double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z, nx, ny, nz, pmul=1;
-  int    line;
+  int    line, Nq;
   char   intersect=0;
   char   intersecti=0;
   
   line_info.type = '\0';
   
-  if (line_info.V_0 && (Nq || my_inc)) {
+  if (line_info.V_0 && (line_info.count || my_inc)) {
     if (line_info.shape == 1) {
       intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
       intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
@@ -690,9 +688,11 @@ TRACE
 
     /* Calculate total scattering cross section at relevant velocity */
     my_s_v2_sum=0;
-    for(line=0; line<Nq; line++) {
-      if (q_v[line] <= 2*v) {
+    Nq = 0;
+    for(line=0; line<line_info.count; line++) {
+      if (q_v[line] <= 2*v) { /* q < 2*kf: restrict structural range */
         my_s_v2_sum+=my_s_v2[line];
+        if (Nq < line+1) Nq=line+1; /* determine maximum line index which can scatter */
       }
     }
       
