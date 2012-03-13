@@ -574,7 +574,6 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     vtxArray[i].z=(vtxArray[i].z-centerz)*ratioz+(!notcenter ? 0 : centerz);        
   }
 
-
   //table_read create a table on one line if the number of columns is not constant, so there are 2 cases :
   if (faceTable.rows==1)
   {
@@ -630,11 +629,11 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
 
   if (ratiox!=ratioy || ratiox!=ratioz || ratioy!=ratioz)
     printf("Warning: Aspect ratio of the sample was modified.\n"
-           "         If you want to keep the originial proportions, specifiy only one of the dimensions.\n");
+           "         If you want to keep the original proportions, specifiy only one of the dimensions.\n");
   printf("  Bounding box dimensions:\n");
-  printf("    Length=%f (%.3f%%)\n", rangex*ratiox, ratiox*100);
-  printf("    Width= %f (%.3f%%)\n", rangey*ratioy, ratioy*100);
-  printf("    Depth= %f (%.3f%%)\n", rangez*ratioz, ratioz*100);
+  printf("    Length=%f (%.3f%%)\n", rangex, ratiox*100);
+  printf("    Width= %f (%.3f%%)\n", rangey, ratioy*100);
+  printf("    Depth= %f (%.3f%%)\n", rangez, ratioz*100);
 
   data->vtxArray   = vtxArray;
   data->normalArray= normalArray;
