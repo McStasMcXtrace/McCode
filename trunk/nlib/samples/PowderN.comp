@@ -838,7 +838,7 @@ TRACE
           if (d_phi) pmul *= alpha/PI;
           
           line_info.type = 'c';
-          line_info.dq = L[line].q;
+          line_info.dq = q_v[line]*V2K;
         } /* else transmit <-- No powder lines in file */
       }  /* Coherent scattering event */
       else if (neutrontype == 2) {  /* Make incoherent scattering event */
