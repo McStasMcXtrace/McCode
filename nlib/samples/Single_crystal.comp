@@ -14,6 +14,7 @@
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
+* Modified by: M. Schulz, March 2012 : allow to curve the crystal planes
 *
 * Mosaic single crystal with multiple scattering vectors.
 *
@@ -23,6 +24,8 @@
 * The mosaic may EITHER be specified isotropic by setting the mosaic input
 * parameter, OR anisotropic by setting the mosaic_a, mosaic_b, and mosaic_c
 * parameters.
+* The crystal lattice can be bent locally, keeping the external geometry unchanged.
+* Curvature is spherical along vertical and horizontal axes.
 *
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or any other shape
@@ -95,59 +98,61 @@
 *
 * %P
 * INPUT PARAMETERS:
-* radius:   Outer radius of sample in (x,z) plane [m]
+* radius:    Outer radius of sample in (x,z) plane [m]
 * xwidth:    Width of crystal [m]
 * yheight:   Height of crystal [m]
 * zdepth:    Depth of crystal (no extinction simulated) [m]
-* geometry:   Name of an Object File Format (OFF) file for complex geometry. 
-*               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
+* geometry:  Name of an Object File Format (OFF) file for complex geometry. 
+*              The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
 * delta_d_d: Lattice spacing variance, gaussian RMS [1]
 * mosaic:    Crystal mosaic (isotropic), gaussian RMS. Puts the crystal in the 
-*            isotropic mosaic model state, thus disregarding other mosaicity parameters. [arc minutes]
+*              isotropic mosaic model state, thus disregarding other mosaicity parameters. [arc minutes]
 * mosaic_a:  Horizontal (rotation around lattice vector a) mosaic (anisotropic), gaussian RMS. 
-*            Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity
-*            through rotation around the crystal lattice vectors. Has precedence over
-*            in-plane mosaic model. [arc minutes]
+*              Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity
+*              through rotation around the crystal lattice vectors. Has precedence over
+*              in-plane mosaic model. [arc minutes]
 * mosaic_b:  Vertical (rotation around lattice vector b) mosaic (anisotropic), 
-*            gaussian RMS. [arc minutes]
+*              gaussian RMS. [arc minutes]
 * mosaic_c:  Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), 
-*            gaussian RMS [arc minutes]
+*              gaussian RMS [arc minutes]
 * mosaic_AB: In Plane mosaic rotation and plane vectors (anisotropic), 
-*            mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l. Puts the crystal in 
-*            the in-plane mosaic state. Vectors A and B define plane in which 
-*            the crystal roation is defined, and mosaic_A, mosaic_B, denotes the 
-*            resp. mosaicities (gaussian RMS) with respect to the the two 
-*            reflections chosen by A and B (Miller indices). [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]
+*              mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l. Puts the crystal in 
+*              the in-plane mosaic state. Vectors A and B define plane in which 
+*              the crystal roation is defined, and mosaic_A, mosaic_B, denotes the 
+*              resp. mosaicities (gaussian RMS) with respect to the the two 
+*              reflections chosen by A and B (Miller indices). [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]
 * 
 * recip_cell: Choice of direct/reciprocal (0/1) unit cell definition [1]
-* ax:        
-* ay:        Coordinates of first (direct/recip) unit cell vector [AA or AA^-1]
-* az:        
-* bx:        
-* by:        Coordinates of second (direct/recip) unit cell vector [AA or AA^-1]
-* bz:        
-* cx:        
-* cy:        Coordinates of third (direct/recip) unit cell vector [AA or AA^-1]
-* cz:        
+* ax:        Coordinates of first (direct/recip) unit cell vector [AA or AA^-1]
+* ay:        a on y axis
+* az:        a on z axis
+* bx:        Coordinates of second (direct/recip) unit cell vector [AA or AA^-1]
+* by:        b on y axis
+* bz:        b on z axis
+* cx:        Coordinates of third (direct/recip) unit cell vector [AA or AA^-1]
+* cy:        c on y axis
+* cz:        c on z axis
 * reflections: File name containing structure factors of reflections. Use
 *              empty ("") or NULL for incoherent scattering only [string]
-* order:      limit multiple scattering up to given order
-*                 (0: all, 1: first, 2: second, ...) [1]
+* order:     Limit multiple scattering up to given order
+*              (0: all, 1: first, 2: second, ...) [1]
 *
 * Optional input parameters:
 *
 * p_transmit: Monte Carlo probability for neutrons to be transmitted
 *               without any scattering. Used to improve statistics from
 *               weak reflections [1]
-* sigma_abs:  absorption cross-section per unit cell at 2200 m/s [barns]
-* sigma_inc:  incoherent scattering cross-section per unit cell [barns]
-* aa:         [deg].
-* bb:         unit cell angles alpha, beta and gamma. Then uses norms of
-*               vectors a,b and c as lattice parameters [deg]
-* cc:         [deg].
-* barns:      Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. 
-*             barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), 
-*             barns=0 for lau type files [1]
+* sigma_abs: Absorption cross-section per unit cell at 2200 m/s [barns]
+* sigma_inc: Incoherent scattering cross-section per unit cell [barns]
+* aa:        Unit cell angles alpha, beta and gamma. Then uses norms of
+*              vectors a,b and c as lattice parameters [deg]
+* bb:        Beta angle [deg] 
+* cc:        Gamma angle [deg].
+* barns:     Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. 
+*              barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), 
+*              barns=0 for lau type files [1]
+* RV:        Radius of vertical lattice curvature. flat for 0 (m)
+* RH:        Radius of horizontal lattice curvature. flat for 0 (m)
 *
 * OUTPUT PARAMETERS:
 *
@@ -240,7 +245,7 @@ SETTING PARAMETERS(string reflections=0, string geometry=0,
             bx = 0, by = 0, bz = 0,
             cx = 0, cy = 0, cz = 0,
             p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
-            aa=0, bb=0, cc=0, order=0)
+            aa=0, bb=0, cc=0, order=0, RV=0, RH=0)
 OUTPUT PARAMETERS(hkl_info, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
@@ -835,6 +840,7 @@ TRACE
   double p_trans;               /* Transmission probability */
   double mc_trans, mc_interact; /* Transmission, interaction MC choices */
   int    intersect=0;
+  double theta, phi;            /* rotation angles for curved lattice option */
   
   /* Intersection neutron trajectory / sample (sample surface) */
   if (hkl_info.shape == 0)
@@ -895,9 +901,20 @@ TRACE
 
       /* (1). Compute incoming wave vector ki */
       
-      kix = V2K*vx;
-      kiy = V2K*vy;
-      kiz = V2K*vz;
+      /* lattice curvature option: rotate neutron velocity */
+      if (RH || RV) { 
+        if (RH) { rotate(b1x,b1y,b1z,vx,vy,vz,    atan2(x,RH),0,1,0); } 
+        else { b1x=vx; b1y=vy; b1z=vz; }
+		    if (RV) { rotate(b2x,b2y,b2z,b1x,b1y,b1z,-atan2(y,RV),1,0,0); }
+		    else { b2x=b1x; b2y=b1y; b2z=b1z; }
+		    kix = V2K*b2x;
+        kiy = V2K*b2y;
+        kiz = V2K*b2z;
+      } else {
+        kix = V2K*vx;
+        kiy = V2K*vy;
+        kiz = V2K*vz;
+      }
 
       /* (2). Intersection of Ewald sphere with reciprocal lattice points */
 
@@ -1093,6 +1110,15 @@ TRACE
         hkl_info.k    = L[i].k;
         hkl_info.l    = L[i].l;
       }
+      /* lattice curvature option: rotate back neutron velocity */
+      if (RH || RV) {
+        if (RH) { rotate(b1x,b1y,b1z,vx,vy,vz,    atan2(x,RH),0,1,0); } 
+        else { b1x=vx; b1y=vy; b1z=vz; }
+	      if (RV) { rotate(b2x,b2y,b2z,b1x,b1y,b1z,-atan2(y,RV),1,0,0); }
+	      else { b2x=b1x; b2y=b1y; b2z=b1z; }
+	      vx=b2x; vy=b2y; vz=b2z;
+	    }
+      
       SCATTER;
       /* exit if multiple scattering order has been reached */
       if (order && event_counter >= order) { intersect=0; break; }
