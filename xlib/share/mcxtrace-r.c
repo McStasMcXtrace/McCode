@@ -251,11 +251,11 @@ cylinder_intersect(double *l0, double *l1, double x, double y, double z,
       dl1p = k*(h/2-y)/ky;
       /*switch solutions?*/
       if (dl0p<dl1p){
-        stat|=(ENTER_BOT|EXIT_TOP);
+        plane_stat|=(ENTER_BOT|EXIT_TOP);
       }else{
         double tmp=dl1p;
         dl1p=dl0p;dl0p=tmp;
-        stat|=(ENTER_TOP|EXIT_BOT);
+        plane_stat|=(ENTER_TOP|EXIT_BOT);
       }
     }
   }
