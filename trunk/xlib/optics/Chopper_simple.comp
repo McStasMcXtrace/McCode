@@ -1,0 +1,88 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component: Chopper_simple
+*
+* %I
+*
+* Written by; Erik Knudsen 
+* Date: August 2011
+* Release: McXtrace 1.0
+* Origin: Risoe
+*
+* Ideal chopper
+*
+* %D
+* Ideal model of a chopper situated at Z=0. If a photon arrives at the chopper plane
+* at a time of t = [t0 +-n*T: t0 +-n*T +tau], where T is the period of the chopper, t0 the initial delay
+* and tau the opening time of the chopper, it is left untouched - otherwise it is ABSORBed. 
+* If on a continous source the isfirst parameter may be used. In this case the photon time is _defined_
+* by the chopper.
+* Limitations: this component does not take chopper geometry into account.
+* 
+*
+* %P
+* Input parameters:
+* t0:    [s] initial delay of the opening time
+* T:     [s] period of the chopper
+* tau:   [s] opening time of the chopper 
+* xwidth:[m] height of the chopper opening
+* yheight:[m] width of the chopeper opening
+* isfirst: [] is the chopper the first chopper on a continous source.
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Chopper_simple
+DEFINITION PARAMETERS ()
+  SETTING PARAMETERS (t0=0,T=1,tau=0.1,xwidth=0.1,yheight=0.1,isfirst=0)
+OUTPUT PARAMETERS ()
+STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+
+INITIALIZE
+%{
+  if (T<=0 || tau<=0){
+    fprintf(stderr,"Error: (%s): Periodm T=%g <=0 or opening time, tau=%g <=0\n",NAME_CURRENT_COMP,T,tau);
+    exit(-1);
+  }
+  if(xwidth<=0 || yheight<=0){
+    fprintf(stderr,"Error: (%s): Opening area (xwidth x yheight) = (%g x %g) <=0\n",NAME_CURRENT_COMP,xwidth,yheight);
+    exit(-1);
+  }
+%}
+
+TRACE
+%{
+  PROP_Z0;
+  if ( fabs(x)<xwidth/2.0 || fabs(y)<yheight/2.0){
+    if (isfirst){
+      /*this is the first time defining element*/
+      t=t0+rand01()*tau;
+    }else{
+      int n=(int) floor((t-t0)/T);
+      if(t-(t0+n*T)>tau){
+        ABSORB;
+      }
+    }
+  }else{
+    ABSORB;
+  }
+%}
+
+MCDISPLAY
+%{
+  /*chopper is symbolically shown as a disc chopper, although it is not*/ 
+  magnify("xy");
+  rectangle("xy",0,0,0,xwidth,yheight);
+  double delta,radius;
+  delta=2*yheight;
+  radius=sqrt(xwidth*xwidth/4+delta*delta);
+  circle("xy",0,-(delta-yheight/2.0),0,radius);
+%}
+
+END
