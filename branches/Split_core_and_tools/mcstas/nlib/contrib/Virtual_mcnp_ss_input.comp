@@ -1,0 +1,177 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2012, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Virtual_mcnp_ss_input.comp
+
+* %I
+* Written by: <a href="mailto:esbe@dtu.dk">Esben Klinkby</a> and <a href="mailto:pkwi@dtu.dk">Peter Willendrup</a> 
+* Date: January, 2012
+* Version:  $Revision: 1.0 $
+* Origin: <a href="http://www.risoe.dtu.dk/">DTU</a>
+* Release: McStas 2.0
+*
+* This component uses a Source Surface type file of recorded neutrons from the 
+* reactor monte carlo code MCNP as a source of particles.
+*
+* %D
+* This component draws neutron events from a Source Surface file created using the
+* MCNP Monte Carlo code and converts them to make them suitable for a McStas simulation
+*
+* Note that axes orientation may be different between MCNP and McStas!
+* Note also that the conversion of between McStas and MCNP units and parameters 
+* is done automatically by this component - but the user must ensure that
+* geometry description matches between the two Monte Carlo codes.
+*
+* The verbose mode is highly recommended as it displays lots of useful informations.
+*
+* This interface uses the MCNP Source Surface Read/Write format (SSW/SSR). 
+* Infomation transfer from(to) SSW files proceeds via a set of Fortran modules 
+* and subroutines collected in "subs.f"
+* For succesful compilation, it is required that these subroutines are compiled 
+* and linked to the instrument file:
+* 
+*  mcstas dummy.instr  -> generates dummy.c
+*  gfortran -c subs.f  -> generates subs.f
+*  gcc -o runme.out dummy.c subs.o -lm -lgfortran  -> generates runme.out
+*
+* Note that this requires a fortran compiler (here gfortran) and gcc.
+*
+* %BUGS
+* None known bugs so far. But surely this will change...
+* Caveat: when writing the header for the output wssa file, the number of histories and tracks are assumed to be that of the
+*         input MNCP run. This is generally not the case, due to losses in the McStas simulation step.
+*         In case of losses any subsequel MCNP run based on the McStas output, can be confused by inconsistency between
+*         header and file content. To resolve, either ensure that NPS is lower than the actual number of events in the McStas output.
+*         Or hardcode values of nhis & ntrk in either subs.f or Virtual_mcnp_ss_output.comp.
+*
+* EXAMPLE of usage:
+first a MCNP simulation is run
+*     and at a relevant surface, a Source Surface Write card is given (e.g. for MCNP surface #1, add the line:
+*     SSW 1 
+*     to the end of the input file.
+*     By this a ".w" file is produced, which then serves as input to the McStas simulation.
+* Present version: rename *.w to rssa, and make sure to put it in the dir from which McStas is run
+*
+* %P
+* file: Name of the MCNP SSW neutron input file. Not active: Name assumed to be 'rssa' (str)
+* verbose: Toggles debugging info on/off (1)
+*
+* %L
+* <a href="http://mcnp-green.lanl.gov/index.html">MCNP</a>
+* %L
+* MCNP -- A General Monte Carlo N-Particle Transport Code, Version 5, Volume II: User's Guide, p177
+*
+* %E
+*
+*******************************************************************************/
+
+DEFINE COMPONENT Virtual_mcnp_ss_input
+DEFINITION PARAMETERS (string file="rssa")
+SETTING PARAMETERS (verbose=1)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx, sy, sz)
+
+SHARE
+%{
+#ifndef MCNP_INPUT_DEFS
+#define MCNP_INPUT_DEFS
+/* number of neutron events to read for file pre-analysis */
+
+#include <sys/stat.h>
+
+#endif
+
+ %}
+
+DECLARE
+%{
+  FILE *hfile;                    /* Neutron input file handle */
+
+  double to_mcstas[8];
+  double from_mcstas[8];
+  unsigned int ntrk = 0;
+  unsigned int nhis = 0;
+  unsigned int counter = 0;
+  %}
+
+INITIALIZE
+%{
+  char  exit_flag=0;  /* set to 1 if end of simulation */
+  long   filesize  =0;
+
+  struct stat stfile;
+  /* Open neutron input file. */
+  /* (If empty filename given, present warning in case of verbose, perform nothing) */
+
+  if (strcmp(file,"rssa")) {
+    printf("MCNP_input: %s. Given filename is %s, please rename to 'rssa' and rerun!\n", NAME_CURRENT_COMP, file);
+  } else {
+    if (file) {
+      stat(file,&stfile);
+      filesize = stfile.st_size;
+      hfile = fopen(file, "r");
+    }
+    if(!hfile)
+      {
+	fprintf(stderr, "MCNP_input: %s: Error: Cannot open input file %s.\n", NAME_CURRENT_COMP, file);
+      } else if (verbose)
+      printf("MCNP_input: %s: opening MCNP SSW file '%s' )\n", NAME_CURRENT_COMP, file);
+  
+    readheader_(&ntrk,&nhis);
+    if (verbose) printf("Number of histories in input MCNP SSW file: %d \n ", nhis);
+    if (verbose) printf("Number of tracks in input MCNP SSW file: %d \n ", ntrk);
+    if (verbose) printf("Analysing MCNP file %s (", file);
+    if (verbose) printf(")\n");
+    
+  } /* non-empty filename */
+
+%}
+
+TRACE
+%{
+  char exit_flag=0;  /* set to 1 if end of simulation */
+  int  result_read=1;
+
+  while(1) {
+    readneutron_(&to_mcstas);
+
+    x=to_mcstas[0];
+    y=to_mcstas[1];
+    z=to_mcstas[2];
+
+    vx=to_mcstas[3];
+    vy=to_mcstas[4];
+    vz=to_mcstas[5];
+
+    p = to_mcstas[6];
+    t = to_mcstas[7];
+    sx=1.;sy=sz=0;
+
+    if ( counter >= (nhis-1) ) {
+      result_read=EOF;
+      exit_flag = 1; 
+    }
+    counter++;
+
+  if (exit_flag) {
+    if (verbose) printf("  Finishing simulation\n");
+    mcset_ncount(mcget_run_num()); ABSORB;
+  }
+  SCATTER;
+  break;
+ /* end while */
+  }
+
+%}
+
+FINALLY
+%{
+  closefiles_();
+%}
+
+END
+
