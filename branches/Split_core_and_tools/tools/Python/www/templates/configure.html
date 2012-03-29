@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+{% block title %}Simulations{% endblock %}
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+    p { color: #336699; }
+  </style>
+{% endblock %}
+{% block content %}
+  <h1>Configure your simulation</h1>
+
+  <p>Select the simulation and its parameters.</p>
+
+  <script type="text/javascript" src="/static/configure.js"></script>
+  <script language="javascript">
+    var jobid = "{{ jobid }}";
+
+    // parameters and default values
+    var defaults = { {%
+      for sim in sims %}
+      {{ sim.name|tojson|safe }}: { {%
+        for param in sim.params
+        %}{{ param.param.name|tojson|safe }}: {{ param.value|tojson|safe }},{%
+        endfor
+      %} },{%
+      endfor
+    %} };
+
+    var chosen = { {%
+      if job %}
+      {{ job.sim.name|tojson|safe }}: { {%
+         for param in job.params
+        %}{{ param.param.name|tojson|safe }}: {{ param.value|tojson|safe }},{%
+         endfor
+      %} }{%
+       endif %}
+    };
+
+
+    {% if job %}
+    var defaultSim = {{ job.sim.name|tojson|safe }};
+    {% else %}
+    var defaultSim = {{ sims[0].name|tojson|safe }};
+    {% endif %}
+
+    window.addEventListener("load", function () {
+      update_defaults(defaultSim);
+      params = document.getElementById("sim").children;
+      for(var i = 0; i < params.length; i++) {
+        if(params[i].value == defaultSim) {
+          params[i].selected = true;
+          break;
+        }
+      }
+    }, false);
+
+  </script>
+
+  <form method=post action="/job/update/{{ jobid }}"
+        onsubmit="return false;" id="form">
+    <fieldset>
+      <legend>Step 1: Select simulation</legend>
+      <ol>
+        <li>
+          <label for=sim>Choose simulation:</label>
+          <select size=5 name=sim id=sim
+                  onchange="update_defaults(this.value); set_changed()">
+            {% for sim in sims %}
+            {{ sim }}
+            <option value="{{ sim }}">{{ sim }}</option>
+            {% endfor %}
+          </select>
+        </li>
+      </ol>
+    </fieldset>
+    <fieldset>
+      <legend>Step 2: Configure parameters</legend>
+      <ol id=params></ol>
+    </fieldset>
+    <fieldset>
+      <legend>Step 3: Runtime configuration</legend>
+      <ol>
+        <li>
+          <label for=seed>Seed:</label>
+          <input type=text value="{{ job.seed or 0 }}"
+                 id=seed name=seed
+                 onchange="set_changed()">
+        </li>
+        <li>
+          <label for=samples>Samples:</label>
+          <input type=text value="{{ job.samples or 10000}}"
+                 id=samples name=samples
+                 onchange="set_changed()" >
+        </li>
+      </ol>
+    </fieldset>
+
+    <fieldset>
+      <input type=submit id="btnSave"
+             value="Save" onclick="save();" />
+      <input type=submit id="btnRun" style="float:right"
+             value="Run this config!" onclick="run();" />
+    </fieldset>
+  </form>
+  <br>
+{% endblock %}

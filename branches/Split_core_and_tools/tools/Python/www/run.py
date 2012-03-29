@@ -14,13 +14,13 @@ def convert_type(default, str_value):
 
 @app.route('/')
 def index():
-    return redirect(url_for('configureGET', jobid=str(uuid())))
+    return redirect(url_for('configure', jobid=str(uuid())))
 
 
 @app.route('/job/<jobid>', methods=['GET'])
 @cached()
 @templated()
-def configureGET(jobid):
+def configure(jobid):
     jobQ = Job.query.filter_by(id=jobid)
     job = None
     if jobQ.count() == 1:
