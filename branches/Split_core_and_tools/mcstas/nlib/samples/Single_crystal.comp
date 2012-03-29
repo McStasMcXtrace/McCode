@@ -151,8 +151,9 @@
 * barns:     Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2. 
 *              barns=1 for laz and isotropic constant elastic scattering (reflections=NULL), 
 *              barns=0 for lau type files [1]
-* RV:        Radius of vertical lattice curvature. flat for 0 (m)
-* RH:        Radius of horizontal lattice curvature. flat for 0 (m)
+* RX:        Radius of horizontal along X lattice curvature. flat for 0 (m)
+* RY:        Radius of vertical lattice curvature. flat for 0 (m)
+* RZ:        Radius of horizontal along Z lattice curvature. flat for 0 (m)
 *
 * OUTPUT PARAMETERS:
 *
@@ -245,7 +246,7 @@ SETTING PARAMETERS(string reflections=0, string geometry=0,
             bx = 0, by = 0, bz = 0,
             cx = 0, cy = 0, cz = 0,
             p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
-            aa=0, bb=0, cc=0, order=0, RV=0, RH=0)
+            aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0)
 OUTPUT PARAMETERS(hkl_info, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
@@ -902,14 +903,16 @@ TRACE
       /* (1). Compute incoming wave vector ki */
       
       /* lattice curvature option: rotate neutron velocity */
-      if (RH || RV) { 
-        if (RH) { rotate(b1x,b1y,b1z,vx,vy,vz,    atan2(x,RH),0,1,0); } 
-        else { b1x=vx; b1y=vy; b1z=vz; }
-		    if (RV) { rotate(b2x,b2y,b2z,b1x,b1y,b1z,-atan2(y,RV),1,0,0); }
+      if (RX || RY || RZ) { 
+        if (RX) { rotate(b1x,b1y,b1z,vx,vy,vz,    atan2(x,RX),0,0,1); }
+		    else { b1x=vx; b1y=vy; b1z=vz; }
+		    if (RY) { rotate(b2x,b2y,b2z,b1x,b1y,b1z, atan2(y,RY),1,0,0); }
 		    else { b2x=b1x; b2y=b1y; b2z=b1z; }
-		    kix = V2K*b2x;
-        kiy = V2K*b2y;
-        kiz = V2K*b2z;
+		    if (RZ) { rotate(b1x,b1y,b1z,b2x,b2y,b2z, atan2(z,RZ),0,1,0); } 
+        else { b1x=b2x; b1y=b2y; b1z=b2z; }
+		    kix = V2K*b1x;
+        kiy = V2K*b1y;
+        kiz = V2K*b1z;
       } else {
         kix = V2K*vx;
         kiy = V2K*vy;
@@ -1111,12 +1114,14 @@ TRACE
         hkl_info.l    = L[i].l;
       }
       /* lattice curvature option: rotate back neutron velocity */
-      if (RH || RV) {
-        if (RH) { rotate(b1x,b1y,b1z,vx,vy,vz,    atan2(x,RH),0,1,0); } 
-        else { b1x=vx; b1y=vy; b1z=vz; }
-	      if (RV) { rotate(b2x,b2y,b2z,b1x,b1y,b1z,-atan2(y,RV),1,0,0); }
-	      else { b2x=b1x; b2y=b1y; b2z=b1z; }
-	      vx=b2x; vy=b2y; vz=b2z;
+      if (RZ || RY) {
+        if (RX) { rotate(b1x,b1y,b1z,vx,vy,vz,    -atan2(x,RX),0,0,1); }
+		    else { b1x=vx; b1y=vy; b1z=vz; }
+		    if (RY) { rotate(b2x,b2y,b2z,b1x,b1y,b1z, -atan2(y,RY),1,0,0); }
+		    else { b2x=b1x; b2y=b1y; b2z=b1z; }
+		    if (RZ) { rotate(b1x,b1y,b1z,b2x,b2y,b2z, -atan2(z,RZ),0,1,0); } 
+        else { b1x=b2x; b1y=b2y; b1z=b2z; }
+        vx=b1x; vy=b1y; vz=b1z;
 	    }
       
       SCATTER;
