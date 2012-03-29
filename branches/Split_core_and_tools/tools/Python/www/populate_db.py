@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from app import db
 from models import Simulation, Param, ParamDefault
@@ -67,7 +67,7 @@ def info(bin):
             ParamDefault(param=p, value=f(defaults[param]), sim=sim))
 
     # Commit work so far
-    # db.session.commit()
+    db.session.commit()
 
 
 def getlist():

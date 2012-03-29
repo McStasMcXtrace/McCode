@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from models import *
 from subprocess import Popen, PIPE
 import time, os

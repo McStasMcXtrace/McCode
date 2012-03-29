@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from flask import *
 from util import skip, templated, cached
 from uuid import uuid4 as uuid
