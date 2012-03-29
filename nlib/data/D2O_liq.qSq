@@ -8,8 +8,8 @@
 # density   1.105   in [g/cm^3]
 # weight    20.0270 in [g/mol]
 # Temperature 293   in [K]
-# T_m       273     melting temperature in [K]
-# T_b       373     boiling temperature in [K]
+# T_m       277     melting temperature in [K]
+# T_b       374     boiling temperature in [K]
 #
 # Format parameters: Q	S(Q)
 # column_q  1
