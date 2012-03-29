@@ -1,6 +1,8 @@
 from app import db
 from sqlalchemy import DDL
 from json import dumps, loads
+from datetime import datetime
+
 
 class Job(db.Model):
     ''' A job specifying the simuation to run and its status '''
@@ -9,12 +11,14 @@ class Job(db.Model):
     samples = db.Column(db.Integer)
     sim_id  = db.Column(db.Integer, db.ForeignKey('simulation.id'))
     params  = db.relationship('ParamValue', backref='job')
+    created = db.Column(db.DateTime(timezone=False), index=True)
 
     def __init__(self, id, seed, samples, sim):
         self.id = id
         self.seed = seed
         self.samples = samples
         self.sim_id = sim.id
+        self.created = datetime.now()
 
 
 class Simulation(db.Model):
@@ -23,12 +27,47 @@ class Simulation(db.Model):
     name   = db.Column(db.String(64))
     params = db.relationship('ParamDefault', backref='sim')
     jobs   = db.relationship('Job', backref='sim')
+    runs   = db.relationship('SimRun', backref='sim')
 
     def __init__(self, name):
         self.name = name
 
     def __repr__(self):
         return self.name
+
+
+class SimRun(db.Model):
+    ''' A particular run of a simulation (configured by Job) '''
+    id     = db.Column(db.String(64), primary_key=True)
+    job_id = db.Column(db.String(38), db.ForeignKey('job.id'))
+    sim_id = db.Column(db.Integer, db.ForeignKey('simulation.id'))
+    status = db.Column(db.String(32), index=True)
+    str_params = db.Column(db.String())
+    str_result = db.Column(db.String())
+    created = db.Column(db.DateTime(timezone=False), index=True)
+
+    def __init__(self, job, sim, params):
+        self.id     = job.id + "__" + str(datetime.now()).replace(' ', '_')
+        self.job_id = job.id
+        self.sim_id = sim.id
+        self.status = "waiting"
+        self.params = params
+        self.result = ""
+        self.created = datetime.now()
+
+    @property
+    def params(self):
+        return loads(self.str_params)
+    @params.setter
+    def params(self, p):
+        self.str_params = dumps(p)
+
+    @property
+    def result(self):
+        return loads(self.str_result)
+    @result.setter
+    def result(self, r):
+        self.str_result = dumps(r)
 
 
 class Param(db.Model):

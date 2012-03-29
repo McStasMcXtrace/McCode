@@ -4,7 +4,7 @@ from uuid import uuid4 as uuid
 import sys
 
 from app import app, db
-from models import Job, Simulation, Param, ParamValue, ParamDefault
+from models import Job, Simulation, SimRun, Param, ParamValue, ParamDefault
 
 
 def convert_type(default, str_value):
@@ -97,6 +97,25 @@ def configurePOST(jobid):
         db.session.commit()
 
     return jsonify(errors=errors, oks=oks)
+
+
+@app.route('/sim/<jobid>', methods=['GET'])
+def simulate(jobid):
+    job = Job.query.filter_by(id=jobid).one()
+    sim = Simulation.query.filter_by(id=job.sim_id).one()
+    params = { "_seed": job.seed,
+               "_samples": job.samples }
+    params.update(dict(
+        (p.param.name, p.value) for p in job.params))
+    run = SimRun(job=job, sim=sim, params=params)
+    db.session.add(run)
+    db.session.commit()
+    return redirect(url_for('status', runid=run.id))
+
+
+@app.route('/sim/status/<runid>', methods=['GET'])
+def status(runid):
+    return str(runid)
 
 
 if __name__ == '__main__':
