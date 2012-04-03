@@ -216,10 +216,16 @@ long off_getBlocksIndex(char* filename, long* vtxIndex, long* vtxSize, long* fac
     }
   }
   
-  printf("Loading geometry file: %s\n", filename);
+  printf("Loading geometry file (OFF/PLY): %s\n", filename);
   char line[CHAR_BUF_LENGTH];
   char *ret=0;
-  *vtxIndex = *vtxSize  = *faceIndex=0;
+  *vtxIndex = *vtxSize = *faceIndex = *polySize = 0;
+  
+  /* **************** start to read the file header */
+  /* OFF file:
+     'OFF' or '3'
+   */
+  
   ret=fgets(line,CHAR_BUF_LENGTH , f);// line 1 = "OFF"
   if (ret == NULL)
   {
@@ -227,30 +233,51 @@ long off_getBlocksIndex(char* filename, long* vtxIndex, long* vtxSize, long* fac
     exit(1);
   }
 
-  if (strncmp(line,"OFF",3) && strncmp(line,"3",1))
+  if (strncmp(line,"OFF",3) && strncmp(line,"3",1) && strncmp(line,"ply",1))
   {
-    fprintf(stderr, "Error: %s is probably not an OFF or NOFF file (interoff/off_getBlocksIndex).\n"
-                    "       Requires first line to be 'OFF' or '3'.\n",filename);
+    fprintf(stderr, "Error: %s is probably not an OFF, NOFF or PLY file (interoff/off_getBlocksIndex).\n"
+                    "       Requires first line to be 'OFF', '3' or 'ply'.\n",filename);
     fclose(f);
     return(0);
   }
 
   *vtxIndex+= strlen(line);
-        
-  do  /* skip # comments which may be there */
-  {
-    ret=fgets(line,CHAR_BUF_LENGTH , f);
-    if (ret == NULL)
+  if (!strncmp(line,"OFF",3) || !strncmp(line,"3",1)) {
+    do  /* OFF file: skip # comments which may be there */
     {
-      fprintf(stderr, "Error: Can not read line in file %s (interoff/off_getBlocksIndex)\n", filename);
-      exit(1);
-    }
-    *vtxIndex+= strlen(line);
-  } while (line[0]=='#');
-  
-  //line = nblines of vertex,faces and edges arrays
-  sscanf(line,"%lu %lu",vtxSize,polySize);
+      ret=fgets(line,CHAR_BUF_LENGTH , f);
+      if (ret == NULL)
+      {
+        fprintf(stderr, "Error: Can not read line in file %s (interoff/off_getBlocksIndex)\n", filename);
+        exit(1);
+      }
+      *vtxIndex+= strlen(line);
+    } while (line[0]=='#');
+    //line = nblines of vertex,faces and edges arrays
+    sscanf(line,"%lu %lu",vtxSize,polySize);
+  } else {
+    do  /* PLY file: read all lines until find 'end_header' 
+           and locate 'element faces' and 'element vertex' */
+    {
+      ret=fgets(line,CHAR_BUF_LENGTH , f);
+      if (ret == NULL)
+      {
+        fprintf(stderr, "Error: Can not read line in file %s (interoff/off_getBlocksIndex)\n", filename);
+        exit(1);
+      }
+      if (!strncmp(line,"element face",12))
+        sscanf(line,"element face %lu",polySize);
+      else if (!strncmp(line,"element vertex",14))
+        sscanf(line,"element vertex %lu",vtxSize);
+      else if (!strncmp(line,"format binary",13))
+        exit(fprintf(stderr, 
+          "Error: Can not read binary PLY file %s, only 'format ascii' (interoff/off_getBlocksIndex)\n%s\n",
+          filename, line));
+      *vtxIndex+= strlen(line);
+    } while (strncmp(line,"end_header",10));
+  }
 
+  /* **************** read the vertices and polygons */
   *faceIndex=*vtxIndex;
   int i=0;
   for (i=0; i<*vtxSize; )
@@ -258,11 +285,13 @@ long off_getBlocksIndex(char* filename, long* vtxIndex, long* vtxSize, long* fac
     ret=fgets(line,CHAR_BUF_LENGTH,f);
     if (ret == NULL)
     {
-      fprintf(stderr, "Error: Can not read vertex %i in file %s (interoff/off_getBlocksIndex)\n", i, filename);
+      fprintf(stderr, 
+        "Error: Can not read vertex %i in file %s (interoff/off_getBlocksIndex)\n", 
+        i, filename);
       exit(1);
     }
     *faceIndex+=strlen(line); 
-    if (line[0]!='#') i++;               
+    if (line[0]!='#' && strncmp(line,"comment",7)) i++;   /* do not count comments */
   }
  
   fclose(f);

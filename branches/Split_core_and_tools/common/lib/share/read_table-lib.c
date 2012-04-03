@@ -338,7 +338,7 @@
             InputTokens            = line;
 
             do { /* while (!flag_End_Line) */
-              lexeme      = (char *)strtok(InputTokens, " ,;\t\n");
+              lexeme      = (char *)strtok(InputTokens, " ,;\t\n\r");
               InputTokens = NULL;
               if ((lexeme != NULL) && (strlen(lexeme) != 0))
               { /* reading line: the token is not empty */
