@@ -63,8 +63,13 @@ long     mcDetectorArray_size        = 0;         /* allocated detector array si
 long     mcDetectorArray_index       = 0;         /* current detector length (number of detectors so far) */
 
 /* Number of particule histories to simulate. */
+#ifdef NEUTRONICS
+mcstatic unsigned long long int mcncount             = 1;
+mcstatic unsigned long long int mcrun_num            = 0;
+#else
 mcstatic unsigned long long int mcncount             = 1e6;
 mcstatic unsigned long long int mcrun_num            = 0;
+#endif /* NEUTRONICS */
 
 /* I/O structures */
 mcstatic struct mcformats_struct mcformat;
@@ -4879,7 +4884,9 @@ int mccode_main(int argc, char *argv[])
 /* main particule event loop */
 while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
   {
+#ifndef NEUTRONICS 
     mcgenstate();
+#endif
     /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
     mcraytrace();
     mcrun_num++;
@@ -4905,6 +4912,70 @@ while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
 
   return 0;
 } /* mccode_main */
+
+
+/*Main neutronics function steers the McStas calls, initializes parameters etc */
+/* Only called in case NEUTRONICS = TRUE */
+void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *invy, float *invz, float *intime, float *insx, float *insy, float *insz, float *inw, float *outx, float *outy, float *outz, float *outvx, float *outvy, float *outvz, float *outtime, float *outsx, float *outsy, float *outsz, float *outwgt) 
+{
+
+  extern double mcnx, mcny, mcnz, mcnvx, mcnvy, mcnvz;
+  extern double mcnt, mcnsx, mcnsy, mcnsz, mcnp;
+
+  /* External code governs iteration - McStas is iterated once per call to neutronics_main. I.e. below counter must be initiancated for each call to neutronics_main*/
+  mcrun_num=0; 
+
+  time_t t;
+  t = (time_t)mcstartdate;
+  mcstartdate = t;  /* set start date before parsing options and creating sim file */
+  mcinit();
+
+  /* *** parse options *** */
+  SIG_MESSAGE("main (Start)");
+  mcformat=mcuse_format(getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
+  /* default is to output as McStas format */
+  mcformat_data.Name=NULL;
+  /* read simulation parameters and options */
+  if (strstr(mcformat.Name, "NeXus")) {
+    if (mcformat_data.Name) mcclear_format(mcformat_data);
+    mcformat_data.Name=NULL;
+  }
+  if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
+    mcformat_data = mcuse_format("VRML");
+  
+  /* Set neutron state based on input from neutronics code */
+  mcsetstate(*inx,*iny,*inz,*invx,*invy,*invz,*intime,*insx,*insy,*insz,*inw);
+  
+  /* main neutron event loop - runs only one iteration */
+  
+  //mcstas_raytrace(&mcncount); /* prior to McStas 1.12 */
+
+  int argc=1;
+  char *argv[0];
+  int dummy = mccode_main(argc, argv);
+  
+  /*  save/finally executed by master node/thread. Needed for McStas 1.12 and older */
+  /*  mcfinally(); */
+  /*  mcclear_format(mcformat); */
+
+  if (mcformat_data.Name) mcclear_format(mcformat_data);
+  
+  *outx =  mcnx;     
+  *outy =  mcny;     
+  *outz =  mcnz;     
+  *outvx =  mcnvx;     
+  *outvy =  mcnvy;     
+  *outvz =  mcnvz;     
+  *outtime =  mcnt;     
+  *outsx =  mcnsx;     
+  *outsy =  mcnsy;     
+  *outsz =  mcnsz;     
+  *outwgt =  mcnp;     
+
+  return;
+} /* neutronics_main */
+
+
 
 #endif /* !MCCODE_H */
 /* End of file "mccode-r.c". */
