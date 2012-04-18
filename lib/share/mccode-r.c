@@ -4950,6 +4950,7 @@ void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *in
   
   //mcstas_raytrace(&mcncount); /* prior to McStas 1.12 */
 
+  mcallowbackprop = 1; //avoid absorbtion from negative dt
   int argc=1;
   char *argv[0];
   int dummy = mccode_main(argc, argv);
