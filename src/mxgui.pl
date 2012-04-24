@@ -74,7 +74,7 @@ use Tk::DialogBox;
 use File::Path;
 
 require "mcfrontlib.pl";
-require "mcguilib.pl";
+require "mxguilib.pl";
 # Requirement for mcplotlib.pl removed, will be loaded only
 # if mcdisplay PGPLOT backend is used.
 # PW, 20030314
