@@ -55,9 +55,6 @@
 * my_a: Attenuation factor due to absorbtion (m^-1)
 *
 * %Link
-* The test/example instrument <a href="../examples/SANS.instr">SANS.instr</a>.
-%L
-* Some alternative implementations exist as contributed components.
 * %E
 *******************************************************************************/
 
