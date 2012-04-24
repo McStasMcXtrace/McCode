@@ -20,15 +20,6 @@
 * Models a refractive lens, with a radius of curvature radius
 * a numerical transmission of 0<T<=1
 * the theoretical lens plane is in the X-Y plane at Z=0
-WHEN (!simple && BEin) AT(0,0,0) RELATIVE ivt_mntpt
-
-COMPONENT CRL_Al_simple=Lens_simple(radius=0.2e-3,xwidth=0.5e-3,yheight=0.5e-3,N=AlN,material_datafile="Al.txt")
-WHEN (simple && ALin) AT(0,0,Al_zc+0.082) RELATIVE ivt_mntpt
-
-COMPONENT CRL_Al = Lens_parab(r=0.5e-3, w=Al_w, d=50e-6,N=AlN, material_datafile="Al.txt")
-WHEN (!simple && ALin) AT(0,0,0.082) RELATIVE ivt_mntpt
-
-
 *
 * %P
 * INPUT PARAMETERS
