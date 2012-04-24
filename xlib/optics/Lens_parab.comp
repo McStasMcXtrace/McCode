@@ -22,9 +22,9 @@
 *
 * %P
 * Input parameters:
-* r - raduis of curvature (circular approximation at the tip of the profile) [mm];
-* yheight - the CRL's dimensions along Y, aka aperture[mm];
-* xwidth - the CRL's dimensions along X [mm];
+* r - radius of curvature (circular approximation at the tip of the profile) [m];
+* yheight - the CRL's dimensions along Y, aka aperture[m];
+* xwidth - the CRL's dimensions along X [m];
 * d - distance between two surfaces of the lens along the propagation axis;
 * N - amount of single lenses in a stack.
 * T - transmission of the lens
