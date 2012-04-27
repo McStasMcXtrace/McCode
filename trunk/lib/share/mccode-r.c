@@ -4913,7 +4913,7 @@ while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
   return 0;
 } /* mccode_main */
 
-
+#ifdef NEUTRONICS
 /*Main neutronics function steers the McStas calls, initializes parameters etc */
 /* Only called in case NEUTRONICS = TRUE */
 void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *invy, float *invz, float *intime, float *insx, float *insy, float *insz, float *inw, float *outx, float *outy, float *outz, float *outvx, float *outvy, float *outvz, float *outtime, float *outsx, float *outsy, float *outsz, float *outwgt) 
@@ -4976,7 +4976,7 @@ void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *in
   return;
 } /* neutronics_main */
 
-
+#endif /*NEUTRONICS*/
 
 #endif /* !MCCODE_H */
 /* End of file "mccode-r.c". */
