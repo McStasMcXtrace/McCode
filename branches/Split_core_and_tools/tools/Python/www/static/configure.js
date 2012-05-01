@@ -1,9 +1,7 @@
 
 
 function set_changed() {
-    $("#btnSave")
-        .val("> Save <")
-        .css("font-weight", "bold");
+    $("#btnSave").val("Save");
 }
 
 function update_defaults(sim) {
@@ -40,13 +38,23 @@ function update_defaults(sim) {
 }
 
 
-function save() {
+function save(cb) {
     // update button
     var btn = $("#btnSave");
-    btn.attr("disabled", true).val("Saving ...");
+
+    if(!cb) {
+        btn.attr("disabled", true).val("Saving ...");
+    }
 
     // collect data
     var data = $("#form").serialize();
+
+    // run callback if defined
+    function mcb(success) {
+        if(cb) {
+            cb(success);
+        }
+    }
 
     // save
     $.post("/job/update/" + jobid, data, "json")
@@ -67,17 +75,20 @@ function save() {
                 }
                 btn.val("Not saved (errors)")
                     .attr("disabled", false);
+                mcb(false);
                 return;
             }
             // reset button
-            btn.val("Saved.")
+            btn.val("Save")
                 .attr("disabled", false)
                 .css("font-weight", "normal");
+            mcb(true);
         })
         .error(function(data, status) {
             // damn, what's up?
             alert("An error occured while saving your stuff :/");
             btn.val(val).attr("disabled", false);
+            mcb(false);
         });
 
     return false;
@@ -85,5 +96,11 @@ function save() {
 
 
 function run() {
-    window.open("/sim/" + jobid, "_blank");
+    save(function(succes) {
+        if(!succes) {
+            alert("Configuration contains errors :/");
+        } else {
+            window.open("/sim/" + jobid, "_blank");
+        }
+    });
 }
