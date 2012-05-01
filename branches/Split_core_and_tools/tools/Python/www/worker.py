@@ -2,10 +2,14 @@
 
 from models import *
 from subprocess import Popen, PIPE
-import time, os
-from os.path import basename, dirname
+from os.path import basename, dirname, splitext
 
-SIM_PATH = "sim/src/%s.instr"
+import time, os, shutil
+import traceback
+
+
+SIM_SRC_PATH = "sim/src/%s.instr"
+SIM_BIN_PATH = "sim/bin/%s"
 
 WORK_PATH = "out/%s"
 
@@ -19,6 +23,19 @@ def plot(simfile, outfile, fmt="gif", log=False):
     pid.communicate()
     print simfile, outfile
     os.rename("%s.%s" % (simfile, fmt) , outfile)
+
+
+def display(instr, params, outfile, fmt="gif"):
+    ''' Display instrument '''
+    pid = Popen(["mcdisplay", "-k", "--save", "-"+fmt,
+                 basename(instr),
+                 "-n", str(1) # precision / iterations
+                 ] + params,
+                cwd=dirname(instr))
+    print outfile
+    (out, err) = pid.communicate()
+    if err: print err
+    os.rename(splitext(instr)[0] + ".out."+fmt, outfile)
 
 
 def work():
@@ -50,19 +67,32 @@ def work():
     del params["_seed"]
     del params["_samples"]
 
-    # locate binary
+    # instrument name
     name = run.sim.name
-    simbin = SIM_PATH % name
+    siminstr = SIM_SRC_PATH % name
+    simbin = SIM_BIN_PATH % name
+
+    # generate list of parameters
+    params = [ '%s=%s' % (str(k),str(v)) for k,v in params.items() ]
+
+    # copy instrument file
+    shutil.copy(siminstr, workdir % (name + ".instr"))
+
+    # compute instrument layout
+    display(workdir % (name + ".instr"), params, workdir % "layout.gif")
+
+    # run mcstas via mcrun
     pid = Popen(["mcrun"] +
                 (seed > 0 and ["--seed", str(seed)] or []) +
                 ["--ncount", str(samples),
                  "--dir", workdir % "mcstas",
-                 simbin]
-                # parameters (NAME=VALUE)
-                + [ '%s=%s' % (str(k),str(v)) for k,v in params.items() ],
+                 siminstr] + params,
                 stdout=PIPE,
                 stderr=PIPE)
     (out, err) = pid.communicate()
+
+    # debug
+    if err: print err
 
     # populate result folder
     file(workdir % "out.txt", "w").write(out)
@@ -73,7 +103,6 @@ def work():
         plot(workdir % "mcstas/mcstas.sim",
              outfile=workdir % ("plot"+mode+".gif"),
              log=(mode == "log"))
-
 
     run.status = "done"
     db.session.commit()
@@ -86,5 +115,5 @@ if __name__ == '__main__':
         time.sleep(1)
         try:
             work()
-        except Exception,e:
-            print e
+        except:
+            traceback.print_exc()
