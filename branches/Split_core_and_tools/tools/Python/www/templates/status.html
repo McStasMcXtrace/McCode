@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block title %}Results{% endblock %}
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+    p { color: #336699; }
+  </style>
+{% endblock %}
+{% block content %}
+  <h1>Results</h1>
+
+  <script language="javascript">
+    var runid = "{{ runid }}";
+  </script>
+  <script type="text/javascript" src="/static/status.js"></script>
+  <script language="javascript">
+    $(document).ready(loadData);
+  </script>
+
+  <fieldset>
+    <legend>Simulation output</legend>
+    <ul>
+      <li>
+        <p id=mcstas>mcstas.sim</p>
+      </li>
+      <li>
+        <p id=out>stdout</p>
+      </li>
+      <li>
+        <p id=err>stderr</p>
+      </li>
+    </ul>
+  </fieldset>
+  <br />
+  <fieldset>
+    <legend>Data plot</legend>
+    <img src="" id="imgPlot"></img>
+  </fieldset>
+  <fieldset>
+    <legend>Data plot (logarithmic)</legend>
+    <img src="" id="imgPlotLog"></img>
+  </fieldset>
+
+{% endblock %}

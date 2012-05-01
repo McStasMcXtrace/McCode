@@ -3,12 +3,27 @@
 from models import *
 from subprocess import Popen, PIPE
 import time, os
+from os.path import basename, dirname
 
 SIM_PATH = "sim/src/%s.instr"
 
 WORK_PATH = "out/%s"
 
+
+def plot(simfile, outfile, fmt="gif", log=False):
+    ''' Plot a mcstas.sim file with mcplot '''
+    pid = Popen(["mcplot", "-"+fmt] +
+                (log and ["-log"] or []) +
+                [basename(simfile)],
+                cwd=dirname(simfile))
+    pid.communicate()
+    print simfile, outfile
+    os.rename("%s.%s" % (simfile, fmt) , outfile)
+
+
 def work():
+    ''' Process a job by running the McStas simulation '''
+
     # fetch job
     run = SimRun.query.filter_by(status="waiting").order_by('created').first()
     if run is None:
@@ -38,7 +53,7 @@ def work():
     # locate binary
     name = run.sim.name
     simbin = SIM_PATH % name
-    fid = Popen(["mcrun"] +
+    pid = Popen(["mcrun"] +
                 (seed > 0 and ["--seed", str(seed)] or []) +
                 ["--ncount", str(samples),
                  "--dir", workdir % "mcstas",
@@ -47,11 +62,18 @@ def work():
                 + [ '%s=%s' % (str(k),str(v)) for k,v in params.items() ],
                 stdout=PIPE,
                 stderr=PIPE)
-    (out, err) = fid.communicate()
+    (out, err) = pid.communicate()
 
     # populate result folder
-    file(workdir % "out", "w").write(out)
-    file(workdir % "err", "w").write(err)
+    file(workdir % "out.txt", "w").write(out)
+    file(workdir % "err.txt", "w").write(err)
+
+    # compute gif plots
+    for mode in ("", "log"):
+        plot(workdir % "mcstas/mcstas.sim",
+             outfile=workdir % ("plot"+mode+".gif"),
+             log=(mode == "log"))
+
 
     run.status = "done"
     db.session.commit()

@@ -116,8 +116,9 @@ def simulate(jobid):
 
 
 @app.route('/sim/status/<runid>', methods=['GET'])
+@templated()
 def status(runid):
-    return str(runid)
+    return dict(runid=runid)
 
 
 if __name__ == '__main__':
