@@ -4,7 +4,7 @@ from models import *
 from subprocess import Popen, PIPE
 from os.path import basename, dirname, splitext
 
-import time, os, shutil
+import time, os, shutil, re, json
 import traceback
 
 
@@ -98,11 +98,16 @@ def work():
     file(workdir % "out.txt", "w").write(out)
     file(workdir % "err.txt", "w").write(err)
 
-    # compute gif plots
-    for mode in ("", "log"):
-        plot(workdir % "mcstas/mcstas.sim",
-             outfile=workdir % ("plot"+mode+".gif"),
-             log=(mode == "log"))
+    # dump components
+    comps = re.findall(r'filename:\s*([^\s]+)',
+                       file(workdir % 'mcstas/mcstas.sim').read())
+    file(workdir % "comps.json", "w").write(json.dumps(comps))
+    # plot components
+    for comp in comps:
+        for mode in ("lin", "log"):
+            plot(workdir % "mcstas/" + comp,
+                 outfile=workdir % ('plot-%s-%s.gif' % (comp, mode)),
+                 log=(mode == "log"))
 
     run.status = "done"
     db.session.commit()

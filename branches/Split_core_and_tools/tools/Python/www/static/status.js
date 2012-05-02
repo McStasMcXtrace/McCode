@@ -8,10 +8,42 @@ function loadData() {
     loadUrl("err", "err.txt");
     loadUrl("mcstas", "mcstas/mcstas.sim");
 
-    // load images
-    loadImg("imgLayout", "layout.gif");
-    loadImg("imgPlot", "plot.gif");
-    loadImg("imgPlotLog", "plotlog.gif");
+    // load list of components
+    path = baseUrl + "comps.json";
+    waitContent(
+        path,
+        function() {
+            // grab JSON
+            $.getJSON(
+                path,
+                createCompImgs
+            )}
+    );
+}
+
+function createCompImgs(comps) {
+    $.each(comps.sort(), function(i, comp) {
+        // create img tag
+        $.each(['lin', 'log'],
+               function(_, mode) {
+                   var plotid = 'plot'+mode+i;
+                   // create a tag
+                   var taga = $('<a>').attr('id', plotid + 'a')
+                   // create img tag
+                   taga.append($('<img>').attr('id', plotid + 'i').
+                               css('width', '280px'));
+                   // add to list of plots
+                   $('#'+mode+'Plots').append(taga);
+
+                   // wait till content is ready
+                   var linUrl = baseUrl+'plot'+'-'+comp+'-'+mode+'.gif';
+                   waitContent(linUrl,
+                               function () {
+                                   $('#'+plotid+'a').attr('href', linUrl);
+                                   $('#'+plotid+'i').attr('src', linUrl);
+                               });
+               });
+    });
 }
 
 
