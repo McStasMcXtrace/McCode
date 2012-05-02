@@ -36,6 +36,7 @@ def configurePOST(jobid):
     oks    = []
     errors = []  # all ok
     def ok(name, old, f):
+        ''' check parameter and update either oks or errors '''
         try:
             v = f()
             oks.extend([name])
@@ -51,6 +52,7 @@ def configurePOST(jobid):
     seed    = 0
     samples = 100000
 
+    # lookup job
     query = Job.query.filter_by(id=jobid)
     job = None
     if query.count() == 0:
@@ -73,6 +75,7 @@ def configurePOST(jobid):
     db.session.commit()
 
     # insert / update params
+    file("form.tmp","w").write(repr(form))
     for name in skip(('sim', 'seed', 'samples'), form):
         str_value = form[name]
         param  = Param.query.filter_by(name=name).one()
@@ -103,15 +106,22 @@ def configurePOST(jobid):
 
 @app.route('/sim/<jobid>', methods=['GET'])
 def simulate(jobid):
+    ''' Create simulation job for the worker '''
     job = Job.query.filter_by(id=jobid).one()
     sim = Simulation.query.filter_by(id=job.sim_id).one()
+    # treat seed and samples specially
     params = { "_seed": job.seed,
                "_samples": job.samples }
+    # filter params by what the simulation expects (needed!)
+    valid = set(pd.param.name for pd in sim.params)
     params.update(dict(
-        (p.param.name, p.value) for p in job.params))
+        (p.param.name, p.value) for p in job.params
+        if p.param.name in valid))
+    # create simulation run (for the worker to compute)
     run = SimRun(job=job, sim=sim, params=params)
     db.session.add(run)
     db.session.commit()
+    # send user to status page
     return redirect(url_for('status', runid=run.id))
 
 
