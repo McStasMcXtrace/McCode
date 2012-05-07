@@ -8,6 +8,9 @@ function loadData() {
     loadUrl('err', 'err.txt');
     loadUrl('mcstas', 'mcstas/mcstas.sim');
 
+    // load instrument layout
+    loadImg('imgLayout', 'layout.gif', '150px');
+
     // load list of components
     path = baseUrl + 'comps.json';
     waitContent(
@@ -22,27 +25,12 @@ function loadData() {
 }
 
 function createCompImgs(comps) {
-    $.each(comps.sort(), function(i, comp) {
+    $.each(comps.sort(), function(_, comp) {
         // create img tag
         $.each(
             ['lin', 'log'],
             function(_, mode) {
-                var plotid = 'plot'+mode+i;
-                // create a tag
-                var taga = $('<a>').attr('id', plotid + 'a');
-                // create img tag
-                taga.append($('<img>').attr('id', plotid + 'i').
-                            css('width', '280px'));
-                // add to list of plots
-                $('#'+mode+'Plots').append(taga);
-
-                // wait till content is ready
-                var linUrl = baseUrl+'plot'+'-'+comp+'-'+mode+'.gif';
-                waitContent(linUrl,
-                            function () {
-                                $('#'+plotid+'a').attr('href', linUrl);
-                                $('#'+plotid+'i').attr('src', linUrl);
-                            });
+                loadImg(mode + 'Plots', 'plot'+'-'+comp+'-'+mode+'.gif', '250px');
             });
            });
 }
@@ -59,12 +47,38 @@ function loadUrl(id, file) {
     );
 }
 
+function uniqueID(prefix) {
+    /* Generate a new ID */
+    var uid;
+    var n;
+    do {
+        n = Math.floor(Math.random() * 0xffffffff);
+        uid = prefix + '_' + n;
+    } while ($('#'+uid).length != 0) ;
+    // uid is unused
+    return uid;
+}
 
-function loadImg(id, file) {
-    waitContent(baseUrl + file,
-                function () {
-                    $('#'+id).attr('src', baseUrl + file);
-                });
+
+function loadImg(id, file, width) {
+    var myUrl = baseUrl + file;
+    waitContent(
+        myUrl,
+        function () {
+            var uid = uniqueID(id);
+            var taga = $('<a>').attr('id', uid + 'a');
+            // create img tag
+            taga.append($('<img>').attr('id', uid + 'i').css('width', width));
+            // add to imgs
+            $('#'+id).append(taga);
+
+            // wait till content is ready
+            waitContent(myUrl,
+                        function () {
+                            $('#'+uid+'a').attr('href', myUrl);
+                            $('#'+uid+'i').attr('src', myUrl);
+                        });
+        });
 }
 
 
