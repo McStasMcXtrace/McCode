@@ -75,7 +75,6 @@ def configurePOST(jobid):
     db.session.commit()
 
     # insert / update params
-    file("form.tmp","w").write(repr(form))
     for name in skip(('sim', 'seed', 'samples'), form):
         str_value = form[name]
         param  = Param.query.filter_by(name=name).one()
