@@ -4,6 +4,7 @@
   {{ super() }}
   <style type="text/css">
     p { color: #336699; }
+    #logFieldset { display: none; }
   </style>
 {% endblock %}
 {% block content %}
@@ -14,7 +15,7 @@
   </script>
   <script type="text/javascript" src="/static/status.js"></script>
   <script language="javascript">
-    $(document).ready(loadData);
+    $(document).ready(doInit);
   </script>
 
   <fieldset>
@@ -39,12 +40,12 @@
   </fieldset>
   <br />
 
-  <fieldset>
-    <legend>Data plots</legend>
+  <fieldset id="linFieldset">
+    <legend id="linLegend">Data plots (click here for logarithmic)</legend>
     <div id="linPlots"></div>
   </fieldset>
-  <fieldset>
-    <legend>Data plot (logarithmic)</legend>
+  <fieldset id="logFieldset">
+    <legend id="logLegend">Data plots (click here for linear)</legend>
     <div id="logPlots"></div>
   </fieldset>
 

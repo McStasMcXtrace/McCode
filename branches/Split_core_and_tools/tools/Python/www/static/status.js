@@ -2,6 +2,26 @@
 var baseUrl = '/out/' + runid + '/';
 
 
+function doInit() {
+    $('#linLegend').click(switchToLog);
+    $('#logLegend').click(switchToLin);
+    loadData();
+}
+
+
+function switchToLog(ev) {
+    // switch to logarithmic plots
+    $('#linFieldset').css('display', 'none');
+    $('#logFieldset').css('display', 'block');
+}
+
+function switchToLin(ev) {
+    // switch to linear plots
+    $('#linFieldset').css('display', 'block');
+    $('#logFieldset').css('display', 'none');
+}
+
+
 function loadData() {
     // load text files
     loadUrl('out', 'out.txt');
