@@ -4,7 +4,10 @@
   {{ super() }}
   <style type="text/css">
     p { color: #336699; }
-    #logFieldset { display: none; }
+    div.plot {
+      margin: 10px 0px 10px 0px;
+      text-align: center;
+    }
   </style>
 {% endblock %}
 {% block content %}
@@ -36,17 +39,17 @@
   <br />
   <fieldset>
     <legend>Instrument layout</legend>
-    <div id="imgLayout"></div>
+    <div id="imgLayout" class="plot"></div>
   </fieldset>
   <br />
 
   <fieldset id="linFieldset">
     <legend id="linLegend">Data plots (click here for logarithmic)</legend>
-    <div id="linPlots"></div>
+    <div id="linPlots" class="plot"></div>
   </fieldset>
   <fieldset id="logFieldset">
     <legend id="logLegend">Data plots (click here for linear)</legend>
-    <div id="logPlots"></div>
+    <div id="logPlots" class="plot"></div>
   </fieldset>
 
 {% endblock %}

@@ -3,6 +3,7 @@ var baseUrl = '/out/' + runid + '/';
 
 
 function doInit() {
+    switchToLin();
     $('#linLegend').click(switchToLog);
     $('#logLegend').click(switchToLin);
     loadData();
