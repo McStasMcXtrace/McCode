@@ -28,7 +28,7 @@ function isLog() {
 
 function switchLog() {
     /* Flip plots: log -> lin, lin -> log */
-    window.location.hash = isLog() ? '#' : '#log';
+    window.location.hash = isLog() ? '#lin' : '#log';
     setLog();
 }
 
