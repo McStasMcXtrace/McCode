@@ -4,7 +4,7 @@
   {{ super() }}
   <style type="text/css">
     p { color: #336699; }
-    div.plot {
+    div.centered {
       margin: 10px 0px 10px 0px;
       text-align: center;
     }
@@ -21,35 +21,42 @@
     $(document).ready(doInit);
   </script>
 
-  <fieldset>
-    <legend>Simulation output</legend>
-    <ul>
-      <li>
-        <p id=mcstas>mcstas.sim</p>
-      </li>
-      <li>
-        <p id=out>stdout</p>
-      </li>
-      <li>
-        <p id=err>stderr</p>
-      </li>
-    </ul>
-  </fieldset>
-
-  <br />
-  <fieldset>
-    <legend>Instrument layout</legend>
-    <div id="imgLayout" class="plot"></div>
-  </fieldset>
-  <br />
-
   <fieldset id="linFieldset">
-    <legend id="linLegend">Data plots (click here for logarithmic)</legend>
-    <div id="linPlots" class="plot"></div>
+    <legend id="linLegend">
+      Data plots (click here for logarithmic - or press 'L')</legend>
+    <div id="linPlots" class="centered"></div>
   </fieldset>
   <fieldset id="logFieldset">
-    <legend id="logLegend">Data plots (click here for linear)</legend>
-    <div id="logPlots" class="plot"></div>
+    <legend id="logLegend">
+      Data plots (click here for linear - or press 'L')</legend>
+    <div id="logPlots" class="centered"></div>
   </fieldset>
+
+  <br />
+
+  <fieldset>
+    <legend>Instrument layout</legend>
+    <div id="imgLayout" class="centered"></div>
+  </fieldset>
+
+  <br/>
+
+  <fieldset>
+    <legend>Simulation output</legend>
+    <div class="centered">
+      <ul class="inlinelist">
+        <li>
+          <span id=mcstas>mcstas.sim</span>
+        </li>
+        <li>
+          <span id=out>stdout</span>
+        </li>
+        <li>
+          <span id=err>stderr</span>
+        </li>
+      </ul>
+    </div>
+  </fieldset>
+
 
 {% endblock %}
