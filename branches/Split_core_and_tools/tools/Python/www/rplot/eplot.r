@@ -16,7 +16,6 @@ eplot1d <- function (title, subt, xlab, ylab,
   pts$y <- pts$y
 
   ## plot
-  print("open file")
   start.plot(format, output)
 
   if (logy) {
@@ -66,7 +65,6 @@ eplot2d <- function (title, subt, xlab, ylab, leglab,
 
   ## plot
   start.plot(format, output)
-  print(seq(xylim[1], xylim[2], length=20))
 
   ## cannot compute log(0)
   if (logy) {
