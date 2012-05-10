@@ -14,15 +14,30 @@ SIM_BIN_PATH = "sim/bin/%s"
 WORK_PATH = "out/%s"
 
 
-def plot(simfile, outfile, fmt="gif", log=False):
+# try to use new R plotter instead of mcplot
+def mcplot(simfile, outfile, logy=False):
     ''' Plot a mcstas.sim file with mcplot '''
-    pid = Popen(["mcplot", "-"+fmt] +
-                (log and ["-log"] or []) +
+    pid = Popen(["mcplot", "-gif"] +
+                (logy and ["-log"] or []) +
                 [basename(simfile)],
                 cwd=dirname(simfile))
     pid.communicate()
     print simfile, outfile
-    os.rename("%s.%s" % (simfile, fmt) , outfile)
+    os.rename("%s.gif" % simfile , outfile)
+try:
+    from rplot.plot import plotSim
+    def plot(simfile, outfile, logy=False):
+        ''' Plot a sim file with R '''
+        try:
+            plotSim(simfile, logy, 'png')
+            os.rename('%s.png' % simfile, outfile)
+        except Exception,e:
+            print e
+            mcplot(simfile, outfile, logy)
+    print 'using plotter from rplot/'
+except Exception, e:
+    print e
+    plot = mcplot
 
 
 def display(instr, params, outfile, fmt="gif"):
@@ -107,7 +122,7 @@ def work():
         for mode in ("lin", "log"):
             plot(workdir % "mcstas/" + comp,
                  outfile=workdir % ('plot-%s-%s.gif' % (comp, mode)),
-                 log=(mode == "log"))
+                 logy=(mode == "log"))
 
     run.status = "done"
     db.session.commit()
