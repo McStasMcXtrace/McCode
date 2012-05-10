@@ -3,23 +3,46 @@ var baseUrl = '/out/' + runid + '/';
 
 
 function doInit() {
-    switchToLin();
-    $('#linLegend').click(switchToLog);
-    $('#logLegend').click(switchToLin);
+    setLog();
+
+    $('#linLegend').click(switchLog);
+    $('#logLegend').click(switchLog);
     loadData();
+
+    // add a shortcut handler
+    $(document).keyup(
+        function(e) {
+            switch(e.which) {
+                case 108: // l
+                case  76: // L
+                switchLog();
+            }
+        });
 }
 
 
-function switchToLog(ev) {
-    // switch to logarithmic plots
-    $('#linFieldset').css('display', 'none');
-    $('#logFieldset').css('display', 'block');
+function isLog() {
+    /* Whether to use log plots */
+    return window.location.hash == '#log';
 }
 
-function switchToLin(ev) {
-    // switch to linear plots
-    $('#linFieldset').css('display', 'block');
-    $('#logFieldset').css('display', 'none');
+function switchLog() {
+    /* Flip plots: log -> lin, lin -> log */
+    window.location.hash = isLog() ? '#' : '#log';
+    setLog();
+}
+
+function setLog() {
+    /* Show the chosen plots as defined by isLog() */
+    if (isLog()) {
+        // switch to logarithmic plots
+        $('#linFieldset').css('display', 'none');
+        $('#logFieldset').css('display', 'block');
+    } else {
+        // switch to linear plots
+        $('#linFieldset').css('display', 'block');
+        $('#logFieldset').css('display', 'none');
+    }
 }
 
 
