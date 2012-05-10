@@ -51,7 +51,10 @@ function createCompImgs(comps) {
         $.each(
             ['lin', 'log'],
             function(_, mode) {
-                loadImg(mode + 'Plots', 'plot'+'-'+comp+'-'+mode+'.gif', '250px');
+                var parent = mode + 'Plots';
+                var id = uniqueID(parent);
+                $('#'+parent).append($('<span>').attr('id', id).css('margin', 'auto'));
+                loadImg(id, 'plot'+'-'+comp+'-'+mode+'.gif', '250px');
             });
            });
 }
