@@ -31,5 +31,5 @@ PID=/tmp/mcstas-www-nginx.pid
 if [ -f $PID ]; then
     echo ""
     echo "## Stopping nginx process: `cat $PID`";
-    kill `cat $PID`
+    sudo kill `cat $PID`
 fi
