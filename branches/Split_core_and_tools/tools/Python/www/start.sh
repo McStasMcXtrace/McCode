@@ -21,7 +21,7 @@ if [ -f $PID ]; then
     sudo kill `cat $PID`
 fi
 echo 'Starting nginx..'
-sudo nginx -c `pwd`/nginx/nginx.conf
+sudo nginx -c `pwd`/nginx/nginx.conf || exit -1
 
 # run uwsgi
 ./uwsgi/uwsgi --socket 127.0.0.1:9001 --module run --callable app
