@@ -1,16 +1,16 @@
-from app import db
-from sqlalchemy import DDL
+from app import db, ModelBase, cache
 from json import dumps, loads
 from datetime import datetime
 
 
-class Job(db.Model):
+class Job(ModelBase):
     ''' A job specifying the simuation to run and its status '''
+    __tablename__ = 'job'
     id      = db.Column(db.String(38), primary_key=True)
     seed    = db.Column(db.Integer)
     samples = db.Column(db.Integer)
     sim_id  = db.Column(db.Integer, db.ForeignKey('simulation.id'))
-    params  = db.relationship('ParamValue', backref='job')
+    params  = db.relationship('ParamValue', backref='job', lazy=False)
     created = db.Column(db.DateTime(timezone=False), index=True)
 
     def __init__(self, id, seed, samples, sim):
@@ -21,11 +21,12 @@ class Job(db.Model):
         self.created = datetime.now()
 
 
-class Simulation(db.Model):
+class Simulation(ModelBase):
     ''' A simulation '''
+    __tablename__ = 'simulation'
     id     = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name   = db.Column(db.String(64))
-    params = db.relationship('ParamDefault', backref='sim')
+    params = db.relationship('ParamDefault', backref='sim', lazy=False)
     jobs   = db.relationship('Job', backref='sim')
     runs   = db.relationship('SimRun', backref='sim')
 
@@ -36,8 +37,9 @@ class Simulation(db.Model):
         return self.name
 
 
-class SimRun(db.Model):
+class SimRun(ModelBase):
     ''' A particular run of a simulation (configured by Job) '''
+    __tablename__ = 'sim_run'
     id     = db.Column(db.String(64), primary_key=True)
     job_id = db.Column(db.String(38), db.ForeignKey('job.id'))
     sim_id = db.Column(db.Integer, db.ForeignKey('simulation.id'))
@@ -70,23 +72,26 @@ class SimRun(db.Model):
         self.str_result = dumps(r)
 
 
-class Param(db.Model):
+class Param(ModelBase):
     ''' A parameter '''
+    __tablename__ = 'param'
     id       = db.Column(db.Integer, primary_key=True)
     name     = db.Column(db.String(128))
-    defaults = db.relationship('ParamDefault', backref='param')
-    values   = db.relationship('ParamValue', backref='param')
+    defaults = db.relationship('ParamDefault', lazy=False)
+    values   = db.relationship('ParamValue', backref='param', lazy=False)
 
     def __init__(self, name):
         self.name = name
 
-
-class ParamDefault(db.Model):
+class ParamDefault(ModelBase):
     ''' A parameter default '''
+    __tablename__ = 'param_default'
     id        = db.Column(db.Integer, primary_key=True)
     param_id  = db.Column(db.Integer, db.ForeignKey('param.id'))
     str_value = db.Column(db.String(255))
     sim_id    = db.Column(db.ForeignKey('simulation.id'))
+
+    param = db.relationship('Param', back_populates='defaults', lazy=False)
 
     def __init__(self, param, value, sim):
         self.param_id = param.id
@@ -104,8 +109,9 @@ class ParamDefault(db.Model):
         self.str_value = dumps(v)
 
 
-class ParamValue(db.Model):
+class ParamValue(ModelBase):
     ''' A parameter value tied to a specific job '''
+    __tablename__ = 'param_value'
     id        = db.Column(db.Integer, primary_key=True)
     param_id  = db.Column(db.Integer, db.ForeignKey('param.id'))
     str_value = db.Column(db.PickleType)
@@ -115,9 +121,6 @@ class ParamValue(db.Model):
         self.param_id = param.id
         self.value    = value
         self.job_id   = job.id
-
-    def job(self):
-        return
 
     @property
     def value(self):

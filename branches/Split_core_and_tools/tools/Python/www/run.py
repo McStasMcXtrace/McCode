@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 
+# setup flask.ext for old versions of flask (<8)
+import flaskext_compat
+flaskext_compat.activate()
+
+
 from flask import *
-from util import skip, templated, cached
+from util import skip, templated
 from uuid import uuid4 as uuid
 import sys
 
-from app import app, db
+from app import app, db, db_session, SessionMaker, cache
 from models import Job, Simulation, SimRun, Param, ParamValue, ParamDefault
 
 
@@ -18,16 +23,16 @@ def convert_type(default, str_value):
 def index():
     return redirect(url_for('configure', jobid=str(uuid())))
 
+@cache.memoize(timeout=10)
+def get_sims():
+    return Simulation.query.order_by('simulation.name').all()
 
 @app.route('/job/<jobid>', methods=['GET'])
-@cached()
+@cache.cached(timeout=1)
 @templated()
 def configure(jobid):
-    jobQ = Job.query.filter_by(id=jobid)
-    job = None
-    if jobQ.count() == 1:
-        job = jobQ.one()
-    sims = Simulation.query.order_by('name').all()
+    job = Job.query.get(jobid)
+    sims = get_sims()
     return dict(sims = sims, job=job, jobid=jobid)
 
 
@@ -125,6 +130,7 @@ def simulate(jobid):
 
 
 @app.route('/sim/status/<runid>', methods=['GET'])
+@cache.cached(timeout=10)
 @templated()
 def status(runid):
     return dict(runid=runid)
