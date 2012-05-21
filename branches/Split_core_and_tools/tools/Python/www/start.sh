@@ -1,14 +1,8 @@
 #!/bin/sh
 
-# download and build uwsgi if necessary
-UWSGI=uwsgi-1.2
-if [ ! -d uwsgi ]; then
-    rm -rf uwsgi ${UWSGI}*;
-    wget http://projects.unbit.it/downloads/${UWSGI}.tar.gz
-    tar xf ${UWSGI}.tar.gz && rm ${UWSGI}.tar.gz
-    ln -s ${UWSGI} uwsgi
-fi
-cd uwsgi && make && cd ..
+# grab dependencies
+./download.sh
+
 
 # run nginx (possibly from /usr/sbin)
 PATH=/usr/sbin:$PATH
