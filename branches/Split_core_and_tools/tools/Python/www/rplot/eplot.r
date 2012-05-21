@@ -61,7 +61,7 @@ eplot2d <- function (title, subt, xlab, ylab, leglab,
                      input, output, logy, format, xylim, rows, cols) {
   ## read data
   pts <- read.table(input)
-  pts = pts[1:rows,1:cols]
+  pts = pts[1:cols,1:rows]
 
   ## plot
   start.plot(format, output)
