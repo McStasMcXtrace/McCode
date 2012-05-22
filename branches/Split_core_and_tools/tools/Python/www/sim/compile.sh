@@ -3,7 +3,7 @@
 BASEDIR=$(dirname $0)
 cd $BASEDIR
 
-echo "Translating and compiling (sim/src -> sim/bin)"
+echo "Translating and compiling (from sim/src)"
 
 for i in $( ls src/*.instr ); do
     echo "> $i"
@@ -14,10 +14,10 @@ for i in $( ls src/*.instr ); do
         echo "* generating c file..";
         mcstas -o src/$b.c $i &> /dev/null;
     fi
-    if [ -x bin/$b ]; then
+    if [ -x src/$b.out ]; then
         echo "* executable exists";
     else
         echo "* compiling..";
-        gcc -lm -O3 -o bin/$b -O2 src/$b.c
+        gcc -lm -O3 -o src/$b.out -O2 src/$b.c
     fi
 done
