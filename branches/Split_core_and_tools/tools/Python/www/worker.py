@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from app import db_session
 from models import *
 from subprocess import Popen, PIPE
 from os.path import basename, dirname, splitext
@@ -62,7 +63,7 @@ def work():
         return
 
     run.status = "running"
-    db.session.commit()
+    db_session.commit()
 
     print "Running job: ", run.id
     params = run.params
@@ -125,7 +126,7 @@ def work():
                  logy=(mode == "log"))
 
     run.status = "done"
-    db.session.commit()
+    db_session.commit()
 
     print "Done."
 
