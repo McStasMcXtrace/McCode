@@ -7,6 +7,7 @@
 # run nginx (possibly from /usr/sbin)
 PATH=/usr/sbin:$PATH
 
+NCONF=nginx/nginx.conf
 PID=/tmp/mcstas-www-nginx.pid
 if [ -f $PID ]; then
     echo ""
@@ -14,6 +15,9 @@ if [ -f $PID ]; then
     echo ""
     sudo kill `cat $PID`
 fi
+# replace user in config file with current user
+cat ${NCONF}.template|sed s/CURRENT_USER/`whoami`/g|sponge ${NCONF}
+# start server
 echo 'Starting nginx..'
 sudo nginx -c `pwd`/nginx/nginx.conf || exit -1
 
