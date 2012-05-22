@@ -1,4 +1,4 @@
-from app import db, ModelBase, cache
+from app import db, ModelBase
 from json import dumps, loads
 from datetime import datetime
 

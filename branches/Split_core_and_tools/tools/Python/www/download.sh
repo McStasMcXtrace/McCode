@@ -98,11 +98,3 @@ ensure "flask_sqlalchemy.py" \
     python_setup \
     "https://github.com/mitsuhiko/flask-sqlalchemy/tarball/${FLASK_SQLA_COMMIT}"
 
-# Flask-Cache
-FLASK_CACHE_COMMIT="568be70"
-ensure "flaskext_cache" \
-    build_wget \
-    "thadeusb-flask-cache-${FLASK_CACHE_COMMIT}" \
-    "flaskext" \
-    python_setup \
-    "https://github.com/thadeusb/flask-cache/tarball/${FLASK_CACHE_COMMIT}"
