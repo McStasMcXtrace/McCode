@@ -62,6 +62,15 @@ ensure "uwsgi" \
     make \
     "http://projects.unbit.it/downloads/${UWSGI}.tar.gz"
 
+# Werkzeug
+WERK_COMMIT="43037e6"
+ensure "werkzeug" \
+    build_wget \
+    "mitsuhiko-werkzeug-${WERK_COMMIT}" \
+    "werkzeug" \
+    python_setup \
+    "https://github.com/mitsuhiko/werkzeug/tarball/${WERK_COMMIT}"
+
 # Flask
 FLASK_COMMIT="d5e10e4"
 ensure "flask" \
@@ -79,7 +88,6 @@ ensure "sqlalchemy" \
     "build/lib*/sqlalchemy" \
     python_setup \
     "http://hg.sqlalchemy.org/sqlalchemy/archive/rel_${SQLA_VER}.tar.gz"
-
 
 # Flask-SQLAlchemy
 FLASK_SQLA_COMMIT="087c3c0"
