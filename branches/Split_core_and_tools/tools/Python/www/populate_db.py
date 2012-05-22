@@ -10,7 +10,7 @@ from glob import glob
 import json
 import re
 
-PATH_BIN = 'sim/bin'
+PATH_BIN = 'sim/src'
 RE_types   = re.compile(r'(\w+)\((\w+)\)')
 RE_default = re.compile(r'\s*Param:\s+(\w+)=(.*)')
 
@@ -24,9 +24,9 @@ def exist(model, **kwargs):
 
 def info(bin):
     # Insert new simulation
-    sim_name = basename(bin)
+    sim_name = basename(bin)[:-1*len('.out')]
     if exist(Simulation, name=sim_name):
-        print 'Skipping existing simulation: ' + bin
+        print 'Skipping existing simulation: ' + sim_name
         return
 
     # Get info from executable
@@ -71,9 +71,9 @@ def info(bin):
 
 
 def getlist():
-    return glob(PATH_BIN + '/*')
+    return glob(PATH_BIN + '/*.out')
 
 
 if __name__ == '__main__':
-    print "* Populating database with executables from sim/bin/"
+    print "* Populating database with executables from " + PATH_BIN
     map(info, getlist())
