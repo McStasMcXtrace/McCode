@@ -10,7 +10,7 @@ from util import skip, templated
 from uuid import uuid4 as uuid
 import sys
 
-from app import app, db, db_session, SessionMaker
+from app import app, db, db_session, SessionMaker, ModelBase
 from models import Job, Simulation, SimRun, Param, ParamValue, ParamDefault
 
 
@@ -62,7 +62,7 @@ def configurePOST(jobid):
         # create job
         # TODO: check types of seed and samples
         job = Job(id=jobid, seed=seed, samples=samples, sim=sim)
-        db.session.add(job)
+        db_session.add(job)
     else:
         job = query.one()
 
@@ -75,7 +75,7 @@ def configurePOST(jobid):
     job.sim_id = sim.id
 
     # commit job
-    db.session.commit()
+    db_session.commit()
 
     # insert / update params
     for name in skip(('sim', 'seed', 'samples'), form):
@@ -96,12 +96,12 @@ def configurePOST(jobid):
         if valueQ.count() == 0:
             # create parameter value
             pvalue = ParamValue(param=param, job=job, value=cvalue)
-            db.session.add(pvalue)
+            db_session.add(pvalue)
         else:
             pvalue = valueQ.one()
             pvalue.value = cvalue
         # commit parameter value
-        db.session.commit()
+        db_session.commit()
 
     return jsonify(errors=errors, oks=oks)
 
@@ -121,8 +121,8 @@ def simulate(jobid):
         if p.param.name in valid))
     # create simulation run (for the worker to compute)
     run = SimRun(job=job, sim=sim, params=params)
-    db.session.add(run)
-    db.session.commit()
+    db_session.add(run)
+    db_session.commit()
     # send user to status page
     return redirect(url_for('status', runid=run.id))
 
@@ -137,6 +137,6 @@ if __name__ == '__main__':
     if '--init' in sys.argv[1:]:
         print 'Creating database..'
         db.init_app(app)
-        db.create_all()
+        ModelBase.metadata.create_all(bind=db.engine)
         sys.exit(0)
     app.run(debug=True)
