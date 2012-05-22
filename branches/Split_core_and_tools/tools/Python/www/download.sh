@@ -1,5 +1,11 @@
 #!/bin/sh
 
+
+python_setup() {
+    python setup.py build
+}
+
+
 ensure() {
     NAME=$1
     FUNC=$2
@@ -17,9 +23,10 @@ ensure() {
 
 cdmake() {
     DIR=$1
+    MAKE=$2
     echo ""
     echo "make >>"
-    cd ${DIR} && make && cd .. || exit 1
+    cd ${DIR} && ${MAKE} && cd .. || exit 1
     echo "<< done"
     echo ""
 }
@@ -28,7 +35,8 @@ build_wget() {
     LINK=$1
     DIR=$2
     RESULT=$3
-    URL=$4
+    MAKE=$4
+    URL=$5
 
     # fetch and unpack
     if [ -d ${DIR} ]; then
@@ -41,7 +49,7 @@ build_wget() {
     fi
 
     # build and link
-    cdmake ${DIR}
+    cdmake ${DIR} ${MAKE}
     ln -s ${DIR}/${RESULT} ${LINK} || exit 1
 }
 
@@ -49,7 +57,8 @@ build_git() {
     LINK=$1
     DIR=$2
     RESULT=$3
-    URL=$4
+    MAKE=$4
+    URL=$5
 
     # checkout repo
     if [ -d ${DIR} ]; then
@@ -59,7 +68,7 @@ build_git() {
     fi
 
     # build and update symbolic link
-    cdmake ${DIR}
+    cdmake ${DIR} ${MAKE}
     ln -s ${DIR}/${RESULT} ${LINK}
 }
 
@@ -70,6 +79,7 @@ ensure "uwsgi" \
     build_wget \
     ${UWSGI} \
     "." \
+    make \
     "http://projects.unbit.it/downloads/${UWSGI}.tar.gz"
 
 # Flask-SQLAlchemy
@@ -77,4 +87,5 @@ ensure "flask_sqlalchemy.py" \
     build_git \
     "flask-sqlalchemy" \
     "flask_sqlalchemy.py" \
+    python_setup \
     "https://github.com/mitsuhiko/flask-sqlalchemy.git"
