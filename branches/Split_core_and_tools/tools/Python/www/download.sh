@@ -42,8 +42,8 @@ build_wget() {
     if [ -d ${DIR} ]; then
         echo "* using existing sources";
     else
-        FILE="`basename ${URL}`"
-        wget ${URL} &&
+        FILE=${DIR}.tar
+        wget -O ${FILE} ${URL} &&
         tar xvf ${FILE} &&
         rm -f ${FILE} || exit 1
     fi
@@ -52,26 +52,6 @@ build_wget() {
     cdmake ${DIR} ${MAKE}
     ln -s ${DIR}/${RESULT} ${LINK} || exit 1
 }
-
-build_git() {
-    LINK=$1
-    DIR=$2
-    RESULT=$3
-    MAKE=$4
-    URL=$5
-
-    # checkout repo
-    if [ -d ${DIR} ]; then
-        echo "* using existing sources"
-    else
-        git clone ${URL} || exit 1
-    fi
-
-    # build and update symbolic link
-    cdmake ${DIR} ${MAKE}
-    ln -s ${DIR}/${RESULT} ${LINK}
-}
-
 
 # uwsgi
 UWSGI=uwsgi-1.2
@@ -82,18 +62,39 @@ ensure "uwsgi" \
     make \
     "http://projects.unbit.it/downloads/${UWSGI}.tar.gz"
 
+# Flask
+FLASK_COMMIT="d5e10e4"
+ensure "flask" \
+    build_wget \
+    "mitsuhiko-flask-${FLASK_COMMIT}" \
+    "flask" \
+    python_setup \
+    "https://github.com/mitsuhiko/flask/tarball/${FLASK_COMMIT}"
+
+# SQLAlchemy
+SQLA_VER="0_7"
+ensure "sqlalchemy" \
+    build_wget \
+    "sqlalchemy-rel_${SQLA_VER}" \
+    "build/lib*/sqlalchemy" \
+    python_setup \
+    "http://hg.sqlalchemy.org/sqlalchemy/archive/rel_${SQLA_VER}.tar.gz"
+
+
 # Flask-SQLAlchemy
+FLASK_SQLA_COMMIT="087c3c0"
 ensure "flask_sqlalchemy.py" \
-    build_git \
-    "flask-sqlalchemy" \
+    build_wget \
+    "mitsuhiko-flask-sqlalchemy-${FLASK_SQLA_COMMIT}" \
     "flask_sqlalchemy.py" \
     python_setup \
-    "https://github.com/mitsuhiko/flask-sqlalchemy.git"
+    "https://github.com/mitsuhiko/flask-sqlalchemy/tarball/${FLASK_SQLA_COMMIT}"
 
 # Flask-Cache
+FLASK_CACHE_COMMIT="568be70"
 ensure "flaskext_cache" \
-    build_git \
-    "flask-cache" \
+    build_wget \
+    "thadeusb-flask-cache-${FLASK_CACHE_COMMIT}" \
     "flaskext" \
     python_setup \
-    "https://github.com/thadeusb/flask-cache.git"
+    "https://github.com/thadeusb/flask-cache/tarball/${FLASK_CACHE_COMMIT}"
