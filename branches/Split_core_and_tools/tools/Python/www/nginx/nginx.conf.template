@@ -1,6 +1,6 @@
 worker_processes 4;
 pid /tmp/mcstas-www-nginx.pid;
-user CURRENT_USER;
+user CURRENT_USER CURRENT_GROUP;
 
 events {
 	worker_connections 768;
