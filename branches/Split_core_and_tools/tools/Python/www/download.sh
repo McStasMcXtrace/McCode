@@ -91,9 +91,9 @@ ensure "flask_sqlalchemy.py" \
     "https://github.com/mitsuhiko/flask-sqlalchemy.git"
 
 # Flask-Cache
-ensure "flask_cache.py" \
+ensure "flaskext_cache" \
     build_git \
     "flask-cache" \
-    "flask_cache.py" \
+    "flaskext" \
     python_setup \
     "https://github.com/thadeusb/flask-cache.git"
