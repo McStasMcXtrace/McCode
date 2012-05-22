@@ -16,7 +16,7 @@ if [ -f $PID ]; then
     sudo kill `cat $PID`
 fi
 # replace user in config file with current user
-cat ${NCONF}.template|sed s/CURRENT_USER/`whoami`/g|sponge ${NCONF}
+cat ${NCONF}.template|sed s/CURRENT_USER/`whoami`/g > ${NCONF}
 # start server
 echo 'Starting nginx..'
 sudo nginx -c `pwd`/nginx/nginx.conf || exit -1
