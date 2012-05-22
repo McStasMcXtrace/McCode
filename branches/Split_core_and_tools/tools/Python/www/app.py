@@ -1,9 +1,9 @@
 from flask import *
-from flaskext.sqlalchemy import SQLAlchemy
+from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-from flaskext.cache import Cache
+from flask.ext.cache import Cache
 
 # Setup application
 app = Flask(__name__)
