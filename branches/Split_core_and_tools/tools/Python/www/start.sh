@@ -8,6 +8,7 @@
 PATH=/usr/sbin:$PATH
 
 NCONF=nginx/nginx.conf
+MCONF=nginx/mcstas.conf
 PID=/tmp/mcstas-www-nginx.pid
 if [ -f $PID ]; then
     echo ""
@@ -16,13 +17,15 @@ if [ -f $PID ]; then
     sudo kill `cat $PID`
 fi
 # replace user in config file with current user
-cat ${NCONF}.template|sed s/CURRENT_USER/`whoami`/g > ${NCONF}
+cat ${NCONF}.template|./preconf.sh > ${NCONF}
+cat ${MCONF}.template|./preconf.sh > ${MCONF}
+
 # start server
 echo 'Starting nginx..'
 sudo nginx -c `pwd`/nginx/nginx.conf || exit -1
 
 # run uwsgi
-./uwsgi/uwsgi --socket 127.0.0.1:9001 --module run --callable app
+./uwsgi/uwsgi --workers 10 --socket 127.0.0.1:9001 --module run --callable app
 
 # clean up after uwsgi close
 PID=/tmp/mcstas-www-nginx.pid

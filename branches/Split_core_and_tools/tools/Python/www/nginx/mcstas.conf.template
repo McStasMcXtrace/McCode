@@ -15,11 +15,11 @@ server {
     }
 
     location /static {
-        root        /var/www/mcstas;
+        root        PWD;
     }
     location /out {
         autoindex on;
-        root        /var/www/mcstas;
+        root        PWD;
     }
 
 }
