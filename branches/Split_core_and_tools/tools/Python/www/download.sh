@@ -89,3 +89,11 @@ ensure "flask_sqlalchemy.py" \
     "flask_sqlalchemy.py" \
     python_setup \
     "https://github.com/mitsuhiko/flask-sqlalchemy.git"
+
+# Flask-Cache
+ensure "flask_cache.py" \
+    build_git \
+    "flask-cache" \
+    "flask_cache.py" \
+    python_setup \
+    "https://github.com/thadeusb/flask-cache.git"
