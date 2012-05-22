@@ -1,6 +1,6 @@
-#!/bin/zsh
+#!/bin/sh
 
-function ensure() {
+ensure() {
     NAME=$1
     FUNC=$2
     shift; shift;
@@ -15,7 +15,7 @@ function ensure() {
     echo ""
 }
 
-function cdmake() {
+cdmake() {
     DIR=$1
     echo ""
     echo "make >>"
@@ -24,7 +24,7 @@ function cdmake() {
     echo ""
 }
 
-function build_wget() {
+build_wget() {
     LINK=$1
     DIR=$2
     RESULT=$3
@@ -45,7 +45,7 @@ function build_wget() {
     ln -s ${DIR}/${RESULT} ${LINK} || exit 1
 }
 
-function build_git() {
+build_git() {
     LINK=$1
     DIR=$2
     RESULT=$3
