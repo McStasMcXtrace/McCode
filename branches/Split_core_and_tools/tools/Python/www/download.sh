@@ -98,7 +98,6 @@ ensure "flask_sqlalchemy.py" \
     python_setup \
     "https://github.com/mitsuhiko/flask-sqlalchemy/tarball/${FLASK_SQLA_COMMIT}"
 
-
 # Jinja2
 JINJA2_COMMIT="abfbc18"
 ensure "jinja2" \
