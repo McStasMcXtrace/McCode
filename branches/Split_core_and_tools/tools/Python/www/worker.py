@@ -45,7 +45,7 @@ def display(instr, params, outfile, fmt="gif"):
     ''' Display instrument '''
     pid = Popen(["mcdisplay", "-k", "--save", "-"+fmt,
                  basename(instr),
-                 "-n", str(1) # precision / iterations
+                 "-n", str(1) # precision (iterations)
                  ] + params,
                 cwd=dirname(instr))
     print outfile
