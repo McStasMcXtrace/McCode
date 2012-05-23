@@ -50,7 +50,7 @@ function loadData() {
     // load text files
     loadUrl('out', 'out.txt');
     loadUrl('err', 'err.txt');
-    loadUrl('mcstas', 'mcstas/mcstas.sim');
+    loadUrl('mcstas', 'mcstas-' + runid + '.tar.gz');
 
     // load instrument layout
     loadImg('imgLayout', 'layout.gif', '150px');

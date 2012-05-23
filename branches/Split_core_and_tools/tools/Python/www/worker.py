@@ -7,6 +7,7 @@ from os.path import basename, dirname, splitext
 
 import time, os, shutil, re, json
 import traceback
+import tarfile
 
 
 SIM_SRC_PATH = "sim/src/%s.instr"
@@ -107,6 +108,11 @@ def work():
                 stdout=PIPE,
                 stderr=PIPE)
     (out, err) = pid.communicate()
+
+    # tar results
+    tarname = 'mcstas-' + run.id
+    tarf = workdir % ('%s.tar.gz' % tarname)
+    tarfile.open(tarf, 'w').add(workdir % "mcstas", arcname=tarname)
 
     # debug
     if err: print err
