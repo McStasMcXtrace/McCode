@@ -1,10 +1,18 @@
 import os
 _basedir = os.path.abspath(os.path.dirname(__file__))
 
+from random import SystemRandom
+PRNG = SystemRandom()
+
+import string
+ALPHA = string.letters + string.digits
+
+
 DEBUG = True
 
 ADMINS = frozenset(['mxw968@alumni.ku.dk'])
-SECRET_KEY = 'RfQPKhaa1FP2OrwYHR8gNA'
+SECRET_KEY = ''.join(PRNG.choice(ALPHA) for _ in xrange(32))
+
 
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(_basedir, 'data/app.db')
 DATABASE_CONNECT_OPTIONS = {}

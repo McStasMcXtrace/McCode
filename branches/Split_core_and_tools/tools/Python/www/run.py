@@ -10,8 +10,11 @@ from uuid import uuid4 as uuid
 import sys
 
 from app import app, db, db_session, SessionMaker, ModelBase
-from models import Job, Simulation, SimRun, Param, ParamValue, ParamDefault
-from util import skip, templated, with_nonce, get_nonce, check_nonce
+from models import Job, Simulation, SimRun, Param, ParamValue, ParamDefault, User
+
+from util import skip, templated, with_nonce, get_nonce, check_nonce, \
+     authenticated, authenticate, get_session
+
 
 def convert_type(default, str_value):
     # tested types: str and float
@@ -25,8 +28,33 @@ def index():
 def get_sims():
     return Simulation.query.order_by('simulation.name').all()
 
+
+@app.route('/login/<path:next>', methods=['GET'])
+@templated()
+def login(next):
+    return dict(next = next)
+
+
+@app.route('/login/<path:next>', methods=['POST'])
+def loginPOST(next):
+    form = request.form
+    usernm = form.get('username', '')
+    passwd = form.get('password', '')
+    # check information
+    if not authenticate(usernm, passwd):
+        return redirect(url_for('login', next=next))
+    # All ok, register user
+    session = get_session()
+    session['user'] = usernm
+    resp = redirect(next)
+    app.save_session(session, resp)
+    return resp
+
+
+
 @app.route('/job/<jobid>', methods=['GET'])
 @with_nonce()
+@authenticated()
 @templated()
 def configure(jobid):
     job = Job.query.get(jobid)
@@ -35,6 +63,7 @@ def configure(jobid):
 
 
 @app.route('/job/update/<jobid>', methods=['POST'])
+@authenticated()
 @check_nonce()
 def configurePOST(jobid):
     oks    = []
@@ -108,6 +137,7 @@ def configurePOST(jobid):
 
 
 @app.route('/sim/<jobid>', methods=['POST'])
+@authenticated()
 @check_nonce()
 def simulatePOST(jobid):
     ''' Create simulation job for the worker '''

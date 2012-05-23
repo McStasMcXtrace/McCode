@@ -2,6 +2,12 @@ from app import db, ModelBase
 from json import dumps, loads
 from datetime import datetime
 
+class User(ModelBase):
+    ''' A user of the system '''
+    __tablename__ = 'user'
+    username = db.Column(db.String(64), primary_key=True)
+    passhash = db.Column(db.String(128), primary_key=True)
+
 
 class Job(ModelBase):
     ''' A job specifying the simuation to run and its status '''

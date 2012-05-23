@@ -4,7 +4,11 @@ from functools import wraps
 import uuid
 
 from app import app
-from flask import request, make_response, render_template
+from flask import request, make_response, render_template, redirect, url_for
+
+from models import User
+
+from werkzeug.security import check_password_hash
 
 
 def skip(disallowed, items):
@@ -77,3 +81,31 @@ def check_nonce():
             return handle(*args, **kwargs)
         return decorated_function
     return decorator
+
+
+def authenticated(allowed=None):
+    ''' Make sure user is authenticated '''
+    def decorator(handle):
+        ''' Decorator around handler '''
+        @wraps(handle)
+        def decorated_function(*args, **kwargs):
+            ''' Gets called in place of handle '''
+            session = get_session()
+            user = session.get('user', None)
+            if user is None or (allowed and user != allowed):
+                return redirect(url_for('login', next=request.path))
+            return handle(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
+def authenticate(username, password):
+    ''' Check whether a user can be authenticated '''
+    if '' in (username, password):
+        return False
+    # check information
+    users = User.query.filter_by(username=username).all()
+    if not users or not check_password_hash(users[0].passhash, password):
+        return False
+    # All ok
+    return True
