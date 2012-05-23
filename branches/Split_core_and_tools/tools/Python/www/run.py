@@ -6,13 +6,12 @@ flaskext_compat.activate()
 
 
 from flask import *
-from util import skip, templated
 from uuid import uuid4 as uuid
 import sys
 
 from app import app, db, db_session, SessionMaker, ModelBase
 from models import Job, Simulation, SimRun, Param, ParamValue, ParamDefault
-
+from util import skip, templated, with_nonce, get_nonce, check_nonce
 
 def convert_type(default, str_value):
     # tested types: str and float
@@ -27,14 +26,16 @@ def get_sims():
     return Simulation.query.order_by('simulation.name').all()
 
 @app.route('/job/<jobid>', methods=['GET'])
+@with_nonce()
 @templated()
 def configure(jobid):
     job = Job.query.get(jobid)
     sims = get_sims()
-    return dict(sims = sims, job=job, jobid=jobid)
+    return dict(sims = sims, job=job, jobid=jobid, nonce=get_nonce())
 
 
 @app.route('/job/update/<jobid>', methods=['POST'])
+@check_nonce()
 def configurePOST(jobid):
     oks    = []
     errors = []  # all ok
@@ -78,7 +79,7 @@ def configurePOST(jobid):
     db_session.commit()
 
     # insert / update params
-    for name in skip(('sim', 'seed', 'samples'), form):
+    for name in skip(('__nonce', 'sim', 'seed', 'samples'), form):
         str_value = form[name]
         param  = Param.query.filter_by(name=name).one()
         paramd = ParamDefault.query.filter_by(param_id=param.id, sim_id=sim.id).one()
@@ -106,8 +107,9 @@ def configurePOST(jobid):
     return jsonify(errors=errors, oks=oks)
 
 
-@app.route('/sim/<jobid>', methods=['GET'])
-def simulate(jobid):
+@app.route('/sim/<jobid>', methods=['POST'])
+@check_nonce()
+def simulatePOST(jobid):
     ''' Create simulation job for the worker '''
     job = Job.query.filter_by(id=jobid).one()
     sim = Simulation.query.filter_by(id=job.sim_id).one()

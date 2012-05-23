@@ -58,6 +58,7 @@
 
   <form method=post action="/job/update/{{ jobid }}"
         onsubmit="return false;" id="form">
+    <input type="hidden" name="__nonce" value="{{ nonce }}">
     <fieldset>
       <legend>Step 1: Select simulation</legend>
       <ol>

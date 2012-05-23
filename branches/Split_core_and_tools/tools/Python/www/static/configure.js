@@ -87,7 +87,9 @@ function save(cb) {
         .error(function(data, status) {
             // damn, what's up?
             alert("An error occured while saving your stuff :/");
-            btn.val(val).attr("disabled", false);
+            btn.val("Save")
+                .attr("disabled", false)
+                .css("font-weight", "normal");
             mcb(false);
         });
 
@@ -96,11 +98,15 @@ function save(cb) {
 
 
 function run() {
-    save(function(succes) {
-        if(!succes) {
+    save(function(success) {
+        if(!success) {
             alert("Configuration contains errors :/");
         } else {
-            window.open("/sim/" + jobid, "_blank");
+            var form = $('<form>').attr('target', '_blank')
+                                  .attr('action', '/sim/' + jobid)
+                                  .attr('method', 'POST')
+                                  .append($('input[name="__nonce"]'));
+            form.submit();
         }
     });
 }
