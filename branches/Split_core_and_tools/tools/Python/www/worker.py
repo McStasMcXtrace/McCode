@@ -10,7 +10,7 @@ import traceback
 
 
 SIM_SRC_PATH = "sim/src/%s.instr"
-SIM_BIN_PATH = "sim/bin/%s"
+SIM_BIN_PATH = "sim/src/%s.out"
 
 WORK_PATH = "out/%s"
 
@@ -93,6 +93,7 @@ def work():
 
     # copy instrument file
     shutil.copy(siminstr, workdir % (name + ".instr"))
+    shutil.copy(simbin, workdir % (name + ".out"))
 
     # compute instrument layout
     display(workdir % (name + ".instr"), params, workdir % "layout.gif")
