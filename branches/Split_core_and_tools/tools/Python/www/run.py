@@ -13,7 +13,7 @@ from app import app, db, db_session, SessionMaker, ModelBase
 from models import Job, Simulation, SimRun, Param, ParamValue, ParamDefault, User
 
 from util import skip, templated, with_nonce, get_nonce, check_nonce, \
-     authenticated, authenticate, get_session
+     authenticated, authenticate, get_session, one_or_none
 
 
 def convert_type(default, str_value):
@@ -51,7 +51,6 @@ def loginPOST(next):
     return resp
 
 
-
 @app.route('/job/<jobid>', methods=['GET'])
 @with_nonce()
 @authenticated()
@@ -86,15 +85,12 @@ def configurePOST(jobid):
     samples = 100000
 
     # lookup job
-    query = Job.query.filter_by(id=jobid)
-    job = None
-    if query.count() == 0:
+    job = Job.query.get(jobid)
+    if job is None:
         # create job
         # TODO: check types of seed and samples
         job = Job(id=jobid, seed=seed, samples=samples, sim=sim)
         db_session.add(job)
-    else:
-        job = query.one()
 
     seed    = ok("seed",    seed,    lambda : abs(int(form['seed'])))
     samples = ok("samples", samples, lambda : abs(int(form['samples'])))
@@ -113,24 +109,23 @@ def configurePOST(jobid):
         param  = Param.query.filter_by(name=name).one()
         paramd = ParamDefault.query.filter_by(param_id=param.id, sim_id=sim.id).one()
 
-        oldQ = ParamValue.query.filter_by(job_id=job.id, param_id=param.id)
-        if oldQ.count() == 0:
-            # no value set, use default as old
-            old = paramd.value
-        else:
-            old = oldQ.one().value
+        # lookup parameter value
+        oldP = ParamValue.query.filter_by(job_id=job.id, param_id=param.id)
+        oldP = one_or_none(oldP)
+
+        # pick parameter value if present or use default
+        old = oldP is None and paramd.value or oldP.value
 
         cvalue = ok(name, old, lambda : convert_type(paramd, str_value))
 
         valueQ = ParamValue.query.filter_by(job_id=job.id, param_id=param.id)
-        if valueQ.count() == 0:
+        value = one_or_none(valueQ)
+        if value is None:
             # create parameter value
             pvalue = ParamValue(param=param, job=job, value=cvalue)
             db_session.add(pvalue)
-        else:
-            pvalue = valueQ.one()
-            pvalue.value = cvalue
         # commit parameter value
+        pvalue.value = cvalue
         db_session.commit()
 
     return jsonify(errors=errors, oks=oks)
@@ -141,8 +136,8 @@ def configurePOST(jobid):
 @check_nonce()
 def simulatePOST(jobid):
     ''' Create simulation job for the worker '''
-    job = Job.query.filter_by(id=jobid).one()
-    sim = Simulation.query.filter_by(id=job.sim_id).one()
+    job = Job.query.get(jobid)
+    sim = Simulation.query.get(job.sim_id)
     # treat seed and samples specially
     params = { "_seed": job.seed,
                "_samples": job.samples }

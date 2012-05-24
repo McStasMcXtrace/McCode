@@ -9,6 +9,15 @@ from flask import request, make_response, render_template, redirect, url_for
 from models import User
 
 from werkzeug.security import check_password_hash
+from sqlalchemy.orm.exc import NoResultFound
+
+
+def one_or_none(query):
+    ''' Try to extract one row from query, return None when not possible '''
+    try:
+        return query.one()
+    except NoResultFound:
+        return None
 
 
 def skip(disallowed, items):
