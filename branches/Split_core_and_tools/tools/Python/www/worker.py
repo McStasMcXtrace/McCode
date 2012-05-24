@@ -112,7 +112,7 @@ def work():
     # tar results
     tarname = 'mcstas-' + run.id
     tarf = workdir % ('%s.tar.gz' % tarname)
-    tarfile.open(tarf, 'w').add(workdir % "mcstas", arcname=tarname)
+    tarfile.open(tarf, 'w:gz').add(workdir % "mcstas", arcname=tarname)
 
     # debug
     if err: print err
