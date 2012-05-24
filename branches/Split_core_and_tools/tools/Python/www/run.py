@@ -115,7 +115,10 @@ def configurePOST(jobid):
         oldP = one_or_none(oldP)
 
         # pick parameter value if present or use default
-        old = oldP is None and paramd.value or oldP.value
+        if oldP is None:
+            old = paramd.value
+        else:
+            old = oldP.value
 
         cvalue = ok(name, old, lambda : convert_type(paramd, str_value))
 
