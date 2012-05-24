@@ -27,6 +27,14 @@ def skip(disallowed, items):
             yield i
 
 
+def new_id():
+    ''' Returns a printable and URL-safe, unique ID '''
+    uid = uuid.uuid4()  # random UUID (v4)
+    uid = uid.get_bytes().encode('base64').strip('\n')
+    uid = uid.replace('/', '-').replace('=', '_').replace('+', ':')
+    return uid
+
+
 def templated(template=None):
     ''' Attach a template to a response handler '''
     def decorator(handle):

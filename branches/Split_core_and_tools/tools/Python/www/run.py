@@ -13,7 +13,7 @@ from app import app, db, db_session, SessionMaker, ModelBase
 from models import Job, Simulation, SimRun, Param, ParamValue, ParamDefault, User
 
 from util import skip, templated, with_nonce, get_nonce, check_nonce, \
-     authenticated, authenticate, get_session, one_or_none
+     authenticated, authenticate, get_session, one_or_none, new_id
 
 
 def convert_type(default, str_value):
@@ -23,7 +23,8 @@ def convert_type(default, str_value):
 
 @app.route('/')
 def index():
-    return redirect(url_for('configure', jobid=str(uuid())))
+    jobid = new_id()
+    return redirect(url_for('configure', jobid=jobid))
 
 def get_sims():
     return Simulation.query.order_by('simulation.name').all()
@@ -119,8 +120,8 @@ def configurePOST(jobid):
         cvalue = ok(name, old, lambda : convert_type(paramd, str_value))
 
         valueQ = ParamValue.query.filter_by(job_id=job.id, param_id=param.id)
-        value = one_or_none(valueQ)
-        if value is None:
+        pvalue = one_or_none(valueQ)
+        if pvalue is None:
             # create parameter value
             pvalue = ParamValue(param=param, job=job, value=cvalue)
             db_session.add(pvalue)
@@ -151,13 +152,13 @@ def simulatePOST(jobid):
     db_session.add(run)
     db_session.commit()
     # send user to status page
-    return redirect(url_for('status', runid=run.id))
+    return redirect(url_for('status', jobid=job.id, runid=run.id))
 
 
-@app.route('/sim/status/<runid>', methods=['GET'])
+@app.route('/sim/status/<jobid>/<runid>', methods=['GET'])
 @templated()
-def status(runid):
-    return dict(runid=runid)
+def status(jobid, runid):
+    return dict(runid = runid)
 
 
 if __name__ == '__main__':
