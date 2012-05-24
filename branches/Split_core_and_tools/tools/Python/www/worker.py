@@ -104,7 +104,7 @@ def work():
 
     # compute instrument layout
     display(workdir % (name + ".instr"), params, workdir % "layout.gif")
-    display(workdir % (name + ".instr"), params, workdir % "layout.vrml", fmt='vrml')
+    display(workdir % (name + ".instr"), params, workdir % "layout.wrl", fmt='vrml')
 
     # run mcstas via mcrun
     pid = Popen(["mcrun"] +

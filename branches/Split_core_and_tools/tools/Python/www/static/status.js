@@ -56,7 +56,7 @@ function loadData() {
 
     // load instrument layout
     loadImg('imgLayout', 'layout.gif', '150px');
-    loadUrl('vrml', 'layout.vrml');
+    loadUrl('vrml', 'layout.wrl');
 
     // load list of components
     path = baseUrl + 'comps.json';
