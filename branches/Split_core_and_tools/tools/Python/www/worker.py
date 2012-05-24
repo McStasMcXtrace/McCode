@@ -44,15 +44,21 @@ except Exception, e:
 
 def display(instr, params, outfile, fmt="gif"):
     ''' Display instrument '''
-    pid = Popen(["mcdisplay", "-k", "--save", "-"+fmt,
+    # VRML needs --format, which does not seem to work with gif/ps
+    fmt_arg = fmt == 'vrml' and '--format=vrml' or '-'+fmt
+    pid = Popen(["mcdisplay", "-k", "--save", fmt_arg,
                  basename(instr),
                  "-n", str(1) # precision (iterations)
                  ] + params,
                 cwd=dirname(instr))
-    print outfile
     (out, err) = pid.communicate()
     if err: print err
-    os.rename(splitext(instr)[0] + ".out."+fmt, outfile)
+    # VRML needs special treatment
+    if fmt == 'vrml':
+        mcout = '%s/%s' % (dirname(instr), 'mcdisplay_commands.wrl')
+    else:
+        mcout = splitext(instr)[0] + ".out." + fmt
+    os.rename(mcout, outfile)
 
 
 def work():
@@ -98,6 +104,7 @@ def work():
 
     # compute instrument layout
     display(workdir % (name + ".instr"), params, workdir % "layout.gif")
+    display(workdir % (name + ".instr"), params, workdir % "layout.vrml", fmt='vrml')
 
     # run mcstas via mcrun
     pid = Popen(["mcrun"] +
