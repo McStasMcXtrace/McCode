@@ -30,8 +30,8 @@ def skip(disallowed, items):
 def new_id():
     ''' Returns a printable and URL-safe, unique ID '''
     uid = uuid.uuid4()  # random UUID (v4)
-    uid = uid.get_bytes().encode('base64').strip('\n')
-    uid = uid.replace('/', '-').replace('=', '_').replace('+', ':')
+    uid = uid.get_bytes().encode('base64').strip('\n=')
+    uid = uid.replace('/', '-').replace('+', ':')
     return uid
 
 

@@ -15,6 +15,7 @@
 
   <script language="javascript">
     var runid = "{{ runid }}";
+    var sim   = "{{ sim.name }}";
   </script>
   <script type="text/javascript" src="/static/status.js"></script>
   <script language="javascript">
@@ -47,6 +48,9 @@
       <ul class="inlinelist">
         <li>
           <span id=mcstas>mcstas.tar.gz</span>
+        </li>
+        <li>
+          <span id=instr>{{ sim.name }}.instr</span>
         </li>
         <li>
           <span id=out>stdout</span>

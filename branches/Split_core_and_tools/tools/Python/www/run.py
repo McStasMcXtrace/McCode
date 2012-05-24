@@ -152,13 +152,15 @@ def simulatePOST(jobid):
     db_session.add(run)
     db_session.commit()
     # send user to status page
-    return redirect(url_for('status', jobid=job.id, runid=run.id))
+    return redirect(url_for('status', runid=run.id))
 
 
-@app.route('/sim/status/<jobid>/<runid>', methods=['GET'])
+@app.route('/sim/status/<runid>', methods=['GET'])
 @templated()
-def status(jobid, runid):
-    return dict(runid = runid)
+def status(runid):
+    jobid = runid.split('__', 1)[0]
+    job = Job.query.get(jobid)
+    return dict(sim = job.sim, runid = runid)
 
 
 if __name__ == '__main__':
