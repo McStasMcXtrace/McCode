@@ -1,4 +1,5 @@
-from os.path import basename
+from os.path import basename, dirname
+import os
 
 from log import McRunException
 
@@ -133,6 +134,7 @@ class Scanner:
         if len(self.intervals) == 0:
             raise InvalidInterval('No interval range specified')
 
+        os.mkdir(dirname(self.outfile))
         fid = open(self.outfile, 'w')
         wrote_header = False
 
