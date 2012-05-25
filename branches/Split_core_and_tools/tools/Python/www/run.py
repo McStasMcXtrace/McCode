@@ -52,6 +52,12 @@ def loginPOST(next):
     return resp
 
 
+@app.route('/doc/<instr>', methods=['GET'])
+def documentation(instr):
+    resp = make_response(file('sim/src/%s.instr.doc.txt' % instr).read())
+    resp.headers['Content-Type'] = 'text/plain'
+    return resp
+
 @app.route('/job/<jobid>', methods=['GET'])
 @with_nonce()
 @authenticated()

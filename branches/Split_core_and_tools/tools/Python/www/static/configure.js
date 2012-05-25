@@ -5,9 +5,14 @@ function set_changed() {
 }
 
 function update_defaults(sim) {
+    // update documentation location
+    $('#docLink').attr("href", "/doc/" + sim);
+
+    // update parameters
     var ps = $("#params");
     // clear old
     ps.html("");
+
     // set new
     for(var param in defaults[sim]) {
         // container, label and input
