@@ -58,6 +58,18 @@ def documentation(instr):
     resp.headers['Content-Type'] = 'text/plain'
     return resp
 
+
+@app.route('/plot/<runid>/<name>', methods=['GET'])
+def show_plot(runid, name):
+    # remove tags, eg. plot-Lmon1.sim-lin.gif => Lmon1.sim
+    mon = name.split('-', 1)[1].rsplit('-', 1)[0]
+    doc_url = '/out/%s/mcstas/%s' % (runid, mon)
+    img_url = '/out/%s/%s' % (runid, name)
+    return """
+    <a href="%s"><img src="%s"></a>
+    """ % (doc_url, img_url)
+
+
 @app.route('/job/<jobid>', methods=['GET'])
 @with_nonce()
 @authenticated()
