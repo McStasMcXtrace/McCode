@@ -80,7 +80,8 @@ function createCompImgs(comps) {
                 var parent = mode + 'Plots';
                 var id = uniqueID(parent);
                 $('#'+parent).append($('<span>').attr('id', id).css('margin', 'auto'));
-                loadImg(id, 'plot'+'-'+comp+'-'+mode+'.gif', '250px');
+                var plot = 'plot'+'-'+comp+'-'+mode+'.gif';
+                loadImg(id, plot, '250px', '/plot/' + runid + '/' + plot);
             });
            });
 }
@@ -110,8 +111,9 @@ function uniqueID(prefix) {
 }
 
 
-function loadImg(id, file, width) {
+function loadImg(id, file, width, hrefUrl) {
     var myUrl = baseUrl + file;
+    hrefUrl = hrefUrl ? hrefUrl : myUrl;
     waitContent(
         myUrl,
         function () {
@@ -125,7 +127,7 @@ function loadImg(id, file, width) {
             // wait till content is ready
             waitContent(myUrl,
                         function () {
-                            $('#'+uid+'a').attr('href', myUrl);
+                            $('#'+uid+'a').attr('href', hrefUrl);
                             $('#'+uid+'i').attr('src', myUrl);
                         });
         });
