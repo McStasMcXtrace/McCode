@@ -59,7 +59,7 @@
 * cite authors with references bellow (in <a href="#links">Links</a>).
 *
 * Example: PowderN(reflections = "c60.lau", d_phi = 15 , radius = 0.01,
-*   yheight = 0.05, Vc = 1076.89, sigma_abs = 0, Delta_d=0, DW=1,
+*   yheight = 0.05, Vc = 1076.89, Delta_d=0, DW=1,
 *   format=Crystallographica)
 *
 * <b>Powder definition file format</b>
@@ -68,8 +68,6 @@
 * Lines begining by '#' are read as comments (ignored) but they may contain
 * the following keywords (in the header):
 *   #Vc           <value of unit cell volume Vc [Angs^3]>
-*   #sigma_abs    <value of Absorption cross section [barns]>
-*   #sigma_inc    <value of Incoherent cross section [barns]>
 *   #Debye_Waller <value of Debye-Waller factor DW>
 *   #Delta_d/d    <value of Detla_d/d width for all lines>
 * These values are not read if entered as component parameters (Vc=...)
@@ -152,8 +150,6 @@
 *               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
 * barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2 
 *             (barns=1 for laz, barns=0 for lau type files).[1]
-* sigma_abs:Absorption cross section per unit cell at 2200 m/s [barns]
-* sigma_inc:Incoherent cross section per unit cell [barns]
 * Vc:       Volume of unit cell=nb atoms per cell/density of atoms [AA^3]
 * DW:       Global Debey-Waller factor when the 'DW' column
 *             is not available. Use 1 if included in F2 [1]
@@ -190,7 +186,7 @@ DEFINE COMPONENT PowderN
 DEFINITION PARAMETERS (format=Undefined)
      SETTING PARAMETERS (string reflections=0, string material=0, string geometry=0,
                     radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
-                    pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
+                    pack=1, Vc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
                     DW=0, nb_atoms=1, d_phi=0, p_interact=0,
                     concentric=0, density=0, weight=0, barns=1)
 OUTPUT PARAMETERS (line_info, Nq, my_s_k2, XsectionFactor,
@@ -306,8 +302,6 @@ SHARE
     /* parsing of header */
     parsing = Table_ParseHeader(sTable.header,
       "Vc","V_0",
-//      "sigma_abs","sigma_a ",
-//      "sigma_inc","sigma_i ",
       "column_j",
       "column_d",
       "column_F2",
@@ -486,8 +480,6 @@ INITIALIZE
   line_info.rho      = density;
   line_info.at_weight= weight;
   line_info.at_nb    = nb_atoms;
-//  line_info.sigma_a  = sigma_abs;
-//  line_info.sigma_i  = sigma_inc;
   line_info.flag_barns=barns;
   line_info.shape    = 0;
   line_info.flag_warning=0;
