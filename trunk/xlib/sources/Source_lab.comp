@@ -119,11 +119,11 @@ INITIALIZE
   }
   
   /*Integrate the continuous spectrum and the characteristic so as to get the relative intenisities right*/
-  prms.Icont=BKRAMER*prms.Z*(E0*log(Emax)-E0*log(Emin) - Emax + Emin);
+  prms.Icont=tube_current/CELE*BKRAMER*prms.Z*(E0*log(Emax)-E0*log(Emin) - Emax + Emin);
   /*check if E0 >Ek. If not, no characteristic emission can take place*/
   if (E0>prms.em_p->Ek){
     double Bk=1.2e-5*pow(prms.em_p->Ek,1.67)*exp(-0.077*prms.Z);
-    prms.Ichar=4*M_PI*(E0/prms.em_p->Ek-1)*Bk;
+    prms.Ichar=tube_current/CELE*4*M_PI*(E0/prms.em_p->Ek-1)*Bk;
     double Ichar_tot=0;
     for (ii=0;ii<prms.em_p->linec;ii++){
       if(Emax>prms.em_p->e[ii]+5*prms.em_p->w[ii] && Emin<prms.em_p->e[ii]-5*prms.em_p->w[ii]){
@@ -180,7 +180,7 @@ TRACE
     /*bremsstrahlung*/
     double e=rand01()*(Emax-Emin)+Emin;
     k=e*E2K;
-    pmul=BKRAMER*prms.Z*(E0/e-1);
+    pmul=tube_current/CELE*BKRAMER*prms.Z*(E0/e-1);
     /*correct for not having the full E-window*/
     pmul*=(Emax-Emin)/E0;
     /*correct for monte-carlo statistics*/
