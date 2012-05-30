@@ -20,23 +20,40 @@
 *
 * %D
 * Model of a laboratory X-ray tube, Generating X-rays by bombarding a target by electrons.
-* Given a input energy E0 of the electron beam, x-rays are emitted from the accesible absorption edges
-* taken from the header of the datafile "material_datafile" (Similar to the refractive lens components).
+* Given a input energy E0 of the electron beam, x-rays are emitted from the accesible emission lines
 * The geometry of the tube is assumed to be:
 *  The electron beam hits a slab of surface material surface at a at a right angle illuminating an area of x0 by z0.
 *  A window is situated at the origin of the component, which is at an angle take_off wrt. the surface plane. 
+*  The origin of the component is the centre of the exit window with the beam direction (Z) perpendicular to it
+* The Bremsstrahlung emitted is modelled using the model of Kramer (1923) as restated in International
+* Tables of Crystallography C 4.1
+* Characteristic radiation is modelled by Gaussian energy profiles with line-energies from Bearden (1967), widths from
+* Krause (1979) and intensity is taken from Honkimäki (1990) and x-ray data booklet.
+* Currently absorption in the target is not taken into account.   
+* 
 *
 * %P
 * Input parameters:
 * mu - absorption coefficient
-* (none)
+* x0 [m] width of impinging electron beam
+* z0 [m] height of impinging electron beam
+* take_off [deg] Take off angle of beam centre
+* dist [m] Distance between centre of illuminated target and exit window
+* E0 [kV] Acceleration voltage of xray tube
+* tube_current [A] Electron beam current
+* Emax: [keV] Maximum energy to sample. Default (Emax=0) is to set it to E0.
+* Emin: [keV] Minimum energy to sample.
+* xwidth: [m] Width of exit window
+* yheight: [m] Height of exit window
+* frac: [] Fraction of statistic to use for Bremsstrahlung
+* material_datafile: [] name of datafiel which describes the target material    
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Source_lab
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (x0=1e-3,z0=1e-3,E0=20,Emax=1,Emin=1,xwidth=5e-3,yheight=5e-3,
+SETTING PARAMETERS (x0=1e-3,z0=1e-3,E0=20,Emax=0,Emin=1,xwidth=5e-3,yheight=5e-3,
       take_off=6,dist=1,tube_current=1e-3, string material_datafile="Cu.txt", frac=0.5)
 OUTPUT PARAMETERS (R_xray_gen,R_xray_geni, O_xray_gen, prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
