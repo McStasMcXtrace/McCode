@@ -2,25 +2,24 @@
 *
 * McXtrace, X-ray tracing package
 *         Copyright, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Technical University of Denmark, Kgs. Lyngby, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *         University of Copenhagen, Copenhagen, Denmark
 *
 * Component: Source_lab
 *
 * %I
-*
-* Written by: Erik Knudsen 
-* Date: Octatober 2010
+* Written by: Erik Bergb&auml;ck Knudsen 
+* Date: May 2012
 * Version: 1.0
-* Release: McXtrace 1.0
-* Origin: Risoe
+* Release: McXtrace 1.1
+* Origin: Kgs. Lyngby
 *
-* Laboratory X-ray Source.
+* Laboratory x-ray source.
 *
 * %D
-* Model of a laboratory X-ray tube, Generating X-rays by bombarding a target by electrons.
-* Given a input energy E0 of the electron beam, x-rays are emitted from the accesible emission lines
+* Model of a laboratory x-ray tube, generating x-rays by bombarding a target by electrons.
+* Given a input energy E0 of the electron beam, x-rays are emitted from the accessible emission lines
 * The geometry of the tube is assumed to be:
 *  The electron beam hits a slab of surface material surface at a at a right angle illuminating an area of x0 by z0.
 *  A window is situated at the origin of the component, which is at an angle take_off wrt. the surface plane. 
@@ -28,34 +27,33 @@
 * The Bremsstrahlung emitted is modelled using the model of Kramer (1923) as restated in International
 * Tables of Crystallography C 4.1
 * Characteristic radiation is modelled by Gaussian energy profiles with line-energies from Bearden (1967), widths from
-* Krause (1979) and intensity is taken from Honkimäki (1990) and x-ray data booklet.
+* Krause (1979) and intensity from Honkimäki (1990) and x-ray data booklet.
 * Currently absorption in the target is not taken into account.   
 * 
+* Example: Source_lab(material_datafile="Cu.txt",Emin=1, E0=80)
 *
 * %P
-* Input parameters:
-* mu - absorption coefficient
-* x0 [m] width of impinging electron beam
-* z0 [m] height of impinging electron beam
-* take_off [deg] Take off angle of beam centre
-* dist [m] Distance between centre of illuminated target and exit window
-* E0 [kV] Acceleration voltage of xray tube
-* tube_current [A] Electron beam current
-* Emax: [keV] Maximum energy to sample. Default (Emax=0) is to set it to E0.
-* Emin: [keV] Minimum energy to sample.
-* xwidth: [m] Width of exit window
-* yheight: [m] Height of exit window
-* frac: [] Fraction of statistic to use for Bremsstrahlung
-* material_datafile: [] name of datafiel which describes the target material    
+* x0:    [m] Width of impinging electron beam.
+* z0:    [m] Height of impinging electron beam.
+* take_off: [deg] Take off angle of beam centre.
+* dist:  [m] Distance between centre of illuminated target and exit window.
+* E0:    [kV] Acceleration voltage of xray tube.
+* tube_current: [A] Electron beam current.
+* Emax:  [keV] Maximum energy to sample. Default (Emax=0) is to set it to E0.
+* Emin:  [keV] Minimum energy to sample.
+* xwidth: [m] Width of exit window.
+* yheight:[m] Height of exit window.
+* frac:  [] Fraction of statistic to use for Bremsstrahlung.
+* material_datafile: [] Name of datafile which describes the target material.    
 *
 * %E
-*******************************************************************************/
+*************************************************************************/
 
 DEFINE COMPONENT Source_lab
-DEFINITION PARAMETERS ()
-SETTING PARAMETERS (x0=1e-3,z0=1e-3,E0=20,Emax=0,Emin=1,xwidth=5e-3,yheight=5e-3,
-      take_off=6,dist=1,tube_current=1e-3, string material_datafile="Cu.txt", frac=0.5)
-OUTPUT PARAMETERS (R_xray_gen,R_xray_geni, O_xray_gen, prms)
+DEFINITION PARAMETERS (string material_datafile="Cu.txt")
+SETTING PARAMETERS (x0=1e-3, z0=1e-3, E0=20, Emax=0, Emin=1, xwidth=5e-3, yheight=5e-3,
+      take_off=6, dist=1, tube_current=1e-3, frac=0.5)
+OUTPUT PARAMETERS (R_xray_gen,R_xray_geni, O_xray_gen, prms,pmul_c,mu,p_continous)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -68,13 +66,13 @@ SHARE
     double Ek;/*ionazation energy*/
     double w_k;/*flourescence yield*/
     int linec;
-    double e[2];/*line energy*/
-    double w[2];/*natural width of line*/
-    double i[2];/*relative intensity*/
+    double e[6];/*line energy*/
+    double w[6];/*natural width of line*/
+    double i[6];/*relative intensity*/
   } xray_mat_data[]={
-    {29,8.979 ,0.407,2,{8.02783,8.04778},{2.11e-3,2.17e-3},{0.51,1.0}},
-    {42,20.00 ,0.770,2,{17.3743,17.47934},{6.31e-3,6.49e-3},{0.52,1.0}},
-    {74,69.525,0.945,2,{57.9817,59.31824},{44.9e-3,45.2e-3},{0.58,1.0}},
+    {29,8.979 ,0.407,2,{8.02783,8.04778,0,0,0},{2.11e-3,2.17e-3,0,0,0},{0.51,1.0,0,0,0}},
+    {42,20.00 ,0.770,5,{17.3743,17.47934,19.5903, 19.6083, 19.965},{6.31e-3,6.49e-3,12e-3, 12e-3, 12e-3},{0.52,1.0,0.08,0.15,0.03}},
+    {74,69.525,0.945,2,{57.9817,59.31824,0,0,0},{44.9e-3,45.2e-3,0,0,0},{0.58,1.0,0,0,0}},
     {NULL}
   };
 
@@ -94,7 +92,7 @@ DECLARE
   } prms; 
   double p_continous;
   double mu=0.2;
-  double pmul;
+  double pmul_c;
 %}
 
 INITIALIZE
@@ -130,7 +128,7 @@ INITIALIZE
   while (prms.Z!=prms.em_p->Z){
     prms.em_p++;
     if ((prms.em_p)==NULL){
-      fprintf("Error: %s (Z=%d) anode not implemented yet. Aborting\n",material_datafile,prms.Z);
+      fprintf(stderr,"Error: %s (Z=%d) anode not implemented yet. Aborting\n",material_datafile,prms.Z);
       exit(-1);
     }
   }
@@ -149,23 +147,25 @@ INITIALIZE
         Ichar_tot+=prms.em_p->i[ii]*0.5*( erf(M_SQRT1_2*(Emax-prms.em_p->e[ii])/prms.em_p->w[ii]) - erf(M_SQRT1_2*(Emin-prms.em_p->e[ii])/prms.em_p->w[ii]) );
       }
     } 
-    //printf("Bk,Ico,Ich,Icht,p_c=%g %g %g %g\n",Bk,prms.Icont,prms.Ichar,Ichar_tot,p_continous);
-    p_continous=prms.Icont/(Ichar_tot+prms.Icont);
+    p_continous=prms.Icont/(prms.Ichar*Ichar_tot+prms.Icont);
+    printf("Bk,Ico,Ich,Icht,p_c=%g %g %g %g %g\n",Bk,prms.Icont,prms.Ichar,Ichar_tot,p_continous);
   }else{
     /*characteristic K-emission is not possible*/
-    p_continous=prms.Icont;
+    p_continous=1;
     frac=1;
   }
   O_xray_gen=coords_set(0,0,-dist);
   rot_set_rotation(R_xray_gen,-take_off*DEG2RAD,0,0);
   rot_set_rotation(R_xray_geni,take_off*DEG2RAD,0,0);
   printf("O_xray_gen=%g %g %g\n",O_xray_gen.x,O_xray_gen.y,O_xray_gen.z);
+
+  pmul_c=1.0/(mcget_ncount());
+
 %}
 
 TRACE
 %{
-  double x1,y1,z1,x2,y2,z2,r,e,k,pdir;
-
+  double x1,y1,z1,x2,y2,z2,r,e,k,pdir,pmul;
   /* pick a point in the generating volume*/
   x1=rand01()*x0-x0/2.0;
   z1=rand01()*z0-z0/2.0;
@@ -213,7 +213,9 @@ TRACE
     }
     pmul=pt->i[lineno]*prms.Ichar;
     k=E2K*(randnorm()*pt->w[lineno]+pt->e[lineno]);
-
+    
+    pmul*=(1-p_continous)/frac;
+    //printf("%g\n",pmul);
     //printf("l# %d li %g le %g lw %g Na=%g\n",lineno,pt->i[lineno],pt->e[lineno],pt->w[lineno],Ichar);/*see honkimaeki1990*/
     /*correct for not having the full E-window if so*/
 
@@ -223,8 +225,8 @@ TRACE
   NORM(kx,ky,kz);
   kx*=k;ky*=k;kz*=k;
   
-  /*set the x-ray weight to whatever we computed just before and correct for only sampling the exit window*/
-  p=pmul*pdir;
+  /*set the x-ray weight to whatever we computed just before and correct for only sampling the exit window, and correct for number of issued photons*/
+  p=pmul*pmul_c;
     
   /*remember to correct for absorption*/
   
