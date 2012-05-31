@@ -43,7 +43,7 @@ DEFINE COMPONENT Lens_parab_rough
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
 SETTING PARAMETERS (r=0.5e-3,yheight=1.4e-3,xwidth=1.4e-3,d=.1e-3,T=.99,N=1,deltaN=0,rough_z=0,rough_xy=0)
 OUTPUT PARAMETERS (prms,parab)
-STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)
+/*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 
 SHARE
 %{
