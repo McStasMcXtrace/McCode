@@ -108,12 +108,13 @@ function run() {
             alert("Configuration contains errors :/");
         } else {
             var nonce = $('input[name="__nonce"]');
-            var form = $('<form>').attr('target', '_blank')
-                                  .attr('action', '/sim/' + jobid)
-                                  .attr('method', 'POST')
-                                  .append(nonce);
+            var form = $('<form />').attr({'target': '_blank',
+                                           'action': '/sim/' + jobid,
+                                           'method': 'POST'}).append(nonce);
+            $('#hiddenDiv').append(form);
             form.submit();
             $('#form').append(nonce);
         }
     });
 }
+
