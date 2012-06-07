@@ -111,7 +111,7 @@ function run() {
             var form = $('<form />').attr({'target': '_blank',
                                            'action': '/sim/' + jobid,
                                            'method': 'POST'}).append(nonce);
-            $('#hiddenDiv').append(form);
+            $('#hiddenDiv').html(form);
             form.submit();
             $('#form').append(nonce);
         }

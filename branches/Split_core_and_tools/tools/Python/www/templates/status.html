@@ -15,7 +15,9 @@
 
   <script language="javascript">
     var runid = "{{ runid }}";
-    var sim   = "{{ sim.name }}";
+    var sim   = "{{ job.sim.name }}";
+    var compN = "{{ compN }}";
+    var npoints = "{{ job.npoints }}";
   </script>
   <script type="text/javascript" src="/static/status.js"></script>
   <script language="javascript">
@@ -32,6 +34,9 @@
       Data plots [LOG] (click here for linear - or press 'L')</legend>
     <div id="logPlots" class="centered"></div>
   </fieldset>
+  {% if compNs != 'None' %}
+  <div><ul id="comps" class="inlinelist"></ul></div>
+  {% endif %}
 
   <br />
 
@@ -41,7 +46,7 @@
     <div class="centered"><span id=vrml>layout.wrl</span></div>
   </fieldset>
 
-  <br/>
+  <br />
 
   <fieldset>
     <legend>Simulation output</legend>
@@ -51,7 +56,7 @@
           <span id=mcstas>mcstas.tar.gz</span>
         </li>
         <li>
-          <span id=instr>{{ sim.name }}.instr</span>
+          <span id=instr>{{ job.sim.name }}.instr</span>
         </li>
         <li>
           <span id=out>stdout</span>

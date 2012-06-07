@@ -61,6 +61,18 @@ def display(instr, params, outfile, fmt="gif"):
     os.rename(mcout, outfile)
 
 
+def value_to_str(val):
+    ''' Converts a value to string, handling lists specially '''
+    if isinstance(val, list):
+        return ','.join(value_to_str(x) for x in val)
+    return str(val)
+
+
+def first_range(val):
+    ''' Select the first element of a range, e.g. lambda=0.7,1.2 -> lambda=0.7 '''
+    return [ re.sub(r',[^\s]+', r'', x) for x in val ]
+
+
 def work():
     ''' Process a job by running the McStas simulation '''
 
@@ -87,8 +99,10 @@ def work():
     # pick seed and samples
     seed = params["_seed"]
     samples = params["_samples"]
+    npoints = params["_npoints"]
     del params["_seed"]
     del params["_samples"]
+    del params["_npoints"]
 
     # instrument name
     name = run.sim.name
@@ -96,22 +110,26 @@ def work():
     simbin = SIM_BIN_PATH % name
 
     # generate list of parameters
-    params = [ '%s=%s' % (str(k),str(v)) for k,v in params.items() ]
+    params = [ '%s=%s' % (str(k), value_to_str(v)) for k, v in params.items() ]
 
     # copy instrument file
     shutil.copy(siminstr, workdir % (name + ".instr"))
     shutil.copy(simbin, workdir % (name + ".out"))
 
-    # compute instrument layout
-    display(workdir % (name + ".instr"), params, workdir % "layout.gif")
-    display(workdir % (name + ".instr"), params, workdir % "layout.wrl", fmt='vrml')
+    # compute instrument layou
+    is_scan = any(',' in param for param in params)
+    display(workdir % (name + ".instr"), first_range(params), workdir % "layout.gif")
+    display(workdir % (name + ".instr"), first_range(params), workdir % "layout.wrl", fmt='vrml')
 
     # run mcstas via mcrun
-    pid = Popen(["mcrun"] +
-                (seed > 0 and ["--seed", str(seed)] or []) +
-                ["--ncount", str(samples),
-                 "--dir", workdir % "mcstas",
-                 siminstr] + params,
+    args = ["mcrun"] + \
+           (seed > 0 and ["--seed", str(seed)] or []) + \
+           (is_scan and ["-N", str(npoints)] or []) + \
+           ["--ncount", str(samples),
+            "--dir", workdir % "mcstas",
+            siminstr] + params
+
+    pid = Popen(args,
                 stdout=PIPE,
                 stderr=PIPE)
     (out, err) = pid.communicate()
@@ -128,16 +146,23 @@ def work():
     file(workdir % "out.txt", "w").write(out)
     file(workdir % "err.txt", "w").write(err)
 
-    # dump components
-    comps = re.findall(r'filename:\s*([^\s]+)',
-                       file(workdir % 'mcstas/mcstas.sim').read())
-    file(workdir % "comps.json", "w").write(json.dumps(comps))
-    # plot components
-    for comp in comps:
-        for mode in ("lin", "log"):
-            plot(workdir % "mcstas/" + comp,
-                 outfile=workdir % ('plot-%s-%s.gif' % (comp, mode)),
-                 logy=(mode == "log"))
+    def process_components(sim_path):
+        # dump components
+        comps = re.findall(r'filename:\s*([^\s]+)',
+                           file(sim_path).read())
+        file(dirname(sim_path) + "/comps.json", "w").write(json.dumps(comps))
+        # plot components
+        for comp in comps:
+            for mode in ("lin", "log"):
+                plot(dirname(sim_path) + '/' + comp,
+                     outfile=dirname(sim_path) + ('/plot-%s-%s.gif' % (comp, mode)),
+                     logy=(mode == "log"))
+
+    # process_components('mcstas/mcstas.sim')
+    os.path.walk(workdir % 'mcstas',
+                 lambda _arg, folder, files:
+                 process_components(folder + "/mcstas.sim"),
+                 [])
 
     run.status = "done"
     db_session.commit()

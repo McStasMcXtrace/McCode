@@ -15,14 +15,16 @@ class Job(ModelBase):
     id      = db.Column(db.String(38), primary_key=True)
     seed    = db.Column(db.Integer)
     samples = db.Column(db.Integer)
+    npoints = db.Column(db.Integer)
     sim_id  = db.Column(db.Integer, db.ForeignKey('simulation.id'))
     params  = db.relationship('ParamValue', backref='job', lazy=False)
     created = db.Column(db.DateTime(timezone=False), index=True)
 
-    def __init__(self, id, seed, samples, sim):
+    def __init__(self, id, seed, samples, npoints, sim):
         self.id = id
         self.seed = seed
         self.samples = samples
+        self.npoints = npoints
         self.sim_id = sim.id
         self.created = datetime.now()
 

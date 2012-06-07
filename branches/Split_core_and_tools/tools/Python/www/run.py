@@ -18,6 +18,8 @@ from util import skip, templated, with_nonce, get_nonce, check_nonce, \
 
 def convert_type(default, str_value):
     # tested types: str and float
+    if ',' in str_value:
+        return map(lambda elem: convert_type(default, elem), str_value.split(','))
     return type(default.value)(str_value)
 
 
@@ -59,7 +61,7 @@ def documentation(instr):
     return resp
 
 
-@app.route('/plot/<runid>/<name>', methods=['GET'])
+@app.route('/plot/<runid>/<path:name>', methods=['GET'])
 def show_plot(runid, name):
     # remove tags, eg. plot-Lmon1.sim-lin.gif => Lmon1.sim
     mon = name.split('-', 1)[1].rsplit('-', 1)[0]
@@ -102,28 +104,31 @@ def configurePOST(jobid):
     # defualts
     seed    = 0
     samples = 100000
+    npoints = 1
 
     # lookup job
     job = Job.query.get(jobid)
     if job is None:
         # create job
         # TODO: check types of seed and samples
-        job = Job(id=jobid, seed=seed, samples=samples, sim=sim)
+        job = Job(id=jobid, seed=seed, samples=samples, npoints=npoints, sim=sim)
         db_session.add(job)
 
     seed    = ok("seed",    seed,    lambda : abs(int(form['seed'])))
     samples = ok("samples", samples, lambda : abs(int(form['samples'])))
+    npoints = ok("samples", samples, lambda : abs(int(form['npoints'])))
 
     # update job
     job.seed = seed
     job.samples = samples
+    job.npoints = npoints
     job.sim_id = sim.id
 
     # commit job
     db_session.commit()
 
     # insert / update params
-    for name in skip(('__nonce', 'sim', 'seed', 'samples'), form):
+    for name in skip(('__nonce', 'sim', 'seed', 'samples', 'npoints'), form):
         str_value = form[name]
         param  = Param.query.filter_by(name=name).one()
         paramd = ParamDefault.query.filter_by(param_id=param.id, sim_id=sim.id).one()
@@ -162,7 +167,9 @@ def simulatePOST(jobid):
     sim = Simulation.query.get(job.sim_id)
     # treat seed and samples specially
     params = { "_seed": job.seed,
-               "_samples": job.samples }
+               "_samples": job.samples,
+               "_npoints": job.npoints
+               }
     # filter params by what the simulation expects (needed!)
     valid = set(pd.param.name for pd in sim.params)
     params.update(dict(
@@ -176,12 +183,13 @@ def simulatePOST(jobid):
     return redirect(url_for('status', runid=run.id))
 
 
-@app.route('/sim/status/<runid>', methods=['GET'])
+@app.route('/sim/status/<runid>', methods=['GET'], defaults={'compN': None})
+@app.route('/sim/status/<runid>/<int:compN>', methods=['GET'])
 @templated()
-def status(runid):
+def status(runid, compN):
     jobid = runid.split('__', 1)[0]
     job = Job.query.get(jobid)
-    return dict(sim = job.sim, runid = runid)
+    return dict(job = job, runid = runid, compN = compN)
 
 
 if __name__ == '__main__':

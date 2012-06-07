@@ -1,4 +1,5 @@
 
+var simUrl  = '/sim/status/' + runid + '/';
 var baseUrl = '/out/' + runid + '/';
 
 
@@ -45,6 +46,8 @@ function setLog() {
     }
 }
 
+var COMPS = [];
+
 
 function loadData() {
     // load text files
@@ -59,31 +62,91 @@ function loadData() {
     loadUrl('vrml', 'layout.wrl');
 
     // load list of components
-    path = baseUrl + 'comps.json';
+    populateComps(
+        function() {
+            if (compN != 'None') {
+                loadComponent(compN);
+            } else {
+                createCompImgs();
+            }
+            if (npoints > 1) {
+                // add links to components
+                var div = $('#comps');
+                $.each(COMPS,
+                       function (i, comp) {
+                           // clean out time-stamp
+                           var cleanComp = comp.replace(new RegExp('_\\d{10,}\\.'), '.');
+                           div.append($('<li>').append($('<a>')
+                                                       .attr({'href': simUrl + i})
+                                                       .html(cleanComp + '\n')));
+                       });
+            }
+        });
+}
+
+
+function loadComponent(compN) {
+    /* load component from all steps from a scan */
+    function load(i) {
+        var jsonPath = baseUrl + '/mcstas/' + i + '/comps.json';
+        waitContent(
+            jsonPath,
+            function() {
+                // grab JSON
+                $.getJSON(
+                    jsonPath,
+                    function(comps) {
+                        createCompImg('mcstas/' + i, comps[compN]);
+                        if (i < npoints) {
+                            load(i + 1);
+                        }
+                    });
+                });
+    }
+    load(0);
+}
+
+
+function populateComps(callback, path) {
+    path = 'mcstas' + (path == undefined ? '' : path);
+    var absPath = baseUrl + path + '/comps.json';
     waitContent(
-        path,
+        absPath,
         function() {
             // grab JSON
             $.getJSON(
-                path,
-                createCompImgs
+                absPath,
+                function (compList) {
+                    if (compList == 'mcstas.dat') {
+                        populateComps(callback, '/0');
+                    } else {
+                        COMPS = compList.sort();
+                        callback();
+                    }
+                }
             );
         });
 }
 
-function createCompImgs(comps) {
-    $.each(comps.sort(), function(_, comp) {
-        // create img tag
-        $.each(
-            ['lin', 'log'],
-            function(_, mode) {
-                var parent = mode + 'Plots';
-                var id = uniqueID(parent);
-                $('#'+parent).append($('<span>').attr('id', id).css('margin', 'auto'));
-                var plot = 'plot'+'-'+comp+'-'+mode+'.gif';
-                loadImg(id, plot, '250px', '/plot/' + runid + '/' + plot);
-            });
+function createCompImgs() {
+    var comps = npoints > 1 ? ['mcstas.dat'] : COMPS;
+    $.each(comps, function(_, comp) {
+               createCompImg('mcstas', comp);
            });
+}
+
+
+function createCompImg(path, comp) {
+    // create img tag
+    $.each(
+        ['lin', 'log'],
+        function(_, mode) {
+            var parent = mode + 'Plots';
+            var id = uniqueID(parent);
+            $('#'+parent).append($('<span>').attr('id', id).css('margin', 'auto'));
+            var plot = path + '/plot' + '-' + comp + '-' + mode + '.gif';
+            loadImg(id, plot, '250px', '/plot/' + runid + '/' + plot);
+        });
 }
 
 

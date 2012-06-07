@@ -94,6 +94,12 @@
                  id=samples name=samples
                  onchange="set_changed()" >
         </li>
+        <li>
+          <label for=numpoints>Scan num-points:</label>
+          <input type=text value="{{ job.npoints or 1}}"
+                 id=npoints name=npoints
+                 onchange="set_changed()" >
+        </li>
       </ol>
     </fieldset>
 
