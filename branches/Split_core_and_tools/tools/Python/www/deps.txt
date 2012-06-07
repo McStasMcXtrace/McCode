@@ -1,0 +1,17 @@
+* standard
+** Python 2.(6|7)
+** build-essential (gcc, make, etc.)
+** autoconf
+** sqlite3
+
+* extra
+** mcstas
+** nginx (>0.8.40, needs uwsgi module)
+** Python dev files (python-dev)
+** Python modules:
+*** setup_tools (python-setuptools)
+
+* optional
+** R
+*** rpy2
+*** fields (up to date version of R package "fields")
