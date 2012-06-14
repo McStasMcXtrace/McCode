@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
+* McXtrace, xray-tracing package
 *         Copyright 1997-2002, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
@@ -30,7 +30,7 @@
 * This component is a general Monitor that can output 0/1/2D signals
 * It can produce many 1D signals (one for any variable specified in
 * option list), or a single 2D output (two variables correlation).
-* Also, an additional 'list' of neutron events can be produced.
+* Also, an additional 'list' of photon events can be produced.
 * By default, monitor is square (in x/y plane). A disk shape is also possible
 * The 'cylinder' and 'banana' option will change that for a banana shape
 * The 'sphere' option simulates spherical detector. The 'box' is a box.
@@ -38,8 +38,8 @@
 * The monitored flux may be per monitor unit area, and weighted by
 * a lambda/lambda(2200m/s) factor to obtain standard integrated capture flux.
 * In normal configuration, the Monitor_nD measures the current parameters
-* of the neutron that is beeing detected. But a PreMonitor_nD component can
-* be used in order to study correlations between a neutron being detected in
+* of the photon that is beeing detected. But a PreMonitor_nD component can
+* be used in order to study correlations between a photon being detected in
 * a Monitor_nD place, and given parameters that are monitored elsewhere
 * (at <b>PreMonitor_nD</b>).
 * The monitor can also act as a 3He gas detector, taking into account the
@@ -83,16 +83,16 @@
 *     all  {limits|bins|auto}   To set all limits or bins values or auto mode
 *     binary {float|double}     with 'source' option, saves in compact files
 *     bins=[bins=20]            Number of bins in the detector along dimension
-*     borders                   To also count off-limits neutrons
+*     borders                   To also count off-limits photon
 *                                (X < min or X > max)
 *     capture                   weight by lambda/lambda(2200m/s) capture flux
-*     exclusive                 absorb neutrons out of monitor limits
+*     exclusive                 absorb photon out of monitor limits
 *     file=string               Detector image file name. default is component
 *                                name, plus date and variable extension.
 *     incoming                  Monitor incoming beam in non flat det
 *     limits=[min max]          Lower/Upper limits for axes
 *                                (see up for the variable unit)
-*     list=[counts=1000] or all For a long file of neutron characteristics
+*     list=[counts=1000] or all For a long file of photon characteristics
 *                                with [counts] or all events
 *     log                       Will monitor the log of the following variable
 *                               or of the signal (if used after all variables)
@@ -105,15 +105,13 @@
 *                                the same position (parallel components)
 *     per cm2                   Intensity will be per cm^2
 *     per steradian             Intensity will be per steradian (requires auto)
-*     premonitor                Will monitor neutron parameters stored
+*     premonitor                Will monitor photon parameters stored
 *                                previously with <b>PreMonitor_nD</b>.
 *     signal=[var]              Will monitor [var] instead of usual intensity
-*     slit or absorb            Absorb neutrons that are out detector
-*     source                    The monitor will save neutron states
+*     slit or absorb            Absorb photons that are out detector
+*     source                    The monitor will save photon states
 *     unactivate                To unactivate detector (0D detector)
 *     verbose                   To display additional informations
-*     3He_pressure=[3 in bars]  The 3He gas pressure in detector.
-*                               3He_pressure=0 is perfect detector (default)
 *
 * Detector shape options (specified as xwidth,yheight,zdepth or x/y/z/min/max)
 *     box                       Box of size xwidth, yheight, zdepth.
@@ -135,16 +133,16 @@
 *   xwidth = 0.1, yheight = 0.1, zdepth = 0,
 *   options = "intensity per cm2 angle,limits=[-5 5] bins=10,with
 *              borders, file = mon1");
-*                  will monitor neutron angle from [z] axis, between -5
+*                  will monitor photon angle from [z] axis, between -5
 *                  and 5 degrees, in 10 bins, into "mon1.A" output 1D file
 *   options = "sphere theta phi outgoing"  for a sphere PSD detector (out
 *                  beam)  and saves into file "MyMon_[Date_ID].th_ph"
 *   options = "banana, theta limits=[10,130], bins=120, y" a theta/height
          banana detector
 *   options = "angle radius all auto"   is a 2D monitor with automatic limits
-*   options = "list=1000 kx ky kz energy" records 1000 neutron event in a file
-*   options = "multiple kx ky kz, auto abs log t, and list all neutrons"
-*        makes 4 output 1D files and produces a complete list for all neutrons
+*   options = "list=1000 kx ky kz energy" records 1000 photon event in a file
+*   options = "multiple kx ky kz, auto abs log t, and list all photons"
+*        makes 4 output 1D files and produces a complete list for all photons
 *        and monitor log(abs(tof)) within automatic limits (for t)
 *
 * To dynamically define a number of bins, or limits:
@@ -162,7 +160,7 @@
 *      AT ...
 *
 * See also the example in <a href="PreMonitor_nD.html">PreMonitor_nD</a> to
-* monitor neutron parameters cross-correlations.
+* monitor photon parameters cross-correlations.
 *
 * %BUGS
 * The 'auto' option for guessing optimal variable bounds should NOT be used with MPI
@@ -198,7 +196,7 @@
 * username1:  [str] Name assigned to User1
 * username2:  [str] Name assigned to User2
 * username3:  [str] Name assigned to User3
-* restore_xray: [0|1] If set, the monitor does not influence the neutron state.
+* restore_xray: [0|1] If set, the monitor does not influence the photon state.
 *                        Equivalent to setting the 'parallel' option.
 * geometry:   [str] Name of an OFF file to specify a complex geometry detector
 *
@@ -383,7 +381,7 @@ TRACE
 //      XY = exp(-7.417*Vars.He3_pressure*fabs(l1-l0)*2*PI*K2V);
       /* will monitor the absorbed part */
 //      Vars.cp *= 1-XY;
-      /* and modify the neutron weight after monitor, only remains 1-p_detect */
+      /* and modify the ray weight after monitor, only remains 1-p_detect */
 //      p *= XY;
 //    }
 
