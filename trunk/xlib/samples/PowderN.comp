@@ -308,9 +308,9 @@ SHARE
       "column_DW",
       "column_Dd",
       "column_inv2d", "column_1/2d", "column_sintheta/lambda",
-      "column_q", /* 14 */
+      "column_q", /* 10 */
       "DW", "Debye_Waller",
-      "Detla_d/d",
+      "Delta_d/d",
       "column_F ",
       "V_rho",
       "density",
@@ -321,29 +321,25 @@ SHARE
     if (parsing) {
       if (parsing[0] && !info->V_0)     info->V_0    =atof(parsing[0]);
       if (parsing[1] && !info->V_0)     info->V_0    =atof(parsing[1]);
-      if (parsing[2] && !info->sigma_a) info->sigma_a=atof(parsing[2]);
-      if (parsing[3] && !info->sigma_a) info->sigma_a=atof(parsing[3]);
-      if (parsing[4] && !info->sigma_i) info->sigma_i=atof(parsing[4]);
-      if (parsing[5] && !info->sigma_i) info->sigma_i=atof(parsing[5]);
-      if (parsing[6])                   info->column_order[0]=atoi(parsing[6]);
-      if (parsing[7])                   info->column_order[1]=atoi(parsing[7]);
-      if (parsing[8])                   info->column_order[2]=atoi(parsing[8]);
-      if (parsing[9])                   info->column_order[3]=atoi(parsing[9]);
-      if (parsing[10])                  info->column_order[4]=atoi(parsing[10]);
-      if (parsing[11])                  info->column_order[5]=atoi(parsing[11]);
-      if (parsing[12])                  info->column_order[5]=atoi(parsing[12]);
-      if (parsing[13])                  info->column_order[5]=atoi(parsing[13]);
-      if (parsing[14])                  info->column_order[6]=atoi(parsing[14]);
-      if (parsing[15] && info->DWfactor<=0)    info->DWfactor=atof(parsing[15]);
-      if (parsing[16] && info->DWfactor<=0)    info->DWfactor=atof(parsing[16]);
-      if (parsing[17] && info->Dd <0)          info->Dd      =atof(parsing[17]);
-      if (parsing[18])                  info->column_order[7]=atoi(parsing[18]);
-      if (parsing[19] && !info->V_0)    info->V_0    =1/atof(parsing[19]);
-      if (parsing[20] && !info->rho)    info->rho    =atof(parsing[20]);
-      if (parsing[21] && !info->at_weight)     info->at_weight    =atof(parsing[21]);
-      if (parsing[22] && info->at_nb <= 1)  info->at_nb    =atof(parsing[22]);
-      if (parsing[23] && info->at_nb <= 1)  info->at_nb    =atof(parsing[23]);
-      for (i=0; i<=23; i++) if (parsing[i]) free(parsing[i]);
+      if (parsing[2])                   info->column_order[0]=atoi(parsing[2]);
+      if (parsing[3])                   info->column_order[1]=atoi(parsing[3]);
+      if (parsing[4])                   info->column_order[2]=atoi(parsing[4]);
+      if (parsing[5])                   info->column_order[3]=atoi(parsing[5]);
+      if (parsing[6])                  info->column_order[4]=atoi(parsing[6]);
+      if (parsing[7])                  info->column_order[5]=atoi(parsing[7]);
+      if (parsing[8])                  info->column_order[5]=atoi(parsing[8]);
+      if (parsing[9])                  info->column_order[5]=atoi(parsing[9]);
+      if (parsing[10])                  info->column_order[6]=atoi(parsing[10]);
+      if (parsing[11] && info->DWfactor<=0)    info->DWfactor=atof(parsing[11]);
+      if (parsing[12] && info->DWfactor<=0)    info->DWfactor=atof(parsing[12]);
+      if (parsing[13] && info->Dd <0)          info->Dd      =atof(parsing[13]);
+      if (parsing[14])                  info->column_order[7]=atoi(parsing[14]);
+      if (parsing[15] && !info->V_0)    info->V_0    =1/atof(parsing[15]);
+      if (parsing[16] && !info->rho)    info->rho    =atof(parsing[16]);
+      if (parsing[27] && !info->at_weight)     info->at_weight    =atof(parsing[17]);
+      if (parsing[18] && info->at_nb <= 1)  info->at_nb    =atof(parsing[18]);
+      if (parsing[19] && info->at_nb <= 1)  info->at_nb    =atof(parsing[19]);
+      for (i=0; i<=19; i++) if (parsing[i]) free(parsing[i]);
       free(parsing);
     }
 
@@ -762,7 +758,7 @@ TRACE
           if(fabs(arg) > 1)
             ABSORB;                   /* No bragg scattering possible*/
           theta = asin(arg);          /* Bragg scattering law */
-          //printf("picked line %d my_s_n=%g ,theta=%g\n",line,my_s_n,theta);
+          printf("picked line %d my_s_n=%g ,theta=%g\n",line,my_s_n,theta);
               
           /* Choose point on Debye-Scherrer cone */
           if (d_phi)
