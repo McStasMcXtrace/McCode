@@ -235,7 +235,7 @@ int mc_MPI_Send(void *sbuf, long count, MPI_Datatype dtype, int dest);
 int mc_MPI_Recv(void *rbuf, long count, MPI_Datatype dtype, int source);
 
 #define exit(code) do {                                   \
-    MPI_Finalize();                                       \
+    MPI_Abort(MPI_COMM_WORLD, code);                      \
     exit(code);                                           \
   } while(0)
 

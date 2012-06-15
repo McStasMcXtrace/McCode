@@ -7,19 +7,22 @@ available in various distribution packages, from the project
 website at
 \htmladdnormallink{http://www.mcstas.org/download}{http://www.mcstas.org/download}.
 \begin{itemize}
-\item{\texttt{McStas-1.11-i686-Win32.exe}\\Self-extracting executable
+\item{\texttt{McStas-2.0-i686-Win32.exe}\\Windows self-extracting executable
     including essential support tools. - Refer to section
     \ref{s:win32_install}. }
-\item{\texttt{McStas-1.11.dmg}\\Mac OS X disk image for PPC and Intel machines. Please follow
+\item{\texttt{McStas-2.0.dmg}\\Mac OS X disk image for PPC and Intel machines. Please follow
     the instructions in the README file in the disk image. }
-\item{\texttt{mcstas-1.11-i686.deb}\\Binary Debian GNU/Linux packages for 32 bit Intel/AMD processors, currently built on Debian stable.
+\item{\texttt{mcstas-2.0-i386.deb}\\Binary Debian GNU/Linux packages for 32 bit Intel/AMD processors, currently built on Debian stable.
    Tested to work on Ubuntu and Debian systems.
  - Refer to section \ref{ss:deb_install}}
-\item{\texttt{mcstas-1.11-i686-unknown-Linux.tar.gz}\\Binary package
+\item{\texttt{mcstas-2.0-amd64.deb}\\Binary Debian GNU/Linux packages for 64 bit Intel/AMD processors, currently built on Debian stable.
+   Tested to work on Ubuntu and Debian systems.
+ - Refer to section \ref{ss:deb_install}}
+\item{\texttt{mcstas-2.0-i686-unknown-Linux.tar.gz}\\Binary package
   for Linux systems, currently built on Debian stable.
   Should work on most Linux setups.
  - Refer to section \ref{s:unix_install}}
-\item{\texttt{mcstas-1.11-src.tar.gz}\\Source code package for
+\item{\texttt{mcstas-2.0-src.tar.gz}\\Source code package for
     building \htmladdnormallink{McStas}{http://www.mcstas.org} on
     (at least) Linux and Windows XP. This package should compile on
     most Unix platforms with an \texttt{ANSI-c} compiler. - Refer to section \ref{s:unix_install}}
@@ -85,25 +88,29 @@ and \htmladdnormallink{FreeBSD}{http://www.freebsd.org}.
 
 \subsection{Debian class systems}
 \label{ss:deb_install}
-As of release 1.11, we provide a Debian binary package (32 bit package for Intel/AMD). We have tested that the
+As of release 2.0, we provide a Debian binary package (32 bit package for Intel/AMD). We have tested that the
 package works properly on Ubuntu and Debian systems. To install it, please
 perform the following tasks:
 \begin{enumerate}
 \item{Download the package from \verb+http://www.mcstas.org/download+}
-\item{As root, issue the command \\\verb+apt-get install perl perl-Tk gcc libc6-dev libg2c0 pdl bash+}
+\item{As root, issue the command \\\verb+apt-get install perl perl-tk gcc libc6-dev pdl bash+}
 \item{Optionally, as root, issue the commands
 \\\verb+apt-get install openssh-client openssh-server+
-\\\verb+apt-get install mpich-bin libmpich1.0c2 libmpich1.0-dev+
+\\\verb+apt-get install mpi-default-bin mpi-default-dev+
 to benefit from MPI and SSH grid parallelization}
 \item{As root, issue the command \\\verb+dpkg-reconfigure dash+\\and
     say 'no' to install dash as /bin/sh.}
-\item{As root, issue the command \\\verb+dpkg -i mcstas-1.11-i686.deb+. This later step may be replaced by a ./configure; make; make install procedure after extraction of the Mctas tarball (see below)}
+\item{Optionally, install FreeWRL from \verb+http://freewrl.sourceforge.net/download.html+ or WhiteDune with \\\verb+apt-get install whitedune+.}
+\item{To view OFF/PLY geometry files you may use Geomview or Meshlab, that can be installed with \\\verb+apt-get install geomview meshlab+.}
+\item{If you have acces to Matlab(R), install it prior to McStas, so that the configuration can detect it.}
+\item{As root, issue the command \\\verb+dpkg -i mcstas-2.0-amd64.deb+ (or \\\verb+dpkg -i mcstas-2.0-i386.deb+ on 32 bit systems). This later step may be replaced by a ./configure; make; make install procedure after extraction of the Mctas tarball (see below)}
 %\item{As root, add the following to your \verb+/etc/apt/sources.list+ :
 %\\\verb+deb http://apt.mcstas.org binary/+ (32 bit package for Intel/AMD)}
 %\item{As root execute the command:\\\verb+apt-get update+}
 %\item{As root execute the command:\\\verb+apt-get install mcstas+}
 \end{enumerate}
-Updating your operating system to a new release \emph{may} in some cases require you to re-install McStas following the procedure above. We hope to make a so-called \emph{apt repository} available in the future, which will ensure automatic upgrade of McStas in case of a new release.
+Updating your operating system to a new release \emph{may} in some cases require you to re-install McStas following the procedure above. 
+We hope to make a so-called \emph{apt repository} available in the future, which will ensure automatic upgrade of McStas in case of a new release.
 
 \subsection{Other Linux/Unix systems}
 To get a fully functional McStas installation on Unix systems, a few support
@@ -131,10 +138,10 @@ should be able to compile and/or install McStas using the following steps:
 \item{Unpack the sources to somewhere convenient and change to the
     source directory:\\
   \texttt{gunzip -c <package>.tar.gz | tar xf -}\\
-  \texttt{cd mcstas-1.11/}}
+  \texttt{cd mcstas-2.0/}}
 \item{Configure McStas:\\
   \texttt{./configure} or \texttt{./configure --with-nexus --with-cc=gcc-4.2}}
-\item{Build McStas (only in case of the \verb+mcstas-1.11-src.tar.gz+ package):\\
+\item{Build McStas (only in case of the \verb+mcstas-2.0-src.tar.gz+ package):\\
   \texttt{make}}
 \item{Install McStas (as superuser):\\
   \texttt{make install}
@@ -204,8 +211,8 @@ or the McStas mailing list at \htmladdnormallink{mcstas-users@mcstas.org}{mailto
 
 Once installed, you may check and tune the guessed configuration stored within file
 \begin{itemize}
-\item{\verb+MCSTAS\tools\perl\mcstas_config.perl+ on Windows systems}
-\item{\verb+MCSTAS/tools/perl/mcstas_config.perl+ on Unix/Linux systems}
+\item{\verb+MCSTAS\tools\perl\mccode_config.perl+ on Windows systems}
+\item{\verb+MCSTAS/tools/perl/mccode_config.perl+ on Unix/Linux systems}
 \end{itemize}
 where \verb+MCSTAS+ is the location for the McStas library.
 
