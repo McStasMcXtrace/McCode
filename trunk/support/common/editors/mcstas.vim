@@ -73,9 +73,11 @@
 	\ randpm1 
 	\ rand0max 
 	\ randminmax 
-	\ normal_vec 
+	\ normal_vec
+        \ solve_2nd_order
 	\ box_intersect 
 	\ cylinder_intersect 
+	\ ellipsoid_intersect 
 	\ sphere_intersect 
 	\ randvec_target_circle 
 	\ randvec_target_rect_angular 
