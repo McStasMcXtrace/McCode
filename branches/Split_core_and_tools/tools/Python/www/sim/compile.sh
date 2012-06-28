@@ -1,5 +1,7 @@
 #!/bin/sh
 
+ORGDIR=$PWD
+
 BASEDIR=$(dirname $0)
 cd $BASEDIR
 
@@ -21,3 +23,5 @@ for i in $( ls src/*.instr ); do
         gcc -lm -O3 -o src/$b.out -O2 src/$b.c
     fi
 done
+
+cd $ORGDIR
