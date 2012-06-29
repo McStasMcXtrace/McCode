@@ -12,7 +12,7 @@ for i in $( ls src/*.instr ); do
         echo "* c file exists";
     else
         echo "* generating c file..";
-        mcstas -o src/$b.c $i &> /dev/null;
+        mcstas -o src/$b.c $i > /dev/null 1>&2;
     fi
     if [ -x src/$b.out ]; then
         echo "* executable exists";
