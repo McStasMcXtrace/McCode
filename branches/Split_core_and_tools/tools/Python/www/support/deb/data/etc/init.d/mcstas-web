@@ -1,0 +1,34 @@
+#!/bin/sh
+# /etc/init.d/mcstas-web
+#
+
+PID_WORK=/var/run/mcstas-web-worker.pid
+DIR=/usr/local/mcstas-web
+
+case "$1" in
+    start)
+        start-stop-daemon -b --chdir ${DIR} -m --pidfile ${PID_WORK} --startas ./worker.py \
+		--start
+	start-stop-daemon --chdir ${DIR} --exec /usr/sbin/nginx \
+		--start -- -c ${DIR}/nginx/nginx.conf
+        start-stop-daemon -b --chdir ${DIR} --exec ${DIR}/uwsgi-1.2/uwsgi \
+		--start -- --workers 10 --socket 127.0.0.1:9001 --module run --callable app
+        ;;
+    stop)
+        start-stop-daemon --pidfile ${PID_WORK} --startas ./worker.py \
+		--stop
+	start-stop-daemon --exec /usr/sbin/nginx \
+		--stop
+        start-stop-daemon --exec ${DIR}/uwsgi-1.2/uwsgi \
+		--stop
+        ;;
+    status)
+        #start-stop-daemon --pidfile ${PID} --status --startas ${SCRIPT}
+        ;;
+    *)
+        echo "Usage: /etc/init.d/mcstas-web {start|stop}"
+        exit 1
+        ;;
+esac
+
+exit 0

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Change to mcstas-web directory
+cd /usr/local/mcstas-web/
+
+# Start server
+./start.sh

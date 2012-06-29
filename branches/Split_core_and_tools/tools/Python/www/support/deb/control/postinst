@@ -1,0 +1,37 @@
+#!/bin/sh
+
+section() {
+    echo ''
+    echo '###'
+    echo "### $1"
+    echo '###'
+}
+
+set -e
+
+cd /usr/local/mcstas-web;
+
+section 'Setting up local Python modules..'
+./download.sh
+
+section 'Initialising..'
+./run.py --init
+
+section 'Creating default user: mcstas/mcstas'
+./create_user.py mcstas mcstas || echo 'Skipping.'
+
+
+# Copy some simulations files from mcstas/examples and compile them
+dir=/usr/local/lib/mcstas/examples
+section "Copying instrument sources from local McStas installation: (${dir})"
+examples="ILL_H113.instr ILL_H16.instr"
+for i in ${examples}; do
+    if [ -f ${dir}/${i} ]; then
+        cp -v ${dir}/${i} sim/src/${i};
+    else
+        echo "-- Skipping: ${dir}/${i} [NOT FOUND]";
+    fi
+done
+
+section 'Running "update_sim.sh" to install instruments from sim/src'
+./update_sim.sh
