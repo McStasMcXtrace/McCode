@@ -148,7 +148,7 @@ def work():
 
     def process_components(sim_path):
         # dump components
-        comps = re.findall(r'filename:\s*([^\s]+)',
+        comps = re.findall(r'filename:[ \t]*([^\s]+)',
                            file(sim_path).read())
         file(dirname(sim_path) + "/comps.json", "w").write(json.dumps(comps))
         # plot components
