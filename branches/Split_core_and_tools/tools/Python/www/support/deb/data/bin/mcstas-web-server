@@ -4,4 +4,4 @@
 cd /usr/local/mcstas-web/
 
 # Start server
-./start.sh
+./bin/start-server.sh

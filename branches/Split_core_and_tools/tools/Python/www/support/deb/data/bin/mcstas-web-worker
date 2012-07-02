@@ -4,4 +4,4 @@
 cd /usr/local/mcstas-web/
 
 # Start worker
-./worker.py
+./bin/start-worker.sh
