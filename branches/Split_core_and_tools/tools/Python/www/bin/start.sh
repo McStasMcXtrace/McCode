@@ -17,8 +17,8 @@ if [ -f $PID ]; then
     sudo kill `cat $PID`
 fi
 # replace user in config file with current user
-cat ${NCONF}.template|./preconf.sh > ${NCONF}
-cat ${MCONF}.template|./preconf.sh > ${MCONF}
+cat ${NCONF}.template|./config-preprocessor.sh > ${NCONF}
+cat ${MCONF}.template|./config-preprocessor.sh > ${MCONF}
 
 # start server
 echo 'Starting nginx..'

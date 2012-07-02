@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Replace macros in config file (CURRENT_{USER,GROUP}, PWD)
+
 # grab user and group
 USR="`whoami`"
 GRP="`groups ${USR} | cut -f4 -d' '`"
