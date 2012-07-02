@@ -10,9 +10,9 @@
 echo ""
 
 # Generate documentation
-./generate_docs.py
+./bin/generate_docs.sh
 
 echo ""
 
 # Add new instruments to the database
-./populate_db.py
+./bin/populate_db.sh

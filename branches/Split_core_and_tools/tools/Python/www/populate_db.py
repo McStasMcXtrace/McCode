@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from app import db
 from models import Simulation, Param, ParamDefault
 
