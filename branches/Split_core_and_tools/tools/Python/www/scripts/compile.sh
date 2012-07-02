@@ -1,9 +1,8 @@
 #!/bin/sh
 
-BASEDIR=$(dirname $0)
-cd $BASEDIR
-
 echo "Translating and compiling (from sim/src)"
+
+cd sim
 
 for i in $( ls src/*.instr ); do
     echo "> $i"
