@@ -5,12 +5,12 @@
 
 
 # Scan src/sim for new instrument files and generate binaries
-./sim/compile.sh
+./scripts/compile.sh
 
 echo ""
 
 # Generate documentation
-python generate_docs.py
+python scripts/generate_docs.py
 
 echo ""
 
