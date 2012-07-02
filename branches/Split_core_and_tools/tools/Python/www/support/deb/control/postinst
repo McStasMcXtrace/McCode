@@ -12,13 +12,13 @@ set -e
 cd /usr/local/mcstas-web;
 
 section 'Setting up local Python modules..'
-./download.sh
+./bin/get-dependencies.sh
 
 section 'Initialising..'
-./run.py --init
+./bin/init-db.sh
 
 section 'Creating default user: mcstas/mcstas'
-./create_user.py mcstas mcstas || echo 'Skipping.'
+./bin/create-user.py mcstas mcstas || echo 'Skipping.'
 
 
 # Copy some simulations files from mcstas/examples and compile them
@@ -34,4 +34,4 @@ for i in ${examples}; do
 done
 
 section 'Running "update_sim.sh" to install instruments from sim/src'
-./update_sim.sh
+./bin/update-simulations.sh

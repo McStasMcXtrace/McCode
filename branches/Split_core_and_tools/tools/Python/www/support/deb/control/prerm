@@ -6,12 +6,7 @@ set -e
 cd /usr/local/mcstas-web
 
 # source directories
-rm -rf mitsuhiko-flask-sqlalchemy-087c3c0 \
-    mitsuhiko-flask-d5e10e4 \
-    mitsuhiko-werkzeug-43037e6 \
-    sqlalchemy-rel_0_7 \
-    mitsuhiko-jinja2-abfbc18 \
-    uwsgi-1.2
+rm -rf lib
 
 # links
 rm -f flask flask_sqlalchemy.py jinja2 sqlalchemy uwsgi werkzeug
