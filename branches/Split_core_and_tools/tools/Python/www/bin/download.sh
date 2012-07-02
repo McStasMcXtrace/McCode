@@ -1,5 +1,9 @@
 #!/bin/sh
 
+BUILD=true;
+if [ "$1" = "--no-build" ]; then
+    BUILD=false;
+fi
 
 python_setup() {
     python setup.py build
@@ -12,11 +16,7 @@ ensure() {
     shift; shift;
 
     echo "Getting: ${NAME}"
-    if [ -L ${NAME} ]; then
-        echo "* already exists, skipping."
-    else
-        ${FUNC} ${NAME} $*
-    fi
+    ${FUNC} ${NAME} $*
 
     echo ""
 }
@@ -38,6 +38,10 @@ build_wget() {
     MAKE=$4
     URL=$5
 
+    # build in lib folder
+    mkdir -p lib
+    cd lib
+
     # fetch and unpack
     if [ -d ${DIR} ]; then
         echo "* using existing sources";
@@ -48,9 +52,15 @@ build_wget() {
         rm -f ${FILE} || exit 1
     fi
 
-    # build and link
-    cdmake ${DIR} ${MAKE}
-    ln -s ${DIR}/${RESULT} ${LINK} || exit 1
+    if ${BUILD} && [ ! -f ${DIR}/.mcstas-build ]; then
+        # build and link
+        cdmake ${DIR} ${MAKE}
+        touch ${DIR}/.mcstas-build
+    fi
+    # link from source folder
+    cd ..
+    rm -f ${LINK}
+    ln -s lib/${DIR}/${RESULT} ${LINK} || exit 1
 }
 
 # uwsgi
