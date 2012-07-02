@@ -27,7 +27,7 @@ echo '. Copy files and directories..'
 cp -P ../../*.{py,txt} ${DIST}
 
 # copy dirs
-cp -rP ../../{bin,nginx,rplot,static,templates} ${DIST}
+cp -rP ../../{bin,scripts,nginx,rplot,static,templates} ${DIST}
 
 # init empty dirs
 mkdir -p ${DIST}/{data,logs,out,sim/src}
