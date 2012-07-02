@@ -35,3 +35,7 @@ done
 
 section 'Running "update_sim.sh" to install instruments from sim/src'
 ./bin/update-simulations.sh
+
+
+# Configure nginx
+./bin/write-config.sh
