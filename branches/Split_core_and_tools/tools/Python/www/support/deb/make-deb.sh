@@ -9,7 +9,11 @@ NAME=mcstas-web.deb
 DIST=data/usr/local/mcstas-web
 
 mkdir -p ${DIST}
-rm -rf ${DIST}/*
+(
+    # clean out everything but the lib folder
+    cd ${DIST}
+    rm -rf !lib
+)
 
 echo '2.0' > debian-binary
 
@@ -20,14 +24,21 @@ rm -f {control,data}/*.tar.gz
 
 # copy files
 echo '. Copy files and directories..'
-cp -P ../../*.{py,sh,txt} ${DIST}
+cp -P ../../*.{py,txt} ${DIST}
 
 # copy dirs
-cp -rP ../../{nginx,rplot,static,templates} ${DIST}
+cp -rP ../../{bin,nginx,rplot,static,templates} ${DIST}
 
 # init empty dirs
 mkdir -p ${DIST}/{data,logs,out,sim/src}
 
+# pre-download library sources
+echo ''
+echo '. Get dependencies..'
+(
+    cd ${DIST}
+    ./bin/get-dependencies.sh --no-build
+)
 
 # initialise new debian package
 echo ''
