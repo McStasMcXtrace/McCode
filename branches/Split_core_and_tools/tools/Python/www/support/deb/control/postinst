@@ -18,7 +18,7 @@ section 'Initialising..'
 ./bin/init-db.sh
 
 section 'Creating default user: mcstas/mcstas'
-./bin/create-user.py mcstas mcstas || echo 'Skipping.'
+./bin/create-user.sh mcstas mcstas || echo 'Skipping.'
 
 
 # Copy some simulations files from mcstas/examples and compile them
