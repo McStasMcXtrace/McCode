@@ -4,19 +4,19 @@ echo "Translating and compiling (from sim/src)"
 
 cd sim
 
-for i in $( ls src/*.instr ); do
+for i in $( ls *.instr ); do
     echo "> $i"
     b=`basename $i .instr`
-    if [ -f src/$b.c ]; then
+    if [ -f $b.c ]; then
         echo "* c file exists";
     else
         echo "* generating c file..";
-        mcstas -o src/$b.c $i > /dev/null 1>&2;
+        mcstas -o $b.c $i > /dev/null 1>&2;
     fi
-    if [ -x src/$b.out ]; then
+    if [ -x $b.out ]; then
         echo "* executable exists";
     else
         echo "* compiling..";
-        gcc -lm -O3 -o src/$b.out -O2 src/$b.c
+        gcc -lm -O3 -o $b.out -O2 $b.c
     fi
 done

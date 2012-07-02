@@ -2,7 +2,7 @@ import glob, re
 
 
 def grab_list():
-    return glob.glob('sim/src/*.instr')
+    return glob.glob('sim/*.instr')
 
 
 def gen_html(instr):
