@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # grab dependencies
-./bin/download.sh
+./bin/get-dependencies.sh
 
 
 # run nginx (possibly from /usr/sbin)
