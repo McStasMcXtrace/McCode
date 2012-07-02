@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # setup flask.ext for old versions of flask (<8)
 import flaskext_compat
 flaskext_compat.activate()

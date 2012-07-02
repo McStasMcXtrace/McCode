@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from app import db_session
 from models import *
 from subprocess import Popen, PIPE
