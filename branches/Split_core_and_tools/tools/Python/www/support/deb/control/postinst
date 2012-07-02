@@ -27,7 +27,7 @@ section "Copying instrument sources from local McStas installation: (${dir})"
 examples="ILL_H113.instr ILL_H16.instr"
 for i in ${examples}; do
     if [ -f ${dir}/${i} ]; then
-        cp -v ${dir}/${i} sim/src/${i};
+        cp -v ${dir}/${i} sim/${i};
     else
         echo "-- Skipping: ${dir}/${i} [NOT FOUND]";
     fi
