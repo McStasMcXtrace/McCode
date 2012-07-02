@@ -5,22 +5,36 @@
 PID_WORK=/var/run/mcstas-web-worker.pid
 DIR=/usr/local/mcstas-web
 
+UWSGI_LISTEN=127.0.0.1:9001
+
 case "$1" in
     start)
-        start-stop-daemon -b --chdir ${DIR} -m --pidfile ${PID_WORK} --startas ./worker.py \
-		--start
-	start-stop-daemon --chdir ${DIR} --exec /usr/sbin/nginx \
-		--start -- -c ${DIR}/nginx/nginx.conf
-        start-stop-daemon -b --chdir ${DIR} --exec ${DIR}/uwsgi-1.2/uwsgi \
-		--start -- --workers 10 --socket 127.0.0.1:9001 --module run --callable app
+        # worker
+        start-stop-daemon -b --chdir ${DIR} -m --pidfile ${PID_WORK} \
+            --startas ./bin/start-worker.sh \
+		        --start
+        # nginx
+	      start-stop-daemon --chdir ${DIR} --exec /usr/sbin/nginx \
+		        --start -- -c ${DIR}/nginx/nginx.conf
+        # uwsgi (Python webapp)
+        start-stop-daemon -b --chdir ${DIR} \
+            --exec ${DIR}/lib/uwsgi-1.2/uwsgi \
+		        --start -- --workers 10 --socket ${UWSGI_LISTEN} \
+            --module run --callable app
         ;;
     stop)
-        start-stop-daemon --pidfile ${PID_WORK} --startas ./worker.py \
-		--stop
-	start-stop-daemon --exec /usr/sbin/nginx \
-		--stop
-        start-stop-daemon --exec ${DIR}/uwsgi-1.2/uwsgi \
-		--stop
+        # nginx (takes down the site as main entry-point)
+	      start-stop-daemon \
+            --exec /usr/sbin/nginx \
+		        --stop
+        # uwsgi (Python webapp)
+        start-stop-daemon \
+            --exec ${DIR}/lib/uwsgi-1.2/uwsgi \
+		        --stop
+        # worker
+        start-stop-daemon --pidfile ${PID_WORK} \
+            --startas ./bin/start-worker.sh \
+		        --stop
         ;;
     status)
         #start-stop-daemon --pidfile ${PID} --status --startas ${SCRIPT}
