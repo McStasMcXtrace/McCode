@@ -1,7 +1,2 @@
-sim/bin:
-This directory is used for McStas binaries, generated from McStas source
-files from sim/src (see the update_sim.sh script).
-
-sim/src:
 This directory contains the available McStas source files (*.instr).
-Run the update_sim.sh script whenever source files are added or updated.
+Run the bin/update_simulations.sh script whenever source files are added or updated.
