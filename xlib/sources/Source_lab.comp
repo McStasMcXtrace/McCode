@@ -260,12 +260,8 @@ MCDISPLAY
   height_2=height/2.0;
   x1=-width_2;y1=0;z1=-height_2;
   x2=-width_2;y2=0;z2= height_2;
-  printf("%g %g %g\n",x1,y1,z1);
-  printf("%g %g %g\n",x2,y2,z2);
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
-  printf("%g %g %g\n",x1,y1,z1);
-  printf("%g %g %g %g \n",x2,y2,z2,mu);
   line(x1,y1,z1,x2,y2,z2);
 
   x1=width_2;y1=0;z1=height_2;
@@ -295,38 +291,23 @@ MCDISPLAY
   x1=-width_2;y1=-mu;z1=-height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x2,y2,z2,x1,y1,z1,5);
-  /* add another set of lines line at 2 mean penetration depth*/
-  x1=-width_2;y1=-2*mu;z1=-height_2;
-  x2=-width_2;y2=-2*mu;z2= height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
-  dashed_line(x1,y1,z1,x2,y2,z2,5);
-  x1=width_2;y1=-2*mu;z1=height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
-  dashed_line(x2,y2,z2,x1,y1,z1,5);
-  x2= width_2;y2=-2*mu;z2=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
-  dashed_line(x1,y1,z1,x2,y2,z2,5);
-  x1=-width_2;y1=-2*mu;z1=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
-  dashed_line(x2,y2,z2,x1,y1,z1,5);
-
-  x1=-width_2;y1=-2*mu;z1=-height_2;
+  
+  x1=-width_2;y1=-mu;z1=-height_2;
   x2=-width_2;y2=0;z2=-height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
-  x1=width_2;y1=-2*mu;z1=-height_2;
+  x1=width_2;y1=-mu;z1=-height_2;
   x2=width_2;y2=0;z2=-height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
-  x1=-width_2;y1=-2*mu;z1=height_2;
+  x1=-width_2;y1=-mu;z1=height_2;
   x2=-width_2;y2=0;z2=height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
-  x1=width_2;y1=-2*mu;z1=height_2;
+  x1=width_2;y1=-mu;z1=height_2;
   x2=width_2;y2=0;z2=height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
