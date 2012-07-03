@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo "Translating and compiling (from sim/src)"
+echo "Translating and compiling (from sim/)"
 
 cd sim
 

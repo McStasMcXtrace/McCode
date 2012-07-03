@@ -8,8 +8,8 @@ import traceback
 import tarfile
 
 
-SIM_SRC_PATH = "sim/src/%s.instr"
-SIM_BIN_PATH = "sim/src/%s.out"
+SIM_SRC_PATH = "sim/%s.instr"
+SIM_BIN_PATH = "sim/%s.out"
 
 WORK_PATH = "out/%s"
 

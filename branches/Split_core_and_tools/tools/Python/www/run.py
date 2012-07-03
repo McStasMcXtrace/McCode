@@ -54,7 +54,7 @@ def loginPOST(next):
 
 @app.route('/doc/<instr>', methods=['GET'])
 def documentation(instr):
-    resp = make_response(file('sim/src/%s.instr.doc.txt' % instr).read())
+    resp = make_response(file('sim/%s.instr.doc.txt' % instr).read())
     resp.headers['Content-Type'] = 'text/plain'
     return resp
 

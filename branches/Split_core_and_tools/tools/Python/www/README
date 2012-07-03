@@ -2,7 +2,7 @@
 
 Paths:
 data/app.db:   The sqlite3 database file.
-sim/src:       Stores the available instrument source files.
+sim/:          Stores the available instrument source files and documentation.
 
 Scripts:
 update_sim.sh: Visits files in sim/src and updates sim/bin and data/app.db.

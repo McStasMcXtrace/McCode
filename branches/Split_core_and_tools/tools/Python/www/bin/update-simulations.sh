@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## This script checks the sim/src for new or modified instrument source files
+## This script checks the sim/ dir for new or modified instrument source files
 ## and update sim/bin accordingly.
 
 
