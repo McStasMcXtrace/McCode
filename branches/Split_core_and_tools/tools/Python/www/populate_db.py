@@ -8,7 +8,7 @@ from glob import glob
 import json
 import re
 
-PATH_BIN = 'sim/src'
+PATH_BIN = 'sim'
 RE_types   = re.compile(r'(\w+)\((\w+)\)')
 RE_default = re.compile(r'\s*Param:\s+(\w+)=(.*)')
 
