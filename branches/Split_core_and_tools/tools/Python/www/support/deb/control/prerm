@@ -1,12 +1,17 @@
 #!/bin/sh
+# This script performs manual cleanup of untracked files
+# (files that are not tracked and removed by the package manager)
 
 set -e
-
-# perform manual cleanup of untracked files
 cd /usr/local/mcstas-web
 
-# source directories
+# Source directories
 rm -rf lib
 
-# links
+# Links
 rm -f flask flask_sqlalchemy.py jinja2 sqlalchemy uwsgi werkzeug
+
+# Python byte code
+rm **/*.pyc
+
+# The only thing left now should be the database in "data/app.db"
