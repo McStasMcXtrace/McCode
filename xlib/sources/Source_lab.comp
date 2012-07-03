@@ -9,7 +9,7 @@
 * Component: Source_lab
 *
 * %I
-* Written by: Erik Bergb&auml;ck Knudsen 
+* Written by: Erik Bergbaeck Knudsen 
 * Date: May 2012
 * Version: 1.0
 * Release: McXtrace 1.1
@@ -21,28 +21,30 @@
 * Model of a laboratory x-ray tube, generating x-rays by bombarding a target by electrons.
 * Given a input energy E0 of the electron beam, x-rays are emitted from the accessible emission lines
 * The geometry of the tube is assumed to be:
-*  The electron beam hits a slab of surface material surface at a at a right angle illuminating an area of x0 by z0.
-*  A window is situated at the origin of the component, which is at an angle take_off wrt. the surface plane. 
+*  The electron beam hits a slab of surface material surface at a at a right angle illuminating an area of width by height,
+*  where width is measured along the component X-axis. 
+*  A window is situated at the origin of the component, which is at an angle take_off wrt. the surface plane of the anode. 
 *  The origin of the component is the centre of the exit window with the beam direction (Z) perpendicular to it
 * The Bremsstrahlung emitted is modelled using the model of Kramer (1923) as restated in International
 * Tables of Crystallography C 4.1
 * Characteristic radiation is modelled by Gaussian energy profiles with line-energies from Bearden (1967), widths from
 * Krause (1979) and intensity from Honkimäki (1990) and x-ray data booklet.
-* Currently absorption in the target is not taken into account.   
+* Absoprtion of emitted x-rays while travelling through the target anode is included. 
 * 
 * Example: Source_lab(material_datafile="Cu.txt",Emin=1, E0=80)
 *
 * %P
-* x0:    [m] Width of impinging electron beam.
-* z0:    [m] Height of impinging electron beam.
+* width:    [m] Width of electron beam impinging on the anode.
+* height:    [m] Height of electron beam impinging on the anode.
+* thickness: [m] Thickness of the anode material slab.
 * take_off: [deg] Take off angle of beam centre.
 * dist:  [m] Distance between centre of illuminated target and exit window.
 * E0:    [kV] Acceleration voltage of xray tube.
 * tube_current: [A] Electron beam current.
 * Emax:  [keV] Maximum energy to sample. Default (Emax=0) is to set it to E0.
 * Emin:  [keV] Minimum energy to sample.
-* xwidth: [m] Width of exit window.
-* yheight:[m] Height of exit window.
+* focus_xw: [m] Width of exit window.
+* focus_yh:[m] Height of exit window.
 * frac:  [] Fraction of statistic to use for Bremsstrahlung.
 * material_datafile: [] Name of datafile which describes the target material.    
 *
@@ -51,7 +53,7 @@
 
 DEFINE COMPONENT Source_lab
 DEFINITION PARAMETERS (string material_datafile="Cu.txt")
-SETTING PARAMETERS (x0=1e-3, z0=1e-3, E0=20, Emax=0, Emin=1, xwidth=5e-3, yheight=5e-3,
+SETTING PARAMETERS (width=1e-3, height=1e-3, thickness=100e-6, E0=20, Emax=0, Emin=1, focus_xw=5e-3, focus_yh=5e-3,
       take_off=6, dist=1, tube_current=1e-3, frac=0.5)
 OUTPUT PARAMETERS (R_xray_gen,R_xray_geni, O_xray_gen, prms,pmul_c,mu,p_continous)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -91,7 +93,7 @@ DECLARE
     double Icont,Ichar;
   } prms; 
   double p_continous;
-  double mu=0.2;
+  double mu=0.2e-6;
   double pmul_c;
 %}
 
@@ -154,10 +156,9 @@ INITIALIZE
     p_continous=1;
     frac=1;
   }
-  O_xray_gen=coords_set(0,0,-dist);
+  O_xray_gen=coords_set(0,0,0);
   rot_set_rotation(R_xray_gen,-take_off*DEG2RAD,0,0);
   rot_set_rotation(R_xray_geni,take_off*DEG2RAD,0,0);
-  printf("O_xray_gen=%g %g %g\n",O_xray_gen.x,O_xray_gen.y,O_xray_gen.z);
 
   pmul_c=1.0/(mcget_ncount());
 
@@ -167,8 +168,8 @@ TRACE
 %{
   double x1,y1,z1,x2,y2,z2,r,e,k,pdir,pmul;
   /* pick a point in the generating volume*/
-  x1=rand01()*x0-x0/2.0;
-  z1=rand01()*z0-z0/2.0;
+  x1=rand01()*width-width/2.0;
+  z1=rand01()*height-height/2.0;
   /* y is the absorption depth of the electron getting converted to an xray*/
   y1=log(rand01())*mu;
 
@@ -183,11 +184,11 @@ TRACE
   /*randvec_target_rect_real computes a target point and a solid angle correction factor, hence the k-vector has to be computed from
     generation point and target point. The (0,0,1) location of the target is due to a silent assumption in randvec() that
     the target cannot be situated in the origin.*/
-  randvec_target_rect_real(&px,&py,&pz,&pdir,0,0,1,xwidth,yheight, R_xray_gen,x1,y1,z1,2);
+  randvec_target_rect_real(&px,&py,&pz,&pdir,0,0,dist,focus_xw,focus_yh, R_xray_gen,x1,y1,z1,2);
   /*k is parallell to the line between generation and target points*/
   kx=px-x1;
   ky=py-y1;
-  kz=-z1;
+  kz=pz-z1;
 
   /*Now for wavelength selection*/
   r=rand01();
@@ -215,8 +216,6 @@ TRACE
     k=E2K*(randnorm()*pt->w[lineno]+pt->e[lineno]);
     
     pmul*=(1-p_continous)/frac;
-    //printf("%g\n",pmul);
-    //printf("l# %d li %g le %g lw %g Na=%g\n",lineno,pt->i[lineno],pt->e[lineno],pt->w[lineno],Ichar);/*see honkimaeki1990*/
     /*correct for not having the full E-window if so*/
 
   }
@@ -228,22 +227,39 @@ TRACE
   /*set the x-ray weight to whatever we computed just before and correct for only sampling the exit window, and correct for number of issued photons*/
   p=pmul*pmul_c;
     
-  /*remember to correct for absorption*/
-  
+  double mu_abs,l0;  
+  int ie;
+  /*Correct for absorption*/
+  if (take_off<0){
+    double px,py,pz,nx,ny,nz;
+    coords_get(rot_apply(R_xray_gen,coords_set(0,1,0)),&nx,&ny,&nz);
+    coords_get(rot_apply(R_xray_gen,coords_set(0,-thickness,0)),&px,&py,&pz);
+    /*this means we exit through the bottom of the anode slab*/
+    ie=plane_intersect(&l0,x,y,z,kx,ky,kz,nx,ny,nz,px,py,pz);
+  }else{
+    double nx,ny,nz;
+    coords_get(rot_apply(R_xray_gen,coords_set(0,1,0)),&nx,&ny,&nz);
+    /*exit through top of anode slab*/
+    ie=plane_intersect(&l0,x,y,z,kx,ky,kz,nx,ny,nz,0,0,0);
+    if(l0<0){
+    }
+  }
+  mu_abs=Table_Value(prms.T, k*K2E, 5)*prms.rho*1e2; /*mu_abs in m^-1*/
+  p*=exp(-l0*mu_abs);
+  //printf("%g %g %g %g\n",k*K2E,mu_abs,exp(-l0*mu_abs),Table_Value(prms.T, k*K2E, 5) );
   /*set a random phase - and propagate to the exit window*/
-  phi=0;//rand01()*2*M_PI;
-  PROP_Z0;
-  SCATTER;
+  phi=rand01()*2*M_PI;
 %}
 
 MCDISPLAY
 %{
   magnify("xy");
-  double x1,y1,z1,x2,y2,z2,x0_2,z0_2;
-  x0_2=x0/2.0;
-  z0_2=z0/2.0;
-  x1=-x0_2;y1=0;z1=-z0_2;
-  x2=-x0_2;y2=0;z2= z0_2;
+  double x1,y1,z1,x2,y2,z2,width_2,height_2;
+  double dx,dy,dz;
+  width_2=width/2.0;
+  height_2=height/2.0;
+  x1=-width_2;y1=0;z1=-height_2;
+  x2=-width_2;y2=0;z2= height_2;
   printf("%g %g %g\n",x1,y1,z1);
   printf("%g %g %g\n",x2,y2,z2);
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
@@ -252,73 +268,73 @@ MCDISPLAY
   printf("%g %g %g %g \n",x2,y2,z2,mu);
   line(x1,y1,z1,x2,y2,z2);
 
-  x1=x0_2;y1=0;z1=z0_2;
+  x1=width_2;y1=0;z1=height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
   
-  x2=x0_2;y2=0;z2=-z0_2;
+  x2=width_2;y2=0;z2=-height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x1,y1,z1,x2,y2,z2);
 
-  x1=-x0_2;y1=0;z1=-z0_2;
+  x1=-width_2;y1=0;z1=-height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
 
   /*this is the mean penetration depth of electron that get converted to x-rays*/  
-  x1=-x0_2;y1=-mu;z1=-z0_2;
-  x2=-x0_2;y2=-mu;z2= z0_2;
+  x1=-width_2;y1=-mu;z1=-height_2;
+  x2=-width_2;y2=-mu;z2= height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x1,y1,z1,x2,y2,z2,5);
-  x1=x0_2;y1=-mu;z1=z0_2;
+  x1=width_2;y1=-mu;z1=height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x2,y2,z2,x1,y1,z1,5);
-  x2= x0_2;y2=-mu;z2=-z0_2;
+  x2= width_2;y2=-mu;z2=-height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x1,y1,z1,x2,y2,z2,5);
-  x1=-x0_2;y1=-mu;z1=-z0_2;
+  x1=-width_2;y1=-mu;z1=-height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x2,y2,z2,x1,y1,z1,5);
   /* add another set of lines line at 2 mean penetration depth*/
-  x1=-x0_2;y1=-2*mu;z1=-z0_2;
-  x2=-x0_2;y2=-2*mu;z2= z0_2;
+  x1=-width_2;y1=-2*mu;z1=-height_2;
+  x2=-width_2;y2=-2*mu;z2= height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x1,y1,z1,x2,y2,z2,5);
-  x1=x0_2;y1=-2*mu;z1=z0_2;
+  x1=width_2;y1=-2*mu;z1=height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x2,y2,z2,x1,y1,z1,5);
-  x2= x0_2;y2=-2*mu;z2=-z0_2;
+  x2= width_2;y2=-2*mu;z2=-height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x1,y1,z1,x2,y2,z2,5);
-  x1=-x0_2;y1=-2*mu;z1=-z0_2;
+  x1=-width_2;y1=-2*mu;z1=-height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   dashed_line(x2,y2,z2,x1,y1,z1,5);
 
-  x1=-x0_2;y1=-2*mu;z1=-z0_2;
-  x2=-x0_2;y2=0;z2=-z0_2;
+  x1=-width_2;y1=-2*mu;z1=-height_2;
+  x2=-width_2;y2=0;z2=-height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
-  x1=x0_2;y1=-2*mu;z1=-z0_2;
-  x2=x0_2;y2=0;z2=-z0_2;
+  x1=width_2;y1=-2*mu;z1=-height_2;
+  x2=width_2;y2=0;z2=-height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
-  x1=-x0_2;y1=-2*mu;z1=z0_2;
-  x2=-x0_2;y2=0;z2=z0_2;
+  x1=-width_2;y1=-2*mu;z1=height_2;
+  x2=-width_2;y2=0;z2=height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
-  x1=x0_2;y1=-2*mu;z1=z0_2;
-  x2=x0_2;y2=0;z2=z0_2;
+  x1=width_2;y1=-2*mu;z1=height_2;
+  x2=width_2;y2=0;z2=height_2;
   mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
   mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
   line(x2,y2,z2,x1,y1,z1);
 
 
   /*now draw "exit" window*/
-  rectangle("xy",0,0,0,xwidth,yheight);
+  rectangle("xy",0,0,0,focus_xw,focus_yh);
 %}
 
 END
