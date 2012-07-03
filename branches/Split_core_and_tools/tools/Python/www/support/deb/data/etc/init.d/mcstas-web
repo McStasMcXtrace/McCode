@@ -20,6 +20,7 @@ case "$1" in
         start-stop-daemon -b --chdir ${DIR} \
             --exec ${DIR}/lib/uwsgi-1.2/uwsgi \
 		        --start -- --workers 10 --socket ${UWSGI_LISTEN} \
+                       --logto logs/uwsgi.log \
             --module run --callable app
         ;;
     stop)
