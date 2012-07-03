@@ -5,12 +5,12 @@ Architecture: amd64
 Maintainer: Johan Brinch <jsbn@fysik.dtu.dk>
 Installed-Size: 20713617
 Depends: build-essential (>= 11),
-         sudo, wget,
+         sudo,
          python (>= 2.5),
          python-dev (>= 2.5),
          python-setuptools (>= 0.6),
          nginx (>= 0.8.40)
-Suggests: nginx
+Suggests: wget
 Section: editors
 Priority: optional
 Homepage: http://www.mcstas.org
