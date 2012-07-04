@@ -51,19 +51,24 @@ class SimRun(ModelBase):
     id     = db.Column(db.String(64), primary_key=True)
     job_id = db.Column(db.String(38), db.ForeignKey('job.id'))
     sim_id = db.Column(db.Integer, db.ForeignKey('simulation.id'))
+    user   = db.Column(db.Integer, db.ForeignKey('user.username'))
+
     status = db.Column(db.String(32), index=True)
     str_params = db.Column(db.String())
     str_result = db.Column(db.String())
     created = db.Column(db.DateTime(timezone=False), index=True)
+    completed = db.Column(db.DateTime(timezone=False), index=True)
 
-    def __init__(self, job, sim, params):
+    def __init__(self, user, job, sim, params):
         self.id     = job.id + "__" + str(datetime.now()).replace(' ', '_')
+        self.user   = user
         self.job_id = job.id
         self.sim_id = sim.id
         self.status = "waiting"
         self.params = params
         self.result = ""
         self.created = datetime.now()
+        self.completed = None
 
     @property
     def params(self):

@@ -74,7 +74,7 @@ def show_plot(runid, name):
 @with_nonce()
 @authenticated()
 @templated()
-def configure(jobid):
+def configure(jobid, user):
     job = Job.query.get(jobid)
     sims = get_sims()
     return dict(sims = sims, job=job, jobid=jobid, nonce=get_nonce())
@@ -83,7 +83,7 @@ def configure(jobid):
 @app.route('/job/update/<jobid>', methods=['POST'])
 @authenticated()
 @check_nonce()
-def configurePOST(jobid):
+def configurePOST(jobid, user):
     oks    = []
     errors = []  # all ok
     def ok(name, old, f):
@@ -159,7 +159,7 @@ def configurePOST(jobid):
 @app.route('/sim/<jobid>', methods=['POST'])
 @authenticated()
 @check_nonce()
-def simulatePOST(jobid):
+def simulatePOST(jobid, user):
     ''' Create simulation job for the worker '''
     job = Job.query.get(jobid)
     sim = Simulation.query.get(job.sim_id)
@@ -174,7 +174,7 @@ def simulatePOST(jobid):
         (p.param.name, p.value) for p in job.params
         if p.param.name in valid))
     # create simulation run (for the worker to compute)
-    run = SimRun(job=job, sim=sim, params=params)
+    run = SimRun(user=user, job=job, sim=sim, params=params)
     db_session.add(run)
     db_session.commit()
     # send user to status page

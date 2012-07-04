@@ -109,9 +109,9 @@ def authenticated(allowed=None):
             ''' Gets called in place of handle '''
             session = get_session()
             user = session.get('user', None)
-            if user is None or (allowed and user != allowed):
+            if user is None or (allowed and user not in allowed):
                 return redirect(url_for('login', next=request.path))
-            return handle(*args, **kwargs)
+            return handle(*args, user=user, **kwargs)
         return decorated_function
     return decorator
 
