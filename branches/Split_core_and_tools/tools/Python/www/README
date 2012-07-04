@@ -5,12 +5,18 @@ data/app.db:   The sqlite3 database file.
 sim/:          Stores the available instrument source files and documentation.
 
 Scripts:
-update_sim.sh: Visits files in sim/src and updates sim/bin and data/app.db.
+bin/get-dependencies.sh
+               Retrieves external dependencies (Python modules etc.)
+
+bin/update-simulations.sh
+               Visits files in sim/src and updates sim/bin and data/app.db.
                Run this script whenever the instrument files have changed.
 
-worker.py      Starts a worker that can run simulations.
+bin/start-worker.sh
+               Starts a worker that can run simulations.
 
-run.py:        Runs the application.
+bin/start-server.sh
+               Starts a web-server for the application.
 
 
 
