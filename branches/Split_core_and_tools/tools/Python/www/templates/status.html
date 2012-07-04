@@ -11,7 +11,8 @@
   </style>
 {% endblock %}
 {% block content %}
-  <h1>Results</h1>
+  <h1>{{ job.sim.name }}:
+    <small>{{ job.created.strftime('%Y-%m-%d %H:%M:%S') }}</small></h1>
 
   <script language="javascript">
     var runid = "{{ runid }}";
