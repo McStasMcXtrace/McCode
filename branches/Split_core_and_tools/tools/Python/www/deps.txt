@@ -3,6 +3,7 @@
 ** build-essential (gcc, make, etc.)
 ** autoconf
 ** sqlite3
+** sudo
 
 * extra
 ** mcstas
@@ -12,6 +13,6 @@
 *** setup_tools (python-setuptools)
 
 * optional
-** R
+** R (used for alternative plotter, else fallback to mcplot)
 *** rpy2
 *** fields (up to date version of R package "fields")
