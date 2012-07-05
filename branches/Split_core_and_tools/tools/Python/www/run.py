@@ -156,6 +156,21 @@ def configurePOST(jobid, user):
     return jsonify(errors=errors, oks=oks)
 
 
+
+@app.route('/sim/latest', methods=['GET'])
+@authenticated()
+def simulateLatest(user):
+    ''' List latest simulations as JSON '''
+    runs = SimRun.query.filter_by(user=user) \
+           .order_by(SimRun.created.desc()).limit(100).all()
+
+    return jsonify(runs=[{'id'        : run.id,
+                          'time'      : run.created.strftime('%s'),
+                          'instrument': run.sim.name}
+                         for run in runs])
+
+
+
 @app.route('/sim/<jobid>', methods=['POST'])
 @authenticated()
 @check_nonce()
