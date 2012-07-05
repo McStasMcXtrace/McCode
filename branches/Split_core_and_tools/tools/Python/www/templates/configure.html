@@ -9,7 +9,11 @@
 {% block content %}
   <h1>Configure your simulation</h1>
 
-  <p>Select the simulation and its parameters.</p>
+  <p>Select the simulation and its parameters.
+    <a id='latestLink' onclick='switchLatest()'>
+      [List latest simulations]</a></p>
+
+  <div id='latest'></div>
 
   <script type="text/javascript" src="/static/configure.js"></script>
   <script language="javascript">
@@ -52,9 +56,13 @@
           break;
         }
       }
+      // update list of latest simulations
+      setLatest();
     }, false);
 
   </script>
+
+
 
   <form method=post action="/job/update/{{ jobid }}"
         onsubmit="return false;" id="form">

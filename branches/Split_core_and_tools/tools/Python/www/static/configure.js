@@ -118,3 +118,33 @@ function run() {
     });
 }
 
+
+function showLatest() {
+    return window.location.hash == '#showLatest';
+}
+
+function switchLatest() {
+    window.location.hash = showLatest() ? '' : '#showLatest';
+    setLatest();
+}
+
+
+function setLatest() {
+    if(showLatest()) {
+        $.getJSON(
+            '/sim/latest',
+            function(res) {
+                var ul = $('<ul>');
+                $.each(res.runs, function(i, run) {
+                           ul.append($('<a>').attr('href', '/sim/status/'+run.id).append(
+                                         $('<li>').html(new Date(run.time*1000).toUTCString() +
+                                                        ' - ' +
+                                                        run.instrument)));
+                       });
+                $('#latest').append(ul);
+            }
+        );
+    } else {
+        $('#latest').html('');
+    }
+}
