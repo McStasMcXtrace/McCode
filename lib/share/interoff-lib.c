@@ -434,7 +434,7 @@ int off_compare (void const *a, void const *b)
 } /* off_compare */
 
 // off_cleanDouble *************************************************************
-//given an array of intesction throw those which appear several times
+//given an array of intersections throw those which appear several times
 //returns 1 if there is a possibility of error
 int off_cleanDouble(intersection* t, int* t_size)
 {
@@ -716,6 +716,38 @@ int off_intersect(double* t0, double* t3,
     }
     return 0;
 } /* off_intersect */
+
+
+/*****************************************************************************
+* int off_intersectx(double* l0, double* l3, 
+     Coords *n0, Coords *n3,
+     double x, double y, double z, 
+     double kx, double ky, double kz, 
+     off_struct data )
+* ACTION: computes intersection of an xray trajectory with an object.
+* INPUT:  x,y,z and kx,ky,kz, are spatial coordinates and wavevector of the x-ray
+*         respectively. data points to the OFF data structure.
+* RETURN: the number of polyhedra the trajectory intersects
+*         l0 and l3 are the smallest incoming and outgoing intersection lengths
+*         n0 and n3 are the corresponding normal vectors to the surface
+*******************************************************************************/
+int off_x_intersect(double *l0,double *l3,
+     Coords *n0, Coords *n3,
+     double x,  double y,  double z, 
+     double kx, double ky, double kz, 
+     off_struct data )
+{
+  /*This function simply reformats and calls off_intersect (as for neutrons)
+   *by normalizing the wavevector - this will yield the intersection lengths 
+   *in m*/
+  double jx,jy,jz,invk;
+  int n;
+  invk=1/sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
+  jx=kx*invk;jy=ky*invk;jz=kz*invk;
+  n=off_intersect(l0,l3,n0,n3,x,y,z,jx,jy,jz,data);
+  return n;
+}
+
 
 /*******************************************************************************
 * void off_display(off_struct data)

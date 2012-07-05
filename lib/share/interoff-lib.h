@@ -95,6 +95,25 @@ int off_intersect(double* t0, double* t3,
      double vx, double vy, double vz, 
      off_struct data );
 
+/*****************************************************************************
+* int off_intersectx(double* l0, double* l3, 
+     Coords *n0, Coords *n3,
+     double x, double y, double z, 
+     double kx, double ky, double kz, 
+     off_struct data )
+* ACTION: computes intersection of an xray trajectory with an object.
+* INPUT:  x,y,z and kx,ky,kz, are spatial coordinates and wavevector of the x-ray
+*         respectively. data points to the OFF data structure.
+* RETURN: the number of polyhedra the trajectory intersects
+*         l0 and l3 are the smallest incoming and outgoing intersection lengths
+*         n0 and n3 are the corresponding normal vectors to the surface
+*******************************************************************************/
+int off_x_intersect(double *l0,double *l3,
+     Coords *n0, Coords *n3,
+     double x,  double y,  double z, 
+     double kx, double ky, double kz, 
+     off_struct data );
+
 /*******************************************************************************
 * void off_display(off_struct data)
 * ACTION: display up to N_VERTEX_DISPLAYED points from the object
