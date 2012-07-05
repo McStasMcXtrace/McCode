@@ -758,7 +758,6 @@ TRACE
           if(fabs(arg) > 1)
             ABSORB;                   /* No bragg scattering possible*/
           theta = asin(arg);          /* Bragg scattering law */
-          printf("picked line %d my_s_n=%g ,theta=%g\n",line,my_s_n,theta);
               
           /* Choose point on Debye-Scherrer cone */
           if (d_phi)
@@ -808,7 +807,6 @@ TRACE
           /* Since now scattered and new direction given, calculate path to exit */
           if (line_info.shape == 1) {
             intersect  = box_intersect(&l0, &l3, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
-            if (!intersect) printf("%d %g %g %g %g %g %g %g %g\n",intersect,l0,l3,x,y,z,kx,ky,kz);
             intersecti = box_intersect(&l1, &l2, x, y, z, kx, ky, kz, xwidth_i, yheight_i, zdepth_i);
           } else if (line_info.shape == 0) {
             intersect  = cylinder_intersect(&l0, &l3, x, y, z, kx, ky, kz, radius, yheight);
