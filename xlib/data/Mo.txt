@@ -1,22 +1,23 @@
-#Mo (Z 42)
-#Atomic weight: A[r] 95.94000
+#Mo (Z  42) 
+#Atomic weight: A[r]  95.94000 
 #Nominal density: rho 1.0200E+01
-#sigma[a](barns/atom) = [mu/rho](cm^2 g^-1) x 1.59312E+02
-#E(eV) [mu/rho](cm^2 g^-1) = f[2](e atom^-1) x 4.38611E+05 
-#14 edges. Edge energies (keV): 
+#    σ[a](barns/atom) = [μ/ρ](cm^2 g^-1)  ×  1.59312E+02
+#    E(eV) [μ/ρ](cm^2 g^-1) = f[2](e atom^-1)  ×  4.38611E+05
+#    14 edges. Edge energies (keV):
 #
 #
-# K      1.99995E+01  L I    2.86550E+00  L II   2.62510E+00  L III  2.52020E+00 
-# M I    5.04600E-01  M II   4.09700E-01  M III  3.92300E-01  M IV   2.30300E-01 
-# M V    2.27000E-01  N I    6.18000E-02  N II   3.48000E-02  N III  3.48000E-02 
-# N IV   1.80000E-03  N V    1.80000E-03
-#Relativistic correction estimate f[rel] (H82,3/5CL) = -3.4394E-01, -2.1540E-01 e atom^-1 
-#Nuclear Thomson correction f[NT] = -1.0086E-02 e atom^-1
+#      K      1.99995E+01  L I    2.86550E+00  L II   2.62510E+00  L III  2.52020E+00
+#      M I    5.04600E-01  M II   4.09700E-01  M III  3.92300E-01  M IV   2.30300E-01
+#      M V    2.27000E-01  N I    6.18000E-02  N II   3.48000E-02  N III  3.48000E-02
+#      N IV   1.80000E-03  N V    1.80000E-03
 #
-#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#    Relativistic correction estimate f[rel] (H82,3/5CL) = -3.4394E-01,
+#    -2.1540E-01 e atom^-1
+#    Nuclear Thomson correction f[NT] = -1.0086E-02 e atom^-1
+#
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #Form Factors, Attenuation and Scattering Cross-sections
 #Z=42, E = 0.001 - 433 keV
-#
 #
 #      E            f[1]          f[2]        [mu/rho]      [sigma/rho]      [mu/rho]      [mu/rho][K]      lambda
 #                                      Photoelectric Coh+inc      Total
@@ -231,4 +232,4 @@
 3.788588E+02  4.20264E+01  1.5395E-02  1.7823E-02  9.1251E-02  1.0907E-01  1.545E-02  3.273E-03
 4.050001E+02  4.20237E+01  1.3533E-02  1.4656E-02  8.8334E-02  1.0299E-01  1.269E-02  3.061E-03
 4.329451E+02  4.20212E+01  1.1896E-02  1.2051E-02  8.5498E-02  9.7549E-02  1.042E-02  2.864E-03
-
+#

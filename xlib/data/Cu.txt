@@ -1,17 +1,18 @@
-# Cu (Z 29) 
-# A[r] 63.54600 
-# rho 8.9400
-#    σa(barns/atom) = [μ/ρ](cm2 g-1)  ×  1.05521E+02 
-#    E(eV) [μ/ρ](cm2 g-1) = f2(e atom-1)  ×  6.62202E+05 
+#Cu (Z  29) 
+#Atomic weight: A[r]  63.54600 
+#Nominal density: rho 8.9400
+#    σ[a](barns/atom) = [μ/ρ](cm^2 g^-1)  ×  1.05521E+02
+#    E(eV) [μ/ρ](cm^2 g^-1) = f[2](e atom^-1)  ×  6.62202E+05
 #    9 edges. Edge energies (keV):
 #
-#     
-#      K      8.97890E+00  L I    1.09610E+00  L II   9.51000E-01  L III  9.31100E-01 
-#      M I    1.19800E-01  M II   7.36000E-02  M III  7.36000E-02  M IV   1.60000E-03 
-#      M V    1.60000E-03 
 #
-#    Relativistic correction estimate frel (H82,3/5CL) = -1.4003E-01, -8.7600E-02 e atom-1 
-#    Nuclear Thomson correction fNT = -7.2602E-03 e atom-1 
+#      K      8.97890E+00  L I    1.09610E+00  L II   9.51000E-01  L III  9.31100E-01
+#      M I    1.19800E-01  M II   7.36000E-02  M III  7.36000E-02  M IV   1.60000E-03
+#      M V    1.60000E-03
+#
+#    Relativistic correction estimate f[rel] (H82,3/5CL) = -1.4003E-01,
+#    -8.7600E-02 e atom^-1
+#    Nuclear Thomson correction f[NT] = -7.2602E-03 e atom^-1
 #
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #Form Factors, Attenuation and Scattering Cross-sections
@@ -207,3 +208,4 @@
 3.788588E+02  2.90071E+01  2.8106E-03  4.9127E-03  9.2064E-02  9.6977E-02  4.297E-03  3.273E-03
 4.050001E+02  2.90063E+01  2.4524E-03  4.0098E-03  8.9345E-02  9.3355E-02  3.502E-03  3.061E-03
 4.329451E+02  2.90056E+01  2.1398E-03  3.2729E-03  8.6680E-02  8.9953E-02  2.855E-03  2.864E-03
+#
