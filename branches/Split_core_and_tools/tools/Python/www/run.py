@@ -5,7 +5,7 @@ flaskext_compat.activate()
 
 from flask import *
 from uuid import uuid4 as uuid
-import sys
+import sys, os
 
 from app import app, db, db_session, SessionMaker, ModelBase
 from models import Job, Simulation, SimRun, Param, ParamValue, ParamDefault, User
@@ -63,7 +63,9 @@ def documentation(instr):
 def show_plot(runid, name):
     # remove tags, eg. plot-Lmon1.sim-lin.gif => Lmon1.sim
     mon = name.split('-', 1)[1].rsplit('-', 1)[0]
-    doc_url = '/out/%s/mcstas/%s' % (runid, mon)
+    prefix = os.path.dirname(name)
+    # construct paths
+    doc_url = '/out/%s/%s/%s' % (runid, prefix, mon)
     img_url = '/out/%s/%s' % (runid, name)
     return """
     <a href="%s"><img src="%s"></a>
