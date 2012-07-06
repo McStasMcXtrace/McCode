@@ -11,7 +11,7 @@ for i in $( ls *.instr ); do
         echo "* c file exists";
     else
         echo "* generating c file..";
-        mcstas -o $b.c $i > /dev/null 1>&2;
+        mcstas --trace -O3 -o $b.c $i > /dev/null 1>&2;
     fi
     if [ -x $b.out ]; then
         echo "* executable exists";
