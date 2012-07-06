@@ -12,6 +12,7 @@ from config import IMAGE_FORMAT
 
 SIM_SRC_PATH = "sim/%s.instr"
 SIM_BIN_PATH = "sim/%s.out"
+SIM_C_PATH = "sim/%s.c"
 
 WORK_PATH = "out/%s"
 
@@ -109,16 +110,19 @@ def work():
     name = run.sim.name
     siminstr = SIM_SRC_PATH % name
     simbin = SIM_BIN_PATH % name
+    simc = SIM_C_PATH % name
+
+    # Create hard links to instrument source, c-code and binary
+    for path in (siminstr, simbin, simc):
+        os.link(path, workdir % basename(path))
 
     # generate list of parameters
     params = [ '%s=%s' % (str(k), value_to_str(v)) for k, v in params.items() ]
 
-    # copy instrument file
-    shutil.copy(siminstr, workdir % (name + ".instr"))
-    shutil.copy(simbin, workdir % (name + ".out"))
-
     # compute instrument layou
     is_scan = any(',' in param for param in params)
+
+    # Generate instrument graphics with mcdisplay
     display(workdir % (name + ".instr"), first_range(params), workdir % "layout.gif")
     display(workdir % (name + ".instr"), first_range(params), workdir % "layout.wrl", fmt='vrml')
 
