@@ -25,3 +25,7 @@ CSRF_SESSION_KEY = 'ZF9mckN4+uFOyXpNj5Xx1g'
 
 CACHE_TYPE = 'simple'
 CACHE_THRESHOLD = 5  # seconds
+
+
+IMAGE_FORMAT = 'png' # gif/png - R-based plotter only supports png
+

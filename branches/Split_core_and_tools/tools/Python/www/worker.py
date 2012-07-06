@@ -7,6 +7,8 @@ import time, os, shutil, re, json
 import traceback
 import tarfile
 
+from config import IMAGE_FORMAT
+
 
 SIM_SRC_PATH = "sim/%s.instr"
 SIM_BIN_PATH = "sim/%s.out"
@@ -17,25 +19,26 @@ WORK_PATH = "out/%s"
 # try to use new R plotter instead of mcplot
 def mcplot(simfile, outfile, logy=False):
     ''' Plot a mcstas.sim file with mcplot '''
-    pid = Popen(["mcplot", "-gif"] +
+    pid = Popen(["mcplot", "-%s" % IMAGE_FORMAT] +
                 (logy and ["-log"] or []) +
                 [basename(simfile)],
                 cwd=dirname(simfile))
     pid.communicate()
-    print simfile, outfile
-    os.rename("%s.gif" % simfile , outfile)
+    os.rename("%s.%s" % (simfile, IMAGE_FORMAT) , outfile)
+
 try:
     from rplot.plot import plotSim
     def plot(simfile, outfile, logy=False):
         ''' Plot a sim file with R '''
         try:
-            plotSim(simfile, logy, 'png')
-            os.rename('%s.png' % simfile, outfile)
+            plotSim(simfile, logy, IMAGE_FORMAT)
+            os.rename('%s.%s' % (simfile, IMAGE_FORMAT), outfile)
         except Exception,e:
             print e
             mcplot(simfile, outfile, logy)
-    print 'using plotter from rplot/'
+    print 'INFO: using plotter from rplot/'
 except Exception, e:
+    # Error occured: Print it and fallback to old mcplot
     print e
     plot = mcplot
 
