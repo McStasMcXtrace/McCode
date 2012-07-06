@@ -202,7 +202,11 @@ def simulatePOST(jobid, user):
 def status(runid, compN):
     jobid = runid.split('__', 1)[0]
     job = Job.query.get(jobid)
-    return dict(job = job, runid = runid, compN = compN)
+    run = SimRun.query.filter_by(id=runid).one()
+    params = sorted('%s=%s' % (p,v) for p,v in run.params.items()
+                    if not p.startswith('_'))
+    return dict(run = run, params=params,
+                job = job, runid = runid, compN = compN)
 
 
 if __name__ == '__main__':

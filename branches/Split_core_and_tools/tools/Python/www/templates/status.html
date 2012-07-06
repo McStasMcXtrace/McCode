@@ -13,6 +13,8 @@
 {% block content %}
   <h1>{{ job.sim.name }}:
     <small>{{ job.created.strftime('%Y-%m-%d %H:%M:%S') }}</small></h1>
+  <pre>{% for p in params
+    %}{{ p }} {% endfor %}</pre>
 
   <script language="javascript">
     var runid = "{{ runid }}";
