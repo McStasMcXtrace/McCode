@@ -120,7 +120,7 @@ function populateComps(callback, path) {
                     if (compList == 'mcstas.dat') {
                         populateComps(callback, '/0');
                     } else {
-                        COMPS = compList.sort();
+                        COMPS = compList;
                         callback();
                     }
                 }
