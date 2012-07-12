@@ -24,7 +24,7 @@ section 'Creating default user: mcstas/mcstas'
 # Copy some simulations files from mcstas/examples and compile them
 dir=/usr/local/lib/mcstas/examples
 section "Copying instrument sources from local McStas installation: (${dir})"
-examples="ILL_H113.instr ILL_H16.instr"
+examples="h8_test.instr SANS.instr PSI_DMC.instr"
 for i in ${examples}; do
     if [ -f ${dir}/${i} ]; then
         cp -v ${dir}/${i} sim/${i};
