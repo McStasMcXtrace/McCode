@@ -36,4 +36,4 @@ echo '. Get dependencies..'
 
 # generate new debian package
 sudo dh_md5sums
-sudo dh_builddeb
+sudo dh_builddeb --destdir=.
