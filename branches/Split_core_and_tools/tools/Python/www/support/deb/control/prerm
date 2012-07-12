@@ -12,6 +12,6 @@ rm -rf lib
 rm -f flask flask_sqlalchemy.py jinja2 sqlalchemy uwsgi werkzeug
 
 # Python byte code
-rm **/*.pyc
+rm -f **/*.pyc
 
 # The only thing left now should be the database in "data/app.db"
