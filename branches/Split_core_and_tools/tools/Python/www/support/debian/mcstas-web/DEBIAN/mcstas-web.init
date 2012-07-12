@@ -1,6 +1,14 @@
 #!/bin/sh
-# /etc/init.d/mcstas-web
-#
+
+## BEGIN INIT INFO
+# Provides:          mcstas-web
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts the McStas web interface
+# Description:       starts the McStas web interface including the nginx webserver and a worker
+## END INIT INFO
 
 PID_WORK=/var/run/mcstas-web-worker.pid
 DIR=/usr/local/mcstas-web
