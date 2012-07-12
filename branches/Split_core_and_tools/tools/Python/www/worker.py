@@ -16,6 +16,9 @@ SIM_C_PATH = "sim/%s.c"
 
 WORK_PATH = "out/%s"
 
+STACKTRACE = '''Python stack-trace:
+%s'''
+
 
 # try to use new R plotter instead of mcplot
 def mcplot(simfile, outfile, logy=False):
@@ -76,18 +79,15 @@ def first_range(val):
 
 
 def work():
-    ''' Process a job by running the McStas simulation '''
-
+    ''' Fetch and process a job by running the McStas simulation '''
     # fetch job
     run = SimRun.query.filter_by(status="waiting").order_by('created').first()
     if run is None:
         return
-
     run.status = "running"
     db_session.commit()
 
     print "Running job: ", run.id
-    params = run.params
 
     # create output folder, this works as a lock
     workdir = "%s/%%s" % (WORK_PATH % run.id)
@@ -98,7 +98,27 @@ def work():
         print "Skipping: already running."
         return
 
+    # try to process job
+    try:
+        processJob(run, workdir)
+    except:
+        exc = traceback.format_exc()
+        file(workdir % 'err.txt', 'a').write('\n' + STACKTRACE % exc)
+        print exc
+
+    # mark job as completed
+    run.status = "done"
+    db_session.commit()
+    print "Done."
+
+
+
+def processJob(run, workdir):
+    ''' Process a specific job '''
+
     # pick seed and samples
+    params = run.params
+
     seed = params["_seed"]
     samples = params["_samples"]
     npoints = params["_npoints"]
@@ -169,11 +189,6 @@ def work():
                  process_components(folder + "/mcstas.sim"),
                  [])
 
-    run.status = "done"
-    db_session.commit()
-
-    print "Done."
-
 
 if __name__ == '__main__':
     while True:
@@ -181,4 +196,7 @@ if __name__ == '__main__':
         try:
             work()
         except:
+            # rollback any non-committed transactions
+            db_session.rollback()
+            # print error message to stdout
             traceback.print_exc()
