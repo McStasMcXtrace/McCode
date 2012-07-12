@@ -101,7 +101,7 @@ def configurePOST(jobid, user):
     form = request.form
     sim = Simulation.query.filter_by(name=request.form['sim']).one()
 
-    # defualts
+    # defaults
     seed    = 0
     samples = 100000
     npoints = 1
