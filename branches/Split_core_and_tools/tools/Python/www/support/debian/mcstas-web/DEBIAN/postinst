@@ -39,3 +39,8 @@ section 'Running "update_sim.sh" to install instruments from sim/src'
 
 section 'Updating nginx configuration'
 ./bin/write-config.sh
+update-rc.d nginx disable
+
+section 'Updating init scripts and starting services'
+update-rc.d -f mcstas-web defaults
+/etc/init.d/mcstas-web start

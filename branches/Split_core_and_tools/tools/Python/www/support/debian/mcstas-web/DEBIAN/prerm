@@ -5,6 +5,9 @@
 set -e
 cd /usr/local/mcstas-web
 
+# Stop the services
+/etc/init.d/mcstas-web stop
+
 # Source directories
 rm -rf lib
 
