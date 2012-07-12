@@ -37,5 +37,5 @@ section 'Running "update_sim.sh" to install instruments from sim/src'
 ./bin/update-simulations.sh
 
 
-# Configure nginx
+section 'Updating nginx configuration'
 ./bin/write-config.sh
