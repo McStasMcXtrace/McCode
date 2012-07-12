@@ -47,7 +47,7 @@ except Exception, e:
     plot = mcplot
 
 
-def display(instr, params, outfile, fmt="gif"):
+def display(instr, params, outfile, fmt="png"):
     ''' Display instrument '''
     # VRML needs --format, which does not seem to work with gif/ps
     fmt_arg = fmt == 'vrml' and '--format=vrml' or '-'+fmt
