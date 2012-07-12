@@ -1,22 +1,21 @@
 #!/bin/sh
 
-echo "Translating and compiling (from sim/)"
+echo "* Translating and compiling (from sim/)"
+
+
+# read config value for MPI_NP
+MPI=`python -c "from config import MPI_NP; print MPI_NP"`
+
+MCRUN_FLAGS=""
+if [ $MPI -gt 0 ]; then
+    MCRUN_FLAGS="--mpi=${MPI}";
+fi
+
 
 cd sim
 
 for i in $( ls *.instr ); do
     echo "> $i"
     b=`basename $i .instr`
-    if [ -f $b.c ]; then
-        echo "* c file exists";
-    else
-        echo "* generating c file..";
-        mcstas --trace -o $b.c $i > /dev/null 1>&2;
-    fi
-    if [ -x $b.out ]; then
-        echo "* executable exists";
-    else
-        echo "* compiling..";
-        gcc -lm -O3 -o $b.out -O2 $b.c
-    fi
+    mcrun ${MCRUN_FLAGS} --trace -n0 $i >/dev/null 2>&1;
 done

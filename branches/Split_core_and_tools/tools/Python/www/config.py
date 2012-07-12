@@ -27,5 +27,8 @@ CACHE_TYPE = 'simple'
 CACHE_THRESHOLD = 5  # seconds
 
 
-IMAGE_FORMAT = 'png' # gif/png - R-based plotter only supports png
+# IMAGE_FORMAT is either 'gif' or 'png' - R-based plotter only supports png
+IMAGE_FORMAT = 'png'
 
+# Use MPI to utilise N processors (disabled when 0)
+MPI_NP = 0

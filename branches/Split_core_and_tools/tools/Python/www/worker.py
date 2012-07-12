@@ -7,7 +7,7 @@ import time, os, shutil, re, json
 import traceback
 import tarfile
 
-from config import IMAGE_FORMAT
+from config import IMAGE_FORMAT, MPI_NP
 
 
 SIM_SRC_PATH = "sim/%s.instr"
@@ -148,10 +148,11 @@ def processJob(run, workdir):
 
     # run mcstas via mcrun
     args = ["mcrun"] + \
-           (seed > 0 and ["--seed", str(seed)] or []) + \
-           (is_scan and ["-N", str(npoints)] or []) + \
+           (seed > 0   and ["--seed", str(seed)]    or []) + \
+           (is_scan    and ["-N",     str(npoints)] or []) + \
+           (MPI_NP > 0 and ["--mpi=%s" % MPI_NP]    or []) + \
            ["--ncount", str(samples),
-            "--dir", workdir % "mcstas",
+            "--dir",    workdir % "mcstas",
             siminstr] + params
 
     pid = Popen(args,
