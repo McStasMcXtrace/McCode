@@ -103,7 +103,7 @@ def configurePOST(jobid, user):
 
     # defaults
     seed    = 0
-    samples = 100000
+    samples = 10^6
     npoints = 1
 
     # lookup job
