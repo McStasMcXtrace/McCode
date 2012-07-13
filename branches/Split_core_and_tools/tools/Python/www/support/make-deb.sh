@@ -26,6 +26,9 @@ cp -rP ../{bin,scripts,nginx,rplot,static,templates} ${DIST}
 # init empty dirs
 mkdir -p ${DIST}/{data,logs,out,sim/src}
 
+# transfer embedded instr files
+cp -P ../sim/*.instr ${DIST}/sim
+
 # pre-download library sources
 echo ''
 echo '. Get dependencies..'
