@@ -100,7 +100,7 @@ def check_nonce():
     return decorator
 
 
-def authenticated(allowed=None):
+def authenticated(allowed=None, redirect_login=True):
     ''' Make sure user is authenticated '''
     def decorator(handle):
         ''' Decorator around handler '''
@@ -110,7 +110,9 @@ def authenticated(allowed=None):
             session = get_session()
             user = session.get('user', None)
             if user is None or (allowed and user not in allowed):
-                return redirect(url_for('login', next=request.path))
+                if redirect_login:
+                    return redirect(url_for('login', next=request.path))
+                return 'Denied', 403
             return handle(*args, user=user, **kwargs)
         return decorated_function
     return decorator

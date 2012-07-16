@@ -83,7 +83,7 @@ def configure(jobid, user):
 
 
 @app.route('/job/update/<jobid>', methods=['POST'])
-@authenticated()
+@authenticated(redirect_login=False)
 @check_nonce()
 def configurePOST(jobid, user):
     oks    = []
@@ -174,7 +174,7 @@ def simulateLatest(user):
 
 
 @app.route('/sim/<jobid>', methods=['POST'])
-@authenticated()
+@authenticated(redirect_login=False)
 @check_nonce()
 def simulatePOST(jobid, user):
     ''' Create simulation job for the worker '''

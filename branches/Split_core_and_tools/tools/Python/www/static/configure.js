@@ -1,4 +1,4 @@
-
+"use strict"
 
 function set_changed() {
     $("#btnSave").val("Save");
@@ -61,23 +61,32 @@ function save(cb) {
         }
     }
 
+    // function for dispalying errors
+    function displayErrors(errs, msg) {
+        $("#messages").html(
+            $("<p>").attr("id", "flash").html(msg));
+        $.each(errs, function(i, err) {
+            $("#lbl"+err).css("color", "#ff0000");
+        });
+    }
+
     // save
-    $.post("/job/update/" + jobid, data, "json")
-        .success(function(data) {
-            oks = data.oks;
-            for (var i = 0; i < oks.length; i++) {
-                $("#lbl"+oks[i]).css("color",     "#000000");
-            }
+    $.ajax({
+        type: 'POST',
+        url: "/job/update/" + jobid,
+        data: data,
+        dataType: "json",
+        timeout: 5000,
+        success: function(data) {
+            var oks = data.oks;
+            $.each(oks, function(i, ok) {
+                $("#lbl"+ok).css("color", "#000000");
+            });
             // check errors
-            err = data.errors;
-            if (err.length > 0) {
+            var errs = data.errors;
+            if (errs.length > 0) {
                 // some errors occured
-                $("#messages").html(
-                    $("<p>").attr("id", "flash").html(
-                        "Errors occured while saving!"));
-                for (var i = 0; i < err.length; i++) {
-                    $("#lbl"+err[i]).css("color",     "#ff0000");
-                }
+                displayErrors(errs, "Errors occured while saving!");
                 btn.val("Not saved (errors)")
                     .attr("disabled", false);
                 mcb(false);
@@ -88,15 +97,21 @@ function save(cb) {
                 .attr("disabled", false)
                 .css("font-weight", "normal");
             mcb(true);
-        })
-        .error(function(data, status) {
-            // damn, what's up?
-            alert("An error occured while saving your stuff :/");
-            btn.val("Save")
+        },
+        error: function(xhr, reason) {
+            if (reason == "timeout") {
+                alert("Timeout! Your session may have expired.\n" +
+                      "Refresh page to login and try again (" + xhr.status + ")");
+            } else {
+                // damn, what's up?
+                alert("An error occured while saving your stuff :/ " +
+                      "(" + xhr.status + ")");
+            }
+            btn.val("Not saved (error!)")
                 .attr("disabled", false)
                 .css("font-weight", "normal");
             mcb(false);
-        });
+        }});
 
     return false;
 }
