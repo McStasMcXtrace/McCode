@@ -10,7 +10,7 @@ ALPHA = string.letters + string.digits
 
 DEBUG = True
 
-ADMINS = frozenset(['mxw968@alumni.ku.dk'])
+ADMINS = frozenset(['jsbn@fysik.dtu.dk'])
 SECRET_KEY = ''.join(PRNG.choice(ALPHA) for _ in xrange(32))
 
 
