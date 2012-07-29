@@ -1,0 +1,47 @@
+#!/bin/sh
+# debcreate <version> <arch>
+
+export BUILDDIR="/build/@IFIT_TARNAME@-@IFIT_VERSION@"
+
+rm -rf /build/*
+rm -rf /usr/local/@IFIT_TARNAME@*
+mkdir -p /usr/local/@IFIT_TARNAME@
+
+echo Performing @IFIT_TARNAME@-@IFIT_VERSION@ install to /usr/local
+cp -r /root/@IFIT_TARNAME@-@IFIT_VERSION@-amd64       \
+                                                      /usr/local/@IFIT_TARNAME@
+cp -r /root/@IFIT_TARNAME@-@IFIT_VERSION@/Docs        \
+                                                      /usr/share/doc/@IFIT_TARNAME@
+cp    /root/@IFIT_TARNAME@-@IFIT_VERSION@/COPYING     \
+                                                      /usr/share/doc/@IFIT_TARNAME@/copyright
+cp    /root/@IFIT_TARNAME@-@IFIT_VERSION@/README.txt  \
+                                                      /usr/share/doc/@IFIT_TARNAME@/
+cp    /root/@IFIT_TARNAME@-@IFIT_VERSION@/Applications/GUI/standalone/ifit.desktop \
+                                                      /usr/share/applications
+ln -s /usr/local/@IFIT_TARNAME@/\
+                                @IFIT_TARNAME@        /usr/local/bin
+
+echo create the DEB build directory
+mkdir -p ${BUILDDIR}/DEBIAN
+mkdir -p ${BUILDDIR}/usr/local/bin
+mkdir -p ${BUILDDIR}/usr/local/@IFIT_TARNAME@
+mkdir -p ${BUILDDIR}/usr/share/doc/@IFIT_TARNAME@
+cp -rp /usr/local/bin                  ${BUILDDIR}/usr/local
+cp -rp /usr/local/@IFIT_TARNAME@/*     \
+                                       ${BUILDDIR}/usr/local/@IFIT_TARNAME@
+cp -rp /usr/share/doc/@IFIT_TARNAME@/* \
+                                        ${BUILDDIR}/usr/share/doc/@IFIT_TARNAME@
+cp /root/@IFIT_TARNAME@-@IFIT_VERSION@/Applications/GUI/standalone/deb/control ${BUILDDIR}/DEBIAN
+
+sed -i "s/any/$2/g" ${BUILDDIR}/DEBIAN/control
+
+find ${BUILDDIR} -type d -exec chmod 0755 \{\} \;
+
+dpkg-deb --build ${BUILDDIR}
+
+mv /build/@IFIT_TARNAME@-@IFIT_VERSION@.deb \
+                                     /build/@IFIT_TARNAME@-@IFIT_VERSION@-$2.deb
+
+# rm -rf $BUILDDIR
+
+
