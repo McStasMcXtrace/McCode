@@ -1,0 +1,36 @@
+Package: @IFIT_TARNAME@-@IFIT_VERSION@
+Version: @IFIT_VERSION@
+Architecture: amd64
+Installed-Size: 31120
+Depends: bash
+Section: Science
+Priority: optional
+Homepage: http://ifit.mccode.org
+Maintainer: Emmanuel Farhi <farhi@ill.fr>
+Description: @IFIT_NAME@ generic data analysis and fitting to models
+ Simple methods to be used for complex data analysis
+ .
+ The @IFIT_NAME@ program provides a set of methods to load, analyze, plot, fit and optimize models,
+ and export results. @IFIT_NAME@ is based on Matlab, but stand-alone version does not require any
+ Matlab license to run. Any text file can be imported straight away, and a set of binary files are
+ supported. Any data dimensionality can be handled, including event based data sets.
+ .
+ The spirit of the software is to include simple object definitions for Data sets and Models, with   
+ a set of methods that provide all the means to perform the usual data analysis procedures.
+ - iData objects to hold data sets. Import with:          iData('filename')
+ - iFunc objects to hold models.    Create new ones with: iFunc('expression')
+ - fit model to data with: fits(data, model)
+ - documentation is available in /usr/local/share/doc/@IFIT_TARNAME@
+ You can not define new Matlab functions in this stand-alone release, but can define
+ new iFunc objects to hold your function body.
+ .
+ Main functionalities are: [ iData Load Plot Math Fit Save Optimization iFunc Models ]
+ .
+ To use this software, you need to install the Matlab Compiler Runtime in /opt/MATLAB, 
+ so that you should have a directory /opt/MATLAB/MATLAB_Compiler_Runtime/v713/. 
+ If you install the MCR in an other location, assign the MCRROOT env variable to
+ its location.
+ .
+ To start @IFIT_NAME@, use: @IFIT_TARNAME@
+ .
+ Refer to <ifit.mccode.org> for on-line documentation.
