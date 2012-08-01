@@ -75,7 +75,6 @@
           <select size=5 name=sim id=sim
                   onchange="update_defaults(this.value); set_changed()">
             {% for sim in sims %}
-            {{ sim }}
             <option value="{{ sim }}">{{ sim }}</option>
             {% endfor %}
           </select>
