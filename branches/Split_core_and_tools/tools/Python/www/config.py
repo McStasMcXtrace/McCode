@@ -32,3 +32,7 @@ IMAGE_FORMAT = 'png'
 
 # Use MPI to utilise N processors (disabled when 0)
 MPI_NP = 0
+
+
+# Set URL path for static files (e.g. /static/jquery.js)
+STATIC_PATH = '/static'

@@ -4,7 +4,8 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 # Setup application
-app = Flask(__name__)
+import config
+app = Flask(__name__, static_path=config.STATIC_PATH)
 app.config.from_object('config')
 
 
