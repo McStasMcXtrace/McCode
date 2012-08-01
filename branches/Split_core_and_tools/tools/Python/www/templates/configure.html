@@ -15,7 +15,8 @@
 
   <div id='latest'></div>
 
-  <script type="text/javascript" src="/static/configure.js"></script>
+  <script type="text/javascript"
+          src="{{ url_for('static', filename='configure.js') }}"></script>
   <script language="javascript">
     var jobid = "{{ jobid }}";
 

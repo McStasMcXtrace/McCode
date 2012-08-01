@@ -3,7 +3,8 @@
   <head>
     {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script type="text/javascript" src="/static/jquery.js"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static', filename='jquery.js') }}"></script>
     <title>McStas: {% block title %}{% endblock %}</title>
     {% endblock %}
   </head>

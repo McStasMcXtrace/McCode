@@ -22,7 +22,8 @@
     var compN = "{{ compN }}";
     var npoints = "{{ job.npoints }}";
   </script>
-  <script type="text/javascript" src="/static/status.js"></script>
+  <script type="text/javascript"
+          src="{{ url_for('static', filename='status.js') }}"></script>
   <script language="javascript">
     $(document).ready(doInit);
   </script>
