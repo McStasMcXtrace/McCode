@@ -111,7 +111,7 @@ def authenticated(allowed=None, redirect_login=True):
             user = session.get('user', None)
             if user is None or (allowed and user not in allowed):
                 if redirect_login:
-                    return redirect(url_for('login', next=request.path))
+                    return redirect(url_for('login', next=request.path.lstrip('/')))
                 return 'Denied', 403
             return handle(*args, user=user, **kwargs)
         return decorated_function
