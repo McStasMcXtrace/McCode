@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 function set_changed() {
     $("#btnSave").val("Save");
