@@ -4,14 +4,14 @@ flaskext_compat.activate()
 
 
 from flask import *
-from uuid import uuid4 as uuid
 import sys, os
 
 from app import app, db, db_session, SessionMaker, ModelBase
 from models import Job, Simulation, SimRun, Param, ParamValue, ParamDefault, User
 
-from util import skip, templated, with_nonce, get_nonce, check_nonce, \
-     authenticated, authenticate, get_session, one_or_none, new_id
+from util import new_id
+from flaskutil import skip, templated, with_nonce, get_nonce, check_nonce, \
+     authenticated, authenticate, get_session, one_or_none
 
 
 def convert_type(default, str_value):

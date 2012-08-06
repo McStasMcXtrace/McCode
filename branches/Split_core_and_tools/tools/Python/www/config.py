@@ -1,30 +1,28 @@
 import os
+from util import new_key
+
 _basedir = os.path.abspath(os.path.dirname(__file__))
 
-from random import SystemRandom
-PRNG = SystemRandom()
 
-import string
-ALPHA = string.letters + string.digits
+# List of admin mails
+ADMINS = frozenset(['jsbn@fysik.dtu.dk'])
 
-
+# Display tracebacks in HTML when an error occurs
 DEBUG = True
 
-ADMINS = frozenset(['jsbn@fysik.dtu.dk'])
-SECRET_KEY = ''.join(PRNG.choice(ALPHA) for _ in xrange(32))
 
+
+# Database connection
+#
+# See: http://packages.python.org/Flask-SQLAlchemy/config.html
+# URI examples (SQLite, MySQL, PostgreSQL, Oracle):
+#  sqlite:////absolute/path/to/foo.db
+#  mysql://username:password@server/db
+#  postgresql://scott:tiger@localhost/mydatabase
+#  oracle://scott:tiger@127.0.0.1:1521/sidname
 
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(_basedir, 'data/app.db')
 DATABASE_CONNECT_OPTIONS = {}
-
-THREADS_PER_PAGE = 8
-
-CSRF_ENABLED = True
-CSRF_SESSION_KEY = 'ZF9mckN4+uFOyXpNj5Xx1g'
-
-
-CACHE_TYPE = 'simple'
-CACHE_THRESHOLD = 5  # seconds
 
 
 # IMAGE_FORMAT is either 'gif' or 'png' - R-based plotter only supports png
@@ -36,3 +34,19 @@ MPI_NP = 0
 
 # Set URL path for static files (e.g. /static/jquery.js)
 STATIC_PATH = '/static'
+
+
+
+# Generate a key for signing cookies (resets when server is restartet)
+SECRET_KEY = new_key()
+
+# Enable protection against cross-site request forgery in WTF
+# (not currently needed, util.py does this with nonce)
+CSRF_ENABLED = True
+CSRF_SESSION_KEY = new_key()
+
+
+
+# Cache templates in-memory
+CACHE_TYPE = 'simple'
+CACHE_THRESHOLD = 5  # seconds
