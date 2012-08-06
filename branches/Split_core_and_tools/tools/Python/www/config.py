@@ -36,6 +36,9 @@ MPI_NP = 0
 STATIC_PATH = '/static'
 
 
+# Maximum number of neutrons allowed (ray samples / ncount)
+MAX_RAY_SAMPLES = 10000000
+
 
 # Generate a key for signing cookies (resets when server is restartet)
 SECRET_KEY = new_key()
