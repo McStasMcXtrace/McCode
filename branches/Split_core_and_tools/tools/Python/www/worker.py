@@ -7,7 +7,7 @@ import time, os, shutil, re, json
 import traceback
 import tarfile
 
-from config import IMAGE_FORMAT, MPI_NP, MAX_RAY_SAMPLES
+from config import IMAGE_FORMAT, MPI_NP, MAX_RAY_SAMPLES, MAX_SCAN_POINTS
 
 
 SIM_SRC_PATH = "sim/%s.instr"
@@ -121,7 +121,7 @@ def processJob(run, workdir):
 
     seed = params["_seed"]
     samples = min(MAX_RAY_SAMPLES, params["_samples"])
-    npoints = params["_npoints"]
+    npoints = min(MAX_SCAN_POINTS, params["_npoints"])
     del params["_seed"]
     del params["_samples"]
     del params["_npoints"]
