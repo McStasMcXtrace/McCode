@@ -1,6 +1,36 @@
 "use strict";
 
+
+function enforce_limits() {
+    $.each(["seed", "samples", "npoints"], function(_, id) {
+               ensure_positive_int(id);
+           });
+
+    ensure_max("seed",    2147483647);
+    ensure_max("samples", max_samples);
+    ensure_max("npoints", max_npoints);
+}
+
+function ensure_max(id, max) {
+    var input = $('#' + id),
+        value = parseInt(input.attr("value"));
+    if(value > max) {
+        input.attr("value", max);
+    }
+}
+
+function ensure_positive_int(id) {
+    var input = $('#' + id),
+        value = parseInt(input.attr("value"));
+    if (isNaN(value) || value < 0) {
+        value = 1;
+    }
+    input.attr("value", value);
+}
+
+
 function set_changed() {
+    enforce_limits();
     $("#btnSave").val("Save");
 }
 

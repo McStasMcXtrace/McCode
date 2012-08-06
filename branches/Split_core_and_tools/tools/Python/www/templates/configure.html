@@ -20,6 +20,9 @@
   <script language="javascript">
     var jobid = "{{ jobid }}";
 
+    var max_samples = {{ max_samples }},
+        max_npoints = {{ max_npoints }};
+
     // parameters and default values
     var defaults = { {%
       for sim in sims %}

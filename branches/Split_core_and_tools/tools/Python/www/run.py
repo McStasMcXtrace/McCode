@@ -2,9 +2,11 @@
 import flaskext_compat
 flaskext_compat.activate()
 
-
 from flask import *
-import sys, os
+import sys
+import os
+
+from config import MAX_RAY_SAMPLES, MAX_SCAN_POINTS
 
 from app import app, db, db_session, SessionMaker, ModelBase
 from models import Job, Simulation, SimRun, Param, ParamValue, ParamDefault, User
@@ -79,7 +81,8 @@ def show_plot(runid, name):
 def configure(jobid, user):
     job = Job.query.get(jobid)
     sims = get_sims()
-    return dict(sims = sims, job=job, jobid=jobid, nonce=get_nonce())
+    return dict(sims = sims, job=job, jobid=jobid, nonce=get_nonce(),
+                max_samples=MAX_RAY_SAMPLES, max_npoints=MAX_SCAN_POINTS)
 
 
 @app.route('/job/update/<jobid>', methods=['POST'])
