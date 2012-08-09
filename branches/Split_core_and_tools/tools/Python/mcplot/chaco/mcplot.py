@@ -20,7 +20,14 @@ class PlotDesc(object):
         self.color = color
 
 
-class McPlot(HasTraits):
+class McPlot(Plot):
+    def __init__(self, *args, **kwargs):
+        super(McPlot, self).__init__(*args, **kwargs)
+
+emptyPlot = McPlot()
+
+
+class McLayout(HasTraits):
     layout = Instance(PCont)
     reset = Button('Reset')
 
@@ -30,8 +37,11 @@ class McPlot(HasTraits):
         width=500, height=500, resizable=True, title="Chaco Plot")
 
     def __init__(self, descs, focus=None):
-        super(McPlot, self).__init__()
+        super(McLayout, self).__init__()
         self.descs = descs
+        self.pans = []
+        self.zooms = []
+        self.plots = []
         self.focus = descs if focus is None else focus
         self.reinit()
 
@@ -45,8 +55,7 @@ class McPlot(HasTraits):
         w = int(ceil(sqrt(num)))
         h = int(ceil(num / float(w)))
 
-        empty = Plot()
-        self.plots = self.plots + ((num - w * h) * [empty])
+        self.plots = self.plots + ((num - w * h) * [emptyPlot])
 
         self.layout = PCont(shape=(w, h))
 
@@ -56,7 +65,7 @@ class McPlot(HasTraits):
 
 
     def plot_desc(self, desc):
-        plot = Plot(desc.data)
+        plot = McPlot(desc.data)
         plot.plot((desc.x, desc.y), type=desc.type, title=desc.title, color=desc.color)
 
         pan = MTool(plot)
@@ -88,7 +97,7 @@ def main():
     desc3 = PlotDesc('x', 'y', title='plot3', data=plotdata, type='scatter')
     desc4 = PlotDesc('y', 'x', title='plot4', data=plotdata, type='scatter')
 
-    McPlot([desc1, desc2, desc3, desc4, desc4]).configure_traits()
+    McLayout([desc1, desc2, desc3, desc4, desc4]).configure_traits(scrollable=True)
 
 
 if __name__ == "__main__":
