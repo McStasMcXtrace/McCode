@@ -5,9 +5,28 @@ from chaco.api import Plot, GridPlotContainer as PCont, ArrayPlotData
 from chaco.tools.api import PanTool as MTool, BetterSelectingZoom as ZTool, SaveTool
 
 from enable.component_editor import ComponentEditor
+from enable.api import BaseTool
+
 from numpy import linspace, sin
 
 from math import ceil, sqrt
+
+
+class FocusTool(BaseTool):
+    def __init__(self, mclayout, desc):
+        super(FocusTool, self).__init__()
+        self.mclayout = mclayout
+        self.desc = desc
+
+    def normal_left_dclick(self, *args):
+        if len(self.mclayout.focus) == 1:
+            # go back to overview
+            self.mclayout.focus = self.mclayout.descs
+        else:
+            # focus on chosen plot
+            self.mclayout.focus = [self.desc]
+        # reinit layout
+        self.mclayout.reinit()
 
 
 class PlotDesc(object):
@@ -59,7 +78,6 @@ class McLayout(HasTraits):
 
         self.layout = PCont(shape=(w, h))
 
-        # add zoom and pan
         for p in self.plots:
             self.layout.add(p)
 
@@ -68,16 +86,23 @@ class McLayout(HasTraits):
         plot = McPlot(desc.data)
         plot.plot((desc.x, desc.y), type=desc.type, title=desc.title, color=desc.color)
 
+        # pan
         pan = MTool(plot)
         plot.tools.append(pan)
         self.pans.append(pan)
 
+        # zoom
         zoom = ZTool(plot, tool_mode='box', always_on=True, drag_button='right')
         plot.overlays.append(zoom)
         self.zooms.append(zoom)
 
+        # save
         save = SaveTool(self.layout, always_on=True, filename="plot.pdf")
         plot.tools.append(save)
+
+        # focus
+        focus = FocusTool(self, desc)
+        plot.tools.append(focus)
 
         return plot
 
