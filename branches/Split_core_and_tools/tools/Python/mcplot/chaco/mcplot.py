@@ -7,7 +7,20 @@ from chaco.tools.api import PanTool as MTool, BetterSelectingZoom as ZTool, Save
 from enable.component_editor import ComponentEditor
 from numpy import linspace, sin
 
-class LinePlot(HasTraits):
+from math import ceil, sqrt
+
+
+class PlotDesc(object):
+    def __init__(self, x, y, data, type='line', title=None, color='blue'):
+        self.x = x
+        self.y = y
+        self.data = data
+        self.type = type
+        self.title = title
+        self.color = color
+
+
+class McPlot(HasTraits):
     plot = Instance(PCont)
     reset = Button('Reset')
 
@@ -16,37 +29,33 @@ class LinePlot(HasTraits):
         Item('plot',editor=ComponentEditor(), show_label=False),
         width=500, height=500, resizable=True, title="Chaco Plot")
 
-    def __init__(self):
-        super(LinePlot, self).__init__()
+    def __init__(self, descs):
+        super(McPlot, self).__init__()
 
-        x = linspace(-14, 14, 1000)
-        y = sin(x) * x**3
+        plots = []
+        for desc in descs:
+            plot = Plot(desc.data)
+            plot.plot((desc.x, desc.y), type=desc.type, title=desc.title, color=desc.color)
+            plots.append(plot)
 
-        plotdata = ArrayPlotData(x=x, y=y)
+        w = int(ceil(sqrt(len(plots))))
+        h = int(ceil(len(plots) / float(w)))
 
-        line = Plot(plotdata)
-        line.plot(("x", "y"), type="line", color="blue")
-        line.title = "sin(x) * x^3"
+        print (len(plots), w, h)
 
-        line2 = Plot(plotdata)
-        line2.plot(("y", "x"), type="line", color="blue")
-        line2.title = "sin(x) * x^3"
+        empty = Plot()
+        plots = plots + ((len(plots) - (w * h)) * [empty])
 
-        scatter = Plot(plotdata)
-        scatter.plot(("x", "y"), type="scatter", color="blue")
-        scatter.title = "sin(x) * x^3"
-
-        scatter2 = Plot(plotdata)
-        scatter2.plot(("y", "x"), type="scatter", color="blue")
-        scatter2.title = "sin(x) * x^3"
-
-        self.plot = PCont(shape=(2, 2))
+        self.plot = PCont(shape=(w, h))
 
         # add zoom and pan
         self.pans  = []
         self.zooms = []
-        for p in (line, line2, scatter, scatter2):
+        for p in plots:
             self.plot.add(p)
+
+            if p is empty:
+                continue
 
             pan = MTool(p)
             p.tools.append(pan)
@@ -64,4 +73,13 @@ class LinePlot(HasTraits):
         map(lambda z: z._reset_state_pressed(), self.zooms)
 
 if __name__ == "__main__":
-    LinePlot().configure_traits()
+    x = linspace(-14, 14, 1000)
+    y = sin(x) * x**3
+    plotdata = ArrayPlotData(x=x, y=y)
+
+    desc1 = PlotDesc('x', 'y', title='plot1', data=plotdata)
+    desc2 = PlotDesc('y', 'x', title='plot2', data=plotdata)
+    desc3 = PlotDesc('x', 'y', title='plot3', data=plotdata, type='scatter')
+    desc4 = PlotDesc('y', 'x', title='plot4', data=plotdata, type='scatter')
+
+    McPlot([desc1, desc2, desc3, desc4, desc4]).configure_traits()
