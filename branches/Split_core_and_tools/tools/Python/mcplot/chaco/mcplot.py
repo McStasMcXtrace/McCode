@@ -45,7 +45,6 @@ class McPlot(Plot):
 
 emptyPlot = McPlot()
 
-
 class McLayout(HasTraits):
     layout = Instance(PCont)
     reset = Button('Reset')
@@ -65,6 +64,10 @@ class McLayout(HasTraits):
         self.reinit()
 
     def reinit(self):
+        # clean up plots
+        for p in self.plots:
+            map(p.remove_trait, p.__dict__.keys())
+
         self.pans  = []
         self.zooms = []
 
