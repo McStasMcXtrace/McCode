@@ -20,6 +20,12 @@ class PlotDesc(object):
         self.color = color
 
 
+def plot_desc(desc):
+    plot = Plot(desc.data)
+    plot.plot((desc.x, desc.y), type=desc.type, title=desc.title, color=desc.color)
+    return plot
+
+
 class McPlot(HasTraits):
     plot = Instance(PCont)
     reset = Button('Reset')
@@ -32,16 +38,10 @@ class McPlot(HasTraits):
     def __init__(self, descs):
         super(McPlot, self).__init__()
 
-        plots = []
-        for desc in descs:
-            plot = Plot(desc.data)
-            plot.plot((desc.x, desc.y), type=desc.type, title=desc.title, color=desc.color)
-            plots.append(plot)
+        plots = map(plot_desc, descs)
 
         w = int(ceil(sqrt(len(plots))))
         h = int(ceil(len(plots) / float(w)))
-
-        print (len(plots), w, h)
 
         empty = Plot()
         plots = plots + ((len(plots) - (w * h)) * [empty])
