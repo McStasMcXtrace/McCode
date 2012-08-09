@@ -80,8 +80,7 @@ class McLayout(HasTraits):
         self.plots = map(self.plot_desc, self.focus)
         self.plots = self.plots + ((num - w * h) * [emptyPlot])
 
-        for p in self.plots:
-            self.layout.add(p)
+        map(self.layout.add, self.plots)
 
 
     def plot_desc(self, desc):
