@@ -68,15 +68,14 @@ class McLayout(HasTraits):
         self.pans  = []
         self.zooms = []
 
-        self.plots = map(self.plot_desc, self.focus)
-        num = len(self.plots)
-
+        num = len(self.focus)
         w = int(ceil(sqrt(num)))
         h = int(ceil(num / float(w)))
 
-        self.plots = self.plots + ((num - w * h) * [emptyPlot])
-
         self.layout = PCont(shape=(w, h))
+
+        self.plots = map(self.plot_desc, self.focus)
+        self.plots = self.plots + ((num - w * h) * [emptyPlot])
 
         for p in self.plots:
             self.layout.add(p)
@@ -113,7 +112,7 @@ class McLayout(HasTraits):
 
 
 def main():
-    x = linspace(-14, 14, 1000)
+    x = linspace(-14, 14, 10000)
     y = sin(x) * x**3
     plotdata = ArrayPlotData(x=x, y=y)
 
