@@ -43,7 +43,6 @@ class McPlot(Plot):
     def __init__(self, *args, **kwargs):
         super(McPlot, self).__init__(*args, **kwargs)
 
-emptyPlot = McPlot()
 
 class McLayout(HasTraits):
     layout = Instance(PCont)
@@ -78,8 +77,6 @@ class McLayout(HasTraits):
         self.layout = PCont(shape=(w, h))
 
         self.plots = map(self.plot_desc, self.focus)
-        self.plots = self.plots + ((num - w * h) * [emptyPlot])
-
         map(self.layout.add, self.plots)
 
 
@@ -114,7 +111,7 @@ class McLayout(HasTraits):
 
 
 def main():
-    x = linspace(-14, 14, 10000)
+    x = linspace(-14, 14, 100)
     y = sin(x) * x**3
     plotdata = ArrayPlotData(x=x, y=y)
 
@@ -123,7 +120,7 @@ def main():
     desc3 = PlotDesc('x', 'y', title='plot3', data=plotdata, type='scatter')
     desc4 = PlotDesc('y', 'x', title='plot4', data=plotdata, type='scatter')
 
-    McLayout([desc1, desc2, desc3, desc4, desc4]).configure_traits(scrollable=True)
+    McLayout([desc1, desc2, desc3, desc4, desc4, desc4, desc4, desc4]).configure_traits(scrollable=True)
 
 
 if __name__ == "__main__":
