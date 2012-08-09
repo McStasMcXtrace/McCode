@@ -21,7 +21,7 @@ function ensure_max(id, max) {
 
 function ensure_positive_int(id) {
     var input = $('#' + id),
-        value = parseInt(input.attr("value"));
+        value = Math.floor(parseFloat(input.attr("value")));
     if (isNaN(value) || value < 0) {
         value = 1;
     }
