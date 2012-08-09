@@ -20,59 +20,65 @@ class PlotDesc(object):
         self.color = color
 
 
-def plot_desc(desc):
-    plot = Plot(desc.data)
-    plot.plot((desc.x, desc.y), type=desc.type, title=desc.title, color=desc.color)
-    return plot
-
-
 class McPlot(HasTraits):
-    plot = Instance(PCont)
+    layout = Instance(PCont)
     reset = Button('Reset')
 
     traits_view = View(
         Item('reset', show_label=False),
-        Item('plot',editor=ComponentEditor(), show_label=False),
+        Item('layout',editor=ComponentEditor(), show_label=False),
         width=500, height=500, resizable=True, title="Chaco Plot")
 
-    def __init__(self, descs):
+    def __init__(self, descs, focus=None):
         super(McPlot, self).__init__()
+        self.descs = descs
+        self.focus = descs if focus is None else focus
+        self.reinit()
 
-        plots = map(plot_desc, descs)
-
-        w = int(ceil(sqrt(len(plots))))
-        h = int(ceil(len(plots) / float(w)))
-
-        empty = Plot()
-        plots = plots + ((len(plots) - (w * h)) * [empty])
-
-        self.plot = PCont(shape=(w, h))
-
-        # add zoom and pan
+    def reinit(self):
         self.pans  = []
         self.zooms = []
-        for p in plots:
-            self.plot.add(p)
 
-            if p is empty:
-                continue
+        self.plots = map(self.plot_desc, self.focus)
+        num = len(self.plots)
 
-            pan = MTool(p)
-            p.tools.append(pan)
-            self.pans.append(pan)
+        w = int(ceil(sqrt(num)))
+        h = int(ceil(num / float(w)))
 
-            zoom = ZTool(p, tool_mode='box', always_on=True, drag_button='right')
-            p.overlays.append(zoom)
-            self.zooms.append(zoom)
+        empty = Plot()
+        self.plots = self.plots + ((num - w * h) * [empty])
 
-            save = SaveTool(self.plot, always_on=True, filename="plot.pdf")
-            p.tools.append(save)
+        self.layout = PCont(shape=(w, h))
+
+        # add zoom and pan
+        for p in self.plots:
+            self.layout.add(p)
+
+
+    def plot_desc(self, desc):
+        plot = Plot(desc.data)
+        plot.plot((desc.x, desc.y), type=desc.type, title=desc.title, color=desc.color)
+
+        pan = MTool(plot)
+        plot.tools.append(pan)
+        self.pans.append(pan)
+
+        zoom = ZTool(plot, tool_mode='box', always_on=True, drag_button='right')
+        plot.overlays.append(zoom)
+        self.zooms.append(zoom)
+
+        save = SaveTool(self.layout, always_on=True, filename="plot.pdf")
+        plot.tools.append(save)
+
+        return plot
 
 
     def _reset_changed(self):
-        map(lambda z: z._reset_state_pressed(), self.zooms)
+        self.focus = self.descs
+        self.reinit()
 
-if __name__ == "__main__":
+
+def main():
     x = linspace(-14, 14, 1000)
     y = sin(x) * x**3
     plotdata = ArrayPlotData(x=x, y=y)
@@ -83,3 +89,7 @@ if __name__ == "__main__":
     desc4 = PlotDesc('y', 'x', title='plot4', data=plotdata, type='scatter')
 
     McPlot([desc1, desc2, desc3, desc4, desc4]).configure_traits()
+
+
+if __name__ == "__main__":
+    main()
