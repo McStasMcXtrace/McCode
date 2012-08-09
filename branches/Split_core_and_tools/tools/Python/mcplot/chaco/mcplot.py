@@ -8,7 +8,6 @@ from enable.component_editor import ComponentEditor
 from enable.api import BaseTool
 
 from numpy import linspace, sin
-
 from math import ceil, sqrt
 
 
@@ -53,6 +52,7 @@ class McLayout(HasTraits):
         Item('layout',editor=ComponentEditor(), show_label=False),
         width=500, height=500, resizable=True, title="Chaco Plot")
 
+
     def __init__(self, descs, focus=None):
         super(McLayout, self).__init__()
         self.descs = descs
@@ -61,6 +61,7 @@ class McLayout(HasTraits):
         self.plots = []
         self.focus = descs if focus is None else focus
         self.reinit()
+
 
     def reinit(self):
         # clean up plots
