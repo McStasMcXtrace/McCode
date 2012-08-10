@@ -10,6 +10,8 @@ from enable.api import BaseTool
 from numpy import linspace, sin
 from math import ceil, sqrt
 
+from mcdata import monitor_to_plotdata
+
 
 class FocusTool(BaseTool):
     def __init__(self, mclayout, desc):
@@ -29,13 +31,12 @@ class FocusTool(BaseTool):
 
 
 class PlotDesc(object):
-    def __init__(self, x, y, data, type='line', title=None, color='blue'):
+    def __init__(self, x, y, data, **kwargs):
         self.x = x
         self.y = y
         self.data = data
-        self.type = type
-        self.title = title
-        self.color = color
+        self.params = dict(type='line', color='blue')
+        self.params.update(kwargs)
 
 
 class McPlot(Plot):
@@ -83,7 +84,7 @@ class McLayout(HasTraits):
 
     def plot_desc(self, desc):
         plot = McPlot(desc.data)
-        plot.plot((desc.x, desc.y), type=desc.type, title=desc.title, color=desc.color)
+        plot.plot((desc.x, desc.y), **desc.params)
 
         # pan
         pan = MTool(plot)
@@ -112,16 +113,12 @@ class McLayout(HasTraits):
 
 
 def main():
-    x = linspace(-14, 14, 100)
-    y = sin(x) * x**3
-    plotdata = ArrayPlotData(x=x, y=y)
+    plotdata = monitor_to_plotdata(file('DC_OUT_T_1342100227.t'))
 
-    desc1 = PlotDesc('x', 'y', title='plot1', data=plotdata)
-    desc2 = PlotDesc('y', 'x', title='plot2', data=plotdata)
-    desc3 = PlotDesc('x', 'y', title='plot3', data=plotdata, type='scatter')
-    desc4 = PlotDesc('y', 'x', title='plot4', data=plotdata, type='scatter')
+    desc1 = PlotDesc('t', 'I', title='plot1', data=plotdata)
+    desc2 = PlotDesc('t', 'I_err', title='plot3', data=plotdata)
 
-    McLayout([desc1, desc2, desc3, desc4, desc4, desc4, desc4, desc4]).configure_traits(scrollable=True)
+    McLayout([desc1, desc2]).configure_traits(scrollable=True)
 
 
 if __name__ == "__main__":
