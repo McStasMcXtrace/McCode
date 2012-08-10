@@ -23,9 +23,16 @@ def exist(model, **kwargs):
 def info(bin):
     # Insert new simulation
     sim_name = basename(bin)[:-1*len('.out')]
+    sim = None
     if exist(Simulation, name=sim_name):
-        print 'Skipping existing simulation: ' + sim_name
-        return
+        print 'Updating existing simulation: ' + sim_name
+        sim = fetch(Simulation, name=sim_name)[0]
+    else:
+        # Create new simulation
+        sim = Simulation(name=sim_name)
+        db.session.add(sim)
+        db.session.commit()
+
 
     # Get info from executable
     status, out = getstatusoutput('%s --info' % bin)
@@ -41,11 +48,6 @@ def info(bin):
 
     # Combine types and defaults
     params = dict((p, (types[p], defaults[p])) for p in types)
-
-    # Create simulation
-    sim = Simulation(name=sim_name)
-    db.session.add(sim)
-    db.session.commit()
 
     # Insert new params
     for param in sorted(params):
