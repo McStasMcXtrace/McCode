@@ -1,5 +1,5 @@
 from numpy import array
-from chaco.api import ArrayPlotData
+from chaco.array_plot_data import ArrayPlotData
 
 from os.path import dirname, join, isdir
 

@@ -1,14 +1,26 @@
+# traits
 from traits.api import HasTraits, Instance, Button
-from traitsui.api import View, Item
 
-from chaco.api import Plot, ErrorBarPlot, GridPlotContainer as PCont, \
-     ArrayPlotData, ArrayDataSource, DataRange1D, LinearMapper
+# ui
+from traitsui.view import View
+from traitsui.item import Item
 
-from chaco.tools.api import PanTool as MTool, BetterSelectingZoom as ZTool, SaveTool
+# general
+from chaco.plot import Plot
+from chaco.errorbar_plot import ErrorBarPlot
+from chaco.plot_containers import GridPlotContainer as PCont
+from chaco.array_data_source import ArrayDataSource
 
+# tools
+from chaco.tools.pan_tool import PanTool as MTool
+from chaco.tools.better_selecting_zoom import BetterSelectingZoom as ZTool
+from chaco.tools.save_tool import SaveTool
+
+# enable
 from enable.component_editor import ComponentEditor
-from enable.api import BaseTool
+from enable.base_tool import BaseTool
 
+# other
 from numpy import linspace, sin
 from math import ceil, sqrt
 
