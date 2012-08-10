@@ -86,20 +86,21 @@ class McLayout(HasTraits):
         plot = McPlot(desc.data)
         plot.plot((desc.x, desc.y), name='data', **desc.params)
 
-        # extract and prepare data for error bars
-        ylow = ArrayDataSource(desc.data['value_low'])
-        yhigh = ArrayDataSource(desc.data['value_high'])
+        if None in (desc.data['value_low'], desc.data['value_high']):
+            # extract and prepare data for error bars
+            ylow = ArrayDataSource(desc.data['value_low'])
+            yhigh = ArrayDataSource(desc.data['value_high'])
 
-        # create error bars object
-        scp = plot.plots['data'][0]
-        ebp = ErrorBarPlot(index=ArrayDataSource(desc.data['t']),
-                           value_low=ylow,
-                           value_high=yhigh,
-                           index_mapper=scp.index_mapper,
-                           value_mapper=scp.value_mapper,
-                           origin=scp.origin)
-        # add error bars to plot
-        plot.add(ebp)
+            # create error bars object
+            scp = plot.plots['data'][0]
+            ebp = ErrorBarPlot(index=ArrayDataSource(desc.data[desc.x]),
+                               value_low=ylow,
+                               value_high=yhigh,
+                               index_mapper=scp.index_mapper,
+                               value_mapper=scp.value_mapper,
+                               origin=scp.origin)
+            # add error bars to plot
+            plot.add(ebp)
 
         # pan
         pan = MTool(plot)
