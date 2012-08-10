@@ -1,7 +1,9 @@
 from traits.api import HasTraits, Instance, Button
 from traitsui.api import View, Item
 
-from chaco.api import Plot, GridPlotContainer as PCont, ArrayPlotData
+from chaco.api import Plot, ErrorBarPlot, GridPlotContainer as PCont, \
+     ArrayPlotData, ArrayDataSource, DataRange1D, LinearMapper
+
 from chaco.tools.api import PanTool as MTool, BetterSelectingZoom as ZTool, SaveTool
 
 from enable.component_editor import ComponentEditor
@@ -84,7 +86,22 @@ class McLayout(HasTraits):
 
     def plot_desc(self, desc):
         plot = McPlot(desc.data)
-        plot.plot((desc.x, desc.y), **desc.params)
+        plot.plot((desc.x, desc.y), name='data', **desc.params)
+
+        # extract and prepare data for error bars
+        ylow = ArrayDataSource(desc.data['value_low'])
+        yhigh = ArrayDataSource(desc.data['value_high'])
+
+        # create error bars object
+        scp = plot.plots['data'][0]
+        ebp = ErrorBarPlot(index=ArrayDataSource(desc.data['t']),
+                           value_low=ylow,
+                           value_high=yhigh,
+                           index_mapper=scp.index_mapper,
+                           value_mapper=scp.value_mapper,
+                           origin=scp.origin)
+        # add error bars to plot
+        plot.add(ebp)
 
         # pan
         pan = MTool(plot)
@@ -115,10 +132,9 @@ class McLayout(HasTraits):
 def main():
     plotdata = monitor_to_plotdata(file('DC_OUT_T_1342100227.t'))
 
-    desc1 = PlotDesc('t', 'I', title='plot1', data=plotdata)
-    desc2 = PlotDesc('t', 'I_err', title='plot3', data=plotdata)
+    desc1 = PlotDesc('t', 'I', title='plot1', data=plotdata, value_scale='log', type='line')
 
-    McLayout([desc1, desc2]).configure_traits(scrollable=True)
+    McLayout([desc1]).configure_traits(scrollable=True)
 
 
 if __name__ == "__main__":
