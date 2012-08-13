@@ -45,8 +45,11 @@ def monitor_to_plotdata(it):
 
         return (header, plotdata)
     if dtype.startswith('array_2d'):
-        # TODO: implement 2d
-        return (header, None)
+        # 2d
+        w, h = map(int, dtype[len('array_2d'):].strip('() ').split(','))
+        plotdata = ArrayPlotData()
+        plotdata['imagedata'] = array(data[:h], dtype='float64')
+        return (header, plotdata)
     else:
         print 'Skipping unknown type:', header['type']
         return (header, None)

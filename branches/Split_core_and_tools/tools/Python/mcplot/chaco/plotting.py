@@ -10,6 +10,7 @@ from chaco.plot import Plot
 from chaco.errorbar_plot import ErrorBarPlot
 from chaco.plot_containers import GridPlotContainer as PCont
 from chaco.array_data_source import ArrayDataSource
+from chaco.default_colormaps import jet
 
 # tools
 from chaco.tools.pan_tool import PanTool as MTool
@@ -96,9 +97,11 @@ class McLayout(HasTraits):
 
     def plot_desc(self, desc):
         plot = McPlot(desc.data)
-        plot.plot((desc.x, desc.y), name='data', **desc.params)
 
         if None not in (desc.data['value_low'], desc.data['value_high']):
+            # 1d
+            plot.plot((desc.x, desc.y), name='data', **desc.params)
+
             # extract and prepare data for error bars
             ylow = ArrayDataSource(desc.data['value_low'])
             yhigh = ArrayDataSource(desc.data['value_high'])
@@ -113,6 +116,11 @@ class McLayout(HasTraits):
                                origin=scp.origin)
             # add error bars to plot
             plot.add(ebp)
+
+        elif desc.data['imagedata'] is not None:
+            # 2d
+            plot.img_plot('imagedata', colormap=jet)
+            # plot.contour_plot('imagedata')
 
         # pan
         pan = MTool(plot)
