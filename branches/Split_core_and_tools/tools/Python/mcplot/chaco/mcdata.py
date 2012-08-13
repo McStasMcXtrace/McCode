@@ -34,6 +34,8 @@ def monitor_to_plotdata(it):
     dtype = None
     if header['type'].startswith('array_1d'):
         dtype = '1d'
+    else:
+        print 'Skipping unknown type:', header['type']
 
     # build plotdata object
     if dtype == '1d':
