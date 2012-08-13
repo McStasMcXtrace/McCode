@@ -26,30 +26,30 @@ def parse_monitor(it):
     return header, data
 
 
-
 def monitor_to_plotdata(it):
     ''' Parse a mcstas monitor file file and convert it to a chaco plotdata object '''
     header, data = parse_monitor(it)
 
-    dtype = None
-    if header['type'].startswith('array_1d'):
-        dtype = '1d'
-    else:
-        print 'Skipping unknown type:', header['type']
-
-    # build plotdata object
-    if dtype == '1d':
+    dtype = header['type']
+    if dtype.startswith('array_1d'):
+        # 1d
         # populate with point data
         plotdata = ArrayPlotData()
         for i, name in enumerate(header['variables'].split()):
             plotdata[name] = array(map(lambda line: line[i], data), dtype='float64')
+
         # compute error bar value_low and value_high using I_err
         i, i_err = plotdata['I'], plotdata['I_err']
         plotdata['value_low'] = i - i_err
         plotdata['value_high'] = i + i_err
-        return (header, plotdata)
 
-    return (header, None)
+        return (header, plotdata)
+    if dtype.startswith('array_2d'):
+        # TODO: implement 2d
+        return (header, None)
+    else:
+        print 'Skipping unknown type:', header['type']
+        return (header, None)
 
 
 def mcstas_to_plotdescs(path):
