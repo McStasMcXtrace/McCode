@@ -98,7 +98,7 @@ class McLayout(HasTraits):
         plot = McPlot(desc.data)
         plot.plot((desc.x, desc.y), name='data', **desc.params)
 
-        if None in (desc.data['value_low'], desc.data['value_high']):
+        if None not in (desc.data['value_low'], desc.data['value_high']):
             # extract and prepare data for error bars
             ylow = ArrayDataSource(desc.data['value_low'])
             yhigh = ArrayDataSource(desc.data['value_high'])
