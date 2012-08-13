@@ -1,4 +1,4 @@
-from app import db
+from app import db, db_session
 from models import Simulation, Param, ParamDefault
 
 from os.path import basename
@@ -30,9 +30,14 @@ def info(bin):
     else:
         # Create new simulation
         sim = Simulation(name=sim_name)
-        db.session.add(sim)
-        db.session.commit()
+        db_session.add(sim)
+        db_session.commit()
 
+    # Delete old params
+    print sim.id
+    ParamDefault.query.filter_by(sim_id=sim.id).delete()
+    # db_session.delete(param)
+    db_session.commit()
 
     # Get info from executable
     status, out = getstatusoutput('%s --info' % bin)
@@ -54,8 +59,8 @@ def info(bin):
         if not exist(Param, name=param):
             print 'new param: ', param
             p = Param(name=param)
-            db.session.add(p)
-            db.session.commit()
+            db_session.add(p)
+            db_session.commit()
         else:
             [p] = fetch(Param, name=param)
         # Insert param default
@@ -63,11 +68,12 @@ def info(bin):
                       'double' : float
                     }
         f = convertfns[types[param]]
-        db.session.add(
+
+        db_session.add(
             ParamDefault(param=p, value=f(defaults[param]), sim=sim))
 
     # Commit work so far
-    db.session.commit()
+    db_session.commit()
 
 
 def getlist():
