@@ -74,17 +74,18 @@ class Snapper(LineInspector):
 
         mx = self.plot.index_mapper.map_data(event.x)
 
-        px = -1000
+        px = self.plot.data[self.plot.x_axis.title][0]
         for i, x in enumerate(self.plot.data[self.plot.x_axis.title]):
             if x > mx:
                 break
             px = x
 
-        if (x - mx) ** 2 < (px - mx)**2:
-            mx = x
-        else:
+
+        if (px - mx) ** 2 < (x - mx)**2:
             i -= 1
             mx = px
+        else:
+            mx = x
 
         my = self.plot.data[self.plot.y_axis.title][i]
 
