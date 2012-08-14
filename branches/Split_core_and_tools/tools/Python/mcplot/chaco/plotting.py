@@ -93,7 +93,7 @@ class Snapper(LineInspector):
         y = self.plot.value_mapper.map_screen(my)
 
         self.pos = (x, y)
-        self.plot.title = '%s (%.4f, %.4f)' % (self.title, x, y)
+        self.plot.title = '%s (%.6f, %.6f)' % (self.title, mx, my)
 
         self.plot.request_redraw()
 
