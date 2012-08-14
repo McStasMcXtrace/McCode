@@ -52,7 +52,7 @@ def display(instr, params, outfile, fmt="png"):
     ''' Display instrument '''
     # VRML needs --format, which does not seem to work with gif/ps
     fmt_arg = fmt == 'vrml' and '--format=vrml' or '-'+fmt
-    pid = Popen(["mcdisplay", "-k", "--save", fmt_arg,
+    pid = Popen(["mcdisplay", "-k", fmt_arg,
                  basename(instr),
                  "-n", str(1) # precision (iterations)
                  ] + params,
