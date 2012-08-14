@@ -42,12 +42,19 @@ class FocusTool(BaseTool):
         # reinit layout
         self.mclayout.reinit()
 
+    def normal_key_pressed(self, event):
+        if event.character == 'l':
+            self.desc.log = not self.desc.log
+            self.mclayout.reinit()
+
 
 class PlotDesc(object):
-    def __init__(self, x, y, data, **kwargs):
+    def __init__(self, x, y, data, title, log=False, **kwargs):
         self.x = x
         self.y = y
         self.data = data
+        self.title = title
+        self.log = log
         self.params = dict(type='line', color='blue')
         self.params.update(kwargs)
 
@@ -98,9 +105,17 @@ class McLayout(HasTraits):
     def plot_desc(self, desc):
         plot = McPlot(desc.data)
 
+        plot.title = desc.title
+        plot.x_axis.title = desc.x
+        plot.y_axis.title = desc.y
+
+        log = desc.log
+
         if None not in (desc.data['value_low'], desc.data['value_high']):
             # 1d
-            plot.plot((desc.x, desc.y), name='data', **desc.params)
+            value_scale = 'log' if log else 'linear'
+            plot.plot((desc.x, desc.y), name='data',
+                      value_scale=value_scale, **desc.params)
 
             # extract and prepare data for error bars
             ylow = ArrayDataSource(desc.data['value_low'])
@@ -119,7 +134,8 @@ class McLayout(HasTraits):
 
         elif desc.data['imagedata'] is not None:
             # 2d
-            plot.img_plot('imagedata', colormap=jet)
+            data_name = 'imagedata_log' if log else 'imagedata'
+            plot.img_plot(data_name, colormap=jet)
             # plot.contour_plot('imagedata')
 
         # pan

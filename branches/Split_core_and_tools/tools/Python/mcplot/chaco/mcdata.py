@@ -1,4 +1,4 @@
-from numpy import array
+from numpy import array, log, maximum, max
 from chaco.array_plot_data import ArrayPlotData
 
 from os.path import dirname, join, isdir
@@ -47,8 +47,11 @@ def monitor_to_plotdata(it):
     if dtype.startswith('array_2d'):
         # 2d
         w, h = map(int, dtype[len('array_2d'):].strip('() ').split(','))
-        plotdata = ArrayPlotData()
-        plotdata['imagedata'] = array(data[:h], dtype='float64')
+
+        data = array(data[:h], dtype='float64')
+        print max(data)
+        plotdata = ArrayPlotData(imagedata=data, imagedata_log=log(maximum(1, data)))
+
         return (header, plotdata)
     else:
         print 'Skipping unknown type:', header['type']
