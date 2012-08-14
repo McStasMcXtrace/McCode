@@ -16,6 +16,7 @@ from chaco.default_colormaps import jet
 from chaco.tools.pan_tool import PanTool as MTool
 from chaco.tools.better_selecting_zoom import BetterSelectingZoom as ZTool
 from chaco.tools.save_tool import SaveTool
+from chaco.tools.line_inspector import LineInspector
 
 # enable
 from enable.component_editor import ComponentEditor
@@ -46,6 +47,65 @@ class FocusTool(BaseTool):
         if event.character == 'l':
             self.desc.log = not self.desc.log
             self.mclayout.reinit()
+
+
+class Snapper(LineInspector):
+    def __init__(self, mclayout, plot, **kwargs):
+        super(Snapper, self).__init__(plot, axis='index_x', **kwargs)
+        self.layout = mclayout
+        self.plot = plot
+        self.pos = None
+        self.enabled = False
+        self.title = plot.title
+
+
+    def normal_key_pressed(self, event):
+        if event.character == 't':
+            self.enabled = not self.enabled
+            if not self.enabled:
+                self.pos = None
+                self.plot.title = self.title
+            self.plot.request_redraw()
+
+
+    def normal_mouse_move(self, event):
+        if not self.enabled:
+            return
+
+        mx = self.plot.index_mapper.map_data(event.x)
+
+        px = -1000
+        for i, x in enumerate(self.plot.data[self.plot.x_axis.title]):
+            if x > mx:
+                break
+            px = x
+
+        if (x - mx) ** 2 < (px - mx)**2:
+            mx = x
+        else:
+            i -= 1
+            mx = px
+
+        my = self.plot.data[self.plot.y_axis.title][i]
+
+        x = self.plot.index_mapper.map_screen(mx)
+        y = self.plot.value_mapper.map_screen(my)
+
+        self.pos = (x, y)
+        self.plot.title = '%s (%.4f, %.4f)' % (self.title, x, y)
+
+        self.plot.request_redraw()
+
+
+    def draw(self, gc, view_bounds=None):
+        if self.pos is None or not self.enabled:
+            self._last_position = None
+        else:
+            x, y = self.pos
+            super(Snapper, self)._draw_vertical_line(gc, x)
+            super(Snapper, self)._draw_horizontal_line(gc, y)
+
+        super(Snapper, self).draw(gc, view_bounds)
 
 
 class PlotDesc(object):
@@ -147,6 +207,9 @@ class McLayout(HasTraits):
         zoom = ZTool(plot, tool_mode='box', always_on=True, drag_button='right')
         plot.overlays.append(zoom)
         self.zooms.append(zoom)
+
+        # line inspector
+        plot.overlays.append(Snapper(self.layout, plot))
 
         # save
         save = SaveTool(self.layout, always_on=True, filename="plot.pdf")
