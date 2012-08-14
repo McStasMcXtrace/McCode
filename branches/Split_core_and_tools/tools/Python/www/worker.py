@@ -1,13 +1,14 @@
 from app import db_session
 from models import *
 from subprocess import Popen, PIPE
-from os.path import basename, dirname, splitext
+from os.path import basename, dirname, splitext, abspath
 
 import time, os, shutil, re, json
 import traceback
 import tarfile
 
-from config import IMAGE_FORMAT, MPI_NP, MAX_RAY_SAMPLES, MAX_SCAN_POINTS
+from config import IMAGE_FORMAT, MPI_NP, DATA_FILES, \
+     MAX_RAY_SAMPLES, MAX_SCAN_POINTS
 
 
 SIM_SRC_PATH = "sim/%s.instr"
@@ -136,6 +137,11 @@ def processJob(run, workdir):
     for path in (siminstr, simbin, simc):
         os.link(path, workdir % basename(path))
 
+    # Create soft links to data files/folders
+    for path in DATA_FILES:
+        dest = workdir % basename(path)
+        os.symlink(abspath(path), dest)
+
     # generate list of parameters
     params = [ '%s=%s' % (str(k), value_to_str(v)) for k, v in params.items() ]
 
@@ -152,12 +158,13 @@ def processJob(run, workdir):
            (is_scan    and ["-N",     str(npoints)] or []) + \
            (MPI_NP > 0 and ["--mpi=%s" % MPI_NP]    or []) + \
            ["--ncount", str(samples),
-            "--dir",    workdir % "mcstas",
-            siminstr] + params
+            "--dir",    "mcstas",
+            name] + params
 
     pid = Popen(args,
                 stdout=PIPE,
-                stderr=PIPE)
+                stderr=PIPE,
+                cwd=workdir % '')
     (out, err) = pid.communicate()
 
     # tar results

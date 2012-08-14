@@ -43,6 +43,16 @@ MAX_RAY_SAMPLES = 10000000
 MAX_SCAN_POINTS = 1000
 
 
+# Extra datafiles/directories needed by the simulations
+# (implemented with soft/symbolic linking before running a simulation)
+DATA_FILES = []
+
+# The line below would create a link in the simulation folder
+# named 'datafiles' to the path in 'sim/datafiles'
+# (relative to the webapp folder)
+# DATA_FILES = ['sim/datafiles']
+
+
 # Generate a key for signing cookies (resets when server is restartet)
 SECRET_KEY = new_key()
 
