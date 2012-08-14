@@ -40,6 +40,7 @@ def monitor_to_plotdata(it):
 
         # compute error bar value_low and value_high using I_err
         i, i_err = plotdata['I'], plotdata['I_err']
+        plotdata['value_error'] = i_err
         plotdata['value_low'] = i - i_err
         plotdata['value_high'] = i + i_err
 

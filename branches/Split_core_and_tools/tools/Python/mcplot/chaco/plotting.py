@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 # traits
 from traits.api import HasTraits, Instance, Button
 
@@ -88,12 +90,13 @@ class Snapper(LineInspector):
             mx = x
 
         my = self.plot.data[self.plot.y_axis.title][i]
+        err = self.plot.data['value_error'][i]
 
         x = self.plot.index_mapper.map_screen(mx)
         y = self.plot.value_mapper.map_screen(my)
 
         self.pos = (x, y)
-        self.plot.title = '%s (%.6f, %.6f)' % (self.title, mx, my)
+        self.plot.title = '%s (%.6f, %.6f ± %.6f)' % (self.title, mx, my, err)
 
         self.plot.request_redraw()
 
