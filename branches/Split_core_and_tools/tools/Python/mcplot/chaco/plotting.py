@@ -36,10 +36,7 @@ class FocusTool(BaseTool):
         self.desc = desc
 
     def normal_left_dclick(self, *args):
-        if len(self.mclayout.focus) == 1:
-            # reset current plot
-            self.mclayout.reinit()
-        else:
+        if len(self.mclayout.focus) > 1:
             # focus on chosen plot
             self.mclayout.focus = [self.desc]
         # reinit layout
