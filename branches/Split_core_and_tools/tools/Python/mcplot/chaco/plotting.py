@@ -15,7 +15,7 @@ from chaco.array_data_source import ArrayDataSource
 from chaco.default_colormaps import jet
 
 # tools
-from chaco.tools.pan_tool import PanTool as MTool
+from chaco.tools.pan_tool import PanTool as PTool
 from chaco.tools.better_selecting_zoom import BetterSelectingZoom as ZTool
 from chaco.tools.save_tool import SaveTool
 from chaco.tools.line_inspector import LineInspector
@@ -232,7 +232,7 @@ class McLayout(HasTraits):
 
 
         # pan
-        pan = MTool(plot)
+        pan = PTool(plot, restrict_to_data=True)
         plot.tools.append(pan)
         self.pans.append(pan)
 
