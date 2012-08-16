@@ -50,7 +50,6 @@ def monitor_to_plotdata(it):
         w, h = map(int, dtype[len('array_2d'):].strip('() ').split(','))
 
         data = array(data[:h], dtype='float64')
-        print max(data)
         plotdata = ArrayPlotData(imagedata=data, imagedata_log=log(maximum(1, data)))
 
         return (header, plotdata)
