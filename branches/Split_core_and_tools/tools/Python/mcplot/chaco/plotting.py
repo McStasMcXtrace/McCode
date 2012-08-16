@@ -109,6 +109,23 @@ class Snapper(LineInspector):
         super(Snapper, self).draw(gc, view_bounds)
 
 
+class ZoomWithAspectRatio(ZTool):
+    def __init__(self, plot, *args, **kwargs):
+        super(ZoomWithAspectRatio, self).__init__(plot, *args, **kwargs)
+        self.plot = plot
+
+
+    def selecting_right_up(self, event):
+        super(ZoomWithAspectRatio, self).selecting_right_up(event)
+
+        fx, tx, fy, ty = self._history[-1].next
+        w, h = (tx - fx, ty - fy)
+        print w, h
+        self.plot.aspect_ratio = float(w) / h
+
+
+
+
 class PlotDesc(object):
     def __init__(self, x, y, data, title, log=False, **kwargs):
         self.x = x
@@ -171,6 +188,7 @@ class McLayout(HasTraits):
         plot.y_axis.title = desc.y
 
         log = desc.log
+        ztool = ZTool
 
         if None not in (desc.data['value_low'], desc.data['value_high']):
             # 1d
@@ -210,6 +228,7 @@ class McLayout(HasTraits):
             w, h = len(img), len(img[0])
 
             plot.aspect_ratio = float(h) / w
+            ztool = ZoomWithAspectRatio
 
 
         # pan
@@ -218,7 +237,7 @@ class McLayout(HasTraits):
         self.pans.append(pan)
 
         # zoom
-        zoom = ZTool(plot, tool_mode='box', always_on=True, drag_button='right')
+        zoom = ztool(plot, tool_mode='box', always_on=True, drag_button='right')
         plot.overlays.append(zoom)
         self.zooms.append(zoom)
 
