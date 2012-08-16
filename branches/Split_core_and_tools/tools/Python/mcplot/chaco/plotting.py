@@ -209,8 +209,11 @@ class McLayout(HasTraits):
             # TODO: contour plots: plot.contour_plot('imagedata')
 
             # set apsect ratio
-            x, y = desc.data[data_name][:2]
-            plot.aspect_ratio = float(len(y)) / len(x)
+            img = desc.data[data_name]
+            w, h = len(img), len(img[0])
+
+            plot.aspect_ratio = float(h) / w
+
 
         # pan
         pan = MTool(plot)
