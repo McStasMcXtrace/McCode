@@ -186,8 +186,9 @@ class McLayout(HasTraits):
             yhigh = ArrayDataSource(desc.data['value_high'])
 
             # create error bars object
+            x = ArrayDataSource(desc.data[desc.x])
             scp = plot.plots['data'][0]
-            ebp = ErrorBarPlot(index=ArrayDataSource(desc.data[desc.x]),
+            ebp = ErrorBarPlot(index=x,
                                value_low=ylow,
                                value_high=yhigh,
                                index_mapper=scp.index_mapper,
@@ -196,11 +197,20 @@ class McLayout(HasTraits):
             # add error bars to plot
             plot.add(ebp)
 
+            # set aspect ratio
+            plot.aspect_ratio = 1.0
+
+
+
         elif desc.data['imagedata'] is not None:
             # 2d
             data_name = 'imagedata_log' if log else 'imagedata'
             plot.img_plot(data_name, colormap=jet)
-            # plot.contour_plot('imagedata')
+            # TODO: contour plots: plot.contour_plot('imagedata')
+
+            # set apsect ratio
+            x, y = desc.data[data_name][:2]
+            plot.aspect_ratio = float(len(y)) / len(x)
 
         # pan
         pan = MTool(plot)
