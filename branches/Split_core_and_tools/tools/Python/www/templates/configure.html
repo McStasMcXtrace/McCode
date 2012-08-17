@@ -97,19 +97,19 @@
           <label for=seed>Seed:</label>
           <input type=text value="{{ job.seed or 0 }}"
                  id=seed name=seed
-                 onchange="set_changed()">
+                 onchange="set_changed(this)">
         </li>
         <li>
           <label for=samples>Rays (ncount):</label>
           <input type=text value="{{ job.samples or 1000000}}"
                  id=samples name=samples
-                 onchange="set_changed()" >
+                 onchange="set_changed(this)" >
         </li>
         <li>
           <label for=numpoints>Scan num-points:</label>
           <input type=text value="{{ job.npoints or 1}}"
                  id=npoints name=npoints
-                 onchange="set_changed()" >
+                 onchange="set_changed(this)" >
         </li>
       </ol>
     </fieldset>

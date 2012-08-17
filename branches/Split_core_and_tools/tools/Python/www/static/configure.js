@@ -29,7 +29,7 @@ function ensure_positive_int(id) {
 }
 
 
-function set_changed() {
+function set_changed(i) {
     enforce_limits();
     $("#btnSave").val("Save");
 }
@@ -66,7 +66,7 @@ function update_defaults(sim) {
         inp.bind("keyup", function() {
             chosen[sim][$(this).attr("name")] = $(this).val();
         });
-        inp.bind("change", set_changed);
+        inp.bind("change", function() { set_changed(this); });
         // add to param list
         ps.append(con.append(lbl, inp, lbld));
     };
