@@ -6,9 +6,14 @@ function enforce_limits() {
                ensure_positive_int(id);
            });
 
+    var scan = is_scan();
+
     ensure_range("seed",    0, 2147483647);
     ensure_range("samples", 0, max_samples);
-    ensure_range("npoints", 1, max_npoints);
+
+    var scan_min = scan ?           2 : 1,
+        scan_max = scan ? max_samples : 1;
+    ensure_range("npoints", scan_min, scan_max);
 }
 
 function ensure_range(id, min, max) {
