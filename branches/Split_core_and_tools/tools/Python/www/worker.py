@@ -167,17 +167,17 @@ def processJob(run, workdir):
                 cwd=workdir % '')
     (out, err) = pid.communicate()
 
-    # tar results
-    tarname = 'mcstas-' + run.id
-    tarf = workdir % ('%s.tar.gz' % tarname)
-    tarfile.open(tarf, 'w:gz').add(workdir % "mcstas", arcname=tarname)
-
     # debug
     if err: print err
 
     # populate result folder
     file(workdir % "out.txt", "w").write(out)
     file(workdir % "err.txt", "w").write(err)
+
+    # tar results
+    tarname = 'mcstas-' + run.id
+    tarf = workdir % ('%s.tar.gz' % tarname)
+    tarfile.open(tarf, 'w:gz').add(workdir % "mcstas", arcname=tarname)
 
     def process_components(sim_path):
         # dump components
