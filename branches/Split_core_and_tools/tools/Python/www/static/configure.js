@@ -6,15 +6,17 @@ function enforce_limits() {
                ensure_positive_int(id);
            });
 
-    ensure_max("seed",    2147483647);
-    ensure_max("samples", max_samples);
-    ensure_max("npoints", max_npoints);
+    ensure_range("seed",    0, 2147483647);
+    ensure_range("samples", 0, max_samples);
+    ensure_range("npoints", 1, max_npoints);
 }
 
-function ensure_max(id, max) {
+function ensure_range(id, min, max) {
     var input = $('#' + id),
         value = parseInt(input.attr("value"));
-    if(value > max) {
+    if (value < min) {
+        input.attr("value", min);
+    } else if(value > max) {
         input.attr("value", max);
     }
 }
