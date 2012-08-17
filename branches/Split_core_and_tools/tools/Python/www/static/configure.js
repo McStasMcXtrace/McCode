@@ -29,6 +29,18 @@ function ensure_positive_int(id) {
 }
 
 
+function is_scan() {
+    var scan = false;
+    $.each($('input'), function(idx, inp) {
+        if (inp.value !== undefined && inp.value.indexOf(',') >= 0) {
+            scan = true;
+            return false;
+        }
+    });
+    return scan;
+}
+
+
 function set_changed(i) {
     enforce_limits();
     $("#btnSave").val("Save");
