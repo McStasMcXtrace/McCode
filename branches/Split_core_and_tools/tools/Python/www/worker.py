@@ -123,9 +123,6 @@ def processJob(run, workdir):
     seed = params["_seed"]
     samples = min(MAX_RAY_SAMPLES, params["_samples"])
     npoints = min(MAX_SCAN_POINTS, params["_npoints"])
-    del params["_seed"]
-    del params["_samples"]
-    del params["_npoints"]
 
     # instrument name
     name = run.sim.name
@@ -142,15 +139,18 @@ def processJob(run, workdir):
         dest = workdir % basename(path)
         os.symlink(abspath(path), dest)
 
-    # generate list of parameters
-    params = [ '%s=%s' % (str(k), value_to_str(v)) for k, v in params.items() ]
-
     # compute instrument layou
-    is_scan = any(',' in param for param in params)
+    is_scan = any(isinstance(param, list) for param in params.values())
+
+    # generate list of parameters
+    params_strs = [ '%s=%s' % (str(k), value_to_str(v)) for k, v in params.items()
+                    if not k[0] == '_' ]
 
     # Generate instrument graphics with mcdisplay
-    display(workdir % (name + ".instr"), first_range(params), workdir % "layout.gif")
-    display(workdir % (name + ".instr"), first_range(params), workdir % "layout.wrl", fmt='vrml')
+    display(workdir % (name + ".instr"), first_range(params_strs),
+            workdir % "layout.gif")
+    display(workdir % (name + ".instr"), first_range(params_strs),
+            workdir % "layout.wrl", fmt='vrml')
 
     # run mcstas via mcrun
     args = ["mcrun"] + \
@@ -159,7 +159,7 @@ def processJob(run, workdir):
            (MPI_NP > 0 and ["--mpi=%s" % MPI_NP]    or []) + \
            ["--ncount", str(samples),
             "--dir",    "mcstas",
-            name] + params
+            name] + params_strs
 
     pid = Popen(args,
                 stdout=PIPE,
