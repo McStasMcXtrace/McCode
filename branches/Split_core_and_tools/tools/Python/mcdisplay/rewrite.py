@@ -47,14 +47,16 @@ def parse_trace(csv_comps, csv_lines):
 
     # previous neutron position
     prev = None
-    count = 0
+    skip = False
     # we are drawing a neutron
     active = False
 
-    # read the first line
-    line = get_line()
+    while True:
+        # read line
+        line = get_line()
+        if not line:
+            break
 
-    while line:
         # register components
         if line.startswith(UC_COMP):
             # grab info line
@@ -75,7 +77,9 @@ def parse_trace(csv_comps, csv_lines):
             comp = comps[line[len(MC_COMP) + 1:]]
 
         elif line.startswith(MC_COMP_SHORT):
-            comp = comps[line[len(MC_COMP_SHORT) + 1:].strip('"')]
+            name = line[len(MC_COMP_SHORT) + 1:].strip('"')
+            comp = comps[name]
+            skip = True
 
         # process multiline
         elif line.startswith(MC_LINE):
@@ -100,8 +104,8 @@ def parse_trace(csv_comps, csv_lines):
 
         # activate neutron when it enters
         elif line.startswith(MC_ENTER):
-            count = 0
             prev = None
+            skip = True
             active = True
             color += 1
 
@@ -110,20 +114,25 @@ def parse_trace(csv_comps, csv_lines):
             active = False
 
         elif line.startswith(MC_ABSORB):
-            prev = None
+            pass
 
         # register state and scatter
         elif line.startswith(MC_STATE) or line.startswith(MC_SCATTER):
-            if active:
-                xyz = [float(x) for x in line[line.find(':')+1:].split(',')[:3]]
-                xyz = rotate(xyz, comp)
-                if prev is not None and count > 1:
-                    pass
-                elif count > 0:
-                    prev = xyz
-                count += 1
 
-        line = get_line()
+            if not active:
+                continue
+
+            if skip:
+                skip = False
+                continue
+
+            xyz = [float(x) for x in line[line.find(':')+1:].split(',')[:3]]
+            xyz = rotate(xyz, comp)
+            if prev is not None:
+                out_point(prev)
+                out_point(xyz)
+
+            prev = xyz
 
 
 if __name__ == '__main__':
