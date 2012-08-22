@@ -338,7 +338,7 @@
             do { /* while (!flag_End_Line) */
               lexeme      = (char *)strtok(InputTokens, " ,;\t\n\r");
               InputTokens = NULL;
-              if ((lexeme != NULL) && (strlen(lexeme) != 0))
+              if ((lexeme != NULL) && (lexeme[0] != '\0'))
               { /* reading line: the token is not empty */
                 if (sscanf(lexeme,"%lg ",&X) == 1)
                 { /* reading line: the token is a number in the line */
