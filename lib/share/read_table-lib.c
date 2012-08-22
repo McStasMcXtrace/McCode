@@ -315,13 +315,12 @@
 
       back_pos = ftell(hfile);
       if (fgets(line, 1024*CHAR_BUF_LENGTH, hfile) != NULL) { /* analyse line */
-        int i=0;
         char  flag_Store_into_header=0;
         /* first skip blank and tabulation characters */
-        while (line[i] == ' ' || line[i] == '\t') i++;
+        int i = strspn(line, " \t");
         /* handle comments: stored in header */
         if ((line[i] == '#') || (line[i] == '%')
-        || (line[i] == ';') || (line[i] == '/'))
+            || (line[i] == ';') || (line[i] == '/'))
         { /* line is a comment */
           flag_Store_into_header=1;
           flag_In_array = 0;
@@ -679,7 +678,7 @@
 
     if (!Table.block_number) strcpy(buffer, "catenated");
     else sprintf(buffer, "block %li", Table.block_number);
-    printf("Table from file '%s' (%s)", 
+    printf("Table from file '%s' (%s)",
       Table.filename && strlen(Table.filename) ? Table.filename : "", buffer);
     if ((Table.data != NULL) && (Table.rows*Table.columns))
     {
@@ -961,7 +960,7 @@ char **Table_ParseHeader_backend(char *header, ...){
       eol_pos = strchr(pos+strlen(arg_char), '\n');
       if (!eol_pos)
         eol_pos = strchr(pos+strlen(arg_char), '\r');
-      if (!eol_pos) 
+      if (!eol_pos)
         eol_pos = pos+strlen(pos)-1;
       ret[counter] = (char*)malloc(eol_pos - pos);
       if (!ret[counter]) {
