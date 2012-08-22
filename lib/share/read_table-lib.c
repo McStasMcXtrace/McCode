@@ -354,7 +354,7 @@
                     } /* else append */
                   }
                   /* reading num: all blocks or selected block */
-                  if ( flag_In_array &&  ((block_number == 0) || (block_number == block_Current_index)) )
+                  if ( ((block_number == 0) || (block_number == block_Current_index)) )
                   {
                     /* starting block: already the desired number of rows ? */
                     if (block_Num_Columns == 0
@@ -517,28 +517,28 @@
 * Returns Value from the i-th row, j-th column of Table
 * Tests are performed on indexes i,j to avoid errors
 *******************************************************************************/
-  double Table_Index(t_Table Table, long i, long j)
-  {
-    long AbsIndex;
 
-    if (i < 0)        i = 0;
-    if (j < 0)        j = 0;
-    /* handle vectors specifically */
-    if (Table.columns == 1 || Table.rows == 1) {
-      AbsIndex = i+j;
-    } else {
-      if (i >= Table.rows)    i = Table.rows-1;
-      if (j >= Table.columns) j = Table.columns-1;
-      AbsIndex = i*(Table.columns)+j;
-    }
-    if (AbsIndex >= Table.rows*Table.columns)
-      AbsIndex = Table.rows*Table.columns-1;
-    else if (AbsIndex < 0) AbsIndex=0;
-    if (Table.data != NULL)
-      return(Table.data[AbsIndex]);
-    else
-      return(0);
-  } /* end Table_Index */
+#define max(i, j) ((j) > (i) ? (j) : (i))
+#define min(i, j) ((j) < (i) ? (j) : (i))
+
+double Table_Index(t_Table Table, long i, long j)
+{
+  long AbsIndex;
+
+  i = min(max(0, i), Table.rows - 1);
+  j = min(max(0, j), Table.columns - 1);
+
+  /* handle vectors specifically */
+  if (1 == Table.columns || 1 == Table.rows) {
+    AbsIndex = i+j;
+  } else {
+    AbsIndex = i*(Table.columns)+j;
+  }
+  if (Table.data != NULL)
+    return (Table.data[AbsIndex]);
+  else
+    return 0;
+} /* end Table_Index */
 
 /*******************************************************************************
 * void Table_SetElement(t_Table *Table, long i, long j, double value)
