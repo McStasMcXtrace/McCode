@@ -319,8 +319,7 @@
         /* first skip blank and tabulation characters */
         int i = strspn(line, " \t");
         /* handle comments: stored in header */
-        if ((line[i] == '#') || (line[i] == '%')
-            || (line[i] == ';') || (line[i] == '/'))
+        if (NULL != strchr("#%;/", line[i]))
         { /* line is a comment */
           flag_Store_into_header=1;
           flag_In_array = 0;
