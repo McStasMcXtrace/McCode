@@ -349,7 +349,7 @@
         while (!flag_End_Line) {
           if ((lexeme != NULL) && (lexeme[0] != '\0')) {
             /* reading line: the token is not empty */
-            if (sscanf(lexeme,"%lg ",&X) == 1) {
+            if (sscanf(lexeme,"%lg",&X) == 1) {
               /* reading line: the token is a number in the line */
               if (!flag_In_array) {
                 /* reading num: not already in a block: starts a new data block */
