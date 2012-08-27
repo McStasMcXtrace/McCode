@@ -332,7 +332,7 @@
           char  *lexeme;
           char  flag_End_Line = 0;
           long  block_Num_Columns = 0;
-          const char *seps = " ,;\t\n\r";
+          const char seps[] = " ,;\t\n\r";
 
           lexeme = strtok(line, seps);
           do { /* while (!flag_End_Line) */
@@ -371,7 +371,7 @@
                         return (-1);
                       }
                     }
-                    if (block_Num_Columns == 0) Rows++;
+                    if (0 == block_Num_Columns) Rows++;
                     Data[count_in_array] = X;
                     count_in_array++;
                     block_Num_Columns++;
@@ -403,8 +403,8 @@
         } /* end: if not line comment else numerical */
         if (flag_Store_into_header) { /* add line into header */
           count_in_header += strlen(line);
-          if (count_in_header+4096 > malloc_size_h)
-          { /* if succeed and in array : add (and realloc if necessary) */
+          if (count_in_header+4096 > malloc_size_h) {
+            /* if succeed and in array : add (and realloc if necessary) */
             malloc_size_h = count_in_header+4096;
             Header     = (char*)realloc(Header, malloc_size_h*sizeof(char));
           }
@@ -569,7 +569,7 @@ int Table_SetElement(t_Table *Table, long i, long j,
 *******************************************************************************/
 double Table_Value(t_Table Table, double X, long j)
 {
-  long   Index;
+  long   Index = -1;
   double X1=0, Y1=0, X2=0, Y2=0;
   double ret=0;
 
