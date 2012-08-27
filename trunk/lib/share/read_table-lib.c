@@ -479,9 +479,8 @@
     Table_Stat(Table); /* recompute statitstics and minimal step */
     new_step = Table->step_x; /* minimal step in 1st column */
 
-    if (Table->constantstep) /* already evenly spaced */
-      return (Table->rows*Table->columns);
-    else {
+    if (!(Table->constantstep)) /* not already evenly spaced */
+    {
       long Length_Table;
       double *New_Table;
 
@@ -550,21 +549,22 @@ double Table_Index(t_Table Table, long i, long j)
 * Returns 0 in case of error
 * Tests are performed on indexes i,j to avoid errors
 *******************************************************************************/
-  int Table_SetElement(t_Table *Table, long i, long j,
-                        double value)
-  {
-    long AbsIndex;
+int Table_SetElement(t_Table *Table, long i, long j,
+                     double value)
+{
+  long AbsIndex;
 
-    if (i < 0)        i = 0;
-    if (i >= Table->rows)    i = Table->rows-1;
-    if (j < 0)        j = 0;
-    if (j >= Table->columns) j = Table->columns-1;
-    AbsIndex = i*(Table->columns)+j;
-    if (Table->data != NULL)
-      Table->data[AbsIndex] = value;
-    else return(0);
-    return(1);
-  } /* end Table_SetElement */
+  i = min(max(0, i), Table->rows - 1);
+  j = min(max(0, j), Table->columns - 1);
+
+  AbsIndex = i*(Table->columns)+j;
+  if (Table->data != NULL) {
+    Table->data[AbsIndex] = value;
+    return 1;
+  }
+
+  return 0;
+} /* end Table_SetElement */
 
 /*******************************************************************************
 * double Table_Value(t_Table Table, double X, long j)
