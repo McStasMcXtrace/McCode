@@ -314,7 +314,6 @@
 
       back_pos = ftell(hfile);
       if (fgets(line, 1024*CHAR_BUF_LENGTH, hfile) != NULL) { /* analyse line */
-        char flag_Store_into_header = 0;
         int  flag_In_array = 0;
 
         /* first skip blank and tabulation characters */
@@ -324,84 +323,6 @@
         double X;
         if (NULL != strchr("#%;/", line[i]) || sscanf(&line[i], "%lg", &X) != 1)
         { /* line is a comment */
-          flag_Store_into_header = 1;
-          flag_In_array = 0;
-        } else {
-
-          /* get the number of columns splitting line with strtok */
-          char  *lexeme;
-          char  flag_End_Line = 0;
-          long  block_Num_Columns = 0;
-          const char seps[] = " ,;\t\n\r";
-
-          lexeme = strtok(line, seps);
-          do { /* while (!flag_End_Line) */
-            if ((lexeme != NULL) && (lexeme[0] != '\0')) {
-              /* reading line: the token is not empty */
-              if (sscanf(lexeme,"%lg ",&X) == 1) {
-                /* reading line: the token is a number in the line */
-                if (!flag_In_array) {
-                  /* reading num: not already in a block: starts a new data block */
-                  block_Current_index++;
-                  flag_In_array    = 1;
-                  block_Num_Columns= 0;
-                  if (block_number) {
-                    /* initialise a new data block */
-                    Rows = 0;
-                    count_in_array = 0;
-                  } /* else append */
-                }
-                /* reading num: all blocks or selected block */
-                if ((0 == block_number) || (block_number == block_Current_index)) {
-                  /* starting block: already the desired number of rows ? */
-                  if (0 == block_Num_Columns &&
-                      max_lines && Rows >= max_lines) {
-                    flag_End_Line      = 1;
-                    flag_End_row_loop  = 1;
-                    /* reposition to begining of line (ignore line) */
-                    fseek(hfile, back_pos, SEEK_SET);
-                  } else { /* store into data array */
-                    if (count_in_array >= malloc_size) {
-                      /* realloc data buffer if necessary */
-                      malloc_size = count_in_array+CHAR_BUF_LENGTH;
-                      Data = (double*) realloc(Data, malloc_size*sizeof(double));
-                      if (Data == NULL) {
-                        fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Handle).\n",
-                                malloc_size*sizeof(double));
-                        return (-1);
-                      }
-                    }
-                    if (0 == block_Num_Columns) Rows++;
-                    Data[count_in_array] = X;
-                    count_in_array++;
-                    block_Num_Columns++;
-                  }
-                } /* reading num: end if flag_In_array */
-                else if (block_number < block_Current_index) {
-                  /* reading num: passed selected block */
-                  /* we finished to extract block -> force end of file reading */
-                  flag_End_Line      = 1;
-                  flag_End_row_loop  = 1;
-                  /* else (if read all blocks) continue */
-                }
-              } /* end reading num: end if sscanf lexeme -> numerical */
-              else {
-                /* reading line: the token is not numerical in that line. end block */
-                flag_End_Line = 1;
-              }
-            }
-            else {
-              /* no more tokens in line */
-              flag_End_Line = 1;
-              if (block_Num_Columns) Columns = block_Num_Columns;
-            }
-
-            // parse next token
-            lexeme = strtok(NULL, seps);
-
-          } while (!flag_End_Line); /* end while flag_End_Line */
-        } /* end: if not line comment else numerical */
-        if (flag_Store_into_header) { /* add line into header */
           count_in_header += strlen(line);
           if (count_in_header+4096 > malloc_size_h) {
             /* if succeed and in array : add (and realloc if necessary) */
@@ -413,7 +334,83 @@
           if (block_number && block_number == block_Current_index) {
             flag_End_row_loop  = 1;
           }
+
+          // Continue with next line
+          continue;
         }
+
+        /* get the number of columns splitting line with strtok */
+        char  *lexeme;
+        char  flag_End_Line = 0;
+        long  block_Num_Columns = 0;
+        const char seps[] = " ,;\t\n\r";
+
+        lexeme = strtok(line, seps);
+        do { /* while (!flag_End_Line) */
+          if ((lexeme != NULL) && (lexeme[0] != '\0')) {
+            /* reading line: the token is not empty */
+            if (sscanf(lexeme,"%lg ",&X) == 1) {
+              /* reading line: the token is a number in the line */
+              if (!flag_In_array) {
+                /* reading num: not already in a block: starts a new data block */
+                block_Current_index++;
+                flag_In_array    = 1;
+                block_Num_Columns= 0;
+                if (block_number) {
+                  /* initialise a new data block */
+                  Rows = 0;
+                  count_in_array = 0;
+                } /* else append */
+              }
+              /* reading num: all blocks or selected block */
+              if ((0 == block_number) || (block_number == block_Current_index)) {
+                /* starting block: already the desired number of rows ? */
+                if (0 == block_Num_Columns &&
+                    max_lines && Rows >= max_lines) {
+                  flag_End_Line      = 1;
+                  flag_End_row_loop  = 1;
+                  /* reposition to begining of line (ignore line) */
+                  fseek(hfile, back_pos, SEEK_SET);
+                } else { /* store into data array */
+                  if (count_in_array >= malloc_size) {
+                    /* realloc data buffer if necessary */
+                    malloc_size = count_in_array+CHAR_BUF_LENGTH;
+                    Data = (double*) realloc(Data, malloc_size*sizeof(double));
+                    if (Data == NULL) {
+                      fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Handle).\n",
+                              malloc_size*sizeof(double));
+                      return (-1);
+                    }
+                  }
+                  if (0 == block_Num_Columns) Rows++;
+                  Data[count_in_array] = X;
+                  count_in_array++;
+                  block_Num_Columns++;
+                }
+              } /* reading num: end if flag_In_array */
+              else if (block_number < block_Current_index) {
+                /* reading num: passed selected block */
+                /* we finished to extract block -> force end of file reading */
+                flag_End_Line      = 1;
+                flag_End_row_loop  = 1;
+                /* else (if read all blocks) continue */
+              }
+            } /* end reading num: end if sscanf lexeme -> numerical */
+            else {
+              /* reading line: the token is not numerical in that line. end block */
+              flag_End_Line = 1;
+            }
+          }
+          else {
+            /* no more tokens in line */
+            flag_End_Line = 1;
+            if (block_Num_Columns) Columns = block_Num_Columns;
+          }
+
+          // parse next token
+          lexeme = strtok(NULL, seps);
+
+        } while (!flag_End_Line); /* end while flag_End_Line */
       } /* end: if fgets */
       else flag_End_row_loop = 1; /* else fgets : end of file */
 
@@ -578,9 +575,8 @@ double Table_Value(t_Table Table, double X, long j)
 
   // Use constant-time lookup when possible
   if(Table.constantstep) {
-    Index = (long)floor((X - Table.min_x)
-                        /(Table.max_x - Table.min_x)
-                        *Table.rows);
+    Index = (long)floor(
+              (X - Table.min_x) / (Table.max_x - Table.min_x) * Table.rows);
     X1 = Table_Index(Table,Index  ,0);
     X2 = Table_Index(Table,Index+1,0);
   }
