@@ -324,7 +324,7 @@
         if (NULL != strchr("#%;/", line[i]) || sscanf(&line[i], "%lg", &X) != 1)
         { /* line is a comment */
           count_in_header += strlen(line);
-          if (count_in_header+4096 > malloc_size_h) {
+          if (count_in_header >= malloc_size_h) {
             /* if succeed and in array : add (and realloc if necessary) */
             malloc_size_h = count_in_header+4096;
             Header     = (char*)realloc(Header, malloc_size_h*sizeof(char));
