@@ -587,30 +587,55 @@ int Table_SetElement(t_Table *Table, long i, long j,
     if (X > Table.max_x) return Table_Index(Table,Table.rows-1  ,j);
     if (X < Table.min_x) return Table_Index(Table,0  ,j);
 
-    if (!Table.constantstep)
+    // Use constant-time lookup when possible
+    if(Table.constantstep) {
+      Index = (long)floor((X - Table.min_x)
+                          /(Table.max_x - Table.min_x)
+                          *Table.rows);
+      X1 = Table_Index(Table,Index  ,0);
+      X2 = Table_Index(Table,Index+1,0);
+    }
+    // Use binary search on large, monotonic tables
+    else if(Table.monotonic && Table.rows > 100) {
+      long left = Table.min_x;
+      long right = Table.max_x;
+
+      while (!((X1 <= X) && (X < X2)) && (right - left > 1)) {
+        Index = (left + right) / 2;
+
+        X1 = Table_Index(Table, Index-1, 0);
+        X2 = Table_Index(Table, Index,   0);
+
+        if (X < X1) {
+          right = Index;
+        } else {
+          left  = Index;
+        }
+      }
+    }
+
+    // Fall back to linear search, if no-one else has set X1, X2 correctly
+    if (!((X1 <= X) && (X < X2))) {
       /* look for index surrounding X in the table -> Index */
       for (Index=1; Index < Table.rows-1; Index++)
-      {
-        X2 = Table_Index(Table, Index  ,0);
-        X1 = Table_Index(Table, Index-1,0);
-        if ((X1 <= X) && (X < X2)) break;
-      } /* end for Index */
-    else {
-        Index = (long)floor((X - Table.min_x)
-                          /(Table.max_x - Table.min_x)
-                           *Table.rows);
-        X1 = Table_Index(Table,Index  ,0);
-        X2 = Table_Index(Table,Index+1,0);
+        {
+          X1 = Table_Index(Table, Index-1,0);
+          X2 = Table_Index(Table, Index  ,0);
+          if ((X1 <= X) && (X < X2)) break;
+        } /* end for Index */
     }
-    Y2 = Table_Index(Table,Index  ,j);
+
     Y1 = Table_Index(Table,Index-1,j);
+    Y2 = Table_Index(Table,Index  ,j);
 
-    if (!strcmp(Table.method,"linear"))
+    if (!strcmp(Table.method,"linear")) {
       ret = Table_Interp1d(X, X1,Y1, X2,Y2);
-    else if (!strcmp(Table.method,"nearest"))
+    }
+    else if (!strcmp(Table.method,"nearest")) {
       ret = Table_Interp1d_nearest(X, X1,Y1, X2,Y2);
+    }
 
-    return (ret);
+    return ret;
   } /* end Table_Value */
 
 /*******************************************************************************
