@@ -320,12 +320,6 @@
         /* first skip blank and tabulation characters */
         int i = strspn(line, " \t");
 
-        int flag = 0;
-        if (line[i] == 'n') {
-          printf("%s\n", line);
-          flag = 1;
-        }
-
         /* handle comments: stored in header */
         double X;
         if (NULL != strchr("#%;/", line[i]) || sscanf(&line[i], "%lg", &X) != 1)
@@ -333,9 +327,7 @@
           flag_Store_into_header = 1;
           flag_In_array = 0;
         } else {
-          if (flag) {
-            printf("X: <<%f>>\n", X);
-          }
+
           /* get the number of columns splitting line with strtok */
           char  *lexeme;
           char  flag_End_Line = 0;
@@ -366,7 +358,6 @@
                       max_lines && Rows >= max_lines) {
                     flag_End_Line      = 1;
                     flag_End_row_loop  = 1;
-                    flag_In_array      = 0;
                     /* reposition to begining of line (ignore line) */
                     fseek(hfile, back_pos, SEEK_SET);
                   } else { /* store into data array */
@@ -391,14 +382,12 @@
                   /* we finished to extract block -> force end of file reading */
                   flag_End_Line      = 1;
                   flag_End_row_loop  = 1;
-                  flag_In_array  = 0;
                   /* else (if read all blocks) continue */
                 }
               } /* end reading num: end if sscanf lexeme -> numerical */
               else {
                 /* reading line: the token is not numerical in that line. end block */
                 flag_End_Line = 1;
-                flag_In_array = 0;
               }
             }
             else {
@@ -420,11 +409,9 @@
             Header     = (char*)realloc(Header, malloc_size_h*sizeof(char));
           }
           strncat(Header, line, 4096);
-          flag_In_array  = 0; /* will start a new data block */
           /* exit line and file if passed desired block */
           if (block_number && block_number == block_Current_index) {
             flag_End_row_loop  = 1;
-
           }
         }
       } /* end: if fgets */
