@@ -102,9 +102,9 @@ SAVE
   %{
     DETECTOR_OUT_2D(
         "W_psd_monitor",
-        "X position [cm]",
-        "Y position [cm]",
-        xmin*100.0, xmax*100.0, ymin*100.0, ymax*100.0,
+        "X position [m]",
+        "Y position [m]",
+        xmin, xmax, ymin, ymax,
         nx, ny,
         &PSD_N[0][0],&PSD_W[0][0],&PSD_W2[0][0],
         filename);
