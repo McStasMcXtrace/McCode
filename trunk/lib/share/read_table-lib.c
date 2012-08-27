@@ -335,7 +335,7 @@
             flag_End_row_loop  = 1;
           }
 
-          // Continue with next line
+          /* Continue with next line */
           continue;
         }
 
@@ -346,7 +346,7 @@
         const char seps[] = " ,;\t\n\r";
 
         lexeme = strtok(line, seps);
-        do { /* while (!flag_End_Line) */
+        while (!flag_End_Line) {
           if ((lexeme != NULL) && (lexeme[0] != '\0')) {
             /* reading line: the token is not empty */
             if (sscanf(lexeme,"%lg ",&X) == 1) {
@@ -410,7 +410,7 @@
           // parse next token
           lexeme = strtok(NULL, seps);
 
-        } while (!flag_End_Line); /* end while flag_End_Line */
+        } /* while (!flag_End_Line) */
       } /* end: if fgets */
       else flag_End_row_loop = 1; /* else fgets : end of file */
 
