@@ -17,8 +17,14 @@
 * Release: McXtrace 0.1
 * Origin: NBI
 *
-* %D
-* A simple X-ray compound refractive lens (CRL) with a parabolic cylinder profile, it focuses in 1D.
+* %D.
+* An X-ray compound refractive lens (CRL) with a parabolic cylinder profile focussing in 1D, i.e. onto a line
+* 
+* The lens is invariant along the x-axis and has a parabolic profile along the y-axis defined as z/c = y^2/b^2.
+* Thus, i.e. it focuses onto a line along the x-axis.
+* N>1 means that a stack of lenses is to be simulated. Each lens consists of a pair of two opposing parabolic surfaces
+* with a distance d between them. The reference point of the component is at the bottom of the first parabolic
+* surface.
 *
 * %P
 * Input parameters:
