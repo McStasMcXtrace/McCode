@@ -87,9 +87,9 @@ INITIALIZE
       PSD_p2=calloc(nx,sizeof(double *));
 
       for (i=0; i<nx; i++){
-        PSD_N[i]=&(p1[i*nx]);//calloc(ny,sizeof(double));
-        PSD_p[i]=&(p2[i*nx]);//calloc(ny,sizeof(double));
-        PSD_p2[i]=&(p3[i*nx]);//calloc(ny,sizeof(double));
+        PSD_N[i]=&(p1[i*ny]);//calloc(ny,sizeof(double));
+        PSD_p[i]=&(p2[i*ny]);//calloc(ny,sizeof(double));
+        PSD_p2[i]=&(p3[i*ny]);//calloc(ny,sizeof(double));
       }
     }else{
       PSD_N=calloc(1,sizeof(double *));
