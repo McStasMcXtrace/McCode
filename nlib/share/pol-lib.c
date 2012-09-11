@@ -29,6 +29,11 @@
 #include "pol-lib.h"
 #endif
 
+#include<sys/stat.h>
+
+%include "interpolation/resample.c"
+
+
 enum {MCMAGNET_STACKSIZE=12} mcmagnet_constants;
 
 /*definition of the magnetic stack*/
@@ -250,6 +255,81 @@ int majorana_magnetic_field(double x, double y, double z, double t,
 }
 
 
+typedef struct {
+  int samples;
+  char* table_path;
+  void* tree;
+} resampled_opts ;
+
+
+int resampled_3to3_magnetic_field(double x, double y, double z, double t,
+                                  double *bx, double *by, double *bz,
+                                  void *data)
+{
+  resampled_opts *opts = (resampled_opts*) data;
+
+  int samples      = opts->samples;
+  char *table_path = opts->table_path;
+  treeNode *tree   = opts->tree;
+
+  if (tree == NULL) {
+    // There's no in-memory tree, so we have to read it from disk
+
+    char cache_path[256];
+    snprintf(cache_path, 256, "%s.rs-%d-cache", table_path, samples);
+
+    vertex **points = NULL;
+    int rows = 0;
+
+    struct stat tablestat;
+    struct stat cachestat;
+
+    if (stat(table_path, &tablestat) < 0) {
+      fprintf(stderr, "Error: Cannot open table file in '%s'\n", table_path);
+    }
+
+    // keep going until the cache file exists
+    // there's a small race condition where we may miss an update of the table
+    // if we're rebuilding the cache at the same time
+    // TODO: consider erasing race condition of table updates by e.g. including
+    //       the table mtime in the cache-name.
+    while(stat(cache_path, &cachestat) < 0 ||
+          tablestat.st_mtime >= cachestat.st_mtime) {
+      int rebuild = 1;
+
+      #ifdef USE_MPI
+      // only the MPI master node (root) rebuilds the cache
+      rebuild = 0;
+      MPI_MASTER(rebuild = 1);
+      #endif
+
+      if (rebuild == 1) {
+        // rebuild the file (no mpi or mpi master/root)
+        points = resample_file(table_path, &rows, samples, cache_path);
+      } else {
+        // wait until some other node has rebuild the file
+        usleep(250000);
+      }
+    }
+
+    // the cached table is now either in memory or on disk
+    // use it to rebuild the kd-tree for nearest-neighbour queries
+    if (points == NULL || rows == 0) {
+      // the resampled table is on disk; read it into memory
+      points = load_table(cache_path, &rows);
+    }
+
+    // resampled points are now in memory, so build the kd-tree
+    tree = opts->tree = kdtree_addToTree(points, 0, rows, 0);
+
+  }
+
+  interpolate3x3(tree, x, y, z, bx, by, bz);
+
+  return 1;
+}
+
+
 /****************************************************************************
 * void GetMonoPolFNFM(double Rup, double Rdown, double *FN, double *FM)
 *
@@ -263,7 +343,7 @@ int majorana_magnetic_field(double x, double y, double z, double t,
 * FN = sign(Rup)*sqrt(|Rup|) - sign(Rdown)*sqrt(|Rdown|)
 *****************************************************************************/
 void GetMonoPolFNFM(double mc_pol_Rup, double mc_pol_Rdown,
-		    double *mc_pol_FN, double *mc_pol_FM){
+		    double *mc_pol_FN, double *mc_pol_FM) {
   if (mc_pol_Rup>0)
     mc_pol_Rup   = sqrt(fabs(mc_pol_Rup));
   else
