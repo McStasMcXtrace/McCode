@@ -305,9 +305,11 @@ int resampled_3to3_magnetic_field(double x, double y, double z, double t,
 
       if (rebuild == 1) {
         // rebuild the file (no mpi or mpi master/root)
+        printf("rebuilding..\n");
         points = resample_file(table_path, &rows, samples, cache_path);
       } else {
         // wait until some other node has rebuild the file
+        printf("waiting for rebuild..\n");
         usleep(250000);
       }
     }
@@ -316,11 +318,13 @@ int resampled_3to3_magnetic_field(double x, double y, double z, double t,
     // use it to rebuild the kd-tree for nearest-neighbour queries
     if (points == NULL || rows == 0) {
       // the resampled table is on disk; read it into memory
+      printf("loading cache..\n");
       points = load_table(cache_path, &rows);
     }
 
     // resampled points are now in memory, so build the kd-tree
-    tree = opts->tree = kdtree_addToTree(points, 0, rows, 0);
+    tree = kdtree_addToTree(points, 0, rows-1, 0);
+    opts->tree = tree;
 
   }
 
