@@ -49,18 +49,18 @@
 
 /*******************************************************************************
 * long Table_Read_Offset(t_Table *Table, char *name, int block_number, long *offset
-*                        long max_lines)
+*                        long max_rows)
 *   ACTION: read a single Table from a text file, starting at offset
 *     Same as Table_Read(..) except:
 *   input   offset:    pointer to an offset (*offset should be 0 at start)
-*           max_lines: max number of data rows to read from file (0 means all)
+*           max_rows: max number of data rows to read from file (0 means all)
 *   return  initialized single Table t_Table structure containing data, header, ...
 *           number of read elements (-1: error, 0:header only)
 *           updated *offset position (where end of reading occured)
 *******************************************************************************/
   long Table_Read_Offset(t_Table *Table, char *File,
                          long block_number, long *offset,
-                         long max_lines)
+                         long max_rows)
   { /* reads all/a data block in 'file' and returns a Table structure  */
     FILE *hfile;
     long  nelements;
@@ -124,7 +124,7 @@
     begin     = ftell(hfile);
     if (offset && *offset) sprintf(name, "%s@%li", File, *offset);
     else                   strncpy(name, File, 128);
-    nelements = Table_Read_Handle(Table, hfile, block_number, max_lines, name);
+    nelements = Table_Read_Handle(Table, hfile, block_number, max_rows, name);
     Table->begin = begin;
     Table->end   = ftell(hfile);
     Table->filesize = (filesize>0 ? filesize : 0);
@@ -263,14 +263,14 @@
   } /* end Table_Read_Offset_Binary */
 
 /*******************************************************************************
-* long Table_Read_Handle(t_Table *Table, FILE *fid, int block_number, long max_lines, char *name)
+* long Table_Read_Handle(t_Table *Table, FILE *fid, int block_number, long max_rows, char *name)
 *   ACTION: read a single Table from a text file handle (private)
 *   input   Table:pointer to a t_Table structure
 *           fid:  pointer to FILE handle
 *           block_number: if the file does contain more than one
 *                 data block, then indicates which one to get (from index 1)
 *                 a 0 value means append/catenate all
-*           max_lines: if non 0, only reads that number of lines
+*           max_rows: if non 0, only reads that number of lines
 *   return  initialized single Table t_Table structure containing data, header, ...
 *           modified Table t_Table structure containing data, header, ...
 *           number of read elements (-1: error, 0:header only)
@@ -280,7 +280,7 @@
 * Data block may be rebined with Table_Rebin (also sort in ascending order)
 *******************************************************************************/
   long Table_Read_Handle(t_Table *Table, FILE *hfile,
-                         long block_number, long max_lines, char *name)
+                         long block_number, long max_rows, char *name)
   { /* reads all/a data block from 'file' handle and returns a Table structure  */
     double *Data;
     char *Header;
@@ -308,20 +308,18 @@
     }
     Header[0] = '\0';
 
+    int flag_In_array = 0;
     do { /* while (!flag_End_row_loop) */
       char  line[1024*CHAR_BUF_LENGTH];
       long  back_pos=0;   /* ftell start of line */
 
       back_pos = ftell(hfile);
       if (fgets(line, 1024*CHAR_BUF_LENGTH, hfile) != NULL) { /* analyse line */
-        int  flag_In_array = 0;
-
         /* first skip blank and tabulation characters */
         int i = strspn(line, " \t");
 
         /* handle comments: stored in header */
-        double X;
-        if (NULL != strchr("#%;/", line[i]) || sscanf(&line[i], "%lg", &X) != 1)
+        if (NULL != strchr("#%;/", line[i]))
         { /* line is a comment */
           count_in_header += strlen(line);
           if (count_in_header >= malloc_size_h) {
@@ -331,8 +329,8 @@
           }
           strncat(Header, line, 4096);
           /* exit line and file if passed desired block */
-          if (block_number && block_number == block_Current_index) {
-            flag_End_row_loop  = 1;
+          if (block_number > 0 && block_number == block_Current_index) {
+            flag_End_row_loop = 1;
           }
 
           /* Continue with next line */
@@ -349,6 +347,7 @@
         while (!flag_End_Line) {
           if ((lexeme != NULL) && (lexeme[0] != '\0')) {
             /* reading line: the token is not empty */
+            double X;
             if (sscanf(lexeme,"%lg",&X) == 1) {
               /* reading line: the token is a number in the line */
               if (!flag_In_array) {
@@ -356,19 +355,21 @@
                 block_Current_index++;
                 flag_In_array    = 1;
                 block_Num_Columns= 0;
-                if (block_number) {
+                if (block_number > 0) {
                   /* initialise a new data block */
                   Rows = 0;
                   count_in_array = 0;
                 } /* else append */
               }
               /* reading num: all blocks or selected block */
-              if ((0 == block_number) || (block_number == block_Current_index)) {
+              if (flag_In_array && (block_number == 0) ||
+                  (block_number == block_Current_index)) {
                 /* starting block: already the desired number of rows ? */
-                if (0 == block_Num_Columns &&
-                    max_lines && Rows >= max_lines) {
+                if (block_Num_Columns == 0 &&
+                    max_rows > 0 && Rows >= max_rows) {
                   flag_End_Line      = 1;
                   flag_End_row_loop  = 1;
+                  flag_In_array      = 0;
                   /* reposition to begining of line (ignore line) */
                   fseek(hfile, back_pos, SEEK_SET);
                 } else { /* store into data array */
@@ -388,23 +389,22 @@
                   block_Num_Columns++;
                 }
               } /* reading num: end if flag_In_array */
-              else if (block_number < block_Current_index) {
-                /* reading num: passed selected block */
-                /* we finished to extract block -> force end of file reading */
-                flag_End_Line      = 1;
-                flag_End_row_loop  = 1;
-                /* else (if read all blocks) continue */
-              }
             } /* end reading num: end if sscanf lexeme -> numerical */
             else {
               /* reading line: the token is not numerical in that line. end block */
-              flag_End_Line = 1;
+              if (block_Current_index == block_number) {
+                flag_End_Line = 1;
+                flag_End_row_loop = 1;
+              } else {
+                flag_In_array = 0;
+                flag_End_Line = 1;
+              }
             }
           }
           else {
             /* no more tokens in line */
             flag_End_Line = 1;
-            if (block_Num_Columns) Columns = block_Num_Columns;
+            if (block_Num_Columns > 0) Columns = block_Num_Columns;
           }
 
           // parse next token
@@ -420,6 +420,7 @@
     Table->array_length = 1;
     if (count_in_header) Header    = (char*)realloc(Header, count_in_header*sizeof(char));
     Table->header       = Header;
+
     if (count_in_array*Rows*Columns == 0)
     {
       Table->rows         = 0;
