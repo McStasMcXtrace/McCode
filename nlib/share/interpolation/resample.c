@@ -106,12 +106,15 @@ void interpolate3x3(treeNode *tree,
 void dump_table(vertex **points, int rows, char *output_path) {
   FILE *file = fopen(output_path, "w");
 
+  char line[256];
+  snprintf(line, 256, "%d\n", rows);
+  fputs(line, file);
+
   int i;
   for(i = 0; i < rows; i++) {
     vertex *p = points[i];
 
-    char line[256];
-    int size = snprintf(line, 256, "%f %f %f %f %f %f\n",
+    int size = snprintf(line, 256, "%lf %lf %lf %lf %lf %lf\n",
                         p->X, p->Y, p->Z, p->U, p->V, p->W);
     if(size >= 256) {
       fprintf(stderr, "WARNING: Line was truncated in resample, dump_tables!\n");
