@@ -54,12 +54,11 @@ vertex **resample(vertex **p, int rows, int new_points) {
   vertex min, max, range;
   delaunay_getRange(p, rows, &min, &max, &range, 0);
 
-  /* p = realloc(p, sizeof(vertex*) * (rows + new_points)); */
-  p = malloc(sizeof(vertex*) * (rows + new_points));
+  p = realloc(p, sizeof(vertex*) * (rows + new_points));
 
   printf("sampling..\n");
-  for(i = 0; i < rows + new_points; i++) {
-    int index = i;
+  for(i = 0; i < new_points; i++) {
+    int index = rows + i;
 
     vertex *v = malloc(sizeof(vertex));
     v->X = betweenH(i, 2, min.X, max.X);
