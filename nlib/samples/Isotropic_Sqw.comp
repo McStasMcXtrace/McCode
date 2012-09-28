@@ -564,6 +564,8 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
   if (!flag_qSq)
     size = 3*(q_max - q_min)/q_step; /* set a default of 3 q values per line */
   else size = list_count;
+  /* update the value of q_step */
+  q_step = (q_max - q_min)/size;
 
   if (Sqw->verbose_output > 0)
     printf("Isotropic_sqw: q range [%g:%g], creating %li elements vector\n",
@@ -1237,7 +1239,7 @@ DECLARE
 %{
 
   struct Sqw_sample_struct VarSqw;
-  int    columns[8] = powder_format;
+  int    columns[9] = powder_format;
   off_struct offdata;
 /* end DECLARE */
 %}
