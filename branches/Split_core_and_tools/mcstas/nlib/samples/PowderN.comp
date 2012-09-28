@@ -220,7 +220,7 @@ SHARE
 /* Declare structures and functions only once in each instrument. */
 #ifndef POWDERN_DECL
 #define POWDERN_DECL
-/* format definitions in the order {j d F2 DW Dd inv2d q F} */
+/* format definitions in the order {j d F2 DW Dd inv2d q F strain} */
 #ifndef Crystallographica
 #define Crystallographica { 4,5,7,0,0,0,0,0,0 }
 #define Fullprof          { 4,0,8,0,0,5,0,0,0 }
@@ -295,7 +295,7 @@ SHARE
       "column_inv2d", "column_1/2d", "column_sintheta/lambda",
       "column_q", /* 14 */
       "DW", "Debye_Waller",
-      "Detla_d/d",
+      "Delta_d/d",
       "column_F ",
       "V_rho",
       "density",

@@ -124,7 +124,7 @@
 *     powder_format=Crystallographica
 * or  powder_format=Fullprof
 * or  powder_format=Lazy
-* or  powder_format={j,d,F2,DW,Delta_d/d,1/2d,q,F} (column indexes 1:n)
+* or  powder_format={j,d,F2,DW,Delta_d/d,1/2d,q,F,strain} (column indexes 1:n)
 *
 * or column indexes (starting from 1) given as comments in the file header
 * (e.g. '#column_j 4'). Refer to the PowderN component for more details.
@@ -284,13 +284,13 @@ SHARE
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
-#define Crystallographica { 4,5,7,0,0,0,0,0 }
-#define Fullprof          { 4,0,8,0,0,5,0,0 }
-#define Undefined         { 0,0,0,0,0,0,0,0 }
-#define Lazy              {17,6,0,0,0,0,0,13}
+#define Crystallographica { 4,5,7,0,0,0,0,0,0 }
+#define Fullprof          { 4,0,8,0,0,5,0,0,0 }
+#define Undefined         { 0,0,0,0,0,0,0,0,0 }
+#define Lazy              {17,6,0,0,0,0,0,13,0}
 #endif
 /* special case for [q,Sq] table */
-#define qSq               {-1,0,0,0,0,0,1,0 }
+#define qSq               {-1,0,0,0,0,0,1,0,0 }
 
 %include "read_table-lib"
 %include "interoff-lib"
@@ -564,6 +564,8 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
   if (!flag_qSq)
     size = 3*(q_max - q_min)/q_step; /* set a default of 3 q values per line */
   else size = list_count;
+  /* update the value of q_step */
+  q_step = (q_max - q_min)/size;
 
   if (Sqw->verbose_output > 0)
     printf("Isotropic_sqw: q range [%g:%g], creating %li elements vector\n",
@@ -1237,7 +1239,7 @@ DECLARE
 %{
 
   struct Sqw_sample_struct VarSqw;
-  int    columns[8] = powder_format;
+  int    columns[9] = powder_format;
   off_struct offdata;
 /* end DECLARE */
 %}
