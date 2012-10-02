@@ -336,7 +336,6 @@ TRACE
   else if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)) /* cylinder */
   {
     intersect = cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius, Vars.Cylinder_Height);
-    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) intersect = 0; /* remove top/bottom for banana */
   }
   else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) /* box */
   {
@@ -351,11 +350,20 @@ TRACE
      || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)
      || (geometry && strlen(geometry)) )
     {
+      /* check if we have to remove the top/bottom with BANANA shape */
+      if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) {
+        double y0,y1;
+        /* propagate to intersection point as temporary variable to check top/bottom */
+        y0 = y+t0*vy; 
+        y1 = y+t1*vy;
+        if (fabs(y0 > Vars.Cylinder_Height/2)) t0 = t1;
+        if (fabs(y1 > Vars.Cylinder_Height/2)) t1 = t0;
+      }
       if (t0 < 0 && t1 > 0)
         t0 = t;  /* neutron was already inside ! */
       if (t1 < 0 && t0 > 0) /* neutron exit before entering !! */
         t1 = t;
-      /* t0 is now time of incoming intersection with the sphere. */
+      /* t0 is now time of incoming intersection with the detection area */
       if ((Vars.Flag_Shape < 0) && (t1 > 0))
         PROP_DT(t1); /* t1 outgoing beam */
       else
