@@ -272,7 +272,7 @@ int resampled_3to3_magnetic_field(double x, double y, double z, double t,
   char *table_path = opts->table_path;
   treeNode *tree   = opts->tree;
 
-  if (tree == NULL) {
+  if (NULL == tree) {
     // There's no in-memory tree, so we have to read it from disk
 
     char cache_path[256];
@@ -303,7 +303,7 @@ int resampled_3to3_magnetic_field(double x, double y, double z, double t,
       MPI_MASTER(rebuild = 1);
       #endif
 
-      if (rebuild == 1) {
+      if (1 == rebuild) {
         // rebuild the file (no mpi or mpi master/root)
         printf("rebuilding..\n");
         points = resample_file(table_path, &rows, samples, cache_path);
@@ -316,7 +316,7 @@ int resampled_3to3_magnetic_field(double x, double y, double z, double t,
 
     // the cached table is now either in memory or on disk
     // use it to rebuild the kd-tree for nearest-neighbour queries
-    if (points == NULL || rows == 0) {
+    if (NULL == points || 0 == rows) {
       // the resampled table is on disk; read it into memory
       printf("loading cache..\n");
       points = load_table(cache_path, &rows);
