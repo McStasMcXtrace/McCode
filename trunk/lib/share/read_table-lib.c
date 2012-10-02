@@ -283,7 +283,7 @@
                          long block_number, long max_rows, char *name)
   { /* reads all/a data block from 'file' handle and returns a Table structure  */
     double *Data;
-    char *Header;
+    char *Header              = NULL;
     long  malloc_size         = CHAR_BUF_LENGTH;
     long  malloc_size_h       = 4096;
     long  Rows = 0,   Columns = 0;
@@ -300,13 +300,12 @@
        fprintf(stderr, "Error: File handle is NULL (Table_Read_Handle).\n");
        return (-1);
     }
-    Header = (char*)  malloc(malloc_size_h*sizeof(char));
-    Data   = (double*)malloc(malloc_size  *sizeof(double));
+    Header = (char*)  calloc(malloc_size_h, sizeof(char));
+    Data   = (double*)calloc(malloc_size,   sizeof(double));
     if ((Header == NULL) || (Data == NULL)) {
        fprintf(stderr, "Error: Could not allocate Table and Header (Table_Read_Handle).\n");
        return (-1);
     }
-    Header[0] = '\0';
 
     int flag_In_array = 0;
     do { /* while (!flag_End_row_loop) */
@@ -325,7 +324,7 @@
           if (count_in_header >= malloc_size_h) {
             /* if succeed and in array : add (and realloc if necessary) */
             malloc_size_h = count_in_header+4096;
-            Header     = (char*)realloc(Header, malloc_size_h*sizeof(char));
+            Header        = (char*)realloc(Header, malloc_size_h*sizeof(char));
           }
           strncat(Header, line, 4096);
           /* exit line and file if passed desired block */
@@ -418,8 +417,12 @@
 
     Table->block_number = block_number;
     Table->array_length = 1;
-    if (count_in_header) Header    = (char*)realloc(Header, count_in_header*sizeof(char));
-    Table->header       = Header;
+
+    // shrink header to actual size (plus terminating 0-byte)
+    if (count_in_header) {
+      Header = (char*)realloc(Header, count_in_header*sizeof(char) + 1);
+    }
+    Table->header = Header;
 
     if (count_in_array*Rows*Columns == 0)
     {
