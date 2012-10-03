@@ -9,6 +9,7 @@
 *
 * %I
 * Written by: Peter Christiansen
+* Modified by  Erik B Knudsen
 * Date: July 2006
 * Version: $Revision: 1.6 $
 * Origin: Risoe
@@ -45,22 +46,22 @@
 *************************************************************************/
 
 DEFINE COMPONENT Pol_monitor
-DEFINITION PARAMETERS (xwidth=0.1, yheight=0.1, npol=20, restore_neutron=0)
+DEFINITION PARAMETERS (xwidth=0.1, yheight=0.1, restore_neutron=0)
 SETTING PARAMETERS (string filename, mx=0, my=0, mz=0)
 OUTPUT PARAMETERS (Pol_N, Pol_p, Pol_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
      
 DECLARE
 %{
-  double Pol_N[npol];
-  double Pol_p[npol];
-  double Pol_p2[npol];
+  double Pol_N;
+  double Pol_p;
+  double Pol_p2;
+  double Psum;
+  char titlestring[128];
   %}
 
 INITIALIZE
 %{
-  int i;
-  
   // Check that input parameteters makes sense
   
   if (mx==0 && my==0 && mz==0) {
@@ -76,22 +77,19 @@ INITIALIZE
 	    NAME_CURRENT_COMP);
     exit(1);
   }
+  sprintf(titlestring,"Polarisation monitor m=(%g %g %g) %s",mx,my,mz,NAME_CURRENT_COMP);
   
   // Initialize variables 
  
   NORM(mx, my, mz);
-  
-  for (i=0; i<npol; i++) {
-    
-    Pol_N[i] = 0;
-    Pol_p[i] = 0;
-    Pol_p2[i] = 0;
-  }
-  %}
+  Psum=0;
+  Pol_N = 0;
+  Pol_p = 0;
+  Pol_p2 = 0;
+%}
 
 TRACE
 %{
-  int i;
   double pol_proj;
   
   PROP_Z0;
@@ -104,38 +102,25 @@ TRACE
 	      NAME_CURRENT_COMP,pol_proj,sx,sy,sz);
       exit(1);
     }
-    
-    i = floor((pol_proj+1.0)*npol/2.0);
-
-    
-    /*To take care of the case when m.s=1*/
-    if(i==npol)
-      i--;
-    /*To handle the case when m.s<-1 can happen due to rounding errors in trig functions*/
-    if(i<0)
-      i=0;
-
-    if(i >= 0 && i < npol) {
-	Pol_N[i]++;
-	Pol_p[i] += p;
-	Pol_p2[i] += p*p;
-	SCATTER;
-    }
+    Pol_N++;
+    Psum  += p;
+    Pol_p += pol_proj*p;
+    Pol_p2 += pol_proj*pol_proj*p;
+    SCATTER;
   }    
   if (restore_neutron) {
     RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   }
-  %}
+%}
 
 SAVE
 %{
-  DETECTOR_OUT_1D("Polarisation monitor",
-		  "Polarisation projection",
-		  "Intensity",
-		  "Pol", -1.0, 1.0, npol,
-		  &Pol_N[0],&Pol_p[0],&Pol_p2[0],
-		  filename);
-  %}
+  Pol_p  /= Psum;
+  Pol_p2 /= Psum;
+  Pol_p2 -= Pol_p*Pol_p;
+  Pol_p2 /= Pol_N;
+  DETECTOR_OUT_0D(titlestring, Pol_N, Pol_p, Pol_p2);
+%}
 
 MCDISPLAY
 %{
