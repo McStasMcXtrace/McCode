@@ -362,7 +362,7 @@ SHARE
 
       if (info->Dd >= 0)      w         = info->Dd;
       if (info->DWfactor > 0) DWfactor  = info->DWfactor;
-      if (!info->Epsilon)     Epsilon   = info->Epsilon*1e-6;
+      if (info->Epsilon)      Epsilon   = info->Epsilon*1e-6;
 
       /* get data from table using columns {j d F2 DW Dd inv2d q F} */
       /* column indexes start at 1, thus need to substract 1 */
