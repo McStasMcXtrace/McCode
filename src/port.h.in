@@ -20,6 +20,12 @@
 *
 *******************************************************************************/
 
+
+#ifdef CMake
+#include "config.h"
+#endif
+
+
 /* Machintosh specific compiler defines. */
 #ifdef __dest_os
 #if (__dest_os == __mac_os)
