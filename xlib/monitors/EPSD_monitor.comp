@@ -115,7 +115,7 @@ SAVE
         "PSD monitor",
         "X position [m]",
         "Y position [m]",
-        xmin xmax, ymin, ymax,
+        xmin, xmax, ymin, ymax,
         nx, ny,
         &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
         filename);
