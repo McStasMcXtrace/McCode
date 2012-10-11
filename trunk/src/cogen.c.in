@@ -1056,7 +1056,7 @@ cogen_trace(struct instr_def *instr)
   cout("  /* Neutronics-specific defines */");
   cout("#ifdef NEUTRONICS");
   coutf("extern double %snx, %sny, %snz, %snvx, %snvy, %snvz;", ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-  coutf("extern double %snt, %snsx, %snsy, %snsz, %snp;", ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+  coutf("extern double %snt, %snsx, %snsy, %snsz, %snp;", ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
   cout("#endif");
   cout("  /* End of Neutronics-specific defines */");
   /* Local neutron state. 
