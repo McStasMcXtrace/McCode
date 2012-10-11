@@ -234,12 +234,12 @@ add_executable(
 
 
 ## Build McFormat executable
-#add_executable(
-#	mcformat
-#	src/mcformat.c
-#)
+add_executable(
+	mcformat
+	src/mcformat.c
+)
 ## McFormat needs to be linked against m
-#target_link_libraries(mcformat m)
+target_link_libraries(mcformat m)
 
 
 
