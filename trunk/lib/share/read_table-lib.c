@@ -449,7 +449,7 @@
   } /* end Table_Read_Handle */
 
 /*******************************************************************************
-* long Rebin_Table(t_Table *Table)
+* long Table_Rebin(t_Table *Table)
 *   ACTION: rebin a single Table, sorting 1st column in ascending order
 *   input   Table: single table containing data.
 *                  The data block is reallocated in this process
@@ -494,7 +494,7 @@
       Table->data = New_Table;
     } /* end else (!constantstep) */
     return (Table->rows*Table->columns);
-  } /* end Rebin_Table */
+  } /* end Table_Rebin */
 
 /*******************************************************************************
 * double Table_Index(t_Table Table, long i, long j)
@@ -507,22 +507,22 @@
 * Tests are performed on indexes i,j to avoid errors
 *******************************************************************************/
 
-#define max(i, j) ((j) > (i) ? (j) : (i))
-#define min(i, j) ((j) < (i) ? (j) : (i))
-
 double Table_Index(t_Table Table, long i, long j)
 {
   long AbsIndex;
 
-  i = min(max(0, i), Table.rows - 1);
-  j = min(max(0, j), Table.columns - 1);
-
-  /* handle vectors specifically */
-  if (1 == Table.columns || 1 == Table.rows) {
-    AbsIndex = i+j;
+  if (Table.rows == 1 || Table.columns == 1) { 
+    /* vector */
+    j = MIN(MAX(0, i+j), Table.columns*Table.rows - 1); i=0;
   } else {
-    AbsIndex = i*(Table.columns)+j;
+    /* matrix */
+    i = MIN(MAX(0, i), Table.rows - 1);
+    j = MIN(MAX(0, j), Table.columns - 1);
   }
+  
+  /* handle vectors specifically */
+  AbsIndex = i*(Table.columns)+j;
+
   if (Table.data != NULL)
     return (Table.data[AbsIndex]);
   else
@@ -544,8 +544,14 @@ int Table_SetElement(t_Table *Table, long i, long j,
 {
   long AbsIndex;
 
-  i = min(max(0, i), Table->rows - 1);
-  j = min(max(0, j), Table->columns - 1);
+  if (Table->rows == 1 || Table->columns == 1) { 
+    /* vector */
+    j = MIN(MAX(0, i+j), Table->columns*Table->rows - 1); i=0;
+  } else {
+    /* matrix */
+    i = MIN(MAX(0, i), Table->rows - 1);
+    j = MIN(MAX(0, j), Table->columns - 1);
+  }
 
   AbsIndex = i*(Table->columns)+j;
   if (Table->data != NULL) {
@@ -633,24 +639,25 @@ double Table_Value(t_Table Table, double X, long j)
 *           X : row index, may be non integer
 *           Y : column index, may be non integer
 *   return  Value = data[index X][index Y] with bi-linear interpolation
-* Returns Value for the indexes [X,Y]
+* Returns Value for the indices [X,Y]
 * Tests are performed (within Table_Index) on indexes i,j to avoid errors
 * NOTE: data should rather be monotonic, and evenly sampled.
 *******************************************************************************/
   double Table_Value2d(t_Table Table, double X, double Y)
   {
-    double x1,x2,y1,y2,z11,z12,z21,z22;
+    long   x1,x2,y1,y2;
+    double z11,z12,z21,z22;
     double ret=0;
-    x1 = floor(X);
-    y1 = floor(Y);
-    if (x1 > Table.rows-1 || x1 < 0)    x2 = x1;
+    x1 = (long)floor(X);
+    y1 = (long)floor(Y);
+    if (x2 > Table.rows-1 || x2 < 0)    x2 = x1;
     else x2=x1+1;
-    if (y1 > Table.columns-1 || y1 < 0) y2 = y1;
+    if (y2 > Table.columns-1 || y2 < 0) y2 = y1;
     else y2=y1+1;
     z11=Table_Index(Table, x1, y1);
-    z12=Table_Index(Table, x1, y2);
-    z21=Table_Index(Table, x2, y1);
-    z22=Table_Index(Table, x2, y2);
+    if (y2 != y1) z12=Table_Index(Table, x1, y2); else z12 = z11;
+    if (x2 != x1) z21=Table_Index(Table, x2, y1); else z21 = z11;
+    if (y2 != y1) z22=Table_Index(Table, x2, y2); else z22 = z21;
 
     if (!strcmp(Table.method,"linear"))
       ret = Table_Interp2d(X,Y, x1,y1,x2,y2, z11,z12,z21,z22);

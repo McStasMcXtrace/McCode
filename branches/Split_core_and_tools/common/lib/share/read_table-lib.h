@@ -90,15 +90,16 @@ long     Table_Read_Offset       (t_Table *Table, char *File, long block_number,
                                   long *offset, long max_lines);
 long     Table_Read_Offset_Binary(t_Table *Table, char *File, char *Type,
                                   long *Offset, long Rows, long Columns);
-long     Table_Rebin(t_Table *Table);
+long     Table_Rebin(t_Table *Table); /* rebin table with regular 1st column and interpolate all columns 2:end */
 long     Table_Info (t_Table Table);
-double   Table_Index(t_Table Table,   long i, long j);
-double   Table_Value(t_Table Table, double X, long j);
+double   Table_Index(t_Table Table,   long i, long j); /* get indexed value */
+double   Table_Value(t_Table Table, double X, long j); /* search X in 1st column and return interpolated value in j-column */
 t_Table *Table_Read_Array(char *File, long *blocks);
 void     Table_Free_Array(t_Table *Table);
 long     Table_Info_Array(t_Table *Table);
 int      Table_SetElement(t_Table *Table, long i, long j, double value);
 long     Table_Init(t_Table *Table, long rows, long columns);
+double   Table_Value2d(t_Table Table, double X, double Y); /* same as Table_Index with non-integer indices and 2d interpolation */
 
 #define Table_ParseHeader(header, ...) \
   Table_ParseHeader_backend(header,__VA_ARGS__,NULL);

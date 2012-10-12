@@ -49,18 +49,18 @@
 
 /*******************************************************************************
 * long Table_Read_Offset(t_Table *Table, char *name, int block_number, long *offset
-*                        long max_lines)
+*                        long max_rows)
 *   ACTION: read a single Table from a text file, starting at offset
 *     Same as Table_Read(..) except:
 *   input   offset:    pointer to an offset (*offset should be 0 at start)
-*           max_lines: max number of data rows to read from file (0 means all)
+*           max_rows: max number of data rows to read from file (0 means all)
 *   return  initialized single Table t_Table structure containing data, header, ...
 *           number of read elements (-1: error, 0:header only)
 *           updated *offset position (where end of reading occured)
 *******************************************************************************/
   long Table_Read_Offset(t_Table *Table, char *File,
                          long block_number, long *offset,
-                         long max_lines)
+                         long max_rows)
   { /* reads all/a data block in 'file' and returns a Table structure  */
     FILE *hfile;
     long  nelements;
@@ -124,7 +124,7 @@
     begin     = ftell(hfile);
     if (offset && *offset) sprintf(name, "%s@%li", File, *offset);
     else                   strncpy(name, File, 128);
-    nelements = Table_Read_Handle(Table, hfile, block_number, max_lines, name);
+    nelements = Table_Read_Handle(Table, hfile, block_number, max_rows, name);
     Table->begin = begin;
     Table->end   = ftell(hfile);
     Table->filesize = (filesize>0 ? filesize : 0);
@@ -263,14 +263,14 @@
   } /* end Table_Read_Offset_Binary */
 
 /*******************************************************************************
-* long Table_Read_Handle(t_Table *Table, FILE *fid, int block_number, long max_lines, char *name)
+* long Table_Read_Handle(t_Table *Table, FILE *fid, int block_number, long max_rows, char *name)
 *   ACTION: read a single Table from a text file handle (private)
 *   input   Table:pointer to a t_Table structure
 *           fid:  pointer to FILE handle
 *           block_number: if the file does contain more than one
 *                 data block, then indicates which one to get (from index 1)
 *                 a 0 value means append/catenate all
-*           max_lines: if non 0, only reads that number of lines
+*           max_rows: if non 0, only reads that number of lines
 *   return  initialized single Table t_Table structure containing data, header, ...
 *           modified Table t_Table structure containing data, header, ...
 *           number of read elements (-1: error, 0:header only)
@@ -280,7 +280,7 @@
 * Data block may be rebined with Table_Rebin (also sort in ascending order)
 *******************************************************************************/
   long Table_Read_Handle(t_Table *Table, FILE *hfile,
-                         long block_number, long max_lines, char *name)
+                         long block_number, long max_rows, char *name)
   { /* reads all/a data block from 'file' handle and returns a Table structure  */
     double *Data;
     char *Header;
@@ -290,7 +290,6 @@
     long  count_in_array      = 0;
     long  count_in_header     = 0;
     long  block_Current_index = 0;
-    char  flag_In_array       = 0;
     char  flag_End_row_loop   = 0;
 
     if (!Table) return(-1);
@@ -309,133 +308,119 @@
     }
     Header[0] = '\0';
 
+    int flag_In_array = 0;
     do { /* while (!flag_End_row_loop) */
       char  line[1024*CHAR_BUF_LENGTH];
       long  back_pos=0;   /* ftell start of line */
 
       back_pos = ftell(hfile);
       if (fgets(line, 1024*CHAR_BUF_LENGTH, hfile) != NULL) { /* analyse line */
-        int i=0;
-        char  flag_Store_into_header=0;
         /* first skip blank and tabulation characters */
-        while (line[i] == ' ' || line[i] == '\t') i++;
+        int i = strspn(line, " \t");
+
         /* handle comments: stored in header */
-        if ((line[i] == '#') || (line[i] == '%')
-        || (line[i] == ';') || (line[i] == '/'))
+        if (NULL != strchr("#%;/", line[i]))
         { /* line is a comment */
-          flag_Store_into_header=1;
-          flag_In_array = 0;
-        } else {
-          double X;
-
-          /* get the number of columns splitting line with strtok */
-          if (sscanf(line,"%lg ",&X) == 1)
-          { /* line begins at least with one num */
-            char  *InputTokens, *lexeme;
-            char   flag_End_Line= 0;
-            long   block_Num_Columns     = 0;
-
-            InputTokens            = line;
-
-            do { /* while (!flag_End_Line) */
-              lexeme      = (char *)strtok(InputTokens, " ,;\t\n\r");
-              InputTokens = NULL;
-              if ((lexeme != NULL) && (strlen(lexeme) != 0))
-              { /* reading line: the token is not empty */
-                if (sscanf(lexeme,"%lg ",&X) == 1)
-                { /* reading line: the token is a number in the line */
-                  if (!flag_In_array)
-                  { /* reading num: not already in a block: starts a new data block */
-                    block_Current_index++;
-                    flag_In_array    = 1;
-                    block_Num_Columns= 0;
-                    if (block_number)
-                    { /* initialise a new data block */
-                      Rows = 0;
-                      count_in_array = 0;
-                    } /* else append */
-                  }
-                  /* reading num: all blocks or selected block */
-                  if ( flag_In_array &&  ((block_number == 0) || (block_number == block_Current_index)) )
-                  {
-                    /* starting block: already the desired number of rows ? */
-                    if (block_Num_Columns == 0
-                      && max_lines && Rows >= max_lines) {
-                      flag_End_Line      = 1;
-                      flag_End_row_loop  = 1;
-                      flag_In_array      = 0;
-                      /* reposition to begining of line (ignore line) */
-                      fseek(hfile, back_pos, SEEK_SET);
-                    } else { /* store into data array */
-                      if (count_in_array >= malloc_size)
-                      { /* realloc data buffer if necessary */
-                        malloc_size = count_in_array+CHAR_BUF_LENGTH;
-                        Data     = (double*)realloc(Data, malloc_size*sizeof(double));
-                        if (Data == NULL)
-                        {
-                          fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Handle).\n", malloc_size*sizeof(double));
-                          return (-1);
-                        }
-                      }
-                      if (block_Num_Columns == 0) Rows++;
-                      Data[count_in_array] = X;
-                      count_in_array++;
-                      block_Num_Columns++;
-                    }
-                  } /* reading num: end if flag_In_array */
-                  else
-                  { /* reading num: passed selected block */
-                    if (block_number < block_Current_index)
-                    { /* we finished to extract block -> force end of file reading */
-                      flag_End_Line      = 1;
-                      flag_End_row_loop  = 1;
-                      flag_In_array  = 0;
-                    }
-                    /* else (if read all blocks) continue */
-                  }
-                } /* end reading num: end if sscanf lexeme -> numerical */
-                else
-                { /* reading line: the token is not numerical in that line. end block */
-                  flag_End_Line = 1;
-                  flag_In_array = 0;
-                }
-              }
-              else
-              { /* no more tokens in line */
-                flag_End_Line = 1;
-                if (block_Num_Columns) Columns = block_Num_Columns;
-              }
-            } while (!flag_End_Line); /* end while flag_End_Line */
-          }
-          else
-          { /* ascii line: does not begin with a number: ignore line */
-            flag_In_array          = 0;
-            flag_Store_into_header = 1;
-          }
-        } /* end: if not line comment else numerical */
-        if (flag_Store_into_header) { /* add line into header */
           count_in_header += strlen(line);
-          if (count_in_header+4096 > malloc_size_h)
-          { /* if succeed and in array : add (and realloc if necessary) */
+          if (count_in_header >= malloc_size_h) {
+            /* if succeed and in array : add (and realloc if necessary) */
             malloc_size_h = count_in_header+4096;
             Header     = (char*)realloc(Header, malloc_size_h*sizeof(char));
           }
           strncat(Header, line, 4096);
-          flag_In_array  = 0; /* will start a new data block */
           /* exit line and file if passed desired block */
-          if (block_number && block_number == block_Current_index) {
-            flag_End_row_loop  = 1;
-
+          if (block_number > 0 && block_number == block_Current_index) {
+            flag_End_row_loop = 1;
           }
+
+          /* Continue with next line */
+          continue;
         }
+
+        /* get the number of columns splitting line with strtok */
+        char  *lexeme;
+        char  flag_End_Line = 0;
+        long  block_Num_Columns = 0;
+        const char seps[] = " ,;\t\n\r";
+
+        lexeme = strtok(line, seps);
+        while (!flag_End_Line) {
+          if ((lexeme != NULL) && (lexeme[0] != '\0')) {
+            /* reading line: the token is not empty */
+            double X;
+            if (sscanf(lexeme,"%lg",&X) == 1) {
+              /* reading line: the token is a number in the line */
+              if (!flag_In_array) {
+                /* reading num: not already in a block: starts a new data block */
+                block_Current_index++;
+                flag_In_array    = 1;
+                block_Num_Columns= 0;
+                if (block_number > 0) {
+                  /* initialise a new data block */
+                  Rows = 0;
+                  count_in_array = 0;
+                } /* else append */
+              }
+              /* reading num: all blocks or selected block */
+              if (flag_In_array && (block_number == 0) ||
+                  (block_number == block_Current_index)) {
+                /* starting block: already the desired number of rows ? */
+                if (block_Num_Columns == 0 &&
+                    max_rows > 0 && Rows >= max_rows) {
+                  flag_End_Line      = 1;
+                  flag_End_row_loop  = 1;
+                  flag_In_array      = 0;
+                  /* reposition to begining of line (ignore line) */
+                  fseek(hfile, back_pos, SEEK_SET);
+                } else { /* store into data array */
+                  if (count_in_array >= malloc_size) {
+                    /* realloc data buffer if necessary */
+                    malloc_size = count_in_array+CHAR_BUF_LENGTH;
+                    Data = (double*) realloc(Data, malloc_size*sizeof(double));
+                    if (Data == NULL) {
+                      fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Handle).\n",
+                              malloc_size*sizeof(double));
+                      return (-1);
+                    }
+                  }
+                  if (0 == block_Num_Columns) Rows++;
+                  Data[count_in_array] = X;
+                  count_in_array++;
+                  block_Num_Columns++;
+                }
+              } /* reading num: end if flag_In_array */
+            } /* end reading num: end if sscanf lexeme -> numerical */
+            else {
+              /* reading line: the token is not numerical in that line. end block */
+              if (block_Current_index == block_number) {
+                flag_End_Line = 1;
+                flag_End_row_loop = 1;
+              } else {
+                flag_In_array = 0;
+                flag_End_Line = 1;
+              }
+            }
+          }
+          else {
+            /* no more tokens in line */
+            flag_End_Line = 1;
+            if (block_Num_Columns > 0) Columns = block_Num_Columns;
+          }
+
+          // parse next token
+          lexeme = strtok(NULL, seps);
+
+        } /* while (!flag_End_Line) */
       } /* end: if fgets */
       else flag_End_row_loop = 1; /* else fgets : end of file */
+
     } while (!flag_End_row_loop); /* end while flag_End_row_loop */
 
     Table->block_number = block_number;
     Table->array_length = 1;
     if (count_in_header) Header    = (char*)realloc(Header, count_in_header*sizeof(char));
     Table->header       = Header;
+
     if (count_in_array*Rows*Columns == 0)
     {
       Table->rows         = 0;
@@ -461,7 +446,7 @@
   } /* end Table_Read_Handle */
 
 /*******************************************************************************
-* long Rebin_Table(t_Table *Table)
+* long Table_Rebin(t_Table *Table)
 *   ACTION: rebin a single Table, sorting 1st column in ascending order
 *   input   Table: single table containing data.
 *                  The data block is reallocated in this process
@@ -481,9 +466,8 @@
     Table_Stat(Table); /* recompute statitstics and minimal step */
     new_step = Table->step_x; /* minimal step in 1st column */
 
-    if (Table->constantstep) /* already evenly spaced */
-      return (Table->rows*Table->columns);
-    else {
+    if (!(Table->constantstep)) /* not already evenly spaced */
+    {
       long Length_Table;
       double *New_Table;
 
@@ -507,7 +491,7 @@
       Table->data = New_Table;
     } /* end else (!constantstep) */
     return (Table->rows*Table->columns);
-  } /* end Rebin_Table */
+  } /* end Table_Rebin */
 
 /*******************************************************************************
 * double Table_Index(t_Table Table, long i, long j)
@@ -519,28 +503,28 @@
 * Returns Value from the i-th row, j-th column of Table
 * Tests are performed on indexes i,j to avoid errors
 *******************************************************************************/
-  double Table_Index(t_Table Table, long i, long j)
-  {
-    long AbsIndex;
 
-    if (i < 0)        i = 0;
-    if (j < 0)        j = 0;
-    /* handle vectors specifically */
-    if (Table.columns == 1 || Table.rows == 1) {
-      AbsIndex = i+j;
-    } else {
-      if (i >= Table.rows)    i = Table.rows-1;
-      if (j >= Table.columns) j = Table.columns-1;
-      AbsIndex = i*(Table.columns)+j;
-    }
-    if (AbsIndex >= Table.rows*Table.columns)
-      AbsIndex = Table.rows*Table.columns-1;
-    else if (AbsIndex < 0) AbsIndex=0;
-    if (Table.data != NULL)
-      return(Table.data[AbsIndex]);
-    else
-      return(0);
-  } /* end Table_Index */
+double Table_Index(t_Table Table, long i, long j)
+{
+  long AbsIndex;
+
+  if (Table.rows == 1 || Table.columns == 1) { 
+    /* vector */
+    j = MIN(MAX(0, i+j), Table.columns*Table.rows - 1); i=0;
+  } else {
+    /* matrix */
+    i = MIN(MAX(0, i), Table.rows - 1);
+    j = MIN(MAX(0, j), Table.columns - 1);
+  }
+  
+  /* handle vectors specifically */
+  AbsIndex = i*(Table.columns)+j;
+
+  if (Table.data != NULL)
+    return (Table.data[AbsIndex]);
+  else
+    return 0;
+} /* end Table_Index */
 
 /*******************************************************************************
 * void Table_SetElement(t_Table *Table, long i, long j, double value)
@@ -552,21 +536,28 @@
 * Returns 0 in case of error
 * Tests are performed on indexes i,j to avoid errors
 *******************************************************************************/
-  int Table_SetElement(t_Table *Table, long i, long j,
-                        double value)
-  {
-    long AbsIndex;
+int Table_SetElement(t_Table *Table, long i, long j,
+                     double value)
+{
+  long AbsIndex;
 
-    if (i < 0)        i = 0;
-    if (i >= Table->rows)    i = Table->rows-1;
-    if (j < 0)        j = 0;
-    if (j >= Table->columns) j = Table->columns-1;
-    AbsIndex = i*(Table->columns)+j;
-    if (Table->data != NULL)
-      Table->data[AbsIndex] = value;
-    else return(0);
-    return(1);
-  } /* end Table_SetElement */
+  if (Table->rows == 1 || Table->columns == 1) { 
+    /* vector */
+    j = MIN(MAX(0, i+j), Table->columns*Table->rows - 1); i=0;
+  } else {
+    /* matrix */
+    i = MIN(MAX(0, i), Table->rows - 1);
+    j = MIN(MAX(0, j), Table->columns - 1);
+  }
+
+  AbsIndex = i*(Table->columns)+j;
+  if (Table->data != NULL) {
+    Table->data[AbsIndex] = value;
+    return 1;
+  }
+
+  return 0;
+} /* end Table_SetElement */
 
 /*******************************************************************************
 * double Table_Value(t_Table Table, double X, long j)
@@ -580,40 +571,63 @@
 * Tests are performed (within Table_Index) on indexes i,j to avoid errors
 * NOTE: data should rather be monotonic, and evenly sampled.
 *******************************************************************************/
-  double Table_Value(t_Table Table, double X, long j)
-  {
-    long   Index;
-    double X1=0, Y1=0, X2=0, Y2=0;
-    double ret=0;
+double Table_Value(t_Table Table, double X, long j)
+{
+  long   Index = -1;
+  double X1=0, Y1=0, X2=0, Y2=0;
+  double ret=0;
 
-    if (X > Table.max_x) return Table_Index(Table,Table.rows-1  ,j);
-    if (X < Table.min_x) return Table_Index(Table,0  ,j);
+  if (X > Table.max_x) return Table_Index(Table,Table.rows-1  ,j);
+  if (X < Table.min_x) return Table_Index(Table,0  ,j);
 
-    if (!Table.constantstep)
-      /* look for index surrounding X in the table -> Index */
-      for (Index=1; Index < Table.rows-1; Index++)
-      {
-        X2 = Table_Index(Table, Index  ,0);
+  // Use constant-time lookup when possible
+  if(Table.constantstep) {
+    Index = (long)floor(
+              (X - Table.min_x) / (Table.max_x - Table.min_x) * Table.rows);
+    X1 = Table_Index(Table,Index  ,0);
+    X2 = Table_Index(Table,Index+1,0);
+  }
+  // Use binary search on large, monotonic tables
+  else if(Table.monotonic && Table.rows > 100) {
+    long left = Table.min_x;
+    long right = Table.max_x;
+
+    while (!((X1 <= X) && (X < X2)) && (right - left > 1)) {
+      Index = (left + right) / 2;
+
+      X1 = Table_Index(Table, Index-1, 0);
+      X2 = Table_Index(Table, Index,   0);
+
+      if (X < X1) {
+        right = Index;
+      } else {
+        left  = Index;
+      }
+    }
+  }
+
+  // Fall back to linear search, if no-one else has set X1, X2 correctly
+  if (!((X1 <= X) && (X < X2))) {
+    /* look for index surrounding X in the table -> Index */
+    for (Index=1; Index < Table.rows-1; Index++) {
         X1 = Table_Index(Table, Index-1,0);
+        X2 = Table_Index(Table, Index  ,0);
         if ((X1 <= X) && (X < X2)) break;
       } /* end for Index */
-    else {
-        Index = (long)floor((X - Table.min_x)
-                          /(Table.max_x - Table.min_x)
-                           *Table.rows);
-        X1 = Table_Index(Table,Index  ,0);
-        X2 = Table_Index(Table,Index+1,0);
-    }
-    Y2 = Table_Index(Table,Index  ,j);
-    Y1 = Table_Index(Table,Index-1,j);
+  }
 
-    if (!strcmp(Table.method,"linear"))
-      ret = Table_Interp1d(X, X1,Y1, X2,Y2);
-    else if (!strcmp(Table.method,"nearest"))
-      ret = Table_Interp1d_nearest(X, X1,Y1, X2,Y2);
+  Y1 = Table_Index(Table,Index-1,j);
+  Y2 = Table_Index(Table,Index  ,j);
 
-    return (ret);
-  } /* end Table_Value */
+  if (!strcmp(Table.method,"linear")) {
+    ret = Table_Interp1d(X, X1,Y1, X2,Y2);
+  }
+  else if (!strcmp(Table.method,"nearest")) {
+    ret = Table_Interp1d_nearest(X, X1,Y1, X2,Y2);
+  }
+
+  return ret;
+} /* end Table_Value */
 
 /*******************************************************************************
 * double Table_Value2d(t_Table Table, double X, double Y)
@@ -622,24 +636,25 @@
 *           X : row index, may be non integer
 *           Y : column index, may be non integer
 *   return  Value = data[index X][index Y] with bi-linear interpolation
-* Returns Value for the indexes [X,Y]
+* Returns Value for the indices [X,Y]
 * Tests are performed (within Table_Index) on indexes i,j to avoid errors
 * NOTE: data should rather be monotonic, and evenly sampled.
 *******************************************************************************/
   double Table_Value2d(t_Table Table, double X, double Y)
   {
-    double x1,x2,y1,y2,z11,z12,z21,z22;
+    long   x1,x2,y1,y2;
+    double z11,z12,z21,z22;
     double ret=0;
-    x1 = floor(X);
-    y1 = floor(Y);
-    if (x1 > Table.rows-1 || x1 < 0)    x2 = x1;
+    x1 = (long)floor(X);
+    y1 = (long)floor(Y);
+    if (x2 > Table.rows-1 || x2 < 0)    x2 = x1;
     else x2=x1+1;
-    if (y1 > Table.columns-1 || y1 < 0) y2 = y1;
+    if (y2 > Table.columns-1 || y2 < 0) y2 = y1;
     else y2=y1+1;
     z11=Table_Index(Table, x1, y1);
-    z12=Table_Index(Table, x1, y2);
-    z21=Table_Index(Table, x2, y1);
-    z22=Table_Index(Table, x2, y2);
+    if (y2 != y1) z12=Table_Index(Table, x1, y2); else z12 = z11;
+    if (x2 != x1) z21=Table_Index(Table, x2, y1); else z21 = z11;
+    if (y2 != y1) z22=Table_Index(Table, x2, y2); else z22 = z21;
 
     if (!strcmp(Table.method,"linear"))
       ret = Table_Interp2d(X,Y, x1,y1,x2,y2, z11,z12,z21,z22);
@@ -679,7 +694,7 @@
 
     if (!Table.block_number) strcpy(buffer, "catenated");
     else sprintf(buffer, "block %li", Table.block_number);
-    printf("Table from file '%s' (%s)", 
+    printf("Table from file '%s' (%s)",
       Table.filename && strlen(Table.filename) ? Table.filename : "", buffer);
     if ((Table.data != NULL) && (Table.rows*Table.columns))
     {
@@ -961,7 +976,7 @@ char **Table_ParseHeader_backend(char *header, ...){
       eol_pos = strchr(pos+strlen(arg_char), '\n');
       if (!eol_pos)
         eol_pos = strchr(pos+strlen(arg_char), '\r');
-      if (!eol_pos) 
+      if (!eol_pos)
         eol_pos = pos+strlen(pos)-1;
       ret[counter] = (char*)malloc(eol_pos - pos);
       if (!ret[counter]) {
