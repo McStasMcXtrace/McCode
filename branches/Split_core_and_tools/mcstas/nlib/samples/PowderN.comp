@@ -50,7 +50,7 @@
 *   The complex geometry option handles any closed non-convex polyhedra.
 *   It computes the intersection points of the neutron ray with the object  
 *   transparently, so that it can be used like a regular sample object.
-*   It supports the OFF and NOFF file format but not COFF (colored faces). 
+*   It supports the PLY, OFF and NOFF file format but not COFF (colored faces). 
 *   Such files may be generated from XYZ data using:
 *     qhull < coordinates.xyz Qx Qv Tv o > geomview.off 
 *   or
@@ -156,8 +156,8 @@
 * concentric: Indicate that this component has a hollow geometry
 *               and may contain other components. It should then be duplicated 
 *               after the inside part (only for box, cylinder, sphere) [1] 
-* geometry:   Name of an Object File Format (OFF) file for complex geometry. 
-*               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
+* geometry:   Name of an Object File Format (OFF) or PLY file for complex geometry. 
+*               The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust [str]
 * barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2 
 *             (barns=1 for laz, barns=0 for lau type files).[1]
 * sigma_abs:Absorption cross section per unit cell at 2200 m/s. Use a negative value to unactivate it  [barns]
@@ -362,7 +362,7 @@ SHARE
 
       if (info->Dd >= 0)      w         = info->Dd;
       if (info->DWfactor > 0) DWfactor  = info->DWfactor;
-      if (!info->Epsilon)     Epsilon   = info->Epsilon*1e-6;
+      if (info->Epsilon)      Epsilon   = info->Epsilon*1e-6;
 
       /* get data from table using columns {j d F2 DW Dd inv2d q F} */
       /* column indexes start at 1, thus need to substract 1 */
