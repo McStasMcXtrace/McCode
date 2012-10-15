@@ -507,19 +507,27 @@
 * Tests are performed on indexes i,j to avoid errors
 *******************************************************************************/
 
+#ifndef MIN
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef MAX
+#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#endif
+
 double Table_Index(t_Table Table, long i, long j)
 {
   long AbsIndex;
 
-  if (Table.rows == 1 || Table.columns == 1) { 
+  if (Table.rows == 1 || Table.columns == 1) {
     /* vector */
-    j = MIN(MAX(0, i+j), Table.columns*Table.rows - 1); i=0;
+    j = MIN(MAX(0, i+j), Table.columns*Table.rows - 1);
+    i = 0;
   } else {
     /* matrix */
     i = MIN(MAX(0, i), Table.rows - 1);
     j = MIN(MAX(0, j), Table.columns - 1);
   }
-  
+
   /* handle vectors specifically */
   AbsIndex = i*(Table.columns)+j;
 
@@ -544,7 +552,7 @@ int Table_SetElement(t_Table *Table, long i, long j,
 {
   long AbsIndex;
 
-  if (Table->rows == 1 || Table->columns == 1) { 
+  if (Table->rows == 1 || Table->columns == 1) {
     /* vector */
     j = MIN(MAX(0, i+j), Table->columns*Table->rows - 1); i=0;
   } else {

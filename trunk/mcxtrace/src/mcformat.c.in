@@ -70,12 +70,6 @@ typedef struct Pool_header *Pool; /* allows memory to be included */
 #include "../lib/share/mccode-r.c"
 
 /* end of parts copied from mccode.h */
-#ifndef MIN
-#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
-#endif
-#ifndef MAX
-#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
-#endif
 #include "../lib/share/read_table-lib.h" /* independent library */
 #include "../lib/share/read_table-lib.c"
 
