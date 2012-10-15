@@ -70,7 +70,6 @@ typedef struct Pool_header *Pool; /* allows memory to be included */
 #include "../lib/share/mccode-r.c"
 
 /* end of parts copied from mccode.h */
-
 #include "../lib/share/read_table-lib.h" /* independent library */
 #include "../lib/share/read_table-lib.c"
 
