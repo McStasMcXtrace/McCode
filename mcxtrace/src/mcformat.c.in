@@ -70,7 +70,12 @@ typedef struct Pool_header *Pool; /* allows memory to be included */
 #include "../lib/share/mccode-r.c"
 
 /* end of parts copied from mccode.h */
-
+#ifndef MIN
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef MAX
+#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#endif
 #include "../lib/share/read_table-lib.h" /* independent library */
 #include "../lib/share/read_table-lib.c"
 
@@ -600,7 +605,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
 
   /* returns if this is not a McStas format file, or invalid */
   if (!rTable[0].data || (array_length != 1 && array_length != 3))   {
-    if (mcverbose) fprintf(stderr, "mcformat: file %s is invalid (%ld blocks)\n", 
+    if (mcverbose) fprintf(stderr, "mcformat: file %s is invalid (%ld blocks)\n",
       filename, array_length);
     flag_abort=1;
   } else if (!rTable[0].header) {
@@ -732,7 +737,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
   if (McStasStruct.RunNum < McStasStruct.Ncount*0.99)
     fprintf(stderr, "Warning: %s: Temporary results with ratio %g/%g. Simulation results are not completed.\n",
       filename, McStasStruct.RunNum, McStasStruct.Ncount);
-  
+
   /* analyse type, and check that Data dims are m,n,p */
   if (McStasStruct.type) {
     if (!strcmp(McStasStruct.type, "array_0d")) m=n=p=1;
@@ -747,7 +752,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
     fprintf(stderr, "Warning: %s: invalid data type '%s' (not 1d/2d/3d/multiarray)\n", filename, McStasStruct.type);
     return(McStasStruct);
   }
-  
+
 /* Scans: just test existence. If yes, then will skip the SIM file */
   /*
   "# Numpoints: "
@@ -769,8 +774,8 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
   if (McStasStruct.Format && (strstr(McStasStruct.Format, "binary") || strstr(McStasStruct.Format, "float") || strstr(McStasStruct.Format, "double")))
     fprintf(stderr, "WARNING: %s: Format of data file indicates binary blocks."
                     "         Not supported. Might crash.\n", filename);
-  if (McStasStruct.Format && McStasStruct.type 
-    && strstr(McStasStruct.Format, "PGPLOT") && array_length == 1 
+  if (McStasStruct.Format && McStasStruct.type
+    && strstr(McStasStruct.Format, "PGPLOT") && array_length == 1
     && strstr(McStasStruct.type, "array_1d") && rTable[0].columns == 4) flag_pgplot1d=1;
   if (flag_pgplot1d) n = 4;
   if (n != rTable[0].columns) {
@@ -800,17 +805,17 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
       fprintf(stderr, "Warning: %s: invalid xylimits '%s'. extracted %i values\n",
         filename, McStasStruct.xylimits, i);
   }
-  
+
   /* special case of 2D binary files: axes must be exchanged */
   if (strstr(mcformat.Name, "binary") || strstr(mcformat.Name, "float") || strstr(mcformat.Name, "double"))
   if (p == 1 && m>1 && n>1) {
     double tmp; char* c;
-    tmp=McStasStruct.x1; McStasStruct.x1=McStasStruct.y1; McStasStruct.y1=tmp; 
-    tmp=McStasStruct.x2; McStasStruct.x2=McStasStruct.y2; McStasStruct.y2=tmp; 
+    tmp=McStasStruct.x1; McStasStruct.x1=McStasStruct.y1; McStasStruct.y1=tmp;
+    tmp=McStasStruct.x2; McStasStruct.x2=McStasStruct.y2; McStasStruct.y2=tmp;
     c=McStasStruct.xlabel; McStasStruct.xlabel=McStasStruct.ylabel; McStasStruct.ylabel=c;
     c=McStasStruct.xvar;   McStasStruct.xvar=McStasStruct.yvar;     McStasStruct.yvar=c;
   }
-  
+
   McStasStruct.filename   = str_dup(filename);
   if (!McStasStruct.component) McStasStruct.component=str_dup(filename);
   struct fileparts_struct file_parts=fileparts(filename);
@@ -821,7 +826,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
   McStasStruct.mcdirname  = str_dup(mcdirname);
   if (McStasStruct.position) sscanf(McStasStruct.position, "%lg %lg %lg",
     &McStasStruct.POSITION.x,&McStasStruct.POSITION.y,&McStasStruct.POSITION.z);
-  
+
   /* header analysis: get instrument parameters and fills numipar and inputtable */
   char *s = rTable[0].header;
   char *tok=s;
@@ -1230,7 +1235,7 @@ int mcformat_merge_compare(int nb)
 
     /* skip empty elements */
     if (!McStasStruct.p1) continue;
-    
+
     /* we multiply the p1 and p2 by the Ncount so that the operations take
        into account the relative Ncount weight of each simulation. We will
        divide by the sum(Ncount) at the end of operation */
@@ -1239,7 +1244,7 @@ int mcformat_merge_compare(int nb)
       Files_to_Merge[i].p1[j] *= Files_to_Merge[i].Ncount;
       if (Files_to_Merge[i].p2) Files_to_Merge[i].p2[j] *= Files_to_Merge[i].Ncount;
     }
-    
+
     /* second loop to search for similar items to add to Files_to_Merge[i] */
     for (j=i+1; j<nb; j++) {
       struct McStas_file_format ThisStruct=Files_to_Merge[j];
@@ -1283,8 +1288,8 @@ int mcformat_merge_compare(int nb)
         (!ThisStruct.ylabel || !McStasStruct.ylabel || !strcmp(ThisStruct.ylabel, McStasStruct.ylabel)) &&
         (!ThisStruct.zlabel || !McStasStruct.zlabel || !strcmp(ThisStruct.zlabel, McStasStruct.zlabel)) );
       if (!flag_data) continue;
-      
-      char flag_limits=(mcforcemode || mcscanmode || 
+
+      char flag_limits=(mcforcemode || mcscanmode ||
           (ThisStruct.n == 1 && ThisStruct.x1 == McStasStruct.x1) ||
           (ThisStruct.x1 == McStasStruct.x1 && ThisStruct.y1 == McStasStruct.y1)
           );
@@ -1365,7 +1370,7 @@ int mcformat_merge_compare(int nb)
           if (McStasStruct.p0) Files_to_Merge[i].p0[index_i] += ThisStruct.p0[index_i];
                                Files_to_Merge[i].p1[index_i] += ThisStruct.Ncount*ThisStruct.p1[index_i];
           if (McStasStruct.p2) Files_to_Merge[i].p2[index_i] += ThisStruct.Ncount*ThisStruct.p2[index_i];
-          
+
         }
         /* free and leave j in empty state */
         memfree(ThisStruct.p0); memfree(ThisStruct.p1); memfree(ThisStruct.p2);
@@ -1374,14 +1379,14 @@ int mcformat_merge_compare(int nb)
       Files_to_Merge[i].Ncount += ThisStruct.Ncount;
       Files_to_Merge[i].RunNum += ThisStruct.RunNum;
     } /* end for j */
-    
+
     /* divide p1 and p2 by total Ncount to account for the weighted sum */
     if (!strstr(McStasStruct.Format, " list ")) /* NOT FOR LISTs (content non additive) */
     for (j=0; j<abs(McStasStruct.m*McStasStruct.n*McStasStruct.p); j++) {
       Files_to_Merge[i].p1[j] /= Files_to_Merge[i].Ncount;
       if (Files_to_Merge[i].p2) Files_to_Merge[i].p2[j] /= Files_to_Merge[i].Ncount;
     }
-      
+
     /* now count integral values for item Files_to_Merge[i] */
     double Nsum=0, Psum=0, P2sum=0;
     for (j=0; j<abs(Files_to_Merge[i].m*Files_to_Merge[i].n*Files_to_Merge[i].p); j++) {
@@ -1458,13 +1463,13 @@ void mcformat_scan_compare(int nb)
    */
   int scan_index1=0;
   int i=0,j;
-  
+
   /* test if there is scan data to be processed */
   for (scan_index1=0; scan_index1<nb; scan_index1++) {
     if (Scans_to_merge[scan_index1] < 0 || Scans_to_merge[scan_index1] < scan_index1) continue;
     else { i=1; break; }
   }
-    
+
   if (i == 0)
     fprintf(stderr, "Warning: Could not find scanned parameter within 'Param' lines in data file headers.\n"
           "Ignoring [mcformat:mcformat_scan_compare].\n");
@@ -1598,7 +1603,7 @@ void mcformat_scan_compare(int nb)
       /* extract sorted column and set Scan */
       for (i=0; i<scan_length1; i++) { /* loop on column elements(row) */
         Table_SetElement(&Scan,
-          i, 
+          i,
           Files_to_Merge[scan_index1].mcnumipar+2*j,
           Files_to_Merge[Monitor_column[i]].Psum);
         Table_SetElement(&Scan,
@@ -1643,7 +1648,7 @@ void mcformat_scan_compare(int nb)
     if (!datfile) datfile = str_cat("mcstas.", strstr(mcformat.Name, "McStas") ? "dat" : mcformat.Extension, NULL);
     strcat(mcformat.Name, " scan ");
     if (mcverbose)
-      printf("Writing scan file=%s (%s) into directory %s: %s=%g:%g\n", 
+      printf("Writing scan file=%s (%s) into directory %s: %s=%g:%g\n",
         datfile, mcsiminfo_name, mcdirname,
         Files_to_Merge[scan_index1].mcinputtable[ipar_var].name, ipar_min, ipar_max);
     strcpy(mcinstrument_name,   Files_to_Merge[scan_index1].InstrName);
@@ -1658,7 +1663,7 @@ void mcformat_scan_compare(int nb)
       ipar_min, ipar_max, 0, 0, 0, 0,
       -scan_length1, Files_to_Merge[scan_index1].mcnumipar+2*mon_count,  1,
       NULL, Scan.data, NULL, datfile,
-      Files_to_Merge[scan_index1].component, 
+      Files_to_Merge[scan_index1].component,
       Files_to_Merge[scan_index1].POSITION);
 
     /* for PGPLOT: close mcstas.sim */
@@ -1959,5 +1964,3 @@ int main(int argc, char *argv[])
   return mcnbconvert; /* number of converted files */
 
 } /* main */
-
-
