@@ -1,0 +1,17 @@
+Package: mcstas-web
+Source: mcstas-web (0.1)
+Version: 0.1-1
+Architecture: amd64
+Maintainer: Johan Brinch <jsbn@fysik.dtu.dk>
+Installed-Size: 20713617
+Depends: build-essential (>= 11),
+         sudo,
+         python (>= 2.5),
+         python-dev (>= 2.5),
+         python-setuptools (>= 0.6),
+         nginx (>= 0.8.40)
+Suggests: wget
+Section: editors
+Priority: optional
+Homepage: http://www.mcstas.org
+Description: A web-interface for the McStas neutron simulation package.
