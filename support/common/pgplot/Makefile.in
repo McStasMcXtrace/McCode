@@ -103,7 +103,7 @@ DEMOS= pgdemo1 pgdemo2 pgdemo3 pgdemo4 pgdemo5 pgdemo6 pgdemo7 pgdemo8 pgdemo9 p
 #-----------------------------------------------------------------------
 # Target "all" makes everything (except the library of obsolete routines)
 #-----------------------------------------------------------------------
-all: lib grfont.dat prog pgplot.doc pgdisp pgxwin_server cpg
+xxxall: lib grfont.dat prog pgplot.doc pgdisp pgxwin_server cpg
 	@echo ' ';echo '*** Finished compilation of PGPLOT ***';echo ' '
 	@echo 'Note that if you plan to install PGPLOT in a different'
 	@echo 'directory than the current one, the following files will be'
@@ -121,7 +121,7 @@ all: lib grfont.dat prog pgplot.doc pgdisp pgxwin_server cpg
 	@echo 'an environment variable named PGPLOT_DIR.'
 	@echo ' '
 
-safe: lib_safe grfont.dat prog pgplot.doc pgdisp pgxwin_server cpg_safe
+all: lib_safe grfont.dat prog pgplot.doc pgdisp pgxwin_server cpg_safe
 	@echo ' ';echo '*** Finished compilation of PGPLOT ***';echo ' '
 	@echo 'Note that if you plan to install PGPLOT in a different'
 	@echo 'directory than the current one, the following files will be'

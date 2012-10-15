@@ -31,9 +31,11 @@
 
 # define version and symbols that will be replaced in many places
 if [ "y$2" = "ymcxtrace" ]; then
+  FLAVOR=mcxtrace
   MCCODE_TARNAME=mcxtrace
   MCCODE_NAME=McXtrace
 else
+  FLAVOR=mcstas
   MCCODE_TARNAME=mcstas
   MCCODE_NAME=McStas
 fi
@@ -46,18 +48,18 @@ MCCODE_STRING="$MCCODE_NAME $MCCODE_VERSION - $MONTH. $DAY, $YEAR"
 
 # Create temporary workdir:
 PW=`pwd`
-TMPDIR=$PWD/..
+TMPDIR=$PW/..
 DIST=$TMPDIR/$MCCODE_TARNAME-$MCCODE_VERSION
 
 # Copy current PW checkout to DIST
 cp -rp $PW $DIST
 
 # Create the doc's from tex - if a checkout is avail.
-if [ -d $PW/../../McStasTeX/trunk ] ;
+if [ -d $TMPDIR/../McStasTeX/trunk ] ;
 then
-  cd $PW/../../McStasTeX/trunk
+  cd $TMPDIR/../McStasTeX/trunk
   ./build $MCCODE_VERSION
-  
+
   # copy the doc in DIST/doc. Only use PDF files in distro.
   mv $MCCODE_TARNAME-$MCCODE_VERSION-manual.pdf $DIST/doc/manuals/$MCCODE_TARNAME-manual.pdf
   mv $MCCODE_TARNAME-$MCCODE_VERSION-components.pdf $DIST/doc/manuals/$MCCODE_TARNAME-components.pdf
@@ -82,19 +84,20 @@ find . -wholename './setyear'    -prune -o -type d -prune -o -path ./src/McStasT
 
 # we update all package/version strings
 echo "Set package $MCCODE_VERSION information"
-for iter in 1 2 3;
-do
-for file in configure.in lib/tools/perl/mccode_reconfigure.in ;
-	do
-	  sed 's/@MCCODE_STRING@/'$MCCODE_NAME'-'$MCCODE_VERSION' - '$MONTH'. '$DAY', '$YEAR'/' $file > $file.tmp
-    sed 's/@MCCODE_NAME@/'$MCCODE_NAME'/'                                                 $file.tmp > $file
-    sed 's/@MCCODE_TARNAME@/'$MCCODE_TARNAME'/'                                           $file > $file.tmp
-    sed 's/@MCCODE_VERSION@/'$MCCODE_VERSION'/'                                           $file.tmp > $file
-    sed 's/@MCCODE_DATE@/'$MONTH'. '$DAY', '$YEAR'/'                                      $file > $file.tmp
-    mv $file.tmp $file
-	done
+for iter in 1 2 3; do
+    for file in mcstas/{CMakeLists.txt,configure.in} \
+        mcxtrace/{CMakeLists.txt,configure.in} \
+        tools/Legacy-Perl/lib/tools/perl/mccode_reconfigure.in ; do
+        echo ${file}
+	      sed 's/@MCCODE_STRING@/'$MCCODE_NAME'-'$MCCODE_VERSION' - '$MONTH'. '$DAY', '$YEAR'/' $file > $file.tmp
+        sed 's/@MCCODE_NAME@/'$MCCODE_NAME'/'                                                 $file.tmp > $file
+        sed 's/@MCCODE_TARNAME@/'$MCCODE_TARNAME'/'                                           $file > $file.tmp
+        sed 's/@MCCODE_VERSION@/'$MCCODE_VERSION'/'                                           $file.tmp > $file
+        sed 's/@MCCODE_DATE@/'$MONTH'. '$DAY', '$YEAR'/'                                      $file > $file.tmp
+        mv $file.tmp $file
+	  done
 done
-chmod a+x support/deb/debcreate
+# chmod a+x support/deb/debcreate
 
 # Create the doc's from tex - if a checkout is avail.
 cd $DIST
@@ -116,7 +119,7 @@ then
   # gzip install.ps
       rm *.ps *.ps.gz
   fi
-  
+
   mkdir ../html
   latex2html -local_icons -dir ../html install.tex
   # clean up
@@ -126,22 +129,21 @@ then
   # Update the tutorial files
   ./update
   rm update
-  mkdir $DIST/lib/doc
+  mkdir -p $DIST/lib/doc
   cp -r $DIST/doc/install_docs/ $DIST/lib/doc
   cp -r $DIST/doc/tutorial/ $DIST/lib/doc/
   cp -r $DIST/doc/man/ $DIST/lib/doc/
-fi  
+fi
 cd $DIST
 
 # Create configure (which will itself create mccode_config.perl and mccode_reconfigure)
-autoconf 
-
-#-o configure $CONFIGURE_IN
+cd $FLAVOR
+autoconf
 
 # run lex, yacc (assuming linux - flex -i & bison -v -d)
-cd src
-flex -i instrument.l
-bison -v -d instrument.y
+cd src &&
+flex -i instrument.l &&
+bison -v -d instrument.y &&
 cd ..
 
 
@@ -154,80 +156,80 @@ export INSTALL="./install-sh -c"
 # These will be dependent on this system, ofcourse...
 ./configure
 
-cd lib/tools/perl
+cd ..
+
+
+cd tools/Legacy-Perl/lib/tools/perl
 autoconf mccode_reconfigure > ${MCCODE_TARNAME}_reconfigure
 chmod a+x ${MCCODE_TARNAME}_reconfigure
 cd -
 
 
 # Select scilab as default plotter
-make pgplot
+# make pgplot
 
 # Clean up
 rm TODO.txt
 rm mkdist
 rm setversion
 rm setyear
-rm header
+rm ${FLAVOR}/header
 # Make new runs of configure not dependent of this system...
 rm config.*
 cd ..
 
 # Create tar archive
-tar cfz $PW/../$MCCODE_TARNAME-$MCCODE_VERSION-src.tar.gz $MCCODE_TARNAME-$MCCODE_VERSION
+tar cfz $TMPDIR/$MCCODE_TARNAME-$MCCODE_VERSION-src.tar.gz $MCCODE_TARNAME-$MCCODE_VERSION
 
 # Do a 'make' for creation of binary version (should apply to 'any' Unix)
-cd $PW
-cd $DIST
+cd $DIST/${FLAVOR}
 
 # Default again to Linux' /usr/bin/install -c (or whatever ./configure finds)
 export INSTALL=
-./configure
-# Select pgplot as default plotter
-make pgplot
 
-make
+./configure && make
+
 UNAME=`uname`
 MACH=`uname -m`
 # Up to now, this is always done on intel...
 PROC=Intel
-cd ..
+cd $TMPDIR
 
 # Create tar archive
-tar cfz $PW/../$MCCODE_TARNAME-$MCCODE_VERSION-$MACH-$PROC-$UNAME.tar.gz $MCCODE_TARNAME-$MCCODE_VERSION
+tar cfz $TMP/$MCCODE_TARNAME-$MCCODE_VERSION-$MACH-$PROC-$UNAME.tar.gz $MCCODE_TARNAME-$MCCODE_VERSION
 
 # Remove temporary dir
 # rm -rf $TMPDIR
 
 # Create .tar.gz archive for building a binary Windows version
-cd $PW
-cd $DIST
+cd $DIST/${FLAVOR}
 make clean
+
 cd src
 flex -i instrument.l
 bison -v -d instrument.y
 cd ..
+
 ./configure
 # build.bat is obsolete?
 #sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
 #sed 's/DONSIS="0"/DONSIS="1"/' build.bat.new > build.bat
 cp support/Win32/install/which.exe .
 cd ..
-tar cfz $PW/../$MCCODE_TARNAME-$MCCODE_VERSION-Win32-src.tar.gz $MCCODE_TARNAME-$MCCODE_VERSION
+tar cfz $TMPDIR/$MCCODE_TARNAME-$MCCODE_VERSION-Win32-src.tar.gz $MCCODE_TARNAME-$MCCODE_VERSION
 echo "  "
 echo "========================================================================="
 echo "mkdist: Distro creation for $MCCODE_STRING"
 if [ `which makensis` ]; then
-    cd -
+    cd ${DIST}/${FLAVOR}
     ./configure
-    # Make sure we default to PGPLOT plotter
-    make pgplot
+    make
     make $MCCODE_TARNAME.win32
     cp support/Win32/install/$MCCODE_TARNAME.ini ..
     cp support/Win32/install/$MCCODE_TARNAME.nsi ..
     cp support/Win32/install/$MCCODE_TARNAME.bmp ..
     cp support/Win32/install/LICENSE_$MCCODE_TARNAME.rtf ..
-    cd ..
+    cd ${TMPDIR}
     zip -r $MCCODE_TARNAME-$MCCODE_VERSION-i686-Intel-Win32.zip $MCCODE_TARNAME-$MCCODE_VERSION
     cp winsupport/* .
     makensis -X"SetCompressor /FINAL lzma" $MCCODE_TARNAME.nsi
@@ -244,7 +246,7 @@ echo ../$MCCODE_TARNAME-$MCCODE_VERSION-Win32-src.tar.gz
 echo
 echo NOTE: Win32 version must be built using \'build.bat\' of the Win32-src package
 echo
-if [ -d $PW/../../McStasTeX/trunk ] ;
+if [ -d $TMPDIR/../McStasTeX/trunk ] ;
 then
 echo Your $MCCODE_STRING doc packages are placed in
 echo ../$MCCODE_TARNAME-$MCCODE_VERSION-manual.ps.gz
@@ -315,7 +317,7 @@ then
   else
     echo You need a chroot environment based on debootstrap in build-chroot-i386 before building the i386 deb package - create using something like
     echo sudo debootstrap --arch i386 karmic build-chroot
-  fi  
+  fi
   if [ -e build-chroot-x86_64 ]
   then
     echo Proceeding to .deb build
@@ -341,4 +343,3 @@ then
     echo sudo debootstrap --arch amd64 karmic build-chroot-x86_64
   fi
 fi
-
