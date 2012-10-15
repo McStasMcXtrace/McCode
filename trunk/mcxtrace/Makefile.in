@@ -1,0 +1,103 @@
+# Makefile for @MCCODE_NAME@.
+#
+#   This file is part of the @MCCODE_NAME@ ray-trace simulation package
+#   Copyright (C) 1997-2008, All rights reserved
+#   Risoe National Laborartory, Roskilde, Denmark
+#   Institut Laue Langevin, Grenoble, France
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; version 2 of the License.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# Available methods for installation
+# make                 normal build
+# make install         normal installation
+# make clean           clean distro
+# make test            distro self-test
+# make plotter         best plotter choice
+# make pgplot          plotter PGPLOT selection
+# make reconfigure     reconfigure @MCCODE_TARNAME@ installation (after software update)
+# make install-pgplot  build and install PGPLOT (including perl-PGPLOT)
+# make install-scilab  build and install Scilab
+# make install-apps    install highligh syntax in gedit/kate 
+#                          and icon in menu/education (requires administrator permissions)
+
+SHELL = /bin/sh
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+srcdir = @srcdir@
+libdir = @libdir@
+mandir = @mandir@
+PWD = `pwd`
+
+
+DEBUG = -DDEBUG=0
+libdir_@MCCODE_TARNAME@ = $(libdir)/@MCCODE_TARNAME@
+
+CC = @CC@
+MINGW = @MINGW@
+CFLAGS = @CFLAGS@
+LDFLAGS= @LDFLAGS@
+
+HAVE_QSORT = @HAVE_QSORT@
+USE_NEXUS = @HAVE_NEXUS@
+
+DEFS = @MCCODE_NAME@ @DEFS@ $(DEBUG)
+LIBS = @LIBS@
+
+PERL = @PERL@
+
+FLEX = flex
+FLEXFLAGS=-i
+
+BISON = bison
+BISONFLAGS = -v -d
+
+INSTALL=@INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+
+#
+# End of configuration section.
+#
+
+all: @MCCODE_TARNAME@
+
+@MCCODE_TARNAME@: $(OBJECTS)
+	cd src/ && $(MAKE)
+
+@MCCODE_TARNAME@.win32: $(OBJECTS)
+	cd src/ && $(MAKE) @MCCODE_TARNAME@.win32
+
+clean:
+	cd src/ && $(MAKE) clean
+	rm -f src/config.cache config.cache
+
+distclean:
+	cd src/ && $(MAKE) distclean
+	rm -f src/config.cache src/Makefile config.cache Makefile
+
+install: 
+	cd src/ && $(MAKE) install
+
+test:
+	cd src && $(MAKE) test
+
+uninstall:
+	cd src && $(MAKE) uninstall
+
+reconfigure:
+	cd $(libdir_@MCCODE_TARNAME@)/tools/perl/
+	$(libdir_@MCCODE_TARNAME@)/tools/perl/mccode_reconfigure
+
