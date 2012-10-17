@@ -16,7 +16,7 @@ add_definitions(
 ## @MCCODE_DATE@, @MCCODE_STRING@, @MCCODE_NAME@, @MCCODE_TARNAME@, @MCCODE_VERSION@
 set(MKDIST "@MCCODE_DATE@")
 
-if(MKDIST STREQUAL "")
+if(MKDIST STREQUAL "@MCCODE_DATE@")
   ## Set SVN-specific version
   set(MAJOR "2")
   set(MINOR "9999")
