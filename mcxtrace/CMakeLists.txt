@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 ## This file will build McStas
 project(mcstas)
-set(FLAVOR     "mxtrace")
+set(FLAVOR     "mcxtrace")
 set(FLAVOR_LIB "xlib")
 
 
@@ -37,12 +37,15 @@ else()
 endif()
 
 set(MCCODE_PARTICLE "xray")
-set(MCCODE_LIBENV   "MXTRACE")
+set(MCCODE_LIBENV   "MCXTRACE")
 set(MCCODE_PROJECT  1)
 
 
 ## CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}")
+set(CPACK_BUNDLE_NAME          "${FLAVOR}")
+set(CPACK_BUNDLE_PLIST          "${FLAVOR}")
+set(CPACK_BUNDLE_ICON          "${FLAVOR}")
 set(CPACK_RESOURCE_FilE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../COPYING")
 set(CPACK_PACKAGE_VERSION_MAJOR "${MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${MINOR}")
@@ -254,11 +257,11 @@ add_executable(
 
 ## Build McFormat executable
 add_executable(
-	mcformat
+	mxformat
 	work/src/mcformat.c
 )
 ## McFormat needs to be linked against m
-target_link_libraries(mcformat m)
+target_link_libraries(mxformat m)
 
 
 
