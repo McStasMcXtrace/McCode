@@ -277,7 +277,7 @@ macro(install_lib path)
     )
 endmacro()
 
-# shared library, lib
+# Shared library, lib
 install_lib("${PROJECT_BINARY_DIR}/work/lib/")
 install_lib("${PROJECT_SOURCE_DIR}/${FLAVOR_LIB}/")
 
@@ -286,4 +286,10 @@ install (
   DIRECTORY "${PROJECT_BINARY_DIR}/work/doc/man/"
   DESTINATION man/man1
   PATTERN "*.1"
+)
+
+# Binaries
+install (
+  PROGRAMS "${PROJECT_BINARY_DIR}/mcxtrace" "${PROJECT_BINARY_DIR}/mxformat"
+  DESTINATION bin
 )
