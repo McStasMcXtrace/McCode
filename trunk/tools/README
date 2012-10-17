@@ -1,0 +1,7 @@
+This folder is home of the McCode tool layer in various implementations.
+
+Python: New implementation based on Python, work in progress mainly by Johan Brinch
+
+Legacy-Perl: Original Perl + Perl-Tk + (PDL+pgplot+Perl-pgplot || Matlab || Scilab || Gnuplot)
+
+The idea is to implement independent configure/Make/build scripts as per tool package.
