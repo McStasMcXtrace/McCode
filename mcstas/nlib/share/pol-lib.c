@@ -31,6 +31,7 @@
 
 #include<sys/stat.h>
 
+%include "interpolation/resample.h"
 %include "interpolation/resample.c"
 
 
