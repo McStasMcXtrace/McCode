@@ -23,7 +23,7 @@ set(MKDIST "@MCCODE_DATE@")
 
 if(MKDIST STREQUAL "@MCCODE_DATE@")
   ## Set SVN-specific version
-  set(MAJOR "x")
+  set(MAJOR "2")
   set(MINOR "9999")
   set(MCCODE_VERSION "${MAJOR}.${MINOR}-svn")
   set(MCCODE_NAME "${NAME}")
