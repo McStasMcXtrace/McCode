@@ -4,5 +4,6 @@
 
 // System options
 #cmakedefine HAVE_STRCASECMP
+#cmakedefine HAVE_STRCASESTR
 #cmakedefine HAVE_FDOPEN
 #cmakedefine HAVE_QSORT
