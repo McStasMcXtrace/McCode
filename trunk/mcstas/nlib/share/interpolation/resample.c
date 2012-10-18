@@ -3,9 +3,6 @@
 #include<math.h>
 
 
-%include "interpolation/resample.h"
-
-
 double halton(int index, int base) {
   double result = 0;
   double f = 1.0 / base;
@@ -164,3 +161,17 @@ vertex **resample_file(char *input_path, int *rows,
   return points;
 
 }
+
+
+// Clean up macros
+#undef R_MIN
+#undef R_MAX
+#undef R_SQR
+#undef R_SWAP
+
+#undef X
+#undef Y
+#undef Z
+#undef U
+#undef V
+#undef W

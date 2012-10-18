@@ -32,5 +32,4 @@ vertex** load_table(char *input_path, int *rows);
 
 void dump_table(vertex **points, int rows, char *output_path);
 
-
 #endif
