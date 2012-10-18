@@ -5,8 +5,6 @@
 #include <math.h>
 #include <string.h>
 
-%include "interpolation/array-utils.h"
-%include "interpolation/nearest/kdtree.h"
 /******************************************************************************/
 
 /* Unit testing */

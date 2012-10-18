@@ -1,4 +1,4 @@
-%include "interpolation/natural/utils-extra.h"
+/* utility functions */
 
 int vercmp(vertex *v1, vertex *v2)
 {

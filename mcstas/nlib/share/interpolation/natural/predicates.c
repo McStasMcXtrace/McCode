@@ -113,6 +113,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#ifndef PREDICATES_H
+#define PREDICATES_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -2318,7 +2321,7 @@ REAL *pd;
   adxbdy = adx * bdy;
   bdxady = bdx * ady;
 
-  det = adz * (bdxcdy - cdxbdy) 
+  det = adz * (bdxcdy - cdxbdy)
       + bdz * (cdxady - adxcdy)
       + cdz * (adxbdy - bdxady);
 
@@ -4261,3 +4264,4 @@ REAL *pe;
   return insphereadapt(pa, pb, pc, pd, pe, permanent);
 }
 
+#endif
