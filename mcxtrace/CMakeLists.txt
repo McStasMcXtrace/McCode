@@ -2,8 +2,12 @@ cmake_minimum_required(VERSION 2.6)
 
 ## This file will build McStas
 project(mcstas)
-set(FLAVOR     "mcxtrace")
-set(FLAVOR_LIB "xlib")
+set(FLAVOR          "mcxtrace")
+set(FLAVOR_FMT      "mxformat")
+set(FLAVOR_LIB      "xlib")
+set(MCCODE_PARTICLE "xray")
+set(MCCODE_LIBENV   "MCXTRACE")
+set(MCCODE_PROJECT  2)
 
 
 ## We are building with CMake and need to let port.h know this
@@ -18,7 +22,7 @@ set(MKDIST "@MCCODE_DATE@")
 
 if(MKDIST STREQUAL "@MCCODE_DATE@")
   ## Set SVN-specific version
-  set(MAJOR "2")
+  set(MAJOR "x")
   set(MINOR "9999")
   set(MCCODE_VERSION "${MAJOR}.${MINOR}-svn")
   set(MCCODE_NAME "McXtrace")
@@ -27,30 +31,27 @@ if(MKDIST STREQUAL "@MCCODE_DATE@")
   set(MCCODE_TARNAME "${FLAVOR}")
 else()
   ## Set mkdist-provided version
-  set(MAJOR "2")  # TODO: Replace with information from ${VERSION}
+  set(MAJOR "2")  # TODO: Replace with information from ${MCCODE_VERSION}
   set(MINOR "0")
   set(MCCODE_VERSION "@MCCODE_VERSION@")
   set(MCCODE_NAME "@MCCODE_NAME@")
   set(MCCODE_DATE "@MCCODE_DATE@")
   set(MCCODE_STRING "@MCCODE_STRING@")
-  set(MCCODE_TARNAME "@MCCODE_TARNAME")
+  set(MCCODE_TARNAME "@MCCODE_TARNAME@")
 endif()
-
-set(MCCODE_PARTICLE "xray")
-set(MCCODE_LIBENV   "MCXTRACE")
-set(MCCODE_PROJECT  1)
 
 
 ## CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}")
-set(CPACK_BUNDLE_NAME          "${FLAVOR}")
-set(CPACK_BUNDLE_PLIST          "${FLAVOR}")
-set(CPACK_BUNDLE_ICON          "${FLAVOR}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../COPYING")
 set(CPACK_PACKAGE_VERSION_MAJOR "${MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${MINOR}")
 set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
 set(CPACK_PACKAGE_DEPENDS       "")
+
+# Add files debian-specific files
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/debian/postinst;")
+
 
 set(CPACK_PACKAGE_CONTACT "jsbn@fysik.dtu.dk") #required
 
@@ -164,6 +165,7 @@ check_function_exists(qsort       HAVE_QSORT)
 # Create work directory, where all rewritten source files go to
 # (to support in-place builds)
 file(MAKE_DIRECTORY "work")
+file(MAKE_DIRECTORY "work/support")
 
 
 ## Rules for processing files while expanding macros
@@ -202,6 +204,11 @@ configure_directory ("lib/*" "work/lib")
 configure_directory ("lib/share/*" "work/lib/share")
 
 configure_directory ("src/*" "work/src")
+
+# Debian specific postinst script
+configure_directory (
+  "${CMAKE_SOURCE_DIR}/../cmake/support/debian/*.in"
+  "work/support/debian")
 
 
 # Generate man pages
@@ -258,11 +265,11 @@ add_executable(
 
 ## Build McFormat executable
 add_executable(
-	mxformat
+	"${FLAVOR_FMT}"
 	work/src/mcformat.c
 )
 ## McFormat needs to be linked against m
-target_link_libraries(mxformat m)
+target_link_libraries(${FLAVOR_FMT} m)
 
 
 
@@ -273,7 +280,7 @@ target_link_libraries(mxformat m)
 macro(install_lib path)
   install (
     DIRECTORY "${path}"
-    DESTINATION "lib/${FLAVOR}"
+    DESTINATION "lib/${FLAVOR}-${MCCODE_VERSION}"
     PATTERN "Makefile*" EXCLUDE  # skip makefiles
     PATTERN "#*"        EXCLUDE  # skip backup files
     PATTERN ".*"        EXCLUDE  # skip hidden files
@@ -287,13 +294,24 @@ install_lib("${PROJECT_SOURCE_DIR}/${FLAVOR_LIB}/")
 
 # Man pages
 install (
-  DIRECTORY "${PROJECT_BINARY_DIR}/work/doc/man/"
+  FILES "${PROJECT_BINARY_DIR}/work/doc/man/${FLAVOR}.1"
   DESTINATION man/man1
-  PATTERN "*.1"
+  RENAME "${FLAVOR}-${MCCODE_VERSION}.1"
+)
+install (
+  FILES "${PROJECT_BINARY_DIR}/work/doc/man/${FLAVOR_FMT}.1"
+  DESTINATION man/man1
+  RENAME "${FLAVOR_FMT}-${MCCODE_VERSION}.1"
 )
 
 # Binaries
 install (
-  PROGRAMS "${PROJECT_BINARY_DIR}/mcxtrace" "${PROJECT_BINARY_DIR}/mxformat"
+  PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}"
   DESTINATION bin
+  RENAME "${FLAVOR}-${MCCODE_VERSION}"
+)
+install (
+  PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}"
+  DESTINATION bin
+  RENAME "${FLAVOR}-${MCCODE_VERSION}"
 )
