@@ -155,6 +155,7 @@ message("-- Looking for bison and flex - found")
 
 # OPTIONAL
 check_function_exists(strcasecmp  HAVE_STRCASECMP)
+check_function_exists(strcasestr HAVE_STRCASESTR)
 check_function_exists(fdopen      HAVE_FDOPEN)
 check_function_exists(qsort       HAVE_QSORT)
 
