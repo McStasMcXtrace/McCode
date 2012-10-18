@@ -9,7 +9,7 @@
 #define kdtree_h
 /******************************************************************************/
 
-%include "interpolation/nearest/array-utils.h"
+%include "interpolation/array-utils.h"
 %include "interpolation/nearest/vertex.h"
 
 /******************************************************************************/
