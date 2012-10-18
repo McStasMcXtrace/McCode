@@ -17,12 +17,16 @@ macro(InstallMCCODE)
   set(CPACK_PACKAGE_VERSION_MINOR "${MINOR}")
   set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
   set(CPACK_PACKAGE_DEPENDS       "")
+  set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
-  # Add files debian-specific files
+  # Make CPack respect the install prefix
+  SET(CPACK_SET_DESTDIR "ON")
+  SET(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+
+
+  # Debian
   set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/debian/postinst;")
 
-
-  set(CPACK_PACKAGE_CONTACT "jsbn@fysik.dtu.dk") #required
 
   include(CPack)
 
