@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 
-## This file will build McStas
+## This file will build McXtrace
 project(mcstas)
+set(NAME            "McXtrace")
 set(FLAVOR          "mcxtrace")
 set(FLAVOR_FMT      "mxformat")
 set(FLAVOR_LIB      "xlib")
@@ -25,9 +26,9 @@ if(MKDIST STREQUAL "@MCCODE_DATE@")
   set(MAJOR "x")
   set(MINOR "9999")
   set(MCCODE_VERSION "${MAJOR}.${MINOR}-svn")
-  set(MCCODE_NAME "McXtrace")
+  set(MCCODE_NAME "${NAME}")
   set(MCCODE_DATE "svn")
-  set(MCCODE_STRING "McXtrace ${MCCODE_VERSION}, ${MCCODE_DATE}")
+  set(MCCODE_STRING "${NAME} ${MCCODE_VERSION}, ${MCCODE_DATE}")
   set(MCCODE_TARNAME "${FLAVOR}")
 else()
   ## Set mkdist-provided version
