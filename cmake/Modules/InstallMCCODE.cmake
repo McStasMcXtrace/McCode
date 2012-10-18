@@ -259,7 +259,6 @@ macro(InstallMCCODE)
 
   # Shared library, lib
   install_lib("${PROJECT_BINARY_DIR}/work/lib/")
-  install_lib("${PROJECT_SOURCE_DIR}/${FLAVOR_LIB}/")
 
   # Man pages
   install (
