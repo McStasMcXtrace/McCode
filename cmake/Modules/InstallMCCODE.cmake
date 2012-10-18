@@ -16,7 +16,6 @@ macro(InstallMCCODE)
   set(CPACK_PACKAGE_VERSION_MAJOR "${MAJOR}")
   set(CPACK_PACKAGE_VERSION_MINOR "${MINOR}")
   set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
-  set(CPACK_PACKAGE_DEPENDS       "")
   set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
   # Make CPack respect the install prefix
@@ -26,7 +25,7 @@ macro(InstallMCCODE)
 
   # Debian
   set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/debian/postinst;")
-
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS       "")
 
   include(CPack)
 
@@ -243,19 +242,7 @@ macro(InstallMCCODE)
 
 
   ## Add install targets
-
-  # Macro for installing library files into lib/${FLAVOR},
-  # while skipping unneeded files
-  macro(install_lib path)
-    install (
-      DIRECTORY "${path}"
-      DESTINATION "lib/${FLAVOR}-${MCCODE_VERSION}"
-      PATTERN "Makefile*" EXCLUDE  # skip makefiles
-      PATTERN "#*"        EXCLUDE  # skip backup files
-      PATTERN ".*"        EXCLUDE  # skip hidden files
-      PATTERN "*.out"     EXCLUDE  # skip binary files
-    )
-  endmacro()
+  include(MCUtil)
 
   # Shared library, lib
   install_lib("${PROJECT_BINARY_DIR}/work/lib/")
