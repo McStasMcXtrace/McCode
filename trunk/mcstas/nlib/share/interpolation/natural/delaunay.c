@@ -26,8 +26,6 @@
 #include <time.h>
 #include <assert.h>
 
-%include "interpolation/natural/delaunay.h"
-
 %include "interpolation/natural/natural.h"
 %include "interpolation/natural/utils-extra.h"
 %include "interpolation/natural/predicates.c"

@@ -10,12 +10,15 @@
 
 
 
-%include "interpolation/array-utils.c"
+%include "interpolation/array-utils"
 
+%include "interpolation/natural/delaunay.h"
 %include "interpolation/natural/delaunay.c"
-%include "interpolation/natural/natural.c"
-%include "interpolation/natural/utils-extra.c"
 
+%include "interpolation/natural/natural"
+%include "interpolation/natural/utils-extra"
+
+%include "interpolation/nearest/kdtree.h"
 %include "interpolation/nearest/kdtree.c"
 
 

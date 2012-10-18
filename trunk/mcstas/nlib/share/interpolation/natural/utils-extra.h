@@ -1,8 +1,7 @@
+/* utility functions */
 
 #ifndef utils_extra_h
 #define utils_extra_h
-
-%include "interpolation/natural/delaunay.h"
 
 
 //------------------------------------------------------------------------------

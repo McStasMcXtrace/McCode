@@ -10,8 +10,6 @@
 *******************************************************************************/
 #include<assert.h>
 
-%include "interpolation/array-utils.h"
-
 
 /* Unit Testing */
 // #define _TEST_
