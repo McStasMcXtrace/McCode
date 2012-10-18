@@ -164,14 +164,51 @@ vertex **resample_file(char *input_path, int *rows,
 
 
 // Clean up macros
-#undef R_MIN
+#undef Absolute
+#undef DIMENSION
+#undef Eight_Four_Sum
+#undef Eight_One_Sum
+#undef Eight_Two_Sum
+#undef Fast_Two_Diff
+#undef Fast_Two_Diff_Tail
+#undef Fast_Two_Sum
+#undef Fast_Two_Sum_Tail
+#undef Four_Four_Sum
+#undef Four_One_Product
+#undef Four_One_Sum
+#undef Four_Two_Sum
+#undef INEXACT
+#undef INTERPOLATE_DETAIL
+#undef NARROWRAND
+#undef NUM_TEST_POINTS
+#undef OUTPUT_TO_FILE
+#undef PERTURBATION_VALUE
 #undef R_MAX
+#undef R_MIN
 #undef R_SQR
 #undef R_SWAP
-
-#undef X
-#undef Y
-#undef Z
+#undef Split
+#undef Square
+#undef Square_Tail
+#undef Two_Diff
+#undef Two_Diff_Tail
+#undef Two_One_Diff
+#undef Two_One_Product
+#undef Two_One_Sum
+#undef Two_Product
+#undef Two_Product_
+#undef Two_Product_Presplit
+#undef Two_Product_Tail
+#undef Two_Square
+#undef Two_Sum
+#undef Two_Sum_Tail
+#undef Two_Two_Diff
+#undef Two_Two_Product
+#undef Two_Two_Sum
+#undef UNIFORMRAND
 #undef U
 #undef V
 #undef W
+#undef X
+#undef Y
+#undef Z
