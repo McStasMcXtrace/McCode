@@ -298,7 +298,7 @@ EXTEND %{
 %}
   
 COMPONENT Sample=Isotropic_Sqw(xwidth=0.05, yheight=0.05, zdepth=4e-3, 
-  Sqw_coh=coh, Sqw_inc=inc, save_sqw=1, p_interact=0.99, order=1, d_phi=30)
+  Sqw_coh=coh, Sqw_inc=inc, p_interact=0.99, order=1, d_phi=30)
   AT (0, 0, 0) RELATIVE SamplePos
 EXTEND %{
   if (SCATTERED)

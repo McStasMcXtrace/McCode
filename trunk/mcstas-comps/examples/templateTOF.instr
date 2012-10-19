@@ -134,8 +134,8 @@ EXTEND
 %}
 
 COMPONENT Sample_in=Isotropic_Sqw(
-  radius = radius, thickness=thickness, yheight = yheight, save_sqw=1,
-  Sqw_coh=coh, Sqw_inc=inc, auto_qw=0, p_interact=0.9
+  radius = radius, thickness=thickness, yheight = yheight,
+  Sqw_coh=coh, Sqw_inc=inc, p_interact=0.9
 ) AT (0, 0, 0) RELATIVE SampleIn
 EXTEND
 %{
@@ -145,10 +145,8 @@ EXTEND
   t = randtriangle()*2*dt0;  // we assume that in the real instrument, the chopper is close to sample
 %}
 
-COMPONENT Container_out=Isotropic_Sqw(
-  radius=radius+0.0001+container_thickness,yheight=yheight,thickness=container_thickness,
-  auto_qw=0, Sqw_coh=container, verbose=0
-  ) WHEN(yheight && container_thickness)
+COMPONENT Container_out=COPY(Container_in)(concentric=0)
+WHEN(yheight && container_thickness)
 AT (0, 0, 0) RELATIVE SampleIn
 EXTEND
 %{
@@ -156,10 +154,8 @@ EXTEND
 %}
 
 /* external shield */
-COMPONENT Environment_out=Isotropic_Sqw(
-  radius = environment_radius, yheight = 0.1, thickness=environment_thickness,
-  auto_qw=0, Sqw_coh=environment, verbose=0
-) WHEN (environment_thickness > 0)
+COMPONENT Environment_out=COPY(Environment_in)(concentric=0)
+WHEN (environment_thickness > 0)
 AT (0, 0, 0) RELATIVE SampleIn
 EXTEND %{
   if (SCATTERED) flag_env=1;

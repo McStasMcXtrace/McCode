@@ -48,7 +48,7 @@ COMPONENT Sample_pos = Arm()
 AT (0, 0, 1.5) RELATIVE Origin
 
 COMPONENT Sample=Isotropic_Sqw(
-  radius = 0.01, yheight = 0.055, p_interact=0.8, save_sqw=1,
+  radius = 0.01, yheight = 0.055, p_interact=0.8,
   Sqw_coh=sample_coh, Sqw_inc=sample_inc
 ) AT (0, 0, 0) RELATIVE Sample_pos
 EXTEND
