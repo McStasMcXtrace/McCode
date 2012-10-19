@@ -71,8 +71,7 @@
 
     if (!Table) return(-1);
     Table_Init(Table, 0, 0);
-    if (!File)  return(-1);
-    if (strlen(File) == 0) return (-1);
+    if (!File || File[0]=='\0')  return(-1);
     if (!strcmp(File,"NULL") || !strcmp(File,"0"))  return(-1);
     hfile = fopen(File, "r");
     if(!hfile)
@@ -116,7 +115,7 @@
       {
         fprintf(stderr, "Error: Could not open input file '%s' (Table_Read_Offset_Binary)\n", File);
         return (-1);
-      } else
+      } else if (!offset || (offset && !*offset))
         printf("Opening input file '%s' (Table_Read)\n", path);
     }
     stat(File,&stfile); filesize = stfile.st_size;
@@ -162,8 +161,7 @@
     if (!Table) return(-1);
 
     Table_Init(Table, 0, 0);
-    if (!File)  return(-1);
-    if (strlen(File) == 0) return (-1);
+    if (!File || File[0]=='\0')  return(-1);
     if (!strcmp(File,"NULL") || !strcmp(File,"0"))  return(-1);
 
     hfile = fopen(File, "r");
@@ -294,7 +292,7 @@
 
     if (!Table) return(-1);
     Table_Init(Table, 0, 0);
-    if (name && strlen(name)) strcpy(Table->filename, name);
+    if (name && name[0]!='\0') strcpy(Table->filename, name);
 
     if(!hfile) {
        fprintf(stderr, "Error: File handle is NULL (Table_Read_Handle).\n");
@@ -779,6 +777,40 @@ long Table_Init(t_Table *Table, long rows, long columns)
   return(Table->rows*Table->columns);
 } /* end Table_Init */
 
+/******************************************************************************
+* long Table_Write(t_Table Table, char *file)
+*   ACTION: write a Table to disk (ascii).
+*   return: 0=all is fine, non-0: error
+*******************************************************************************/
+long     Table_Write(t_Table Table, char *file, char *xl, char *yl)
+{
+  long    i =0;
+  double *p1=NULL;
+  
+  if ((Table.data == NULL) && (Table.rows*Table.columns))
+    return(0); /* Table is empty - nothing to do */
+    
+  /* transfer content of the Table into a 2D detector */
+  p1 = calloc(Table.rows*Table.columns, sizeof(double));
+  if (!p1)
+    return(-1); /* could not allocate copy area to store table */
+  for (i=0; i<Table.rows*Table.columns; p1[i] = Table.data[i++]);
+  
+  if (Table.rows == 1 || Table.columns == 1)
+    mcdetector_out_1D(Table.filename,
+    xl ? xl : "", yl ? yl : "", "x",
+    Table.min_x,Table.max_x,Table.rows*Table.columns,NULL,p1,NULL,file, 
+    file, coords_set(0,0,0));
+  else
+    mcdetector_out_2D(Table.filename,
+      xl ? xl : "", yl ? yl : "",
+      Table.min_x,Table.max_x,1,Table.columns,
+      Table.rows,Table.columns,NULL,p1,NULL,file,
+      file, coords_set(0,0,0));
+      
+  free(p1);
+  return(0);
+}
 
 /******************************************************************************
 * void Table_Stat(t_Table *Table)
@@ -959,7 +991,7 @@ char **Table_ParseHeader_backend(char *header, ...){
   char exit_flag=0;
   int counter   =0;
   char **ret    =NULL;
-  if (!header || !strlen(header)) return(NULL);
+  if (!header || header[0]=='\0') return(NULL);
 
   ret = (char**)calloc(MyNL_ARGMAX, sizeof(char*));
   if (!ret) {
@@ -977,7 +1009,7 @@ char **Table_ParseHeader_backend(char *header, ...){
     char *pos     =NULL;
     /* get variable argument value as a char */
     arg_char = va_arg(ap, char *);
-    if (!arg_char || !strlen(arg_char)){
+    if (!arg_char || arg_char[0]=='\0'){
       exit_flag = 1; break;
     }
     /* search for the symbol in the header */
