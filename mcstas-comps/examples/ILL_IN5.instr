@@ -433,8 +433,8 @@ ROTATED (0,det_angle,0) RELATIVE Collimator
 
 SPLIT COMPONENT SAMPLE = Isotropic_Sqw(
   radius = radius, thickness=thickness, yheight = height,
-  Sqw_coh=coh, Sqw_inc=inc, auto_qw=0, p_interact=0.9,
-  order = order, d_phi = 180/PI*atan(1.5/4)*2, verbose=1, save_sqw=1)
+  Sqw_coh=coh, Sqw_inc=inc, p_interact=0.9,
+  order = order, d_phi = 180/PI*atan(1.5/4)*2, verbose=1)
 AT (0,0,0) RELATIVE arm2
 ROTATED (0,0,0) RELATIVE arm2
 EXTEND
