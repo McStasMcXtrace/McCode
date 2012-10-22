@@ -87,7 +87,7 @@ echo "Set package $MCCODE_VERSION information"
 for iter in 1 2 3; do
     for file in mcstas/{CMakeLists.txt,configure.in} \
         mcxtrace/{CMakeLists.txt,configure.in} \
-        tools/Legacy-Perl/lib/tools/perl/mccode_reconfigure.in ; do
+        tools/Legacy-Perl/{configure.in,lib/tools/perl/mccode_reconfigure.in} ; do
         echo ${file}
 	      sed 's/@MCCODE_STRING@/'$MCCODE_NAME'-'$MCCODE_VERSION' - '$MONTH'. '$DAY', '$YEAR'/' $file > $file.tmp
         sed 's/@MCCODE_NAME@/'$MCCODE_NAME'/'                                                 $file.tmp > $file
