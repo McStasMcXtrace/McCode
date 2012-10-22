@@ -4342,10 +4342,7 @@ mcinfo(void)
     exit(fprintf(stderr,"Error: Can not display instrument information in NeXus binary format\n"));
   mcsiminfo_init(stdout);
   mcsiminfo_close();
-#ifdef USE_MPI
-  MPI_Finalize();
-#endif
-  exit(0);
+  exit(0); /* includes MPI_Finalize in MPI mode
 } /* mcinfo */
 
 /*******************************************************************************
@@ -4766,7 +4763,7 @@ int mccode_main(int argc, char *argv[])
 #else /* !USE_MPI */
   mcseed=(long)time(&t);
   srandom(mcseed);
-#endif /* !USE_MPI */
+#endif /* USE_MPI */
   mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
 
 /* *** parse options ******************************************************* */
