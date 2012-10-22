@@ -786,28 +786,40 @@ long     Table_Write(t_Table Table, char *file, char *xl, char *yl)
 {
   long    i =0;
   double *p1=NULL;
-  
-  if ((Table.data == NULL) && (Table.rows*Table.columns))
+
+  if ((Table.data == NULL) && (Table.rows*Table.columns)) {
     return(0); /* Table is empty - nothing to do */
-    
+  }
+
   /* transfer content of the Table into a 2D detector */
   p1 = calloc(Table.rows*Table.columns, sizeof(double));
-  if (!p1)
+  if (!p1) {
     return(-1); /* could not allocate copy area to store table */
-  for (i=0; i<Table.rows*Table.columns; p1[i] = Table.data[i++]);
-  
-  if (Table.rows == 1 || Table.columns == 1)
+  }
+
+  for (i=0; i<Table.rows*Table.columns; i++) {
+    p1[i] = Table.data[i];
+  }
+
+  Coords coords = { 0, 0, 0};
+
+  if (Table.rows == 1 || Table.columns == 1) {
     mcdetector_out_1D(Table.filename,
-    xl ? xl : "", yl ? yl : "", "x",
-    Table.min_x,Table.max_x,Table.rows*Table.columns,NULL,p1,NULL,file, 
-    file, coords_set(0,0,0));
-  else
+                      xl ? xl : "", yl ? yl : "",
+                      "x", Table.min_x, Table.max_x,
+                      Table.rows * Table.columns,
+                      NULL, p1, NULL,
+                      file, file, coords);
+  } else {
     mcdetector_out_2D(Table.filename,
-      xl ? xl : "", yl ? yl : "",
-      Table.min_x,Table.max_x,1,Table.columns,
-      Table.rows,Table.columns,NULL,p1,NULL,file,
-      file, coords_set(0,0,0));
-      
+                      xl ? xl : "", yl ? yl : "",
+                      Table.min_x, Table.max_x,
+                      1, Table.columns,
+                      Table.rows, Table.columns,
+                      NULL, p1, NULL,
+                      file, file, coords);
+  }
+
   free(p1);
   return(0);
 }
