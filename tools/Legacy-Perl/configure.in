@@ -62,7 +62,7 @@ if test x"$enable_mcstas" = "xyes" -o x"$enable_mcxtrace" = "xyes" ; then
   MCCODE_VERSION="$MONTH-$DAY-$YEAR"
   MCCODE_STRING="$MCCODE_NAME $MCCODE_VERSION - $MONTH. $DAY, $YEAR"
   MCCODE_BUGREPORT="$MCCODE_TARNAME-support@$MCCODE_TARNAME.org"
-  
+
   echo "Configurating McCode with $MCCODE_NAME flavour"
   echo "MCCODE_DATE     =$MCCODE_DATE"
   echo "MCCODE_TARNAME  =$MCCODE_TARNAME"
@@ -160,7 +160,7 @@ else
   AC_DEFINE([HAVE_NEXUS], [])
 fi
 
-AC_OUTPUT(Makefile support/common/Makefile lib/Makefile lib/tools/perl/mccode_config.perl lib/tools/perl/mccode_reconfigure doc/man/mcconvert.1 doc/man/mcdisplay.1 doc/man/mcdoc.1 doc/man/mcgui.1 doc/man/mcplot.1 doc/man/mcrun.1 doc/man/mxconvert.1 doc/man/mxdisplay.1 doc/man/mxdoc.1 doc/man/mxgui.1 doc/man/mxplot.1 doc/man/mxrun.1)
+AC_OUTPUT(Makefile lib/Makefile lib/tools/perl/mccode_config.perl lib/tools/perl/mccode_reconfigure doc/man/mcconvert.1 doc/man/mcdisplay.1 doc/man/mcdoc.1 doc/man/mcgui.1 doc/man/mcplot.1 doc/man/mcrun.1 doc/man/mxconvert.1 doc/man/mxdisplay.1 doc/man/mxdoc.1 doc/man/mxgui.1 doc/man/mxplot.1 doc/man/mxrun.1)
 
 chmod a+x lib/tools/perl/mccode_reconfigure
 
@@ -247,5 +247,3 @@ echo "After (optional) plotter config, build and install $MCCODE_STRING by execu
 echo "  # make; make install"
 echo "will install $MCCODE_STRING into $prefix"
 echo ""
-
-
