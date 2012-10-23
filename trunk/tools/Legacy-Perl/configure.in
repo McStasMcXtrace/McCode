@@ -59,7 +59,7 @@ if test x"$enable_mcstas" = "xyes" -o x"$enable_mcxtrace" = "xyes" ; then
   DAY=`date +"%d"`
   YEAR=`date +"%Y"`
   MCCODE_DATE="$MONTH. $DAY, $YEAR"
-  MCCODE_VERSION="$MONTH-$DAY-$YEAR"
+  MCCODE_VERSION="2.9999-svn"
   MCCODE_STRING="$MCCODE_NAME $MCCODE_VERSION - $MONTH. $DAY, $YEAR"
   MCCODE_BUGREPORT="$MCCODE_TARNAME-support@$MCCODE_TARNAME.org"
 

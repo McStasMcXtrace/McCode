@@ -14,15 +14,15 @@ INSTALL=@INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
-libdir_mccode = $(libdir)/@MCCODE_TARNAME@
-tooldir_mccode = $(libdir)/@MCCODE_TARNAME@/tools
-perlmods_mccode = $(libdir)/@MCCODE_TARNAME@/tools/perl/modules
+libdir_mccode = $(libdir)/@MCCODE_TARNAME@-@MCCODE_VERSION@
+libdir_tools = $(libdir)/@MCCODE_TARNAME@-tools-@MCCODE_VERSION@
+perlmods_mccode = $(libdir_tools)/perl/modules
 
 install: install_@MCCODE_TARNAME@
 
 install_@MCCODE_TARNAME@: installdirs
-	cd tools && cp -rp * $(libdir_mccode)/tools/
+	cd tools && cp -rp * $(libdir_tools)/
 
 installdirs:
-	$(rootdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_mccode) $(perlmods_mccode) $(tooldir_mccode) $(mandir)/man1
-
+	$(rootdir)/mkinstalldirs $(bindir) $(libdir) \
+	$(perlmods_mccode) $(tooldir_mccode) $(mandir)/man1
