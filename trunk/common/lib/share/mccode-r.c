@@ -2164,6 +2164,74 @@ static int mcsiminfo_init(FILE *f)
 } /* mcsiminfo_init */
 
 /*******************************************************************************
+* mcdetector_write_content: write mcstas.dat, which has integrated intensities for all monitors
+* Used by: mcsiminfo_close
+*******************************************************************************/
+int mcdetector_write_content(MCDETECTOR *DetectorArray, long DetectorArray_index)
+{
+#ifdef USE_MPI
+  /* only for Master */
+  if(mpi_node_rank != mpi_node_root)                      return(-1);
+#endif
+  if (mcdisable_output_files)                             return(-2);
+  if (!mcsiminfo_name || !strlen(mcsiminfo_name))         return(-3);
+  if (!DetectorArray_index)                               return(-4);
+
+  /* build p1 array from all detector integrated counts */
+  double *this_p1 = (double *)calloc(DetectorArray_index*2, sizeof(double));
+  int i;
+
+  if (this_p1 && DetectorArray) {
+    char   *labels=NULL;
+    long    labels_size=0;
+    long    index=0;
+    for (i=0; i < DetectorArray_index; i++) {
+        char mem[CHAR_BUF_LENGTH];
+        char valid[CHAR_BUF_LENGTH];
+        /* store I I_err */
+        this_p1[index++] = DetectorArray[i].intensity;
+        this_p1[index++] = DetectorArray[i].error;
+        /* add corresponding label */
+        mcvalid_name(valid, DetectorArray[i].filename, CHAR_BUF_LENGTH);
+        sprintf(mem, "%s_I %s_Err ", valid, valid);
+        if (!labels ||
+          (labels && labels_size <= strlen(labels)+strlen(mem))) {
+          labels_size+=CHAR_BUF_LENGTH;
+          if (!labels || !strlen(labels))
+            labels = calloc(1, labels_size);
+          else
+            labels = realloc(labels, labels_size);
+        }
+        strcat(labels, " ");
+        strcat(labels, mem);
+    } /* for */
+
+    struct mcformats_struct format=mcformat;
+    strcat(format.Name, " scan step");
+    Coords zero={0.0,0.0,0.0};
+
+    /* now create detector and write 'abstract' file */
+    MCDETECTOR detector = mcdetector_import(format,
+      mcinstrument_name, "Monitor integrated counts",
+      index, 1, 1,
+      "Monitors", "I", "Integrated Signal",
+      "Index", labels, "I",
+      0, index-1, 0, 0, 0, 0, "content",  /* use name from OpenOffice content.xml description file */
+      NULL, this_p1, NULL, zero);
+
+    mcdetector_write_data(detector);
+
+    free(labels); labels=NULL; labels_size=0;
+
+    /* free DETECTOR array */
+    free(this_p1); this_p1=NULL;
+    free(mcDetectorArray); mcDetectorArray=NULL;
+  } /* if this_p1 */
+
+} /* mcdetector_write_content */
+
+
+/*******************************************************************************
 * mcsiminfo_close: close simulation file (mcstas.sim) and write mcstas.dat
 * Used by: mcsave/mcfinally from code generation (cogen), mcinfo, mcstas_main
 *******************************************************************************/
@@ -2623,73 +2691,6 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
 
   return(detector);
 } /* mcdetector_write_data */
-
-/*******************************************************************************
-* mcdetector_write_content: write mcstas.dat, which has integrated intensities for all monitors
-* Used by: mcsiminfo_close
-*******************************************************************************/
-int mcdetector_write_content(MCDETECTOR *DetectorArray, long DetectorArray_index)
-{
-#ifdef USE_MPI
-  /* only for Master */
-  if(mpi_node_rank != mpi_node_root)                      return(-1);
-#endif
-  if (mcdisable_output_files)                             return(-2);
-  if (!mcsiminfo_name || !strlen(mcsiminfo_name))         return(-3);
-  if (!DetectorArray_index)                               return(-4);
-
-  /* build p1 array from all detector integrated counts */
-  double *this_p1 = (double *)calloc(DetectorArray_index*2, sizeof(double));
-  int i;
-
-  if (this_p1 && DetectorArray) {
-    char   *labels=NULL;
-    long    labels_size=0;
-    long    index=0;
-    for (i=0; i < DetectorArray_index; i++) {
-        char mem[CHAR_BUF_LENGTH];
-        char valid[CHAR_BUF_LENGTH];
-        /* store I I_err */
-        this_p1[index++] = DetectorArray[i].intensity;
-        this_p1[index++] = DetectorArray[i].error;
-        /* add corresponding label */
-        mcvalid_name(valid, DetectorArray[i].filename, CHAR_BUF_LENGTH);
-        sprintf(mem, "%s_I %s_Err ", valid, valid);
-        if (!labels ||
-          (labels && labels_size <= strlen(labels)+strlen(mem))) {
-          labels_size+=CHAR_BUF_LENGTH;
-          if (!labels || !strlen(labels))
-            labels = calloc(1, labels_size);
-          else
-            labels = realloc(labels, labels_size);
-        }
-        strcat(labels, " ");
-        strcat(labels, mem);
-    } /* for */
-
-    struct mcformats_struct format=mcformat;
-    strcat(format.Name, " scan step");
-    Coords zero={0.0,0.0,0.0};
-
-    /* now create detector and write 'abstract' file */
-    MCDETECTOR detector = mcdetector_import(format,
-      mcinstrument_name, "Monitor integrated counts",
-      index, 1, 1,
-      "Monitors", "I", "Integrated Signal",
-      "Index", labels, "I",
-      0, index-1, 0, 0, 0, 0, "content",  /* use name from OpenOffice content.xml description file */
-      NULL, this_p1, NULL, zero);
-
-    mcdetector_write_data(detector);
-
-    free(labels); labels=NULL; labels_size=0;
-
-    /* free DETECTOR array */
-    free(this_p1); this_p1=NULL;
-    free(mcDetectorArray); mcDetectorArray=NULL;
-  } /* if this_p1 */
-
-} /* mcdetector_write_content */
 
 /*******************************************************************************
 * mcdetector_out_0D: wrapper for 0D (single value).
