@@ -30,36 +30,30 @@ use File::Basename;
 
 use Config;
 BEGIN {
-  # default configuration (for all high level perl scripts)
-  if($ENV{"MCSTAS"}) {
-    $MCSTAS::sys_dir = $ENV{"MCSTAS"};
-  } else {
-    if ($0 =~ /mcplot/i) {
-      if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
-      } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
-      }
+    # default configuration (for all high level perl scripts)
+    if($ENV{"MCSTAS"}) {
+        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
     } else {
-      if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::sys_dir = "c:\\mcxtrace\\lib";
-      } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcxtrace";
-      }
+        if ($Config{'osname'} eq 'MSWin32') {
+            $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+        } else {
+            $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+        }
     }
-  }
-  $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
-  $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
+    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/perl";
+    $MCSTAS::perl_dir =~ s/\/mcstas-/\/mcstas-tools-/;
 
-  # custom configuration (this script)
-  END {
-    if (-f $tmp_file ) {
-	if (!($plotter =~ /PGPLOT|McStas/i)) {
-	    print "mcplot: Removing temporary $tmp_file (10 sec)\n";
-	    sleep 10;
-	}
-	unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!";
-      }
+    $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
+
+    # custom configuration (this script)
+    END {
+        if (-f $tmp_file ) {
+            if (!($plotter =~ /PGPLOT|McStas/i)) {
+                print "mcplot: Removing temporary $tmp_file (10 sec)\n";
+                sleep 10;
+            }
+            unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!";
+        }
     }
 }
 

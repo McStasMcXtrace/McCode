@@ -36,28 +36,21 @@ use FileHandle;
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
 BEGIN {
-  # default configuration (for all high level perl scripts)
-  if($ENV{"MCSTAS"}) {
-    $MCSTAS::sys_dir = $ENV{"MCSTAS"};
-  } else {
-    if ($0 =~ /mcformatgui/i) {
-      if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
-      } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
-      }
+    # default configuration (for all high level perl scripts)
+    if($ENV{"MCSTAS"}) {
+        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
     } else {
-      if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::sys_dir = "c:\\mcxtrace\\lib";
-      } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcxtrace";
-      }
+        if ($Config{'osname'} eq 'MSWin32') {
+            $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+        } else {
+            $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+        }
     }
-  }
-  $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
+    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/perl";
+    $MCSTAS::perl_dir =~ s/\/mcstas-/\/mcstas-tools-/;
 
-  # custom configuration (this script)
-  $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
+    # custom configuration (this script)
+    $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
 }
 
 use lib $MCSTAS::perl_dir;
@@ -336,4 +329,3 @@ sub iformat_select {
 
   return($iformat);
 }
-

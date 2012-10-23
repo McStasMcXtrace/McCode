@@ -7,26 +7,18 @@
 use Config;
 use Cwd;
 BEGIN {
-  # default configuration (for all high level perl scripts)
-  if($ENV{"MCSTAS"}) {
-    $MCSTAS::sys_dir = $ENV{"MCSTAS"};
-  } else {
-    if ($0 =~ /m[xc]doc/i) {
-      if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
-      } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
-      }
+    # default configuration (for all high level perl scripts)
+    if($ENV{"MCSTAS"}) {
+        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
     } else {
-      if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::sys_dir = "c:\\mcxtrace\\lib";
-      } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcxtrace";
-      }
+        if ($Config{'osname'} eq 'MSWin32') {
+            $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+        } else {
+            $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+        }
     }
-  }
-  $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
-  
+    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/perl";
+    $MCSTAS::perl_dir =~ s/\/mcstas-/\/mcstas-tools-/;
 }
 
 use lib $MCSTAS::perl_dir;
@@ -142,7 +134,7 @@ sub html_table_entry {
     print $f "<B>" if %{$d->{'parhelp'}};
     my $link = "file://".$vn;
     $link =~ s!\\!/!g;
-    
+
     if ($d->{'type'} eq "Instrument") {
       print $f "$d->{'site'} <A HREF=\"$link.html\">$d->{'name'}</A> ($d->{'path'})";
     } else {
@@ -154,10 +146,10 @@ sub html_table_entry {
     print $f "<TD>$d->{'identification'}{'origin'}</TD>\n";
 
     print $f "<TD>$d->{'identification'}{'author'}</TD>\n";
-    
+
     $link = "file://".$bn;
     $link =~ s!\\!/!g;
-    
+
     print $f "<TD>";
     print $f "<A HREF=\"$link.$d->{'ext'}\">$d->{'ext'}</A>";
     print $f "</TD>\n";
@@ -466,7 +458,7 @@ sub add_comp_search_html {
 	if (-f "$comp") {
 	    push @comps, $comp;
 	} elsif (-f "$inst") {
-	    push @comps, $inst; 
+	    push @comps, $inst;
 	}
     }
     return unless @comps;
@@ -499,7 +491,7 @@ END
 	} else {
 	    ($name, $sec, $suf) = fileparse($comp, ".instr");  # without extension
 	}
-	
+
 	$data = component_information($comp);
 	$data->{'path'} = $sec;
 	if (not defined($data)) {
@@ -599,7 +591,7 @@ for($i = 0; $i < @ARGV; $i++) {
         print "SEE ALSO: mxstas, mxdoc, mxplot, mxrun, mxgui\n";
         print "DOC:      Please visit http://www.mcxtrace.org/\n";
         exit;
-      } 
+      }
   } else {
       $file = $ARGV[$i];
       $index++;
@@ -736,7 +728,7 @@ if ($filehandle) {
 if (-f $out_file) {
     if ($browser ne "text") {
       # In case of multiple matches, create table of results:
-      if (@valid_names > 1) { 
+      if (@valid_names > 1) {
           require File::Temp;
           my $searchfile;
           ($filehandle, $searchfile) = File::Temp::tempfile("mccode_doc_tmpXXXXXX", SUFFIX => '.html', UNLINK => 1);
@@ -745,11 +737,11 @@ if (-f $out_file) {
           html_main_end($filehandle, $toolbar);
           close($filehandle);
           $out_file = "$searchfile";
-      } 
+      }
 
       # open the index.html
       my $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $out_file";
-      print "$0: Starting $cmd\n"; 
+      print "$0: Starting $cmd\n";
       system("$cmd\n");
       sleep(10); # gives time for browser to start and display page before removing it
     }

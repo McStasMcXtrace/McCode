@@ -53,14 +53,14 @@ if ($Config{'osname'} eq "MSWin32") {
       if ($failed) { $scilab = "runscilab.exe"; }
 
     print STDOUT "$scilab\n";
-    
+
     print STDOUT "Checking for SSH: ";
 
       $failed=system("$which plink.exe");
       $ssh = (not $failed) ? "plink.exe" : "no";
 
     print STDOUT "$ssh\n";
-    
+
     print STDOUT "Checking for SCP: ";
 
       $failed=system("$which pscp.exe");
@@ -115,12 +115,12 @@ if ($Config{'osname'} eq "MSWin32") {
     # For now, mpicc is realised using a user-configurable
     # batch script in the McStas bin directory
     $mpicc = "mpicc.bat";
-    
+
     #print STDOUT "Checking for MPI compiler: ";
     #$failed=system("$which mpicc.exe");
     #$mpicc = (not $failed) ? "mpicc.exe" : "no";
     #print STDOUT "$mpicc\n";
-    
+
     print STDOUT "Checking for MPI run: ";
     $failed=system("$which mpiexec.exe");
     $mpirun = (not $failed) ? "mpiexec.exe" : "no";
@@ -247,7 +247,7 @@ sub locate {
 	$state = index('which: no', $path);
 	if ($state ==0) {
 	  # which reports no existance of $cmdname
-        $state = 1; 
+        $state = 1;
         $path = "";
 	} else {
 	  $state = 0;
