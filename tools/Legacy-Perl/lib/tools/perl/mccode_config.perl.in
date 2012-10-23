@@ -53,7 +53,7 @@
 #
 # MCGUI_CFLAGS - Choose whether CFLAGS should be applied in mcgui (0/1)
 # MCGUI_PGMULTI - Choose if mcgui uses 3-pane view when running mcplot/PGPLOT (0/1)
-# 
+#
 # NOTE: If you modify this file to change a SCILAB equal to 'no' to adjust an existing
 # installation to a new install of scilab, enter the FULL PATH to the scilab binary, e.g.
 # /usr/local/scilab-3.1.1/bin/scilab
@@ -66,7 +66,7 @@ use Config;
 %MCSTAS::mcstas_config = (
      CFLAGS => '@CFLAGS@',
      LDFLAGS => '@LDFLAGS@',
-     MCCODE => '@MCCODE_TARNAME@',
+     MCCODE => '@MCCODE_TARNAME@-@MCCODE_VERSION@',
      PKGNAME => '@MCCODE_NAME@',
      PARTICLE=> '@MCCODE_PARTICULE@',
      CC => '@CC@',
@@ -261,12 +261,12 @@ if ($Config{'osname'} ne 'MSWin32') { # Unix systems
   $ENV{PATH} = $ENV{PATH} ? ".:$ENV{PATH}" : ".";
   my $HOME = $ENV{'HOME'} ? "$ENV{'HOME'}" : ".";
   my $hostfile = "";
-  if ($ENV{'HOME'}) { 
+  if ($ENV{'HOME'}) {
     if (-d "$HOME/.mcstas") {
       $hostfile = "$HOME/.mcstas/hosts";
     } else {
       $hostfile = "$HOME/.mcstas-hosts"
-    } 
+    }
   }
   else { $hostfile = ".mcstas-hosts"; }
   if (!-e $hostfile) {
