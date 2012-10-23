@@ -29,28 +29,21 @@ use Config;
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
 BEGIN {
-  # default configuration (for all high level perl scripts)
-  if($ENV{"MCSTAS"}) {
-    $MCSTAS::sys_dir = $ENV{"MCSTAS"};
-  } else {
-    if ($0 =~ /mcrun/i) {
-      if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
-      } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
-      }
+    # default configuration (for all high level perl scripts)
+    if($ENV{"MCSTAS"}) {
+        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
     } else {
-      if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::sys_dir = "c:\\mcxtrace\\lib";
-      } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcxtrace";
-      }
+        if ($Config{'osname'} eq 'MSWin32') {
+            $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+        } else {
+            $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+        }
     }
-  }
-  $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
+    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/perl";
+    $MCSTAS::perl_dir =~ s/\/mcstas-/\/mcstas-tools-/;
 
-  # custom configuration (this script)
-  $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
+    # custom configuration (this script)
+    $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
 }
 
 use lib $MCSTAS::perl_dir;
@@ -421,7 +414,7 @@ sub exec_sim {
     my $hostncount=int($ncount/$multi);
     for ($j=0; $j<$multi; $j++) {
       my @opt = @options;
-      if ($force_compile) { 
+      if ($force_compile) {
         push @opt, "--force-compile"; # transfer request for recompilation on all nodes
       }
       if ($ncount) { $pids[$j]     =Proc::Simple->new(); }
@@ -477,7 +470,7 @@ sub exec_sim {
     File::Path::rmtree("$datadir");
     unlink("$datadir");
     rename("$griddir/$datadirs[0]",$datadir);
-    
+
     # build up catenated log files into the merged data set dir
     open(WRITE,">>$datadir/mcstas.log") || die "Simulation failed (can not merge results from $datadir)";
     my $date1 = localtime(time());
@@ -491,11 +484,11 @@ sub exec_sim {
     for ($j=0; $j<=$multi; $j++) { # last step is merge log
       my $log;
       print WRITE "################################################################################\n";
-      if ($j==$multi) { 
+      if ($j==$multi) {
         $log="$griddir/mcformat.log";
         print WRITE "# logfile $log from merge (mcformat)\n";
       }
-      else { 
+      else {
         $log="$griddir/$hostnames[$j]_$j.log";
         copy($log,"$datadir/$hostnames[$j]_$j.log");
         print WRITE "# logfile $hostnames[$j]_$j.log from $hostnames[$j] node $j\n";
@@ -548,9 +541,9 @@ sub exec_sim_local {
   push @cmd, @opt;
   push @cmd, map("$_=$vals{$_}", @params);
   print "@cmd\n";
-  
+
   # execute full command line
-  if ($ncount) { 
+  if ($ncount) {
     exec join(' ',@cmd);  #may call exec as nothing has to be done afterwards
   } else {
     exit(-1);
@@ -578,7 +571,7 @@ sub exec_sim_host {
     # add format option to cmd stack
     push @opt, "--format=$MCSTAS::mcstas_config{'PLOTTER'}";
 		my $tmpname;
-		
+
 		# make distant tmpdir (ssh)
 		if ($MCSTAS::mcstas_config{'TEMP'} ne "no") {
 		  my $fh;
@@ -597,9 +590,9 @@ sub exec_sim_host {
 		# compile locally if required (update C code)
 		my $v;
 		($out_file, $v) = get_out_file($sim_def, $force_compile, $mpi, $cflags, @ccopts);
-		if ($v->{'cc_cmd'} eq "") { 
-		  print STDERR "Failed to compile instrument $sim_def on slave $slave. Using master executable $out_file.\n"; 
-		  $force_compile=0; 
+		if ($v->{'cc_cmd'} eq "") {
+		  print STDERR "Failed to compile instrument $sim_def on slave $slave. Using master executable $out_file.\n";
+		  $force_compile=0;
 		}
 		if ($force_compile) {
 	    # force compilation on node
@@ -630,7 +623,7 @@ sub host_ssh {
 	if ($ncount) {
 	  my_system("$MCSTAS::mcstas_config{'SSH'} $host \"$cmd\"","# ssh $host \"$cmd\"");
 	} else {
-	  print STDERR "# $MCSTAS::mcstas_config{'SSH'} $host \"$cmd\"\n"; 
+	  print STDERR "# $MCSTAS::mcstas_config{'SSH'} $host \"$cmd\"\n";
 	}
 }
 
@@ -1155,14 +1148,14 @@ sub do_scan {
       output_sim_file("${prefix}$simfile", $info, \@youts, $variables, $datfile, $datablock);
 
       print "Output file: '${prefix}$datfile'\nOutput parameters: $variables\n";
-      
+
     } else {
       die "Ending simulation scan (ncount=0)\n";
     }
     if ($found_invalid_scans) {
       die "mcrun: Error: Simulation $out_file $data_dir returned $found_invalid_scans invalid scan steps,
        which intensity was set to zero in data file $datfile.\n"; }
-    
+
     return ($datablock,$variables, @youts);
 }
 
@@ -1309,4 +1302,3 @@ if($numpoints == 1 && $optim_flag == 0) {
 	}
 }
 exit(0);
-

@@ -25,17 +25,18 @@
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
 BEGIN {
-  # default configuration (for all high level perl scripts)
-  if($ENV{"MCSTAS"}) {
-    $MCSTAS::sys_dir = $ENV{"MCSTAS"};
-  } else {
-    if ($Config{'osname'} eq 'MSWin32') {
-      $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+    # default configuration (for all high level perl scripts)
+    if($ENV{"MCSTAS"}) {
+        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
     } else {
-      $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+        if ($Config{'osname'} eq 'MSWin32') {
+            $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+        } else {
+            $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+        }
     }
-  }
-  $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
+    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/perl";
+    $MCSTAS::perl_dir =~ s/\/mcstas-/\/mcstas-tools-/;
 }
 use lib $MCSTAS::perl_dir;
 

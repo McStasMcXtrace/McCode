@@ -32,44 +32,35 @@
 
 
 
-
-
-
 # Config module needed for Win32 vs unix setup.
 # PW 20030320
 use Config;
 
 BEGIN {
-  # default configuration (for all high level perl scripts)
-  if($ENV{"MCSTAS"}) {
-    $MCSTAS::sys_dir = $ENV{"MCSTAS"};
-  } else {
-    if ($0 =~ /mcdisplay/i) {
-      if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
-      } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
-      }
+    # default configuration (for all high level perl scripts)
+    if($ENV{"MCSTAS"}) {
+        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
     } else {
-      if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::sys_dir = "c:\\mcxtrace\\lib";
-      } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcxtrace";
-      }
+        if ($Config{'osname'} eq 'MSWin32') {
+            $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+        } else {
+            $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+        }
     }
-  }
-  $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
-  $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
+    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/perl";
+    $MCSTAS::perl_dir =~ s/\/mcstas-/\/mcstas-tools-/;
 
-  # custom configuration (this script)
+    $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
 
-  # If this is Win32, load OLE related modules -
-  # we can not talk to Matlab using pipe on Win32 :(
-  # PW 20030314
-  if ($Config{'osname'} eq 'MSWin32') {
-    require Win32::OLE;
-    require Win32::OLE::Variant;
-  }
+    # custom configuration (this script)
+
+    # If this is Win32, load OLE related modules -
+    # we can not talk to Matlab using pipe on Win32 :(
+    # PW 20030314
+    if ($Config{'osname'} eq 'MSWin32') {
+        require Win32::OLE;
+        require Win32::OLE::Variant;
+    }
 }
 
 use lib $MCSTAS::perl_dir;
@@ -784,7 +775,7 @@ sub plot_neutron {
       }
     } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
       # Matlab (split across multiple lines - otherwise sometimes
-      # crashes with component-rich instrs.) 
+      # crashes with component-rich instrs.)
       # - Unless on Win32 where this will not work with the OLE connection
       $retval=write_process("mcdisplay('Timeout');\n");
       if ($Config{'osname'} eq 'MSWin32' && (!$file_output)) {
@@ -1248,14 +1239,14 @@ if($paramfile) {
 	    if($p =~ /^([A-Za-z0-9_]+)\=(.*)$/) {
 		$parm = $1;
 		$val = $2;
-	    } 
+	    }
 	    @vals = split(',',$val);
 	    if (@vals>1) {
 		$val = ($vals[0]+$vals[1])/2;
 		print "Parameter $parm: Substituting interval $vals[0],$vals[1] to $val\n";
 		push @cmdline, "$parm=$val";
 	    } else {
-		push @cmdline, $p; 
+		push @cmdline, $p;
 	    }
         }
     }
@@ -1456,4 +1447,3 @@ if ($plotter =~ /McStas|PGPLOT/i) {
 } else {
   close(WRITER);
 }
-
