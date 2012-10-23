@@ -897,7 +897,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
   } /* for index_q */
   
   /* display some usefull information, only once in MPI mode (MASTER) */
-  MPI_MASTER(
+  
   if (Sqw->Temperature > 0 && Sqw->verbose_output > 1) {
     double Da         = 1.660538921e-27;  /* [kg] unified atomic mass unit = Dalton = 1 g/mol */
   #ifndef KB
@@ -909,6 +909,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     
     double meV2s      = CELE/HBAR/1000/2/PI; /* 1 meV = 241.80e9 GHz */
     
+    MPI_MASTER(
     if (do_coh || do_inc)
       printf("Isotropic_Sqw: %s: "
              "Physical constants from the S(q,w) %s. Values are estimates.\n", 
@@ -953,8 +954,8 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
         printf("# Diffusion coefficient          D=%g [mm^2/s] (Egelstaff p220)\n", D);
       }
     }
+    ); /* end MASTER in MPI mode */
   } /* if T>0 */
-  ); /* end MASTER in MPI mode */
  
   /* write all tables to disk M0=S(q) M1=E_r M3 w_c w_l M0_cl=S_cl(q) */
   if (Sqw_Data->w_bins > 1) {
@@ -1316,7 +1317,7 @@ struct Sqw_Data_struct *Sqw_readfile(
           /* T=0 ? would compute the M1_cl = M1 - recoil energy, assuming we have a quantum S(q,w) in file */
           /* the M1(quantum) = (MNEUTRON/m)*2.0725*q^2 recoil energy */
           double Da = 1.660538921e-27; /* atomic mass unit */
-          double Er = (MNEUTRON/Sqw->mat_weight/Da)*2.0725*q*q; /* recoil for one scattering element in the cell [meV] */
+          double Er = (MNEUTRON/Sqw->mat_weight/Da)*2.0725*q*q; /* recoil for one scattering element in the cell [meV] Schober JDN16 p239 */
           M1_cl      += M1 - Er;
           M1_cl_count++;
         }
@@ -1427,6 +1428,13 @@ struct Sqw_Data_struct *Sqw_readfile(
       (q_max*q_max*q_max/3 - (Sqw->type == 'c' ? 2*PI*PI*Sqw->mat_rho : 0)) 
       /iq2Sq;
   }
+  
+  if (alpha < 0) {
+    printf("Isotropic_Sqw: %s: normalisation factor is negative. rho=%g [Angs^-3] may be too high.\n"
+           "WARNING        Disabling renormalization i.e. keeping initial S(,w).\n",
+      Sqw->compname, Sqw->mat_rho);
+    alpha=0;
+  }
 
   /* apply normalization on S(q,w) */
   if (alpha && alpha != 1) {
@@ -1456,7 +1464,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     if (Sqw->sqw_norm >0)
       printf("                   normalization factor S(q,w)*%g (user)\n", alpha);
     else if (Sqw->sqw_norm<0)
-      printf("                   normalization factor S(q,w)*%g (auto) iq2Sq=%g\n", alpha, iq2Sq);
+      printf("                   normalization factor S(q,w)*%g (auto) \\int q^2 S(q) dq=%g\n", alpha, iq2Sq);
   }
   );
   
