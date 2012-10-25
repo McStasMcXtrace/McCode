@@ -95,17 +95,11 @@ BINOBJS_mcxtrace=$(MXPERLOBJ)
 
 .pl.fixpl:
 	@echo "Fixing PERL dirs:" $< "->" $@
-	@sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
-	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(libdir_mccode)'"+' \
-	    < $< > $@
-	@chmod +x $@
+	@./perl_fix.sh ${libdir_mccode} $< $@
 
 .pl.mxfixpl:
 	@echo "Fixing PERL dirs:" $< "->" $(subst mc,mx,$@)
-	@sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
-	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(libdir_mccode)'"+' \
-	    < $< > $(subst mc,mx,$@)
-	@chmod +x $(subst mc,mx,$@)
+	@./perl_fix.sh ${libdir_mccode} $< $(subst mc,mx,$@)
 
 all: $(BINOBJS_@MCCODE_TARNAME@)
 
@@ -125,7 +119,7 @@ distclean: clean
 install: install_@MCCODE_TARNAME@
 	$(INSTALL_DATA) $(topdir)/doc/man/*.1 $(mandir)/man1
 	chmod a+x $(libdir_tools)/perl/mccode_reconfigure
-	@echo "Install additional Perl modules..."
+	# @echo "Install additional Perl modules..."
 	# cd $(topdir)/support/common && $(MAKE) perl-modules
 	@echo "================================================================"
 	@echo "Installation of @MCCODE_STRING@ finished."
