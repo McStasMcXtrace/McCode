@@ -31,28 +31,7 @@ use POSIX qw(_exit);
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
 BEGIN {
-  # default configuration (for all high level perl scripts)
-  if($ENV{"MCSTAS"}) {
-    $MCSTAS::sys_dir = $ENV{"MCSTAS"};
-  } else {
-    if ($0 =~ /mcgui/i) {
-      if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
-      } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
-      }
-    } else {
-      if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::sys_dir = "c:\\mcxtrace\\lib";
-      } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcxtrace";
-      }
-    }
-  }
-  $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
-  
-  # custom configuration (this script)
-  $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
+    ENV_HEADER
 }
 
 use lib $MCSTAS::perl_dir;
@@ -196,7 +175,7 @@ sub menu_quit {
         my $date = localtime(time());
         $inifile .= "_${date}.log";
         $inifile =~ s!\ !_!g;
-        $file = $inidir . $inifile; 
+        $file = $inidir . $inifile;
         my $outputtext = $cmdwin->get('1.0', 'end');
         putmsg($cmdwin, "Save log file $file\n");
         open(MCLOG,">>$file");
@@ -578,9 +557,9 @@ sub menu_saveas {
 
 sub menu_save_config {
   my ($w) = @_;
-  
+
   my $initdir;
-  
+
   if (-d $ENV{"HOME"}) {
     if (!(-d $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'})) {
       mkdir $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'};
@@ -601,7 +580,7 @@ sub save_config {
 
   # Start by collecting header + footer from perl_dir configfile
   # for safe possible writing of this file...
-  
+
   my ($HEADER, $FOOTER);
   my $found_head = 0; my $found_foot = 0;
 
@@ -619,9 +598,9 @@ sub save_config {
   }
 
   close($fh);
-  
+
   my $fid = open($fh, ">", $file);
-  
+
   if(!$fid) {
     $w->messageBox(-message => "Error saving $file (permissions?)",
 		   -title => "Error saving configuration",
@@ -631,12 +610,12 @@ sub save_config {
     return;
   } else {
     print $fh $HEADER;
-    
+
     my @keys = keys %MCSTAS::mcstas_config;
     my @values = values %MCSTAS::mcstas_config;
-    
+
     my ($j, $value, $key);
-    
+
     print $fh "\n\%MCSTAS::mcstas_config = (\n";
     for ($j=0; $j<@keys; $j++) {
     # CFLAGS/CFLAGS_SAVED must be handled as special case
@@ -650,7 +629,7 @@ sub save_config {
 	}
       }
     }
-    print $fh "\n);\n\n";  
+    print $fh "\n);\n\n";
     print $fh $FOOTER;
     close($fh);
     putmsg($w, "Configuration file\n  $file\nsaved successfully\n", 'msg');
@@ -752,7 +731,7 @@ sub run_dialog_create {
     # can only update when in Single or OpenMP simulation mode (no cluster/grid)
     # and performing simulation
     if ($Config{'osname'} ne 'MSWin32' && $update_cmd && $inf_sim->{'Mode'}==0
-      && $MCSTAS::mcstas_config{'CLUSTER'} <= 1 && $text !~ /compil/i && $text !~ /DSA/i 
+      && $MCSTAS::mcstas_config{'CLUSTER'} <= 1 && $text !~ /compil/i && $text !~ /DSA/i
       && $title !~ /compil/i && $title !~ /DSA/i) {
       $but = $bot_frame->Button(-text => "Update", -command => $update_cmd);
       $but->pack(-side => "right");
@@ -820,11 +799,11 @@ sub run_dialog {
     my $reader = sub {
         run_dialog_reader($w, $fh, $cmdwin, \$state, \$success);
     };
-    
+
     $status_label->configure(-text => "Status: Running $text");
     my $savefocus = run_dialog_popup($dlg);
     my $status;
-    
+
     # The following is a little hack which allows us to upgrade perl on Win32,
     # where we have been stuck with 5.6 since 2003...
     if ($Config{'osname'} ne 'MSWin32') {
@@ -840,7 +819,7 @@ sub run_dialog {
       $success = 1;
     }
     run_dialog_retract($dlg, $savefocus);
-    
+
     $status_label->configure(-text => "Status: Done");
     if(!$success || (! $status && ($? != 0 || $!))) {
         putmsg($cmdwin, "Job exited abnormally.\n");
@@ -963,7 +942,7 @@ sub my_system {
     # PW 20030314
     if ($Config{'osname'} eq 'MSWin32') {
       $child_pid = open($fh, "start safewrap.pl @sysargs 2>&1 |");
-    } else { 
+    } else {
       $child_pid = open($fh, "-|");
     }
     unless(defined($child_pid)) {
@@ -1753,7 +1732,7 @@ sub setup_cmdwin {
                                 -anchor => 'w',
                                 -justify => 'left');
     $status_lab->pack(-fill => 'x');
-    
+
     my $f4 = $w->Frame();
     # Add the main text field, with scroll bar
     my $rotext = $f4->ROText(-relief => 'sunken', -bd => '2',
@@ -1769,7 +1748,7 @@ sub setup_cmdwin {
     $current_results_label = $res_lab;
     $status_label = $status_lab;
     $cmdwin       = $rotext;
-    
+
     $f4->pack(-fill => 'x');
     my $f5 = $w->Frame();
 
@@ -1787,8 +1766,8 @@ sub setup_cmdwin {
     $workdir = $dirbox;
     set_workdir($w, getcwd());
     $f5->pack(-fill => 'x');
-    
-    
+
+
 
     # Insert "mcstas --version" message in window. Do it a line at the
     # time, since otherwise the tags mechanism seems to get confused.
@@ -1826,7 +1805,7 @@ sub setup_cmdwin {
       putmsg($cmdwin, "Your system has MPI/SSH parallelisation available. To make use of this, \n".
 	     "  please go to the Tool menu and select 'Install DSA key'.\n", 'msg');
     }
-    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w);});		       
+    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w);});
 }
 
 # save command output into LOG file
