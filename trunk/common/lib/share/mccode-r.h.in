@@ -297,14 +297,14 @@ struct mcdetector_struct {
   double halfwidthY;
   int    rank;                        /* dimensionaly of monitor, e.g. 0 1 2 3 */
   char   istransposed;                /* flag to transpose matrix for some formats */
-  
+
   long   m,n,p;                       /* dimensions of data block and along axes */
   long   date_l;                      /* same as date, but in sec since 1970 */
-  
+
   double *p0, *p1, *p2;               /* pointers to saved data, NULL when freed */
   double *p0_orig,*p1_orig,*p2_orig;  /* initial pointer in case some post processing is done
                                          with e.g. lists and MPI handling */
-  
+
   FILE   *file_handle;                /* file handle for detector file */
   struct mcformats_struct format;     /* format used for that detector */
 };
@@ -315,6 +315,9 @@ void   mcset_ncount(unsigned long long count);    /* wrapper to get mcncount */
 unsigned long long int mcget_ncount(void);            /* wrapper to set mcncount */
 unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:mcncount */
 char *mcfull_file(char *name, char *ext); /* builds "name+ext" */
+
+/* Needed function signatures */
+MCDETECTOR mcdetector_write_data(MCDETECTOR detector);
 
 /* output functions */
 MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos);
@@ -329,8 +332,8 @@ MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
       char *xvar, char *yvar, char *zvar,
                   double x1, double x2, double y1, double y2, double z1, double z2, int m,
                   int n, int p, double *p0, double *p1, double *p2, char *f,
-                  char *c, Coords pos);             
-/* wrappers to output functions, that automatically set NAME and POSITION */        
+                  char *c, Coords pos);
+/* wrappers to output functions, that automatically set NAME and POSITION */
 #define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
 #define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
 #define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
@@ -637,7 +640,7 @@ int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
     double vx, double vy, double vz, double r, double h);
 int sphere_intersect(double *t0, double *t1, double x, double y, double z,
                  double vx, double vy, double vz, double r);
-/* second order equation roots */ 
+/* second order equation roots */
 int solve_2nd_order(double *t1, double *t2,
     double A,  double B,  double C);
 
@@ -648,7 +651,7 @@ void randvec_target_circle(double *xo, double *yo, double *zo,
 void randvec_target_rect_angular(double *xo, double *yo, double *zo,
     double *solid_angle,
                double xi, double yi, double zi, double height, double width, Rotation A);
-#define randvec_target_rect(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9)  randvec_target_rect_real(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,0,0,0,1)               
+#define randvec_target_rect(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9)  randvec_target_rect_real(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,0,0,0,1)
 void randvec_target_rect_real(double *xo, double *yo, double *zo,
     double *solid_angle,
 	       double xi, double yi, double zi, double height, double width, Rotation A,
