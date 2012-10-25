@@ -58,17 +58,15 @@
 #ifdef MAC
 #define MCSTAS ":@MCCODE_TARNAME@:lib" /* ToDo: What to put here? */
 #else  /* !MAC */
-#define MCSTAS "/usr/local/lib/@MCCODE_TARNAME@"
+#define MCSTAS "/usr/local/lib/@MCCODE_TARNAME@-@MCCODE_VERSION@"
 #endif /* !MAC */
 #endif /* !WIN32 */
 #endif /* MCSTAS */
 
 #ifdef WIN32
 #define MCCODE_BUGREPORT "www.@MCCODE_TARNAME@.org"
-#ifndef HAVE_STRCASECMP
-#define HAVE_STRCASECMP
 #endif
-#endif
+
 #ifndef HAVE_STRCASECMP
 int strcasecmp(char *, char *);
 #endif
