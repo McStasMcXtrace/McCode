@@ -207,14 +207,21 @@ void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
                 double t, double sx, double sy, double sz, double p);
 
 #ifdef DEBUG
+
 #define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,sx,sy,sz,p) if(!mcdotrace); else \
   printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
          x,y,z,vx,vy,vz,t,sx,sy,sz,p);
 #define mcDEBUG_SCATTER(x,y,z,vx,vy,vz,t,sx,sy,sz,p) if(!mcdotrace); else \
   printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
          x,y,z,vx,vy,vz,t,sx,sy,sz,p);
+
+#else
+
+#define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+#define mcDEBUG_SCATTER(x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+
 #endif
-    
+
 #endif /* !MCCODE_H */
 
 #endif /* MCSTAS_R_H */

@@ -462,11 +462,13 @@ MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
 #define mcDEBUG_INSTR_END()
 #define mcDEBUG_ENTER()
 #define mcDEBUG_COMP(c)
-#define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,sx,sy,sz,p)
-#define mcDEBUG_SCATTER(x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 #define mcDEBUG_LEAVE()
 #define mcDEBUG_ABSORB()
 #endif
+
+// mcDEBUG_STATE and mcDEBUG_SCATTER are defined by mcstas-r.h and mcxtrace-r.h
+
+
 
 #ifdef TEST
 #define test_printf printf
