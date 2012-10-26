@@ -1,0 +1,169 @@
+#
+#   This file is part of the McStas/McXtrace @MCCODE_STRING@ neutron ray-trace simulation package
+#   Copyright (C) 1997-2010, All rights reserved
+#   Risoe National Laborartory, Roskilde, Denmark
+#   Institut Laue Langevin, Grenoble, France
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; version 2 of the License.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(@MCCODE_NAME@, @MCCODE_VERSION@, @MCCODE_TARNAME@-support@@MCCODE_TARNAME@.org)
+AC_REVISION($Revision: 1.1$)
+AC_COPYRIGHT([Copyright (C) Copyright, All rights reserved
+Risoe National Laborartory, Roskilde, Denmark
+Institut Laue Langevin, Grenoble, France
+This software is covered by the GNU LESSER GENERAL PUBLIC LICENSE
+see file COPYING for further information])
+
+# set default package defines
+MCCODE_TARNAME=$PACKAGE_TARNAME
+MCCODE_NAME=$PACKAGE_NAME
+MCCODE_VERSION=$PACKAGE_VERSION
+MCCODE_STRING=$PACKAGE_STRING
+MCCODE_BUGREPORT=$PACKAGE_BUGREPORT
+MCCODE_DATE="@MCCODE_DATE@"
+
+AC_PREFIX_DEFAULT(/usr/local)
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
+
+AC_ARG_WITH([cc], AC_HELP_STRING([--with-cc=c compiler], [Specify name of C compiler]),
+        [with_cc=$withval], [with_cc=yes])
+if test x"$with_cc" != x"no" ; then
+        if test x"$with_cc" != x"yes" ; then CC="$with_cc"; fi
+        AC_PROG_CC
+else
+        AC_MSG_ERROR([You need a C compiler to compile this package])
+fi
+
+# this configure script will always setup McXtrace
+MCCODE_TARNAME=[mcxtrace]
+MCCODE_NAME=McXtrace
+
+# set VERSION (in principle, done in mkdist)
+MONTH=`date +"%b"`
+DAY=`date +"%d"`
+YEAR=`date +"%Y"`
+MCCODE_DATE="$MONTH. $DAY, $YEAR"
+MCCODE_VERSION="$MONTH-$DAY-$YEAR"
+MCCODE_STRING="$MCCODE_NAME $MCCODE_VERSION - $MONTH. $DAY, $YEAR"
+MCCODE_BUGREPORT="$MCCODE_TARNAME-support@$MCCODE_TARNAME.org"
+
+echo "Configurating McCode with $MCCODE_NAME flavour"
+echo "MCCODE_DATE     =$MCCODE_DATE"
+echo "MCCODE_TARNAME  =$MCCODE_TARNAME"
+echo "MCCODE_NAME     =$MCCODE_NAME"
+echo "MCCODE_VERSION  =$MCCODE_VERSION"
+echo "MCCODE_STRING   =$MCCODE_STRING"
+echo "MCCODE_BUGREPORT=$MCCODE_BUGREPORT"
+
+# determine particule to use
+# (n or X and name of the env variable for location of library)
+MCCODE_PARTICULE=Xray
+MCCODE_PROJECT=2
+MCCODE_LIBENV=[MCXTRACE]
+MCCODE_PREFIX=mx
+
+echo "MCCODE_PARTICULE=$MCCODE_PARTICULE"
+echo "MCCODE_PROJECT  =$MCCODE_PROJECT"
+echo "MCCODE_LIBENV   =$MCCODE_LIBENV"
+echo "MCCODE_PREFIX   =$MCCODE_PREFIX"
+
+# update corresponding DEFINE string in all makefiles
+AC_DEFINE_UNQUOTED([MCCODE_DATE], "${MCCODE_DATE}")
+AC_DEFINE_UNQUOTED([MCCODE_TARNAME], "${MCCODE_TARNAME}")
+AC_DEFINE_UNQUOTED([MCCODE_NAME], "${MCCODE_NAME}")
+AC_DEFINE_UNQUOTED([MCCODE_VERSION], "${MCCODE_VERSION}")
+AC_DEFINE_UNQUOTED([MCCODE_STRING], "${MCCODE_STRING}")
+AC_DEFINE_UNQUOTED([MCCODE_BUGREPORT], "${MCCODE_BUGREPORT}")
+AC_DEFINE_UNQUOTED([MCCODE_PARTICULE],[$MCCODE_PARTICULE])
+AC_DEFINE_UNQUOTED([MCCODE_LIBENV],[$MCCODE_LIBENV])
+AC_DEFINE_UNQUOTED([MCCODE_PROJECT],[$MCCODE_PROJECT])
+AC_DEFINE_UNQUOTED([MCCODE_PREFIX],[$MCCODE_PREFIX])
+
+# activate substitution in all .in files
+AC_SUBST([MCCODE_DATE])
+AC_SUBST([MCCODE_TARNAME])
+AC_SUBST([MCCODE_NAME])
+AC_SUBST([MCCODE_VERSION])
+AC_SUBST([MCCODE_STRING])
+AC_SUBST([MCCODE_BUGREPORT])
+AC_SUBST([MCCODE_PARTICULE])
+AC_SUBST([MCCODE_LIBENV])
+AC_SUBST([MCCODE_PROJECT])
+AC_SUBST([MCCODE_PREFIX])
+
+AC_PROG_INSTALL
+CF_ANSI_CC_CHECK
+MC_ANSI_MATH_PROTO
+AC_FUNC_MALLOC
+AC_FUNC_REALLOC
+AC_FUNC_STRTOD
+AC_CHECK_FUNCS(strcasecmp fdopen qsort strcasestr)
+
+AC_PATH_PROGS(PERL,   [perl perl5], no, /usr/bin:/usr/local/bin:$PATH)
+AC_PATH_PROGS(SCILAB, [scilab runscilab scilex], no, /usr/local/bin:/usr/lib/scilab/bin:/lib/scilab/bin:$PATH)
+AC_PATH_PROGS(MATLAB, [matlab], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(GNUPLOT,[gnuplot /usr/local/bin/gnuplot], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(PGPLOT, [pgxwin_server], no, /usr/local/bin:/usr/local/pgplot:$PATH)
+AC_PATH_PROGS(TCLTK,  [wish tclsh], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(SSH,    [ssh plink], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(SCP,    [scp pscp], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(DASH,   [dash], no, /bin:/usr/bin:/usr/local/bin:$PATH)
+AC_PATH_PROGS(MPIRUN, [mpirun], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(MPICC,  [mpicc hcc mpxlc_r mpxlc mpcc cmpicc], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(BROWSER,[gnome-open firefox mozilla-firefox mozilla konqueror epiphany galeon netscape open], no,  /Applications/Safari.app/Contents/MacOS:/Applications/Firefox.app/Contents/MacOS:/usr/local/bin:$PATH)
+AC_PATH_PROGS(EDITOR, [gedit nedit kate xemacs gnome-open xedit vim notepad wordpad open], no)
+AC_PATH_PROGS(VRMLVIEW, [octagaplayer freewrl gtklookat qtlookat xmlookat maclookat fltklookat lookat], no)
+AC_PATH_PROGS(PERLDL,   [perldl], no, /usr/bin:/usr/local/bin:$PATH)
+AC_PATH_PROGS(G77, [g77 f77 gfortran g95 f95], no)
+AC_PATH_PROGS(MINGW, [i586-mingw32msvc-gcc], no)
+AC_PATH_PROGS(MAKE,   [make gmake], no)
+AC_PATH_PROGS(AT,  [at], no)
+AC_PATH_PROGS(HDFVIEW,  [hdfview], no, /usr/local/bin:/usr/local/hdfview:$PATH)
+AC_PATH_PROGS(FLEX,   [flex], flex, /bin:/usr/bin:/usr/local/bin:$PATH)
+AC_PATH_PROGS(BISON,   [bison], bison, /bin:/usr/bin:/usr/local/bin:$PATH)
+# Important here: gnome-terminal is broken:
+#  Any commandline arguments after -e must contain escaped spaces.
+# BUT: If escaped in the perl code, use of xterm/konsole is broken....
+# Hence we allow only gnome-terminal.wrapper which is debian only
+# :(
+AC_PATH_PROGS(TERMINAL,   [xterm konsole gnome-terminal.wrapper], no)
+
+# handle PIC options
+AC_ARG_WITH([pic],
+  [AS_HELP_STRING([--with-pic],
+     [enable support for PIC libraries (required to compile PGPLOT on some systems)])],
+  [USE_PIC=$withval],
+  [USE_PIC=no])
+AC_SUBST(USE_PIC)
+
+
+# check for MPI
+if test "$MPICC" != "no" ; then
+  AC_CHECK_HEADER(mpi.h, , [ echo "WARNING: $MPICC may fail to compile without mpi.h" ] )
+fi
+
+# check for NeXus libraries
+AC_ARG_WITH([nexus],
+  [AS_HELP_STRING([--with-nexus],
+     [enable support for NeXus/HDF libraries])])
+if test "${with_nexus+set}" = "set" ; then
+  AC_SUBST([HAVE_NEXUS], ["-DUSE_NEXUS -lNeXus "])
+  AC_DEFINE([HAVE_NEXUS], ["-DUSE_NEXUS -lNeXus "])
+else
+  AC_SUBST([HAVE_NEXUS], [])
+  AC_DEFINE([HAVE_NEXUS], [])
+fi
+
+AC_OUTPUT(Makefile)

@@ -17,11 +17,13 @@ libdir = @libdir@
 mandir = @mandir@
 PWD = `pwd`
 
-mc_libdir = $(libdir)/mcxtrace
+mc_libdir = $(libdir)/@MCCODE_TARNAME@-@MCCODE_VERSION@
 
-install:
-	@echo "Install library (mcxtrace part)..."
-	cp -rp * $(mc_libdir)
+all:
+
+install: installdirs
+	@echo "Install library (mcstas part)..."
+	cp -rp data examples misc monitors optics samples share sources $(mc_libdir)
 
 installdirs:
-	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(mc_libdir) $(mandir)/man1
+	$(topdir)/mkinstalldirs $(libdir) $(mc_libdir)

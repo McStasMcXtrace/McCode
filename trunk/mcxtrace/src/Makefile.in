@@ -42,7 +42,7 @@ PWD = `pwd`
 
 
 DEBUG = -DDEBUG=0
-libdir_mccode = $(libdir)/@MCCODE_TARNAME@
+libdir_mccode = $(libdir)/@MCCODE_TARNAME@-@MCCODE_VERSION@
 
 CC = @CC@
 MINGW = @MINGW@
@@ -89,7 +89,7 @@ BINOBJS_mcstas=mcstas mcformat
 
 BINOBJS_mcxtrace=mcxtrace mxformat
 
-.SUFFIXES: .c .o 
+.SUFFIXES: .c .o
 
 .c.o:
 	@echo "Building" $(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_mccode)'"' ... $<
@@ -128,7 +128,7 @@ clean:
 	rm -rf selftest_* selftest/
 
 distclean: clean
-	rm -f instrument.tab.c instrument.tab.h instrument.output lex.yy.c 
+	rm -f instrument.tab.c instrument.tab.h instrument.output lex.yy.c
 
 TAGS:
 	etags *.[chly]
@@ -139,7 +139,7 @@ install: install_@MCCODE_TARNAME@
 	@echo "Installation of @MCCODE_STRING@ finished."
 	@echo "  library  in MCSTAS=$(libdir_mccode)"
 	@echo "  binaries in        $(bindir)"
-	@echo "Thanks for using @MCCODE_NAME@"	
+	@echo "Thanks for using @MCCODE_NAME@"
 	@echo "================================================================"
 
 # TODO: currently, all Perl scripts use MCSTAS env. Should be changed in the future.
@@ -148,7 +148,7 @@ install_mcstas: installdirs $(BINOBJS_mcstas)
 	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
 	$(INSTALL_PROGRAM) mcformat $(bindir)/mcformat
 	$(rootdir)/mkinstalldirs $(libdir_mccode)
-	cd $(topdir)/lib && $(MAKE) install 
+	cd $(topdir)/lib && $(MAKE) install
 	cd $(topdir)/nlib && $(MAKE) install
 
 # documentation with mxdoc is broken, as it uses MCSTAS location and env
@@ -157,8 +157,8 @@ install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
 	$(INSTALL_PROGRAM) mcxtrace $(bindir)/mcxtrace
 	$(INSTALL_PROGRAM) mxformat $(bindir)/mxformat
 	$(rootdir)/mkinstalldirs $(libdir_mccode)
-	cd $(topdir)/lib && $(MAKE) install 
-	cd $(topdir)/xlib && $(MAKE) install 
+	cd $(topdir)/lib && $(MAKE) install
+	cd $(topdir)/xlib && $(MAKE) install
 
 installdirs:
 	$(rootdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_mccode) $(mandir)/man1
@@ -185,15 +185,14 @@ lex.yy.c: instrument.l
 uninstall: uninstall_@MCCODE_TARNAME@
 	rm -rf $(libdir_mccode)
 
-uninstall_mcstas: 
+uninstall_mcstas:
 	cd $(bindir); rm -f $(BINOBJS_@MCCODE_TARNAME@)
 	rm -f $(PERLBIN)
 
-uninstall_mcxtrace: 
+uninstall_mcxtrace:
 	cd $(bindir); rm -f $(BINOBJS_@MCCODE_TARNAME@)
 	rm -f $(MXPERLBIN)
 
 reconfigure:
 	cd $(libdir_mccode)/tools/perl/
 	$(libdir_mccode)/tools/perl/mccode_reconfigure
-
