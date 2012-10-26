@@ -204,8 +204,8 @@ TRACE
   }
 
   randvec_target_rect_real(&xf, &yf, &r, &w_focus,
-			   0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
-
+			   tx, ty, tz, xw, yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+ 
   dx = xf-x;
   dy = yf-y;
   r = sqrt(dx*dx+dy*dy+dist*dist);
