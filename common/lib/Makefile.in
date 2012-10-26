@@ -14,7 +14,7 @@ INSTALL=@INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
-libdir_mccode = $(libdir)/@MCCODE_TARNAME@
+libdir_mccode = $(libdir)/@MCCODE_TARNAME@-@MCCODE_VERSION@
 
 install: install_@MCCODE_TARNAME@
 
@@ -24,4 +24,3 @@ install_@MCCODE_TARNAME@: installdirs
 
 installdirs:
 	$(rootdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_@MCCODE_TARNAME@) $(mandir)/man1
-

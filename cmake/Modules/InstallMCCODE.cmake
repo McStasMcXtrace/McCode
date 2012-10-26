@@ -244,6 +244,9 @@ macro(InstallMCCODE)
   ## Add install targets
   include(MCUtil)
 
+  # Flavor-specific library
+  install_lib("${PROJECT_SOURCE_DIR}/${FLAVOR_LIB}/")
+
   # Shared library, lib
   install_lib("${PROJECT_BINARY_DIR}/work/lib/")
 
