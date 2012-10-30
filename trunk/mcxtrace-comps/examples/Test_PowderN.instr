@@ -3,7 +3,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: Test_Saxs_spheres 
+* Instrument: Test_Saxs_spheres
 *
 * %Identification
 * Written by: Your name (email)
@@ -15,13 +15,13 @@
 *
 * Unit-test instrument for the PowderN sample component.
 *
-* Simply a model source illuminating a powder sample. 
-* The sampe itself is an Fe-powder.
+* Simply a model source illuminating a powder sample.
+* The sample itself is an Fe-powder.
 *
-* %Example: mxrun Test_PowderN.instr -n1e7 TTH=13.4 Detector: detector2_I=2.49827e-16 
+* %Example: Test_PowderN.instr -n1e7 TTH=13.4 Detector: detector2_I=2.49827e-16
 *
 * %Parameters
-* TTH: [deg.] Two theta rotation. Only places the last detector (does not tough the sample). 
+* TTH: [deg.] Two theta rotation. Only places the last detector (does not tough the sample).
 *
 * %End
 *******************************************************************************/
@@ -102,7 +102,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-
-
-
-
