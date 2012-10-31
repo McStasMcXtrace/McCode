@@ -165,7 +165,7 @@ macro(InstallMCCODE)
 
   # Generate c and header files
   configure_file (
-    "../config.h.in"
+    "config.h.in"
     "work/src/config.h"
   )
 
