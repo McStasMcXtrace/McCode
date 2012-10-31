@@ -1,11 +1,12 @@
 #!/bin/sh
 
 function usage() {
-    echo "usage: $0 name [version] [source]";
+    echo "usage: $0 name [version] [source] [target]";
     echo "";
     echo "  name:      The name of the distribution (e.g. mcstas)";
     echo "  version:   The version (default: current date)";
     echo "  source:    The source directory (default: name)";
+    echo "  target:    The target directory (default: dist)";
 }
 
 if [ "x$1" = "x" ]; then
@@ -13,11 +14,26 @@ if [ "x$1" = "x" ]; then
     usage;
     exit 1;
 fi
+NAME="$1"
+
+TOP="`pwd`"
+
+
+function get_absolute() {
+    if [ -e /$1 ]; then
+        # path is absolute
+        echo "$1"
+    else
+        echo "`pwd`/$1";
+    fi
+}
+
 
 # Collect date information
 MONTH=`date +"%b"`
 DAY=`date +"%d"`
 YEAR=`date +"%Y"`
+
 
 # Set version
 if [ "x$2" = "x" ]; then
@@ -26,12 +42,13 @@ else
     MCCODE_VERSION="$2";
 fi
 
-# Set source
+
+# Set source directory
 if [ "x$3" = "x" ]; then
-    SOURCE="${NAME}";
+    SOURCE="`pwd`/${NAME}";
 else
     if [ -d "$3" ]; then
-        SOURCE="$3";
+        SOURCE="`get_absolute "$3"`";
     else
         echo "Error: no such directory: $3"
         exit 1;
@@ -39,9 +56,20 @@ else
 fi
 
 
-# Setup global versioning
-NAME="$1"
+# Set distination directory
+if [ "x$4" = "x" ]; then
+    DIST="${TOP}/dist";
+else
+    DIST="`get_absolute "$4"`";
+fi
 
+if [ -d "${DIST}/.git" ] || [ -d "${DIST}/.svn" ]; then
+    echo "Error: distination dir looks like a source repository: ${DIST}";
+    exit 1;
+fi
+
+
+# Setup global versioning
 FLAVOR="${NAME}"
 MCCODE_TARNAME="${NAME}"
 
@@ -58,13 +86,10 @@ case "${NAME}" in
 esac
 
 
-# Constants
-DIST=dist
-
 
 function config_mccode() {
     for file in $(find . -name "CMakeLists.txt" -or -name "*.in"); do
-        echo ${file}
+        echo "${file}"
         for i in 1 2 3 4 5; do
             # replace variables into file.tmp
             sed -e 's/@MCCODE_NAME@/'"${MCCODE_NAME}"'/' \
@@ -74,7 +99,7 @@ function config_mccode() {
                 -e 's/@MCCODE_STRING@/'"${MCCODE_STRING}"'/' \
                 "${file}" > "${file}.tmp"
             # rename "fixed" version to file
-            mv ${file}.tmp ${file};
+            mv "${file}.tmp" "${file}";
         done;
     done;
 }
@@ -121,7 +146,7 @@ function cleanup() {
     # remove generated files with a corresponding *.in file
     for f in $(find . -iname "*.in"); do
         genf=$(echo $f | rev | cut -f2-100 -d'.' | rev);
-        rm -f ${genf};
+        rm -f "${genf}";
     done
 }
 
@@ -143,74 +168,71 @@ function build_mccode() {
 }
 
 
+function fresh_copy() {
+    rm -rf "${2}" &&
+    cp -Lr "${1}" "${2}";
+}
+
+
 function make_source() {
-    SOURCE=$1
+    OUT="${DIST}/${NAME}-src";
 
-    OUT=${DIST}/${SOURCE}-src;
-
-    cp -Lr ${SOURCE} ${OUT};
+    # copy source files
+    fresh_copy "${SOURCE}" "${OUT}";
 
     (
-        cd ${OUT};
+        cd "${OUT}";
         cleanup &&
+        config_mccode &&
         prepare_mccode;
     )
 }
 
 function make_bin() {
-    NAME=$1
-    SOURCE=$2
+    OUT="${DIST}/${NAME}-bin";
 
-    if [ "x${SOURCE}" = "x" ]; then
-        SOURCE="${NAME}";
-    fi
-
-    OUT=${DIST}/${NAME}-bin;
-
-    cp -Lr ${SOURCE} ${OUT};
+    # copy source files
+    fresh_copy "${SOURCE}" "${OUT}";
 
     (
-        cd ${OUT};
+        cd "${OUT}";
         cleanup &&
         build_mccode "--prefix=`pwd`/build" &&
         make install;
         (
             cd build;
-            tar zcf ../${NAME}.tar.gz *;
+            tar zcf "../${NAME}.tar.gz" *;
         )
     )
 }
 
 
 function make_deb() {
-    SOURCE=$1
+    OUT="${DIST}/${NAME}-deb";
 
-    OUT=${DIST}/${SOURCE}-deb;
-
-    cp -Lr ${SOURCE} ${OUT};
+    # copy source files
+    fresh_copy "${SOURCE}" "${OUT}";
 
     (
-        cd ${OUT};
+        cd "${OUT}";
         cleanup &&
+        config_mccode &&
         cmake . &&
         cpack -G DEB
     )
 }
 
 
-# clean up
-rm -r ${DIST}
-
-mkdir -p ${DIST}
+# create dist
+echo "${SOURCE} -> ${DIST}"
+mkdir -p "${DIST}"
 
 # copy needed files to dist
-cp mkinstalldirs ${DIST}
+cp mkinstalldirs "${DIST}"
 
-# make_source "mcstas"
-# make_source "mcxtrace"
+# move into dist
+cd "${DIST}" || exit 1
 
-make_bin "${NAME}" "${SOURCE}"
-# make_bin "mcxtrace"
-
-# make_deb "mcstas"
-# make_deb "mcxtrace"
+make_source
+make_bin
+make_deb
