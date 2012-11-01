@@ -12,8 +12,4 @@
     }
 
     $MCSTAS::perl_dir = "$MCSTAS::sys_dir/perl";
-
-    $MCSTAS::perl_dir =~ s/\/mcstas-/\/mcstas-tools-/;
-    $MCSTAS::perl_dir =~ s/\/mcxtrace-/\/mcxtrace-tools-/;
-
-    $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules"
+    $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";

@@ -70,7 +70,10 @@ if test x"$enable_mcstas" = "xyes" -o x"$enable_mcxtrace" = "xyes" ; then
   echo "MCCODE_VERSION  =$MCCODE_VERSION"
   echo "MCCODE_STRING   =$MCCODE_STRING"
   echo "MCCODE_BUGREPORT=$MCCODE_BUGREPORT"
+fi
 
+if test "x${MCINSTALL_PREFIX}" = "x" ; then
+   MCINSTALL_PREFIX=$prefix;
 fi
 
 # determine particule to use: n or X and name of the env variable for location of library
@@ -93,7 +96,9 @@ if test x"$enable_mcstas" = "xyes" -o x"$enable_mcxtrace" = "xyes" ; then
   echo "MCCODE_PREFIX   =$MCCODE_PREFIX"
 fi
 
+
 # update corresponding DEFINE string in all makefiles
+AC_DEFINE_UNQUOTED([MCINSTALL_PREFIX], "${MCINSTALL_PREFIX}")
 AC_DEFINE_UNQUOTED([MCCODE_DATE], "${MCCODE_DATE}")
 AC_DEFINE_UNQUOTED([MCCODE_TARNAME], "${MCCODE_TARNAME}")
 AC_DEFINE_UNQUOTED([MCCODE_NAME], "${MCCODE_NAME}")
