@@ -170,7 +170,7 @@ function build_mccode() {
 
 function fresh_copy() {
     rm -rf "${2}" &&
-    cp -Lr "${1}" "${2}";
+    cp -LR "${1}" "${2}";
 }
 
 
@@ -222,6 +222,21 @@ function make_deb() {
     )
 }
 
+function make_OSXpkg() {
+    OUT="${DIST}/${NAME}-OSXpkg";
+
+    # copy source files
+    fresh_copy "${SOURCE}" "${OUT}";
+
+    (
+        cd "${OUT}";
+        cleanup &&
+        config_mccode &&
+        cmake . &&
+        cpack -G PackageMaker
+    )
+}
+
 
 # create dist
 echo "${SOURCE} -> ${DIST}"
@@ -235,4 +250,6 @@ cd "${DIST}" || exit 1
 
 make_source
 make_bin
+# Ought to be factored out as command line parm?
 make_deb
+#make_OSXpkg
