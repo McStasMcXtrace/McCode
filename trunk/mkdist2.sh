@@ -1,5 +1,11 @@
 #!/bin/sh
 
+if [ "x${MCINSTALL_PREFIX}" = "x" ]; then
+    MCINSTALL_PREFIX="/usr/local";
+fi
+export MCINSTALL_PREFIX
+
+
 function usage() {
     echo "usage: $0 name [version] [source] [target] [-- gens ...] ";
     echo "";
@@ -25,7 +31,7 @@ for a in ${args}; do
     VAL="$1";
 
     # Break on EOF or --
-    if [ "x${VAL}" = "x" ] || [ "x${VAL}" = "x--" ]; then
+    if [ "x${VAL}" = "x--" ]; then
         shift;
         break;
     fi
@@ -46,6 +52,17 @@ fi
 
 # Set environment constants
 TOP="`pwd`"
+
+
+# Set name-specific constants
+case ${NAME} in
+    mctools )
+        CONFIGURE_FLAGS="--enable-mcstas";
+        ;;
+    mxtools )
+        CONFIGURE_FLAGS="--enable-mcxtrace";
+        ;;
+esac
 
 
 # Convert any path to an absolute path
@@ -98,9 +115,13 @@ fi
 
 
 # Setup global versioning
-FLAVOR="${NAME}"
-MCCODE_TARNAME="${NAME}"
+if ( echo ${NAME} | grep mcstas ); then
+    FLAVOR="mcstas"
+else
+    FLAVOR="mcxtrace"
+fi
 
+MCCODE_TARNAME="${FLAVOR}"
 MCCODE_DATE="${MONTH}. ${DAY}, ${YEAR}";
 MCCODE_STRING="${MCCODE_NAME} ${MCCODE_VERSION} - ${MCCODE_DATE}";
 
@@ -184,8 +205,9 @@ function prepare_mccode() {
 
     (
         cd src;
-        flex instrument.l;
-        bison instrument.y;
+        flex instrument.l  &&
+        bison instrument.y ||
+        echo "ignoring (likely not mcstas/mcxtrace)..";
     )
 }
 
@@ -225,7 +247,7 @@ function make_bin() {
     (
         cd "${OUT}";
         cleanup &&
-        build_mccode "--prefix=`pwd`/build" &&
+        build_mccode "--prefix=`pwd`/build ${CONFIGURE_FLAGS}" &&
         make install;
         (
             cd build;

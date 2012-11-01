@@ -42,8 +42,8 @@ PWD = "`pwd`"
 
 
 DEBUG = -DDEBUG=0
-libdir_mccode = $(libdir)/@MCCODE_TARNAME@-@MCCODE_VERSION@
-libdir_tools  = $(libdir)/@MCCODE_TARNAME@-tools-@MCCODE_VERSION@
+libdir_mccode = $(MCINSTALL_PREFIX)/@MCCODE_TARNAME@-@MCCODE_VERSION@
+libdir_tools  = $(MCINSTALL_PREFIX)/@MCCODE_TARNAME@-tools-@MCCODE_VERSION@
 
 CC = @CC@
 MINGW = @MINGW@
@@ -95,11 +95,11 @@ BINOBJS_mcxtrace=$(MXPERLOBJ)
 
 .pl.fixpl:
 	@echo "Fixing PERL dirs:" $< "->" $@
-	@./perl_fix.sh ${libdir_mccode} $< $@
+	@./perl_fix.sh ${libdir_mccode} ${libdir_tools} $< $@
 
 .pl.mxfixpl:
 	@echo "Fixing PERL dirs:" $< "->" $(subst mc,mx,$@)
-	@./perl_fix.sh ${libdir_mccode} $< $(subst mc,mx,$@)
+	@./perl_fix.sh ${libdir_mccode} ${libdir_tools} $< $(subst mc,mx,$@)
 
 all: $(BINOBJS_@MCCODE_TARNAME@)
 
@@ -134,10 +134,10 @@ install_mcstas: installdirs $(BINOBJS_mcstas)
 	for pgm in $(PERLBIN); do \
 	  $(INSTALL_PROGRAM) $$pgm.fixpl $(bindir)/$$pgm-@MCCODE_VERSION@; \
 	done
-	$(rootdir)/mkinstalldirs $(libdir_tools)
 	cd $(topdir)/lib && $(MAKE) install
 	@echo "Create component documentation..."
-	MCSTAS=$(libdir_mccode) $(topdir)/mcdoc.fixpl --text;
+	MCSTAS=$(libdir_mccode) MCSTAS_TOOLS=${libdir_tools} \
+		$(topdir)/mcdoc.fixpl --text;
 
 # documentation with mxdoc is broken, as it uses MCSTAS location and env
 install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
@@ -145,13 +145,12 @@ install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
 	for pgm in $(MXPERLBIN); do \
 	  $(INSTALL_PROGRAM) $$pgm.mxfixpl $(bindir)/$$pgm-@MCCODE_VERSION@; \
 	done
-	$(rootdir)/mkinstalldirs $(libdir_tools)
 	cd $(topdir)/lib && $(MAKE) install
 	@echo "Create component documentation..."
 	MCSTAS=$(libdir_mccode) $(topdir)/mxdoc.mxfixpl --text;
 
 installdirs:
-	$(rootdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_mccode) $(mandir)/man1
+	$(rootdir)/mkinstalldirs $(bindir) $(libdir) $(mandir)/man1
 
 test: test_@MCCODE_TARNAME@
 
