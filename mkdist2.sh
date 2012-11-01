@@ -1,21 +1,50 @@
 #!/bin/sh
 
 function usage() {
-    echo "usage: $0 name [version] [source] [target]";
+    echo "usage: $0 name [version] [source] [target] [-- gens ...] ";
     echo "";
     echo "  name:      The name of the distribution (e.g. mcstas)";
     echo "  version:   The version (default: current date)";
     echo "  source:    The source directory (default: name)";
     echo "  target:    The target directory (default: dist)";
+    echo "  gens:      Generators to use (src, bin, deb, rpm)";
+    echo ""
+    echo "McStas, Johan Brinch <jsbn@fysik.dtu.dk>";
 }
 
 if [ "x$1" = "x" ]; then
-    # No name specified
+    # No arguments
     usage;
     exit 1;
 fi
-NAME="$1"
 
+
+# Parse arguments into variables; stop at --
+args="NAME MCCODE_VERSION SOURCE DEST"
+for a in ${args}; do
+    VAL="$1";
+
+    # Break on EOF or --
+    if [ "x${VAL}" = "x" ] || [ "x${VAL}" = "x--" ]; then
+        shift;
+        break;
+    fi
+
+    # Set argument from args and shift to next
+    export ${a}="$1";
+    shift;
+done
+
+# Any arguments from here on are generators (e.g. src, bin, deb or rpm)
+GENS="$*"
+
+# Set default generators
+if [ "x${GENS}" = "x" ]; then
+    GENS="src bin";
+fi
+
+
+# Set environment constants
 TOP="`pwd`"
 
 
@@ -33,21 +62,19 @@ MONTH=`date +"%b"`
 DAY=`date +"%d"`
 YEAR=`date +"%Y"`
 
-
-# Set version
-if [ "x$2" = "x" ]; then
+# Set default version
+if [ "x${MCCODE_VERSION}" = "x" ]; then
     MCCODE_VERSION="${YEAR}-${MONTH}-${DAY}";
-else
-    MCCODE_VERSION="$2";
 fi
 
 
 # Set source directory
-if [ "x$3" = "x" ]; then
+if [ "x${SOURCE}" = "x" ]; then
     SOURCE="`pwd`/${NAME}";
 else
-    if [ -d "$3" ]; then
-        SOURCE="`get_absolute "$3"`";
+    # Make absolute
+    if [ -d "${SOURCE}" ]; then
+        SOURCE="`get_absolute "${SOURCE}"`";
     else
         echo "Error: no such directory: $3"
         exit 1;
@@ -55,15 +82,17 @@ else
 fi
 
 
-# Set distination directory
-if [ "x$4" = "x" ]; then
-    DIST="${TOP}/dist";
+# Set default distination directory
+if [ "x${DEST}" = "x" ]; then
+    DEST="${TOP}/dist";
 else
-    DIST="`get_absolute "$4"`";
+    # Make absolute
+    DEST="`get_absolute "${DEST}"`";
 fi
 
-if [ -d "${DIST}/.git" ] || [ -d "${DIST}/.svn" ]; then
-    echo "Error: distination dir looks like a source repository: ${DIST}";
+if [ -d "${DEST}/.git" ] || [ -d "${DEST}/.svn" ]; then
+    echo "Error: distination dir looks like a source repository: ${DEST}";
+    echo "> Refusing to delete it!"
     exit 1;
 fi
 
@@ -173,8 +202,8 @@ function fresh_copy() {
 }
 
 
-function make_source() {
-    OUT="${DIST}/${NAME}-src";
+function make_src() {
+    OUT="${DEST}/${NAME}-src";
 
     # copy source files
     fresh_copy "${SOURCE}" "${OUT}";
@@ -188,7 +217,7 @@ function make_source() {
 }
 
 function make_bin() {
-    OUT="${DIST}/${NAME}-bin";
+    OUT="${DEST}/${NAME}-bin";
 
     # copy source files
     fresh_copy "${SOURCE}" "${OUT}";
@@ -207,7 +236,7 @@ function make_bin() {
 
 
 function make_deb() {
-    OUT="${DIST}/${NAME}-deb";
+    OUT="${DEST}/${NAME}-deb";
 
     # copy source files
     fresh_copy "${SOURCE}" "${OUT}";
@@ -222,7 +251,7 @@ function make_deb() {
 }
 
 function make_OSXpkg() {
-    OUT="${DIST}/${NAME}-OSXpkg";
+    OUT="${DEST}/${NAME}-OSXpkg";
 
     # copy source files
     fresh_copy "${SOURCE}" "${OUT}";
@@ -238,17 +267,21 @@ function make_OSXpkg() {
 
 
 # create dist
-echo "${SOURCE} -> ${DIST}"
-mkdir -p "${DIST}"
+echo "${SOURCE} -> ${DEST}"
+mkdir -p "${DEST}"
 
 # copy needed files to dist
-cp mkinstalldirs "${DIST}"
+cp mkinstalldirs "${DEST}"
 
 # move into dist
-cd "${DIST}" || exit 1
+cd "${DEST}" || exit 1
 
-make_source
-make_bin
-# Ought to be factored out as command line parm?
-make_deb
-#make_OSXpkg
+
+for gen in ${GENS}; do
+    echo ""
+    echo "=== ${gen} ===";
+    echo ""
+
+    # run generator
+    make_${gen};
+done
