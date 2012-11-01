@@ -115,11 +115,18 @@ fi
 
 
 # Setup global versioning
-if ( echo ${NAME} | grep mcstas ); then
-    FLAVOR="mcstas"
-else
-    FLAVOR="mcxtrace"
+if [ "x${FLAVOR}" = "x" ]; then
+    if ( echo ${NAME} | grep mcx ) || ( echo ${NAME} | grep mx ) then
+        FLAVOR="mcxtrace"
+    else
+        FLAVOR="mcstas"
+    fi
 fi
+
+echo ""
+echo "=== Picked flavor: ${FLAVOR}"
+echo ""
+
 
 MCCODE_TARNAME="${FLAVOR}"
 MCCODE_DATE="${MONTH}. ${DAY}, ${YEAR}";
