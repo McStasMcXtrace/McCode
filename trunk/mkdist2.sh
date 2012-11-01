@@ -19,13 +19,12 @@ NAME="$1"
 TOP="`pwd`"
 
 
+# Convert any path to an absolute path
 function get_absolute() {
-    if [ -e /$1 ]; then
-        # path is absolute
-        echo "$1"
-    else
-        echo "`pwd`/$1";
-    fi
+    (
+        cd $(dirname "$1");
+        echo `pwd`/$(basename "$1");
+    )
 }
 
 
