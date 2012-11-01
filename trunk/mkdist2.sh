@@ -234,35 +234,38 @@ function make_bin() {
     )
 }
 
-
-function make_deb() {
-    OUT="${DEST}/${NAME}-deb";
-
+function prepare_cpack() {
     # copy source files
-    fresh_copy "${SOURCE}" "${OUT}";
-
+    fresh_copy "${SOURCE}" "$1";
     (
-        cd "${OUT}";
+        cd "$1";
         cleanup &&
         config_mccode &&
-        cmake . &&
-        cpack -G DEB
+        cmake .
     )
 }
 
-function make_OSXpkg() {
-    OUT="${DEST}/${NAME}-OSXpkg";
-
-    # copy source files
-    fresh_copy "${SOURCE}" "${OUT}";
-
+function simple_cpack() {
+    # make a CPack package from GEN and destination
+    # e.g. simple_cpack DEB "dist/deb"
     (
-        cd "${OUT}";
-        cleanup &&
-        config_mccode &&
-        cmake . &&
-        cpack -G PackageMaker
+        prepare_cpack "$2";
+        cd "$2" &&
+        cpack -G $1;
     )
+}
+
+
+function make_deb() {
+    simple_cpack DEB "${DEST}/${NAME}-deb";
+}
+
+function make_rpm() {
+    simple_cpack RPM "${DEST}/${NAME}-rpm";
+}
+
+function make_OSXpkg() {
+    simple_cpack PackageMaker "${DEST}/${NAME}-OSXpkg";
 }
 
 
