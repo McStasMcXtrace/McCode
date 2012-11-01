@@ -19,9 +19,10 @@ add_definitions(
 
 ## If this value is not empty, we have the following macros from mkdist:
 ## @MCCODE_DATE@, @MCCODE_STRING@, @MCCODE_NAME@, @MCCODE_TARNAME@, @MCCODE_VERSION@
-string(REPLACE "@" "_" "@MCCODE_DATE@" MKDIST)
+set(MKDIST "${MCCODE_DATE}")
 
-if(MKDIST STREQUAL "_MCCODE_DATE_")
+
+if(MKDIST STREQUAL "")
   ## Set SVN-specific version
   set(MAJOR "2")
   set(MINOR "9999")
