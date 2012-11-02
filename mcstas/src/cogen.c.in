@@ -818,7 +818,7 @@ cogen_init(struct instr_def *instr)
   last = NULL;
   coutf("    %sDEBUG_INSTR()", ID_PRE);
 
-  /* Initialization of component position, rotation 
+  /* Initialization of component position, rotation
      setting parameters and user initialization code. */
   cout("  /* Component initializations. */");
   liter = list_iterate(instr->complist);
@@ -826,10 +826,10 @@ cogen_init(struct instr_def *instr)
   {
     struct comp_inst *relcomp; /* Component relative to. */
     char *x, *y, *z;
-    
+
     List_handle setpar;        /* component parameters */
     struct comp_iformal *par;
-    
+
     coutf("    /* Component %s. */", comp->name);
     coutf("    SIG_MESSAGE(\"%s (Init:Place/Rotate)\");", comp->name); /* signal handler message */
 
@@ -972,7 +972,7 @@ cogen_init(struct instr_def *instr)
 
   } /* end while instr->complist */
   list_iterate_end(liter);
-  
+
   /* Initialization of component and user initialization code. */
   cout("  /* Component initializations. */");
   liter = list_iterate(instr->complist);
@@ -1029,7 +1029,7 @@ cogen_trace(struct instr_def *instr)
   int i;
 
   if (verbose) fprintf(stderr, "Writing instrument and components TRACE\n");
-  
+
   static char *statepars_all[NUM_STATE_PARS] =
   { /* these particle state parameter names are used for all calls */
 #if MCCODE_PROJECT == 1     /* neutron */
@@ -1052,14 +1052,14 @@ cogen_trace(struct instr_def *instr)
   /* Output the function header. */
   coutf("void %sraytrace(void) {", ID_PRE);
 
-  /* Neutronics-specific defines */  
+  /* Neutronics-specific defines */
   cout("  /* Neutronics-specific defines */");
   cout("#ifdef NEUTRONICS");
   coutf("extern double %snx, %sny, %snz, %snvx, %snvy, %snvz;", ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
   coutf("extern double %snt, %snsx, %snsy, %snsz, %snp;", ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
   cout("#endif");
   cout("  /* End of Neutronics-specific defines */");
-  /* Local neutron state. 
+  /* Local neutron state.
 
   /* Local @MCCODE_PARTICULE@ state. */
   cout("  /* Copy @MCCODE_PARTICULE@ state to local variables. */");
@@ -1134,7 +1134,7 @@ cogen_trace(struct instr_def *instr)
     for(i = 0; i < 9; i++)
       if (i < 9-1) coutf("    &%snl%s,",  ID_PRE, statepars_change[i]);
       else         coutf("    &%snl%s);", ID_PRE, statepars_change[i]);
-    
+
     /* JUMP RELATIVE comp */
     coutf("  /* define label inside component %s (without coords transformations) */", comp->name);
     coutf("  %sJumpTrace_%s:", ID_PRE, comp->name);
@@ -1146,10 +1146,10 @@ cogen_trace(struct instr_def *instr)
     for(i = 0; i < NUM_STATE_PARS; i++)
       if (i < NUM_STATE_PARS-1) coutf("    %snl%s,", ID_PRE, statepars_all[i]);
       else                      coutf("    %snl%s)", ID_PRE, statepars_all[i]);
-    
-    for(i = 0; i < NUM_STATE_PARS; i++)  
+
+    for(i = 0; i < NUM_STATE_PARS; i++)
       coutf("#define %s %snl%s", statepars_all[i], ID_PRE, statepars_all[i]);
-      
+
 #if MCCODE_PROJECT == 1     /* neutron */
     static char *store  ="STORE_NEUTRON";
     static char *restore="RESTORE_NEUTRON";
@@ -1210,7 +1210,7 @@ cogen_trace(struct instr_def *instr)
         ID_PRE, comp->group->name, comp->index);
       cout ("  /* Label to skip component instead of ABSORB */");
       coutf("  %sabsorbComp%s:", ID_PRE, comp->name);
-      
+
       if (strcmp(comp->name, comp->group->last_comp)) {
         /* not the last comp of GROUP: check if SCATTERED */
         coutf("  if (!%sGroup%s) /* restore @MCCODE_PARTICULE@ if was not scattered in GROUP yet */", ID_PRE, comp->group->name);
@@ -1512,7 +1512,7 @@ cogen_runtime(struct instr_def *instr)
 #elif MCCODE_PROJECT == 2   /* xray */
     coutf("#include \"%s%sshare%smcxtrace-r.h\"",  sysdir_new, pathsep, pathsep);
 #endif
-    
+
     coutf("#include \"%s%sshare%snexus-lib.h\"", sysdir_new, pathsep, pathsep);
     fprintf(stderr,"Dependency: %s.o\n", "mccode-r");
 #if MCCODE_PROJECT == 1     /* neutron */
@@ -1580,6 +1580,8 @@ cogen(char *output_name, struct instr_def *instr)
   cout(" */\n");
   cout("");
   coutf("#define MCCODE_STRING \"%s\"", MCCODE_STRING);
+  coutf("#define FLAVOR \"%s\"", FLAVOR);
+  coutf("#define FLAVOR_UPPER \"%s\"", FLAVOR_UPPER);
   cogen_runtime(instr);
   cogen_decls(instr);
   cogen_init(instr);
