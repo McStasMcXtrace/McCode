@@ -4240,7 +4240,7 @@ mchelp(char *pgmname)
   for (i=0; i < mcNUMFORMATS; fprintf(stderr,"\"%s\" " , mcformats[i++].Name) );
   fprintf(stderr, "\n  Format modifiers: FORMAT may be followed by 'binary float' or \n");
   fprintf(stderr, "  'binary double' to save data blocks as binary. This removes text headers.\n");
-  fprintf(stderr, "  The MCSTAS_FORMAT environment variable may set the default FORMAT to use.\n");
+  fprintf(stderr, "  The " FLAVOR_UPPER "_FORMAT environment variable may set the default FORMAT to use.\n");
 #ifndef NOSIGNALS
   fprintf(stderr, "Known signals are: "
 #ifdef SIGUSR1
@@ -4769,7 +4769,8 @@ int mccode_main(int argc, char *argv[])
 
 /* *** parse options ******************************************************* */
   SIG_MESSAGE("main (Start)");
-  mcformat=mcuse_format(getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
+  mcformat=mcuse_format(getenv(FLAVOR_UPPER "_FORMAT") ?
+                        getenv(FLAVOR_UPPER "_FORMAT") : MCSTAS_FORMAT);
   /* default is to output as McStas format */
   mcformat_data.Name=NULL;
   /* read simulation parameters and options */
@@ -4847,7 +4848,7 @@ int mccode_main(int argc, char *argv[])
 /* main particule event loop */
 while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
   {
-#ifndef NEUTRONICS 
+#ifndef NEUTRONICS
     mcgenstate();
 #endif
     /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
@@ -4879,14 +4880,14 @@ while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
 #ifdef NEUTRONICS
 /*Main neutronics function steers the McStas calls, initializes parameters etc */
 /* Only called in case NEUTRONICS = TRUE */
-void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *invy, float *invz, float *intime, float *insx, float *insy, float *insz, float *inw, float *outx, float *outy, float *outz, float *outvx, float *outvy, float *outvz, float *outtime, float *outsx, float *outsy, float *outsz, float *outwgt) 
+void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *invy, float *invz, float *intime, float *insx, float *insy, float *insz, float *inw, float *outx, float *outy, float *outz, float *outvx, float *outvy, float *outvz, float *outtime, float *outsx, float *outsy, float *outsz, float *outwgt)
 {
 
   extern double mcnx, mcny, mcnz, mcnvx, mcnvy, mcnvz;
   extern double mcnt, mcnsx, mcnsy, mcnsz, mcnp;
 
   /* External code governs iteration - McStas is iterated once per call to neutronics_main. I.e. below counter must be initiancated for each call to neutronics_main*/
-  mcrun_num=0; 
+  mcrun_num=0;
 
   time_t t;
   t = (time_t)mcstartdate;
@@ -4895,7 +4896,8 @@ void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *in
 
   /* *** parse options *** */
   SIG_MESSAGE("main (Start)");
-  mcformat=mcuse_format(getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
+  mcformat=mcuse_format(getenv(FLAVOR_UPPER "_FORMAT") ?
+                        getenv(FLAVOR_UPPER "_FORMAT") : MCSTAS_FORMAT);
   /* default is to output as McStas format */
   mcformat_data.Name=NULL;
   /* read simulation parameters and options */
@@ -4905,36 +4907,36 @@ void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *in
   }
   if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
     mcformat_data = mcuse_format("VRML");
-  
+
   /* Set neutron state based on input from neutronics code */
   mcsetstate(*inx,*iny,*inz,*invx,*invy,*invz,*intime,*insx,*insy,*insz,*inw);
-  
+
   /* main neutron event loop - runs only one iteration */
-  
+
   //mcstas_raytrace(&mcncount); /* prior to McStas 1.12 */
 
   mcallowbackprop = 1; //avoid absorbtion from negative dt
   int argc=1;
   char *argv[0];
   int dummy = mccode_main(argc, argv);
-  
+
   /*  save/finally executed by master node/thread. Needed for McStas 1.12 and older */
   /*  mcfinally(); */
   /*  mcclear_format(mcformat); */
 
   if (mcformat_data.Name) mcclear_format(mcformat_data);
-  
-  *outx =  mcnx;     
-  *outy =  mcny;     
-  *outz =  mcnz;     
-  *outvx =  mcnvx;     
-  *outvy =  mcnvy;     
-  *outvz =  mcnvz;     
-  *outtime =  mcnt;     
-  *outsx =  mcnsx;     
-  *outsy =  mcnsy;     
-  *outsz =  mcnsz;     
-  *outwgt =  mcnp;     
+
+  *outx =  mcnx;
+  *outy =  mcny;
+  *outz =  mcnz;
+  *outvx =  mcnvx;
+  *outvy =  mcnvy;
+  *outvz =  mcnvz;
+  *outtime =  mcnt;
+  *outsx =  mcnsx;
+  *outsy =  mcnsy;
+  *outsz =  mcnsz;
+  *outwgt =  mcnp;
 
   return;
 } /* neutronics_main */
