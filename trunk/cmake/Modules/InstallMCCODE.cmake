@@ -10,12 +10,22 @@
 
 macro(InstallMCCODE)
 
+  ## We are building with CMake and need to let port.h know this
+  add_definitions( -DCMake )
+
   ## CPack configuration
   set(CPACK_PACKAGE_NAME          "${FLAVOR}-${MCCODE_VERSION}")
   set(CPACK_RESOURCE_FilE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../COPYING")
+
+  # Debian package versioning
+  set(MAJOR "1")
+  set(MINOR "0")
+
+  set(CPACK_PACKAGE_VERSION       "${MAJOR}.${MINOR}")
   set(CPACK_PACKAGE_VERSION_MAJOR "${MAJOR}")
   set(CPACK_PACKAGE_VERSION_MINOR "${MINOR}")
-  set(CPACK_PACKAGE_VERSION       "${MCCODE_VERSION}")
+
+  # Maintainer
   set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
   # Make CPack respect the install prefix
