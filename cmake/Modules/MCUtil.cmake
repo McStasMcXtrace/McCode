@@ -19,7 +19,37 @@ endmacro()
 
 
 # Setup McCode constants using either mkdist or SVN-defaults
-macro(setup_mccode_mkdist)
+macro(setup_mccode_mkdist FLAVOR)
+
+  if("${FLAVOR}" STREQUAL "mcstas")
+    set(NAME             "McStas")
+
+    set(FLAVOR           "mcstas")
+    set(FLAVOR_UPPER     "MCSTAS")
+
+    set(FLAVOR_FMT       "mcformat")
+
+    set(FLAVOR_LIB       "nlib")
+    set(MCCODE_LIBENV    "${FLAVOR_UPPER}")
+
+    set(MCCODE_PARTICULE "neutron")
+    set(MCCODE_PROJECT   1)
+  endif()
+  if("${FLAVOR}" STREQUAL "mcxtrace")
+    set(NAME             "McXtrace")
+
+    set(FLAVOR           "mcxtrace")
+    set(FLAVOR_UPPER     "MCXTRACE")
+
+    set(FLAVOR_FMT       "mxformat")
+
+    set(FLAVOR_LIB       "xlib")
+    set(MCCODE_LIBENV    "${FLAVOR_UPPER}")
+
+    set(MCCODE_PARTICULE "xray")
+    set(MCCODE_PROJECT   1)
+  endif()
+
 
   # Check for mkdist values
   is_mkdist(MKDIST)

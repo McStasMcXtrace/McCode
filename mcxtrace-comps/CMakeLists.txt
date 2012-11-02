@@ -2,16 +2,13 @@ cmake_minimum_required(VERSION 2.6)
 
 # This will install McXtrace components
 project(mcxtrace-comps)
-set(FLAVOR "mcxtrace")
-
 
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
-setup_mccode_mkdist()
+setup_mccode_mkdist("mcxtrace")
 
 
 # CPack configuration
