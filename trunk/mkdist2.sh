@@ -144,8 +144,11 @@ esac
 
 
 function config_mccode() {
-    for file in $(find . -name "CMakeLists.txt" -or -name "*.in"); do
-        echo "${file}"
+    find . -type f                 \
+        -name "CMakeLists.txt" -or \
+        -name "*.cmake"        -or \
+        -name "*.in" |
+    while read file; do
         for i in 1 2 3 4 5; do
             # replace variables into file.tmp
             sed -e 's/@MCCODE_NAME@/'"${MCCODE_NAME}"'/' \
