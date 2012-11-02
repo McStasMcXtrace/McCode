@@ -1242,7 +1242,7 @@ topatexp:   "PREVIOUS"
       {
         $$ = exp_ctoken("mccompcurname");
       }
-    
+
     | TOK_ID
       {
         List_handle liter=NULL;
@@ -1469,9 +1469,9 @@ print_usage(void)
   fprintf(stderr, "  If run-time libraries are not embedded, you will have to pre-compile\n");
   fprintf(stderr, "    them (.c -> .o) before assembling the program.\n");
   fprintf(stderr, "  The default component search list is usually defined by the environment\n");
-  fprintf(stderr, "    variable 'MCSTAS' (default is " MCSTAS ") \n");
+  fprintf(stderr, "    variable 'MCXTRACE' (default is " MCSTAS ") \n");
   fprintf(stderr, "  Use 'mcrun' to both run " MCCODE_NAME " and the C compiler.\n");
-  fprintf(stderr, "  Use 'mcgui' to run the " MCCODE_NAME " GUI.\n");  
+  fprintf(stderr, "  Use 'mcgui' to run the " MCCODE_NAME " GUI.\n");
   fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui, mcformat, mcdoc\n");
   fprintf(stderr, "DOC:      Please visit " MCCODE_BUGREPORT "\n");
   exit(1);
@@ -1480,7 +1480,7 @@ print_usage(void)
 /* Print McCode version and copyright. */
 static void
 print_version(void)
-{ 
+{
   printf(MCCODE_NAME " version " MCCODE_VERSION " (" MCCODE_DATE ")\n"
     "Copyright (C) Risoe National Laboratory, 1997-2010\n"
     "Additions (C) Institut Laue Langevin, 2003-2010\n"
@@ -1730,13 +1730,13 @@ check_instrument_formals(List formallist, char *instrname)
       /* find first definition of parameter */
       List_handle liter2;
       struct instr_formal *formal2;
-      
+
       liter2 = list_iterate(formallist);
       while(formal2 = list_next(liter2)) {
       	if (formal != formal2 && strlen(formal2->id) && !strcmp(formal->id, formal2->id)) {
       		strcpy(formal2->id, "");  /* unactivate recurrent previous definition */
       		if (verbose) print_warn(NULL, "Instrument parameter name %s is used multiple times "
-            "in instrument %s. Using last definition %s\n", formal->id, instrname, 
+            "in instrument %s. Using last definition %s\n", formal->id, instrname,
             	formal->isoptional ? exp_tostring(formal->default_value) : "");
           break;
       	}
@@ -1838,8 +1838,8 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       strcpy(misspelled, "");
       while(entry2 = symtab_next(siter2)) {
         fprintf(stderr, "%s ", entry2->name);
-        if (!strlen(misspelled) && (!strcasecmp(entry->name, entry2->name) 
-         ||  strcasestr(entry->name, entry2->name) 
+        if (!strlen(misspelled) && (!strcasecmp(entry->name, entry2->name)
+         ||  strcasestr(entry->name, entry2->name)
          ||  strcasestr(entry2->name, entry->name))) strcpy(misspelled, entry2->name);
       }
       symtab_iterate_end(siter2);
@@ -1847,16 +1847,16 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       fprintf(stderr,"\n  Setting parameters: ");
       while(entry2 = symtab_next(siter2)) {
         fprintf(stderr, "%s ", entry2->name);
-        if (!strlen(misspelled) && (!strcasecmp(entry->name, entry2->name) 
-         ||  strcasestr(entry->name, entry2->name) 
+        if (!strlen(misspelled) && (!strcasecmp(entry->name, entry2->name)
+         ||  strcasestr(entry->name, entry2->name)
          ||  strcasestr(entry2->name, entry->name))) strcpy(misspelled, entry2->name);
       }
       symtab_iterate_end(siter2);
       print_error("\n");
-      if (strlen(misspelled)) 
+      if (strlen(misspelled))
       	fprintf(stderr, "Info:    '%s' parameter name used in instrument matches\n"
                         "         component %s parameter '%s' from library but\n"
-                        "         may be misspelled. Check component instance.\n", 
+                        "         may be misspelled. Check component instance.\n",
                         entry->name, comp->type, misspelled);
     }
   }

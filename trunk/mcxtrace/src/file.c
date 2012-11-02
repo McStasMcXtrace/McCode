@@ -95,7 +95,7 @@ get_sys_dir(void)
 
   if(sys_dir == NULL)
   {
-    sys_dir = getenv("MCSTAS");
+    sys_dir = getenv(FLAVOR_UPPER);
     if(sys_dir == NULL)
       sys_dir = MCSTAS;
     sys_dir = str_dup(sys_dir);
@@ -175,4 +175,3 @@ add_search_dir(char *name)
     search_list = list_create();
   list_add(search_list, name);
 }
-

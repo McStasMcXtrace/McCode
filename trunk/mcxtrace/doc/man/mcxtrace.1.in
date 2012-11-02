@@ -119,12 +119,12 @@ foo.out param1=value1 ...
 Execute instrument simulation
 .SH ENVIRONMENT
 The
-.B MCSTAS
+.B MCXTRACE
 environment variable may be set to define the McStas library location. This is /usr/local/lib/mcstas on Linux systems. Executables are usually located in /usr/local/bin.
 The McStas configuration file is MCSTAS/tools/perl/mcstas_config.perl which you can reconfigure by running: MCSTAS/tools/perl/mcstas_reconfigure
 .P
 The
-.B MCSTAS_FORMAT
+.B MCXTRACE_FORMAT
 environment variable may be set to define the default data format used for storing results. This is usually 'PGPLOT', 'Matlab', or 'Scilab'.
 .SH BUGS
 McStas is a large package, and bugs might be found. If so, please report to

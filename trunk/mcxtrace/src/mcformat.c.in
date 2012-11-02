@@ -1741,13 +1741,13 @@ void mcformat_usage(char *pgmname)
 "  # merge simulation data sets (grids)\n"
 "mcformat -d target_dir dir1 dir2 ... --scan\n"
 "  # merge scan data sets\n\n",
-getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
+getenv(FLAVOR_UPPER "_FORMAT") ? getenv(FLAVOR_UPPER "_FORMAT") : MCSTAS_FORMAT);
 
   fprintf(stderr, "Available output formats are (default is %s):\n  ", mcformat.Name);
   for (i=0; i < mcNUMFORMATS; fprintf(stderr,"\"%s\" " , mcformats[i++].Name) );
   fprintf(stderr, "\n  Format modifiers: FORMAT may be followed by 'binary float' or \n");
   fprintf(stderr, "  'binary double' to save data blocks as binary. This removes text headers.\n");
-  fprintf(stderr, "  The MCSTAS_FORMAT environment variable may set the default FORMAT to use.\n");
+  fprintf(stderr, "  The MCXTRACE_FORMAT environment variable may set the default FORMAT to use.\n");
 } /* mcformat_usage */
 
 /*******************************************************************************
@@ -1866,7 +1866,8 @@ int main(int argc, char *argv[])
   t = (time_t)mcstartdate;
   time(&t);
   mcstartdate = t;
-  mcformat=mcuse_format(getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
+  mcformat=mcuse_format(getenv(FLAVOR_UPPER "_FORMAT") ?
+                        getenv(FLAVOR_UPPER "_FORMAT") : MCSTAS_FORMAT);
   /* default is to output as McStas format */
   mcformat_data.Name=NULL;
 

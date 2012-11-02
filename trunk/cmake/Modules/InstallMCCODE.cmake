@@ -8,10 +8,21 @@
 #
 # After doing so (using set()) this module can be included with
 
-macro(InstallMCCODE)
+macro(AppendDef def)
+    set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND
+      PROPERTY COMPILE_DEFINITIONS
+      ${def}
+      )
+endmacro(AppendDef)
 
-  ## We are building with CMake and need to let port.h know this
-  add_definitions( -DCMake )
+macro(AppendDefIf def)
+  if(${def})
+    AppendDef(${def}=${def})
+  endif()
+endmacro(AppendDefIf)
+
+
+macro(InstallMCCODE)
 
   ## CPack configuration
   set(CPACK_PACKAGE_NAME          "${FLAVOR}-${MCCODE_VERSION}")
@@ -41,18 +52,17 @@ macro(InstallMCCODE)
 
 
   ## Add global definitions
-  add_definitions(
-	  -DMCCODE_NAME=\"${MCCODE_NAME}\"
-	  -DMCCODE_TARNAME=\"${MCCODE_TARNAME}\"
-	  -DMCCODE_VERSION=\"${MCCODE_VERSION}\"
-	  -DMCCODE_STRING=\"${MCCODE_STRING}\"
-	  -DMCCODE_BUGREPORT=\"www.mcstas.org\"
-	  -DMCCODE_URL=\"\"
+  # set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY COMPILE_DEFINITIONS
+  AppendDef(MCCODE_NAME="${MCCODE_NAME}")
+	AppendDef(MCCODE_TARNAME="${MCCODE_TARNAME}")
+	AppendDef(MCCODE_VERSION="${MCCODE_VERSION}")
+	AppendDef(MCCODE_STRING="${MCCODE_STRING}")
+	AppendDef(MCCODE_BUGREPORT="www.mcstas.org")
+	AppendDef(MCCODE_URL="")
 
-	  # -DCC_HAS_PROTOS=1
-	  # -DSTDC_HEADERS=1
-	  # -DHAVE_THREADS=\"-DUSE_THREADS\ \$$OPENMP_CFLAGS\ \"
-  )
+	# -DCC_HAS_PROTOS=1
+	# -DSTDC_HEADERS=1
+	# -DHAVE_THREADS=\"-DUSE_THREADS\ \$$OPENMP_CFLAGS\ \"
 
 
 
@@ -62,6 +72,14 @@ macro(InstallMCCODE)
 
   option (USE_THREADS
     "Enable threading; OBSOLETE: Use MPI/SSH grid feature instead." OFF)
+
+  # update definitions to match choices
+  if (USE_NEXUS)
+    AppendDef(USE_NEXUS)
+  endif()
+
+  AppendDefIf(USE_THREADS)
+
 
   ## Functionality needed to check dependencies
   include (CheckFunctionExists)
@@ -140,6 +158,13 @@ macro(InstallMCCODE)
   check_function_exists(fdopen      HAVE_FDOPEN)
   check_function_exists(qsort       HAVE_QSORT)
 
+  # Update definitions
+  AppendDefIf(HAVE_STRCASECMP)
+  AppendDefIf(HAVE_STRCASESTR)
+  AppendDefIf(HAVE_FDOPEN)
+  AppendDefIf(HAVE_QSORT)
+
+
 
   # Create work directory, where all rewritten source files go to
   # (to support in-place builds)
@@ -173,11 +198,6 @@ macro(InstallMCCODE)
     endforeach()
   endmacro()
 
-  # Generate c and header files
-  configure_file (
-    "config.h.in"
-    "work/src/config.h"
-  )
 
   configure_directory ("lib/*" "work/lib")
   configure_directory ("lib/share/*" "work/lib/share")

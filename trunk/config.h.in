@@ -1,9 +1,0 @@
-// User options
-#cmakedefine USE_NEXUS
-#cmakedefine USE_THREADS
-
-// System options
-#cmakedefine HAVE_STRCASECMP
-#cmakedefine HAVE_STRCASESTR
-#cmakedefine HAVE_FDOPEN
-#cmakedefine HAVE_QSORT
