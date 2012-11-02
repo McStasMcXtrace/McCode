@@ -654,13 +654,24 @@ double Table_Value(t_Table Table, double X, long j)
     long   x1,x2,y1,y2;
     double z11,z12,z21,z22;
     double ret=0;
+
     x1 = (long)floor(X);
     y1 = (long)floor(Y);
-    if (x2 > Table.rows-1 || x2 < 0)    x2 = x1;
-    else x2=x1+1;
-    if (y2 > Table.columns-1 || y2 < 0) y2 = y1;
-    else y2=y1+1;
-    z11=Table_Index(Table, x1, y1);
+
+    if (x1 > Table.rows-1 || x1 < 0) {
+      x2 = x1;
+    } else {
+      x2 = x1 + 1;
+    }
+
+    if (y1 > Table.columns-1 || y1 < 0) {
+      y2 = y1;
+    } else {
+      y2 = y1 + 1;
+    }
+
+    z11 = Table_Index(Table, x1, y1);
+
     if (y2 != y1) z12=Table_Index(Table, x1, y2); else z12 = z11;
     if (x2 != x1) z21=Table_Index(Table, x2, y1); else z21 = z11;
     if (y2 != y1) z22=Table_Index(Table, x2, y2); else z22 = z21;
