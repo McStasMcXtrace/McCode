@@ -88,14 +88,14 @@ fi
 # Set source directory
 if [ "x${SOURCE}" = "x" ]; then
     SOURCE="`pwd`/${NAME}";
+fi
+
+# Make absolute
+if [ -d "${SOURCE}" ]; then
+    SOURCE="`get_absolute "${SOURCE}"`";
 else
-    # Make absolute
-    if [ -d "${SOURCE}" ]; then
-        SOURCE="`get_absolute "${SOURCE}"`";
-    else
-        echo "Error: no such directory: $3"
-        exit 1;
-    fi
+    echo "Error: source directory not found: ${SOURCE}"
+    exit 1;
 fi
 
 
