@@ -1,0 +1,175 @@
+\documentclass[twoside,notitlepage,11pt]{report}
+%\usepackage{a4paper}
+\usepackage{graphicx}
+\usepackage{psfrag}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amsbsy}
+\usepackage{verbatimfile}
+\usepackage{fancyhdr}
+\usepackage{pstricks,pst-node}
+% The next rawfonts package one is used in the ``datablad''.
+\usepackage[only,egtrm]{rawfonts}
+% Handle sorting in reference list
+\usepackage{citesort}
+% Create an index table
+\usepackage{makeidx}
+
+\newcommand{\smallverbatimfile}[1]{{\footnotesize\verbatimfile{#1}}}
+\newcommand{\component}[5]{\begin{tabular}{|lp{0.7\textwidth}|}\hline {\bf Name:} & #1 \\ \hline {\bf Author:} & #2 \\ \hline {\bf Input parameters} & #3 \\ \hline {\bf Optional parameters} & #4 \\ \hline {\bf Notes} & #5 \\ \hline \end{tabular} \\ \noindent }
+
+\def\reportnum{Ris{\o}--R--1538(rev.ed.)(EN)}
+
+%\oddsidemargin 0cm
+%\evensidemargin 0cm
+\addtolength{\hoffset}{-1.4cm}
+\topmargin 0cm
+\textwidth 15cm
+\textheight 22cm
+\addtolength{\footskip}{1.6pt}
+\addtolength{\headheight}{1.6pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[LE,RO]{\thepage}
+\fancyfoot[LO,RE]{\reportnum}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\fancypagestyle{plain}{%
+\fancyhf{}
+\fancyfoot[LE,RO]{\thepage}
+\fancyfoot[RE,LO]{\reportnum}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}}
+
+\newcommand{\MCS}{{McStas}}
+\newcommand{\version}{{1.12}}
+\newcommand{\reldate}{{May, 2008}}
+\newcommand{\Ombold}{\mbox{\boldmath $\Omega$}}
+
+% enable index generation
+\makeindex
+
+%\title{Component manual\\ to the neutron ray-tracing package
+% \MCS ,\\ version \version}
+%\author{Kim Lefmann, Peter Kj\ae r Willendrup, and Kristian Nielsen, \\
+% Materials Research Department, \\
+% Ris\o\ National Laboratory, 4000 Roskilde, Denmark;\\
+% Emmanuel Farhi and Klaus Lieutenant \\ ILL, Grenoble, France}
+%\date{\reldate \\[2\baselineskip]
+%\begin{center}
+%  \includegraphics[width=4.5in]{figures/vanadium-surf-2.eps}
+%\end{center}
+%\includegraphics[width=0.45\myheight]{risoe-logo.eps}%
+%}
+
+% The following definitions relate to the appendix on polarisation
+\usepackage[dvips]{epsfig}
+\usepackage{amsmath}
+\parindent=0pt
+
+\newcommand{\kappaB}{\mbox{\boldmath $\kappa$}}
+\newcommand{\etaB}{\mbox{\boldmath $\eta$}}
+\newcommand{\alphaB}{\mbox{\boldmath $\alpha$}}
+\newcommand{\sigmaB}{\mbox{\boldmath $\sigma$}}
+\newcommand{\tauB}{\mbox{\boldmath $\sigma$}}
+\newcommand{\muB}{\mbox{\boldmath $\mu$}}
+
+\def\nup{n_\uparrow}
+\def\nd{n_\downarrow}
+
+\def\Pu{P(\uparrow)}
+\def\Pd{P(\downarrow)}
+\def\Tu{T_\uparrow}
+\def\Td{T_\downarrow}
+\def\Ru{R_\uparrow}
+\def\Rd{R_\downarrow}
+
+\def\dB{\mathbf{d}}
+\def\fB{\mathbf{f}}
+\def\lB{\mathbf{l}}
+\def\mB{\mathbf{m}}
+\def\nB{\mathbf{n}}
+\def\sB{\mathbf{s}}
+
+\def\BB{\mathbf{B}}
+\def\PB{\mathbf{P}}
+\def\RB{\mathbf{R}}
+\def\SB{\mathbf{S}}
+
+\def\nTB{\mathbf{\tilde{n}}}
+
+\def\Q{\mathbf{\kappaB}}
+\def\tP{\mathbf{\tilde{P}}}
+\def\tQ{\mathbf{\tilde{\Q}}}
+\def\tN{\mathbf{\tilde{\etaB}}}
+\def\FN{F_N(\Q)}
+\def\FM{F_M(\Q)}
+\def\ru{r_\uparrow}
+\def\rd{r_\downarrow}
+
+\def\so{\mathbf{\hat{s}}}
+\def\rhoo{\hat{\rho}}
+\def\betao{\hat{\beta}}
+\def\alphao{\hat{\alphaB}}
+\def\sigmao{\hat{\sigmaB}}
+\def\sigmaH{\hat{\sigma}}
+\def\muno{\mathbf{\hat{\muB}_n}}
+\def\vo{\hat{V}_\BB}
+\def\Io{\mathbf{\hat{I}}}
+
+\def\madsq{|\overline{A}_d|^2}
+\def\sqmad{\overline{|A_d|^2}}
+\def\bd{\overline{|B_d|^2}I_d(I_d+1)}
+
+\def\chiU{\chi_\uparrow}
+\def\chiD{\chi_\downarrow}
+
+\begin{document}
+
+%\maketitle
+\input{risoe-rep_comp-title}
+%\begin{center}
+%  \includegraphics[width=4.5in]{figures/sqw.eps}
+%\end{center}
+%
+% NOTE: Find a way to include this nice graphics on front page
+% Currently this does not work?!?
+
+\thispagestyle{empty}
+\include{abstractpage_comp}
+
+\tableofcontents
+%\pagebreak
+%\listoffigures
+%\pagebreak
+%\listoftables
+
+\include{preface_comp}
+\include{comp}
+\include{techniq}
+\include{sources}
+\include{optics}
+\include{samples}
+\include{monitors}
+\include{misc}
+
+\appendix
+\include{polarisation}
+\include{kernelcalls} % as in manual
+%\include{compcode}   % removed: too heavy !!
+%\include{instcode}
+%\include{test}       % contained instr_examples
+%\include{random}
+\include{terms}       % as in manual
+
+\addcontentsline{toc}{chapter}{\protect\numberline{}{Bibliography}}
+\bibliography{mcstas}
+\bibliographystyle{jacs}
+
+\addcontentsline{toc}{chapter}{\protect\numberline{}{Index and keywords}}
+\printindex
+\include{datablad_comp}
+
+\end{document}

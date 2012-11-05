@@ -1,0 +1,19 @@
+\section{TOF2E\_monitor: A time-of-flight monitor with simple energy analysis} \label{s:TOF2E_monitor}
+\index{Monitors!TOF2E monitor}
+\component{E\_monitor}{System}{$x_{\rm min}$, $x_{\rm max}$, $y_{\rm min}$, $y_{\rm max}$, $n_{\rm chan}$, $E_{\rm min}$, $E_{\rm max}$, $t_0$, $L_{\rm flight}$, filename}{}{Not validated}
+The component {\bf TOF2E\_monitor} resembles {\bf TOF\_monitor}
+to a very large extent. Only this monitor converts the neutron flight
+time to energy - as would be done in an experiment.
+The {\em apparent} neutron energy, $E_{\rm app}$ is calculated 
+from the apparent velocity, given by 
+\begin{equation}
+v_{\rm app} = \frac{L_{\rm flight}}{t-t_0} ,
+\end{equation}
+where the time offset, $t_0$ defaults to zero.
+$E_{\rm app}$ is binned in \textit{nchan} bins between
+$E_{\rm min}$ and $E_{\rm max}$ (in meV).
+
+The output parameters from {\bf TOF2E\_monitor} are the total counts,
+and a file with 1-dimensional data vs. $E_{\rm app}$, 
+similar to {\bf TOF\_monitor}.
+

@@ -1,0 +1,81 @@
+% Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
+
+\addcontentsline{toc}{chapter}{\protect\numberline{}{Preface and acknowledgements}}
+\chapter*{Preface and acknowledgements}
+This document contains information on the Monte Carlo neutron
+ray-tracing program \MCS\ version \version, building on the initial
+release in October 1998 of version 1.0 as presented in Ref.~\cite{nn_10_20}. The reader of this
+document is supposed to have some knowledge of neutron scattering,
+whereas only little knowledge about simulation techniques is
+required. In a few places, we also assume familiarity with the
+use of the C programming language and UNIX/Linux.
+
+It is a pleasure to thank Prof.~Kurt N.~Clausen, PSI, for his continuous
+support to this project and for having initiated \MCS\ in the first
+place. Essential support has also been given by Prof.~Robert McGreevy, ISIS.
+Apart from the authors of this manual, also Prof. Per-Olof \AA strand, NTNU Trondheim,
+has contributed to the development of the \MCS\ system.
+%Both he and our other collaborators, Henrik M.\ R\o nnow and Mark
+%Hagen have made major contributions to the project.  Also the
+%contributions from our test users, the students Asger Abrahamsen, Niels
+%Bech Christensen, and Erik Lauridsen, are gratefully acknowledged; they
+%gave us an excellent opportunity to pinpoint a vast amount of serious
+%errors in the test version.  Useful comments to this document itself
+%have been given by Bella Lake and Alan Tennant.
+We have also benefited
+from discussions with many other people in the neutron scattering
+community, too numerous to mention here.
+
+%Philipp Bernhardt contributed the two chopper components in
+%sections~\ref{s:chopper} and~\ref{s:first_chopper}. Emmanuel Farhi
+%contributed the components in sections~\ref{s:sourceoptimizer},
+%\ref{s:monitornd}, and~\ref{s:monitoroptimizer}. We encourage other
+%users to contribute components with manual entries for inclusion in
+%future versions of \MCS.
+
+In case of errors, questions, or suggestions,
+%or other need for support should arise,
+do not hesitate to
+contact the authors at \verb+mcstas@risoe.dk+
+or consult the \MCS\ home page~\cite{mcstas_webpage}.
+A special bug/request reporting service is available \cite{mczilla_webpage}.
+
+If you {\bf appreciate} this software, please subscribe to the \verb+neutron-mc@risoe.dk+ email list, send us a smiley message, and contribute to the package. We also encourage you to refer to this software when publishing results, with the following citations:
+\begin{itemize}
+\item{K. Lefmann and K. Nielsen, Neutron News {\bf 10/3}, 20, (1999).}
+\item{P. Willendrup, E. Farhi and K. Lefmann, Physica B, {\bf 350} (2004) 735.}
+\end{itemize}
+
+
+\section*{\MCS\ \version\ contributors}
+Several people outside the core developer team have been contributing
+to \MCS\ \version:
+\begin{itemize}
+\item Mirror\_Elli.comp, Mirror\_para.comp,
+  Focalisation\_mirrors.instr (Sylvain Desert, LLB)
+\item PSI\_DMC.instr (L. Keller and U. Filges PSI / P. Willendrup, Ris\o\ DTU)
+\end{itemize}
+Thank you guys! This is what \MCS\ is all about!
+
+Third party software included in \MCS\ are:
+\begin{itemize}
+\item perl Math::Amoeba from John A.R. Williams \verb+J.A.R.Williams@aston.ac.uk+.
+\item perl Tk::Codetext from Hans Jeuken \verb+haje@toneel.demon.nl+.
+\item scilab Plotlib from St\'ephane Mottelet \verb+mottelet@utc.fr+.
+\item and optionally PGPLOT from Tim Pearson \verb+tjp@astro.caltech.edu+.
+\end{itemize}
+and special thanks to the following \MCS\ contributors:
+\begin{itemize}
+\item Christophe Taton from ENSIMAG/Grenoble for the MPI support
+\item Reynald Arnerin from Universite J. Fourrier, Grenoble for the complex geometry support in samples
+\end{itemize} 
+
+The \MCS\ project has been supported by the European Union, initially
+through the XENNI program and the RTD ``Cool Neutrons'' program in FP4,
+In FP5, \MCS\ was supported strongly through the
+``SCANS'' program.
+Currently, in FP6, \MCS\ is supported through the Joint Research Activity
+``MCNSI'' under the Integrated Infrastructure Initiative ``NMI3'', see
+the home pages~\cite{mcnsi_webpage,nmi3_webpage}. \MCS\ is also
+supported directly from the construction project for the ISIS second
+target station (TS2), see~\cite{ts2_webpage}.
