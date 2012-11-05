@@ -314,7 +314,9 @@ for gen in ${GENS}; do
     echo ""
 
     # run generator
-    make_${gen};
+    (
+        make_${gen};
+    )
 
     echo "done."
 done
