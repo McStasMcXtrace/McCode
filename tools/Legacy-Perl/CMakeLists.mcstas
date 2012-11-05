@@ -1,0 +1,102 @@
+cmake_minimum_required(VERSION 2.6)
+
+# This will install McStas components
+project(mcstas-tools)
+
+# Set module path
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
+# Set McCode values (from mkdist or defaults)
+include(MCUtil)
+setup_mccode_mkdist("mcstas")
+
+
+# CPack configuration
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-${MCCODE_VERSION}")
+set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../COPYING")
+set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
+
+set(CPACK_PACKAGE_VERSION       "1.0")
+set(CPACK_PACKAGE_VERSION_MAJOR "1")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+
+
+set(MCSTAS_LIB "${CMAKE_INSTALL_PREFIX}/lib/mcstas-${MCCODE_VERSION}")
+
+set(TOOLS_NAME "mcstas-tools-${MCCODE_VERSION}")
+set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/lib/${TOOLS_NAME}")
+
+
+# Debian
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}")
+
+
+# Make CPack respect the install prefix
+set(CPACK_SET_DESTDIR "ON")
+set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+
+include(CPack)
+
+
+set(WORK "${PROJECT_BINARY_DIR}/work")
+
+
+# Include mcstas-comp files
+foreach(NAME
+    mcconfig mcconvert mcdaemon mcdisplay mcdoc mcformatgui
+    mcgui mcplot mcresplot mcrun mcstas2vitess
+    )
+
+  add_custom_command(
+    OUTPUT "${WORK}/${NAME}"
+    COMMAND "./perl_fix.sh" "${MCSTAS_LIB}" "${TOOLS_LIB}"
+    "${NAME}.pl" "${WORK}/${NAME}"
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    )
+
+  add_custom_target(
+    "FIX_PERL_${NAME}" ALL DEPENDS "${WORK}/${NAME}"
+    )
+
+  install(
+    PROGRAMS "${WORK}/${NAME}"
+    DESTINATION bin
+    RENAME "${NAME}-${MCCODE_VERSION}"
+  )
+endforeach()
+
+
+# Generate mccode_config.pl and mccode_reconfigure
+configure_file(lib/tools/perl/mccode_config.perl.in work/mccode_config.pl   @ONLY)
+configure_file(lib/tools/perl/mccode_reconfigure.in work/mccode_reconfigure @ONLY)
+
+# Generate man pages
+foreach(NAME
+    mcconvert mcdisplay mcdoc mcgui mcplot mcrun)
+
+  configure_file(
+    "doc/man/${NAME}.1.in"
+    "${WORK}/doc/man/${NAME}-${MCCODE_VERSION}.1"
+    @ONLY)
+
+endforeach()
+
+
+# install tools (skip *.in files)
+install(
+  DIRECTORY lib/tools/
+  DESTINATION "lib/${TOOLS_NAME}"
+  PATTERN "*.in" EXCLUDE
+)
+
+install(
+  FILES "${WORK}/mccode_config.pl"
+        "${WORK}/mccode_reconfigure"
+  DESTINATION lib/${TOOLS_NAME}/perl/
+)
+
+install(
+  DIRECTORY "${WORK}/doc/man/"
+  DESTINATION share/man/man1
+  FILES_MATCHING PATTERN "*.1"
+)
