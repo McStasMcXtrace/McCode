@@ -1,0 +1,147 @@
+% Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
+
+\chapter{New features in \MCS\ \version\ }
+\label{c:changes}
+
+This version of \MCS\ implements both new features, as well as many bug corrections. Bugs are reported and traced using the \MCS\ Trac Ticket system \cite{mczilla_webpage}. We will not present here an extensive list of corrections, and we let the reader refer to this bug reporting service for details. Only important changes are indicated here.
+
+Of course, we can not guarantee that the software is bullet proof, but we do our best to correct bugs, when they are reported.\index{Bugs}
+
+%\section{General}
+%\label{s:new-features:general}
+%\begin{itemize}
+%\end{itemize}
+
+\section{Kernel}
+\label{s:new-features:kernel}
+\index{Kernel}
+
+The following changes concern the 'Kernel' (i.e. the \MCS\ meta-language and program). See the dedicated chapter in the {\it User manual} for more details.
+
+\begin{itemize}
+\item The \verb+STATE PARAMETERS+ keywords has been removed from components code. We now assume that the neutron state parameters are \verb+x,y,z,vx,vy,vz,sx,sy,sz,t+. \MCS\ 1.X components will need to be adapted by commenting this line.
+\item The \verb+PREVIOUS+ and \verb+MYSELF+ keywords can be used in component instance parameters and positioning (AT/ROTATED) so that one can make use of \verb+MC_GETPAR(PREVIOUS, parameter)+ directly in the TRACE section.
+\end{itemize}
+
+\section{Run-time}
+\label{s:new-features:run-time}
+\index{Library!Run-time}
+
+\begin{itemize}
+\item The number of neutron counts can now exceed $2.10^9$, being stored as a \verb+long long+.
+\item The writing of files has been improved. The \verb+DETECTOR_OUT+ functions now return a \verb+mcdetector+ structure which holds all written information. Simulations also write a 'content.sim' file aside the 'mcstas.sim' one, which holds the integrated counts for each monitor.
+\item A bug has been fixed in the rectangular focusing routine, for large solid angles. Reported by M. Skoulatos, L. Udby and J. Jacobsen.
+\end{itemize}
+
+\section{Components and Library}
+\label{s:new-features:components}
+\index{Components} \index{Library!Components}
+We here list the new and updated components (found in the \MCS\ \verb+lib+ directory)
+which are detailed in the {\it Component manual}, also mentioned in
+the {\it Component Overview} of the {\it User Manual}. Generally, most component parameter names have been uniformized.
+
+\subsection{Components}
+\begin{itemize}
+\item \verb+Single_crystal.comp+ now provides a lattice curvature option (M. Schulz, FRM2).
+\item \verb+PowderN.comp+ now handles strain (E. Farhi, R. Rogge).
+\item \verb+Monitor_nD+ was wrong in the determination of the flux per cm2 and steradians.
+\item \verb+Guide_anyshape+ allows to model any reflecting geometry from a set of vertices and polygons.
+\item \verb+Lens+ models refractive lenses and prisms (E. Farhi/C. Monzat, ILL).
+\item \verb+Lens_simple+ for refractive lenses with a simple analytical model (H. Frielinghaus).
+\item \verb+PSD_Detector+ can now work in event mode (E. Farhi).
+\item \verb+Multilayer_Sample+ to model a set of refractive layers for e.g. reflectometry. Requires GNU Scientific Library to be previously installed (R. Dalgliesh, ISIS).
+\item 
+\end{itemize}
+
+\subsection{New example instruments and Data files}
+\begin{itemize}
+\item Updated ILL instrument models: H16 guide, IN22, IN12, D16
+\item New ILL instrument models: IN1, IN8, IN20, D2B, D4, IN5
+\item Added HZB NEAT ToF spectrometer model (E. Farhi, R. Lechner)
+\item Adde ISIS\_CRISP which uses new multilayer sample (R. Dalgliesh, ISIS)
+\item Sort test instruments in various categories
+\item Update of many data files.
+\end{itemize}
+
+\section{Documentation}
+\label{s:new-features:documentation}
+\begin{itemize}
+\item Manual and component manual fully updated 
+\end{itemize}
+
+\section{Tools, installation}
+\label{s:new-features:tools}
+\index{Tools}
+\index{Installing}
+\subsection{New tool features}
+\begin{itemize}
+  \item Support for per-user mcstas\_config.perl file, located in \verb+$HOME/.mcstas/+ . This folder is also the default
+     location of the 'host list' for use with MPI or gridding, simply name the file 'hosts'.
+  \item mcgui Save Configuration for saving chosen settings on the 'Configuration options' and 'Run dialogue'.
+  \item Possibilty to run MPI or grid simulations by default from mcgui.
+  \item When scanning parameters, mcrun now terminates with a relevant error message if one or more scan steps
+     failed (intensities explicitly set to 0 in those cases).
+  \item When running parameter optimisations, a logfile (default name is "mcoptim\_XXXX.dat" where XXXX is a
+     pseudo-random string) is created during the optimisation, updated at each optim step.
+  \item We now provide syntax-highlighting setup files for vim and gedit editors.
+  \item Rudimentary support for GNUPLOT when plotting with mcplot. Data file format is standard McStas/PGPLOT.
+\end{itemize}
+\subsection{Platform support}
+\begin{itemize}
+\item Mac OS X 10.3 Panther (ppc), 10.4 Tiger (pcc/intel), 10.5 Leopard (ppc/intel)
+\item Windows XP,  Windows Vista (Now with a recent perl version; 5.10 plus various fixes). New feature on Windows:
+     Simulations \emph{always} run in the background, freeing mcgui for other work.
+\item "Any" Linux - reference platforms are Ubuntu 8.04 (and earlier) and Debian 4.0 (and earlier). We have also tested 
+  Fedora 8, OpenSuSE 10.3 and CentOS 4 releases recently.
+\item FreeBSD (FreeBSD release 6.3 and its cousin DesktopBSD 1.6 recently tested)
+\item SUN Solaris 10 (Intel tested, Sparc probably OK)
+\item Plus probably any UNIX/POSIX type environment with a bit of effort...
+\end{itemize}
+Details about the installation and the available tools are given in chapter \ref{installing}.
+
+\subsection{Various}
+\begin{itemize}
+\item  A number of minor bugs ironed out, both in components, runtime code and tools.
+\item From release 1.12, McStas is GPL 2 only. The debate on the internet about the future GPL 3 license suggests that this license 
+     might have implications on the 'derived work', hence have implications on what and how our users use their McStas simulations
+     for. To protect user freedom, we will stick with GPL 2.     
+\end{itemize}
+
+\subsection{Warnings}
+{\bf WARNING:} The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 7.04) makes the 'Cancel' and 'Update' 
+buttons fail in mcgui. Solutions are:
+\begin{itemize}
+\item[a)] If your system is a Debian or Ubuntu, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh
+\item[b)] If you run another Linux with /bin/sh beeing dash, please install bash and manually change the /bin/sh link to point at bash.
+\end{itemize}
+
+\section{Future extensions}
+\label{s:future}
+The following features are planned for the oncoming releases of \MCS\
+(not an ordered list):
+\begin{itemize}
+\item Increased validation and testing.
+\item Extend test cases to all (most) components. One instrument
+  pr. component. (Probably not in \verb+examples/+.
+\item Updates to mcresplot to support the Matlab and Scilab backends.
+\item Global changes of components relating to polarisation
+  visualisation.
+\item Visualisation of neutron spins in magnetic fields for all
+  graphical backends.
+\item \emph{Array} \verb+AT+ specifiers for components, i.e. \\
+  \verb+COMPONENT MyComp=Comp(...)+\\\verb+AT([Xarray],[Yarray],[Zarray])+ and\\
+  \verb+AT Positions('filename')+
+\item Gui support for array AT specifiers.
+\item More complete polarisation support including numerically defined
+  magnetic fields and advanced sample components.
+\item Perl or python plotting alternative to PGPLOT.
+\item Larger variety of sample components.
+\end{itemize}
+
+
+
+
+
+
+
+

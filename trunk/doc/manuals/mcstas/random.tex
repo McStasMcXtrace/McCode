@@ -1,0 +1,84 @@
+\chapter{Random numbers in \MCS}
+\label{s:random}
+\index{Monte Carlo method}
+
+\section{Transformation of random numbers}
+In order to perform the Monte Carlo choices, one needs to be able to
+pick a random number from a given distribution. However, most
+random number generators only give
+uniform distributions over a certain interval.
+We thus need to be able to transform between probability distributions,
+and we here give a short explanation on how to do this.
+
+Assume that we pick a random number, $x$, from a distribution $\phi(x)$.
+We are now interested in the shape of the distribution, $\Psi(y)$, of the
+transformed $y=f(x)$, assuming $f(x)$ is monotonous.
+All random numbers lying in the interval $[x; x+dx]$
+are transformed to lie within the interval $[y; y+f'(x)dx]$, so the
+resulting distribution must be $\Psi(y) = \phi(x) / f'(x)$.
+
+If the random number generator selects numbers uniformly in the interval
+$[0; 1]$, we have $\phi(x) = 1$ (inside the interval; zero outside), and
+we reach
+\begin{equation}
+\Psi(y) = \frac{1}{f'(x)} = \frac{d}{dy} f^{-1}(y) .
+\end{equation}
+By indefinite integration we reach
+\begin{equation}
+\label{e:randtrans}
+\int \Psi(y) dy = f^{-1}(y) = x ,
+\end{equation}
+which is the essential formula for random number transformation, since we
+in general know $\Psi(y)$ and like to determine the relation $y=f(x)$.
+Let us illustrate with a few examples of transformations relevant for the
+\MCS\ components.
+
+\paragraph{The circle}
+For finding a random point within the
+circle of radius $R$, one would like to choose the polar angle, $\phi$,
+from a uniform
+distribution in $[0; 2\pi]$, giving $\Psi_\phi = 1/(2\pi)$.
+and the radius from the (normalised) distribution $\Psi_r=2r/R^2$.
+
+For the radial part,
+eq.~(\ref{e:randtrans}) becomes $y/(2 \pi) = x$, whence
+$\phi$ is found simply by multiplying a random number ($x$)
+with $2\pi$.
+
+For the radial part, the left side of eq.~(\ref{e:randtrans}), gives
+$\int \Psi(r) dr = \int 2 r/R^2 dr = r^2/R^2$,
+which from (\ref{e:randtrans}) should equal $x$.
+Hence we reach the wanted transformation $r = R\sqrt{x}$.
+
+\paragraph{The sphere}
+For finding a random point on the surface of the unit sphere,
+we need to determine the two angles, $(\theta, \phi)$.
+
+$\Psi_\phi$ is chosen from a uniform distribution
+in $[0; 2\pi]$, giving $\phi = 2\pi x$ as for the circle.
+
+The probability distribution of $\theta$ should be
+$\Psi_\theta=\sin(\theta)$ (for $\theta \in [0; \pi ]$),
+whence by eq.~(\ref{e:randtrans}) $\theta=\cos^{-1}(x)$.
+
+\paragraph{Exponential decay}
+In a simple time-of-flight source, the neutron flux decays exponentially
+after the initial activation at $t=0$. We thus want to pick an initial
+neutron emission time from the normalised distribution
+$\Psi(t) = \exp(-t/\tau) / \tau$.
+Use of Eq.~(\ref{e:randtrans}) gives
+$x = 1 - \exp(-t/\tau)$. For convenience we now use the random variable
+$x_1 = 1-x$ (with the same distributions as $x$),
+giving the simple expression $t = - \tau \ln (x_1)$.
+
+\paragraph{Normal distributions}
+The important normal distribution can not be reached as a simple
+transformation of a uniform distribution.
+In stead, we rely on a specific algorithm for selecting random
+numbers with this distribution.
+
+\section{Random generators}
+\index{Monte Carlo method!Random number, Mersenne Twister}
+Eventhough there is the possibility to use the system random generator, as well as the initial \MCS\ version 1.1 random generator, the default algorithm is the so-called "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. See \\ \verb+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html+ for original source.
+
+It is considered today to be by far the best random generator, which means that both its period is extremely large $2^{19937}-1$, and cross-correlations are negligible, i.e distributions are homogeneous and independent up to 623 dimensions. It is also extremely fast.

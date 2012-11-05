@@ -1,0 +1,149 @@
+% Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
+
+\chapter{Source components}
+\label{c:source}
+\index{Sources|textbf}
+\index{Library!Components!sources}
+
+\MCS\ contains a number of different source components,
+and any simulation will usually contain exactly one of these sources.
+The main function of a source is to determine a set of initial
+parameters $({\bf r}, {\bf v}, t)$
+for each neutron ray. This is done by Monte Carlo choices from
+suitable distributions. For example, in most present sources
+the initial position is
+found from a uniform distribution over the source surface,
+which can be chosen to be either circular or rectangular.
+The initial neutron velocity is selected within an interval
+of either the corresponding energy or the corresponding wavelength.
+Polarization is not relevant for sources,
+and we initialize the neutron average spin to zero: ${\bf s}=(0,0,0)$.
+
+For time-of-flight sources, the choice of the emission time, $t$,
+is being made on basis of detailed analytical expressions.
+For other sources, $t$ is set to zero.
+In the case one would like to use a steady state source
+with time-of-flight settings,
+the emission time of each neutron ray should be determined using
+a Monte Carlo choice. This may be achieved by
+the \verb+EXTEND+ keyword in the instrument description source
+as in the example below:\index{Keyword!EXTEND}
+
+\begin{verbatim}
+  TRACE
+
+  COMPONENT MySource=Source_gen(...) AT (...)
+  EXTEND
+  %{
+    t = 1e-3*randpm1(); /* set time to +/- 1 ms */
+  %}
+\end{verbatim}
+
+\subsection{Neutron flux}
+\label{s:neutron-flux}
+The flux of the sources deserves special attention. The total neutron
+intensity is defined as the sum of weights of all emitted neutron rays
+during one simulation
+(the unit of total neutron weight is thus neutrons per second).
+The flux, $\psi$, at an instrument is defined as intensity per area perpendicular
+to the beam direction.
+
+The source flux, $\Phi$, is defined in different units:
+the number of neutrons emitted per second from a
+1~cm$^2$ area on the source surface,
+with direction within a 1~ster.\ solid angle,
+and with wavelength within a 1 {\AA} interval.
+The total intensity of real neutrons emitted towards a given diaphragm
+(units: n/sec) is therefore (for constant $\Phi$):
+\begin{equation}
+I_{\rm total} = \Phi A \Delta\Omega \Delta\lambda ,
+\end{equation}
+where $A$ is the source area, $\Delta\Omega$ is the solid angle of the
+diaphragm as seen from the source surface, and $\Delta\lambda$ is the
+width of the wavelength interval in which neutrons are emitted (assuming
+a uniform wavelength spectrum).
+
+The simulations are performed so that detector intensities
+are independent of the number of neutron histories simulated
+(although more neutron histories will give better statistics).
+If $N_{\rm sim}$ denotes the number of
+neutron histories to simulate, the initial neutron weight $p_0$ must be set to
+\begin{equation}
+\label{proprule}
+p_0 = \frac{N_{\rm total}}{N_{\rm sim}} =
+    \frac{\Phi(\lambda)}{N_{\rm sim}} A \Omega \Delta\lambda ,
+\end{equation}
+where the source flux is now given a $\lambda$-dependence.
+
+As a start, we recommend new \MCS\ users to use the
+{\bf Source\_simple} component.
+Slightly more realistic sources are {\bf Source\_Maxwell\_3} for
+continuous sources or {\bf Moderator} for time-of-flight sources.
+
+Optimizers can dramatically improve the statistics, but may occasionally
+give wrong results, due to misleaded optimization.
+You should always check such simulations with (shorter) non-optimized ones.
+
+Other ways to speed-up simulations are to read events from a file.
+See section \ref{sources-seealso} for details.
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=0.75\textwidth]{figures/sources.eps}
+  \end{center}
+\caption{A circular source component (at z=0) emitting neutron events randomly, either from a model, or from a data file.}
+\label{f:source}
+\end{figure}
+
+\newpage
+\input{source_simple}
+
+\input{source_div}
+
+\input{source_maxwell}
+
+\input{source_gen}
+
+\newpage
+\input{moderator}
+
+\input{ISISdoc.tex}
+
+\newpage
+\input{Source_adapt}
+
+\input{Adapt_check}
+
+\newpage
+\input{Source_Optimizer}
+
+\input{Monitor_Optimizer}
+
+\newpage
+\section{Other sources components: contributed pulsed sources, virtual sources (event files)}
+\label{sources-seealso}
+
+There are many other source definitions in \MCS .
+
+Detailed pulsed source components are available for new facilities
+in a number of contributed components:
+\begin{itemize}
+\item SNS ({\bf contrib/SNS\_source}),
+\item ISIS ({\bf contrib/ISIS\_moderator}) see section \ref{isis-moderator},
+\item ESS-project ({\bf ESS\_moderator\_long} and {\bf  ESS\_moderator\_short}).
+\end{itemize}
+
+When no analytical model (e.g. a Maxwellian distribution) exits,
+one may have access to measurements, estimated flux distributions,
+event files, and - better - to MCNP/Triploli4 neutron event records.
+The following components are then useful:
+
+\begin{itemize}
+\item{{\bf misc/Virtual\_input} can read a \MCS\ event file
+(in text or binary format), often bringing an order-of-magnitude speed-up.
+See section \ref{virtual_input}.}
+\item{{\bf contrib/Virtual\_tripoli4\_input} does the same, but from event files (text format) obtained from the \emph{Tripoli4} \cite{tripoli_webpage} reactor simulation program. Such files are usually huge.\index{Tripoli}}
+\item{{\bf contrib/Virtual\_mcnp\_input} can read MCNP "PTRAC" event files (text format) obtained from the \emph{MCNP} \cite{mcnp_webpage} reactor simulation program. Such files are usually huge.\index{MCNP}}
+\item{{\bf misc/Vitess\_input} can read \emph{Vitess} \cite{vitess_webpage} neutron event binary files.\index{Vitess}}
+\item{{\bf optics/Filter\_gen} reads a 1D distribution from a file, and may either modify or set the flux according to it. See section \ref{filter-gen}.}
+\end{itemize}

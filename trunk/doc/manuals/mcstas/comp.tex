@@ -1,0 +1,282 @@
+% Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
+
+\chapter{About the component library}
+\label{c:components}
+This \MCS\ Component Manual consists of the following major parts:
+\begin{itemize}
+\item An introduction to the use of Monte Carlo methods in \MCS .
+\item A thorough description of system components,
+with one chapter per major category: Sources, optics,
+monochromators, samples, monitors, and other components.
+\item The \MCS\ library functions and definitions
+  that aid in the writing of simulations and components in
+  Appendix~\ref{c:kernelcalls}.
+%\item A detailed explanation of the use of random numbers
+%   in Appendix~\ref{s:random}.
+\item An explanation of the \MCS\ terminology in Appendix~\ref{s:terminology}.
+\end{itemize}
+Additionally, you may refer to the list of example instruments
+from the library in the \MCS\ User Manual.
+
+\section{Authorship}
+The component library is
+maintained by the \MCS\ system group. A number of basic components
+``belongs'' the \MCS\ system, and are supported and tested by the \MCS\
+team.
+
+Other components are contributed
+by specific authors, who are listed in the code for each component
+they contribute as well as in this manual.
+\MCS\ users are encouraged to send their
+contributions to us for inclusion in future releases.
+
+Some contributed components have later been taken over
+for further development by the \MCS\ system
+group, with permission from the original authors.
+The original authors will still appear both in the component code and in the
+\MCS\ manual.
+
+\section{Symbols for neutron scattering and simulation}
+In the description of the theory behind the component functionality
+we will use the usual symbols {\bf r} for the position
+$(x,y,z)$ of the particle (unit m), and {\bf v} for
+the particle velocity $(v_x, v_y, v_z)$ (unit m/s).
+Another essential quantity is the neutron wave vector
+${\bf k} = m_{\rm n} {\bf v}/\hbar$ , where
+$m_{\rm n}$ is the neutron mass. {\bf k} is usually given in
+\AA$^{-1}$, while neutron energies are given in meV.
+The neutron wavelength is the reciprocal wave vector,
+$\lambda=2 \pi / k$.
+In general, vectors are denoted by boldface symbols.
+
+Subscripts "i" and "f" denotes ``initial'' and ``final'', respectively,
+and are used in connection with the neutron state before and after
+an interaction with the component in question.
+%This is of particular importance in sample components, where the
+%wave vector change is denoted the {\em scattering vector}
+%\begin{equation}\label{eq:q-transfert}
+%{\bf q} \equiv {\bf k}_{\rm i} - {\bf k}_{\rm f} .
+%\end{equation}
+%In analogy, the {\em energy transfer} is given by
+%\begin{equation}\label{eq:w-transfert}
+%\hbar \omega \equiv E_{\rm i}-E_{\rm f} =
+%\frac{\hbar^2}{2 m_{\rm n}} \left( k_{\rm i}^2 - k_{\rm f}^2 \right).
+%\end{equation}
+
+The spin of the neutron is given a special treatment. Despite
+the fact that each physical neutron has a well defined spin value,
+the \MCS\ spin vector
+{\bf s} can have any length between zero (unpolarized beam) and unity
+(totally polarized beam). Further, all three cartesian components of
+the spin vector are present simultaneously, although this is physically
+not permitted by quantum mechanics.
+For further details about polarization handling, you may refer to the Appendix~\ref{c:polarization}.
+
+\section{Component coordinate system}
+All mentioning of component geometry refer to
+the local coordinate system of the individual component.
+The axis convention is so that the $z$ axis is along
+the neutron propagation axis, the $y$ axis is vertical up,
+and the $x$ axis points left when looking along the $z$-axis,
+completing a right-handed coordinate system.
+Most components 'position' (as specified in the instrument description
+with the \verb+AT+ keyword) corresponds to their input side at the nominal
+beam position.
+However, a few components are radial and thus positioned in their centre.
+\index{Symbols}\index{Coordinates system}
+
+Components are usually not designed to overlap.
+This may lead to loss of neutron rays.
+Warnings will be issued during simulation if sections of the instrument
+are not reached by any neutron rays, or if neutrons are removed.
+This is usually the sign of either overlapping components
+or a very low intensity.\index{Removed neutron events}
+
+\section{About data files}\index{Data files}\index{Library!read\_table-lib (Read\_Table)}
+Some components require external data files,
+e.g. lattice crystallographic definitions for Laue and powder pattern diffraction,
+$S(q,\omega)$ tables for inelastic scattering,
+neutron events files for virtual sources,
+transmission and reflectivity files, etc.
+
+Such files distributed with \MCS\ are located in the
+\verb+data+ sub-directory of the \verb+MCSTAS+ library.
+Components that make use of the \MCS\ file system,
+including the \verb+read-table+ library (see section \ref{s:read-table})
+may access all \MCS\ data files without making local copies.
+Of course, you are welcome to define your own data files,
+and eventually contribute to \MCS\ if you find them useful.
+
+File extensions are not compulsory but help in identifying relevant files per application. We list powder and liquid data files from the \MCS\ library in Tables \ref{t:powders-data} and \ref{t:liquids-data}. These files contain an extensive header describing physical properties with references, and are specially suited for the PowderN (see \ref{powder}) and Isotropic\_Sqw components (see \ref{s:isotropic-sqw}).
+
+\begin{table}
+  \begin{center}
+    {\let\my=\\
+    \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
+      \hline
+       {\bf MCSTAS/data} & Description \\
+       \hline
+ *.lau & Laue pattern file, as issued from Crystallographica.
+       For use with Single\_crystal, PowderN, and Isotropic\_Sqw.
+       Data: [ h   k   l Mult. d-space 2Theta   F-squared ] \\
+ *.laz & Powder pattern file, as obtained from Lazy/ICSD.
+       For use with PowderN, Isotropic\_Sqw and possibly Single\_crystal.\\
+ *.trm & transmission file, typically for monochromator crystals and filters.
+       Data: [ k (Angs-1) , Transmission (0-1) ] \\
+ *.rfl & reflectivity file, typically for mirrors and monochromator crystals.
+       Data: [ k (Angs-1) , Reflectivity (0-1) ] \\
+ *.sqw & $S(q,\omega)$ files for Isotropic\_Sqw component.
+       Data: [q] [$\omega$] [$S(q,\omega)$]\\
+      \hline
+    \end{tabular}
+    \caption{Data files of the \MCS\ library.}
+    \label{t:comp-data}
+    \index{Library!Components!data}
+    }
+  \end{center}
+\end{table}
+
+\begin{table}
+  \begin{center}
+    {\let\my=\\
+    \begin{small}
+    \begin{tabular}{|l|rrr|rr|p{0.2\textwidth}|}
+
+      \hline
+      {\bf MCSTAS/data} & $\sigma_{coh}$&$\sigma_{inc}$&$\sigma_{abs}$&$T_m$       & $c$    & Note \\
+          File name     & [barns]     & [barns]    & [barns]    & [K]        & [m/s] & \\
+      \hline
+Ag.laz             & 4.407     & 0.58     &{\bf 63.3}      &1234.9    &2600&\\
+Al2O3\_sapphire.laz & 15.683    & 0.0188   &0.4625    &2273      &   &\\
+Al.laz             & 1.495     & 0.0082   &0.231     &933.5     &5100& .lau\\
+Au.laz             & 7.32      & 0.43     &{\bf 98.65}     &1337.4    &{\bf 1740}&\\
+B4C.laz            & 19.71     & 6.801    &{\bf 3068}      &2718      &     &\\
+Ba.laz             & 3.23      & 0.15     &29.0      &1000      &{\bf 1620}&\\
+Be.laz             & 7.63      & 0.0018   &0.0076    &1560      &13000&\\
+BeO.laz            & 11.85     & 0.003    &0.008     &2650      &   & .lau\\
+Bi.laz             & 9.148     & 0.0084   &0.0338    &544.5     &{\bf 1790}&\\
+C60.lau            & 5.551     & 0.001    &0.0035    &          &   &\\
+C\_diamond.laz      & 5.551     & 0.001    &0.0035    &4400      &18350 & .lau\\
+C\_graphite.laz     & 5.551     & 0.001    &0.0035    &3800      &18350 & .lau\\
+Cd.laz             & 3.04      & 3.46     &{\bf 2520}      &594.2     &2310&\\
+Cr.laz             & 1.660     & 1.83     &3.05      &2180      &5940&\\
+Cs.laz             & 3.69      & 0.21     &29.0      &301.6     &{\bf 1090}  & $c$ in liquid\\
+Cu.laz             & 7.485     & 0.55     &3.78      &1357.8    &3570&\\
+Fe.laz             & 11.22     & 0.4      &2.56      &1811      &4910&\\
+Ga.laz             & 6.675     & 0.16     &2.75      &302.91    &2740&\\
+Gd.laz             & 29.3      & 151      &{\bf 49700}     &1585      &2680&\\
+Ge.laz             & 8.42      & 0.18     &2.2       &1211.4    &5400  & \\
+H2O\_ice\_1h.laz     & 7.75      & 160.52   &0.6652    &273       &     &\\
+Hg.laz             & 20.24     & 6.6      &{\bf 372.3}     &234.32    &{\bf 1407}&\\
+I2.laz             & 7.0       & 0.62     &12.3      &386.85    &   &\\
+In.laz             & 2.08      & 0.54     &{\bf 193.8}     &429.75    &{\bf 1215}&\\
+K.laz              & .69       & 0.27     &2.1       &336.53    &{\bf 2000}&\\
+LiF.laz            & 4.46      & 0.921    &{\bf 70.51}     &1140      &   &\\
+Li.laz             & 0.454     & 0.92     &{\bf 70.5}      &453.69    &6000&\\
+Nb.laz             & 8.57      & 0.0024   &1.15      &2750      &3480&\\
+Ni.laz             & 13.3      & 5.2      &4.49      &1728      &4970&\\
+Pb.laz             & 11.115    & 0.003    &0.171     &600.61    &{\bf 1260}&\\
+Pd.laz             & 4.39      & 0.093    &6.9       &1828.05   &3070&\\
+Pt.laz             & 11.58     & 0.13     &10.3      &2041.4    &2680&\\
+Rb.laz             & 6.32      & 0.5      &0.38      &312.46    &{\bf 1300}  & \\
+Se\_alpha.laz       & 7.98      & 0.32     &11.7      &494       &3350&\\
+Se\_beta.laz        & 7.98      & 0.32     &11.7      &494       &3350&\\
+Si.laz             & 2.163     & 0.004    &0.171     &1687      &2200&\\
+SiO2\_quartza.laz   & 10.625    & 0.0056   &0.1714    &846       &      & .lau\\
+SiO2\_quartzb.laz   & 10.625    & 0.0056   &0.1714    &1140      &      & .lau\\
+Sn\_alpha.laz       & 4.871     & 0.022    &0.626     &505.08    &     &\\
+Sn\_beta.laz        & 4.871     & 0.022    &0.626     &505.08    &2500&\\
+Ti.laz             & 1.485     & 2.87     &6.09      &1941      &4140&\\
+Tl.laz             & 9.678     & 0.21     &3.43      &577       &{\bf 818}&\\
+V.laz              & .0184     & 4.935    &5.08      &2183      &4560&\\
+Zn.laz             & 4.054     & 0.077    &1.11      &692.68    &3700&\\
+Zr.laz             & 6.44      & 0.02     &0.185     &2128      &3800&\\
+      \hline
+    \end{tabular}\end{small}
+    \caption{Powders of the \MCS\ library \cite{icsd_ill,ILLblue}. Low $c$ and high $\sigma_{abs}$ materials are highlighted. Files are given in LAZY format, but may exist as well in Crystallographica {\it .lau} format as well.}
+    \label{t:powders-data}
+    \index{Library!Components!data}
+    }
+  \end{center}
+\end{table}
+
+\begin{table}
+  \begin{center}
+    {\let\my=\\
+    \begin{small}
+    \begin{tabular}{|l|rrr|rr|p{0.2\textwidth}|}
+
+      \hline
+      {\bf MCSTAS/data} & $\sigma_{coh}$&$\sigma_{inc}$&$\sigma_{abs}$&$T_m$       & $c$    & Note \\
+          File name     & [barns]     & [barns]    & [barns]    & [K]        & [m/s] & \\
+      \hline
+Cs\_liq\_tot.sqw                      & 3.69      & 0.21     &29.0      &301.6     &{\bf 1090}  & Measured \\
+Ge\_liq\_coh.sqw and Ge\_liq\_inc.sqw & 8.42      & 0.18     &2.2       &1211.4    &5400  & Ab-initio MD \\
+He4\_liq\_coh.sqw                     & 1.34      & 0        &0.00747   &0         &{\bf 240}   & Measured\\
+Ne\_liq\_tot.sqw                      & 2.62      & 0.008    &0.039     &24.56     &{\bf 591}   & Measured\\
+Rb\_liq\_coh.sqw and Rb\_liq\_inc.sqw & 6.32      & 0.5      &0.38      &312.46    &{\bf 1300}  & Classical MD \\
+Rb\_liq\_tot.sqw                      & 6.32      & 0.5      &0.38      &312.46    &{\bf 1300}  & Measured \\
+      \hline
+    \end{tabular}\end{small}
+    \caption{Liquids of the \MCS\ library \cite{icsd_ill,ILLblue}. Low $c$ and high $\sigma_{abs}$ materials are highlighted.}
+    \label{t:liquids-data}
+    \index{Library!Components!data}
+    }
+  \end{center}
+\end{table}
+
+\MCS\ itself generates both simulation and monitor data files, which structure is explained in the User Manual (see end of chapter 'Running \MCS\ ').
+
+\section{Component source code}
+Source code for all components may be found in the \verb+MCSTAS+ library
+subdirectory of the McStas installation;
+the default is \verb+/usr/local/lib/mcstas/+
+on Unix-like systems and \verb+C:\mcstas\lib+ on Windows systems, but it may be
+changed using the \verb+MCSTAS+ environment variable.
+\index{Environment variable!MCSTAS}
+
+In case users only require to add new features, preserving the existing features of a component, 
+using the \verb+EXTEND+ keyword\index{Keyword!EXTEND} in the instrument description file is recommended. For larger modification of a component, it is advised to make a copy
+of the component file into the working directory.
+A component file in the local directory will in \MCS\ take precedence over
+a library component of the same name.
+
+\section{Documentation}
+As a complement to this Component Manual, we encourage users to use
+the \verb+mcdoc+ front-end which enables to display both the
+catalog of the \MCS\ library, e.g using: \index{Tools!mcdoc}
+\begin{quote}
+  \verb|mcdoc|
+\end{quote}
+as well as the documentation of specific components, e.g with:
+\begin{quote}
+  \verb|mcdoc --text| {\it name} \\
+  \verb|mcdoc| {\it file.comp}
+\end{quote}
+The first line will search for all components matching the {\it name},
+and display their help section as text. For instance, \verb+mcdoc .laz+ will list all available Lazy data files, whereas \verb+mcdoc --text Monitor+ will list most Monitors.
+The second example will display the help corresponding to
+the {\it file.comp} component, using your
+BROWSER\index{Environment variable!BROWSER} setting, or as text if unset.
+The \verb+--help+ option will display the command help, as usual.
+
+An overview of the component library is also given at the \MCS\ home page \cite{mcstas_webpage} and in the User Manual \cite{mcstasmanual}.
+
+\section{Component validation}
+
+Some components were checked for release 1.9: the Fermi choppers, the velocity selectors, 2 of the guide components and Source\_gen. The results are sumarized in a talk available online (\verb+http://www.ill.fr/tas/mcstas/doc/ValMcStas.pdf+).
+
+Velocity selector and Fermi chopper were treated as black boxes and the resulting line shapes cross-checked against analytical functions for some cases.
+The component 'Selector' showed no dependence on the distance between guide and selector axe. This is corrected at the moment. Apart from that the component yielded correct results.
+That was different with the Fermi chopper components. The component 'Chopper\_Fermi', which has been part of the \MCS\ distribution for a long time, gave wrong results and was removed from the package. The new 'Vitess\_ChopperFermi' (transferred from the VITESS package) showed mainly correct behaviour. Little bugs were corrected after the first tests. At the moment, there is only the problem left that it underestimates the influence of a shadowing cylinder. With the contributed 'FermiChopper' component, there were also minor problems, which are all corrected in the meantime.
+
+For the guides, several trajectories through different kinds of guides (straight, convergent, divergent) were calculated analytically and positions, directions and losses of reflections compared to the values calculated in the components. This was done for 'Guide' and 'Guide\_gravity'; in the latter case calculations were performed with and without gravity. Additionally a cross-check against the VITESS guide module was performed. Waviness, chamfers and channels were not checked.
+After correction of a bug in 'Guide\_gravity', both components worked perfectly (within the conditions tested).
+
+'Source\_gen' was cross-checked against the VITESS source module for the case of 3 Maxwellians describing the moderator characteristic and typical sizes the guide and its distance to the moderator. It showed the same line shape as a functions of wavelength and divergence and the same absolute values.
+
+\section{Disclaimer, bugs}\index{Bugs}
+
+We would like to emphasize that the usage of both the \MCS\ software, as well as its components are the responsability of the users. Indeed, obtaining accurate and reliable results requires a substantial work when writing instrument descriptions. This also means that users should read carefully both the documentation from the manuals \cite{mcstasmanual} and from the component itself (using \verb+mcdoc+ {\it comp}) before reporting errors. Most anomalous results often originate from a wrong usage of some part of the package.
+
+Anyway, if you find that either the documentation is not clear, or the behavior of the simulation is undoubtedly anomalous, you should report this to us at \verb+mcstas@risoe.dk+ and refer to our special bug/request reporting service \cite{mczilla_webpage}.

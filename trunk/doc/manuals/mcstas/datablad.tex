@@ -1,0 +1,72 @@
+% Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
+
+{% Make all definitions local.
+
+%
+% This was modified from risoe.sty, <2 Aug 95>
+%
+\newcommand{\titel}[1]{{\egtrm Title and author(s)}
+ \rm\\[3dd]#1\\[\baselineskip]}
+\newcommand{\forfatter}[1]{{\egtrm}
+ \rm #1\\\underline{\makebox[\textwidth]{\mbox{}}}\\[-3dd]}
+\newcommand{\isbn}[1]{\parbox[t]{0.75\textwidth}{{\footnotesize ISBN}
+ \normalsize\rm\\[3dd]#1\mbox{}}}
+\newcommand{\issn}[1]{\parbox[t]{0.25\textwidth}{{\footnotesize ISSN}
+ \normalsize\rm\\[3dd] #1\mbox{}}\\[0.5\baselineskip]
+ \underline{\makebox[\textwidth]{\mbox{}}}\\[-3dd]}
+\newcommand{\afdeling}[1]{\parbox[t]{0.75\textwidth}{{\egtrm Dept. or group}
+ \rm\\[3dd]#1\mbox{}}}
+\newcommand{\dato}[1]{\parbox[t]{0.25\textwidth}{{\egtrm Date}
+ \rm\\[3dd] #1\mbox{}}\\[0.5\baselineskip]
+ \underline{\makebox[\textwidth]{\mbox{}}}\\[-3dd]}
+\newcommand{\regnummer}[1]{\parbox[t]{0.5\textwidth}{{\egtrm
+ Groups own reg. number(s)}\rm\\[3dd] #1\mbox{}}}
+\newcommand{\projektnummer}[1]{\parbox[t]{0.5\textwidth}{{\egtrm
+ Project/contract No.}\rm\\[3dd] #1\mbox{}}\\[0.5\baselineskip]
+ \underline{\makebox[\textwidth]{\mbox{}}}\\[-3dd]}
+\newcommand{\sider}[1]{\parbox[t]{0.25\textwidth}{{\egtrm Pages}
+ \rm\\[3dd]\mbox{}#1\mbox{}}}
+\newcommand{\tabeller}[1]{\parbox[t]{0.25\textwidth}{{\egtrm Tables}
+ \rm\\[3dd]\mbox{}#1\mbox{}}}
+\newcommand{\figurer}[1]{\parbox[t]{0.25\textwidth}{{\egtrm Illustrations}
+ \rm\\[3dd]\mbox{}#1\mbox{}}}
+\newcommand{\referencer}[1]{\parbox[t]{0.25\textwidth}{{\egtrm References}
+ \rm\\[3dd]\mbox{}#1\mbox{}}\\[0.5\baselineskip]
+ \underline{\makebox[\textwidth]{\mbox{}}}\\[-3dd]}
+\newcommand{\resume}[1]{{\egtrm Abstract (Max. 2000 char.)}
+ \rm\\[3dd]#1\mbox{}\\\underline{\makebox[\textwidth]{\mbox{}}}\\[-3dd]}
+\newcommand{\deskriptorer}[1]{{\egtrm Descriptors}
+ \rm\\[3dd]#1\mbox{}\\
+ \underline{\makebox[\textwidth]{\mbox{}}}\\[-3dd]}
+\newenvironment{datablad}{\parindent 0pt\parskip 0pt\clearpage
+ \frenchspacing\thispagestyle{empty}\normalsize
+ \underline{\makebox[\textwidth]{\bf Bibliographic Data Sheet
+ \rule[-6dd]{0cc}{1cc}\hfill\reportnum \reportlan}}\\}{
+
+\footnotesize\vspace{-\baselineskip}
+Available on request from:\\
+Information Service Department, Ris{\o} DTU \\
+(Afdelingen for Informationsservice, Ris{\o} DTU) \\
+P.O. Box 49, DK--4000 Roskilde, Denmark \\
+Phone +45 4677 4004,
+Telefax +45 4677 4013
+\clearpage}
+
+\def\reportlan{}
+% Ensure datablad is on a left-hand page.
+\newpage\ifodd\csname c@page\endcsname\noindent\hbox{}\par\newpage\else\fi
+\begin{datablad}
+\titel{User and Programmers Guide to the Neutron Ray-Tracing Package
+ \MCS , Version \version}
+\forfatter{Peter Willendrup, Emmanuel Farhi, Erik Knudsen and Kim Lefmann}
+\isbn{ISBN 978--87--550--3679--6}\issn{0106--2840}
+\afdeling{Materials Research Department}
+\dato{\reldate}
+\regnummer{---}
+\projektnummer{---}
+\sider{\thepage}\tabeller{12}\figurer{27}\referencer{49}
+\resume{\input{abstract}}
+\deskriptorer{Neutron Instrumentation; Monte Carlo Simulation; Software}
+\end{datablad}
+
+}
