@@ -9,6 +9,7 @@
 * Version: $Revision$
 * Origin: KU-Science
 * Release: McStas 1.12c
+* %INSTRUMENT_SITE: Templates
 *
 * %Description
 * Toy model used for testing various sample components for solution-SANS.
@@ -59,10 +60,10 @@ COMPONENT Origin = Progress_bar(
 COMPONENT Source = Source_simple(
 	radius = 0.02,
 	dist = DistanceFromSourceToSecondPinhole, 
-	yh = 0.01, 
-	xw = 0.01,
-	Lambda0 = Lambda, 
-	dLambda = DLambda * Lambda
+	yheight = 0.01, 
+	xwidth = 0.01,
+	lambda0 = Lambda, 
+	dlambda = DLambda * Lambda
 )
   AT (0, 0, 0) RELATIVE Origin
 
