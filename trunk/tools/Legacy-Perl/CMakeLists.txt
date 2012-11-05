@@ -1,14 +1,29 @@
 cmake_minimum_required(VERSION 2.6)
 
 # This will install McStas components
-project(mcstas-tools)
+project(legacy-tools)
+
+# Choose between McStas or McXtrace
+option(enable_mcstas   "Choose the McStas flavor" off)
+option(enable_mcxtrace "Choose the McXtrace flavor (trumps enable_mcstas)" Off)
 
 # Set module path
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
-setup_mccode_mkdist("mcstas")
+
+if (${enable_mcxtrace})
+  set(FLAVOR "mcxtrace")
+elseif(${enable_mcstas})
+  set(FLAVOR "mcstas")
+else()
+  message(FATAL_ERROR "No flavor specified!\n"
+    "Please use either -Denable_mcstas=1 or -Denable_mcxtrace=1")
+endif()
+
+message("Enabling ${FLAVOR} flavor")
+setup_mccode_mkdist("${FLAVOR}")
 
 
 # CPack configuration
@@ -21,9 +36,9 @@ set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
-set(MCSTAS_LIB "${CMAKE_INSTALL_PREFIX}/lib/mcstas-${MCCODE_VERSION}")
+set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/lib/${FLAVOR}-${MCCODE_VERSION}")
 
-set(TOOLS_NAME "mcstas-tools-${MCCODE_VERSION}")
+set(TOOLS_NAME "${FLAVOR}-tools-${MCCODE_VERSION}")
 set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/lib/${TOOLS_NAME}")
 
 
@@ -37,31 +52,37 @@ set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
 include(CPack)
 
-
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
+# Select prefix
+if(${enable_mcstas})
+  set(P "mc")
+else()
+  set(P "mx")
+endif()
+
 # Include mcstas-comp files
 foreach(NAME
-    mcconfig mcconvert mcdaemon mcdisplay mcdoc mcformatgui
-    mcgui mcplot mcresplot mcrun mcstas2vitess
+    config convert daemon display doc formatgui
+    gui plot resplot run stas2vitess
     )
 
   add_custom_command(
-    OUTPUT "${WORK}/${NAME}"
-    COMMAND "./perl_fix.sh" "${MCSTAS_LIB}" "${TOOLS_LIB}"
-    "${NAME}.pl" "${WORK}/${NAME}"
+    OUTPUT "${WORK}/${P}${NAME}"
+    COMMAND "./perl_fix.sh" "${MCCODE_LIB}" "${TOOLS_LIB}"
+    "mc${NAME}.pl" "${WORK}/${P}${NAME}"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     )
 
   add_custom_target(
-    "FIX_PERL_${NAME}" ALL DEPENDS "${WORK}/${NAME}"
+    "FIX_PERL_${NAME}" ALL DEPENDS "${WORK}/${P}${NAME}"
     )
 
   install(
-    PROGRAMS "${WORK}/${NAME}"
+    PROGRAMS "${WORK}/${P}${NAME}"
     DESTINATION bin
-    RENAME "${NAME}-${MCCODE_VERSION}"
+    RENAME "${P}${NAME}-${MCCODE_VERSION}"
   )
 endforeach()
 
@@ -71,12 +92,13 @@ configure_file(lib/tools/perl/mccode_config.perl.in work/mccode_config.pl   @ONL
 configure_file(lib/tools/perl/mccode_reconfigure.in work/mccode_reconfigure @ONLY)
 
 # Generate man pages
-foreach(NAME
-    mcconvert mcdisplay mcdoc mcgui mcplot mcrun)
+
+set(LIST convert display doc gui plot run)
+foreach(NAME ${LIST})
 
   configure_file(
-    "doc/man/${NAME}.1.in"
-    "${WORK}/doc/man/${NAME}-${MCCODE_VERSION}.1"
+    "doc/man/${P}${NAME}.1.in"
+    "${WORK}/doc/man/${P}${NAME}-${MCCODE_VERSION}.1"
     @ONLY)
 
 endforeach()
