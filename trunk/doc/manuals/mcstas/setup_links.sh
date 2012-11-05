@@ -3,8 +3,8 @@
 
 function get_absolute() {
     (
-        cd $(dirname "$1");
-        echo `pwd`/$(basename "$1");
+        cd "$1" &&
+        echo `pwd`;
     )
 }
 
@@ -13,9 +13,8 @@ WORK="$1"
 MCCODE="$2"
 
 if [ "x${MCCODE}" = "x" ]; then
-    # Search for a McCode checkout
-    MCCODE=$(find .. -iname mcstas-comps -type d|head -n1);
-    MCCODE="`dirname ${MCCODE}`"
+    # Use trunk from current checkout
+    MCCODE="../../.."
 fi
 
 if [ -d "${MCCODE}" ]; then
@@ -24,6 +23,8 @@ else
     echo "Error: cannot find McCode trunk (using: ${MCCODE})";
     exit 1;
 fi
+
+echo "${MCCODE}"
 
 
 mkdir -p ${WORK}/McCode;
