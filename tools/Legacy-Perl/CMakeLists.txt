@@ -87,8 +87,8 @@ foreach(NAME
 endforeach()
 
 
-# Generate mccode_config.pl and mccode_reconfigure
-configure_file(lib/tools/perl/mccode_config.perl.in work/mccode_config.pl   @ONLY)
+# Generate mccode_config.perl and mccode_reconfigure
+configure_file(lib/tools/perl/mccode_config.perl.in work/mccode_config.perl   @ONLY)
 configure_file(lib/tools/perl/mccode_reconfigure.in work/mccode_reconfigure @ONLY)
 
 # Generate man pages
@@ -112,7 +112,7 @@ install(
 )
 
 install(
-  FILES "${WORK}/mccode_config.pl"
+  FILES "${WORK}/mccode_config.perl"
         "${WORK}/mccode_reconfigure"
   DESTINATION lib/${TOOLS_NAME}/perl/
 )
