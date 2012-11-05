@@ -1,0 +1,83 @@
+# Require the version 1.12 of pod2ipf, see
+# ftp://ftp.math.ohio-state.edu/pub/users/ilya/perl/scripts
+use strict;
+
+my @files;
+
+foreach my $dir (qw(. pTk DupName)) {
+  opendir D, $dir or die "opendir $dir: $!";
+  push @files, map "$dir/$_", grep /\.pod$/, readdir D;
+  closedir D or die "closedir $dir: $!";
+}
+
+my %files;
+my %cats;
+my %alias = qw(./option.pod Tk::option ./options.pod Tk::options);
+
+for my $file (@files) {
+  open F, $file or die "open `$file': $!";
+  while (<F>) {
+    next unless /^=for\s+(category|pm)\s*(.*?)\s*$/m;
+    if ($1 eq 'pm') {
+      my $f = $2;
+      warn "Found alias $f for $file\n";
+      $f =~ s,/,::,g;	# Tk/Widget.pm
+      $f =~ s/\.pm$//;
+      $alias{$file} = $f;
+      next;
+    }
+    $cats{$file} = $2;
+  }
+  close F or die "close: $!";
+}
+
+my @known_cats = ( 'Introduction' ,
+		   'Creating and Configuring Widgets',
+		   'Tk Widget Classes',
+		   'Binding Events and Callbacks',
+		   'Tk Image Classes',
+		   'Tix Extensions',
+		   'Derived Widgets',
+		   'Tk Generic Methods',
+		   'Tk Geometry Management',
+		   'User Interaction',
+		   'Popups and Dialogs',
+		   'Implementation',
+		   'Experimental Modules',
+		   'Other Modules and Languages',
+		   'C Programming',
+#		   'Perl/Tk Constructs',
+#		   'Tk Generic Methods',
+#		   'Tk User Interaction',
+#		   'Partially Converted Methods',
+#		   'Tix Extensions',
+#		   'Tk Geometry Management',
+#		   'Tk Selection Handling',
+#		   'Tk Image Classes',
+#		   'Tk Library Procedures',
+#		   'Tk Modules',
+		 );
+my %known_cat;
+
+@known_cat{@known_cats} = (1) x 100;
+foreach my $file (@files) {
+  my $cat = $cats{$file};
+  push @known_cats, $cat unless exists $known_cat{$cat};
+  $known_cat{$cat} = 1;
+  $files{$cat} ||= [];
+  push @{$files{$cat}}, $file;
+}
+
+my @file_args = '--title=Perl/Tk Reference';
+push @file_args, qw(--by-files --nofaqs --debug --about --believe-pod-name);
+for my $cat (@known_cats) {
+  next unless defined $files{$cat};
+  push @file_args, "--section-name=$cat",
+    map {
+      ("--file=$_",
+       ($alias{$_} ? "--alias=$alias{$_}" : ()))
+    } sort @{$files{$cat}};
+}
+
+print STDERR join ' ', 'pod2ipf', @file_args , "\n";
+system 'pod2ipf', @file_args and die "\$?=$?, $!";

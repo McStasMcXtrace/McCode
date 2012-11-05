@@ -1,0 +1,36 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+use strict;
+
+@ARGV = __FILE__ unless (@ARGV);
+my @data = <>;
+
+my $top = MainWindow->new();
+# $top->optionAdd('*Scrollbar.width' => '3.5m');
+
+$top->Button(-text => 'Quit', -command => [destroy => $top])
+   ->pack(-side => 'bottom', -fill => 'x');
+
+my $lb  = $top->ScrlListbox(-scrollbars => 'rsw',-label => 'sw');
+$lb->configure(-labelRelief => 'raised');
+$lb->insert('end',@data);
+$lb->pack(-side => 'left', -expand => 1, -fill => 'both'  );
+
+$lb  = $top->ScrlListbox(-scrollbars => 'rnw',-label => 'nw');
+$lb->configure(-labelRelief => 'raised');
+$lb->insert('end',@data);
+$lb->pack(-side => 'left', -expand => 1, -fill => 'both'  );
+
+$lb  = $top->ScrlListbox(-scrollbars => 'rse',-label => 'se');
+$lb->configure(-labelRelief => 'raised');
+$lb->insert('end',@data);
+$lb->pack(-side => 'left', -expand => 1, -fill => 'both'  );
+
+$lb  = $top->ScrlListbox(-scrollbars => 'rne',-label => 'ne');
+$lb->configure(-labelRelief => 'raised');
+$lb->insert('end',@data);
+$lb->pack(-side => 'left', -expand => 1, -fill => 'both'  );
+
+
+MainLoop();

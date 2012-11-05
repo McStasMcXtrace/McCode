@@ -1,0 +1,28 @@
+#!/usr/local/bin/perl  -w
+use Tk;
+require Tk::TextUndo;
+
+use Carp;
+
+$SIG{__DIE__} = \&Carp::confess;
+
+my $mw = MainWindow->new;
+
+
+# Uncomment next line to avoid the warning - this a test of the warning
+# use Tk::TextUndo;
+my $t1 = $mw->Scrolled('TextUndo', -wrap => 'none');
+my $lb = $mw->Scrolled('Listbox');
+$lb->packAdjust(-side => 'left', -fill => 'both', -delay => 1);
+$lb->bind('<Double-ButtonRelease-1>',sub { $t1->Load($lb->getSelected) });
+
+$t1->pack(-side => 'right', -fill => 'both', -expand => 1);
+
+opendir(DIR,'.');
+my $name;
+foreach $name (readdir(DIR))
+ {
+  $lb->insert('end',$name) if (-T $name);
+ }
+closedir(DIR);
+MainLoop;

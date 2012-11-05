@@ -1,0 +1,70 @@
+#!/usr/local/bin/perl -w
+use File::Find;
+use Config;
+my @libs;
+my $dlext = $Config{'dlext'};
+
+my %ref;
+my %def;
+my %file;
+
+sub read_object
+{
+ my $obj = shift;
+ open(NM,"nm -p $obj|") || die "Cannot open nm $obj:$!";
+ while (<NM>)
+  {
+   if (/\b([A-Z])\b\s*_?(.*)$/)
+    {
+     my ($kind,$name) = ($1,$2);
+     if ($kind ne 'U')
+      {
+       $def{$name} = [] unless (exists $def{$name});
+       push(@{$def{$name}},$obj);
+      }
+     else
+      {
+       $ref{$name} = [] unless (exists $ref{$name});
+       push(@{$ref{$name}},$obj);
+      }
+    }
+   if (/\b(f)\b\s*_?(.*)$/)
+    {
+     my ($kind,$name) = ($1,$2);
+     $file{$name} = [] unless (exists $file{$name});
+     push(@{$file{$name}},$obj);
+    }
+  }
+ close(NM);
+}
+
+
+find(\&scan,'blib');
+sub scan
+{
+ push(@libs,$File::Find::name) if /\.$dlext$/o;
+}
+
+foreach my $lib (@libs)
+ {
+  read_object($lib);
+ }
+
+foreach my $def (sort keys %def)
+ {
+  my $w = $def{$def};
+  if (@$w > 1 && @$w != @libs)
+   {
+    print $def,' ',join(' ',@$w),"\n";
+   }
+ }
+
+foreach my $file (sort keys %file)
+ {
+  my $w = $file{$file};
+  if (@$w > 1 && @$w != @libs)
+   {
+    print $file,' ',join(' ',@$w),"\n";
+   }
+ }
+
