@@ -57,10 +57,10 @@ TOP="`pwd`"
 # Set name-specific constants
 case ${NAME} in
     mctools )
-        CONFIGURE_FLAGS="--enable-mcstas";
+        CONFIGURE_FLAGS="-Denable_mcstas=1";
         ;;
     mxtools )
-        CONFIGURE_FLAGS="--enable-mcxtrace";
+        CONFIGURE_FLAGS="-Denable_mcxtrace=1";
         ;;
 esac
 
@@ -213,18 +213,21 @@ function prepare_mccode() {
     config_mccode;
     autoconf;
 
-    (
-        cd src;
-        flex instrument.l  &&
-        bison instrument.y ||
-        echo "ignoring (likely not mcstas/mcxtrace)..";
-    )
+    if [ -f src/instrument.l ]; then
+        (
+            cd src &&
+            flex instrument.l  &&
+            bison instrument.y
+        )
+    fi
 }
 
 function build_mccode() {
-    prepare_mccode;
-    ./configure $1 &&
-    make
+    # prepare_mccode;
+    # ./configure $1 &&
+    # make
+    mkdir build && cd build;
+    cmake $1 ..
 }
 
 
@@ -233,60 +236,53 @@ function fresh_copy() {
     cp -LR "${1}" "${2}";
 }
 
-
-function make_src() {
-    OUT="${DEST}/${NAME}-src";
-
-    # copy source files
-    fresh_copy "${SOURCE}" "${OUT}";
-
+function fresh_clean_copy() {
+    DEST="${1}"
+    fresh_copy "${SOURCE}" "${DEST}";
     (
-        cd "${OUT}";
+        cd "${DEST}";
         cleanup &&
-        config_mccode &&
-        prepare_mccode;
+        config_mccode
     )
 }
 
-function make_bin() {
-    OUT="${DEST}/${NAME}-bin";
 
-    # copy source files
-    fresh_copy "${SOURCE}" "${OUT}";
-
+function make_src() {
+    OUT="${DEST}/${NAME}-src";
+    fresh_clean_copy "${OUT}";
     (
         cd "${OUT}";
-        cleanup &&
-        build_mccode "--prefix=`pwd`/build ${CONFIGURE_FLAGS}" &&
-        make install;
-        (
-            cd build;
-            tar zcf "../${NAME}.tar.gz" *;
-        )
+        prepare_mccode;
     )
 }
 
 function prepare_cpack() {
     # copy source files
-    fresh_copy "${SOURCE}" "$1";
+    DEST="${1}"
+    fresh_clean_copy "${DEST}";
     (
-        cd "$1";
-        cleanup &&
-        config_mccode &&
-        cmake .
+        cd "${DEST}";
+        cmake ${CONFIGURE_FLAGS} .
     )
 }
 
 function simple_cpack() {
     # make a CPack package from GEN and destination
     # e.g. simple_cpack DEB "dist/deb"
+
+    GEN="$1"
+    DEST="$2"
+    prepare_cpack "${DEST}";
     (
-        prepare_cpack "$2";
-        cd "$2" &&
-        cpack -G $1;
+        cd "${DEST}" &&
+        cpack -G "${GEN}";
     )
 }
 
+
+function make_bin() {
+    simple_cpack TGZ "${DEST}/${NAME}-tgz";
+}
 
 function make_deb() {
     simple_cpack DEB "${DEST}/${NAME}-deb";
@@ -319,4 +315,6 @@ for gen in ${GENS}; do
 
     # run generator
     make_${gen};
+
+    echo "done."
 done
