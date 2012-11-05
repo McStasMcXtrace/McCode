@@ -1,0 +1,39 @@
+#!/usr/local/bin/perl -w
+use strict;
+
+use File::Find;
+
+my %mTk;
+
+sub scan
+{
+ if (/\.[ch]$/)
+  {
+   my $name = $File::Find::name;
+   if (exists $mTk{$_})
+    {
+     warn "$_ = $mTk{$_} and $name\n";
+    }
+   $mTk{$_} = $name;
+  }
+}
+
+find(\&scan,"mTk");
+
+opendir(DIR,".") || die;
+foreach (sort readdir(DIR))
+ {
+  if (/\.[ch]$/)
+   {
+    if (exists $mTk{$_})
+     {
+      my $path = $mTk{$_};
+      print "$path => $_\n";
+     }
+    else
+     {
+      warn "$_ is orphan\n";
+     }
+   }
+ }
+close(DIR);

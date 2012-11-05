@@ -1,0 +1,27 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+use Tk::Xrm;
+use Tk::widgets qw(DirTree Button);
+
+# This does not work properly yet
+
+use strict qw(subs);
+
+use Tk::Pretty;
+
+sub top
+{
+ my $name = shift;
+ my $top = MainWindow->new();
+ $top->Button('-text'=>"Quit",'-command'=>['destroy',$top])->pack;
+ $top->Button('-textvariable'=>\$name,
+              '-command'=> [ sub { my $name = shift; print "$name\n"},$name])->pack;
+ $top->DirTree()->pack;
+ $top->title($name);
+}
+
+&top("One");
+&top("Two");
+
+MainLoop;

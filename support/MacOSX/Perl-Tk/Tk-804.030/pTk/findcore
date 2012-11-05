@@ -1,0 +1,37 @@
+#!/usr/local/bin/perl -w
+
+BEGIN { require Exporter };
+
+use Tk::Pretty;
+
+%depth = ();
+
+require 'process_object';
+
+foreach (<*.o>)
+ {
+  do_nm($_);
+ }
+
+
+@ARGV = <*_f.o> unless(@ARGV);
+
+foreach (@ARGV)
+ {
+  do_need($_,0,"ARGV");
+ }
+
+foreach $file (sort keys %need)
+ {
+  my $src = $file;
+  $src =~ s/\.o$/.c/;
+  print "$src ($depth{$file}) : ",Pretty($need{$file}),"\n";
+ }
+
+print "\n";
+
+foreach $name (sort keys %unres)
+ {
+  print "$name : ",Pretty($unres{$name}),"\n";
+ }
+

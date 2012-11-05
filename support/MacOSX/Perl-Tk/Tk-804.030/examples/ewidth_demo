@@ -1,0 +1,36 @@
+#!/usr/local/bin/perl -w
+use Tk;
+use strict;
+
+{
+package Tk::LimitEntry;
+require Tk::Entry;
+@Tk::LimitEntry::ISA = qw(Tk::Entry);
+
+Construct Tk::Widget 'LimitEntry';
+
+sub Insert
+{
+ my ($w,$char) = @_;
+ my $width = $w->cget('-width');
+ my $len   = $w->index('end');
+ if ($len >= $width)
+  {
+   $w->bell;
+  }
+ else
+  {
+   $w->SUPER::Insert($char);
+  }
+}
+
+
+}
+
+
+my $mw = MainWindow->new;
+my $var = "";
+my $e  = $mw->LimitEntry(-width => 8, -textvariable => \$var)->pack;
+$mw->update;
+$e->focus;
+MainLoop;

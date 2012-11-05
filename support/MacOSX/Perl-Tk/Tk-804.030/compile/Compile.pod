@@ -1,0 +1,106 @@
+
+=head1 NAME
+
+Tk/compile - making executables from perl/Tk scripts
+
+=for category Other Modules and Languages
+
+=head1 SYNOPSIS
+
+  cd .../Tk800.013/compile
+  make PROG=...path/to/script
+
+=head1 DESCRIPTION
+
+This directory is for experimenting with compiling Tk apps. to executables.
+You need perl5.00556 (or later?) to have the right hooks in perl itself.
+
+This has only been tested on Solaris 2.6 (but I doubt version makes
+much difference), and RedHat Linux 5.1 both with gcc. As far as I am aware
+other C compilers should work if 'Makefile' is tweaked appropriately.
+The Makefile is for GNU make as it uses $(shell ...).
+The Makefile could be converted to a script (contributions welcome), but having
+a makefile makes it easier for me to debug the stages.
+
+=head2 Instructions
+
+build and install perl5.005_56 (suggest not as your _main_ perl).
+build and install Tk800.013 with perl5.005_56
+
+cd to this directory
+Copy the script you want to compile to trial.pl
+( make PROG=.../script will do that )
+type 'make'
+
+wait ...
+
+type 'trial' to test the executable.
+
+copy 'trial' to your path.
+
+=head2 How it Works
+
+The script is "invoked" with two modules ahead of it on the command line
+and with perl's -c flag to "just compile". The most important of the
+modules is Malcolm Beatie's -MO=C "Compile" module. This installs an END {}
+block so that when perl has finished parsing the script the "C backend" gets
+control.
+
+The other command line module is -MPreLoad (in this directory)
+this supplies another END {} block (which is run before Malcolm's), and
+overrides AutoLoader::import to pass the END {} block a list of modules
+that "use AutoLoader". The END {} block then loads _all_ the subs that
+module could load.
+
+When Malcolm's END {} block gets control it then writes C code to build
+the same data structures that perl has just built. (This takes a long time
+and writes a large file - ../tiny takes 1:20 minutes and builds 3.5M of C).
+Lots of messages get written at the start - expect 'bootstrap' to be
+redefined a few times.
+
+This C code (with version of B::C module in 5.00556) has one function
+which is very large. This stresses the C compiler, so makefile runs a perl
+script "splitfunc" which breaks that function down into smaller ones.
+
+Then C code is compiled to an object file.
+This takes a long time (tiny takes 3:07 minutes).
+Beware enabling optimization or debug on this compile, it will
+take even longer.
+
+Another perl script is run to find the shared objects which where
+loaded by DynaLoader (B::C module has listed them as comments in the C file).
+We also hunt down the DynaLoader.a library (just in case script will load
+something at run time).
+
+Then all the above i.e. object files, shared objects, dynaloader are linked
+with libperl to produce the final executable.
+
+tiny builds a 2.7M executable (stripped).
+Note though that due to fact that B::C and PreLoad include "everything"
+from modules, larger apps don't grow in proportion (ptked is 5M stripped).
+
+=head2 Restrictions on Scripts
+
+What gets compiled into the script is what gets built by perl up to,
+but stopping short of running the main script. This means that body of "use'd"
+modules is run, but "required" modules are not. The built executable
+is still (supposed to be) capable of loading other code (including binary
+modules), but will use "compiled-in" paths to do so.
+
+So 'use Tk::widgets (...)' to load the widgets your script needs.
+
+Only AutoLoader is handled by PreLoad. In particular SelfLoader will not work
+as DATA handle is lost between compile and running executable.
+
+B::C's handing of initialized variables is still patchy. Thus if modules
+set global variables at "compile" time their values may be lost
+by time executable is run.
+
+=head2 Showing Off
+
+This file is being edited by compiled ptked on Linux.
+
+
+
+
+

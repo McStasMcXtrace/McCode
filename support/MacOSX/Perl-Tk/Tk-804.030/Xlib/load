@@ -1,0 +1,12 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+use Tk::Xlib;
+use Tk::X;
+
+my $mw = MainWindow->new;
+
+
+$mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+MainLoop;
+
