@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # This will install McStas components
-project(legacy-tools)
+project(legacy-tools C)
 
 # Choose between McStas or McXtrace
 option(enable_mcstas   "Choose the McStas flavor" off)

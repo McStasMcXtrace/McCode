@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # This file will build McStas
-project(mcstas)
+project(mcstas C)
 
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
