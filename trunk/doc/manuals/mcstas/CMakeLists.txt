@@ -4,20 +4,23 @@ cmake_minimum_required(VERSION 2.6)
 project(mcstastex)
 
 set(FLAVOR mcstas)
-set(MCCODE_VERSION 2.9999)
+
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+include(MCUtil)
+
+setup_mccode_mkdist("${FLAVOR}")
 
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-${MCCODE_VERSION}-svn")
-# set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../COPYING")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-manuals-${MCCODE_VERSION}")
+set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../COPYING")
 set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
 set(CPACK_PACKAGE_VERSION       "1.0")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 
-
-set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/lib/${FLAVOR}-${MCCODE_VERSION}-svn")
+set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/lib/${FLAVOR}-${MCCODE_VERSION}")
 
 
 # Debian
@@ -29,6 +32,7 @@ set(CPACK_SET_DESTDIR "ON")
 set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
 include(CPack)
+
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
