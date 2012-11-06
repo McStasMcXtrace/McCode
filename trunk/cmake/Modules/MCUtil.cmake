@@ -65,7 +65,7 @@ macro(setup_mccode_mkdist FLAVOR)
   if(MKDIST)
     ## Set mkdist-provided version
     set(MCCODE_VERSION "@MCCODE_VERSION@")
-    set(MCCODE_NAME "${MKDIST} ${MKDIST_S} @__MCCODE_NAME@")
+    set(MCCODE_NAME "@MCCODE_NAME@")
     set(MCCODE_DATE "@MCCODE_DATE@")
     set(MCCODE_STRING "@MCCODE_STRING@")
     set(MCCODE_TARNAME "@MCCODE_TARNAME@")
