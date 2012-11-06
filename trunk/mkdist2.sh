@@ -211,7 +211,10 @@ function cleanup() {
 
 function prepare_mccode() {
     config_mccode;
-    autoconf;
+
+    if [ -f configure.in ]; then
+        autoconf;
+    fi
 
     if [ -f src/instrument.l ]; then
         (
@@ -237,9 +240,10 @@ function fresh_copy() {
 }
 
 function fresh_clean_copy() {
-    DEST="${1}"
-    fresh_copy "${SOURCE}" "${DEST}";
     (
+        DEST="${1}"
+        fresh_copy "${SOURCE}" "${DEST}";
+
         cd "${DEST}";
         cleanup &&
         config_mccode
@@ -247,20 +251,12 @@ function fresh_clean_copy() {
 }
 
 
-function make_src() {
-    OUT="${DEST}/${NAME}-src";
-    fresh_clean_copy "${OUT}";
-    (
-        cd "${OUT}";
-        prepare_mccode;
-    )
-}
-
 function prepare_cpack() {
     # copy source files
-    DEST="${1}"
-    fresh_clean_copy "${DEST}";
     (
+        DEST="${1}"
+        fresh_clean_copy "${DEST}";
+
         cd "${DEST}";
         cmake ${CONFIGURE_FLAGS} .
     )
@@ -269,31 +265,56 @@ function prepare_cpack() {
 function simple_cpack() {
     # make a CPack package from GEN and destination
     # e.g. simple_cpack DEB "dist/deb"
-
-    GEN="$1"
-    DEST="$2"
-    prepare_cpack "${DEST}";
     (
+        GEN="$1"
+        DEST="$2"
+
+        prepare_cpack "${DEST}";
+
         cd "${DEST}" &&
         cpack -G "${GEN}";
     )
 }
 
+function simple_cpack_file() {
+    (
+        GEN="$1"
+        NAME="$2"
+        FILE="$3"
+
+        simple_cpack "${GEN}" "${DEST}/${NAME}";
+
+        # pull out packed file and clean up
+        mv "${DEST}/${NAME}"/${FILE} "${DEST}" &&
+        rm -rf "${DEST}/${NAME}"
+    )
+}
+
+function make_src() {
+    (
+        OUT="${DEST}/${NAME}-src";
+        fresh_clean_copy "${OUT}";
+
+        cd "${OUT}";
+        prepare_mccode;
+    )
+}
 
 function make_bin() {
-    simple_cpack TGZ "${DEST}/${NAME}-tgz";
+    echo "${DEST}"
+    simple_cpack_file TGZ "${NAME}-tgz" "*.tar.gz";
 }
 
 function make_deb() {
-    simple_cpack DEB "${DEST}/${NAME}-deb";
+    simple_cpack_file DEB "${NAME}-deb" "*.deb";
 }
 
 function make_rpm() {
-    simple_cpack RPM "${DEST}/${NAME}-rpm";
+    simple_cpack_file RPM "${NAME}-rpm" "*.rpm";
 }
 
 function make_OSXpkg() {
-    simple_cpack PackageMaker "${DEST}/${NAME}-OSXpkg";
+    simple_cpack_file PackageMaker "${NAME}-OSXpkg" "*.pkg";
 }
 
 
