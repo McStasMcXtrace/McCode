@@ -13,8 +13,16 @@ WORK="$1"
 MCCODE="$2"
 
 if [ "x${MCCODE}" = "x" ]; then
-    # Use trunk from current checkout
-    MCCODE="../../.."
+    # Use trunk from current checkout (search parents)
+    MCCODE="`pwd`"
+    while ! [ -d "${MCCODE}/mcstas-comps" ] ||
+          ! [ -d "${MCCODE}/doc"          ]; do
+        MCCODE="`dirname ${MCCODE}`";
+        if [ "${MCCODE}" = "/" ]; then
+            echo "Error: cannot find McCode trunk. Please give as second argument.";
+            exit 1;
+        fi;
+    done;
 fi
 
 if [ -d "${MCCODE}" ]; then
@@ -23,8 +31,6 @@ else
     echo "Error: cannot find McCode trunk (using: ${MCCODE})";
     exit 1;
 fi
-
-echo "${MCCODE}"
 
 
 mkdir -p ${WORK}/McCode;
