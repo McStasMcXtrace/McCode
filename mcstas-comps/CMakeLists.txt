@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # This will install McStas components
-project(mcstas-comps)
+project(mcstas-comps NONE)
 
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
