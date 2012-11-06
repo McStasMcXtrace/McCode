@@ -286,7 +286,7 @@ function simple_cpack_file() {
 
         # pull out packed file and clean up
         mv "${DEST}/${NAME}"/${FILE} "${DEST}" &&
-        rm -rf "${DEST}/${NAME}"
+        rm -rf "${DEST}/${NAME}";
     )
 }
 
@@ -297,11 +297,14 @@ function make_src() {
 
         cd "${OUT}";
         prepare_mccode;
+        cd ..;
+
+        tar czf "${OUT}.tar.gz" "${NAME}-src" &&
+        rm -rf "${OUT}";
     )
 }
 
 function make_bin() {
-    echo "${DEST}"
     simple_cpack_file TGZ "${NAME}-tgz" "*.tar.gz";
 }
 
@@ -341,3 +344,7 @@ for gen in ${GENS}; do
 
     echo "done."
 done
+
+
+# clean up
+rm -f "${DEST}"/mkinstalldirs
