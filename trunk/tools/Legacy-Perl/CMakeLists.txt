@@ -28,6 +28,7 @@ setup_mccode_mkdist("${FLAVOR}")
 
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
+set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
 
 
 # CPack configuration
