@@ -26,6 +26,10 @@ message("Enabling ${FLAVOR} flavor")
 setup_mccode_mkdist("${FLAVOR}")
 
 
+# Set some extra options for mccode_config
+set(CC "${CMAKE_C_COMPILER}")
+
+
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../COPYING")
