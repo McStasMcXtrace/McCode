@@ -1,0 +1,6 @@
+
+MCCODE_BIN = "@MCCODE_BIN@"
+MCCODE_LIB = "@MCCODE_LIB@"
+
+CC         = "@CC@"
+CFLAGS     = "@CFLAGS@"

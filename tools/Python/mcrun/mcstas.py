@@ -103,12 +103,12 @@ class McStas:
         LOG.info('Recompiling: %s', self.binpath)
 
         # Generate C-code
-        Process('mcstas').run(['-o', self.cpath, self.path])
+        Process(options.mccode_bin).run(['-o', self.cpath, self.path])
 
         # Setup cflags
         cflags = [
             '-lm',  # math library
-            options.no_cflags and '-O0' or '-O2',  # optimizing flags
+            options.no_cflags and '-O0' or options.CFLAGS,  # optimizing flags
             mpi and '-DUSE_MPI' or '-UUSE_MPI',  # MPI
         ]
 
