@@ -243,7 +243,7 @@ def main():
     # Add options
     usage = ('usage: %prog [-cpnN] Instr [-sndftgahi] '
              'params={val|min,max|min,guess,max}...')
-    parser = OptionParser(usage, version='mcrun 0.1')
+    parser = OptionParser(usage, version=config.VERSION)
 
     add_mcrun_options(parser)
     add_mcstas_options(parser)
