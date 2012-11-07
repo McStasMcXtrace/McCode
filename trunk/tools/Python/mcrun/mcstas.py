@@ -9,8 +9,10 @@ from os.path import isfile, dirname, basename, splitext
 from subprocess import Popen, PIPE
 from decimal import Decimal
 
+import config
 from log import getLogger
 LOG = getLogger('mcstas')
+
 
 
 def modified(path):
@@ -106,11 +108,9 @@ class McStas:
         Process(options.mccode_bin).run(['-o', self.cpath, self.path])
 
         # Setup cflags
-        cflags = [
-            '-lm',  # math library
-            options.no_cflags and '-O0' or options.CFLAGS,  # optimizing flags
-            mpi and '-DUSE_MPI' or '-UUSE_MPI',  # MPI
-        ]
+        cflags = ['-lm']  # math library
+        cflags += [mpi and '-DUSE_MPI' or '-UUSE_MPI']  # MPI
+        cflags += options.no_cflags and ['-O0'] or config.CFLAGS.split()  # cflags
 
         # Compiler optimisation
         args = ['-o', self.binpath] + cflags + [self.cpath]
