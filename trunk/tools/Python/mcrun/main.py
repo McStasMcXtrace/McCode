@@ -8,6 +8,7 @@ from datetime import datetime
 
 from mcstas import McStas
 from optimisation import Scanner, LinearInterval, MultiInterval
+import config
 
 from log import getLogger, setupLogger, setLogLevel, McRunException
 from log import DEBUG
@@ -179,6 +180,10 @@ def add_mcstas_options(parser):
 
 def expand_options(options):
     ''' Add extra options based on previous choices '''
+    # McCode version and library
+    options.mccode_bin = config.MCCODE_BIN
+    options.mccode_lib = config.MCCODE_LIB
+
     # MPI
     if options.mpi > 0:
         options.use_mpi = True
@@ -189,7 +194,7 @@ def expand_options(options):
             LOG.warning('Ignoring MPI flag: not enough nodes (%d).',
                         options.mpi)
         options.use_mpi = False
-        options.cc = 'gcc'
+        options.cc = config.CC
     # Output dir
     if options.dir is None:
         # use unique directory when unspecified
