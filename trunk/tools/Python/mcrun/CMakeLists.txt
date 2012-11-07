@@ -77,9 +77,37 @@ configure_file(config.py "${WORK}/config.py"  @ONLY)
 
 install(FILES "${WORK}/config.py" DESTINATION "lib/${TOOLS_NAME}")
 
-foreach(NAME "__init__.py" "log.py" "main.py" "mcstas.py" "optimisation.py")
+foreach(NAME "__init__.py" "log.py" "mcstas.py" "optimisation.py")
     install(
       FILES "${PROJECT_SOURCE_DIR}/${NAME}"
       DESTINATION "lib/${TOOLS_NAME}"
       )
 endforeach()
+
+# Program files
+install(
+  FILES "${PROJECT_SOURCE_DIR}/main.py"
+  DESTINATION "lib/${TOOLS_NAME}"
+  PERMISSIONS
+  OWNER_READ OWNER_WRITE OWNER_EXECUTE
+  GROUP_READ GROUP_EXECUTE
+  WORLD_READ WORLD_EXECUTE
+)
+
+# Symlink to main
+add_custom_command(
+  OUTPUT "${WORK}/mcrun"
+  COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/mcrun"
+  COMMAND "${CMAKE_COMMAND}" -E create_symlink
+    "${TOOLS_LIB}/main.py" "${WORK}/mcrun"
+)
+
+add_custom_target(
+  "CREATE_SYMLINK" ALL DEPENDS "${WORK}/mcrun"
+)
+
+install(
+  PROGRAMS "${WORK}/mcrun"
+  DESTINATION bin
+  RENAME "mcrun.py-${MCCODE_VERSION}"
+)
