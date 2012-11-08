@@ -300,14 +300,16 @@ static int mpi_node_root = 0;
 *******************************************************************************/
 int mc_MPI_Sum(double *sbuf, long count)
 {
-
   if (!sbuf || count <= 0) return(MPI_ERR_COUNT);
   else {
     /* we must cut the buffer into blocks not exceeding the MPI max buffer size of 32000 */
     long   offset=0;
-    double rbuf[count];
+    double *rbuf=NULL;
     int    length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
     int    i=0;
+    rbuf = calloc(count, sizeof(double));
+    if (!rbuf)
+      exit(-fprintf(stderr, "Error: Out of memory %li (mc_MPI_Sum)\n", count*sizeof(double)));
     while (offset < count) {
       if (!length || offset+length > count-1) length=count-offset;
       else length=MPI_REDUCE_BLOCKSIZE;
@@ -317,6 +319,7 @@ int mc_MPI_Sum(double *sbuf, long count)
     }
 
     for (i=0; i<count; i++) sbuf[i] = rbuf[i];
+    free(rbuf);
   }
   return MPI_SUCCESS;
 } /* mc_MPI_Sum */
@@ -1821,13 +1824,12 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
 #ifdef USE_MPI
   if (!strstr(format.Name," list ") && mpi_node_count > 1 && detector.rank != -1) {
     /* we save additive data: reduce everything into mpi_node_root */
-    if (p0) mc_MPI_Sum(p0, abs(m*n*p));
-    if (p1) mc_MPI_Sum(p1, abs(m*n*p));
-    if (p2) mc_MPI_Sum(p2, abs(m*n*p));
-
+    if (p0) mc_MPI_Sum(p0, m*n*p);
+    if (p1) mc_MPI_Sum(p1, m*n*p);
+    if (p2) mc_MPI_Sum(p2, m*n*p);
     if (!p0) {  /* additive signal must be then divided by the number of nodes */
       int i;
-      for (i=0; i<abs(m*n*p); i++) {
+      for (i=0; i<m*n*p; i++) {
         p1[i] /= mpi_node_count;
         if (p2) p2[i] /= mpi_node_count;
       }
@@ -1911,8 +1913,8 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   {
     fmon_x = sum_xz/sum_z;
     fmon_y = sum_yz/sum_z;
-    smon_x = sqrt(sum_x2z/sum_z-fmon_x*fmon_x);
-    smon_y = sqrt(sum_y2z/sum_z-fmon_y*fmon_y);
+    smon_x = sum_x2z/sum_z-fmon_x*fmon_x; smon_x = smon_x > 0 ? sqrt(smon_x) : 0;
+    smon_y = sum_y2z/sum_z-fmon_y*fmon_y; smon_y = smon_y > 0 ? sqrt(smon_y) : 0;
     mean_z = sum_z/n/m/p;
   }
   /* store statistics into detector */
@@ -1959,7 +1961,6 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
     return detector;
   }
 #endif
-
   /* output "Detector:" line ================================================ */
   /* when this is a detector written by a component (not the SAVE from instrument),
      not a multiarray nor event lists */
@@ -2042,12 +2043,7 @@ MCDETECTOR* mcdetector_register(MCDETECTOR detector)
 
 } /* mcdetector_register */
 
-/*******************************************************************************
-* mcdetector_import_sim: build detector structure as SIM data
-* RETURN:            detector structure for SIM (m=0 and filename=mcsiminfo_name).
-* Used by: mcsiminfo_init, mcsiminfo_close, mcdetector_write_sim
-*******************************************************************************/
-MCDETECTOR mcdetector_import_sim(void) {
+MCDETECTOR mcdetector_init(void) {
   Coords zero={0.0,0.0,0.0};
   MCDETECTOR detector=mcdetector_import(mcformat, "mcstas", NULL,
     0,0,0,            /* mnp */
@@ -2058,6 +2054,16 @@ MCDETECTOR mcdetector_import_sim(void) {
     NULL, NULL, NULL, /* p012 */
     zero);
   strncpy(detector.filename, mcsiminfo_name, CHAR_BUF_LENGTH);
+  return(detector);
+}
+
+/*******************************************************************************
+* mcdetector_import_sim: build detector structure as SIM data
+* RETURN:            detector structure for SIM (m=0 and filename=mcsiminfo_name).
+* Used by: mcsiminfo_init, mcsiminfo_close, mcdetector_write_sim
+*******************************************************************************/
+MCDETECTOR mcdetector_import_sim(void) {
+  MCDETECTOR detector  = mcdetector_init();
   detector.file_handle = mcsiminfo_file;
   return(detector);
 }
