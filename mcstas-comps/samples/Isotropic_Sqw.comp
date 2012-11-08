@@ -6,7 +6,7 @@
 * Component: Isotropic_Sqw
 *
 * %I
-* Written by: E. Farhi, Virginie Hugouvieux
+* Written by: E. Farhi, V. Hugouvieux
 * Date: August 2003
 * Version: $Revision: 1.90 $
 * Origin:  ILL
@@ -209,6 +209,7 @@
 *                     multiply S(q,w) when norm>0.
 * classical:    [1] Assumes the S(q,w) data from the files is a classical S(q,w),
 *                     and multiply that data by exp(hw/2kT) on up/down energy sides.
+*                     Use 0 when obtained from raw experiments, 1 from molecular dynamics.
 *                     Use -1 to guess from a data set including both energy sides.
 *
 * POWDER ELASTIC SCATTERING PARAMETERS (see PowderN for more details):
@@ -761,14 +762,17 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
 {
 
   t_Table  Sqw_cl;             /* the Sqw symmetric/classical version (T-> Inf) */
-  t_Table  Sqw_moments[6];     /* M0=S(q) M1=E_r M3 w_c w_l M0_cl=S_cl(q) */
+  t_Table  Gqw;                /* the generalized density of states as of Carpenter and Price, PRL 54 (1987) 153 */
+  t_Table  Sqw_moments[7];     /* M0=S(q) M1=E_r M3 w_c w_l M0_cl=S_cl(q) G(w) */
   t_Table  w_c, w_l;
   long     index_q, index_w;
   char     c[CHAR_BUF_LENGTH]; /* temporary variable */
   long     q_min_index = 0;
   
   char     do_coh=0, do_inc=0;
-  double   q_min=0;
+  double   q_min =0;
+  double   u2    =0, S0=1;
+  long     u2_count=0;
   
   if (!Sqw_Data || !Sqw_Data->intensity) return; /* nothing to do with empty S(q,w) */
   
@@ -776,6 +780,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
   if (Sqw_Data->type=='i') do_inc = 1;
   
   q_min = Sqw_Data->q_min_file;
+  if (q_min <= 0) q_min = Sqw_Data->q_step;
   
   /* test if there is only one S(q,w) available */
   if (!((Sqw->Data_inc).intensity) || !((Sqw->Data_coh).intensity))
@@ -795,13 +800,22 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     Sqw_cl.min_x        = 0;
     Sqw_cl.max_x        = Sqw_Data->q_max;
     Sqw_cl.step_x       = Sqw_Data->q_step;
+    if (!Table_Init(&Gqw, Sqw_Data->q_bins, Sqw_Data->w_bins)) {
+      printf("Isotropic_Sqw: %s: Cannot allocate G(q,w) Table (%lix%i).\n"
+             "WARNING          Skipping S(q,w) diagnosis.\n",
+             Sqw->compname, Sqw_Data->q_bins, 1);
+        return;
+    }
+    sprintf(Gqw.filename, 
+      "G(q,w) from %s (generalized density of states, Carpenter PRL 54 (1987) 153)", 
+      Sqw_Data->filename);
+    Gqw.block_number = 1; 
+    Gqw.min_x        = 0;
+    Gqw.max_x        = Sqw_Data->q_max;
+    Gqw.step_x       = Sqw_Data->q_step;
   }
   
-  /* also compute the S(q) =\int S(q,w) dw on the available w range=-w_max:w_max 
-   * which is used to normalize the incoherent S(q,w) -> 1 when q -> q_max
-   * and iq2Sq = \int q^2 S(q) dq used for the g-sum rule
-   * which is used for the g-sum rule (normalize coherent S(q,w) to density)
-   */
+  /* initialize moments and 1D stuff */
   for (index_q=0; index_q < 6; index_q++) {
     if (!Table_Init(&Sqw_moments[index_q], Sqw_Data->q_bins, 1)) {
       printf("Isotropic_Sqw: %s: Cannot allocate S(q,w) moment %ld Table (%lix%i).\n"
@@ -814,10 +828,16 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     Sqw_moments[index_q].max_x  = Sqw_Data->q_max;
     Sqw_moments[index_q].step_x = Sqw_Data->q_step;
   }
+  index_q=6;
+  Table_Init(&Sqw_moments[index_q], Sqw_Data->w_bins, 1);
+  Sqw_moments[index_q].block_number = 1;
+  Sqw_moments[index_q].min_x  = -Sqw_Data->w_max;
+  Sqw_moments[index_q].max_x  =  Sqw_Data->w_max;
+  Sqw_moments[index_q].step_x =  Sqw_Data->w_step;
 
   /* set Table titles */
   sprintf(Sqw_moments[0].filename, 
-    "M0(q)=S(q) from %s [int S(q,w) dw]", 
+    "S(q)=M0(q) from %s [int S(q,w) dw]", 
     Sqw_Data->filename);
   sprintf(Sqw_moments[1].filename, 
     "M1(q) 1-st moment from %s [int w S(q,w) dw] = HBAR^2*q^2/2/m (f-sum rule, recoil, Lovesey T1 Eq 3.63 p72, Egelstaff p196)", 
@@ -832,7 +852,10 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     "w_l(q) = sqrt(M3(q)/M1(q)) harmonic frequency from %s (Lovesey T1 5.39 p 180)", 
     Sqw_Data->filename);
   sprintf(Sqw_moments[5].filename, 
-    "M0_cl(q)=S_cl(q) from %s [int S_cl(q,w) dw]", 
+    "S_cl(q)=M0_cl(q) from %s [int S_cl(q,w) dw]", 
+    Sqw_Data->filename);
+  sprintf(Sqw_moments[6].filename, 
+    "G(w) generalized effective density of states from %s (Carpenter PRL 54 (1987) 153)", 
     Sqw_Data->filename);
 
   for   (index_q=0; index_q < Sqw_Data->q_bins; index_q++) {
@@ -843,12 +866,6 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     double sq_cl       = 0;              /* S(q) = M0 = 0-th moment classical */
     double w_c         = 0;
     double w_l         = 0;
-    
-    /* find minimal reliable q value (not interpolated) */
-    if (q >= q_min && !q_min_index) {
-      q_min_index = index_q; 
-      q_min       = q;
-    }
     
     for (index_w=0; index_w < Sqw_Data->w_bins; index_w++) {
       double w = -Sqw_Data->w_max + index_w*Sqw_Data->w_step; /* w value in Sqw_full */
@@ -867,6 +884,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
       
       /* compute classical Sqw and S(q)_cl */
       if (Sqw->Temperature > 0) {
+        double n;
         sqw_cl = sqw_full * exp(-w/(Sqw->Temperature*Sqw->T2E)/2);
         if (!Table_SetElement(&Sqw_cl, index_q, index_w, sqw_cl))
           printf("Isotropic_Sqw: %s: "
@@ -878,6 +896,19 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     } /* for index_w */
     sq    *= Sqw_Data->w_step;         /* S(q) = \int S(q,w) dw = structure factor */
     sq_cl *= Sqw_Data->w_step;
+    /* find minimal reliable q value (not interpolated) */
+    if (q >= q_min && !q_min_index && sq) {
+      q_min_index = index_q; 
+      q_min       = q;
+      if (0.9 < sq)
+        S0          = sq; /* minimum reliable S(q) */
+      else S0 = 1;
+    }
+    /* compute <u^2> = <3 * ln(S(q)) / q^2> */
+    if (q_min_index && q && S0 && sq) {
+      u2      += 3 * log(sq/S0) /q/q;
+      u2_count++;
+    }
 
     /* store moment values (q) as M0=S(q) M1=E_r M3 w_c w_l M0_cl=S_cl(q) */
     Table_SetElement(&Sqw_moments[0],    index_q, 0, sq);
@@ -897,17 +928,17 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
   } /* for index_q */
   
   /* display some usefull information, only once in MPI mode (MASTER) */
-  
-  if (Sqw->Temperature > 0 && Sqw->verbose_output > 1) {
+  if (Sqw->Temperature > 0) {
     double Da         = 1.660538921e-27;  /* [kg] unified atomic mass unit = Dalton = 1 g/mol */
   #ifndef KB
     double KB         = 1.3806503e-23;    /* [J/K] */
     /* HBAR   = 1.05457168e-34 */
   #endif
     double CELE       = 1.602176487e-19;  /* [C] Elementary charge CODATA 2006 'e' */
+    double meV2Hz     = CELE/HBAR/1000/2/PI; /* 1 meV = 241.80e9 GHz */
+    double gqw_sum    = 0;
     
-    
-    double meV2s      = CELE/HBAR/1000/2/PI; /* 1 meV = 241.80e9 GHz */
+    if (u2_count) u2 /= u2_count;
     
     MPI_MASTER(
     if (do_coh || do_inc)
@@ -924,66 +955,114 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
 
       /* compute isothermal sound velocity and compressibility */
       /* get the S(q_min) value and the corresponding w_c */
-      if (q_min_index > 0) {
+
+      if (q_min_index > 0 && q_min && q_min < 0.6) {
         double w_c = Table_Index(Sqw_moments[3], q_min_index, 0); /* meV */
-        double S0  = Table_Index(Sqw_moments[0], q_min_index, 0);
         /* HBAR = [J*s] */
-        double c_c = 2*PI*w_c*meV2s/q_min/1e10;                   /* meV*Angs -> m/s */
+        double c_T = 2*PI*w_c*meV2Hz/q_min/1e10;                  /* meV*Angs -> m/s */
         double ChiT= S0/(KB*Sqw->Temperature*Sqw->mat_rho*1e30);
         printf("# Isothermal compressibility Chi_T=%g [Pa-1] (Egelstaff  p201 Eq 10.21)\n", ChiT);
         printf("# Isothermal sound velocity    c_T=%g [m/s]  (Lovesey T1 p210 Eq 5.197)\n",
-          c_c);
+          c_T);
           
         /* Computation if C11 is rather tricky as it is obtained from w_l, which is usually quite noisy
-       * This means that the obtained values are not reliable from C = rho c_l^2 (Egelstaff Eq 14.10b p284)
-       * C44 = rho c_c^2 ~ C11/3 
-       */
+         * This means that the obtained values are not reliable from C = rho c_l^2 (Egelstaff Eq 14.10b p284)
+         * C44 = rho c_c^2 ~ C11/3 
+         */
         double w_l = Table_Index(Sqw_moments[4], q_min_index, 0); /* meV */
-        double c_l = 2*PI*w_l*meV2s/q_min/1e10;                   /* meV*Angs -> m/s */
+        double c_l = 2*PI*w_l*meV2Hz/q_min/1e10;                  /* meV*Angs -> m/s */
         double C11 = (Sqw->mat_weight*Da)*(Sqw->mat_rho*1e30)*c_l*c_l; 
-        printf("# Elastic modulus              C11=%g [GPa]  (Egelstaff Eq 14.10b p284) rough estimate.\n",
+        printf("# Elastic modulus              C11=%g [GPa]  (Egelstaff Eq 14.10b p284) [rough estimate]\n",
             C11/1e9);
       }
     }
     if (do_inc) {
+      /* display the mean square displacement from S(q) = exp(-<u^2>q^2/3) 
+           <u^2>= <3 * ln(S(q)) / q^2>
+       */
+      if (u2_count && u2) {
+        printf("# Mean square displacement   <u^2>=%g [Angs^2] (<3 * ln(S(q)) / q^2>)\n", u2);
+      }
+      
       /* compute the mean diffusion coefficient D=w_c/q^2 */
       /* FWHM of gaussian is Gamma*RMS2FWHM, only in diffusive regime (Q < 0.2 Angs-1) */
-      if (q_min_index > 0) {
+      if (q_min_index > 0 && q_min && q_min < 0.6) {
         double w_c = Table_Index(Sqw_moments[3], q_min_index, 0);
-        double D   = 2*PI*w_c*meV2s/q_min/q_min/1e14*RMS2FWHM; /* meV*Angs^2 -> mm^2/s */
+        double D   = 2*PI*w_c*meV2Hz/q_min/q_min/1e14*RMS2FWHM/2; /* meV*Angs^2 -> mm^2/s */
         printf("# Diffusion coefficient          D=%g [mm^2/s] (Egelstaff p220)\n", D);
+        if (u2_count && u2 && D)
+          printf("# Jump relaxation time         tau=%g [ns] (Egelstaff Eq 11.8 p220)\n", u2*1e-2/6/D);
       }
     }
     ); /* end MASTER in MPI mode */
+    
+    /* density of states (generalized) */
+    for (index_w=0; index_w < Sqw_Data->w_bins; index_w++) {
+      double w        = -Sqw_Data->w_max + index_w*Sqw_Data->w_step; /* w value in Sqw_full */
+      double gw       = 0;
+      for   (index_q=0; index_q < Sqw_Data->q_bins; index_q++) {
+        double q           = index_q*Sqw_Data->q_step; /* q value in Sqw_full ; q_min = 0 */
+        double sqw_full = Table_Index(Sqw_Data->Sqw, index_q, index_w);
+        double n        = 1/(exp(w/(Sqw->Temperature*Sqw->T2E))-1); /* Bose factor */
+        double DW       = q && u2 ? exp(2*u2*q*q/6) : 1;           /* Debye-Weller factor */
+        double gqw      = q && n+1 ? sqw_full*DW*2*(Sqw->mat_weight*Da)*w/(n+1)/q/q : 0;
+        if (!Table_SetElement(&Gqw, index_q, index_w, gqw))
+          printf("Isotropic_Sqw: %s: "
+                 "Error when setting Sqw_cl[%li q=%g,%li w=%g]=%g from file %s\n",
+                 Sqw->compname, index_q, q, index_w, w, gqw, Sqw_Data->filename);
+        gw      += gqw;
+        gqw_sum += gqw;
+      }
+      Table_SetElement(&Sqw_moments[6],    index_w, 0, gw);
+    }
+
+    /* normalize the density of states */
+    for (index_w=0; index_w < Sqw_Data->w_bins; index_w++) {
+      double gw = Table_Index(Sqw_moments[6], index_w, 0);
+      Table_SetElement(&Sqw_moments[6], index_w, 0, gw / gqw_sum);
+      for   (index_q=0; index_q < Sqw_Data->q_bins; index_q++) {
+        double gqw = Table_Index(Gqw, index_q, index_w);
+        Table_SetElement(&Gqw, index_q, index_w, gqw / gqw_sum);
+      }
+    }
   } /* if T>0 */
  
   /* write all tables to disk M0=S(q) M1=E_r M3 w_c w_l M0_cl=S_cl(q) */
   if (Sqw_Data->w_bins > 1) {
     sprintf(c, "%s_%s.m1",  Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-    Table_Write(Sqw_moments[1], c, "Momentum [Angs-1]", "int w S(q,w) dw (recoil) q^2/2m [meV]");
+    Table_Write(Sqw_moments[1], c, "Momentum [Angs-1]", "int w S(q,w) dw (recoil) q^2/2m [meV]", 0,0,0,0);
     sprintf(c, "%s_%s.w_l", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-    Table_Write(Sqw_moments[4], c, "Momentum [Angs-1]", "w_l(q) harmonic frequency [meV]");
+    Table_Write(Sqw_moments[4], c, "Momentum [Angs-1]", "w_l(q) harmonic frequency [meV]", 0,0,0,0);
     sprintf(c, "%s_%s.sqw", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-    Table_Write(Sqw_Data->Sqw, c, "Momentum [Angs-1]", "S(q,w) dynamical structure factor [meV-1]");
+    Table_Write(Sqw_Data->Sqw, c, "Momentum [Angs-1]", "S(q,w) dynamical structure factor [meV-1]",
+      0,0,-Sqw_Data->w_max,Sqw_Data->w_max);
     
     if (Sqw->Temperature > 0) {
       sprintf(c, "%s_%s.w_c",    Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-      Table_Write(Sqw_moments[3], c, "Momentum [Angs-1]", "w_c(q) collective excitation [meV]");
+      Table_Write(Sqw_moments[3], c, "Momentum [Angs-1]", "w_c(q) collective excitation [meV]", 0,0,0,0);
       sprintf(c, "%s_%s_cl.sq",  Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-      Table_Write(Sqw_moments[5], c, "Momentum [Angs-1]", "int S_cl(q,w) dw");
+      Table_Write(Sqw_moments[5], c, "Momentum [Angs-1]", "int S_cl(q,w) dw", 0,0,0,0);
       sprintf(c, "%s_%s_cl.sqw", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-      Table_Write(Sqw_cl, c, "Momentum [Angs-1]", "S(q,w)*exp(hw/2kT) classical limit [meV]");
+      Table_Write(Sqw_cl, c, "Momentum [Angs-1]", "S(q,w)*exp(hw/2kT) classical limit [meV]", 0,0,0,0);
+      sprintf(c, "%s_%s.gw",  Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
+      Table_Write(Sqw_moments[6], c, "Energy [meV]", "Generalized effective density of states",
+        0,0,-Sqw_Data->w_max,Sqw_Data->w_max);
+      sprintf(c, "%s_%s.gqw", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
+      Table_Write(Gqw, c, "Momentum [Angs-1]", "Generalized density of states",
+        0,0,-Sqw_Data->w_max,Sqw_Data->w_max);
     }
   }
   sprintf(c, "%s_%s.sq",    Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-  Table_Write(Sqw_moments[0], c, "Momentum [Angs-1]","S(q) = int S(q,w) dw");
+  Table_Write(Sqw_moments[0], c, "Momentum [Angs-1]","S(q) = int S(q,w) dw", 0,0,0,0);
   sprintf(c, "%s_%s.sigma", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-  Table_Write(Sqw_Data->iqSq, c, "Energy [meV]", "sigma kf/ki int q S(q,w) dw scattering cross section [barns]");
+  Table_Write(Sqw_Data->iqSq, c, "Energy [meV]", "sigma kf/ki int q S(q,w) dw scattering cross section [barns]", 0,0,0,0);
   
   /* free Tables */
-  if (Sqw->Temperature > 0)
+  if (Sqw->Temperature > 0) {
     Table_Free(&Sqw_cl);
-  for (index_q=0; index_q < 6; Table_Free(&Sqw_moments[index_q++]));
+    Table_Free(&Gqw);
+  }
+  for (index_q=0; index_q < 7; Table_Free(&Sqw_moments[index_q++]));
   
 } /* Sqw_diagnosis */
 
@@ -1107,7 +1186,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     Sqw->mat_rho = Sqw->mat_density/(Sqw->mat_weight*mat_at_nb)/1e24*NA;
     MPI_MASTER(
     if (Sqw->verbose_output > 0) 
-      printf("Isotropic_Sqw: %s: Computing scattering unit density V_rho=%g [AA^-3] from density=%g [g/cm^3] weight=%g [g/mol.]\n", 
+      printf("Isotropic_Sqw: %s: Computing scattering unit density V_rho=%g [AA^-3] from density=%g [g/cm^3] weight=%g [g/mol].\n", 
         Sqw->compname, Sqw->mat_rho, Sqw->mat_density, Sqw->mat_weight);
     );
   }
@@ -1195,9 +1274,10 @@ struct Sqw_Data_struct *Sqw_readfile(
   }
   sprintf(Sqw_full.filename, "S(q,w) from %s (dynamic structure factor)", file);
   Sqw_full.block_number = 1; 
-  Sqw_full.min_x        = 0;
-  Sqw_full.max_x        = q_max;
-  Sqw_full.step_x       = q_step;
+  
+  Sqw_Data->q_bins = q_bins; Sqw_Data->q_max = q_max; Sqw_Data->q_step= q_step;
+  Sqw_Data->w_bins = w_bins; Sqw_Data->w_max = w_max; Sqw_Data->w_step= w_step;
+  Sqw_Data->q_min_file = q_min_file;
   
   /* build an energy symmetric Sqw data set with detailed balance there-in, so
    * that we can both compute effective scattering Xsection, probability distributions
@@ -1286,6 +1366,8 @@ struct Sqw_Data_struct *Sqw_readfile(
     } /* for index_w */
   } /* for index_q */
   
+  /* if only one S(q,w) side is given, it is symmetrised by mirroring, then M1=0 */ 
+  
   /* (5) test if the Sqw_full is classical or not by computing the 1st moment (=0 for classical) */
   /* also compute temperature (quantum case) if not set */
   for   (index_q=0; index_q < q_bins; index_q++) {
@@ -1305,10 +1387,10 @@ struct Sqw_Data_struct *Sqw_readfile(
           T      += fabs(2*w/log(sqw_opp/sqw_full)/Sqw->T2E);
           T_count++;
         }
-        /* we first assume Sqw is classical. M1_cl should be 0, M1 should be recoil */
+        /* we first assume Sqw is quantum. M1_cl should be 0, M1 should be recoil */
         M1      += w*sqw_full*w_step;
         M1_count++;
-        /* then we assume it is quantum (non symmetric) and check that its symmetrized version has M1=0 */
+        /* we assume it is quantum (non symmetric) and check that its symmetrized version has M1_cl=0 */
         if (Sqw->Temperature > 0) {
           sqw_opp = sqw_full * exp(-w/(Sqw->Temperature*Sqw->T2E)/2); /* Sqw_cl */
           M1_cl      += w*sqw_opp*w_step;
@@ -1327,35 +1409,35 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (T_count)     T     /= T_count;     /* mean temperature from Bose ratio */
   if (M1_count)    M1    /= M1_count; 
   if (M1_cl_count) M1_cl /= M1_cl_count; /* mean energy value along q range */
-  
+
   /* determine if we use a classical or quantum S(q,w) */
-  if (M1 && M1_cl && Sqw->sqw_classical < 0) {
-    if (fabs(M1_cl) < fabs(M1)) {
+  if (Sqw->sqw_classical < 0) {
+    if (fabs(M1) < 2*w_step) {
+      Sqw->sqw_classical = 1; /* the initial Sqw from file seems to be centered, thus classical */
+    } else if (fabs(M1_cl) < fabs(M1)) {
       /* M1 for classical is closer to 0 than for quantum one */
       Sqw->sqw_classical = 0; /* initial data from file seems to be quantum (non classical) */  
-    } else if (fabs(M1) < 2*w_step) {
-      Sqw->sqw_classical = 1; /* the intial Sqw from file seems to be centered, thus classical */
     } else { /* M1_cl > M1 > 2*w_step */
       printf("Isotropic_Sqw: %s: I do not know if S(q,w) data is classical or quantum.\n"
              "WARNING        First moment M1=%g M1_cl=%g for file %s. Defaulting to classical case.\n",
                  Sqw->compname, M1, M1_cl, file);
     }
   }
-  if (Sqw->sqw_classical < 0) Sqw->sqw_classical=1;
+  if (Sqw->sqw_classical < 0) Sqw->sqw_classical=1; /* default when quantum/classical choice is not set */
   if (T) {
     if (Sqw->Temperature < 0)    Sqw->Temperature = fabs(T);
     MPI_MASTER(
     if (Sqw->verbose_output > 0)
       printf("Isotropic_Sqw: %s: Temperature guessed from S(q,w) data from %s is T=%g [K].\n", 
-      Sqw->compname, file, T);
+        Sqw->compname, file, T);
     );
   }
   
   MPI_MASTER(
-  if (Sqw->verbose_output > 0)
+  if (Sqw->verbose_output > 0 && w_bins > 1)
     printf("Isotropic_Sqw: %s: S(q,w) data from %s (%s) assumed to be %s.\n", 
       Sqw->compname, file, Sqw->type=='c' ? "coh" : "inc", 
-      Sqw->sqw_classical ? "classical (symmetrised, from e.g molecular dynamics)" : "quantum (includes Bose)");
+      Sqw->sqw_classical ? "classical (symmetrised)" : "quantum (includes Bose, non symmetric)");
   );
   
   /* (6) apply detailed balance on Sqw_full for classical or quantum S(q,w) */
@@ -1408,14 +1490,6 @@ struct Sqw_Data_struct *Sqw_readfile(
   
   /* free memory and store limits for new full Sqw table */
   Table_Free_Array(Table_Array);
-  Sqw_Data->q_bins = q_bins; Sqw_Data->q_max = q_max; Sqw_Data->q_step= q_step;
-  Sqw_Data->w_bins = w_bins; Sqw_Data->w_max = w_max; Sqw_Data->w_step= w_step;
-  Sqw_Data->q_min_file = q_min_file;
-  
-  Sqw_full.block_number = 1; 
-  Sqw_full.min_x        = 0;
-  Sqw_full.max_x        = Sqw_Data->q_max;
-  Sqw_full.step_x       = Sqw_Data->q_step;
   
   /* (7) renormalization of S(q,w) ========================================== */
 
@@ -1449,6 +1523,9 @@ struct Sqw_Data_struct *Sqw_readfile(
   Sqw_Data->intensity       = sum;
 
   Table_Stat(&Sqw_full);
+  Sqw_full.min_x        = 0;
+  Sqw_full.max_x        = q_max;
+  Sqw_full.step_x       = q_step;
   
   MPI_MASTER(
   if (Sqw->verbose_output > 0) {
@@ -1759,26 +1836,25 @@ INITIALIZE
                      "WARNING        Please check parameter values.\n", NAME_CURRENT_COMP);
     }
   }
-  
+  MPI_MASTER(
   if (VarSqw.verbose_output) {
     switch (VarSqw.shape) {
-      case 0: printf("Isotropic_Sqw: %s: is a %s %s : radius=%f thickness=%f height=%f \n",
+      case 0: printf("Isotropic_Sqw: %s: is a %scylinder: radius=%f thickness=%f height=%f \n",
               NAME_CURRENT_COMP, (thickness ? "hollow " : ""),
-              "Cylinder",
               radius,fabs(thickness),yheight);
               break;
-      case 1: printf("Isotropic_Sqw: %s: is a %s Box : width=%f height=%f depth=%f \n",
-              NAME_CURRENT_COMP, (thickness ? "hollow" : ""), xwidth,yheight,zdepth);
+      case 1: printf("Isotropic_Sqw: %s: is a %sbox: width=%f height=%f depth=%f \n",
+              NAME_CURRENT_COMP, (thickness ? "hollow " : ""), xwidth,yheight,zdepth);
               break;
-      case 2: printf("Isotropic_Sqw: %s: is a %s %s : radius=%f thickness=%f\n",
+      case 2: printf("Isotropic_Sqw: %s: is a %ssphere: radius=%f thickness=%f\n",
               NAME_CURRENT_COMP, (thickness ? "hollow " : ""),
-              "Sphere",
               radius,fabs(thickness));
               break;
       case 3: printf("Isotropic_Sqw: %s: is a volume defined from file %s\n",
               NAME_CURRENT_COMP, geometry);
     }
   }
+  );
 
   if (concentric && !thickness) {
     printf("Isotropic_Sqw: %s:Can not use concentric mode\n"
