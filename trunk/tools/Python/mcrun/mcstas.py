@@ -149,7 +149,7 @@ class McStas:
         return self.runMPI(args, pipe, override_mpi)
 
     def runMPI(self, args, pipe=False, override_mpi=None):
-        """ Run McStas, possible via mpi """
+        """ Run McStas, possibly via mpi """
         binpath = self.binpath
         mpi = self.options.use_mpi
         if override_mpi or override_mpi is None and mpi:
