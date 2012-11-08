@@ -101,13 +101,13 @@
       }
       if (!hfile) /* search in MCSTAS data */
       {
-        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
+        strcpy(dir, MCSTAS);
         sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, File);
         hfile = fopen(path, "r");
       }
       if (!hfile) /* search in MVCSTAS/contrib */
       {
-        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
+        strcpy(dir, MCSTAS);
         sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, File);
         hfile = fopen(path, "r");
       }
@@ -192,13 +192,13 @@
       }
       if (!hfile) /* search in MCSTAS data */
       {
-        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
+        strcpy(dir, MCSTAS);
         sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, File);
         hfile = fopen(path, "r");
       }
       if (!hfile) /* search in MVCSTAS/contrib */
       {
-        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
+        strcpy(dir, MCSTAS);
         sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, File);
         hfile = fopen(path, "r");
       }
@@ -789,50 +789,49 @@ long Table_Init(t_Table *Table, long rows, long columns)
 } /* end Table_Init */
 
 /******************************************************************************
-* long Table_Write(t_Table Table, char *file)
+* long Table_Write(t_Table Table, char *file, x1,x2, y1,y2)
 *   ACTION: write a Table to disk (ascii).
+*     when x1=x2=0 or y1=y2=0, the table default limits are used.
 *   return: 0=all is fine, non-0: error
 *******************************************************************************/
-long     Table_Write(t_Table Table, char *file, char *xl, char *yl)
+MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl, 
+  double x1, double x2, double y1, double y2)
 {
   long    i =0;
-  double *p1=NULL;
+  MCDETECTOR detector;
 
   if ((Table.data == NULL) && (Table.rows*Table.columns)) {
-    return(0); /* Table is empty - nothing to do */
+    detector.m = 0;
+    return(detector); /* Table is empty - nothing to do */
+  }
+  if (!x1 && !x2) {
+    x1 = Table.min_x;
+    x2 = Table.max_x;
+  }
+  if (!y1 && !y2) {
+    y1 = 1;
+    y2 = Table.columns;
   }
 
   /* transfer content of the Table into a 2D detector */
-  p1 = calloc(Table.rows*Table.columns, sizeof(double));
-  if (!p1) {
-    return(-1); /* could not allocate copy area to store table */
-  }
-
-  for (i=0; i<Table.rows*Table.columns; i++) {
-    p1[i] = Table.data[i];
-  }
-
   Coords coords = { 0, 0, 0};
 
   if (Table.rows == 1 || Table.columns == 1) {
-    mcdetector_out_1D(Table.filename,
+    detector = mcdetector_out_1D(Table.filename,
                       xl ? xl : "", yl ? yl : "",
-                      "x", Table.min_x, Table.max_x,
+                      "x", x1, x2,
                       Table.rows * Table.columns,
-                      NULL, p1, NULL,
+                      NULL, Table.data, NULL,
                       file, file, coords);
   } else {
-    mcdetector_out_2D(Table.filename,
+    detector = mcdetector_out_2D(Table.filename,
                       xl ? xl : "", yl ? yl : "",
-                      Table.min_x, Table.max_x,
-                      1, Table.columns,
+                      x1, x2, y1, y2,
                       Table.rows, Table.columns,
-                      NULL, p1, NULL,
+                      NULL, Table.data, NULL,
                       file, file, coords);
   }
-
-  free(p1);
-  return(0);
+  return(detector);
 }
 
 /******************************************************************************
