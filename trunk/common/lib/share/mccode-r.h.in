@@ -113,6 +113,10 @@
 #define MCCODE_LIBENV "@MCCODE_LIBENV@"
 #endif
 
+#ifndef FLAVOR_UPPER
+#define FLAVOR_UPPER MCCODE_NAME
+#endif
+
 #ifdef MC_PORTABLE
 #ifndef NOSIGNALS
 #define NOSIGNALS 1
