@@ -101,13 +101,13 @@
       }
       if (!hfile) /* search in MCSTAS data */
       {
-        strcpy(dir, MCSTAS);
+        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
         sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, File);
         hfile = fopen(path, "r");
       }
       if (!hfile) /* search in MVCSTAS/contrib */
       {
-        strcpy(dir, MCSTAS);
+        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
         sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, File);
         hfile = fopen(path, "r");
       }
@@ -192,13 +192,13 @@
       }
       if (!hfile) /* search in MCSTAS data */
       {
-        strcpy(dir, MCSTAS);
+        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
         sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, File);
         hfile = fopen(path, "r");
       }
       if (!hfile) /* search in MVCSTAS/contrib */
       {
-        strcpy(dir, MCSTAS);
+        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
         sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, File);
         hfile = fopen(path, "r");
       }
