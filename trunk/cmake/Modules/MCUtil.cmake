@@ -33,7 +33,10 @@ macro(setup_mccode_mkdist FLAVOR)
     set(MCCODE_LIBENV    "${FLAVOR_UPPER}")
 
     set(MCCODE_PARTICULE "neutron")
-    set(MCCODE_PROJECT   1)
+    set(MCCODE_PROJECT    1)
+
+    set(MCCODE_PREFIX     "mc")
+
   endif()
   if("${FLAVOR}" STREQUAL "mcxtrace")
     set(NAME             "McXtrace")
@@ -48,6 +51,9 @@ macro(setup_mccode_mkdist FLAVOR)
 
     set(MCCODE_PARTICULE "xray")
     set(MCCODE_PROJECT   1)
+
+    set(MCCODE_PREFIX     "mx")
+
   endif()
 
 
