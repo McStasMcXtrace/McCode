@@ -227,7 +227,7 @@ def get_parameters(options):
             interval = value.split(',')
             # When just one point is present, fix as constant
             if len(interval) == 1:
-                fixed_params[key] = Decimal(value)
+                fixed_params[key] = value
             else:
                 LOG.debug('interval: %s', interval)
                 intervals[key] = interval
