@@ -263,7 +263,13 @@ def main():
     if len(args) == 0:
         print parser.get_usage()
         parser.exit()
-    options.instr = args[0]
+
+    # swap .out for .instr to avoid parsing binary file
+    instr = args[0]
+    if instr.endswith(".out"):
+        instr = instr[:-4] + ".instr"
+
+    options.instr = instr
     options.params = args[1:]
 
     # Run McStas
