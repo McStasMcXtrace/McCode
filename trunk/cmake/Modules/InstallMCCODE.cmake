@@ -304,6 +304,18 @@ macro(InstallMCCODE)
     RENAME "${FLAVOR_FMT}-${MCCODE_VERSION}"
   )
 
+  # McCode select scripts
+  install(
+    PROGRAMS "${PROJECT_SOURCE_DIR}/mccode-select/mccode-select.sh"
+    DESTINATION bin
+    RENAME "mccode-select"
+    )
+  install(
+    PROGRAMS "${PROJECT_SOURCE_DIR}/mccode-select/mccode-select-bundle.sh"
+    DESTINATION bin
+    RENAME "mccode-select-bundle"
+    )
+
 endmacro(InstallMCCODE)
 
 # InstallMCCODE ends here
