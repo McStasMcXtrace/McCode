@@ -1749,12 +1749,6 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
   d_inc = Sqw_readfile(Sqw, file_inc, &(Sqw->Data_inc));
   Sqw->type = 'c';
   d_coh = Sqw_readfile(Sqw, file_coh, &(Sqw->Data_coh));
-
-  if (d_inc == NULL || d_coh == NULL) {
-    printf("ERROR: Sqw failed to read/parse file!\n");
-    exit(1);
-  }
-
   if (d_inc && !d_inc->intensity && Sqw->s_inc>0) {
     MPI_MASTER(
     if (Sqw->verbose_output > 0)
