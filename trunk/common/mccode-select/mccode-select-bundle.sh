@@ -4,15 +4,61 @@
 PREFIX=/usr/local
 
 
+function usage() {
+    echo "usage: $0 [OPTION]... package [VERSION]";
+    cat <<EOF
+Select a specific version of McStas/McXtrace as default.
+
+  --list     list available versions of package.
+  --install  install a new version of package for later linking.
+  --help     display this help and exit.
+
+Report bugs to jsbn@fysik.dtu.dk
+EOF
+}
+
+
+
+# Parse arguments
+LIST=false;
 INSTALL="";
-if [ "x$1" = "x--install" ]; then
-    INSTALL="--install";
+DRYRUN="";
+
+while true; do
+    case "$1" in
+        "--list" )
+            LIST=true
+            ;;
+        "--install" )
+            INSTALL="$1";
+            ;;
+        "--dryrun" )
+            DRYRUN="$1";
+            ;;
+        * )
+            # No match, drop out
+            break;
+    esac
     shift;
+done
+
+# Sanity check
+if ${LIST} && [ "x${INSTALL}" = "x--install" ] ; then
+    echo "Error: list and install cannot be combined. Pick one.";
+    exit 1;
+fi
+
+# Check for help or missing package name after parsing arguments
+if [ "x$1" = "x" ] || [ "x$1" = "x--help" ] ; then
+    usage;
+    exit 0;
 fi
 
 
 NAME="$1"
 VERSION="$2"
+
+
 
 TOOLS="config convert daemon display doc formatgui gui plot resplot run stas2vitess"
 
@@ -38,17 +84,9 @@ function flavor() {
     esac
 }
 
-function whenReal() {
-    if ${DOIT}; then
-        $*
-    else
-        echo $*
-    fi
-}
-
 function switch_version() {
     (
-        DOIT="$1"
+        DRYRUN="$1"
         ret=0;
 
         cd "${PREFIX}";
@@ -57,14 +95,14 @@ function switch_version() {
         # Setup core
         echo "Core:"
         for name in "${NAME}" "${MC}format"; do
-            mccode-select $INSTALL "${name}" "${VERSION}" || ret=1;
+            mccode-select $INSTALL $DRYRUN "${name}" "${VERSION}" || ret=1;
         done
 
         # Setup tools
         echo ""
         echo "Tools:"
         for tool in ${TOOLS}; do
-            mccode-select $INSTALL "${MC}${tool}" "${VERSION}" || \
+            mccode-select $INSTALL $DRYRUN "${MC}${tool}" "${VERSION}" || \
                 echo ".. skipping";
         done
 
@@ -73,18 +111,23 @@ function switch_version() {
 }
 
 
-if [ "x${VERSION}" = "x" ]; then
+if ${LIST}; then
     # list available versions
     list;
 else
+    if [ "x${VERSION}" = "x" ]; then
+        usage;
+        exit 1;
+    fi
+
     # test run
-    switch_version false > /dev/null;
+    switch_version --dryrun > /dev/null;
 
     if [ $? -eq 0 ]; then
         # things look good, do real run
-        switch_version true
+        switch_version ${DRYRUN};
     else
         # rerun test run with messages
-        switch_version false
+        switch_version --dryrun;
     fi
 fi
