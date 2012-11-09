@@ -62,11 +62,35 @@ else
 fi
 
 
+function linksTo() {
+    (
+        link=$1
+        file=$2
+        if ( ls -l "${link}" | grep "${file}"'$' > /dev/null ); then
+            exit 0;
+        fi
+        ALT=/etc/alternatives/"${link}";
+
+        if [ -e "${ALT}" ] &&
+           ( ls -l "${link}" | grep "${ALT}"'$'  > /dev/null ) &&
+           ( ls -l "${ALT}"  | grep "${file}"'$' > /dev/null ); then
+            exit 0;
+        fi
+
+        # Link does not point to file
+        exit 1;
+    )
+}
+
 function list() {
     (
         cd "${PREFIX}/bin";
         for ver in "${NAME}-"*; do
-            echo "${ver}" | sed s/\-/': '/;
+            SEL=""
+            if [ -L "${NAME}" ] && ( linksTo "${NAME}" "${ver}" ); then
+                SEL='*'
+            fi
+            echo "${ver} ${SEL}" | sed s/\-/': '/;
         done
     )
 }
