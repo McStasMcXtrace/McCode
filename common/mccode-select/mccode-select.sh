@@ -108,6 +108,23 @@ function doLink() {
     )
 }
 
+function check() {
+    (
+        name="$1"
+        file="$2"
+        link="$3"
+
+        if ! [ -x "${file}" ]; then
+            echo "${name}: Error: could not locate binary: ${file}"
+            exit 1;
+        fi
+        if [ -e "${link}" ] && ( ! [ -L "${link}" ] ); then
+            echo "${name}: Error: path is not a link: ${link}"
+            exit 1;
+        fi
+    )
+}
+
 function installBinary() {
     (
         name="$1"
@@ -122,27 +139,27 @@ function installBinary() {
             prio=1;
         fi
 
-        if ! [ -x "${file}" ]; then
-            echo "Error: could not locate binary: ${PREFIX}/${file}"
+        # Sanity check
+        if ! (check "${name}" "${file}" "${link}"); then
             exit 1;
-        else
-            MANCMD=""
-            manlink="${PREFIX}/man/man1/${name}.1"
-            manfile="${PREFIX}/man/man1/${name}-${vers}.1"
-            if [ -f "${manfile}" ]; then
-                MANCMD="--slave ${manlink} ${name}.1 ${manfile}"
-            fi
-
-            # Install using update alternatives
-            if ${HAS_ALTERNATIVES}; then
-                echo "INSTALL: ${name}: ${file}"
-                whenReal ${ALTERNATIVES} --install \
-                    "${link}" "${name}" "${file}" ${prio} \
-                    ${MANCMD} ;
-            fi
-
-            # When update-alternatives is not present --install only checks
         fi
+
+        MANCMD=""
+        manlink="${PREFIX}/man/man1/${name}.1"
+        manfile="${PREFIX}/man/man1/${name}-${vers}.1"
+        if [ -f "${manfile}" ]; then
+            MANCMD="--slave ${manlink} ${name}.1 ${manfile}"
+        fi
+
+        # Install using update alternatives
+        if ${HAS_ALTERNATIVES}; then
+            echo "INSTALL: ${name}: ${file}"
+            whenReal ${ALTERNATIVES} --install \
+                "${link}" "${name}" "${file}" ${prio} \
+                ${MANCMD} ;
+        fi
+
+        # When update-alternatives is not present --install only checks
     )
 }
 
@@ -156,17 +173,18 @@ function linkBinary() {
         link="${PREFIX}/bin/${name}";
         file="${link}-${vers}";
 
-        if ! [ -x "${file}" ]; then
-            echo "Error: could not locate binary: ${file}"
+        # Sanity check
+        if ! (check "${name}" "${file}" "${link}"); then
             exit 1;
+        fi
+
+
+        if ${HAS_ALTERNATIVES}; then
+            echo "${name} -> ${file}"
+            whenReal ${ALTERNATIVES} --set "${name}" "${file}"
+            exit 0;
         else
-            if ${HAS_ALTERNATIVES}; then
-                echo "${name} -> ${file}"
-                whenReal ${ALTERNATIVES} --set "${name}" "${file}"
-                exit 0;
-            else
-                whenReal doLink "${file}" "${link}"
-            fi
+            whenReal doLink "${file}" "${link}"
         fi
 
         # Man pages are auto linked when using update-alternatives
