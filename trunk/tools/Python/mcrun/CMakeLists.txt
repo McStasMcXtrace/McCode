@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # This will install McStas components
-project(python-tools C)
+project(python-tools-mcrun C)
 
 # Choose between McStas or McXtrace
 option(enable_mcstas   "Choose the McStas flavor" off)
@@ -109,5 +109,5 @@ add_custom_target(
 install(
   PROGRAMS "${WORK}/mcrun"
   DESTINATION bin
-  RENAME "mcrun.py-${MCCODE_VERSION}"
+  RENAME "mcrun-${MCCODE_VERSION}-py"
 )
