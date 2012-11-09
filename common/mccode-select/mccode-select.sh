@@ -52,6 +52,8 @@ fi
 NAME="$1"
 VERSION="$2"
 
+# Define dirname where existing non-overwritable binaries are moved
+BACKUPDIR=$PREFIX/bin/MCCODE_BACKUP_`date +%Y%m%d_%H:%M`
 
 # Check to see whether we have update-alternatives (Debian)
 ALTERNATIVES=$(command -v update-alternatives)
@@ -143,8 +145,14 @@ function check() {
             exit 1;
         fi
         if [ -e "${link}" ] && ( ! [ -L "${link}" ] ); then
-            echo "${name}: Error: path is not a link: ${link}"
-            exit 1;
+	    echo
+            echo "NOTE: ${name} was NOT a link: ${link}, moved to ${BACKUPDIR}/"
+	    echo
+	    if ! [ -d "${BACKUPDIR}" ]; then
+		mkdir $BACKUPDIR
+	    fi
+	    mv $link $BACKUPDIR/`basename $link`
+	    exit 0;
         fi
     )
 }
@@ -239,3 +247,4 @@ else
         linkBinary "${NAME}" "${VERSION}"
     fi
 fi
+
