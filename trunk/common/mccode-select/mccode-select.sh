@@ -3,10 +3,27 @@
 
 PREFIX=/usr/local
 
+
+if [ "x$1" = "x" ] || [ "x$1" = "x--help" ] ; then
+    echo "usage: $0 [OPTION]... package [VERSION]";
+    cat <<EOF
+Select a specific version of McStas/McXtrace as default.
+
+  --list     list available versions of package.
+  --install  install a new version of package for later linking.
+  --dryrun   run checks and simulate actions only.
+  --help     display this help and exit.
+
+Report bugs to jsbn@fysik.dtu.dk
+EOF
+    exit 0;
+fi
+
+
 # Parse arguments
 LIST=false;
 INSTALL=false;
-kDOIT=true;
+DOIT=true;
 
 while true; do
     case "$1" in
@@ -69,8 +86,6 @@ function flavor() {
 function whenReal() {
     if ${DOIT}; then
         $*
-    else
-        echo $*
     fi
 }
 
