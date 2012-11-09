@@ -134,9 +134,15 @@ function installBinary() {
         link="${PREFIX}/bin/${name}"
         file="${link}-${vers}"
 
-        prio="`echo ${vers} | sed 's/\./ * 10000 + /' | bc`"
+        # Priority: 2.01 => 200001
+        prio=`echo ${vers} | sed 's/\./ * 100000 + /' | bc`
         if [ $? -ne 0 ]; then
             prio=1;
+        fi
+
+        # Python beats Perl
+        if ( echo "${vers}" | grep '\-py' >/dev/null ); then
+            prio=`echo ${prio} '+' 1 | bc`;
         fi
 
         # Sanity check
@@ -183,9 +189,8 @@ function linkBinary() {
             echo "${name} -> ${file}"
             whenReal ${ALTERNATIVES} --set "${name}" "${file}"
             exit 0;
-        else
-            whenReal doLink "${file}" "${link}"
         fi
+        whenReal doLink "${file}" "${link}"
 
         # Man pages are auto linked when using update-alternatives
         # The below is for manual linking only
