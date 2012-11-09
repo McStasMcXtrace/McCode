@@ -1749,6 +1749,7 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
   d_inc = Sqw_readfile(Sqw, file_inc, &(Sqw->Data_inc));
   Sqw->type = 'c';
   d_coh = Sqw_readfile(Sqw, file_coh, &(Sqw->Data_coh));
+
   if (d_inc && !d_inc->intensity && Sqw->s_inc>0) {
     MPI_MASTER(
     if (Sqw->verbose_output > 0)
@@ -1756,9 +1757,11 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
     );
     ret=1;
   }
+
+  if (!d_inc || !d_coh) return(0);
+
   d_coh->type = 'c';
   Sqw->Data_inc.type = 'i';
-  if (!d_inc || !d_coh) return(0);
   if (d_coh && !d_coh->intensity && Sqw->s_coh)
     printf("Isotropic_Sqw: %s: Coherent scattering Sqw intensity is null.\n"
            "Warning        Disabling coherent scattering.\n", Sqw->compname);
