@@ -4,9 +4,9 @@
 PREFIX=/usr/local
 
 
-INSTALL=false;
+INSTALL="";
 if [ "x$1" = "x--install" ]; then
-    INSTALL=true;
+    INSTALL="--install";
     shift;
 fi
 
@@ -46,52 +46,6 @@ function whenReal() {
     fi
 }
 
-
-function doLink() {
-    (
-        FROM="$1"
-        TO="$2"
-
-        if [ -L "${TO}" ]; then
-            rm "${TO}";
-        fi
-
-        if [ -e "${TO}" ]; then
-            echo "Error: cannot replace existing file: ${TO}";
-            exit 1;
-        fi
-
-        ln -vs "${FROM}" "${TO}" ;
-    )
-}
-
-function linkBinary() {
-    (
-        name="$1";
-
-
-        link="bin/${name}";
-        file="${link}-${VERSION}";
-
-        if ! [ -x "${file}" ]; then
-            echo "Error: could not locate binary: ${PREFIX}/${file}"
-            exit 1;
-        else
-            whenReal doLink "${PREFIX}/${file}" "${PREFIX}/${link}"
-        fi
-
-
-        link="man/man1/${name}.1";
-        file="man/man1/${name}-${VERSION}.1";
-
-        if [ -f "${file}" ]; then
-            whenReal doLink "${PREFIX}/${file}" "${PREFIX}/${link}";
-        fi
-
-    )
-}
-
-
 function switch_version() {
     (
         DOIT="$1"
@@ -101,17 +55,17 @@ function switch_version() {
         MC="`flavor ${NAME}`";
 
         # Setup core
-        echo ""
         echo "Core:"
         for name in "${NAME}" "${MC}format"; do
-            linkBinary "${name}" || ret=1;
+            mccode_select.sh $INSTALL "${name}" "${VERSION}" || ret=1;
         done
 
         # Setup tools
         echo ""
         echo "Tools:"
         for tool in ${TOOLS}; do
-            linkBinary "${MC}${tool}" || echo ".. skipping";
+            mccode_select.sh $INSTALL "${MC}${tool}" "${VERSION}" || \
+                echo ".. skipping";
         done
 
         exit ${ret};
@@ -123,8 +77,6 @@ if [ "x${VERSION}" = "x" ]; then
     # list available versions
     list;
 else
-    echo "Switching ${NAME} to version ${VERSION}..";
-
     # test run
     switch_version false > /dev/null;
 
