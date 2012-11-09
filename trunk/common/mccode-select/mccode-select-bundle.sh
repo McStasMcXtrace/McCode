@@ -57,14 +57,14 @@ function switch_version() {
         # Setup core
         echo "Core:"
         for name in "${NAME}" "${MC}format"; do
-            mccode_select.sh $INSTALL "${name}" "${VERSION}" || ret=1;
+            mccode-select $INSTALL "${name}" "${VERSION}" || ret=1;
         done
 
         # Setup tools
         echo ""
         echo "Tools:"
         for tool in ${TOOLS}; do
-            mccode_select.sh $INSTALL "${MC}${tool}" "${VERSION}" || \
+            mccode-select $INSTALL "${MC}${tool}" "${VERSION}" || \
                 echo ".. skipping";
         done
 
