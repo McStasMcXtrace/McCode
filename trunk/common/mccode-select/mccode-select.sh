@@ -53,7 +53,7 @@ NAME="$1"
 VERSION="$2"
 
 # Define dirname where existing non-overwritable binaries are moved
-BACKUPDIR=$PREFIX/bin/MCCODE_BACKUP_`date +%Y%m%d_%H:%M`
+BACKUPDIR=$PREFIX/bin/MCCODE_BACKUP_`date +%Y%m%d_%H.%M`
 
 # Check to see whether we have update-alternatives (Debian)
 ALTERNATIVES=$(command -v update-alternatives)
