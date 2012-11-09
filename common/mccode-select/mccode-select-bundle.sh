@@ -64,12 +64,7 @@ TOOLS="config convert daemon display doc formatgui gui plot resplot run stas2vit
 
 
 function list() {
-    (
-        cd "${PREFIX}/bin";
-        for ver in "${NAME}-"*; do
-            echo "${ver}";
-        done
-    )
+    mccode-select --list ${NAME};
 }
 
 
