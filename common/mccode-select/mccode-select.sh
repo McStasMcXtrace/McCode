@@ -145,14 +145,14 @@ function check() {
             exit 1;
         fi
         if [ -e "${link}" ] && ( ! [ -L "${link}" ] ); then
-	    echo
+	          echo
             echo "NOTE: ${name} was NOT a link: ${link}, moved to ${BACKUPDIR}/"
-	    echo
-	    if ! [ -d "${BACKUPDIR}" ]; then
-		mkdir $BACKUPDIR
-	    fi
-	    mv $link $BACKUPDIR/`basename $link`
-	    exit 0;
+	          echo
+	          if ! [ -d "${BACKUPDIR}" ]; then
+		            mkdir $BACKUPDIR
+	          fi
+	          mv $link $BACKUPDIR/`basename $link`
+	          exit 0;
         fi
     )
 }
