@@ -46,7 +46,10 @@ macro(InstallMCCODE)
 
   # Debian
   set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/debian/postinst;")
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS       "")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS       "gcc, libc6-dev")
+  set(CPACK_DEBIAN_PACKAGE_RECOMMENDS    "${FLAVOR}-comps-${MCCODE_VERSION}")
+  set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "openmpi-bin, openmpi-dev")
+
 
   include(CPack)
 
