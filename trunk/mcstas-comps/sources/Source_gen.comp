@@ -232,7 +232,7 @@ INITIALIZE
       exit(fprintf(stderr, "Source_gen: %s: can not read file %s\n", NAME_CURRENT_COMP, flux_file));
     /* put table in Log scale */
     int i;
-    if (pTable.columns < 2) exit(fprintf(stderr, "Source_gen: %s: Flux file %s should contain at least 2 columns\n", NAME_CURRENT_COMP, flux_file));
+    if (pTable.columns < 2) exit(fprintf(stderr, "Source_gen: %s: Flux file %s should contain at least 2 columns [lambda,flux].\n", NAME_CURRENT_COMP, flux_file));
     double table_lmin=FLT_MAX, table_lmax=-FLT_MAX;
     double tmin=FLT_MAX, tmax=-FLT_MAX;
     for (i=0; i<pTable.rows; i++) {
@@ -243,7 +243,7 @@ INITIALIZE
     }
     for (i=0; i<pTable.rows; i++) {
       double val = Table_Index(pTable, i,1);
-      if (val < 0) fprintf(stderr, "Source_gen: %s: File %s has negative flux at row %i\n", NAME_CURRENT_COMP, flux_file, i+1);
+      if (val < 0) fprintf(stderr, "Source_gen: %s: File %s has negative flux at row %i.\n", NAME_CURRENT_COMP, flux_file, i+1);
       if (flux_file_log)
         val = log(val > 0 ? val : tmin/10);
       Table_SetElement(&pTable, i, 1, val);
@@ -439,7 +439,7 @@ INITIALIZE
       NAME_CURRENT_COMP);
     exit(-1);
   }
-  
+  MPI_MASTER(
   if (verbose)
   {
     printf("Source_gen: component %s ", NAME_CURRENT_COMP);
@@ -476,6 +476,7 @@ INITIALIZE
   else
     if (verbose == -1)
       printf("Source_gen: component %s unactivated", NAME_CURRENT_COMP);
+  );
 %}
 
 TRACE
