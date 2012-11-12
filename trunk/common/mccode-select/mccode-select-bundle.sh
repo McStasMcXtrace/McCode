@@ -101,7 +101,7 @@ function switch_version() {
             vers="${VERSION}";
             # Install Perl tool
             mccode-select $INSTALL $DRYRUN "${name}" "${vers}" || \
-                echo ".. skipping";
+                echo "> skipping: ${NAME}-tools-${VERSION} isn't installed?";
             if [ -x "bin/${name}-${vers}-py" ]; then
                 # Install Python tool as well
                 mccode-select $INSTALL $DRYRUN "${name}" "${vers}-py" || \

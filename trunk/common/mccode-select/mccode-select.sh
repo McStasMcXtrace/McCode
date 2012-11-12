@@ -141,7 +141,7 @@ function check() {
         link="$3"
 
         if ! [ -x "${file}" ]; then
-            echo "${name}: Error: could not locate binary: ${file}"
+            echo "${name}: cannot locate binary: ${file}"
             exit 1;
         fi
         if [ -e "${link}" ] && ( ! [ -L "${link}" ] ); then
@@ -247,4 +247,3 @@ else
         linkBinary "${NAME}" "${VERSION}"
     fi
 fi
-
