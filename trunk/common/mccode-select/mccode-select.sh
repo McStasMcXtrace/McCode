@@ -166,9 +166,14 @@ installBinary() {
         link="${PREFIX}/bin/${name}"
         file="${link}-${vers}"
 
-        # Priority: 2.01 => 200001
-        prio=`echo ${vers} | sed 's/\./ * 100000 + /' | bc`
-        if [ $? -ne 0 ]; then
+        # Priority:
+        # only numbers and dot, then try and compute a priority from this
+        prio=$( echo ${vers} | sed \
+            -e 's/[^0-9\\.]//g' \
+            -e 's/\./ * 100000 + /' | bc);
+        # sanitise to only allow numbers (version can be something strange)
+        prio=`echo ${prio} | sed 's/[^0-9]//g'`
+        if [ "x${prio}" = "x" ]; then
             prio=1;
         fi
 
