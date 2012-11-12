@@ -215,7 +215,7 @@ macro(InstallMCCODE)
 
   # Debian specific postinst script
   configure_directory (
-    "${CMAKE_SOURCE_DIR}/../cmake/support/debian/*.in"
+    "${CMAKE_SOURCE_DIR}/cmake/support/debian/*.in"
     "work/support/debian"
   )
 
