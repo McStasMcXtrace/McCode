@@ -54,17 +54,6 @@ fi
 TOP="`pwd`"
 
 
-# Set name-specific constants
-case ${NAME} in
-    mctools )
-        CONFIGURE_FLAGS="-Denable_mcstas=1";
-        ;;
-    mxtools )
-        CONFIGURE_FLAGS="-Denable_mcxtrace=1";
-        ;;
-esac
-
-
 # Convert any path to an absolute path
 function get_absolute() {
     (
@@ -117,9 +106,11 @@ fi
 # Setup global versioning
 if [ "x${FLAVOR}" = "x" ]; then
     if ( echo ${NAME} | grep mcx ) || ( echo ${NAME} | grep mx ) then
-        FLAVOR="mcxtrace"
+        FLAVOR="mcxtrace";
+        CONFIGURE_FLAGS="-Denable_mcxtrace=1";
     else
-        FLAVOR="mcstas"
+        FLAVOR="mcstas";
+        CONFIGURE_FLAGS="-Denable_mcstas=1";
     fi
 fi
 
