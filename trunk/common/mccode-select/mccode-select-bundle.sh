@@ -4,7 +4,7 @@
 PREFIX=/usr/local
 
 
-function usage() {
+usage() {
     echo "usage: $0 [OPTION]... package [VERSION]";
     cat <<EOF
 Select a specific version of McStas/McXtrace as default.
@@ -63,12 +63,12 @@ VERSION="$2"
 TOOLS="config convert daemon display doc formatgui gui plot resplot run stas2vitess"
 
 
-function list() {
+list() {
     mccode-select --list ${NAME};
 }
 
 
-function flavor() {
+flavor() {
     case "$1" in
         "mcstas" )
             echo "mc";
@@ -79,7 +79,7 @@ function flavor() {
     esac
 }
 
-function switch_version() {
+switch_version() {
     (
         DRYRUN="$1"
         ret=0;
