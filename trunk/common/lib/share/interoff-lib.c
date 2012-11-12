@@ -215,8 +215,10 @@ long off_getBlocksIndex(char* filename, long* vtxIndex, long* vtxSize, long* fac
       return (0);
     }
   }
-
+  MPI_MASTER(
   printf("Loading geometry file (OFF/PLY): %s\n", filename);
+  );
+  
   char line[CHAR_BUF_LENGTH];
   char *ret=0;
   *vtxIndex = *vtxSize = *faceIndex = *polySize = 0;
@@ -532,9 +534,10 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
 
   //initialize Arrays
   faceSize   = faceTable.columns;
-
+  MPI_MASTER(
   printf("  Number of polygons: %ld\n", polySize);
   printf("  Number of vertices: %ld\n", vtxSize);
+  );
 
   vtxArray   = malloc(vtxSize*sizeof(Coords));
   normalArray= malloc(polySize*sizeof(Coords));
@@ -655,14 +658,16 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     indNormal++;
 
   }
-
+  MPI_MASTER(
   if (ratiox!=ratioy || ratiox!=ratioz || ratioy!=ratioz)
     printf("Warning: Aspect ratio of the sample was modified.\n"
            "         If you want to keep the original proportions, specifiy only one of the dimensions.\n");
+  
   printf("  Bounding box dimensions:\n");
   printf("    Length=%f (%.3f%%)\n", rangex, ratiox*100);
   printf("    Width= %f (%.3f%%)\n", rangey, ratioy*100);
   printf("    Depth= %f (%.3f%%)\n", rangez, ratioz*100);
+  );
 
   data->vtxArray   = vtxArray;
   data->normalArray= normalArray;
