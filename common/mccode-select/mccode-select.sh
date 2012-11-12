@@ -64,7 +64,7 @@ else
 fi
 
 
-function linksTo() {
+linksTo() {
     (
         link=$1
         file=$2
@@ -84,7 +84,7 @@ function linksTo() {
     )
 }
 
-function list() {
+list() {
     (
         cd "${PREFIX}/bin";
         for ver in "${NAME}-"*; do
@@ -98,7 +98,7 @@ function list() {
 }
 
 
-function flavor() {
+flavor() {
     case "$1" in
         "mcstas" )
             echo "mc";
@@ -109,14 +109,14 @@ function flavor() {
     esac
 }
 
-function whenReal() {
+whenReal() {
     if ${DOIT}; then
         $*
     fi
 }
 
 
-function doLink() {
+doLink() {
     (
         FROM="$1"
         TO="$2"
@@ -134,7 +134,7 @@ function doLink() {
     )
 }
 
-function check() {
+check() {
     (
         name="$1"
         file="$2"
@@ -158,7 +158,7 @@ function check() {
     )
 }
 
-function installBinary() {
+installBinary() {
     (
         name="$1"
         vers="$2"
@@ -202,7 +202,7 @@ function installBinary() {
     )
 }
 
-function linkBinary() {
+linkBinary() {
     (
         cd "${PREFIX}";
 
