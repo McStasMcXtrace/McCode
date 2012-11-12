@@ -162,7 +162,6 @@ installBinary() {
     (
         name="$1"
         vers="$2"
-        targ="$3"
 
         link="${PREFIX}/bin/${name}"
         file="${link}-${vers}"
