@@ -24,6 +24,12 @@ endmacro(AppendDefIf)
 
 macro(InstallMCCODE)
 
+  # Ignore CMake warning when setting "-Denable_mcstas=1"
+  option(enable_${FLAVOR} "This option is here for compatibility only." On)
+  if (NOT enable_${FLAVOR})
+    message(FATAL_ERROR "Cannot deselect ${FLAVOR} flavor.")
+  endif()
+
   ## CPack configuration
   set(CPACK_PACKAGE_NAME          "${FLAVOR}-${MCCODE_VERSION}")
   set(CPACK_RESOURCE_FilE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../COPYING")
