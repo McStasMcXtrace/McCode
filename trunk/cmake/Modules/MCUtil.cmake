@@ -36,8 +36,8 @@ macro(setup_mccode_mkdist FLAVOR)
     set(MCCODE_PROJECT    1)
 
     set(MCCODE_PREFIX     "mc")
-
   endif()
+
   if("${FLAVOR}" STREQUAL "mcxtrace")
     set(NAME             "McXtrace")
 
@@ -53,7 +53,6 @@ macro(setup_mccode_mkdist FLAVOR)
     set(MCCODE_PROJECT   1)
 
     set(MCCODE_PREFIX     "mx")
-
   endif()
 
 
