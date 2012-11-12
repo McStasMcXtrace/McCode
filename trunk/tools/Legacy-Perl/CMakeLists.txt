@@ -51,7 +51,11 @@ set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/lib/${TOOLS_NAME}")
 
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/postinst;")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS
+  "${FLAVOR}-${MCCODE_VERSION}, perl, perl-tk, pdl, pgplot5, libpgplot-perl, gnuplot, sed, bc"
+  )
+set(CPACK_DEBIAN_PACKAGE_SUGGESTS "scilab, freewrl")
 
 
 # Make CPack respect the install prefix
@@ -96,7 +100,8 @@ endforeach()
 
 
 # Generate mccode_config.perl and mccode_reconfigure
-configure_file(lib/tools/perl/mccode_config.perl.in work/mccode_config.perl   @ONLY)
+configure_file(cmake/support/debian/postinst.in     work/support/postinst)
+configure_file(lib/tools/perl/mccode_config.perl.in work/mccode_config.perl @ONLY)
 configure_file(lib/tools/perl/mccode_reconfigure.in work/mccode_reconfigure @ONLY)
 
 # Generate man pages
