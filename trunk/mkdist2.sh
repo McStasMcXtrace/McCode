@@ -276,7 +276,7 @@ function simple_cpack_file() {
         simple_cpack "${GEN}" "${DEST}/${NAME}";
 
         # pull out packed file and clean up
-        mv "${DEST}/${NAME}"/${FILE} "${DEST}" &&
+        find "${DEST}/${NAME}" -name "${FILE}" -exec mv {} "${DEST}" \; &&
         rm -rf "${DEST}/${NAME}";
     )
 }
