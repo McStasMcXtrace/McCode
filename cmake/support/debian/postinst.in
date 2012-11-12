@@ -1,13 +1,6 @@
 #!/bin/sh
 
-# Install mcstas/mcxtrace
-update-alternatives --install \
-    /usr/local/bin/${FLAVOR} ${FLAVOR} \
-    ${CPACK_INSTALL_PREFIX}/bin/${FLAVOR}-${MCCODE_VERSION} \
-    50  # priority
-
-# Install mcformat/mxformat
-update-alternatives --install \
-    /usr/local/bin/${FLAVOR_FMT} ${FLAVOR_FMT} \
-    ${CPACK_INSTALL_PREFIX}/bin/${FLAVOR_FMT}-${MCCODE_VERSION} \
-    50  # priority
+# Install mcstas/mcxtrace including available tools
+mccode-select-bundle --install \
+    ${FLAVOR} \
+    ${MCCODE_VERSION}
