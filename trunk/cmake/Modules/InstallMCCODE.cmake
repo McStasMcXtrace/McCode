@@ -40,8 +40,8 @@ macro(InstallMCCODE)
   set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
   # Make CPack respect the install prefix
-  SET(CPACK_SET_DESTDIR "ON")
-  SET(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+  set(CPACK_SET_DESTDIR "ON")
+  set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
 
   # Debian
