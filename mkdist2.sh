@@ -105,7 +105,7 @@ fi
 
 # Setup global versioning
 if [ "x${FLAVOR}" = "x" ]; then
-    if ( echo ${NAME} | grep mcx ) || ( echo ${NAME} | grep mx ) then
+    if ( echo ${NAME} | grep '^mcx' ) || ( echo ${NAME} | grep '^mx' ) then
         FLAVOR="mcxtrace";
         CONFIGURE_FLAGS="-Denable_mcxtrace=1";
     else
