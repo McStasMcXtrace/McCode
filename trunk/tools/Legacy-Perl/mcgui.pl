@@ -1112,6 +1112,12 @@ sub menu_run_simulation {
         # on Win32 (also giving out a warning message). This is done
         # because Win32::GetShortPathName only works on directories that
         # actually exist... :(
+        if (!($newsi->{'Dir'})) {
+            my $tmpdir = ${out_name};
+            $tmpdir =~ s/\.$MCSTAS::mcstas_config{'EXE'}$//;
+            $tmpdir .= '_' . POSIX::strftime("%Y%m%d_%H%M%S", localtime);
+            $newsi->{'Dir'} = $tmpdir;
+        }
         if ($newsi->{'Dir'} && !($newsi->{'Mode'})) {
           $OutDir=$newsi->{'Dir'};
           if ($Config{'osname'} eq 'MSWin32') {
