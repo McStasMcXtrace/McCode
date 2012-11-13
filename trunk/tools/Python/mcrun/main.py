@@ -250,14 +250,6 @@ def main():
 
     # Parse options
     (options, args) = parser.parse_args()
-    expand_options(options)
-
-    if options.verbose:
-        setLogLevel(DEBUG)
-
-    # Inform user of what is happening
-    # TODO: More info?
-    LOG.info('Using directory: "%s"' % options.dir)
 
     # Extract instrument and parameters
     if len(args) == 0:
@@ -271,6 +263,16 @@ def main():
 
     options.instr = instr
     options.params = args[1:]
+
+    # Fill out extra information
+    expand_options(options)
+
+    if options.verbose:
+        setLogLevel(DEBUG)
+
+    # Inform user of what is happening
+    # TODO: More info?
+    LOG.info('Using directory: "%s"' % options.dir)
 
     # Run McStas
     mcstas = McStas(options.instr)
