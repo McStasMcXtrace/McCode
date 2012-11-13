@@ -634,6 +634,24 @@ sub preferences_dialog {
     $b->attach($choicequote, -balloonmsg => "All string parameters will be surrounded with quotes\nThis option does not allow to pass variable names");
     if ($quote) { $choicequote->select; }
 
+    # Tool-definitions
+    my $toolchoice = $lf->Label(-text => "Runtime tool options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
+    $lf->Label(-text => "Execution/run command to use:", -anchor => 'n',)->pack(-fill => 'x');
+    $lf->Entry(-relief => 'sunken',
+		       -width=>16,
+		       -textvariable => \$MCSTAS::mcstas_config{'RUNCMD'},
+		       -justify => 'right')->pack(-fill => 'x');
+    $lf->Label(-text => "Plot command to use:", -anchor => 'n',)->pack(-fill => 'x');
+    $lf->Entry(-relief => 'sunken',
+		       -width=>16,
+		       -textvariable => \$MCSTAS::mcstas_config{'PLOTCMD'},
+		       -justify => 'right')->pack(-fill => 'x');
+    $lf->Label(-text => "Trace command to use:", -anchor => 'n',)->pack(-fill => 'x');
+    $lf->Entry(-relief => 'sunken',
+		       -width=>16,
+		       -textvariable => \$MCSTAS::mcstas_config{'TRACECMD'},
+		       -justify => 'right')->pack(-fill => 'x');
+
     $MCSTAS::mcstas_config{'CFLAGS_SAVED'} = $MCSTAS::mcstas_config{'CFLAGS'} unless $MCSTAS::mcstas_config{'CFLAGS_SAVED'};
     $MCSTAS::mcstas_config{'CC_SAVED'} = $MCSTAS::mcstas_config{'CC'} unless $MCSTAS::mcstas_config{'CC_SAVED'}; 
     $MCSTAS::mcstas_config{'MPICC_SAVED'} = $MCSTAS::mcstas_config{'MPICC'} unless $MCSTAS::mcstas_config{'MPICC_SAVED'};                              
