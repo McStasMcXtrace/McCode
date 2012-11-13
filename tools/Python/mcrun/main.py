@@ -261,7 +261,7 @@ def main():
 
     # swap .out for .instr to avoid parsing binary file
     instr = args[0]
-    if instr.endswith(".out"):
+    if instr.endswith(".out") or instr.endswith(".exe"):
         instr = instr[:-4] + ".instr"
 
     options.instr = instr
