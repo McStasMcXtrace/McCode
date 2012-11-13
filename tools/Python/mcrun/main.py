@@ -197,9 +197,12 @@ def expand_options(options):
         options.cc = config.CC
     # Output dir
     if options.dir is None:
+        instr = options.instr
+        instr = instr.endswith('.instr') and instr[:-6] or instr
         # use unique directory when unspecified
-        options.dir = "./mcstas-%s" % (datetime.strftime(datetime.now(),
-                                                         DATE_FORMAT_PATH))
+        options.dir = "./%s_%s" % \
+                      (instr,
+                       datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
         # alert user
         LOG.info('No output directory specified (--dir)')
     # Output file
