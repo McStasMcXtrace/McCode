@@ -121,32 +121,32 @@ COMPONENT source = ESS_moderator_long(
     tau2 = 20e-6, d = Pulse_width, n = 20, n2 = 5, chi2 = 0.9,
     I0 = 6.9e11, I2 = 27.6e10, branch1 = 1, branch2 = 0.5,
     branch_tail = 0.1, branchframe = BRANCHFRAME)
-  AT (0, 0, 0) RELATIVE Origin
+  AT (0, 0, -0.1) RELATIVE Origin
 
 COMPONENT TOFmoderator_zoom = TOF_monitor(
     nt = 1000, filename = "TOFmoderator_zoom.dat", xwidth = 0.12,
     yheight = 0.12, tmin = 0, tmax = 5000)
-  AT (0, 0, 1E-6) RELATIVE source
+    AT (0, 0, 1E-6) RELATIVE Origin 
 
 COMPONENT TOFmoderator = TOF_monitor(
     nt = 1000, filename = "TOFmoderator.dat", xwidth = 0.12,
     yheight = 0.12, tmin = 0, tmax = 3.0e5)
-  AT (0, 0, 1E-6) RELATIVE source
+  AT (0, 0, 1E-6) RELATIVE Origin
 
 COMPONENT Lmon_guistart = L_monitor(
     nL = 1000, filename = "Lmon_guistart.dat", xwidth = GUI_w+0.01,
     yheight = GUI_h+0.01, Lmin = 0, Lmax = Lmax+1)
-  AT (0, 0, GUI_start-2e-6) RELATIVE source
+  AT (0, 0, GUI_start-2e-6) RELATIVE Origin
 
 COMPONENT Lmon_normalize = L_monitor(
     nL = 2880, filename = "Lmon_guistart_normalize.dat", xwidth = 0.10,
     yheight = 0.10, Lmin = 0, Lmax = 20)
-  AT (0, 0, GUI_start-1e-6) RELATIVE source
+  AT (0, 0, GUI_start-1e-6) RELATIVE Origin
 
 COMPONENT Guide1 = Guide(
     w1 = GUI_w, h1 = GUI_h, w2 = W1, h2 = H1, l = FO1_DIST-GUI_start-GUI_GAP/2, R0 = 1,
     alpha = ALPHA, m = M, W = 0.003)
-  AT (0, 0, GUI_start) RELATIVE source
+  AT (0, 0, GUI_start) RELATIVE Origin
 
 COMPONENT Lmonslow1 = L_monitor(
     nL = 200, filename = "Lmonslow1.dat", xwidth = 0.06,
@@ -159,7 +159,7 @@ COMPONENT PSDslow1 = PSD_monitor(
 
 COMPONENT FOchop1 = DiskChopper(
     theta_0 = SLOW1_THETA, yheight=0.20, radius = 0.6, nu = F_slow1, nslit = 1, delay = t_FO1)
-  AT (0, 0, FO1_DIST) RELATIVE source
+  AT (0, 0, FO1_DIST) RELATIVE Origin
 
 COMPONENT TOFLmon1 = TOFLambda_monitor(
     nL = 200, nt = 200, filename = "TOFLmon1.dat", tmin = 0,
@@ -185,20 +185,20 @@ COMPONENT Guidelong1 = Guide(
 COMPONENT Guidelong1b = Guide(
     w1 = W2, h1 = H2, w2 = W3, h2 = H3, l = Length/2-L_ballistic_begin-GUI_start-GUI_GAP/2,
     R0 = 1, alpha = ALPHA, m = M, W = 0.003)
-  AT (0, 0, L_ballistic_begin+GUI_start) RELATIVE source
+  AT (0, 0, L_ballistic_begin+GUI_start) RELATIVE Origin
 
 COMPONENT Lmon_slow2 = L_monitor(
     nL = 200, filename = "Lmon_slow2.dat", xwidth = 0.06,
     yheight = 0.21, Lmin = 0, Lmax = Lmax+1)
-  AT (0, 0, Length/2-1e-6) RELATIVE source
+  AT (0, 0, Length/2-1e-6) RELATIVE Origin
 
 COMPONENT FOchop2 = DiskChopper(
      theta_0 = 155, radius=0.6, nu = F_slow2, nslit = 1, delay = t_FO2)
-  AT (0, 0.1, Length/2) RELATIVE source
+  AT (0, 0.1, Length/2) RELATIVE Origin
 
 COMPONENT Fastchop1 = DiskChopper(
     theta_0 = THETA_fast1, radius = 0.5, nu = F_fast1, nslit = N_fast, delay = t_fast1)
-  AT (0, 0.1, Length/2+GUI_GAP) RELATIVE source
+  AT (0, 0.1, Length/2+GUI_GAP) RELATIVE Origin
 
 COMPONENT PSD_afterslow2 = PSD_monitor(
     filename = "PSD_afterslow2.dat", xwidth = 0.1, yheight = 0.25)
@@ -262,19 +262,19 @@ COMPONENT PSDfast2 = PSD_monitor(
 
 COMPONENT Fastchop2 = DiskChopper(
     theta_0 = FAST_THETA, radius = 0.35, nu = F_fast2, nslit = N_fast, delay = t_fast2)
-  AT (0, 0.04, Length) RELATIVE source
+  AT (0, 0.04, Length) RELATIVE Origin
 
 COMPONENT Fastchop2counter = DiskChopper(
     theta_0 = FAST_THETA, radius = 0.35, nu = -F_fast2, nslit = N_fast, delay = -t_fast2a)
-  AT (0, 0.04, Length+GUI_GAP) RELATIVE source
+  AT (0, 0.04, Length+GUI_GAP) RELATIVE Origin
 
 COMPONENT FOchop3 = DiskChopper(
     theta_0 = 2*FAST_THETA, radius = 0.35, nu = F_fast2/FO3, nslit = N_fast, delay = t_fast3)
-  AT (0, 0.04, Length+2*GUI_GAP) RELATIVE source
+  AT (0, 0.04, Length+2*GUI_GAP) RELATIVE Origin
 
 COMPONENT TOFfast2_zoom = TOF_monitor(
-    nt = 100, filename = "TOF_fast2.dat", xwidth = 0.1,
-    yheight = 0.2, tmin = 1e6*t_fast3-2e2, tmax = 1e6*t_fast3+2e2)
+    nt = 100, filename = "TOF_fast2.dat", xwidth = 1.1,
+    yheight = 1.2, tmin = 1e6*t_fast3-2e2, tmax = 1e6*t_fast3+2e2)
   AT (0, -0.04, 1e-6) RELATIVE PREVIOUS
 
 COMPONENT Lmon_afterfast2 = L_monitor(
