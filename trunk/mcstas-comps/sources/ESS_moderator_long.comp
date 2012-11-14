@@ -117,7 +117,8 @@ OUTPUT PARAMETERS (M, F, l_range, w_mult, offset, cyl_radius)
 DECLARE
 %{
   double l_range, w_mult;
-  double cyl_radius, offset;
+    double tx,ty,tz;
+    double cyl_radius, offset;
   /* Neutron-specific distribution-shape variables */
   double T_n, tau_n, tau1_n, tau2_n, chi2_n, I0_n, I2_n, branch1_n, branch2_n;
   
@@ -138,11 +139,12 @@ INITIALIZE
   if (target_index && !dist)
   {
     Coords ToTarget;
-    double tx,ty,tz;
     ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
     ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
     coords_get(ToTarget, &tx, &ty, &tz);
     dist=sqrt(tx*tx+ty*ty+tz*tz);
+  } else {
+    tx=0, ty=0, tz=dist;
   }
   
   if (n == 1 || n2 == 1 || Lmin<=0 || Lmax <=0 || dist == 0
@@ -204,7 +206,7 @@ TRACE
   }
 
   randvec_target_rect_real(&xf, &yf, &r, &w_focus,
-			   tx, ty, tz, xw, yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
  
   dx = xf-x;
   dy = yf-y;
