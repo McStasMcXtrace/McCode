@@ -77,6 +77,8 @@
 #ifdef WIN32
 #define MC_PATHSEP_C '\\'
 #define MC_PATHSEP_S "\\"
+#define random rand
+#define srandom srand
 #else  /* !WIN32 */
 #ifdef MAC
 #define MC_PATHSEP_C ':'
