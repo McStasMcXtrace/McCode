@@ -289,6 +289,18 @@ macro(InstallMCCODE)
   # Shared library, lib
   install_lib("${PROJECT_BINARY_DIR}/work/lib/")
 
+  # Binaries
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${EXE_SUFFIX}"
+    DESTINATION bin
+    RENAME "${FLAVOR}-${MCCODE_VERSION}${EXE_SUFFIX}"
+  )
+  install (
+    PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${EXE_SUFFIX}"
+    DESTINATION bin
+    RENAME "${FLAVOR_FMT}-${MCCODE_VERSION}${EXE_SUFFIX}"
+  )
+
   # Man pages
   install (
     FILES "${PROJECT_BINARY_DIR}/work/doc/man/${FLAVOR}.1"
@@ -299,18 +311,6 @@ macro(InstallMCCODE)
     FILES "${PROJECT_BINARY_DIR}/work/doc/man/${FLAVOR_FMT}.1"
     DESTINATION man/man1
     RENAME "${FLAVOR_FMT}-${MCCODE_VERSION}.1"
-  )
-
-  # Binaries
-  install (
-    PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}"
-    DESTINATION bin
-    RENAME "${FLAVOR}-${MCCODE_VERSION}"
-  )
-  install (
-    PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}"
-    DESTINATION bin
-    RENAME "${FLAVOR_FMT}-${MCCODE_VERSION}"
   )
 
   # McCode select scripts
