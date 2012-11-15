@@ -92,7 +92,7 @@ list() {
             if [ -L "${NAME}" ] && ( linksTo "${NAME}" "${ver}" ); then
                 SEL='*'
             fi
-            echo "${ver} ${SEL}" | sed s/\-/': '/;
+            echo "${ver} ${SEL}" | sed s/"${NAME}\-/${NAME}"': '/;
         done
     )
 }
