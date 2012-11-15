@@ -87,7 +87,7 @@ linksTo() {
 list() {
     (
         cd "${PREFIX}/bin";
-        for ver in "${NAME}-"*; do
+        for ver in "${NAME}-"[0-9]*; do
             SEL=""
             if [ -L "${NAME}" ] && ( linksTo "${NAME}" "${ver}" ); then
                 SEL='*'
