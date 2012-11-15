@@ -82,9 +82,8 @@ foreach(NAME
 
   add_custom_command(
     OUTPUT "${WORK}/${P}${NAME}"
-    COMMAND "./perl_fix.sh" "${MCCODE_LIB}" "${TOOLS_LIB}"
-    "mc${NAME}.pl" "${WORK}/${P}${NAME}"
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    COMMAND "./perl_fix.sh" "${PROJECT_SOURCE_DIR}/mc${NAME}.pl" "${WORK}/${P}${NAME}"
+    WORKING_DIRECTORY "${WORK}"
     )
 
   add_custom_target(
@@ -105,6 +104,11 @@ configure_file(cmake/support/debian/postinst.in     work/support/postinst)
 # Generate mccode_config.perl and mccode_reconfigure
 configure_file(lib/tools/perl/mccode_config.perl.in work/mccode_config.perl @ONLY)
 configure_file(lib/tools/perl/mccode_reconfigure.in work/mccode_reconfigure @ONLY)
+
+# Generate perl header
+configure_file(perl_env_header.pl.in work/perl_env_header.pl @ONLY)
+configure_file(perl_fix.sh.in work/perl_fix.sh @ONLY)
+
 
 # Generate man pages
 
