@@ -1,6 +1,10 @@
 #!/bin/sh
 
-# Install mcstas/mcxtrace including available tools
+# Setup mccode-select and mccode-select-bundle
+mccode-select-${MCCODE_VERSION} --install mccode-select        ${MCCODE_VERSION}
+mccode-select-${MCCODE_VERSION} --install mccode-select-bundle ${MCCODE_VERSION}
+
+# Setup mcstas/mcxtrace including available tools
 mccode-select-bundle --install \
     ${FLAVOR} \
     ${MCCODE_VERSION}
