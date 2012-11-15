@@ -2,8 +2,8 @@
 # Included from perl_env_header.pl
 
 {
-    if($ENV{"MCSTAS"}) {
-        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
+    if($ENV{"@FLAVOR_UPPER@"}) {
+        $MCSTAS::sys_dir = $ENV{"@FLAVOR_UPPER@"};
     } else {
         if ($Config{'osname'} eq 'MSWin32') {
             $MCSTAS::sys_dir = "c:\\mcstas\\lib";
@@ -12,8 +12,8 @@
         }
     }
 
-    if($ENV{"MCSTAS_TOOLS"}) {
-        $MCSTAS::perl_dir = "$ENV{'MCSTAS_TOOLS'}/perl";
+    if($ENV{"@FLAVOR_UPPER@_TOOLS"}) {
+        $MCSTAS::perl_dir = "$ENV{'@FLAVOR_UPPER@_TOOLS'}/perl";
     } else {
         $MCSTAS::perl_dir = "$MCSTAS::sys_dir/perl";
     }

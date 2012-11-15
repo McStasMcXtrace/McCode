@@ -1,9 +1,10 @@
 #!/bin/sh
 
-LIB="$1";
-LIBT="$2"
-IN="$3";
-OUT="$4";
+LIB="@MCCODE_LIB@";
+LIBT="@TOOLS_LIB@";
+
+IN="$1";
+OUT="$2";
 
 # Find cutoff surrounding ENV_HEADER macro
 N=$(grep -n ENV_HEADER ${IN} | (IFS=":" read -r N REST && echo $N))
