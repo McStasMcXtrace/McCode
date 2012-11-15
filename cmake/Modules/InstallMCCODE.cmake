@@ -317,12 +317,12 @@ macro(InstallMCCODE)
   install(
     PROGRAMS "${PROJECT_SOURCE_DIR}/mccode-select/mccode-select.sh"
     DESTINATION bin
-    RENAME "mccode-select"
+    RENAME "mccode-select-${MCCODE_VERSION}"
     )
   install(
     PROGRAMS "${PROJECT_SOURCE_DIR}/mccode-select/mccode-select-bundle.sh"
     DESTINATION bin
-    RENAME "mccode-select-bundle"
+    RENAME "mccode-select-bundle-${MCCODE_VERSION}"
     )
 
 endmacro(InstallMCCODE)
