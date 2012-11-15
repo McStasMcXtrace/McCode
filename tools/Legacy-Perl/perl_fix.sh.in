@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 LIB="@MCCODE_LIB@";
 LIBT="@TOOLS_LIB@";
