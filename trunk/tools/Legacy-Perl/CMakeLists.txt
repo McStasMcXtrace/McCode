@@ -99,8 +99,10 @@ foreach(NAME
 endforeach()
 
 
-# Generate mccode_config.perl and mccode_reconfigure
+# Generate debian postinst script
 configure_file(cmake/support/debian/postinst.in     work/support/postinst)
+
+# Generate mccode_config.perl and mccode_reconfigure
 configure_file(lib/tools/perl/mccode_config.perl.in work/mccode_config.perl @ONLY)
 configure_file(lib/tools/perl/mccode_reconfigure.in work/mccode_reconfigure @ONLY)
 
