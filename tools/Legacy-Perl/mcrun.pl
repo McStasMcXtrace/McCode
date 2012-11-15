@@ -216,7 +216,7 @@ sub parse_args {
     # tests for grid/mpi support
     if ($mpi >= 1 || $multi >= 1) {
       if (! -e $MCSTAS::mcstas_config{'HOSTFILE'}) {
-        print STDERR "mcrun: No MPI/grid machine list. Running locally.
+        print STDERR "$MCSTAS::mcstas_config{'RUNCMD'}: No MPI/grid machine list. Running locally.
   Define ".$ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/hosts
   or $MCSTAS::sys_dir/tools/perl/hosts
   or use option --machines=<file>\n";
@@ -224,7 +224,7 @@ sub parse_args {
       }
       if ($mpi >= 1 && ($MCSTAS::mcstas_config{'MPICC'}  eq "no"
                      || $MCSTAS::mcstas_config{'MPIRUN'} eq "no")) {
-        print STDERR "mcrun: You have no mpicc/mpirun available, --mpi disabled...\n";
+        print STDERR "$MCSTAS::mcstas_config{'RUNCMD'}: You have no mpicc/mpirun available, --mpi disabled...\n";
         $mpi   = 0;
       }
     }
@@ -236,7 +236,7 @@ sub parse_args {
 
     if ($multi >= 1) {  # grid: test hosts
     		# grid requires a data_dir for output
-        if (!$data_dir) { die "mcrun: distributed computation requires data_dir directory for storage\n" ; }
+        if (!$data_dir) { die "$MCSTAS::mcstas_config{'RUNCMD'}: distributed computation requires data_dir directory for storage\n" ; }
     }
     if ($multi >= 1 && $MCSTAS::mcstas_config{'HOSTFILE'} ne "") {
         require Net::Ping;
@@ -271,8 +271,10 @@ sub parse_args {
     my $cc     = $MCSTAS::mcstas_config{CC};
     my $mcstas_cflags = $MCSTAS::mcstas_config{CFLAGS};
 
-    die "Usage: mcrun [-cpnN] Instr [-sndftgahi] params={val|min,max|min,guess,max}
-  mcrun options:
+    do { 
+      my $usage = << "ENDCOM";
+"Usage: $MCSTAS::mcstas_config{'RUNCMD'} [-cpnN] Instr [-sndftgahi] params={val|min,max|min,guess,max}
+$MCSTAS::mcstas_config{'RUNCMD'} options:
    -c        --force-compile  Force rebuilding of instrument.
    -p FILE   --param=FILE     Read parameters from file FILE.
    -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.
@@ -288,7 +290,7 @@ sub parse_args {
    --optim-prec=PREC          Relative requested accuracy of criteria (1e-3)
    --optim-file=FILENAME      Defines filename for storing optim results.
                                 (Defaults to \"mcoptim_XXXX.dat\")
-   --test                     Execute McStas selftest and generate report
+   --test                     Execute $MCSTAS::mcstas_config{'PKGNAME'} selftest and generate report
    --no-cflags                Does not use CFLAGS for faster compilation
   Instr options:
    -s SEED   --seed=SEED      Set random seed (must be != 0)
@@ -303,8 +305,11 @@ sub parse_args {
    -i        --info           Detailed instrument information.
    --format=FORMAT            Output data files using format FORMAT.
                               (format list obtained from <instr>.out -h)
-
-This program both runs mcstas with Instr and the C compiler to build an
+ENDCOM
+    $_=$MCSTAS::mcstas_config{'MCCODE'};
+    if (/^mcstas/) {
+      $usage .= << "ENDMC";                    
+\"This program both runs mcstas with Instr and the C compiler to build an
 independent simulation program. The following environment variables may be
 specified for building the instrument:
   MCSTAS        Location of the McStas and component library
@@ -314,7 +319,25 @@ specified for building the instrument:
   MCSTAS_FORMAT Default FORMAT to use for data files ($MCSTAS::mcstas_config{'PLOTTER'})
 SEE ALSO: mcstas, mcdoc, mcplot, mcdisplay, mcgui, mcresplot, mcstas2vitess
 DOC:      Please visit http://www.mcstas.org/
-** No instrument definition name given\n" unless $sim_def || $exec_test;
+** No instrument definition name given
+ENDMC
+    } elsif (/^mcxtrace/) {
+      $usage .= << "ENDMX";
+\"This program both runs mcxtrace with Instr and the C compiler to build an
+independent simulation program. The following environment variables may be
+specified for building the instrument:
+  MCXTRACE        Location of the McXtrace and component library
+                  ($MCSTAS::sys_dir).
+  MCSTAS_CC     Name of the C compiler               ($cc)
+  MCSTAS_CFLAGS Options for compilation              ($mcstas_cflags)
+  MCSTAS_FORMAT Default FORMAT to use for data files ($MCSTAS::mcstas_config{'PLOTTER'})
+SEE ALSO: mcxtrace, mxdoc, mxplot, mxdisplay
+DOC:      Please visit http://www.mcxtrace.org/
+** No instrument definition name given
+ENDMX
+    }
+    die "$usage\n";
+  }unless $sim_def || $exec_test;
 
 if ($numpoints < 1) { $numpoints=1; }
 }
