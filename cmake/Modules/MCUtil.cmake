@@ -21,13 +21,6 @@ endmacro()
 # Setup McCode constants using either mkdist or SVN-defaults
 macro(setup_mccode_mkdist FLAVOR)
 
-  # Set default installation paths, if they haven't been set by a toolchain
-  foreach(name bin doc etc include lib man sbin share src)
-    if(NOT(DEFINED ${name}))
-      set(${name} "${name}")
-    endif()
-  endforeach()
-
   # Set macros
   if("${FLAVOR}" STREQUAL "mcstas")
     set(NAME             "McStas")
@@ -71,7 +64,6 @@ macro(setup_mccode_mkdist FLAVOR)
     MCCODE_PROJECT=${MCCODE_PROJECT}
     )
 
-
   # Check for mkdist values
   is_mkdist(MKDIST)
 
@@ -90,6 +82,19 @@ macro(setup_mccode_mkdist FLAVOR)
     set(MCCODE_STRING "${NAME} ${MCCODE_VERSION}, ${MCCODE_DATE}")
     set(MCCODE_TARNAME "${FLAVOR}")
   endif()
+
+
+  # Set default installation paths
+  foreach(name bin doc etc include lib man sbin share src)
+    if(NOT(DEFINED ${name}))
+      # The Windows platform installs everything in same dir
+      if(MINGW)
+        set(${name} ".")
+      else()
+        set(${name} "${name}")
+      endif()
+    endif()
+  endforeach()
 
 
   # Setup mccode name and paths
