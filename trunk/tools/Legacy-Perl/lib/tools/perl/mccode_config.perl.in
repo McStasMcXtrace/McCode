@@ -18,10 +18,11 @@
 #            - Scilab scriptfile (Unix / Win32)
 # PGDEV      - Default device for PGPLOT (usually /xserv or /gw)
 # GNUDEV     - Default device for GNUPLOT (x11/aqua/windows)
-# EDITOR   - Choice of default built-in editor
+# EDITOR     - Choice of default built-in editor
 #            0 - McStas CVS-080208 editor (simple, no extra perl modules req'd)
 #            1 - CodeText editor with highlighting of McStas instrument code
 #            2 - Default to external editor
+# TKPALETTE  - Palette choice for mcgui & child dialogues
 # EXTERNAL_EDITOR - default external editor, overriden by VISUAL or EDITOR variables
 # BROWSER  - Default BROWSER, overriden by BROWSER variable
 # VRMLVIEW - Default VRML BROWSER, overriden by VRMLVIEW variable
@@ -91,6 +92,7 @@ use Config;
      TRACECMD=> '@MCCODE_PREFIX@'.'display-@MCCODE_VERSION@',
      DOCCMD=> '@MCCODE_PREFIX@'.'doc-@MCCODE_VERSION@',
      EDITOR => 1,
+     TKPALETTE => '#fcfafa',
      MATLAB => '@MATLAB@',
      SCILAB => '@SCILAB@',
      GNUPLOT => '@GNUPLOT@',

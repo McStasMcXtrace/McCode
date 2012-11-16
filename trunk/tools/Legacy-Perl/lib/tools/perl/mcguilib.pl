@@ -629,11 +629,16 @@ sub preferences_dialog {
       -textvariable => \$editorchoice_val,
       -options      => $choices
     )->pack(-fill => 'x');
+    my $toolchoice = $lf->Label(-text => "GUI Palette", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
+    $lf->Entry(-relief => 'sunken',
+		       -width=>16,
+		       -textvariable => \$MCSTAS::mcstas_config{'TKPALETTE'},
+		       -justify => 'right')->pack(-fill => 'x');
     $choicequote = $lf->Checkbutton(-text => "Surround strings with quotes",
                -relief => 'flat', -variable => \$quote)->pack(-fill => 'x');
     $b->attach($choicequote, -balloonmsg => "All string parameters will be surrounded with quotes\nThis option does not allow to pass variable names");
     if ($quote) { $choicequote->select; }
-
+    
     # Tool-definitions
     my $toolchoice = $lf->Label(-text => "Runtime tool options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $lf->Label(-text => "Execution/run command to use:", -anchor => 'n',)->pack(-fill => 'x');
