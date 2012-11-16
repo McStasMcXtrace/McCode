@@ -104,9 +104,12 @@ configure_file(lib/tools/perl/mccode_config.perl.in work/mccode_config.perl @ONL
 configure_file(lib/tools/perl/mccode_reconfigure.in work/mccode_reconfigure @ONLY)
 
 # Generate perl header
-configure_file(perl_env_header.pl.in work/perl_env_header.pl @ONLY)
-configure_file(perl_fix.sh.in work/perl_fix.sh @ONLY)
+configure_file(perl_env_header.pl.in work/perl_env_header.pl @ONLY immediate)
+configure_file(perl_fix.sh.in work/perl_fix.sh @ONLY immediate)
 
+if(UNIX)
+	exec_program(chmod ARGS 755  work/perl_env_header.pl work/perl_fix.sh)
+endif(UNIX)
 
 # Generate man pages
 
