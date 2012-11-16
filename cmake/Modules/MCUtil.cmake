@@ -2,7 +2,7 @@
 macro(install_lib path)
   install (
     DIRECTORY "${path}"
-    DESTINATION "lib/${FLAVOR}-${MCCODE_VERSION}"
+    DESTINATION "${lib}/${FLAVOR}-${MCCODE_VERSION}"
     PATTERN "Makefile*" EXCLUDE  # skip makefiles
     PATTERN "#*"        EXCLUDE  # skip backup files
     PATTERN ".*"        EXCLUDE  # skip hidden files
@@ -21,6 +21,14 @@ endmacro()
 # Setup McCode constants using either mkdist or SVN-defaults
 macro(setup_mccode_mkdist FLAVOR)
 
+  # Set default installation paths, if they haven't been set by a toolchain
+  foreach(name bin doc etc include lib man sbin share src)
+    if(NOT(DEFINED ${name}))
+      set(${name} "${name}")
+    endif()
+  endforeach()
+
+  # Set macros
   if("${FLAVOR}" STREQUAL "mcstas")
     set(NAME             "McStas")
 

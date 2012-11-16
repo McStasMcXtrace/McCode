@@ -27,11 +27,11 @@ setup_mccode_mkdist("${FLAVOR}")
 
 set(MCCODE_NAME "${FLAVOR}-${MCCODE_VERSION}")
 
-set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/bin/${MCCODE_NAME}")
-set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/lib/${MCCODE_NAME}")
+set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/${bin}/${MCCODE_NAME}")
+set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${MCCODE_NAME}")
 
 set(TOOLS_NAME "${FLAVOR}-tools-python-${MCCODE_VERSION}")
-set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/lib/${TOOLS_NAME}/mcplot/matplotlib")
+set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}/mcplot/matplotlib")
 
 
 # Set some extra options for mccode_config
@@ -96,6 +96,6 @@ add_custom_target(
 
 install(
   PROGRAMS "${WORK}/mcplot"
-  DESTINATION bin
+  DESTINATION ${bin}
   RENAME "mcplot-${MCCODE_VERSION}-matplotlib"
 )
