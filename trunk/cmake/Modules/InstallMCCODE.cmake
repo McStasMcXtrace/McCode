@@ -301,29 +301,31 @@ macro(InstallMCCODE)
     RENAME "${FLAVOR_FMT}-${MCCODE_VERSION}${EXE_SUFFIX}"
   )
 
-  # Man pages
-  install (
-    FILES "${PROJECT_BINARY_DIR}/work/doc/man/${FLAVOR}.1"
-    DESTINATION man/man1
-    RENAME "${FLAVOR}-${MCCODE_VERSION}.1"
-  )
-  install (
-    FILES "${PROJECT_BINARY_DIR}/work/doc/man/${FLAVOR_FMT}.1"
-    DESTINATION man/man1
-    RENAME "${FLAVOR_FMT}-${MCCODE_VERSION}.1"
-  )
+  if(NOT(MINGW32))
+    # Man pages
+    install (
+      FILES "${PROJECT_BINARY_DIR}/work/doc/man/${FLAVOR}.1"
+      DESTINATION man/man1
+      RENAME "${FLAVOR}-${MCCODE_VERSION}.1"
+      )
+    install (
+      FILES "${PROJECT_BINARY_DIR}/work/doc/man/${FLAVOR_FMT}.1"
+      DESTINATION man/man1
+      RENAME "${FLAVOR_FMT}-${MCCODE_VERSION}.1"
+      )
 
-  # McCode select scripts
-  install(
-    PROGRAMS "${PROJECT_SOURCE_DIR}/mccode-select/mccode-select.sh"
-    DESTINATION bin
-    RENAME "mccode-select-${FLAVOR}-${MCCODE_VERSION}"
-    )
-  install(
-    PROGRAMS "${PROJECT_SOURCE_DIR}/mccode-select/mccode-select-bundle.sh"
-    DESTINATION bin
-    RENAME "mccode-select-bundle-${FLAVOR}-${MCCODE_VERSION}"
-    )
+    # McCode select scripts
+    install(
+      PROGRAMS "${PROJECT_SOURCE_DIR}/mccode-select/mccode-select.sh"
+      DESTINATION bin
+      RENAME "mccode-select-${FLAVOR}-${MCCODE_VERSION}"
+      )
+    install(
+      PROGRAMS "${PROJECT_SOURCE_DIR}/mccode-select/mccode-select-bundle.sh"
+      DESTINATION bin
+      RENAME "mccode-select-bundle-${FLAVOR}-${MCCODE_VERSION}"
+      )
+  endif()
 
 endmacro(InstallMCCODE)
 
