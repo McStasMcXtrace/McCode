@@ -1,8 +1,14 @@
 # Install library files into lib/${FLAVOR}, while skipping unneeded files
 macro(install_lib path)
+  if(MINGW)
+    set(dest "${lib}")
+  else()
+    set(dest "${lib}/${MCCODE_NAME}")
+  endif()
+
   install (
     DIRECTORY "${path}"
-    DESTINATION "${lib}/${FLAVOR}-${MCCODE_VERSION}"
+    DESTINATION "${dest}"
     PATTERN "Makefile*" EXCLUDE  # skip makefiles
     PATTERN "#*"        EXCLUDE  # skip backup files
     PATTERN ".*"        EXCLUDE  # skip hidden files
