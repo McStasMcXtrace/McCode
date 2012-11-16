@@ -46,7 +46,9 @@ macro(InstallMCCODE)
   set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
   # Make CPack respect the install prefix
-  set(CPACK_SET_DESTDIR "ON")
+  if(NOT(MINGW))
+    set(CPACK_SET_DESTDIR "ON")
+  endif()
   set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
 
