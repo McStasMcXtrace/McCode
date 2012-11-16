@@ -301,7 +301,7 @@ macro(InstallMCCODE)
     RENAME "${FLAVOR_FMT}-${MCCODE_VERSION}${EXE_SUFFIX}"
   )
 
-  if(NOT(MINGW32))
+  if(NOT(MINGW))
     # Man pages
     install (
       FILES "${PROJECT_BINARY_DIR}/work/doc/man/${FLAVOR}.1"

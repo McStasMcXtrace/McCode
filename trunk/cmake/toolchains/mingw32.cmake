@@ -1,6 +1,6 @@
 
 # the name of the target operating system
-SET(MINGW32 1)
+SET(MINGW 1)
 SET(CMAKE_SYSTEM_NAME Windows)
 
 # which compilers to use for C and C++
