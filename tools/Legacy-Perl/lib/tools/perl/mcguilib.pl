@@ -1061,8 +1061,8 @@ sub sitemenu_build {
         }
         # add last item for Undefined site instruments
         push @added, "Undefined site";
-        $CurrentSub = $sitemenu->cascade(-label => "Undefined site");
-        push @sites, $CurrentSub; # will be last site item
+        $UndefSite = $sitemenu->cascade(-label => "Undefined site");
+        push @sites, $UndefSite; # will be last site item
 
         # STORE instruments 
         for ($j=0 ; $j<@paths; $j++) {
@@ -1088,13 +1088,22 @@ sub sitemenu_build {
                     }
                 }
             } # end while
-            # Add the instrument to the given menu.
-            my ($base, $dirname, $suffix);
-            ($base, $dirname, $suffix) = fileparse($paths[$j],".instr");
-            if ($cname ne "" && $cname ne $base) { $base = "$base ($cname)"; }
-            $CurrentSub = $sites[$index];
-            $CurrentSub->command(-label => "$base", 
-              -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
+	    if (!($index==@added)) {
+	      # Add the instrument to the given menu.
+	      my ($base, $dirname, $suffix);
+	      ($base, $dirname, $suffix) = fileparse($paths[$j],".instr");
+	      if ($cname ne "" && $cname ne $base) { $base = "$base ($cname)"; }
+	      $CurrentSub = $sites[$index];
+	      $CurrentSub->command(-label => "$base", 
+				   -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
+	    } else {
+	      # Add the instrument to the given menu.
+	      my ($base, $dirname, $suffix);
+	      ($base, $dirname, $suffix) = fileparse($paths[$j],".instr");
+	      if ($cname ne "" && $cname ne $base) { $base = "$base ($cname)"; }
+	      $UndefSite->command(-label => "$base", 
+				   -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
+	    }
         }
     }
 }
