@@ -2053,6 +2053,12 @@ sub check_if_need_recompile {
 }
 
 my $win = new MainWindow;
+eval {
+  $win -> setPalette($MCSTAS::mcstas_config{'TKPALETTE'});
+}; 
+if ($@) {
+  printf "Specified colorscheme '$MCSTAS::mcstas_config{'TKPALETTE'}' failed. Using system default.\n";
+}
 $main_window = $win;
 setup_menu($win);
 setup_cmdwin($win);
