@@ -2,6 +2,9 @@
 # Clear out build and src dirs
 rm -rf ../build/*
 make clean
+cd ../Tk-CodeText-0.3.4
+make clean
+cd -
 
 # What version of Tk are we building?
 TKVER=`basename $PWD|sed -e 's/\./\_/g'`
@@ -13,6 +16,17 @@ PERLVER_=`echo $PERLVER|sed -e 's/\./\_/g'`
 
 # Assemble build-dir path
 BUILDDIR=${TKVER}_MacOSX_${OSXVER}_Perl_${PERLVER_}
+# Configure with system default perl
+perl Makefile.PL PREFIX=../build/$BUILDDIR/Library/Perl/$PERLVER LIB=../build/$BUILDDIR/Library/Perl/$PERLVER
+
+# Build
+make
+
+# Install
+make install
+
+cd ../Tk-CodeText-0.3.4
+
 # Configure with system default perl
 perl Makefile.PL PREFIX=../build/$BUILDDIR/Library/Perl/$PERLVER LIB=../build/$BUILDDIR/Library/Perl/$PERLVER
 
