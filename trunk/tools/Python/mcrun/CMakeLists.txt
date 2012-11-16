@@ -27,11 +27,11 @@ setup_mccode_mkdist("${FLAVOR}")
 
 set(MCCODE_NAME "${FLAVOR}-${MCCODE_VERSION}")
 
-set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/bin/${MCCODE_NAME}")
-set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/lib/${MCCODE_NAME}")
+set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/${bin}/${MCCODE_NAME}")
+set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${MCCODE_NAME}")
 
 set(TOOLS_NAME "${FLAVOR}-tools-python-${MCCODE_VERSION}")
-set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/lib/${TOOLS_NAME}")
+set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
 
 
 # Set some extra options for mccode_config
@@ -75,19 +75,19 @@ endif()
 # Configure Python files
 configure_file(config.py "${WORK}/config.py"  @ONLY)
 
-install(FILES "${WORK}/config.py" DESTINATION "lib/${TOOLS_NAME}")
+install(FILES "${WORK}/config.py" DESTINATION "${lib}/${TOOLS_NAME}")
 
 foreach(NAME "__init__.py" "log.py" "mcstas.py" "optimisation.py")
     install(
       FILES "${PROJECT_SOURCE_DIR}/${NAME}"
-      DESTINATION "lib/${TOOLS_NAME}"
+      DESTINATION "${lib}/${TOOLS_NAME}"
       )
 endforeach()
 
 # Program files
 install(
   FILES "${PROJECT_SOURCE_DIR}/main.py"
-  DESTINATION "lib/${TOOLS_NAME}"
+  DESTINATION "${lib}/${TOOLS_NAME}"
   PERMISSIONS
   OWNER_READ OWNER_WRITE OWNER_EXECUTE
   GROUP_READ GROUP_EXECUTE
@@ -108,6 +108,6 @@ add_custom_target(
 
 install(
   PROGRAMS "${WORK}/mcrun"
-  DESTINATION bin
+  DESTINATION ${bin}
   RENAME "mcrun-${MCCODE_VERSION}-py"
 )

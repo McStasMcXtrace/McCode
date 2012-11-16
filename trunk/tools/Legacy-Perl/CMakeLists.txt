@@ -44,10 +44,10 @@ set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
-set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/lib/${FLAVOR}-${MCCODE_VERSION}")
+set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}-${MCCODE_VERSION}")
 
 set(TOOLS_NAME "${FLAVOR}-tools-${MCCODE_VERSION}")
-set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/lib/${TOOLS_NAME}")
+set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
 
 
 # Debian
@@ -92,7 +92,7 @@ foreach(NAME
 
   install(
     PROGRAMS "${WORK}/${P}${NAME}"
-    DESTINATION bin
+    DESTINATION ${bin}
     RENAME "${P}${NAME}-${MCCODE_VERSION}"
   )
 endforeach()
@@ -126,18 +126,18 @@ endforeach()
 # install tools (skip *.in files)
 install(
   DIRECTORY lib/tools/
-  DESTINATION "lib/${TOOLS_NAME}"
+  DESTINATION "${lib}/${TOOLS_NAME}"
   PATTERN "*.in" EXCLUDE
 )
 
 install(
   FILES "${WORK}/mccode_config.perl"
         "${WORK}/mccode_reconfigure"
-  DESTINATION lib/${TOOLS_NAME}/perl/
+  DESTINATION ${lib}/${TOOLS_NAME}/perl/
 )
 
 install(
   DIRECTORY "${WORK}/doc/man/"
-  DESTINATION share/man/man1
+  DESTINATION ${man}/man1
   FILES_MATCHING PATTERN "*.1"
 )
