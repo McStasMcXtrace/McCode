@@ -90,4 +90,18 @@ macro(setup_mccode_mkdist FLAVOR)
     set(MCCODE_STRING "${NAME} ${MCCODE_VERSION}, ${MCCODE_DATE}")
     set(MCCODE_TARNAME "${FLAVOR}")
   endif()
+
+
+  # Setup mccode name and paths
+  set(MCCODE_NAME "${FLAVOR}-${MCCODE_VERSION}")
+
+  if(MINGW)
+    set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}/${MCCODE_NAME}")
+    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}/")
+  else()
+    set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/${bin}/${MCCODE_NAME}")
+    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${MCCODE_NAME}")
+  endif()
+
+
 endmacro()
