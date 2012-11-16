@@ -57,7 +57,7 @@ macro(setup_mccode_mkdist FLAVOR)
     set(MCCODE_LIBENV    "${FLAVOR_UPPER}")
 
     set(MCCODE_PARTICULE "xray")
-    set(MCCODE_PROJECT   1)
+    set(MCCODE_PROJECT   2)
 
     set(MCCODE_PREFIX     "mx")
   endif()
