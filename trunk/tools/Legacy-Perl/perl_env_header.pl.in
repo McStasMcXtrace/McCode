@@ -6,9 +6,9 @@
         $MCSTAS::sys_dir = $ENV{"@FLAVOR_UPPER@"};
     } else {
         if ($Config{'osname'} eq 'MSWin32') {
-            $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+            $MCSTAS::sys_dir = "c:\\@FLAVOR@\\lib";
         } else {
-            $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+            $MCSTAS::sys_dir = "@MCCODE_LIB@";
         }
     }
 
