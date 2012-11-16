@@ -86,6 +86,7 @@
 %token TOK_ROTATED    "ROTATED"
 %token TOK_PREVIOUS   "PREVIOUS"
 %token TOK_SETTING    "SETTING"
+%token TOK_STATE      "STATE"
 %token TOK_TRACE      "TRACE"
 %token TOK_SHARE      "SHARE"
 %token TOK_EXTEND     "EXTEND"
@@ -270,7 +271,7 @@ trace: /* empty */
       }
 ;
 
-parameters:   def_par set_par out_par
+parameters:   def_par set_par out_par state_par
       {
         $$.def = $1;
         $$.set = $2;
@@ -307,6 +308,16 @@ out_par:    /* empty */
       {
         $$ = $3;
       }
+;
+
+state_par:    /* empty */ 
+      { 
+	print_warn(NULL, " %s is using STATE PARAMETERS\n    %s %s support is PARTIAL for these and support will END with next release\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION);
+      } 
+    | "STATE" "PARAMETERS" formallist 
+      {
+	/* Do nothing */
+      } 
 ;
 
 comp_iformallist: '(' comp_iformals ')'
