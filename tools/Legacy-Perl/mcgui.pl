@@ -1740,17 +1740,30 @@ sub setup_cmdwin {
                                 -command => sub { menu_read_sim_file($w) });
     $sim_but->pack(-side => "right", -padx => 1, -pady => 1);
     $b->attach($sim_but, -balloonmsg => "Open previous simulation results");
-    my $status_lab = $w->Label(-text => "Status: Ok",
+    my $f4 = $w->Frame();
+    my $status_lab = $f4->Label(-text => "Status: Ok",
                                 -anchor => 'w',
                                 -justify => 'left');
-    $status_lab->pack(-fill => 'x');
+    
+    my $dir_but = $f4->Button(-text => "<-- Work dir.",
+     			      -command => sub { set_run_dir($w) });
+    $status_lab->pack(-side => 'left');
+    
+    my $dirbox = $f4->ROText(-relief => 'sunken', -bd => '0',
+     			     -setgrid => 'true',
+     			     -height => 1);
+    $dir_but->pack(-side => 'right'); 
+    $dirbox->pack(-expand => 'yes', -fill => 'x', -side => 'right');
+  
+    $workdir = $dirbox;
+    set_workdir($w, getcwd());
+    $f4->pack(-fill => 'x');      
 
-    my $f4 = $w->Frame();
     # Add the main text field, with scroll bar
-    my $rotext = $f4->ROText(-relief => 'sunken', -bd => '2',
+    my $rotext = $w->ROText(-relief => 'sunken', -bd => '2',
                             -setgrid => 'true',
                             -height => 24, -width => 80);
-    my $s = $f4->Scrollbar(-command => [$rotext, 'yview']);
+    my $s = $w->Scrollbar(-command => [$rotext, 'yview']);
     $rotext->configure(-yscrollcommand =>  [$s, 'set']);
     $s->pack(-side => 'right', -fill => 'y');
     $rotext->pack(-expand => 'yes', -fill => 'both');
@@ -1760,26 +1773,6 @@ sub setup_cmdwin {
     $current_results_label = $res_lab;
     $status_label = $status_lab;
     $cmdwin       = $rotext;
-
-    $f4->pack(-fill => 'x');
-    my $f5 = $w->Frame();
-
-    my $runlab = $f5->Label(-text => "Working directory:",
-                                -anchor => 'w',
-                                -justify => 'left');
-    $runlab->pack(-side => 'left');
-    my $dir_but = $f5->Button(-text => "Set",
-			      -command => sub { set_run_dir($w) });
-    $dir_but->pack(-side => 'right');
-    my $dirbox = $f5->ROText(-relief => 'sunken', -bd => '0',
-			     -setgrid => 'true',
-			     -height => 1);
-    $dirbox->pack(-expand => 'yes', -fill => 'x');
-    $workdir = $dirbox;
-    set_workdir($w, getcwd());
-    $f5->pack(-fill => 'x');
-
-
 
     # Insert "mcstas --version" message in window. Do it a line at the
     # time, since otherwise the tags mechanism seems to get confused.
