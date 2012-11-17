@@ -92,7 +92,7 @@ use Config;
      TRACECMD=> '@MCCODE_PREFIX@'.'display-@MCCODE_VERSION@',
      DOCCMD=> '@MCCODE_PREFIX@'.'doc-@MCCODE_VERSION@',
      EDITOR => 1,
-     TKPALETTE => '#fcfafa',
+     TKPALETTE => '#c6c6c0',
      MATLAB => '@MATLAB@',
      SCILAB => '@SCILAB@',
      GNUPLOT => '@GNUPLOT@',
