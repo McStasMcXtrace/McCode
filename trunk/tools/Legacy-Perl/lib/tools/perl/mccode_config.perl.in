@@ -23,6 +23,7 @@
 #            1 - CodeText editor with highlighting of McStas instrument code
 #            2 - Default to external editor
 # TKPALETTE  - Palette choice for mcgui & child dialogues
+# TKFONT     - Font choice for mcgui & child dialogues
 # EXTERNAL_EDITOR - default external editor, overriden by VISUAL or EDITOR variables
 # BROWSER  - Default BROWSER, overriden by BROWSER variable
 # VRMLVIEW - Default VRML BROWSER, overriden by VRMLVIEW variable
@@ -93,6 +94,7 @@ use Config;
      DOCCMD=> '@MCCODE_PREFIX@'.'doc-@MCCODE_VERSION@',
      EDITOR => 1,
      TKPALETTE => '#c6c6c0',
+     TKFONT => '-*-arial-normal-r-*-*-*-120-*-*-*-*-*-*',
      MATLAB => '@MATLAB@',
      SCILAB => '@SCILAB@',
      GNUPLOT => '@GNUPLOT@',

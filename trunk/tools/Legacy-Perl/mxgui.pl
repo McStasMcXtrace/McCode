@@ -1983,6 +1983,13 @@ eval {
 if ($@) {
   printf "Specified colorscheme '$MCSTAS::mcstas_config{'TKPALETTE'}' failed. Using system default.\n";
 }
+eval {
+  $win->optionAdd("*font", $MCSTAS::mcstas_config{'TKFONT'});
+  $win->optionAdd("*borderWidth", 1);
+};
+if ($@) {
+  printf "Specified font '$MCSTAS::mcstas_config{'TKFONT'}' failed. Using system default.\n";
+}
 $main_window = $win;
 setup_menu($win);
 setup_cmdwin($win);
