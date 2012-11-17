@@ -634,6 +634,11 @@ sub preferences_dialog {
 		       -width=>16,
 		       -textvariable => \$MCSTAS::mcstas_config{'TKPALETTE'},
 		       -justify => 'right')->pack(-fill => 'x');
+    my $toolchoice2 = $lf->Label(-text => "GUI Font", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
+    $lf->Entry(-relief => 'sunken',
+		       -width=>16,
+		       -textvariable => \$MCSTAS::mcstas_config{'TKFONT'},
+		       -justify => 'right')->pack(-fill => 'x');
     $choicequote = $lf->Checkbutton(-text => "Surround strings with quotes",
                -relief => 'flat', -variable => \$quote)->pack(-fill => 'x');
     $b->attach($choicequote, -balloonmsg => "All string parameters will be surrounded with quotes\nThis option does not allow to pass variable names");
