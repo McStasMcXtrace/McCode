@@ -194,10 +194,18 @@ sub menu_edit_current {
     if($edit_control) {
         $edit_window->raise();
     } else {
-        if ($MCSTAS::mcstas_config{'EDITOR'} eq 0) {
-            setup_edit_1_7($main_window);
+      my $tkwin;
+        if ($MCSTAS::mcstas_config{'EDITOR'} eq 0 || $MCSTAS::mcstas_config{'EDITOR'} eq 1) {
+	  $tkwin = $main_window->Toplevel;
+	  eval { # Try CodeText editor first 
+	    setup_edit($main_window,$tkwin);
+	  };
+	  if ($@) { # or revert to old-school editor  if that failed.
+	    printf "Starting Tk::CodeText based editor failed. Using simpler McStas 1.7 style editor\n";
+	    setup_edit_1_7($main_window,$tkwin);
+	  }
         } elsif ($MCSTAS::mcstas_config{'EDITOR'} eq 1 && $MCSTAS::mcstas_config{'CODETEXT'}) {
-            setup_edit($main_window);
+            
         } else {
             menu_spawn_editor($main_window);
         }
@@ -1890,12 +1898,87 @@ sub Tk::CodeText::selectionModify {
             }
 }
 
+sub setup_edit_1_7 {
+    # BEWARE: The code in this sub is from McStas version 1.7,
+    # added only for those users unable to use the CodeText
+    # based highlighting editor below. Other features are
+    # also missing.
+    my ($mw, $w) = @_;
+    # Create the editor window.
+    my $e;
+    # Create the editor menus.
+    my $menu = $w->Frame(-relief => 'raised', -borderwidth => 2);
+    $menu->pack(-fill => 'x');
+    my $filemenu = $menu->Menubutton(-text => 'File', -underline => 0);
+    $filemenu->command(-label => 'New instrument',
+                       -command => [\&menu_new, $w],
+                       -underline => 0);
+    $filemenu->command(-label => 'Save instrument',
+                       -accelerator =>  $shortcuts{'menusave'} ,
+                       -command => [\&menu_save, $w],
+                       -underline => 0);
+    $w->bind( $shortcuts{'menusave'}  => [\&menu_save, $w]);
+    $filemenu->command(-label => 'Save instrument as ...',
+                       -underline => 16,
+                       -command => sub {menu_saveas($w)});
+    $filemenu->separator;
+    $filemenu->command(-label => 'Close',
+                       -underline => 0,
+                       -accelerator =>  $shortcuts{'menuclose'} ,
+                       -command => sub { editor_quit($w) } );
+    $w->bind( $shortcuts{'menuclose'}  => sub { editor_quit($w) } );
+    $filemenu->pack(-side=>'left');
+    my $editmenu = $menu->Menubutton(-text => 'Edit', -underline => 0);
+    $editmenu->command(-label => 'Undo',
+                       -accelerator => 'Ctrl+Z',
+                       -command => [\&menu_undo, $w], -underline => 0);
+    $w->bind('<Control-z>' => [\&menu_undo, $w]);
+    $editmenu->separator;
+    $editmenu->command(-label => 'Cut',
+                       -accelerator => $shortcuts{'cut'} ,
+                       -command => sub { $e->clipboardCut(); },
+                       -underline => 0);
+    $editmenu->command(-label => 'Copy',
+                       -accelerator =>  $shortcuts{'copy'} ,
+                       -command => sub { $e->clipboardCopy(); },
+                       -underline => 1);
+    $editmenu->command(-label => 'Paste',
+                       -accelerator =>  $shortcuts{'paste'} ,
+                       -command => sub { $e->clipboardPaste(); },
+                       -underline => 0);
+    $editmenu->pack(-side=>'left');
+    my $insert_menu = $menu->Menubutton(-text => 'Insert', -underline => 0);
+    make_insert_menu($w, $insert_menu);
 
+    # Create the editor text widget.
+    $e = $w->TextUndo(-relief => 'sunken', -bd => '2', -setgrid => 'true',
+                      -height => 24);
+    my $s = $w->Scrollbar(-command => [$e, 'yview']);
+    $e->configure(-yscrollcommand =>  [$s, 'set']);
+    $s->pack(-side => 'right', -fill => 'y');
+    $e->pack(-expand => 'yes', -fill => 'both');
+    $e->mark('set', 'insert', '0.0');
+    $e->Load($current_sim_def) if $current_sim_def && -r $current_sim_def;
+    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w);
+					     if ( $kill_when_editor_exits == 1) {
+						 $mw->destroy();
+					     }
+					 } );
+    $edit_control = $e;
+    $edit_window = $w;
+    if ($current_sim_def) {
+      $w->title("Edit: $current_sim_def");
+      if (-r $current_sim_def) {
+          $e->Load($current_sim_def);
+      }
+    } else {
+      $w->title("Edit: Start with Insert/Instrument template");
+    }
+}
 
 sub setup_edit {
-    my ($mw) = @_;
+    my ($mw,$w) = @_;
     # Create the editor window.
-    my $w = $mw->Toplevel;
     my $e;
     # Create the editor text widget.
     require Tk::CodeText;
@@ -1935,6 +2018,8 @@ sub setup_edit {
       $w->title("Edit: Start with Insert/Instrument template");
     }
 }
+
+
 
 sub Tk::TextUndo::FileSaveAsPopup
 {
