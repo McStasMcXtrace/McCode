@@ -201,6 +201,22 @@ sub Tkgui {
     use Tk::Balloon;
     $continue = 0;
     my $win = new MainWindow(-title => "McGnuplot");
+    eval { # Try specified color palette...
+      $win -> setPalette($MCSTAS::mcstas_config{'TKPALETTE'});
+    }; 
+    if ($@) { # or continue with system default if that failed.
+      printf "Specified colorscheme '$MCSTAS::mcstas_config{'TKPALETTE'}' failed. Using system default.\n";
+    }
+    
+    if (!($MCSTAS::mcstas_config{'TKFONT'} eq "")) { # Only try loading a font if non-empty string is defined
+      eval { # Try loading specified font...
+	$win->optionAdd("*font", $MCSTAS::mcstas_config{'TKFONT'});
+	$win->optionAdd("*borderWidth", 1);
+      };
+      if ($@) { # or continue with system default if that failed
+	printf "Specified font '$MCSTAS::mcstas_config{'TKFONT'}' failed. Using system default.\n";
+      }
+    }
     build_gui($win);
     $TkUp=1;
     MainLoop;
