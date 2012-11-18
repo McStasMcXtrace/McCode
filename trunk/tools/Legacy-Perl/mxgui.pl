@@ -1744,11 +1744,15 @@ sub setup_cmdwin {
     my $status_lab = $w->Label(-text => "Status: Ok",
                                 -anchor => 'w',
                                 -justify => 'left');
-
+    my $spacer = $f4->Label(-text => " in ",
+                                -anchor => 'w',
+                                -justify => 'left');
     my $dir_but = $f4->Button(-text => "<-- Work dir.",
     			      -command => sub { set_run_dir($w) });
+
     $status_lab->pack(-side => 'left');
-    
+    $spacer->pack(-side => 'left');
+
     my $dirbox = $f4->ROText(-relief => 'sunken', -bd => '0',
      			     -setgrid => 'true',
      			     -height => 1);
