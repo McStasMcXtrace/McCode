@@ -194,10 +194,18 @@ sub menu_edit_current {
     if($edit_control) {
         $edit_window->raise();
     } else {
-        if ($MCSTAS::mcstas_config{'EDITOR'} eq 0) {
-            setup_edit_1_7($main_window);
+      my $tkwin;
+        if ($MCSTAS::mcstas_config{'EDITOR'} eq 0 || $MCSTAS::mcstas_config{'EDITOR'} eq 1) {
+	  $tkwin = $main_window->Toplevel;
+	  eval { # Try CodeText editor first 
+	    setup_edit($main_window,$tkwin);
+	  };
+	  if ($@) { # or revert to old-school editor  if that failed.
+	    printf "Starting Tk::CodeText based editor failed. Using simpler McStas 1.7 style editor\n";
+	    setup_edit_1_7($main_window,$tkwin);
+	  }
         } elsif ($MCSTAS::mcstas_config{'EDITOR'} eq 1 && $MCSTAS::mcstas_config{'CODETEXT'}) {
-            setup_edit($main_window);
+            
         } else {
             menu_spawn_editor($main_window);
         }
@@ -1893,9 +1901,8 @@ sub setup_edit_1_7 {
     # added only for those users unable to use the CodeText
     # based highlighting editor below. Other features are
     # also missing.
-    my ($mw) = @_;
+    my ($mw, $w) = @_;
     # Create the editor window.
-    my $w = $mw->Toplevel;
     my $e;
     # Create the editor menus.
     my $menu = $w->Frame(-relief => 'raised', -borderwidth => 2);
@@ -1969,9 +1976,8 @@ sub setup_edit_1_7 {
 
 
 sub setup_edit {
-    my ($mw) = @_;
+    my ($mw, $w) = @_;
     # Create the editor window.
-    my $w = $mw->Toplevel;
     my $e;
     # Create the editor text widget.
     require Tk::CodeText;
