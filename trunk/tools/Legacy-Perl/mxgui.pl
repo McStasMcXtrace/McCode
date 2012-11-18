@@ -1977,19 +1977,24 @@ sub check_if_need_recompile {
 }
 
 my $win = new MainWindow;
-eval {
+
+eval { # Try specified color palette...
   $win -> setPalette($MCSTAS::mcstas_config{'TKPALETTE'});
 }; 
-if ($@) {
+if ($@) { # or continue with system default if that failed.
   printf "Specified colorscheme '$MCSTAS::mcstas_config{'TKPALETTE'}' failed. Using system default.\n";
 }
-eval {
-  $win->optionAdd("*font", $MCSTAS::mcstas_config{'TKFONT'});
-  $win->optionAdd("*borderWidth", 1);
-};
-if ($@) {
-  printf "Specified font '$MCSTAS::mcstas_config{'TKFONT'}' failed. Using system default.\n";
+
+if (!($MCSTAS::mcstas_config{'TKFONT'} eq "")) { # Only try loading a font if non-empty string is defined
+  eval { # Try loading specified font...
+    $win->optionAdd("*font", $MCSTAS::mcstas_config{'TKFONT'});
+    $win->optionAdd("*borderWidth", 1);
+  };
+  if ($@) { # or continue with system default if that failed
+    printf "Specified font '$MCSTAS::mcstas_config{'TKFONT'}' failed. Using system default.\n";
+  }
 }
+
 $main_window = $win;
 setup_menu($win);
 setup_cmdwin($win);
