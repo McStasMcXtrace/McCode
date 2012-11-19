@@ -7,6 +7,9 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 
+# Python and Perl suffixes
+set(PYTHON_SUFFIX "py")
+set(PERL_SUFFIX "pl")
 
 # Set executable extension
 set(EXE_SUFFIX   "exe")
