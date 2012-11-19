@@ -22,4 +22,4 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 # Set executable extension
 set(EXE_SUFFIX   "exe")
 
-# INSTR_SUFFIX defaults to EXE_SUFFIX
+# OUT_SUFFIX defaults to EXE_SUFFIX
