@@ -93,5 +93,5 @@ add_custom_target(
 install(
   PROGRAMS "${WORK}/mcplot"
   DESTINATION ${bin}
-  RENAME "mcplot-${MCCODE_VERSION}-matplotlib"
+  RENAME "mcplot-${MCCODE_VERSION}-matplotlib${DOT_PYTHON_SUFFIX}"
 )
