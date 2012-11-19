@@ -123,6 +123,7 @@ macro(setup_mccode_mkdist FLAVOR)
     endif()
   endif()
 
+  # Macros that include a leading dot "."
   if(NOT DEFINED DOT_EXE_SUFFIX AND NOT ${EXE_SUFFIX} STREQUAL "")
     set(DOT_EXE_SUFFIX ".${EXE_SUFFIX}")
   endif()
