@@ -100,7 +100,7 @@ use Config;
      GNUPLOT => '@GNUPLOT@',
      MATLAB_COMMAND => '-nodesktop -nosplash',
      SCILAB_COMMAND => '-nw',
-     EXE => 'out',
+     EXE => '@INSTR_SUFFIX@',
      HOSTFILE => '',
      MODULES => '',
      CODETEXT => 'no',
