@@ -131,10 +131,10 @@ macro(setup_mccode_mkdist FLAVOR)
   endmacro()
 
   # Define suffix-macros that include a leading dot "."
-  add_dot(DOT_EXE_SUFFIX ${EXE_SUFFIX})
-  add_dot(DOT_OUT_SUFFIX ${OUT_SUFFIX})
+  add_dot(DOT_EXE_SUFFIX "${EXE_SUFFIX}")
+  add_dot(DOT_OUT_SUFFIX "${OUT_SUFFIX}")
 
-  add_dot(DOT_PYTHON_SUFFIX ${PYTHON_SUFFIX})
-  add_dot(DOT_PERL_SUFFIX   ${PERL_SUFFIX})
+  add_dot(DOT_PYTHON_SUFFIX "${PYTHON_SUFFIX}")
+  add_dot(DOT_PERL_SUFFIX   "${PERL_SUFFIX}")
 
 endmacro()
