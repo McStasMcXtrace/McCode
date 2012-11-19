@@ -104,5 +104,5 @@ add_custom_target(
 install(
   PROGRAMS "${WORK}/mcrun"
   DESTINATION ${bin}
-  RENAME "mcrun-${MCCODE_VERSION}-py"
+  RENAME "mcrun-${MCCODE_VERSION}-py${DOT_PYTHON_SUFFIX}"
 )
