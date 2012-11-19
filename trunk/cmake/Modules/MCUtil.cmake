@@ -123,12 +123,18 @@ macro(setup_mccode_mkdist FLAVOR)
     endif()
   endif()
 
-  # Macros that include a leading dot "."
-  if(NOT DEFINED DOT_EXE_SUFFIX AND NOT ${EXE_SUFFIX} STREQUAL "")
-    set(DOT_EXE_SUFFIX ".${EXE_SUFFIX}")
-  endif()
-  if(NOT DEFINED DOT_OUT_SUFFIX AND NOT ${OUT_SUFFIX} STREQUAL "")
-    set(DOT_OUT_SUFFIX ".${OUT_SUFFIX}")
-  endif()
+  # Helper for adding leading "."
+  macro(add_dot name val)
+    if(NOT DEFINED ${name} AND NOT ${val} STREQUAL "")
+      set(${name} ".${val}")
+    endif()
+  endmacro()
+
+  # Define suffix-macros that include a leading dot "."
+  add_dot(DOT_EXE_SUFFIX ${EXE_SUFFIX})
+  add_dot(DOT_OUT_SUFFIX ${OUT_SUFFIX})
+
+  add_dot(DOT_PYTHON_SUFFIX ${PYTHON_SUFFIX})
+  add_dot(DOT_PERL_SUFFIX   ${PERL_SUFFIX})
 
 endmacro()
