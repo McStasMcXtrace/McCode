@@ -112,13 +112,15 @@ if [ -d "${DEST}/.git" ] || [ -d "${DEST}/.svn" ]; then
 fi
 
 
-# Setup global versioning
+# Setup global flavor (mcstas/mcxtrace)
 if [ "x${FLAVOR}" = "x" ]; then
     if ( echo ${NAME} | grep '^mcx' ) || ( echo ${NAME} | grep '^mx' ) then
         FLAVOR="mcxtrace";
+        MCCODE_NAME="McXtrace";
         CONFIGURE_FLAGS="-Denable_mcxtrace=1";
     else
         FLAVOR="mcstas";
+        MCCODE_NAME="McStas";
         CONFIGURE_FLAGS="-Denable_mcstas=1";
     fi
 fi
@@ -131,16 +133,6 @@ echo ""
 MCCODE_TARNAME="${FLAVOR}"
 MCCODE_DATE="${MONTH}. ${DAY}, ${YEAR}";
 MCCODE_STRING="${MCCODE_NAME} ${MCCODE_VERSION} - ${MCCODE_DATE}";
-
-case "${NAME}" in
-    "mcstas" )
-        export MCCODE_NAME="McStas";
-        ;;
-    "mcxtrace" )
-        export MCCODE_NAME="McXtrace";
-        ;;
-esac
-
 
 
 function config_mccode() {
