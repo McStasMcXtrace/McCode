@@ -1,6 +1,6 @@
 # Install library files into lib/${FLAVOR}, while skipping unneeded files
 macro(install_lib path)
-  if(MINGW)
+  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(dest "${lib}")
   else()
     set(dest "${lib}/${MCCODE_NAME}")
@@ -102,7 +102,7 @@ macro(setup_mccode_mkdist FLAVOR)
   foreach(name bin doc etc include lib man sbin share src)
     if(NOT(DEFINED ${name}))
       # The Windows platform installs everything in same dir
-      if(MINGW)
+      if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         set(${name} ".")
       else()
         set(${name} "${name}")
@@ -114,7 +114,7 @@ macro(setup_mccode_mkdist FLAVOR)
   # Setup mccode name and paths
   set(MCCODE_NAME "${FLAVOR}-${MCCODE_VERSION}")
 
-  if(MINGW)
+  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}/${MCCODE_NAME}")
     set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}/")
   else()

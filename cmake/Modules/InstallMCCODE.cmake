@@ -46,7 +46,7 @@ macro(InstallMCCODE)
   set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
   # Make CPack respect the install prefix
-  if(NOT(MINGW))
+  if(NOT (CMAKE_SYSTEM_NAME STREQUAL "Windows"))
     set(CPACK_SET_DESTDIR "ON")
   endif()
   set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -303,7 +303,7 @@ macro(InstallMCCODE)
     RENAME "${FLAVOR_FMT}-${MCCODE_VERSION}${DOT_EXE_SUFFIX}"
   )
 
-  if(NOT MINGW)
+  if(NOT (CMAKE_SYSTEM_NAME STREQUAL "Windows"))
     # Man pages
     install (
       FILES "${PROJECT_BINARY_DIR}/work/doc/man/${FLAVOR}.1"
