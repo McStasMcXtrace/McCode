@@ -1985,7 +1985,7 @@ sub setup_edit {
     require Tk::CodeText::McStas;
     $e = $w->Scrolled('CodeText',-relief => 'sunken', -bd => '2', -setgrid => 'true',
                       -height => 24, wrap => 'none', -scrollbars =>'se',
-                      -commentchar => '// ', -indentchar => "  ", -updatecall => \&update_line, -syntax => 'McStas', -background => 'white');
+                      -commentchar => '// ', -indentchar => "  ", -updatecall => \&update_line, -syntax => 'McStas');
     my $menu = $e->menu;
     $w->bind('<F5>' => [\&Tk::CodeText::selectionIndent]);
     $w->bind('<F6>' => [\&Tk::CodeText::selectionUnIndent]);
