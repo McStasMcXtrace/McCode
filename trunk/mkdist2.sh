@@ -10,6 +10,13 @@ DEFAULT_VERSION="${YEAR}-${MONTH}-${DAY}";
 DEFAULT_TARGET="dist/"
 DEFAULT_GENS="src bin"
 
+# Trick to extract available generators from this source file
+export ALL_GENS=$(
+    grep '^make_' "$0" | grep -oE '^make_[^(]+' | grep -oE '[^_]+$' | \
+        while read gen; do \
+        echo -n "$gen "; \
+        done)
+
 # name is mandatory and source is guessed (they have no defaults)
 
 
@@ -26,8 +33,12 @@ usage() {
     echo "  name:      The name of the distribution (e.g. mcstas)";
     echo "  version:   The version (default: current date)";
     echo "  source:    The source directory (default: name)";
-    echo "  target:    The target directory (default: dist)";
-    echo "  gens:      Generators to use (src, bin, deb, rpm)";
+    echo "  target:    The target directory (default: ${DEFAULT_TARGET})";
+    echo "  gens:      Generators to use (default: ${DEFAULT_GENS})";
+    echo "";
+    echo "A default value can be chosen by supplying an empty value like ''.";
+    echo ""
+    echo "Available generators are: ${ALL_GENS}";
     echo ""
     echo "McStas, Johan Brinch <jsbn@fysik.dtu.dk>";
 }
