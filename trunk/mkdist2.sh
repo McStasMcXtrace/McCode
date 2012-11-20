@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Set environment constants
+TOP="`pwd`"
+cd `dirname "$0"`;
 
 # Collect date information
 MONTH=`date +"%b"`
@@ -73,11 +76,6 @@ GENS="$*"
 if [ "x${GENS}" = "x" ]; then
     GENS="${DEFAULT_GENS}";
 fi
-
-
-# Set environment constants
-TOP="`pwd`"
-
 
 # Convert any path to an absolute path
 get_absolute() {
