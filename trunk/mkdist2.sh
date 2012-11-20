@@ -1,5 +1,19 @@
 #!/bin/sh
 
+
+# Collect date information
+MONTH=`date +"%b"`
+DAY=`date +"%d"`
+YEAR=`date +"%Y"`
+
+DEFAULT_VERSION="${YEAR}-${MONTH}-${DAY}";
+DEFAULT_TARGET="dist/"
+DEFAULT_GENS="src bin"
+
+# name is mandatory and source is guessed (they have no defaults)
+
+
+
 if [ "x${MCINSTALL_PREFIX}" = "x" ]; then
     MCINSTALL_PREFIX="/usr/local";
 fi
@@ -46,7 +60,7 @@ GENS="$*"
 
 # Set default generators
 if [ "x${GENS}" = "x" ]; then
-    GENS="src bin";
+    GENS="${DEFAULT_GENS}";
 fi
 
 
@@ -63,14 +77,9 @@ function get_absolute() {
 }
 
 
-# Collect date information
-MONTH=`date +"%b"`
-DAY=`date +"%d"`
-YEAR=`date +"%Y"`
-
 # Set default version
 if [ "x${MCCODE_VERSION}" = "x" ]; then
-    MCCODE_VERSION="${YEAR}-${MONTH}-${DAY}";
+    MCCODE_VERSION="${DEFAULT_VERSION}";
 fi
 
 
@@ -90,7 +99,7 @@ fi
 
 # Set default distination directory
 if [ "x${DEST}" = "x" ]; then
-    DEST="${TOP}/dist";
+    DEST="${TOP}/${DEFAULT_TARGET}";
 else
     # Make absolute
     DEST="`get_absolute "${DEST}"`";
