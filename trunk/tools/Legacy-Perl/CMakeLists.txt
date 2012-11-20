@@ -56,6 +56,12 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS
 set(CPACK_DEBIAN_PACKAGE_SUGGESTS "scilab, freewrl")
 
 
+# RPM
+set(CPACK_RPM_PACKAGE_REQUIRES
+  "${FLAVOR}-${MCCODE_VERSION}, perl, perl-tk, pdl, pgplot5, libpgplot-perl, gnuplot, sed, bc"
+  )
+
+
 # Make CPack respect the install prefix
 set(CPACK_SET_DESTDIR "ON")
 set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
