@@ -20,7 +20,7 @@ fi
 export MCINSTALL_PREFIX
 
 
-function usage() {
+usage() {
     echo "usage: $0 name [version] [source] [target] [-- gens ...] ";
     echo "";
     echo "  name:      The name of the distribution (e.g. mcstas)";
@@ -69,7 +69,7 @@ TOP="`pwd`"
 
 
 # Convert any path to an absolute path
-function get_absolute() {
+get_absolute() {
     (
         cd $(dirname "$1");
         echo `pwd`/$(basename "$1");
@@ -135,7 +135,7 @@ MCCODE_DATE="${MONTH}. ${DAY}, ${YEAR}";
 MCCODE_STRING="${MCCODE_NAME} ${MCCODE_VERSION} - ${MCCODE_DATE}";
 
 
-function config_mccode() {
+config_mccode() {
     find . -type f                 \
         -name "CMakeLists.txt" -or \
         -name "*.cmake"        -or \
@@ -156,7 +156,7 @@ function config_mccode() {
 }
 
 
-function remove_all() {
+remove_all() {
     # Recursively REMOVE everything matched by glob
     while true; do
         # Next pattern
@@ -172,7 +172,7 @@ function remove_all() {
 }
 
 
-function cleanup() {
+cleanup() {
     # if there's a makefile, try "make clean"
     if [ -f Makefile ]; then
         make clean
@@ -201,7 +201,7 @@ function cleanup() {
     done
 }
 
-function prepare_mccode() {
+prepare_mccode() {
     config_mccode;
 
     if [ -f configure.in ]; then
@@ -217,7 +217,7 @@ function prepare_mccode() {
     fi
 }
 
-function build_mccode() {
+build_mccode() {
     # prepare_mccode;
     # ./configure $1 &&
     # make
@@ -226,12 +226,12 @@ function build_mccode() {
 }
 
 
-function fresh_copy() {
+fresh_copy() {
     rm -rf "${2}" &&
     cp -LR "${1}" "${2}";
 }
 
-function fresh_clean_copy() {
+fresh_clean_copy() {
     (
         DEST="${1}"
         fresh_copy "${SOURCE}" "${DEST}";
@@ -243,7 +243,7 @@ function fresh_clean_copy() {
 }
 
 
-function prepare_cpack() {
+prepare_cpack() {
     # copy source files
     (
         DEST="${1}"
@@ -254,7 +254,7 @@ function prepare_cpack() {
     )
 }
 
-function simple_cpack() {
+simple_cpack() {
     # make a CPack package from GEN and destination
     # e.g. simple_cpack DEB "dist/deb"
     (
@@ -268,7 +268,7 @@ function simple_cpack() {
     )
 }
 
-function simple_cpack_file() {
+simple_cpack_file() {
     (
         GEN="$1"
         NAME="$2"
@@ -282,7 +282,7 @@ function simple_cpack_file() {
     )
 }
 
-function make_src() {
+make_src() {
     (
         OUT="${DEST}/${NAME}-src";
         fresh_clean_copy "${OUT}";
@@ -296,19 +296,19 @@ function make_src() {
     )
 }
 
-function make_bin() {
+make_bin() {
     simple_cpack_file TGZ "${NAME}-tgz" "*.tar.gz";
 }
 
-function make_deb() {
+make_deb() {
     simple_cpack_file DEB "${NAME}-deb" "*.deb";
 }
 
-function make_rpm() {
+make_rpm() {
     simple_cpack_file RPM "${NAME}-rpm" "*.rpm";
 }
 
-function make_OSXpkg() {
+make_OSXpkg() {
     simple_cpack_file PackageMaker "${NAME}-OSXpkg" "*.pkg";
 }
 
