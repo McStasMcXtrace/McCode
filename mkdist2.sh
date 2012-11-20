@@ -207,7 +207,7 @@ cleanup() {
 
     # automake and CMake directories
     rm -rf autom*.cache       \
-        build work CMakeFiles
+        build* work* CMakeFiles
 
     # CMake files
     rm -f CMakeCache.txt cmake_install.cmake       \
