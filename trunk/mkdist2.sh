@@ -299,44 +299,50 @@ simple_cpack_file() {
     (
         GEN="$1"
         NAME="$2"
-        FILE="$3"
+        EXT="$3"
 
-        simple_cpack "${GEN}" "${DEST}/${NAME}";
+        OUT="${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}${EXT}"
+        WORK="${OUT}.work"
+
+        simple_cpack "${GEN}" "${WORK}";
 
         # pull out packed file and clean up
-        find "${DEST}/${NAME}" -name "${FILE}" -exec mv {} "${DEST}" \; &&
-        rm -rf "${DEST}/${NAME}";
+        find "${WORK}" -name "*${EXT}" -exec mv {} "${OUT}" \; &&
+        rm -rf "${WORK}";
     )
 }
 
 make_src() {
     (
-        OUT="${DEST}/${NAME}-src";
-        fresh_clean_copy "${OUT}";
+        cd "${DEST}";
+        WORK="${NAME}-${MCCODE_VERSION}-src";
+        OUT="${WORK}.tar.gz"
+        fresh_clean_copy "${WORK}";
 
-        cd "${OUT}";
-        prepare_mccode;
-        cd ..;
+        (
+            cd "${WORK}" &&
+            prepare_mccode
+        )
 
-        tar czf "${OUT}.tar.gz" "${NAME}-src" &&
-        rm -rf "${OUT}";
+        tar czf "${OUT}" "${WORK}" &&
+        rm -rf "${WORK}";
     )
 }
 
 make_bin() {
-    simple_cpack_file TGZ "${NAME}-tgz" "*.tar.gz";
+    simple_cpack_file TGZ "${NAME}" ".tar.gz";
 }
 
 make_deb() {
-    simple_cpack_file DEB "${NAME}-deb" "*.deb";
+    simple_cpack_file DEB "${NAME}" ".deb";
 }
 
 make_rpm() {
-    simple_cpack_file RPM "${NAME}-rpm" "*.rpm";
+    simple_cpack_file RPM "${NAME}" ".rpm";
 }
 
 make_OSXpkg() {
-    simple_cpack_file PackageMaker "${NAME}-OSXpkg" "*.pkg";
+    simple_cpack_file PackageMaker "${NAME}-OSXpkg" ".pkg";
 }
 
 
