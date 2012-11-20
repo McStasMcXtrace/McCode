@@ -61,6 +61,11 @@ args="NAME MCCODE_VERSION SOURCE DEST CHAIN"
 for a in ${args}; do
     VAL="$1";
 
+    if [ "x${VAL}" = "x--help" ] || [ "x${VAL}" = "x-h" ]; then
+        usage;
+        exit 0;
+    fi
+
     # Break on EOF or --
     if [ "x${VAL}" = "x--" ]; then
         shift;
