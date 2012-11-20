@@ -12,6 +12,7 @@ YEAR=`date +"%Y"`
 DEFAULT_VERSION="${YEAR}-${MONTH}-${DAY}";
 DEFAULT_TARGET="dist/"
 DEFAULT_GENS="src bin"
+DEFAULT_CHAIN="linux64"
 
 # Trick to extract available generators from this source file
 export ALL_GENS=$(
@@ -31,15 +32,17 @@ export MCINSTALL_PREFIX
 
 
 usage() {
-    echo "usage: $0 name [version] [source] [target] [-- gens ...] ";
+    echo "usage: $0 name [version] [source] [target] [chain] [-- gens ...] ";
     echo "";
     echo "  name:      The name of the distribution (e.g. mcstas)";
     echo "  version:   The version (default: current date)";
     echo "  source:    The source directory (default: name)";
     echo "  target:    The target directory (default: ${DEFAULT_TARGET})";
+    echo "  chain:     The toolchain to use (default: ${DEFAULT_CHAIN})";
     echo "  gens:      Generators to use (default: ${DEFAULT_GENS})";
     echo "";
     echo "A default value can be chosen by supplying an empty value like ''.";
+    echo "See cmake/toolchains/*.cmake for available toolchains.";
     echo ""
     echo "Available generators are: ${ALL_GENS}";
     echo ""
@@ -54,7 +57,7 @@ fi
 
 
 # Parse arguments into variables; stop at --
-args="NAME MCCODE_VERSION SOURCE DEST"
+args="NAME MCCODE_VERSION SOURCE DEST CHAIN"
 for a in ${args}; do
     VAL="$1";
 
@@ -133,6 +136,16 @@ if [ "x${FLAVOR}" = "x" ]; then
         CONFIGURE_FLAGS="-Denable_mcstas=1";
     fi
 fi
+
+
+# Setup toolchain
+TOOLCHAIN_FILE=`get_absolute "${TOP}/cmake/toolchains/${CHAIN}.cmake"`
+if ! [ -f "${TOOLCHAIN_FILE}" ]; then
+    echo "Error: No such toolchain ${CHAIN} (${TOOLCHAIN_FILE})."
+    exit 1;
+fi
+CONFIGURE_FLAGS="${CONFIGURE_FLAGS} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE}"
+
 
 echo ""
 echo "=== Picked flavor: ${FLAVOR}"
