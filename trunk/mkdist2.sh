@@ -325,6 +325,10 @@ cd "${DEST}" || exit 1
 
 
 for gen in ${GENS}; do
+    if [ "x${gen}" = "x--" ]; then
+        continue;
+    fi
+
     echo ""
     echo "=== ${gen} ===";
     echo ""
