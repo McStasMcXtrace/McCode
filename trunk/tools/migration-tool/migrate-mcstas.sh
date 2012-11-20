@@ -32,11 +32,11 @@ echo >> $MOVE_SCRIPT
 echo \# Create directory for the binaries >> $MOVE_SCRIPT
 echo sudo mkdir $MCSTAS_NEWBINDIR >> $MOVE_SCRIPT
 echo \# Move component library to $MCSTAS_NEWLIBDIR >> $MOVE_SCRIPT
-echo sudo mv $MCSTAS_LIBDIR $MCSTAS_NEWLIBDIR >> $MOVE_SCRIPT
+echo sudo cp -rp $MCSTAS_LIBDIR $MCSTAS_NEWLIBDIR >> $MOVE_SCRIPT
 echo \# Move the binaries to $MCSTAS_NEWBINDIR >> $MOVE_SCRIPT
 for bincomp in `echo mcconvert mcdaemon mcdisplay mcdoc mcformat mcformatgui mcgui mcplot mcresplot mcrun mcstas mcstas2vitess`
 do 
-  echo sudo mv $MCSTAS_BINDIR/$bincomp $MCSTAS_NEWBINDIR/ >> $MOVE_SCRIPT;
+  echo sudo cp $MCSTAS_BINDIR/$bincomp $MCSTAS_NEWBINDIR/ >> $MOVE_SCRIPT;
 done
 # Write environment script info to screen
 echo
