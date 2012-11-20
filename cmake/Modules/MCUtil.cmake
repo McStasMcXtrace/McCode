@@ -27,6 +27,14 @@ endmacro()
 # Setup McCode constants using either mkdist or SVN-defaults
 macro(setup_mccode_mkdist FLAVOR)
 
+  # Set 32-bit flags
+  if(ARCH EQUAL 32)
+    set(CMAKE_C_FLAGS  "-m32")
+    set(CMAKE_C_LFLAGS "-m32")
+  endif()
+  message("Compiling for ${ARCH}-bit ${CMAKE_SYSTEM_NAME}")
+
+
   # Set macros
   if("${FLAVOR}" STREQUAL "mcstas")
     set(NAME             "McStas")
