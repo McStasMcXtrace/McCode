@@ -2,5 +2,15 @@
 set(CMAKE_SYSTEM_NAME "Darwin")
 set(ARCH   64)
 
-# Command for mcdoc access to html/pdf
+# Commands for running various external tools
 set(BROWSER "open")
+set(VRMLVIEW "freewrl")
+set(MPICC "mpicc")
+set(MPIRUN "mpirun")
+set(PGPLOT "pgxwin_server")
+set(GNUPLOT "gnuplot")
+
+# Plotting options
+set(PLOTTER "PGPLOT")
+set(PGDEV "/xserv")
+set(GNUDEV "x11")
