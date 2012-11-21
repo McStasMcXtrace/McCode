@@ -312,12 +312,12 @@ out_par:    /* empty */
 
 state_par:    /* empty */ 
       { 
-        /* Do nothing */
-	print_warn(NULL, " %s is using STATE PARAMETERS\n    %s %s support is PARTIAL for these and support will END with next release\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION);
+        /* Do nothing */	
       } 
     | "STATE" "PARAMETERS" formallist 
       {
-	/* Do nothing */
+	/* Issue warning */
+	print_warn(NULL, " %s is using STATE PARAMETERS\n    %s %s support is PARTIAL for these and support will END with next release\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION);
       } 
 ;
 
