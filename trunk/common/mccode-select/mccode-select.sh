@@ -9,15 +9,31 @@ if [ "x$1" = "x" ] || [ "x$1" = "x--help" ] ; then
     cat <<EOF
 Select a specific version of McStas/McXtrace as default.
 
-  --list     list available versions of package.
-  --install  install a new version of package for later linking.
-  --dryrun   run checks and simulate actions only.
-  --help     display this help and exit.
+  --bootstrap  install called version of mccode-select and mccode-select-bundle.
+  --list       list available versions of package.
+  --install    install a new version of package for later linking.
+  --dryrun     run checks and simulate actions only.
+  --help       display this help and exit.
 
 Report bugs to jsbn@fysik.dtu.dk
 EOF
     exit 0;
 fi
+
+
+if [ "x$1" = "x--bootstrap" ]; then
+    VERSION=$(echo `basename $0` | cut -f'3-' -d'-')
+
+    if [ "x" = "x${VERSION}" ]; then
+        echo "Error: Cannot bootstrap without explicit version.";
+        exit 1;
+    fi
+
+    $0 --install mccode-select        ${VERSION};
+    $0 --install mccode-select-bundle ${VERSION};
+    exit 0;
+fi
+
 
 
 # Parse arguments
