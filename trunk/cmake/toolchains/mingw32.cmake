@@ -13,3 +13,6 @@ SET(CMAKE_FIND_ROOT_PATH  /usr/i686-w64-mingw32)
 # include general MinGW module
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(MinGW)
+
+# Command for mcdoc access to html/pdf
+set(BROWSER "start")
