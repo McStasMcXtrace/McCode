@@ -4,7 +4,7 @@
 *
 * %Identification
 * Written by: Mirko Boin (HZB)
-* 
+*
 * Date: 2012
 * Origin: HZB
 * Release: McStas 2.0
@@ -14,10 +14,10 @@
 * %Description
 * Test TOF-diffraction instrument for the Sample_nxs.comp component. See documentation for the component plus the references in the Link section below.
 *
-* This component/instrument relies on the 'nxs' library that is provided with McStas as of release 2.0. 
+* This component/instrument relies on the 'nxs' library that is provided with McStas as of release 2.0.
 * Please see further instructions in your MCSTAS/lib/share/nxslib/README.TXT
 *
-* Example: 
+* Example:
 * mcrun Test_Sample_nsx_diffraction.instr
 *
 * %Parameters
@@ -28,7 +28,7 @@
 * pinhole_sample_distance: Distance between pinhole and sample [m]
 * sample_x: Sample translation along x [m]
 * sample_file: Crystallographic structure from 'nsx' file [str]
-* moderator_face: Chosen ISIS moderator [str] 
+* moderator_face: Chosen ISIS moderator [str]
 *
 * %Link
 * M. Boin (2012), <i>J. Appl. Cryst.</i> <b>45</b>, 603-607, <a href="http://dx.doi.org/10.1107/S0021889812016056">doi:10.1107/S0021889812016056</a>
@@ -60,15 +60,15 @@ COMPONENT a1 = Arm()
 
 
 COMPONENT moderator = ISIS_moderator(
-  Face = moderator_face, E0 = -lambda1, E1 = -lambda2, dist = 4.0,
-  xw = 0.001, yh = 0.001, modXsize = 0.001, modYsize = 0.001,
+  Face = moderator_face, Emin = -lambda1, Emax = -lambda2, dist = 4.0,
+  focus_xw = 0.001, focus_yh = 0.001, xwidth = 0.001, yheight = 0.001,
   CAngle = 0.0, SAC = 1
 ) AT (0.0, 0.0, 0.0) RELATIVE a1
 
 
 COMPONENT pinhole = Slit(
-  width = 0.002,
-  height = 0.002
+  xwidth = 0.002,
+  yheight = 0.002
 ) AT (0.0, 0.0, moderator_pinhole_distance) RELATIVE moderator
 
 
@@ -89,8 +89,8 @@ COMPONENT sample = Arm()
 COMPONENT beamstop = Beamstop(
   radius = 0.005
   ) AT (-sample_x, 0, 0.05) RELATIVE sample
-  
-  
+
+
   /*COMPONENT psd4pi = MyPSD_monitor_4PI(
   radius=0.5,
   nx=300, ny=300,
@@ -113,10 +113,10 @@ COMPONENT tofmon = TOF_monitor(
   filename = "tofmon.dat",
   xwidth =0.1,
   yheight = 0.1,
-  t0 = 25000,
-  t1 = 45000,
+  tmin = 25000,
+  tmax = 45000,
   restore_neutron = 1
-) AT (-sample_x, 0, sample_detector_distance) RELATIVE sample 
+) AT (-sample_x, 0, sample_detector_distance) RELATIVE sample
 
 
 
@@ -148,8 +148,8 @@ COMPONENT rot90 = Arm()
   AT (0,0,0) RELATIVE sample ROTATED (0,60,0) RELATIVE sample
 
 COMPONENT blende = Slit(
-  width = 0.001,
-  height = 0.1002
+  xwidth = 0.001,
+  yheight = 0.1002
 ) AT (0.0, 0.0, 0.026) RELATIVE rot90
 
 COMPONENT detector = PSD_monitor(
@@ -163,304 +163,3 @@ FINALLY
 %}
 
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
