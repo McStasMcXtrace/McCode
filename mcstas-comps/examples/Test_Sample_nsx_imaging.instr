@@ -91,7 +91,7 @@ COMPONENT sample = Arm()
 
 
 COMPONENT tofmon = TOF_monitor(
-  nchan = 1000,
+  nt = 1000,
   filename = "tofmon.dat",
   xwidth =0.01,
   yheight = 0.01,
@@ -100,7 +100,7 @@ COMPONENT tofmon = TOF_monitor(
   restore_neutron = 1
 ) AT (-sample_x, 0, sample_detector_distance) RELATIVE sample
 COMPONENT lmon = L_monitor(
-  nchan = 50,
+  nL = 50,
   filename = "lmon.dat",
   xwidth = 0.01,
   yheight = 0.01,

@@ -109,7 +109,7 @@ COMPONENT psd4pi = PSD_monitor_4PI(
 
 
 COMPONENT tofmon = TOF_monitor(
-  nchan = 600,
+  nt = 600,
   filename = "tofmon.dat",
   xwidth =0.1,
   yheight = 0.1,
@@ -135,7 +135,7 @@ COMPONENT tofmon = TOF_monitor(
 
 
 COMPONENT lmon = L_monitor(
-  nchan = 500,
+  nL = 500,
   filename = "lmon.dat",
   xwidth = 0.1,
   yheight = 0.1,
