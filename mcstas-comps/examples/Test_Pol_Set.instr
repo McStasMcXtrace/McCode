@@ -66,8 +66,8 @@ COMPONENT source = Source_simple(
 COMPONENT polSetter1 = Set_pol(randomOn=1)
   AT (0,0,0) RELATIVE Origin
 
-COMPONENT polMonitor1x = 
-Pol_monitor(xwidth=0.1, yheight=0.1, npol=41, 
+COMPONENT polMonitor1x =
+Pol_monitor(xwidth=0.1, yheight=0.1, npol=41,
 	    mx=1, my=0, mz=0, filename="polMon1x.data")
      AT (0, 0, 0.2) RELATIVE Origin
 
@@ -85,17 +85,17 @@ COMPONENT polSetter2 =
 Set_pol(py=1)
      AT (0, 0, 0.5) RELATIVE Origin
 
-COMPONENT polMonitor2 = 
-Pol_monitor(xwidth=0.1, yheight=0.1, npol=41, 
+COMPONENT polMonitor2 =
+Pol_monitor(xwidth=0.1, yheight=0.1, npol=41,
 	    my=1, filename="polMon2.data")
      AT (0, 0, 0.75) RELATIVE Origin
 
 COMPONENT armTarget = Arm()
   AT (0,0,1) RELATIVE Origin
 
-COMPONENT vsample = 
+COMPONENT vsample =
 V_sample(radius = 0.01, yheight = 0.1, sigma_abs = 0,
-	 target_x=1.0, target_y=0, target_z=0, 
+	 target_x=1.0, target_y=0, target_z=0,
 	 focus_xw=0.01, focus_yh=0.01)
      AT (0, 0, 0) RELATIVE armTarget
 
@@ -103,8 +103,8 @@ COMPONENT armMonitor = Arm()
   AT (0,0,0) RELATIVE armTarget
   ROTATED (0, 90, 0) RELATIVE armTarget
 
-COMPONENT polMonitor3 = 
-Pol_monitor(xwidth=0.1, yheight=0.1, npol=41, 
+COMPONENT polMonitor3 =
+Pol_monitor(xwidth=0.1, yheight=0.1, npol=41,
 	    my=1, filename="polMon3.data")
      AT (0, 0, 0.25) RELATIVE armMonitor
 
@@ -113,4 +113,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-
