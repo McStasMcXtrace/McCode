@@ -67,17 +67,17 @@ COMPONENT polSetter1 = Set_pol(randomOn=1)
   AT (0,0,0) RELATIVE Origin
 
 COMPONENT polMonitor1x =
-Pol_monitor(xwidth=0.1, yheight=0.1, npol=41,
+Pol_monitor(xwidth=0.1, yheight=0.1,
 	    mx=1, my=0, mz=0, filename="polMon1x.data")
      AT (0, 0, 0.2) RELATIVE Origin
 
 COMPONENT polMonitor1y =
-Pol_monitor(xwidth=0.1, yheight=0.1, npol=41,
+Pol_monitor(xwidth=0.1, yheight=0.1,
 	    mx=0, my=1, mz=0, filename="polMon1y.data")
      AT (0, 0, 0.25) RELATIVE Origin
 
 COMPONENT polMonitor1z =
-Pol_monitor(xwidth=0.1, yheight=0.1, npol=41,
+Pol_monitor(xwidth=0.1, yheight=0.1,
 	    mx=0, my=0, mz=1, filename="polMon1z.data")
      AT (0, 0, 0.3) RELATIVE Origin
 
@@ -86,7 +86,7 @@ Set_pol(py=1)
      AT (0, 0, 0.5) RELATIVE Origin
 
 COMPONENT polMonitor2 =
-Pol_monitor(xwidth=0.1, yheight=0.1, npol=41,
+Pol_monitor(xwidth=0.1, yheight=0.1,
 	    my=1, filename="polMon2.data")
      AT (0, 0, 0.75) RELATIVE Origin
 
@@ -104,7 +104,7 @@ COMPONENT armMonitor = Arm()
   ROTATED (0, 90, 0) RELATIVE armTarget
 
 COMPONENT polMonitor3 =
-Pol_monitor(xwidth=0.1, yheight=0.1, npol=41,
+Pol_monitor(xwidth=0.1, yheight=0.1,
 	    my=1, filename="polMon3.data")
      AT (0, 0, 0.25) RELATIVE armMonitor
 
