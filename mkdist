@@ -376,6 +376,7 @@ make_rpm() {
 }
 
 make_OSXpkg() {
+    sane_toolchain "grep mac" mac;
     simple_cpack_file PackageMaker "${NAME}-OSXpkg" ".pkg";
 }
 
