@@ -347,15 +347,26 @@ make_src() {
     )
 }
 
+sane_toolchain() {
+    if ! $(echo $CHAIN | $1 >/dev/null); then
+        echo "!! Warning: Overriding toolchain with $2 (replacing ${CHAIN})"
+        echo ""
+        CHAIN=$2;
+    fi
+}
+
 make_bin() {
     simple_cpack_file TGZ "${NAME}" ".tar.gz";
 }
 
 make_deb() {
+    # default to linux32 when toolchain is incompatible
+    sane_toolchain "grep linux" linux32;
     simple_cpack_file DEB "${NAME}" ".deb";
 }
 
 make_rpm() {
+    sane_toolchain "grep linux" linux32;
     simple_cpack_file RPM "${NAME}" ".rpm";
 }
 
