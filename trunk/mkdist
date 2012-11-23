@@ -374,6 +374,11 @@ make_OSXpkg() {
     simple_cpack_file PackageMaker "${NAME}-OSXpkg" ".pkg";
 }
 
+make_nsis() {
+    # Default to mingw32 when toolchain is incompatible
+    sane_toolchain "grep mingw" mingw32;
+    simple_cpack_file NSIS "${NAME}-NSIS" ".exe";
+}
 
 # create dist
 echo "${SOURCE} -> ${DEST}"
