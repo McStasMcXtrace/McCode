@@ -12,7 +12,6 @@ YEAR=`date +"%Y"`
 DEFAULT_VERSION="${YEAR}-${MONTH}-${DAY}";
 DEFAULT_TARGET="dist/"
 DEFAULT_GENS="src bin"
-DEFAULT_CHAIN="linux64"
 
 # Trick to extract available generators from this source file
 export ALL_GENS=$(
@@ -21,7 +20,7 @@ export ALL_GENS=$(
         echo -n "$gen "; \
         done)
 
-# name is mandatory and source is guessed (they have no defaults)
+# name is mandatory and source and chain can be guessed (they have no defaults)
 
 
 
@@ -129,6 +128,24 @@ if [ -d "${DEST}/.git" ] || [ -d "${DEST}/.svn" ]; then
 fi
 
 
+# Try to guess chain if not set
+if [ "x${CHAIN}" = "x" ]; then
+    case "`uname`" in
+        "Darwin")
+            CHAIN=mac;
+            ;;
+        "Linux")
+            if [ "x`uname -m`" = "xx86_64" ]; then
+                CHAIN=linux64;
+            else
+                CHAIN=linux32;
+            fi
+            ;;
+    esac
+    echo "Using default tool chain: ${CHAIN}";
+fi
+
+
 # Setup global flavor (mcstas/mcxtrace)
 if [ "x${FLAVOR}" = "x" ]; then
     if ( echo ${NAME} | grep '^mcx' ) || ( echo ${NAME} | grep '^mx' ) then
@@ -144,12 +161,11 @@ fi
 
 
 # Setup toolchain
-TOOLCHAIN_FILE=`get_absolute "${TOP}/cmake/toolchains/${CHAIN}.cmake"`
+TOOLCHAIN_FILE="${TOP}/cmake/toolchains/${CHAIN}.cmake"
 if ! [ -f "${TOOLCHAIN_FILE}" ]; then
     echo "Error: No such toolchain ${CHAIN} (${TOOLCHAIN_FILE})."
     exit 1;
 fi
-CONFIGURE_FLAGS="${CONFIGURE_FLAGS} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE}"
 
 
 echo ""
@@ -277,7 +293,9 @@ prepare_cpack() {
         fresh_clean_copy "${DEST}";
 
         cd "${DEST}";
-        cmake ${CONFIGURE_FLAGS} .
+
+        TOOLCHAIN_FILE="${TOP}/cmake/toolchains/${CHAIN}.cmake"
+        cmake ${CONFIGURE_FLAGS} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} .
     )
 }
 
