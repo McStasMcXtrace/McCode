@@ -10,7 +10,7 @@ DAY=`date +"%d"`
 YEAR=`date +"%Y"`
 
 DEFAULT_VERSION="${YEAR}-${MONTH}-${DAY}";
-DEFAULT_TARGET="dist/"
+DEFAULT_TARGET="dist"
 DEFAULT_GENS="src bin"
 
 # Trick to extract available generators from this source file
