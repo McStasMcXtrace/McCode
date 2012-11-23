@@ -326,7 +326,10 @@ simple_cpack_file() {
 
         # pull out packed file and clean up
         find "${WORK}" -name "*${EXT}" -exec mv {} "${OUT}" \; &&
-        rm -rf "${WORK}";
+        rm -rf "${WORK}" || exit 1;
+
+        echo "";
+        echo "Build: ${OUT}";
     )
 }
 
@@ -343,7 +346,9 @@ make_src() {
         )
 
         tar czf "${OUT}" "${WORK}" &&
-        rm -rf "${WORK}";
+        rm -rf "${WORK}" || exit 1;
+
+        echo "Build: ${DEST}/${OUT}";
     )
 }
 
@@ -405,7 +410,6 @@ for gen in ${GENS}; do
         make_${gen};
     )
 
-    echo "done."
 done
 
 
