@@ -21,6 +21,25 @@
 * Chooses evenly in lambda, evenly/exponentially decaying in time
 * Adapted from Moderator by: KN, M.Hagen, August 1998
 *
+* 2012-updates:
+* <ol>
+* <li>Geometry is now MCNPX-like <b>IMPORTANT</b>: Origin of the component is inside the cylindrical 
+* moderator, i.e. take care when positioning the next components! (E Klinkby)
+* <li>Component implements both the cold moderator and the thermal (pre-)moderator, fraction of statistics for
+* the cold moderator is the new cold_frac parameter. New set of input parameters with subscript _t defines the
+* thermal flux.(E Klinkby)
+* <li><b>IMPORTANT</b>: The thermal flux corresponds to the 2001 thermal ESS moderator as no update has currently
+* been released from the ESS neutronics group.
+* <li>By default the component applies a wavelength-dependent correction term to the cold flux, derived from 
+* 2012 MCNPX calculations by ESS neutronics group. Corrections calculated by K Lieutenant (Vitess) and 
+* implemented here by E Klinkby. In case this is not wanted, the src_2012 parameter can be set to 0.
+* <li>Default cold moderator intensity parameters correspond to the "ESS 2012" parameter set. The original 
+* 2001 ESS "Mezei moderator" can be described by setting T=50, tau=287e-6, tau1=0, tau2=20e-6, chi2=0.9, I0=6.9e11, 
+* I2=27.6e10, branch1=0, branch2=0.5, src_2012=0
+* <li>The component can use target_index for focusing to a given beam port. Use an Arm() and ROTATED to position 
+* relatively to the moderator.
+* </ol>
+*
 * Units of flux: n/cm^2/s/AA/ster
 * (McStas units are in general neutrons/second)
 *
@@ -43,13 +62,13 @@
 *     Phi(t,lam) =  I0 M(lam,T) F(t,tau,n)
 *                 + I2/(1+exp(chi2 lam-2.2))/lam*F(t,tau2*lam,n2)  )
 *
-*   c1: Ambient H20, long pulse, coupled
+*   c1: Ambient H20, long pulse, coupled <b>ESS 2001 thermal</b>
 *          T_t=325 tau_t=80e-6 tau1_t=400e-6 tau2_t=12e-6 n=20 n2=5 d=2e-3 chi2_t=2.5
 *          I0_t=13.5e11 I2_t=27.6e10    branch1_t=0.5 branch2_t=0.5
 *
-*   c2: Liquid H2, long pulse, coupled
+*   c2: Liquid H2, long pulse, coupled <b>ESS 2012 cold</b>
 *          T=50 tau=287e-6 tau1=0 tau2=20e-6 n=20 n2=5 d=2e-3 chi2=0.9
-*          I0=6.9e11 I2=27.6e10    branch1=0 branch2=0.5
+*          I0=8.21e11, I2=3.29e11    branch1=0 branch2=0.5
 *
 * Debugged intensively against Mezei note (4/12 2000) and VitESS @ Rencurel 2006.
 * The output is now neutrons / second, not as previously neutrons / pulse.
@@ -103,6 +122,8 @@
 * cold_frac: (1) Fraction of neutron statistics from cold source. It is implicitely assumed 
 *                that supermirror allows each beamline to choose the desired fraction
 *                of cold and thermal neutrons (i.e. extreme idealization).
+* src_2012:  (bool) Flag to apply 2012 MCNPX-derived, wavelenght-dependent correction to intensity 
+*                from the cold moderator.
 *
 * %E
 ******************************************************************************/
@@ -115,7 +136,7 @@ SETTING PARAMETERS (size=0.12, Lmin, Lmax, dist=0, focus_xw, focus_yh, nu=50.0/3
 		    cyl_radius=0.08, branch1=1, branch2=0.5, branch_tail=0.14350,
 		    branchframe=0, size_t=0.12, T_t=325, tau_t=80e-6, tau1_t=400e-6,
 		    tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5,
-		    branch2_t=0.5)
+		    branch2_t=0.5, int src_2012=1)
 OUTPUT PARAMETERS (M, F, l_range, w_mult)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
@@ -298,7 +319,7 @@ TRACE
  else
    p/=(1-branchframe);
 
- if (cold) {
+ if (cold && src_2012) {
    /* Correction factors to converts 'predicted' spectrum from cold moderator to the one observed in MCNPX */
    if (lambda<=2.5) cor=log(1.402+0.898*lambda)*(2.0776-4.1093*lambda+4.8836*pow(lambda,2)-2.4715*pow(lambda,3)+0.4521*pow(lambda,4));
    else if (lambda <= 3.5) cor = log(1.402 + 0.898*lambda)*(4.3369 - 1.8367*lambda + 0.2524*pow(lambda,2) );
