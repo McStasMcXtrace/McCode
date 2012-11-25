@@ -28,7 +28,7 @@
 * Lmax:              [AA]  Maximum wavelength emitted by the moderator
 * lambda0:           [AA]  Target wavelength for the monochromating crystal
 * Pulse_width:       [s]   Length of the long pulse. Default to 2 ms.
-* BRANCHFRAME:       [1]   Probability of emitting neutrons from a second pulse. Default 0.
+* Num_pulses:       [1]   Number of pulses to simulate. Default 1.
 *
 * GUI_start:         [m]   Distance from moderator to guide start
 * FO1_DIST:          [m]   Distance from moderator to FO1 chopper
@@ -76,7 +76,7 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT ESS_IN5_reprate(Lmin=4.9, Lmax=5.1, lambda0=5, Pulse_width=0.002, 
-  BRANCHFRAME=0, GUI_start=1.5,  FO1_DIST=6, L_ballistic_begin=19.5, 
+  Num_pulses=1, GUI_start=1.5,  FO1_DIST=6, L_ballistic_begin=19.5, 
   L_ballistic_end=17, Length=100, SAMPLE_DIST=1.2,  DETECTOR_DIST=4, 
   GUI_h=0.105, GUI_w=0.1, GUI_GAP=0.05, H1=0.167, W1=0.116, H2=0.185,  
   W2=0.15, H3=0.19, W3=0.15, H4=0.213, W4=0.14, H_chop=0.075, W_chop=0.03, 
@@ -120,7 +120,7 @@ COMPONENT source = ESS_moderator_long(
     focus_yh = GUI_h, nu = FREQ, T = 50, tau = 287e-6, tau1 = 0,
     tau2 = 20e-6, d = Pulse_width, n = 20, n2 = 5, chi2 = 0.9,
     I0 = 6.9e11, I2 = 27.6e10, branch1 = 1, branch2 = 0.5,
-    branch_tail = 0.1, branchframe = BRANCHFRAME)
+    branch_tail = 0.1, n_pulses = Num_pulses)
   AT (0, 0, -0.1) RELATIVE Origin
 
 COMPONENT TOFmoderator_zoom = TOF_monitor(
@@ -359,4 +359,5 @@ COMPONENT TOF2Edetector = TOF2E_monitor(
   AT (0, 0, 1e-6) RELATIVE PREVIOUS
 
 END
+
 

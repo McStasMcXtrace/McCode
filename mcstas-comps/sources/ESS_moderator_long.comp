@@ -46,7 +46,6 @@
 *
 * Example general parameters (general):
 *          size=0.12 Lmin=0.1 Lmax=10 dist=1.6 focus_xw=0.19 focus_yh=0.15 nu=16.67
-*          branchframe=0.5
 *
 * Example moderator specific parameters
 * (From F. Mezei, "ESS reference moderator characteristics for ...", 4/12/00:
@@ -118,8 +117,8 @@
 *                (default value 0.5)
 * branch_tail: (1)   limit for switching between pulse and tail
 *                (suggested value: tau/d - default defined this way)
-* branchframe: (1) limit for switching between 1st and 2nd pulse
-*                  (if only one pulse wanted: 1)
+* n_pulses: (1)  Number of pulses simulated. 0 and 1 creates one pulse. 
+*                The integrated intensity is constant 
 * cold_frac: (1) Fraction of neutron statistics from cold source. It is implicitely assumed 
 *                that supermirror allows each beamline to choose the desired fraction
 *                of cold and thermal neutrons (i.e. extreme idealization).
@@ -138,7 +137,7 @@ SETTING PARAMETERS (size=0.12, Lmin, Lmax, dist=0, focus_xw, focus_yh, nu=50.0/3
                     T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2.857e-3, n=20, cold_frac=1.0,
                     n2=5, chi2=0.9, I0=8.21e11, I2=3.29e11, int target_index=+1, 
 		    cyl_radius=0.08, branch1=1, branch2=0.5, branch_tail=0.14350,
-		    branchframe=0, size_t=0.12, T_t=325, tau_t=80e-6, tau1_t=400e-6,
+		    int n_pulses=1, size_t=0.12, T_t=325, tau_t=80e-6, tau1_t=400e-6,
 		    tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5,
 		    branch2_t=0.5, int src_2012=1, tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0)
 OUTPUT PARAMETERS (M, F, l_range, w_mult)
@@ -164,6 +163,9 @@ DECLARE
 
 INITIALIZE
 %{
+  n_pulses=(double)floor(n_pulses);
+  if (n_pulses == 0) n_pulses=1;
+ 
   if (target_index && !dist)
   {
     Coords ToTarget;
@@ -327,13 +329,6 @@ TRACE
     p *= I2_n*w_mult/(1+exp(chi2_n*lambda-2.2))/lambda;    /* Calculate true intensity */
   }
  }
- if (rand01()<branchframe)
-   {
-     t+=1/nu;
-     p/=(branchframe);
-   }
- else
-   p/=(1-branchframe);
 
  if (cold && src_2012) {
    /* Correction factors to converts 'predicted' spectrum from cold moderator to the one observed in MCNPX */
@@ -345,6 +340,8 @@ TRACE
    cor = 1.0;
  }
  p *= cor;
+ 
+ t+=(double)floor((n_pulses)*rand01())/nu;   /* Select a random pulse */
 
  
 %}
