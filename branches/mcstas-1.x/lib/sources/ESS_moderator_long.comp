@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * Mcstas, neutron ray-tracing package
-*         Copyright (C) 1997-2010, All rights reserved
+*         Copyright (C) 1997-2012, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -9,10 +9,10 @@
 *
 * %I
 * Written by: KL, February 2001
-* Modified by: KL, 18 November 2001
-* Version: $Revision: 1.23 $
+* Modified by: E Klinkby, October 2012 - updated geometry, bispectral
+* Version: $Revision: 1.25 $
 * Origin: Risoe
-* Release: McStas 1.12b
+* Release: McStas CVS_080803
 *
 * A parametrised pulsed source for modelling ESS long pulses.
 *
@@ -21,12 +21,31 @@
 * Chooses evenly in lambda, evenly/exponentially decaying in time
 * Adapted from Moderator by: KN, M.Hagen, August 1998
 *
+* 2012-updates:
+* <ol>
+* <li>Geometry is now MCNPX-like <b>IMPORTANT</b>: Origin of the component is inside the cylindrical 
+* moderator, i.e. take care when positioning the next components! (E Klinkby)
+* <li>Component implements both the cold moderator and the thermal (pre-)moderator, fraction of statistics for
+* the cold moderator is the new cold_frac parameter. New set of input parameters with subscript _t defines the
+* thermal flux.(E Klinkby)
+* <li><b>IMPORTANT</b>: The thermal flux corresponds to the 2001 thermal ESS moderator as no update has currently
+* been released from the ESS neutronics group.
+* <li>By default the component applies a wavelength-dependent correction term to the cold flux, derived from 
+* 2012 MCNPX calculations by ESS neutronics group. Corrections calculated by K Lieutenant (Vitess) and 
+* implemented here by E Klinkby. In case this is not wanted, the src_2012 parameter can be set to 0.
+* <li>Default cold moderator intensity parameters correspond to the "ESS 2012" parameter set. The original 
+* 2001 ESS "Mezei moderator" can be described by setting T=50, tau=287e-6, tau1=0, tau2=20e-6, chi2=0.9, I0=6.9e11, 
+* I2=27.6e10, branch1=0, branch2=0.5, src_2012=0
+* <li>The component can use target_index for focusing to a given beam port. Use an Arm() and ROTATED to position 
+* relatively to the moderator.
+* <li>Time focusing option: Adjusts neutron departure time to match a 'first chopper' defined by parameters tfocus_dist, tfocus_time, tfocus_width (K Lefmann). 
+* </ol>
+*
 * Units of flux: n/cm^2/s/AA/ster
 * (McStas units are in general neutrons/second)
 *
 * Example general parameters (general):
-*          size=0.12 l_low=0.1 l_high=10 dist=1.6 xw=0.19 yh=0.15 freq=16.67
-*          branchframe=0.5
+*          size=0.12 Lmin=0.1 Lmax=10 dist=1.6 focus_xw=0.19 focus_yh=0.15 nu=16.67
 *
 * Example moderator specific parameters
 * (From F. Mezei, "ESS reference moderator characteristics for ...", 4/12/00:
@@ -43,13 +62,13 @@
 *     Phi(t,lam) =  I0 M(lam,T) F(t,tau,n)
 *                 + I2/(1+exp(chi2 lam-2.2))/lam*F(t,tau2*lam,n2)  )
 *
-*   c1: Ambient H20, long pulse, coupled
-*          T=325 tau=80e-6 tau1=400e-6 tau2=12e-6 n=20 n2=5 d=2e-3 chi2=2.5
-*          I0=13.5e11 I2=27.6e10    branch1=0.5 branch2=0.5
+*   c1: Ambient H20, long pulse, coupled <b>ESS 2001 thermal</b>
+*          T_t=325 tau_t=80e-6 tau1_t=400e-6 tau2_t=12e-6 n=20 n2=5 d=2e-3 chi2_t=2.5
+*          I0_t=13.5e11 I2_t=27.6e10    branch1_t=0.5 branch2_t=0.5
 *
-*   c2: Liquid H2, long pulse, coupled
+*   c2: Liquid H2, long pulse, coupled <b>ESS 2012 cold</b>
 *          T=50 tau=287e-6 tau1=0 tau2=20e-6 n=20 n2=5 d=2e-3 chi2=0.9
-*          I0=6.9e11 I2=27.6e10    branch1=0 branch2=0.5
+*          I0=8.21e11, I2=3.29e11    branch1=0 branch2=0.5
 *
 * Debugged intensively against Mezei note (4/12 2000) and VitESS @ Rencurel 2006.
 * The output is now neutrons / second, not as previously neutrons / pulse.
@@ -60,47 +79,76 @@
 * %P
 * Input parameters:
 *
-* size:   (m)    Edge of cube shaped source
-* l_low:  (AA)   Lower edge of lambda distribution
-* l_high: (AA)   Upper edge of energy distribution
+* size:   (m)    Height of the cylindershaped cold source
+* cyl_radius:(m) Radius of the cylindershaped cold source
+* size_t: (m)    Edge of cube shaped thermal source
+* Lmin:   (AA)   Lower edge of wavelength distribution
+* Lmax:   (AA)   Upper edge of wavelength distribution
 * dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
-* xw:     (m)    Width of focusing rectangle
-* yh:     (m)    Height of focusing rectangle
-* freq:   (Hz)   Frequency of pulses
-* T:      (K)    Temperature of source
-* tau:    (s)    long time decay constant for pulse tail 1a
-* tau1:   (s)    long time decay constant for pulse tail 1b
-* tau2:   (s)    long time decay constant for pulse, 2
+* focus_xw:(m)   Width of focusing rectangle
+* focus_yh:(m)   Height of focusing rectangle
+* target_index:(1)  relative index of component to focus at, e.g. next is +1
+*                this is used to compute 'dist' automatically.
+* nu:     (Hz)   Frequency of pulses
+* T:      (K)    Temperature of cold source
+* T_t:    (K)    Temperature of thermal source
+* tau:    (s)    long time decay constant for cold pulse tail 1a
+* tau_t:  (s)    long time decay constant for thermal pulse tail 1a
+* tau1:   (s)    long time decay constant for cold pulse tail 1b
+* tau1_t: (s)    long time decay constant for thermal pulse tail 1b
+* tau2:   (s)    long time decay constant for cold pulse, 2
+* tau2_t:   (s)    long time decay constant for thermal pulse, 2
 * d:      (s)    pulse length
 * n:      (1)    pulse shape parameter, 1
 * n2:     (1)    pulse shape parameter, 2
-* chi2:   (1/AA) lambda-distribution parameter in pulse 2
-* I0:     (flux) integrated flux, 1 (in flux units, see above)
-* I2:     (flux) Flux, 2 (in flux units, see above)
+* chi2:   (1/AA) lambda-distribution parameter in cold pulse 2
+* chi2_t: (1/AA) lambda-distribution parameter in thermal pulse 2
+* I0:     (flux) integrated cold flux, 1 (in flux units, see above)
+* I0_t:   (flux) integrated thermal flux, 1 (in flux units, see above)
+* I2:     (flux) Cold flux, 2 (in flux units, see above)
+* I2_t:   (flux) Thermal flux, 2 (in flux units, see above)
 * branch1: (1)   limit for switching between two time structures in
-                 distribution 1 (only for coupled water, else = 1)
-* branch2: (1)   limit for switching between distribution 1 and 2.
+                 cold distribution 1 (only for coupled water, else = 1)
+* branch1_t: (1) limit for switching between two time structures in
+                 thermal distribution 1 (only for coupled water, else = 1)
+* branch2: (1)   limit for switching between cold distribution 1 and 2.
+*                (default value 0.5)
+* branch2_t: (1) limit for switching between thermal distribution 1 and 2.
 *                (default value 0.5)
 * branch_tail: (1)   limit for switching between pulse and tail
 *                (suggested value: tau/d - default defined this way)
-* twopulses: (1) Flag for selecting one or two pulses. 0 is one pulse. 
+* n_pulses: (1)  Number of pulses simulated. 0 and 1 creates one pulse. 
+*                The integrated intensity is constant 
+* cold_frac: (1) Fraction of neutron statistics from cold source. It is implicitely assumed 
+*                that supermirror allows each beamline to choose the desired fraction
+*                of cold and thermal neutrons (i.e. extreme idealization).
+* src_2012:  (bool) Flag to apply 2012 MCNPX-derived, wavelenght-dependent correction to intensity 
+*                from the cold moderator.
+* tfocus_dist: (m) Position of time window
+* tfocus_time: (s) Time position of window
+* tfocus_width: (s) Time width of window
 *
 * %E
-******************************************************************************/
+*******************************************************************************/
 
 DEFINE COMPONENT ESS_moderator_long
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (size=0.12, l_low, l_high, dist, xw, yh, freq=50.0/3.0,
-                    T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2e-3, n=20,
-		    n2=5, chi2=0.9, I0=6.9e11, I2=27.6e10,
-                    branch1=1, branch2=0.5, branch_tail=0.14350, twopulses=0)
+SETTING PARAMETERS (size=0.12, Lmin, Lmax, dist=0, focus_xw, focus_yh, nu=50.0/3.0,
+                    T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2.857e-3, n=20, cold_frac=1.0,
+                    n2=5, chi2=0.9, I0=8.21e11, I2=3.29e11, int target_index=+1, 
+		    cyl_radius=0.08, branch1=1, branch2=0.5, branch_tail=0.14350,
+		    int n_pulses=1, size_t=0.12, T_t=325, tau_t=80e-6, tau1_t=400e-6,
+		    tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5,
+		    branch2_t=0.5, int src_2012=1, tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0)
 OUTPUT PARAMETERS (M, F, l_range, w_mult)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-
 DECLARE
 %{
-  double l_range, w_mult, branchframe;
-
+  double l_range, w_mult;
+  double tx,ty,tz;
+  /* Neutron-specific distribution-shape variables */
+  double T_n, tau_n, tau1_n, tau2_n, chi2_n, I0_n, I2_n, branch1_n, branch2_n;
+  
   double M(double l, double temp)
     {
       double a=949.0/temp;
@@ -115,10 +163,24 @@ DECLARE
 
 INITIALIZE
 %{
-  if (n == 1 || n2 == 1 || l_low<=0 || l_high <=0 || dist == 0
+  n_pulses=(double)floor(n_pulses);
+  if (n_pulses == 0) n_pulses=1;
+ 
+  if (target_index && !dist)
+  {
+    Coords ToTarget;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &tx, &ty, &tz);
+    dist=sqrt(tx*tx+ty*ty+tz*tz);
+  } else {
+    tx=0, ty=0, tz=dist;
+  }
+  
+  if (n == 1 || n2 == 1 || Lmin<=0 || Lmax <=0 || dist == 0
     || branch2 == 0 || branch_tail == 0 || tau == 0)
   {
-    printf("ESS_moderator_long: %s: Check parameters (lead to Math Error).\n Avoid 0 value for {l_low l_high dist d tau branch1/2/tail} and 1 value for {n n2 branch1/2/tail}\n", NAME_CURRENT_COMP);
+    printf("ESS_moderator_long: %s: Check parameters (lead to Math Error).\n Avoid 0 value for {Lmin Lmax dist d tau branch1/2/tail} and 1 value for {n n2 branch1/2/tail}\n", NAME_CURRENT_COMP);
     exit(-1);
   }
 
@@ -127,37 +189,52 @@ INITIALIZE
     printf("ESS_moderator_long: %s: WARNING: Setting tau1 to zero implies branch 1=1.\n", NAME_CURRENT_COMP);
   }
 
-  if (twopulses) {
-    branchframe = 0.5;
-    printf("ESS_moderator_long: %s: INFO: Running with TWO pulses\n", NAME_CURRENT_COMP);
-  } else {
-    branchframe = 0;
-    printf("ESS_moderator_long: %s: INFO: Running with ONE pulse\n", NAME_CURRENT_COMP);
-  }
-
-  l_range = l_high-l_low;
+  l_range = Lmax-Lmin;
   w_mult = size*size*1.0e4;     /* source area correction */
   w_mult *= l_range;            /* wavelength range correction */
   w_mult *= 1.0/mcget_ncount();   /* Correct for number of rays */
-  w_mult *= 50.0/3.0;           /* Correct for baseline frequency setting */
+  w_mult *= nu;               /* Correct for frequency */
 %}
 TRACE
 %{
-  double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag;
+  double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag,cor,dt;
 
-  z=0;
+  /* Bispectral source - choice of spectrum and initial position */
+  int cold = ( rand01() < cold_frac ) ? 1 : 0;
 
-  x = 0.5*size*randpm1();
-  y = 0.5*size*randpm1();         /* Choose initial position */
+  /* Geometry adapted from ESS MCNPX model, mid 2012 */
+  if (cold) {          //case: cold moderator
+    double theta_tmp;
+    
+    //choose random point on cylinder surface
+    theta_tmp = randpm1()*PI/3 + PI/2;
+        x     = cyl_radius * cos(theta_tmp);
+        y     = 0.5*randpm1()*size;
+        z     = cyl_radius * sin(theta_tmp);
+ 
+    //spectrum related constants - ESS 2001 Cold moderator
+    //T=50, tau=287e-6, tau1=0, tau2=20e-6, chi2=0.9, I0=6.9e11, I2=27.6e10, branch1=0, branch2=0.5;
+    T_n=T; tau_n=tau; tau1_n=tau1; tau2_n=tau2; chi2_n=chi2; I0_n=I0; I2_n=I2; branch1_n=branch1; branch2_n=branch2;
+    
+  }  else  {                      //case: thermal moderator
+    x = cyl_radius + size_t*rand01();
+    y = 0.5*randpm1()*size_t;
+    z = cyl_radius;
+
+    //spectrum related constants - ESS 2001 Thermal moderator       
+    //T_t=325, tau_t=80e-6, tau1_t=400e-6, tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5, branch2_t=0.5;
+    T_n=T_t; tau_n=tau_t; tau1_n=tau1_t; tau2_n=tau2_t; chi2_n=chi2_t; I0_n=I0_t; I2_n=I2_t; branch1_n=branch1_t; branch2_n=branch2_t;
+    
+  }
 
   randvec_target_rect_real(&xf, &yf, &r, &w_focus,
-			   0, 0, dist, xw, yh, ROT_A_CURRENT_COMP, x, y, z, 2);
-
+			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+ 
   dx = xf-x;
   dy = yf-y;
   r = sqrt(dx*dx+dy*dy+dist*dist);
 
-  lambda = l_low+l_range*rand01();    /* Choose from uniform distribution */
+  lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
   k = 2*PI/lambda;
   v = K2V*k;
 
@@ -165,92 +242,141 @@ TRACE
   vy = v*dy/r;
   vx = v*dx/r;
 
-
-/*  printf("pos0 (%g %g %g), pos1 (%g %g %g), r: %g, v (%g %g %g), v %g\n",
-  x,y,z,xf,yf,dist,r,vx,vy,vz, v);
-  printf("l %g, w_focus %g \n", lambda, w_focus);  */
-
+  /* Determine delta-t needed to reach first chopper */
+  if (tfocus_width>0) {
+    dt = tfocus_dist/vz;			/* Flight time to time window (chopper) */
+  }
   tail_flag = (rand01()<branch_tail);   /* Choose tail/bulk */
  if (tail_flag)
  {
-  if (rand01() < branch2)
+  if (rand01() < branch2_n)
   {
-    if (tau1>0)
-      if (rand01() < branch1)     /* Quick and dirty non-general solution */
+    if (tau1_n>0)
+      if (rand01() < branch1_n)     /* Quick and dirty non-general solution */
       {  /* FIRST CASE a */
-        tau_l = tau;
-        p = 1/(branch1*branch2*branch_tail); /* Correct for switching prob. */
+        tau_l = tau_n;
+        p = 1/(branch1_n*branch2_n*branch_tail); /* Correct for switching prob. */
       }
       else
       {  /* FIRST CASE b */
-        tau_l = tau1;
-        p = 1/((1-branch1)*branch2*branch_tail); /* Correct for switching prob. */
+        tau_l = tau1_n;
+        p = 1/((1-branch1_n)*branch2_n*branch_tail); /* Correct for switching prob. */
       }
     else
       {
-        tau_l = tau;
-        p = 1/(branch2*branch_tail); /* Correct for switching prob. */
+        tau_l = tau_n;
+        p = 1/(branch2_n*branch_tail); /* Correct for switching prob. */
       }
     t = -tau_l*log(1e-12+rand01());       /* Sample from long-time tail a */
  /* Correct for true pulse shape */
     p *= w_focus;                         /* Correct for target focusing */
     p *= tau_l/d;                         /* Correct for tail part */
-    p *= I0*w_mult*M(lambda,T);           /* Calculate true intensity */
+    p *= I0_n*w_mult*M(lambda,T_n);           /* Calculate true intensity */
   }
   else
   {
     /* SECOND CASE */
-    tau_l = tau2*lambda;
+    tau_l = tau2_n*lambda;
     t = -tau_l*log(1e-12+rand01());       /* Sample from long-time tail */
     p = n2/(n2-1)*((1-exp(-d/tau_l))-(1-exp(-n2*d/tau_l))*exp(-(n2-1)*t/tau_l)/n);
                                           /* Correct for true pulse shape */
-    p /= (1-branch2)*branch_tail;          /* Correct for switching prob. */
+    p /= (1-branch2_n)*branch_tail;          /* Correct for switching prob. */
     p *= tau_l/d;                         /* Correct for tail part */
     p *= w_focus;                         /* Correct for target focusing */
-    p *= I2*w_mult/(1+exp(chi2*lambda-2.2))/lambda;
-                                          /* Calculate true intensity */
+    p *= I2_n*w_mult/(1+exp(chi2_n*lambda-2.2))/lambda;                                         /* Calculate true intensity */
   }
   t += d;                                 /* Add pulse length */
  }
- else
+ else /* Tail-flag */
  {
-  t = d*rand01();                        /* Sample from bulk pulse */
-  if (rand01() < branch2)
+   if (tfocus_width>0) {
+     t = tfocus_time-dt;                    /* Set time to hit time window center */
+     t += randpm1()*tfocus_width/2.0;       /* Add random time within window width */
+   } else {
+     t = d*rand01();                        /* Sample from bulk pulse */
+   }
+  if (t<0) ABSORB;                       /* Kill neutron if outside pulse duration */
+  if (t>d) ABSORB;
+  if (rand01() < branch2_n)
   {
-    if (rand01() < branch1)     /* Quick and dirty non-general solution */
+    if (rand01() < branch1_n)     /* Quick and dirty non-general solution */
     {  /* FIRST CASE a */
-      tau_l = tau;
-      p = 1/(branch1*branch2*(1-branch_tail)); /* Correct for switching prob. */
+      tau_l = tau_n;
+      p = 1/(branch1_n*branch2_n*(1-branch_tail)); /* Correct for switching prob. */
     }
     else
     {  /* FIRST CASE b */
-      tau_l = tau1;
-      p = 1/((1-branch1)*branch2*(1-branch_tail)); /* Correct for switching prob. */
+      tau_l = tau1_n;
+      p = 1/((1-branch1_n)*branch2_n*(1-branch_tail)); /* Correct for switching prob. */
     }
     p *= 1-n/(n-1)*(exp(-t/tau_l)-exp(-n*t/tau_l)/n); /* Correct for true pulse shape */
     p *= w_focus;                         /* Correct for target focusing */
-    p *= I0*w_mult*M(lambda,T);           /* Calculate true intensity */
-  }
+    if (tfocus_width>0) {
+      p *= tfocus_width/d;    	  	  /* Correct for time focusing */
+    }
+    p *= I0_n*w_mult*M(lambda,T_n);       /* Calculate true intensity */
+   }
   else
   {
     /* SECOND CASE */
-    tau_l = tau2*lambda;
+    tau_l = tau2_n*lambda;
     p = 1-n2/(n2-1)*(exp(-t/tau_l)-exp(-n2*t/tau_l)/n2); /* Correct for true pulse shape */
-    p /= (1-branch2)*(1-branch_tail);      /* Correct for switching prob. */
+    p /= (1-branch2_n)*(1-branch_tail);   /* Correct for switching prob. */
     p *= w_focus;                         /* Correct for target focusing */
-    p *= I2*w_mult/(1+exp(chi2*lambda-2.2))/lambda;
-                                          /* Calculate true intensity */
+    if (tfocus_width) {
+      p *= tfocus_width/d;    		  /* Correct for time focusing */
+    }
+    p *= I2_n*w_mult/(1+exp(chi2_n*lambda-2.2))/lambda;    /* Calculate true intensity */
   }
  }
- if (rand01()<branchframe){
-   t+=1/freq;
+
+ if (cold && src_2012) {
+   /* Correction factors to converts 'predicted' spectrum from cold moderator to the one observed in MCNPX */
+   if (lambda<=2.5) cor=log(1.402+0.898*lambda)*(2.0776-4.1093*lambda+4.8836*pow(lambda,2)-2.4715*pow(lambda,3)+0.4521*pow(lambda,4));
+   else if (lambda <= 3.5) cor = log(1.402 + 0.898*lambda)*(4.3369 - 1.8367*lambda + 0.2524*pow(lambda,2) );
+   else if (lambda  > 3.5) cor = log(1.402 + 0.898*lambda);
+ } else {
+   /* Thermal (pre-)moderator, i.e. no correction */
+   cor = 1.0;
  }
+ p *= cor;
+ 
+ t+=(double)floor((n_pulses)*rand01())/nu;   /* Select a random pulse */
+
+ 
 %}
 
 MCDISPLAY
 %{
-  magnify("xy");
-  rectangle("xy", 0, 0, 0, size, size);
+
+  /* Draw cold moderator as cylinder */
+  magnify("xz");
+  circle("xz", 0,  size/2.0, 0, cyl_radius);
+  circle("xz", 0,  -size/2.0, 0, cyl_radius);
+  line(0, -size/2.0, cyl_radius, 0, size/2.0, cyl_radius);
+  line(0, -size/2.0, -cyl_radius, 0, size/2.0, -cyl_radius);
+  line(cyl_radius, -size/2.0, 0, cyl_radius, size/2.0, 0);  
+  line(-cyl_radius, -size/2.0, 0, -cyl_radius, size/2.0, 0);
+  /* Draw thermal moderator as a couple of squares + some lines */
+  multiline(5, cyl_radius, -size/2.0, cyl_radius,
+         cyl_radius + size, -size/2.0, cyl_radius,
+	        cyl_radius + size, size/2.0, cyl_radius,
+		       cyl_radius, size/2.0, cyl_radius,
+		              cyl_radius, -size/2.0, cyl_radius);
+  multiline(5, cyl_radius, -size/2.0, 0.9*cyl_radius,
+         cyl_radius + size, -size/2.0, 0.9*cyl_radius,
+	        cyl_radius + size, size/2.0, 0.9*cyl_radius,
+		       cyl_radius, size/2.0, 0.9*cyl_radius,
+		              cyl_radius, -size/2.0, 0.9*cyl_radius);
+  line(cyl_radius, -size/2.0, cyl_radius, 
+       cyl_radius, -size/2.0, 0.9*cyl_radius);
+  line(cyl_radius + size, -size/2.0, cyl_radius, 
+       cyl_radius + size, -size/2.0, 0.9*cyl_radius);
+  line(cyl_radius, size/2.0, cyl_radius, 
+       cyl_radius, size/2.0, 0.9*cyl_radius);
+  line(cyl_radius + size, size/2.0, cyl_radius, 
+       cyl_radius + size, size/2.0, 0.9*cyl_radius);
+
 %}
 
 END
