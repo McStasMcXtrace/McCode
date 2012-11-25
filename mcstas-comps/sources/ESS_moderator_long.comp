@@ -38,6 +38,7 @@
 * I2=27.6e10, branch1=0, branch2=0.5, src_2012=0
 * <li>The component can use target_index for focusing to a given beam port. Use an Arm() and ROTATED to position 
 * relatively to the moderator.
+* <li>Time focusing option: Adjusts neutron departure time to match a 'first chopper' defined by parameters tfocus_dist, tfocus_time, tfocus_width (K Lefmann). 
 * </ol>
 *
 * Units of flux: n/cm^2/s/AA/ster
@@ -124,9 +125,12 @@
 *                of cold and thermal neutrons (i.e. extreme idealization).
 * src_2012:  (bool) Flag to apply 2012 MCNPX-derived, wavelenght-dependent correction to intensity 
 *                from the cold moderator.
+* tfocus_dist: (m) Position of time window
+* tfocus_time: (s) Time position of window
+* tfocus_width: (s) Time width of window
 *
 * %E
-******************************************************************************/
+*******************************************************************************/
 
 DEFINE COMPONENT ESS_moderator_long
 DEFINITION PARAMETERS ()
@@ -136,7 +140,7 @@ SETTING PARAMETERS (size=0.12, Lmin, Lmax, dist=0, focus_xw, focus_yh, nu=50.0/3
 		    cyl_radius=0.08, branch1=1, branch2=0.5, branch_tail=0.14350,
 		    branchframe=0, size_t=0.12, T_t=325, tau_t=80e-6, tau1_t=400e-6,
 		    tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5,
-		    branch2_t=0.5, int src_2012=1)
+		    branch2_t=0.5, int src_2012=1, tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0)
 OUTPUT PARAMETERS (M, F, l_range, w_mult)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
@@ -191,7 +195,7 @@ INITIALIZE
 %}
 TRACE
 %{
-  double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag, cor;
+  double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag,cor,dt;
 
   /* Bispectral source - choice of spectrum and initial position */
   int cold = ( rand01() < cold_frac ) ? 1 : 0;
@@ -236,11 +240,10 @@ TRACE
   vy = v*dy/r;
   vx = v*dx/r;
 
-
-/*  printf("pos0 (%g %g %g), pos1 (%g %g %g), r: %g, v (%g %g %g), v %g\n",
-  x,y,z,xf,yf,dist,r,vx,vy,vz, v);
-  printf("l %g, w_focus %g \n", lambda, w_focus);  */
-
+  /* Determine delta-t needed to reach first chopper */
+  if (tfocus_width>0) {
+    dt = tfocus_dist/vz;			/* Flight time to time window (chopper) */
+  }
   tail_flag = (rand01()<branch_tail);   /* Choose tail/bulk */
  if (tail_flag)
  {
@@ -284,7 +287,14 @@ TRACE
  }
  else /* Tail-flag */
  {
-  t = d*rand01();                        /* Sample from bulk pulse */
+   if (tfocus_width>0) {
+     t = tfocus_time-dt;                    /* Set time to hit time window center */
+     t += randpm1()*tfocus_width/2.0;       /* Add random time within window width */
+   } else {
+     t = d*rand01();                        /* Sample from bulk pulse */
+   }
+  if (t<0) ABSORB;                       /* Kill neutron if outside pulse duration */
+  if (t>d) ABSORB;
   if (rand01() < branch2_n)
   {
     if (rand01() < branch1_n)     /* Quick and dirty non-general solution */
@@ -299,15 +309,21 @@ TRACE
     }
     p *= 1-n/(n-1)*(exp(-t/tau_l)-exp(-n*t/tau_l)/n); /* Correct for true pulse shape */
     p *= w_focus;                         /* Correct for target focusing */
-    p *= I0_n*w_mult*M(lambda,T_n);           /* Calculate true intensity */
+    if (tfocus_width>0) {
+      p *= tfocus_width/d;    	  	  /* Correct for time focusing */
+    }
+    p *= I0_n*w_mult*M(lambda,T_n);       /* Calculate true intensity */
    }
   else
   {
     /* SECOND CASE */
     tau_l = tau2_n*lambda;
     p = 1-n2/(n2-1)*(exp(-t/tau_l)-exp(-n2*t/tau_l)/n2); /* Correct for true pulse shape */
-    p /= (1-branch2_n)*(1-branch_tail);      /* Correct for switching prob. */
+    p /= (1-branch2_n)*(1-branch_tail);   /* Correct for switching prob. */
     p *= w_focus;                         /* Correct for target focusing */
+    if (tfocus_width) {
+      p *= tfocus_width/d;    		  /* Correct for time focusing */
+    }
     p *= I2_n*w_mult/(1+exp(chi2_n*lambda-2.2))/lambda;    /* Calculate true intensity */
   }
  }
