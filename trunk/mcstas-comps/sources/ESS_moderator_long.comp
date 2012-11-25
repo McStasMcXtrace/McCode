@@ -298,10 +298,15 @@ TRACE
  else
    p/=(1-branchframe);
 
- /* Correction factors to converts 'predicted' spectrum to the one observed in MCNPX */
- if (lambda<=2.5) cor=log(1.402+0.898*lambda)*(2.0776-4.1093*lambda+4.8836*pow(lambda,2)-2.4715*pow(lambda,3)+0.4521*pow(lambda,4));
- else if (lambda <= 3.5) cor = log(1.402 + 0.898*lambda)*(4.3369 - 1.8367*lambda + 0.2524*pow(lambda,2) );
- else if (lambda  > 3.5) cor = log(1.402 + 0.898*lambda);
+ if (cold) {
+   /* Correction factors to converts 'predicted' spectrum from cold moderator to the one observed in MCNPX */
+   if (lambda<=2.5) cor=log(1.402+0.898*lambda)*(2.0776-4.1093*lambda+4.8836*pow(lambda,2)-2.4715*pow(lambda,3)+0.4521*pow(lambda,4));
+   else if (lambda <= 3.5) cor = log(1.402 + 0.898*lambda)*(4.3369 - 1.8367*lambda + 0.2524*pow(lambda,2) );
+   else if (lambda  > 3.5) cor = log(1.402 + 0.898*lambda);
+ } else {
+   /* Thermal (pre-)moderator, i.e. no correction */
+   cor = 1.0;
+ }
  p *= cor;
 
  
