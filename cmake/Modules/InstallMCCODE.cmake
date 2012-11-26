@@ -45,12 +45,6 @@ macro(InstallMCCODE)
   # Maintainer
   set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
-  # Make CPack respect the install prefix
-  if(NOT (CMAKE_SYSTEM_NAME STREQUAL "Windows"))
-    set(CPACK_SET_DESTDIR "ON")
-  endif()
-  set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
-
 
   # Debian
   set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/debian/postinst;")
