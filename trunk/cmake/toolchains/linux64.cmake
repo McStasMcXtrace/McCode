@@ -13,4 +13,4 @@ set(GNUPLOT "gnuplot")
 # Plotting options
 set(PLOTTER "PGPLOT")
 set(PGDEV "/xserv")
-set(GNUDEV "x11")
+set(GNUDEV "wxt")
