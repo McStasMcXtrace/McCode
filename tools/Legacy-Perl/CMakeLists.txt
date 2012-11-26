@@ -58,7 +58,7 @@ set(CPACK_DEBIAN_PACKAGE_SUGGESTS "scilab, freewrl")
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, perl, perl-tk, pdl, pgplot5, libpgplot-perl, gnuplot, sed, bc"
+  "${FLAVOR}-${MCCODE_VERSION}, perl, perl-Tk, perl-PDL, pgplot, perl-PGPLOT, gnuplot, sed, bc"
   )
 set(CPACK_RPM_SPEC_MORE_DEFINE "AutoReq: no")
 
