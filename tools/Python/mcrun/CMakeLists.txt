@@ -47,7 +47,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}", python-yaml)
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python-yaml")
 
 
 # Make CPack respect the install prefix
