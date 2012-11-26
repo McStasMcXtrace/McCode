@@ -45,7 +45,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 set(TOOLS_NAME "${FLAVOR}-tools-${MCCODE_VERSION}")
-set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
+set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${TOOLS_NAME}")
 
 
 # Debian
@@ -60,7 +60,7 @@ set(CPACK_DEBIAN_PACKAGE_SUGGESTS "scilab, freewrl")
 set(CPACK_RPM_PACKAGE_REQUIRES
   "${FLAVOR}-${MCCODE_VERSION}, perl, perl-tk, pdl, pgplot5, libpgplot-perl, gnuplot, sed, bc"
   )
-
+set(CPACK_RPM_SPEC_MORE_DEFINE "AutoReq: no")
 
 # Make CPack respect the install prefix
 set(CPACK_SET_DESTDIR "ON")
