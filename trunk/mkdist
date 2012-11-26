@@ -318,6 +318,7 @@ simple_cpack_file() {
         GEN="$1"
         NAME="$2"
         EXT="$3"
+        HINT="$4"
 
         OUT="${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}${EXT}"
         WORK="${OUT}.work"
@@ -325,7 +326,7 @@ simple_cpack_file() {
         simple_cpack "${GEN}" "${WORK}";
 
         # pull out packed file and clean up
-        find "${WORK}" -name "*${EXT}" -exec mv {} "${OUT}" \; &&
+        find "${WORK}" -name "*${HINT}${EXT}" -exec mv {} "${OUT}" \; &&
         rm -rf "${WORK}" || exit 1;
 
         echo "";
@@ -385,7 +386,7 @@ make_OSXpkg() {
 make_nsis() {
     # Default to mingw32 when toolchain is incompatible
     sane_toolchain "grep mingw" mingw32;
-    simple_cpack_file NSIS "${NAME}-NSIS" ".exe";
+    simple_cpack_file NSIS "${NAME}-NSIS" ".exe" "win32";
 }
 
 # create dist
