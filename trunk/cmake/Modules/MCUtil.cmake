@@ -145,4 +145,27 @@ macro(setup_mccode_mkdist FLAVOR)
   add_dot(DOT_PYTHON_SUFFIX "${PYTHON_SUFFIX}")
   add_dot(DOT_PERL_SUFFIX   "${PERL_SUFFIX}")
 
+
+  # Add some special Windows/Unix CPACK configuration
+  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+
+    # Fix installation root and folder (installs to ${ROOT}\${DIRECTORY})
+    set(CPACK_NSIS_INSTALL_ROOT "C:")
+    set(CPACK_PACKAGE_INSTALL_DIRECTORY "${FLAVOR}-${MCCODE_VERSION}")
+
+    # Windows program files do not have any version-suffix
+    set(PROGRAM_SUFFIX "")
+
+  else()
+
+    # Have CMake respect install prefix
+    set(CPACK_SET_DESTDIR "ON")
+    set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+
+    # Add "-VERSION" to all program files (executables)
+    set(PROGRAM_SUFFIX "-${MCCODE_VERSION}")
+
+  endif()
+
+
 endmacro()
