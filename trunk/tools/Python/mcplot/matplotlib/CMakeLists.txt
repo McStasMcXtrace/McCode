@@ -26,7 +26,7 @@ message("Enabling ${FLAVOR} flavor")
 setup_mccode_mkdist("${FLAVOR}")
 
 
-set(TOOLS_NAME "${FLAVOR}-tools-python-${MCCODE_VERSION}")
+set(TOOLS_NAME "${FLAVOR}-tools-python-mcplot-matplotlib-${MCCODE_VERSION}")
 set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}/mcplot/matplotlib")
 
 
@@ -47,7 +47,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}", python-matplotlib)
 
 
 # Make CPack respect the install prefix
