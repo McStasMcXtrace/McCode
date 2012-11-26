@@ -53,6 +53,10 @@ macro(InstallMCCODE)
   set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "openmpi-bin, openmpi-dev")
 
 
+  # NSIS
+  set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_NAME} ${MCCODE_VERSION}")
+  set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_NAME} ${MCCODE_VERSION}")
+
   include(CPack)
 
 
