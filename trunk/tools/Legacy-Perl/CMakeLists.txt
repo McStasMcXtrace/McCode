@@ -51,7 +51,7 @@ set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
 # Debian
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/postinst;")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS
-  "${FLAVOR}-${MCCODE_VERSION}, perl, perl-tk, pdl, pgplot5, libpgplot-perl, gnuplot, sed, bc"
+  "${FLAVOR}-${MCCODE_VERSION}, perl, perl-tk, pdl, pgplot5, libpgplot-perl, gnuplot-x11, sed, bc"
   )
 set(CPACK_DEBIAN_PACKAGE_SUGGESTS "scilab, freewrl")
 
