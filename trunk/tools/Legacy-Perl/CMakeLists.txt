@@ -93,7 +93,7 @@ foreach(NAME
   install(
     PROGRAMS "${WORK}/${P}${NAME}"
     DESTINATION ${bin}
-    RENAME "${P}${NAME}-${MCCODE_VERSION}${DOT_PERL_SUFFIX}"
+    RENAME "${P}${NAME}${PROGRAM_SUFFIX}${DOT_PERL_SUFFIX}"
   )
 endforeach()
 
