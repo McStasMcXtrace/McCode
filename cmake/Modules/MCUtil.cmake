@@ -101,12 +101,7 @@ macro(setup_mccode_mkdist FLAVOR)
   # Set default installation paths
   foreach(name bin doc etc include lib man sbin share src)
     if(NOT(DEFINED ${name}))
-      # The Windows platform installs everything in same dir
-      if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(${name} ".")
-      else()
-        set(${name} "${name}")
-      endif()
+      set(${name} "${name}")
     endif()
   endforeach()
 
