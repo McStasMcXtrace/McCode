@@ -33,8 +33,9 @@ macro(InstallMCCODE)
   ## CPack configuration
   set(CPACK_PACKAGE_NAME          "${FLAVOR}-${MCCODE_VERSION}")
   set(CPACK_RESOURCE_FilE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../COPYING")
+  set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
-  # Debian package versioning
+  ## Package versioning
   set(MAJOR "1")
   set(MINOR "0")
 
@@ -42,18 +43,13 @@ macro(InstallMCCODE)
   set(CPACK_PACKAGE_VERSION_MAJOR "${MAJOR}")
   set(CPACK_PACKAGE_VERSION_MINOR "${MINOR}")
 
-  # Maintainer
-  set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
-
-
-  # Debian
+  ## Debian
   set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/debian/postinst;")
   set(CPACK_DEBIAN_PACKAGE_DEPENDS       "gcc, libc6-dev")
   set(CPACK_DEBIAN_PACKAGE_RECOMMENDS    "${FLAVOR}-comps-${MCCODE_VERSION}")
   set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "openmpi-bin, openmpi-dev")
 
-
-  # NSIS
+  ## NSIS
   set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_STRING}")
   set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING}")
 
