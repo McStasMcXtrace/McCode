@@ -323,7 +323,7 @@ simple_cpack_file() {
         OUT="${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}${EXT}"
         WORK="${OUT}.work"
 
-        simple_cpack "${GEN}" "${WORK}";
+        simple_cpack "${GEN}" "${WORK}" || exit 1;
 
         # pull out packed file and clean up
         find "${WORK}" -name "*${HINT}${EXT}" -exec mv {} "${OUT}" \; &&
@@ -344,7 +344,7 @@ make_src() {
         (
             cd "${WORK}" &&
             prepare_mccode
-        )
+        ) || exit 1;
 
         tar czf "${OUT}" "${WORK}" &&
         rm -rf "${WORK}" || exit 1;
