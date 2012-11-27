@@ -110,9 +110,14 @@ macro(setup_mccode_mkdist FLAVOR)
   set(MCCODE_NAME "${FLAVOR}-${MCCODE_VERSION}")
 
   if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    # Install in C:
     set(CMAKE_INSTALL_PREFIX "C:")
+    # Set BIN and LIB paths
     set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}/${bin}/${FLAVOR}")
     set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}/${lib}")
+    # Replace '/' with '\'
+    string(REPLACE "/" "\\\\" MCCODE_BIN "${MCCODE_BIN}")
+    string(REPLACE "/" "\\\\" MCCODE_LIB "${MCCODE_LIB}")
   else()
     set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/${bin}/${MCCODE_NAME}")
     set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${MCCODE_NAME}")
