@@ -142,8 +142,11 @@ install(
   DESTINATION ${lib}/${TOOLS_NAME}/perl/
 )
 
-install(
-  DIRECTORY "${WORK}/doc/man/"
-  DESTINATION ${man}/man1
-  FILES_MATCHING PATTERN "*.1"
-)
+if(NOT (CMAKE_SYSTEM_NAME STREQUAL "Windows"))
+  # Man pages
+  install(
+    DIRECTORY "${WORK}/doc/man/"
+    DESTINATION ${man}/man1
+    FILES_MATCHING PATTERN "*.1"
+    )
+endif()
