@@ -62,10 +62,6 @@ set(CPACK_RPM_PACKAGE_REQUIRES
   )
 set(CPACK_RPM_SPEC_MORE_DEFINE "AutoReq: no")
 
-# Make CPack respect the install prefix
-set(CPACK_SET_DESTDIR "ON")
-set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
-
 include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
