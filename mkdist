@@ -334,7 +334,8 @@ simple_cpack_file() {
 	    POSTINST=`find "${WORK}" -name postinst`;
 	    cp "${POSTINST}" "${OUT}/Contents/Resources/postinstall";
 	    cp "${POSTINST}" "${OUT}/Contents/Resources/postupgrade";
-	    chmod +x "${OUT}/Contents/Resources/post*";
+	    chmod a+x "${OUT}/Contents/Resources/postinstall";
+	    chmod a+x "${OUT}/Contents/Resources/postupgrade";
 	fi
 
 	rm -rf "${WORK}" || exit 1;
