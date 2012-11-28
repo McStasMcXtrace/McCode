@@ -137,3 +137,9 @@ if(NOT (CMAKE_SYSTEM_NAME STREQUAL "Windows"))
 
   endforeach()
 endif()
+
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  # Safe wrap; used when calling scripts
+  install(PROGRAMS support/Win32/Perl/safewrap.pl DESTINATION ${bin})
+endif()
