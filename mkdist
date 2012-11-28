@@ -326,10 +326,18 @@ simple_cpack_file() {
         simple_cpack "${GEN}" "${WORK}" || exit 1;
 
         # pull out packed file and clean up
-        find "${WORK}" -name "*${HINT}${EXT}" -exec mv {} "${OUT}" \; &&
-        rm -rf "${WORK}" || exit 1;
+        find "${WORK}" -name "*${HINT}${EXT}" -exec mv {} "${OUT}" \; 
+	
+	# If this is PackageMaker, the postinst script needs special handing
+	if [ "${GEN}" = "PackageMaker" ]; then
+	    echo This is PackageMaker
+	    POSTINST=`find "${WORK}" -name postinst`;
+	    cp "${POSTINST}" "${OUT}/Contents/Resources/postinstall";
+	    cp "${POSTINST}" "${OUT}/Contents/Resources/postupgrade";
+	    chmod +x "${OUT}/Contents/Resources/post*";
+	fi
 
-        echo "";
+	rm -rf "${WORK}" || exit 1;
         echo "Build: ${OUT}";
     )
 }
