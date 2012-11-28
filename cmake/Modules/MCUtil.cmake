@@ -171,8 +171,9 @@ macro(setup_mccode_mkdist FLAVOR)
     # Add "-VERSION" to all program files (executables)
     set(PROGRAM_SUFFIX "-${MCCODE_VERSION}")
 
-    # Run postinst script
+    # Run postinst script for various platforms
     set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/postinst;")
+    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postinst;")
 
     # Generate debian postinst script
     configure_file(
