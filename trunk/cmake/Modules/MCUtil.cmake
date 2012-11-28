@@ -166,6 +166,14 @@ macro(setup_mccode_mkdist FLAVOR)
     # Add "-VERSION" to all program files (executables)
     set(PROGRAM_SUFFIX "-${MCCODE_VERSION}")
 
+    # Run postinst script
+    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/postinst;")
+
+    # Generate debian postinst script
+    configure_file(
+      cmake/support/scripts/postinst.in
+      work/support/postinst)
+
   endif()
 
 

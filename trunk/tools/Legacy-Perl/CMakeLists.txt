@@ -54,7 +54,6 @@ endif()
 
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/postinst;")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS
   "${FLAVOR}-${MCCODE_VERSION}, perl, perl-tk, pdl, pgplot5, libpgplot-perl, gnuplot-x11, sed, bc"
   )
@@ -102,9 +101,6 @@ foreach(NAME
   )
 endforeach()
 
-
-# Generate debian postinst script
-configure_file(cmake/support/debian/postinst.in     work/support/postinst)
 
 # Generate mccode_config.perl and mccode_reconfigure
 configure_file(lib/tools/perl/mccode_config.perl.in work/mccode_config.perl @ONLY)

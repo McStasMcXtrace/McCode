@@ -44,7 +44,6 @@ macro(InstallMCCODE)
   set(CPACK_PACKAGE_VERSION_MINOR "${MINOR}")
 
   ## Debian
-  set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/debian/postinst;")
   set(CPACK_DEBIAN_PACKAGE_DEPENDS       "gcc, libc6-dev")
   set(CPACK_DEBIAN_PACKAGE_RECOMMENDS    "${FLAVOR}-comps-${MCCODE_VERSION}")
   set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "openmpi-bin, openmpi-dev")
@@ -208,12 +207,6 @@ macro(InstallMCCODE)
   configure_directory ("lib/share/*" "work/lib/share")
 
   configure_directory ("src/*" "work/src")
-
-  # Debian specific postinst script
-  configure_directory (
-    "${CMAKE_SOURCE_DIR}/cmake/support/debian/*.in"
-    "work/support/debian"
-  )
 
   # Generate man pages
   message("-- Preparing man files")
