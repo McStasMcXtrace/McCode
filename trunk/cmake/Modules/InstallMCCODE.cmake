@@ -290,7 +290,7 @@ macro(InstallMCCODE)
     RENAME "${FLAVOR_FMT}${PROGRAM_SUFFIX}${DOT_EXE_SUFFIX}"
   )
 
-  if(NOT (CMAKE_SYSTEM_NAME STREQUAL "Windows"))
+  if(NOT WINDOWS)
     # Man pages
     install (
       FILES "${PROJECT_BINARY_DIR}/work/doc/man/${FLAVOR}.1"
