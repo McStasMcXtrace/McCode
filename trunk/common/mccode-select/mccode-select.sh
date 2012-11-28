@@ -29,8 +29,12 @@ if [ "x$1" = "x--bootstrap" ]; then
         exit 1;
     fi
 
+    # Install mccode-select version
     $0 --install mccode-select        ${VERSION};
     $0 --install mccode-select-bundle ${VERSION};
+    # Choose mccode-select version
+    $0 mccode-select        ${VERSION};
+    $0 mccode-select-bundle ${VERSION};
     exit 0;
 fi
 
