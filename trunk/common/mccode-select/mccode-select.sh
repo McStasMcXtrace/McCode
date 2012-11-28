@@ -244,6 +244,7 @@ linkBinary() {
 
         if ${HAS_ALTERNATIVES}; then
             echo "${name} -> ${file}"
+            whenReal installBinary "${name}" "${vers}"
             whenReal ${ALTERNATIVES} --set "${name}" "${file}"
             exit 0;
         fi
@@ -266,8 +267,6 @@ if ${LIST}; then
     list "${NAME}"
 else
     if ${INSTALL}; then
-        installBinary "${NAME}" "${VERSION}"
-    else
         linkBinary "${NAME}" "${VERSION}"
     fi
 fi

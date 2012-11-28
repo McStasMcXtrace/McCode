@@ -21,7 +21,7 @@ EOF
 
 # Parse arguments
 LIST=false;
-INSTALL="";
+INSTALL=false;
 DRYRUN="";
 
 while true; do
@@ -30,7 +30,7 @@ while true; do
             LIST=true
             ;;
         "--install" )
-            INSTALL="$1";
+            INSTALL=true;
             ;;
         "--dryrun" )
             DRYRUN="$1";
@@ -90,7 +90,7 @@ switch_version() {
         # Setup core
         echo "Core:"
         for name in "${NAME}" "${MC}format"; do
-            mccode-select $INSTALL $DRYRUN "${name}" "${VERSION}" || ret=1;
+            mccode-select --install $DRYRUN "${name}" "${VERSION}" || ret=1;
         done
 
         # Setup tools
@@ -100,11 +100,11 @@ switch_version() {
             name="${MC}${tool}";
             vers="${VERSION}";
             # Install Perl tool
-            mccode-select $INSTALL $DRYRUN "${name}" "${vers}" || \
+            mccode-select --install $DRYRUN "${name}" "${vers}" || \
                 echo "> skipping: ${NAME}-tools-${VERSION} isn't installed?";
             if [ -x "bin/${name}-${vers}-py" ]; then
                 # Install Python tool as well
-                mccode-select $INSTALL $DRYRUN "${name}" "${vers}-py" || \
+                mccode-select --install $DRYRUN "${name}" "${vers}-py" || \
                     echo ".. skipping";
             fi
         done
@@ -118,7 +118,7 @@ if ${LIST}; then
     # list available versions
     list;
 else
-    if [ "x${VERSION}" = "x" ]; then
+    if ! ${INSTALL} || [ "x${VERSION}" = "x" ]; then
         usage;
         exit 1;
     fi
