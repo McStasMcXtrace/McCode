@@ -46,7 +46,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 set(TOOLS_NAME "${FLAVOR}-tools-${MCCODE_VERSION}")
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(WINDOWS)
   set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}/${lib}/${TOOLS_NAME}")
 else()
   set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
@@ -125,7 +125,7 @@ install(
   DESTINATION ${lib}/${TOOLS_NAME}/perl/
 )
 
-if(NOT (CMAKE_SYSTEM_NAME STREQUAL "Windows"))
+if(NOT WINDOWS)
   # Generate man pages
   set(LIST convert display doc gui plot run)
   foreach(NAME ${LIST})
@@ -139,7 +139,7 @@ if(NOT (CMAKE_SYSTEM_NAME STREQUAL "Windows"))
 endif()
 
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(WINDOWS)
   # Safe wrap; used when calling scripts
   install(PROGRAMS support/safewrap.pl DESTINATION ${bin})
 endif()

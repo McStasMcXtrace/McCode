@@ -1,6 +1,6 @@
 # Install library files into lib/${FLAVOR}, while skipping unneeded files
 macro(install_lib path)
-  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  if(WINDOWS)
     set(dest "${lib}")
   else()
     set(dest "${lib}/${MCCODE_NAME}")
@@ -26,6 +26,11 @@ endmacro()
 
 # Setup McCode constants using either mkdist or SVN-defaults
 macro(setup_mccode_mkdist FLAVOR)
+
+  # Check for WINDOWS
+  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(WINDOWS true)
+  endif()
 
   # Set 32-bit flags
   if(ARCH EQUAL 32)
@@ -109,7 +114,7 @@ macro(setup_mccode_mkdist FLAVOR)
   # Setup mccode name and paths
   set(MCCODE_NAME "${FLAVOR}-${MCCODE_VERSION}")
 
-  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  if(WINDOWS)
     # Install in C:
     set(CMAKE_INSTALL_PREFIX "C:")
     # Set BIN and LIB paths
@@ -148,7 +153,7 @@ macro(setup_mccode_mkdist FLAVOR)
 
 
   # Add some special Windows/Unix CPACK configuration
-  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  if(WINDOWS)
 
     # Fix installation root and folder (installs to ${ROOT}\${DIRECTORY})
     set(CPACK_NSIS_INSTALL_ROOT "C:")
