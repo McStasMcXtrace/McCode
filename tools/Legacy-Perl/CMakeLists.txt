@@ -112,19 +112,6 @@ configure_file(perl_fix.sh.in work/perl_fix.sh @ONLY immediate)
 
 exec_program(chmod ARGS 755  work/perl_env_header.pl work/perl_fix.sh)
 
-# Generate man pages
-
-set(LIST convert display doc gui plot run)
-foreach(NAME ${LIST})
-
-  configure_file(
-    "doc/man/${P}${NAME}.1.in"
-    "${WORK}/doc/man/${P}${NAME}-${MCCODE_VERSION}.1"
-    @ONLY)
-
-endforeach()
-
-
 # install tools (skip *.in files)
 install(
   DIRECTORY lib/tools/
@@ -139,10 +126,14 @@ install(
 )
 
 if(NOT (CMAKE_SYSTEM_NAME STREQUAL "Windows"))
-  # Man pages
-  install(
-    DIRECTORY "${WORK}/doc/man/"
-    DESTINATION ${man}/man1
-    FILES_MATCHING PATTERN "*.1"
-    )
+  # Generate man pages
+  set(LIST convert display doc gui plot run)
+  foreach(NAME ${LIST})
+
+    set(filepath "${WORK}/doc/man/${P}${NAME}-${MCCODE_VERSION}.1")
+
+    configure_file("doc/man/${P}${NAME}.1.in" "${filepath}" @ONLY)
+    install(FILES "${filepath}" DESTINATION ${man}/man1)
+
+  endforeach()
 endif()
