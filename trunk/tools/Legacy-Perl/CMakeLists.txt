@@ -141,5 +141,5 @@ endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   # Safe wrap; used when calling scripts
-  install(PROGRAMS support/Win32/Perl/safewrap.pl DESTINATION ${bin})
+  install(PROGRAMS support/safewrap.pl DESTINATION ${bin})
 endif()
