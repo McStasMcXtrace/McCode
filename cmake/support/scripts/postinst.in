@@ -4,13 +4,17 @@
 PATH=${CMAKE_INSTALL_PREFIX}/bin:$PATH
 
 # Setup mccode-select and mccode-select-bundle
-mccode-select-${FLAVOR}-${MCCODE_VERSION} --install \
-    mccode-select ${FLAVOR}-${MCCODE_VERSION}
-
-mccode-select-${FLAVOR}-${MCCODE_VERSION} --install \
-    mccode-select-bundle ${FLAVOR}-${MCCODE_VERSION}
+mccode-select-${FLAVOR}-${MCCODE_VERSION} --bootstrap
 
 # Setup mcstas/mcxtrace including available tools
-mccode-select-bundle --install \
-    ${FLAVOR} \
-    ${MCCODE_VERSION}
+
+UPDATE_ALT=`which update-alternatives`
+if [ "$?" = "0" ]; then
+    mccode-select-bundle --install \
+	${FLAVOR} \
+	${MCCODE_VERSION}
+else
+    mccode-select-bundle \
+	${FLAVOR} \
+	${MCCODE_VERSION}
+fi
