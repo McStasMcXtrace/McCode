@@ -505,9 +505,11 @@ sub set_run_dir {
 
 sub set_workdir{
   my ($w, $dir) = @_;
-  $workdir->delete("1.0", "end");
-  chdir($dir);
-  $workdir->insert('end', $dir);
+  if (!($dir eq "")) {
+    $workdir->delete("1.0", "end");
+    chdir($dir);
+    $workdir->insert('end', $dir);
+  }
 }
 
 sub menu_open {
