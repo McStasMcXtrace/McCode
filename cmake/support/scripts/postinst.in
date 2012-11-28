@@ -7,14 +7,6 @@ PATH=${CMAKE_INSTALL_PREFIX}/bin:$PATH
 mccode-select-${FLAVOR}-${MCCODE_VERSION} --bootstrap
 
 # Setup mcstas/mcxtrace including available tools
-
-UPDATE_ALT=`which update-alternatives`
-if [ "$?" = "0" ]; then
-    mccode-select-bundle --install \
-	${FLAVOR} \
-	${MCCODE_VERSION}
-else
-    mccode-select-bundle \
-	${FLAVOR} \
-	${MCCODE_VERSION}
-fi
+mccode-select-bundle --install \
+	  ${FLAVOR} \
+	  ${MCCODE_VERSION}
