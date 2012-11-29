@@ -318,7 +318,7 @@ Available functions to read \emph{a single} vector/matrix are:
   performed by other functions already.
 \item {\bf Table\_Read}(\&$Table$, $filename$, $block$)
   reads numerical block number
-  $block$ (0 to catenate all) data from \emph{text} file $filename$ into $Table$,
+  $block$ (0 to concatenate all) data from \emph{text} file $filename$ into $Table$,
   which is as well initialized in the process.
   The block number changes when the numerical data changes its size,
   or a comment is encoutered (lines starting
@@ -390,7 +390,7 @@ A usage example for this library part may be:
                                 // and extract 2nd column value of that row
   Table_Free(&Table);           // free allocated memory for table
 \end{verbatim}
-Additionally, if the block number (3rd) argument of  {\bf Table\_Read} is 0, all blocks will be catenated.
+Additionally, if the block number (3rd) argument of  {\bf Table\_Read} is 0, all blocks will be concatenated.
 The {\bf Table\_Value} function assumes that the 'x' axis is the first column (index 0).
 Other functions are used the same way with a few additional parameters, e.g. specifying an offset for reading files, or reading binary data.
 
