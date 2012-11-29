@@ -545,7 +545,7 @@ INITIALIZE, SAVE, and FINALLY C blocks, as well as instrument parameters from
 each part are concatenated. The TRACE section is made of inserted COMPONENTS
 from each part. In principle, it then possible to write an instrument as:
 \begin{verbatim}
-DEFINE catenated()
+DEFINE concatenated()
 TRACE
 
 %include "part1.instr"
@@ -1508,7 +1508,11 @@ The syntax for a full component child is
 \end{quote}
 This single line will copy all parts of the {\it parent} into the {\it child}, except for the documentation header.
 
-As for normal component definitions, you may add other parameters, \texttt{DECLARE}, \texttt{TRACE}, ... sections. Each of them will replace or extend (be catenated to, with the COPY/EXTEND keywords, see example below) the corresponding {\it parent} definition. In practice, you could copy a component and only rewrite some of it, as in the following example:
+As for normal component definitions, you may add other parameters,
+\texttt{DECLARE}, \texttt{TRACE}, ... sections. Each of them will replace or
+extend (be concatenated to, with the COPY/EXTEND keywords, see example below)
+the corresponding {\it parent} definition. In practice, you could copy a
+component and only rewrite some of it, as in the following example:
 \begin{quote}
   \texttt{DEFINE COMPONENT} {\it child\_name} \texttt{COPY} {\it parent\_name} \\
 
