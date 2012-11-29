@@ -423,7 +423,7 @@ This will result in a coordinate system that is rotated first the angle $\phi_x$
 $\phi_z$ around the $z$ axis. Rotation may also be specified using
 \texttt{ABSOLUTE} rather than \texttt{RELATIVE}. If no rotation is specified,
 the default is $(0,0,0)$ using the same relative or absolute specification used
-in the \texttt{AT} modifier. We \emph{highly} recommend to apply all rotations
+in the \texttt{AT} modifier. We \emph{strongly} recommend to apply all rotations
 of an instrument description on Arm class components only, acting as
 goniometers, and position the optics on top of these. This usually makes it much
 easier to orient pieces of the instrument, and avoid positioning errors.
@@ -978,7 +978,7 @@ by the component itself, rather than being passed as input. This could
 for example be a count of neutrons in a detector or a constant that is
 precomputed to speed up computation.
 
-Using \texttt{OUTPUT PARAMETERS} is \emph{highly recommended} for
+Using \texttt{OUTPUT PARAMETERS} is \emph{strongly recommended} for
 \texttt{DECLARE} and internal/global component variables and functions in order
 to prevent that instances of the same component use the same variable
 names. Moreover (see section \ref{s:comp-declare} below), these may be accessed
