@@ -1,0 +1,10 @@
+@CALL @CMAKE_INSTALL_PREFIX@@FLAVOR@-@MCCODE_VERSION@\\bin\\mcstasenv.bat
+@ECHO OFF
+@ECHO McStas environment shell:
+@ECHO OFF
+@ECHO OFF
+@mcstas -v
+@ECHO OFF
+@cmd
+
+
