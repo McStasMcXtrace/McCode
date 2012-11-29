@@ -213,7 +213,7 @@ same result is obtained as with the \verb+--portable+ option of the
 \MCS\ compiler. The effect of the \verb+--trace+ option may be obtained
 by defining the \verb+MC_TRACE_ENABLED+ macro. Most Unix-like C
 compilers allow preprocessor macros to be defined using the \verb+-D+
-option, eg.
+option, e.g.
 \begin{verbatim}
     cc -DMC_TRACE_ENABLED -DMC_PORTABLE ...
 \end{verbatim}
@@ -1084,7 +1084,7 @@ The meaning of the different fields is as follows:
   \begin{itemize}
   \item Simulate: perform a normal simulation or a scan when \#steps
     is set to non-zero value
-  \item Trace (3D view): View the instrument in 3D tracing indivitual
+  \item Trace (3D view): View the instrument in 3D tracing individual
     neutrons through the instrument
   \item Optimize: find the optimum value of the simulation parameters
     in the given ranges (see section \ref{s:optimize}).
@@ -1961,7 +1961,7 @@ To use MPI you will need
       we recommend to use only the local machine (for multi-cores/cpu), i.e. do
       not use a machine hosts file.}
   \item Signals are \emph{not} supported while simulating with MPI (since
-    asynchroneous events cannot be easily transmitted to all nodes). This
+    asynchronous events cannot be easily transmitted to all nodes). This
     means it is not possible to cancel an on-going computation. However,
     simulation scans can be interrupted as soon as the on-going computation
     step ends.
