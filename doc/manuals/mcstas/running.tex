@@ -830,16 +830,16 @@ The list of available \MCS\ front-end programs may be obtained from the \verb+mc
 \label{s:mcgui}
 \index{Tools!mcgui|textbf}
 
-The front-end \verb+mcgui+ provides a graphical user interface that
-interfaces the various parts of the McStas package. It is started using
-simply the command
+The front-end \verb+mcgui+ provides a graphical user interface that interfaces
+the various parts of the McStas package. It may be started with the single
+command
 \begin{verbatim}
     mcgui
 \end{verbatim}
-The mcgui (mcgui.pl on Windows) program may optionally be given the name of an
-instrument file.
+The mcgui (mcgui.pl on Windows) program may optionally be given the name of the
+instrument file to use.
 
-\paragraph{Dependencies:}\index{Tools!PGPLOT} To use the \verb+mcgui+
+\paragraph{Dependencies:}\index{Tools!PGPLOT} To run the \verb+mcgui+
 front-end, the programs Perl and Perl/Tk must be properly installed on the
 system. Additionally, to use the \MCS/PGPLOT back-end the software packages
 PGPLOT, PgPerl, and PDL are required. \index{Tools!Perl libraries} It may be
@@ -850,11 +850,11 @@ difficulty. \index{Environment variable!PGPLOT\_DIR} \index{Environment
 
 \subsubsection{The menus}
 
-When the front-end is started, a main window is opened (see figure
+When the front-end is started the main window is opened (see figure
 \ref{fig:mcgui}). This window displays the output from compiling and running
-simulations, and also contains a few menus and buttons. The main purpose of the
-front-end is to edit and compile instrument definitions, run the simulations,
-and visualize the results.
+simulations, and contains a few menus and buttons for easy navigation. The main
+purpose of the front-end is to edit and compile instrument definitions, run the
+simulations, and visualize the results.
 
 The {\bf File} menu has the following features:
 \begin{description}
