@@ -1,0 +1,4 @@
+@CALL @CMAKE_INSTALL_PREFIX@@FLAVOR@-@MCCODE_VERSION@\\bin\\mcstasenv.bat
+@ECHO Staring mcgui
+@mcgui.pl
+

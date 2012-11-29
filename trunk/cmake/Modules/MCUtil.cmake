@@ -157,11 +157,16 @@ macro(setup_mccode_mkdist FLAVOR)
   if(WINDOWS)
 
     # Fix installation root and folder (installs to ${ROOT}\${DIRECTORY})
-    set(CPACK_NSIS_INSTALL_ROOT "C://")
+    set(CPACK_NSIS_INSTALL_ROOT "C:")
     set(CPACK_PACKAGE_INSTALL_DIRECTORY "${FLAVOR}-${MCCODE_VERSION}")
-
+    
     # Windows program files do not have any version-suffix
     set(PROGRAM_SUFFIX "")
+    
+    # Create desktop links for mcguigo and mcstasgo batch files
+    set(CPACK_NSIS_CREATE_ICONS "CreateShortCut '$DESKTOP\\McGui-${MCCODE_VERSION}.lnk' '\\${FLAVOR}-${MCCODE_VERSION}\\bin\\mcguigo.bat' ")
+    set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$DESKTOP\\mcstas-shell-${MCCODE_VERSION}.lnk' '\\${FLAVOR}-${MCCODE_VERSION}\\bin\\mcstasgo.bat' ")
+
 
   else()
 

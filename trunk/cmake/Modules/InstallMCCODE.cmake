@@ -324,13 +324,19 @@ macro(InstallMCCODE)
       work/support/mcstasenv.bat
       )
 
-    install(PROGRAMS ${WORK}/support/mcstasenv.bat DESTINATION ${bin})
-
-    install(PROGRAMS
-      cmake/support/scripts/mcstasgo.bat
-      cmake/support/scripts/mcguigo.bat
-      DESTINATION ${bin}
+    configure_file(
+      cmake/support/scripts/mcguigo.bat.in
+      work/support/mcguigo.bat
       )
+
+    configure_file(
+      cmake/support/scripts/mcstasgo.bat.in
+      work/support/mcstasgo.bat
+      )
+
+    install(PROGRAMS ${WORK}/support/mcstasenv.bat DESTINATION ${bin})
+    install(PROGRAMS ${WORK}/support/mcguigo.bat DESTINATION ${bin})
+    install(PROGRAMS ${WORK}/support/mcstasgo.bat DESTINATION ${bin})
 
   endif()
 
