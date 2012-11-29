@@ -1642,8 +1642,8 @@ smaller in size and faster to import.
 Each data file contains informations about the simulation, the instrument, the
 parameters used, and of course the signal, the estimated error on the signal,
 and the number of events used in each bin. Additionally, all data files indicate
-their first (mean value) and second moment (half width) in the 'statistics'
-field.
+their first moment (mean value) and second moment (half width) in the
+'statistics' field.
 
 In order for the user to choose the data format, we recommend to set it using
 the \verb+--format=FORMAT+ or alternatively {\it via} the MCSTAS\_FORMAT
@@ -1873,7 +1873,7 @@ especially suited on multi-core machines, but may also be used on any set of
 distant machines (grids), as well as clusters. For Windows master machines, we
 recommend the installation of the PuTTY SSH client. The overhead is proportional
 to the number of nodes and the amount of data files to transfer per
-simulation. It is usually larger that the pure MPI method. We thus recommend to
+simulation. It is usually larger than the pure MPI method. We thus recommend to
 launch long runs on fewer nodes rather than many short runs on many nodes.
 
 \subsubsection{Requirements and limitation (SSH grids)}
