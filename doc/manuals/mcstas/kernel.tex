@@ -790,12 +790,13 @@ MYSELF, NEXT, and NEXT($n$), where $n$ is the index gap to the target either
 backward (PREVIOUS) or forward (NEXT), so that PREVIOUS(1) is PREVIOUS and
 NEXT(1) is NEXT. MYSELF means that the component will be iterated as long as the
 condition is true. This may be a way to handle multiple scattering, if the
-component has been designed for that.
+component has been designed for that.\index{PREVIOUS}\index{MYSELF}\index{NEXT}
 
 The jump arrives directly inside the target component, in the local coordinate
 system (i.e. without applying the AT and ROTATED keywords). In order to control
 better the target positions, it is \emph{required} that, except for looping
 MYSELF, the target component type should be an \emph{Arm}.
+\index{ROTATED}
 
 There is a more general way to iterate components, which consists in repeating
 the loop for a given number of times.
@@ -805,6 +806,7 @@ the loop for a given number of times.
 This method is specially suited for very long curved guides of similar
 components, but in order to take into account rotation and translation between
 guide sections, the iterations are performed between Arm's.
+\index{ITERATE}
 
 In the following example for a curved guide made on $n=500$ elements of length
 $L$ on a curvature radius $R$, with gaps $d$ between elements, we simply write:
