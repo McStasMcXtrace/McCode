@@ -56,7 +56,7 @@ file(COPY figures DESTINATION "${WORK}")
 foreach(NAME manual Component_manual)
   add_custom_command(
     OUTPUT "${WORK}/${NAME}.pdf"
-    COMMAND "${PROJECT_SOURCE_DIR}/build_pdf.sh" "${NAME}";
+    COMMAND "${PROJECT_SOURCE_DIR}/compile_pdf.sh" "${NAME}";
     WORKING_DIRECTORY "${WORK}"
     )
   add_custom_target(
