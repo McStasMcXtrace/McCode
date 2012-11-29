@@ -317,6 +317,24 @@ macro(InstallMCCODE)
       )
   endif()
 
+  if(WINDOWS)
+    # Generate and install Windows setup scripts
+    configure_file(
+      cmake/support/scripts/mcstasenv.bat.in
+      work/support/mcstasenv.bat
+      )
+
+    install(PROGRAMS ${WORK}/support/mcstasenv.bat DESTINATION ${bin})
+
+    install(PROGRAMS
+      cmake/support/scripts/mcstasgo.bat
+      cmake/support/scripts/mcguigo.bat
+      DESTINATION ${bin}
+      )
+
+  endif()
+
+
 endmacro(InstallMCCODE)
 
 # InstallMCCODE ends here
