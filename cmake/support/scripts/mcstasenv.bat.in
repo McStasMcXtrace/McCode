@@ -3,12 +3,12 @@
 @REM First, set up various environment variables
 @REM
 @REM Path related:
-@SET PATH=@CPACK_PACKAGE_INSTALL_DIRECTORY@\\bin;%PATH%
+@SET PATH=@CMAKE_INSTALL_PREFIX@@FLAVOR@-@MCCODE_VERSION@\\bin;%PATH%
 @SET PATHEXT=%PATHEXT%;.pl;.py
 @REM
-@REM McStas related: 
-@SET MCSTAS=@CPACK_PACKAGE_INSTALL_DIRECTORY@\\lib;
-@SET MCSTAS_TOOLS=@CPACK_PACKAGE_INSTALL_DIRECTORY@\\lib;
+@REM McStas related:
+@SET MCSTAS=@MCCODE_LIB@;
+@SET MCSTAS_TOOLS=@MCCODE_LIB@\\@FLAVOR@-tools-@MCCODE_VERSION@;
 @SET MCSTAS_CC=gcc
 @SET MCSTAS_FORMAT=@PLOTTER@
 @REM
@@ -16,5 +16,3 @@
 @SET PGPLOT_DIR=c:\\strawberry\\perl\\site\\lib\\PGPLOT\\pgplot_supp
 @SET PGPLOT_FONT=c:\\strawberry\\perl\\site\\lib\\PGPLOT\\pgplot_supp\\grfont.dat
 @SET PGPLOT_DEV=/gw
-
-
