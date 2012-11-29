@@ -896,7 +896,7 @@ the component.  The calculation of the effect of the component on the
 neutron is performed by a block of embedded C code.
 One example of a component definition is given in section~\ref{s:slit}, and all
 component definitions can be found on the McStas
-web-page~\cite{mcstas_webpage} and described in the \MCS\ component manual.
+web-page~\cite{mcstas_webpage} and are described in the \MCS\ component manual.
 
 There exists a large number of functions and constants available in
 order to write efficient components. See appendix~\ref{c:kernelcalls}
@@ -1168,7 +1168,7 @@ results of the simulation in any way, but it allows the front-end
 programs to visualize the scattering events properly, and to handle
 component \texttt{GROUP}s in an instrument definition (see
 section~\ref{s:trace}). It basically increments the SCATTERED counter. The \texttt{SCATTER} macro should be called with
-the state parameters set to the proper values for the scattering event., so that neutron events are displayed correctly.
+the state parameters set to the proper values for the scattering event, so that neutron events are displayed correctly.
 For an example of \texttt{SCATTER}, see the optics/Guide
 component. \index{Library!Run-time!SCATTER}
 
@@ -1341,7 +1341,7 @@ components to output customized meta data. The macro:
   \texttt{DETECTOR\_CUSTOM\_HEADER({\it t})}
 \end{quote}
 
-defines a string to be written during the next \verb+DETECTOR\_OUT*+ call, as a field {\it custom}. This string may additionally use the symbol \verb+%PRE+ which is replaced by the format specific comment character, e.g. '\#' for McStas/PGPLOT, '\%' for Octave/Matlab, '\verb+//+' for Scilab and ';' for IDL, and ' ' for other formats. The argument {\it t} to the macro may be a static string, e.g. {\it "My own additional information"}, or the name of a {\it character array variable} containing the meta data. After the detector/monitor file being written, the custom meta data output is unactivated. This way, each monitor file may have its own meta data definition by repeating the DETECTOR\_CUSTOM\_HEADER call. You may either do that inside the component SAVE section, or within an instrument description in an EXTEND code preceeding the monitor (e.g. following an Arm component).
+defines a string to be written during the next \verb+DETECTOR\_OUT*+ call, as a field {\it custom}. This string may additionally use the symbol \verb+%PRE+ which is replaced by the format specific comment character, e.g. '\#' for McStas/PGPLOT, '\%' for Octave/Matlab, '\verb+//+' for Scilab and ';' for IDL, and ' ' for other formats. The argument {\it t} to the macro may be a static string, e.g. {\it "My own additional information"}, or the name of a {\it character array variable} containing the meta data. After the detector/monitor file being written, the custom meta data output is deactivated. This way, each monitor file may have its own meta data definition by repeating the DETECTOR\_CUSTOM\_HEADER call. You may either do that inside the component SAVE section, or within an instrument description in an EXTEND code preceeding the monitor (e.g. following an Arm component).
 
 \subsection{The \texttt{FINALLY} section}
 \label{s:comp-finally}
@@ -1608,8 +1608,8 @@ Additionally, optional keys \verb+%VALIDATION+ and \verb+%BUGS+ may be found to 
   or \hbox{``\texttt{{\it name\/}:~{\it text\/} [{\it unit\/}]}''}.
   These may span multiple lines, but subsequent lines must be
   indented by at least four spaces. Note that square brackets \verb+[]+ should
-  be used for units. Normal parenthesis are also supported for backwards
-  compatibility, but nested parenthesis do not work well.
+  be used for units. Normal parentheses are also supported for backwards
+  compatibility, but nested parentheses do not work well.
 \item The \verb+%DESCRIPTION+
   section contains text in free format. The text may contain HTML tags
   like \verb+<IMG>+ (to include pictures) and
