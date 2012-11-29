@@ -75,7 +75,7 @@ sub overview_gnuplot {
   my $type;
   @monitornames = ('Overview');
   # On Win32, multiple windows are not supported...
-  if (int(@$datalist) < 10 || ($default_term eq "windows")) {
+  if (int(@$datalist) < 100 || ($default_term eq "windows")) {
     $type = 0;
     print GNUPLOT "\nset multiplot layout $ny,$nx\n";
   } else {
@@ -94,7 +94,7 @@ sub overview_gnuplot {
     if ($info->{'Origin'} eq "scanfile") {
       $index++;
     }
-    gnuplot_dat_info($info, $index);
+    gnuplot_dat_info($info, $index,$nx*$ny>1);
     if ($type)  {
       $termnum++;
     }
@@ -118,7 +118,7 @@ sub gnuplot_single {
 	$index++;
       }
       if ($info->{'Component'} eq $currentmon) {
-        gnuplot_dat_info($info, $index);
+        gnuplot_dat_info($info, $index,0);
       }
     }
   }
@@ -149,7 +149,7 @@ sub gnuplot_save {
       }
       if ($info->{'Component'} eq $currentmon) {
      	print GNUPLOT "\nset output \"$currentmon.$suffix\"\n";
-        gnuplot_dat_info($info, $index);
+        gnuplot_dat_info($info, $index,0);
 	print "Saved hardcopy \"$currentmon.$suffix\"\n";
       }
     }
@@ -159,35 +159,52 @@ sub gnuplot_save {
 }
 
 sub gnuplot_dat_info {
-    my ($info, $index) = @_;
+    my ($info, $index, $overview) = @_;
     if ($index == 0) {
       $index = 1;
     }
     my $type = $info->{'Type'};
     if($type =~ /^\s*array_2d\s*\(\s*([0-9]+)\s*,\s*([0-9]+)\s*\)\s*$/i) {
-      gnuplot_array_2d($info, $1, $2);
+      gnuplot_array_2d($info, $1, $2, $overview);
     }elsif($type =~ /^\s*array_1d\s*\(\s*([0-9]+)\s*\)\s*$/i) {
-      gnuplot_array_1d($info, $1, $index);
+      gnuplot_array_1d($info, $1, $index, $overview);
     } else {
       print "Warning: Unimplemented plot type '$type' in file '$info->{Filename}' (plot_dat_info)";
     }
 }
 
 sub gnuplot_array_2d {
-  my ($info,$m,$n) = @_;
+  my ($info,$m,$n,$overview) = @_;
   print GNUPLOT "\nset view map\n";
-  print GNUPLOT "\nset xlabel \"$info->{'Xlabel'}\"\nset ylabel \"$info->{'Ylabel'}\"\n";
+  if ($overview) {
+    print GNUPLOT "\nunset colorbox\n";
+    print GNUPLOT "\nunset xtics\n";
+    print GNUPLOT "\nunset ytics\n";
+  } else {
+    print GNUPLOT "\nset colorbox\n";
+    print GNUPLOT "\nset xlabel \"$info->{'Xlabel'}\"\nset ylabel \"$info->{'Ylabel'}\"\n";
+    print GNUPLOT "\nset xtics\n";
+    print GNUPLOT "\nset ytics\n";
+  }
   print GNUPLOT "\nset title \"$info->{'Component'}\"\n";
   my ($x0,$x1,$y0,$y1) = @{$info->{'Limits'}};
-  my ($dx,$dy) = (($x1 - $x0)/$m, ($y1 - $y0)/$n);
-  print GNUPLOT "\nset pm3d clip1in\n";
-  print GNUPLOT "\nsplot \"$info->{Filename}\" matrix index 0 using ($x0+\$1*$dx):($y0+\$2*$dy):3 with pm3d notitle\n";
+  my ($dx,$dy) = (($x1 - $x0)/($m-1), ($y1 - $y0)/($n-1));
+  print GNUPLOT "\nsplot \"$info->{Filename}\" using ($x0+\$1*$dx):($y0+\$2*$dy):3 matrix index 0 w image notitle\n";
+  print "\nsplot \"$info->{Filename}\" using ($x0+\$1*$dx):($y0+\$2*$dy):3 matrix index 0 w image notitle\n";
 }
 
+
 sub gnuplot_array_1d {
-  my ($info,$m,$n) = @_; 
-  print GNUPLOT "\nset xlabel \"$info->{'Xlabel'}\"\nset ylabel \"$info->{'Ylabel'}\"\n";
-  print GNUPLOT "\nset title \"$info->{'Component'}\"\n";
+  my ($info,$m,$n,$overview) = @_; 
+  print GNUPLOT "\nset title \"$info->{'Component'}\"\n";  
+  if ($overview) {
+    print GNUPLOT "\nunset xtics\n";
+    print GNUPLOT "\nunset ytics\n";
+  } else {
+    print GNUPLOT "\nset xlabel \"$info->{'Xlabel'}\"\nset ylabel \"$info->{'Ylabel'}\"\n";
+    print GNUPLOT "\nset xtics\n";
+    print GNUPLOT "\nset ytics\n";
+  }
   my $int = 2*$n;
   my $err = 2*$n+1;
   print GNUPLOT "\nplot \"$info->{Filename}\" u 1:$int with lines notitle, ";
