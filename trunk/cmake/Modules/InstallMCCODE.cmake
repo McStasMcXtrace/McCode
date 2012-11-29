@@ -271,12 +271,13 @@ macro(InstallMCCODE)
 
   ## Add install targets
   include(MCUtil)
+  set(WORK "${PROJECT_BINARY_DIR}/work")
 
   # Flavor-specific library
   install_lib("${PROJECT_SOURCE_DIR}/${FLAVOR_LIB}/")
 
   # Shared library, lib
-  install_lib("${PROJECT_BINARY_DIR}/work/lib/")
+  install_lib("${WORK}/lib/")
 
   # Binaries
   install (
@@ -293,12 +294,12 @@ macro(InstallMCCODE)
   if(NOT WINDOWS)
     # Man pages
     install (
-      FILES "${PROJECT_BINARY_DIR}/work/doc/man/${FLAVOR}.1"
+      FILES "${WORK}/doc/man/${FLAVOR}.1"
       DESTINATION ${man}/man1
       RENAME "${FLAVOR}${PROGRAM_SUFFIX}.1"
       )
     install (
-      FILES "${PROJECT_BINARY_DIR}/work/doc/man/${FLAVOR_FMT}.1"
+      FILES "${WORK}/doc/man/${FLAVOR_FMT}.1"
       DESTINATION ${man}/man1
       RENAME "${FLAVOR_FMT}${PROGRAM_SUFFIX}.1"
       )
