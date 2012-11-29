@@ -338,6 +338,11 @@ macro(InstallMCCODE)
     install(PROGRAMS ${WORK}/support/mcguigo.bat DESTINATION ${bin})
     install(PROGRAMS ${WORK}/support/mcstasgo.bat DESTINATION ${bin})
 
+    install(PROGRAMS 
+      cmake/support/scripts/postsetup.bat 
+      DESTINATION ${bin} 
+      ) 
+
   endif()
 
 
