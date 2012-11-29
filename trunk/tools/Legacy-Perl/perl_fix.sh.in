@@ -19,9 +19,12 @@ else
 fi
 
 # Locate Perl
-PERL="$(command -v perl)"
-if [ $? -ne 0 ]; then
-    PERL=/usr/bin/perl;
+PERL="@PERL@";
+if [ "x${PERL}" = "x" ]; then
+    PERL="$(command -v perl)"
+    if [ $? -ne 0 ]; then
+        PERL=/usr/bin/perl;
+    fi
 fi
 
 (
