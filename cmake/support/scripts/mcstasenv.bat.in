@@ -1,0 +1,20 @@
+@REM DOS/cmd.exe batch file for starting @CPACK_PACKAGE_NAME@
+@REM
+@REM First, set up various environment variables
+@REM
+@REM Path related:
+@SET PATH=@CPACK_PACKAGE_INSTALL_DIRECTORY@\\bin;%PATH%
+@SET PATHEXT=%PATHEXT%;.pl;.py
+@REM
+@REM McStas related: 
+@SET MCSTAS=@CPACK_PACKAGE_INSTALL_DIRECTORY@\\lib;
+@SET MCSTAS_TOOLS=@CPACK_PACKAGE_INSTALL_DIRECTORY@\\lib;
+@SET MCSTAS_CC=gcc
+@SET MCSTAS_FORMAT=@PLOTTER@
+@REM
+@REM PGPLOT configuration
+@SET PGPLOT_DIR=c:\\strawberry\\perl\\site\\lib\\PGPLOT\\pgplot_supp
+@SET PGPLOT_FONT=c:\\strawberry\\perl\\site\\lib\\PGPLOT\\pgplot_supp\\grfont.dat
+@SET PGPLOT_DEV=/gw
+
+
