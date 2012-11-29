@@ -1238,11 +1238,11 @@ requires a working installation of Perl to run.
 \index{Tools!mcdisplay|textbf}
 
 The front-end \verb+mcdisplay+ (mcdisplay.pl on Windows) is a graphical
-debugging tool.  It presents a schematic drawing of the instrument definition,
-showing the position of the components and the paths of the simulated neutrons
-through the instrument. It is thus very useful for debugging a simulation, for
-example to spot components in the wrong position or to find out where neutrons
-are getting lost.  (See figures
+visualization tool, very useful for debugging.  It presents a schematic drawing
+of the instrument definition, showing the position of the components and the
+paths of the simulated neutrons through the instrument. It is thus very useful
+for debugging a simulation, for example to spot components in the wrong position
+or to find out where neutrons are getting lost.  (See figures
 \ref{fig:mcdisp_PGPLOT}-\ref{fig:mcdisp_Matlab}.)
 
 To use the \verb+mcdisplay+ front-end with a simulation, run it as
@@ -1293,9 +1293,8 @@ prematurely, type `Q' or use control-C as normal in the window in which
 To see details in the instrument, it is possible to zoom in on a part of the
 instrument using the middle mouse button (or the `Z' key on systems with a one-
 or two-button mouse). The right mouse button (or the `X' key) resets the
-zoom. Note that after zooming, the units on the different axes may no longer be
-equal, and thus the angles as seen on the display may not match the actual
-angles.
+zoom. Note that after zooming, the aspect ratio of the plot may have changed,
+and thus the angles as seen on the display may not match the actual angles.
 
 Another way to see details while maintaining an overview of the instrument is to
 use the \verb+--zoom=+\textit{factor} option. This magnifies the display of each
