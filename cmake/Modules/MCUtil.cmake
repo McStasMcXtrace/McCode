@@ -116,16 +116,17 @@ macro(setup_mccode_mkdist FLAVOR)
 
   if(WINDOWS)
     # Install in C:
-    set(CMAKE_INSTALL_PREFIX "C:")
+    set(CMAKE_INSTALL_PREFIX "C://")
     # Set BIN and LIB paths
-    set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}/${bin}/${FLAVOR}")
-    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}/${lib}")
+    set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}${MCCODE_NAME}/${bin}/${FLAVOR}")
+    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}${MCCODE_NAME}/${lib}")
     # Replace '/' with '\'
+    string(REPLACE "/" "\\\\" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
     string(REPLACE "/" "\\\\" MCCODE_BIN "${MCCODE_BIN}")
     string(REPLACE "/" "\\\\" MCCODE_LIB "${MCCODE_LIB}")
   else()
-    set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/${bin}/${MCCODE_NAME}")
-    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${MCCODE_NAME}")
+    set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}${bin}/${MCCODE_NAME}")
+    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}${lib}/${MCCODE_NAME}")
   endif()
 
   # Set instrument suffix (after compilation)
@@ -156,7 +157,7 @@ macro(setup_mccode_mkdist FLAVOR)
   if(WINDOWS)
 
     # Fix installation root and folder (installs to ${ROOT}\${DIRECTORY})
-    set(CPACK_NSIS_INSTALL_ROOT "C:")
+    set(CPACK_NSIS_INSTALL_ROOT "C://")
     set(CPACK_PACKAGE_INSTALL_DIRECTORY "${FLAVOR}-${MCCODE_VERSION}")
 
     # Windows program files do not have any version-suffix
