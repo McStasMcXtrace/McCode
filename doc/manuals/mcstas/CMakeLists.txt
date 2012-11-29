@@ -44,7 +44,7 @@ add_custom_command(
   )
 
 
-file(GLOB LIST "*.tex" "*.sty")
+file(GLOB LIST "*.tex" "*.sty" "*.bib" "*.bst")
 foreach(NAME ${LIST})
   file(COPY ${NAME} DESTINATION "${WORK}")
 endforeach()
