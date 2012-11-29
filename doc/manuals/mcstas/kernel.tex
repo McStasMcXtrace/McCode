@@ -543,7 +543,7 @@ The \texttt{\%include} insertion mechanism may be used within the TRACE section,
 in order to concatenate instruments together. This way, each DECLARE,
 INITIALIZE, SAVE, and FINALLY C blocks, as well as instrument parameters from
 each part are concatenated. The TRACE section is made of inserted COMPONENTS
-from each part. In principle, it then possible to write an instrument as:
+from each part. In principle, it is then possible to write an instrument as:
 \begin{verbatim}
 DEFINE concatenated()
 TRACE
@@ -751,7 +751,7 @@ when the \verb+WHEN+ is false, the component instance is not active in the
 
 A usage example of the WHEN keyword can be found in the \\
 \verb+Neutron site/ILL/ILL_TOF_Env+ instrument from the \verb+mcgui+, to monitor
-neutron depending on their fate.
+neutrons depending on their fate.
 
 
 WARNING: Combining WHEN, EXTEND and GROUP can result in unexpected behaviour,
@@ -772,7 +772,7 @@ present and SCATTER.
 
 There are situations for which one would like to repeat a given component many
 times, or under a given condition. The JUMP modifier is meant for that and
-should be mentioned after the positioning, GROUP and EXTEND. This breaks the
+should be placed after the positioning, GROUP and EXTEND. This breaks the
 sequential propagation along components in the instrument description. There may
 be more than one JUMP per component instance.
 
