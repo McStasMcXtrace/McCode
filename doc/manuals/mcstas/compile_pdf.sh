@@ -6,7 +6,7 @@ echo "Building ${NAME}"
 
 for prog in latex bibtex makeindex latex latex; do
     echo "> ${prog}";
-    ${prog} "${NAME}" > /dev/null;
+    ${prog} "${NAME}" > /dev/null || exit 1;
 done
 
 echo ""
