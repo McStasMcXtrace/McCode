@@ -3,23 +3,22 @@
 \chapter{Instrument examples}
 \label{s:instrument}
 
-In this section, we present a few typical instruments.
+In this section, we present a few typical instruments.  We then give a longer
+description of three selected instruments. We present the \MCS\ versions of the
+Ris\o\ standard triple axis spectrometer TAS1 (\ref{s:TAS1}) and the ISIS
+time-of-flight spectrometer PRISMA (\ref{s:PRISMA}).
 
-Then, we give a longer description of three selected
-instruments. We present the \MCS\ versions of
-the Ris\o\ standard triple axis spectrometer TAS1 (\ref{s:TAS1})
-and the ISIS time-of-flight spectrometer PRISMA (\ref{s:PRISMA}).
-Before that, however, we present one example of a component
-test instrument: the instrument to test the component
-{\bf V\_sample} (\ref{s:V-instr}).
+But first we present an example of a component test instrument: the instrument
+to test the component {\bf V\_sample} (\ref{s:V-instr}).
 %
 %The source text for the three instrument definitions
 %is listed in Appendix~\ref{instcode}.
-These instrument files are included in the \MCS\ distribution
-in the \verb+examples/+ directory.
-Most of the instrument examples there-in may be executed automatically throught the \MCS\ self-test procedure (see section~\ref{s:testing}).
-The list of instrument examples has been extended considerably, see
-the ``Neutron Site'' menu in mcgui (See page \ref{p:neutronsite}).
+These instrument files are included in the \MCS\ distribution in the
+\verb+examples/+ directory.  Most of the instrument examples there-in may be
+executed automatically throught the \MCS\ self-test procedure (see
+section~\ref{s:testing}).  The list of instrument examples has been extended
+considerably, see the ``Neutron Site'' menu in mcgui (See page
+\ref{p:neutronsite}).
 
 \section{A quick tour of instrument examples}
 \label{s:quick-tour-instr}
@@ -30,17 +29,21 @@ The former Brookhaven reactor hosted the H8 triple-axis spectrometer. This latte
 
 \subsection{Neutron site: Tools}
 
-This caterory currently contains a special \verb+Histogrammer+ that can read any event file from Vitess, MCNP, tripoli and McStas in order to produce histograms of any type. This is a very powerful tool to analyse sparse huge events data sets.
+This category currently contains a special \verb+Histogrammer+ that can read any event file from Vitess, MCNP, tripoli and McStas in order to produce histograms of any type. This is a very powerful tool to analyse sparse huge events data sets.
 
 \subsection{Neutron site: ILL}
 
 Cold and thermal guide models are given in the ILL neutron site. Descriptions are very accurate, based on actual drawings, including all elements with curvature and gaps. Simulated capture fluxes were found in very good agreement with measurements.
 
-Additionally, the \verb+IN12+ triple-axis instrument has been detailed, in its year 2005 configuration. It is located at the end of the H15 cold guide. sample is a Vanadium rod.
+Additionally, the \verb+IN12+ triple-axis instrument has been detailed, in its
+year 2005 configuration. It is located at the end of the H15 cold guide. The
+sample is a Vanadium rod.
 
-The \verb+IN6+ instrument is an hybrid time-of-flight with 3 monochromators and a Fermi chopper. Sample is an isotropic scatterer (liquid). It makes use of the SPLIT keyword to enhance statistics.
+The \verb+IN6+ instrument is a hybrid time-of-flight spectrometer with 3
+monochromators and a Fermi chopper. The sample is an isotropic scatterer
+(liquid). It makes use of the SPLIT keyword to enhance statistics.
 
-The \verb+ILL_TOF_Env+ example is a simple neutron pulse (e.g. from a chopper system coming out of IN5, IN4 or IN5) illuminating a sample, with a container around and a cylinder shaped sample environment.
+The \verb+ILL_TOF_Env+ example is a simple neutron pulse (e.g. from a chopper system coming out of IN4, IN5 or IN6) illuminating a sample, with a container around and a cylinder shaped sample environment.
 
 \subsection{Neutron site: tests}
 
@@ -50,9 +53,9 @@ This large set of examples shows simple instruments using particular components 
 
 You will find here examples of ISIS instruments, some of them using the ISIS moderator component (obtained from MCNP computations).
 
-\subsection{Neutron site: Risoe}
+\subsection{Neutron site: Ris\o\ }
 
-This section contains former Risoe instruments, which constitue the default test series for the \MCS\ distribution.
+This section contains former Ris\o\  instruments, which constitue the default test series for the \MCS\ distribution.
 
 \subsection{Neutron site: PSI}
 
@@ -64,7 +67,11 @@ A typical diffractometer including a powder sample and a Rescal-type triple-axis
 
 \subsection{Neutron site: ESS}
 
-This section contains design studies for a future, long-pulsed european spallation source. The only contents is currently the \verb+ESS_IN5_reprate+ instrument for simulating an IN5-TYPE (cold chopper) multi-frame spectrometer for the long-pulsed ESS. (Also serves as example instrument for \verb+Tunneling_sample.comp+.)
+This section contains design studies for the future, long-pulsed European
+Spallation Source (ESS). The only contents is currently the
+\verb+ESS_IN5_reprate+ instrument for simulating an IN5-TYPE (cold chopper)
+multi-frame spectrometer for the long-pulsed ESS. (Also serves as example
+instrument for \verb+Tunneling_sample.comp+.)
 
 \section{A test instrument for the component V\_sample}
 \label{s:V-instr}
@@ -98,12 +105,11 @@ V\_sample.}
 \subsection{Scattering from the V-sample test instrument}
 \label{s:vanadium-result}
 
-In figure \ref{f:V-results}, we present the radial distribution
-of the scatting from an evenly illuminated V-sample,
-as seen by a spherical PSD.
-It is interesting to note that the variation in the
-scattering intensity is as large as 10\%. This is an effect
-of anisotropic attenuation of the beam in the cylindrical sample.
+In figure \ref{f:V-results}, we present the radial distribution of the
+scattering from an evenly illuminated V-sample, as seen by a spherical PSD.  It
+is interesting to note that the variation in the scattering intensity is as
+large as 10\%. This is an effect of anisotropic attenuation of the beam in the
+cylindrical sample.
 
 \begin{figure}
   \begin{center}
