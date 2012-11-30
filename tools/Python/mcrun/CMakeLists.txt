@@ -50,10 +50,6 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python-yaml")
 
 
-# Make CPack respect the install prefix
-set(CPACK_SET_DESTDIR "ON")
-set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
-
 include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
@@ -104,5 +100,5 @@ add_custom_target(
 install(
   PROGRAMS "${WORK}/mcrun"
   DESTINATION ${bin}
-  RENAME "mcrun-${MCCODE_VERSION}-py${DOT_PYTHON_SUFFIX}"
+  RENAME "mcrun${PROGRAM_SUFFIX}-py${DOT_PYTHON_SUFFIX}"
 )

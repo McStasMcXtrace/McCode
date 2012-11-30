@@ -27,7 +27,7 @@ setup_mccode_mkdist("${FLAVOR}")
 
 
 set(TOOLS_NAME "${FLAVOR}-tools-python-mcplot-chaco-${MCCODE_VERSION}")
-set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}/mcplot/chaco")
+set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
 
 
 # Set some extra options for mccode_config
@@ -49,10 +49,6 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 # Debian
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python-chaco")
 
-
-# Make CPack respect the install prefix
-set(CPACK_SET_DESTDIR "ON")
-set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
 include(CPack)
 
