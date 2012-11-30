@@ -11,9 +11,9 @@ TKVER=`basename $PWD|sed -e 's/\./\_/g'`
 
 # On which OS X and which PERL
 OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
-PERLVER="5_8"
+PERLVER="5.8"
 #`/usr/bin/perl5.8.9 -v |grep v5|cut -f2 -d\(|cut -f1 -d\)|cut -b2-|cut -f1-2 -d.`
-#PERLVER_=`echo $PERLVER|sed -e 's/\./\_/g'`
+PERLVER_=`echo $PERLVER|sed -e 's/\./\_/g'`
 
 # Assemble build-dir path
 BUILDDIR=${TKVER}_MacOSX_${OSXVER}_Perl_${PERLVER_}
@@ -29,7 +29,7 @@ make install
 cd ../Tk-CodeText-0.3.4
 
 # Configure with system default perl
-perl Makefile.PL PREFIX=../build/$BUILDDIR/Library/Perl/$PERLVER LIB=../build/$BUILDDIR/Library/Perl/$PERLVER
+/usr/bin/perl5.8.9 Makefile.PL PREFIX=../build/$BUILDDIR/Library/Perl/$PERLVER LIB=../build/$BUILDDIR/Library/Perl/$PERLVER
 
 # Build
 make
