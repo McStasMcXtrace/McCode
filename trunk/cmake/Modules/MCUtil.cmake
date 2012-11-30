@@ -167,9 +167,6 @@ macro(setup_mccode_mkdist FLAVOR)
     set(CPACK_NSIS_CREATE_ICONS "CreateShortCut '$DESKTOP\\\\McGui-${MCCODE_VERSION}.lnk' '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\mcguigo.bat' ")
     set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$DESKTOP\\\\mcstas-shell-${MCCODE_VERSION}.lnk' '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\mcstasgo.bat' ")
 
-    # Post install script for downloading extra Perl modules
-    set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\postsetup.bat' ")
-
   else()
 
     # Have CMake respect install prefix
