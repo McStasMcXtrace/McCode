@@ -7,12 +7,12 @@ if [ "x$1" = "x" ]; then
 fi
 
 # 64-bit
-#./mkdist mcstas $1 "" "" mingw64 -- nsis
-#./mkdist mcstas-comps $1 "" "" mingw64 -- nsis
-#./mkdist mcstas-tools-Perl $1 tools/Legacy-Perl/ "" mingw64 -- nsis
-#./mkdist mcstas-tools-Python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mingw64 -- nsis
-#./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 -- nsis
-#./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mingw64 -- nsis
+./mkdist mcstas $1 "" "" mingw64 -- nsis
+./mkdist mcstas-comps $1 "" "" mingw64 -- nsis
+./mkdist mcstas-tools-Perl $1 tools/Legacy-Perl/ "" mingw64 -- nsis
+./mkdist mcstas-tools-Python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mingw64 -- nsis
+./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 -- nsis
+./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mingw64 -- nsis
 
 # 32-bit
 ./mkdist mcstas $1 "" "" mingw32 -- nsis
