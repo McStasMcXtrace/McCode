@@ -27,7 +27,7 @@ setup_mccode_mkdist("${FLAVOR}")
 
 
 set(TOOLS_NAME "${FLAVOR}-tools-python-mcplot-matplotlib-${MCCODE_VERSION}")
-set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}/mcplot/matplotlib")
+set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
 
 
 # Set some extra options for mccode_config
@@ -54,9 +54,6 @@ set(CPACK_RPM_PACKAGE_REQUIRES
   "${FLAVOR}-${MCCODE_VERSION}, python-matplotlib"
   )
 
-# Make CPack respect the install prefix
-set(CPACK_SET_DESTDIR "ON")
-set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
 include(CPack)
 
