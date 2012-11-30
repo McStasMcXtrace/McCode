@@ -143,6 +143,14 @@ Changes in McStas v2.0RC1, November 30th, 2012
  - As far as possible, we build the packages on "standard" versions of the relevant OS'es (with the exception
    of the windows builds that are created on Debian Linux via cross-compilation)
 
+ Tools
+ - Many new developments as mentioned above. Just to name a few:
+   - New mcrun tool based on Python
+   - New mcplot tool based on Python+matplotlib
+   - New mcplot tool baded on Python+chaco
+   - New web-frontend based on Python
+   - Mcgui perl-tool has been refurbished, updated look plus new button for changing working dir
+
  Core & runtime code:
  - Backward compatibility 1: Some backward-compatibility is lost in the new version of the code-generation, 
    as we no longer use the information defined in the component STATE_PARAMETERS and POLARISATION_PARAMETERS
