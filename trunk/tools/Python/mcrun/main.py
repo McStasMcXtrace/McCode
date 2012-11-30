@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
 from os import mkdir
 from os.path import isfile, isdir, abspath, dirname
