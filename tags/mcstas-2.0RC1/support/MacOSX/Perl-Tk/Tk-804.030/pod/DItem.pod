@@ -1,0 +1,439 @@
+=head1 NAME
+
+Tk::DItem - Tix Display Items
+
+=for category Tix Extensions
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+The Tix B<Display Items> and B<Display Types> are devised to
+solve a general problem: many Tix widgets (both existing and planned
+ones) display many items of many types simultaneously.
+
+For example, a hierarchical listbox widget (see L<Tk::HList>) can display
+items
+of images, plain text and subwindows in the form of a
+hierarchy. Another widget, the tabular listbox widget (see L<Tk::TList>)
+also displays items of the
+same types, although it arranges the items in a tabular form. Yet
+another widget, the spreadsheet widget (see L<Tk::TixGrid>),
+also displays similar types
+items, but in yet another format.
+
+In these examples, the display items in different widgets are only
+different in how they are arranged by the B<host widget>. In Tix,
+display items are clearly separated from the host widgets. The
+advantage is two-fold: first, the creation and configuration of
+display items become uniform across different host widgets. Second,
+new display item types can be added without the need to modify the
+existing host widgets.
+
+In a way, Tix display items are similar to the items inside Tk
+the canvas widget. However, unlike the Tix display items, the canvas
+items are not independent of the canvas widget; this makes it
+impossible to use the canvas items inside other types of TK widgets.
+
+The appearance of a display item is controlled by a set of
+I<attributes>. It is observed that each the attributes usually fall
+into one of two categroies: ``I<individual>'' or
+``I<collective>''. For example, the text items inside a HList widget
+may all display a different text string; however, in most cases, the
+text items share the same color, font and spacing. Instead of keeping
+a duplicated version of the same attributes inside each display item,
+it will be advantageous to put the collective attributes in a
+special object called a B<display style>. First, there is the space
+concern: a host widget may have many thousands of items; keeping
+dupilcated attributes will be very wasteful. Second, when it becomes
+necessary to change a collective attribute, such as changing all the
+text items' foreground color to red, it will be more efficient to
+change only the display style object than to modify all the text
+items one by one.
+
+The attributes of the a display item are thus stored in two places: it
+has a set of B<item options> to store its individual attributes. Each
+display item is also associated with a I<display style>, which specifies
+the collective attributes of all items associated with itself.
+
+The division between the individual and collective attributes are
+fixed and cannot be changed. Thus, when it becomes necessary for some
+items to differ in their collective attributes, two or more B<display styles>
+can be used. For example, suppose you want to display two
+columns of text items inside an HList widget, one column in red and
+the other in blue. You can create a TextStyle object called ``$red''
+which defines a red foreground, and another called ``$blue'', which
+defines a blue foreground. You can then associate all text items of
+the first column to ``$red'' and the second column to ``$blue''
+
+=head1 DISPLAY ITEM TYPES AND OPTIONS
+
+Currently there are three types of display items: B<text>,
+B<imagetext> and I<window>.
+
+=head1 IMAGETEXT ITEMS
+
+Display items of the type B<imagetext> are used to display an image
+together with a text string. Imagetext items support the following options:
+
+=head2 Imagetext Item Options
+
+=over 4
+
+=item Name:	B<bitmap>
+
+=item Class:	B<Bitmap>
+
+=item Switch:	B<-bitmap>
+
+Specifies the bitmap to display in the item.
+
+=item Name:	B<image>
+
+=item Class:	B<Image>
+
+=item Switch:	B<-image>
+
+Specifies the image to display in the item. When both the
+B<-bitmap> and B<-image> options are specified, only the image
+will be displayed.
+
+=item Name:	B<imageTextStyle>
+
+=item Class:	B<ImageTextStyle>
+
+=item Switch:	B<-style>
+
+Specifies the display style to use for this item. Must be the
+name of a B<imagetext> display style that has already be created with
+B<ItemStyle>.
+
+=item Name:	B<showImage>
+
+=item Class:	B<ShowImage>
+
+=item Switch:	B<-showimage>
+
+A Boolean value that specifies whether the image/bitmap should be
+displayed.
+
+=item Name:	B<showText>
+
+=item Class:	B<ShowText>
+
+=item Switch:	B<-showtext>
+
+A Boolean value that specifies whether the text string should be
+displayed.
+
+=item Name:	B<text>
+
+=item Class:	B<Text>
+
+=item Switch:	B<-text>
+
+Specifies the text string to display in the item.
+
+=item Name:	B<underline>
+
+=item Class:	B<Underline>
+
+=item Switch:	B<-underline>
+
+Specifies the integer index of a character to underline in the text
+string in the item.  0 corresponds to the first character of the text
+displayed in the widget, 1 to the next character, and so on.
+
+=back
+
+=head2 Imagetext Style Options
+
+The style information of B<imagetext> items are stored in the
+B<imagetext> display style. The following options are supported:
+
+B<STANDARD OPTIONS>
+
+B<-activebackground>	B<-activeforeground>
+B<-anchor>	B<-background>
+B<-disabledbackground>	B<-disabledforeground>
+B<-foreground>	B<-font>
+B<-justify>	B<-padx>
+B<-pady>	B<-selectbackground>
+B<-selectforeground>	B<-wraplength>
+
+See L<Tk::options> for details of the standard options.
+
+B<STYLE-SPECIFIC OPTIONS>
+
+=over 4
+
+=item Name:	B<gap>
+
+=item Class:	B<Gap>
+
+=item Switch:	B<-gap>
+
+Specifies the distance between the bitmap/image and the text string,
+in number of pixels.
+
+=item Name:	B<textAnchor>
+
+=item Class:	B<TextAnchor>
+
+=item Switch:	B<-textanchor>
+
+The anchor position on the image to which text part is attached.
+This is a perl/Tk addition. Defaults to B<e> for compatibility with standard
+Tix. The interesting cases are
+
+=over 8
+
+=item B<n>
+
+Text is centred above the image.
+
+=item B<s>
+
+Text is centred below the image
+
+=item B<e>
+
+Text is centred to right of the image.
+
+=item B<w>
+
+Text is centred to left of the image.
+
+=item B<c>
+
+Text is centred over the image.
+
+=back
+
+The B<sw>, B<se>, B<ne>, and b<nw> cases look rather odd.
+
+To get items to line up correctly it will usually be necessary
+to specify B<-anchor> as well. e.g. with default B<e> then anchoring
+item as a whole B<w> lines images up down left with text stuck to right side.
+
+=back
+
+=head1 TEXT ITEMS
+
+Display items of the type B<text> are used to display a text string
+in a widget. Text items support the following options:
+
+=head2 Text Item Options
+
+=over 4
+
+=item Name:	B<textStyle>
+
+=item Class:	B<TextStyle>
+
+=item Switch:	B<-style>
+
+Specifies the display style to use for this text item. Must be the
+name of a B<text> display style that has already be created with
+B<ItemStyle>.
+
+=item Name:	B<text>
+
+=item Class:	B<Text>
+
+=item Switch:	B<-text>
+
+Specifies the text string to display in the item.
+
+=item Name:	B<underline>
+
+=item Class:	B<Underline>
+
+=item Switch:	B<-underline>
+
+Specifies the integer index of a character to underline in the item.
+0 corresponds to the first character of the text displayed in the
+widget, 1 to the next character, and so on.
+
+=back
+
+=head2 Text Style Options
+
+B<STANDARD OPTIONS>
+
+B<-activebackground>	B<-activeforeground>
+B<-anchor>	B<-background>
+B<-disabledbackground>	B<-disabledforeground>
+B<-foreground>	B<-font>
+B<-justify>	B<-padx>
+B<-pady>	B<-selectbackground>
+B<-selectforeground>	B<-wraplength>
+
+See L<Tk::options> for details of the standard options.
+
+=head1 WINDOW ITEMS
+
+Display items of the type I<window> are used to display a
+sub-window in a widget. B<Window> items support the following
+options:
+
+=head2 Window Item Options
+
+=over 4
+
+=item Name:	B<windowStyle>
+
+=item Class:	B<WindowStyle>
+
+=item Switch:	B<-style>
+
+Specifies the display style to use for this window item. Must be the
+name of a I<window> display style that has already be created with
+the B<ItemStyle> method.
+
+=item Name:	B<window>
+
+=item Class:	B<Window>
+
+=item Switch:	B<-window>
+
+=item Alias:	B<-widget>
+
+Specifies the sub-window to display in the item.
+
+=back
+
+=head2 Window Style Options
+
+B<STYLE STANDARD OPTIONS>
+
+B<-anchor>	B<-padx>	B<-pady>
+
+See L<Tk::options> for details of the standard options.
+
+=head1 CREATING DISPLAY ITEMS
+
+Display items do not exist on their and thus they cannot be created
+independently of the widgets they reside in. As a rule, display items
+are created by special methods of their ``host'' widgets. For
+example, the HList widgets has a method B<item> which can be used
+to create new display items. The following code creates a new text
+item at the third column of the entry foo inside an HList widget:
+
+ my $hlist = $parent->HList(-columns=>3);
+ $hlist->add('foo');
+ $hlist->itemCreate('foo', 2, -itemtype=>'text', -text=>'Hello');
+
+The B<itemCreate> method of the HList widget accepts a variable
+number of arguments. The special argument B<-itemtype> specifies
+which type of display item to create. Options that are valid for this
+type of display items can then be specified by one or more
+I<option-value> pairs.
+
+After the display item is created, they can then be configured or
+destroyed using the methods provided by the host widget. For example,
+the HList widget has the methods B<itemConfigure>, B<itemCget>
+and B<itemDelete> for accessing the display items.
+
+=head1 CREATING AND MANIPULATING ITEM STYLES
+
+Item styles are created with B<ItemStyle>:
+
+=head1 SYNOPSIS
+
+S<   >I<$widget>-E<gt>B<ItemStyle>(I<itemType> ?,B<-stylename>=E<gt>I<name>? ?,B<-refwindow>=E<gt>I<pathName>? ?,I<option>=E<gt>I<value>, ...>?);
+
+I<itemType> must be one of the existing display items types such as
+B<text>, B<imagetext>, B<window> or any new types added by
+the user. Additional arguments can be given in one or more
+I<option-value> pairs. I<option> can be any of the valid option
+for this display style or any of the following:
+
+=over 4
+
+=item B<-stylename> =E<gt> I<name>
+
+Specifies a name for this style. If unspecified, then a default name
+will be chosen for this style.
+
+=item B<-refwindow> =E<gt> I<$otherwidget>
+
+Specifies a window to use for determine the default values of the
+display type. If unspecified, the I<$widget> will be used. Default
+values for the display types can be set via the options database. The
+following example sets the B<-disablebackground> and
+B<-disabledforeground> options of a B<text> display style via
+the option database:
+
+  $widget->optionAdd('*table.list*disabledForeground' => 'blue');
+  $widget->optionAdd('*table.list*disabledBackground' => 'darkgray');
+  $widget->ItemStyle('text', -refwindow => $table_list, -fg => 'red');
+
+By using the option database to set the options of the display styles,
+we can advoid hard-coding the option values and give the user more
+flexibility in customization. See L<Tk::option> for a detailed description
+of the option database.
+
+=back
+
+=head1 STYLE METHODS
+
+The B<ItemStyle> method creates an object.
+This object supports the B<configure> and B<cget> methods
+described in L<Tk::options> which can be used to enquire and
+modify the options described above.
+
+The following additional methods are available for item styles:
+
+=over 4
+
+=item I<$style>-E<gt>B<delete>
+
+Destroy this display style object.
+
+=back
+
+=head1 EXAMPLE
+
+The following example creates two columns of data in a HList
+widget. The first column is in red and the second column in blue. The
+colors of the columns are controlled by two different B<text>
+styles. Also, the anchor and font of the second column is chosen so
+that the income data is aligned properly.
+
+   use strict;
+   use Tk;
+   use Tk::HList;
+   use Tk::ItemStyle;
+
+   my $mw = MainWindow->new();
+
+   my $hlist = $mw->HList(-columns=>2)->pack;
+
+   my $red  = $hlist->ItemStyle('text', -foreground=>'#800000');
+   my $blue = $hlist->ItemStyle('text', -foreground=>'#000080', -anchor=>'e');
+
+   my $e;
+   foreach ([Joe => '$10,000'], [Peter => '$20,000'],
+            [Raj => '$90,000'],  [Zinh => '$0']) {
+       $e = $hlist->addchild("");
+       $hlist->itemCreate($e, 0, -itemtype=>'text',
+   		-text=>$_->[0], -style=>$red );
+       $hlist->itemCreate($e, 1, -itemtype=>'text',
+   		-text=>$_->[1], -style=>$blue);
+   }
+
+   Tk::MainLoop;
+
+=head1 SEE ALSO
+
+L<Tk::HList|Tk::HList>
+L<Tk::TixGrid|Tk::TixGrid>
+L<Tk::TList|Tk::TList>
+
+=head1 KEYWORDS
+
+display item, display style, item style
+
+=cut
+

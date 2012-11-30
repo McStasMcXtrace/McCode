@@ -1,0 +1,17 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+
+my $mw = MainWindow->new;
+
+my $t = $mw->Text(-background => 'yellow', -width => 30, -height => 10);
+$t->pack(-expand => 1, -fill => 'both');
+
+$t->insert('1.0','This is Text','Atag');
+$t->tagConfigure('Atag',-background => 'green');
+
+$mw->Button(-text => "Change Colour",
+            -command => sub { $t->tagConfigure('Atag',-background => undef) }
+           )->pack;
+
+MainLoop;

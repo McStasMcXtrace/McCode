@@ -1,0 +1,14 @@
+#!/usr/local/bin/perl -w
+use Tk;
+my $mw = MainWindow->new;
+open(FILE,__FILE__);
+
+my $f  = $mw->Frame->pack(-expand => 1, -fill => 'both');
+my $t  = $f->Text;
+my $y  = $f->Scrollbar(-orient => 'vertical');
+my $x  = $f->Scrollbar(-orient => 'horizontal');
+$t->grid(-row    => 0, -sticky => 'nsew');
+$y->grid(-row    => 0, -column => 1, -sticky => 'nsew');
+$x->grid(-row    => 1, -sticky => 'nsew');
+$t->insert('end',join('',<FILE>));
+MainLoop;

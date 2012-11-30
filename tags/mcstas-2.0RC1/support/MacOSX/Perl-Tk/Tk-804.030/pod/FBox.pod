@@ -1,0 +1,67 @@
+=head1 NAME
+
+Tk::FBox - a file dialog
+
+=for pm Tk/FBox.pm
+
+=for category Popups and Dialogs
+
+=head1 SYNOPSIS
+
+    use Tk::FBox;
+    $file = $mw->FBox(...)->Show;
+
+=head1 DESCRIPTION
+
+C<Tk::FBox> is the dialog implementation behind the C<getOpenFile>,
+C<getSaveFile>, and C<chooseDirectory> method calls in the Unix/X11
+world. As such, it supports all options for these methods and
+additionally:
+
+=over
+
+=item -sortcmd => sub { $_[0] cmp $_[1] }
+
+Specified a callback for changing the sorting of the icons in the
+C<IconList> widget. By default, perl's C<cmp> operator will be used.
+
+From the source code:
+
+  # Using -sortcmd is really strange :-(
+  # $top->getOpenFile(-sortcmd => sub { package Tk::FBox; uc $b cmp uc $a});
+  # or, un-perlish, but useable (now activated in code):
+  # $top->getOpenFile(-sortcmd => sub { uc $_[1] cmp uc $_[0]});
+
+This is an experimental option!
+
+=item -type => $type
+
+Type should be "open" for choosing existing files to open (default),
+"save" for choosing existing or non-existing files to save, or "dir"
+for choosing directories.
+
+=item -filter => $glob
+
+A file glob to restrict displayed files. This is only active if no
+B<-filetypes> are defined.
+
+=item -force => $bool
+
+If true, then there will be no dialog if a file already exists.
+
+=back
+
+=head1 COPYRIGHT
+
+The original tkfbox.tcl from Tcl/Tk is:
+
+Copyright (c) 1994-1996 Sun Microsystems, Inc.
+
+See the file "license.terms" for information on usage and redistribution
+of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+
+Translated to Perl/Tk by Slaven Rezic <srezic@cpan.org>.
+
+=head1 SEE ALSO
+
+L<Tk::getOpenFile>, L<Tk::IconList>.

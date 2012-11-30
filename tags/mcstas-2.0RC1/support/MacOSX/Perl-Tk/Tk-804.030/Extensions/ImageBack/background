@@ -1,0 +1,10 @@
+#!/usr/local/bin/perl -w
+use Tk;
+use Tk::ImageBack;
+use Tk::Photo;
+
+my $mw = MainWindow->new;
+my $image = $mw->Photo('back', -file => Tk->findINC('icon.gif'));
+my $t     = $mw->Frame(-width => '4i', -height => '2i')->pack;
+$t->ImageBackground('back');
+MainLoop;

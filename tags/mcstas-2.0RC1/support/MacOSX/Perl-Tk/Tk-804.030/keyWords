@@ -1,0 +1,73 @@
+#!/usr/local/bin/perl -w
+
+use File::Find;
+
+%words = ();
+
+open(KEY,"pTk/Methods.def") || die "Cannot open pTk/Methods.def:$!";
+while (<KEY>)
+ {
+  if (/\(\("(.*)",NULL\)\)/)
+   {
+    my @words = split(/","/,$1);
+    my $word;
+    foreach $word (@words)
+     {
+      next if ($word =~ /^[A-Z]/);
+      unless (exists $words{$word})
+       {
+        $words{$word} = 1;
+       }
+     }
+   }
+ }
+close(KEY);
+
+$words = '('.join('|',keys %words).')';
+
+
+sub match
+{
+ while (/sub\s+\b(${words}[A-Za-z]+|[A-Za-z]+${words})\b/go)
+  {
+   unless (exists $word{$1})
+    {
+     print STDERR "$1 '$2/$3'\n";
+     $word{$1} = []
+    }
+   push(@{$word{$1}},"${File::Find::name}:$.");
+  }
+ return 0;
+}
+
+sub wanted
+{
+ $File::Find::prune = 0;
+ if (-T $_ && !/%$/)
+  {
+   if (/\.pm$/)
+    {
+     local $file   = ($_);
+     local ($_);
+     open($file,"<$file") || die "Cannot open $file:$!";
+     while (<$file>)
+      {
+       last if &match;
+      }
+     close($file);
+    }
+  }
+ elsif (-d $_)
+  {
+   $File::Find::prune = 1 if (/^(blib|Pod|HTML)$/);
+  }
+}
+
+@ARGV = '.' unless (@ARGV);
+
+find(\&wanted,@ARGV);
+
+foreach (sort keys %word)
+ {
+  print "$_:",join(' ',@{$word{$_}}),"\n";
+ }

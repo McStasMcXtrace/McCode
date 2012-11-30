@@ -1,0 +1,278 @@
+tk8pod 800_005.10
+
+  o pod/Entry
+	more perlization
+	make values in xview example less ambiguous
+
+tk8pod 800_005.9
+
+  o pod/place.pod pod/pack.pod pod/grid.pod pod/form.pod
+	now use L<Tk::this|Tk::this> is SEE ALSO
+  o pod/grid.pod
+	some rephrasing due to tcl pack $w1 $w2 ... to
+	perl $w1->grid($w2,...) translation
+
+tk8pod 800_005.8
+
+  o pod/mega.pod
+	L<> corrections
+	documented Subwidgets in array context
+
+tk8pod 800_005.7
+
+  o pod/mega.pod:
+	applied Slavens typos fix patch
+
+tk8pod 800_005.6
+
+  o pod/mega.pod
+	new document. first snapshot send to ptk list
+
+tk8pod 800_005.5
+
+  o pod/LabFrame.pod
+	perlized and minor additions
+  o pod/Scrolled.pod
+	documented Advertised widgets
+  o pod/configspec.pod
+	some fixes
+
+tk8pod 800_005.4
+
+  o options, Tlist, Scrolled, DItem, Tree, DirTree:
+	o various fixed found while checkin pTkref tar11
+
+tk8pod 800_005.3
+
+  o pod/UserGuide.pod: minimal fixes send to O'Reilly
+
+tk8pod 800_005.2
+
+  o DItem: perlized & markup fixes/addition
+
+tk8pod 800_005.1
+
+  o sync. with pod/ in Tk800.005
+
+tk8pod 800_004.7
+
+  o TixGrid:
+	mention that TixGrid is alpha and buggy
+
+
+tk8pod 800_004.6
+
+  o tkpoddiff now relative to Nicks last downloaded
+    version (25-Apr)
+  o TixGrid:
+	added POD skelton for missing option/methods
+  o HList:
+        fix in header() return value
+  o focus:
+	some Markup changes
+
+tk8pod 800_004.5
+
+  o pod/HList.pod
+
+	o more perlized
+	o fixed some typos
+	o added missing info('dropsite') doc
+
+tk8pod 800_004.4
+
+  o pod/*Wm.pod
+		o better perlized
+		o fixed grid -> wmGrid
+		o Mwm seem not to work
+
+tk8pod 800_004.3
+
+  o pod/HList.pod:	o more perlized
+			o added L<BUGS> to add and item create
+			  method desc.
+
+tk8pod 800_004.2
+
+  o pod/After.pod:	L<> and I<$id> fixes
+
+tk8pod 800_004.1
+
+  o included Nick's pod19980419 snapshot
+    (same as Tk800.004)
+
+tk8pod 800_003.13
+
+  o Perlized Photo.pod (unfinished see TODO)
+  o SEE ALSO addition and small fixes to Bitmap/Image
+
+  o tkpoddiff now against version Nick grabbed 13-Apr-1998
+
+tk8pod 800_003.12
+
+  o fixed over #.   pod2html ignore num, pod2man use abs. value
+    tkpod indent item but item text uses abs value  (all optical
+    inspection)
+
+  o fixed some missing backs and removed an unnecessary item/back
+    pair in text.
+
+tk8pod 800_003.11
+
+  Replace L</[A-Z ]*> -> L<"..."
+
+tk8pod 800_003.10
+
+o Canvas.pod
+
+	o perlized TCL term to perlish notation
+
+	o added a very terse describtion of default bindings
+
+	o added tcl diff to ptkdifftcl.pod
+
+   More changes need (see TODO).  Some could be considered a
+   misfeature/bug in perl/Tk.
+
+tk8pod 800_003.9
+
+o tidypod:
+	fix unnecessary usage of E<gt> to get more readable out
+	put and to save some bits :-)
+
+	Tested here but not applied to keep diff smaller.
+	Nick should do it.
+
+tk8pod 800_003.8
+
+o Changes:
+
+	L<Tk::Widget> class  (, and the L<Tk::Wm> class.)?
+
+  to
+
+	L<Tk::Widget|Tk::Widget> class  (, and the L<Tk::Wm|Tk::Wm> class.)?
+
+  so pod2man gives right output.
+
+tk8pod 800_003.7
+
+o Pixmap & tkerror
+	o minor POD markup changes
+
+  !! tkerror enhancements still pending !!
+
+tk8pod 800_003.6
+
+o Tlist.pod: =item <N> fix & minor markup correction
+
+tk8pod 800_003.5
+
+o event.pod & bind.pod
+
+	o added L<> from event <-> bind
+	o minor perlize markup changes
+
+tk8pod 800_003.4
+
+o pod/Font.pod
+
+	o perlized it.
+
+        o '-displayof=>window' and 'defaults to mainwindow' removed
+
+        o remove window defaults to widgets mainwindow  but mention font settings
+          are *per* MainWindow
+
+	o see TODO for 'unsolved' L<> stuff
+
+tk8pod 800_003.3
+
+o minor fixes to tkerror.pod.  Raised more question
+  (see TODO) than I could solved :-(
+
+tk8pod 800_003.2
+
+o fixed L<> in SEE ALSO
+o moved KEYWORDS after SEE ALSO for consistency
+
+tk8pod 800_003.1
+
+o sync with pod of Tk800.003
+
+tk8pod 19980328.1
+
+o TixGrid: should be okay beside missing peaces (marked with ???)
+
+tk8pod 19980328.1
+
+o sync with Nick's pod19980328.tar.gz
+
+tk8pod version 0.8
+
+o removed 'the section' to prevent dublication by pod2man
+	Text.pod
+	getOpenFile.pod
+
+tk8pod version 0.7
+
+Once through geometry mgr.  (See TODO)
+o grid perlized'ed. move description from gridConfigure to
+  grid.  Moved paragraph in grid() about already managed
+  widgets above the option list.
+o form improved perlization
+o place "       "
+o pack  "       "  and markup more like other geo.mgr
+
+tk8pod version 0.6
+
+Merged in my POD changes I did motnth ago
+for the following docs:
+
+o callbacks.pod
+o configspec.pod
+o composite.pod
+o Configure.pod
+
+Things I noticed during merge are collected in TODO
+
+tk8pod version 0.5
+
+o configspec (still not happy)
+
+	o fixed wrong POD markup
+	o sorted items of where
+	o code examples now in C<> (too lazy to add all I<> B<>
+	  in the first go
+	o minor additions (e.g., add {-option=>$widget,...}
+
+tk8pod version 0.4
+
+o added Makefile.PL, CHANGES, TODO to repository
+
+tk8pod version 0.3
+
+o Text:
+
+	o fixed window* methods and some other tcl remnants
+
+tk8pod version 0.2
+
+* TList:
+	o  example to perl/Tk (example uncovers a bug. see comment)
+	o  misc formatting
+
+* HList:
+	o  added ctdean's doc modification (Tk::DirList.pm is in
+	   (so I assume Tk::HList changes also)
+	o  command -> method
+	o  misc formatting
+
+* DItem:
+	o some spelling errors and updates
+
+tk8pod version 0.1
+
+* Nick pod.tar.gz (Mar 23, 1998)
+
+

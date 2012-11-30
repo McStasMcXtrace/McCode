@@ -1,0 +1,88 @@
+
+=head1 NAME
+
+Tk::Font - a class for finding X Fonts
+
+=for pm Tk/X11Font.pm
+
+=for category Tk Generic Methods
+
+=head1 SYNOPSIS
+
+ use Tk::X11Font;
+
+ $font = $widget->X11Font(foundry => 'adobe',
+                       family  => 'times',
+                       point   => 120
+                      );
+
+ $font = $widget->X11Font('*-courier-medium-r-normal-*-*');
+
+=head1 DESCRIPTION
+
+   This module can be use to interrogate the X server what fonts are
+   avaliable.
+
+=head1 METHODS
+
+=head2 Foundry( [ $val ] )
+
+=head2 Family( [ $val ] )
+
+=head2 Weight( [ $val ] )
+
+=head2 Slant( [ $val ] )
+
+=head2 Swidth( [ $val ] )
+
+=head2 Adstyle( [ $val ] )
+
+=head2 Pixel( [ $val ] )
+
+=head2 Point( [ $val ] )
+
+=head2 Xres( [ $val ] )
+
+=head2 Yres( [ $val ] )
+
+=head2 Space( [ $val ] )
+
+=head2 Avgwidth( [ $val ] )
+
+=head2 Registry( [ $val ] )
+
+=head2 Encoding( [ $val ] )
+
+Set the given field in the font name to C<$val> if given and return the current
+or previous value
+
+=head2 Name( [ $max ] )
+
+In a list context it returns a list of all font names that match the
+fields given. It will return a maximum of C<$max> names, or 128 if
+$max is not given.
+
+In a scalar contex it returns the first matching name or undef
+
+=head2 Clone( [ key => value, [ ...]] )
+
+Create a duplicate of the curent font object and modify the given fields
+
+=head1 AUTHOR
+
+Graham Barr <Graham.Barr@tiuk.ti.com>
+
+=head1 HISTORY
+
+11-Jan-96 Initial version
+
+08-Nov-98 Renamed for Tk800.012
+
+=head1 COPYRIGHT
+
+Copyright (c) 1995-1996 Graham Barr. All rights reserved. This program is free
+software; you can redistribute it and/or modify it under the same terms
+as Perl itself.
+
+=cut
+

@@ -1,0 +1,394 @@
+/********************************************************************
+* 
+* Instrument: ILL_H16_IN5
+*
+* %Identification
+* Written by: E. Farhi, J. Ollivier, Celia Castan Guerrero
+* Date: Jan 2004-2009
+* Origin: ILL
+*
+ * %INSTRUMENT_SITE: ILL
+*
+* The H16 cold guide (feeding IN5)
+*
+* %Description
+*
+* The H16@ILL curved guide sending cold neutrons from the VCS to IN5.
+*
+* %Example: m=1 Detector: GuideOut_Phic_I=1.85e+10
+*
+* %Parameters
+* m:        [1]  m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* lambda:   [AA] mean incident wavelength.
+* dlambda:  [AA] wavelength half width. Use e.g. 0.8*lambda for white beam.
+*
+* %E
+************************************************************************/
+DEFINE INSTRUMENT ILL_H16(lambda=10, dlambda=9.9, m=1)
+DECLARE
+%{  
+//---Guide (1st part of guide) --------------------------------------
+  double L_pinkcarter_1, L_pinkcarter_2, L_gap_A;
+  double L_MAN_31, L_MAN_32, L_MAN_33, L_MAN_34, L_MAN_35, L_gap_B;
+  double L_MAN_4, L_gap_C, L_MAN_5, L_gap_D;
+  double L_OP, L_VS;
+
+  //---Reactor & Krumm Guide coating (2nd part of guide) ------------
+  double alt_Guide_Qc,alt_Guide_Ro,alt_Guide_alpha,alt_Guide_W;
+
+ //---Neue Guide coating--------------------------------------------
+  double Guide_Qc,Guide_Ro,Guide_alpha,Guide_W;
+
+  // Source characteristics
+  double sT1,sT2,sT3,sI1,sI2,sI3;
+  
+   
+%}
+
+
+INITIALIZE
+%{
+  
+//==========================================================================
+//                Source
+//==========================================================================
+sT1=216.8; sI1=1.24e+13;    // old
+sT2=33.9;  sI2=1.02e+13;
+sT3=16.7;  sI3=3.0423e+12;
+/*
+sT1=362.7; sI1=7.95e12;    
+sT2=168.9; sI2=1.23e+13,
+sT3=34.4;  sI3=1.12e13;
+*/
+
+//==========================================================================
+//                 Guide
+//==========================================================================
+    L_pinkcarter_1 = 1.997;  
+    L_pinkcarter_2 = 1.303;
+    L_gap_A   = 0.233;  L_OP = L_gap_A;
+    L_MAN_31 = 0.300;
+    L_MAN_32 = 0.450;
+    L_MAN_33 = 1.000;
+    L_MAN_34 = 1.000;
+    L_MAN_35 = 1.000;
+    L_gap_B   = 0.148; L_VS = L_gap_B;
+    L_MAN_4 = 16.5;
+    L_gap_C   = 0.002;
+    L_MAN_5 = 4.75;
+    L_gap_D   = 0.188;         // valeur inconnue, d'apres les (vieux) plans AutoCAD
+  
+
+    // Alt Guide coating
+    alt_Guide_Qc    = 0.021745; // for m=1 alpha and W aren't used.
+    alt_Guide_Ro    = 0.995;    
+    alt_Guide_alpha = 6.07;   
+    alt_Guide_W     = 0.0023;   
+    // New Guide and super-mirors
+    Guide_Qc    = 0.02275;
+    Guide_Ro    = 0.996;
+    Guide_alpha = 5.75;
+   Guide_W     = 0.00125;
+
+%}
+
+TRACE 
+
+COMPONENT arm = Progress_bar(percent=10) AT (0,0,0) ABSOLUTE
+
+/*------------------*/
+/*  SOURCE          */
+/*------------------*/
+COMPONENT VCS = Source_gen(
+  yheight  = 0.22,
+  xwidth   = 0.14,
+  focus_xw = 0.036,
+  focus_yh = 0.2,
+  dist = 2.367,
+  lambda0  = lambda,
+  dlambda  = dlambda,
+  T1=sT1, I1=sI1,	     /* VCS parameters */
+  T2=sT2, I2=sI2,
+  T3=sT3 ,I3=sI3,
+  verbose  = 1)
+  AT (0, 0, 0) RELATIVE PREVIOUS
+
+
+// Source monitors
+COMPONENT GuideOut_SL = Monitor_nD(
+  xwidth=0.20, yheight=0.30, restore_neutron=1,
+  options="lambda, limits=[0 20] bins=150, per cm2")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT GuideOut_SE = Monitor_nD(
+  xwidth=0.20, yheight=0.30, restore_neutron=1,
+  options="energy, limits=[0 80]  bins=150, per cm2")
+AT (0,0,0) RELATIVE PREVIOUS
+
+
+/*------------------*/
+/*  GUIDE  H16      */
+/*------------------*/
+COMPONENT pinkcarter1 = Guide(
+  w1 = 0.036, h1 = 0.2, w2 = 0.03237, h2 = 0.2, l = L_pinkcarter_1,
+  R0 = Guide_Ro, Qc = Guide_Qc, alpha = Guide_alpha,
+  m  = 2, W = Guide_W)
+AT (0,0,2.367) RELATIVE arm
+
+//  JOR, Thu Mar  1 18:36:21 CET 2012
+// L_source-first guide was orignally 2.33m, from last refurbishement 
+// note DPT11SH16 gives 2.367m (to check)
+
+COMPONENT pinkcarter2 = Guide(
+  w1 = 0.03237, h1 = 0.2, w2 = 0.030, h2 = 0.2, l = L_pinkcarter_2,
+  R0 = Guide_Ro, Qc = Guide_Qc, alpha = Guide_alpha,
+  m  = 2, W = Guide_W)
+AT (0,0,L_pinkcarter_1+0.0001) RELATIVE PREVIOUS
+
+// ---------------------------------------------------------------
+//  Section 3 is new from 2006 : this holds for the SM parameters 
+// ---------------------------------------------------------------
+COMPONENT krumm1 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.2980,
+ R0 = Guide_Ro, Qc = Guide_Qc, alpha = Guide_alpha, m = 2, W = Guide_W)
+ AT      (0,0,L_pinkcarter_2+0.2333)  RELATIVE pinkcarter2
+ ROTATED (0,0.002479,0)    RELATIVE pinkcarter2
+
+
+COMPONENT krumm2 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.4480,
+ R0 = Guide_Ro, Qc = Guide_Qc, alpha = Guide_alpha, m = 2, W = Guide_W)
+ AT      (0,0,0.3000)          RELATIVE krumm1
+ ROTATED (0,0.007970,0)        RELATIVE krumm1
+
+
+COMPONENT krumm3 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = Guide_Ro, Qc = Guide_Qc, alpha = Guide_alpha, m = 2, W = Guide_W)
+ AT      (0,0,0.4500)          RELATIVE krumm2
+ ROTATED (0,0.015408,0)        RELATIVE krumm2
+
+
+COMPONENT krumm4 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = Guide_Ro, Qc = Guide_Qc, alpha = Guide_alpha, m = 2, W = Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm3
+ ROTATED (0,0.021252,0)        RELATIVE krumm3
+
+
+COMPONENT krumm5 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = Guide_Ro, Qc = Guide_Qc, alpha = Guide_alpha, m = 2, W = Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm4
+ ROTATED (0,0.021252,0)        RELATIVE krumm4
+
+
+COMPONENT krumm6 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.7480,
+ R0 = Guide_Ro, Qc = Guide_Qc, alpha = Guide_alpha, m = 2, W = Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm5
+ ROTATED (0,0.018596,0)        RELATIVE krumm5
+
+
+COMPONENT krumm7 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = Guide_Ro, Qc = Guide_Qc, alpha = Guide_alpha, m = 2, W = Guide_W)
+ AT      (0,0,0.7500)          RELATIVE krumm6
+ ROTATED (0,0.018596,0)        RELATIVE krumm6
+
+
+COMPONENT krumm8 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.4980,
+ R0 = Guide_Ro, Qc = Guide_Qc, alpha = Guide_alpha, m = 2, W = Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm7
+ ROTATED (0,0.015939,0)        RELATIVE krumm7
+
+// ---------------------------------------------------------------
+//  Then, the section 4 with the VS gap, the 1972 guide is 
+//  changed for new SM guide coating
+// ---------------------------------------------------------------
+COMPONENT krumm9 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.2980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,0.6480)  RELATIVE krumm8
+ ROTATED (0,0.001573,0)    RELATIVE krumm8
+
+
+COMPONENT krumm10 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.6980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,0.3000)          RELATIVE krumm9
+ ROTATED (0,0.010626,0)        RELATIVE krumm9
+
+
+COMPONENT krumm11 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,0.7000)          RELATIVE krumm10
+ ROTATED (0,0.018064,0)        RELATIVE krumm10
+
+
+COMPONENT krumm12 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm11
+ ROTATED (0,0.021252,0)        RELATIVE krumm11
+
+
+COMPONENT krumm13 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm12
+ ROTATED (0,0.021252,0)        RELATIVE krumm12
+
+
+COMPONENT krumm14 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm13
+ ROTATED (0,0.021252,0)        RELATIVE krumm13
+
+
+COMPONENT krumm15 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm14
+ ROTATED (0,0.021252,0)        RELATIVE krumm14
+
+
+COMPONENT krumm16 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm15
+ ROTATED (0,0.021252,0)        RELATIVE krumm15
+
+
+COMPONENT krumm17 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm16
+ ROTATED (0,0.021252,0)        RELATIVE krumm16
+
+
+COMPONENT krumm18 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm17
+ ROTATED (0,0.021252,0)        RELATIVE krumm17
+
+
+COMPONENT krumm19 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.4980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm18
+ ROTATED (0,0.015939,0)        RELATIVE krumm18
+
+
+COMPONENT krumm20 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,0.5000)          RELATIVE krumm19
+ ROTATED (0,0.015939,0)        RELATIVE krumm19
+
+
+COMPONENT krumm21 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm20
+ ROTATED (0,0.021252,0)        RELATIVE krumm20
+
+
+COMPONENT krumm22 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm21
+ ROTATED (0,0.021252,0)        RELATIVE krumm21
+
+
+COMPONENT krumm23 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm22
+ ROTATED (0,0.021252,0)        RELATIVE krumm22
+
+
+COMPONENT krumm24 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm23
+ ROTATED (0,0.021252,0)        RELATIVE krumm23
+
+
+COMPONENT krumm25 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm24
+ ROTATED (0,0.021252,0)        RELATIVE krumm24
+
+
+COMPONENT krumm26 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm25
+ ROTATED (0,0.021252,0)        RELATIVE krumm25
+
+// ---------------------------------------------------------------
+//  Then, the section 5 with the MM gap, , the 1972 guide is 
+//  changed for new SM guide coating
+// ---------------------------------------------------------------
+COMPONENT krumm27 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 1.2480,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0220)  RELATIVE krumm26
+ ROTATED (0,0.000234,0)    RELATIVE krumm26
+
+
+COMPONENT krumm28 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 1.4980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.2500)          RELATIVE krumm27
+ ROTATED (0,0.029222,0)        RELATIVE krumm27
+
+
+COMPONENT krumm29 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.5000)          RELATIVE krumm28
+ ROTATED (0,0.026565,0)        RELATIVE krumm28
+
+
+COMPONENT krumm30 = Guide(
+ w1 = 0.0300, h1 = 0.2000, w2 = 0.0300, h2 = 0.2000, l = 0.9980,
+ R0 = alt_Guide_Ro, Qc = alt_Guide_Qc, alpha = alt_Guide_alpha, m = m, W = alt_Guide_W)
+ AT      (0,0,1.0000)          RELATIVE krumm29
+ ROTATED (0,0.021252,0)        RELATIVE krumm29
+
+/*------------------*/
+/* Monitors at end  */
+/* of the guide     */
+/*------------------*/
+COMPONENT GuideOut = Arm() AT (0,0,1.000) RELATIVE krumm30
+
+COMPONENT GuideOut_xy = Monitor_nD(
+  xwidth=0.04, yheight=0.22, restore_neutron=1,
+  options="x y, per cm2, slit")
+AT (0,0,0.01) RELATIVE PREVIOUS
+
+COMPONENT GuideOut_dxdy = Monitor_nD(
+  xwidth=0.04, yheight=0.22, restore_neutron=1,
+  options="dx dy, all auto, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT GuideOut_Phic = Monitor_nD(
+  xwidth=0.04, yheight=0.22, restore_neutron=1,
+  options="per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT GuideOut_L = Monitor_nD(
+  xwidth=0.04, yheight=0.22, restore_neutron=1,
+  options="lambda, limits=[1 21] bins=20, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+END
+
+

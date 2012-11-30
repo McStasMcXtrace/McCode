@@ -1,0 +1,220 @@
+#!/usr/bin/perl -wT
+# (cannot use /usr/bin/env here)
+#
+# This script implements a simple remote-control mechanism for Tk
+# applications.  It allows you to select an application and then type
+# commands to that application.
+
+
+require 5.002;
+use English;
+
+use Tk;
+use Tk::ErrorDialog;
+use strict;
+
+sub get_eval_status; sub prompt;
+
+$ENV{HOME} = '/home/bug';
+
+my $MW = MainWindow->new;
+$MW->minsize(1, 1);
+$MW->ErrorDialog->configure('-cleanupcode' => \&prompt);
+
+my $app = "local";		# application name that we're sending to
+my $lastCommand = "";		# use this command if !! entered
+
+# Create menu bar.  Arrange to recreate all the information in the
+# applications sub-menu whenever it is cascaded to.
+
+my $menu = $MW->Frame(-relief => 'raised', -bd => 2);
+my $menu_file = $menu->Menubutton(-text => "File", -underline => 0);
+my $SELECT_APPLICATION = 'Select Application';
+$menu_file->cascade(-label => $SELECT_APPLICATION, -underline => 0);
+$menu_file->command(-label => 'Quit', -command => \&exit, -underline => 0);
+my $menu_file_m = $menu_file->cget(-menu);
+my $menu_file_m_apps = $menu_file_m->Menu;
+$menu_file_m->entryconfigure($SELECT_APPLICATION, -menu => $menu_file_m_apps);
+$menu_file_m->configure(-postcommand => \&fillAppsMenu);
+$menu->pack(-side => 'top', -fill => 'x');
+$menu_file->pack(-side => 'left');
+
+# Create text window and scrollbar.
+
+my $t = $MW->Text(-relief => "raised", -borderwidth => 2, -setgrid => 1);
+my $s = $MW->Scrollbar(-relief => "flat", -command => ['yview', $t]);
+$t->configure(-yscrollcommand => ['set', $s]);
+$s->pack(-side => 'right', -fill => 'both');
+$t->pack(-side => 'left');
+
+# Perl -w handler to fill text widget with eval errors.
+
+$SIG{'__WARN__'} = \&get_eval_status;
+
+# Create a binding to forward commands to the target application, plus modify
+# many of the built-in bindings so that only information in the current
+# command can be deleted (can still set the cursor earlier in the text and
+# select and insert; just can't delete).
+
+$t->bindtags([$t, 'Tk::Text', $MW, 'all']); # use *my* bindings before
+                                            # considering those of class Text
+$t->bind('<Return>' => sub {
+    my $t = shift;
+    $t->mark('set', 'insert', 'end - 1c');
+    $t->insert('insert', "\n");
+    &invoke();
+    $t->break;
+});
+$t->bind('<Delete>' => sub {
+    my $t = shift;
+    if (defined $t->tag('nextrange', 'sel', '1.0', 'end')) {
+	$t->tag('remove', 'sel', 'sel.first', 'promptEnd');
+    } else {
+	$t->break if $t->compare('insert', '<', 'promptEnd');
+    }
+});
+$t->bind('<BackSpace>' => sub {
+    my $t = shift;
+    if (defined $t->tag('nextrange', 'sel', '1.0', 'end')) {
+	$t->tag('remove', 'sel', 'sel.first', 'promptEnd');
+    } else {
+	$t->break if $t->compare('insert', '<', 'promptEnd');
+    }
+});
+$t->bind('<Control-d>' => sub {
+    my $t = shift;
+    $t->break if $t->compare('insert', '<', 'promptEnd');
+});
+$t->bind('<Control-k>' => sub {
+    my $t = shift;
+    $t->mark('set', 'insert', 'promptEnd') if $t->compare('insert', '<', 'promptEnd');
+});
+$t->bind('<Control-t>' => sub {
+    my $t = shift;
+    $t->break if $t->compare('insert', '<', 'promptEnd');
+});
+$t->bind('<Meta-d>' => sub {
+    my $t = shift;
+    $t->break if $t->compare('insert', '<', 'promptEnd');
+});
+$t->bind('<Meta-BackSpace>' => sub {
+    my $t = shift;
+    $t->break if $t->compare('insert', '<', 'promptEnd');
+});
+$t->bind('<Control-h>' => sub {
+    my $t = shift;
+    $t->break if $t->compare('insert', '<', 'promptEnd');
+});
+$t->bind('<Control-x>' => sub {
+    my $t = shift;
+    $t->tag('remove', 'sel', 'sel.first', 'promptEnd');
+});
+
+$t->tag('configure', 'bold',
+    -font => "*-Courier-Bold-R-Normal-*-120-*-*-*-*-*-*",
+);
+$app = $MW->name;
+$MW->title("Tk Remote Controller - $app");
+$MW->iconname($app);
+prompt;
+$t->focus();
+
+MainLoop;
+
+sub prompt {
+
+    # This procedure is used to print out a prompt at the insertion point
+    # (which should be at the beginning of a line right now).
+
+    $t->insert('insert', "$app: ");
+    $t->mark('set', 'promptEnd', 'insert');
+    $t->mark('gravity', 'promptEnd', 'left');
+    $t->tag('add', 'bold', 'promptEnd linestart', 'promptEnd');
+
+} # end prompt
+
+sub invoke {
+
+    # The procedure below executes a command (it takes everything on the
+    # current line after the prompt and either sends it to the remote
+    # application or executes it locally, depending on "app".
+
+    my $cmd = $t->get('promptEnd', 'insert');
+    my $result = '';
+
+    if($cmd eq "!!\n") {
+	$cmd = $lastCommand;
+    } else {
+	$lastCommand = $cmd;
+    }
+    if($app eq "local") {
+	eval $cmd; get_eval_status;
+    } else {
+	$t->send($app,$cmd);
+    }
+    prompt;
+    $t->mark('set','promptEnd','insert');
+    $t->yview(-pickplace => 'insert');
+
+} # end invoke
+
+sub newApp {
+
+    # The following procedure is invoked to change the application that we're
+    # talking to, or update the current prompt.
+
+    my $appName = shift;
+    $app = $appName;
+    $t->mark('gravity', 'promptEnd', 'right');
+    $t->delete("promptEnd linestart", "promptEnd");
+    $t->insert("promptEnd", "$appName: ");
+    $t->tag("add", "bold", "promptEnd linestart", "promptEnd");
+    $t->mark('gravity', 'promptEnd', 'left');
+    return '';
+
+} # end newApp
+
+sub fillAppsMenu {
+
+    # The procedure below will fill in the applications sub-menu with a list
+    # of all the applications that currently exist.
+
+    my $i; eval {$menu_file_m_apps->delete(0, 'last')};
+    foreach $i (sort $MW->interps) {
+	$menu_file_m_apps->add("command",
+            -label   => $i,
+            -command => [sub { &newApp($_[0]);},$i],
+        );
+    }
+    $menu_file_m_apps->add("command",
+        -label   => "local",
+        -command => sub { &newApp("local"); },
+    );
+
+} # end fillAppsMenu
+
+sub get_eval_status {
+
+    # Inform user of any eval errors.
+
+    chomp ($EVAL_ERROR, @_);
+    my $errors = join '', $EVAL_ERROR, @_;
+    $t->insert('insert',"$errors\n") if $errors;
+    $EVAL_ERROR = '';		# prevent $t->break error for local app
+
+} # end get_eval_status
+
+sub Tk::Receive {
+
+    # For security you must roll you own `receive' command, run with
+    # taint checks on and untaint the received data.
+
+    my($window, $cmd) = @_;
+
+    chop $cmd;
+    $cmd =~ /(.*)/;
+    $cmd = $1;
+    eval $cmd; get_eval_status;
+
+} # end receive
+

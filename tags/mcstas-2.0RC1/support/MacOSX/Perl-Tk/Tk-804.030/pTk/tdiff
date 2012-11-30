@@ -1,0 +1,29 @@
+#!/usr/local/bin/perl -w
+
+sub fail
+{
+ warn shift(@_)."\n";
+ return undef;
+}
+
+sub tdiff
+{
+ my $file = shift;
+ my ($src) = grep(-r $_,map("mTk/$_/$file",qw(unix win generic tclGeneric tclWin tclUnix)));
+ return fail("Cannot find $file in mTk") unless $src;
+ my ($tcl) = grep(-r $_,map("../../tcltk/$_/$file",qw(unix win generic)));
+ ($tcl) = grep(-r $_,map("../../tcl/$_/$file",qw(unix win generic))) unless $tcl;
+ return fail("Cannot find $file in tcltk") unless $tcl;
+ print "$tcl\n$src\n";
+ system("diff -ub $tcl $src > /tmp/$file");
+ return "/tmp/$file";
+}
+
+if (@ARGV)
+ {
+  foreach (@ARGV)
+   {
+    my $file = tdiff($_);
+    system("ned",$file) if $file;
+   }
+ }

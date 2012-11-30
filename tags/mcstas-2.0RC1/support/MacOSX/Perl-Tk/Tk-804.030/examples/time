@@ -1,0 +1,24 @@
+#!/usr/local/bin/perl -w
+use Tk::Stats 'Start';
+use strict;
+use Tk;
+use Tk::Stats 'useTk';
+use Tk::Button;
+use Tk::Stats 'useButton';
+
+Tk::Stats::stats('start');
+my $mw = MainWindow->new;
+Tk::Stats::stats('Mw');
+withdraw $mw;
+Tk::Stats::stats('withdraw');
+$mw->bind('<Map>', \&Tk::Stats::stats );
+Tk::Stats::stats('bind');
+$mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+Tk::Stats::stats('Button');
+$mw->idletasks;
+Tk::Stats::stats('idletasks');
+deiconify $mw;
+Tk::Stats::stats('deconify');
+$mw->update;
+Tk::Stats::stats('update');
+

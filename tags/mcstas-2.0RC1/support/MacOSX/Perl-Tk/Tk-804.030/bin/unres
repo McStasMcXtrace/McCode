@@ -1,0 +1,78 @@
+#!/usr/local/bin/perl -w
+
+%done = ();
+%defs = ();
+
+sub unres
+{
+ my ($file) = @_;
+ my %unres;
+ my $sym;
+ unless (!-d $file && -r $file && -B $file)
+  {
+   chomp($file = `find blib -name '$file.so' -print`);
+  }
+ libraries($file);
+ open(NM,"nm -p $file |") || die "Cannot open nm $file:$!";
+ print STDERR "$file\n";
+ while (<NM>)
+  {
+   if (/^[\d[a-fA-F]+\s+U\s+(\w+)$/)
+    {
+     $unres{$1} = 1 unless (exists $defs{$1});
+    }
+  }
+ close(NM);
+ print "$file:",join(',',sort keys %unres),"\n";
+}
+
+sub defs;
+
+sub libraries
+{
+ my ($file) = @_;
+ local (*LDD,$_);
+ open(LDD,"ldd $file|") || die "Cannot open nm $file:$!";
+ while (<LDD>)
+  {
+   defs($1) if (/=>\s*(\S*)\s*$/);
+  }
+}
+
+sub defs
+{
+ my ($file) = @_;
+ return if (!defined($file) || exists($done{$file}));
+ local (*NM,*LDD,$_);
+ $done{$file} = 1;
+ open(NM,"nm -p $file |") || die "Cannot open nm $file:$!";
+ print STDERR "Reading definitions from $file\n";
+ while (<NM>)
+  {
+   if (/^[\d[a-fA-F]+\s+[DTB]\s+(\w+)$/)
+    {
+     $defs{$1} = $file;
+    }
+  }
+ close(NM);
+ libraries($file);
+}
+
+sub which
+{
+ my ($name) = @_;
+ my $dir;
+ foreach $dir (split(/:/,$ENV{PATH}))
+  {
+   my $try = "$dir/$name";
+   return $try if (-f $try && -x $try);
+  }
+ return undef;
+}
+
+defs(which('perl'));
+
+foreach $file (@ARGV)
+ {
+  unres($file);
+ }

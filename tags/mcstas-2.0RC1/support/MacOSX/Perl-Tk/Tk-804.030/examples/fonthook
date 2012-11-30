@@ -1,0 +1,44 @@
+use Tk;
+use strict;
+binmode(STDOUT,":utf8");
+
+$Tk::FontRank = \&Ranker;
+
+my $mw = MainWindow->new();
+my $t  = $mw->Scrolled(Text => -font => [fixed => 14])->pack;
+#$t->insert(end => "Simple ASCII\n");
+#$t->update;
+$t->insert(end => "\x{3A3A}\n");
+$t->update;
+#$t->insert(end => "\x{20AC}0.02 ¬£?\n");
+#$t->update;
+#$t->insert(end => "\x{2323}\x{2322}\n");
+MainLoop unless @ARGV;
+
+
+sub Ranker
+{
+ my ($cost,$ch,$want,$got) = @_;
+ return $cost if $ch == 32;
+ if ($cost == 0)
+  {
+   printf "U+%04x for ",$ch;
+   print $want->family," use ",$got->Xname,"\n";
+  }
+ elsif ($cost == -1)
+  {
+   printf "U+%04x $ch not in ",$ch;
+   print $got->Xname,"\n";
+  }
+ else
+  {
+   return (1 << 30) if ($got->size && $want->size != $got->size);
+   if ($got->encoding eq 'iso10646-1')
+    {
+     $cost = ($cost >> 3) || 1;
+    }
+   printf "%08x for U+%04x ",$cost,$ch;
+   print $want->family,' got ',$got->family,'/',$got->encoding,"\n";
+  }
+ return $cost;
+}
