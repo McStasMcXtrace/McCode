@@ -117,7 +117,7 @@ macro(setup_mccode_mkdist FLAVOR)
   if(WINDOWS)
     # Fix installation root
     set(CMAKE_INSTALL_PREFIX "C://")
-    set(CPACK_NSIS_INSTALL_ROOT "C:\\\\")
+    set(CPACK_NSIS_INSTALL_ROOT "C:\\\\${FLAVOR}-${MCCODE_VERSION}")
 
     # Set BIN and LIB paths
     set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}${MCCODE_NAME}/${bin}/${FLAVOR}")
@@ -158,7 +158,7 @@ macro(setup_mccode_mkdist FLAVOR)
   if(WINDOWS)
 
     # Fix installation folder (installs to ${ROOT}\${DIRECTORY})
-    set(CPACK_PACKAGE_INSTALL_DIRECTORY "${FLAVOR}-${MCCODE_VERSION}")
+    set(CPACK_PACKAGE_INSTALL_DIRECTORY "")
 
     # Windows program files do not have any version-suffix
     set(PROGRAM_SUFFIX "")

@@ -1,3 +1,3 @@
-@CALL @CPACK_NSIS_INSTALL_ROOT@@FLAVOR@-@MCCODE_VERSION@\\bin\\mcstasenv.bat
+@CALL @CPACK_NSIS_INSTALL_ROOT@\\bin\\mcstasenv.bat
 @ECHO Staring mcgui
 @mcgui.pl
