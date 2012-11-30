@@ -115,13 +115,14 @@ macro(setup_mccode_mkdist FLAVOR)
   set(MCCODE_NAME "${FLAVOR}-${MCCODE_VERSION}")
 
   if(WINDOWS)
-    # Install in C:
+    # Fix installation root
     set(CMAKE_INSTALL_PREFIX "C://")
+    set(CPACK_NSIS_INSTALL_ROOT "C:\\\\")
+
     # Set BIN and LIB paths
     set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}${MCCODE_NAME}/${bin}/${FLAVOR}")
     set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}${MCCODE_NAME}/${lib}")
     # Replace '/' with '\'
-    string(REPLACE "/" "\\\\" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
     string(REPLACE "/" "\\\\" MCCODE_BIN "${MCCODE_BIN}")
     string(REPLACE "/" "\\\\" MCCODE_LIB "${MCCODE_LIB}")
   else()
@@ -156,13 +157,12 @@ macro(setup_mccode_mkdist FLAVOR)
   # Add some special Windows/Unix CPACK configuration
   if(WINDOWS)
 
-    # Fix installation root and folder (installs to ${ROOT}\${DIRECTORY})
-    set(CPACK_NSIS_INSTALL_ROOT "C:")
+    # Fix installation folder (installs to ${ROOT}\${DIRECTORY})
     set(CPACK_PACKAGE_INSTALL_DIRECTORY "${FLAVOR}-${MCCODE_VERSION}")
-    
+
     # Windows program files do not have any version-suffix
     set(PROGRAM_SUFFIX "")
-    
+
     # Create desktop links for mcguigo and mcstasgo batch files
     set(CPACK_NSIS_CREATE_ICONS "CreateShortCut '$DESKTOP\\\\McGui-${MCCODE_VERSION}.lnk' '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\mcguigo.bat' ")
     set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$DESKTOP\\\\mcstas-shell-${MCCODE_VERSION}.lnk' '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\mcstasgo.bat' ")
