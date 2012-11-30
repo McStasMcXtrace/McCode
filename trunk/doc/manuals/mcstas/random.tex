@@ -3,12 +3,11 @@
 \index{Monte Carlo method}
 
 \section{Transformation of random numbers}
-In order to perform the Monte Carlo choices, one needs to be able to
-pick a random number from a given distribution. However, most
-random number generators only give
-uniform distributions over a certain interval.
-We thus need to be able to transform between probability distributions,
-and we here give a short explanation on how to do this.
+In order to perform the Monte Carlo choices, one needs to be able to pick a
+random number from a given distribution. However, most random number generators
+only give a uniform distribution over a certain interval.  We thus need to be
+able to transform between probability distributions, and we here give a short
+explanation on how to do this.
 
 Assume that we pick a random number, $x$, from a distribution $\phi(x)$.
 We are now interested in the shape of the distribution, $\Psi(y)$, of the
@@ -41,7 +40,7 @@ distribution in $[0; 2\pi]$, giving $\Psi_\phi = 1/(2\pi)$.
 and the radius from the (normalised) distribution $\Psi_r=2r/R^2$.
 
 For the radial part,
-eq.~(\ref{e:randtrans}) becomes $y/(2 \pi) = x$, whence
+eg.~(\ref{e:randtrans}) becomes $y/(2 \pi) = x$, whence
 $\phi$ is found simply by multiplying a random number ($x$)
 with $2\pi$.
 
@@ -78,7 +77,14 @@ In stead, we rely on a specific algorithm for selecting random
 numbers with this distribution.
 
 \section{Random generators}
-\index{Monte Carlo method!Random number, Mersenne Twister}
-Eventhough there is the possibility to use the system random generator, as well as the initial \MCS\ version 1.1 random generator, the default algorithm is the so-called "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. See \\ \verb+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html+ for original source.
+\index{Monte Carlo method!Random number, Mersenne Twister} Even though there is
+the possibility to use the system random generator, as well as the initial \MCS\
+version 1.1 random generator, the default algorithm is the so-called "Mersenne
+Twister", by Makoto Matsumoto and Takuji Nishimura. See \\
+\verb+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html+ for original
+source.
 
-It is considered today to be by far the best random generator, which means that both its period is extremely large $2^{19937}-1$, and cross-correlations are negligible, i.e distributions are homogeneous and independent up to 623 dimensions. It is also extremely fast.
+It is considered today to be by far the best random generator, which means that
+both its period is extremely large $2^{19937}-1$, and cross-correlations are
+negligible, i.e distributions are homogeneous and independent up to 623
+dimensions. It is also extremely fast.

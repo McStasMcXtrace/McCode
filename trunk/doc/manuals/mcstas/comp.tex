@@ -100,7 +100,7 @@ neutron events files for virtual sources,
 transmission and reflectivity files, etc.
 
 Such files distributed with \MCS\ are located in the
-\verb+data+ sub-directory of the \verb+MCSTAS+ library.
+\verb+data+ sub-directory of the McStas library.
 Components that make use of the \MCS\ file system,
 including the \verb+read-table+ library (see section \ref{s:read-table})
 may access all \MCS\ data files without making local copies.
@@ -235,7 +235,7 @@ on Unix-like systems and \verb+C:\mcstas\lib+ on Windows systems, but it may be
 changed using the \verb+MCSTAS+ environment variable.
 \index{Environment variable!MCSTAS}
 
-In case users only require to add new features, preserving the existing features of a component, 
+In case users only require to add new features, preserving the existing features of a component,
 using the \verb+EXTEND+ keyword\index{Keyword!EXTEND} in the instrument description file is recommended. For larger modification of a component, it is advised to make a copy
 of the component file into the working directory.
 A component file in the local directory will in \MCS\ take precedence over
