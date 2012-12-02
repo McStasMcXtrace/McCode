@@ -29,9 +29,9 @@ setup_mccode_mkdist("${FLAVOR}")
 set(TOOLS_NAME "${FLAVOR}-tools-python-mcplot-chaco-${MCCODE_VERSION}")
 if(WINDOWS)
   # Windows needs special handling of this path...
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
-else()
   set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
+else()
+  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
 endif()
 
 
