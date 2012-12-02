@@ -69,10 +69,13 @@ Changes in McStas v2.0RC1, November 30th, 2012
    - mcstas-tools-Python-mcplot-matplotlib, contains a new matplotlib mcplot solution
      * Dependencies: python-matplotlib
      * Remark: A bit on the slow side for large datasets
+     * Remark: Features zooming on individual plots
+     * Remark: "Standard" mcplot shortcuts for graphics dumps etc.
      * Remark: Recommendations for platform-specific python-distributions below
    - mcstas-tools-Python-mcplot-chaco, contains a draft implementation of mcplot based on chaco
      * Dependencies: python-chaco
      * Remark: Faster than matplotlib-solution, but a bit on the slow side for large datasets
+     * Remark: Features zooming on individual plots
      * Remark: Recommendations for platform-specific python-distributions below
      * Remark: Not easy to install dependencies for chaco if not in your python distro
    - mcstas-web, contains a webserver-based run/trace/plot solution
