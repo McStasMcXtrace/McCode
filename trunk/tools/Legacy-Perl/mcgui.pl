@@ -506,6 +506,9 @@ sub set_run_dir {
 sub set_workdir{
   my ($w, $dir) = @_;
   if (!($dir eq "")) {
+    if ($Config{'osname'} eq 'MSWin32') {
+      $dir =~ s+/+\\+g;
+    }
     $workdir->delete("1.0", "end");
     chdir($dir);
     $workdir->insert('end', $dir);
