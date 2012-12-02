@@ -27,7 +27,7 @@ setup_mccode_mkdist("${FLAVOR}")
 
 
 set(TOOLS_NAME "${FLAVOR}-tools-python-mcplot-matplotlib-${MCCODE_VERSION}")
-set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
+set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
 
 
 # Set some extra options for mccode_config
