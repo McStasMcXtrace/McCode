@@ -1,0 +1,39 @@
+#  Copyright (c) 1995-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_NameOfImage - Return name of image.
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+char *
+B<Tk_NameOfImage>(I<typePtr>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_ImageMaster *masterPtr (in)
+
+Token for image, which was passed to image manager's I<createProc> when
+the image was created.
+
+=back
+
+=head1 DESCRIPTION
+
+This procedure is invoked by image managers to find out the name
+of an image.  Given the token for the image, it returns the
+string name for the image.
+
+=head1 KEYWORDS
+
+image manager, image name

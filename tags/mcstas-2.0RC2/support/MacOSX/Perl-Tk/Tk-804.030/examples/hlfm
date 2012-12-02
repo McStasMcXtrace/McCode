@@ -1,0 +1,11 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+require Tk::Dirlist;
+require Tk::Menubar;
+
+my $mw = MainWindow->new;
+my $mb = $mw->Menubar();
+my $dl = $mw->Scrolled('Dirlist',-directory => '.', -width => 40, -height => 40);
+$dl->pack(-expand => 1, -fill => 'both');
+MainLoop;

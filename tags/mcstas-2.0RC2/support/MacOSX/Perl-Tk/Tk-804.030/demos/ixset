@@ -1,0 +1,289 @@
+#!/usr/bin/env perl
+
+# A nice interface to "xset" to change X server settings
+#
+# History :
+#   91/11/23 : pda@masi.ibp.fr, jt@ratp.fr : design
+#   92/08/01 : pda@masi.ibp.fr : cleaning
+#
+# Tcl/Tk -> Perl translation by Stephen O. Lidie.  lusol@Lehigh.EDU  96/01/24
+
+require 5.002;
+use English;
+use Tk;
+
+use subs qw(cancel dispsettings labelentry quit readsettings writesettings);
+
+sub labelentry {
+
+    # Create all windows, and pack them.
+
+    my ($parent, $path, $text, $length) = @_;
+
+    ${$path} = $parent->Frame();
+    $w = "${path}_label";
+    ${$w} = ${$path}->Label(-text => $text);
+    ${$w}->pack(-side => 'left', -expand => 'y');
+    $w = "${path}_entry";
+    ${$w} = ${$path}->Entry(-width => $length, -relief => 'sunken');
+    ${$w}->pack(-side => 'right', -expand => 'y');
+
+} # end labelentry
+
+sub createwindows {
+
+    # Buttons
+
+    $buttons = $MW->Frame();
+    $buttons_ok = $buttons->Button(-command => \&ok, -text => 'Ok');
+    $buttons_apply = $buttons->Button(
+        -command => \&writesettings,
+        -text    => 'Apply',
+    );
+    $buttons_cancel = $buttons->Button(
+        -command => \&cancel,
+        -text    => 'Cancel',
+    );
+    $buttons_quit = $buttons->Button(-command => \&quit, -text => 'Quit');
+    $buttons_ok->pack(-side => 'left', -expand => 'yes', -pady => '5');
+    $buttons_apply->pack(-side => 'left', -expand => 'yes', -pady => '5');
+    $buttons_cancel->pack(-side => 'left', -expand => 'yes', -pady => '5');
+    $buttons_quit->pack(-side => 'left', -expand => 'yes', -pady => '5');
+
+    # Bell settings
+
+    $bell = $MW->Frame(-relief => 'raised', -borderwidth => '2');
+    $bell_label = $bell->Label(-text => 'Bell Settings');
+    $bell_vol = $bell->Scale(
+        -from         => '0',
+        -to           => '100',
+        -length       => '200',
+        -tickinterval => '20',
+        -label        => 'Volume (%)',
+	-orient       => 'horizontal',
+    );
+    $bell_val = $bell->Frame();
+    labelentry $bell_val, 'bell_val_pit', 'Pitch (Hz)', 6;
+    labelentry $bell_val, 'bell_val_dur', 'Duration (ms)', 6;
+    $bell_val_pit->pack(-side => 'left', -padx => '5');
+    $bell_val_dur->pack(-side => 'right', -padx => '5');
+    $bell_label->pack(-side => 'top', -expand => 'yes');
+    $bell_vol->pack(-side => 'top', -expand => 'yes');
+    $bell_val->pack(-side => 'top', -expand => 'yes');
+
+    # Keyboard settings
+
+    $kbd = $MW->Frame(-relief => 'raised', -borderwidth => '2');
+    $kbd_label = $kbd->Label(-text => 'Keyboard Repeat Settings');
+    $kbd_val = $kbd->Frame();
+    $kbd_val_onoff = $kbd_val->Checkbutton(
+        -text     => 'On',
+        -onvalue  => 'on',
+        -offvalue => 'off',
+        -variable => \$kbdrpt,
+	-relief   => 'flat',
+    );
+    $kbd_val_cli = $kbd_val->Scale(
+        -from         => '0',
+        -to           => '100',
+        -length       => '200',
+        -tickinterval => '20',
+	-label        => 'Click Volume (%)',
+        -orient       => 'horizontal',
+    );
+    $kbd_val_onoff->pack(-side => 'left', -expand => 'yes', -fill => 'both');
+    $kbd_val_cli->pack(-side => 'left', -expand => 'yes');
+    $kbd_label->pack(-side => 'top', -expand => 'yes');
+    $kbd_val->pack(-side => 'top', -expand => 1, -pady => '2', -fill => 'x');
+
+    # Mouse settings
+
+    $mouse = $MW->Frame(-relief => 'raised', -borderwidth => '2');
+    $mouse_label = $mouse->Label(-text => 'Mouse Settings');
+    $mouse_hor = $mouse->Frame();
+    labelentry $mouse_hor, 'mouse_hor_acc', 'Acceleration', 3;
+    labelentry $mouse_hor, 'mouse_hor_thr', 'Threshold (pixels)', 3;
+    $mouse_hor_acc->pack(-side => 'left');
+    $mouse_hor_thr->pack(-side => 'right');
+    $mouse_label->pack(-side => 'top');
+    $mouse_hor->pack(-side => 'top', -expand => 'yes');
+
+    # Screen Saver settings
+
+    $screen = $MW->Frame(-relief => 'raised', -borderwidth => '2');
+    $screen_label = $screen->Label(-text => 'Screen-saver Settings');
+    $screen_val = $screen->Frame();
+    $screen_val_rb = $screen_val->Frame();
+    $screen_val_rb_blank = $screen_val_rb->Radiobutton(
+        -text     => 'Blank',
+        -relief   => 'flat',
+        -value    => 'blank',
+	-variable => \$screenbla,
+    );
+    $screen_val_rb_pat = $screen_val_rb->Radiobutton(
+        -text     => 'Pattern',
+        -relief   => 'flat',
+        -value    => 'noblank',
+	-variable => \$screenbla,
+    );
+    $screen_val_rb_blank->pack(-side => 'top', -pady => '2', -anchor => 'w');
+    $screen_val_rb_pat->pack(-side => 'top', -pady => '2', -anchor => 'w');
+    $screen_val_le = $screen_val->Frame();
+    labelentry $screen_val_le, 'screen_val_le_tim', 'Timeout (s)', 5;
+    labelentry $screen_val_le, 'screen_val_le_cyc', 'Cycle (s)', 5;
+    $screen_val_le_tim->pack(-side => 'top', -pady => '2', -anchor => 'e');
+    $screen_val_le_cyc->pack(-side => 'top', -pady => '2', -anchor => 'e');
+    $screen_val_rb->pack(-side => 'left');
+    $screen_val_le->pack(-side => 'left');
+
+    $screen_label->pack(-side => 'top');
+    $screen_val->pack(-side => 'top', -expand => 'y');
+
+    # Main window
+
+    $buttons->pack(-side => 'top', -fill => 'both');
+    my(@pl)= (-side => 'top', -fill => 'both', -ipady => '5', -expand =>1);
+    $bell->pack(@pl);
+    $kbd->pack(@pl);
+    $mouse->pack(@pl);
+    $screen->pack(@pl);
+
+    # Let the user resize our window
+
+    $MW->minsize(10, 10);
+
+} # end createwindows
+
+
+# Main program
+
+$MW = MainWindow->new;
+
+readsettings;
+createwindows;
+dispsettings;
+
+MainLoop;
+
+# Define button actions.
+
+sub quit {
+    exit;
+}
+
+sub ok {
+    writesettings;
+    quit;
+}
+
+sub cancel {
+    readsettings;
+    dispsettings;
+}
+
+# `apply' is just "writesettings".
+
+sub readsettings {
+
+    # Read the `xset' output to get current setting.
+
+    $kbdrpt = "on";
+    $kbdcli = 0;
+    $bellvol = 100;
+    $bellpit = 440;
+    $belldur = 100;
+    $mouseacc = "3/1";
+    $mousethr = 4;
+    $screenbla = "blank";
+    $screentim = 600;
+    $screencyc = 600;
+
+    open XFD, "xset q |";
+    while (<XFD>) {
+	@line = split ' ';
+	my $kw = $line[0];
+
+	if ($kw eq 'auto') {
+	    my $rpt = $line[1];
+	    if ($rpt eq 'repeat:') {
+		$kbdrpt = $line[2];
+		$kbdcli = $line[6];
+	    }
+	} elsif ($kw eq 'bell') {
+	    $bellvol = $line[2];
+	    $bellpit = $line[5];
+	    $belldur = $line[8];
+	} elsif ($kw eq 'acceleration:') {
+	    $mouseacc = $line[1];
+	    $mousethr = $line[3];
+	} elsif ($kw eq 'prefer') {
+	    my $bla = $line[2];
+	    $screenbla = ($bla eq 'yes' ? 'blank' : 'noblank');
+	} elsif ($kw eq 'timeout:') {
+	    $screentim = $line[1];
+	    $screencyc = $line[3];
+	}
+    } # whilend
+    close XFD;
+
+} # end readsettings
+
+sub writesettings {
+
+    # execute an `xset' command to propagate current values.
+
+    $bellvol = $bell_vol->get;
+    $bellpit = $bell_val_pit_entry->get;
+    $belldur = $bell_val_dur_entry->get;
+
+    if ($kbdrpt eq 'on') {
+	$kbdcli = $kbd_val_cli->get;
+    } else {
+	$kbdcli = 'off';
+    }
+
+    $mouseacc = $mouse_hor_acc_entry->get;
+    $mousethr = $mouse_hor_thr_entry->get;
+
+    $screentim = $screen_val_le_tim_entry->get;
+    $screencyc = $screen_val_le_cyc_entry->get;
+
+    system "xset b $bellvol $bellpit $belldur c $kbdcli r $kbdrpt m $mouseacc $mousethr s $screentim $screencyc s $screenbla";
+
+} # end writesettings
+
+sub dispsettings {
+
+    # Update `xset' values in all widgets.
+
+    $bell_vol->set($bellvol);
+    $bell_val_pit_entry->delete('0', 'end');
+    $bell_val_pit_entry->insert('0', $bellpit);
+    $bell_val_dur_entry->delete('0', 'end');
+    $bell_val_dur_entry->insert('0', $belldur);
+
+    if ($kbdrpt eq 'on') {
+	$kbd_val_onoff->select;
+    } else {
+	$kbd_val_onoff->deselect;
+    }
+    $kbd_val_cli->set($kbdcli);
+
+    $mouse_hor_acc_entry->delete('0', 'end');
+    $mouse_hor_acc_entry->insert('0', $mouseacc);
+    $mouse_hor_thr_entry->delete('0', 'end');
+    $mouse_hor_thr_entry->insert('0', $mousethr);
+
+    if ($screenbla eq 'blank') {
+	$screen_val_rb_blank->select;
+	$screen_val_rb_pat->select;
+    } else {
+	$screen_val_rb_blank->deselect;
+	$screen_val_rb_pat->deselect;
+    }
+    $screen_val_le_tim_entry->delete('0', 'end');
+    $screen_val_le_tim_entry->insert('0', $screentim);
+    $screen_val_le_cyc_entry->delete('0', 'end');
+    $screen_val_le_cyc_entry->insert('0', $screencyc);
+
+} # end dispsettings

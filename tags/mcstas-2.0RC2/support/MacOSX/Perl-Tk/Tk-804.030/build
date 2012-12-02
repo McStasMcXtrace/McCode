@@ -1,0 +1,10 @@
+#!/usr/local/bin/perl -w
+use Config;
+my $make = $Config{'make'};
+my @para;
+{local $ENV{'TKNOMAKEDEPEND'} = "1"; system("$^X","Makefile.PL","XFT=1")};
+system($make,"clean");
+system("$^X","Makefile.PL");
+system($make,@ARGV);
+system($make,'test');
+

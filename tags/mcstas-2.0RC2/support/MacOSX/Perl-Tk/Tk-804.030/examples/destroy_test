@@ -1,0 +1,24 @@
+#!/usr/local/bin/perl -w
+
+
+use Tk;
+
+require Tk::Pretty ;
+
+$top = MainWindow->new();
+
+$label = $top->Label("-text" => "Something" );
+
+$label->bind('<Destroy>' , sub { printf "RIP %s\n", shift->PathName });
+$top->bind('<Destroy>' , sub { printf "top RIP %s\n", shift->PathName });
+
+$label->pack;
+
+$quit = $top->Button("-text" => "Quit", "-command" => ["destroy",$top]);
+
+$quit->pack;
+
+$top->update();
+
+Tk::MainLoop();
+

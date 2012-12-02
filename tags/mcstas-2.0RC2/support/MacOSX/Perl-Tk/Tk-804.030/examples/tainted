@@ -1,0 +1,16 @@
+#!/usr/local/bin/perl -T
+
+use Tk;
+
+print join(':',@INC),"\n";
+
+my $command = shift;
+
+my $mw = MainWindow->new;
+my $b  = $mw->Button(-text => 'Quit', -command => [destroy => $mw]);
+$b->pack;
+my $b  = $mw->Button(-text => 'Do It', -command => sub { unlink $command } );
+$b->pack;
+
+MainLoop;
+

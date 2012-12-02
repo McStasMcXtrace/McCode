@@ -1,0 +1,4 @@
+#!/bin/sh
+PERL_DESTRUCT_LEVEL=2 valgrind --num-callers=8 --leak-resolution=high \
+ --leak-check=yes --show-reachable=yes "$@"
+

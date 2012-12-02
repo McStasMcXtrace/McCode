@@ -1,0 +1,99 @@
+# Makefile for @MCCODE_NAME@.
+#
+#   This file is part of the @MCCODE_NAME@ ray-trace simulation package
+#   Copyright (C) 1997-2008, All rights reserved
+#   Risoe National Laborartory, Roskilde, Denmark
+#   Institut Laue Langevin, Grenoble, France
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; version 2 of the License.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# Available methods for installation
+# make                 normal build
+# make install         normal installation
+# make install-pgplot  build and install PGPLOT
+# make clean           clean distro
+# make test            distro self-test
+# make plotter         best plotter choice
+# make reconfigure     reconfigure @MCCODE_TARNAME@ installation (after software update)
+
+
+SHELL = /bin/sh
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+srcdir = @srcdir@
+topdir = .
+rootdir = ../../
+libdir = @libdir@
+mandir = @mandir@
+PWD = `pwd`
+
+
+DEBUG = -DDEBUG=0
+libdir_mccode = $(libdir)/@MCCODE_TARNAME@
+
+CC = @CC@
+MINGW = @MINGW@
+CFLAGS = @CFLAGS@
+LDFLAGS= @LDFLAGS@
+
+USE_NEXUS = @HAVE_NEXUS@
+
+DEFS = @DEFS@ $(DEBUG)
+LIBS = @LIBS@
+
+PERL = @PERL@
+
+FLEX = @FLEX@
+FLEXFLAGS=-i
+
+BISON = @BISON@
+BISONFLAGS = -v -d
+
+SCILAB = @SCILAB@
+MATLAB = @MATLAB@
+PGPLOT = @PGPLOT@
+VRML = @VRMLVIEW@
+
+WGET = @WGET@
+
+XTERM = @TERM@
+
+INSTALL=@INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+
+
+#
+# End of configuration section.
+#
+
+
+all: 
+
+
+clean:
+
+distclean: clean
+
+install: installdirs
+	cd mcplot && cp -rp * $(libdir_mccode)/tools/Python/mcplot
+	ln -sf $(libdir_mccode)/tools/Python/mcplot/mcplot.py $(bindir)/mcplot.py
+	cd mcrun && cp -rp * $(libdir_mccode)/tools/Python/mcrun
+	ln -sf $(libdir_mccode)/tools/Python/mcplot/main.py $(bindir)/mcrun.py
+
+installdirs:
+	$(rootdir)/mkinstalldirs $(bindir) $(libdir_mccode)/tools $(libdir_mccode)/tools/Python $(libdir_mccode)/tools/Python/mcplot $(libdir_mccode)/tools/Python/mcrun $(libdir_mccode)/tools/Python/mcdisplay
+

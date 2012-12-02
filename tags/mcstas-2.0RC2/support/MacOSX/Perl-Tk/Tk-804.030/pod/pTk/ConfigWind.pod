@@ -1,0 +1,183 @@
+#  Copyright (c) 1990-1993 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_ConfigureWindow, Tk_MoveWindow, Tk_ResizeWindow, Tk_MoveResizeWindow, Tk_SetWindowBorderWidth, Tk_ChangeWindowAttributes, Tk_SetWindowBackground, Tk_SetWindowBackgroundPixmap, Tk_SetWindowBorder, Tk_SetWindowBorderPixmap, Tk_SetWindowColormap, Tk_DefineCursor, Tk_UndefineCursor - change window configuration or attributes
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_ConfigureWindow>(I<tkwin, valueMask, valuePtr>)
+
+B<Tk_MoveWindow>(I<tkwin, x, y>)
+
+B<Tk_ResizeWindow>(I<tkwin, width, height>)
+
+B<Tk_MoveResizeWindow>(I<tkwin, x,  y, width, height>)
+
+B<Tk_SetWindowBorderWidth>(I<tkwin, borderWidth>)
+
+B<Tk_ChangeWindowAttributes>(I<tkwin, valueMask, attsPtr>)
+
+B<Tk_SetWindowBackground>(I<tkwin, pixel>)
+
+B<Tk_SetWindowBackgroundPixmap>(I<tkwin, pixmap>)
+
+B<Tk_SetWindowBorder>(I<tkwin, pixel>)
+
+B<Tk_SetWindowBorderPixmap>(I<tkwin, pixmap>)
+
+B<Tk_SetWindowColormap>(I<tkwin, colormap>)
+
+B<Tk_DefineCursor>(I<tkwin, cursor>)
+
+B<Tk_UndefineCursor>(I<tkwin>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_Window tkwin (in)
+
+Token for window.
+
+=item "unsigned int" valueMask (in)
+
+OR-ed mask of values like B<CWX> or B<CWBorderPixel>,
+indicating which fields of I<*valuePtr> or I<*attsPtr> to use.
+
+=item XWindowChanges *valuePtr (in)
+
+Points to a structure containing new values for the configuration
+parameters selected by I<valueMask>.  Fields not selected
+by I<valueMask> are ignored.
+
+=item int x (in)
+
+New x-coordinate for I<tkwin>'s top left pixel (including
+border, if any) within tkwin's parent.
+
+=item int y (in)
+
+New y-coordinate for I<tkwin>'s top left pixel (including
+border, if any) within tkwin's parent.
+
+=item "int" width (in)
+
+New width for I<tkwin> (interior, not including border).
+
+=item "int" height (in)
+
+New height for I<tkwin> (interior, not including border).
+
+=item "int" borderWidth (in)
+
+New width for I<tkwin>'s border.
+
+=item XSetWindowAttributes *attsPtr (in)
+
+Points to a structure containing new values for the attributes
+given by the I<valueMask> argument.  Attributes not selected
+by I<valueMask> are ignored.
+
+=item "unsigned long" pixel (in)
+
+New background or border color for window.
+
+=item Pixmap pixmap (in)
+
+New pixmap to use for background or border of I<tkwin>.  WARNING:
+cannot necessarily be deleted immediately, as for Xlib calls.  See
+note below.
+
+=item Colormap colormap (in)
+
+New colormap to use for I<tkwin>.
+
+=item Tk_Cursor cursor (in)
+
+New cursor to use for I<tkwin>.  If B<None> is specified, then
+I<tkwin> will not have its own cursor;  it will use the cursor
+of its parent.
+
+=back
+
+=head1 DESCRIPTION
+
+These procedures are analogous to the X library procedures
+with similar names, such as B<XConfigureWindow>.  Each
+one of the above procedures calls the corresponding X procedure
+and also saves the configuration information in Tk's local
+structure for the window.  This allows the information to
+be retrieved quickly by the application (using macros such
+as B<Tk_X> and B<Tk_Height>) without having to contact
+the X server.  In addition, if no X window has actually been
+created for I<tkwin> yet, these procedures do not issue
+X operations or cause event handlers to be invoked;  they save
+the information in Tk's local
+structure for the window;  when the window is created later,
+the saved information will be used to configure the window.
+
+See the X library documentation for details on what these
+procedures do and how they use their arguments.
+
+In the procedures B<Tk_ConfigureWindow>, B<Tk_MoveWindow>,
+B<Tk_ResizeWindow>, B<Tk_MoveResizeWindow>, and
+B<Tk_SetWindowBorderWidth>,
+if I<tkwin> is an internal window then event handlers interested
+in configure events are invoked immediately, before the procedure
+returns.  If I<tkwin> is a top-level window
+then the event handlers will be invoked later, after X has seen
+the request and returned an event for it.
+
+Applications using Tk should never call procedures like
+B<XConfigureWindow> directly;  they should always use the
+corresponding Tk procedures.
+
+The size and location of a window should only be modified by the
+appropriate geometry manager for that window and never by a window
+itself (but see L<Tk::MoveToplev> for moving a top-level
+window).
+
+You may not use B<Tk_ConfigureWindow> to change the
+stacking order of a window (I<valueMask> may not contain the
+B<CWSibling> or B<CWStackMode> bits).
+To change the stacking order, use the procedure B<Tk_RestackWindow>.
+
+The procedure B<Tk_SetWindowColormap> will automatically add
+I<tkwin> to the B<TK_COLORMAP_WINDOWS> property of its
+nearest top-level ancestor if the new colormap is different from
+that of I<tkwin>'s parent and I<tkwin> isn't already in
+the B<TK_COLORMAP_WINDOWS> property.
+
+=head1 BUGS
+
+B<Tk_SetWindowBackgroundPixmap> and B<Tk_SetWindowBorderPixmap>
+differ slightly from their Xlib counterparts in that the I<pixmap>
+argument may not necessarily be deleted immediately after calling
+one of these procedures.  This is because I<tkwin>'s window
+may not exist yet at the time of the call, in which case I<pixmap>
+is merely saved and used later when I<tkwin>'s window is actually
+created.  If you wish to delete I<pixmap>, then call
+B<Tk_MakeWindowExist> first to be sure that I<tkwin>'s window exists
+and I<pixmap> has been passed to the X server.
+
+A similar problem occurs for the I<cursor> argument passed to
+B<Tk_DefineCursor>.  The solution is the same as for pixmaps above:
+call B<Tk_MakeWindowExist> before freeing the cursor.
+
+=head1 SEE ALSO
+
+L<Tk::MoveToplev>, L<Tk::Restack>
+
+=head1 KEYWORDS
+
+attributes, border, color, configure, height, pixel, pixmap, width, window, x, y

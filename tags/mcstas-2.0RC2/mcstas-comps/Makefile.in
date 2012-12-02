@@ -1,0 +1,30 @@
+SHELL = /bin/sh
+
+PERL = @PERL@
+
+INSTALL=@INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+srcdir = @srcdir@
+topdir = ..
+rootdir = ../../
+libdir = @libdir@
+mandir = @mandir@
+PWD = `pwd`
+
+mc_libdir = $(libdir)/@MCCODE_TARNAME@-@MCCODE_VERSION@
+
+all:
+
+install: installdirs
+	@echo "Install library (mcstas part)..."
+	cp -rp contrib data examples misc monitors obsolete \
+	   optics samples share sources $(mc_libdir)
+
+installdirs:
+	$(topdir)/mkinstalldirs $(libdir) $(mc_libdir)

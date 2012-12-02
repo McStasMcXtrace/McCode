@@ -1,0 +1,4 @@
+#define balArrow_width 6
+#define balArrow_height 6
+static char balArrow_bits[] = {
+   0x1f, 0x07, 0x07, 0x09, 0x11, 0x20};

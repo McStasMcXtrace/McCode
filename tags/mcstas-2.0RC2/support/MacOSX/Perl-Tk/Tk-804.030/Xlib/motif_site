@@ -1,0 +1,37 @@
+#!/usr/local/bin/perl -w
+use Tk;
+use Tk::Xlib;
+use Data::Dumper;
+
+my $win_image;
+
+sub AddChildren
+{
+ my ($mw,$w) = @_;
+ if ($mw->property('exists' => '_MOTIF_DRAG_RECEIVER_INFO', $$w))
+  {
+   my $val = $mw->property('get','_MOTIF_DRAG_RECEIVER_INFO',$$w);
+   printf "%08X l=%d ",$$w,length($val);
+   my @val = map(sprintf("%02X",$_),unpack('C*',$val));
+   print join(' ',@val),"\n";
+   print "\n";
+  }
+ my $child;
+ foreach $child ($mw->Display->XQueryTree($w))
+  {
+   AddChildren($mw,$child);
+  }
+}
+
+
+my $mw = MainWindow->new;
+$mw->MakeWindowExist;
+my $root;
+$mw->Display->XQueryTree($mw->WindowId,$root);
+
+if (defined $root)
+ {
+  AddChildren($mw,$root);
+ }
+
+

@@ -1,0 +1,50 @@
+% Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
+
+\chapter{Monochromators}
+
+In this class of components, we are concerned with elastic Bragg
+scattering from monochromators. {\bf Monochromator\_flat}
+models a flat thin mosaic crystal with a single scattering vector
+perpendicular to the surface.
+The component {\bf Monochromator\_curved} is physically similar,
+but models a singly or doubly bend monochromator crystal arrangement.
+
+A much more general model of scattering from a single crystal is
+found in the component {\bf Single\_crystal},
+which is presented under Samples, chapter~\ref{c:samples}.
+
+\input{monochromator_flat.tex}
+
+\input{monochromator_curved.tex}
+
+\section{Single\_crystal: Thick single crystal monochromator plate with multiple scattering}
+\index{Optics!Monochromator, thick}
+
+The {\bf Single\_crystal} component may be used to study more complex monochromators, including incoherent scattering, thickness and multiple scattering. Please refer to section \ref{s:Single_crystal}.
+
+\section{Phase space transformer - moving monochromator}
+\index{Optics!phase space transformer}
+
+Eventhough there exist a few attempts to write dedicated phase space transformer components, there is an elegant way to put a monochromator into move, by mean of the EXTEND keyword. If you define a SPEED parameter for the instrument, the idea is to change the coordinate system before the monochromator, and restore it afterwards, as follow in the TRACE section:
+\begin{verbatim}
+DEFINE INSTRUMENT PST(SPEED=200, ...)
+(...)
+TRACE
+(...)
+COMPONENT Mono_PST_on=Arm()
+AT ...
+EXTEND %{
+  vx = vx + SPEED; // monochromator moves transversaly by SPPED m/s
+%}
+
+COMPONENT  Mono=Monochromator(...)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mono_PST_off=Arm
+AT (0,0,0) RELATIVE PREVIOUS
+EXTEND  %{
+  vz = vz - SPEED; // puts back neutron in static coordinate frame
+%}
+\end{verbatim}
+This solution does not contain acceleration, but is far enough for most
+studies, and it is very simple. In the latter example, the instance \verb+Mono_PST_on+ should itself be rotated to reflect according to a Bragg law.

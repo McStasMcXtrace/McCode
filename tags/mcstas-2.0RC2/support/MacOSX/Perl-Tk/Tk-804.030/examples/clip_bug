@@ -1,0 +1,64 @@
+#!/usr/local/bin/perl -w
+# Show a Tk canvas bug:
+# when scrolling a canvas, clipping for embedded windows
+# uses the embedded windows parent, not the canvas.
+#
+# Note also that embedded windows do not behave properly
+# when covered by other canvas items: they stay on top.
+
+
+use strict;
+use Tk;
+
+my $display = new MainWindow;
+$display->minsize(100, 100);
+
+# Quit button
+my $quit = $display->Button(-text => 'Quit', -command => sub {exit;});
+$quit->pack();
+
+# Canvas and all
+my $canvas_frame = $display->Frame;
+$canvas_frame->pack(-expand => 'yes', -fill => 'both');
+my $canvas = $canvas_frame->Canvas(-relief => 'sunken', -bd => 2);
+my $vscroll = $canvas_frame->Scrollbar(-command => ['yview', $canvas]);
+my $hscroll = $canvas_frame->Scrollbar(-command => ['xview', $canvas],
+				       -orient => 'horiz');
+$canvas->configure(-xscrollcommand => ['set', $hscroll],
+		   -yscrollcommand => ['set', $vscroll]);
+$vscroll->pack(-side => 'right', -fill => 'y');
+$hscroll->pack(-side => 'bottom', -fill => 'x');
+$canvas->pack(-expand => 'yes', -fill => 'both');
+$canvas->configure(-scrollregion => ['0', '0', '10c', '10c']);
+
+# Add a few items to scroll
+add_item($display, $canvas, 1);
+add_item($display, $canvas, 5);
+add_item($display, $canvas, 9);
+MainLoop;
+
+
+# Add a box with a check-button beside
+# Parameters:
+# - Reference to window
+# - Reference to canvas
+# - Y-pos
+sub add_item
+{
+    my ($d, $c, $y) = @_;
+
+    # This button is owned by the display, not the canvas
+    my $button1 = $c->Checkbutton();
+    $c->create(('window', '1c', "$y" . 'c'),
+	       -anchor => 'w', -window => $button1);
+
+    # Rectangle
+    my $yp = $y + 2;
+    $c->create(('rectangle', '1.2c', "$y" . 'c', '4c', "$yp" . 'c'),
+	       -fill => 'SkyBlue2');
+
+    # This button is owned by the canvas, and doesn't go wrong
+    my $button2 = $c->Checkbutton();
+    $c->create(('window', '4.2c', "$y" . 'c'),
+	       -anchor => 'w', -window => $button2);
+}

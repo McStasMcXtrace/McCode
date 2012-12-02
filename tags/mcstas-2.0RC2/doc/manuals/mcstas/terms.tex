@@ -1,0 +1,41 @@
+% Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
+
+\chapter{The \MCS\ terminology}
+\label{s:terminology}
+
+This is a short explanation of phrases and terms which have a specific
+meaning within \MCS. We have tried to keep the list as short
+as possible with the risk that the reader may occasionally miss
+an explanation. In this case, you are more than welcome to contact
+the \MCS\ core team.
+
+\noindent
+\begin{itemize}
+\item{\bf Arm}  A generic \MCS\ component which defines a frame of reference
+      for other components.
+\item{\bf Component} One unit ({\em e.g.} optical element) in a neutron
+      spectrometer. These are considered as Types of elements to be instantiated in an Instrument description.
+\item{\bf Component Instance} A named Component (of a given Type) inserted in an Instrument description.
+\item{\bf Definition parameter} An input parameter for a component. For
+  example the radius of a sample component or the divergence of a collimator.
+\item{\bf Input parameter} For a component, either a definition parameter
+or a setting parameter. These parameters are supplied by the user to
+define the characteristics of the particular instance of the component
+definition. For an instrument, a parameter that can be changed at
+simulation run-time.
+\item{\bf Instrument} An assembly of \MCS\ components defining
+      a neutron spectrometer.
+\item{\bf Kernel} The \MCS\ language definition and the associated compiler
+\item{\bf \MCS} Monte Carlo Simulation of Triple Axis Spectrometers
+       (the name of this package). Pronounciation ranges from \emph{mex-tas}, to \emph{mac-stas} and \emph{m-c-stas}.
+\item{\bf Output parameter} An output parameter for a component.
+  For example the counts in a monitor. An output parameter may be
+  accessed from the instrument in which the component is used using
+  \verb`MC_GETPAR`.
+\item{\bf Run-time} C code, contained in the files
+  \verb+mcstas-r.c+ and \verb+mcstas-r.h+ included in the \MCS\
+  distribution, that declare functions and variables used by the
+  generated simulations.
+\item{\bf Setting parameter} Similar to a definition parameter, but with the
+  restriction that the value of the parameter must be a number.
+\end{itemize}

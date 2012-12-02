@@ -1,0 +1,51 @@
+#!/usr/local/bin/perl -w
+
+# This is the old method, nowadays one would
+# use
+#     $mw->attributes(-topmost => 1) 
+# instead.
+
+use Tk;
+
+$mw = MainWindow->new;
+$hello = $mw->Button(-text => 'Hello, world', -command => sub {print STDOUT "Hello, world\n"; mkTopLevel($mw);});
+$hello->pack;
+$bye = $mw->Button(-text => 'Goodbye', -command => sub {print STDOUT "Goodbye, cruel world!\n"; exit;});
+$bye->pack;
+MainLoop;
+
+sub unobscure
+{
+    my $w = shift;
+    my $s = shift;
+    return unless $w == $w->toplevel;
+    my $g = $w->grab('current');   # sorry Tk-b6 form ... would be Tk->grab('current');
+    return unless defined($g);
+    print "$w $s\n";
+    if ($w == $g)
+     {
+      $g->raise($g->MainWindow) if ($s !~ /Unobscured$/);
+     }
+    else
+     {
+      $g->raise if ($s !~ /FullyObscured$/);
+     }
+}
+
+sub mkTopLevel {
+  my  $main = shift;
+  my $topLevelWin = $main->Toplevel();
+
+  # raise if obscured
+  $topLevelWin->bind('all',"<Visibility>", [\&unobscure, Ev('s')]);
+
+  my $cancel = $topLevelWin->Button(
+				 "-text" => "Bye",
+				 "-command" =>
+				 sub { print "bye\n"; $topLevelWin->destroy; }
+				);
+  $cancel->pack(-side => 'top');
+  grab $topLevelWin;
+}
+
+1;

@@ -1,0 +1,39 @@
+#!/usr/local/bin/perl -w
+$meth = "pTk/Methods.def";
+
+%sub = ();
+$blen = 0;
+$slen = 0;
+
+open(METH,"<$meth") || die "Cannot open $meth:$!";
+while (<METH>)
+ {
+  if (/COMMAND\(\("(.*)",NULL\)\)/)
+   {
+    my ($base,@sub) = split(/","/,$1);
+    unless ($base eq 'wm' || $base eq 'winfo')
+     {
+      $sub{$base} = \@sub;
+      $blen = length($base) if (length($base) > $blen);
+      foreach $base (@sub)
+       {
+        $slen = length($base) if (length($base) > $slen);
+       }
+     }
+   }
+ }
+close(METH);
+
+my $base;
+my $ulen = $blen+$slen;
+foreach $base (sort keys %sub)
+ {
+  my $sub;
+  foreach $sub (sort @{$sub{$base}})
+   {
+    my $pbase = $base;
+    $pbase =~ s/^tk(\w+)/$1/;
+    printf("%-${blen}s %-${slen}s %-${ulen}s %-${ulen}s\n",
+           $base,$sub,$pbase."\u$sub",$sub."\u$pbase");
+   }
+ }

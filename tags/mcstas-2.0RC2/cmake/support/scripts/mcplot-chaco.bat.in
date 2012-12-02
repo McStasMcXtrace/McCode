@@ -1,0 +1,5 @@
+@SET PATH=@CPACK_NSIS_INSTALL_ROOT@\\lib\\@FLAVOR@-tools-python-mcplot-chaco-@MCCODE_VERSION@;%PATH%
+@REM Isn't windows a lovely place???
+@main.py %1 %2 %3 %4 %5 %6 %7 %8 %9
+@exit
+

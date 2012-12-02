@@ -1,0 +1,36 @@
+Plotlib - overview
+axis - get/set axis limits                     
+background  - change background
+bar - draws vertical bargraph
+caxis - set/get color axis
+clf - clear a figure                         
+colormap - Set/get the colormap of currently active figure
+delete - deletes a figure                      
+fig - creates/activates a figure.              
+foreground  - change foreground
+gcw - get the number of active window
+grid - property : add a grid on a 2D graph
+hold - holds/releases current plot             
+legend - adds a legend         
+loglog - plot with logarihtmic x andy scale    
+mesh - 3D mesh surface.
+pcolor - 2D pseudo color patches
+plot - generic plot function.                  
+plot3 - Plot lines and points in 3-D space.    
+plotlibver - returns the plotlib version number
+semilogx - plot with logarihtmic x scale       
+semilogy - plot with logarihtmic y scale       
+shg - brings the current window forward.
+subplot -  Create axes in tiled positions.     
+surf - 3D colored surface.                    
+surfl - 3D surface with lighting              
+title - adds a title on top of a graph         
+triplot - 2D plot of a triangulation
+trimesh  - 3D surface mesh based on a triangulation
+tripcolor - 2D pseudo color patches based on a triangulation        
+trisurf - 3D colored surface based on a triangulation
+trisurfl - 3D surface based on a triangulation, with lightning 
+whitebg - Set the default color scheme
+view - property for 3D graphs : sets the view point
+xlabel - adds a label on x axis                
+ylabel - adds a label on y axis                

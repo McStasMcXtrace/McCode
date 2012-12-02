@@ -1,0 +1,19 @@
+% Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
+
+
+\section{L\_monitor: The wavelength sensitive monitor}
+\label{s:L_monitor}
+\index{Monitors!Wavelength monitor}
+
+\component{L\_monitor}{System}{$x_{\rm min}$, $x_{\rm max}$, $y_{\rm min}$, $y_{\rm max}$, $n_{\rm chan}$, $\lambda_{\rm min}$, $\lambda_{\rm max}$, filename}{}{}
+
+
+The component {\bf L\_monitor} is very similar to
+{\bf TOF\_monitor} and {\bf E\_monitor}.
+This component is just sensitive to the neutron wavelength.
+The wavelength spectrum is output in a one-dimensional histogram.
+between $\lambda_{\rm min}$ and $\lambda_{\rm max}$ (measured in \AA ).
+
+As for the two other 1-dimensional monitors, this component outputs
+the total counts and a file with the histogram.
+

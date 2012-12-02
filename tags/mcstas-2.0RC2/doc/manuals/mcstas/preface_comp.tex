@@ -1,0 +1,108 @@
+% Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
+
+\addcontentsline{toc}{chapter}{\protect\numberline{}{Preface and acknowledgements}}
+\chapter*{Preface and acknowledgements}
+This document contains information on the neutron scattering components
+which are the building blocks for defining instruments
+in the Monte Carlo neutron
+ray-tracing program \MCS\ version \version . The initial
+release in October 1998 of version 1.0 was presented in Ref.~\cite{nn_10_20}.
+The reader of this
+document is not supposed to have specific knowledge of neutron scattering,
+but some basic understanding of physics is helpful in
+understanding the theoretical background for the component functionality.
+For details about setting up and running simulations, we refer to
+the \MCS\ system manual \cite{mcstasmanual}.
+We assume familiarity with the use of
+the C programming language.
+
+%We especially like to thank Kristian Nielsen for laying a solid foundation
+%for the \MCS\ system, which the authors of this manual benefit from daily.
+
+It is a pleasure to thank Dir.~Kurt N.~Clausen, PSI, for his continuous
+support to \MCS\ and for having initiated the project.
+Continuous support to \MCS\ has also come from Prof.~Robert McGreevy, ISIS.
+Apart from the authors of this manual, also Per-Olof \AA strand, NTNU Trondheim,
+has contributed to the development of the \MCS\ system.
+%Both he and our other collaborators, Henrik M.\ R\o nnow and Mark
+%Hagen have made major contributions to the project.  Also the
+%contributions from our test users, the students Asger Abrahamsen, Niels
+%Bech Christensen, and Erik Lauridsen, are gratefully acknowledged; they
+%gave us an excellent opportunity to pinpoint a vast amount of serious
+%errors in the test version.  Useful comments to this document itself
+%have been given by Bella Lake and Alan Tennant.
+We have further benefited
+from discussions with many other people in the neutron scattering
+community, too numerous to mention here.
+
+%Philipp Bernhardt contributed the two chopper components in
+%sections~\ref{s:chopper} and~\ref{s:first_chopper}. Emmanuel Farhi
+%contributed the components in sections~\ref{s:sourceoptimizer},
+%\ref{s:monitornd}, and~\ref{s:monitoroptimizer}.
+The users who contributed components to this manual are acknowledged
+as authors of the individual components. We encourage other
+users to contribute components with manual entries for inclusion in
+future versions of \MCS.
+
+In case of errors, questions, or suggestions,
+%or other need for support should arise,
+do not hesitate to
+contact the authors at \verb+mcstas@risoe.dk+
+or consult the \MCS\ home page~\cite{mcstas_webpage}. A special bug/request reporting service is available \cite{mczilla_webpage}.
+
+Important developments on the component side in \MCS\ version \version\
+as compared to version 1.4 (the last version of the component manual;
+then a section of the system manual) include
+
+\begin{itemize}
+\item{Validation of most components against analytical formula,
+and benchmarking in simple cases}
+\item{Newly added, realistic source components}
+  \begin{itemize}
+  \item \verb+ISIS_moderator+ ISIS source model based on MCNPX (D. Champion and S. Ansell, ISIS)
+  \item \verb+Virtual_tripoli4_input/output+ Trioli4 (similar to MCNP) files reading/writing (G. Campioni, LLB)
+  \item \verb+SNS_source+ SNS source model based on MCNPX (G. Granroth, SNS)
+  \item \verb+Source_gen+ ILL sources Maxwellian parameters (E. Farhi/N. Kernavanois/H. Bordallo, ILL)
+  \item \verb+ESS_moderator_short+ Calculated source model for the short pulse target station of the ESS project (K. Lefmann, Ris\o )
+  \item \verb+ESS_moderator_long+ Calculated source model for the long pulse target station of the ESS project (K. Lefmann, Ris\o )
+  \end{itemize}
+\item{Newly added, optical components}
+  \begin{itemize}
+  \item \verb+Radial_collimator+ Radial collimator with both approximated and exact options (E. Farhi, ILL)
+  \item \verb+FermiChopper+ and \verb+Vitess_ChopperFermi+ Two Fermi Chopper components (M. Poehlmann, G. Zsigmond, ILL and PSI)
+  \item \verb+Guide_tapering+ A rectangular tapered guide (U. Filges, PSI)
+  \item \verb+Guide_curved+  Non-focusing curved neutron guide (R. Stewart, ILL)
+  \end{itemize}
+\item{A suite of sample components}
+  \begin{itemize}
+  \item \verb+Inelastic_Incoherent+ Inelastic incoherent sample with quasielastic and elastic contributions (K. Lefmann, Ris\o)
+  \item \verb+Phonon_simple+ An isotropic acoustic phonon (K. Lefmann, Ris\o)
+  \item \verb+PowderN+. N lines powder diffraction (P.K. Willendrup, Ris\o)
+  \item \verb+Sans_spheres+ hard spheres in thin solution, mono disperse (L. Arleth, the Royal Veterinary and Agricultural University (DK), K. Lefmann, Ris\o )
+  \item \verb+Isotropic_Sqw+ isotropic inelastic sample (powder, liquid, glass)
+elastic/inelastic scattering from $S(q,\omega)$ data (E. Farhi, V. Hugouvieux, ILL)
+  \item \verb+SANS_*+ A collection of samples for SANS (H. Frielinghaus,  FZ-J\"ulich)
+  \end{itemize}
+\end{itemize}
+
+We would like to kindly thank all \MCS\ component contributors. This is the way we improve the software alltogether.
+
+The \MCS\ project has been supported by the European Union, initially
+through the XENNI program and the RTD ``Cool Neutrons'' program in FP4,
+In FP5, \MCS\ was supported strongly through the
+``SCANS'' program.
+Currently, in FP6, \MCS\ is supported through the Joint Research Activity
+``MCNSI'' under the Integrated Infrastructure Initiative ``NMI3'', see
+the WWW home pages~\cite{mcnsi_webpage,nmi3_webpage}.
+
+If you {\bf appreciate} this software, please subscribe to the \verb+neutron-mc@risoe.dk+ email list, send us a smiley message, and contribute to the package. We also encourage you to refer to this software when publishing results, with the following citations:
+\begin{itemize}
+\item{K. Lefmann and K. Nielsen, Neutron News {\bf 10/3}, 20, (1999).}
+\item{P. Willendrup, E. Farhi and K. Lefmann, Physica B, {\bf 350}, 735 (2004).}
+\end{itemize}
+
+
+
+
+
+

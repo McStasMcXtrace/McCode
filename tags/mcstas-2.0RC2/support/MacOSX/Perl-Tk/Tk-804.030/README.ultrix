@@ -1,0 +1,31 @@
+From  owner-ptk@guest.WPI.EDU  Wed Apr 10 00:03:47 1996
+Return-Path: <owner-ptk@guest.WPI.EDU>
+From: PVHP@LNS62.LNS.CORNELL.EDU ()
+Date: Tue, 09 Apr 1996 19:00:12 -0500 (EST)
+Subject: Re: Compiling Tk-b9.01 under Ultrix 4.2
+To: farhad@math.ku.dk
+Cc: ptk@guest.WPI.EDU
+Message-Id: <01I3CJJC43Q08X5ACP@LNS62.LNS.CORNELL.EDU>
+X-Vms-To: IN%"farhad@math.ku.dk"
+X-Vms-Cc: IN%"ptk@guest.WPI.EDU"
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+Sender: owner-ptk@guest.WPI.EDU
+Precedence: bulk
+
+I did use MakeMaker on ultrix to build tkperl. I changed the line in
+Makefile.PL that reads:
+
+'LIBS'    => ["$xlib -lX11 -lpt -lsocket -lnsl -lm"],
+
+to read:
+
+'LIBS'    => ["$xlib -lX11 -lpt -lsocket -lnsl -lm -ldnet"],
+
+as we had a newer X11 in /usr/local that needed the DECnet protocol linking.
+This was with Tk-b11 by the way.
+
+Peter Prymmer
+pvhp@lns62.lns.cornell.edu
+
+
+

@@ -1,0 +1,20 @@
+
+=head1 NAME
+
+Tk::widgets - preload widget classes
+
+=for pm Tk/widgets.pm
+
+=for category Implementation
+
+=head1 SYNOPSIS
+
+  use Tk::widgets qw(Button Label Frame);
+
+=head1 DESCRIPTION
+
+Does a 'require Tk::Foo' for each 'Foo' in the list.
+May speed startup by avoiding AUTOLOADs.
+
+=cut
+

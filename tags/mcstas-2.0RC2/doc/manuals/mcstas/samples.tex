@@ -1,0 +1,206 @@
+\chapter{Samples}
+\index{Library!Components!samples}
+\index{Samples|textbf}
+\label{c:samples}
+
+This class of components models the sample of the experiment.
+This is by far the most challenging part of a neutron scattering
+instrument to model. However, for purpose of simulating
+instrument performance, details of the samples are rather unimportant,
+allowing for simple approximations. On the contrary, for full
+virtual experiments it is of importance to have realistic and
+detailed sample descriptions. \MCS\ contains both simple and detailed
+samples.
+
+We first consider incoherent scattering. The simple component {\bf V-sample}
+performs both incoherent scattering and absorption.
+
+An important component class is elastic Bragg scattering from an ideal powder.
+The component {\bf PowderN} models a powder scatterer with reflections
+given in an input file. To scatter on a single Bragg peak, the {\bf Powder1} component may be used.
+The component includes absorption, incoherent scattering, direct beam
+transmission and can assume \emph{concentric} shape, i.e. can be used
+for modelling sample enviroments.
+
+Next type is Bragg scattering from single crystals.
+The simplest single crystals are in fact the monochromator components
+like {\bf Monochromator\_flat}, presented in section \ref{s:monochromator_flat}.
+The monochromators are models of a thin mosaic crystal
+with a single scattering vector perpendicular to the surface.
+Much more advanced, the component {\bf Single\_crystal}
+is a general single crystal sample (with multiple scattering) that allows
+the input of an arbitrary unit cell and a list of structure factors, read
+from a LAZY / Crystallographica file.
+This component also allows anisotropic mosaicity
+and $\Delta d/d$ lattice space variation.
+
+Isotropic small-angle scattering is simulated in {\bf Sans\_Spheres},
+which models scattering from a collection of hard spheres (dilute colloids).
+
+Inelastic scattering from a dispersion is exemplified by
+the component {\bf Phonon\_simple}, which models
+scattering from a single acoustic phonon branch.
+
+For a more general sample model, the {\bf Isotropic\_Sqw} component
+is able to simulate all kinds of isotropic materials:
+Liquids, glasses, polymers, powders, etc, with $S(q,\omega)$ table
+specified by an input file.
+Physical processes include coherent/incoherent scattering,
+both elastic and inelastic, with absorption and multiple scattering.
+Moreover, this component may be used concentrically,
+to model a sample environment.
+Thus it may handle most samples except single crystals.
+
+\begin{table}
+  \begin{center}
+  {\let\my=\\
+    \begin{tabular}{|c|cc|cc|c|c|}
+    \hline
+    Sample        & \multicolumn{2}{c|}{Coherent} & \multicolumn{2}{c|}{Incoherent} &&\\
+    Process       & Elastic & Inelastic & Elastic & Inelastic & Absorption & Multi. Scatt.\\
+    \hline
+    Phonon\_simple&         & X         &         &           & 1 & \\
+    Isotropic\_Sqw&  X      & X         & X       & X         & 2 & X \\
+    Powder1       &  1 line &           & X       &           & 1 & \\
+    PowderN       &  N lines&           & X       &           & 1 & \\
+    Sans\_spheres &  colloid&           &         &           & 1 & \\
+    Single\_crystal& X      &           & X       &           & 2 & X \\
+    V\_sample     &         &           & X       & QE broad. & 1 & \\
+    Tunneling\_sample &     & X         & X       & QE broad. & 1 & \\
+    \hline
+    \end{tabular}
+    \caption{Processes implemented in sample components. Absorption: 1=single only, 2=with secondary}
+    \label{t:sample-process}
+  }
+  \end{center}
+\end{table}
+\subsection{Neutron scattering notation}
+In sample components, we use the notation common for neutron scattering,
+where the wave vector transfer is denoted the {\em scattering vector}
+\begin{equation} \label{eq:q-transfer}
+{\bf q} \equiv {\bf k}_{\rm i} - {\bf k}_{\rm f} .
+\end{equation}
+In analygo, the {\em energy transfer} is given by
+\begin{equation} \label{eq:w-transfer}
+\hbar \omega \equiv E_{\rm i} - E_{\rm f} =
+\frac{\hbar^2}{2 m_{\rm n}} \left( k_{\rm i}^2 - k_{\rm f}^2 \right) .
+\end{equation}
+
+\subsection{Weight transformation in samples; focusing}
+
+Within many samples,
+the incident beam is attenuated by scattering and absorption,
+so that the illumination varies considerably throughout the sample.
+For single crystals, this phenomenon is known as
+{\em secondary extinction} \cite{bacon}, but the effect is
+important for all samples.
+In analytical treatments, attenuation is difficult to deal with,
+and is thus often ignored, making a {\em thin sample approximation}.
+In Monte Carlo simulations, the beam attenuation
+is easily taken care of, as will be shown below.
+In the description, we ignore multiple scattering, which is however
+ implemented in some sample components.
+
+The sample has an absorption cross section per unit cell of
+$\sigma_c^a$ and a scattering cross section per unit cell
+of $\sigma_c^s$. The neutron path length
+in the sample before the scattering event is denoted by $l_1$, and
+the path length within the sample after the scattering
+is denoted by $l_2$, see figure \ref{powderFig}.
+We then define the inverse penetration lengths as
+$\mu^s = \sigma_c^s / V_c$ and $\mu^a = \sigma_c^a / V_c$, where
+$V_c$ is the volume of a unit cell. Physically, the attenuation
+along this path follows
+\begin{equation}
+f_{\rm att}(l) = \exp(- l (\mu^s + \mu^a)) ,
+\end{equation}
+where the normalization $f_{\rm att}(0)=1$.
+
+\begin{figure}
+  \begin{center}
+    \psfrag{l1}{$l_1$}
+    \psfrag{l2}{$l_2$}
+    \psfrag{lfull}{$l_{\rm full}$}
+    \includegraphics[width=0.6\textwidth]{figures/scatter.eps}
+  \end{center}
+\caption{The geometry of a scattering event within a powder sample.}
+\label{powderFig}
+\end{figure}
+
+The probability for a given neutron ray to be scattered from within the interval
+$[ l_1 ; l_1+dl ]$ will be
+\begin{equation}
+P(l_1) dl = \mu^s f_{\rm att}(l_1) dl ,
+\end{equation}
+while the probability for a neutron to be scattered from within
+this interval into the solid angle $\Omega$ {\em and}
+not being scattered further
+or absorbed on the way out of the sample is
+\begin{equation}
+P(l_1,\Omega) dl d\Omega =
+  \mu^s f_{\rm att}(l_1) f_{\rm att}(l_2) \gamma(\Omega) d\Omega dl ,
+\end{equation}
+where $\gamma(\Omega)$ is the directional distribution
+of the scattered neutrons, and $l_2$ is determined by
+Monte Carlo chocies of $l_1$, $\Omega$,
+and from the sample geometry, see e.g. figure \ref{powderFig}.
+
+In our Monte-Carlo simulations, we may choose the scattering
+parameters by making a Monte-Carlo choice of $l_1$ and $\Omega$
+from a distribution different from $P(l_1,\Omega)$.
+By doing this, we must adjust $\pi_i$ according to
+the probability transformation rule (\ref{probrule}).
+If we {\em e.g.}\ choose the scattering depth, $l_1$,
+from a flat distribution in $[ 0 ; l_{\rm full} ]$,
+and choose the directional dependence from $g(\Omega)$,
+we have a Monte Carlo probability
+\begin{equation}
+f(l_1,\Omega) = g(\Omega) / l_{\rm full} ,
+\end{equation}
+$l_{\rm full}$ is here the path length through the sample
+as taken by a non-scattered neutron (although we here
+assume that all simulated neutrons are being scattered).
+According to (\ref{probrule}), the neutron weight factor
+is now adjusted by the amount
+\begin{equation}     \label{sampleprob}
+\pi_i(l_1,\Omega) =
+ \mu^s l_{\rm full} \exp \left[ - (l_1+l_2) (\mu^a + \mu^s) \right]
+  \frac{\gamma(\Omega)}{g(\Omega)} .
+\end{equation}
+
+In analogy with the source components, it is possible to define
+"interesting" directions for the scattering.
+One will then try to focus the scattered neutrons,
+choosing a $g(\Omega)$, which peaks around these directions.
+To do this, one uses (\ref{sampleprob}), where the
+fraction $\gamma(\Omega)/g(\Omega)$ corrects for the focusing.
+One must choose a proper distribution so that
+$g(\Omega) > 0$ in every interesting direction. If this is not the
+case, the Monte Carlo simulation gives incorrect results.
+All samples have been constructed with a focusing
+and a non-focusing option.
+
+
+\subsection{Future development of sample components}
+There is still room for much more development of functionality in
+\MCS\ samples.
+
+A more general SANS sample is under development.
+In addition, a reflectometry sample will soon be developed. In the mean time, you may use the \verb+SiC+ contributed component.
+
+In general, all samples are assumed to be homogeneous. There would also be
+potential in developing an inhomogeneous sample, e.g. with
+spatially varying lattice constant, relevant for stress/strain scanners.
+Inhomogeneously absorbing sample for tomography could also be possible.
+Further, no polarization effects are yet taken into account in any
+of the samples.
+
+
+\input{vanadium.tex}         \newpage
+\input{tunneling.tex}        \newpage
+\input{powderN.tex}          \newpage
+\input{Single_crystal.tex}   \newpage
+\input{sans.tex}             \newpage
+\input{phonon.tex}           \newpage
+%\input{LSCO.tex}            \newpage
+\input{isotropic_sqw.tex}
