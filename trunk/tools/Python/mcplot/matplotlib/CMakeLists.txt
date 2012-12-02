@@ -25,10 +25,14 @@ endif()
 message("Enabling ${FLAVOR} flavor")
 setup_mccode_mkdist("${FLAVOR}")
 
-
 set(TOOLS_NAME "${FLAVOR}-tools-python-mcplot-matplotlib-${MCCODE_VERSION}")
-set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
 
+if(WINDOWS)
+  # Windows needs special handling of this path...
+  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
+else()
+  set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
+endif()
 
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
