@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if [ "x$1" = "x" ]; then
+    # No arguments
+    echo Please provide one argument,e.g : $0 2.0
+    exit 1;
+fi
+
+# 64-bit Mac OS
+./mkdist mcxtrace $1 "" "" mac -- OSXpkg
+./mkdist mcxtrace-comps $1 "" "" mac -- OSXpkg
+./mkdist mcxtrace-tools-Perl $1 tools/Legacy-Perl/ "" mac -- OSXpkg
+./mkdist mcxtrace-tools-Python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mac -- OSXpkg
+./mkdist mcxtrace-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac -- OSXpkg
+./mkdist mcxtrace-tools-Python-mcrun $1 tools/Python/mcrun/ "" mac -- OSXpkg
