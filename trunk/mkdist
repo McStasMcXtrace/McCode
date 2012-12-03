@@ -337,21 +337,22 @@ simple_cpack_file() {
         simple_cpack "${GEN}" "${WORK}" || exit 1;
 
         # pull out packed file and clean up
-        find "${WORK}" -name "*${HINT}${EXT}" -exec mv {} "${OUT}" \; 
-	
-	# If this is PackageMaker, the postinst script needs special handing
-	if [ "${GEN}" = "PackageMaker" ]; then
-	    POSTINST=`find "${WORK}" -name postinst`;
-	    cp "${POSTINST}" "${OUT}/Contents/Resources/postinstall";
-	    cp "${POSTINST}" "${OUT}/Contents/Resources/postupgrade";
-	    chmod a+x "${OUT}/Contents/Resources/postinstall";
-	    chmod a+x "${OUT}/Contents/Resources/postupgrade";
-	    OSXVER=`sw_vers | grep ProductVersion | awk '{print $2}' |cut -f1-2 -d.`
-	    mv "${OUT}" "${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}-${OSXVER}${EXT}"
-	    OUT="${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}-${OSXVER}${EXT}"
-	fi
+        find "${WORK}" -name "*${HINT}${EXT}" -exec mv {} "${OUT}" \;
 
-	rm -rf "${WORK}" || exit 1;
+	      # If this is PackageMaker, the postinst script needs special handing
+	      if [ "${GEN}" = "PackageMaker" ]; then
+	          POSTINST=`find "${WORK}" -name postinst`;
+	          cp "${POSTINST}" "${OUT}/Contents/Resources/postinstall";
+	          cp "${POSTINST}" "${OUT}/Contents/Resources/postupgrade";
+	          chmod a+x "${OUT}/Contents/Resources/postinstall";
+	          chmod a+x "${OUT}/Contents/Resources/postupgrade";
+	          OSXVER=`sw_vers | grep ProductVersion | awk '{print $2}' |cut -f1-2 -d.`
+	          mv "${OUT}" "${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}-${OSXVER}${EXT}"
+	          OUT="${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}-${OSXVER}${EXT}"
+	      fi
+
+	      rm -rf "${WORK}" || exit 1;
+
         echo "Build: ${OUT}";
     )
 }
