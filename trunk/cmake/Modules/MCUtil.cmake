@@ -197,7 +197,7 @@ macro(setup_mccode_mkdist FLAVOR)
       work/support/postinst)
 
     # Set architecture
-    if(${ARCH} EQUAL 64)
+    if(ARCH EQUAL 64)
       set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "x86_64")
       set(CPACK_RPM_PACKAGE_ARCHITECTURE    "x86_64")
     else()
