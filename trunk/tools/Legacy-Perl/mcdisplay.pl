@@ -85,7 +85,7 @@ sub read_instrument {
             $st = 1;
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
               # Initialize matlab struct...
-              write_process("addpath('$MCSTAS::sys_dir/tools/matlab');\n");
+              write_process("addpath('$MCSTAS::perl_dir/../matlab');\n");
               write_process("mcdisplay('Init');\n");
               write_process("global INSTRUMENT;\n");
               write_process("INSTRUMENT.descr='$sim';\n");
@@ -95,7 +95,7 @@ sub read_instrument {
             }
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Initialize scilab struct...
-              write_process("exec('$MCSTAS::sys_dir/tools/scilab/mcdisplay.sci',-1);\n");
+              write_process("exec('$MCSTAS::perl_dir/../scilab/mcdisplay.sci',-1);\n");
               write_process("INSTRUMENT.descr='$sim';\n");
               # Possibly, set firstcomp + lastcomp
               if ($first) { write_process("INSTRUMENT.firstcomp='$first';\n"); }
