@@ -102,6 +102,8 @@ Changes in McStas v2.0RC2, November 30th, 2012
    - RPM-based Linux systems (including Scientific Linux, CentOS etc.)
      * Versions: 32 and 64 bit
      * Remark: Dependencies resolved through OS package system
+     * Remark: For most of these distros you will need to enable the RPMforge and EPEL repositories.
+       	       See e.g.: http://www.howtoforge.com/perfect-server-centos-6.3-x86_64-nginx-courier-ispconfig-3-p3
      * Remark: We provide RPM or SRPM packages for dependencies that are not in the OS'es by default
      * Remark: We will soon provide an RPM repository for your yum
      * Remark: The 'python-chaco' dependency for the chaco-mcplot is not easily available here
