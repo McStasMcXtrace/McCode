@@ -309,18 +309,20 @@ simple_cpack() {
         prepare_cpack "${DEST}";
 
         # Choose architecture for CPack
-        ARCH="";
-        case "${CHAIN}" in
-            "linux32")
-                ARCH="setarch i686";
+        CMD="";
+        case "${GEN},${CHAIN}" in
+            "RPM,linux32")
+                CMD="setarch i686";
                 ;;
-            "linux64")
-                ARCH="setarch x86_64";
+            "RPM,linux64")
+                CMD="setarch x86_64";
                 ;;
         esac
 
+        echo ""
+
         cd "${DEST}" &&
-        ${ARCH} cpack -G "${GEN}";
+        ${CMD} cpack -G "${GEN}";
     )
 }
 
