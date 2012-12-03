@@ -37,7 +37,12 @@ macro(setup_mccode_mkdist FLAVOR)
     set(CMAKE_C_FLAGS  "-m32")
     set(CMAKE_C_LFLAGS "-m32")
   endif()
-  message("Compiling for ${ARCH}-bit ${CMAKE_SYSTEM_NAME}")
+
+  if(DEFINED ARCH)
+    message(STATUS "Compiling for ${ARCH}-bit ${CMAKE_SYSTEM_NAME}")
+  else()
+    message(STATUS "Compiling for ${CMAKE_SYSTEM_NAME}")
+  endif()
 
 
   # Set macros
