@@ -92,6 +92,18 @@ get_absolute() {
     )
 }
 
+# Sanitise name and version (lowercase)
+NAME_SANE=$(echo "${NAME}" | tr '[:upper:]' '[:lower:]');
+if ! [ "x${NAME}" = "x${NAME_SANE}" ]; then
+    echo "!! Changing name from '${NAME}' to '${NAME_SANE}'";
+    NAME="${NAME_SANE}";
+fi
+MCCODE_VERSION_SANE=$(echo "${MCCODE_VERSION}" | tr '[:upper:]' '[:lower:]');
+if ! [ "x${MCCODE_VERSION}" = "x${MCCODE_VERSION_SANE}" ]; then
+    echo "!! Changing version from '${MCCODE_VERSION}'to '${MCCODE_VERSION_SANE}'";
+    MCCODE_VERSION="${MCCODE_VERSION_SANE}";
+fi
+
 
 # Set default version
 if [ "x${MCCODE_VERSION}" = "x" ]; then
