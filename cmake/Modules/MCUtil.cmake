@@ -32,10 +32,16 @@ macro(setup_mccode_mkdist FLAVOR)
     set(WINDOWS true)
   endif()
 
+  # Set Nexus linking flag
+  if(USE_NEXUS)
+    set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS}  -lNeXus")
+    set(CMAKE_C_LFLAGS "${CMAKE_C_LFLAGS} -lNeXus")
+  endif()
+
   # Set 32-bit flags
   if(ARCH EQUAL 32)
     set(CMAKE_C_FLAGS  "-m32")
-    set(CMAKE_C_LFLAGS "-m32")
+    set(CMAKE_C_LFLAGS "${CMAKE_C_LFLAGS} -m32")
   endif()
 
   if(DEFINED ARCH)
