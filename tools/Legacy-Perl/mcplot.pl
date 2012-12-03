@@ -195,7 +195,7 @@ if ($plotter =~ /Scilab/i && $MCSTAS::mcstas_config{'SCILAB'} ne "no") {
   autoflush $fh 1;
   # write the scilab script
   printf $fh "if execstr('stacksize(1e8);','errcatch') then execstr('stacksize(1e7);','errcatch'); end\n";
-  printf $fh "exec('$MCSTAS::sys_dir/tools/scilab/mcplot.sci',-1);\n";
+  printf $fh "exec('$MCSTAS::perl_dir/../scilab/mcplot.sci',-1);\n";
   printf $fh "global McPlotTempFile;\nMcPlotTempFile='$tmp_file';\n";
   printf $fh "s=mcplot('$file','$passed_arg_str');\n";
   printf $fh "mprintf('s=mcplot(''$file'',''$passed_arg_str'',)\\n');\n";
@@ -215,7 +215,7 @@ if ($plotter =~ /Scilab/i && $MCSTAS::mcstas_config{'SCILAB'} ne "no") {
 } elsif ($plotter =~ /Matlab/i && $MCSTAS::mcstas_config{'MATLAB'} ne "no") {
   my $tosend = "$MCSTAS::mcstas_config{'MATLAB'} ";
   if ($nowindow) { $tosend .= "-nojvm -nosplash "; }
-  $tosend .= "-r \"addpath('$MCSTAS::sys_dir/tools/matlab');addpath(pwd);s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');";
+  $tosend .= "-r \"addpath('$MCSTAS::perl_dir/../matlab');addpath(pwd);s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');";
   $tosend .= "disp('s=mcplot(''$file'',''$passed_arg_str $passed_arg_str_quit'',''$inspect'')');";
 
   if ($passed_arg_str_quit) {
