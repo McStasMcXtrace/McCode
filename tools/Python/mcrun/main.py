@@ -239,6 +239,11 @@ def get_parameters(options):
     return (fixed_params, intervals)
 
 
+def clean_quotes(string):
+    ''' Remove all leading and ending quotes (" and \') '''
+    return string.strip('"' + "'")
+
+
 def main():
     ''' Main routine '''
     setupLogger()
@@ -260,12 +265,12 @@ def main():
         parser.exit()
 
     # swap .out for .instr to avoid parsing binary file
-    instr = args[0]
+    instr = clean_quotes(args[0])
     if instr.endswith(".out") or instr.endswith(".exe"):
         instr = instr[:-4] + ".instr"
 
     options.instr = instr
-    options.params = args[1:]
+    options.params = map(clean_quotes, args[1:])
 
     # Fill out extra information
     expand_options(options)
