@@ -76,13 +76,13 @@ function update_defaults(sim) {
             default_unit = defaults[sim][param]["unit"],
             default_msg  = defaults[sim][param]["msg"];
 
-        lbl.html(param + ":").attr("for", param).attr("id", "lbl"+param).css('width', '250px');
+        lbl.html(param + ":").attr("for", param).attr("id", "lbl"+param).css('width', '300px');
         lbld.html("(" + default_unit + ") Default: " + default_val)
             .css({
                      "float": "right",
                      "font-size": "9pt",
                      "font-family": "monotype",
-                     "width": "150px",
+                     "width": "200px",
                      "height": "30px"
                  });
         conm.html($('<i>').append(default_msg))
