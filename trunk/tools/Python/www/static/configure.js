@@ -74,20 +74,21 @@ function update_defaults(sim) {
             default_unit = defaults[sim][param]["unit"],
             default_msg  = defaults[sim][param]["msg"];
 
-        lbl.html(param + ":").attr("for", param).attr("id", "lbl"+param);
+        lbl.html(param + ":").attr("for", param).attr("id", "lbl"+param).css('width', '150px');
         lbld.html(default_val + " " + default_unit + "<i>, " + default_msg + "</i>")
             .attr("title", default_msg)
             .css({
                      "float": "right",
+                     "font-size": "9pt",
                      "font-family": "monotype",
                      "display": "block",
-                     "width": "180px",
-                     "height": "20px",
+                     "width": "350px",
+                     "height": "30px",
                      "overflow": "hidden",
                      "white-space": "nowrap"
                  });
 
-        inp.attr("name", param).attr("id", param);
+        inp.attr("name", param).attr("id", param).css('width', '150px');
         // choose between user value or default
         if (chosen[sim]        != undefined &&
             chosen[sim][param] != undefined) {
