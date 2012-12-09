@@ -34,7 +34,7 @@ select#sim {
 /* } */
 
 form {
-    background: #bcb;
+    background: #8ADCE6;
     -moz-border-radius: 10px;
     -webkit-border-radius: 10px;
     border-radius: 10px;
@@ -52,7 +52,7 @@ form fieldset:last-of-type {
 }
 
 form legend {
-    color: #003366;
+    color: #000000;
     font-size: 16px;
     font-weight: bold;
     text-shadow: 0 1px 1px #c0d576;
@@ -60,7 +60,7 @@ form legend {
 
 
 form ol li {
-    background: #b9cf6a;
+    background: #8ADCE6;
     background: rgba(255,255,255,.3);
     border-color: #e3ebc3;
     border-color: rgba(255,255,255,.6);
