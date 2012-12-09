@@ -30,13 +30,17 @@ def read_params(instr_file):
 
     # Read parameters
     params = {}
+    priority = 0
     for line in simf:
+        # Leave some space for later adjustment (defines order on webpage)
+        priority += 10
+        # Extract parameter
         line = line.lstrip('*').strip()
         match = re.match(r'([^:]+):\s*\[([^\]]*)\]\s*(.*)$', line)
         if not match:
             break
         name, unit, msg = match.groups()
-        params[name] = (unit, msg)
+        params[name] = (priority, unit, msg)
 
     return params
 
@@ -69,7 +73,7 @@ def info(bin):
     map(lambda s: defaults.update(dict([RE_default.match(s).groups()])),
         filter(lambda x: 'Param:' in x, lines))
 
-    # Extract unit information and description messages
+    # Extract priority, unit information and description messages
     info = read_params('%s.instr' % bin[:-1*len('.out')])
 
     # Combine types and defaults
@@ -90,7 +94,8 @@ def info(bin):
         else:
             [p] = fetch(Param, name=param)
 
-        unit, msg = info[param]
+        priority, unit, msg = info[param]
+        p.priority = priority
         p.unit = unit
         p.msg = msg
         p.default_value = convertfns[types[param]](defaults[param])
