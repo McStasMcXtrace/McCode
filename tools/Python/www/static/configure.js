@@ -69,9 +69,23 @@ function update_defaults(sim) {
             lbl  = $("<label>"),
             lbld = $("<label>"),
             inp  = $("<input>");
+
+        var default_val = defaults[sim][param]["value"],
+            default_unit = defaults[sim][param]["unit"],
+            default_msg  = defaults[sim][param]["msg"];
+
         lbl.html(param + ":").attr("for", param).attr("id", "lbl"+param);
-        lbld.html("[ " + defaults[sim][param] + " ]")
-            .css("float", "right").css("font-family", "monotype");
+        lbld.html(default_val + " " + default_unit + "<i>, " + default_msg + "</i>")
+            .attr("title", default_msg)
+            .css({
+                     "float": "right",
+                     "font-family": "monotype",
+                     "display": "block",
+                     "width": "180px",
+                     "height": "20px",
+                     "overflow": "hidden",
+                     "white-space": "nowrap"
+                 });
 
         inp.attr("name", param).attr("id", param);
         // choose between user value or default
@@ -79,7 +93,7 @@ function update_defaults(sim) {
             chosen[sim][param] != undefined) {
             inp.val(chosen[sim][param]);
         } else {
-            inp.val(defaults[sim][param]);
+            inp.val(defaults[sim][param]["value"]);
         }
         // add event listeners
         inp.bind("keyup", function() {

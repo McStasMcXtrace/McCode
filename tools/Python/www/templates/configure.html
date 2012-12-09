@@ -28,7 +28,11 @@
       for sim in sims %}
       {{ sim.name|tojson|safe }}: { {%
         for param in sim.params
-        %}{{ param.param.name|tojson|safe }}: {{ param.value|tojson|safe }},{%
+        %}{{ param.name|tojson|safe }}: {
+    "value": {{ param.default_value|tojson|safe }},
+    "unit" : {{ param.unit|tojson|safe }},
+    "msg"  : {{ param.msg |tojson|safe }} },
+    {%
         endfor
       %} },{%
       endfor
