@@ -34,7 +34,7 @@ class Simulation(ModelBase):
     __tablename__ = 'simulation'
     id     = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name   = db.Column(db.String(64))
-    params = db.relationship('Param', backref='sim', lazy=False)
+    params = db.relationship('Param', backref='sim', lazy=False, order_by='Param.priority')
     jobs   = db.relationship('Job', backref='sim')
     runs   = db.relationship('SimRun', backref='sim')
 
@@ -88,7 +88,10 @@ class SimRun(ModelBase):
 class Param(ModelBase):
     ''' A parameter '''
     __tablename__ = 'param'
-    id   = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+
+    priority = db.Column(db.Integer)
+
     name = db.Column(db.String(127))
     unit = db.Column(db.String(127))
     msg  = db.Column(db.String(127))
