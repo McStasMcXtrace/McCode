@@ -9,7 +9,7 @@ import os
 from config import MAX_RAY_SAMPLES, MAX_SCAN_POINTS
 
 from app import app, db, db_session, SessionMaker, ModelBase
-from models import Job, Simulation, SimRun, Param, ParamValue, ParamDefault, User
+from models import Job, Simulation, SimRun, Param, ParamValue, User
 
 from util import new_id
 from flaskutil import skip, templated, with_nonce, get_nonce, check_nonce, \
@@ -20,7 +20,7 @@ def convert_type(default, str_value):
     # tested types: str and float
     if ',' in str_value:
         return map(lambda elem: convert_type(default, elem), str_value.split(','))
-    return type(default.value)(str_value)
+    return type(default)(str_value)
 
 
 @app.route('/')
@@ -97,7 +97,8 @@ def configurePOST(jobid, user):
             v = f()
             oks.extend([name])
             return v
-        except:
+        except Exception,e:
+            print e
             errors.extend([name])
             return old
 
@@ -134,7 +135,6 @@ def configurePOST(jobid, user):
     for name in skip(('__nonce', 'sim', 'seed', 'samples', 'npoints'), form):
         str_value = form[name]
         param  = Param.query.filter_by(name=name).one()
-        paramd = ParamDefault.query.filter_by(param_id=param.id, sim_id=sim.id).one()
 
         # lookup parameter value
         oldP = ParamValue.query.filter_by(job_id=job.id, param_id=param.id)
@@ -142,11 +142,11 @@ def configurePOST(jobid, user):
 
         # pick parameter value if present or use default
         if oldP is None:
-            old = paramd.value
+            old = param.default_value
         else:
             old = oldP.value
 
-        cvalue = ok(name, old, lambda : convert_type(paramd, str_value))
+        cvalue = ok(name, old, lambda : convert_type(param.default_value, str_value))
 
         valueQ = ParamValue.query.filter_by(job_id=job.id, param_id=param.id)
         pvalue = one_or_none(valueQ)
@@ -189,10 +189,10 @@ def simulatePOST(jobid, user):
                "_npoints": job.npoints
                }
     # filter params by what the simulation expects (needed!)
-    valid = set(pd.param.name for pd in sim.params)
+    valid = set(pd.name for pd in sim.params)
     params.update(dict(
-        (p.param.name, p.value) for p in job.params
-        if p.param.name in valid))
+        (pv.param.name, pv.value) for pv in job.params
+        if pv.param.name in valid))
     # create simulation run (for the worker to compute)
     run = SimRun(user=user, job=job, sim=sim, params=params)
     db_session.add(run)

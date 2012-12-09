@@ -34,7 +34,7 @@ class Simulation(ModelBase):
     __tablename__ = 'simulation'
     id     = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name   = db.Column(db.String(64))
-    params = db.relationship('ParamDefault', backref='sim', lazy=False)
+    params = db.relationship('Param', backref='sim', lazy=False)
     jobs   = db.relationship('Job', backref='sim')
     runs   = db.relationship('SimRun', backref='sim')
 
@@ -88,38 +88,30 @@ class SimRun(ModelBase):
 class Param(ModelBase):
     ''' A parameter '''
     __tablename__ = 'param'
-    id       = db.Column(db.Integer, primary_key=True)
-    name     = db.Column(db.String(128))
-    defaults = db.relationship('ParamDefault', lazy=False)
+    id   = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(127))
+    unit = db.Column(db.String(127))
+    msg  = db.Column(db.String(127))
+
+    str_default = db.Column(db.String(255))
+
+    sim_id = db.Column(db.ForeignKey('simulation.id'))
+
     values   = db.relationship('ParamValue', backref='param', lazy=False)
 
-    def __init__(self, name):
+    def __init__(self, sim, name):
+        self.sim_id = sim.id
         self.name = name
-
-class ParamDefault(ModelBase):
-    ''' A parameter default '''
-    __tablename__ = 'param_default'
-    id        = db.Column(db.Integer, primary_key=True)
-    param_id  = db.Column(db.Integer, db.ForeignKey('param.id'))
-    str_value = db.Column(db.String(255))
-    sim_id    = db.Column(db.ForeignKey('simulation.id'))
-
-    param = db.relationship('Param', back_populates='defaults', lazy=False)
-
-    def __init__(self, param, value, sim):
-        self.param_id = param.id
-        self.value    = value
-        self.sim_id   = sim.id
 
     def simulation(self):
         return Simulation.query.filter_by(id=self.sim_id).one()
 
     @property
-    def value(self):
-        return loads(self.str_value)
-    @value.setter
-    def value(self, v):
-        self.str_value = dumps(v)
+    def default_value(self):
+        return loads(self.str_default)
+    @default_value.setter
+    def default_value(self, val):
+        self.str_default = dumps(val)
 
 
 class ParamValue(ModelBase):
@@ -139,5 +131,5 @@ class ParamValue(ModelBase):
     def value(self):
         return loads(self.str_value)
     @value.setter
-    def value(self, v):
-        self.str_value = dumps(v)
+    def value(self, val):
+        self.str_value = dumps(val)

@@ -1,5 +1,5 @@
 from app import db, db_session
-from models import Simulation, Param, ParamDefault
+from models import Simulation, Param
 
 from os.path import basename
 from commands import getstatusoutput
@@ -20,6 +20,27 @@ def exist(model, **kwargs):
     return fetch(model, **kwargs).count() > 0
 
 
+def read_params(instr_file):
+    simf = file(instr_file)
+
+    # Skip lines up to parameters
+    for line in simf:
+        if line.lstrip('*').strip().lower().startswith('%parameters'):
+            break
+
+    # Read parameters
+    params = {}
+    for line in simf:
+        line = line.lstrip('*').strip()
+        match = re.match(r'([^:]+):\s*\[([^\]]*)\]\s*(.*)$', line)
+        if not match:
+            break
+        name, unit, msg = match.groups()
+        params[name] = (unit, msg)
+
+    return params
+
+
 def info(bin):
     # Insert new simulation
     sim_name = basename(bin)[:-1*len('.out')]
@@ -34,10 +55,7 @@ def info(bin):
         db_session.commit()
 
     # Delete old params
-    print sim.id
-    ParamDefault.query.filter_by(sim_id=sim.id).delete()
-    # db_session.delete(param)
-    db_session.commit()
+    print sim.id, sim_name
 
     # Get info from executable
     status, out = getstatusoutput('%s --info' % bin)
@@ -51,26 +69,31 @@ def info(bin):
     map(lambda s: defaults.update(dict([RE_default.match(s).groups()])),
         filter(lambda x: 'Param:' in x, lines))
 
+    # Extract unit information and description messages
+    info = read_params('%s.instr' % bin[:-1*len('.out')])
+
     # Combine types and defaults
-    params = dict((p, (types[p], defaults[p])) for p in types)
+    # params = dict((p, (types[p], defaults[p])) for p in types)
+
+    # Insert param default
+    convertfns = {'string' : lambda x: x,
+                  'double' : float
+                  }
 
     # Insert new params
-    for param in sorted(params):
-        if not exist(Param, name=param):
+    for param in sorted(types.keys()):
+        if not exist(Param, sim_id=sim.id, name=param):
             print 'new param: ', param
-            p = Param(name=param)
+            p = Param(sim=sim, name=param)
             db_session.add(p)
             db_session.commit()
         else:
             [p] = fetch(Param, name=param)
-        # Insert param default
-        convertfns = {'string' : lambda x: x,
-                      'double' : float
-                    }
-        f = convertfns[types[param]]
 
-        db_session.add(
-            ParamDefault(param=p, value=f(defaults[param]), sim=sim))
+        unit, msg = info[param]
+        p.unit = unit
+        p.msg = msg
+        p.default_value = convertfns[types[param]](defaults[param])
 
     # Commit work so far
     db_session.commit()
