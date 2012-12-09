@@ -76,9 +76,6 @@ def info(bin):
     # Extract priority, unit information and description messages
     info = read_params('%s.instr' % bin[:-1*len('.out')])
 
-    # Combine types and defaults
-    # params = dict((p, (types[p], defaults[p])) for p in types)
-
     # Insert param default
     convertfns = {'string' : lambda x: x,
                   'double' : float
