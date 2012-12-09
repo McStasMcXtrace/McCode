@@ -66,25 +66,32 @@ function update_defaults(sim) {
     // set new
     for(var param in defaults[sim]) {
         // container, label and input
-        var con  = $("<li>"),
+        var con  = $("<div>"),
             lbl  = $("<label>"),
             lbld = $("<label>"),
-            inp  = $("<input>");
+            inp  = $("<input>"),
+            conm = $("<div>");
 
         var default_val = defaults[sim][param]["value"],
             default_unit = defaults[sim][param]["unit"],
             default_msg  = defaults[sim][param]["msg"];
 
-        lbl.html(param + ":").attr("for", param).attr("id", "lbl"+param).css('width', '150px');
-        lbld.html(default_val + " " + default_unit + "<i>, " + default_msg + "</i>")
-            .attr("title", default_msg)
+        lbl.html(param + ":").attr("for", param).attr("id", "lbl"+param).css('width', '250px');
+        lbld.html("(" + default_unit + ") Default: " + default_val)
             .css({
                      "float": "right",
                      "font-size": "9pt",
                      "font-family": "monotype",
+                     "width": "150px",
+                     "height": "30px"
+                 });
+        conm.html($('<i>').append(default_msg))
+            .attr("title", default_msg)
+            .css({
+                     "font-size": "9pt",
+                     "font-family": "monotype",
                      "display": "block",
-                     "width": "350px",
-                     "height": "30px",
+                     "width": "650px",
                      "overflow": "hidden",
                      "white-space": "nowrap"
                  });
@@ -103,7 +110,7 @@ function update_defaults(sim) {
         });
         inp.bind("change", function() { set_changed(this); });
         // add to param list
-        ps.append(con.append(lbl, inp, lbld));
+        ps.append($('<li>').append(con.append(lbl, inp, lbld), conm));
     };
 }
 
