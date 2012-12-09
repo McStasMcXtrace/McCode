@@ -43,6 +43,7 @@ function is_scan() {
             scan = true;
             return false;
         }
+        return true;
     });
     return scan;
 }
