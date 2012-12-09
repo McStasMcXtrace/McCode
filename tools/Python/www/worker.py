@@ -21,14 +21,20 @@ STACKTRACE = '''Python stack-trace:
 %s'''
 
 
+def popenwait(args, cwd, log):
+    pid = Popen(args, cwd=cwd, stdout=PIPE, stderr=PIPE)
+    out, err = pid.communicate()
+    log(out, err)
+    return out
+
+
 # try to use new R plotter instead of mcplot
-def mcplot(simfile, outfile, logy=False):
+def mcplotwait(simfile, outfile, log, logy=False):
     ''' Plot a mcstas.sim file with mcplot '''
-    pid = Popen(["mcplot", "-%s" % IMAGE_FORMAT] +
-                (logy and ["-log"] or []) +
-                [basename(simfile)],
-                cwd=dirname(simfile))
-    pid.communicate()
+    args = (["mcplot", "-%s" % IMAGE_FORMAT] +
+            (logy and ["-log"] or []) +
+            [basename(simfile)])
+    popenwait(args, cwd=dirname(simfile), log=log)
     os.rename("%s.%s" % (simfile, IMAGE_FORMAT) , outfile)
 
 try:
@@ -48,17 +54,14 @@ except Exception, e:
     plot = mcplot
 
 
-def display(instr, params, outfile, fmt="png"):
+def display(instr, params, outfile, log, fmt="png"):
     ''' Display instrument '''
     # VRML needs --format, which does not seem to work with gif/ps
     fmt_arg = fmt == 'vrml' and '--format=vrml' or '-'+fmt
-    pid = Popen(["mcdisplay", "-k", "--save", fmt_arg,
-                 basename(instr),
-                 "-n", str(1) # precision (iterations)
-                 ] + params,
-                cwd=dirname(instr))
-    (out, err) = pid.communicate()
-    if err: print err
+    args = (["mcdisplay", "-k", "--save", fmt_arg, basename(instr),
+             "-n", str(1) # precision (iterations)
+             ] + params)
+    popenwait(args, cwd=dirname(instr), log=log)
     # VRML needs special treatment
     if fmt == 'vrml':
         mcout = '%s/%s' % (dirname(instr), 'mcdisplay_commands.wrl')
@@ -117,6 +120,11 @@ def work():
 def processJob(run, workdir):
     ''' Process a specific job '''
 
+    def appendLog(out, err):
+        # populate result folder
+        if out: file(workdir % "out.txt", "a").write(out)
+        if err: file(workdir % "err.txt", "a").write(err)
+
     # pick seed and samples
     params = run.params
 
@@ -139,7 +147,7 @@ def processJob(run, workdir):
         dest = workdir % basename(path)
         os.symlink(abspath(path), dest)
 
-    # compute instrument layou
+    # compute instrument layout
     is_scan = any(isinstance(param, list) for param in params.values())
 
     # generate list of parameters
@@ -148,9 +156,9 @@ def processJob(run, workdir):
 
     # Generate instrument graphics with mcdisplay
     display(workdir % (name + ".instr"), first_range(params_strs),
-            workdir % "layout.gif")
+            workdir % "layout.gif", log=appendLog)
     display(workdir % (name + ".instr"), first_range(params_strs),
-            workdir % "layout.wrl", fmt='vrml')
+            workdir % "layout.wrl", log=appendLog, fmt='vrml')
 
     # run mcstas via mcrun
     args = ["mcrun"] + \
@@ -160,19 +168,7 @@ def processJob(run, workdir):
            ["--ncount", str(samples),
             "--dir",    "mcstas",
             name] + params_strs
-
-    pid = Popen(args,
-                stdout=PIPE,
-                stderr=PIPE,
-                cwd=workdir % '')
-    (out, err) = pid.communicate()
-
-    # debug
-    if err: print err
-
-    # populate result folder
-    file(workdir % "out.txt", "w").write(out)
-    file(workdir % "err.txt", "w").write(err)
+    popenwait(args, cwd=workdir % '', log=appendLog)
 
     # tar results
     tarname = 'mcstas-' + run.id
