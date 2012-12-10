@@ -44,9 +44,9 @@ def read_params(instr_file):
 
         parS = r'(\[|\()'  # [ or (
         parE = r'(\]|\))'  # ] or )
-        match0 = re.match(r'(?P<name>[^\s]+)\s*:?\s*'+parS+'(?P<unit>[^\]\)]*)'+parE+'(?P<msg>.*)$', line)
-        match1 = re.match(r'(?P<name>[^\s]+)\s*:?(?P<msg>.*)'+parS+'(?P<unit>[^\]\)]*)'+parE+'\s*$', line)
-        match2 = re.match(r'(?P<name>[^\s]+)\s*:?(?P<msg>.*)$', line)
+        match0 = re.match(r'(?P<name>[^\s:]+)\s*:?\s*'+parS+'(?P<unit>[^\]\)]*)'+parE+'(?P<msg>.*)$', line)
+        match1 = re.match(r'(?P<name>[^\s:]+)\s*:?(?P<msg>.*)'+parS+'(?P<unit>[^\]\)]*)'+parE+'\s*$', line)
+        match2 = re.match(r'(?P<name>[^\s:]+)\s*:?(?P<msg>.*)$', line)
         match = match0 or match1 or match2
         if not match:
             continue
