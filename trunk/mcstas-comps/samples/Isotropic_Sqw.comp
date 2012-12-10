@@ -46,6 +46,7 @@
 *
 * If you use this component and produce valuable scientific results, please
 * cite authors with references bellow (in <a href="#links">Links</a>).
+*     E. Farhi et al, J Comp Phys 228 (2009) 5251
 *
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or any other shape
@@ -762,7 +763,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
 {
 
   t_Table  Sqw_cl;             /* the Sqw symmetric/classical version (T-> Inf) */
-  t_Table  Gqw;                /* the generalized density of states as of Carpenter and Price, PRL 54 (1987) 153 */
+  t_Table  Gqw;                /* the generalized density of states as of Carpenter and Price, J Non Cryst Sol 92 (1987) 153 */
   t_Table  Sqw_moments[7];     /* M0=S(q) M1=E_r M3 w_c w_l M0_cl=S_cl(q) G(w) */
   t_Table  w_c, w_l;
   long     index_q, index_w;
@@ -807,7 +808,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
         return;
     }
     sprintf(Gqw.filename,
-      "G(q,w) from %s (generalized density of states, Carpenter PRL 54 (1987) 153)",
+      "G(q,w) from %s (generalized density of states, Carpenter J Non Cryst Sol 92 (1987) 153)",
       Sqw_Data->filename);
     Gqw.block_number = 1;
     Gqw.min_x        = 0;
@@ -855,7 +856,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     "S_cl(q)=M0_cl(q) from %s [int S_cl(q,w) dw]",
     Sqw_Data->filename);
   sprintf(Sqw_moments[6].filename,
-    "G(w) generalized effective density of states from %s (Carpenter PRL 54 (1987) 153)",
+    "G(w) generalized effective density of states from %s (Carpenter J Non Cryst Sol 92 (1987) 153)",
     Sqw_Data->filename);
 
   for   (index_q=0; index_q < Sqw_Data->q_bins; index_q++) {
@@ -1843,7 +1844,7 @@ INITIALIZE
   MPI_MASTER(
   if (VarSqw.verbose_output) {
     switch (VarSqw.shape) {
-      case 0: printf("Isotropic_Sqw: %s: is a %scylinder: radius=%f thickness=%f height=%f \n",
+      case 0: printf("Isotropic_Sqw: %s: is a %scylinder: radius=%f thickness=%f height=%f [J Comp Phys 228 (2009) 5251]\n",
               NAME_CURRENT_COMP, (thickness ? "hollow " : ""),
               radius,fabs(thickness),yheight);
               break;
