@@ -76,24 +76,15 @@ function update_defaults(sim) {
             default_unit = defaults[sim][param]["unit"],
             default_msg  = defaults[sim][param]["msg"];
 
-        lbl.html(param + ":").attr("for", param).attr("id", "lbl"+param).css('width', '300px');
+        lbl.html(param + ":").attr({"for": param,
+                                    "id": "lbl"+param
+                                   }).css('width', '200px');
         lbld.html("(" + default_unit + ") Default: " + default_val)
             .css({
                      "float": "right",
                      "font-size": "9pt",
                      "font-family": "monotype",
-                     "width": "200px",
-                     "height": "30px"
-                 });
-        conm.html($('<i>').append(default_msg))
-            .attr("title", default_msg)
-            .css({
-                     "font-size": "9pt",
-                     "font-family": "monotype",
-                     "display": "block",
-                     "width": "650px",
-                     "overflow": "hidden",
-                     "white-space": "nowrap"
+                     "width": "200px"
                  });
 
         inp.attr("name", param).attr("id", param).css('width', '150px');
@@ -110,7 +101,8 @@ function update_defaults(sim) {
         });
         inp.bind("change", function() { set_changed(this); });
         // add to param list
-        ps.append($('<li>').append(con.append(lbl, inp, lbld), conm));
+        ps.append($('<li>').append(con.append(lbl, inp, lbld))
+                  .attr('title', default_msg));
     };
 }
 
