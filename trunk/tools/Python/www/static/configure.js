@@ -84,7 +84,11 @@ function update_defaults(sim) {
                      "float": "right",
                      "font-size": "9pt",
                      "font-family": "monotype",
-                     "width": "200px"
+                     "width": "300px",
+                     "height": "30px",
+                     "overflow": "hidden",
+                     "display": "block",
+                     "white-space": "nowrap"
                  });
 
         inp.attr("name", param).attr("id", param).css('width', '150px');
