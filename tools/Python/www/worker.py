@@ -29,24 +29,24 @@ def popenwait(args, cwd, log):
 
 
 # try to use new R plotter instead of mcplot
-def mcplotwait(simfile, outfile, log, logy=False):
+def mcplot(simfile, outfile, logger, logy=False):
     ''' Plot a mcstas.sim file with mcplot '''
     args = (["mcplot", "-%s" % IMAGE_FORMAT] +
             (logy and ["-log"] or []) +
             [basename(simfile)])
-    popenwait(args, cwd=dirname(simfile), log=log)
+    popenwait(args, cwd=dirname(simfile), log=logger)
     os.rename("%s.%s" % (simfile, IMAGE_FORMAT) , outfile)
 
 try:
     from rplot.plot import plotSim
-    def plot(simfile, outfile, logy=False):
+    def plot(simfile, outfile, logger, logy=False):
         ''' Plot a sim file with R '''
         try:
             plotSim(simfile, logy, IMAGE_FORMAT)
             os.rename('%s.%s' % (simfile, IMAGE_FORMAT), outfile)
         except Exception,e:
             print e
-            mcplot(simfile, outfile, logy)
+            mcplot(simfile, outfile, logger=logger, logy=logy)
     print 'INFO: using plotter from rplot/'
 except Exception, e:
     # Error occured: Print it and fallback to old mcplot
@@ -185,6 +185,7 @@ def processJob(run, workdir):
             for mode in ("lin", "log"):
                 plot(dirname(sim_path) + '/' + comp,
                      outfile=dirname(sim_path) + ('/plot-%s-%s.gif' % (comp, mode)),
+                     logger=appendLog,
                      logy=(mode == "log"))
 
     # process_components('mcstas/mcstas.sim')
