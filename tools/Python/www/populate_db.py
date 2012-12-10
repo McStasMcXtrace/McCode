@@ -13,6 +13,10 @@ RE_types   = re.compile(r'(\w+)\((\w+)\)')
 RE_default = re.compile(r'\s*Param:\s+(\w+)=(.*)')
 
 
+DEFAULT_UNIT = '?'
+DEFAULT_MSG  = 'Parameter missing description.'
+
+
 def fetch(model, **kwargs):
     return model.query.filter_by(**kwargs)
 
@@ -53,8 +57,8 @@ def read_params(instr_file):
 
         groups = match.groupdict()
         name = groups.get('name', '')
-        unit = groups.get('unit', '?')
-        msg  = groups.get('msg',  '?')
+        unit = groups.get('unit', DEFAULT_UNIT)
+        msg  = groups.get('msg',  DEFAULT_MSG)
         if name:
             params[name.strip().lower()] = (priority, unit.strip(), msg.strip())
 
@@ -111,7 +115,8 @@ def info(bin):
             priority, unit, msg = infos[param.lower()]
         else:
             priority = 100000
-            unit, msg = '??'
+            unit = DEFAULT_UNIT
+            msg  = DEFAULT_MSG
 
         p.priority = priority
         p.unit = unit
