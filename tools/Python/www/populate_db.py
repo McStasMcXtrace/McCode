@@ -36,11 +36,27 @@ def read_params(instr_file):
         priority += 10
         # Extract parameter
         line = line.lstrip('*').strip()
-        match = re.match(r'([^:]+):\s*\[([^\]]*)\]\s*(.*)$', line)
-        if not match:
+        if 'INPUT PARAMETERS' in line.upper():
+            continue
+
+        if line.startswith('%'):
             break
-        name, unit, msg = match.groups()
-        params[name] = (priority, unit, msg)
+
+        parS = r'(\[|\()'  # [ or (
+        parE = r'(\]|\))'  # ] or )
+        match0 = re.match(r'(?P<name>[^\s]+)\s*:?\s*'+parS+'(?P<unit>[^\]\)]*)'+parE+'(?P<msg>.*)$', line)
+        match1 = re.match(r'(?P<name>[^\s]+)\s*:?(?P<msg>.*)'+parS+'(?P<unit>[^\]\)]*)'+parE+'\s*$', line)
+        match2 = re.match(r'(?P<name>[^\s]+)\s*:?(?P<msg>.*)$', line)
+        match = match0 or match1 or match2
+        if not match:
+            continue
+
+        groups = match.groupdict()
+        name = groups.get('name', '')
+        unit = groups.get('unit', '?')
+        msg  = groups.get('msg',  '?')
+        if name:
+            params[name.strip().lower()] = (priority, unit.strip(), msg.strip())
 
     return params
 
@@ -74,7 +90,7 @@ def info(bin):
         filter(lambda x: 'Param:' in x, lines))
 
     # Extract priority, unit information and description messages
-    info = read_params('%s.instr' % bin[:-1*len('.out')])
+    infos = read_params('%s.instr' % bin[:-1*len('.out')])
 
     # Insert param default
     convertfns = {'string' : lambda x: x,
@@ -89,12 +105,18 @@ def info(bin):
             db_session.add(p)
             db_session.commit()
         else:
-            [p] = fetch(Param, name=param)
+            [p] = fetch(Param, sim_id=sim.id, name=param)
 
-        priority, unit, msg = info[param]
+        if param.lower() in infos:
+            priority, unit, msg = infos[param.lower()]
+        else:
+            priority = 100000
+            unit, msg = '??'
+
         p.priority = priority
         p.unit = unit
         p.msg = msg
+
         p.default_value = convertfns[types[param]](defaults[param])
 
     # Commit work so far
