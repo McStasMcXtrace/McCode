@@ -65,4 +65,5 @@ CSRF_SESSION_KEY = new_key()
 
 # Cache templates in-memory
 CACHE_TYPE = 'simple'
-CACHE_THRESHOLD = 5  # seconds
+CACHE_THRESHOLD       = 20  # object size
+CACHE_DEFAULT_TIMEOUT = 30  # seconds
