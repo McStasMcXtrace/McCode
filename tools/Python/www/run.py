@@ -134,7 +134,7 @@ def configurePOST(jobid, user):
     # insert / update params
     for name in skip(('__nonce', 'sim', 'seed', 'samples', 'npoints'), form):
         str_value = form[name]
-        param  = Param.query.filter_by(name=name).one()
+        param  = Param.query.filter_by(sim_id=sim.id, name=name).one()
 
         # lookup parameter value
         oldP = ParamValue.query.filter_by(job_id=job.id, param_id=param.id)
