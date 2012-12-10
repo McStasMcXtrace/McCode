@@ -79,7 +79,7 @@ function update_defaults(sim) {
         lbl.html(param + ":").attr({"for": param,
                                     "id": "lbl"+param
                                    }).css('width', '200px');
-        lbld.html("(" + default_unit + ") Default: " + default_val)
+        lbld.html("[" + default_unit + "] Default: " + default_val + " " + default_unit)
             .css({
                      "float": "right",
                      "font-size": "9pt",
