@@ -77,8 +77,9 @@ function update_defaults(sim) {
             default_msg  = defaults[sim][param]["msg"];
 
         lbl.html(param + ":").attr({"for": param,
+                                    "class": "forlabel",
                                     "id": "lbl"+param
-                                   }).css('width', '200px');
+                                   });
 
         var html = "[" + default_unit + "] Default: " + default_val + " " + default_unit;
         if(default_unit == '1') {
