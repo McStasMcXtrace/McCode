@@ -64,7 +64,7 @@ build_wget() {
 }
 
 # uwsgi
-UWSGI=uwsgi-1.2
+UWSGI=uwsgi-1.4.2
 ensure "uwsgi" \
     build_wget \
     ${UWSGI} \
