@@ -17,7 +17,7 @@ DEFAULT_GENS="src bin"
 export ALL_GENS=$(
     grep '^make_' "$0" | grep -oE '^make_[^(]+' | grep -oE '[^_]+$' | \
         while read gen; do \
-        echo -n "$gen "; \
+        printf "%s " "$gen"; \
         done)
 
 # name is mandatory and source and chain can be guessed (they have no defaults)
