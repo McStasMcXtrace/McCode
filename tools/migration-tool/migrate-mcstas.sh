@@ -87,7 +87,8 @@ chmod a+x $MOVE_SCRIPT
 
 # If this is Debian and mcstas is installed,
 # recommend to uninstall before installing 2.0
-if [ -f /etc/debian_version ]; then
+DPKG="$(command -v dpkg)";
+if [ -x "${DPKG}" ]; then
 	  echo "Debian machine - checking if mcstas was previously installed";
 	  MCSTAS_FROM_DEB=`dpkg -l \*mcstas\* |grep ^ii`
 	  if [ "$?" = "0" ]; then
