@@ -41,7 +41,7 @@ cat <<EOF > $MOVE_SCRIPT
 # Script for moving your McStas $MCSTAS_VERSION installation out of the way before installation of 2.0
 
 # Create directory for the binaries
-sudo mkdir $MCSTAS_NEWBINDIR
+sudo mkdir -p $MCSTAS_NEWBINDIR
 # Move component library to $MCSTAS_NEWLIBDIR
 sudo cp -rp $MCSTAS_LIBDIR $MCSTAS_NEWLIBDIR
 # Move the binaries to $MCSTAS_NEWBINDIR
