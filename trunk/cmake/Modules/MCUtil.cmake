@@ -198,7 +198,7 @@ macro(setup_mccode_mkdist FLAVOR)
 
     # Set architecture
     if(ARCH EQUAL 64)
-      set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "x86_64")
+      set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
       set(CPACK_RPM_PACKAGE_ARCHITECTURE    "x86_64")
     else()
       set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
