@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 
-# This will install McStas components
+# This will install McStas or McXtrace mc/mxrun
 project(python-tools-mcrun C)
 
 # Choose between McStas or McXtrace
@@ -25,7 +25,7 @@ endif()
 message("Enabling ${FLAVOR} flavor")
 setup_mccode_mkdist("${FLAVOR}")
 
-set(TOOLS_NAME "${FLAVOR}-tools-python-mcrun-${MCCODE_VERSION}")
+set(TOOLS_NAME "${FLAVOR}-tools-python-${MCCODE_PREFIX}run-${MCCODE_VERSION}")
 set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
 
 
@@ -87,18 +87,18 @@ install(
 
 # Symlink to main
 add_custom_command(
-  OUTPUT "${WORK}/mcrun"
-  COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/mcrun"
+  OUTPUT "${WORK}/${MCCODE_PREFIX}run"
+  COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${MCCODE_PREFIX}run"
   COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${TOOLS_LIB}/main.py" "${WORK}/mcrun"
+    "${TOOLS_LIB}/main.py" "${WORK}/${MCCODE_PREFIX}run"
 )
 
 add_custom_target(
-  "CREATE_SYMLINK" ALL DEPENDS "${WORK}/mcrun"
+  "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${MCCODE_PREFIX}run"
 )
 
 install(
-  PROGRAMS "${WORK}/mcrun"
+  PROGRAMS "${WORK}/${MCCODE_PREFIX}run"
   DESTINATION ${bin}
-  RENAME "mcrun${PROGRAM_SUFFIX}-py${DOT_PYTHON_SUFFIX}"
+  RENAME "${MCCODE_PREFIX}run${PROGRAM_SUFFIX}-py${DOT_PYTHON_SUFFIX}"
 )

@@ -84,19 +84,19 @@ install(
 
 # Symlink to main
 add_custom_command(
-  OUTPUT "${WORK}/mcplot"
+  OUTPUT "${WORK}/${MCCODE_PREFIX}plot"
   COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
-  COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/mcplot"
+  COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${MCCODE_PREFIX}plot"
   COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${TOOLS_LIB}/mcplot.py" "${WORK}/mcplot"
+    "${TOOLS_LIB}/mcplot.py" "${WORK}/${MCCODE_PREFIX}plot"
 )
 
 add_custom_target(
-  "CREATE_SYMLINK" ALL DEPENDS "${WORK}/mcplot"
+  "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${MCCODE_PREFIX}plot"
 )
 
 install(
-  PROGRAMS "${WORK}/mcplot"
+  PROGRAMS "${WORK}/${MCCODE_PREFIX}plot"
   DESTINATION ${bin}
-  RENAME "mcplot-${MCCODE_VERSION}-matplotlib${DOT_PYTHON_SUFFIX}"
+  RENAME "${MCCODE_PREFIX}plot-${MCCODE_VERSION}-matplotlib${DOT_PYTHON_SUFFIX}"
 )
