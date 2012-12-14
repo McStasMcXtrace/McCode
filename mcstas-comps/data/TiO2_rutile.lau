@@ -1,6 +1,11 @@
 # rutile (TiO2): 'P 42/m n m' (136) tetragonal
 # a=b=4.594, c=2.959; 90 degs; Sigma_a=6.09;
 #
+# Physical parameters:
+# sigma_abs 6.09   absorption scattering cross section (single atom) in [barn]
+# lattice_a 4.594   lattice parameter a in [Angs]
+# lattice_c 2.959   lattice parameter c in [Angs]
+#
 # Format parameters: Crystallographica format
 # column_j  4 multiplicity 'j'
 # column_d  5 d-spacing 'd' in [Angs]

@@ -17,8 +17,8 @@
 # lattice_b 6.790   lattice parameter b in [Angs]
 # lattice_c 8.638   lattice parameter c in [Angs]
 # lattice_aa 90     lattice angle alpha in [deg]
-# lattice_bb 98.02  lattice angle alpha in [deg]
-# lattice_cc 90     lattice angle alpha in [deg]
+# lattice_bb 98.02  lattice angle beta in [deg]
+# lattice_cc 90     lattice angle gamma in [deg]
 #
 # Format parameters: Crystallographica format
 # column_j  4 multiplicity 'j'
