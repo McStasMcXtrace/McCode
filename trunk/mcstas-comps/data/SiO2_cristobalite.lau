@@ -1,6 +1,14 @@
 # Cristobalite (SiO2): 'P 41 21 2' (92) tetragonal
 # a=b=4.957 c=6.89; 90 degs; Sigma_a = 0.171;
 #
+# Physical parameters:
+# sigma_coh 10.625  coherent scattering cross section for SiO2 in [barn]
+# sigma_inc 0.0056  incoherent scattering cross section for SiO2 in [barn]
+# sigma_abs 0.1714  absorption scattering cross section for SiO2 in [barn]
+# weight    60.08   in [g/mol] for SiO2
+# lattice_a 4.957   lattice parameter a in [Angs]
+# lattice_c 6.89    lattice parameter c in [Angs]
+#
 # Format parameters: Crystallographica format
 # column_j  4 multiplicity 'j'
 # column_d  5 d-spacing 'd' in [Angs]
