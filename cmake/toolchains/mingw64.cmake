@@ -23,6 +23,6 @@ set(PGPLOT "") # <- Empty indicates not available
 set(GNUPLOT "gnuplot.exe")
 
 # Plotting options
-set(PLOTTER "Gnuplot")
+set(PLOTTER "PGPLOT")
 set(PGDEV "/gw")
 set(GNUDEV "windows")
