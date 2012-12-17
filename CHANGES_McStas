@@ -131,15 +131,11 @@ Changes in McStas v2.0RC2, November 30th, 2012
      * Versions: 32 and 64 bit, tested on XP, Windows 7 and Windows 8
      * Remark: We distribute zip files for each 32 and 64 bit Windows independently. Follow instructions 
        	       in the README file. 
-     * Remark: We recommend using MinGW-w64 or MinGW32 as C-compiler on Windows systems. The easiest way
-       	       of getting mingw is using mingw-get-inst (see http://www.mingw.org/wiki/Getting_Started)
-     * Remark: We aim to support Microsoft Visual C++ in the future, but so far did not succeed in porting
-               our ISO-C code
-     * Remark: We are looking for a MinGW-compatible MPI environment for Windows working on both 32 and 64
-               bit versions, please inform us if you stumble upon one?
      * Remark: We recommend using Strawberry Perl (v. 5.16) and provide compatible ppd's for the various
                perl-tool dependencies (perl-PDL, pgplot, perl-PGPLOT, perl-Tk-CodeText, perl-Math-Amoeba).
 	       Get Strawberry Perl via http://strawberryperl.com
+     * Remark: Strawberry Perl includes gcc! Hence no need to install a separate c-compiler!
+     * Remark: For MPI parallelization, we recommend installing MPICH2 from http://www.mpich.org
      * Remark: We recommend Python(x,y) on Windows systems as it includes both matplotlib and chaco. Get
        	       Python(x,y) via http://code.google.com/p/pythonxy/
      * Remark: Windows installations now recide in e.g. c:\mcstas-2.0RC2 and we provide two version-
