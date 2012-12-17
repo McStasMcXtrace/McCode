@@ -319,7 +319,7 @@ macro(InstallMCCODE)
 
   if(WINDOWS)
     # Generate and install Windows setup scripts
-    foreach (name mcstasenv.bat mcguigo.bat mcstasgo.bat mcrun-py.bat mcplot-chaco.bat mcplot-matplotlib.bat)
+    foreach (name mcstasenv.bat mcguigo.bat mcstasgo.bat mcstasmpigo.bat mcrun-py.bat mcplot-chaco.bat mcplot-matplotlib.bat)
       configure_file(
 	cmake/support/scripts/${name}.in
 	work/support/${name}
@@ -329,6 +329,11 @@ macro(InstallMCCODE)
 
     install(PROGRAMS 
       cmake/support/scripts/postsetup.bat 
+      DESTINATION ${bin} 
+      ) 
+
+    install(PROGRAMS 
+      cmake/support/scripts/mpicc.bat 
       DESTINATION ${bin} 
       ) 
 
