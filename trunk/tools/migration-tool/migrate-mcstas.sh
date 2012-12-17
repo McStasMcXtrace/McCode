@@ -92,8 +92,8 @@ chmod a+x $MOVE_SCRIPT
 DPKG="$(command -v dpkg)";
 if [ -x "${DPKG}" ]; then
     echo "Debian machine - checking if mcstas was previously installed";
-    MCSTAS_FROM_DEB=`dpkg -l \*mcstas\* |grep ^ii`
-    if [ "$?" = "0" ]; then
+    dpkg -l "*mcstas*" 2>&1 | grep ^ii > /dev/null
+    if [ $? -eq 0 ]; then
         echo "Found these McStas-related packages on your system:";
         echo "";
         dpkg -l "*mcstas*" | grep ^ii ;
