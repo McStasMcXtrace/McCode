@@ -26,6 +26,12 @@ ENV_SCRIPT=/tmp/mcstas-$MCSTAS_VERSION-environment
 BINS="mcconvert mcdaemon mcdisplay mcdoc mcformat mcformatgui mcgui mcplot \
       mcresplot mcrun mcstas mcstas2vitess"
 
+# Check if system is Debian-like and has dpkg (e.g. Ubuntu)
+HAS_DPKG=false;
+DPKG="$(command -v dpkg)";
+if [ $? -eq 0 ] && [ -x "${DPKG}" ]; then
+    HAS_DPKG=true;
+fi
 
 # Write migration info to the screen:
 cat <<EOF
@@ -103,8 +109,7 @@ chmod a+x $MOVE_SCRIPT
 
 # If this is Debian and mcstas is installed,
 # recommend to uninstall before installing 2.0
-DPKG="$(command -v dpkg)";
-if [ -x "${DPKG}" ]; then
+if ${HAS_DPKG}; then
     echo "Debian machine - checking if mcstas was previously installed";
     dpkg -l "*mcstas*" 2>&1 | grep ^ii > /dev/null
     if [ $? -eq 0 ]; then
