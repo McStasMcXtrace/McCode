@@ -14,8 +14,11 @@ fi
 
 MCSTAS_BINDIR=`dirname $MCSTAS_WHERE`
 MCSTAS_LIBDIR=`dirname $MCSTAS_BINDIR`/lib/mcstas
+MCSTAS_MANDIR=`dirname $MCSTAS_BINDIR`/man/man1
 MCSTAS_NEWBINDIR=$MCSTAS_BINDIR/McStas-$MCSTAS_VERSION
 MCSTAS_NEWLIBDIR=$MCSTAS_LIBDIR-$MCSTAS_VERSION
+MCSTAS_NEWMANDIR=$MCSTAS_NEWLIBDIR/man
+
 MOVE_SCRIPT=/tmp/mcstas-$MCSTAS_VERSION-move
 ENV_SCRIPT=/tmp/mcstas-$MCSTAS_VERSION-environment
 
@@ -49,13 +52,23 @@ cat <<EOF > $MOVE_SCRIPT
 sudo mkdir -p $MCSTAS_NEWBINDIR
 # Move component library to $MCSTAS_NEWLIBDIR
 sudo cp -rp $MCSTAS_LIBDIR $MCSTAS_NEWLIBDIR
+
 # Move the binaries to $MCSTAS_NEWBINDIR
 EOF
 for bincomp in ${BINS}; do
-    echo "sudo cp $MCSTAS_BINDIR/$bincomp $MCSTAS_NEWBINDIR/" >> $MOVE_SCRIPT;
+    echo "# ${bincomp}" >> $MOVE_SCRIPT;
+    BIN=$MCSTAS_BINDIR/$bincomp
+    if [ -f ${BIN} ]; then
+        echo "sudo cp ${BIN} ${MCSTAS_NEWBINDIR}/" >> $MOVE_SCRIPT;
+    fi
+    MAN=$MCSTAS_MANDIR/$bincomp.1
+    if [ -f ${MAN} ]; then
+        echo "sudo cp ${MAN} ${MCSTAS_NEWMANDIR}/" >> $MOVE_SCRIPT;
+    fi
 done
 
 cat <<EOF >> $MOVE_SCRIPT
+
 # Finally, copy environment script to /usr/local/bin...
 sudo cp $ENV_SCRIPT /usr/local/bin
 EOF
