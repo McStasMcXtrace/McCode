@@ -96,7 +96,7 @@ if [ -x "${DPKG}" ]; then
     if [ "$?" = "0" ]; then
         echo "Found these McStas-related packages on your system:";
         echo "";
-        dpkg -l \*mcstas\* |grep ^ii ;
+        dpkg -l "*mcstas*" | grep ^ii ;
         echo "";
         echo "Our recommendation is that you uninstall the old 1.x packages"
         echo "  once you have run $MOVE_SCRIPT";
