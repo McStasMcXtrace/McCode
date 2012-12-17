@@ -49,6 +49,7 @@ With the component library in:
 To move your installation, please execute the script $MOVE_SCRIPT
 EOF
 
+
 # Write the move script:
 cat <<EOF > $MOVE_SCRIPT
 #!/bin/sh
@@ -62,6 +63,9 @@ sudo cp -rp $MCSTAS_LIBDIR $MCSTAS_NEWLIBDIR
 
 # Move the binaries to $MCSTAS_NEWBINDIR
 EOF
+
+
+# Write code to copy binaries and man-pages
 for bincomp in ${BINS}; do
     echo "# ${bincomp}" >> $MOVE_SCRIPT;
     BIN=$MCSTAS_BINDIR/$bincomp
@@ -74,11 +78,14 @@ for bincomp in ${BINS}; do
     fi
 done
 
+
+# Write code to copy environment-setup script
 cat <<EOF >> $MOVE_SCRIPT
 
 # Finally, copy environment script to /usr/local/bin...
 sudo cp $ENV_SCRIPT /usr/local/bin
 EOF
+
 
 # Write environment script info to screen
 echo "";
@@ -102,6 +109,7 @@ echo
 export PS1='McStas $MCSTAS_VERSION env \\w\\$ > '
 /bin/sh
 EOF
+
 
 # Make the scripts executable:
 chmod a+x $ENV_SCRIPT
