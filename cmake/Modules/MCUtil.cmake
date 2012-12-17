@@ -177,7 +177,7 @@ macro(setup_mccode_mkdist FLAVOR)
     # Create desktop links for mcguigo and mcstasgo batch files
     set(CPACK_NSIS_CREATE_ICONS "CreateShortCut '$DESKTOP\\\\McGui-${MCCODE_VERSION}.lnk' '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\mcguigo.bat' ")
     set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$DESKTOP\\\\mcstas-shell-${MCCODE_VERSION}.lnk' '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\mcstasgo.bat' ")
-    set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$DESKTOP\\\\mcstas-MPI-shell-${MCCODE_VERSION}.lnk' '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\mcstasmpigo.bat' ")	
+
   else()
 
     # Have CMake respect install prefix
