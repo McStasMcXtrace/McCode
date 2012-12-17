@@ -1,0 +1,9 @@
+@CALL @CPACK_NSIS_INSTALL_ROOT@\\bin\\mcstasenv.bat
+@start smpd -d
+@ECHO OFF
+@ECHO McStas environment shell with MPI:
+@ECHO OFF
+@ECHO OFF
+@mcstas -v
+@ECHO OFF
+@cmd
