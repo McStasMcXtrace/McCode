@@ -201,7 +201,7 @@ sub get_out_file_init {
 # either ERROR or FINISHED is returned.
 #
 sub get_out_file_next {
-  my ($v, $printer, $mcrunflag) = @_;
+  my ($v, $printer, $mpi, $mcrunflag) = @_;
   # The mcrunflag allows mcgui to request a compilation
   # using mcrun -c (Win32 specific).
   my ($cmd, $exit_val);
@@ -246,7 +246,10 @@ sub get_out_file_next {
       }
       my @inc = $v->{'dir'} ? ("-I", $dir) : ();
       if (defined($mcrunflag) && $mcrunflag eq 1) {
-         my $cmd = ["$MCSTAS::mcstas_config{'RUNCMD'}$MCSTAS::mcstas_config{'SUFFIX'} -c -n0 ", $sim_def];
+	 my $mpistr;
+	 if ($mpi) {$mpistr="--mpi";}
+	 else {$mpistr="";}
+         my $cmd = ["$MCSTAS::mcstas_config{'RUNCMD'}$MCSTAS::mcstas_config{'SUFFIX'} -c $mpistr -n0 ", $sim_def];
       &$printer(join(" ", @$cmd));
 	$v->{'stage'} = POST_MCSTAS;
       return (RUN_CMD, $cmd);

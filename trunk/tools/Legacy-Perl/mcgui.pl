@@ -869,7 +869,7 @@ sub dialog_get_out_file {
     } else {
         $state = 0;
         for(;;) {
-            my ($type, $val) = get_out_file_next($compile_data, $printer, $mcrunflag);
+            my ($type, $val) = get_out_file_next($compile_data, $printer, $mpi, $mcrunflag);
             if($type eq 'FINISHED') {
                 $success = 1;
                 $out_name = $val;
