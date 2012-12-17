@@ -540,11 +540,7 @@ sub exec_sim_local {
       push @cmd, " -machinefile $MCSTAS::mcstas_config{'HOSTFILE'}";
       $localonly = 0;
     }
-    # Win32 mpiexec needs different flags...
-    if ($Config{'osname'} eq 'MSWin32') {
-      if ($localonly == 1) { push @cmd, " -localonly $mpi"; }
-      else { push @cmd, " -n $mpi"; }
-    } else { push @cmd, " -np $mpi"; }
+    push @cmd, " -np $mpi";
   }
   push @cmd, $out_file;
   push @cmd, @opt;
