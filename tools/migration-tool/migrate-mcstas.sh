@@ -100,5 +100,7 @@ if [ -x "${DPKG}" ]; then
 	      echo "";
 	      echo "Our recommendation is that you uninstall the old 1.x packages"
         echo "  once you have run $MOVE_SCRIPT";
+        echo "";
+        echo "The binaries and man-pages have to be uninstalled BEFORE installing a mcstas 2.x";
 	  fi
 fi
