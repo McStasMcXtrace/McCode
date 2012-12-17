@@ -146,7 +146,11 @@ echo
 echo To end using this version of mcstas, exit this shell.
 echo
 export PS1='McStas $MCSTAS_VERSION env \\w\\$ > '
-/bin/sh
+if [ -x "\${SHELL}" ]; then
+  \${SHELL}
+else
+  /bin/sh
+fi
 EOF
 
 
