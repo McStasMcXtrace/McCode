@@ -56,8 +56,8 @@ cat <<EOF > $MOVE_SCRIPT
 # Script for moving your McStas $MCSTAS_VERSION installation out of the way
 # before installation of 2.0
 
-# Create directory for the binaries
-sudo mkdir -p $MCSTAS_NEWBINDIR
+# Create directory for the binaries and man-pages
+sudo mkdir -p $MCSTAS_NEWBINDIR $MCSTAS_NEWMANDIR
 # Move component library to $MCSTAS_NEWLIBDIR
 sudo cp -rp $MCSTAS_LIBDIR $MCSTAS_NEWLIBDIR
 
@@ -77,6 +77,45 @@ for bincomp in ${BINS}; do
         echo "sudo cp ${MAN} ${MCSTAS_NEWMANDIR}/" >> $MOVE_SCRIPT;
     fi
 done
+
+
+# Add some code to remove McStas binaries and man-pages if needed
+if ! ${HAS_DPKG}; then
+    # Build list of files to remove
+    FILES="$MCSTAS_LIBDIR"
+    for bincomp in ${BINS}; do
+        BIN=$MCSTAS_BINDIR/$bincomp;
+        if [ -f $BIN ]; then
+            FILES="$FILES $BIN"
+        fi
+        MAN=$MCSTAS_MANDIR/$bincomp.1;
+        if [ -f $MAN ]; then
+            FILES="$FILES $MAN"
+        fi
+    done
+
+    cat <<EOF >> $MOVE_SCRIPT
+
+echo ""
+echo "!! You're not running on a debian-like system and thus needs to remove"
+echo "!! the McStas files manually (and not through the package manager)."
+echo "!! (All McStas binaries AND man-pages must be moved from standard"
+echo "!!  locations before installing a 2.x version)"
+echo ""
+
+FILES="$FILES"
+
+echo "These are the files:"
+ls \$FILES
+echo ""
+
+printf "?? Would you like me to delete these files for you? (y/n): "
+read answer
+if [ "x\$answer" = "xy" ]; then
+    sudo rm -vr \$FILES
+fi
+EOF
+fi
 
 
 # Write code to copy environment-setup script
