@@ -46,7 +46,7 @@ The suggested new location for the $MCSTAS_VERSION binaries is:
 With the component library in:
   $MCSTAS_NEWLIBDIR
 
-To move your installation, please execute the script $MOVE_SCRIPT
+1) To move your installation, please execute the script $MOVE_SCRIPT
 EOF
 
 
@@ -128,7 +128,7 @@ EOF
 
 # Write environment script info to screen
 echo "";
-echo "Afterwards, the script $ENV_SCRIPT can be used to run your";
+echo "2) Afterwards, the script $ENV_SCRIPT can be used to run your";
 echo "relocated McStas $MCSTAS_VERSION.\
  (Migration script places a copy in /usr/local/bin)";
 echo "";
