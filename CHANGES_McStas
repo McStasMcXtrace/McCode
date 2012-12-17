@@ -56,7 +56,7 @@ Changes in McStas v2.0RC2, November 30th, 2012
  - As of this release, McStas is distributed as multiple packages rather than a monolithic:
    - mcstas, contains code generator and runtime codes
      * Dependencies: a C-compiler (and mcstas-comps)
-     * Optional: an MPI invironment
+     * Optional: an MPI environment
    - mcstas-comps, contains component- and instrument example libraries 
      * Dependencies: mcstas
    - mcstas-tools-Perl, contains our "legacy" set of perl tools 
@@ -137,7 +137,7 @@ Changes in McStas v2.0RC2, November 30th, 2012
                our ISO-C code
      * Remark: We are looking for a MinGW-compatible MPI environment for Windows working on both 32 and 64
                bit versions, please inform us if you stumble upon one?
-     * Remark: We recommend using Strawberry Perl (>5.8) and provide compatible ppd's for the various
+     * Remark: We recommend using Strawberry Perl (v. 5.16) and provide compatible ppd's for the various
                perl-tool dependencies (perl-PDL, pgplot, perl-PGPLOT, perl-Tk-CodeText, perl-Math-Amoeba).
 	       Get Strawberry Perl via http://strawberryperl.com
      * Remark: We recommend Python(x,y) on Windows systems as it includes both matplotlib and chaco. Get
