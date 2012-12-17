@@ -19,6 +19,11 @@ MCSTAS_NEWLIBDIR=$MCSTAS_LIBDIR-$MCSTAS_VERSION
 MOVE_SCRIPT=/tmp/mcstas-$MCSTAS_VERSION-move
 ENV_SCRIPT=/tmp/mcstas-$MCSTAS_VERSION-environment
 
+
+BINS="mcconvert mcdaemon mcdisplay mcdoc mcformat mcformatgui mcgui mcplot \
+      mcresplot mcrun mcstas mcstas2vitess"
+
+
 # Write migration info to the screen:
 cat <<EOF
 Your existing mcstas executable is this one: $MCSTAS_WHERE
@@ -46,10 +51,7 @@ sudo mkdir -p $MCSTAS_NEWBINDIR
 sudo cp -rp $MCSTAS_LIBDIR $MCSTAS_NEWLIBDIR
 # Move the binaries to $MCSTAS_NEWBINDIR
 EOF
-for bincomp in \
-    mcconvert mcdaemon mcdisplay mcdoc mcformat mcformatgui mcgui \
-    mcplot mcresplot mcrun mcstas mcstas2vitess
-do
+for bincomp in ${BINS}; do
 	  echo "sudo cp $MCSTAS_BINDIR/$bincomp $MCSTAS_NEWBINDIR/" >> $MOVE_SCRIPT;
 done
 
