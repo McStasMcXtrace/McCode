@@ -52,7 +52,7 @@ sudo cp -rp $MCSTAS_LIBDIR $MCSTAS_NEWLIBDIR
 # Move the binaries to $MCSTAS_NEWBINDIR
 EOF
 for bincomp in ${BINS}; do
-	  echo "sudo cp $MCSTAS_BINDIR/$bincomp $MCSTAS_NEWBINDIR/" >> $MOVE_SCRIPT;
+    echo "sudo cp $MCSTAS_BINDIR/$bincomp $MCSTAS_NEWBINDIR/" >> $MOVE_SCRIPT;
 done
 
 cat <<EOF >> $MOVE_SCRIPT
@@ -91,16 +91,16 @@ chmod a+x $MOVE_SCRIPT
 # recommend to uninstall before installing 2.0
 DPKG="$(command -v dpkg)";
 if [ -x "${DPKG}" ]; then
-	  echo "Debian machine - checking if mcstas was previously installed";
-	  MCSTAS_FROM_DEB=`dpkg -l \*mcstas\* |grep ^ii`
-	  if [ "$?" = "0" ]; then
-	      echo "Found these McStas-related packages on your system:";
-	      echo "";
-	      dpkg -l \*mcstas\* |grep ^ii ;
-	      echo "";
-	      echo "Our recommendation is that you uninstall the old 1.x packages"
+    echo "Debian machine - checking if mcstas was previously installed";
+    MCSTAS_FROM_DEB=`dpkg -l \*mcstas\* |grep ^ii`
+    if [ "$?" = "0" ]; then
+        echo "Found these McStas-related packages on your system:";
+        echo "";
+        dpkg -l \*mcstas\* |grep ^ii ;
+        echo "";
+        echo "Our recommendation is that you uninstall the old 1.x packages"
         echo "  once you have run $MOVE_SCRIPT";
         echo "";
         echo "The binaries and man-pages have to be uninstalled BEFORE installing a mcstas 2.x";
-	  fi
+    fi
 fi
