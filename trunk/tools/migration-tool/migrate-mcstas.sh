@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Unix migration script for McStas-pre 2.0 for those who want to keep that on their machine
-#
+# Unix migration script for McStas-pre 2.0 for those who want to keep that on
+# their machine
 #
 
 MCSTAS_WHERE=`which mcstas`
@@ -46,7 +46,8 @@ EOF
 # Write the move script:
 cat <<EOF > $MOVE_SCRIPT
 #!/bin/sh
-# Script for moving your McStas $MCSTAS_VERSION installation out of the way before installation of 2.0
+# Script for moving your McStas $MCSTAS_VERSION installation out of the way
+# before installation of 2.0
 
 # Create directory for the binaries
 sudo mkdir -p $MCSTAS_NEWBINDIR
@@ -114,6 +115,8 @@ if [ -x "${DPKG}" ]; then
         echo "Our recommendation is that you uninstall the old 1.x packages"
         echo "  once you have run $MOVE_SCRIPT";
         echo "";
-        echo "The binaries and man-pages have to be uninstalled BEFORE installing a mcstas 2.x";
+
+        echo "The binaries and man-pages have to be uninstalled" \
+             "BEFORE installing a mcstas 2.x";
     fi
 fi
