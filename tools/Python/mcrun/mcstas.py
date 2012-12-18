@@ -80,7 +80,6 @@ class McStas:
         # Setup paths
         self.dir = tempfile.mkdtemp(prefix='mcstas-')
         self.cpath = '%s/%s.c' % (self.dir, self.name)
-        self.binpath = '%s/%s.out' % (dirname(self.path) or '.', self.name)
 
         # Remove temporary files at exit
         atexit.register(self.cleanup)
@@ -95,7 +94,11 @@ class McStas:
 
         # Use mpi?
         mpi = options.use_mpi
-        self.binpath += (mpi and '-mpi' or '')
+        mpi_flag = '-mpi' if mpi else ''
+        self.binpath = '%s/%s%s.%s' % (dirname(self.path) or '.',
+                                       self.name,
+                                       mpi_flag,
+                                       config.OUT_SUFFIX)
 
         # Check if instrument code has changed
         if not options.force_compile and isfile(self.binpath) \
