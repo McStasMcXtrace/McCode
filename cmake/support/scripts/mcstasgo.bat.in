@@ -1,8 +1,8 @@
 @CALL @CPACK_NSIS_INSTALL_ROOT@\\bin\\mcstasenv.bat
 @ECHO OFF
-@ECHO McStas environment shell:
+@ECHO @NAME@ environment shell:
 @ECHO OFF
 @ECHO OFF
-@mcstas -v
+@@FLAVOR@ -v
 @ECHO OFF
 @cmd
