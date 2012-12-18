@@ -69,6 +69,8 @@
 * <b>Powder definition file format</b>
 * Powder structure is specified with an ascii data file 'reflections'.
 * The powder data are free-text column based files.
+* The reflection list should be ordered by decreasing d-spacing values.
+*       ... d ... F2
 * Lines begining by '#' are read as comments (ignored) but they may contain
 * the following keywords (in the header):
 *   #Vc           <value of unit cell volume Vc [Angs^3]>
