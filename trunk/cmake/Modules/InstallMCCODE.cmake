@@ -328,7 +328,7 @@ macro(InstallMCCODE)
     endforeach()
 
     # Python related batches special handling 
-    foreach (run-py.bat plot-chaco.bat plot-matplotlib.bat)
+    foreach (name run-py.bat plot-chaco.bat plot-matplotlib.bat)
       configure_file(
 	cmake/support/scripts/${name}.in
 	work/support/${MCCODE_PREFIX}${name}
