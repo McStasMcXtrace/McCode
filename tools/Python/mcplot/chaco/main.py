@@ -17,6 +17,11 @@ def main():
         usage()
         sys.exit(1)
 
+    simfile = os.path.abspath(sys.argv[1])
+    if os.path.isdir(simfile):
+        simfile = os.path.join(simfile, 'mcstas.sim')
+
+
     from mcdata import mcstas_to_plotdescs
     from plotting import PlotDesc, McLayout
 
