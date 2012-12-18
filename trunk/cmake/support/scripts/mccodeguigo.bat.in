@@ -1,0 +1,3 @@
+@CALL @CPACK_NSIS_INSTALL_ROOT@\\bin\\mccodeenv.bat
+@ECHO Staring mcgui
+@@MCCODE_PREFIX@gui.pl

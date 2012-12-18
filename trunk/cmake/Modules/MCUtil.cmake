@@ -175,8 +175,8 @@ macro(setup_mccode_mkdist FLAVOR)
     set(PROGRAM_SUFFIX "")
 
     # Create desktop links for mcguigo and mcstasgo batch files
-    set(CPACK_NSIS_CREATE_ICONS "CreateShortCut '$DESKTOP\\\\${MCCODE_PREFIX}gui-${MCCODE_VERSION}.lnk' '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\mcguigo.bat' ")
-    set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$DESKTOP\\\\${FLAVOR}-shell-${MCCODE_VERSION}.lnk' '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\mcstasgo.bat' ")
+    set(CPACK_NSIS_CREATE_ICONS "CreateShortCut '$DESKTOP\\\\${MCCODE_PREFIX}gui-${MCCODE_VERSION}.lnk' '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\mccodeguigo.bat' ")
+    set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$DESKTOP\\\\${FLAVOR}-shell-${MCCODE_VERSION}.lnk' '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\mccodego.bat' ")
 
   else()
 
