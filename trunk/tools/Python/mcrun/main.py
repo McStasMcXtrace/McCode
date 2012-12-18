@@ -164,7 +164,7 @@ def add_mcstas_options(parser):
     add('--format',
         metavar='FORMAT', default='McStas',
         help='output data files using format FORMAT '
-             '(format list obtained from <instr>.out -h)')
+             '(format list obtained from <instr>.%s -h)' % config.OUT_SUFFIX)
 
     add('--no-output-files',
         action='store_true', default=False,
@@ -266,7 +266,7 @@ def main():
 
     # swap .out for .instr to avoid parsing binary file
     instr = clean_quotes(args[0])
-    if instr.endswith(".out") or instr.endswith(".exe"):
+    if instr.endswith("." + config.OUT_SUFFIX):
         instr = instr[:-4] + ".instr"
 
     options.instr = instr
