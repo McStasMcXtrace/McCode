@@ -138,8 +138,10 @@ Changes in McStas v2.0RC2, November 30th, 2012
      * Remark: For MPI parallelization, we recommend installing MPICH2 from http://www.mpich.org
      * Remark: We recommend Python(x,y) on Windows systems as it includes both matplotlib and chaco. Get
        	       Python(x,y) via http://code.google.com/p/pythonxy/
+     * Remark: To enable the Python based mcrun tool with Python(x,y) you need to install PyYAML from
+       	       http://pyyaml.org/wiki/PyYAML
      * Remark: Windows installations now recide in e.g. c:\mcstas-2.0RC2 and we provide two version-
-               dependent desktop links: mcgui-2.0RC2 and mcstas-enviroment-2.0RC2 (the latter for running 
+               dependent desktop links: mcgui-2.0RC2 and mcstas-environment-2.0RC2 (the latter for running 
 	       simulations using the windows cmd.exe). We do not touch the system registry for setting up 
 	       PATH's etc., all is handled from the two links/batch files.
  - As far as possible, we build the packages on "standard" versions of the relevant OS'es (with the exception
