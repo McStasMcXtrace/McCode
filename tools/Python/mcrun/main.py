@@ -239,6 +239,21 @@ def get_parameters(options):
     return (fixed_params, intervals)
 
 
+def find_instr_file(instr):
+    # Remove [-mpi].out to avoid parsing a binary file
+    instr = clean_quotes(instr)
+    if instr.endswith("-mpi." + config.OUT_SUFFIX):
+        instr = instr[:-(5 + len(config.OUT_SUFFIX))]
+    if instr.endswith("." + config.OUT_SUFFIX):
+        instr = instr[:-(1 + len(config.OUT_SUFFIX))]
+
+    # Append ".instr" if needed
+    if not isfile(instr) and isfile(instr + ".instr"):
+        instr += ".instr"
+
+    return instr
+
+
 def clean_quotes(string):
     ''' Remove all leading and ending quotes (" and \') '''
     return string.strip('"' + "'")
@@ -264,12 +279,10 @@ def main():
         print parser.get_usage()
         parser.exit()
 
-    # swap .out for .instr to avoid parsing binary file
-    instr = clean_quotes(args[0])
-    if instr.endswith("." + config.OUT_SUFFIX):
-        instr = instr[:-4] + ".instr"
+    # Set path of instrument-file after locating it
+    options.instr = find_instr_file(args[0])
 
-    options.instr = instr
+    # Clean out quotes (perl mcgui requires this step)
     options.params = map(clean_quotes, args[1:])
 
     # Fill out extra information
