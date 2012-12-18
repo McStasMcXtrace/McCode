@@ -319,13 +319,22 @@ macro(InstallMCCODE)
 
   if(WINDOWS)
     # Generate and install Windows setup scripts
-    foreach (name mccodeenv.bat mccodeguigo.bat mccodego.bat mcrun-py.bat mcplot-chaco.bat mcplot-matplotlib.bat)
+    foreach (name mccodeenv.bat mccodeguigo.bat mccodego.bat)
       configure_file(
 	cmake/support/scripts/${name}.in
 	work/support/${name}
 	)
       install(PROGRAMS ${WORK}/support/${name} DESTINATION ${bin})
     endforeach()
+
+    # Python related batches special handling 
+    foreach (run-py.bat plot-chaco.bat plot-matplotlib.bat)
+      configure_file(
+	cmake/support/scripts/${name}.in
+	work/support/${MCCODE_PREFIX}${name}
+	)      
+      install(PROGRAMS ${WORK}/support/${MCCODE_PREFIX}${name} DESTINATION ${bin})
+    endforeach()	 
 
     install(PROGRAMS 
       cmake/support/scripts/postsetup.bat 
