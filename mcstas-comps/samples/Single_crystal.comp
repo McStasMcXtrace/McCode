@@ -56,6 +56,7 @@
 * point, and the 7-th number is the value of the structure factor |F|**2, in
 * barns. The rest of the numbers are not used; the file is in the format
 * output by the Crystallographica program.
+* The reflection list should be ordered by decreasing d-spacing values.
 * Lines begining by '#' are read as comments (ignored). Most sample parameters
 * may be defined from the data file header, following the same mechanism as
 * PowderN.

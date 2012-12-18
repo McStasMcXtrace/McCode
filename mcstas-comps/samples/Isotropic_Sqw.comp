@@ -137,6 +137,7 @@
 * (e.g. '#column_j 4'). Refer to the PowderN component for more details.
 * Delta_d/d and Debye-Waller factor may be specified for all lines with the
 * 'powder_Dd' and 'powder_DW' parameters.
+* The reflection list should be ordered by decreasing d-spacing values.
 *
 * Additionally a special [q,Sq] format is also defined with:
 *   powder_format=qSq
