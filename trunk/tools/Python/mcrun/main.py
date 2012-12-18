@@ -187,8 +187,8 @@ def expand_options(options):
     # MPI
     if options.mpi > 0:
         options.use_mpi = True
-        options.cc = 'mpicc'
-        options.mpirun = 'mpirun'
+        options.cc      = config.MPICC
+        options.mpirun  = config.MPIRUN
     else:
         if not options.mpi is None:
             LOG.warning('Ignoring MPI flag: not enough nodes (%d).',
