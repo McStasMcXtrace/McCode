@@ -149,17 +149,22 @@ class McLayout(HasTraits):
     traits_view = View(
         Item('reset', show_label=False),
         Item('layout',editor=ComponentEditor(), show_label=False),
-        width=500, height=500, resizable=True, title="Chaco Plot")
+        width=500, height=500, resizable=True, title='mcplot')
 
-
-    def __init__(self, descs, focus=None):
+    def __init__(self, descs, focus=None, window_title=None):
         super(McLayout, self).__init__()
+
         self.descs = descs
         self.pans = []
         self.zooms = []
         self.plots = []
         self.focus = descs if focus is None else focus
-        self.reinit()
+
+        if window_title:
+            self.trait_view().title = window_title
+
+        if descs:
+            self.reinit()
 
 
     def reinit(self):

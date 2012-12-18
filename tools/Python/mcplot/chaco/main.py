@@ -25,8 +25,26 @@ def main():
     from mcdata import mcstas_to_plotdescs
     from plotting import PlotDesc, McLayout
 
-    plotdatas = mcstas_to_plotdescs(sys.argv[1])
-    McLayout(list(plotdatas)).configure_traits(scrollable=True)
+    # Use mcstas.sim position as window title
+    titlepath = os.path.abspath(simfile)
+
+    # Remove mcstas.sim (its implied)
+    if titlepath.endswith('/mcstas.sim'):
+        titlepath = os.path.dirname(titlepath) + '/'
+
+    # Truncate from front of too large
+    if len(titlepath) > 50:
+        titlepath = '...%s' % titlepath[-47:]
+
+    # Construct final title
+    title = 'mcplot: %s' % titlepath
+
+    # Load data
+    plotdatas = mcstas_to_plotdescs(simfile)
+
+    # Create plots
+    McLayout(list(plotdatas), window_title=title).configure_traits(
+        scrollable=True)
 
 
 if __name__ == "__main__":
