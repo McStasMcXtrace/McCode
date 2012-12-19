@@ -259,15 +259,18 @@ static struct
     char * (*parminfo)(char *);
     void (*error)(char *, char *);
     void (*printer)(char *, void *);
-  } mcinputtypes[] =
-      {
-        mcparm_double, mcparminfo_double, mcparmerror_double,
-                mcparmprinter_double,
-        mcparm_int, mcparminfo_int, mcparmerror_int,
-                mcparmprinter_int,
-        mcparm_string, mcparminfo_string, mcparmerror_string,
-                mcparmprinter_string
-      };
+} mcinputtypes[] = {
+  {
+    mcparm_double, mcparminfo_double, mcparmerror_double,
+    mcparmprinter_double
+  }, {
+    mcparm_int, mcparminfo_int, mcparmerror_int,
+    mcparmprinter_int
+  }, {
+    mcparm_string, mcparminfo_string, mcparmerror_string,
+    mcparmprinter_string
+  }
+};
 
 /*******************************************************************************
 * mcestimate_error: compute sigma from N,p,p2 in Gaussian large numbers approx
