@@ -121,7 +121,7 @@ def add_mcstas_options(parser):
         help='set random seed (must be: SEED != 0)')
 
     add('-n', '--ncount',
-        metavar='COUNT', type=int, default=1000000,
+        metavar='COUNT', type=float, default=1000000,
         help='set number of neutrons to simulate')
 
     add('-t', '--trace',
