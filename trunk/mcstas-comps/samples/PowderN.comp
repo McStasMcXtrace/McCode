@@ -425,9 +425,10 @@ SHARE
         if (i == size-1) list_count++;
       /*   if duplication index == previous multiplicity */
       /*      set back multiplicity of previous lines to 1 */
-        if (mult_count && list_count>0 &&
-          (mult_count == list[list_count-1].j
-          || (mult_count == list[list_count].j && i == size-1)) ) {
+        if ((mult_count && list_count>0)
+            && (mult_count == list[list_count-1].j
+                || ((list_count < size) && (i == size - 1)
+                    && (mult_count == list[list_count].j))) ) {
           printf("PowderN: %s: Set multiplicity to 1 for lines [%i:%i]\n"
                   "         (d-spacing %g is duplicated %i times)\n",
             info->compname, list_count-mult_count, list_count-1, list[list_count-1].q, mult_count);
