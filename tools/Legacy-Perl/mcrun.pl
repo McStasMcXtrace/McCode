@@ -328,10 +328,10 @@ independent simulation program. The following environment variables may be
 specified for building the instrument:
   MCXTRACE        Location of the McXtrace and component library
                   ($MCSTAS::sys_dir).
-  MCSTAS_CC     Name of the C compiler               ($cc)
-  MCSTAS_CFLAGS Options for compilation              ($mcstas_cflags)
-  MCSTAS_FORMAT Default FORMAT to use for data files ($MCSTAS::mcstas_config{'PLOTTER'})
-SEE ALSO: mcxtrace, mxdoc, mxplot, mxdisplay
+  MCXTRACE_CC    Name of the C compiler               ($cc)
+  MCXTRACE_CFLAGS Options for compilation              ($mcstas_cflags)
+  MCXTRACE_FORMAT Default FORMAT to use for data files ($MCSTAS::mcstas_config{'PLOTTER'})
+SEE ALSO: mcxtrace, mxdoc, mxplot, mxdisplay, mxgui
 DOC:      Please visit http://www.mcxtrace.org/
 ** No instrument definition name given
 ENDMX
