@@ -61,8 +61,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 
 
     t = (long)time(NULL);
-    
-/* initialize DEFS */  
+
+/* initialize DEFS */
 /* Variables to monitor */
     DEFS->COORD_NONE   =0;
     DEFS->COORD_X      =1;
@@ -103,7 +103,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     DEFS->COORD_KXY    =29;
     DEFS->COORD_KYZ    =33;
     DEFS->COORD_KXZ    =35;
-    
+
 
 /* token modifiers */
     DEFS->COORD_VAR    =0;    /* next token should be a variable or normal option */
@@ -568,7 +568,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     if ((Vars->Coord_Type[0] & (DEFS->COORD_LOG-1)) == DEFS->COORD_P) {
       strncat(Vars->Coord_Label[0], " [n/s", 30);
       if (Vars->Flag_per_cm2) strncat(Vars->Coord_Label[0], "/cm2", 30);
-      
+
       if (XY > 1 && Vars->Coord_Number)
         strncat(Vars->Coord_Label[0], "/bin", 30);
       strncat(Vars->Coord_Label[0], "]", 30);
@@ -610,10 +610,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     if (Vars->Flag_log == 1) strcat(Vars->Monitor_Label, " [log] ");
 
     /* now allocate memory to store variables in TRACE */
-    
+
     /* Vars->Coord_Number  0   : intensity or signal
      * Vars->Coord_Number  1:n : detector variables */
-     
+
     if ((Vars->Coord_Number != 2) && !Vars->Flag_Multiple && !Vars->Flag_List)
     { Vars->Flag_Multiple = 1; Vars->Flag_List = 0; } /* default is n1D */
 
@@ -689,7 +689,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     {
       Vars->area = PI*Vars->Sphere_Radius*Vars->Sphere_Radius*1E4; /* disk shapes */
     }
-    if (Vars->area == 0 && abs(Vars->Flag_Shape) != DEFS->SHAPE_PREVIOUS) 
+    if (Vars->area == 0 && abs(Vars->Flag_Shape) != DEFS->SHAPE_PREVIOUS)
       Vars->Coord_Number = 0;
     if (Vars->Coord_Number == 0 && Vars->Flag_Verbose)
       printf("Monitor_nD: %s is unactivated (0D)\n", Vars->compcurname);
@@ -735,9 +735,9 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
           XY = Vars->Mon2D_Buffer[i+j*(Vars->Coord_Number+1)];  /* scanning variables in Buffer */
           if (XY < Vars->Coord_Min[i]) Vars->Coord_Min[i] = XY;
           if (XY > Vars->Coord_Max[i]) Vars->Coord_Max[i] = XY;
-        } 
+        }
       }
-    } 
+    }
     Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step (read Buffer and generate new events to store in histograms) */
   } /* end if Flag_Auto_Limits == 1 */
 
@@ -820,7 +820,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         Vars->mean_dx += Vars->cp*fabs(Vars->ckx/k);
         Vars->mean_dy += Vars->cp*fabs(Vars->cky/k);
       }
-        
+
       for (i = 0; i <= Vars->Coord_Number; i++)
       { /* handle current neutron : last while */
         XY = 0;
@@ -856,15 +856,15 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_V) XY = M_C;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_RADIUS) 
+        if (Set_Vars_Coord_Type == DEFS->COORD_RADIUS)
           XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy+Vars->cz*Vars->cz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_XY) 
+        if (Set_Vars_Coord_Type == DEFS->COORD_XY)
           XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy)*(Vars->cx > 0 ? 1 : -1);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_YZ) XY = sqrt(Vars->cy*Vars->cy+Vars->cz*Vars->cz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_XZ) 
+        if (Set_Vars_Coord_Type == DEFS->COORD_XZ)
           XY = sqrt(Vars->cx*Vars->cx+Vars->cz*Vars->cz);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_VXY) XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy);
@@ -883,7 +883,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_ENERGY) XY = k*K2E;
         else
-          if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA) { if (k!=0) XY = 2*M_PI; } // { sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; } 
+          if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA) { if (k!=0) XY = 2*M_PI; } // { sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT) XY = Coord[i]+1;
         else
@@ -1021,7 +1021,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
     long    Coord_Index[MONnD_COORD_NMAX];
     char    label[CHAR_BUF_LENGTH];
     double  ratio;
-    
+
     MCDETECTOR detector;
 
     ratio = 100.0*mcget_run_num()/mcget_ncount();
@@ -1030,7 +1030,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
         Vars->compcurname, (Vars->max_x-Vars->min_x)
                           *(Vars->max_y-Vars->min_y)*1E4, Vars->area);
       printf("Monitor_nD: %s: beam solid angle is %g [st] (%g x %g [deg^2])\n",
-        Vars->compcurname, 
+        Vars->compcurname,
         2*fabs(2*atan(Vars->mean_dx/Vars->mean_p)
          *sin(2*atan(Vars->mean_dy/Vars->mean_p)/2)),
         atan(Vars->mean_dx/Vars->mean_p)*RAD2DEG,
@@ -1056,7 +1056,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
             if (XY > Vars->Coord_Max[i]) Vars->Coord_Max[i] = XY;
           }
         }
-      } 
+      }
       Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
       Vars->Buffer_Block = Vars->Buffer_Counter;
 
@@ -1092,7 +1092,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
         }
 
         /* store n1d/2d section from Buffer */
-        
+
         pp = Coord[0];
         /* apply per cm2 or per st */
         if (Vars->Flag_per_cm2 && Vars->area      != 0)
@@ -1292,8 +1292,8 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
                 fname, Vars->compcurname, Vars->compcurpos);
 
             } /* else */
-            /* comment out 'free memory' lines to avoid loosing arrays if 
-               'detector' structure is used by other instrument parts 
+            /* comment out 'free memory' lines to avoid loosing arrays if
+               'detector' structure is used by other instrument parts
             if (p1m != NULL) free(p1m); p1m=NULL;
             if (p2m != NULL) free(p2m); p2m=NULL;
             */
@@ -1315,8 +1315,8 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
         if (p2m == NULL)
         {
           if (Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for 2D array (%li). Skipping.\n", Vars->compcurname, 3*Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*sizeof(double));
-          /* comment out 'free memory' lines to avoid loosing arrays if 
-               'detector' structure is used by other instrument parts 
+          /* comment out 'free memory' lines to avoid loosing arrays if
+               'detector' structure is used by other instrument parts
           if (p0m != NULL) free(p0m);
           if (p1m != NULL) free(p1m);
           */
@@ -1389,8 +1389,8 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
             p0m,p1m,p2m,
             fname, Vars->compcurname, Vars->compcurpos);
 
-          /* comment out 'free memory' lines to avoid loosing arrays if 
-               'detector' structure is used by other instrument parts 
+          /* comment out 'free memory' lines to avoid loosing arrays if
+               'detector' structure is used by other instrument parts
           if (p0m != NULL) free(p0m);
           if (p1m != NULL) free(p1m);
           if (p2m != NULL) free(p2m);
@@ -1508,9 +1508,9 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
       mcdis_circle("yz",0,0,0,radius);
     }
     /* banana/cylinder/sphere portion */
-    else 
-    if (restricted && ((abs(Vars->Flag_Shape) == DEFS->SHAPE_CYLIND) 
-                    || (abs(Vars->Flag_Shape) == DEFS->SHAPE_BANANA) 
+    else
+    if (restricted && ((abs(Vars->Flag_Shape) == DEFS->SHAPE_CYLIND)
+                    || (abs(Vars->Flag_Shape) == DEFS->SHAPE_BANANA)
                     || (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE)))
     {
       int NH=24, NV=24;
