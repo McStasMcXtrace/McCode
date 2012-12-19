@@ -46,13 +46,13 @@
 *   any shape:       geometry=OFF_file
 *
 *   The complex geometry option handles any closed non-convex polyhedra.
-*   It computes the intersection points of the xray with the object  
+*   It computes the intersection points of the xray with the object
 *   transparently, so that it can be used like a regular sample object.
-*   It supports the OFF and NOFF file format but not COFF (colored faces). 
+*   It supports the OFF and NOFF file format but not COFF (colored faces).
 *   Such files may be generated from XYZ data using:
-*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off 
+*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off
 *   and viewed with geomview or java -jar jroff.jar (see below).
-*   The default size of the object depends of the OFF file data, but its 
+*   The default size of the object depends of the OFF file data, but its
 *   bounding box may be resized using xwidth,yheight and zdepth.
 *
 * If you use this component and produce valuable scientific results, please
@@ -127,7 +127,7 @@
 * xwidth:   Horiz. dimension of sample, as a width [m]
 * yheight:  Height of sample y direction [m]
 * zdepth:   Depth of box sample [m]
-* thickness:Thickness of hollow sample. 
+* thickness:Thickness of hollow sample.
 *                Negative value extends the hollow volume outside of the box/cylinder. [m]
 * reflections: Input file for reflections.
 *                Use only incoherent scattering if NULL or "" [string]
@@ -144,11 +144,11 @@
 * p_transmit: Fraction of transmitted (only attenuated) xrays [1]
 * p_interact: Fraction of events interacting with sample, e.g. 1-p_transmit-p_inc [1]
 * concentric: Indicate that this component has a hollow geometry
-*               and may contain other components. It should then be duplicated 
-*               after the inside part (only for box, cylinder, sphere) [1] 
-* geometry:   Name of an Object File Format (OFF) file for complex geometry. 
+*               and may contain other components. It should then be duplicated
+*               after the inside part (only for box, cylinder, sphere) [1]
+* geometry:   Name of an Object File Format (OFF) file for complex geometry.
 *               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
-* barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2 
+* barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2
 *             (barns=1 for laz, barns=0 for lau type files).[1]
 * Vc:       Volume of unit cell=nb atoms per cell/density of atoms [AA^3]
 * DW:       Global Debey-Waller factor when the 'DW' column
@@ -158,7 +158,7 @@
 * nb_atoms: Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell [1]
 *
 * %L
-* “Validation of a realistic powder sample using data from DMC at PSI” Willendrup P, Filges U, Keller L, Farhi E, Lefmann K, Physica B-Cond Matt 385 (2006) 1032.  
+* “Validation of a realistic powder sample using data from DMC at PSI” Willendrup P, Filges U, Keller L, Farhi E, Lefmann K, Physica B-Cond Matt 385 (2006) 1032.
 * %L
 * See also: Powder1, Powder2 and PowderN
 * %L
@@ -176,7 +176,7 @@
 * %L
 * Geomview and Object File Format (OFF) <http://www.geomview.org>
 * %L
-* Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/> 
+* Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/>
 * %L
 * Powercrust/qhull <http://qhull.org>
 *
@@ -190,9 +190,9 @@ DEFINITION PARAMETERS (format=Undefined)
                     DW=0, nb_atoms=1, d_phi=0, p_interact=0,
                     concentric=0, density=0, weight=0, barns=1)
 OUTPUT PARAMETERS (line_info, Nq, my_s_k2, XsectionFactor,
-  my_s_k2_sum, my_a_k, my_inc, my_q, my_w, columns, 
+  my_s_k2_sum, my_a_k, my_inc, my_q, my_w, columns,
   radius_i, xwidth_i, yheight_i, zdepth_i, offdata)
-/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 SHARE
 %{
   /* used for reading data table from file */
@@ -243,7 +243,7 @@ SHARE
       int    column_order[8]; /* column signification */
       int    flag_warning;
     };
-    
+
   off_struct offdata;
 
   int read_abs_data(char *ABS_file, struct abs_data **abs)
@@ -350,14 +350,14 @@ SHARE
     Table_Info(sTable);
     printf("PowderN: %s: Reading %d rows from %s\n",
           info->compname, size, SC_file);
-          
+
     if (info->column_order[0] == 4 && info->flag_barns !=0)
     printf("PowderN: %s: Powder file probably of type Crystallographica/Fullprof (lau)\n"
-           "WARNING: but F2 unit is set to barns=1 (barns). Intensity might be 100 times too high.\n", 
+           "WARNING: but F2 unit is set to barns=1 (barns). Intensity might be 100 times too high.\n",
            info->compname);
   if (info->column_order[0] == 17 && info->flag_barns == 0)
     printf("PowderN: %s: Powder file probably of type Lazy Pulver (laz)\n"
-           "WARNING: but F2 unit is set to barns=0 (fm^2). Intensity might be 100 times too low.\n", 
+           "WARNING: but F2 unit is set to barns=0 (fm^2). Intensity might be 100 times too low.\n",
            info->compname);
     /* allocate line_data array */
     list = (struct line_data*)malloc(size*sizeof(struct line_data));
@@ -463,7 +463,7 @@ DECLARE
   int    columns[8] = format;
   double XsectionFactor;
   double radius_i=0, xwidth_i=0, yheight_i=0, zdepth_i=0;
-  
+
   off_struct offdata;
 %}
 INITIALIZE
@@ -481,7 +481,7 @@ INITIALIZE
   line_info.flag_warning=0;
   for (i=0; i< 8; i++) line_info.column_order[i] = columns[i];
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
-  
+
   line_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
   if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
 	  if (off_init(geometry, xwidth, yheight, zdepth, 0, &offdata)) {
@@ -492,7 +492,7 @@ INITIALIZE
   else if (radius > 0 && yheight)        line_info.shape=0; /* cylinder */
   else if (radius > 0 && !yheight)       line_info.shape=2; /* sphere */
 
-  if (line_info.shape < 0) 
+  if (line_info.shape < 0)
     exit(fprintf(stderr,"PowderN: %s: sample has invalid dimensions.\n"
                         "ERROR    Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
   if (thickness) {
@@ -506,20 +506,20 @@ INITIALIZE
                      "WARNING  Please check parameter values.\n", NAME_CURRENT_COMP);
     }
   }
-  
+
   if (concentric && thickness==0) {
     printf("PowderN: %s:Can not use concentric mode\n"
            "WARNING     on non hollow shape. Ignoring.\n",
            NAME_CURRENT_COMP);
     concentric=0;
   }
-    
+
   if (thickness>0) {
     if (radius>thickness) {
       radius_i=radius-thickness;
     } else {
-      if (xwidth>2*thickness)  xwidth_i =xwidth -2*thickness; 
-      if (yheight>2*thickness) yheight_i=yheight-2*thickness; 
+      if (xwidth>2*thickness)  xwidth_i =xwidth -2*thickness;
+      if (yheight>2*thickness) yheight_i=yheight-2*thickness;
       if (zdepth>2*thickness)  zdepth_i =zdepth -2*thickness;
     }
   } else if (thickness<0) {
@@ -531,12 +531,12 @@ INITIALIZE
       xwidth_i =xwidth;
       yheight_i=yheight;
       zdepth_i =zdepth;
-      xwidth   =xwidth +2*thickness; 
-      yheight  =yheight+2*thickness; 
+      xwidth   =xwidth +2*thickness;
+      yheight  =yheight+2*thickness;
       zdepth   =zdepth +2*thickness;
     }
   }
-  
+
   if (!yheight_i) {
     yheight_i = yheight;
   }
@@ -544,12 +544,12 @@ INITIALIZE
     if (p_interact < p_inc) { double tmp=p_interact; p_interact=p_inc; p_inc=tmp; }
     p_transmit = 1-p_interact-p_inc;
   }
-  
+
   if (p_inc + p_transmit > 1) {
-    fprintf(stderr,"PowderN: %s: You have requested an unmeaningful choice of the 'p_inc' and 'p_transmit' parameters (sum is %g, exeeding 1). Fixing.\n", 
+    fprintf(stderr,"PowderN: %s: You have requested an unmeaningful choice of the 'p_inc' and 'p_transmit' parameters (sum is %g, exeeding 1). Fixing.\n",
                  NAME_CURRENT_COMP, p_inc+p_transmit);
     if (p_inc > p_transmit) p_transmit=1-2*p_inc;
-    else p_transmit=1-2*p_inc; 
+    else p_transmit=1-2*p_inc;
   } else if (p_inc + p_transmit == 1) {
     printf("PowderN: %s: You have requested all xrays be attenuated\n"
            "WARNING  or incoherently scattered!\n", NAME_CURRENT_COMP);
@@ -562,7 +562,7 @@ INITIALIZE
              "WARNING  Don't you want any transmitted xrays?\n", NAME_CURRENT_COMP);
     }
   }
-  
+
   if (reflections && strlen(reflections) && strcmp(reflections, "NULL") && strcmp(reflections, "0")) {
     i = read_line_data(reflections, &line_info);
     if (i == 0)
@@ -571,7 +571,7 @@ INITIALIZE
   }
 
   /* compute the scattering unit density from material weight and density */
-  /* the weight of the scattering element is the chemical formula molecular weight 
+  /* the weight of the scattering element is the chemical formula molecular weight
    * times the nb of chemical formulae in the scattering element (nb_atoms) */
   if (!line_info.V_0 && line_info.at_nb > 0
     && line_info.at_weight > 0 && line_info.rho > 0) {
@@ -580,16 +580,16 @@ INITIALIZE
     line_info.V_0 = line_info.at_nb
       /(line_info.rho/line_info.at_weight/1e24*6.02214199e23);
   }
-  
-  /* the scattering unit cross sections are the chemical formula onces 
+
+  /* the scattering unit cross sections are the chemical formula onces
    * times the nb of chemical formulae in the scattering element */
-  if (line_info.at_nb > 0) { 
+  if (line_info.at_nb > 0) {
     line_info.sigma_a *= line_info.at_nb; line_info.sigma_i *= line_info.at_nb;
   }
 
   if (line_info.V_0 <= 0)
     fprintf(stderr,"PowderN: %s: density/unit cell volume is NULL (Vc). Unactivating component.\n", NAME_CURRENT_COMP);
-    
+
   if (line_info.V_0 && p_inc && !line_info.sigma_i) {
     printf("PowderN %s WARNING: You have requested statistics for incoherent scattering but not defined sigma_inc!\n", NAME_CURRENT_COMP);
   }
@@ -599,7 +599,7 @@ INITIALIZE
   } else {
     XsectionFactor = 1;
   }
-  
+
   if (line_info.V_0 && i) {
     L = line_info.list;
 
@@ -641,7 +641,7 @@ TRACE
   int    line;
   char   intersect=0;
   char   intersecti=0;
-  
+
   if (line_info.V_0 && (Nq || my_inc)) {
     if (line_info.shape == 1) {
       intersect  = box_intersect(&l0, &l3, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
@@ -654,12 +654,12 @@ TRACE
       intersecti = sphere_intersect  (&l1, &l2, x,y,z, kx,ky,kz, radius_i);
     } else if (line_info.shape == 3) {
       intersect  = off_intersect  (&l0, &l3, NULL, NULL, x,y,z, kx,ky,kz, offdata);
-      intersecti = 0; 
+      intersecti = 0;
     }
   }
-  
+
   if(intersect && l3 >0) {
-      
+
     if (concentric) {
       /* Set up for concentric case */
       /* 'Remove' the backside of this comp */
@@ -676,7 +676,7 @@ TRACE
       }
       dl = randpm1(); /* Possibility to scatter at all points in line of sight */
     }
-      
+
     /* X-ray enters at t=l0. */
     if(l0 < 0) l0=0; /* already in sample */
     if(l1 < 0) l1=0; /* already in inner hollow */
@@ -691,13 +691,13 @@ TRACE
         my_s_k2_sum+=my_s_k2[line];
       }
     }
-     
 
 
- 
+
+
     if (l3 < 0) {
       l3=0; /* Already past sample?! */
-      if (line_info.flag_warning < 100) 
+      if (line_info.flag_warning < 100)
       printf("PowderN: %s: Warning: xray has already passed us? (Skipped).\n"
              "         In concentric geometry, this may be caused by a missing concentric=0 option in 2nd enclosing instance.\n", NAME_CURRENT_COMP);
       line_info.flag_warning++;
@@ -707,7 +707,7 @@ TRACE
       } else {
         dl = dl * (l3 - l2) + (l2-l0) ; /* Possibly also 'backside' part */
       }
-      
+
       my_s = my_s_k2_sum/(k*k);
       /* Total attenuation from scattering */
 
@@ -729,9 +729,9 @@ TRACE
       p_inc=0; /*is turned off till we fix the Compton scattering code*/
       /* How to handle this one? Transmit (1) / Incoherent (2) / Coherent (3) ? */
       if (type < p_transmit) {
-        type = 1; 
+        type = 1;
         l = l_full; /* Passing through, full length */
-        PROP_DL(l3); 
+        PROP_DL(l3);
 //      } else if (type >= p_transmit && type < (p_transmit + p_inc)) {
 //        type = 2;
 //        l = v*dt;       /* Penetration in sample */
@@ -744,7 +744,7 @@ TRACE
       } else {
         exit(fprintf(stderr,"PowderN %s: DEAD - this shouldn't happen!\n", NAME_CURRENT_COMP));
       }
-        
+
       if (type == 3) { /* Make coherent scattering event */
         if (line_info.count > 0) {
           /* choose line */
@@ -758,7 +758,7 @@ TRACE
           if(fabs(arg) > 1)
             ABSORB;                   /* No bragg scattering possible*/
           theta = asin(arg);          /* Bragg scattering law */
-              
+
           /* Choose point on Debye-Scherrer cone */
           if (d_phi)
           { /* relate height of detector to the height on DS cone */
@@ -782,7 +782,7 @@ TRACE
           }
           else
             alpha0 = PI*randpm1();
-              
+
           /* now find a nearly vertical rotation axis:
            * Either
            *  (k along Z) x (X axis) -> nearly Y axis
@@ -795,10 +795,10 @@ TRACE
             nx = 0; ny = 0; nz = 1;
           }
           vec_prod(tmp_kx,tmp_ky,tmp_kz, kx,ky,kz, nx,ny,nz);
-          
+
           /* k_out = rotate 'k' by 2*theta around tmp_k: Bragg angle */
           rotate(kout_x,kout_y,kout_z, kx,ky,kz, 2*theta, tmp_kx,tmp_ky,tmp_kz);
-          
+
           /* tmp_k = rotate k_out by alpha0 around 'k' (Debye-Scherrer cone) */
           rotate(tmp_kx,tmp_ky,tmp_kz, kout_x,kout_y,kout_z, alpha0, kx, ky, kz);
           kx = tmp_kx;
@@ -818,33 +818,33 @@ TRACE
             intersect  = off_intersect  (&l0, &l3, NULL, NULL, x,y,z, kx,ky,kz, offdata);
             intersecti = 0;
           }
-          
+
           if (!intersect) {
             /* Strange error: did not hit cylinder */
-            if (line_info.flag_warning < 100) 
+            if (line_info.flag_warning < 100)
               fprintf(stderr, "PowderN: %s: FATAL ERROR: Did not hit sample from inside (coh).\n", NAME_CURRENT_COMP);
             line_info.flag_warning++;
             ABSORB;
           }
-          
+
           if (!intersecti) {
             l1 = (l3 + l0) /2;
             l2 = l1;
           }
-          
+
           if (concentric && intersecti) {
             /* In case of concentricity, 'remove' backward wall of sample */
             l2 = l1;
             l3 = l1;
           }
-          
+
           if(l0 < 0) l0=0; /* already in sample */
           if(l1 < 0) l1=0; /* already in inner hollow */
           if(l2 < 0) l2=0; /* already past inner hollow */
-          
+
 
           l_1 = l3 - l2 + l1 - l0; /* Length to exit */
-          
+
           pmul  = Nq*l_full*my_s_n*exp(-(my_abs+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
           /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
           if (d_phi) pmul *= alpha/PI;
@@ -864,7 +864,7 @@ TRACE
 //        vx *= v/v1;
 //        vy *= v/v1;
 //        vz *= v/v1;
-//        
+//
 //        /* Since now scattered and new direction given, calculate path to exit */
 //        if (line_info.shape == 1) {
 //          intersect  = box_intersect(&l0, &l3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
@@ -879,36 +879,36 @@ TRACE
 //          intersect  = off_intersect  (&l0, &l3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
 //          intersecti = 0;
 //        }
-//        
+//
 //        if (!intersect) {
 //          /* Strange error: did not hit cylinder */
-//          if (line_info.flag_warning < 100) 
+//          if (line_info.flag_warning < 100)
 //            fprintf(stderr, "PowderN: %s: FATAL ERROR: Did not hit sample from inside (inc).\n", NAME_CURRENT_COMP);
 //          line_info.flag_warning++;
 //          ABSORB;
-//        }  
-//          
+//        }
+//
 //        if (!intersecti) {
 //          l1 = (l3 + l0) /2;
 //          l2 = l1;
 //        }
-//          
+//
 //        if (concentric && intersecti) {
 //          /* In case of concentricity, 'remove' backward wall of sample */
 //          l2 = l1;
 //          l3 = l1;
 //        }
-//          
+//
 //        if(l0 < 0) l0=0; /* already in sample */
 //        if(l1 < 0) l1=0; /* already in inner hollow */
 //        if(l2 < 0) l2=0; /* already past inner hollow */
-//          
+//
 //
 //        l_1 = v*(l3 - l2 + l1 - l0); /* Length to exit */
-//        
+//
 //        pmul = l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(p_inc);
 //        pmul *= solid_angle/(4*PI);
-//            
+//
 //      }  /* Incoherent scattering event */
       else if (type == 1) {
         /* Make transmitted (absorption-corrected) event */
@@ -918,19 +918,19 @@ TRACE
       p *= pmul;
     } /* Neutron leaving since it has passed already */
   } /* else transmit non interacting xrays */
-  
+
 %}
 
-FINALLY 
+FINALLY
 %{
   free(line_info.list);
   free(my_q);
   free(my_w);
   free(my_s_k2);
   if (line_info.flag_warning)
-    fprintf(stderr, "PowderN: %s: Error message was repeated %i times with absorbed xrays.\n", 
+    fprintf(stderr, "PowderN: %s: Error message was repeated %i times with absorbed xrays.\n",
       NAME_CURRENT_COMP, line_info.flag_warning);
-    
+
 %}
 
 MCDISPLAY
