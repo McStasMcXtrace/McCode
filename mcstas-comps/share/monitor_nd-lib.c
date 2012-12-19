@@ -767,7 +767,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         pp = Vars->Mon2D_Buffer[While_Buffer*(Vars->Coord_Number+1)];
         /* For some reason the Intel c compiler version 10.1 gives 0 counts with Monitor_nD!
            An ugly patch seems to be the following printf */
-        printf("");
+        printf("%s", "");
         Coord[0] = pp;
 
         for (i = 1; i <= Vars->Coord_Number; i++)
