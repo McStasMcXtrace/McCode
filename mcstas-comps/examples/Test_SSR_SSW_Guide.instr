@@ -9,7 +9,7 @@
 * Version:  $Revision: 1.0 $
 * Origin: Risoe-DTU
 * Release: McStas 2.0
-* %INSTRUMENT_SITE: Test_SSR_SSW_Guide
+* %INSTRUMENT_SITE: Tests_optics
 *
 * Test instrument for SSW/SSR interface between McStas and MCNP
 *
