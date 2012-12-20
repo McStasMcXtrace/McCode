@@ -358,40 +358,5 @@ int mcnxfile_data(NXhandle nxhandle, MCDETECTOR detector, char *part,
   return(NXclosedata(nxhandle));
 } /* mcnxfile_datablock */
 
-/*******************************************************************************
-* mcnxfile_parameters: writes the simulation parameters
-*                   open/close a new Data Set per parameter in the current simulation Group
-* NOTE: this function can not be included in nexus-lib as it depends on mcinputtypes
-*       and mcinputtable are defined at compile time in here.
-* Returns: NX_OK
-*******************************************************************************/
-int mcnxfile_parameters(NXhandle nxhandle)
-{
-  int i;
-  char Parameters[CHAR_BUF_LENGTH];
-  /* in the parameter group, create one SDS per parameter */
-  for(i = 0; i < mcnumipar; i++) {
-    if (mcget_run_num() || (mcinputtable[i].val && strlen(mcinputtable[i].val))) {
-      char nxname[CHAR_BUF_LENGTH];
-      int length;
-      if (mcinputtable[i].par == NULL)
-        strncpy(Parameters, (mcinputtable[i].val ? mcinputtable[i].val : ""), CHAR_BUF_LENGTH);
-      else
-        (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
-      sprintf(nxname, "%s", Parameters);
-      length = strlen(nxname);
-      NXmakedata(mcnxHandle, mcinputtable[i].name, NX_CHAR, 1, &length);
-      NXopendata(mcnxHandle, mcinputtable[i].name);
-      NXputdata (mcnxHandle, nxname);
-      strcpy(nxname, (*mcinputtypes[mcinputtable[i].type].parminfo)(mcinputtable[i].name));
-      NXputattr (mcnxHandle, "type", nxname, strlen(nxname), NX_CHAR);
-      strcpy(nxname, mcinputtable[i].val ? mcinputtable[i].val : "");
-      NXputattr (mcnxHandle, "default_value", nxname, strlen(nxname), NX_CHAR);
-      NXputattr (mcnxHandle, "name", mcinputtable[i].name, strlen(mcinputtable[i].name), NX_CHAR);
-      NXclosedata(mcnxHandle);
-    }
-  }
-  return(NX_OK);
-} /* mcnxfile_parameters */
 
 #endif /* USE_NEXUS */

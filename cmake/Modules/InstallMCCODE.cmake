@@ -79,6 +79,7 @@ macro(InstallMCCODE)
 
   # update definitions to match choices
   if (USE_NEXUS)
+    AppendDef(HAVE_NEXUS="-DUSE_NEXUS -lNeXus")    
     AppendDef(USE_NEXUS)
   endif()
 
