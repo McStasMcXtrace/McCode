@@ -4328,7 +4328,11 @@ mcuse_dir(char *dir)
   if(mpi_node_rank == mpi_node_root)
   {
 #endif
-    if(mkdir(dir, 0777)) {
+#ifdef WIN32
+    if(mkdir(dir)) {
+#else
+    if(mkdir(dir), 0777)) {
+#endif 
 #ifndef DANSE
       fprintf(stderr, "Error: unable to create directory '%s' (mcuse_dir)\n", dir);
       fprintf(stderr, "(Maybe the directory already exists?)\n");
