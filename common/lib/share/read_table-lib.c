@@ -67,16 +67,17 @@
     long  begin;
     long  filesize=0;
     char  name[256];
+    char  path[1024];
     struct stat stfile;
 
     if (!Table) return(-1);
     Table_Init(Table, 0, 0);
     if (!File || File[0]=='\0')  return(-1);
     if (!strcmp(File,"NULL") || !strcmp(File,"0"))  return(-1);
-    hfile = fopen(File, "r");
+    strncpy(path, File, 1024);
+    hfile = fopen(path, "r");
     if(!hfile)
     {
-      char path[1024];
       char dir[1024];
 
       if (!hfile) /* search in instrument location */
@@ -118,7 +119,7 @@
       } else if (!offset || (offset && !*offset))
         printf("Opening input file '%s' (Table_Read)\n", path);
     }
-    stat(File,&stfile); filesize = stfile.st_size;
+    stat(path,&stfile); filesize = stfile.st_size;
     if (offset && *offset) fseek(hfile, *offset, SEEK_SET);
     begin     = ftell(hfile);
     if (offset && *offset) sprintf(name, "%s@%li", File, *offset);
@@ -325,6 +326,7 @@
             Header        = (char*)realloc(Header, malloc_size_h*sizeof(char));
           }
           strncat(Header, line, 4096);
+          flag_In_array=0;
           /* exit line and file if passed desired block */
           if (block_number > 0 && block_number == block_Current_index) {
             flag_End_row_loop = 1;
@@ -359,8 +361,8 @@
                 } /* else append */
               }
               /* reading num: all blocks or selected block */
-              if (flag_In_array && (block_number == 0) ||
-                  (block_number == block_Current_index)) {
+              if (flag_In_array && (block_number == 0 ||
+                  block_number == block_Current_index)) {
                 /* starting block: already the desired number of rows ? */
                 if (block_Num_Columns == 0 &&
                     max_rows > 0 && Rows >= max_rows) {
