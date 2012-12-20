@@ -350,7 +350,10 @@ simple_cpack_file() {
 
         simple_cpack "${GEN}" "${WORK}" || exit 1;
 
-        # pull out packed file and clean up
+        # Remove old packed version if present
+        rm -rf ${OUT}
+
+        # Pull out packed file and clean up
         find "${WORK}" -name "*${HINT}${EXT}" -exec mv {} "${OUT}" \;
 
 	      # If this is PackageMaker, the postinst script needs special handing
