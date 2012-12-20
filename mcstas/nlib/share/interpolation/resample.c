@@ -92,10 +92,11 @@ void interpolate3x3(treeNode *tree,
                     double *bx, double *by, double *bz)
 {
   vertex v = { x, y, z, 0, 0, 0, 0, -1 };
-  kdtree_nearestNeighbour(&v, tree);
-  *bx = v.U;
-  *by = v.V;
-  *bz = v.W;
+  vertex *w;  
+   w=kdtree_nearestNeighbour(&v, tree);
+  *bx = w->U;
+  *by = w->V;
+  *bz = w->W;
 }
 
 
