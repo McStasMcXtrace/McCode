@@ -36,6 +36,14 @@
 * The I/O format definitions and functions
 *******************************************************************************/
 
+
+/** Include header files to avoid implicit declarations (not allowed on LLVM) */
+#include <ctype.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+
 #ifndef DANSE
 #ifdef MC_ANCIENT_COMPATIBILITY
 int mctraceenabled = 0;
