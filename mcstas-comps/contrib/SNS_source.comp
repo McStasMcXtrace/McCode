@@ -22,7 +22,7 @@
 * Notes:
 * (1) the raw moderator files are per Sr.  The focusing parameters provide the solid
 * angle accepted by the guide to remove the Sr dependence from the output. Therefore 
-* the best practice is to set focus_xw and focus_yh to the xwidth and yheight of the next beam 
+* the best practice is to set focus_xw and focus_yh to the width and height of the next beam 
 * component, respectively. The dist parameter should then be set as the distance 
 * from the moderator to the first component.
 * (2) This component works purely by interpolation. Therefore be sure that Emin and 
