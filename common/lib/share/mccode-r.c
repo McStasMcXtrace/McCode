@@ -4960,6 +4960,7 @@ void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *in
 
 #endif /*NEUTRONICS*/
 
+#ifdef USE_NEXUS
 /*******************************************************************************
 * mcnxfile_parameters: writes the simulation parameters
 *                   open/close a new Data Set per parameter in the current simulation Group
@@ -4995,7 +4996,7 @@ int mcnxfile_parameters(NXhandle nxhandle)
   }
   return(NX_OK);
 } /* mcnxfile_parameters */
-
+#endif /* USE_NEXUS */
 
 #endif /* !MCCODE_H */
 /* End of file "mccode-r.c". */
