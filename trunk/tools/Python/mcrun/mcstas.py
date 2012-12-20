@@ -116,7 +116,7 @@ class McStas:
         cflags += options.no_cflags and ['-O0'] or config.CFLAGS.split()  # cflags
 
         # Compiler optimisation
-        args = ['-o', self.binpath] + cflags + [self.cpath]
+        args = ['-o', self.binpath, self.cpath] + cflags
         Process(options.cc).run(args)
 
     def run(self, pipe=False, extra_opts=None, override_mpi=None):
