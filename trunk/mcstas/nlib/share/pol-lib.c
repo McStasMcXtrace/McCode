@@ -507,7 +507,7 @@ void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
 		    mc_pol_BxTemp, mc_pol_ByTemp, mc_pol_BzTemp);
       mc_pol_sp /= mc_pol_Bstart*mc_pol_Btemp;
 
-    } while (mc_pol_sp<mc_pol_spThreshold);
+    } while (mc_pol_sp<mc_pol_spThreshold && mc_pol_timeStep>FLT_EPSILON);
 
     mc_pol_timeStep*=2;
 
