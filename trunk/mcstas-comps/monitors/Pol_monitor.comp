@@ -33,7 +33,6 @@
 * my:       Y-component of monitor vector (can be negative) (1)
 * mz:       Z-component of monitor vector (can be negative) (1)
 * npol:     Number of channels (1)
-* filename: Name of file in which to store the detector output (text)
 * restore_neutron: If set, the monitor does not influence the neutron state (1)
 *
 * OUTPUT PARAMETERS:
