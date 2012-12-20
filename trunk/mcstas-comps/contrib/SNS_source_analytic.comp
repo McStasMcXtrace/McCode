@@ -18,7 +18,7 @@
 * - corrected for setting ttmin=tinmin if tinmin>ttmin          October 15,   2010
 * - added normalization parameters n_pulses and p_power         October 18,   2010
 * - normalizes with                                             October 18,   2010
-*      (width x height/0.1/0.12) *n_pulses *p_power/2.0
+*      (xwidth x yheight/0.1/0.12) *n_pulses *p_power/2.0
 *
 *
 * Component: SNS_source_analytic
@@ -34,24 +34,33 @@
 * %D
 * Produces a time-of-flight spectrum from SNS moderator files
 * moderator files can be obtained from the author
-* The output units of this component are N/pulse
+* <strong>IMPORTANT: The output units of this component are N/pulse</strong>
+* <strong>IMPORTANT: The component needs a FULL PATH to the source input file</strong>
 * Notes:
-* (1) the raw moderator files are per Sr.  The parameters xw yh and dist 
+* (1) the raw moderator files are per Sr.  The parameters focus_xw focus_yh and dist 
 * provide the solid angle with which the beam line is served. 
-* The best practice is to set xw and yh to the width and height of the 
+* The best practice is to set focus_xw and focus_yh to the width and height of the 
 * closest beam component, and dist as the distance from the moderator 
 * location to this component.
 * (2) Be sure that Emin and Emax are within the limits of 1e-5 to 100 eV
 * (3) the proton pulse length T determines short- and long-pulse mode 
 *
+* Beamport definitions:
+* BL11: a1Gw2-11-f5_fit_fit.dat
+* BL14: a1Gw2-14-f5_fit_fit.dat
+* BL17: a1Gw2-17-f5_fit_fit.dat
+* BL02: a1Gw2-2-f5_fit_fit.dat
+* BL05: a1Gw2-5-f5_fit_fit.dat
+* BL08: a1Gw2-8-f5_fit_fit.dat
+*
 * %P
 * Input parameters:
-* S_filename:   Filename of source data 
-* width:  (m)   width of moderator (default 0.1 m)
-* height: (m)   height of moderator (default 0.12 m)
+* filename:   Filename of source data 
+* xwidth:  (m)   width of moderator (default 0.1 m)
+* yheight: (m)   height of moderator (default 0.12 m)
 * dist:   (m)   Distance from source to the focusing rectangle (no default)
-* xw:     (m)   Width of focusing rectangle (no default)
-* yh:     (m)   Height of focusing rectangle (no default)
+* focus_xw:     (m)   Width of focusing rectangle (no default)
+* focus_yh:     (m)   Height of focusing rectangle (no default)
 * Emin: (meV)   minimum energy of neutrons (default 0.01 meV)
 * Emax: (meV)   maximum energy of neutrons (default 1e5 meV)
 * tinmin:(us)   minimum time of neutrons (default 0 us)
@@ -72,12 +81,12 @@
 *******************************************************************************/
 
 DEFINE COMPONENT SNS_source_analytic
-DEFINITION PARAMETERS (S_filename)
-SETTING PARAMETERS (width=0.10, 
-                    height=0.12, 
+DEFINITION PARAMETERS (string filename)
+SETTING PARAMETERS (xwidth=0.10, 
+                    yheight=0.12, 
                     dist, 
-                    xw, 
-                    yh, 
+                    focus_xw, 
+                    focus_yh, 
                     Emin=0.01, 
                     Emax=1.0e5, 
                     tinmin=0.0, 
@@ -765,7 +774,7 @@ INITIALIZE
 
   FILE *fp, *fopen();
 
-  fp = fopen(S_filename,"r");
+  fp = fopen(filename,"r");
   if (fp==NULL){
     printf("Error opening file\n");
   }
@@ -861,12 +870,12 @@ INITIALIZE
     printf(" dist must be greater zero\n");
     abort();
   }
-  else if(xw<=0.0) {
-    printf(" xw must be greater zero\n");
+  else if(focus_xw<=0.0) {
+    printf(" focus_xw must be greater zero\n");
     abort();
   }
-  else if(yh<=0.0) {
-    printf(" yh must be greater zero\n");
+  else if(focus_yh<=0.0) {
+    printf(" focus_yh must be greater zero\n");
     abort();
   }
   else if(p_power<=0) {
@@ -880,9 +889,9 @@ INITIALIZE
  
 /* Normalization */
   // Calculate solid Angle
-  p_in = xw*yh/(dist*dist);
+  p_in = focus_xw*focus_yh/(dist*dist);
   // Normalize to viewed area
-  p_in *= width*height/0.1/0.12;
+  p_in *= xwidth*yheight/0.1/0.12;
   // Normalize to proton power
   p_in *= p_power/2.0;
   // Normalize to number of pulses
@@ -901,12 +910,12 @@ TRACE
   int i;
   p=p_in;
   z=0;
-  x = (rand01()-0.5)*width; /* choose points uniformly distributed on the source */
-  y = (rand01()-0.5)*height;
-  hdivmax=atan((xw/2.0-x)/dist);
-  hdivmin=atan(-(xw/2.0+x)/dist);
-  vdivmax=atan((yh/2.0-y)/dist);
-  vdivmin=atan(-(yh/2.0+y)/dist);
+  x = (rand01()-0.5)*xwidth; /* choose points uniformly distributed on the source */
+  y = (rand01()-0.5)*yheight;
+  hdivmax=atan((focus_xw/2.0-x)/dist);
+  hdivmin=atan(-(focus_xw/2.0+x)/dist);
+  vdivmax=atan((focus_yh/2.0-y)/dist);
+  vdivmin=atan(-(focus_yh/2.0+y)/dist);
   theta = hdivmin + (hdivmax-hdivmin)*rand01(); /* Small angle approx. */ 
   phi = vdivmin + (vdivmax-vdivmin)*rand01();
   hdiv=theta;
@@ -1017,7 +1026,7 @@ FINALLY
 MCDISPLAY
 %{
   double x1,y1,x2,y2;
-  x1=-width/2.0;y1=-height/2.0;x2=width/2.0;y2=height/2.0;
+  x1=-xwidth/2.0;y1=-yheight/2.0;x2=xwidth/2.0;y2=yheight/2.0;
   multiline(4,(double)x1,(double)y1,0.0,(double)x1,(double)y2,0.0,(double)x2,(double)y2,0.0,(double)x2,(double)y1,0.0,(double)x1,(double)y1,0.0);
 %}
 
