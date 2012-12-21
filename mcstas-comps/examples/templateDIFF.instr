@@ -120,7 +120,7 @@ REMOVABLE COMPONENT Origin = Progress_bar()
 REMOVABLE COMPONENT Source = Source_gen(
     radius = 0.11, dist = L1, focus_xw = 0.1*fabs(sin(DEG2RAD*THETA_M)), focus_yh = 0.15,
     lambda0 = lambda, dlambda = lambda*0.01,
-    T1 = 683.7, I1 = 0.5874e13, T2 = 257.7, I2 = 2.5094e13, T3 =  16.7, I3 = 0.10343e13)
+    T1=229.6,I1=5.32e13,T2=1102, I2=4.37e12, T3=437.1,I3=3.84e13)
   AT (0, 0, 0) RELATIVE Origin
   
 /* TIP: monochromator cradle */

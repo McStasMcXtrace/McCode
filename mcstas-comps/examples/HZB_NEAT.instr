@@ -98,7 +98,7 @@ TRACE
 COMPONENT PG = Progress_bar()
 AT (0,0,0) ABSOLUTE
 
-COMPONENT Source = Source_gen(T1=28, I1=1e14, radius=0.1, yheight=0.2,
+COMPONENT Source = Source_gen(T1=43.7 ,I1=1.4e12, T2=137.2,I2=2.08e12,radius=.155,
   lambda0=lambda, dlambda=dlambda,
   focus_xw=0.03, focus_yh=0.055)
 AT (0,0,0) ABSOLUTE

@@ -34,9 +34,6 @@ DEFINE INSTRUMENT ILL_H22(m=2, lambda=4, dlambda=3.9, mip=2)
 DECLARE
 %{
   /* Thermal (H2x) source parameters */
-  double sT1=683.7,sI1=0.5874e+13;
-  double sT2=257.7,sI2=2.5099e+13;
-  double sT3=16.7 ,sI3=1.0343e+12;
   /* guide coating parameters */
   double gR0          = 1;
   double gQc          = 0.021;
@@ -89,12 +86,7 @@ COMPONENT Thermal = Source_gen(
   focus_yh = 0.2,
   lambda0  = lambda,
   dlambda  = dlambda,
-  T1       = sT1,
-  I1       = sI1,
-  T2       = sT2,
-  I2       = sI2,
-  T3       = sT3,
-  I3       = sI3,
+  T1=683.7,I1=0.5874e+13,T2=257.7,I2=2.5099e+13,T3=16.7 ,I3=1.0343e+12
   verbose  = 1)
   AT (0, 0, 0) RELATIVE Origin
 
