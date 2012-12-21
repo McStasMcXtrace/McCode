@@ -144,7 +144,7 @@ REMOVABLE COMPONENT Source = Source_gen(
   radius  = 0.10,
   dist = machine_hkl.l1,
   focus_xw = fabs(WM*sin(machine_real.a1*DEG2RAD)), focus_yh = HM,
-  T1 = 683.7, I1 = 2*0.5874e13, T2 = 257.7, I2 = 2*2.5094e13, T3 =  16.7, I3 = 2*0.10343e13,
+  T1=683.7,I1=0.5874e+13,T2=257.7,I2=2.5099e+13,T3=16.7 ,I3=1.0343e+12,
   E0 = machine_hkl.ei,
   dE = machine_hkl.ei*0.03)
 AT (0,0,0) ABSOLUTE

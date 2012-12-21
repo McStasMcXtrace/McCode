@@ -35,7 +35,7 @@
 * In this TAS configuration, PG002 is used as monochromator analyser, 
 * with a single type detector.
 *
-* %Example: KI=1.55 QM=1 Sqw_coh=V.laz Detector: Sample_Cradle_I=3.53099e+07
+* %Example: KI=1.55 QM=1 Sqw_coh=V.laz Detector: Sample_Cradle_I=6.8e+07
 *
 * %Parameters
 * m:         m-value of guide coating (H14/H142) [1]
@@ -79,13 +79,7 @@ double sLmbdMaxM = 20.0;
 double sLmbdMonoMin;
 double sLmbdMonoMax;
 
-double sT1 	    = 213.4;
-double sI1 	    = 1.47e13;
-double sT2 	    = 83.1;
-double sI2 	    = 3.26e12;
-double sT3 	    = 26.5;
-double sI3 	    = 1.21e13;
-
+double sT1=413.5,sI1=10.22e12,sT2=145.8,sI2=3.44e13,sT3=40.1 ,sI3=2.78e13;
 
 /* guide curvatures */
 
@@ -150,12 +144,7 @@ COMPONENT HCS = Source_gen(
   focus_yh       = 0.12,
   Lmin     = lambda-dlambda,
   Lmax     = lambda+dlambda,
-  T1       = sT1,
-  I1       = sI1,
-  T2       = sT2,
-  I2       = sI2,
-  T3       = sT3,
-  I3       = sI3,
+  T1=413.5,I1=10.22e12,T2=145.8,I2=3.44e13,T3=40.1 ,I3=2.78e13,
   verbose  = 1)
   AT (0, 0, 0) RELATIVE Origin
   
