@@ -1,0 +1,112 @@
+#  Copyright (c) 1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::fileevent - Execute a callback when a filehandle becomes readable or writable
+
+=for category  Binding Events and Callbacks
+
+=head1 SYNOPSIS
+
+I<$widget>-E<gt>B<fileevent>(I<fileHandle>,B<readable>?,I<callback>?)
+
+I<$widget>-E<gt>B<fileevent>(I<fileHandle>,B<writable>?,I<callback>?)
+
+=head1 DESCRIPTION
+
+This command is used to create I<file event handlers>.  A file event
+handler is a binding between a filehandle and a callback, such that the callback
+is evaluated whenever the filehandle becomes readable or writable.  File event
+handlers are most commonly used to allow data to be received from another
+process on an event-driven basis, so that the receiver can continue to
+interact with the user while waiting for the data to arrive.  If an
+application invokes C<E<lt>E<gt>>, C<sysread> or C<read> on a blocking filehandle when
+there is no input data available, the process will block; until the input
+data arrives, it will not be able to service other events, so it will
+appear to the user to ``freeze up''.  With B<fileevent>, the process can
+tell when data is present and only invoke B<gets> or B<read> when
+they won't block.
+
+The I<fileHandle> argument to B<fileevent> refers to an open filehandle,
+such as the return value from a previous B<open> or B<socket>
+command.
+If the I<callback> argument is specified, then B<fileevent>
+creates a new event handler:  I<callback> will be evaluated
+whenever the filehandle becomes readable or writable (depending on the
+argument to B<fileevent>).
+In this case B<fileevent> returns an empty string.
+The B<readable> and B<writable> event handlers for a file
+are independent, and may be created and deleted separately.
+However, there may be at most one B<readable> and one B<writable>
+handler for a file at a given time in a given interpreter.
+If B<fileevent> is called when the specified handler already
+exists in the invoking interpreter, the new callback replaces the old one.
+
+If the I<callback> argument is not specified, B<fileevent>
+returns the current callback for I<fileHandle>, or an empty string
+if there is none.
+If the I<callback> argument is specified as an empty string
+then the event handler is deleted, so that no callback will be invoked.
+A file event handler is also deleted automatically whenever
+its filehandle is closed or its interpreter is deleted.
+
+A filehandle is considered to be readable if there is unread data
+available on the underlying device.
+A filehandle is also considered to be readable if an end of file or
+error condition is present on the underlying file or device.
+It is important for I<callback> to check for these conditions
+and handle them appropriately;  for example, if there is no special
+check for end of file, an infinite loop may occur where I<callback>
+reads no data, returns, and is immediately invoked again.
+
+A filehandle is considered to be writable if at least one byte of data
+can be written to the underlying file or device without blocking,
+or if an error condition is present on the underlying file or device.
+
+Event-driven I/O works best for filehandles that have been
+placed into nonblocking mode.
+In blocking mode, a C<print> command may block if you give it
+more data than the underlying file or device can accept, and a
+C<E<lt>E<gt>>, C<sysread> or C<read> command will block if you attempt to read
+more data than is ready;  no events will be processed while the
+commands block.
+In nonblocking mode C<print>, C<E<lt>E<gt>>, C<sysread> and C<read> never block.
+See the documentation for the individual commands for information
+on how they handle blocking and nonblocking filehandles.
+
+The callback for a file event is executed in the context of I<$widget>
+with which B<fileevent> was invoked.
+If an error occurs while executing the callback then the
+L<Tk::Error> mechanism is used to report the error.
+In addition, the file event handler is deleted if it ever returns
+an error;  this is done in order to prevent infinite loops due to
+buggy handlers.
+
+=head1 BUGS
+
+On windows platforms B<fileevent> is limited in the types of filehandles
+that behave correctly. Making filefhandles non-blocking is only implemented
+on a subset of UNIX platforms (see L<Tk::IO>).
+
+=head1 CREDITS
+
+B<fileevent> is based on the B<addinput> command created
+by Mark Diekhans.
+
+=head1 SEE ALSO
+
+L<Tk::IO|Tk::IO>
+L<Tk::callbacks|Tk::callbacks>
+
+=head1 KEYWORDS
+
+asynchronous I/O, blocking, filehandle, event handler, nonblocking, readable,
+callback, writable.
+
+=cut
+

@@ -1,0 +1,133 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::Label - Create and manipulate Label widgets
+
+=for category  Tk Widget Classes
+
+=head1 SYNOPSIS
+
+I<$label> = I<$parent>-E<gt>B<Label>(?I<options>?);
+
+=head1 STANDARD OPTIONS
+
+B<-activebackground>
+B<-activeforeground>
+B<-anchor>
+B<-background>
+B<-bitmap>
+B<-borderwidth>
+B<-compound>
+B<-cursor>
+B<-disabledforeground>
+B<-font>
+B<-foreground>
+B<-highlightbackground>
+B<-highlightcolor>
+B<-highlightthickness>
+B<-image>
+B<-justify>
+B<-padx>
+B<-pady>
+B<-relief>
+B<-takefocus>
+B<-text>
+B<-textvariable>
+B<-underline>
+B<-wraplength>
+
+See L<Tk::options> for details of the standard options.
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item Name:	B<height>
+
+=item Class:	B<Height>
+
+=item Switch:	B<-height>
+
+Specifies a desired height for the label.
+If an image or bitmap is being displayed in the label then the value is in
+screen units (i.e. any of the forms acceptable to B<Tk_GetPixels>);
+for text it is in lines of text.
+If this option isn't specified, the label's desired height is computed
+from the size of the image or bitmap or text being displayed in it.
+
+=item Name:	B<state>
+
+=item Class:	B<State>
+
+=item Switch:	B<-state>
+
+Specifies one of three states for the label: B<normal>, B<active>, or
+B<disabled>. In normal state the label is displayed using the
+B<foreground> and B<background> options. In active state the label is
+displayed using the B<activeForeground> and B<activeBackground>
+options. In the disabled state the B<disabledForeground> and
+B<background> options determine how the button is displayed.
+
+=item Name:	B<width>
+
+=item Class:	B<Width>
+
+=item Switch:	B<-width>
+
+Specifies a desired width for the label.
+If an image or bitmap is being displayed in the label then the value is in
+screen units (i.e. any of the forms acceptable to B<Tk_GetPixels>);
+for text it is in characters.
+If this option isn't specified, the label's desired width is computed
+from the size of the image or bitmap or text being displayed in it.
+
+=back
+
+=head1 DESCRIPTION
+
+The B<Label> method creates a new window (given by the
+$widget argument) and makes it into a label widget.
+Additional
+options, described above, may be specified on the command line
+or in the option database
+to configure aspects of the label such as its colors, font,
+text, and initial relief.  The B<label> command returns its
+$widget argument.  At the time this command is invoked,
+there must not exist a window named $widget, but
+$widget's parent must exist.
+
+A label is a widget that displays a textual string, bitmap or image.
+If text is displayed, it must all be in a single font, but it
+can occupy multiple lines on the screen (if it contains newlines
+or if wrapping occurs because of the B<wrapLength> option) and
+one of the characters may optionally be underlined using the
+B<underline> option.
+The label can be manipulated in a few simple ways, such as
+changing its relief or text, using the commands described below.
+
+=head1 WIDGET METHODS
+
+The B<Label> method creates a widget object.
+This object supports the B<configure> and B<cget> methods
+described in L<Tk::options> which can be used to enquire and
+modify the options described above.
+The widget also inherits all the methods provided by the generic
+L<Tk::Widget|Tk::Widget> class.
+
+=head1 BINDINGS
+
+When a new label is created, it has no default event bindings:
+labels are not intended to be interactive.
+
+=head1 KEYWORDS
+
+label, widget
+
+=cut
+

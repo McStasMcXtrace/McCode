@@ -1,0 +1,77 @@
+#  Copyright (c) 1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_GetScrollInfo - parse arguments for scrolling commands
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+int
+B<Tk_GetScrollInfo(>I<interp, argc, argv, dblPtr, intPtr>B<)>
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter to use for error reporting.
+
+=item int argc (in)
+
+Number of strings in I<argv> array.
+
+=item char *argv[] (in)
+
+Argument strings.  These represent the entire method, of
+which the first word is typically the widget name and the second
+word is typically B<xview> or B<yview>.  This procedure parses
+arguments starting with I<argv>[2].
+
+=item double *dblPtr (out)
+
+Filled in with fraction from B<moveto> option, if any.
+
+=item int *intPtr (out)
+
+Filled in with line or page count from B<scroll> option, if any.
+The value may be negative.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_GetScrollInfo> parses the arguments expected by widget
+scrolling commands such as B<xview> and B<yview>.
+It receives the entire list of words that make up a method
+and parses the words starting with I<argv>[2].
+The words starting with I<argv>[2] must have one of the following forms:
+
+ moveto fraction
+ scroll number units
+ scroll number pages
+
+Any of the B<moveto>, B<scroll>, B<units>, and B<pages>
+keywords may be abbreviated.
+If I<argv> has the B<moveto> form, B<TK_SCROLL_MOVETO>
+is returned as result and I<*dblPtr> is filled in with the
+I<fraction> argument to the command, which must be a proper real
+value.
+If I<argv> has the B<scroll> form, B<TK_SCROLL_UNITS>
+or B<TK_SCROLL_PAGES> is returned and I<*intPtr> is filled
+in with the I<number> value, which must be a proper integer.
+If an error occurs in parsing the arguments, B<TK_SCROLL_ERROR>
+is returned and an error message is left in I<interp-E<gt>result>.
+
+=head1 KEYWORDS
+
+parse, scrollbar, scrolling command, xview, yview

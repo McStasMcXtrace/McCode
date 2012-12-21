@@ -1,0 +1,118 @@
+#!/usr/local/bin/perl -w
+
+use Tk::Pretty;
+
+sub complete
+{
+ local ($_) = @_;
+ my $open  = tr/{/{/;
+ my $close = tr/}/}/;
+ return 0 if ($open > $close);
+ die "More } than { in \n$_" if ($close > $open);
+ my $open  = tr/[/[/;
+ my $close = tr/]/]/;
+ return 0 if ($open > $close);
+ die "More ] than [ in \n$_" if ($close > $open);
+ return 1;
+}
+
+sub statement
+{
+# &Tk::Pretty::PrintArgs;
+ local ($_) = @_;
+ my ($sp,$rest) = (/^(\s*)(.*)$/s);
+ if (defined($rest) && length($rest))
+  {
+   my @words = split(/\s+/,$rest);
+   my $cmd = shift(@words);
+   my $i = 0;
+   while ($i < @words)
+    {
+     while (($i+1) < @words && !complete($words[$i]))
+      {
+       my $next = splice(@words,$i+1,1);
+       $words[$i] .= " $next";
+      }
+     $i++;
+    }
+   print PERL "$cmd(",join(',',@words),");\n";
+  }
+ else
+  {
+   print PERL "$_\n";
+  }
+}
+
+sub block
+{
+ my @lines = split(/\n/,$_[0]);
+ local ($_);
+ while (@lines)
+  {
+   $_ = shift(@lines);
+   while (@lines && !complete($_))
+    {
+     my $more = shift(@lines);
+     $_ .= "\n$more";
+    }
+   statement($_);
+  }
+}
+
+sub convert
+{
+ my ($tcl) = @_;
+ open(TCL,"expand $tcl|") || die "Cannot open expand $tcl:$!";
+ open(PERL,">$tcl.pm") || die "Cannot open $tcl.pm:$!";
+LOOP:
+ while (<TCL>)
+  {
+   if (/^\s*(#.*)?$/)
+    {
+     print PERL $_;
+    }
+   else
+    {
+     if (/\\$/ || !complete($_))
+      {
+       my $more = <TCL>;
+       if (/\\$/)
+        {
+         chomp;
+         s/\\$//;
+        }
+       $_ .= $more;
+       redo LOOP;
+      }
+     # handling of args with defaults needs work for general case
+     if (/^proc\s+(\S+)\s*\{([^\}]*)}\s*\{(.*)\}\s*$/s)
+      {
+       my ($name,$args,$body) = ($1,$2,$3);
+       print STDERR "$name\n";
+       print PERL "sub $name\n{\n";
+       my @args = split(/\s/,$args);
+       if (@args)
+        {
+         print PERL " my (",join(',',map('$'.$_,@args)),") = \@_;\n";
+        }
+       block($body);
+       print PERL "}\n";
+       next LOOP;
+      }
+     else
+      {
+       chomp;
+       statement($_);
+      }
+    }
+  }
+ close(TCL);
+ close(PERL);
+}
+
+@ARGV = <*.tcl> unless (@ARGV);
+
+foreach $file (@ARGV)
+ {
+  convert($file) if ($file =~ /\.tcl$/);
+ }

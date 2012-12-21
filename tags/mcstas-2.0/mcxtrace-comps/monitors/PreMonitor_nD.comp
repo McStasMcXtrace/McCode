@@ -1,0 +1,106 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: PreMonitor_nD
+*
+* %Identification
+* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
+* Modified for xrays by Erik B Knudsen
+* Date: 01st Nov 2011.
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>
+* Release: McXtrace 1.1
+* Version: $Revision: 1.11 $
+*
+* Xray parameters spatial cross-correlation monitor.
+*
+* %Description
+* Photon parameters are stored when entering in the PreMonitor.
+* If this photon then reaches the associated Monitor_nD, this latter
+* component measures the previously stored parameters. This enables to study
+* correlations between a given parameter in one place of the instrument
+* and an other detection position in the instrument.
+*
+* <b>EXAMPLES:</b>
+* Here follows a Phase-Space correlation diagram detector
+* (used for guides for instance)
+*
+*  MyPreMonitor = PreMonitor_nD(
+*   monitor_comp = MyMonitor)
+*
+* ...some optics....
+*
+* MyMonitor = Monitor_nD(
+*   xmin = -0.1, xmax = 0.1,
+*   ymin = -0.1, ymax = 0.1,
+*   options = "hdiv x, auto, use premonitor");
+*
+* %Parameters
+* INPUT PARAMETERS:
+*
+* monitor_comp: name of the associated Monitor_nD where the detection should take place [no quotes]
+*
+* OUTPUT PARAMETERS:
+*
+* %Link
+* <a href="Monitor_nD.html">Monitor_nD</a>
+*
+* %End
+*******************************************************************************/
+
+DEFINE COMPONENT PreMonitor_nD
+DEFINITION PARAMETERS (monitor_comp)
+SETTING PARAMETERS ()
+/* Xray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+/* Flag will be set to 1 automatically */
+/* unset by user in Monitor_nD if required (with 'not') */
+/* Monitor_nD with premonitor should check that a PreMonitor exists */
+/* if Flag==0 in option parsing -> no pre monitor -> warning, normal monitor */
+
+INITIALIZE
+%{
+    struct MonitornD_Variables *Vars = &(MC_GETPAR(monitor_comp, Vars));
+    Vars->Flag_UsePreMonitor = 1;
+    strncpy(Vars->UserName1, NAME_CURRENT_COMP, 64);
+%}
+
+TRACE
+%{
+    struct MonitornD_Variables *Vars = &(MC_GETPAR(monitor_comp, Vars));
+    /* directly act on MonitornD_Variables pointer, do not need to update */
+
+    PROP_Z0;
+
+    if (Vars->Flag_UsePreMonitor == 1)
+    {
+        Vars->cp = p;
+        Vars->cx = x;
+        Vars->ckx = kx;
+        Vars->cEx = Ex;
+        Vars->cy = y;
+        Vars->cky = ky;
+        Vars->cEy = Ey;
+        Vars->cz = z;
+        Vars->ckz = kz;
+        Vars->cEz = Ez;
+        Vars->ct = t;
+        Vars->cphi = phi;
+        SCATTER;
+    }
+%}
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. 0.1 m */
+  magnify("");
+  line(0,0,0,0.1,0,0);
+  line(0,0,0,0,0.1,0);
+  line(0,0,0,0,0,0.1);
+%}
+
+END
+

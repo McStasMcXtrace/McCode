@@ -1,0 +1,91 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1997 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_Name, Tk_PathName, Tk_NameToWindow - convert between names and window tokens
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Tk_Uid
+B<Tk_Name>(I<tkwin>)
+
+char *
+B<Tk_PathName>(I<tkwin>)
+
+Tk_Window
+B<Tk_NameToWindow>(I<interp, pathName, tkwin>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_Window tkwin (in)
+
+Token for window.
+
+=item Tcl_Interp *interp (out)
+
+Interpreter to use for error reporting.
+
+=item char *pathName (in)
+
+Character string containing path name of window.
+
+=back
+
+=head1 DESCRIPTION
+
+Each window managed by Tk has two names, a short name that identifies
+a window among children of the same parent, and a path name that
+identifies the window uniquely among all the windows belonging to the
+same main window.  The path name is used more often in Tk than the
+short name;  many commands, like B<bind>, expect path names as
+arguments.
+
+The B<Tk_Name> macro returns a window's
+short name, which is the same as the I<name> argument
+passed to B<Tk_CreateWindow> when
+the window was created.  The value is returned
+as a Tk_Uid, which may be used just like a string pointer but also has
+the properties of a unique identifier (see the the documentation for
+B<Tk_GetUid> for details).
+
+The B<Tk_PathName> macro returns a
+hierarchical name for I<tkwin>.
+Path names have a structure similar to file names in Unix but with
+dots between elements instead of slashes:  the main window for
+an application has the path name ``.'';  its children have names like
+``.a'' and ``.b''; their children have names like ``.a.aa'' and
+``.b.bb''; and so on.  A window is considered to be be a child of
+another window for naming purposes if the second window was named
+as the first window's I<parent> when the first window was created.
+This is not always the same as the X window hierarchy.  For
+example, a pop-up
+is created as a child of the root window, but its logical parent will
+usually be a window within the application.
+
+The procedure B<Tk_NameToWindow> returns the token for a window
+given its path name (the $widget argument) and another window
+belonging to the same main window (I<tkwin>).  It normally
+returns a token for the named window, but if no such window exists
+B<Tk_NameToWindow> leaves an error message in I<interp-E<gt>result>
+and returns NULL.  The I<tkwin> argument to B<Tk_NameToWindow>
+is needed because path names are only unique within a single
+application hierarchy.  If, for example, a single process has opened
+two main windows, each will have a separate naming hierarchy and the
+same path name might appear in each of the hierarchies.  Normally
+I<tkwin> is the main window of the desired hierarchy, but this
+need not be the case:  any window in the desired hierarchy may be used.
+
+=head1 KEYWORDS
+
+name, path name, token, window

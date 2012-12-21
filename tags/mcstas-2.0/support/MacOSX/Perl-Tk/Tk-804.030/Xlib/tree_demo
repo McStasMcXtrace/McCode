@@ -1,0 +1,63 @@
+#!/usr/local/bin/perl -w
+use Tk;
+use Tk::Xlib;
+use Tk::HList;
+
+my $win_image;
+
+sub AddChildren
+{
+ my ($hl,$path,$id) = @_;
+ my $w;
+# foreach $w ($hl->property(list => $$id))
+#  {
+#   $hl->add("$path.$w", -itemtype => 'text', -text => $w, -data => $w);
+#  }
+ foreach $w ($hl->Display->XQueryTree($id))
+  {
+   my $name = sprintf("#%X",$$w);
+   my $text = ($hl->property('exists' => 'WM_NAME',$$w))
+                ? $hl->property(get => 'WM_NAME',$$w)
+                : $name;
+
+   $hl->add("$path.$name", -itemtype => 'imagetext', -image => $win_image, -text => $text, -data => $w);
+   AddChildren($hl,"$path.$name",$w);
+  }
+}
+
+sub More
+{
+ my ($w,$item) = @_;
+ my $data = $w->entrycget($item,'-data');
+ if (ref($data))
+  {
+   AddChildren($w,$item,$data);
+  }
+ else
+  {
+   my $prop = $data;
+   my $parent = $w->info('parent',$item);
+   $data = $w->entrycget($parent,'-data');
+   my @info = $w->property('get',$prop,$$data);
+   print join(' ',$prop,@info),"\n";
+  }
+}
+
+
+my $mw = MainWindow->new;
+$mw->MakeWindowExist;
+my $root;
+$mw->Display->XQueryTree($mw->WindowId,$root);
+
+if (defined $root)
+ {
+  $win_image = $mw->Bitmap(-file => Tk->findINC('win.xbm'));
+  my $hl = $mw->Scrolled('HList',-separator => '.',-drawbranch => 1);
+  $hl->configure(-command => [\&More,$hl]);
+  my $name = sprintf("%X",$$root);
+  $hl->add($name, -itemtype => 'imagetext', -image => $win_image, -text => $name, -data => $root);
+  AddChildren($hl,$name,$root);
+  $hl->pack(-expand=> 1, -fill => 'both');
+ }
+
+MainLoop;

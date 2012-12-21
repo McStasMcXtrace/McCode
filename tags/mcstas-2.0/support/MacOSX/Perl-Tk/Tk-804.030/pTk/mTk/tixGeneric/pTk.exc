@@ -1,0 +1,10 @@
+tixClass.c
+tixCmds.c
+tixGeometry.c
+tixInit.c
+tixMethod.c
+tixOption.c
+tixItcl.c
+tixItcl.h
+tixWidget.c
+

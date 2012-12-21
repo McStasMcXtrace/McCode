@@ -1,0 +1,34 @@
+This is an extension for Tk800.015 and later which supplies
+JPEG format loader for Photo image type.
+
+This version builds with Mingw32 on Win32, and should build with
+other "perl supported" Win32 compilers.
+
+(Please use earlier Tk::JPEG 1.* with Tk40?.*)
+
+The sub-directory jpeg is release 6a of the The Independent JPEG Group's (IJG)
+free JPEG software with only the addition of a (dubious) Makefile.PL.
+
+This package is not distributed with perl/Tk due to different portability
+and licencing issues see jpeg/README for details of IJG's license.
+
+This version uses Tk wrapper code based on the Img extension to Tcl/Tk.
+
+The support for -data and passing options to read and write is incomplete.
+
+The Makefile.PL in jpeg directory just invokes IJG's GNU-ish
+'configure' script (on UNIX), and copies canned files into
+place on Win32. Thus some hand intervention may be required.
+Corrections to canned-file copying, and/or extension of that scheme
+to use more of IJG's canned examples for other perl ports welcome.
+
+That said :
+
+perl Makefile.PL
+make
+make test
+
+Should build it.
+
+Nick Ing-Simmons <nick@ing-simmons.net>
+

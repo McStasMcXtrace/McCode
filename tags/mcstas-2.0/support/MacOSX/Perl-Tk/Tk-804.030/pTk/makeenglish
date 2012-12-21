@@ -1,0 +1,59 @@
+#!/usr/local/bin/perl -w
+# BEGIN { push(@INC, qw(../../../lib ../../lib ../lib lib)) }
+
+die "Must be executed from Tk/pTk distribution directory\n" unless -f "Lang.h";
+open(STDOUT, ">../Tk/English.pm") || die "open failed: $!";
+print <<'EOH';
+package Tk::English;
+
+require Exporter;
+use base  (Exporter);
+
+# This file is generated automatically by pTk/makeenglish from Tk distribution.
+
+EOH
+
+my %found = ();
+
+opendir(DIR,'.') || die "Cannot open '.':$!";
+@ARGV = grep(/\.c/,readdir(DIR));
+closedir(DIR);
+
+while (<>)
+ {
+  if (/strn?cmp\s*\(.*"([a-z][a-z0-9]+)"/)
+   {my $key = $1;
+    my $name = "\U$key";
+    if (!defined $found{$name})
+     {
+      $found{$name} = $key;
+     }
+   }
+}
+
+
+print "\n\@EXPORT = qw(\n";
+$line = "";
+foreach (sort keys %found)
+ {
+  if (length($line)+length($_)+2 > 76)
+   {
+    print "    $line\n";
+    $line = "";
+   }
+  else
+   {
+    $line .= ' ' if (length $line);
+   }
+  $line .= "&$_";
+ }
+print "    $line\n" if (length $line);
+print ");\n";
+
+foreach $name (sort keys %found) {
+    my $key = $found{$name};
+    print qq(sub $name () { '$key' }\n);
+}
+
+print "\n1;\n";
+

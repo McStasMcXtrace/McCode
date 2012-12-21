@@ -1,0 +1,1267 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2010, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Documentation: CHANGES
+*
+* %Identification
+* Written by: KN, KL, PEO, EF, PW, EK, JB
+* Date: 2012
+* Origin: DTU, ILL, Uni Copenhagen, PSI
+* Release: McStas 2.0RC2
+* Modified by: KN, October 26, 1998 : initial release 1.0
+* Modified by: KN, March 31, 1999   : release 1.1
+* Modified by: KN, January 31, 2000 : release 1.2
+* Modified by: KN, May 18, 2000     : release 1.3
+* Modified by: KN, July 28, 2000    : release 1.4
+* Modified by: KN, PEO, March 16, 2001: release 1.4.1
+* Modified by: PEO, EF, October, 10th, 2001: release 1.5
+* Modified by: PW, EF, May 19th 2003: version 1.7
+* Modified by: PW, EF, March 4th 2004: version 1.8
+* Modified by: PW, EF, November 16th 2005: version 1.9
+* Modified by: PW, EF, March 29th 2006: version 1.9.1
+* Modified by: PW, EF, December 4th 2006: version 1.10
+* Modified by: PW, EF, July 3rd 2007: version 1.11
+* Modified by: PW, EF, EK May 8th 2008: version 1.12
+* Modified by: PW, EF, EK April 2nd 2009: version 1.12a
+* Modified by: PW, EF, EK June/July 2010: version 1.12b
+* Modified by: PW May-June 2011: version 1.12c (re-release)
+* Modified by: PW November 2012: version 2.0RC1 (pre-release)
+* Modified by: PW December 2012: version 2.0RC2 (pre-release)
+* This file is part of McStas  version 2.0, released December 21st, 2012.
+* It gives a 'changes' list from the beginning of the project
+*
+*******************************************************************************/
+Changes in McStas v2.0, December 21st, 2012
+
+ McStas 2.0 is the long-awaited major release of McStas
+
+ Thanks:
+ - Thanks to all contributors of components, instruments etc.! This is what Open Source
+   and McStas is all about!
+ - Thanks to Johan Brinch for helping us modernize the structure of the code and bring
+   new solutions in the tool area!
+ - Thanks to Esben Klinkby for debugging results of the McStas (physics) test!
+
+ General:
+ - As documented in the manual, a new major release means loss of backward compatibility.
+   See remarks below about STATE_PARAMETERS and naming of component parameters. Most of your
+   existing instruments and components should be trivial to port to the new release as the
+   code generation gives you helpful debugging information. Should you fail after trying, 
+   feel free to send us a tgz or zip with all needed instrument- and component code to 
+   mcstas-users@mcstas.org and we will try to help.
+ - As of this release, McStas is distributed as multiple packages rather than a monolithic:
+   - mcstas, contains code generator and runtime codes
+     * Dependencies: a C-compiler (and mcstas-comps)
+     * Optional: an MPI environment
+   - mcstas-comps, contains component- and instrument example libraries 
+     * Dependencies: mcstas
+   - mcstas-tools-Perl, contains our "legacy" set of perl tools 
+     * Dependencies: mcstas, Perl, Perl::Tk, pgplot, perl-PGPLOT, Gnuplot
+     * Optional: Perl::Tk::CodeText, Perl::Math::Amoeba, Matlab, a VRML-viewer, (Scilab 4.0)
+     * Remark: As far as possible, we provide dependencies in the installation bundles
+     * Remark: mcgui can be configured to run python-based tools for sub-tasks
+   - mcstas-doc, contains our PDF manuals
+   - mcstas-tools-Python-mcrun, contains our new, python-based compile/run script
+     * Dependencies: python-yaml
+     * Remark: The script falls back to the perl version if dependencies do not resolve
+   - mcstas-tools-Python-mcplot-matplotlib, contains a new matplotlib mcplot solution
+     * Dependencies: python-matplotlib
+     * Remark: A bit on the slow side for large datasets
+     * Remark: Features zooming on individual plots
+     * Remark: "Standard" mcplot shortcuts for graphics dumps etc.
+     * Remark: Recommendations for platform-specific python-distributions below
+     * Remark: The script falls back to the perl version if dependencies do not resolve
+   - mcstas-tools-Python-mcplot-chaco, contains a draft implementation of mcplot based on chaco
+     * Dependencies: python-chaco
+     * Remark: Faster than matplotlib-solution, but a bit on the slow side for large datasets
+     * Remark: Features zooming on individual plots
+     * Remark: Recommendations for platform-specific python-distributions below
+     * Remark: Not easy to install dependencies for chaco if not in your python distro
+     * Remark: The script falls back to the perl version if dependencies do not resolve
+   - mcstas-web, contains a webserver-based run/trace/plot solution
+     * Dependencies: python, python-XXX, R or perl+pgplot+perl-PGPLOT, nginx or apache
+     * Remark: Currently not packaged, get it from our SVN.
+ - In the future, we will release new versions of e.g. the component library, docs or tools while 
+   maintaining the core mcstas package. See repository-remarks below.
+ - A given McStas 2.x release is "self-contained" and can be installed in parallel with other of
+   McStas and McXtrace (i.e. run mcgui-2.0RC2 to select a specific version)
+ - We provide the new mccode-select and mccode-select-bundle that allows to select the version of
+   a given tool (i.e. mcrun) which is run by default 
+ - We provide a "migration tool" for Unix based systems (i.e. Linux & Mac) to let your already
+   installed McStas 1.x co-exist with the new 2.x 
+ - Using McStas with NeXus does no longer require recompilation if you only want to _write_ NeXus.
+   (Simply install NeXus and update your MCSTAS_CFLAGS to include -lNeXus -DUSE_NEXUS). For the
+   conversion of files using mcformat NeXus must still be available at compile time
+
+ Platform support:
+ - We have moved from autoconf+make to CMake for easy multi-platform support
+ - Supported platforms / targeted distributions of McStas are available for
+   - Debian-based Linux systems (including Ubuntu, Mint etc.)
+     * Versions: 32 and 64 bit
+     * Remark: Dependencies resolved through OS package system
+     * Remark: We provide debian packages for dependencies that are not in the OS'es by default
+     * Remark: On Debian you need to enable the 'non-free' and 'contrib' apt-repositories
+     * Remark: We will soon provide an apt repository for your sources.list
+   - RPM-based Linux systems (including Scientific Linux, CentOS etc.)
+     * Versions: 32 and 64 bit
+     * Remark: Dependencies resolved through OS package system
+     * Remark: For most of these distros you will need to enable the RPMforge and EPEL repositories.
+       	       See e.g.: http://www.howtoforge.com/perfect-server-centos-6.3-x86_64-nginx-courier-ispconfig-3-p3
+     * Remark: We provide RPM or SRPM packages for dependencies that are not in the OS'es by default
+     * Remark: We will soon provide an RPM repository for your yum
+     * Remark: The 'python-chaco' dependency for the chaco-mcplot is not easily available here
+   - Mac OS X, through a set of .pkg packages
+     * Versions: Independent 64 bit versions for 10.6 Snow Leopard, 10.7 Lion and 10.8 Mountain Lion. 
+       	       Older versions are not directly supported, but installation should be possible if you 
+	       build from the SVN tree using cmake.
+     * Remark: On 10.6 you need to install a compatible Xcode - available from http://developer.apple.com
+       	       or use the one on your original installation medium.
+     * Remark: On 10.7 and 10.8 you need to get Xcode from the App store and through the in-app preferences
+       	       download the 'Command Line Tools'.
+     * Remark: On 10.8 you need to install XQuartz from	http://xquartz.macosforge.org/landing/
+     * Remark: We distribute dmg images for each supported target release of OS X including all other
+       	       bits you need for runing McStas and the Perl tools. Follow instructions in the README file. 
+     * Remark: To run the python-mcrun tool you need to install python-yaml via Terminal.app and this commmand:
+               sudo easy_install pyyaml
+     * Remark: To run the python-mcplot tools you need to either get
+       	       a) Enthought Python (Commercial Python distribution) from http://www.enthought.com/products/epd.php .
+	       	  This enables both the matplotlib and chaco based mcplot tools. You need to make the installed 
+		  python the system-default python 2.7, the instructions from Enthought:
+		  http://www.enthought.com/products/epdgetstart.php?platform=mac#default
+	       b) SciPy superpack from http://fonnesbeck.github.com/ScipySuperpack/ . This enables the 
+	          matplotlib mcplot tool with the default Python available on OS X.
+   - Microsoft Windows systems
+     * Versions: 32 and 64 bit, tested on XP, Windows 7 and Windows 8
+     * Remark: We distribute zip files for each 32 and 64 bit Windows independently. Follow instructions 
+       	       in the README file. 
+     * Remark: We recommend using Strawberry Perl (v. 5.16) and provide compatible ppd's for the various
+               perl-tool dependencies (perl-PDL, pgplot, perl-PGPLOT, perl-Tk-CodeText, perl-Math-Amoeba).
+	       Get Strawberry Perl via http://strawberryperl.com
+     * Remark: Strawberry Perl includes gcc! Hence no need to install a separate c-compiler!
+     * Remark: For MPI parallelization, we recommend installing MPICH2 from http://www.mpich.org
+     * Remark: We recommend Python(x,y) on Windows systems as it includes both matplotlib and chaco. Get
+       	       Python(x,y) via http://code.google.com/p/pythonxy/
+     * Remark: To enable the Python based mcrun tool with Python(x,y) you need to install PyYAML from
+       	       http://pyyaml.org/wiki/PyYAML
+     * Remark: Windows installations now recide in e.g. c:\mcstas-2.0RC2 and we provide two version-
+               dependent desktop links: mcgui-2.0RC2 and mcstas-environment-2.0RC2 (the latter for running 
+	       simulations using the windows cmd.exe). We do not touch the system registry for setting up 
+	       PATH's etc., all is handled from the two links/batch files.
+ - As far as possible, we build the packages on "standard" versions of the relevant OS'es (with the exception
+   of the windows builds that are created on Debian Linux via cross-compilation)
+
+ Tools
+ - Many new developments as mentioned above. Just to name a few:
+   - New mcrun tool based on Python
+   - New mcplot tool based on Python+matplotlib
+   - New mcplot tool baded on Python+chaco
+   - New web-frontend based on Python
+   - Mcgui perl-tool has been refurbished, updated look plus new button for changing working dir
+
+ Core & runtime code:
+ - Backward compatibility 1: Some backward-compatibility is lost in the new version of the code-generation, 
+   as we no longer use the information defined in the component STATE_PARAMETERS and POLARISATION_PARAMETERS
+   macros. A warning is issued in case of components using these macros, e.g.:
+   Warning:  /usr/local/lib/mcstas-2.0delta/monitors/TOF2Q_cylPSD_monitor.comp is using STATE PARAMETERS
+    mcstas-2.0delta 2.0delta support is PARTIAL for these and support will END with next release
+ - Backward compatibility 2: We have standardized naming of component parameters - see the file NOMENCLATURE
+   installed in the McStas library. The code generation will give error messages of e.g. using xw and yh where
+   one should now be using xwidth and yheight.
+ - Support for tabulated magnetic fields. New code for handling interpolation in sparse data is included 
+   in the share/interpolation/ area. The test instrument Test_pol_tabled.instr takes use of this feature. 
+   The curren implementation is in draft status, we expect speedup in the next McStas release.
+
+ New Components:
+ - Sample_nxs.comp from Mirko Boin, HZB. Diffraction/imaging oriented sample where one defines the structure
+   by means of the NXS crystallography library which is now also included with McStas. Comes with the test-
+   instruments Test_Sample_nxs_diffraction.instr and Test_Sample_nxs_imaging.instr. NOTE: Special compilation 
+   required, see instrument source codes!
+ - Elliptic_guide_gravity.comp from Henrik Carlsen, NBI. Analytical approach to describing an elliptical guide
+   geometry where gravity is taken into account. Included in the Reflectometer.instr from Anette Vickery, NBI.
+ - Suite of SANS-samples from Martin Cramer Pedersen, NBI. Various approaches to describing SANS diffraction
+   e.g. using the PDB data bank. Component names are SANSShells.comp SANSPDBFast.comp SANSPDB.comp 
+   SANSNanodiscsWithTagsFast.comp SANSNanodiscsWithTags.comp SANSNanodiscsFast.comp SANSNanodiscs.comp
+   SANSLiposomes.comp SANSEllipticCylinders.comp SANSCylinders.comp SANSCurve.comp SANSSpheres.comp. Included
+   (some as comments) in the TestSANS.instr.
+ - SANSQMonitor.comp also from  Martin Cramer Pedersen, NBI. Q-monitor for SANS also included in TestSANS.instr.
+ - TOF2Q_cylPSD_monitor from Anette Vickery, NBI. Time-of-flight vs. q monitor of cylindrical shape. Included
+   in the Reflectometer.instr test instrument. 
+ - SNS_source_analytic.comp from Franz X. Gallmeier, SNS. Smooth-fit description of the SNS-moderators. Fits are
+   derived from the same underlying raw-data as the ordinary SNS_source.comp is using directly with linear
+   interpolation. NOTE: This component uses the atypical neutrons/pulse intensity unit. The used input file MUST 
+   be given with a full path.
+ - Brilliance_monitor.comp from Peter Willendrup, DTU Fysik. Monitor for easy evaluation of mean and instantaneous
+   source brilliance for source comparison. Used in the ESS_brilliance.instr test instrument.
+ - TOF_PSD_monitor_rad.comp from Kim Lefmann, KU. Derived from PSD_monitor_rad by Henrich Frielinghaus, FZJ.
+   Position-sensitive TOF monitor with radially averaging.
+ - PSD_TOF_monitor.comp from Peter Willendrup, DTU Fysik. PSD-monitor with a number of independent time-slices. 
+   Derived from PSD_monitor by Kim Lefmann, KU.
+ - Source_gen4.comp from Jonas O Birk, NBI and Uwe Filges PSI. Version of source_gen with PSI-specific changes,
+   e.g. a high-energy tail contribution. Included in the RITA-II.instr from Linda Udby, NBI.
+ - Absorber.comp from Peter Willendrup, DTU Fysik. Slab of perfectly absorbing material. Included in the RITA-II.instr 
+   from Linda Udby, NBI.
+ - PSD_monitor_psf.comp and PSD_monitor_psf_eff.comp from Kim Lefmann and Linda Udby, KU. Two derivatives of 
+   PSD_monitor.comp both with gaussian point-spread-function and _eff with a 1/k efficiency parameter. Included 
+   in the RITA-II.instr from Linda Udby, NBI.
+ - Virtual_mcnp_ss_input.comp and Virtual_mcnp_ss_output.comp from Esben Klinkby, DTU Nutech. Allows to read and write
+   MCNP/MCNPX 'source surfaces'. For use in simulations where neutrons need transport in both codes.
+ - Virtual_mcnp_ss_Guide.comp from Esben Klinkby, DTU Nutech. Single guide piece sitting in a 'sandwich' between 
+   an input and an output MCNP/X source surface.
+ - Mirror_Curved_Bispectral.comp and Mirror_Elliptic_Bispectral.comp from Henrik Jacobsen, KU. Mirrors for the
+   bispectral ESS instrument ESS_2001_bispectral.instr.
+ - Radial_div.comp from Kaspar Klenoe, KU. Divergence monitor measuring the radial deviation in divergence. Used in 
+   Henrik Jacobsen's ESS_2001_bispectral.instr.
+
+ Updated Components:
+ - ESS_moderator_long.comp patches from Kim Lefmann KU (multiple-pulses, TOF-focusing) and Esben Klinkby DTU Nutech 
+   (geometry and spectrum from ESS MCNPX models). Thanks to Klaus Lieutenant from Vitess/HZB for providing adjusted
+   parameters for the 'Mezei moderator' and a wavelength-dependent corretion term. The legacy 2001 ESS parametrization
+   is provided in obsolete as ESS_moderator_long_2001.comp.
+ - Bugfix of the SNS_source.comp from Garrett Granroth, SNS (segfaulted on windows). NOTE: This component uses the 
+   atypical neutrons/pulse intensity unit. The used input file MUST be given with a full path.
+ - Bugfix of the Multilayer_sample from Rob Dalgliesh, ISIS. 
+ - Many other components received updates... 
+
+ Instruments:
+ - HZB_NEAT.instr from Emmanuel Farhi, ILL - written in collaboration with Ruep E Lechner. The NEAT spectrometer
+   from the HZB.
+ - TestSANS.instr from Martin Cramer Pedersen, NBI. Test SANS setup for the new SANS components described above.
+ - Reflectometer.instr from Anette Vickery, NBI. Reflectometer on pulsed source. Test instrument for a couple of
+   components from NBI contributors decribed above.
+ - Test_Sample_nxs_imaging.instr and Test_Sample_nxs_diffraction.instr from Mirko Boin, HZB. Test instruments for
+   the use of Sample_nxs.comp. NOTE: Special compilation required, see instrument source codes!
+ - RITA-II.instr from Linda Udby, NBI. Very detailed and complete, experimentally benchmarked description of the
+   RITA-II spectrometer at PSI. Use the RITA-II_test.sh script for test-scans.
+ - Test_SSR_SSW.instr and Test_SSR_SSW_Guide.instr from Esben Klinkby DTU Nutech. Test instruments for the above
+   mentioned components.
+ - ESS_2001_bispectral.instr from Henrik Jacobsen, KU. Model of a bispectral extraction system for the ESS (currently
+   using the 2001 version of the source)
+ - ILL_D22.instr from Emmanuel Farhi. Model of the D22 SANS from ILL.
+
+Changes in McStas v1.12c, June 3rd, 2011
+
+ McStas 1.12c is bugfix release.
+
+ Bugfixes include:
+
+  Runtime
+  - Fix of a bug in the rectangular focusing routine, reported to mcstas-users by Markos Skoulatos, HZB
+    (see http://mailman.mcstas.org/pipermail/mcstas-users/2010q4/000845.html)
+  - Introduction of --ncount as unsigned long long int in place of double. Using double could potentially lead 
+    simulations to "hang". A re-release of McStas 1.12c was done due to bugs in components related to the new
+    type returned from mcget_ncount.
+
+  Tools
+  - If gnuplot is available at installation time, mcplot and mcgui can use this in place of PGPLOT.
+    To use gnuplot, either
+    - edit your mcstas_config.perl and put      PLOTTER => 'Gnuplot',
+    - set the enviroment variable MCSTAS_FORMAT to Gnuplot
+
+  Components
+  - Lens.comp, typo in author name corrected
+  - Guide_four_side.comp (and other similar), by Tobias Panzner updated
+  - Single_crystal.comp, corrected initialization when providing lattice consts and angles
+  - Source_simple.comp, corrected centering-bug when using gaussian wavelength distribution
+  - Monochromator_pol.comp, now works properly in GROUPS/multi-slab configurations
+  - Pol_simpleBfield.comp, potential polarisation exit-state bug corrected
+  - FermiChopper.comp, fixed error when computing automatic phase 
+  - Monitor_nD.comp, fixed geometry bugs reported by Lambert van Eijck
+  
+  
+  Example instruments
+  - ESS_IN5_reprate.instr, parameter naming change in ESS_moderator_long component was not accomodated.
+  - templateTAS.instr, fixes relating to inclusion in other instrument files
+  
+
+
+Changes in McStas v1.12b, July 15th, 2010
+
+ McStas 1.12b is mostly a bugfix release, and the VERY last release in the 1.x series.
+ - A few extra features and contributions have been included.
+
+ McStas 2.0 will be released late 2010 and will introduce new features that
+ could break ceartain backward compatibility, hence we move from the 1.x series.
+
+ Bugfixes include:
+
+  Runtime
+  - Further adjustments to the MPI implementation, solves problems of hanging processes on large cluster runs.
+  - Threading support completely removed.
+
+  Components
+  - New contributions
+    - Multilayer_Sample.comp (Robert Dalgliesh, ISIS)
+      Multilayer Reflecting sample using matrix Formula. Requires GSL (GNU Scientific Library)
+    - Lens.comp (C. Monzat/E. Farhi/S. Desert/G.Euzin, ILL/LLB)
+      Refractive lens with absorption, incoherent scattering and surface imperfection.
+    - Lens_simple.comp (Henrich Frielinghaus, FZ Juelich)
+      Rectangular/circular slit with parabolic/spherical LENS
+    - Guide_four_side.comp (Tobias Panzner, PSI)
+      Models a guide with elliptic, parabolic or straight shaped side walls. 
+    - Guide_four_side_2_shells.comp (Tobias Panzner, PSI)
+      Models a guide with elliptic, parabolic or straight shaped side walls. 
+      As -"- with 2 outer mirror layer shells.
+    - Guide_four_side_10_shells.comp (Tobias Panzner, PSI)
+      Models a guide with elliptic, parabolic or straight shaped side walls.
+      As -"- with 10 outer mirror layer shells.
+    - Pol_FieldBox (Peter Willendrup)
+      Easier to use precession area. Corresponds to a set of Pol_simpleBfield's plus slits.
+    - Sapphire_Filter (Jonas O Birk, Uni CPH). Filter component, defaulting to saphire material properties
+
+  - New component features
+    - Addition of high-energy tail to Source_gen.comp (edits by Uwe Filges, PSI)  
+    - Single_crystal.comp extended for anisotropic mosaicity (EXPERIMENTAL), (edits by Erik Knudsen, Risoe DTU)
+
+  - Various minor bugfixes to
+    - Guide_curved.comp
+    - DiskChopper.comp
+    - SNS_source.comp
+    - ESS_moderator_long.comp
+   
+  Example instruments
+  - New examples
+    - ISIS_CRISP.instr, CRISP reflectometer from ISIS, test instrument for Multilayer_Sample.comp above
+    - Test_Lens.instr, test instrument for Lens.comp above
+    - FZJ_KWS2_Lens.instr, KWS2 SANS from FZJ, test instrument for Lens_simple.comp above
+    - templateTOF.instr (Was ILL_TOF_Env before)
+    - templateLaue.instr (Derived from the old tutorial Laue instrument)
+    - SE_example.instr and SE_example2.instr, simplistic Spin-Echo machines for illustrating use of Pol options
+    - template.instr ("Void" instrument skeleton - like Insert->Instrument Template)
+    - Test_shellguides.instr, test instrument for contributions from Tobias Panzner and Jonas O Birk.
+
+  - Minor improvements to
+    - templateDIFF.instr (SPLIT improves statistics)
+    - templateTAS.instr (SPLIT improves statistics)
+    - SNS_test.instr (Cleanup)
+    
+  Datafiles
+  - Added SNS moderator input file source_sct091_tu_02_1.dat
+  - Added ISIS moderator input file h.crisp
+
+  Licensing
+  - We have decided to distribute the components and the other runtime code under the LGPL license (see the LGPL
+    file under lib/ . This allows to link (unmodified) code from that directory with other software and achieve
+    non-GPL binaries.
+ 
+  Platform support/Tools
+  - Mac OS X 10.3 Panther, 10.4 Tiger, 10.5 Leopard, 10.6 Snow Leopard (PPC/Intel, 32/64bit)  
+    - Fix for problems with multiple perl installs, currently locked to perl 5.8.
+    - Instructions for using Matlab visualisation in the .dmg README file
+  - Windows XP 32/64bit, Windows Vista 32/64bit, Windows 7 32/64bit
+    - Note that we provide only a 32 bit package, but shown to work on 64 bit
+    - Fixed mcrun / mcgui for Windows for missing transfer of mpi parameters
+    - Fixed mcplot for Windows, foreground color is now black, not cyan
+  - Linux: Ubuntu is now our only "reference" Linux (Debian does not provide perl-pgplot)
+    - Ubuntu .deb's for 32 and 64bit, work for both for 9.10 Karmic Koala and 10.04 Lucid Lynx
+    - The .deb's require PGPLOT and perl-pgplot from Ubuntu Universe/Multiverse repositories
+
+  Parallelisation
+  - Improved stability of MPI simulations
+ 
+  Various
+  - A number of unlisted minor bugs ironed out, both in components, runtime code and tools.
+
+
+ McStas 1.12a is essentially a bugfix release, and the last release in the 1.x series.
+
+ McStas 2.0 will be released late 2009 / early 2010 and will introduce new features that
+ could break ceartain backward compatibility, hence we move from the 1.x series.
+
+ Bugfixes include:
+
+  Runtime
+  - Adjustments to the MPI implementation, solves problems of hanging processes on large cluster runs.
+
+  Components
+  - Various minor bugfixes to
+    - Isotropic_sqw.comp
+    - Vitess_input.comp
+    - Pol_bender.comp
+    - Pol_monitor.comp
+    - PolLambda_monitor.comp
+    - SNS_source.comp
+    - ISIS_moderator.comp
+    - FermiChopper_ILL.comp
+    - Progress_bar.comp
+    - TOFRes_sample.comp
+    - Virtual_tripoli4_output.comp
+    - Guide_honeycomb.comp
+   
+  Example instruments
+  - Minor improvements to
+    - PSI_DMC.instr (source-guide focusing corrected)
+    - templateDIFF.instr (SPLIT improves statistics)
+    - templateTAS.instr (SPLIT improves statistics)
+    - SNS_test.instr (Cleanup)
+
+  Datafiles
+  - Added SNS moderator input file source_sct091_tu_02_1.dat
+
+  Tools
+  - Fixed mcrun / mcgui for Win32 for 'fixed --ncount at 1e6' when scanning/optimizing
+ 
+  Platform support
+  - Mac OS X, fix for problems with multiple perl install
+  - Windows XP,  Windows Vista - see Tools section
+  - Linux, pgplot and pgperl now builds using gfortran (replacing g77)
+  
+  Parallelisation
+  - Improved stability of MPI simulations
+  - Preference for OpenMPI (standard on Ubuntu and Mac OS X)
+
+  Various
+  - A number of unlisted minor bugs ironed out, both in components, runtime code and tools.
+
+
+Changes in McStas v1.12, May 8th, 2008
+
+  Metalanguage
+  - New %include "instr" mechanism to include one instrument in another. (Useful for independent
+     build-up of e.g. primary and secondary spectrometer. Or easily see the effect of moving an instrument
+     to a different beamport or facility!) See the manual for details.
+  - When applying the WHEN keyword, an applied EXTEND %{ %} block will only be active if the WHEN
+     returns 'true'.
+  - Please take care when combining WHEN, GROUP and EXTEND %{ %} - see the manual.
+
+  Runtime
+  - Fix of a limiting case focusing problem reported to mcstas-users by George Apostolopoulos.
+     ( See http://mailman.risoe.dk/pipermail/neutron-mc/2007q4/002915.html )
+
+  Components
+  - When using the Virtual_input type components, --ncount is always set to an integer multiplum 
+     (repeat_count) of the number of events in the file. See also related remark about MPI below.
+  - New component: MirrorElli.comp, elliptical mirror. Contributed by Sylvain Desert, LLB
+  - New component: MirrorPara.comp, parabolic mirror. Contributed by Sylvain Desert, LLB
+  - Single_crystal validation still ongoing, but has progressed: The algorithm seems OK, but is to some
+     extent not in sync with the documentation. New option to specify reciprocal space vectors directly.
+     (before only real space definitions were possible)
+  - Most monitors now allow to 'not propagate' the neutron, i.e. not influence the beam. Parameter name
+     is 'restore_neutron'.
+   
+  Example instruments
+  - ILL_H25_IN22_sample/_resolution.instr (CRG instrument @ ILL) by E. Farhi / P. Willendrup
+  - Incoherent_Test.instr - instrument to compare incoherent scattering from the different sample comps
+     (V_samle, PowderN, Single_crystal, Isotropic_sqw). More instruments of this type planned (compare
+     guides etc.), P. Willendrup / E. Knudsen / A. Daoud-Aladine
+  - FocalisationMirrors.instr - test instrument for MirrorElli and MirrorPara, Sylvain Desert, LLB
+  - PSI_DMC.instr, Powder Diffractometer, PSI, L. Keller / U. Filges / P. Willendrup
+
+  Datafiles
+  - 'Bugfix', some of the provided .laz files did not have proper unit for |F2|.
+  
+  Tools
+  - Support for per-user mcstas_config.perl file, located in $HOME/.mcstas/ . This folder is also the default
+     location of the 'host list' for use with MPI or gridding, simply name the file 'hosts'.
+  - mcgui Save Configuration for saving chosen settings on the 'Configuration options' and 'Run dialogue'.
+  - Possibilty to run MPI or grid simulations by default from mcgui.
+  - When scanning parameters, mcrun now terminates with a relevant error message if one or more scan steps
+     failed (intensities explicitly set to 0 in those cases).
+  - When running parameter optimisations, a logfile (default name is "mcoptim_XXXX.dat" where XXXX is a
+     pseudo-random string) is created during the optimisation, updated at each optim step.
+  - We now provide syntax-highlighting setup files for vim and gedit editors.
+
+  Output formats
+  - Rudimentary support for GNUPLOT when plotting with mcplot. Data file format is standard McStas/PGPLOT.
+ 
+  Platform support
+  - Mac OS X 10.3 Panther (ppc), 10.4 Tiger (pcc/intel), 10.5 Leopard (ppc/intel)
+  - Windows XP,  Windows Vista (Now with a recent perl version; 5.10 plus various fixes). New feature on Windows:
+     Simulations _always_ run in the background, freeing mcgui for other work.
+  - "Any" Linux - reference platforms are Ubuntu 8.04 (and earlier) and Debian 4.0 (and earlier). We have also tested 
+     Fedora 8, OpenSuSE 10.3 and CentOS 4 releases recently.
+  - FreeBSD (FreeBSD release 6.3 and its cousin DesktopBSD 1.6 recently tested)
+  - SUN Solaris 10 (Intel tested, Sparc probably OK)
+  - Plus probably any UNIX/POSIX type environment with a bit of effort...
+  
+  Parallelisation
+  - Improved stability of MPI simulations by addition of an 'MPI barrier' (reduces probability of nodes beeing 'out of sync'.
+  - On Windows, an 'mpicc.bat' script has been added for easier setup of McStas with gcc and MPI (We recommend MPICH).
+  - Mac OS X 10.5 Leopard is shipped with built-in support for MPI (OpenMPI). No need to install extra packages.
+  - Use of 'virtual sources' is now supported on MPI clusters. (If running on N nodes, all neutron events will be processed
+     on each of the N nodes - implicit repetition N times of the source contents.)
+  - OpenMP threading support 
+  - Much improved gridding support (via ssh). Ready for heterogenous systems, e.g. mixed operating systems and hardware
+     types! (Requires -c compile flag for mcrun or equivalent setting in mcgui.) The only requirement is ssh client on the machine 
+     where the grid run is started, plus ssh daemon and c-compiler (e.g. gcc or simply cc) on the remote machines. Files in the 
+     current dir are transparently copied back and forth, causes a substantial network traffic in some cases. Output data from the 
+     nodes are automatically merged using mcformat. Just as efficient as MPI without any library dependencies at all. Make use 
+     of all processer cores in your machine, simply choose to 'grid'. Windows 'client' host OK, we autodetect ssh and scp binaries
+     from the Putty package.
+
+  Various
+  - A number of minor bugs ironed out, both in components, runtime code and tools.
+  - From release 1.12, McStas is GPL 2 only. The debate on the internet about the future GPL 3 license suggests that this license 
+     might have implications on the 'derived work', hence have implications on what and how our users use their McStas simulations
+     for. To protect user freedom, we will stick with GPL 2.     
+
+  WARNING: The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 8.04) makes the 'Cancel' and 'Update' 
+  buttons fail in mcgui. Solutions:
+  a) If your system is a Debian or Ubuntu, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh
+  b) If you run another Linux with /bin/sh beeing dash, please install bash and manually change the /bin/sh link to point at bash.
+
+Changes in McStas v1.11, July 3rd, 2007
+
+  Metalanguage
+  - New SPLIT keyword for improving statistics. WARNING: Follow instructions in the documentation for safe
+    use of the SPLIT keyword. 
+
+  Components
+  - Source_adapt.comp, additions by Aaron Percival which allows to specify a flat wavlength distibution.
+  - Single_crystal.comp, warning NOT to use this component as a monochromator (bug fix/validation under way).
+  - PowderN.comp, can now be used in concentric mode, i.e. for modelling sample surroundings (cryostat, container..).
+  - Tunneling_sample.comp (new) Double-cylinder shaped all-incoherent scatterer with elastic, quasielastic (Lorentzian)
+    and tunneling (sharp) components. No multiple scattering. Absorbtion included. By Kim Lefmann
+  - TOF2E_monitor.comp (new) TOF-sensitive monitor, converting to energy. By Kim Lefmann
+
+  Example instruments
+  - New ILL_H15_IN6 and ILL_H142_IN12 instruments by Emmanuel Farhi are included.
+  - Histogrammer.instr - see the 'Tools' section
+  - New ESS_IN5_reprate.instr Instrument for simulating IN5-TYPE (cold chopper) multi-frame spectrometer at ESS LPT.
+    (Also example instrument for Tunneling_sample.comp.) By  Kim Lefmann
+
+  Datafiles
+  - Reflectivity curves from Swiss Neutronics (more work done, available in the next McStas release).
+  - More Sqw tables for use with the Isotropic_Sqw component.
+
+  Tools
+  - PGPLOT output format (original McStas format) is now possible on Windows. A pgplot/pgperl installation
+    is included in a standard McStas Win32 installation.
+  - New mcdaemon for visualisation of intermediate simulation results (obtained by sending USR2 signal to a 
+    running simulation or by using the Progress_bar component with flag_save=1).
+  - Improvements to mcgui:
+    * New tool menu with hooks to mcformat, mcdaemon and mcplot
+    * Possibility for auto-setup of MPI ssh keys
+    * Possibility to run the McStas editor in 'detached' mode, hence available whilst a simulation is running
+  - Histogrammer.instr: Special histogramming instrument for visualisation of virtual source files (Virtual_input,
+    VitESS, MCNP and Tripoli formats)
+
+  Output formats
+  - NeXus output format possible. To use this feature, HDF and NeXus libraries must be available
+    and functional on your system before installing McStas from source. (In case of a binary package, 
+    you MUST recompile the McStas software.) To enable a McStas build with NeXus, run 
+    ./configure --with-nexus.
+
+  Platform support
+  - Mac OS X is now considered a supported platform. For now, no actuall installer program
+    is given, but all needed software has been packed together with easy to follow instructions.
+    Test of the instructions have been performed on Mac OS X 10.4 Tiger on both Intel and PPC
+    hardware.
+  - McStas now comes in a Debian binary package (.deb), tested to work on Debian and Ubuntu systems. The debian
+    package provides McStas, pgplot and pgperl and have dependencies for the perl, perl-tk, gcc, libg2c0, pdl and libc6-dev 
+    packages.
+
+  Parallelisation
+  - The threading mechanism for parallelisation has been removed from McStas since it caused too many problems. For 
+    parallelisation on single machines (e.g. modern dual-core processors) or clusters, MPI (MPICH) is the recommended solution.
+    The McStas team members routinely run developer machines and clusters using MPI.
+
+  Intel C compiler
+  - The documentation now includes instructions to run McStas with the Intel C compiler (available on Windows,
+    Linux x86 and Mac OS x86 systems). Typically, a performance gain of 2 is found relative to gcc -O2. Relevant
+    compiler flags are:
+
+    MCSTAS_CFLAGS="-g -O2 -wd177,266,1011,181"
+    export MCSTAS_CC="icc"
+
+  - To run McStas with MPI and the Intel C compiler, you may have to edit your mpicc shell script to set:
+    
+    CC="icc"
+
+  Various
+  - A standard McStas source package now works directly within the DANSE framework.
+
+  WARNING: The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 7.04) makes the 'Cancel' and 'Update' 
+  buttons fail in mcgui. Solutions:
+  a) If your system is a Debian or Ubuntu, please install our Debian package which requests automatic removal of 'dash'.
+  b) If your /bin/sh is dash, please install bash and manually change the /bin/sh link to point at bash.
+
+Changes in McStas v1.10, Dec 4, 2006
+
+  General
+  - This release is a major step forward for McStas in terms of support for polarisation.
+    Peter Christiansen who worked at Risoe March-October 2006 was the main workforce 
+    behind this new functionality, backed by funding from ISIS, work by Rob Dalgliesh at 
+    ISIS and inspiration from the VitESS and NISP packages. As this is the first release
+    with polarisation support, the methods and algorithms implemented will certainly be 
+    developed further. Hence, documentation of the functionality has been placed in an 
+    appendix to the manual. 
+    Polarisation users: Please give us feedback for further development!
+    Items marked by (p) below relate to the new polarisation support.
+  - New keywords for the meta language improves support for e.g. description of sample
+    enviroments.
+  - A method for automatic optimisation has been implemented, e.g. for achieving maximum flux
+    at the sample position (any quantity measured by a McStas monitor can be optimised) as a
+    function of simulation parameters.
+  - Bugfixes in many different areas.
+
+  Documentation
+  - Manual and component manual slightly updated according to adding/modification of components
+    and functionality. New appendix on the polarisation features. (p)
+
+  Kernel
+  - New WHEN keyword, conditional use of components,
+        COMPONENT MyComp=Component(...) WHEN (condition) AT
+  - New JUMP keyword, possibility to iterate a given component a number of times (multiple 
+    scattering) or for 'teleportation' to a given component. (USE WITH CAUTION)
+  - Improved COPY keyword with parameter substitution (Make a copy of an other component 
+    instance with a few parameters changed)
+  - Spin propagation algorithm (When magnetic field is set 'on', the central propagation
+    routines also handle Larmor precession in the field) (p)
+  - Handeling of analytical B-fields (p)
+
+  Tools
+  - New 'merge/convert' tool mcformat: Convert between McStas output formats and merge cluster
+    node datasets into one dataset.
+  - TOF mode for mcdisplay (Statistical chopper acceptance diagrams generated from the simulated
+    neutron rays. Currently only supported on Unix systems with PGPLOT.)
+  - Optmisation support in mcrun/mcgui using Perl::Amoeba (se description above)
+  - POSIX threading on multi-core processors (BEWARE, performance is generally better using MPI)
+  - mcgui: Note that if you experience crashes when starting/running GNOME/Gtk2 applications, 
+    update your perl-Tk installation. Two ways to do this:
+    1) Get the tarball from http://www.mcstas.org/download/Tk-804.027_gtk2_patch.tar.gz and
+       install using 'perl Makefile.PL && make && make install'.
+    2) Do a 'make tk' in the McStas unpacked McStas source directory. This will download and
+       install the tarball into your McStas system directory.
+
+  Components
+  - Monochromator_pol.comp - Polarising monochromator/analyzer (p)
+  - Pol_bender.comp - Polarising bender (p)
+  - Pol_mirror.comp - Polarising mirror (p)
+  - Pol_guide_vmirror.comp - Guide with semi-transparent, polarising mirror (p)
+  - Pol_simpleBfield.comp - Numerical precession in analytical B-fields (p)
+  - 3 Polarisation monitors - MeanPolLambda_monitor.comp, PolLambda_monitor.comp
+    Pol_monitor.comp (p)
+  - PSD_Detector.comp - Physical detector - comes with many gas lookup tables 
+    (Contrib: Thorwald van Vuure, ILL)
+  - Virtual_mcnp_*.comp - MCNP event file handeling
+    (Contrib: Chama Hennane, ENSIMAG and Emmanuel Farhi, ILL) 
+  - Source_multi_surfaces.comp - Source comp with multiple surface areas with individual
+    spectrums 
+    (Contrib: Ludovic Giller, EPFL and Uwe Filges, PSI)
+  - multi_pipe.comp - Defines a 'grid' of slits (focusing device)
+    (Contrib: Uwe Filges, PSI)
+  - Exact_radial_coll.comp - Radial collimator comp, exact model
+    (Contrib: Roland Schedler, HMI)
+  - FermiChopper_ILL.comp  - Fermi Chopper comp with optional supermirror coated blades.
+    (Contrib: Helmut Schober, ILL)
+  - V_sample enriched with quasi-elastic features (Kim Lefmann)
+          
+  Example Instruments
+  - TAS frontend with reciprocal space (hkl) calculator (Emmanuel Farhi)
+  - Example instruments for polarisation comps (p)
+  - QUENS_test.instr (Test of new quasi-elastic features V_sample)
+  
+  Installation
+  - Much easier installation on Windows, single executable file with all support applications
+    is now available. Simply click 'next' alle the way and you are done.
+  - PGPLOT and Scilab installation help tools on Linux systems
+
+  WARNINGS (Almost identical to those from release 1.9.1)
+  - Because of rapid changes in the support software for McStas, the current release has support
+    for only some releases of:
+
+    * Scilab (Win32 and Unix) - pick release 4.0 if available or pick release 3.0 from , e.g. from
+      http://www.scilab.org/download/index_download.php?page=oldReleases.html
+      (Automatically included in the Win32 .exe installer and Linux Scilab installer)
+
+    * Perl (Win32) - on Windows we only support Perl 5.6 - pick
+      http://downloads.activestate.com/ActivePerl/Windows/5.6/ActivePerl-5.6.1.638-MSWin32-x86.msi
+      (Automatically included in the Win32 .exe installer)
+
+    * If you are running Unix with GNOME/Gtk2 applications, you may experience problems with mcgui
+      crashing, please install updated perl-Tk from http://www.mcstas.org/download
+
+Changes in McStas v1.9.1, Mar 29, 2006
+
+  General
+  - Update release, mainly bugfixes plus a few other things
+
+  Documentation
+  - Component manual slightly updated according to adding/modification of components.
+
+  Tools
+  - mcgui: A few bugfixes. Note also that if you experience crashes when starting/running
+    GNOME/Gtk2 applications, update your perl-Tk installation. Two ways to do this:
+    1) Get the tarball from http://www.mcstas.org/download/Tk-804.027_gtk2_patch.tar.gz and
+       install using 'perl Makefile.PL && make && make install'.
+    2) Do a 'make tk' in the McStas unpacked McStas source directory. This will download and
+       install the tarball into your McStas system directory.
+
+  Components
+  - DiskChopper.comp - new disc chopper component. Chopper.comp made obsolete.
+    See mcdoc page / component manual for further details.
+  - Guide.comp - reads reflectivity tables from disk.
+  - Isotropic_Sqw - minor bugfixes, validated against PowerN, V_sample, etc.
+  - PowderN - validated against Isotropix_Sqw, Squires, experimental data.
+
+  WARNINGS
+  - Because of rapid changes in the support software for McStas, the current release has support
+    for only some releases of:
+
+    * Scilab (Win32 and Unix) - pick release 4.0 if available or pick release 3.0 from , e.g. from
+      http://www.scilab.org/download/index_download.php?page=oldReleases.html
+
+    * Perl (Win32) - on Windows we only support Perl 5.6 - pick
+      http://downloads.activestate.com/ActivePerl/Windows/5.6/ActivePerl-5.6.1.638-MSWin32-x86.msi
+
+    * If you are running Unix with GNOME/Gtk2 applications, you may experience problems with mcgui
+      crashing, please install updated perl-Tk as noted above.
+
+Changes in McStas v1.9, Nov 16, 2005
+
+  General
+  - To indicate the collaborative nature of the McStas package, the main website
+    URL does no longer belong to Risoe or ILL but is http://www.mcstas.org.
+  - The package has been strengthened by the presence of Klaus Lieutenant (former
+    captain of Vitess, HMI) at ILL. He has focused a lot on validation and testing
+    of the package, giving very important input and done very valuable work.
+  - To help us in the fight against bugs, a BUGZILLA system has been set up for users
+    to report their suggestions and problems. The system is available at the URL
+    http://www.mcstas.org/McZilla .
+  - The VnCS (Virtual neutron Code Sharing) agreement has been signed by the leaders
+    of the Vitess and McStas software packages to formally support closer collaboration
+    and sharing of code between the packages. At least one component (Vitess_ChopperFermi)
+    now works with both packages, work done by Klaus Lieutenant and Geza Zsigmond.
+  - Many big and small BUGS ellimnated!
+  - First attempt at "concentric components" (sample environment). See Isotropic_Sqw in
+    the 'Components' section below.
+
+  Documentation
+  - With this release, the component manual has finally been updated! Major work has
+    been put into this by especially Kim Lefmann and Emmanuel Farhi. The user manual
+    has also been revised, but not as intensively.
+  - Improvements to tutorial/teaching material as result of Copenhagen University course on
+    neutron scattering, given by Kim Lefmann and Peter Willendrup. The idea is that when
+    improved further, the full simulation part of the course can serve as an extended
+    tutorial for McStas. In the package, projects on virtual experiments at DMC, RITA-2 and
+    SANS-2 at PSI is included.
+
+  Tools
+  - A web frontend is now available for McStas, check it out at http://www.mcstas.org/webfront .
+    Currently it is not actually part of the package, may become so in a near future release.
+  - On Unix systems, mcdaemon is a tool to periodically send -USR2 signals (save) to running
+    simulation processes. Is in an early state but should work okay, but not documented in the
+    user manual. Replots intermediate data.
+  - mcgui has been intensively revised, many annoyances have been removed and features adjusted
+    for easier use.
+
+  Components
+  - For simplicity, a number of components (especially monitors and sources) have been merged.
+    This for example means that the Source_simple replaces the former Source_flat* components.
+    Fewer duplications of code => smaller risk of old bugs surviving in the code.
+  - PowderN: General powder sample component, replaces the simpler Powder1 and Powder2 components,
+    has a very flexible system to read crystallographic data for powder line description. Is
+    in the process of beeing validated against data from DMC@PSI. The code itself and the
+    validation of it is the result of collaboration between mainly Peter Willendrup from the
+    McStas team and Laurent Chapon (ISIS), Uwe Filges (PSI) and Lukas Keller (PSI). A validation
+    paper will be presented at ICNS, Sydney.
+  - Isotropic_Sqw: Originally work for the Ph.D. thesis of V. Hugouvieux, ILL. Extended and
+    validated intensively by Emmanuel Farhi, ILL. It handles elastic and inelastic scattering
+    for both coherent and incoherent processes, with secondary absorption and multiple scattering.
+    The code has been validated against PowderN and V_sample. It comes with the same flexible
+    system as PowderN to read data files, including crystallographic data for powder line
+    description. Moreover, it may be used to describe concentric geometries in order to model
+    sample environments.
+  - Vitess_ChopperFermi: Originally work for Vitess by Geza Zsigmond, now PSI. Validated and
+    adapted for use with McStas by Klaus Lieutentant, ILL in the frame of the VnCS agreement.
+  - TOFRes_sample: time-of-flight version of the Res_sample component. Written by Kim Lefmann,
+    Risoe. Will be merged with the res_sample component in next release.
+  - The full suite of Fermi Choppers have been tested intensively by Klaus Lieutentant, partly
+    inspired by the work of ILL stagiere Rebecca Peacock.
+
+  WARNINGS
+  - Because of rapid changes in the support software for McStas, the current release has support
+    for only some releases of:
+
+    * Scilab (Win32 and Unix) - pick release 3.0 from , e.g. from
+      http://www.scilab.org/download/index_download.php?page=oldReleases.html
+
+    * Perl (Win32) - on Windows we only support Perl 5.6 - pick
+      http://downloads.activestate.com/ActivePerl/Windows/5.6/ActivePerl-5.6.1.638-MSWin32-x86.msi
+
+
+Changes in McStas v1.8, Mar 4, 2004
+
+  License
+  - McStas is now GPL software. Note that generated code, output data and papers
+    based on these is not considered "derived work" but merely normal usage of the
+    software package.
+  - The McStas software package now includes a re-distribution of the plotlib
+    package for Scilab, (http://www.dma.utc.fr/~mottelet/myplot.html), courtesy of
+    Stephane Mottelet (stephane.mottelet@dma.utc.fr). Plotlib is beeing distributed
+    using a BSD like license. Plotlib needs not be precompiled anymore.
+  - McStas now uses the Perl CPAN module Proc::Simple on unix platforms. Proc::Simple
+    is distributed using the Perl artistic license.
+
+  General
+  - Nightly CVS builds of McStas are now available to the public from
+    http://mcstas.risoe.dk/cvs (optionally use the mcsync script to get these)
+    NOTE: The CVS builds are not considered 100% stable, you can count on errors
+    in there, but you also get the newest stuff.
+
+  Installation
+  - Improved installation and build scripts. NOTE: The new version is INCOMPATIBLE
+    with Win32 releases older than Windows 2000
+  - Automatic detection of plotting backend, (make config)
+  - Test procedure (make test)
+
+  Kernel (i.e. the 'mcstas' program)
+  - a PREVIOUS keyword has been implemented, for referencing e.g. position placement
+    to upsteam components.
+  - improvements to runtime randvec_target_rect functions
+  - Updated Mersenne Twister random number generator
+
+  Tools
+  - Various bugfixes, especially on the Win32 platform and RedHat 9 specific stuff
+  - mcgui now includes an option to 'scan' instrument parameters (previously only
+    possible using mcrun.pl.
+  - mcconvert.pl script has been added to the distribution, converts between
+    Matlab and Scilab type output. Cyclic conversion, e.g. Matlab->Scilab->Matlab
+    is not supported.
+  - mcplot opens scan steps with Matlab/Scilab backends
+  - mcrun now has support for Matlab/Scilab backends, built in test procedure
+    (mcrun --test), poor man's grid computing - see the manual for information on
+    how to use this.
+  - mcdoc support for instrument headers, support for the built in tutorial
+  - Improved tutorial built into the gui tools
+  - editor, various improvements (line numbers etc.)
+
+  Instruments
+  - mcgui now has a special Neutron Site menu (auto generated) to allow distribution
+    of instruments
+  - instruments can now have default input values
+  - several contributed / new instruments, have a look in your examples/ folder
+
+  Components
+  - New components:
+    $ Official components
+      - Sans_spheres, a sample for small angle neutron scattering
+      - Powder2, a two ring powder sample
+      - Phonon_simple, a phonon scattering sample
+      - Guide_gravity improved
+    $ Contributed components
+      - Guide_tapering, guide with elliptical/parabolic/general tapering
+        (Uwe Filges)
+      - ISIS_moderator, (Stuart Ansell and Dickon Champion)
+      - Guide_curved (Ross Stewart)
+
+Changes in McStas v1.7, Jan 17, 2003
+
+  Kernel (i.e. the 'mcstas' program)
+  - components may have a SHARE section, which is imported only once per type
+    of component. It has the same role as DECLARE, but only once.
+  - the component files may have some %include inside '%{ }%' C DECLARE or SHARE
+    blocks. The files to include are searched locally, and then in the library.
+    If an extension is found, just the specified file is included, else both
+    .h and .c are embedded if the --no-runtime has not been specified.
+    The instrument files can also embed external files, both in C blocks
+    and in the instrument parts (DECLARE, etc...) as in previous releases.
+  - The instrument and components may have char* setting parameters. For
+    instruments, their length is limited to 1024 chars.
+  - The FINALLY section, that was executed at the end, has been split into
+    still the FINALLY, and a new SAVE section. This latter is executed
+    at simulation end (just before the FINALLY), but also each time an
+    intermediate save is required (e.g. a 'kill -USR2 <pid>' is used).
+  - An instrument source file may contain EXTEND %{ }% C blocks just after
+    the usual AT...ROTATED.. keywords, to extend the behaviour of existing
+    components, without touching their code. All local component variables are
+    available. This may for instance be used to add a new 'color' to neutrons,
+    i.e. assign a new characteristic variable to the neutron.
+  - component instances in an instrument source file may be GROUPed into
+    exclusive assembly, i.e. only one component of the group will intercept
+    neutron, the rest will be skipped. This is usefull for multi monochromators
+    multi detectors, multiple collimators, ... This is a kind if splitting.
+  - McStas can now compile for Windows without troubles (if lex/yacc files
+    were generated elsewere, or using the flex/yacc for Windows)
+
+  Run-time library (e.g. the instrument program)
+  - A global gravitation handling is now available, by setting the -g flag
+  - many output formats are available for data. use the --format="format"
+    flag, e.g. --format="Scilab". The full list is displayed with
+    the -h flag for the instrument program.
+    example:
+      mcrun test.instr --format="Matlab binary" -n 1e4
+    will create a mcstas.m file. Launch Matlab and execute
+      s=mcstas('plot')  % will import data into s, and plot all detectors.
+    Binary formats are handled by IDL, Matlab, Scilab.
+    The present available format list is
+      "McStas" "Scilab" "Matlab" "IDL" "XML" "HTML"
+    The default format is McStas/PGPLOT, but may be specified globally using
+    the MCSTAS_FORMAT environment variable
+  - It is possible to save 3D data arrays, by calling the DETECTOR_OUT_3D macro.
+    (handled as 2D by mcplot)
+  - The type of the 'number of events' array in monitors was changed from int to
+    double, to avoid overflow. Please update your home-made monitors.
+  - many dedicated libraries are now available as shared code for reading
+    tables, handling data trees and monitors. These are C functions to be
+    %included into components (see e.g. lib/monitors/Monitor_nD.comp)
+  - The USR2 signal generates an intermediate save for all monitors, during
+    the simulation (execute the SAVE section). The USR1 still give informations.
+  - a new randvec_target_rect function now focuses on a rectangle
+    (more efficient than former randvec_target_sphere=randvec_target_circle)
+
+  Components (in the lib directory)
+  - a new data directory contains neutron data tables
+  - obsolete directory contains components that were renamed or old.
+  - misc/Progress_bar component now exists, and may save data regularly.
+  - optics/Monochromator_curved can read reflectivity and transmission tables
+  - monitors/Monitor_nD can have automatic limits mode for either all or
+    selected monitored variables. It may also plot banana monitors for mcdisplay
+    and trigger intermediate savings for all monitors (same as USR2 sig.)
+    Also, it may monitor something else than the intensity, e.g. the mean
+    energy on a XY psd.
+  - sources/Virtual_output can save all neutron events into a file
+    (beware the size of the generated files !). Format may be text and binary
+  - sources/Virtual_input can read the files generated by Virtual_output
+  - optics/Guide_gravity can handle a 2D array of channels
+  - optics/Filter_gen can read a table from a file and affect the neutron beam
+    (replaces the obsolete 'Flux_adapter'). It may act as a filter or a source
+  - samples: they now can all target towards any component, giving its index
+    (no need to compute target_x/y/z vector, use e.g. target_index=+1)
+  - samples/Res_monitor, Powder1 and V_sample may now have a sphere or box
+    shape, and may focus to a circular or rectangular area
+
+  Tools
+  - Matlab, Scilab and IDL may read directly McStas results if the simulation
+    was executed with the --format="..." option (see 'Run-time' changes)
+  - mcplot, mcdisplay, mcgui are now less dependent on the perl/pgplot installed
+    versions.
+  - mcplot can plot a single simulation data file
+  - mcplot, mcresplot, mcdisplay can output gif, ps and ps color. They also
+    have integrated help (-h options), and may generate output files in a
+    non interactive mode (read file, create output file, exit)
+  - mcplot and mcdisplay work with Matlab, PGPLOT and Scilab plotters (set with
+    the MCSTAS_FORMAT default setting, or -pPLOTTER, or PGPLOT if not set)
+  - mcrun can not currently generate scan results in other formats than McStas
+  - mcsats2vitess works now ok for converting a McStas component to a Vitess one
+
+
+Changes in McStas v1.6.1 (beta), Feb 18th, 2002.
+
+ - a bug was corrected for very small signal statistics automatic limits
+   search in Monitor_nD (0.16.4), that could cause parasitc peaks and
+   fluctuations in detector.
+
+ - 'optics' components were renamed by categories, starting with Guide_...,
+   Monochromator_..., Filter_... etc so that sorting is easier.
+
+ - Monochromator_2foc and Monochromator_curved can now read a reflectivity table
+   file (eg. PG) with rows [k, R]. Both components give the same results, and
+   can use the same parameters.
+
+ - mcplot can now read a list of detector files, without a '.sim' file. This
+   enables to visualise a set of selected monitors, or may be used when the
+   mcstas.sim file was deleted. Detector files must be in current directory.
+
+ - the 1D and 2D detectors now compute simple signal statistics (min, max, mean,
+   center and width of distributions) which are stored in the detector file
+   and shown in plots (mcplot).
+
+ - The Virtual_input replaces the Source_file component (see below), and can
+   read text, Vitess and binary float files of neutron events.
+
+Changes in McStas v1.6-ill (alpha), October 29th, 2001.
+
+ - In component definitions, a SHARE keyword followed by a C code block
+   %{...}% acts the same as a DECLARE block, but is only included once in an
+   instrument. This is very useful when using many identical components
+   (guides, monitors, monochromators) to speed-up compiling and perfomrnaces.
+     SHARE
+     %{ /* included only once for all identical components */
+     %}
+     DECLARE
+     %{ /* included for all components */
+     %}
+   Then all component programmers may add C functions to the 'kernel'. This is
+   only worth when you plan to use a given component many times in a simulation
+   (e.g. not for sources or samples). To downgrade a McStas 1.5 component, just
+   move the SHARE block C code into the DECLARE block.
+ - In an instrument definition, within the TRACE section, each COMPONENT
+   instance may include a C code block:
+     COMPONENT Comp1 = Guide(...)
+     AT (...) ROTATED (...)
+     EXTEND
+     %{ /* some C code to execute after component Comp1 */
+        /* in current coordinate system. You may use Comp1 and global */
+        /* instrument variables */
+     %}
+   For instance, you can here give a 'color' (additional neutron
+   characteristic) and modify next components behaviours.
+   This block is always executed in groups, but you can test if the componnet
+   intercepted the neutron with the SCATTERED variable (if (SCATTERED) { ... }).
+ - In an instrument TRACE section, it is possible to put a set of component
+   in an exclusive group. Only one of the elements of the group can act on
+   the neutron. If no element acts on the neutron, it is absorbed.
+   This is specially useful for multi-detectors, multi-monochromators in
+   parallel, multiple collimators/guides (e.g. radial).
+     COMPONENT Comp1 = Guide(...)
+     AT (...) ROTATED (...) GROUP MyGroupName
+
+     COMPONENT Comp2 = Guide(...)
+     AT (...) ROTATED (...) GROUP MyGroupName
+   Comp1 and Comp2 may even be at the same place.
+   For programmers: it is important that the component TRACE section contains a
+   SCATTER keyword when it successfully intercepts it, to tell McStas that a
+   component in a group acts on a neutron, and can skip other comp in the group.
+ - In 'mcplot', it is possible to use the -ps, -psc and -gif options to
+   generate a PS, color PS, and GIF file, and exit mcplot (no display).
+ - The Monitor_nD was upgraded to correct bugs when reaching the component
+   (the propagation was not performed correctly in some cases), and the disk/
+   sphere radius (monitor remained then squared). This component now uses
+   the SHARE block. A bug was corrected for lists. It can output log and abs of
+   signals, and source files (see Source_file).
+ - The Gravity_guide now handles correctly the focusing multichannel guides.
+   Gravitation is included (on y axis). This component now uses the SHARE block.
+   The Channeled_guide does not handle properly the focusing multichannels.
+ - The Source_gen component focuses uniformly on the target, and can model
+   rectangular, disk, gaussian, and Maxwellian (up to 3 distributions) sources.
+   Previous source components did not focus correctly on the target. They were
+   also corrected, execpt the 'Source_Maxwell'. Source_gen can replace all thee
+   previous sources.
+ - A new Source_file component can take as input a text file containing an
+   array with columns ' x y z vx vy vz t sx sy sz p', such as the data files
+   generated from Monitor_nD with options="list all source". The source may
+   be re-generated more than once, which is useful to improve accuracy,
+   specially when further components do MC choices. Vitess files and float
+   binary files are also ok (auto-recognition of format).
+ - The signal handler now gives more info about where a signal was caught.
+   For instance it tells in which component part an error occured, to make
+   debuging easier.
+   Usefull Signals: kill -Signal <pid>
+      -USR1: display info and continue simulation
+      -USR2: finish simulation and save results
+      -QUIT: end simulation immediately
+ - The 2D detectors now also output the errors/counts on signal as 1D detectors.
+   Set p2=NULL in DETECTOR_OUT_2D to unactivate error saving in components.
+ - We tried to lower the number of components by merging similar ones.
+ - There are now new MACROS for the component programmer.
+     * mccompcurindex is the number (index) of the current component
+       (1 is first component of instrument)
+     * RESTORE_NEUTRON(index, x, y, z, vx, vy, vz, t, sx, sy, sz, p)
+       restores the neutron state to the one at the input of the component
+       'index'. To ignore a component effect, use
+       RESTORE_NEUTRON(mccompcurindex, x, y, z, vx, vy, vz, t, sx, sy, sz, p)
+       at the end of its TRACE section, or in its EXTEND section.
+       These neutron states are in the local component coordinate systems.
+     * STORE_NEUTRON(index, x, y, z, vx, vy, vz, t, sx, sy, sz, p)
+       stores the current neutron state in the trace-history table, in local
+       coordinate system. This is automatically done when entering each
+       component of an instrument.
+     * POS_A_COMP_INDEX(index) is the absolute position of component
+       'index'. POS_A_COMP_INDEX(mccompcurindex) is the same as
+       POS_A_CURRENT_COMP. You may use POS_A_COMP_INDEX(mccompcurindex+1) to
+       make, for instance, your component access the position of the next
+       component (this is usefull for automatic targeting).
+     * SCATTERED is non zero when previous component acted on neutron (let pass
+       or scatter)
+
+   Warning: programmers, do not use anymore the 'mccompcurname' when writing
+   your components. rather use the 'NAME_CURRENT_COMP'.
+
+   Other minor modifications
+   #cleaned up non used variables in mcstas-r.c/h
+   #tested and corrected components
+        misc: Vitess_input/output: included Spin from Vitess. (vitess-lib.c/h)
+          but can not be used as mcstas can not find vitess-lib.c/h. I included
+          what was needed in SHARE sections. now works OK.
+        samples:
+            Single_crystal (now can take lattice angles, forgot a %} at SHARE
+              end)
+            provide *.dat diffraction samples from Crystallographica
+        optics:
+            Beamstop now is a merging of Beamstop_circular and
+              Beamstop_rectangular (using default  values to select shape)
+            Channeled_guide: now output an error in multichannel focusing mode.
+            Chopper: determined default values to have lambda~4 AA. Can handle
+              First_Chopper (parameter IsFirst)
+            Fermi_Chopper : default values for transmission every ~2 AA
+            Gravity_guide: limit loops to max of 1000 bounces for each
+              components (to avoid endless loops)
+            Mosaic_anisotropic: can take DM (d-spacing). default for graphite.
+            Powder_filter (did not work at all, now can take lattice angles,
+              also works as a sample, can take samples/*.dat diffraction files)
+            Selector: default values for transmission at ~4 AA
+            Slit: now is a merging of Slit and Circular_slit (using default
+              values to select shape)
+            Soller: can take transmission
+            V_selector: default values for transmission at ~4 AA
+        sources
+            Source_gen: can handle all previous sources in one component (up to
+              3 Maxwellians). Corrected homogeneity bug for illumination.
+            Source_file: can read 'source' files from Vitess, text files (both
+              90 bytes/neutron) and float binary  files (e.g, from Monitor_nD
+              with options="list all, source binary" which is more compact in
+              size, 48  bytes/neutron). Autorecognition of the format. The MCNP
+              output is not fixed. Just tell MCNP  guys to output the float
+              binary or text file.
+   #other tested components:
+        monitors: all
+        optics: Bender, Curved_Monochromator, Filter, Filter_Graphite,
+          Gravity_guide, Mon_2foc,
+        Curved_Monochromator, Monochromator
+   #not tested: Guide, He3_cell, Mirror, (should be ok ??!!)
+   #moved to obsolete components:
+        monitors: PSD_monitor_4PI_log.comp, PSD_bidim.comp, PSD_curved.comp,
+          PSD_entry.comp,
+        samples: Powder0.comp
+        optics:
+            Beamstop_circular Beamstop_rectangular (gathered into Beamstop)
+            First_Chopper (included in Chopper)
+            Circular_slit (included in Slit)
+            Guide2
+            Monochromator0
+            Circular_slit
+            Soller_trans.comp
+   #perl scripts: mcplot (direct output -ps, -psc, -gif)
+
+Changes in McStas v1.5, October, 10th, 2001
+
+Modified components
+      A corrected version of Arm.comp. For further information, see the emails by Ulrich
+      Wildgruber and Stuart Rycroft. (Apr. 26, 2001)
+      A corrected version of  Monitor_nD.comp. For further information, see the email by
+      Emmanuel Farhi. (Apr. 26, 2001)
+      A rewritten version of Gravity_guide.comp has been contributed by Emmanuel Farhi
+      (see email). The component provided in the email works with McStas 1.4.2, but the official
+      version of the component is not working with McStas 1.4.2 because support for this
+      component has been added to the kernel. (Aug. 7, 2001)
+      An updated version of Monitor_nD.comp has been contributed by Emmanuel Farhi (see
+      first and second email). The new version of the component is not working with McStas
+      1.4.2 because support for the component has been added to the kernel. (Aug. 8, 2001)
+      Andrew Wildes and Emmanuel Farhi have detected an error when using focusing
+      geometry in Channeled_guide. The slope of the channels is not computed corrected
+      correctly, because the same left and right slopes are used in all channels. This has now
+      been included properly in Gravity_guide, and it is recommended that this component is
+      used. (Sep. 18, 2001)
+      The handling of illumination in Source_flat, Source_div and Source_flat_lambda have
+      been corrected. (Oct. 9, 2001)
+  New components
+      The He3_cell.comp has been contributed by Trefor Roberts. It models a cylindrical 3He
+      spin filter cell. (Aug. 8, 2001)
+      The Mon_2foc.comp has been contributed by Peter Link. It models a double bent
+      monochromator with multiple slabs. (Aug. 9, 2001)
+      The Bender.comp has been contributed by Philipp Bernhardt. It models a curved neutron
+      guide. (Aug. 10, 2001)
+      The Powder_filter.comp has been contributed by Ben Fortescue. It models a general
+      box-shaped powder filter. (Aug. 16, 2001)
+      The Source_Maxwell_3 component describes a source with three Maxwellian
+      distributions. (Sep. 17, 2001)
+      Various monitors have been added: EPSD_monitor, PSDcyl_monitor, PSDlin_monitor,
+      TOF_cylPSD_monitor, TOFlog_mon. (Sep. 18, 2001)
+          A minor error in TOF_cylPSD_monitor has been corrected. (Oct. 9, 2001)
+      A new monitor TOFLambda_monitor has been added. (Oct. 9, 2001)
+      A guide modeling waviness, Guide_wavy, has been added. (Oct. 9, 2001)
+      A generic source, Source_gen, has been added. (Oct. 10, 2001)
+  The signal handling system has been updated to handle a special case. The signal handling
+  system will be documented in the manual of version 1.5. (Aug. 7, 2001)
+  The representation of polarisation in McStas components and instruments is supposed to work
+  as follows. Only components actually modifying the spin explicitly require the "POLARISATION
+  PARAMETERS (sx,sy,sz)" line. An instrument handling polarisation may consist of  components
+  both with and without this line; it will transform the spin vector correctly anyway. The
+  "POLARISATION PARAMETERS (sx,sy,sz)" line is therefore removed from all official
+  components not dealing with polarisation. The reason is that for instruments without polarisation
+  some simulation time is gained by excluding the transformations of the spin vector. (Aug. 9,
+  2001)
+  Some definitions have been added that can be used in coding components:
+      NAME_CURRENT_COMP gives the name of the current component as a string. (Aug.
+      16, 2001)
+      POS_A_CURRENT_COMP gives the absolute position of the current component. A
+      component of the vector is referred to as POS_A_CURRENT_COMP.i where i is x, y or z.
+      (Aug. 16, 2001)
+      ROT_A_CURRENT_COMP and  ROT_R_CURRENT_COMP give the orientation of the
+      current component as rotation matrices (absolute orientation and the orientation relative to
+      the previous component, respectively). A component of  a rotation matrice is referred to
+      as  ROT_A_CURRENT_COMP[m][n], where m and n are 0, 1, or 2. (Aug. 16, 2001)
+      POS_A_COMP(comp) gives the absolute position of the component with the name
+      comp. Note that comp is not given as a string. A component of the vector is referred to as
+      POS_A_COMP(comp).i where i is x, y or z. (Aug. 16, 2001)
+      ROT_A_COMP(comp) and ROT_R_COMP(comp)  give the orientation of the
+      component comp as rotation matrices (absolute orientation and the orientation relative to
+      its previous component, respectively). Note that comp is not given as a string. A
+      component of  a rotation matrice is referred to as  ROT_A_COMP(comp)[m][n], where
+      m and n are 0, 1, or 2. (Aug. 16, 2001)
+
+Changes in McStas v1.4.1, March 16, 2001
+
+ - New components: ESS_moderator_long.comp and ESS_moderator_short.comp
+   (by Kim Lefmann), Source_Maxwell (by Emmanuel Farhi). Gravity_guide.comp
+   is included in the official version.
+ - Some support for the calculation of correlation functions in the
+   components Monitor_nD and PreMonitor_nD (by Emmanuel Farhi)
+ - A signal handling system is included (by Emmanuel Farhi)
+ - Misc. minor bug fixes
+ - For more information:
+   http://neutron.risoe.dk/mcstas/developments/developments.html
+
+
+Changes in McStas v1.4, July 28, 2000:
+
+ - It is now possible to use arbitrary C expressions in the instrument
+   definition, ie. to set rotations, component parameters, etc. Only
+   works for SETTING parameters though, not DEFINITION parameters.
+ - Experimental mcstas2vitess conversion program to automatically
+   translate a McStas component into a VITESS module.
+ - Option to clear the simulation output in mcgui.
+ - Partial solution to the problem with name conflicts on component
+   parameters.
+ - Partial NeXus support implemented, but not yet functional.
+ - Misc. minor bug fixes.
+
+
+
+Changes in McStas v1.3, May 18, 2000:
+
+ - New facility `McDoc' for documentation of components, with
+   automatic extraction of documentation from comment headers in the
+   source code.
+ - The possibility in the graphical user interface `mcgui' to build
+   instrument definitions using "point-and-click", based on McDoc.
+ - Much improved `mcrun' front-end, which now replaces the old `gscan'
+   front-end and interfaces with `mcplot'.
+ - Optional component input parameters.
+ - Instrument parameters may now also be of string type.
+ - Improved Single_crystal component, now supports anisotropic mosaic,
+   multiple scattering, extinction, absorbtion, and incoherent
+   scattering.
+ - New components Source_Optimizer and Monitor-nD, by Emmanuel Farhi.
+ - Misc. minor bug fixes.
+
+
+
+Changes in McStas v1.2, January 31, 2000:
+
+ - New components (Single_crystal, Mosaic_simple, Source_adapt,
+   Res_sample, ...).
+ - New graphical user interface mcgui.
+ - New command-line front-end mcrun with automatic compilation
+   (experimental).
+ - New resolution function front-end mcresplot (experimental).
+ - Better random number generator "Mersenne Twister".
+ - Fix for problem with Digital Unix almost-ANSI compiler.
+ - Misc. minor bug fixes.
+
+
+
+Changes in McStas v1.1, March 31, 1999:
+
+ - New components.
+ - Much improved output file format, with new mcplot front-end to
+   automatically plot the results of a simulation.
+ - New MCDISPLAY sections in component definitions, and much improved
+   mcdisplay front-end.
+ - New kernel calls DETECTOR_OUT_[012]D(), mcget_ncount().
+ - Improved error messages.
+ - New --portable compiler option.
+ - Various minor bug and compatibility fixes.
+ - Preliminary support for polarised neutrons.
+ - Quote special characters in strings in the generated C code.
+
+
+
+Changes in McStas v1.0, October 26, 1998:
+
+ - Initial release.

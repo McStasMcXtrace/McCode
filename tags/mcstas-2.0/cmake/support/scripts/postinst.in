@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Include installation path before any attempt to postconfig
+PATH=${CMAKE_INSTALL_PREFIX}/bin:$PATH
+
+# Setup mccode-select and mccode-select-bundle
+mccode-select-${FLAVOR}-${MCCODE_VERSION} --bootstrap
+
+# Setup mcstas/mcxtrace including available tools
+mccode-select-bundle --install \
+	  ${FLAVOR} \
+	  ${MCCODE_VERSION}

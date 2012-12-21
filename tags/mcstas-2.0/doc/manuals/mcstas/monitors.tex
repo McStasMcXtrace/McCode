@@ -1,0 +1,68 @@
+\chapter{Monitors and detectors}
+\index{Library!Components!monitors}
+\index{Monitors|textbf}
+
+In real neutron experiments, detectors and monitors play quite
+different roles. One wants the detectors to be as efficient as
+possible, counting all neutrons (absorbing them in the process),
+while the monitors measure the intensity of the incoming beam, and must
+as such be almost transparent, interacting only with (roughly) 0.1-1\%
+of the neutrons passing by. In computer simulations, it is
+of course possible to detect every neutron ray without
+absorbing it or disturbing any of its parameters. Hence, the two components
+have very similar functions in the simulations, and we do
+not distinguish between them. For simplicity, they are from here on
+just called {\bf monitors}.
+
+Another important difference between computer simulations
+and real experiments is
+that one may allow the monitor to be sensitive to any neutron property,
+as {\em e.g.} direction, energy, and divergence, in addition to what
+is found in real-world detectors (space and time). One may, in
+fact, let the monitor record correlations between these properties,
+as seen for example in the divergence/position sensitive monitor in
+section~\ref{s:divpos-monitor}.
+
+When a monitor detects a neutron ray,
+a number counting variable is incremented: $n_i = n_{i-1}+1$.
+In addition, the neutron
+weight $p_i$ is added to the weight counting variable:
+$I_i = I_{i-1} + p_i$,
+and the second moment of the weight is
+updated: $M_{2,i} = M_{2,i-1} + p_i^2$.
+As also discussed chapter \ref{s:MCtechniques}, after a simulation of $N$ rays
+the detected intensity (in units of neutrons/sec.) is $I_N$,
+while the estimated errorbar is $\sqrt{M_{2,N}^2}$.
+
+Many different monitor components have been developed for
+\MCS , but we have decided to support only the most important ones.
+One example of the monitors we have omitted is the single monitor,
+{\bf Monitor},
+that measures just one number (with errorbars) per simulation.
+This effect is mirrored by any of the 1- or 2-dimensional components
+we support, e.g. the {\rm PSD\_monitor}.
+In case additional functionality of monitors is required,
+the few code lines of existing monitors can easily be modified.
+
+However, the ultimate solution is the use of the
+``Swiss army knife'' of monitors, {\bf Monitor\_nD}, that can face
+almost any simulation requirement,
+but will prove challenging for users who like to perform own modifications.
+
+\newpage
+\input{tof_monitor}
+
+\input{tof2e_monitor}
+
+\input{e_monitor}
+
+\input{l_monitor}
+
+\input{psd_monitor}
+
+\input{div_monitor}
+
+\input{divpos_monitor}
+
+\newpage
+\input{Monitor_nD}

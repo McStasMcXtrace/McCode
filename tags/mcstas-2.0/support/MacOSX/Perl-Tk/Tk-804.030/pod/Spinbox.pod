@@ -1,0 +1,819 @@
+#  Copyright (c) 2000 Jeffrey Hobbs.
+#  Copyright (c) 2000 Ajuba Solutions.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#  RCS: @(#) $Id: spinbox.n,v 1.3 2001/12/18 23:02:35 hobbs Exp $
+
+=head1 NAME
+
+Tk::Spinbox - Create and manipulate Spinbox widgets
+
+=for category  Tk Generic Methods
+
+=head1 SYNOPSIS
+
+I<$spinbox> =  I<$parent>-E<gt>Spinbox(?I<options>?);
+
+ -activebackground    -highlightthickness -repeatinterval
+ -background          -insertbackground   -selectbackground
+ -borderwidth         -insertborderwidth  -selectborderwidth
+ -cursor              -insertontime       -selectforeground
+ -exportselection     -insertwidth        -takefocus
+ -font                -insertofftime      -textvariable
+ -foreground          -justify            -xscrollcommand
+ -highlightbackground -relief
+ -highlightcolor      -repeatdelay
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item Option:	B<-buttonbackground>
+
+=item Name:	B<buttonBackground>
+
+=item Class:	B<Background>
+
+The background color to be used for the spin buttons.
+
+=item Option:	B<-buttoncursor>
+
+=item Name:	B<buttonCursor>
+
+=item Class:	B<Cursor>
+
+The cursor to be used when over the spin buttons.  If this is empty
+(the default), a default cursor will be used.
+
+=item Option:	B<-buttondownrelief>
+
+=item Name:	B<buttonDownRelief>
+
+=item Class:	B<Relief>
+
+The relief to be used for the upper spin button.
+
+=item Option:	B<-buttonuprelief>
+
+=item Name:	B<buttonUpRelief>
+
+=item Class:	B<Relief>
+
+The relief to be used for the lower spin button.
+
+=item Option:	B<-command>
+
+=item Name:	B<command>
+
+=item Class:	B<Command>
+
+Specifies a Perl/Tk callback to invoke whenever a Spinbutton is invoked.
+The callback has these two arguments I<appended> to any existing callback
+arguments: the current value of the widget and the direction of the button
+press (B<up> or B<down>).
+
+=item Option:	B<-disabledbackground>
+
+=item Name:	B<disabledBackground>
+
+=item Class:	B<DisabledBackground>
+
+Specifies the background color to use when the Spinbox is disabled.  If
+this option is the empty string, the normal background color is used.
+
+=item Option:	B<-disabledforeground>
+
+=item Name:	B<disabledForeground>
+
+=item Class:	B<DisabledForeground>
+
+Specifies the foreground color to use when the Spinbox is disabled.  If
+this option is the empty string, the normal foreground color is used.
+
+=item Option:	B<-format>
+
+=item Name:	B<format>
+
+=item Class:	B<Format>
+
+Specifies an alternate format to use when setting the string value
+when using the B<-from> and B<-to> range.
+This must be a format specifier of the form B<%E<lt>padE<gt>.E<lt>padE<gt>f>,
+as it will format a floating-point number.
+
+=item Option:	B<-from>
+
+=item Name:	B<from>
+
+=item Class:	B<From>
+
+A floating-point value corresponding to the lowest value for a Spinbox, to
+be used in conjunction with B<-to> and B<-increment>.  When all
+are specified correctly, the Spinbox will use these values to control its
+contents.  This value must be less than the B<-to> option.
+If B<-values> is specified, it supercedes this option.
+
+=item Option:	B<-invalidcommand>
+
+=item Alias:	B<-invcmd>
+
+=item Name:	B<invalidCommand>
+
+=item Class:	B<InvalidCommand>
+
+Specifies a script to eval when B<validateCommand> returns 0.  Setting
+it to an empty string disables this feature (the default).  The best use of
+this option is to set it to I<bell>.  See B<Validation> below for
+more information.
+
+=item Option:	B<-increment>
+
+=item Name:	B<increment>
+
+=item Class:	B<Increment>
+
+A floating-point value specifying the increment.  When used with
+B<-from> and B<-to>, the value in the widget will be adjusted by
+B<-increment> when a spin button is pressed (up adds the value,
+down subtracts the value).
+
+=item Option:	B<-readonlybackground>
+
+=item Name:	B<readonlyBackground>
+
+=item Class:	B<ReadonlyBackground>
+
+Specifies the background color to use when the Spinbox is readonly.  If
+this option is the empty string, the normal background color is used.
+
+=item Option:	B<-state>
+
+=item Name:	B<state>
+
+=item Class:	B<State>
+
+Specifies one of three states for the Spinbox:  B<normal>,
+B<disabled>, or B<readonly>.  If the Spinbox is readonly, then the
+value may not be changed using methods and no insertion cursor
+will be displayed, even if the input focus is in the widget; the
+contents of the widget may still be selected.  If the Spinbox is
+disabled, the value may not be changed, no insertion cursor will be
+displayed, the contents will not be selectable, and the Spinbox may
+be displayed in a different color, depending on the values of the
+B<-disabledforeground> and B<-disabledbackground> options.
+
+=item Option:	B<-to>
+
+=item Name:	B<to>
+
+=item Class:	B<To>
+
+A floating-point value corresponding to the highest value for the Spinbox,
+to be used in conjunction with B<-from> and B<-increment>.  When
+all are specified correctly, the Spinbox will use these values to control
+its contents.  This value must be greater than the B<-from> option.
+If B<-values> is specified, it supercedes this option.
+
+=item Option:	B<-validate>
+
+=item Name:	B<validate>
+
+=item Class:	B<Validate>
+
+Specifies the mode in which validation should operate: B<none>,
+B<focus>, B<focusin>, B<focusout>, B<key>, or B<all>.
+It defaults to B<none>.  When you want validation, you must explicitly
+state which mode you wish to use.  See B<Validation> below for more.
+
+=item Option:	B<-validatecommand>
+
+=item Alias:	B<-vcmd>
+
+=item Name:	B<validateCommand>
+
+=item Class:	B<ValidateCommand>
+
+Specifies a script to evaluate when you want to validate the input in the
+widget.  Setting it to an empty string disables this feature (the default).
+Validation occurs according to the value of B<-validate>.
+This command must return a valid boolean value.  If it returns 0 (or
+the valid boolean equivalent) then the value of the widget will not
+change and the B<invalidCommand> will be evaluated if it is set.  If it
+returns 1, then value will be changed.
+See B<Validation> below for more information.
+
+=item Option:	B<-values>
+
+=item Name:	B<values>
+
+=item Class:	B<Values>
+
+Must be a proper list value.  If specified, the Spinbox will use these
+values as to control its contents, starting with the first value.  This
+option has precedence over the B<-from> and B<-to> range.
+
+=item Option:	B<-width>
+
+=item Name:	B<width>
+
+=item Class:	B<Width>
+
+Specifies an integer value indicating the desired width of the Spinbox window,
+in average-size characters of the widget's font.
+If the value is less than or equal to zero, the widget picks a
+size just large enough to hold its current text.
+
+=item Option:	B<-wrap>
+
+=item Name:	B<wrap>
+
+=item Class:	B<Wrap>
+
+Must be a proper boolean value.  If on, the Spinbox will wrap around the
+values of data in the widget.
+
+=back
+
+=head1 DESCRIPTION
+
+The B<Spinbox> method creates a new window (given by the
+$spinbox argument) and makes it into a Spinbox widget.
+Additional options, described above, may be specified on the
+command line or in the option database
+to configure aspects of the Spinbox such as its colors, font,
+and relief. 
+
+A B<Spinbox> is an extended B<Entry> widget that allows he user
+to move, or spin, through a fixed set of ascending or descending values
+such as times or dates in addition to editing the value as in an
+B<entry>.  When first created, a Spinbox's string is empty.
+A portion of the Spinbox may be selected as described below.
+If a Spinbox is exporting its selection (see the B<exportSelection>
+option), then it will observe the standard protocols for handling the
+selection;  Spinbox selections are available as type B<STRING>.
+Spinboxes also observe the standard Tk rules for dealing with the
+input focus.  When a Spinbox has the input focus it displays an
+I<insertion cursor> to indicate where new characters will be
+inserted.
+
+Spinboxes are capable of displaying strings that are too long to
+fit entirely within the widget's window.  In this case, only a
+portion of the string will be displayed; commands described below
+may be used to change the view in the window.  Spinboxes use
+the standard B<-xscrollcommand> mechanism for interacting with
+scrollbars (see the description of the B<-xscrollcommand> option
+for details).  They also support scanning, as described below.
+
+=head1 VALIDATION
+
+Validation works by setting the B<validateCommand>
+option to a callback which will be evaluated according to the B<validate>
+option as follows:
+
+=over 4
+
+=item B<none>
+
+Default.  This means no validation will occur.
+
+=item B<focus>
+
+B<validateCommand> will be called when the Spinbox receives or
+loses focus.
+
+=item B<focusin>
+
+B<validateCommand> will be called when the Spinbox receives focus.
+
+=item B<focusout>
+
+B<validateCommand> will be called when the Spinbox loses focus.
+
+=item B<key>
+
+B<validateCommand> will be called when the Spinbox is edited.
+
+=item B<all>
+
+B<validateCommand> will be called for all above conditions.
+
+
+The B<validateCommand> and B<invalidCommand> callbacks are invoked
+with at least 5 positional arguments, which are I<appended> to any already
+existing callback arguments:
+
+=over 4
+
+=item * 1
+
+The proposed value of the entry.  If you are configuring the
+entry widget to have a new textVariable, this will be the value of that
+textVariable.
+
+=item * 2
+
+The characters to be added (or deleted). This will be C<undef>
+if validation is due to focus, explcit call to validate or if change
+is due to C<-textvariable> changing.
+
+=item * 3
+
+The current value of entry i.e. before the proposed change.
+
+=item * 4
+
+The index of character string to be added/deleted, if any. Otherwise -1.
+
+=item * 5
+
+Type of action. 1 == INSERT, 0 == DELETE,
+-1 if it's a forced validation or textVariable validation.
+
+=back
+
+In general, the B<textVariable> and B<validateCommand> can be
+dangerous to mix.  Any problems have been overcome so that using the
+B<validateCommand> will not interfere with the traditional behavior of
+the Spinbox widget.  Using the B<textVariable> for read-only purposes will
+never cause problems.  The danger comes when you try set the
+B<textVariable> to something that the B<validateCommand> would not
+accept, which causes B<validate> to become I<none> (the
+B<invalidCommand> will not be triggered).  The same happens
+when an error occurs evaluating the B<validateCommand>.
+
+Primarily, an error will occur when the B<validateCommand> or
+B<invalidCommand> encounters an error in its script while evaluating or
+B<validateCommand> does not return a valid boolean value.  The
+B<validate> option will also set itself to B<none> when you edit the
+Spinbox widget from within either the B<validateCommand> or the
+B<invalidCommand>.  Such editions will override the one that was being
+validated.  If you wish to edit the value of the widget
+during validation and still have the B<validate> option set, you should
+include the command
+
+ my $val = $spinbox->cget(-validate);
+ $spinbox->configure(-validate => $val);
+
+in the B<validateCommand> or B<invalidCommand> (whichever one you
+were editing the Spinbox widget from).  It is also recommended to not set an
+associated B<textVariable> during validation, as that can cause the
+Spinbox widget to become out of sync with the B<textVariable>.
+
+=back
+
+=head1 WIDGET METHODS
+
+The B<Spinbox> command creates a widget object whose
+name is $widget.  This command may be used to invoke various
+operations on the widget.  It has the following general form:
+
+ $widget->method(?arg arg ...?);
+
+Many of the methods for Spinboxes take one or more indices as
+arguments.  An index specifies a particular character in the Spinbox's
+string, in any of the following ways:
+
+=over 4
+
+=item I<number>
+
+Specifies the character as a numerical index, where 0 corresponds
+to the first character in the string.
+
+=item B<anchor>
+
+Indicates the anchor point for the selection, which is set with the
+B<select from> and B<select adjust> methods.
+
+=item B<end>
+
+Indicates the character just after the last one in the Spinbox's string.
+This is equivalent to specifying a numerical index equal to the length
+of the Spinbox's string.
+
+=item B<insert>
+
+Indicates the character adjacent to and immediately following the
+insertion cursor.
+
+=item B<sel.first>
+
+Indicates the first character in the selection.  It is an error to
+use this form if the selection isn't in the Spinbox window.
+
+=item B<sel.last>
+
+Indicates the character just after the last one in the selection.
+It is an error to use this form if the selection isn't in the
+Spinbox window.
+
+=item B<@>I<number>
+
+In this form, I<number> is treated as an x-coordinate in the
+Spinbox's window;  the character spanning that x-coordinate is used.
+For example, ``B<@0>'' indicates the left-most character in the
+window.
+
+=back
+
+Abbreviations may be used for any of the forms above, e.g. ``B<e>''
+or ``B<sel.f>''.  In general, out-of-range indices are automatically
+rounded to the nearest legal value.
+
+The following commands are possible for Spinbox widgets:
+
+=over 4
+
+=item I<$widget>-E<gt>B<bbox>(I<index>);
+
+Returns a list of four numbers describing the bounding box of the
+character given by I<index>.
+The first two elements of the list give the x and y coordinates of
+the upper-left corner of the screen area covered by the character
+(in pixels relative to the widget) and the last two elements give
+the width and height of the character, in pixels.
+The bounding box may refer to a region outside the visible area
+of the window.
+
+=item I<$widget>-E<gt>B<cget>(I<option>);
+
+Returns the current value of the configuration option given
+by I<option>.
+I<Option> may have any of the values accepted by the B<Spinbox>
+command.
+
+=item I<$widget>-E<gt>B<configure>(?I<option>?, ?I<value, option, value, ...>?);
+
+Query or modify the configuration options of the widget.
+If no I<option> is specified, returns a list describing all of
+the available options for $widget (see L<Tk::configure> for
+information on the format of this list).  If I<option> is specified
+with no I<value>, then the command returns a list describing the
+one named option (this list will be identical to the corresponding
+sublist of the value returned if no I<option> is specified).  If
+one or more I<option-value> pairs are specified, then the command
+modifies the given widget option(s) to have the given value(s);  in
+this case the command returns an empty string.
+I<Option> may have any of the values accepted by the B<Spinbox>
+command.
+
+=item I<$widget>-E<gt>B<delete>(I<first, >?I<last>?);
+
+Delete one or more elements of the Spinbox.
+I<First> is the index of the first character to delete, and
+I<last> is the index of the character just after the last
+one to delete.
+If I<last> isn't specified it defaults to I<first>+1,
+i.e. a single character is deleted.
+This command returns an empty string.
+
+=item I<$widget>-E<gt>B<get>;
+
+Returns the Spinbox's string.
+
+=item I<$widget>-E<gt>B<icursor>(I<index>);
+
+Arrange for the insertion cursor to be displayed just before the character
+given by I<index>.  Returns an empty string.
+
+=item I<$widget>-E<gt>B<identify>(I<x, y>);
+
+Returns the name of the window element corresponding to coordinates
+I<x> and I<y> in the Spinbox.  Return value is one of:
+B<none>, B<buttondown>, B<buttonup>, B<entry>.
+
+=item I<$widget>-E<gt>B<index>(I<index>);
+
+Returns the numerical index corresponding to I<index>.
+
+=item I<$widget>-E<gt>B<insert>(I<index, string>);
+
+Insert the characters of I<string> just before the character
+indicated by I<index>.  Returns an empty string.
+
+=item I<$widget>-E<gt>B<invoke>(I<element>);
+
+Causes the specified element, either B<buttondown> or B<buttonup>,
+to be invoked, triggering the action associated with it.
+
+=item I<$widget>-E<gt>B<scan>(I<option, args>);
+
+This command is used to implement scanning on Spinboxes.  It has
+two forms, depending on I<option>:
+
+=over 4
+
+=item I<$widget>-E<gt>B<scanMark>(I<x>);
+
+Records I<x> and the current view in the Spinbox window;  used in
+conjunction with later B<scan dragto> commands.  Typically this
+command is associated with a mouse button press in the widget.  It
+returns an empty string.
+
+=item I<$widget>-E<gt>B<scanDragto>(I<x>);
+
+This command computes the difference between its I<x> argument
+and the I<x> argument to the last B<scan mark> command for
+the widget.  It then adjusts the view left or right by 10 times the
+difference in x-coordinates.  This command is typically associated
+with mouse motion events in the widget, to produce the effect of
+dragging the Spinbox at high speed through the window.  The return
+value is an empty string.
+
+=back
+
+=item I<$widget>-E<gt>B<selection>(I<option, arg>);
+
+This command is used to adjust the selection within a Spinbox.  It
+has several forms, depending on I<option>:
+
+=over 4
+
+=item I<$widget>-E<gt>B<selectionAdjust>(I<index>);
+
+Locate the end of the selection nearest to the character given by
+I<index>, and adjust that end of the selection to be at I<index>
+(i.e including but not going beyond I<index>).  The other
+end of the selection is made the anchor point for future
+B<select to> commands.  If the selection
+isn't currently in the Spinbox, then a new selection is created to
+include the characters between I<index> and the most recent
+selection anchor point, inclusive.
+Returns an empty string.
+
+=item I<$widget>-E<gt>B<selectionClear>;
+
+Clear the selection if it is currently in this widget.  If the
+selection isn't in this widget then the command has no effect.
+Returns an empty string.
+
+=item I<$widget>-E<gt>B<selectionElement>(?I<element>?);
+
+Sets or gets the currently selected element.  If a spinbutton element
+is specified, it will be displayed depressed.
+
+=item I<$widget>-E<gt>B<selectionFrom>(I<index>);
+
+Set the selection anchor point to just before the character
+given by I<index>.  Doesn't change the selection.
+Returns an empty string.
+
+=item I<$widget>-E<gt>B<selectionPresent>;
+
+Returns 1 if there is are characters selected in the Spinbox,
+0 if nothing is selected.
+
+=item I<$widget>-E<gt>B<selectionRange>(I<start, >I<end>);
+
+Sets the selection to include the characters starting with
+the one indexed by I<start> and ending with the one just
+before I<end>.
+If I<end> refers to the same character as I<start> or an
+earlier one, then the Spinbox's selection is cleared.
+
+=item I<$widget>-E<gt>B<selectionTo>(I<index>);
+
+If I<index> is before the anchor point, set the selection
+to the characters from I<index> up to but not including
+the anchor point.
+If I<index> is the same as the anchor point, do nothing.
+If I<index> is after the anchor point, set the selection
+to the characters from the anchor point up to but not including
+I<index>.
+The anchor point is determined by the most recent B<select from>
+or B<select adjust> command in this widget.
+If the selection isn't in this widget then a new selection is
+created using the most recent anchor point specified for the widget.
+Returns an empty string.
+
+=back
+
+=item I<$widget>-E<gt>B<set>(?I<string>?);
+
+If I<string> is specified, the Spinbox will try and set it to this
+value, otherwise it just returns the Spinbox's string.
+If validation is on, it will occur when setting the string.
+
+=item I<$widget>-E<gt>B<validate>;
+
+This command is used to force an evaluation of the B<validateCommand>
+independent of the conditions specified by the B<validate> option.
+This is done by temporarily setting the B<validate> option to B<all>.
+It returns 0 or 1.
+
+=item I<$widget>-E<gt>B<xview>(I<args>);
+
+This command is used to query and change the horizontal position of the
+text in the widget's window.  It can take any of the following
+forms:
+
+=over 4
+
+=item I<$widget>-E<gt>B<xview>;
+
+Returns a list containing two elements.
+Each element is a real fraction between 0 and 1;  together they describe
+the horizontal span that is visible in the window.
+For example, if the first element is .2 and the second element is .6,
+20% of the Spinbox's text is off-screen to the left, the middle 40% is visible
+in the window, and 40% of the text is off-screen to the right.
+These are the same values passed to scrollbars via the B<-xscrollcommand>
+option.
+
+=item I<$widget>-E<gt>B<xview>(I<index>);
+
+Adjusts the view in the window so that the character given by I<index>
+is displayed at the left edge of the window.
+
+=item I<$widget>-E<gt>B<xviewMoveto>(I<fraction>);
+
+Adjusts the view in the window so that the character I<fraction> of the
+way through the text appears at the left edge of the window.
+I<Fraction> must be a fraction between 0 and 1.
+
+=item I<$widget>-E<gt>B<xviewScroll>(I<number, what>);
+
+This command shifts the view in the window left or right according to
+I<number> and I<what>.
+I<Number> must be an integer.
+I<What> must be either B<units> or B<pages> or an abbreviation
+of one of these.
+If I<what> is B<units>, the view adjusts left or right by
+I<number> average-width characters on the display;  if it is
+B<pages> then the view adjusts by I<number> screenfuls.
+If I<number> is negative then characters farther to the left
+become visible;  if it is positive then characters farther to the right
+become visible.
+
+=back
+
+=back
+
+=head1 DEFAULT BINDINGS
+
+Tk automatically creates class bindings for Spinboxes that give them
+the following default behavior.
+In the descriptions below, ``word'' refers to a contiguous group
+of letters, digits, or ``_'' characters, or any single character
+other than these.
+
+=over 4
+
+=item [1]
+
+Clicking mouse button 1 positions the insertion cursor
+just before the character underneath the mouse cursor, sets the
+input focus to this widget, and clears any selection in the widget.
+Dragging with mouse button 1 strokes out a selection between
+the insertion cursor and the character under the mouse.
+
+=item [2]
+
+Double-clicking with mouse button 1 selects the word under the mouse
+and positions the insertion cursor at the beginning of the word.
+Dragging after a double click will stroke out a selection consisting
+of whole words.
+
+=item [3]
+
+Triple-clicking with mouse button 1 selects all of the text in the
+Spinbox and positions the insertion cursor before the first character.
+
+=item [4]
+
+The ends of the selection can be adjusted by dragging with mouse
+button 1 while the Shift key is down;  this will adjust the end
+of the selection that was nearest to the mouse cursor when button
+1 was pressed.
+If the button is double-clicked before dragging then the selection
+will be adjusted in units of whole words.
+
+=item [5]
+
+Clicking mouse button 1 with the Control key down will position the
+insertion cursor in the Spinbox without affecting the selection.
+
+=item [6]
+
+If any normal printing characters are typed in a Spinbox, they are
+inserted at the point of the insertion cursor.
+
+=item [7]
+
+The view in the Spinbox can be adjusted by dragging with mouse button 2.
+If mouse button 2 is clicked without moving the mouse, the selection
+is copied into the Spinbox at the position of the mouse cursor.
+
+=item [8]
+
+If the mouse is dragged out of the Spinbox on the left or right sides
+while button 1 is pressed, the Spinbox will automatically scroll to
+make more text visible (if there is more text off-screen on the side
+where the mouse left the window).
+
+=item [9]
+
+The Left and Right keys move the insertion cursor one character to the
+left or right;  they also clear any selection in the Spinbox and set
+the selection anchor.
+If Left or Right is typed with the Shift key down, then the insertion
+cursor moves and the selection is extended to include the new character.
+Control-Left and Control-Right move the insertion cursor by words, and
+Control-Shift-Left and Control-Shift-Right move the insertion cursor
+by words and also extend the selection.
+Control-b and Control-f behave the same as Left and Right, respectively.
+Meta-b and Meta-f behave the same as Control-Left and Control-Right,
+respectively.
+
+=item [10]
+
+The Home key, or Control-a, will move the insertion cursor to the
+beginning of the Spinbox and clear any selection in the Spinbox.
+Shift-Home moves the insertion cursor to the beginning of the Spinbox
+and also extends the selection to that point.
+
+=item [11]
+
+The End key, or Control-e, will move the insertion cursor to the
+end of the Spinbox and clear any selection in the Spinbox.
+Shift-End moves the cursor to the end and extends the selection
+to that point.
+
+=item [12]
+
+The Select key and Control-Space set the selection anchor to the position
+of the insertion cursor.  They don't affect the current selection.
+Shift-Select and Control-Shift-Space adjust the selection to the
+current position of the insertion cursor, selecting from the anchor
+to the insertion cursor if there was not any selection previously.
+
+=item [13]
+
+Control-/ selects all the text in the Spinbox.
+
+=item [14]
+
+Control-\ clears any selection in the Spinbox.
+
+=item [15]
+
+The F16 key (labelled Copy on many Sun workstations) or Meta-w
+copies the selection in the widget to the clipboard, if there is a selection.
+
+=item [16]
+
+The F20 key (labelled Cut on many Sun workstations) or Control-w
+copies the selection in the widget to the clipboard and deletes
+the selection.
+If there is no selection in the widget then these keys have no effect.
+
+=item [17]
+
+The F18 key (labelled Paste on many Sun workstations) or Control-y
+inserts the contents of the clipboard at the position of the
+insertion cursor.
+
+=item [18]
+
+The Delete key deletes the selection, if there is one in the Spinbox.
+If there is no selection, it deletes the character to the right of
+the insertion cursor.
+
+=item [19]
+
+The BackSpace key and Control-h delete the selection, if there is one
+in the Spinbox.
+If there is no selection, it deletes the character to the left of
+the insertion cursor.
+
+=item [20]
+
+Control-d deletes the character to the right of the insertion cursor.
+
+=item [21]
+
+Meta-d deletes the word to the right of the insertion cursor.
+
+=item [22]
+
+Control-k deletes all the characters to the right of the insertion
+cursor.
+
+=item [23]
+
+Control-t reverses the order of the two characters to the right of
+the insertion cursor.
+
+If the Spinbox is disabled using the B<-state> option, then the Spinbox's
+view can still be adjusted and text in the Spinbox can still be selected,
+but no insertion cursor will be displayed and no text modifications will
+take place.
+
+The behavior of Spinboxes can be changed by defining new bindings for
+individual widgets or by redefining the class bindings.
+
+=back
+
+=head1 KEYWORDS
+
+Spinbox, Entry, widget

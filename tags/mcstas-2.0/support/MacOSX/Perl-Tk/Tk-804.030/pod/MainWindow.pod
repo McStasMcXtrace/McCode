@@ -1,0 +1,85 @@
+
+=head1 NAME
+
+Tk::MainWindow - Root widget of a widget tree
+
+=for pm Tk/MainWindow.pm
+
+=for category Creating and Configuring Widgets
+
+=head1 SYNOPSIS
+
+    use Tk;
+
+    my $mw = MainWindow->new( ... options ... );
+
+    my $this = $mw->ThisWidget -> pack ;
+    my $that = $mw->ThatWidget;
+    ...
+
+    MainLoop;
+
+=head1 DESCRIPTION
+
+Perl/Tk applications (which have windows associated with them) create
+one or more B<MainWindow>s which act as the containers and parents
+of the other widgets.
+
+B<Tk::MainWindow> is a special kind of L<Toplevel|Tk::Toplevel> widget. It is
+the root of a widget tree. Therefore C<$mw-E<gt>Parent> returns
+C<undef>.
+
+The default title of a MainWindow is the basename of the script
+(actually the Class name used for options lookup, i.e. with basename
+with inital caps) or 'Ptk' as the fallback value.  If more than one MainWindow is created
+or several instances of the script are running at the same time the
+string C<" #n"> is appended where the number C<n> is set to get
+a unique value.
+
+Unlike the standard Tcl/Tk's wish, perl/Tk allows you to create
+several MainWindows.  When the I<last> B<MainWindow> is destroyed
+the Tk eventloop exits (the eventloop is entered with the call of
+C<MainLoop>). Various resources (bindings, fonts, images, colors) are
+maintained or cached for each MainWindow, so each MainWindow consumes more
+resources than a Toplevel. However multiple MainWindows can make sense when
+the user can destroy them independently.
+
+=head1 METHODS
+
+You can apply all methods that a L<Toplevel|Tk::Toplevel> widget accepts.
+
+The method I<$w>-E<gt>B<MainWindow> applied to any widget will return the
+B<MainWindow> to which the widget belongs (the  MainWindow belongs to itself).
+
+=head1 MISSING
+
+Documentation is incomplete.
+Here are I<some> missing items that should be explained in
+more detail:
+
+=over 4
+
+=item *
+
+The new mechanism for MainWindows is slightly different to
+other widgets.
+
+=item *
+
+There no explanation about what resources are bound
+to a MainWindow (e.g., ClassInit done per MainWindow)
+
+=item *
+
+Passing of command line options to override or augment
+arguments of the C<new> method (see L<Tk::CmdLine>).
+
+=back
+
+=head1 SEE ALSO
+
+L<Tk::Toplevel|Tk::Toplevel>
+L<Tk::CmdLine|Tk::CmdLine>
+
+=cut
+

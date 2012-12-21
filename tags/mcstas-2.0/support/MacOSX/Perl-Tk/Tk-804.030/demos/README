@@ -1,0 +1,70 @@
+
+This directory contains a collection of programs to demonstrate the
+features of the Tk toolkit.  The programs are all scripts for Perl 5
+with the "Tk" extension.  If Perl has been installed in /usr/local/bin
+then you can invoke any of the programs in this directory just by
+typing its file name to your command shell.  In particular, try the
+`widget' program.
+
+Ball.pm
+		A class module used by `bounce'.
+
+LabeledEntryLabeledRadiobutton.pm
+		A class module used by `composite'.
+
+bounce
+		A bouncing ball simulation.
+
+browse
+		A simple directory browser.  Invoke it with an argument
+		giving the name of the directory you'd like to browse.
+		Double-click on files or subdirectories to browse them.
+		Control-c and control-q cause the program to exit.
+
+color_editor
+	        Simple ColorEditor object example program.
+
+composite
+		An example of a composite widget.
+
+dialog
+		An example of Dialog.pm, a composite widget.
+
+hello
+		Creates a single button;  if you click on it, a message
+		is typed and the application terminates.
+
+ixset
+		A simple Tk-based wrapper for the "xset" program, which
+		allows you to interactively query and set various X options
+		such as mouse acceleration and bell volume.  Thanks to
+		Pierre David for contributing this example.
+
+rmt
+		Allows you to "hook-up" remotely to any Tk application
+		on the display.  Select an application with the menu,
+		then just type commands:  they'll go to that application.
+
+rolodex
+		A mock-up of a simple rolodex application.  It has much of
+		the user interface for such an application but no back-end
+		database.  This program was written in response to Tom
+		LaStrange's toolkit benchmark challenge.
+
+timer
+		Displays a seconds timer with start and stop buttons.
+		Control-c and control-q cause it to exit.
+
+tom
+		A sample program for Tom Christiansen (-:
+
+widget
+		Contains a collection of demonstrations of the widgets
+		currently available in the Tk library.  Most of the .pl
+		files are scripts for individual demos available through
+		the "widget" program (located in directory widget_lib).
+
+widget_old
+		Old version of widget, non-hypertext-like.
+
+

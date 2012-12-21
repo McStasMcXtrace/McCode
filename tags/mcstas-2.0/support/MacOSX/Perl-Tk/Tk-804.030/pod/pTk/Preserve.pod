@@ -1,0 +1,111 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#  @(#) Preserve.3 1.7 95/05/06 15:30:19
+#
+
+=head1 NAME
+
+Tk_Preserve, Tk_Release, Tk_EventuallyFree - avoid freeing storage while it's being used
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_Preserve>(I<clientData>)
+
+B<Tk_Release>(I<clientData>)
+
+B<Tk_EventuallyFree>(I<clientData, freeProc>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item ClientData clientData (in)
+
+Token describing structure to be freed or reallocated.  Usually a pointer
+to memory for structure.
+
+=item Tk_FreeProc *freeProc (in)
+
+Procedure to invoke to free I<clientData>.
+
+=back
+
+=head1 DESCRIPTION
+
+These three procedures help implement a simple reference count mechanism
+for managing storage.  They are designed to solve a problem
+having to do with widget deletion.  When a widget is deleted, its
+widget record (the structure holding information specific to the
+widget) must be returned to the storage allocator.
+However, it's possible that the widget record is in active use
+by one of the procedures on the stack at the time of the deletion.
+This can happen, for example, if the command associated with a button
+widget causes the button to be destroyed:  an X event causes an
+event-handling C procedure in the button to be invoked, which in
+turn causes the button's associated Tcl command to be executed,
+which in turn causes the button to be deleted, which in turn causes
+the button's widget record to be de-allocated.
+Unfortunately, when the Tcl command returns, the button's
+event-handling procedure will need to reference the
+button's widget record.
+Because of this, the widget record must not be freed as part of the
+deletion, but must be retained until the event-handling procedure has
+finished with it.
+In other situations where the widget is deleted, it may be possible
+to free the widget record immediately.
+
+B<Tk_Preserve> and B<Tk_Release>
+implement short-term reference counts for their I<clientData>
+argument.
+The I<clientData> argument identifies an object and usually
+consists of the address of a structure.
+The reference counts guarantee that an object will not be freed
+until each call to B<Tk_Preserve> for the object has been
+matched by calls to B<Tk_Release>.
+There may be any number of unmatched B<Tk_Preserve> calls
+in effect at once.
+
+B<Tk_EventuallyFree> is invoked to free up its I<clientData>
+argument.
+It checks to see if there are unmatched B<Tk_Preserve> calls
+for the object.
+If not, then B<Tk_EventuallyFree> calls I<freeProc> immediately.
+Otherwise B<Tk_EventuallyFree> records the fact that I<clientData>
+needs eventually to be freed.
+When all calls to B<Tk_Preserve> have been matched with
+calls to B<Tk_Release> then I<freeProc> will be called by
+B<Tk_Release> to do the cleanup.
+
+All the work of freeing the object is carried out by I<freeProc>.
+I<FreeProc> must have arguments and result that match the
+type B<Tk_FreeProc>:
+
+=over 4
+
+typedef void Tk_FreeProc(ClientData I<clientData>);
+
+=back
+
+The I<clientData> argument to I<freeProc> will be the
+same as the I<clientData> argument to B<Tk_EventuallyFree>.
+
+This mechanism can be used to solve the problem described above
+by placing B<Tk_Preserve> and B<Tk_Release> calls around
+actions that may cause undesired storage re-allocation.  The
+mechanism is intended only for short-term use (i.e. while procedures
+are pending on the stack);  it will not work efficiently as a
+mechanism for long-term reference counts.
+The implementation does not depend in any way on the internal
+structure of the objects being freed;  it keeps the reference
+counts in a separate structure.
+
+=head1 KEYWORDS
+
+free, reference count, storage

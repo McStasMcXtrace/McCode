@@ -1,0 +1,1130 @@
+/*******************************************************************************
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2011, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Elliptic_guide_gravity
+*
+* %I
+* Written by: Henrik Bo Hoffmann Carlsen
+* Date: March 14
+* Version: alpha
+* Origin: NBI
+* Release: McStas 2.0 ???
+*
+*
+* %D
+* THIS COMPONENT IS TEST ONLY, AND SHOULD ONLY BE USED TO INTERNAL TESTING
+* 
+* Example: grav_elliptic_guide(L=100,Linh=3,Linv=3,Louth=3,Loutv=3,widthOfEllipse=0.4,R0=0.99,Qc=0.0219,alpha=6.07,m=2,W=0.003)
+* %P
+* INPUT PARAMETERS:
+*
+* L          (m)    Length
+* Linh       [m] Focus for the source, horizontal direction, positive
+* Linv       [m] Focus for the source, vertical direction, positive
+* Louth      [m] Focus for the sample, horizontal direction, positive
+* Loutv      [m] Focus for the sample, vertical direction, positive* widthOfEllipse: (m)  width of ellipse
+* alpha:   	(AA)   Slope of reflectivity
+* m:       	(1)    m-value of material. Zero means completely absorbing.
+* W:       	(AA-1) Width of supermirror cut-off
+* R0:      (1)    Low-angle reflectivity
+* Qc:      (AA-1) Critical scattering vector
+*
+* %D
+* Example values: m=4 Qc=0.02 W=1/300 alpha=6.49 R0=1
+*
+* %E
+*******************************************************************************/
+
+// kort laesnings guide:
+// alle kommentarer paa dansk er kommentarer til mig selv, og de er aldrig skrevet til brug for andre
+// og er derfor meget indforstaet. Kommentarer paa engelsk er ofte til brug for andre.
+// Jeg har ikke skrevet kommentarer til udkommenteret kode.
+// fejlen jeg ikke kunne loese ligger i handleReflectionPhysics,handleReflectionPhysics2,handleReflectionPhysics3
+// jeg tror der er en for stor q.
+
+
+
+// indhold :
+
+// 1 #GLOBAL VARIABLES
+// 2 #DEBUG FUNCTIONS
+// 3 #SEGMENT FUNCTIONS // commented at the moment
+// 4 #INTERSECTION FUNCTIONS
+// 5 #REFLECTION FUNCTIONS
+// 6 INITIALIZE
+// 7 #TRACE
+// 8 #DISPLAY
+
+
+DEFINE COMPONENT Elliptic_guide_gravity
+DEFINITION PARAMETERS(string reflect=0)
+SETTING PARAMETERS (L=0,Linh=0,Louth=0,Linv=0,Loutv=0,widthOfEllipseh=0,
+                    widthOfEllipsev=0,R0=0.99,Qc=0.0219,alpha=6.07,m=2,W=0.003)
+OUTPUT PARAMETERS (MinorAxisHalfh,MinorAxisHalfv,Alpha,Mvalue,X,Y,Z,Vx,Vy,Vz,Gx,Gy,Gz,
+                   EllipseLength,MajorAxisHalfh,MajorAxisHalfv,Ellipse1z,Ellipse1x,Ellipse2z,Ellipse2y,
+                   Ellipse1xOffset,Ellipse1zOffset,Ellipse2yOffset,Ellipse2zOffset,errornum)
+
+SHARE
+%{
+
+        // debug function
+    int debugEllip(int number,double v0,double w0,
+                   double v,double vv,double gv,
+                   double w,double vw,double gw,
+                   double time,double ellipseV,double ellipseW){
+        /*
+         double vsol=v+vv*time+gv/2*time*time-v0;
+         double wsol=w+vw*time+gw/2*time*time-w0;
+         
+         char elliBuffVW[200];
+         double ellipseCorrectnessVW = (vsol*vsol)/( (ellipseV)*(ellipseV) )
+         + (wsol*wsol)/( (ellipseW)*(ellipseW) );
+         sprintf(elliBuffVW, "interation, %d,vwPoint (%e,%e),ellipseCorrectnessVW: %e\n",number,vsol+v0,wsol+w0,ellipseCorrectnessVW);
+         printf(elliBuffVW);
+         */
+        return 1;
+    }
+
+        // debug function
+    int debugText(int i,double t){
+        /*
+         char Buff[500];
+         sprintf(Buff, "debugText number: %d positionVector(%e,%e,%e)\n, velocityVector(%e,%e,%e) and time: %e\n",i,X,Y,Z,Vx,Vy,Vz,t);
+         printf(Buff);
+         */
+        return 1;
+    }
+    
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////// #INTERSECTION FUNCTIONS //////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////
+    
+    
+    /**
+     * TODO Make this function more general by allow 4 ellipses
+     * Test whether a Point is inside our 2 ellipses.
+     * @param x,y,z the position of the point to be tested.
+     * @return 1 if the point is inside the ellipses, returns 0 otherwise.
+     */
+    int insideEllipse(double x,double y,double z,double Ellipse1xOffset,double Ellipse1x,
+                      double Ellipse1zOffset,double Ellipse1z,double Ellipse2yOffset,
+                      double Ellipse2y,double Ellipse2zOffset,double Ellipse2z){
+        if( ( (x-Ellipse1xOffset)*(x-Ellipse1xOffset) )/(Ellipse1x*Ellipse1x)
+           + ( (z-Ellipse1zOffset)*(z-Ellipse1zOffset) )/(Ellipse1z*Ellipse1z) <= 1.0001 ){
+            if( ( (y-Ellipse2yOffset)*(y-Ellipse2yOffset) )/(Ellipse2y*Ellipse2y)
+               + ( (z-Ellipse2zOffset)*(z-Ellipse2zOffset) )/(Ellipse2z*Ellipse2z) <= 1.0001 ){
+                return 1; //inside
+            }
+        }
+        return 0;
+    }
+    
+    
+    /* 
+     Basicly it is a fancy implementation of Newtons method; made unreadable by too many optimization attempts
+     
+     */
+        //TODO clean up this function
+    /**
+     * Finds a approximate solution between the path of the particle and the ellipse.
+     * There is up to 4 solution to parabola ellipse intersection, but this algorithm
+     * only return the smallest non-zero positive solution. If there is no positive solution
+     * then 0 will be returned if v0,w0 is inside the ellipse and -1 otherwise.
+     * 
+     * @param vc,wc the center of the ellipse in the components coordinate.
+     * @param v0,w0 start position of the particle.
+     * @param dv0,dw0 start velocity of the particle.
+     * @param gv,gw gravity vector
+     * @param ellipseV,ellipseW axis of the ellipse
+     * @return time needed for the particle to reach the border of ellipse.
+     * returns 0 or -1 as errors.
+     */
+    double approximateIntersection(
+                                   double vc,double wc,double v0,double w0,
+                                   double dv0,double dw0,double gv,double gw,
+                                   double ellipseV,double ellipseW,
+                                   double X, double Y, double Z,double Ellipse1xOffset,
+                                   double Ellipse1x, double Ellipse1zOffset, 
+                                   double Ellipse1z, double Ellipse2yOffset,
+                                   double Ellipse2y, double Ellipse2zOffset,
+                                   double Ellipse2z){
+        
+            /// ini globals
+            // TODO debug for foerste kald er v=x og W=z
+        
+        v0=v0-vc; 	w0=w0-wc; 	
+        double v=v0; 	double w=w0;
+        double dv=dv0; 	double dw=dw0;
+        
+            // tangentLine
+        double vt=0; 	double wt=0;
+        double dvt=0; 	double dwt=0;
+        
+        double k0,k1,k2;
+        double s;
+        double localTime = 0;
+        double localTimeLast=-1000;
+        
+        int iteration = 0;
+        for(iteration = 0; iteration < 100; iteration++){
+            
+                // tangent
+            vt=v0+dv0*localTime+gv/2*localTime*localTime;
+            wt=w0+dw0*localTime+gw/2*localTime*localTime;
+            dvt = dv0 + gv*localTime;
+            dwt = dw0 + gw*localTime;
+            
+                // tangentLine-Ellipse Intersection
+			k0 = (vt*vt)/(ellipseV*ellipseV)+(wt*wt)/(ellipseW*ellipseW)-1; // todo improve performance?
+			k1 = 2*( (dvt*vt)/(ellipseV*ellipseV) + (dwt*wt)/(ellipseW*ellipseW) );
+			k2 = (dvt*dvt)/(ellipseV*ellipseV)+(dwt*dwt)/(ellipseW*ellipseW);
+            
+			if( k1*k1-4*k2*k0 < 0){
+				if( !insideEllipse(X,Y,Z, Ellipse1xOffset, Ellipse1x,
+                                    Ellipse1zOffset, Ellipse1z, Ellipse2yOffset,
+                                    Ellipse2y, Ellipse2zOffset, Ellipse2z) ){
+					printf("\n!!! The particle never entered the guide!!!\n");
+					return -1;
+				}
+				char buffy[300];
+				sprintf(buffy, "\n pos(%e,%e),\n vecStart(%e,%e),\n vecTangent(%e,%e) G(%e,%e),\n k0:%e,k1:%e,k2:%e solv%e\n" 
+						,v0,w0,dv0,dw0,dvt,dwt,gv,gw,k0,k1,k2,k1*k1-4*k2*k0);
+				printf("\n!!!error: complex number in approximateIntersection, tangentLine-Ellipse Intersection!!!");
+				printf(buffy);
+				return 0;
+			}
+            
+			s=(-k1+sqrt(k1*k1-4*k2*k0))/(2*k2); // todo improve performance?
+			v=vt+dvt*s; w=wt+dwt*s;
+			vt=vt+dvt*s; wt=wt+dwt*s;
+            
+                // verticalLine-parabola Intersection // rewrite to general solution
+                // TODO test this once
+            if(gv == 0 && gw == 0){
+                if(dw0 == 0){ // exception: (posX,posY) is the correct point.
+                    printf("\n!!!error: complex number in lineEllipseIntersection, verticalLine-parabola Intersection!!!\n");
+                    return 0;
+                }
+                    //todo correct div by 0
+                localTime = (wt-w0)/dw0; /* time = delta x / velocity x */
+            }
+            else if(dvt == 0 && gv == 0){
+                if(gw != 0)	localTime = (-dw0+sqrt(dw0*dw0-2*gw*(w0-wt)) )/(gw);
+                else	localTime = (wt-w0)/dw0;
+            }
+            else if(dwt == 0 && gw == 0){
+                localTime = (vt-v0)/dv0; 
+            }
+            else			// TODO correct this
+            {
+                    //printf("!jeg kom her ind!!!!! error maybe: %e!\n",dv*gw-dw*gv);
+                
+                    //localTime=(gw*(v1-v0)+(w0-w1)*gv)/(gw*dv-gv*dw)
+                localTime = ((w0-wt)*gv/2+(v0-vt)*gw/2)/(dv*gw/2-dw*gv/2);
+            }
+            
+            if( fabs(localTimeLast - localTime ) < 0.00000001 ) break;
+            /*
+             char buff[150];
+             sprintf(buff, "iteration number %d, t:%e s:%e pos(%e,%e) vel(%e,%e) \n",iteration,localTime,s,v,w,dv,dw);
+             printf(buff);
+             */
+                // save last point
+            localTimeLast = localTime;
+        }
+        
+		/*debugEllip(iteration,vc,wc,
+         v0,dv0,gv,w0,dw0,gw,
+         localTime,ellipseV,ellipseW); */
+        return fabs(localTime);
+    }
+    
+    
+        // TODO this function is really no longer needed because of PROP_DT, use insideEllipse instead
+    /**
+     * use insideEllipse instead
+     * function name
+     * short help text
+     * @param parameters
+     * @return return variables
+     */
+    double calculateStartingPoint(double X, double Y, double Z, double Ellipse1xOffset
+                                  ,double Ellipse1zOffset, double Ellipse2yOffset
+                                  ,double Ellipse2zOffset, double Ellipse1x
+                                  ,double Ellipse1z, double Ellipse2y
+                                  ,double Ellipse2z ){   
+        //double ellipse1x,double ellipse1z,double ellipse2y,double ellipse2z){
+        /* the entrance to the guide is defined as the part of the xy plane at (0,0,0)
+        / that is inside the ellipses */        
+        
+        double xtemp= X;//X+Vx*time+Gx*time*time;
+        double ytemp= Y;//Y+Vy*time+Gy*time*time;
+        double ztemp= Z;//Z+Vz*time+Gz*time*time;
+        
+        
+        double xsol1=xtemp-Ellipse1xOffset;
+        double zsol1=ztemp-Ellipse1zOffset;
+        double ysol2=ytemp-Ellipse2yOffset;
+        double zsol2=ztemp-Ellipse2zOffset;
+        
+        if( (xsol1*xsol1)/(Ellipse1x*Ellipse1x) + (zsol1*zsol1)/(Ellipse1z*Ellipse1z) <= 1 ){
+            if( (ysol2*ysol2)/(Ellipse2y*Ellipse2y) + (zsol2*zsol2)/(Ellipse2z*Ellipse2z) <= 1 ){
+                    //X=xtemp; Y=ytemp; Z=ztemp;
+                    //Vx=Vx+Gx*time; Vy=Vy+Gy*time; Vz=Vz+Gz*time;
+                    //t=t;//+time; // todo is this a bug???
+                return 1; //inside
+            }
+        }
+            //debugText(3);
+        return 0;
+    }
+    
+        // TODO what did i use this for?!?!?
+    /**
+     * never been tested
+     * function name
+     * short help text
+     * @param parameters
+     * @return return variables
+     */
+    int onEllipse(double x,double y,double z, double Ellipse1xOffset, double Ellipse1zOffset
+                  ,double Ellipse2yOffset, double Ellipse2zOffset, double Ellipse1x
+                  ,double Ellipse1z, double Ellipse2y, double Ellipse2z ){
+        double xsol1=x-Ellipse1xOffset;
+        double zsol1=z-Ellipse1zOffset;
+        double ysol2=y-Ellipse2yOffset;
+        double zsol2=z-Ellipse2zOffset;
+        
+        double XZ = ( xsol1*xsol1 )/(Ellipse1x*Ellipse1x)
+        + ( zsol1*zsol1 )/(Ellipse1z*Ellipse1z);
+        double YZ = ( ysol2*ysol2 )/(Ellipse2y*Ellipse2y)
+        + ( zsol2*zsol2 )/(Ellipse2z*Ellipse2z);
+        /*
+         char elliBuffXZ[50];
+         sprintf(elliBuffXZ, "XZ: %e,YZ: %e\n",XZ,YZ);
+         printf(elliBuffXZ);
+         */
+        
+        if(  0.999 <= XZ && XZ <= 1.001){
+            if(  0.999 <= YZ && YZ <= 1.001){
+                return 1;
+            }
+        }
+        return 0;
+    }
+    
+    
+        // TODO tag hoejde for flooting point errors
+    /**
+     * insideGuideCheck
+     * check if the given point is inside the guide
+     * @param x,y,z
+     * @param ellipse1x,ellipse1z,ellipse2y,ellipse2z the axis of the ellipses
+     * @return 1 if inside, 0 otherwise
+     */
+    int insideGuideCheck(double x,double y,double z,
+                         double ellipse1x,double ellipse1z,
+                         double ellipse2y,double ellipse2z,double L){
+        if( -0.00000001 <= z && z <= L+0.00000001 ){
+            return 1;
+        }
+        return 0;
+    }
+    
+    
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////// #REFLECTION FUNCTIONS ////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////
+    
+    
+        // TODO make this function
+    /**
+     * doesnt work
+     * function name
+     * short help text
+     * @param parameters
+     * @return return variables
+     */
+    double handleReflectionPhysics3(double v0,double w0,double *dv0,double *dw0,
+                                    double eV,double eW,double eVOffset,double eWOffset){
+        
+        double dv = *dv0;
+        double dw = *dw0;
+        
+        double nv = 0;
+        double nw = (eW*eW)/(eV*eV)*v0/w0*(-v0)+w0;
+        
+        double theta = acos( (nv*dv+nw*dw)/(sqrt(nv*nv+nw*nw)*sqrt(dv*dv+dw*dw) ) );
+        
+        double q = sin(theta)*V2Q*2; // Mads: mulig fejl 1
+        double arg = -1;
+        double weight = 1;
+        
+        double lR0=0.99;
+        double lQc=0.021;
+        double lalpha=6.07;
+        double lm=2;
+        double lW=0.003;
+        
+        if(q > lQc){
+            arg = (q-lm*lQc)/lW;
+            if(arg < 10)
+                weight = .5*(1-tanh(arg))*(1-lalpha*(q-lQc));
+            else weight = 0;         // Cutoff ~ 1E-10 
+		}
+        
+        
+        
+        printf("dv %e,*dv %e\nnv %e,nw %e\ntheta %e, q %e \n",dv,dv,nv,nw,theta,q);
+        
+            // find normal til ellipsen
+        
+    }
+    /**
+     * doesnt work
+     * function name
+     * short help text
+     * @param parameters
+     * @return return variables
+     */
+     /*
+    double handleReflectionPhysics2(double v0,double w0,double *dv0,double *dw0,
+                                    double eV,double eW,double eVOffset,double eWOffset){
+        
+        v0=v0-eVOffset;
+        w0=w0-eWOffset;
+        
+        double dv0t=v0-*dv0;
+        double dw0t=w0-*dw0;
+        
+        double c=(v0*(dv0t-v0)+(eV*eV)/(eW*eW)*w0*(dw0t-w0) ) / (v0*v0+(eV*eV)/(eW*eW)*(eV*eV)/(eW*eW)*w0*w0 ) ;
+        
+        double dv02=-(dv0t-2*v0)+2*v0*c;
+        double dw02=-(dw0t-2*w0)+(eV*eV)/(eW*eW)*2*w0*c;
+        
+        dv02=dv02-v0;
+        dw02=dw02-w0;
+        
+        
+        
+        
+        
+        double q = -1;
+        double arg = -1;
+        double weight = 1;
+        
+        double lR0=0.99;
+        double lQc=0.021;
+        double lalpha=6.07;
+        double lm=2;
+        double lW=0.003;
+        
+        
+        // double fv1 = *dv0/sqrt(*dv0* *dv0+dv02*dv02); 
+        // double fw1 = *dw0/sqrt(*dv0* *dv0+dv02*dv02);
+        // double fv2 = *dv0/sqrt(*dw0* *dw0+dw02*dw02);
+        // double fw2 = *dw0/sqrt(*dw0* *dw0+dw02*dw02);
+         
+        // double angle = acos( fv1*fv2+fw1*fw2 );
+         
+         //double angle = acos((-ab*ab-ob*ob+oa*oa)/(2*ab*ob));
+         
+        // double v=sqrt( (dv02-*dv0)*(dv02-*dv0)+(dw02-*dw0)*(dw02-*dw0) );
+        // q = fabs(2*sin(angle)*v*V2Q);
+         
+        double nv = dv02-*dv0;
+        double nw = dw02-*dw0;
+        
+        double lol = (nv* *dv0)+(nw* *dw0)/sqrt( nv*nv+nw*nw ); // Mads: Mulig fejl 2, mangler paranteser
+        q = V2Q*2*fabs(lol);
+            //q = V2Q*sqrt( deltax*deltax+deltay*deltay );
+        
+        if(q > lQc){
+            arg = (q-lm*lQc)/lW;
+            if(arg < 10)
+                weight = .5*(1-tanh(arg))*(1-lalpha*(q-lQc));
+            else weight = 0;         // Cutoff ~ 1E-10 
+		}
+        
+            //printf("sqrt %e,angle %e v %e\n",1,angle,v);
+        
+        printf("dv02 %e,*dv0 %e\ndw02 %e,*dw0 %e\n deltax %e, deltay %e,sqrt %e \n",dv02,*dv0,dw02,*dw0,nv,nw,sqrt( nw*nv+nw*nw ));
+        printf("q %e,Qc %e,alpha %e\narg %e,R0 %e,weight %e \n",q,Qc,alpha,arg,R0,weight);
+        
+        
+        *dv0=dv02;
+        *dw0=dw02;
+        
+        return weight;
+    }
+    */
+    
+    
+    /**
+     * doesnt work
+     * function name
+     * short help text
+     * @param parameters
+     * @return return variables
+     */
+    double handleReflectionPhysics(double v0,double w0,double *dv0,double *dw0,
+                                   double eV,double eW,double eVOffset,double eWOffset
+                                   , double R0, double Mvalue, double Qc, double W, double Alpha){
+        
+        v0=v0-eVOffset;
+        w0=w0-eWOffset;
+        
+        double dv0t=v0-*dv0;
+        double dw0t=w0-*dw0;
+        
+        double c=(v0*(dv0t-v0)+(eV*eV)/(eW*eW)*w0*(dw0t-w0) ) / (v0*v0+(eV*eV)/(eW*eW)*(eV*eV)/(eW*eW)*w0*w0 ) ;
+        
+        double dv02=-(dv0t-2*v0)+2*v0*c;
+        double dw02=-(dw0t-2*w0)+(eV*eV)/(eW*eW)*2*w0*c;
+        
+        dv02=dv02-v0;
+        dw02=dw02-w0;
+        
+        
+            // (dv0,dw0) is f_i and (dv02,dw02) f_o
+            // q = f_i-f_o
+        
+            // length of q
+            //R0=0.99,Qc=0.0219,Alpha=6.07,Mvalue=2,W=0.003;
+        double q = V2Q*sqrt( (dv02-*dv0)*(dv02-*dv0)+(dw02-*dw0)*(dw02-*dw0) );
+        
+        double blabla = sqrt( (dv02-*dv0)*(dv02-*dv0)+(dw02-*dw0)*(dw02-*dw0) );
+        
+            //sqrt( (*dv0)*(*dv0)+(*dw0)*(*dw0) );
+            //sqrt( (dv02)*(dv02)+(dw02)*(dw02) );
+        
+        double B = R0;
+        double arg = (q-Mvalue*Qc)/W;
+        
+        if(q > Qc){
+                //double arg = (q-Mvalue*Qc)/W;
+            if(arg < 10){
+                B *= .5*(1-tanh(arg))*(1-Alpha*(q-Qc));
+                    // P *= B;
+            }
+            else return 0;         // Cutoff ~ 1E-10 
+        }
+        
+        
+        
+        /* printf("q,Qc,alpha,arg,R: %g %g %g %g %g \n",q,Qc,alpha,arg,R); */
+        
+            /////////////////////// return new velocity
+        
+        *dv0=dv02;
+        *dw0=dw02;
+        return B;
+    }
+    
+    /**
+     *	Reflect the velocity vector in the ellipse normal on given the point.
+     */
+    
+    /**
+     * works
+     * handleReflectionPerfect
+     * reflect the velocity vector in the normal to the ellipse in the given point
+     * @param v0,w0 given point
+     * @param *dv0,*dw0 velocity vector
+     * @param eV,eW 
+     * @param eVOffset,eWOffset
+     * @return 1
+     */
+    int handleReflectionPerfect(double v0,double w0,double *dv0,double *dw0,
+                                double eV,double eW,double eVOffset,double eWOffset){
+        
+        
+            // solved with http://mathworld.wolfram.com/Reflection.html
+        
+        v0=v0-eVOffset;
+        w0=w0-eWOffset;
+        
+            // adds position vector to a velocity vector?
+        double dv0t=v0-*dv0; 
+        double dw0t=w0-*dw0;
+        
+            //double a=(v0*(dv0t-v0) + (eV*eV)/(eW*eW)*w0*(dw0t-w0) );
+            //double b=(v0*v0+(eV*eV)/(eW*eW)*(eV*eV)/(eW*eW)*w0*w0 );
+        double c=(v0*(dv0t-v0)+(eV*eV)/(eW*eW)*w0*(dw0t-w0) ) / (v0*v0+(eV*eV)/(eW*eW)*(eV*eV)/(eW*eW)*w0*w0 ) ;
+        
+        double dv02=-(dv0t-2*v0)+2*v0*c;
+        double dw02=-(dw0t-2*w0)+(eV*eV)/(eW*eW)*2*w0*c;
+        
+            // removes the position vector again?
+        dv02=dv02-v0;
+        dw02=dw02-w0;
+        
+        /*
+         char handleReflectionPerfect[200];
+         sprintf(handleReflectionPerfect, "handleReflectionPerfect: before(%e,%e),after(%e,%e) \n \t and a:%e b:%e c:%e \n",*dv0,*dw0,dv02,dw02,c);
+         printf(handleReflectionPerfect);
+         */
+        
+        *dv0=dv02;
+        *dw0=dw02;
+        return 1;
+    }
+    
+    /**
+     * not used
+     * function name
+     * short help text
+     * @param parameters
+     * @return return variables
+     */
+    /*
+     int moveParticleT(double time){
+     X=X+Vx*time+Gx*time*time;	
+     Y=Y+Vy*time+Gy*time*time;	
+     Z=Z+Vz*time+Gz*time*time;
+     Vx=Vx+Gx*time;			
+     Vy=Vy+Gy*time;
+     Vz=Vz+Gz*time;
+     }
+     */
+
+%}
+
+DECLARE
+%{
+
+
+
+
+///////////
+
+/** USED FOR SEGMENTS ONLY
+struct ApproximationPlane{
+double wStart;
+double wEnd;
+double vStart;
+double vEnd;
+double cosPhi;
+double sinPhi;
+double sign;
+double R0;
+double Qc;
+double alpha;
+double m;
+double w;
+};
+
+struct ApproximationPlane ApproximationArrayBottom[200];
+struct ApproximationPlane ApproximationArrayTop[200];
+struct ApproximationPlane ApproximationArrayLeft[200];
+struct ApproximationPlane ApproximationArrayRight[200];
+struct ApproximationPlane AppArrG[200]; // ApproximationArrayGenerel
+*/
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////// #GLOBAL VARIABLES ////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+//////////////SETTING PARAMETERS
+double L; // length of guide
+double Lin; // distance from guide start to the first focal point, a positive distance is outside guide
+double Lout; // distance from guide end to the second focal point, a positive distance is outside guide
+double MinorAxisHalf; // the width of the middle of the guide
+
+//reflection related
+double P;  // Local variable of p
+double R0; // Low-angle reflectivity
+double Qc; // Critical scattering vector
+double Alpha; // alpha-value of material. Zero means completely absorbing.
+double W; // Width of supermirror cut-off
+double Mvalue; //m-value of material. Zero means completely absorbing.
+*/
+
+/// Global constants
+// beregnet globals constants #declare
+
+// TODO remove these
+double Alpha; // alpha-value of material. Zero means completely absorbing.
+double Mvalue; //m-value of material. Zero means completely absorbing.
+double MinorAxisHalfh;
+double MinorAxisHalfv;
+
+double X,Y,Z; // global variables, not used anymore
+double Vx,Vy,Vz; // global variables, not used anymore
+
+double Gx,Gy,Gz; // use GRAVITY 
+
+double EllipseLength;
+double MajorAxisHalfh;
+double MajorAxisHalfv;
+
+double Ellipse1z; /* the minor and major axes of the ellipse */
+double Ellipse1x;
+
+double Ellipse2z; /* the minor and major axes of the ellipse */
+double Ellipse2y;
+
+double Ellipse1xOffset;
+double Ellipse1zOffset;
+double Ellipse2yOffset;
+double Ellipse2zOffset;
+int errornum;
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////// #DEBUG FUNCTIONS /////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+%}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////// #INITIALIZE //////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+INITIALIZE
+%{
+
+// DEBUG INPUT!!!
+//L = 8; // altid positiv
+//Lin = 1; // positiv mean outside, negative inside
+//Lout = -1;
+//MinorAxisHalf = 1; // altid positiv
+//	L = 98;
+//	Lin = 1.79;
+//	Lout = 0.33;
+
+
+// R0=R0; // Low-angle reflectivity
+// Qc=Qc; // Critical scattering vector
+Alpha=alpha; // -value of material. Zero means completely absorbing.
+//W=W; // Width of supermirror cut-off
+Mvalue=m; //m-value of material. Zero means completely absorbing.
+
+
+// TODO faa GRAVITY fra
+Gx=0, Gy=-GRAVITY, Gz=0;
+//	Gx=0, Gy=0, Gz=0;
+/*
+  Coords mcLocG;
+  mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,Gy,0));
+  coords_get(mcLocG, &Gx, &Gy, &Gz);
+*/
+
+//ROT_A_CURRENT_COMP[m][n]
+//TODO end getting gravitity
+
+
+MinorAxisHalfh = widthOfEllipseh;
+MinorAxisHalfv = widthOfEllipsev;
+
+EllipseLength = L + Linh + Louth;
+double lengthBetweenFocih = L+Linh+Louth;	// TODO is this ever used?
+MajorAxisHalfh =  sqrt( (lengthBetweenFocih*lengthBetweenFocih)/4+MinorAxisHalfh*MinorAxisHalfh ); // proof by basic algebra, and tested with drawing.
+
+double lengthBetweenFociv = L+Linv+Loutv;	// TODO is this ever used?
+MajorAxisHalfv =  sqrt( (lengthBetweenFociv*lengthBetweenFociv)/4+MinorAxisHalfv*MinorAxisHalfv ); // proof by basic algebra, and tested with drawing.
+
+
+char MajorAxisHalfB[120];
+sprintf(MajorAxisHalfB, "construct Ellipse EllipseLengthh: %e MinorAxisHalfh: %e MajorAxisHalfh: %e\n",EllipseLength,MinorAxisHalfh,MajorAxisHalfh);
+printf(MajorAxisHalfB);
+
+
+// the two ellipse are equal at the moment
+// calculated values
+Ellipse1z = MajorAxisHalfh;
+Ellipse1x = MinorAxisHalfh;
+Ellipse2z = MajorAxisHalfv;
+Ellipse2y = MinorAxisHalfv;
+Ellipse1zOffset = (-Linh + L + Louth)/2;
+Ellipse1xOffset = 0;
+Ellipse2zOffset = (-Linv + L + Loutv)/2;
+Ellipse2yOffset = 0;
+
+//////////////////////////////////////////////////////
+
+//AppArrG[200]
+
+/*
+UniformApproksimation(Ellipse1x, Ellipse1z, Ellipse1xOffset,Ellipse1zOffset,
+				L,200,R0,Qc,Alpha,Mvalue,W);
+
+
+double wStart;
+double wEnd;
+double vStart;
+double vEnd;
+
+char buffer1[100];
+sprintf(buffer1, " debugging!!! xs:%e,xe:%e,zs:%e,ze:%e \n",AppArrG[0].vStart,AppArrG[0].vEnd,AppArrG[0].wStart,AppArrG[0].wEnd);
+printf(buffer1);
+
+char buffer2[100];
+sprintf(buffer2, " debugging!!! xs:%e,xe:%e,zs:%e,ze:%e \n",AppArrG[1].vStart,AppArrG[1].vEnd,AppArrG[1].wStart,AppArrG[1].wEnd);
+printf(buffer2);
+
+char buffer3[100];
+sprintf(buffer3, " debugging!!! xs:%e,xe:%e,zs:%e,ze:%e \n",AppArrG[199].vStart,AppArrG[199].vEnd,AppArrG[199].wStart,AppArrG[199].wEnd);
+printf(buffer3);
+*/
+
+/////////////////////////////////////////////////////
+%}
+
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////// #TRACE  /////////////////
+/////////////////////////////////////////////////////////////////////////////
+
+/** works by
+ 	probagate to the guide entrance z_value
+	if inside the ellipse, continue else absorb
+	
+	Loop
+		Find intersection between particle and ellipses
+		if still inside the guide continue else probagate to guide exit and break loop
+		calculate reflection in the intersection point.
+		continue with new start position and velocity for the particle
+	loop ends
+*/
+
+TRACE
+%{
+
+
+
+
+//P=p;
+
+//x=0;y=0;z=1;
+//vx=0,vy=1;vz=1,t=0,p=1;
+// END of DEBUG INPUT!!!
+
+PROP_Z0;
+debugText(-1,t);
+
+SCATTER;
+
+X=x;Y=y;Z=z;
+Vx=vx;Vy=vy;Vz=vz;
+
+
+
+debugText(0,t);
+    double startTime = calculateStartingPoint( X, Y, Z, Ellipse1xOffset
+            , Ellipse1zOffset, Ellipse2yOffset, Ellipse2zOffset, Ellipse1x
+            , Ellipse1z, Ellipse2y, Ellipse2z );
+            
+if( startTime != 0 ){
+	//t+=startTime; // fejl 1
+	debugText(1,t);
+	//printf("The particle entered the guide \n");
+	//debugText(1);
+	// yes: 3a) loop:printf("which is inside the ellipse!! \n");
+	int bounces = 0;
+	for(bounces = 0; bounces <= 100; bounces++){
+		//printf("\nbounce number: %d\n",bounces);
+		//printf("Looking for Intersection between the guide and the particle \n");
+		// TODO test approximateIntersection
+		// tested for ellipse = unit circle
+		// and no gravity (needs to make an exception for no w (z) movement
+		// Test Results:
+		// approximateIntersection giver gode resultater for alle de variabel
+		// jeg kunne give til den. Der var i nogle tilfaelde en flooting point
+		// fejl? paa 6. decimal, naar jeg tester resultatet med validateResult2Ellip.
+		double timeXZ = approximateIntersection
+				(Ellipse1xOffset,Ellipse1zOffset,x,z,vx,vz,Gx,Gz,Ellipse1x,Ellipse1z,
+                  X, Y, Z, Ellipse1xOffset, Ellipse1x, Ellipse1zOffset, Ellipse1z,
+                  Ellipse2yOffset, Ellipse2y, Ellipse2zOffset, Ellipse2z);
+		double timeYZ = approximateIntersection
+				(Ellipse2yOffset,Ellipse2zOffset,y,z,vy,vz,Gy,Gz,Ellipse2y,Ellipse2z,
+                 X, Y, Z, Ellipse2yOffset, Ellipse2y, Ellipse2zOffset, Ellipse2z,
+                 Ellipse1xOffset, Ellipse1x, Ellipse1zOffset, Ellipse1z);
+
+		//validateResult2Ellip(timeXZ,timeYZ,Ellipse1x,Ellipse2y,Ellipse1z,Ellipse2z);
+
+		// TODO test if then else
+		// der er virkelig ikke meget at teste her
+		// ser rigtig nok ud
+
+		// det korrekt fysiske svar skal vaere positiv og det midste at de potentielle
+
+		//validateResult2Ellip(timeXZ,timeYZ,Ellipse1x,Ellipse2y,Ellipse1z,Ellipse2z);
+		double time;
+		if(timeXZ != 0 || timeYZ != 0 ){
+			if(timeXZ < timeYZ){
+				time = timeXZ;
+				//printf("intersection between the horizontal ellipse and the particle \n");
+			}
+			else{
+				time = timeYZ;
+				//printf("intersection between the vertical ellipse and the particle \n");
+			}
+		}
+		else 	// fejlen kunne ogsaa ligge i insideGuideCheck();
+			printf("\nThere is an error in findIntersection during the loop checking, debugging is needed inside the component\n");
+		if(time <= 0)
+			printf("negative time send to moveParticleT!!!, this is an error and you(Henrik) should fix it!!! \n");
+
+		//printf("original position is (%e,%e,%e) \n",x,y,z);
+		//debugText(0);
+		debugText(3,t);
+
+		// if the Particle is outside of the guide then propagate to the end of the guide
+		// ref #labelinsideGuideCheck
+		double fz=z+vz*time+Gz/2*time*time;
+		if( !insideGuideCheck(0,0,fz,0,0,0,0,L) ){
+			// propergerer til guide slutningen.
+			time = (L-z)/vz;
+			PROP_GRAV_DT(time,Gx,Gy,Gz);
+			break;
+			}
+		////////////////////////////////////////////////////////////////////// approximation to segments
+		if(0){ // none shall pass!!!
+			/*
+			// aendrer tiden
+			int IS;
+
+			double givenX=x+vx*time+Gx/2*time*time;
+			double givenZ=z+vz*time+Gz/2*time*time;
+			time = getApproximatedPosition2(Ellipse1xOffset,Ellipse1zOffset,x,z,
+						vx,vz,Gx,Gz,
+						givenX,givenZ,
+						Ellipse1x,Ellipse1z,200);
+			PROP_GRAV_DT(time,Gx,Gy,Gz);
+			break;
+			//double reflektionPlane(double *dv,double *dw, struct ApproximationPlane AP)
+			*/
+		}
+		
+/*
+getApproximatedPosition(double vc,double wc,double v0,double w0,
+			double dv0,double dw0,double gv,double gw,
+			double givenV,double givenW
+			double ellipseV,double ellipseW,
+			,NumberOfSegments){
+
+
+getApproximatedPosition
+double reflektionPlane(double *dv,double *dw, struct ApproximationPlane AP)
+*/
+
+		////////////////////////////////////////////////////////////////////// approximation to segments end
+		else{
+			PROP_GRAV_DT(time,Gx,Gy,Gz);	// move the particle to the intersection point
+            
+			if(timeXZ < timeYZ){	// send debug text
+				debugEllip(bounces,Ellipse1xOffset,Ellipse1zOffset,
+				x,vx,Gx,z,vz,Gz,
+				0,Ellipse1x,Ellipse1z);
+			}
+			else{			// send debug text
+				debugEllip(bounces,Ellipse2yOffset,Ellipse2zOffset,
+				y,vy,Gy,z,vz,Gz,
+				0,Ellipse2y,Ellipse2z);
+			}
+			
+			debugText(4,t);
+			//debugText(1);
+
+			//validateResult2Ellip(0,0,Ellipse1x,Ellipse2y,Ellipse1z,Ellipse2z);
+
+			//printf("Intersection position is (%e,%e,%e) \n",x,y,z);
+
+			// TODO test insideGuideCheck()
+			// virker korrekt naar en partikel uden paavirkning af
+			// tyngdekraften bliver sendt lige igennem guiden.
+
+			/*
+			if( insideEllipse(x,y,z) ){}
+				//printf("which is inside the ellipse!! \n");
+			else{}
+				//printf("which is NOT inside the ellipse!! \n");
+			*/
+			
+			// this check is no longer needed because of #labelinsideGuideCheck
+			if( insideGuideCheck(x,y,z,Ellipse1x,Ellipse1z,Ellipse2y,Ellipse2z,L) ){	
+                SCATTER;
+
+				if(timeXZ < timeYZ){ // use local variables of the particle
+					debugText(5,t);
+					double weight = handleReflectionPhysics
+						(x,z,&vx,&vz,Ellipse1x,Ellipse1z,Ellipse1xOffset,Ellipse1zOffset
+                        ,R0,Mvalue,Qc,W,Alpha);	
+					if(weight == 0){
+                     //   printf("Mads fejl1 \n");
+						ABSORB;
+                    }
+					else
+						p*=weight;
+					debugText(6,t);
+				}
+				else{	// modify the local variables of the particle.
+					debugText(7,t);
+					double weight = handleReflectionPhysics
+						(y,z,&vy,&vz,Ellipse2y,Ellipse2z,Ellipse2yOffset,Ellipse2zOffset
+                        ,R0,Mvalue,Qc,W,Alpha);
+					if(weight == 0){
+                     //   printf("Mads fejl2 \n");
+						ABSORB;
+                    }
+					else
+						p*=weight;
+					debugText(8,t);		
+				}
+			}
+			else{ //no end loop as the particle leaves the ellipse, update global values
+				// TODO de naeste to linier er kun til debugging!
+				//x=X,y=Y;z=Z;
+				//SCATTER;
+				//printf("which is NOT inside the guide \n");
+                //printf("should happen \n");
+				break;
+			}
+		}
+	}
+	if( bounces == 100){
+		// TODO cast Error!!! the particle is lost inside the ellipse
+		//printf("a particle has bounced 100 times inside the ellipse and is now considered lost \n");
+//        printf("Mads fejl3 \n");
+	}
+	debugText(100,t);
+}
+else{
+    errornum++;
+	ABSORB; // TODO make a better solution
+	}
+
+
+%}
+
+FINALLY
+%{
+if (errornum>0.5) {
+printf("%d neutrons did not enter the guide \n",errornum);
+}
+%}
+
+//////////////////////////7//////////////////////////7//////////////////////////7
+//////////////////////////7 # MCDISPLAY	//////////////////////////7//////////////
+//////////////////////////7//////////////////////////7//////////////////////////7
+MCDISPLAY
+%{
+
+
+char Buff11[200];
+sprintf(Buff11, "gravityVector(%e,%e,%e)",Gx,Gy,Gz);
+printf(Buff11);
+
+double  minor1 = Ellipse1x,minor2 = Ellipse2y,major1 = Ellipse1z,major2 = Ellipse2z;
+
+//double lengthBetweenFocih = L+Lin-Lout;
+
+//minor1 = 1; minor2 = 1; major1 = 5; major2 = 5; L = 4; // test line!
+
+int ApproximationMirrors = 400; // TODO This needs to be a user-defined variable 
+
+double zvalue=0;//-Ellipse1zOffset-Lin; // defined by the opening of the guide
+double zdelta=L/ApproximationMirrors;
+
+double xplus[ApproximationMirrors+1];
+double xminus[ApproximationMirrors+1];
+double yplus[ApproximationMirrors+1];
+double yminus[ApproximationMirrors+1];
+
+double tempx;
+double tempy;
+
+int i = 0;
+for(i=0;i<ApproximationMirrors+1;i++){
+   tempx = sqrt(minor1*minor1-(minor1*minor1)/(major1*major1)
+	*(zvalue+zdelta*i-Ellipse1zOffset)*(zvalue+zdelta*i-Ellipse1zOffset) );
+   xplus[i] =  tempx+Ellipse1xOffset;
+   xminus[i]= -tempx+Ellipse1xOffset;
+
+   tempy = sqrt(minor2*minor2-(minor2*minor2)/(major2*major2)
+	*(zvalue+zdelta*i-Ellipse2zOffset)*(zvalue+zdelta*i-Ellipse2zOffset) );
+   yplus[i] =  tempy+Ellipse2yOffset;
+   yminus[i]= -tempy+Ellipse2yOffset;
+}
+
+
+// TODO this may not give correct result if one of the ends are closed
+// draw lines perpendicular to the z-axis
+
+int j=0;
+
+    line( xplus[j], yplus[j], zvalue+j*zdelta, xminus[j],yplus[j], zvalue+j*zdelta);
+    line( xminus[j],yplus[j], zvalue+j*zdelta, xminus[j],yminus[j],zvalue+j*zdelta);
+    line( xminus[j],yminus[j],zvalue+j*zdelta, xplus[j], yminus[j],zvalue+j*zdelta);
+    line( xplus[j], yminus[j],zvalue+j*zdelta, xplus[j], yplus[j], zvalue+j*zdelta);
+    
+    j=ApproximationMirrors;
+
+    line( xplus[j], yplus[j], zvalue+j*zdelta, xminus[j],yplus[j], zvalue+j*zdelta);
+    line( xminus[j],yplus[j], zvalue+j*zdelta, xminus[j],yminus[j],zvalue+j*zdelta);
+    line( xminus[j],yminus[j],zvalue+j*zdelta, xplus[j], yminus[j],zvalue+j*zdelta);
+    line( xplus[j], yminus[j],zvalue+j*zdelta, xplus[j], yplus[j], zvalue+j*zdelta);
+
+
+/*
+for(j=0; j < ApproximationMirrors+1; j++){
+  line( xplus[j], yplus[j], zvalue+j*zdelta, xminus[j],yplus[j], zvalue+j*zdelta);
+  line( xminus[j],yplus[j], zvalue+j*zdelta, xminus[j],yminus[j],zvalue+j*zdelta);
+  line( xminus[j],yminus[j],zvalue+j*zdelta, xplus[j], yminus[j],zvalue+j*zdelta);
+  line( xplus[j], yminus[j],zvalue+j*zdelta, xplus[j], yplus[j], zvalue+j*zdelta);
+}*/
+
+// draw lines parallel to the z-axis
+
+int k=0;
+for(k=0; k < ApproximationMirrors; k++){
+  line( xplus[k], yplus[k], zvalue+k*zdelta, xplus[k+1], yplus[k+1], zvalue+(k+1)*zdelta);
+  line( xminus[k],yplus[k], zvalue+k*zdelta, xminus[k+1],yplus[k+1], zvalue+(k+1)*zdelta);
+  line( xplus[k], yminus[k],zvalue+k*zdelta, xplus[k+1], yminus[k+1],zvalue+(k+1)*zdelta);
+  line( yminus[k],yminus[k],zvalue+k*zdelta, xminus[k+1],yminus[k+1],zvalue+(k+1)*zdelta);
+}
+
+
+magnify("xy");
+
+
+/// this code is used to debug the drawing
+/*
+char bufferC[200];
+sprintf(bufferC, "\n \n debugging!!! V2K=%e \n",V2K);
+printf(bufferC);
+
+char bufferS[100];
+sprintf(bufferS, " debugging!!! tempx:%e,-tempx:%e,tempy:%e,-tempy:%e \n",tempx,-tempx,tempy,-tempy);
+printf(bufferS);
+
+char buffer1[100];
+sprintf(buffer1, " debugging!!! xp:%e,xm:%e,yp:%e,ym:%e \n",xplus[0],xminus[0],yplus[0],yminus[0]);
+printf(buffer1);
+
+char buffer2[100];
+sprintf(buffer2, " debugging!!! xp:%e,xm:%e,yp:%e,ym:%e \n",xplus[1],xminus[1],yplus[1],yminus[1]);
+printf(buffer2);
+
+char buffer4[100];
+sprintf(buffer4, " debugging!!! xp:%e,xm:%e,yp:%e,ym:%e \n",xplus[199],xminus[199],yplus[199],yminus[199]);
+printf(buffer4);
+/*
+char buffer5[100];
+sprintf(buffer5, " debugging!!! xp:%e,xm:%e,yp:%e,ym:%e \n",xplus[100],xminus[100],yplus[100],yminus[100]);
+printf(buffer5);
+*/
+%}
+
+END
+

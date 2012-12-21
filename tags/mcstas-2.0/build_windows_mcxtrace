@@ -1,0 +1,23 @@
+#!/bin/sh
+
+if [ "x$1" = "x" ]; then
+    # No arguments
+    echo Please provide one argument,e.g : $0 2.0
+    exit 1;
+fi
+
+# 64-bit
+./mkdist mcxtrace $1 "" "" mingw64 -- nsis
+./mkdist mcxtrace-comps $1 "" "" mingw64 -- nsis
+./mkdist mcxtrace-tools-Perl $1 tools/Legacy-Perl/ "" mingw64 -- nsis
+./mkdist mcxtrace-tools-Python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" mingw64 -- nsis
+./mkdist mcxtrace-tools-Python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 -- nsis
+./mkdist mcxtrace-tools-Python-mxrun $1 tools/Python/mcrun/ "" mingw64 -- nsis
+
+# 32-bit
+./mkdist mcxtrace $1 "" "" mingw32 -- nsis
+./mkdist mcxtrace-comps $1 "" "" mingw32 -- nsis
+./mkdist mcxtrace-tools-Perl $1 tools/Legacy-Perl/ "" mingw32 -- nsis
+./mkdist mcxtrace-tools-Python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" mingw32 -- nsis
+./mkdist mcxtrace-tools-Python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw32 -- nsis
+./mkdist mcxtrace-tools-Python-mxrun $1 tools/Python/mcrun/ "" mingw32 -- nsis

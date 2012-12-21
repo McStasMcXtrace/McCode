@@ -1,0 +1,96 @@
+TYPEMAP
+Tk_Window		T_TK_WINDOW
+Tk_Image		T_TK_IMAGE
+TkWindow *		T_TKWINDOW
+Display *		T_IVOBJ
+Screen *		T_IVOBJ
+Visual *		T_IVOBJ
+Window			T_IVOBJ
+Colormap		T_IVOBJ
+GC			T_IVOBJ
+Font			T_IVOBJ
+Atom			T_IV
+HANDLE			T_IV
+BOOL			T_IV
+HWND			T_TK_HWND
+FILE *			T_NIO
+hash_ptr *		T_PTR
+Tk_3DBorder		T_IVOBJ
+Tk_Uid			T_TK_UID
+Tcl_Interp *		T_TK_INTERP
+Tk_Font			T_TK_FONT
+EventAndKeySym *	T_TK_XEVENT
+LangCallback *		T_TK_CALLBACK
+LangFontInfo *		T_PVOBJ
+const char *		T_PV
+
+INPUT
+T_PVOBJ
+	if (sv_isobject($arg)) {
+	    STRLEN sz;
+	    $var = ($type) SvPV((SV*)SvRV($arg),sz);
+	    if (sz != sizeof(*$var))
+	     croak(\"$arg too small (%d) for $var $type (%d)\",sz,sizeof(*$var));
+	}
+	else
+	    croak(\"$var is not an object\")
+
+T_TK_WINDOW
+	$var = SVtoWindow($arg)
+
+T_TK_CALLBACK
+	$var = LangMakeCallback($arg)
+
+
+T_TK_HWND
+	$var = SVtoHWND($arg)
+
+T_TK_XEVENT
+	$var = SVtoEventAndKeySym($arg)
+
+T_TK_FONT
+	$var = SVtoFont($arg)
+
+T_TK_IMAGE
+	$var = SVtoImage($arg)
+
+T_TKWINDOW
+	$var = (TkWindow *) SVtoWindow($arg)
+
+T_TK_INTERP
+	$var = WindowCommand($arg,NULL,1)->interp
+
+T_TK_UID
+	$var = Tk_GetUid(SvPV($arg,na))
+
+T_IVOBJ
+	if (sv_isa($arg, \"${ntype}\")) {
+	    $var = INT2PTR($type, SvIV(SvRV($arg)));
+	}
+	else {
+	    $var = ($type) NULL;
+	    croak(\"$var is not of type ${ntype}\");
+	}
+
+T_NIO
+	if (sv_isa($arg, \"${Package}\")) {
+	    $var = IoIFP(sv_2io(SvRV($arg)));
+	}
+	else
+	    croak(\"$var is not of type ${Package}\")
+
+
+OUTPUT
+T_IVOBJ
+	sv_setref_iv($arg, \"${ntype}\", PTR2IV($var));
+
+T_TK_UID
+	sv_setpv($arg,$var);
+
+T_TK_WINDOW
+	SvSetMagicSV($arg,TkToWidget($var,NULL));
+
+T_TKWINDOW
+	SvSetMagicSV($arg,TkToWidget((Tk_Window) $var,NULL));
+
+
