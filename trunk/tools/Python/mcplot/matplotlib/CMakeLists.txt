@@ -79,6 +79,13 @@ endif()
 configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/mcplot" @ONLY)
 
 
+if(WINDOWS)
+  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py")
+else()
+  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/mcplot")
+endif()
+
+
 # Program files
 install(
   FILES "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/mcplot"
@@ -89,21 +96,23 @@ install(
   WORLD_READ WORLD_EXECUTE
 )
 
-# Symlink to main
-add_custom_command(
-  OUTPUT "${WORK}/${P}plot-py"
-  COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
-  COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}plot-py"
-  COMMAND "${CMAKE_COMMAND}" -E create_symlink
+if(NOT WINDOWS)
+  # Symlink to main
+  add_custom_command(
+    OUTPUT "${WORK}/${P}plot-py"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
+    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}plot-py"
+    COMMAND "${CMAKE_COMMAND}" -E create_symlink
     "${TOOLS_LIB}/mcplot" "${WORK}/${P}plot-py"
-)
+    )
 
-add_custom_target(
-  "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}plot-py"
-)
+  add_custom_target(
+    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}plot-py"
+    )
 
-install(
-  PROGRAMS "${WORK}/${P}plot-py"
-  DESTINATION ${bin}
-  RENAME "${P}plot-${MCCODE_VERSION}-matplotlib${DOT_PYTHON_SUFFIX}"
-)
+  install(
+    PROGRAMS "${WORK}/${P}plot-py"
+    DESTINATION ${bin}
+    RENAME "${P}plot-${MCCODE_VERSION}-matplotlib${DOT_PYTHON_SUFFIX}"
+    )
+endif()

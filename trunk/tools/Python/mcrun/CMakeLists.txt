@@ -77,8 +77,14 @@ foreach(NAME "__init__.py" "log.py" "mcstas.py" "optimisation.py")
 endforeach()
 
 # Program files
+if(WINDOWS)
+  set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py")
+else()
+  set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py" "${WORK}/mcrun")
+endif()
+
 install(
-  FILES "${PROJECT_SOURCE_DIR}/mcrun.py" "${WORK}/mcrun"
+  FILES ${BINS}
   DESTINATION "${lib}/${TOOLS_NAME}"
   PERMISSIONS
   OWNER_READ OWNER_WRITE OWNER_EXECUTE
@@ -86,20 +92,22 @@ install(
   WORLD_READ WORLD_EXECUTE
 )
 
-# Symlink to main
-add_custom_command(
-  OUTPUT "${WORK}/${P}run-py"
-  COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}run-py"
-  COMMAND "${CMAKE_COMMAND}" -E create_symlink
+if(NOT WINDOWS)
+  # Symlink to main
+  add_custom_command(
+    OUTPUT "${WORK}/${P}run-py"
+    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}run-py"
+    COMMAND "${CMAKE_COMMAND}" -E create_symlink
     "${TOOLS_LIB}/mcrun" "${WORK}/${P}run-py"
-)
+    )
 
-add_custom_target(
-  "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}run-py"
-)
+  add_custom_target(
+    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}run-py"
+    )
 
-install(
-  PROGRAMS "${WORK}/${P}run-py"
-  DESTINATION ${bin}
-  RENAME "${P}run${PROGRAM_SUFFIX}-py${DOT_PYTHON_SUFFIX}"
-)
+  install(
+    PROGRAMS "${WORK}/${P}run-py"
+    DESTINATION ${bin}
+    RENAME "${P}run${PROGRAM_SUFFIX}-py${DOT_PYTHON_SUFFIX}"
+    )
+endif()
