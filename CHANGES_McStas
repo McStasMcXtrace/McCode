@@ -240,7 +240,7 @@ Changes in McStas v2.0, December 21st, 2012
    mentioned components.
  - ESS_2001_bispectral.instr from Henrik Jacobsen, KU. Model of a bispectral extraction system for the ESS (currently
    using the 2001 version of the source)
- 
+ - ILL_D22.instr from Emmanuel Farhi. Model of the D22 SANS from ILL.
 
 Changes in McStas v1.12c, June 3rd, 2011
 
