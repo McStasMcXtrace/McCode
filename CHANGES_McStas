@@ -31,13 +31,13 @@
 * Modified by: PW May-June 2011: version 1.12c (re-release)
 * Modified by: PW November 2012: version 2.0RC1 (pre-release)
 * Modified by: PW December 2012: version 2.0RC2 (pre-release)
-* This file is part of McStas  version 2.0RC2, released December 2nd, 2012.
+* This file is part of McStas  version 2.0, released December 21st, 2012.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v2.0RC2, November 30th, 2012
+Changes in McStas v2.0, December 21st, 2012
 
- McStas 2.0RC2 is a major release (in preview status)
+ McStas 2.0 is the long-awaited major release of McStas
 
  Thanks:
  - Thanks to all contributors of components, instruments etc.! This is what Open Source
@@ -67,20 +67,24 @@ Changes in McStas v2.0RC2, November 30th, 2012
    - mcstas-doc, contains our PDF manuals
    - mcstas-tools-Python-mcrun, contains our new, python-based compile/run script
      * Dependencies: python-yaml
+     * Remark: The script falls back to the perl version if dependencies do not resolve
    - mcstas-tools-Python-mcplot-matplotlib, contains a new matplotlib mcplot solution
      * Dependencies: python-matplotlib
      * Remark: A bit on the slow side for large datasets
      * Remark: Features zooming on individual plots
      * Remark: "Standard" mcplot shortcuts for graphics dumps etc.
      * Remark: Recommendations for platform-specific python-distributions below
+     * Remark: The script falls back to the perl version if dependencies do not resolve
    - mcstas-tools-Python-mcplot-chaco, contains a draft implementation of mcplot based on chaco
      * Dependencies: python-chaco
      * Remark: Faster than matplotlib-solution, but a bit on the slow side for large datasets
      * Remark: Features zooming on individual plots
      * Remark: Recommendations for platform-specific python-distributions below
      * Remark: Not easy to install dependencies for chaco if not in your python distro
+     * Remark: The script falls back to the perl version if dependencies do not resolve
    - mcstas-web, contains a webserver-based run/trace/plot solution
      * Dependencies: python, python-XXX, R or perl+pgplot+perl-PGPLOT, nginx or apache
+     * Remark: Currently not packaged, get it from our SVN.
  - In the future, we will release new versions of e.g. the component library, docs or tools while 
    maintaining the core mcstas package. See repository-remarks below.
  - A given McStas 2.x release is "self-contained" and can be installed in parallel with other of
@@ -89,6 +93,9 @@ Changes in McStas v2.0RC2, November 30th, 2012
    a given tool (i.e. mcrun) which is run by default 
  - We provide a "migration tool" for Unix based systems (i.e. Linux & Mac) to let your already
    installed McStas 1.x co-exist with the new 2.x 
+ - Using McStas with NeXus does no longer require recompilation if you only want to _write_ NeXus.
+   (Simply install NeXus and update your MCSTAS_CFLAGS to include -lNeXus -DUSE_NEXUS). For the
+   conversion of files using mcformat NeXus must still be available at compile time
 
  Platform support:
  - We have moved from autoconf+make to CMake for easy multi-platform support
@@ -164,8 +171,9 @@ Changes in McStas v2.0RC2, November 30th, 2012
  - Backward compatibility 2: We have standardized naming of component parameters - see the file NOMENCLATURE
    installed in the McStas library. The code generation will give error messages of e.g. using xw and yh where
    one should now be using xwidth and yheight.
- - Support for tabulated magnetic fields. New code for handling fast interpolation in sparse data is included 
-   in the share/interpolation/ area. A new version of the SE_example.instr takes use of this feature.
+ - Support for tabulated magnetic fields. New code for handling interpolation in sparse data is included 
+   in the share/interpolation/ area. The test instrument Test_pol_tabled.instr takes use of this feature. 
+   The curren implementation is in draft status, we expect speedup in the next McStas release.
 
  New Components:
  - Sample_nxs.comp from Mirko Boin, HZB. Diffraction/imaging oriented sample where one defines the structure
@@ -184,7 +192,8 @@ Changes in McStas v2.0RC2, November 30th, 2012
    in the Reflectometer.instr test instrument. 
  - SNS_source_analytic.comp from Franz X. Gallmeier, SNS. Smooth-fit description of the SNS-moderators. Fits are
    derived from the same underlying raw-data as the ordinary SNS_source.comp is using directly with linear
-   interpolation.
+   interpolation. NOTE: This component uses the atypical neutrons/pulse intensity unit. The used input file MUST 
+   be given with a full path.
  - Brilliance_monitor.comp from Peter Willendrup, DTU Fysik. Monitor for easy evaluation of mean and instantaneous
    source brilliance for source comparison. Used in the ESS_brilliance.instr test instrument.
  - TOF_PSD_monitor_rad.comp from Kim Lefmann, KU. Derived from PSD_monitor_rad by Henrich Frielinghaus, FZJ.
@@ -202,11 +211,20 @@ Changes in McStas v2.0RC2, November 30th, 2012
    MCNP/MCNPX 'source surfaces'. For use in simulations where neutrons need transport in both codes.
  - Virtual_mcnp_ss_Guide.comp from Esben Klinkby, DTU Nutech. Single guide piece sitting in a 'sandwich' between 
    an input and an output MCNP/X source surface.
+ - Mirror_Curved_Bispectral.comp and Mirror_Elliptic_Bispectral.comp from Henrik Jacobsen, KU. Mirrors for the
+   bispectral ESS instrument ESS_2001_bispectral.instr.
+ - Radial_div.comp from Kaspar Klenoe, KU. Divergence monitor measuring the radial deviation in divergence. Used in 
+   Henrik Jacobsen's ESS_2001_bispectral.instr.
+
 
  Updated Components:
  - ESS_moderator_long.comp patches from Kim Lefmann KU (multiple-pulses, TOF-focusing) and Esben Klinkby DTU Nutech 
    (geometry and spectrum from ESS MCNPX models). Thanks to Klaus Lieutenant from Vitess/HZB for providing adjusted
-   parameters for the 'Mezei moderator' and a wavelength-dependent corretion term.
+   parameters for the 'Mezei moderator' and a wavelength-dependent corretion term. The legacy 2001 ESS parametrization
+   is provided in obsolete as ESS_moderator_long_2001.comp.
+ - Bugfix of the SNS_source.comp from Garrett Granroth, SNS (segfaulted on windows). NOTE: This component uses the 
+   atypical neutrons/pulse intensity unit. The used input file MUST be given with a full path.
+ - Bugfix of the Multilayer_sample from Rob Dalgliesh, ISIS. 
  - Many other components received updates... 
 
  Instruments:
