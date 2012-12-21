@@ -26,7 +26,10 @@ message("Enabling ${FLAVOR} flavor")
 setup_mccode_mkdist("${FLAVOR}")
 
 
-set(TOOLS_NAME "${FLAVOR}-tools-python-${MCCODE_PREFIX}plot-chaco-${MCCODE_VERSION}")
+# Select prefix
+set(P "${MCCODE_PREFIX}")
+
+set(TOOLS_NAME "${FLAVOR}-tools-python-${P}plot-chaco-${MCCODE_VERSION}")
 if(WINDOWS)
   # Windows needs special handling of this path...
   set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
@@ -63,13 +66,8 @@ include(CPack)
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
-# Select prefix
-if(${enable_mcstas})
-  set(P "mc")
-else()
-  set(P "mx")
-endif()
-
+# Configure fallback script
+configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/mcplot" @ONLY)
 
 # Python files
 foreach(name mcdata.py plotting.py)
@@ -81,7 +79,7 @@ endforeach()
 
 # Program files
 install(
-  FILES "${PROJECT_SOURCE_DIR}/main.py"
+  FILES "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/mcplot"
   DESTINATION "${TOOLS_LIB}"
   PERMISSIONS
   OWNER_READ OWNER_WRITE OWNER_EXECUTE
@@ -91,19 +89,19 @@ install(
 
 # Symlink to main
 add_custom_command(
-  OUTPUT "${WORK}/${MCCODE_PREFIX}plot"
+  OUTPUT "${WORK}/${P}plot-py"
   COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
-  COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${MCCODE_PREFIX}plot"
+  COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}plot-py"
   COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${TOOLS_LIB}/main.py" "${WORK}/${MCCODE_PREFIX}plot"
+    "${TOOLS_LIB}/mcplot" "${WORK}/${P}plot-py"
 )
 
 add_custom_target(
-  "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${MCCODE_PREFIX}plot"
+  "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}plot-py"
 )
 
 install(
-  PROGRAMS "${WORK}/${MCCODE_PREFIX}plot"
+  PROGRAMS "${WORK}/${P}plot-py"
   DESTINATION ${bin}
-  RENAME "${MCCODE_PREFIX}plot-${MCCODE_VERSION}-py${DOT_PYTHON_SUFFIX}"
+  RENAME "${P}plot-${MCCODE_VERSION}-py${DOT_PYTHON_SUFFIX}"
 )
