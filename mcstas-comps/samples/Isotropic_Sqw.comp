@@ -483,8 +483,8 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
   size = sqwTable.rows;
   MPI_MASTER(
   if (Sqw->verbose_output > 0) {
-    printf("Isotropic_sqw: Converting %ld powder lines from %s into S(q,w) data\n",
-        size, sqwTable.filename);
+    printf("Isotropic_sqw: Converting %ld %s from %s into S(q,w) data\n",
+        size, flag_qSq ? "S(q)" : "powder lines", sqwTable.filename);
   }
   );
   /* allocate line_data array */
@@ -1253,13 +1253,13 @@ struct Sqw_Data_struct *Sqw_readfile(
   }
 
   q_min_file  = Table_Array[0].min_x; q_max_file = Table_Array[0].max_x;
-  q_step_file = Table_Array[0].step_x;
+  q_step_file = Table_Array[0].step_x ? Table_Array[0].step_x : (q_max_file - q_min_file)/(Table_Array[0].rows*Table_Array[0].columns);
   w_min_file  = Table_Array[1].min_x; w_max_file = Table_Array[1].max_x;
   w_step_file = Table_Array[1].step_x;
 
   /* create a regular extended q,w and Sqw tables applying the exp(-hw/kT) factor */
   q_max  = q_max_file;
-  q_bins = (q_step_file ?   q_max/q_step_file : 0)+1;
+  q_bins = (q_step_file ?   q_max/q_step_file : q_bins_file)+1;
   q_step = q_bins-1 > 0 ?   q_max/(q_bins-1) : 1;
   w_max  = fabs(w_max_file);
   if (fabs(w_min_file) > fabs(w_max_file)) w_max = fabs(w_min_file);
