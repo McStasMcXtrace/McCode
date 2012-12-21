@@ -125,7 +125,7 @@ TRACE
 	RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
 	// This part is basically from V_sample
 	
-	intersect = box_intersect(&t0, &t2, x, y, z, vx, vy, vz, xwidth, ythick, zlength);
+	intersect = box_intersect(&t0, &t2, x, y+ythick/2.0, z, vx, vy, vz, xwidth, ythick, zlength);
 	if (intersect) {
 	  if (t0 < 0) ABSORB; /* we already passed the sample; this is illegal */
 	  dt = rand01()*(t2-t0);/* Time of scattering (relative to t0) */
