@@ -94,7 +94,7 @@ COMPONENT Thermal = Source_gen(
   focus_yh = 0.2,
   lambda0  = lambda,
   dlambda  = dlambda,
-  T1=683.7,I1=0.5874e+13,T2=257.7,I2=2.5099e+13,T3=16.7 ,I3=1.0343e+12
+  T1=683.7,I1=0.5874e+13,T2=257.7,I2=2.5099e+13,T3=16.7 ,I3=1.0343e+12,
   verbose  = 1)
   AT (0, 0, 0) RELATIVE Origin
 
