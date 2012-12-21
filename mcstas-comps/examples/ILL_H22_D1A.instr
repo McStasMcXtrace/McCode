@@ -43,7 +43,7 @@
 *
 * This instrument was installed on the H22 guide.
 *
-* %Example: lambda=1.911 Detector: BananaPSD_I=436746
+* %Example: lambda=1.911 Detector: BananaPSD_I=148070
 *
 * %Parameters
 * m:      [1]    m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
