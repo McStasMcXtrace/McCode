@@ -39,9 +39,13 @@
 
 /** Include header files to avoid implicit declarations (not allowed on LLVM) */
 #include <ctype.h>
-#include <sys/stat.h>
 #include <sys/types.h>
+
+// UNIX specific headers (non-Windows)
+#if defined(__unix__) || defined(mac)
 #include <unistd.h>
+#include <sys/stat.h>
+#endif
 
 
 #ifndef DANSE
