@@ -216,7 +216,6 @@ Changes in McStas v2.0, December 21st, 2012
  - Radial_div.comp from Kaspar Klenoe, KU. Divergence monitor measuring the radial deviation in divergence. Used in 
    Henrik Jacobsen's ESS_2001_bispectral.instr.
 
-
  Updated Components:
  - ESS_moderator_long.comp patches from Kim Lefmann KU (multiple-pulses, TOF-focusing) and Esben Klinkby DTU Nutech 
    (geometry and spectrum from ESS MCNPX models). Thanks to Klaus Lieutenant from Vitess/HZB for providing adjusted
@@ -239,6 +238,8 @@ Changes in McStas v2.0, December 21st, 2012
    RITA-II spectrometer at PSI. Use the RITA-II_test.sh script for test-scans.
  - Test_SSR_SSW.instr and Test_SSR_SSW_Guide.instr from Esben Klinkby DTU Nutech. Test instruments for the above
    mentioned components.
+ - ESS_2001_bispectral.instr from Henrik Jacobsen, KU. Model of a bispectral extraction system for the ESS (currently
+   using the 2001 version of the source)
  
 
 Changes in McStas v1.12c, June 3rd, 2011
