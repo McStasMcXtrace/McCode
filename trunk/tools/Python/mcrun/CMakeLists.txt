@@ -25,7 +25,11 @@ endif()
 message("Enabling ${FLAVOR} flavor")
 setup_mccode_mkdist("${FLAVOR}")
 
-set(TOOLS_NAME "${FLAVOR}-tools-python-${MCCODE_PREFIX}run-${MCCODE_VERSION}")
+# Select prefix
+set(P "${MCCODE_PREFIX}")
+
+
+set(TOOLS_NAME "${FLAVOR}-tools-python-${P}run-${MCCODE_VERSION}")
 set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
 
 
@@ -57,13 +61,8 @@ include(CPack)
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
-# Select prefix
-if(${enable_mcstas})
-  set(P "mc")
-else()
-  set(P "mx")
-endif()
-
+# Configure fallback script
+configure_file("${CMAKE_SOURCE_DIR}/mcrun.in" "${WORK}/mcrun" @ONLY)
 
 # Configure Python files
 configure_file(config.py "${WORK}/config.py"  @ONLY)
@@ -79,7 +78,7 @@ endforeach()
 
 # Program files
 install(
-  FILES "${PROJECT_SOURCE_DIR}/main.py"
+  FILES "${PROJECT_SOURCE_DIR}/mcrun.py" "${WORK}/mcrun"
   DESTINATION "${lib}/${TOOLS_NAME}"
   PERMISSIONS
   OWNER_READ OWNER_WRITE OWNER_EXECUTE
@@ -89,18 +88,18 @@ install(
 
 # Symlink to main
 add_custom_command(
-  OUTPUT "${WORK}/${MCCODE_PREFIX}run"
-  COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${MCCODE_PREFIX}run"
+  OUTPUT "${WORK}/${P}run-py"
+  COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}run-py"
   COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${TOOLS_LIB}/main.py" "${WORK}/${MCCODE_PREFIX}run"
+    "${TOOLS_LIB}/mcrun" "${WORK}/${P}run-py"
 )
 
 add_custom_target(
-  "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${MCCODE_PREFIX}run"
+  "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}run-py"
 )
 
 install(
-  PROGRAMS "${WORK}/${MCCODE_PREFIX}run"
+  PROGRAMS "${WORK}/${P}run-py"
   DESTINATION ${bin}
-  RENAME "${MCCODE_PREFIX}run${PROGRAM_SUFFIX}-py${DOT_PYTHON_SUFFIX}"
+  RENAME "${P}run${PROGRAM_SUFFIX}-py${DOT_PYTHON_SUFFIX}"
 )
