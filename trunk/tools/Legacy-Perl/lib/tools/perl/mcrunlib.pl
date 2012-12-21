@@ -214,7 +214,7 @@ sub get_out_file_next {
   my $c_age = $v->{'c_age'};
   my $out_age = $v->{'out_age'};
   my $stage = $v->{'stage'};
-  my $mpi   = $v->{'mpi'};
+  $mpi   = $v->{'mpi'};
   my $cflags   = $v->{'cflags'};
   my $ccopts = $v->{'ccopts'};
   my $cccmd  = $v->{'cc_cmd'};
@@ -358,7 +358,7 @@ sub do_test {
   if ($mpi) {
       &$printer("# MPI enabled, spawning $mpi compute nodes");
   }
-  &$printer(`$MCSTAS_:mcstas_config{'MCCODE'} --version`);
+  &$printer(`$MCSTAS::mcstas_config{'MCCODE'} --version`);
   # create selftest direcory
   require File::Temp; # for tempdir
   $tmpdir = File::Temp::tempdir( 'selftest_XXXX' ) || return "$MCSTAS::mcstas_config{'RUNCMD'}: Couldn't create 'selftest': $@\n";
