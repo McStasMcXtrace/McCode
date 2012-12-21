@@ -18,7 +18,7 @@
 * is working. The field referred to by the default input parameter MF is 10 \mu T along the z-axis
 * at entry and flips to l0 \mu T along the negative z-axis halfway through 
 *
-* x%Example: mcrun -n1e4 Test_pol_tabled.instr MF=flipfield.dat pol_6_I=0.665777
+* Example: mcrun -n1e4 Test_pol_tabled.instr MF=flipfield.dat pol_6_I=0.665777
 *
 * %Parameters
 * Par1: [unit] Parameter1 description
