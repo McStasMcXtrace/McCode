@@ -1,0 +1,5 @@
+\bblib/
+%$
+\.(o|bs|bak|old)$
+ImageBack\.c$
+\bMakefile$

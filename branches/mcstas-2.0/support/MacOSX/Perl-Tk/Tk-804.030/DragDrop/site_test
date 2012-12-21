@@ -1,0 +1,151 @@
+#!/usr/local/bin/perl -w
+use Tk;
+use strict;
+use Tk::DropSite;
+use vars qw($kind $STRING $FILE_NAME);
+
+sub MAX_LEN () { 48 }
+
+BEGIN
+{
+ $kind = ($^O eq 'MSWin32' or ($^O eq 'cygwin' and $Tk::platform eq 'MSWin32'))?
+          ['Win32'] : ['Sun','XDND']
+}
+use Tk::DropSite @$kind;
+use Tk::DragDrop @$kind;
+use Tk::Menubar;
+
+$SIG{__WARN__} = sub {
+local ($_) = @_;
+warn "$_";
+if (/Malformed UTF-8 character|Attempt to free unreferenced|Use of uninitialized/)
+ {
+  Tk::abort();
+ }
+};
+
+sub enter_leave
+{
+ my ($ds,$flag) = @_;
+ $ds->configure(-relief => ($flag) ? 'sunken' : 'ridge');
+ return 1;
+}
+
+my $top = MainWindow->new();
+my $mb  = $top->Menubar;
+$mb->Menubutton(-text => '~File', -menuitems => [
+                [ Button => 'E~xit', -command => [ destroy => $top]],
+                ]);
+
+my $but = $top->Frame->pack;
+
+my $lb = $top->Scrolled('Listbox',-width => 40)->pack(-side => 'bottom');
+
+my $filename = "/tmp/SomethingSilly";
+my $uri      = "file://localhost/tmp/SomethingSilly";
+
+open(FOO,">$filename");
+print FOO "Hi There\n";
+close(FOO);
+
+my $src = $top->Frame->pack;
+foreach my $k ('Local',@$kind,'Any')
+ {
+  my $thing = $src->Message('-text' => "$k Source")->pack(-side => 'left');
+  my @list;
+  @list = (-sitetypes => $k) unless $k eq 'Any';
+  $thing->DragDrop(-event => '<B1-Motion>', @list,
+                 -handlers => [
+                   [-type => 'text/plain',[\&string_handler,"This is text/plain"]],
+                   [-type => 'text/uri-list',[\&string_handler,$uri]],
+                 ]);
+ }
+
+
+my $dst = $top->Frame->pack;
+foreach my $k ('Local',@$kind,'Any')
+ {
+  my @list;
+  @list = (-droptypes => $k) unless $k eq 'Any';
+  my $sun = $dst->Message('-text' => "$k Drops here", '-relief' => 'ridge' )->pack(-side => 'left');
+  $sun->DropSite(-dropcommand => [\&ShowTargets,$lb],
+                 -entercommand => [\&enter_leave,$sun],
+                 @list);
+ }
+
+my $str = $top->Frame->pack(-fill => 'x');
+foreach my $targ (qw(STRING FILE_NAME))
+ {
+  no strict 'refs';
+  my $l = $str->Label(-anchor => 'e', -justify => 'right', -text => $targ);
+  my $v = $str->Label(-anchor => 'w', -justify => 'left', -relief => 'groove',
+              -textvariable => \${$targ});
+  Tk::grid($l,$v,-sticky => 'ew');
+ }
+$str->gridColumnconfigure(0,-weight => 0);
+$str->gridColumnconfigure(1,-weight => 1);
+
+sub string_handler
+{
+ my ($text,$offset,$max) = @_;
+ return substr($text,$offset,$max);
+}
+
+MainLoop;
+
+use Data::Dumper;
+
+sub ShowTargets
+{
+ my ($lb,$seln,$action,$targ,$x,$y) = @_;
+ my $own =  $lb->SelectionExists('-selection'=>$seln);
+ unless ($targ && @$targ)
+  {
+   Tk::catch { $targ = [$lb->SelectionGet('-selection'=>$seln,'TARGETS')] };
+  }
+ print "Action = $action\n" if $action;
+ $lb->delete(0,'end');
+ $lb->insert('end',@$targ);
+ $STRING = $FILE_NAME = '';
+ foreach (@$targ)
+  {
+   if (m#^(FILE_NAME|text/uri-list)#)
+    {
+     Tk::catch { $FILE_NAME = $lb->SelectionGet('-selection'=>$seln,$_) };
+    }
+   elsif (/_SUN/ && !/(END|ACK|DONE|YIELD)/)
+    {
+     my @info;
+     Tk::catch { @info  = $lb->SelectionGet('-selection'=>$seln,$_) };
+     if ($@)
+      {
+       print "Cannot get $_\n";
+      }
+     else
+      {
+       print "$_:",Dumper(\@info);
+      }
+    }
+   elsif (m#^((UTF8_)?STRING$|text/)#)
+    {
+     my $string;
+     Tk::catch { $string = $lb->SelectionGet('-selection'=>$seln,$_) };
+     if ($@)
+      {
+       print "Cannot get $_:$@\n";
+      }
+     else
+      {
+       $STRING = $string;
+       $string =~ s/([^\x20-\x7e\xa0-\xff])/sprintf("\\x{%x}",ord($1))/ge;
+       if (length($string) > MAX_LEN())
+        {
+         substr($string,MAX_LEN()-3) = "..."
+        }
+       print "$_:$string\n";
+      }
+    }
+  }
+}
+
+

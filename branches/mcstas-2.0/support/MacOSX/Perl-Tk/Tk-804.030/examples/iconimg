@@ -1,0 +1,32 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+
+my $top = MainWindow->new();
+$top->title("Mail : Trial");
+
+my $i64 = $top->Photo(-width => 64, -height => 64, -gamma => 2, '-file' => Tk->findINC("Xcamel.gif"));
+my $i32 = $top->Photo(-width => 32, -height => 32);
+$i32->copy($i64,-subsample => 2,2);
+my $i16 = $top->Photo(-width => 16, -height => 16);
+$i16->copy($i64,-subsample => 4,4);
+my $w = $i64->width;
+my $h = $i64->height;
+
+
+$top->Button(-bitmap => 'Tk', -command => sub {
+$top->withdraw;
+$top->iconbitmap('Tk');
+$top->deiconify})->pack;
+
+foreach my $img ($i64,$i32,$i16)
+ {
+  $top->Button(-image => $img, -command => sub {
+  $top->withdraw;
+  $top->iconimage($img);
+  $top->deiconify})->pack;
+ }
+
+MainLoop();
+
+

@@ -1,0 +1,35 @@
+
+OSF's 'make' has problems with the Makefiles constructed by MakeMaker
+before MakeMaker-4.18
+
+make
+just says:
+`Makefile' is up to date.
+
+Using GNU make solves this.
+
+Otherwise type:
+
+make all
+
+and do 'install' by hand:
+
+make all
+
+perl ./basic_demo
+
+cp -r blib /usr/local/lib/perl5
+
+Note that the cp -r does *not* do quite the same as a make install,
+in particular the binaries are not separated from the scripts.
+
+On Alpha if you get something like:
+
+GC already registered in Tk_GetGC
+Tcl_Panic at ...
+
+Then it has been reported that reducing optimize from -O4 to -O3
+fixes the problem.
+
+
+

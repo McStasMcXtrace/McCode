@@ -1,0 +1,4 @@
+#!/bin/sh
+truss -topen -o /tmp/wal perl -Mblib "$@"
+perl -ne 'print "$1\n" if (m#(Tk/.*)\.al.*=\s+\d+#)' /tmp/wal
+

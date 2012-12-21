@@ -1,0 +1,33 @@
+#!/tools/local/perl5.7.0 -w
+use strict;
+my $pat  = join('|',@ARGV);
+
+my @m = glob('*.m');
+my %e;
+
+foreach my $m (glob('*.m'))
+ {
+  my ($what) = $m =~ /^(.*)\.m$/;
+  open(M,"$what.m") || die "Cannot open $what.m:$!";
+  while (<M>)
+   {
+    if (/^\s*#\s*define\s+(\w*(?:$pat)\w*)\b/o)
+     {
+      warn "$what: $1\n";
+      my $f = $e{$what};
+      unless (defined $f)
+       {
+        open($f,">>$what.exc") || die "Cannot open $what.exc:$!";
+        $e{$what} = $f;
+       }
+      print $f "$1\n";
+     }
+   }
+  close(M);
+ }
+
+foreach my $f (values %e)
+ {
+  close($f);
+ }
+

@@ -1,0 +1,28 @@
+SHELL = /bin/sh
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+srcdir = @srcdir@
+topdir = ..
+rootdir = ../../../
+libdir = @libdir@
+mandir = @mandir@
+PWD = `pwd`
+
+INSTALL=@INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+
+libdir_mccode = $(libdir)/@MCCODE_TARNAME@-@MCCODE_VERSION@
+libdir_tools = $(libdir)/@MCCODE_TARNAME@-tools-@MCCODE_VERSION@
+perlmods_mccode = $(libdir_tools)/perl/modules
+
+install: install_@MCCODE_TARNAME@
+
+install_@MCCODE_TARNAME@: installdirs
+	cd tools && cp -rp * $(libdir_tools)/
+
+installdirs:
+	$(rootdir)/mkinstalldirs $(bindir) $(libdir) \
+	$(perlmods_mccode) $(tooldir_mccode) $(mandir)/man1

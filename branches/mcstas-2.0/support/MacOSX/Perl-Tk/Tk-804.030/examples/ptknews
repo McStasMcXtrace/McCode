@@ -1,0 +1,372 @@
+#!/usr/local/bin/perl -w
+
+use strict;
+use Tk;
+use Data::Dumper;
+use Tk::ErrorDialog;
+require Tk::Text;
+require Mail::Internet;
+require Net::NNTP;
+
+package News::Group;
+use Carp;
+
+my %groups = ();
+my @subscribed = ();
+
+sub new
+{
+ my $class = shift;
+ my $obj;
+ if (@_ == 1)
+  {
+   local $_ = shift;
+   my ($group,$state,$read) = /^([\w+.-]+)([:!])\s*(.*)$/;
+   my @read = ();
+   my %hash = (name => $group, subscribed => ($state eq ':'), Read => \@read);
+   if (defined $read)
+    {
+     foreach (split(/,/,$read))
+      {
+       if (/^\d+$/)
+        {
+         push(@read,[$_,$_]);
+        }
+       else
+        {
+         my ($start,$end) = split(/-/,$_);
+         push(@read,[$start,$end]);
+        }
+      }
+     $obj = bless \%hash,$class;
+    }
+  }
+ else
+  {
+   my %args = @_;
+   $obj  = bless \%args,$class;
+  }
+ $groups{$obj->name}     = $obj;
+ if ($obj->subscribed)
+  {
+   push(@subscribed,$obj);
+  }
+}
+
+sub subscribed
+{
+ my $self = shift;
+ if (ref($self))
+  {
+   $self->{subscribed} = shift if (@_);
+   return $self->{subscribed};
+  }
+ else
+  {
+   return @subscribed;
+  }
+}
+
+sub read
+{
+ my $self = shift;
+ if (@_)
+  {
+   my $art = shift;
+   croak "No article" unless (defined $art);
+   if (@_)
+    {
+     my $state = shift;
+     croak "No state" unless (defined $state);
+     my $i;
+     for ($i=0; $i < @{$self->{Read}}; $i++)
+      {
+       my ($low,$high) = @{$self->{Read}[$i]};
+       croak "$low > $high" unless ($low <= $high);
+       if ($art >= $low && $art <= $high)
+        {
+         return if ($state);  # already in the list
+         if ($art == $low)
+          {
+           # At bottom of range
+           if ($art == $high)
+            {
+             # whole of range - remove entry
+             splice(@{$self->{Read}},$i,1);
+             return;
+            }
+           # move range up
+           $self->{Read}[$i][0] = $art+1;
+           return;
+          }
+         elsif ($art == $high)
+          {
+           # move range down
+           $self->{Read}[$i][1] = $art-1;
+           return;
+          }
+         # otherwise split the range into two
+         splice(@{$self->{Read}},$i,1,[$low,$art-1],[$art+1,$high]);
+         return;
+        }
+       if ($state)
+        {
+         if ($art == ($high+1))
+          {
+           # Just off the top end
+           if (($i+1) < @{$self->{Read}} && $art == ($self->{Read}[$i+1][0]-1))
+            {
+             # filled in hole between two ranges
+             $art = $self->{Read}[$i+1][1];  # new top is end of higher range
+             splice(@{$self->{Read}},$i+1);  # loose upper range
+            }
+           $self->{Read}[$i][1] = $art;      # set new upper end
+           return;
+          }
+         if ($art == ($low-1))
+          {
+           # special case hole should be handled above
+           $self->{Read}[$i][0] = $art;      # set new lower end
+           return;
+          }
+         if ($art < $low)
+          {
+           # read something in a hole - add new degenerate range
+           splice(@{$self->{Read}},$i,1,[$art,$art],$self->{Read}[$i]);
+           return;
+          }
+        }
+      }
+     if ($state)
+      {
+       # read something off the end
+       push(@{$self->{Read}},[$art,$art])
+      }
+    }
+   else
+    {
+     my $range;
+     foreach $range (@{$self->{Read}})
+      {
+       return 1 if ($art >= $range->[0] && $art <= $range->[1]);
+      }
+     return 0;
+    }
+  }
+ else
+  {
+   my $range;
+   my $str = "";
+   my @range = @{$self->{Read}};
+   while (@range)
+    {
+     my $range = shift(@range);
+     if ($range->[0] == $range->[1])
+      {
+       $str .= $range->[0];
+      }
+     else
+      {
+       $str .= $range->[0] . '-' . $range->[1];
+      }
+     $str .= ',' if (@range);
+    }
+   return $str;
+  }
+}
+
+sub ReadRC
+{
+ my $class = shift;
+ my $path = "$ENV{'HOME'}/.Newsrc";
+ if (open(RC,"<$path"))
+  {
+   local $/ = "\n";
+   while (<RC>)
+    {
+     $class->new($_);
+    }
+   close(RC);
+  }
+ else
+  {
+   warn "Cannot open $path:$!";
+  }
+}
+
+sub WriteRC
+{
+ my ($self,$fh) = @_;
+ print $fh $self->name,(($self->subscribed) ? ':' : '!'),' ',$self->read,"\n";
+}
+
+sub SaveRC
+{
+ my $class = shift;
+ my $path = "$ENV{'HOME'}/.Newsrc";
+ unlink("$path.bak");
+ link($path,"$path.bak");
+ if (open(RC,">$path.new"))
+  {
+   my $group;
+   foreach $group ($class->subscribed)
+    {
+     $group->WriteRC(\*RC);
+    }
+   foreach $group (values %groups)
+    {
+     $group->WriteRC(\*RC) unless ($group->subscribed);
+    }
+   close(RC);
+   rename("$path.new",$path) || warn "Cannot rename $path.new to $path:$!";
+   system('ned',$path);
+  }
+ else
+  {
+   warn "Cannot open $path.new:$!";
+  }
+}
+
+sub name { shift->{name} }
+
+sub find
+{
+ my ($class,$name) = @_;
+ return $groups{$name};
+}
+
+package main;
+
+use Getopt::Long;
+my %opt;
+GetOptions(\%opt, "server=s")
+    or die "usage: $0 [-server host]";
+
+my $mw    = MainWindow->new;
+my $news  = Net::NNTP->new($opt{server})
+    or die "Can't connect to news server, please specify -server";
+my $group = 'comp.lang.perl.tk';
+
+sub SetGroup
+{
+ my ($lb,$group) = @_;
+ $lb->{Group} = News::Group->find($group);
+ my ($count,$start,$end,$name) = $news->group($group);
+ $lb->delete(0,'end');
+ $lb->Busy;
+ while ($start <= $end)
+  {
+   unless ($lb->{Group}->read($start))
+    {
+     my $head = $news->head($start);
+     if ($head)
+      {
+       my $mail = Mail::Internet->new($head);
+       my @info = (sprintf("%6d",$start));
+       push(@info,scalar $mail->get('Subject'));
+       push(@info,scalar $mail->get('Date'));
+       push(@info,scalar $mail->get('From'));
+       $lb->insert('end',join(' ',@info));
+      }
+    }
+   $start++;
+  }
+ $lb->Unbusy;
+ $lb->focus;
+}
+
+my $n = 0;
+
+sub Reply
+{
+ my ($text) = @_;
+ my @lines  = split(/\n/,$text->get('1.0','end'));
+ foreach (@lines) { $_ .= "\n"; s/^Message-ID:/Message-Id:/ };
+ my $mail = Mail::Internet->new(\@lines);
+ $mail->remove_sig;
+ $mail->tidy_body;
+ my $id = $mail->get('Message-Id');
+ my $groups = $mail->get('Newsgroups');
+ my $refs   = $mail->get('References');
+ my $reply = $mail->reply(": ");
+ $reply->add(Newsgroups => $groups);
+ $reply->add(References => $refs);
+ $reply->add(References => $id);
+ $reply->combine('References');
+ $reply->delete('Cc');
+ $n++;
+ my $path = "/tmp/reply.$$.$n";
+ open(TMP,">$path") || die "Cannot open $path:$!";
+ $reply->print(\*TMP);
+ close(TMP);
+ system($ENV{'EDITOR'}.' '.$path.' &');
+}
+
+sub Catchup
+{
+ my ($lb,$sel,$state) = @_;
+ my $group = $lb->{Group};
+ die "No group" unless (defined $group);
+ my ($art) = ($sel =~ /^\s*(\d+)/);
+ $lb->{Group}->read($art,$state);
+}
+
+sub GetArticle
+{
+ my ($lb,$text,$sel) = @_;
+ my $group = $lb->{Group};
+ die "No group" unless (defined $group);
+ my ($art) = ($sel =~ /^\s*(\d+)/);
+ die "No arg in '$sel'" unless (defined $art);
+ my $data = $news->article($art);
+ $text->delete('1.0','end');
+ $text->Busy;
+ my $header = 1;
+ foreach (@$data)
+  {
+   if ($header && /^([^:]+):/)
+    {
+     $text->insert('end',$_,$1);
+    }
+   else
+    {
+     $text->insert('end',$_);
+    }
+   $header = 0 if ($header && /^\s*$/);
+  }
+ $text->Unbusy;
+ $text->focusNext;
+ die "No arg in '$sel'" unless (defined $art);
+ $lb->{Group}->read($art,1);
+}
+
+my $menubar = $mw->Frame->pack(-fill => 'x');
+
+my $mb = $menubar->Menubutton(-text => 'File', -underline => 0)->pack(-side => 'left');
+$mb->command(-label => 'Save', -underline => 0,
+             -command => sub { $mb->Busy; News::Group->SaveRC; $mb->Unbusy } );
+$mb->command(-label => 'Quit', -underline => 0, -command => [ destroy => $mw ]);
+my $text = $mw->Scrolled('Text', -scrollbars => 'osow',-wrap => 'none');
+$mb->command(-label => 'Reply', -underline => 0, -command => [ \&Reply, $text ]);
+
+my $list = $mw->Scrolled('Listbox',-scrollbars => 'osow');
+$list->pack(-fill => 'both', -expand => 'y');
+
+$list->bind('<1>','focus');
+
+News::Group->ReadRC;
+
+my $sel = $menubar->Optionmenu(-options => [ map($_->name,News::Group->subscribed)]);
+$sel->configure(-command => [\&SetGroup,$list->Subwidget('listbox')]);
+$sel->pack(-side => 'right');
+
+$text->pack(-fill => 'both', -expand => 'y');
+eval { $text->tag('configure','Subject',-foreground => 'blue') };
+$text->tag('configure','From',-underline => 1);
+
+$list->bind('<Double-ButtonRelease-1>',[\&GetArticle,$text,Ev(['getSelected'])]);
+$list->bind('<Return>',[\&GetArticle,$text,Ev(['get','active'])]);
+$list->bind('<c>',[\&Catchup,Ev(['get','active']),1]);
+$list->bind('<u>',[\&Catchup,Ev(['get','active']),0]);
+
+MainLoop;

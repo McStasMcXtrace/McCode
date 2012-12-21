@@ -1,0 +1,37 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk::Event;
+Tk::Event::HandleSignals;
+my $done = 0;
+
+$SIG{'INT'}  = sub { print "Interrupt\n"; $done = 1 };
+$SIG{'ALRM'} = sub { print "Alarm\n"; alarm(3) };
+
+print "Loaded ",join(' ',sort keys %INC),"\n";
+
+
+Tk::Event::IO->fileevent(\*STDIN,'readable',\&read_it);
+$| = 1;
+
+my $h = Tk::Event::IO->fileevent(\*STDIN,'readable');
+print "Callback is $h\n";
+
+
+alarm(3);
+Tk::Event::DoOneEvent(0) while (!$done);
+
+sub read_it
+{
+ my $line = <STDIN>;
+ if (defined $line)
+  {
+   print $line;
+  }
+ else
+  {
+   $done = 1;
+  }
+}
+
+
+

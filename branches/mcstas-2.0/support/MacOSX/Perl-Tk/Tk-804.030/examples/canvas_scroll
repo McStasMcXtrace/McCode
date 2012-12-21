@@ -1,0 +1,44 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+
+$top = MainWindow->new();
+
+$top->wm("minsize",  10, 10);
+$top->wm("geometry", "100x100");
+
+$c = $top->Canvas("-width" => 200,"-height" => 200);
+
+
+$s1 = $top->Scrollbar("-command" => ["yview",$c]);
+$s2 = $top->Scrollbar("-orient" => "horizontal",
+                           "-command" => ["xview",$c]);
+$c->configure("-yscrollcommand" => ["set",$s1]);
+$c->configure("-xscrollcommand" => ["set",$s2]);
+
+
+$id = $c->create("line",0,0, 0,200, 200,0, 200,200, 0,0, 200,0, 200,200, 0,200,
+                 "-width" => 4);
+
+print "Line id=$id\n";
+
+$id = $c->create("grid",0,0, 10,10,"-width" => 1);
+
+print "Grid id=$id\n";
+
+$c->create("grid",0,0, 50,50,"-width" => 1, -lines => 1, -dash => '.');
+$c->create("grid",0,0, 100,100,"-width" => 1, -lines => 1);
+
+
+$c->configure("-scrollregion" => [0,0,204,204]);
+
+
+$s1->pack( "-side"   => "left", "-fill"   => "y");
+$s2->pack(  "-side"   => "bottom", "-fill"   => "x");
+$c->pack("-expand" => 1, "-fill" => "both" );
+
+
+Tk::MainLoop;
+
+
+

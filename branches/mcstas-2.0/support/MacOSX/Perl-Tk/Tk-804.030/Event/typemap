@@ -1,0 +1,15 @@
+Tcl_TimerProc *			T_PTR
+Tcl_IdleProc *			T_PTR
+Tcl_ExitProc *			T_PTR
+Tcl_FileProc *			T_PTR
+Tcl_EventProc *			T_PTR
+ClientData			T_PTR
+Tcl_QueuePosition		T_PTR
+Tcl_Event *			T_PTR
+Tcl_TimerToken			T_PTR
+PerlIOHandler *			T_TK_IOHANDLER
+
+INPUT
+T_TK_IOHANDLER
+	$var = SVtoPerlIOHandler($arg)
+

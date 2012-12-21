@@ -1,0 +1,67 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+use Tk::Table;
+
+sub Compass
+{
+ my ($top,$var) = @_;
+ my $out = $top->Table(-relief => 'ridge',-borderwidth => 3,-scrollbars => 'c');
+ my $i = 0;
+ foreach $r ([qw(nw n ne)],[qw(w c e)],[qw(sw s se)])
+  {
+   my $j = 0;
+   foreach $a (@$r)
+    {
+     $b = $out->Create($i,$j++,'Radiobutton',-text=> $a,
+                       -variable => $var, -value => $a, -anchor => 'w');
+    }
+   $i++;
+  }
+ return $out;
+}
+
+my $mw = MainWindow->new;
+
+my $t  = $mw->Table(-columns => 6, -rows => 8, -fixedrows => 1, -scrollbars => 'se');
+$t->pack(-expand=> 1, -fill => 'both');
+
+sub Pressed
+{
+ my ($t,$i,$j) = @_;
+ my $l = $t->Label(-text => "Pressed $i,$j",-relief => 'sunken');
+ my $old = $t->put($i,$j,$l);
+ $old->delete if ($old);
+}
+
+my $i;
+foreach $i (0..9)
+ {
+  my $j;
+  foreach $j (0..9)
+   {
+    my $l = $t->Button(-text => "Entry $i,$j",
+                       -command => [\&Pressed,$t,$i,$j]);
+    $t->put($i,$j,$l);
+   }
+ }
+
+my $sb;
+my $rl;
+my $cl;
+
+tie $sb,Tk::Configure,$t,'-scrollbars';
+tie $rl,Tk::Configure,$t,'-fixedcolumns';
+tie $cl,Tk::Configure,$t,'-fixedrows';
+
+Compass($mw,\$sb)->pack(-side => 'bottom');
+
+$mw->Checkbutton(-text => 'Row labels', -variable => \$rl, -onvalue => 1, -offvalue => 0)
+ ->pack(-side => 'left');
+$mw->Checkbutton(-text => 'Column labels', -variable => \$cl, -onvalue => 1,-offvalue => 0)
+ ->pack(-side => 'right');
+
+$t->focus;
+$t->update;
+
+MainLoop;

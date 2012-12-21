@@ -1,0 +1,33 @@
+#!/tools/local/perl -w
+use strict;
+
+my $file = (@ARGV) ? shift : 'tclDecls.m';
+
+use vars qw(%ref);
+my %mac;
+
+require 'process_object';
+
+my @n = grep(!/_f\.n/,glob('*.n'));
+
+warn "Scanning object\n";
+foreach my $obj (grep(!/_f\.n/,glob('*.n')))
+ {
+  do_nm($obj);
+ }
+
+
+open(TCL,"$file") || die "Cannot open $file:$!";
+warn "Reading $file\n";
+while (<TCL>)
+ {
+  if (/^\s*#\s*define\s+(\w+)\b/o)
+   {
+    $mac{$1} = $file;
+   }
+ }
+
+foreach my $name (keys %mac)
+ {
+  print "$name\n" unless exists $ref{$name};
+ }

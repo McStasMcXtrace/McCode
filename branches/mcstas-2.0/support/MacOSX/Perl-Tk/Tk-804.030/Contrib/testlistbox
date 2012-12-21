@@ -1,0 +1,52 @@
+#!/usr/local/bin/perl
+use Tk;
+use Tk::TiedListbox;
+
+my $top = MainWindow->new;
+my $f = $top->Frame->pack(-expand => 'yes', -fill => 'both');
+my $l1 = $f->ScrlListbox(-relief => 'flat',
+                         -exportselection => 0,
+                         -selectmode => 'extended',-height => 20);
+my $l2 = $f->ScrlListbox(-relief => 'flat',
+                         -exportselection => 0,
+                         -selectmode => 'extended',-height => 10);
+my $l3 = $f->ScrlListbox(-relief => 'flat',
+                         -exportselection => 0,
+                         -selectmode => 'extended',-height => 20,
+                         # -font => 'clb6x10'
+                         );
+my $bv1,$bv2;
+my $b1 = $f->Checkbutton(-text => 'tie selection',
+                         -variable => \$bv1,
+                         -command => [\&set_tie,\$bv1,\$bv2]);
+my $b2 = $f->Checkbutton(-text => 'tie scroll',
+                         -variable => \$bv2,
+                         -command => [\&set_tie,\$bv1,\$bv2]);
+$b1->pack(-side => bottom);
+$b2->pack(-side => bottom);
+$l1->pack(-expand => 'yes', -side => 'left');
+$l2->pack(-expand => 'yes', -side => 'left');
+$l3->pack(-expand => 'yes', -side => 'left');
+
+my $id;
+foreach $id (0..300){
+  $l1->insert('end', $id) if $id<100;
+  $l2->insert('end', $id);
+  $l3->insert('end', $id);
+}
+
+$b1->invoke;
+$b2->invoke;
+
+MainLoop();
+
+sub set_tie {
+  my($b1,$b2)=@_;
+  my($x1,$x2,$x3)=map($_->Subwidget('scrolled'),$l1,$l2,$l3);
+  $x1->tie('all',      [$x2,$x3]),return if($$b1 && $$b2);
+  $x1->tie('selection',[$x2,$x3]),return if($$b1);
+  $x1->tie('scroll',   [$x2,$x3]),return if($$b2);
+  $x1->untie,$x2->untie,$x3->untie;
+}
+
+
