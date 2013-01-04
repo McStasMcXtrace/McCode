@@ -6,4 +6,4 @@ Architecture: all
 Depends: mcstas-2.0, mcstas-comps-2.0, mcstas-tools-python-mcplot-chaco-2.0, mcstas-tools-python-mcplot-matplotlib-2.0, mcstas-tools-python-mcrun-2.0
 Installed-Size:
 Maintainer: Peter Willendrup
-Description: A metapackage for McStas + perl tools
+Description: A metapackage for McStas + python tools
