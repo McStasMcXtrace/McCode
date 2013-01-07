@@ -81,8 +81,8 @@ class McStas:
         self.dir = tempfile.mkdtemp(prefix='mcstas-')
         self.cpath = '%s/%s.c' % (self.dir, self.name)
 
-        # Remove temporary files at exit
-        atexit.register(self.cleanup)
+        # This is where one would remove temporary files at exit
+        # atexit.register(self.cleanup)
 
     def set_parameter(self, key, value):
         ''' Set the value of an experiment parameter '''
@@ -107,8 +107,8 @@ class McStas:
             return  # skip
         LOG.info('Recompiling: %s', self.binpath)
 
-        # Generate C-code
-        Process(options.mccode_bin).run(['-o', self.cpath, self.path])
+        # Generate C-code (implicit: always prepare for --trace mode)
+        Process(options.mccode_bin).run(['-t','-o', self.cpath, self.path])
 
         # Setup cflags
         cflags = ['-lm']  # math library
