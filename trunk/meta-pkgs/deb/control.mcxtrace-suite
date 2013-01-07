@@ -1,0 +1,9 @@
+Package: mcxtrace-suite
+Version: 1.1
+Section: main
+Priority: optional
+Architecture: all
+Depends: mcxtrace-suite-perl, mcxtrace-suite-python
+Installed-Size:
+Maintainer: Peter Willendrup
+Description: A metapackage for McXtrace + perl and python tools
