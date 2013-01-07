@@ -1,7 +1,7 @@
 #!/bin/sh
 
 LIB="@TOOLS_LIB@"
-TOOL="@MCCODE_PREFIX@plot"
+TOOL="mcplot"
 VERS="@MCCODE_VERSION@"
 
 
@@ -10,7 +10,7 @@ canrun() {
         exit 127;
     fi
 
-    modules="matplotlib pylab numpy"
+    modules="matplotlib numpy"
     cmd=""
     for name in ${modules}; do
         cmd="${cmd}import ${name}; "
