@@ -3,7 +3,7 @@ Version: 1.1
 Section: main
 Priority: optional
 Architecture: all
-Depends: mcxtrace-1.1, mcxtrace-comps-1.1, mcxtrace-tools-python-mcplot-chaco-1.1, mcxtrace-tools-python-mcplot-matplotlib-1.1, mcxtrace-tools-python-mcrun-1.1
+Depends: mcxtrace-1.1, mcxtrace-comps-1.1, mcxtrace-tools-python-mcplot-chaco-1.1, mcxtrace-tools-python-mcplot-matplotlib-1.1, mcxtrace-tools-python-mxrun-1.1
 Installed-Size:
 Maintainer: Peter Willendrup
 Description: A metapackage for McXtrace + python tools
