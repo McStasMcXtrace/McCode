@@ -25,7 +25,7 @@ endif()
 message("Enabling ${FLAVOR} flavor")
 setup_mccode_mkdist("${FLAVOR}")
 
-set(TOOLS_NAME "${FLAVOR}-tools-python-mcplot-matplotlib-${MCCODE_VERSION}")
+set(TOOLS_NAME "${FLAVOR}-tools-python-${P}plot-matplotlib-${MCCODE_VERSION}")
 
 if(WINDOWS)
   # Windows needs special handling of this path...
