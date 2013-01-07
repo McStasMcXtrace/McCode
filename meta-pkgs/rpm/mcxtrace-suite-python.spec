@@ -17,7 +17,7 @@ Summary:   %{summary}
 Group:     %{group}
 URL:       http://www.mccode.org
 Buildroot: %{buildroot}
-Requires:  mcxtrace-1.1 mcxtrace-comps-1.1 mcxtrace-tools-python-mcplot-chaco-1.1 mcxtrace-tools-python-mcplot-matplotlib-1.1 mcxtrace-tools-python-mcrun-1.1
+Requires:  mcxtrace-1.1 mcxtrace-comps-1.1 mcxtrace-tools-python-mcplot-chaco-1.1 mcxtrace-tools-python-mcplot-matplotlib-1.1 mcxtrace-tools-python-mxrun-1.1
 
 %description
 A metapackage for McXtrace + python tools
