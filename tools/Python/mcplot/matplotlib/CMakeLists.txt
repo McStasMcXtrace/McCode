@@ -25,6 +25,13 @@ endif()
 message("Enabling ${FLAVOR} flavor")
 setup_mccode_mkdist("${FLAVOR}")
 
+# Select prefix
+if(${enable_mcstas})
+  set(P "mc")
+else()
+  set(P "mx")
+endif()
+
 set(TOOLS_NAME "${FLAVOR}-tools-python-${P}plot-matplotlib-${MCCODE_VERSION}")
 
 if(WINDOWS)
@@ -65,14 +72,6 @@ set(CPACK_RPM_PACKAGE_REQUIRES
 include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
-
-
-# Select prefix
-if(${enable_mcstas})
-  set(P "mc")
-else()
-  set(P "mx")
-endif()
 
 
 # Configure fallback script
