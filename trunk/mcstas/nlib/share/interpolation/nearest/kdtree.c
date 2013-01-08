@@ -198,7 +198,7 @@ vertex **kdtree_loadPoints(char *filename, int *n)
   }
 
   // Get the number of points.
-  fscanf(f, "%d", n);
+  fscanf(f, "%*s %d", n);
 
   // Allocate enough memory for all of our points.
   // and also the interpolant.

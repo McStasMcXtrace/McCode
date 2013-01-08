@@ -105,7 +105,7 @@ void dump_table(vertex **points, int rows, char *output_path) {
   FILE *file = fopen(output_path, "w");
 
   char line[256];
-  snprintf(line, 256, "%d\n", rows);
+  snprintf(line, 256, "# %d\n", rows);
   fputs(line, file);
 
   int i;
