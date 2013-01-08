@@ -17,7 +17,7 @@ Summary:   %{summary}
 Group:     %{group}
 URL:       http://www.mccode.org
 Buildroot: %{buildroot}
-Requires:  mcstas-2.0 mcstas-comps-2.0 mcstas-tools-2.0
+Requires:  mcstas-2.0 mcstas-comps-2.0 mcstas-tools-2.0 mcstas-manuals-2.0
 
 %description
 A metapackage for McStas + perl tools
