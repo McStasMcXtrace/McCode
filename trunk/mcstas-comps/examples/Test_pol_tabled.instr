@@ -16,7 +16,7 @@
 * %Description
 * A test instrument to check that supplying a magnetic field as a vector field point cloud
 * is working. The field referred to by the default input parameter MF is 10 \mu T along the z-axis
-* at entry and flips to l0 \mu T along the negative z-axis halfway through 
+* at entry and flips to l0 \mu T along the negative z-axis halfway through
 *
 * Example: Test_pol_tabled.instr -n1e4 MF=flipfield.dat pol_6_I=0.665777
 *   N.b. this example will not be run by autotest since it reuireq the presence of the file
@@ -90,7 +90,8 @@ AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT field = Pol_simpleBfield(
     xwidth=0.1, yheight=0.1, zdepth=1, filename=MF,
-	Bx=0,By=1,Bz=0,fieldFunction=table_magnetic_field)
+	Bx=0,By=1,Bz=0,fieldFunction=resampled_3to3_magnetic_field,
+        Stepx=8,Stepy=8,Stepz=8)
 AT(0,0,1) RELATIVE PREVIOUS
 /*COMPONENT field = Pol_simpleBfield(*/
 /*    xwidth=0.1, yheight=0.1, zdepth=1, filename=MF,*/
@@ -155,4 +156,3 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
-

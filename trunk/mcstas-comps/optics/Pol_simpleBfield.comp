@@ -16,7 +16,7 @@
 *
 * Magnetic field component.
 *
-* %D 
+* %D
 *
 * Region with a definable magnetic field.
 *
@@ -62,17 +62,28 @@
 * The magnetic field is turned on by an instance of this component, and turned off by an instance of Pol_simpleBfield_stop
 * Anything in between is considered inside the field.
 *
+* When using table_magnetic_field or resampled_3to3_magnetic_field as
+* fieldFunction the input data is first resampled to speed up the interpolation.
+* With table_magnetic_field only Stepx is used, and this defines the total number
+* of points to use during resampling (should be at least the number of points present in the input table).
+* With resampled_3to3_magnetic_field both Stepx, Stepy and Stepz is used to
+* determine the number of points to use in each individual dimension. Here the
+* total number of resample points are the product Stepx*Stepy*Stepz (which again should exceed the number of points in the input table).
+*
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:      [m]       Width of opening. 
-* yheight:      [m]       Height of opening. 
+* xwidth:      [m]       Width of opening.
+* yheight:      [m]       Height of opening.
 * zdepth:  [m]       Length of field.
 * Bx:      [T]       Parameter used for x composant of field.
 * By:      [T]       Parameter used for y composant of field.
 * Bz:      [T]       Parameter used for z composant of field.
 * fieldFunction [pointer] Function describing the magnetic field.
 * filename []        file where the magnetic field is tabulated.
+* Stepx    []        Number of points in x to use during resampling (increases precision in x dimension)
+* Stepy    []        Number of points in y to use during resampling (increases precision in y dimension)
+* Stepz    []        Number of points in z to use during resampling (increases precision in z dimension)
 *
 * OUTPUT PARAMETERS:
 *
@@ -85,10 +96,11 @@
 DEFINE COMPONENT Pol_simpleBfield
 DEFINITION PARAMETERS (fieldFunction=const_magnetic_field)
 SETTING PARAMETERS (xwidth, yheight,zdepth,
-		       Bx, By, Bz,
-                       string filename="bfield.dat")
+                    Bx, By, Bz,
+                    string filename="bfield.dat",
+                    Stepx=100, Stepy=0, Stepz=0)
 OUTPUT PARAMETERS(gz, magnet, parPtr, vertices, vertices2, tree)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
@@ -108,13 +120,13 @@ DECLARE
   /*   Larmor frequency and scalar product threshold*/
   double gz;
   void *parPtr;
-  mcmagnet_field_info *magnet;  
+  mcmagnet_field_info *magnet;
   vertex **vertices, **vertices2;
   treeNode *tree;
 %}
 
 INITIALIZE
-%{  
+%{
   double gx, gy;
   Coords localG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0));
 
@@ -145,21 +157,31 @@ INITIALIZE
       exit(1);
     }
     /*resampling to double number of points*/
-    vertices2 = resample(vertices, r, r);
-    tree = kdtree_addToTree(vertices2, 0, 2*r-1, 0);
+    int steps[] = { Stepx, 0, 0 };
+    vertices2 = resample(vertices, r, steps);
+    tree = kdtree_addToTree(vertices2, 0, Stepx-1, 0);
     parPtr=(void *) tree;
+  } else if (fieldFunction==resampled_3to3_magnetic_field){
+    /* initialize the interpolation data */
+    resampled_opts *opts = calloc(1, sizeof(resampled_opts));
+    opts->steps[0] = Stepx;
+    opts->steps[1] = Stepy;
+    opts->steps[2] = Stepz;
+    opts->table_path = filename;
+    opts->between = betweenG;
+    parPtr = (void*) opts;
   }
 
   coords_get(localG, &gx, &gy, &gz);
   if(!mcgravitation)
     gz = 0;
-  
+
   if ((xwidth<=0) || (yheight<=0) || (zdepth<=0)) {
     fprintf(stderr, "Pol_filter: %s: Null or negative volume!\n"
 	    "ERROR      (xwidth, yheight, zdepth). Exiting\n",
 	    NAME_CURRENT_COMP);
     exit(1);
-  }  
+  }
 %}
 
 TRACE
@@ -170,7 +192,7 @@ TRACE
   if (2*x>xwidth || 2*x<-xwidth || 2*y>yheight || 2*y<-yheight){
     ABSORB;
   }
-  mcmagnet_push(fieldFunction,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,parPtr); 
+  mcmagnet_push(fieldFunction,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,parPtr);
 //  mcmagnet_print_stack();
 %}
 
