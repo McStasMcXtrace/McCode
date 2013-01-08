@@ -31,6 +31,9 @@
 
 #include<sys/stat.h>
 
+
+%include "read_table-lib"
+
 %include "interpolation/resample.h"
 %include "interpolation/resample.c"
 
@@ -257,9 +260,21 @@ int majorana_magnetic_field(double x, double y, double z, double t,
 
 
 typedef struct {
-  int samples;
+  // Options set before using
+  // step is the number of samples to use (steps[0-2]). When sampling only
+  // requires one number of samples put this in steps[0] (like betweenH/R).
+  int steps[3];
   char* table_path;
+  double (*between)(int i, int *steps, int dim, double a, double b);
+
+  // State used by the resampled_3to3_magnetic_field function
+  // (just leave this as NULL / calloc'ed)
+  t_Table *table;
   void* tree;
+
+  vertex *min;
+  vertex *max;
+
 } resampled_opts ;
 
 
@@ -269,15 +284,18 @@ int resampled_3to3_magnetic_field(double x, double y, double z, double t,
 {
   resampled_opts *opts = (resampled_opts*) data;
 
-  int samples      = opts->samples;
+  int *steps       = opts->steps;
   char *table_path = opts->table_path;
+
+  t_Table *table   = opts->table;
   treeNode *tree   = opts->tree;
 
-  if (NULL == tree) {
-    // There's no in-memory tree, so we have to read it from disk
+  if (NULL == table && NULL == tree) {
+    // There's no in-memory table or tree, so we have to read it from disk
 
     char cache_path[256];
-    snprintf(cache_path, 256, "%s.rs-%d-cache", table_path, samples);
+    snprintf(cache_path, 256, "%s.rs-%dx%dx%d-cache", table_path,
+             MAX(1, steps[0]), MAX(1, steps[1]), MAX(1, steps[2]));
 
     vertex **points = NULL;
     int rows = 0;
@@ -286,7 +304,8 @@ int resampled_3to3_magnetic_field(double x, double y, double z, double t,
     struct stat cachestat;
 
     if (stat(table_path, &tablestat) < 0) {
-      fprintf(stderr, "Error: Cannot open table file in '%s'\n", table_path);
+      fprintf(stderr, "Error: Cannot find table file in '%s'\n", table_path);
+      exit(1);
     }
 
     // keep going until the cache file exists
@@ -296,18 +315,28 @@ int resampled_3to3_magnetic_field(double x, double y, double z, double t,
     //       the table mtime in the cache-name.
     while(stat(cache_path, &cachestat) < 0 ||
           tablestat.st_mtime >= cachestat.st_mtime) {
-      int rebuild = 1;
 
       #ifdef USE_MPI
       // only the MPI master node (root) rebuilds the cache
-      rebuild = 0;
+      int rebuild = 0;
       MPI_MASTER(rebuild = 1);
+      #else
+      int rebuild = 1;
       #endif
 
       if (1 == rebuild) {
         // rebuild the file (no mpi or mpi master/root)
         printf("rebuilding..\n");
-        points = resample_file(table_path, &rows, samples, cache_path);
+        opts->min = malloc(sizeof(vertex));
+        opts->max = malloc(sizeof(vertex));
+
+        points = resample_file(table_path, &rows, steps, cache_path,
+                               opts->between, opts->min, opts->max);
+
+        printf("done\n");
+        if(points == NULL) {
+          exit(1);
+        }
       } else {
         // wait until some other node has rebuild the file
         printf("waiting for rebuild..\n");
@@ -315,21 +344,69 @@ int resampled_3to3_magnetic_field(double x, double y, double z, double t,
       }
     }
 
-    // the cached table is now either in memory or on disk
-    // use it to rebuild the kd-tree for nearest-neighbour queries
-    if (NULL == points || 0 == rows) {
-      // the resampled table is on disk; read it into memory
-      printf("loading cache..\n");
-      points = load_table(cache_path, &rows);
+    if (opts->between == betweenG) {
+      if (NULL == points || 0 == rows) {
+        printf("loading from cache..");
+      }
+      table = opts->table = malloc(sizeof(t_Table));
+      Table_Init(table, 100, 6);
+      int r = Table_Read(table, cache_path, 0);
+      if (r < 0) {
+        fprintf(stderr, "Error: Could not read table '%s'", cache_path);
+        exit(1);
+      }
+      if (NULL == opts->min || NULL == opts->max) {
+        opts->min = malloc(sizeof(vertex));
+        opts->max = malloc(sizeof(vertex));
+        int row;
+        for(row = 0; row < table->rows; row++) {
+          int col;
+          for(col = 0; col < 3; col++) {
+            double value = Table_Index(*table, row, col);
+            opts->min->v[col] = MIN(opts->min->v[col], value);
+            opts->max->v[col] = MAX(opts->max->v[col], value);
+          }
+        }
+      }
+    }
+    else {
+      // the cached table is now either in memory or on disk
+      // use it to rebuild the kd-tree for nearest-neighbour queries
+      if (NULL == points || 0 == rows) {
+        // the resampled table is on disk; read it into memory
+        printf("loading from cache..\n");
+        points = load_table(cache_path, &rows);
+      }
     }
 
-    // resampled points are now in memory, so build the kd-tree
-    tree = kdtree_addToTree(points, 0, rows-1, 0);
-    opts->tree = tree;
+    if(opts->between == betweenG) {
+      // betweenG chooses fixed points that doesn't need a kd-tree
+      // We don't do anything here
+    } else {
+      // resampled points are now in memory, so build the kd-tree
+      tree = kdtree_addToTree(points, 0, rows-1, 0);
+      opts->tree = tree;
+    }
 
   }
 
-  interpolate3x3(tree, x, y, z, bx, by, bz);
+  // betweenG uses the table directly (and only the kd-tree during resampling)
+  // other point-selectors use the kd-tree
+  if (NULL != opts->table) {
+    int N = table->rows;
+    vertex tmpv = { x, y, z};
+    int index = reverseG(steps, opts->min, opts->max, &tmpv);
+    *bx = Table_Index(*table, index, 3);
+    *by = Table_Index(*table, index, 4);
+    *bz = Table_Index(*table, index, 5);
+    /* fprintf(stderr, "Error: Not ready for table-data yet! (%f, %f, %f -> %f, %f, %f)\n", x, y, z, *bx, *by, *bz); */
+    /* exit(1); */
+  } else if (NULL != opts->tree) {
+    interpolate3x3(tree, x, y, z, bx, by, bz);
+  } else {
+    fprintf(stderr, "%s\n", "Error: No interpolation data!");
+    exit(1);
+  }
 
   return 1;
 }

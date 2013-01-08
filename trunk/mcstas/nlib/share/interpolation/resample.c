@@ -3,6 +3,16 @@
 #include<math.h>
 
 
+
+int calcSamples(int *steps) {
+  int samples = 1;
+  int dim;
+  for(dim = 0; dim < 3; dim++) {
+    samples *= MAX(1, steps[dim]);
+  }
+  return samples;
+}
+
 double halton(int index, int base) {
   double result = 0;
   double f = 1.0 / base;
@@ -14,18 +24,71 @@ double halton(int index, int base) {
   return result;
 }
 
-double betweenH(int i, int base, double a, double b) {
-  double r = halton(i, base);
+
+double betweenH(int i, int *steps, int dim, double a, double b) {
+  // Select points using halton sequences
+  int base[] = {2, 3, 5};
+  double r = halton(i, base[dim]);
   double v = (b - a) * r + a;
   assert(a <= v && v < b);
   return v;
 }
 
-double betweenR(double a, double b) {
+double betweenR(int i, int *steps, int dim, double a, double b) {
+  // Select points at random
   double r = (double)rand() / ((double)RAND_MAX);
   double v = (b - a) * r + a;
   assert(a <= v && v < b);
   return v;
+}
+
+
+int tdrt(int N) {
+  // Calculate accurate third root (search down from pow(N, 1/3))
+  int root = ceil(pow((double)N, 1.0/3.0));
+  if ((root * root * root) > N) {
+    root -= 1;
+  }
+  return root;
+}
+
+double betweenG(int i, int *steps, int dim, double a, double b) {
+  // Select points systematically (number of points are chosen by steps - 3d)
+  int top = steps[dim];
+  int j = (i / (int)(pow(top, dim))) % top;
+  double width = (b - a) / ((double)top - 1);
+
+  return MAX(a, MIN(b, (a + (width * j))));
+}
+
+
+int reverseG(int *steps, vertex *min, vertex *max, vertex *v) {
+  // Each intermediate value has one per dimension
+  double xyz[3];
+  double width[3];
+  double index[3];
+
+  int dim;
+  for(dim = 0; dim < 3; dim++) {
+    // Truncate values to fit interval
+    xyz[dim] = MIN(MAX(v->v[dim], min->v[dim]), max->v[dim]);
+    // Compute step-size
+    width[dim] = ((max->v[dim]) - (min->v[dim])) / ((double)steps[dim] - 1);
+    // Compute index for each dimension (of size width*steps)
+    index[dim] = round((xyz[dim]-(min->v[dim])) / width[dim]);
+    index[dim] = MIN(index[dim], width[dim] - 1);
+  }
+
+  // Combine indices to one flat index
+  double arrIndex = 0;
+  int base = 1;
+  for(dim = 0; dim < 3; dim++) {
+    arrIndex += index[dim];
+    base *= steps[dim];
+  }
+
+  // Round off to nearest
+  return round(arrIndex);
 }
 
 
@@ -36,54 +99,59 @@ int x_compare(const void *a, const void *b) {
 }
 
 
-vertex **resample(vertex **p, int rows, int new_points) {
+vertex **resample_f(vertex **p, int rows, int *steps,
+                    double (*between)(int i, int *steps, int dim, double min, double max),
+                    vertex *min, vertex* max)
+{
 
-  printf("preparing for sampling..\n");
+  /* printf("preparing for sampling..\n"); */
   int i;
-  for(i = 0; i < rows; i++) {
-    p[i]->index = i;
-    p[i]->voronoiVolume = -1;
-  }
+  int col;
+
+  int new_points = calcSamples(steps);
 
   mesh *mesh = delaunay_newMesh();
   delaunay_buildMesh(p, rows, mesh);
 
-  vertex min, max, range;
-  delaunay_getRange(p, rows, &min, &max, &range, 0);
+  vertex range;
+  delaunay_getRange(p, rows, min, max, &range, 0);
 
-  p = realloc(p, sizeof(vertex*) * (rows + new_points));
+  p = calloc(new_points, sizeof(vertex*));
 
-  printf("sampling..\n");
+  /* printf("sampling..\n"); */
   for(i = 0; i < new_points; i++) {
-    int index = rows + i;
 
     vertex *v = malloc(sizeof(vertex));
-    v->X = betweenH(i, 2, min.X, max.X);
-    v->Y = betweenH(i, 3, min.Y, max.Y);
-    v->Z = betweenH(i, 5, min.Z, max.Z);
 
-    /* v->X = betweenR(min.X, max.X); */
-    /* v->Y = betweenR(min.Y, max.Y); */
-    /* v->Z = betweenR(min.Z, max.Z); */
+    for(col = 0; col < 3; col++) {
+      // v->v[0] == v->X, v->v[1] == v->Y, v->v[2] == v->Z
+      double val = between(i, steps, 0, min->v[col], max->v[col]);
+      // sanitise between min and max
+      v->v[col] = MAX(min->v[col], MIN(max->v[col], val));
+
+    }
 
     interpolate3_3(v->X, v->Y, v->Z,
                    &(v->U), &(v->V), &(v->W),
                    mesh);
 
-    v->index = index;
-    v->voronoiVolume = -1;
-
-    p[index] = v;
+    p[i] = v;
   }
 
   delaunay_freeMesh(mesh);
 
   // points are always ordered by X
   // TODO: is it required by the kd-tree that points are ordered by x?
-  qsort(p, rows + new_points, sizeof(vertex*), x_compare);
+  qsort(p, new_points, sizeof(vertex*), x_compare);
 
   return p;
 
+}
+
+
+vertex **resample(vertex **p, int rows, int *steps) {
+  vertex min, max;
+  return resample_f(p, rows, steps, betweenG, &min, &max);
 }
 
 
@@ -92,7 +160,7 @@ void interpolate3x3(treeNode *tree,
                     double *bx, double *by, double *bz)
 {
   vertex v = { x, y, z, 0, 0, 0, 0, -1 };
-  vertex *w;  
+  vertex *w;
    w=kdtree_nearestNeighbour(&v, tree);
   *bx = w->U;
   *by = w->V;
@@ -132,7 +200,9 @@ vertex** load_table(char *input_path, int *rows) {
 
 
 vertex **resample_file(char *input_path, int *rows,
-                         int samples, char *cache_path)
+                       int *steps, char *cache_path,
+                       double (*between)(int i, int *steps, int dim, double min, double max),
+                       vertex *min, vertex *max)
 {
 
   // Use kdtree's loadPoints to read whitespace seperate lines for now
@@ -146,8 +216,9 @@ vertex **resample_file(char *input_path, int *rows,
   }
 
   // resample to a total of (rows + samples) points
-  points = resample(points, *rows, samples);
-  *rows = (*rows) + samples;
+  points = resample_f(points, *rows, steps, between, min, max);
+
+  *rows = calcSamples(steps);
 
   // update cache
   if (cache_path != NULL) {
