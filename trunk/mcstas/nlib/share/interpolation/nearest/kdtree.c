@@ -188,33 +188,40 @@ int kdtree_splitAboutMedian(vertex **points, int d, int left, int right)
 
 vertex **kdtree_loadPoints(char *filename, int *n)
 {
-  int i;
-  FILE *f = fopen(filename, "r");
+  // Read the table with Read Table Lib, then convert it to vertex[] layout
+  // We do it this way because Read Table Lib can find files in the library path
+  // and because the kdtree code uses the regular vertex array layout
+  t_Table table;
+  Table_Init(&table, 1, 6);
 
-  if (!f)
-  {
+  if(!Table_Read(&table, filename, 0) || table.rows <= 0) {
+    // Give up!
     fprintf(stderr, "Could not open file: '%s'.\n", filename);
-    exit(1);
+    *n = 0;
+    Table_Free_Array(&table);
+    return NULL;
   }
 
-  // Get the number of points.
-  fscanf(f, "%*s %d", n);
+  // Let caller know how many rows / points we read
+  *n = table.rows;
 
-  // Allocate enough memory for all of our points.
-  // and also the interpolant.
-  vertex **ps = malloc(sizeof(vertex*) **n);
+  // Allocate array of vertex pointers
+  vertex **ps = calloc(table.rows, sizeof(vertex*));
 
-  for (i=0; i<*n; i++)
+  // Convert from table to array layout
+  int i, j;
+  for (i=0; i < table.rows; i++)
   {
-    ps[i] = malloc(sizeof(vertex));
-    // Initialise the voronoiVolume to an impossible value, so that
-    // we can tell whether or not it has been calculated.
-    // Load the known point of this vector field at this vertex.
-    fscanf(f, "%lf %lf %lf %lf %lf %lf", &ps[i]->X, &ps[i]->Y, &ps[i]->Z,
-                                         &ps[i]->U, &ps[i]->V, &ps[i]->W );
-
+    vertex *v = malloc(sizeof(vertex));
+    for (j = 0; j < 3; j++) {
+      v->v[j]    = Table_Index(table, i,     j);
+      v->data[j] = Table_Index(table, i, 3 + j);
+    }
+    ps[i] = v;
   }
-  fclose(f);
+
+  // Free table (points are in ps now)
+  Table_Free(&table);
 
   return ps;
 }
