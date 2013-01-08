@@ -300,21 +300,10 @@ int resampled_3to3_magnetic_field(double x, double y, double z, double t,
     vertex **points = NULL;
     int rows = 0;
 
-    struct stat tablestat;
+    // Rebuild cache file if not present
+    // TODO: Consider invalidating cache file if too old
     struct stat cachestat;
-
-    if (stat(table_path, &tablestat) < 0) {
-      fprintf(stderr, "Error: Cannot find table file in '%s'\n", table_path);
-      exit(1);
-    }
-
-    // keep going until the cache file exists
-    // there's a small race condition where we may miss an update of the table
-    // if we're rebuilding the cache at the same time
-    // TODO: consider erasing race condition of table updates by e.g. including
-    //       the table mtime in the cache-name.
-    while(stat(cache_path, &cachestat) < 0 ||
-          tablestat.st_mtime >= cachestat.st_mtime) {
+    while(stat(cache_path, &cachestat) < 0) {
 
       #ifdef USE_MPI
       // only the MPI master node (root) rebuilds the cache
@@ -326,27 +315,27 @@ int resampled_3to3_magnetic_field(double x, double y, double z, double t,
 
       if (1 == rebuild) {
         // rebuild the file (no mpi or mpi master/root)
-        printf("rebuilding..\n");
+        printf("Rebuilding interpolation cache file: %s..\n", cache_path);
         opts->min = malloc(sizeof(vertex));
         opts->max = malloc(sizeof(vertex));
 
         points = resample_file(table_path, &rows, steps, cache_path,
                                opts->between, opts->min, opts->max);
 
-        printf("done\n");
+        printf("Done.\n");
         if(points == NULL) {
           exit(1);
         }
       } else {
         // wait until some other node has rebuild the file
-        printf("waiting for rebuild..\n");
+        printf("Waiting for cache file ...\n");
         usleep(250000);
       }
     }
 
     if (opts->between == betweenG) {
       if (NULL == points || 0 == rows) {
-        printf("loading from cache..");
+        printf("Loading interpolated data from cache.. ");
       }
       table = opts->table = malloc(sizeof(t_Table));
       Table_Init(table, 100, 6);
@@ -368,6 +357,7 @@ int resampled_3to3_magnetic_field(double x, double y, double z, double t,
           }
         }
       }
+      printf("Done\n");
     }
     else {
       // the cached table is now either in memory or on disk
