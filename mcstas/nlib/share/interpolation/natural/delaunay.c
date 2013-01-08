@@ -72,6 +72,13 @@ void delaunay_buildMesh(vertex** ps, int n, mesh *m)
   // any degenerecies as we find them.
   srand ( time(NULL) );
 
+  // Reset meta-data
+  int i,j;
+  for (i=0; i<n; i++) {
+    ps[i]->index = i;
+    ps[i]->voronoiVolume = -1;
+  }
+
   // We have no degenerecies to start with.
   m->coplanar_degenerecies  = 0;
   m->cospherical_degenerecies = 0;
@@ -80,7 +87,6 @@ void delaunay_buildMesh(vertex** ps, int n, mesh *m)
   delaunay_initSuperSimplex(ps, n, m);
   delaunay_addSimplexToMesh(m, m->super);
 
-  int i,j;
   // Add each point to the mesh 1-by-1 using the Edge Flipping technique.
   for (i=0; i<n; i++)
   {
