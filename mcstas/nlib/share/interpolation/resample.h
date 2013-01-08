@@ -23,7 +23,9 @@
 
 
 vertex **resample_file(char *input_path, int *rows,
-                       int samples, char *cache_path);
+                       int *steps, char *cache_path,
+                       double (*between)(int i, int *steps, int dim, double min, double max),
+                       vertex *min, vertex *max);
 
 
 void interpolate3x3(treeNode *tree,
