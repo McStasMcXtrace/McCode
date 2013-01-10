@@ -3,6 +3,7 @@ import atexit
 import os
 import re
 import tempfile
+import shutil
 import yaml
 
 from os.path import isfile, dirname, basename, splitext
@@ -100,6 +101,10 @@ class McStas:
         def x_path(file):
             ''' Return external path (relative to self.path) for file '''
             return '%s/%s' % (dirname(self.path), basename(file))
+
+        # Copy instrument file to cwd if not already there (for compatibility)
+        if not isfile(basename(self.path)):
+            shutil.copy2(self.path, ".")  # also copies stat information
 
         # Use mpi?
         mpi = options.use_mpi
