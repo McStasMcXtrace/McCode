@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from os import mkdir
-from os.path import isfile, isdir, abspath, dirname
+from os.path import isfile, isdir, abspath, dirname, basename
 from optparse import OptionParser, OptionGroup, OptionValueError
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
@@ -200,8 +200,8 @@ def expand_options(options):
         instr = options.instr
         instr = instr.endswith('.instr') and instr[:-6] or instr
         # use unique directory when unspecified
-        options.dir = "./%s_%s" % \
-                      (instr,
+        options.dir = "%s_%s" % \
+                      (basename(instr),
                        datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
         # alert user
         LOG.info('No output directory specified (--dir)')
