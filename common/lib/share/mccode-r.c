@@ -42,7 +42,7 @@
 #include <sys/types.h>
 
 // UNIX specific headers (non-Windows)
-#if defined(__unix__) || defined(mac)
+#if defined(__unix__) || defined(__APPLE__)
 #include <unistd.h>
 #include <sys/stat.h>
 #endif
