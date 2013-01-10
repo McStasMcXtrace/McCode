@@ -78,11 +78,7 @@ class McStas:
         self.params = {}
 
         # Setup paths
-        self.dir = tempfile.mkdtemp(prefix='mcstas-')
-        self.cpath = '%s/%s.c' % (self.dir, self.name)
-
-        # This is where one would remove temporary files at exit
-        # atexit.register(self.cleanup)
+        self.cpath = '%s.c' % self.name
 
     def set_parameter(self, key, value):
         ''' Set the value of an experiment parameter '''
@@ -107,8 +103,13 @@ class McStas:
             return  # skip
         LOG.info('Recompiling: %s', self.binpath)
 
-        # Generate C-code (implicit: always prepare for --trace mode)
-        Process(options.mccode_bin).run(['-t','-o', self.cpath, self.path])
+        if not isfile(self.cpath) \
+           or  modified(self.path) >= modified(self.cpath):
+            # Generate C-code (implicit: always prepare for --trace mode)
+            LOG.info('Regenerating c-file: %s', basename(self.cpath))
+            Process(options.mccode_bin).run(['-t','-o', self.cpath, self.path])
+        else:
+            LOG.info('Using existing c-file: %s', basename(self.cpath))
 
         # Setup cflags
         cflags = ['-lm']  # math library
@@ -163,16 +164,6 @@ class McStas:
 
     def get_info(self):
         return McStasInfo(self.runMPI(['--info'], pipe=True))
-
-    def cleanup(self):
-        ''' Remove temporary files '''
-        for path in (self.cpath,):
-            try:
-                os.remove(path)
-            except OSError:
-                pass  # file not found
-
-        os.rmdir(self.dir)
 
 
 class Detector(object):
