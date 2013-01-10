@@ -20,6 +20,15 @@ def modified(path):
     return os.stat(path).st_mtime
 
 
+def findReusableFile(source, candidates):
+    ''' Finds an existing candidate that is newer than source modification time or None '''
+    min_ = modified(source)
+    for path in candidates:
+        if isfile(path) and modified(path) > min_:
+            return path
+    return None
+
+
 class ProcessException(Exception):
     ''' Exception/error in external process '''
 
@@ -78,7 +87,7 @@ class McStas:
         self.params = {}
 
         # Setup paths
-        self.cpath = '%s.c' % self.name
+        self.cpath = './%s.c' % self.name
 
     def set_parameter(self, key, value):
         ''' Set the value of an experiment parameter '''
@@ -88,28 +97,40 @@ class McStas:
         ''' Prepare for simultation run '''
         self.options = options
 
+        def x_path(file):
+            ''' Return external path (relative to self.path) for file '''
+            return '%s/%s' % (dirname(self.path), basename(file))
+
         # Use mpi?
         mpi = options.use_mpi
         mpi_flag = '-mpi' if mpi else ''
-        self.binpath = '%s/%s%s.%s' % (dirname(self.path) or '.',
-                                       self.name,
-                                       mpi_flag,
-                                       config.OUT_SUFFIX)
+        self.binpath = './%s%s.%s' % (self.name,
+                                      mpi_flag,
+                                      config.OUT_SUFFIX)
 
-        # Check if instrument code has changed
-        if not options.force_compile and isfile(self.binpath) \
-               and modified(self.path) < modified(self.binpath):
-            LOG.info('Using existing binary: %s', basename(self.binpath))
-            return  # skip
+        # Check if instrument code has changed since last compilation
+        existingBin = findReusableFile(self.path,
+                                       [self.binpath, x_path(self.binpath)])
+
+        # Reuse binary if present and up-to-date
+        if not options.force_compile and existingBin is not None:
+            LOG.info('Using existing binary: %s', existingBin)
+            self.binpath = existingBin
+            return  # skip recompilation
+
         LOG.info('Recompiling: %s', self.binpath)
 
-        if not isfile(self.cpath) \
-           or  modified(self.path) >= modified(self.cpath):
+        # Check for reusable c-file
+        existingC = findReusableFile(self.path,
+                                     [self.cpath, x_path(self.cpath)])
+
+        if not options.force_compile and existingC is not None:
+            LOG.info('Using existing c-file: %s', existingC)
+            self.cpath = existingC
+        else:
             # Generate C-code (implicit: always prepare for --trace mode)
             LOG.info('Regenerating c-file: %s', basename(self.cpath))
             Process(options.mccode_bin).run(['-t','-o', self.cpath, self.path])
-        else:
-            LOG.info('Using existing c-file: %s', basename(self.cpath))
 
         # Setup cflags
         cflags = ['-lm']  # math library
