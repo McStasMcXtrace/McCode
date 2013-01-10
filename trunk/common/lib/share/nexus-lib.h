@@ -26,6 +26,9 @@
 #include "napi.h"
 #include <sys/stat.h>
 
+#include <sys/types.h>
+#include <ctype.h>
+
 /* NeXus variables to be used in functions */
 NXhandle mcnxHandle;
 char    *mcnxFilename=NULL;
