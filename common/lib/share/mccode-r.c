@@ -2249,6 +2249,8 @@ int mcdetector_write_content(MCDETECTOR *DetectorArray, long DetectorArray_index
     free(mcDetectorArray); mcDetectorArray=NULL;
   } /* if this_p1 */
 
+  return 0;
+
 } /* mcdetector_write_content */
 
 
