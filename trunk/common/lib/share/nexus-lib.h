@@ -76,4 +76,7 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
 int mcnxfile_data(NXhandle nxhandle, MCDETECTOR detector, char *part,
   char *valid_parent, char *valid_xlabel, char *valid_ylabel, char *valid_zlabel);
 
+/* Prototype for function in mccode-r.c only included when USE_NEXUS */
+int mcnxfile_parameters(NXhandle nxhandle);
+
 #endif
