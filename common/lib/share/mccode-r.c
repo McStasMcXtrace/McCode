@@ -2147,9 +2147,10 @@ static int mcsiminfo_init(FILE *f)
   mcinfo_header(mcsiminfo, "header");
 #ifdef USE_NEXUS
   /* close information SDS opened with mcfile_section(siminfo, "mcstas (header)") */
-  if (strstr(mcformat.Name, "NeXus"))
+  if (strstr(mcformat.Name, "NeXus")) {
     if (NXclosedata(mcnxHandle) == NX_ERROR)
       fprintf(stderr, "Warning: NeXus: could not close data set mcstas/information (header)\n");
+  }
 #endif
 
   /* begin-end instrument =================================================== */
@@ -2174,9 +2175,10 @@ static int mcsiminfo_init(FILE *f)
 
 #ifdef USE_NEXUS
   /* close information SDS opened with mcfile_section(siminfo,"simulation") */
-  if (strstr(mcformat.Name, "NeXus"))
+  if (strstr(mcformat.Name, "NeXus")) {
     if (NXclosedata(mcnxHandle) == NX_ERROR)
       fprintf(stderr, "Warning: NeXus: could not close data set simulation/information\n");
+  }
 #endif
   if (ismcstas_nx)
     mcsiminfo = mcfile_section(mcsiminfo, "end", mcsiminfo.simulation, mcsiminfo_name, "simulation", 2);
@@ -2279,9 +2281,11 @@ void mcsiminfo_close(void)
     mcfile_section(mcsiminfo, "end", mcsiminfo.simulation, mcinstrument_name, "instrument", 1);
   }
 #ifdef USE_NEXUS
-  /* re-open the simulation/information dataset */
-  if (NXopendata(mcnxHandle, "information") == NX_ERROR)
-    fprintf(stderr, "Warning: NeXus: could not re-open 'information' for mcstas NXentry\n");
+  if (strstr(mcformat.Name, "NeXus")) {
+    /* re-open the simulation/information dataset */
+    if (NXopendata(mcnxHandle, "information") == NX_ERROR)
+      fprintf(stderr, "Warning: NeXus: could not re-open 'information' for mcstas NXentry\n");
+  }
 #endif
   mcinfo_header(mcsiminfo, "footer");
 #ifdef USE_NEXUS
@@ -2602,11 +2606,12 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
   }
 #ifdef USE_NEXUS
   /* close information SDS opened with mcfile_section(detector,"data") */
-  if (strstr(mcformat.Name, "NeXus"))
+  if (strstr(mcformat.Name, "NeXus")) {
     mcinfo_header(detector, "footer");
     if (NXclosedata(mcnxHandle) == NX_ERROR)
       fprintf(stderr, "Warning: NeXus: could not close data set %s/information (footer)\n",
         detector.filename);
+  }
   /* group remains opened for data to be written */
 #endif
 
