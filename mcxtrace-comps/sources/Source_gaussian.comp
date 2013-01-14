@@ -80,7 +80,7 @@ INITIALIZE
     /*read spectrum from file*/
     int status=0;
     if ( (status=Table_Read(&(prms.T),spectrum_file,0))==-1){
-      fprintf(stderr,"Source_gaussian(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file);
+      fprintf(stderr,"Source_gaussian(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file?spectrum_file:"");
       exit(-1);
     }
     /*data is now in table t*/
