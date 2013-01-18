@@ -96,16 +96,15 @@ def parse_trace(world):
 
         # process circle
         elif line.startswith(MC_CIRCLE):
-            xyz = 'xyz'
             items = line[len(MC_CIRCLE):].strip('()').split(',')
             # plane
-            pla = [xyz.find(a) for a in items[0].strip("''")]
+            pla = items[0].strip("''")
             # center and radius
             pos = [float(x) for x in items[1:4]]
             rad = float(items[4])
             # draw_circle(pla, pos, rad, comp, world.drawLine)
             if rad > 0:
-                world.drawCircle(rotate(pos, comp), rad)
+                world.drawCircle(rotate(pos, comp), rad, pla)
 
         # activate neutron when it enters
         elif line.startswith(MC_ENTER):

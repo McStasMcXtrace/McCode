@@ -1,6 +1,6 @@
 
 from xml.etree import ElementTree as ET
-from math import sqrt, acos
+from math import sqrt, acos, pi
 
 # X3D properties taken from the Wikipedia example
 # http://en.wikipedia.org/wiki/X3D
@@ -20,8 +20,8 @@ class X3DWorld(object):
     def drawLine(self, points):
         self.scene.drawLine(points)
 
-    def drawCircle(self, center=(0, 0, 0), radius=1):
-        self.scene.drawCircle(center, radius)
+    def drawCircle(self, center=(0, 0, 0), radius=1, plane='xy'):
+        self.scene.drawCircle(center, radius, plane)
 
     def dumps(self):
         return self.world.dumps()
@@ -84,11 +84,15 @@ class Shape(Node):
 
 
 class Transform(Node):
-    def __init__(self, translation=(0, 0, 0), rotation=(0, 0, 0, 0), shapes=()):
+    def __init__(self, translation=(0, 0, 0), rotation=(0, 0, 0, 0), center=None, shapes=()):
         super(Transform, self).__init__()
+
+        prepare = lambda l: ' '.join(map(str, l))
+
+        extra = dict(center is not None and [('center', prepare(center))] or [])
         self._root = ET.Element('Transform',
-                                translation=' '.join(map(str, translation)),
-                                rotation=' '.join(map(str, rotation)))
+                                translation=prepare(translation),
+                                rotation=prepare(rotation))
         map(self.addShape, shapes)
 
     def addShape(self, shape):
@@ -117,11 +121,20 @@ class Scene(Node):
 
         self._addNode(line)
 
-    def drawCircle(self, center=(0, 0, 0), radius=1):
+    def drawCircle(self, center=(0, 0, 0), radius=1, plane='xy'):
         ''' Draw a circle '''
         circle = Shape('Circle2D',
                        radius=radius)
-        self._addNode(Transform(translation=center, shapes=[circle]))
+
+        rots = {'xy': (0, 0, 0,    0),  # default plane, no rotation needed
+                'xz': (1, 0, 0, pi/2),
+                'yz': (0, 1, 0, pi/2)
+                }
+
+        self._addNode(Transform(translation=center, shapes=[
+            Transform(rotation=rots[plane],
+                      center=center,
+                      shapes=[circle])]))
 
 
 class X3D(Node):
