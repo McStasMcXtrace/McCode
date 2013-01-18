@@ -55,6 +55,11 @@ set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 # Debian
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python-yaml")
 
+# RPM
+set(CPACK_RPM_PACKAGE_REQUIRES
+  "${FLAVOR}-${MCCODE_VERSION}, python-yaml"
+  )
+
 
 include(CPack)
 
