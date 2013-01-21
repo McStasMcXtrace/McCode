@@ -16,3 +16,10 @@ mccode-select-${MCCODE} --bootstrap
 mccode-select-bundle --install \
 	  ${FLAVOR} \
 	  ${VERSION}
+
+
+# Check if mcdoc is installed and if it needs to run
+if [ -x mcdoc-${VERSION} ] && \
+    [ -d ${PREFIX}/lib/${MCCODE}/examples ]; then
+    mcdoc-${VERSION} --text
+fi
