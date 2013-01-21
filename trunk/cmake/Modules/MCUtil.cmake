@@ -194,7 +194,8 @@ macro(setup_mccode_mkdist FLAVOR)
     # Generate debian postinst script
     configure_file(
       cmake/support/scripts/postinst.in
-      work/support/postinst)
+      work/support/postinst
+      @ONLY)
 
     # Set architecture
     if(ARCH EQUAL 64)

@@ -1,12 +1,18 @@
 #!/bin/sh
 
+# Extract CMake macros during configure
+PREFIX="@CMAKE_INSTALL_PREFIX@"
+FLAVOR="@FLAVOR@"
+VERSION="@MCCODE_VERSION@"
+
 # Include installation path before any attempt to postconfig
-PATH=${CMAKE_INSTALL_PREFIX}/bin:$PATH
+export PATH=${PREFIX}/bin:${PATH}
+MCCODE=${FLAVOR}-${VERSION}
 
 # Setup mccode-select and mccode-select-bundle
-mccode-select-${FLAVOR}-${MCCODE_VERSION} --bootstrap
+mccode-select-${MCCODE} --bootstrap
 
 # Setup mcstas/mcxtrace including available tools
 mccode-select-bundle --install \
 	  ${FLAVOR} \
-	  ${MCCODE_VERSION}
+	  ${VERSION}
