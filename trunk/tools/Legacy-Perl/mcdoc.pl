@@ -739,6 +739,7 @@ if (-f $out_file) {
       my $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $out_file";
       print "$0: Starting $cmd\n";
       system("$cmd\n");
-      sleep(10); # gives time for browser to start and display page before removing it
+      # wait for browser tab to open (when browsers open page in current window)
+      sleep(10);
     }
 }
