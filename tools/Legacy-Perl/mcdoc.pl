@@ -1,5 +1,9 @@
 #! /usr/bin/perl -w
 
+# Install a handler for the interrupt signal (CTRL-C) that simply exits the
+# program cleanly (this removes tmpfiles correctly).
+$SIG{INT} = sub { exit };
+
 # Determine the path to the McStas system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
