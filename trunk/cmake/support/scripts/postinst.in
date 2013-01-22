@@ -4,6 +4,7 @@
 PREFIX="@CMAKE_INSTALL_PREFIX@"
 FLAVOR="@FLAVOR@"
 VERSION="@MCCODE_VERSION@"
+MC="@MCCODE_PREFIX@"
 
 # Include installation path before any attempt to postconfig
 export PATH=${PREFIX}/bin:${PATH}
@@ -17,9 +18,8 @@ mccode-select-bundle --install \
 	  ${FLAVOR} \
 	  ${VERSION}
 
-
 # Check if mcdoc is installed and if it needs to run
-if [ -x mcdoc-${VERSION} ] && \
+if [ -x ${PREFIX}/bin/${MC}doc-${VERSION} ] && \
     [ -d ${PREFIX}/lib/${MCCODE}/examples ]; then
-    mcdoc-${VERSION} --text
+    ${PREFIX}/bin/${MC}doc-${VERSION} --text &>/dev/null
 fi
