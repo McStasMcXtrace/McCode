@@ -93,9 +93,15 @@ foreach(NAME
     gui plot resplot run stas2vitess
     )
 
+  if(NAME STREQUAL "gui")
+    set(filename ${P}gui)
+  else()
+    set(filename mc${NAME})
+  endif()
+
   add_custom_command(
     OUTPUT "${WORK}/${P}${NAME}"
-    COMMAND "./perl_fix.sh" "${PROJECT_SOURCE_DIR}/mc${NAME}.pl" "${WORK}/${P}${NAME}"
+    COMMAND "./perl_fix.sh" "${PROJECT_SOURCE_DIR}/${filename}.pl" "${WORK}/${P}${NAME}"
     WORKING_DIRECTORY "${WORK}"
     )
 
