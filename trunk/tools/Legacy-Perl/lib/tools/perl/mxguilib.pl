@@ -629,14 +629,43 @@ sub preferences_dialog {
       -textvariable => \$editorchoice_val,
       -options      => $choices
     )->pack(-fill => 'x');
+    my $toolchoice = $lf->Label(-text => "GUI Palette", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
+    $lf->Entry(-relief => 'sunken',
+		       -width=>16,
+		       -textvariable => \$MCSTAS::mcstas_config{'TKPALETTE'},
+		       -justify => 'right')->pack(-fill => 'x');
+    my $toolchoice2 = $lf->Label(-text => "GUI Font", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
+    $lf->Entry(-relief => 'sunken',
+		       -width=>16,
+		       -textvariable => \$MCSTAS::mcstas_config{'TKFONT'},
+		       -justify => 'right')->pack(-fill => 'x');
     $choicequote = $lf->Checkbutton(-text => "Surround strings with quotes",
                -relief => 'flat', -variable => \$quote)->pack(-fill => 'x');
     $b->attach($choicequote, -balloonmsg => "All string parameters will be surrounded with quotes\nThis option does not allow to pass variable names");
-    if ($quote) { $choicequote->select; }
+    if ($quote) { $choicequote->select;
+
+    # Tool-definitions
+    my $toolchoice = $lf->Label(-text => "Runtime tool options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
+    $lf->Label(-text => "Execution/run command to use:", -anchor => 'n',)->pack(-fill => 'x');
+    $lf->Entry(-relief => 'sunken',
+		       -width=>16,
+		       -textvariable => \$MCSTAS::mcstas_config{'RUNCMD'},
+		       -justify => 'right')->pack(-fill => 'x');
+    $lf->Label(-text => "Plot command to use:", -anchor => 'n',)->pack(-fill => 'x');
+    $lf->Entry(-relief => 'sunken',
+		       -width=>16,
+		       -textvariable => \$MCSTAS::mcstas_config{'PLOTCMD'},
+		       -justify => 'right')->pack(-fill => 'x');
+    $lf->Label(-text => "Trace command to use:", -anchor => 'n',)->pack(-fill => 'x');
+    $lf->Entry(-relief => 'sunken',
+		       -width=>16,
+		       -textvariable => \$MCSTAS::mcstas_config{'TRACECMD'},
+		       -justify => 'right')->pack(-fill => 'x');
 
     $MCSTAS::mcstas_config{'CFLAGS_SAVED'} = $MCSTAS::mcstas_config{'CFLAGS'} unless $MCSTAS::mcstas_config{'CFLAGS_SAVED'};
     $MCSTAS::mcstas_config{'CC_SAVED'} = $MCSTAS::mcstas_config{'CC'} unless $MCSTAS::mcstas_config{'CC_SAVED'}; 
-    $MCSTAS::mcstas_config{'MPICC_SAVED'} = $MCSTAS::mcstas_config{'MPICC'} unless $MCSTAS::mcstas_config{'MPICC_SAVED'};                              
+    $MCSTAS::mcstas_config{'MPICC_SAVED'} = $MCSTAS::mcstas_config{'MPICC'} unless $MCSTAS::mcstas_config{'MPICC_SAVED'};
+    $MCSTAS::mcstas_config{'MPIRUN_SAVED'} = $MCSTAS::mcstas_config{'MPIRUN'} unless $MCSTAS::mcstas_config{'MPIRUN_SAVED'};
     my $compilchoice = $lf->Label(-text => "Compilation options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $choicecflags = $lf->Checkbutton(-text => "Apply compiler flags: (define in textbox below)",
                -relief => 'flat', -variable => \$MCSTAS::mcstas_config{'MCGUI_CFLAGS'})->pack(-fill => 'x');
@@ -656,7 +685,11 @@ sub preferences_dialog {
 		       -width=>16,
 		       -textvariable => \$MCSTAS::mcstas_config{'MPICC_SAVED'},
 		       -justify => 'right')->pack(-fill => 'x');
-
+    $lf->Label(-text => "MPIrun command to use:", -anchor => 'n')->pack(-fill => 'x');
+    $lf->Entry(-relief => 'sunken',
+		       -width=>16,
+		       -textvariable => \$MCSTAS::mcstas_config{'MPIRUN_SAVED'},
+		       -justify => 'right')->pack(-fill => 'x');
     my $precchoice = $lf->Label(-text => "Optimization options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $labelprec = $lf->Label(-text => "Precision",
                -relief => 'flat')->pack(-side => 'left');
@@ -703,6 +736,7 @@ sub preferences_dialog {
     }
     $MCSTAS::mcstas_config{'CC'} = $MCSTAS::mcstas_config{'CC_SAVED'};
     $MCSTAS::mcstas_config{'MPICC'} = $MCSTAS::mcstas_config{'MPICC_SAVED'};
+    $MCSTAS::mcstas_config{'MPIRUN'} = $MCSTAS::mcstas_config{'MPIRUN_SAVED'};
     $MPIstuff = $MCSTAS::mcstas_config{'CLUSTER'};
     return ($res);
 }
@@ -1043,8 +1077,8 @@ sub sitemenu_build {
         }
         # add last item for Undefined site instruments
         push @added, "Undefined site";
-        $CurrentSub = $sitemenu->cascade(-label => "Undefined site");
-        push @sites, $CurrentSub; # will be last site item
+        $UndefSite = $sitemenu->cascade(-label => "Undefined site");
+        push @sites, $UndefSite; # will be last site item
 
         # STORE instruments 
         for ($j=0 ; $j<@paths; $j++) {
@@ -1070,13 +1104,22 @@ sub sitemenu_build {
                     }
                 }
             } # end while
-            # Add the instrument to the given menu.
-            my ($base, $dirname, $suffix);
-            ($base, $dirname, $suffix) = fileparse($paths[$j],".instr");
-            if ($cname ne "" && $cname ne $base) { $base = "$base ($cname)"; }
-            $CurrentSub = $sites[$index];
-            $CurrentSub->command(-label => "$base", 
-              -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
+	    if (!($index==@added)) {
+	      # Add the instrument to the given menu.
+	      my ($base, $dirname, $suffix);
+	      ($base, $dirname, $suffix) = fileparse($paths[$j],".instr");
+	      if ($cname ne "" && $cname ne $base) { $base = "$base ($cname)"; }
+	      $CurrentSub = $sites[$index];
+	      $CurrentSub->command(-label => "$base",
+				   -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
+	    } else {
+	      # Add the instrument to the given menu.
+	      my ($base, $dirname, $suffix);
+	      ($base, $dirname, $suffix) = fileparse($paths[$j],".instr");
+	      if ($cname ne "" && $cname ne $base) { $base = "$base ($cname)"; }
+	      $UndefSite->command(-label => "$base",
+				   -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
+	    }
         }
     }
 }
