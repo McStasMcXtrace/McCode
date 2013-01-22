@@ -117,7 +117,7 @@ INITIALIZE
   }
  
   if ( (status=Table_Read(&(prms.T),material_datafile,0))==-1){
-    fprintf(stderr,"Error %s: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,material_datafile);
+    fprintf(stderr,"Error %s: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,material_datafile?material_datafile:"");
     exit(-1);
   }
   char **header_parsed;
