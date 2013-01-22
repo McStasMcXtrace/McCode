@@ -144,8 +144,8 @@ def processJob(run, workdir):
 
     # Create soft links to data files/folders
     for path in DATA_FILES:
-        dest = workdir % basename(path)
-        os.symlink(abspath(path), dest)
+        for fname in os.listdir(path):
+            os.symlink('%s/%s' % (abspath(path), fname), workdir % fname)
 
     # compute instrument layout
     is_scan = any(isinstance(param, list) for param in params.values())
