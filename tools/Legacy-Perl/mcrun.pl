@@ -32,6 +32,7 @@ BEGIN {
     ENV_HEADER
 }
 
+use constant { true => 1, false => 0 };
 use lib $MCSTAS::perl_dir;
 use lib $MCSTAS::perl_modules;
 require "mccode_config.perl";
@@ -70,7 +71,8 @@ my $exec_test=0;                # flag for McStas package test execution
 our $slave = 0;                 # 'slave' hostname for running remotely
 my $multi=0;                    # multi machine mode
 my @hostlist = ();              # list of remote machines to run on...
-my $mpi = 0;                    # how many nodes used with MPI? 0 implies no MPI.
+my $mpi_enabled = false;        # run with mpi?
+my $mpi = 0;                    # how many nodes used with MPI? 0 implies auto.
 my $cflags = 1;                 # true if we use CFLAGS, else no CFLAGS is used
 
 our @optim_names = ();          # list of monitor names to optimize
@@ -151,8 +153,10 @@ sub parse_args {
         } elsif (/^--host\=(.*)$/ || /^--machine\=(.*)$/ || /^--slave\=(.*)$/) {
         	  $slave=$1;
         } elsif (/^--mpi$/) {
+            $mpi_enabled = true;
             $mpi = 2;   # default to dual core/cpu machines
         } elsif (/^--mpi\=(.*)$/) {
+            $mpi_enabled = true;
             $mpi = $1;
         } elsif (/^--machines\=(.*)$/) {
             $MCSTAS::mcstas_config{'HOSTFILE'} = $1;
@@ -214,7 +218,7 @@ sub parse_args {
     }
 
     # tests for grid/mpi support
-    if ($mpi >= 1 || $multi >= 1) {
+    if ($mpi_enabled || $multi >= 1) {
       if (! -e $MCSTAS::mcstas_config{'HOSTFILE'}) {
         print STDERR "$MCSTAS::mcstas_config{'RUNCMD'}: No MPI/grid machine list. Running locally.
   Define ".$ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/hosts
@@ -222,15 +226,15 @@ sub parse_args {
   or use option --machines=<file>\n";
         $MCSTAS::mcstas_config{'HOSTFILE'} = "";
       }
-      if ($mpi >= 1 && ($MCSTAS::mcstas_config{'MPICC'}  eq "no"
-                     || $MCSTAS::mcstas_config{'MPIRUN'} eq "no")) {
+      if ($mpi_enabled && ($MCSTAS::mcstas_config{'MPICC'} eq "no"
+                       || $MCSTAS::mcstas_config{'MPIRUN'} eq "no")) {
         print STDERR "$MCSTAS::mcstas_config{'RUNCMD'}: You have no mpicc/mpirun available, --mpi disabled...\n";
-        $mpi   = 0;
+        $mpi_enabled = 0;
       }
     }
 
     # Adapt parameters to MPI (if used) which overrides grid.
-    if ($mpi >= 1 && $MCSTAS::mcstas_config{MPICC} ne "no") {
+    if ($mpi_enabled && $MCSTAS::mcstas_config{MPICC} ne "no") {
       $multi = 0;
     }
 
@@ -271,7 +275,7 @@ sub parse_args {
     my $cc     = $MCSTAS::mcstas_config{CC};
     my $mcstas_cflags = $MCSTAS::mcstas_config{CFLAGS};
 
-    do { 
+    do {
       my $usage = << "ENDCOM";
 "Usage: $MCSTAS::mcstas_config{'RUNCMD'} [-cpnN] Instr [-sndftgahi] params={val|min,max|min,guess,max}
 $MCSTAS::mcstas_config{'RUNCMD'} options:
@@ -308,7 +312,7 @@ $MCSTAS::mcstas_config{'RUNCMD'} options:
 ENDCOM
     $_=$MCSTAS::mcstas_config{'MCCODE'};
     if (/^mcstas/) {
-      $usage .= << "ENDMC";                    
+      $usage .= << "ENDMC";
 \"This program both runs mcstas with Instr and the C compiler to build an
 independent simulation program. The following environment variables may be
 specified for building the instrument:
@@ -533,14 +537,16 @@ sub exec_sim_local {
   # that would be necessary if the user actually wanted to run the
   # command manually. (Note that the exec() call is correct since it
   # does not need any quoting).
-  if ($mpi >= 1 && $MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
+  if ($mpi_enabled && $MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
     push @cmd, "$MCSTAS::mcstas_config{'MPIRUN'}";
     my $localonly = 1;
     if ($MCSTAS::mcstas_config{'HOSTFILE'} ne "") {
       push @cmd, " -machinefile $MCSTAS::mcstas_config{'HOSTFILE'}";
       $localonly = 0;
     }
-    push @cmd, " -np $mpi";
+    if($mpi >= 0) {
+        push @cmd, " -np $mpi";
+    }
   }
   push @cmd, $out_file;
   push @cmd, @opt;

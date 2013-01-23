@@ -107,7 +107,7 @@ class McStas:
             shutil.copy2(self.path, ".")  # also copies stat information
 
         # Use mpi?
-        mpi = options.use_mpi
+        mpi = self.options.use_mpi
         mpi_flag = '-mpi' if mpi else ''
         self.binpath = './%s%s.%s' % (self.name,
                                       mpi_flag,
@@ -185,7 +185,9 @@ class McStas:
         if override_mpi or override_mpi is None and mpi:
             LOG.debug('Running via MPI: %s', self.binpath)
             binpath = self.options.mpirun
-            args = ['-np', str(self.options.mpi), self.binpath] + args
+            mpi_flags = ['-np', str(self.options.mpi)] \
+                        if self.options.mpi >= 1 else []
+            args = mpi_flags + [self.binpath] + args
         return Process(binpath).run(args, pipe=pipe)
 
     def get_info(self):
