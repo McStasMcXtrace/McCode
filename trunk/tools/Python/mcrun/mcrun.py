@@ -185,16 +185,14 @@ def expand_options(options):
     options.mccode_lib = config.MCCODE_LIB
 
     # MPI
-    if options.mpi > 0:
+    if options.mpi is not None:
         options.use_mpi = True
         options.cc      = config.MPICC
         options.mpirun  = config.MPIRUN
     else:
-        if not options.mpi is None:
-            LOG.warning('Ignoring MPI flag: not enough nodes (%d).',
-                        options.mpi)
         options.use_mpi = False
         options.cc = config.CC
+
     # Output dir
     if options.dir is None:
         instr = options.instr
