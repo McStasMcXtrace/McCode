@@ -106,12 +106,8 @@ class McStas:
         if not isfile(basename(self.path)):
             shutil.copy2(self.path, ".")  # also copies stat information
 
-        # Use mpi?
-        mpi = self.options.use_mpi
-        mpi_flag = '-mpi' if mpi else ''
-        self.binpath = './%s%s.%s' % (self.name,
-                                      mpi_flag,
-                                      config.OUT_SUFFIX)
+        # Create the path for the binary
+        self.binpath = './%s.%s' % (self.name, config.OUT_SUFFIX)
 
         # Check if instrument code has changed since last compilation
         existingBin = findReusableFile(self.path,
@@ -139,7 +135,7 @@ class McStas:
 
         # Setup cflags
         cflags = ['-lm']  # math library
-        cflags += [mpi and '-DUSE_MPI' or '-UUSE_MPI']  # MPI
+        cflags += [self.options.mpi and '-DUSE_MPI' or '-UUSE_MPI']  # MPI
         cflags += options.no_cflags and ['-O0'] or config.CFLAGS.split()  # cflags
 
         # Compiler optimisation
