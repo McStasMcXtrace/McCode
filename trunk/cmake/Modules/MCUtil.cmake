@@ -181,8 +181,11 @@ macro(setup_mccode_mkdist FLAVOR)
   else()
 
     # Have CMake respect install prefix
-    set(CPACK_SET_DESTDIR "ON")
+    message(${CMAKE_INSTALL_PREFIX})
     set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+
+    set(CPACK_RPM_PACKAGE_RELOCATABLE TRUE)
 
     # Add "-VERSION" to all program files (executables)
     set(PROGRAM_SUFFIX "-${MCCODE_VERSION}")
