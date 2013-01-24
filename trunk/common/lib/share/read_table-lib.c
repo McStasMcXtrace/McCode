@@ -347,7 +347,17 @@
           if ((lexeme != NULL) && (lexeme[0] != '\0')) {
             /* reading line: the token is not empty */
             double X;
-            if (sscanf(lexeme,"%lg",&X) == 1) {
+            int    count=1;
+            /* test if we have 'NaN','Inf' */
+            if (!strncasecmp(lexeme,"NaN",3))
+              X = 0;
+            else if (!strncasecmp(lexeme,"Inf",3) || !strncasecmp(lexeme,"+Inf",4))
+              X = FLT_MAX;
+            else if (!strncasecmp(lexeme,"-Inf",3))
+              X = -FLT_MAX;
+            else
+              count = sscanf(lexeme,"%lg",&X);
+            if (count == 1) {
               /* reading line: the token is a number in the line */
               if (!flag_In_array) {
                 /* reading num: not already in a block: starts a new data block */
