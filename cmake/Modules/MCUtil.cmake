@@ -1,5 +1,5 @@
 # Install library files into lib/${FLAVOR}, while skipping unneeded files
-macro(install_lib path)
+macro(installLib path)
   if(WINDOWS)
     set(dest "${lib}")
   else()
@@ -18,14 +18,14 @@ endmacro()
 
 
 # Check whether we are being run through mkdist
-macro(is_mkdist outvar)
+macro(isMkDist outvar)
   string(REPLACE "@" "_" TMP "@MCCODE_NAME@")
   string(COMPARE NOTEQUAL "${TMP}" "_MCCODE_NAME_" ${outvar})
 endmacro()
 
 
 # Setup McCode constants using either mkdist or SVN-defaults
-macro(setup_mccode_mkdist FLAVOR)
+macro(setupMCCODE FLAVOR)
 
   # Check for WINDOWS
   if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -95,7 +95,7 @@ macro(setup_mccode_mkdist FLAVOR)
     )
 
   # Check for mkdist values
-  is_mkdist(MKDIST)
+  isMkDist(MKDIST)
 
   if(MKDIST)
     ## Set mkdist-provided version
@@ -151,18 +151,18 @@ macro(setup_mccode_mkdist FLAVOR)
   endif()
 
   # Helper for adding leading "."
-  macro(add_dot name val)
+  macro(addDot name val)
     if(NOT DEFINED ${name} AND NOT ${val} STREQUAL "")
       set(${name} ".${val}")
     endif()
   endmacro()
 
   # Define suffix-macros that include a leading dot "."
-  add_dot(DOT_EXE_SUFFIX "${EXE_SUFFIX}")
-  add_dot(DOT_OUT_SUFFIX "${OUT_SUFFIX}")
+  addDot(DOT_EXE_SUFFIX "${EXE_SUFFIX}")
+  addDot(DOT_OUT_SUFFIX "${OUT_SUFFIX}")
 
-  add_dot(DOT_PYTHON_SUFFIX "${PYTHON_SUFFIX}")
-  add_dot(DOT_PERL_SUFFIX   "${PERL_SUFFIX}")
+  addDot(DOT_PYTHON_SUFFIX "${PYTHON_SUFFIX}")
+  addDot(DOT_PERL_SUFFIX   "${PERL_SUFFIX}")
 
 
   # Add some special Windows/Unix CPACK configuration

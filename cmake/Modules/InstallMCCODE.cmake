@@ -79,7 +79,7 @@ macro(InstallMCCODE)
 
   # update definitions to match choices
   if (USE_NEXUS)
-    AppendDef(HAVE_NEXUS="-DUSE_NEXUS -lNeXus")    
+    AppendDef(HAVE_NEXUS="-DUSE_NEXUS -lNeXus")
     AppendDef(USE_NEXUS)
   endif()
 
@@ -275,10 +275,10 @@ macro(InstallMCCODE)
   set(WORK "${PROJECT_BINARY_DIR}/work")
 
   # Flavor-specific library
-  install_lib("${PROJECT_SOURCE_DIR}/${FLAVOR_LIB}/")
+  installLib("${PROJECT_SOURCE_DIR}/${FLAVOR_LIB}/")
 
   # Shared library, lib
-  install_lib("${WORK}/lib/")
+  installLib("${WORK}/lib/")
 
   # Binaries
   install (
@@ -328,24 +328,24 @@ macro(InstallMCCODE)
       install(PROGRAMS ${WORK}/support/${name} DESTINATION ${bin})
     endforeach()
 
-    # Python related batches special handling 
+    # Python related batches special handling
     foreach (name run-py.bat plot-chaco.bat plot-matplotlib.bat)
       configure_file(
 	cmake/support/scripts/${name}.in
 	work/support/${MCCODE_PREFIX}${name}
-	)      
+	)
       install(PROGRAMS ${WORK}/support/${MCCODE_PREFIX}${name} DESTINATION ${bin})
-    endforeach()	 
+    endforeach()
 
-    install(PROGRAMS 
-      cmake/support/scripts/postsetup.bat 
-      DESTINATION ${bin} 
-      ) 
+    install(PROGRAMS
+      cmake/support/scripts/postsetup.bat
+      DESTINATION ${bin}
+      )
 
-    install(PROGRAMS 
-      cmake/support/scripts/mpicc.bat 
-      DESTINATION ${bin} 
-      ) 
+    install(PROGRAMS
+      cmake/support/scripts/mpicc.bat
+      DESTINATION ${bin}
+      )
 
   endif()
 
