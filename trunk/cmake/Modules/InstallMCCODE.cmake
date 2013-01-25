@@ -22,7 +22,7 @@ macro(AppendDefIf def)
 endmacro(AppendDefIf)
 
 
-macro(InstallMCCODE)
+macro(installMCCODE)
 
   # Ignore CMake warning when setting "-Denable_mcstas=1"
   option(enable_${FLAVOR} "This option is here for compatibility only." On)
@@ -350,6 +350,4 @@ macro(InstallMCCODE)
   endif()
 
 
-endmacro(InstallMCCODE)
-
-# InstallMCCODE ends here
+endmacro(installMCCODE)
