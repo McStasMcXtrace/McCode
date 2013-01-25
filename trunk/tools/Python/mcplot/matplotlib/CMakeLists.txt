@@ -23,7 +23,7 @@ else()
 endif()
 
 message("Enabling ${FLAVOR} flavor")
-setup_mccode_mkdist("${FLAVOR}")
+setupMCCODE("${FLAVOR}")
 
 # Select prefix
 if(${enable_mcstas})

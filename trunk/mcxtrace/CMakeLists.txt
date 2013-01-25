@@ -9,7 +9,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 # Setup McCode values (from mkdist or defaults)
 include(MCUtil)
-setup_mccode_mkdist("mcxtrace")
+setupMCCODE("mcxtrace")
 
 # Setup install target
 include(InstallMCCODE)

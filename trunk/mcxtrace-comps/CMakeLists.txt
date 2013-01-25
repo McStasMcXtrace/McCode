@@ -8,7 +8,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
-setup_mccode_mkdist("mcxtrace")
+setupMCCODE("mcxtrace")
 
 
 # CPack configuration
@@ -34,5 +34,5 @@ include(CPack)
 
 # Install mcxtrace components
 foreach(name data examples misc monitors optics samples share sources)
-  install_lib("${PROJECT_SOURCE_DIR}/${name}")
+  installLib("${PROJECT_SOURCE_DIR}/${name}")
 endforeach()
