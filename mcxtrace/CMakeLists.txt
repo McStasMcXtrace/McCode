@@ -13,4 +13,4 @@ setupMCCODE("mcxtrace")
 
 # Setup install target
 include(InstallMCCODE)
-InstallMCCODE()
+installMCCODE()

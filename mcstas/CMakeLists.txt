@@ -12,4 +12,4 @@ setupMCCODE("mcstas")
 
 # Setup install target
 include(InstallMCCODE)
-InstallMCCODE()
+installMCCODE()
