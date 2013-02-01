@@ -21,7 +21,7 @@
 * that window and scales the beam intensity accordingly.
 * If an input spectrum datafile (spectrum_file) is not specified, the beam is restricted to emit photons between E0+-dE keV, or lambda0+-dlambda Å, whichever is given.
 * The input spectrum file should be formatted such that x-ray energy/wavelength is in the first column and the intensity in the second. Any preceding
-* lines starting with # are considered part of the file header. If a datafile is given, a nonzero E¤0 value indicates that is is parametrized by energy ( in keV)
+* lines starting with # are considered part of the file header. If a datafile is given, a nonzero E0 value indicates that is is parametrized by energy ( in keV)
 * as opposed to wavelength (in Å). Wavelength is the default. 
 * Flux is set in the unit photons/s
 *
@@ -118,10 +118,7 @@ INITIALIZE
     }
     printf("Source_flat(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
     if(E0) printf("Source_flat(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
-  }else if (E0){
-    lambda0=2*M_PI/(E0*E2K);
-    if (dE){dlambda=2*M_PI/(E2K*E0*E0)*dE;}
-  }else if (!lambda0){
+  }else if ( !E0 && !lambda0){
     fprintf(stderr,"Source_flat(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP); 
     exit(0);  
   }  
@@ -137,7 +134,7 @@ INITIALIZE
 
 TRACE
 %{
-  double chi,E,k,l,r, xf, yf, rf, dx, dy, pdir;
+  double chi,e,k,l,r, xf, yf, rf, dx, dy, pdir;
 
   phi=0;
   z=0;
@@ -171,23 +168,29 @@ TRACE
     //}
     p*=pp;
     /*if E0!=0 convert the tabled value to wavelength*/
-    if (E0) {
-      l=2*M_PI/(l*E2K);
+  }else if (E0){
+    if(!dE){
+      e=E0;
+    }else if (gauss){
+      e=E0+dE*randnorm();
+    }else{
+      e=randpm1()*dE*0.5 + E0;
     }
-  }else if (dlambda){
-    if (gauss){
+    k=E2K*e;
+  }else if (lambda0){
+    if (!dlambda){
+      l=lambda0;
+    }else if (gauss){
       l=lambda0+dlambda*randnorm();
     }else{
-      l=randpm1()*dlambda + lambda0;
+      l=randpm1()*dlambda*0.5 + lambda0;
     }
-  }else{
-    l=lambda0;
+    k=(2*M_PI/l);
   }
-
-  k = (2*M_PI/l);
   ky=k*dy/rf;
   kx=k*dx/rf;
   kz=k*dist/rf;
+
   /*randomly pick phase or set to something real*/
   if (incoherent){
     phi=rand01()*2*M_PI;
