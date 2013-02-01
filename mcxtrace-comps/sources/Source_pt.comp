@@ -94,12 +94,9 @@ INITIALIZE
     }
     printf("Source_pt(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
     if(E0) printf("Source_pt(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
-  }else if (E0){
-    lambda0=2*M_PI/(E0*E2K);
-    if (dE){dlambda=2*M_PI/(E2K*E0*E0)*dE;}
-  }else if (!lambda0){
-    fprintf(stderr,"Source_pt(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP); 
-    exit(0);  
+  } else if (!E0 && !lambda0){
+    fprintf(stderr,"Error(%s): Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
+    exit(1);
   }
 
   if(phase) printf("got phase %g from outside\n",phase);
@@ -114,7 +111,7 @@ INITIALIZE
 
 TRACE
 %{
-  double k,l;
+  double k,l,e;
   /*point source*/
   p=prms.pmul;
   x=0;y=0;z=0;
@@ -133,19 +130,25 @@ TRACE
     //}
     p*=pp;
     /*if E0!=0 convert the tabled value to wavelength*/
-    if (E0) {
-      l=2*M_PI/(l*E2K);
+  }else if (E0){
+    if(!dE){
+      e=E0;
+    }else if (gauss){
+      e=E0+dE*randnorm();
+    }else{
+      e=randpm1()*dE*0.5 + E0;
     }
-  }else if (dlambda){
-    if (gauss){
+    k=E2K*e;
+  }else if (lambda0){
+    if (!dlambda){
+      l=lambda0;
+    }else if (gauss){
       l=lambda0+dlambda*randnorm();
     }else{
-      l=randpm1()*dlambda + lambda0;
+      l=randpm1()*dlambda*0.5 + lambda0;
     }
-  }else{
-    l=lambda0;
+    k=(2*M_PI/l);
   }
-  k=2*M_PI/l;
   kx*=k;
   ky*=k;
   kz*=k;
