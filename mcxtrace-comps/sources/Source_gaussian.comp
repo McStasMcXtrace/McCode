@@ -45,7 +45,7 @@
  * brilliance: () Unit in spectrum_file is Brilliance - apply corrections to get to raw flux.
  */
 
-DEFINE COMPONENT Source_gaussian2
+DEFINE COMPONENT Source_gaussian
 DEFINITION PARAMETERS (string spectrum_file=NULL)
   SETTING PARAMETERS (sig_x=1,sig_y=0,sigPr_x=0,sigPr_y=0,flux=1,brilliance=0,dist=1,gauss=0,focus_xw=0,focus_yh=0,E0=0, dE=0, lambda0=0,dlambda=-1,phase=-1)
 OUTPUT PARAMETERS (prms,spX,spY)
