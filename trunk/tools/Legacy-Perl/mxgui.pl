@@ -1751,7 +1751,7 @@ sub setup_cmdwin {
     $sim_but->pack(-side => "right", -padx => 1, -pady => 1);
     $b->attach($sim_but, -balloonmsg => "Open previous simulation results");
     my $f4 = $w->Frame();
-    my $status_lab = $w->Label(-text => "Status: Ok",
+    my $status_lab = $f4->Label(-text => "Status: Ok",
                                 -anchor => 'w',
                                 -justify => 'left');
     my $spacer = $f4->Label(-text => " in ",
