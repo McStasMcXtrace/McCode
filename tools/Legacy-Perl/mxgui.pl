@@ -352,7 +352,7 @@ sub tools_shortcuts {
 	    "$shortcuts{'cut'} - Editor cut\n".
 	    "$shortcuts{'copy'} - Editor copy\n".
 	    "$shortcuts{'paste'} - Editor paste";
-    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mcstas|pgplot/i) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mcstas|mcxtrace|pgplot/i) {
      $msg .= "\n\n
     'P' - Plotter/PGPLOT export BW postscript
     'C' - Plotter/PGPLOT export color postscript
