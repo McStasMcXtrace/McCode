@@ -642,7 +642,7 @@ sub preferences_dialog {
     $choicequote = $lf->Checkbutton(-text => "Surround strings with quotes",
                -relief => 'flat', -variable => \$quote)->pack(-fill => 'x');
     $b->attach($choicequote, -balloonmsg => "All string parameters will be surrounded with quotes\nThis option does not allow to pass variable names");
-    if ($quote) { $choicequote->select;
+    if ($quote) { $choicequote->select;}
 
     # Tool-definitions
     my $toolchoice = $lf->Label(-text => "Runtime tool options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
