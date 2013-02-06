@@ -2,12 +2,13 @@
 
 ''' Small script to rewrite McStas trace output to CSV data for plotting '''
 
+import argparse
+
 import sys
 import numpy as np
 
-
 import x3d
-from util import parse_multiline, rotate, draw_circle, get_line, debug
+from util import parse_multiline, rotate, get_line, debug
 
 
 UC_COMP = 'COMPONENT:'
@@ -25,7 +26,21 @@ MC_SCATTER = 'SCATTER:'
 MC_ABSORB = 'ABSORB:'
 
 
-def parse_trace(world):
+colors = ["1.0, 0.0, 0.0","0.0, 1.0, 0.0","0.0, 0.0, 1.0",
+          "1.0, 1.0, 0.0","1.0, 0.0, 1.0","0.0, 1.0, 1.0",
+          "1.0, 1.0, 1.0","0.5, 1.0, 1.0","1.0, 0.5, 1.0",
+          "1.0, 1.0, 0.5","0.5, 0.0, 1.0","0.0, 0.5, 1.0",
+          "0.0, 1.0, 0.5","0.5, 1.0, 0.0","1.0, 0.5, 0.0",
+          "1.0, 0.0, 0.5","0.5, 0.0, 0.0","0.0, 0.5, 0.0",
+          "0.0, 0.0, 0.5","0.5, 0.5, 1.0","0.5, 1.0, 0.5",
+          "1.0, 0.5, 0.5","0.5, 0.0, 0.5","0.0, 0.5, 0.5",
+          "0.5, 0.5, 0.0","0.5, 0.5, 0.5"]
+
+def getColor(n):
+    return colors[n % len(colors)]
+
+
+def parse_trace(world, inspectComp=None):
     ''' Prase McStas trace output from stdin and write result to output '''
 
     color = 0
@@ -46,12 +61,18 @@ def parse_trace(world):
             np.array([1, 0, 0,
                       0, 1, 0,
                       0, 0, 1]).reshape(3,3))
+    compName = ""
 
-    # previous neutron position
-    prev = None
-    skip = False
-    # we are drawing a neutron
+
+    # we are following a neutron
     active = False
+    # we need to draw the neutron (it passed the "check-point"/inspect component)
+    inspect = False
+    # list of observed neutron positions
+    neutron = []
+    # skip next neutron position
+    skip = False
+
 
     while True:
         # read line
@@ -76,23 +97,20 @@ def parse_trace(world):
         # switch perspective
         elif line.startswith(MC_COMP):
             color += 1
-            comp = comps[line[len(MC_COMP) + 1:]]
+            name = line[len(MC_COMP) + 1:].strip()
+            compName = name
+            comp = comps[name]
 
         elif line.startswith(MC_COMP_SHORT):
             name = line[len(MC_COMP_SHORT) + 1:].strip('"')
+            compName = name
             comp = comps[name]
             skip = True
 
         # process multiline
         elif line.startswith(MC_LINE):
             points = parse_multiline(line[len(MC_LINE):].strip('()'))
-            world.drawLine(rotate(p, comp) for p in points)
-            # start = points.pop(0)
-            # while points:
-            #     end = points.pop(0)
-            #     for point in (start, end):
-            #         out_point(rotate(point, comp))
-            #     start = end
+            world.drawLine((rotate(p, comp) for p in points), color=getColor(color))
 
         # process circle
         elif line.startswith(MC_CIRCLE):
@@ -102,23 +120,28 @@ def parse_trace(world):
             # center and radius
             pos = [float(x) for x in items[1:4]]
             rad = float(items[4])
-            # draw_circle(pla, pos, rad, comp, world.drawLine)
+            # draw circle when positive radius
             if rad > 0:
-                world.drawCircle(rotate(pos, comp), rad, pla)
+                world.drawCircle(rotate(pos, comp), rad, pla, color=getColor(color))
 
         # activate neutron when it enters
         elif line.startswith(MC_ENTER):
-            prev = None
+            neutron = []
             skip = True
             active = True
+            inspect = False
             color += 1
 
         # deactivate neutron when it leaves
         elif line.startswith(MC_LEAVE):
             active = False
+            if inspect:
+                w.drawLine(neutron, color="1 0 0")
 
         elif line.startswith(MC_ABSORB):
-            pass
+            active = False
+            if inspectComp is None or inspect:
+                w.drawLine(neutron, color="1 0 0")
 
         # register state and scatter
         elif line.startswith(MC_STATE) or line.startswith(MC_SCATTER):
@@ -130,18 +153,23 @@ def parse_trace(world):
                 skip = False
                 continue
 
+            if inspectComp and inspectComp == compName:
+                # We will draw this neutron!
+                inspect = True
+
+            # keep track of points the neutron passes through
             xyz = [float(x) for x in line[line.find(':')+1:].split(',')[:3]]
             xyz = rotate(xyz, comp)
-            if prev is not None:
-                # world.drawLine([prev, xyz])
-                pass
-
-            prev = xyz
+            neutron.append(xyz)
 
 
 if __name__ == '__main__':
-    # parse_trace(csv_comps=file(sys.argv[1], 'w'),
-    #             csv_lines=file(sys.argv[2], 'w'))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--inspect', type=str, metavar='COMP',
+                        help='Only draw the neutrons that reach component COMP')
+    parser.add_argument('outfile', type=str, help='Output X3D file')
+    args = parser.parse_args()
+
     w = x3d.X3DWorld()
-    parse_trace(w)
-    file(sys.argv[1], 'w').write(w.dumps())
+    parse_trace(w, inspectComp=args.inspect)
+    file(args.outfile, 'w').write(w.dumps())

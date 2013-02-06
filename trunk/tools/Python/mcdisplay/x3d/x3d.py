@@ -17,50 +17,20 @@ class X3DWorld(object):
         self.scene = Scene()
         self.world = X3D(scenes=[self.scene])
 
-    def drawLine(self, points):
-        self.scene.drawLine(points)
+    def drawLine(self, points, color=''):
+        self.scene.drawLine(points, color=color)
 
-    def drawCircle(self, center=(0, 0, 0), radius=1, plane='xy'):
-        self.scene.drawCircle(center, radius, plane)
+    def drawCircle(self, center=(0, 0, 0), radius=1, plane='xy', color=''):
+        self.scene.drawCircle(center, radius, plane, color)
 
     def dumps(self):
         return self.world.dumps()
 
 
-def test():
-    w = X3DWorld()
-
-    lines = [
-        [(-0.0239,-0.0245,0),(0.0239,-0.0245,0),(0.0239,0.0245,0),(-0.0239,0.0245,0),(-0.0239,-0.0245,0)],
-        [(-0.0239,-0.0245,0.3048),(0.0239,-0.0245,0.3048),(0.0239,0.0245,0.3048),(-0.0239,0.0245,0.3048),(-0.0239,-0.0245,0.3048)],
-        [(-0.0239,-0.0245,0),(-0.0239,-0.0245,0.3048)],
-        [(0.0239,-0.0245,0),(0.0239,-0.0245,0.3048)],
-        [(0.0239,0.0245,0),(0.0239,0.0245,0.3048)],
-        [(-0.0239,0.0245,0),(-0.0239,0.0245,0.3048)]]
-
-    map(w.drawLine, lines)
-
-    file('test.x3d', 'w').write(w.dumps())
-
-
-def dotProduct(p0, p1):
-    return sum(a * x for a, x in zip(p0, p1))
-
-def length(xs):
-    return sqrt(sum(x**2 for x in xs))
-
-def vectorAngle(v0, v1):
-    ''' Calculate angle between vectors v0 and v1 '''
-    return acos(dotProduct(v0, v1) / (length(v0) * length(v1)))
-
-def pointAngle(p0, p1):
-    ''' Calculate angle between the vectors (origo -> p0) and (p0 -> p1) '''
-    return vectorAngle(p0, tuple(x-a for a,x in zip(p0, p1)))
-
 
 class Node(object):
-    def __init__(self):
-        self._root = None
+    def __init__(self, name='', **props):
+        self._root = ET.Element(name, props)
 
     def _addNode(self, childNode):
         self._root.append(childNode.getRoot())
@@ -71,8 +41,7 @@ class Node(object):
 
 class Shape(Node):
     def __init__(self, name, **kwargs):
-        super(Shape, self).__init__()
-        self._root = ET.Element('Shape')
+        super(Shape, self).__init__('Shape')
         self._root.append(
             ET.Element(name, dict((str(k), str(v)) for k, v in kwargs.items()))
             )
@@ -85,15 +54,12 @@ class Shape(Node):
 
 class Transform(Node):
     def __init__(self, translation=(0, 0, 0), rotation=(0, 0, 0, 0), center=None, shapes=()):
-        super(Transform, self).__init__()
-
         prepare = lambda l: ' '.join(map(str, l))
-
-        extra = dict(center is not None and [('center', prepare(center))] or [])
-        self._root = ET.Element('Transform',
-                                translation=prepare(translation),
-                                rotation=prepare(rotation))
+        super(Transform, self).__init__('Transform',
+                                        translation=prepare(translation),
+                                        rotation=prepare(rotation))
         map(self.addShape, shapes)
+
 
     def addShape(self, shape):
         ''' Extend with a scene that adheres to this tranformation '''
@@ -102,26 +68,25 @@ class Transform(Node):
 
 class Scene(Node):
     def __init__(self, shapes=()):
-        super(Scene, self).__init__()
-        self._root = ET.Element('Scene')
+        super(Scene, self).__init__('Scene')
         map(self.addShape, shapes)
 
     def addShape(self, shape):
         ''' Extend scene with a shape '''
         self._addNode(shape)
 
-    def drawLine(self, points=(), thickness=1):
+    def drawLine(self, points=(), thickness=1, color='1 1 1'):
         ''' Draw a line from point (a, b, c) to point (x, y, z) '''
         points = map(tuple, points)
         line = Shape('IndexedLineSet',
                      coordIndex=' '.join('%i %i' % (i, i+1) for i in xrange(len(points)-1)),
                      colorIndex=' '.join('0'*(len(points)-1)*2))
-        line.addElem('Color', color='1 1 1')
+        line.addElem('Color', color=color)
         line.addElem('Coordinate', point=' '.join('%s %s %s' % p for p in points))
 
         self._addNode(line)
 
-    def drawCircle(self, center=(0, 0, 0), radius=1, plane='xy'):
+    def drawCircle(self, center=(0, 0, 0), radius=1, plane='xy', color='1 1 1'):
         ''' Draw a circle '''
         circle = Shape('Circle2D',
                        radius=radius)
@@ -130,6 +95,10 @@ class Scene(Node):
                 'xz': (1, 0, 0, pi/2),
                 'yz': (0, 1, 0, pi/2)
                 }
+
+        appear = Node('Appearance')
+        appear._addNode(Node('Material', emissiveColor=color))
+        circle._addNode(appear)
 
         self._addNode(Transform(translation=center, shapes=[
             Transform(rotation=rots[plane],
