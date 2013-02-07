@@ -124,13 +124,28 @@ class X3D(Node):
 
     def dumps(self):
         ''' Dump contents as a string in X3D format '''
-        xml = ''
+        xml = []
         # Header
-        xml += '<?xml version="1.0" encoding="UTF-8"?>\n'
-        xml += '<!DOCTYPE %s>\n\n' % X3D_DOCTYPE
+        xml += ['<?xml version="1.0" encoding="UTF-8"?>\n']
+        xml += ['<!DOCTYPE %s>\n\n' % X3D_DOCTYPE]
         # X3D body
-        xml += ET.tostring(self._root)
-        return xml
+        xml += ET.tostringlist(self._root)
+
+        # reformat for multi-line printing
+        tag   = None
+        lined = []
+        for chunk in xml:
+            lined.append(chunk)
+            if chunk.startswith('</'):
+                tag = 'close'
+            elif chunk.startswith('<'):
+                tag = 'open'
+            elif chunk.endswith('>'):
+                lined.append('\n')
+                tag = None
+
+        return ''.join(lined)
+
 
     def addScene(self, scene):
         ''' Extend X3D object with a scene '''
