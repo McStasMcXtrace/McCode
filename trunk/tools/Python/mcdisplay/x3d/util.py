@@ -3,6 +3,7 @@
 import os, sys
 from math import pi, cos, sin
 from numpy import dot, array
+import subprocess
 
 
 def parse_multiline(line):
@@ -58,3 +59,36 @@ def get_line(fp):
 def debug(obj):
     ''' Write a Python object to stderr '''
     sys.stderr.write(repr(obj) + '\n')
+
+
+
+def startfile(filepath):
+    # Use built-in startfile if present (currently Windows-only)
+    if hasattr(os, 'startfile'):
+        return os.startfile(filepath)
+
+    # Use 'open' on MAC and 'xdg-open' on Linux/*BSD
+    # See: http://bugs.python.org/issue3177
+    if sys.platform == 'darwin':
+        command = ['open']
+    else:
+        command = ['xdg-open']
+
+    # Run command and capture errors and return code
+    ret = 0
+    err = None
+    try:
+        ret = subprocess.call(command + [filepath])
+    except OSError, e:
+        err = e
+
+    # Print error if something went wrong (couldn't find command or failed to run)
+    if ret != 0 or err is not None:
+        sys.stderr.write(
+            'Error: Could not open file "%s" using "%s"\n' % (filepath, command[0]))
+        if err:
+            sys.stderr.write('Reason: %s\n' % err)
+
+    # Only return 0 when all went well
+    if err: return -1
+    else: return ret
