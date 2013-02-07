@@ -79,7 +79,7 @@ def parse_trace(world, fp=sys.stdin, inspectComp=None):
     while True:
         # read line
         line = get_line(fp)
-        if not line:
+        if line is None:
             break
 
         # register components
