@@ -40,7 +40,7 @@ def getColor(n):
     return colors[n % len(colors)]
 
 
-def parse_trace(world, inspectComp=None):
+def parse_trace(world, fp=sys.stdin, inspectComp=None):
     ''' Prase McStas trace output from stdin and write result to output '''
 
     color = 0
@@ -72,18 +72,20 @@ def parse_trace(world, inspectComp=None):
     neutron = []
     # skip next neutron position
     skip = False
+    # total count of drawed neutrons
+    neutrons_drawed = 0
 
 
     while True:
         # read line
-        line = get_line()
+        line = get_line(fp)
         if not line:
             break
 
         # register components
         if line.startswith(UC_COMP):
             # grab info line
-            info = get_line()
+            info = get_line(fp)
             assert info[:4] == 'POS:'
             nums = [x.strip() for x in info[4:].split(',')]
             # extract fields
@@ -133,15 +135,11 @@ def parse_trace(world, inspectComp=None):
             color += 1
 
         # deactivate neutron when it leaves
-        elif line.startswith(MC_LEAVE):
-            active = False
-            if inspect:
-                w.drawLine(neutron, color="1 0 0")
-
-        elif line.startswith(MC_ABSORB):
+        elif line.startswith(MC_LEAVE) or line.startswith(MC_ABSORB):
             active = False
             if inspectComp is None or inspect:
-                w.drawLine(neutron, color="1 0 0")
+                world.drawLine(neutron, color="1 0 0")
+                neutrons_drawed += 1
 
         # register state and scatter
         elif line.startswith(MC_STATE) or line.startswith(MC_SCATTER):
@@ -162,14 +160,5 @@ def parse_trace(world, inspectComp=None):
             xyz = rotate(xyz, comp)
             neutron.append(xyz)
 
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--inspect', type=str, metavar='COMP',
-                        help='Only draw the neutrons that reach component COMP')
-    parser.add_argument('outfile', type=str, help='Output X3D file')
-    args = parser.parse_args()
-
-    w = x3d.X3DWorld()
-    parse_trace(w, inspectComp=args.inspect)
-    file(args.outfile, 'w').write(w.dumps())
+    print 'Neutrons drawed:', neutrons_drawed, (inspectComp and '(reaching %s)' % inspectComp or '(all)')
+    return world

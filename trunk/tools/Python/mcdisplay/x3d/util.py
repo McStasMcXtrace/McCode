@@ -45,9 +45,12 @@ def draw_circle(plane, pos, radius, comp, out):
 
 
 
-def get_line():
+def get_line(fp):
     ''' Read a line from stdin '''
-    return stdin.readline().strip()
+    line = fp.readline().strip()
+    if line.startswith('Set value'):
+        print line
+    return line
 
 
 def debug(obj):
