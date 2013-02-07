@@ -1,6 +1,6 @@
 ''' Helper module to support McStas trace output processing '''
 
-from sys import stdin, stderr
+import os, sys
 from math import pi, cos, sin
 from numpy import dot, array
 
@@ -46,7 +46,7 @@ def draw_circle(plane, pos, radius, comp, out):
 
 
 def get_line(fp):
-    ''' Read a line from stdin '''
+    ''' Read a line from file-like object '''
     line = fp.readline()
     if line.startswith('Set value'):
         print line
@@ -57,4 +57,4 @@ def get_line(fp):
 
 def debug(obj):
     ''' Write a Python object to stderr '''
-    stderr.write(repr(obj) + '\n')
+    sys.stderr.write(repr(obj) + '\n')
