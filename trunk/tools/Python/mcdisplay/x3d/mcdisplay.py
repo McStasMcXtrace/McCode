@@ -5,6 +5,7 @@ import argparse
 from subprocess import Popen, PIPE
 from sys import stdin, stderr
 
+from util import startfile
 from x3d import X3DWorld
 from rewrite import parse_trace
 
@@ -34,16 +35,25 @@ def main():
                         help='only draw the neutrons that reach component COMP')
     parser.add_argument('--outfile', metavar='FILE', type=str, default='tmpfile.x3d',
                         help='write X3D code to FILE [default: tmpfile.x3d]')
+    parser.add_argument('--auto-open', choices=('on', 'off'), default='on',
+                        help='attempt to open x3d output-file using system default [default: on]')
+
     # Collect the rest and pass them to mcrun
     parser.add_argument('params', nargs=argparse.REMAINDER, metavar='...',
                         help='arguments to pass to mcrun (settings and parameters)')
 
     args = parser.parse_args()
 
-
+    # Generate 3D world
     world = trace(args.instrument, args.params, inspect=args.inspect)
+    # Write 3D to output file
     file(args.outfile, 'w').write(world.dumps())
 
+    if args.auto_open == 'on':
+        # Try to open output file in system viewer
+        print ''
+        print '-- Running output file: %s' % args.outfile
+        startfile(args.outfile)
 
 
 if __name__ == '__main__':
