@@ -35,8 +35,8 @@ def main():
                         help='only draw the neutrons that reach component COMP')
     parser.add_argument('--outfile', metavar='FILE', type=str, default='tmpfile.x3d',
                         help='write X3D code to FILE [default: tmpfile.x3d]')
-    parser.add_argument('--auto-open', choices=('on', 'off'), default='on',
-                        help='attempt to open x3d output-file using system default [default: on]')
+    parser.add_argument('--no-auto-open', action='store_true', default=False,
+                        help='do not attempt to open x3d output-file [default: false]')
 
     # Collect the rest and pass them to mcrun
     parser.add_argument('params', nargs=argparse.REMAINDER, metavar='...',
@@ -49,7 +49,7 @@ def main():
     # Write 3D to output file
     file(args.outfile, 'w').write(world.dumps())
 
-    if args.auto_open == 'on':
+    if not args.no_auto_open:
         # Try to open output file in system viewer
         print ''
         print '-- Running output file: %s' % args.outfile
