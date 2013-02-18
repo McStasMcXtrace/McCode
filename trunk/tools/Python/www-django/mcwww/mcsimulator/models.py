@@ -32,6 +32,7 @@ class Job(models.Model):
     def new(ref, sim, seed=0, samples=1000, npoints=1):
         return Job(None, ref, seed, samples, npoints, sim.id, created=now())
 
+
 class JobAdmin(admin.ModelAdmin):
     readonly_fields = ('created',)
 

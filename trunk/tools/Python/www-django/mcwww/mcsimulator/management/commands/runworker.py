@@ -5,7 +5,7 @@ from django.utils import simplejson as json
 
 
 from mcsimulator.models import *
-from mcsimulator.util import fetch, fetch1, one_or_none
+from common import fetch, fetch1, one_or_none
 
 
 from subprocess import Popen, PIPE
