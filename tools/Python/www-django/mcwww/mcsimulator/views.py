@@ -1,13 +1,13 @@
-from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
-from django.shortcuts import redirect, render_to_response
+from django.shortcuts import redirect
 from django.http import HttpResponse
 
-from util import *
 from mcsimulator.models import *
+from common import *
 
 from mcwww.settings import STATIC_URL
+
 
 NONCE_NAME = 'csrfmiddlewaretoken'
 
@@ -17,35 +17,6 @@ def convert_type(default, str_value):
     if ',' in str_value:
         return map(lambda elem: convert_type(default, elem), str_value.split(','))
     return type(default)(str_value)
-
-
-@templated('mcsimulator/login')
-def login_form(req):
-    return dict(next = req.GET.get('next', '/'))
-
-
-def loginPOST(req):
-    form = req.POST
-    nexturl = form.get('next', '/')
-
-    usernm = form.get('username', '')
-    passwd = form.get('password', '')
-    # check information
-    user = authenticate(username=usernm, password=passwd)
-    if user is None or not user.is_active:
-        return redirect('/login/?next=' + nexturl)
-
-    # all ok, register user
-    login(req, user)
-
-    # continue to 'next' url
-    return redirect(nexturl)
-
-
-def logout_user(req):
-    if req.user is not None:
-        logout(req)
-    return redirect('login_form')
 
 
 @login_required

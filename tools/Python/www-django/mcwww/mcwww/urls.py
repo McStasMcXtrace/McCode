@@ -9,9 +9,9 @@ RUNREF_RE='[\w\.:-]+'
 urlpatterns = patterns(
     '',
 
-    url(r'^login/$',     'mcsimulator.views.login_form' , name='login_form'),
-    url(r'^login/try/$', 'mcsimulator.views.loginPOST',   name='loginPOST'),
-    url(r'^logout/$',    'mcsimulator.views.logout_user', name='logout_user'),
+    url(r'^login/$',     'mcwww.views.login_form' , name='login_form'),
+    url(r'^login/try/$', 'mcwww.views.loginPOST',   name='loginPOST'),
+    url(r'^logout/$',    'mcwww.views.logout_user', name='logout_user'),
 
     url(r'^sim/latest/', 'mcsimulator.views.latest', name='latest'),
 
