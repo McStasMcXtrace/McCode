@@ -51,7 +51,7 @@ def logout_user(req):
 @login_required
 @only_safe
 def home(req):
-    sim = one_or_none(Simulation.objects.all())
+    sim = get_or_404(Simulation.objects.all()[:1])
     job = Job.new(ref=new_key(), sim=sim)
     job.save()
 
