@@ -742,7 +742,7 @@ sub get_comp_info {
                 }
             }
         }
-        if($s =~ m!SETTING\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*]+)\)!i && $typ ne "Instrument") {
+        if($s =~ m!SETTING\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*\"]+)\)!i && $typ ne "Instrument") {
             foreach (split(",", $1)) {
                 if(/^\s*([a-zA-Z0-9_ \s\*]+)\s*\=\s*([-+.e0-9]+)\s*$/) { # [type] name=numerical value
                     my $p = $1;
