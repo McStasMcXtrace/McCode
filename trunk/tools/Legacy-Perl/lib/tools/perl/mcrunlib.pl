@@ -757,6 +757,7 @@ sub get_comp_info {
                     }
                 } elsif(/^\s*([a-zA-Z0-9_ \s\*]+)\s*\=\s*(.*)\s*$/) { # [type] name=other value
                     my $p = $1;
+		    my $val = $2;
                     my @p_splitted = split(" ", $p);
                     my $length = scalar @p_splitted;
                     my $p_last_word = $p_splitted[$length-1];
@@ -764,10 +765,10 @@ sub get_comp_info {
                     my $p_first_word = $p_splitted[0];
                     if ($length > 1 && $p_first_word !~ m/char/ && $p_first_word !~ m/string/) {
                       print STDERR "
-Warning: SETTING parameter $1 with default value $2\n
+Warning: SETTING parameter $1 with default value $val\n
          is not of type char/string. Ignoring default value.\n";
                     } else {
-                      $d->{'parhelp'}{$p_last_word}{'default'} = $2;
+                      $d->{'parhelp'}{$p_last_word}{'default'} = $val;
                     }
                     if ($length > 1) {
                       $d->{'parhelp'}{$p_last_word}{'type'} = $p_first_word;
