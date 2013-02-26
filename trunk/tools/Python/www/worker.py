@@ -45,7 +45,8 @@ try:
             plotSim(simfile, logy, IMAGE_FORMAT)
             os.rename('%s.%s' % (simfile, IMAGE_FORMAT), outfile)
         except Exception,e:
-            print e
+            print 'Fallback to mcplot, because:'
+            traceback.print_exc()
             mcplot(simfile, outfile, logger=logger, logy=logy)
     print 'INFO: using plotter from rplot/'
 except Exception, e:
@@ -204,4 +205,5 @@ if __name__ == '__main__':
             # rollback any non-committed transactions
             db_session.rollback()
             # print error message to stdout
+            print 'Job failed because:'
             traceback.print_exc()
