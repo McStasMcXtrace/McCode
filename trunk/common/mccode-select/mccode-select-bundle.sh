@@ -1,7 +1,15 @@
 #!/bin/sh
 
+function fullpath_dir() {
+    (
+        cd $(dirname $0);
+        echo $(pwd)
+    )
+}
 
-PREFIX=/usr/local
+# Locate bin-folder and prefix from current script-location
+BIN="$(fullpath_dir)"
+PREFIX=$(dirname "${BIN}")
 
 
 usage() {
@@ -17,6 +25,13 @@ Report bugs to jsbn@fysik.dtu.dk
 EOF
 }
 
+
+if [ "x$1" = "x--no-update-alternatives" ]; then
+    HAS_ALTERNATIVES=false;
+    shift;
+else
+    HAS_ALTERNATIVES=true;
+fi
 
 
 # Parse arguments
@@ -63,6 +78,14 @@ VERSION="$2"
 TOOLS="config convert daemon display doc formatgui gui plot resplot run stas2vitess"
 
 
+mcselect() {
+    if ${HAS_ALTERNATIVES}; then
+        mccode-select --install $*
+    else
+        mccode-select --no-update-alternatives --install $*
+    fi
+}
+
 list() {
     mccode-select --list ${NAME};
 }
@@ -90,7 +113,7 @@ switch_version() {
         # Setup core
         echo "Core:"
         for name in "${NAME}" "${MC}format"; do
-            mccode-select --install $DRYRUN "${name}" "${VERSION}" || ret=1;
+            mcselect $DRYRUN "${name}" "${VERSION}" || ret=1;
         done
 
         # Setup tools
@@ -100,11 +123,11 @@ switch_version() {
             name="${MC}${tool}";
             vers="${VERSION}";
             # Install Perl tool
-            mccode-select --install $DRYRUN "${name}" "${vers}" || \
+            mcselect $DRYRUN "${name}" "${vers}" || \
                 echo "> skipping: ${NAME}-tools-${VERSION} isn't installed?";
             if [ -x "bin/${name}-${vers}-py" ]; then
                 # Install Python tool as well
-                mccode-select --install $DRYRUN "${name}" "${vers}-py" || \
+                mcselect $DRYRUN "${name}" "${vers}-py" || \
                     echo ".. skipping";
             fi
         done

@@ -29,6 +29,12 @@ if [ "x${MCINSTALL_PREFIX}" = "x" ]; then
 fi
 export MCINSTALL_PREFIX
 
+if [ "x${MCNO_ALTERNATIVES}" = "x" ]; then
+    MCNO_ALTERNATIVES=0;
+else
+    MCNO_ALTERNATIVES=1;
+fi
+
 
 usage() {
     echo "usage: $0 name [version] [source] [target] [chain] [-- gens ...] ";
@@ -307,7 +313,10 @@ prepare_cpack() {
         cd "${DEST}";
 
         TOOLCHAIN_FILE="${TOP}/cmake/toolchains/${CHAIN}.cmake"
-        cmake ${CONFIGURE_FLAGS} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} .
+        cmake ${CONFIGURE_FLAGS} \
+            -DCMAKE_INSTALL_PREFIX=${MCINSTALL_PREFIX} \
+            -DNO_ALTERNATIVES=${MCNO_ALTERNATIVES} \
+            -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} .
     )
 }
 
