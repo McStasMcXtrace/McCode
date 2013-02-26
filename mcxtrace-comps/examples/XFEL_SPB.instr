@@ -28,7 +28,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT XFEL-SPB(L0=1.54,DL=0.01, D=10,offset_omega_rad=3.6e-3,offset2_rad=50000,preCRL=0,FXE=0, R1=20000,R2=20000)
+DEFINE INSTRUMENT XFEL_SPB(L0=1.54,DL=0.01, D=10,offset_omega_rad=3.6e-3,offset2_rad=50000,preCRL=0,FXE=0, R1=20000,R2=20000)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
