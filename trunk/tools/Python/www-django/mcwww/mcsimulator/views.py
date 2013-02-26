@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from mcsimulator.models import *
 from common import *
 
-from mcwww.settings import STATIC_URL
+from mcwww.settings import STATIC_URL, MAX_RAY_SAMPLES, MAX_SCAN_POINTS
 
 
 NONCE_NAME = 'csrfmiddlewaretoken'
@@ -36,7 +36,7 @@ def configure(req, jobref):
     job = get_or_404(Job, ref=jobref)
     sims = Simulation.objects.all()
     return dict(job=job, jobid=job.ref, sims=sims,
-                max_samples=1000, max_npoints=1000)
+                max_samples=MAX_RAY_SAMPLES, max_npoints=MAX_SCAN_POINTS)
 
 @login_required
 @only_unsafe
