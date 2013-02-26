@@ -13,7 +13,7 @@
 {% endblock %}
 {% block content %}
   <h1>{{ job.sim.name }}:
-    <small>{{ job.created|date:'DATETIME_FORMAT' }} ({{ job.created|timesince }} old)</small></h1>
+    <small>{{ run.created|date:'DATETIME_FORMAT' }} ({{ run.created|timesince }} old)</small></h1>
   <pre>{% for p in params %} {{ p }} {% endfor %}
     (<a target="_blank" href="/job/{{ job.ref }}">reconfigure</a>)</pre>
 
