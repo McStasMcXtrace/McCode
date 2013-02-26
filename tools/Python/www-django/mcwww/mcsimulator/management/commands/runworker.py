@@ -198,7 +198,6 @@ def processJob(run, workdir):
                      logger=appendLog,
                      logy=(mode == "log"))
 
-    # process_components('mcstas/mcstas.sim')
     os.path.walk(workdir % 'mcstas',
                  lambda _arg, folder, files:
                  process_components(folder + "/mcstas.sim"),
