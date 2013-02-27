@@ -30,12 +30,9 @@ setupMCCODE("${FLAVOR}")
 set(P "${MCCODE_PREFIX}")
 
 set(TOOLS_NAME "${FLAVOR}-tools-python-${P}plot-chaco-${MCCODE_VERSION}")
-if(WINDOWS)
-  # Windows needs special handling of this path...
-  set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
-else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
-endif()
+
+# Windows needs special handling of this path...
+set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
 
 
 # Set some extra options for mccode_config

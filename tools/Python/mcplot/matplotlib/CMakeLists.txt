@@ -33,13 +33,8 @@ else()
 endif()
 
 set(TOOLS_NAME "${FLAVOR}-tools-python-${P}plot-matplotlib-${MCCODE_VERSION}")
+set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
 
-if(WINDOWS)
-  # Windows needs special handling of this path...
-  set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
-else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
-endif()
 
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
@@ -87,7 +82,7 @@ endif()
 
 # Program files
 install(
-  FILES "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/mcplot"
+  FILES ${BINS}
   DESTINATION "${TOOLS_LIB}"
   PERMISSIONS
   OWNER_READ OWNER_WRITE OWNER_EXECUTE
