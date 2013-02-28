@@ -107,7 +107,7 @@ if(NOT WINDOWS)
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
     COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}plot-py"
     COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${lib}/${TOOLS_NAME}/mcplot" "${WORK}/${P}plot-py"
+    "${TOOLS_LIB}/mcplot" "${WORK}/${P}plot-py"
     )
 
   add_custom_target(
