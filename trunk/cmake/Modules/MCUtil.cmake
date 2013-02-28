@@ -190,14 +190,19 @@ macro(setupMCCODE FLAVOR)
     # Add "-VERSION" to all program files (executables)
     set(PROGRAM_SUFFIX "-${MCCODE_VERSION}")
 
-    # Run postinst script for various platforms
-    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/postinst;")
+    # Run postinst and postrm scripts for various platforms
+    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "work/support/postinst;work/support/postrm")
     set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postinst;")
+    set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postrm;")
 
-    # Generate debian postinst script
+    # Generate postinst and postrm scripts
     configure_file(
       cmake/support/install-scripts/postinst.in
       work/support/postinst
+      @ONLY)
+    configure_file(
+      cmake/support/install-scripts/postrm.in
+      work/support/postrm
       @ONLY)
 
     # Set architecture
