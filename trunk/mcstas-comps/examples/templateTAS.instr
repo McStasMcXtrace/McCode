@@ -239,7 +239,7 @@ DECLARE
             cosa[i]  = cos(alpha[i]);
             sina[i]  = sin(alpha[i]);
           }
-        cc = cosa[0]*cosa[0]+cosa[1]*cosa[1]+cosa[2]*cosa[2]; /* nprm */
+        cc = cosa[0]*cosa[0]+cosa[1]*cosa[1]+cosa[2]*cosa[2]; /* norm */
         cc = 1 + 2*cosa[0]*cosa[1]*cosa[2] - cc;
         if (cc <= 0) sprintf(machine_real.message, "Lattice angles (AA,BB,CC) cc=%g", cc);
         else cc = sqrt(cc);
