@@ -1,3 +1,21 @@
 #!/bin/sh
 
-## This script runs after uninstallation of a package
+# Extract CMake macros during configure
+PREFIX="@CMAKE_INSTALL_PREFIX@"
+FLAVOR="@FLAVOR@"
+VERSION="@MCCODE_VERSION@"
+MC="@MCCODE_PREFIX@"
+NO_ALTERNATIVES="@NO_ALTERNATIVES@"
+
+# Include installation path before any attempt to postconfig
+export PATH=${PREFIX}/bin:${PATH}
+MCCODE=${FLAVOR}-${VERSION}
+
+# Remove html files if mcdoc is no longer installed
+if [ ! -x ${PREFIX}/bin/${MC}doc-${VERSION} ]; then
+    find ${PREFIX}/lib/${MCCODE}/ -iname '*.instr' -or -iname '*.comp' | \
+        while read comp; do
+        rm -f $(dirname ${comp})/$(basename ${comp} .instr).html ;
+        rm -f $(dirname ${comp})/$(basename ${comp} .comp).html ;
+    done
+fi
