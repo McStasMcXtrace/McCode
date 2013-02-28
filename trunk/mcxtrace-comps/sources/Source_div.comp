@@ -41,7 +41,8 @@
 * dE:      (keV) Energy spread of X-rays.
 * lambda0: (AA) Mean wavelength of X-rays (only relevant for E0=0)
 * dlambda: (AA) Wavelength half spread of X-rays.
-* gauss:  (0|1)  Criterion: 0: uniform, 1: Gaussian distributions
+* gauss:  (1)  Criterion: 0: uniform, 1: Gaussian distribution of energy/wavelength
+* gauss_a:   (1) Criterion: 0: uniform, 1: Gaussian divergence distribution
 * flux:   [1/(s*cm**2*st*energy unit)] flux per energy unit, Angs or meV
 *
 * OUTPUT PARAMETERS:
@@ -55,7 +56,7 @@
 DEFINE COMPONENT Source_div
 DEFINITION PARAMETERS (string spectrum_file=NULL)
 SETTING PARAMETERS (xwidth, yheight, focus_xw=0,focus_yh=0,dist=0,focus_aw, focus_ah, 
-    E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0)
+    E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,gauss_a=0,incoherent=1,phase=0)
 OUTPUT PARAMETERS (prms,thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -122,9 +123,9 @@ INITIALIZE
 
 TRACE
 %{
-  double kk,theta_x,theta_y,l,k;
+  double kk,theta_x,theta_y,l,e,k;
   p=prms.pmul;
-  if (!gauss){ 
+  if (!gauss_a){ 
     theta_x=(rand01()-0.5)*focus_aw;
     if(focus_xw!=0.0){
       if (theta_x>0){
@@ -160,6 +161,11 @@ TRACE
     }
     p*=pp;
     /*if E0!=0 convert the tabled value to wavelength*/
+    if (E0!=0){
+      k==E2K*e;
+    }else{
+      k=(2*M_PI/l);
+    }
   }else if (E0){
     if(!dE){
       e=E0;
