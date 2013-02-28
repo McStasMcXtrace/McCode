@@ -1,6 +1,6 @@
 #!/bin/sh
 
-function fullpath_dir() {
+fullpath_dir() {
     (
         cd $(dirname $0);
         echo $(pwd)
@@ -11,7 +11,7 @@ function fullpath_dir() {
 BIN="$(fullpath_dir)"
 PREFIX=$(dirname "${BIN}")
 
-function usage() {
+usage() {
     echo "usage: $0 [OPTION]... package [VERSION]";
     cat <<EOF
 Select a specific version of McStas/McXtrace as default.
