@@ -2482,10 +2482,13 @@ MCDETECTOR mcdetector_write_sim(MCDETECTOR detector)
 {
   /* MPI: only write sim by Master ========================================== */
 #ifdef USE_MPI
-  if(mpi_node_rank != mpi_node_root) return(detector);
-#endif
+  if (mpi_node_rank != mpi_node_root) return(detector);
+  if (mcdisable_output_files) return(detector);
+#else
   /* skip invalid detectors */
   if (!detector.m || mcdisable_output_files) return(detector);
+#endif
+  
 
   /* sim file has been initialized when starting simulation and when calling
    * mcsave ; this defines mcsiminfo_file as the SIM file handle
@@ -2552,9 +2555,8 @@ MCDETECTOR mcdetector_write_sim(MCDETECTOR detector)
 *******************************************************************************/
 MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
 {
-  /* skip if 0D or no filename or no data (only stored in sim file) */
-  if (!detector.rank || !strlen(detector.filename)
-   || !detector.m) return(detector);
+  /* skip if 0D or no filename (only stored in sim file) */
+  if (!detector.rank) return(detector);
 
 #ifdef USE_MPI
   /* only by MASTER for non lists (MPI reduce has been done in detector_import) */
@@ -2568,6 +2570,9 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
     }
     return(detector);
   }
+#else
+  /* skip if no data */
+  if (!detector.m || !strlen(detector.filename)) return(detector);
 #endif
 
   /* OPEN data file (possibly appending if already opened) ================== */
