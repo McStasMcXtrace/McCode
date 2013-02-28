@@ -33,6 +33,10 @@ def main():
     # Named
     parser.add_argument('--inspect', type=str, metavar='COMP',
                         help='only draw the neutrons that reach component COMP')
+    parser.add_argument('--format', type=str, metavar='FORMAT',
+                        help='Ouput format (currenly only x3d)')
+    parser.add_argument('--plotter', type=str, metavar='FORMAT',
+                        help='Ouput format (currenly only x3d)')
     parser.add_argument('--outfile', metavar='FILE', type=str, default='tmpfile.x3d',
                         help='write X3D code to FILE [default: tmpfile.x3d]')
     parser.add_argument('--no-auto-open', action='store_true', default=False,
