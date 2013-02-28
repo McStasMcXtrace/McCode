@@ -32,7 +32,11 @@ set(P "${MCCODE_PREFIX}")
 set(TOOLS_NAME "${FLAVOR}-tools-python-${P}plot-chaco-${MCCODE_VERSION}")
 
 # Windows needs special handling of this path...
-set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
+if(WINDOWS)
+  set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
+else()
+  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
+endif()
 
 
 # Set some extra options for mccode_config
@@ -75,7 +79,7 @@ configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/mcplot" @ONLY)
 foreach(name mcdata.py plotting.py)
   install(
     FILES "${PROJECT_SOURCE_DIR}/${name}"
-    DESTINATION "${TOOLS_LIB}"
+    DESTINATION "${lib}/${TOOLS_NAME}"
     )
 endforeach()
 
@@ -88,7 +92,7 @@ endif()
 # Program files
 install(
   FILES ${BINS}
-  DESTINATION "${TOOLS_LIB}"
+  DESTINATION "${lib}/${TOOLS_NAME}"
   PERMISSIONS
   OWNER_READ OWNER_WRITE OWNER_EXECUTE
   GROUP_READ GROUP_EXECUTE
@@ -103,7 +107,7 @@ if(NOT WINDOWS)
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
     COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}plot-py"
     COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${TOOLS_LIB}/mcplot" "${WORK}/${P}plot-py"
+    "${lib}/${TOOLS_NAME}/mcplot" "${WORK}/${P}plot-py"
     )
 
   add_custom_target(
