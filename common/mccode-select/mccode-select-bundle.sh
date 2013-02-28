@@ -1,6 +1,6 @@
 #!/bin/sh
 
-function fullpath_dir() {
+fullpath_dir() {
     (
         cd $(dirname $0);
         echo $(pwd)
