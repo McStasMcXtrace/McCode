@@ -196,7 +196,7 @@ macro(setupMCCODE FLAVOR)
 
     # Generate debian postinst script
     configure_file(
-      cmake/support/scripts/postinst.in
+      cmake/support/install-scripts/postinst.in
       work/support/postinst
       @ONLY)
 
