@@ -1100,7 +1100,7 @@ sub menu_run_simulation {
 
             }
 
-            push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
+            push @command, "--inspect=$newsi->{'Inspect'}" if $newsi->{'Inspect'};
             push @command, "--first=$newsi->{'First'}" if $newsi->{'First'};
             push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
             # push @command, "--save";
