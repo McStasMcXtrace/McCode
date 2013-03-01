@@ -55,9 +55,9 @@
 
 DEFINE COMPONENT Source_div
 DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (xwidth, yheight, focus_xw=0,focus_yh=0,dist=0,focus_aw, focus_ah, 
-    E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,gauss_a=0,incoherent=1,phase=0)
-OUTPUT PARAMETERS (prms,thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh)
+SETTING PARAMETERS (xwidth, yheight, focus_xw=0, focus_yh=0, dist=0, focus_aw, focus_ah, 
+    E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, incoherent=1, phase=0)
+OUTPUT PARAMETERS (prms,thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -70,13 +70,11 @@ SHARE
 
 DECLARE
 %{
-  double thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh;
+  double thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist;
   struct {
     double K,dK,xmin,xmax,xw_2,focus_xw_2,ymin,ymax,yh_2,focus_yh_2,pmul,pint;
     t_Table T;
   } prms;
-
-
 %}
 
 INITIALIZE
@@ -162,7 +160,7 @@ TRACE
     p*=pp;
     /*if E0!=0 convert the tabled value to wavelength*/
     if (E0!=0){
-      k==E2K*e;
+      k=E2K*e;
     }else{
       k=(2*M_PI/l);
     }
