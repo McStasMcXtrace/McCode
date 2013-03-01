@@ -4,6 +4,7 @@ import argparse
 
 from subprocess import Popen, PIPE
 from sys import stdin, stderr
+from os import name as osname
 
 from util import startfile
 from x3d import X3DWorld
@@ -13,7 +14,7 @@ from rewrite import parse_trace
 def trace(instr, args, inspect=None):
 
     # mcrun cmd needs special care on windoze
-    if os.name == 'nt':
+    if osname == 'nt':
         mcrun_cmd = 'mcrun-py.bat'
     else:
         mcrun_cmd = 'mcrun'
