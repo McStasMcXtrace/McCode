@@ -11,8 +11,15 @@ from rewrite import parse_trace
 
 
 def trace(instr, args, inspect=None):
+
+    # mcrun cmd needs special care on windoze
+    if os.name == 'nt':
+        mcrun_cmd = 'mcrun-py.bat'
+    else:
+        mcrun_cmd = 'mcrun'
+    
     # run mcrun on instrument; capture stdout
-    pid = Popen(['mcrun', '--trace', instr] + args, stdout=PIPE)
+    pid = Popen([mcrun_cmd, '--trace', instr] + args, stdout=PIPE)
 
     # parse the trace from stdout
     world = parse_trace(X3DWorld(), pid.stdout, inspectComp=inspect)
