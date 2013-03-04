@@ -13,6 +13,7 @@ fi
 ./mkdist mcxtrace-tools-Python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" linux64 -- deb
 ./mkdist mcxtrace-tools-Python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 -- deb
 ./mkdist mcxtrace-tools-Python-mxrun $1 tools/Python/mcrun/ "" linux64 -- deb
+./mkdist mcxtrace-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" linux64 -- deb
 
 # 32-bit
 ./mkdist mcxtrace $1 "" "" linux32 -- deb
@@ -21,3 +22,4 @@ fi
 ./mkdist mcxtrace-tools-Python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" linux32 -- deb
 ./mkdist mcxtrace-tools-Python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux32 -- deb
 ./mkdist mcxtrace-tools-Python-mxrun $1 tools/Python/mcrun/ "" linux32 -- deb
+./mkdist mcxtrace-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 -- deb
