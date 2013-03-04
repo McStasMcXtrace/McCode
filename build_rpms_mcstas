@@ -13,6 +13,7 @@ fi
 ./mkdist mcstas-tools-Python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" linux64 -- rpm
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 -- rpm
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" linux64 -- rpm
+./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" linux64 -- rpm
 
 # 32-bit
 ./mkdist mcstas $1 "" "" linux32 -- rpm
@@ -21,3 +22,4 @@ fi
 ./mkdist mcstas-tools-Python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" linux32 -- rpm
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux32 -- rpm
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" linux32 -- rpm
+./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 -- rpm
