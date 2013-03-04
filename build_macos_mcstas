@@ -13,3 +13,4 @@ fi
 ./mkdist mcstas-tools-Python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mac -- OSXpkg
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac -- OSXpkg
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mac -- OSXpkg
+./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mac -- OSXpkg
