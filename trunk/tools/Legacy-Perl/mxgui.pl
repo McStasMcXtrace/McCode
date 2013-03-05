@@ -201,7 +201,7 @@ sub menu_edit_current {
 	    setup_edit($main_window,$tkwin);
 	  };
 	  if ($@) { # or revert to old-school editor  if that failed.
-	    printf "Starting Tk::CodeText based editor failed. Using simpler McStas 1.7 style editor\n";
+	    printf "Starting Tk::CodeText based editor failed. Using simpler editor as fallback.\n";
 	    setup_edit_1_7($main_window,$tkwin);
 	  }
         } elsif ($MCSTAS::mcstas_config{'EDITOR'} eq 1 && $MCSTAS::mcstas_config{'CODETEXT'}) {
