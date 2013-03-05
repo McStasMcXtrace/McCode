@@ -1,8 +1,8 @@
 # Library of McXtrace gui functions
 #
 #   This file is part of the McXtrace x-ray trace simulation package
-#   Copyright (C) 1997-2012, All rights reserved
-#   Risoe National Laborartory, Roskilde, Denmark
+#   Copyright (C) 1997-2013, All rights reserved
+#   DTU Physics, Kgs. Lyngby, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
 #   This program is free software; you can redistribute it and/or modify
@@ -90,7 +90,7 @@ sub select_dir {
 
 
 # Query user for instrument parameters and simulation options for a
-# McStas simulation.
+# simulation.
 # Input: top-level window for the dialog, instrument info descriptor, and
 #        simulation info descriptor.
 # Output: user action ("Start" or "Cancel") and new simulation info
@@ -310,7 +310,7 @@ sub simulation_dialog {
       $b->attach($formatchoice, -balloonmsg => "Plot automatically result after simulation (unix only)");
     }
     my $formatchoice_val;
-    if ($plotter =~ /McStas|PGPLOT/i)  { $formatchoice_val= 'PGPLOT'; }
+    if ($plotter =~ /McXtrace|PGPLOT/i)  { $formatchoice_val= 'PGPLOT'; }
     if ($plotter =~ /Gnuplot/i)  { $formatchoice_val= 'Gnuplot'; }
     if ($plotter =~ /Matlab/i)  { $formatchoice_val= 'Matlab'; }
     if ($plotter =~ /Scilab/i) { $formatchoice_val= 'Scilab'; }
@@ -424,7 +424,7 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
     if ($res eq 'Start') {
       # update Plotter in case of change in this dialog (instead of Preferences)
       if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
-      elsif ($formatchoice_val =~ /McStas|PGPLOT|Gnuplot/i)  { $plotter= 'PGPLOT'; }
+      elsif ($formatchoice_val =~ /McXtrace|PGPLOT|Gnuplot/i)  { $plotter= 'PGPLOT'; }
       elsif ($formatchoice_val =~ /Scilab/i)    { $plotter= 'Scilab'; }
       elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
       elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }
@@ -486,7 +486,7 @@ sub dialog_plot_single {
     # Should only do something if we are using PGPLOT
     # PW 20030314
     my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
-    if ($plotter =~ /PGPLOT|McStas/i) {
+    if ($plotter =~ /PGPLOT|McXtrace/i) {
         $current_plot = $cl->index('active');
         single_plot($MCSTAS::mcstas_config{'PGDEV'}, $di->[$current_plot], 0);
     }
@@ -496,7 +496,7 @@ sub dialog_hardcopy {
     my ($dlg, $di, $type) = @_;
     # Should only be done if we are using PGPLOT
     # PW 20030314
-    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McXtrace/i) {
         my $default = $current_plot == -1 ?
             "mcstas" : ($di->[$current_plot]{'Filename'});
         my $ext = $type eq "cps" ? "ps" : $type;
@@ -542,7 +542,7 @@ sub preferences_dialog {
     # Choice of internal editor
     # PW 20040527
     my ($win) = @_;
-    my $dlg = $win->DialogBox(-title => "McStas: Preferences",
+    my $dlg = $win->DialogBox(-title => "McXtrace: Preferences",
                               -buttons => ["OK"]);
     $b = $dlg->Balloon(-state => 'balloon');
     my $lf = $dlg->Frame(-borderwidth => 2, -relief => 'ridge');
@@ -557,7 +557,7 @@ sub preferences_dialog {
     my $plotopt = $lf->Label(-text => "Plotting options:", -anchor => 'w', -fg=>'blue'
     )->pack(-fill => 'x');
     $b->attach($plotopt, -balloonmsg => "Select output format/plotter");
-    if ($plotter =~ /McStas|PGPLOT/i)  { $formatchoice_val= 'PGPLOT (original McStas)'; }
+    if ($plotter =~ /McXtrace|PGPLOT/i)  { $formatchoice_val= 'PGPLOT (original McXtrace)'; }
     elsif ($plotter =~ /Gnuplot/i) { $formatchoice_val= 'Gnuplot'; }
     elsif ($plotter =~ /Matlab/i) {
       $formatchoice_val= 'Matlab' . ($plotter =~ /scriptfile/ ?
@@ -570,12 +570,12 @@ sub preferences_dialog {
     }  elsif ($plotter =~ /NeXus|HDF/i) {
       $formatchoice_val='NeXus/HDF file'; }
     if ($MCSTAS::mcstas_config{'NEXUS'} ne "") {
-      $opts = ['PGPLOT (original McStas)',
+      $opts = ['PGPLOT (original McXtrace)',
         'Matlab (requires Matlab)', 'Matlab scriptfile',
         'Scilab (requires Scilab)', 'Scilab scriptfile',
         'HTML/VRML document','NeXus/HDF file'];
     } else {
-      $opts = ['PGPLOT (original McStas)','Gnuplot',
+      $opts = ['PGPLOT (original McXtrace)','Gnuplot',
         'Matlab (requires Matlab)', 'Matlab scriptfile',
         'Scilab (requires Scilab)', 'Scilab scriptfile',
         'HTML/VRML document'];
@@ -621,7 +621,7 @@ sub preferences_dialog {
     elsif ($editor == 2) { $editorchoice_val="External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})";}
     my $editorchoice = $lf->Label(-text => "Editor options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $b->attach($editorchoice, -balloonmsg => "Select editor to use to\ndisplay instrument descriptions");
-    $choices=["Simple built-in editor (McStas CVS-080208)","External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})"];
+    $choices=["Simple built-in editor","External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})"];
     if  ($MCSTAS::mcstas_config{'CODETEXT'} ne "no") {
       push @{ $choices }, 'Advanced built-in editor';
     }
@@ -697,13 +697,13 @@ sub preferences_dialog {
 	       -width=>8,
                -textvariable => \$MCSTAS::mcstas_config{'PREC'},
                -justify => 'right')->pack(-side => 'right');
-    $b->attach($labelprec, -balloonmsg => "Determines final precision in optimizations.\nSee McStas manual for details");
+    $b->attach($labelprec, -balloonmsg => "Determines final precision in optimizations.\nSee McXtrace manual for details");
     if ($MCSTAS::mcstas_config{'MCGUI_CFLAGS'}) { $choicecflags->select; }
 
     my $res = $dlg->Show;
 
     if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
-      elsif ($formatchoice_val =~ /McStas|PGPLOT|Gnuplot/i)  { $plotter= 'PGPLOT'; }
+      elsif ($formatchoice_val =~ /McXtrace|PGPLOT|Gnuplot/i)  { $plotter= 'PGPLOT'; }
       elsif ($formatchoice_val =~ /Scilab/i)    { $plotter= 'Scilab'; }
       elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
       elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }
