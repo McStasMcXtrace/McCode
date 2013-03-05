@@ -506,6 +506,9 @@ sub set_run_dir {
 sub set_workdir{
   my ($w, $dir) = @_;
   if (!($dir eq "")) {
+    if ($Config{'osname'} eq 'MSWin32') {
+      $dir =~ s+/+\\+g;
+    }
     $workdir->delete("1.0", "end");
     chdir($dir);
     $workdir->insert('end', $dir);
@@ -866,7 +869,7 @@ sub dialog_get_out_file {
     } else {
         $state = 0;
         for(;;) {
-            my ($type, $val) = get_out_file_next($compile_data, $printer, $mcrunflag);
+            my ($type, $val) = get_out_file_next($compile_data, $printer, $mpi, $mcrunflag);
             if($type eq 'FINISHED') {
                 $success = 1;
                 $out_name = $val;
