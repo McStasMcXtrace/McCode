@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Unix migration script for McXtrace-pre 2.0 for those who want to keep that on their machine
+# Unix migration script for McXtrace-pre 1.1 for those who want to keep that on their machine
 #
 #
 
@@ -89,7 +89,7 @@ chmod a+x $ENV_SCRIPT
 chmod a+x $MOVE_SCRIPT
 
 # If this is Debian and mcxtrace is installed,
-# recommend to uninstall before installing 2.0
+# recommend to uninstall before installing 1.1
 DPKG="$(command -v dpkg)";
 if [ -x "${DPKG}" ]; then
 	  echo "Debian machine - checking if mcxtrace was previously installed";
