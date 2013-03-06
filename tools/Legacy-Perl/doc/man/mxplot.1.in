@@ -1,61 +1,62 @@
-.TH mcplot 1  "" "@MCCODE_STRING@" "USER COMMANDS"
+.TH mxplot 1  "" "@MCCODE_STRING@" "USER COMMANDS"
 .SH NAME
-mcplot \- simulation results plotter of the McStas neutron ray-trace simulation package
+mxplot \- simulation results plotter of the McXtrace x-ray trace simulation package
 .SH SYNOPSIS
-.B mcplot
+.B mxplot
 [\-ps|\-psc|\-gif] <simfile | detector_file>
 .SH DESCRIPTION
 The
-.B mcplot
-command is the simulation results plotter of the McStas package.
+.B mxplot
+command is the simulation results plotter of the McXtrace package.
 .PP
-.B McStas
+.B McXtrace
 is a general tool for simulating neutron scattering instruments and experiments. It is actively supported by
-.I Risoe National Laboratory
+.I DTU Physics,
+.I ESRF,
 and
-.I ILL
+.I University of Copenhagen
 
 .PP
-McStas is based on a compiler [mcstas(1)] that reads a high-level specification language defining the instrument to be simulated and produces C code that performs the Monte Carlo Simulation. The system is very fast in use, both when setting up the instrument definition and when doing calculations.
+McXtrace is based on a compiler [mcxtrace(1)] that reads a high-level specification language defining the instrument to be simulated and produces C code that performs the Monte Carlo Simulation. The system is very fast in use, both when setting up the instrument definition and when doing calculations.
 .PP
-McStas supportsall neutron scattering instruments, including  triple-axis,  time-of-flight instruments, and polarised neutrons. It comes with a comprehensive manual and a library of well-tested components that include most standard elements of neutron scattering instruments, including steady-state and pulsed sources, monochromators/analysers, guides, collimators, vanadium and powder samples, velocity selectors and choppers, and a variety of detectors.
+McXtrace supports all x-ray scattering instruments. It comes with a comprehensive manual and a library of well-tested components that include most standard elements of x-ray scattering instruments, including steady-state and pulsed sources, monochromators/analysers, powder samples, choppers, and a variety of detectors.
 .PP
 The package consists of the following user commands:
 .TP
-mcgui(1)
+mxgui(1)
 is the graphical user interface. Then use the
 .I Neutron Site
 menu to select an example instrument, and access the whole documentation for the
 .I Help
 menu. It contains an instrument editor, methods to plot simulation results, and much more
 .TP
-mcrun(1)
+mxrun(1)
 is the command-line tool for building and running simulations
 .TP
-.B mcplot(1)
+.B mxplot(1)
 is the simulation results plotting tool
 .TP
-mcdisplay(1)
+mxdisplay(1)
 is the instrument geometry and neutron trajectory viewer
 .TP
-mcdoc(1)
+mxdoc(1)
 is the documentation tool
 .TP
-mcstas(1)
+mcxtrace(1)
 is the instrument compiler
 .TP
-mcconvert(1)
+mxconvert(1)
 can convert Matlab data files into Scilab data files, and vice-versa. It also handles data sets with binary encoding. It also handles parameter scan results.
 .TP
-mcformat(1)
+mxformat(1)
 can transform any text data set from one format to an other. It does not support conversion from binary data sets. It can also merge equivalent results.
 .PP
 We encourage users to refer to the User and Component Manuals, which are available with the command
 .B
-mcdoc
+mxdoc
 .P
 .SH OPTIONS
-The usage of the command does not require option. Refer to mcplot \-h for special uses.
+The usage of the command does not require option. Refer to mxplot \-h for special uses.
 .TP
 \-h | \-\-help
 displays the command help
@@ -65,26 +66,26 @@ saves plot as a ps/color ps/gif/png file and exits
 .SH EXAMPLES
 .TP
 Typical usage (plots last results in current directory)
-.B mcplot
+.B mxplot
 .TP
 Plots results in current directory DIR
-mcplot DIR
+mxplot DIR
 .SH ENVIRONMENT
 The
-.B MCSTAS
-environment variable may be set to define the McStas library location. This is /usr/local/lib/mcstas on Linux systems. Executables are usually located in /usr/local/bin.
+.B MCXTRACE
+environment variable may be set to define the McXtrace library location. This is /usr/local/lib/mcxtrace on Linux systems. Executables are usually located in /usr/local/bin.
 .SH BUGS
-McStas is a large package, and bugs might be found. If so, please report to
-.B http://mcstas.org/McZilla/
+McXtrace is a large package, and bugs might be found. If so, please report to
+.B http://trac.mcxtrace.org
 and the mailing list
-.B mcstas-users@mcstas.org
+.B mcxtrace-users@mcxtrace.org
 .SH AUTHOR
-Peter Kjaer Willendrup, Emmanuel FARHI, Kim Lefmann, and Klaus Lieutenant
+Erik B Knudsen, Peter Kjaer Willendrup, Kim Lefmann, Søren Schmidt
 .SH SEE ALSO
-mcstas(1), mcrun(1), mcdisplay(1), mcplot(1), mcgui(1), mcdoc(1), mcformat(1), mcconvert(1)
+mcxtrace(1), mxrun(1), mxdisplay(1), mxplot(1), mxgui(1), mxdoc(1), mxformat(1), mxconvert(1)
 .P
-web site:     <http://www.mcstas.org>
+web site:     <http://www.mcxtrace.org>
 .P
-mailing list: <mailto:mcstas-users@mcstas.org>
+mailing list: <mailto:mcxtrace-users@mcxtrace.org>
 .P
-matlab(1), idl(1), scilab(1), octave(1), vitess(1), NISP(1), restrax(1), mcnp(1), tripoli(1)
+matlab(1), scilab(1), octave(1)

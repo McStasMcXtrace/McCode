@@ -1,51 +1,50 @@
-.TH mcconvert 1  "" "@MCCODE_STRING@" "USER COMMANDS"
+.TH mxconvert 1  "" "@MCCODE_STRING@" "USER COMMANDS"
 .SH NAME
-mcconvert \- Matlab/Scilab conversion tool of the McStas/McXtrace neutron ray-trace simulation package
+mxconvert \- Matlab/Scilab conversion tool of the McXtrace x-ray trace simulation package
 .SH SYNOPSIS
-.B mcconvert [\-\-format=FORMAT][\-\-indir=IN][\-\-outdir=OUT] [file]
+.B mxconvert [\-\-format=FORMAT][\-\-indir=IN][\-\-outdir=OUT] [file]
 .SH DESCRIPTION
 The
-.B mcconvert
-command is the Matlab/Scilab conversion tool of the @MCCODE_NAME@ package. It converts Matlab files into Scilab equivalents, and vice-versa. As it works by replacing functions calls, it can handle data sets with binary files, as well as parameter scan data sets.
+.B mxconvert
+command is the Matlab/Scilab conversion tool of the McXtrace package. It converts Matlab files into Scilab equivalents, and vice-versa. As it works by replacing functions calls, it can handle data sets with binary files, as well as parameter scan data sets.
 .PP
-.B McStas
-is a general tool for simulating neutron scattering instruments and experiments. It is actively supported by
-.I Risoe National Laboratory
-and
-.I ILL
 .B McXtrace
-is the X-ray version of the package.
+is a general tool for simulating x-ray scattering instruments and experiments. It is actively supported by
+.I DTU Physics, 
+.I ESRF,
+and
+.I University of Copenhagen
 
 .PP
-McStas is based on a compiler [mcstas(1)] that reads a high-level specification language defining the instrument to be simulated and produces C code that performs the Monte Carlo Simulation. The system is very fast in use, both when setting up the instrument definition and when doing calculations.
+McXtrace is based on a compiler [mcxtrace(1)] that reads a high-level specification language defining the instrument to be simulated and produces C code that performs the Monte Carlo Simulation. The system is very fast in use, both when setting up the instrument definition and when doing calculations.
 .PP
-McStas supports all neutron scattering instruments, including triple-axis,  time-of-flight instruments, and polarised neutrons. It comes with a comprehensive manual and a library of well-tested components that include most standard elements of neutron scattering instruments, including steady-state and pulsed sources, monochromators/analysers, guides, collimators, vanadium and powder samples, velocity selectors and choppers, and a variety of detectors.
+McXtrace supports all x-ray scattering instruments. It comes with a comprehensive manual and a library of tested components that include most standard elements of x-ray scattering instruments, including steady-state and pulsed sources, monochromators/analysers, powder samples, and a variety of detectors etc.
 .PP
 The package consists of the following user commands:
 .TP
-mcgui(1)
+mxgui(1)
 is the graphical user interface. Then use the
-.I Neutron Site
+.I Xray Site
 menu to select an example instrument, and access the whole documentation for the
 .I Help
 menu. It contains an instrument editor, methods to plot simulation results, and much more
 .TP
-mcrun(1)
+mxrun(1)
 is the command-line tool for building and running simulations
 .TP
-mcplot(1)
+mxplot(1)
 is the simulation results plotting tool
 .TP
-mcdisplay(1)
-is the instrument geometry and neutron trajectory viewer
+mxdisplay(1)
+is the instrument geometry and photon trajectory viewer
 .TP
-mcdoc(1)
+mxdoc(1)
 is the documentation tool
 .TP
-mcstas(1)
+mcxtrace(1)
 is the instrument compiler
 .TP
-.B mcconvert(1)
+.B mxconvert(1)
 can convert Matlab data files into Scilab data files, and vice-versa. It also handles data sets with binary encoding. It also handles parameter scan results.
 .TP
 mcformat(1)
@@ -67,24 +66,24 @@ Specifies wanted output directory
 Specifies wanted input directory. Default is current directory.
 .TP
 \-\-quiet
-Suppress status info (e.g. 'mcstas.m \-> mcstas.sci')
+Suppress status info 
 .SH EXAMPLES
 .TP
 Typical usage
-.B mcconvert
+.B mxconvert
 \-\-format=Matlab \-\-indir=SciData \-\-outdir=MatData
 .SH BUGS
-McStas is a large package, and bugs might be found. If so, please report to
-.B http://mcstas.org/McZilla/
+McXtrace is a large package, and bugs might be found. If so, please report to
+.B http://trac.mccode.org
 and the mailing list
-.B mcstas-users@mcstas.org
+.B mcxtrace-users@mcxtrace.org
 .SH AUTHOR
-Peter Kjaer Willendrup, Emmanuel FARHI, Kim Lefmann, and Klaus Lieutenant
+Erik B Knudsen, Peter Kjaer Willendrup, Kim Lefmann, and Søren Schmidt
 .SH SEE ALSO
-mcstas(1), mcrun(1), mcdisplay(1), mcplot(1), mcgui(1), mcdoc(1), mcformat(1), mcconvert(1)
+mcxtrace(1), mxrun(1), mxdisplay(1), mxplot(1), mxgui(1), mxdoc(1), mxformat(1), mxconvert(1)
 .P
-web site:     <http://www.mcstas.org>
+web site:     <http://www.mcxtrace.org>
 .P
-mailing list: <mailto:mcstas-users@mcstas.org>
+mailing list: <mailto:mcxtrace-users@mcxtrace.org>
 .P
-matlab(1), idl(1), scilab(1), octave(1), vitess(1), NISP(1), restrax(1), mcnp(1), tripoli(1)
+matlab(1),  octave(1) 

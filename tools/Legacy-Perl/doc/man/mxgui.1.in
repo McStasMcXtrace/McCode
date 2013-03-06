@@ -1,58 +1,59 @@
-.TH mcgui 1  "" "@MCCODE_STRING@" "USER COMMANDS"
+.TH mxgui 1  "" "@MCCODE_STRING@" "USER COMMANDS"
 .SH NAME
-mcgui \- graphical user interface of the McStas neutron ray-trace simulation package
+mxgui \- graphical user interface of the McXtrace x-ray ray-trace simulation package
 .SH SYNOPSIS
-.B mcgui
+.B mxgui
 [\-\-open] [file.instr]
 .SH DESCRIPTION
 The
-.B mcgui
-command is the graphical user interface of the McStas package. It has the following features: Loading instruments and editing their descriptions, compiling them, running single simulations, as well as scans of parameters, usage of parallel computation (when available), parameter optimization to maximize monitor values, plotting of simulation results and instrument geometry, access to instrument templates and plenty of documentation.
+.B mxgui
+command is the graphical user interface of the McXtrace package. It has the following features: Loading instruments and editing their descriptions, compiling them, running single simulations, as well as scans of parameters, usage of parallel computation (when available), parameter optimization to maximize monitor values, plotting of simulation results and instrument geometry, access to instrument templates and plenty of documentation.
 .PP
-.B McStas
-is a general tool for simulating neutron scattering instruments and experiments. It is actively supported by
-.I Risoe National Laboratory
+.B McXtrace
+is a general tool for simulating x-ray scattering instruments and experiments. It is actively supported by
+.I DTU Physics,
+.I ILL, 
 and
-.I ILL
+.I PSI
 
 .PP
-McStas is based on a compiler [mcstas(1)] that reads a high-level specification language defining the instrument to be simulated and produces C code that performs the Monte Carlo Simulation. The system is very fast in use, both when setting up the instrument definition and when doing calculations.
+McXtrace is based on a compiler [mcxtrace(1)] that reads a high-level specification language defining the instrument to be simulated and produces C code that performs the Monte Carlo Simulation. The system is very fast in use, both when setting up the instrument definition and when doing calculations.
 .PP
-McStas supports all neutron scattering instruments, including triple-axis,  time-of-flight instruments, and polarised neutrons. It comes with a comprehensive manual and a library of well-tested components that include most standard elements of neutron scattering instruments, including steady-state and pulsed sources, monochromators/analysers, guides, collimators, vanadium and powder samples, velocity selectors and choppers, and a variety of detectors.
+McXtrace supports all x-ray scattering instruments. It comes with a comprehensive manual and a library of well-tested components that include most standard elements of x-ray scattering instruments, including steady-state and pulsed sources, powder samples, choppers, and a variety of detectors.
 .PP
 The package consists of the following user commands:
 .TP
-.B mcgui(1)
+.B mxgui(1)
 is the graphical user interface. Then use the
-.I Neutron Site
+.I X-ray Site
 menu to select an example instrument, and access the whole documentation for the
 .I Help
 menu. It contains an instrument editor, methods to plot simulation results, and much more
 .TP
-mcrun(1)
+mxrun(1)
 is the command-line tool for building and running simulations
 .TP
-mcplot(1)
+mxplot(1)
 is the simulation results plotting tool
 .TP
-mcdisplay(1)
-is the instrument geometry and neutron trajectory viewer
+mxdisplay(1)
+is the instrument geometry and x-ray trajectory viewer
 .TP
-mcdoc(1)
+mxdoc(1)
 is the documentation tool
 .TP
-mcstas(1)
+mcxtrace(1)
 is the instrument compiler
 .TP
-mcconvert(1)
+mxconvert(1)
 can convert Matlab data files into Scilab data files, and vice-versa. It also handles data sets with binary encoding. It also handles parameter scan results.
 .TP
-mcformat(1)
+mxformat(1)
 can transform any text data set from one format to an other. It does not support conversion from binary data sets. It can also merge equivalent results.
 .PP
 We encourage users to refer to the User and Component Manuals, which are available with the command
 .B
-mcdoc
+mxdoc
 .P
 .SH OPTIONS
 .TP
@@ -70,46 +71,46 @@ display command help
 .SH EXAMPLES
 .TP
 Typical usage
-.B mcgui
+.B mxgui
 .TP
 Open the foo.instr instrument
-mcgui foo.instr
+mxgui foo.instr
 .SH ENVIRONMENT
 The
-.B MCSTAS
-environment variable may be set to define the McStas library location. This is /usr/local/lib/mcstas on Linux systems. Executables are usually located in /usr/local/bin.
-The McStas configuration file is MCSTAS/tools/perl/mcstas_config.perl
+.B MCXTRACE
+environment variable may be set to define the McXtrace library location. This is /usr/local/lib/mcxtrace on Linux systems. Executables are usually located in /usr/local/bin.
+The McXtrace configuration file is MCXTRACE/tools/perl/mccode_config.perl
 .P
 The
-.B MCSTAS_FORMAT
+.B MCXTRACE_FORMAT
 environment variable may be set to define the default data format used for storing results. This is usually 'PGPLOT', 'Matlab', or 'Scilab'.
 .P
 The
 .B
-MCSTAS_CC
+MCXTRACE_CC
 environment variable may be set to define the compiler to use (e.g. gcc)
 .P
 The
 .B
-MCSTAS_CFLAGS
+MCXRACE_CFLAGS
 environment variable may be set to define the options for compilation (e.g. -O2)
 .P
 The
 .B BROWSER
 environment variable may be set to define the default HTML browser to use
 .SH BUGS
-Some implementations of Perl-Tk do not support desktop switching and windows redraw. This may crash mcgui.
-McStas is a large package, and bugs might be found. If so, please report to
-.B http://mcstas.org/McZilla/
+Some implementations of Perl-Tk do not support desktop switching and windows redraw. This may crash mxgui.
+McXtrace is a large package, and bugs might be found. If so, please report to
+.B http://mcxtrace.org/McZilla/
 and the mailing list
-.B mcstas-users@mcstas.org
+.B mcxtrace-users@mcxtrace.org
 .SH AUTHOR
 Peter Kjaer Willendrup, Emmanuel FARHI, Kim Lefmann, and Klaus Lieutenant
 .SH SEE ALSO
-mcstas(1), mcrun(1), mcdisplay(1), mcplot(1), mcgui(1), mcdoc(1), mcformat(1), mcconvert(1)
+mcxtrace(1), mxrun(1), mxdisplay(1), mxplot(1), mxgui(1), mxdoc(1), mxformat(1), mxconvert(1)
 .P
-web site:     <http://www.mcstas.org>
+web site:     <http://www.mcxtrace.org>
 .P
-mailing list: <mailto:mcstas-users@mcstas.org>
+mailing list: <mailto:mcxtrace-users@mcxtrace.org>
 .P
 matlab(1), idl(1), scilab(1), octave(1), vitess(1), NISP(1), restrax(1), mcnp(1), tripoli(1)
