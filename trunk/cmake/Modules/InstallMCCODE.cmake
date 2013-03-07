@@ -320,7 +320,7 @@ macro(installMCCODE)
 
   if(WINDOWS)
     # Generate and install Windows setup scripts
-    foreach (name mccodeenv.bat mccodeguigo.bat mccodego.bat)
+    foreach (name mccodeenv.bat mccodeguigo.bat mccodego.bat mccodetest.bat)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${name}
