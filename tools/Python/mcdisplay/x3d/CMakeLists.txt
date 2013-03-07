@@ -74,7 +74,9 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # Configure fallback script
 configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/mcdisplay" @ONLY)
-configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.py.in" "${WORK}/mcdisplay.py" @ONLY)
+
+# Configure internal naming and how we call mcrun/mxrun across systems
+configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.py.in" "${CMAKE_SOURCE_DIR}/mcdisplay.py" @ONLY)
 
 # Python files
 foreach(name rewrite.py util.py x3d.py)
