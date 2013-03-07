@@ -15,9 +15,9 @@ def trace(instr, args, inspect=None):
 
     # mcrun cmd needs special care on windoze
     if osname == 'nt':
-        mcrun_cmd = 'mcrun-py.bat'
+        mcrun_cmd = '@MCCODE_PREFIX@run-py.bat'
     else:
-        mcrun_cmd = 'mcrun'
+        mcrun_cmd = '@MCCODE_PREFIX@run'
     
     # run mcrun on instrument; capture stdout
     pid = Popen([mcrun_cmd, '--trace', instr] + args, stdout=PIPE)
@@ -37,7 +37,7 @@ def main():
     parser = argparse.ArgumentParser()
     # Positional
     parser.add_argument('instrument', type=str, metavar='infile.instr',
-                        help='the McStas instrument file')
+                        help='the @FLAVOR@ instrument file')
     # Named
     parser.add_argument('--inspect', type=str, metavar='COMP',
                         help='only draw the neutrons that reach component COMP')
