@@ -357,7 +357,9 @@ def main():
         scanner.set_points(interval_points)
         scanner.run()
     else:
-        mcstas.run()
+        # Only run a simulation if we have a nonzero ncount
+        if not options.ncount == 0.0:
+            mcstas.run()
 
 
 if __name__ == '__main__':
