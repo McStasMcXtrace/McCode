@@ -13,7 +13,7 @@ fi
 ./mkdist mcxtrace-tools-Python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" linux64 -- rpm
 ./mkdist mcxtrace-tools-Python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 -- rpm
 ./mkdist mcxtrace-tools-Python-mxrun $1 tools/Python/mcrun/ "" linux64 -- rpm
-./mkdist mcxtrace-tools-Python-mxdisplay $1 tools/Python/mxdisplay/x3d/ "" linux64 -- rpm
+./mkdist mcxtrace-tools-Python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux64 -- rpm
 
 # 32-bit
 ./mkdist mcxtrace $1 "" "" linux32 -- rpm
@@ -22,4 +22,4 @@ fi
 ./mkdist mcxtrace-tools-Python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" linux32 -- rpm
 ./mkdist mcxtrace-tools-Python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux32 -- rpm
 ./mkdist mcxtrace-tools-Python-mxrun $1 tools/Python/mcrun/ "" linux32 -- rpm
-./mkdist mcxtrace-tools-Python-mxdisplay $1 tools/Python/mxdisplay/x3d/ "" linux32 -- rpm
+./mkdist mcxtrace-tools-Python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 -- rpm

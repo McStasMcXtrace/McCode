@@ -13,4 +13,4 @@ fi
 ./mkdist mcxtrace-tools-Python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_SL -- OSXpkg
 ./mkdist mcxtrace-tools-Python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_SL -- OSXpkg
 ./mkdist mcxtrace-tools-Python-mxrun $1 tools/Python/mcrun/ "" mac_SL -- OSXpkg
-./mkdist mcxtrace-tools-Python-mxdisplay $1 tools/Python/mxdisplay/x3d/ "" mac_SL -- OSXpkg
+./mkdist mcxtrace-tools-Python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" mac_SL -- OSXpkg
