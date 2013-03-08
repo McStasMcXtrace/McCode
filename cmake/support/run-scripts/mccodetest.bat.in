@@ -5,5 +5,5 @@
 @ECHO OFF
 @@FLAVOR@ -v
 @ECHO OFF
-@ @MCCODE_PREFIX@run --test > @NAME@-@MCCODE_VERSION@-test.log 2<&1
+@ @MCCODE_PREFIX@run --test 
 
