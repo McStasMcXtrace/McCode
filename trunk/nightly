@@ -84,7 +84,7 @@ ssh ${LINUSER}@${LINHOST} mcrun-${VER} --test &> mcstas_${VER}_linux.log &
 echo ...Windows
 ssh ${WINUSER}@${WINHOST} /cygdrive/c/mcstas-${VER}/bin/mccodetest.bat &> mcstas_${VER}_windows.log &
 echo ...Mac OS X
-ssh ${LINUSER}@${LINHOST} mcrun-${VER} --test &> mcstas_${VER}_osx.log # Is kept in the foreground 
+ssh ${OSXUSER}@${OSXHOST} mcrun-${VER} --test &> mcstas_${VER}_osx.log # Is kept in the foreground 
 
 echo Running the tests - McXtrace!
 echo ...Linux
@@ -92,6 +92,6 @@ ssh ${LINUSER}@${LINHOST} mxrun-${VER} --test &> mcxtrace_${VER}_linux.log &
 echo ...Windows
 ssh ${WINUSER}@${WINHOST} /cygdrive/c/mcxtrace-${VER}/bin/mccodetest.bat &> mcxtrace_${VER}_windows.log &
 echo ...Mac OS X
-ssh ${LINUSER}@${LINHOST} mxrun-${VER} --test &> mcxtrace_${VER}_osx.log # Is kept in the foreground 
+ssh ${OSXUSER}@${OSXHOST} mxrun-${VER} --test &> mcxtrace_${VER}_osx.log # Is kept in the foreground 
 
 # This is then where we will wait for all the processes to end and copy results to mcc-01...
