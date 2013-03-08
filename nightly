@@ -20,6 +20,7 @@
 
 
 VER=svn_`date "+%Y-%m-%d"`
+SVNREL=`svn update | grep At\ revision|cut -f3 -d\ "`
 
 WINHOST=192.168.33.10
 LINHOST=192.168.33.11
@@ -37,6 +38,7 @@ echo Clean, build, install Linux \& Windows
 # Step 0 - cleanup
 echo Step 0
 ssh ${LINUSER}@${LINHOST} cd ${LINPATH} \&\& rm -rf dist 
+ssh ${WINUSER}@${WINHOST} rm ./Downloads/\*.exe
 # Step 1 - McStas
 echo Step 1
 ssh ${LINUSER}@${LINHOST} cd ${LINPATH} \&\& svn update \&\& ./build_debs_mcstas ${VER} \&\& ./build_windows_mcstas ${VER} 
@@ -82,16 +84,49 @@ echo Running the tests - McStas!
 echo ...Linux
 ssh ${LINUSER}@${LINHOST} mcrun-${VER} --test &> mcstas_${VER}_linux.log &
 echo ...Windows
-ssh ${WINUSER}@${WINHOST} /cygdrive/c/mcstas-${VER}/bin/mccodetest.bat &> mcstas_${VER}_windows.log &
+ssh ${WINUSER}@${WINHOST} /cygdrive/c/mcstas-${VER}/bin/mccodetest.bat \&\& exit &> mcstas_${VER}_windows.log &
 echo ...Mac OS X
-ssh ${OSXUSER}@${OSXHOST} export PATH=/usr/local/bin:\${PATH} \&\& mcrun-${VER} --test &> mcstas_${VER}_osx.log # Is kept in the foreground 
+ssh ${OSXUSER}@${OSXHOST} export PATH=/usr/local/bin:\${PATH} \&\& mcrun-${VER} --test &> mcstas_${VER}_osx.log &
+
+wait
 
 echo Running the tests - McXtrace!
 echo ...Linux
 ssh ${LINUSER}@${LINHOST} mxrun-${VER} --test &> mcxtrace_${VER}_linux.log &
 echo ...Windows
-ssh ${WINUSER}@${WINHOST} /cygdrive/c/mcxtrace-${VER}/bin/mccodetest.bat &> mcxtrace_${VER}_windows.log &
+ssh ${WINUSER}@${WINHOST} /cygdrive/c/mcxtrace-${VER}/bin/mccodetest.bat \&\& exit &> mcxtrace_${VER}_windows.log &
 echo ...Mac OS X
-ssh ${OSXUSER}@${OSXHOST} export PATH=/usr/local/bin:\${PATH} \&\& mxrun-${VER} --test &> mcxtrace_${VER}_osx.log # Is kept in the foreground 
+ssh ${OSXUSER}@${OSXHOST} export PATH=/usr/local/bin:\${PATH} \&\& mxrun-${VER} --test &> mcxtrace_${VER}_osx.log 
 
-# This is then where we will wait for all the processes to end and copy results to mcc-01...
+wait
+# This is where we wait for all the processes to end and copy results to mcc-01...
+
+# Copy back selftest directories
+SELFTEST_LIN_MCSTAS=`grep selftest mcstas_${VER}_linux.log |grep Abstract`
+SELFTEST_LIN_MCXTRACE=`grep selftest mcxtrace_${VER}_linux.log |grep Abstract`
+SELFTEST_OSX_MCSTAS=`grep selftest mcstas_${VER}_osx.log |grep Abstract`
+SELFTEST_OSX_MCXTRACE=`grep selftest mcxtrace_${VER}_osx.log |grep Abstract`
+SELFTEST_WIN_MCSTAS=`grep selftest mcstas_${VER}_windows.log |grep Abstract`
+SELFTEST_WIN_MCXTACE=`grep selftest mcxtrace_${VER}_windows.log |grep Abstract`
+scp -rp ${LINUSER}@${LINHOST}:${SELFTEST_LIN_MCSTAS} ${SELFTEST_LIN_MCSTAS}
+scp -rp ${LINUSER}@${LINHOST}:${SELFTEST_LIN_MCXTRACE} ${SELFTEST_LIN_MCXTRACE}
+scp -rp ${OSXUSER}@${OSXHOST}:${SELFTEST_OSX_MCSTAS} ${SELFTEST_OSX_MCSTAS}
+scp -rp ${OSXUSER}@${OSXHOST}:${SELFTEST_OSX_MCXTRACE} ${SELFTEST_OSX_MCXTRACE}
+scp -rp ${WINUSER}@${WINHOST}:${SELFTEST_WIN_MCSTAS} ${SELFTEST_WIN_MCSTAS}
+scp -rp ${WINUSER}@${WINHOST}:${SELFTEST_WIN_MCXTRACE} ${SELFTEST_WIN_MCXTRACE}
+mv $SELFTEST_LIN_MCSTAS mcstas_${VER}_linux
+mv $SELFTEST_LIN_MCXTRACE mcxtrace_${VER}_linux
+mv $SELFTEST_OSX_MCSTAS mcstas_${VER}_osx
+mv $SELFTEST_OSX_MCXTRACE mcxtrace_${VER}_osx
+mv $SELFTEST_WIN_MCSTAS mcstas_${VER}_win
+mv $SELFTEST_WIN_MCXTRACE mcxtrace_${VER}_win
+tar cfz mcstas_${VER}_linux.tgz mcstas_${VER}_linux
+tar cfz mcxtrace_${VER}_linux.tgz mcxtrace_${VER}_linux
+tar cfz mcstas_${VER}_osx.tgz mcstas_${VER}_osx
+tar cfz mcxtrace_${VER}_osx.tgz mcxtrace_${VER}_osx
+tar cfz mcstas_${VER}_win.tgz mcstas_${VER}_win
+tar cfz mcxtrace_${VER}_win.tgz mcxtrace_${VER}_win
+
+scp *${VER}* mcstas@mcc-01.risoe.dk:Builds/Nightly/Logs
+ssh mcstas@mcc-01.risoe.dk cd Builds/Nightly/Logs \&\& echo ${SVNREL} \> ${VER}.svnrev
+
