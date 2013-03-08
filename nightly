@@ -1,34 +1,68 @@
 #!/bin/sh
+#
+# Script for executing mcrun / mxrun --test across a set of virtual machines
+#
+# Build-machine requirements:
+#
+# 1) Common to all client machines:
+#    * ssh-keys installed for password-less logins (Linux machine key needs to be installed @ Windows as well)
+#    * All required "support software" for installation and succesful execution of mcrun --test (Perl)
+#    * For safety, the clients ought to have static IP's
+#
+# 2) Special to the Windows platform:
+#    * Cygwin-based sshd needs to be installed, including cygrunserver to run as an NT service
+#    * Firewall has to be opened on port 22
+#    * Security needs to be lowered to a minimum, no tests for "third party software" etc, otherwise we will be prompted for passwords etc.
+#    * The "mcstas" user needs his HOME directory changed to be e.g. /cygdrive/c/Users/mcstas in the Cygwin passwd file
+#
+# Next step in the process will be to scp all of the log files to mcc-01 for processing and putting on the web.
+
+
 
 VER=svn_`date "+%Y-%m-%d"`
 
-WINHOST=192.168.33.161
-LINHOST=debian.local
+WINHOST=192.168.33.10
+LINHOST=192.168.33.11
 OSXHOST=localhost
 
-WINUSER=mcstas0
+WINUSER=mcstas
 LINUSER=mcstas
 OSXUSER=willend
 
 LINPATH=trunk
 OSXPATH=Projects/McCode/trunk
 
+echo Clean, build, install Linux \& Windows
 # Build the Linux (deb) and Windows packages at the Linux host
-
 # Step 0 - cleanup
+echo Step 0
 ssh ${LINUSER}@${LINHOST} cd ${LINPATH} \&\& rm -rf dist 
 # Step 1 - McStas
+echo Step 1
 ssh ${LINUSER}@${LINHOST} cd ${LINPATH} \&\& svn update \&\& ./build_debs_mcstas ${VER} \&\& ./build_windows_mcstas ${VER} 
+echo Step 2
 # Step 2 - McXtrace
 ssh ${LINUSER}@${LINHOST} cd ${LINPATH} \&\& ./build_debs_mcxtrace ${VER} \&\& ./build_windows_mcxtrace ${VER}
+echo Step 3
 # Step 3 Install McStas & McXtrace
 ssh ${LINUSER}@${LINHOST} cd ${LINPATH}/dist \&\& sudo dpkg -i mcstas-${VER}-linux64.deb mcstas-comps-${VER}-linux64.deb mcstas-tools-perl-${VER}-linux64.deb 
 ssh ${LINUSER}@${LINHOST} cd ${LINPATH}/dist \&\& sudo dpkg -i mcxtrace-${VER}-linux64.deb mcxtrace-comps-${VER}-linux64.deb mcxtrace-tools-perl-${VER}-linux64.deb 
+echo Step 4
 # Step 4 Transfer .exes to the Windows host
 scp ${LINUSER}@${LINHOST}:${LINPATH}/dist/\*${VER}\*32.exe ${WINUSER}@${WINHOST}:Downloads/
+echo Step 5
 # Step 5 install .exes on the Windows host
+ssh ${WINUSER}@${WINHOST} ./Downloads/mcstas-NSIS-${VER}-mingw32.exe /S
+ssh ${WINUSER}@${WINHOST} ./Downloads/Downloads\mcxtrace-NSIS-${VER}-mingw32.exe /S
+# Are backgrounded immediately, hence a sleep before next cmds
+sleep 20
+ssh ${WINUSER}@${WINHOST} ./Downloads/mcstas-comps-NSIS-${VER}-mingw32.exe /S
+ssh ${WINUSER}@${WINHOST} ./Downloads/mcxtrace-comps-NSIS-${VER}-mingw32.exe /S
+# Are backgrounded immediately, hence a sleep before next cmds
+ssh ${WINUSER}@${WINHOST} ./Downloads/mcstas-tools-perl-NSIS-${VER}-mingw32.exe /S
+ssh ${WINUSER}@${WINHOST} ./Downloads/mcxtrace-tools-perl-NSIS-${VER}-mingw32.exe /S
 
-
+echo Clean, build, install Mac
 # Build the OSX packages at the Mac host
 # Step 0 - cleanup
 ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH} \&\& rm -rf dist 
@@ -43,3 +77,21 @@ ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& sudo installer -pkg mcstas-too
 ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& sudo installer -pkg mcxtrace-OSXpkg-${VER}\*.pkg -target /
 ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& sudo installer -pkg mcxtrace-comps-OSXpkg-${VER}\*.pkg -target /
 ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& sudo installer -pkg mcxtrace-tools-perl-OSXpkg-${VER}\*.pkg -target /
+
+echo Running the tests - McStas!
+echo ...Linux
+ssh ${LINUSER}@${LINHOST} mcrun-${VER} --test &> mcstas_${VER}_linux.log &
+echo ...Windows
+ssh ${WINUSER}@${WINHOST} /cygdrive/c/mcstas-${VER}/bin/mccodetest.bat &> mcstas_${VER}_windows.log &
+echo ...Mac OS X
+ssh ${LINUSER}@${LINHOST} mcrun-${VER} --test &> mcstas_${VER}_osx.log # Is kept in the foreground 
+
+echo Running the tests - McXtrace!
+echo ...Linux
+ssh ${LINUSER}@${LINHOST} mxrun-${VER} --test &> mcxtrace_${VER}_linux.log &
+echo ...Windows
+ssh ${WINUSER}@${WINHOST} /cygdrive/c/mcxtrace-${VER}/bin/mccodetest.bat &> mcxtrace_${VER}_windows.log &
+echo ...Mac OS X
+ssh ${LINUSER}@${LINHOST} mxrun-${VER} --test &> mcxtrace_${VER}_osx.log # Is kept in the foreground 
+
+# This is then where we will wait for all the processes to end and copy results to mcc-01...
