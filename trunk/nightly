@@ -53,7 +53,7 @@ scp ${LINUSER}@${LINHOST}:${LINPATH}/dist/\*${VER}\*32.exe ${WINUSER}@${WINHOST}
 echo Step 5
 # Step 5 install .exes on the Windows host
 ssh ${WINUSER}@${WINHOST} ./Downloads/mcstas-NSIS-${VER}-mingw32.exe /S
-ssh ${WINUSER}@${WINHOST} ./Downloads/Downloads\mcxtrace-NSIS-${VER}-mingw32.exe /S
+ssh ${WINUSER}@${WINHOST} ./Downloads/mcxtrace-NSIS-${VER}-mingw32.exe /S
 # Are backgrounded immediately, hence a sleep before next cmds
 sleep 20
 ssh ${WINUSER}@${WINHOST} ./Downloads/mcstas-comps-NSIS-${VER}-mingw32.exe /S
