@@ -133,4 +133,4 @@ tar cfz mcxtrace_${VER}_windows.tgz mcxtrace_${VER}_windows && rm -rf mcxtrace_$
 
 scp *${VER}* mcstas@mcc-01.risoe.dk:Builds/Nightly/Logs
 ssh mcstas@mcc-01.risoe.dk cd Builds/Nightly/Logs \&\& echo ${SVNREL} \> ${VER}_svnrev.txt
-ssh mcstas@mcc-01.risoe.dk touch /usr/local/build/Nighlty
+ssh mcstas@mcc-01.risoe.dk touch /usr/local/build/Nightly
