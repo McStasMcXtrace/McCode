@@ -51,7 +51,7 @@ AT (0,0,0) ABSOLUTE
 COMPONENT Source = ISIS_moderator(
     Face = "gem", Emin = emin, Emax = emax, target_index=1, focus_xw = 0.008,
     focus_yh = 0.04, xwidth = 0.09, yheight = 0.084, CAngle = 0,dist=0,
-    SAC = 1)
+    SAC = 1, Acc_current=160)
 AT (0, 0, 0) ABSOLUTE
 
 SPLIT COMPONENT Sample = PowderN(
