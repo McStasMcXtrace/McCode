@@ -33,7 +33,7 @@ COMPONENT a1 = Progress_bar()
 
 COMPONENT isis_mod = ISIS_moderator(
 	Face ="narrow", Lmin = 0.3, Lmax = 12, dist = 0.01, focus_xw = 0.1,
-    focus_yh = 0.1, xwidth=-0.5, yheight=-0.8, CAngle = 0.0,SAC=0)
+	focus_yh = 0.1, xwidth=-0.5, yheight=-0.8, CAngle = 0.0,SAC=0, Acc_current=40)
   AT (0, 0, 0) RELATIVE a1
 
 

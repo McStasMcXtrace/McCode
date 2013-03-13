@@ -85,7 +85,7 @@ TRACE
 COMPONENT Source = ISIS_moderator(
 	Face = ISISFACE, Emin = e_min, Emax = e_max, dist = 8.299, focus_xw = 0.005,
 	focus_yh = 0.005, xwidth = .12, yheight = .115, CAngle = 0,
-	SAC = 1)
+	SAC = 1, Acc_current=40)
   AT (0, 0, 0) ABSOLUTE
 
 COMPONENT Coord = Progress_bar()
