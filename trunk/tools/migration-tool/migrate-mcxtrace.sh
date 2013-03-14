@@ -70,8 +70,8 @@ echo "";
 # Write environment script info to Enviroment script
 cat <<EOF > $ENV_SCRIPT
 #!/bin/sh
-export MCXTRACE=$MCXTRACE_NEWLIBDIR
-export MCSTAS=$MCXTRACE_NEWLIBDIR
+export MCXTRACE=$MCXTRACE_NEWLIBDIR/mcxtrace
+export MCSTAS=$MCXTRACE_NEWLIBDIR/mcxtrace
 export PATH=$MCXTRACE_NEWBINDIR:\$PATH
 echo
 echo The new shell started here is now set up for running this version of mcxtrace:
