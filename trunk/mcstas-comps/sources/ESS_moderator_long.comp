@@ -135,7 +135,7 @@ DEFINE COMPONENT ESS_moderator_long
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (size=0.12, Lmin, Lmax, dist=0, focus_xw, focus_yh, nu=14,
                     T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2.857e-3, n=20, cold_frac=1.0,
-                    n2=5, chi2=0.9, I0=8.21e11, I2=3.29e11, int target_index=+1, 
+                    n2=5, chi2=0.9, I0=8.21e11, I2=3.29e11, int target_index=0, 
 		    cyl_radius=0.08, branch1=1, branch2=0.5, branch_tail=0.14350,
 		    int n_pulses=1, size_t=0.12, T_t=325, tau_t=80e-6, tau1_t=400e-6,
 		    tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5,
@@ -173,8 +173,17 @@ INITIALIZE
     ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
     coords_get(ToTarget, &tx, &ty, &tz);
     dist=sqrt(tx*tx+ty*ty+tz*tz);
+  } else if (target_index && !dist) {
+    printf("ESS_moderator_long: %s: Please choose to set either the dist parameter or specify a target_index.\nExit\n", NAME_CURRENT_COMP);
+    exit(-1);
   } else {
     tx=0, ty=0, tz=dist;
+  }
+
+  if (focus_xw < 0 || focus yh < 0)
+  {
+    printf("ESS_moderator_long: %s: Please specify both focus_xw and focus_yh as positive numbers.\nExit\n", NAME_CURRENT_COMP);
+    exit(-1);
   }
   
   if (n == 1 || n2 == 1 || Lmin<=0 || Lmax <=0 || dist == 0
