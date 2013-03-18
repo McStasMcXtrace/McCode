@@ -99,8 +99,8 @@ echo ...Mac OS X
 ssh ${OSXUSER}@${OSXHOST} export PATH=/usr/local/bin:\${PATH} \&\& mxrun-${VER} --test  &> mcxtrace_${VER}_osx.log &
 echo ...Windows
 ssh ${WINUSER}@${WINHOST} c\:\\\\mcxtrace-${VER}\\\\bin\\\\mccodetest.bat &> mcxtrace_${VER}_windows.log &
-dos2unix mcxtrace_${VER}_windows.log
-dos2unix mcstas_${VER}_windows.log
+/usr/local/bin/dos2unix mcxtrace_${VER}_windows.log
+/usr/local/bin/dos2unix mcstas_${VER}_windows.log
 
 wait
 # This is where we wait for all the processes to end and copy results to mcc-01...
