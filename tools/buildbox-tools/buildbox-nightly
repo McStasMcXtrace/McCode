@@ -99,11 +99,16 @@ echo ...Mac OS X
 ssh ${OSXUSER}@${OSXHOST} export PATH=/usr/local/bin:\${PATH} \&\& mxrun-${VER} --test  &> mcxtrace_${VER}_osx.log &
 echo ...Windows
 ssh ${WINUSER}@${WINHOST} c\:\\\\mcxtrace-${VER}\\\\bin\\\\mccodetest.bat &> mcxtrace_${VER}_windows.log &
+
+wait
+
 /usr/local/bin/dos2unix mcxtrace_${VER}_windows.log
 /usr/local/bin/dos2unix mcstas_${VER}_windows.log
 
 wait
 # This is where we wait for all the processes to end and copy results to mcc-01...
+
+echo Copying files to the web box...
 
 # Copy back selftest directories
 SELFTEST_LIN_MCSTAS=`grep selftest mcstas_${VER}_linux.log |grep Installing | cut -f2 -d\' `
@@ -134,3 +139,5 @@ tar cfz mcxtrace_${VER}_windows.tgz mcxtrace_${VER}_windows && rm -rf mcxtrace_$
 scp *${VER}* mcstas@mcc-01.risoe.dk:Builds/Nightly/Logs
 ssh mcstas@mcc-01.risoe.dk cd Builds/Nightly/Logs \&\& echo ${SVNREL} \> ${VER}_svnrev.txt
 ssh mcstas@mcc-01.risoe.dk touch /usr/local/build/Nightly
+
+echo End of script!
