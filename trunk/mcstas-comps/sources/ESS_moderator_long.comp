@@ -127,6 +127,7 @@
 * tfocus_dist: (m) Position of time window
 * tfocus_time: (s) Time position of window
 * tfocus_width: (s) Time width of window
+* beamport_angle: (deg) Direction within the beamport sector (0 < angle < 60) to direct neutrons
 *
 * %E
 *******************************************************************************/
@@ -136,16 +137,17 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (size=0.12, Lmin, Lmax, dist=0, focus_xw, focus_yh, nu=14,
                     T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2.857e-3, n=20, cold_frac=1.0,
                     n2=5, chi2=0.9, I0=8.21e11, I2=3.29e11, int target_index=0, 
-		    cyl_radius=0.08, branch1=1, branch2=0.5, branch_tail=0.14350,
+		    cyl_radius=0, branch1=1, branch2=0.5, branch_tail=0.14350,
 		    int n_pulses=1, size_t=0.12, T_t=325, tau_t=80e-6, tau1_t=400e-6,
 		    tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5,
-		    branch2_t=0.5, int src_2012=1, tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0)
+		    branch2_t=0.5, int src_2012=1, tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0, beamport_angle=30)
 OUTPUT PARAMETERS (M, F, l_range, w_mult)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
 %{
   double l_range, w_mult;
   double tx,ty,tz;
+  double t1x,t1y,t1z,t2x,t2y,t2z;
   /* Neutron-specific distribution-shape variables */
   double T_n, tau_n, tau1_n, tau2_n, chi2_n, I0_n, I2_n, branch1_n, branch2_n;
   
@@ -159,6 +161,10 @@ DECLARE
     {
       return (exp(-t/tau)-exp(-n*t/tau))*n/(n-1)/tau;
     }
+  
+  /* Target station geometry... */
+  double r_empty = 2.0; /* two meters from moderator surface and out... */
+  double r_optics;
 %}
 
 INITIALIZE
@@ -180,12 +186,33 @@ INITIALIZE
     tx=0, ty=0, tz=dist;
   }
 
-  if (focus_xw < 0 || focus yh < 0)
+  if (focus_xw < 0 || focus_yh < 0)
   {
     printf("ESS_moderator_long: %s: Please specify both focus_xw and focus_yh as positive numbers.\nExit\n", NAME_CURRENT_COMP);
     exit(-1);
   }
+
+  if (dist < r_empty && dist > 0)
+  {
+    printf("ESS_moderator_long: %s WARNING: Provided dist parameter is %g and hence inside the vacated zone of the beam extraction system!\nYou might be placing optics in a restricted area!!!\n", NAME_CURRENT_COMP, dist);
+  }
+    
+  if (beamport_angle < 0 || beamport_angle > 60)
+  {
+    printf("ESS_moderator_long: %s: Please select a beamport_angle between 0 and 60 degrees!\nExit\n", NAME_CURRENT_COMP);
+    exit(-1);
+  }
   
+  if (size && cyl_radius) {
+    printf("ESS_moderator_long: %s: Please specify EITHER cold-moderator radius (cyl_radius) or length of visible arch (size)!\nExit\n", NAME_CURRENT_COMP);
+    exit(-1);
+  } else if (cyl_radius) {
+    size = 2*PI*cyl_radius*60/360;
+  } else {
+    cyl_radius = 360*size/(2*PI*60);
+  }
+  r_optics = 6.0 - r_empty - cyl_radius;
+
   if (n == 1 || n2 == 1 || Lmin<=0 || Lmax <=0 || dist == 0
     || branch2 == 0 || branch_tail == 0 || tau == 0)
   {
@@ -203,10 +230,24 @@ INITIALIZE
   w_mult *= l_range;            /* wavelength range correction */
   w_mult *= 1.0/mcget_ncount();   /* Correct for number of rays */
   w_mult *= nu;               /* Correct for frequency */
+
+  /* Calculate location of thermal wings wrt beamport_angle (z) direction */
+  /* Wing 1 (left) is at -beamport_angle */
+  t1z = cyl_radius*cos(-DEG2RAD*beamport_angle);
+  t1x = cyl_radius*sin(-DEG2RAD*beamport_angle);
+  t1y = 0;
+  /* Wing 2 (right) is at 60-beamport_angle */
+  t2z = cyl_radius*cos(DEG2RAD*(60-beamport_angle));
+  t2x = cyl_radius*sin(DEG2RAD*(60-beamport_angle));
+  t2y = 0;
+  /* We want unit vectors... */
+  NORM(t1x,t1y,t1z);
+  NORM(t2x,t2y,t2z);
+  
 %}
 TRACE
 %{
-  double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag,cor,dt;
+  double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag,cor,dt,xprime,yprime,zprime;
 
   /* Bispectral source - choice of spectrum and initial position */
   int cold = ( rand01() < cold_frac ) ? 1 : 0;
@@ -216,7 +257,7 @@ TRACE
     double theta_tmp;
     
     //choose random point on cylinder surface
-    theta_tmp = randpm1()*PI/3 + PI/2;
+    theta_tmp = randpm1()*PI/6 + PI/2 + (- 30 + beamport_angle)*DEG2RAD;
         x     = cyl_radius * cos(theta_tmp);
         y     = 0.5*randpm1()*size;
         z     = cyl_radius * sin(theta_tmp);
@@ -226,9 +267,25 @@ TRACE
     T_n=T; tau_n=tau; tau1_n=tau1; tau2_n=tau2; chi2_n=chi2; I0_n=I0; I2_n=I2; branch1_n=branch1; branch2_n=branch2;
     
   }  else  {                      //case: thermal moderator
-    x = cyl_radius + size_t*rand01();
-    y = 0.5*randpm1()*size_t;
-    z = cyl_radius;
+    /* choose "left" or "right" thermal wing */
+    int isleft = ( rand01() < 0.5 ) ? 1 : 0;
+    double poshorz, posvert;
+    
+    poshorz = cyl_radius+rand01()*size_t;
+    posvert = 0.5*randpm1()*size_t;
+    
+    if (isleft) {
+      x = t1x * poshorz;
+      z = t1z * poshorz;
+    } else {
+      x = t2x * poshorz;
+      z = t2z * poshorz;
+    }
+    y = posvert;
+    
+    /* x = cyl_radius + size_t*rand01(); */
+    /* y = 0.5*randpm1()*size_t; */
+    /* z = cyl_radius; */
 
     //spectrum related constants - ESS 2001 Thermal moderator       
     //T_t=325, tau_t=80e-6, tau1_t=400e-6, tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5, branch2_t=0.5;
@@ -366,25 +423,53 @@ MCDISPLAY
   line(0, -size/2.0, -cyl_radius, 0, size/2.0, -cyl_radius);
   line(cyl_radius, -size/2.0, 0, cyl_radius, size/2.0, 0);  
   line(-cyl_radius, -size/2.0, 0, -cyl_radius, size/2.0, 0);
-  /* Draw thermal moderator as a couple of squares + some lines */
-  multiline(5, cyl_radius, -size/2.0, cyl_radius,
-         cyl_radius + size, -size/2.0, cyl_radius,
-	        cyl_radius + size, size/2.0, cyl_radius,
-		       cyl_radius, size/2.0, cyl_radius,
-		              cyl_radius, -size/2.0, cyl_radius);
-  multiline(5, cyl_radius, -size/2.0, 0.9*cyl_radius,
-         cyl_radius + size, -size/2.0, 0.9*cyl_radius,
-	        cyl_radius + size, size/2.0, 0.9*cyl_radius,
-		       cyl_radius, size/2.0, 0.9*cyl_radius,
-		              cyl_radius, -size/2.0, 0.9*cyl_radius);
-  line(cyl_radius, -size/2.0, cyl_radius, 
-       cyl_radius, -size/2.0, 0.9*cyl_radius);
-  line(cyl_radius + size, -size/2.0, cyl_radius, 
-       cyl_radius + size, -size/2.0, 0.9*cyl_radius);
-  line(cyl_radius, size/2.0, cyl_radius, 
-       cyl_radius, size/2.0, 0.9*cyl_radius);
-  line(cyl_radius + size, size/2.0, cyl_radius, 
-       cyl_radius + size, size/2.0, 0.9*cyl_radius);
+  /* Draw thermal moderators as a couple of squares + some lines */
+  // Left
+  multiline(4, t1x*cyl_radius, -size/2.0, t1z*cyl_radius,
+	    t1x*(cyl_radius + size_t), -size/2.0, t1z*(cyl_radius + size_t),
+      	    t1x*(cyl_radius + size_t), size/2.0,  t1z*(cyl_radius + size_t),
+	    t1x*cyl_radius, size/2.0, t1z*cyl_radius);
+	    // Right
+  multiline(4, t2x*cyl_radius, -size/2.0, t2z*cyl_radius,
+	    t2x*(cyl_radius + size_t), -size/2.0, t2z*(cyl_radius + size_t),
+      	    t2x*(cyl_radius + size_t), size/2.0,  t2z*(cyl_radius + size_t),
+	    t2x*cyl_radius, size/2.0, t2z*cyl_radius);
+  
+  /* Dashed lines for indicating "beam extraction" area... */
+  dashed_line(t1x*cyl_radius, -size/2.0, t1z*cyl_radius, t1x*r_empty, -size/2.0, t1z*r_empty,10);
+  dashed_line(t1x*cyl_radius, size/2.0, t1z*cyl_radius, t1x*r_empty, size/2.0, t1z*r_empty,10);
+  dashed_line(t2x*cyl_radius, -size/2.0, t2z*cyl_radius, t2x*r_empty, -size/2.0, t2z*r_empty,5);
+  dashed_line(t2x*cyl_radius, size/2.0, t2z*cyl_radius, t2x*r_empty, size/2.0, t2z*r_empty,5);
+
+  circle("xz", 0,  size/2.0, 0, r_empty);
+  circle("xz", 0,  -size/2.0, 0, r_empty);
+
+  circle("xz", 0,  size/2.0, 0, r_optics);
+  circle("xz", 0,  -size/2.0, 0, r_optics);
+
+  circle("xz", 0,  size/2.0, 0, 6);
+  circle("xz", 0,  -size/2.0, 0, 6);
+  
+  rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
+
+  /* multiline(5, cyl_radius, -size/2.0, cyl_radius, */
+  /*        cyl_radius + size, -size/2.0, cyl_radius, */
+  /* 	        cyl_radius + size, size/2.0, cyl_radius, */
+  /* 		       cyl_radius, size/2.0, cyl_radius, */
+  /* 		              cyl_radius, -size/2.0, cyl_radius); */
+  /* multiline(5, cyl_radius, -size/2.0, 0.9*cyl_radius, */
+  /*        cyl_radius + size, -size/2.0, 0.9*cyl_radius, */
+  /* 	        cyl_radius + size, size/2.0, 0.9*cyl_radius, */
+  /* 		       cyl_radius, size/2.0, 0.9*cyl_radius, */
+  /* 		              cyl_radius, -size/2.0, 0.9*cyl_radius); */
+  /* line(cyl_radius, -size/2.0, cyl_radius,  */
+  /*      cyl_radius, -size/2.0, 0.9*cyl_radius); */
+  /* line(cyl_radius + size, -size/2.0, cyl_radius,  */
+  /*      cyl_radius + size, -size/2.0, 0.9*cyl_radius); */
+  /* line(cyl_radius, size/2.0, cyl_radius,  */
+  /*      cyl_radius, size/2.0, 0.9*cyl_radius); */
+  /* line(cyl_radius + size, size/2.0, cyl_radius,  */
+  /*      cyl_radius + size, size/2.0, 0.9*cyl_radius); */
 
 %}
 
