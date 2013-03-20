@@ -76,14 +76,14 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT ESS_IN5_reprate(Lmin=4.9, Lmax=5.1, lambda0=5, Pulse_width=0.002, 
-  Num_pulses=1, GUI_start=1.5,  FO1_DIST=6, L_ballistic_begin=19.5, 
+  Num_pulses=1, GUI_start=2.0,  FO1_DIST=6, L_ballistic_begin=19.5, 
   L_ballistic_end=17, Length=100, SAMPLE_DIST=1.2,  DETECTOR_DIST=4, 
   GUI_h=0.105, GUI_w=0.1, GUI_GAP=0.05, H1=0.167, W1=0.116, H2=0.185,  
   W2=0.15, H3=0.19, W3=0.15, H4=0.213, W4=0.14, H_chop=0.075, W_chop=0.03, 
   H_end=0.042,  W_end=0.0215, ALPHA=3.4, M=3.5, F_slow1=16.6667, F_slow2=0, 
   F_fast1=0, F_fast2=200,  N_fast=1, SLOW1_THETA=120, FO3=1, THETA_fast1=180, 
   FAST_THETA=5, Gamma=0, Etun=1,  V_HOLE=0, FRAC_QUASIEL=0, FRAC_TUNNEL=0, 
-  TT=50, RES_DE=0.5)
+				  TT=50, RES_DE=0.5, port=30, cold=0)
      
 DECLARE
 %{
@@ -112,25 +112,28 @@ INITIALIZE
 
 TRACE
 
-COMPONENT Origin = Progress_bar()
-  AT (0,0,0) ABSOLUTE
 
+/* Displaced wrt Origin - as it has a volume... */
 COMPONENT source = ESS_moderator_long(
-    size = 0.12, Lmin = Lmin, Lmax = Lmax, dist = GUI_start, focus_xw = GUI_w,
+				      Lmin = Lmin, Lmax = Lmax, dist = GUI_start, focus_xw = GUI_w, cyl_radius=0.085,   
     focus_yh = GUI_h, nu = FREQ, T = 50, tau = 287e-6, tau1 = 0,
     tau2 = 20e-6, d = Pulse_width, n = 20, n2 = 5, chi2 = 0.9,
     I0 = 6.9e11, I2 = 27.6e10, branch1 = 1, branch2 = 0.5,
-    branch_tail = 0.1, n_pulses = Num_pulses)
-  AT (0, 0, -0.1) RELATIVE Origin
+    branch_tail = 0.1, n_pulses = Num_pulses, beamport_angle=port, cold_frac=cold)
+  AT (0, 0, -0.1) ABSOLUTE
+
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
 
 COMPONENT TOFmoderator_zoom = TOF_monitor(
     nt = 1000, filename = "TOFmoderator_zoom.dat", xwidth = 0.12,
-    yheight = 0.12, tmin = 0, tmax = 5000)
+    yheight = 0.12, tmin = 0, tmax = 5000, restore_neutron=1)
     AT (0, 0, 1E-6) RELATIVE Origin 
 
 COMPONENT TOFmoderator = TOF_monitor(
     nt = 1000, filename = "TOFmoderator.dat", xwidth = 0.12,
-    yheight = 0.12, tmin = 0, tmax = 3.0e5)
+    yheight = 0.12, tmin = 0, tmax = 3.0e5, restore_neutron=1)
   AT (0, 0, 1E-6) RELATIVE Origin
 
 COMPONENT Lmon_guistart = L_monitor(
@@ -142,6 +145,8 @@ COMPONENT Lmon_normalize = L_monitor(
     nL = 2880, filename = "Lmon_guistart_normalize.dat", xwidth = 0.10,
     yheight = 0.10, Lmin = 0, Lmax = 20)
   AT (0, 0, GUI_start-1e-6) RELATIVE Origin
+
+
 
 COMPONENT Guide1 = Guide(
     w1 = GUI_w, h1 = GUI_h, w2 = W1, h2 = H1, l = FO1_DIST-GUI_start-GUI_GAP/2, R0 = 1,
@@ -177,7 +182,7 @@ COMPONENT PSD_afterslow1 = PSD_monitor(
   AT (0, 0, 3e-6) RELATIVE FOchop1
 
 COMPONENT Guidelong1 = Guide(
-    w1 = W1, h1 = H1, w2 = W2, h2 = H2, 
+    w1 = W1, h1 = H1, w2 = W2, h2 = H2,
     l = L_ballistic_begin+GUI_start-FO1_DIST-GUI_GAP/2,
     R0 = 1, alpha = ALPHA, m = M, W = 0.003)
   AT (0, 0, GUI_GAP/2) RELATIVE FOchop1
@@ -329,7 +334,7 @@ COMPONENT Lmon_sample_zoom = L_monitor(
 
 COMPONENT sample = Tunneling_sample(
     thickness = 0.01-V_HOLE, radius = 0.01, yheight = 0.04, p_interact = 1,
-    f_QE = FRAC_QUASIEL, f_tun=FRAC_TUNNEL, gamma = Gamma, E_tun = Etun, 
+    f_QE = FRAC_QUASIEL, f_tun=FRAC_TUNNEL, gamma = Gamma, E_tun = Etun,
     focus_xw = 0.015, focus_yh = 0.015, target_index = 2)
   AT (0, -0.04, SAMPLE_DIST) RELATIVE Fastchop2
 
