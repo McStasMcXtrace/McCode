@@ -83,7 +83,7 @@ DEFINE INSTRUMENT ESS_IN5_reprate(Lmin=4.9, Lmax=5.1, lambda0=5, Pulse_width=0.0
   H_end=0.042,  W_end=0.0215, ALPHA=3.4, M=3.5, F_slow1=16.6667, F_slow2=0, 
   F_fast1=0, F_fast2=200,  N_fast=1, SLOW1_THETA=120, FO3=1, THETA_fast1=180, 
   FAST_THETA=5, Gamma=0, Etun=1,  V_HOLE=0, FRAC_QUASIEL=0, FRAC_TUNNEL=0, 
-				  TT=50, RES_DE=0.5, port=30, cold=0)
+				  TT=50, RES_DE=0.5, port=30, cold=0.95)
      
 DECLARE
 %{
