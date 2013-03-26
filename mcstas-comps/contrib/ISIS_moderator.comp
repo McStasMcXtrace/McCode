@@ -846,8 +846,10 @@ cmdnumberI(char *mc,int* num,const int len)
       return A;
     }
 
+int TargetStation;
+int CurrentWeight;
 
-  %}
+%}
 
 INITIALIZE
 %{
@@ -1012,7 +1014,14 @@ INITIALIZE
 	    rtmodY=Olist[i].Ysize;
 	    fprintf(stderr,"default yheight used %g m\n",rtmodY);
 	  }
-	sprintf(fname,"h.%s",Olist[i].Name);
+	/* Input file naming according to "beamline" list above */
+	if (i < 18) {
+	  sprintf(fname,"TS1.%s",Olist[i].Name);
+	  TargetStation = 1;
+	} else {
+	  sprintf(fname,"TS2.%s",Olist[i].Name);
+	  TargetStation = 2;
+	}
 	scaleSize=(SAC) ? 1.0 : rtmodY*rtmodX*10000.0;
 	break;
       }
@@ -1036,7 +1045,7 @@ INITIALIZE
   /* READ PARAMETER FILE */
 
   TFile=openFile(fname);
-
+  
   if (!readHtable(TFile,rtE0,rtE1))
     {
       fprintf(stderr,"Failed to read the Hzone from file %s\n", fname);
@@ -1052,7 +1061,18 @@ INITIALIZE
     angleArea=(dist>0.0) ? strArea() : 2*3.141592654;
   else
     angleArea=1.0;
-
+  
+  /* 
+  TS1: MCNPX runs were done for 60 mu-A, but the source runs at 160 mu-A, 40 Hz.
+  TS2: MCNPX runs were done for 60 mu-A, but the source runs at 40-mu-A, 10 Hz.
+  */
+  
+  if (TargetStation == 1) {
+    CurrentWeight = 160.0/60.0;
+  } else {
+    CurrentWeight = 40.0/60.0;
+  }
+  
 %}
 
 TRACE
@@ -1110,7 +1130,7 @@ TRACE
 
   t=Tval;
 
-  p=w_focus*Ival/Nsim;
+  p=w_focus*Ival*CurrentWeight/Nsim;
 %}
 
 
