@@ -847,7 +847,7 @@ cmdnumberI(char *mc,int* num,const int len)
     }
 
 int TargetStation;
-int CurrentWeight;
+double CurrentWeight;
 
 %}
 
@@ -1129,7 +1129,7 @@ TRACE
     fprintf(stderr,"FF[%d]=> %g %g %g %g \n",Ncount,Eval,Tval,TS.Total,Ival);
 
   t=Tval;
-
+  
   p=w_focus*Ival*CurrentWeight/Nsim;
 %}
 
