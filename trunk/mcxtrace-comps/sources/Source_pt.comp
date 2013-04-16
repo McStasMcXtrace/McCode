@@ -35,6 +35,7 @@
 * E0:     [keV] Mean energy of xrays.
 * dE:     [keV] Energy half spread of x-rays.
 * gauss:  [1]   Gaussian (1) or Flat (0) energy/wavelength distribution
+* dist:   [m]   Distance from source plane to sampling window.
 * 
 * 
 */
