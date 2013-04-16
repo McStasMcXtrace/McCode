@@ -78,8 +78,13 @@ MAC-OSX:
 4. Install McXtrace (kernel, component, tools - in that order) using the installer packages as you would usually.
 
 DEBIAN-based systems:
-Install kernel, components and optionally tools packages (in that order) by:
+1. Untar the package tarball and cd into the directory
+2. Install kernel, components and optionally tools packages (in that order) by:
 dpkg --install <package file>
+In this process you may be asked to install some dependencies such as perl, perl-tk etc. from 
+the regulr apt repositories. Please go ahead and do so if you intended to install the tools-package.
+3. Optionally install the python based experimental tools using dpkg analogously to above
+... you should now be able to run mxgui, mxrun and so on.
 
 
 SOURCE-TARBALLS:
