@@ -69,7 +69,7 @@ SHARE
     double w_k;/*flourescence yield*/
     int linec;
     double e[6];/*line energy*/
-    double w[6];/*natural width of line*/
+    double w[6];/*natural width of line FWHM*/
     double i[6];/*relative intensity*/
   } xray_mat_data[]={
     {29,8.979 ,0.407,2,{8.02783,8.04778,0,0,0},{2.11e-3,2.17e-3,0,0,0},{0.51,1.0,0,0,0}},
