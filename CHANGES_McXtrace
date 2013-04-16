@@ -65,6 +65,7 @@ WINDOWS:
 2. Install first kernel packages followed by component library (mctrace, mcxtrace-comps)
 --additional steps for GUI and plotting tools
 3. Make sure your system has perl installed. We recommend strawberry perl (www.strawberryperl.com) as the distribution includes the necessary perl modules to run McXtrace.
+It alsos includes a port of gcc - so you do not need to install a c-compiler separately if you do not want to do so.
 4. Install the mcxtrace-tools-perl package. 
 --optional steps to get the epxerimental python based tools
 5. Install a python distribution. We recommend PythonXY (http://www.pythonxy.com) or Anaconda CE (http://store.continuum.io/cshop/anaconda).
