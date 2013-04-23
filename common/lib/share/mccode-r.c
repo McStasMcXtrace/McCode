@@ -315,7 +315,7 @@ static int mpi_node_root = 0;
 *******************************************************************************/
 int mc_MPI_Sum(double *sbuf, long count)
 {
-  if (!sbuf || count <= 0) return(MPI_ERR_COUNT);
+  if (!sbuf || count <= 0) return(MPI_SUCCESS); /* nothing to reduce */
   else {
     /* we must cut the buffer into blocks not exceeding the MPI max buffer size of 32000 */
     long   offset=0;
@@ -328,8 +328,9 @@ int mc_MPI_Sum(double *sbuf, long count)
     while (offset < count) {
       if (!length || offset+length > count-1) length=count-offset;
       else length=MPI_REDUCE_BLOCKSIZE;
-      MPI_Allreduce((double*)(sbuf+offset), (double*)(rbuf+offset),
-              length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      if (MPI_Allreduce((double*)(sbuf+offset), (double*)(rbuf+offset),
+              length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD) != MPI_SUCCESS)
+        return MPI_ERR_COUNT;
       offset += length;
     }
 
@@ -351,13 +352,14 @@ int mc_MPI_Send(void *sbuf,
   int  tag=1;
   int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
 
-  if (!sbuf || count <= 0) return(MPI_ERR_COUNT);
+  if (!sbuf || count <= 0) return(MPI_SUCCESS); /* nothing to send */
   MPI_Type_size(dtype, &dsize);
 
   while (offset < count) {
     if (offset+length > count-1) length=count-offset;
     else length=MPI_REDUCE_BLOCKSIZE;
-    MPI_Send((void*)(sbuf+offset*dsize), length, dtype, dest, tag++, MPI_COMM_WORLD);
+    if (MPI_Send((void*)(sbuf+offset*dsize), length, dtype, dest, tag++, MPI_COMM_WORLD) != MPI_SUCCESS)
+      return MPI_ERR_COUNT;
     offset += length;
   }
 
@@ -377,14 +379,15 @@ int mc_MPI_Recv(void *sbuf,
   int  tag=1;
   int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
 
-  if (!sbuf || count <= 0) return(MPI_ERR_COUNT);
+  if (!sbuf || count <= 0) return(MPI_SUCCESS); /* nothing to recv */
   MPI_Type_size(dtype, &dsize);
 
   while (offset < count) {
     if (offset+length > count-1) length=count-offset;
     else length=MPI_REDUCE_BLOCKSIZE;
-    MPI_Recv((void*)(sbuf+offset*dsize), length, dtype, source, tag++,
-            MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    if (MPI_Recv((void*)(sbuf+offset*dsize), length, dtype, source, tag++,
+            MPI_COMM_WORLD, MPI_STATUS_IGNORE) != MPI_SUCCESS)
+      return MPI_ERR_COUNT;
     offset += length;
   }
 
@@ -2630,10 +2633,10 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
       int mnp[3]={detector.m,detector.n,detector.p};
 
       if (mc_MPI_Send(mnp, 3, MPI_INT, mpi_node_root)!= MPI_SUCCESS)
-        fprintf(stderr, "Warning: proc %i to master: MPI_Send mnp list error (mcdetector_write_data)", mpi_node_rank);
+        fprintf(stderr, "Warning: proc %i to master: MPI_Send mnp list error (mcdetector_write_data)\n", mpi_node_rank);
       if (!detector.p1
        || mc_MPI_Send(detector.p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, mpi_node_root) != MPI_SUCCESS)
-        fprintf(stderr, "Warning: proc %i to master: MPI_Send p1 list error (mcdetector_write_data)", mpi_node_rank);
+        fprintf(stderr, "Warning: proc %i to master: MPI_Send p1 list error: mnp=%i (mcdetector_write_data)\n", mpi_node_rank, abs(mnp[0]*mnp[1]*mnp[2]));
       /* slaves are done */
       return (detector);
     }
@@ -2651,11 +2654,11 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
       if (node_i != mpi_node_root) { /* get data from slaves */
         if (mc_MPI_Recv(mnp, 3, MPI_INT, node_i) != MPI_SUCCESS)
           fprintf(stderr, "Warning: master from proc %i: "
-            "MPI_Recv mnp list error (mcdetector_write_data)", node_i);
+            "MPI_Recv mnp list error (mcdetector_write_data)\n", node_i);
         this_p1 = (double *)calloc(abs(mnp[0]*mnp[1]*mnp[2]), sizeof(double));
         if (!this_p1 || mc_MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i)!= MPI_SUCCESS)
           fprintf(stderr, "Warning: master from proc %i: "
-            "MPI_Recv p1 list error (mcdetector_write_data)", node_i);
+            "MPI_Recv p1 list error: mnp=%i (mcdetector_write_data)\n", node_i, abs(mnp[0]*mnp[1]*mnp[2]));
         detector.p1 = this_p1;
         detector.m  = mnp[0]; detector.n  = mnp[1]; detector.p  = mnp[2];
       } else
@@ -4649,7 +4652,7 @@ void sighandler(int sig)
 
   printf("\n# McStas: [pid %i] Signal %i detected", getpid(), sig);
 #ifdef USE_MPI
-  printf("[proc %i]", mpi_node_rank);
+  printf(" [proc %i]", mpi_node_rank);
 #endif
 #if defined(SIGUSR1) && defined(SIGUSR2) && defined(SIGKILL)
   if (!strcmp(mcsig_message, "sighandler") && (sig != SIGUSR1) && (sig != SIGUSR2))
