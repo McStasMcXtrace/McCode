@@ -130,7 +130,12 @@ TRACE
     pp=Table_Value(prms.T,l,1);
     //}
     p*=pp;
-    /*if E0!=0 convert the tabled value to wavelength*/
+    /*if E0!=0 the tabled value is assumed to be energy in keV*/
+    if (E0!=0){
+      k=E2K*l;
+    }else{
+      k=(2*M_PI/l);
+    }
   }else if (E0){
     if(!dE){
       e=E0;

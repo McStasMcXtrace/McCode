@@ -168,7 +168,7 @@ TRACE
       //}
     p*=pp;
     //printf("%g\n",p);
-    /*if E0!=0 convert the tabled value to */
+    /*if E0!=0 convert the tabled value to energy*/
     if (E0) {
       k=E2K*l;
     }else{
