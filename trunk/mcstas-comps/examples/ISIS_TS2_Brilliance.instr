@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McStas instrument definition URL=http://www.mcstas.org
 *
-* Instrument: ISIS_Brilliance (rename also the example and DEFINE lines below)
+* Instrument: ISIS_TS2_Brilliance (rename also the example and DEFINE lines below)
 *
 * %Identification
 * Written by: Peter Willendrup
@@ -11,10 +11,10 @@
 * Version: 0.2
 * %INSTRUMENT_SITE: ISIS
 *
-* This instrument produces brilliance curves from the ISIS facility.
+* This instrument produces brilliance curves from the ISIS TS2 facility.
 *
 * %Description
-* This instrument produces brilliance curves from the ISIS facility.
+* This instrument produces brilliance curves from the ISIS TS2 facility.
 * 
 * The Brilliance_monitor is used to determine both the mean and peak brilliances, plus pulse-shapes for different wavelengths.
 *
@@ -29,7 +29,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ISIS(string modfile="hydrogen")
+DEFINE INSTRUMENT ISIS_TS2_Brilliance(string modfile="hydrogen")
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -67,7 +67,7 @@ COMPONENT Source = ISIS_moderator(Face = modfile, Emin = -lambdamin,Emax = -lamb
 COMPONENT Brillmon = Brilliance_monitor(
     nlam = 196, nt = 601, filename = "brill", t_0 = 0,
     t_1 = 600, lambda_0 = lambdamin, lambda_1 = lambdamax,
-    Freq =40.0)
+    Freq =10.0)
   AT (0, 0, 0.0000001) RELATIVE Source
 
 /* This section is executed when the simulation ends (C code). Other    */
