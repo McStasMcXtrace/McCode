@@ -156,14 +156,6 @@ SAVE
   double Pnorm;
   char ff[256];
   char tt[256];
-  sprintf(ff, "TOFL_%s",filename);
-  DETECTOR_OUT_2D(
-		  "TOF-wavelength brilliance",
-		  "Time-of-flight [\\gms]", "Wavelength [AA]",
-		  t_0, t_1, lambda_0, lambda_1,
-		  nt, nlam,
-		  &BRIL_N[0][0],&BRIL_p[0][0],&BRIL_p2[0][0],
-		  filename);
   
   for (i=0; i<nlam; i++)
     {
@@ -211,6 +203,18 @@ SAVE
         "Peak", lambda_0, lambda_1, nlam,
         &BRIL_peakN[0],&BRIL_peak[0],&BRIL_peakE[0],
         ff);
+
+  /* MPI related NOTE: Order is important here! The 2D-data used to generate wavelength-slices and calculate
+     the peak brilliance should be done LAST, otherwise we will get a factor of MPI_node_count too much as 
+     scatter/gather has been performed on the arrays... */
+  sprintf(ff, "TOFL_%s",filename);
+  DETECTOR_OUT_2D(
+		  "TOF-wavelength brilliance",
+		  "Time-of-flight [\\gms]", "Wavelength [AA]",
+		  t_0, t_1, lambda_0, lambda_1,
+		  nt, nlam,
+		  &BRIL_N[0][0],&BRIL_p[0][0],&BRIL_p2[0][0],
+		  filename);
   %}
 
 MCDISPLAY
