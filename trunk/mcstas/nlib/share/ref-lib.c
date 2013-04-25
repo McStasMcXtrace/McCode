@@ -51,9 +51,33 @@ void StdReflecFunc(double mc_pol_q, double *mc_pol_par, double *mc_pol_r) {
     double alpha = mc_pol_par[2];
     double m     = mc_pol_par[3];
     double W     = mc_pol_par[4];
+    double beta  = 0;
     mc_pol_q     = fabs(mc_pol_q);
-    double arg   = W > 0 ? (mc_pol_q - m*Qc)/W : 11;
+    double arg;
+    double m_value;
     
+    /* Simpler parametrization from Henrik Jacobsen uses these values that depend on m only.
+       double m_value=m*0.9853+0.1978;
+       double W=-0.0002*m_value+0.0022;
+       double alpha=0.2304*m_value+5.0944;
+       double beta=-7.6251*m_value+68.1137; 
+       If W and alpha are set to 0, use Henrik's approach for estimating these parameters
+       and apply the formulation:
+       arg = R0*0.5*(1-tanh(arg))*(1-alpha*(q-Qc)+beta*(q-Qc)*(q-Qc));
+    */  
+    if (W==0 && alpha==0) {
+      m=m*0.9853+0.1978;
+      W=-0.0002*m+0.0022;
+      alpha=0.2304*m+5.0944;
+      beta=-7.6251*m+68.1137;
+      if (m_value<=3) {
+	alpha=m;
+	beta=0;
+      }
+    }
+    
+    arg = W > 0 ? (mc_pol_q - m*Qc)/W : 11;
+
     if (arg > 10 || m <= 0 || Qc <=0 || R0 <= 0) {
       *mc_pol_r = 0;
       return;
@@ -66,7 +90,9 @@ void StdReflecFunc(double mc_pol_q, double *mc_pol_par, double *mc_pol_r) {
       return;
     }
     
-    *mc_pol_r = R0*0.5*(1 - tanh(arg))*(1 - alpha*(mc_pol_q - Qc));
+    
+    *mc_pol_r = R0*0.5*(1 - tanh(arg))*(1 - alpha*(mc_pol_q - Qc) + beta*(mc_pol_q - Qc)*(mc_pol_q - Qc));
+    
     return;
   }
 
