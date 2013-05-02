@@ -30,15 +30,15 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Molecule_2state
-  DEFINITION PARAMETERS (string form_factors="FormFactors.txt",string state_0_file=NULL,string state_1_file=NULL  )
-  SETTING PARAMETERS (delta_t=100e-9,excitation_yield=0.2,t_relax=100e-9,psimin=0,psimax=M_PI_2, etamin=0, etamax=2*M_PI, radius=0, yheight=0, xwidth=0, zdepth=0, concentration=1,p_transmit=0.1)
+DEFINITION PARAMETERS (string form_factors="FormFactors.txt",string state_0_file=NULL,string state_1_file=NULL, nq=201)
+SETTING PARAMETERS (delta_t=100e-9,excitation_yield=0.2,t_relax=100e-9,psimin=0,psimax=M_PI_2, etamin=0, etamax=2*M_PI, radius=0, yheight=0, xwidth=0, zdepth=0, concentration=1,p_transmit=0.1)
 OUTPUT PARAMETERS (delta_q,prms,shape)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
   %include "read_table-lib"
-  //%include "atom-lib"
+  %include "form_factor-lib"
   enum SHAPES {NONE,CYLINDER,SPHERE,BOX};
 
 %}
@@ -78,10 +78,10 @@ INITIALIZE
       exit(-1);
     }
   }
-  prms[0].f2=malloc(sizeof(double)*f0.rows);
-  prms[0].q=malloc(sizeof(double)*f0.rows);
-  prms[1].f2=malloc(sizeof(double)*f0.rows);
-  prms[1].q=malloc(sizeof(double)*f0.rows);
+  prms[0].f2=malloc(sizeof(double)*nq);/*could be done by read_table-lib*/
+  prms[0].q=malloc(sizeof(double)*nq);
+  prms[1].f2=malloc(sizeof(double)*nq);
+  prms[1].q=malloc(sizeof(double)*nq);
   
   if (!psimax) psimax=M_PI;
   /*compute q-limits*/;
@@ -90,14 +90,15 @@ INITIALIZE
 
   printf("%s: Computing F2(q) for two states:\n", NAME_CURRENT_COMP);
   int r,n,m,states;/*do this for two states*/
+  double dq= 6.0/(nq-1);
   for (states=0;states<2;states++){
-    for (r=0;r<f0.rows;r++){
+    for (r=0;r<nq;r++){
       double f2=0;
-      double q=Table_Index(f0,r,0);
+      double q=prms[states].qnmin + r*dq;//Table_Index(f0,r,0);
       for (n=0;n<T[states].rows;n++){
         int Zn=(int) Table_Index(T[states],n,0);
         /*figure out Z_n*/
-        double f0n=Table_Index(f0,r,Zn);
+        double f0n=atomic_form_factor(Zn,0,q);//Table_Index(f0,r,Zn);
         double nx,ny,nz;
         nx=Table_Index(T[states],n,1);
         ny=Table_Index(T[states],n,2);
@@ -106,7 +107,7 @@ INITIALIZE
         //printf("debug %d %g\n",Zn,f2);
         for (m=n+1;m<T[states].rows;m++){
           int Zm=(int) Table_Index(T[states],m,0);
-          double f0m=Table_Index(f0,r,Zm);
+          double f0m=atomic_form_factor(Zm,0,q);//Table_Index(f0,r,Zm);
           double mx,my,mz,dr;
           mx=Table_Index(T[states],m,1);
           my=Table_Index(T[states],m,2);
@@ -122,7 +123,7 @@ INITIALIZE
       prms[states].f2[r]=f2;
       prms[states].q[r]=q;
       if (r>0){
-        double dq=q-Table_Index(f0,r-1,0);
+        //double dq=q-Table_Index(f0,r-1,0);
         /*integrate using linear interpolation*/ 
         prms[states].f2sum+=0.5*(prms[states].f2[r-1]+f2)*dq;
         if (q>prms[states].qnmin && q<prms[states].qnmax){
@@ -141,9 +142,11 @@ INITIALIZE
   if (radius){
     if (yheight) shape=CYLINDER;
     else shape=SPHERE;
+  }else if (xwidth && yheight && zdepth){
+    shape=BOX;
   }
   if (shape==NONE){
-    fprintf(stderr,"Error (%s): cpould not understand which shape the thing is\n",NAME_CURRENT_COMP);exit(1);
+    fprintf(stderr,"Error (%s): could not understand which shape the thing is\n",NAME_CURRENT_COMP);exit(1);
   }
 
 %}
@@ -209,12 +212,11 @@ TRACE
       
       /*find f2 for this q by interpolation*/
       int r;
-      for(r=1;r<prms[state].rows;r++){
+      for(r=1;r<nq;r++){
         if (prms[state].q[r]>q) break;
       }
-      alpha=q-prms[state].q[r-1]/(prms[state].q[r]-prms[state].q[r-1]);
+      alpha=(q-prms[state].q[r-1])/(prms[state].q[r]-prms[state].q[r-1]);
       f2=(1-alpha)*prms[state].f2[r-1] + alpha*prms[state].f2[r];
-      
       /*apply psi and eta rotations to k to get the new vector*/
       /*compute new k using random eta in eta interval if any*/
       kx=k*cos(eta)*sin(psi);
@@ -245,9 +247,7 @@ TRACE
       /*also downscale for absorption effects*/
       /*here we should also take into account flourescence*/
     }
-
   }
-
 %}
 
 MCDISPLAY
