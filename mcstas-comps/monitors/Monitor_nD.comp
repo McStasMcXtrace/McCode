@@ -148,7 +148,7 @@
 *
 * To dynamically define a number of bins, or limits:
 *   Use in DECLARE:    char op[256]; 
-*   Use in INITIALIZE: sprintf(op, "lambda limits=[%g %g], bins=%i", lmin, lmax, lbin);
+*   Use in INITIALIZE: sprintf(op, "lambda limits=[g g], bins=i", lmin, lmax, lbin);
 *   Use in TRACE:      Monitor_nD(... options=op ...)
 *
 * <b>How to monitor any instrument/component variable into a Monitor_nD</b>
