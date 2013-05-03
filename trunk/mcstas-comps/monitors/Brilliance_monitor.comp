@@ -12,17 +12,19 @@
 * Origin: DTU Physics
 * Release: McStas 1.12c
 *
-* Special "Brilliance" monitor of FIXED size 1x1cm. If used in the right setting, will output "instantaneous" and "mean" brilliances in units of Neutrons/cm^2/ster/AA/s. Conditions for proper units:
-<ul>
-<li>Use a with a source of area 1x1cm
-<li>The source must illuminate/focus to an area of 1x1cm a 1m distance
-<li>Parametrise the Brilliance_monitor with the frequency of the source
-<li>To not change the source TOF distribution, place the Brilliance monitor close to the source!
-</ul>
-
-  with a source of area 1x1cm illuminating/focusing to an area of 1x1cm a 1m distance, this monitor will output "instantaneous" and "mean" brilliances in units of Neutrons/cm^2/ster/AA/s
+* Special "Brilliance" monitor of FIXED size 1x1cm. 
 *
 * %D
+* If used in the right setting, will output "instantaneous" and "mean" brilliances in units of Neutrons/cm^2/ster/AA/s. Conditions for proper units:
+* <ul>
+* <li>Use a with a source of area 1x1cm
+* <li>The source must illuminate/focus to an area of 1x1cm a 1m distance
+* <li>Parametrise the Brilliance_monitor with the frequency of the source
+* <li>To not change the source TOF distribution, place the Brilliance monitor close to the source!
+* </ul>
+* 
+* with a source of area 1x1cm illuminating/focusing to an area of 1x1cm a 1m distance, this monitor will output "instantaneous" and "mean" brilliances in units of Neutrons/cm^2/ster/AA/s
+* 
 * Here is an example of the use of the component. Note how the mentioned Unit conditions are implemented in instrument code.
 *
 *COMPONENT Source = ESS_moderator_long(

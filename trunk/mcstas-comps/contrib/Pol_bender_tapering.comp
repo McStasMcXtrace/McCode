@@ -271,7 +271,7 @@ TRACE
       q1z= q0z - dx1_q*(sphi);
 
 #ifdef MCDEBUG
-        printf("%sPTS: %d %g %g %g %g %g %g %g %g %g %g\n",NAME_CURRENT_COMP,channel_no,p1x,p1z,p2x,p2z,q1x,q1z,q2x,q2z,q0x,q0z);
+        printf("%sPTS: %i %g %g %g %g %g %g %g %g %g %g\n",NAME_CURRENT_COMP,channel_no,p1x,p1z,p2x,p2z,q1x,q1z,q2x,q2z,q0x,q0z);
 #endif
       
       while ( !( x> entry_radius*sin(dx2/entry_radius) && x< entry_radius*sin(dx1/entry_radius) ) ){

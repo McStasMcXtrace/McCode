@@ -917,7 +917,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     Table_SetElement(&Sqw_moments[1],    index_q, 0, w1);
     Table_SetElement(&Sqw_moments[2],    index_q, 0, w3);
     if (w1 > 0 && sq && Sqw->Temperature > 0) {
-      double w_c = sqrt(w1/sq*2*Sqw->Temperature*Sqw->T2E);
+      double w_c = sqrt(w1/sq*2*Sqw->Temperature*Sqw->T2E);  /* HBAR^2 q^2 kT /m/ S(q) */
       Table_SetElement(&Sqw_moments[3],    index_q, 0, w_c); /* collective dispersion */
     }
     if (w1 && w3*w1 > 0) {
@@ -963,9 +963,10 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
         /* HBAR = [J*s] */
         double c_T = 2*PI*w_c*meV2Hz/q_min/1e10;                  /* meV*Angs -> m/s */
         double ChiT= S0/(KB*Sqw->Temperature*Sqw->mat_rho*1e30);
-        printf("# Isothermal compressibility Chi_T=%g [Pa-1] (Egelstaff  p201 Eq 10.21)\n", ChiT);
-        printf("# Isothermal sound velocity    c_T=%g [m/s]  (Lovesey T1 p210 Eq 5.197)\n",
-          c_T);
+        printf("# Isothermal compressibility Chi_T=%g [Pa-1] (Egelstaff  p201 Eq 10.21) at q=%g [Angs-1]\n", 
+          ChiT, q_min);
+        printf("# Isothermal sound velocity    c_T=%g [m/s]  (Lovesey T1 p210 Eq 5.197) at q=%g [Angs-1]\n",
+          c_T, q_min);
 
         /* Computation if C11 is rather tricky as it is obtained from w_l, which is usually quite noisy
          * This means that the obtained values are not reliable from C = rho c_l^2 (Egelstaff Eq 14.10b p284)
@@ -974,8 +975,8 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
         double w_l = Table_Index(Sqw_moments[4], q_min_index, 0); /* meV */
         double c_l = 2*PI*w_l*meV2Hz/q_min/1e10;                  /* meV*Angs -> m/s */
         double C11 = (Sqw->mat_weight*Da)*(Sqw->mat_rho*1e30)*c_l*c_l;
-        printf("# Elastic modulus              C11=%g [GPa]  (Egelstaff Eq 14.10b p284) [rough estimate]\n",
-            C11/1e9);
+        printf("# Elastic modulus              C11=%g [GPa]  (Egelstaff Eq 14.10b p284) [rough estimate] at q=%g [Angs-1]\n",
+            C11/1e9, q_min);
       }
     }
     if (do_inc) {
