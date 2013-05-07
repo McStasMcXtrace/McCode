@@ -253,9 +253,9 @@ INITIALIZE
   else if (min > -FLT_MAX) { sprintf(tmp, " all min=%g", min); strcat(Vars.option, tmp); }
   else if (max <  FLT_MAX) { sprintf(tmp, " all max=%g", max); strcat(Vars.option, tmp); }
 
-  strncpy(Vars.UserName1, username1 && strlen(username1) ? username1 : "", 32);
-  strncpy(Vars.UserName2, username2 && strlen(username2) ? username2 : "", 32);
-  strncpy(Vars.UserName3, username3 && strlen(username3) ? username3 : "", 32);
+  strncpy(Vars.UserName1, username1 && strlen(username1) ? username1 : "", 128);
+  strncpy(Vars.UserName2, username2 && strlen(username2) ? username2 : "", 128);
+  strncpy(Vars.UserName3, username3 && strlen(username3) ? username3 : "", 128);
   if (radius) { 
     xwidth = zdepth = 2*radius;
     if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana")) 
