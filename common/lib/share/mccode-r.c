@@ -1897,7 +1897,7 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
       z = p1[index];
       N = p0 ? p0[index] : 1;
       E = p2 ? p2[index] : 0;
-      if (p2 && !israw) p2[index] = (*mcestimate_error_p)(p0[i],p1[i],p2[i]); /* set sigma */
+      if (p2 && !israw) p2[index] = (*mcestimate_error_p)(p0[index],p1[index],p2[index]); /* set sigma */
 
       /* compute stats integrals */
       sum_xz += x*z;
