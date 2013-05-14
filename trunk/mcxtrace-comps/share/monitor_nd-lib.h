@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.19 $
+* Version: $Revision$
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions.
@@ -24,7 +24,7 @@
 
 #ifndef MONITOR_ND_LIB_H
 
-#define MONITOR_ND_LIB_H "$Revision: 1.19 $"
+#define MONITOR_ND_LIB_H "$Revision$"
 #define MONnD_COORD_NMAX  30  /* max number of variables to record */
 
   typedef struct MonitornD_Defines

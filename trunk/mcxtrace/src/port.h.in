@@ -12,11 +12,11 @@
 * Date: Nov 11, 1998
 * Origin: Risoe
 * Release: McStas CVS_090602
-* Version: $Revision: 1.19 $
+* Version: $Revision$
 *
 * Header file for portability related stuff.
 *
-* $Id: port.h,v 1.19 2009-06-03 14:03:42 farhi Exp $
+* $Id$
 *
 *******************************************************************************/
 

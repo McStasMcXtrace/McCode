@@ -12,7 +12,7 @@
 * Date: Aug  8, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.16 $
+* Version: $Revision$
 *
 * Misc. useful routines to handle Cartesian coordinates.
 *

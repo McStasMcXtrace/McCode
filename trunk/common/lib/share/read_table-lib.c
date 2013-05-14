@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas CVS_090504
-* Version: $Revision: 1.42 $
+* Version: $Revision$
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.

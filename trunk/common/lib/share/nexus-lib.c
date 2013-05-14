@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.14 $
+* Version: $Revision$
 *
 * NeXus Runtime output functions for McStas.
 * Overrides default mcstas runtime functions.

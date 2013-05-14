@@ -12,17 +12,17 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: @MCCODE_STRING@
-* Version: $Revision: 1.50 $
+* Version: $Revision$
 *
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mccode.h,v 1.50 2007-07-30 12:25:41 farhi Exp $
+* $Id$
 *
 *******************************************************************************/
 
 #ifndef MCCODE_H
-#define MCCODE_H "$Revision: 1.50 $"
+#define MCCODE_H "$Revision$"
 
 #include <stdlib.h>
 #include <stdio.h>

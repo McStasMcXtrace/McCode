@@ -11,7 +11,7 @@
 * Written by: Peter Link, <a href="mailto:Andreas.Ostermann@frm2.tum.de">Andreas Ostermann</a>
 * Date: MARCH 1999
 * Origin: Uni. Gottingen (Germany)
-* Version: $Revision: 1.11 $
+* Version: $Revision$
 * Release: McStas 1.6
 *
 * velocity selector (helical lamella type) such as <b>V_selector</b> component

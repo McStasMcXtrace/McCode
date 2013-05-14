@@ -12,7 +12,7 @@
 * Date: 1st Dec 2009.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.5 $
+* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_optics
 *
 * An example using a statistical/correlation chopper and its de-correlation monitor

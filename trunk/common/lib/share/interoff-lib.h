@@ -31,7 +31,7 @@
 *******************************************************************************/
 
 #ifndef INTEROFF_LIB_H
-#define INTEROFF_LIB_H "$Revision: 1.4 $"
+#define INTEROFF_LIB_H "$Revision$"
 
 #ifndef EPSILON
 #define EPSILON 1e-13

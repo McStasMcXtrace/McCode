@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: @MCCODE_STRING@
-* Version: $Revision: 1.36 $
+* Version: $Revision$
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.36 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision$" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI

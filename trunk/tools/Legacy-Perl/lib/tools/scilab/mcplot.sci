@@ -24,7 +24,7 @@ function data = mcplot(varargin)
 // Written by: E. Farhi
 // Date: April 16st 2010
 // Release: McStas 1.6
-// Version: $Revision: 1.229 $
+// Version: $Revision$
 // Origin: ILL
 // 
 //   This file is part of the McCode neutron/X ray-trace simulation package

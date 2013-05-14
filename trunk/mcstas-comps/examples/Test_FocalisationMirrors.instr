@@ -12,7 +12,7 @@
 * Date: 2007.
 * Origin: <a href="http://www-llb.cea.fr/">LLB</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
+* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Test instrument for neutron focalisation with a set of supermirrors. 

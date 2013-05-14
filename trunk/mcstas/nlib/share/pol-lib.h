@@ -12,7 +12,7 @@
 * Date: August, 2006
 * Origin: RISOE
 * Release: McStas 1.10
-* Version: $Revision: 1.3 $
+* Version: $Revision$
 *
 * This file is to be imported by polarisation components.
 * It handles some shared functions.
@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 #ifndef POL_LIB_H
-#define POL_LIB_H "$Revision: 1.3 $"
+#define POL_LIB_H "$Revision$"
 
 // Constant used 
 #define mc_pol_omegaL (-2 * PI * 29.16e6) /* MHz*rad/Tesla */

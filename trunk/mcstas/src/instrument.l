@@ -14,7 +14,7 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.44 $
+* Version: $Revision$
 *
 * Flex scanner for instrument definition files.
 *

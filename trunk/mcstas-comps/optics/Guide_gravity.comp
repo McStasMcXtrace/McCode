@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.39 $
+* Version: $Revision$
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas CVS_080902
 * Modified by: E. Farhi, from Gravity_guide by nslit. Lefmann (buggy).
@@ -128,7 +128,7 @@ SHARE
 %{
 %include "ref-lib"
 #ifndef Gravity_guide_Version
-#define Gravity_guide_Version "$Revision: 1.39 $"
+#define Gravity_guide_Version "$Revision$"
 
 #ifndef PROP_GRAV_DT
 #error McStas : You need PROP_GRAV_DT (McStas >= 1.4.3) to run this component

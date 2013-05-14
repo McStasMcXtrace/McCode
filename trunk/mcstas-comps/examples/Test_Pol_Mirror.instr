@@ -7,7 +7,7 @@
 * Written by: Peter Christiansen 
 * Date: July 2006
 * Origin: RISOE
-* Version: $Revision: 1.6 $
+* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * Test that Pol_mirror reflects, transmits, and polarizes. 

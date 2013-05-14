@@ -12,11 +12,11 @@
 * Date: Nov 11, 1998
 * Origin: Risoe
 * Release: McStas CVS_090602
-* Version: $Revision: 1.13 $
+* Version: $Revision$
 *
 * Code to handle portability issues (mainly Win32 stuff).
 *
-* $Id: port.c,v 1.13 2009-06-03 14:03:42 farhi Exp $
+* $Id$
 *
 *******************************************************************************/
 

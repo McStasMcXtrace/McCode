@@ -12,7 +12,7 @@
 * Date: August 1998.
 * Origin: ISIS/Risoe
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
+* Version: $Revision$
 * %INSTRUMENT_SITE: ISIS
 *
 * Simple simulation of PRISMA2 with RITA-style analyser backend.

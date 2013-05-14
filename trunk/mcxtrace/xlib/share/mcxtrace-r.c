@@ -11,7 +11,7 @@
 * Edited by: EK
 * Date:    May 29, 2009
 * Release: McXtrace X.Y
-* Version: $Revision: $
+* Version: $Revision$
 *
 * Runtime system for McXtrace.
 * Embedded within instrument in runtime mode.

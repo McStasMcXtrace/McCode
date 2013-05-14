@@ -8,7 +8,7 @@
 * Date: 2007-03-19
 * Origin: Risoe
 * Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Version: $Revision$
 * %INSTRUMENT_SITE: Tools
 *
 * Takes eventfile input (Virtual_input/Vitess/MCNP/Tripoli4 formats) and applies Monitor_nD to generate

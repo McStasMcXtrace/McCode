@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.46 $
+* Version: $Revision$
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.

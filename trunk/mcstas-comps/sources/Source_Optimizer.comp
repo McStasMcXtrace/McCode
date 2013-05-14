@@ -10,7 +10,7 @@
 * Date: 17 Sept 1999
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.9 $
+* Version: $Revision$
 * Modified by: (v 0.06) EF, Feb 2000;
 * Modified by: (v.0.07) EF, Mar 10th 2000; (smoothed, parse options). struct
 * Modified by: (v.0.08) EF, Oct 12th 2000; optim divergence for v and s

@@ -12,7 +12,7 @@
 * Date: August, 2006
 * Origin: RISOE
 * Release: McStas 1.10
-* Version: $Revision: 1.1 $
+* Version: $Revision$
 *
 * Commonly used reflection functions are declared in this file which
 * are used by some guide and mirror components.

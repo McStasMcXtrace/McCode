@@ -12,7 +12,7 @@
 * Date:   Sep 02, 2002
 * Origin: Risoe/ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.8 $
+* Version: $Revision$
 *
 * This file is to be imported by components handling adaptive trees, like
 * Source_adapt and Adapt_check (in lib/sources)

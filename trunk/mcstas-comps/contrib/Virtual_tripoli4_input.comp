@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.34 $
+* Version:  $Revision$
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.10
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm

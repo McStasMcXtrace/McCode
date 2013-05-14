@@ -12,7 +12,7 @@
 * Date:   Aug 28, 2002
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.15 $
+* Version: $Revision$
 *
 * This file is to be imported by the mcstas2vitess perl script
 * It handles the way Vitess parses parameters.
@@ -25,7 +25,7 @@
 *******************************************************************************/
 
 #ifndef VITESS_LIB_H
-#define VITESS_LIB_H "$Revision: 1.15 $"
+#define VITESS_LIB_H "$Revision$"
 
 #ifndef GENERAL_H
  #include <math.h>
