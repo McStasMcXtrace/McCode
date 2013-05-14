@@ -11,14 +11,14 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.229 $
+* Version: $Revision$
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.229 2009/08/13 14:52:01 farhi Exp $
+* $Id$
 *
 *******************************************************************************/
 

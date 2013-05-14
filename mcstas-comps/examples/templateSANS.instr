@@ -12,7 +12,7 @@
 * Date: 19th Dec 2003.
 * Origin: <a href="http://www.risoe.dk">Risoe</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Version: $Revision$
 * %INSTRUMENT_SITE: Templates
 *
 * Test instrument for the Sans_spheres component. No guide / velocity selector

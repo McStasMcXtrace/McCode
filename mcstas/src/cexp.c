@@ -12,7 +12,7 @@
 * Date: Aug  7, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.19 $
+* Version: $Revision$
 *
 * Handle expressions used as arguments to components etc.
 *

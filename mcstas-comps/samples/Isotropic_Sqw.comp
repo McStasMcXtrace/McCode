@@ -8,7 +8,7 @@
 * %I
 * Written by: E. Farhi, V. Hugouvieux
 * Date: August 2003
-* Version: $Revision: 1.90 $
+* Version: $Revision$
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -302,7 +302,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.90 $
+#define ISOTROPIC_SQW $Revision$
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica

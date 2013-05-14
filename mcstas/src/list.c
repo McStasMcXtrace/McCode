@@ -12,7 +12,7 @@
 * Date: Jul  3, 1997
 * Origin: Risoe
 * Release: McStas X.Y.Z
-* Version: $Revision: 1.19 $
+* Version: $Revision$
 *
 * Implementation of lists.
 *

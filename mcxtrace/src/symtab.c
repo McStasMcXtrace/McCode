@@ -12,7 +12,7 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.18 $
+* Version: $Revision$
 *
 * Symbol tables.
 *

@@ -12,7 +12,7 @@
 * Date: Oct 08
 * Origin: RISOE
 * Release: McStas 1.12
-* Version: $Revision: 1.3 $
+* Version: $Revision$
 *
 * This file is to be imported by polarisation components.
 * It handles some shared functions.

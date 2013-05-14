@@ -12,7 +12,7 @@
 * Date:   November 21, 2011
 * Origin: Risoe/ILL
 * Release: McXtrace 0.1
-* Version: $Revision: $
+* Version: $Revision$
 *
 * It handles the way Shadow parses parameters.
 * Functions are used by the Shadow_input and Shadow_output
@@ -21,7 +21,7 @@
 * Usage: within SHARE
 * %include "shadow-lib"
 *
-* $Id: shadow-lib.c,v 0.1 Exp $
+* $Id$
 *
 * $Log: shadow-lib.c,v $
 *******************************************************************************/

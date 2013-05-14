@@ -9,7 +9,7 @@
 * %I
 * Written by:  E. Farhi
 * Date: Dec, 15th, 2002
-* Version: $Revision: 1.6 $
+* Version: $Revision$
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -85,7 +85,7 @@ OUTPUT PARAMETERS (pTable, Mode_Table, Type_Table)
 SHARE
 %{
 #ifndef FILTER_GEN
-#define FILTER_GEN $Revision: 1.6 $
+#define FILTER_GEN $Revision$
 #define UNKNOWN_TABLE    0
 #define ENERGY_TABLE     1
 #define WAVEVECTOR_TABLE 2

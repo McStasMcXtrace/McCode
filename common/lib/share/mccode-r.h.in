@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: @MCCODE_NAME@ @MCCODE_VERSION@
-* Version: $Revision: 1.112 $
+* Version: $Revision$
 *
 * Runtime system header for McStas.
 *
@@ -29,12 +29,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.112 2009/08/13 14:52:01 farhi Exp $
+* $Id$
 *
 *******************************************************************************/
 
 #ifndef MCCODE_R_H
-#define MCCODE_R_H "$Revision: 1.0 $"
+#define MCCODE_R_H "$Revision$"
 
 #include <math.h>
 #include <string.h>

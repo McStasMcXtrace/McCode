@@ -12,7 +12,7 @@
 * Date: Sep 25, 1998
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.21 $
+* Version: $Revision$
 *
 * Code to handle files and command line arguments.
 *

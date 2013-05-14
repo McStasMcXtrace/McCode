@@ -8,7 +8,7 @@
 * Date: July 2006.
 * Origin: RISOE.
 * Release: McStas CVS_080624
-* Version: $Revision: 1.7 $
+* Version: $Revision$
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Compares intensities of Monochromator components.

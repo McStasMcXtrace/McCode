@@ -11,7 +11,7 @@
 * Written by: Reynald Arnerin
 * Date:    Jun 12, 2008
 * Origin: ILL
-* Release: $Revision: 1.8 $
+* Release: $Revision$
 * Version: McStas X.Y
 *
 * Object File Format intersection library for McStas. Requires the qsort function.

@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.21 $
+* Version: $Revision$
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions.
@@ -25,7 +25,7 @@
 *******************************************************************************/
 
 #ifndef READ_TABLE_LIB_H
-#define READ_TABLE_LIB_H "$Revision: 1.21 $"
+#define READ_TABLE_LIB_H "$Revision$"
 
 #define READ_TABLE_STEPTOL  0.04 /* tolerancy for constant step approx */
 

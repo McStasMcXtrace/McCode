@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas CVS_090504
-* Version: $Revision: 1.21 $
+* Version: $Revision$
 *
 * Memory management functions.
 *
-*       $Id: memory.c,v 1.21 2009-05-14 22:15:30 farhi Exp $
+*       $Id$
 *
 *******************************************************************************/
 

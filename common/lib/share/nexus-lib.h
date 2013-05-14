@@ -11,7 +11,7 @@
 * Written by: EF
 * Date:    Jan 17, 2007
 * Release: McStas CVS-080208
-* Version: $Revision: 1.8 $
+* Version: $Revision$
 *
 * NeXus Runtime system header for McStas.
 * Overrides default mcstas runtime functions.

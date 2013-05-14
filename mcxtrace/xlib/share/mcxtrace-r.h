@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McXtrace X.Y
-* Version: $Revision: 1.109 $
+* Version: $Revision$
 *
 * Runtime system header for McXtrace.
 *
@@ -32,7 +32,7 @@
 *******************************************************************************/
 
 #ifndef MCXTRACE_R_H
-#define MCXTRACE_R_H "$Revision: $"
+#define MCXTRACE_R_H "$Revision$"
 
 /* Following part is only embedded when not redundant with mcstas.h ========= */
 

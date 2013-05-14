@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas X.Y.Z
-* Version: $Revision: 1.84 $
+* Version: $Revision$
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.84 2009-06-12 13:48:32 farhi Exp $
+* $Id$
 *
 *******************************************************************************/
 

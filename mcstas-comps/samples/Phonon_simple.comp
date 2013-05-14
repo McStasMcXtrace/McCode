@@ -6,7 +6,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: 04.02.04
-* Version: $Revision: 1.7 $
+* Version: $Revision$
 * Origin: Risoe
 *
 * A sample for phonon scattering
@@ -71,7 +71,7 @@ OUTPUT PARAMETERS (V_rho, V_my_s, V_my_a, DV, parms)
 SHARE
 %{
 #ifndef PHONON_SIMPLE
-#define PHONON_SIMPLE $Revision: 1.7 $
+#define PHONON_SIMPLE $Revision$
 #define T2E (1/11.605)   /* Kelvin to meV */
 
 double nbose(double omega, double T)  /* Other name ?? */
