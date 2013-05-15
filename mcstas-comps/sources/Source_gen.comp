@@ -75,6 +75,7 @@
 * HZB thermal tube    T1=293.0,I1=2.64e12
 * FRM2 cold           T1=35.0, I1=9.38e12,T2=547.5,I2=2.23e12,T3=195.4,I3=1.26e13
 * FRM2 thermal        T1=285.6,I1=3.06e13,T2=3000, I2=1.68e12,T3=429.9,I3=6.77e12
+* LLB cold            T1=220,  I1=2.09e12,T2=60,   I2=3.83e12;T3=20,   I3=1.04e12
 *
 * %VALIDATION
 * Feb 2005: output cross-checked for 3 Maxwellians against VITESS source
