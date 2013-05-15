@@ -54,7 +54,8 @@
 * w:        (m)   width of one chopper slit
 * xwidth:   (m)   optional total width of slit package
 * yheight:  (m)   height of slit package
-* nu:       (Hz)  chopper frequency. Omega=2*PI*nu in rad/s, nu*60 in rpm.
+* nu:       (Hz)  chopper frequency. Omega=2*PI*nu in rad/s, nu*60 in rpm. 
+*                 Positive value corresponds to a clockwise rotation from X towards Z from above (y>0).
 * eff:      (1)   efficiency = transmission x fraction of transparent material
 * verbose:  (1)   set to 1,2 or 3 gives debugging information
 * curvature:(m-1) Curvature of slits (1/radius of curvature).
