@@ -220,6 +220,10 @@ TRACE
      t -= Delta_t;
    p *= 2.0/(1-branchframe);
   }
+
+ /* Go to per-second units */
+ p*=nu;
+ 
 %}
 
 MCDISPLAY
