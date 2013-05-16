@@ -30,7 +30,6 @@ DEFINE INSTRUMENT Mezei_SNS_decoupled_poisoned(Lambda_min=0.5,Lambda_max=20)
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
 
-//  mcrun --mpi=8 --ncount=2E7 BASIS_0003.instr
 DECLARE
 %{
   double E_min; 
