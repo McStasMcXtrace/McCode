@@ -34,25 +34,23 @@
 *
 * %P
 * Input parameters:
-* length [m] 			length of the crystal (along z-axia)
+* length [m] 			length of the crystal (along z-axis)
 * width [m] 			width of the crystal (along x-axis)
-* Material 			Si, Ge (maybe also GaAs?)	
-* V [Å^3]			unit cell volume160.1826
-* h []                          Miller index of reflection
-* k []                          Miller index of reflection
-* l []                          Miller index of reflection
+* Material 			Si, Ge (maybe also GaAs?)
+* V [Å^3]			unit cell volum
+* h [ ]                          Miller index of reflection
+* k [ ]                          Miller index of reflection
+* l [ ]                          Miller index of reflection
 * alpha [rad]			asymmetry angle (alpha=0 for symmetric reflection, ie the Bragg planes are parallel to the crystal surface)
-* R0 []                         Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging. 
+* R0 [ ]                         Reflectivity. Overrides the computed Darwin reflectivity. Probably only useful for debugging. 
 * 
-* (none)
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Perfect_crystal
-  DEFINITION PARAMETERS (string form_factors="FormFactors.txt", string material="Si.txt",R0=0) 
+DEFINITION PARAMETERS (string form_factors="FormFactors.txt", string material="Si.txt",R0=0) 
 SETTING PARAMETERS (length=0.05, width=0.02, V=160.1826, h=1, k=1, l=1, alpha=0.0)
-/* OUTPUT PARAMETERS (prms_m, a,b,c,M,Z0,Y0,xi,cost0) */
 OUTPUT PARAMETERS (prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
