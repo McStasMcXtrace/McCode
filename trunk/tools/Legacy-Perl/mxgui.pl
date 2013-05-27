@@ -1434,7 +1434,7 @@ my $instr_template_start = <<INSTR_FINISH;
 * %Description
 * Instrument longer description (type, elements, usage...)
 *
-* Example: mcrun test.instr <parameters=values>
+* Example: test.instr <parameters=values>
 *
 * %Parameters
 * Par1: [unit] Parameter1 description
