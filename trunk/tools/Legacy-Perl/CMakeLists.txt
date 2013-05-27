@@ -83,14 +83,16 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Select prefix
 if(${enable_mcstas})
   set(P "mc")
+  set(SOURCENAMES config convert daemon display doc formatgui
+      gui plot resplot run stas2vitess )
 else()
   set(P "mx")
+  set(SOURCENAMES config convert daemon display doc formatgui
+      gui plot run )
 endif()
 
 # Include mcstas-comp files
-foreach(NAME
-    config convert daemon display doc formatgui
-    gui plot resplot run stas2vitess
+foreach(NAME ${SOURCENAMES}
     )
 
   if(NAME STREQUAL "gui")

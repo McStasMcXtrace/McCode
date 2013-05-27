@@ -73,10 +73,26 @@ fi
 NAME="$1"
 VERSION="$2"
 
+flavor() {
+    case "$1" in
+        "mcstas" )
+            echo "mc";
+            ;;
+        "mcxtrace" )
+            echo "mx";
+            ;;
+    esac
+}
+echo `flavor mcxtrace`
 
-
-TOOLS="config convert daemon display doc formatgui gui plot resplot run stas2vitess"
-
+case "`flavor $1`" in
+  "mc" )
+    TOOLS="config convert daemon display doc formatgui gui plot resplot run stas2vitess"
+        ;;
+  "mx" )
+    TOOLS="config convert daemon display doc formatgui gui plot run"
+        ;;
+esac
 
 mcselect() {
     if ${HAS_ALTERNATIVES}; then
@@ -90,17 +106,6 @@ list() {
     mccode-select --list ${NAME};
 }
 
-
-flavor() {
-    case "$1" in
-        "mcstas" )
-            echo "mc";
-            ;;
-        "mcxtrace" )
-            echo "mx";
-            ;;
-    esac
-}
 
 switch_version() {
     (
