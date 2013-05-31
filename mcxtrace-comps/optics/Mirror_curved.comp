@@ -22,8 +22,8 @@
 ***********************************************************************/
 
 DEFINE COMPONENT Mirror_curved
-  DEFINITION PARAMETERS (string coating="Be.txt")
-  SETTING PARAMETERS ( radius=1, length=0.2, width=0.2, R0=1)
+DEFINITION PARAMETERS (string coating="Be.txt")
+SETTING PARAMETERS ( radius=1, length=0.2, width=0.2, R0=1)
 OUTPUT PARAMETERS(prms,prmsp)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
