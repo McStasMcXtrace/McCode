@@ -122,7 +122,7 @@
 *                       yChDivRelSigma=0.006,
 *                       filename="ReuterStokes.psd")
 *
-* Example: PSD_Detector(awidth=1.533, yheight=0.4, na=640, ny=256,
+* Example: PSD_Detector(awidth=1.533, yheight=0.4, nx=640, ny=256,
 *                       radius=0.73, zdepth=0.032, dc=0.026, threshold=100,
 *                       borderx=-1, bordery=-1,
 *                       PressureConv=5, PressureStop=1,
