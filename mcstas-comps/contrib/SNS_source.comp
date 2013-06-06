@@ -88,7 +88,7 @@ DECLARE
     printf("%s\n",fname);
     fp=fopen(fname,"r");
     if (fp==NULL){
-      printf("Error opening file");
+      exit(printf("Error opening file: %s. Check existence/permission. Aborting.\n", fname));
       }
     /* skip header lines any line that begin with # */
     while((fgets(line,Maxlength,fp)!=NULL)&&(strchr(line,'#')!=NULL)){      
