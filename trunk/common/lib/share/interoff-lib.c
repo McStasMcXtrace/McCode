@@ -415,6 +415,7 @@ int off_clip_3D_mod(intersection* t, Coords a, Coords b,
         intersection x;
         if (off_intersectPoly(&x, a, b, pol))
         {
+          x.index = indPoly;
           t[t_size++]=x;
         }
       } /* if (j<pol.npol) */
@@ -717,6 +718,7 @@ int off_intersect(double* t0, double* t3,
         if (t3) *t3 = t[i].time;
         if (n3) *n3 = t[i].normal;
       }
+      /* should also return t[0].index and t[i].index as polygon ID */
       return t_size;
     }
     return 0;

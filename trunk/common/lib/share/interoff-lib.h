@@ -47,6 +47,7 @@ typedef struct intersection {
 	Coords normal;  //normal vector of the surface intersected
 	short in_out;	  //1 if the ray enters the volume, -1 otherwise
 	short edge;	    //1 if the intersection is on the boundary of the polygon, and error is possible
+	unsigned long index; // index of the face
 } intersection;
 
 typedef struct polygon {
