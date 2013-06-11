@@ -31,7 +31,24 @@ use File::Basename;
 use Config;
 BEGIN {
 
-    ENV_HEADER
+# Default configuration (for all high level perl scripts)
+# Included from perl_env_header.pl
+
+{
+    if($ENV{"MCSTAS"}) {
+        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
+    } else {
+        $MCSTAS::sys_dir = "/usr/local/lib/mcstas-2.0";
+    }
+
+    if($ENV{"MCSTAS_TOOLS"}) {
+        $MCSTAS::perl_dir = "$ENV{'MCSTAS_TOOLS'}/perl";
+    } else {
+        $MCSTAS::perl_dir = "/usr/local/lib/mcstas-tools-2.0/perl";
+    }
+
+    $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
+}
 
     # custom configuration (this script)
     END {
@@ -142,13 +159,13 @@ if ($index == 0) {
 if (-d $file) { # check if dir containing result file
   my $newfile = "$file/mcstas";
   if (-e "$newfile.m" || -e "$newfile.sci" || -e "$newfile.sim" || -e "$newfile.html" || -e "$newfile.nxs") {
-    $file = $newfile; }
+    $file = $newfile;  }
 }
 
 # look if there is only one file type and set plotter to use
 if (-e "$file.m" and not -e "$file.sci" and not -e "$file.sim" and not -e "$file.html") { $plotter = "Matlab"; }
 if (-e "$file.sci" and not -e "$file.m" and not -e "$file.sim" and not -e "$file.html") { $plotter = "Scilab"; }
-if (-e "$file.sim" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.html" and not ($plotter =~ /gnuplot/i)) { $plotter = "PGPLOT"; }
+if (-e "$file.sim" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.html" and not ($plotter =~ /gnuplot|Matlab/i)) { $plotter = "PGPLOT"; }
 if (-e "$file.html" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.sim") { $plotter = "HTML";   }
 if (-e "$file.nxs") { $plotter = "NeXus";   }
 
@@ -162,12 +179,16 @@ elsif ($plotter =~ /NeXus/i) { $default_ext = ".nxs"; }
 # if no extension in file name, add default extension.
 if ($file !~ m'\.[^/]*$' && $default_ext) { $file .= $default_ext; }
 
+print "Opening $file\n";
+
 # set plotter from extension
 if ($file =~ m'\.m$')    { $plotter = "Matlab"; }
 if ($file =~ m'\.sci$' || $file =~ m'\.sce$') {$plotter = "Scilab"; }
-if ($file =~ m'\.sim$' and not($plotter =~ /gnuplot/i))  { $plotter = "PGPLOT"; }
+if ($file =~ m'\.sim$' and not($plotter =~ /gnuplot|Matlab/i))  { $plotter = "PGPLOT"; }
 if ($file =~ m'\.html$') { $plotter = "HTML"; }
 if ($file =~ m'\.nxs$') { $plotter = "NeXus"; }
+
+
 
 # On Win32, chdir to directory containing base filename
 if ($Config{'osname'} eq 'MSWin32') {
@@ -215,17 +236,18 @@ if ($plotter =~ /Scilab/i && $MCSTAS::mcstas_config{'SCILAB'} ne "no") {
 } elsif ($plotter =~ /Matlab/i && $MCSTAS::mcstas_config{'MATLAB'} ne "no") {
   my $tosend = "$MCSTAS::mcstas_config{'MATLAB'} ";
   if ($nowindow) { $tosend .= "-nojvm -nosplash "; }
-  $tosend .= "-r \"addpath('$MCSTAS::perl_dir/../matlab');addpath(pwd);s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');";
-  $tosend .= "disp('s=mcplot(''$file'',''$passed_arg_str $passed_arg_str_quit'',''$inspect'')');";
+  $tosend .= "-r \"if(exist('mcplot')),addpath('$MCSTAS::perl_dir/../matlab');addpath(pwd);s=mcplot('$file',[],'$inspect');else;s=iData('$file');subplot(s);end;";
+  $tosend .= "disp('s=mcplot(''$file'',[],''$inspect'')');";
 
+  print $tosend;
   if ($passed_arg_str_quit) {
     $tosend .= "exit;\"\n";
   } else {
-      $tosend .= "if length(s),";
-      $tosend .= "disp('type: help mcplot for this function usage.');";
-      $tosend .= "disp('mcplot: Simulation data structure from file $file');";
-      $tosend .= "disp('        is stored into variable s. Type in ''s'' at prompt to see it !');";
-      $tosend .= "end;\"\n";
+#      $tosend .= "if length(s),";
+#      $tosend .= "disp('type: help mcplot for this function usage.');";
+#      $tosend .= "disp('mcplot: Simulation data structure from file $file');";
+#      $tosend .= "disp('        is stored into variable s. Type in ''s'' at prompt to see it !');";
+      $tosend .= "\"\n";
     }
   system($tosend);
 } elsif ($plotter =~ /HTML|VRML/i && $MCSTAS::mcstas_config{'BROWSER'}) {
