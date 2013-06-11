@@ -61,19 +61,21 @@
 *     kxy kyz kxz           [Angs-1] Radial wavevector in xy, yz and xz plane
 *     vxy vyz vxz           [m/s]    Radial velocity in xy, yz and xz plane
 *     t time                [s]      Time of Flight
-*     energy omega          [meV]
-*     lambda wavelength     [Angs]
-*     p intensity flux      [n/s] or [n/cm^2/s]
-*     ncounts               [1]
+*     energy omega          [meV]    energy of neutron
+*     lambda wavelength     [Angs]   wavelength of neutron
 *     sx sy sz              [1]      Spin
 *     vdiv ydiv dy          [deg]    vertical divergence (y)
 *     hdiv divergence xdiv  [deg]    horizontal divergence (x)
 *     angle                 [deg]    divergence from <z> direction
-*     theta longitude       [deg]    longitude (x/z) [for sphere and cylinder]
-*     phi   lattitude       [deg]    lattitude (y/z) [for sphere and cylinder]
+*     theta longitude       [deg]    longitude (x/z) for sphere and cylinder
+*     phi   lattitude       [deg]    lattitude (y/z) for sphere and cylinder  
 *
 *     user user1            will monitor the [Mon_Name]_Vars.UserVariable{1|2|3}
 *     user2 user3           to be assigned in an other component (see below)
+*
+*     p intensity flux      [n/s] or [n/cm^2/s]
+*     ncounts n neutron     [1]      neutron ID, i.e current event index
+*     pixel id              [1]      pixelID in histogram made of preceeding vars
 *
 * <b>Other options keywords are:</b>
 *     abs                       Will monitor the abs of the following variable

@@ -67,6 +67,7 @@
     int COORD_XY    ;
     int COORD_XZ    ;
     int COORD_YZ    ;
+    int COORD_PIXELID;
 
     /* token modifiers */
     int COORD_VAR   ; /* next token should be a variable or normal option */
@@ -113,11 +114,11 @@
     char   Flag_capture      ;   /* lambda monitor with lambda/lambda(2200m/s = 1.7985 Angs) weightening */
     int    Flag_signal       ;   /* 0:monitor p, else monitor a mean value */
 
-    long   Coord_Number      ;   /* total number of variables to monitor, plus intensity (0) */
-    long   Buffer_Block      ;   /* Buffer size for list or auto limits */
-    long   Neutron_Counter   ;   /* event counter, simulation total counts is mcget_ncount() */
-    long   Buffer_Counter    ;   /* index in Buffer size (for realloc) */
-    long   Buffer_Size       ;
+    unsigned long Coord_Number      ;   /* total number of variables to monitor, plus intensity (0) */
+    unsigned long Buffer_Block      ;   /* Buffer size for list or auto limits */
+    unsigned long Neutron_Counter   ;   /* event counter, simulation total counts is mcget_ncount() */
+    unsigned long Buffer_Counter    ;   /* index in Buffer size (for realloc) */
+    unsigned long Buffer_Size       ;
     int    Coord_Type[MONnD_COORD_NMAX];    /* type of variable */
     char   Coord_Label[MONnD_COORD_NMAX][30];       /* label of variable */
     char   Coord_Var[MONnD_COORD_NMAX][30]; /* short id of variable */
@@ -149,6 +150,7 @@
     double **Mon2D_p;
     double **Mon2D_p2;
     double *Mon2D_Buffer;
+    unsigned long PixelID;
 
     double mxmin,mxmax,mymin,mymax,mzmin,mzmax;
     double mean_dx, mean_dy, min_x, min_y, max_x, max_y, mean_p;
