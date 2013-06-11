@@ -85,7 +85,7 @@ sub read_instrument {
             $st = 1;
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
               # Initialize matlab struct...
-              write_process("addpath('$MCSTAS::perl_dir/../matlab');\n");
+              write_process("if ~exist('mcdisplay'), addpath('$MCSTAS::perl_dir/../matlab'); end\n");
               write_process("mcdisplay('Init');\n");
               write_process("global INSTRUMENT;\n");
               write_process("INSTRUMENT.descr='$sim';\n");
