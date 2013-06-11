@@ -147,7 +147,7 @@
 *             to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
 * pack:     Packing factor [1]
 * Delta_d:  Global relative Delta_d/d broadening when the 'w' column
-*             is not available. Use 0 if ideal. [Angs]
+*             is not available. Use 0 if ideal. [0-1]
 * Strain:   Global relative Delta_d/d shift when the 'Strain' column
 *             is not available. Use 0 if ideal. [ppm]
 * format:   Name of the format, or list of column indexes

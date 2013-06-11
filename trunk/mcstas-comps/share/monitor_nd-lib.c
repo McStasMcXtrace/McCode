@@ -102,8 +102,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     DEFS->COORD_KXY    =29;
     DEFS->COORD_KYZ    =33;
     DEFS->COORD_KXZ    =35;
-
-
+    DEFS->COORD_PIXELID=36;
 
 /* token modifiers */
     DEFS->COORD_VAR    =0;    /* next token should be a variable or normal option */
@@ -412,8 +411,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           { Set_Vars_Coord_Type = DEFS->COORD_THETA; strcpy(Set_Vars_Coord_Label,"Longitude [deg]"); strcpy(Set_Vars_Coord_Var,"th"); lmin = -180; lmax = 180; }
         if (!strcmp(token, "phi") || !strcmp(token, "lattitude") || !strcmp(token, "ph"))
           { Set_Vars_Coord_Type = DEFS->COORD_PHI; strcpy(Set_Vars_Coord_Label,"Lattitude [deg]"); strcpy(Set_Vars_Coord_Var,"ph"); lmin = -180; lmax = 180; }
-        if (!strcmp(token, "ncounts") || !strcmp(token, "n"))
-          { Set_Vars_Coord_Type = DEFS->COORD_NCOUNT; strcpy(Set_Vars_Coord_Label,"Neutrons [1]"); strcpy(Set_Vars_Coord_Var,"n"); lmin = 0; lmax = 1e10; }
+        if (!strcmp(token, "ncounts") || !strcmp(token, "n") || !strcmp(token, "neutron"))
+          { Set_Vars_Coord_Type = DEFS->COORD_NCOUNT; strcpy(Set_Vars_Coord_Label,"Neutron ID [1]"); strcpy(Set_Vars_Coord_Var,"n"); lmin = 0; lmax = mcget_ncount(); }
+        if (!strcmp(token, "id") || !strcmp(token, "pixel"))
+          { Set_Vars_Coord_Type = DEFS->COORD_PIXELID; strcpy(Set_Vars_Coord_Label,"Pixel ID [1]"); strcpy(Set_Vars_Coord_Var,"id"); lmin = 0; lmax = FLT_MAX; }
         if (!strcmp(token, "user") || !strcmp(token, "user1") || !strcmp(token, "u1"))
           { Set_Vars_Coord_Type = DEFS->COORD_USER1; strncpy(Set_Vars_Coord_Label,Vars->UserName1,30); strcpy(Set_Vars_Coord_Var,"U1"); lmin = -1e10; lmax = 1e10; }
         if (!strcmp(token, "user2") || !strcmp(token, "u2"))
@@ -446,7 +447,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           if (lmin > lmax) { XY = lmin; lmin=lmax; lmax = XY; }
           Vars->Coord_Min[Coord_Number] = lmin;
           Vars->Coord_Max[Coord_Number] = lmax;
-          if (Set_Coord_Mode != DEFS->COORD_SIGNAL) Vars->Coord_Bin[Coord_Number] = 20;
+          if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT || Set_Vars_Coord_Type == DEFS->COORD_PIXELID || Set_Vars_Coord_Type == DEFS->COORD_SIGNAL)
+            Vars->Coord_Bin[Coord_Number] = 1;
+          else
+            Vars->Coord_Bin[Coord_Number] = 20;
           Set_Coord_Mode = DEFS->COORD_VAR;
           Flag_All = 0;
           Flag_No  = 0;
@@ -530,10 +534,13 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
        strcpy(Short_Label[i],"Wavelength");
       else
       if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT)
-       strcpy(Short_Label[i],"Neutron counts");
+       strcpy(Short_Label[i],"Neutron_ID");
+      else
+      if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT)
+       strcpy(Short_Label[i],"Pixel_ID");
       else
       if (Set_Vars_Coord_Type == DEFS->COORD_T)
-          strcpy(Short_Label[i],"Time Of Flight");
+          strcpy(Short_Label[i],"Time_Of_Flight");
       else
       if (Set_Vars_Coord_Type == DEFS->COORD_P)
           strcpy(Short_Label[i],"Intensity");
@@ -882,7 +889,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA) { XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT) XY = Coord[i]+1;
+        if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT) XY = Vars->Neutron_Counter;
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_ANGLE)
         {  XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy);
@@ -901,7 +908,10 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_USER3) XY = Vars->UserVariable3;
         else
+        if (Set_Vars_Coord_Type == DEFS->COORD_PIXELID) XY = Vars->PixelID;
+        else
         XY = 0;
+        
         /* handle 'abs' and 'log' keywords */
         if (Vars->Coord_Type[i] & DEFS->COORD_ABS) XY=fabs(XY);
 
@@ -909,37 +919,37 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         {  if (XY > 0) XY = log(XY)/log(10);
            else XY = -100; }
 
-        Coord[i] = XY;
+        Coord[i] = XY; Coord_Index[i] = 0;
         if (i == 0) { pp = XY; Coord_Index[i] = 0; }
-        else if (!Vars->Flag_Auto_Limits)
+        else if (!Vars->Flag_Auto_Limits && Vars->Coord_Bin[i]>1)
         { /* compute index in histograms for each variable to monitor */
           XY = (Vars->Coord_Max[i]-Vars->Coord_Min[i]);
           if (XY > 0) Coord_Index[i] = floor((Coord[i]-Vars->Coord_Min[i])*Vars->Coord_Bin[i]/XY);
-          else Coord_Index[i] = 0;
           if (Vars->Flag_With_Borders)
           {
-            if (Coord_Index[i] < 0) Coord_Index[i] = 0;
             if (Coord_Index[i] >= Vars->Coord_Bin[i]) Coord_Index[i] = Vars->Coord_Bin[i] - 1;
+            if (Coord_Index[i] < 0) Coord_Index[i] = 0;
           }
         } /* else will get Index later from Buffer when Flag_Auto_Limits == 2 */
       } /* end for i */
       While_End = 1;
     }/* end else if Vars->Flag_Auto_Limits == 2 */
-
-    if (Vars->Flag_Auto_Limits != 2) /* not when reading auto limits Buffer */
-    { /* now store Coord into Buffer (no index needed) if necessary (list or auto limits) */
-      if ((Vars->Buffer_Counter < Vars->Buffer_Block) && ((Vars->Flag_List) || (Vars->Flag_Auto_Limits == 1)))
-      {
-        for (i = 0; i <= Vars->Coord_Number; i++)
-        {
-          Vars->Mon2D_Buffer[i + Vars->Neutron_Counter*(Vars->Coord_Number+1)] = Coord[i];
-        }
-        Vars->Buffer_Counter++;
-        if (Vars->Flag_Verbose && (Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_List == 1)) printf("Monitor_nD: %s %li neutrons stored in List.\n", Vars->compcurname, Vars->Buffer_Counter);
-      }
-      Vars->Neutron_Counter++;
-    } /* end (Vars->Flag_Auto_Limits != 2) */
-
+    
+    /* the PixelID is the product of Coord_Index[i] in the detector geometry */
+    /*
+    1D: Vars->PixelID = Coord_Index[1];
+    2D: Vars->PixelID = Vars->Coord_Bin[1]*Coord_Index[2] + Coord_Index[1];
+    3D: Vars->PixelID = Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*Coord_Index[3] 
+                      + Vars->Coord_Bin[1]*Coord_Index[2] + Coord_Index[1];
+                      
+    The PixelID must not take into account variables which can not be histogrammed, e.g.:
+      PixelID
+      NCOUNT
+      Intensity = Coord[0]
+    These have Bin==1
+    */
+    Vars->PixelID = 0;
+    
     /* ====================================================================== */
     /* store n1d/2d neutron from Buffer (Auto_Limits == 2) or current neutron in while */
     if (Vars->Flag_Auto_Limits != 1) /* not when storing auto limits Buffer */
@@ -948,34 +958,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
       if (Vars->Flag_per_cm2 && Vars->area      != 0)
         pp /= Vars->area;
 
-      /* 1D and n1D case : Vars->Flag_Multiple */
-      if (Vars->Flag_Multiple)
-      { /* Dim : Vars->Coord_Number*Vars->Coord_Bin[i] vectors (intensity is not included) */
-        /* check limits: monitors define a phase space to record */
-        char within_limits=1;
-        for (i= 1; i <= Vars->Coord_Number; i++)
-        {
-          j = Coord_Index[i];
-          if (j < 0 || j >= Vars->Coord_Bin[i])
-            within_limits=0;
-        }
-        if (within_limits)
-        { for (i= 1; i <= Vars->Coord_Number; i++)
-          {
-            j = Coord_Index[i];
-            if (j >= 0 && j < Vars->Coord_Bin[i])
-            {
-              Vars->Mon2D_N[i-1][j]++;
-              Vars->Mon2D_p[i-1][j] += pp;
-              Vars->Mon2D_p2[i-1][j] += pp*pp;
-            }
-          }
-        }
-        else if (Vars->Flag_Exclusive)
-        { pp = 0.0;
-        }
-      }
-      else /* 2D case : Vars->Coord_Number==2 and !Vars->Flag_Multiple and !Vars->Flag_List */
+      /* 2D case : Vars->Coord_Number==2 and !Vars->Flag_Multiple and !Vars->Flag_List */
       if ((Vars->Coord_Number == 2) && !Vars->Flag_Multiple)
       { /* Dim : Vars->Coord_Bin[1]*Vars->Coord_Bin[2] matrix */
         i = Coord_Index[1];
@@ -985,12 +968,66 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
           Vars->Mon2D_N[i][j]++;
           Vars->Mon2D_p[i][j] += pp;
           Vars->Mon2D_p2[i][j] += pp*pp;
+          Vars->PixelID = Vars->Coord_Bin[1]*Coord_Index[2] + Coord_Index[1];
+        }
+        else if (Vars->Flag_Exclusive)
+        { pp = 0.0;
+        }
+      } else {
+        /* 1D and n1D case : Vars->Flag_Multiple and List */
+        /* Dim : Vars->Coord_Number*Vars->Coord_Bin[i] vectors (intensity is not included) */
+        /* check limits: monitors define a phase space to record */
+        char within_limits=1;
+        for (i= 1; i <= Vars->Coord_Number; i++)
+        {
+          j = Coord_Index[i];
+          if (j < 0 || j >= Vars->Coord_Bin[i])
+            within_limits=0;
+        }
+        if (within_limits)
+        { 
+          if (Vars->Flag_Multiple)
+            for (i= 1; i <= Vars->Coord_Number; i++) {
+              j = Coord_Index[i];
+              if (j >= 0 && j < Vars->Coord_Bin[i])
+              {
+                Vars->Mon2D_N[i-1][j]++;
+                Vars->Mon2D_p[i-1][j] += pp;
+                Vars->Mon2D_p2[i-1][j] += pp*pp;
+              }
+            }
+          /* compute the PixelID */
+          for (i= 1; i <= Vars->Coord_Number; i++) {
+            long Set_Vars_Coord_Type = (Vars->Coord_Type[i] & (DEFS->COORD_LOG-1));
+            if (Set_Vars_Coord_Type == DEFS->COORD_PIXELID) break;
+            for (j = 1; j <= i-1; Coord_Index[i] *= Vars->Coord_Bin[j++]);
+            Vars->PixelID += Coord_Index[i];
+          }
         }
         else if (Vars->Flag_Exclusive)
         { pp = 0.0;
         }
       }
     } /* end (Vars->Flag_Auto_Limits != 1) */
+    
+    if (Vars->Flag_Auto_Limits != 2) /* not when reading auto limits Buffer */
+    { /* now store Coord into Buffer (no index needed) if necessary (list or auto limits) */
+      if ((Vars->Buffer_Counter < Vars->Buffer_Block) && ((Vars->Flag_List) || (Vars->Flag_Auto_Limits == 1)))
+      {
+        /* use the PixelID as we have just computed it (requires an histogram) */
+        for (i = 0; i <= Vars->Coord_Number; i++)
+        {
+          long Set_Vars_Coord_Type = (Vars->Coord_Type[i] & (DEFS->COORD_LOG-1));
+          if (Set_Vars_Coord_Type == DEFS->COORD_PIXELID) Coord[i]=Vars->PixelID;
+          Vars->Mon2D_Buffer[i + Vars->Neutron_Counter*(Vars->Coord_Number+1)] = Coord[i];
+        }
+        Vars->Buffer_Counter++;
+        if (Vars->Flag_Verbose && (Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_List == 1)) 
+          printf("Monitor_nD: %s %li neutrons stored in List.\n", Vars->compcurname, Vars->Buffer_Counter);
+      }
+      Vars->Neutron_Counter++;
+    } /* end (Vars->Flag_Auto_Limits != 2) */
+    
   } /* end while */
   return pp;
 } /* end Monitor_nD_Trace */
