@@ -1,6 +1,6 @@
 
 var simUrl  = '/sim/status/' + runid + '/';
-var baseUrl = '/out/' + runid + '/';
+var baseUrl = '/static/out/' + runid + '/';
 
 
 function doInit() {
