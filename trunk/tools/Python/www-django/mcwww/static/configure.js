@@ -226,7 +226,7 @@ function setLatest() {
             function(res) {
                 var ul = $('<ul>');
                 $.each(res.runs, function(i, run) {
-                           ul.append($('<a>').attr('href', '/sim/status/'+run.id).append(
+                           ul.append($('<a>').attr('href', '/status/'+run.runref).append(
                                          $('<li>').html(new Date(run.time*1000).toUTCString() +
                                                         ' - ' +
                                                         run.instrument)));

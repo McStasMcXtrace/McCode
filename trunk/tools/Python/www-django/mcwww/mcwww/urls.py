@@ -24,6 +24,8 @@ urlpatterns = patterns(
 
     url(r'^status/(?P<runref>'+RUNREF_RE+')/$', 'mcsimulator.views.status', name='status'),
 
+    url(r'^sim/status/(?P<runref>'+RUNREF_RE+')/$', 'mcsimulator.views.status', name='status'),
+
     url(r'^plot/(?P<runref>'+RUNREF_RE+')/(?P<name>.+)', 'mcsimulator.views.show_plot', name='show_plot'),
 
     url(r'^doc/(?P<instr>\w+)', 'mcsimulator.views.documentation', name='documentation'),
