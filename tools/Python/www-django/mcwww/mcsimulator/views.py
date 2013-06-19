@@ -145,8 +145,8 @@ def show_plot(req, runref, name):
     mon = name.split('-', 1)[1].rsplit('-', 1)[0]
     prefix = os.path.dirname(name)
     # construct paths
-    doc_url = '/out/%s/%s/%s' % (runref, prefix, mon)
-    img_url = '/out/%s/%s' % (runref, name)
+    doc_url = '/static/out/%s/%s/%s' % (runref, prefix, mon)
+    img_url = '/static/out/%s/%s' % (runref, name)
     return HttpResponse('<a href="%s"><img src="%s"></a>' % (doc_url, img_url))
 
 
@@ -165,6 +165,7 @@ def latest(req):
            .order_by('-created').all()[:25]
 
     return jsonify(runs=[{'id'        : run.id,
+                          'runref'    : run.ref,
                           'time'      : run.created.strftime('%s'),
                           'instrument': run.sim.name}
                          for run in runs])
