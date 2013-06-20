@@ -113,6 +113,7 @@
     char   Flag_Binary_List  ;
     char   Flag_capture      ;   /* lambda monitor with lambda/lambda(2200m/s = 1.7985 Angs) weightening */
     int    Flag_signal       ;   /* 0:monitor p, else monitor a mean value */
+    int    Flag_mantid       ;   /* 0:normal monitor, else do mantid-event specifics */
 
     unsigned long Coord_Number      ;   /* total number of variables to monitor, plus intensity (0) */
     unsigned long Buffer_Block      ;   /* Buffer size for list or auto limits */
