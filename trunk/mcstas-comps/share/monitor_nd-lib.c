@@ -151,6 +151,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->He3_pressure      = 0;
     Vars->Flag_capture      = 0;
     Vars->Flag_signal       = DEFS->COORD_P;
+    Vars->Flag_mantid       = 0;
     Vars->mean_dx=Vars->mean_dy=0;
     Vars->min_x = Vars->max_x  =0;
     Vars->min_y = Vars->max_y  =0;
@@ -321,6 +322,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           Vars->He3_pressure = 3; iskeyword=1; }
         if (!strcmp(token, "no") || !strcmp(token, "not")) { Flag_No = 1;  iskeyword=1; }
         if (!strcmp(token, "signal")) Set_Coord_Mode = DEFS->COORD_SIGNAL;
+        if (!strcmp(token, "mantid")) { Vars->Flag_mantid = 1; iskeyword=1; }
 
         /* Mode has changed: this was a keyword or value  ? */
         if (Set_Coord_Mode != old_Mode) iskeyword=1;
@@ -1609,6 +1611,27 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
              (double)xmax, (double)ymax, 0.0,
              (double)xmin, (double)ymax, 0.0,
              (double)xmin, (double)ymin, 0.0);
+      
+      if (Vars->Flag_mantid) {
+	/* First define the base pixel type */
+	double dx, dy, xtmp, ytmp, ztmp;
+	dx = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
+	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
+	printf("MANTID_PIXEL_SIZE: %g, %g, %i\n", dx, dy, (int)Vars->Coord_Bin[1]*Vars->Coord_Bin[2]);
+
+	/* Next, loop over the actual pixels */
+	xtmp = Vars->Coord_Min[1]+dx/2;
+	ztmp = 0;
+	for (int i=0; i<Vars->Coord_Bin[1]; i++) {
+	  ytmp = Vars->Coord_Min[2]+dy/2;
+	  for (int j=0; j<Vars->Coord_Bin[2]; j++) {
+	    printf("MANTID_PIXEL: %i, %g, %g, %g, %g, %g\n", i*Vars->Coord_Bin[1]+j, xtmp, ytmp, ztmp, dx, dy);
+	    ytmp += dy;
+	  }
+	  xtmp += dx;
+	}
+	printf("MANTID_PIXELS_END:\n");
+      }
     }
     /* full cylinder/banana */
     else

@@ -141,6 +141,97 @@ int mcnxfile_instrcode(NXhandle nxhandle,
   }
   length = instr_code ? strlen(instr_code) : 0;
   if (length) {
+
+
+
+
+    /****************/
+    /* name 				     */
+    /*                          */
+    /*                          */
+    int ns=strlen(parent);
+    NXmakedata (nxhandle, "name", NX_CHAR, 1, &ns);
+    NXopendata (nxhandle, "name");
+    NXputdata  (nxhandle, parent);
+    NXclosedata(nxhandle);  
+    /* name */
+    /*                  */
+    /****************/
+
+    /****************/
+    /* instrument_source        */
+    /*                          */
+    /*                          */
+    
+    /* int ns=strlen(parent);
+    */
+    
+    NXmakedata (nxhandle, "instrument_source", NX_CHAR, 1, &ns);
+    NXopendata (nxhandle, "instrument_source");
+    NXputdata  (nxhandle, "McStas");
+    NXclosedata(nxhandle);  
+    /* instrument_source */
+    /*                  */
+    /****************/
+
+
+    /****************/
+    /* read XML 	*/
+    /* 				*/
+    /* 				*/
+	#define MAXBUFLEN 3000000
+	char source[MAXBUFLEN + 1];
+	FILE *fp = fopen("IDF.xml", "r");
+	if (fp != NULL) {
+    	size_t newLen = fread(source, sizeof(char), MAXBUFLEN, fp);
+    	if (newLen == 0) {
+        	fputs("Error reading file", stderr);
+    	} else {
+        	source[++newLen] = '\0'; /* Just to be safe. */
+    	}
+
+    	fclose(fp);
+	}
+	/* displaying the string 	*/
+	/* printf ( "%s",source);   */
+    int ns2=strlen(source);
+    /*             	*/
+    /****************/
+
+
+    /****************/
+    /* Output XML 	*/
+    /* 				*/
+    /* 				*/
+    NXmakegroup (nxhandle, "instrument_xml", "NXnote");
+    NXopengroup (nxhandle, "instrument_xml", "NXnote");  
+    
+
+    NXmakedata (nxhandle, "data", NX_CHAR, 1, &ns2);
+    NXopendata (nxhandle, "data");
+    NXputdata  (nxhandle, source);
+    /* NXputdata  (nxhandle, "1 \n2 \n3"); 	*/
+    /*  NXputdata  (nxhandle, parent); 		*/ 
+    NXclosedata(nxhandle); 
+    
+
+    NXmakedata (nxhandle, "description", NX_CHAR, 1, &ns);
+    NXopendata (nxhandle, "description");
+    NXputdata  (nxhandle, "TODO: write something here");
+    NXclosedata(nxhandle); 
+
+
+    NXmakedata (nxhandle, "type", NX_CHAR, 1, &ns);
+    NXopendata (nxhandle, "type");
+    NXputdata  (nxhandle, "text/xml");
+    NXclosedata(nxhandle); 
+    
+    NXclosegroup (nxhandle);  /* instrument_xml */
+    /*             	*/
+    /****************/     
+      
+      
+      
     time_t t;
     NXmakedata(nxhandle, "description", NX_CHAR, 1, &length);
     if (NXopendata(nxhandle, "description") == NX_ERROR) {
@@ -161,6 +252,10 @@ int mcnxfile_instrcode(NXhandle nxhandle,
     return(NXclosedata(nxhandle));
   } else
   return(NX_ERROR);
+  
+  
+
+
 } /* mcnxfile_instrcode */
 
 /*******************************************************************************
