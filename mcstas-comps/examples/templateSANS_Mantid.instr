@@ -54,33 +54,17 @@
 DEFINE INSTRUMENT templateSANS_Mantid(lambda=6, dlambda=0.05, r=100, PHI=1e-3, Delta_Rho=0.6, sigma_abs=0.5)
 
 DECLARE %{
-  /* Variables for storing the pixel index */
-  int idX, idY, idPix;
-  /* Neutron id */
-  long long idN;
-  long long idN2;
 %}
 
 INITIALIZE %{
-  /* Initialize to -1 and increment by each added neutron */
-  idN=-1;
-  idN2=0;
- 
 %}
 
 TRACE
 
 COMPONENT a1 = Progress_bar()
   AT (0,0,0) ABSOLUTE
-EXTEND %{
-  /* Initialize to a know non-meaningful value */
-  idX=-1;
-  idY=-1;
-  idN++;
-%}
 
-COMPONENT arm = Arm(
-    )
+COMPONENT arm = Arm()
   AT (0, 0, 0) ABSOLUTE
 
 COMPONENT source = Source_simple(
@@ -123,44 +107,15 @@ COMPONENT PSDrad = PSD_monitor_rad(
     filename = "psd2.dat", filename_av = "psd2_av.dat", rmax = 0.3)
   AT (0, 0, 3.02) RELATIVE sample
 
-
 COMPONENT nD_Mantid_1 = Monitor_nD(
-    options ="mantid square x limits=[-0.2 0.2] bins=128 y limits=[-0.2 0.2] bins=128 t list all neutrons",
-    xmin = -0.2,
-    xmax = 0.2,
-    ymin = -0.2,
-    ymax = 0.2,
-    restore_neutron = 1,
-    filename = "TestnD.dat")
-  AT (0, 0, 3.2) RELATIVE sample
-EXTEND %{
-  /* This could clearly be done better - as we have access to the internal arrays etc. of the comp... */
-  /* Assunme 128 x 128 pixels */
-  /* e.g. round((128-1)*(xmax-x)/(xmax-xmin)) */
-  
-  idN2 = idN2 + 1;
-  /*printf("Hello World \n");*/
-  
-  /*printf(" %d \n", idN2) ; */
-   
-  idX = round(127*(0.2-x)/(0.2+0.2));
-  idY = round(127*(0.2-y)/(0.2+0.2));
-  idPix = 128*idY+idX;
-  
-  
-%}
-
-COMPONENT ActualData = Monitor_nD(
-    user1=idN2, user2=idPix, username1="Neutron ID", username2="Pixel ID",
-    options ="square user1 user2 t list all neutrons",
+    options ="mantid square x limits=[-0.2 0.2] bins=128 y limits=[-0.2 0.2] bins=128, neutron pixel t, list all neutrons",
     xmin = -0.2,
     xmax = 0.2,
     ymin = -0.2,
     ymax = 0.2,
     restore_neutron = 1,
     filename = "bank01_events.dat")
-    AT (0, 0, 3.2) RELATIVE sample
-
+  AT (0, 0, 3.2) RELATIVE sample
 
 END
 
