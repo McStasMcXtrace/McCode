@@ -77,6 +77,8 @@ sub read_instrument {
     my ($in) = @_;
     my ($st, $comp);
     my $compheader;
+    my $mantidfirst=1;
+    my $mantidcount=-1;
     $st = 0;
     @components = ();
     while(<$in>) {
@@ -106,6 +108,28 @@ sub read_instrument {
                 write_process("INSTRUMENT.save=1;\n");
               } else { write_process("INSTRUMENT.save=0;\n"); }
             }
+	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+
+	      my $last_mod_time = (stat ($sim_cmd))[9];
+	      write_process("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+	      write_process("<!-- IDF generated using McStas McDisplay and the Mantid backend -->\n");
+	      write_process("<!-- For help on the notation used to specify an Instrument Definition File see http://www.mantidproject.org/IDF -->\n");
+	      write_process("<instrument name=\"".$sim_cmd."\" valid-from   =\"1900-01-31 23:59:59\"\n");
+	      write_process("valid-to     =\"2100-01-31 23:59:59\" last-modified=\"".localtime($last_mod_time)."\">\n");
+	      write_process("<defaults>\n\t<length unit=\"meter\"/>\n\t<angle unit=\"degree\"/>\n\t<reference-frame>\n");
+	      write_process("\t\t<!-- The z-axis is set parallel to and in the direction of the beam. The y-axis points up and the coordinate system is right handed. -->\n");
+	      write_process("\t\t<along-beam axis=\"z\"/>\n");
+	      write_process("\t\t<pointing-up axis=\"y\"/>\n");
+	      write_process("\t\t<handedness val=\"right\"/>\n");
+	      write_process("\t</reference-frame>\n");
+	      write_process("\t\t<default-view axis-view=\"z-\"/>\n");
+	      write_process("\t</defaults>\n\n");
+	      write_process("<!-- LIST OF PHYSICAL COMPONENTS (which the instrument consists of) -->\n\n");
+	      # Initialize a few component types
+	      write_process("<type name=\"Othercomp\"></type>\n\n");
+	      write_process("<type name=\"source\" is=\"Source\" />\n");
+	      write_process("<type name=\"some-sample-holder\" is=\"SamplePos\" />\n");
+	    }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /VRML/i) {
 	    my @argv=@ARGV;
 	    for ($i=0; $i<@ARGV; $i++) {
@@ -280,6 +304,24 @@ Transform {
               # Initialize components in matlab struct:
               write_process("INSTRUMENT.name{length(INSTRUMENT.name)+1}='$comp';\n");
             }
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+              # Initialize components in matlab struct:
+	      my $type = "Othercomp";
+	      if ($comp =~ /source/i) {
+		$type = "source";
+	      }
+	      if ($comp =~ /sample/i) {
+		$type = "some-sample-holder";
+	      }
+	      if ($comp =~ /nD_Mantid/i) {
+		$mantidcount=$mantidcount+1;
+		$type = "MonNDtype-$mantidcount";
+		write_process("<component type=\"".$type."\" name=\"$comp\" idlist=\"${comp}_${mantidcount}\">\n");
+	      } else {
+		write_process("<component type=\"".$type."\" name=\"$comp\">\n");
+	      }
+	      
+            }
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Initialize components in scilab struct:
               write_process("setcomponent('$comp');\n");
@@ -299,6 +341,11 @@ Transform {
               write_process("INSTRUMENT.$comp.T=ReshapeTransform([@T]);\n");
               write_process("INSTRUMENT.$comp.j=$compcnt;\n");
               write_process("INSTRUMENT.$comp.K=cell(0);\n");
+            }
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+              # Component position for mantid:
+              write_process("<location x=\"".$T[0]."\" y=\"".$T[1]."\" z=\"".$T[2]."\" />\n</component>\n\n");
+	      # We need to handle orientations here as well...
             }
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Component position for scilab struct:
@@ -329,8 +376,51 @@ Transform {
 		    "geometry IndexedLineSet {\ncoord Coordinate {\npoint [\n";
 		$nbcomp2++;
 		$comp = "";
-	    }
+	      }
+	} elsif (/^MANTID_PIXEL_SIZE:(.*)$/) {
+	  my @T;
+	  @T = split ",", $1;
+	  
+	  my @PIXELDATA=@T;
+	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+	      write_process("<type name=\"pixel\" is=\"detector\">\n");
+	      write_process("\t<cuboid id=\"shape\">\n");
+	      write_process("\t\t<left-front-bottom-point x=\"".$PIXELDATA[0]/(2.0)."\" y=\"".-($PIXELDATA[1]/2.0)."\" z=\"0.0\" />\n");
+	      write_process("\t\t<left-front-top-point x=\"".$PIXELDATA[0]/(2.0)."\" y=\"".-($PIXELDATA[1]/2.0)."\" z=\"0.00005\" />\n");
+	      write_process("\t\t<left-back-bottom-point x=\"".$PIXELDATA[0]/(-2.0)."\" y=\"".-($PIXELDATA[1]/2.0)."\" z=\"0.0\" />\n");
+	      write_process("\t\t<right-front-bottom-point x=\"".$PIXELDATA[0]/(2.0)."\" y=\"".($PIXELDATA[1]/2.0)."\" z=\"0.0\" />\n");
+	      write_process("\t</cuboid>\n");
+	      write_process("\t<algebra val=\"shape\" />\n");
+	      write_process("</type>\n\n");
+	      write_process("<idlist idname=\"nD_Mantid_1_0\" >\n");
+	      write_process("<id start=\"");
+	      write_process(${mantidcount}*1000000);
+	      write_process("\" end=\"".($PIXELDATA[2]-1)."\" />\n");
+	      write_process("</idlist>\n\n");
 
+	    }
+	} elsif (/^MANTID_PIXEL:(.*)$/) {
+	  my @T;
+	  @T = split ",", $1;
+#            $transformations{$comp} = \@T;
+	  my @PIXELDATA=@T;
+	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+	      if ($mantidfirst) {
+		$mantidfirst=0;
+		write_process("<type name=\"MonNDtype-$mantidcount\">\n<properties/>\n<component type=\"pixel\">\n");
+	      }
+	      my $pixnum = $mantidcount*1000000+$PIXELDATA[0];
+	      write_process("<location x=\"".$PIXELDATA[1]."\" y=\"".$PIXELDATA[2]."\" z=\"".$PIXELDATA[3]."\" name=\"pixel".$pixnum."\"/>\n");
+	    } else {
+	      next;
+	    }
+	} elsif (/^MANTID_PIXELS_END/) {
+	  if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+	    $mantidfirst=1;
+	    write_process("</component>\n</type>\n");
+	  } else {
+	    next;
+	  }
         } elsif($st == 1 && /^MCDISPLAY: start$/) {
             $st = 2;                # Start of component graphics representation
 	} elsif($st == 2 && /^MCDISPLAY: component ([a-zA-Z0-9_]+)/) {
@@ -362,6 +452,9 @@ Transform {
               write_process("z=coords(3:3:length(coords));\n");
               write_process("coords=[x;y;z;1+0*z];\n");
               write_process("INSTRUMENT.$comp.K{size(INSTRUMENT.$comp.K,2)+1}=coords;\n");
+            }           
+	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+              # Line elements for mantid... 
             }
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Line elements for Scilab struct
@@ -404,6 +497,11 @@ Transform {
               write_process("coords=[x;y;z;1+0*z];\n");
               write_process("INSTRUMENT.$comp.K{size(INSTRUMENT.$comp.K,2)+1}=coords;\n");
             }
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+              # Line elements for Matlab struct, circle representation
+              # write_process("coords=[@coords];\n");
+            }
+
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Line elements for Scilab struct, circle representation
               write_process("circle('$plane',$x,$y,$z,$r);\n");
@@ -428,6 +526,10 @@ Transform {
                 write_process("set(INSTRUMENT.fig, 'closerequestfcn','exit;');\n");
                 write_process("wait(INSTRUMENT.fig);\n");
               }
+            }
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+              # Scilab 'End of instrument'
+	      write_process("</instrument>\n");
             }
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Scilab 'End of instrument'
@@ -482,7 +584,7 @@ Transform {
 				  "}\n");
 		}
 	    }
-
+	    
 	} elsif($st == 1 && /^INSTRUMENT END:/) {
             $st = 100;
             last;
@@ -1198,8 +1300,9 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
            --tmax=TMAX       Maxiumum TOF [ms] (defaults to 50 ms)
  -zZF      --zoom=ZF         Show zoomed view by factor ZF
  -iCOMP    --inspect=COMP    Show only trajectories reaching component COMP
-           --param=FILE     Read input parameters from parameter file
- -pPLOTTER --plotter=PLOTTER Output graphics using {PGPLOT,Scilab,Matlab}
+           --param=FILE      Read input parameters from parameter file
+ -pPLOTTER --plotter=PLOTTER Output graphics using {PGPLOT,Scilab,Matlab,Mantid}
+ --format=PLOTTER            --\"-- 
  -fFNAME   --file=FNAME      Output graphics commands to file FNAME
                              (Only used when PLOTTER = {Scilab, Matlab})
            --first=COMP      First component to visualize {Scilab, Matlab}
@@ -1284,6 +1387,12 @@ if ($plotter =~ /scriptfile/i && not $file_output) {
   print STDERR "Outputting to file $file_output\n";
 }
 
+if ($plotter =~ /mantid/i && not $file_output) {
+  $file_output="$sim_cmd.xml";
+  print STDERR "Outputting to file $file_output\n";
+}
+
+
 # Final PLOTTER check, is PGPLOT wanted but not possible?
 # - Ask user to rerun / set other default
 if ($plotter =~ /McStas|PGPLOT/i && $MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
@@ -1330,6 +1439,10 @@ if ($plotter =~ /McStas|PGPLOT/i) { # PGPLOT is plotter!
   my %compheaders;
 } elsif ($plotter =~ /Matlab/i && $plotter =~ /scriptfile/i) {
   # Matlab w/FILE is plotter - open a file handle
+  open(WRITER, "> $file_output");
+  $pid=0;
+} elsif ($plotter =~ /mantid/i) {
+  # Mantid FILE is plotter - open a file handle
   open(WRITER, "> $file_output");
   $pid=0;
 } elsif ($plotter =~ /Matlab/i) {
