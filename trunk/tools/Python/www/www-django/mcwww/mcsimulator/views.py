@@ -152,8 +152,8 @@ def show_plot(req, runref, name):
 
 @only_safe
 def documentation(req, instr):
-    return HttpResponse(file('sim/%s.instr.doc.txt' % instr).read(),
-                        content_type='text/plain')
+    return HttpResponse(file('sim/%s.html' % instr).read(),
+                        content_type='text/html')
 
 
 # @app.route('/sim/latest', methods=['GET'])
