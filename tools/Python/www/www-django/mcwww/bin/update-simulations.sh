@@ -9,6 +9,10 @@
 
 echo ""
 
+cd sim
+mcdoc -t .
+cd -
+
 # Generate documentation
 python manage.py generate_docs
 
