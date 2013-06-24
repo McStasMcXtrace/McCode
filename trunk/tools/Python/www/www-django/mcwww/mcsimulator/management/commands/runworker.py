@@ -149,6 +149,8 @@ def processJob(run, workdir):
     simbin = SIM_BIN_PATH % name
     simc = SIM_C_PATH % name
 
+    name=basename(name)
+    
     # Create hard links to instrument source, c-code and binary
     for path in (siminstr, simbin, simc):
         os.link(path, workdir % basename(path))

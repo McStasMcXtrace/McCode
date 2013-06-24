@@ -14,8 +14,13 @@ fi
 
 cd sim
 
-for i in $( ls *.instr ); do
-    echo "> $i"
-    b=`basename $i .instr`
-    mcrun ${MCRUN_FLAGS} --trace --info $i &>/dev/null;
+for dir in $( ls -d * | grep -v datafiles ); do
+  cd $dir
+  echo "Instrument group $dir..."
+    for i in $( ls *.instr ); do
+      echo "> $i"
+      b=`basename $i .instr`
+      mcrun ${MCRUN_FLAGS} --trace --info $i &>/dev/null;
+      cd -
+    done
 done

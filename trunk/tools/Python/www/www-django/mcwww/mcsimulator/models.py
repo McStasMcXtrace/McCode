@@ -24,7 +24,7 @@ class Job(models.Model):
 
     # Simulation to run
     sim     = models.ForeignKey('Simulation')
-
+    
     # Date and time created
     created = models.DateTimeField(db_index=True, editable=False)
 
@@ -42,21 +42,23 @@ class Simulation(models.Model):
 
     # Simulation name (see Param/sim.param_set() for parameters)
     name = models.CharField(max_length=64, unique=True, db_index=True)
-
+    simgroup = models.CharField(max_length=64, unique=False, db_index=True)
+    displayname = models.CharField(max_length=64, unique=False, db_index=True)
+    
     # param_set()  gives the parameters
     # job_set()    gives the related jobs
     # simrun_set() gives the related runs
 
     def __repr__(self):
         return self.name
-
+    
     @staticmethod
     def new(*args, **kwargs):
         return Simulation(None, *args, **kwargs)
 
     def __unicode__(self):
         return u'<Sim %s>' % self.name
-
+    
 
 class SimRun(models.Model):
     ''' A particular run of a simulation (configured by Job) '''
@@ -66,11 +68,11 @@ class SimRun(models.Model):
 
     # Creator / owner
     user = models.ForeignKey(User)
-
+    
     # Job to run
     job = models.ForeignKey('Job')
     sim = models.ForeignKey('Simulation')
-
+    
     # Current status (waiting, running, completed)
     status = models.CharField(max_length=32, db_index=True)
 
@@ -119,7 +121,7 @@ class Param(models.Model):
     name = models.CharField(max_length=128)
     unit = models.CharField(max_length=128)
     msg  = models.CharField(max_length=128)
-
+    
     # JSON-encoded default value
     str_default = models.CharField(max_length=256)
 
