@@ -1,10 +1,12 @@
 from django.core.management.base import NoArgsCommand, make_option
+from django.contrib.auth.models import User,Group
 
 from mcsimulator.models import Simulation, Param
 
-from os.path import basename
+from os.path import basename, dirname
 from commands import getstatusoutput
 from glob import glob
+
 
 import json
 import re
@@ -70,13 +72,16 @@ def read_params(instr_file):
 def info(bin):
     # Insert new simulation
     sim_name = basename(bin)[:-1*len('.out')]
+    sim_group = basename(dirname(bin))
+    Group.objects.get_or_create(name=sim_group)
+    full_sim_name = sim_group+'/'+sim_name
     sim = None
-    if exist(Simulation, name=sim_name):
+    if exist(Simulation, name=full_sim_name, simgroup=sim_group, displayname=sim_name):
         print 'Updating existing simulation: ' + sim_name
         sim = fetch(Simulation, name=sim_name)[0]
     else:
         # Create new simulation
-        sim = Simulation(name=sim_name)
+        sim = Simulation(name=full_sim_name, simgroup=sim_group, displayname=sim_name)
         sim.save()
 
     # Delete old params
@@ -99,7 +104,8 @@ def info(bin):
 
     # Insert param default
     convertfns = {'string' : lambda x: x,
-                  'double' : float
+                  'double' : float,
+                  'int'    : int
                   }
 
     # Insert new params
@@ -126,7 +132,7 @@ def info(bin):
 
 
 def getlist():
-    return glob(PATH_BIN + '/*.out')
+    return glob(PATH_BIN + '/*/*.out')
 
 
 def main():

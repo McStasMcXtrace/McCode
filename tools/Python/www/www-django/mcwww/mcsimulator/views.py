@@ -1,7 +1,9 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User, Group
 
 from django.shortcuts import redirect
 from django.http import HttpResponse
+
 
 from mcsimulator.models import *
 from common import *
@@ -34,7 +36,7 @@ def home(req):
 @templated('mcsimulator/configure')
 def configure(req, jobref):
     job = get_or_404(Job, ref=jobref)
-    sims = Simulation.objects.all()
+    sims = Simulation.objects.all().filter(simgroup__in=req.user.groups.values_list('name',flat=True))
     return dict(job=job, jobid=job.ref, sims=sims,
                 max_samples=MAX_RAY_SAMPLES, max_npoints=MAX_SCAN_POINTS)
 
