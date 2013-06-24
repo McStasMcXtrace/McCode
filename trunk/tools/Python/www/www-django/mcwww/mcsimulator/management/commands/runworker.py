@@ -19,7 +19,6 @@ import tarfile
 from mcwww.settings import IMAGE_FORMAT, MPI_NP, DATA_FILES, \
      MAX_RAY_SAMPLES, MAX_SCAN_POINTS
 
-
 SIM_SRC_PATH = "sim/%s.instr"
 SIM_BIN_PATH = "sim/%s.out"
 SIM_C_PATH = "sim/%s.c"
@@ -145,9 +144,13 @@ def processJob(run, workdir):
 
     # instrument name
     name = run.sim.name
-    siminstr = SIM_SRC_PATH % name
-    simbin = SIM_BIN_PATH % name
-    simc = SIM_C_PATH % name
+    group = run.sim.simgroup
+    siminstr = "sim/"+group+"/"+name+".instr" #SIM_SRC_PATH % group % name
+    simbin = "sim/"+group+"/"+name+".out"
+    simc = "sim/"+group+"/"+name+".c"
+    #    print "Instrument file is "+siminstr
+    #simbin = SIM_BIN_PATH % group % name
+    #simc = SIM_C_PATH % group % name
 
     name=basename(name)
     

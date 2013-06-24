@@ -48,7 +48,10 @@ class Simulation(models.Model):
     # param_set()  gives the parameters
     # job_set()    gives the related jobs
     # simrun_set() gives the related runs
-
+    
+    def shortname(self):
+        return self.displayname
+    
     def __repr__(self):
         return self.name
     

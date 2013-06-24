@@ -37,7 +37,7 @@ def home(req):
 def configure(req, jobref):
     job = get_or_404(Job, ref=jobref)
     sims = Simulation.objects.all().filter(simgroup__in=req.user.groups.values_list('name',flat=True))
-    return dict(job=job, jobid=job.ref, sims=sims,
+    return dict(job=job, jobid=job.ref, sims=sims, 
                 max_samples=MAX_RAY_SAMPLES, max_npoints=MAX_SCAN_POINTS)
 
 @login_required
