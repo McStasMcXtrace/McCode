@@ -137,10 +137,10 @@ MCDISPLAY
   x1 =  Width/2.0;
   y0 = -height/2.0;
   y1 =  height/2.0;
-  z0 = -l0/2.0;
-  z1 = -l1/2.0;
-  z2 =  l1/2.0;
-  z3 =  l0/2.0;
+  z0 =  0;
+  z1 =  0;
+  z2 =  l1;
+  z3 =  l0;
 
   magnify("xy");
   xw = Width/2.0;
