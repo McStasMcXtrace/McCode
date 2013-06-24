@@ -148,6 +148,7 @@ def processJob(run, workdir):
     siminstr = "sim/"+group+"/"+name+".instr" #SIM_SRC_PATH % group % name
     simbin = "sim/"+group+"/"+name+".out"
     simc = "sim/"+group+"/"+name+".c"
+    simhtml = "sim/"+group+"/"+name+".html"
     #    print "Instrument file is "+siminstr
     #simbin = SIM_BIN_PATH % group % name
     #simc = SIM_C_PATH % group % name
@@ -155,7 +156,7 @@ def processJob(run, workdir):
     name=basename(name)
     
     # Create hard links to instrument source, c-code and binary
-    for path in (siminstr, simbin, simc):
+    for path in (siminstr, simbin, simc, simhtml):
         os.link(path, workdir % basename(path))
 
     # Create soft links to data files/folders
