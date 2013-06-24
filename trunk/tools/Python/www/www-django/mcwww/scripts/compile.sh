@@ -17,6 +17,7 @@ cd sim
 for dir in $( ls -d * | grep -v datafiles ); do
   cd $dir
   echo "Instrument group $dir..."
+  mcdoc -t .
     for i in $( ls *.instr ); do
       echo "> $i"
       b=`basename $i .instr`
