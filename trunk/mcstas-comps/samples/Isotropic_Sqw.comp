@@ -176,7 +176,8 @@
 * sigma_inc:[barns] Incoherent Scattering cross-section. Use -1 to unactivate.
 * sigma_abs:[barns] Absorption cross-section at 2200 m/s. Use -1 to unactivate.
 * rho:       [AA-3] Density of scattering elements (nb atoms/unit cell V_0).
-* T:            [K] Temperature of sample, detailed balance
+* T:            [K] Temperature of sample, detailed balance. Use T=0 to disable it.
+*                   and T=-1 to automatically set it from non-classical S(q,w).
 *
 * Geometry parameters:
 * radius:       [m] Outer radius of sample in (x,z) plane. cylinder/sphere.
@@ -806,6 +807,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
       printf("Isotropic_Sqw: %s: Cannot allocate G(q,w) Table (%lix%i).\n"
              "WARNING          Skipping S(q,w) diagnosis.\n",
              Sqw->compname, Sqw_Data->q_bins, 1);
+        Table_Free(&Sqw_cl);
         return;
     }
     sprintf(Gqw.filename,
@@ -823,6 +825,8 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
       printf("Isotropic_Sqw: %s: Cannot allocate S(q,w) moment %ld Table (%lix%i).\n"
            "WARNING          Skipping S(q,w) diagnosis.\n",
            Sqw->compname, index_q, Sqw_Data->q_bins, 1);
+      Table_Free(&Sqw_cl);
+      Table_Free(&Gqw);
       return;
     }
     Sqw_moments[index_q].block_number = 1;
@@ -893,8 +897,8 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
                  "Error when setting Sqw_cl[%li q=%g,%li w=%g]=%g from file %s\n",
                  Sqw->compname, index_q, q, index_w, w, sqw_cl, Sqw_Data->filename);
         sq_cl += sqw_cl;
-        sq    += sqw_full;
       }
+      sq    += sqw_full;
     } /* for index_w */
     sq    *= Sqw_Data->w_step;         /* S(q) = \int S(q,w) dw = structure factor */
     sq_cl *= Sqw_Data->w_step;
@@ -948,12 +952,14 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
              "Physical constants from the S(q,w) %s. Values are estimates.\n",
              Sqw->compname, Sqw_Data->filename);
     if (do_coh) {
-      double LAMBDA     = HBAR*2*PI/sqrt(2*PI*Sqw->mat_weight*Da*KB*Sqw->Temperature)*1e10;   /* in [Angs] */
-      double z          = Sqw->mat_rho * LAMBDA*LAMBDA*LAMBDA;  /* fugacity , rho=N/V in [Angs-3]*/
-      double mu         = KB*Sqw->Temperature*log(z);       /* perfect gas chemical potential */
-      printf("# De Broglie wavelength     LAMBDA=%g [Angs]\n", LAMBDA);
-      printf("# Fugacity                       z=%g (from Egelstaff p32 Eq 2.31)\n", z);
-      printf("# Chemical potential            mu=%g [eV] (eq. perfect gas)\n", mu/CELE);
+      if (Sqw->mat_weight) {
+        double LAMBDA     = HBAR*2*PI/sqrt(2*PI*Sqw->mat_weight*Da*KB*Sqw->Temperature)*1e10;   /* in [Angs] */
+        double z          = Sqw->mat_rho * LAMBDA*LAMBDA*LAMBDA;  /* fugacity , rho=N/V in [Angs-3]*/
+        double mu         = KB*Sqw->Temperature*log(z);       /* perfect gas chemical potential */
+        printf("# De Broglie wavelength     LAMBDA=%g [Angs]\n", LAMBDA);
+        printf("# Fugacity                       z=%g (from Egelstaff p32 Eq 2.31)\n", z);
+        printf("# Chemical potential            mu=%g [eV] (eq. perfect gas)\n", mu/CELE);
+      }
 
       /* compute isothermal sound velocity and compressibility */
       /* get the S(q_min) value and the corresponding w_c */
@@ -1004,10 +1010,10 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
       double w        = -Sqw_Data->w_max + index_w*Sqw_Data->w_step; /* w value in Sqw_full */
       double gw       = 0;
       for   (index_q=0; index_q < Sqw_Data->q_bins; index_q++) {
-        double q           = index_q*Sqw_Data->q_step; /* q value in Sqw_full ; q_min = 0 */
+        double q        = index_q*Sqw_Data->q_step; /* q value in Sqw_full ; q_min = 0 */
         double sqw_full = Table_Index(Sqw_Data->Sqw, index_q, index_w);
         double n        = 1/(exp(w/(Sqw->Temperature*Sqw->T2E))-1); /* Bose factor */
-        double DW       = q && u2 ? exp(2*u2*q*q/6) : 1;           /* Debye-Weller factor */
+        double DW       = q && u2 ? exp(2*u2*q*q/6) : 1;            /* Debye-Weller factor */
         double gqw      = q && n+1 ? sqw_full*DW*2*(Sqw->mat_weight*Da)*w/(n+1)/q/q : 0;
         if (!Table_SetElement(&Gqw, index_q, index_w, gqw))
           printf("Isotropic_Sqw: %s: "
@@ -1303,15 +1309,31 @@ struct Sqw_Data_struct *Sqw_readfile(
   for (index_w=0; index_w < w_bins; index_w++) {
     double w = -w_max + index_w*w_step; /* w value in Sqw_full */
     double index_w_file=0;              /* w index in Sqw file */
+    char   found=0;
     for (index_w_file=0; index_w_file < w_bins_file; index_w_file++) {
       double w0=Table_Index(Table_Array[1], (long)index_w_file,  0);
       double w1=Table_Index(Table_Array[1], (long)index_w_file+1,0);
-      /* test if we are in Stokes or anti-Stokes */
-      if (w0 <= w && w <= w1) {
+      /* test if we are in Stokes */
+      if (w0 > w1) {
+        double tmp=w0; w0=w1; w1=tmp;
+      }
+      if (w0 <= w && w < w1) {
         /* w ~ w_file exists in file, usually on w > 0 side Stokes, neutron looses energy */
         index_w_file += w1-w0 ? (w-w0)/(w1-w0) : 0; /* may correspond with a position in-betwwen two w elements */
+        found=1;
         break;
-      } else if (w0 <= -w && -w <= w1) {            /* w value is mirrored from the opposite side in file */
+      }
+    }
+    /* test if we are in anti-Stokes */
+    if (!found)
+    for (index_w_file=0; index_w_file < w_bins_file; index_w_file++) {
+      double w0=Table_Index(Table_Array[1], (long)index_w_file,  0);
+      double w1=Table_Index(Table_Array[1], (long)index_w_file+1,0);
+      /* test if we are in anti-Stokes */
+      if (w0 > w1) {
+        double tmp=w0; w0=w1; w1=tmp;
+      }
+      if (w0 <= -w && -w < w1) {            /* w value is mirrored from the opposite side in file */
         index_w_file += w1-w0 ? (-w-w0)/(w1-w0) : 0;
         index_w_file = -index_w_file;               /* in this case, index value is set to negative */
         break;
@@ -1360,7 +1382,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       sqw_file     = Table_Value2d(Table_Array[2], index_q_file, abs(index_w_file));
       /* apply the minimum threshold to remove noisy background in S(q,w) */
       if (sqw_file < Sqw->sqw_threshold) sqw_file = 0;
-      if (index_w_file < 0)              sqw_file = -sqw_file; /* negative == mirrored from other side */
+      else if (index_w_file < 0)         sqw_file = -sqw_file; /* negative == mirrored from other side */
 
       if (!Table_SetElement(&Sqw_full, index_q, index_w, sqw_file))
         printf("Isotropic_Sqw: %s: "
@@ -1368,6 +1390,9 @@ struct Sqw_Data_struct *Sqw_readfile(
                Sqw->compname, index_q, q, index_w, w, fabs(sqw_file), file);
     } /* for index_w */
   } /* for index_q */
+  
+  /* free memory and store limits for new full Sqw table */
+  Table_Free_Array(Table_Array);
 
   /* if only one S(q,w) side is given, it is symmetrised by mirroring, then M1=0 */
 
@@ -1379,14 +1404,14 @@ struct Sqw_Data_struct *Sqw_readfile(
     for (index_w=0; index_w < w_bins; index_w++) {
       double w        = -w_max + index_w*w_step; /* w value in Sqw_full */
       double sqw_full = Table_Index(Sqw_full, index_q, index_w);
-      long   index_mw = (-w+w_max)/q_step;       /* opposite w index in S(q,w) */
+      long   index_mw = w_bins-1-index_w;        /* opposite w index in S(q,w) */
       double sqw_opp  = Table_Index(Sqw_full, index_q, index_mw);
 
       /* the analysis must be done only on values which exist on both sides */
       /* as integrals must be symmetric, and Bose factor requires both sides as well */
       if (sqw_full > 0 && sqw_opp > 0) {
         /* compute temperature from Bose factor */
-        if (Sqw->Temperature <=0 && sqw_opp != sqw_full) {
+        if (sqw_opp != sqw_full) {
           T      += fabs(2*w/log(sqw_opp/sqw_full)/Sqw->T2E);
           T_count++;
         }
@@ -1402,7 +1427,7 @@ struct Sqw_Data_struct *Sqw_readfile(
           /* T=0 ? would compute the M1_cl = M1 - recoil energy, assuming we have a quantum S(q,w) in file */
           /* the M1(quantum) = (MNEUTRON/m)*2.0725*q^2 recoil energy */
           double Da = 1.660538921e-27; /* atomic mass unit */
-          double Er = (MNEUTRON/Sqw->mat_weight/Da)*2.0725*q*q; /* recoil for one scattering element in the cell [meV] Schober JDN16 p239 */
+          double Er = (MNEUTRON/Sqw->mat_weight/Da)*2.0725*q*q; /* recoil for one scattering unit in the cell [meV] Schober JDN16 p239 */
           M1_cl      += M1 - Er;
           M1_cl_count++;
         }
@@ -1430,9 +1455,17 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (T) {
     if (Sqw->Temperature < 0)    Sqw->Temperature = fabs(T);
     MPI_MASTER(
-    if (Sqw->verbose_output > 0)
-      printf("Isotropic_Sqw: %s: Temperature guessed from S(q,w) data from %s is T=%g [K].\n",
+    if (Sqw->verbose_output > 0) {
+      printf(  "Isotropic_Sqw: %s: Temperature guessed from S(q,w) data from %s is T=%g [K].\n",
         Sqw->compname, file, T);
+      if (Sqw->Temperature == 0)
+        printf("Warning:       %s: Use T=-1 to set it. Currently using T=%g, i.e. no detailed balance.\n", 
+          Sqw->compname, Sqw->Temperature);
+    }
+    if (Sqw->sqw_classical == 0 && Sqw->Temperature>0 && Sqw->Temperature != T)
+      printf("WARNING:       %s: The temperature %g [K] guessed from the non-classical\n"
+             "               S(q,w) %s does not match the requested T=%g [K]. Fixing.\n", 
+             Sqw->compname, T, file, Sqw->Temperature);
     );
   }
 
@@ -1440,7 +1473,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (Sqw->verbose_output > 0 && w_bins > 1)
     printf("Isotropic_Sqw: %s: S(q,w) data from %s (%s) assumed to be %s.\n",
       Sqw->compname, file, Sqw->type=='c' ? "coh" : "inc",
-      Sqw->sqw_classical ? "classical (symmetrised)" : "quantum (includes Bose, non symmetric)");
+      Sqw->sqw_classical ? "classical (symmetrised in energy)" : "non-classical (includes Bose factor, non symmetric in energy)");
   );
 
   /* (6) apply detailed balance on Sqw_full for classical or quantum S(q,w) */
@@ -1454,18 +1487,26 @@ struct Sqw_Data_struct *Sqw_readfile(
     double q           = index_q*q_step;  /* q value in Sqw_full ; q_min = 0 */
     for (index_w=0; index_w < w_bins; index_w++) {
       double w = -w_max + index_w*w_step; /* w value in Sqw_full */
-      double balance   =1;                /* detailed balance factor, default is 1 */
+      double balance   = 1;               /* detailed balance factor, default is 1 */
       double sqw_full  = Table_Index(Sqw_full, index_q, index_w);
-      long   index_w_file = w_file2full[index_w];
 
       /* do we use a symmetric S(q,w) from real G(r,t) from e.g. MD ? */
-      if (Sqw->Temperature > 0) {
-        if (Sqw->sqw_classical)
-          /* un-symmetrize Sqw(file) * exp(hw/kT/2) on both sides */
-          balance = exp(w/(Sqw->Temperature*Sqw->T2E)/2);
-        else if (sqw_full < 0) /* quantum but mirrored/symmetric value (was missing in file) */
-          /* detailed balance in quantum case */
-          balance = exp(w/(Sqw->Temperature*Sqw->T2E));
+      if (Sqw->sqw_classical && Sqw->Temperature > 0) /* data is symmetric, we apply Bose factor */
+        /* un-symmetrize Sqw(file) * exp(hw/kT/2) on both sides */
+        balance = exp(w/(Sqw->Temperature*Sqw->T2E)/2);
+      else if (!Sqw->sqw_classical) {  /* data is quantum (contains Bose) */
+        if (sqw_full < 0) { /* quantum but mirrored/symmetric value (was missing in file) */
+          if (T)
+            /* prefer to use T from file for mirroring */
+            balance *= exp(w/(T*Sqw->T2E)); /* apply Bose where missing */
+          else if (Sqw->Temperature>0)
+            balance *= exp(w/(Sqw->Temperature*Sqw->T2E)); /* apply Bose where missing */
+        }
+        /* test if T from file matches requested T, else apply correction */
+        if (T && Sqw->Temperature > 0 && Sqw->Temperature != T) {
+          balance *= exp(-w/(T*Sqw->T2E)/2);                /* make it a classical data set */
+          balance *= exp( w/(Sqw->Temperature*Sqw->T2E)/2); /* then apply Bose to proper temperature */
+        }
       }
       /* update Sqw value */
       sqw_full = fabs(sqw_full)*balance;
@@ -1485,14 +1526,12 @@ struct Sqw_Data_struct *Sqw_readfile(
     printf("                 q=[%g:%g] w=[%g:%g]\n",
            q_min_file, q_max_file,
            w_min_file, w_max_file);
+    Table_Free(&Sqw_full);
     return(NULL);
   }
 
   /* norm S(q ,w) = sum(S)*q_range/q_bins on total q,w range from file */
   sum *= (q_max_file - q_min_file)/q_bins_file;
-
-  /* free memory and store limits for new full Sqw table */
-  Table_Free_Array(Table_Array);
 
   /* (7) renormalization of S(q,w) ========================================== */
 
@@ -1508,7 +1547,7 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   if (alpha < 0) {
     printf("Isotropic_Sqw: %s: normalisation factor is negative. rho=%g [Angs^-3] may be too high.\n"
-           "WARNING        Disabling renormalization i.e. keeping initial S(,w).\n",
+           "WARNING        Disabling renormalization i.e. keeping initial S(q,w).\n",
       Sqw->compname, Sqw->mat_rho);
     alpha=0;
   }
@@ -1541,7 +1580,7 @@ struct Sqw_Data_struct *Sqw_readfile(
            (Sqw->type == 'i' ? Sqw->s_inc : Sqw->s_coh));
     if (w_max < 1e-2)
       printf("               Mainly elastic scattering.\n");
-    if (Sqw->sqw_norm >0)
+    if (Sqw->sqw_norm >0 && Sqw->sqw_norm != 1)
       printf("                   normalization factor S(q,w)*%g (user)\n", alpha);
     else if (Sqw->sqw_norm<0)
       printf("                   normalization factor S(q,w)*%g (auto) \\int q^2 S(q) dq=%g\n", alpha, iq2Sq);
@@ -1568,6 +1607,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     printf("Isotropic_Sqw: %s: Cannot allocate [int q S(q,w) dq dw] array (%li bytes).\n"
            "ERROR          Exiting.\n",
       Sqw->compname, Sqw->lookup_length*sizeof(double));
+    Table_Free(&Sqw_full);
     return(NULL);
   }
 
@@ -1613,6 +1653,8 @@ struct Sqw_Data_struct *Sqw_readfile(
     printf("Isotropic_Sqw: %s: Cannot allocate SW (%li bytes).\n"
            "ERROR          Exiting.\n",
       Sqw->compname, w_bins*sizeof(struct Sqw_W_struct));
+    Table_Free(&Sqw_full);
+    Table_Free(&iqSq);
     return(NULL);
   }
   sum = 0;
@@ -1633,6 +1675,8 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (!sum) {
     printf("Isotropic_Sqw: %s: Total S(q,w) intensity is NULL.\n"
            "ERROR          Exiting.\n", Sqw->compname);
+    Table_Free(&Sqw_full);
+    Table_Free(&iqSq);
     return(NULL);
   }
 
@@ -1657,6 +1701,8 @@ struct Sqw_Data_struct *Sqw_readfile(
     printf("Isotropic_Sqw: %s: Cannot allocate P(Q|w) array (%li bytes).\n"
            "ERROR          Exiting.\n",
       Sqw->compname, w_bins*sizeof(struct Sqw_Q_struct*));
+    Table_Free(&Sqw_full);
+    Table_Free(&iqSq);
     return(NULL);
   }
   for (index_w=0; index_w < w_bins ; index_w++) {
@@ -1667,6 +1713,8 @@ struct Sqw_Data_struct *Sqw_readfile(
       printf("Isotropic_Sqw: %s: Cannot allocate P(Q|w)[%li] (%li bytes).\n"
              "ERROR          Exiting.\n",
         Sqw->compname, index_w, q_bins*sizeof(struct Sqw_Q_struct));
+      Table_Free(&Sqw_full);
+      Table_Free(&iqSq);
       return(NULL);
     }
     /* set P(Q|W) and compute total intensity */
@@ -1940,6 +1988,18 @@ INITIALIZE
            "               scattering. Setting to order=1.\n",
            NAME_CURRENT_COMP);
     order = 1;
+  }
+  
+  /* request statistics */
+  if (VarSqw.verbose_output > 1) {
+    Sqw_diagnosis(&VarSqw, &VarSqw.Data_coh);
+    Sqw_diagnosis(&VarSqw, &VarSqw.Data_inc);
+  }
+  
+  for (i=0; i < 2; i++) {
+    struct Sqw_Data_struct Data_sqw;
+    Data_sqw =  (i == 0 ? VarSqw.Data_coh : VarSqw.Data_inc);
+    Table_Free(&(Data_sqw.Sqw));
   }
 
 /* end INITIALIZE */
@@ -2497,14 +2557,6 @@ if (SCATTERED) {
 /* end TRACE */
 %}
 
-SAVE %{
-  /* request statistics */
-  if (VarSqw.verbose_output > 1) {
-    Sqw_diagnosis(&VarSqw, &VarSqw.Data_coh);
-    Sqw_diagnosis(&VarSqw, &VarSqw.Data_inc);
-  }
-%}
-
 FINALLY
 %{
   int  k;
@@ -2516,8 +2568,7 @@ FINALLY
 
     strcpy(type_ci, (k == 0 ? "coherent" : "incoherent"));
     Data_sqw =  (k == 0 ? VarSqw.Data_coh : VarSqw.Data_inc);
-
-    Table_Free(&(Data_sqw.Sqw));
+    /* Data_sqw->Sqw has already been freed at end of INIT */
     Table_Free(&(Data_sqw.iqSq));
 
     if (Data_sqw.SW)           free(Data_sqw.SW);
