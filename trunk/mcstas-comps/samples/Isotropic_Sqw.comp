@@ -803,20 +803,6 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     Sqw_cl.min_x        = 0;
     Sqw_cl.max_x        = Sqw_Data->q_max;
     Sqw_cl.step_x       = Sqw_Data->q_step;
-    if (!Table_Init(&Gqw, Sqw_Data->q_bins, Sqw_Data->w_bins)) {
-      printf("Isotropic_Sqw: %s: Cannot allocate G(q,w) Table (%lix%i).\n"
-             "WARNING          Skipping S(q,w) diagnosis.\n",
-             Sqw->compname, Sqw_Data->q_bins, 1);
-        Table_Free(&Sqw_cl);
-        return;
-    }
-    sprintf(Gqw.filename,
-      "G(q,w) from %s (generalized density of states, Carpenter J Non Cryst Sol 92 (1987) 153)",
-      Sqw_Data->filename);
-    Gqw.block_number = 1;
-    Gqw.min_x        = 0;
-    Gqw.max_x        = Sqw_Data->q_max;
-    Gqw.step_x       = Sqw_Data->q_step;
   }
 
   /* initialize moments and 1D stuff */
@@ -826,7 +812,6 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
            "WARNING          Skipping S(q,w) diagnosis.\n",
            Sqw->compname, index_q, Sqw_Data->q_bins, 1);
       Table_Free(&Sqw_cl);
-      Table_Free(&Gqw);
       return;
     }
     Sqw_moments[index_q].block_number = 1;
@@ -932,6 +917,8 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
       Table_SetElement(&Sqw_moments[5],    index_q, 0, sq_cl);
 
   } /* for index_q */
+  
+  
 
   /* display some usefull information, only once in MPI mode (MASTER) */
   if (Sqw->Temperature > 0) {
@@ -943,6 +930,11 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     double CELE       = 1.602176487e-19;  /* [C] Elementary charge CODATA 2006 'e' */
     double meV2Hz     = CELE/HBAR/1000/2/PI; /* 1 meV = 241.80e9 GHz */
     double gqw_sum    = 0;
+    
+    /* classical Sqw */
+    sprintf(c, "%s_%s_cl.sqw", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
+      Table_Write(Sqw_cl, c, "Momentum [Angs-1]", "S(q,w)*exp(hw/2kT) classical limit [meV]", 0,0,0,0);
+    Table_Free(&Sqw_cl);
 
     if (u2_count) u2 /= u2_count;
 
@@ -1006,6 +998,20 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     ); /* end MASTER in MPI mode */
 
     /* density of states (generalized) */
+    if (!Table_Init(&Gqw, Sqw_Data->q_bins, Sqw_Data->w_bins)) {
+      printf("Isotropic_Sqw: %s: Cannot allocate G(q,w) Table (%lix%i).\n"
+             "WARNING          Skipping S(q,w) diagnosis.\n",
+             Sqw->compname, Sqw_Data->q_bins, 1);
+        return;
+    }
+    sprintf(Gqw.filename,
+      "G(q,w) from %s (generalized density of states, Carpenter J Non Cryst Sol 92 (1987) 153)",
+      Sqw_Data->filename);
+    Gqw.block_number = 1;
+    Gqw.min_x        = 0;
+    Gqw.max_x        = Sqw_Data->q_max;
+    Gqw.step_x       = Sqw_Data->q_step;
+    
     for (index_w=0; index_w < Sqw_Data->w_bins; index_w++) {
       double w        = -Sqw_Data->w_max + index_w*Sqw_Data->w_step; /* w value in Sqw_full */
       double gw       = 0;
@@ -1017,7 +1023,7 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
         double gqw      = q && n+1 ? sqw_full*DW*2*(Sqw->mat_weight*Da)*w/(n+1)/q/q : 0;
         if (!Table_SetElement(&Gqw, index_q, index_w, gqw))
           printf("Isotropic_Sqw: %s: "
-                 "Error when setting Sqw_cl[%li q=%g,%li w=%g]=%g from file %s\n",
+                 "Error when setting Gqw[%li q=%g,%li w=%g]=%g from file %s\n",
                  Sqw->compname, index_q, q, index_w, w, gqw, Sqw_Data->filename);
         gw      += gqw;
         gqw_sum += gqw;
@@ -1033,6 +1039,14 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
         double gqw = Table_Index(Gqw, index_q, index_w);
         Table_SetElement(&Gqw, index_q, index_w, gqw / gqw_sum);
       }
+    }
+    
+    /* write Gqw and free memory */
+    if (Sqw_Data->w_bins > 1) {
+      sprintf(c, "%s_%s.gqw", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
+        Table_Write(Gqw, c, "Momentum [Angs-1]", "Generalized density of states",
+          0,0,-Sqw_Data->w_max,Sqw_Data->w_max);
+      Table_Free(&Gqw);
     }
   } /* if T>0 */
 
@@ -1051,14 +1065,10 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
       Table_Write(Sqw_moments[3], c, "Momentum [Angs-1]", "w_c(q) collective excitation [meV]", 0,0,0,0);
       sprintf(c, "%s_%s_cl.sq",  Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
       Table_Write(Sqw_moments[5], c, "Momentum [Angs-1]", "int S_cl(q,w) dw", 0,0,0,0);
-      sprintf(c, "%s_%s_cl.sqw", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-      Table_Write(Sqw_cl, c, "Momentum [Angs-1]", "S(q,w)*exp(hw/2kT) classical limit [meV]", 0,0,0,0);
       sprintf(c, "%s_%s.gw",  Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
       Table_Write(Sqw_moments[6], c, "Energy [meV]", "Generalized effective density of states",
         0,0,-Sqw_Data->w_max,Sqw_Data->w_max);
-      sprintf(c, "%s_%s.gqw", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-      Table_Write(Gqw, c, "Momentum [Angs-1]", "Generalized density of states",
-        0,0,-Sqw_Data->w_max,Sqw_Data->w_max);
+      
     }
   }
   sprintf(c, "%s_%s.sq",    Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
@@ -1067,10 +1077,6 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
   Table_Write(Sqw_Data->iqSq, c, "Energy [meV]", "sigma kf/ki int q S(q,w) dw scattering cross section [barns]", 0,0,0,0);
 
   /* free Tables */
-  if (Sqw->Temperature > 0) {
-    Table_Free(&Sqw_cl);
-    Table_Free(&Gqw);
-  }
   for (index_q=0; index_q < 7; Table_Free(&Sqw_moments[index_q++]));
 
 } /* Sqw_diagnosis */
