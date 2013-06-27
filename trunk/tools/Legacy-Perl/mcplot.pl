@@ -171,8 +171,8 @@ if (-e "$file.nxs") { $plotter = "NeXus";   }
 
 # set default extension from plotter
 if    ($plotter =~ /Scilab/i) { $default_ext = ".sci"; }
-elsif ($plotter =~ /Matlab/i) { $default_ext = ".m"; }
-elsif ($plotter =~ /PGPLOT|McStas|gnuplot/i) { $default_ext = ".sim"; }
+elsif ($plotter =~ /Matlab/i and -e "$file.m") { $default_ext = ".m"; }
+elsif ($plotter =~ /PGPLOT|McStas|gnuplot|Matlab/i) { $default_ext = ".sim"; }
 elsif ($plotter =~ /HTML/i) { $default_ext = ".html"; }
 elsif ($plotter =~ /NeXus/i) { $default_ext = ".nxs"; }
 
@@ -236,7 +236,7 @@ if ($plotter =~ /Scilab/i && $MCSTAS::mcstas_config{'SCILAB'} ne "no") {
 } elsif ($plotter =~ /Matlab/i && $MCSTAS::mcstas_config{'MATLAB'} ne "no") {
   my $tosend = "$MCSTAS::mcstas_config{'MATLAB'} ";
   if ($nowindow) { $tosend .= "-nojvm -nosplash "; }
-  $tosend .= "-r \"if(exist('mcplot')),addpath('$MCSTAS::perl_dir/../matlab');addpath(pwd);s=mcplot('$file',[],'$inspect');else;s=iData('$file');subplot(s);end;";
+  $tosend .= "-r \"if(exist('iData'));s=iData('$file');subplot(s);else;addpath('$MCSTAS::perl_dir/../matlab');addpath(pwd);s=mcplot('$file',[],'$inspect');end;";
   $tosend .= "disp('s=mcplot(''$file'',[],''$inspect'')');";
 
   print $tosend;
