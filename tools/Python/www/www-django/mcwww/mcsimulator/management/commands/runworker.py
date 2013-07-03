@@ -148,10 +148,6 @@ def processJob(run, workdir):
     siminstr = "sim/"+group+"/"+name+".instr" #SIM_SRC_PATH % group % name
     simbin = "sim/"+group+"/"+name+".out"
     simc = "sim/"+group+"/"+name+".c"
-    simhtml = "sim/"+group+"/"+name+".html"
-    #    print "Instrument file is "+siminstr
-    #simbin = SIM_BIN_PATH % group % name
-    #simc = SIM_C_PATH % group % name
 
     name=basename(name)
     
