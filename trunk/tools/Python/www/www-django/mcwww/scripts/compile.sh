@@ -22,6 +22,8 @@ for dir in $( ls -d * | grep -v datafiles ); do
       echo "> $i"
       b=`basename $i .instr`
       mcrun ${MCRUN_FLAGS} --trace --info $i &>/dev/null;
-      cd -
+      
     done
+  mv *.html ..
+  cd -
 done
