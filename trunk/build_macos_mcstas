@@ -14,3 +14,14 @@ fi
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac -- OSXpkg
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mac -- OSXpkg
 ./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mac -- OSXpkg
+
+# A hack for creating a metapackage
+cp -rp meta-pkgs/OSX/McStas-Metapackage.pmdoc dist/McStas-Metapackage.pmdoc
+cd dist/McStas-Metapackage.pmdoc
+
+REGEX="s/@VERSION@/${1}/g"
+
+find . -name \*xml -exec sed -i\.bak $REGEX \{\} \;
+rm *.bak
+cd ..
+open McStas-Metapackage.pmdoc
