@@ -689,7 +689,7 @@ sub get_comp_info {
     close($file);
     $typ = "Component";
     @opar = (); @dpar = (); @spar = ();
-    if ($s =~ m!DEFINE\s+INSTRUMENT\s+([a-zA-Z0-9_]+)\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*{}\"]+)\)!i) {
+    if ($s =~ m!DEFINE\s+INSTRUMENT\s+([a-zA-Z0-9_]*)\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*{}\"]*)\)!i) {
         $cname = $1;
         $typ   = "Instrument";
         foreach (split(",", $2)) {
