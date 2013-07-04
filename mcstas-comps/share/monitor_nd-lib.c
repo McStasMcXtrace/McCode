@@ -1622,9 +1622,10 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
 	/* Next, loop over the actual pixels */
 	xtmp = Vars->Coord_Min[1]+dx/2;
 	ztmp = 0;
-	for (int i=0; i<Vars->Coord_Bin[1]; i++) {
+	int i,j;
+	for (i=0; i<Vars->Coord_Bin[1]; i++) {
 	  ytmp = Vars->Coord_Min[2]+dy/2;
-	  for (int j=0; j<Vars->Coord_Bin[2]; j++) {
+	  for (j=0; j<Vars->Coord_Bin[2]; j++) {
 	    printf("MANTID_PIXEL: %i, %g, %g, %g, %g, %g\n", i*Vars->Coord_Bin[1]+j, xtmp, ytmp, ztmp, dx, dy);
 	    ytmp += dy;
 	  }
