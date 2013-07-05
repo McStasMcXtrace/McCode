@@ -1049,7 +1049,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
         {
           Vars->Coord_Min[i] = FLT_MAX;
           Vars->Coord_Max[i] = -FLT_MAX;
-          for (j = 0; j < Vars->Buffer_Block; j++)
+          for (j = 0; j < Vars->Buffer_Counter; j++)
           {
             XY = Vars->Mon2D_Buffer[i+j*(Vars->Coord_Number+1)];  /* scanning variables in Buffer */
             if (XY < Vars->Coord_Min[i]) Vars->Coord_Min[i] = XY;
