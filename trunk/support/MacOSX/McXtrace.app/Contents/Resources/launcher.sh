@@ -6,7 +6,7 @@
 #
 
 # program name
-PROGRAM=mcgui
+PROGRAM=mxgui
 
 # program arguments
 ARGUMENTS=""
