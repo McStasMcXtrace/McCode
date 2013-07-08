@@ -23,6 +23,7 @@ unzip ../support/MacOSX/SciPDL/SciPDL-v2.4.10-Lion.pkg.zip
 cd -
 # A hack for creating a metapackage
 cp -rp meta-pkgs/OSX/McStas-Metapackage.pmdoc dist/McStas-Metapackage.pmdoc
+cp -rp meta-pkgs/OSX/logos_etc dist/logos_etc
 cd dist/McStas-Metapackage.pmdoc
 
 REGEX="s/@VERSION@/${1}/g"
