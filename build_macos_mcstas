@@ -15,20 +15,24 @@ fi
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mac -- OSXpkg
 ./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mac -- OSXpkg
 
-OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
 
-cd dist
-unzip ../support/MacOSX/Perl-Tk/Tk-*${OSXVER}*zip
-unzip ../support/MacOSX/SciPDL/SciPDL-v2.4.10-Lion.pkg.zip
-cd -
-# A hack for creating a metapackage
-cp -rp meta-pkgs/OSX/McStas-Metapackage.pmdoc dist/McStas-Metapackage.pmdoc
-cp -rp meta-pkgs/OSX/logos_etc dist/logos_etc
-cd dist/McStas-Metapackage.pmdoc
-
-REGEX="s/@VERSION@/${1}/g"
-
-find . -name \*xml -exec sed -i\.bak $REGEX \{\} \;
-rm *.bak
-cd ..
-open McStas-Metapackage.pmdoc
+if [ "x$2" != "x" ]; then
+    # Build the meta-package also
+    OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
+    
+    cd dist
+    unzip ../support/MacOSX/Perl-Tk/Tk-*${OSXVER}*zip
+    unzip ../support/MacOSX/SciPDL/SciPDL-v2.4.10-Lion.pkg.zip
+    cd -
+    # A hack for creating a metapackage
+    cp -rp meta-pkgs/OSX/McStas-Metapackage.pmdoc dist/McStas-Metapackage.pmdoc
+    cp -rp meta-pkgs/OSX/mcstas_logos_etc dist/logos_etc
+    cd dist/McStas-Metapackage.pmdoc
+    
+    REGEX="s/@VERSION@/${1}/g"
+    
+    find . -name \*xml -exec sed -i\.bak $REGEX \{\} \;
+    rm *.bak
+    cd ..
+    open McStas-Metapackage.pmdoc
+fi
