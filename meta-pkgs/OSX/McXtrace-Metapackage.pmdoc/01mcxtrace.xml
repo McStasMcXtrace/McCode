@@ -1,0 +1,6 @@
+<pkgref spec="1.12" uuid="29D71034-B594-451E-84FB-B65AE65C8F29"><config><identifier>com.Humanity.mcxtrace-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
+===========
+
+This is an installer created using CPack (http://www.cmake.org). No additional installation instructions provided.
+
+</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"></packageStore><mod>relocatable</mod><mod>installTo</mod><mod>parent</mod></config><scripts><scripts-dir>/Users/willend/Projects/McCode/trunk/dist/mcxtrace-OSXpkg-@VERSION@-mac-10.8.pkg/Contents/Resources</scripts-dir></scripts><extra><packagePath>/Users/willend/Projects/McCode/trunk/dist/mcxtrace-OSXpkg-@VERSION@-mac-10.8.pkg</packagePath><title>mcxtrace-@VERSION@</title></extra></pkgref>
