@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="B438A9A3-12B5-444C-9BD6-156977C2292F"><config><identifier>com.Humanity.mcstas-comps-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (http://www.cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"></packageStore><mod>relocatable</mod><mod>installTo</mod><mod>parent</mod></config><scripts><scripts-dir>/Users/willend/Projects/McCode/trunk/dist/mcstas-comps-OSXpkg-@VERSION@-mac-10.8.pkg/Contents/Resources</scripts-dir></scripts><extra><packagePath>/Users/willend/Projects/McCode/trunk/dist/mcstas-comps-OSXpkg-@VERSION@-mac-10.8.pkg</packagePath><title>mcstas-comps-@VERSION@</title></extra></pkgref>
