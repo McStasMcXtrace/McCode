@@ -27,12 +27,22 @@ if [ "x$2" != "x" ]; then
     # A hack for creating a metapackage
     cp -rp meta-pkgs/OSX/McStas-Metapackage.pmdoc dist/McStas-Metapackage.pmdoc
     cp -rp meta-pkgs/OSX/mcstas_logos_etc dist/logos_etc
-    cd dist/McStas-Metapackage.pmdoc
-    
+    cd dist/McStas-Metapackage.pmdoc    
+
     REGEX="s/@VERSION@/${1}/g"
     
     find . -name \*xml -exec sed -i\.bak $REGEX \{\} \;
     rm *.bak
     cd ..
+    cp -rp ../support/MacOSX/McStas.app McStas.app
+    cp -rp ../support/MacOSX/mcstas-app.pmdoc mcstas-app.pmdoc
+    cd McStas.app/Contents/Resources
+    sed -i\.bak $REGEX launcher.sh
+    cd -
+    cd mcstas-app.pmdoc/
+    find . -name \*xml -exec sed -i\.bak $REGEX \{\} \;
+    cd -
+    /Applications/PackageMaker.app/Contents/MacOS/PackageMaker -d mcstas-app.pmdoc/
+
     open McStas-Metapackage.pmdoc
 fi
