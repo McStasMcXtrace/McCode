@@ -6,7 +6,7 @@
 #
 
 # program name
-PROGRAM=mcgui
+PROGRAM=mcgui-@VERSION@
 
 # program arguments
 ARGUMENTS=""
