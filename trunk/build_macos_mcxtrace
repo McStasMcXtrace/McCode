@@ -34,15 +34,10 @@ if [ "x$2" != "x" ]; then
     find . -name \*xml -exec sed -i\.bak $REGEX \{\} \;
     rm *.bak
     cd ..
-    cp -rp ../support/MacOSX/McXtrace.app McXtrace.app
-    cp -rp ../support/MacOSX/mcxtrace-app.pmdoc mcxtrace-app.pmdoc
-    cd McXtrace.app/Contents/Resources
+    cp -rp ../support/MacOSX/McXtrace.app McXtrace-${1}.app
+    cd McXtrace-${1}.app/Contents/Resources
     sed -i\.bak $REGEX launcher.sh
     cd -
-    cd mcxtrace-app.pmdoc/
-    find . -name \*xml -exec sed -i\.bak $REGEX \{\} \;
-    cd -
-    /Applications/PackageMaker.app/Contents/MacOS/PackageMaker -d mcxtrace-app.pmdoc/
 
     open McXtrace-Metapackage.pmdoc
 fi
