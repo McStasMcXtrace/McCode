@@ -68,7 +68,7 @@ use Config;
 %MCSTAS::mcstas_config = (
      CFLAGS => '@CFLAGS@',
      LDFLAGS => '@LDFLAGS@',
-     MCCODE => '@FLAVOR@',
+     MCCODE => '@FLAVOR@-@MCCODE_VERSION@',
      PKGNAME => '@MCCODE_NAME@',
      PARTICLE=> '@MCCODE_PARTICULE@',
      CC => '@CC@',
@@ -282,6 +282,8 @@ if ($Config{'osname'} ne 'MSWin32') { # Unix systems
     }
   }
   $MCSTAS::mcstas_config{'HOSTFILE'} = $hostfile;
+} else {
+  $MCSTAS::mcstas_config{'MCCODE'} = "@FLAVOR@";
 }
 
 1;  # return true for import/use/do
