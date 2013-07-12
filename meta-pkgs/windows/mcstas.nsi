@@ -22,7 +22,7 @@
 !define TEMP1 $R0
 
 !ifndef VERSION
-  !define VERSION "MCSTAS_VERSION"
+  !define VERSION "@MCCODE_VERSION@"
 !endif
 
  
@@ -30,7 +30,7 @@
 !include Sections.nsh
  
 Name "McStas plus tools"
-OutFile "McStas-${VERSION}-i686-Win32.exe"
+OutFile "McStas-MetaPackage-${VERSION}-i686-Win32.exe"
 
 ##===========================================================================
 ## Modern UI Pages
@@ -38,7 +38,7 @@ OutFile "McStas-${VERSION}-i686-Win32.exe"
 
 !define MUI_WELCOMEFINISHPAGE_BITMAP "mcstas.bmp" 
 !define MUI_WELCOMEPAGE_TEXT "This wizard will guide you through the installation of \
-McStas release ${VERSION} on Win32 systems.\
+McStas release ${VERSION} on Windows systems.\
 \n\nMcStas is a ray-tracing Monte Carlo neutron simulator (see <http://www.mcstas.org>).\
 \n\nThis installer will set up McStas and support tools on your computer.\
 \n\nNOTE: If you have a previous, working installation of McStas on your machine, you should be able\
@@ -93,32 +93,11 @@ McStas in the following folder... WARNING: Spaces and specials chars are unsuppo
 ## Sections Group 1
 SectionGroup /e "Support tools" PROG1 
 
-Section "Perl 5.10"
+Section "Strawberry Perl"
    SetOutPath "$TEMP"
-   File ActivePerl-5.10.0.1002-MSWin32-x86-283697.msi
-   ExecWait "msiexec /i ActivePerl-5.10.0.1002-MSWin32-x86-283697.msi"
+   File strawberry-perl-5.16.3.1-32bit.msi
+   ExecWait "msiexec /i strawberry-perl-5.16.3.1-32bit.msi"
    messagebox mb_ok "Perl installation complete!"
-SectionEnd
-
-Section "Dev-cpp"
-   SetOutPath "$TEMP"
-   File devcpp-4.9.9.2_setup.exe
-   ExecWait "devcpp-4.9.9.2_setup.exe"
-   messagebox mb_ok "Dev-CPP installation complete!"
-SectionEnd
-
-Section "Scilab 4.0"
-   SetOutPath "$TEMP"
-   File scilab-4.0.exe
-   ExecWait "scilab-4.0.exe"
-   messagebox mb_ok "Scilab installation complete!"
-SectionEnd
-
-Section "Cortona VRML" CORT
-   SetOutPath "$TEMP"
-   File cortvrml.exe
-   ExecWait "cortvrml.exe"
-   messagebox mb_ok "Cortona installation complete!"
 SectionEnd
 
 SectionGroupEnd
@@ -129,48 +108,22 @@ SectionGroup /e "McStas" PROG2
 Section "McStas ${VERSION} (required)" MCSTAS
   ; Start by going to the temp folder...
   SetOutPath "$TEMP"
-
-  File mcstas-${VERSION}-i686-Intel-Win32.zip
-  ZipDLL::extractall "mcstas-${VERSION}-i686-Intel-Win32.zip" ""
-  SectionIn RO
-  
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("NSIS", "AUTO").r0'
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("DEVBIN", "$4").r0'
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("DEVLIB", "$5").r0'
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("PERLBIN",  "$3").r0'
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("SCIBIN", "$6").r0'
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCSTAS_SITE", "$INSTDIR").r0'
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCVERSION", "${VERSION}").r0'
-      
-
-  ; Execute batch installer
-  ExecWait "$TEMP\mcstas-${VERSION}\install.bat"
- 
+  File mcstas-NSIS-${VERSION}-mingw32.exe
+  ExecWait "$TEMP\mcstas-NSIS-${VERSION}-mingw32.exe"
 SectionEnd
 
-Section "Windows setup" WIN
-   SectionIn RO
-   ; Create desktop link etc. for all users:
-   SetShellVarContext all
-   
-   ; Create desktop and SM link for mcgui.pl
-   CreateShortCut "$DESKTOP\McStas.lnk" "$INSTDIR\bin\mcgui.pl" "" "$INSTDIR\bin\mcgui.pl" 0
-   CreateDirectory "$SMPROGRAMS\McStas"
-   CreateShortCut "$SMPROGRAMS\McStas\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-   CreateShortCut "$SMPROGRAMS\McStas\McStas.lnk" "$INSTDIR\bin\mcgui.pl" "" "$INSTDIR\bin\mcgui.pl" 0
-  
-   ; Write the installation path into the registry
-   WriteRegStr HKLM SOFTWARE\McStas "Install_Dir" "$INSTDIR"
+Section "McStas comps ${VERSION} (required)" MCSTAS
+  ; Start by going to the temp folder...
+  SetOutPath "$TEMP"
+  File mcstas-comps-NSIS-${VERSION}-mingw32.exe
+  ExecWait "$TEMP\mcstas-comps-NSIS-${VERSION}-mingw32.exe"
+SectionEnd
 
-   ; Write the uninstall keys for Windows
-   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "DisplayName" "McStas"
-   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "UninstallString" '"$INSTDIR\uninstall.exe"'
-   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "NoModify" 1
-   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "NoRepair" 1
-   WriteUninstaller "uninstall.exe"
-
-   messagebox mb_ok "McStas install complete! Please log off to complete configuration."
-
+Section "McStas tools ${VERSION} (required)" MCSTAS
+  ; Start by going to the temp folder...
+  SetOutPath "$TEMP"
+  File mcstas-NSIS-${VERSION}-mingw32.exe
+  ExecWait "$TEMP\mcstas-tools-perl-NSIS-${VERSION}-mingw32.exe"
 SectionEnd
  
 SectionGroupEnd
