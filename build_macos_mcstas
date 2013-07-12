@@ -34,15 +34,10 @@ if [ "x$2" != "x" ]; then
     find . -name \*xml -exec sed -i\.bak $REGEX \{\} \;
     rm *.bak
     cd ..
-    cp -rp ../support/MacOSX/McStas.app McStas.app
-    cp -rp ../support/MacOSX/mcstas-app.pmdoc mcstas-app.pmdoc
-    cd McStas.app/Contents/Resources
+    cp -rp ../support/MacOSX/McStas.app McStas-${1}.app
+    cd McStas-${1}.app/Contents/Resources
     sed -i\.bak $REGEX launcher.sh
     cd -
-    cd mcstas-app.pmdoc/
-    find . -name \*xml -exec sed -i\.bak $REGEX \{\} \;
-    cd -
-    /Applications/PackageMaker.app/Contents/MacOS/PackageMaker -d mcstas-app.pmdoc/
-
+   
     open McStas-Metapackage.pmdoc
 fi
