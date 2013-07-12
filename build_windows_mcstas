@@ -13,7 +13,7 @@ fi
 ./mkdist mcstas-tools-Python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mingw64 -- nsis
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 -- nsis
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mingw64 -- nsis
-./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcdisplay/x3d/ "" mingw64 -- nsis
+./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mingw64 -- nsis
 
 # 32-bit
 ./mkdist mcstas $1 "" "" mingw32 -- nsis
@@ -22,4 +22,4 @@ fi
 ./mkdist mcstas-tools-Python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mingw32 -- nsis
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw32 -- nsis
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mingw32 -- nsis
-./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcdisplay/x3d/ "" mingw32 -- nsis
+./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mingw32 -- nsis
