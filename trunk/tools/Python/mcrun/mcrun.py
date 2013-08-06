@@ -355,6 +355,7 @@ def main():
     if interval_points:
         scanner = Scanner(mcstas, intervals)
         scanner.set_points(interval_points)
+        mkdir(options.dir)
         scanner.run()
     else:
         # Only run a simulation if we have a nonzero ncount
