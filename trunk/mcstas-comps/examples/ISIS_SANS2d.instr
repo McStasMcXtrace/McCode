@@ -1,6 +1,23 @@
 /*******************************************************************************
-* SANS2d
-* actual bender is continuously curved, here use straight segments approx.with gravity.
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: ISIS_SANS2d 
+*
+* %Identification
+* Written by: Richard Heenan with edits by Peter Willendrup
+* Date: 20130820
+* Origin: ISIS, DTU Fysik
+* Release: McStas 2.x
+* Version: 0.2
+* %INSTRUMENT_SITE: ISIS
+*
+* This instrument models the ISIS TS2 SANS2d instrument.
+*
+* %Description
+* This instrument models the ISIS TS2 SANS2d instrument up to the sample position.
+*
+* From the author:
+* The actual bender is continuously curved, here use straight segments approx.with gravity.
 * 1/7/10 L1=4m  increased gap between bender exit and S1 slit from .247 to .286m
 * At 4m we actually use 1.75 to 16.5 angstrom. 
 * Note "2m guides" are actually 1.985m long (new ones will be 1.981m) so "real gaps" are included below, losses are pro-rata the gap/guide lengths.
@@ -12,11 +29,21 @@
 * Stu Ansell's McStas spectra for TS-2 actually have no angle variation included.
 * In reality spectra and backgrounds will vary, fast background is likely much higher on ZOOM(E1) than SANS2d (E2)
 * RKH 17/08/12
+*
+* %Parameters
+* L1:  [m] Variable distance from 1st to 2nd variable slit
+* S6:  [m] Radius of slit S6 (last of the optis slits)
+* A1w: [m] Width of first collimation slit, rectangular slit
+* A1h: [m] Height of first collimation slit, rectangular slit
+* A2:  [m] Radius of second collimation slit, circular slit
+* Lmin: [AA] Minimum wavelength to produce at the source
+* Lmax: [AA] Maximum wavelength to produce at the source
+*
+* %Link
+*
+* %End
 *******************************************************************************/
-
-
-
-DEFINE INSTRUMENT sans2d(L1=3.926, A1w=0.030, A1h=0.02, S6=0.006, A2=0.006, Lmin=1, Lmax=14)
+DEFINE INSTRUMENT ISIS_SANS2d(L1=3.926, A1w=0.030, A1h=0.02, S6=0.006, A2=0.006, Lmin=1, Lmax=14)
 /* F2409w3p5, cf run 5226, L1=4m, A1=30x20, S6=12, A2=12, 1.75-16.5 ang */
 DECLARE
 %{
