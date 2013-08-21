@@ -75,7 +75,9 @@
 *
 *     p intensity flux      [n/s] or [n/cm^2/s]
 *     ncounts n neutron     [1]      neutron ID, i.e current event index
-*     pixel id              [1]      pixelID in histogram made of preceeding vars
+*     pixel id              [1]      pixelID in histogram made of preceeding vars,
+*                                     e.g. 'theta y'. To set an offset PixelID
+*                                     use the 'min=value' keyword. Sets event mode.
 *
 * <b>Other options keywords are:</b>
 *     abs                       Will monitor the abs of the following variable
@@ -87,7 +89,6 @@
 *     borders                   To also count off-limits neutrons
 *                                (X < min or X > max)
 *     capture                   weight by lambda/lambda(2200m/s) capture flux
-*     exclusive                 absorb neutrons out of monitor limits
 *     file=string               Detector image file name. default is component
 *                                name, plus date and variable extension.
 *     incoming                  Monitor incoming beam in non flat det
@@ -130,6 +131,7 @@
 *     square                    Square flat xy monitor (xwidth, yheight).
 *     previous                  The monitor uses PREVIOUS component as detector
 *                               surface.
+*     or use 'geometry' parameter to specify any PLY/OFF geometry file.
 *
 * <b>EXAMPLES:</b>
 * MyMon = Monitor_nD(
@@ -147,6 +149,9 @@
 *   options = "multiple kx ky kz, auto abs log t, and list all neutrons"
 *        makes 4 output 1D files and produces a complete list for all neutrons
 *        and monitor log(abs(tof)) within automatic limits (for t)
+*   options = "theta y, sphere, pixel min=100"
+*        a 4pi detector which outputs an event list with pixelID from the actual 
+*        detector surface, starting from index 100.
 *
 * To dynamically define a number of bins, or limits:
 *   Use in DECLARE:    char op[256]; 

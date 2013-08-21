@@ -218,7 +218,7 @@ sub simulation_dialog {
                                -justify => 'left',
                                -textvariable => \$si{'Dir'});
     $dir_entry->pack(-side => 'left');
-    my $choiceforce = $line->Checkbutton(-text => "force",-variable => \$si{'Force'})->pack(-side => 'left');
+    my $choiceforce = $line->Checkbutton(-text => "overwrite",-variable => \$si{'Force'})->pack(-side => 'left');
     $b->attach($choiceforce, -balloonmsg => "Force to overwrite existing directories");
     $line->Button(-text => "Browse...", -width => 9,
                 -command => sub { my $d = select_dir($si{'Dir'});
