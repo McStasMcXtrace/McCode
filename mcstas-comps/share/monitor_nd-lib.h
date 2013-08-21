@@ -106,7 +106,6 @@
     int    Flag_Shape        ;
     char   Flag_Auto_Limits  ;   /* get limits from first Buffer */
     char   Flag_Absorb       ;   /* monitor is also a slit */
-    char   Flag_Exclusive    ;   /* absorb neutrons out of monitor limits */
     char   Flag_per_cm2      ;   /* flux is per cm2 */
     char   Flag_log          ;   /* log10 of the flux */
     char   Flag_parallel     ;   /* set neutron state back after detection (parallel components) */
@@ -116,18 +115,20 @@
     int    Flag_mantid       ;   /* 0:normal monitor, else do mantid-event specifics */
 
     unsigned long Coord_Number      ;   /* total number of variables to monitor, plus intensity (0) */
+    unsigned long Coord_NumberNoPixel;  /* same but without counting PixelID */
     unsigned long Buffer_Block      ;   /* Buffer size for list or auto limits */
     unsigned long Neutron_Counter   ;   /* event counter, simulation total counts is mcget_ncount() */
     unsigned long Buffer_Counter    ;   /* index in Buffer size (for realloc) */
     unsigned long Buffer_Size       ;
-    int    Coord_Type[MONnD_COORD_NMAX];    /* type of variable */
-    char   Coord_Label[MONnD_COORD_NMAX][30];       /* label of variable */
-    char   Coord_Var[MONnD_COORD_NMAX][30]; /* short id of variable */
-    long   Coord_Bin[MONnD_COORD_NMAX];             /* bins of variable array */
+    int    Coord_Type[MONnD_COORD_NMAX];      /* type of variable */
+    char   Coord_Label[MONnD_COORD_NMAX][30]; /* label of variable */
+    char   Coord_Var[MONnD_COORD_NMAX][30];   /* short id of variable */
+    long   Coord_Bin[MONnD_COORD_NMAX];       /* bins of variable array */
+    long   Coord_BinProd[MONnD_COORD_NMAX];   /* product of bins of variable array */
     double Coord_Min[MONnD_COORD_NMAX];
     double Coord_Max[MONnD_COORD_NMAX];
-    char   Monitor_Label[MONnD_COORD_NMAX*30];      /* Label for monitor */
-    char   Mon_File[128];    /* output file name */
+    char   Monitor_Label[MONnD_COORD_NMAX*30];/* Label for monitor */
+    char   Mon_File[128];                     /* output file name */
 
     double cx,cy,cz;
     double cvx, cvy, cvz;

@@ -174,25 +174,21 @@ COMPONENT M_total = Monitor_nD(
 AT (0,0,0) RELATIVE SampleOut
 
 /* single coherent */
-COMPONENT M_single_coh = Monitor_nD(
- xwidth=2.5, yheight=0.4,
- options=op) WHEN (flag_single == 1)
+COMPONENT M_single_coh = COPY(M_total) 
+  WHEN (flag_single == 1)
 AT (0,0,0) RELATIVE SampleOut
 
 /* single incoherent */
-COMPONENT M_single_inc = Monitor_nD(
- xwidth=2.5, yheight=0.4,
- options=op) WHEN (flag_single == 2)
+COMPONENT M_single_inc = COPY(M_total) 
+  WHEN (flag_single == 2)
 AT (0,0,0) RELATIVE SampleOut
 
-COMPONENT M_multi = Monitor_nD(
- xwidth=2.5, yheight=0.4,
- options=op) WHEN (flag_multi)
+COMPONENT M_multi = COPY(M_total) 
+  WHEN (flag_multi)
 AT (0,0,0) RELATIVE SampleOut
 
-COMPONENT M_env_container = Monitor_nD(
- xwidth=2.5, yheight=0.4,
- options=op) WHEN (flag_env || flag_container)
+COMPONENT M_env_container = COPY(M_total) 
+  WHEN (flag_env || flag_container)
 AT (0,0,0) RELATIVE SampleOut
 
 END
