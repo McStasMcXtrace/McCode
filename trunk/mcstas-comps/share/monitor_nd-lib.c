@@ -944,7 +944,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_THETA)  { if (Vars->cz != 0) XY = RAD2DEG*atan2(Vars->cx,Vars->cz); }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_PHI) { if (Vars->cz != 0) XY = RAD2DEG*asin(Vars->cy/Vars->cz); }
+        if (Set_Vars_Coord_Type == DEFS->COORD_PHI) { if (Vars->cz != 0) XY = RAD2DEG*asin(Vars->cy/sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy+Vars->cz*Vars->cz)); }
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_USER1) XY = Vars->UserVariable1;
         else
