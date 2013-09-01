@@ -870,9 +870,9 @@ sub plot_neutron {
       if ($Config{'osname'} eq 'MSWin32' && (!$file_output)) {
 	$retval=write_process("mcdisplay('PlotNeutron',[@$x],[@$y],[@$z]);\n");
       } else {
-	$retval=write_process("mcdisplay('PlotNeutron',...\n");
-	$retval=write_process("[@$x],...\n");
-	$retval=write_process("[@$y],...\n");
+	$retval=write_process("mcdisplay('PlotNeutron', ");
+	$retval=write_process("[@$x], ");
+	$retval=write_process("[@$y], ");
 	$retval=write_process("[@$z]);\n");
       }
       return $retval;
