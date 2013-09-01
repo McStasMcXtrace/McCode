@@ -9,7 +9,7 @@
 * Origin: DTU Fysik 
 * Release: McXtrace 1.1
 * Version: 1.0
-* %INSTRUMENT_SITE: None
+* %INSTRUMENT_SITE: Tests_optics
 *
 * Test instrument to show that the source components work
 *
@@ -32,7 +32,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT test(SRC=0)
+DEFINE INSTRUMENT Test_Sources(SRC=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -92,7 +92,7 @@ COMPONENT s1d = Source_div(
 )
 WHEN (SRC==6) AT (0,0,0) RELATIVE Origin
 COMPONENT s2d = Source_div(
-    xwidth=1e-3, yheight=1e-3, focus_aw=2e-3, focus_ah=0.5e-3, dist=1, lambda0=2.5, dlambda=0.2, gauss=1, gauss=0
+    xwidth=1e-3, yheight=1e-3, focus_aw=2e-3, focus_ah=0.5e-3, dist=1, lambda0=2.5, dlambda=0.2, gauss=1, gauss_a=0
 )
 WHEN (SRC==7) AT (0,0,0) RELATIVE Origin
 
