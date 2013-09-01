@@ -18,31 +18,30 @@
  * 
  * %D
  * A simple source model emitting photons from a gaussian distribution in the X-Y plane with the specified
- * standard deviations (in mm). A square target centered on the beam (Z-axis)
- restricts the beam to that aperture.
+ * standard deviations and divergence. A square target centered on the beam (Z-axis)
+ * restricts the beam to that aperture. If no target aperture is given the full gaussian cross-section is used.
  * Further, the beam is restricted to emit photons between E0+-dE keV, or lambda0+-dlambda, whichever is given.
- * Flux is given in the unit 
  * 
  * Example: Source_gaussian(sig_x=10e-6,sig_y=10e-6,dist=15,sigPr_x=9e-6, sigPr_y=9e-6,E0=sensible, dE=sensible)
  *  
  * %P
  * Input Parameters:
- * sig_x: (m) Horizontal source size
- * sig_y: (m) Vertical source size
+ * sig_x: (m) Horizontal standard deviation of source (rms source size).
+ * sig_y: (m) Vertical standard deviation of source (rms source size).
  * sigPr_x: (rad) Angular horizontal divergence
  * sigPr_y: (rad) Angular vertical divergence
  * Optional Parameters:
- * spectrum_file: () File from which to read the spectral intensity profile
+ * spectrum_file: ( ) File from which to read the spectral intensity profile
  * E0: (keV) Center of emitted energy spectrum (overrides spectrum_file)  
  * dE: (kev) Half-width of emitted energy spectrum
  * lambda0: (AA) Centre of emitted wavelength spectrum 
  * dlambda: (AA) Half-width of emitted wavelength spectrum
- * phase: () The initial phase of the photons (default corresponds to a random phase (incoherent radiation).
- * flux: () Scaling factor to set the total emitted unrestricted flux.
+ * phase: ( ) The initial phase of the photons (default corresponds to a random phase (incoherent radiation).
+ * flux: ( ) Scaling factor to set the total emitted unrestricted flux.
  * focus_xw: (m) Width of sampling window dist m downstream from source to allow focused sampling.
  * focus_yh: (m) Height of sampling window dist m downstream from source to allow focused sampling.
  * dist: (m) Distance from source plane to sampling window.
- * brilliance: () Unit in spectrum_file is Brilliance - apply corrections to get to raw flux.
+ * brilliance: ( ) Unit in spectrum_file is Brilliance - apply corrections to get to raw flux.
  */
 
 DEFINE COMPONENT Source_gaussian
@@ -144,7 +143,7 @@ TRACE
   double F1=1.0;
   double dx,dy,dz;
   
-  // initial source area
+  /* Initial source area. Gaussian distribution at origin*/
   xx=randnorm();
   yy=randnorm();
   x=xx*sig_x;
@@ -152,23 +151,19 @@ TRACE
   z=0;
   p=1.0;
  
-  // Gaussian distribution at origin
 
   if (spectrum_file){
     double pp=0;
-    //while (pp<=0){ 
     l=prms.T.data[0]+ (prms.T.data[(prms.T.rows-1)*prms.T.columns] -prms.T.data[0])*rand01();
     if(brilliance){
       /*correct for brilliance being defined in relative wavelength band to get raw flux*/
       pp=Table_Value(prms.T,l,2)/(Table_Value(prms.T,1,0)*0.01);
-      //printf("BRILL: %g %g %g\n",Table_Value(prms.T,l,2),Table_Value(prms.T,l,0)*0.01,pp);
     }else{
       pp=Table_Value(prms.T,l,2);
     }
-      //}
     p*=pp;
-    //printf("%g\n",p);
-    /*if E0!=0 convert the tabled value to energy*/
+    
+    /*if E0!=0 assume tables values are in keV, otherwise assume lambda i Å*/
     if (E0) {
       k=E2K*l;
     }else{
@@ -194,7 +189,7 @@ TRACE
     k=(2*M_PI/l);
   }
 
-  // targeted area calculation
+  /* targeted area calculation*/
   if (focus_xw){
     if (uniform_sampling){
       /*sample uniformly but adjust weight*/
