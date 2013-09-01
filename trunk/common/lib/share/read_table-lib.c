@@ -502,6 +502,7 @@
       Table->step_x = new_step;
       free(Table->data);
       Table->data = New_Table;
+      Table->constantstep=1;
     } /* end else (!constantstep) */
     return (Table->rows*Table->columns);
   } /* end Table_Rebin */
@@ -604,7 +605,7 @@ double Table_Value(t_Table Table, double X, long j)
   // Use constant-time lookup when possible
   if(Table.constantstep) {
     Index = (long)floor(
-              (X - Table.min_x) / (Table.max_x - Table.min_x) * Table.rows);
+              (X - Table.min_x) / (Table.max_x - Table.min_x) * (Table.rows-1));
     X1 = Table_Index(Table,Index  ,0);
     X2 = Table_Index(Table,Index+1,0);
   }
@@ -756,6 +757,7 @@ double Table_Value(t_Table Table, double X, long j)
       printf("  '%s'\n", header);
       free(header);
     }
+
     return(ret);
   } /* end Table_Info */
 
