@@ -113,9 +113,9 @@ int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double
     p=stack[++i];
   }
   /*we now have the magnetic field in lab coords in loc., transfer it back to caller*/
-  *bx=loc.x;
-  *by=loc.y;
-  *bz=loc.z;
+  *bx=bsum.x;
+  *by=bsum.y;
+  *bz=bsum.z;
   return 1;
 }
 
