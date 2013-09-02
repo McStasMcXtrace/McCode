@@ -1,7 +1,7 @@
 #! /usr/bin/perl
 #
 # Implements perl interface for plotting McStas data output using PGPLOT,
-# gnuplot, Matlab or Scilab
+# gnuplot, Matlab, HTML/VRML, NeXus/HDFVIEW
 #
 #   This file is part of the McStas neutron ray-trace simulation package
 #   Copyright (C) 1997-2004, All rights reserved
@@ -34,21 +34,7 @@ BEGIN {
 # Default configuration (for all high level perl scripts)
 # Included from perl_env_header.pl
 
-{
-    if($ENV{"MCSTAS"}) {
-        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
-    } else {
-        $MCSTAS::sys_dir = "/usr/local/lib/mcstas-2.0";
-    }
-
-    if($ENV{"MCSTAS_TOOLS"}) {
-        $MCSTAS::perl_dir = "$ENV{'MCSTAS_TOOLS'}/perl";
-    } else {
-        $MCSTAS::perl_dir = "/usr/local/lib/mcstas-tools-2.0/perl";
-    }
-
-    $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
-}
+    ENV_HEADER
 
     # custom configuration (this script)
     END {
@@ -125,13 +111,13 @@ for($i = 0; $i < @ARGV; $i++) {
       $contourmode = 1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
       print "mcplot [-ps|-psc|-gif] <simfile | detector_file>\n";
-      print "       [-pPLOTTER] Output graphics using {PGPLOT,gnuplot,Scilab,Matlab,HTML}\n";
+      print "       [-pPLOTTER] Output graphics using {PGPLOT,gnuplot,Matlab,HTML}\n";
       print "                   The file extension will also set the PLOTTER\n";
       print "       [-overview] Show all plots in a single window\n";
       print "       [-plot]     Show all plots in separate window(s)\n";
       print "       [-iCOMP]    Only show monitors whos name match COMP\n";
-      print "       [+nw]       Open {Scilab,Matlab} command window (with Tcl/Java)\n";
-      print "       [-nw]       Open {Scilab,Matlab} command window (without Tcl/Java)\n";
+      print "       [+nw]       Open {Matlab} command window (with Java)\n";
+      print "       [-nw]       Open {Matlab} command window (without Java)\n";
       print "       [-log]      Plot results in log10 scale\n";
       print "       [-contour]  Display matrix/images as contour plots\n";
       print "  Plots all monitor data from a simulation, or a single data file.\n";
@@ -164,14 +150,12 @@ if (-d $file) { # check if dir containing result file
 
 # look if there is only one file type and set plotter to use
 if (-e "$file.m" and not -e "$file.sci" and not -e "$file.sim" and not -e "$file.html") { $plotter = "Matlab"; }
-if (-e "$file.sci" and not -e "$file.m" and not -e "$file.sim" and not -e "$file.html") { $plotter = "Scilab"; }
 if (-e "$file.sim" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.html" and not ($plotter =~ /gnuplot|Matlab/i)) { $plotter = "PGPLOT"; }
 if (-e "$file.html" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.sim") { $plotter = "HTML";   }
 if (-e "$file.nxs") { $plotter = "NeXus";   }
 
 # set default extension from plotter
-if    ($plotter =~ /Scilab/i) { $default_ext = ".sci"; }
-elsif ($plotter =~ /Matlab/i and -e "$file.m") { $default_ext = ".m"; }
+if ($plotter =~ /Matlab/i and -e "$file.m") { $default_ext = ".m"; }
 elsif ($plotter =~ /PGPLOT|McStas|gnuplot|Matlab/i) { $default_ext = ".sim"; }
 elsif ($plotter =~ /HTML/i) { $default_ext = ".html"; }
 elsif ($plotter =~ /NeXus/i) { $default_ext = ".nxs"; }
@@ -183,7 +167,6 @@ print "Opening $file\n";
 
 # set plotter from extension
 if ($file =~ m'\.m$')    { $plotter = "Matlab"; }
-if ($file =~ m'\.sci$' || $file =~ m'\.sce$') {$plotter = "Scilab"; }
 if ($file =~ m'\.sim$' and not($plotter =~ /gnuplot|Matlab/i))  { $plotter = "PGPLOT"; }
 if ($file =~ m'\.html$') { $plotter = "HTML"; }
 if ($file =~ m'\.nxs$') { $plotter = "NeXus"; }
@@ -199,41 +182,8 @@ if ($Config{'osname'} eq 'MSWin32') {
     }
 }
 
-# Added E. Farhi, March 2003. plotter (pgplot, scilab, matlab, html) -> $file
-if ($plotter =~ /Scilab/i && $MCSTAS::mcstas_config{'SCILAB'} ne "no") {
-  my $fh;
-  # create a temporary scilab execution script
-  if ($MCSTAS::mcstas_config{'TEMP'} ne "no") {
-    require File::Temp;
-    ($fh, $tmp_file) = File::Temp::tempfile("mcplot_tmpXXXXXX", SUFFIX => '.sce');
-    if (not defined $fh) { $tmp_file=""; }
-  }
-  if ($tmp_file eq "") {
-    $tmp_file="mcplot_tmp000000.sce";
-    $fh = new FileHandle "> $tmp_file";
-  }
-  if (not defined $fh) { die "Could not open temporary Scilab script $tmp_file\n"; }
-  autoflush $fh 1;
-  # write the scilab script
-  printf $fh "if execstr('stacksize(1e8);','errcatch') then execstr('stacksize(1e7);','errcatch'); end\n";
-  printf $fh "exec('$MCSTAS::perl_dir/../scilab/mcplot.sci',-1);\n";
-  printf $fh "global McPlotTempFile;\nMcPlotTempFile='$tmp_file';\n";
-  printf $fh "s=mcplot('$file','$passed_arg_str');\n";
-  printf $fh "mprintf('s=mcplot(''$file'',''$passed_arg_str'',)\\n');\n";
-  if ($passed_arg_str_quit) {
-    printf $fh "quit\n";
-  } else {
-    printf $fh "if length(s)\n";
-    printf $fh "mprintf('mcplot: Simulation data structure from file $file\\n');\n";
-    printf $fh "mprintf('        is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
-    printf $fh "end\n";
-  }
-
-  close($fh);
-  if ($nowindow) { system("$MCSTAS::mcstas_config{'SCILAB'} -nw -f $tmp_file\n"); }
-  else { system("$MCSTAS::mcstas_config{'SCILAB'} -f $tmp_file\n"); }
-
-} elsif ($plotter =~ /Matlab/i && $MCSTAS::mcstas_config{'MATLAB'} ne "no") {
+# Added E. Farhi, March 2003. plotter (pgplot, matlab, html) -> $file
+if ($plotter =~ /Matlab/i && $MCSTAS::mcstas_config{'MATLAB'} ne "no") {
   my $tosend = "$MCSTAS::mcstas_config{'MATLAB'} ";
   if ($nowindow) { $tosend .= "-nojvm -nosplash "; }
   $tosend .= "-r \"if(exist('iData'));s=iData('$file');subplot(s);else;addpath('$MCSTAS::perl_dir/../matlab');addpath(pwd);s=mcplot('$file',[],'$inspect');end;";
@@ -280,7 +230,7 @@ if ($plotter =~ /Scilab/i && $MCSTAS::mcstas_config{'SCILAB'} ne "no") {
     print STDERR "Default / selected PLOTTER is PGPLOT - Problems:\n\n";
     print STDERR "PGPLOT.pm not found on Perl \@INC path\n\nSolutions:\n\n";
     print STDERR "1) Install pgplot + pgperl packages (Unix/Linux/Cygwin) \n";
-    print STDERR "2) Rerun mcplot with -p/--plotter set to Scilab/Matlab/VRML \n";
+    print STDERR "2) Rerun mcplot with -p/--plotter set to Matlab/HTML \n";
     print STDERR "3) Modify $MCSTAS::perl_dir/mccode_config.perl\n";
     print STDERR "   to set a different default plotter\n";
     print STDERR "4) Set your env variable MCSTAS_FORMAT to set the default\n";

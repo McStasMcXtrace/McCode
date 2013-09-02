@@ -49,7 +49,7 @@ sudo cp -rp $MCXTRACE_LIBDIR $MCXTRACE_NEWLIBDIR
 # Move the binaries to $MCXTRACE_NEWBINDIR
 EOF
 for bincomp in \
-    mcconvert mcdaemon mcdisplay mcdoc mcformat mcformatgui mcgui \
+    mcdaemon mcdisplay mcdoc mcformat mcformatgui mcgui \
     mcplot mcresplot mcrun mcxtrace mcxtrace2vitess
 do
 	  echo "sudo cp $MCXTRACE_BINDIR/$bincomp $MCXTRACE_NEWBINDIR/" >> $MOVE_SCRIPT;

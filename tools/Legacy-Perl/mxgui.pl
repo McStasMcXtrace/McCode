@@ -1036,39 +1036,6 @@ sub menu_run_simulation {
 
             } elsif ($plotter =~ /Matlab/i) {
               push @command, "--plotter=Matlab";
-            } elsif ($plotter =~ /Scilab/i && $plotter =~ /scriptfile/i) {
-              push @command, "--plotter=Scilab";
-              my $output_file = save_disp_file($w,'sci');
-              if (!$output_file) {
-                putmsg($cmdwin, "Trace cancelled...\n");
-                return;
-              }
-              $output_file =~ s! !\ !g;
-              push @command, "-f$output_file";
-
-            } elsif ($plotter =~ /Scilab/i) {
-              push @command, "--plotter=Scilab";
-              # If this is Win32, make a check for # of xray histories,
-              # should be made small to avoid waiting a long time for
-              # mcdisplay...
-              if ($Config{'osname'} eq "MSWin32") {
-                  # Subtract 0 to make sure $num_histories is treated as a
-                  # number...
-                  my $num_histories = $newsi->{'Ncount'} - 0;
-                  if ($num_histories >=1e3) {
-                      my $break = $w->messageBox(-message => "$num_histories is a very large number\nof xray histories when using\nScilab on Win32.\nContinue ?",
-                     -title => "Warning: large number",
-                     -type => 'yesnocancel',
-                     -icon => 'error',
-                     -default => 'no');
-                      # Make first char lower case - default on
-                      # Win32 upper case default on Unix... (perl 5.8)
-                      $break = lcfirst($break);
-                      if ((lc($break) eq "no")||(lc($break) eq "cancel")) {
-                          return 0;
-                      }
-                  }
-              }
             } elsif ($plotter =~ /html|vrml/i) {
                 push @command, "--plotter=VRML";
                 # Make a check for # of xray histories,
@@ -1171,7 +1138,10 @@ sub menu_run_simulation {
             rmtree($OutDir,0,1);
           }
         }
-        push @command, "--format=$plotter" unless ($newsi->{'Mode'}==1);
+        # we now always use McStas/PGPLOT legacy format, except for HTML and NeXus
+        if ($newsi->{'Mode'}!=1 && $plotter !~ /PGPLOT|McStas|Gnuplot|Matlab/i) {
+          push @command, "--plotter=$plotter";
+        }
 
        # add parameter values
         my @unset = ();
@@ -1294,9 +1264,7 @@ sub menu_run_simulation {
         $inf_sim=$newsi;
         return unless $success;
         my $ext;
-        if ($plotter =~ /PGPLOT|McXtrace|Gnuplot/i) { $ext="sim"; }
-        elsif ($plotter =~ /Matlab/i)     { $ext="m"; }
-        elsif ($plotter =~ /Scilab/i)     { $ext="sci"; }
+        if ($plotter =~ /PGPLOT|McStas|McXtrace|Matlab|Gnuplot/i) { $ext="sim"; }
         elsif ($plotter =~ /HTML/i)       { $ext="html"; }
         elsif ($plotter =~ /NeXus|HDF/i)  { $ext="nxs"; }
         $current_sim_file = $newsi->{'Dir'} ?
@@ -1305,7 +1273,7 @@ sub menu_run_simulation {
         new_simulation_results($w);
         # In case of non-PGPLOT plotter, we can not read the data from disk.
         # Instead, we simply keep $newsi information in $inf_sim
-        if ($plotter eq 0) {
+        if ($plotter !~ /PGPLOT|McStas|Matlab|Gnuplot/i) {
             read_sim_data($w);
         } else {
             $inf_sim=$newsi;
@@ -1791,7 +1759,6 @@ sub setup_cmdwin {
     }
 
     my $text="";
-    if ($MCSTAS::mcstas_config{'SCILAB'} ne "no")   { $text .= "Scilab "; }
     if ($MCSTAS::mcstas_config{'MATLAB'} ne "no")   { $text .= "Matlab "; }
     if ($MCSTAS::mcstas_config{'PGPLOT'} ne "no")   { $text .= "PGPLOT/McXtrace "; }
     if ($MCSTAS::mcstas_config{'GNUPLOT'} ne "no")   { $text .= "Gnuplot "; }

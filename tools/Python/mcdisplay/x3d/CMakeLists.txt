@@ -46,7 +46,7 @@ set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${TOOLS_NAME}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
-set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
+set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
 set(CPACK_PACKAGE_VERSION       "1.0")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")

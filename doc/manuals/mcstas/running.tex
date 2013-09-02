@@ -97,18 +97,17 @@ presented graphics will resemble one of those shown in figure
 \begin{figure}[htb!]
   \begin{center}
     \includegraphics[angle=-90,width=0.49\textwidth]{figures/mcplot_PGPLOT.ps}
-    \includegraphics[angle=-90,width=0.49\textwidth]{figures/mcplot_Scilab.eps}
     \includegraphics[width=0.49\textwidth]{figures/mcplot_Matlab.eps}
   \end{center}
-\caption{Output from \texttt{mcplot} with PGPLOT, Scilab and Matlab backends}
+\caption{Output from \texttt{mcplot} with PGPLOT and Matlab backends}
 \label{fig:mcplot_figs}
 \end{figure}
-When using the Scilab or Matlab backends, full 3D view of plots and different
+When using the Matlab backend, full 3D view of plots and different
 display possibilities are available. Use the attached \MCS\ window menus to
 control these. Features are quite self explanatory. For other options, execute
 \verb+mcplot --help+ (\verb+mcplot.pl --help+ on windows) to get help.
 
-\index{Tools!PGPLOT} \index{Tools!Scilab} \index{Tools!Matlab} To visualize or
+\index{Tools!PGPLOT} \index{Tools!Matlab} To visualize or
 debug the simulation graphically, repeat the steps but check the ``Trace''
 option instead of the ``Simulate'' option.  A window will pop up showing a
 sketch of the instrument.  Depending on your chosen plotting backend, the
@@ -124,15 +123,6 @@ presented graphics will resemble one of those shown in figures
     right button resets the zoom. The Q key quits the program. Right: The new
     PGPLOT time-of-flight option. See section \ref{s:mcdisplay} for details.}
 \label{fig:mcdisp_PGPLOT}
-\end{figure}
-\begin{figure}[htb!]
-  \begin{center}
-    \includegraphics[width=0.55\textwidth]{figures/mcdisplay_Scilab.ps}
-    \includegraphics[width=0.25\textwidth]{figures/mcdisplay_Scilab_dialog.ps}
-  \end{center}
-\caption{Output from \texttt{mcdisplay} with Scilab backend. Display
-  can be adjusted using the dialog box (right).}
-\label{fig:mcdisp_Scilab}
 \end{figure}
 \begin{figure}[htb!]
   \begin{center}
@@ -448,18 +438,18 @@ detail in section~\ref{s:analyze}. It may be chosen either with
 MCSTAS\_FORMAT environment variable. \index{Environment variable!MCSTAS\_FORMAT}
 The available format list is obtained using the \verb+name.out --help+ option,
 and shown in Table~\ref{t:formatoptions}. \index{Tools!PGPLOT}
-\index{Tools!Matlab} \index{Tools!Scilab} \index{Tools!VRML/OpenGL}
+\index{Tools!Matlab} \index{Tools!VRML/OpenGL}
 \index{Tools!HTML} \index{Data formats} \MCS\ can presently generate many
-formats, including the original \MCS /PGPLOT and the Scilab and Matlab
+formats, including the original \MCS /PGPLOT and the Matlab
 formats. All formats, except the \MCS /PGPLOT, may eventually support binary
 files, which are much smaller and faster to import, but are platform
 dependent. The simulation data file extensions are appended automatically,
 depending on the format, if the file names do not contain any. Binary files are
 particularly recommended for the IDL format (e.g. \verb+--format=IDL_binary+),
-and the Matlab and Scilab format when handling large detectors (e.g. more than
+and the Matlab format when handling large detectors (e.g. more than
 50x50 bins). For example:
 \begin{verbatim}
-    ./Samples_vanadium.out ROT=90 --format="Scilab_binary"
+    ./Samples_vanadium.out ROT=90 --format="Matlab_binary"
 \end{verbatim}
 or more generally (for bash/Bourne shell users)
 \begin{verbatim}
@@ -493,13 +483,7 @@ directly from Matlab (using the {\it sim file} function)
 \end{verbatim} \index{Tools!Matlab}
 The first line returns the simulation data as a single structure variable,
 whereas the second one will additionally plot each detector separately.  This
-also equivalently stands for Scilab (using the \verb+get_+{\it sim file}
-function, the 'exec' call is required in order to compile the code)
-\begin{verbatim}
-    scilab> exec('mcstas.sci', -1); s=get_mcstas();
-    scilab> exec('mcstas.sci', -1); s=get_mcstas('plot')
-\end{verbatim} \index{Tools!Scilab}
-and for IDL
+also equivalently stands for IDL 
 \begin{verbatim}
     idl> s=mcstas()
     idl> s=mcstas(/plot)
@@ -627,8 +611,6 @@ page.\index{Tools!VRML/OpenGL}
     \begin{tabular}{|p{0.24\textwidth}|c|p{0.7\textwidth}|}
       \hline
       \texttt{\MCS} \my \texttt{PGPLOT} & .sim & Original format for PGPLOT plotter (may be used with -f and -d options) \\
-      \texttt{Scilab} & .sci & Scilab format (may be used with -f and -d options) \\
-      \texttt{Scilab\_binary} & & Scilab format with external binary files (may be used with -d option). (-a option implicitly set) \\
       \texttt{Matlab} & .m & Matlab format (may be used with -f and -d options) \\
       \texttt{Matlab\_binary} & & Matlab format with external binary files (may be used with -d option). (-a option implicitly set) \\
       \texttt{Octave} & .m & Octave format (may be used with -f and -d options) \\
@@ -840,7 +822,7 @@ order to study the effects of the $TT$ parameter:
     y = -Mean;      % 'value' of the simulation
 \end{verbatim}
 
-Then a numerical optimization should be available, such as those provided with Matlab, Scilab, IDL, and Perl-PDL high level languages. In this example, we may wish to maximize the \verb+instr_value+ function value. The \verb+fminsearch+ function of Matlab is a minimization method (that's why we have a minus sign for $y$ value), and:
+Then a numerical optimization should be available, such as those provided with Matlab, IDL, and Perl-PDL high level languages. In this example, we may wish to maximize the \verb+instr_value+ function value. The \verb+fminsearch+ function of Matlab is a minimization method (that's why we have a minus sign for $y$ value), and:
 \begin{verbatim}
     matlab> TT = fminsearch('instr_value', -25)
 \end{verbatim}
@@ -868,7 +850,6 @@ The list of available \MCS\ front-end programs may be obtained from the
        mcdisplay     Instrument geometry viewer
        mcresplot     Instrument resolution function viewer
        mcstas2vitess McStas to Vitess component translation utility
-       mcconvert     Matlab <-> Scilab script conversion tool
        mcformat      Conversion tool for text files and MPI/grids
        mcformatgui   GUI for mcformat
        mcdaemon      Instrument results on-line plotting
@@ -934,7 +915,7 @@ The {\bf File} menu has the following features:
   \item[File/Preferences] Opens the choose backend dialog shown in
   figure~\ref{fig:mcgui-choose}. Several settings can be chosen here:
 \begin{itemize}
-  \item Selection of  the desired (PGPLOT|Scilab|Matlab|HTML/VRML) output
+  \item Selection of  the desired (PGPLOT|Matlab|HTML/VRML) output
     format and possibility to save 'binary files' when
   applicable (improved disk I/O).
   \item One- or three-pane view of your instrument in trace mode when
@@ -1211,7 +1192,7 @@ After running the simulation, the results will be written to the file
 \verb+mcstas.dat+ by default. This file contains one line for each simulation
 run giving the values of the scanned input variables along with the integrated
 intensity and estimated error in all monitors. Additionally, a file
-\verb+mcstas.sci+ (when using Scilab format) is written that can be read by the
+\verb+mcstas.m+ (when using Matlab format) is written that can be read by the
 \verb+mcplot+ front-end to plot the results on the screen or in a Postscript
 file, see section~\ref{s:mcplot}. \index{Tools!mcplot}
 \item When performing a scan, the \texttt{-f {\it file}} and
@@ -1255,20 +1236,13 @@ where \verb+sim+ is the name of either the instrument source \texttt{{\it
 \MCS, and \textit{args \ldots} are the normal command line arguments for the
 simulation, as explained above. The \verb+-h+ option will list valid options.
 
-\index{Tools!PGPLOT} \index{Tools!Matlab} \index{Tools!Scilab}
+\index{Tools!PGPLOT} \index{Tools!Matlab}
 \index{Tools!VRML/OpenGL} The drawing back-end program may be selected among
-PGPLOT, VRML, Matlab and Scilab using either the -p{\it PLOTTER} option or using
-the current \verb+MCSTAS_FORMAT+ environment variable. \index{Environment
-  variable!MCSTAS\_FORMAT} For instance, calling
+PGPLOT, VRML, and Matlab using the -p{\it PLOTTER} option. For instance, calling
 \begin{quote}
-  \verb+mcdisplay -pScilab ./Samples_vanadium.out ROT=90+
+  \verb+mcdisplay --pMatlab ./Samples_vanadium.out ROT=90+
 \end{quote}
-or (\verb+csh+/\verb+tcsh+ syntax)
-\begin{quote}
-  \verb+setenv MCSTAS_FORMAT Scilab+\\
-  \verb+mcdisplay ./Samples_vanadium.out ROT=90+
-\end{quote}
-will output graphics using Scilab.
+will output graphics using Matlab.
 The \verb+mcdisplay+ front-end can also be run from the \verb+mcgui+ front-end.
 \index{Tools!mcgui}
 Examples of plotter appearence for \verb+mcdisplay+ is shown in figures
@@ -1325,18 +1299,15 @@ documentation for PGPLOT on the local system in case of difficulty.
 \index{Environment variable!PGPLOT\_DIR} \index{Environment
   variable!PGPLOT\_DEV} \index{Tools!Perl libraries}
 
-\paragraph{Matlab and Scilab back-ends}
+\paragraph{Matlab and back-end}
 
 A 3D view of the instrument, and various operations (zoom, export, print, trace
 neutrons, \ldots) is available from dedicated Graphical User Interfaces.  The
 \verb+--inspect+ option may be used (see previous paragraph), as well as the
-\verb+--first+ and \verb+--last+ options to specify a region of interest. {\bf
-  Note:} The Scilab plotter for \emph{Windows} does not allow to rotate
-interactively the 3D view, and you are to use the \emph{alpha} and \emph{theta}
-choices in the pop-up Dialog.
+\verb+--first+ and \verb+--last+ options to specify a region of interest.
 
-The \verb+mcdisplay+ front-end will then require the Perl, and either Scilab or
-Matlab to be installed. \index{Tools!Matlab} \index{Tools!Scilab}
+The \verb+mcdisplay+ front-end will then require the Perl, and
+Matlab to be installed. \index{Tools!Matlab}
 
 \paragraph{VRML/OpenGL back-ends}
 
@@ -1367,22 +1338,18 @@ the file or directory should be passed to mcplot, {\em e.g.} ``\texttt{mcplot
 one single text (not binary) data file from a given monitor, passing its name to
 mcplot.
 
-The drawing back-end program may be selected among PGPLOT, VRML, Matlab and
-Scilab using either the -p{\it PLOTTER} option (e.g. \texttt{mcplot -pScilab
+The drawing back-end program may be selected among PGPLOT, VRML, Matlab, and
+Gnuplot using either the -p{\it PLOTTER} option (e.g. \texttt{mcplot -pMatlab
 file}) or using the current \verb+MCSTAS_FORMAT+ environment
 variable. \index{Environment variable!MCSTAS\_FORMAT} Moreover, the drawing
 back-end program will also be set depending on the {\it file} extension (see
 Table~\ref{t:formatoptions}).
 
-It should be emphasised that \verb+mcplot+ may \emph{only} display simulation
-results with the format that was chosen during the computation. Indeed, if you
-request data in a given format from a simulation, you will only be able to
-display results using that same drawing back-end.
+Except for the HTML/VRML and NeXus formats, all other plotters read the legacy 
+McStas/PGPLOT text based data format. 
 
-Anyway, the \verb+mcconvert+ utility may convert a \MCS\ data file between
-Matlab and Scilab formats (see section \ref{s:mcconvert}), also handling binary
-data sets. Alternatively, the \verb+mcformat+ utility will convert any \MCS\
-result into data format (see section \ref{s:mcformat}), but restricting to text
+The \verb+mcformat+ utility will convert any \MCS\
+result into an other data format (see section \ref{s:mcformat}), but restricting to text
 data sets. In this case, we recommend to generate data sets using PGPLOT/McStas
 format, and translate into any other format using \verb+mcformat+.
 
@@ -1409,36 +1376,30 @@ variable; consult the documentation for PGPLOT on the local system in case of
 difficulty. \index{Environment variable!PGPLOT\_DIR} \index{Environment
 variable!PGPLOT\_DEV} \index{Tools!Perl libraries}
 
-\paragraph{Matlab and Scilab back-ends}
+\paragraph{Matlab back-end}
 
 A dedicated \MCS /Mcplot Dialog or menu attached to the plotting window is
 available, and provides many operations (duplication, export, colormaps,
-\ldots).  The corresponding 'mcplot' Matlab and Scilab functions may be called
+\ldots).  The corresponding 'mcplot' Matlab function may be called
 from these language prompt with the same method as in section~\ref{s:run-sim},
 e.g:
 \begin{verbatim}
     matlab> s=mcplot;
     matlab> help mcplot
-    scilab> s=mcplot();
-    matlab or scilab> s=mcplot('mcstas.m');
-    matlab or scilab> mcplot(s);
-\end{verbatim} \index{Tools!Matlab} \index{Tools!Scilab}
+    matlab> s=mcplot('mcstas.m');
+    matlab> mcplot(s);
+\end{verbatim} \index{Tools!Matlab}
 
 A full parameter scan simulation result, or simply one of its scan steps may be
 displayed using the 'Scan step' menu item.  When the \verb|+nw| option is
-specified, a separate Matlab or Scilab window will appear (instead of being
+specified, a separate Matlab window will appear (instead of being
 launched in the current terminal). This will then enable Java support under
-Matlab and Tk support under Scilab, resulting in additional menus and tools. On
-the other hand, the \verb|-nw| option will force Matlab/Scilab to run in the
+Matlab, resulting in additional menus and tools. On
+the other hand, the \verb|-nw| option will force Matlab to run in the
 current terminal, which is usually faster.
 
-If you experience slow data sets plotting, or even failure, you might try the
-binary storage format, either from the mcgui/Simulation/Configuration options
-menu, or specifying e.g. the \verb+-p Scilab_binary+ option from the command
-line.
-
-To use the \verb+mcplot+ front-end, the programs Perl, and either Scilab or
-Matlab are required. \index{Tools!Matlab} \index{Tools!Scilab}
+To use the \verb+mcplot+ front-end, the programs Perl, and
+Matlab are required. \index{Tools!Matlab}
 
 
 \subsection{Plotting resolution functions (mcresplot)}
@@ -1474,8 +1435,8 @@ Here, {\it file\/} is the name of a file output from a simulation using
 the Res\_monitor component.
 % (section~\ref{s:res_monitor}).
 
-This front-end currently only works with the PGPLOT plotter, but ports for
-Matlab and Scilab may be written in the future.
+This front-end currently only works with the PGPLOT plotter, but port for
+Matlab may be written in the future.
 
 The front-end will open a window displaying projections of the 4-dimensional
 resolution function $R(\boldsymbol{Q}, \omega)$, measured at a
@@ -1577,22 +1538,9 @@ and \verb+fprintf(stdout, ...)+ occurrences should be changed manually into
 
 To use the \verb+mcstas2vitess+ front-end, the program Perl should be available.
 
-\subsection{Translating \MCS\ results files between Matlab and Scilab formats}
-\label{s:mcconvert}
-\index{Tools!mcconvert|textbf}
-\index{Tools!Matlab} \index{Tools!Scilab}
-
-If you have been running a \MCS\ simulation with Scilab output, but finally plan
-to look at the results with Matlab, or the contrary, you may use
-\begin{quote}
-  \texttt{mcconvert {\it file.{m|sci}\/}}
-\end{quote}
-to simply translate one file format to the other. This works only for text files
-of course. The binary files need not be translated.
-
 \subsection{Translating and merging \MCS\ results files (all text formats)}
 \label{s:mcformat}
-\index{Tools!mcformat|textbf} \index{Tools!Matlab} \index{Tools!Scilab}
+\index{Tools!mcformat|textbf} \index{Tools!Matlab}
 \index{Tools!Octave} \index{Tools!IDL} \index{Data formats} \index{Grid
   computing}
 
@@ -1631,7 +1579,7 @@ correct.\index{Bugs}
 \index{Data formats}
 
 To analyze simulation results, one uses the same tools as for analyzing
-experimental data, \textit{i.e}. programs such as IDL, Matlab and Scilab.  The
+experimental data, \textit{i.e}. programs such as IDL, Matlab.  The
 output files from simulations are usually simple text files containing headers
 and data blocks. If data blocks are empty they may be accessed referring to an
 external file indicated in the header. This file may also be a binary file
@@ -1703,20 +1651,20 @@ data with programs that do not know the special \MCS\ file format is
 simplified. The \verb+--file+ option may be used to store all data inside the
 \verb+mcstas.sim+ file instead of in separate files.
 
-\subsection{Matlab, Scilab and IDL formats}
-\index{Tools!Matlab} \index{Tools!Scilab} \index{Tools!IDL} \index{Data formats}
+\subsection{Matlab and IDL formats}
+\index{Tools!Matlab} \index{Tools!IDL} \index{Data formats}
 
 With these formats \MCS\ automatically writes scripts containing the data as a
 structure, as well as in-line import and plot functions for the selected
 language. Usage examples are given in section~\ref{s:run-sim}.  Thus, it is not
 necessary to write a load routine for each format, as the script is itself a
 program that knows how to handle the data. Alternatively, using \verb+mcplot+
-with Matlab and Scilab plotters provide additional functionalities from menus
+with Matlab plotters provide additional functionalities from menus
 and dialogs (see section~\ref{s:mcplot}).
 
 When imported through the data generated script (see section~\ref{s:run-sim}),
 or using \verb+mcplot+ (see section~\ref{s:mcplot}), a single variable may be
-created into the Matlab, Scilab or IDL base workspace. This variable is a
+created into the Matlab or IDL base workspace. This variable is a
 \emph{structure} constituting a data tree containing many fields, some being
 themselves structures. Field names are the initial names from the instrument
 (components, files, \ldots), transformed into valid variable names, e.g

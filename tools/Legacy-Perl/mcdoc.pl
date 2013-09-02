@@ -569,7 +569,6 @@ for($i = 0; $i < @ARGV; $i++) {
         print "   mcdisplay     Instrument geometry viewer\n";
         print "   mcresplot     Instrument resolution function viewer\n";
         print "   mcstas2vitess McStas to Vitess component translation utility\n";
-        print "   mcconvert     Matlab <-> Scilab script conversion tool\n";
         print "   mcformat      Conversion tool for text files and MPI/grids\n";
         print "   mcformatgui   GUI for mcformat\n";
         print "   mcdaemon      Instrument results on-line plotting\n";

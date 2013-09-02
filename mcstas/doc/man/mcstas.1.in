@@ -46,9 +46,6 @@ is the documentation tool
 .B mcstas(1)
 is the instrument compiler
 .TP
-mcconvert(1)
-can convert Matlab data files into Scilab data files, and vice-versa. It also handles data sets with binary encoding. It also handles parameter scan results.
-.TP
 mcformat(1)
 can transform any text data set from one format to an other. It does not support conversion from binary data sets. It can also merge equivalent results.
 .PP
@@ -103,7 +100,7 @@ Show help message for the instrument
 Detailed instrument information, including valid parameters
 .TP
 \-\-format=FORMAT
-Output data files using format FORMAT (format list obtained from foo.out -h, e.g. Matlab, Scilab, PGPLOT, HTML, XML, Octave)
+Output data files using format FORMAT (format list obtained from foo.out -h, e.g. Matlab, Scilab, PGPLOT, HTML, XML, IDL, VRML, Python, Octave)
 .SH EXAMPLES
 The three following examples are equivalent to the single command:
  mcrun -c foo.instr param1=value1 ...
@@ -125,7 +122,7 @@ The McStas configuration file is MCSTAS/tools/perl/mcstas_config.perl which you 
 .P
 The
 .B MCSTAS_FORMAT
-environment variable may be set to define the default data format used for storing results. This is usually 'PGPLOT', 'Matlab', or 'Scilab'.
+environment variable may be set to define the default data format used for storing results. This is usually 'PGPLOT'.
 .SH BUGS
 McStas is a large package, and bugs might be found. If so, please report to
 .B http://mcstas.org/McZilla/
@@ -136,10 +133,10 @@ mcstas returns 1 in case of error, 0 when all went fine
 .SH AUTHOR
 Peter Kjaer Willendrup, Emmanuel FARHI, Kim Lefmann, and Klaus Lieutenant
 .SH SEE ALSO
-mcstas(1), mcrun(1), mcdisplay(1), mcplot(1), mcgui(1), mcdoc(1), mcformat(1), mcconvert(1)
+mcstas(1), mcrun(1), mcdisplay(1), mcplot(1), mcgui(1), mcdoc(1), mcformat(1)
 .P
 web site:     <http://www.mcstas.org>
 .P
 mailing list: <mailto:mcstas-users@mcstas.org>
 .P
-matlab(1), idl(1), scilab(1), octave(1), vitess(1), NISP(1), restrax(1), mcnp(1), tripoli(1)
+matlab(1), idl(1), octave(1), vitess(1), NISP(1), restrax(1), mcnp(1), tripoli(1)

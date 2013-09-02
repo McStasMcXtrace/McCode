@@ -41,7 +41,6 @@ fi
 CF_ANSI_CC_CHECK
 
 AC_PATH_PROGS(PERL,   [perl perl5], no, /usr/bin:/usr/local/bin:$PATH)
-AC_PATH_PROGS(SCILAB, [scilab runscilab scilex], no, /usr/local/bin:/usr/lib/scilab/bin:/lib/scilab/bin:$PATH)
 AC_PATH_PROGS(MATLAB, [matlab], no, /usr/local/bin:$PATH)
 AC_PATH_PROGS(GNUPLOT,[gnuplot /usr/local/bin/gnuplot], no, /usr/local/bin:$PATH)
 AC_PATH_PROGS(PGPLOT, [pgxwin_server], no, /usr/local/bin:/usr/local/pgplot:$PATH)

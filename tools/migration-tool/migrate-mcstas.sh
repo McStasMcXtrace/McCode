@@ -23,7 +23,7 @@ MOVE_SCRIPT=/tmp/mcstas-$MCSTAS_VERSION-move
 ENV_SCRIPT=/tmp/mcstas-$MCSTAS_VERSION-environment
 
 
-BINS="mcconvert mcdaemon mcdisplay mcdoc mcformat mcformatgui mcgui mcplot \
+BINS="mcdaemon mcdisplay mcdoc mcformat mcformatgui mcgui mcplot \
       mcresplot mcrun mcstas mcstas2vitess"
 
 # Check if system is Debian-like and has dpkg (e.g. Ubuntu)

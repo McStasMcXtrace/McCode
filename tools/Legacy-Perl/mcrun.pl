@@ -659,7 +659,7 @@ sub do_instr_header { # dies if failed
     print $OUT join("", map("$prefix$_", @{$instr_info->{'RAW'}}));
 }
 
-# Write Matlab/Scilab function header to datafile
+# Write Matlab function header to datafile
 sub do_instr_init {
     my ($OUT, $filename) = @_;
     my $funcname=$filename;
@@ -670,28 +670,17 @@ sub do_instr_init {
 function mcstas = get_mcstas(p)
 % Embedded function for building 'mcplot' compatible structure
 % Matlab with text headers function
-% PW, RISOE, 20030701
+% PW, DTU, 2013
 %
 % import data using $filename; s=get_mcstas('plot');
 if nargout == 0 | nargin > 0, p=1; else p=0; end
 ENDCODE
-    } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
-        print $OUT <<ENDCODE
-function mcstas = get_mcstas(p)
-// Embedded function for building 'mcplot' compatible structure
-// Scilab with text headers function
-// PW, RISOE, 20030701
-//
-// import data using exec('mcstas.sci',-1); s=get_mcstas('plot');
-mode(-1); //silent execution
-if argn(2) > 0, p=1; else p=0; end
-ENDCODE
-   }
+    }
 
 
 }
 
-# Write Matlab/Scilab embedded plotting functions to datafile
+# Write Matlab embedded plotting functions to datafile
 sub do_sim_tail{
     my ($OUT) = @_;
     if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
@@ -714,43 +703,6 @@ if ~isempty(findstr(d.type,'2d')), colorbar; end
 
 % end of datafile...
 ENDCODE
-    } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
-        print $OUT <<ENDCODE
-
-endfunction
-
-function d=mcplot_inline(d,p)
-// local inline func to plot data
-if ~p, return; end;
-execstr(['l=[',d.xylimits,'];']); S=size(d.data);
-t1=['['+d.parent+'] '+d.filename+': '+d.title];t = [t1;['  '+d.variables+'=['+d.values+']'];['  '+d.signal];['  '+d.statistics]];
-mprintf('%s\\n',t(:));
-if ~length(strindex(d.type,'1d')),return;
-else
-  w=winsid();if length(w),w=w(\$)+1; else w=0; end
-  xbasr(w); xset('window',w);
-  if length(strindex(d.type,'1d'))
-    d.x=linspace(l(1),l(2),S(1));
-    mcplot_errorbar(d.x,d.data,d.errors);
-    if p == 2, t = t1; end
-    xtitle(t,d.xlabel,d.ylabel)
-  end
-end
-xname(t1);
-endfunction // mcplot_inline
-
-function mcplot_errorbar(x,y,e)
-// function for creating simple errorbar plots...
-  // first, estimate plot range
-  xmin=min(x);
-  xmax=max(x);
-  ymin=min(y-e);
-  ymax=max(y+e);
-  plot2d(x,y,rect=[xmin ymin xmax ymax]);
-  errbar(x,y,e,e);
-endfunction // mcplot_errorbar
-
-ENDCODE
     }
 }
 
@@ -764,12 +716,9 @@ sub do_sim_header {
     print $OUT "${prefix}Date$format_assign $format_start_value$date$format_end_value\n";
     print $OUT "${prefix}Ncount$format_assign $format_start_value$ncount$format_end_value\n";
     print $OUT "${prefix}Numpoints$format_assign $format_start_value$numpoints$format_end_value\n";
-    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab|Matlab/i) { $param_field = "parameters"; }
-    # Scilab needs initalisation of Param here...
-    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
-      print $OUT "${prefix}$param_field=0; ${prefix}$param_field=struct(); \n";
-    }
-    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab|Matlab/i) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) { $param_field = "parameters"; }
+    
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
       print $OUT "${prefix}${param_field}${format_member}class = 'parameters';\n";
       print $OUT "${prefix}${param_field}${format_member}name  = 'parameters';\n";
       print $OUT "${prefix}${param_field}${format_member}parent= '$sim_def';\n";
@@ -802,7 +751,7 @@ sub do_data_header {
       push @$xvar_list, map($params[$_], @{$info->{VARS}});
       $min = $info->{MIN}[0]; $max = $info->{MAX}[0];
     }
-    # Here, we need special handling of the Matlab/Scilab output cases, since
+    # Here, we need special handling of the Matlab output cases, since
     # each monitor dataset must be defined in its own class 'data' structure for mcplot
     if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /McStas|PGPLOT/i) {
       print $OUT <<END
@@ -816,7 +765,7 @@ ${pr}${format_limprefix}limits$format_assign ${format_start_value}$min $max$form
 ${pr}filename$format_assign ${format_start_value}$datfile$format_end_value
 ${pr}variables$format_assign ${format_start_value}$variables$format_end_value
 END
-    } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab|Scilab/i) {
+    } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
         if (! $datablock eq "") {
           print $OUT "DataBlock=[$datablock];\n";
           # Now loop across all the youts...
@@ -826,9 +775,7 @@ END
             my $start_char = index($y_pair, "(") + 1;
             my $end_char = index($y_pair, ",") - $start_char;
             my $y_label = substr($y_pair, $start_char, $end_char);
-            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
-                print $OUT "$pr$y_label=0; $pr$y_label=struct();\n";
-            }
+
             print $OUT "$pr$y_label.class='data';\n";
             print $OUT "$pr$y_label.data  =[DataBlock(:,$idx)];\n";
             print $OUT "$pr$y_label.errors=[DataBlock(:,$idx+1)];\n";
@@ -999,7 +946,7 @@ sub do_scan {
     my @youts = ();
     our $point;
     my @lab_datablock = ();          # Storing of scan data in variable
-                                     # for saving datablock in matlab/scilab
+                                     # for saving datablock in matlab
     my $datablock = "";              # 'sim' file.
     my $Monitors_nb=0;
     my $found_invalid_scans=0;
@@ -1210,13 +1157,6 @@ if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
   $format_start_value="'";
   $format_end_value  ="';";
   $format_prefix     ="% ";
-  $format_limprefix  ="xy";
-} elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
-  $format_ext        = ".sci";
-  $format_assign     ="=";
-  $format_start_value="'";
-  $format_end_value  ="';";
-  $format_prefix     ="// ";
   $format_limprefix  ="xy";
 } elsif ($numpoints > 1 && $MCSTAS::mcstas_config{'PLOTTER'} !~ /PGPLOT|McStas/i) {
   print STDERR "mcrun: Warning: format $MCSTAS::mcstas_config{'PLOTTER'} does not support parameter scans\n";

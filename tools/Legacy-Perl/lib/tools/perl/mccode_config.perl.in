@@ -14,8 +14,6 @@
 #            - PGPLOT (Unix / Win32)
 #            - Matlab (Unix / Win32)
 #            - Matlab scriptfile (Unix / Win32)
-#            - Scilab (Unix only)
-#            - Scilab scriptfile (Unix / Win32)
 # PGDEV      - Default device for PGPLOT (usually /xserv or /gw)
 # GNUDEV     - Default device for GNUPLOT (x11/aqua/windows)
 # EDITOR     - Choice of default built-in editor
@@ -32,12 +30,10 @@
 # DATE     - date format
 # AT	   - Command to detach simulation process (Unix only)
 # MATLAB   - comand to launch matlab
-# SCILAB   - comand to launch scilab
 # GNUPLOT  - command to launch gnuplot
 # EXE      - executable suffix (out or exe)
 # HOSTFILE - MPI/grid hosts/machine list
 # MATLAB_COMMAND - options to execute matlab
-# SCILAB_COMMAND - options to execute scilab
 # CODETEXT - check for Tk::CodeText availability
 # PROCSIMPLE - check for Proc::Simple availability
 # TEMP     - check for File::Temp availability
@@ -55,10 +51,6 @@
 #
 # MCGUI_CFLAGS - Choose whether CFLAGS should be applied in mcgui (0/1)
 # MCGUI_PGMULTI - Choose if mcgui uses 3-pane view when running mcplot/PGPLOT (0/1)
-#
-# NOTE: If you modify this file to change a SCILAB equal to 'no' to adjust an existing
-# installation to a new install of scilab, enter the FULL PATH to the scilab binary, e.g.
-# /usr/local/scilab-3.1.1/bin/scilab
 #
 
 use Config;
@@ -96,10 +88,8 @@ use Config;
      TKPALETTE => '#c6c6c0',
      TKFONT => '-*-arial-normal-r-*-*-*-120-*-*-*-*-*-*',
      MATLAB => 'matlab',
-     SCILAB => 'scilab',
      GNUPLOT => '@GNUPLOT@',
      MATLAB_COMMAND => '-nodesktop -nosplash',
-     SCILAB_COMMAND => '-nw',
      EXE => '@OUT_SUFFIX@',
      HOSTFILE => '',
      MODULES => '',
