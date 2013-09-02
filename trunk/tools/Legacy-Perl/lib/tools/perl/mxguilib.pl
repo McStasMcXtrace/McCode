@@ -427,7 +427,7 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
       elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
       elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }
 
-      if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /binary/i && $plotter =~ /Matlab/i) { $plotter .= "_binary"; }
+      
       if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /scriptfile/i && $plotter =~ /Matlab/i) { $plotter .= "_scriptfile"; }
       # finally set the PLOTTER
       $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
@@ -578,10 +578,6 @@ sub preferences_dialog {
       -options      =>$opts
     )->pack(-fill => 'x');
 
-    $button_bin=$lf->Checkbutton(-text => "Use binary files (faster)",
-               -relief => 'flat', -variable => \$binary)->pack(-fill => 'x');
-    $b->attach($button_bin, -balloonmsg => "Binary files are usually much faster\nto import (Matlab)\nand smaller in size");
-    if ($plotter =~ /binary/) { $button_bin->select; }
     $pgmultiflag = $lf->Checkbutton(-text => "3-pane view with PGPLOT trace",
 				     -relief => 'flat', -variable => \$MCSTAS::mcstas_config{'MCGUI_PGMULTI'})->pack(-fill => 'x');
     $b->attach($pgmultiflag, -balloonmsg => "Check to view 3 panes in PGPLOT mcdisplay");
@@ -699,10 +695,7 @@ sub preferences_dialog {
       elsif ($formatchoice_val =~ /McXtrace|PGPLOT|Gnuplot/i)  { $plotter= 'PGPLOT'; }
       elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
       elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }
-    # add binary flag to plotter
-    if ($binary == 1 && $formatchoice_val =~ /Matlab/i) {
-      $plotter .= "_binary";
-    }
+
     if ($formatchoice_val =~ /scriptfile/i && $plotter =~ /Matlab/i) {
       $plotter .= "_scriptfile";
     }
