@@ -63,6 +63,7 @@ function data = mcplot(varargin)
         continue;
       else index_out = index_out+1; end
       this_file = varargin{index};
+      if isempty(this_file), return; end
       this_data = mcplot(this_file);
       data{index_out} = this_data;
       
@@ -92,6 +93,7 @@ function data = mcplot(varargin)
 
   if isempty(filename)
     if ~exist('uigetfile')
+      % for Octave
       [filename, pathname] = mcplot_uigetfile('*.*', 'Select data file to load');
     else
       [filename, pathname] = uigetfile('*.*', 'Select data file to load');
