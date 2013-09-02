@@ -68,6 +68,7 @@
     int COORD_XZ    ;
     int COORD_YZ    ;
     int COORD_PHASE ;
+    int COORD_PIXELID;
  
     /* token modifiers */
     int COORD_VAR   ; /* next token should be a variable or normal option */
@@ -106,7 +107,6 @@
     int    Flag_Shape        ;
     char   Flag_Auto_Limits  ;   /* get limits from first Buffer */
     char   Flag_Absorb       ;   /* monitor is also a slit */
-    char   Flag_Exclusive    ;   /* absorb particles out of monitor limits */
     char   Flag_per_cm2      ;   /* flux is per cm2 */
     char   Flag_log          ;   /* log10 of the flux */
     char   Flag_parallel     ;   /* set neutron state back after detection (parallel components) */
@@ -114,11 +114,12 @@
     char   Flag_capture      ;   /* lambda monitor with lambda/lambda(2200m/s = 1.7985 Angs) weightening */
     int    Flag_signal       ;   /* 0:monitor p, else monitor a mean value */
 
-    long   Coord_Number      ;   /* total number of variables to monitor, plus intensity (0) */
-    long   Buffer_Block      ;   /* Buffer size for list or auto limits */
-    long   Photon_Counter    ;   /* event counter, simulation total counts is mcget_ncount() */
-    long   Buffer_Counter    ;   /* index in Buffer size (for realloc) */
-    long   Buffer_Size       ;
+    unsigned long Coord_Number      ;   /* total number of variables to monitor, plus intensity (0) */
+    unsigned long Coord_NumberNoPixel;  /* same but without counting PixelID */
+    unsigned long Buffer_Block      ;   /* Buffer size for list or auto limits */
+    unsigned long   Photon_Counter    ;   /* event counter, simulation total counts is mcget_ncount() */
+    unsigned long   Buffer_Counter    ;   /* index in Buffer size (for realloc) */
+    unsigned long   Buffer_Size       ;
     int    Coord_Type[MONnD_COORD_NMAX];    /* type of variable */
     char   Coord_Label[MONnD_COORD_NMAX][30];       /* label of variable */
     char   Coord_Var[MONnD_COORD_NMAX][30]; /* short id of variable */
