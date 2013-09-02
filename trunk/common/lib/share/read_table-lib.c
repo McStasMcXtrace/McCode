@@ -484,7 +484,7 @@
       long Length_Table;
       double *New_Table;
 
-      Length_Table = ceil(fabs(Table->max_x - Table->min_x)/new_step);
+      Length_Table = ceil(fabs(Table->max_x - Table->min_x)/new_step)+1;
       New_Table    = (double*)malloc(Length_Table*Table->columns*sizeof(double));
 
       for (i=0; i < Length_Table; i++)
@@ -500,6 +500,9 @@
 
       Table->rows = Length_Table;
       Table->step_x = new_step;
+      Table->max_x = Table->min_x + (Length_Table-1)*new_step; 
+      /*max might not be the same anymore
+       * Use Length_Table -1 since the first and laset rows are the limits of the defined interval.*/
       free(Table->data);
       Table->data = New_Table;
       Table->constantstep=1;
