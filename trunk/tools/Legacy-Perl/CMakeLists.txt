@@ -66,7 +66,7 @@ endif()
 set(CPACK_DEBIAN_PACKAGE_DEPENDS
   "${FLAVOR}-${MCCODE_VERSION}, perl, perl-tk, pdl, pgplot5, libpgplot-perl, gnuplot-x11, sed, bc, libtk-codetext-perl"
   )
-set(CPACK_DEBIAN_PACKAGE_SUGGESTS "scilab, freewrl")
+set(CPACK_DEBIAN_PACKAGE_SUGGESTS "freewrl")
 
 
 # RPM
@@ -83,11 +83,11 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Select prefix
 if(${enable_mcstas})
   set(P "mc")
-  set(SOURCENAMES config convert daemon display doc formatgui
+  set(SOURCENAMES config daemon display doc formatgui
       gui plot resplot run stas2vitess )
 else()
   set(P "mx")
-  set(SOURCENAMES config convert daemon display doc formatgui
+  set(SOURCENAMES config daemon display doc formatgui
       gui plot run )
 endif()
 
@@ -144,7 +144,7 @@ install(
 
 if(NOT WINDOWS)
   # Generate man pages
-  set(LIST convert display doc gui plot run)
+  set(LIST display doc gui plot run)
   foreach(NAME ${LIST})
 
     set(filepath "${WORK}/doc/man/${P}${NAME}-${MCCODE_VERSION}.1")

@@ -14,7 +14,7 @@ setupMCCODE("mcstas")
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-comps-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../COPYING")
-set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
+set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
 set(CPACK_PACKAGE_VERSION       "1.0")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")

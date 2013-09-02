@@ -2,7 +2,7 @@ Package: @MCCODE_TARNAME@
 Version: @MCCODE_VERSION@
 Architecture: any
 Depends: perl, perl-tk, gcc, libc6-dev, pdl, libgfortran3, pgplot5, libpgplot-perl, gnuplot
-Suggests: scilab, freewrl, mpich-bin, libmpich1.0-dev, openmpi-common, openmpi-bin, libopenmpi-dev
+Suggests: freewrl, mpich-bin, libmpich1.0-dev, openmpi-common, openmpi-bin, libopenmpi-dev
 Installed-Size: 31120
 Maintainer: McStas Team <mcstas-support@mcstas.org>
 Description: McStas is a computer program (written in C) that enables
@@ -17,7 +17,7 @@ Description: McStas is a computer program (written in C) that enables
  To start McStas, use: mcgui
  .
  We recommend to install some of:
-   Matlab, Scilab, Octave, Gnuplot, MPI, gdl, freewrl, gtklookat,
+   Matlab, iFit, Octave, Gnuplot, MPI, gdl, freewrl, gtklookat,
    octagaplayer as well.
  .
  You should then reconfigure McStas by running:

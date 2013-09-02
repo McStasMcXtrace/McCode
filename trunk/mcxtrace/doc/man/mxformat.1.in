@@ -46,9 +46,6 @@ is the documentation tool
 mcxtrace(1)
 is the instrument compiler
 .TP
-mxconvert(1)
-can convert Matlab data files into Scilab data files, and vice-versa. It also handles data sets with binary encoding. It also handles parameter scan results.
-.TP
 .B mxformat(1)
 can transform any text data set from one format to an other. It does not support conversion from binary data sets. It can also merge equivalent results.
 .PP
@@ -59,7 +56,7 @@ mxdoc
 .SH OPTIONS
 .TP
 \-\-format=FORMAT
-Specifies wanted output format, i.e. PGPLOT, Matlab, Scilab, HTML, XML, Octave, ...
+Specifies wanted output format, i.e. PGPLOT, Matlab, Scilab, IDL, HTML, XML, Octave, ...
 .TP
 \-d DIR | \-\-dir=DIR
 Put all data files in directory DIR.
@@ -111,10 +108,10 @@ and the mailing list
 .SH AUTHOR
 Erik B Knudsen, Peter Kjaer Willendrup, Kim Lefmann, and Søren Schmidt
 .SH SEE ALSO
-mcxtrace(1), mxrun(1), mxdisplay(1), mxplot(1), mxgui(1), mxdoc(1), mxformat(1), mxconvert(1)
+mcxtrace(1), mxrun(1), mxdisplay(1), mxplot(1), mxgui(1), mxdoc(1), mxformat(1)
 .P
 web site:     <http://www.mcxtrace.org>
 .P
 mailing list: <mailto:mcxtrace-users@mcxtrace.org>
 .P
-matlab(1), idl(1), scilab(1), octave(1), vitess(1), NISP(1), restrax(1), mcnp(1), tripoli(1)
+matlab(1), idl(1), octave(1), vitess(1), NISP(1), restrax(1), mcnp(1), tripoli(1)

@@ -25,7 +25,7 @@ use Tk::ROText;
 use Tk::Listbox;
 use Tk::DirTree;
 
-# For calling mcplot properly in the case of Matlab/Scilab backend
+# For calling mcplot properly in the case of Matlab backend
 use Cwd;
 use File::Basename;
 # For copying files - 'Site' menu
@@ -299,7 +299,7 @@ sub simulation_dialog {
                -justify => 'right')->pack(-side => 'left');
     # output format (same line as exec mode)
     
-    my $formatchoice = $line->Checkbutton(-text => "Plot results, Format: ",
+    my $formatchoice = $line->Checkbutton(-text => "Plot results with: ",
 					  -variable => \$si{'Autoplot'},
 					  -relief => 'flat')->pack(-side => 'left');
     
@@ -313,13 +313,12 @@ sub simulation_dialog {
     if ($plotter =~ /McStas|PGPLOT/i)  { $formatchoice_val= 'PGPLOT'; }
     if ($plotter =~ /Gnuplot/i)  { $formatchoice_val= 'Gnuplot'; }
     if ($plotter =~ /Matlab/i)  { $formatchoice_val= 'Matlab'; }
-    if ($plotter =~ /Scilab/i) { $formatchoice_val= 'Scilab'; }
     if ($plotter =~ /HTML|VRML/) { $formatchoice_val='HTML/VRML'; }
     if ($plotter =~ /NeXus|HDF/) { $formatchoice_val='NeXus/HDF'; }
     if ($MCSTAS::mcstas_config{'NEXUS'} ne "") {
-      $opts = ['PGPLOT','Gnuplot','Matlab','Scilab','HTML/VRML','NeXus/HDF'];
+      $opts = ['PGPLOT','Gnuplot','Matlab','HTML/VRML','NeXus/HDF'];
     } else {
-      $opts = ['PGPLOT','Gnuplot','Matlab','Scilab','HTML/VRML'];
+      $opts = ['PGPLOT','Gnuplot','Matlab','HTML/VRML'];
     }
     my $formatchoice_orig=$formatchoice_val;
     $formatchoice = $line->Optionmenu (
@@ -425,12 +424,10 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
       # update Plotter in case of change in this dialog (instead of Preferences)
       if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
       elsif ($formatchoice_val =~ /McStas|PGPLOT|Gnuplot/i)  { $plotter= 'PGPLOT'; }
-      elsif ($formatchoice_val =~ /Scilab/i)    { $plotter= 'Scilab'; }
       elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
       elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }
 
-      if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /binary/i && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_binary"; }
-      if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /scriptfile/i && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_scriptfile"; }
+      if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /scriptfile/i && $plotter =~ /|Matlab/i) { $plotter .= "_scriptfile"; }
       # finally set the PLOTTER
       $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
       
@@ -562,9 +559,6 @@ sub preferences_dialog {
     elsif ($plotter =~ /Matlab/i) {
       $formatchoice_val= 'Matlab' . ($plotter =~ /scriptfile/ ?
         ' scriptfile' : ' (requires Matlab)');
-    } elsif ($plotter =~ /Scilab/i) {
-      $formatchoice_val= 'Scilab' . ($plotter =~ /scriptfile/ ?
-        ' scriptfile' : ' (requires Scilab)');
     } elsif ($plotter =~ /HTML|VRML/i) {
       $formatchoice_val='HTML/VRML document';
     }  elsif ($plotter =~ /NeXus|HDF/i) {
@@ -572,12 +566,10 @@ sub preferences_dialog {
     if ($MCSTAS::mcstas_config{'NEXUS'} ne "") {
       $opts = ['PGPLOT (original McStas)',
         'Matlab (requires Matlab)', 'Matlab scriptfile',
-        'Scilab (requires Scilab)', 'Scilab scriptfile',
         'HTML/VRML document','NeXus/HDF file'];
     } else {
       $opts = ['PGPLOT (original McStas)','Gnuplot',
         'Matlab (requires Matlab)', 'Matlab scriptfile',
-        'Scilab (requires Scilab)', 'Scilab scriptfile',
         'HTML/VRML document'];
     }
     my $formatchoice = $lf->Optionmenu (
@@ -585,10 +577,6 @@ sub preferences_dialog {
       -options      =>$opts
     )->pack(-fill => 'x');
 
-    $button_bin=$lf->Checkbutton(-text => "Use binary files (faster)",
-               -relief => 'flat', -variable => \$binary)->pack(-fill => 'x');
-    $b->attach($button_bin, -balloonmsg => "Binary files are usually much faster\nto import (Matlab/Scilab)\nand smaller in size");
-    if ($plotter =~ /binary/) { $button_bin->select; }
     $pgmultiflag = $lf->Checkbutton(-text => "3-pane view with PGPLOT trace",
 				     -relief => 'flat', -variable => \$MCSTAS::mcstas_config{'MCGUI_PGMULTI'})->pack(-fill => 'x');
     $b->attach($pgmultiflag, -balloonmsg => "Check to view 3 panes in PGPLOT mcdisplay");
@@ -621,7 +609,7 @@ sub preferences_dialog {
     elsif ($editor == 2) { $editorchoice_val="External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})";}
     my $editorchoice = $lf->Label(-text => "Editor options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $b->attach($editorchoice, -balloonmsg => "Select editor to use to\ndisplay instrument descriptions");
-    $choices=["Simple built-in editor (McStas CVS-080208)","External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})"];
+    $choices=["Simple built-in editor (McStas)","External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})"];
     if  ($MCSTAS::mcstas_config{'CODETEXT'} ne "no") {
       push @{ $choices }, 'Advanced built-in editor';
     }
@@ -704,14 +692,10 @@ sub preferences_dialog {
 
     if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
       elsif ($formatchoice_val =~ /McStas|PGPLOT|Gnuplot/i)  { $plotter= 'PGPLOT'; }
-      elsif ($formatchoice_val =~ /Scilab/i)    { $plotter= 'Scilab'; }
       elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
       elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }
-    # add binary flag to plotter
-    if ($binary == 1 && $formatchoice_val =~ /Scilab|Matlab/i) {
-      $plotter .= "_binary";
-    }
-    if ($formatchoice_val =~ /scriptfile/i && $plotter =~ /Scilab|Matlab/i) {
+
+    if ($formatchoice_val =~ /scriptfile/i && $plotter =~ /Matlab/i) {
       $plotter .= "_scriptfile";
     }
     # finally set the PLOTTER

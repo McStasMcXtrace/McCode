@@ -17,7 +17,7 @@
 #     along with this program; if not, write to the Free Software
 #     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-# mcformatgui.pl - perl-Tk gui for mcformat and mcconvert tools.
+# mcformatgui.pl - perl-Tk gui for mcformat tool.
 #
 
 use Cwd;
@@ -52,7 +52,7 @@ if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mcco
 my $dodisplay = 0;
 my $timeout = 5;
 my $show_help = 0;
-my $iformats = ['McStas','Scilab','Matlab'];
+my $iformats = ['McStas','Matlab'];
 my $oformats;
 my $runmodes;
 my $iformat="McStas";
@@ -61,8 +61,6 @@ my $runmode="Merge";
 my $inputdir;
 my $outputdir;
 my $oformats_iMcStas;
-my $oformats_iMatlab = ['Scilab'];
-my $oformats_iScilab = ['Matlab'];
 my $runmodes_iMcStas = ['Convert','Merge','Scan assembly','Scan Merge'];
 my $runmodes_ilab = ['Convert'];
 my $recordlog=0;
@@ -76,9 +74,9 @@ my $iformat_crtl;
 my $oformat_line="";
 
 if ($MCSTAS::mcstas_config{'NEXUS'} ne "") {
-   $oformats_iMcStas = ['McStas','Scilab','Matlab','IDL','HTML','XML','Octave','NeXus'];
+   $oformats_iMcStas = ['McStas','Matlab','IDL','HTML','XML','Octave','Python','Scilab','NeXus'];
 } else {
-   $oformats_iMcStas = ['McStas','Scilab','Matlab','IDL','HTML','XML','Octave'];
+   $oformats_iMcStas = ['McStas','Matlab','IDL','HTML','XML','Octave','Python','Scilab'];
 }
 
 my $cmd;
@@ -101,12 +99,7 @@ if ($recordlog) {
   }
 }
 
-if ($iformat =~ /Matlab|Scilab/i && $oformat =~ /Matlab|Scilab/i
- && $iformat ne $oformat && $runmode eq "Convert") {
-    print "Using mcconvert.pl for $iformat -> $oformat conversion...\n";
-    $cmd="mcconvert$MCSTAS::mcstas_config{'SUFFIX'} --format=$oformat --indir=$inputdir --outdir=$outputdir";
-
-} elsif ($oformat_line !~ /binary/s) {
+if ($oformat_line !~ /binary/s) {
     print "Input format is McStas, running mcformat to $runmode data. Output will go to $outputdir in $oformat...\n";
     my $mode="";
     if ($oformat =~ /IDL/i) { $oformat="IDL_binary"; }
@@ -131,7 +124,7 @@ if ($iformat =~ /Matlab|Scilab/i && $oformat =~ /Matlab|Scilab/i
     $cmd.=" --format=$oformat --dir=$outputdir $inputdir $mode";
 } else {
   print "mcformatgui: I do not have any appropriate method for conversion.\n";
-  print "ERROR        Try mcformat or mcconvert commands manually.\n";
+  print "ERROR        Try mcformat command manually.\n";
   exit();
 }
 if ($recordlog && defined $fid) {
@@ -190,7 +183,7 @@ sub build_gui {
     $midframe->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
     $tmp3=$midframe->Label(-text => "Output format: ", -anchor => 'w',
 		     -justify => "center", -fg => 'blue')->pack(-side => "left");
-		$b->attach($tmp3, -balloonmsg => "Format for converted data\nNOTE: If input data is Matlab/Scilab\n      and output format is Scilab/Matlab\n      'Convert' mode will work also with binary data.");
+		$b->attach($tmp3, -balloonmsg => "Format for converted data");
     $oformats = $oformats_iMcStas;
     $oformat_ctrl = $midframe->Optionmenu(-textvariable => \$oformat, -options =>
 					 $oformats)->pack(-side => 'left');
@@ -295,7 +288,6 @@ sub iformat_select {
 
   # look if there is only one file type and set iformat
   if (-e "$file.m")    { $iformat = "Matlab";  $file = "$file.m"; }
-  if (-e "$file.sci")  { $iformat = "Scilab";  $file = "$file.sci"; }
   if (-e "$file.sim")  { $iformat = "McStas";  $file = "$file.sim"; }
   if (-e "$file.html") { $iformat = "HTML";    $file = "$file.html"; }
   if (-e "$file.xml")  { $iformat = "XML";     $file = "$file.xml";  }

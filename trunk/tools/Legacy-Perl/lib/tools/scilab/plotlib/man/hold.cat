@@ -1,8 +1,0 @@
- HOLD   Hold current graph.
- 
-    HOLD ON holds the current plot and all axis properties so that
-    subsequent graphing commands add to the existing graph.
-    HOLD OFF returns to the default mode whereby PLOT commands erase 
-    the previous plots and reset all axis properties before drawing 
-    new plots.
-    HOLD, by itself, toggles the hold state.

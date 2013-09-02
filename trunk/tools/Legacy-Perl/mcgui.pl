@@ -352,7 +352,7 @@ sub tools_shortcuts {
 	    "$shortcuts{'cut'} - Editor cut\n".
 	    "$shortcuts{'copy'} - Editor copy\n".
 	    "$shortcuts{'paste'} - Editor paste";
-    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mcstas|pgplot/i) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mcstas|mcxtrace|pgplot/i) {
      $msg .= "\n\n
     'P' - Plotter/PGPLOT export BW postscript
     'C' - Plotter/PGPLOT export color postscript
@@ -1015,12 +1015,12 @@ sub menu_run_simulation {
 
         # Check 'Mode' setting if a scan/trace/optim is
         # requested
-        if ($newsi->{'Mode'} == 1) {
-	    push @command, "$MCSTAS::mcstas_config{'TRACECMD'}$suffix";
-            if ($plotter =~ /PGPLOT|McStas|Gnuplot/i) {
+        if ($newsi->{'Mode'} == 1) { # Trace 3D
+            push @command, "$MCSTAS::mcstas_config{'TRACECMD'}$suffix";
+            if ($plotter =~ /PGPLOT|McStas|McXtrace|Gnuplot/i) {
               push @command, "--plotter=PGPLOT";
               # Selection of PGPLOT 3-pane view from config menu only.
-	      # Default is to NOT use 3-pane view.
+              # Default is to NOT use 3-pane view.
               if ($MCSTAS::mcstas_config{'MCGUI_PGMULTI'}) {
                 push @command, "--multi";
               }
@@ -1036,39 +1036,6 @@ sub menu_run_simulation {
 
             } elsif ($plotter =~ /Matlab/i) {
               push @command, "--plotter=Matlab";
-            } elsif ($plotter =~ /Scilab/i && $plotter =~ /scriptfile/i) {
-              push @command, "--plotter=Scilab";
-              my $output_file = save_disp_file($w,'sci');
-              if (!$output_file) {
-                putmsg($cmdwin, "Trace cancelled...\n");
-                return;
-              }
-              $output_file =~ s! !\ !g;
-              push @command, "-f$output_file";
-
-            } elsif ($plotter =~ /Scilab/i) {
-              push @command, "--plotter=Scilab";
-              # If this is Win32, make a check for # of neutron histories,
-              # should be made small to avoid waiting a long time for
-              # mcdisplay...
-              if ($Config{'osname'} eq "MSWin32") {
-                  # Subtract 0 to make sure $num_histories is treated as a
-                  # number...
-                  my $num_histories = $newsi->{'Ncount'} - 0;
-                  if ($num_histories >=1e3) {
-                      my $break = $w->messageBox(-message => "$num_histories is a very large number\nof neutron histories when using\nScilab on Win32.\nContinue ?",
-                     -title => "Warning: large number",
-                     -type => 'yesnocancel',
-                     -icon => 'error',
-                     -default => 'no');
-                      # Make first char lower case - default on
-                      # Win32 upper case default on Unix... (perl 5.8)
-                      $break = lcfirst($break);
-                      if ((lc($break) eq "no")||(lc($break) eq "cancel")) {
-                          return 0;
-                      }
-                  }
-              }
             } elsif ($plotter =~ /html|vrml/i) {
                 push @command, "--plotter=VRML";
                 # Make a check for # of neutron histories,
@@ -1077,7 +1044,7 @@ sub menu_run_simulation {
                 # Subtract 0 to make sure $num_histories is treated as a
                 # number...
                 my $num_histories = $newsi->{'Ncount'} - 0;
-                if ($num_histories >=1e3) {
+                if ($num_histories >=1001) {
                     my $break = $w->messageBox(-message => "$num_histories is a very large number\nof neutron histories when using\nVRML\nContinue ?",
                      -title => "Warning: large number",
                      -type => 'yesnocancel',
@@ -1125,7 +1092,7 @@ sub menu_run_simulation {
             $tmpdir =~ s/\.$MCSTAS::mcstas_config{'EXE'}$//;
             $tmpdir .= '_' . POSIX::strftime("%Y%m%d_%H%M%S", localtime);
             $newsi->{'Dir'} = $tmpdir;
-	    $newsi->{'DirAutogen'} =1;
+            $newsi->{'DirAutogen'} =1;
         }
         if ($newsi->{'Dir'} && !($newsi->{'Mode'})) {
           $OutDir=$newsi->{'Dir'};
@@ -1147,9 +1114,9 @@ sub menu_run_simulation {
           push @command, "--mpi=$MCSTAS::mcstas_config{'NODES'}";
         } elsif ($newsi->{'cluster'} == 3) {
           push @command, "--multi=$MCSTAS::mcstas_config{'NODES'}";
-	  if ($MCSTAS::mcstas_config{'GRID_FORCECOMPILE'}) {
-	    push @command, "-c";
-	  }
+          if ($MCSTAS::mcstas_config{'GRID_FORCECOMPILE'}) {
+            push @command, "-c";
+          }
         }
         if ($newsi->{'Forcecompile'} == 1) {
           if ($newsi->{'cluster'} == 3) {
@@ -1171,9 +1138,12 @@ sub menu_run_simulation {
             rmtree($OutDir,0,1);
           }
         }
-        push @command, "--format=$plotter" unless ($newsi->{'Mode'}==1);
+        # we now always use McStas/PGPLOT legacy format, except for HTML and NeXus
+        if ($newsi->{'Mode'}!=1 && $plotter !~ /PGPLOT|McStas|Gnuplot|Matlab/i) {
+          push @command, "--plotter=$plotter";
+        }
 
-       # add parameter values
+        # add parameter values
         my @unset = ();
         my @multiple = ();
         if ($newsi->{'NScan'} eq '') { $newsi->{'NScan'} = 1; }
@@ -1294,9 +1264,7 @@ sub menu_run_simulation {
         $inf_sim=$newsi;
         return unless $success;
         my $ext;
-        if ($plotter =~ /PGPLOT|McStas|Gnuplot/i) { $ext="sim"; }
-        elsif ($plotter =~ /Matlab/i)     { $ext="m"; }
-        elsif ($plotter =~ /Scilab/i)     { $ext="sci"; }
+        if ($plotter =~ /PGPLOT|McStas|McXtrace|Matlab|Gnuplot/i) { $ext="sim"; }
         elsif ($plotter =~ /HTML/i)       { $ext="html"; }
         elsif ($plotter =~ /NeXus|HDF/i)  { $ext="nxs"; }
         $current_sim_file = $newsi->{'Dir'} ?
@@ -1305,7 +1273,7 @@ sub menu_run_simulation {
         new_simulation_results($w);
         # In case of non-PGPLOT plotter, we can not read the data from disk.
         # Instead, we simply keep $newsi information in $inf_sim
-        if ($plotter eq 0) {
+        if ($plotter !~ /PGPLOT|McStas|Matlab|Gnuplot/i) {
             read_sim_data($w);
         } else {
             $inf_sim=$newsi;
@@ -1425,7 +1393,7 @@ my $instr_template_start = <<INSTR_FINISH;
 * Written by: Your name (email)
 * Date: Current Date
 * Origin: Your institution
-* Release: McStas CVS-080208
+* Release: McStas
 * Version: 0.2
 * %INSTRUMENT_SITE: Institution_name_as_a_single word
 *
@@ -1789,7 +1757,6 @@ sub setup_cmdwin {
     }
 
     my $text="";
-    if ($MCSTAS::mcstas_config{'SCILAB'} ne "no")   { $text .= "Scilab "; }
     if ($MCSTAS::mcstas_config{'MATLAB'} ne "no")   { $text .= "Matlab "; }
     if ($MCSTAS::mcstas_config{'PGPLOT'} ne "no")   { $text .= "PGPLOT/McStas "; }
     if ($MCSTAS::mcstas_config{'GNUPLOT'} ne "no")   { $text .= "Gnuplot "; }

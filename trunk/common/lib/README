@@ -12,10 +12,10 @@
 * Date: 2002
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.6
-* Version: 1.0
+* Version: $Revision$
 * Modified by: EF, Dec 19th, 1998 : initial release 1.0
 *
-* This file is part of McStas  version 1.6, released <today Aug 28th, 2002>.
+* This file is part of McStas.
 * It provides components, tools and data files for McStas.
 *
 * contrib:  users contributed components
@@ -29,6 +29,6 @@
 * samples:  sample components (Vanadium, powders, crystals, ...)
 * share:    shared dynamic library (functions and C structures)
 * sources:  neutron sources (continuous, pulsed, virtual...)
-* tools:    perl and Scilab libraries (for mcplot, mcdisplay...)
+* tools:    perl, Python and Matlab libraries (for mcplot, mcdisplay...)
 *
 *******************************************************************************/

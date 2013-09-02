@@ -3,7 +3,6 @@
 use Config;
 use File::Copy;
 
-our $scilab;
 our $tcltk;
 our $matlab;
 our $cc;
@@ -34,25 +33,6 @@ if ($Config{'osname'} eq "MSWin32") {
       $matlab = (not $failed) ? "matlab.exe" : "no";
 
     print STDOUT "$matlab\n";
-
-    print STDOUT "Checking for Scilab: ";
-
-      $failed=system("$which runscilab.exe");
-      if ($failed) {
-        $failed=system("$which scilab.exe");
-        $scilab = (not $failed) ? "scilab.exe" : "no";
-      }
-      if ($failed) {
-        $failed=system("$which wscilex.exe");
-        $scilab = (not $failed) ? "wscilex.exe" : "no";
-      }
-      if ($failed) {
-        $failed=system("$which scilab.bat");
-        $scilab = (not $failed) ? "scilab.bat" : "no";
-      }
-      if ($failed) { $scilab = "runscilab.exe"; }
-
-    print STDOUT "$scilab\n";
 
     print STDOUT "Checking for SSH: ";
 
@@ -137,9 +117,6 @@ if ($Config{'osname'} eq "MSWin32") {
     if ($matlab ne "no") {
         print STDOUT "\n\nMatlab found, configuring McStas\n";
         $plotter = "Matlab";
-    } elsif ($scilab ne "no") {
-        print STDOUT "\n\nScilab found ($scilab), configuring McStas\n";
-        $plotter = "Scilab";
     } else {
         print STDERR "\n\nSorry, neither Matlab or Scilab found, setting HTML/VRML.\n";
         $plotter = "HTML";
