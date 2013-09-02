@@ -314,7 +314,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           Vars->Flag_Auto_Limits = 1;
           if (Flag_All) Flag_auto = -1;
           else          Flag_auto = 1;
-          iskeyword=1; Flag_All=0; }
+          iskeyword=1;  Flag_All=0; }
         if (!strcmp(token, "premonitor")) {
           Vars->Flag_UsePreMonitor = 1; iskeyword=1; }
         if (!strcmp(token, "3He_pressure") || !strcmp(token, "pressure")) {
@@ -411,8 +411,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           { Set_Vars_Coord_Type = DEFS->COORD_VDIV; strcpy(Set_Vars_Coord_Label,"Vert. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"vd"); lmin = -5; lmax = 5; }
         if (!strcmp(token, "theta") || !strcmp(token, "longitude") || !strcmp(token, "th"))
           { Set_Vars_Coord_Type = DEFS->COORD_THETA; strcpy(Set_Vars_Coord_Label,"Longitude [deg]"); strcpy(Set_Vars_Coord_Var,"th"); lmin = -180; lmax = 180; }
-        if (!strcmp(token, "phi") || !strcmp(token, "lattitude") || !strcmp(token, "ph"))
-          { Set_Vars_Coord_Type = DEFS->COORD_PHI; strcpy(Set_Vars_Coord_Label,"Lattitude [deg]"); strcpy(Set_Vars_Coord_Var,"ph"); lmin = -180; lmax = 180; }
+        if (!strcmp(token, "phi") || !strcmp(token, "latitude") || !strcmp(token, "ph"))
+          { Set_Vars_Coord_Type = DEFS->COORD_PHI; strcpy(Set_Vars_Coord_Label,"Latitude [deg]"); strcpy(Set_Vars_Coord_Var,"ph"); lmin = -180; lmax = 180; }
         if (!strcmp(token, "ncounts") || !strcmp(token, "n") || !strcmp(token, "neutron"))
           { Set_Vars_Coord_Type = DEFS->COORD_NCOUNT; strcpy(Set_Vars_Coord_Label,"Neutron ID [1]"); strcpy(Set_Vars_Coord_Var,"n"); lmin = 0; lmax = mcget_ncount(); if (Flag_auto>0) Flag_auto=0; }
         if (!strcmp(token, "id") || !strcmp(token, "pixel"))
