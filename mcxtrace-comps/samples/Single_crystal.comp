@@ -222,7 +222,7 @@
 
 DEFINE COMPONENT Single_crystal
 DEFINITION PARAMETERS(mosaic_AB={0,0, 0,0,0, 0,0,0})
-SETTING PARAMETERS(string reflections=0, string geometry=0,
+  SETTING PARAMETERS(string reflections=0, string geometry=0, string material=0,
             xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
             mosaic = -1, mosaic_a = -1, mosaic_b = -1, mosaic_c = -1,
             recip_cell=0, barns=0,
@@ -231,7 +231,7 @@ SETTING PARAMETERS(string reflections=0, string geometry=0,
             cx = 0, cy = 0, cz = 0,
             p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
             aa=0, bb=0, cc=0, order=0)
-OUTPUT PARAMETERS(hkl_info, offdata)
+OUTPUT PARAMETERS(hkl_info, offdata, abs_info)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 SHARE
 %{
@@ -702,6 +702,48 @@ SHARE
     }
     return(info->count = i);
   } /* read_hkl_data */
+  
+  struct abs_data
+  {
+    int muc; /*column where mu is to be found*/
+    t_Table table;
+  };
+
+  int sx_read_abs_data(char *ABS_file, struct abs_data *abs){
+    int status;
+    char **parsing;
+    if (ABS_file && strlen(ABS_file) && strcmp(ABS_file, "NULL")) {
+      if ( (status=Table_Read(&(abs->table),ABS_file,0))==-1){
+        fprintf(stderr,"Error (%s): Could not parse file \"%s\"\n","Single_crystal",ABS_file);
+        exit(-1);
+      }
+      parsing=Table_ParseHeader(abs->table.header,"Z","A[r]","rho",NULL);
+      if (abs->table.columns==3) {
+        abs->muc=1;
+      }else{
+        abs->muc=5;
+      }
+      /*reorganize the data table a to use log(e) instead and rebin to use constantstep feature*/
+      int j;
+      for (j=0;j<abs->table.rows;j++){
+        abs->table.data[j*abs->table.columns]=log(abs->table.data[j*abs->table.columns]);
+      }/*now in terms of log e instead of just e - makes for better rebinning*/
+      Table_Stat(&(abs->table));
+      if(10*(double)mcget_ncount()>(abs->table.max_x-abs->table.min_x)/(abs->table.step_x)){
+        /*it is probably worth Rebinning*/
+        printf("%s: Rebinning material data (%s) for faster tracing...\n","Single_crystal",ABS_file); 
+        Table_Rebin(&(abs->table));
+      }
+
+      return 1;
+    }else{
+      /*init an empty table with absorption 0*/
+      Table_Init(&(abs->table),2,2);
+      abs->table.data[0]=0;abs->table.data[1]=0;
+      abs->table.data[2]=FLT_MAX;abs->table.data[3]=0;
+      fprintf(stderr,"Warning: material file (%s) not found. Absorption set to 0\n",ABS_file);
+    }
+  }
 #endif /* !SINGLE_CRYSTAL_DECL */
 
 %}
@@ -710,6 +752,7 @@ DECLARE
 %{
   struct hkl_info_struct hkl_info;
   off_struct offdata;
+  struct abs_data abs_info;
 %}
 
 INITIALIZE
@@ -769,8 +812,14 @@ INITIALIZE
     exit(fprintf(stderr,"Single_crystal: %s: sample has invalid dimensions.\n"
                         "ERROR           Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
   
-  printf("Single_crystal: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn] reflections=%s\n",
+  /*read material data from a file to get absorption*/
+  if (!sx_read_abs_data(material,&abs_info)){
+    fprintf(stderr,"Single_crystal: %s Cannot read absorption data from file %s - will proceed without absorption.\n",NAME_CURRENT_COMP,material);
+  }
+
+  printf("Single_crystal: %s: Vc=%g [Angs] sigma_abs= (mu/rho)*%g [barn] sigma_inc=%g [barn] reflections=%s\n",
       NAME_CURRENT_COMP, hkl_info.V0, hkl_info.sigma_a, hkl_info.sigma_i, reflections && strlen(reflections) ? reflections : "NULL");
+
 %}
 
 TRACE
@@ -833,12 +882,20 @@ TRACE
       PROP_DL(l1);                /* Move to crystal surface if not inside */
     ki = sqrt(kx*kx + ky*ky + kz*kz);
     event_counter = 0;
-    /*this should be done in a real manner*/
-    abs_xsect = hkl_info.sigma_a;
-    inc_xsect = hkl_info.sigma_i;
+      
+    /*absorption cross-section */
+    do {
+      double mu=Table_Value(abs_info.table,log(ki*K2E),abs_info.muc);
+      abs_xsect = hkl_info.sigma_a*mu;
+      /*assume the given sigma a is like taken from the NIST file*/
+    }while (0);
     V0= hkl_info.V0;
     abs_xlen  = abs_xsect/V0;
+
+    /*look into Compton scattering*/
+    inc_xsect = hkl_info.sigma_i;
     inc_xlen  = inc_xsect/V0;
+
     if (barns) { 
       /*If cross sections are given in barns, we need a scaling factor of 100 
         to get scattering lengths in m, since V0 is assumed to be in AA*/
@@ -991,6 +1048,7 @@ TRACE
       if(mc_trans > 0 && (mc_trans >= 1 || rand01() < mc_trans))  /* Transmit */
       {
         p *= p_trans/mc_trans;
+        SCATTER;
         intersect=0; break;
       }
       if(tot_xlen <= 0){
