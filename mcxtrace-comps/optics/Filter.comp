@@ -10,11 +10,11 @@
 * %I
 * Written by: Erik Knudsen
 * Date: Jan 24, 2011
-* Version: $Revision: 1.0$
-* Origin: Risoe
-* Release: McXtrace 0.9
+* Version: $Revision$
+* Origin: DTU Physics
+* Release: McXtrace 1.1
 *
-* Block of a attenuating material
+* Block of an attenuating material
 * 
 * %D
 * A rectangular block of attenuating material. Attenuation is computed through
@@ -32,25 +32,27 @@
 *******************************************************************************/
 DEFINE COMPONENT Filter
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (xwidth,yheight,zdepth) 
-OUTPUT PARAMETERS (prms)
+SETTING PARAMETERS (string geometry=0,xwidth,yheight,zdepth) 
+OUTPUT PARAMETERS (prms,filter_row)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
   %include "read_table-lib"
-  struct mat_prms {
-    int Z;
-    double At, rho;
-    double *E,*mu;
-  };
+  %include "interoff-lib"
 %}
 
 DECLARE
 %{
-  double xmax,xmin,ymax,ymin;
-
-  struct mat_prms *prms;
+  struct {
+    int Z,mu_c;
+    double Ar, rho;
+    double delta_prefactor,betafact;
+    t_Table table;
+    enum shapes {NONE=-1,SPHERE, CUBE, ELLIPSOID, ANY} shape;
+    off_struct offdata;
+  } *prms;
+  int filter_row;
 
 %}
 
@@ -58,75 +60,120 @@ INITIALIZE
 %{
   int status=0;
  
-  if(!xwidth || !yheight){
-    fprintf(stderr,"%s: Lens has zero effective area\n",NAME_CURRENT_COMP);
+  if(!xwidth || !yheight || !zdepth){
+    fprintf(stderr,"%s: Filter has zero effective volume\n",NAME_CURRENT_COMP);
     exit(0);
   }
-  xmax=xwidth/2.0;
-  xmin=-xmax;
-  ymax=yheight/2.0;
-  ymin=-ymax;
-
-  t_Table T;
-  if ( (status=Table_Read(&T,material_datafile,0))==-1){
+  
+  prms=calloc(1,sizeof(* prms));
+  
+  //t_Table T;
+  if ( (status=Table_Read(&(prms->table),material_datafile,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
     exit(-1);
   }
   char **header_parsed;
-  header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
-  prms=calloc(1,sizeof(struct mat_prms));
-  prms->E=malloc(sizeof(double)*(T.rows+1));
-  prms->mu=malloc(sizeof(double)*(T.rows+1));
-  if(header_parsed[2]){prms->rho=strtod(header_parsed[2],NULL);}
-  else{fprintf(stderr,"Warning(%s): %s found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",material_datafile);prms->rho=1;}
+  header_parsed=Table_ParseHeader(prms->table.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+  if (header_parsed[0]){prms->Z=strtol(header_parsed[0],NULL,10);}
+  if (header_parsed[1]){prms->Ar=strtod(header_parsed[1],NULL);}
+  if (header_parsed[2]){prms->rho=strtod(header_parsed[2],NULL);}
+  else{fprintf(stderr,"Warning(%s): %s not found in header of %s, set to 1\n",NAME_CURRENT_COMP,"rho",material_datafile);prms->rho=1;}
   /*which columns holds the mus*/
-  int mu_c=5;
-  if (T.columns==3) mu_c=1;
+  prms->mu_c=5;
+  if (prms->table.columns==3) prms->mu_c=1;
 
-  int i;
-  for (i=0;i<T.rows;i++){
-    prms->E[i]=T.data[i*T.columns];
-    prms->mu[i]=T.data[mu_c+i*T.columns]*prms->rho*1e2;     /*mu is now in SI, [m^-1]*/ 
+  prms->delta_prefactor= NA*(prms->rho*1e-24)/prms->Ar * 2.0*M_PI*RE;
+  int j;
+  for (j=0;j<prms->table.rows;j++){
+    prms->table.data[j*prms->table.columns]=log(prms->table.data[j*prms->table.columns]);
+  }/*now in terms of log e instead of just e - makes for better rebinning*/
+  if(10*(double)mcget_ncount()>(prms->table.max_x-prms->table.min_x)/(prms->table.step_x)){
+    /*it is probably worth Rebinning*/
+    printf("%s: Rebinning material data (%s) for faster tracing...\n","Filter_off",material_datafile); 
+    Table_Rebin(&(prms->table));
   }
-
-  prms->E[T.rows]=-1.0;
-  prms->mu[T.rows]=-FLT_MAX;
   
-  Table_Free(&T);
+  /*if wanted, do the thing with off - file*/
+  prms->shape=CUBE; 
+  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
+    if (off_init(geometry, xwidth, yheight, zdepth, 0, &(prms->offdata))) {
+      prms->shape=ANY; 
+    }
+  }
 %}
 
 TRACE
 %{
-  double alpha,e,k,mu;
+  double alpha,e,k,mu,mu0,delta,beta,f;
   double l0,l1;
-  int i;
-  if (box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth)){
+  int i,status=0;
+  if (prms->shape==CUBE) {
+    status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
+  }else if (prms->shape==ANY){
+    status = off_x_intersect(&l0, &l1, NULL, NULL, x, y, z, kx, ky, kz, prms->offdata );
+    //if(status) printf("intersected off - object %d %g %g\n",status,l0,l1);
+  } 
+
+  if(status){
     PROP_DL(l0);
-    /*table interpolation*/
     k=sqrt(kx*kx+ky*ky+kz*kz);
     e=k*K2E;
-    i=0;
-    while (e>prms->E[i]){
-      i++;
-      if (prms->E[i]==-1){
-        fprintf(stderr,"Photon energy (%g keV) is outside the filter's material data\n",e); ABSORB;
-      }
-    }
-    alpha=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
-    mu=(1-alpha)*prms->mu[i-1]+alpha*prms->mu[i];
-    //mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
-    
-    l1-=l0; 
-    p*=exp(-mu*l1);
+    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
+    /*We have reparametrized e as log(e) for a more practical constant step table.*/
+    f=Table_Value(prms->table,log(e),1);
+    delta = f/(k*k) * prms->delta_prefactor;
+    mu0=Table_Value(prms->table,log(e),prms->mu_c)*prms->rho*1e2;
+    beta = mu0/(2*k);
+ 
+    /*change k*/
+    kx*=1-delta;
+    ky*=1-delta;
+    kz*=1-delta;
 
+    /*check the interval used by the last xray, to avoid traversing the table unnecessarily*/
+/*    if(filter_row && (e<prms->E[filter_row] && e>prms->E[filter_row-1]) ){*/
+/*      i=filter_row;*/
+/*    }else{*/
+/*      i=0;*/
+/*      while (e>prms->E[i]){*/
+/*        i++;*/
+/*        if (prms->E[i]==-1){*/
+/*          fprintf(stderr,"Photon energy (%g keV) is outside the filter's material data\n",e); ABSORB;*/
+/*        }*/
+/*      }*/
+/*      filter_row=i;*/
+/*    }*/
+/*    alpha=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);*/
+/*    mu=(1-alpha)*prms->mu[i-1]+alpha*prms->mu[i];*/
+/*    printf("e=%g, %g %g %g\n",e,mu,mu0,mu-mu0);*/
+    //mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
+
+    l1-=l0; 
+    p*=exp(-mu0*l1);
+    SCATTER;
     PROP_DL(l1);
+    /*correct for optical path length through the material*/
+    /*change k back*/
+    kx/=1-delta;
+    ky/=1-delta;
+    kz/=1-delta;
   }
 %}
 
+FINALLY
+%{
+  Table_Free(&(prms->table));
+  free(prms);
+%}
 
 MCDISPLAY
 %{
   magnify("xy");
-  box(0,0,0,xwidth,yheight,zdepth);
+  if (prms->shape==CUBE){
+    box(0,0,0,xwidth,yheight,zdepth);
+  }else if (prms->shape == ANY) {	/* OFF file */
+    off_display(prms->offdata);
+  }
 %}
+
 END
