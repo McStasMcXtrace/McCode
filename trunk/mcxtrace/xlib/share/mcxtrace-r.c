@@ -30,7 +30,7 @@ mcstore_xray(MCNUM *s, int index, double x, double y, double z,
                double kx, double ky, double kz, double phi, double t,
                double Ex, double Ey, double Ez, double p)
 {
-    double *dptr = &s[11*index];
+    double *dptr = &s[12*index];
     *dptr++  = x;
     *dptr++  = y ;
     *dptr++  = z ;
@@ -53,7 +53,7 @@ mcrestore_xray(MCNUM *s, int index, double *x, double *y, double *z,
                double *kx, double *ky, double *kz, double *phi, double *t,
                double *Ex, double *Ey, double *Ez, double *p)
 {
-    double *dptr = &s[11*index];
+    double *dptr = &s[12*index];
     *x  =  *dptr++;
     *y  =  *dptr++;
     *z  =  *dptr++;
