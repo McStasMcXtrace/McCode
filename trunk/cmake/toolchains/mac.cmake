@@ -9,6 +9,7 @@ set(MPICC "mpicc")
 set(MPIRUN "mpirun")
 set(PGPLOT "pgxwin_server")
 set(GNUPLOT "gnuplot")
+set(PERL "/usr/bin/perl")
 
 # Plotting options
 set(PLOTTER "PGPLOT")
