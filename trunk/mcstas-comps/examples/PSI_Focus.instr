@@ -157,7 +157,7 @@ COMPONENT FOCUSguide = Guide_channeled(
 /* distance guide exit to chopper center 0.054 m */
 
 COMPONENT FirstChopper = DiskChopper(theta_0=0, abs_out=0, verbose=1,
-    radius = 0.70, xwidth = 0.07, nu = DISC_SPEED/2/PI, nslit = 2, delay = FO_PHA, isfirst = 1)
+				     radius = 0.70, yheight=0.70, xwidth = 0.07, nu = DISC_SPEED/2/PI, nslit = 2, delay = FO_PHA, isfirst = 1)
   AT (0, 0, 69.674) RELATIVE a1
   
 COMPONENT  DISCTOF = Monitor_nD(
