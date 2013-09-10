@@ -198,11 +198,11 @@ COMPONENT Lmon_slow2 = L_monitor(
   AT (0, 0, Length/2-1e-6) RELATIVE Origin
 
 COMPONENT FOchop2 = DiskChopper(
-     yheight=0.20, theta_0 = 155, radius=0.6, nu = F_slow2, nslit = 1, delay = t_FO2)
+     yheight=0.6, theta_0 = 155, radius=0.6, nu = F_slow2, nslit = 1, delay = t_FO2)
   AT (0, 0.1, Length/2) RELATIVE Origin
 
 COMPONENT Fastchop1 = DiskChopper(
-    yheight=0.20, theta_0 = THETA_fast1, radius = 0.5, nu = F_fast1, nslit = N_fast, delay = t_fast1)
+    yheight=0.5, theta_0 = THETA_fast1, radius = 0.5, nu = F_fast1, nslit = N_fast, delay = t_fast1)
   AT (0, 0.1, Length/2+GUI_GAP) RELATIVE Origin
 
 COMPONENT PSD_afterslow2 = PSD_monitor(
@@ -266,15 +266,15 @@ COMPONENT PSDfast2 = PSD_monitor(
   AT (0, 0, 1e-6) RELATIVE PREVIOUS
 
 COMPONENT Fastchop2 = DiskChopper(
-    yheight=0.20, theta_0 = FAST_THETA, radius = 0.35, nu = F_fast2, nslit = N_fast, delay = t_fast2)
+    yheight=0.35, theta_0 = FAST_THETA, radius = 0.35, nu = F_fast2, nslit = N_fast, delay = t_fast2)
   AT (0, 0.04, Length) RELATIVE Origin
 
 COMPONENT Fastchop2counter = DiskChopper(
-    yheight=0.20, theta_0 = FAST_THETA, radius = 0.35, nu = -F_fast2, nslit = N_fast, delay = -t_fast2a)
+    yheight=0.35, theta_0 = FAST_THETA, radius = 0.35, nu = -F_fast2, nslit = N_fast, delay = -t_fast2a)
   AT (0, 0.04, Length+GUI_GAP) RELATIVE Origin
 
 COMPONENT FOchop3 = DiskChopper(
-    yheight=0.20, theta_0 = 2*FAST_THETA, radius = 0.35, nu = F_fast2/FO3, nslit = N_fast, delay = t_fast3)
+    yheight=0.35, theta_0 = 2*FAST_THETA, radius = 0.35, nu = F_fast2/FO3, nslit = N_fast, delay = t_fast3)
   AT (0, 0.04, Length+2*GUI_GAP) RELATIVE Origin
 
 COMPONENT TOFfast2_zoom = TOF_monitor(
