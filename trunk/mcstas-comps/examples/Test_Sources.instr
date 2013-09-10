@@ -107,7 +107,7 @@ AT (0,0,0) ABSOLUTE
 
 COMPONENT sa7 = ESS_moderator_long(  /* flux in n/s/cm2/st/AA */
   Lmin=1, Lmax=11, dist=1, focus_xw=0.1, focus_yh=0.1,
-  yheight=0.01, width_c=0.01, nu = 1000.0/60.0, T = 50, tau = 287e-6, tau1 = 0,
+  yheight=0.01, width_c=0.01, cyl_radius=0, nu = 1000.0/60.0, T = 50, tau = 287e-6, tau1 = 0,
   tau2 = 20e-6, d =0.002, n = 20, n2 = 5, chi2 = 0.9,
   I0 = 6.9e11, I2 = 27.6e10, branch1 = 1, branch2 = 0.5,
   branch_tail = 0.1) WHEN (source == 7)
