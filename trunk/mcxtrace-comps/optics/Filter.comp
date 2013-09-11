@@ -31,7 +31,7 @@
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Filter
-DEFINITION PARAMETERS (string material_datafile="Be.txt")
+DEFINITION PARAMETERS (refraction=1,fixed_delta=0,string material_datafile="Be.txt")
 SETTING PARAMETERS (string geometry=0,xwidth,yheight,zdepth) 
 OUTPUT PARAMETERS (prms,filter_row)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -40,6 +40,40 @@ SHARE
 %{
   %include "read_table-lib"
   %include "interoff-lib"
+
+  inline int filter_refract(double *kx, double *ky, double *kz, double nx, double ny, double nz, double delta0, double delta1){
+    const double n2=scalar_prod(nx,ny,nz, nx,ny,nz);
+    const double k=sqrt(scalar_prod(*kx,*ky,*kz, *kx,*ky,*kz));
+    const double nr=(1.0-delta0)/(1.0-delta1);
+    double kxi=*kx;
+    double kyi=*ky;
+    double kzi=*kz;
+    double s;
+
+    //printf("%g %g %g\n",1-delta0,1-delta1,nr);
+
+    NORM(kxi,kyi,kzi);
+    if(n2!=1){
+      NORM(nx,ny,nz);
+    }
+    //kinv=1.0/sqrt(k2);
+    s=scalar_prod(nx,ny,nz,kxi,kyi,kzi);
+    if(s>0){
+      /*n points in the direction of k - i.e. into material 1, so use -n instead*/
+      double sinth2=nr*nr*(1.0-(s)*(s));
+      *kx=nr* (kxi) - (nr*s+sqrt(1.0-sinth2))*(-nx);
+      *ky=nr* (kyi) - (nr*s+sqrt(1.0-sinth2))*(-ny);
+      *kz=nr* (kzi) - (nr*s+sqrt(1.0-sinth2))*(-nz);
+    } else {
+      /*n points oppsite to k - i.e. out of material 1, into mat. 0*/ 
+      double sinth2=nr*nr*(1.0-s*s);
+      *kx=nr* (kxi) - (nr*s+sqrt(1.0-sinth2))*nx;
+      *ky=nr* (kyi) - (nr*s+sqrt(1.0-sinth2))*ny;
+      *kz=nr* (kzi) - (nr*s+sqrt(1.0-sinth2))*nz;
+    }
+    return 1;
+  }
+
 %}
 
 DECLARE
@@ -105,7 +139,7 @@ INITIALIZE
 TRACE
 %{
   double alpha,e,k,mu,mu0,delta,beta,f;
-  double l0,l1;
+  double l0,l1,nx,ny,nz;
   int i,status=0;
   if (prms->shape==CUBE) {
     status=box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth);
@@ -121,37 +155,59 @@ TRACE
     /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
     /*We have reparametrized e as log(e) for a more practical constant step table.*/
     f=Table_Value(prms->table,log(e),1);
-    delta = f/(k*k) * prms->delta_prefactor;
+    delta = (fixed_delta ? fixed_delta : f/(k*k) * prms->delta_prefactor);
     mu0=Table_Value(prms->table,log(e),prms->mu_c)*prms->rho*1e2;
     beta = mu0/(2*k);
- 
-    /*change k*/
+
+    /*change direction of ray due to refraction*/
+    if(refraction){
+      switch (prms->shape){
+        case CUBE:
+          if( fabs(x-xwidth*0.5)<DBL_EPSILON || fabs(x+xwidth*0.5)<DBL_EPSILON ){
+            nx=1.0;ny=0.0;nz=0.0;
+          }else if( fabs(y-xwidth*0.5)<DBL_EPSILON || fabs(y+xwidth*0.5)<DBL_EPSILON ){ 
+            nx=0.0;ny=1.0;nz=0.0;
+          }else if( fabs(z-xwidth*0.5)<DBL_EPSILON || fabs(z+xwidth*0.5)<DBL_EPSILON ){ 
+            nx=0.0;ny=0.0;nz=-1.0;
+          };
+          break;
+        default:
+          1;
+      }
+      status=filter_refract(&kx,&ky,&kz,nx,ny,nz,0.0,delta);
+      SCATTER;
+    }
+
+    /*change k ' we're now inside some material*/
     kx*=1-delta;
     ky*=1-delta;
     kz*=1-delta;
 
-    /*check the interval used by the last xray, to avoid traversing the table unnecessarily*/
-/*    if(filter_row && (e<prms->E[filter_row] && e>prms->E[filter_row-1]) ){*/
-/*      i=filter_row;*/
-/*    }else{*/
-/*      i=0;*/
-/*      while (e>prms->E[i]){*/
-/*        i++;*/
-/*        if (prms->E[i]==-1){*/
-/*          fprintf(stderr,"Photon energy (%g keV) is outside the filter's material data\n",e); ABSORB;*/
-/*        }*/
-/*      }*/
-/*      filter_row=i;*/
-/*    }*/
-/*    alpha=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);*/
-/*    mu=(1-alpha)*prms->mu[i-1]+alpha*prms->mu[i];*/
-/*    printf("e=%g, %g %g %g\n",e,mu,mu0,mu-mu0);*/
-    //mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
-
+    /*propagate to next intersection with filter (assumed to be exit)*/
     l1-=l0; 
     p*=exp(-mu0*l1);
     SCATTER;
     PROP_DL(l1);
+    
+    /*change direction of ray due to refraction*/
+    if(refraction){
+      switch (prms->shape){
+        case CUBE:
+          if( fabs(x-xwidth*0.5)<DBL_EPSILON || fabs(x+xwidth*0.5)<DBL_EPSILON ){
+            nx=1.0;ny=0.0;nz=0.0;
+          }else if( fabs(y-xwidth*0.5)<DBL_EPSILON || fabs(y+xwidth*0.5)<DBL_EPSILON ){ 
+            nx=0.0;ny=1.0;nz=0.0;
+          }else if( fabs(z-xwidth*0.5)<DBL_EPSILON || fabs(z+xwidth*0.5)<DBL_EPSILON ){ 
+            nx=0.0;ny=0.0;nz=1.0;
+          };
+          break;
+        default:
+          1;
+      }
+      SCATTER;
+      status=filter_refract(&kx,&ky,&kz,nx,ny,nz,delta,0.0);
+    }
+
     /*correct for optical path length through the material*/
     /*change k back*/
     kx/=1-delta;
