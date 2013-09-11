@@ -55,7 +55,7 @@
 
 DEFINE COMPONENT Source_div
 DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (xwidth, yheight, focus_xw=0, focus_yh=0, dist=0, focus_aw, focus_ah, 
+SETTING PARAMETERS (xwidth, yheight, focus_aw, focus_ah, 
     E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, incoherent=1, phase=0)
 OUTPUT PARAMETERS (prms,thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
@@ -80,8 +80,8 @@ DECLARE
 INITIALIZE
 %{
 
-  prms.focus_xw_2=focus_xw/2.0;
-  prms.focus_yh_2=focus_yh/2.0;
+//  prms.focus_xw_2=focus_xw/2.0;
+//  prms.focus_yh_2=focus_yh/2.0;
   prms.xmin=-xwidth/2.0;
   prms.ymin=-yheight/2.0;
   prms.xmax=xwidth/2.0;
@@ -103,7 +103,7 @@ INITIALIZE
       prms.pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
     }
     printf("Source_div(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
-    if(E0) printf("Source_flat(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
+    if(E0) printf("Source_div(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
   }else if (!E0 && !lambda0){
     fprintf(stderr,"Source_div(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
     exit(0);  
@@ -125,31 +125,13 @@ TRACE
   p=prms.pmul;
   if (!gauss_a){ 
     theta_x=(rand01()-0.5)*focus_aw;
-    if(focus_xw!=0.0){
-      if (theta_x>0){
-        x=prms.xmin + rand01()*prms.focus_xw_2-dist*tan(theta_x);
-        p*=xwidth-(prms.focus_xw_2-dist*tan(theta_x)-prms.xmin);
-      }else{
-        x=prms.xmax + rand01()*prms.focus_xw_2-dist*tan(theta_x);
-        p*=xwidth-(prms.focus_xw_2-dist*tan(theta_x)+prms.xmax);
-      }
-    }
     theta_y=(rand01()-0.5)*focus_ah;
-    if(focus_yh!=0.0){
-      if (theta_y>0){
-        y=prms.ymin + rand01()*prms.focus_yh_2-dist*tan(theta_y);
-        p*=yheight-(prms.focus_yh_2-dist*tan(theta_y)-prms.ymin);
-      }else{
-        y=prms.ymax + rand01()*prms.focus_yh_2-dist*tan(theta_y);
-        p*=yheight-(prms.focus_yh_2-dist*tan(theta_y)+prms.ymax);
-      }
-    }
   }else{
     theta_x=randnorm()*focus_aw;
     theta_y=randnorm()*focus_ah;
-    x=prms.xmin+rand01()*xwidth;
-    y=prms.ymin+rand01()*yheight;
   }
+  x=prms.xmin+rand01()*xwidth;
+  y=prms.ymin+rand01()*yheight;
 
   if (spectrum_file){
     double pp=0;
@@ -209,16 +191,19 @@ TRACE
 MCDISPLAY
 %{
   magnify("xy");
+  double dist=1;
   multiline(5, -xwidth/2.0, -yheight/2.0, 0.0,
                 xwidth/2.0, -yheight/2.0, 0.0,
                 xwidth/2.0,  yheight/2.0, 0.0,
                -xwidth/2.0,  yheight/2.0, 0.0,
                -xwidth/2.0, -yheight/2.0, 0.0);
-  if (dist) {
-    dashed_line(0,0,0, -focus_xw/2,-focus_yh/2,dist, 4);
-    dashed_line(0,0,0,  focus_xw/2,-focus_yh/2,dist, 4);
-    dashed_line(0,0,0,  focus_xw/2, focus_yh/2,dist, 4);
-    dashed_line(0,0,0, -focus_xw/2, focus_yh/2,dist, 4);
+  if (focus_aw){
+    dashed_line(0,0,0, tan(focus_aw/2.0)*dist,0,dist,4);
+    dashed_line(0,0,0,-tan(focus_aw/2.0)*dist,0,dist,4);
+  }
+  if (focus_ah){
+    dashed_line(0,0,0,0, tan(focus_ah/2.0)*dist,dist,4);
+    dashed_line(0,0,0,0,-tan(focus_ah/2.0)*dist,dist,4);
   }
 %}
 
