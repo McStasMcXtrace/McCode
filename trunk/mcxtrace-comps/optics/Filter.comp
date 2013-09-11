@@ -123,8 +123,9 @@ INITIALIZE
   }/*now in terms of log e instead of just e - makes for better rebinning*/
   if(10*(double)mcget_ncount()>(prms->table.max_x-prms->table.min_x)/(prms->table.step_x)){
     /*it is probably worth Rebinning*/
-    printf("%s: Rebinning material data (%s) for faster tracing...\n","Filter_off",material_datafile); 
+    printf("%s: Rebinning material data (%s) for faster tracing...",NAME_CURRENT_COMP,material_datafile); 
     Table_Rebin(&(prms->table));
+    printf("done\n");
   }
   
   /*if wanted, do the thing with off - file*/
