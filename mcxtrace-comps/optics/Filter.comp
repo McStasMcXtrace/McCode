@@ -61,9 +61,9 @@ SHARE
     if(s>0){
       /*n points in the direction of k - i.e. into material 1, so use -n instead*/
       double sinth2=nr*nr*(1.0-(s)*(s));
-      *kx=nr* (kxi) - (nr*s+sqrt(1.0-sinth2))*(-nx);
-      *ky=nr* (kyi) - (nr*s+sqrt(1.0-sinth2))*(-ny);
-      *kz=nr* (kzi) - (nr*s+sqrt(1.0-sinth2))*(-nz);
+      *kx=nr* (kxi) - (nr*(-s)+sqrt(1.0-sinth2))*(-nx);
+      *ky=nr* (kyi) - (nr*(-s)+sqrt(1.0-sinth2))*(-ny);
+      *kz=nr* (kzi) - (nr*(-s)+sqrt(1.0-sinth2))*(-nz);
     } else {
       /*n points oppsite to k - i.e. out of material 1, into mat. 0*/ 
       double sinth2=nr*nr*(1.0-s*s);
@@ -71,6 +71,9 @@ SHARE
       *ky=nr* (kyi) - (nr*s+sqrt(1.0-sinth2))*ny;
       *kz=nr* (kzi) - (nr*s+sqrt(1.0-sinth2))*nz;
     }
+    *kx *=k;
+    *ky *=k;
+    *kz *=k;
     return 1;
   }
 
@@ -164,12 +167,12 @@ TRACE
     if(refraction){
       switch (prms->shape){
         case CUBE:
-          if( fabs(x-xwidth*0.5)<DBL_EPSILON || fabs(x+xwidth*0.5)<DBL_EPSILON ){
+          if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
             nx=1.0;ny=0.0;nz=0.0;
-          }else if( fabs(y-xwidth*0.5)<DBL_EPSILON || fabs(y+xwidth*0.5)<DBL_EPSILON ){ 
+          }else if( fabs(y-yheight*0.5)<FLT_EPSILON || fabs(y+yheight*0.5)<FLT_EPSILON ){ 
             nx=0.0;ny=1.0;nz=0.0;
-          }else if( fabs(z-xwidth*0.5)<DBL_EPSILON || fabs(z+xwidth*0.5)<DBL_EPSILON ){ 
-            nx=0.0;ny=0.0;nz=-1.0;
+          }else if( fabs(z-zdepth*0.5)<FLT_EPSILON || fabs(z+zdepth*0.5)<FLT_EPSILON ){ 
+            nx=0.0;ny=0.0;nz=1.0;
           };
           break;
         default:
@@ -194,11 +197,11 @@ TRACE
     if(refraction){
       switch (prms->shape){
         case CUBE:
-          if( fabs(x-xwidth*0.5)<DBL_EPSILON || fabs(x+xwidth*0.5)<DBL_EPSILON ){
+          if( fabs(x-xwidth*0.5)<FLT_EPSILON || fabs(x+xwidth*0.5)<FLT_EPSILON ){
             nx=1.0;ny=0.0;nz=0.0;
-          }else if( fabs(y-xwidth*0.5)<DBL_EPSILON || fabs(y+xwidth*0.5)<DBL_EPSILON ){ 
+          }else if( fabs(y-yheight*0.5)<FLT_EPSILON || fabs(y+yheight*0.5)<FLT_EPSILON ){ 
             nx=0.0;ny=1.0;nz=0.0;
-          }else if( fabs(z-xwidth*0.5)<DBL_EPSILON || fabs(z+xwidth*0.5)<DBL_EPSILON ){ 
+          }else if( fabs(z-zdepth*0.5)<FLT_EPSILON || fabs(z+zdepth*0.5)<FLT_EPSILON ){ 
             nx=0.0;ny=0.0;nz=1.0;
           };
           break;
