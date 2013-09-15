@@ -1026,6 +1026,7 @@ sub sitemenu_build {
         closedir(DIR);
         next unless @instruments;
         @paths = map("$MCSTAS::sys_dir/examples/$_", grep(/\.(instr)$/, @instruments));
+        @paths = sort @paths;
         my $j;
         my @added;   # Names of sites
         my @handles; # Menu handles
