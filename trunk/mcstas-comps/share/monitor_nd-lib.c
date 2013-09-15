@@ -231,7 +231,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
       Flag_New_token = 1;
       if ((token != NULL) && (strlen(token) != 0))
       {
-        char iskeyword=0;
+        char iskeyword=0; /* left at 0 when variables are processed, 1 for modifiers */
         int  old_Mode;
         /* change token to lower case */
         for (i=0; i<strlen(token); i++) token[i]=tolower(token[i]);
@@ -314,7 +314,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           Vars->Flag_Auto_Limits = 1;
           if (Flag_All) Flag_auto = -1;
           else          Flag_auto = 1;
-          iskeyword=1;  Flag_All=0; }
+          iskeyword=1; Flag_All=0; }
         if (!strcmp(token, "premonitor")) {
           Vars->Flag_UsePreMonitor = 1; iskeyword=1; }
         if (!strcmp(token, "3He_pressure") || !strcmp(token, "pressure")) {
@@ -411,8 +411,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           { Set_Vars_Coord_Type = DEFS->COORD_VDIV; strcpy(Set_Vars_Coord_Label,"Vert. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"vd"); lmin = -5; lmax = 5; }
         if (!strcmp(token, "theta") || !strcmp(token, "longitude") || !strcmp(token, "th"))
           { Set_Vars_Coord_Type = DEFS->COORD_THETA; strcpy(Set_Vars_Coord_Label,"Longitude [deg]"); strcpy(Set_Vars_Coord_Var,"th"); lmin = -180; lmax = 180; }
-        if (!strcmp(token, "phi") || !strcmp(token, "latitude") || !strcmp(token, "ph"))
-          { Set_Vars_Coord_Type = DEFS->COORD_PHI; strcpy(Set_Vars_Coord_Label,"Latitude [deg]"); strcpy(Set_Vars_Coord_Var,"ph"); lmin = -180; lmax = 180; }
+        if (!strcmp(token, "phi") || !strcmp(token, "lattitude") || !strcmp(token, "ph"))
+          { Set_Vars_Coord_Type = DEFS->COORD_PHI; strcpy(Set_Vars_Coord_Label,"Lattitude [deg]"); strcpy(Set_Vars_Coord_Var,"ph"); lmin = -180; lmax = 180; }
         if (!strcmp(token, "ncounts") || !strcmp(token, "n") || !strcmp(token, "neutron"))
           { Set_Vars_Coord_Type = DEFS->COORD_NCOUNT; strcpy(Set_Vars_Coord_Label,"Neutron ID [1]"); strcpy(Set_Vars_Coord_Var,"n"); lmin = 0; lmax = mcget_ncount(); if (Flag_auto>0) Flag_auto=0; }
         if (!strcmp(token, "id") || !strcmp(token, "pixel"))
@@ -731,17 +731,20 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
 double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars)
 {
 
-  double  XY=0;
-  long    i=0,j;
-  double  pp=0;
+  double  XY=0, pp=0;
+  long    i =0, j =0;
   double  Coord[MONnD_COORD_NMAX];
   long    Coord_Index[MONnD_COORD_NMAX];
   char    While_End   =0;
   long    While_Buffer=0;
   char    Set_Vars_Coord_Type = DEFS->COORD_NONE;
-  char    outsidebounds=0;
+  
+  /* the logic below depends mainly on:
+       Flag_List:        1=store 1 buffer, 2=list all, 3=re-use buffer 
+       Flag_Auto_Limits: 0 (no auto limits/list), 1 (store events into Buffer), 2 (re-emit store events)
+   */
 
-  /* Vars->Flag_Auto_Limits: we read the Buffer, and determine min and max bounds */
+  /* Vars->Flag_Auto_Limits=1: buffer full, we read the Buffer, and determine min and max bounds */
   if ((Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_Auto_Limits == 1) && (Vars->Coord_Number > 0))
   {
     /* auto limits case : get limits in Buffer for each variable */
@@ -788,6 +791,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
 
   while (!While_End)
   { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) or passing neutron */
+    char    outsidebounds=0;
     if ((Vars->Flag_Auto_Limits == 2) && (Vars->Coord_Number > 0))
     { /* Vars->Flag_Auto_Limits == 2: read back from Buffer (Buffer is filled or auto limits have been computed) */
       if (While_Buffer < Vars->Buffer_Block)
@@ -804,37 +808,37 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
 
           Coord[i] = Vars->Mon2D_Buffer[i+While_Buffer*(Vars->Coord_Number+1)];
           if (XY > 0) Coord_Index[i] = floor((Coord[i]-Vars->Coord_Min[i])*Vars->Coord_Bin[i]/XY);
-          else Coord_Index[i] = 0;
+          else        Coord_Index[i] = 0;
           if (Vars->Flag_With_Borders)
           {
-            if (Coord_Index[i] < 0) Coord_Index[i] = 0;
+            if (Coord_Index[i] < 0)                   Coord_Index[i] = 0;
             if (Coord_Index[i] >= Vars->Coord_Bin[i]) Coord_Index[i] = Vars->Coord_Bin[i] - 1;
           }
         } /* end for */
         
         /* update the PixelID, we compute it from the previous variables index */
+        if (Vars->Coord_NumberNoPixel < Vars->Coord_Number) /* there is a Pixel variable */
         for (i = 1; i <= Vars->Coord_Number; i++) {
           char Set_Vars_Coord_Type = (Vars->Coord_Type[i] & (DEFS->COORD_LOG-1));
           if (Set_Vars_Coord_Type == DEFS->COORD_PIXELID) {
-            char outsidebounds=0;
+            char flag_outside=0;
             Coord_Index[i] = Coord[i] = 0;
             for (j= 1; j < i; j++) {
               /* not for 1D variables with Bin=1 such as PixelID, NCOUNT, Intensity */
               if (Vars->Coord_Bin[j] == 1) continue; 
               if (0 > Coord_Index[j] || Coord_Index[j] >= Vars->Coord_Bin[j]) {
-                outsidebounds=1;
+                flag_outside=1;
                 Coord[i] = 0;
                 break;
               }
               Coord[i] += Coord_Index[j]*Vars->Coord_BinProd[j-1];
               
             }
-            if (!outsidebounds) {
+            if (!flag_outside) {
               Vars->Mon2D_Buffer[i+While_Buffer*(Vars->Coord_Number+1)] = Coord[i];
             }
           } /* end if PixelID */
         }
-          
         While_Buffer++;
       } /* end if in Buffer */
       else /* (While_Buffer >= Vars->Buffer_Block) && (Vars->Flag_Auto_Limits == 2) */
@@ -846,7 +850,8 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         }
         if (Vars->Flag_Verbose) printf("Monitor_nD: %s flushed %li Auto Limits from List (%li) in TRACE.\n", Vars->compcurname, Vars->Coord_Number, Vars->Buffer_Counter);
       }
-    }
+    } /* if Vars->Flag_Auto_Limits == 2 */
+    
     if (Vars->Flag_Auto_Limits != 2 || !Vars->Coord_Number) /* Vars->Flag_Auto_Limits == 0 (no auto limits/list) or 1 (store events into Buffer) */
     {
       /* automatically compute area and steradian solid angle when in AUTO mode */
@@ -944,7 +949,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_THETA)  { if (Vars->cz != 0) XY = RAD2DEG*atan2(Vars->cx,Vars->cz); }
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_PHI) { if (Vars->cz != 0) XY = RAD2DEG*asin(Vars->cy/sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy+Vars->cz*Vars->cz)); }
+        if (Set_Vars_Coord_Type == DEFS->COORD_PHI) { if (Vars->cz != 0) XY = RAD2DEG*asin(Vars->cy/Vars->cz); }
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_USER1) XY = Vars->UserVariable1;
         else
@@ -952,7 +957,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_USER3) XY = Vars->UserVariable3;
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_PIXELID && !Vars->Flag_Auto_Limits) { 
+        if (Set_Vars_Coord_Type == DEFS->COORD_PIXELID && !Vars->Flag_Auto_Limits) {
           /* compute the PixelID from previous coordinates 
              the PixelID is the product of Coord_Index[i] in the detector geometry 
              pixelID = sum( Coord_Index[j]*prod(Vars->Coord_Bin[1:(j-1)]) )
@@ -960,21 +965,22 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
              this does not apply when we store events in the buffer as Coord_Index
              is not set. Then the pixelID will be re-computed during SAVE.
           */
+          char flag_outside=0;
           for (j= 1; j < i; j++) {
             /* not for 1D variables with Bin=1 such as PixelID, NCOUNT, Intensity */
             if (Vars->Coord_Bin[j] <= 1) continue; 
             if (0 > Coord_Index[j] || Coord_Index[j] >= Vars->Coord_Bin[j]) { 
-              outsidebounds=1; XY=0; break;
+              flag_outside=1; XY=0; break;
             }
             XY += Coord_Index[j]*Vars->Coord_BinProd[j-1];
           }
-          if (!outsidebounds) XY += Vars->Coord_Min[i];
+          if (!flag_outside) XY += Vars->Coord_Min[i];
         }
         
         /* handle 'abs' and 'log' keywords */
         if (Vars->Coord_Type[i] & DEFS->COORD_ABS) XY=fabs(XY);
 
-        if (i && (Vars->Coord_Type[i] & DEFS->COORD_LOG)) /* not for the flux */
+        if (Vars->Coord_Type[i] & DEFS->COORD_LOG) /* compute log of variable if requested */
         {  if (XY > 0) XY = log(XY)/log(10);
            else        XY = -100; }
 
@@ -982,7 +988,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         if (i == 0) { pp = XY; Coord_Index[i] = 0; }
         else {
         /* check bounds for variables which have no automatic limits */
-          if (!(Vars->Coord_Type[i] & DEFS->COORD_AUTO) && Vars->Coord_Bin[i]>1)
+          if ((!Vars->Flag_Auto_Limits || !(Vars->Coord_Type[i] & DEFS->COORD_AUTO)) && Vars->Coord_Bin[i]>1)
           { /* compute index in histograms for each variable to monitor */
             XY = (Vars->Coord_Max[i]-Vars->Coord_Min[i]);
             if (XY > 0) Coord_Index[i] = floor((Coord[i]-Vars->Coord_Min[i])*Vars->Coord_Bin[i]/XY);
@@ -995,6 +1001,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
               outsidebounds=1;
           } /* else will get Index later from Buffer when Flag_Auto_Limits == 2 */
         }
+        
       } /* end for i */
       While_End = 1;
     }/* end else if Vars->Flag_Auto_Limits == 2 */
@@ -1010,6 +1017,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
       /* 2D case : Vars->Coord_Number==2 and !Vars->Flag_Multiple and !Vars->Flag_List */
       if ( Vars->Coord_NumberNoPixel == 2 && !Vars->Flag_Multiple && !outsidebounds)
       { /* Dim : Vars->Coord_Bin[1]*Vars->Coord_Bin[2] matrix */
+        
         i = Coord_Index[1];
         j = Coord_Index[2];
         if (i >= 0 && i < Vars->Coord_Bin[1] && j >= 0 && j < Vars->Coord_Bin[2])
@@ -1026,6 +1034,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
       } else if (!outsidebounds) {
         /* 1D and n1D case : Vars->Flag_Multiple */
         /* Dim : Vars->Coord_Number*Vars->Coord_Bin[i] vectors (intensity is not included) */
+          
         for (i= 1; i <= Vars->Coord_Number; i++) {
           j = Coord_Index[i];
           if (j >= 0 && j < Vars->Coord_Bin[i]) {
@@ -1046,6 +1055,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
     { /* now store Coord into Buffer (no index needed) if necessary (list or auto limits) */
       if ((Vars->Buffer_Counter < Vars->Buffer_Block) && ((Vars->Flag_List) || (Vars->Flag_Auto_Limits == 1)))
       {
+          
         for (i = 0; i <= Vars->Coord_Number; i++)
         {
           Vars->Mon2D_Buffer[i + Vars->Neutron_Counter*(Vars->Coord_Number+1)] = Coord[i];

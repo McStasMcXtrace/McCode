@@ -986,7 +986,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         if (i == 0) { pp = XY; Coord_Index[i] = 0; }
         else {
         /* check bounds for variables which have no automatic limits */
-          if (!(Vars->Coord_Type[i] & DEFS->COORD_AUTO) && Vars->Coord_Bin[i]>1)
+          if ((!Vars->Flag_Auto_Limits || !(Vars->Coord_Type[i] & DEFS->COORD_AUTO)) && Vars->Coord_Bin[i]>1)
           { /* compute index in histograms for each variable to monitor */
             XY = (Vars->Coord_Max[i]-Vars->Coord_Min[i]);
             if (XY > 0) Coord_Index[i] = floor((Coord[i]-Vars->Coord_Min[i])*Vars->Coord_Bin[i]/XY);
