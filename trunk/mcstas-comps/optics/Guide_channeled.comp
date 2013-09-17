@@ -49,7 +49,7 @@
 * nslit:   (1)    Number of channels in the guide (>= 1)
 * R0:      (1)    Low-angle reflectivity
 * Qc:      (AA-1) Critical scattering vector
-* alpha:   (AA)   Slope of filenameivity
+* alpha:   (AA)   Slope of reflectivity
 * m:       (1)    m-value of material. Zero means completely absorbing.
 * W:       (AA-1) Width of supermirror cut-off for all mirrors
 *

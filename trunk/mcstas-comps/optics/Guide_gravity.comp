@@ -36,7 +36,7 @@
 *
 * The reflectivity may be specified either using an analytical mode (see
 * Component manual) or as a text file in free format, with 1st
-* column as q[Angs-1] and 2nd column as the filenameivity R in [0-1].
+* column as q[Angs-1] and 2nd column as the reflectivity R in [0-1].
 * For details on the geometry calculation see the description in the McStas
 * component manual.
 *
@@ -62,10 +62,14 @@
 * w2:      (m)    Width at the guide exit. If 0, use w1.
 * h2:      (m)    Height at the guide exit. If 0, use h1.
 * l:       (m)    length of guide
-* R0:      (1)    Low-angle filenameivity
+* R0:      (1)    Low-angle reflectivity
 * Qc:      (AA-1) Critical scattering vector
-* alpha:   (AA)   Slope of filenameivity
-* m:       (1)    m-value of material. Zero means completely absorbing.
+* alpha:   (AA)   Slope of reflectivity
+* m:       (1)    m-value of material. Zero means completely absorbing. m=0.65 
+*                     glass/SiO2 Si   Ni  Ni58  supermirror Be    Diamond 
+*                 m=  0.65       0.47 1   1.18  2-6         1.01  1.12
+*                 for glass/SiO2, m=1 for Ni, 1.2 for Ni58, m=2-6 for supermirror.
+*                 m=0.47 for Si
 * W:       (AA-1) Width of supermirror cut-off
 * d:       (m)    Thickness of subdividing walls
 * nslit:   (1)    Number of vertical channels in the guide (>= 1)
