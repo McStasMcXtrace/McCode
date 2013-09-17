@@ -1537,6 +1537,7 @@ sub make_insert_menu {
                 closedir DIR;
                 next unless @comps;
                 my @paths = map("$dir/$_", grep(/\.(comp|cmp|com)$/, @comps));
+                @paths = sort @paths;
                 push(@compdefs, @paths);
                 push(@{$sl->[1]}, map([compname($_), $_], @paths));
             }
