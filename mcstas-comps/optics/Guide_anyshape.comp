@@ -28,7 +28,7 @@
 * R0,Qc,alpha,W,m, or from a reflectivity file 'reflect' with a 2 column 
 * format [q(Angs-1) R(0-1)].
 *
-* The complex OFF geometry option handles any closed non-convex polyhedra.
+* The complex OFF/PLY geometry option handles any closed non-convex polyhedra.
 *   It supports the OFF and NOFF file format but not COFF (colored faces). 
 *   Such files may be generated from XYZ data using:
 *     qhull < coordinates.xyz Qx Qv Tv o > geomview.off 
@@ -37,6 +37,7 @@
 *   and viewed with geomview or java -jar jroff.jar (see below).
 *   The default size of the object depends of the OFF file data, but its 
 *   bounding box may be resized using xwidth,yheight and zdepth.
+*   PLY geometry files are also supported.
 *
 * %BUGS
 * This component does take into account gravitation accurately.
@@ -44,7 +45,7 @@
 * %P
 * INPUT PARAMETERS:
 *
-* geometry:(str)  Name of the OFF file describing the guide geometry
+* geometry:(str)  Name of the OFF/PLY file describing the guide geometry
 * xwidth:  (m)    Redimension the object bounding box on X axis is non-zero
 * yheight: (m)    Redimension the object bounding box on Y axis is non-zero
 * zdepth:  (m)    Redimension the object bounding box on Z axis is non-zero
@@ -58,6 +59,9 @@
 * transmit:(1)    When true, non reflected neutrons are transmitted through
 *                 the surfaces, instead of being absorbed. No material absorption
 *                 is taken into account though
+*
+* OUTPUT PARAMETERS:
+* SCATTERED:    number of reflected events
 *
 * %D
 * Example values: m=4 Qc=0.0219 W=1/300 alpha=6.49 R0=1
@@ -125,7 +129,7 @@ TRACE
     if (intersect > 1 && dt <= 0 && t3 > dt) { dt = t3; n=n3; }
     
     /* exit loop when no intersection forward */
-    if (dt <= 0) break;
+    if (dt <= 0 || !intersect) break;
     
     double nx,ny,nz;
     coords_get(n, &nx, &ny, &nz);
@@ -148,25 +152,30 @@ TRACE
       StdReflecFunc(q, par, &R);
     }
 
-    if (R <= 0) ABSORB;
     if (R > 1) {
       fprintf(stderr,"Guide_anyshape: %s: Warning: Reflectivity R=%g > 1 lowered to R=1.\n", NAME_CURRENT_COMP, R);
       R=1;
     }
-
     /* now handle either probability when transmit or reflect */
-    if (!transmit) {
-      p *= R;
-    }
-    /* reflect velocity, and handle transmission */
-    if (!transmit || (transmit && rand01() <= R)) { 
-      /* reflect velocity: -q -> -2*n*n.v/|n|^2 */
-      n_dot_v *= 2/n2;
-      vx -= nx*n_dot_v;
-      vy -= ny*n_dot_v;
-      vz -= nz*n_dot_v; 
-    }
-    SCATTER;  
+    if (R > 0) {
+      /* when allowing transmission, we should check if indeed we reflect */
+      if (!transmit || (transmit && rand01() < R)) {
+        /* reflect velocity: -q -> -2*n*n.v/|n|^2 */
+        p *= R;
+        n_dot_v *= 2/n2;
+        vx -= nx*n_dot_v;
+        vy -= ny*n_dot_v;
+        vz -= nz*n_dot_v; 
+        SCATTER;
+      } else {
+        if (transmit) {
+          p *= (1-R); /* transmitted beam has non reflected weight */
+        } else ABSORB;
+      }
+    } else {
+      /* R=0: no reflection: absorb or transmit through when allowed */
+      if (!transmit) ABSORB;
+    } 
     
     /* leave surface by a small amount so that next intersection is not the same one */
     PROP_DT(1e-9);
