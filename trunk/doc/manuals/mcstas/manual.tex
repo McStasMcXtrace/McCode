@@ -1,22 +1,23 @@
-\documentclass[twoside,notitlepage,11pt]{report}
+\documentclass[twoside,11pt]{scrreprt}
+%\documentclass[twoside,notitlepage,11pt]{report}
 % Here's a comment again - probably no more testing...
 %\usepackage{a4paper}
 \usepackage{graphicx}
-\usepackage{psfrag}
+% FIXME \usepackage{psfrag}
 \usepackage{amsfonts}
 \usepackage{amsbsy}
 \usepackage{verbatimfile}
 \usepackage{fancyhdr}
-\usepackage{pstricks,pst-node}
+% FIXME \usepackage{pstricks,pst-node}
 % The next rawfonts package one is used in the ``datablad''.
-\usepackage[only,egtrm]{rawfonts}
+% FIXME \usepackage[only,egtrm]{rawfonts}
 % Handle sorting in reference list
 \usepackage{citesort}
 % Create an index table
 \usepackage{makeidx}
 % For html links in install chapter (install latex2html package to get
 % this style)
-\usepackage{html}
+% \usepackage{html}
 
 \newcommand{\smallverbatimfile}[1]{{\footnotesize\verbatimfile{#1}}}
 
@@ -110,7 +111,7 @@ Technical University of Denmark, 2800 Kongens Lyngby, Denmark}
 
 \addcontentsline{toc}{chapter}{\protect\numberline{}{Index and keywords}}
 \printindex
-\include{datablad}
+% FIXME \include{datablad}
 
 
 \end{document}
