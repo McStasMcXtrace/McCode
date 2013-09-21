@@ -24,12 +24,12 @@ the {\bf Res\_monitor} should be used in connection with one of the
 components {\bf Res\_sample} or {\bf TOF\_Res\_sample}, 
 the name of which should be passed as an
 input parameter to \textbf{Res\_monitor}. For example
-\begin{verbatim}
+\begin{lstlisting}
     COMPONENT mysample = Res_sample( ... )
     ...
     COMPONENT det = Res_monitor(res_sample_comp = mysample, ...)
     ...
-\end{verbatim}
+\end{lstlisting}
 
 The output file is in ASCII format, one line per scattering event, with
 the following columns:

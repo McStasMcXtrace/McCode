@@ -23,20 +23,20 @@ A usage example of this component can be found in the \\
 \subsection{Files formats: powder structures}
 
 Data files of type \verb'lau' and \verb'laz' in the \MCS\ distribution data directory are self-documented in their header. A list of common powder definition files is available in Table \ref{t:powders-data} (page \pageref{t:powders-data}). They do not need any additional parameters to be used, as in the example:
-\begin{verbatim}
+\begin{lstlisting}
   PowderN(<geometry parameters>, filename="Al.laz")
-\end{verbatim}
+\end{lstlisting}
 Other column-based file formats may also be imported e.g. with parameters such as:
-\begin{verbatim}
+\begin{lstlisting}
   format=Crystallographica
   format=Fullprof
   format={1,2,3,4,0,0,0,0}
-\end{verbatim}
+\end{lstlisting}
 In the latter case, the indices define order of columns parameters
 multiplicity, lattice spacing, $F^2$, Debye-Waller factor and intrinsic line width.
 
 The column signification may as well explicitely be set in the data file header using any of the lines:
-\begin{verbatim}
+\begin{lstlisting}
   #column_j     <index of the multiplicity 'j' column>
   #column_d     <index of the d-spacing 'd' column>
   #column_F2    <index of the squared str. factor '|F|^2' column [b]>
@@ -45,11 +45,11 @@ The column signification may as well explicitely be set in the data file header 
   #column_Dd    <index of the relative line width Delta_d/d 'Dd' column>
   #column_inv2d <index of the 1/2d=sin(theta)/lambda 'inv2d' column>
   #column_q     <index of the scattering wavevector 'q' column>
-\end{verbatim}
+\end{lstlisting}
 
 Other component parameters may as well be specified in the data file
 header with lines e.g.:
-\begin{verbatim}
+\begin{lstlisting}
   #V_rho        <value of atom number density [at/Angs^3]>
   #Vc           <value of unit cell volume Vc [Angs^3]>
   #sigma_abs    <value of Absorption cross section [barns]>
@@ -59,7 +59,7 @@ header with lines e.g.:
   #density      <value of material density [g/cm^3]>
   #weight       <value of material molar weight [g/mol]>
   #nb_atoms     <value of number of atoms per unit cell>
-\end{verbatim}
+\end{lstlisting}
 
 Further details on file formats are available in the \verb+mcdoc+ page
 of the component.
@@ -75,7 +75,7 @@ can contain other components inside the inner hollow. To allow this, two almost 
 of the PowderN components must be set up \emph{around} the internal component(s), for example:
 
 
-\begin{verbatim}
+\begin{lstlisting}
 COMPONENT Cryo = PowderN(reflections="Al.laz", radius = 0.01, thickness = 0.001,
                           concentric = 1)
 AT (0,0,0) RELATIVE Somewhere
@@ -85,7 +85,7 @@ AT (0,0,0) RELATIVE Somewhere
 
 COMPONENT Cryo2 = COPY(Cryo)(concentric = 0)
 AT (0,0,0) RELATIVE Somewhere
-\end{verbatim}
+\end{lstlisting}
 
 As outlined, the first instance of PowderN \emph{must} have \verb+concentric = 1+ and the instance \emph{must}
 have \verb+concentric = 0+. Furthermore, the component(s) inside the hollow \emph{must} have a geometry which can

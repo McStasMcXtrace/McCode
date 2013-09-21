@@ -327,7 +327,7 @@ The format of the data files is free text, consisting of three numerical blocks,
 Any line beginning with any character of \verb+#;/%+ is considered to be a comment, and lines which can not be read as vectors/matrices are ignored.
 
 The file header may optionally contain parameter settings for the material, as comments, with keywords as in the following example:
-\begin{verbatim}
+\begin{lstlisting}
   #V_0         35   cell volume [Angs^3]
   #V_rho       0.07 atom number density [at/Angs^3]
   #sigma_abs   5    absorption cross section [barns]
@@ -337,45 +337,45 @@ The file header may optionally contain parameter settings for the material, as c
   #density     1    material density [g/cm^3]
   #weight      18   material molar weight [g/mol]
   #nb_atoms    6    number of atoms per unit cell
-\end{verbatim}
+\end{lstlisting}
 Some \verb+sqw+ data files are included in the \MCS\ distribution data directory, and they contain material parameter settings in their header, so that you may use:
-\begin{verbatim}
+\begin{lstlisting}
 Isotropic_Sqw(<geometry parameters>, Sqw_coh="He4_liq_coh.sqw", T=4)
-\end{verbatim}
+\end{lstlisting}
 
 Example files are listed as \verb+*.sqw+ files in directory \verb+MCSTAS/data+. A table of $S(q,\omega)$ data files for a few liquids are listed in Table \ref{t:liquids-data} (page \pageref{t:liquids-data}).
 
 \subsubsection{File formats: $S(q)$ liquids}
 
 This file format provides a mean to import directly an $S(q)$ data set, when setting parameters:
-\begin{verbatim}
+\begin{lstlisting}
   powder_format=qSq
-\end{verbatim}
+\end{lstlisting}
 The 'Sqw\_coh' (or 'Sqw\_inc') file should contains a single numerical block, which column assignment is defaulted as $q$ and $S(q)$ being the first and second column respectively. This may be overridden from the file header with '\#column' keywords, as in the example:
-\begin{verbatim}
+\begin{lstlisting}
   #column_q  2
   #column_Sq 1
-\end{verbatim}
+\end{lstlisting}
 Such files can only handle elastic scattering.
 
 \subsubsection{File formats: powder structures (LAZY, Fullprof, Crystallographica)}
 
 Data files as used by the component PowderN may also be read. Data files of type \verb'lau' and \verb'laz' in the \MCS\ distribution data directory are self-documented in their header. They do not need any additional parameters to be used, as in the example:
-\begin{verbatim}
+\begin{lstlisting}
   Isotropic_Sqw(<geometry parameters>, Sqw_coh="Al.laz")
-\end{verbatim}
+\end{lstlisting}
 Other column-based file formats may also be imported e.g. with parameters such as:
-\begin{verbatim}
+\begin{lstlisting}
   powder_format=Crystallographica
   powder_format=Fullprof
   powder_Dd    =0
   powder_DW    =1
-\end{verbatim}
+\end{lstlisting}
 The last two parameters may as well be specified in the data file header with lines:
-\begin{verbatim}
+\begin{lstlisting}
   #Debye_Waller 1
   #Delta_d/d    1e-3
-\end{verbatim}
+\end{lstlisting}
 The powder description is then translated into $S(q)$ by using Eq. (\ref{eq:sq-F2}).
 In this case, the density $\rho = n/V_0$ is the number of atoms in the inverse volume of the unit cell.
 
@@ -387,7 +387,7 @@ Such files can only handle elastic scattering. A list of common powder definitio
 \index{Sample environments}
 
 The component has been designed in a way which enables to describe complex imbricated set-ups, i.e. what you need to simulate sample environments. To do so, one has first to use hollow shapes, then keep in mind that each surrounding geometry should be first declared before the central position (usually the sample) with the \verb+concentric=1+ parameter, but also duplicated (with an other instance name) at a symmetric position with regards to the centre as in the example (shown in Fig. \ref{f:isotropic-sqw}):
-\begin{verbatim}
+\begin{lstlisting}
 COMPONENT s_in=Isotropic_Sqw(
   thickness=0.001, radius=0.02, yheight=0.015,
   Sqw_coh="Al.laz", concentric=1)
@@ -402,7 +402,7 @@ COMPONENT s_out=Isotropic_Sqw(
   thickness=0.001, radius=0.02, yheight=0.015,
   Sqw_coh="Al.laz")
 AT (0,0,1) RELATIVE a
-\end{verbatim}
+\end{lstlisting}
 Central component may be of any type, not specifically an Isotropic\_Sqw instance. It could be for instance a Single\_crystal or a PowderN.
 In principle, the number of surrounding shells is not restricted.
 The only restriction is that neutrons that scatter (in $4\pi$) can not come back in the instrument description, so that some of the multiple scattering events are lost. Namely, in the previous example, neutrons scattered by the outer wall of the cryostat \verb+s_out+ can not come back to the sample or to the other cryostat wall \verb+s_in+. As these neutrons have usually few chances to reach the rest of the simulation, we expect that the approximation is fair.
