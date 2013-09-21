@@ -4,7 +4,7 @@ It contains the User and Component Manuals.
 Additionally, the 'mcdoc' (mcdoc.pl on Windows)  tool may be used with the syntax:
 
 Usage: mcdoc [options] <dir|file>
-   -f    --force   Force re-writting of existing HTML doc locally
+   -f    --force   Force re-writing of existing HTML doc locally
    -h    --help    Show this help
    -l    --tools   Display the McStas tools list
    -m    --manual  Open the McStas manual
