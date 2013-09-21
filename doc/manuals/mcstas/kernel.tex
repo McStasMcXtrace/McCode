@@ -167,9 +167,9 @@ standard component library (as well as in the current directory and any
 user-specified search directories, see section~\ref{s:files}). It is
 also possible to explicitly include another file using a line of the
 form \index{Keyword!\%include}
-\begin{verbatim}
+\begin{lstlisting}
     %include "file"
-\end{verbatim}
+\end{lstlisting}
 Beware of possible confusion with the C language ``\verb+#include+''
 statement, especially when it is used in C code embedded within the
 \MCS\ meta-language. Files referenced with ``\verb+%include+'' are read
@@ -213,14 +213,14 @@ examples of instrument definitions can be found on the McStas
 web-page~\cite{mcstas_webpage} and in the \texttt{example} directory.
 
 As a summary, the usual grammar for instrument descriptions is
-\begin{verbatim}
+\begin{lstlisting}
 DEFINE INSTRUMENT name(parameters)
 DECLARE C_code
 INITIALIZE C_code {NEXUS}
 TRACE components
 {FINALLY C_code}
 END
-\end{verbatim}
+\end{lstlisting}
 
 
 \subsection{The instrument definition head}
@@ -353,11 +353,11 @@ one data set per node.
 
 As a summary, the usual grammar for component instances within the instrument
 TRACE section is
-\begin{verbatim}
+\begin{lstlisting}
 COMPONENT name = comp(parameters)
   AT (...) [RELATIVE [reference|PREVIOUS] | ABSOLUTE]
  {ROTATED  {RELATIVE [reference|PREVIOUS] | ABSOLUTE} }
-\end{verbatim}
+\end{lstlisting}
 
 The \texttt{TRACE} keyword starts a section giving the list of
 components that constitute the instrument.
@@ -527,14 +527,14 @@ groups, code extension, conditions, loops and duplication of components.
 As a summary, the nearly complete grammar definition for component instances
 within the instrument TRACE section is:
 
-\begin{verbatim}
+\begin{lstlisting}
 {SPLIT} COMPONENT name = comp(parameters) {WHEN condition}
   AT (...) [RELATIVE [reference|PREVIOUS] | ABSOLUTE]
   {ROTATED {RELATIVE [reference|PREVIOUS] | ABSOLUTE} }
   {GROUP group_name}
   {EXTEND C_code}
   {JUMP [reference|PREVIOUS|MYSELF|NEXT] [ITERATE number_of_times | WHEN condition] }
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{Embedding instruments in instruments TRACE}
 \index{Keyword!\%include}
@@ -544,7 +544,7 @@ in order to concatenate instruments together. This way, each DECLARE,
 INITIALIZE, SAVE, and FINALLY C blocks, as well as instrument parameters from
 each part are concatenated. The TRACE section is made of inserted COMPONENTS
 from each part. In principle, it is then possible to write an instrument as:
-\begin{verbatim}
+\begin{lstlisting}
 DEFINE concatenated()
 TRACE
 
@@ -552,13 +552,13 @@ TRACE
 %include "part2.instr"
 
 END
-\end{verbatim}
+\end{lstlisting}
 where each inserted instrument is a valid full instrument. In order to avoid
 some components to be duplicated - e.g. Sources from each part - a special
 syntax in the TRACE section
-\begin{verbatim}
+\begin{lstlisting}
 REMOVABLE COMPONENT a=...
-\end{verbatim}
+\end{lstlisting}
 marks the component {\it a} as removable when inserted. In principle, inserted
 instruments may themselves use \texttt{\%include}.
 
@@ -685,7 +685,7 @@ the first instance of the Guide component is defined, whereas following
 instances are copies of that definition. The instance name of Guide components
 is set automatically.
 
-\begin{verbatim}
+\begin{lstlisting}
 COMPONENT CG_In = Arm() AT (...)
 
 COMPONENT CG_1  = Guide_gravity(l=L/n, m=1, ...)
@@ -700,7 +700,7 @@ COMPONENT COPY(CG_1)  = COPY(CG_1)
   ROTATED (0, (L/n+d)/R*180/PI, 0) RELATIVE PREVIOUS
 ...
 COMPONENT CG_Out = Arm() AT (0,0,L/n) RELATIVE PREVIOUS
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{Conditional components - WHEN}
 \index{Keyword!WHEN}
@@ -728,7 +728,7 @@ among a set of choices.
 
 In the following example, an EXTEND block sets a condition when a scattering
 event is encountered, and the following monitor is then activated.
-\begin{verbatim}
+\begin{lstlisting}
 COMPONENT Sample = V_sample(...) AT ...
   EXTEND
   %{
@@ -737,7 +737,7 @@ COMPONENT Sample = V_sample(...) AT ...
 
 COMPONENT MyMon = Monitor(...) WHEN (flag==1)
   AT ...
-\end{verbatim}
+\end{lstlisting}
 
 The WHEN keyword only applies to the TRACE section and related EXTEND blocks of
 instruments/components. Other sections (INITIALIZE, SAVE, MCDISPLAY, FINALLY)
@@ -810,7 +810,7 @@ guide sections, the iterations are performed between Arm's.
 
 In the following example for a curved guide made on $n=500$ elements of length
 $L$ on a curvature radius $R$, with gaps $d$ between elements, we simply write:
-\begin{verbatim}
+\begin{lstlisting}
 COMPONENT CG_In = Arm() AT (...)
 
 COMPONENT CG_1  = Guide_gravity(l=L/n, m=1, ...)
@@ -826,7 +826,7 @@ COMPONENT CG_2  = Guide_gravity(l=L/n, m=1, ...)
   JUMP CG_2_Position ITERATE n
 ...
 COMPONENT CG_Out = Arm() AT (0,0,L/n) RELATIVE PREVIOUS
-\end{verbatim}
+\end{lstlisting}
 
 Similarly to the \texttt{WHEN} modifier (see section
 \ref{s:instrdefs-extend-when}), \texttt{JUMP} only applies within the TRACE
@@ -1061,7 +1061,7 @@ are used in the same instrument. To avoid this, variables declared in the
 because \MCS\ will then rename variables to avoid conflicts.  For example, a
 simple detector might be defined as follows:
 \begin{quote}
-\begin{verbatim}
+\begin{lstlisting}
 DEFINE COMPONENT Detector
 OUTPUT PARAMETERS (counts)
 DECLARE
@@ -1069,7 +1069,7 @@ DECLARE
   int counts;
 %}
 ...
-\end{verbatim}
+\end{lstlisting}
 \end{quote}
 \index{Keyword!OUTPUT PARAMETERS} \index{Library!Run-time!MC\_GETPAR} The idea
 is that the \texttt{counts} variable counts the number of neutrons detected. In
@@ -1077,7 +1077,7 @@ the instrument definition, the \texttt{counts} parameter may be referenced using
 the \verb+MC_GETPAR+ C macro, as in the following example instrument
 fragment:\label{mcgetpar}
 \begin{quote}
-\begin{verbatim}
+\begin{lstlisting}
 COMPONENT d1 = Detector()
 ...
 COMPONENT d2 = Detector()
@@ -1087,7 +1087,7 @@ FINALLY
   printf("Detector counts: d1 = %d, d2 = %d\n",
          MC_GETPAR(d1,counts), MC_GETPAR(d2,counts));
 %}
-\end{verbatim}
+\end{lstlisting}
 \end{quote}
 This way, \MCS\ takes care to rename transparently the two 'counts'
 \texttt{OUTPUT} parameters so that they are distinct, and can be accessed from
@@ -1387,9 +1387,9 @@ single argument: a string containing zero or more of the letters ``x'',
 ``y'' and ``z''. It causes the drawing to be enlarged along the
 specified axis in case \verb+mcdisplay+ is called with the \verb+--zoom+
 option. For example:
-\begin{verbatim}
+\begin{lstlisting}
     magnify("xy");
-\end{verbatim}
+\end{lstlisting}
 
 
 \paragraph{The {\tt line} command}
@@ -1424,14 +1424,14 @@ one of the nasty quirks of C since \emph{no} type checking is
 performed by the C compiler. It is thus very important that all
 arguments to {\tt multiline} (except $n$) are valid numbers of type {\tt
   double}. A common mistake is to write
-\begin{verbatim}
+\begin{lstlisting}
     multiline(3, x, y, 0, ...)
-\end{verbatim}
+\end{lstlisting}
 which will silently produce garbage output. This must instead be
 written as
-\begin{verbatim}
+\begin{lstlisting}
     multiline(3, (double)x, (double)y, 0.0, ...)
-\end{verbatim}
+\end{lstlisting}
 
 \paragraph{The {\tt rectangle} command}
 

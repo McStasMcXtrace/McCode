@@ -100,7 +100,7 @@ source (but any location is possible afterwards in principle), and use the {\bf
   Monitor\_Optimizer} at a location where you want to reach better
 statistics.
 
-\begin{verbatim}
+\begin{lstlisting}
     /* where to act on neutron beam */
     COMPONENT optim_s = Source_Optimizer(options="")
     ...
@@ -111,7 +111,7 @@ statistics.
     optim_comp = optim_s)
     ...
     /* using more than one Monitor_Optimizer is possible */
-\end{verbatim}
+\end{lstlisting}
 
 The input parameter for {\bf Source\_Optimizer} is a single {\it
   options} string that can contain some specific optimizer configuration
@@ -131,11 +131,11 @@ Parameters keep and step should be between 0 and 1.
 Additionally, you may restrict the optimization to only some of the neutron parameters, using the {\it SetXY, SetV, SetS, SetDivV, SetDivS} keywords.
 The keyword modifiers {\it no} or {\it not} revert the next option.
 Other options not shown here are:
-\begin{verbatim}
+\begin{lstlisting}
 verbose         displays optimization process (debug purpose).
 unactivate      to unactivate the Optimizer.
 file=[name]     Filename where to save optimized source distributions
-\end{verbatim}
+\end{lstlisting}
 The {\it file} option will save the source distributions at the end of
 the optimization. If no name is given the component name will be used,
 and a '.src' extension will be added. By default, no file is generated.

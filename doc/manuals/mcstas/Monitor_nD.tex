@@ -76,7 +76,7 @@ and position. Some can have more than one name (e.g. \texttt{energy} or
 \texttt{omega}).
 
 
-\begin{verbatim}
+\begin{lstlisting}
     kx ky kz k wavevector [Angs-1] (    usually axis are
     vx vy vz v            [m/s]         x=horz., y=vert., z=on axis)
     x y z                 [m]      Distance, Position
@@ -92,12 +92,12 @@ and position. Some can have more than one name (e.g. \texttt{energy} or
     angle                 [deg]    divergence from  direction
     theta longitude       [deg]    longitude (x/z) [for sphere and cylinder]
     phi   lattitude       [deg]    lattitude (y/z) [for sphere and cylinder]
-\end{verbatim}
+\end{lstlisting}
 as well as two other special variables
-\begin{verbatim}
+\begin{lstlisting}
     user user1            will monitor the [Mon_Name]_Vars.UserVariable{1|2}
     user2 user3           to be assigned in an other component (see below)
-\end{verbatim}
+\end{lstlisting}
 
 To tell the component what you want to monitor, just add the variable
 names in the {\it options} parameter. The data will be sorted into {\it
@@ -204,12 +204,12 @@ TOF\_monitor        & {\it options}="time bins=$nt$ limits=[$t_0, t_1$]" \\
 
 \begin{itemize}
 \item{
-\begin{verbatim}
+\begin{lstlisting}
 COMPONENT MyMonitor = Monitor_nD(
     xmin = -0.1, xmax = 0.1,
     ymin = -0.1, ymax = 0.1,
     options = "energy auto limits")
-\end{verbatim}
+\end{lstlisting}
 will monitor the neutron energy in a single 1D file (a kind of E\_monitor)}
 \item{\texttt{options = "banana, theta limits=[10,130], bins=120, y bins=30"} \\
     is a theta/height banana detector.\index{Monitors!Banana shape}}
@@ -245,13 +245,13 @@ There are two ways to monitor any quantity with Monitor\_nD. This may be e.g. th
 \subsubsection{Setting directly the user variables (simple)}
 
 The first method uses directly the \verb+user1+ and \verb+username1+ component parameters to transfert directly the value and label, such as in the following example:
-\begin{verbatim}
+\begin{lstlisting}
 TRACE
 (...)
 COMPONENT UserMonitor = Monitor_nD(
   user1    = log(t), username1="Log(time)",
   options  ="auto user1")
-\end{verbatim}
+\end{lstlisting}
 The values to assign to \verb+user2+ and \verb+user3+ must be global instrument variables, or a component output variables as in \verb+user1=MC_GETPAR(some_comp, outpar)+.
 Similarly, the \verb+user2,user3+ and \verb+username2,username3+ parameters may be used to control the second and third user variable, to produce eventually 2D/3D user variable correlation data and custom event lists.
 
@@ -262,24 +262,24 @@ It is possible to control the user variables of a given Monitor\_nD instance any
 This is performed in a 4 steps process:
 \begin{enumerate}
 \item Declare that you intend to monitor user variables in a Monitor\_nD instance (defined in TRACE):
-\begin{verbatim}
+\begin{lstlisting}
 DECLARE
 %{ (...)
   %include "monitor_nd-lib"
   MONND_DECLARE(UserMonitor); // will monitor custom things in UserMonitor
 %}
-\end{verbatim}
+\end{lstlisting}
 \item Initialize the label of the user variable (optional):
-\begin{verbatim}
+\begin{lstlisting}
 INITIALIZE
 %{
   (...)
   MONND_USER_TITLE(UserMonitor, 1, "Log(time)");
 %}
-\end{verbatim}
+\end{lstlisting}
 The value '1' could be '2' or '3' for the \verb+user2,user3+ variable.
 \item Set the user variable value in a TRACE component EXTEND block:\index{Keyword!EXTEND}
-\begin{verbatim}
+\begin{lstlisting}
 TRACE
 (...)
 COMPONENT blah = blah_comp(...)
@@ -288,14 +288,14 @@ EXTEND
   MONND_USER_VALUE(UserMonitor, 1, log(t));
 %}
 (...)
-\end{verbatim}
+\end{lstlisting}
 \item Tell the Monitor\_nD instance to record user variables:
-\begin{verbatim}
+\begin{lstlisting}
 TRACE
 (...)
 COMPONENT UserMonitor = Monitor_nD(options="auto user1")
 (...)
-\end{verbatim}
+\end{lstlisting}
 \end{enumerate}
 Setting the user variable values may either make use of the neutron parameters (x,y,z, vx,vy,vz, t, sx,sy,sz, p), access the internal variables of the component that sets the user variables (in this example, those from the \verb+blah+ instance), access any component OUTPUT parameter \index{Keyword!OUTPUT PARAMETERS} using the \verb+MC_GETPAR+ C macro(see chapter \ref{c:kernelcalls}), or simply use a global instrument variable. Instrument parameters can not be used directly.
 \index{Library!Run-time!MC\_GETPAR}
@@ -304,7 +304,7 @@ Setting the user variable values may either make use of the neutron parameters (
 
 \index{Monitors!Number of neutron bounces in a guide}
 In the following example, we show how the number of bounces in a polygonal guide may be monitored. Let us have a guide made of many Guide\_gravity instances. We declare a global simulation variable \verb+nbounces+, set it to 0 for each neutron entering the guide, and sum-up all bounces from each section, accessing the \verb+Gvars+ OUTPUT variable of component Guide\_gravity. Then we ask Monitor\_nD to look at that value.
-\begin{verbatim}
+\begin{lstlisting}
 DECLARE
 %{
   double nbounces;
@@ -334,14 +334,14 @@ COMPONENT UserMonitor = Monitor_nD(
   user1=nbounces, username1="Number of bounces",
   options="auto user1") AT (...)
 (...)
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{Monitoring neutron parameter correlations, PreMonitor\_nD}
 
 The first imediate usage of the Monitor\_nD component is when one requires to identify cross-correlations between some neutron parameters, e.g. position and divergence ({\it aka} phase-space diagram). This latter monitor would be merely obtained with:\index{Monitors!Neutron parameter correlations, PreMonitor\_nD}
-\begin{verbatim}
+\begin{lstlisting}
 options="x dx, auto", bins=30
-\end{verbatim}
+\end{lstlisting}
 This example records the correlation between position and divergence of neutrons at a given instrument location.
 
 \component{PreMonitor\_nD}{System, E. Farhi}{comp}{}{}
@@ -349,7 +349,7 @@ This example records the correlation between position and divergence of neutrons
 But it is also possible to search for cross-correlation between two part of the instrument simulation. One example is the acceptance phase-diagram, which shows the neutron caracteristics at the input required to reach the end of the simulation. This \emph{spatial} correlation may be revealed using the {\bf PreMonitor\_nD} component. This latter stores the neutron parameters at a given instrument location, to be used at an other Monitor\_nD location for monitoring.
 
 The only parameter of {\bf PreMonitor\_nD} is the name of the associated Monitor\_nD instance, which should use the \verb+premonitor+ option, as in the following example:
-\begin{verbatim}
+\begin{lstlisting}
 COMPONENT CorrelationLocation = PreMonitor_nD(comp = CorrelationMonitor)
 AT (...)
 
@@ -358,5 +358,5 @@ AT (...)
 COMPONENT CorrelationMonitor  = Monitor_nD(
    options="x dx, auto, all bins=30, premonitor")
 AT (...)
-\end{verbatim}
+\end{lstlisting}
 which performs the same monitoring as the previous example, but with a spatial correlation constrain. Indeed, it records the position {\it vs} the divergence of neutrons at the correlation location, but only if they reach the monitoring position. All usual Monitor\_nD variables may be used, except the user variables. These latter may be defined as described in section \ref{s:monnd:user} in an EXTEND block.

@@ -313,7 +313,7 @@ Real curved guides are usually made of many straight elements (about 1 m long) s
 We give here an example description of such a section. Let us have a curved guide of total length $L$, made of $n$ elements with a curvature radius $R$. Gaps of size $d$ separate elements from each other. The rotation angle of individual straight guide elements is $\alpha_z = (L+d)/R*180/\pi$ in degrees.
 
 In order to build an independent curved guide section, we define \verb+Arm+ components at the begining and end of it.
-\begin{verbatim}
+\begin{lstlisting}
 COMPONENT CG_In = Arm() AT (...)
 
 COMPONENT CG_1  = Guide_gravity(l=L/n, ...)
@@ -324,7 +324,7 @@ AT (0,0,L/n+d) RELATIVE PREVIOUS
 ROTATED (0, (L/n+d)/R*180/PI, 0) RELATIVE PREVIOUS
 ...
 COMPONENT CG_Out = Arm() AT (0,0,L/n) RELATIVE PREVIOUS
-\end{verbatim}
+\end{lstlisting}
 The \verb+Guide+ component should be duplicated $n$ times by copy-paste, but changing the instance name, e.g. CG\_1, CG\_2, ..., CG\_n. This may be automated with the \verb+COPY+ or the \verb+JUMP ITERATE+ mechanisms (see User manual).
 
 An implementation of a continuous curved guide has been contributed as component Guide\_curved.

@@ -75,7 +75,7 @@ the number of frames to study by the parameter $n_{\rm pulse}$.
 For more advanced chopper geometries than those mentioned above, it is
 possible to set up a \texttt{GROUP} of choppers:
 
-\begin{verbatim}
+\begin{lstlisting}
 COMPONENT Chop1 = DiskChopper(omega=2500, R=0.3, h=0.2, theta_0=20, n=1)
 AT (0, 0, 1.1) RELATIVE Source
 GROUP Choppers
@@ -84,7 +84,7 @@ COMPONENT Chop2 = DiskChopper(omega=2500, R=0.3, h=0.2, theta_0=20, n=1,
                               phi_0=40)
 AT (0, 0, 1.1) RELATIVE Source
 GROUP Choppers
-\end{verbatim}
+\end{lstlisting}
 
 The result of such a {\bf DiskChopper} \texttt{GROUP}ing can be seen in
 figure \ref{f:chopper2}

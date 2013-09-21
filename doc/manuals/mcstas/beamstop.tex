@@ -31,10 +31,10 @@ This method is useful for instance in the case where only neutrons
 scattered from a sample are of interest. 
 The example below removes the direct beam and 
 any background signal from other parts of the instrument
-\begin{verbatim}
+\begin{lstlisting}
 COMPONENT MySample=V_sample(...) AT (...)
 EXTEND
 %{
   if (!SCATTERED) ABSORB;
 %}
-\end{verbatim}
+\end{lstlisting}

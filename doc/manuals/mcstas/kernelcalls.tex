@@ -20,15 +20,15 @@ pre-loaded, but only imported once when a component requests it
 using the \verb+%include+ \MCS\ keyword. For instance, within a
 component C code block, (usually SHARE or DECLARE):
 \index{Keyword!\%include}
-\begin{verbatim}
+\begin{lstlisting}
     %include "read_table-lib"
-\end{verbatim}
+\end{lstlisting}
 will include the 'read\_table-lib.h' file, and the 'read\_table-lib.c'
 (unless the \verb+--no-runtime+ option is used with \verb+mcstas+).
 Similarly,
-\begin{verbatim}
+\begin{lstlisting}
     %include "read_table-lib.h"
-\end{verbatim}
+\end{lstlisting}
 will \emph{only} include the 'read\_table-lib.h'.
 The library embedding is done only once for all components (like the
  SHARE section). \index{Keyword!SHARE} For an example
@@ -299,7 +299,7 @@ Details about using these functions are given in the \MCS\ User Manual.
   add a \verb+%include "read_table-lib"+ in your component definition
   DECLARE or SHARE section. Tables are structures of type \verb+t_Table+
   (see \verb+read_table-lib.h+ file for details):
-\begin{verbatim}
+\begin{lstlisting}
     /* t_Table structure (most important members) */
     double *data;     /* Use Table_Index(Table, i j) to extract [i,j] element */
     long    rows;     /* number of rows */
@@ -308,7 +308,7 @@ Details about using these functions are given in the \MCS\ User Manual.
     char   *filename; /* file name or title */
     double  min_x;    /* minimum value of 1st column/vector */
     double  max_x;    /* maximum value of 1st column/vector */
-\end{verbatim}
+\end{lstlisting}
 
 Available functions to read \emph{a single} vector/matrix are:
 \begin{itemize}
@@ -358,7 +358,7 @@ The number of blocks is put into $n$.
 \end{itemize}
 
 The format of text files is free. Lines starting by '\verb+# ; % /+' characters are considered to be comments, and stored in $Table.header$. Data blocks are vectors and matrices. Block numbers are counted starting from 1, and changing when a comment is found, or the column number changes. For instance, the file 'MCSTAS/data/BeO.trm' (Transmission of a Berylium filter) looks like:
-\begin{verbatim}
+\begin{lstlisting}
   # BeO transmission, as measured on IN12
   # Thickness: 0.05 [m]
   # [ k(Angs-1) Transmission (0-1) ]
@@ -367,7 +367,7 @@ The format of text files is free. Lines starting by '\verb+# ; % /+' characters 
   1.0750  0.76727
   1.1000  0.80680
   ...
-\end{verbatim}
+\end{lstlisting}
 Binary files should be of type "float" (i.e. REAL*32) and "double" (i.e. REAL*64),
 and should \emph{not} contain text header lines. These files are platform
 dependent (little or big endian).
@@ -376,7 +376,7 @@ The $filename$ is first searched into the current directory (and all user additi
 \index{Environment variable!MCSTAS} This way, you do not need to have local copies of the \MCS\ Library Data files (see table~\ref{t:comp-data}).
 
 A usage example for this library part may be:
-\begin{verbatim}
+\begin{lstlisting}
   t_Table Table;       // declare a t_Table structure
   char file[]="BeO.trm";  // a file name
   double x,y;
@@ -389,13 +389,13 @@ A usage example for this library part may be:
   y = Table_Value(Table, 1.45,1);  // look for value 1.45 in 1st column (x axis)
                                 // and extract 2nd column value of that row
   Table_Free(&Table);           // free allocated memory for table
-\end{verbatim}
+\end{lstlisting}
 Additionally, if the block number (3rd) argument of  {\bf Table\_Read} is 0, all blocks will be concatenated.
 The {\bf Table\_Value} function assumes that the 'x' axis is the first column (index 0).
 Other functions are used the same way with a few additional parameters, e.g. specifying an offset for reading files, or reading binary data.
 
 This other example for text files shows how to read many data blocks:
-\begin{verbatim}
+\begin{lstlisting}
   t_Table *Table;       // declare a t_Table structure array
   long     n;
   double y;
@@ -406,7 +406,7 @@ This other example for text files shows how to read many data blocks:
   y = Table_Index(Table[0], 2,5);  // read in 1st block the 3rd row, 6th column element
                                    // ONLY use Table[i] with i < n !
   Table_Free_Array(Table);         // free allocated memory for Table
-\end{verbatim}
+\end{lstlisting}
 
 You may look into, for instance, the source files for
 {\bf Monochromator\_curved} or {\bf Virtual\_input}

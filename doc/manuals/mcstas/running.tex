@@ -163,9 +163,9 @@ front-ends will compile and run the simulations automatically.
 
 The compiler for the \MCS{} instrument definition
 is invoked by typing a command of the form
-\begin{verbatim}
+\begin{lstlisting}
     mcstas name.instr
-\end{verbatim}
+\end{lstlisting}
 This will read the instrument definition \verb+name.instr+ which is
 written in the \MCS\ meta-language. The compiler will translate the
 instrument definition into a Monte Carlo simulation program provided in
@@ -173,9 +173,9 @@ ISO-C. The output is by default written to a file in the current
 directory with the same name as the instrument file, but with extension
 \verb+.c+ rather than \verb+.instr+. This can be overridden using the
 \verb+-o+ option as follows:
-\begin{verbatim}
+\begin{lstlisting}
     mcstas -o code.c name.instr
-\end{verbatim}
+\end{lstlisting}
 which gives the output in the file \verb+code.c+.
 A single dash `\verb+-+' may be used for both input and output filename
 to represent standard input and standard output, respectively.
@@ -205,9 +205,9 @@ same result is obtained as with the \verb+--portable+ option of the
 by defining the \verb+MC_TRACE_ENABLED+ macro. Most Unix-like C
 compilers allow preprocessor macros to be defined using the \verb+-D+
 option, e.g.
-\begin{verbatim}
+\begin{lstlisting}
     cc -DMC_TRACE_ENABLED -DMC_PORTABLE ...
-\end{verbatim}
+\end{lstlisting}
 Finally, the \verb+--verbose+ option will list the components and libraries beeing
 included in the instrument.
 
@@ -231,13 +231,13 @@ systems and \verb+C:\mcstas\lib+ on Windows systems, but it can be changed to
 something else, see section~\ref{s:install} for details. The location can be
 overridden by setting the environment variable \verb+MCSTAS+: \index{Environment
   variable!MCSTAS}
-\begin{verbatim}
+\begin{lstlisting}
     setenv MCSTAS /home/joe/mcstas
-\end{verbatim}
+\end{lstlisting}
 for csh/tcsh users, or
-\begin{verbatim}
+\begin{lstlisting}
     export MCSTAS=/home/joe/mcstas
-\end{verbatim}
+\end{lstlisting}
 for bash/Bourne shell users.  For Windows Users, you should define the
 \verb+MCSTAS+ from the menu 'Start/Settings/Control
 Panel/System/Advanced/Environment Variables' by creating \verb+MCSTAS+ with the
@@ -245,9 +245,9 @@ value \verb+C:\mcstas\lib+
 
 To make \MCS\ search additional directories for component definitions
 and include files, use the \verb+-I+ switch for the \MCS\ compiler:
-\begin{verbatim}
+\begin{lstlisting}
     mcstas -I/home/joe/components -I/home/joe/neutron/include name.instr
-\end{verbatim}
+\end{lstlisting}
 Multiple \verb+-I+ options can be given, as shown.
 
 
@@ -282,9 +282,9 @@ After the source code for the simulation program has been generated with the
 executable. The generated C code obeys the ISO-C standard, so it should be easy
 to compile it using any ISO-C (or C++) compiler. \textit{E.g}.\ a typical
 Unix-style command would be
-\begin{verbatim}
+\begin{lstlisting}
     cc -O -o name.out name.c -lm
-\end{verbatim}
+\end{lstlisting}
 The \MCS\ team recommends these compiler alternatives for the Intel (and AMD)
 hardware architectures:
 \begin{itemize}
@@ -372,9 +372,9 @@ discussed. For a full list, please consult tables
 
 The simplest way is to run it directly from the
 command line or shell:
-\begin{verbatim}
+\begin{lstlisting}
     ./name.out
-\end{verbatim}
+\end{lstlisting}
 Note the leading ``.'', which is needed if the current directory is not in the
 path searched by the shell. When used in this way, the simulation will prompt
 for the values of any instrument parameters such as angular settings, and then
@@ -392,14 +392,14 @@ scan.
 
 The generated simulations accept a number of options and arguments. The
 full list can be obtained using the \verb+--help+ option:
-\begin{verbatim}
+\begin{lstlisting}
     ./name.out --help
-\end{verbatim}
+\end{lstlisting}
 The values of instrument parameters may be specified as arguments using
 the syntax \textit{name}\verb+=+\textit{val}. For example
-\begin{verbatim}
+\begin{lstlisting}
     ./Samples_vanadium.out ROT=90
-\end{verbatim}
+\end{lstlisting}
 \index{Parameters!Instruments}
 The number of neutron histories to simulate may be set using the
 \verb+--ncount+ or \verb+-n+ option, for example
@@ -449,14 +449,14 @@ depending on the format, if the file names do not contain any. Binary files are
 particularly recommended for the IDL format (e.g. \verb+--format=IDL_binary+),
 and the Matlab format when handling large detectors (e.g. more than
 50x50 bins). For example:
-\begin{verbatim}
+\begin{lstlisting}
     ./Samples_vanadium.out ROT=90 --format="Matlab_binary"
-\end{verbatim}
+\end{lstlisting}
 or more generally (for bash/Bourne shell users)
-\begin{verbatim}
+\begin{lstlisting}
     export MCSTAS_FORMAT="Matlab"
     ./Samples_vanadium.out ROT=90
-\end{verbatim}
+\end{lstlisting}
 
 It is also possible to create and read \textit{Vitess}, \textit{MCNP/PTRAC} and
 \textit{Tripoli4/batch} neutron event files using components
@@ -478,17 +478,17 @@ concatenate data to existing files.
 \label{s:run-format}
 The previous example will result in a \verb+mcstas.m+ file, that may be read
 directly from Matlab (using the {\it sim file} function)
-\begin{verbatim}
+\begin{lstlisting}
     matlab> s=mcstas;
     matlab> s=mcstas('plot')
-\end{verbatim} \index{Tools!Matlab}
+\end{lstlisting} \index{Tools!Matlab}
 The first line returns the simulation data as a single structure variable,
 whereas the second one will additionally plot each detector separately.  This
 also equivalently stands for IDL 
-\begin{verbatim}
+\begin{lstlisting}
     idl> s=mcstas()
     idl> s=mcstas(/plot)
-\end{verbatim} \index{Tools!IDL}
+\end{lstlisting} \index{Tools!IDL}
 See section~\ref{s:mcplot} for another way of plotting simulation results
 using the \verb+mcplot+ front-end.\index{Tools!mcplot} \index{Tools!mcplot}
 
@@ -650,17 +650,17 @@ If a {\it file.out} simulation obtained from \MCS\ is running, the process statu
 where \verb+user+ is your Unix login. The {\it pid} is there '13277'.
 
 Once known, it is possible to send one of the signals listed in Table~\ref{t:signals} using the 'kill' unix command (or the functionalities of your process manager), e.g.
-\begin{verbatim}
+\begin{lstlisting}
     kill -USR2 13277
-\end{verbatim}
+\end{lstlisting}
 This will result in a message showing status (here 33 \% achieved), as well as the position in the instrument of the current neutron.
-\begin{verbatim}
+\begin{lstlisting}
 # McStas: [pid 13277] Signal 12 detected SIGUSR2 (Save simulation)
 # Simulation: file (file.instr)
 # Breakpoint: MyDetector (Trace) 33.37 % (  333654.0/ 1000000.0)
 # Date      : Wed May  7 00:00:52 2003
 # McStas: Saving data and resume simulation (continue)
-\end{verbatim}
+\end{lstlisting}
 followed by the list of detector outputs (integrated counts and files). Finally, sending a \verb+kill 13277+ (which is equivalent to \verb+kill -TERM 13277+) will end the simulation before the initial 'ncount' preset.
 
 A typical usage example would be, for instance, to save data during a
@@ -810,7 +810,7 @@ The user should write a function script or a program that
 For instance, for the \verb+prisma2+ instrument we could write a function for
 Matlab (see section~\ref{s:analyze} for details about the Matlab data format) in
 order to study the effects of the $TT$ parameter:
-\begin{verbatim}
+\begin{lstlisting}
   function y = instr_value(p)
     TT = p(1);     % p may be a vector/matrix containing many parameters
     syscmd = [ 'mcrun prisma2.instr -n1e5 TT=' num2str(TT) ...
@@ -821,12 +821,12 @@ order to study the effects of the $TT$ parameter:
     s = s.prisma2.m_mcstas.detector.prisma2_tof.signal;
     eval(s);        % we could also use the 'statistics' field
     y = -Mean;      % 'value' of the simulation
-\end{verbatim}
+\end{lstlisting}
 
 Then a numerical optimization should be available, such as those provided with Matlab, IDL, and Perl-PDL high level languages. In this example, we may wish to maximize the \verb+instr_value+ function value. The \verb+fminsearch+ function of Matlab is a minimization method (that's why we have a minus sign for $y$ value), and:
-\begin{verbatim}
+\begin{lstlisting}
     matlab> TT = fminsearch('instr_value', -25)
-\end{verbatim}
+\end{lstlisting}
 will determine the best value of TT, starting from -25 estimate, in order to
 minimize function \verb+instr_value+, and thus maximize the mean detector
 counts.
@@ -841,7 +841,7 @@ presenting the output in various ways to the user.
 
 The list of available \MCS\ front-end programs may be obtained from the
 \verb+mcdoc --tools+ command:
-\begin{verbatim}
+\begin{lstlisting}
     McStas Tools
        mcstas        Main instrument compiler
        mcrun         Instrument build and execution utility
@@ -857,7 +857,7 @@ The list of available \MCS\ front-end programs may be obtained from the
     When used with the -h flag, all tools display a specific help.
     SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess
     DOC:      Please visit http://www.mcstas.org
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{The graphical user interface (mcgui)}
 \label{s:mcgui}
@@ -866,9 +866,9 @@ The list of available \MCS\ front-end programs may be obtained from the
 The front-end \verb+mcgui+ provides a graphical user interface that interfaces
 the various parts of the McStas package. It may be started with the single
 command
-\begin{verbatim}
+\begin{lstlisting}
     mcgui
-\end{verbatim}
+\end{lstlisting}
 The mcgui (mcgui.pl on Windows) program may optionally be given the name of the
 instrument file to use.
 
@@ -1183,9 +1183,9 @@ extensions:
   series of simulations is called a \emph{scan}. To specify
   an interval for a parameter \textit{X}, it should be assigned two
   values separated by a comma. For example, the command
-\begin{verbatim}
+\begin{lstlisting}
     mcrun sim.instr -N4 X=2,8 Y=1
-\end{verbatim}
+\end{lstlisting}
 would run the simulation defined in \verb+sim.instr+ four times, with
 \textit{X} having the values 2, 4, 6, and 8, respectively.
 
@@ -1328,9 +1328,9 @@ plots of all the monitors in a simulation, and it is thus useful to get
 a quick overview of the simulation results.
 
 In the simplest case, the front-end is run simply by typing
-\begin{verbatim}
+\begin{lstlisting}
     mcplot
-\end{verbatim}
+\end{lstlisting}
 This will plot any simulation data stored in the current directory, which is
 where simulations store their results by default. If the \verb+--dir+ or
 \verb+--file+ options have been used (see section~\ref{s:run-sim}), the name of
@@ -1384,12 +1384,12 @@ available, and provides many operations (duplication, export, colormaps,
 \ldots).  The corresponding 'mcplot' Matlab function may be called
 from these language prompt with the same method as in section~\ref{s:run-sim},
 e.g:
-\begin{verbatim}
+\begin{lstlisting}
     matlab> s=mcplot;
     matlab> help mcplot
     matlab> s=mcplot('mcstas.m');
     matlab> mcplot(s);
-\end{verbatim} \index{Tools!Matlab}
+\end{lstlisting} \index{Tools!Matlab}
 
 A full parameter scan simulation result, or simply one of its scan steps may be
 displayed using the 'Scan step' menu item.  When the \verb|+nw| option is
@@ -1681,7 +1681,7 @@ contain the monitored data. The usual structure is
 
 For instance, reading the data from a 'test' instrument using Matlab format will
 look like
-\begin{verbatim}
+\begin{lstlisting}
 matlab> s=mcstas; % or mcplot mcstas.m from the terminal
 matlab> s
 s =
@@ -1709,7 +1709,7 @@ matlab> eval(s.test.m_mcstas.monitor1.monitor1_y_kz);
 matlab> dX
 ans =
           0.0201232
-\end{verbatim}
+\end{lstlisting}
 The latter example accesses the data from the 'monitor1.y\_kz' file written by
 the 'monitor1' component in the 'test' instrument during the './mcstas'
 simulation. You may evaluate directly the 'signal' and 'statistics' fields of
@@ -1925,7 +1925,7 @@ To use MPI you will need
 To enable parallel computation, compile McStas output C-source file
 with \verb'mpicc' with the flag \verb'-DUSE_MPI' and run it using the
 wrapper of your MPI implementation (\verb'mpirun' for mpich or lammpi) :
-\begin{verbatim}
+\begin{lstlisting}
   # generate a C-source file [sim.c]
   mcstas sim.instr
 
@@ -1939,12 +1939,12 @@ wrapper of your MPI implementation (\verb'mpirun' for mpich or lammpi) :
   mpirun -machinefile machines.list -n <N> \
          ./sim.mpi <instrument parameters>
   ...
-\end{verbatim}
+\end{lstlisting}
 
 If you don't want to spread the simulation, run it as usual :
-\begin{verbatim}
+\begin{lstlisting}
   ./sim.mpi <instrument parameters>
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{McRun script with MPI support (mpich)}
 
@@ -1964,18 +1964,18 @@ dialog. Specify the number of nodes required.
 
 Suppose you have four machines named \verb'node1' to \verb'node4'.
 A typical machine list file, \verb'machines.list' looks like :
-\begin{verbatim}
+\begin{lstlisting}
 node1
 node2
 node3
 node4
-\end{verbatim}
+\end{lstlisting}
 
 You can then spread a simulation \verb'sim.instr' using \verb'mcrun' :
-\begin{verbatim}
+\begin{lstlisting}
   mcrun -c --mpi=4 --machines=machines.list \
         sim.instr <instrument parameters>
-\end{verbatim}
+\end{lstlisting}
 
 \begin{paragraph}{Warning:} when using \verb'mcrun' with MPI, be sure to
   recompile your simulation with MPI support (see \verb'-c' flag of

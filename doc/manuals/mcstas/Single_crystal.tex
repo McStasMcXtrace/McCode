@@ -486,17 +486,17 @@ Any line beginning with any character of \verb+#;/%+ is considered to be a
 comment, and lines which can not be read as vectors/matrices are ignored.
 
 The column signification may also explicitely be set in the data file header using any of the lines:
-\begin{verbatim}
+\begin{lstlisting}
   #column_h <index of the Bragg Qh column>
   #column_k <index of the Bragg Qk column>
   #column_l <index of the Bragg Ql column>
   #column_F2 <index of the squared str. factor '|F|^2' column [b]>
   #column_F  <index of the structure factor norm '|F|' column>
-\end{verbatim}
+\end{lstlisting}
 
 Other component parameters may as well be specified in the data file
 header with lines e.g.:
-\begin{verbatim}
+\begin{lstlisting}
   #sigma_abs <value of Absorption cross section [barns]>
   #sigma_inc <value of Incoherent cross section [barns]>
   #Delta_d/d <value of Detla_d/d width for all lines>
@@ -506,15 +506,15 @@ header with lines e.g.:
   #lattice_aa <value of the alpha lattice angle [deg]>
   #lattice_bb <value of the beta  lattice angle [deg]>
   #lattice_cc <value of the gamma lattice angle [deg]>
-\end{verbatim}
+\end{lstlisting}
 
 Example data \verb+*.lau+ files are given in directory \verb+MCSTAS/data+.
 
 These files contain an extensive self-documented header defining most the sample parameters, so that only the file name and mosaicity should be given to the component:
-\begin{verbatim}
+\begin{lstlisting}
   Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01,
     mosaic = 5, reflections="YBaCuO.lau")
-\end{verbatim}
+\end{lstlisting}
 
 Powder files from ICSD/LAZY \cite{icsd_ill} and Fullprof \cite{Fullprof}
 may also be used (see Table \ref{t:powders-data}, page \pageref{t:powders-data}).
