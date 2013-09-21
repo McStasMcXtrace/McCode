@@ -3,7 +3,7 @@
 \chapter{Running \MCS}
 \label{c:running}
 
-DESCRIBE NEW Python TOOLS!!
+%FIXME DESCRIBE NEW Python TOOLS!!
 
 This chapter describes usage of the McStas simulation package. Refer
 to Chapter \ref{s:install} for installation instructions. In case of
@@ -644,9 +644,9 @@ Once the simulation has started, it is possible, under Unix, Linux and Mac OS X 
 
 \MCS\ attaches a signal handler to the simulation process. In order to send a signal to the process, the process-id {\it pid} must be known. Users may look at their running processes with the Unix 'ps' command, or alternatively process managers like 'top' and 'gtop'.
 If a {\it file.out} simulation obtained from \MCS\ is running, the process status command should output a line resembling
-\begin{quote}
+\begin{lstlisting}
   \verb|<user>| {\it 13277} \verb|7140 99 23:52 pts/2    00:00:13 | {\it file.out}\\
-\end{quote}
+\end{lstlisting}
 where \verb+user+ is your Unix login. The {\it pid} is there '13277'.
 
 Once known, it is possible to send one of the signals listed in Table~\ref{t:signals} using the 'kill' unix command (or the functionalities of your process manager), e.g.
@@ -1153,9 +1153,9 @@ compilation features available in the \verb+mcgui+ front-end. It also provides a
 facility for running a series of simulations while varying an input parameter.
 
 The command
-\begin{quote}
+\begin{lstlisting}
   \texttt{mcrun {\it sim} {\it args\/} \ldots}
-\end{quote}
+\end{lstlisting}
 will compile the instrument definition \texttt{{\it sim}.instr} (if
 necessary) into an executable simulation \texttt{{\it sim}.out}. It
 will then run \texttt{{\it sim}.out}, passing the argument list {\it
@@ -1229,9 +1229,9 @@ or to find out where neutrons are getting lost.  (See figures
 
 To use the \verb+mcdisplay+ front-end with a simulation, run it as
 follows:
-\begin{quote}
+\begin{lstlisting}
   \verb+mcdisplay sim +{\it args \ldots}
-\end{quote}
+\end{lstlisting}
 where \verb+sim+ is the name of either the instrument source \texttt{{\it
     sim}.instr} or the simulation program \texttt{{\it sim}.out} generated with
 \MCS, and \textit{args \ldots} are the normal command line arguments for the
@@ -1240,9 +1240,9 @@ simulation, as explained above. The \verb+-h+ option will list valid options.
 \index{Tools!PGPLOT} \index{Tools!Matlab}
 \index{Tools!VRML/OpenGL} The drawing back-end program may be selected among
 PGPLOT, VRML, and Matlab using the -p{\it PLOTTER} option. For instance, calling
-\begin{quote}
+\begin{lstlisting}
   \verb+mcdisplay --pMatlab ./Samples_vanadium.out ROT=90+
-\end{quote}
+\end{lstlisting}
 will output graphics using Matlab.
 The \verb+mcdisplay+ front-end can also be run from the \verb+mcgui+ front-end.
 \index{Tools!mcgui}
@@ -1254,9 +1254,9 @@ Examples of plotter appearence for \verb+mcdisplay+ is shown in figures
 This will view the instrument from above. A multi-display that shows the
 instrument from three directions simultaneously can be shown using the
 \verb+--multi+ option:
-\begin{quote}
+\begin{lstlisting}
   \verb+mcdisplay --multi sim.out +{\it args \ldots}
-\end{quote}
+\end{lstlisting}
 
 Click the left mouse button in the graphics window or hit the space key to see
 the display of successive neutron trajectories. The `P' key saves a postscript
@@ -1429,9 +1429,9 @@ has been included in the release since it may be useful
 despite its somewhat rough user interface.
 
 The \verb+mcresplot+ front-end is launched with the command
-\begin{quote}
+\begin{lstlisting}
   \texttt{mcresplot {\it file\/}}
-\end{quote}
+\end{lstlisting}
 Here, {\it file\/} is the name of a file output from a simulation using
 the Res\_monitor component.
 % (section~\ref{s:res_monitor}).
@@ -1459,11 +1459,11 @@ and PDL must all be properly installed on the system.
 \MCS\ provides an easy way to generate automatically an HTML help page about a
 given component or instrument, or the whole \MCS\
 library. \index{Library!Components}
-\begin{quote}
+\begin{lstlisting}
   \verb|mcdoc|\\
   \verb|mcdoc| {\it comp|instr}\\
   \verb|mcdoc --tools|
-\end{quote}
+\end{lstlisting}
 The first example generates an {\it index.html} catalog file using the available
 components and instruments (both locally, and in the \MCS\ library). The library
 catalog of components is opened using the \verb+BROWSER+ environment variable
@@ -1495,9 +1495,9 @@ available.
 
 Any \MCS\ component may be translated for usage with Vitess (starting from
 Vitess version 2.3). The syntax is simply \index{Library!Components}
-\begin{quote}
+\begin{lstlisting}
   \texttt{mcstas2vitess {\it Compo.comp\/}}
-\end{quote}
+\end{lstlisting}
 This will create a Vitess module of the given component.
 
 Let us assume the component \verb+Compo+ shall be translated. The tool first
@@ -1548,9 +1548,9 @@ To use the \verb+mcstas2vitess+ front-end, the program Perl should be available.
 If you have been running a \MCS\ simulation with a given text format output, but
 finally plan to look at the results with an other plotter (e.g. you ran a
 simulation with PGPLOT output and want to view it using Matlab), you may use
-\begin{quote}
+\begin{lstlisting}
   \texttt{mcformat {\it file | dir} -d {\it target\_dir} --format=TARGET\_FORMAT}
-\end{quote}
+\end{lstlisting}
 to translate files into format TARGET\_FORMAT. When given a directory, the
 translation works recursively. The conversion works only for text files. Some
 problems may be found when translating from HTML/VRML data files, or from binary
@@ -1675,9 +1675,9 @@ avoid name clash with existing Matlab commands/variables.\footnote{For instance
   in most case, the simulation location is './mcstas.m' which turns into field
   'm\_mcstas'.}.  In this tree, you will find the monitor names, which fields
 contain the monitored data. The usual structure is
-\begin{quote}
+\begin{lstlisting}
   \texttt{s.{\it instrument}.{\it simulation}.{\it comp\_name}.{\it file\_name}}
-\end{quote}
+\end{lstlisting}
 
 For instance, reading the data from a 'test' instrument using Matlab format will
 look like

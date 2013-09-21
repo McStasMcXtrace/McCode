@@ -159,7 +159,7 @@ much larger than the beam cross section, reads \cite{bacon}
 where the sum in the structure factor runs over all atoms in one unit cell.
 The meanings and units of the symbols are
 %
-\begin{quote}\begin{tabular}{ccl}
+\begin{lstlisting}\begin{tabular}{ccl}
 $P_0$ & s$^{-1}$ & Incoming intensity of neutrons \\
 $P$   & s$^{-1}$ & Detected intensity of neutrons \\
 $l_s$ & m        & Height of detector \\
@@ -171,7 +171,7 @@ $N_c$ & m$^{-3}$ & Density of unit cells in bulk material\\
 $|F({\bf Q})|^2$ & m$^2$  & Structure factor \\
 $\exp(-2W)$ & 1  & Debye-Waller factor \\
 $\mu^a$ & m$^{-1}$ & Linear attenuation factor due to absorption. \\
-\end{tabular}\end{quote}
+\end{tabular}\end{lstlisting}
 %
 In analogy with this, the textbook expression for a cylinder shaped powder
 sample, completely illuminated by the beam, reads \cite{bacon}
@@ -183,21 +183,21 @@ sample, completely illuminated by the beam, reads \cite{bacon}
 \end{equation}
 where the new symbols are
 %
-\begin{quote}\begin{tabular}{ccl}
+\begin{lstlisting}\begin{tabular}{ccl}
 $\Psi_0$  & s$^{-1}$m$^{-2}$ & Incoming beam flux \\
 $V$       & m$^3$    & Sample volume \\
 $A_{hkl}$ & 1        & Attenuation factor. \\
-\end{tabular}\end{quote}
+\end{tabular}\end{lstlisting}
 %
 Eq.\ (\ref{e:slab}) for a slab shaped sample
 may be cast into the form of the cylinder expression above
 by using the substitutions
 %
-\begin{quote}\begin{tabular}{lrcl}
+\begin{lstlisting}\begin{tabular}{lrcl}
 Incoming flux & $P_0 / (w h \cos\theta)$ & $\rightarrow$ & $\Psi_0$ \\
 Sample volume & $w h t$ & $\rightarrow$ & $V$ \\
 Absorption factor & $\exp(-\mu^a t / \cos\theta)$ & $\rightarrow$ & $A_{hkl}$, \\
-\end{tabular}\end{quote}
+\end{tabular}\end{lstlisting}
 %
 where $h$ and $w$ are the height and width of the sample, respectively.
 Often, one defines the {\em scattering power} as
@@ -246,7 +246,7 @@ Multiple scattering is not implemented.
 
 The input parameters for this component are
 %
-\begin{quote}\begin{tabular}{ccl}
+\begin{lstlisting}\begin{tabular}{ccl}
 $r$ & m & Radius of cylinder \\
 $h$ & m & Height of cylinder \\
 $\sigma_c^a$ & fm$^2$ & Absorption cross section per unit cell (at 2200 m/s) \\
@@ -262,7 +262,7 @@ $d\phi$ & deg & Angular interval of focusing \\
 $f_x$ & m & \\
 $f_y$ & m & Focusing vector\\
 $f_z$ & m & \\
-\end{tabular}\end{quote}
+\end{tabular}\end{lstlisting}
 %
 The source text for the component is shown in Appendix
 \ref{c:powder1}.
