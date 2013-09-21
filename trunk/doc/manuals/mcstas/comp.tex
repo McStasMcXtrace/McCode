@@ -245,14 +245,14 @@ a library component of the same name.
 As a complement to this Component Manual, we encourage users to use
 the \verb+mcdoc+ front-end which enables to display both the
 catalog of the \MCS\ library, e.g using: \index{Tools!mcdoc}
-\begin{quote}
+\begin{lstlisting}
   \verb|mcdoc|
-\end{quote}
+\end{lstlisting}
 as well as the documentation of specific components, e.g with:
-\begin{quote}
+\begin{lstlisting}
   \verb|mcdoc --text| {\it name} \\
   \verb|mcdoc| {\it file.comp}
-\end{quote}
+\end{lstlisting}
 The first line will search for all components matching the {\it name},
 and display their help section as text. For instance, \verb+mcdoc .laz+ will list all available Lazy data files, whereas \verb+mcdoc --text Monitor+ will list most Monitors.
 The second example will display the help corresponding to

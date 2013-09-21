@@ -181,13 +181,14 @@ executable from the generated C code, and must contain valid C.
 Embedded C code is used in several instances in the \MCS\
 meta-language. Such code is copied by the \MCS\ compiler into the
 generated simulation C program. Embedded C code is written by putting it
-between the special symbols \verb|%{| and \verb|%}|, as follows:
-\begin{quote}
-  \verb|%{| \\
-  \hbox to 3em{}\ldots Embedded C code \ldots \\
-  \verb|%}|
-\end{quote} \index{Embedded C code}
-The ``\verb|%{|'' and ``\verb|%}|'' must appear on a line by themselves (do not add comments after).
+between the special symbols %{ and %}, as follows:
+\begin{lstlisting}
+%{ 
+// Embedded C code...
+%}
+\end{lstlisting} 
+\index{Embedded C code}
+The ``%{'' and ``%}'' must appear on a line by themselves (do not add comments after).
 Additionally, if a ``\verb+%include+'' statement is found \emph{within} an embedded C code block, the specified file will be included from the 'share' directory of the standard component library \index{Library!Components!share} (or from the
 current directory and any user-specified search directories) as a C library, just like the usual ``\verb+#include+'' \emph{but only once}. For instance, if many components require to read data from a file, they may all ask for ``\verb+%include "read_table-lib"+'' \index{Library!read\_table-lib (Read\_Table)} without duplicating the code of this library. If the file has no extension, both \verb+.h+ and \verb+.c+ files will be searched and included, otherwise, only the specified file will be imported. The \MCS\ 'run-time' shared
 library is included by default (equivalent to ``\verb+%include "mcstas-r"+'' in the \texttt{DECLARE} section). \index{Library!Run-time}
@@ -225,9 +226,9 @@ END
 
 \subsection{The instrument definition head}
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{DEFINE} \texttt{INSTRUMENT} \textit{name} $(a_1, a_2, \ldots)$
-\end{quote} \index{Keyword!DEFINE!INSTRUMENT}
+\end{lstlisting} \index{Keyword!DEFINE!INSTRUMENT}
 This marks the beginning of the definition. It also gives the name of
 the instrument and the list of instrument parameters. Instrument
 parameters describe the configuration of the instrument, and usually
@@ -245,9 +246,9 @@ integer type or \verb+char *+ for the C string type. The name
 \verb+string+ may be used as a synonym for \verb+char *+, and floating
 point parameters may be explicitly declared using the name
 \verb+double+. The following example illustrates all possibilities:
-\begin{quote}
+\begin{lstlisting}
   \texttt{DEFINE INSTRUMENT test(d1, double d2, int i, char *s1, string s2)}
-\end{quote}
+\end{lstlisting}
 Here \verb+d1+ and \verb+d2+ will be floating point parameters of C type
 \verb+double+, \verb+i+ will be an integer parameter of C type \verb+int+, and
 \verb+s1+ and \verb+s2+ will be string parameters of C type \verb+char *+.
@@ -261,9 +262,9 @@ parameter values, but pressing the \verb+Return+ key selects the default value
 non specified parameters will have their value set to the default one (if
 any). A parameter is given a default value using the syntax
 ``\textit{param}\texttt{= }\textit{value}''.  For example
-\begin{quote}
+\begin{lstlisting}
   \texttt{DEFINE INSTRUMENT test(d1= 1, string s2="hello")}
-\end{quote}
+\end{lstlisting}
 Here \verb+d1+ and \verb+d2+ are optional parameters and if no
 value are given explicitly, ``1'' and ``hello'' will be used.
 
@@ -278,12 +279,12 @@ starting point to study the instrument design.
 \index{Keyword!DECLARE}
 \label{s:declare}
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{DECLARE} \\
-  \verb|%{| \\
+  %{ \\
   \hbox to 3em{}\ldots C declarations of global variables etc. \ldots \\
-  \verb|%}|
-\end{quote} \index{Embedded C code} This gives C declarations that may be
+  %}
+\end{lstlisting} \index{Embedded C code} This gives C declarations that may be
 referred to in the rest of the instrument definition. A typical use is to
 declare global variables or small functions that are used elsewhere in the
 instrument. The \verb+%include ''file''+ keyword may be used to import a
@@ -298,12 +299,12 @@ reason. \index{Can not compile}The \texttt{DECLARE} section is optional.
 \index{Keyword!INITIALIZE}
 \label{s:initialize}
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{INITIALIZE} \\
-  \verb|%{| \\
+  %{ \\
   \hbox to 3em{}\ldots C initializations. \ldots \\
-  \verb|%}|
-\end{quote} \index{Embedded C code} This gives code that is executed when the
+  %}
+\end{lstlisting} \index{Embedded C code} This gives code that is executed when the
 simulation starts. This section is optional. Instrument setting parameters may
 be modified in this section (e.g. doing tests or automatic settings).
 
@@ -322,13 +323,13 @@ The default NeXus format is NeXus 5 with compression. However, that format may
 be changed with the optional keyword \verb+NEXUS+ to follow the INITIALIZE
 section, namely:
 
-\begin{quote}
-  \texttt{INITIALIZE} \\
-  \verb|%{| \\
-  \hbox to 3em{}\ldots C initializations. \ldots \\
-  \verb|%}|
-  \verb+NEXUS {"4"|"5"|"XML"|"compress"|"zip"}+
-\end{quote}
+\begin{lstlisting}
+INITIALIZE
+%{ 
+    // C initializations. 
+%}
+NEXUS {"4"|"5"|"XML"|"compress"|"zip"}
+\end{lstlisting}
 
 It is possible to set the type of NeXus file with a string argument, containing
 words "4", "5" or "XML". Optionally, if the string also contains the
@@ -362,10 +363,10 @@ COMPONENT name = comp(parameters)
 The \texttt{TRACE} keyword starts a section giving the list of
 components that constitute the instrument.
 Components are declared like this:
-\begin{quote}
+\begin{lstlisting}
   \texttt{COMPONENT} $\textit{name} =
     \textit{comp}(p_1 = e_1, p_2 = e_2, \ldots)$
-\end{quote}
+\end{lstlisting}
 \index{Components}
 \index{Keyword!COMPONENT} \index{Parameters!Setting}
 \index{Parameters!Definition}
@@ -403,21 +404,21 @@ explicitly read definitions from other files using \verb+%include+
 The physical position of a component is specified using an \texttt{AT} modifier
 following the component declaration:
 \index{Keyword!AT} \index{Keyword!RELATIVE} \index{Keyword!ABSOLUTE}
-\begin{quote}
-  \texttt{AT} $(x,y,z)$ \texttt{RELATIVE} \textit{name}
-\end{quote}
+\begin{lstlisting}
+  AT (x,y,z) RELATIVE name
+\end{lstlisting}
 This places the component at position $(x,y,z)$ in the coordinate system
 of the previously declared component \textit{name}. Placement may also
 be absolute (not relative to any component) by writing
-\begin{quote}
-  \texttt{AT} $(x,y,z)$ \texttt{ABSOLUTE}
-\end{quote}
+\begin{lstlisting}
+  AT (x,y,z) RELATIVE ABSOLUTE
+\end{lstlisting}
 Any C expression may be used for $x$, $y$, and $z$. The \texttt{AT}
 modifier is required.
 Rotation is achieved similarly by writing \index{Keyword!ROTATED}
-\begin{quote}
-  \texttt{ROTATED} $(\phi_x,\phi_y,\phi_z)$ \texttt{RELATIVE} \textit{name}
-\end{quote}
+\begin{lstlisting}
+  ROTATED (phi_x,phi_y,phi_z) RELATIVE name
+\end{lstlisting}
 This will result in a coordinate system that is rotated first the angle $\phi_x$
 (in degrees) around the $x$ axis, then $\phi_y$ around the $y$ axis, and finally
 $\phi_z$ around the $z$ axis. Rotation may also be specified using
@@ -440,10 +441,10 @@ refer to the previous component in the simulation. Moreover, the
 starting from the current component, so that \texttt{PREVIOUS} is equivalent to
 \texttt{PREVIOUS(1)}. This keyword should be used after the \texttt{RELATIVE}
 keyword, but not for the first component instance of the instrument description.
-\begin{quote}
-  \texttt{AT} $(x,y,z)$ \texttt{RELATIVE} \texttt{PREVIOUS}
-  \texttt{ROTATED} $(\phi_x,\phi_y,\phi_z)$ \texttt{RELATIVE} \texttt{PREVIOUS(2)}
-\end{quote}
+\begin{lstlisting}
+AT (x,y,z) RELATIVE PREVIOUS
+ROTATED (phi_x, phi_y, phi_z) RELATIVE PREVIOUS(2)
+\end{lstlisting}
 Invalid \texttt{PREVIOUS} references will be assumed to be absolute placement.
 
 The order and position of components in the \texttt{TRACE} section does not
@@ -470,12 +471,14 @@ section \ref{s:instrdefs-extend} below.
 \index{Keyword!SAVE}
 \label{s:save}
 
-\begin{quote}
-  \texttt{SAVE} \\
-  \verb|%{| \\
-  \hbox to 3em{}\ldots C code to execute each time a temporary save is required \ldots \\
-  \verb|%}|
-\end{quote} \index{Signal handler!USR2 signal} This gives code that will be
+\begin{lstlisting}
+SAVE 
+%{
+  // C code to execute each time a temporary save is required...
+%}
+\end{lstlisting} 
+
+\index{Signal handler!USR2 signal} This gives code that will be
 executed when the simulation is requested to save data, for instance when
 receiving a USR2 signal (on Unix systems), or using the \verb+Progress_bar+
 component with intermediate savings. It is also executed when the simulation
@@ -485,12 +488,12 @@ ends. This section is optional.
 \index{Keyword!FINALLY}
 \label{s:finally}
 
-\begin{quote}
-  \texttt{FINALLY} \\
-  \verb|%{| \\
-  \hbox to 3em{}\ldots C code to execute at end of simulation \ldots \\
-  \verb|%}|
-\end{quote}
+\begin{lstlisting}
+FINALLY
+%{
+// C code to execute at end of simulation
+%}
+\end{lstlisting}
 This gives code that will be executed when the simulation has
 ended. When existing, the \texttt{SAVE} section is first executed. The
 \texttt{FINALLY} section is optional.
@@ -505,9 +508,9 @@ Control-C, causing code in \texttt{FINALLY} to be evaluated.
 \index{Keyword!END}
 
 The end of the instrument definition must be explicitly marked using the keyword
-\begin{quote}
-  \texttt{END}
-\end{quote}
+\begin{lstlisting}
+END
+\end{lstlisting}
 
 \subsection{Code for the instrument \texttt{vanadium\_example.instr}}
 \label{s:Samples_vanadium.instr}
@@ -568,12 +571,12 @@ instruments may themselves use \texttt{\%include}.
 \label{s:instrdefs-extend-group}
 
 It is sometimes desirable to slightly modify an existing component of the \MCS\ library. One would usually make a copy of the component, and extend the code of its \texttt{TRACE} section. \MCS\ provides an easy way to change the behaviour of existing components in an instrument definition without duplicating files, using the \texttt{EXTEND} modifier \index{Keyword!EXTEND}
-\begin{quote}
-  \texttt{EXTEND} \\
-  \verb|%{| \\
-  \hbox to 3em{}\ldots C code executed after the component TRACE section \ldots \\
-  \verb|%}|
-\end{quote} \index{Embedded C code} The embedded C code is appended to the
+\begin{lstlisting}
+EXTEND
+%{ 
+// C code executed after the component TRACE section...
+%}
+\end{lstlisting} \index{Embedded C code} The embedded C code is appended to the
 component \texttt{TRACE} section, and all its internal variables (as well as all
 the \texttt{DECLARE} instrument variables, \emph{except} instrument parameters)
 may be used. To use instrument parameters, you should copy them into global
@@ -589,9 +592,9 @@ crystal monochromator. One would then like the neutron ray to interact with
 
 In order to handle such arrangements without removing neutrons, groups are
 defined by the \texttt{GROUP} modifier (after the AT-ROTATED positioning):
-\begin{quote}
-  \texttt{GROUP} \textit{name}
-\end{quote}
+\begin{lstlisting}
+GROUP name
+\end{lstlisting}
 to all involved component declarations. \index{Keyword!GROUP} All components of
 the same named group are tested one after the other, until one of them interacts
 (uses the SCATTER macro\index{Library!Run-time!SCATTER}). The selected component
@@ -604,20 +607,25 @@ are skipped, one may use the SCATTERED flag, which is set to zero when entering
 each component or group, and incremented when the neutron is SCATTERed, as in
 the following example \index{Library!Run-time!SCATTER}
 \index{Library!Run-time!SCATTERED}
-\begin{quote}
-  \texttt{COMPONENT} $\textit{name0} =
-    \textit{comp}(p_1 = e_1, p_2 = e_2, \ldots)$ \\
-    \hbox to 1em{} \texttt{AT} $(0,0,0)$ \texttt{ABSOLUTE} \\
-  \texttt{COMPONENT} $\textit{name1} =
-    \textit{comp}(\ldots)$ \texttt{AT} $(...)$  \texttt{ROTATED} $(...)$ \\
-  \hbox to 1em{} \texttt{GROUP} \textit{GroupName} \texttt{EXTEND} \\
-  \hbox to 1em{} \verb|%{| \\
-  \hbox to 3em{} \verb+if (SCATTERED) printf("I scatter"); else printf("I do not scatter");+\\
-  \hbox to 1em{} \verb|%}| \\
-  \texttt{COMPONENT} $\textit{name2} =
-    \textit{comp}(\ldots)$ \texttt{AT} $(...)$ \texttt{ROTATED} $(...)$ \\
-  \hbox to 1em{} \texttt{GROUP} \textit{GroupName}
-\end{quote}
+\begin{lstlisting}
+COMPONENT name0 = comp (
+                  p_1 = e_1, 
+                  p_2 = e_2, 
+                  ...)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT name1 = comp... 
+AT (...) ROTATED (...)
+
+GROUP GroupName EXTEND
+%{ 
+   if (SCATTERED) printf("I scatter"); else printf("I do not scatter");
+%}
+
+COMPONENT} name2 = comp ...
+AT (...) ROTATED (...)
+GROUP GroupName
+\end{lstlisting}
 Components \emph{name1} and \emph{name2} are at the same position. If the first
 one intercepts the neutron (and has a SCATTER within its \texttt{TRACE}
 section), the SCATTERED variable becomes true, the code extension will result in
@@ -645,16 +653,18 @@ JUMP and WHEN keyword.  Position (AT) and rotation (ROTATED) specification must
 be explicitely entered in order to avoid component overlapping.
 
 The syntax for instance copy is
-\begin{quote}
-  \texttt{COMPONENT} name = \texttt{COPY}(instance\_name)
-\end{quote}
+\begin{lstlisting}
+COMPONENT name = COPY (instance_name)
+\end{lstlisting}
 where {\it instance\_name} is the name of a preceeding component instance in the
 instrument. It may be 'PREVIOUS' as well.
 
 If you would like to change only some of the parameters in the instance copy, you may write, e.g.:
-\begin{quote}
-  \texttt{COMPONENT} name = \texttt{COPY}(instance\_name)(par1=0, par2=1)
-\end{quote}
+
+\begin{lstlisting}
+COMPONENT name = COPY (instance_name)(par1=0, par2=1)
+\end{lstlisting}
+
 which will override the original instance parameter values. This possibility to
 override parameters is very useful in case of describing e.g. sample environments
 using the Isotropic\_Sqw and PowderN components, which allow \emph{concentric}
@@ -666,9 +676,9 @@ copied instance.
 
 In the case where there are many duplicated components all originating from the
 same instance, there is a mechanism for automating copied instance names:
-\begin{quote}
-  \texttt{COMPONENT} \texttt{COPY}(root\_name) = \texttt{COPY}(instance\_name)
-\end{quote}
+\begin{lstlisting}
+COMPONENT COPY(root_name) = COPY(instance_name)
+\end{lstlisting}
 will concatenate a unique number to {\it root\_name}, avoiding name
 conflicts. As a side effect, referring to this component instance (for
 e.g. further positioning) is not straight forward as the name is determined by
@@ -711,10 +721,10 @@ One of the most useful features of the extended \MCS\ syntax is the conditional
 positioning. It basically enables the component only when a given condition is
 true (non null).
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{COMPONENT} $\textit{name} = \textit{comp}(p_1 = e_1, p_2 = e_2, \ldots)$
   \texttt{WHEN} {\it condition}
-\end{quote}
+\end{lstlisting}
 The condition has the same scope as the EXTEND modifier, i.e. may use component
 internal variables as well as all the \texttt{DECLARE} instrument variables,
 \emph{except} instrument parameters. To use instrument parameters, you should
@@ -777,11 +787,11 @@ sequential propagation along components in the instrument description. There may
 be more than one JUMP per component instance.
 
 The jump may depend on a condition:
-\begin{quote}
+\begin{lstlisting}
   \texttt{COMPONENT} $\textit{name} = \textit{comp}(p_1 = e_1, p_2 = e_2, \ldots)$
   \texttt{AT} (...)
   \texttt{JUMP} {\it reference} WHEN {\it condition}
-\end{quote}
+\end{lstlisting}
 in which case the instrument TRACE will jump to the {\it reference} when {\it
   condition} is true.
 
@@ -800,9 +810,9 @@ MYSELF, the target component type should be an \emph{Arm}.
 
 There is a more general way to iterate components, which consists in repeating
 the loop for a given number of times.
-\begin{quote}
+\begin{lstlisting}
   \texttt{JUMP} {\it reference} ITERATE {\it number\_of\_times}
-\end{quote}
+\end{lstlisting}
 This method is specially suited for very long curved guides of similar
 components, but in order to take into account rotation and translation between
 guide sections, the iterations are performed between Arm's.
@@ -858,9 +868,9 @@ shuffle this way the distributions, so that identical incoming events will not
 produce the same outgoing event. In this case, you may use the \verb+SPLIT+
 keyword with the syntax
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{SPLIT} ${r}$ \texttt{COMPONENT} $\textit{name} = \textit{comp}(\ldots)$
-\end{quote}
+\end{lstlisting}
 
 where the optional number $r$ specifies the number of repetitions for each
 event. Default is $r=10$.  Each neutron event reaching component {\it name} will
@@ -918,16 +928,16 @@ for
 \subsection{The component definition header}
 \label{s:comp-header}
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{DEFINE} \texttt{COMPONENT} \textit{name}
-\end{quote}
+\end{lstlisting}
 \index{Keyword!DEFINE!COMPONENT}
 This marks the beginning of the definition, and defines the name of the
 component.
-\begin{quote}
+\begin{lstlisting}
   \texttt{DEFINITION} \texttt{PARAMETERS} $(d_1, d_2, \ldots)$ \\
   \texttt{SETTING} \texttt{PARAMETERS} $(s_1, s_2, \ldots)$
-\end{quote}
+\end{lstlisting}
 \index{Keyword!DEFINITION PARAMETERS}
 \index{Keyword!SETTING PARAMETERS}
 This declares the definition and setting parameters of the component.
@@ -968,9 +978,9 @@ Setting parameters may optionally be declared to be of type \verb+int+,
 \verb+char *+ and \verb+string+, just as in the instrument definition (see
 section~\ref{s:instrdefs}).
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{OUTPUT} \texttt{PARAMETERS} $(s_1, s_2, \ldots)$
-\end{quote}
+\end{lstlisting}
 \index{Keyword!OUTPUT PARAMETERS}
 \index{Parameters!Protecting|see{Keyword/OUTPUT}}
 This declares a list of C identifiers (variables, functions) that are
@@ -990,18 +1000,18 @@ defined as OUTPUT parameters.
 
 The \texttt{OUTPUT} \texttt{PARAMETERS} section is optional.
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{STATE} \texttt{PARAMETERS} $(x,y,z,v_x,v_y,v_z,t,s_1,s_2,p)$
-\end{quote}
+\end{lstlisting}
 \index{Keyword!STATE PARAMETERS}
 This declares the parameters that define the state of the incoming
 neutron. The task of the component code is to assign new values to these
 parameters based on the old values and the values of the definition and
 setting parameters. Note that $s_1$ and $s_2$ are obsolete and stand for
 $s_x$ and $s_y$ members of the polarisation vector. To access $s_z$, use:
-\begin{quote}
+\begin{lstlisting}
   \texttt{POLARISATION} \texttt{PARAMETERS} $(s_x,s_y,s_z)$
-\end{quote}
+\end{lstlisting}
 \index{Keyword!POLARISATION PARAMETERS}
 This line is necessary only if the component handles polarisation of neutrons
 and thus modifies the spin vector. For an instrument to handle polarisation
@@ -1017,9 +1027,9 @@ called \emph{optional parameters}, and need not be given an explicit value when
 the component is used in an instrument definition. A parameter is given a
 default value using the syntax ``\textit{param}\texttt{ = }\textit{value}''.
 For example
-\begin{quote}
+\begin{lstlisting}
   \texttt{SETTING PARAMETERS (radius, height, pack= 1)}
-\end{quote}
+\end{lstlisting}
 Here \verb+pack+ is an optional parameter and if no value is given
 explicitly, ``1'' will be used. In contrast, if no value is
   given for \texttt{radius} or \texttt{height}, an error message will
@@ -1042,13 +1052,13 @@ explicitly, ``1'' will be used. In contrast, if no value is
 
 \subsection{The \texttt{DECLARE} section}
 \label{s:comp-declare}
-\begin{quote}
+\begin{lstlisting}
   \texttt{DECLARE} \\
-  \verb|%{| \\
+  %{ \\
   \hbox to 3em{}\ldots C code declarations (variables, definitions, functions)\ldots \\
   \hbox to 3em{}\ldots These are usually OUTPUT parameters to avoid name conflicts \ldots \\
-  \verb|%}|
-\end{quote}
+  %}
+\end{lstlisting}
 \index{Keyword!DECLARE} This gives C declarations of global variables,
 functions, etc. that are used by the component code. This may for instance be
 used to declare a neutron counter for a detector component. This section is
@@ -1060,7 +1070,7 @@ are used in the same instrument. To avoid this, variables declared in the
 \texttt{DECLARE} section should be \texttt{OUTPUT} parameters of the component
 because \MCS\ will then rename variables to avoid conflicts.  For example, a
 simple detector might be defined as follows:
-\begin{quote}
+\begin{lstlisting}
 \begin{lstlisting}
 DEFINE COMPONENT Detector
 OUTPUT PARAMETERS (counts)
@@ -1070,13 +1080,13 @@ DECLARE
 %}
 ...
 \end{lstlisting}
-\end{quote}
+
 \index{Keyword!OUTPUT PARAMETERS} \index{Library!Run-time!MC\_GETPAR} The idea
 is that the \texttt{counts} variable counts the number of neutrons detected. In
 the instrument definition, the \texttt{counts} parameter may be referenced using
 the \verb+MC_GETPAR+ C macro, as in the following example instrument
 fragment:\label{mcgetpar}
-\begin{quote}
+\begin{lstlisting}
 \begin{lstlisting}
 COMPONENT d1 = Detector()
 ...
@@ -1088,7 +1098,7 @@ FINALLY
          MC_GETPAR(d1,counts), MC_GETPAR(d2,counts));
 %}
 \end{lstlisting}
-\end{quote}
+
 This way, \MCS\ takes care to rename transparently the two 'counts'
 \texttt{OUTPUT} parameters so that they are distinct, and can be accessed from
 elsewhere in the instrument (EXTEND, FINALLY, SAVE, ...)  or from other
@@ -1097,13 +1107,13 @@ themselves output their contents.
 
 \subsection{The \texttt{SHARE} section}
 \label{s:comp-share}
-\begin{quote}
+\begin{lstlisting}
   \texttt{SHARE} \\
-  \verb|%{| \\
+  %{ \\
     \hbox to 3em{}\ldots C code \emph{shared} declarations (variables, definitions, functions)\ldots \\
     \hbox to 3em{}\ldots These should not be OUTPUT parameters \ldots \\
-  \verb|%}|
-\end{quote}
+  %}
+\end{lstlisting}
 \index{Keyword!SHARE}
 
 The \texttt{SHARE} section has the same role as \texttt{DECLARE} except that
@@ -1123,12 +1133,12 @@ a shared library. The \texttt{SHARE} section is optional.
 \subsection{The \texttt{INITIALIZE} section}
 \label{s:comp-initialize}
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{INITIALIZE} \\
-  \verb|%{| \\
+  %{ \\
   \hbox to 3em{}\ldots C code initialization \ldots \\
-  \verb|%}|
-\end{quote}
+  %}
+\end{lstlisting}
 \index{Keyword!INITIALIZE} This gives C code that will be executed once at the
 start of the simulation, usually to initialize any variables declared in the
 \texttt{DECLARE} section. This section is optional. Component setting parameters
@@ -1138,13 +1148,13 @@ may be modified in this section, affecting the rest of the component.
 \subsection{The \texttt{TRACE} section}
 \label{s:comp-trace}
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{TRACE} \\
-  \verb|%{| \\
+  %{ \\
   \hbox to 3em{}\ldots C code to compute neutron interaction with
     component \ldots \\
-  \verb|%}|
-\end{quote}
+  %}
+\end{lstlisting}
 \index{Keyword!TRACE}
 \index{Library!Run-time!PROP\_Z0}
 This performs the actual computation of the interaction between the
@@ -1178,12 +1188,12 @@ component. \index{Library!Run-time!SCATTER}
 \index{Data formats}
 \index{Keyword!SAVE}
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{SAVE} \\
-  \verb|%{| \\
+  %{ \\
   \hbox to 3em{}\ldots C code to execute in order to save data \ldots \\
-  \verb|%}|
-\end{quote}
+  %}
+\end{lstlisting}
 This gives code that will be executed when the simulation ends, or is requested
 to save data, for instance when receiving a USR2 signal (on Unix systems, see
 section~\ref{s:run-sim}), or when triggered by the
@@ -1204,9 +1214,9 @@ As a default, all monitors using the standard macros will display the
 integral $p$ of the monitor bins, as well as the 2$^{nd}$ moment $\sigma$
 and the number of statistical events $N$. This will result in a line such as:
 
-\begin{quote}
+\begin{lstlisting}
 \verb+Detector:+ {\it CompName}\_I=$p$ {\it CompName}\_ERR=$\sigma$ {\it CompName}\_N=$N$ "{\it filename}"
-\end{quote}
+\end{lstlisting}
 
 For 1D, 2D and 3D monitors/detectors, the data histogram store in the files is
 given {\emph per bin} when the signal is the neutron intensity ({\it i.e.} most
@@ -1222,9 +1232,9 @@ in the 'options' parameter (refer to that component documentation).
 
 The results of a single detector/monitor are written using the following
 macro:
-\begin{quote}
+\begin{lstlisting}
   \texttt{DETECTOR\_OUT\_0D({\it t}, $N$, $p$, {\it p2})}
-\end{quote}
+\end{lstlisting}
 Here, \textit{t} is a string giving a short descriptive title for the
 results, {\em e.g.}\ ``Single monitor''.
 
@@ -1233,7 +1243,7 @@ results, {\em e.g.}\ ``Single monitor''.
 
 The results of a one-dimensional detector/\discretionary{}{}{}mon\-i\-tor are written using the
 following macro:
-\begin{quote}
+\begin{lstlisting}
   \texttt{DETECTOR\_OUT\_1D({\it t},
         {\it xlabel},
         {\it ylabel},
@@ -1241,7 +1251,7 @@ following macro:
         \phantom{\texttt{DETECTOR\_OUT\_1D(}}% Paren hack ->)
           $\&N[0]$, $\&p[0]$, $\&{\it p2}[0]$,
         {\it filename})}
-\end{quote}
+\end{lstlisting}
 Here,
 \begin{itemize}
 \item \textit{t} is a string giving a descriptive title ({\em e.g.}\ ``Energy
@@ -1272,7 +1282,7 @@ Here,
 
 The results of a two-dimensional detector/\discretionary{}{}{}mon\-i\-tor are written to a file using the
 following macro:
-\begin{quote}
+\begin{lstlisting}
   \texttt{DETECTOR\_OUT\_2D({\it t},
         {\it xlabel},
         {\it ylabel},
@@ -1280,7 +1290,7 @@ following macro:
         \phantom{\texttt{DETECTOR\_OUT\_2D(}}% Paren hack ->)
           $\&N[0][0]$, $\&p[0][0]$, $\&{\it p2}[0][0]$,
         {\it filename})}
-\end{quote}
+\end{lstlisting}
 Here,
 \begin{itemize}
 \item \textit{t} is a string giving a descriptive title ({\em e.g.}\ ``PSD
@@ -1314,7 +1324,7 @@ is a pointer to the first element.
 The results of a three-dimensional detector/\discretionary{}{}{}mon\-i\-tor are written to a file using the
 following macro:
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{DETECTOR\_OUT\_3D({\it t},
         {\it xlabel}, {\it ylabel}, {\it zlabel},
         {\it xvar}, {\it yvar}, {\it zvar},
@@ -1323,7 +1333,7 @@ following macro:
         \phantom{\texttt{DETECTOR\_OUT\_3D(}}% Paren hack ->)
           $\&N[0][0][0]$, $\&p[0][0][0]$, $\&{\it p2}[0][0][0]$,
         {\it filename})}
-\end{quote}
+\end{lstlisting}
 The meaning of parameters is the same as those used in the 1D and 2D
 versions of DETECTOR\_OUT. The available data format currently saves
 the 3D arrays as 2D, with the 3rd dimension specified in the {\it
@@ -1337,9 +1347,9 @@ Users may want to have additional information than the default one written by
 the DETECTOR\_OUT macros. A mechanism has been implemented for monitor
 components to output customized meta data. The macro:
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{DETECTOR\_CUSTOM\_HEADER({\it t})}
-\end{quote}
+\end{lstlisting}
 
 defines a string to be written during the next \verb+DETECTOR\_OUT*+ call, as a field {\it custom}. This string may additionally use the symbol \verb+%PRE+ which is replaced by the format specific comment character, e.g. '\#' for McStas/PGPLOT, '\%' for Octave/Matlab, '\verb+//+' for Scilab and ';' for IDL, and ' ' for other formats. The argument {\it t} to the macro may be a static string, e.g. {\it "My own additional information"}, or the name of a {\it character array variable} containing the meta data. After the detector/monitor file being written, the custom meta data output is deactivated. This way, each monitor file may have its own meta data definition by repeating the DETECTOR\_CUSTOM\_HEADER call. You may either do that inside the component SAVE section, or within an instrument description in an EXTEND code preceeding the monitor (e.g. following an Arm component).
 
@@ -1347,12 +1357,12 @@ defines a string to be written during the next \verb+DETECTOR\_OUT*+ call, as a 
 \label{s:comp-finally}
 \index{Keyword!FINALLY}
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{FINALLY} \\
-  \verb|%{| \\
+  %{ \\
   \hbox to 3em{}\ldots C code to execute at end of simulation \ldots \\
-  \verb|%}|
-\end{quote}
+  %}
+\end{lstlisting}
 This gives code that will be executed when the simulation has ended. This might
 be used to free memory and print out final results from components,
 \textit{e.g}.\ the simulated intensity in a detector. This section also triggers
@@ -1362,12 +1372,12 @@ the SAVE section to be executed.
 \label{s:comp-mcdisplay}
 \index{Keyword!MCDISPLAY}
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{MCDISPLAY} \\
-  \verb|%{| \\
+  %{ \\
   \hbox to 3em{}\ldots C code to draw a sketch of the component \ldots \\
-  \verb|%}|
-\end{quote}
+  %}
+\end{lstlisting}
 This gives C code that draws a sketch of the component in the plots
 produced by the \verb+mcdisplay+ front-end (see
 section~\ref{s:mcdisplay}). The section can contain arbitrary C code and
@@ -1395,18 +1405,18 @@ option. For example:
 \paragraph{The {\tt line} command}
 
 The {\tt line} command takes the following form:
-\begin{quote}
+\begin{lstlisting}
   \texttt{line($x_1$, $y_1$, $z_1$, $x_2$, $y_2$, $z_2$)}
-\end{quote}
+\end{lstlisting}
 It draws a line between the points $(x_1, y_1, z_1)$ and $(x_2, y_2,
 z_2)$.
 
 \paragraph{The {\tt dashed\_line} command}
 
 The {\tt dashed\_line} command takes the following form:
-\begin{quote}
+\begin{lstlisting}
   \texttt{dashed\_line($x_1$, $y_1$, $z_1$, $x_2$, $y_2$, $z_2$, $n$)}
-\end{quote}
+\end{lstlisting}
 It draws a dashed line between the points $(x_1, y_1, z_1)$ and $(x_2, y_2,
 z_2)$ with $n$ equidistant spaces.
 
@@ -1414,9 +1424,9 @@ z_2)$ with $n$ equidistant spaces.
 \paragraph{The {\tt multiline} command}
 
 The {\tt multiline} command takes the following form:
-\begin{quote}
+\begin{lstlisting}
   \texttt{multiline($n$, $x_1$, $y_1$, $z_1$, ..., $x_n$, $y_n$, $z_n$)}
-\end{quote}
+\end{lstlisting}
 It draws a series of lines through the $n$ points $(x_1, y_1, z_1)$,
 $(x_2, y_2, z_2)$, \ldots, $(x_n, y_n, z_n)$. It thus accepts a variable
 number of arguments depending on the value of $n$. This exposes
@@ -1436,9 +1446,9 @@ written as
 \paragraph{The {\tt rectangle} command}
 
 The {\tt rectangle} command takes the following form:
-\begin{quote}
+\begin{lstlisting}
   \texttt{rectangle({\it plane}, $x$, $y$, $z$, {\it width}, {\it height})}
-\end{quote}
+\end{lstlisting}
 Here {\it plane} should be either \verb+"xy"+, \verb+"xz"+, or
 \verb+"yz"+. The command draws a rectangle in the specified plane with
 the center at $(x, y, z)$ and the size {\it width} $\times$ {\it
@@ -1453,17 +1463,17 @@ height}. Depending on {\it plane} the width and height are defined as:\\
 \paragraph{The {\tt box} command}
 
 The {\tt box} command takes the following form:
-\begin{quote}
+\begin{lstlisting}
   \texttt{box($x$, $y$, $z$, {\it xwidth}, {\it yheight}, {\it zlength})}
-\end{quote}
+\end{lstlisting}
 The command draws a box with the center at $(x, y, z)$ and the size {\it xwidth} $\times$ {\it yheight} $\times$ {\it zlength}.
 
 \paragraph{The {\tt circle} command}
 
 The {\tt circle} command takes the following form:
-\begin{quote}
+\begin{lstlisting}
   \texttt{circle({\it plane}, $x$, $y$, $z$, $r$)}
-\end{quote}
+\end{lstlisting}
 Here {\it plane} should be either \verb+"xy"+, \verb+"xz"+, or
 \verb+"yz"+. The command draws a circle in the specified plane with the center
  at $(x, y, z)$ and the radius $r$.
@@ -1473,9 +1483,9 @@ Here {\it plane} should be either \verb+"xy"+, \verb+"xz"+, or
 \subsection{The end of the component definition}
 \index{Keyword!END}
 
-\begin{quote}
+\begin{lstlisting}
   \texttt{END}
-\end{quote}
+\end{lstlisting}
 This marks the end of the component definition.
 
 \subsection{A component example: Slit}
@@ -1505,9 +1515,9 @@ are exact duplicates of the parent component, but one may override/extend
 original definitions of any section.
 
 The syntax for a full component child is
-\begin{quote}
+\begin{lstlisting}
   \texttt{DEFINE COMPONENT} {\it child\_name} \texttt{COPY} {\it parent\_name}
-\end{quote}
+\end{lstlisting}
 This single line will copy all parts of the {\it parent} into the {\it child}, except for the documentation header.
 
 As for normal component definitions, you may add other parameters,
@@ -1515,33 +1525,33 @@ As for normal component definitions, you may add other parameters,
 extend (be concatenated to, with the COPY/EXTEND keywords, see example below)
 the corresponding {\it parent} definition. In practice, you could copy a
 component and only rewrite some of it, as in the following example:
-\begin{quote}
+\begin{lstlisting}
   \texttt{DEFINE COMPONENT} {\it child\_name} \texttt{COPY} {\it parent\_name} \\
 
   \texttt{SETTING PARAMETERS} (newpar1, newpar2) \\
   \texttt{INITIALIZE} \texttt{COPY} {\it parent\_name} \texttt{EXTEND} \\
-  \verb|%{|  \\
+  %{  \\
   \hbox to 3em{}\ldots C code to be concatenated to the {\it parent\_name} INITIALIZE \ldots  \\
-  \verb|%}| \\
+  %} \\
   \texttt{SAVE} \\
-  \verb|%{|  \\
+  %{  \\
   \hbox to 3em{}\ldots C code to replace the {\it parent\_name} SAVE \ldots  \\
-  \verb|%}| \\
-\end{quote}
+  %} \\
+\end{lstlisting}
 where two additional parameters have been defined, and should be handled in the
 extension of the original INITIALIZE section.
 
 On the other hand, if you do not derive a component as a whole from a parent,
 you may still use specific parts from any component:
-\begin{quote}
+\begin{lstlisting}
   \texttt{DEFINE COMPONENT} {\it name} \ldots \\
   \texttt{DECLARE} \texttt{COPY} {\it parent1} \\
   \texttt{INITIALIZE} \texttt{COPY} {\it parent2} \texttt{EXTEND} \\
-  \verb|%{|  \\
+  %{  \\
   \hbox to 3em{}\ldots C code to be concatenated to the {\it parent2} INITIALIZE \ldots  \\
-  \verb|%}| \\
+  %} \\
   \texttt{TRACE} \texttt{COPY} {\it parent3}
-\end{quote}
+\end{lstlisting}
 
 This mechanism may lighten the component code, but a special care should be taken in mixing bits from different sources, specially concerning variables. This may result in difficulties to compile components.\index{Can not compile}
 
