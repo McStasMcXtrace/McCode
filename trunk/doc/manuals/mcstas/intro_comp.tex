@@ -4,12 +4,12 @@
 
 Efficient design and optimization of neutron spectrometers are
 formidable challenges. Monte Carlo techniques are well matched to meet
-these challenges. When \MCS\ version 1.0 was released in October
+these challenges. When \MCS version 1.0 was released in October
 1998, except for the NISP/MCLib program~\cite{nisp_webpage}, no existing package offered a general framework for the neutron
 scattering community to tackle the problems currently faced at reactor and
-spallation sources. The \MCS\ project was designed to provide such a framework.
+spallation sources. The \MCS project was designed to provide such a framework.
 
-\MCS\ %({\em Monte Carlo Simulations of Triple Axis Spectrometers\/}) 
+\MCS %({\em Monte Carlo Simulations of Triple Axis Spectrometers\/}) 
 is a fast and versatile software tool for neutron ray-tracing simulations.
 It is based on a meta-language specially designed for neutron
 simulation. Specifications are written in this language by users and
@@ -18,8 +18,8 @@ The present version supports both continuous and pulsed source instru-
 ments, and includes a library of standard
 components with in total around 90 components. These enable to simulate all kinds of neutron scattering instruments (diffractometers, triple-axis, reflectometers, small-angle, back-scattering,...) for both continuous and pulsed sources.
 
-The \MCS\ package is written in ANSI-C and is freely available for down-load
-from the \MCS\ web-page~\cite{mcstas_webpage}. The package is actively
+The \MCS package is written in ANSI-C and is freely available for down-load
+from the \MCS web-page~\cite{mcstas_webpage}. The package is actively
 being developed and supported by Ris\o\ National Laboratory 
 and the Institut Laue Langevin (ILL). 
 The system is well tested and
@@ -40,18 +40,18 @@ Writing programs in C or Fortran for
 each of the different cases involves a huge effort, with debugging presenting
 particularly difficult problems. A higher level tool specially designed
 for the needs of simulating neutron instruments is needed. As there was
-no existing simulation software that would fulfill our needs, the \MCS\ 
+no existing simulation software that would fulfill our needs, the \MCS 
 project was initiated.
 In addition, the ILL required an efficient and general simulation
 package in order to achieve renewal of its instruments and guides. 
-A significant contribution to both the component library and the \MCS\ 
+A significant contribution to both the component library and the \MCS 
 kernel itself was early performed at the ILL and included in the package.
-ILL later became a part of the core \MCS\ team.
+ILL later became a part of the core \MCS team.
 
 \subsection{The goals of \MCS}
 \label{s:goals}
 
-Initially, the \MCS\ project had four main objectives 
+Initially, the \MCS project had four main objectives 
 that determined its design.
 
 \paragraph{Correctness.}
@@ -70,7 +70,7 @@ testing to maximize the chances of finding existing bugs.
 When you commit yourself to using a tool for an important project, you
 need to know if the tool will satisfy not only your present, but also
 your future requirements. The tool must not have fundamental limitations that
-restrict its potential usage. Thus the \MCS\ systems needs to be
+restrict its potential usage. Thus the \MCS systems needs to be
 flexible enough to simulate different kinds of instruments
 as well as many different kind of
 optical components, and it must also be extensible so that future, as
@@ -95,10 +95,10 @@ achieve this.
 \section{The design of \MCS}
 \label{s:design}
 
-In order to meet these ambitious goals, it was decided that \MCS\ should
+In order to meet these ambitious goals, it was decided that \MCS should
 be based on its own meta-language, specially designed for
 simulating neutron scattering instruments. Simulations are written in
-this meta-language by the user, and the \MCS\ compiler automatically
+this meta-language by the user, and the \MCS compiler automatically
 translates them into efficient simulation programs written in ANSI-C.
 
 In realizing the design of \MCS, the task was
@@ -128,7 +128,7 @@ code for simulating the individual components in the instrument. A third
 user may write an intricate simulation of a complex component,
 e.g.\ a detailed description of a rotating velocity selector, 
 and expect other users to easily
-benefit from his/her work, and so on. \MCS\ attempts to make it
+benefit from his/her work, and so on. \MCS attempts to make it
 possible to work at any combination of layers in isolation by separating
 the layers as much as possible in the design of the system and in
 the meta-language in which simulations are written.
@@ -143,12 +143,12 @@ geometry of instruments would be much more complex if it were specified
 in C code with static arrays and pointers. The compiler can also take
 care of the low-level details of interfacing the various parts of the
 specification with the underlying C implementation language and each
-other. This way, users do not need to know about \MCS\ internals to
+other. This way, users do not need to know about \MCS internals to
 write new component or instrument definitions, and even if those
 internals change in later versions of \MCS, existing definitions can be
 used without modification.
 
-The \MCS\ system also utilizes the meta-language to let the \MCS\ 
+The \MCS system also utilizes the meta-language to let the \MCS 
 compiler generate as much code as possible automatically, letting the
 compiler handle some of the things that would otherwise be the task of
 the user/programmer. \textit{Correctness} is improved by having a well-tested
@@ -162,7 +162,7 @@ ways, to generate a simulation that graphically displays neutron
 trajectories, and possibly other things in the future that were not even
 considered when the original instrument specification was written.
 
-The design of \MCS\ makes it well suited for doing ``what if\ldots''
+The design of \MCS makes it well suited for doing ``what if\ldots''
 types of simulations. Once an instrument has been defined, questions
 such as ``what if a slit was inserted'', ``what if a focusing
 monochromator was used instead of a flat one'', ``what if the sample was
@@ -174,7 +174,7 @@ containing a neutron source, the component to be tested, and whatever
 detectors are useful, and the component can be thoroughly tested before
 being used in a complex simulation with many different components.
 
-The \MCS\ system is based on ANSI-C, making it both efficient and
+The \MCS system is based on ANSI-C, making it both efficient and
 portable. The meta-language allows the user to embed arbitrary C code in
 the specifications. \textit{Flexibility} is thus ensured since the full
 power of the C language is available if needed.
@@ -182,25 +182,25 @@ power of the C language is available if needed.
 
 \section{Overview}
 
-This \MCS\ Component Manual consists of the following major parts:
+This \MCS Component Manual consists of the following major parts:
 \begin{itemize}
 \item A thorough description of system components 
 from chapter~\ref{c:components}, sorted by categories. 
 \item A list of example instruments from the library in chapter~\ref{c:instr_examples}. 
-\item The \MCS\ library functions and definitions
+\item The \MCS library functions and definitions
   that aid in the writing of simulations and components in
   Appendix~\ref{c:kernelcalls}.    
 \end{itemize}
-An explanation of \MCS\ terminology can be
+An explanation of \MCS terminology can be
 found in appendix~\ref{s:terminology}.
 
-Additionally, you may refer to the list of example instruments from the library in the \MCS\ User Manual.
+Additionally, you may refer to the list of example instruments from the library in the \MCS User Manual.
 
 Plans for future component development are presented 
-on the \MCS\ web-page~\cite{mcstas_webpage}.
+on the \MCS web-page~\cite{mcstas_webpage}.
 
 
-%The \MCS\ package consists of four levels:
+%The \MCS package consists of four levels:
 %\paragraph{The kernel.} Here are located some geometrical tools
 %({\em e.g.} intersection between a line and various surfaces)
 %and other elemental tools ({\em e.g.} creation and annihilation
@@ -217,7 +217,7 @@ on the \MCS\ web-page~\cite{mcstas_webpage}.
 % is being maintained by the Ris\o\ group.
 
 %\paragraph{The instruments.} An instrument definition is written 
-% in the \MCS\ meta-language, which is a means of positioning
+% in the \MCS meta-language, which is a means of positioning
 % components within an experimental geometry. 
 % Instruments may have inout parameters, like {\em e.g.}\ the three 
 % $(\omega,2\theta)$ pairs of a standard triple-axis spectrometer.

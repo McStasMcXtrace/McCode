@@ -1,11 +1,11 @@
 % Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
 
-\chapter{New features in \MCS\ \version\ }
+\chapter{New features in \MCS \version\ }
 \label{c:changes}
 
 UPDATE!!!!
 
-This version of \MCS\ implements both new features, as well as many bug corrections. Bugs are reported and traced using the \MCS\ Trac Ticket system \cite{mczilla_webpage}. We will not present here an extensive list of corrections, and we let the reader refer to this bug reporting service for details. Only important changes are indicated here.
+This version of \MCS implements both new features, as well as many bug corrections. Bugs are reported and traced using the \MCS Trac Ticket system \cite{mczilla_webpage}. We will not present here an extensive list of corrections, and we let the reader refer to this bug reporting service for details. Only important changes are indicated here.
 
 Of course, we can not guarantee that the software is bullet proof, but we do our best to correct bugs, when they are reported.\index{Bugs}
 
@@ -18,10 +18,10 @@ Of course, we can not guarantee that the software is bullet proof, but we do our
 \label{s:new-features:kernel}
 \index{Kernel}
 
-The following changes concern the 'Kernel' (i.e. the \MCS\ meta-language and program). See the dedicated chapter in the {\it User manual} for more details.
+The following changes concern the 'Kernel' (i.e. the \MCS meta-language and program). See the dedicated chapter in the {\it User manual} for more details.
 
 \begin{itemize}
-\item The \verb+STATE PARAMETERS+ keywords has been removed from components code. We now assume that the neutron state parameters are \verb+x,y,z,vx,vy,vz,sx,sy,sz,t+. \MCS\ 1.X components will need to be adapted by commenting this line.
+\item The \verb+STATE PARAMETERS+ keywords has been removed from components code. We now assume that the neutron state parameters are \verb+x,y,z,vx,vy,vz,sx,sy,sz,t+. \MCS 1.X components will need to be adapted by commenting this line.
 \item The \verb+PREVIOUS+ and \verb+MYSELF+ keywords can be used in component instance parameters and positioning (AT/ROTATED) so that one can make use of \verb+MC_GETPAR(PREVIOUS, parameter)+ directly in the TRACE section.
 \end{itemize}
 
@@ -38,7 +38,7 @@ The following changes concern the 'Kernel' (i.e. the \MCS\ meta-language and pro
 \section{Components and Library}
 \label{s:new-features:components}
 \index{Components} \index{Library!Components}
-We here list the new and updated components (found in the \MCS\ \verb+lib+ directory)
+We here list the new and updated components (found in the \MCS \verb+lib+ directory)
 which are detailed in the {\it Component manual}, also mentioned in
 the {\it Component Overview} of the {\it User Manual}. Generally, most component parameter names have been uniformized.
 
@@ -119,7 +119,7 @@ buttons fail in mcgui. Solutions are:
 
 \section{Future extensions}
 \label{s:future}
-The following features are planned for the oncoming releases of \MCS\
+The following features are planned for the oncoming releases of \MCS
 (not an ordered list):
 \begin{itemize}
 \item Increased validation and testing.

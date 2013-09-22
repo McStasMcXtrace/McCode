@@ -148,7 +148,7 @@ As a consistency check, we note that for all $p_i$ equal, this reduces to
 eq.~(\ref{e:sigI1})
 
 In order to compute the intensities and uncertainties, the monitor/detector components
-in \MCS\ will keep track of
+in \MCS will keep track of
 $N=\sum_i p_i^0, I=\sum_i p_i^1$, and $M_2 = \sum_i p_i^2$.
 
 \section{Weight factor transformations during a Monte Carlo
@@ -225,7 +225,7 @@ we cut neutrons rays that should have reached the final detector.
 \begin{center}
 \includegraphics[width=.8\textwidth]{figures/focusing}
 \end{center}
-\caption{Illustration of the effect of direction focusing in \MCS\
+\caption{Illustration of the effect of direction focusing in \MCS
   . Weights of neutrons emitted into a certain solid angle are
   scaled down by the full unit sphere area.}
 \label{fig:focusing}
@@ -236,7 +236,7 @@ we cut neutrons rays that should have reached the final detector.
 \index{Monte Carlo method!Stratified sampling}
 Another strategy to improve sampling in simulations
 is \emph{adaptive importance sampling} (also called variance reduction technique), % \cite{importance},
-where \MCS\ during the simulations will determine
+where \MCS during the simulations will determine
 the most interesting directions and gradually change
 the focusing according to that.
 Implementation of this idea is
@@ -252,7 +252,7 @@ In the case of \MCS, an ad-hoc implementation of adaptive stratified is used whe
 
 When running a Monte Carlo, the meaningfull quantities are obtained by integrating random events into a single value (e.g. flux), or onto an histogram grid. The theory \cite{James80} shows that the accuracy of these estimates is a function of the space dimension $d$ and the number of events $N$. For large numbers $N$, the central limit theorem provides an estimate of the relative error as $1/\sqrt{N}$. However, the exact expression depends on the random distributions.
 
-\MCS\ uses a space with $d=10$ parameters to describe neutrons (position, velocity, spin, time). We show in Table \ref{t:mc_accuracy} a rough estimate of the accurarcy on integrals as a function of the number of records reaching the integration point. This stands both for integrated flux, as well as for histogram bins - for which the number of events per bin should be used for $N$.
+\MCS uses a space with $d=10$ parameters to describe neutrons (position, velocity, spin, time). We show in Table \ref{t:mc_accuracy} a rough estimate of the accurarcy on integrals as a function of the number of records reaching the integration point. This stands both for integrated flux, as well as for histogram bins - for which the number of events per bin should be used for $N$.
 
 \begin{table}
   \begin{center}

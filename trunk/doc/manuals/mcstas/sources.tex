@@ -5,7 +5,7 @@
 \index{Sources|textbf}
 \index{Library!Components!sources}
 
-\MCS\ contains a number of different source components,
+\MCS contains a number of different source components,
 and any simulation will usually contain exactly one of these sources.
 The main function of a source is to determine a set of initial
 parameters $({\bf r}, {\bf v}, t)$
@@ -75,7 +75,7 @@ p_0 = \frac{N_{\rm total}}{N_{\rm sim}} =
 \end{equation}
 where the source flux is now given a $\lambda$-dependence.
 
-As a start, we recommend new \MCS\ users to use the
+As a start, we recommend new \MCS users to use the
 {\bf Source\_simple} component.
 Slightly more realistic sources are {\bf Source\_Maxwell\_3} for
 continuous sources or {\bf Moderator} for time-of-flight sources.
@@ -139,7 +139,7 @@ event files, and - better - to MCNP/Triploli4 neutron event records.
 The following components are then useful:
 
 \begin{itemize}
-\item{{\bf misc/Virtual\_input} can read a \MCS\ event file
+\item{{\bf misc/Virtual\_input} can read a \MCS event file
 (in text or binary format), often bringing an order-of-magnitude speed-up.
 See section \ref{virtual_input}.}
 \item{{\bf contrib/Virtual\_tripoli4\_input} does the same, but from event files (text format) obtained from the \emph{Tripoli4} \cite{tripoli_webpage} reactor simulation program. Such files are usually huge.\index{Tripoli}}

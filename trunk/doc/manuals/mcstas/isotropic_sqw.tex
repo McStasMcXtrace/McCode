@@ -338,7 +338,7 @@ The file header may optionally contain parameter settings for the material, as c
   #weight      18   material molar weight [g/mol]
   #nb_atoms    6    number of atoms per unit cell
 \end{lstlisting}
-Some \verb+sqw+ data files are included in the \MCS\ distribution data directory, and they contain material parameter settings in their header, so that you may use:
+Some \verb+sqw+ data files are included in the \MCS distribution data directory, and they contain material parameter settings in their header, so that you may use:
 \begin{lstlisting}
 Isotropic_Sqw(<geometry parameters>, Sqw_coh="He4_liq_coh.sqw", T=4)
 \end{lstlisting}
@@ -360,7 +360,7 @@ Such files can only handle elastic scattering.
 
 \subsubsection{File formats: powder structures (LAZY, Fullprof, Crystallographica)}
 
-Data files as used by the component PowderN may also be read. Data files of type \verb'lau' and \verb'laz' in the \MCS\ distribution data directory are self-documented in their header. They do not need any additional parameters to be used, as in the example:
+Data files as used by the component PowderN may also be read. Data files of type \verb'lau' and \verb'laz' in the \MCS distribution data directory are self-documented in their header. They do not need any additional parameters to be used, as in the example:
 \begin{lstlisting}
   Isotropic_Sqw(<geometry parameters>, Sqw_coh="Al.laz")
 \end{lstlisting}
