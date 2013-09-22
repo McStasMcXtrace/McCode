@@ -23,14 +23,15 @@
  \let\@maketitle\relax
  \gdef\@thanks{}\gdef\@author{}\gdef\@title{}\let\thanks\relax}
 \def\@maketitle{\newpage \baselineskip 30dd \mbox{}
- \marginpar{{\frtnbf \hfill \llap{\mbox{\reportnum \reportlan\qquad\qquad}}}}
- \par\noindent\mbox{\includegraphics[height=1.5cm]{figures/risoe-logo.eps}\hspace{2mm}\includegraphics[height=1.5cm]{figures/DTU_logo.ps}} \par
- \vskip 1.5cm
+\marginpar{{\frtnbf \hfill \llap{\mbox{\reportnum \reportlan\qquad\qquad}}}}
+\par\noindent\mbox{\includegraphics[height=1.5cm]{figures/risoe-logo.eps} %
+\hspace{2mm}\includegraphics[height=1.5cm]{figures/DTU_logo.png}} %
+\par\vskip 1.5cm
  {\twfvbf \noindent \@title \par} \vskip 20dd \baselineskip 16dd
  {\frtnbf\noindent\@author \par} 
  \vskip 1.0cm
    \begin{flushright}
-     \includegraphics[width=0.95\textwidth]{figures/frontpage.ps}
+     \includegraphics[width=0.95\textwidth]{figures/frontpage.pdf}
    \end{flushright}
    \par \vfill \baselineskip 12dd
  \frtnbf\noindent Ris{\o} DTU, Roskilde, Denmark \par
