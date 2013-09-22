@@ -354,19 +354,18 @@ one data set per node.
 
 As a summary, the usual grammar for component instances within the instrument
 TRACE section is
-\begin{lstlisting}
+\begin{mcstas}
 COMPONENT name = comp(parameters)
   AT (...) [RELATIVE [reference|PREVIOUS] | ABSOLUTE]
  {ROTATED  {RELATIVE [reference|PREVIOUS] | ABSOLUTE} }
-\end{lstlisting}
+\end{mcstas}
 
 The \texttt{TRACE} keyword starts a section giving the list of
 components that constitute the instrument.
 Components are declared like this:
-\begin{lstlisting}
-  \texttt{COMPONENT} $\textit{name} =
-    \textit{comp}(p_1 = e_1, p_2 = e_2, \ldots)$
-\end{lstlisting}
+\begin{mcstas}
+COMPONENT name = comp(p_1 = e_1, p_2 = e_2, ...)
+\end{mcstas}
 \index{Components}
 \index{Keyword!COMPONENT} \index{Parameters!Setting}
 \index{Parameters!Definition}
@@ -695,7 +694,7 @@ the first instance of the Guide component is defined, whereas following
 instances are copies of that definition. The instance name of Guide components
 is set automatically.
 
-\begin{lstlisting}
+\begin{mcstas}
 COMPONENT CG_In = Arm() AT (...)
 
 COMPONENT CG_1  = Guide_gravity(l=L/n, m=1, ...)
@@ -710,7 +709,7 @@ COMPONENT COPY(CG_1)  = COPY(CG_1)
   ROTATED (0, (L/n+d)/R*180/PI, 0) RELATIVE PREVIOUS
 ...
 COMPONENT CG_Out = Arm() AT (0,0,L/n) RELATIVE PREVIOUS
-\end{lstlisting}
+\end{mcstas}
 
 \subsection{Conditional components - WHEN}
 \index{Keyword!WHEN}

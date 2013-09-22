@@ -1460,9 +1460,9 @@ and PDL must all be properly installed on the system.
 given component or instrument, or the whole \MCS\
 library. \index{Library!Components}
 \begin{lstlisting}
-  \verb|mcdoc|\\
-  \verb|mcdoc| {\it comp|instr}\\
-  \verb|mcdoc --tools|
+mcdoc
+mcdoc {comp|instr}
+mcdoc --tools
 \end{lstlisting}
 The first example generates an {\it index.html} catalog file using the available
 components and instruments (both locally, and in the \MCS\ library). The library
@@ -1496,7 +1496,7 @@ available.
 Any \MCS\ component may be translated for usage with Vitess (starting from
 Vitess version 2.3). The syntax is simply \index{Library!Components}
 \begin{lstlisting}
-  \texttt{mcstas2vitess {\it Compo.comp\/}}
+mcstas2vitess Compo.comp
 \end{lstlisting}
 This will create a Vitess module of the given component.
 
@@ -1549,7 +1549,7 @@ If you have been running a \MCS\ simulation with a given text format output, but
 finally plan to look at the results with an other plotter (e.g. you ran a
 simulation with PGPLOT output and want to view it using Matlab), you may use
 \begin{lstlisting}
-  \texttt{mcformat {\it file | dir} -d {\it target\_dir} --format=TARGET\_FORMAT}
+mcformat {file|dir} -d {target_dir} --format=TARGET_FORMAT
 \end{lstlisting}
 to translate files into format TARGET\_FORMAT. When given a directory, the
 translation works recursively. The conversion works only for text files. Some
@@ -1676,12 +1676,13 @@ avoid name clash with existing Matlab commands/variables.\footnote{For instance
   'm\_mcstas'.}.  In this tree, you will find the monitor names, which fields
 contain the monitored data. The usual structure is
 \begin{lstlisting}
-  \texttt{s.{\it instrument}.{\it simulation}.{\it comp\_name}.{\it file\_name}}
+s.instrument.simulation.comp_name.file_name
 \end{lstlisting}
 
 For instance, reading the data from a 'test' instrument using Matlab format will
 look like
-\begin{lstlisting}
+
+\begin{matlab}
 matlab> s=mcstas; % or mcplot mcstas.m from the terminal
 matlab> s
 s =
@@ -1709,7 +1710,8 @@ matlab> eval(s.test.m_mcstas.monitor1.monitor1_y_kz);
 matlab> dX
 ans =
           0.0201232
-\end{lstlisting}
+\end{matlab}
+
 The latter example accesses the data from the 'monitor1.y\_kz' file written by
 the 'monitor1' component in the 'test' instrument during the './mcstas'
 simulation. You may evaluate directly the 'signal' and 'statistics' fields of
@@ -1972,10 +1974,10 @@ node4
 \end{lstlisting}
 
 You can then spread a simulation \verb'sim.instr' using \verb'mcrun' :
-\begin{lstlisting}
+\begin{bash}
   mcrun -c --mpi=4 --machines=machines.list \
         sim.instr <instrument parameters>
-\end{lstlisting}
+\end{bash}
 
 \begin{paragraph}{Warning:} when using \verb'mcrun' with MPI, be sure to
   recompile your simulation with MPI support (see \verb'-c' flag of
