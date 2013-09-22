@@ -6,7 +6,7 @@
 \index{Library!Shared|see{Library/Components/share}}
 \index{Library!mcstas-r|see{Library/Run-time}}
 
-The \MCS\ Library contains a number of built-in functions
+The \MCS Library contains a number of built-in functions
 and conversion constants which are useful when constructing
 components. These are stored in the \verb+share+ directory of
 the \verb+MCSTAS+ library. \index{Library!Components!share}
@@ -17,7 +17,7 @@ component/instrument descriptions. The other parts
 % (see table~\ref{t:comp-share})
 are dynamic, that is they are not
 pre-loaded, but only imported once when a component requests it
-using the \verb+%include+ \MCS\ keyword. For instance, within a
+using the \verb+%include+ \MCS keyword. For instance, within a
 component C code block, (usually SHARE or DECLARE):
 \index{Keyword!\%include}
 \begin{lstlisting}
@@ -57,7 +57,7 @@ from one point to an other. Except when using the special
 the neutron rays which have negative propagation times are removed automatically.
 \begin{itemize}
 \item {\bf ABSORB}. This macro issues an order to the overall
-  \MCS\ simulator to interrupt the simulation of the current neutron
+  \MCS simulator to interrupt the simulation of the current neutron
   history and to start a new one.
 \item {\bf PROP\_Z0}. Propagates the neutron to the $z=0$ plane,
   by adjusting $(x,y,z)$ and $t$ accordingly from knowledge of the
@@ -210,12 +210,12 @@ resulting Coord structure.
 \end{itemize}
 
 \subsection{Output from detectors}
-Details about using these functions are given in the \MCS\ User Manual.
+Details about using these functions are given in the \MCS User Manual.
 \begin{itemize}
 \item {\bf DETECTOR\_OUT\_0D}$(...)$. Used to output the results from a
   single detector. The name of the detector is output together
   with the simulated intensity and estimated statistical error. The
-  output is produced in a format that can be read by \MCS\ front-end
+  output is produced in a format that can be read by \MCS front-end
   programs.
 %See section~\ref{s:comp-finally} ??? for details.
 \item {\bf DETECTOR\_OUT\_1D}$(...)$. Used to output the results from a
@@ -372,8 +372,8 @@ Binary files should be of type "float" (i.e. REAL*32) and "double" (i.e. REAL*64
 and should \emph{not} contain text header lines. These files are platform
 dependent (little or big endian).
 
-The $filename$ is first searched into the current directory (and all user additional locations specified using the \verb+-I+ option, see the 'Running \MCS\ ' chapter in the User Manual), and if not found, in the \verb+data+ sub-directory of the \verb+MCSTAS+ library location. \index{Library!Components!data}
-\index{Environment variable!MCSTAS} This way, you do not need to have local copies of the \MCS\ Library Data files (see table~\ref{t:comp-data}).
+The $filename$ is first searched into the current directory (and all user additional locations specified using the \verb+-I+ option, see the 'Running \MCS ' chapter in the User Manual), and if not found, in the \verb+data+ sub-directory of the \verb+MCSTAS+ library location. \index{Library!Components!data}
+\index{Environment variable!MCSTAS} This way, you do not need to have local copies of the \MCS Library Data files (see table~\ref{t:comp-data}).
 
 A usage example for this library part may be:
 \begin{lstlisting}

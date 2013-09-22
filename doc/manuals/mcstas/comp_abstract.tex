@@ -4,23 +4,23 @@
 
 This chapter presents an abstract of existing components.
 As a complement to this chapter and the
-detailed description in the \MCS\ component manual,
+detailed description in the \MCS component manual,
 you may use the \verb+mcdoc -s+ command to obtain the on-line
 component documentation and refer to the McStas web-page~\cite{mcstas_webpage}
 where all components are documented using the McDoc system.
 
-\section{A short overview of the \MCS\ component library}
+\section{A short overview of the \MCS component library}
 \label{s:comp-overview}
 
-The table in this section gives a quick overview of available \MCS\ components
+The table in this section gives a quick overview of available \MCS components
 provided with the distribution. The location of this library is detailed in
 section~\ref{s:files}.  All of them are believed to be reliable, and some amount
 of systematic tests have been carried out.  However, no absolute guaranty can
 be given concerning their accuracy.\index{Environment variable!MCSTAS}
 
 The \verb+contrib+ directory of the library contains components that were
-submitted by \MCS\ users, but where responsibility has not (yet) been taken by
-the \MCS\ core team. \index{Library!Components!contrib}
+submitted by \MCS users, but where responsibility has not (yet) been taken by
+the \MCS core team. \index{Library!Components!contrib}
 
 Additionally the \verb+obsolete+ directory of the library gathers components
 that were renamed, or considered to be outdated.  These component are kept for
@@ -28,7 +28,7 @@ backwards compatibility and they still all work as
 before.\index{Library!Components!obsolete}
 
 The \verb+mcdoc+ front-end (section~\ref{s:mcdoc-run}) enables to display both
-the catalog of the \MCS\ library, e.g using: \index{Tools!mcdoc}
+the catalog of the \MCS library, e.g using: \index{Tools!mcdoc}
 \begin{bash}
 mcdoc
 \end{bash}
@@ -68,7 +68,7 @@ Virtual\_output &  Detector-like component that writes neutron state
                    (for use in Virtual\_input). \\
       \hline
     \end{tabular}
-    \caption{Source and source-related components of the \MCS\ library.}
+    \caption{Source and source-related components of the \MCS library.}
     \label{t:comp-sources}
     \index{Library!Components!sources}
     }
@@ -117,7 +117,7 @@ Virtual\_output &  Detector-like component that writes neutron state
  Vitess\_ChopperFermi & Curved Fermi chopper (longer execution time than FermiChopper).
                      From the Vitess package.\\ \hline
     \end{tabular}
-    \caption{Optics components of the \MCS\ library.}
+    \caption{Optics components of the \MCS library.}
     \label{t:comp-optics}
     \index{Library!Components!optics}
     }
@@ -153,7 +153,7 @@ Res\_monitor      &   Monitor for resolution function calculations \\
 TOF\_Res\_monitor      &   Monitor for resolution function calculations
                         for TOF instruments \\ \hline
     \end{tabular}
-    \caption{Sample components of the \MCS\ library.}
+    \caption{Sample components of the \MCS library.}
     \label{t:comp-samples}
     \index{Library!Components!samples}
     }
@@ -198,7 +198,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
 %                    time binning. \\
       \hline
     \end{tabular}
-    \caption{Selected Monitor components of the \MCS\ library.}
+    \caption{Selected Monitor components of the \MCS library.}
     \label{t:comp-monitors}
     \index{Library!Components!monitors}
     }
@@ -220,7 +220,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
  Vitess\_output    &  Write neutron state parameters to a VITESS neutron file.\\
       \hline
     \end{tabular}
-    \caption{Miscellaneous components of the \MCS\ library.}
+    \caption{Miscellaneous components of the \MCS library.}
     \label{t:comp-misc}
     \index{Library!Components!misc}
     }
@@ -260,7 +260,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
  Virtual\_tripoli4\_output& Writes a 'Batch' neutron events file for Tripoli 4. \\
       \hline
     \end{tabular}
-    \caption{Contributed components of the \MCS\ library.}
+    \caption{Contributed components of the \MCS library.}
     \index{Library!Components!contrib}
     \label{t:comp-contrib}
     }
@@ -286,7 +286,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
                         Used by Vitess\_input and Vitess\_output \\
       \hline
     \end{tabular}
-    \caption{Shared libraries of the \MCS\ library. See Appendix~\ref{c:kernelcalls} for details.}
+    \caption{Shared libraries of the \MCS library. See Appendix~\ref{c:kernelcalls} for details.}
     \label{t:comp-share}
     \index{Library!Components!share}
     \index{Library!Run-time}
@@ -314,7 +314,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
        Data: [q] [$\omega$] [$S(q,\omega)$]\\
       \hline
     \end{tabular}
-    \caption{Data files of the \MCS\ library.}
+    \caption{Data files of the \MCS library.}
     \label{t:comp-data}
     \index{Library!Components!data}
     }
@@ -331,7 +331,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
       *.instr & This directory contains example instruments, accessible throught the \verb+mcgui+ ``Neutron site'' menu. \\
       \hline
     \end{tabular}
-    \caption{Instrument example files of the \MCS\ library.}
+    \caption{Instrument example files of the \MCS library.}
     \label{t:comp-instr}
     \index{Library!Instruments}
     }
