@@ -478,10 +478,10 @@ concatenate data to existing files.
 \label{s:run-format}
 The previous example will result in a \verb+mcstas.m+ file, that may be read
 directly from Matlab (using the {\it sim file} function)
-\begin{lstlisting}
+\begin{matlab}
     matlab> s=mcstas;
     matlab> s=mcstas('plot')
-\end{lstlisting} \index{Tools!Matlab}
+\end{matlab} \index{Tools!Matlab}
 The first line returns the simulation data as a single structure variable,
 whereas the second one will additionally plot each detector separately.  This
 also equivalently stands for IDL 
@@ -644,15 +644,18 @@ Once the simulation has started, it is possible, under Unix, Linux and Mac OS X 
 
 \MCS\ attaches a signal handler to the simulation process. In order to send a signal to the process, the process-id {\it pid} must be known. Users may look at their running processes with the Unix 'ps' command, or alternatively process managers like 'top' and 'gtop'.
 If a {\it file.out} simulation obtained from \MCS\ is running, the process status command should output a line resembling
-\begin{lstlisting}
-  \verb|<user>| {\it 13277} \verb|7140 99 23:52 pts/2    00:00:13 | {\it file.out}\\
-\end{lstlisting}
+
+\begin{bash}
+<user> 13277 7140 99 23:52 pts/2   00:00:13   file.out
+\end{bash}
+
 where \verb+user+ is your Unix login. The {\it pid} is there '13277'.
 
 Once known, it is possible to send one of the signals listed in Table~\ref{t:signals} using the 'kill' unix command (or the functionalities of your process manager), e.g.
-\begin{lstlisting}
+\begin{bash}
     kill -USR2 13277
-\end{lstlisting}
+\end{bash}
+
 This will result in a message showing status (here 33 \% achieved), as well as the position in the instrument of the current neutron.
 \begin{lstlisting}
 # McStas: [pid 13277] Signal 12 detected SIGUSR2 (Save simulation)
@@ -1153,9 +1156,11 @@ compilation features available in the \verb+mcgui+ front-end. It also provides a
 facility for running a series of simulations while varying an input parameter.
 
 The command
-\begin{lstlisting}
-  \texttt{mcrun {\it sim} {\it args\/} \ldots}
-\end{lstlisting}
+
+\begin{bash}
+mcrun sim args ...
+\end{bash}
+
 will compile the instrument definition \texttt{{\it sim}.instr} (if
 necessary) into an executable simulation \texttt{{\it sim}.out}. It
 will then run \texttt{{\it sim}.out}, passing the argument list {\it
@@ -1183,9 +1188,9 @@ extensions:
   series of simulations is called a \emph{scan}. To specify
   an interval for a parameter \textit{X}, it should be assigned two
   values separated by a comma. For example, the command
-\begin{lstlisting}
-    mcrun sim.instr -N4 X=2,8 Y=1
-\end{lstlisting}
+\begin{bash}
+mcrun sim.instr -N4 X=2,8 Y=1
+\end{bash}
 would run the simulation defined in \verb+sim.instr+ four times, with
 \textit{X} having the values 2, 4, 6, and 8, respectively.
 
@@ -1229,9 +1234,10 @@ or to find out where neutrons are getting lost.  (See figures
 
 To use the \verb+mcdisplay+ front-end with a simulation, run it as
 follows:
-\begin{lstlisting}
-  \verb+mcdisplay sim +{\it args \ldots}
-\end{lstlisting}
+\begin{bash}
+mcdisplay sim args ...
+\end{bash}
+
 where \verb+sim+ is the name of either the instrument source \texttt{{\it
     sim}.instr} or the simulation program \texttt{{\it sim}.out} generated with
 \MCS, and \textit{args \ldots} are the normal command line arguments for the
@@ -1240,9 +1246,9 @@ simulation, as explained above. The \verb+-h+ option will list valid options.
 \index{Tools!PGPLOT} \index{Tools!Matlab}
 \index{Tools!VRML/OpenGL} The drawing back-end program may be selected among
 PGPLOT, VRML, and Matlab using the -p{\it PLOTTER} option. For instance, calling
-\begin{lstlisting}
-  \verb+mcdisplay --pMatlab ./Samples_vanadium.out ROT=90+
-\end{lstlisting}
+\begin{bash}
+mcdisplay --pMatlab ./Samples_vanadium.out ROT=90+
+\end{bash}
 will output graphics using Matlab.
 The \verb+mcdisplay+ front-end can also be run from the \verb+mcgui+ front-end.
 \index{Tools!mcgui}
@@ -1255,7 +1261,7 @@ This will view the instrument from above. A multi-display that shows the
 instrument from three directions simultaneously can be shown using the
 \verb+--multi+ option:
 \begin{lstlisting}
-  \verb+mcdisplay --multi sim.out +{\it args \ldots}
+mcdisplay --multi sim.out args ...
 \end{lstlisting}
 
 Click the left mouse button in the graphics window or hit the space key to see
@@ -1328,9 +1334,9 @@ plots of all the monitors in a simulation, and it is thus useful to get
 a quick overview of the simulation results.
 
 In the simplest case, the front-end is run simply by typing
-\begin{lstlisting}
+\begin{bash}
     mcplot
-\end{lstlisting}
+\end{bash}
 This will plot any simulation data stored in the current directory, which is
 where simulations store their results by default. If the \verb+--dir+ or
 \verb+--file+ options have been used (see section~\ref{s:run-sim}), the name of
@@ -1384,12 +1390,12 @@ available, and provides many operations (duplication, export, colormaps,
 \ldots).  The corresponding 'mcplot' Matlab function may be called
 from these language prompt with the same method as in section~\ref{s:run-sim},
 e.g:
-\begin{lstlisting}
+\begin{matlab}
     matlab> s=mcplot;
     matlab> help mcplot
     matlab> s=mcplot('mcstas.m');
     matlab> mcplot(s);
-\end{lstlisting} \index{Tools!Matlab}
+\end{matlab} \index{Tools!Matlab}
 
 A full parameter scan simulation result, or simply one of its scan steps may be
 displayed using the 'Scan step' menu item.  When the \verb|+nw| option is
@@ -1430,9 +1436,9 @@ despite its somewhat rough user interface.
 
 The \verb+mcresplot+ front-end is launched with the command
 \begin{lstlisting}
-  \texttt{mcresplot {\it file\/}}
+mcresplot outfile
 \end{lstlisting}
-Here, {\it file\/} is the name of a file output from a simulation using
+Here, {\it outfile\/} is the name of a file output from a simulation using
 the Res\_monitor component.
 % (section~\ref{s:res_monitor}).
 
@@ -1548,8 +1554,9 @@ To use the \verb+mcstas2vitess+ front-end, the program Perl should be available.
 If you have been running a \MCS\ simulation with a given text format output, but
 finally plan to look at the results with an other plotter (e.g. you ran a
 simulation with PGPLOT output and want to view it using Matlab), you may use
+% FIXME syntax check!
 \begin{lstlisting}
-mcformat {file|dir} -d {target_dir} --format=TARGET_FORMAT
+mcformat {file|dir} -d target_dir --format=TARGET_FORMAT
 \end{lstlisting}
 to translate files into format TARGET\_FORMAT. When given a directory, the
 translation works recursively. The conversion works only for text files. Some
@@ -1927,7 +1934,7 @@ To use MPI you will need
 To enable parallel computation, compile McStas output C-source file
 with \verb'mpicc' with the flag \verb'-DUSE_MPI' and run it using the
 wrapper of your MPI implementation (\verb'mpirun' for mpich or lammpi) :
-\begin{lstlisting}
+\begin{bash}
   # generate a C-source file [sim.c]
   mcstas sim.instr
 
@@ -1941,12 +1948,12 @@ wrapper of your MPI implementation (\verb'mpirun' for mpich or lammpi) :
   mpirun -machinefile machines.list -n <N> \
          ./sim.mpi <instrument parameters>
   ...
-\end{lstlisting}
+\end{bash}
 
-If you don't want to spread the simulation, run it as usual :
-\begin{lstlisting}
+If you don't want to spread the simulation, run it as usual:
+\begin{bash}
   ./sim.mpi <instrument parameters>
-\end{lstlisting}
+\end{bash}
 
 \subsection{McRun script with MPI support (mpich)}
 
