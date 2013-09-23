@@ -8,9 +8,6 @@ set(FLAVOR mcstas)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(MCUtil)
 
-setup_mccode_mkdist("${FLAVOR}")
-
-
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-manuals-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../COPYING")
@@ -52,8 +49,9 @@ endforeach()
 
 file(COPY figures DESTINATION "${WORK}")
 
-
-foreach(NAME manual Component_manual)
+# Component manual build disabled for now...
+# foreach(NAME manual Component_manual)
+foreach(NAME manual)
   add_custom_command(
     OUTPUT "${WORK}/${NAME}.pdf"
     COMMAND "${PROJECT_SOURCE_DIR}/compile_pdf.sh" "${NAME}";
