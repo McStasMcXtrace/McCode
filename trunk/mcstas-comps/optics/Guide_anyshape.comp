@@ -161,11 +161,11 @@ TRACE
       /* when allowing transmission, we should check if indeed we reflect */
       if (!transmit || (transmit && rand01() < R)) {
         /* reflect velocity: -q -> -2*n*n.v/|n|^2 */
-        p *= R;
+        if (!transmit) p *= R;
         n_dot_v *= 2/n2;
         vx -= nx*n_dot_v;
         vy -= ny*n_dot_v;
-        vz -= nz*n_dot_v; 
+        vz -= nz*n_dot_v;
         SCATTER;
       } else {
         if (transmit) {
