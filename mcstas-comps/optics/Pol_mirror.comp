@@ -21,17 +21,19 @@
 * For an unrotated component, the mirror surface lies in the Y-Z
 * plane (ie. parallel to the beam).
 * It relies on similar physics as the Monochromator_pol.
-* The reflec function (see e.g. share/ref-lib for examples) and parameters 
+* The reflectivity function (see e.g. share/ref-lib for examples) and parameters 
 * are passed to this component to give a bigger freedom. 
 * The up direction is hardcoded to be along the y-axis (0, 1, 0)
 * For now we assume:
 * P(Transmit|Q) = 1 - P(Reflect|Q)
 * i.e. NO ABSORPTION!
 *
-* There are 3 options:
-* 1) Reflect and transmit (randomly choose) [default]
-* 2) Only reflect (reduce weight)
-* 3) Only transmit (reduce weight)
+* The component can both reflect and transmit neutrons with a respective proportion
+* depending on the p_reflect parameter:
+*   p_reflect=-1 Reflect and transmit (proportions given from reflectivity) [default]
+*   p_reflect=1 Only handle reflected events
+*   p_reflect=0 Only handle transmitted events (reduce weight)
+*   p_reflect=0-1 Both transmit and reflect with fixed statistics proportions
 *
 * The parameters can either be 
 * double pointer initializations (e.g. {R0, Qc, alpha, m, W}) 
@@ -40,11 +42,11 @@
 *
 * Examples:
 * Reflection function parametrization 
-* Pol_mirror(zwidth = 0.40, yheight = 0.40, option=1,
+* Pol_mirror(zwidth = 0.40, yheight = 0.40,
 *             rUpFunc=StdReflecFunc, rUpPar={1.0, 0.0219, 6.07, 2.0, 0.003})
 *
 * Table function 
-* Pol_mirror(zwidth = 0.40, yheight = 0.40, option=2, 
+* Pol_mirror(zwidth = 0.40, yheight = 0.40,
 *             rUpFunc=TableReflecFunc, rUpPar="supermirror_m2.rfl",
 *             rDownFunc=TableReflecFunc, rDownPar="supermirror_m3.rfl", 
 *             useTables=1)
