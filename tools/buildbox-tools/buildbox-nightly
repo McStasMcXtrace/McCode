@@ -44,6 +44,7 @@ ssh ${WINUSER}@${WINHOST} del Downloads\\\*.exe
 # Step 1 - McStas
 echo Step 1
 ssh ${LINUSER}@${LINHOST} cd ${LINPATH} \&\& svn update \&\& ./build_debs_mcstas ${VER} \&\& ./build_windows_mcstas ${VER} 
+ssh ${LINUSER}@${LINHOST} cd ${LINPATH}/dist \&\& tar cfz mccode-linux-${VER}.tgz \*.deb  \&\& tar cfz mccode-windows-${VER}.tgz \*.exe
 echo Step 2
 # Step 2 - McXtrace
 ssh ${LINUSER}@${LINHOST} cd ${LINPATH} \&\& ./build_debs_mcxtrace ${VER} \&\& ./build_windows_mcxtrace ${VER}
@@ -81,7 +82,7 @@ ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& sudo installer -pkg mcstas-too
 ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& sudo installer -pkg mcxtrace-OSXpkg-${VER}\*.pkg -target /
 ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& sudo installer -pkg mcxtrace-comps-OSXpkg-${VER}\*.pkg -target /
 ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& sudo installer -pkg mcxtrace-tools-perl-OSXpkg-${VER}\*.pkg -target /
-ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& tar cfz mccode-${VER}.tgz \*.pkg
+ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& tar cfz mccode-OSX-${VER}.tgz \*.pkg
 
 echo Running the tests - McStas!
 echo ...Linux
@@ -141,9 +142,9 @@ scp *${VER}* mcstas@mcc-01.risoe.dk:Builds/Nightly/Logs
 ssh mcstas@mcc-01.risoe.dk mkdir /srv/web/mccode.org/nightly/Current/OSX
 ssh mcstas@mcc-01.risoe.dk mkdir /srv/web/mccode.org/nightly/Current/Linux
 ssh mcstas@mcc-01.risoe.dk mkdir /srv/web/mccode.org/nightly/Current/Windows
-scp ${LINUSER}@${LINHOST}:${LINPATH}/dist/\*${VER}\*.exe mcstas@mcc-01.risoe.dk:/srv/web/mccode.org/nightly/Current/Windows
-scp ${LINUSER}@${LINHOST}:${LINPATH}/dist/\*${VER}\*.deb mcstas@mcc-01.risoe.dk:/srv/web/mccode.org/nightly/Current/Linux
-scp ${OSXUSER}@${OSXHOST}:${OSXPATH}/dist/mccode-${VER}.tgz mcstas@mcc-01.risoe.dk:/srv/web/mccode.org/nightly/Current/OSX
+scp ${LINUSER}@${LINHOST}:${LINPATH}/dist/mccode-windows-${VER}.tgz mcstas@mcc-01.risoe.dk:/srv/web/mccode.org/nightly/Current/Windows
+scp ${LINUSER}@${LINHOST}:${LINPATH}/dist/mccode-linux-${VER}.tgz  mcstas@mcc-01.risoe.dk:/srv/web/mccode.org/nightly/Current/Linux
+scp ${OSXUSER}@${OSXHOST}:${OSXPATH}/dist/mccode-OSX-${VER}.tgz mcstas@mcc-01.risoe.dk:/srv/web/mccode.org/nightly/Current/OSX
 
 
 ssh mcstas@mcc-01.risoe.dk cd Builds/Nightly/Logs \&\& echo ${SVNREL} \> ${VER}_svnrev.txt
