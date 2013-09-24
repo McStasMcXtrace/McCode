@@ -81,6 +81,7 @@ ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& sudo installer -pkg mcstas-too
 ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& sudo installer -pkg mcxtrace-OSXpkg-${VER}\*.pkg -target /
 ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& sudo installer -pkg mcxtrace-comps-OSXpkg-${VER}\*.pkg -target /
 ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& sudo installer -pkg mcxtrace-tools-perl-OSXpkg-${VER}\*.pkg -target /
+ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& tar cfz mccode-${VER}.tgz \*.pkg
 
 echo Running the tests - McStas!
 echo ...Linux
@@ -137,7 +138,17 @@ tar cfz mcstas_${VER}_windows.tgz mcstas_${VER}_windows && rm -rf mcstas_${VER}_
 tar cfz mcxtrace_${VER}_windows.tgz mcxtrace_${VER}_windows && rm -rf mcxtrace_${VER}_windows
 
 scp *${VER}* mcstas@mcc-01.risoe.dk:Builds/Nightly/Logs
+ssh mcstas@mcc-01.risoe.dk mkdir /srv/web/mccode.org/nightly/Current/OSX
+ssh mcstas@mcc-01.risoe.dk mkdir /srv/web/mccode.org/nightly/Current/Linux
+ssh mcstas@mcc-01.risoe.dk mkdir /srv/web/mccode.org/nightly/Current/Windows
+scp ${LINUSER}@${LINHOST}:${LINPATH}/dist/\*${VER}\*.exe mcstas@mcc-01.risoe.dk:/srv/web/mccode.org/nightly/Current/Windows
+scp ${LINUSER}@${LINHOST}:${LINPATH}/dist/\*${VER}\*.deb mcstas@mcc-01.risoe.dk:/srv/web/mccode.org/nightly/Current/Linux
+scp ${OSXUSER}@${OSXHOST}:${OSXPATH}/dist/mccode-${VER}.tgz mcstas@mcc-01.risoe.dk:/srv/web/mccode.org/nightly/Current/OSX
+
+
 ssh mcstas@mcc-01.risoe.dk cd Builds/Nightly/Logs \&\& echo ${SVNREL} \> ${VER}_svnrev.txt
+ssh mcstas@mcc-01.risoe.dk touch /usr/local/build/Nightly
+
 ssh mcstas@mcc-01.risoe.dk touch /usr/local/build/Nightly
 
 echo End of script!
