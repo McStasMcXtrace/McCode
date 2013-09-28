@@ -790,8 +790,23 @@ complist:   /* empty */
               worry about freeing the memory allocated for
               the component instance. */
           }
+          /* check that instance name does not match an OUTPUT parameter */
           else
           {
+            List_handle out;
+            char *par;
+            
+            out = list_iterate($2->def->out_par);
+            while(par = list_next(out)) {
+              if (!strcmp($2->name, par))
+                print_error("Component instance name "
+            "'%s' matches an internal OUTPUT parameter of component class %s at "
+            "line %s:%d.\nPlease change the instance name.\n", 
+            $2->name, $2->type, instr_current_filename, instr_current_line);
+            }
+            list_iterate_end(out);
+            
+            /* if we come there, instance is not an OUTPUT name */
             symtab_add(comp_instances, $2->name, $2);
             list_add(comp_instances_list, $2);
             if (verbose) fprintf(stderr, "Component[%li]: %s = %s().\n", comp_current_index, $2->name, $2->type);
@@ -1910,9 +1925,10 @@ read_component(char *name)
     file = open_component_search(name);
     if(file == NULL)
     {
-      print_error(
-        "Cannot find file containing definition of component `%s'.\n", name);
-      return NULL;
+      fatal_error(
+        "Cannot find file containing definition of component '%s'.\n"
+        "Check the McStas library installation or your MCSTAS environment variable\n"
+        "or copy the component definition file locally.\n", name);
     }
     push_autoload(file);
     /* Note: the str_dup copy of the file name is stored in codeblocks, and
@@ -1921,7 +1937,7 @@ read_component(char *name)
     instr_current_line = 1;
     err = mc_yyparse();   /* Read definition from file. */
     if(err != 0)
-      fatal_error("Errors encountered during autoload of component %s.\n",
+      fatal_error("Errors encountered during autoload of component %s. The instrument definition has syntax errors.\n",
         name);
     fclose(file);
     /* Now check if the file contained the required component definition. */
@@ -1932,7 +1948,7 @@ read_component(char *name)
     }
     else
     {
-      print_error("Definition of component %s not found (file was found but does not contain the component definition).\n", name);
+      fatal_error("Definition of component %s not found (file was found but does not contain the component definition).\n", name);
       return NULL;
     }
   }
