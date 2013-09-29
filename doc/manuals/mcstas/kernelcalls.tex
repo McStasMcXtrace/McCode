@@ -300,14 +300,14 @@ Details about using these functions are given in the \MCS User Manual.
   DECLARE or SHARE section. Tables are structures of type \verb+t_Table+
   (see \verb+read_table-lib.h+ file for details):
 \begin{lstlisting}
-    /* t_Table structure (most important members) */
-    double *data;     /* Use Table_Index(Table, i j) to extract [i,j] element */
-    long    rows;     /* number of rows */
-    long    columns;  /* number of columns */
-    char   *header;   /* the header with comments */
-    char   *filename; /* file name or title */
-    double  min_x;    /* minimum value of 1st column/vector */
-    double  max_x;    /* maximum value of 1st column/vector */
+/* t_Table structure (most important members) */
+double *data;     /* Use Table_Index(Table, i j) to get element [i,j] */
+long    rows;     /* number of rows */
+long    columns;  /* number of columns */
+char   *header;   /* the header with comments */
+char   *filename; /* file name or title */
+double  min_x;    /* minimum value of 1st column/vector */
+double  max_x;    /* maximum value of 1st column/vector */
 \end{lstlisting}
 
 Available functions to read \emph{a single} vector/matrix are:
