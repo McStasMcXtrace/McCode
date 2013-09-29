@@ -36,7 +36,7 @@ print_error(char *format, ...)
   va_start(ap, format);
   vfprintf(stderr, format, ap);
   va_end(ap);
-  error_encountered = 1;
+  error_encountered++;
 }
 
 
