@@ -66,7 +66,7 @@ p = p_n = p_0 \prod_{j=1}^n \pi_j .
 \end{equation}
 Each adjustement factor should be $0 < \pi_j < 1$, except in special
 circumstances, so that total flux can only decrease through the
-simulation, see section \cite{s:weighttransform}. For convenience, the value of $p$ is updated (within each component)
+simulation, see section \ref{s:weighttransform}. For convenience, the value of $p$ is updated (within each component)
 during the simulation.
 
 Simulation by weight adjustment is performed
@@ -180,7 +180,7 @@ generalize, weight factor transformations are given by the master equation
 %only neutrons within a certain parameter interval.
 %However, we must then require that the weights are adjusted
 %by a factor $\pi_j$ (in this case: $j=1$) so that
-\begin{equation} \label{probrule}
+\begin{equation} \label{e:probrule}
 f_{\rm MC} \pi_j = P .
 \end{equation}
 %For the sources present in version \version,
@@ -193,7 +193,7 @@ An important different example
 is elastic scattering from a powder sample,
 where the Monte-Carlo choices are the particular powder line to scatter from,
 the scattering position within the sample and the final neutron direction
-within the Debye-Scherrer cone. This weight transformation is much more complex than described above, but still boils down to obeying the master transformation rule \cite{probrule}.
+within the Debye-Scherrer cone. This weight transformation is much more complex than described above, but still boils down to obeying the master transformation rule \ref{e:probrule}.
 
 \subsection{Direction focusing}
 \index{Monte Carlo method!Direction focusing}
@@ -215,7 +215,7 @@ solid angle interval $\Delta \Ombold$, only these solid angles
 are used for the Monte Carlo choice of scattering direction.
 This implies $f_{\rm MC}(\Delta\Omega) = 1$. However, if the physical
 events are distributed uniformly over the unit sphere, we would have
-$P(\Delta\Omega) = \Delta\Omega / (4\pi)$, according to Eq.~(\ref{probrule}).
+$P(\Delta\Omega) = \Delta\Omega / (4\pi)$, according to Eq.~(\ref{e:probrule}).
 One thus ensures that the mean simulated intensity is unchanged
 during a "correct" direction focusing, while a too narrow focusing will
 result in a lower (\textit{i.e.} wrong) intensity, since

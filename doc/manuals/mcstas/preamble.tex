@@ -1,3 +1,4 @@
+% !TeX root = manual.tex
 \usepackage{graphicx}
 \usepackage{amsfonts}
 \usepackage{amsbsy}
@@ -12,15 +13,13 @@
 % this style)
 % \usepackage{html}
 
+
 \usepackage{color}
 \usepackage{xcolor}
 
 \input{syntaxhighlighting}
 
-
 \usepackage{xspace}
-
-
  
 \newcommand{\smallverbatimfile}[1]{{\footnotesize\verbatimfile{#1}}}
 
@@ -31,7 +30,28 @@
 \newcommand{\reldate}{{November, 2012}}
 \newcommand{\Ombold}{\mbox{\boldmath $\Omega$}}
 
- \usepackage{hyperref} %LOAD AT LAST!
+\usepackage[%
+backend=biber,%
+style=alphabetic,%
+sorting=nyt,%
+doi=true,%
+isbn=true,%
+hyperref=true,%
+backref=true,%
+url=false]{biblatex}
 
-% enable index generation
-\makeindex
+\bibliography{mcstas}
+%\bibliographystyle{jacs}
+
+\usepackage{hyperref} %LOAD AT LAST!
+
+\hypersetup{%
+  colorlinks=false,   % 
+  pdfpagemode=UseNone,  % PDF-Viewer TOC settings
+  pdfstartview=FitH, % PDF-Viewer 
+  pdfauthor={P. Willendrup, E. Farhi, E. Knudsen, U. Filges, K. Lefmann, J. Stein},%
+  pdftitle=User and programmers guide to the neutron ray-tracing package McStas%
+}
+
+
+\makeindex % enable index generation
