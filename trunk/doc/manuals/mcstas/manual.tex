@@ -7,7 +7,7 @@
 % The next rawfonts package one is used in the ``datablad''.
 % FIXME \usepackage[only,egtrm]{rawfonts}
 % Handle sorting in reference list
-\usepackage{citesort}
+% FIXME \usepackage{citesort}
 % Create an index table
 \usepackage{makeidx}
 % For html links in install chapter (install latex2html package to get
@@ -71,22 +71,23 @@ morekeywords={SETTING,SHARE,SPLIT,STATE,TRACE,WHEN} %
 \newcommand{\reldate}{{November, 2012}}
 \newcommand{\Ombold}{\mbox{\boldmath $\Omega$}}
 
-% \usepackage{hyperref} %LOAD AT LAST!
+ \usepackage{hyperref} %LOAD AT LAST!
 
 % enable index generation
 \makeindex
 
 \title{User and programmers guide\\ to the neutron ray-tracing package
  \MCS ,\\ version 2.0}
-\author{P Willendrup, E Farhi, E Knudsen, U Filges, K Lefmann \\
+\author{P Willendrup, E Farhi, E Knudsen, U Filges, K Lefmann, J Stein\\
 Physics Department, \\
 Technical University of Denmark, 2800 Kongens Lyngby, Denmark}
 \date{\reldate \\[2\baselineskip]
 \begin{center}
-\includegraphics[width=4.5in]{figures/mcstas_logo}
+\includegraphics[width=4.5in]{figures/mcstas_logo}\\[4cm]
+\includegraphics[width=1cm]{figures/DTU_logo}
 \end{center}
-\includegraphics[width=0.45cm]{figures/DTU_logo}
 }
+
 
 \begin{document}
 
@@ -106,8 +107,8 @@ Technical University of Denmark, 2800 Kongens Lyngby, Denmark}
 \include{running}
 \include{kernel}
 %\include{comp} % now in separate Manual
-\include{comp_abstract}
-\include{instrum}
+% FIXME \include{comp_abstract}
+% FIXME \include{instrum}
 %\include{test}   % now in instrum
 %\include{future} % now in changes
 
