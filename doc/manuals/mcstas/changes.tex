@@ -3,7 +3,7 @@
 \chapter{New features in \MCS \version\ }
 \label{c:changes}
 
-UPDATE!!!!
+%TODO FIXME UPDATE!!!!
 
 This version of \MCS implements both new features, as well as many bug corrections. Bugs are reported and traced using the \MCS Trac Ticket system \cite{mczilla_webpage}. We will not present here an extensive list of corrections, and we let the reader refer to this bug reporting service for details. Only important changes are indicated here.
 
@@ -18,11 +18,11 @@ Of course, we can not guarantee that the software is bullet proof, but we do our
 \label{s:new-features:kernel}
 \index{Kernel}
 
-The following changes concern the 'Kernel' (i.e. the \MCS meta-language and program). See the dedicated chapter in the {\it User manual} for more details.
+The following changes concern the 'Kernel' (i.e. the \MCS meta-language and program). See the dedicated chapter for more details \ref{c:kernel}.
 
 \begin{itemize}
 \item The \verb+STATE PARAMETERS+ keywords has been removed from components code. We now assume that the neutron state parameters are \verb+x,y,z,vx,vy,vz,sx,sy,sz,t+. \MCS 1.X components will need to be adapted by commenting this line.
-\item The \verb+PREVIOUS+ and \verb+MYSELF+ keywords can be used in component instance parameters and positioning (AT/ROTATED) so that one can make use of \verb+MC_GETPAR(PREVIOUS, parameter)+ directly in the TRACE section.
+\item The \verb+PREVIOUS+ and \verb+MYSELF+ keywords can be used in component instance parameters and positioning (AT/ROTATED) so that one can make use of\\ \verb+MC_GETPAR(PREVIOUS, parameter)+ directly in the TRACE section.
 \end{itemize}
 
 \section{Run-time}
@@ -52,7 +52,6 @@ the {\it Component Overview} of the {\it User Manual}. Generally, most component
 \item \verb+Lens_simple+ for refractive lenses with a simple analytical model (H. Frielinghaus).
 \item \verb+PSD_Detector+ can now work in event mode (E. Farhi).
 \item \verb+Multilayer_Sample+ to model a set of refractive layers for e.g. reflectometry. Requires GNU Scientific Library to be previously installed (R. Dalgliesh, ISIS).
-\item 
 \end{itemize}
 
 \subsection{New example instruments and Data files}
@@ -68,7 +67,7 @@ the {\it Component Overview} of the {\it User Manual}. Generally, most component
 \section{Documentation}
 \label{s:new-features:documentation}
 \begin{itemize}
-\item Manual and component manual fully updated 
+\item Manual and component manual updated 
 \end{itemize}
 
 \section{Tools, installation}
@@ -104,13 +103,13 @@ the {\it Component Overview} of the {\it User Manual}. Generally, most component
 \subsection{Various}
 \begin{itemize}
 \item  A number of minor bugs ironed out, both in components, runtime code and tools.
-\item From release 1.12, McStas is GPL 2 only. The debate on the internet about the future GPL 3 license suggests that this license 
-     might have implications on the 'derived work', hence have implications on what and how our users use their McStas simulations
+\item From release 1.12, \MCS is GPL 2 only. The debate on the internet about the GPL 3 license suggests that this license 
+     might have implications on the 'derived work', hence have implications on what and how our users use their \MCS simulations
      for. To protect user freedom, we will stick with GPL 2.     
 \end{itemize}
 
 \subsection{Warnings}
-{\bf WARNING:} The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 7.04) makes the 'Cancel' and 'Update' 
+{\bf WARNING:} The 'dash' shell which is used as /bin/sh on some Linux system (including Ubuntu 7.04) makes the 'Cancel' and 'Update' 
 buttons fail in mcgui. Solutions are:
 \begin{itemize}
 \item[a)] If your system is a Debian or Ubuntu, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh
