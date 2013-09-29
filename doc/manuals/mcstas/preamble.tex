@@ -1,0 +1,37 @@
+\usepackage{graphicx}
+\usepackage{amsfonts}
+\usepackage{amsbsy}
+
+% The next rawfonts package one is used in the ``datablad''.
+% FIXME \usepackage[only,egtrm]{rawfonts}
+% Handle sorting in reference list
+% FIXME \usepackage{citesort}
+% Create an index table
+\usepackage{makeidx}
+% For html links in install chapter (install latex2html package to get
+% this style)
+% \usepackage{html}
+
+\usepackage{color}
+\usepackage{xcolor}
+
+\input{syntaxhighlighting}
+
+
+\usepackage{xspace}
+
+
+ 
+\newcommand{\smallverbatimfile}[1]{{\footnotesize\verbatimfile{#1}}}
+
+\def\reportnum{DTU}
+
+\newcommand{\MCS}{{McStas\xspace}}
+\newcommand{\version}{{2.0}}
+\newcommand{\reldate}{{November, 2012}}
+\newcommand{\Ombold}{\mbox{\boldmath $\Omega$}}
+
+ \usepackage{hyperref} %LOAD AT LAST!
+
+% enable index generation
+\makeindex
