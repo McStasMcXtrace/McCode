@@ -68,7 +68,7 @@
 }
 
 %token TOK_RESTRICTED TOK_GENERAL
-ssembly
+
 %token TOK_ABSOLUTE   "ABSOLUTE"
 %token TOK_AT         "AT"
 %token TOK_COMPONENT  "COMPONENT"
@@ -180,34 +180,36 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         /* all redefined blocks override */
         struct comp_def *def;
         def = read_component($5);
-        struct comp_def *c;
-        palloc(c);
-        c->name = $3;
-        c->source = str_quote(instr_current_filename);
-        /* only catenate if defined as non empty  */
-        c->def_par   = list_create(); list_cat(c->def_par, def->def_par);
-        if (list_len($6.def)) list_cat(c->def_par,$6.def);
+        if (def) {
+          struct comp_def *c;
+          palloc(c);
+          c->name = $3;
+          c->source = str_quote(instr_current_filename);
+          /* only catenate if defined as non empty  */
+          c->def_par   = list_create(); list_cat(c->def_par, def->def_par);
+          if (list_len($6.def)) list_cat(c->def_par,$6.def);
 
-        c->set_par   = list_create(); list_cat(c->set_par, def->set_par);
-        if (list_len($6.set)) list_cat(c->set_par,$6.set);
+          c->set_par   = list_create(); list_cat(c->set_par, def->set_par);
+          if (list_len($6.set)) list_cat(c->set_par,$6.set);
 
-        c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
-        if (list_len($6.out)) list_cat(c->out_par,$6.out);
+          c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
+          if (list_len($6.out)) list_cat(c->out_par,$6.out);
 
-        c->share_code = ($7->linenum ?  $7  : def->share_code);
-        c->decl_code  = ($8->linenum ?  $8  : def->decl_code);
-        c->init_code  = ($9->linenum ?  $9  : def->init_code);
-        c->trace_code = ($10->linenum ? $10 : def->trace_code);
-        c->save_code  = ($11->linenum ? $11 : def->save_code);
-        c->finally_code = ($12->linenum ? $12 : def->finally_code);
-        c->mcdisplay_code = ($13->linenum ? $13 : def->mcdisplay_code);
-        c->comp_inst_number = 0;
+          c->share_code = ($7->linenum ?  $7  : def->share_code);
+          c->decl_code  = ($8->linenum ?  $8  : def->decl_code);
+          c->init_code  = ($9->linenum ?  $9  : def->init_code);
+          c->trace_code = ($10->linenum ? $10 : def->trace_code);
+          c->save_code  = ($11->linenum ? $11 : def->save_code);
+          c->finally_code = ($12->linenum ? $12 : def->finally_code);
+          c->mcdisplay_code = ($13->linenum ? $13 : def->mcdisplay_code);
+          c->comp_inst_number = 0;
 
-        /* Check definition and setting params for uniqueness */
-        check_comp_formals(c->def_par, c->set_par, c->name);
-        /* Put component definition in table. */
-        symtab_add(read_components, c->name, c);
-        if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
+          /* Check definition and setting params for uniqueness */
+          check_comp_formals(c->def_par, c->set_par, c->name);
+          /* Put component definition in table. */
+          symtab_add(read_components, c->name, c);
+          if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
+        }
 
       }
 ;
@@ -225,7 +227,10 @@ share:    /* empty */
       {
         struct comp_def *def;
         def = read_component($3);
-        $$ = def->share_code;
+        if (def)
+          $$ = def->share_code;
+        else
+          $$ = codeblock_new();
       }
     | "SHARE" "COPY" TOK_ID "EXTEND" codeblock
       {
@@ -233,11 +238,13 @@ share:    /* empty */
         struct code_block *cb;
         cb = codeblock_new();
         def = read_component($3);
-        cb->filename        = def->share_code->filename;
-        cb->quoted_filename = def->share_code->quoted_filename;
-        cb->linenum         = def->share_code->linenum;
-        list_cat(cb->lines, def->share_code->lines);
-        list_cat(cb->lines, $5->lines);
+        if (def) {
+          cb->filename        = def->share_code->filename;
+          cb->quoted_filename = def->share_code->quoted_filename;
+          cb->linenum         = def->share_code->linenum;
+          list_cat(cb->lines, def->share_code->lines);
+          list_cat(cb->lines, $5->lines);
+        }
         $$ = cb;
       }
 
@@ -255,7 +262,10 @@ trace: /* empty */
       {
         struct comp_def *def;
         def = read_component($3);
-        $$ = def->trace_code;
+        if (def)
+          $$ = def->trace_code;
+        else
+          $$ = codeblock_new();
       }
     | "TRACE" "COPY" TOK_ID "EXTEND" codeblock
       {
@@ -263,11 +273,13 @@ trace: /* empty */
         struct code_block *cb;
         cb = codeblock_new();
         def = read_component($3);
-        cb->filename        = def->trace_code->filename;
-        cb->quoted_filename = def->trace_code->quoted_filename;
-        cb->linenum         = def->trace_code->linenum;
-        list_cat(cb->lines, def->trace_code->lines);
-        list_cat(cb->lines, $5->lines);
+        if (def) {
+          cb->filename        = def->trace_code->filename;
+          cb->quoted_filename = def->trace_code->quoted_filename;
+          cb->linenum         = def->trace_code->linenum;
+          list_cat(cb->lines, def->trace_code->lines);
+          list_cat(cb->lines, $5->lines);  
+        }
         $$ = cb;
       }
 ;
@@ -463,7 +475,10 @@ declare:    /* empty */
       {
         struct comp_def *def;
         def = read_component($3);
-        $$ = def->decl_code;
+        if (def)
+          $$ = def->decl_code;
+        else
+          $$ = codeblock_new();
       }
     | "DECLARE" "COPY" TOK_ID "EXTEND" codeblock
       {
@@ -471,11 +486,13 @@ declare:    /* empty */
         struct code_block *cb;
         cb = codeblock_new();
         def = read_component($3);
-        cb->filename        = def->decl_code->filename;
-        cb->quoted_filename = def->decl_code->quoted_filename;
-        cb->linenum         = def->decl_code->linenum;
-        list_cat(cb->lines, def->decl_code->lines);
-        list_cat(cb->lines, $5->lines);
+        if (def) {
+          cb->filename        = def->decl_code->filename;
+          cb->quoted_filename = def->decl_code->quoted_filename;
+          cb->linenum         = def->decl_code->linenum;
+          list_cat(cb->lines, def->decl_code->lines);
+          list_cat(cb->lines, $5->lines); 
+        }
         $$ = cb;
       }
 ;
@@ -488,7 +505,10 @@ initialize:   /* empty */
       {
         struct comp_def *def;
         def = read_component($3);
-        $$ = def->init_code;
+        if (def)
+          $$ = def->init_code;
+        else
+          $$ = codeblock_new();
       }
     | "INITIALIZE" "COPY" TOK_ID "EXTEND" codeblock
       {
@@ -496,11 +516,13 @@ initialize:   /* empty */
         struct code_block *cb;
         cb = codeblock_new();
         def = read_component($3);
-        cb->filename        = def->init_code->filename;
-        cb->quoted_filename = def->init_code->quoted_filename;
-        cb->linenum         = def->init_code->linenum;
-        list_cat(cb->lines, def->init_code->lines);
-        list_cat(cb->lines, $5->lines);
+        if (def) {
+          cb->filename        = def->init_code->filename;
+          cb->quoted_filename = def->init_code->quoted_filename;
+          cb->linenum         = def->init_code->linenum;
+          list_cat(cb->lines, def->init_code->lines);
+          list_cat(cb->lines, $5->lines);
+        } 
         $$ = cb;
       }
     | "INITIALIZE" codeblock
@@ -521,7 +543,10 @@ save:   /* empty */
       {
         struct comp_def *def;
         def = read_component($3);
-        $$ = def->save_code;
+        if (def)
+          $$ = def->save_code;
+        else
+          $$ = codeblock_new();
       }
     | "SAVE" "COPY" TOK_ID "EXTEND" codeblock
       {
@@ -529,11 +554,13 @@ save:   /* empty */
         struct code_block *cb;
         cb = codeblock_new();
         def = read_component($3);
-        cb->filename        = def->save_code->filename;
-        cb->quoted_filename = def->save_code->quoted_filename;
-        cb->linenum         = def->save_code->linenum;
-        list_cat(cb->lines, def->save_code->lines);
-        list_cat(cb->lines, $5->lines);
+        if (def) {
+          cb->filename        = def->save_code->filename;
+          cb->quoted_filename = def->save_code->quoted_filename;
+          cb->linenum         = def->save_code->linenum;
+          list_cat(cb->lines, def->save_code->lines);
+          list_cat(cb->lines, $5->lines);
+        }
         $$ = cb;
       }
 ;
@@ -550,7 +577,10 @@ finally:    /* empty */
       {
         struct comp_def *def;
         def = read_component($3);
-        $$ = def->finally_code;
+        if (def)
+          $$ = def->finally_code;
+        else
+          $$ = codeblock_new();
       }
     | "FINALLY" "COPY" TOK_ID "EXTEND" codeblock
       {
@@ -558,11 +588,13 @@ finally:    /* empty */
         struct code_block *cb;
         cb = codeblock_new();
         def = read_component($3);
-        cb->filename        = def->finally_code->filename;
-        cb->quoted_filename = def->finally_code->quoted_filename;
-        cb->linenum         = def->finally_code->linenum;
-        list_cat(cb->lines, def->finally_code->lines);
-        list_cat(cb->lines, $5->lines);
+        if (def) {
+          cb->filename        = def->finally_code->filename;
+          cb->quoted_filename = def->finally_code->quoted_filename;
+          cb->linenum         = def->finally_code->linenum;
+          list_cat(cb->lines, def->finally_code->lines);
+          list_cat(cb->lines, $5->lines);
+        }
         $$ = cb;
       }
 ;
@@ -579,7 +611,10 @@ mcdisplay:    /* empty */
       {
         struct comp_def *def;
         def = read_component($3);
-        $$ = def->mcdisplay_code;
+        if (def)
+          $$ = def->mcdisplay_code;
+        else
+          $$ = codeblock_new();
       }
     | "MCDISPLAY" "COPY" TOK_ID "EXTEND" codeblock
       {
@@ -587,11 +622,13 @@ mcdisplay:    /* empty */
         struct code_block *cb;
         cb = codeblock_new();
         def = read_component($3);
-        cb->filename        = def->mcdisplay_code->filename;
-        cb->quoted_filename = def->mcdisplay_code->quoted_filename;
-        cb->linenum         = def->mcdisplay_code->linenum;
-        list_cat(cb->lines, def->mcdisplay_code->lines);
-        list_cat(cb->lines, $5->lines);
+        if (def) {
+          cb->filename        = def->mcdisplay_code->filename;
+          cb->quoted_filename = def->mcdisplay_code->quoted_filename;
+          cb->linenum         = def->mcdisplay_code->linenum;
+          list_cat(cb->lines, def->mcdisplay_code->lines);
+          list_cat(cb->lines, $5->lines);
+        }
         $$ = cb;
       }
 ;
@@ -628,7 +665,7 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
         /* Check instrument parameters for uniqueness */
         check_instrument_formals(instrument_definition->formals,
                instrument_definition->name);
-        if (verbose) fprintf(stderr, "Creating instrument %s (with %li component instances)\n", $3, comp_current_index);
+        if (verbose && !error_encountered) fprintf(stderr, "Creating instrument %s (with %li component instances)\n", $3, comp_current_index);
       }
 ;
 
@@ -802,22 +839,44 @@ complist:   /* empty */
               worry about freeing the memory allocated for
               the component instance. */
           }
-          /* check that instance name does not match an OUTPUT parameter */
+          /* check that instance name does not match any OUTPUT/SETTING/DEFINITION parameter */
           else
           {
-            List_handle out;
-            char *par;
-            
-            out = list_iterate($2->def->out_par);
-            while(par = list_next(out)) {
-              if (!strcmp($2->name, par))
-                print_error("Component instance name "
-            "'%s' matches an internal OUTPUT parameter of component class %s at "
-            "line %s:%d.\nPlease change the instance name.\n", 
-            $2->name, $2->type, instr_current_filename, instr_current_line);
+            if ($2->def) {
+              List_handle          liter;
+              char                *par;
+              struct comp_iformal *formal;
+              
+              liter = list_iterate($2->def->out_par);
+              while(par = list_next(liter)) {
+                if (!strcmp($2->name, par))
+                  print_error("Component instance name "
+              "'%s' matches an internal OUTPUT parameter of component class %s at "
+              "line %s:%d.\nPlease change the instance name.\n", 
+              $2->name, $2->type, instr_current_filename, instr_current_line);
+              }
+              list_iterate_end(liter);
+              
+              liter = list_iterate($2->def->set_par);
+              while(formal = list_next(liter)) {
+                if (!strcmp($2->name, formal->id))
+                  print_error("Component instance name "
+                  "'%s' matches an internal SETTING parameter of component class %s at "
+                  "line %s:%d.\nPlease change the instance name.\n", 
+                  $2->name, $2->type, instr_current_filename, instr_current_line);
+              }
+              list_iterate_end(liter);
+              
+              liter = list_iterate($2->def->def_par);
+              while(formal = list_next(liter)) {
+                if (!strcmp($2->name, formal->id))
+                  print_error("Component instance name "
+                  "'%s' matches an internal DEFINITION parameter of component class %s at "
+                  "line %s:%d.\nPlease change the instance name.\n", 
+                  $2->name, $2->type, instr_current_filename, instr_current_line);
+              }
+              list_iterate_end(liter);
             }
-            list_iterate_end(out);
-            
             /* if we come there, instance is not an OUTPUT name */
             symtab_add(comp_instances, $2->name, $2);
             list_add(comp_instances_list, $2);
@@ -922,8 +981,12 @@ component: removable split "COMPONENT" instname '=' instref when place orientati
         struct comp_inst *comp;
 
         comp = $6;
-        comp->type = str_dup(comp->def->name);
-        if (comp->def != NULL) comp->def->comp_inst_number--;
+        
+        if (comp->def != NULL) {
+          comp->def->comp_inst_number--;
+          comp->type = str_dup(comp->def->name);
+        } else 
+          comp->type = str_dup("Definition not found");
 
         comp->name  = $4;
         comp->split = $2;
@@ -1680,7 +1743,7 @@ main(int argc, char *argv[])
     str_quote(instrument_definition->source);
   if (verbose) {
     fprintf(stderr, MCCODE_NAME " version " MCCODE_VERSION "\n");
-    fprintf(stderr, "Analyzing file      %s\n", instrument_definition->quoted_source);
+    fprintf(stderr, "Analyzing file            %s\n", instrument_definition->quoted_source);
   }
   instr_current_line = 1;
   lex_new_file(file);
@@ -1688,16 +1751,18 @@ main(int argc, char *argv[])
   lib_instances   = symtab_create(); /* Create table of libraries. */
   err = mc_yyparse();
   fclose(file);
-  if(err != 0 || error_encountered != 0)
+  if (err != 0 && !error_encountered) error_encountered++;
+  if(error_encountered != 0)
   {
-    print_error(MCCODE_NAME ": Errors encountered during parse of %s.\n", instr_current_filename);
+    print_error(MCCODE_NAME ": %i Errors encountered during parse of %s.\n",
+      error_encountered, instr_current_filename);
     exit(1);
   }
   else
   {
     if (verbose) fprintf(stderr, "Starting to create C code %s\n", output_filename);
     cogen(output_filename, instrument_definition);
-    if (verbose) fprintf(stderr, "Generated C code    %s\n", output_filename);
+    if (verbose) fprintf(stderr, "Generated          C code %s\n", output_filename);
     exit(0);
   }
 }
@@ -1803,6 +1868,9 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
   /* First check the formal parameters one by one. */
   defpar = symtab_create();
   setpar = symtab_create();
+  if (!comp || !comp->def) return;
+  
+  /* definition parameters */
   liter = list_iterate(comp->def->def_par);
   while(formal = list_next(liter))
   {
@@ -1836,6 +1904,8 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
     }
   }
   list_iterate_end(liter);
+  
+  /* setting parameters */
   liter = list_iterate(comp->def->set_par);
   while(formal = list_next(liter))
   {
@@ -1937,10 +2007,11 @@ read_component(char *name)
     file = open_component_search(name);
     if(file == NULL)
     {
-      fatal_error(
+      print_error(
         "Cannot find file containing definition of component '%s'.\n"
         "Check the McStas library installation or your MCSTAS environment variable\n"
         "or copy the component definition file locally.\n", name);
+      return NULL;
     }
     push_autoload(file);
     /* Note: the str_dup copy of the file name is stored in codeblocks, and
@@ -1949,7 +2020,7 @@ read_component(char *name)
     instr_current_line = 1;
     err = mc_yyparse();   /* Read definition from file. */
     if(err != 0)
-      fatal_error("Errors encountered during autoload of component %s. The instrument definition has syntax errors.\n",
+      fatal_error("Errors encountered during autoload of component %s. The component definition has syntax errors.\n",
         name);
     fclose(file);
     /* Now check if the file contained the required component definition. */
@@ -1960,7 +2031,7 @@ read_component(char *name)
     }
     else
     {
-      fatal_error("Definition of component %s not found (file was found but does not contain the component definition).\n", name);
+      print_error("Definition of component %s not found (file was found but does not contain the component definition).\n", name);
       return NULL;
     }
   }
