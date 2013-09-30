@@ -4,12 +4,13 @@ NAME="$1"
 
 echo "Building ${NAME}"
 
-for prog in pdflatex bibtex makeindex pdflatex pdflatex; do
-    echo "> ${prog}";
-    ${prog} "${NAME}" > /dev/null || exit 1;
-done
+latexmk -gg -bibtex -pdf ${NAME}.tex 
+#for prog in pdflatex bibtex makeindex pdflatex pdflatex; do
+#    echo "> ${prog}";
+#    ${prog} "${NAME}" > /dev/null || exit 1;
+#done
 
-echo ""
+#echo ""
 
 
 #DVIPDF="`command -v dvipdf`"
