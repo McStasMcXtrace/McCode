@@ -23,3 +23,16 @@ fi
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw32 -- nsis
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mingw32 -- nsis
 ./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mingw32 -- nsis
+
+if [ "x$2" != "x" ]; then
+    # Build the meta-packages also
+    cd meta-pkgs/windows
+
+    sed s/@VERSION@/${1}/g McStas-metapackage32.iss > McStas-${1}-metapackage32.iss
+    sed s/@VERSION@/${1}/g McStas-metapackage64.iss > McStas-${1}-metapackage64.iss
+    ./iscc McStas-${1}-metapackage32.iss
+    mv Output/setup.exe dist/McStas-Metapackage-Perl-${1}-win32.exe
+    ./iscc McStas-${1}-metapackage64.iss
+    mv Output/setup.exe dist/McStas-Metapackage-Perl-${1}-win64.exe
+
+fi
