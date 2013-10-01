@@ -1,4 +1,4 @@
-Placeholder for a nullsoft (nsi) script to generate ONE exe for the windows users. Starting points either:
+InnoSetup-based metapackages for windows are built here...
 
-1) The old mcstas.nsi from the 1.x series
-2) The utility available here:http://nsis.sourceforge.net/NSIS_Quick_Setup_Script_Generator
+See https://katastrophos.net/andre/blog/2009/03/16/setting-up-the-inno-setup-compiler-on-debian/ for setting up wine and the relevant compiler
+
