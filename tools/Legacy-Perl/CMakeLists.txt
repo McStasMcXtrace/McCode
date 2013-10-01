@@ -55,7 +55,8 @@ if(WINDOWS)
   set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}/${lib}/${TOOLS_NAME}")
 
   # Post install script for downloading extra Perl modules
-  set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\postsetup.bat' ")
+  # - removed since included in metapackage-build
+  # set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\postsetup.bat' ")
 
 else()
   set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
