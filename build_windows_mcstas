@@ -6,10 +6,16 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
+# Workaround for having CRLF linefeeds in a couple of windows packages
+rsync -avz --delete --exclude=".svn/" mcstas-comps/ mcstas-comps-win
+find mcstas-comps-win -type f -exec todos \{\} \;
+rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl/ tools/Legacy-Perl-win
+find tools/Legacy-Perl-win -type f -exec todos \{\} \;
+
 # 64-bit
 ./mkdist mcstas $1 "" "" mingw64 -- nsis
-./mkdist mcstas-comps $1 "" "" mingw64 -- nsis
-./mkdist mcstas-tools-Perl $1 tools/Legacy-Perl/ "" mingw64 -- nsis
+./mkdist mcstas-comps $1 mcstas-comps-win "" mingw64 -- nsis
+./mkdist mcstas-tools-Perl $1 tools/Legacy-Perl-win "" mingw64 -- nsis
 ./mkdist mcstas-tools-Python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mingw64 -- nsis
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 -- nsis
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mingw64 -- nsis
@@ -17,8 +23,8 @@ fi
 
 # 32-bit
 ./mkdist mcstas $1 "" "" mingw32 -- nsis
-./mkdist mcstas-comps $1 "" "" mingw32 -- nsis
-./mkdist mcstas-tools-Perl $1 tools/Legacy-Perl/ "" mingw32 -- nsis
+./mkdist mcstas-comps $1 mcstas-comps-win "" mingw32 -- nsis
+./mkdist mcstas-tools-Perl $1 tools/Legacy-Perl-win "" mingw32 -- nsis
 ./mkdist mcstas-tools-Python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mingw32 -- nsis
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw32 -- nsis
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mingw32 -- nsis
