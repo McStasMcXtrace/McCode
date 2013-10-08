@@ -429,8 +429,8 @@ def display(this_File, comment):
         print os.path.basename(sys.argv[0]) +": Dataset " + File + " does not exist!"
         exit()
     
-    isBegin = lambda line: line.startswith('begin')
-    isCompFilename = lambda line: line.startswith('    filename:')
+    isBegin = lambda line: (line.strip()).startswith('begin')
+    isCompFilename = lambda line: (line.strip()).startswith('filename:')
     # First, determine if this is single or overview plot...
     SimFile = filter(isBegin, open(this_File).readlines())
     Datfile = 0;

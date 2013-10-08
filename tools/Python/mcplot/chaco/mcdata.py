@@ -69,11 +69,11 @@ def mcstas_to_plotdescs(path):
     fname = None
     for line in file(path):
         sline = line.strip()
-        if sline.startswith('begin component'):
+        if sline.startswith('begin component') or sline.startswith('begin data'):
             fname = None
         elif sline.startswith('filename:'):
             fname = sline.split()[-1]
-        elif sline.startswith('end component') and fname is not None:
+        elif (sline.startswith('end component') or sline.startswith('end data')) and fname is not None:
             files.append(fname)
 
     # parse instrument files
