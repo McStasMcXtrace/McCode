@@ -84,6 +84,7 @@ sub read_instrument {
     my $compheader;
     my $mantidfirst=1;
     my $mantidcount=-1;
+    my $mantidcount2=-1;
     $st = 0;
     @components = ();
     while(<$in>) {
@@ -308,7 +309,7 @@ Transform {
 	      if ($comp =~ /nD_Mantid/i) {
 		$mantidcount=$mantidcount+1;
 		$type = "MonNDtype-$mantidcount";
-		write_process("<component type=\"".$type."\" name=\"$comp\" idlist=\"${comp}_${mantidcount}\">\n");
+		write_process("<component type=\"".$type."\" name=\"$comp\" idlist=\"nD_Mantid_${mantidcount}\">\n");
 	      } else {
 		write_process("<component type=\"".$type."\" name=\"$comp\">\n");
 	      }
@@ -364,10 +365,12 @@ Transform {
 	} elsif (/^MANTID_PIXEL_SIZE:(.*)$/) {
 	  my @T;
 	  @T = split ",", $1;
-	  
+
+	  $mantidcount2++;
+
 	  my @PIXELDATA=@T;
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
-	      write_process("<type name=\"pixel\" is=\"detector\">\n");
+	      write_process("<type name=\"pixel-$mantidcount2\" is=\"detector\">\n");
 	      write_process("\t<cuboid id=\"shape\">\n");
 	      write_process("\t\t<left-front-bottom-point x=\"".$PIXELDATA[0]/(2.0)."\" y=\"".-($PIXELDATA[1]/2.0)."\" z=\"0.0\" />\n");
 	      write_process("\t\t<left-front-top-point x=\"".$PIXELDATA[0]/(2.0)."\" y=\"".-($PIXELDATA[1]/2.0)."\" z=\"0.00005\" />\n");
@@ -376,9 +379,9 @@ Transform {
 	      write_process("\t</cuboid>\n");
 	      write_process("\t<algebra val=\"shape\" />\n");
 	      write_process("</type>\n\n");
-	      write_process("<idlist idname=\"nD_Mantid_1_0\" >\n");
+	      write_process("<idlist idname=\"nD_Mantid_$mantidcount2\" >\n");
 	      write_process("<id start=\"");
-	      write_process(${mantidcount}*1000000);
+	      write_process(${mantidcount2}*1000000);
 	      write_process("\" end=\"".($PIXELDATA[2]-1)."\" />\n");
 	      write_process("</idlist>\n\n");
 
@@ -391,9 +394,9 @@ Transform {
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
 	      if ($mantidfirst) {
 		$mantidfirst=0;
-		write_process("<type name=\"MonNDtype-$mantidcount\">\n<properties/>\n<component type=\"pixel\">\n");
+		write_process("<type name=\"MonNDtype-$mantidcount2\">\n<properties/>\n<component type=\"pixel-$mantidcount2\">\n");
 	      }
-	      my $pixnum = $mantidcount*1000000+$PIXELDATA[0];
+	      my $pixnum = $mantidcount2*1000000+$PIXELDATA[0];
 	      write_process("<location x=\"".$PIXELDATA[1]."\" y=\"".$PIXELDATA[2]."\" z=\"".$PIXELDATA[3]."\" name=\"pixel".$pixnum."\"/>\n");
 	    } else {
 	      next;
@@ -401,6 +404,7 @@ Transform {
 	} elsif (/^MANTID_PIXELS_END/) {
 	  if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
 	    $mantidfirst=1;
+	    $mantidcount++;
 	    write_process("</component>\n</type>\n");
 	  } else {
 	    next;
