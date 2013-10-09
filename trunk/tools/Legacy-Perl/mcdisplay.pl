@@ -382,7 +382,9 @@ Transform {
 	      write_process("<idlist idname=\"nD_Mantid_$mantidcount2\" >\n");
 	      write_process("<id start=\"");
 	      write_process(${mantidcount2}*1000000);
-	      write_process("\" end=\"".($PIXELDATA[2]-1)."\" />\n");
+	      write_process("\" end=\"");
+	      write_process(${mantidcount2}*1000000+($PIXELDATA[2]-1));
+	      write_process("\" />\n");
 	      write_process("</idlist>\n\n");
 
 	    }
