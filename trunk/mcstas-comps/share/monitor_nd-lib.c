@@ -1666,6 +1666,14 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
             x3,y3,z3,
             x0,y0,z0);
         }
+      if (Vars->Flag_mantid) {
+	/* First define the base pixel type */
+	double dt, dy;
+	dt = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
+	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
+	printf("MANTID_BANANA_DET:  %g, %g, %g, %li, %li\n", radius,
+	       Vars->Coord_Max[1]-Vars->Coord_Min[1], Vars->Coord_Max[2]-Vars->Coord_Min[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2]);
+      }
     }
     /* disk (circle) */
     else
