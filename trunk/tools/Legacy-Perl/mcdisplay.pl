@@ -297,24 +297,6 @@ Transform {
               # Initialize components in matlab struct:
               write_process("INSTRUMENT.name{length(INSTRUMENT.name)+1}='$comp';\n");
             }
-            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
-              # Initialize components in matlab struct:
-	      my $type = "Othercomp";
-	      if ($comp =~ /source/i) {
-		$type = "source";
-	      }
-	      if ($comp =~ /sample/i) {
-		$type = "some-sample-holder";
-	      }
-	      if ($comp =~ /nD_Mantid/i) {
-		$mantidcount=$mantidcount+1;
-		$type = "MonNDtype-$mantidcount";
-		write_process("<component type=\"".$type."\" name=\"$comp\" idlist=\"nD_Mantid_${mantidcount}\">\n");
-	      } else {
-		write_process("<component type=\"".$type."\" name=\"$comp\">\n");
-	      }
-	      
-            }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /vrml/i) {
 		$compheaders{$comp}="\n########################".
 		    " $comp ".
@@ -333,7 +315,18 @@ Transform {
             }
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
               # Component position for mantid:
-              write_process("<location x=\"".$T[0]."\" y=\"".$T[1]."\" z=\"".$T[2]."\" />\n</component>\n\n");
+	      my $type = "Othercomp";
+	      if ($comp =~ /source/i) {
+		$type = "source";
+	      }
+	      if ($comp =~ /sample/i) {
+		$type = "some-sample-holder";
+	      }
+	      if (!($comp =~ /nD_Mantid/i)) {
+		 # Component position for mantid - but not Monitor_nD case:
+		write_process("<component type=\"".$type."\" name=\"$comp\">\n");
+		write_process("<location x=\"".$T[0]."\" y=\"".$T[1]."\" z=\"".$T[2]."\" />\n</component>\n\n");
+	      }
 	      # We need to handle orientations here as well...
             }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /vrml/i) {
@@ -362,6 +355,37 @@ Transform {
 		$nbcomp2++;
 		$comp = "";
 	      }
+	} elsif (/^MANTID_RECTANGULAR_DET:(.*)$/) {
+	  # Rectangular detector, width, height, nx, ny
+	  $mantidcount2++;
+	  my @PIXELDATA = split ",", $1;
+	  my $dx,$dy;
+	  $dx = $PIXELDATA[0]/($PIXELDATA[2]);
+	  $dy = $PIXELDATA[1]/($PIXELDATA[3]);
+	  if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+	      # First define a panel, cf. http://www.mantidproject.org/IDF#Creating_Rectangular_Area_Detectors
+	      my $type = "MonNDtype-$mantidcount2";
+	      write_process("<component type=\"".$type."\" name=\"$comp\" idstart=\"");
+	      write_process(${mantidcount2}*1000000);
+	      write_process("\" idfillbyfirst=\"x\" idstepbyrow=\"".$PIXELDATA[2]."\">\n");
+	      write_process("\t<location x=\"".$transformations{$comp}[0]."\" y=\"".$transformations{$comp}[1]."\" z=\"".$transformations{$comp}[2]."\" />\n</component>\n\n");
+
+	      # Panel pixellation
+	      write_process("\<type name=\"MonNDtype-$mantidcount2\" is=\"RectangularDetector\" type=\"pixel-$mantidcount2\"\n");
+	      write_process("\txpixels=\"$PIXELDATA[2]\" xstart=\"-".$PIXELDATA[0]/(2.0)."\" xstep=\"".$dx."\"\n");
+	      write_process("\typixels=\"$PIXELDATA[3]\" ystart=\"-".$PIXELDATA[1]/(2.0)."\" ystep=\"".$dy."\">\n</type>\n");
+
+	      # Individual pixel
+	      write_process("<type is=\"detector\" name=\"pixel-$mantidcount2\">\n");
+	      write_process("\t<cuboid id=\"pixel-shape-$mantidcount2\">\n");
+	      write_process("\t\t<left-front-bottom-point x=\"".$dx/(2.0)."\" y=\"".-($dy/2.0)."\" z=\"0.0\" />\n");
+	      write_process("\t\t<left-front-top-point x=\"".$dx/(2.0)."\" y=\"".-($dy/2.0)."\" z=\"0.00005\" />\n");
+	      write_process("\t\t<left-back-bottom-point x=\"".$dx/(-2.0)."\" y=\"".-($dy/2.0)."\" z=\"0.0\" />\n");
+	      write_process("\t\t<right-front-bottom-point x=\"".$dx/(2.0)."\" y=\"".($dy/2.0)."\" z=\"0.0\" />\n");
+	      write_process("\t</cuboid>\n");
+	      write_process("\t<algebra val=\"pixel-shape-$mantidcount2\" />\n");
+	      write_process("</type>\n\n");
+	    }
 	} elsif (/^MANTID_PIXEL_SIZE:(.*)$/) {
 	  my @T;
 	  @T = split ",", $1;
@@ -407,7 +431,7 @@ Transform {
 	  if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
 	    $mantidfirst=1;
 	    $mantidcount++;
-	    write_process("</component>\n</type>\n");
+#	    write_process("</component>\n</type>\n");
 	  } else {
 	    next;
 	  }
