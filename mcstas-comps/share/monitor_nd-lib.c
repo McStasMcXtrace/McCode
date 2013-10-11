@@ -1671,8 +1671,8 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
 	double dt, dy;
 	dt = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
 	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
-	printf("MANTID_BANANA_DET:  %g, %g, %g, %li, %li\n", radius,
-	       Vars->Coord_Max[1]-Vars->Coord_Min[1], Vars->Coord_Max[2]-Vars->Coord_Min[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2]);
+	printf("MANTID_BANANA_DET:  %g, %g, %g, %g, %g, %li, %li\n", radius,
+	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2]);
       }
     }
     /* disk (circle) */
@@ -1698,8 +1698,8 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
 	double dx, dy;
 	dx = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
 	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
-	printf("MANTID_RECTANGULAR_DET:  %g, %g, %li, %li\n", 
-	       Vars->Coord_Max[1]-Vars->Coord_Min[1], Vars->Coord_Max[2]-Vars->Coord_Min[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2]);
+	printf("MANTID_RECTANGULAR_DET:  %g, %g, %g, %g, %li, %li\n", 
+	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2]);
       }
     }
     /* full cylinder/banana */
