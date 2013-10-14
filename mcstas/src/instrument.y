@@ -59,7 +59,6 @@
   struct comp_inst        *instance;      /* Component instance */
   struct comp_place        place;         /* Component place */
   struct comp_orientation  ori;           /* Component orientation */
-  struct NXinfo           *nxinfo;        /* Info for NeXus interface */
   struct group_inst       *groupinst;     /* group instances */
   struct jump_struct      *jump;          /* jumps structures */
   List                     jumps;
@@ -93,7 +92,6 @@
 %token TOK_EXTEND     "EXTEND"
 %token TOK_GROUP      "GROUP"   /* extended McCode grammar */
 %token TOK_SAVE       "SAVE"
-%token TOK_NEXUS      "NEXUS"   /* optional */
 %token TOK_JUMP       "JUMP"    /* extended McCode grammar */
 %token TOK_WHEN       "WHEN"    /* extended McCode grammar */
 %token TOK_NEXT       "NEXT"    /* extended McCode grammar */
@@ -130,7 +128,6 @@
 %type <parms>   parameters
 %type <place>   place
 %type <ori>     orientation
-%type <nxinfo>  nexus
 %type <string>  instname
 %type <number>  hdfversion
 %type <jump>    jump
@@ -646,7 +643,7 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
           instrument_definition->has_included_instr++;
         }
       }
-      declare initialize nexus instr_trace save finally "END"
+      declare initialize instr_trace save finally "END"
       {
         if (!instrument_definition->decls) instrument_definition->decls = $6;
         else list_cat(instrument_definition->decls->lines, $6->lines);
@@ -785,33 +782,6 @@ instr_formal:   TOK_ID TOK_ID
           formal->type = instr_type_double;
         }
         $$ = formal;
-      }
-;
-
-/* NeXus output support */
-nexus:      /* empty: default NeXus support */
-      {
-        struct NXinfo *nxinfo;
-        palloc(nxinfo);
-        nxinfo->any = 0;
-        nxinfo->hdfversion    = NULL;
-        $$ = nxinfo;
-      }
-    | nexus "NEXUS" hdfversion
-      { /* specify NeXus version */
-        struct NXinfo *nxinfo = $1;
-        nxinfo->hdfversion    = $3;
-        nxinfo->any = 1;
-        $$ = nxinfo;
-      }
-;
-hdfversion: /* empty: default HDF version */
-      {
-        $$ = "5 zip";
-      }
-    | hdfversion TOK_STRING
-      {
-        $$ = $1;
       }
 ;
 

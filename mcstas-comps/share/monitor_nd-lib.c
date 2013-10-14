@@ -1238,7 +1238,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
     /* write output files (sent to file as p[i*n + j] vectors) */
     if (Vars->Coord_Number == 0)
     {
-      double Nsum;
+      long long int Nsum;
       double psum, p2sum;
       Nsum = Vars->Nsum;
       psum = Vars->psum;
@@ -1254,8 +1254,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
       fname = (char*)malloc(strlen(Vars->Mon_File)+10*Vars->Coord_Number);
       if (Vars->Flag_List && Vars->Mon2D_Buffer) /* List: DETECTOR_OUT_2D */
       {
-        int  ascii_only_orig;
-        char formatName[256];
+        char  formatName[256];
         char *formatName_orig;
 
         if (Vars->Flag_List >= 2) Vars->Buffer_Size = Vars->Neutron_Counter;
@@ -1280,9 +1279,8 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
         if (Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", Vars->compcurname, fname,bin2d,bin1d);
 
         /* handle the type of list output */
-        ascii_only_orig = mcascii_only;
-        formatName_orig = mcformat.Name;  /* copy the pointer position */
-        strcpy(formatName, mcformat.Name);
+        formatName_orig = mcformat;  /* copy the pointer position */
+        strcpy(formatName, mcformat);
         if (Vars->Flag_List >= 1)
         { /* Flag_List mode:
                1=store 1 buffer
@@ -1295,10 +1293,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
            */
           strcat(formatName, " list ");
           if (Vars->Flag_List == 3) strcat(formatName, " no header ");
-          if (Vars->Flag_List >= 2 && Vars->Buffer_Counter >= Vars->Buffer_Block)
-            strcat(formatName, " no footer ");
 
-          if (Vars->Flag_Binary_List) mcascii_only = 1;
           if (Vars->Flag_Binary_List == 1)
             strcat(formatName, " binary float ");
           else if (Vars->Flag_Binary_List == 2)
@@ -1309,7 +1304,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
         strcpy(label, Vars->Monitor_Label);
         if (!Vars->Flag_Binary_List)
         { bin2d=-bin2d; }
-        mcformat.Name = formatName;
+        mcformat = formatName;
         detector = mcdetector_out_2D(
               label,
               "List of neutron events",
@@ -1322,8 +1317,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
             fname, Vars->compcurname, Vars->compcurpos);
 
         /* reset the original type of output */
-        mcascii_only = ascii_only_orig;
-        mcformat.Name= formatName_orig;
+        mcformat= formatName_orig;
       }
       if (Vars->Flag_Multiple) /* n1D: DETECTOR_OUT_1D */
       {

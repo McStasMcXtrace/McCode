@@ -420,9 +420,7 @@ TRACE
     { ABSORB;
     }
     else
-    { Vars.Nsum++;
-      Vars.psum += pp;
-      Vars.p2sum += pp*pp;
+    { 
       SCATTER;
     }
 

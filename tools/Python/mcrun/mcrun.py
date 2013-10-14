@@ -152,15 +152,6 @@ def add_mcstas_options(parser):
         action='callback', callback=check_file(exist=False),
         help='put all data files in directory DIR')
 
-    add('-f', '--file',
-        metavar='FILE', type=str,
-        action='callback', callback=check_file(exist=False),
-        help='put all data in a single file')
-
-    add('-a', '--data-only',
-        action='store_true', default=False,
-        help='Do not put any headers in the data files')
-
     add('--format',
         metavar='FORMAT', default='McStas',
         help='output data files using format FORMAT '
