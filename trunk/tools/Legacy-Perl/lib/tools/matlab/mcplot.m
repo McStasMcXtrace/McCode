@@ -300,8 +300,8 @@ function structure=mcplot_load_mccode(filename)
   
   structure = [];
   
-  isMcCode = [ mcplot_filestrfind(filename, 'McStas with text headers', 10000) ...
-               mcplot_filestrfind(filename, 'McCode with text headers', 10000) ...
+  isMcCode = [ mcplot_filestrfind(filename, 'array_1d', 10000) ...
+               mcplot_filestrfind(filename, 'array_2d', 10000) ...
                mcplot_filestrfind(filename, 'multiarray_1d', 10000) ];
   
   if isempty(isMcCode), return; end % also returns when filename is empty
@@ -608,7 +608,7 @@ function data=mcplot_load_sim(filename)
     % calls mcplot_load_mccode
     this_filename = fullfile(filepath, filenameLines{index});
     this_data     = mcplot_load_mccode(this_filename);
-    if ~isempty(strmatch('multiarray_1d',this_data.type))
+    if ~isempty(this_data) && ~isempty(strmatch('multiarray_1d',this_data.type))
       this_data.size = size(this_data.data);
       this_data = mcplot_split_multiarray(this_data);
     end
