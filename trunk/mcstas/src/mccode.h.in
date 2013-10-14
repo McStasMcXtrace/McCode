@@ -55,8 +55,8 @@
 #define MCCODE_NAME "@MCCODE_NAME@"
 #endif
 
-#ifndef MCCODE_PARTICULE
-#define MCCODE_PARTICULE "@MCCODE_PARTICULE@"
+#ifndef MCCODE_PARTICLE
+#define MCCODE_PARTICLE "@MCCODE_PARTICLE@"
 #endif
 
 #ifndef MCCODE_LIBENV
@@ -408,6 +408,9 @@ struct group_inst
     int   index;
     char *first_comp;
     char *last_comp;
+    char  final_absorb_when_all_not_scattered;
+    char  skip_following_when_scattered;
+    char  comp_absorb_sends_to_next;
     CExp  split;
   };
 
@@ -442,13 +445,6 @@ struct instr_formal
     CExp default_value;           /* Default value if isoptional is true */
   };
 
-/* NeXus information. NeXus is supported through the NeXus API */
-struct NXinfo
-  {
-    int any;           /* True only if any NEXUS decls. */
-    char *hdfversion;  /* may be 4 or 5, or xml, with optionally compression */
-  };
-
 /* Instrument definition. */
 struct instr_def
   {
@@ -464,7 +460,6 @@ struct instr_def
     Symtab groupmap;          /* Map of component group names */
     List complist;            /* List of components in declaration order */
     List grouplist;           /* List of component groups in declaration order */
-    struct NXinfo *nxinfo;    /* NeXus declarations */
     int use_default_main;     /* If set, output a main() function */
     int include_runtime;      /* If set, include runtime in output */
     int enable_trace;         /* If set, enable output of ray traces */

@@ -127,7 +127,6 @@ TRACE         return TOK_TRACE;
 SHARE         return TOK_SHARE;
 EXTEND        return TOK_EXTEND;
 GROUP         return TOK_GROUP;         /* extended McStas grammar */
-NEXUS         return TOK_NEXUS;         /* optional */
 SAVE          return TOK_SAVE;
 JUMP          return TOK_JUMP;          /* extended McStas grammar */
 WHEN          return TOK_WHEN;          /* extended McStas grammar */

@@ -92,9 +92,9 @@
 * ##compcurindex
 * ##absorb          label for ABSORB (goto)
 * ##Scattered       Incremented each time a SCATTER is done
-* ##NCounter        Incremented each time a @MCCODE_PARTICULE@ is entering the component
+* ##NCounter        Incremented each time a @MCCODE_PARTICLE@ is entering the component
 * ##AbsorbProp      single counter for removed events in PROP calls
-* ##comp_storein    Positions of @MCCODE_PARTICULE@ entering each comp (loc. coords)
+* ##comp_storein    Positions of @MCCODE_PARTICLE@ entering each comp (loc. coords)
 * ##Group<GROUP>    Flag true when in an active group
 * ##sig_message     Message for the signal handler (debug/trace, sim status)
 * ##JumpCounter     iteration counter for JUMP
@@ -124,11 +124,11 @@
 *    definition parameters and global variables for setting parameters.
 * X. User declarations from component definitions.
 * X. Declarations of variables for coordinate system transformations.
-* X. Declaration of variables for @MCCODE_PARTICULE@ state.
+* X. Declaration of variables for @MCCODE_PARTICLE@ state.
 * X. Function prototypes.
 *******************************************************************************/
 
-/* PROJECT=1 for McStas, 2 for McXtrace. Now using @MCCODE_PARTICULE@ @MCCODE_NAME@ */
+/* PROJECT=1 for McStas, 2 for McXtrace. Now using @MCCODE_PARTICLE@ @MCCODE_NAME@ */
 #ifndef MCCODE_PROJECT
 #define MCCODE_PROJECT @MCCODE_PROJECT@
 #endif
@@ -137,8 +137,8 @@
 #define MCCODE_LIBENV @MCCODE_LIBENV@
 #endif
 
-#ifndef MCCODE_PARTICULE
-#define MCCODE_PARTICULE @MCCODE_PARTICULE@
+#ifndef MCCODE_PARTICLE
+#define MCCODE_PARTICLE @MCCODE_PARTICLE@
 #endif
 
 #if MCCODE_PROJECT == 1
@@ -601,8 +601,8 @@ cogen_decls(struct instr_def *instr)
   cogen_instrument_scope(instr, (void (*)(void *))codeblock_out, instr->decls);
   cout("");
 
-  /* 6. Table to store @MCCODE_PARTICULE@ states when entering each component */
-  cout("/* @MCCODE_PARTICULE@ state table at each component input (local coords) */");
+  /* 6. Table to store @MCCODE_PARTICLE@ states when entering each component */
+  cout("/* @MCCODE_PARTICLE@ state table at each component input (local coords) */");
 #if MCCODE_PROJECT == 1     /* neutron */
   cout("/* [x, y, z, vx, vy, vz, t, sx, sy, sz, p] */");
 #elif MCCODE_PROJECT == 2   /* xray */
@@ -623,7 +623,7 @@ cogen_decls(struct instr_def *instr)
   coutf("MCNUM  %sAbsorbProp[%i];", ID_PRE, list_len(instr->complist)+2);
 
   /* 8. Declaration of SCATTER flags */
-  cout("/* Flag true when previous component acted on the @MCCODE_PARTICULE@ (SCATTER) */");
+  cout("/* Flag true when previous component acted on the @MCCODE_PARTICLE@ (SCATTER) */");
   coutf("MCNUM %sScattered=0;", ID_PRE);
 
   if (list_len(instr->grouplist) > 0)
@@ -764,7 +764,7 @@ cogen_decls(struct instr_def *instr)
   list_iterate_end(liter);
   cout("");
 
-  /* 12. @MCCODE_PARTICULE@ state. */
+  /* 12. @MCCODE_PARTICLE@ state. */
 #if MCCODE_PROJECT == 1   /* neutron */
   coutf("MCNUM %snx, %sny, %snz, %snvx, %snvy, %snvz, %snt, "
         "%snsx, %snsy, %snsz, %snp;",
@@ -1014,9 +1014,9 @@ cogen_init(struct instr_def *instr)
 *   WHEN: the trace section of comp is embraced in a: if (when) { ...  }
 *   GROUP: defines a global Group_<name> flag which gets true when one of the
 *          comps SCATTER. Rest of GROUP is then skipped, using goto's.
-*          ABSORB @MCCODE_PARTICULE@ are sent to label absorbComp at the end of component
+*          ABSORB @MCCODE_PARTICLE@ are sent to label absorbComp at the end of component
 *          and next comp in GROUP is tested.
-*   JUMP:  sends @MCCODE_PARTICULE@ to the JumpTrace labels, either with condition
+*   JUMP:  sends @MCCODE_PARTICLE@ to the JumpTrace labels, either with condition
 *          or condition is (counter < iterations)
 *   SPLIT: loops from comp/group TRACE to END, incrementing mcrun_num
 *******************************************************************************/
@@ -1051,8 +1051,8 @@ cogen_trace(struct instr_def *instr)
 
   /* Output the function header. */
   coutf("void %sraytrace(void) {", ID_PRE);
-  /* Local @MCCODE_PARTICULE@ state. */
-  cout("  /* Copy @MCCODE_PARTICULE@ state to local variables. */");
+  /* Local @MCCODE_PARTICLE@ state. */
+  cout("  /* Copy @MCCODE_PARTICLE@ state to local variables. */");
   for(i = 0; i < NUM_STATE_PARS; i++)
     coutf("  MCNUM %snl%s = %sn%s;", ID_PRE, statepars_all[i], ID_PRE, statepars_all[i]);
   cout("");
@@ -1148,17 +1148,17 @@ cogen_trace(struct instr_def *instr)
     static char *restore="RESTORE_XRAY";
 #endif
 
-    /* store @MCCODE_PARTICULE@ state in mccomp_storein */
+    /* store @MCCODE_PARTICLE@ state in mccomp_storein */
     if (!comp->split) {
       coutf("  %s(%i,", store, comp->index); /* STORE */
       for(i = 0; i < NUM_STATE_PARS; i++)
         if (i < NUM_STATE_PARS-1) coutf("    %snl%s,", ID_PRE, statepars_all[i]);
         else                      coutf("    %snl%s);",ID_PRE, statepars_all[i]);
     } else {
-      /* spliting: store first time, then restore @MCCODE_PARTICULE@ */
+      /* spliting: store first time, then restore @MCCODE_PARTICLE@ */
       char *exp=exp_tostring(comp->split); /* number of splits */
       coutf("  if (!%sSplit_%s) {                   /* STORE only the first time */", ID_PRE, comp->name);
-      coutf("    if (floor(%s) > 1) p /= floor(%s); /* adapt weight for SPLITed @MCCODE_PARTICULE@ */", exp, exp);
+      coutf("    if (floor(%s) > 1) p /= floor(%s); /* adapt weight for SPLITed @MCCODE_PARTICLE@ */", exp, exp);
       coutf("    %s(%i,", store, comp->index); /* STORE */
       for(i = 0; i < NUM_STATE_PARS; i++)
         if (i < NUM_STATE_PARS-1) coutf("      %snl%s,", ID_PRE, statepars_all[i]);
@@ -1203,7 +1203,7 @@ cogen_trace(struct instr_def *instr)
 
       if (strcmp(comp->name, comp->group->last_comp)) {
         /* not the last comp of GROUP: check if SCATTERED */
-        coutf("  if (!%sGroup%s) /* restore @MCCODE_PARTICULE@ if was not scattered in GROUP yet */", ID_PRE, comp->group->name);
+        coutf("  if (!%sGroup%s) /* restore @MCCODE_PARTICLE@ if was not scattered in GROUP yet */", ID_PRE, comp->group->name);
         coutf("  { %s(%i,", restore, comp->index); /* RESTORE */
         for(i = 0; i < NUM_STATE_PARS; i++)
           if (i < NUM_STATE_PARS-1) coutf("      %snl%s,", ID_PRE, statepars_all[i]);
@@ -1211,7 +1211,7 @@ cogen_trace(struct instr_def *instr)
       } else {
         /* last comp of GROUP: restore default ABSORB */
         coutf("/* end of GROUP %s */", comp->group->name);
-        coutf("  if (!%sGroup%s) ABSORB; /* absorb @MCCODE_PARTICULE@ non scattered in GROUP */", ID_PRE, comp->group->name);
+        coutf("  if (!%sGroup%s) ABSORB; /* absorb @MCCODE_PARTICLE@ non scattered in GROUP */", ID_PRE, comp->group->name);
       }
     } /* GROUP */
 
@@ -1254,7 +1254,7 @@ cogen_trace(struct instr_def *instr)
   } /* while comp */
   list_iterate_end(liter);
 
-  /* Absorbing @MCCODE_PARTICULE@ - goto this label to skip remaining components. End of TRACE */
+  /* Absorbing @MCCODE_PARTICLE@ - goto this label to skip remaining components. End of TRACE */
   coutf("  %sabsorbAll:", ID_PRE);
 
   if (has_splits) coutf("  /* SPLIT loops in reverse order */\n%s", reverse_SplitJumps);
@@ -1266,10 +1266,10 @@ cogen_trace(struct instr_def *instr)
     if (i < NUM_STATE_PARS-1) coutf("%snl%s,", ID_PRE, statepars_all[i]);
     else                      coutf("%snl%s)", ID_PRE, statepars_all[i]);
 
-  /* Copy back @MCCODE_PARTICULE@ state to global variables. */
+  /* Copy back @MCCODE_PARTICLE@ state to global variables. */
   /* ToDo: Currently, this will be in the local coordinate system of the last
      component - should be transformed back into the global system. */
-  cout("  /* Copy @MCCODE_PARTICULE@ state to global variables. */");
+  cout("  /* Copy @MCCODE_PARTICLE@ state to global variables. */");
   for(i = 0; i < NUM_STATE_PARS; i++)
     coutf("  %sn%s = %snl%s;", ID_PRE, statepars_all[i], ID_PRE, statepars_all[i]);
   cout("");
@@ -1357,7 +1357,7 @@ cogen_finally(struct instr_def *instr)
       cout("");
     }
     coutf("    if (!%sNCounter[%i]) "
-      "fprintf(stderr, \"Warning: No @MCCODE_PARTICULE@ could reach Component[%i] %s\\n\");",
+      "fprintf(stderr, \"Warning: No @MCCODE_PARTICLE@ could reach Component[%i] %s\\n\");",
       ID_PRE, comp->index, comp->index, comp->name);
     if (comp->split) {
       char *exp=exp_tostring(comp->split); /* number of splits */

@@ -74,7 +74,7 @@ MCDETECTOR* mcDetectorArray          = NULL;      /* array of all opened detecto
 long     mcDetectorArray_size        = 0;         /* allocated detector array size */
 long     mcDetectorArray_index       = 0;         /* current detector length (number of detectors so far) */
 
-/* Number of particule histories to simulate. */
+/* Number of particle histories to simulate. */
 #ifdef NEUTRONICS
 mcstatic unsigned long long int mcncount             = 1;
 mcstatic unsigned long long int mcrun_num            = 0;
@@ -4244,10 +4244,10 @@ mchelp(char *pgmname)
   fprintf(stderr,
 "Options are:\n"
 "  -s SEED   --seed=SEED      Set random seed (must be != 0)\n"
-"  -n COUNT  --ncount=COUNT   Set number of @MCCODE_PARTICULE@s to simulate.\n"
+"  -n COUNT  --ncount=COUNT   Set number of @MCCODE_PARTICLE@s to simulate.\n"
 "  -d DIR    --dir=DIR        Put all data files in directory DIR.\n"
 "  -f FILE   --file=FILE      Put all data in a single file.\n"
-"  -t        --trace          Enable trace of @MCCODE_PARTICULE@s through instrument.\n"
+"  -t        --trace          Enable trace of @MCCODE_PARTICLE@s through instrument.\n"
 "  -g        --gravitation    Enable gravitation for all trajectories.\n"
 "  -a        --data-only      Do not put any headers in the data files.\n"
 "  --no-output-files          Do not write any data files.\n"
@@ -4873,7 +4873,7 @@ int mccode_main(int argc, char *argv[])
 #endif
 #endif /* !NOSIGNALS */
 
-/* ================ main particule generation/propagation loop ================ */
+/* ================ main particle generation/propagation loop ================ */
 #if defined (USE_MPI)
   /* sliced Ncount on each MPI node */
   mcncount = mpi_node_count > 1 ?
@@ -4881,7 +4881,7 @@ int mccode_main(int argc, char *argv[])
     mcncount; /* number of rays per node */
 #endif
 
-/* main particule event loop */
+/* main particle event loop */
 while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
   {
 #ifndef NEUTRONICS

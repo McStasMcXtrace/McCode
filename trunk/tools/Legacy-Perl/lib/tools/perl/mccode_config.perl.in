@@ -62,7 +62,7 @@ use Config;
      LDFLAGS => '@LDFLAGS@',
      MCCODE => '@FLAVOR@-@MCCODE_VERSION@',
      PKGNAME => '@MCCODE_NAME@',
-     PARTICLE=> '@MCCODE_PARTICULE@',
+     PARTICLE=> '@MCCODE_PARTICLE@',
      CC => '@CC@',
      AT => '@AT@',
      TERMINAL => '@TERMINAL@',
