@@ -52,8 +52,6 @@ SETTING PARAMETERS (DeltaRho = 1.0e-14, Volume = 1000.0,
 
 OUTPUT PARAMETERS ()
 
-STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
-
 DECLARE
 %{
 	double Absorption;

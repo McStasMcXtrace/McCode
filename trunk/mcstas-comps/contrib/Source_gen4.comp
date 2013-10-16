@@ -146,7 +146,6 @@ OUTPUT PARAMETERS (p_in,
   lambda0, lambda02, L2P,
   lambda0b, lambda02b, L2Pb,lambda0c, lambda02c, L2Pc,
   pTable, pTable_x, pTable_y)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
 %{

@@ -176,12 +176,6 @@ SAVE
         detector.xmin,detector.xmax,detector.ymin,detector.ymax,
         correlation_m,detector.n,
         p0,p1,p2,file);
-    else
-      DETECTOR_OUT_3D("Correlation monitor",
-        detector.xlabel,detector.ylabel,detector.zlabel,detector.xvar,detector.yvar,detector.zvar,
-        detector.xmin,detector.xmax,detector.ymin,detector.ymax,detector.zmin,detector.zmax,
-        correlation_m,detector.n,detector.p,
-        p0,p1,p2,file);
 
   }
   

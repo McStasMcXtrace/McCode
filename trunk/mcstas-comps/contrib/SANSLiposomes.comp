@@ -63,8 +63,6 @@ SETTING PARAMETERS (Radius = 800.0, Thickness = 38.89, SigmaRadius = 0.20,
 
 OUTPUT PARAMETERS ()
 
-STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
-
 DECLARE
 %{
 	// Declarations	

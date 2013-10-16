@@ -93,8 +93,8 @@ COMPONENT a1 = Progress_bar()
 
 
 COMPONENT source = Source_gen (
-    w = 0.104, h=0.15, xw = 0.08, yh = 0.15,  
-    dist = 1.14,Lambda0 = Lambda_source, dLambda = dLambda_source, 
+    xwidth = 0.104, yheighth=0.15, focus_xw = 0.08, focus_yh = 0.15,  
+    dist = 1.14,lambda0 = Lambda_source, dlambda = dLambda_source, 
     T1=289.42, I1=(3.083e12/4/PI),  
     T2=120.002,I2=(3.575e12/4/PI), 
     T3=24.144,I3=(7.26e12/4/PI),  
@@ -103,7 +103,7 @@ COMPONENT source = Source_gen (
   AT (0,0,0) RELATIVE armSource   
 
 COMPONENT Lmonsource1 = L_monitor(
-    nchan = 1050, filename = "source-Source.dat", xwidth=0.2,
+    nL = 1050, filename = "source-Source.dat", xwidth=0.2,
     yheight = 0.21, Lmin = 0, Lmax = 11)
   AT (0, 0, 0) RELATIVE armSource
 
@@ -116,8 +116,8 @@ COMPONENT PSD_source = PSD_monitor(
 
 COMPONENT divmonsource = Divergence_monitor(
     nh = 100, nv = 100, filename = "divmonsource.dat", xmin = -0.04,
-    xmax = 0.04, ymin = -0.075, ymax = 0.075, h_maxdiv = 3,
-    v_maxdiv = 3)
+    xmax = 0.04, ymin = -0.075, ymax = 0.075, maxdiv_v = 3,
+    maxdiv_h = 3)
   AT (0, 0, 1.13) RELATIVE armSource
 
 
@@ -138,14 +138,14 @@ COMPONENT Filter = Sapphire_Filter(
   AT (0, 0, 0.800) RELATIVE PREVIOUS
 
 COMPONENT Lmonfilter= L_monitor(
-    nchan = 100, filename = "afterFilter.dat", xmin = -0.06, xmax = 0.06,
+    nL = 100, filename = "afterFilter.dat", xmin = -0.06, xmax = 0.06,
     ymin = -0.075, ymax = 0.075, Lmin = 0.0, Lmax = 11)
   AT (0, 0, 0.1001) RELATIVE PREVIOUS
 
 COMPONENT divmonfilter = Divergence_monitor(
     nh = 100, nv = 100, filename = "divmonfilter.dat", xmin = -0.04,
-    xmax = 0.04, ymin = -0.075, ymax = 0.075, h_maxdiv = 3,
-    v_maxdiv = 3)
+    xmax = 0.04, ymin = -0.075, ymax = 0.075, maxdiv_h = 3,
+    maxdiv_v = 3)
   AT (0, 0, 0.0001) RELATIVE PREVIOUS
 
 COMPONENT monitorFilter = PSD_monitor(
@@ -179,14 +179,14 @@ COMPONENT Guide = Guide_four_side(
 
 
 COMPONENT Lmonsource4= L_monitor(
-    nchan = 100, filename = "afterguide.dat", xmin = -0.06, xmax = 0.06,
+    nL = 100, filename = "afterguide.dat", xmin = -0.06, xmax = 0.06,
     ymin = -0.075, ymax = 0.075, Lmin = 0.0, Lmax = 11)
   AT (0, 0,4.001) RELATIVE PREVIOUS
 
 COMPONENT divmonGuide = Divergence_monitor(
     nh = 100, nv = 100, filename = "divmonGuide.dat", xmin = -0.04,
-    xmax = 0.04, ymin = -0.075, ymax = 0.075, h_maxdiv = 3,
-    v_maxdiv = 3)
+    xmax = 0.04, ymin = -0.075, ymax = 0.075, maxdiv_h = 3,
+    maxdiv_v = 3)
   AT (0, 0, 0.0001) RELATIVE PREVIOUS
 
 COMPONENT monitorGuide = PSD_monitor(
@@ -399,14 +399,14 @@ COMPONENT lens = Guide_four_side_10_shells(
   AT (0, 0, 0.2) RELATIVE PREVIOUS
 
 COMPONENT Lmonsource5= L_monitor(
-    nchan = 100, filename = "afterlens.dat", xmin = -0.06, xmax = 0.06,
+    nL = 100, filename = "afterlens.dat", xmin = -0.06, xmax = 0.06,
     ymin = -0.075, ymax = 0.075, Lmin = 0.0, Lmax = 11)
   AT (0, 0,1.0001+lens_focal_out_hor) RELATIVE lens
 
 COMPONENT divmonlens = Divergence_monitor(
     nh = 100, nv = 100, filename = "divmonlens.dat", xmin = -0.04,
-    xmax = 0.04, ymin = -0.075, ymax = 0.075, h_maxdiv = 3,
-    v_maxdiv = 3)
+    xmax = 0.04, ymin = -0.075, ymax = 0.075, maxdiv_h = 3,
+    maxdiv_v = 3)
   AT (0, 0, 1.0002+lens_focal_out_hor) RELATIVE lens
 
 COMPONENT PSDmonLens = PSD_monitor(

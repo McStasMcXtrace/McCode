@@ -46,7 +46,6 @@ DEFINE COMPONENT SNS_source
 DEFINITION PARAMETERS (filename)
 SETTING PARAMETERS (xwidth=0.1, yheight=0.12, dist, focus_xw, focus_yh, Emin, Emax)
 OUTPUT PARAMETERS (hdiv,vdiv,p_in)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
   double xonly(double);

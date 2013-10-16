@@ -51,7 +51,6 @@ DEFINE COMPONENT TOF2Q_cylPSD_monitor
 DEFINITION PARAMETERS (nQ, string filename, ny)
 SETTING PARAMETERS (radius, yheight,  Qmin, Qmax, ymin=0, ymax=0, T_zero, L_flight, restore_neutron=0,theta)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
     double TOF_N[nQ][ny];

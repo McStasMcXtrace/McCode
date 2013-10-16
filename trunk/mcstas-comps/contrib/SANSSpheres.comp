@@ -46,8 +46,6 @@ SETTING PARAMETERS (R = 100.0, Concentration = 0.01, DeltaRho = 1.0e-14, Absorpt
 
 OUTPUT PARAMETERS ()
 
-STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
-
 DECLARE
 %{
 	// Declarations	

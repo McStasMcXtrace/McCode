@@ -49,8 +49,7 @@
 *
 * %BUGS
 * Using bufsize non-zero may generate a virtual source with wrong intensity. This
-* component works with MPI (parallel execution mode). When generating NeXus files,
-* the bufsize must be non zero.
+* component works with MPI (parallel execution mode). 
 *
 * %P
 * INPUT PARAMETERS
@@ -69,7 +68,7 @@
 DEFINE COMPONENT Virtual_output
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, string type=0, bufsize=0)
-OUTPUT PARAMETERS (DEFS, Vars, mcformat_sim, mcformat_vo, mcformat_override)
+OUTPUT PARAMETERS (DEFS, Vars)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
@@ -81,21 +80,18 @@ DECLARE
 %{
   MonitornD_Defines_type   DEFS;
   MonitornD_Variables_type Vars;
-  struct mcformats_struct  mcformat_sim;
-  struct mcformats_struct  mcformat_vo;
-  char                     mcformat_override;
 %}
 
 INITIALIZE
 %{
-  long element_size;
+  long element_size=85; /* mean size per neutron for ascii storing */
 
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
 
-  if (bufsize > 0) sprintf(Vars.option, "list=%15g", bufsize);
+  if (bufsize > 0) sprintf(Vars.option, "list=%g", bufsize);
   else strcpy(Vars.option, "list all");
 
-  if (type)
+  if (type && strlen(type))
   {
     if (strstr(type, "Vitess"))
     { fprintf(stderr, "Virtual_output: %s: Vitess files may be generated using the Vitess_output component\n", NAME_CURRENT_COMP); exit(-1); }
@@ -105,23 +101,17 @@ INITIALIZE
     } else if (strstr(type, "double")) {
       strcat(Vars.option, ", binary double");
       element_size = sizeof(double);
-    } else element_size = 85;
+    }
   }
 
   strcat(Vars.option,", x y z vx vy vz t sx sy sz");
   Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0); /* dims for mcdisplay */
+  Vars.compcurpos = POS_A_CURRENT_COMP;
+  
   if (filename && strcmp(filename,"NULL") && strcmp(filename,"0") && strlen(filename))
     strncpy(Vars.Mon_File, filename, 128);
 
-  mcformat_override = (!strstr(Vars.option, "binary") && !strstr(mcformat.Name, "NeXus"));
-  mcformat_sim      = mcformat;
-  mcformat_vo       = mcuse_format("McStas");
-
-  if (bufsize <= 0 && strstr(mcformat.Name, "NeXus"))
-    exit(fprintf(stderr, "Virtual_output: %s: NeXus files output\n"
-                         "ERROR           require to use a buffer size (bufsize>0).\n",
-                         NAME_CURRENT_COMP));
-  else if (bufsize > 0 && !strstr(mcformat.Name, "NeXus"))
+  if (bufsize > 0)
     printf("Warning: Virtual_output: %s: buffer size=%g not recommended\n", NAME_CURRENT_COMP, bufsize);
   if (bufsize > 0) printf(
            "Virtual_output: %s: Beware virtual output generated file size (max %g Mo)\n"
@@ -147,22 +137,16 @@ TRACE
   Vars.csz = sz;
   Vars.ct  = t;
 
-  if (mcformat_override) mcformat = mcformat_vo;
   pp = Monitor_nD_Trace(&DEFS, &Vars);
-  if (mcformat_override) mcformat = mcformat_sim;
-  Vars.Nsum++;
-  Vars.psum  += pp;
-  Vars.p2sum += pp*pp;
+
   SCATTER;
 %}
 
 SAVE
 %{
 
-
-  if (mcformat_override) mcformat = mcformat_vo;
   Monitor_nD_Save(&DEFS, &Vars);
-  if (mcformat_override) mcformat = mcformat_sim;
+
 %}
 
 FINALLY
@@ -170,12 +154,12 @@ FINALLY
   /* free pointers */
   Monitor_nD_Finally(&DEFS, &Vars);
   if (bufsize) {
-    printf("Virtual_output: %s: Saved %15f events (from buffer) in file %s\n",
+    printf("Virtual_output: %s: Saved %Li events (from buffer) in file %s\n",
            NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
     if (bufsize < Vars.Nsum)
       printf("WARNING         When using this source, intensities must be multiplied\n"
-             "                by a factor %g\n", Vars.Nsum/bufsize);
-  } else printf("Virtual_output: %s: Saved %15f events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+             "                by a factor %g\n", (double)Vars.Nsum/(double)bufsize);
+  } else printf("Virtual_output: %s: Saved %Li events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
 %}
 
 MCDISPLAY

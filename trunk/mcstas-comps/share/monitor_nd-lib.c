@@ -1068,6 +1068,10 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
     } /* end (Vars->Flag_Auto_Limits != 2) */
     
   } /* end while */
+  Vars->Nsum++;
+  Vars->psum  += pp;
+  Vars->p2sum += pp*pp;
+  
   return pp;
 } /* end Monitor_nD_Trace */
 
@@ -1238,7 +1242,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
     /* write output files (sent to file as p[i*n + j] vectors) */
     if (Vars->Coord_Number == 0)
     {
-      long long int Nsum;
+      double Nsum;
       double psum, p2sum;
       Nsum = Vars->Nsum;
       psum = Vars->psum;
@@ -1254,23 +1258,16 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
       fname = (char*)malloc(strlen(Vars->Mon_File)+10*Vars->Coord_Number);
       if (Vars->Flag_List && Vars->Mon2D_Buffer) /* List: DETECTOR_OUT_2D */
       {
-        char  formatName[256];
-        char *formatName_orig;
-
+       
         if (Vars->Flag_List >= 2) Vars->Buffer_Size = Vars->Neutron_Counter;
         if (Vars->Buffer_Size >= Vars->Neutron_Counter)
           Vars->Buffer_Size = Vars->Neutron_Counter;
         strcpy(fname,Vars->Mon_File);
         if (strchr(Vars->Mon_File,'.') == NULL) strcat(fname, "_list");
 
-        min1d = 1; max1d = Vars->Coord_Number+1;
-        min2d = 0; max2d = Vars->Buffer_Size;
-        bin1d = Vars->Coord_Number+1; bin2d = Vars->Buffer_Size;
         strcpy(Coord_X_Label,"");
         for (i= 0; i <= Vars->Coord_Number; i++)
         {
-          if (min2d < Vars->Coord_Min[i]) min2d = Vars->Coord_Min[i];
-          if (max2d < Vars->Coord_Max[i]) max2d = Vars->Coord_Max[i];
           strcat(Coord_X_Label, Vars->Coord_Var[i]);
           strcat(Coord_X_Label, " ");
           if (strchr(Vars->Mon_File,'.') == NULL)
@@ -1279,45 +1276,13 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
         if (Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", Vars->compcurname, fname,bin2d,bin1d);
 
         /* handle the type of list output */
-        formatName_orig = mcformat;  /* copy the pointer position */
-        strcpy(formatName, mcformat);
-        if (Vars->Flag_List >= 1)
-        { /* Flag_List mode:
-               1=store 1 buffer
-               2=list all, triggers 3 when 1st buffer reallocated
-               3=re-used buffer (file already opened)
-             Format modifiers for Flag_List
-               1= normal monitor file (no modifier, export in one go)
-               2= write data+header, and footer if buffer not full (Vars->Buffer_Counter < Vars->Buffer_Block)
-               3= write data, and footer if buffer not full (final)
-           */
-          strcat(formatName, " list ");
-          if (Vars->Flag_List == 3) strcat(formatName, " no header ");
-
-          if (Vars->Flag_Binary_List == 1)
-            strcat(formatName, " binary float ");
-          else if (Vars->Flag_Binary_List == 2)
-            strcat(formatName, " binary double ");
-        }
-        if (min2d == max2d) max2d = min2d+1e-6;
-        if (min1d == max1d) max1d = min1d+1e-6;
         strcpy(label, Vars->Monitor_Label);
-        if (!Vars->Flag_Binary_List)
-        { bin2d=-bin2d; }
-        mcformat = formatName;
-        detector = mcdetector_out_2D(
-              label,
-              "List of neutron events",
-              Coord_X_Label,
-              min2d, max2d,
-              min1d, max1d,
-              bin2d,
-              bin1d,
-            NULL,Vars->Mon2D_Buffer,NULL,
-            fname, Vars->compcurname, Vars->compcurpos);
-
-        /* reset the original type of output */
-        mcformat= formatName_orig;
+        
+        detector = mcdetector_out_list(
+              label, "List of neutron events", Coord_X_Label,
+              -Vars->Buffer_Size, Vars->Coord_Number+1,
+              Vars->Mon2D_Buffer,
+              fname, Vars->compcurname, Vars->compcurpos);
       }
       if (Vars->Flag_Multiple) /* n1D: DETECTOR_OUT_1D */
       {
@@ -1660,14 +1625,6 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
             x3,y3,z3,
             x0,y0,z0);
         }
-      if (Vars->Flag_mantid) {
-	/* First define the base pixel type */
-	double dt, dy;
-	dt = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
-	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
-	printf("MANTID_BANANA_DET:  %g, %g, %g, %g, %g, %li, %li\n", radius,
-	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2]);
-      }
     }
     /* disk (circle) */
     else
@@ -1689,11 +1646,24 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
       
       if (Vars->Flag_mantid) {
 	/* First define the base pixel type */
-	double dx, dy;
+	double dx, dy, xtmp, ytmp, ztmp;
 	dx = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
 	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
-	printf("MANTID_RECTANGULAR_DET:  %g, %g, %g, %g, %li, %li\n", 
-	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2]);
+	printf("MANTID_PIXEL_SIZE: %g, %g, %li\n", dx, dy, (int)Vars->Coord_Bin[1]*Vars->Coord_Bin[2]);
+
+	/* Next, loop over the actual pixels */
+	xtmp = Vars->Coord_Min[1]+dx/2;
+	ztmp = 0;
+	int i,j;
+	for (i=0; i<Vars->Coord_Bin[1]; i++) {
+	  ytmp = Vars->Coord_Min[2]+dy/2;
+	  for (j=0; j<Vars->Coord_Bin[2]; j++) {
+	    printf("MANTID_PIXEL: %li, %g, %g, %g, %g, %g\n", i*Vars->Coord_Bin[1]+j, xtmp, ytmp, ztmp, dx, dy);
+	    ytmp += dy;
+	  }
+	  xtmp += dx;
+	}
+	printf("MANTID_PIXELS_END:\n");
       }
     }
     /* full cylinder/banana */
