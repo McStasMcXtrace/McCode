@@ -46,8 +46,6 @@ SETTING PARAMETERS (RadiusDetector, DistanceFromSample, LambdaMin = 1.0, Lambda0
 
 OUTPUT PARAMETERS (Nofq, Iofq, IofqSquared, NofR, IofR, IofRSquared)
 
-STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
-
 DECLARE
 %{
 	// Declarations

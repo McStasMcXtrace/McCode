@@ -97,8 +97,6 @@ SETTING PARAMETERS (xwidth=0.10,
                     p_power=2.0, 
                     n_pulses=1.0)
 OUTPUT PARAMETERS (hdiv,vdiv,p_in)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
 %{
@@ -208,7 +206,7 @@ double prepare_cumulative_spectral_function (  double *csfE, double Emin, double
     I0 = I1;
     E0 = E1;
   }
-  printf("\n   CItot = %12.4e\n", i, CItot);
+  printf("\n   CItot = %12.4e\n", CItot);
   CI = 0.0;
   dCI = 1.0e-3;
   E0 = Emin*1e-3;
@@ -818,7 +816,7 @@ INITIALIZE
   kk=sscanf(line," %le %le %le %le %le %le %le %le %le %le", &para_R[0], &para_R[1], &para_R[2], 
 	    &para_R[3], &para_R[4], &para_R[5], &para_R[6], &para_R[7], &para_R[8], &para_R[9]);
   if(kk!=10) {
-    printf("para_R: kk=%d  insufficient number of data entries read\n"), kk;
+    printf("para_R: kk=%d  insufficient number of data entries read\n", kk);
     abort();
   }
 

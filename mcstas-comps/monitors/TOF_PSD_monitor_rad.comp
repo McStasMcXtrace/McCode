@@ -53,8 +53,6 @@ DEFINE COMPONENT TOF_PSD_monitor_rad
 DEFINITION PARAMETERS (nr=100, nt=100)
 SETTING PARAMETERS (string filename="", string filename_av="", rmax=0.2, tmin, tmax, restore_neutron=0)
 OUTPUT PARAMETERS (TOFPSDr_N, TOFPSDr_p, TOFPSDr_p2, TOFPSDr_av_p, TOFPSDr_av_p2)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
   %{

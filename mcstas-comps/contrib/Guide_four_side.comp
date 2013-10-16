@@ -317,8 +317,6 @@ OUTPUT PARAMETERS(w1rwt,w1lwt,h1uwt,h1dwt,w2rwt,w2lwt,h2uwt,h2dwt,
                   TEST_UP_DOWN,TEST_LEFT_RIGHT
 )
 
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,p)
-
 SHARE
 %{	
 %include "read_table-lib"

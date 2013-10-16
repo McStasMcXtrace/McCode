@@ -146,7 +146,7 @@
     double UserVariable3;
     char   option[CHAR_BUF_LENGTH];
 
-    double Nsum;
+    long long int Nsum;
     double psum, p2sum;
     double **Mon2D_N;
     double **Mon2D_p;

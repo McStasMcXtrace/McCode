@@ -59,8 +59,6 @@ SETTING PARAMETERS (RhoSolvent = 6.4e-14, Concentration = 0.01, AbsorptionCrosss
 
 OUTPUT PARAMETERS ()
 
-STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
-
 DECLARE
 %{
 	// Declarations

@@ -207,7 +207,7 @@ OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, EAP,M1P1,PosAP, EAT,M1T1,PosAT,
   CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, SensVolCumul, DetCumul, PHSpectrum,
   PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors,
   DetectorType, 
-  DEFS, Vars, mcformat_sim, mcformat_vo, mcformat_override)
+  DEFS, Vars)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
@@ -233,9 +233,6 @@ DECLARE
   %{
     MonitornD_Defines_type   DEFS;  /* for event files */
     MonitornD_Variables_type Vars;
-    struct mcformats_struct  mcformat_sim;
-    struct mcformats_struct  mcformat_vo;
-    char                     mcformat_override;
     
     double PSD_N[nx][ny];
     double PSD_p[nx][ny];
@@ -621,20 +618,12 @@ INITIALIZE
     if (filename != NULL)
       strncpy(Vars.Mon_File, filename, 128);
 
-    mcformat_override = (!strstr(Vars.option, "binary") && !strstr(mcformat.Name, "NeXus"));
-    mcformat_sim      = mcformat;
-    mcformat_vo       = mcuse_format("McStas");
-
-    if (bufsize <= 0 && strstr(mcformat.Name, "NeXus"))
-      exit(fprintf(stderr, "PSD_Detector: %s: NeXus files output\n"
-                           "ERROR         require to use a buffer size (bufsize>0).\n",
-                           NAME_CURRENT_COMP));
-    else if (bufsize > 0 && !strstr(mcformat.Name, "NeXus"))
-      printf("Warning: PSD_Detector: %s: buffer size=%g not recommended\n", NAME_CURRENT_COMP, bufsize);
+    if (bufsize > 0)
+    printf("Warning: PSD_Detector: %s: buffer size=%g not recommended\n", NAME_CURRENT_COMP, bufsize);
     if (bufsize > 0) printf(
-             "PSD_Detector: %s: Beware virtual output generated file size (max %g Mo)\n"
-             "WARNING       Memory required is %g Mo\n", NAME_CURRENT_COMP,
-             bufsize*element_size/1e6, bufsize*sizeof(double)/1e6);
+           "PSD_Detector: %s: Beware virtual output generated file size (max %g Mo)\n"
+           "WARNING         Memory required is %g Mo\n", NAME_CURRENT_COMP,
+           bufsize*element_size/1e6, bufsize*sizeof(double)/1e6);
   }
 %}
 
@@ -1122,9 +1111,8 @@ TRACE
               Vars.csz = sz;
               Vars.ct  = t;
 
-              if (mcformat_override) mcformat = mcformat_vo;
               pp = Monitor_nD_Trace(&DEFS, &Vars);
-              if (mcformat_override) mcformat = mcformat_sim;
+
               Vars.Nsum++;
               Vars.psum  += p;
               Vars.p2sum += p*p;
@@ -1147,9 +1135,7 @@ SAVE
 
   if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
     /* event file */
-    if (mcformat_override) mcformat = mcformat_vo;
     Monitor_nD_Save(&DEFS, &Vars);
-    if (mcformat_override) mcformat = mcformat_sim;
     DETECTOR_OUT(Vars.Nsum, Vars.psum, Vars.p2sum);
   } else {
     double width;
@@ -1207,13 +1193,13 @@ FINALLY
   if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
     Monitor_nD_Finally(&DEFS, &Vars);
     if (bufsize) {
-      printf("PSD_Detector: %s: Saved %15f events (from buffer) in file %s\n",
+      printf("PSD_Detector: %s: Saved %Li events (from buffer) in file %s\n",
              NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
       if (bufsize < Vars.Nsum)
         printf("WARNING         When using this source, intensities must be multiplied\n"
-               "                by a factor %g\n", Vars.Nsum/bufsize);
+               "                by a factor %g\n", (double)Vars.Nsum/bufsize);
     } else
-      printf("PSD_Detector: %s: Saved %15f events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+      printf("PSD_Detector: %s: Saved %Li events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
   }
 %}
 

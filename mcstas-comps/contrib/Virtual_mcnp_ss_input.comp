@@ -72,8 +72,6 @@ first a MCNP simulation is run
 DEFINE COMPONENT Virtual_mcnp_ss_input
 DEFINITION PARAMETERS (string file="rssa")
 SETTING PARAMETERS (verbose=1)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx, sy, sz)
 
 SHARE
 %{

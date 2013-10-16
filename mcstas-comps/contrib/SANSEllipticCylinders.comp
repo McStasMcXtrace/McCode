@@ -50,8 +50,6 @@ SETTING PARAMETERS (R1 = 20.0, R2 = 40.0, Height = 100.0, Concentration = 0.01, 
 
 OUTPUT PARAMETERS ()
 
-STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
-
 DECLARE
 %{
 	// Declarations	
