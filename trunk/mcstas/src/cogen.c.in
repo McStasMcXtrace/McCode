@@ -1045,7 +1045,7 @@ cogen_trace(struct instr_def *instr)
 
   /* Output the function header. */
   coutf("void %sraytrace(void) {", ID_PRE);
-
+#if MCCODE_PROJECT == 1     /* neutron */
   /* Neutronics-specific defines */
   cout("  /* Neutronics-specific defines */");
   cout("#ifdef NEUTRONICS");
@@ -1053,7 +1053,7 @@ cogen_trace(struct instr_def *instr)
   coutf("extern double %snt, %snsx, %snsy, %snsz, %snp;", ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
   cout("#endif");
   cout("  /* End of Neutronics-specific defines */");
-  /* Local neutron state.
+#endif
 
   /* Local @MCCODE_PARTICLE@ state. */
   cout("  /* Copy @MCCODE_PARTICLE@ state to local variables. */");
