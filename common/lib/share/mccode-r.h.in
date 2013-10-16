@@ -55,40 +55,6 @@
 #define mcstatic
 #endif
 
-#ifdef __dest_os
-#if (__dest_os == __mac_os)
-#define MAC
-#endif
-#endif
-
-#ifdef __FreeBSD__
-#define NEED_STAT_H
-#endif
-
-#if defined(__APPLE__) && defined(__GNUC__)
-#define NEED_STAT_H
-#endif
-
-#ifdef NEED_STAT_H
-#include <sys/stat.h>
-#endif
-
-#ifndef MC_PATHSEP_C
-#ifdef WIN32
-#define MC_PATHSEP_C '\\'
-#define MC_PATHSEP_S "\\"
-#define random rand
-#define srandom srand
-#else  /* !WIN32 */
-#ifdef MAC
-#define MC_PATHSEP_C ':'
-#define MC_PATHSEP_S ":"
-#else  /* !MAC */
-#define MC_PATHSEP_C '/'
-#define MC_PATHSEP_S "/"
-#endif /* !MAC */
-#endif /* !WIN32 */
-#endif /* MC_PATHSEP_C */
 
 /* the version string is replaced when building distribution with mkdist */
 #ifndef MCCODE_STRING
@@ -107,8 +73,8 @@
 #define MCCODE_NAME "@MCCODE_NAME@"
 #endif
 
-#ifndef MCCODE_PARTICLE
-#define MCCODE_PARTICLE "@MCCODE_PARTICLE@"
+#ifndef MCCODE_PARTICULE
+#define MCCODE_PARTICULE "@MCCODE_PARTICULE@"
 #endif
 
 #ifndef MCCODE_LIBENV
@@ -145,12 +111,6 @@
 #undef NOSIGNALS
 #endif
 
-#if (USE_NEXUS == 0)
-#undef USE_NEXUS
-#endif
-
-/* I/O section part ========================================================= */
-
 /* Note: the enum instr_formal_types definition MUST be kept
    synchronized with the one in mcstas.h and with the
    instr_formal_type_names array in cogen.c. */
@@ -183,34 +143,6 @@ extern int mctraceenabled, mcdefaultmain;
 #endif
 #endif
 
-/* file I/O definitions and function prototypes */
-
-struct mcformats_struct {
-  char *Name;       /* format name: may also specify: append, partial(hidden), binary */
-  char *Extension;  /* file name extension set if not specified */
-  char *Header;     /* to be written as header(begin) in output file */
-  char *Footer;     /* to be written as foorter(end) in output file */
-  char *BeginSection; /* defines how to start a new section */
-  char *EndSection;   /* defines how to end a new section */
-  char *AssignTag;    /* defines how to write e.g. 'par=value' */
-  char *BeginData;    /* defines how to start a data block */
-  char *EndData;      /* defines how to end a data block */
-  char *BeginErrors;  /* defines how to start an error(statistical) block */
-  char *EndErrors;    /* defines how to end an error(statistical) block */
-  char *BeginNcount;  /* defines how to start an event (number of) block */
-  char *EndNcount;    /* defines how to end an event (number of) block */
-  };
-
-#ifndef MC_EMBEDDED_RUNTIME /* the mcstatic variables (from mcstas-r.c) */
-extern FILE * mcsiminfo_file;     /* handle to the output siminfo file */
-extern int    mcgravitation;      /* flag to enable gravitation */
-extern int    mcdotrace;          /* flag to print MCDISPLAY messages */
-extern struct mcformats_struct mcformats[]; /* array of all possible formats */
-extern struct mcformats_struct mcformat;    /* selected format to be used */
-extern struct mcformats_struct mcformat_data; /* same as above, but may be different for data blocks */
-#else
-mcstatic FILE *mcsiminfo_file        = NULL;
-#endif
 
 /* Useful macros ============================================================ */
 
@@ -258,99 +190,11 @@ static int mpi_node_count;
 #error Threading (USE_THREADS) support has been removed for very poor efficiency. Use MPI/SSH grid instead.
 #endif
 
-/* I/O function prototypes ================================================== */
-
-#ifndef CHAR_BUF_LENGTH
-#define CHAR_BUF_LENGTH 1024
-#endif
-
-/* main DETECTOR structure which stores most information to write to data files */
-struct mcdetector_struct {
-  char   prefix[CHAR_BUF_LENGTH];     /* prefix to prepend to format specifications */
-  char   filename[CHAR_BUF_LENGTH];   /* file name of monitor */
-  char   position[CHAR_BUF_LENGTH];   /* position of detector component */
-  char   component[CHAR_BUF_LENGTH];  /* component instance name */
-  char   instrument[CHAR_BUF_LENGTH]; /* instrument name */
-  char   simulation[CHAR_BUF_LENGTH]; /* simulation name, e.g. directory */
-  char   type[CHAR_BUF_LENGTH];       /* data type, e.g. 0d, 1d, 2d, 3d */
-  char   user[CHAR_BUF_LENGTH];       /* user name, e.g. HOME */
-  char   date[CHAR_BUF_LENGTH];       /* date of simulation end/write time */
-  char   title[CHAR_BUF_LENGTH];      /* title of detector */
-  char   xlabel[CHAR_BUF_LENGTH];     /* X axis label */
-  char   ylabel[CHAR_BUF_LENGTH];     /* Y axis label */
-  char   zlabel[CHAR_BUF_LENGTH];     /* Z axis label */
-  char   xvar[CHAR_BUF_LENGTH];       /* X variable name */
-  char   yvar[CHAR_BUF_LENGTH];       /* Y variable name */
-  char   zvar[CHAR_BUF_LENGTH];       /* Z variable name */
-  char   ncount[CHAR_BUF_LENGTH];     /* number of events initially generated */
-  char   limits[CHAR_BUF_LENGTH];     /* X Y Z limits, e.g. [xmin xmax ymin ymax zmin zmax] */
-  char   variables[CHAR_BUF_LENGTH];  /* variables written into data block */
-  char   statistics[CHAR_BUF_LENGTH]; /* center, mean and half width along axis */
-  char   signal[CHAR_BUF_LENGTH];     /* min max and mean of signal (data block) */
-  char   values[CHAR_BUF_LENGTH];     /* integrated values e.g. [I I_err N] */
-  double xmin,xmax;                   /* min max of axes */
-  double ymin,ymax;
-  double zmin,zmax;
-  double intensity;                   /* integrated values for data block */
-  double error;
-  double events;
-  double min;                         /* statistics for data block */
-  double max;
-  double mean;
-  double centerX;                     /* statistics for axes */
-  double halfwidthX;
-  double centerY;
-  double halfwidthY;
-  int    rank;                        /* dimensionaly of monitor, e.g. 0 1 2 3 */
-  char   istransposed;                /* flag to transpose matrix for some formats */
-
-  long   m,n,p;                       /* dimensions of data block and along axes */
-  long   date_l;                      /* same as date, but in sec since 1970 */
-
-  double *p0, *p1, *p2;               /* pointers to saved data, NULL when freed */
-  double *p0_orig,*p1_orig,*p2_orig;  /* initial pointer in case some post processing is done
-                                         with e.g. lists and MPI handling */
-
-  FILE   *file_handle;                /* file handle for detector file */
-  struct mcformats_struct format;     /* format used for that detector */
-};
-
-typedef struct mcdetector_struct MCDETECTOR;
 
 void   mcset_ncount(unsigned long long count);    /* wrapper to get mcncount */
 unsigned long long int mcget_ncount(void);            /* wrapper to set mcncount */
 unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:mcncount */
-char *mcfull_file(char *name, char *ext); /* builds "name+ext" */
 
-/* Needed function signatures */
-MCDETECTOR mcdetector_write_data(MCDETECTOR detector);
-
-/* output functions */
-MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos);
-MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
-                  char *xvar, double x1, double x2, int n,
-                  double *p0, double *p1, double *p2, char *f, char *c, Coords pos);
-MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
-                  double x1, double x2, double y1, double y2, int m,
-                  int n, double *p0, double *p1, double *p2, char *f,
-                  char *c, Coords pos);
-MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
-      char *xvar, char *yvar, char *zvar,
-                  double x1, double x2, double y1, double y2, double z1, double z2, int m,
-                  int n, int p, double *p0, double *p1, double *p2, char *f,
-                  char *c, Coords pos);
-/* wrappers to output functions, that automatically set NAME and POSITION */
-#define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
-#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
-#define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
-     mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
-#define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
-     mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
-#define DETECTOR_OUT_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f) \
-     mcdetector_out_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
-#define DETECTOR_CUSTOM_HEADER(t)  if (t && strlen(t)) { \
-     mcDetectorCustomHeader=malloc(strlen(t)); \
-     if (mcDetectorCustomHeader) strcpy(mcDetectorCustomHeader, t); }
 
 /* Following part is only embedded when not redundent with mcstas.h ========= */
 
@@ -362,8 +206,6 @@ MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
 #else
 #define SIG_MESSAGE(msg)
 #endif /* !NOSIGNALS */
-
-
 
 /* Useful macros and constants ============================================== */
 
@@ -670,5 +512,152 @@ int mccode_main(int argc, char *argv[]);
 
 
 #endif /* !MCCODE_H */
+
+#ifndef MCCODE_R_IO_H
+#define MCCODE_R_IO_H "$Revision$"
+
+#ifdef __dest_os
+#if (__dest_os == __mac_os)
+#define MAC
+#endif
+#endif
+
+#ifdef __FreeBSD__
+#define NEED_STAT_H
+#endif
+
+#if defined(__APPLE__) && defined(__GNUC__)
+#define NEED_STAT_H
+#endif
+
+#ifdef NEED_STAT_H
+#include <sys/stat.h>
+#endif
+
+#ifndef MC_PATHSEP_C
+#ifdef WIN32
+#define MC_PATHSEP_C '\\'
+#define MC_PATHSEP_S "\\"
+#define random rand
+#define srandom srand
+#else  /* !WIN32 */
+#ifdef MAC
+#define MC_PATHSEP_C ':'
+#define MC_PATHSEP_S ":"
+#else  /* !MAC */
+#define MC_PATHSEP_C '/'
+#define MC_PATHSEP_S "/"
+#endif /* !MAC */
+#endif /* !WIN32 */
+#endif /* MC_PATHSEP_C */
+
+#if (USE_NEXUS == 0)
+#undef USE_NEXUS
+#endif
+
+#ifndef CHAR_BUF_LENGTH
+#define CHAR_BUF_LENGTH 1024
+#endif
+
+/* I/O section part ========================================================= */
+
+/* ========================================================================== */
+
+/*                               MCCODE_R_IO_C                                */
+
+/* ========================================================================== */
+
+
+/* main DETECTOR structure which stores most information to write to data files */
+struct mcdetector_struct {
+  char   filename[CHAR_BUF_LENGTH];   /* file name of monitor */
+  char   position[CHAR_BUF_LENGTH];   /* position of detector component */
+  char   component[CHAR_BUF_LENGTH];  /* component instance name */
+  char   instrument[CHAR_BUF_LENGTH]; /* instrument name */
+  char   type[CHAR_BUF_LENGTH];       /* data type, e.g. 0d, 1d, 2d, 3d */
+  char   user[CHAR_BUF_LENGTH];       /* user name, e.g. HOME */
+  char   date[CHAR_BUF_LENGTH];       /* date of simulation end/write time */
+  char   title[CHAR_BUF_LENGTH];      /* title of detector */
+  char   xlabel[CHAR_BUF_LENGTH];     /* X axis label */
+  char   ylabel[CHAR_BUF_LENGTH];     /* Y axis label */
+  char   zlabel[CHAR_BUF_LENGTH];     /* Z axis label */
+  char   xvar[CHAR_BUF_LENGTH];       /* X variable name */
+  char   yvar[CHAR_BUF_LENGTH];       /* Y variable name */
+  char   zvar[CHAR_BUF_LENGTH];       /* Z variable name */
+  char   ncount[CHAR_BUF_LENGTH];     /* number of events initially generated */
+  char   limits[CHAR_BUF_LENGTH];     /* X Y Z limits, e.g. [xmin xmax ymin ymax zmin zmax] */
+  char   variables[CHAR_BUF_LENGTH];  /* variables written into data block */
+  char   statistics[CHAR_BUF_LENGTH]; /* center, mean and half width along axis */
+  char   signal[CHAR_BUF_LENGTH];     /* min max and mean of signal (data block) */
+  char   values[CHAR_BUF_LENGTH];     /* integrated values e.g. [I I_err N] */
+  double xmin,xmax;                   /* min max of axes */
+  double ymin,ymax;
+  double zmin,zmax;
+  double intensity;                   /* integrated values for data block */
+  double error;
+  double events;
+  double min;                         /* statistics for data block */
+  double max;
+  double mean;
+  double centerX;                     /* statistics for axes */
+  double halfwidthX;
+  double centerY;
+  double halfwidthY;
+  int    rank;                        /* dimensionaly of monitor, e.g. 0 1 2 3 */
+  char   istransposed;                /* flag to transpose matrix for some formats */
+
+  long   m,n,p;                       /* dimensions of data block and along axes */
+  long   date_l;                      /* same as date, but in sec since 1970 */
+
+  double *p0, *p1, *p2;               /* pointers to saved data, NULL when freed */
+  char   format[CHAR_BUF_LENGTH];    /* format for file generation */
+};
+
+typedef struct mcdetector_struct MCDETECTOR;
+
+static   char *mcdirname             = NULL;      /* name of output directory */
+static   char *mcsiminfo_name        = "mcstas";  /* default output sim file name */
+char    *mcformat                    = NULL;      /* NULL (default) or a specific format */
+
+/* file I/O definitions and function prototypes */
+
+#ifndef MC_EMBEDDED_RUNTIME /* the mcstatic variables (from mcstas-r.c) */
+extern FILE * mcsiminfo_file;     /* handle to the output siminfo file */
+extern int    mcgravitation;      /* flag to enable gravitation */
+extern int    mcdotrace;          /* flag to print MCDISPLAY messages */
+#else
+mcstatic FILE *mcsiminfo_file        = NULL;
+#endif
+
+/* I/O function prototypes ================================================== */
+
+/* output functions */
+MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos);
+MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
+                  char *xvar, double x1, double x2, long n,
+                  double *p0, double *p1, double *p2, char *f, char *c, Coords pos);
+MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2, long m,
+                  long n, double *p0, double *p1, double *p2, char *f,
+                  char *c, Coords pos);
+MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
+                  long m, long n,
+                  double *p1, char *f,
+                  char *c, Coords posa);
+
+/* wrappers to output functions, that automatically set NAME and POSITION */
+#define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+#define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
+     mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+#define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
+     mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+
+#ifdef USE_NEXUS
+#include "napi.h"
+NXhandle nxhandle;
+#endif
+
+#endif /* ndef MCCODE_R_IO_H */
 
 #endif /* MCCODE_R_H */

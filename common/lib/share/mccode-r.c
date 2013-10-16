@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Runtime: share/mcstas-r.c
+* Runtime: share/mccode-r.c
 *
 * %Identification
 * Written by: KN
@@ -53,28 +53,17 @@
 int mctraceenabled = 0;
 int mcdefaultmain  = 0;
 #endif
-/* else defined directly in the McStas generated C code */
+/* else defined directly in the McCode generated C code */
 
 static   long mcseed                 = 0; /* seed for random generator */
-static   int  mcascii_only           = 0; /* flag for no header */
-static   int  mcsingle_file          = 0; /* flag for storing all detectors into a single file */
 static   long mcstartdate            = 0; /* start simulation time */
 static   int  mcdisable_output_files = 0; /* --no-output-files */
-mcstatic int  mcgravitation          = 0; /* use gravir=tation flag, for PROP macros */
-int      mcMagnet                    = 0; /* megnet stack flag */
+mcstatic int  mcgravitation          = 0; /* use gravitation flag, for PROP macros */
+int      mcMagnet                    = 0; /* magnet stack flag */
 mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
-/* mcstatic FILE *mcsiminfo_file        = NULL; */
-static   char *mcdirname             = NULL;      /* name of output directory */
-static   char *mcsiminfo_name        = "mcstas";  /* default output sim file name */
 int      mcallowbackprop             = 0;         /* flag to enable negative/backprop */
-char*    mcDetectorCustomHeader      = NULL;      /* additional user output Tag in data files */
-char*    mcopenedfiles               = "";        /* list of opened files (for append) */
-long     mcopenedfiles_size          = 0;         /* size of that opened files list */
-MCDETECTOR* mcDetectorArray          = NULL;      /* array of all opened detectors */
-long     mcDetectorArray_size        = 0;         /* allocated detector array size */
-long     mcDetectorArray_index       = 0;         /* current detector length (number of detectors so far) */
 
-/* Number of particle histories to simulate. */
+/* Number of particule histories to simulate. */
 #ifdef NEUTRONICS
 mcstatic unsigned long long int mcncount             = 1;
 mcstatic unsigned long long int mcrun_num            = 0;
@@ -83,16 +72,103 @@ mcstatic unsigned long long int mcncount             = 1e6;
 mcstatic unsigned long long int mcrun_num            = 0;
 #endif /* NEUTRONICS */
 
-/* I/O structures */
-mcstatic struct mcformats_struct mcformat;
-mcstatic struct mcformats_struct mcformat_data;
 #else
 #include "mcstas-globals.h"
 #endif /* !DANSE */
 
-#ifndef MCSTAS_FORMAT
-#define MCSTAS_FORMAT "McStas"  /* default format */
-#endif
+/* SECTION: MPI handling ==================================================== */
+
+#ifdef USE_MPI
+/* MPI rank */
+static int mpi_node_rank;
+static int mpi_node_root = 0;
+
+
+/*******************************************************************************
+* mc_MPI_Reduce: Gathers arrays from MPI nodes using Reduce function.
+*******************************************************************************/
+int mc_MPI_Sum(double *sbuf, long count)
+{
+  if (!sbuf || count <= 0) return(MPI_SUCCESS); /* nothing to reduce */
+  else {
+    /* we must cut the buffer into blocks not exceeding the MPI max buffer size of 32000 */
+    long   offset=0;
+    double *rbuf=NULL;
+    int    length=MPI_REDUCE_BLOCKSIZE; /* defined in mccode-r.h */
+    int    i=0;
+    rbuf = calloc(count, sizeof(double));
+    if (!rbuf)
+      exit(-fprintf(stderr, "Error: Out of memory %li (mc_MPI_Sum)\n", count*sizeof(double)));
+    while (offset < count) {
+      if (!length || offset+length > count-1) length=count-offset;
+      else length=MPI_REDUCE_BLOCKSIZE;
+      if (MPI_Allreduce((double*)(sbuf+offset), (double*)(rbuf+offset),
+              length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD) != MPI_SUCCESS)
+        return MPI_ERR_COUNT;
+      offset += length;
+    }
+
+    for (i=0; i<count; i++) sbuf[i] = rbuf[i];
+    free(rbuf);
+  }
+  return MPI_SUCCESS;
+} /* mc_MPI_Sum */
+
+/*******************************************************************************
+* mc_MPI_Send: Send array to MPI node by blocks to avoid buffer limit
+*******************************************************************************/
+int mc_MPI_Send(void *sbuf,
+                  long count, MPI_Datatype dtype,
+                  int dest)
+{
+  int dsize;
+  long offset=0;
+  int  tag=1;
+  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mccode-r.h */
+
+  if (!sbuf || count <= 0) return(MPI_SUCCESS); /* nothing to send */
+  MPI_Type_size(dtype, &dsize);
+
+  while (offset < count) {
+    if (offset+length > count-1) length=count-offset;
+    else length=MPI_REDUCE_BLOCKSIZE;
+    if (MPI_Send((void*)(sbuf+offset*dsize), length, dtype, dest, tag++, MPI_COMM_WORLD) != MPI_SUCCESS)
+      return MPI_ERR_COUNT;
+    offset += length;
+  }
+
+  return MPI_SUCCESS;
+} /* mc_MPI_Send */
+
+/*******************************************************************************
+* mc_MPI_Recv: Receives arrays from MPI nodes by blocks to avoid buffer limit
+*             the buffer must have been allocated previously.
+*******************************************************************************/
+int mc_MPI_Recv(void *sbuf,
+                  long count, MPI_Datatype dtype,
+                  int source)
+{
+  int dsize;
+  long offset=0;
+  int  tag=1;
+  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mccode-r.h */
+
+  if (!sbuf || count <= 0) return(MPI_SUCCESS); /* nothing to recv */
+  MPI_Type_size(dtype, &dsize);
+
+  while (offset < count) {
+    if (offset+length > count-1) length=count-offset;
+    else length=MPI_REDUCE_BLOCKSIZE;
+    if (MPI_Recv((void*)(sbuf+offset*dsize), length, dtype, source, tag++,
+            MPI_COMM_WORLD, MPI_STATUS_IGNORE) != MPI_SUCCESS)
+      return MPI_ERR_COUNT;
+    offset += length;
+  }
+
+  return MPI_SUCCESS;
+} /* mc_MPI_Recv */
+
+#endif /* USE_MPI */
 
 /* SECTION: parameters handling ============================================= */
 
@@ -302,734 +378,17 @@ double mcestimate_error(double N, double p1, double p2)
 double (*mcestimate_error_p)
   (double V2, double psum, double p2sum)=mcestimate_error;
 
-/* SECTION: MPI handling ==================================================== */
+/* ========================================================================== */
 
-#ifdef USE_MPI
-/* MPI rank */
-static int mpi_node_rank;
-static int mpi_node_root = 0;
+/*                               MCCODE_R_IO_C                                */
 
+/* ========================================================================== */
 
-/*******************************************************************************
-* mc_MPI_Reduce: Gathers arrays from MPI nodes using Reduce function.
-*******************************************************************************/
-int mc_MPI_Sum(double *sbuf, long count)
-{
-  if (!sbuf || count <= 0) return(MPI_SUCCESS); /* nothing to reduce */
-  else {
-    /* we must cut the buffer into blocks not exceeding the MPI max buffer size of 32000 */
-    long   offset=0;
-    double *rbuf=NULL;
-    int    length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
-    int    i=0;
-    rbuf = calloc(count, sizeof(double));
-    if (!rbuf)
-      exit(-fprintf(stderr, "Error: Out of memory %li (mc_MPI_Sum)\n", count*sizeof(double)));
-    while (offset < count) {
-      if (!length || offset+length > count-1) length=count-offset;
-      else length=MPI_REDUCE_BLOCKSIZE;
-      if (MPI_Allreduce((double*)(sbuf+offset), (double*)(rbuf+offset),
-              length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD) != MPI_SUCCESS)
-        return MPI_ERR_COUNT;
-      offset += length;
-    }
-
-    for (i=0; i<count; i++) sbuf[i] = rbuf[i];
-    free(rbuf);
-  }
-  return MPI_SUCCESS;
-} /* mc_MPI_Sum */
-
-/*******************************************************************************
-* mc_MPI_Send: Send array to MPI node by blocks to avoid buffer limit
-*******************************************************************************/
-int mc_MPI_Send(void *sbuf,
-                  long count, MPI_Datatype dtype,
-                  int dest)
-{
-  int dsize;
-  long offset=0;
-  int  tag=1;
-  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
-
-  if (!sbuf || count <= 0) return(MPI_SUCCESS); /* nothing to send */
-  MPI_Type_size(dtype, &dsize);
-
-  while (offset < count) {
-    if (offset+length > count-1) length=count-offset;
-    else length=MPI_REDUCE_BLOCKSIZE;
-    if (MPI_Send((void*)(sbuf+offset*dsize), length, dtype, dest, tag++, MPI_COMM_WORLD) != MPI_SUCCESS)
-      return MPI_ERR_COUNT;
-    offset += length;
-  }
-
-  return MPI_SUCCESS;
-} /* mc_MPI_Send */
-
-/*******************************************************************************
-* mc_MPI_Recv: Receives arrays from MPI nodes by blocks to avoid buffer limit
-*             the buffer must have been allocated previously.
-*******************************************************************************/
-int mc_MPI_Recv(void *sbuf,
-                  long count, MPI_Datatype dtype,
-                  int source)
-{
-  int dsize;
-  long offset=0;
-  int  tag=1;
-  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
-
-  if (!sbuf || count <= 0) return(MPI_SUCCESS); /* nothing to recv */
-  MPI_Type_size(dtype, &dsize);
-
-  while (offset < count) {
-    if (offset+length > count-1) length=count-offset;
-    else length=MPI_REDUCE_BLOCKSIZE;
-    if (MPI_Recv((void*)(sbuf+offset*dsize), length, dtype, source, tag++,
-            MPI_COMM_WORLD, MPI_STATUS_IGNORE) != MPI_SUCCESS)
-      return MPI_ERR_COUNT;
-    offset += length;
-  }
-
-  return MPI_SUCCESS;
-} /* mc_MPI_Recv */
-
-#endif /* USE_MPI */
+#ifndef MCCODE_R_IO_C
+#define MCCODE_R_IO_C "$Revision$"
 
 /* SECTION: file i/o handling ================================================ */
 
-/* Multiple output format support. ========================================== */
-#ifdef USE_NEXUS
-#define mcNUMFORMATS 10
-#else
-#define mcNUMFORMATS 9
-#endif
-
-/*******************************************************************************
-* Definition of output formats. structure defined in mcstas-r.h
-* Name aliases are defined in mcuse_format_* functions (below)
-*******************************************************************************/
-
-/* {Name, Extension, Header, Footer,
-    BeginSection, EndSection, AssignTag;
-    BeginData, EndData;
-    BeginErrors, EndErrors;
-    BeginNcount, EndNcount};
- */
-
-mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
-  { "McStas", "sim",
-    "%PREFormat: %FMT file. Use mcplot/PGPLOT to view.\n"
-      "%PREURL:    http://www.mccode.org/\n"
-      "%PREEditor: %USR\n"
-      "%PRECreator:%SRC simulation (" MCCODE_STRING ")\n"
-      "%PREDate:   Simulation started (%DATL) %DAT\n"
-      "%PREFile:   %FIL\n",
-    "%PREEndDate:%DAT\n",
-    "%PREbegin %TYP\n",
-    "%PREend %TYP\n",
-    "%PRE%NAM: %VAL\n",
-    "%PREData [%PAR/%FIL] I: \n", "",
-    "%PREErrors [%PAR/%FIL] E: \n", "",
-    "%PREEvents [%PAR/%FIL] N: \n", "" },
-  { "Scilab", "sci",
-    "function mc_%VPA = get_%VPA(p)\n"
-      "// %FMT function generated by McStas on %DAT\n"
-      "// McStas simulation %SRC: %FIL %FMT\n"
-      "// Import data using scilab> exec('%VPA.sci',-1); s=get_%VPA(); and s=get_%VPA('plot'); to plot\n\n"
-      "mode(-1); //silent execution\n"
-      "if argn(2) > 0, p=1; else p=0; end\n"
-      "mc_%VPA = struct();\n"
-      "mc_%VPA.Format ='%FMT';\n"
-      "mc_%VPA.URL    ='http://www.mccode.org';\n"
-      "mc_%VPA.Editor ='%USR';\n"
-      "mc_%VPA.Creator='%SRC " MCCODE_STRING " simulation';\n"
-      "mc_%VPA.Date   =%DATL; // for getdate\n"
-      "mc_%VPA.File   ='%FIL';\n",
-    "mc_%VPA.EndDate=%DATL; // for getdate\nendfunction\n"
-    "function d=mcload_inline(d)\n"
-      "// local inline func to load data\n"
-      "execstr(['S=['+part(d.type,10:(length(d.type)-1))+'];']);\n"
-      "if ~length(d.data)\n"
-      " if ~length(strindex(d.format, 'binary'))\n"
-      "  exec(d.filename,-1);p=d.parent;\n"
-      "  if ~execstr('d2='+d.func+'();','errcatch'),d=d2; d.parent=p;end\n"
-      " else\n"
-      "  if length(strindex(d.format, 'float')), t='f';\n"
-      "  elseif length(strindex(d.format, 'double')), t='d';\n"
-      "  else return; end\n"
-      "  fid=mopen(d.filename, 'rb');\n"
-      "  pS = prod(S);\n"
-      "  x = mget(3*pS, t, fid);\n"
-      "  d.data  =matrix(x(1:pS), S);\n"
-      "  if length(x) >= 3*pS,\n"
-      "  d.errors=matrix(x((pS+1):(2*pS)), S);\n"
-      "  d.events=matrix(x((2*pS+1):(3*pS)), S);end\n"
-      "  mclose(fid);\n"
-      "  return\n"
-      " end\n"
-      "end\n"
-      "endfunction\n"
-      "function d=mcplot_inline(d,p)\n"
-      "// local inline func to plot data\n"
-      "if ~length(strindex(d.type,'0d')), d=mcload_inline(d); end\n"
-      "if ~p, return; end;\n"
-      "execstr(['l=[',d.xylimits,'];']); S=size(d.data);\n"
-      "t1=['['+d.parent+'] '+d.filename+': '+d.title];t = [t1;['  '+d.variables+'=['+d.values+']'];['  '+d.signal];['  '+d.statistics]];\n"
-      "mprintf('%s\\n',t(:));\n"
-      "if length(strindex(d.type,'0d')),return; end\n"
-      "w=winsid();if length(w),w=w($)+1; else w=0; end\n"
-      "xbasr(w); xset('window',w);\n"
-      "if length(strindex(d.type,'2d'))\n"
-      " if S(2) > 1, d.stepx=abs(l(1)-l(2))/(S(2)-1); else d.stepx=0; end\n"
-      " if S(1) > 1, d.stepy=abs(l(3)-l(4))/(S(1)-1); else d.stepy=0; end\n"
-      " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,S(2));\n"
-      " d.y=linspace(l(3)+d.stepy/2,l(4)-d.stepy/2,S(1)); z=d.data;\n"
-      " xlab=d.xlabel; ylab=d.ylabel; x=d.x; y=d.y;\n"
-      " fz=max(abs(z));fx=max(abs(d.x));fy=max(abs(d.y));\n"
-      " if fx>0,fx=round(log10(fx)); x=x/10^fx; xlab=xlab+' [*10^'+string(fx)+']'; end\n"
-      " if fy>0,fy=round(log10(fy)); y=y/10^fy; ylab=ylab+' [*10^'+string(fy)+']'; end\n"
-      " if fz>0,fz=round(log10(fz)); z=z/10^fz; t1=t1+' [*10^'+string(fz)+']'; end\n"
-      " xset('colormap',hotcolormap(64));\n"
-      " plot3d1(x,y,z',90,0,xlab+'@'+ylab+'@'+d.zlabel,[-1,2,4]); xtitle(t);\n"
-      "else\n"
-      " if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1); else d.stepx=0; end\n"
-      " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));\n"
-      " plot2d(d.x,d.data);xtitle(t,d.xlabel,d.ylabel);\n"
-      "end\n"
-      "xname(t1);\nendfunction\n"
-    "mc_%VPA=get_%VPA();\n",
-    "// Section %TYP [%NAM] (level %LVL)\n"
-      "%PREt=[]; execstr('t=mc_%VNA.class','errcatch'); if ~length(t), mc_%VNA = struct(); end; mc_%VNA.class = '%TYP';",
-    "%PREmc_%VPA.mc_%VNA = 0; mc_%VPA.mc_%VNA = mc_%VNA;\n",
-    "%PREmc_%SEC.%NAM = '%VAL';\n",
-    "%PREmc_%VPA.func='get_%VPA';\n%PREmc_%VPA.data = [ \n",
-    " ]; // end of data\n%PREif length(mc_%VPA.data) == 0, single_file=0; else single_file=1; end\n%PREmc_%VPA=mcplot_inline(mc_%VPA,p);\n",
-    "%PREerrors = [ \n",
-    " ]; // end of errors\n%PREif single_file == 1, mc_%VPA.errors=errors; end\n",
-    "%PREevents = [ \n",
-    " ]; // end of events\n%PREif single_file == 1, mc_%VPA.events=events; end\n"},
-  { "Matlab", "m",
-    "function mc_%VPA = get_%VPA(p)\n"
-      "%% %FMT function generated by McStas on %DAT\n"
-      "%% McStas simulation %SRC: %FIL\n"
-      "%% Import data using matlab> s=%VPA; and s=%VPA('plot'); to plot\n\n"
-      "if nargout == 0 | nargin > 0, p=1; else p=0; end\n"
-      "mc_%VPA.Format ='%FMT';\n"
-      "mc_%VPA.URL    ='http://www.mccode.org';\n"
-      "mc_%VPA.Editor ='%USR';\n"
-      "mc_%VPA.Creator='%SRC " MCCODE_STRING " simulation';\n"
-      "mc_%VPA.Date   =%DATL; %% for datestr\n"
-      "mc_%VPA.File   ='%FIL';\n",
-    "mc_%VPA.EndDate=%DATL; %% for datestr\n"
-      "function d=mcload_inline(d)\n"
-      "%% local inline function to load data\n"
-      "S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' ];']);\n"
-      "if isempty(d.data)\n"
-      " if ~length(findstr(d.format, 'binary'))\n"
-      "  if ~strcmp(d.filename,[d.func,'.m']) copyfile(d.filename,[d.func,'.m']); end\n"
-      "  p=d.parent;path(path);\n"
-      "  eval(['d=',d.func,';']);d.parent=p;\n"
-      "  if ~strcmp(d.filename,[d.func,'.m']) delete([d.func,'.m']); end\n"
-      " else\n"
-      "  if length(findstr(d.format, 'float')), t='single';\n"
-      "  elseif length(findstr(d.format, 'double')), t='double';\n"
-      "  else return; end\n"
-      "  if length(S) == 1, S=[S 1]; end\n"
-      "  fid=fopen(d.filename, 'r');\n"
-      "  pS = prod(S);\n"
-      "  x = fread(fid, 3*pS, t);\n"
-      "  d.data  =reshape(x(1:pS), S);\n"
-      "  if prod(size(x)) >= 3*pS,\n"
-      "  d.errors=reshape(x((pS+1):(2*pS)), S);\n"
-      "  d.events=reshape(x((2*pS+1):(3*pS)), S);end\n"
-      "  fclose(fid);\n"
-      "  return\n"
-      " end\n"
-      "end\n"
-      "return;\n"
-      "function d=mcplot_inline(d,p)\n"
-      "%% local inline function to plot data\n"
-      "if isempty(findstr(d.type,'0d')), d=mcload_inline(d); end\nif ~p, return; end;\n"
-      "eval(['l=[',d.xylimits,'];']); S=size(d.data);\n"
-      "t1=['[',d.parent,'] ',d.filename,': ',d.title];t = strvcat(t1,['  ',d.variables,'=[',d.values,']'],['  ',d.signal],['  ',d.statistics]);\n"
-      "disp(t);\n"
-      "if ~isempty(findstr(d.type,'0d')), return; end\n"
-      "figure; if ~isempty(findstr(d.type,'2d'))\n"
-      " if S(2) > 1, d.stepx=abs(l(1)-l(2))/(S(2)-1); else d.stepx=0; end\n"
-      " if S(1) > 1, d.stepy=abs(l(3)-l(4))/(S(1)-1); else d.stepy=0; end\n"
-      " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,S(2));\n"
-      " d.y=linspace(l(3)+d.stepy/2,l(4)-d.stepy/2,S(1));\n"
-      " surface(d.x,d.y,d.data); xlim([l(1) l(2)]); ylim([l(3) l(4)]); shading flat;\n"
-      "else\n"
-      " if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1); else d.stepx=0; end\n"
-      " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));\n"
-      " plot(d.x,d.data); xlim([l(1) l(2)]);\n"
-      "end\n"
-      "xlabel(d.xlabel); ylabel(d.ylabel); title(t); \n"
-      "set(gca,'position',[.18,.18,.7,.65]); set(gcf,'name',t1);grid on;\n"
-      "if ~isempty(findstr(d.type,'2d')), colorbar; end\n",
-    "%% Section %TYP [%NAM] (level %LVL)\n"
-      "%PREmc_%VNA.class = '%TYP';",
-    "mc_%VPA.mc_%VNA = mc_%VNA;\n",
-    "%PREmc_%SEC.%NAM = '%VAL';\n",
-    "%PREmc_%VPA.func='%VPA';\n%PREmc_%VPA.data = [ \n",
-    " ]; %% end of data\nif length(mc_%VPA.data) == 0, single_file=0; else single_file=1; end\nmc_%VPA=mcplot_inline(mc_%VPA,p);\n",
-    "%PREerrors = [ \n",
-    " ]; %% end of errors\nif single_file, mc_%VPA.errors=errors; end\n",
-    "%PREevents = [ \n",
-    " ]; %% end of events\nif single_file, mc_%VPA.events=events; end\n"},
-  { "IDL", "pro",
-    "; %FMT function generated by McStas on %DAT\n"
-      "; McStas simulation %SRC: %FIL\n"
-      "; import using idl> s=%VPA() and s=%VPA(/plot) to plot\n\n"
-      "function mcload_inline,d\n"
-      "; local inline function to load external data\n"
-      "S=d.type & a=execute('S=long(['+strmid(S,9,strlen(S)-10)+'])')\n"
-      "if strpos(d.format, 'binary') lt 0 then begin\n"
-      " p=d.parent\n"
-      " x=read_binary(d.filename)\n"
-      " get_lun, lun\n"
-      " openw,lun,d.func+'.pro'\n"
-      " writeu, lun,x\n"
-      " free_lun,lun\n"
-      " resolve_routine, d.func, /is_func, /no\n"
-      " d=call_function(d.func)\n"
-      "endif else begin\n"
-      " if strpos(d.format, 'float') ge 0 then t=4 $\n"
-      " else if strpos(d.format, 'double') ge 0 then t=5 $\n"
-      " else return,d\n"
-      " x=read_binary(d.filename, data_type=t)\n"
-      " pS=n_elements(S)\nif pS eq 1 then pS=long(S) $\n"
-      " else if pS eq 2 then pS=long(S(0)*S(1)) $\n"
-      " else pS=long(S(0)*S(1)*S(2))\n"
-      " pS=pS(0)\nstv,d,'data',reform(x(0:(pS-1)),S)\n"
-      " d.data=transpose(d.data)\n"
-      " if n_elements(x) ge long(3*pS) then begin\n"
-      "  stv,d,'errors',reform(x(pS:(2*pS-1)),S)\n"
-      "  stv,d,'events',reform(x((2*pS):(3*pS-1)),S)\n"
-      "  d.errors=transpose(d.errors)\n"
-      "  d.events=transpose(d.events)\n"
-      " endif\n"
-      "endelse\n"
-      "return,d\nend ; FUN load\n"
-    "function mcplot_inline,d,p\n"
-      "; local inline function to plot data\n"
-      "if size(d.data,/typ) eq 7 and strpos(d.type,'0d') lt 0 then d=mcload_inline(d)\n"
-      "if p eq 0 or strpos(d.type,'0d') ge 0 then return, d\n"
-      "S=d.type & a=execute('S=long(['+strmid(S,9,strlen(S)-10)+'])')\n"
-      "stv,d,'data',reform(d.data,S,/over)\n"
-      "if total(strpos(tag_names(d),'ERRORS')+1) gt 0 then begin\n"
-      " stv,d,'errors',reform(d.errors,S,/over)\n"
-      " stv,d,'events',reform(d.events,S,/over)\n"
-      "endif\n"
-      "d.xylimits=strjoin(strsplit(d.xylimits,' ',/extract),',') & a=execute('l=['+d.xylimits+']')\n"
-      "t1='['+d.parent+'] '+d.filename+': '+d.title\n"
-      "t=[t1,'  '+d.variables+'=['+d.values+']','  '+d.signal,'  '+d.statistics]\n"
-      "print,t\n"
-      "if strpos(d.type,'0d') ge 0 then return,d\n"
-      "d.xlabel=strjoin(strsplit(d.xlabel,'`!\"^&*()-+=|\\,.<>/?@''~#{[}]',/extract),'_')\n"
-      "d.ylabel=strjoin(strsplit(d.ylabel,'`!\"^&*()-+=|\\,.<>/?@''~#{[}]',/extract),'_')\n"
-      "stv,d,'x',l(0)+indgen(S(0))*(l(1)-l(0))/S(0)\n"
-      "if strpos(d.type,'2d') ge 0 then begin\n"
-      "  name={DATA:d.func,IX:d.xlabel,IY:d.ylabel}\n"
-      "  stv,d,'y',l(2)+indgen(S(1))*(l(3)-l(2))/S(1)\n"
-      "  live_surface,d.data,xindependent=d.x,yindependent=d.y,name=name,reference_out=Win\n"
-      "endif else begin\n"
-      "  name={DATA:d.func,I:d.xlabel}\n"
-      "  live_plot,d.data,independent=d.x,name=name,reference_out=Win\n"
-      "endelse\n"
-      "live_text,t,Window_In=Win.Win,location=[0.3,0.9]\n"
-      "return,d\nend ; FUN plot\n"
-    "pro stv,S,T,V\n"
-      "; procedure set-tag-value that does S.T=V\n"
-      "sv=size(V)\n"
-      "T=strupcase(T)\n"
-      "TL=strupcase(tag_names(S))\n"
-      "id=where(TL eq T)\n"
-      "sz=[0,0,0]\n"
-      "vd=n_elements(sv)-2\n"
-      "type=sv[vd]\n"
-      "if id(0) ge 0 then d=execute('sz=SIZE(S.'+T+')')\n"
-      "if (sz(sz(0)+1) ne sv(sv(0)+1)) or (sz(0) ne sv(0)) $\n"
-      "  or (sz(sz(0)+2) ne sv(sv(0)+2)) $\n"
-      "  or type eq 8 then begin\n"
-      " ES = ''\n"
-      " for k=0,n_elements(TL)-1 do begin\n"
-      "  case TL(k) of\n"
-      "   T:\n"
-      "   else: ES=ES+','+TL(k)+':S.'+TL(k)\n"
-      "  endcase\n"
-      " endfor\n"
-      " d=execute('S={'+T+':V'+ES+'}')\n"
-      "endif else d=execute('S.'+T+'=V')\n"
-      "end ; PRO stv\n"
-    "function %VPA,plot=plot\n"
-      "; %FMT function generated by McStas on %DAT\n"
-      "; McStas simulation %SRC: %FIL\n"
-      "; import using s=%VPA() and s=%VPA(/plot) to plot\n"
-      "if keyword_set(plot) then p=1 else p=0\n"
-      "%7$s={Format:'%FMT',URL:'http://www.mccode.org',"
-      "Editor:'%USR',$\n"
-      "Creator:'%SRC " MCCODE_STRING " simulation',$\n"
-      "Date:%DATL,"
-      "File:'%FIL'}\n",
-    "stv,%VPA,'EndDate',%DATL ; for systime\nreturn, %VPA\nend\n",
-    "; Section %TYP [%NAM] (level %LVL)\n"
-      "%PRE%VNA={class:'%TYP'}\n",
-    "%PREstv,%VPA,'%VNA',%VNA\n",
-    "%PREstv,%SEC,'%NAM','%VAL'\n",
-    "%PREstv,%VPA,'func','%VPA' & data=[ $\n",
-    " ]\n%PREif size(data,/type) eq 7 then single_file=0 else single_file=1\n"
-    "%PREstv,%VPA,'data',data & data=0 & %VPA=mcplot_inline(%VPA,p)\n",
-    "%PREif single_file ne 0 then begin errors=[ ",
-    " ]\n%PREstv,%VPA,'errors',reform(errors,%MDIM,%NDIM,/over) & errors=0\n%PREendif\n",
-    "%PREif single_file ne 0 then begin events=[ ",
-    " ]\n%PREstv,%VPA,'events',reform(events,%MDIM,%NDIM,/over) & events=0\n%PREendif\n\n"},
-  { "XML", "xml",
-    "<?xml version=\"1.0\" ?>\n<!--\n"
-      "URL:    http://www.nexusformat.org/\n"
-      "Editor: %USR\n"
-      "Creator:%SRC " MCCODE_STRING " [www.mccode.org].\n"
-      "Date:   Simulation started (%DATL) %DAT\n"
-      "File:   %FIL\n"
-      "View with Mozilla, InternetExplorer, gxmlviewer, kxmleditor\n-->\n"
-      "<NX%PAR file_name=\"%FIL\" file_time=\"%DAT\" user=\"%USR\">\n"
-        "<NXentry name=\"" MCCODE_STRING "\"><start_time>%DAT</start_time>\n",
-    "<end_time>%DAT</end_time></NXentry></NX%PAR>\n<!-- EndDate:%DAT -->\n",
-    "%PRE<NX%TYP name=\"%NAM\">\n",
-    "%PRE</NX%TYP>\n",
-    "%PRE<%NAM>%VAL</%NAM>\n",
-    "%PRE<%XVL long_name=\"%XLA\" axis=\"1\" primary=\"1\" min=\"%XMIN\""
-        " max=\"%XMAX\" dims=\"%MDIM\" range=\"1\"></%XVL>\n"
-      "%PRE<%YVL long_name=\"%YLA\" axis=\"2\" primary=\"1\" min=\"%YMIN\""
-        " max=\"%YMAX\" dims=\"%NDIM\" range=\"1\"></%YVL>\n"
-      "%PRE<%ZVL long_name=\"%ZLA\" axis=\"3\" primary=\"1\" min=\"%ZMIN\""
-        " max=\"%ZMAX\" dims=\"%PDIM\" range=\"1\"></%ZVL>\n"
-      "%PRE<data long_name=\"%TITL\" signal=\"1\"  axis=\"[%XVL,%YVL,%ZVL]\" file_name=\"%FIL\">\n",
-    "%PRE</data>\n",
-    "%PRE<errors>\n", "%PRE</errors>\n",
-    "%PRE<monitor>\n", "%PRE</monitor>\n"},
-  { "HTML", "html",
-    "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD %DAT//EN\"\n"
-      "\"http://www.w3.org/TR/html4/strict.dtd\">\n"
-      "<HTML><HEAD><META name=\"Author\" content=\"%PAR\">\n"
-      "<META name=\"Creator\" content=\"%PAR (%SRC) " MCCODE_STRING " [www.mccode.org] simulation\">\n"
-      "<META name=\"Date\" content=\"%DAT\">\n"
-      "<TITLE>[McStas %PAR (%SRC)]%FIL</TITLE></HEAD>\n"
-      "<BODY><center><h1><a name=\"%PAR\">"
-        "McStas simulation %SRC (%SRC): Result file %FIL.html</a></h1></center><br>\n"
-        "This simulation report was automatically created by"
-        " <a href=\"http://www.mccode.org/\"><i>" MCCODE_STRING "</i></a><br>\n"
-        "<pre>User:   %USR<br>\n"
-        "%PRECreator: <a href=\"%SRC\">%SRC</a> %PAR McStas simulation<br>\n"
-        "%PREFormat:  %FMT<br>\n"
-        "%PREDate:    (%DATL) %DAT<br></pre>\n"
-        "VRML viewers may be obtained at <a href=\"http://cic.nist.gov/vrml/vbdetect.html\">http://cic.nist.gov/vrml/vbdetect.html</a>\n",
-    "<b>EndDate: </b>(%DATL) %DAT<br></BODY></HTML>\n",
-    "%PRE<h%LVL><a name=\"%NAM\">%TYP %NAM</a></h%LVL> "
-      "[child of <a href=\"#%PAR\">%PAR</a>]<br>\n",
-    "[end of <a href=\"#%NAM\">%TYP %NAM</a>]<br>\n",
-    "%PRE<b>%NAM: </b>%VAL<br>\n",
-    "%PRE<b>DATA</b><br><center><embed src=\"%FIL\" type=\"model/vrml\" width=\"75%%\" height=\"50%%\"></embed><br>File <a href=\"%FIL\">%FIL [VRML format]</a></center><br>\n", "%PREEnd of DATA<br>\n",
-    "%PRE<b>ERRORS</b><br>\n","%PREEnd of ERRORS<br>\n",
-    "%PRE<b>EVENTS</b><br>\n", "%PREEnd of EVENTS<br>\n"},
-  { "Octave", "m",
-    "function mc_%VPA = get_%VPA(p)\n"
-      "%% %FMT function generated by McStas on %DAT\n"
-      "%% McStas simulation %SRC: %FIL\n"
-      "%% Import data using octave> s=%VPA(); and plot with s=%VPA('plot');\n"
-      "if nargin > 0, p=1; else p=0; end\n"
-      "mc_%VPA.Format ='%FMT';\n"
-      "mc_%VPA.URL    ='http://www.mccode.org';\n"
-      "mc_%VPA.Editor ='%USR';\n"
-      "mc_%VPA.Creator='%SRC " MCCODE_STRING " simulation';\n"
-      "mc_%VPA.Date   =%DATL; %% for datestr\n"
-      "mc_%VPA.File   ='%FIL';\n",
-    "mc_%VPA.EndDate=%DATL; %% for datestr\nendfunction\n"
-      "if exist('mcload_inline'), return; end\n"
-      "function d=mcload_inline(d)\n"
-      "%% local inline function to load data\n"
-      "S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' ];']);\n"
-      "if isempty(d.data)\n"
-      " if ~length(findstr(d.format, 'binary'))\n"
-      "  source(d.filename);p=d.parent;\n"
-      "  eval(['d=get_',d.func,';']);d.parent=p;\n"
-      " else\n"
-      "  if length(findstr(d.format, 'float')), t='float';\n"
-      "  elseif length(findstr(d.format, 'double')), t='double';\n"
-      "  else return; end\n"
-      "  if length(S) == 1, S=[S 1]; end\n"
-      "  fid=fopen(d.filename, 'r');\n"
-      "  pS = prod(S);\n"
-      "  x = fread(fid, 3*pS, t);\n"
-      "  d.data  =reshape(x(1:pS), S);\n"
-      "  if prod(size(x)) >= 3*pS,\n"
-      "  d.errors=reshape(x((pS+1):(2*pS)), S);\n"
-      "  d.events=reshape(x((2*pS+1):(3*pS)), S);end\n"
-      "  fclose(fid);\n"
-      "  return\n"
-      " end\n"
-      "end\n"
-      "return;\nendfunction\n\n"
-      "function d=mcplot_inline(d,p)\n"
-      "%% local inline function to plot data\n"
-      "if isempty(findstr(d.type,'0d')), d=mcload_inline(d); end\nif ~p, return; end;\n"
-      "eval(['l=[',d.xylimits,'];']); S=size(d.data);\n"
-      "t1=['[',d.parent,'] ',d.filename,': ',d.title];t = strcat(t1,['  ',d.variables,'=[',d.values,']'],['  ',d.signal],['  ',d.statistics]);\n"
-      "disp(t);\n"
-      "if ~isempty(findstr(d.type,'0d')), return; end\n"
-      "xlabel(d.xlabel); ylabel(d.ylabel); title(t);"
-      "figure; if ~isempty(findstr(d.type,'2d'))\n"
-      " if S(2) > 1, d.stepx=abs(l(1)-l(2))/(S(2)-1); else d.stepx=0; end\n"
-      " if S(1) > 1, d.stepy=abs(l(3)-l(4))/(S(1)-1); else d.stepy=0; end\n"
-      " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,S(2));\n"
-      " d.y=linspace(l(3)+d.stepy/2,l(4)-d.stepy/2,S(1));\n"
-      " mesh(d.x,d.y,d.data);\n"
-      "else\n"
-      " if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1); else d.stepx=0; end\n"
-      " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));\n"
-      " plot(d.x,d.data);\n"
-      "end\nendfunction\n",
-    "%% Section %TYP [%NAM] (level %LVL)\n"
-      "mc_%VNA.class = '%TYP';",
-    "mc_%VPA.mc_%VNA = mc_%VNA;\n",
-    "mc_%SEC.%NAM = '%VAL';\n",
-    "mc_%VPA.func='%VPA';\n%PREmc_%VPA.data = [ \n",
-    " ]; %% end of data\nif length(mc_%VPA.data) == 0, single_file=0; else single_file=1; end\nmc_%VPA=mcplot_inline(mc_%VPA,p);\n",
-    "errors = [ \n",
-    " ]; %% end of errors\nif single_file, mc_%VPA.errors=errors; end\n",
-    "events = [ \n",
-    " ]; %% end of events\nif single_file, mc_%VPA.events=events; end\n"},
-  { "VRML", "wrl",
-    "#VRML V2.0 utf8\n# Format: %FMT file\n"
-      "use freeWRL, openvrml, vrmlview, CosmoPlayer, Cortona, Octaga... to view file\n"
-      "WorldInfo {\n"
-      "title \"%SRC/%FIL simulation Data\"\n"
-      "info [ \"URL:    http://www.mccode.org/\"\n"
-      "       \"Editor: %USR\"\n"
-      "       \"Creator:%SRC simulation (" MCCODE_STRING ")\"\n"
-      "       \"Date:   Simulation started (%DATL) %DAT\"\n"
-      "       \"File:   %FIL\" ]\n}\n"
-      "Background { skyAngle [ 1.57 1.57] skyColor [0 0 1, 1 1 1, 0.1 0 0] }\n",
-    "# EndDate:%DAT\n",
-    "# begin %TYP %PAR\n",
-    "# end %TYP %PAR\n",
-    "%PRE%SEC.%NAM= '%VAL'\n",
-    "# The Proto that contains data values and objects to plot these\n"
-      "PROTO I_ERR_N_%VPA [\n"
-      "# the PROTO parameters\n"
-      "  field MFFloat Data [ ]\n"
-      "  field MFFloat Errors [ ]\n"
-      "  field MFFloat Ncounts [ ]\n"
-      "] { # The plotting objects/methods in the Proto\n"
-      "  # draw a small sphere at the origin\n"
-      "  DEF Data_%VPA Group {\n"
-      "  children [\n"
-      "    DEF CoordinateOrigin Group {\n"
-      "      children [\n"
-      "        Transform { translation  0 0 0 }\n"
-      "        Shape { \n"
-      "          appearance Appearance { \n"
-      "            material Material {\n"
-      "              diffuseColor 1.0 1.0 0.0\n"
-      "              transparency 0.5 } }\n"
-      "          geometry Sphere { radius .01 } \n"
-      "    } ] }\n"
-      "    # defintion of the arrow allong Y axis\n"
-      "    DEF ARROW Group {\n"
-      "      children [\n"
-      "        Transform {\n"
-      "          translation 0 0.5 0\n"
-      "          children [\n"
-      "            Shape {\n"
-      "              appearance DEF ARROW_APPEARANCE Appearance {\n"
-      "                material Material {\n"
-      "                  diffuseColor .3 .3 1\n"
-      "                  emissiveColor .1 .1 .33\n"
-      "                }\n"
-      "              }\n"
-      "              geometry Cylinder {\n"
-      "                bottom FALSE\n"
-      "                radius .005\n"
-      "                height 1\n"
-      "                top FALSE\n"
-      "        } } ] }\n"
-      "        Transform {\n"
-      "          translation 0 1 0\n"
-      "          children [\n"
-      "            DEF ARROW_POINTER Shape {\n"
-      "              geometry Cone {\n"
-      "                bottomRadius .05\n"
-      "                height .1\n"
-      "              }\n"
-      "              appearance USE ARROW_APPEARANCE\n"
-      "    } ] } ] }\n"
-      "    # the arrow along X axis\n"
-      "    Transform {\n"
-      "      translation 0 0 0\n"
-      "      rotation 1 0 0 1.57\n"
-      "      children [\n"
-      "        Group {\n"
-      "          children [ \n"
-      "            USE ARROW\n"
-      "    ] } ] }\n"
-      "    # the arrow along Z axis\n"
-      "    Transform {\n"
-      "      translation 0 0 0\n"
-      "      rotation 0 0 1 -1.57\n"
-      "      children [\n"
-      "        Group {\n"
-      "          children [ \n"
-      "            USE ARROW\n"
-      "    ] } ] }\n"
-      "    # the Y label (which is vertical)\n"
-      "    DEF Y_Label Group {\n"
-      "      children [\n"
-      "        Transform {\n"
-      "          translation 0 1 0\n"
-      "          children [\n"
-      "            Billboard {\n"
-      "              children [\n"
-      "                Shape {\n"
-      "                  appearance DEF LABEL_APPEARANCE Appearance {\n"
-      "                    material Material {\n"
-      "                      diffuseColor 1 1 .3\n"
-      "                      emissiveColor .33 .33 .1\n"
-      "                    } }\n"
-      "                  geometry Text { \n"
-      "                    string [ \"%ZVAR: %ZLA\", \"%ZMIN:%ZMAX - %PDIM points\" ] \n"
-      "                    fontStyle FontStyle {  size .2 }\n"
-      "    } } ] } ] } ] }\n"
-      "    # the X label\n"
-      "    DEF X_Label Group {\n"
-      "      children [\n"
-      "        Transform {\n"
-      "          translation 1 0 0\n"
-      "          children [\n"
-      "            Billboard {\n"
-      "              children [\n"
-      "                Shape {\n"
-      "                  appearance DEF LABEL_APPEARANCE Appearance {\n"
-      "                    material Material {\n"
-      "                      diffuseColor 1 1 .3\n"
-      "                      emissiveColor .33 .33 .1\n"
-      "                    } }\n"
-      "                  geometry Text { \n"
-      "                    string [ \"%XVAR: %XLA\", \"%XMIN:%XMAX - %MDIM points\" ] \n"
-      "                    fontStyle FontStyle {  size .2 }\n"
-      "    } } ] } ] } ] }\n"
-      "    # the Z label\n"
-      "    DEF Z_Label Group {\n"
-      "      children [\n"
-      "        Transform {\n"
-      "          translation 0 0 1\n"
-      "          children [\n"
-      "            Billboard {\n"
-      "              children [\n"
-      "                Shape {\n"
-      "                  appearance DEF LABEL_APPEARANCE Appearance {\n"
-      "                    material Material {\n"
-      "                      diffuseColor 1 1 .3\n"
-      "                      emissiveColor .33 .33 .1\n"
-      "                    } }\n"
-      "                  geometry Text { \n"
-      "                    string [ \"%YVAR: %YLA\", \"%YMIN:%YMAX - %NDIM points\" ] \n"
-      "                    fontStyle FontStyle {  size .2 }\n"
-      "    } } ] } ] } ] }\n"
-      "    # The text information (header data )\n"
-      "    DEF Header Group {\n"
-      "      children [\n"
-      "        Transform {\n"
-      "          translation 0 2 0\n"
-      "          children [\n"
-      "            Billboard {\n"
-      "              children [\n"
-      "                Shape {\n"
-      "                  appearance Appearance {\n"
-      "                    material Material { \n"
-      "                      diffuseColor .9 0 0\n"
-      "                      emissiveColor .9 0 0 }\n"
-      "                  }\n"
-      "                  geometry Text {\n"
-      "                    string [ \"%PAR/%FIL\",\"%TITL\" ]\n"
-      "                    fontStyle FontStyle {\n"
-      "                        style \"BOLD\"\n"
-      "                        size .2\n"
-      "    } } } ] } ] } ] }\n"
-      "    # The Data plot\n"
-      "    DEF MonitorData Group {\n"
-      "      children [\n"
-      "        DEF TransformData Transform {\n"
-      "          children [\n"
-      "            Shape {\n"
-      "              appearance Appearance {\n"
-      "                material Material { emissiveColor 0 0.2 0 }\n"
-      "              }\n"
-      "              geometry ElevationGrid {\n"
-      "                xDimension  %MDIM\n"
-      "                zDimension  %NDIM\n"
-      "                xSpacing    1\n"
-      "                zSpacing    1\n"
-      "                solid       FALSE\n"
-      "                height IS Data\n"
-      "    } } ] } ] }\n"
-      "    # The VRMLScript that redimension x and z axis within 0:1\n"
-      "    # and re-scale data within 0:1\n"
-      "    DEF GetScale Script {\n"
-      "      eventOut SFVec3f scale_vect\n"
-      "      url \"javascript: \n"
-      "        function initialize( ) {\n"
-      "          scale_vect = new SFVec3f(1.0/%MDIM, 1.0/Math.abs(%ZMAX-%ZMIN), 1.0/%NDIM); }\" }\n"
-      "  ] }\n"
-      "ROUTE GetScale.scale_vect TO TransformData.scale\n} # end of PROTO\n"
-      "# now we call the proto with Data values\n"
-      "I_ERR_N_%VPA {\nData [\n",
-    "] # End of Data\n",
-    "Errors [\n",
-    "] # End of Errors\n",
-    "Ncounts [\n",
-    "] # End of Ncounts\n}" },
-    { "Python", "py",
-    "from numpy import array\ndef %VPA(p):\n"
-      "  '''\n  %PAR (%FIL) procedure generated from McStas on %DAT\n\n"
-      "  McStas simulation %SRC: %FIL\n"
-      "  import data using python> s=%VPA(p); with p=0/1 for no plot/plot\n  '''\n"
-      "  %VPA={'Format':'%FMT','URL':'http://www.mccode.org',\\\n"
-      "  'Editor':'%USR',\\\n"
-      "  'Creator':'%SRC " MCCODE_STRING " [www.mccode.org]',\\\n"
-      "  'Date':%DATL,\\\n"
-      "  'File':'%FIL'}\n",
-    "  %VPA['EndDate']=%DATL\nreturn %VPA\n",
-    "  # Section Section %TYP [%NAM] (level %LVL)\n"
-      "  %VNA['class'] = '%TYP'\n",
-    "  %VPA['%VNA'] = %VNA\n  del %VNA\n",
-    "  %SEC['%NAM'] = '%VAL'\n",
-    "  %VPA['func'] ='%VPA'\n  %VPA['data'] = [ ",
-    "  ] # end of data\n",
-    "  %VPA['errors'] = [ ",
-    "  ] # end of errors\n",
-    "  %VPA['ncount'] = [ ",
-    "  ] # end of ncount\n",
-    }
-#ifdef USE_NEXUS
-    ,
-    { "NeXus", "nxs",
-    "%PREFormat: %FMT file. Use hdfview to view.\n"
-      "%PREURL:    http://www.mccode.org/\n"
-      "%PREEditor: %USR\n"
-      "%PRECreator:%SRC simulation (" MCCODE_STRING ")\n"
-      "%PREDate:   Simulation started (%DATL) %DAT\n"
-      "%PREFile:   %FIL\n",
-    "%PREEndDate:%DAT\n",
-    "%PREbegin %TYP\n",
-    "%PREend %TYP\n",
-    "%PRE%NAM: %VAL\n",
-    "", "",
-    "%PREErrors [%PAR/%FIL]: \n", "",
-    "%PREEvents [%PAR/%FIL]: \n", "" }
-#endif
-};
 
 /*******************************************************************************
 * mcfull_file: allocates a full file name=mcdirname+file. Catenate extension if missing.
@@ -1063,635 +422,204 @@ char *mcfull_file(char *name, char *ext)
 
 /*******************************************************************************
 * mcnew_file: opens a new file within mcdirname if non NULL
-*             if mode is non 0, then mode is used, else mode is 'w'
+*             the file is opened in "a" (append, create if does not exist)
+*             the extension 'ext' is added if the file name does not include one.
+*             the last argument is set to 0 if file did not exist, else to 1.
 *******************************************************************************/
-FILE *mcnew_file(char *name, char *ext, char *mode)
+FILE *mcnew_file(char *name, char *ext, int *exists)
 {
   char *mem;
-  FILE *file;
+  FILE *file=NULL;
 
   if (!name || strlen(name) == 0 || mcdisable_output_files) return(NULL);
-
-  mem = mcfull_file(name, ext);
-  file = fopen(mem, (mode ? mode : "w"));
+  
+  mem  = mcfull_file(name, ext); /* create mcdirname/name.ext */
+  
+  /* check for existence */
+  file = fopen(mem, "r"); /* for reading -> fails if does not exist */
+  if (file) {
+    fclose(file);
+    *exists=1;
+  } else
+    *exists=0;
+  
+  /* open the file for writing/appending */
+#ifdef USE_NEXUS
+  if (strcasestr(mcformat, "NeXus")) {
+    /* NXhandle nxhandle is defined in the .h with USE_NEXUS */
+    NXaccess mode = (*exists ? NXACC_CREATE5 | NXACC_RDWR : NXACC_CREATE5);
+      
+    if (NXopen(mem, mode, &nxhandle) != NX_OK)
+      file = NULL;
+    else
+      file = (FILE*)&nxhandle; /* to make it non NULL */
+  } else
+#endif
+    file = fopen(mem, "a+"); 
+    
   if(!file)
-    fprintf(stderr, "Warning: could not open output file '%s' in mode '%s' (mcnew_file)\n", mem, mode);
-  else {
-    if (!mcopenedfiles ||
-        (mcopenedfiles && mcopenedfiles_size <= strlen(mcopenedfiles)+strlen(mem))) {
-      mcopenedfiles_size+=CHAR_BUF_LENGTH;
-      if (!mcopenedfiles || !strlen(mcopenedfiles))
-        mcopenedfiles = calloc(1, mcopenedfiles_size);
-      else
-        mcopenedfiles = realloc(mcopenedfiles, mcopenedfiles_size);
-    }
-    strcat(mcopenedfiles, " ");
-    strcat(mcopenedfiles, mem);
-  }
+    fprintf(stderr, "Warning: could not open output file '%s' for %s (mcnew_file)\n", 
+      mem, *exists ? "append" : "create");
   free(mem);
 
   return file;
 } /* mcnew_file */
 
 /*******************************************************************************
-* str_rep: Replaces a token by an other (of SAME length) in a string
-* This function modifies 'string'
+* mcdetector_statistics: compute detector statistics, error bars, [x I I_err N] 1D
+* RETURN:            updated detector structure
+* Used by: mcdetector_import
 *******************************************************************************/
-char *str_rep(char *string, char *from, char *to)
+MCDETECTOR mcdetector_statistics(
+  MCDETECTOR detector)
 {
-  char *p;
 
-  if (!string || !strlen(string)) return(string);
-  if (strlen(from) != strlen(to)) return(string);
+  if (!detector.p1 || !detector.m || !detector.filename)
+    return(detector);
+  
+  /* compute statistics and update MCDETECTOR structure ===================== */
+  double sum_z  = 0, min_z  = 0, max_z  = 0;
+  double fmon_x =0,  smon_x = 0, fmon_y =0, smon_y=0, mean_z=0;
+  double Nsum=0, P2sum=0;
 
-  p   = string;
+  double sum_xz = 0, sum_yz = 0, sum_x = 0, sum_y = 0, sum_x2z = 0, sum_y2z = 0;
+  int    i,j;
+  char   hasnan=0, hasinf=0;
+  char   israw = (strcasestr(detector.format," raw"));
+  double *this_p1=NULL; /* new 1D McCode array [x I E N]. Freed after writing data */
 
-  while (( p = strstr(p, from) ) != NULL) {
-    long index;
-    for (index=0; index<strlen(to); index++) p[index]=to[index];
+  /* if McCode/PGPLOT and rank==1 we create a new m*4 data block=[x I E N] */
+  if (detector.rank == 1 && strcasestr(detector.format,"McCode")) {
+    this_p1 = (double *)calloc(detector.m*detector.n*detector.p*4, sizeof(double));
+    if (!this_p1)
+      exit(-fprintf(stderr, "Error: Out of memory creating %li 1D " MCCODE_STRING " data set for file '%s' (mcdetector_import)\n",
+        detector.m*detector.n*detector.p*4*sizeof(double*), detector.filename));
   }
-  return(string);
-} /* str_rep */
 
-#define VALID_NAME_LENGTH 64
-/*******************************************************************************
-* mcvalid_name: makes a valid string for variable names.
-*   copy 'original' into 'valid', replacing invalid characters by '_'
-*   char arrays must be pre-allocated. n can be 0, or the maximum number of
-*   chars to be copied/checked
-*******************************************************************************/
-static char *mcvalid_name(char *valid, char *original, int n)
-{
-  long i;
-
-
-  if (original == NULL || strlen(original) == 0)
-  { strcpy(valid, "noname"); return(valid); }
-  if (n <= 0) n = strlen(valid);
-
-  if (n > strlen(original)) n = strlen(original);
-  else original += strlen(original)-n;
-  strncpy(valid, original, n);
-
-  for (i=0; i < n; i++)
+  max_z = min_z = detector.p1[0];
+  
+  /* compute sum and moments (not for lists) */
+  if (!strcasestr(detector.format,"list") && detector.m)
+  for(j = 0; j < detector.n*detector.p; j++)
   {
-    if ( (valid[i] > 122)
-      || (valid[i] < 32)
-      || (strchr("!\"#$%&'()*+,-.:;<=>?@[\\]^`/ \n\r\t", valid[i]) != NULL) )
+    for(i = 0; i < detector.m; i++)
     {
-      if (i) valid[i] = '_'; else valid[i] = 'm';
-    }
-  }
-  valid[i] = '\0';
+      double x,y,z;
+      double N, E;
+      long   index= !detector.istransposed ? i*detector.n*detector.p + j : i+j*detector.m;
+      char   hasnaninf=0;
 
-  return(valid);
-} /* mcvalid_name */
-
-/*******************************************************************************
-* pfprintf: just as fprintf with positional arguments %N$t,
-*   but with (char *)fmt_args being the list of arg type 't'.
-*   Needed as the vfprintf is not correctly handled on some platforms.
-*   1- look for the maximum %d$ field in fmt
-*   2- look for all %d$ fields up to max in fmt and set their type (next alpha)
-*   3- retrieve va_arg up to max, and save pointer to arg in local arg array
-*   4- use strchr to split around '%' chars, until all pieces are written
-*   returns number of arguments written.
-* Warning: this function is restricted to only handles types t=s,g,i,li
-*          without additional field formating, e.g. %N$t
-*******************************************************************************/
-static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
-{
-  #define MyNL_ARGMAX 50
-  char  *fmt_pos;
-
-  char *arg_char[MyNL_ARGMAX];
-  int   arg_int[MyNL_ARGMAX];
-  long  arg_long[MyNL_ARGMAX];
-  double arg_double[MyNL_ARGMAX];
-
-  char *arg_posB[MyNL_ARGMAX];  /* position of '%' */
-  char *arg_posE[MyNL_ARGMAX];  /* position of '$' */
-  char *arg_posT[MyNL_ARGMAX];  /* position of type */
-
-  int   arg_num[MyNL_ARGMAX];   /* number of argument (between % and $) */
-  int   this_arg=0;
-  int   arg_max=0;
-  va_list ap;
-
-  if (!f || !fmt_args || !fmt) return(-1);
-  for (this_arg=0; this_arg<MyNL_ARGMAX;  arg_num[this_arg++] =0); this_arg = 0;
-  fmt_pos = fmt;
-  while(1)  /* analyse the format string 'fmt' */
-  {
-    char *tmp;
-
-    arg_posB[this_arg] = (char *)strchr(fmt_pos, '%');
-    tmp = arg_posB[this_arg];
-    if (tmp)	/* found a percent */
-    {
-      char  printf_formats[]="dliouxXeEfgGcs\0";
-      arg_posE[this_arg] = (char *)strchr(tmp, '$');
-      if (arg_posE[this_arg] && isdigit(tmp[1]))
-      { /* found a dollar following a percent  and a digit after percent */
-        char  this_arg_chr[10];
-
-
-        /* extract positional argument index %*$ in fmt */
-        strncpy(this_arg_chr, arg_posB[this_arg]+1, arg_posE[this_arg]-arg_posB[this_arg]-1 < 10 ? arg_posE[this_arg]-arg_posB[this_arg]-1 : 9);
-        this_arg_chr[arg_posE[this_arg]-arg_posB[this_arg]-1] = '\0';
-        arg_num[this_arg] = atoi(this_arg_chr);
-        if (arg_num[this_arg] <=0 || arg_num[this_arg] >= MyNL_ARGMAX)
-          return(-fprintf(stderr,"pfprintf: invalid positional argument number (%i is <=0 or >=%i) from '%s'.\n", arg_num[this_arg], MyNL_ARGMAX, this_arg_chr));
-        /* get type of positional argument: follows '%' -> arg_posE[this_arg]+1 */
-        fmt_pos = arg_posE[this_arg]+1;
-        fmt_pos[0] = tolower(fmt_pos[0]);
-        if (!strchr(printf_formats, fmt_pos[0]))
-          return(-fprintf(stderr,"pfprintf: invalid positional argument type (%c != expected %c).\n", fmt_pos[0], fmt_args[arg_num[this_arg]-1]));
-        if (fmt_pos[0] == 'l' && (fmt_pos[1] == 'i' || fmt_pos[1] == 'd')) fmt_pos++;
-        arg_posT[this_arg] = fmt_pos;
-        /* get next argument... */
-        this_arg++;
+      if (detector.m) 
+        x = detector.xmin + (i + 0.5)/detector.m*(detector.xmax - detector.xmin); 
+      else x = 0;
+      if (detector.n && detector.p) 
+        y = detector.ymin + (j + 0.5)/detector.n/detector.p*(detector.ymax - detector.ymin); 
+      else y = 0;
+      z = detector.p1[index];
+      N = detector.p0 ? detector.p0[index] : 1;
+      E = detector.p2 ? detector.p2[index] : 0;
+      if (detector.p2 && !israw) 
+        detector.p2[index] = (*mcestimate_error_p)(detector.p0[index],detector.p1[index],detector.p2[index]); /* set sigma */
+      
+      if (detector.rank == 1 && this_p1 && strcasestr(detector.format,"McCode")) {
+        /* fill-in 1D McCode array [x I E N] */
+        this_p1[index*4]   = x;
+        this_p1[index*4+1] = z;
+        this_p1[index*4+2] = detector.p2 ? detector.p2[index] : 0;
+        this_p1[index*4+3] = N;
       }
-      else
-      { /* no dollar or no digit */
-        if  (tmp[1] == '%') {
-          fmt_pos = arg_posB[this_arg]+2;  /* found %% */
-        } else if (strchr(printf_formats,tmp[1])) {
-          fmt_pos = arg_posB[this_arg]+1;  /* found %s */
-        } else {
-          return(-fprintf(stderr,"pfprintf: must use only positional arguments (%s).\n", arg_posB[this_arg]));
-        }
+      
+      if (isnan(z) || isnan(E) || isnan(N)) hasnaninf=hasnan=1;
+      if (isinf(z) || isinf(E) || isinf(N)) hasnaninf=hasinf=1;
+
+      /* compute stats integrals */
+      if (!hasnaninf) {
+        sum_xz += x*z;
+        sum_yz += y*z;
+        sum_x  += x;
+        sum_y  += y;
+        sum_z  += z;
+        sum_x2z += x*x*z;
+        sum_y2z += y*y*z;
+        if (z > max_z) max_z = z;
+        if (z < min_z) min_z = z;
+
+        Nsum += N;
+        P2sum += E;
       }
-    } else
-      break;  /* no more % argument */
-  }
-  arg_max = this_arg;
-  /* get arguments from va_arg list, according to their type */
-  va_start(ap, fmt_args);
-  for (this_arg=0; this_arg<strlen(fmt_args); this_arg++)
+
+    }
+  } /* for j */
+
+  /* compute 1st and 2nd moments. For lists, sum_z=0 so this is skipped. */
+  if (sum_z && detector.n*detector.m*detector.p)
   {
-
-    switch(tolower(fmt_args[this_arg]))
-    {
-      case 's':                       /* string */
-              arg_char[this_arg] = va_arg(ap, char *);
-              break;
-      case 'd':
-      case 'i':
-      case 'c':                      /* int */
-              arg_int[this_arg] = va_arg(ap, int);
-              break;
-      case 'l':                       /* long int */
-              arg_long[this_arg] = va_arg(ap, long int);
-              break;
-      case 'f':
-      case 'g':
-      case 'e':                      /* double */
-              arg_double[this_arg] = va_arg(ap, double);
-              break;
-      default: fprintf(stderr,"pfprintf: argument type is not implemented (arg %%%i$ type %c).\n", this_arg+1, fmt_args[this_arg]);
-    }
+    fmon_x = sum_xz/sum_z;
+    fmon_y = sum_yz/sum_z;
+    smon_x = sum_x2z/sum_z-fmon_x*fmon_x; smon_x = smon_x > 0 ? sqrt(smon_x) : 0;
+    smon_y = sum_y2z/sum_z-fmon_y*fmon_y; smon_y = smon_y > 0 ? sqrt(smon_y) : 0;
+    mean_z = sum_z/detector.n/detector.m/detector.p;
   }
-  va_end(ap);
-  /* split fmt string into bits containing only 1 argument */
-  fmt_pos = fmt;
-  for (this_arg=0; this_arg<arg_max; this_arg++)
-  {
-    char *fmt_bit;
-    int   arg_n;
+  /* store statistics into detector */
+  detector.intensity = sum_z;
+  detector.error     = Nsum ? (*mcestimate_error_p)(Nsum, sum_z, P2sum) : 0;
+  detector.events    = Nsum;
+  detector.min       = min_z;
+  detector.max       = max_z;
+  detector.mean      = mean_z;
+  detector.centerX   = fmon_x;
+  detector.halfwidthX= smon_x;
+  detector.centerY   = fmon_y;
+  detector.halfwidthY= smon_y;
 
-    if (arg_posB[this_arg]-fmt_pos>0)
-    {
-      fmt_bit = (char*)malloc(arg_posB[this_arg]-fmt_pos+10);
-      if (!fmt_bit) return(-fprintf(stderr,"pfprintf: not enough memory.\n"));
-      strncpy(fmt_bit, fmt_pos, arg_posB[this_arg]-fmt_pos);
-      fmt_bit[arg_posB[this_arg]-fmt_pos] = '\0';
-      fprintf(f, "%s", fmt_bit); /* fmt part without argument */
-    } else
-    {
-      fmt_bit = (char*)malloc(10);
-      if (!fmt_bit) return(-fprintf(stderr,"pfprintf: not enough memory.\n"));
-    }
-    arg_n = arg_num[this_arg]-1; /* must be >= 0 */
-    strcpy(fmt_bit, "%");
-    strncat(fmt_bit, arg_posE[this_arg]+1, arg_posT[this_arg]-arg_posE[this_arg]);
-    fmt_bit[arg_posT[this_arg]-arg_posE[this_arg]+1] = '\0';
-
-    switch(tolower(fmt_args[arg_n]))
-    {
-      case 's': fprintf(f, fmt_bit, arg_char[arg_n]);
-                break;
-      case 'd':
-      case 'i':
-      case 'c':                      /* int */
-              fprintf(f, fmt_bit, arg_int[arg_n]);
-              break;
-      case 'l':                       /* long */
-              fprintf(f, fmt_bit, arg_long[arg_n]);
-              break;
-      case 'f':
-      case 'g':
-      case 'e':                       /* double */
-              fprintf(f, fmt_bit, arg_double[arg_n]);
-              break;
-    }
-    fmt_pos = arg_posT[this_arg]+1;
-    if (this_arg == arg_max-1)
-    { /* add eventual leading characters for last parameter */
-      if (fmt_pos < fmt+strlen(fmt))
-        fprintf(f, "%s", fmt_pos);
-    }
-    if (fmt_bit) free(fmt_bit);
-
-  }
-  return(this_arg);
-} /* pfprintf */
-
-/*******************************************************************************
-* mcinfo_header: output header/footer tags/info using specific file format.
-*   the 'part' may be 'header' or 'footer' depending on part to write.
-* RETURN: negative==error, positive=all went fine
-* Used by: mcsiminfo_init, mcsiminfo_close
-*******************************************************************************/
-static int mcinfo_header(MCDETECTOR detector, char *part)
-{
-  char*HeadFoot;              /* format string */
-  long date_l;                /* date as a long number */
-  char date[CHAR_BUF_LENGTH]; /* date as a string */
-  char valid_parent[VALID_NAME_LENGTH];     /* who generates that: the simulation or mcstas */
-
-  if (mcdisable_output_files) return(-1);
-  if (!detector.file_handle && !strstr(detector.format.Name,"NeXus")) return(-1);
-  if (strcmp(part,"header") && strstr(detector.format.Name, "no header")) return (-2);
-  if (strcmp(part,"footer") && strstr(detector.format.Name, "no footer")) return (-3);
-
-  /* initiate date and format string ======================================== */
-
-  date_l = detector.date_l;   /* use current write time (from import) by default */
-  strncpy(date, detector.date, CHAR_BUF_LENGTH);
-
-  if (part && !strcmp(part,"footer"))
-    HeadFoot = detector.format.Footer; /* footer has always detector (current) write time */
-  else {
-    HeadFoot = detector.format.Header; /* SIM header has simulation start time */
-    if (detector.file_handle == mcsiminfo_file
-        && !strcmp(detector.filename, mcsiminfo_name)) {
-      date_l = mcstartdate;
-      time_t t = (time_t)date_l;
-      strncpy(date, ctime(&t), CHAR_BUF_LENGTH);
-      if (strlen(date)) date[strlen(date)-1] = '\0';
-    }
+  /* if McCode/PGPLOT and rank==1 replace p1 with new m*4 1D McCode and clear others */
+  if (detector.rank == 1 && this_p1 && strcasestr(detector.format,"McCode")) {
+    
+    detector.p1 = this_p1;
+    detector.n  = detector.m; detector.m  = 4;
+    detector.p0 = detector.p2 = NULL;
+    detector.istransposed = 1;
   }
 
-  mcvalid_name(valid_parent,
-    strlen(detector.filename) && detector.file_handle!=mcsiminfo_file ?
-      detector.filename : detector.simulation, VALID_NAME_LENGTH);
-
-  /* output header ========================================================== */
-
-#ifdef USE_NEXUS
-  if (strstr(detector.format.Name, "NeXus")) {
-    if(mcnxinfo_header(mcnxHandle, part,
-      detector.prefix,                          /* %1$s  PRE  */
-      detector.instrument,                      /* %2$s  SRC  */
-      strlen(detector.filename) ?
-        detector.filename: detector.simulation, /* %3$s  FIL  */
-      detector.format.Name,                     /* %4$s  FMT  */
-      detector.date,                            /* %5$s  DAT  */
-      detector.user,                            /* %6$s  USR  */
-      valid_parent,                             /* %7$s  PAR  */
-      detector.date_l) == NX_ERROR) {           /* %8$li DATL */
-        fprintf(stderr, "Error: writing NeXus header file %s (mcinfo_header)\n",
-          strlen(detector.filename) ?
-            detector.filename: detector.simulation);
-        /* close information data set opened by mcnxfile_section */
-      return(-1);
-    }
-    else return(1);
-  }
+  if (detector.n*detector.m*detector.p > 1)
+    snprintf(detector.signal, CHAR_BUF_LENGTH, 
+      "Min=%g; Max=%g; Mean=%g;", detector.min, detector.max, detector.mean);
   else
-#endif
-  return(pfprintf(detector.file_handle, HeadFoot, "sssssssl",
-    detector.prefix,                          /* %1$s  PRE  */
-    detector.instrument,                      /* %2$s  SRC  */
-    strlen(detector.filename) ?
-      detector.filename: detector.simulation, /* %3$s  FIL  */
-    detector.format.Name,                     /* %4$s  FMT  */
-    detector.date,                            /* %5$s  DAT  */
-    detector.user,                            /* %6$s  USR  */
-    valid_parent,                             /* %7$s  PAR  */
-    detector.date_l));                        /* %8$li DATL */
-} /* mcinfo_header */
+    strcpy(detector.signal, "None");
+  snprintf(detector.values, CHAR_BUF_LENGTH,
+    "%g %g %g", detector.intensity, detector.error, detector.events);
 
-/*******************************************************************************
-* mcinfo_tag: output tag/value using specific file format.
-*   outputs a tag/value pair e.g. section.name=value
-* RETURN: negative==error, positive=all went fine
-* Used by: mcfile_section, mcinfo_instrument, mcinfo_simulation, mcinfo_data
-*******************************************************************************/
-static int mcinfo_tag(MCDETECTOR detector, char *section, char *name, char *value)
-{
-  char valid_section[VALID_NAME_LENGTH];
-  char valid_name[VALID_NAME_LENGTH];
-  int i;
-
-  if (!detector.file_handle && !strstr(detector.format.Name,"NeXus")) return(-1);
-  if (!strlen(detector.format.AssignTag)
-   || !name || !strlen(name)
-   || mcdisable_output_files) return(-1);
-
-  mcvalid_name(valid_section, section, VALID_NAME_LENGTH);
-  mcvalid_name(valid_name,    name,    VALID_NAME_LENGTH);
-
-  /* remove quote chars in values =========================================== */
-  if (strstr(detector.format.Name, "Scilab")
-   || strstr(detector.format.Name, "Matlab")
-   || strstr(detector.format.Name, "IDL"))
-    for(i = 0; i < strlen(value); i++) {
-      if (value[i] == '"' || value[i] == '\'')   value[i] = ' ';
-      if (value[i] == '\n'  || value[i] == '\r') value[i] = ';';
-    }
-
-  /* output tag ============================================================= */
-#ifdef USE_NEXUS
-  if (strstr(detector.format.Name, "NeXus")) {
-    if(mcnxinfo_tag(mcnxHandle, detector.prefix, valid_section, name, value) == NX_ERROR) {
-      fprintf(stderr, "Error: writing NeXus tag file %s/%s=%s (mcinfo_tag)\n", section, name, value);
-      return(-1);
-    } else return(1); }
-  else
-#endif
-  return(pfprintf(detector.file_handle, detector.format.AssignTag, "ssss",
-    detector.prefix,  /* %1$s PRE */
-    valid_section,    /* %2$s SEC */
-    valid_name,       /* %3$s NAM */
-    value));          /* %4$s VAL */
-} /* mcinfo_tag */
-
-/*******************************************************************************
-* mcfile_section: output section start/end using specific file format.
-*   'part' may be 'begin' or 'end' depending on section part to write
-*   'type' may be e.g. 'instrument','simulation','component','data'
-*   the prefix is automatically indented/un-indented
-* RETURN: detector structure with updated prefix (indentation)
-* Used by: mcsiminfo_init, mcsiminfo_close, mcinfo_simulation, mcdetector_write_sim
-*******************************************************************************/
-MCDETECTOR mcfile_section(MCDETECTOR detector, char *part, char *parent, char *section, char *type, int level)
-{
-  char *Section;
-  char valid_section[VALID_NAME_LENGTH];
-  char valid_parent[VALID_NAME_LENGTH];
-
-  if((!detector.file_handle && !strstr(detector.format.Name,"NeXus"))
-   || !section || !strlen(section)
-   || mcdisable_output_files) return(detector);
-  if (strcmp(part,"begin") && strstr(detector.format.Name, "no header")) return (detector);
-  if (strcmp(part,"end")   && strstr(detector.format.Name, "no footer")) return (detector);
-
-  /* initiate format string and handle prefix-- ============================= */
-
-  if (part && !strcmp(part,"end")) Section = detector.format.EndSection;
-  else                             Section = detector.format.BeginSection;
-
-  if (!strlen(Section)) return (detector);
-
-  mcvalid_name(valid_section, section, VALID_NAME_LENGTH);
-  if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, VALID_NAME_LENGTH);
-  else                                strcpy(valid_parent, "root");
-
-  if (!strcmp(part,"end") && strlen(detector.prefix) >= 2)
-    detector.prefix[strlen(detector.prefix)-2]='\0'; /* un-indent prefix */
-
-  /* output section ========================================================= */
-
-#ifdef USE_NEXUS
-  if (strstr(detector.format.Name, "NeXus")) {
-    if (mcnxfile_section(mcnxHandle,part,
-      detector.prefix, type, section, valid_section, parent, valid_parent, level) == NX_ERROR) {
-      fprintf(stderr, "Error: writing NeXus section %s/%s=NX%s (mcfile_section)\n", parent, section, type);
-      return(detector);
-    }
+  switch (detector.rank) {
+    case 1:  snprintf(detector.statistics, CHAR_BUF_LENGTH, "X0=%g; dX=%g;",
+      detector.centerX, detector.halfwidthX); break;
+    case 2:
+    case 3:  snprintf(detector.statistics, CHAR_BUF_LENGTH, "X0=%g; dX=%g; Y0=%g; dY=%g;",
+      detector.centerX, detector.halfwidthX, detector.centerY, detector.halfwidthY);
+      break;
+    default: strcpy(detector.statistics, "None");
   }
-  else
-#endif
-  pfprintf(detector.file_handle, Section, "ssssssi",
-    detector.prefix,/* %1$s  PRE  */
-    type,           /* %2$s  TYP  */
-    section,        /* %3$s  NAM  */
-    valid_section,  /* %4$s  VNA  */
-    parent,         /* %5$s  PAR  */
-    valid_parent,   /* %6$s  VPA  */
-    level);         /* %7$i  LVL */
-
-  /* handle prefix++ and write section start ID ============================= */
-
-  if (!strcmp(part,"begin"))
-  {
-    if (strlen(detector.prefix) < CHAR_BUF_LENGTH-2) strcat(detector.prefix,"  ");  /* indent prefix */
-    if (section && strlen(section))
-      mcinfo_tag(detector, section, "name",   section);
-    if (parent && strlen(parent))
-      mcinfo_tag(detector, section, "parent", parent);
-  }
-
+  
+  if (hasnan)
+    printf("WARNING: Nan detected in component/file %s %s\n", 
+      detector.component, strlen(detector.filename) ? detector.filename : "");
+  if (hasinf)
+    printf("WARNING: Inf detected in component/file %s %s\n", 
+      detector.component, strlen(detector.filename) ? detector.filename : "");
+  
   return(detector);
-} /* mcfile_section */
-
-/*******************************************************************************
-* mcinfo_instrument: output instrument tags/info. Only written to SIM file
-* RETURN: negative==error, positive=all went fine
-* Used by: mcsiminfo_init, mcdetector_write_sim
-*******************************************************************************/
-static int mcinfo_instrument(MCDETECTOR detector, char *name)
-{
-  char Parameters[CHAR_BUF_LENGTH] = "";
-  int  i;
-
-  if (!detector.file_handle && !strstr(detector.format.Name,"NeXus")) return(-1);
-  if (!name || !strlen(name)
-   || mcdisable_output_files) return(-1);
-
-  /* create parameter string ================================================ */
-
-  for(i = 0; i < mcnumipar; i++)
-  {
-    char ThisParam[VALID_NAME_LENGTH];
-    if (strlen(mcinputtable[i].name) > VALID_NAME_LENGTH) break;
-    snprintf(ThisParam, VALID_NAME_LENGTH, " %s(%s)", mcinputtable[i].name,
-            (*mcinputtypes[mcinputtable[i].type].parminfo)
-                (mcinputtable[i].name));
-    strcat(Parameters, ThisParam);
-    if (strlen(Parameters) >= CHAR_BUF_LENGTH-VALID_NAME_LENGTH) break;
-  }
-
-  /* output data ============================================================ */
-  mcinfo_tag(detector, name, "Parameters",    Parameters);
-  mcinfo_tag(detector, name, "Source",        mcinstrument_source);
-  mcinfo_tag(detector, name, "Trace_enabled", mctraceenabled ? "yes" : "no");
-  mcinfo_tag(detector, name, "Default_main",  mcdefaultmain ? "yes" : "no");
-  mcinfo_tag(detector, name, "Embedded_runtime",
-#ifdef MC_EMBEDDED_RUNTIME
-         "yes"
-#else
-         "no"
-#endif
-         );
-
-  fflush(NULL);
-
-  return(1);
-} /* mcinfo_instrument */
-
-/*******************************************************************************
-* mcinfo_simulation: output simulation tags/info
-* RETURN: detector structure with updated prefix (indentation)
-* Used by: mcsiminfo_init, mcdetector_write_sim
-*******************************************************************************/
-MCDETECTOR mcinfo_simulation(MCDETECTOR detector, char *instr)
-{
-  int i;
-  char Parameters[CHAR_BUF_LENGTH];
-
-  if (!detector.file_handle && !strstr(detector.format.Name,"NeXus")) return(detector);
-  if (!instr || !strlen(instr)
-   || mcdisable_output_files) return(detector);
-
-  mcinfo_tag(detector, instr, "Ncount",      detector.ncount);
-  mcinfo_tag(detector, instr, "Trace",       mcdotrace ? "yes" : "no");
-  mcinfo_tag(detector, instr, "Gravitation", mcgravitation ? "yes" : "no");
-  snprintf(Parameters, CHAR_BUF_LENGTH, "%ld", mcseed);
-  mcinfo_tag(detector, instr, "Seed", Parameters);
-
-  /* output parameter string ================================================ */
-  if (!strstr(detector.format.Name, "McStas")) {
-#ifdef USE_NEXUS
-    /* close simulation/information */
-    if (strstr(detector.format.Name, "NeXus"))
-    if (NXclosedata(mcnxHandle) == NX_ERROR)
-      fprintf(stderr, "Warning: NeXus: could not close data set simulation/information in %s\n", detector.filename);
-#endif
-    detector = mcfile_section(detector, "begin", instr, "parameters", "parameters", 3);
-  }
-
-  for(i = 0; i < mcnumipar; i++) {
-    if (mcget_run_num() || (mcinputtable[i].val && strlen(mcinputtable[i].val))) {
-      if (mcinputtable[i].par == NULL)
-        strncpy(Parameters, (mcinputtable[i].val ? mcinputtable[i].val : ""), CHAR_BUF_LENGTH);
-      else
-        (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
-      if (strstr(detector.format.Name, "McStas"))
-        fprintf(detector.file_handle, "%sParam: %s=%s\n", detector.prefix, mcinputtable[i].name, Parameters);
-      else
-        mcinfo_tag(detector, "parameters", mcinputtable[i].name, Parameters);
-    }
-  }
-#ifdef USE_NEXUS
-  if (strstr(mcformat.Name, "NeXus")) {
-    /* close information SDS opened with mcfile_section(detector, "parameters") */
-    if (NXclosedata(mcnxHandle) == NX_ERROR)
-      fprintf(stderr, "Warning: NeXus: could not close data set simulation/parameters/information in %s\n", detector.filename);
-    /* in the parameter group, create one SDS per parameter */
-    mcnxfile_parameters(mcnxHandle);
-
-    /* this can not be included in nexus-lib as it requires mcinputtypes which
-      is defined only in mccode-r.c (points to function that are defined here) */
-
-
-    /* re-open the simulation/information dataset */
-    if (NXopendata(mcnxHandle, "information") == NX_ERROR) {
-      fprintf(stderr, "Warning: NeXus: could not re-open 'information' for simulation in %s\n", detector.filename);
-    }
-  }
-#endif
-  if (!strstr(detector.format.Name, "McStas"))
-    detector = mcfile_section(detector, "end", instr, "parameters", "parameters", 3);
-
-  fflush(NULL);
-
-  return(detector);
-} /* mcinfo_simulation */
-
-/*******************************************************************************
-* mcinfo_data: output data tags/info
-*              mcinfo_data(detector, NULL)        writes data info to SIM file
-*              mcinfo_data(detector, "data file") writes info to data file
-* Used by: mcdetector_write_sim, mcdetector_write_data
-*******************************************************************************/
-void mcinfo_data(MCDETECTOR detector, char *filename)
-{
-  char parent[CHAR_BUF_LENGTH];
-
-  if (!detector.m || mcdisable_output_files) return;
-
-  /* access either SIM or Data file */
-  if (!filename) {
-    /* use SIM file which has already be opened with instrument/simulation info */
-    detector.file_handle = mcsiminfo_file;
-    if (strstr(detector.format.Name, "McStas") && strlen(detector.prefix)>1) detector.prefix[0]=' ';
-  } else {
-    if (!detector.file_handle) return;
-  }
-
-  /* parent must be a valid name */
-  mcvalid_name(parent, detector.filename, VALID_NAME_LENGTH);
-
-  /* output data ============================================================ */
-  mcinfo_tag(detector, parent, "type",       detector.type);
-  mcinfo_tag(detector, parent, "Source",     mcinstrument_source);
-  mcinfo_tag(detector, parent, (strstr(detector.format.Name,"McStas") ?
-        "component" : "parent"),             detector.component);
-  mcinfo_tag(detector, parent, "position",   detector.position);
-
-  mcinfo_tag(detector, parent, "title",      detector.title);
-  mcinfo_tag(detector, parent, !mcget_run_num() || mcget_run_num() >= mcget_ncount() ?
-      "Ncount" : "ratio",      detector.ncount);
-
-  if (strlen(detector.filename)) {
-    mcinfo_tag(detector, parent, "filename", detector.filename);
-    mcinfo_tag(detector, parent, "format",   detector.format.Name);
-  }
-
-  mcinfo_tag(detector, parent, "statistics", detector.statistics);
-  mcinfo_tag(detector, parent, strstr(detector.format.Name, "NeXus") ?
-       "Signal" : "signal",                  detector.signal);
-  mcinfo_tag(detector, parent, "values",     detector.values);
-
-  if (detector.rank >= 1 || detector.rank == -1)
-  {
-    mcinfo_tag(detector, parent, (strstr(detector.format.Name," scan ") ?
-          "xvars" : "xvar"),                 detector.xvar);
-    mcinfo_tag(detector, parent, (strstr(detector.format.Name," scan ") ?
-          "yvars" : "yvar"),                 detector.yvar);
-    mcinfo_tag(detector, parent, "xlabel",   detector.xlabel);
-    mcinfo_tag(detector, parent, "ylabel",   detector.ylabel);
-    if (detector.rank > 1 || detector.rank == -1) {
-      mcinfo_tag(detector, parent, "zvar",   detector.zvar);
-      mcinfo_tag(detector, parent, "zlabel", detector.zlabel);
-    }
-  }
-
-  mcinfo_tag(detector, parent, abs(detector.rank)==1 && strstr(detector.format.Name, "McStas") ?
-                    "xlimits" : "xylimits", detector.limits);
-  mcinfo_tag(detector, parent, "variables", detector.rank == -1 ?
-                                            detector.zvar : detector.variables);
-
-   if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
-     mcinfo_tag(detector, parent, "custom",  mcDetectorCustomHeader);
-   }
-
-   fflush(NULL);
-} /* mcinfo_data */
+  
+} /* mcdetector_statistics */
 
 /*******************************************************************************
 * mcdetector_import: build detector structure, merge non-lists from MPI
 *                    compute basic stat, write "Detector:" line
-*                    mcdetector_import(... filename=NULL ...) sets siminfo data
 * RETURN:            detector structure. Invalid data if detector.p1 == NULL
 *                    Invalid detector sets m=0 and filename=""
 *                    Simulation data  sets m=0 and filename=mcsiminfo_name
-* Used by: mcdetector_out_nD public functions, mcdetector_import_sim
+* This function is equivalent to the old 'mcdetector_out', returning a structure
 *******************************************************************************/
-MCDETECTOR mcdetector_import(struct mcformats_struct format,
+MCDETECTOR mcdetector_import(
+  char *format,
   char *component, char *title,
   long m, long n,  long p,
   char *xlabel, char *ylabel, char *zlabel,
@@ -1712,26 +640,18 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   /* make sure we do not have NULL for char fields */
 
   /* these also apply to simfile */
-  strncpy (detector.filename,  filename ? filename : "",    CHAR_BUF_LENGTH);
+  strncpy (detector.filename,  filename ? filename : "",        CHAR_BUF_LENGTH);
+  strncpy (detector.format,    format   ? format   : "MCCODE" , CHAR_BUF_LENGTH);
   /* add extension if missing */
-  if (strlen(detector.filename) && !strchr(detector.filename, '.') && format.Extension)
+  if (strlen(detector.filename) && !strchr(detector.filename, '.'))
   { /* add extension if not in file name already */
-    strcat(detector.filename, ".");
-    strcat(detector.filename, format.Extension);
+    strcat(detector.filename, ".dat");
   }
-  strncpy (detector.component, component ? component : "McStas component", CHAR_BUF_LENGTH);
-  snprintf(detector.simulation, CHAR_BUF_LENGTH, "%s%s%s",
-      mcdirname && strlen(mcdirname) ? mcdirname : ".", MC_PATHSEP_S, mcsiminfo_name);
-  detector.format=format;
-
-  /* set prefix: # for McStas data files, VRML and Python */
-  strcpy(detector.prefix,
-      (strstr(format.Name, "McStas") && (strlen(detector.filename)) ?
-      "# " : ""));
+  strncpy (detector.component, component ? component : MCCODE_STRING " component", CHAR_BUF_LENGTH);
 
   snprintf(detector.instrument, CHAR_BUF_LENGTH, "%s (%s)", mcinstrument_name, mcinstrument_source);
   snprintf(detector.user, CHAR_BUF_LENGTH,      "%s on %s",
-        getenv("USER") ? getenv("USER") : "mcstas",
+        getenv("USER") ? getenv("USER") : MCCODE_NAME,
         getenv("HOST") ? getenv("HOST") : "localhost");
   time(&t);         /* get current write time */
   date_l = (long)t; /* same but as a long */
@@ -1740,30 +660,32 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   detector.date_l = date_l;
 
   if (!mcget_run_num() || mcget_run_num() >= mcget_ncount())
-    snprintf(detector.ncount, CHAR_BUF_LENGTH, "%g", (double)mcget_ncount());
+    snprintf(detector.ncount, CHAR_BUF_LENGTH, "%Li", mcget_ncount()
+#ifdef USE_MPI
+*mpi_node_count
+#endif
+  );
   else
     snprintf(detector.ncount, CHAR_BUF_LENGTH, "%g/%g", (double)mcget_run_num(), (double)mcget_ncount());
 
-  detector.p0         = p0; detector.p0_orig=p0;
-  detector.p1         = p1; detector.p1_orig=p1;
-  detector.p2         = p2; detector.p2_orig=p2;
-  detector.file_handle= filename ? NULL : mcsiminfo_file;
+  detector.p0         = p0;
+  detector.p1         = p1;
+  detector.p2         = p2;
 
-  /* handle transposition */
-  if (!strstr(format.Name, "NeXus")) {
-    if (m<0 || n<0 || p<0)                istransposed = !istransposed;
-    if (strstr(format.Name, "binary"))    istransposed = !istransposed;
-    if (strstr(format.Name, "transpose")) istransposed = !istransposed;
+  /* handle transposition (not for NeXus) */
+  if (!strcasestr(mcformat, "NeXus")) {
+    if (m<0 || n<0 || p<0)             istransposed = !istransposed;
+    if (strstr(detector.format, "transpose")) istransposed = !istransposed;
     if (istransposed) { /* do the swap once for all */
-      long i=m; m=abs(n); n=abs(i); p=abs(p);
+      long i=m; m=n; n=i;
     }
   }
+
   m=abs(m); n=abs(n); p=abs(p); /* make sure dimensions are positive */
   detector.istransposed = istransposed;
 
   /* determine detector rank (dimensionality) */
   if (!m || !n || !p || !p1) detector.rank = 4; /* invalid: exit with m=0 filename="" */
-  else if (strstr(format.Name," scan ")) detector.rank=-1;  /* 1D scan: multiarray */
   else if (m*n*p == 1)       detector.rank = 0; /* 0D */
   else if (n == 1 || m == 1) detector.rank = 1; /* 1D */
   else if (p == 1)           detector.rank = 2; /* 2D */
@@ -1771,29 +693,16 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
 
   /* from rank, set type */
   switch (detector.rank) {
-    case -1: sprintf(detector.type, "multiarray_1d(%ld)", n); p=1; break;
     case 0:  strcpy(detector.type,  "array_0d"); m=n=p=1; break;
-    case 1:  sprintf(detector.type, "array_1d(%ld)", m*n*p); m *= n*p; n=p=1; break;
-    case 2:  sprintf(detector.type, "array_2d(%ld, %ld)", m, n*p); n *= p; p=1; break;
-    case 3:  sprintf(detector.type, "array_3d(%ld, %ld, %ld)", m, n, p); break;
+    case 1:  snprintf(detector.type, CHAR_BUF_LENGTH, "array_1d(%ld)", m*n*p); m *= n*p; n=p=1; break;
+    case 2:  snprintf(detector.type, CHAR_BUF_LENGTH, "array_2d(%ld, %ld)", m, n*p); n *= p; p=1; break;
+    case 3:  snprintf(detector.type, CHAR_BUF_LENGTH, "array_3d(%ld, %ld, %ld)", m, n, p); break;
     default: m=0; strcpy(detector.type, ""); strcpy(detector.filename, "");/* invalid */
   }
 
   detector.m    = m;
   detector.n    = n;
   detector.p    = p;
-
-/* init default values for statistics */
-  detector.intensity  = 0;
-  detector.error      = 0;
-  detector.events     = 0;
-  detector.min        = 0;
-  detector.max        = 0;
-  detector.mean       = 0;
-  detector.centerX    = 0;
-  detector.halfwidthX = 0;
-  detector.centerY    = 0;
-  detector.halfwidthY = 0;
 
   /* these only apply to detector files ===================================== */
 
@@ -1826,21 +735,16 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   detector.ymax = y2;
   detector.zmin = z1;
   detector.zmax = z2;
-  if (abs(detector.rank) == 1 && strstr(format.Name, "McStas"))
+  if (abs(detector.rank) == 1)
     snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g", x1, x2);
   else if (detector.rank == 2)
     snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g %g %g", x1, x2, y1, y2);
   else
     snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g %g %g %g %g", x1, x2, y1, y2, z1, z2);
 
-  if (!m || !n || !p) {
-    return(detector);
-  }
-
   /* if MPI and nodes_nb > 1: reduce data sets when using MPI =============== */
-  /* not for scan steps/multiarray (only processed by root */
 #ifdef USE_MPI
-  if (!strstr(format.Name," list ") && mpi_node_count > 1 && detector.rank != -1) {
+  if (!strstr(detector.format,"list") && mpi_node_count > 1 && m) {
     /* we save additive data: reduce everything into mpi_node_root */
     if (p0) mc_MPI_Sum(p0, m*n*p);
     if (p1) mc_MPI_Sum(p1, m*n*p);
@@ -1855,123 +759,8 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   }
 #endif /* USE_MPI */
 
-  /* compute statistics and update MCDETECTOR structure ===================== */
-  double sum_z   = 0;
-  double min_z   = 0;
-  double max_z   = 0;
-  double fmon_x=0, smon_x=0, fmon_y=0, smon_y=0, mean_z=0;
-  double Nsum=0;
-  double P2sum=0;
-
-  double sum_xz  = 0;
-  double sum_yz  = 0;
-  double sum_x   = 0;
-  double sum_y   = 0;
-  double sum_x2z = 0;
-  double sum_y2z = 0;
-  int    i,j;
-  char   hasnan=0;
-  char   hasinf=0;
-  char   israw = (strstr(detector.format.Name," raw") != NULL);
-  double *this_p1=NULL; /* new 1D McStas array [x I E N]. Freed after writing data */
-
-  /* if McStas/PGPLOT and rank==1 we create a new m*4 data block=[x I E N] */
-  if (detector.rank == 1 && strstr(detector.format.Name,"McStas")) {
-    this_p1 = (double *)calloc(detector.m*detector.n*detector.p*4, sizeof(double));
-    if (!this_p1)
-      exit(-fprintf(stderr, "Error: Out of memory creating %li 1D McStas data set for file '%s' (mcdetector_import)\n", detector.m*detector.n*detector.p*4*sizeof(double*), detector.filename));
-  }
-
-  max_z = min_z = p1[0];
-
-  for(j = 0; j < n*p; j++)
-  {
-    for(i = 0; i < m; i++)
-    {
-      double x,y,z;
-      double N, E;
-      long   index= !detector.istransposed ? i*n*p + j : i+j*m;
-
-      if (m) x = x1 + (i + 0.5)/m*(x2 - x1); else x = 0;
-      if (n && p) y = y1 + (j + 0.5)/n/p*(y2 - y1); else y = 0;
-      z = p1[index];
-      N = p0 ? p0[index] : 1;
-      E = p2 ? p2[index] : 0;
-      if (p2 && !israw) p2[index] = (*mcestimate_error_p)(p0[index],p1[index],p2[index]); /* set sigma */
-
-      /* compute stats integrals */
-      sum_xz += x*z;
-      sum_yz += y*z;
-      sum_x += x;
-      sum_y += y;
-      sum_z += z;
-      sum_x2z += x*x*z;
-      sum_y2z += y*y*z;
-      if (z > max_z) max_z = z;
-      if (z < min_z) min_z = z;
-
-      Nsum += N;
-      P2sum += E;
-
-      if (isnan(z) || isnan(E) || isnan(N)) hasnan=1;
-      if (isinf(z) || isinf(E) || isinf(N)) hasinf=1;
-
-      if (detector.rank == 1 && this_p1 && strstr(detector.format.Name,"McStas")) {
-        /* fill-in 1D McStas array [x I E N] */
-        this_p1[index*4]   = x;
-        this_p1[index*4+1] = z;
-        this_p1[index*4+2] = p2 ? p2[index] : 0;
-        this_p1[index*4+3] = N;
-      }
-    }
-  } /* for j */
-
-  /* compute 1st and 2nd moments */
-  if (sum_z && n*m*p)
-  {
-    fmon_x = sum_xz/sum_z;
-    fmon_y = sum_yz/sum_z;
-    smon_x = sum_x2z/sum_z-fmon_x*fmon_x; smon_x = smon_x > 0 ? sqrt(smon_x) : 0;
-    smon_y = sum_y2z/sum_z-fmon_y*fmon_y; smon_y = smon_y > 0 ? sqrt(smon_y) : 0;
-    mean_z = sum_z/n/m/p;
-  }
-  /* store statistics into detector */
-  detector.intensity = sum_z;
-  detector.error     = (*mcestimate_error_p)(Nsum, sum_z, P2sum);
-  detector.events    = Nsum;
-  detector.min       = min_z;
-  detector.max       = max_z;
-  detector.mean      = mean_z;
-  detector.centerX   = fmon_x;
-  detector.halfwidthX= smon_x;
-  detector.centerY   = fmon_y;
-  detector.halfwidthY= smon_y;
-
-  /* if McStas/PGPLOT and rank==1 replace p1 with new m*4 1D McStas and clear others */
-  if (detector.rank == 1 && this_p1 && strstr(detector.format.Name,"McStas")) {
-    detector.p1 = this_p1;
-    detector.n=detector.m; detector.m  = 4;
-    detector.p0 = NULL;
-    detector.p2 = NULL;
-    detector.istransposed = 1;
-  }
-
-  if (n*m*p > 1)
-    sprintf(detector.signal, "Min=%g; Max=%g; Mean=%g;", detector.min, detector.max, detector.mean);
-  else
-    strcpy(detector.signal, "");
-  sprintf(detector.values, "%g %g %g", detector.intensity, detector.error, detector.events);
-
-  switch (detector.rank) {
-    case 0:  strcpy(detector.statistics, ""); break;
-    case 1:  snprintf(detector.statistics, CHAR_BUF_LENGTH, "X0=%g; dX=%g;",
-      detector.centerX, detector.halfwidthX); break;
-    case 2:
-    case 3:  snprintf(detector.statistics, CHAR_BUF_LENGTH, "X0=%g; dX=%g; Y0=%g; dY=%g;",
-      detector.centerX, detector.halfwidthX, detector.centerY, detector.halfwidthY);
-      break;
-    default: strcpy(detector.statistics, "");
-  }
+  /* compute statistics, Nsum, intensity, Error bars */
+  detector = mcdetector_statistics(detector);
 
 #ifdef USE_MPI
   /* slaves are done */
@@ -1979,1077 +768,1221 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
     return detector;
   }
 #endif
+
   /* output "Detector:" line ================================================ */
   /* when this is a detector written by a component (not the SAVE from instrument),
-     not a multiarray nor event lists */
-  if (detector.rank == -1 || strstr(format.Name," list ")) return(detector);
+     not an event lists */
+  if (!m) return(detector);
+  if (!strcasestr(detector.format,"list")) {
+    if (!strcmp(detector.component, mcinstrument_name)) {
+      if (strlen(detector.filename))  /* we name it from its filename, or from its title */
+        strncpy(c, detector.filename, CHAR_BUF_LENGTH);
+      else
+        snprintf(c, CHAR_BUF_LENGTH, "%s", mcinstrument_name);
+    } else
+      strncpy(c, detector.component, CHAR_BUF_LENGTH);  /* usual detectors written by components */
 
-  if (!strcmp(detector.component, mcinstrument_name)) {
-    if (strlen(detector.filename))  /* we name it from its filename, or from its title */
-      mcvalid_name(c, detector.filename, CHAR_BUF_LENGTH);
-    else
-      mcvalid_name(c, detector.title, CHAR_BUF_LENGTH);
-  } else
-    strncpy(c, detector.component, CHAR_BUF_LENGTH);  /* usual detectors written by components */
-
-  printf("Detector: %s_I=%g %s_ERR=%g %s_N=%g",
-         c, detector.intensity,
-         c, detector.error,
-         c, detector.events);
-  printf(" \"%s\"\n", strlen(detector.filename) ? detector.filename : detector.component);
-
-  if (hasnan)
-    printf("WARNING: Nan detected in component %s\n", detector.component);
-  if (hasinf)
-    printf("WARNING: Inf detected in component %s\n", detector.component);
-
-  /* add warning in case of low statistics or large number of bins in text format mode */
-  if (detector.error > detector.intensity/4)
-    printf("WARNING: file '%s': Low Statistics\n",    detector.filename);
-  else if (strlen(detector.filename)) {
-    if (m*n*p > 1000 && Nsum < m*n*p && Nsum)
-       printf(
-        "WARNING: file '%s': Low Statistics (%g events in %ldx%ldx%ld bins).\n",
-        detector.filename, Nsum, m,n,p);
-    if ( !strstr(format.Name, "binary")
-      && (strstr(format.Name, "Scilab") || strstr(format.Name, "Matlab"))
-      && (n*m*p > 10000 || m > 1000) ) printf(
-        "WARNING: file '%s' (%s format)\n"
-        "         Large matrices (%ldx%ldx%ld) in text mode may be\n"
-        "         slow or fail at import. Prefer binary mode e.g. --format='Matlab_binary'.\n",
-        detector.filename, format.Name, m,n,p);
+    printf("Detector: %s_I=%g %s_ERR=%g %s_N=%g",
+           c, detector.intensity,
+           c, detector.error,
+           c, detector.events);
+    printf(" \"%s\"\n", strlen(detector.filename) ? detector.filename : detector.component);
   }
-
-  if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
-   if (strstr(detector.format.Name, "Octave") || strstr(detector.format.Name, "Matlab"))
-     str_rep(mcDetectorCustomHeader, "%PRE", "%   ");
-   else if (strstr(detector.format.Name, "IDL"))    str_rep(mcDetectorCustomHeader, "%PRE", ";   ");
-   else if (strstr(detector.format.Name, "Scilab")) str_rep(mcDetectorCustomHeader, "%PRE", "//  ");
-   else if (strstr(detector.format.Name, "McStas")) str_rep(mcDetectorCustomHeader, "%PRE", "#   ");
-   else str_rep(mcDetectorCustomHeader, "%PRE", "    ");
-  }
+  
 
   return(detector);
 } /* mcdetector_import */
 
+/* end MCDETECTOR import section ============================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================================================== */
+
+/*                               ASCII output                                 */
+/*     The SIM file is YAML based, the data files have '#' headers            */
+
+/* ========================================================================== */
+
+
 /*******************************************************************************
-* mcdetector_register: adds detector to the detector array, for scans and sim abstract
-* RETURN:            detector array pointer
-* Used by: mcdetector_out_xD
+* mcinfo_out: output instrument tags/info (only in SIM)
+* Used in: mcsiminfo_init (ascii), mcinfo(stdout)
 *******************************************************************************/
-MCDETECTOR* mcdetector_register(MCDETECTOR detector)
+static void mcinfo_out(char *pre, FILE *f)
 {
-#ifdef USE_MPI
-  /* only for Master */
-  if(mpi_node_rank != mpi_node_root)                      return(NULL);
-#endif
+  char Parameters[CHAR_BUF_LENGTH] = "";
+  int  i;
 
-  if (detector.m) {
-    /* add detector entry in the mcDetectorArray */
-    if (!mcDetectorArray ||
-        (mcDetectorArray && mcDetectorArray_size <= mcDetectorArray_index)) {
-      mcDetectorArray_size+=CHAR_BUF_LENGTH;
-      if (!mcDetectorArray || !mcDetectorArray_index)
-        mcDetectorArray = (MCDETECTOR*)calloc(mcDetectorArray_size, sizeof(MCDETECTOR));
-      else
-        mcDetectorArray = (MCDETECTOR*)realloc(mcDetectorArray, mcDetectorArray_size*sizeof(MCDETECTOR));
-    }
-    mcDetectorArray[mcDetectorArray_index++]=detector;
-  }
+  if (!f || mcdisable_output_files) return;
 
-  return(mcDetectorArray);
-
-} /* mcdetector_register */
-
-MCDETECTOR mcdetector_init(void) {
-  Coords zero={0.0,0.0,0.0};
-  MCDETECTOR detector=mcdetector_import(mcformat, "mcstas", NULL,
-    0,0,0,            /* mnp */
-    NULL, NULL, NULL, /* labels */
-    NULL, NULL, NULL, /* vars */
-    0,0,0,0,0,0,      /* limits */
-    NULL,             /* filename */
-    NULL, NULL, NULL, /* p012 */
-    zero);
-  strncpy(detector.filename, mcsiminfo_name, CHAR_BUF_LENGTH);
-  return(detector);
-}
-
-/*******************************************************************************
-* mcdetector_import_sim: build detector structure as SIM data
-* RETURN:            detector structure for SIM (m=0 and filename=mcsiminfo_name).
-* Used by: mcsiminfo_init, mcsiminfo_close, mcdetector_write_sim
-*******************************************************************************/
-MCDETECTOR mcdetector_import_sim(void) {
-  MCDETECTOR detector  = mcdetector_init();
-  detector.file_handle = mcsiminfo_file;
-  return(detector);
-}
-
-/*******************************************************************************
-* mcsiminfo_init: writes simulation structured description file (mcstas.sim)
-*                 f may be NULL or e.g. stdout
-*                 opens NX file if this is NeXus format
-* Used by: mcsave/mcfinally from code generation (cogen), mcinfo, mcstas_main
-*******************************************************************************/
-static int mcsiminfo_init(FILE *f)
-{
-
-#ifdef USE_MPI
-  /* only for Master */
-  if(mpi_node_rank != mpi_node_root)                      return(-1);
-#endif
-  if (mcdisable_output_files)                             return(-2);
-  if (!f && (!mcsiminfo_name || !strlen(mcsiminfo_name))) return(-3);
-
-  /* clear list of opened files to start new save session */
-  if (mcopenedfiles && strlen(mcopenedfiles) > 0) strcpy(mcopenedfiles, "");
-
-  /* open sim file ========================================================== */
-
-#ifdef USE_NEXUS
-  /* NeXus sim info is the NeXus root file. */
-  if(strstr(mcformat.Name, "NeXus")) {
-    mcsiminfo_file = NULL;
-    if (mcnxfile_init(mcsiminfo_name, mcformat.Extension,
-      strstr(mcformat.Name, "append") || strstr(mcformat.Name, "catenate") ? "a":"w",
-      &mcnxHandle) == NX_ERROR) {
-      return(-fprintf(stderr, "Error: opening NeXus file %s (mcsiminfo_init)\n", mcsiminfo_name));
-    } else {
-      mcsiminfo_file = (FILE*)mcnxHandle; /* make it non NULL */
-    }
-  } else /* not NX - includes next if+else */
-#endif
+  /* create parameter string ================================================ */
+  for(i = 0; i < mcnumipar; i++)
   {
-    if (!f || (!mcsiminfo_file && f != stdout))
-      mcsiminfo_file = mcnew_file(mcsiminfo_name, mcformat.Extension, "w");
-    else mcsiminfo_file = f;
+    char ThisParam[CHAR_BUF_LENGTH];
+    if (strlen(mcinputtable[i].name) > CHAR_BUF_LENGTH) break;
+    snprintf(ThisParam, CHAR_BUF_LENGTH, " %s(%s)", mcinputtable[i].name,
+            (*mcinputtypes[mcinputtable[i].type].parminfo)
+                (mcinputtable[i].name));
+    strcat(Parameters, ThisParam);
+    if (strlen(Parameters) >= CHAR_BUF_LENGTH-64) break;
   }
 
+  /* output data ============================================================ */
+  if (f != stdout)
+    fprintf(f, "%sFile: %s%c%s\n",    pre, mcdirname, MC_PATHSEP_C, mcsiminfo_name);
+  else
+    fprintf(f, "%sCreator: %s\n",     pre, MCCODE_STRING);
+
+  fprintf(f, "%sSource: %s '%s'\n",   pre, mcinstrument_source, mcinstrument_name);
+  fprintf(f, "%sParameters: %s\n",    pre, Parameters);
+  
+  fprintf(f, "%sTrace_enabled: %s\n", pre, mctraceenabled ? "yes" : "no");
+  fprintf(f, "%sDefault_main: %s\n",  pre, mcdefaultmain ?  "yes" : "no");
+  fprintf(f, "%sEmbedded_runtime: %s\n", pre, 
+#ifdef MC_EMBEDDED_RUNTIME
+         "yes"
+#else
+         "no"
+#endif
+         );
+
+  fflush(f);
+} /* mcinfo_out */
+
+/*******************************************************************************
+* mcruninfo_out: output simulation tags/info (both in SIM and data files)
+* Used in: mcsiminfo_init (ascii case), mcdetector_out_xD_ascii
+*******************************************************************************/
+static void mcruninfo_out(char *pre, FILE *f)
+{
+  int i;
+  char Parameters[CHAR_BUF_LENGTH];
+
+  if (!f || mcdisable_output_files) return;
+
+  fprintf(f, "%sFormat: %s\n",      pre, 
+    mcformat && !strcasecmp(mcformat,"McCode") ? MCCODE_STRING " with text headers" : mcformat);
+  fprintf(f, "%sURL: %s\n",         pre, "http://www.mccode.org");
+  fprintf(f, "%sCreator: %s\n",     pre, MCCODE_STRING);
+  fprintf(f, "%sInstrument: %s '%s'\n", pre, mcinstrument_source, mcinstrument_name);
+  fprintf(f, "%sTrace: %s\n",       pre, mcdotrace ? "yes" : "no");
+  fprintf(f, "%sGravitation: %s\n", pre, mcgravitation ? "yes" : "no");
+  snprintf(Parameters, CHAR_BUF_LENGTH, "%ld", mcseed);
+  fprintf(f, "%sSeed: %s\n",        pre, Parameters);
+  fprintf(f, "%sDirectory: %s\n",        pre, mcdirname);
+#ifdef USE_MPI
+  if (mpi_node_count > 1)
+    fprintf(f, "%sNodes: %i\n",        pre, mpi_node_count);
+#endif
+
+  /* output parameter string ================================================ */
+  for(i = 0; i < mcnumipar; i++) {
+    if (mcget_run_num() || (mcinputtable[i].val && strlen(mcinputtable[i].val))) {
+      if (mcinputtable[i].par == NULL)
+        strncpy(Parameters, (mcinputtable[i].val ? mcinputtable[i].val : ""), CHAR_BUF_LENGTH);
+      else
+        (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
+
+      fprintf(f, "%sParam: %s=%s\n", pre, mcinputtable[i].name, Parameters);
+    }
+  }
+  fflush(f);
+} /* mcruninfo_out */
+
+/*******************************************************************************
+* mcsiminfo_out:    wrapper to fprintf(mcsiminfo_file)
+*******************************************************************************/
+void mcsiminfo_out(char *format, ...)
+{
+  va_list ap;
+
+  if(mcsiminfo_file && !mcdisable_output_files)
+  {
+    va_start(ap, format);
+    vfprintf(mcsiminfo_file, format, ap);
+    va_end(ap);
+  }
+} /* mcsiminfo_out */
+
+
+/*******************************************************************************
+* mcdatainfo_out: output detector header
+*   mcdatainfo_out(prefix, file_handle, detector) writes info to data file
+*******************************************************************************/
+static void
+mcdatainfo_out(char *pre, FILE *f, MCDETECTOR detector)
+{
+  if (!f || !detector.m || mcdisable_output_files) return;
+  
+  /* output data ============================================================ */
+  fprintf(f, "%sDate: %s (%li)\n",       pre, detector.date, detector.date_l);
+  fprintf(f, "%stype: %s\n",       pre, detector.type);
+  fprintf(f, "%sSource: %s\n",     pre, detector.instrument);
+  fprintf(f, "%scomponent: %s\n",  pre, detector.component);
+  fprintf(f, "%sposition: %s\n",   pre, detector.position);
+
+  fprintf(f, "%stitle: %s\n",      pre, detector.title);
+  fprintf(f, !mcget_run_num() || mcget_run_num() >= mcget_ncount() ?
+             "%sNcount: %s\n" : 
+             "%sratio: %s\n",  pre, detector.ncount);
+
+  if (strlen(detector.filename)) {
+    fprintf(f, "%sfilename: %s\n", pre, detector.filename);
+  }
+
+  fprintf(f, "%sstatistics: %s\n", pre, detector.statistics);
+  fprintf(f, "%ssignal: %s\n",     pre, detector.signal);
+  fprintf(f, "%svalues: %s\n",     pre, detector.values);
+
+  if (detector.rank >= 1)
+  {
+    fprintf(f, "%sxvar: %s\n",     pre, detector.xvar);
+    fprintf(f, "%syvar: %s\n",     pre, detector.yvar);
+    fprintf(f, "%sxlabel: %s\n",   pre, detector.xlabel);
+    fprintf(f, "%sylabel: %s\n",   pre, detector.ylabel);
+    if (detector.rank > 1) {
+      fprintf(f, "%szvar: %s\n",   pre, detector.zvar);
+      fprintf(f, "%szlabel: %s\n", pre, detector.zlabel);
+    }
+  }
+
+  fprintf(f, 
+    abs(detector.rank)==1 ?
+             "%sxlimits: %s\n" : 
+             "%sxylimits: %s\n", pre, detector.limits);
+  fprintf(f, "%svariables: %s\n", pre, 
+    strcasestr(detector.format, "list") ? detector.ylabel : detector.variables);
+    
+  fflush(f);
+
+} /* mcdatainfo_out */
+
+/* mcdetector_out_array_ascii: output a single array to a file
+ *   m: columns
+ *   n: rows
+ *   p: array
+ *   f: file handle (already opened)
+ */
+static void mcdetector_out_array_ascii(long m, long n, double *p, FILE *f, char istransposed)
+{
+  if(f)
+  {
+    int i,j;
+    for(j = 0; j < n; j++)
+    {
+      for(i = 0; i < m; i++)
+      {
+        fprintf(f, "%g ", p[!istransposed ? i*n + j : j*m+i]);
+      }
+      fprintf(f,"\n");
+    }
+  }
+} /* mcdetector_out_array_ascii */
+
+/*******************************************************************************
+* mcdetector_out_0D_ascii: called by mcdetector_out_0D for ascii output
+*******************************************************************************/
+MCDETECTOR mcdetector_out_0D_ascii(MCDETECTOR detector)
+{
+  int exists=0;
+  FILE *outfile = NULL;
+  
+  /* Write data set information to simulation description file. */
+  MPI_MASTER(
+    mcsiminfo_out("\nbegin data: %s\n", detector.component);
+    mcdatainfo_out("  ", mcsiminfo_file, detector);
+    mcsiminfo_out("end data\n");
+    /* Don't write if filename is NULL: mcnew_file handles this (return NULL) */
+    outfile = mcnew_file(detector.component, "dat", &exists);
+    if(outfile)
+    {
+      /* write data file header and entry in simulation description file */
+      mcruninfo_out( "# ", outfile);
+      mcdatainfo_out("# ", outfile, detector);
+      /* write I I_err N */
+      fprintf(outfile, "%g %g %g\n", 
+        detector.intensity, detector.error, detector.events);
+      fclose(outfile);
+    }
+  );
+} /* mcdetector_out_0D_ascii */
+
+/*******************************************************************************
+* mcdetector_out_1D_ascii: called by mcdetector_out_1D for ascii output
+*******************************************************************************/
+MCDETECTOR mcdetector_out_1D_ascii(MCDETECTOR detector)
+{
+  int exists=0;
+  FILE *outfile = NULL;
+
+  MPI_MASTER(
+    /* Write data set information to simulation description file. */
+    mcsiminfo_out("\nbegin data: %s\n", detector.filename);
+    mcdatainfo_out("  ", mcsiminfo_file, detector);
+    mcsiminfo_out("end data\n");
+    /* Loop over array elements, writing to file. */
+    /* Don't write if filename is NULL: mcnew_file handles this (return NULL) */
+    outfile = mcnew_file(detector.filename, "dat", &exists);
+    if(outfile)
+    {
+      /* write data file header and entry in simulation description file */
+      mcruninfo_out( "# ", outfile);
+      mcdatainfo_out("# ", outfile, detector);
+      /* output the 1D array columns */
+      mcdetector_out_array_ascii(detector.m, detector.n, detector.p1, outfile, detector.istransposed);
+      
+      fclose(outfile);
+    }
+  ); /* MPI_MASTER */
+  
+}  /* mcdetector_out_1D_ascii */
+
+/*******************************************************************************
+* mcdetector_out_2D_ascii: called by mcdetector_out_2D for ascii output
+*******************************************************************************/
+MCDETECTOR mcdetector_out_2D_ascii(MCDETECTOR detector)
+{
+  int exists=0;
+  FILE *outfile = NULL;
+  
+  MPI_MASTER(
+    /* Loop over array elements, writing to file. */
+    /* Don't write if filename is NULL: mcnew_file handles this (return NULL) */
+    outfile = mcnew_file(detector.filename, "dat", &exists);
+    if(outfile)
+    {
+      /* write header only if file has just been created (not appending) */
+      if (!exists) {
+        /* Write data set information to simulation description file. */
+        mcsiminfo_out("\nbegin data: %s\n", detector.filename);
+        mcdatainfo_out("  ", mcsiminfo_file, detector);
+        mcsiminfo_out("end data\n");
+      
+        mcruninfo_out( "# ", outfile);
+        mcdatainfo_out("# ", outfile,   detector);
+        fprintf(outfile, "# Data [%s/%s] %s:\n", detector.component, detector.filename, detector.zvar);
+      }
+      mcdetector_out_array_ascii(detector.m, detector.n*detector.p, detector.p1, 
+        outfile, detector.istransposed);
+      if (detector.p2) {
+        fprintf(outfile, "# Errors [%s/%s] %s_err:\n", detector.component, detector.filename, detector.zvar);
+        mcdetector_out_array_ascii(detector.m, detector.n*detector.p, detector.p2, 
+          outfile, detector.istransposed);
+      }
+      if (detector.p0) {
+        fprintf(outfile, "# Events [%s/%s] N:\n", detector.component, detector.filename);
+        mcdetector_out_array_ascii(detector.m, detector.n*detector.p, detector.p0, 
+          outfile, detector.istransposed);
+      }
+      fclose(outfile);
+      
+      if (!exists) {
+        if (strcasestr(detector.format, "list"))
+          printf("Events:   \"%s\"\n",  
+            strlen(detector.filename) ? detector.filename : detector.component);
+      }
+    } /* if outfile */
+  ); /* MPI_MASTER */
+#ifdef USE_MPI
+  if (strcasestr(detector.format, "list") && mpi_node_count > 1) {
+    int node_i=0;
+    /* loop along MPI nodes to write sequentially */
+    for(node_i=0; node_i<mpi_node_count; node_i++) {
+      /* MPI: slaves wait for the master to write its block, then append theirs */
+      MPI_Barrier(MPI_COMM_WORLD);
+      if (node_i != mpi_node_root && node_i == mpi_node_rank) {
+        if(strlen(detector.filename) && !mcdisable_output_files)	/* Don't write if filename is NULL */
+          outfile = mcnew_file(detector.filename, "dat", &exists);
+        if (!exists)
+          fprintf(stderr, "Warning: [MPI node %i] file '%s' does not exist yet, "
+                          "MASTER should have opened it before.\n",
+            mpi_node_rank, detector.filename);
+        if(outfile) {
+          mcdetector_out_array_ascii(detector.m, detector.n*detector.p, detector.p1, 
+            outfile, detector.istransposed);
+          fclose(outfile);
+        }
+      }
+    }
+  } /* if strcasestr list */
+#endif
+} /* mcdetector_out_2D_ascii */
+
+/*******************************************************************************
+* strcpy_valid: makes a valid string for variable names.
+*   copy 'original' into 'valid', replacing invalid characters by '_'
+*   char arrays must be pre-allocated
+*******************************************************************************/
+static char *strcpy_valid(char *valid, char *original)
+{
+  long i;
+  int  n=32; /* max length of valid names */
+
+  if (original == NULL || !strlen(original)) return(NULL);
+
+  if (n > strlen(original)) n = strlen(original);
+  else original += strlen(original)-n;
+  strncpy(valid, original, n);
+
+  for (i=0; i < n; i++)
+  {
+    if ( (valid[i] > 122)
+      || (valid[i] < 32)
+      || (strchr("!\"#$%&'()*+,-.:;<=>?@[\\]^`/ \n\r\t", valid[i]) != NULL) )
+    {
+      if (i) valid[i] = '_'; else valid[i] = 'm';
+    }
+  }
+  valid[i] = '\0';
+
+  return(valid);
+} /* strcpy_valid */
+
+/* end ascii output section ================================================= */
+
+
+
+
+
+
+
+#ifdef USE_NEXUS
+
+/* ========================================================================== */
+
+/*                               NeXus output                                 */
+
+/* ========================================================================== */
+
+#define nxprintf(...)    nxstr('d', __VA_ARGS__)
+#define nxprintattr(...) nxstr('a', __VA_ARGS__)
+
+/*******************************************************************************
+* nxstr: output a tag=value data set (char) in NeXus/current group
+*   when 'format' is larger that 1024 chars it is used as value for the 'tag'
+*   else the value is assembled with format and following arguments.
+*   type='d' -> data set
+*        'a' -> attribute for current data set
+*******************************************************************************/
+static int nxstr(char type, NXhandle *f, char *tag, char *format, ...)
+{
+  va_list ap;
+  char value[CHAR_BUF_LENGTH];
+  int  i;
+  int  ret=NX_OK;
+  
+  if (!tag || !format || !strlen(tag) || !strlen(format)) return(NX_OK);
+  
+  /* assemble the value string */
+  if (strlen(format) < CHAR_BUF_LENGTH) {
+    va_start(ap, format);
+    ret = vsnprintf(value, CHAR_BUF_LENGTH, format, ap);
+    va_end(ap);
+  
+    i = strlen(value);
+  } else {
+    i = strlen(format);
+  }
+
+  if (type == 'd') {
+    /* open/put/close data set */
+    if (NXmakedata (f, tag, NX_CHAR, 1, &i) != NX_OK) return(NX_ERROR);
+    NXopendata (f, tag);
+    if (strlen(format) < CHAR_BUF_LENGTH)
+      ret = NXputdata  (f, value);
+    else
+      ret = NXputdata  (f, format);
+    NXclosedata(f);
+  } else {
+    if (strlen(format) < CHAR_BUF_LENGTH)
+      ret = NXputattr  (f, tag, value, strlen(value), NX_CHAR);
+    else
+      ret = NXputattr  (f, tag, format, strlen(format), NX_CHAR);
+  }
+  
+  return(ret);
+  
+} /* nxstr */
+
+/*******************************************************************************
+* mcinfo_readfile: read a full file into a string buffer which is allocated
+*   Think to free the buffer after use.
+* Used in: mcinfo_out_nexus (nexus)
+*******************************************************************************/
+char *mcinfo_readfile(char *filename)
+{
+  FILE *f = fopen(filename, "r");
+  if (!f) return(NULL);
+  fseek(f, 0, SEEK_END);
+  long fsize = ftell(f);
+  rewind(f);
+  char *string = malloc(fsize + 1);
+  if (string) {
+    int n = fread(string, fsize, 1, f);
+    fclose(f);
+
+    string[fsize] = 0;
+  }
+  return(string);
+}
+
+/*******************************************************************************
+* mcinfo_out: output instrument/simulation groups in NeXus file
+* Used in: mcsiminfo_init (nexus)
+*******************************************************************************/
+static void mcinfo_out_nexus(NXhandle f)
+{
+  time_t t;       /* for date */
+  FILE  *fid;     /* for intrument source code/C/IDF */
+  char  *buffer=NULL;
+  
+  if (!f || mcdisable_output_files) return;
+  
+  /* write NeXus NXroot attributes */
+  /* automatically added: file_name, HDF5_Version, file_time, NeXus_version */ 
+  nxprintattr(f, "creator",   "%s generated with " MCCODE_STRING, mcinstrument_name);
+
+  /* create the main NXentry (mandatory in NeXus) */
+  if (NXmakegroup(f, "entry0", "NXentry") == NX_OK)
+  if (NXopengroup(f, "entry0", "NXentry") == NX_OK) {
+    time_t t=time(NULL);
+    
+    nxprintf(nxhandle, "program_name", MCCODE_STRING);
+    nxprintf(f, "start_time", ctime(&t));
+    nxprintf(f, "title", "%s%s%s simulation generated by instrument %s", 
+      mcdirname && strlen(mcdirname) ? mcdirname : ".", MC_PATHSEP_S, mcsiminfo_name,
+      mcinstrument_name);
+      
+    
+
+    /* write NeXus instrument group */
+    if (NXmakegroup(f, "instrument", "NXinstrument") == NX_OK)
+    if (NXopengroup(f, "instrument", "NXinstrument") == NX_OK) {
+      int   i;
+      char *string=NULL;
+
+      /* write NeXus parameters(types) data =================================== */
+      string = (char*)malloc(CHAR_BUF_LENGTH);
+      if (string) {
+        strcpy(string, "");
+        for(i = 0; i < mcnumipar; i++)
+        {
+          char ThisParam[CHAR_BUF_LENGTH];
+          snprintf(ThisParam, CHAR_BUF_LENGTH, " %s(%s)", mcinputtable[i].name,
+                  (*mcinputtypes[mcinputtable[i].type].parminfo)
+                      (mcinputtable[i].name));
+          if (strlen(string) + strlen(ThisParam) < CHAR_BUF_LENGTH)
+            strcat(string, ThisParam);
+        }
+        nxprintattr(f, "Parameters",    string);
+        free(string);
+      }
+        
+      nxprintattr(f, "name",          mcinstrument_name);
+      nxprintf   (f, "name",          mcinstrument_name);
+      nxprintattr(f, "Source",        mcinstrument_source);
+      
+      nxprintattr(f, "Trace_enabled", mctraceenabled ? "yes" : "no");
+      nxprintattr(f, "Default_main",  mcdefaultmain ?  "yes" : "no");
+      nxprintattr(f, "Embedded_runtime",  
+  #ifdef MC_EMBEDDED_RUNTIME
+           "yes"
+  #else
+           "no"
+  #endif
+           );
+           
+      /* add instrument source code when available */
+      buffer = mcinfo_readfile(mcinstrument_source);
+      if (buffer && strlen(buffer)) {
+        long length=strlen(buffer);
+        nxprintf (f, "description", buffer);
+        NXopendata(f,"description");
+        nxprintattr(f, "file_name", mcinstrument_source);
+        nxprintattr(f, "file_size", "%li", length);
+        nxprintattr(f, "MCCODE_STRING", MCCODE_STRING);
+        NXclosedata(f);
+        nxprintf (f,"instrument_source", "%s " MCCODE_NAME " " MCCODE_PARTICULE " Monte Carlo simulation", mcinstrument_name);
+        free(buffer);
+      } else
+        nxprintf (f, "description", "File %s not found (instrument description %s is missing)", 
+          mcinstrument_source, mcinstrument_name);
+      
+      /* add Mantid/IDF.xml when available */
+      buffer = mcinfo_readfile("IDF.xml");
+      if (buffer && strlen(buffer)) {
+        NXmakegroup (nxhandle, "instrument_xml", "NXnote");
+        NXopengroup (nxhandle, "instrument_xml", "NXnote");
+        nxprintf(f, "data", buffer);
+        nxprintf(f, "description", "IDF.xml file found with instrument %s", mcinstrument_source);
+        nxprintf(f, "type", "text/xml");
+        free(buffer);
+      }
+      NXclosegroup(f); /* instrument */
+    } /* NXinstrument */
+
+    /* write NeXus simulation group */
+    if (NXmakegroup(f, "simulation", "NXnote") == NX_OK)
+    if (NXopengroup(f, "simulation", "NXnote") == NX_OK) {
+    
+      
+      
+      nxprintattr(f, "name",   "%s%s%s",
+        mcdirname && strlen(mcdirname) ? mcdirname : ".", MC_PATHSEP_S, mcsiminfo_name);
+      
+      nxprintf   (f, "name",      "%s",     mcsiminfo_name);
+      nxprintattr(f, "Format",    mcformat);
+      nxprintattr(f, "URL",       "http://www.mccode.org");
+      nxprintattr(f, "program",   MCCODE_STRING);
+      nxprintattr(f, "Instrument",mcinstrument_source);
+      nxprintattr(f, "Trace",     mcdotrace ?     "yes" : "no");
+      nxprintattr(f, "Gravitation",mcgravitation ? "yes" : "no");
+      nxprintattr(f, "Seed",      "%li", mcseed);
+      nxprintattr(f, "Directory", mcdirname);
+    #ifdef USE_MPI
+      if (mpi_node_count > 1)
+        nxprintf(f, "Nodes", "%i",        mpi_node_count);
+    #endif
+    
+      /* output parameter string ================================================ */
+      if (NXmakegroup(f, "Param", "NXparameters") == NX_OK)
+      if (NXopengroup(f, "Param", "NXparameters") == NX_OK) {
+        int i;
+        char string[CHAR_BUF_LENGTH];
+        for(i = 0; i < mcnumipar; i++) {
+          if (mcget_run_num() || (mcinputtable[i].val && strlen(mcinputtable[i].val))) {
+            if (mcinputtable[i].par == NULL)
+              strncpy(string, (mcinputtable[i].val ? mcinputtable[i].val : ""), CHAR_BUF_LENGTH);
+            else
+              (*mcinputtypes[mcinputtable[i].type].printer)(string, mcinputtable[i].par);
+
+            nxprintf(f,  mcinputtable[i].name, "%s", string);
+            nxprintattr(f, mcinputtable[i].name, string);
+          }
+        }
+        NXclosegroup(f); /* Param */
+      } /* NXparameters */
+      
+      NXclosegroup(f); /* simulation */
+    } /* NXsimulation */
+    
+    /* create a group to hold all monitors */
+    NXmakegroup(f, "data", "NXdetector");
+
+    /* leave the NXentry opened (closed at exit) */
+  } /* NXentry */
+} /* mcinfo_out_nexus */
+
+/*******************************************************************************
+* mcdatainfo_out_nexus: output detector header
+*   mcdatainfo_out_nexus(detector) create group and write info to NeXus data file
+*   open data:NXdetector then filename:NXdata and write headers/attributes
+*   requires: NXentry to be opened
+*******************************************************************************/
+static void
+mcdatainfo_out_nexus(NXhandle f, MCDETECTOR detector)
+{
+  char data_name[32];
+  if (!f || !detector.m || mcdisable_output_files) return;
+  
+  strcpy_valid(data_name, 
+    detector.filename && strlen(detector.filename) ? 
+      detector.filename : detector.component);
+
+  /* the NXdetector group has been created in mcinfo_out_nexus (mcsiminfo_init) */
+  if (NXopengroup(f, "data", "NXdetector") == NX_OK) {
+
+    /* create and open the data group */
+    /* this may fail when appending to list -> ignore/skip */
+    NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
+    
+    if (NXmakegroup(f, data_name, "NXdata") == NX_OK)
+    if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
+    
+      /* output metadata (as attributes) ======================================== */
+      nxprintattr(f, "Date",       detector.date);
+      nxprintattr(f, "type",       detector.type);
+      nxprintattr(f, "Source",     detector.instrument);
+      nxprintattr(f, "component",  detector.component);
+      nxprintattr(f, "position",   detector.position);
+
+      nxprintattr(f, "title",      detector.title);
+      nxprintattr(f, !mcget_run_num() || mcget_run_num() >= mcget_ncount() ?
+                 "Ncount" : 
+                 "ratio",  detector.ncount);
+
+      if (strlen(detector.filename)) {
+        nxprintattr(f, "filename", detector.filename);
+      }
+
+      nxprintattr(f, "statistics", detector.statistics);
+      nxprintattr(f, "signal",     detector.signal);
+      nxprintattr(f, "values",     detector.values);
+
+      if (detector.rank >= 1)
+      {
+        nxprintattr(f, "xvar",     detector.xvar);
+        nxprintattr(f, "yvar",     detector.yvar);
+        nxprintattr(f, "xlabel",   detector.xlabel);
+        nxprintattr(f, "ylabel",   detector.ylabel);
+        if (detector.rank > 1) {
+          nxprintattr(f, "zvar",   detector.zvar);
+          nxprintattr(f, "zlabel", detector.zlabel);
+        }
+      }
+
+      nxprintattr(f, abs(detector.rank)==1 ?
+                 "xlimits" : 
+                 "xylimits", detector.limits);
+      nxprintattr(f, "variables", 
+        strcasestr(detector.format, "list") ? detector.ylabel : detector.variables);
+      nxprintf(f, "distance", detector.position);
+      nxprintf(f, "acquisition_mode",
+        strcasestr(detector.format, "list") ? "event" : "summed");
+        
+      NXclosegroup(f);
+    } /* NXdata (filename) */
+    NXMEnableErrorReporting();  /* re-enable NeXus error messages */
+    NXclosegroup(f);
+  } /* NXdetector (data) */
+  
+} /* mcdatainfo_out_nexus */
+
+/*******************************************************************************
+* mcdetector_out_axis_nexus: write detector axis into current NXdata
+*   requires: NXdata to be opened
+*******************************************************************************/
+int mcdetector_out_axis_nexus(NXhandle f, char *label, char *var, int rank, long length, double min, double max)
+{
+  if (!f || length <= 1 || mcdisable_output_files || max == min) return(NX_OK);
+  else {
+    double axis[length];
+    char valid[32];
+    int dim=(int)length;
+    int i;
+    int nprimary=1;
+    /* create an axis from [min:max] */
+    for(i = 0; i < length; i++)
+      axis[i] = min+(max-min)*(i+0.5)/length;
+    /* create the data set */
+    strcpy_valid(valid, label);
+    NXcompmakedata(f, valid, NX_FLOAT64, 1, &dim, NX_COMP_LZW, &dim);
+    /* open it */
+    if (NXopendata(f, valid) != NX_OK) {
+      fprintf(stderr, "Warning: could not open axis rank %i '%s' (NeXus)\n",
+        rank, valid);
+      return(NX_ERROR);
+    }
+    /* put the axis and its attributes */
+    NXputdata  (f, axis);
+    nxprintattr(f, "long_name",  label);
+    nxprintattr(f, "short_name", var);
+    NXputattr  (f, "axis",       &rank,     1, NX_INT32);
+    nxprintattr(f, "units",      var);
+    NXputattr  (f, "primary",    &nprimary, 1, NX_INT32);
+    NXclosedata(f);
+    
+    return(NX_OK);
+  }
+} /* mcdetector_out_axis_nexus */
+
+/*******************************************************************************
+* mcdetector_out_array_nexus: write detector array into current NXdata (1D,2D)
+*   requires: NXdata to be opened
+*******************************************************************************/
+int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR detector)
+{
+  
+  int dims[3]={detector.m,detector.n,detector.p};  /* number of elements to write */
+  int signal=1;
+  int exists=0;
+  int current_dims[3]={0,0,0};
+  int ret=NX_OK;
+  
+  if (!f || !data || !detector.m || mcdisable_output_files) return(NX_OK);
+  
+  /* when this is a list, we set 1st dimension to NX_UNLIMITED for creation */
+  if (strstr(mcformat, "list")) dims[0] = NX_UNLIMITED;
+  
+  /* create the data set in NXdata group */
+  NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
+  /* NXcompmakedata fails with NX_UNLIMITED */
+  if (strstr(mcformat, "list"))
+    ret = NXmakedata(    f, part, NX_FLOAT64, detector.rank, dims);
+  else
+    ret = NXcompmakedata(f, part, NX_FLOAT64, detector.rank, dims, NX_COMP_LZW, dims);
+  if (ret != NX_OK) {
+    /* failed: data set already exists */
+    int datatype=0;
+    int rank=0;
+    exists=1;
+    /* inquire current size of data set (nb of events stored) */
+    NXopendata(f, part);
+    NXgetinfo(f, &rank, current_dims, &datatype);
+    NXclosedata(f);
+  }
+  NXMEnableErrorReporting();  /* re-enable NeXus error messages */
+  dims[0] = detector.m; /* restore actual dimension from data writing */
+  
+  /* open the data set */
+  if (NXopendata(f, part) == NX_ERROR) {
+    fprintf(stderr, "Warning: could not open DataSet %s '%s' (NeXus)\n",
+      part, detector.title);
+    return(NX_ERROR);
+  }
+  if (strcasestr(detector.format, "list")) {
+    current_dims[1] = current_dims[2] = 0; /* set starting location for writing slab */
+    NXputslab(f, data, current_dims, dims);
+    if (!exists)
+      printf("Events:   \"%s\"\n",  
+        strlen(detector.filename) ? detector.filename : detector.component);
+  } else {
+    NXputdata (f, data);
+  }
+  
+  if (strstr(part,"data") || strstr(part, "events")) {
+    NXputattr(f, "signal", &signal, 1, NX_INT32);
+    nxprintattr(f, "short_name", detector.filename && strlen(detector.filename) ? 
+      detector.filename : detector.component);
+  }
+  nxprintattr(f, "long_name", "%s '%s'", part, detector.title);
+  NXclosedata(f);
+  
+  return(NX_OK);
+} /* mcdetector_out_array_nexus */
+
+/*******************************************************************************
+* mcdetector_out_data_nexus: write detector axes+data into current NXdata
+*   The data:NXdetector is opened, then filename:NXdata
+*   requires: NXentry to be opened
+*******************************************************************************/
+int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
+{
+  char data_name[32];
+  
+  if (!f || !detector.m || mcdisable_output_files) return(NX_OK);
+  
+  strcpy_valid(data_name, 
+    detector.filename && strlen(detector.filename) ? 
+      detector.filename : detector.component);
+
+  /* the NXdetector group has been created in mcinfo_out_nexus (mcsiminfo_init) */
+  if (NXopengroup(f, "data", "NXdetector") == NX_OK) {
+
+    /* the NXdata group has been created in mcdatainfo_out_nexus */
+    if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
+  
+      /* write axes, for histogram data sets, not for lists */
+      if (!strstr(mcformat, "list")) {
+        mcdetector_out_axis_nexus(f, detector.xlabel, detector.xvar, 
+          1, detector.m, detector.xmin, detector.xmax);
+          
+        mcdetector_out_axis_nexus(f, detector.ylabel, detector.yvar, 
+          2, detector.n, detector.ymin, detector.ymax);
+          
+        mcdetector_out_axis_nexus(f, detector.zlabel, detector.zvar, 
+          3, detector.p, detector.zmin, detector.zmax);
+
+      } /* !list */
+      
+      /* write the actual data (appended if already exists) */
+      if (!strstr(mcformat, "list")) {
+        mcdetector_out_array_nexus(f, "data", detector.p1, detector);
+        mcdetector_out_array_nexus(f, "errors", detector.p2, detector);
+        mcdetector_out_array_nexus(f, "ncount", detector.p0, detector);
+      } else
+        mcdetector_out_array_nexus(  f, "events", detector.p1, detector);
+      
+      NXclosegroup(f);
+    } /* NXdata */
+    NXclosegroup(f);
+  } /* NXdetector */
+  
+  return(NX_OK);
+} /* mcdetector_out_array_nexus */
+
+#ifdef USE_MPI
+/*******************************************************************************
+* mcdetector_out_list_slaves: slaves send their list data to master which writes
+*   requires: NXentry to be opened
+* WARNING: this method has a flaw: it requires all nodes to flush the lists
+*   the same number of times. In case one node is just below the buffer size
+*   when finishing (e.g. monitor_nd), it may not trigger save but others may. 
+*   Then the number of recv/send is not constant along nodes, and simulation stalls.  
+*******************************************************************************/
+MCDETECTOR mcdetector_out_list_slaves(MCDETECTOR detector)
+{
+  int     node_i=0;
+  
+  if (mpi_node_rank != mpi_node_root) {
+    /* MPI slave: slaves send their data to master: 2 MPI_Send calls */
+    /* m, n, p must be sent first, since all slaves do not have the same number of events */
+    int mnp[3]={detector.m,detector.n,detector.p};
+
+    if (mc_MPI_Send(mnp, 3, MPI_INT, mpi_node_root)!= MPI_SUCCESS)
+      fprintf(stderr, "Warning: proc %i to master: MPI_Send mnp list error (mcdetector_out_list_slaves)\n", mpi_node_rank);
+    if (!detector.p1
+     || mc_MPI_Send(detector.p1, mnp[0]*mnp[1]*mnp[2], MPI_DOUBLE, mpi_node_root) != MPI_SUCCESS)
+      fprintf(stderr, "Warning: proc %i to master: MPI_Send p1 list error: mnp=%i (mcdetector_out_list_slaves)\n", mpi_node_rank, abs(mnp[0]*mnp[1]*mnp[2]));
+    /* slaves are done: sent mnp and p1 */
+    return (detector);
+  } /* end slaves */
+
+  /* MPI master: receive data from slaves sequentially: 2 MPI_Recv calls */
+  for(node_i=0; node_i<mpi_node_count; node_i++) {
+    double *this_p1=NULL;                               /* buffer to hold the list from slaves */
+    int     mnp[3]={0,0,0};  /* size of this buffer */
+    if (node_i != mpi_node_root) { /* get data from slaves */
+      if (mc_MPI_Recv(mnp, 3, MPI_INT, node_i) != MPI_SUCCESS)
+        fprintf(stderr, "Warning: master from proc %i: "
+          "MPI_Recv mnp list error (mcdetector_write_data)\n", node_i);
+      if (mnp[0]*mnp[1]*mnp[2]) {
+        this_p1 = (double *)calloc(mnp[0]*mnp[1]*mnp[2], sizeof(double));
+        if (!this_p1 || mc_MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i)!= MPI_SUCCESS)
+          fprintf(stderr, "Warning: master from proc %i: "
+            "MPI_Recv p1 list error: mnp=%i (mcdetector_write_data)\n", node_i, mnp[0]*mnp[1]*mnp[2]);
+        else {
+          detector.p1 = this_p1;
+          detector.m  = mnp[0]; detector.n  = mnp[1]; detector.p  = mnp[2];
+          mcdetector_out_data_nexus(nxhandle, detector);
+        }
+      }
+    } /* if not master */
+  } /* for */
+
+}
+#endif
+
+MCDETECTOR mcdetector_out_0D_nexus(MCDETECTOR detector)
+{
+  /* Write data set information to NeXus file. */
+  MPI_MASTER(
+    mcdatainfo_out_nexus(nxhandle, detector);
+  );
+  
+  return(detector);
+} /* mcdetector_out_0D_ascii */
+
+MCDETECTOR mcdetector_out_1D_nexus(MCDETECTOR detector)
+{
+  MPI_MASTER(
+  mcdatainfo_out_nexus(nxhandle, detector);
+  mcdetector_out_data_nexus(nxhandle, detector);
+  );
+  return(detector);
+}
+
+MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector)
+{
+  MPI_MASTER(
+  mcdatainfo_out_nexus(nxhandle, detector);
+  mcdetector_out_data_nexus(nxhandle, detector);
+  );
+  
+#ifdef USE_MPI // and USE_NEXUS
+  /* NeXus: slave nodes have master write their lists */
+  if (strcasestr(detector.format, "list") && mpi_node_count > 1) {
+    mcdetector_out_list_slaves(detector);
+  }
+#endif /* USE_MPI */
+
+  return(detector);
+} /* mcdetector_out_2D_nexus */
+
+#endif /* USE_NEXUS*/
+
+
+
+
+
+
+
+
+/* ========================================================================== */
+
+/*                            Main input functions                            */
+/*            DETECTOR_OUT_xD function calls -> ascii or NeXus                */
+
+/* ========================================================================== */
+
+/*******************************************************************************
+* mcsiminfo_init:   open SIM and write header
+*******************************************************************************/
+FILE *mcsiminfo_init(FILE *f)
+{
+  int exists=0;
+  
+  /* check format */
+  if (!mcformat || !strlen(mcformat) 
+   || !strcasecmp(mcformat, "McStas") || !strcasecmp(mcformat, "McXtrace") 
+   || !strcasecmp(mcformat, "PGPLOT"))
+    mcformat = "MCCODE";
+  
+  /* open the SIM file if not defined yet */
+  if (mcsiminfo_file || mcdisable_output_files) 
+    return (mcsiminfo_file);
+    
+#ifdef USE_NEXUS
+  /* only master writes NeXus header: calls NXopen(nxhandle) */
+  if (strcasestr(mcformat, "NeXus")) {
+	  MPI_MASTER(
+	  mcsiminfo_file = mcnew_file(mcsiminfo_name, "h5", &exists);
+    if(!mcsiminfo_file)
+      fprintf(stderr,
+	      "Warning: could not open simulation description file '%s'\n",
+	      mcsiminfo_name);
+	  else
+	    mcinfo_out_nexus(nxhandle);
+	  );
+    return(mcsiminfo_file); /* points to nxhandle */
+  }
+#endif
+  
+  /* write main description file (only MASTER) */
+  MPI_MASTER(
+
+  mcsiminfo_file = mcnew_file(mcsiminfo_name, "sim", &exists);
   if(!mcsiminfo_file)
-    return(-fprintf(stderr,
-            "Warning: could not open simulation description file '%s' (mcsiminfo_init)\n",
-            mcsiminfo_name));
+    fprintf(stderr,
+	    "Warning: could not open simulation description file '%s'\n",
+	    mcsiminfo_name);
+  else
+  {
+    /* write SIM header */
+    time_t t=time(NULL);
+    mcsiminfo_out("# %s simulation description file for %s.\n", 
+      MCCODE_NAME, mcinstrument_name);
+    mcsiminfo_out("# Date:    %s", ctime(&t)); /* includes \n */
+    mcsiminfo_out("# Program: %s\n\n", MCCODE_STRING);
+    
+    mcsiminfo_out("begin instrument: %s\n", mcinstrument_name);
+    mcinfo_out(   "  ", mcsiminfo_file);
+    mcsiminfo_out("end instrument\n");
 
-  /* initialize sim file information, sets detector.file_handle=mcsiminfo_file */
-  MCDETECTOR mcsiminfo = mcdetector_import_sim();
+    mcsiminfo_out("\nbegin simulation: %s\n", mcdirname);
+    mcruninfo_out("  ", mcsiminfo_file);
+    mcsiminfo_out("end simulation\n");
 
-  /* flag true for McStas or NX data format */
-  int  ismcstas_nx= (strstr(mcformat.Name, "McStas") || strstr(mcformat.Name, "NeXus"));
-
-  /* start to write meta data =============================================== */
-
-#ifdef USE_NEXUS
-  if (strstr(mcformat.Name, "NeXus")) {
-    /* NXentry class */
-    char file_time[CHAR_BUF_LENGTH];
-    snprintf(file_time, CHAR_BUF_LENGTH, "%s_%li", mcinstrument_name, mcstartdate);
-    mcsiminfo = mcfile_section(mcsiminfo, "begin", "mcstas", file_time, "entry", 1);
   }
-#endif
-  mcinfo_header(mcsiminfo, "header");
-#ifdef USE_NEXUS
-  /* close information SDS opened with mcfile_section(siminfo, "mcstas (header)") */
-  if (strstr(mcformat.Name, "NeXus")) {
-    if (NXclosedata(mcnxHandle) == NX_ERROR)
-      fprintf(stderr, "Warning: NeXus: could not close data set mcstas/information (header)\n");
-  }
-#endif
-
-  /* begin-end instrument =================================================== */
-  mcsiminfo = mcfile_section(mcsiminfo, "begin", mcsiminfo.simulation, mcinstrument_name, "instrument", 1);
-  mcinfo_instrument(mcsiminfo, mcinstrument_name);
-
-#ifdef USE_NEXUS
-  if (strstr(mcformat.Name, "NeXus")) {
-    /* close information SDS opened with mcfile_section(siminfo, "instrument") */
-    if (NXclosedata(mcnxHandle) == NX_ERROR)
-      fprintf(stderr, "Warning: NeXus: could not close data set instrument/information\n");
-    /* insert instrument source code */
-    mcnxfile_instrcode(mcnxHandle, mcinstrument_source, mcinstrument_name);
-  }
-#endif
-  if (ismcstas_nx)
-    mcsiminfo = mcfile_section(mcsiminfo, "end", mcsiminfo.simulation, mcinstrument_name, "instrument", 1);
-
-  /* begin-end simulation =================================================== */
-  mcsiminfo = mcfile_section(mcsiminfo, "begin", mcsiminfo.simulation, mcsiminfo_name, "simulation", 2);
-  mcsiminfo = mcinfo_simulation(mcsiminfo, mcsiminfo_name);
-
-#ifdef USE_NEXUS
-  /* close information SDS opened with mcfile_section(siminfo,"simulation") */
-  if (strstr(mcformat.Name, "NeXus")) {
-    if (NXclosedata(mcnxHandle) == NX_ERROR)
-      fprintf(stderr, "Warning: NeXus: could not close data set simulation/information\n");
-  }
-#endif
-  if (ismcstas_nx)
-    mcsiminfo = mcfile_section(mcsiminfo, "end", mcsiminfo.simulation, mcsiminfo_name, "simulation", 2);
-
-  return(1);
+  return (mcsiminfo_file);
+  
+  ); /* MPI_MASTER */
+  
 } /* mcsiminfo_init */
 
 /*******************************************************************************
-* mcdetector_write_content: write mcstas.dat, which has integrated intensities for all monitors
-* Used by: mcsiminfo_close
+*   mcsiminfo_close:  close SIM
 *******************************************************************************/
-int mcdetector_write_content(MCDETECTOR *DetectorArray, long DetectorArray_index)
+void mcsiminfo_close()
 {
-#ifdef USE_MPI
-  /* only for Master */
-  if(mpi_node_rank != mpi_node_root)                      return(-1);
-#endif
-  if (mcdisable_output_files)                             return(-2);
-  if (!mcsiminfo_name || !strlen(mcsiminfo_name))         return(-3);
-  if (!DetectorArray_index)                               return(-4);
-
-  /* build p1 array from all detector integrated counts */
-  double *this_p1 = (double *)calloc(DetectorArray_index*2, sizeof(double));
-  int i;
-
-  if (this_p1 && DetectorArray) {
-    char   *labels=NULL;
-    long    labels_size=0;
-    long    index=0;
-    for (i=0; i < DetectorArray_index; i++) {
-        char mem[CHAR_BUF_LENGTH];
-        char valid[CHAR_BUF_LENGTH];
-        /* store I I_err */
-        this_p1[index++] = DetectorArray[i].intensity;
-        this_p1[index++] = DetectorArray[i].error;
-        /* add corresponding label */
-        mcvalid_name(valid, DetectorArray[i].filename, CHAR_BUF_LENGTH);
-        sprintf(mem, "%s_I %s_Err ", valid, valid);
-        if (!labels ||
-          (labels && labels_size <= strlen(labels)+strlen(mem))) {
-          labels_size+=CHAR_BUF_LENGTH;
-          if (!labels || !strlen(labels))
-            labels = calloc(1, labels_size);
-          else
-            labels = realloc(labels, labels_size);
-        }
-        strcat(labels, " ");
-        strcat(labels, mem);
-    } /* for */
-
-    struct mcformats_struct format=mcformat;
-    strcat(format.Name, " scan step");
-    Coords zero={0.0,0.0,0.0};
-
-    /* now create detector and write 'abstract' file */
-    MCDETECTOR detector = mcdetector_import(format,
-      mcinstrument_name, "Monitor integrated counts",
-      index, 1, 1,
-      "Monitors", "I", "Integrated Signal",
-      "Index", labels, "I",
-      0, index-1, 0, 0, 0, 0, "content",  /* use name from OpenOffice content.xml description file */
-      NULL, this_p1, NULL, zero);
-
-    mcdetector_write_data(detector);
-
-    free(labels); labels=NULL; labels_size=0;
-
-    /* free DETECTOR array */
-    free(this_p1); this_p1=NULL;
-    free(mcDetectorArray); mcDetectorArray=NULL;
-  } /* if this_p1 */
-
-  return 0;
-
-} /* mcdetector_write_content */
-
-
-/*******************************************************************************
-* mcsiminfo_close: close simulation file (mcstas.sim) and write mcstas.dat
-* Used by: mcsave/mcfinally from code generation (cogen), mcinfo, mcstas_main
-*******************************************************************************/
-void mcsiminfo_close(void)
-{
-  int i;
-#ifdef USE_MPI
-  if(mpi_node_rank != mpi_node_root) return;
-#endif
-  if (mcdisable_output_files || !mcsiminfo_file) return;
-
-  int  ismcstas_nx  = (strstr(mcformat.Name, "McStas") || strstr(mcformat.Name, "NeXus"));
-
-  mcdetector_write_content(mcDetectorArray, mcDetectorArray_index);
-
-  /* initialize sim file information, sets detector.file_handle=mcsiminfo_file */
-  MCDETECTOR mcsiminfo = mcdetector_import_sim();
-
-  /* close those sections which were opened in mcsiminfo_init =============== */
-  if (!ismcstas_nx) {
-    mcfile_section(mcsiminfo, "end", mcsiminfo.simulation, mcsiminfo_name, "simulation", 2);
-    mcfile_section(mcsiminfo, "end", mcsiminfo.simulation, mcinstrument_name, "instrument", 1);
-  }
+  MPI_MASTER(
+  if(mcsiminfo_file && !mcdisable_output_files) {
 #ifdef USE_NEXUS
-  if (strstr(mcformat.Name, "NeXus")) {
-    /* re-open the simulation/information dataset */
-    if (NXopendata(mcnxHandle, "information") == NX_ERROR)
-      fprintf(stderr, "Warning: NeXus: could not re-open 'information' for mcstas NXentry\n");
-  }
+    if (strcasestr(mcformat, "NeXus")) {
+      time_t t=time(NULL);
+      nxprintf(nxhandle, "end_time", ctime(&t));
+      nxprintf(nxhandle, "duration", "%li", (long)t-mcstartdate);
+      NXclosegroup(nxhandle); /* NXentry */
+      NXclose(&nxhandle);
+    } else
 #endif
-  mcinfo_header(mcsiminfo, "footer");
-#ifdef USE_NEXUS
-  /* close information SDS opened with mcfile_section(siminfo, "mcstas(footer)" */
-  if (strstr(mcformat.Name, "NeXus")) {
-    if (NXclosedata(mcnxHandle) == NX_ERROR)
-      fprintf(stderr, "Warning: NeXus: could not close data set mcstas/information (footer)\n");
-    mcfile_section(mcsiminfo, "end", "mcstas", mcinstrument_name, "entry", 1);
+      fclose(mcsiminfo_file);
+    );
+    mcsiminfo_file = NULL;
   }
-#endif
-
-  /* close sim file ========================================================= */
-#ifdef USE_NEXUS
-  if (strstr(mcformat.Name, "NeXus")) mcnxfile_close(&mcnxHandle);
-  else
-#endif
-  if (mcsiminfo_file != stdout && mcsiminfo_file) {
-    fclose(mcsiminfo_file);
-  }
-  mcsiminfo_file = NULL;
-
 } /* mcsiminfo_close */
 
 /*******************************************************************************
-* mcfile_data: output a single data block using specific file format, e.g. "part=[ array ]"
-*   'part' can be 'data','errors','ncount'
-* Used by: mcdetector_write_sim, mcdetector_write_data
-*******************************************************************************/
-int mcfile_data(MCDETECTOR detector, char *part)
-{
-  double *this_p1=NULL;
-  char   *Begin  =NULL;
-  char   *End    =NULL;
-  char    valid_xlabel[VALID_NAME_LENGTH];
-  char    valid_ylabel[VALID_NAME_LENGTH];
-  char    valid_zlabel[VALID_NAME_LENGTH];
-  char    valid_parent[VALID_NAME_LENGTH];
-
-  if (strstr(part,"data"))
-  { this_p1=detector.p1; Begin = detector.format.BeginData; End = detector.format.EndData; }
-  if (strstr(part,"errors"))
-  { this_p1=detector.p2;Begin = detector.format.BeginErrors; End = detector.format.EndErrors; }
-  if (strstr(part,"ncount") || strstr(part,"events"))
-  { this_p1=detector.p0;Begin = detector.format.BeginNcount; End = detector.format.EndNcount; }
-
-  if (!this_p1 || mcdisable_output_files) return(-1);
-  if (!detector.file_handle && !strstr(detector.format.Name,"NeXus")) return(-1);
-  if (!detector.rank) return(-1);
-
-
-  mcvalid_name(valid_xlabel, detector.xlabel, VALID_NAME_LENGTH);
-  mcvalid_name(valid_ylabel, detector.ylabel, VALID_NAME_LENGTH);
-  mcvalid_name(valid_zlabel, detector.zlabel, VALID_NAME_LENGTH);
-  mcvalid_name(valid_parent, detector.filename, VALID_NAME_LENGTH);
-
-  /* output Begin =========================================================== */
-  if (!strstr(detector.format.Name,"NeXus")
-   && (!strstr(detector.format.Name,"binary") || strstr(part,"empty array"))
-   && !strstr(detector.format.Name,"no header"))
-  pfprintf(detector.file_handle, Begin, "sssssssssssssiiigggggg",
-      detector.prefix,       /* %1$s   PRE  */
-      valid_parent,          /* %2$s   PAR  */
-      detector.filename,     /* %3$s   FIL  */
-      detector.xlabel,       /* %4$s   XLA  */
-      valid_xlabel,          /* %5$s   XVL  */
-      detector.ylabel,       /* %6$s   YLA  */
-      valid_ylabel,          /* %7$s   YVL  */
-      detector.zlabel,       /* %8$s   ZLA  */
-      valid_zlabel,          /* %9$s   ZVL  */
-      detector.title,        /* %10$s  TITL */
-      detector.xvar,         /* %11$s  XVAR */
-      detector.yvar,         /* %12$s  YVAR */
-      detector.zvar,         /* %13$s  ZVAR */
-      detector.m,            /* %14$i  MDIM */
-      detector.n,            /* %15$i  NDIM */
-      detector.p,            /* %16$i  PDIM */
-      detector.xmin,         /* %17$g  XMIN */
-      detector.xmax,         /* %18$g  XMAX */
-      detector.ymin,         /* %19$g  YMIN */
-      detector.ymax,         /* %20$g  YMAX */
-      detector.zmin,         /* %21$g  ZMIN */
-      detector.zmax);        /* %22$g  ZMAX */
-
-  /* output array */
-  if (strstr(part,"empty array")) {
-    /* skip array output: set as empty */
-
-    /* special case of IDL: can not have empty vectors. Init to 'external' */
-    if (strstr(detector.format.Name, "IDL")) fprintf(detector.file_handle, "'external'");
-  } else {
-#ifdef USE_NEXUS
-    /* array NeXus ========================================================== */
-    if (strstr(detector.format.Name,"NeXus")) {
-      if(mcnxfile_data(mcnxHandle, detector, part,
-        valid_parent, valid_xlabel, valid_ylabel, valid_zlabel) == NX_ERROR) {
-        fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_data)\n", valid_parent, detector.filename);
-        return(-1);
-      }
-      return(1);
-    } /* end if NeXus */
-#endif
-    /* array non binary (text) ============================================== */
-    if (!strstr(detector.format.Name, "binary")
-     && !strstr(detector.format.Name, "float") && !strstr(detector.format.Name, "double"))
-    {
-      char eol_char[3];
-      int isIDL    = (strstr(detector.format.Name, "IDL") != NULL);
-      int isPython = (strstr(detector.format.Name, "Python") != NULL);
-      int i,j;
-      if (isIDL) strcpy(eol_char,"$\n");
-      else if (isPython) strcpy(eol_char,"\\\n");
-      else strcpy(eol_char,"\n");
-
-      for(j = 0; j < detector.n*detector.p; j++)  /* loop on rows (y) */
-      {
-        for(i = 0; i < detector.m; i++)  /* write all columns (x) */
-        {
-          long index   = !detector.istransposed ? i*detector.n*detector.p + j : i+j*detector.m;
-          double value = this_p1[index];
-          fprintf(detector.file_handle, "%.12g", value);
-          fprintf(detector.file_handle, "%s",
-            (isIDL || isPython) && ((i+1)*(j+1) < detector.m*detector.n*detector.p) ?
-            "," : " ");
-        }
-        fprintf(detector.file_handle, "%s", eol_char);
-      } /* end 2 loops if not Binary */
-    } /* end if !Binary */
-
-    /* array binary double =================================================== */
-    if (strstr(detector.format.Name, "double"))
-    {
-      long count=0;
-      count = fwrite(this_p1, sizeof(double), detector.m*detector.n*detector.p, detector.file_handle);
-      if (count != detector.m*detector.n*detector.p)
-        fprintf(stderr, "Error: writing double binary file '%s' (%li instead of %li, mcfile_data)\n", detector.filename,count, detector.m*detector.n*detector.p);
-    } /* end if Binary double */
-
-    /* array binary float =================================================== */
-    if (strstr(detector.format.Name, "binary") || strstr(detector.format.Name, "float"))
-    {
-      float *s;
-      s = (float*)malloc(detector.m*detector.n*detector.p*sizeof(float));
-      if (s)
-      {
-        long    i, count=0;
-        for (i=0; i<detector.m*detector.n*detector.p; i++) {
-          s[i] = (float)this_p1[i]; }
-        count = fwrite(s, sizeof(float), detector.m*detector.n*detector.p, detector.file_handle);
-        if (count != detector.m*detector.n*detector.p)
-          fprintf(stderr, "Error writing float binary file '%s' (%li instead of %li, mcfile_data)\n",
-            detector.filename,count, detector.m*detector.n*detector.p);
-        free(s);
-      } else
-      fprintf(stderr, "Error: Out of memory for writing %li float binary file '%s' (mcfile_data)\n",
-        detector.m*detector.n*detector.p*sizeof(float), detector.filename);
-    } /* end if Binary float */
-  } /* end if not empty array */
-
-  /* output End ============================================================= */
-  if (!strstr(detector.format.Name,"NeXus")
-   && (!strstr(detector.format.Name,"binary") || strstr(part,"empty array"))
-   && !strstr(detector.format.Name,"no footer"))
-  pfprintf(detector.file_handle, End, "sssssssssssssiiigggggg",
-      detector.prefix,       /* %1$s   PRE  */
-      valid_parent,          /* %2$s   PAR  */
-      detector.filename,     /* %3$s   FIL  */
-      detector.xlabel,       /* %4$s   XLA  */
-      valid_xlabel,          /* %5$s   XVL  */
-      detector.ylabel,       /* %6$s   YLA  */
-      valid_ylabel,          /* %7$s   YVL  */
-      detector.zlabel,       /* %8$s   ZLA  */
-      valid_zlabel,          /* %9$s   ZVL  */
-      detector.title,        /* %10$s  TITL */
-      detector.xvar,         /* %11$s  XVAR */
-      detector.yvar,         /* %12$s  YVAR */
-      detector.zvar,         /* %13$s  ZVAR */
-      detector.m,            /* %14$i  MDIM */
-      detector.n,            /* %15$i  NDIM */
-      detector.p,            /* %16$i  PDIM */
-      detector.xmin,         /* %17$g  XMIN */
-      detector.xmax,         /* %18$g  XMAX */
-      detector.ymin,         /* %19$g  YMIN */
-      detector.ymax,         /* %20$g  YMAX */
-      detector.zmin,         /* %21$g  ZMIN */
-      detector.zmax);        /* %22$g  ZMAX */
-
-  return(2);
-} /* mcfile_data */
-
-/*******************************************************************************
-* mcdetector_write_sim: write information to sim file
-*******************************************************************************/
-MCDETECTOR mcdetector_write_sim(MCDETECTOR detector)
-{
-  /* MPI: only write sim by Master ========================================== */
-#ifdef USE_MPI
-  if (mpi_node_rank != mpi_node_root) return(detector);
-  if (mcdisable_output_files) return(detector);
-#else
-  /* skip invalid detectors */
-  if (!detector.m || mcdisable_output_files) return(detector);
-#endif
-  
-
-  /* sim file has been initialized when starting simulation and when calling
-   * mcsave ; this defines mcsiminfo_file as the SIM file handle
-   * and calls:
-   *    mcinfo_header
-   *    mcfile_section begin instrument
-   *    mcinfo_instrument
-   *    mcfile_section end instrument
-   *    mcfile_section begin simulation
-   *    mcinfo_simulation
-   *    mcfile_section end simulation
-   *    sets "mcopenedfiles" list to empty string
-   * When using NeXus format, this information is stored into mcnxHandle NX
-   *
-   * The sim file (and mcnxHandle) is closed when ending mcsave
-   */
-
-  MCDETECTOR simfile = mcdetector_import_sim(); /* store reference structure to SIM file */
-
-  /* add component and data section to SIM file */
-  if (!strstr(detector.format.Name,"NeXus"))
-    simfile = mcfile_section(simfile, "begin", detector.simulation, detector.component, "component", 3);
-  simfile = mcfile_section(simfile, "begin", detector.component, detector.filename, "data", 4);
-
-  /* handle indentation for simfile */
-  char prefix[CHAR_BUF_LENGTH];
-  strncpy(prefix, detector.prefix, CHAR_BUF_LENGTH);
-  strncpy(detector.prefix, simfile.prefix, CHAR_BUF_LENGTH);
-
-  /* WRITE detector information to sim file ================================= */
-  mcinfo_data(detector, NULL);
-#ifdef USE_NEXUS
-  /* close information SDS opened with mcfile_section(siminfo,"data") */
-  if (strstr(mcformat.Name, "NeXus"))
-    if (NXclosedata(mcnxHandle) == NX_ERROR)
-      fprintf(stderr, "Warning: NeXus: could not close data set %s/information\n",
-        detector.filename);
-#endif
-  /* WRITE data link to SIM file */
-  if (!strstr(detector.format.Name,"McStas") && !mcsingle_file) {
-    FILE *file=detector.file_handle;
-    detector.file_handle = mcsiminfo_file;
-    mcfile_data(detector, "data (empty array)");
-    if (detector.p2) mcfile_data(detector, "errors (empty array)");
-    if (detector.p0) mcfile_data(detector, "events (empty array)");
-    detector.file_handle = file;
-  }
-
-  /* close component and data sections in SIM file */
-  simfile = mcfile_section(simfile, "end", detector.component, detector.filename, "data", 4);
-  if (!strstr(detector.format.Name,"NeXus"))
-    simfile = mcfile_section(simfile, "end", detector.simulation, detector.component, "component", 3);
-
-  strncpy(detector.prefix, prefix, CHAR_BUF_LENGTH);
-
-  return(detector);
-} /* mcdetector_write_sim */
-
-/*******************************************************************************
-* mcdetector_write_data: write information to data file and catenate lists
-*                        this is where we open/close data files
-*                        also free detector.p1=this_p1 field which may hold
-*                        1D McStas [x I Ierr N] array which is set in mcdetector_import
-*******************************************************************************/
-MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
-{
-  /* skip if 0D or no filename (only stored in sim file) */
-  if (!detector.rank) return(detector);
-
-#ifdef USE_MPI
-  /* only by MASTER for non lists (MPI reduce has been done in detector_import) */
-  if (!strstr(detector.format.Name," list ") && mpi_node_rank != mpi_node_root) {
-    if (detector.rank == 1 && detector.p1 && strstr(detector.format.Name,"McStas")) {
-      free(detector.p1);  /* 'this_p1' allocated in mcdetector_import for 1D McStas data sets [x I E N] */
-      detector.p0 = detector.p0_orig;
-      detector.p1 = detector.p1_orig;
-      detector.p2 = detector.p2_orig;
-      detector.m = detector.n; detector.n=1; detector.istransposed=0;
-    }
-    return(detector);
-  }
-#else
-  /* skip if no data */
-  if (!detector.m || !strlen(detector.filename)) return(detector);
-#endif
-
-  /* OPEN data file (possibly appending if already opened) ================== */
-  if (mcformat_data.Name && strlen(mcformat_data.Name) && !mcsingle_file)
-    detector.format = mcformat_data;
-
-  if (!strstr(detector.format.Name, "NeXus")) {
-    /* explicitely open data file if not NeXus format */
-    char mode[10];
-
-    /* open or re-open file for write/append */
-    strcpy(mode,
-           (strstr(detector.format.Name, "no header")
-            || strstr(detector.format.Name, "append") || strstr(detector.format.Name, "catenate")
-            || strstr(mcopenedfiles, detector.filename) ?
-           "a" : "w"));
-    if (strstr(detector.format.Name, "binary")) strcat(mode, "b");
-    detector.file_handle = mcnew_file(!mcsingle_file ?
-      detector.filename : mcsiminfo_name,
-      detector.format.Extension, mode);
-  } else {
-    /* NeXus file mcnxHandle has been opened in mcsiminfo_init */
-    /* but we must open the proper Data Set group and write information */
-    mcfile_section(detector, "begin", detector.component, detector.filename, "data", 4);
-  }
-
-  /* WRITE data header (except when in 'no header') */
-  if (!strstr(detector.format.Name, "no header")) {
-    if (!strstr(detector.format.Name, "binary") && !mcascii_only)  {
-      /* skip in data-only mode or binary */
-      mcinfo_header(detector, "header");
-      mcinfo_simulation(detector, mcsiminfo_name);
-      mcinfo_data(detector, detector.filename);
-      /* mcinfo_simulation(detector, detector.filename); */
-    }
-  }
-#ifdef USE_NEXUS
-  /* close information SDS opened with mcfile_section(detector,"data") */
-  if (strstr(mcformat.Name, "NeXus")) {
-    mcinfo_header(detector, "footer");
-    if (NXclosedata(mcnxHandle) == NX_ERROR)
-      fprintf(stderr, "Warning: NeXus: could not close data set %s/information (footer)\n",
-        detector.filename);
-  }
-  /* group remains opened for data to be written */
-#endif
-
-  /* case: list of events =================================================== */
-  if (strstr(detector.format.Name," list ")) {
-
-#ifdef USE_MPI
-    if (mpi_node_rank != mpi_node_root) {
-      /* MPI slave: all slaves send their data to master */
-      /* m, n, p must be sent too, since all slaves do not have the same number of events */
-      int mnp[3]={detector.m,detector.n,detector.p};
-
-      if (mc_MPI_Send(mnp, 3, MPI_INT, mpi_node_root)!= MPI_SUCCESS)
-        fprintf(stderr, "Warning: proc %i to master: MPI_Send mnp list error (mcdetector_write_data)\n", mpi_node_rank);
-      if (!detector.p1
-       || mc_MPI_Send(detector.p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, mpi_node_root) != MPI_SUCCESS)
-        fprintf(stderr, "Warning: proc %i to master: MPI_Send p1 list error: mnp=%i (mcdetector_write_data)\n", mpi_node_rank, abs(mnp[0]*mnp[1]*mnp[2]));
-      /* slaves are done */
-      return (detector);
-    }
-#endif
-
-    /* master node or non-MPI list: store data block */
-    int     master_mnp[3]={detector.m,detector.n,detector.p};
-
-#ifdef USE_MPI
-    int     node_i=0;
-    /* MPI master: receive data from slaves */
-    for(node_i=0; node_i<mpi_node_count; node_i++) {
-      double *this_p1=NULL;                               /* buffer to hold the list to save */
-      int     mnp[3]={detector.m,detector.m,detector.p};  /* size of this buffer */
-      if (node_i != mpi_node_root) { /* get data from slaves */
-        if (mc_MPI_Recv(mnp, 3, MPI_INT, node_i) != MPI_SUCCESS)
-          fprintf(stderr, "Warning: master from proc %i: "
-            "MPI_Recv mnp list error (mcdetector_write_data)\n", node_i);
-        this_p1 = (double *)calloc(abs(mnp[0]*mnp[1]*mnp[2]), sizeof(double));
-        if (!this_p1 || mc_MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i)!= MPI_SUCCESS)
-          fprintf(stderr, "Warning: master from proc %i: "
-            "MPI_Recv p1 list error: mnp=%i (mcdetector_write_data)\n", node_i, abs(mnp[0]*mnp[1]*mnp[2]));
-        detector.p1 = this_p1;
-        detector.m  = mnp[0]; detector.n  = mnp[1]; detector.p  = mnp[2];
-      } else
-#endif
-      { /* MASTER/single node use its own detector structure */
-        detector.p1 = detector.p1_orig;
-        detector.m  = master_mnp[0]; detector.n  = master_mnp[1]; detector.p  = master_mnp[2];
-      }
-
-      /* WRITE list data (will be catenated in case of MPI as file is already opened) */
-      mcfile_data(detector, "data");
-
-#ifdef USE_MPI
-      /* free temporary MPI block used for Recv from slaves */
-      if (this_p1 && node_i != mpi_node_root)
-        free(this_p1);
-      detector.p0 = detector.p0_orig;
-      detector.p1 = detector.p1_orig;
-      detector.p2 = detector.p2_orig;
-      detector.m  = master_mnp[0]; detector.n  = master_mnp[1]; detector.p  = master_mnp[2];
-
-    } /* for node_i: end loop on nodes */
-#endif
-
-  } /* end list case */
-  else
-  {
-  /* case: normal detector ================================================== */
-
-    /* WRITE data */
-    mcfile_data(detector, "data");
-
-    /* write errors (not for lists) */
-    if (detector.p2) mcfile_data(detector, "errors");
-
-    /* write events (not for lists) */
-    if (detector.p0) mcfile_data(detector, "events");
-
-    if (detector.rank == 1 && detector.p1 && strstr(detector.format.Name,"McStas")) {
-      free(detector.p1);  /* 'this_p1' allocated in mcdetector_write_sim for 1D McStas data sets [x I E N] */
-      detector.p0 = detector.p0_orig;
-      detector.p1 = detector.p1_orig;
-      detector.p2 = detector.p2_orig;
-      detector.m = detector.n; detector.n=1; detector.istransposed=0;
-    }
-  } /* end normal detector case */
-
-  /* WRITE data footer (except when 'no footer') */
-  if (!strstr(detector.format.Name, "no footer") && !strstr(mcformat.Name, "NeXus")) {
-    /* skip in data-only mode or binary */
-    if (!strstr(detector.format.Name, "binary") && !mcascii_only)
-      mcinfo_header(detector, "footer");
-  }
-
-  /* close data file and free memory */
-  if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
-    free(mcDetectorCustomHeader); mcDetectorCustomHeader=NULL; }
-
-  if (!strstr(mcformat.Name, "NeXus") && detector.file_handle != mcsiminfo_file
-   && !mcdisable_output_files && detector.file_handle)
-    fclose(detector.file_handle);
-  else if (strstr(mcformat.Name, "NeXus")) {
-    /* close data set group */
-    mcfile_section(detector, "end", detector.component, detector.filename, "data", 4);
-  }
-
-  return(detector);
-} /* mcdetector_write_data */
-
-/*******************************************************************************
 * mcdetector_out_0D: wrapper for 0D (single value).
+*   Output single detector/monitor data (p0, p1, p2).
+*   Title is t, component name is c.
 *******************************************************************************/
 MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
                          char *c, Coords posa)
 {
-  /* import and perform basic detector analysis (and handle MPI reduce except for lists) */
+  /* import and perform basic detector analysis (and handle MPI reduce) */
   MCDETECTOR detector = mcdetector_import(mcformat,
-    c, (t ? t : "McStas data"),
+    c, (t ? t : MCCODE_STRING " data"),
     1, 1, 1,
     "I", "", "",
     "I", "", "",
     0, 0, 0, 0, 0, 0, "",
     &p0, &p1, &p2, posa); /* write Detector: line */
 
-  /* write detector to simulation file (incl custom header if any) */
-  detector = mcdetector_write_sim(detector);
-  mcdetector_register(detector);
-  return(detector);
-}
+#ifdef USE_NEXUS
+  if (strcasestr(mcformat, "NeXus"))
+    return(mcdetector_out_0D_nexus(detector));
+  else
+#endif
+    return(mcdetector_out_0D_ascii(detector));
+    
+} /* mcdetector_out_0D */
+
+
 
 /*******************************************************************************
 * mcdetector_out_1D: wrapper for 1D.
+*   Output 1d detector data (p0, p1, p2) for n bins linearly
+*   distributed across the range x1..x2 (x1 is lower limit of first
+*   bin, x2 is upper limit of last bin). Title is t, axis labels are xl
+*   and yl. File name is f, component name is c.
 *******************************************************************************/
 MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
         char *xvar, double x1, double x2,
-        int n,
+        long n,
         double *p0, double *p1, double *p2, char *f,
         char *c, Coords posa)
 {
-  /* import and perform basic detector analysis (and handle MPI_Reduce except for lists) */
+  
+  /* import and perform basic detector analysis (and handle MPI_Reduce) */
   MCDETECTOR detector = mcdetector_import(mcformat,
-    c, (t ? t : "McStas 1D data"),
+    c, (t ? t : MCCODE_STRING " 1D data"),
     n, 1, 1,
     xl, yl, (n > 1 ? "Signal per bin" : " Signal"),
     xvar, "(I,I_err)", "I",
     x1, x2, 0, 0, 0, 0, f,
     p0, p1, p2, posa); /* write Detector: line */
+  if (!detector.p1 || !detector.m) return(detector);
 
-  /* write detector to simulation and data file (incl custom header if any) */
-  detector = mcdetector_write_sim(detector);
-  detector = mcdetector_write_data(detector);  /* will also merge lists */
-  mcdetector_register(detector);
-  return(detector);
-}
+#ifdef USE_NEXUS
+  if (strcasestr(mcformat, "NeXus"))
+    return(mcdetector_out_1D_nexus(detector));
+  else
+#endif
+    return(mcdetector_out_1D_ascii(detector));
+  
+} /* mcdetector_out_1D */
 
 /*******************************************************************************
 * mcdetector_out_2D: wrapper for 2D.
+*   special case for list: master creates file first, then slaves append their blocks without header
 *******************************************************************************/
 MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2,
-                  int m, int n,
+                  long m, long n,
                   double *p0, double *p1, double *p2, char *f,
                   char *c, Coords posa)
 {
   char xvar[CHAR_BUF_LENGTH];
   char yvar[CHAR_BUF_LENGTH];
-
+  
+  /* create short axes labels */
   if (xl && strlen(xl)) { strncpy(xvar, xl, CHAR_BUF_LENGTH); xvar[2]='\0'; }
   else strcpy(xvar, "x");
   if (yl && strlen(yl)) { strncpy(yvar, yl, CHAR_BUF_LENGTH); yvar[2]='\0'; }
   else strcpy(yvar, "y");
-
-  /* is it in fact a 1D call ? */
-  if (m == 1)      return(mcdetector_out_1D(
-                    t, yl, "I", yvar, y1, y2, n, p0, p1, p2, f, c, posa));
-  else if (n == 1) return(mcdetector_out_1D(
-                    t, xl, "I", xvar, x1, x2, m, p0, p1, p2, f, c, posa));
-
-  /* import and perform basic detector analysis (and handle MPI_Reduce except for lists) */
+  
+  /* import and perform basic detector analysis (and handle MPI_Reduce) */
   MCDETECTOR detector = mcdetector_import(mcformat,
-    c, (t ? t : "McStas 2D data"),
+    c, (t ? t : MCCODE_STRING " 2D data"),
     m, n, 1,
     xl, yl, "Signal per bin",
     xvar, yvar, "I",
     x1, x2, y1, y2, 0, 0, f,
     p0, p1, p2, posa); /* write Detector: line */
+  if (!detector.p1 || !detector.m) return(detector);
 
-  /* write detector to simulation and data file (incl custom header if any) */
-  detector = mcdetector_write_sim(detector);
-  detector = mcdetector_write_data(detector); /* will also merge lists */
-  mcdetector_register(detector);
-  return(detector);
-}
-
-/*******************************************************************************
-* mcdetector_out_3D: wrapper for 3D.
-*   exported as a large 2D array, but the 3 dims are given in the header
-*******************************************************************************/
-MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
-      char *xvar, char *yvar, char *zvar,
-      double x1, double x2, double y1, double y2, double z1, double z2,
-      int m, int n, int p,
-      double *p0, double *p1, double *p2, char *f,
-      char *c, Coords posa)
-{
-  /* import and perform basic detector analysis (and handle MPI_Reduce except for lists) */
-  MCDETECTOR detector = mcdetector_import(mcformat,
-    c, (t ? t : "McStas 3D data"),
-    m, n, p,
-    xl, yl, zl,
-    xvar, yvar, zvar,
-    x1, x2, y1, y2, z1, z2, f,
-    p0, p1, p2, posa); /* write Detector: line */
-
-  /* write detector to simulation and data file (incl custom header if any) */
-  detector = mcdetector_write_sim(detector);
-  detector = mcdetector_write_data(detector); /* will also merge lists */
-  mcdetector_register(detector);
-  return(detector);
-}
-
-/*******************************************************************************
-* mcuse_format_header: Replaces aliases names in format fields (header part)
-*******************************************************************************/
-char *mcuse_format_header(char *format_const)
-{ /* Header Footer */
-  char *format=NULL;
-
-  if (!format_const) return(NULL);
-  format = (char *)malloc(strlen(format_const)+1);
-  if (!format) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format_header)\n"));
-  strcpy(format, format_const);
-  str_rep(format, "%PRE", "%1$s"); /* prefix */
-  str_rep(format, "%SRC", "%2$s"); /* name of instrument source file */
-  str_rep(format, "%FIL", "%3$s"); /* output file name (data) */
-  str_rep(format, "%FMT", "%4$s"); /* format name */
-  str_rep(format, "%DATL","%8$li");/* Time elapsed since Jan 1st 1970, in seconds */
-  str_rep(format, "%DAT", "%5$s"); /* Date as a string */
-  str_rep(format, "%USR", "%6$s"); /* User/machine name */
-  str_rep(format, "%PAR", "%7$s"); /* Parent name (root/mcstas) valid_parent */
-  str_rep(format, "%VPA", "%7$s");
-  return(format);
-}
-
-/*******************************************************************************
-* mcuse_format_tag: Replaces aliases names in format fields (tag part)
-*******************************************************************************/
-char *mcuse_format_tag(char *format_const)
-{ /* AssignTag */
-  char *format=NULL;
-
-  if (!format_const) return(NULL);
-  format = (char *)malloc(strlen(format_const)+1);
-  if (!format) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format_tag)\n"));
-  strcpy(format, format_const);
-  str_rep(format, "%PRE", "%1$s"); /* prefix */
-  str_rep(format, "%SEC", "%2$s"); /* section/parent name valid_parent/section */
-  str_rep(format, "%PAR", "%2$s");
-  str_rep(format, "%VPA", "%2$s");
-  str_rep(format, "%NAM", "%3$s"); /* name of field valid_name */
-  str_rep(format, "%VNA", "%3$s");
-  str_rep(format, "%VAL", "%4$s"); /* value of field */
-  return(format);
-}
-
-/*******************************************************************************
-* mcuse_format_section: Replaces aliases names in format fields (section part)
-*******************************************************************************/
-char *mcuse_format_section(char *format_const)
-{ /* BeginSection EndSection */
-  char *format=NULL;
-
-  if (!format_const) return(NULL);
-  format = (char *)malloc(strlen(format_const)+1);
-  if (!format) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format_section)\n"));
-  strcpy(format, format_const);
-  str_rep(format, "%PRE", "%1$s"); /* prefix */
-  str_rep(format, "%TYP", "%2$s"); /* type/class of section */
-  str_rep(format, "%NAM", "%3$s"); /* name of section */
-  str_rep(format, "%SEC", "%3$s");
-  str_rep(format, "%VNA", "%4$s"); /* valid name (letters/digits) of section */
-  str_rep(format, "%PAR", "%5$s"); /* parent name (simulation) */
-  str_rep(format, "%VPA", "%6$s"); /* valid parent name (letters/digits) */
-  str_rep(format, "%LVL", "%7$i"); /* level index */
-  return(format);
-}
-
-/*******************************************************************************
-* mcuse_format_data: Replaces aliases names in format fields (data part)
-*******************************************************************************/
-char *mcuse_format_data(char *format_const)
-{ /* BeginData EndData BeginErrors EndErrors BeginNcount EndNcount */
-  char *format=NULL;
-
-  if (!format_const) return(NULL);
-  format = (char *)malloc(strlen(format_const)+1);
-  if (!format) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format_data)\n"));
-  strcpy(format, format_const);
-  str_rep(format, "%PRE", "%1$s"); /* prefix */
-  str_rep(format, "%PAR", "%2$s"); /* parent name (component instance name) valid_parent */
-  str_rep(format, "%VPA", "%2$s");
-  str_rep(format, "%FIL", "%3$s"); /* output file name (data) */
-  str_rep(format, "%XLA", "%4$s"); /* x axis label */
-  str_rep(format, "%XVL", "%5$s"); /* x axis valid label (letters/digits) */
-  str_rep(format, "%YLA", "%6$s"); /* y axis label */
-  str_rep(format, "%YVL", "%7$s"); /* y axis valid label (letters/digits) */
-  str_rep(format, "%ZLA", "%8$s"); /* z axis label */
-  str_rep(format, "%ZVL", "%9$s"); /* z axis valid label (letters/digits) */
-  str_rep(format, "%TITL", "%10$s"); /* data title */
-  str_rep(format, "%XVAR", "%11$s"); /* x variables */
-  str_rep(format, "%YVAR", "%12$s"); /* y variables */
-  str_rep(format, "%ZVAR", "%13$s"); /* z variables */
-  str_rep(format, "%MDIM", "%14$i"); /* m dimension of x axis */
-  str_rep(format, "%NDIM", "%15$i"); /* n dimension of y axis */
-  str_rep(format, "%PDIM", "%16$i"); /* p dimension of z axis */
-  str_rep(format, "%XMIN", "%17$g"); /* x min axis value (m bins) */
-  str_rep(format, "%XMAX", "%18$g"); /* x max axis value (m bins) */
-  str_rep(format, "%YMIN", "%19$g"); /* y min axis value (n bins) */
-  str_rep(format, "%YMAX", "%20$g"); /* y max axis value (n bins) */
-  str_rep(format, "%ZMIN", "%21$g"); /* z min axis value (usually min of signal, p bins) */
-  str_rep(format, "%ZMAX", "%22$g"); /* z max axis value (usually max of signal, p bins) */
-  return(format);
-}
-
-/*******************************************************************************
-* mcuse_format: selects an output format for sim and data files. returns format
-*******************************************************************************/
-struct mcformats_struct mcuse_format(char *format)
-{
-  int i,j;
-  int i_format=-1;
-  char *tmp;
-  char low_format[256];
-  struct mcformats_struct usedformat;
-
-  usedformat.Name = NULL;
-  /* get the format to lower case */
-  if (!format) exit(fprintf(stderr, "Error: Invalid NULL format. Exiting (mcuse_format)\n"));
-  strcpy(low_format, format);
-  for (i=0; i<strlen(low_format); i++) low_format[i]=tolower(format[i]);
-  /* handle format aliases */
-  if (!strcmp(low_format, "pgplot")) strcpy(low_format, "mcstas");
-  if (!strcmp(low_format, "hdf"))    strcpy(low_format, "nexus");
-#ifndef USE_NEXUS
-  if (!strcmp(low_format, "nexus"))
-    fprintf(stderr, "WARNING: to enable NeXus format you must have the NeXus libs installed.\n"
-                    "         You should then re-compile with the -DUSE_NEXUS define.\n");
+#ifdef USE_NEXUS
+  if (strcasestr(mcformat, "NeXus"))
+    return(mcdetector_out_2D_nexus(detector));
+  else
 #endif
-
-  tmp = (char *)malloc(256);
-  if(!tmp) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format)\n"));
-
-  /* look for a specific format in mcformats.Name table */
-  for (i=0; i < mcNUMFORMATS; i++)
-  {
-    strcpy(tmp, mcformats[i].Name);
-    for (j=0; j<strlen(tmp); j++) tmp[j] = tolower(tmp[j]);
-    if (strstr(low_format, tmp))  i_format = i;
-  }
-  if (i_format < 0)
-  {
-    i_format = 0; /* default format is #0 McStas */
-    fprintf(stderr, "Warning: unknown output format '%s'. Using default (%s, mcuse_format).\n", format, mcformats[i_format].Name);
-  }
-
-  usedformat = mcformats[i_format];
-  strcpy(tmp, usedformat.Name);
-  usedformat.Name = tmp;
-  if (strstr(low_format,"raw")) strcat(usedformat.Name," raw");
-  if (strstr(low_format,"binary"))
-  {
-    if (strstr(low_format,"double")) strcat(usedformat.Name," binary double data");
-    else strcat(usedformat.Name," binary float data");
-    mcascii_only = 1;
-  }
-
-  /* Replaces vfprintf parameter name aliases */
-  /* Header Footer */
-  usedformat.Header       = mcuse_format_header(usedformat.Header);
-  usedformat.Footer       = mcuse_format_header(usedformat.Footer);
-  /* AssignTag */
-  usedformat.AssignTag    = mcuse_format_tag(usedformat.AssignTag);
-  /* BeginSection EndSection */
-  usedformat.BeginSection = mcuse_format_section(usedformat.BeginSection);
-  usedformat.EndSection   = mcuse_format_section(usedformat.EndSection);
-  /*  BeginData  EndData  BeginErrors  EndErrors  BeginNcount  EndNcount  */
-  usedformat.BeginData    = mcuse_format_data(usedformat.BeginData  );
-  usedformat.EndData      = mcuse_format_data(usedformat.EndData    );
-  usedformat.BeginErrors  = mcuse_format_data(usedformat.BeginErrors);
-  usedformat.EndErrors    = mcuse_format_data(usedformat.EndErrors  );
-  usedformat.BeginNcount  = mcuse_format_data(usedformat.BeginNcount);
-  usedformat.EndNcount    = mcuse_format_data(usedformat.EndNcount  );
-
-  return(usedformat);
-} /* mcuse_format */
+    return(mcdetector_out_2D_ascii(detector));
+  
+} /* mcdetector_out_2D */
 
 /*******************************************************************************
-* mcclear_format: free format structure
+* mcdetector_out_list: wrapper for list output (calls out_2D with mcformat+"list").
+*   m=number of events, n=size of each event
 *******************************************************************************/
-void mcclear_format(struct mcformats_struct usedformat)
+MCDETECTOR mcdetector_out_list(char *t, char *xl, char *yl,
+                  long m, long n,
+                  double *p1, char *f,
+                  char *c, Coords posa)
 {
-/* free format specification strings */
-  if (usedformat.Name        ) free(usedformat.Name        );
-  else return;
-  if (usedformat.Header      ) free(usedformat.Header      );
-  if (usedformat.Footer      ) free(usedformat.Footer      );
-  if (usedformat.AssignTag   ) free(usedformat.AssignTag   );
-  if (usedformat.BeginSection) free(usedformat.BeginSection);
-  if (usedformat.EndSection  ) free(usedformat.EndSection  );
-  if (usedformat.BeginData   ) free(usedformat.BeginData   );
-  if (usedformat.EndData     ) free(usedformat.EndData     );
-  if (usedformat.BeginErrors ) free(usedformat.BeginErrors );
-  if (usedformat.EndErrors   ) free(usedformat.EndErrors   );
-  if (usedformat.BeginNcount ) free(usedformat.BeginNcount );
-  if (usedformat.EndNcount   ) free(usedformat.EndNcount   );
-} /* mcclear_format */
+  char       format_new[CHAR_BUF_LENGTH];
+  char      *format_org;
+  MCDETECTOR detector;
+  
+  format_org = mcformat;
+  strcpy(format_new, mcformat);
+  strcat(format_new, " list");
+  mcformat = format_new;
 
-/*******************************************************************************
-* mcuse_file: will save data/sim files
-*******************************************************************************/
-static void mcuse_file(char *file)
-{
-  if (file && strcmp(file, "NULL"))
-    mcsiminfo_name = file;
-  else {
-    char *filename=(char*)malloc(CHAR_BUF_LENGTH);
-    sprintf(filename, "%s_%li", mcinstrument_name, mcstartdate);
-    mcsiminfo_name = filename;
-  }
-  mcsingle_file  = 1;
+  detector = mcdetector_out_2D(t, xl, yl,
+                  1,abs(m),1,abs(n),
+                  m,n,
+                  NULL, p1, NULL, f,
+                  c, posa);
+  
+  mcformat = format_org;
+  return(detector);
 }
+
+/*******************************************************************************
+ * mcuse_dir: set data/sim storage directory and create it,
+ * or exit with error if exists
+ ******************************************************************************/
+static void
+mcuse_dir(char *dir)
+{
+  if (!dir || !strlen(dir)) return;
+#ifdef MC_PORTABLE
+  fprintf(stderr, "Error: "
+          "Directory output cannot be used with portable simulation (mcuse_dir)\n");
+  exit(1);
+#else  /* !MC_PORTABLE */
+  /* handle file://directory URL type */
+  if (strncmp(dir, "file://", strlen("file://")))
+    mcdirname = dir;
+  else
+    mcdirname = dir+strlen("file://");
+
+  MPI_MASTER(
+    if(mkdir(mcdirname, 0777)) {
+#ifndef DANSE
+      fprintf(stderr, "Error: unable to create directory '%s' (mcuse_dir)\n", dir);
+      fprintf(stderr, "(Maybe the directory already exists?)\n");
+      exit(1);
+#endif
+    }
+  ); /* MPI_MASTER */
+
+  /* remove trailing PATHSEP (if any) */
+  while (strlen(mcdirname) && mcdirname[strlen(mcdirname) - 1] == MC_PATHSEP_C)
+    mcdirname[strlen(mcdirname) - 1]='\0';
+#endif /* !MC_PORTABLE */
+} /* mcuse_dir */
+
+/*******************************************************************************
+* mcinfo: display instrument simulation info to stdout and exit
+*******************************************************************************/
+static void
+mcinfo(void)
+{
+  fprintf(stdout, "instrument: %s\n", mcinstrument_name);
+  mcinfo_out("  ", stdout);
+  exit(0); /* includes MPI_Finalize in MPI mode */
+} /* mcinfo */
+
+#endif /* ndef MCCODE_R_IO_C */
 
 /*******************************************************************************
 * mcset_ncount: set total number of rays to generate
@@ -3095,7 +2028,7 @@ mcsetseed(char *arg)
   }
 }
 
-/* Following part is only embedded when not redundent with mcstas.h ========= */
+/* Following part is only embedded when not redundent with mccode-r.h ========= */
 
 #ifndef MCCODE_H
 
@@ -4150,7 +3083,7 @@ unsigned long mt_random(void)
 
 /* End of "Mersenne Twister". */
 
-/* End of McStas random number routine. */
+/* End of McCode random number routine. */
 
 /* randnorm: generate a random number from normal law */
 double
@@ -4244,22 +3177,24 @@ mchelp(char *pgmname)
   fprintf(stderr,
 "Options are:\n"
 "  -s SEED   --seed=SEED      Set random seed (must be != 0)\n"
-"  -n COUNT  --ncount=COUNT   Set number of @MCCODE_PARTICLE@s to simulate.\n"
+"  -n COUNT  --ncount=COUNT   Set number of @MCCODE_PARTICULE@s to simulate.\n"
 "  -d DIR    --dir=DIR        Put all data files in directory DIR.\n"
-"  -f FILE   --file=FILE      Put all data in a single file.\n"
-"  -t        --trace          Enable trace of @MCCODE_PARTICLE@s through instrument.\n"
+"  -t        --trace          Enable trace of @MCCODE_PARTICULE@s through instrument.\n"
 "  -g        --gravitation    Enable gravitation for all trajectories.\n"
-"  -a        --data-only      Do not put any headers in the data files.\n"
 "  --no-output-files          Do not write any data files.\n"
 "  -h        --help           Show this help message.\n"
 "  -i        --info           Detailed instrument information.\n"
-"  --format=FORMAT            Output data files using format FORMAT\n"
-"                             (use option +a to include text header in files\n"
-#ifdef USE_MPI
-"This instrument has been compiled with MPI support. Use 'mpirun'.\n"
+"  --format=FORMAT            Output data files using FORMAT="
+   FLAVOR_UPPER
+#ifdef USE_NEXUS
+   " NEXUS"
 #endif
-"\n"
+"\n\n"
 );
+#ifdef USE_MPI
+  fprintf(stderr,
+  "This instrument has been compiled with MPI support.\n  Use 'mpirun %s [options] [parm=value ...]'.\n", pgmname);
+#endif
   if(mcnumipar > 0)
   {
     fprintf(stderr, "Instrument parameters are:\n");
@@ -4272,11 +3207,7 @@ mchelp(char *pgmname)
         fprintf(stderr, "  %-16s(%s)\n", mcinputtable[i].name,
         (*mcinputtypes[mcinputtable[i].type].parminfo)(mcinputtable[i].name));
   }
-  fprintf(stderr, "Available output formats are (default is %s):\n  ", mcformat.Name);
-  for (i=0; i < mcNUMFORMATS; fprintf(stderr,"\"%s\" " , mcformats[i++].Name) );
-  fprintf(stderr, "\n  Format modifiers: FORMAT may be followed by 'binary float' or \n");
-  fprintf(stderr, "  'binary double' to save data blocks as binary. This removes text headers.\n");
-  fprintf(stderr, "  The " FLAVOR_UPPER "_FORMAT environment variable may set the default FORMAT to use.\n");
+
 #ifndef NOSIGNALS
   fprintf(stderr, "Known signals are: "
 #ifdef SIGUSR1
@@ -4323,64 +3254,12 @@ mcenabletrace(void)
  {
    fprintf(stderr,
            "Error: trace not enabled (mcenabletrace)\n"
-           "Please re-run the McStas compiler "
+           "Please re-run the " MCCODE_NAME " compiler "
                    "with the --trace option, or rerun the\n"
            "C compiler with the MC_TRACE_ENABLED macro defined.\n");
    exit(1);
  }
 }
-
-/*******************************************************************************
- * mcuse_dir: set data/sim storage directory and create it,
- * or exit with error if exists
- ******************************************************************************/
-static void
-mcuse_dir(char *dir)
-{
-  if (!dir || !strlen(dir)) return;
-#ifdef MC_PORTABLE
-  fprintf(stderr, "Error: "
-          "Directory output cannot be used with portable simulation (mcuse_dir)\n");
-  exit(1);
-#else  /* !MC_PORTABLE */
-#ifdef USE_MPI
-  if(mpi_node_rank == mpi_node_root)
-  {
-#endif
-    if(mkdir(dir, 0777)) {
-#ifndef DANSE
-      fprintf(stderr, "Error: unable to create directory '%s' (mcuse_dir)\n", dir);
-      fprintf(stderr, "(Maybe the directory already exists?)\n");
-      exit(1);
-#endif
-    }
-#ifdef USE_MPI
-  }
-#endif
-  /* handle file://directory URL type */
-  if (strncmp(dir, "file:/", strlen("file:/")))
-    mcdirname = dir;
-  else
-    mcdirname = dir+strlen("file:/");
-
-  /* remove trailing PATHSEP (if any) */
-  while (strlen(mcdirname) && mcdirname[strlen(mcdirname) - 1] == MC_PATHSEP_C)
-    mcdirname[strlen(mcdirname) - 1]='\0';
-#endif /* !MC_PORTABLE */
-} /* mcuse_dir */
-
-/*******************************************************************************
-* mcinfo: display instrument simulation info to stdout and exit
-*******************************************************************************/
-static void
-mcinfo(void)
-{
-  if(strstr(mcformat.Name,"NeXus"))
-    exit(fprintf(stderr,"Error: Can not display instrument information in NeXus binary format\n"));
-  mcsiminfo_init(stdout);
-  mcsiminfo_close();
-  exit(0); /* includes MPI_Finalize in MPI mode */
-} /* mcinfo */
 
 /*******************************************************************************
 * mcreadparams: request parameters from the prompt (or use default)
@@ -4527,20 +3406,12 @@ mcparseoptions(int argc, char *argv[])
       usedir=argv[++i];
     else if(!strncmp("--dir=", argv[i], 6))
       usedir=&argv[i][6];
-    else if(!strcmp("-f", argv[i]) && (i + 1) < argc)
-      mcuse_file(argv[++i]);
-    else if(!strncmp("-f", argv[i], 2))
-      mcuse_file(&argv[i][2]);
-    else if(!strcmp("--file", argv[i]) && (i + 1) < argc)
-      mcuse_file(argv[++i]);
-    else if(!strncmp("--file=", argv[i], 7))
-      mcuse_file(&argv[i][7]);
     else if(!strcmp("-h", argv[i]))
       mcshowhelp(argv[0]);
     else if(!strcmp("--help", argv[i]))
       mcshowhelp(argv[0]);
     else if(!strcmp("-i", argv[i])) {
-      mcformat=mcuse_format(MCSTAS_FORMAT);
+      mcformat=FLAVOR_UPPER;
       mcinfo();
     }
     else if(!strcmp("--info", argv[i]))
@@ -4549,31 +3420,15 @@ mcparseoptions(int argc, char *argv[])
       mcenabletrace();
     else if(!strcmp("--trace", argv[i]))
       mcenabletrace();
-    else if(!strcmp("-a", argv[i]))
-      mcascii_only = 1;
-    else if(!strcmp("+a", argv[i]))
-      mcascii_only = 0;
-    else if(!strcmp("--data-only", argv[i]))
-      mcascii_only = 1;
     else if(!strcmp("--gravitation", argv[i]))
       mcgravitation = 1;
     else if(!strcmp("-g", argv[i]))
       mcgravitation = 1;
     else if(!strncmp("--format=", argv[i], 9)) {
-      mcascii_only = 0;
-      mcformat=mcuse_format(&argv[i][9]);
+      mcformat=&argv[i][9];
     }
     else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
-      mcascii_only = 0;
-      mcformat=mcuse_format(argv[++i]);
-    }
-    else if(!strncmp("--format_data=", argv[i], 14) || !strncmp("--format-data=", argv[i], 14)) {
-      mcascii_only = 0;
-      mcformat_data=mcuse_format(&argv[i][14]);
-    }
-    else if((!strcmp("--format_data", argv[i]) || !strcmp("--format-data", argv[i])) && (i + 1) < argc) {
-      mcascii_only = 0;
-      mcformat_data=mcuse_format(argv[++i]);
+      mcformat=argv[++i];
     }
     else if(!strcmp("--no-output-files", argv[i]))
       mcdisable_output_files = 1;
@@ -4611,10 +3466,6 @@ mcparseoptions(int argc, char *argv[])
       mcusage(argv[0]);
     }
   }
-  if (!mcascii_only) {
-    if (strstr(mcformat.Name,"binary")) fprintf(stderr, "Warning: %s files will contain text headers.\n         Use -a option to clean up.\n", mcformat.Name);
-    strcat(mcformat.Name, " with text headers");
-  }
   if(!paramset)
     mcreadparams();                /* Prompt for parameters if not specified. */
   else
@@ -4650,7 +3501,7 @@ void sighandler(int sig)
 #define SIG_STAT 2
 #define SIG_ABRT 3
 
-  printf("\n# McStas: [pid %i] Signal %i detected", getpid(), sig);
+  printf("\n# " MCCODE_STRING ": [pid %i] Signal %i detected", getpid(), sig);
 #ifdef USE_MPI
   printf(" [proc %i]", mpi_node_rank);
 #endif
@@ -4728,14 +3579,14 @@ void sighandler(int sig)
 
   if (sig == SIG_STAT)
   {
-    printf("# McStas: Resuming simulation (continue)\n");
+    printf("# " MCCODE_STRING ": Resuming simulation (continue)\n");
     fflush(stdout);
     return;
   }
   else
   if (sig == SIG_SAVE)
   {
-    printf("# McStas: Saving data and resume simulation (continue)\n");
+    printf("# " MCCODE_STRING ": Saving data and resume simulation (continue)\n");
     mcsave(NULL);
     fflush(stdout);
     return;
@@ -4743,7 +3594,7 @@ void sighandler(int sig)
   else
   if (sig == SIG_TERM)
   {
-    printf("# McStas: Finishing simulation (save results and exit)\n");
+    printf("# " MCCODE_STRING ": Finishing simulation (save results and exit)\n");
     mcfinally();
     exit(0);
   }
@@ -4751,7 +3602,7 @@ void sighandler(int sig)
   {
     fflush(stdout);
     perror("# Last I/O Error");
-    printf("# McStas: Simulation stop (abort)\n");
+    printf("# " MCCODE_STRING ": Simulation stop (abort)\n");
     exit(-1);
   }
 #undef SIG_SAVE
@@ -4782,6 +3633,7 @@ int mccode_main(int argc, char *argv[])
   MPI_Init(&argc,&argv);
   MPI_Comm_size(MPI_COMM_WORLD, &mpi_node_count); /* get number of nodes */
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_node_rank);
+  MPI_Comm_set_name(MPI_COMM_WORLD, mcinstrument_name);
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
 #endif /* USE_MPI */
 
@@ -4805,18 +3657,10 @@ int mccode_main(int argc, char *argv[])
 
 /* *** parse options ******************************************************* */
   SIG_MESSAGE("main (Start)");
-  mcformat=mcuse_format(getenv(FLAVOR_UPPER "_FORMAT") ?
-                        getenv(FLAVOR_UPPER "_FORMAT") : MCSTAS_FORMAT);
-  /* default is to output as McStas format */
-  mcformat_data.Name=NULL;
+  mcformat=getenv(FLAVOR_UPPER "_FORMAT") ?
+           getenv(FLAVOR_UPPER "_FORMAT") : FLAVOR_UPPER;
   /* read simulation parameters and options */
   mcparseoptions(argc, argv); /* sets output dir and format */
-  if (strstr(mcformat.Name, "NeXus")) {
-    if (mcformat_data.Name) mcclear_format(mcformat_data);
-    mcformat_data.Name=NULL;
-  }
-  if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
-    mcformat_data = mcuse_format("VRML");
 
 /* *** install sig handler, but only once !! after parameters parsing ******* */
 #ifndef NOSIGNALS
@@ -4861,9 +3705,7 @@ int mccode_main(int argc, char *argv[])
     signal( SIGSEGV,SIG_IGN);   /* segmentation violation */
 #endif
 #endif /* !NOSIGNALS */
-  if (!strstr(mcformat.Name,"NeXus")) {
-    mcsiminfo_init(NULL); mcsiminfo_close();  /* makes sure we can do that */
-  }
+  mcsiminfo_init(NULL); /* open SIM */
   SIG_MESSAGE("main (Init)");
   mcinit();
 #ifndef NOSIGNALS
@@ -4873,7 +3715,7 @@ int mccode_main(int argc, char *argv[])
 #endif
 #endif /* !NOSIGNALS */
 
-/* ================ main particle generation/propagation loop ================ */
+/* ================ main particule generation/propagation loop ================ */
 #if defined (USE_MPI)
   /* sliced Ncount on each MPI node */
   mcncount = mpi_node_count > 1 ?
@@ -4881,7 +3723,7 @@ int mccode_main(int argc, char *argv[])
     mcncount; /* number of rays per node */
 #endif
 
-/* main particle event loop */
+/* main particule event loop */
 while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
   {
 #ifndef NEUTRONICS
@@ -4903,8 +3745,6 @@ while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
 
 /* save/finally executed by master node/thread */
   mcfinally();
-  mcclear_format(mcformat);
-  if (mcformat_data.Name) mcclear_format(mcformat_data);
 
 #ifdef USE_MPI
   MPI_Finalize();
@@ -4932,17 +3772,8 @@ void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *in
 
   /* *** parse options *** */
   SIG_MESSAGE("main (Start)");
-  mcformat=mcuse_format(getenv(FLAVOR_UPPER "_FORMAT") ?
-                        getenv(FLAVOR_UPPER "_FORMAT") : MCSTAS_FORMAT);
-  /* default is to output as McStas format */
-  mcformat_data.Name=NULL;
-  /* read simulation parameters and options */
-  if (strstr(mcformat.Name, "NeXus")) {
-    if (mcformat_data.Name) mcclear_format(mcformat_data);
-    mcformat_data.Name=NULL;
-  }
-  if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
-    mcformat_data = mcuse_format("VRML");
+  mcformat=getenv(FLAVOR_UPPER "_FORMAT") ?
+           getenv(FLAVOR_UPPER "_FORMAT") : "MCCODE";
 
   /* Set neutron state based on input from neutronics code */
   mcsetstate(*inx,*iny,*inz,*invx,*invy,*invz,*intime,*insx,*insy,*insz,*inw);
@@ -4955,12 +3786,6 @@ void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *in
   int argc=1;
   char *argv[0];
   int dummy = mccode_main(argc, argv);
-
-  /*  save/finally executed by master node/thread. Needed for McStas 1.12 and older */
-  /*  mcfinally(); */
-  /*  mcclear_format(mcformat); */
-
-  if (mcformat_data.Name) mcclear_format(mcformat_data);
 
   *outx =  mcnx;
   *outy =  mcny;
@@ -4978,44 +3803,6 @@ void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *in
 } /* neutronics_main */
 
 #endif /*NEUTRONICS*/
-
-#ifdef USE_NEXUS
-/*******************************************************************************
-* mcnxfile_parameters: writes the simulation parameters
-*                   open/close a new Data Set per parameter in the current simulation Group
-* NOTE: this function can not be included in nexus-lib as it depends on mcinputtypes
-*       and mcinputtable are defined at compile time in here.
-* Returns: NX_OK
-*******************************************************************************/
-int mcnxfile_parameters(NXhandle nxhandle)
-{
-  int i;
-  char Parameters[CHAR_BUF_LENGTH];
-  /* in the parameter group, create one SDS per parameter */
-  for(i = 0; i < mcnumipar; i++) {
-    if (mcget_run_num() || (mcinputtable[i].val && strlen(mcinputtable[i].val))) {
-      char nxname[CHAR_BUF_LENGTH];
-      int length;
-      if (mcinputtable[i].par == NULL)
-        strncpy(Parameters, (mcinputtable[i].val ? mcinputtable[i].val : ""), CHAR_BUF_LENGTH);
-      else
-        (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
-      sprintf(nxname, "%s", Parameters);
-      length = strlen(nxname);
-      NXmakedata(mcnxHandle, mcinputtable[i].name, NX_CHAR, 1, &length);
-      NXopendata(mcnxHandle, mcinputtable[i].name);
-      NXputdata (mcnxHandle, nxname);
-      strcpy(nxname, (*mcinputtypes[mcinputtable[i].type].parminfo)(mcinputtable[i].name));
-      NXputattr (mcnxHandle, "type", nxname, strlen(nxname), NX_CHAR);
-      strcpy(nxname, mcinputtable[i].val ? mcinputtable[i].val : "");
-      NXputattr (mcnxHandle, "default_value", nxname, strlen(nxname), NX_CHAR);
-      NXputattr (mcnxHandle, "name", mcinputtable[i].name, strlen(mcinputtable[i].name), NX_CHAR);
-      NXclosedata(mcnxHandle);
-    }
-  }
-  return(NX_OK);
-} /* mcnxfile_parameters */
-#endif /* USE_NEXUS */
 
 #endif /* !MCCODE_H */
 /* End of file "mccode-r.c". */
