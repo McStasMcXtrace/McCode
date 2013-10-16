@@ -997,12 +997,6 @@ cogen_init(struct instr_def *instr)
   coutf("    %sDEBUG_INSTR_END()", ID_PRE);
   cout("  }");
   cout("");
-  cout ("/* NeXus support */\n");
-  cout ("#ifdef USE_NEXUS\n");
-  coutf("strncmp(%snxversion,\"%s\",128);\n", ID_PRE,
-    instr->nxinfo->any && instr->nxinfo->hdfversion && strlen(instr->nxinfo->hdfversion) ?
-      instr->nxinfo->hdfversion : "5 zip");
-  cout ("#endif\n");
 
   cout("} /* end init */");
   cout("");
@@ -1051,6 +1045,16 @@ cogen_trace(struct instr_def *instr)
 
   /* Output the function header. */
   coutf("void %sraytrace(void) {", ID_PRE);
+#if MCCODE_PROJECT == 1     /* neutron */
+  /* Neutronics-specific defines */
+  cout("  /* Neutronics-specific defines */");
+  cout("#ifdef NEUTRONICS");
+  coutf("extern double %snx, %sny, %snz, %snvx, %snvy, %snvz;", ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+  coutf("extern double %snt, %snsx, %snsy, %snsz, %snp;", ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+  cout("#endif");
+  cout("  /* End of Neutronics-specific defines */");
+#endif
+
   /* Local @MCCODE_PARTICLE@ state. */
   cout("  /* Copy @MCCODE_PARTICLE@ state to local variables. */");
   for(i = 0; i < NUM_STATE_PARS; i++)
@@ -1484,9 +1488,7 @@ cogen_runtime(struct instr_def *instr)
     embed_file("mcxtrace-r.h");
 #endif
     /* NeXus support, only active with -DUSE_NEXUS */
-    embed_file("nexus-lib.h"); /* will require linking with -DUSE_NEXUS -lNeXus */
-    embed_file("nexus-lib.c");
-    if (verbose) printf("Requires library    -DUSE_NEXUS -lNeXus (to enable NeXus support)\n");
+    if (verbose) printf("Specify             -DUSE_NEXUS -lNeXus to enable NeXus support\n");
     embed_file("mccode-r.c");
 #if MCCODE_PROJECT == 1     /* neutron */
     embed_file("mcstas-r.c");
@@ -1503,7 +1505,6 @@ cogen_runtime(struct instr_def *instr)
     coutf("#include \"%s%sshare%smcxtrace-r.h\"",  sysdir_new, pathsep, pathsep);
 #endif
 
-    coutf("#include \"%s%sshare%snexus-lib.h\"", sysdir_new, pathsep, pathsep);
     fprintf(stderr,"Dependency: %s.o\n", "mccode-r");
 #if MCCODE_PROJECT == 1     /* neutron */
     fprintf(stderr,"Dependency: %s.o\n", "mcstas-r");
@@ -1511,7 +1512,7 @@ cogen_runtime(struct instr_def *instr)
     fprintf(stderr,"Dependency: %s.o\n", "mcxtrace-r");
 #endif
     fprintf(stderr,"Dependency: %s.o\n", "mcstas-r");
-    fprintf(stderr,"Dependency: %s.o and '-DUSE_NEXUS -lNeXus' to enable NeXus support\n", "nexus-lib");
+    fprintf(stderr,"Dependency: '-DUSE_NEXUS -lNeXus' to enable NeXus support\n");
     fprintf(stderr,"To build instrument %s, compile and link with these libraries (in %s%sshare)\n", instrument_definition->quoted_source, sysdir_new, pathsep);
   }
 

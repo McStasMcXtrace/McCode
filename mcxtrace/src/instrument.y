@@ -59,7 +59,6 @@
   struct comp_inst        *instance;      /* Component instance */
   struct comp_place        place;         /* Component place */
   struct comp_orientation  ori;           /* Component orientation */
-  struct NXinfo           *nxinfo;        /* Info for NeXus interface */
   struct group_inst       *groupinst;     /* group instances */
   struct jump_struct      *jump;          /* jumps structures */
   List                     jumps;
@@ -93,7 +92,6 @@
 %token TOK_EXTEND     "EXTEND"
 %token TOK_GROUP      "GROUP"   /* extended McCode grammar */
 %token TOK_SAVE       "SAVE"
-%token TOK_NEXUS      "NEXUS"   /* optional */
 %token TOK_JUMP       "JUMP"    /* extended McCode grammar */
 %token TOK_WHEN       "WHEN"    /* extended McCode grammar */
 %token TOK_NEXT       "NEXT"    /* extended McCode grammar */
@@ -130,9 +128,7 @@
 %type <parms>   parameters
 %type <place>   place
 %type <ori>     orientation
-%type <nxinfo>  nexus
 %type <string>  instname
-%type <number>  hdfversion
 %type <jump>    jump
 %type <jumps>   jumps jumps1
 %type <jumpname> jumpname
@@ -635,17 +631,16 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
           instrument_definition->has_included_instr++;
         }
       }
-      declare initialize nexus instr_trace save finally "END"
+      declare initialize instr_trace save finally "END"
       {
         if (!instrument_definition->decls) instrument_definition->decls = $6;
         else list_cat(instrument_definition->decls->lines, $6->lines);
         if (!instrument_definition->inits) instrument_definition->inits = $7;
         else list_cat(instrument_definition->inits->lines, $7->lines);
-        if (!instrument_definition->nxinfo) instrument_definition->nxinfo = $8;
-        if (!instrument_definition->saves) instrument_definition->saves = $10;
-        else list_cat(instrument_definition->saves->lines, $10->lines);
-        if (!instrument_definition->finals) instrument_definition->finals = $11;
-        else list_cat(instrument_definition->finals->lines, $11->lines);
+        if (!instrument_definition->saves) instrument_definition->saves = $9;
+        else list_cat(instrument_definition->saves->lines, $9->lines);
+        if (!instrument_definition->finals) instrument_definition->finals = $10;
+        else list_cat(instrument_definition->finals->lines, $10->lines);
         instrument_definition->compmap = comp_instances;
         instrument_definition->groupmap = group_instances;
         instrument_definition->complist = comp_instances_list;
@@ -774,33 +769,6 @@ instr_formal:   TOK_ID TOK_ID
           formal->type = instr_type_double;
         }
         $$ = formal;
-      }
-;
-
-/* NeXus output support */
-nexus:      /* empty: default NeXus support */
-      {
-        struct NXinfo *nxinfo;
-        palloc(nxinfo);
-        nxinfo->any = 0;
-        nxinfo->hdfversion    = NULL;
-        $$ = nxinfo;
-      }
-    | nexus "NEXUS" hdfversion
-      { /* specify NeXus version */
-        struct NXinfo *nxinfo = $1;
-        nxinfo->hdfversion    = $3;
-        nxinfo->any = 1;
-        $$ = nxinfo;
-      }
-;
-hdfversion: /* empty: default HDF version */
-      {
-        $$ = "5 zip";
-      }
-    | hdfversion TOK_STRING
-      {
-        $$ = $1;
       }
 ;
 
@@ -1560,7 +1528,7 @@ print_usage(void)
   fprintf(stderr, "  If run-time libraries are not embedded, you will have to pre-compile\n");
   fprintf(stderr, "    them (.c -> .o) before assembling the program.\n");
   fprintf(stderr, "  The default component search list is usually defined by the environment\n");
-  fprintf(stderr, "    variable 'MCXTRACE' (default is " MCSTAS ") \n");
+  fprintf(stderr, "    variable '" MCCODE_NAME "' (default is " MCSTAS ") \n");
   fprintf(stderr, "  Use 'mcrun' to both run " MCCODE_NAME " and the C compiler.\n");
   fprintf(stderr, "  Use 'mcgui' to run the " MCCODE_NAME " GUI.\n");
   fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui, mcformat, mcdoc\n");

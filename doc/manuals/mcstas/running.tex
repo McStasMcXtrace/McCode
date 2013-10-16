@@ -39,8 +39,8 @@ detector as a motor position is varied.}
 \item{The output data may be analyzed and visualized in the same way as regular
     experiments by using the data handling and visualisation tools in \MCS
     based on Perl/Python in combination with \verb+chaco+, \verb+matplotlib+,
-    Matlab, GNUPlot or PGPLOT. Further data output formats including IDL, NeXus
-    and XML are available, see section \ref{s:analyze}.\index{Tools}}
+    Matlab, GNUPlot or PGPLOT. Further data output formats including NeXus
+    are available, see section \ref{s:analyze}.\index{Tools}}
 \end{itemize}
 
 
@@ -436,26 +436,8 @@ The format of the output files from \MCS simulations is described in more
 detail in section~\ref{s:analyze}. It may be chosen either with
 \verb+--format=FORMAT+ for each simulation or globally by setting the
 MCSTAS\_FORMAT environment variable. \index{Environment variable!MCSTAS\_FORMAT}
-The available format list is obtained using the \verb+name.out --help+ option,
-and shown in Table~\ref{t:formatoptions}. \index{Tools!PGPLOT}
-\index{Tools!Matlab} \index{Tools!VRML/OpenGL}
-\index{Tools!HTML} \index{Data formats} \MCS can presently generate many
-formats, including the original \MCS /PGPLOT and the Matlab
-formats. All formats, except the \MCS /PGPLOT, may eventually support binary
-files, which are much smaller and faster to import, but are platform
-dependent. The simulation data file extensions are appended automatically,
-depending on the format, if the file names do not contain any. Binary files are
-particularly recommended for the IDL format (e.g. \verb+--format=IDL_binary+),
-and the Matlab format when handling large detectors (e.g. more than
-50x50 bins). For example:
-\begin{lstlisting}
-    ./Samples_vanadium.out ROT=90 --format="Matlab_binary"
-\end{lstlisting}
-or more generally (for bash/Bourne shell users)
-\begin{lstlisting}
-    export MCSTAS_FORMAT="Matlab"
-    ./Samples_vanadium.out ROT=90
-\end{lstlisting}
+The available format list is obtained using the \verb+name.out --help+ option. \index{Tools!PGPLOT}
+\index{Tools!Matlab}\index{Data formats} \MCS can presently generate the \MCS /PGPLOT and the NeXus format. 
 
 It is also possible to create and read \textit{Vitess}, \textit{MCNP/PTRAC} and
 \textit{Tripoli4/batch} neutron event files using components
@@ -475,7 +457,7 @@ concatenate data to existing files.
 
 \subsection{Basic import and plot of results}
 \label{s:run-format}
-The previous example will result in a \verb+mcstas.m+ file, that may be read
+The previous example will result in a \verb+mcstas.sim+ file, that may be read
 directly from Matlab (using the {\it sim file} function)
 \begin{matlab}
     matlab> s=mcstas;
@@ -563,9 +545,6 @@ page.\index{Tools!VRML/OpenGL}
       \texttt{-f {\it file}} \my \texttt{--file={\it file}}
         & Write all data into a single file {\it file}. Avoid when using binary formats. \\
       \hline
-      \texttt{-a} \my \texttt{--data-only}
-        & Do not put any headers in the data files. \\
-      \hline
       \texttt{--format\_data={\it FORMAT}}
         & Sets the file format for result data files from monitors. This enables to have simulation files in one format (e.g. HTML), and monitor files in an other format (e.g. VRML).\\
       \hline
@@ -601,37 +580,6 @@ page.\index{Tools!VRML/OpenGL}
     \end{tabular}
     \caption{Additional options accepted by \MCS simulations.}
     \label{f:simoptions2}
-    }
-  \end{center}
-\end{table}
-
-\begin{table} \index{Data formats|textbf}
-  \begin{center}
-    {\let\my=\\
-    \begin{tabular}{|p{0.24\textwidth}|c|p{0.7\textwidth}|}
-      \hline
-      \texttt{\MCS} \my \texttt{PGPLOT} & .sim & Original format for PGPLOT plotter (may be used with -f and -d options) \\
-      \texttt{Matlab} & .m & Matlab format (may be used with -f and -d options) \\
-      \texttt{Matlab\_binary} & & Matlab format with external binary files (may be used with -d option). (-a option implicitly set) \\
-      \texttt{Octave} & .m & Octave format (may be used with -f and -d options) \\
-      \texttt{Octave\_binary} & & Octave format with external binary files (may be used with -d option). (-a option implicitly set) \\
-      \texttt{IDL} & .pro & IDL format. {\em Must} be used with -f option. \\
-      \texttt{IDL\_binary} & & IDL format with external binary files (may be used with -d option). (-a option implicitly set) \\
-      \texttt{XML} & .xml & XML format, NeXus-like (may be used with -f and -d options). \\
-      \texttt{HTML} & .html & HTML format (generates a web page, may be used with -f and -d options). Data files are saved as VRML objects (OpenGL). \\
-      \texttt{VRML} & .wrl & Virtual Reality file format for data files. Simulation files are not saved properly, and the HTML format should be used preferably. \\
-      \texttt{NeXus} & .nxs & NeXus data files (HDF). All simulation results are stored in a unique compressed binary file. This format requires to have NeXus installed.\\
-      {\it Tripoli} &  & Tripoli 4 neutron events file format. Use
-        \verb+Virtual_tripoli4_input+/\verb+Virtual_tripoli4_output+ components.\index{Tripoli}\\
-      {\it MCNP} &  & MCNP PTRAC neutron events file format. Use
-        \verb+Virtual_mcnp_input+/\verb+Virtual_mcnp_output+ components.\index{MCNP}\\
-      {\it Vitess} &  & Vitess neutron events file format. Use \verb+Vitess_input+/\verb+Vitess_output+ components.\index{Vitess}\\
-      {\it McStas events} & & McStas event files in text or binary
-      format. Use \verb+Virtual_input+/\verb+Virtual_output+ components.\\
-      \hline
-    \end{tabular}
-    \caption{Available formats supported by \MCS simulations. Format modifiers include \emph{binary}, \emph{raw}, \emph{transpose}, \emph{append}.}
-    \label{t:formatoptions}
     }
   \end{center}
 \end{table}
@@ -1343,14 +1291,12 @@ the file or directory should be passed to mcplot, {\em e.g.} ``\texttt{mcplot
 one single text (not binary) data file from a given monitor, passing its name to
 mcplot.
 
-The drawing back-end program may be selected among PGPLOT, VRML, Matlab, and
+The drawing back-end program may be selected among PGPLOT, Matlab, and
 Gnuplot using either the -p{\it PLOTTER} option (e.g. \texttt{mcplot -pMatlab
 file}) or using the current \verb+MCSTAS_FORMAT+ environment
-variable. \index{Environment variable!MCSTAS\_FORMAT} Moreover, the drawing
-back-end program will also be set depending on the {\it file} extension (see
-Table~\ref{t:formatoptions}).
+variable. \index{Environment variable!MCSTAS\_FORMAT}.
 
-Except for the HTML/VRML and NeXus formats, all other plotters read the legacy 
+Except for the NeXus format, all other plotters read the legacy 
 McStas/PGPLOT text based data format. 
 
 The \verb+mcformat+ utility will convert any \MCS
@@ -1546,8 +1492,7 @@ To use the \verb+mcstas2vitess+ front-end, the program Perl should be available.
 \subsection{Translating and merging \MCS results files (all text formats)}
 \label{s:mcformat}
 \index{Tools!mcformat|textbf} \index{Tools!Matlab}
-\index{Tools!Octave} \index{Tools!IDL} \index{Data formats} \index{Grid
-  computing}
+\index{Data formats} \index{Grid computing}
 
 If you have been running a \MCS simulation with a given text format output, but
 finally plan to look at the results with an other plotter (e.g. you ran a
@@ -1556,10 +1501,8 @@ simulation with PGPLOT output and want to view it using Matlab), you may use
 \begin{lstlisting}
 mcformat {file|dir} -d target_dir --format=TARGET_FORMAT
 \end{lstlisting}
-to translate files into format TARGET\_FORMAT. When given a directory, the
-translation works recursively. The conversion works only for text files. Some
-problems may be found when translating from HTML/VRML data files, or from binary
-files.\index{Tools!VRML/OpenGL}
+to translate files into format TARGET\_FORMAT (e.g. NeXus). When given a directory, the
+translation works recursively. The conversion works only for text files.
 
 The \verb+--merge+ option may be used to merge similar files, e.g. obtained from
 grid systems, just as if a longer run was achieved.
@@ -1585,13 +1528,10 @@ correct.\index{Bugs}
 \index{Data formats}
 
 To analyze simulation results, one uses the same tools as for analyzing
-experimental data, \textit{i.e}. programs such as IDL, Matlab.  The
+experimental data, \textit{i.e}. programs such as Matlab, NumPy, IDL.  The
 output files from simulations are usually simple text files containing headers
 and data blocks. If data blocks are empty they may be accessed referring to an
-external file indicated in the header. This file may also be a binary file
-(except with the original \MCS /PGPLOT format), which does not contain any
-header (except if simulation is launched with \verb|+a| option), but are in turn
-smaller in size and faster to import.
+external file indicated in the header.
 
 Each data file contains informations about the simulation, the instrument, the
 parameters used, and of course the signal, the estimated error on the signal,
@@ -1599,12 +1539,12 @@ and the number of events used in each bin. Additionally, all data files indicate
 their first moment (mean value) and second moment (half width) in the
 'statistics' field.
 
+The available data formats are the legacy McStas (McCode) format, and the HDF/NeXus binary when the needed libraries are installed. \index{Environment variable!MCSTAS\_FORMAT}
+
 In order for the user to choose the data format, we recommend to set it using
 the \verb+--format=FORMAT+ or alternatively {\it via} the MCSTAS\_FORMAT
 environment variable, which will also make the front-end programs able to import
-and plot data and instrument consistently (see Section \ref{s:run-sim}). The
-available format list is shown in
-Table~\ref{t:formatoptions}. \index{Environment variable!MCSTAS\_FORMAT}
+and plot data and instrument consistently (see Section \ref{s:run-sim}). 
 
 Note that the neutron event counts in detectors are typically not very
 meaningful except as a way to measure the performance of the
@@ -1657,83 +1597,6 @@ data with programs that do not know the special \MCS file format is
 simplified. The \verb+--file+ option may be used to store all data inside the
 \verb+mcstas.sim+ file instead of in separate files.
 
-\subsection{Matlab and IDL formats}
-\index{Tools!Matlab} \index{Tools!IDL} \index{Data formats}
-
-With these formats \MCS automatically writes scripts containing the data as a
-structure, as well as in-line import and plot functions for the selected
-language. Usage examples are given in section~\ref{s:run-sim}.  Thus, it is not
-necessary to write a load routine for each format, as the script is itself a
-program that knows how to handle the data. Alternatively, using \verb+mcplot+
-with Matlab plotters provide additional functionalities from menus
-and dialogs (see section~\ref{s:mcplot}).
-
-When imported through the data generated script (see section~\ref{s:run-sim}),
-or using \verb+mcplot+ (see section~\ref{s:mcplot}), a single variable may be
-created into the Matlab or IDL base workspace. This variable is a
-\emph{structure} constituting a data tree containing many fields, some being
-themselves structures. Field names are the initial names from the instrument
-(components, files, \ldots), transformed into valid variable names, e.g
-containing only letters, digits and the '\_' character, except for the first
-character which may only be a letter. When using Matlab, an 'm\_' is appended to
-avoid name clash with existing Matlab commands/variables.\footnote{For instance
-  in most case, the simulation location is './mcstas.m' which turns into field
-  'm\_mcstas'.}.  In this tree, you will find the monitor names, which fields
-contain the monitored data. The usual structure is
-\begin{lstlisting}
-s.instrument.simulation.comp_name.file_name
-\end{lstlisting}
-
-For instance, reading the data from a 'test' instrument using Matlab format will
-look like
-
-\begin{matlab}
-matlab> s=mcstas; % or mcplot mcstas.m from the terminal
-matlab> s
-s =
-     Format: 'Matlab with text headers'
-        URL: 'http://neutron.risoe.dk'
-     Editor: 'farhi on pcfarhi'
-    Creator: 'test (test.instr) McStas 1.9 - Nov. 15, 2005 simulation'
-       Date: 1.0529e+09
-       File: './mcstas'
-       test: [1x1 struct]
-    EndDate: 1.0529e+09
-      class: 'root'
-matlab> s.test.m_mcstas.monitor1.monitor1_y_kz
-ans =
-          ...
-          Date:       1.0529e+09
-          File:       'monitor1.y_kz'
-          type:       'array_2d(20, 10)'
-          ...
-          ratio:      '1e+06/1e+06'
-          signal:     'Min=0; Max=5.54051e-10; Mean= 6.73026e-13;'
-          statistics: 'X0=0.438302; dX=0.0201232; Y0=51019.6; dY=20557.1;'
-          ...
-matlab> eval(s.test.m_mcstas.monitor1.monitor1_y_kz);
-matlab> dX
-ans =
-          0.0201232
-\end{matlab}
-
-The latter example accesses the data from the 'monitor1.y\_kz' file written by
-the 'monitor1' component in the 'test' instrument during the './mcstas'
-simulation. You may evaluate directly the 'signal' and 'statistics' fields of
-the structure to obtain useful information.
-
-\subsection{HTML/VRML and XML formats}
-\index{Tools!HTML} \index{Tools!VRML} \index{Data formats}
-
-Both HTML and XML formats are available. The former may be viewed using any web
-browser (Netscape/Mozilla/Firefox, Internet Explorer, Nautilus, Konqueror) -
-showing data sets as VRML objects. XML data sets may be browsed for instance
-using Internet Explorer (Windows and Mac OS) or Firefox, GXMLViewer and
-KXMLEditor (under Linux).
-
-The XML format is NeXus-like, but not fully compatible. However, \MCS may
-generate genuine NeXus/HDF format (see bellow).
-
 \subsection{NeXus format}
 \index{Tools!NeXus} \index{Tools!HDF} \index{Data formats}
 \label{r:nexus}
@@ -1741,11 +1604,9 @@ generate genuine NeXus/HDF format (see bellow).
 The NeXus format~\cite{nexus_webpage} is a platform independent HDF binary data
 file. To have \MCS use it
 \begin{enumerate}
-\item the HDF and NeXus libraries must have been installed
-\item the \MCS installation should be done with NeXus bindings, e.g. on
-  Unix/Linux systems \verb+configure --with-nexus; make; make install+.
+\item the HDF and NeXus libraries must have been installed (libNeXus and headers)
 \item the compilation of instruments must be done with the
-  \verb+-DHUSE_NEXUS -lNeXus+ flag (see Section \ref{s:nexus}). This is
+  \verb+-DUSE_NEXUS -lNeXus+ flag (see Section \ref{s:nexus}). This is
   automated with the \verb+mcrun+ tool (Section \ref{s:mcrun}).
 \end{enumerate}
 All results are saved in a single file, containing 'groups' of data. To view

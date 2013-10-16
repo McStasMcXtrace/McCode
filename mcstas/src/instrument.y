@@ -129,7 +129,6 @@
 %type <place>   place
 %type <ori>     orientation
 %type <string>  instname
-%type <number>  hdfversion
 %type <jump>    jump
 %type <jumps>   jumps jumps1
 %type <jumpname> jumpname
@@ -649,11 +648,10 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
         else list_cat(instrument_definition->decls->lines, $6->lines);
         if (!instrument_definition->inits) instrument_definition->inits = $7;
         else list_cat(instrument_definition->inits->lines, $7->lines);
-        if (!instrument_definition->nxinfo) instrument_definition->nxinfo = $8;
-        if (!instrument_definition->saves) instrument_definition->saves = $10;
-        else list_cat(instrument_definition->saves->lines, $10->lines);
-        if (!instrument_definition->finals) instrument_definition->finals = $11;
-        else list_cat(instrument_definition->finals->lines, $11->lines);
+        if (!instrument_definition->saves) instrument_definition->saves = $9;
+        else list_cat(instrument_definition->saves->lines, $9->lines);
+        if (!instrument_definition->finals) instrument_definition->finals = $10;
+        else list_cat(instrument_definition->finals->lines, $10->lines);
         instrument_definition->compmap = comp_instances;
         instrument_definition->groupmap = group_instances;
         instrument_definition->complist = comp_instances_list;
@@ -1541,7 +1539,7 @@ print_usage(void)
   fprintf(stderr, "  If run-time libraries are not embedded, you will have to pre-compile\n");
   fprintf(stderr, "    them (.c -> .o) before assembling the program.\n");
   fprintf(stderr, "  The default component search list is usually defined by the environment\n");
-  fprintf(stderr, "    variable 'MCSTAS' (default is " MCSTAS ") \n");
+  fprintf(stderr, "    variable '" MCCODE_STRING "' (default is " MCSTAS ") \n");
   fprintf(stderr, "  Use 'mcrun' to both run " MCCODE_NAME " and the C compiler.\n");
   fprintf(stderr, "  Use 'mcgui' to run the " MCCODE_NAME " GUI.\n");
   fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui, mcformat, mcdoc\n");
@@ -1683,7 +1681,6 @@ main(int argc, char *argv[])
   instrument_definition->name      = NULL;
   instrument_definition->decls     = NULL;
   instrument_definition->inits     = NULL;
-  instrument_definition->nxinfo    = NULL;
   instrument_definition->saves     = NULL;
   instrument_definition->finals    = NULL;
   instrument_definition->compmap   = NULL;
