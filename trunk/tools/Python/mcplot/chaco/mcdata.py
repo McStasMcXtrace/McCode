@@ -27,7 +27,7 @@ def parse_monitor(it):
 
 
 def monitor_to_plotdata(it):
-    ''' Parse a mcstas monitor file file and convert it to a chaco plotdata object '''
+    ''' Parse a mcstas monitor file and convert it to a chaco plotdata object '''
     header, data = parse_monitor(it)
 
     dtype = header['type']

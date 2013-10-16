@@ -14,22 +14,18 @@
 * Release: @MCCODE_STRING@
 * Version: $Revision$
 *
-* A McStas format converter to merge/convert data files.
+* A McCode format converter to merge/convert data files.
 *
 * %Description
 *
-* A McStas format converter to merge/convert data files.
+* A McCode format converter to merge/convert data files.
 * Parameters are the files/directories to process, and option flags.
 * May be used to:
 * 1- continue an interupted simulation, and then add (--merge option) the similar
 *    data files.
-* 2- generate complex data formats to be used using different viewer from
-*    original simple text format (--format=...).
+* 2- convert original simple text format into NeXus format (--format=NeXus)
 * 3- catenate list files
 * 4- reconstruct parameter scan sumulations (--scan)
-*
-* Limitations: can not convert from binary files; Conversion from HTML/VRML
-* may fail; does not handle event files.
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -62,11 +58,6 @@ typedef struct Pool_header *Pool; /* allows memory to be included */
 #include "memory.c"
 
 #include "../lib/share/mccode-r.h" /* with decl of MC_PATHSEP */
-
-#ifdef USE_NEXUS
-#include "../lib/share/nexus-lib.h"
-#endif
-
 #include "../lib/share/mccode-r.c"
 
 /* end of parts copied from mccode.h */
@@ -86,7 +77,7 @@ char *str_cat(char *first, ...);/* Concatenate strings to allocated string. */
 char *str_quote(char *string);  /* Quote string for inclusion in C code */
 void  str_free(char *);   /* Free memory for string. */
 
-/* default global variables required by mcstas-r (usually generated in cogen) */
+/* default global variables required by mccode-r (usually generated in cogen) */
 int  mcdefaultmain         = 1;
 int  mctraceenabled        = 0;
 char mcinstrument_name[CHAR_BUF_LENGTH];
@@ -95,53 +86,11 @@ int  mcnumipar             = 0;
 struct mcinputtable_struct mcinputtable[CHAR_BUF_LENGTH];
 mcstatic FILE *mcsiminfo_file        = NULL;
 
-#ifdef USE_NEXUS
-#include "../lib/share/nexus-lib.c"
-
-/*******************************************************************************
-* mcnxfile_parameters: writes the simulation parameters
-*                   open/close a new Data Set per parameter in the current simulation Group
-* NOTE: this function can not be included in nexus-lib as it depends on mcinputtypes
-*       and mcinputtable are defined at compile time in here.
-* Returns: NX_OK
-*******************************************************************************/
-int mcnxfile_parameters(NXhandle nxhandle)
-{
-  int i;
-  char Parameters[CHAR_BUF_LENGTH];
-  /* in the parameter group, create one SDS per parameter */
-  for(i = 0; i < mcnumipar; i++) {
-    if (mcget_run_num() || (mcinputtable[i].val && strlen(mcinputtable[i].val))) {
-      char nxname[CHAR_BUF_LENGTH];
-      int length;
-      if (mcinputtable[i].par == NULL)
-        strncpy(Parameters, (mcinputtable[i].val ? mcinputtable[i].val : ""), CHAR_BUF_LENGTH);
-      else
-        (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
-      sprintf(nxname, "%s", Parameters);
-      length = strlen(nxname);
-      NXmakedata(mcnxHandle, mcinputtable[i].name, NX_CHAR, 1, &length);
-      NXopendata(mcnxHandle, mcinputtable[i].name);
-      NXputdata (mcnxHandle, nxname);
-      strcpy(nxname, (*mcinputtypes[mcinputtable[i].type].parminfo)(mcinputtable[i].name));
-      NXputattr (mcnxHandle, "type", nxname, strlen(nxname), NX_CHAR);
-      strcpy(nxname, mcinputtable[i].val ? mcinputtable[i].val : "");
-      NXputattr (mcnxHandle, "default_value", nxname, strlen(nxname), NX_CHAR);
-      NXputattr (mcnxHandle, "name", mcinputtable[i].name, strlen(mcinputtable[i].name), NX_CHAR);
-      NXclosedata(mcnxHandle);
-    }
-  }
-  return(NX_OK);
-} /* mcnxfile_parameters */
-#endif
-
-
 /* default global variables for mcformat converter */
 int  files_to_convert_NB    = 0;          /* nb of files to convert */
 int  files_to_convert_Array[CHAR_BUF_LENGTH];  /* index of argv[] for these files */
 char mcforcemode =0;
 char mcverbose   =0;
-char mctestmode  =0;
 char mcmergemode =0;
 char mcscanmode  =0;
 char mcmergesamedir=0;
@@ -228,7 +177,7 @@ char *str_dup_name(char *orig, int length)
   if (!orig || !strlen(orig)) return(NULL);
 
   valid=str_dup_n(orig, length > 0 ? length : strlen(orig));
-  mcvalid_name(valid, orig, 0);
+  strcpy_valid(valid, orig);
 
   return(valid);
 } /* str_dup_name */
@@ -837,7 +786,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
   }
 
   /* special case of 2D binary files: axes must be exchanged */
-  if (strstr(mcformat.Name, "binary") || strstr(mcformat.Name, "float") || strstr(mcformat.Name, "double"))
+  if (strstr(mcformat, "binary") || strstr(mcformat, "float") || strstr(mcformat, "double"))
   if (p == 1 && m>1 && n>1) {
     double tmp; char* c;
     tmp=McStasStruct.x1; McStasStruct.x1=McStasStruct.y1; McStasStruct.y1=tmp;
@@ -1000,9 +949,9 @@ static void mcformat_usedir(char *dir)
   return;
 #else  /* !MC_PORTABLE */
 #ifndef WIN32
-  if(!mctestmode && mkdir(dir, 0777))
+  if(!mcdisable_output_files && mkdir(dir, 0777))
 #else
-  if(!mctestmode && mkdir(dir))
+  if(!mcdisable_output_files && mkdir(dir))
 #endif
   {
     int errno_mkdir = errno;
@@ -1087,7 +1036,7 @@ int mcformat_output(struct McStas_file_format McStasStruct)
   int i;
 
 
-  if (mctestmode) return(1);
+  if (mcdisable_output_files) return(1);
   if (!McStasStruct.p1) return(0); /* empty data */
   /* determine in which directory we are and set SIM file */
 
@@ -1138,17 +1087,16 @@ int mcformat_output(struct McStas_file_format McStasStruct)
   /* write data file from McStasStruct */
   if (mcverbose) printf("mcformat: Writing %s from %s\n", McStasStruct.outputname, McStasStruct.filename);
 
-  if (strstr(McStasStruct.Format, "PGPLOT") && strstr(McStasStruct.type, "array_1d") && !mctestmode) {
+  if (strstr(McStasStruct.Format, "PGPLOT") && strstr(McStasStruct.type, "array_1d") && !mcdisable_output_files) {
     mcdetector_out_1D(McStasStruct.title, McStasStruct.xlabel, McStasStruct.ylabel,
                   McStasStruct.xvar, McStasStruct.x1, McStasStruct.x2, McStasStruct.m,
                   McStasStruct.p0, McStasStruct.p1, McStasStruct.p2, McStasStruct.outputname,
                   McStasStruct.component, McStasStruct.POSITION);
-  } else if (!mctestmode)
-  mcdetector_out_3D(McStasStruct.title,
-    McStasStruct.xlabel, McStasStruct.ylabel, McStasStruct.zlabel,
-    McStasStruct.xvar, McStasStruct.yvar, McStasStruct.zvar,
-    McStasStruct.x1, McStasStruct.x2, McStasStruct.y1, McStasStruct.y2, McStasStruct.z1, McStasStruct.z2,
-    McStasStruct.m, McStasStruct.n,  McStasStruct.p,
+  } else if (!mcdisable_output_files)
+  mcdetector_out_2D(McStasStruct.title,
+    McStasStruct.xlabel, McStasStruct.ylabel,
+    McStasStruct.x1, McStasStruct.x2, McStasStruct.y1, McStasStruct.y2, 
+    McStasStruct.m, McStasStruct.n,  
     McStasStruct.p0,
     McStasStruct.p1,
     McStasStruct.p2,
@@ -1185,7 +1133,7 @@ int mcformat_convert(char *name)
     char *lower_dir= mcoutputdir ? str_cat(mcoutputdir, MC_PATHSEP_S, name_win, NULL)
                                : str_dup(name);
     /* entering new directory */
-    if (!mctestmode) mcformat_usedir(lower_dir);
+    if (!mcdisable_output_files) mcformat_usedir(lower_dir);
     else mcdirname = lower_dir;
     mcdirnames[mcdircount] = lower_dir;
     mcsimfiles[mcdircount] = NULL;
@@ -1213,7 +1161,7 @@ int mcformat_convert(char *name)
         if (mcverbose) {
           printf("mcformat: converting %s (%ld bytes) ", name, (long int)stbuf.st_size);
           printf("into %s%s ", mcdirname ? mcdirname : ".", mcdirname ? MC_PATHSEP_S : "");
-          if (mctestmode) printf(" (--test mode)\n"); else printf("\n");
+          if (mcdisable_output_files) printf(" (--test mode)\n"); else printf("\n");
         }
 
       mcformat_free_mcstas_struct(McStasFile);
@@ -1671,33 +1619,29 @@ void mcformat_scan_compare(int nb)
       Files_to_Merge[scan_index1].mcinputtable[ipar_var].name, NULL);
     /* output scan multiarray */
     /* for PGPLOT: open mcstas.sim */
-    if (strstr(mcformat.Name, "McStas")) mcsiminfo_init(NULL); /* open new SIM file in this dir for the first time */
+    if (strcasestr(mcformat, "McCode")) mcsiminfo_init(NULL); /* open new SIM file in this dir for the first time */
     else mcsiminfo_name=NULL;
     char *datfile=NULL;
-    if (mcsingle_file && mcsiminfo_name) datfile=str_dup(mcsiminfo_name);
-    if (!datfile) datfile = str_cat("mcstas.", strstr(mcformat.Name, "McStas") ? "dat" : mcformat.Extension, NULL);
-    strcat(mcformat.Name, " scan ");
+    if (!datfile) datfile = str_cat("mcstas.", "dat", NULL);
+    strcat(mcformat, " scan ");
     if (mcverbose)
       printf("Writing scan file=%s (%s) into directory %s: %s=%g:%g\n",
         datfile, mcsiminfo_name, mcdirname,
         Files_to_Merge[scan_index1].mcinputtable[ipar_var].name, ipar_min, ipar_max);
     strcpy(mcinstrument_name,   Files_to_Merge[scan_index1].InstrName);
     strcpy(mcinstrument_source, Files_to_Merge[scan_index1].Source);
-    if (!mctestmode)
-    mcdetector_out_3D(title,
+    if (!mcdisable_output_files)
+    mcdetector_out_2D(title,
       Files_to_Merge[scan_index1].mcinputtable[ipar_var].name,
-      Files_to_Merge[scan_index1].ylabel, "",
-      Files_to_Merge[scan_index1].mcinputtable[ipar_var].name,
-      youts,
-      header,
-      ipar_min, ipar_max, 0, 0, 0, 0,
-      -scan_length1, Files_to_Merge[scan_index1].mcnumipar+2*mon_count,  1,
+      Files_to_Merge[scan_index1].ylabel, 
+      ipar_min, ipar_max, 0, 0, 
+      -scan_length1, Files_to_Merge[scan_index1].mcnumipar+2*mon_count, 
       NULL, Scan.data, NULL, datfile,
       Files_to_Merge[scan_index1].component,
       Files_to_Merge[scan_index1].POSITION);
 
     /* for PGPLOT: close mcstas.sim */
-    if (strstr(mcformat.Name, "McStas")) mcsiminfo_close();
+    if (strstr(mcformat, "McCode")) mcsiminfo_close();
     Table_Free(&Scan);
     memfree(datfile);
     memfree(youts);
@@ -1713,8 +1657,8 @@ void mcformat_scan_compare(int nb)
 int mcformat_merge_output(int nb)
 {
   int i;
-  char mctestmode_sav=mctestmode;
-  if (mcscanmode == 2) mctestmode=1; /* scan only will skip writing for non scan files */
+  char mcdisable_output_files_sav=mcdisable_output_files;
+  if (mcscanmode == 2) mcdisable_output_files=1; /* scan only will skip writing for non scan files */
   /* output files for non empty elements */
   for (i=0; i<nb; i++) {
     if (mcformat_output(Files_to_Merge[i])) {
@@ -1723,11 +1667,11 @@ int mcformat_merge_output(int nb)
         printf("into %s%s ",
           Files_to_Merge[i].mcdirname ? Files_to_Merge[i].mcdirname : ".",
           Files_to_Merge[i].mcdirname ? MC_PATHSEP_S : "");
-        if (mctestmode) printf(" (--test or --scan-only mode)\n"); else printf("\n");
+        if (mcdisable_output_files) printf(" (--test or --scan-only mode)\n"); else printf("\n");
       }
     }
   }
-  mctestmode = mctestmode_sav;
+  mcdisable_output_files = mcdisable_output_files_sav;
 
   if (mcscanmode) {
   /* build and output scans (if any) for non empty elements of same index */
@@ -1757,7 +1701,6 @@ void mcformat_usage(char *pgmname)
 "Options are:\n"
 "  -d DIR    --dir=DIR        Put all data files in directory DIR.\n"
 "  -f FILE   --file=FILE      Put all data in a single file.\n"
-"  -a        --data-only      Do not put any headers in the data files.\n"
 "  --no-output-files          Do not write any data files (test data).\n"
 "  -h        --help           Show this help message.\n"
 "  -p FORMAT --format=FORMAT  Output data files using format FORMAT\n"
@@ -1777,10 +1720,9 @@ void mcformat_usage(char *pgmname)
 "  # merge simulation data sets (grids)\n"
 "mcformat -d target_dir dir1 dir2 ... --scan\n"
 "  # merge scan data sets\n\n",
-getenv(FLAVOR_UPPER "_FORMAT") ? getenv(FLAVOR_UPPER "_FORMAT") : MCSTAS_FORMAT);
+getenv(FLAVOR_UPPER "_FORMAT") ? getenv(FLAVOR_UPPER "_FORMAT") : "MCCODE");
 
-  fprintf(stderr, "Available output formats are (default is %s):\n  ", mcformat.Name);
-  for (i=0; i < mcNUMFORMATS; fprintf(stderr,"\"%s\" " , mcformats[i++].Name) );
+  fprintf(stderr, "Available output formats are (default is %s):\n  ", mcformat);
   fprintf(stderr, "\n  Format modifiers: FORMAT may be followed by 'binary float' or \n");
   fprintf(stderr, "  'binary double' to save data blocks as binary. This removes text headers.\n");
   fprintf(stderr, "  The " FLAVOR_UPPER "_FORMAT environment variable may set the default FORMAT to use.\n");
@@ -1805,58 +1747,26 @@ mcformat_parseoptions(int argc, char *argv[])
       mcformat_usedir(argv[++i]);
     else if(!strncmp("--dir=", argv[i], 6))
       mcformat_usedir(&argv[i][6]);
-    else if(!strcmp("-f", argv[i]) && (i + 1) < argc)
-      mcuse_file(argv[++i]);
-    else if(!strncmp("-f", argv[i], 2))
-      mcuse_file(&argv[i][2]);
-    else if(!strcmp("--file", argv[i]) && (i + 1) < argc)
-      mcuse_file(argv[++i]);
-    else if(!strncmp("--file=", argv[i], 7))
-      mcuse_file(&argv[i][7]);
     else if(!strcmp("-h", argv[i]) || !strcmp("--help", argv[i]))
     {  mcformat_usage(argv[0]); exit(-1); }
     else if(!strcmp("-v", argv[i]) || !strcmp("--version", argv[i]))
     {  fprintf(stderr, "mcformat version %s format conversion tool (" MCCODE_STRING ")\n", MCFORMAT); exit(-1); }
-    else if(!strcmp("-a", argv[i]))
-      mcascii_only = 1;
-    else if(!strcmp("+a", argv[i]))
-      mcascii_only = 0;
     else if(!strcmp("-c", argv[i]))
       mcforcemode = 1;
     else if(!strcmp("--force", argv[i]))
       mcforcemode = 1;
-    else if(!strcmp("--data-only", argv[i]))
-      mcascii_only = 1;
     else if(!strncmp("--format=", argv[i], 9)) {
-      mcascii_only = 0;
-      mcformat=mcuse_format(&argv[i][9]);
+      mcformat=&argv[i][9];
     }
     else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
-      mcascii_only = 0;
-      mcformat=mcuse_format(argv[++i]);
-    }
-    else if(!strncmp("-p=", argv[i], 3)) {
-      mcascii_only = 0;
-      mcformat=mcuse_format(&argv[i][3]);
-    }
-    else if(!strcmp("-p", argv[i]) && (i + 1) < argc) {
-      mcascii_only = 0;
-      mcformat=mcuse_format(argv[++i]);
-    }
-    else if(!strncmp("--format_data=", argv[i], 14) || !strncmp("--format-data=", argv[i], 14)) {
-      mcascii_only = 0;
-      mcformat_data=mcuse_format(&argv[i][14]);
-    }
-    else if((!strcmp("--format_data", argv[i]) || !strcmp("--format-data", argv[i])) && (i + 1) < argc) {
-      mcascii_only = 0;
-      mcformat_data=mcuse_format(argv[++i]);
+      mcformat=argv[++i];
     }
     else if(!strcmp("--no-output-files", argv[i]))
       mcdisable_output_files = 1;
     else if(!strcmp("--verbose", argv[i]))
       mcverbose  = 1;
     else if(!strcmp("-t", argv[i]) || !strcmp("--test", argv[i]))
-      mctestmode = 1;
+      mcdisable_output_files = 1;
     else if(!strcmp("-m", argv[i]) || !strcmp("--merge", argv[i]))
       mcmergemode= 1;
     else if(!strcmp("-s", argv[i]) || !strcmp("--scan", argv[i]))
@@ -1875,12 +1785,7 @@ mcformat_parseoptions(int argc, char *argv[])
           CHAR_BUF_LENGTH, argv[i]);
     }
   }
-  if (!mcascii_only) {
-    if (strstr(mcformat.Name,"binary"))
-      fprintf(stderr, "Warning: %s files will contain text headers.\n"
-                      "         Use -a option to clean up.\n", mcformat.Name);
-    strcat(mcformat.Name, " with text headers");
-  }
+
   if (!mcdirname) {
     getcwd(cwd, CHAR_BUF_LENGTH);
     mcdirname = str_dup(cwd); /* default is to export to PWD */
@@ -1902,23 +1807,23 @@ int main(int argc, char *argv[])
   t = (time_t)mcstartdate;
   time(&t);
   mcstartdate = t;
-  mcformat=mcuse_format(getenv(FLAVOR_UPPER "_FORMAT") ?
-                        getenv(FLAVOR_UPPER "_FORMAT") : MCSTAS_FORMAT);
-  /* default is to output as McStas format */
-  mcformat_data.Name=NULL;
+  mcformat=getenv(FLAVOR_UPPER "_FORMAT") ?
+           getenv(FLAVOR_UPPER "_FORMAT") : "MCCODE";
+  /* default is to output as McCode format */
 
   /* parse parameters from the command line and get files to convert */
   mcformat_parseoptions(argc, argv);
 
   if (!files_to_convert_NB) {  mcformat_usage(argv[0]); exit(-1); }
-  if (!mcformat_data.Name && !strcmp(mcformat.Name, "HTML"))
-    mcformat_data = mcuse_format("VRML");
+  
+  /* check format */
+  if (!mcformat || !strlen(mcformat) 
+   || !strcasecmp(mcformat, "McStas") || !strcasecmp(mcformat, "McXtrace") 
+   || !strcasecmp(mcformat, "PGPLOT"))
+    mcformat = "MCCODE";
 
   mcnbconvert = mcdircount = 0;
   mcoutputdir = mcdirname; /* base output dir */
-
-  if (mcscanmode && mcverbose && !strstr(mcformat.Name, "McStas"))
-    printf("Warning: Scan gathering mode is only compatible when using --format=McStas\n");
 
   /* count the number of files to store */
   for(j = 0; j < files_to_convert_NB; j++) {
@@ -1966,7 +1871,7 @@ int main(int argc, char *argv[])
   }
 
   /* clean up: close all SIM files */
-  if (!mctestmode) {
+  if (!mcdisable_output_files) {
     if (!mcdircount) mcsiminfo_close();
     else {
       for (j=0; j<mcdircount; j++) {
@@ -1988,9 +1893,6 @@ int main(int argc, char *argv[])
       memfree(mcsources);
     }
   }
-
-  mcclear_format(mcformat);
-  if (mcformat_data.Name) mcclear_format(mcformat_data);
 
   return mcnbconvert; /* number of converted files */
 
