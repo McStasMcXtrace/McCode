@@ -121,8 +121,6 @@ RELATIVE      return TOK_RELATIVE;
 ROTATED       return TOK_ROTATED;
 PREVIOUS      return TOK_PREVIOUS;
 SETTING       return TOK_SETTING;
-STATE         return TOK_STATE;
-POLARISATION  return TOK_POL;
 TRACE         return TOK_TRACE;
 SHARE         return TOK_SHARE;
 EXTEND        return TOK_EXTEND;

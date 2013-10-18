@@ -85,8 +85,6 @@
 %token TOK_ROTATED    "ROTATED"
 %token TOK_PREVIOUS   "PREVIOUS"
 %token TOK_SETTING    "SETTING"
-%token TOK_STATE      "STATE"
-%token TOK_POL        "POLARISATION"
 %token TOK_TRACE      "TRACE"
 %token TOK_SHARE      "SHARE"
 %token TOK_EXTEND     "EXTEND"
@@ -280,7 +278,7 @@ trace: /* empty */
       }
 ;
 
-parameters:   def_par set_par out_par state_par pol_par
+parameters:   def_par set_par out_par
       {
         $$.def = $1;
         $$.set = $2;
@@ -316,28 +314,6 @@ out_par:    /* empty */
     | "OUTPUT" "PARAMETERS" formallist
       {
         $$ = $3;
-      }
-;
-
-state_par:    /* empty */
-      {
-        /* Do nothing */
-      }
-    | "STATE" "PARAMETERS" formallist
-      {
-        /* Issue warning */
-        print_warn(NULL, " %s is using STATE PARAMETERS\n    %s %s support is PARTIAL for these and support will END with next release\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION);
-      }
-;
-
-pol_par:    /* empty */
-      {
-        /* Do nothing */
-      }
-    | "POLARISATION" "PARAMETERS" formallist
-      {
-        /* Issue warning */
-        print_warn(NULL, " %s is using STATE PARAMETERS\n    %s %s support is PARTIAL for these and support will END with next release\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION);
       }
 ;
 
