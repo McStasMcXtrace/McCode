@@ -1625,6 +1625,14 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
             x3,y3,z3,
             x0,y0,z0);
         }
+      if (Vars->Flag_mantid) {
+	/* First define the base pixel type */
+	double dt, dy;
+	dt = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
+	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
+	printf("MANTID_BANANA_DET:  %g, %g, %g, %g, %g, %li, %li\n", radius, 
+	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2]); 
+      }
     }
     /* disk (circle) */
     else
@@ -1646,24 +1654,11 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
       
       if (Vars->Flag_mantid) {
 	/* First define the base pixel type */
-	double dx, dy, xtmp, ytmp, ztmp;
+	double dx, dy;
 	dx = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
 	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
-	printf("MANTID_PIXEL_SIZE: %g, %g, %li\n", dx, dy, (int)Vars->Coord_Bin[1]*Vars->Coord_Bin[2]);
-
-	/* Next, loop over the actual pixels */
-	xtmp = Vars->Coord_Min[1]+dx/2;
-	ztmp = 0;
-	int i,j;
-	for (i=0; i<Vars->Coord_Bin[1]; i++) {
-	  ytmp = Vars->Coord_Min[2]+dy/2;
-	  for (j=0; j<Vars->Coord_Bin[2]; j++) {
-	    printf("MANTID_PIXEL: %li, %g, %g, %g, %g, %g\n", i*Vars->Coord_Bin[1]+j, xtmp, ytmp, ztmp, dx, dy);
-	    ytmp += dy;
-	  }
-	  xtmp += dx;
-	}
-	printf("MANTID_PIXELS_END:\n");
+	printf("MANTID_RECTANGULAR_DET:  %g, %g, %g, %g, %li, %li\n", 
+	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2]);
       }
     }
     /* full cylinder/banana */
