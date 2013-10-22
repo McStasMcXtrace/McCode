@@ -356,24 +356,24 @@ Transform {
 		$comp = "";
 	      }
 	} elsif (/^MANTID_RECTANGULAR_DET:(.*)$/) {
-	  # Rectangular detector, widthlims, heightlims, nx, ny
+	  # Rectangular detector, width, height, nx, ny
 	  $mantidcount2++;
-	  my ($xmin, $xmax, $ymin, $ymax, $nx, $ny)  = split ",", $1;
+	  my @PIXELDATA = split ",", $1;
 	  my $dx,$dy;
-	  $dx = ($xmax-$xmin)/($nx-1);
-	  $dy = ($ymax-$ymin)/($ny-1);
+	  $dx = $PIXELDATA[0]/($PIXELDATA[2]);
+	  $dy = $PIXELDATA[1]/($PIXELDATA[3]);
 	  if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
 	      # First define a panel, cf. http://www.mantidproject.org/IDF#Creating_Rectangular_Area_Detectors
 	      my $type = "MonNDtype-$mantidcount2";
 	      write_process("<component type=\"".$type."\" name=\"$comp\" idstart=\"");
 	      write_process(${mantidcount2}*1000000);
-	      write_process("\" idfillbyfirst=\"x\" idstepbyrow=\"".$nx."\">\n");
+	      write_process("\" idfillbyfirst=\"x\" idstepbyrow=\"".$PIXELDATA[2]."\">\n");
 	      write_process("\t<location x=\"".$transformations{$comp}[0]."\" y=\"".$transformations{$comp}[1]."\" z=\"".$transformations{$comp}[2]."\" />\n</component>\n\n");
 
 	      # Panel pixellation
 	      write_process("\<type name=\"MonNDtype-$mantidcount2\" is=\"RectangularDetector\" type=\"pixel-$mantidcount2\"\n");
-	      write_process("\txpixels=\"$nx\" xstart=\"".$xmin."\" xstep=\"".$dx."\"\n");
-	      write_process("\typixels=\"$ny\" ystart=\"".$ymin."\" ystep=\"".$dy."\">\n</type>\n");
+	      write_process("\txpixels=\"$PIXELDATA[2]\" xstart=\"-".$PIXELDATA[0]/(2.0)."\" xstep=\"".$dx."\"\n");
+	      write_process("\typixels=\"$PIXELDATA[3]\" ystart=\"-".$PIXELDATA[1]/(2.0)."\" ystep=\"".$dy."\">\n</type>\n");
 
 	      # Individual pixel
 	      write_process("<type is=\"detector\" name=\"pixel-$mantidcount2\">\n");
@@ -387,24 +387,23 @@ Transform {
 	      write_process("</type>\n\n");
 	    }
 	  	} elsif (/^MANTID_BANANA_DET:(.*)$/) {
-	  # Banana detector: radius, theta-lims, y-lims, ntheta, ny
+	  # Banana detector: radius, theta-range, yheight, ntheta, ny
 	  $mantidcount2++;
-	  my ($radius, $tmin, $tmax, $ymin, $ymax, $nt, $ny) = split ",", $1;
-	  
+	  my @PIXELDATA = split ",", $1;
 	  my $dx,$dt,$dy, $j, $yval;
-	  $dt = ($tmax-$tmin)/($nt-1);
-	  $dy = ($ymax-$ymin)/($ny-1);
+	  $dt = $PIXELDATA[1]/$PIXELDATA[3]-1;
+	  $dy = $PIXELDATA[2]/($PIXELDATA[4]-1);
 	  # A quick estimate of the bin-width in carthesian coords...
-	  $dx = (2*3.1415*$radius*($tmax-$tmin)/360)/($nt-1);
+	  $dx = (2*3.1415*$PIXELDATA[0]*$PIXELDATA[1]/360)/($PIXELDATA[3]-1);
 	  if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
 	      # First define a panel, cf. http://www.mantidproject.org/IDF#Creating_Rectangular_Area_Detectors
 	      my $type = "MonNDtype-$mantidcount2";
 	      write_process("<component type=\"".$type."\" name=\"$comp\" idlist=\"".$type."-list\">\n"); #(${mantidcount2}*1000000)."\">\n");
-	      write_process("\t<locations x=\"".$transformations{$comp}[0]."\" y=\"".($transformations{$comp}[1]+$ymin)."\" y-end=\"".($transformations{$comp}[1]+$ymax)."\" n-elements=\"".$ny."\" z=\"".$transformations{$comp}[2]."\"/>\n");
+	      write_process("\t<locations x=\"".$transformations{$comp}[0]."\" y=\"".($transformations{$comp}[1]-$PIXELDATA[2]/2.0)."\" y-end=\"".($transformations{$comp}[1]+$PIXELDATA[2]/2.0)."\" n-elements=\"".($PIXELDATA[4])."\" z=\"".$transformations{$comp}[2]."\"/>\n");
 	      write_process("</component>\n\n");
 	      write_process("<type name=\"".$type."\">\n");
 	      write_process("\t<component type=\"pixel-".$mantidcount2."\">\n"); #(${mantidcount2}*1000000)."\">\n");
-	      write_process("\t\t<locations r=\"".$radius."\" t=\"".$tmin."\" t-end=\"".$tmax."\" n-elements=\"".$nt."\"/>\n");
+	      write_process("\t\t<locations r=\"".$PIXELDATA[0]."\" t=\"-".$PIXELDATA[1]/2.0."\" t-end=\"".$PIXELDATA[1]/2.0."\" n-elements=\"".$PIXELDATA[3]."\"/>\n");
 	      write_process("\t</component>\n\n");
 	      write_process("</type>\n\n");
 
@@ -419,7 +418,7 @@ Transform {
 	      write_process("\t<algebra val=\"pixel-shape-$mantidcount2\" />\n");
 	      write_process("</type>\n\n");
 	      write_process("<idlist idname=\"".$type."-list\">\n");
-	      write_process("\t<id start=\"".(${mantidcount2}*1000000)."\" end=\"".(${mantidcount2}*1000000+$nt*$ny-1)."\"/>");
+	      write_process("\t<id start=\"".(${mantidcount2}*1000000)."\" end=\"".(${mantidcount2}*1000000+$PIXELDATA[3]*$PIXELDATA[4]-1)."\"/>");
 	      write_process("</idlist>\n");
 	    }
 	} elsif (/^MANTID_PIXEL_SIZE:(.*)$/) {
