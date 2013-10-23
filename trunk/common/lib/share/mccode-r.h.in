@@ -55,6 +55,38 @@
 #define mcstatic
 #endif
 
+#ifdef __dest_os
+#if (__dest_os == __mac_os)
+#define MAC
+#endif
+#endif
+
+#ifdef __FreeBSD__
+#define NEED_STAT_H
+#endif
+
+#if defined(__APPLE__) && defined(__GNUC__)
+#define NEED_STAT_H
+#endif
+
+#ifdef NEED_STAT_H
+#include <sys/stat.h>
+#endif
+
+#ifndef MC_PATHSEP_C
+#ifdef WIN32
+#define MC_PATHSEP_C '\\'
+#define MC_PATHSEP_S "\\"
+#define strcasestr strstr
+#define random rand
+#define srandom srand
+#else  /* !WIN32 */
+#define MC_PATHSEP_C '/'
+#define MC_PATHSEP_S "/"
+#endif /* !WIN32 */
+#endif /* MC_PATHSEP_C */
+
+
 
 /* the version string is replaced when building distribution with mkdist */
 #ifndef MCCODE_STRING
@@ -515,41 +547,6 @@ int mccode_main(int argc, char *argv[]);
 
 #ifndef MCCODE_R_IO_H
 #define MCCODE_R_IO_H "$Revision$"
-
-#ifdef __dest_os
-#if (__dest_os == __mac_os)
-#define MAC
-#endif
-#endif
-
-#ifdef __FreeBSD__
-#define NEED_STAT_H
-#endif
-
-#if defined(__APPLE__) && defined(__GNUC__)
-#define NEED_STAT_H
-#endif
-
-#ifdef NEED_STAT_H
-#include <sys/stat.h>
-#endif
-
-#ifndef MC_PATHSEP_C
-#ifdef WIN32
-#define MC_PATHSEP_C '\\'
-#define MC_PATHSEP_S "\\"
-#define random rand
-#define srandom srand
-#else  /* !WIN32 */
-#ifdef MAC
-#define MC_PATHSEP_C ':'
-#define MC_PATHSEP_S ":"
-#else  /* !MAC */
-#define MC_PATHSEP_C '/'
-#define MC_PATHSEP_S "/"
-#endif /* !MAC */
-#endif /* !WIN32 */
-#endif /* MC_PATHSEP_C */
 
 #if (USE_NEXUS == 0)
 #undef USE_NEXUS
