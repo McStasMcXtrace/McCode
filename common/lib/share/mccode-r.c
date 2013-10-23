@@ -3136,31 +3136,31 @@ double randtriangle(void) {
  * Random number between 0.0 and 1.0 (including?)
  */
 double rand01() {
-	double rand;
-	rand = (double) random();
-	rand /= (double) MC_RAND_MAX + 1;
-	return rand;
+	double randnum;
+	randnum = (double) random();
+	randnum /= (double) MC_RAND_MAX + 1;
+	return randnum;
 }
 
 /**
  * Return a random number between 1 and -1
  */
 double randpm1() {
-	double rand;
-	rand = (double) random();
-	rand /= ((double) MC_RAND_MAX + 1) / 2;
-	rand -= 1;
-	return rand;
+	double randnum;
+	randnum = (double) random();
+	randnum /= ((double) MC_RAND_MAX + 1) / 2;
+	randnum -= 1;
+	return randnum;
 }
 
 /**
  * Return a random number between 0 and max.
  */
 double rand0max(double max) {
-	double rand;
-	rand = (double) random();
-	rand /= ((double) MC_RAND_MAX + 1) / max;
-	return rand;
+	double randnum;
+	randnum = (double) random();
+	randnum /= ((double) MC_RAND_MAX + 1) / max;
+	return randnum;
 }
 
 /**
