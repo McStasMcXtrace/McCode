@@ -1367,7 +1367,7 @@ static void mcinfo_out_nexus(NXhandle f)
         nxprintattr(f, "file_size", "%li", length);
         nxprintattr(f, "MCCODE_STRING", MCCODE_STRING);
         NXclosedata(f);
-        nxprintf (f,"instrument_source", "%s " MCCODE_NAME " " MCCODE_PARTICLE " Monte Carlo simulation", mcinstrument_name);
+        nxprintf (f,"instrument_source", "%s ", MCCODE_NAME, " ",  "@MCCODE_PARTICLE@", " Monte Carlo simulation", mcinstrument_name);
         free(buffer);
       } else
         nxprintf (f, "description", "File %s not found (instrument description %s is missing)", 
