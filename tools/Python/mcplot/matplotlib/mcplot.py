@@ -243,6 +243,7 @@ def read_monitor(this_File):
     # Add the data block:
     Filestruct['data']=loadtxt(this_File)
     Filestruct['fullpath'] = this_File
+    Filestruct['File'] = this_File
     print "Loading " + this_File
     
     return Filestruct

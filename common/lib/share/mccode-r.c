@@ -63,7 +63,7 @@ int      mcMagnet                    = 0; /* magnet stack flag */
 mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
 int      mcallowbackprop             = 0;         /* flag to enable negative/backprop */
 
-/* Number of particule histories to simulate. */
+/* Number of particle histories to simulate. */
 #ifdef NEUTRONICS
 mcstatic unsigned long long int mcncount             = 1;
 mcstatic unsigned long long int mcrun_num            = 0;
@@ -389,6 +389,42 @@ double (*mcestimate_error_p)
 
 /* SECTION: file i/o handling ================================================ */
 
+#ifndef HAVE_STRCASESTR
+// from msysgit: https://code.google.com/p/msysgit/source/browse/compat/strcasestr.c
+char *strcasestr(const char *haystack, const char *needle)
+{
+  int nlen = strlen(needle);
+  int hlen = strlen(haystack) - nlen + 1;
+  int i;
+
+  for (i = 0; i < hlen; i++) {
+    int j;
+    for (j = 0; j < nlen; j++) {
+            unsigned char c1 = haystack[i+j];
+            unsigned char c2 = needle[j];
+            if (toupper(c1) != toupper(c2))
+                    goto next;
+    }
+    return (char *) haystack + i;
+  next:
+    ;
+  }
+  return NULL;
+}
+
+
+#endif
+#ifndef HAVE_STRCASECMP
+int strcasecmp( const char *s1, const char *s2 )
+{
+  int c1, c2;
+  do {
+    c1 = tolower( (unsigned char) *s1++ );
+    c2 = tolower( (unsigned char) *s2++ );
+  } while (c1 == c2 && c1 != 0);
+  return c2 > c1 ? -1 : c1 > c2;
+}
+#endif
 
 /*******************************************************************************
 * mcfull_file: allocates a full file name=mcdirname+file. Catenate extension if missing.
@@ -445,7 +481,7 @@ FILE *mcnew_file(char *name, char *ext, int *exists)
   
   /* open the file for writing/appending */
 #ifdef USE_NEXUS
-  if (strcasestr(mcformat, "NeXus")) {
+  if (mcformat && strcasestr(mcformat, "NeXus")) {
     /* NXhandle nxhandle is defined in the .h with USE_NEXUS */
     NXaccess mode = (*exists ? NXACC_CREATE5 | NXACC_RDWR : NXACC_CREATE5);
       
@@ -485,7 +521,7 @@ MCDETECTOR mcdetector_statistics(
   double sum_xz = 0, sum_yz = 0, sum_x = 0, sum_y = 0, sum_x2z = 0, sum_y2z = 0;
   int    i,j;
   char   hasnan=0, hasinf=0;
-  char   israw = (strcasestr(detector.format," raw"));
+  char   israw = (strcasestr(detector.format,"raw") != NULL);
   double *this_p1=NULL; /* new 1D McCode array [x I E N]. Freed after writing data */
 
   /* if McCode/PGPLOT and rank==1 we create a new m*4 data block=[x I E N] */
@@ -641,7 +677,7 @@ MCDETECTOR mcdetector_import(
 
   /* these also apply to simfile */
   strncpy (detector.filename,  filename ? filename : "",        CHAR_BUF_LENGTH);
-  strncpy (detector.format,    format   ? format   : "MCCODE" , CHAR_BUF_LENGTH);
+  strncpy (detector.format,    format   ? format   : "McCode" , CHAR_BUF_LENGTH);
   /* add extension if missing */
   if (strlen(detector.filename) && !strchr(detector.filename, '.'))
   { /* add extension if not in file name already */
@@ -673,9 +709,9 @@ MCDETECTOR mcdetector_import(
   detector.p2         = p2;
 
   /* handle transposition (not for NeXus) */
-  if (!strcasestr(mcformat, "NeXus")) {
+  if (!strcasestr(detector.format, "NeXus")) {
     if (m<0 || n<0 || p<0)             istransposed = !istransposed;
-    if (strstr(detector.format, "transpose")) istransposed = !istransposed;
+    if (strcasestr(detector.format, "transpose")) istransposed = !istransposed;
     if (istransposed) { /* do the swap once for all */
       long i=m; m=n; n=i;
     }
@@ -744,7 +780,7 @@ MCDETECTOR mcdetector_import(
 
   /* if MPI and nodes_nb > 1: reduce data sets when using MPI =============== */
 #ifdef USE_MPI
-  if (!strstr(detector.format,"list") && mpi_node_count > 1 && m) {
+  if (!strcasestr(detector.format,"list") && mpi_node_count > 1 && m) {
     /* we save additive data: reduce everything into mpi_node_root */
     if (p0) mc_MPI_Sum(p0, m*n*p);
     if (p1) mc_MPI_Sum(p1, m*n*p);
@@ -811,8 +847,6 @@ MCDETECTOR mcdetector_import(
 
 
 
-
-
 /* ========================================================================== */
 
 /*                               ASCII output                                 */
@@ -850,7 +884,7 @@ static void mcinfo_out(char *pre, FILE *f)
   else
     fprintf(f, "%sCreator: %s\n",     pre, MCCODE_STRING);
 
-  fprintf(f, "%sSource: %s '%s'\n",   pre, mcinstrument_source, mcinstrument_name);
+  fprintf(f, "%sSource: %s\n",   pre, mcinstrument_source);
   fprintf(f, "%sParameters: %s\n",    pre, Parameters);
   
   fprintf(f, "%sTrace_enabled: %s\n", pre, mctraceenabled ? "yes" : "no");
@@ -877,16 +911,18 @@ static void mcruninfo_out(char *pre, FILE *f)
 
   if (!f || mcdisable_output_files) return;
 
-  fprintf(f, "%sFormat: %s\n",      pre, 
-    mcformat && !strcasecmp(mcformat,"McCode") ? MCCODE_STRING " with text headers" : mcformat);
+  fprintf(f, "%sFormat: %s%s\n",      pre, 
+    mcformat && strlen(mcformat) ? mcformat : MCCODE_NAME,
+    mcformat && strcasestr(mcformat,"McCode") ? " with text headers" : "");
   fprintf(f, "%sURL: %s\n",         pre, "http://www.mccode.org");
   fprintf(f, "%sCreator: %s\n",     pre, MCCODE_STRING);
-  fprintf(f, "%sInstrument: %s '%s'\n", pre, mcinstrument_source, mcinstrument_name);
+  fprintf(f, "%sInstrument: %s\n", pre, mcinstrument_source);
+  fprintf(f, "%sNcount: %Li\n",        pre, mcget_ncount());
   fprintf(f, "%sTrace: %s\n",       pre, mcdotrace ? "yes" : "no");
   fprintf(f, "%sGravitation: %s\n", pre, mcgravitation ? "yes" : "no");
   snprintf(Parameters, CHAR_BUF_LENGTH, "%ld", mcseed);
   fprintf(f, "%sSeed: %s\n",        pre, Parameters);
-  fprintf(f, "%sDirectory: %s\n",        pre, mcdirname);
+  fprintf(f, "%sDirectory: %s\n",        pre, mcdirname ? mcdirname : ".");
 #ifdef USE_MPI
   if (mpi_node_count > 1)
     fprintf(f, "%sNodes: %i\n",        pre, mpi_node_count);
@@ -1006,7 +1042,7 @@ MCDETECTOR mcdetector_out_0D_ascii(MCDETECTOR detector)
   
   /* Write data set information to simulation description file. */
   MPI_MASTER(
-    mcsiminfo_out("\nbegin data: %s\n", detector.component);
+    mcsiminfo_out("\nbegin data\n"); // detector.component
     mcdatainfo_out("  ", mcsiminfo_file, detector);
     mcsiminfo_out("end data\n");
     /* Don't write if filename is NULL: mcnew_file handles this (return NULL) */
@@ -1021,7 +1057,8 @@ MCDETECTOR mcdetector_out_0D_ascii(MCDETECTOR detector)
         detector.intensity, detector.error, detector.events);
       fclose(outfile);
     }
-  );
+  ); /* MPI_MASTER */
+  return(detector);
 } /* mcdetector_out_0D_ascii */
 
 /*******************************************************************************
@@ -1034,7 +1071,7 @@ MCDETECTOR mcdetector_out_1D_ascii(MCDETECTOR detector)
 
   MPI_MASTER(
     /* Write data set information to simulation description file. */
-    mcsiminfo_out("\nbegin data: %s\n", detector.filename);
+    mcsiminfo_out("\nbegin data\n"); // detector.filename
     mcdatainfo_out("  ", mcsiminfo_file, detector);
     mcsiminfo_out("end data\n");
     /* Loop over array elements, writing to file. */
@@ -1051,6 +1088,7 @@ MCDETECTOR mcdetector_out_1D_ascii(MCDETECTOR detector)
       fclose(outfile);
     }
   ); /* MPI_MASTER */
+  return(detector);
   
 }  /* mcdetector_out_1D_ascii */
 
@@ -1071,7 +1109,7 @@ MCDETECTOR mcdetector_out_2D_ascii(MCDETECTOR detector)
       /* write header only if file has just been created (not appending) */
       if (!exists) {
         /* Write data set information to simulation description file. */
-        mcsiminfo_out("\nbegin data: %s\n", detector.filename);
+        mcsiminfo_out("\nbegin data\n"); // detector.filename
         mcdatainfo_out("  ", mcsiminfo_file, detector);
         mcsiminfo_out("end data\n");
       
@@ -1123,6 +1161,7 @@ MCDETECTOR mcdetector_out_2D_ascii(MCDETECTOR detector)
     }
   } /* if strcasestr list */
 #endif
+  return(detector);
 } /* mcdetector_out_2D_ascii */
 
 /*******************************************************************************
@@ -1328,7 +1367,7 @@ static void mcinfo_out_nexus(NXhandle f)
         nxprintattr(f, "file_size", "%li", length);
         nxprintattr(f, "MCCODE_STRING", MCCODE_STRING);
         NXclosedata(f);
-        nxprintf (f,"instrument_source", "%s " MCCODE_NAME " " MCCODE_PARTICULE " Monte Carlo simulation", mcinstrument_name);
+        nxprintf (f,"instrument_source", "%s " MCCODE_NAME " " MCCODE_PARTICLE " Monte Carlo simulation", mcinstrument_name);
         free(buffer);
       } else
         nxprintf (f, "description", "File %s not found (instrument description %s is missing)", 
@@ -1356,7 +1395,7 @@ static void mcinfo_out_nexus(NXhandle f)
         mcdirname && strlen(mcdirname) ? mcdirname : ".", MC_PATHSEP_S, mcsiminfo_name);
       
       nxprintf   (f, "name",      "%s",     mcsiminfo_name);
-      nxprintattr(f, "Format",    mcformat);
+      nxprintattr(f, "Format",    mcformat && strlen(mcformat) ? mcformat : MCCODE_NAME);
       nxprintattr(f, "URL",       "http://www.mccode.org");
       nxprintattr(f, "program",   MCCODE_STRING);
       nxprintattr(f, "Instrument",mcinstrument_source);
@@ -1527,12 +1566,12 @@ int mcdetector_out_array_nexus(NXhandle f, char *part, double *data, MCDETECTOR 
   if (!f || !data || !detector.m || mcdisable_output_files) return(NX_OK);
   
   /* when this is a list, we set 1st dimension to NX_UNLIMITED for creation */
-  if (strstr(mcformat, "list")) dims[0] = NX_UNLIMITED;
+  if (strcasestr(detector.format, "list")) dims[0] = NX_UNLIMITED;
   
   /* create the data set in NXdata group */
   NXMDisableErrorReporting(); /* unactivate NeXus error messages, as creation may fail */
   /* NXcompmakedata fails with NX_UNLIMITED */
-  if (strstr(mcformat, "list"))
+  if (strcasestr(detector.format, "list"))
     ret = NXmakedata(    f, part, NX_FLOAT64, detector.rank, dims);
   else
     ret = NXcompmakedata(f, part, NX_FLOAT64, detector.rank, dims, NX_COMP_LZW, dims);
@@ -1598,7 +1637,7 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
     if (NXopengroup(f, data_name, "NXdata") == NX_OK) {
   
       /* write axes, for histogram data sets, not for lists */
-      if (!strstr(mcformat, "list")) {
+      if (!strcasestr(detector.format, "list")) {
         mcdetector_out_axis_nexus(f, detector.xlabel, detector.xvar, 
           1, detector.m, detector.xmin, detector.xmax);
           
@@ -1611,7 +1650,7 @@ int mcdetector_out_data_nexus(NXhandle f, MCDETECTOR detector)
       } /* !list */
       
       /* write the actual data (appended if already exists) */
-      if (!strstr(mcformat, "list")) {
+      if (!strcasestr(detector.format, "list")) {
         mcdetector_out_array_nexus(f, "data", detector.p1, detector);
         mcdetector_out_array_nexus(f, "errors", detector.p2, detector);
         mcdetector_out_array_nexus(f, "ncount", detector.p0, detector);
@@ -1695,7 +1734,7 @@ MCDETECTOR mcdetector_out_1D_nexus(MCDETECTOR detector)
   mcdetector_out_data_nexus(nxhandle, detector);
   );
   return(detector);
-}
+} /* mcdetector_out_1D_ascii */
 
 MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector)
 {
@@ -1736,12 +1775,13 @@ MCDETECTOR mcdetector_out_2D_nexus(MCDETECTOR detector)
 FILE *mcsiminfo_init(FILE *f)
 {
   int exists=0;
+  int index;
   
-  /* check format */
+  /* check format */      
   if (!mcformat || !strlen(mcformat) 
-   || !strcasecmp(mcformat, "McStas") || !strcasecmp(mcformat, "McXtrace") 
+   || !strcasecmp(mcformat, "MCSTAS") || !strcasecmp(mcformat, "MCXTRACE") 
    || !strcasecmp(mcformat, "PGPLOT"))
-    mcformat = "MCCODE";
+    mcformat="McCode";
   
   /* open the SIM file if not defined yet */
   if (mcsiminfo_file || mcdisable_output_files) 
@@ -1749,7 +1789,7 @@ FILE *mcsiminfo_init(FILE *f)
     
 #ifdef USE_NEXUS
   /* only master writes NeXus header: calls NXopen(nxhandle) */
-  if (strcasestr(mcformat, "NeXus")) {
+  if (mcformat && strcasestr(mcformat, "NeXus")) {
 	  MPI_MASTER(
 	  mcsiminfo_file = mcnew_file(mcsiminfo_name, "h5", &exists);
     if(!mcsiminfo_file)
@@ -1775,10 +1815,10 @@ FILE *mcsiminfo_init(FILE *f)
   {
     /* write SIM header */
     time_t t=time(NULL);
-    mcsiminfo_out("# %s simulation description file for %s.\n", 
+    mcsiminfo_out("%s simulation description file for %s.\n", 
       MCCODE_NAME, mcinstrument_name);
-    mcsiminfo_out("# Date:    %s", ctime(&t)); /* includes \n */
-    mcsiminfo_out("# Program: %s\n\n", MCCODE_STRING);
+    mcsiminfo_out("Date:    %s", ctime(&t)); /* includes \n */
+    mcsiminfo_out("Program: %s\n\n", MCCODE_STRING);
     
     mcsiminfo_out("begin instrument: %s\n", mcinstrument_name);
     mcinfo_out(   "  ", mcsiminfo_file);
@@ -1803,7 +1843,7 @@ void mcsiminfo_close()
   MPI_MASTER(
   if(mcsiminfo_file && !mcdisable_output_files) {
 #ifdef USE_NEXUS
-    if (strcasestr(mcformat, "NeXus")) {
+    if (mcformat && strcasestr(mcformat, "NeXus")) {
       time_t t=time(NULL);
       nxprintf(nxhandle, "end_time", ctime(&t));
       nxprintf(nxhandle, "duration", "%li", (long)t-mcstartdate);
@@ -1835,7 +1875,7 @@ MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
     &p0, &p1, &p2, posa); /* write Detector: line */
 
 #ifdef USE_NEXUS
-  if (strcasestr(mcformat, "NeXus"))
+  if (strcasestr(detector.format, "NeXus"))
     return(mcdetector_out_0D_nexus(detector));
   else
 #endif
@@ -1870,7 +1910,7 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
   if (!detector.p1 || !detector.m) return(detector);
 
 #ifdef USE_NEXUS
-  if (strcasestr(mcformat, "NeXus"))
+  if (strcasestr(detector.format, "NeXus"))
     return(mcdetector_out_1D_nexus(detector));
   else
 #endif
@@ -1908,7 +1948,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
   if (!detector.p1 || !detector.m) return(detector);
 
 #ifdef USE_NEXUS
-  if (strcasestr(mcformat, "NeXus"))
+  if (strcasestr(detector.format, "NeXus"))
     return(mcdetector_out_2D_nexus(detector));
   else
 #endif
@@ -1985,8 +2025,12 @@ mcuse_dir(char *dir)
 static void
 mcinfo(void)
 {
-  fprintf(stdout, "instrument: %s\n", mcinstrument_name);
+  fprintf(stdout, "begin instrument: %s\n", mcinstrument_name);
   mcinfo_out("  ", stdout);
+  fprintf(stdout, "end instrument\n");
+  fprintf(stdout, "begin simulation: %s\n", mcdirname ? mcdirname : ".");
+  mcruninfo_out("  ", stdout);
+  fprintf(stdout, "end simulation\n");
   exit(0); /* includes MPI_Finalize in MPI mode */
 } /* mcinfo */
 
@@ -3185,9 +3229,9 @@ mchelp(char *pgmname)
   fprintf(stderr,
 "Options are:\n"
 "  -s SEED   --seed=SEED      Set random seed (must be != 0)\n"
-"  -n COUNT  --ncount=COUNT   Set number of @MCCODE_PARTICULE@s to simulate.\n"
+"  -n COUNT  --ncount=COUNT   Set number of @MCCODE_PARTICLE@s to simulate.\n"
 "  -d DIR    --dir=DIR        Put all data files in directory DIR.\n"
-"  -t        --trace          Enable trace of @MCCODE_PARTICULE@s through instrument.\n"
+"  -t        --trace          Enable trace of @MCCODE_PARTICLE@s through instrument.\n"
 "  -g        --gravitation    Enable gravitation for all trajectories.\n"
 "  --no-output-files          Do not write any data files.\n"
 "  -h        --help           Show this help message.\n"
@@ -3723,7 +3767,7 @@ int mccode_main(int argc, char *argv[])
 #endif
 #endif /* !NOSIGNALS */
 
-/* ================ main particule generation/propagation loop ================ */
+/* ================ main particle generation/propagation loop ================ */
 #if defined (USE_MPI)
   /* sliced Ncount on each MPI node */
   mcncount = mpi_node_count > 1 ?
@@ -3731,7 +3775,7 @@ int mccode_main(int argc, char *argv[])
     mcncount; /* number of rays per node */
 #endif
 
-/* main particule event loop */
+/* main particle event loop */
 while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
   {
 #ifndef NEUTRONICS
@@ -3781,7 +3825,7 @@ void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *in
   /* *** parse options *** */
   SIG_MESSAGE("main (Start)");
   mcformat=getenv(FLAVOR_UPPER "_FORMAT") ?
-           getenv(FLAVOR_UPPER "_FORMAT") : "MCCODE";
+           getenv(FLAVOR_UPPER "_FORMAT") : FLAVOR_UPPER;
 
   /* Set neutron state based on input from neutronics code */
   mcsetstate(*inx,*iny,*inz,*invx,*invy,*invz,*intime,*insx,*insy,*insz,*inw);
