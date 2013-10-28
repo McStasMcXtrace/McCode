@@ -11,6 +11,9 @@
 * Release: McStas 1.9
 * Origin: PSI
 *
+* Guide with four side walls
+*
+* %Description
 *
 *  This component models a guide with four side walls.
 *  As user you can controll the properties of every wall separatly. All togther you have up to 

@@ -150,7 +150,7 @@ class McStas:
         options = self.options
 
         # Handle proxy options with values
-        proxy_opts_val = ['seed', 'ncount', 'dir', 'file', 'format']
+        proxy_opts_val = ['seed', 'ncount', 'dir', 'format']
         for opt in proxy_opts_val:
             # try extra_opts before options
             default = getattr(options, opt.replace('-', '_'))
@@ -159,7 +159,7 @@ class McStas:
                 args.extend(['--%s' % opt, str(val)])
 
         # Handle proxy options without values (flags)
-        proxy_opts_flags = ['trace', 'gravitation', 'data-only',
+        proxy_opts_flags = ['trace', 'gravitation', 
                             'no-output-files', 'info']
         for opt in proxy_opts_flags:
             # try extra_opts before optionts

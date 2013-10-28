@@ -11,6 +11,9 @@
 * Release: McStas 1.9
 * Origin: PSI
 *
+* Guide with four side walls surounded by up to 10 shells
+*
+* %Description
 *
 *  This component models a guide with four side walls surounded by up to 10 shells (every shell consists of 
 *  additional four walls). In the  end it  forms a guide with an inner and up to 10 outer channel.

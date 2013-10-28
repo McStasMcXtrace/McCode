@@ -84,7 +84,11 @@ sub read_instrument_info {
             $inf->{'Parameter-types'} = $parmtypes;
         } elsif(/^\s*Instrument-source:\s*(.*?)\s*$/i) {
             $inf->{'Instrument-source'} = strip_quote($1);
+        } elsif(/^\s*Instrument_source:\s*(.*?)\s*$/i) {
+            $inf->{'Instrument-source'} = strip_quote($1);
         } elsif(/^\s*Source:\s*(.*?)\s*$/i) {
+            $inf->{'Instrument-source'} = strip_quote($1);
+        } elsif(/^\s*Instrument:\s*(.*?)\s*$/i) {
             $inf->{'Instrument-source'} = strip_quote($1);
         } elsif(/^\s*Trace-enabled:\s*(no|yes)\s*$/i) {
             $inf->{'Trace-enabled'} = get_yes_no($1);
