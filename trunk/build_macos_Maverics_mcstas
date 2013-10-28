@@ -7,25 +7,25 @@ if [ "x$1" = "x" ]; then
 fi
 
 # 64-bit Mac OS
-./mkdist mcstas $1 "" "" mac -- OSXpkg
-./mkdist mcstas-comps $1 "" "" mac -- OSXpkg
-./mkdist mcstas-tools-Perl $1 tools/Legacy-Perl/ "" mac -- OSXpkg
-./mkdist mcstas-tools-Python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mac -- OSXpkg
-./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac -- OSXpkg
-./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mac -- OSXpkg
+./mkdist mcstas $1 "" "" mac_maverics -- OSXpkg
+./mkdist mcstas-comps $1 "" "" mac_maverics -- OSXpkg
+./mkdist mcstas-tools-Perl $1 tools/Legacy-Perl/ "" mac_maverics -- OSXpkg
+./mkdist mcstas-tools-Python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_maverics -- OSXpkg
+./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_maverics -- OSXpkg
+./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mac_maverics -- OSXpkg
 ./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mac -- OSXpkg
-
 
 if [ "x$2" != "x" ]; then
     # Build the meta-package also
     OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
     
     cd dist
-    unzip ../support/MacOSX/Perl-Tk/Tk-*${OSXVER}*zip
+    # For now, use the Tk for perl5.12 from Mountain Lion...
+    unzip ../support/MacOSX/Perl-Tk/Tk-*10_8*zip
     unzip ../support/MacOSX/SciPDL/SciPDL-v2.4.10-Lion.pkg.zip
     cd -
     # A hack for creating a metapackage
-    cp -rp meta-pkgs/OSX/McStas-Metapackage_10_8.pmdoc dist/McStas-Metapackage.pmdoc
+    cp -rp meta-pkgs/OSX/McStas-Metapackage_10_9.pmdoc dist/McStas-Metapackage.pmdoc
     cp -rp meta-pkgs/OSX/mcstas_logos_etc dist/logos_etc
     cd dist/McStas-Metapackage.pmdoc    
 
