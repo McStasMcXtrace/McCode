@@ -35,20 +35,23 @@
 *
 * %P
 * INPUT PARAMETERS:
+* mvaluesright: (pointer) Pointer to array of m-values, right mirror
+* mvaluesleft: (pointer) - same, left mirror
+* mvaluestop: (pointer) - same, top mirror
+* mvaluesbottom: (pointer) - same, bottom mirror
+* seglength: (pointer) Pointer to array of segment lengths for discrete mirror description
 * l: (m) length of the guide
 *
-* linw: (m) distance from 1st focal point to guide entrance 
+* linxw: (m) distance from 1st focal point to guide entrance 
 *			- left and right horizontal mirrors
-* loutw: (m) distance from 2nd focal point to guide exit 
+* loutxw: (m) distance from 2nd focal point to guide exit 
 *			- left and right horizontal mirrors
-* linh: (m)	distance from 1st focal point to guide entrance 
+* linyh: (m)	distance from 1st focal point to guide entrance 
 *		- top and bottom vertical mirrors
-* louth: (m) distance from 2nd focal point to guide exit 
+* loutyh: (m) distance from 2nd focal point to guide exit 
 *		- top and bottom vertical mirrors
-*
 * xwidth: (m) 	width at the guide entry, mid or exit (see dimensionsAt)
 * yheight: (m) 	height at the guide entry, mid or exit (see dimensionsAt)
-*
 * R0:		(1)		Low-angle reflectivity
 * Qc:		(AA-1) 	Critical scattering vector
 * alpha: 	(AA) 	Slope of reflectivity
@@ -70,7 +73,7 @@
 * alphaleft: 	(AA) 	Slope of reflectivity for left vertical mirror
 * mleft: 		(1) 	m-value of material for left vertical mirror
 *
-* option: (string):	options are 'ellipse' and 'halfEllipse'. Ellipse is defined by 
+* option: (string)	options are 'ellipse' and 'halfEllipse'. Ellipse is defined by 
 *					both the focal points, while halfEllipse locked the center 
 *					of the ellipse either the entrance or exit of the guide, and 
 *					use the focal point of the other end to define the ellipse
@@ -78,29 +81,33 @@
 * dimensionsAt: (string) define whether xwidth and yheight sets the size of 
 *						he opening, minor axis or the end of the guide.
 *
-* majorAxisw = 0: (m) direct defination of the guide geometry, will ignore 
+* majorAxisxw: (m) direct defination of the guide geometry, will ignore 
 *					  w,h lin and lout parameters if this is nonzero. Length of 
 *					  the axis parallel to the z for the horizontal ellipse
-* minorAxisw = 0: (m) direct defination of the guide geometry, will ignore 
+* minorAxisxw: (m) direct defination of the guide geometry, will ignore 
 *					  w,h lin and lout parameters if this is nonzero. Length of 
 *					  the axis Perpendicular to the z for the horizontal ellipse
-* majorAxish = 0: (m) direct defination of the guide geometry, will ignore 
+* majorAxisyh: (m) direct defination of the guide geometry, will ignore 
 *					  w,h lin and lout parameters if this is nonzero. Length of 
 *					  the axis parallel to the z for the vertical ellipse
-* minorAxish = 0: (m) direct defination of the guide geometry, will ignore 
+* minorAxisyh: (m) direct defination of the guide geometry, will ignore 
 *					  w,h lin and lout parameters if this is nonzero. Length of 
 *					  the axis Perpendicular to the z for the vertical ellipse
 *
-* majorAxisoffsetw = 0: (m) direct defination of the guide geometry, 
+* majorAxisoffsetxw: (m) direct defination of the guide geometry, 
 *							distance between the center of the horizontal 
 *							ellipse and the guide entrance							
-* majorAxisoffseth = 0: (m) direct defination of the guide geometry, 
+* majorAxisoffsetyh: (m) direct defination of the guide geometry, 
 *							distance between the center of the vertical 
 *							ellipse and the guide entrance
+* verbose: (bool) Give extra information about calculations
+* curvature: (m) Simulate horizontal radius of curvature by centripetal force added to the gravity. Note: Does not curve the guide in mcdisplay but "curves the neutron". Has opposite sign definition of Guide_curved.
 *
 * OUTPUT PARAMETERS
 * guideInfo: (1) 	structure containing internal variables
-* Gx,Gy,Gz: (m/s^2) local gravity vector 
+* Gx: x-component of (m/s^2) local gravity vector 
+* Gy: y-component of (m/s^2) local gravity vector 
+* Gz: z-component of (m/s^2) local gravity vector 
 * dynamicalSegLength: (1) automatic generate length of specific m-value segments 
 *					  if no seglength is given
 *
@@ -151,55 +158,26 @@
 
 DEFINE COMPONENT Elliptic_guide_gravity
 DEFINITION PARAMETERS(	
-	// Enclosing Box pointers
-	// xInput=NULL, yInput=NULL, zInput=NULL,
-	// Specific m-value pointers
 	mvaluesright=NULL, mvaluesleft=NULL, mvaluestop=NULL, mvaluesbottom=NULL,
-	seglength=NULL
-	)
-SETTING PARAMETERS (
-		// Basic guide geometry
-		l,
+	seglength=NULL	)
+SETTING PARAMETERS (l,
 		xwidth = 0,yheight = 0,
-		
-		// Focal points
 		linxw = 0,loutxw = 0,
 		linyh = 0,loutyh = 0,
-		
-		// Major and minor axes
 		majorAxisxw = 0,minorAxisxw = 0,
-		majorAxisoffsetxw = 0,
 		majorAxisyh = 0,minorAxisyh = 0,
+		majorAxisoffsetxw = 0,
 		majorAxisoffsetyh = 0,
-		
-		// Defines the meaning of the w and h parameters
-			// options are entrance, exit or mid (only for elliptical)
 		string dimensionsAt = "entrance",
-			// options are elliptical (ellipse,e) 
-			// or half-elliptical (halfelliptical,halfellipse,he)
 		string option = "ellipse",
-		
-		// Mirrors properties
 		R0=0.99, Qc=0.0218, alpha=6.07, m=2, W=0.003,
 	    alpharight=-1,  mright=-1, 
 	    alphaleft=-1,   mleft=-1, 
 	    alphatop=-1,    mtop=-1,  	
 	    alphabottom=-1, mbottom=-1,	
-
-	    // Mirror modes
-		// string inner_right_side_mirror = "reflection", 
-		// string inner_left_side_mirror = "reflection", 
-		// string inner_top_side_mirror = "reflection",
-		// string inner_bottom_side_mirror = "reflection",
-		// string outer_right_side_mirror = "absorption", 
-		// string outer_left_side_mirror = "absorption", 
-		// string outer_top_side_mirror = "absorption", 
-		// string outer_bottom_side_mirror = "absorption",
-
-		// Output options
 		string verbose = "on", // on or off
-		enableGravity = 1.0
-	)
+		enableGravity = 1.0,
+		curvature=0	)
 
 OUTPUT PARAMETERS (
 	guideInfo,Gx,Gy,Gz,dynamicalSegLength,
@@ -841,6 +819,8 @@ DECLARE
 	struct SGI guideInfo; // Static Guide information, is set in INITIALIZE
 	struct Intersection latestParticleCollision; // Is changed duing trace
 	double Gx,Gy,Gz;  // Local gravity vector, is set once in INITIALIZE
+	double Gx0, Gy0, Gz0;
+	double Circ;
 	double *dynamicalSegLength;
 
 %}
@@ -1430,12 +1410,12 @@ INITIALIZE
 	and when apply the same rotation matrix as applied to guide. 
 */ 
 	if (enableGravity != 0){
-		Gx=0, Gy=-GRAVITY*enableGravity, Gz=0;
+		Gx0=0, Gy0=-GRAVITY*enableGravity, Gz0=0;
 		Coords mcLocG;
-		mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,Gy,0));
-		coords_get(mcLocG, &Gx, &Gy, &Gz);
+		mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,Gy0,0));
+		coords_get(mcLocG, &Gx0, &Gy0, &Gz0);
 	}
-
+	Circ=2*PI*curvature;
 %}
 
 /**
@@ -1452,6 +1432,14 @@ TRACE
 %{
   PROP_Z0;
   SCATTER;
+  
+  double Gloc;
+  if (curvature) {
+    Gloc=(vx*vx+vy*vy+vz*vz)/curvature;
+  } else {
+    Gloc=0;
+  }
+  
 
 	if( !guideInfo.EnclosingBoxOn )
 		if( fabs(x) > guideInfo.entranceHorizontalWidth/2.0 
@@ -1461,6 +1449,12 @@ TRACE
 
 	int bounces = 0;
 	for(bounces = 0; bounces <= 1000; bounces++){
+	
+	  Gx=Gx0; Gy=Gy0; Gz=Gz0;
+	  if (curvature) {
+	    // Add velocity-dependent, location-dependent approximation to centripetal force for curvature...
+	    Gx=Gx0+Gloc*cos(2*PI*z/Circ);Gz=Gz0+Gloc*sin(2*PI*z/Circ);
+	  }
 
 		// Find the next intersection between the guide and the neutron.
 		int boolean = guide_elliptical_handleGuideIntersection(

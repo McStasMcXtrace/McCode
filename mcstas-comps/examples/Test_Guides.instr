@@ -23,7 +23,8 @@
 * %Example: Guide=3 Detector: Monitor2_xy_I=0.00727304
 * %Example: Guide=4 Detector: Monitor2_xy_I=0.00721742
 * %Example: Guide=5 Detector: Monitor2_xy_I=0.00721742 
-* %Example: Guide=6 Detector: Monitor2_xy_I=0.00683072
+* %Example: Guide=6 Detector: Monitor2_xy_I=0.00721742 
+* %Example: Guide=7 Detector: Monitor2_xy_I=0.00683072
 *
 * %Parameters
 * Guide: [1] Choice of Guide component to test, with
@@ -32,7 +33,8 @@
 *            3=Guide_gravity, 
 *            4=Guide_wavy,
 *            5=Guide_curved
-*            6=Guide_honeycomb
+*            6=Elliptic_guide_gravity
+*            7=Guide_honeycomb
 *
 * %End
 *******************************************************************************/
@@ -41,7 +43,6 @@ DEFINE INSTRUMENT Test_Guides(int Guide=1)
 
 INITIALIZE
 %{
-  printf("\n%s: ", NAME_CURRENT_COMP);
   switch (Guide) {
   case 1:
     printf("Using Guide\n"); break;
@@ -54,7 +55,9 @@ INITIALIZE
   case 5:
     printf("Using Guide_curved\n"); break;
   case 6:
-    printf("Using Guide_honeycomb\n"); break;   
+    printf("Using Elliptic_guide_gravity\n"); break;    
+  case 7:
+    printf("Using Guide_honeycomb\n"); break;
   }
 %}
 
@@ -118,13 +121,23 @@ EXTEND %{
   if (!SCATTERED) ABSORB;
 %}
 
-COMPONENT GuideH = Guide_honeycomb(
-    w1 = 0.05, l = 1.0, R0 = 0.99, m=1, d=0)
+COMPONENT GuideEl = Elliptic_guide_gravity(
+  xwidth = 0.05, yheight=0.05, l = 1.0, R0 = 0.99, m=1,
+  linxw=1e6, linyh=1e6, loutxw=1e6, loutyh=1e6, dimensionsAt="mid")
   WHEN (Guide == 6)
   AT (0, 0, 0) RELATIVE Guide_Position
 EXTEND %{
   if (!SCATTERED) ABSORB;
 %}
+
+COMPONENT GuideH = Guide_honeycomb(
+    w1 = 0.05, l = 1.0, R0 = 0.99, m=1, d=0)
+  WHEN (Guide == 7)
+  AT (0, 0, 0) RELATIVE Guide_Position
+EXTEND %{
+  if (!SCATTERED) ABSORB;
+%}
+
 
 COMPONENT Monitor2_xy = Monitor_nD(
     options = "x y", xwidth = 0.07, yheight = 0.07)
