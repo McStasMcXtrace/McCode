@@ -135,6 +135,9 @@ COMPONENT mono_out = Arm()
 COMPONENT Sample_pos = Arm()
 AT (0, 0, L2) RELATIVE mono_out
 
+COMPONENT slit1 = Slit(radius=5e-3)
+AT (0, 0, -0.1) RELATIVE Sample_pos
+
 COMPONENT D16_flux = Monitor_nD(
   xwidth=0.02, yheight=0.03,
   options="auto lambda, all bins=20, per cm2", restore_neutron=1)
@@ -171,10 +174,16 @@ COMPONENT D16_BananaTheta = Monitor_nD(
     radius = L3, yheight = 0.32, restore_neutron=1)
   WHEN (flag_sample)
   AT (0, 0, 0) RELATIVE Sample_pos
+  
+COMPONENT Det_dir = Arm()
+AT(0,0,0) RELATIVE Sample_pos
+ROTATED (0, TwoTheta, 0) RELATIVE Sample_pos
+
+COMPONENT slit2 = Slit(radius=5e-3)
+AT (0, 0, 0.1) RELATIVE Det_dir
 
 COMPONENT Det_pos = Arm()
-AT(0,0,L3) RELATIVE Sample_pos
-ROTATED (0, TwoTheta, 0) RELATIVE Sample_pos
+AT(0,0,L3) RELATIVE Det_dir
 EXTEND %{
     flag_al=0;
 %}
