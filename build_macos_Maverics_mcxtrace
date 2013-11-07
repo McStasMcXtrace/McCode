@@ -1,0 +1,43 @@
+#!/bin/sh
+
+if [ "x$1" = "x" ]; then
+    # No arguments
+    echo Please provide one argument,e.g : $0 2.0
+    exit 1;
+fi
+
+# 64-bit Mac OS
+./mkdist mcxtrace $1 "" "" mac_maverics -- OSXpkg
+./mkdist mcxtrace-comps $1 "" "" mac_maverics -- OSXpkg
+./mkdist mcxtrace-tools-Perl $1 tools/Legacy-Perl/ "" mac_maverics -- OSXpkg
+./mkdist mcxtrace-tools-Python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_maverics -- OSXpkg
+./mkdist mcxtrace-tools-Python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_maverics -- OSXpkg
+./mkdist mcxtrace-tools-Python-mxrun $1 tools/Python/mcrun/ "" mac_maverics -- OSXpkg
+./mkdist mcxtrace-tools-Python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" mac -- OSXpkg
+
+if [ "x$2" != "x" ]; then
+    # Build the meta-package also
+    OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
+    
+    cd dist
+    # For now, use the Tk for perl5.12 from Mountain Lion...
+    unzip ../support/MacOSX/Perl-Tk/Tk-*10_8*zip
+    unzip ../support/MacOSX/SciPDL/SciPDL-v2.4.10-Lion.pkg.zip
+    cd -
+    # A hack for creating a metapackage
+    cp -rp meta-pkgs/OSX/McXtrace-Metapackage_10_9.pmdoc dist/McXtrace-Metapackage.pmdoc
+    cp -rp meta-pkgs/OSX/mcxtrace_logos_etc dist/logos_etc
+    cd dist/McXtrace-Metapackage.pmdoc    
+
+    REGEX="s/@VERSION@/${1}/g"
+    
+    find . -name \*xml -exec sed -i\.bak $REGEX \{\} \;
+    rm *.bak
+    cd ..
+    cp -rp ../support/MacOSX/McXtrace.app McXtrace-${1}.app
+    cd McXtrace-${1}.app/Contents/Resources
+    sed -i\.bak $REGEX launcher.sh
+    cd -
+   
+    open McXtrace-Metapackage.pmdoc
+fi
