@@ -28,10 +28,14 @@
 #endif
 
 /* List of brilliance definitions */
-double ESS_Mezei_cold(double wavelength, string geometry);
-double ESS_Mezei_thermal(double wavelength, string geometry);
-double ESS_2012_Lieutenant_cold(double wavelength, string geometry);
-double ESS_2013_Schoenfeldt_cold(double wavelength, string geometry);
-double ESS_2013_Schoenfeldt_thermal(double wavelength, string geometry);
+double ESS_Mezei_cold(double wavelength, double geometry);
+double ESS_Mezei_thermal(double wavelength, double geometry);
+double ESS_2012_Lieutenant_cold(double wavelength, double geometry);
+double ESS_2013_Schoenfeldt_cold(double wavelength, double geometry);
+double ESS_2013_Schoenfeldt_thermal(double wavelength, double geometry);
+
+/* List of geometry definitions - mainly for mcdisplay... */
+void ESS_mcdisplay_flat(double geometry);
+void ESS_mcdisplay_TDRlike(double geometry);
 
 /* end of ess_source-lib.h */
