@@ -1,8 +1,8 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
+* McXtrace, x-ray-tracing package
+*         Copyright 1997-2013, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
 * Library: share/monitor_nd-lib.h
@@ -11,7 +11,7 @@
 * Written by: EF
 * Date: Aug 28, 2002
 * Origin: ILL
-* Release: McStas 1.6
+* Release: McXtrace 0.9
 * Version: $Revision$
 *
 * This file is to be imported by the monitor_nd related components
@@ -69,7 +69,7 @@
     int COORD_YZ    ;
     int COORD_PHASE ;
     int COORD_PIXELID;
- 
+
     /* token modifiers */
     int COORD_VAR   ; /* next token should be a variable or normal option */
     int COORD_MIN   ; /* next token is a min value */
@@ -109,7 +109,7 @@
     char   Flag_Absorb       ;   /* monitor is also a slit */
     char   Flag_per_cm2      ;   /* flux is per cm2 */
     char   Flag_log          ;   /* log10 of the flux */
-    char   Flag_parallel     ;   /* set neutron state back after detection (parallel components) */
+    char   Flag_parallel     ;   /* set photon state back after detection (parallel components) */
     char   Flag_Binary_List  ;
     char   Flag_capture      ;   /* lambda monitor with lambda/lambda(2200m/s = 1.7985 Angs) weightening */
     int    Flag_signal       ;   /* 0:monitor p, else monitor a mean value */
@@ -117,17 +117,18 @@
     unsigned long Coord_Number      ;   /* total number of variables to monitor, plus intensity (0) */
     unsigned long Coord_NumberNoPixel;  /* same but without counting PixelID */
     unsigned long Buffer_Block      ;   /* Buffer size for list or auto limits */
-    unsigned long   Photon_Counter    ;   /* event counter, simulation total counts is mcget_ncount() */
-    unsigned long   Buffer_Counter    ;   /* index in Buffer size (for realloc) */
-    unsigned long   Buffer_Size       ;
-    int    Coord_Type[MONnD_COORD_NMAX];    /* type of variable */
-    char   Coord_Label[MONnD_COORD_NMAX][30];       /* label of variable */
-    char   Coord_Var[MONnD_COORD_NMAX][30]; /* short id of variable */
-    long   Coord_Bin[MONnD_COORD_NMAX];             /* bins of variable array */
+    unsigned long Photon_Counter    ;   /* event counter, simulation total counts is mcget_ncount() */
+    unsigned long Buffer_Counter    ;   /* index in Buffer size (for realloc) */
+    unsigned long Buffer_Size       ;
+    int    Coord_Type[MONnD_COORD_NMAX];      /* type of variable */
+    char   Coord_Label[MONnD_COORD_NMAX][30]; /* label of variable */
+    char   Coord_Var[MONnD_COORD_NMAX][30];   /* short id of variable */
+    long   Coord_Bin[MONnD_COORD_NMAX];       /* bins of variable array */
+    long   Coord_BinProd[MONnD_COORD_NMAX];   /* product of bins of variable array */
     double Coord_Min[MONnD_COORD_NMAX];
     double Coord_Max[MONnD_COORD_NMAX];
-    char   Monitor_Label[MONnD_COORD_NMAX*30];      /* Label for monitor */
-    char   Mon_File[128];    /* output file name */
+    char   Monitor_Label[MONnD_COORD_NMAX*30];/* Label for monitor */
+    char   Mon_File[128];                     /* output file name */
 
     double cx,cy,cz;
     double cvx, cvy, cvz;
@@ -135,7 +136,7 @@
     double cEx, cEy, cEz;
     double ct, cphi, cp;
     double He3_pressure;
-    char   Flag_UsePreMonitor    ;   /* use a previously stored parameter set */
+    char   Flag_UsePreMonitor    ;   /* use a previously stored photon parameter set */
     char   UserName1[128];
     char   UserName2[128];
     char   UserName3[128];
@@ -144,12 +145,13 @@
     double UserVariable3;
     char   option[CHAR_BUF_LENGTH];
 
-    double Nsum;
+    long long int Nsum;
     double psum, p2sum;
     double **Mon2D_N;
     double **Mon2D_p;
     double **Mon2D_p2;
     double *Mon2D_Buffer;
+    unsigned long PixelID;
 
     double mxmin,mxmax,mymin,mymax,mzmin,mzmax;
     double mean_dx, mean_dy, min_x, min_y, max_x, max_y, mean_p;
@@ -179,7 +181,5 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *,
     mcmonnd ## monname->UserVariable ## num = (value); }
 
 #endif
-
-
 
 /* end of monitor_nd-lib.h */
