@@ -1367,7 +1367,7 @@ static void mcinfo_out_nexus(NXhandle f)
         nxprintattr(f, "file_size", "%li", length);
         nxprintattr(f, "MCCODE_STRING", MCCODE_STRING);
         NXclosedata(f);
-        nxprintf (f,"instrument_source", "%s " MCCODE_NAME " @MCCODE_PARTICLE@ Monte Carlo simulation", mcinstrument_name);
+        nxprintf (f,"instrument_source", "%s " MCCODE_NAME " " MCCODE_PARTICLE " Monte Carlo simulation", mcinstrument_name);
         free(buffer);
       } else
         nxprintf (f, "description", "File %s not found (instrument description %s is missing)", 
@@ -3229,9 +3229,9 @@ mchelp(char *pgmname)
   fprintf(stderr,
 "Options are:\n"
 "  -s SEED   --seed=SEED      Set random seed (must be != 0)\n"
-"  -n COUNT  --ncount=COUNT   Set number of @MCCODE_PARTICLE@s to simulate.\n"
+"  -n COUNT  --ncount=COUNT   Set number of " MCCODE_PARTICLE "s to simulate.\n"
 "  -d DIR    --dir=DIR        Put all data files in directory DIR.\n"
-"  -t        --trace          Enable trace of @MCCODE_PARTICLE@s through instrument.\n"
+"  -t        --trace          Enable trace of " MCCODE_PARTICLE "s through instrument.\n"
 "  -g        --gravitation    Enable gravitation for all trajectories.\n"
 "  --no-output-files          Do not write any data files.\n"
 "  -h        --help           Show this help message.\n"
