@@ -212,11 +212,6 @@ INITIALIZE
     exit(-1);
   }
 
-  /* if (tau1==0 && !(branch1==1)) { */
-  /*   branch1=1; */
-  /*   printf("ESS_moderator: %s: WARNING: Setting tau1 to zero implies branch 1=1.\n", NAME_CURRENT_COMP); */
-  /* } */
-
   l_range = Lmax-Lmin;
   w_geom_c  = width_c*yheight*1.0e4;     /* source area correction */
   w_geom_t  = width_t*yheight*1.0e4;
@@ -236,9 +231,25 @@ INITIALIZE
   /* We want unit vectors... */
   NORM(t1x,t1y,t1z);
   NORM(t2x,t2y,t2z);
+  
+  if (strcasestr(sourcedef,"TDR")) {
+    printf("Using ESS TDR brilliance\n");
+    cold_bril=ESS_2012_Lieutenant_cold;
+    thermal_bril=ESS_Mezei_thermal;
+  } else if (strcasestr(sourcedef,"2001")) {
+    printf("Using ESS 2001 brilliance\n");
+    cold_bril=ESS_Mezei_cold;
+    thermal_bril=ESS_Mezei_thermal;
+  } else if (strcasestr(sourcedef,"2013")) {
+    printf("Using ESS 2013 brilliance\n");
+    cold_bril=ESS_2013_Schoenfeldt_cold;
+    thermal_bril=ESS_2013_Schoenfeldt_thermal;
+  } else {
+    printf("Soure def %s not implemented!\n",sourcedef);
+    exit(-1);
+  }
 
-  cold_bril=ESS_2012_Lieutenant_cold;//ESS_Mezei_cold;
-  thermal_bril=ESS_Mezei_thermal;
+  
 
 %}
 TRACE
