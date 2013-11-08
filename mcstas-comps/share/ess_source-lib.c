@@ -41,8 +41,8 @@ double Mezei_F(double t, double tau, int n)
     }
 
 
-/* This is the cold Mezei moderator from 2001 */
-double ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_width, double tfocus_time, double dt, ess_moderator_struct extras) 
+/* This is the cold Mezei moderator from 2012 (updated I0 and I2) */
+double ESS_Mezei_cold_2012(double *t, double *p, double lambda, double tfocus_width, double tfocus_time, double dt, ess_moderator_struct extras) 
 {
   // Spectrum related constants - ESS 2001 Cold moderator
   double T=50, tau=287e-6, tau1=0, tau2=20e-6, chi2=0.9, I0=8.21e11, I2=3.29e11, branch1=1, branch2=0.5, n2=5, n=20;
@@ -144,10 +144,114 @@ double ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_width, 
 	}
     }
   
+} /* end of ESS_Mezei_cold_2012 */
+
+/* This is the cold Mezei moderator from 2001 (Original I0 and I2) */
+double ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_width, double tfocus_time, double dt, ess_moderator_struct extras) 
+{
+  // Spectrum related constants - ESS 2001 Cold moderator
+  double T=50, tau=287e-6, tau1=0, tau2=20e-6, chi2=0.9, I0=6.9e11, I2=27.6e10, branch1=1, branch2=0.5, n2=5, n=20;
+  
+  // Branching
+  double branch_tail=tau/ESS_SOURCE_DURATION;
+  
+  // Other variables
+  double tail_flag, tau_l;
+  
+  // Taken directly from the ESS_moderator.comp:
+  tail_flag = (rand01()<branch_tail);   /* Choose tail/bulk */
+  if (tail_flag)
+    {
+      if (rand01() < branch2)
+	{
+	  if (tau1>0)
+	    if (rand01() < branch1)     /* Quick and dirty non-general solution */
+	      {  /* FIRST CASE a */
+		tau_l = tau;
+		*p = 1/(branch1*branch2*branch_tail); /* Correct for switching prob. */
+	      }
+	    else
+	      {  /* FIRST CASE b */
+		tau_l = tau1;
+		*p = 1/((1-branch1)*branch2*branch_tail); /* Correct for switching prob. */
+	      }
+	  else
+	    {
+	      tau_l = tau;
+	      *p = 1/(branch2*branch_tail); /* Correct for switching prob. */
+	    }
+	  *t = -tau_l*log(1e-12+rand01());       /* Sample from long-time tail a */
+	  /* Correct for true pulse shape */
+	  //	  p *= w_focus;                         /* Correct for target focusing */
+	  *p *= tau_l/ESS_SOURCE_DURATION;                         /* Correct for tail part */
+	  //p *= I0*w_mult*w_geom*Mezei_M(lambda,T);           /* Calculate true intensity */
+	  *p *= I0*Mezei_M(lambda,T);
+	}
+      else
+	{
+	  /* SECOND CASE */
+	  tau_l = tau2*lambda;
+	  *t = -tau_l*log(1e-12+rand01());       /* Sample from long-time tail */
+	  *p = n2/(n2-1)*((1-exp(-ESS_SOURCE_DURATION/tau_l))-(1-exp(-n2*ESS_SOURCE_DURATION/tau_l))*exp(-(n2-1)*(*t)/tau_l)/n);
+	  /* Correct for true pulse shape */
+	  *p /= (1-branch2)*branch_tail;          /* Correct for switching prob. */
+	  *p *= tau_l/ESS_SOURCE_DURATION;                         /* Correct for tail part */
+	  // p *= w_focus;                         /* Correct for target focusing */
+	  //p *= I2*w_mult*w_geom/(1+exp(chi2*lambda-2.2))/lambda;                                         /* Calculate true intensity */
+	  *p *= I2/(1+exp(chi2*lambda-2.2))/lambda;                                         /* Calculate true intensity */ 
+	}
+      *t += ESS_SOURCE_DURATION;                                 /* Add pulse length */
+    }
+  else /* Tail-flag */
+    {
+      if (tfocus_width>0) {
+	*t = tfocus_time-dt;                    /* Set time to hit time window center */
+	*t += randpm1()*tfocus_width/2.0;       /* Add random time within window width */
+      } else {
+	*t = ESS_SOURCE_DURATION*rand01();                        /* Sample from bulk pulse */
+      }
+      // FLAG to KILL these on return!
+
+      /* if (t<0) ABSORB;                       /\* Kill neutron if outside pulse duration *\/ */
+      /* if (t>ESS_SOURCE_DURATION) ABSORB; */
+      if (rand01() < branch2)
+	{
+	  if (rand01() < branch1)     /* Quick and dirty non-general solution */
+	    {  /* FIRST CASE a */
+	      tau_l = tau;
+	      *p = 1/(branch1*branch2*(1-branch_tail)); /* Correct for switching prob. */
+	    }
+	  else
+	    {  /* FIRST CASE b */
+	      tau_l = tau1;
+	      *p = 1/((1-branch1)*branch2*(1-branch_tail)); /* Correct for switching prob. */
+	    }
+	  *p *= 1-n/(n-1)*(exp(-*t/tau_l)-exp(-n*(*t)/tau_l)/n); /* Correct for true pulse shape */
+	  //	  p *= w_focus;                         /* Correct for target focusing */
+	  if (tfocus_width>0) {
+	    *p *= tfocus_width/ESS_SOURCE_DURATION;    	  	  /* Correct for time focusing */
+	  }
+	  //p *= I0*w_mult*w_geom*M(lambda,T);       /* Calculate true intensity */
+	  *p *= I0*Mezei_M(lambda,T);       /* Calculate true intensity */
+	}
+      else
+	{
+	  /* SECOND CASE */
+	  tau_l = tau2*lambda;
+	  *p = 1-n2/(n2-1)*(exp(-*t/tau_l)-exp(-n2*(*t)/tau_l)/n2); /* Correct for true pulse shape */
+	  *p /= (1-branch2)*(1-branch_tail);   /* Correct for switching prob. */
+	  //p *= w_focus;                         /* Correct for target focusing */
+	  if (tfocus_width) {
+	    *p *= tfocus_width/ESS_SOURCE_DURATION;    		  /* Correct for time focusing */
+	  }
+	  //p *= I2*w_mult*w_geom/(1+exp(chi2*lambda-2.2))/lambda;    /* Calculate true intensity */
+	  *p *= I2/(1+exp(chi2*lambda-2.2))/lambda;    /* Calculate true intensity */
+	}
+    }
+  
 } /* end of ESS_Mezei_cold */
 
-
-/* This is the thermal Mezei moderator from 2001 */
+/* This is the thermal Mezei moderator from 2001 - also used in 2012 - TDR */
 double ESS_Mezei_thermal(double *t, double *p, double lambda, double tfocus_width, double tfocus_time, double dt, ess_moderator_struct extras)
 {
   // Spectrum related constants - ESS 2001 Thermal moderator       
@@ -256,7 +360,7 @@ double ESS_Mezei_thermal(double *t, double *p, double lambda, double tfocus_widt
 /* This is the Mezei moderator with a correction term from Klaus Lieutenant */
 double ESS_2012_Lieutenant_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
-  ESS_Mezei_cold(t, p,  lambda,  tfocus_w,  tfocus_t, tfocus_dt, extras);
+  ESS_Mezei_cold_2012(t, p,  lambda,  tfocus_w,  tfocus_t, tfocus_dt, extras);
   
   double cor;
   
