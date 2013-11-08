@@ -25,17 +25,38 @@
 
 #ifndef ESS_SOURCE_LIB_H
 #define ESS_SOURCE_LIB_H 0.1
-#endif
+#define ESS_SOURCE_DURATION 2.857e-3
+#define ESS_SOURCE_FREQUENCY 14
+
+
+/* Struct for extra source parameters - for future geometrical adjustments */
+struct ess_struct {
+  char *X;
+  char *Y;
+  char *Z;
+};
+
+typedef struct ess_struct ess_moderator_struct;
+
+//typedef (double *) (double*, double *, double , double, double, double, ess_moderator_struct) functype;
+typedef double (*functype)(double* t , double* p, double lambda,  double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras);
+//struct ess_moderator_struct modextras;
+//functype ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras) 
+
+/* Maths for the curves below */
+double Mezei_M(double l, double temp);
+double Mezei_F(double t, double tau, int n);
 
 /* List of brilliance definitions */
-double ESS_Mezei_cold(double wavelength, double geometry);
-double ESS_Mezei_thermal(double wavelength, double geometry);
-double ESS_2012_Lieutenant_cold(double wavelength, double geometry);
-double ESS_2013_Schoenfeldt_cold(double wavelength, double geometry);
-double ESS_2013_Schoenfeldt_thermal(double wavelength, double geometry);
+double ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
+double ESS_Mezei_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
+double ESS_2012_Lieutenant_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
+double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
+double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras);
 
 /* List of geometry definitions - mainly for mcdisplay... */
 void ESS_mcdisplay_flat(double geometry);
 void ESS_mcdisplay_TDRlike(double geometry);
 
 /* end of ess_source-lib.h */
+#endif
