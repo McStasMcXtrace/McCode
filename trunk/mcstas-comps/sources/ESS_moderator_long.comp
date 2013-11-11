@@ -408,6 +408,13 @@ TRACE
  }
  p *= cor;
  
+ /* Correct weight for sampling of cold vs. thermal events. */
+ if (cold) {
+   p /=cold_frac;
+ } else {
+   p/=(1-cold_frac);
+ }
+ 
  t+=(double)floor((n_pulses)*rand01())/nu;   /* Select a random pulse */
 
  

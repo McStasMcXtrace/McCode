@@ -318,7 +318,13 @@ TRACE
   p*=w_focus*w_geom*w_mult;
   t+=(double)floor((n_pulses)*rand01())/ESS_SOURCE_FREQUENCY;   /* Select a random pulse */
 
- 
+  /* Correct weight for sampling of cold vs. thermal events. */
+  if (cold) {
+    p /=cold_frac;
+  } else {
+    p/=(1-cold_frac);
+  }
+  
 %}
 
 MCDISPLAY
