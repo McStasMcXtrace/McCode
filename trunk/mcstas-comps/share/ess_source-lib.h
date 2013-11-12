@@ -27,6 +27,7 @@
 #define ESS_SOURCE_LIB_H 0.1
 #define ESS_SOURCE_DURATION 2.857e-3
 #define ESS_SOURCE_FREQUENCY 14
+#define ESS_SOURCE_POWER 5
 
 
 /* Struct for extra source parameters - for future geometrical adjustments */
