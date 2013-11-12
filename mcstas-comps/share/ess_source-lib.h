@@ -31,9 +31,10 @@
 
 /* Struct for extra source parameters - for future geometrical adjustments */
 struct ess_struct {
-  char *X;
-  char *Y;
-  char *Z;
+  double X;
+  double Y;
+  double Z;
+  double height;
 };
 
 typedef struct ess_struct ess_moderator_struct;
@@ -46,6 +47,8 @@ typedef double (*functype)(double* t , double* p, double lambda,  double tfocus_
 /* Maths for the curves below */
 double Mezei_M(double l, double temp);
 double Mezei_F(double t, double tau, int n);
+double Schoenfeldt_cold(double I_SD, double alpha_SD, double lambda_SD, double alpha_l, double lambda_l, double Exponent, double I_1, double alpha_1, double I_2, double alpha_2, double lambda);
+double Schoenfeldt_thermal(double I_th, double T, double I_SD, double alpha, double lambda_cf, double lambda);
 
 /* List of brilliance definitions */
 double ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 

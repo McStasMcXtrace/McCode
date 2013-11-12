@@ -40,6 +40,16 @@ double Mezei_F(double t, double tau, int n)
       return (exp(-t/tau)-exp(-n*t/tau))*n/(n-1)/tau;
     }
 
+double Schoenfeldt_cold(double I_SD, double alpha_SD, double lambda_SD, double alpha_l, double lambda_l, double Exponent, double I_1, double alpha_1, double I_2, double alpha_2, double lambda) 
+{
+  return (I_1 * exp(-alpha_1 * lambda) + I_2 * exp(-alpha_2 * lambda)) * 1 / pow(1 + exp(alpha_l * (lambda - lambda_l)),-Exponent) + I_SD * (1/lambda) * 1/( 1 + exp(alpha_SD * (lambda - lambda_SD)));
+}
+
+double Schoenfeldt_thermal(double I_th, double T, double I_SD, double alpha, double lambda_cf, double lambda) 
+{
+  double k_Th=949;
+  return I_th * exp(k_Th/(T*lambda*lambda))*(2*k_Th*k_Th)/(T*T*pow(lambda,5)) + I_SD * (1/lambda) * 1/(1+exp(alpha*(lambda - lambda_cf)));
+}
 
 /* This is the cold Mezei moderator from 2012 (updated I0 and I2) */
 double ESS_Mezei_cold_2012(double *t, double *p, double lambda, double tfocus_width, double tfocus_time, double dt, ess_moderator_struct extras) 
@@ -378,12 +388,87 @@ double ESS_2012_Lieutenant_cold(double *t, double *p, double lambda, double tfoc
 /* Parametrization including moderator height for the "pancake" moderator */
 double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
+    /* From the forthcoming Schoenfeldt et al.
+       S_cold(\lambda) = (I_1*exp(-\alpha_1*lambda)  + I_2*exp(-\alpha_2*\lambda)) * 1/(1+exp(\alpha_l * (\lambda-lambda_l)))^(1/\gamma)
+       + I_SD * (1/lambda) * 1/(1+exp(\alpha_SD*(\lambda-\lambda_SD)))
+    */
+
+  /* As function of moderator height, parameters for the brilliance expression */
+  double height[7]    = {10, 5, 3, 1.5, 1, .5, .1};
+  double I_SD[7]      = {4.75401e+011, 7.0319e+011,  8.36605e+011, 9.41035e+011, 9.54305e+011, 9.83515e+011, 9.54108e+01};
+  double alpha_SD[7]  = {0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9};
+  double lambda_SD[7] = {2.44444, 2.44444, 2.44444, 2.44444, 2.44444, 2.44444, 2.44444};
+  double alpha_l[7]   = {-11.9056, -13.8444, -17.8359, -19.6643, -23.0058, -21.6241, -18.82};
+  double lambda_l[7]  = {2.53562, 2.53527, 2.53956, 2.53243, 2.53375, 2.5364, 2.51714};
+  double Exponent[7]  = {-0.259162, -0.215819, -0.160541, -0.140769, -0.119278, -0.124298, -0.144056};
+  double I_1[7]       = {1.22098e+013, 2.57992e+013, 4.43235e+013, 8.86873e+013, 1.26172e+014, 2.02098e+014, 3.32623e+01};
+  double alpha_1[7]   = {0.653579, 0.720244, 0.772538, 0.871765, 0.927905, 1.01579, 1.11621};
+  double I_2[7]       = {2.97518e+011, 1.11421e+012, 1.8961e+012,  4.00852e+012, 5.05278e+012, 6.98605e+012, 7.89424e+01};
+  double alpha_2[7]   = {0.261097, 0.307898, 0.317865, 0.346354, 0.354282, 0.371298, 0.38382};
+
+  double S_a, S_b;
+  double dS;
+  int j, idxa, idxb;
+  if ((extras.height <= height[0]) && (extras.height >= height[6])) {
+    for (j=0; j<6; j++) {
+      if (extras.height <= height[j] && extras.height >= height[j+1]) {
+	dS = (height[j]-extras.height)/(height[j]-height[j+1]);
+	/* Linear interpolation between the two closest heights */
+	S_a = Schoenfeldt_cold(I_SD[j], alpha_SD[j], lambda_SD[j], alpha_l[j], lambda_l[j], Exponent[j], I_1[j], alpha_1[j], I_2[j], alpha_2[j], lambda);
+	S_b = Schoenfeldt_cold(I_SD[j+1], alpha_SD[j+1], lambda_SD[j+1], alpha_l[j+1], lambda_l[j+1], Exponent[j+1], I_1[j+1], alpha_1[j+1], I_2[j+1], alpha_2[j+1], lambda);
+	*p = (1-dS)*S_a + dS*S_b;
+	break;
+      }
+    }
+  } else {
+    printf("Sorry! Moderator height must be between %g and %g cm\n",height[6],height[0]);
+    exit(-1);
+  }
+
+  /* Next is time structure... */
+  *t=0;
+  
 } /* end of ESS_2013_Schoenfeldt_cold */
 
 
 /* This is the thermal moderator with 2013 updates, fits from Troels Schoenfeldt */
 double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
+  /*  From the forthcoming Schoenfeldt et al.
+     S_Th(\lambda) = I_Th * exp(k_Th/(T*\lambda^2))*(2*k_Th^2)/(T^2*\lambda^5) + I_SD * \lambda^-1 * 1/(1+exp(\alpha*(\lambda - \lambda_cf))
+   */
+  
+  /* As function of moderator height, parameters for the brilliance expression */
+  double height[7]    = {10, 5, 3, 1.5, 1, .5, .1};
+  double I_th[7]      = {2.97527e+012, 4.35192e+012, 5.18047e+012, 6.0305e+012,  6.20079e+012, 6.44927e+012, 6.55127e+01};
+  double T[7]      = {303.764, 306.099, 307.497, 311.292, 310.525, 310.822, 317.56};
+  double I_SD[7]      = {5.38083e+011, 7.3059e+011,  8.94408e+011, 9.89515e+011, 1.02135e+012, 1.07415e+012, 1.12157e+01};
+  double alpha[7]     = {2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5};
+  double lambda_cf[7] = {0.88, 0.88, 0.88, 0.88, 0.88, 0.88, 0.88};
+
+  double S_a, S_b;
+  double dS;
+  int j, idxa, idxb;
+  if ((extras.height <= height[0]) && (extras.height >= height[6])) {
+    for (j=0; j<6; j++) {
+      if (extras.height <= height[j] && extras.height >= height[j+1]) {
+	dS = (height[j]-extras.height)/(height[j]-height[j+1]);
+	/* Linear interpolation between the two closest heights */
+	S_a = Schoenfeldt_thermal(I_th[j], T[j], I_SD[j], alpha[j], lambda_cf[j], lambda);
+	S_b = Schoenfeldt_thermal(I_th[j+1], T[j+1], I_SD[j+1], alpha[j+1], lambda_cf[j+1], lambda);;
+	*p = (1-dS)*S_a + dS*S_b;
+	break;
+      }
+    }
+  } else {
+    printf("Sorry! Moderator height must be between %g and %g cm\n",height[6],height[0]);
+    exit(-1);
+  }
+
+  /* Next is time structure... */
+  *t=0;
+  
+
 } /* end of ESS_2013_Schoenfeldt_thermal */
 
 /* Display of geometry - flat and TDR-like */
