@@ -242,6 +242,8 @@ INITIALIZE
     thermal_bril=ESS_Mezei_thermal;
   } else if (strcasestr(sourcedef,"2013")) {
     printf("Using ESS 2013 brilliance\n");
+    // Fix: transfer in m units rather than cm's...
+    modextras.height=100.0*yheight;
     cold_bril=ESS_2013_Schoenfeldt_cold;
     thermal_bril=ESS_2013_Schoenfeldt_thermal;
   } else {
