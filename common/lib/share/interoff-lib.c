@@ -715,8 +715,10 @@ int off_intersect(double* t0, double* t3,
       if(t_size>1) {
         for (i=1; i < t_size; i++)
           if (t[i].time > 0 && t[i].time > t[0].time) break;
-        if (t3) *t3 = t[i].time;
-        if (n3) *n3 = t[i].normal;
+        if(i!=t_size){
+          if (t3) *t3 = t[i].time;
+          if (n3) *n3 = t[i].normal;
+        }
       }
       /* should also return t[0].index and t[i].index as polygon ID */
       return t_size;
