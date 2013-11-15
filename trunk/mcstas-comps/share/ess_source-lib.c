@@ -48,7 +48,7 @@ double Schoenfeldt_cold(double I_SD, double alpha_SD, double lambda_SD, double a
 double Schoenfeldt_thermal(double I_th, double T, double I_SD, double alpha, double lambda_cf, double lambda) 
 {
   double k_Th=949;
-  return I_th * exp(k_Th/(T*lambda*lambda))*(2*k_Th*k_Th)/(T*T*pow(lambda,5)) + I_SD * (1/lambda) * 1/(1+exp(alpha*(lambda - lambda_cf)));
+  return I_th * exp(-k_Th/(T*lambda*lambda))*(2*k_Th*k_Th)/(T*T*pow(lambda,5)) + I_SD * (1/lambda) * 1/(1+exp(alpha*(lambda - lambda_cf)));
 }
 
 /* This is the cold Mezei moderator from 2012 (updated I0 and I2) */
@@ -441,7 +441,7 @@ double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
   /* As function of moderator height, parameters for the brilliance expression */
   double height[7]    = {10, 5, 3, 1.5, 1, .5, .1};
   double I_th[7]      = {2.97527e+012, 4.35192e+012, 5.18047e+012, 6.0305e+012,  6.20079e+012, 6.44927e+012, 6.55127e+01};
-  double T[7]      = {303.764, 306.099, 307.497, 311.292, 310.525, 310.822, 317.56};
+  double T[7]         = {303.764, 306.099, 307.497, 311.292, 310.525, 310.822, 317.56};
   double I_SD[7]      = {5.38083e+011, 7.3059e+011,  8.94408e+011, 9.89515e+011, 1.02135e+012, 1.07415e+012, 1.12157e+01};
   double alpha[7]     = {2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5};
   double lambda_cf[7] = {0.88, 0.88, 0.88, 0.88, 0.88, 0.88, 0.88};
