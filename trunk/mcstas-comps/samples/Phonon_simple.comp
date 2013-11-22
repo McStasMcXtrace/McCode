@@ -221,7 +221,6 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
     }
 #undef UNUSED
 #undef MAXRIDD
-#undef SIGN
 #endif
 %}
 
