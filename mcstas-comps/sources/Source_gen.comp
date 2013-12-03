@@ -116,7 +116,7 @@
 * T3:       [K]   Third Maxwellian source Temperature, 0=none
 * I3:       [1/(cm**2*sr*AA)] Third Maxwellian Source flux
 * flux_file:[str] Name of a two columns [lambda flux] text file that contains
-*                 the wavelength distribution of the flux in [1/(s*cm**2*st*AA)].
+*                 the wavelength distribution of the flux in <b>either</b> [1/(s*cm**2*st)] <b>or</b> [1/(s*cm**2*st*AA)] (see flux_file_perAA flag)
 *                 Comments (#) and further columns are ignored. Format is
 *                 compatible with McStas/PGPLOT wavelength monitor files.
 *                 When specified, temperature and intensity values are ignored.
