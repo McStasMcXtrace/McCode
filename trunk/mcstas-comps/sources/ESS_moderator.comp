@@ -128,6 +128,7 @@
 * tfocus_time: (s) Time position of window
 * tfocus_width: (s) Time width of window
 * beamport_angle: (deg) Direction within the beamport sector (0 < angle < 60) to direct neutrons
+* acc_power: (MW) Accelerator power in MW
 *
 * %E
 *******************************************************************************/
@@ -138,7 +139,7 @@ DEFINITION PARAMETERS ()
 		      Lmin, Lmax, cold_frac=1.0,
 		      dist=0, focus_xw, focus_yh, int target_index=0, 
 		      tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0,
-		      int n_pulses=1, string sourcedef="TDR")
+		      int n_pulses=1, string sourcedef="TDR", acc_power=5)
 OUTPUT PARAMETERS (cold_bril, thermal_bril, l_range, w_mult, w_geom, w_geom, w_geom_t)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
@@ -217,7 +218,6 @@ INITIALIZE
   w_geom_t  = width_t*yheight*1.0e4;
   w_mult  = l_range;            /* wavelength range correction */
   w_mult *= 1.0/mcget_ncount();   /* Correct for number of rays */
-  w_mult *= ESS_SOURCE_FREQUENCY;               /* Correct for frequency */
 
   /* Calculate location of thermal wings wrt beamport_angle (z) direction */
   /* Wing 1 (left) is at -beamport_angle */
@@ -233,14 +233,20 @@ INITIALIZE
   NORM(t2x,t2y,t2z);
   
   if (strcasestr(sourcedef,"TDR")) {
+    w_mult *= ESS_SOURCE_FREQUENCY;               /* Correct for frequency */
+    w_mult *= acc_power/5;                        /* Correct for accelerator power */
     printf("Using ESS TDR brilliance\n");
     cold_bril=ESS_2012_Lieutenant_cold;
     thermal_bril=ESS_Mezei_thermal;
   } else if (strcasestr(sourcedef,"2001")) {
+    w_mult *= ESS_SOURCE_FREQUENCY;               /* Correct for frequency */
+    w_mult *= acc_power/5;                        /* Correct for accelerator power */
     printf("Using ESS 2001 brilliance\n");
     cold_bril=ESS_Mezei_cold;
     thermal_bril=ESS_Mezei_thermal;
   } else if (strcasestr(sourcedef,"2013")) {
+    // w_mult *= ESS_SOURCE_FREQUENCY;               /* Is already in per-second units */
+    w_mult *= acc_power;                             /* Is already in per-MW units */
     printf("Using ESS 2013 brilliance\n");
     // Fix: transfer in m units rather than cm's...
     modextras.height=100.0*yheight;
