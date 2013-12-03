@@ -187,6 +187,7 @@ double ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_width, 
 	      }
 	  else
 	    {
+	      /* This is the only active part - tau1 is set to 0! */
 	      tau_l = tau;
 	      *p = 1/(branch2*branch_tail); /* Correct for switching prob. */
 	    }
@@ -199,6 +200,7 @@ double ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_width, 
 	}
       else
 	{
+	  /* Shine-through from spallation, i.e. not T-dependent */
 	  /* SECOND CASE */
 	  tau_l = tau2*lambda;
 	  *t = -tau_l*log(1e-12+rand01());       /* Sample from long-time tail */
@@ -247,6 +249,7 @@ double ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_width, 
       else
 	{
 	  /* SECOND CASE */
+	  /* Shine-through from spallation, i.e. not T-dependent */
 	  tau_l = tau2*lambda;
 	  *p = 1-n2/(n2-1)*(exp(-*t/tau_l)-exp(-n2*(*t)/tau_l)/n2); /* Correct for true pulse shape */
 	  *p /= (1-branch2)*(1-branch_tail);   /* Correct for switching prob. */
