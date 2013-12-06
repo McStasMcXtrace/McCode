@@ -126,17 +126,62 @@ TRACE
   %}
 SAVE
   %{
-    double PSD_p_abs[nx][ny];
-    int i,j;
     
     char filename_abs[255],filename_arg[255];
 
     snprintf(filename_abs,255,"%s.abs",filename);
+    double PSD_p_abs[nx][ny];
+    int i,j;
+    /*This should be done differently if MPI*/ 
     for (i=0;i<nx;i++){
       for (j=0;j<ny;j++){
         PSD_p_abs[i][j]=cabs(PSD_phi[i][j]);
       }
     }
+
+    double PSD_p_arg[nx][ny];
+    snprintf(filename_arg,255,"%s.arg",filename);
+    for (i=0;i<nx;i++){
+      for (j=0;j<ny;j++){
+        PSD_p_arg[i][j]=carg(PSD_phi[i][j]);
+      }
+    }
+
+#ifdef USE_MPI
+    double *PSD_p_absbuf,*PSD_p_argbuf;
+    int *N_buf;
+    if (mpi_node_rank==0){
+      PSD_p_absbuf=malloc(sizeof(double)*mpi_node_count);
+      PSD_p_argbuf=malloc(sizeof(double)*mpi_node_count);
+      N_buf=malloc(sizeof(int)*mpi_node_count);
+    }
+    for (i=0;i<nx;i++){
+      for(j=0;j<ny;j++){
+        //printf("%s %d %d\n",NAME_CURRENT_COMP,i,j);
+        MPI_Gather(&(PSD_p_abs[i][j]), 1, MPI_DOUBLE, PSD_p_absbuf, 1, MPI_DOUBLE, 0,MPI_COMM_WORLD);
+        MPI_Gather(&(PSD_p_arg[i][j]), 1, MPI_DOUBLE, PSD_p_argbuf, 1, MPI_DOUBLE, 0,MPI_COMM_WORLD);
+        MPI_Gather(&(PSD_N[i][j]),1, MPI_INT, N_buf, 1, MPI_INT, 0,MPI_COMM_WORLD);
+        if (mpi_node_rank==0){
+          complex double tmp_phi=0;
+          int k,tmp_N=0;
+          for (k=0;k<mpi_node_count;k++){
+            tmp_phi+=PSD_p_absbuf[k]*cexp(I*PSD_p_argbuf[k]);
+            tmp_N+=N_buf[k];
+          }
+          PSD_p_abs[i][j]=cabs(tmp_phi);
+          PSD_p_arg[i][j]=carg(tmp_phi);
+          PSD_N[i][j]+=tmp_N;
+        }else{
+          /*this is necessary to ensure that whatever comes from the other nodes is just zeroes*/
+          PSD_p_abs[i][j]=0;
+          PSD_p_arg[i][j]=0;
+          PSD_N[i][j]=0;
+        }
+      }
+    }
+    /*doing it this way is inefficient since we send a lot of zeros across the network - but it should work*/ 
+#endif
+    
     DETECTOR_OUT_2D(
         "PSD monitor",
         "X position [m]",
@@ -146,13 +191,6 @@ SAVE
         &PSD_N[0][0],&PSD_p_abs[0][0],&PSD_p2[0][0],
         filename_abs);
     
-    double PSD_p_arg[nx][ny];
-    snprintf(filename_arg,255,"%s.arg",filename);
-    for (i=0;i<nx;i++){
-      for (j=0;j<ny;j++){
-        PSD_p_arg[i][j]=carg(PSD_phi[i][j]);
-      }
-    }
     DETECTOR_OUT_2D(
         "PSD monitor",
         "X position [m]",
