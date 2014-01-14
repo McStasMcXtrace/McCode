@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Runtime: share/mcstas-r.h
+* Runtime: share/mccode-r.h
 *
 * %Identification
 * Written by: KN
@@ -13,7 +13,7 @@
 * Release: @MCCODE_NAME@ @MCCODE_VERSION@
 * Version: $Revision$
 *
-* Runtime system header for McStas.
+* Runtime system header for McStas/McXtrace.
 *
 * In order to use this library as an external library, the following variables
 * and macros must be declared (see details in the code)
@@ -143,7 +143,7 @@
 #endif
 
 /* Note: the enum instr_formal_types definition MUST be kept
-   synchronized with the one in mcstas.h and with the
+   synchronized with the one in mccode.h and with the
    instr_formal_type_names array in cogen.c. */
 enum instr_formal_types
   {
@@ -227,7 +227,7 @@ unsigned long long int mcget_ncount(void);            /* wrapper to set mcncount
 unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:mcncount */
 
 
-/* Following part is only embedded when not redundent with mcstas.h ========= */
+/* Following part is only embedded when not redundant with mccode.h ========= */
 
 #ifndef MCCODE_H
 
@@ -613,12 +613,12 @@ struct mcdetector_struct {
 typedef struct mcdetector_struct MCDETECTOR;
 
 static   char *mcdirname             = NULL;      /* name of output directory */
-static   char *mcsiminfo_name        = "mcstas";  /* default output sim file name */
+static   char *mcsiminfo_name        = "mccode";  /* default output sim file name */
 char    *mcformat                    = NULL;      /* NULL (default) or a specific format */
 
 /* file I/O definitions and function prototypes */
 
-#ifndef MC_EMBEDDED_RUNTIME /* the mcstatic variables (from mcstas-r.c) */
+#ifndef MC_EMBEDDED_RUNTIME /* the mcstatic variables (from mccode-r.c) */
 extern FILE * mcsiminfo_file;     /* handle to the output siminfo file */
 extern int    mcgravitation;      /* flag to enable gravitation */
 extern int    mcdotrace;          /* flag to print MCDISPLAY messages */

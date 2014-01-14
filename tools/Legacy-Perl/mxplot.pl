@@ -1,11 +1,11 @@
 #! /usr/bin/perl
 #
-# Implements perl interface for plotting McStas data output using PGPLOT,
+# Implements perl interface for plotting McXtrace data output using PGPLOT,
 # gnuplot, Matlab, HTML/VRML, NeXus/HDFVIEW
 #
-#   This file is part of the McStas neutron ray-trace simulation package
+#   This file is part of the McXtrace xray trace simulation package
 #   Copyright (C) 1997-2004, All rights reserved
-#   Risoe National Laborartory, Roskilde, Denmark
+#   Risoe National Laboratory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
 #   This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,7 @@
 use FileHandle;
 use File::Basename;
 
-# Determine the path to the McStas system directory. This must be done
+# Determine the path to the McXtrace system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
 
@@ -39,11 +39,11 @@ BEGIN {
     # custom configuration (this script)
     END {
         if (-f $tmp_file ) {
-            if (!($plotter =~ /PGPLOT|McStas/i)) {
-                print "mcplot: Removing temporary $tmp_file (10 sec)\n";
+            if (!($plotter =~ /PGPLOT|McXtrace/i)) {
+                print "mxplot: Removing temporary $tmp_file (10 sec)\n";
                 sleep 10;
             }
-            unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!";
+            unlink($tmp_file) or die "mxplot: Couldn't unlink $tmp_file : $!";
         }
     }
 }
@@ -56,7 +56,7 @@ require "mccode_config.perl";
 
 # Overload with user's personal config
 if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl") {
-  print "mcplot: reading local $MCSTAS::mcstas_config{'MCCODE'} configuration from " . $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl\n";
+  print "mxplot: reading local $MCSTAS::mcstas_config{'MCCODE'} configuration from " . $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl\n";
   require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl";
 }
 
@@ -84,7 +84,7 @@ $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
 
 for($i = 0; $i < @ARGV; $i++) {
   $_ = $ARGV[$i];
-  # Options specific to mcplot.
+  # Options specific to mxplot.
   if(/^-plot$/i) {
       $do_plot = 1;
   } elsif(/^-overview$/i) {
@@ -110,7 +110,7 @@ for($i = 0; $i < @ARGV; $i++) {
   } elsif(/^-contour/i) {
       $contourmode = 1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
-      print "mcplot [-ps|-psc|-gif] <simfile | detector_file>\n";
+      print "mxplot [-ps|-psc|-gif] <simfile | detector_file>\n";
       print "       [-pPLOTTER] Output graphics using {PGPLOT,gnuplot,Matlab,HTML}\n";
       print "                   The file extension will also set the PLOTTER\n";
       print "       [-overview] Show all plots in a single window\n";
@@ -123,8 +123,8 @@ for($i = 0; $i < @ARGV; $i++) {
       print "  Plots all monitor data from a simulation, or a single data file.\n";
       print "  When using -ps -psc -gif, the program writes the hardcopy file\n";
       print "  and then exits.\n";
-      print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
-      print "DOC:      Please visit http://www.mcstas.org\n";
+      print "SEE ALSO: mcxtrace, mxdoc, mxplot, mxrun, mxgui\n";
+      print "DOC:      Please visit http://www.mcxtrace.org\n";
       exit;
   } elsif(/^-([a-zA-Z0-9_]+)$/) {
       $passed_arg_str_quit .= "-$1 ";
@@ -160,7 +160,7 @@ if (-e "$file.nxs") { $plotter = "NeXus";   }
 
 # set default extension from plotter
 if ($plotter =~ /Matlab/i and -e "$file.m") { $default_ext = ".m"; }
-elsif ($plotter =~ /PGPLOT|McStas|gnuplot|Matlab/i) { $default_ext = ".sim"; }
+elsif ($plotter =~ /PGPLOT|McXtrace|gnuplot|Matlab/i) { $default_ext = ".sim"; }
 elsif ($plotter =~ /HTML/i) { $default_ext = ".html"; }
 elsif ($plotter =~ /NeXus/i) { $default_ext = ".nxs"; }
 
@@ -190,15 +190,15 @@ if ($Config{'osname'} eq 'MSWin32') {
 if ($plotter =~ /Matlab/i && $MCSTAS::mcstas_config{'MATLAB'} ne "no") {
   my $tosend = "$MCSTAS::mcstas_config{'MATLAB'} ";
   if ($nowindow) { $tosend .= "-nojvm -nosplash "; }
-  $tosend .= "-r \"if(exist('iData'));s=iData('$file');subplot(s);else;addpath('$MCSTAS::perl_dir/../matlab');addpath(pwd);s=mcplot('$file',[],'$inspect');end;";
+  $tosend .= "-r \"if(exist('iData'));s=iData('$file');subplot(s);else;addpath('$MCSTAS::perl_dir/../matlab');addpath(pwd);s=mxplot('$file',[],'$inspect');end;";
 
   print $tosend;
   if ($passed_arg_str_quit) {
     $tosend .= "exit;\"\n";
   } else {
 #      $tosend .= "if length(s),";
-#      $tosend .= "disp('type: help mcplot for this function usage.');";
-#      $tosend .= "disp('mcplot: Simulation data structure from file $file');";
+#      $tosend .= "disp('type: help mxplot for this function usage.');";
+#      $tosend .= "disp('mxplot: Simulation data structure from file $file');";
 #      $tosend .= "disp('        is stored into variable s. Type in ''s'' at prompt to see it !');";
       $tosend .= "\"\n";
     }
@@ -208,11 +208,11 @@ if ($plotter =~ /Matlab/i && $MCSTAS::mcstas_config{'MATLAB'} ne "no") {
 } elsif ($plotter =~ /HDF|NeXus/i && $MCSTAS::mcstas_config{'HDFVIEW'} ne "no") {
   system("$MCSTAS::mcstas_config{'HDFVIEW'} $file");
 } elsif ($plotter =~ /gnuplot/i) {
-  # McStas original mcplot format using GNUPLOT
+  # McXtrace original mxplot format using GNUPLOT
   require "mcgnuplot.pl";
   gnuplotit($file);
-} elsif ($plotter =~ /PGPLOT|McStas/i) {
-  # McStas original mcplot using perl/PGPLOT
+} elsif ($plotter =~ /PGPLOT|McXtrace/i) {
+  # McXtrace original mxplot using perl/PGPLOT
 
   require "mcfrontlib2D.pl";
   require "mcplotlib.pl";
@@ -228,17 +228,17 @@ if ($plotter =~ /Matlab/i && $MCSTAS::mcstas_config{'MATLAB'} ne "no") {
   }
 
 } else {
-  if ($plotter =~ /PGPLOT|McStas/i && $MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
+  if ($plotter =~ /PGPLOT|McXtrace/i && $MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
     print STDERR "\n******************************************************\n";
     print STDERR "Default / selected PLOTTER is PGPLOT - Problems:\n\n";
     print STDERR "PGPLOT.pm not found on Perl \@INC path\n\nSolutions:\n\n";
     print STDERR "1) Install pgplot + pgperl packages (Unix/Linux/Cygwin) \n";
-    print STDERR "2) Rerun mcplot with -p/--plotter set to Matlab/HTML \n";
+    print STDERR "2) Rerun mxplot with -p/--plotter set to Matlab/HTML \n";
     print STDERR "3) Modify $MCSTAS::perl_dir/mccode_config.perl\n";
     print STDERR "   to set a different default plotter\n";
     print STDERR "4) Set your env variable MCSTAS_FORMAT to set the default\n";
     print STDERR "   data format and plotter\n";
-    print STDERR "5) Convert your PGPLOT/McStas files into an other format\n";
+    print STDERR "5) Convert your PGPLOT/McXtrace files into an other format\n";
     print STDERR "   using the mcformat tool\n";
     print STDERR "******************************************************\n\n";
   }
@@ -316,7 +316,7 @@ sub pgplotit {
               if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
               if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
               if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
-	      system("$MCSTAS::mcstas_config{'PLOTCMD'}$MCSTAS::mcstas_config{'suffix'} --format=McStas $passed_arg_str -$dev $file");
+	      system("$MCSTAS::mcstas_config{'PLOTCMD'}$MCSTAS::mcstas_config{'suffix'} --format=McCode $passed_arg_str -$dev $file");
               next;
           }
           elsif($cc =~ /[l]/i) {        # toggle log mode
@@ -340,7 +340,7 @@ sub pgplotit {
               if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
               my $filename = "$datalist->[$idx]{'Filename'}";
 	      print "Spawning plot of $filename \n";
-	      system("$MCSTAS::mcstas_config{'PLOTCMD'}$MCSTAS::mcstas_config{'suffix'} --format=McStas $passed_arg_str $filename -$dev");
+	      system("$MCSTAS::mcstas_config{'PLOTCMD'}$MCSTAS::mcstas_config{'suffix'} --format=McCode $passed_arg_str $filename -$dev");
           }
           if($cc =~ /[l]/i) {        # toggle log mode
             if ($logmode == 0) { $logmode=1; }
