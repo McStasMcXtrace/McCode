@@ -134,10 +134,10 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'mcwww.urls'
+ROOT_URLCONF = 'mxwww.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'mcwww.wsgi.application'
+WSGI_APPLICATION = 'mxwww.wsgi.application'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -148,7 +148,7 @@ TEMPLATE_DIRS = (
 
 INSTALLED_APPS = (
     'mcsimulator',
-    'mcwww',
+    'mxwww',
 
     'django.contrib.auth',
     'django.contrib.contenttypes',

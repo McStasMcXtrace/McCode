@@ -9,9 +9,9 @@ RUNREF_RE='[\w\.:-]+'
 urlpatterns = patterns(
     '',
 
-    url(r'^login/$',     'mcwww.views.login_form' , name='login_form'),
-    url(r'^login/try/$', 'mcwww.views.loginPOST',   name='loginPOST'),
-    url(r'^logout/$',    'mcwww.views.logout_user', name='logout_user'),
+    url(r'^login/$',     'mxwww.views.login_form' , name='login_form'),
+    url(r'^login/try/$', 'mxwww.views.loginPOST',   name='loginPOST'),
+    url(r'^logout/$',    'mxwww.views.logout_user', name='logout_user'),
 
     url(r'^sim/latest/', 'mcsimulator.views.latest', name='latest'),
 
@@ -31,7 +31,7 @@ urlpatterns = patterns(
     url(r'^doc/(?P<instr>\w+)', 'mcsimulator.views.documentation', name='documentation'),
 
 
-    # url(r'^mcwww/', include('mcwww.foo.urls')),
+    # url(r'^mxwww/', include('mxwww.foo.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

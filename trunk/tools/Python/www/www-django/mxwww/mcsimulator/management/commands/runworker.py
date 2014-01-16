@@ -38,7 +38,7 @@ def popenwait(args, cwd, log):
 
 # try to use new R plotter instead of mxplot
 def mxplot(simfile, outfile, logger, logy=False):
-    ''' Plot a mcstas.sim file with mxplot '''
+    ''' Plot a mccode.sim file with mxplot '''
     args = (["mxplot", "-%s" % IMAGE_FORMAT] +
             (logy and ["-log"] or []) +
             [basename(simfile)])
@@ -58,9 +58,9 @@ try:
             mxplot(simfile, outfile, logger=logger, logy=logy)
     print 'INFO: using plotter from rplot/'
 except Exception, e:
-    # Error occured: Print it and fallback to old mcplot
+    # Error occured: Print it and fallback to old mxplot
     print e
-    plot = mcplot
+    plot = mxplot
 
 
 def display(instr, params, outfile, log, fmt="png"):
@@ -76,6 +76,7 @@ def display(instr, params, outfile, log, fmt="png"):
         mxout = '%s/%s' % (dirname(instr), 'mxdisplay_commands.wrl')
     else:
         mxout = splitext(instr)[0] + ".out." + fmt
+    print mxout,outfile;
     os.rename(mxout, outfile)
 
 
@@ -148,6 +149,7 @@ def processJob(run, workdir):
     siminstr = "sim/"+group+"/"+name+".instr" #SIM_SRC_PATH % group % name
     simbin = "sim/"+group+"/"+name+".out"
     simc = "sim/"+group+"/"+name+".c"
+    simhtml = "sim/"+name+".html"
 
     name=basename(name)
     
@@ -203,7 +205,7 @@ def processJob(run, workdir):
 
     os.path.walk(workdir % 'mcxtrace',
                  lambda _arg, folder, files:
-                 process_components(folder + "/mcxtrace.sim"),
+                 process_components(folder + "/mccode.sim"),
                  [])
 
 
