@@ -4,7 +4,7 @@ from django.shortcuts import redirect
 from common import templated
 
 
-@templated('mcwww/login')
+@templated('mxwww/login')
 def login_form(req):
     return dict(next = req.GET.get('next', '/'))
 

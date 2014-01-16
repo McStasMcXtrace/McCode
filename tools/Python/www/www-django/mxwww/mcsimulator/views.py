@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from mcsimulator.models import *
 from common import *
 
-from mcwww.settings import STATIC_URL, MAX_RAY_SAMPLES, MAX_SCAN_POINTS
+from mxwww.settings import STATIC_URL, MAX_RAY_SAMPLES, MAX_SCAN_POINTS
 
 
 NONCE_NAME = 'csrfmiddlewaretoken'
