@@ -96,7 +96,7 @@ endif()
 foreach(NAME ${SOURCENAMES}
     )
 
-  if((NAME STREQUAL "gui") OR (NAME STREQUAL "plot") )
+  if((NAME STREQUAL "gui") OR (NAME STREQUAL "plot")  OR (NAME STREQUAL "display") )
     set(filename ${P}${NAME})
   else()
     set(filename mc${NAME})
