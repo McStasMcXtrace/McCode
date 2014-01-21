@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: test (rename also the example and DEFINE lines below)
+* Instrument: NSLS2_CHX_beamline
 *
 * %Identification
 * Written by: Jana Baltser
@@ -11,6 +11,9 @@
 * Version: 0.2
 * %INSTRUMENT_SITE: NSLS2
 *
+* Coherent hard x-ray beamline @ NSLS II
+* 
+* %Description
 * This is a lay-out of the coherent hard x-ray (CHX) beamline at NSLS-II.
 * Since the ray-tracing method doesn't allow to account for partial coherence of the
 * undulator source, the best approximation was to use the gaussian photon beam and to neglect
@@ -18,14 +21,15 @@
 * The choice of the source sizes along with angular divergence corresponds to the situation of 
 * high emittance (e=0.99nm). 
 *
-* %Parameters
-*  L  [m] - distance from the source to the SS1 - secondary source aperture.
-*  L2 [m] - position of the CRL.
-*  L3 [m] - position of the Kinoform lens.
-*  Energy [keV] - primary energy used at the beamline.
-* 
 *
+* %Parameters
+* L: [m] Distance from the source to the SS1, secondary source aperture.
+* L2: [m] Position of the CRL.
+* L3: [m] Position of the Kinoform lens.
+* Energy: [keV] primary energy used at the beamline.
 * 
+* %Example: NSLS2_CHX_beamline -n1e6 L=33.5 L2=35.3 L3=44 Energy=10 Detector: Det_ff_I=3.8916e+16 
+*
 * %End
 *******************************************************************************/
 
