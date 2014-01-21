@@ -1268,8 +1268,8 @@ sub menu_run_simulation {
         elsif ($plotter =~ /HTML/i)       { $ext="html"; }
         elsif ($plotter =~ /NeXus|HDF/i)  { $ext="nxs"; }
         $current_sim_file = $newsi->{'Dir'} ?
-            "$newsi->{'Dir'}/mcstas.$ext" :
-            "mcstas.$ext";
+            "$newsi->{'Dir'}/mccode.$ext" :
+            "mccode.$ext";
         new_simulation_results($w);
         # In case of non-PGPLOT plotter, we can not read the data from disk.
         # Instead, we simply keep $newsi information in $inf_sim
