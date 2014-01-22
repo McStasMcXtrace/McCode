@@ -107,7 +107,7 @@ SHARE
       }
     if (A==0){
       /*incident k-vector is parallel (exactly) to the z-axis. Thus, the eq. becomes linear*/
-      if (B==0){ fprintf(stderr, "line 92: Division by zero in %s\n",NAME_CURRENT_COMP); return;}
+      if (B==0){ fprintf(stderr, "line 92: Division by zero in %s\n",NAME_CURRENT_COMP); return result;}
       t[0]=-C/B; 
       for (i=0;i<=2;i++){
 	result.coord[i]=p[i]+t[0]*knorm[i]; 
