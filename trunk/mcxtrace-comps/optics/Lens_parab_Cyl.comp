@@ -154,7 +154,7 @@ SHARE
  
     /* new k vector */
     if ((1.0-cos_theta*cos_theta)==0) {
-       fprintf(stderr,"line 134: Division by zero\n"); return; }
+       fprintf(stderr,"line 134: Division by zero\n"); return result; }
        
     Arg=(1.0-cos_theta1*cos_theta1)/(1.0-cos_theta*cos_theta);
     s=(1/M)*sqrt(Arg);
