@@ -2504,16 +2504,14 @@ mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
 {
   Coords b, c;
 
-  if (*z != 0.0 || *x != 0.0 || *y != 0.0) {
-    b.x = *x;
-    b.y = *y;
-    b.z = *z;
-    c = rot_apply(t, b);
-    b = coords_add(c, a);
-    *x = b.x;
-    *y = b.y;
-    *z = b.z;
-  }
+  b.x = *x;
+  b.y = *y;
+  b.z = *z;
+  c = rot_apply(t, b);
+  b = coords_add(c, a);
+  *x = b.x;
+  *y = b.y;
+  *z = b.z;
 
   if (*vz != 0.0 || *vx != 0.0 || *vy != 0.0) mccoordschange_polarisation(t, vx, vy, vz);
 
