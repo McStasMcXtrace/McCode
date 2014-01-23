@@ -696,7 +696,7 @@ MCDETECTOR mcdetector_import(
   detector.date_l = date_l;
 
   if (!mcget_run_num() || mcget_run_num() >= mcget_ncount())
-    snprintf(detector.ncount, CHAR_BUF_LENGTH, "%Li", mcget_ncount()
+    snprintf(detector.ncount, CHAR_BUF_LENGTH, "%llu", mcget_ncount()
 #ifdef USE_MPI
 *mpi_node_count
 #endif
