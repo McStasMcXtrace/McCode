@@ -324,7 +324,7 @@ struct {
   {"Cf", 98, 0,  4.14210, -0.73977, 0.93342, -0.62981},
 };/*}}}*/
 
-inline double atomic_form_factor_low_q(int j, double s){
+double atomic_form_factor_low_q(int j, double s){
   int i;
   double f=form_factor_low_q_data[j].c;
   double s2=pow(s,2.0);
@@ -334,7 +334,7 @@ inline double atomic_form_factor_low_q(int j, double s){
   return f;
 }
 
-inline double atomic_form_factor_hi_q(int j, double s){
+double atomic_form_factor_hi_q(int j, double s){
   if (j==0){
     /*this is a hydrogen atom, use the value for s=2 (very small) as this model won't work here*/
     return atomic_form_factor_low_q(0.0, s);
