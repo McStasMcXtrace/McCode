@@ -917,7 +917,7 @@ static void mcruninfo_out(char *pre, FILE *f)
   fprintf(f, "%sURL: %s\n",         pre, "http://www.mccode.org");
   fprintf(f, "%sCreator: %s\n",     pre, MCCODE_STRING);
   fprintf(f, "%sInstrument: %s\n", pre, mcinstrument_source);
-  fprintf(f, "%sNcount: %Li\n",        pre, mcget_ncount());
+  fprintf(f, "%sNcount: %llu\n",        pre, mcget_ncount());
   fprintf(f, "%sTrace: %s\n",       pre, mcdotrace ? "yes" : "no");
   fprintf(f, "%sGravitation: %s\n", pre, mcgravitation ? "yes" : "no");
   snprintf(Parameters, CHAR_BUF_LENGTH, "%ld", mcseed);
