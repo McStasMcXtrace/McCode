@@ -41,7 +41,7 @@ SHARE
   %include "read_table-lib"
   %include "interoff-lib"
 
-  inline int filter_refract(double *kx, double *ky, double *kz, double nx, double ny, double nz, double delta0, double delta1){
+  int filter_refract(double *kx, double *ky, double *kz, double nx, double ny, double nz, double delta0, double delta1){
     const double n2=scalar_prod(nx,ny,nz, nx,ny,nz);
     const double k=sqrt(scalar_prod(*kx,*ky,*kz, *kx,*ky,*kz));
     const double nr=(1.0-delta0)/(1.0-delta1);
