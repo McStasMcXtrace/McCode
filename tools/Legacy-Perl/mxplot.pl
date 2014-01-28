@@ -39,7 +39,7 @@ BEGIN {
     # custom configuration (this script)
     END {
         if (-f $tmp_file ) {
-            if (!($plotter =~ /PGPLOT|McXtrace/i)) {
+            if (!($plotter =~ /PGPLOT|McCode|McXtrace/i)) {
                 print "mxplot: Removing temporary $tmp_file (10 sec)\n";
                 sleep 10;
             }
@@ -160,7 +160,7 @@ if (-e "$file.nxs") { $plotter = "NeXus";   }
 
 # set default extension from plotter
 if ($plotter =~ /Matlab/i and -e "$file.m") { $default_ext = ".m"; }
-elsif ($plotter =~ /PGPLOT|McXtrace|gnuplot|Matlab/i) { $default_ext = ".sim"; }
+elsif ($plotter =~ /PGPLOT|McCode|McXtrace|gnuplot|Matlab/i) { $default_ext = ".sim"; }
 elsif ($plotter =~ /HTML/i) { $default_ext = ".html"; }
 elsif ($plotter =~ /NeXus/i) { $default_ext = ".nxs"; }
 
@@ -211,7 +211,7 @@ if ($plotter =~ /Matlab/i && $MCSTAS::mcstas_config{'MATLAB'} ne "no") {
   # McXtrace original mxplot format using GNUPLOT
   require "mcgnuplot.pl";
   gnuplotit($file);
-} elsif ($plotter =~ /PGPLOT|McXtrace/i) {
+} elsif ($plotter =~ /PGPLOT|McCode|McXtrace/i) {
   # McXtrace original mxplot using perl/PGPLOT
 
   require "mcfrontlib2D.pl";
@@ -228,7 +228,7 @@ if ($plotter =~ /Matlab/i && $MCSTAS::mcstas_config{'MATLAB'} ne "no") {
   }
 
 } else {
-  if ($plotter =~ /PGPLOT|McXtrace/i && $MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
+  if ($plotter =~ /PGPLOT|McCode|McXtrace/i && $MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
     print STDERR "\n******************************************************\n";
     print STDERR "Default / selected PLOTTER is PGPLOT - Problems:\n\n";
     print STDERR "PGPLOT.pm not found on Perl \@INC path\n\nSolutions:\n\n";
