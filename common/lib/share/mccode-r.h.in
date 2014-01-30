@@ -169,6 +169,7 @@ extern char   mcinstrument_name[], mcinstrument_source[]; /* instrument name and
 extern MCNUM  mccomp_storein[]; /* 11 coords * number of components in instrument */
 extern MCNUM  mcAbsorbProp[];
 extern MCNUM  mcScattered;      /* number of SCATTER calls in current component */
+extern MCNUM  mcRestore;        /* Flag to indicate if neutron needs to be restored */
 #ifndef MC_ANCIENT_COMPATIBILITY
 extern int mctraceenabled, mcdefaultmain;
 #endif
@@ -283,8 +284,11 @@ unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:
     (mccomp_posa[index])
 #define POS_R_COMP_INDEX(index) \
     (mccomp_posr[index])
-/* number of SCATTER calls in current comp: mcScattered defined in McStas generated C code */
+/* number of SCATTER calls in current comp: mcScattered defined in generated C code */
 #define SCATTERED mcScattered
+/* Flag to indicate if neutron needs to be restored: mcRestore defined in generated C code */
+#define RESTORE mcRestore
+
 
 /* Retrieve component information from the kernel */
 /* Name, position and orientation (both absolute and relative)  */

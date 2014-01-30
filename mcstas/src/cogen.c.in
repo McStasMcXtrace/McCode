@@ -92,6 +92,7 @@
 * ##compcurindex
 * ##absorb          label for ABSORB (goto)
 * ##Scattered       Incremented each time a SCATTER is done
+* ##Restore         Flag indicating that @MCCODE_PARTICLE@ should be restored
 * ##NCounter        Incremented each time a @MCCODE_PARTICLE@ is entering the component
 * ##AbsorbProp      single counter for removed events in PROP calls
 * ##comp_storein    Positions of @MCCODE_PARTICLE@ entering each comp (loc. coords)
@@ -622,10 +623,13 @@ cogen_decls(struct instr_def *instr)
   cout("/* Counter for PROP ABSORB */");
   coutf("MCNUM  %sAbsorbProp[%i];", ID_PRE, list_len(instr->complist)+2);
 
-  /* 8. Declaration of SCATTER flags */
+  /* 8. Declaration of SCATTER and RESTORE flags */
   cout("/* Flag true when previous component acted on the @MCCODE_PARTICLE@ (SCATTER) */");
   coutf("MCNUM %sScattered=0;", ID_PRE);
-
+  
+  cout("/* Flag true when @MCCODE_PARTICLE@ should be restored (RESTORE) */");
+  coutf("MCNUM %sRestore=0;", ID_PRE);
+  
   if (list_len(instr->grouplist) > 0)
   {
     cout("/* Component group definitions (flags), equals index of scattering comp */");
@@ -1060,14 +1064,14 @@ cogen_trace(struct instr_def *instr)
   for(i = 0; i < NUM_STATE_PARS; i++)
     coutf("  MCNUM %snl%s = %sn%s;", ID_PRE, statepars_all[i], ID_PRE, statepars_all[i]);
   cout("");
-
+  
   /* Debugging (initial state). */
   coutf("  %sDEBUG_ENTER()", ID_PRE);
   coutf("  %sDEBUG_STATE(" , ID_PRE);
   for(i = 0; i < NUM_STATE_PARS; i++)
     if (i < NUM_STATE_PARS-1) coutf("    %snl%s,", ID_PRE, statepars_all[i]);
     else                      coutf("    %snl%s)", ID_PRE, statepars_all[i]);
-
+    
   /* Set group flags */
   if (list_len(instr->grouplist) > 0)
   {
@@ -1144,6 +1148,10 @@ cogen_trace(struct instr_def *instr)
     for(i = 0; i < NUM_STATE_PARS; i++)
       coutf("#define %s %snl%s", statepars_all[i], ID_PRE, statepars_all[i]);
 
+    cout("");
+    coutf("#define %sabsorbComp %sabsorbComp%s", ID_PRE, ID_PRE, comp->name);
+
+
 #if MCCODE_PROJECT == 1     /* neutron */
     static char *store  ="STORE_NEUTRON";
     static char *restore="RESTORE_NEUTRON";
@@ -1178,6 +1186,7 @@ cogen_trace(struct instr_def *instr)
     } /* SPLIT handling */
 
     coutf("  %sScattered=0;", ID_PRE);
+    coutf("  %sRestore=0;", ID_PRE);
     coutf("  %sNCounter[%i]++;", ID_PRE, comp->index);
     coutf("  %sPCounter[%i] += p;", ID_PRE, comp->index);
     coutf("  %sP2Counter[%i] += p*p;", ID_PRE, comp->index);
@@ -1200,27 +1209,32 @@ cogen_trace(struct instr_def *instr)
       coutf("#undef %sabsorb", ID_PRE);
       coutf("#define %sabsorb %sabsorbAll", ID_PRE, ID_PRE);
       coutf("  } /* end comp %s in GROUP %s */", comp->name, comp->group->name);
-      coutf("  if (SCATTERED) %sGroup%s=%i;",
+      coutf("  if (SCATTERED) {\n    %sGroup%s=%i;\n  } else {\n    RESTORE=1;\n  }",
         ID_PRE, comp->group->name, comp->index);
-      cout ("  /* Label to skip component instead of ABSORB */");
-      coutf("  %sabsorbComp%s:", ID_PRE, comp->name);
-
-      if (strcmp(comp->name, comp->group->last_comp)) {
-        /* not the last comp of GROUP: check if SCATTERED */
-        coutf("  if (!%sGroup%s) /* restore @MCCODE_PARTICLE@ if was not scattered in GROUP yet */", ID_PRE, comp->group->name);
-        coutf("  { %s(%i,", restore, comp->index); /* RESTORE */
-        for(i = 0; i < NUM_STATE_PARS; i++)
-          if (i < NUM_STATE_PARS-1) coutf("      %snl%s,", ID_PRE, statepars_all[i]);
-          else                      coutf("      %snl%s); }",ID_PRE, statepars_all[i]);
-      } else {
-        /* last comp of GROUP: restore default ABSORB */
-        coutf("/* end of GROUP %s */", comp->group->name);
-        coutf("  if (!%sGroup%s) ABSORB; /* absorb @MCCODE_PARTICLE@ non scattered in GROUP */", ID_PRE, comp->group->name);
-      }
     } /* GROUP */
+    /* mcabsorbComp label for any component */
+    cout ("  /* Label for restoring  @MCCODE_PARTICLE@ */");
+    coutf("  %sabsorbComp%s:", ID_PRE, comp->name);
+    coutf("  if (RESTORE) /* restore if needed */");
+    coutf("  { %s(%i,", restore, comp->index); /* RESTORE */
+    for(i = 0; i < NUM_STATE_PARS; i++) {
+      if (i < NUM_STATE_PARS-1) coutf("      %snl%s,", ID_PRE, statepars_all[i]);
+      else                      coutf("      %snl%s); }",ID_PRE, statepars_all[i]);
+    }
+    
+    /* GROUP - last element */
+    if (comp->group) {
+      if (!strcmp(comp->name, comp->group->last_comp)) {
+	/* last comp of GROUP: restore default ABSORB */
+	coutf("/* end of GROUP %s */", comp->group->name);
+	coutf("  if (!%sGroup%s) ABSORB; /* absorb @MCCODE_PARTICLE@ non scattered in GROUP */", ID_PRE, comp->group->name);
+      }
+    }
 
-    for(i = NUM_STATE_PARS-1; i >= 0; i--)
+    coutf("#undef %sabsorbComp", ID_PRE);
+     for(i = NUM_STATE_PARS-1; i >= 0; i--)
       coutf("#undef %s", statepars_all[i]);
+
     /* Debugging (exit from component). */
     coutf("  %sDEBUG_STATE(", ID_PRE);
     for(i = 0; i < NUM_STATE_PARS; i++)
