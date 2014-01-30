@@ -846,16 +846,16 @@ sub output_sim_file {
       $loc_prefix = "sim.";
     }
     do_sim_header($loc_prefix, $SIM);
-    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /McStas|PGPLOT/i) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /McCode|PGPLOT/i) {
       print $SIM "end simulation\n\nbegin data\n";
     } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
-      print $SIM "\nmcstas.sim = sim; clear sim;\n";
-      print $SIM "mcstas.File= '$filename';\n";
-      print $SIM "mcstas.instrument.Source= '$sim_def';\n";
-      print $SIM "mcstas.instrument.parent= 'mcstas';\n";
-      print $SIM "mcstas.instrument.class = 'instrument';\n";
-      print $SIM "mcstas.instrument.name  = '$instr_name';\n";
-      print $SIM "mcstas.instrument.Parameters  = '...';\n";
+      print $SIM "\nmccode.sim = sim; clear sim;\n";
+      print $SIM "mccode.File= '$filename';\n";
+      print $SIM "mccode.instrument.Source= '$sim_def';\n";
+      print $SIM "mccode.instrument.parent= 'mcstas';\n";
+      print $SIM "mccode.instrument.class = 'instrument';\n";
+      print $SIM "mccode.instrument.name  = '$instr_name';\n";
+      print $SIM "mccode.instrument.Parameters  = '...';\n";
       print $SIM "\ndata.class = 'superdata';\n";
       print $SIM "data.name = 'Scan of $namvar';\n";
       print $SIM "data.scannedvar = '$namvar';\n";
@@ -864,15 +864,15 @@ sub output_sim_file {
       print $SIM "data.maxvar  = $maxvar;\n";
       $loc_prefix = "data.";
     } else {
-      print $SIM "\nmcstas = struct(); mcstas.sim = 0; mcstas.sim = sim; clear sim;\n";
-      print $SIM "mcstas.File= '$filename';\n";
+      print $SIM "\nmccode = struct(); mcstas.sim = 0; mcstas.sim = sim; clear sim;\n";
+      print $SIM "mccode.File= '$filename';\n";
       print $SIM "instrument = struct();\n";
       print $SIM "instrument.Source= '$sim_def';\n";
       print $SIM "instrument.parent= 'mcstas';\n";
       print $SIM "instrument.class = 'instrument';\n";
       print $SIM "instrument.name  = '$instr_name';\n";
       print $SIM "instrument.Parameters  = '...';\n";
-      print $SIM "mcstas.instrument = 0; mcstas.instrument = instrument; clear instrument;\n";
+      print $SIM "mccode.instrument = 0; mccode.instrument = instrument; clear instrument;\n";
       print $SIM "\ndata = struct(); data.class = 'superdata';\n";
       print $SIM "data.name = 'Scan of $namvar';\n";
       print $SIM "data.scannedvar = '$namvar';\n";
@@ -920,8 +920,8 @@ sub do_scan {
         print STDERR "# mkdir $data_dir\n";
       }
     }
-    # Use user-specified output file name, with a default of "mcstas.dat".
-    my $datfile = ($data_file || "mcstas.dat");
+    # Use user-specified output file name, with a default of "mccode.dat".
+    my $datfile = ($data_file || "mccode.dat");
     # Add a default '.dat' extension if no other extension given.
     $datfile .= ".dat" unless $datfile =~ m'\.[^/]*$'; # Quote hack ';
     my $simfile = $datfile;
@@ -929,7 +929,7 @@ sub do_scan {
     $simfile .= $format_ext;        # ... and add ".sim|m|sci" extension.
     my $DAT;
     # Only initialize / use $DAT datafile if format is PGPLOT
-    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McCode/i) {
       $DAT = new FileHandle;
       if ($ncount) {
         open($DAT, ">${prefix}$datfile");
