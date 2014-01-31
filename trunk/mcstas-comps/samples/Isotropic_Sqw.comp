@@ -94,6 +94,16 @@
 * then a matrix with one line per q axis value, containing Sqw values for
 * each energy axis value. Comments (starting with '#') and non numerical lines
 * are ignored and used to separate blocks. Sampling must be regular.
+* Some parameters can be specified in comment lines, namely (00 is a numerical value):
+*
+* # sigma_abs   00 absorption scattering cross section in [barn]
+* # sigma_inc   00 coherent scattering cross section in [barn]
+* # sigma_coh   00 incoherent scattering cross section in [barn]
+* # Temperature 00 in [K]
+* # V_rho       00 atom density per Angs^3
+* # density     00 in [g/cm^3]
+* # weight      00 in [g/mol]
+* # classical   00 [0=contains Bose factor (measurement) ; 1=classical symmetric]
 *
 * Example:
 * # q axis values
@@ -933,7 +943,8 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     
     /* classical Sqw */
     sprintf(c, "%s_%s_cl.sqw", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-      Table_Write(Sqw_cl, c, "Momentum [Angs-1]", "S(q,w)*exp(hw/2kT) classical limit [meV]", 0,0,0,0);
+      Table_Write(Sqw_cl, c, "Momentum [Angs-1]", "'S(q,w)*exp(hw/2kT) classical limit' Energy [meV]",
+        0,Sqw_Data->q_max,-Sqw_Data->w_max,Sqw_Data->w_max);
     Table_Free(&Sqw_cl);
 
     if (u2_count) u2 /= u2_count;
@@ -1044,8 +1055,8 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
     /* write Gqw and free memory */
     if (Sqw_Data->w_bins > 1) {
       sprintf(c, "%s_%s.gqw", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-        Table_Write(Gqw, c, "Momentum [Angs-1]", "Generalized density of states",
-          0,0,-Sqw_Data->w_max,Sqw_Data->w_max);
+        Table_Write(Gqw, c, "Momentum [Angs-1]", "'Generalized density of states' Energy [meV]",
+          0,Sqw_Data->q_max,-Sqw_Data->w_max,Sqw_Data->w_max);
       Table_Free(&Gqw);
     }
   } /* if T>0 */
@@ -1053,28 +1064,31 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
   /* write all tables to disk M0=S(q) M1=E_r M3 w_c w_l M0_cl=S_cl(q) */
   if (Sqw_Data->w_bins > 1) {
     sprintf(c, "%s_%s.m1",  Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-    Table_Write(Sqw_moments[1], c, "Momentum [Angs-1]", "int w S(q,w) dw (recoil) q^2/2m [meV]", 0,0,0,0);
+    Table_Write(Sqw_moments[1], c, "Momentum [Angs-1]", "int w S(q,w) dw (recoil) q^2/2m [meV]",
+      0,Sqw_Data->q_max,0,0);
     sprintf(c, "%s_%s.w_l", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-    Table_Write(Sqw_moments[4], c, "Momentum [Angs-1]", "w_l(q) harmonic frequency [meV]", 0,0,0,0);
+    Table_Write(Sqw_moments[4], c, "Momentum [Angs-1]", "w_l(q) harmonic frequency [meV]", 
+      0,Sqw_Data->q_max,0,0);
     sprintf(c, "%s_%s.sqw", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-    Table_Write(Sqw_Data->Sqw, c, "Momentum [Angs-1]", "S(q,w) dynamical structure factor [meV-1]",
-      0,0,-Sqw_Data->w_max,Sqw_Data->w_max);
+    Table_Write(Sqw_Data->Sqw, c, "Momentum [Angs-1]", "'S(q,w) dynamical structure factor [meV-1]' Energy [meV]",
+      0,Sqw_Data->q_max,-Sqw_Data->w_max,Sqw_Data->w_max);
 
     if (Sqw->Temperature > 0) {
       sprintf(c, "%s_%s.w_c",    Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-      Table_Write(Sqw_moments[3], c, "Momentum [Angs-1]", "w_c(q) collective excitation [meV]", 0,0,0,0);
+      Table_Write(Sqw_moments[3], c, "Momentum [Angs-1]", "w_c(q) collective excitation [meV]", 0,Sqw_Data->q_max,0,0);
       sprintf(c, "%s_%s_cl.sq",  Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-      Table_Write(Sqw_moments[5], c, "Momentum [Angs-1]", "int S_cl(q,w) dw", 0,0,0,0);
+      Table_Write(Sqw_moments[5], c, "Momentum [Angs-1]", "int S_cl(q,w) dw", 
+        0,Sqw_Data->q_max,0,0);
       sprintf(c, "%s_%s.gw",  Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-      Table_Write(Sqw_moments[6], c, "Energy [meV]", "Generalized effective density of states",
-        0,0,-Sqw_Data->w_max,Sqw_Data->w_max);
+      Table_Write(Sqw_moments[6], c, "Energy [meV]", "'Generalized effective density of states' Energy [meV]",
+        0,Sqw_Data->q_max,-Sqw_Data->w_max,Sqw_Data->w_max);
       
     }
   }
   sprintf(c, "%s_%s.sq",    Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-  Table_Write(Sqw_moments[0], c, "Momentum [Angs-1]","S(q) = int S(q,w) dw", 0,0,0,0);
+  Table_Write(Sqw_moments[0], c, "Momentum [Angs-1]","S(q) = int S(q,w) dw", 0,Sqw_Data->q_max,0,0);
   sprintf(c, "%s_%s.sigma", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-  Table_Write(Sqw_Data->iqSq, c, "Energy [meV]", "sigma kf/ki int q S(q,w) dw scattering cross section [barns]", 0,0,0,0);
+  Table_Write(Sqw_Data->iqSq, c, "Energy [meV]", "sigma kf/ki int q S(q,w) dw scattering cross section [barns]", 0,Sqw_Data->q_max,0,0);
 
   /* free Tables */
   for (index_q=0; index_q < 7; Table_Free(&Sqw_moments[index_q++]));
