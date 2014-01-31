@@ -12,6 +12,7 @@
 # sigma_inc   0.008  incoherent scattering cross section in [barn]
 # Temperature 26.9   in [K]
 # v_sound     591    in [m/s]
+# classical   0      experimental, contains Bose factor
 #
 # q axis values
 # vector of m values in Angstroem-1

@@ -18,6 +18,7 @@
 # T_b       944     boiling temperature in [K]
 # At_number 55      atomic number Z
 # Temperature 308   in [K]
+# classical   1      symmetric, does not include Bose factor
 #
 # q axis values
 # vector of m values in Angstroem-1
