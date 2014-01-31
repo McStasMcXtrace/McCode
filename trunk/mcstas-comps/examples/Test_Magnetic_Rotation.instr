@@ -21,7 +21,7 @@
 * See: 
 * Seeger et al. NIM A: Volume 457, Issues 1-2 , 11 January 2001, Pages 338-346
 *
-* %Example: Test_Magnetic_Rotation.instr -n1e5 RESTORE=1 Detector: MPLMonNum2Y_I=3.54525
+* %Example: Test_Magnetic_Rotation.instr -n1e5 RESTORENEUT=1 Detector: MPLMonNum2Y_I=3.54525
 *
 * %Parameters
 *
@@ -31,7 +31,7 @@
 ****************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_Magnetic_Rotation(RESTORE=1)
+DEFINE INSTRUMENT Test_Magnetic_Rotation(RESTORENEUT=1)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -117,7 +117,7 @@ MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
 COMPONENT MPLMonNum2Y_1 =
 MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
 		  nL=100, Lmin = 0.0, Lmax = 10.0,
-		  mx=0, my=1, mz=0, filename="MPLMonNum2Y_1.data",restore_neutron=RESTORE)
+		  mx=0, my=1, mz=0, filename="MPLMonNum2Y_1.data",restore_neutron=RESTORENEUT)
      AT (0, 0, magnetLength/2) RELATIVE magnetNum
 /*
 COMPONENT MPLMonNum2Z_1 =
