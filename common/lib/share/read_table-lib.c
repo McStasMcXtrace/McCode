@@ -1018,6 +1018,7 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
 /******************************************************************************
 * char **Table_ParseHeader(char *header, symbol1, symbol2, ..., NULL)
 *    ACTION: search for char* symbols in header and return their value or NULL
+*            the search is not case sensitive.
 *            Last argument MUST be NULL
 *    return: array of char* with line following each symbol, or NULL if not found
 *******************************************************************************/
@@ -1052,7 +1053,7 @@ char **Table_ParseHeader_backend(char *header, ...){
       exit_flag = 1; break;
     }
     /* search for the symbol in the header */
-    pos = strstr(header, arg_char);
+    pos = strcasestr(header, arg_char);
     if (pos) {
       char *eol_pos;
       eol_pos = strchr(pos+strlen(arg_char), '\n');
