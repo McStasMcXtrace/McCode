@@ -1081,14 +1081,14 @@ void Sqw_diagnosis(struct Sqw_sample_struct *Sqw, struct Sqw_Data_struct *Sqw_Da
         0,Sqw_Data->q_max,0,0);
       sprintf(c, "%s_%s.gw",  Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
       Table_Write(Sqw_moments[6], c, "Energy [meV]", "'Generalized effective density of states' Energy [meV]",
-        0,Sqw_Data->q_max,-Sqw_Data->w_max,Sqw_Data->w_max);
+        -Sqw_Data->w_max,Sqw_Data->w_max,0,0);
       
     }
   }
   sprintf(c, "%s_%s.sq",    Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
   Table_Write(Sqw_moments[0], c, "Momentum [Angs-1]","S(q) = int S(q,w) dw", 0,Sqw_Data->q_max,0,0);
   sprintf(c, "%s_%s.sigma", Sqw->compname, Sqw_Data->type=='c' ? "coh" : "inc");
-  Table_Write(Sqw_Data->iqSq, c, "Energy [meV]", "sigma kf/ki int q S(q,w) dw scattering cross section [barns]", 0,Sqw_Data->q_max,0,0);
+  Table_Write(Sqw_Data->iqSq, c, "Energy [meV]", "sigma kf/ki int q S(q,w) dw scattering cross section [barns]", 0,0,0,0);
 
   /* free Tables */
   for (index_q=0; index_q < 7; Table_Free(&Sqw_moments[index_q++]));
@@ -1476,7 +1476,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     if (Sqw->Temperature < 0)    Sqw->Temperature = fabs(T);
     MPI_MASTER(
     if (Sqw->verbose_output > 0) {
-      printf(  "Isotropic_Sqw: %s: Temperature guessed from S(q,w) data from %s is T=%g [K].\n",
+      printf(  "Isotropic_Sqw: %s: Temperature computed from S(q,w) data from %s is T=%g [K] (not set here).\n",
         Sqw->compname, file, T);
       if (Sqw->Temperature == 0)
         printf("Warning:       %s: Use T=-1 to set it. Currently using T=%g, i.e. no detailed balance.\n", 

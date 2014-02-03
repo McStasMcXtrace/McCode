@@ -411,15 +411,15 @@ def display(this_File, comment):
     global scan_flag,scan_length
     
     if this_File =="":
-        # No filename given, assume mcstas.sim in current dir
-        this_File = "mcstas.sim"
+        # No filename given, assume mccode.sim in current dir
+        this_File = "mccode.sim"
 
     # FIX: make the path to this_File absolute to always get a non-empty dirname.
     this_File = os.path.abspath(this_File)
     
     if os.path.isdir(this_File)==1:
-        # dirname given, assume mcstas.sim in that dir.
-        this_File = os.path.join(this_File,'mcstas.sim')
+        # dirname given, assume mccode.sim in that dir.
+        this_File = os.path.join(this_File,'mccode.sim')
 
     if os.path.dirname(this_File) != '':
         pwd = os.getcwd()
