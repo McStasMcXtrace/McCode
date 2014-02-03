@@ -24,6 +24,8 @@ echo Clean out selftest dirs on the hosts
 ssh ${LINUSER}@${LINHOST} rm -rf selftest_\*
 ssh ${OSXUSER}@${OSXHOST} rm -rf selftest_\*
 ssh ${WEBUSER}@${WEBHOST} rm -rf /srv/web/mccode.org/nightly/Current/\*
+ssh ${WINUSER}@${WINHOST} del \\users\\Public\\Desktop\\mc*.lnk
+ssh ${WINUSER}@${WINHOST} del \\users\\Public\\Desktop\\mx*.lnk
 ssh ${WINUSER}@${WINHOST} for /d %a in \(selftest*\) do rd /s /q %a
 
 
