@@ -19,7 +19,7 @@ def main():
 
     simfile = os.path.abspath(sys.argv[1])
     if os.path.isdir(simfile):
-        simfile = os.path.join(simfile, 'mcstas.sim')
+        simfile = os.path.join(simfile, 'mccode.sim')
 
 
     from mcdata import mcstas_to_plotdescs
@@ -29,7 +29,7 @@ def main():
     titlepath = os.path.abspath(simfile)
 
     # Remove mcstas.sim (its implied)
-    if titlepath.endswith('/mcstas.sim'):
+    if titlepath.endswith('/mccode.sim'):
         titlepath = os.path.dirname(titlepath) + '/'
 
     # Truncate from front of too large
