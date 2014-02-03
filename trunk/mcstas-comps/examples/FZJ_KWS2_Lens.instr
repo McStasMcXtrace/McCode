@@ -15,7 +15,7 @@
 *
 * Notice effect of gravitation on the final beam.
 *
-* %Example: lambda=20.15 Detector: detector_I=40.8393
+* %Example: lambda=20.15 Detector: detector_I=3.4633E+01
 *
 * %Parameters
 * INPUT PARAMETERS:
