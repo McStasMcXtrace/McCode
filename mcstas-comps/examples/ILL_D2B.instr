@@ -39,7 +39,7 @@
 * Ge       511 DM=1.089 AA
 * Ge       533 DM=0.863 AA
 *
-* %Example: lambda=1 Detector: D2B_BananaPSD_I=4753.29
+* %Example: lambda=1 Detector: D2B_BananaPSD_I=1.4489E+04
 *
 * %Parameters
 * lambda: [Angs] Wavelength at monochromator, computed from DM and THETA_M if left as 0.
