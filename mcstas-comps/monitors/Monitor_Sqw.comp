@@ -106,11 +106,18 @@ INITIALIZE %{
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
   if (options != NULL)
     strncpy(Vars.option, options, CHAR_BUF_LENGTH);
-  strncat(Vars.option," user1, user2, all auto", CHAR_BUF_LENGTH);
+  if (!strstr(Vars.option, "user1"))
+    strncat(Vars.option," user1", CHAR_BUF_LENGTH);
+  if (!strstr(Vars.option, "user2"))
+    strncat(Vars.option," user2", CHAR_BUF_LENGTH);
+  if (!strstr(Vars.option, "limits") && !strstr(Vars.option, "auto"))
+    strncat(Vars.option," all auto", CHAR_BUF_LENGTH);
   Vars.compcurpos = POS_A_CURRENT_COMP;
 
-  if (bins) { sprintf(tmp, " all bins=%ld ", (long)bins); strncat(Vars.option, tmp, CHAR_BUF_LENGTH); }
-  if (min > -FLT_MAX && max < FLT_MAX) { 
+  if (bins && !strstr(Vars.option, "bins")) { 
+    sprintf(tmp, " all bins=%ld ", (long)bins); strncat(Vars.option, tmp, CHAR_BUF_LENGTH); 
+  }
+  if (min > -FLT_MAX && max < FLT_MAX && !strstr(Vars.option, "limits")) { 
     sprintf(tmp, " all limits=[%g %g]", min, max); strncat(Vars.option, tmp, CHAR_BUF_LENGTH); 
   }
   else if (min > -FLT_MAX) { 
