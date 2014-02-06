@@ -47,7 +47,6 @@
 * with a single type detector.
 *
 * %Example: QM=1 Sqw_coh=V.laz Detector: D7_SC3_1D_I=1.06671e+09
-* %Example: QM=1 Sqw_coh=V.laz Detector: He3H_I=1397.33
 *
 * %Parameters
 * INPUT PARAMETERS:

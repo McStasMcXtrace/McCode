@@ -45,7 +45,6 @@
 * analyser, with a single type detector.
 *
 * %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: D7_SC3_1D_I=9.36585e+08
-* %Example: QM=1 EN=0 Sqw_coh=V.laz Detector: He3H_I=512.093
 *
 * %Parameters
 * INPUT PARAMETERS:
