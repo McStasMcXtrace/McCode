@@ -72,8 +72,8 @@
  *   beam_wavelength=4.0, beam_resolution_meV=0.1, 
  *   sample_detector_distance=3.5, detector_height=4.0
  *
- * %Example: beam_wavelength=4.1 Detector: M_single_coh_I=8.23e-12
- * %Example: beam_wavelength=1.6 beam_resolution_meV=1.07 Detector: M_single_coh_I=2.32e-10
+ * Example: beam_wavelength=4.1 Detector: M_single_coh_I=8.23e-12
+ * Example: beam_wavelength=1.6 beam_resolution_meV=1.07 Detector: M_single_coh_I=2.32e-10
  *
  * %Parameters
  * INPUT PARAMETERS:
