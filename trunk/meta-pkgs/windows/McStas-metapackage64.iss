@@ -37,7 +37,7 @@ Source: "Support\unzip.exe"; DestDir: "{tmp}"
 Source: "Support\unzip32.dll"; DestDir: "{tmp}"
 Source: "dist\mcstas-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-comps-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
-Source: "dist\mcstas-doc-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
+Source: "dist\mcstas-manuals-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-perl-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 
 [Run]
@@ -46,7 +46,7 @@ Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\PPDs.zip"
 Filename: "{tmp}\PPDs\postsetup.bat"
 Filename: "{tmp}\mcstas-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-comps-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
-Filename: "{tmp}\mcstas-doc-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
+Filename: "{tmp}\mcstas-manuals-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-perl-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
