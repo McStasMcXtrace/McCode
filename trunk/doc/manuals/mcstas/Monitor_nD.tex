@@ -77,26 +77,26 @@ and position. Some can have more than one name (e.g. \texttt{energy} or
 
 
 \begin{lstlisting}
-    kx ky kz k wavevector [Angs-1] (    usually axis are
-    vx vy vz v            [m/s]         x=horz., y=vert., z=on axis)
-    x y z                 [m]      Distance, Position
-    kxy vxy xy radius     [m]      Radial wavevector, velocity and position
-    t time                [s]      Time of Flight
-    energy omega          [meV]
-    lambda wavelength     [Angs]
-    p intensity flux      [n/s] or [n/cm^2/s]
-    ncounts               [1]
-    sx sy sz              [1]      Spin
-    vdiv ydiv dy          [deg]    vertical divergence (y)
-    hdiv divergence xdiv  [deg]    horizontal divergence (x)
-    angle                 [deg]    divergence from  direction
-    theta longitude       [deg]    longitude (x/z) [for sphere and cylinder]
-    phi   lattitude       [deg]    lattitude (y/z) [for sphere and cylinder]
+kx ky kz k wavevector [Angs-1] (    usually axis are
+vx vy vz v            [m/s]         x=horz., y=vert., z=on axis)
+x y z                 [m]      Distance, Position
+kxy vxy xy radius     [m]      Radial wavevector, velocity and position
+t time                [s]      Time of Flight
+energy omega          [meV]
+lambda wavelength     [Angs]
+p intensity flux      [n/s] or [n/cm^2/s]
+ncounts               [1]
+sx sy sz              [1]      Spin
+vdiv ydiv dy          [deg]    vertical divergence (y)
+hdiv divergence xdiv  [deg]    horizontal divergence (x)
+angle                 [deg]    divergence from  direction
+theta longitude       [deg]    longitude (x/z) [for sphere and cylinder]
+phi   lattitude       [deg]    lattitude (y/z) [for sphere and cylinder]
 \end{lstlisting}
 as well as two other special variables
 \begin{lstlisting}
-    user user1            will monitor the [Mon_Name]_Vars.UserVariable{1|2}
-    user2 user3           to be assigned in an other component (see below)
+user user1            will monitor the [Mon_Name]_Vars.UserVariable{1|2}
+user2 user3           to be assigned in an other component (see below)
 \end{lstlisting}
 
 To tell the component what you want to monitor, just add the variable

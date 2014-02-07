@@ -215,13 +215,13 @@ In the simple case where $\BB = (0, 0, B)$, we find the solution
 
 where $\omega_L = -\gamma_n B/\hbar$ is the Larmor frequency.\\
 
-\begin{lstlisting}
-  The equations above was checked against the equations in the ``polarimetrie
+\begin{quote}
+  The equations above were checked against the equations in the ``polarimetrie
   neutronique'' notes by Francis Tasset and found to be consistent. There can
   be sign differences between different publications depending on whether they
   use a right-handed (like e.g. McStas) or a left-handed (like e.g. NISP)
   coordinate system.
-\end{lstlisting}
+\end{quote}
 
 \section{Polarized Neutron Scattering}
 \label{sec:scat}
@@ -425,13 +425,13 @@ crystal is done, and inserting the constraints above one finds
   & \PB [\FN^2 - \FM^2] + \tN [2\FN\FM + 2(\tN \cdot \PB)\FM^2]
 \end{eqnarray}
 
-\begin{lstlisting}
+\begin{quote}
   NB! Note that in~\cite{gavin} Eq.~2.2.25 there is a minus in front of the
   second term in Eq.~\ref{eq:mono_sigma}. We have not been able to understand
   this discrepancy, which is probably due to notation. Most other authors
   agree with the minus in front of the second term (e.g. Squires and Francis
   Tasset).
-\end{lstlisting}
+\end{quote}
 
 For a beam which is initially unpolarized we find the outgoing
 polarization to be:
@@ -490,12 +490,12 @@ different polarization values, since $\PB [\FN^2 - \FM^2]$ and $\tN 2(\tN
 \cdot \PB)\FM^2$ are different for the two solutions. It seems that one needs
 some additional information to choose between the two solutions.
 
-\begin{lstlisting}
+\begin{quote}
   NB! The simplifying geometry shown in Figure~\ref{fig:mono_princip} only
   applies for the sides of the guide wall and not the top and bottom (assuming
   that the magnetizing field is pointing up or down), so there another set of
   equations should really be used.
-\end{lstlisting}
+\end{quote}
 
 The same physics could also be used for a polarizing powder or single crystal
 sample if $\FN$ and $\FM$ can be calculated with some other program, but one
@@ -534,22 +534,22 @@ on the unit sphere.\\
   \lambda = \lambda - \lambda_\text{Bragg}$, with the peak reflectivity and
   polarization calculated as described in section~\ref{sub:mono}.
 
-  \begin{lstlisting}
+  \begin{quote}
     NB! Note that this monochromator reflects the neutrons billiard-like. In
     \textbf{Monochromator\_flat} the mosaicity of the reflecting crystal is
     taken into account, but the d-spread is not taken into account. One should
     implement d-spread and mosaicity in a way similar to what is done in
     \textbf{Single crystal}.
-  \end{lstlisting}
+  \end{quote}
 
 \item \textbf{Pol\_mirror:} Plane with a reflection probability for up
 and down. There are 3 options: always reflect, always transmit, or
 random select transmit/reflect.
 
-\begin{lstlisting}
+\begin{quote}
   NB! Note that at the moment the plane only reflects from one side (because
   it uses PROP\_Z0.
-\end{lstlisting}
+\end{quote}
 
 \item \textbf{Pol\_bender:} Curved guide with the possibilities to
   insert multiple slits, and have the end gap parallel to the entrance
@@ -579,10 +579,10 @@ functions or use tables for the up and down reflectivity descriptions.
   projection of the spin along the defined vector $\mathbf{m}$ (see
   \textbf{Pol\_monitor}) as a function of the wavelength $\lambda$.
 
-  \begin{lstlisting}
+  \begin{quote}
     NB! currently the error on the mean is shown ($\sigma/\sqrt(N)$), but it
     might make more sense to show the spread ($\sigma$).
-  \end{lstlisting}
+  \end{quote}
 \end{itemize}
 
 \subsection{Magnetic fields}
@@ -605,7 +605,7 @@ in~\cite{pol_seeger}.
   overloads the propagation routines so that numerical spin propagation is
   done for analytical magnetic fields.
 
-  \begin{lstlisting}
+  \begin{quote}
     NB! At the moment both components does not really check the boundaries of
     the field on the sides, but merely assumes that the field starts at the
     entrance plane and stops at the exit plane.
@@ -614,7 +614,7 @@ in~\cite{pol_seeger}.
     be nice to support tabulated magnetic field files. However, the framework
     developed for \textbf{Pol\_simpleBfield} is very general and should
     easily facilitate these changes.
-  \end{lstlisting}
+  \end{quote}
 
 \end{itemize}
 
