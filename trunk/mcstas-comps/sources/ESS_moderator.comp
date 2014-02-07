@@ -23,8 +23,9 @@
 *
 * 2012-updates:
 * <ol>
-* <li>Geometry is now MCNPX-like <b>IMPORTANT</b>: Origin of the component is inside the cylindrical 
-* moderator, i.e. take care when positioning the next components! (E Klinkby)
+* <li>Geometry is now MCNPX-like <b>IMPORTANT</b>: Origin of the component is 
+* inside the cylindrical moderator, i.e. take care when positioning the next 
+* components! (E Klinkby)
 * <li>Component implements both the cold moderator and the thermal (pre-)moderator, fraction of statistics for
 * the cold moderator is the new cold_frac parameter. New set of input parameters with subscript _t defines the
 * thermal flux.(E Klinkby)
