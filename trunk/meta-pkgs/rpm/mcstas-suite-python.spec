@@ -1,6 +1,6 @@
 %define name			mcstas-suite-python
 %define summary			A metapackage for McStas + python tools
-%define version			2.0
+%define version			2.1
 %define release			1
 %define license			GPL
 %define group			Documentation
@@ -17,7 +17,7 @@ Summary:   %{summary}
 Group:     %{group}
 URL:       http://www.mccode.org
 Buildroot: %{buildroot}
-Requires:  mcstas-2.0 mcstas-comps-2.0 mcstas-tools-python-mcplot-chaco-2.0 mcstas-tools-python-mcplot-matplotlib-2.0 mcstas-tools-python-mcrun-2.0 mcstas-manuals-2.0
+Requires:  mcstas-2.1 mcstas-comps-2.1 mcstas-tools-python-mcplot-chaco-2.1 mcstas-tools-python-mcplot-matplotlib-2.1 mcstas-tools-python-mcrun-2.1 mcstas-manuals-2.1
 
 %description
 A metapackage for McStas + python tools
