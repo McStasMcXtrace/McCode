@@ -14,7 +14,7 @@ fi
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 -- src bin
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" linux64 -- src bin
 ./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" linux64 -- src bin
-./mkdist mcstas-doc $1 doc/manuals/mcstas/ "" linux64 -- src bin
+./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" linux64 -- src bin
 
 # 32-bit
 ./mkdist mcstas $1 "" "" linux32 -- src bin
@@ -24,4 +24,4 @@ fi
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux32 -- src bin
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" linux32 -- src bin
 ./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 -- src bin
-./mkdist mcstas-doc $1 doc/manuals/mcstas/ "" linux32 -- src bin
+./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" linux32 -- src bin
