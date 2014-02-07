@@ -33,6 +33,6 @@ include(CPack)
 
 
 # Include mcstas-comp files
-foreach(name contrib data examples misc monitors obsolete optics samples share sources)
+foreach(name contrib data examples misc monitors obsolete optics samples share sources editors)
   installLib("${PROJECT_SOURCE_DIR}/${name}")
 endforeach()
