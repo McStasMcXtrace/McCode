@@ -50,8 +50,7 @@ endforeach()
 file(COPY figures DESTINATION "${WORK}")
 
 # Component manual build disabled for now...
-# foreach(NAME manual Component_manual)
-foreach(NAME manual)
+foreach(NAME manual Component_manual)
   add_custom_command(
     OUTPUT "${WORK}/${NAME}.pdf"
     COMMAND "${PROJECT_SOURCE_DIR}/compile_pdf.sh" "${NAME}";

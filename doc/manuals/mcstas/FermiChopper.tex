@@ -6,19 +6,19 @@
 \begin{figure}
 \begin{center}
 \begin{tabular}{cc}
-\includegraphics[height=7cm]{./figures/FCChoppergeo.eps}
+\includegraphics[height=7cm]{./figures/FCChoppergeo}
 &
-\includegraphics[height=5cm,width=5.3cm]{./figures/FCOverview.eps}
+\includegraphics[height=5cm,width=5.3cm]{./figures/FCOverview}
 \end{tabular}
 \end{center}
 \caption{Geometry of the Fermi-chopper (left) and Neutrons in the chopper (right).}
-\label{fig:Overview.eps}
+\label{fig:Overview}
 \end{figure}
 
 \subsection{The chopper geometry and parameters}
 \label{ssec:chopper}
 
-The Fermi chopper is a rotating vertical cylinder containing a set of collimating slits (\emph{slit package}). Main geometry parameters are the radius $R$, minimum and maximum height $y_{min}$ and $y_{max}$ (see Fig. \ref{fig:Overview.eps}).
+The Fermi chopper is a rotating vertical cylinder containing a set of collimating slits (\emph{slit package}). Main geometry parameters are the radius $R$, minimum and maximum height $y_{min}$ and $y_{max}$ (see Fig. \ref{fig:Overview}).
 In this implementation, the slits are by default straight, but may be coated with super-mirror, and curved. Main parameters for the slits are the number of slits $Nslit$, the length $length$ and width $w$ of each slit, the width of the separating Cd-blades is neglected. The slit walls reflectivity is modelled just like in guide components by the $m$-value ($m > 1$ for super mirrors), the critical scattering vector $Q_c$, the slope of reflectivity $\alpha$, the low-angle reflectivity $R_0$ and the width of supermirror cut-off $W$. For $m=0$ the blades are completly absorbing. The AT position of the component is its center.
 
 The angular speed of the chopper is $\omega = 2\pi \nu$, where $\nu$ is the rotation frequency. The angle $phase$ for which the chopper is in the 'open' state for most of the neutrons coming in (z' axis of the rotating frame parallel to the z axis of the static frame) is also an input parameter. The time window may optionally be shifted to zero when setting the \verb+zero_time=1+ option. A phase guess value may be set automatically using the \verb+zero_time=2+ option.
@@ -61,7 +61,7 @@ R0    & [1] & \\
 
 \subsection{Propagation in the Fermi-chopper}
 
-As can be seen in figure \ref{fig:Overview.eps}, neutrons first propagate onto the cylinder surface of the chopper (yellow curve). Then the program checks the interaction with the entrance of the slit package (orange line) and calculates which slit is hit. If the slit coating is reflecting ($m > 0$), multiple reflections are calculated (green, blue and maroon circles), otherwise the neutrons are absorbed as soon as they interact with the blades. Finally the remaining neutrons propagate to the exit of the chopper (red curve).
+As can be seen in figure \ref{fig:Overview}, neutrons first propagate onto the cylinder surface of the chopper (yellow curve). Then the program checks the interaction with the entrance of the slit package (orange line) and calculates which slit is hit. If the slit coating is reflecting ($m > 0$), multiple reflections are calculated (green, blue and maroon circles), otherwise the neutrons are absorbed as soon as they interact with the blades. Finally the remaining neutrons propagate to the exit of the chopper (red curve).
 
 The rotation of the chopper is characterized by the angle $\delta$ between the rotating z' and the static z-axis. $\delta(t)$ is defined by:
 
@@ -82,16 +82,16 @@ T_{zx \rightarrow z'x'} = \left(
 \begin{figure}
 \begin{center}
 \begin{tabular}{cc}
-\includegraphics[height=5.5cm]{./figures/XZCoords.eps}
+\includegraphics[height=5.5cm]{./figures/XZCoords}
 &
-\includegraphics[height=6.5cm,width=5.5cm]{./figures/XZplain.eps}
+\includegraphics[height=6.5cm,width=5.5cm]{./figures/XZplain}
 \end{tabular}
 \end{center}
 \caption{The x' and z' component as a function of time in the rotating frame (left). A typical neutron trajectory in the rotating frame (right).}
-\label{fig:Component.eps}
+\label{fig:Component}
 \end{figure}
 
-Together with the equation for a non-accelerated, linear propagation $\vec{r} = \vec{r_0}+\vec{v}t$ the orthogonal transformation produces a curve in the Z'-X'-plane known as \emph{archidemic spiral}, as can be seen in figure \ref{fig:Component.eps}. The two vector components $s(t) = (z',x')$ follow the equation:
+Together with the equation for a non-accelerated, linear propagation $\vec{r} = \vec{r_0}+\vec{v}t$ the orthogonal transformation produces a curve in the Z'-X'-plane known as \emph{archidemic spiral}, as can be seen in figure \ref{fig:Component}. The two vector components $s(t) = (z',x')$ follow the equation:
 \begin{equation}
 s(t) = \left(
 \begin{array}{c}
@@ -127,16 +127,16 @@ This method provides faster and more accurate intersection determination than ot
 \begin{figure}
 \begin{center}
 \begin{tabular}{cc}
-\includegraphics[height=5cm]{./figures/FCAlgo.eps}
+\includegraphics[height=5cm]{./figures/FCAlgo}
 &
-\includegraphics[height=5cm]{./figures/FCtangents.eps}
+\includegraphics[height=5cm]{./figures/FCtangents}
 \end{tabular}
 \end{center}
 \caption{The different steps in the algorithm (left). A neutron trajectory in a slit (right)}
-\label{fig:TOFalg.eps}
+\label{fig:TOFalg}
 \end{figure}
 
-The neutrons are first propagated to the outer chopper cylinder and their coordinates are transformed into the rotating frame using $T$. Neutrons outside the slit channel (chopper opening), or hitting the top and bottom caps are absorbed (yellow dots in Fig. \ref{fig:Overview.eps}). The side from which the neutron approaches the chopper is known (positive or negative z'-axis of the rotating frame) so that the calculation of the time of interaction with the slit package entrance $t_1$ is performed solving $z' = \pm \frac{\rm length}{2}$ in Eq. (\ref{eq:Txz}). Using the result of the numerical algorithms the neutron propagates to the entrance of the slit package (orange circles in Fig. \ref{fig:Overview.eps}). Neutrons getting aside the slit package entrance are absorbed. Additionally, the slit package exit time $t_2$ is estimated the same way with $z' = \mp \frac{\rm length}{2}$, in order to evaluate the whole time-of-flight in the chopper. The index of the slit which was hit is also computed, as we know the $x'$ coordinate in the rotating frame at the slit entrance.
+The neutrons are first propagated to the outer chopper cylinder and their coordinates are transformed into the rotating frame using $T$. Neutrons outside the slit channel (chopper opening), or hitting the top and bottom caps are absorbed (yellow dots in Fig. \ref{fig:Overview}). The side from which the neutron approaches the chopper is known (positive or negative z'-axis of the rotating frame) so that the calculation of the time of interaction with the slit package entrance $t_1$ is performed solving $z' = \pm \frac{\rm length}{2}$ in Eq. (\ref{eq:Txz}). Using the result of the numerical algorithms the neutron propagates to the entrance of the slit package (orange circles in Fig. \ref{fig:Overview}). Neutrons getting aside the slit package entrance are absorbed. Additionally, the slit package exit time $t_2$ is estimated the same way with $z' = \mp \frac{\rm length}{2}$, in order to evaluate the whole time-of-flight in the chopper. The index of the slit which was hit is also computed, as we know the $x'$ coordinate in the rotating frame at the slit entrance.
 
 Differentiating Eq. (\ref{eq:Txz}) for $x$ coordinate
 \begin{equation}
@@ -146,7 +146,7 @@ we may estimate the tangents to the spiral neutron trajectory in the rotating fr
 
 If the neutron remains in the same slit at this point, then there is no intersection with the slit walls (direct flight), and the neutron may be propagated to the slit output, and then to the cylinder output. A last check is made for the neutron to pass the chopper aperture in the cylinder.
 
-If the neutron changes of slit channel at this point, we may determine the intersection time of the neutron trajectory within $[ t_1, t_3 ]$ or $[ t_3, t_2 ]$, as seen in Fig. \ref{fig:TOFalg.eps}. If walls are not reflecting, we just absorb neutrons here.
+If the neutron changes of slit channel at this point, we may determine the intersection time of the neutron trajectory within $[ t_1, t_3 ]$ or $[ t_3, t_2 ]$, as seen in Fig. \ref{fig:TOFalg}. If walls are not reflecting, we just absorb neutrons here.
 
 \subsubsection{The reflections (super-mirror slits)}
 
