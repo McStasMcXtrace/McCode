@@ -7,6 +7,7 @@ set(FLAVOR mcstas)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(MCUtil)
+setupMCCODE("mcstas")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-manuals-${MCCODE_VERSION}")
@@ -49,7 +50,6 @@ endforeach()
 
 file(COPY figures DESTINATION "${WORK}")
 
-# Component manual build disabled for now...
 foreach(NAME manual Component_manual)
   add_custom_command(
     OUTPUT "${WORK}/${NAME}.pdf"
