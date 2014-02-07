@@ -24,9 +24,15 @@ set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
 if(WINDOWS)
-  set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}/${lib}/")
+  set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/")
+  set(MANUAL "mcstas-manual.pdf")
+  set(CMANUAL "mcstas-components.pdf")
+  set(MANDEST "${lib}/doc/manuals")
 else()
   set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${MCCODE_NAME}")
+  set(MANUAL "mcstas-${MCCODE_VERSION}-manual.pdf")
+  set(CMANUAL "mcstas-${MCCODE_VERSION}-components.pdf")
+  set(MANDEST "${lib}/${MCCODE_NAME}/doc/manuals")
 endif()
 
 
@@ -64,11 +70,11 @@ foreach(NAME manual Component_manual)
 endforeach()
 
 install(FILES "${WORK}/manual.pdf"
-  DESTINATION "${lib}/${MCCODE_NAME}/doc/manuals"
-  RENAME "mcstas-${MCCODE_VERSION}-manual.pdf"
+  DESTINATION "${MANDEST}"
+  RENAME "${MANUAL}"
 )
 
 install(FILES "${WORK}/Component_manual.pdf"
-  DESTINATION "${lib}/${MCCODE_NAME}/doc/manuals"
-  RENAME "mcstas-${MCCODE_VERSION}-components.pdf"
+  DESTINATION "${MANDEST}"
+  RENAME "${CMANUAL}"
 )
