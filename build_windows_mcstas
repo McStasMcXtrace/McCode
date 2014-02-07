@@ -20,6 +20,7 @@ find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 -- nsis
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mingw64 -- nsis
 ./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mingw64 -- nsis
+./mkdist mcstas-doc $1 doc/manuals/mcstas/ "" mingw64 -- nsis
 
 # 32-bit
 ./mkdist mcstas $1 "" "" mingw32 -- nsis
@@ -29,6 +30,7 @@ find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw32 -- nsis
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mingw32 -- nsis
 ./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mingw32 -- nsis
+./mkdist mcstas-doc $1 doc/manuals/mcstas/ "" mingw32 -- nsis
 
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
