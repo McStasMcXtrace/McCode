@@ -36,7 +36,11 @@ my $single_comp_name = 0;  # component single name
 my $browser       = $MCSTAS::mcstas_config{'BROWSER'};
 my $is_forced     = 0; # true when force re-writting of existing HTML
 my @valid_names; # Full list of possible comp matches
-my $HTTP_SYSDIR = "file://".$MCSTAS::sys_dir; # Many browsers need a file:// to properly access local files
+my $HTTP_SYSDIR = $MCSTAS::sys_dir; 
+if (!($Config{'osname'} eq 'MSWin32')) {
+# Many Unix browsers need a file:// to properly access local files
+    $HTTP_SYSDIR="file://".$HTTP_SYSDIR;
+}
 $HTTP_SYSDIR =~ s!\\!/!g;
 
 sub show_header { # output in text mode
