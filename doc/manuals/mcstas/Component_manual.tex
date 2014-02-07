@@ -1,74 +1,6 @@
 \documentclass[twoside,notitlepage,11pt]{report}
-%\usepackage{a4paper}
-\usepackage{graphicx}
-\usepackage{psfrag}
-\usepackage{amsfonts}
-\usepackage{amsmath}
-\usepackage{amsbsy}
-\usepackage{verbatimfile}
-\usepackage{fancyhdr}
-\usepackage{pstricks,pst-node}
-% The next rawfonts package one is used in the ``datablad''.
-\usepackage[only,egtrm]{rawfonts}
-% Handle sorting in reference list
-\usepackage{citesort}
-% Create an index table
-\usepackage{makeidx}
 
-\newcommand{\smallverbatimfile}[1]{{\footnotesize\verbatimfile{#1}}}
-\newcommand{\component}[5]{\begin{tabular}{|lp{0.7\textwidth}|}\hline {\bf Name:} & #1 \\ \hline {\bf Author:} & #2 \\ \hline {\bf Input parameters} & #3 \\ \hline {\bf Optional parameters} & #4 \\ \hline {\bf Notes} & #5 \\ \hline \end{tabular} \\ \noindent }
-
-\def\reportnum{Ris{\o}--R--1538(rev.ed.)(EN)}
-
-%\oddsidemargin 0cm
-%\evensidemargin 0cm
-\addtolength{\hoffset}{-1.4cm}
-\topmargin 0cm
-\textwidth 15cm
-\textheight 22cm
-\addtolength{\footskip}{1.6pt}
-\addtolength{\headheight}{1.6pt}
-
-\pagestyle{fancy}
-\fancyhf{}
-\fancyfoot[LE,RO]{\thepage}
-\fancyfoot[LO,RE]{\reportnum}
-\renewcommand{\headrulewidth}{0pt}
-\renewcommand{\footrulewidth}{0pt}
-
-\fancypagestyle{plain}{%
-\fancyhf{}
-\fancyfoot[LE,RO]{\thepage}
-\fancyfoot[RE,LO]{\reportnum}
-\renewcommand{\headrulewidth}{0pt}
-\renewcommand{\footrulewidth}{0pt}}
-
-\newcommand{\MCS}{{McStas}}
-\newcommand{\version}{{1.12}}
-\newcommand{\reldate}{{May, 2008}}
-\newcommand{\Ombold}{\mbox{\boldmath $\Omega$}}
-
-% enable index generation
-\makeindex
-
-%\title{Component manual\\ to the neutron ray-tracing package
-% \MCS ,\\ version \version}
-%\author{Kim Lefmann, Peter Kj\ae r Willendrup, and Kristian Nielsen, \\
-% Materials Research Department, \\
-% Ris\o\ National Laboratory, 4000 Roskilde, Denmark;\\
-% Emmanuel Farhi and Klaus Lieutenant \\ ILL, Grenoble, France}
-%\date{\reldate \\[2\baselineskip]
-%\begin{center}
-%  \includegraphics[width=4.5in]{figures/vanadium-surf-2.eps}
-%\end{center}
-%\includegraphics[width=0.45\myheight]{risoe-logo.eps}%
-%}
-
-% The following definitions relate to the appendix on polarisation
-\usepackage[dvips]{epsfig}
-\usepackage{amsmath}
-\parindent=0pt
-
+\input{preamble_comp.tex}
 \newcommand{\kappaB}{\mbox{\boldmath $\kappa$}}
 \newcommand{\etaB}{\mbox{\boldmath $\eta$}}
 \newcommand{\alphaB}{\mbox{\boldmath $\alpha$}}
@@ -129,7 +61,7 @@
 \begin{document}
 
 %\maketitle
-\input{risoe-rep_comp-title}
+%\input{risoe-rep_comp-title}
 %\begin{center}
 %  \includegraphics[width=4.5in]{figures/sqw.eps}
 %\end{center}
@@ -165,11 +97,11 @@
 \include{terms}       % as in manual
 
 \addcontentsline{toc}{chapter}{\protect\numberline{}{Bibliography}}
-\bibliography{mcstas}
-\bibliographystyle{jacs}
+%\bibliography{mcstas}
+%\bibliographystyle{jacs}
 
 \addcontentsline{toc}{chapter}{\protect\numberline{}{Index and keywords}}
-\printindex
-\include{datablad_comp}
+%\printindex
+%\include{datablad_comp}
 
 \end{document}
