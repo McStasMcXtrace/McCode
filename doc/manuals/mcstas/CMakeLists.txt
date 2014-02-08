@@ -58,6 +58,12 @@ endforeach()
 
 file(COPY figures DESTINATION "${WORK}")
 
+file(COPY sources DESTINATION "${WORK}")
+file(COPY samples DESTINATION "${WORK}")
+file(COPY optics DESTINATION "${WORK}")
+file(COPY monitors DESTINATION "${WORK}")
+file(COPY misc DESTINATION "${WORK}")
+
 foreach(NAME manual Component_manual)
   add_custom_command(
     OUTPUT "${WORK}/${NAME}.pdf"
