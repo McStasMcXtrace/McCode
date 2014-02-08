@@ -35,7 +35,7 @@
 * yheight: [m] Height of sample in y direction
 * sigma_abs:[barns] Absorption cross section at 2200 m/s per atom
 * sigma_inc:[barns] Incoherent scattering cross section per atom
-* a:      [AA] Lattice constant (fcc)
+* a:      [AA] fcc Lattice constant 
 * b:      [fm] Scattering length
 * M:    [a.u.] Atomic mass
 * c:[meV/AA^(-1)] Velocity of sound
@@ -43,12 +43,12 @@
 * T:       [K] Temperature
 * focus_r: [m] Radius of sphere containing target.
 * focus_xw:[m] horiz. dimension of a rectangular area
-* focus_yh:[m] vert.  dimension of a rectangular area [m]
-* focus_aw:[m] horiz. angular dimension of a rectangular area [deg]
-* focus_ah:[m] vert.  angular dimension of a rectangular area [deg]
+* focus_yh:[m] vert.  dimension of a rectangular area 
+* focus_aw:[deg] horiz. angular dimension of a rectangular area 
+* focus_ah:[deg] vert.  angular dimension of a rectangular area 
 * target_x:[m] position of target to focus at . Transverse coordinate
-* target_y:[m] position of target to focus at [m]. Vertical coordinate
-* target_z:[m] position of target to focus at [m]. Straight ahead.
+* target_y:[m] position of target to focus at. Vertical coordinate
+* target_z:[m] position of target to focus at. Straight ahead.
 * target_index: relative index of component to focus at, e.g. next is +1 [1]
 *
 * OUTPUT PARAMETERS:
