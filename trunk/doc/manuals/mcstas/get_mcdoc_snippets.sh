@@ -4,7 +4,7 @@
 #
 #
 
-BASEDIR=../../../mcstas-comps/
+BASEDIR=$2/../../../mcstas-comps/
 DIRNAME=`basename $1`
 PW=$PWD
 HEADER=$PWD/COMPheader
@@ -18,3 +18,4 @@ do
     cat $FOOTER >> $COMP.parms
     cd $PW
 done
+touch $DIRNAME.done

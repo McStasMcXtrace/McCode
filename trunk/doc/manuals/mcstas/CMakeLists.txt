@@ -63,10 +63,25 @@ file(COPY samples DESTINATION "${WORK}")
 file(COPY optics DESTINATION "${WORK}")
 file(COPY monitors DESTINATION "${WORK}")
 file(COPY misc DESTINATION "${WORK}")
+file(COPY COMPheader DESTINATION "${WORK}")
+file(COPY COMPfooter DESTINATION "${WORK}")
+
+foreach(NAME sources samples optics monitors misc)
+  add_custom_command(
+    OUTPUT "${WORK}/${NAME}.done"
+    COMMAND "${PROJECT_SOURCE_DIR}/get_mcdoc_snippets.sh" "${NAME} ${PROJECT_SOURCE_DIR}";
+    WORKING_DIRECTORY "${WORK}"
+    )
+endforeach()
 
 foreach(NAME manual Component_manual)
   add_custom_command(
     OUTPUT "${WORK}/${NAME}.pdf"
+    DEPENDS "${WORK}/sources.done"
+    DEPENDS "${WORK}/samples.done"
+    DEPENDS "${WORK}/optics.done"
+    DEPENDS "${WORK}/monitors.done"
+    DEPENDS "${WORK}/misc.done"
     COMMAND "${PROJECT_SOURCE_DIR}/compile_pdf.sh" "${NAME}";
     WORKING_DIRECTORY "${WORK}"
     )
@@ -74,6 +89,7 @@ foreach(NAME manual Component_manual)
     "COMPILE_MANUAL_${NAME}" ALL DEPENDS "${WORK}/McCode" "${WORK}/${NAME}.pdf"
     )
 endforeach()
+
 
 install(FILES "${WORK}/manual.pdf"
   DESTINATION "${MANDEST}"
