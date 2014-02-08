@@ -9,7 +9,7 @@ DIRNAME=`basename $1`
 PW=$PWD
 for COMP in `cat $DIRNAME/mcdoc_index`
 do
-    cd $BASEDIR/$DIRNAME/
-    mcdoc -t ./$COMP.comp > $PW/$DIRNAME/$COMP.txt
+    cd $DIRNAME/
+    mcdoc -t $COMP.comp | grep -A1000 \#\ Input | grep -B1000 \#\ Output | grep -v \# > $COMP.parms
     cd $PW
 done
