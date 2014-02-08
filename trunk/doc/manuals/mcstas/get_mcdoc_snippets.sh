@@ -5,9 +5,11 @@
 #
 
 BASEDIR=../../../mcstas-comps/
-DIRNAME=$1
-
+DIRNAME=`basename $1`
+PW=$PWD
 for COMP in `cat $DIRNAME/mcdoc_index`
 do
-    mcdoc -t $BASEDIR/$COMP.comp > $DIRNAME/$COMP.txt
+    cd $BASEDIR/$DIRNAME/
+    mcdoc -t ./$COMP.comp > $PW/$DIRNAME/$COMP.txt
+    cd $PW
 done
