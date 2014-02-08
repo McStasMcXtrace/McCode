@@ -1,4 +1,3 @@
 {\scriptsize
-\begin{tabular}[h!]{|p{0.2\columnwidth} |p{0.1\columnwidth}|p{0.65\columnwidth}|}
-\hline
-{\bf Param. = val} & {\bf Unit} & {\bf Description} 
+\begin{lstlisting}
+<Parameter = value>, [Unit], Description
