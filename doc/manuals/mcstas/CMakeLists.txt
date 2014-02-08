@@ -63,6 +63,7 @@ file(COPY samples DESTINATION "${WORK}")
 file(COPY optics DESTINATION "${WORK}")
 file(COPY monitors DESTINATION "${WORK}")
 file(COPY misc DESTINATION "${WORK}")
+file(COPY COMPprefix DESTINATION "${WORK}")
 file(COPY COMPheader DESTINATION "${WORK}")
 file(COPY COMPfooter DESTINATION "${WORK}")
 
