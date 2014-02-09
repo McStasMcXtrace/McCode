@@ -4,7 +4,7 @@ import os
 
 VERSION = "mcrun @MCCODE_VERSION@"
 
-MCCODE_BIN = "@MCCODE_BIN@"
+MCCODE_BIN = "@FLAVOR@"
 OUT_SUFFIX = "@OUT_SUFFIX@"
 
 

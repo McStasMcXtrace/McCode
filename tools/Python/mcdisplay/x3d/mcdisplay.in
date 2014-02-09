@@ -26,5 +26,5 @@ else
     echo ""
 
     # Try old Perl-version of mcplot if Python version cannot run
-    ${TOOL}-${VERS} $*
+    ${TOOL} $*
 fi
