@@ -114,8 +114,8 @@ foreach(NAME ${SOURCENAMES}
 
   install(
     PROGRAMS "${WORK}/${P}${NAME}"
-    DESTINATION ${bin}
-    RENAME "${P}${NAME}${PROGRAM_SUFFIX}${DOT_PERL_SUFFIX}"
+    DESTINATION ${lib}/${MCCODE_NAME}/bin
+    RENAME "${P}${NAME}${DOT_PERL_SUFFIX}"
   )
 endforeach()
 
