@@ -322,7 +322,7 @@ macro(installMCCODE)
       configure_file(
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${name}
-	      )
+	      @ONLY)
       install(PROGRAMS ${WORK}/support/${name} DESTINATION ${lib}/${MCCODE_NAME}/)
     endforeach()
     
