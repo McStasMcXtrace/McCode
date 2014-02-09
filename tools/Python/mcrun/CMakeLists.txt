@@ -112,7 +112,7 @@ if(NOT WINDOWS)
 
   install(
     PROGRAMS "${WORK}/${P}run-py"
-    DESTINATION ${bin}
-    RENAME "${P}run${PROGRAM_SUFFIX}-py${DOT_PYTHON_SUFFIX}"
+    DESTINATION ${lib}/${FLAVOR}-${MCCODE_VERSION}/bin
+    RENAME "${P}run-py${DOT_PYTHON_SUFFIX}"
     )
 endif()

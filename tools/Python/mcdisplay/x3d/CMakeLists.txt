@@ -119,7 +119,7 @@ if(NOT WINDOWS)
 
   install(
     PROGRAMS "${WORK}/${P}display-py"
-    DESTINATION ${bin}
-    RENAME "${P}display-${MCCODE_VERSION}-py${DOT_PYTHON_SUFFIX}"
+    DESTINATION ${lib}/${FLAVOR}-${MCCODE_VERSION}/bin
+    RENAME "${P}display-x3d-py${DOT_PYTHON_SUFFIX}"
     )
 endif()

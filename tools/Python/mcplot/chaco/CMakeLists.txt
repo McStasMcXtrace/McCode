@@ -116,7 +116,7 @@ if(NOT WINDOWS)
 
   install(
     PROGRAMS "${WORK}/${P}plot-py"
-    DESTINATION ${bin}
-    RENAME "${P}plot-${MCCODE_VERSION}-py${DOT_PYTHON_SUFFIX}"
+    DESTINATION ${lib}/${FLAVOR}-${MCCODE_VERSION}/bin
+    RENAME "${P}plot-chaco-py${DOT_PYTHON_SUFFIX}"
     )
 endif()

@@ -110,7 +110,7 @@ if(NOT WINDOWS)
 
   install(
     PROGRAMS "${WORK}/${P}plot-py"
-    DESTINATION ${bin}
-    RENAME "${P}plot-${MCCODE_VERSION}-matplotlib${DOT_PYTHON_SUFFIX}"
+    DESTINATION ${lib}/${FLAVOR}-${MCCODE_VERSION}/bin
+    RENAME "${P}plot-matplotlib-py${DOT_PYTHON_SUFFIX}"
     )
 endif()
