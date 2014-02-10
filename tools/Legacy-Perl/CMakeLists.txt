@@ -111,12 +111,20 @@ foreach(NAME ${SOURCENAMES}
   add_custom_target(
     "FIX_PERL_${NAME}" ALL DEPENDS "${WORK}/${P}${NAME}"
     )
-
-  install(
-    PROGRAMS "${WORK}/${P}${NAME}"
-    DESTINATION ${lib}/${MCCODE_NAME}/bin
-    RENAME "${P}${NAME}${DOT_PERL_SUFFIX}"
-  )
+  
+  if(NOT WINDOWS)
+    install(
+      PROGRAMS "${WORK}/${P}${NAME}"
+      DESTINATION ${lib}/${MCCODE_NAME}/bin
+      RENAME "${P}${NAME}${DOT_PERL_SUFFIX}"
+      )
+  else()
+    install(
+      PROGRAMS "${WORK}/${P}${NAME}"
+      DESTINATION ${bin}
+      RENAME "${P}${NAME}${DOT_PERL_SUFFIX}"
+      )
+  endif()
 endforeach()
 
 
