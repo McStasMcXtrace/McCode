@@ -31,10 +31,109 @@
 * Modified by: PW May-June 2011: version 1.12c (re-release)
 * Modified by: PW November 2012: version 2.0RC1 (pre-release)
 * Modified by: PW December 2012: version 2.0RC2 (pre-release)
-* This file is part of McStas  version 2.0, released December 21st, 2012.
+* Modified by: PW February 2014: version 2.1RC1 (pre-release)
+* This file is part of McStas  version 2.1, released February 2014.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v2.1, February, 2014
+
+ McStas 2.1 is the second release in the 2.x series and fixes various issues with McStas 2.0
+
+ Thanks:
+ - Thanks to all contributors of components, instruments etc.! This is what Open Source
+   and McStas is all about!
+ - Thanks to Jonas Stein for helping us modernize the TeX documentation!
+ 
+ General:
+ - Use of STATE_PARAMETERS and POLARIZATION parameters is no longer supported!
+   If you have home-grown components using these, you will get this type of error with 
+   McStas 2.1:
+
+      Translating instrument definition 'BNL_H8.instr' into C ...
+      mcstas -t -o BNL_H8.c BNL_H8.instr
+      Compiling simulation BNL_H8.instr
+      syntax error, unexpected TOK_ID, expecting END at line 36.
+
+
+      Fatal error: Errors encountered during autoload of component Arm. The component 
+      definition has syntax errors.
+
+
+      Program aborted.
+
+   These types of errors can in most cases be handled by simply removing/commenting out
+   the STATE and POLARISATION parameter lines in the top of the component, i.e.:
+   /* STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p) */
+   /* POLARISATION PARAMETERS (sx,sy,sz) */
+   
+   Should you fail to get this working after trying, feel free to send us a tgz or zip
+   with all needed instrument- and component code to mcstas-users@mcstas.org and we will 
+   try to help.
+   
+ - As of this release, McStas is distributed using easy-to-use meta-packages for the Windows
+   and Mac OS X systems. The content of these packages are:
+
+   * Windows:
+     - Strawberry Perl (including a gcc compiler)
+     - Perl PPD extensions for PDL, PGPLOT and Tk
+     - The core mcstas package
+     - The mcstas component package, with comps, instruments, datafiles
+     - The mcstas Perl tools package with mcgui, mcplot etc.
+     - The mcstas manuals package with PDF docs
+     - For VRML and X3D viewing of instruments, we recommend Instant Player from
+       http://www.instantreality.org
+     - ! If you want to use our OPTIONAL Python based packages, these need to be installed
+       by hand !
+       - Needed dependencies for the Python packages are all available in the Python(x,y)
+       	 package available from https://code.google.com/p/pythonxy/
+
+   * Mac OS X:
+     - Tk perl package for mcgui
+     - SciPDL package for mcplot, including the core pgplot package
+     - The core mcstas package
+     - The mcstas component package, with comps, instruments, datafiles
+     - The mcstas Perl tools package with mcgui, mcplot etc.
+     - The mcstas manuals package with PDF docs
+     - For VRML and X3D viewing of instruments, we recommend Instant Player from
+       http://www.instantreality.org
+     - ! If you want to use our OPTIONAL Python based packages, select these for installation
+       in the Metapackage installer !
+       - For the Python mcrun, you need to install PyYAML from http://www.pyyaml.org/wiki/PyYAML
+       - Most other needed dependencies for the Python packages are available through the 
+       	 SciPy superpack available from http://fonnesbeck.github.io/ScipySuperpack/
+       - You may also choose the commerical Anaconda or Enthought Python distributions
+
+ - For the Linux (Debian and RPM based) systems we now provide a set of APT and YUM repos,
+   see http://www.mcstas.org/download/apt_n_yum/
+     - Simply choose to install mcstas-suite-perl (perl tools), mcstas-suite-python (python tools)
+       or mcstas-suite (both toolsets) and all dependencies should be taken care of
+
+ - A given McStas 2.x release is "self-contained" and can be installed in parallel with other of
+   McStas and McXtrace (i.e. run mcgui-2.0RC2 to select a specific version)
+ - We provide a "migration tool" for Unix based systems (i.e. Linux & Mac) to let your already
+   installed McStas 1.x or 2.0 co-exist with the new 2.1
+ - Using McStas with NeXus does no longer require recompilation if you only want to _write_ NeXus.
+   (Simply install NeXus and update your MCSTAS_CFLAGS to include -lNeXus -DUSE_NEXUS). For the
+   conversion of files using mcformat NeXus must still be available at compile time
+
+ Core & runtime code:
+ - Backward compatibility 1: As written above, STATE and POLARIZATION parameters are no longer supported!
+ - Complete rework of the DETECTOR_OUT infrastructure:
+   * Simplified code-structure
+   * Proper support for MPI when generating NeXus event lists
+ - New logic wrt. negative time propagation: Neutrons are restored rather than ABSORB'ed
+
+ New Components:
+ FIXME!!
+
+ Updated Components:
+ FIXME!!
+
+ Instruments:
+ FIXME!!
+
+
 Changes in McStas v2.0, December 21st, 2012
 
  McStas 2.0 is the long-awaited major release of McStas
@@ -177,9 +276,8 @@ Changes in McStas v2.0, December 21st, 2012
 
  New Components:
  - Sample_nxs.comp from Mirko Boin, HZB. Diffraction/imaging oriented sample where one defines the structure
-   by means of the NXS crystallography library which is now also included with McStas. Comes with the test-
-   instruments Test_Sample_nxs_diffraction.instr and Test_Sample_nxs_imaging.instr. NOTE: Special compilation 
-   required, see instrument source codes!
+   by means of the NXS crystallography library which is now also included with McStas. The component comes with the test-
+   instruments Test_Sample_nxs_diffraction.instr and Test_Sample_nxs_imaging.instr. 
  - Elliptic_guide_gravity.comp from Henrik Carlsen, NBI. Analytical approach to describing an elliptical guide
    geometry where gravity is taken into account. Included in the Reflectometer.instr from Anette Vickery, NBI.
  - Suite of SANS-samples from Martin Cramer Pedersen, NBI. Various approaches to describing SANS diffraction
