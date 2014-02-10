@@ -84,11 +84,11 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Select prefix
 if(${enable_mcstas})
   set(P "mc")
-  set(SOURCENAMES config daemon display doc formatgui
+  set(SOURCENAMES daemon display doc formatgui
       gui plot resplot run stas2vitess )
 else()
   set(P "mx")
-  set(SOURCENAMES config daemon display doc formatgui
+  set(SOURCENAMES daemon display doc formatgui
       gui plot run )
 endif()
 
