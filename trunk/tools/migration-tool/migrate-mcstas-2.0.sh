@@ -26,7 +26,7 @@ BINS="mcdaemon mcdisplay mcdoc mcformat mcformatgui mcgui mcplot \
       mccode-select-mcstas-2.0 mcconfig mcconfig-2.0 mcconvert-2.0 mcdaemon-2.0 \
       mcdisplay-2.0 mcdoc-2.0 mcformat-2.0 mcformatgui-2.0 mcgui-2.0 \
       mcplot-2.0 mcplot-2.0-matplotlib  mcplot-2.0-py mcresplot-2.0 \
-      mcrun-2.0 mcrun-2.0-py mcstas-2.0 mcstas2vitess-2.0"
+      mcrun-2.0 mcrun-2.0-py mcstas-2.0 mcstas2vitess-2.0 mcdisplay-2.0-py"
 
 # Check if system is Debian-like and has dpkg (e.g. Ubuntu)
 HAS_DPKG=false;
