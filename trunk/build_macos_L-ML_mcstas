@@ -21,6 +21,7 @@ if [ "x$2" != "x" ]; then
     OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
     
     cd dist
+    DISTDIR=$PWD
     unzip ../support/MacOSX/Perl-Tk/Tk-*${OSXVER}*zip
     unzip ../support/MacOSX/SciPDL/SciPDL-v2.4.10-Lion.pkg.zip
     cd -
@@ -30,9 +31,12 @@ if [ "x$2" != "x" ]; then
     cd dist/McStas-Metapackage.pmdoc    
 
     REGEX="s/@VERSION@/${1}/g"
+    REGEXDIR="s+@DISTDIR@+${DISTDIR}+g"
     
     find . -name \*xml -exec sed -i\.bak $REGEX \{\} \;
+    find . -name \*xml -exec sed -i\.bak2 $REGEXDIR \{\} \;
     rm *.bak
+    rm *.bak2
     cd ..
     cp -rp ../support/MacOSX/McStas.app McStas-${1}.app
     cd McStas-${1}.app/Contents/Resources
