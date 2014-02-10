@@ -20,6 +20,7 @@ if [ "x$2" != "x" ]; then
     OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
     
     cd dist
+    DISTDIR=$PWD
     # For now, use the Tk for perl5.12 from Mountain Lion...
     unzip ../support/MacOSX/Perl-Tk/Tk-*10_8*zip
     unzip ../support/MacOSX/SciPDL/SciPDL-v2.4.10-Lion.pkg.zip
