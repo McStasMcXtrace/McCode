@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/perl 
 #
 # Main perl script for running scans (subsequent simulations) with McStas
 #
@@ -36,6 +36,7 @@ use constant { true => 1, false => 0 };
 use lib $MCSTAS::perl_dir;
 use lib $MCSTAS::perl_modules;
 require "mccode_config.perl";
+use POSIX qw(_exit);
 
 # Overload with user's personal config
 if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl") {
@@ -55,6 +56,7 @@ autoflush STDOUT 1;
 # Various parameters determined by the command line.
 my ($sim_def, $force_compile, $data_file);
 our $data_dir=undef;            # where to store data: undef=--no-output-files
+our $no_output_files;
 my $ncount = 1e6;               # Number of neutron histories in one simulation
 our $numpoints = 1;             # Number of points in scan (if any)
 our @params = ();               # List of input parameters
@@ -198,7 +200,10 @@ sub parse_args {
             $exec_test=1;
         } elsif(/^--no-cflags$/) {
             $cflags=0;
-        } elsif(/^--(data-only|help|info|trace|no-output-files|gravitation)$/) {
+	 } elsif(/^--(no-output-files)$/) {
+	    $no_output_files=1;
+	    push @options, "--$1";
+        } elsif(/^--(data-only|help|info|trace|gravitation)$/) {
             push @options, "--$1";
         } elsif(/^-([ahitg])$/) {
             push @options, "-$1";
@@ -215,6 +220,13 @@ sub parse_args {
                 $sim_def = $_;
             }
         }
+    }
+    
+    if ((!($no_output_files)) && (!($data_dir))) {
+      $data_dir = ${sim_def};
+      $data_dir =~ s/\.instr//;
+      $data_dir .= '_' . POSIX::strftime("%Y%m%d_%H%M%S", localtime);
+      print "*** No directory given - placing data in $data_dir ***\n";
     }
 
     # tests for grid/mpi support
@@ -341,7 +353,7 @@ DOC:      Please visit http://www.mcxtrace.org/
 ENDMX
     }
     die "$usage\n";
-  }unless $sim_def || $exec_test;
+  } unless $sim_def || $exec_test;
 
 if ($numpoints < 1) { $numpoints=1; }
 }
