@@ -5,6 +5,7 @@ build_debs_mcstas <release name>
 build_debs_mcxtrace <release name>
 Dependencies:
 cmake cpack texlive latexmk bibtex gcc flex bison libc6-dev (Check on clean system if this is enough!!)
+Configuration - dpkg-reconfigure dash, select not to use dash as /bin/sh
 
 
 
@@ -13,6 +14,7 @@ build_rpms_mcstas <release name>
 build_rpms_mcxtrace <release name>
 Dependencies:
 cmake cpack texlive latexmk bibtex gcc flex bison libc6-dev (Check on clean system if this is enough!!)
+Configuration - dpkg-reconfigure dash, select not to use dash as /bin/sh
 
 
 
@@ -21,6 +23,7 @@ build_src_bin_mcstas <release name>
 build_src_bin_mcxtrace
 Dependencies:
 cmake cpack texlive latexmk bibtex gcc flex bison libc6-dev (Check on clean system if this is enough!!)
+Configuration - dpkg-reconfigure dash, select not to use dash as /bin/sh
 
 
 
