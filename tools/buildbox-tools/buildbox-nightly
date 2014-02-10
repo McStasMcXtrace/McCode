@@ -86,9 +86,9 @@ ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH}/dist \&\& tar cfz mccode-OSX-${VER}.tgz 
 
 echo Running the tests - McStas!
 echo ...Linux
-ssh ${LINUSER}@${LINHOST} mcrun-${VER} --test  &> mcstas_${VER}_linux.log &
+ssh ${LINUSER}@${LINHOST} mcrun --test  &> mcstas_${VER}_linux.log &
 echo ...Mac OS X
-ssh ${OSXUSER}@${OSXHOST} export PATH=/usr/local/bin:\${PATH} \&\& mcrun-${VER} --test  &> mcstas_${VER}_osx.log &
+ssh ${OSXUSER}@${OSXHOST} export PATH=/usr/local/bin:\${PATH} \&\& mcrun --test  &> mcstas_${VER}_osx.log &
 echo ...Windows
 ssh ${WINUSER}@${WINHOST} c\:\\\\mcstas-${VER}\\\\bin\\\\mccodetest.bat &> mcstas_${VER}_windows.log &
 
@@ -96,9 +96,9 @@ wait
 
 echo Running the tests - McXtrace!
 echo ...Linux
-ssh ${LINUSER}@${LINHOST} mxrun-${VER} --test  &> mcxtrace_${VER}_linux.log &
+ssh ${LINUSER}@${LINHOST} mxrun --test  &> mcxtrace_${VER}_linux.log &
 echo ...Mac OS X
-ssh ${OSXUSER}@${OSXHOST} export PATH=/usr/local/bin:\${PATH} \&\& mxrun-${VER} --test  &> mcxtrace_${VER}_osx.log &
+ssh ${OSXUSER}@${OSXHOST} export PATH=/usr/local/bin:\${PATH} \&\& mxrun --test  &> mcxtrace_${VER}_osx.log &
 echo ...Windows
 ssh ${WINUSER}@${WINHOST} c\:\\\\mcxtrace-${VER}\\\\bin\\\\mccodetest.bat &> mcxtrace_${VER}_windows.log &
 
