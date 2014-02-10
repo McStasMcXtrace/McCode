@@ -36,7 +36,7 @@ build_macos_SL_mcstas  <release name> <meta>   / Snow Leopard
 build_macos_SL_mcxtrace  <release name> <meta>   / Snow Leopard
 Dependencies:
 cmake cpack texlive/MacTeX Xcode with commandline tools PackageMaker.app  (Check on clean system if this is enough!!)
-
+!! If need for any MacPorts / Fink / Brew software on the build machine - please add to END OF THE PATH variable rather than front... !!
 
 
 * Windows packages for 32bit and 64bit systems. Input parameters - 1) release "name", i.e. 2.1 2) flag to indicate if we are building a 'meta' package. Built on Linux!!
