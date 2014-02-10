@@ -280,18 +280,6 @@ macro(installMCCODE)
   # Shared library, lib
   installLib("${WORK}/lib/")
 
-  # Binaries
-  install (
-    PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
-    DESTINATION ${lib}/${MCCODE_NAME}/bin
-    RENAME "${FLAVOR}${DOT_EXE_SUFFIX}"
-  )
-  install (
-    PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
-    DESTINATION ${lib}/${MCCODE_NAME}/bin
-    RENAME "${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
-  )
-
   if(NOT WINDOWS)
     # Man pages
     install (
@@ -305,18 +293,15 @@ macro(installMCCODE)
       RENAME "${FLAVOR_FMT}${PROGRAM_SUFFIX}.1"
       )
 
-    # # McCode select scripts
-    # install(
-    #   PROGRAMS "${PROJECT_SOURCE_DIR}/mccode-select/mccode-select.sh"
-    #   DESTINATION ${lib}/${FLAVOR}${PROGRAM_SUFFIX}/bin
-    #   RENAME "mccode-select"
-    #   )
-    # install(
-    #   PROGRAMS "${PROJECT_SOURCE_DIR}/mccode-select/mccode-select-bundle.sh"
-    #   DESTINATION ${lib}/${FLAVOR}${PROGRAM_SUFFIX}/bin
-    #   RENAME "mccode-select-bundle"
-    #   )
-    # # Shell script snippets
+    # Binaries
+    install (
+      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
+      DESTINATION ${lib}/${MCCODE_NAME}/bin
+    )
+    install (
+      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
+      DESTINATION ${lib}/${MCCODE_NAME}/bin
+    )
 
     foreach (name environment module)
       configure_file(
@@ -346,6 +331,16 @@ macro(installMCCODE)
 	      )
       install(PROGRAMS ${WORK}/support/${MCCODE_PREFIX}${name} DESTINATION ${bin})
     endforeach()
+
+    # Binaries
+    install (
+      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
+      DESTINATION ${bin}
+    )
+    install (
+      PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
+      DESTINATION ${bin}
+    )
 
     install(PROGRAMS
       cmake/support/install-scripts/postsetup.bat
