@@ -16,12 +16,6 @@ DIRECTORY="~"
 
 # paths
 PATH=/usr/local/lib/mcstas-@VERSION@/bin:/usr/local/bin:/sw/bin:/sw/sbin:/opt/local/bin:/opt/local/sbin:/usr/X11R6/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/bin/X11:/usr/local/bin/X11:$PATH
-DYLD_LIBRARY_PATH=/sw/lib:/opt/local/lib:$DYLD_LIBRARY_PATH
-LD_LIBRARY_PATH=/sw/lib:/opt/local/lib:$LD_LIBRARY_PATH
-
-# environment variables
-PATH=/usr/local/bin:$PATH
-
 
 # require X11
 USEX11=1
