@@ -29,20 +29,20 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ESS_Brilliance_2012()
+DEFINE INSTRUMENT ESS_Brilliance_2012(string srcdef="2013", height=0.01,acc_power=5,coldfrac=1)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-  double lambdamin,lambdamax;
+  double lambdamin,lambdamax; 
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-  lambdamin=0.5;
+  lambdamin=0.1;
   lambdamax=20;
 %}
 
@@ -60,14 +60,18 @@ TRACE
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
-COMPONENT Source=ESS_moderator(yheight=0.01,width_c=0.01,cyl_radius=0.0,dist=1,focus_xw=0.01,focus_yh=0.01,Lmin=lambdamin,Lmax=lambdamax)
+  COMPONENT Source=ESS_moderator(yheight=height,width_c=0.01,cyl_radius=0.0,dist=1,focus_xw=0.01,focus_yh=0.01,
+				 Lmin=lambdamin,Lmax=lambdamax,sourcedef=srcdef,acc_power=acc_power,cold_frac=coldfrac)
   AT (0, 0, 0) RELATIVE Origin
+EXTEND %{
+  //printf("Final state %g %g %g %g %g %g with p %g and t %g\n",x,y,z,vx,vy,vz,p,t);
+%}
 
 COMPONENT Brillmon = Brilliance_monitor(
     nlam = 196, nt = 601, filename = "brill", t_0 = 0,
     t_1 = 6000, lambda_0 = lambdamin, lambda_1 = lambdamax,
-    Freq =14.0)
-  AT (0, 0, 0.01) RELATIVE Source
+    Freq =14.0, toflambda=1, tofcuts=1)
+  AT (0, 0, .9) RELATIVE Source
 
 
 /* This section is executed when the simulation ends (C code). Other    */
