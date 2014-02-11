@@ -48,8 +48,8 @@ typedef double (*functype)(double* t , double* p, double lambda,  double tfocus_
 /* Maths for the curves below */
 double Mezei_M(double l, double temp);
 double Mezei_F(double t, double tau, int n);
-double Schoenfeldt_cold(double I_SD, double alpha_SD, double lambda_SD, double alpha_l, double lambda_l, double Exponent, double I_1, double alpha_1, double I_2, double alpha_2, double lambda);
-double Schoenfeldt_thermal(double I_th, double T, double I_SD, double alpha, double lambda_cf, double lambda);
+double Schoenfeldt_cold(double I_SD, double alpha_SD, double lambda_SD, double alpha_l, double lambda_l, double Exponent, double I_1, double alpha_1, double I_2, double alpha_2, double lambda, double t);
+double Schoenfeldt_thermal(double I_th, double T, double I_SD, double alpha, double lambda_cf, double lambda, double t);
 
 /* List of brilliance definitions */
 double ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
@@ -62,6 +62,9 @@ double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
 /* List of geometry definitions - mainly for mcdisplay... */
 void ESS_mcdisplay_flat(double geometry);
 void ESS_mcdisplay_TDRlike(double geometry);
+
+double iExp(double t, double tau);
+double PulseShape(double t,double tau,double n);
 
 /* end of ess_source-lib.h */
 #endif
