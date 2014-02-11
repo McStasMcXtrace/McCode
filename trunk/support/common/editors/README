@@ -13,7 +13,8 @@ GEDIT (Gnome):
 mcstas1.lang and mcstas2.lang are for usage under Gnome. Gedit uses gtksourceview. The 
 syntax definition file should be copied in e.g. (Correct path on a Debian system)
   mcstas1.lang -> /usr/share/gtksourceview-1.0/language-specs/ 
-  mcstas2.lang -> /usr/share/gtksourceview-2.0/language-specs/ 
+  mcstas2.lang -> /usr/share/gtksourceview-2.0/language-specs/
+  mcstas3.lang -> /usr/share/gtksourceview-3.0/language-specs/ 
 
 (X)EMACS:
 McStas is not C only, but quite close. The contents of the provided emacs
