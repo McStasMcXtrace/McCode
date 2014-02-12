@@ -138,7 +138,7 @@ echo "";
 # Write environment script info to Enviroment script
 cat <<EOF > $ENV_SCRIPT
 #!/bin/sh
-export MCSTAS=$MCSTAS_NEWLIBDIR/mcstas
+export MCSTAS=$MCSTAS_NEWLIBDIR/
 export PATH=$MCSTAS_NEWBINDIR:\$PATH
 echo
 echo The new shell started here is now set up for running this version of mcstas:
