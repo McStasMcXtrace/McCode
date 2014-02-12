@@ -1134,7 +1134,7 @@ sub menu_run_simulation {
         push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'} ne "" && $newsi->{'Seed'} ne 0;
         push @command, "--dir=$OutDir" if ($newsi->{'Dir'} && !$newsi->{'Mode'}==1);
         if ($newsi->{'Force'} eq 1) {
-          if (-e $OutDir) {
+          if (-e $OutDir && !($OutDir eq ("." || "./" || ".\\"))) {
             rmtree($OutDir,0,1);
           }
         }

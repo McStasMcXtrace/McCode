@@ -222,13 +222,20 @@ sub parse_args {
         }
     }
     
+    # If no data dir is explicitly given, generate dirname from time stamp
     if ((!($no_output_files)) && (!($data_dir))) {
       $data_dir = ${sim_def};
       $data_dir =~ s/\.instr//;
       $data_dir .= '_' . POSIX::strftime("%Y%m%d_%H%M%S", localtime);
       print "*** No directory given - placing data in $data_dir ***\n";
     }
-
+    
+    # If data dir '.' is explicitly given, undef it to dump files in current dir
+    if ($data_dir == "." || $data_dir == "./" || $data_dir == ".\\") {
+	print "*** NOTE: Placing your data in . potentially overwriting files ***\n";
+	$data_dir=undef;
+    }
+    
     # tests for grid/mpi support
     if ($mpi_enabled || $multi >= 1) {
       if (! -e $MCSTAS::mcstas_config{'HOSTFILE'}) {
