@@ -43,7 +43,7 @@ Changes in McStas v2.1, February, 2014
  Thanks:
  - Thanks to all contributors of components, instruments etc.! This is what Open Source
    and McStas is all about!
- - Thanks to Jonas Stein for helping us modernize the TeX documentation!
+ - Thanks to Jonas Stein from Uni Cologne for helping us modernize the TeX documentation!
  
  General:
  - Use of STATE_PARAMETERS and POLARIZATION parameters is no longer supported!
@@ -87,6 +87,13 @@ Changes in McStas v2.1, February, 2014
        by hand !
        - Needed dependencies for the Python packages are all available in the Python(x,y)
        	 package available from https://code.google.com/p/pythonxy/
+  
+   - ! If you experience strange behavior from perl/mcgui on Windows like
+       	    a) ppm shell not being able to install the extra Perl packages
+            b) mcgui not being able to run / compile a simulation (all you get is mcrun -- help output)
+     	    c) mcgui not being able to access local component files
+	  - Solution can be to ensure your user has "full control" to the executables in
+	    c:\strawberry\perl\bin (Right-click, Properties, Security, Authenticated users -> Edit)
 
    * Mac OS X:
      - Tk perl package for mcgui
@@ -123,6 +130,12 @@ Changes in McStas v2.1, February, 2014
    * Simplified code-structure
    * Proper support for MPI when generating NeXus event lists
  - New logic wrt. negative time propagation: Neutrons are restored rather than ABSORB'ed
+
+ Tools:
+ - Since 2.0 mcgui and mcrun Python has been generating time-stamped output directories if no output dir 
+   was specified. The legacy mcrun Perl now exhibit this behavior also. This is balanced by the possiblitiy
+   to choose . (dot) as the output directory - then the legacy behaviour of storing data in the working
+   directory is enabled.
 
  New Components:
  FIXME!!
