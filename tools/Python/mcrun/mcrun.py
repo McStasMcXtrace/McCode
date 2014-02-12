@@ -142,6 +142,8 @@ def add_mcstas_options(parser):
         else:
             def is_valid(path):
                 ''' Ensure path to file exists and filename is provided '''
+                if path == "." or path == "./" or path == ".\\":
+                    return True
                 if not dir_exists(dirname(path)):
                     return False
                 return not isdir(abspath(path))
@@ -283,6 +285,9 @@ def main():
     # Inform user of what is happening
     # TODO: More info?
     LOG.info('Using directory: "%s"' % options.dir)
+    if options.dir == "." or options.dir == "./" or options == ".\\":
+        LOG.warning('Existing files in "%s" will be overwritten!' % options.dir)
+        options.dir = '';
 
     # Run McStas
     mcstas = McStas(options.instr)
