@@ -62,7 +62,7 @@
 
   typedef struct struct_table
   {
-    char    filename[256];
+    char    filename[1024];
     long    filesize;
     char   *header;  /* text header, e.g. comments */
     double *data;    /* vector { x[0], y[0], ... x[n-1], y[n-1]... } */

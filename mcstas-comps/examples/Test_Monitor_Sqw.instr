@@ -2,35 +2,41 @@
  *
  * %Identification
  * Written by: E. Farhi
- * Date: Jan 2004
+ * Date: Feb 2014
  * Origin: ILL
  *
  * %INSTRUMENT_SITE: Tests_samples
  *
- * A test instrument for the S(q,w) sample, with furnace/container
+ * A simple ToF with cylindrical/spherical sample, and furnace/cryostat/container. The sample can be hollow.
  *
  * %Description
  * This instrument models a generic, tunable, neutron time-of-flight spectrometer.
  *
- * The incoming flux at the sample brings neutron with 'beam_wavelength' wavelength.
+ * The incoming flux at the sample brings neutrons with 'beam_wavelength_Angs' wavelength.
  * The energy resolution at the sample is given as 'beam_resolution_meV'.
  * The beam size at the sample is set to the sample cross section (e.g. ~2 x 5 cm).
  *
- * The sample geometry is either cylindrical ('sample_radius' and 'sample_height') 
- * or spherical ('sample_height=0'). The sample can be hollow when given a thickness
- * 'sample_thickness', or filled ('sample_thickness=0'). When in cylindrical geometry, 
- * it is surrounded by a container with thickness 'container_thickness'. The container
- * material is specified as a powder file name 'container' in the McStas PowderN format.
+ * The sample geometry is either cylindrical ('sample_radius_m' and 'sample_height_m') 
+ * or spherical ('sample_height_m=0'). The sample can be hollow when given a thickness
+ * 'sample_thickness_m', or filled ('sample_thickness_m=0'). When in cylindrical geometry, 
+ * it is surrounded by a container with thickness 'container_thickness_m'. The container
+ * material is specified as a powder file name 'container' in the McStas Sqw or PowderN format,
+ * e.g. 'Al.laz' or 'Nb.laz'. Setting 'container=0' removes the container.
+ *
  * The sample scattering is characterised by its coherent and incoherent contributions
- * given as 'sample_coh' and 'sample_inc' file names in McStas Sqw format.
+ * given as 'sample_coh' and 'sample_inc' file names in McStas Sqw or PowderN format.
+ * Setting the 'sample_coh=sample_inc=0' removes the sample, e.g. to study the container or 
+ * environment only contribution.
  *
- * The sample and its container are located inside a cylindrical cylinder with radius
- * 'environment_radius' and thickness 'environment_thickness'. The material is set from
- * the 'environment' file name in the McStas PowderN format (e.g. 'Al.laz').
+ * The sample and its container are located inside a cylindrical shield with radius
+ * 'environment_radius_m' and thickness 'environment_thickness_m'. The material is set from
+ * the 'environment' file name in the McStas Sqw or PowderN format (e.g. 'Al.laz'). 
+ * This way, it is possible to estimate the contribution of a cryostat or furnace.
+ * Setting 'environment=0' removes the environment.
  *
- * The detector has a cylindrical geometry, with a radius 'sample_detector_distance'
- * and tubes with height 'detector_height'. The detector covers a -30 to 140 deg angular range
- * with 2.54 cm tubes (the number of tubes is computed from the distance).
+ * The detector has a cylindrical geometry, with a radius 'sample_detector_distance_m'
+ * and tubes with height 'detector_height_m'. The detector covers a -30 to 140 deg angular range
+ * with 2.54 cm diameter tubes (the number of tubes is computed from the distance).
  * The direct beam (non scattered neutrons) is discarded.
  *
  * The detector produces both (angle,tof) and (q,w) data sets, for:
@@ -39,81 +45,86 @@
  *   incoherent single scattering from sample
  *   multiple scattering from sample
  *   scattering from the container and sample environment
+ * The (angle,tof) results are corrected for the parallax effect from the detector height.
  *
  * Known configurations:
  * ILL_IN4:
- *   beam_wavelength=2, beam_resolution_meV=0.5, 
- *   sample_detector_distance=2.0, detector_height=0.3
+ *   beam_wavelength_Angs=2, beam_resolution_meV=0.5, 
+ *   sample_detector_distance_m=2.0, detector_height_m=0.3
  * ILL_IN5:
- *   beam_wavelength=5, beam_resolution_meV=0.1, 
- *   sample_detector_distance=4.0, detector_height=3.0
+ *   beam_wavelength_Angs=5, beam_resolution_meV=0.1, 
+ *   sample_detector_distance_m=4.0, detector_height_m=3.0
  * ILL_IN6:
- *   beam_wavelength=4.1, beam_resolution_meV=0.1, 
- *   sample_detector_distance=2.48, detector_height=1.2
+ *   beam_wavelength_Angs=4.1, beam_resolution_meV=0.1, 
+ *   sample_detector_distance_m=2.48, detector_height_m=1.2
  * PSI_Focus:
- *   beam_wavelength=4.1, beam_resolution_meV=0.1, 
- *   sample_detector_distance=2.5, detector_height=1.2
+ *   beam_wavelength_Angs=4.1, beam_resolution_meV=0.1, 
+ *   sample_detector_distance_m=2.5, detector_height_m=1.2
  * FRM2_TOFTOF:
- *   beam_wavelength=3.0, beam_resolution_meV=0.3, 
- *   sample_detector_distance=4.0, detector_height=2.0
+ *   beam_wavelength_Angs=3.0, beam_resolution_meV=0.3, 
+ *   sample_detector_distance_m=4.0, detector_height_m=2.0
  * SNS_SEQUOIA:
- *   beam_wavelength=1.0, beam_resolution_meV=3.0, 
- *   sample_detector_distance=5.5, detector_height=1.2
+ *   beam_wavelength_Angs=1.0, beam_resolution_meV=3.0, 
+ *   sample_detector_distance_m=5.5, detector_height_m=1.2
  * SNS_ARCS:
- *   beam_wavelength=0.3, beam_resolution_meV=20.0, 
- *   sample_detector_distance=3.0, detector_height=1.46
+ *   beam_wavelength_Angs=0.3, beam_resolution_meV=20.0, 
+ *   sample_detector_distance_m=3.0, detector_height_m=1.46
  * NIST_DCS:
- *   beam_wavelength=3.0, beam_resolution_meV=0.2, 
- *   sample_detector_distance=4.0, detector_height=1.2
+ *   beam_wavelength_Angs=3.0, beam_resolution_meV=0.2, 
+ *   sample_detector_distance_m=4.0, detector_height_m=1.2
  * ISIS_MERLIN:
- *   beam_wavelength=1.0, beam_resolution_meV=2.4, 
- *   sample_detector_distance=2.5, detector_height=3.0
+ *   beam_wavelength_Angs=1.0, beam_resolution_meV=2.4, 
+ *   sample_detector_distance_m=2.5, detector_height_m=3.0
  * ISIS_LET: 
- *   beam_wavelength=4.0, beam_resolution_meV=0.1, 
- *   sample_detector_distance=3.5, detector_height=4.0
+ *   beam_wavelength_Angs=4.0, beam_resolution_meV=0.1, 
+ *   sample_detector_distance_m=3.5, detector_height_m=4.0
  *
- * Example: beam_wavelength=4.1 Detector: M_single_coh_I=8.23e-12
- * Example: beam_wavelength=1.6 beam_resolution_meV=1.07 Detector: M_single_coh_I=2.32e-10
+ * Example: beam_wavelength_Angs=4.1 Detector: M_single_coh_I=9.71933e-11
+ * Example: beam_wavelength_Angs=1.6 beam_resolution_meV=1.07 Detector: M_single_coh_I=3.75781e-09
  *
  * %Parameters
  * INPUT PARAMETERS:
- *  beam_wavelength:          incident neutron beam wavelength        [Angs]
- *  beam_resolution_meV:      incident energy range full width        [meV]
- *  sample_coh:               sample coherent Sqw data file or NULL   [str]
- *  sample_inc:               sample incoherent Sqw data file or NULL [str]
- *  sample_radius:            radius of sample (outer).               [m]
- *  sample_thickness:         thickness of sample. 0=filled           [m]
- *  sample_height:            height of sample.    0=sphere           [m]
- *  sample_detector_distance: distance from sample to detector        [m]
- *  container:                container material or NULL              [str]
- *  container_thickness:      container thickness                     [m]
- *  environment:              sample environment material or NULL     [str]
- *  environment_radius:       sample environment outer radius         [m]
- *  environment_thickness:    sample environment thickness            [m]
- *  detector_height:          detector tubes height                   [m]
+ *  beam_wavelength_Angs:       incident neutron beam wavelength        [Angs]
+ *  beam_resolution_meV:        incident energy range full width        [meV]
+ *  sample_coh:                 sample coherent Sqw data file or NULL   [str]
+ *  sample_inc:                 sample incoherent Sqw data file or NULL [str]
+ *  sample_radius_m:            radius of sample (outer).               [m]
+ *  sample_thickness_m:         thickness of sample. 0=filled           [m]
+ *  sample_height_m:            height of sample.    0=sphere           [m]
+ *  sample_detector_distance_m: distance from sample to detector        [m]
+ *  container:                  container material or NULL              [str]
+ *  container_thickness_m:      container thickness                     [m]
+ *  environment:                sample environment material or NULL     [str]
+ *  environment_radius_m:       sample environment outer radius         [m]
+ *  environment_thickness_m:    sample environment thickness            [m]
+ *  detector_height_m:          detector tubes height                   [m]
  *  
  * %Link
- * The Isotropic_Sqw sample
+ * The <a href="http://mcstas.org/download/components/samples/Isotropic_Sqw.html">Isotropic_Sqw sample</a>
  * %Link
- * The Samples_Isotropic_Sqw example instrument
+ * The <a href="http://mcstas.org/download/components/samples/PowderN.html">PowderN sample</a>
+ * %Link
+ * The <a href="http://mcstas.org/download/components/examples/Samples_Isotropic_Sqw.html">Samples_Isotropic_Sqw</a> example instrument
+ * %Link
+ * The <a href="https://forge.epn-campus.eu/projects/nmoldyn">nMoldyn</a> package to create Sqw data sets from MD trajectories
  * %End
 */
 
 DEFINE INSTRUMENT Test_Monitor_Sqw(
-         beam_wavelength=1.55,
+         beam_wavelength_Angs=2,
          beam_resolution_meV=0.1,
   string sample_coh="Rb_liq_coh.sqw", 
   string sample_inc="Rb_liq_inc.sqw",
-         sample_thickness=1e-4,
-         sample_height=0.0168,
-         sample_radius=0.005,
+         sample_thickness_m=1e-3,
+         sample_height_m=0.03,
+         sample_radius_m=0.005,
   string container="Al.laz", 
-         container_thickness=50e-6,
+         container_thickness_m=50e-6,
   string environment="Al.laz", 
-         environment_radius=0.025, 
-         environment_thickness=2e-3,
-         detector_height=3, 
-         sample_detector_distance=4.0)
+         environment_radius_m=0.025, 
+         environment_thickness_m=2e-3,
+         detector_height_m=3, 
+         sample_detector_distance_m=4.0)
 
 DECLARE
 %{
@@ -121,46 +132,66 @@ DECLARE
  int flag_sample;      /* sample                scatt 1:coh, -1:inc, other multiple*/
  int flag_env;         /* container/environment scatt */
 
- double dt0, bins=100;
- double Ei=0;
+ double dt0, t0, bins=100;
+ double Ei=0, vi;
+ double env_radius, det_radius;
+ 
+ char options_nM[1024];
+ char options_nD[1024];
 
 %}
 
 INITIALIZE
 %{
-  double ki=2*PI/beam_wavelength;         /* wavevector [Angs-1] */
-  double vi=ki*K2V;                       /* velocity   [m/s] */
-  double t0=sample_detector_distance/vi;  /* elastic travel time sample-detector (in-plane) [s] */
-  Ei=VS2E*vi*vi;                          /* incident energy [meV] */
+  double ki=2*PI/beam_wavelength_Angs;      /* wavevector [Angs-1] */
+  
+  vi=ki*K2V;                                /* velocity   [m/s] */
+  t0=sample_detector_distance_m/vi;         /* elastic travel time sample-detector (in-plane) [s] */
+  Ei=VS2E*vi*vi;                            /* incident energy [meV] */
+  
+  env_radius = environment_radius_m;        /* copied for the EXTEND blocks where INSTR parameters are not available */
+  det_radius = sample_detector_distance_m;
   
   /* compute the time spread at detector for the elastic line
    * set it for the incoming beam: dt = 1/2 t dE/E */
-  /* time uncertainty for sample_detector_distance due to beam_resolution_meV */
+  /* time uncertainty for sample_detector_distance_m due to beam_resolution_meV */
   dt0 = 0.5*t0*beam_resolution_meV/Ei;
   
   /* compute the number of tubes along the cylindrical detector, for 1 inch tubes */
-  bins = ceil((sample_detector_distance*(140+30)*PI/180)/2.54e-2);
+  bins = ceil((sample_detector_distance_m*(140+30)*PI/180)/2.54e-2);
 
   /* display some information for the user */
-
   printf("%s: lambda=%g [Angs], k=%g [Angs-1], v=%g [m/s], E=%g [meV]. Time=[%g %g %g]\n",
-    NAME_CURRENT_COMP, beam_wavelength,ki,vi, Ei, t0*.75, t0, t0*1.5);
-  printf("%s: sample is %s, with %s%s geometry.\n",
-    NAME_CURRENT_COMP, 
-    sample_coh, sample_thickness ? "hollow " : "", 
-    sample_height ? "cylindrical" : "spherical");
-  if (sample_height && container_thickness)
+    NAME_CURRENT_COMP, beam_wavelength_Angs,ki,vi, Ei, t0*.75, t0, t0*1.5);
+    
+  if (sample_radius_m > 0)
+    printf("%s: sample is %s, with %s%s geometry.\n",
+      NAME_CURRENT_COMP, 
+      sample_coh, sample_thickness_m ? "hollow " : "", 
+      sample_height_m ? "cylindrical" : "spherical");
+      
+  printf("%s: detector is cylindrical with radius=%g [m] height=%g [m] and %g tubes [1 inch]\n", 
+    NAME_CURRENT_COMP, sample_detector_distance_m, detector_height_m, bins);
+    
+  /* monitor settings with explicit limits, so that we can use MPI */
+  sprintf(options_nM, "user1 limits=[0 %g] user2 limits=[%g %g]", 3*ki, -2*Ei, 4*Ei);
+  sprintf(options_nD, "angle limits=[-30 140], time limits=[%g %g]", 0.5*t0, 2*t0); 
+    
+  /* test for input arguments */
+  if (sample_height_m > 0 && container_thickness_m > 0 && container)
     printf("%s: container is %s (outer cylinder)\n", NAME_CURRENT_COMP, container);
-  if (environment_thickness > 0)
+    
+  if (environment_thickness_m > 0 && environment)
     printf("%s: external environment is %s\n", NAME_CURRENT_COMP, environment);
 
-  if (environment_thickness > 0 && sample_radius > environment_radius-environment_thickness)
-    exit(printf("%s: sample radius %g is larger than sample environment %g\n",
-      NAME_CURRENT_COMP, sample_radius, environment_radius-environment_thickness));
-  if (container_thickness > 0 && environment_thickness > 0 && sample_height > 0
-      && sample_radius+container_thickness+0.0001 > environment_radius-environment_thickness)
-    exit(printf("%s: sample container radius %g is larger than sample environment %g\n",
-      NAME_CURRENT_COMP, sample_radius+container_thickness+0.0001, environment_radius-environment_thickness));
+  if (environment_thickness_m > 0 && sample_radius_m > environment_radius_m-environment_thickness_m)
+    exit(printf("%s: ERROR: sample radius %g [m] is larger than sample environment %g [m]\n",
+      NAME_CURRENT_COMP, sample_radius_m, environment_radius_m-environment_thickness_m));
+      
+  if (container_thickness_m > 0 && environment_thickness_m > 0 && sample_height_m > 0
+      && sample_radius_m+container_thickness_m+0.0001 > environment_radius_m-environment_thickness_m)
+    exit(printf("%s: ERROR: sample container radius %g [m] is larger than sample environment %g [m]\n",
+      NAME_CURRENT_COMP, sample_radius_m+container_thickness_m+0.0001, environment_radius_m-environment_thickness_m));
 %}
 
 TRACE
@@ -175,35 +206,35 @@ EXTEND
 /* neutron source =========================================================== */
 COMPONENT csource = Source_gen(
    radius   = 0.02, 
-   focus_xw = 2*sample_radius, 
-   focus_yh = sample_height ? sample_height : 2*sample_radius, 
-   dist     = 2.88,
+   focus_xw = 2*sample_radius_m, 
+   focus_yh = sample_height_m ? sample_height_m : 2*sample_radius_m, 
+   dist     = 7,
    E0       = Ei, 
    dE       = beam_resolution_meV/2,
-   T1=300.0,I1=1)
+   T1=300.0,I1=1) /* use thermal ideal beam */
 AT (0,0,0) RELATIVE a1
 
 COMPONENT SamplePos=Arm()
-AT (0,0,2.88) RELATIVE a1
+AT (0,0,7) RELATIVE a1
 
 COMPONENT SampleIn =Monitor_nD(
-  xwidth=2*sample_radius, yheight=sample_height, options="x y", bins=100)
-AT (0,0,-fabs(environment_radius)-0.01) RELATIVE SamplePos
+  xwidth=2*sample_radius_m, yheight=sample_height_m, options="x y", bins=100)
+AT (0,0,-fabs(environment_radius_m)-0.01) RELATIVE SamplePos
 EXTEND %{
   /* Models a triangular time distribution from e.g. a chopper system, corresponding with
    * the instrument energy resolution.
    * We assume that in the real instrument, the chopper is close to sample.
    */
-  t = randtriangle()*2*dt0;
+  t = randtriangle()*dt0/2-(fabs(env_radius)+0.01)/vi;
   flag_sample=flag_env=0;
 %}
 
 /* sample position ========================================================== */
 /* external shield */
 COMPONENT Environment_in=Isotropic_Sqw(
-  radius = environment_radius, yheight = 0.1, thickness=environment_thickness,
-  Sqw_coh= environment,        concentric=1,  verbose=0)
-  WHEN (environment_thickness > 0)
+  radius = environment_radius_m, yheight = 0.1, thickness=environment_thickness_m,
+  Sqw_coh= environment,        concentric= 1,  verbose=0, p_interact=.1)
+  WHEN (environment && environment_thickness_m > 0)
   AT (0, 0, 0) RELATIVE SamplePos
 EXTEND %{
   if (SCATTERED) flag_env++;
@@ -211,9 +242,9 @@ EXTEND %{
 
 /* sample container */
 COMPONENT Container_in=Isotropic_Sqw(
-  radius = sample_radius+0.0001+container_thickness, yheight = sample_height, thickness=container_thickness,
-  Sqw_coh=container,                          concentric=1,             verbose=0)
-WHEN(sample_height && container_thickness > 0)
+  radius = sample_radius_m, yheight = sample_height_m, thickness=-container_thickness_m,
+  Sqw_coh=container,      concentric= 1, verbose=0, p_interact=.1)
+WHEN(container && sample_height_m > 0 && container_thickness_m > 0)
 AT (0, 0, 0) RELATIVE SamplePos
 EXTEND
 %{
@@ -221,8 +252,9 @@ EXTEND
 %}
 
 COMPONENT Sample_in=Isotropic_Sqw(
-  radius = sample_radius, thickness= sample_thickness, yheight = sample_height,
-  Sqw_coh= sample_coh,    Sqw_inc  = sample_inc,       p_interact=0.95, verbose=2)
+  radius = sample_radius_m, thickness= sample_thickness_m, yheight = sample_height_m,
+  Sqw_coh= sample_coh,      Sqw_inc  = sample_inc,       p_interact=0.95)
+WHEN(sample_radius_m > 0)
 AT (0, 0, 0) RELATIVE SamplePos
 EXTEND
 %{
@@ -231,7 +263,7 @@ EXTEND
 %}
 
 COMPONENT Container_out=COPY(Container_in)(concentric=0)
-WHEN(sample_height && container_thickness)
+WHEN(container && sample_height_m > 0 && container_thickness_m > 0)
 AT (0, 0, 0) RELATIVE SamplePos
 EXTEND
 %{
@@ -240,7 +272,7 @@ EXTEND
 
 /* external shield */
 COMPONENT Environment_out=COPY(Environment_in)(concentric=0)
-WHEN (environment_thickness > 0)
+WHEN (environment && environment_thickness_m > 0)
 AT (0, 0, 0) RELATIVE SamplePos
 EXTEND %{
   if (SCATTERED) flag_env++;
@@ -248,13 +280,23 @@ EXTEND %{
 
 COMPONENT SampleOut = Arm()
 AT (0, 0, 0) RELATIVE SamplePos
+EXTEND %{
+  /* compute the vertical coordinate on the detector */
+  double v  = sqrt(vx*vx+vy*vy+vz*vz);
+  double dt = det_radius/v;
+  double dy = y + dt*vy;
+  /* correct for parallax for further time detectors */
+  /* this must be done here  as further monitors use restore_neutron=1 */
+  t -= (sqrt(det_radius*det_radius + dy*dy) - det_radius)/vi;
+%}
 
 /* detectors ================================================================ */
 
 /* S(q,w) monitors */
 /* the incoming beam is recorded at index -7 from here */
 COMPONENT Detector_nM = Monitor_Sqw(
-  radius=sample_detector_distance, yheight=detector_height, bins=bins, index=-7)
+  radius=sample_detector_distance_m, yheight=detector_height_m, bins=bins, index=-7, 
+  options=options_nM)
   WHEN (flag_sample || flag_env)
   AT (0, 0, 0) RELATIVE PREVIOUS 
 
@@ -274,11 +316,16 @@ COMPONENT Detector_nM_env = COPY(Detector_nM)(index=-11)
   WHEN (flag_env)
   AT (0, 0, 0) RELATIVE PREVIOUS
   
-/* I(angle, tof) monitors */
+/* I(angle, tof) monitors: 
+ * WARNING the recorded time on the detector is sensitive to the parallax on the tube height 
+ * the corrected time for parallax is 
+     tof = t 
+         - (sqrt(sample_detector_distance_m*sample_detector_distance_m + y*y) - sample_detector_distance_m)/vi
+ */
 
 COMPONENT M_total = Monitor_nD(
-  radius=sample_detector_distance, yheight=detector_height, bins=bins, 
-  options="angle limits=[-30 140], auto time")
+  radius=sample_detector_distance_m, yheight=detector_height_m, bins=bins, 
+  options=options_nD, restore_neutron=1)
   WHEN (flag_sample || flag_env)
   AT (0,0,0) RELATIVE SampleOut
 
@@ -301,4 +348,3 @@ COMPONENT M_env_container = COPY(M_total)
   AT (0,0,0) RELATIVE SampleOut
 
 END
-

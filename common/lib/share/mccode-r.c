@@ -2036,6 +2036,14 @@ mcinfo(void)
 
 #endif /* ndef MCCODE_R_IO_C */
 
+/* end of the I/O section =================================================== */
+
+
+
+
+
+
+
 /*******************************************************************************
 * mcset_ncount: set total number of rays to generate
 *******************************************************************************/
@@ -3709,6 +3717,7 @@ int mccode_main(int argc, char *argv[])
   SIG_MESSAGE("main (Start)");
   mcformat=getenv(FLAVOR_UPPER "_FORMAT") ?
            getenv(FLAVOR_UPPER "_FORMAT") : FLAVOR_UPPER;
+  mcinstrument_exe = argv[0]; /* store the executable path */
   /* read simulation parameters and options */
   mcparseoptions(argc, argv); /* sets output dir and format */
 

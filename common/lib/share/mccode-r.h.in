@@ -166,6 +166,7 @@ typedef MCNUM Rotation[3][3];
 extern struct mcinputtable_struct mcinputtable[]; /* list of instrument parameters */
 extern int    mcnumipar;                          /* number of instrument parameters */
 extern char   mcinstrument_name[], mcinstrument_source[]; /* instrument name and filename */
+extern char  *mcinstrument_exe;                           /* executable path = argv[0] or NULL */
 extern MCNUM  mccomp_storein[]; /* 11 coords * number of components in instrument */
 extern MCNUM  mcAbsorbProp[];
 extern MCNUM  mcScattered;      /* number of SCATTER calls in current component */
