@@ -27,6 +27,88 @@
 #endif
 
 /*******************************************************************************
+* FILE *Open_File(char *name, char *Mode, char *path)
+*   ACTION: search for a file and open it. Optionally return the opened path.
+*   input   name:  file name from which table should be extracted
+*           mode: "r", "w", "a" or any valid fopen mode
+*           path:  NULL or a pointer to at least 1024 allocated chars
+*   return  initialized file handle or NULL in case of error
+*******************************************************************************/
+
+  FILE *Open_File(char *File, const char *Mode, char *Path)
+  {
+    char path[1024];
+    FILE *hfile = NULL;
+    
+    if (!File || File[0]=='\0')                     return(NULL);
+    if (!strcmp(File,"NULL") || !strcmp(File,"0"))  return(NULL);
+    
+    /* search in current or full path */
+    strncpy(path, File, 1024);
+    hfile = fopen(path, Mode);
+    if(!hfile)
+    {
+      char dir[1024];
+
+      if (!hfile && mcinstrument_source && strlen(mcinstrument_source)) /* search in instrument source location */
+      {
+        char *path_pos   = NULL;
+        /* extract path: searches for last file separator */
+        path_pos    = strrchr(mcinstrument_source, MC_PATHSEP_C);  /* last PATHSEP */
+        if (path_pos) {
+          long path_length = path_pos +1 - mcinstrument_source;  /* from start to path+sep */
+          if (path_length) {
+            strncpy(dir, mcinstrument_source, path_length);
+            dir[path_length] = '\0';
+            snprintf(path, 1024, "%s%c%s", dir, MC_PATHSEP_C, File);
+            hfile = fopen(path, Mode);
+          }
+        }
+      }
+      if (!hfile && mcinstrument_exe && strlen(mcinstrument_exe)) /* search in PWD instrument executable location */
+      {
+        char *path_pos   = NULL;
+        /* extract path: searches for last file separator */
+        path_pos    = strrchr(mcinstrument_exe, MC_PATHSEP_C);  /* last PATHSEP */
+        if (path_pos) {
+          long path_length = path_pos +1 - mcinstrument_exe;  /* from start to path+sep */
+          if (path_length) {
+            strncpy(dir, mcinstrument_exe, path_length);
+            dir[path_length] = '\0';
+            snprintf(path, 1024, "%s%c%s", dir, MC_PATHSEP_C, File);
+            hfile = fopen(path, Mode);
+          }
+        }
+      }
+      if (!hfile) /* search in HOME or . */
+      {
+        strcpy(dir, getenv("HOME") ? getenv("HOME") : ".");
+        snprintf(path, 1024, "%s%c%s", dir, MC_PATHSEP_C, File);
+        hfile = fopen(path, Mode);
+      }
+      if (!hfile) /* search in MCSTAS/data */
+      {
+        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
+        snprintf(path, 1024, "%s%c%s%c%s", dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, File);
+        hfile = fopen(path, Mode);
+      }
+      if (!hfile) /* search in MVCSTAS/contrib */
+      {
+        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
+        snprintf(path, 1024, "%s%c%s%c%s", dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, File);
+        hfile = fopen(path, Mode);
+      }
+      if(!hfile)
+      {
+        fprintf(stderr, "Error: Could not open input file '%s' (Open_File)\n", File);
+        return (NULL);
+      }
+    }
+    if (Path) strncpy(Path, path, 1024);
+    return(hfile);
+  } /* end Open_File */
+
+/*******************************************************************************
 * long Read_Table(t_Table *Table, char *name, int block_number)
 *   ACTION: read a single Table from a text file
 *   input   Table: pointer to a t_Table structure
@@ -66,64 +148,27 @@
     long  nelements;
     long  begin;
     long  filesize=0;
-    char  name[256];
+    char  name[1024];
     char  path[1024];
     struct stat stfile;
 
     if (!Table) return(-1);
     Table_Init(Table, 0, 0);
-    if (!File || File[0]=='\0')  return(-1);
-    if (!strcmp(File,"NULL") || !strcmp(File,"0"))  return(-1);
-    strncpy(path, File, 1024);
-    hfile = fopen(path, "r");
-    if(!hfile)
-    {
-      char dir[1024];
-
-      if (!hfile) /* search in instrument location */
-      {
-        char *path_pos   = NULL;
-        /* extract path: searches for last file separator */
-        path_pos    = strrchr(mcinstrument_source, MC_PATHSEP_C);  /* last PATHSEP */
-        if (path_pos) {
-          long path_length = path_pos +1 - mcinstrument_source;  /* from start to path+sep */
-          if (path_length) {
-            strncpy(dir, mcinstrument_source, path_length);
-            sprintf(path, "%s%c%s", dir, MC_PATHSEP_C, File);
-            hfile = fopen(path, "r");
-          }
-        }
-      }
-      if (!hfile) /* search in HOME */
-      {
-        strcpy(dir, getenv("HOME") ? getenv("HOME") : ".");
-        sprintf(path, "%s%c%s", dir, MC_PATHSEP_C, File);
-        hfile = fopen(path, "r");
-      }
-      if (!hfile) /* search in MCSTAS data */
-      {
-        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
-        sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, File);
-        hfile = fopen(path, "r");
-      }
-      if (!hfile) /* search in MVCSTAS/contrib */
-      {
-        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
-        sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, File);
-        hfile = fopen(path, "r");
-      }
-      if(!hfile)
-      {
-        fprintf(stderr, "Error: Could not open input file '%s' (Table_Read_Offset_Binary)\n", File);
-        return (-1);
-      } else if (!offset || (offset && !*offset))
-        printf("Opening input file '%s' (Table_Read)\n", path);
-    }
+    
+    /* open the file */
+    hfile = Open_File(File, "r", path);
+    if (!hfile) return(-1);
+    else if (!offset || (offset && !*offset))
+      printf("Opening input file '%s' (Table_Read)\n", path);
+        
+    /* read file state */
     stat(path,&stfile); filesize = stfile.st_size;
     if (offset && *offset) fseek(hfile, *offset, SEEK_SET);
     begin     = ftell(hfile);
-    if (offset && *offset) sprintf(name, "%s@%li", File, *offset);
-    else                   strncpy(name, File, 128);
+    if (offset && *offset) snprintf(name, 1024, "%s@%li", File, *offset);
+    else                   strncpy(name, File, 1024);
+    
+    /* read file content and set the Table */
     nelements = Table_Read_Handle(Table, hfile, block_number, max_rows, name);
     Table->begin = begin;
     Table->end   = ftell(hfile);
@@ -154,6 +199,7 @@
     long    nelements, sizeofelement;
     long    filesize;
     FILE   *hfile;
+    char    path[1024];
     struct stat stfile;
     double *data;
     long    i;
@@ -162,57 +208,19 @@
     if (!Table) return(-1);
 
     Table_Init(Table, 0, 0);
-    if (!File || File[0]=='\0')  return(-1);
-    if (!strcmp(File,"NULL") || !strcmp(File,"0"))  return(-1);
-
-    hfile = fopen(File, "r");
-    if(!hfile)
-    {
-      char path[1024];
-      char dir[1024];
-
-      if (!hfile) /* search in instrument location */
-      {
-        char *path_pos   = NULL;
-        /* extract path: searches for last file separator */
-        path_pos    = strrchr(mcinstrument_source, MC_PATHSEP_C);  /* last PATHSEP */
-        if (path_pos) {
-          long path_length = path_pos +1 - mcinstrument_source;  /* from start to path+sep */
-          if (path_length) {
-            strncpy(dir, mcinstrument_source, path_length);
-            sprintf(path, "%s%c%s", dir, MC_PATHSEP_C, File);
-            hfile = fopen(path, "r");
-          }
-        }
-      }
-      if (!hfile) /* search in HOME */
-      {
-        strcpy(dir, getenv("HOME") ? getenv("HOME") : ".");
-        sprintf(path, "%s%c%s", dir, MC_PATHSEP_C, File);
-        hfile = fopen(path, "r");
-      }
-      if (!hfile) /* search in MCSTAS data */
-      {
-        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
-        sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, File);
-        hfile = fopen(path, "r");
-      }
-      if (!hfile) /* search in MVCSTAS/contrib */
-      {
-        strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
-        sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, File);
-        hfile = fopen(path, "r");
-      }
-      if(!hfile)
-      {
-        fprintf(stderr, "Error: Could not open input file '%s' (Table_Read_Offset_Binary)\n", File);
-        return (-1);
-      } else
-        printf("Opening input file '%s' (Table_Read)\n", path);
-    }
+    
+    /* open the file */
+    hfile = Open_File(File, "r", path);
+    if (!hfile) return(-1);
+    else
+      printf("Opening input file '%s' (Table_Read, Binary)\n", path);
+    
+    /* read file state */
     stat(File,&stfile);
     filesize = stfile.st_size;
     Table->filesize=filesize;
+    
+    /* read file content */
     if (type && !strcmp(type,"double")) sizeofelement = sizeof(double);
     else  sizeofelement = sizeof(float);
     if (offset && *offset) fseek(hfile, *offset, SEEK_SET);
@@ -250,7 +258,7 @@
       free(data);
       Table->data = dataf;
     }
-    strcpy(Table->filename, File);
+    strncpy(Table->filename, File, 1024);
     Table->rows    = nelements/columns;
     Table->columns = columns;
     Table->array_length = 1;
@@ -293,7 +301,7 @@
 
     if (!Table) return(-1);
     Table_Init(Table, 0, 0);
-    if (name && name[0]!='\0') strcpy(Table->filename, name);
+    if (name && name[0]!='\0') strncpy(Table->filename, name, 1024);
 
     if(!hfile) {
        fprintf(stderr, "Error: File handle is NULL (Table_Read_Handle).\n");
@@ -731,7 +739,7 @@ double Table_Value(t_Table Table, double X, long j)
     if (!Table.block_number) strcpy(buffer, "catenated");
     else sprintf(buffer, "block %li", Table.block_number);
     printf("Table from file '%s' (%s)",
-      Table.filename && strlen(Table.filename) ? Table.filename : "", buffer);
+      Table.filename ? Table.filename : "", buffer);
     if ((Table.data != NULL) && (Table.rows*Table.columns))
     {
       printf(" is %li x %li ", Table.rows, Table.columns);
@@ -966,7 +974,7 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
         }
       }
       /* store it into t_Table array */
-      sprintf(Table.filename, "%s#%li", File, block_number-1);
+      snprintf(Table.filename, 1024, "%s#%li", File, block_number-1);
       Table_Array[block_number-1] = Table;
       /* continues until we find an empty block */
     }
