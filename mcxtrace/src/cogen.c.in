@@ -1525,6 +1525,7 @@ cogen_runtime(struct instr_def *instr)
   coutf("int %sdefaultmain = %d;", ID_PRE, instr->use_default_main);
   coutf("char %sinstrument_name[] = \"%s\";", ID_PRE, instr->name);
   coutf("char %sinstrument_source[] = \"%s\";", ID_PRE, instr->source);
+  coutf("char *%sinstrument_exe=NULL; /* will be set to argv[0] in main */", ID_PRE); 
   if(instr->use_default_main)
     cout("int main(int argc, char *argv[]){return mccode_main(argc, argv);}");
 } /* cogen_runtime */
