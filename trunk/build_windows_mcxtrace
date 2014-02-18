@@ -31,8 +31,8 @@ if [ "x$2" != "x" ]; then
     sed s/@VERSION@/${1}/g McXtrace-metapackage32.iss > McXtrace-${1}-metapackage32.iss
     sed s/@VERSION@/${1}/g McXtrace-metapackage64.iss > McXtrace-${1}-metapackage64.iss
     ./iscc McXtrace-${1}-metapackage32.iss
-    mv Output/setup.exe dist/McXtrace-Metapackage-Perl-${1}-win32.exe
+    mv Output/setup.exe dist/McXtrace-Metapackage-${1}-win32.exe
     ./iscc McXtrace-${1}-metapackage64.iss
-    mv Output/setup.exe dist/McXtrace-Metapackage-Perl-${1}-win64.exe
+    mv Output/setup.exe dist/McXtrace-Metapackage-${1}-win64.exe
 
 fi
