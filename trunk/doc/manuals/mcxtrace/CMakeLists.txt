@@ -7,7 +7,7 @@ set(FLAVOR mcxtrace)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(MCUtil)
-setupMCCODE("mcstas")
+setupMCCODE("mcxtrace")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-manuals-${MCCODE_VERSION}")
@@ -70,7 +70,7 @@ file(COPY COMPfooter DESTINATION "${WORK}")
 foreach(NAME sources samples optics monitors misc)
   add_custom_command(
     OUTPUT "${WORK}/${NAME}.done"
-    COMMAND "${PROJECT_SOURCE_DIR}/get_mcdoc_snippets.sh" "${NAME} ${PROJECT_SOURCE_DIR}";
+    COMMAND "${PROJECT_SOURCE_DIR}/get_mxdoc_snippets.sh" "${NAME} ${PROJECT_SOURCE_DIR}";
     WORKING_DIRECTORY "${WORK}"
     )
 endforeach()
