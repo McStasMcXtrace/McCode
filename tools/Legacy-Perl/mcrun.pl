@@ -231,7 +231,7 @@ sub parse_args {
     }
     
     # If data dir '.' is explicitly given, undef it to dump files in current dir
-    if ($data_dir == "." || $data_dir == "./" || $data_dir == ".\\") {
+    if ($data_dir eq "." || $data_dir eq "./" || $data_dir eq ".\\") {
 	print "*** NOTE: Placing your data in . potentially overwriting files ***\n";
 	$data_dir=undef;
     }
