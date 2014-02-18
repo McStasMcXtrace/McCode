@@ -83,7 +83,8 @@ Changes in McStas v2.1, February, 2014
      - The mcstas manuals package with PDF docs
      - For VRML and X3D viewing of instruments, we recommend Instant Player from
        http://www.instantreality.org
-     - ! If you want to use our OPTIONAL Python based packages, these need to be installed
+     - ! The mcstas Python tool packages are installed by defauylt, but if you want to 
+       make use our OPTIONAL Python based packages, their dependencies need to be installed
        by hand !
        - Needed dependencies for the Python packages are all available in the Python(x,y)
        	 package available from https://code.google.com/p/pythonxy/
