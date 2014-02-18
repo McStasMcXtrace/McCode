@@ -1,0 +1,51 @@
+\section{Source\_lab: X-ray tube laboratory source}
+\label{s:source-div}
+\index{Sources!X-ray tube laboratory source}
+
+\component{Source\_lab}{System}{ $w$, $h$, $\delta_h$, $\delta_v$, $E_0$, $\Delta E$}{$\lambda_0$, $\Delta\lambda$, gauss}{Validated. t=0}
+
+{\bf Source\_lab} is a model of a laboratory X-ray tube. An electron ray hits a
+target of specified material. Currently, only single materiual targets are
+allowed\footnote{To model multiple material targets one could construct a model with two
+or more sources simultaneously. This has consequences for intensity of the source which should be downscaled accordingly.}.
+
+An electron beam of transverse crossection ($x_0,z_0$) and energy $E_0$
+impinges on the target of material. Wrt. the electron beam, the target is
+considereded infinitely thick. The beam is considered to have uniform
+intenisty. Thus, the spatial distribution of x-ray generation will be
+exponential in the depth of the material.
+
+Further, an exit aperture is defined with dimensions ($x_{width},y_{height}$). The centre of the aperture is situated at a distance $wd$ m from where the electron beam hits the target slab at an elevation of $take\_off$ (see Figure~\ref{f:source_lab}).  
+Note that the center of the exit aperture is the reference point of the
+\verb+Source\_lab+ coordinate system. In other words, the position specified in
+the instrument file \verb+AT (x,y,z) RELATIVE somewhere+ is the center of the
+exit aperture. Also note that the exit aperture is merely an opening. If the material absorption of the window, e.g. Be, is to be taken into account a \verb+Filter.comp+ (section~\ref{s:filter}) could be inserted after the exit aperture. 
+
+\begin{figure}
+\label{f:source_lab}
+\caption{Geometry of the \texttt{Source\_lab} component} 
+\end{figure}
+
+For each photon to be generated, a monte carlo choice is made to either
+generate either a Bremstrahlung photon or one from one of the x-ray emission
+lines of the material. $frac$ of the photons are generated from characteristic
+emission, and $1-frac$ from Bremsstrahlung. In most cases Bremstrahlung is
+unwanted background, which is why the default is $0.9$. Note that this
+\emph{only} governs how much of the available statistics is diverted into
+simulating backgrouns. It does not have an impact on what intensity is detected
+in subsequent monitors --- only on the errorbars of the detected numbers.
+
+The spectral characteristics of the generated Bremsstrahlung is goverened by
+the model suggested by Kramer~\cite{kramer_23}. Although disputed in several
+subsequent papers, the model is simple, and sufficiently accurate for many
+background estimation purposes.
+
+Characteristic emission on the other hand is sampled from a set of Lorentzian
+functions with central wavelengths found in the work by \cite{bearden} with
+spectral widths taken from \cite{deutsch}.
+
+An example of beam spectral characteristics emitted from a Cu-anode targate detected $1$ mm  from an exit aperture of $1\times 1$ cm $10$ cm fround the target at a $take\_off$ angle of $6^\circ$. is seen in figure~\ref{f:source_lab_spectrum}.
+\begin{figure}
+\label{f:source_lab_spectrum}
+\caption{Intensity vs. wavlenghth for a Cu-anode laboratory source.}
+\end{figure}
