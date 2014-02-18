@@ -82,6 +82,7 @@ int  mcdefaultmain         = 1;
 int  mctraceenabled        = 0;
 char mcinstrument_name[CHAR_BUF_LENGTH];
 char mcinstrument_source[CHAR_BUF_LENGTH];
+char *mcinstrument_exe = NULL;
 int  mcnumipar             = 0;
 struct mcinputtable_struct mcinputtable[CHAR_BUF_LENGTH];
 mcstatic FILE *mcsiminfo_file        = NULL;
