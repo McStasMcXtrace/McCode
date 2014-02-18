@@ -1,0 +1,17 @@
+\section{Source\_flat: A flat surface emitting photons with a spectrum either uniform, gaussian or generated from a datafile}
+\label{source-flat}
+\index{Sources!Flat surface source}
+\component{Source\_flat}{System}{$d$,$w$,$h$}{$r$,$x_{width}$,$y_{height}$,$d$, $\lambda_0$,${\rm d}\lambda$, $spectrum\_file$, $incoherent$,$phase$}
+
+A simple source model, with a flat surface emitting photons. The surface in the
+$xy$-plane is specified as a rectangle with dimensions
+$x_{width}\times y_{height}$ m, or as a circle w radius,$r$. 
+The initial xray position is chosen randomly in the source surface --- its
+wavevector is chosen randomly (exactly as in the case of \verb+Source\_pt+ (section \ref{source_pt}) in the defining aperture with height $h$ and
+width $w$ placed at $(0,0,dist)$. 
+
+Just as for \verb+Source\_pt+ the aperture is for efficiency purposes and, if misused, may cause biasing
+
+A spectrum file may be supplied as for \verb+Source\_pt+.
+
+Currently only fully coherent or incoherent beams are supported. If $phase$ is set (and not $randomphase$ which takes precedence) a phase is set such that a photon emitted from $(x,y,0)$ will be in phass with a photon at $(0,0,0)$, which has the phase $phase$..
