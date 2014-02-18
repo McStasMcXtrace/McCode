@@ -39,6 +39,10 @@ Source: "dist\mcstas-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-comps-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-manuals-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-tools-perl-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
+Source: "dist\mcstas-tools-python-mcrun-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
+Source: "dist\mcstas-tools-python-mcplot-chaco-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
+Source: "dist\mcstas-tools-python-mcplot-matplotlib-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
+Source: "dist\mcstas-tools-python-mcdisplay-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 
 [Run]
 Filename: "msiexec"; Parameters: "/i {tmp}\strawberry-perl-5.18.2.1-64bit.msi"
@@ -48,5 +52,9 @@ Filename: "{tmp}\mcstas-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-comps-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-manuals-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-perl-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
+Filename: "{tmp}\mcstas-tools-python-mcrun-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
+Filename: "{tmp}\mcstas-tools-python-mcplot-chaco-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
+Filename: "{tmp}\mcstas-tools-python-mcplot-matplotlib-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
+Filename: "{tmp}\mcstas-tools-python-mcdisplay-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
