@@ -920,7 +920,7 @@ TRACE
         if (hkl_info.flag_warning < 100) 
           fprintf(stderr,
                 "Single_crystal: %s: Warning: x-ray has unexpectedly left the crystal!\n"
-                "                t1=%g t2=%g x=%g y=%g z=%g vx=%g vy=%g vz=%g\n",
+                "                l1=%g l2=%g x=%g y=%g z=%g kx=%g ky=%g kz=%g\n",
                 NAME_CURRENT_COMP, l1, l2, x, y, z, kx, ky, kz);
         hkl_info.flag_warning++;
         break;
