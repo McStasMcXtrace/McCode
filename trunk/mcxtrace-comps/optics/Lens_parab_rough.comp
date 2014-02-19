@@ -61,7 +61,7 @@ typedef struct {
   double constants[8];
 } lens;
   
-  incom intersection(incom a,lens b){
+  incom intersection_lens_parab_rough(incom a,lens b){
     incom result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};  
     int i;
     double A,B,C,D,r;
@@ -323,7 +323,7 @@ TRACE
     parab.constants[4]=1.0/Refractive_Index_Re; // M constant
     parab.constants[5]=-1.0; // Sign constant
     
-    refr=intersection(incid,parab);
+    refr=intersection_lens_parab_rough(incid,parab);
     
     if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue; 
     
@@ -340,7 +340,7 @@ TRACE
     parab.constants[4]=Refractive_Index_Re;
     parab.constants[5]=1.0; 
     
-    outg=intersection(refr,parab);
+    outg=intersection_lens_parab_rough(refr,parab);
     
     dl=sqrt( (outg.coord[0]-x)*(outg.coord[0]-x) + (outg.coord[1]-y)*(outg.coord[1]-y) + (outg.coord[2]-z)*(outg.coord[2]-z) );
     PROP_DL(dl);

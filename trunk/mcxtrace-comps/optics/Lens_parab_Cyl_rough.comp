@@ -61,7 +61,7 @@ SHARE
  
   // intersect_Parab_Cyl function calculates the intersection point on a surface of a parabolic cylinder with the photon's trajectory, estimates two points of intersection (if only) and chooses the one that lies within the interval (-yheight/2<=y=<yheight/2 && -xwidth/2<=x=<xwidth/2) and returns it.
    
-  data intersect_Parab_Cyl(data a, param b){
+  data intersect_Parab_Cyl_rough(data a, param b){
     data result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
     int i;
     double A,B,C,D,r;
@@ -282,7 +282,7 @@ TRACE
     parab_Cyl.constants[4]=1.0/Refractive_Index_Re; // M constant
     parab_Cyl.constants[5]=-1.0; //Sign constant
     
-    refr=intersect_Parab_Cyl(incid,parab_Cyl);
+    refr=intersect_Parab_Cyl_rough(incid,parab_Cyl);
     
     if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue;   
     
@@ -299,7 +299,7 @@ TRACE
     parab_Cyl.constants[4]=Refractive_Index_Re;
     parab_Cyl.constants[5]=1.0; 
  
-    outg=intersect_Parab_Cyl(refr,parab_Cyl);
+    outg=intersect_Parab_Cyl_rough(refr,parab_Cyl);
     
     dl=sqrt( (outg.coord[0]-x)*(outg.coord[0]-x) + (outg.coord[1]-y)*(outg.coord[1]-y) + (outg.coord[2]-z)*(outg.coord[2]-z) );
     PROP_DL(dl);
