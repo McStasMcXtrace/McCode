@@ -65,9 +65,9 @@ COMPONENT Source=ESS_moderator_long(yheight=0.01,width_c=0.01,cyl_radius=0.0,dis
 
 COMPONENT Brillmon = Brilliance_monitor(
     nlam = 196, nt = 601, filename = "brill", t_0 = 0,
-    t_1 = 6000, lambda_0 = lambdamin, lambda_1 = lambdamax,
+    t_1 = 12000, lambda_0 = lambdamin, lambda_1 = lambdamax,
     Freq =14.0)
-  AT (0, 0, 0.01) RELATIVE Source
+  AT (0, 0, 1) RELATIVE Source
 
 
 /* This section is executed when the simulation ends (C code). Other    */
@@ -77,6 +77,7 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
+
 
 
 
