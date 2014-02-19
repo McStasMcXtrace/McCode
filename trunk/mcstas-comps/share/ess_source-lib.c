@@ -40,21 +40,15 @@ double Mezei_F(double t, double tau, int n)
       return (exp(-t/tau)-exp(-n*t/tau))*n/(n-1)/tau;
     }
 
-double Schoenfeldt_cold(double I_SD, double alpha_SD, double lambda_SD, double alpha_l, double lambda_l, double Exponent, double I_1, double alpha_1, double I_2, double alpha_2, double lambda, double t) 
+double Schoenfeldt_cold(double I_SD, double alpha_SD, double lambda_SD, double alpha_l, double lambda_l, double Exponent, double I_1, double alpha_1, double I_2, double alpha_2, double lambda) 
 {
-  double T1, T2;
-  T1=(I_1 * exp(-alpha_1 * lambda) + I_2 * exp(-alpha_2 * lambda)) * (1 / pow(1 + exp(alpha_l * (lambda - lambda_l)),-Exponent))*(PulseShape(t,287e-6,20));
-  T2=I_SD * (1/lambda) * (1/( 1 + exp(alpha_SD * (lambda - lambda_SD)))) * PulseShape(t,20e-6*lambda,5);
-  return T1+T2;
+  return (I_1 * exp(-alpha_1 * lambda) + I_2 * exp(-alpha_2 * lambda)) * 1 / pow(1 + exp(alpha_l * (lambda - lambda_l)),-Exponent) + I_SD * (1/lambda) * 1/( 1 + exp(alpha_SD * (lambda - lambda_SD)));
 }
 
-double Schoenfeldt_thermal(double I_th, double T, double I_SD, double alpha, double lambda_cf, double lambda, double t) 
+double Schoenfeldt_thermal(double I_th, double T, double I_SD, double alpha, double lambda_cf, double lambda) 
 {
   double k_Th=949;
-  double T1, T2;
-  T1=(I_th * exp(-k_Th/(T*lambda*lambda))*(2*k_Th*k_Th)/(T*T*pow(lambda,5)))*(PulseShape(t,80e-6,20) + PulseShape(t,400e-6,20));
-  T2=(I_SD * (1/lambda) * 1/(1+exp(alpha*(lambda - lambda_cf))))*PulseShape(t,12e-6*lambda,5);
-  return T1+T2;
+  return I_th * exp(-k_Th/(T*lambda*lambda))*(2*k_Th*k_Th)/(T*T*pow(lambda,5)) + I_SD * (1/lambda) * 1/(1+exp(alpha*(lambda - lambda_cf)));
 }
 
 /* This is the cold Mezei moderator from 2012 (updated I0 and I2) */
@@ -416,29 +410,16 @@ double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
   double alpha_2[7]   = {0.261097, 0.307898, 0.317865, 0.346354, 0.354282, 0.371298, 0.38382};
 
   double S_a, S_b;
-  double dS, dI_SD, dI_1, d_I2;
+  double dS;
   int j, idxa, idxb;
-  
-  /* FIXME!!!! */
-  /* Unit messup somewhere??*/
-  *p/=320;
-
-  /* Assign 90% to main pulse and sample logarithmic from the tail */
-  if (rand01()<0.9) {
-    *t = rand01()*ESS_SOURCE_DURATION;
-  } else {
-    *t=ESS_SOURCE_DURATION-287e-6*log(1e-12+rand01());
-  }
   if ((extras.height <= height[0]) && (extras.height >= height[6])) {
     for (j=0; j<6; j++) {
       if (extras.height <= height[j] && extras.height >= height[j+1]) {
 	dS = (height[j]-extras.height)/(height[j]-height[j+1]);
 	/* Linear interpolation between the two closest heights */
-	S_a = Schoenfeldt_cold(I_SD[j], alpha_SD[j], lambda_SD[j], alpha_l[j], lambda_l[j], Exponent[j], I_1[j], alpha_1[j], I_2[j], alpha_2[j], lambda,*t);
-	S_b = Schoenfeldt_cold(I_SD[j+1], alpha_SD[j+1], lambda_SD[j+1], alpha_l[j+1], lambda_l[j+1], Exponent[j+1], I_1[j+1], alpha_1[j+1], I_2[j+1], alpha_2[j+1], lambda,*t);
-	if(isnan(S_a)) printf("S_a is NAN with %g and %g\n",*t, lambda); 
-	if(isnan(S_b)) printf("S_b is NAN with %g and %g\n",*t, lambda);
-	*p *= (1-dS)*S_a + dS*S_b;
+	S_a = Schoenfeldt_cold(I_SD[j], alpha_SD[j], lambda_SD[j], alpha_l[j], lambda_l[j], Exponent[j], I_1[j], alpha_1[j], I_2[j], alpha_2[j], lambda);
+	S_b = Schoenfeldt_cold(I_SD[j+1], alpha_SD[j+1], lambda_SD[j+1], alpha_l[j+1], lambda_l[j+1], Exponent[j+1], I_1[j+1], alpha_1[j+1], I_2[j+1], alpha_2[j+1], lambda);
+	*p = (1-dS)*S_a + dS*S_b;
 	break;
       }
     }
@@ -446,32 +427,27 @@ double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
     printf("Sorry! Moderator height must be between %g and %g cm\n",height[6],height[0]);
     exit(-1);
   }
-  
-} /* end of ESS_2013_Schoenfeldt_cold */
 
-double iExp(double t, double tau) {
-  double tmp;
-  if (t <= 0) {
-    tmp=0;
-    if (isnan(tmp)) printf("Case a\n");
-  } else if (t<=ESS_SOURCE_DURATION) {
-    tmp=tau*(1-exp(-t/tau));
-    if (isnan(tmp)) printf("Case b\n");
+  /* Next is time structure... */
+  // *p=1;
+  *t=0;
+  /* MC choice of time - maximum 3\tau */  
+  double a=3277.8;
+  double A=1;
+  if (lambda < 0.5) {
+    *t=rand01()*ESS_SOURCE_DURATION;
   } else {
-    /* Protection for NaN underrun */
-    if (t/tau > 700) {
-      tmp=0;
-    } else {
-      tmp=tau*(exp(ESS_SOURCE_DURATION/tau)-1)*exp(-t/tau);
+    *t=rand01()*3*ESS_SOURCE_DURATION;
+    if ( *t < ESS_SOURCE_DURATION ) {
+      //*p *= A*(1-exp(-3277.8* *t));
+    }
+    else {
+      //*p *= A*( (1/exp(-a*0.0028)-1)*exp(-a* *t)) ;
     }
   }
-  return tmp;
-}
-
-double PulseShape(double t,double tau,double n){
-  double iE1,iE2;
-  return (iExp(t,tau)-iExp(t,tau/n))*n/(n-1)/tau/ESS_SOURCE_DURATION;
-}
+  //  printf("Timestructure %g %g\n",*t,*p);
+  
+} /* end of ESS_2013_Schoenfeldt_cold */
 
 
 /* This is the thermal moderator with 2013 updates, fits from Troels Schoenfeldt */
@@ -492,27 +468,14 @@ double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
   double S_a, S_b;
   double dS;
   int j, idxa, idxb;
-
-  // FIXME!!!
-  *p/=3400;
-  
-  /* Assign 90% to main pulse and sample logarithmic from the tail */
-  if (rand01()<0.9) {
-    *t = rand01()*ESS_SOURCE_DURATION;
-  } else {
-    *t=ESS_SOURCE_DURATION-80e-6*log(1e-12+rand01());
-  }
   if ((extras.height <= height[0]) && (extras.height >= height[6])) {
     for (j=0; j<6; j++) {
       if (extras.height <= height[j] && extras.height >= height[j+1]) {
 	dS = (height[j]-extras.height)/(height[j]-height[j+1]);
 	/* Linear interpolation between the two closest heights */
-	S_a = Schoenfeldt_thermal(I_th[j], T[j], I_SD[j], alpha[j], lambda_cf[j], lambda,*t);
-	S_b = Schoenfeldt_thermal(I_th[j+1], T[j+1], I_SD[j+1], alpha[j+1], lambda_cf[j+1], lambda,*t);
-	if(isnan(S_a)) printf("S_a is NAN with %g and %g\n",*t, lambda); 
-	if(isnan(S_b)) printf("S_b is NAN with %g and %g\n",*t, lambda);
-	*p *= (1-dS)*S_a + dS*S_b;
-	//	printf("Data back is p %g Sa %g Sb %g t %g with lambda %g\n", *p, S_a, S_b, *t, lambda);
+	S_a = Schoenfeldt_thermal(I_th[j], T[j], I_SD[j], alpha[j], lambda_cf[j], lambda);
+	S_b = Schoenfeldt_thermal(I_th[j+1], T[j+1], I_SD[j+1], alpha[j+1], lambda_cf[j+1], lambda);;
+	*p = (1-dS)*S_a + dS*S_b;
 	break;
       }
     }
@@ -520,8 +483,24 @@ double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
     printf("Sorry! Moderator height must be between %g and %g cm\n",height[6],height[0]);
     exit(-1);
   }
-
   /* Next is time structure... */
+  // *p=1;
+  *t=0;
+  /* MC choice of time - maximum 3\tau */  
+  double a=3277.8;
+  double A=1;
+  if (lambda < 0.5) {
+    *t=rand01()*ESS_SOURCE_DURATION;
+  } else {
+    *t=rand01()*3*ESS_SOURCE_DURATION;
+    if ( *t < ESS_SOURCE_DURATION ) {
+      //  *p *= A*(1-exp(-3277.8* *t));
+    }
+    else {
+      // *p *= A*( (1/exp(-a*0.0028)-1)*exp(-a* *t)) ;
+    }
+  }
+  //  printf("Timestructure %g %g\n",*t,*p);
 
 } /* end of ESS_2013_Schoenfeldt_thermal */
 
