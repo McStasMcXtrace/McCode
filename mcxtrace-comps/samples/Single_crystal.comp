@@ -872,7 +872,7 @@ TRACE
   else if (hkl_info.shape == 2)
     intersect = sphere_intersect(&l1, &l2, x, y, z, kx, ky, kz, radius);
   else if (hkl_info.shape == 3)
-    intersect = off_intersect(&l1, &l2, NULL, NULL, x, y, z, kx, ky, kz, offdata );
+    intersect = off_x_intersect(&l1, &l2, NULL, NULL, x, y, z, kx, ky, kz, offdata );
       
   if (l2 < 0) intersect=0; /* we passed sample volume already */
     
@@ -913,7 +913,7 @@ TRACE
       else if (hkl_info.shape == 2)
         intersect = sphere_intersect(&l1, &l2, x, y, z, kx, ky, kz, radius);
       else if (hkl_info.shape == 3)
-        intersect = off_intersect(&l1, &l2, NULL, NULL, x, y, z, kx, ky, kz, offdata );
+        intersect = off_x_intersect(&l1, &l2, NULL, NULL, x, y, z, kx, ky, kz, offdata );
       if(!intersect || l2 < -1e-9 || l1 > 1e-9)
       {
         /* x-ray is leaving the sample */
