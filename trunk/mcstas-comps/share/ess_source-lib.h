@@ -35,7 +35,8 @@ struct ess_struct {
   double X;
   double Y;
   double Z;
-  double height;
+  double height_t;
+  double height_c;
 };
 
 typedef struct ess_struct ess_moderator_struct;

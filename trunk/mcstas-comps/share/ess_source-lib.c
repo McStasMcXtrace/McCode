@@ -412,10 +412,10 @@ double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
   double S_a, S_b;
   double dS;
   int j, idxa, idxb;
-  if ((extras.height <= height[0]) && (extras.height >= height[6])) {
+  if ((extras.height_c <= height[0]) && (extras.height_c >= height[6])) {
     for (j=0; j<6; j++) {
-      if (extras.height <= height[j] && extras.height >= height[j+1]) {
-	dS = (height[j]-extras.height)/(height[j]-height[j+1]);
+      if (extras.height_c <= height[j] && extras.height_c >= height[j+1]) {
+	dS = (height[j]-extras.height_c)/(height[j]-height[j+1]);
 	/* Linear interpolation between the two closest heights */
 	S_a = Schoenfeldt_cold(I_SD[j], alpha_SD[j], lambda_SD[j], alpha_l[j], lambda_l[j], Exponent[j], I_1[j], alpha_1[j], I_2[j], alpha_2[j], lambda);
 	S_b = Schoenfeldt_cold(I_SD[j+1], alpha_SD[j+1], lambda_SD[j+1], alpha_l[j+1], lambda_l[j+1], Exponent[j+1], I_1[j+1], alpha_1[j+1], I_2[j+1], alpha_2[j+1], lambda);
@@ -468,10 +468,10 @@ double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
   double S_a, S_b;
   double dS;
   int j, idxa, idxb;
-  if ((extras.height <= height[0]) && (extras.height >= height[6])) {
+  if ((extras.height_t <= height[0]) && (extras.height_t >= height[6])) {
     for (j=0; j<6; j++) {
-      if (extras.height <= height[j] && extras.height >= height[j+1]) {
-	dS = (height[j]-extras.height)/(height[j]-height[j+1]);
+      if (extras.height_t <= height[j] && extras.height_t >= height[j+1]) {
+	dS = (height[j]-extras.height_t)/(height[j]-height[j+1]);
 	/* Linear interpolation between the two closest heights */
 	S_a = Schoenfeldt_thermal(I_th[j], T[j], I_SD[j], alpha[j], lambda_cf[j], lambda);
 	S_b = Schoenfeldt_thermal(I_th[j+1], T[j+1], I_SD[j+1], alpha[j+1], lambda_cf[j+1], lambda);;
