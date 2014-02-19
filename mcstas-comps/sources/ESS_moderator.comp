@@ -5,73 +5,47 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: ESS_moderator_long
+* Component: ESS_moderator
 *
 * %I
-* Written by: KL, February 2001
-* Modified by: E Klinkby, October 2012 - updated geometry, bispectral
+* Written by: P Willendrup and E Klinkby, February 2014, derived from K Lefmann ESS_moderator_long
+* Modified by: 
 * Version: $Revision$
-* Origin: Risoe
-* Release: McStas CVS_080803
+* Origin: DTU
+* Release: McStas 2.1
 *
 * A parametrised pulsed source for modelling ESS long pulses.
 *
 * %D
 * Produces a time-of-flight spectrum, from the ESS parameters
 * Chooses evenly in lambda, evenly/exponentially decaying in time
-* Adapted from Moderator by: KN, M.Hagen, August 1998
+* Adapted from ESS_moderator_long by: K Lefmann, 2001
 *
-* 2012-updates:
+* 2014-updates:
 * <ol>
-* <li>Geometry is now MCNPX-like <b>IMPORTANT</b>: Origin of the component is inside the cylindrical 
+* <li>Selectable between simple flat single-moderator (planar=1) and MCNPX-like dual-moderator (thermal and cold) setup.
+* <b>IMPORTANT</b>: In case of the dual-moderator geometry, the origin of the component is inside the cylindrical 
 * moderator, i.e. take care when positioning the next components! (E Klinkby)
-* <li>Component implements both the cold moderator and the thermal (pre-)moderator, fraction of statistics for
-* the cold moderator is the new cold_frac parameter. New set of input parameters with subscript _t defines the
-* thermal flux.(E Klinkby)
-* <li><b>IMPORTANT</b>: The thermal flux corresponds to the 2001 thermal ESS moderator as no update has currently
-* been released from the ESS neutronics group.
-* <li>By default the component applies a wavelength-dependent correction term to the cold flux, derived from 
+* <li>The spectrum from the source(s) is defined via the sourcedef string input parameter which allows these values:
+* <ul>
+* <li>sourcedef="2001", legacy "Mezei moderators" from the original F. Mezei documents 
+* "ESS reference moderator characteristics for generic instrument performance evaluation", but rescaled to ESS TDR frequency, pulselength and power.
+* <li>sourcedef="TDR", Mezei moderators, with a wavelength-dependent correction term to the cold flux, derived from 
 * 2012 MCNPX calculations by ESS neutronics group. Corrections calculated by K Lieutenant (Vitess) and 
-* implemented here by E Klinkby. In case this is not wanted, the src_2012 parameter can be set to 0.
-* <li>Default cold moderator intensity parameters correspond to the "ESS 2012" parameter set. The original 
-* 2001 ESS "Mezei moderator" can be described by setting T=50, tau=287e-6, tau1=0, tau2=20e-6, chi2=0.9, I0=6.9e11, 
-* I2=27.6e10, branch1=0, branch2=0.5, src_2012=0
+* implemented here by E Klinkby. NOTE: uses the 2001 brilliance for the thermal moderator!
+* <li>sourcedef="2014", updated brilliance using formulation by Troels Schoenfeldt, including support for the "pancacke", i.e. flat geometry.
+*</ul>
 * <li>The component can use target_index for focusing to a given beam port. Use an Arm() and ROTATED to position 
 * relatively to the moderator.
-* <li>Time focusing option: Adjusts neutron departure time to match a 'first chopper' defined by parameters tfocus_dist, tfocus_time, tfocus_width (K Lefmann). 
+* <li>Time focusing option: Adjusts neutron departure time to match a 'first chopper' defined by parameters tfocus_dist, tfocus_time, tfocus_width (K Lefmann).
+* NOTE: Currently only applies to the Mezei-moderator.
+* <li>The component relies on the new ess_source-lib which is expected to become further enriched during design-finaliziation and construciton of the ESS.
 * </ol>
 *
 * Units of flux: n/cm^2/s/AA/ster
 * (McStas units are in general neutrons/second)
 *
-* Example general parameters (general):
-*          size=0.12 Lmin=0.1 Lmax=10 dist=1.6 focus_xw=0.19 focus_yh=0.15 nu=16.67
-*
-* Example moderator specific parameters
-* (From F. Mezei, "ESS reference moderator characteristics for ...", 4/12/00:
-*  Defining the normalised Maxwellian
-*     M(lam,T) = 2 a^2 lam^-5 exp(-a/lam^2); a=949/T; lam in AA; T in K,
-*   the "pulse integral" function
-*     iexp(t,tau,d) = 0                              ; t<0
-*                     tau (1-exp(-t/tau))            ; 0<t<d
-*                     tau (exp(d/tau)-1) exp(-t/tau) ; t>d ,
-*   and the long pulse shape function
-*     I(t,tau,n,d) = (iexp(t,tau,d)-iexp(t,tau/n,d)) n/(n-1)/tau/d ,
-*
-*   the flux distribution is given as
-*     Phi(t,lam) =  I0 M(lam,T) F(t,tau,n)
-*                 + I2/(1+exp(chi2 lam-2.2))/lam*F(t,tau2*lam,n2)  )
-*
-*   c1: Ambient H20, long pulse, coupled <b>ESS 2001 thermal</b>
-*          T_t=325 tau_t=80e-6 tau1_t=400e-6 tau2_t=12e-6 n=20 n2=5 d=2e-3 chi2_t=2.5
-*          I0_t=13.5e11 I2_t=27.6e10    branch1_t=0.5 branch2_t=0.5
-*
-*   c2: Liquid H2, long pulse, coupled <b>ESS 2012 cold</b>
-*          T=50 tau=287e-6 tau1=0 tau2=20e-6 n=20 n2=5 d=2e-3 chi2=0.9
-*          I0=8.21e11, I2=3.29e11    branch1=0 branch2=0.5
-*
-* Debugged intensively against Mezei note (4/12 2000) and VitESS @ Rencurel 2006.
-* The output is now neutrons / second, not as previously neutrons / pulse.
+* Derived from ESS_moderator_long which was debugged intensively against Mezei note (4/12 2000) and VitESS @ Rencurel 2006.
 *
 * %VALIDATION 
 * Validated against VitESS and Mezei note (4/12 2000) @ Rencurel 2006
@@ -240,12 +214,13 @@ INITIALIZE
     printf("Using ESS 2001 brilliance\n");
     cold_bril=ESS_Mezei_cold;
     thermal_bril=ESS_Mezei_thermal;
-  } else if (strcasestr(sourcedef,"2013")) {
+  } else if (strcasestr(sourcedef,"2014")) {
     // w_mult *= ESS_SOURCE_FREQUENCY;               /* Is already in per-second units */
     w_mult *= acc_power;                             /* Is already in per-MW units */
-    printf("Using ESS 2013 brilliance\n");
+    printf("Using ESS 2014 brilliance\n");
     // Fix: transfer in m units rather than cm's...
-    modextras.height=100.0*yheight_c; //FIXME: We need separate thermal and cold heights here!
+    modextras.height_c=100.0*yheight_c;
+    modextras.height_t=100.0*yheight_t;
     cold_bril=ESS_2013_Schoenfeldt_cold;
     thermal_bril=ESS_2013_Schoenfeldt_thermal;
   } else {
