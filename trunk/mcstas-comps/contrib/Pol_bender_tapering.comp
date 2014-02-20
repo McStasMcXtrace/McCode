@@ -13,8 +13,21 @@
 * Version: $Revision$
 * Origin: DTU Physics
 * Release: McStas 2.0
-*
+* 
 * Polarising bender.
+*
+* %D
+*
+* fileformat for channel file columns:
+* d-spacing1 d-spacing2 l_spacer d-coatingp1 d-coatingn1 [d-coatingp2] [dcoatingn2]  
+*
+* fileformat for reflectivity file:
+* #parameter = m 
+* q/m R(up) R(down)
+*
+* %P
+*
+* INPUT PARAMETERS:
 *
 * xwidth:       Width at the guide entry (m)
 * yheight:      Height at the guide entry (m)
@@ -31,18 +44,9 @@
 * debug:        if debug > 0 print out some internal parameters (1)
 *
 *
+* %L
 *
-*
-* fileformat for channel file columns:
-* d-spacing1 d-spacing2 l_spacer d-coatingp1 d-coatingn1 [d-coatingp2] [dcoatingn2]  
-*
-* fileformat for reflectivity file:
-* #parameter = m 
-* q/m R(up) R(down)
-*
-*
-*
-*
+* %E
 */
 DEFINE COMPONENT Pol_bender_tapering
 DEFINITION PARAMETERS (string channel_file="channel.dat")
