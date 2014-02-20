@@ -38,7 +38,7 @@ def popenwait(args, cwd, log):
 
 # try to use new R plotter instead of mcplot
 def mcplot(simfile, outfile, logger, logy=False):
-    ''' Plot a mcstas.sim file with mcplot '''
+    ''' Plot a mccode.sim file with mcplot '''
     args = (["mcplot", "-%s" % IMAGE_FORMAT] +
             (logy and ["-log"] or []) +
             [basename(simfile)])
@@ -148,6 +148,7 @@ def processJob(run, workdir):
     siminstr = "sim/"+group+"/"+name+".instr" #SIM_SRC_PATH % group % name
     simbin = "sim/"+group+"/"+name+".out"
     simc = "sim/"+group+"/"+name+".c"
+    simhtml = "sim/"+name+".html"
 
     name=basename(name)
     
@@ -203,7 +204,7 @@ def processJob(run, workdir):
 
     os.path.walk(workdir % 'mcstas',
                  lambda _arg, folder, files:
-                 process_components(folder + "/mcstas.sim"),
+                 process_components(folder + "/mccode.sim"),
                  [])
 
 
