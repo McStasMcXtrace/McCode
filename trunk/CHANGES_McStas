@@ -70,6 +70,14 @@ Changes in McStas v2.1, February, 2014
    Should you fail to get this working after trying, feel free to send us a tgz or zip
    with all needed instrument- and component code to mcstas-users@mcstas.org and we will 
    try to help.
+
+ - In case of "negative time" propagation we no longer ABSORB these neutrons but rather restore
+   the incoming neutron state and leave it untouched for the following components. This avoids
+   various types of shadowing effects, e.g. when placing parallel monitors that are not in a 
+   GROUP. This is furhter in preparation for the forthcoming ASSEMBLY keyword which will work
+   roughly like an "iterative group" that loops on the ASSEMBLY of components until no furhter
+   scattering is achieved, but always scatters first on the component which is closest (in time)
+   to the neutron.
    
  - As of this release, McStas is distributed using easy-to-use meta-packages for the Windows
    and Mac OS X systems. The content of these packages are:
