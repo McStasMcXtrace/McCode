@@ -14,27 +14,8 @@ MCCODE=${FLAVOR}-${VERSION}
 cd $PREFIX/bin
 ln -sf ${PREFIX}/lib/$FLAVOR-$VERSION/bin/* .
 
-# if [ "x${NO_ALTERNATIVES}" = "x1" ]; then
-#   # Setup mccode-select and mccode-select-bundle
-#   mccode-select-${MCCODE} --no-update-alternatives --bootstrap
-
-#   # Setup mcstas/mcxtrace including available tools
-#   mccode-select-bundle --no-update-alternatives --install \
-# 	    ${FLAVOR} \
-# 	    ${VERSION}
-# else
-#   # Setup mccode-select and mccode-select-bundle
-#   mccode-select-${MCCODE} --bootstrap
-
-#   # Setup mcstas/mcxtrace including available tools
-#   mccode-select-bundle --install \
-# 	    ${FLAVOR} \
-# 	    ${VERSION}
-# fi
-
-
-# # Check if mcdoc is installed and if it needs to run
-# if [ -x ${PREFIX}/lib/${FLAVOR}-${VERSION}/${MC}doc ] && \
-#     [ -d ${PREFIX}/lib/${MCCODE}/examples ]; then
-#     ${PREFIX}/lib/${FLAVOR}-${VERSION}/${MC}doc --text &>/dev/null
-# fi
+# Check if mcdoc is installed and if it needs to run
+if [ -x ${PREFIX}/lib/${FLAVOR}-${VERSION}/bin/${MC}doc ] && \
+    [ -d ${PREFIX}/lib/${MCCODE}/examples ]; then
+    ${PREFIX}/lib/${FLAVOR}-${VERSION}/bin/${MC}doc --text &>/dev/null
+fi
