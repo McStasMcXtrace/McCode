@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/perl
 
 # Install a handler for the interrupt signal (CTRL-C) that simply exits the
 # program cleanly (this removes tmpfiles correctly).
