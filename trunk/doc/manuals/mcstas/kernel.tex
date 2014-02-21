@@ -143,7 +143,6 @@ as C variable names. The list of these reserved keywords is shown in table~\ref{
       \texttt{MCDISPLAY} & C & Embeds C code to display component geometry. \\
       \texttt{OUTPUT} & C & Defines internal variables to be public and protected symbols (usually all global variables and functions of DECLARE).\\
       \texttt{PARAMETERS} & C & Defines a class of component parameter (DEFINITION, SETTING). \\
-      \texttt{POLARISATION} & C & Defines neutron polarisation coordinates. \\
       \texttt{PREVIOUS} & C & Refers to a previous component position/orientation.\\
       \texttt{RELATIVE} & I & Indicates that the AT and ROTATED keywords are relative to an other component. \\
       \texttt{REMOVABLE} & I & Indicates that this component will be removed when the instrument is inserted into an other one using the \texttt{\%include} keyword. \\
@@ -994,26 +993,6 @@ the other hand, the variables from the SHARE sections should \emph{not} be
 defined as OUTPUT parameters.
 
 The \texttt{OUTPUT} \texttt{PARAMETERS} section is optional.
-
-\begin{mcstas}
-STATE PARAMETERS (x,y,z,v_x,v_y,v_z,t,s_1,s_2,p)
-\end{mcstas}
-
-\index{Keyword!STATE PARAMETERS}
-This declares the parameters that define the state of the incoming
-neutron. The task of the component code is to assign new values to these
-parameters based on the old values and the values of the definition and
-setting parameters. Note that $s_1$ and $s_2$ are obsolete and stand for
-$s_x$ and $s_y$ members of the polarisation vector. To access $s_z$, use:
-\begin{mcstas}
-POLARISATION PARAMETERS (s_x,s_y,s_z)
-\end{mcstas}
-
-\index{Keyword!POLARISATION PARAMETERS}
-This line is necessary only if the component handles polarisation of neutrons
-and thus modifies the spin vector. For an instrument to handle polarisation
-correctly, it is only required that {\em one} of the components contains this
-line.
 
 \subsubsection{Optional component parameters}
 \index{Parameters!Optional, default value}
