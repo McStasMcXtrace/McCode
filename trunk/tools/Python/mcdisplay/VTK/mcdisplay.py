@@ -2,6 +2,8 @@
 
 ''' Script to rewrite McStas trace output to VTK for plotting '''
 
+# from Gael Goret, ILL/CS 2014
+
 import numpy as np
 import vtk
 import sys
