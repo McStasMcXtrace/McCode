@@ -85,6 +85,8 @@
 %token TOK_ROTATED    "ROTATED"
 %token TOK_PREVIOUS   "PREVIOUS"
 %token TOK_SETTING    "SETTING"
+%token TOK_STATE      "STATE"
+%token TOK_POL        "POLARISATION"
 %token TOK_TRACE      "TRACE"
 %token TOK_SHARE      "SHARE"
 %token TOK_EXTEND     "EXTEND"
@@ -278,7 +280,7 @@ trace: /* empty */
       }
 ;
 
-parameters:   def_par set_par out_par
+parameters:   def_par set_par out_par state_par pol_par
       {
         $$.def = $1;
         $$.set = $2;
@@ -316,6 +318,29 @@ out_par:    /* empty */
         $$ = $3;
       }
 ;
+
+state_par:    /* empty */
+      {
+        /* Do nothing */
+      }
+    | "STATE" "PARAMETERS" formallist
+      {
+        /* Issue warning */
+        print_error(" %s is using STATE PARAMETERS\n    %s %s does NOT support this keyword. Please remove line %d\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION, instr_current_line);
+      }
+;
+
+pol_par:    /* empty */
+      {
+        /* Do nothing */
+      }
+    | "POLARISATION" "PARAMETERS" formallist
+      {
+        /* Issue warning */
+        print_error(" %s is using POLARISATION PARAMETERS\n    %s %s does NOT support this keyword. Please remove line %d\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION, instr_current_line);
+      }
+;
+
 
 comp_iformallist: '(' comp_iformals ')'
       {
