@@ -53,26 +53,19 @@ Changes in McStas v2.1, February, 2014
       Translating instrument definition 'BNL_H8.instr' into C ...
       mcstas -t -o BNL_H8.c BNL_H8.instr
       Compiling simulation BNL_H8.instr
-      syntax error, unexpected TOK_ID, expecting END at line 36.
+      Arm.comp is using STATE PARAMETERS
+      	       mcstas-2.1 does NOT support this keyword. Please remove line 36
+      mcstas-2.1: 1 Errors encountered during parse of BNL_H8.instr.
+      ** Error exit **
 
-
-      Fatal error: Errors encountered during autoload of component Arm. The component 
-      definition has syntax errors.
-
-
-      Program aborted.
-
-   These types of errors can in most cases be handled by simply removing/commenting out
+      
+   As the error message suggests, this can be fixed by simply removing/commenting out
    the STATE and POLARISATION parameter lines in the top of the component, i.e.:
    /* STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p) */
    /* POLARISATION PARAMETERS (sx,sy,sz) */
    
-   Should you fail to get this working after trying, feel free to send us a tgz or zip
-   with all needed instrument- and component code to mcstas-users@mcstas.org and we will 
-   try to help.
-
  - In case of "negative time" propagation we no longer ABSORB these neutrons but rather restore
-   the incoming neutron state and leave it untouched for the following components. This avoids
+   the incoming neutron state, leaving it untouched for the following components. This avoids
    various types of shadowing effects, e.g. when placing parallel monitors that are not in a 
    GROUP. This is furhter in preparation for the forthcoming ASSEMBLY keyword which will work
    roughly like an "iterative group" that loops on the ASSEMBLY of components until no furhter
@@ -80,7 +73,8 @@ Changes in McStas v2.1, February, 2014
    to the neutron.
    
  - As of this release, McStas is distributed using easy-to-use meta-packages for the Windows
-   and Mac OS X systems. The content of these packages are:
+   and Mac OS X systems. (these already existed for the deb and rpm based Linux packages, see
+   below) The content of these packages are:
 
    * Windows:
      - Strawberry Perl (including a gcc compiler)
@@ -91,12 +85,16 @@ Changes in McStas v2.1, February, 2014
      - The mcstas manuals package with PDF docs
      - For VRML and X3D viewing of instruments, we recommend Instant Player from
        http://www.instantreality.org
-     - ! The mcstas Python tool packages are installed by defauylt, but if you want to 
-       make use our OPTIONAL Python based packages, their dependencies need to be installed
+     - ! The mcstas Python tool packages are installed by default, but if you want to 
+       make use of our OPTIONAL Python based packages, their dependencies need to be installed
        by hand !
        - Needed dependencies for the Python packages are all available in the Python(x,y)
        	 package available from https://code.google.com/p/pythonxy/
-  
+
+   - ! We are only distributing a 32bit package for windows, since we feel the 64-bin gcc on
+       windows is not mature - gives problems in a few, specific cases. In any case, the 32-bit
+       McStas for windows works perfectly fine on a 64-bit operating system !  
+
    - ! If you experience strange behavior from perl/mcgui on Windows like
        	    a) ppm shell not being able to install the extra Perl packages
             b) mcgui not being able to run / compile a simulation (all you get is mcrun -- help output)
@@ -120,13 +118,13 @@ Changes in McStas v2.1, February, 2014
        	 SciPy superpack available from http://fonnesbeck.github.io/ScipySuperpack/
        - You may also choose the commerical Anaconda or Enthought Python distributions
 
- - For the Linux (Debian and RPM based) systems we now provide a set of APT and YUM repos,
+ - For the Linux (Debian and RPM based) systems we provide a set of APT and YUM repos,
    see http://www.mcstas.org/download/apt_n_yum/
      - Simply choose to install mcstas-suite-perl (perl tools), mcstas-suite-python (python tools)
        or mcstas-suite (both toolsets) and all dependencies should be taken care of
 
- - A given McStas 2.x release is "self-contained" and can be installed in parallel with other of
-   McStas and McXtrace (i.e. run mcgui-2.0RC2 to select a specific version)
+ - A given McStas 2.x release is "self-contained" and can be installed in parallel with other versions
+   of McStas and McXtrace 
  - We provide a "migration tool" for Unix based systems (i.e. Linux & Mac) to let your already
    installed McStas 1.x or 2.0 co-exist with the new 2.1
  - Using McStas with NeXus does no longer require recompilation if you only want to _write_ NeXus.
@@ -139,21 +137,48 @@ Changes in McStas v2.1, February, 2014
    * Simplified code-structure
    * Proper support for MPI when generating NeXus event lists
  - New logic wrt. negative time propagation: Neutrons are restored rather than ABSORB'ed
+ - Improvement of the interpolation routines e.g. for magnetic fields: search is performed roughly in constant time
+ - Read_Table: better search for files, including from full executable path, from source.instr location, from 
+   PWD and from McCode lib.
 
  Tools:
- - Since 2.0 mcgui and mcrun Python has been generating time-stamped output directories if no output dir 
+ - Since 2.0 mcgui Perl and mcrun Python has been generating time-stamped output directories if no output dir 
    was specified. The legacy mcrun Perl now exhibit this behavior also. This is balanced by the possiblitiy
    to choose . (dot) as the output directory - then the legacy behaviour of storing data in the working
    directory is enabled.
 
+ Documentation:
+ - Modernized and facelifted TeX documentation in the manuals, which include slightly updated Component manual.
+   A few components-docs parameter tables are now extracted from mcdoc and included in the manual. 
+
  New Components:
- FIXME!!
+ - Rotator and Derotator - components that allow a section of the instrument to rotate in time.
+ - New ESS_moderator component by P Willendrup, E Klinkby and T Schoenfeldt DTU
+   * new ess_source-lib with brilliance defintitions corresponding to Mezei 2001, TDR and 2014 brilliances
+   * support for geometrical brilliance variation (i.e. "pancake" geometry)
+   * much simplified input-parameter setup
+   * various fixes wrt. McStas 2.0 and later updated source modules
+ - Monitor_Sqw - generates an Sqw between a sample and a detector, a kind of inelastic resolution monitor.
 
  Updated Components:
- FIXME!!
+ - ISIS moderator component allow specification of the accellerator current. The component performance
+   defaults to the actual, relevant accellerator setting for each target station (TS). All TS1 and TS2
+   moderator input files are now included with McStas and have meaningful names with reference to the 
+   relevant TS. 
+ - Source_gen now contains LLB and FRM-II source parameters in the component help.
+ - Monitor_nD contains infrastructure for handling events in Mantid NeXus files.
+ - Isotropic_Sqw - various fixes, including optimized memory usage
+ - Lens component - support for abstract geometries via the OFF/PLY input format
+ - Guide_anyshape - various improvements
+ - FermiChopper - fixed bug in tangent intersection
+ - Elliptic_guide_gravity - support for curvature via horizontal, vectorial addition to gravity
+ 
 
  Instruments:
- FIXME!!
+ - Various instruments have been included, allowing to estimate pulsed-source average and peak brilliance.
+ - ISIS_SANS2d geometry contributed by R. Heenan, ISIS
+ - Test_Guide_Curved - test instrument for simple, curved guide types
+ - HZB_FLEX contributed by Klaus Habicht and Markos Skoulatos, HZB
 
 
 Changes in McStas v2.0, December 21st, 2012
