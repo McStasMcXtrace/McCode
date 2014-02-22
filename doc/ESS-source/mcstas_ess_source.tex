@@ -65,7 +65,8 @@ short description
 \section{Introduction}
 In this document the development of the ESS source description in McStas\cite{lefm:1999,will:2013,man,comp} is outlined by comparing brilliance curves of the various versions.
 
-\section{Comparison between ESS source in McStas versions 1.12c, 2.0 and 2.0$+$}
+\section{Comparison between ESS source in McStas versions 1.12c, 2.0,
+  2.0$+$ and 2.1}
 \label{sec:val}
 
 \begin{figure}[h!]
@@ -110,10 +111,59 @@ Figures~\ref{fig:2001} and \ref{fig:2001_t} show the cold and thermal average an
 
 Figure~\ref{fig:2012vs2001} shows the average(left) and peak(right) brilliance curves obtained from running McStas 2.0 using 2012(upper) and 2001(lower) source descriptions respectively.
 
+\begin{figure}[h!]
+\begin{minipage}{\linewidth}
+\centering
+\epsfig{figure=figs/2.0_cold_14Hz/Mean_brill.sim.ps,width=0.35\linewidth,angle=-90}
+\epsfig{figure=figs/2.0_cold_14Hz/Peak_brill.sim.ps,width=0.35\linewidth,angle=-90}
+\epsfig{figure=figs/2.0_cold_14Hz_TDR_corr/Mean_brill.sim.ps,width=0.35\linewidth,angle=-90}
+\epsfig{figure=figs/2.0_cold_14Hz_TDR_corr/Peak_brill.sim.ps,width=0.35\linewidth,angle=-90}
+\caption{Average(left) and peak(right) thermal brilliance curves
+  obtained from running McStas 2.0, 14Hz without (above) and with (below)
+  $\lambda$-dependent correction from TDR }
+\label{fig:2.0_cold}
+\end{minipage}\hfill
+\end{figure}
 
 
+\begin{figure}[h!]
+\begin{minipage}{\linewidth}
+\centering
+\epsfig{figure=figs/2.0_therm_14Hz/Mean_brill.sim.ps,width=0.35\linewidth,angle=-90}
+\epsfig{figure=figs/2.0_therm_14Hz/Peak_brill.sim.ps,width=0.35\linewidth,angle=-90}
+\caption{Average(left) and peak(right) thermal brilliance curves
+  obtained from running McStas 2.0, 14Hz. Note: Brilliance is still
+  2001 Mezei for this moderator }
+\label{fig:2.0_thermal}
+\end{minipage}\hfill
+\end{figure}
+
+FIXME: Describe how use of cold\_frac gives systematic error in
+2.0a. Check influence of doubled thermal source area.
+\begin{figure}[h!]
+\begin{minipage}{\linewidth}
+\centering
+\epsfig{figure=figs/2.0a_cold_14Hz/Mean_brill.sim.ps,width=0.35\linewidth,angle=-90}
+\epsfig{figure=figs/2.0a_cold_14Hz/Peak_brill.sim.ps,width=0.35\linewidth,angle=-90}
+\caption{Average(left) and peak(right) thermal brilliance curves
+  obtained from running McStas 2.0 with the updated source from march 2013, 14Hz without (above) and with (below)
+  $\lambda$-dependent correction from TDR }
+\label{fig:2.0_cold}
+\end{minipage}\hfill
+\end{figure}
 
 
+\begin{figure}[h!]
+\begin{minipage}{\linewidth}
+\centering
+\epsfig{figure=figs/2.0a_therm_14Hz/Mean_brill.sim.ps,width=0.35\linewidth,angle=-90}
+\epsfig{figure=figs/2.0a_therm_14Hz/Peak_brill.sim.ps,width=0.35\linewidth,angle=-90}
+\caption{Average(left) and peak(right) thermal brilliance curves
+  obtained from running McStas 2.0 with the updated source from march 2013, 14Hz Note: Brilliance is still
+  2001 Mezei for this moderator  }
+\label{fig:2.0_thermal}
+\end{minipage}\hfill
+\end{figure}
 
 
 
