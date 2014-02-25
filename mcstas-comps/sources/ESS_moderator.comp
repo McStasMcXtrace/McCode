@@ -218,9 +218,8 @@ INITIALIZE
     // w_mult *= ESS_SOURCE_FREQUENCY;               /* Is already in per-second units */
     w_mult *= acc_power;                             /* Is already in per-MW units */
     printf("Using ESS 2014 brilliance\n");
-    // Fix: transfer in m units rather than cm's...
-    modextras.height_c=100.0*yheight_c;
-    modextras.height_t=100.0*yheight_t;
+    modextras.height_c=yheight_c;
+    modextras.height_t=yheight_t;
     cold_bril=ESS_2013_Schoenfeldt_cold;
     thermal_bril=ESS_2013_Schoenfeldt_thermal;
   } else {
