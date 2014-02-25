@@ -398,15 +398,15 @@ double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
 
   /* As function of moderator height, parameters for the brilliance expression */
   double height[7]    = {0.10, 0.05, 0.03, 0.015, 0.01, 0.005, 0.001};
-  double I_SD[7]      = {4.75401e+011, 7.0319e+011,  8.36605e+011, 9.41035e+011, 9.54305e+011, 9.83515e+011, 9.54108e+01};
+  double I_SD[7]      = {4.75401e+011, 7.0319e+011,  8.36605e+011, 9.41035e+011, 9.54305e+011, 9.83515e+011, 9.54108e+011};
   double alpha_SD[7]  = {0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9};
   double lambda_SD[7] = {2.44444, 2.44444, 2.44444, 2.44444, 2.44444, 2.44444, 2.44444};
   double alpha_l[7]   = {-11.9056, -13.8444, -17.8359, -19.6643, -23.0058, -21.6241, -18.82};
   double lambda_l[7]  = {2.53562, 2.53527, 2.53956, 2.53243, 2.53375, 2.5364, 2.51714};
   double Exponent[7]  = {-0.259162, -0.215819, -0.160541, -0.140769, -0.119278, -0.124298, -0.144056};
-  double I_1[7]       = {1.22098e+013, 2.57992e+013, 4.43235e+013, 8.86873e+013, 1.26172e+014, 2.02098e+014, 3.32623e+01};
+  double I_1[7]       = {1.22098e+013, 2.57992e+013, 4.43235e+013, 8.86873e+013, 1.26172e+014, 2.02098e+014, 3.32623e+014};
   double alpha_1[7]   = {0.653579, 0.720244, 0.772538, 0.871765, 0.927905, 1.01579, 1.11621};
-  double I_2[7]       = {2.97518e+011, 1.11421e+012, 1.8961e+012,  4.00852e+012, 5.05278e+012, 6.98605e+012, 7.89424e+01};
+  double I_2[7]       = {2.97518e+011, 1.11421e+012, 1.8961e+012,  4.00852e+012, 5.05278e+012, 6.98605e+012, 7.89424e+012};
   double alpha_2[7]   = {0.261097, 0.307898, 0.317865, 0.346354, 0.354282, 0.371298, 0.38382};
 
   double S_a, S_b;
@@ -417,12 +417,10 @@ double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
       if (extras.height_c == height[j]) {
 	  S_a = Schoenfeldt_cold(I_SD[j], alpha_SD[j], lambda_SD[j], alpha_l[j], lambda_l[j], Exponent[j], I_1[j], alpha_1[j], I_2[j], alpha_2[j], lambda);
 	  *p = S_a;
-	  printf("S is exact a match for %g\n",height[j]);
 	  break;
 	  
-	} else if (extras.height_c <= height[j] && extras.height_c > height[j+1]) {
+	} else if (extras.height_c < height[j] && extras.height_c > height[j+1]) {
 	  dS = (height[j]-extras.height_c)/(height[j]-height[j+1]);
-	  printf("dS is %g\n",dS);
 	  /* Linear interpolation between the two closest heights */
 	  S_a = Schoenfeldt_cold(I_SD[j], alpha_SD[j], lambda_SD[j], alpha_l[j], lambda_l[j], Exponent[j], I_1[j], alpha_1[j], I_2[j], alpha_2[j], lambda);
 	  S_b = Schoenfeldt_cold(I_SD[j+1], alpha_SD[j+1], lambda_SD[j+1], alpha_l[j+1], lambda_l[j+1], Exponent[j+1], I_1[j+1], alpha_1[j+1], I_2[j+1], alpha_2[j+1], lambda);
@@ -472,9 +470,9 @@ double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
   
   /* As function of moderator height, parameters for the brilliance expression */
   double height[7]    = {10, 5, 3, 1.5, 1, .5, .1};
-  double I_th[7]      = {2.97527e+012, 4.35192e+012, 5.18047e+012, 6.0305e+012,  6.20079e+012, 6.44927e+012, 6.55127e+01};
+  double I_th[7]      = {2.97527e+012, 4.35192e+012, 5.18047e+012, 6.0305e+012,  6.20079e+012, 6.44927e+012, 6.55127e+012};
   double T[7]         = {303.764, 306.099, 307.497, 311.292, 310.525, 310.822, 317.56};
-  double I_SD[7]      = {5.38083e+011, 7.3059e+011,  8.94408e+011, 9.89515e+011, 1.02135e+012, 1.07415e+012, 1.12157e+01};
+  double I_SD[7]      = {5.38083e+011, 7.3059e+011,  8.94408e+011, 9.89515e+011, 1.02135e+012, 1.07415e+012, 1.12157e+012};
   double alpha[7]     = {2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5};
   double lambda_cf[7] = {0.88, 0.88, 0.88, 0.88, 0.88, 0.88, 0.88};
 
@@ -483,7 +481,11 @@ double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
   int j, idxa, idxb;
   if ((extras.height_t <= height[0]) && (extras.height_t >= height[6])) {
     for (j=0; j<6; j++) {
-      if (extras.height_t <= height[j] && extras.height_t >= height[j+1]) {
+      if (extras.height_c == height[j]) {
+	S_a = Schoenfeldt_thermal(I_th[j], T[j], I_SD[j], alpha[j], lambda_cf[j], lambda);
+	*p = S_a;
+	break;
+      } else if (extras.height_t <= height[j] && extras.height_t > height[j+1]) {
 	dS = (height[j]-extras.height_t)/(height[j]-height[j+1]);
 	/* Linear interpolation between the two closest heights */
 	S_a = Schoenfeldt_thermal(I_th[j], T[j], I_SD[j], alpha[j], lambda_cf[j], lambda);
