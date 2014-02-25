@@ -2,7 +2,9 @@
 
 ''' Script to rewrite McStas trace output to VTK for plotting '''
 
-# from Gael Goret, ILL/CS 2014
+# initially from python/mcdisplay/matplotlib
+# ported to VTK by Gael Goret and Eric Pellegrini, nMoldyn project, ILL/CS 2014
+# 
 
 import numpy as np
 import vtk
