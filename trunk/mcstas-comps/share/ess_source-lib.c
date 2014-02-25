@@ -397,7 +397,7 @@ double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
     */
 
   /* As function of moderator height, parameters for the brilliance expression */
-  double height[7]    = {10, 5, 3, 1.5, 1, .5, .1};
+  double height[7]    = {0.10, 0.05, 0.03, 0.015, 0.01, 0.005, 0.001};
   double I_SD[7]      = {4.75401e+011, 7.0319e+011,  8.36605e+011, 9.41035e+011, 9.54305e+011, 9.83515e+011, 9.54108e+01};
   double alpha_SD[7]  = {0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9};
   double lambda_SD[7] = {2.44444, 2.44444, 2.44444, 2.44444, 2.44444, 2.44444, 2.44444};
@@ -413,39 +413,52 @@ double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
   double dS;
   int j, idxa, idxb;
   if ((extras.height_c <= height[0]) && (extras.height_c >= height[6])) {
-    for (j=0; j<6; j++) {
-      if (extras.height_c <= height[j] && extras.height_c >= height[j+1]) {
-	dS = (height[j]-extras.height_c)/(height[j]-height[j+1]);
-	/* Linear interpolation between the two closest heights */
-	S_a = Schoenfeldt_cold(I_SD[j], alpha_SD[j], lambda_SD[j], alpha_l[j], lambda_l[j], Exponent[j], I_1[j], alpha_1[j], I_2[j], alpha_2[j], lambda);
-	S_b = Schoenfeldt_cold(I_SD[j+1], alpha_SD[j+1], lambda_SD[j+1], alpha_l[j+1], lambda_l[j+1], Exponent[j+1], I_1[j+1], alpha_1[j+1], I_2[j+1], alpha_2[j+1], lambda);
-	*p = (1-dS)*S_a + dS*S_b;
-	break;
+    for (j=0; j<7; j++) {
+      if (extras.height_c == height[j]) {
+	  S_a = Schoenfeldt_cold(I_SD[j], alpha_SD[j], lambda_SD[j], alpha_l[j], lambda_l[j], Exponent[j], I_1[j], alpha_1[j], I_2[j], alpha_2[j], lambda);
+	  *p = S_a;
+	  printf("S is exact a match for %g\n",height[j]);
+	  break;
+	  
+	} else if (extras.height_c <= height[j] && extras.height_c > height[j+1]) {
+	  dS = (height[j]-extras.height_c)/(height[j]-height[j+1]);
+	  printf("dS is %g\n",dS);
+	  /* Linear interpolation between the two closest heights */
+	  S_a = Schoenfeldt_cold(I_SD[j], alpha_SD[j], lambda_SD[j], alpha_l[j], lambda_l[j], Exponent[j], I_1[j], alpha_1[j], I_2[j], alpha_2[j], lambda);
+	  S_b = Schoenfeldt_cold(I_SD[j+1], alpha_SD[j+1], lambda_SD[j+1], alpha_l[j+1], lambda_l[j+1], Exponent[j+1], I_1[j+1], alpha_1[j+1], I_2[j+1], alpha_2[j+1], lambda);
+	  *p = (1-dS)*S_a + dS*S_b;
+	  break;
       }
     }
   } else {
-    printf("Sorry! Moderator height must be between %g and %g cm\n",height[6],height[0]);
+    printf("Sorry! Moderator height must be between %g and %g m\n",height[6],height[0]);
     exit(-1);
   }
 
   /* Next is time structure... */
   // *p=1;
   *t=0;
-  /* MC choice of time - maximum 3\tau */  
-  double a=3277.8; /* Decay-constant in seconds */
-  double A=1;
-  if (lambda < 0.5) {
-    *t=rand01()*ESS_SOURCE_DURATION;
-  } else {
-    *t=rand01()*3*ESS_SOURCE_DURATION;
-    if ( *t < ESS_SOURCE_DURATION ) {
-      *p *= A*(1-exp(-3277.8* *t));
-    }
-    else {
-      *p *= A*( (1/exp(-a*ESS_SOURCE_DURATION)-1)*exp(-a* *t)) ;
-    }
-  }
-  //  printf("Timestructure %g %g\n",*t,*p);
+  /* /\* MC choice of time - maximum 3\tau *\/   */
+  /* double a=3277.8; /\* Decay-constant in seconds *\/ */
+  /* double A=1; */
+  /* if (lambda < 0.5) { */
+  /*   *t=rand01()*ESS_SOURCE_DURATION; */
+  /* } else { */
+  /*   /\*if (rand01()<0.1) {/\* log-tail *\/ */
+  /*   /\*   *p /=0.1; *\/ */
+  /*   *t=ESS_SOURCE_DURATION*(5*rand01()); */
+  /*   /\* } else { *\/ */
+  /*   /\*   *p /=0.9; *\/ */
+  /*   /\*   *t=rand01()*ESS_SOURCE_DURATION; *\/ */
+  /*   /\* } *\/ */
+  /*   if ( *t < ESS_SOURCE_DURATION ) { */
+  /*     *p *= A*(1-exp(-3277.8* *t)); */
+  /*   } */
+  /*   else { */
+  /*     *p *= A*( (1/exp(-a*ESS_SOURCE_DURATION)-1)*exp(-a* *t)) ; */
+  /*   } */
+  /* } */
+  /* //  printf("Timestructure %g %g\n",*t,*p); */
   
 } /* end of ESS_2013_Schoenfeldt_cold */
 
