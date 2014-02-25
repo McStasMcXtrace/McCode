@@ -469,7 +469,7 @@ double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
    */
   
   /* As function of moderator height, parameters for the brilliance expression */
-  double height[7]    = {10, 5, 3, 1.5, 1, .5, .1};
+  double height[7]    = {0.10, 0.05, 0.03, 0.015, 0.01, 0.005, 0.001};
   double I_th[7]      = {2.97527e+012, 4.35192e+012, 5.18047e+012, 6.0305e+012,  6.20079e+012, 6.44927e+012, 6.55127e+012};
   double T[7]         = {303.764, 306.099, 307.497, 311.292, 310.525, 310.822, 317.56};
   double I_SD[7]      = {5.38083e+011, 7.3059e+011,  8.94408e+011, 9.89515e+011, 1.02135e+012, 1.07415e+012, 1.12157e+012};
