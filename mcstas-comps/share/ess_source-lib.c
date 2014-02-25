@@ -432,17 +432,17 @@ double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
   // *p=1;
   *t=0;
   /* MC choice of time - maximum 3\tau */  
-  double a=3277.8;
+  double a=3277.8; /* Decay-constant in seconds */
   double A=1;
   if (lambda < 0.5) {
     *t=rand01()*ESS_SOURCE_DURATION;
   } else {
     *t=rand01()*3*ESS_SOURCE_DURATION;
     if ( *t < ESS_SOURCE_DURATION ) {
-      //*p *= A*(1-exp(-3277.8* *t));
+      *p *= A*(1-exp(-3277.8* *t));
     }
     else {
-      //*p *= A*( (1/exp(-a*0.0028)-1)*exp(-a* *t)) ;
+      *p *= A*( (1/exp(-a*ESS_SOURCE_DURATION)-1)*exp(-a* *t)) ;
     }
   }
   //  printf("Timestructure %g %g\n",*t,*p);
