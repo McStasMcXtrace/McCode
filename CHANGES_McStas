@@ -11,7 +11,7 @@
 * Written by: KN, KL, PEO, EF, PW, EK, JB
 * Date: 2012
 * Origin: DTU, ILL, Uni Copenhagen, PSI
-* Release: McStas 2.0RC2
+* Release: McStas 2.1
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -140,6 +140,9 @@ Changes in McStas v2.1, February, 2014
  - Improvement of the interpolation routines e.g. for magnetic fields: search is performed roughly in constant time
  - Read_Table: better search for files, including from full executable path, from source.instr location, from 
    PWD and from McCode lib.
+ - ref-lib.c: If components use alpha=0 and w=0 in parametrizing the reflectivity, the StdReflecFunc
+   applies a phenomenological fit of Swiss Neutronics mirrors (above m=3 including a 2nd order beta term). The fits
+   were done by Henrik Jacobsen, University of Copenhagen.
 
  Tools:
  - Since 2.0 mcgui Perl and mcrun Python has been generating time-stamped output directories if no output dir 
