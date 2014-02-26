@@ -220,8 +220,8 @@ INITIALIZE
     printf("Using ESS 2014 brilliance\n");
     modextras.height_c=yheight_c;
     modextras.height_t=yheight_t;
-    cold_bril=ESS_2013_Schoenfeldt_cold;
-    thermal_bril=ESS_2013_Schoenfeldt_thermal;
+    cold_bril=ESS_2014_Schoenfeldt_cold;
+    thermal_bril=ESS_2014_Schoenfeldt_thermal;
   } else {
     printf("Soure def %s not implemented!\n",sourcedef);
     exit(-1);

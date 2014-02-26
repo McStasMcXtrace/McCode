@@ -29,7 +29,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ESS_Brilliance_2014(frac=1, power=5, flat=0, string srcdef="2014",yheight_c=0.01, width_c=0.01)
+DEFINE INSTRUMENT ESS_Brilliance_2014(frac=1, power=5, flat=0, string srcdef="2014",yheight=0.01, width=0.01)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -60,7 +60,7 @@ TRACE
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
-  COMPONENT Source=ESS_moderator(yheight_t=0.01,yheight_c=yheight_c,width_c=width_c,width_t=0.01,cyl_radius=0.0,dist=1,focus_xw=0.01,focus_yh=0.01,Lmin=lambdamin,Lmax=lambdamax, cold_frac=frac, sourcedef=srcdef, acc_power=power, planar=flat)
+  COMPONENT Source=ESS_moderator(yheight_t=yheight,yheight_c=yheight,width_c=width,width_t=width,cyl_radius=0.0,dist=1,focus_xw=0.01,focus_yh=0.01,Lmin=lambdamin,Lmax=lambdamax, cold_frac=frac, sourcedef=srcdef, acc_power=power, planar=flat)
   AT (0, 0, 0) RELATIVE Origin
   EXTEND %{
 %}
@@ -75,7 +75,7 @@ COMPONENT TOFLmon = TOFLambda_monitor(
 COMPONENT Brillmon = Brilliance_monitor(
     nlam = 196, nt = 601, filename = "brill", t_0 = 0,
     t_1 = 6000, lambda_0 = lambdamin, lambda_1 = lambdamax,
-    Freq =14, toflambda=1,tofcuts=1, srcarea=(100*width_c*100*yheight_c))
+    Freq =14, toflambda=1,tofcuts=1, srcarea=(100*width*100*yheight))
   AT (0, 0, 1) RELATIVE Source
 
 

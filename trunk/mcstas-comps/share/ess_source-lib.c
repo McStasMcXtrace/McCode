@@ -389,7 +389,7 @@ double ESS_2012_Lieutenant_cold(double *t, double *p, double lambda, double tfoc
 
 /* This is the cold moderator with 2013 updates, fits from Troels Schoenfeldt */
 /* Parametrization including moderator height for the "pancake" moderator */
-double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
+double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
     /* From the forthcoming Schoenfeldt et al.
        S_cold(\lambda) = (I_1*exp(-\alpha_1*lambda)  + I_2*exp(-\alpha_2*\lambda)) * 1/(1+exp(\alpha_l * (\lambda-lambda_l)))^(1/\gamma)
@@ -436,6 +436,10 @@ double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
   /* Next is time structure... */
   // *p=1;
   *t=0;
+  /* *t=ESS_SOURCE_DURATION*(5*rand01()); */
+  
+  /* *p *= TSC_Simple_TimeDist_Model(*t,3277.8,ESS_SOURCE_DURATION,1); */
+    
   /* /\* MC choice of time - maximum 3\tau *\/   */
   /* double a=3277.8; /\* Decay-constant in seconds *\/ */
   /* double A=1; */
@@ -458,11 +462,11 @@ double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
   /* } */
   /* //  printf("Timestructure %g %g\n",*t,*p); */
   
-} /* end of ESS_2013_Schoenfeldt_cold */
+} /* end of ESS_2014_Schoenfeldt_cold */
 
 
 /* This is the thermal moderator with 2013 updates, fits from Troels Schoenfeldt */
-double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
+double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
   /*  From the forthcoming Schoenfeldt et al.
      S_Th(\lambda) = I_Th * exp(k_Th/(T*\lambda^2))*(2*k_Th^2)/(T^2*\lambda^5) + I_SD * \lambda^-1 * 1/(1+exp(\alpha*(\lambda - \lambda_cf))
@@ -501,23 +505,30 @@ double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
   /* Next is time structure... */
   // *p=1;
   *t=0;
-  /* MC choice of time - maximum 3\tau */  
-  double a=3277.8;
-  double A=1;
-  if (lambda < 0.5) {
-    *t=rand01()*ESS_SOURCE_DURATION;
-  } else {
-    *t=rand01()*3*ESS_SOURCE_DURATION;
-    if ( *t < ESS_SOURCE_DURATION ) {
-      //  *p *= A*(1-exp(-3277.8* *t));
-    }
-    else {
-      // *p *= A*( (1/exp(-a*0.0028)-1)*exp(-a* *t)) ;
-    }
-  }
-  //  printf("Timestructure %g %g\n",*t,*p);
+  /* /\* MC choice of time - maximum 3\tau *\/   */
+  /* double a=3277.8; */
+  /* double A=1; */
+  /* if (lambda < 0.5) { */
+  /*   *t=rand01()*ESS_SOURCE_DURATION; */
+  /* } else { */
+  /*   *t=rand01()*3*ESS_SOURCE_DURATION; */
+  /*   if ( *t < ESS_SOURCE_DURATION ) { */
+  /*     //  *p *= A*(1-exp(-3277.8* *t)); */
+  /*   } */
+  /*   else { */
+  /*     // *p *= A*( (1/exp(-a*0.0028)-1)*exp(-a* *t)) ; */
+  /*   } */
+  /* } */
+  /* //  printf("Timestructure %g %g\n",*t,*p); */
 
-} /* end of ESS_2013_Schoenfeldt_thermal */
+} /* end of ESS_2014_Schoenfeldt_thermal */
+
+double TSC_Simple_TimeDist_Model(double t, double alpha, double pulselength, double gamma){
+    if(t<0)return 0;
+    double normalizer=gamma/pulselength;
+    if(t<pulselength)return normalizer*(1-exp(-alpha*t));
+    return normalizer*(exp(alpha*pulselength)-1)*exp(-alpha*t);
+}
 
 /* Display of geometry - flat and TDR-like */
 void ESS_mcdisplay_flat(double geometry)
