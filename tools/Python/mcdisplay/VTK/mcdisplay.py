@@ -6,8 +6,6 @@
 # ported to VTK by Gael Goret and Eric Pellegrini, nMoldyn project, ILL/CS 2014
 # 
 
-import sys
-sys.path.append('/usr/local/VTK-6.1.0-Darwin-64bit/vtkpython/bin/')
 import numpy as np
 import vtk
 import sys
