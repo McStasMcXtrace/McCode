@@ -434,33 +434,26 @@ double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
   }
 
   /* Next is time structure... */
-  // *p=1;
   *t=0;
-  /* *t=ESS_SOURCE_DURATION*(5*rand01()); */
-  
-  /* *p *= TSC_Simple_TimeDist_Model(*t,3277.8,ESS_SOURCE_DURATION,1); */
-    
-  /* /\* MC choice of time - maximum 3\tau *\/   */
-  /* double a=3277.8; /\* Decay-constant in seconds *\/ */
-  /* double A=1; */
-  /* if (lambda < 0.5) { */
-  /*   *t=rand01()*ESS_SOURCE_DURATION; */
-  /* } else { */
-  /*   /\*if (rand01()<0.1) {/\* log-tail *\/ */
-  /*   /\*   *p /=0.1; *\/ */
-  /*   *t=ESS_SOURCE_DURATION*(5*rand01()); */
-  /*   /\* } else { *\/ */
-  /*   /\*   *p /=0.9; *\/ */
-  /*   /\*   *t=rand01()*ESS_SOURCE_DURATION; *\/ */
-  /*   /\* } *\/ */
-  /*   if ( *t < ESS_SOURCE_DURATION ) { */
-  /*     *p *= A*(1-exp(-3277.8* *t)); */
-  /*   } */
-  /*   else { */
-  /*     *p *= A*( (1/exp(-a*ESS_SOURCE_DURATION)-1)*exp(-a* *t)) ; */
-  /*   } */
-  /* } */
-  /* //  printf("Timestructure %g %g\n",*t,*p); */
+
+  /* Exponential decay fct. in time - is in principle wavelength-dependent */
+  double alpha_decay=3277.8;
+  /* Normalization constant to achieve that int(pulse)=1. */
+  /* NOTE: Assumption is that ~ 11% of intensity comes after the main pulse */
+  double gamma = ESS_SOURCE_DURATION;
+
+  if (lambda < 0.5) {
+    *t=rand01()*ESS_SOURCE_DURATION;
+  } else {
+    /* Assign 90% of statistics within the pulse duration */
+    if (rand01()>=0.1) {
+      *t = ESS_SOURCE_DURATION*(rand01());
+    } else {
+      *t = -1e-6*alpha_decay*log(1e-12+rand01());
+    }
+    /* Troels Schoenfeldt function for timestructure */
+    *p *= TSC_Simple_TimeDist_Model(*t,alpha_decay,ESS_SOURCE_DURATION,gamma);
+  }
   
 } /* end of ESS_2014_Schoenfeldt_cold */
 
@@ -503,24 +496,26 @@ double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
     exit(-1);
   }
   /* Next is time structure... */
-  // *p=1;
   *t=0;
-  /* /\* MC choice of time - maximum 3\tau *\/   */
-  /* double a=3277.8; */
-  /* double A=1; */
-  /* if (lambda < 0.5) { */
-  /*   *t=rand01()*ESS_SOURCE_DURATION; */
-  /* } else { */
-  /*   *t=rand01()*3*ESS_SOURCE_DURATION; */
-  /*   if ( *t < ESS_SOURCE_DURATION ) { */
-  /*     //  *p *= A*(1-exp(-3277.8* *t)); */
-  /*   } */
-  /*   else { */
-  /*     // *p *= A*( (1/exp(-a*0.0028)-1)*exp(-a* *t)) ; */
-  /*   } */
-  /* } */
-  /* //  printf("Timestructure %g %g\n",*t,*p); */
 
+  /* Exponential decay fct. in time - is in principle wavelength-dependent */
+  double alpha_decay=3277.8;
+  /* Normalization constant to achieve that int(pulse)=1. */
+  /* NOTE: Assumption is that ~ 11% of intensity comes after the main pulse */
+  double gamma = ESS_SOURCE_DURATION;
+
+  if (lambda < 0.5) {
+    *t=rand01()*ESS_SOURCE_DURATION;
+  } else {
+    /* Assign 90% of statistics within the pulse duration */
+    if (rand01()>=0.1) {
+      *t = ESS_SOURCE_DURATION*(rand01());
+    } else {
+      *t = -1e-6*alpha_decay*log(1e-12+rand01());
+    }
+    /* Troels Schoenfeldt function for timestructure */
+    *p *= TSC_Simple_TimeDist_Model(*t,alpha_decay,ESS_SOURCE_DURATION,gamma);
+  }
 } /* end of ESS_2014_Schoenfeldt_thermal */
 
 double TSC_Simple_TimeDist_Model(double t, double alpha, double pulselength, double gamma){
