@@ -443,14 +443,13 @@ double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
   double gamma = 1.2*ESS_SOURCE_DURATION;
 
   /* Assign 90% of statistics within the pulse duration */
-  if (rand01()>=0.1) {
+  if (rand01()>0.1) {
     *t = ESS_SOURCE_DURATION*(rand01());
   } else {
     *t =  ESS_SOURCE_DURATION -1e-3*log(1e-12+rand01());
   }
   /* Troels Schoenfeldt function for timestructure */
   *p *= TSC_Time_Model(*t,lambda,ESS_SOURCE_DURATION,gamma);
-    
 } /* end of ESS_2014_Schoenfeldt_cold */
 
 
@@ -501,7 +500,7 @@ double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
   double gamma = 1.2*ESS_SOURCE_DURATION;
 
   /* Assign 90% of statistics within the pulse duration */
-  if (rand01()>=0.1) {
+  if (rand01()>0.1) {
     *t = ESS_SOURCE_DURATION*(rand01());
   } else {
     *t =  ESS_SOURCE_DURATION -1e-3*log(1e-12+rand01());
@@ -518,10 +517,13 @@ double TSC_Simple_TimeDist_Model(double t, double alpha, double pulselength, dou
 }
 
 double TSC_Time_Model(double time, double lambda, double pulselength, double gamma){
-    if(time<0)return 0;
+    double ret;
+    if(time<0)ret=0;
     double normalizer=gamma/pulselength;
     if(time<pulselength)return normalizer*(1-exp(-(1.20988e4/lambda/lambda+2.31967e3*exp(-4.24902e-2*lambda))*time));
-    return normalizer*(exp((1.20988e4/lambda/lambda+2.31967e3*exp(-4.24902e-2*lambda))*pulselength)-1)*exp(-(1.20988e4/lambda/lambda+2.31967e3*exp(-4.24902e-2*lambda))*time);
+    double tmp=normalizer*(exp((1.20988e4/lambda/lambda+2.31967e3*exp(-4.24902e-2*lambda))*pulselength)-1)*exp(-(1.20988e4/lambda/lambda+2.31967e3*exp(-4.24902e-2*lambda))*time);
+    tmp = isinf(tmp) ? 0 : tmp;
+    return isnan(tmp) ? 0 : tmp;
 }
 
 double TSC_y0_Model(double y,double height, double center){
