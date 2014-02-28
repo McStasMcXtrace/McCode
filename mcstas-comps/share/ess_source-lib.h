@@ -62,7 +62,10 @@ double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
 
 /* List of pulse-shape definitions */
 double TSC_Simple_TimeDist_Model(double t, double alpha, double pulselength, double gamma);
+double TSC_Time_Model(double t, double lambda, double pulselength, double gamma);
 
+/* List of moderator-geometry-weighting definitions */
+double TSC_y0_Model(double y,double height, double center);
 
 /* List of geometry definitions - mainly for mcdisplay... */
 void ESS_mcdisplay_flat(double geometry);

@@ -439,22 +439,18 @@ double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
   /* Exponential decay fct. in time - is in principle wavelength-dependent */
   double alpha_decay=3277.8;
   /* Normalization constant to achieve that int(pulse)=1. */
-  /* NOTE: Assumption is that ~ 11% of intensity comes after the main pulse */
-  double gamma = ESS_SOURCE_DURATION;
+  /* NOTE: Assumption is that ~ 20% of intensity comes after the main pulse */
+  double gamma = 1.2*ESS_SOURCE_DURATION;
 
-  if (lambda < 0.5) {
-    *t=rand01()*ESS_SOURCE_DURATION;
+  /* Assign 90% of statistics within the pulse duration */
+  if (rand01()>=0.1) {
+    *t = ESS_SOURCE_DURATION*(rand01());
   } else {
-    /* Assign 90% of statistics within the pulse duration */
-    if (rand01()>=0.1) {
-      *t = ESS_SOURCE_DURATION*(rand01());
-    } else {
-      *t = -1e-6*alpha_decay*log(1e-12+rand01());
-    }
-    /* Troels Schoenfeldt function for timestructure */
-    *p *= TSC_Simple_TimeDist_Model(*t,alpha_decay,ESS_SOURCE_DURATION,gamma);
+    *t =  ESS_SOURCE_DURATION -1e-3*log(1e-12+rand01());
   }
-  
+  /* Troels Schoenfeldt function for timestructure */
+  *p *= TSC_Time_Model(*t,lambda,ESS_SOURCE_DURATION,gamma);
+    
 } /* end of ESS_2014_Schoenfeldt_cold */
 
 
@@ -501,21 +497,17 @@ double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
   /* Exponential decay fct. in time - is in principle wavelength-dependent */
   double alpha_decay=3277.8;
   /* Normalization constant to achieve that int(pulse)=1. */
-  /* NOTE: Assumption is that ~ 11% of intensity comes after the main pulse */
-  double gamma = ESS_SOURCE_DURATION;
+  /* NOTE: Assumption is that ~ 20% of intensity comes after the main pulse */
+  double gamma = 1.2*ESS_SOURCE_DURATION;
 
-  if (lambda < 0.5) {
-    *t=rand01()*ESS_SOURCE_DURATION;
+  /* Assign 90% of statistics within the pulse duration */
+  if (rand01()>=0.1) {
+    *t = ESS_SOURCE_DURATION*(rand01());
   } else {
-    /* Assign 90% of statistics within the pulse duration */
-    if (rand01()>=0.1) {
-      *t = ESS_SOURCE_DURATION*(rand01());
-    } else {
-      *t = -1e-6*alpha_decay*log(1e-12+rand01());
-    }
-    /* Troels Schoenfeldt function for timestructure */
-    *p *= TSC_Simple_TimeDist_Model(*t,alpha_decay,ESS_SOURCE_DURATION,gamma);
+    *t =  ESS_SOURCE_DURATION -1e-3*log(1e-12+rand01());
   }
+  /* Troels Schoenfeldt function for timestructure */
+  *p *= TSC_Time_Model(*t,lambda,ESS_SOURCE_DURATION,gamma);  
 } /* end of ESS_2014_Schoenfeldt_thermal */
 
 double TSC_Simple_TimeDist_Model(double t, double alpha, double pulselength, double gamma){
@@ -524,6 +516,20 @@ double TSC_Simple_TimeDist_Model(double t, double alpha, double pulselength, dou
     if(t<pulselength)return normalizer*(1-exp(-alpha*t));
     return normalizer*(exp(alpha*pulselength)-1)*exp(-alpha*t);
 }
+
+double TSC_Time_Model(double time, double lambda, double pulselength, double gamma){
+    if(time<0)return 0;
+    double normalizer=gamma/pulselength;
+    if(time<pulselength)return normalizer*(1-exp(-(1.20988e4/lambda/lambda+2.31967e3*exp(-4.24902e-2*lambda))*time));
+    return normalizer*(exp((1.20988e4/lambda/lambda+2.31967e3*exp(-4.24902e-2*lambda))*pulselength)-1)*exp(-(1.20988e4/lambda/lambda+2.31967e3*exp(-4.24902e-2*lambda))*time);
+}
+
+double TSC_y0_Model(double y,double height, double center){
+    double integral=1; //insert integral from c-h/2 to c+h/2
+    if(y<center-height/2.||y>center+height/2.)return 0;
+    return 1./integral*(exp(-2.2e-001*(y-center-height/2.))+exp(-4.5e-002*height+2.2e-001*(y-center+height/2.)))*(exp(50./sqrt(height)*(y-center-height/2.))-1)*(exp(-50./sqrt(height)*(y-center+height/2.))-1);
+}
+
 
 /* Display of geometry - flat and TDR-like */
 void ESS_mcdisplay_flat(double geometry)
