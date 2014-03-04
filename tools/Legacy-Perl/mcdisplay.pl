@@ -365,10 +365,17 @@ Transform {
 	  if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
 	      # First define a panel, cf. http://www.mantidproject.org/IDF#Creating_Rectangular_Area_Detectors
 	      my $type = "MonNDtype-$mantidcount2";
+	      my $angle = (180/pi)*acos(($transformations{$comp}[3]+$transformations{$comp}[7]+$transformations{$comp}[11]-1)/2);
+	      my $d21=$transformations{$comp}[8]-$transformations{$comp}[10]; my $d02=$transformations{$comp}[9]-$transformations{$comp}[5]; my $d10=$transformations{$comp}[4]-$transformations{$comp}[6];
+	      my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);
+	      my $rota="";
+	      if($d!=0){
+		$rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
+	      }
 	      write_process("<component type=\"".$type."\" name=\"$comp\" idstart=\"");
 	      write_process(${mantidcount2}*1000000);
 	      write_process("\" idfillbyfirst=\"x\" idstepbyrow=\"".$nx."\">\n");
-	      write_process("\t<location x=\"".$transformations{$comp}[0]."\" y=\"".$transformations{$comp}[1]."\" z=\"".$transformations{$comp}[2]."\" />\n</component>\n\n");
+	      write_process("\t<location x=\"".$transformations{$comp}[0]."\" y=\"".$transformations{$comp}[1]."\" z=\"".$transformations{$comp}[2]."\" $rota />\n</component>\n\n");
 
 	      # Panel pixellation
 	      write_process("\<type name=\"MonNDtype-$mantidcount2\" is=\"RectangularDetector\" type=\"pixel-$mantidcount2\"\n");
@@ -399,8 +406,15 @@ Transform {
 	  if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
 	      # First define a panel, cf. http://www.mantidproject.org/IDF#Creating_Rectangular_Area_Detectors
 	      my $type = "MonNDtype-$mantidcount2";
+	      my $angle = (180/pi)*acos(($transformations{$comp}[3]+$transformations{$comp}[7]+$transformations{$comp}[11]-1)/2);
+	      my $d21=$transformations{$comp}[8]-$transformations{$comp}[10]; my $d02=$transformations{$comp}[9]-$transformations{$comp}[5]; my $d10=$T[4]-$T[6];
+	      my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);
+	      my $rota="";
+	      if($d!=0){
+		$rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
+	      }
 	      write_process("<component type=\"".$type."\" name=\"$comp\" idlist=\"".$type."-list\">\n"); #(${mantidcount2}*1000000)."\">\n");
-	      write_process("\t<locations x=\"".$transformations{$comp}[0]."\" y=\"".($transformations{$comp}[1]+$ymin)."\" y-end=\"".($transformations{$comp}[1]+$ymax)."\" n-elements=\"".$ny."\" z=\"".$transformations{$comp}[2]."\"/>\n");
+	      write_process("\t<locations x=\"".$transformations{$comp}[0]."\" y=\"".($transformations{$comp}[1]+$ymin)."\" y-end=\"".($transformations{$comp}[1]+$ymax)."\" n-elements=\"".$ny."\" z=\"".$transformations{$comp}[2]."\" $rota /> \n");
 	      write_process("</component>\n\n");
 	      write_process("<type name=\"".$type."\">\n");
 	      write_process("\t<component type=\"pixel-".$mantidcount2."\">\n"); #(${mantidcount2}*1000000)."\">\n");
