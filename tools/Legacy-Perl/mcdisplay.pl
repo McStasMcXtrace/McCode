@@ -323,7 +323,7 @@ Transform {
 		$type = "some-sample-holder";
 	      }
 	      if (!($comp =~ /nD_Mantid/i)) {
-		# Component position for mantid - but not Monitor_nD case:
+		 # Component position for mantid - but not Monitor_nD case:
 		my $angle = (180/pi)*acos(($T[3]+$T[7]+$T[11]-1)/2);
 		my $d21=$T[8]-$T[10]; my $d02=$T[9]-$T[5]; my $d10=$T[4]-$T[6];
 		my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);
@@ -331,10 +331,16 @@ Transform {
 		if($d!=0){
 		  $rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
 		}
+		if (!($comp =~ /sample/i)) {
+		    if (!($comp =~ /source/i)) {
+			$type="$comp-type";
+			write_process("<type name=\"$type\"></type>\n\n");
+		    }
+		}
 		write_process("<component type=\"".$type."\" name=\"$comp\">\n");
 		write_process("<location x=\"".$T[0]."\" y=\"".$T[1]."\" z=\"".$T[2]."\" $rota />\n</component>\n\n");
 	      }
-	    }
+            }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /vrml/i) {
 		if($T[0]!=0 or $T[1]!=0 or $T[2]!=0){$transforms{$comp}.= "translation $T[0] $T[1] $T[2]\n";}
 		my $angle = acos(($T[3]+$T[7]+$T[11]-1)/2);
