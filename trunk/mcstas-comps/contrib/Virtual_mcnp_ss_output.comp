@@ -177,5 +177,10 @@ FINALLY
   closefiles_();
 %}
 
+MCDISPLAY
+%{
+  magnify("");
+%}
+
 END
 

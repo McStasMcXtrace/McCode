@@ -141,4 +141,9 @@ FINALLY
   fprintf(stdout, "\n");
 %}
 
+MCDISPLAY
+%{
+  magnify("");
+%}
+
 END

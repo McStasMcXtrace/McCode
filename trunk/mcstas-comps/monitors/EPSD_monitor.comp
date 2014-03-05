@@ -111,5 +111,10 @@ SAVE
         filename);
   %}
 
+MCDISPLAY
+%{
+  magnify("");
+%}
+
 END
 
