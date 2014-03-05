@@ -60,7 +60,7 @@ def add_mcrun_options(parser):
 
     # Multiprocessing
     add('--mpi',
-        type=int, metavar='NB_CPU',
+        metavar='NB_CPU',
         help='spread simulation over NB_CPU machines using MPI')
 
     add('--machines',

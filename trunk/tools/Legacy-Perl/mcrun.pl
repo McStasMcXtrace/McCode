@@ -563,8 +563,12 @@ sub exec_sim_local {
       push @cmd, " -machinefile $MCSTAS::mcstas_config{'HOSTFILE'}";
       $localonly = 0;
     }
-    if($mpi >= 0) {
+    if(!($mpi eq "auto")) {
+      if($mpi >= 0) {
         push @cmd, " -np $mpi";
+      }
+    } else {
+      print STDERR "Using system default number of mpirun -np processes\n";
     }
   }
   push @cmd, $out_file;
