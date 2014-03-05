@@ -623,11 +623,39 @@ Transform {
               write_process("INSTRUMENT.$comp.K{size(INSTRUMENT.$comp.K,2)+1}=coords;\n");
             }
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
-              # Line elements for Mantid, circle representation
-              # write_process("coords=[@coords];\n");
-            }
-
-        } elsif($st == 2 && /^MCDISPLAY: end$/) {
+	      # Circle elements for Mantid
+	      if (!($comp =~ /nD_Mantid/i) &&  !($comp =~ /sample/i) &&  !($comp =~ /source/i)) {
+		my $dx=0, $dy=0, $dz=0;
+		if($plane =~ /xy|yx/i) {
+		  $dz=1;
+		} elsif($plane =~ /xz|zx/i) {
+		  $dy=1;
+                } elsif($plane =~ /yz|zy/i) {
+		  $dx=1;
+		}
+		write_process("\n");
+		write_process("<type name=\"line-$comp-$mantidlinecount\" >\n");
+		write_process("\t<cylinder id=\"dummy\" >\n");
+		write_process("\t\t<centre-of-bottom-base x=\"".$x."\" y=\"".$y."\" z=\"".$z."\" />\n");
+		write_process("\t\t<axis x=\"".$dx."\" y=\"".$dy."\" z=\"".$dz."\" />\n");
+		write_process("\t\t<radius val=\"".$r."\" />\n"); 
+		write_process("\t\t<height val=\"0.01\" />\n"); # Hard-coded dimension of 1cm
+		write_process("\t</cylinder >\n");
+		write_process("\t<cylinder id=\"dummy2\" >\n");
+		write_process("\t\t<centre-of-bottom-base x=\"".$x."\" y=\"".$y."\" z=\"".$z."\" />\n");
+		write_process("\t\t<axis x=\"".$dx."\" y=\"".$dy."\" z=\"".$dz."\" />\n");
+		write_process("\t\t<radius val=\"".0.9*$r."\" />\n"); 
+		write_process("\t\t<height val=\"0.01\" />\n"); # Hard-coded dimension of 1cm
+		write_process("\t</cylinder >\n");
+		write_process("<algebra val=\"dummy (# dummy2)\" />>\n");
+		write_process("</type>\n");
+		$mantidlines=$mantidlines."\t<component type=\"line-$comp-".${mantidlinecount}."\" >\n";
+		$mantidlines=$mantidlines."\t\t<location x=\"0\" y=\"0\" z=\"0\" />\n";
+		$mantidlines=$mantidlines."\t</component >\n";
+		$mantidlinecount++;
+	      }
+	    }
+	 } elsif($st == 2 && /^MCDISPLAY: end$/) {
             $st = 1;  # End of component graphics representation
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
               # Matlab 'End of instrument'
@@ -720,6 +748,14 @@ Transform {
 
 }
 
+sub max {
+  my ($a, $b) = @_;
+  if ($a >= $b) {
+    return $a;
+  } else {
+    return $b;
+  }
+}
 
 sub make_instrument {
     my (@x, @y, @z, @ori, @dis, @comp);
