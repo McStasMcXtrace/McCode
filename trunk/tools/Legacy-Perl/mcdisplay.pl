@@ -568,7 +568,7 @@ Transform {
 		  write_process("\t<cylinder id=\"dummy\" >\n");
 		  write_process("\t\t<centre-of-bottom-base x=\"".$x0."\" y=\"".$y0."\" z=\"".$z0."\" />\n");
 		  write_process("\t\t<axis x=\"".$dx."\" y=\"".$dy."\" z=\"".$dz."\" />\n");
-		  write_process("\t\t<radius val=\"0.01\" />\n"); # Hard-coded dimension of 1cm
+		  write_process("\t\t<radius val=\"0.005\" />\n"); # Hard-coded dimension of 0.5cm
 		  write_process("\t\t<height val=\"".$length."\" />\n");
 		  write_process("\t</cylinder >\n");
 		  write_process("</type>\n");
@@ -641,7 +641,7 @@ Transform {
 		    write_process("\t<cylinder id=\"dummy\" >\n");
 		    write_process("\t\t<centre-of-bottom-base x=\"".$x0."\" y=\"".$y0."\" z=\"".$z0."\" />\n");
 		    write_process("\t\t<axis x=\"".$dx."\" y=\"".$dy."\" z=\"".$dz."\" />\n");
-		    write_process("\t\t<radius val=\"0.01\" />\n"); # Hard-coded dimension of 1cm
+		    write_process("\t\t<radius val=\"0.005\" />\n"); # Hard-coded dimension of 0.5cm
 		    write_process("\t\t<height val=\"".$length."\" />\n");
 		    write_process("\t</cylinder >\n");
 		    write_process("</type>\n");
