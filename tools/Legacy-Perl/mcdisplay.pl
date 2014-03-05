@@ -85,6 +85,9 @@ sub read_instrument {
     my $mantidfirst=1;
     my $mantidcount=-1;
     my $mantidcount2=-1;
+    my $mantidlines=""; # For visualizing multiline and circle geometry
+    my $mantidlinecount=0;
+    my $mantidtypebuffer=""; # For building up assembly of multiline geometry etc.
     $st = 0;
     @components = ();
     while(<$in>) {
@@ -118,6 +121,8 @@ sub read_instrument {
 	      write_process("\t\t<default-view axis-view=\"z-\"/>\n");
 	      write_process("\t</defaults>\n\n");
 	      write_process("<!-- LIST OF PHYSICAL COMPONENTS (which the instrument consists of) -->\n\n");
+	      # Fallback, dummy component for Mantid use
+	      write_process("<type name=\"Othercomp\"></type>\n\n");
 	    }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /VRML/i) {
 	    my @argv=@ARGV;
@@ -314,27 +319,25 @@ Transform {
 	      my $type = "Othercomp";
 	      my $isa ="";
 	      if ($comp =~ /source/i) {
-		$isa = "is=\"Source\"";
-		$type = "source";
-	      write_process("<type name=\"some-sample-holder\" is=\"SamplePos\" />\n");
+	      	$isa = "is=\"Source\"";
+	      	$type = "source";
 	      }
 	      if ($comp =~ /sample/i) {
-		$isa = "is=\"SamplePos\"";
-		$type = "some-sample-holder";
+	      	$isa = "is=\"SamplePos\"";
+	      	$type = "some-sample-holder";
 	      }
 	      if (!($comp =~ /nD_Mantid/i)) {
-		 # Component position for mantid - but not Monitor_nD case:
-		my $angle = (180/pi)*acos(($T[3]+$T[7]+$T[11]-1)/2);
-		my $d21=$T[8]-$T[10]; my $d02=$T[9]-$T[5]; my $d10=$T[4]-$T[6];
-		my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);
-		my $rota="";
-		if($d!=0){
-		  $rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
-		}
-		$type="$comp-type";
-		write_process("<type name=\"$type\" $isa ></type>\n\n");
-		write_process("<component type=\"".$type."\" name=\"$comp\">\n");
-		write_process("<location x=\"".$T[0]."\" y=\"".$T[1]."\" z=\"".$T[2]."\" $rota />\n</component>\n\n");
+	      	 # Component position for mantid - but not Monitor_nD case:
+	      	my $angle = (180/pi)*acos(($T[3]+$T[7]+$T[11]-1)/2);
+	      	my $d21=$T[8]-$T[10]; my $d02=$T[9]-$T[5]; my $d10=$T[4]-$T[6];
+	      	my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);
+	      	my $rota="";
+	      	if($d!=0){
+	      	  $rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
+	      	}
+	      	$type="$comp-type";
+	      	write_process("<component type=\"".$type."\" name=\"$comp\">\n");
+	      	write_process("<location x=\"".$T[0]."\" y=\"".$T[1]."\" z=\"".$T[2]."\" $rota />\n</component>\n\n");
 	      }
             }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /vrml/i) {
@@ -500,6 +503,32 @@ Transform {
 	    $compdraw{$comp} = {};
             $compdraw{$comp}{'elems'} = [];
 	    #$compdraw{$comp}{'header'} = $compheader;
+	    if (! ($mantidlines eq "")) {
+	      # Output last lines corresponding to previous component. - needs to be done at MCDISPLAY: end also
+	      write_process($mantidlines);
+	      # write_process($mantidlinesend);
+	      write_process("</type>\n");
+            }
+	    # Component position for mantid:
+	    my $type = "Othercomp";
+	    my $isa ="";
+	    if ($comp =~ /source/i) {
+	      $isa = "is=\"Source\"";
+	      $type = "source";
+	    } elsif ($comp =~ /sample/i) {
+	      $isa = "is=\"SamplePos\"";
+	      $type = "some-sample-holder";
+	    } else {
+	      $type="$comp-type";
+	    }
+	    if (!($comp =~ /nD_Mantid/i)) {
+	      $mantidlines="\n<type name=\"".$comp."-type\" $isa >\n";
+	      $mantidlinecount=0;
+	    } else {
+	      $mantidlines="";
+	      # For now, do niente...
+	    }
+	    
 	} elsif($st == 2 && /^MCDISPLAY: magnify\('([xyz]*)'\)$/) {
             my $mag = $1;
             $compdraw{$comp}{'magX'} = 1 if $mag =~ /x/i;
@@ -522,9 +551,33 @@ Transform {
               write_process("INSTRUMENT.$comp.K{size(INSTRUMENT.$comp.K,2)+1}=coords;\n");
             }           
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
-              # Line elements for mantid... 
-            }
-        } elsif($st == 2 &&
+	      # Line elements for Mantid
+	      if (!($comp =~ /nD_Mantid/i) &&  !($comp =~ /sample/i) &&  !($comp =~ /source/i)) {
+		my $looper;
+		for ($looper =  0; $looper < $count-1; $looper++) {
+		  # Coordinates to look at
+		  my $x0, $y0, $z0, $x1, $y1, $z1, $dx, $dy, $dz, $length;
+		  $x0 = $coords[3*$looper  ]; $y0 = $coords[3*$looper+1]; $z0 = $coords[3*$looper+2];
+		  $x1 = $coords[3*$looper+3]; $y1 = $coords[3*$looper+4]; $z1 = $coords[3*$looper+5];
+		  $dx = $x1-$x0; $dy = $y1-$y0; $dz = $z1-$z0;
+		  $length = sqrt($dx*$dx + $dy*$dy + $dz*$dz);
+		  write_process("\n");
+		  write_process("<type name=\"line-$comp-$mantidlinecount\" >\n");
+		  write_process("\t<cylinder id=\"dummy\" >\n");
+		  write_process("\t\t<centre-of-bottom-base x=\"".$x0."\" y=\"".$y0."\" z=\"".$z0."\" />\n");
+		  write_process("\t\t<axis x=\"".$dx."\" y=\"".$dy."\" z=\"".$dz."\" />\n");
+		  write_process("\t\t<radius val=\"0.01\" />\n"); # Hard-coded dimension of 1cm
+		  write_process("\t\t<height val=\"".$length."\" />\n");
+		  write_process("\t</cylinder >\n");
+		  write_process("</type>\n");
+		  $mantidlines=$mantidlines."\t<component type=\"line-$comp-".${mantidlinecount}."\" >\n";
+		  $mantidlines=$mantidlines."\t\t<location x=\"0\" y=\"0\" z=\"0\" />\n";
+		  $mantidlines=$mantidlines."\t</component >\n";
+		  $mantidlinecount++;
+		}
+	      }
+	    }
+	  } elsif($st == 2 &&
                 /^MCDISPLAY: circle\('([xyzXYZ]{2})',([-+0-9.eE]+),([-+0-9.eE]+),([-+0-9.eE]+),([-+0-9.eE]+)\)$/) {
             my ($plane,$x,$y,$z,$r) = ($1,$2,$3,$4,$5);
             # Make a circle using a 25-order multiline.
@@ -570,7 +623,7 @@ Transform {
               write_process("INSTRUMENT.$comp.K{size(INSTRUMENT.$comp.K,2)+1}=coords;\n");
             }
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
-              # Line elements for Matlab struct, circle representation
+              # Line elements for Mantid, circle representation
               # write_process("coords=[@coords];\n");
             }
 
@@ -596,6 +649,12 @@ Transform {
               }
             }
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+	      if (! ($mantidlines eq "")) {
+		# Output last lines corresponding to previous component. - needs to be done at MCDISPLAY: end also
+		write_process($mantidlines);
+		# write_process($mantidlinesend);
+		write_process("</type>\n");
+	      }
               # Mantid 'End of instrument'
 	      write_process("</instrument>\n");
             }
