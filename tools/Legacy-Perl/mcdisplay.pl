@@ -627,34 +627,30 @@ Transform {
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
 	      # Circle elements for Mantid
 	      if (!($comp =~ /nD_Mantid/i) &&  !($comp =~ /sample/i) &&  !($comp =~ /source/i)) {
-		my $dx=0, $dy=0, $dz=0;
-		if($plane =~ /xy|yx/i) {
-		  $dz=1;
-		} elsif($plane =~ /xz|zx/i) {
-		  $dy=1;
-                } elsif($plane =~ /yz|zy/i) {
-		  $dx=1;
+		if (!($comp =~ /nD_Mantid/i) &&  !($comp =~ /sample/i) &&  !($comp =~ /source/i)) {
+		  my $looper;
+		  for ($looper =  0; $looper <=24 ; $looper++) {
+		    # Coordinates to look at
+		    my $x0, $y0, $z0, $x1, $y1, $z1, $dx, $dy, $dz, $length;
+		    $x0 = $coords[3*$looper  ]; $y0 = $coords[3*$looper+1]; $z0 = $coords[3*$looper+2];
+		    $x1 = $coords[3*$looper+3]; $y1 = $coords[3*$looper+4]; $z1 = $coords[3*$looper+5];
+		    $dx = $x1-$x0; $dy = $y1-$y0; $dz = $z1-$z0;
+		    $length = sqrt($dx*$dx + $dy*$dy + $dz*$dz);
+		    write_process("\n");
+		    write_process("<type name=\"line-$comp-$mantidlinecount\" >\n");
+		    write_process("\t<cylinder id=\"dummy\" >\n");
+		    write_process("\t\t<centre-of-bottom-base x=\"".$x0."\" y=\"".$y0."\" z=\"".$z0."\" />\n");
+		    write_process("\t\t<axis x=\"".$dx."\" y=\"".$dy."\" z=\"".$dz."\" />\n");
+		    write_process("\t\t<radius val=\"0.01\" />\n"); # Hard-coded dimension of 1cm
+		    write_process("\t\t<height val=\"".$length."\" />\n");
+		    write_process("\t</cylinder >\n");
+		    write_process("</type>\n");
+		    $mantidlines=$mantidlines."\t<component type=\"line-$comp-".${mantidlinecount}."\" >\n";
+		    $mantidlines=$mantidlines."\t\t<location x=\"0\" y=\"0\" z=\"0\" />\n";
+		    $mantidlines=$mantidlines."\t</component >\n";
+		    $mantidlinecount++;
+		  }
 		}
-		write_process("\n");
-		write_process("<type name=\"line-$comp-$mantidlinecount\" >\n");
-		write_process("\t<cylinder id=\"dummy\" >\n");
-		write_process("\t\t<centre-of-bottom-base x=\"".$x."\" y=\"".$y."\" z=\"".$z."\" />\n");
-		write_process("\t\t<axis x=\"".$dx."\" y=\"".$dy."\" z=\"".$dz."\" />\n");
-		write_process("\t\t<radius val=\"".$r."\" />\n"); 
-		write_process("\t\t<height val=\"0.01\" />\n"); # Hard-coded dimension of 1cm
-		write_process("\t</cylinder >\n");
-		write_process("\t<cylinder id=\"dummy2\" >\n");
-		write_process("\t\t<centre-of-bottom-base x=\"".$x."\" y=\"".$y."\" z=\"".$z."\" />\n");
-		write_process("\t\t<axis x=\"".$dx."\" y=\"".$dy."\" z=\"".$dz."\" />\n");
-		write_process("\t\t<radius val=\"".0.9*$r."\" />\n"); 
-		write_process("\t\t<height val=\"0.01\" />\n"); # Hard-coded dimension of 1cm
-		write_process("\t</cylinder >\n");
-		write_process("<algebra val=\"dummy (# dummy2)\" />>\n");
-		write_process("</type>\n");
-		$mantidlines=$mantidlines."\t<component type=\"line-$comp-".${mantidlinecount}."\" >\n";
-		$mantidlines=$mantidlines."\t\t<location x=\"0\" y=\"0\" z=\"0\" />\n";
-		$mantidlines=$mantidlines."\t</component >\n";
-		$mantidlinecount++;
 	      }
 	    }
 	 } elsif($st == 2 && /^MCDISPLAY: end$/) {
