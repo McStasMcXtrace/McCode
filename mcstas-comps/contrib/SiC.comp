@@ -108,6 +108,11 @@ TRACE
   }
 %}
 
+MCDISPLAY
+%{
+  magnify("");
+%}
+
 END
 
 

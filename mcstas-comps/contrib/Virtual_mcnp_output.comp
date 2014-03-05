@@ -171,4 +171,9 @@ FINALLY
   if (hfile) fclose(hfile);
 %}
 
+MCDISPLAY
+%{
+  magnify("");
+%}
+
 END
