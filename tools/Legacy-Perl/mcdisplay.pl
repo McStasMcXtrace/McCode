@@ -118,10 +118,6 @@ sub read_instrument {
 	      write_process("\t\t<default-view axis-view=\"z-\"/>\n");
 	      write_process("\t</defaults>\n\n");
 	      write_process("<!-- LIST OF PHYSICAL COMPONENTS (which the instrument consists of) -->\n\n");
-	      # Initialize a few component types
-	      write_process("<type name=\"Othercomp\"></type>\n\n");
-	      write_process("<type name=\"source\" is=\"Source\" />\n");
-	      write_process("<type name=\"some-sample-holder\" is=\"SamplePos\" />\n");
 	    }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /VRML/i) {
 	    my @argv=@ARGV;
@@ -316,10 +312,14 @@ Transform {
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
               # Component position for mantid:
 	      my $type = "Othercomp";
+	      my $isa ="";
 	      if ($comp =~ /source/i) {
+		$isa = "is=\"Source\"";
 		$type = "source";
+	      write_process("<type name=\"some-sample-holder\" is=\"SamplePos\" />\n");
 	      }
 	      if ($comp =~ /sample/i) {
+		$isa = "is=\"SamplePos\"";
 		$type = "some-sample-holder";
 	      }
 	      if (!($comp =~ /nD_Mantid/i)) {
@@ -331,12 +331,8 @@ Transform {
 		if($d!=0){
 		  $rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
 		}
-		if (!($comp =~ /sample/i)) {
-		    if (!($comp =~ /source/i)) {
-			$type="$comp-type";
-			write_process("<type name=\"$type\"></type>\n\n");
-		    }
-		}
+		$type="$comp-type";
+		write_process("<type name=\"$type\" $isa ></type>\n\n");
 		write_process("<component type=\"".$type."\" name=\"$comp\">\n");
 		write_process("<location x=\"".$T[0]."\" y=\"".$T[1]."\" z=\"".$T[2]."\" $rota />\n</component>\n\n");
 	      }
