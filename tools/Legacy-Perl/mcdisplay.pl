@@ -509,26 +509,28 @@ Transform {
 	      # write_process($mantidlinesend);
 	      write_process("</type>\n");
             }
+	    
 	    # Component position for mantid:
 	    my $type = "Othercomp";
 	    my $isa ="";
-	    if ($comp =~ /source/i) {
-	      $isa = "is=\"Source\"";
-	      $type = "source";
-	    } elsif ($comp =~ /sample/i) {
-	      $isa = "is=\"SamplePos\"";
-	      $type = "some-sample-holder";
-	    } else {
-	      $type="$comp-type";
-	    }
-	    if (!($comp =~ /nD_Mantid/i)) {
-	      $mantidlines="\n<type name=\"".$comp."-type\" $isa >\n";
-	      $mantidlinecount=0;
-	    } else {
-	      $mantidlines="";
-	      # For now, do niente...
-	    }
-	    
+	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+	      if ($comp =~ /source/i) {
+		$isa = "is=\"Source\"";
+		$type = "source";
+	      } elsif ($comp =~ /sample/i) {
+		$isa = "is=\"SamplePos\"";
+		$type = "some-sample-holder";
+	      } else {
+		$type="$comp-type";
+	      }
+	      if (!($comp =~ /nD_Mantid/i)) {
+		$mantidlines="\n<type name=\"".$comp."-type\" $isa >\n";
+		$mantidlinecount=0;
+	      } else {
+		$mantidlines="";
+		# For now, do niente...
+	      }
+	    }	      
 	} elsif($st == 2 && /^MCDISPLAY: magnify\('([xyz]*)'\)$/) {
             my $mag = $1;
             $compdraw{$comp}{'magX'} = 1 if $mag =~ /x/i;
