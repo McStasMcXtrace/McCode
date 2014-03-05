@@ -181,8 +181,13 @@ class McStas:
         if override_mpi or override_mpi is None and mpi:
             LOG.debug('Running via MPI: %s', self.binpath)
             binpath = self.options.mpirun
-            mpi_flags = ['-np', str(self.options.mpi)] \
-                        if self.options.mpi >= 1 else []
+            if self.options.mpi == "auto":
+                LOG.info('Using system default number of mpirun -np processes')
+                mpi_flags = []
+            elif self.options.mpi >= 1:
+                mpi_flags = ['-np', str(self.options.mpi)]
+            else:
+                mpi_flags = []
             args = mpi_flags + [self.binpath] + args
         return Process(binpath).run(args, pipe=pipe)
 
