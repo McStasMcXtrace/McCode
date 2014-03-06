@@ -514,10 +514,10 @@ Transform {
 	    my $type = "Othercomp";
 	    my $isa ="";
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
-	      if ($comp =~ /source/i) {
+	      if ($comp =~ /sourceMantid/i) {
 		$isa = "is=\"Source\"";
 		$type = "source";
-	      } elsif ($comp =~ /sample/i) {
+	      } elsif ($comp =~ /sampleMantid/i) {
 		$isa = "is=\"SamplePos\"";
 		$type = "some-sample-holder";
 	      } else {
