@@ -20,6 +20,9 @@ find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 -- nsis
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mingw64 -- nsis
 ./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mingw64 -- nsis
+./mkdist mcstas-tools-Python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mingw64 -- nsis
+./mkdist mcstas-tools-Python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mingw64 -- nsis
+./mkdist mcstas-tools-Python-mcdisplay-vtk $1 tools/Python/mcdisplay/vtk/ "" mingw64 -- nsis
 ./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" mingw64 -- nsis
 
 # 32-bit
@@ -30,6 +33,9 @@ find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 ./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw32 -- nsis
 ./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mingw32 -- nsis
 ./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mingw32 -- nsis
+./mkdist mcstas-tools-Python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mingw32 -- nsis
+./mkdist mcstas-tools-Python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mingw32 -- nsis
+./mkdist mcstas-tools-Python-mcdisplay-vtk $1 tools/Python/mcdisplay/vtk/ "" mingw32 -- nsis
 ./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" mingw32 -- nsis
 
 if [ "x$2" != "x" ]; then
