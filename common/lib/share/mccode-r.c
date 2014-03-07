@@ -1374,7 +1374,10 @@ static void mcinfo_out_nexus(NXhandle f)
           mcinstrument_source, mcinstrument_name);
       
       /* add Mantid/IDF.xml when available */
-      buffer = mcinfo_readfile("IDF.xml");
+      char *IDFfile=NULL;
+      IDFfile = (char*)malloc(CHAR_BUF_LENGTH);
+      sprintf(IDFfile,"%s%s",mcinstrument_name,".xml");
+      buffer = mcinfo_readfile(IDFfile);
       if (buffer && strlen(buffer)) {
         NXmakegroup (nxhandle, "instrument_xml", "NXnote");
         NXopengroup (nxhandle, "instrument_xml", "NXnote");
@@ -1384,6 +1387,7 @@ static void mcinfo_out_nexus(NXhandle f)
         NXclosegroup(f); /* instrument_xml */
         free(buffer);
       }
+      free(IDFfile);
       NXclosegroup(f); /* instrument */
     } /* NXinstrument */
 
