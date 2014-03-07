@@ -16,7 +16,7 @@ fi
 ./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mac -- OSXpkg
 ./mkdist mcstas-tools-Python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mac -- OSXpkg
 ./mkdist mcstas-tools-Python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac -- OSXpkg
-./mkdist mcstas-tools-Python-mcdisplay-vtk $1 tools/Python/mcdisplay/vtk/ "" mac -- OSXpkg
+./mkdist mcstas-tools-Python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac -- OSXpkg
 ./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" mac -- OSXpkg
 
 if [ "x$2" != "x" ]; then
