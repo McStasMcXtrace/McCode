@@ -629,7 +629,7 @@ Transform {
 	      if (!($comp =~ /nD_Mantid/i) &&  !($comp =~ /sample/i) &&  !($comp =~ /source/i)) {
 		if (!($comp =~ /nD_Mantid/i) &&  !($comp =~ /sample/i) &&  !($comp =~ /source/i)) {
 		  my $looper;
-		  for ($looper =  0; $looper <=24 ; $looper++) {
+		  for ($looper =  0; $looper <24 ; $looper++) {
 		    # Coordinates to look at
 		    my $x0, $y0, $z0, $x1, $y1, $z1, $dx, $dy, $dz, $length;
 		    $x0 = $coords[3*$looper  ]; $y0 = $coords[3*$looper+1]; $z0 = $coords[3*$looper+2];
