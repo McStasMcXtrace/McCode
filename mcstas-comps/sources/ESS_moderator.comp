@@ -292,7 +292,8 @@ TRACE
   vz = v*dist/r;
   vy = v*dy/r;
   vx = v*dx/r;
-
+  
+  modextras.X=x; modextras.Y=y; modextras.Z=z;
   /* Determine delta-t needed to reach first chopper */
   if (tfocus_width>0) {
     dt = tfocus_dist/vz;			/* Flight time to time window (chopper) */

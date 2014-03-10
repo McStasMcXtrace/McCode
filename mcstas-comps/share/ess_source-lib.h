@@ -71,5 +71,9 @@ double TSC_y0_Model(double y,double height, double center);
 void ESS_mcdisplay_flat(double geometry);
 void ESS_mcdisplay_TDRlike(double geometry);
 
+double TSC_y0_cold(double y0,double height);
+double TSC_alpha_of_lambda_for_t_cold(double lambda,double height);
+double TSC_TimeDist_cold(double t, double lambda, double height, double pulselength, double gamma);
+
 /* end of ess_source-lib.h */
 #endif
