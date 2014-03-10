@@ -29,13 +29,14 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ESS_Brilliance_2014(frac=1, power=5, flat=0, string srcdef="2014",yheight=0.01, width=0.01)
+DEFINE INSTRUMENT ESS_Brilliance_2014(frac=1, power=5, flat=0, string srcdef="2014",yheight=0.01, width=0.01,np=1)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
   double lambdamin,lambdamax;
+  int IsCold;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -60,24 +61,42 @@ TRACE
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
-  COMPONENT Source=ESS_moderator(yheight_t=yheight,yheight_c=yheight,width_c=width,width_t=width,cyl_radius=0.0,dist=1,focus_xw=0.01,focus_yh=0.01,Lmin=lambdamin,Lmax=lambdamax, cold_frac=frac, sourcedef=srcdef, acc_power=power, planar=flat)
+COMPONENT Source=ESS_moderator(yheight_t=yheight,yheight_c=yheight,width_c=width,width_t=width,cyl_radius=0.0,dist=1,focus_xw=0.01,focus_yh=0.01,Lmin=lambdamin,Lmax=lambdamax, cold_frac=frac, sourcedef=srcdef, acc_power=power, planar=flat, n_pulses=np)
   AT (0, 0, 0) RELATIVE Origin
-  EXTEND %{
+EXTEND %{
+  IsCold=cold;
 %}
 
+/* Cylindrical Monitor wrapping around the cyl. cold source - NOTE: Only monitors cold neutrons from cold moderator */
+COMPONENT Cyl = Monitor_nD(
+  xwidth=2*width, yheight=1.1*yheight, filename="cyl.dat",
+  options="banana, theta limits=[-35 35] bins=101, auto y")
+WHEN (IsCold && !flat) AT (0,0,0) RELATIVE PREVIOUS
 
+/* TOF-lambda montitor at 20cm */
 COMPONENT TOFLmon = TOFLambda_monitor(
     nL = 196, nt = 601, filename = "tofl", tmin = 0,
     tmax = 20000, Lmin = lambdamin, Lmax = lambdamax, xwidth=1, yheight=1)
   AT (0, 0, 0.2) RELATIVE Source
 
+/* PSD at 21 cm*/
+COMPONENT PSDmon = PSD_monitor(
+   filename = "PSD", nx=101, ny=101,
+   xwidth=2.2*width, yheight=2.2*yheight)
+  AT (0, 0, 0.21) RELATIVE Source
 
+/* Vertial linear PSD at 21.1cm */
+COMPONENT PSDlinmon = PSDlin_monitor(filename = "PSDlin", nx=101, 
+   xwidth=2.2*yheight, yheight=2.2*width)
+  AT (0, 0, 0.211) RELATIVE Source
+  ROTATED(0,0,90) RELATIVE Source
+
+/* Brilliance monitor. Note use of geometry in srcarea definition */
 COMPONENT Brillmon = Brilliance_monitor(
     nlam = 196, nt = 601, filename = "brill", t_0 = 0,
-    t_1 = 6000, lambda_0 = lambdamin, lambda_1 = lambdamax,
+    t_1 =10000, lambda_0 = lambdamin, lambda_1 = lambdamax,
     Freq =14, toflambda=1,tofcuts=1, srcarea=(100*width*100*yheight))
   AT (0, 0, 1) RELATIVE Source
-
 
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */
