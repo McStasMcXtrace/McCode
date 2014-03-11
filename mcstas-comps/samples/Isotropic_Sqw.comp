@@ -417,6 +417,8 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   double single_coh;
   double single_inc;
   double multi;
+  
+  long index_counter;
 };
 
 #include <stdio.h>
@@ -1815,6 +1817,7 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
 {
   double ret=0;
 
+  /* read files */
   struct Sqw_Data_struct *d_inc, *d_coh;
   Sqw->type = 'i';
   d_inc = Sqw_readfile(Sqw, file_inc, &(Sqw->Data_inc));
@@ -1964,6 +1967,7 @@ INITIALIZE
   VarSqw.lookup_length=100;
   VarSqw.mat_weight    = weight;
   VarSqw.mat_density   = density;
+  VarSqw.index_counter = 0;
 
   /* PowderN compatibility members */
   VarSqw.Dd        = powder_Dd;
@@ -2071,6 +2075,7 @@ VarSqw.ti   = t;
 VarSqw.vi   = 0;
 VarSqw.ki   = 0;
 VarSqw.type = '\0';
+VarSqw.index_counter = VarSqw.maxloop;
 
 do { /* Main interaction loop. Ends with intersect=0 */
 
@@ -2333,6 +2338,9 @@ do { /* Main interaction loop. Ends with intersect=0 */
         if (index_w >= Data_sqw.w_bins) index_w = Data_sqw.w_bins-1;
         randmax = Data_sqw.SW[index_w].cumul_proba;
         tmp_rand = rand0max(randmax < 1 ? randmax : 1);
+        if (VarSqw.verbose_output >= 3 && randmax > 1)
+            printf("Isotropic_Sqw: %s: Warning: randmax=%g > 1 for energy choice for index_w=%li.\n",
+              NAME_CURRENT_COMP, randmax, index_w);
         /* index for rand > cumul SW */
         index_w = Sqw_search_SW(Data_sqw, tmp_rand);
         if (&(Data_sqw.SW[index_w]) != NULL) {
@@ -2379,6 +2387,10 @@ do { /* Main interaction loop. Ends with intersect=0 */
         if (index_q >= Data_sqw.q_bins) index_q = Data_sqw.q_bins-1;
         randmax =
           Data_sqw.SQW[index_w][index_q].cumul_proba;
+        if (VarSqw.verbose_output >= 3 && randmax > 1)
+            printf("Isotropic_Sqw: %s: Warning: randmax=%g >= 1 for momentum choice\n"
+                   "               for w=%g index_w=%li index_q=%li\n",
+              NAME_CURRENT_COMP, randmax, omega, index_w, index_q);
         tmp_rand = rand0max(randmax < 1 ? randmax : 1);
         index_q = Sqw_search_Q_proba_per_w(Data_sqw, tmp_rand, index_w);
         if (index_q == -1) {
@@ -2441,7 +2453,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         /* acceptable values for kf are kf1 and kf2 */
         if (!solve_2nd_order(&kf1, &kf2, 1, 0, -k*k + VarSqw.sqSE2K*omega)) {
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
-            printf("Isotropic_Sqw: %s: Warning: imaginary root for w=%g q=%g ki=%g (triangle can not close)\n",
+            printf("Isotropic_Sqw: %s: Warning: imaginary root for w=%g q=%g Ei=%g (triangle can not close)\n",
             NAME_CURRENT_COMP, omega, q, Ei);
           VarSqw.neutron_removed++;
           continue; /* all roots are imaginary */
@@ -2474,9 +2486,14 @@ do { /* Main interaction loop. Ends with intersect=0 */
         if (order && SCATTERED != order) ABSORB;
         break;       /* finish multiple scattering loop */
       }
+      
+      VarSqw.index_counter = index_counter;
 
       /* scattering angle from ki to DS cone */
       theta = acos(costheta);
+      
+      /* correct weight by 4PI/lambda*sin(theta) for MC choice */
+      p_mult *= sin(theta);
 
       /* Choose point on Debye-Scherrer cone */
       if (order == 1 && d_phi)
@@ -2584,9 +2601,7 @@ FINALLY
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0)
   for (k=0; k < 2; k++) {
     struct Sqw_Data_struct Data_sqw;
-    char type_ci[64];
 
-    strcpy(type_ci, (k == 0 ? "coherent" : "incoherent"));
     Data_sqw =  (k == 0 ? VarSqw.Data_coh : VarSqw.Data_inc);
     /* Data_sqw->Sqw has already been freed at end of INIT */
     Table_Free(&(Data_sqw.iqSq));
@@ -2605,7 +2620,7 @@ FINALLY
           VarSqw.neutron_exit+VarSqw.neutron_removed, VarSqw.maxloop);
   if (VarSqw.neutron_pmult)
     printf("Isotropic_Sqw: %s: %li neutron events (out of %li) reached\n"
-           "WARNING        unrealistic weight. The S(q,w) norm might be too high\n",
+           "WARNING        unrealistic weight. The S(q,w) norm might be too high.\n",
           NAME_CURRENT_COMP, VarSqw.neutron_pmult, VarSqw.neutron_exit);
 
   if (VarSqw.verbose_output >= 1 && VarSqw.psum_scatt > 0) {

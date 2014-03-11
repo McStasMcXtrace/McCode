@@ -79,10 +79,10 @@
 * %End
 ******************************************************************************/
 DEFINE COMPONENT Monitor_Sqw 
-DEFINITION PARAMETERS (string options=0, string filename=0,string geometry=0)
+DEFINITION PARAMETERS (string options=0, string filename=0,string geometry=0, user3=FLT_MAX, username3=0)
 SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, 
   xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, radius=0,
-  bins=0, min=-1e40, max=1e40, 
+  bins=0, min=-1e40, max=1e40,
   int index=-1)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, detector)
@@ -129,7 +129,7 @@ INITIALIZE %{
 
   strcpy(Vars.UserName1, "Momentum transfer Q [Angs-1]");
   strcpy(Vars.UserName2, "Energy transfer w [meV]");
-  strcpy(Vars.UserName3, "");
+  strncpy(Vars.UserName3, username3 && strlen(username3) ? username3 : "", 128);
   if (radius) { 
     xwidth = zdepth = 2*radius;
     if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana")) 
@@ -168,6 +168,8 @@ TRACE %{
   double  t1 = 0;
   double  pp;
   int     intersect   = 0;
+  
+  if (user3 != FLT_MAX) Vars.UserVariable3 = user3;
 
   if (geometry && strlen(geometry))
   {
