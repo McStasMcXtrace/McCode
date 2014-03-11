@@ -18,16 +18,16 @@
  * active when using a spherical sample shape (height=0).
  * detector is 2.5 m diameter, with 40 cm heigh, 1 inch diameter detector tubes.
  *
- * %Example: E0=4.94 Detector:  M_single_coh_I=4.92e-11
- * %Example: E0=33 dE=1.07 dt=9.6e-6 Detector: M_single_coh_I=6.25e-10
+ * %Example: E0=4.94 Detector:  M_single_coh_I=3.5e-11
+ * %Example: E0=33 dE=1.07 dt=9.6e-6 Detector: M_single_coh_I=4.2e-10
  *
  * %Parameters
  * INPUT PARAMETERS:
  *  E0:        incident neutron beam energy                [meV]
  *  dE:        incident neutron beam energy spread         [meV]
  *  dt:        time spread from chopper distribution       [s]
- *  coh:       sample coherent Sqw data file or NULL      [str]
- *  inc:       sample incoherent Sqw data file or NULL    [str]
+ *  coh:       sample coherent Sqw data file or NULL       [str]
+ *  inc:       sample incoherent Sqw data file or NULL     [str]
  *  radius:    radius of sample (outer).                   [m]
  *  thickness: thickness of sample. 0=filled               [m]
  *  yheight:   height of sample. 0=sphere                  [m]
