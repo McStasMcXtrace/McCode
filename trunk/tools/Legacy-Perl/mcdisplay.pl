@@ -1512,7 +1512,7 @@ if ($plotter =~ /scriptfile/i && not $file_output) {
 }
 
 if ($plotter =~ /mantid/i && not $file_output) {
-  $file_output="$sim.xml";
+  $file_output="$sim.instr.xml";
   print STDERR "Outputting to file $file_output\n";
 }
 
