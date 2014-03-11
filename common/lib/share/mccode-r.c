@@ -1376,7 +1376,7 @@ static void mcinfo_out_nexus(NXhandle f)
       /* add Mantid/IDF.xml when available */
       char *IDFfile=NULL;
       IDFfile = (char*)malloc(CHAR_BUF_LENGTH);
-      sprintf(IDFfile,"%s%s",mcinstrument_name,".xml");
+      sprintf(IDFfile,"%s%s",mcinstrument_source,".xml");
       buffer = mcinfo_readfile(IDFfile);
       if (buffer && strlen(buffer)) {
         NXmakegroup (nxhandle, "instrument_xml", "NXnote");
