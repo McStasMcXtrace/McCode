@@ -8,14 +8,22 @@ MC="@MCCODE_PREFIX@"
 NO_ALTERNATIVES="@NO_ALTERNATIVES@"
 
 # Include installation path before any attempt to postconfig
-export PATH=${PREFIX}/lib/$FLAVOR-$VERSION/bin:${PATH}
-MCCODE=${FLAVOR}-${VERSION}
+export PATH=${PREFIX}/lib/${FLAVOR}/${VERSION}/bin:${PATH}
+MCCODE=${FLAVOR}
 
-cd $PREFIX/bin
-ln -sf ${PREFIX}/lib/$FLAVOR-$VERSION/bin/* .
+# If this Unix has "modulefiles" installed in /etc, dump environment config there,
+# else a simple set of links will do...
+if [ -d /etc/modulefiles ]; 
+then
+    mkdir -p /etc/modulefiles/${FLAVOR}
+    cp ${PREFIX}/lib/${FLAVOR}/${VERSION}/module /etc/modulefiles/${FLAVOR}/${VERSION}
+else    
+    cd ${PREFIX}/bin
+    ln -sf ${PREFIX}/lib/${FLAVOR}/${VERSION}/bin/* .
+fi
 
 # Check if mcdoc is installed and if it needs to run
-if [ -x ${PREFIX}/lib/${FLAVOR}-${VERSION}/bin/${MC}doc ] && \
-    [ -d ${PREFIX}/lib/${MCCODE}/examples ]; then
-    ${PREFIX}/lib/${FLAVOR}-${VERSION}/bin/${MC}doc --text &>/dev/null
+if [ -x ${PREFIX}/lib/${FLAVOR}/${VERSION}/bin/${MC}doc ] && \
+    [ -d ${PREFIX}/lib/${FLAVOR}/${VERSION}/examples ]; then
+    ${PREFIX}/lib/${FLAVOR}/${VERSION}/bin/${MC}doc --text &>/dev/null
 fi

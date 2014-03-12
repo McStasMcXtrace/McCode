@@ -32,7 +32,7 @@ else()
   set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${MCCODE_NAME}")
   set(MANUAL "mcstas-manual.pdf")
   set(CMANUAL "mcstas-components.pdf")
-  set(MANDEST "${lib}/${MCCODE_NAME}/doc/manuals")
+  set(MANDEST "${lib}/${FLAVOR}/${MCCODE_VERSION}/doc/manuals")
 endif()
 
 

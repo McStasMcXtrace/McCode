@@ -3,7 +3,7 @@ macro(installLib path)
   if(WINDOWS)
     set(dest "${lib}")
   else()
-    set(dest "${lib}/${MCCODE_NAME}")
+    set(dest "${lib}/${FLAVOR}/${MCCODE_VERSION}")
   endif()
 
   install (
@@ -138,7 +138,7 @@ macro(setupMCCODE FLAVOR)
     string(REPLACE "/" "\\\\" MCCODE_LIB "${MCCODE_LIB}")
   else()
     set(MCCODE_BIN "${CMAKE_INSTALL_PREFIX}/${bin}/${MCCODE_NAME}")
-    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${MCCODE_NAME}")
+    set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}/${MCCODE_VERSION}")
   endif()
 
   # Set instrument suffix (after compilation)

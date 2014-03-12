@@ -36,7 +36,7 @@ set(TOOLS_NAME "${FLAVOR}-tools-python-${P}plot-matplotlib-${MCCODE_VERSION}")
 if(WINDOWS)
   set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
 else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
+  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
 endif()
 
 
@@ -87,7 +87,7 @@ endif()
 # Program files
 install(
   FILES ${BINS}
-  DESTINATION "${lib}/${TOOLS_NAME}"
+  DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
   PERMISSIONS
   OWNER_READ OWNER_WRITE OWNER_EXECUTE
   GROUP_READ GROUP_EXECUTE
@@ -110,7 +110,7 @@ if(NOT WINDOWS)
 
   install(
     PROGRAMS "${WORK}/${P}plot-py"
-    DESTINATION ${lib}/${FLAVOR}-${MCCODE_VERSION}/bin
+    DESTINATION ${lib}/${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}plot-matplotlib-py${DOT_PYTHON_SUFFIX}"
     )
 endif()
