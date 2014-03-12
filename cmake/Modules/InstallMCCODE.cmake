@@ -296,11 +296,11 @@ macro(installMCCODE)
     # Binaries
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
-      DESTINATION ${lib}/${MCCODE_NAME}/bin
+      DESTINATION ${lib}/${FLAVOR}/${MCCODE_VERSION}/bin
     )
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
-      DESTINATION ${lib}/${MCCODE_NAME}/bin
+      DESTINATION ${lib}/${FLAVOR}/${MCCODE_VERSION}/bin
     )
 
     foreach (name environment module)
@@ -308,7 +308,7 @@ macro(installMCCODE)
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${name}
 	      @ONLY)
-      install(PROGRAMS ${WORK}/support/${name} DESTINATION ${lib}/${MCCODE_NAME}/)
+      install(PROGRAMS ${WORK}/support/${name} DESTINATION ${lib}/${FLAVOR}/${MCCODE_VERSION}/)
     endforeach()
     
   endif()

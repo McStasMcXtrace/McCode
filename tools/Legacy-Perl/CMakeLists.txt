@@ -59,7 +59,7 @@ if(WINDOWS)
   # set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\postsetup.bat' ")
 
 else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${TOOLS_NAME}")
+  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
 endif()
 
 
@@ -115,7 +115,7 @@ foreach(NAME ${SOURCENAMES}
   if(NOT WINDOWS)
     install(
       PROGRAMS "${WORK}/${P}${NAME}"
-      DESTINATION ${lib}/${MCCODE_NAME}/bin
+      DESTINATION ${lib}/${FLAVOR}/${MCCODE_VERSION}/bin
       RENAME "${P}${NAME}${DOT_PERL_SUFFIX}"
       )
   else()
@@ -141,14 +141,14 @@ exec_program(chmod ARGS 755  work/perl_env_header.pl work/perl_fix.sh)
 # install tools (skip *.in files)
 install(
   DIRECTORY lib/tools/
-  DESTINATION "${lib}/${TOOLS_NAME}"
+  DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
   PATTERN "*.in" EXCLUDE
 )
 
 install(
   FILES "${WORK}/mccode_config.perl"
         "${WORK}/mccode_reconfigure"
-  DESTINATION ${lib}/${TOOLS_NAME}/perl/
+  DESTINATION ${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}/perl/
 )
 
 if(NOT WINDOWS)
