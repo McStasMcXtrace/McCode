@@ -1,6 +1,6 @@
 #!/bin/sh
-export @FLAVOR_UPPER@=@CMAKE_INSTALL_PREFIX@/lib/@FLAVOR@/@MCCODE_VERSION@
-export PATH=@CMAKE_INSTALL_PREFIX@/lib/@FLAVOR@/@MCCODE_VERSION@/bin:$PATH
+export @FLAVOR_UPPER@=@CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@
+export PATH=@CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/bin:$PATH
 echo
 echo The new shell started here is now set up for running this version of @FLAVOR@:
 echo
