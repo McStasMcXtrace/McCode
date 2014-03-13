@@ -35,7 +35,7 @@ set(TOOLS_NAME "${FLAVOR}-tools-python-${P}plot-chaco-${MCCODE_VERSION}")
 if(WINDOWS)
   set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
 else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
+  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
 endif()
 
 
@@ -107,13 +107,13 @@ if(NOT WINDOWS)
   foreach(name mcdata.py plotting.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
-      DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+      DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
       )
   endforeach()
 
   install(
     FILES ${BINS}
-    DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
@@ -135,7 +135,7 @@ if(NOT WINDOWS)
 
   install(
     PROGRAMS "${WORK}/${P}plot-py"
-    DESTINATION ${lib}/${FLAVOR}/${MCCODE_VERSION}/bin
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}plot-chaco-py${DOT_PYTHON_SUFFIX}"
     )
 endif()

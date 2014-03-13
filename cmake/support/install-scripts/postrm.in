@@ -8,12 +8,12 @@ MC="@MCCODE_PREFIX@"
 NO_ALTERNATIVES="@NO_ALTERNATIVES@"
 
 # Include installation path before any attempt to postconfig
-export PATH=${PREFIX}/lib/${FLAVOR}/${VERSION}/bin:${PATH}
+export PATH=${PREFIX}/${FLAVOR}/${VERSION}/bin:${PATH}
 MCCODE=${FLAVOR}
 
 # Remove html files if mcdoc is no longer installed
-if [ ! -x ${PREFIX}/lib/${FLAVOR}/${VERSION}/bin/${MC}doc ]; then
-    find ${PREFIX}/lib/${FLAVOR}/${VERSION}/ -iname '*.instr' -or -iname '*.comp' | \
+if [ ! -x ${PREFIX}/${FLAVOR}/${VERSION}/bin/${MC}doc ]; then
+    find ${PREFIX}/${FLAVOR}/${VERSION}/ -iname '*.instr' -or -iname '*.comp' | \
         while read comp; do
         rm -f $(dirname ${comp})/$(basename ${comp} .instr).html ;
         rm -f $(dirname ${comp})/$(basename ${comp} .comp).html ;
