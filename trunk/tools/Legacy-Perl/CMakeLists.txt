@@ -138,20 +138,20 @@ configure_file(perl_fix.sh.in work/perl_fix.sh @ONLY immediate)
 
 exec_program(chmod ARGS 755  work/perl_env_header.pl work/perl_fix.sh)
 
-# install tools (skip *.in files)
-install(
-  DIRECTORY lib/tools/
-  DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-  PATTERN "*.in" EXCLUDE
-)
-
-install(
-  FILES "${WORK}/mccode_config.perl"
-        "${WORK}/mccode_reconfigure"
-  DESTINATION ${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}/perl/
-)
-
 if(NOT WINDOWS)
+  # install tools (skip *.in files)
+  install(
+    DIRECTORY lib/tools/
+    DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    PATTERN "*.in" EXCLUDE
+  )
+
+  install(
+    FILES "${WORK}/mccode_config.perl"
+          "${WORK}/mccode_reconfigure"
+    DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}/perl/"
+  )
+
   # Generate man pages
   set(LIST display doc gui plot run)
   foreach(NAME ${LIST})
@@ -166,6 +166,19 @@ endif()
 
 
 if(WINDOWS)
+  # install tools (skip *.in files)
+  install(
+    DIRECTORY lib/tools/
+    DESTINATION "${lib}/${TOOLS_NAME}"
+    PATTERN "*.in" EXCLUDE
+  )
+
+  install(
+    FILES "${WORK}/mccode_config.perl"
+          "${WORK}/mccode_reconfigure"
+    DESTINATION "${lib}/${TOOLS_NAME}/perl/"
+  )
+
   # Safe wrap; used when calling scripts
   install(PROGRAMS support/safewrap.pl DESTINATION ${bin})
 endif()

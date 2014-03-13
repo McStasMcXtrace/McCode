@@ -89,18 +89,29 @@ else()
   set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/mcplot")
 endif()
 
-# Program files
-install(
-  FILES ${BINS}
-  DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-  PERMISSIONS
-  OWNER_READ OWNER_WRITE OWNER_EXECUTE
-  GROUP_READ GROUP_EXECUTE
-  WORLD_READ WORLD_EXECUTE
-)
 
+# Program files
+if(WINDOWS)
+  install(
+    FILES ${BINS}
+    DESTINATION "${lib}/${TOOLS_NAME}"
+    PERMISSIONS
+    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE
+  )
+endif()
 
 if(NOT WINDOWS)
+  install(
+    FILES ${BINS}
+    DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    PERMISSIONS
+    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE
+  )
+
   # Symlink to main
   add_custom_command(
     OUTPUT "${WORK}/${P}plot-py"
