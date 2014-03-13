@@ -112,7 +112,7 @@ if(NOT WINDOWS)
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
       )
-  xcendforeach()
+  endforeach()
 
   install(
     FILES ${BINS}
