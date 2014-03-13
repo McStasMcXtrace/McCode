@@ -16,7 +16,14 @@ MCCODE=${FLAVOR}
 if [ -d /etc/modulefiles ]; 
 then
     mkdir -p /etc/modulefiles/${FLAVOR}
-    cp ${PREFIX}/lib/${FLAVOR}/${VERSION}/module /etc/modulefiles/${FLAVOR}/${VERSION}
+    # Is this RPM-postinstall, potentially relocated?
+    if [[ -z "$RPM_INSTALL_PREFIX" ]]; 
+    then
+	cp ${PREFIX}/lib/${FLAVOR}/${VERSION}/module /etc/modulefiles/${FLAVOR}/${VERSION}
+    else
+	sed -i.bak s+/usr/local+${RPM_INSTALL_PREFIX}+g ${RPM_INSTALL_PREFIX}/lib/${FLAVOR}/${VERSION}/module
+	cp ${RPM_INSTALL_PREFIX}/lib/${FLAVOR}/${VERSION}/module /etc/modulefiles/${FLAVOR}/${VERSION}
+    fi
 else    
     cd ${PREFIX}/bin
     ln -sf ${PREFIX}/lib/${FLAVOR}/${VERSION}/bin/* .

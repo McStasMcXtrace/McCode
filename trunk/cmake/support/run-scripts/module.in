@@ -15,7 +15,7 @@ module-whatis   "loads the mcstas environment"
 
 
 # Define prefix so PATH and MANPATH can be updated.
-setenv        @FLAVOR_UPPER@ @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@
-prepend-path  PATH          @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/bin
-prepend-path  MANPATH       @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/man
+setenv        @FLAVOR_UPPER@ @CMAKE_INSTALL_PREFIX@/lib/@FLAVOR@/@MCCODE_VERSION@
+prepend-path  PATH          @CMAKE_INSTALL_PREFIX@/lib/@FLAVOR@/@MCCODE_VERSION@/bin
+prepend-path  MANPATH       @CMAKE_INSTALL_PREFIX@/lib/@FLAVOR@/@MCCODE_VERSION@/man
 
