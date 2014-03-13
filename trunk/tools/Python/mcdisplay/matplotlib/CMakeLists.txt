@@ -78,14 +78,6 @@ configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/mcdisplay" @ONLY)
 # Configure internal naming and how we call mcrun/mxrun across systems
 configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.py" "${CMAKE_SOURCE_DIR}/mcdisplay.py" @ONLY)
 
-# Python files
-foreach(name util.py)
-  install(
-    FILES "${PROJECT_SOURCE_DIR}/${name}"
-    DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-    )
-endforeach()
-
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
 else()
@@ -94,6 +86,14 @@ endif()
 
 # Program files
 if(WINDOWS)
+  # Python files
+  foreach(name util.py)
+    install(
+      FILES "${PROJECT_SOURCE_DIR}/${name}"
+      DESTINATION "${lib}/${TOOLS_NAME}"
+      )
+  endforeach()
+
   install(
     FILES ${BINS}
     DESTINATION "${lib}/${TOOLS_NAME}"
@@ -106,6 +106,14 @@ endif()
 
 
 if(NOT WINDOWS)
+  # Python files
+  foreach(name util.py)
+    install(
+      FILES "${PROJECT_SOURCE_DIR}/${name}"
+      DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+      )
+  endforeach()
+
   install(
     FILES ${BINS}
     DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
