@@ -284,23 +284,23 @@ macro(installMCCODE)
     # Man pages
     install (
       FILES "${WORK}/doc/man/${FLAVOR}.1"
-      DESTINATION ${man}/man1
+      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/doc/man/man1
       RENAME "${FLAVOR}${PROGRAM_SUFFIX}.1"
       )
     install (
       FILES "${WORK}/doc/man/${FLAVOR_FMT}.1"
-      DESTINATION ${man}/man1
+      DESTINATION "${FLAVOR}/${MCCODE_VERSION}/doc/man/man1"
       RENAME "${FLAVOR_FMT}${PROGRAM_SUFFIX}.1"
       )
 
     # Binaries
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR}${DOT_EXE_SUFFIX}"
-      DESTINATION ${lib}/${FLAVOR}/${MCCODE_VERSION}/bin
+      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     )
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/${FLAVOR_FMT}${DOT_EXE_SUFFIX}"
-      DESTINATION ${lib}/${FLAVOR}/${MCCODE_VERSION}/bin
+      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     )
 
     foreach (name environment module)
@@ -308,7 +308,7 @@ macro(installMCCODE)
 	      cmake/support/run-scripts/${name}.in
 	      work/support/${name}
 	      @ONLY)
-      install(PROGRAMS ${WORK}/support/${name} DESTINATION ${lib}/${FLAVOR}/${MCCODE_VERSION}/)
+      install(PROGRAMS ${WORK}/support/${name} DESTINATION ${FLAVOR}/${MCCODE_VERSION}/)
     endforeach()
     
   endif()

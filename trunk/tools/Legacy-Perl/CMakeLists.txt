@@ -59,7 +59,7 @@ if(WINDOWS)
   # set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait '\\\\${FLAVOR}-${MCCODE_VERSION}\\\\bin\\\\postsetup.bat' ")
 
 else()
-  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
+  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
 endif()
 
 
@@ -115,7 +115,7 @@ foreach(NAME ${SOURCENAMES}
   if(NOT WINDOWS)
     install(
       PROGRAMS "${WORK}/${P}${NAME}"
-      DESTINATION ${lib}/${FLAVOR}/${MCCODE_VERSION}/bin
+      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
       RENAME "${P}${NAME}${DOT_PERL_SUFFIX}"
       )
   else()
@@ -142,14 +142,14 @@ if(NOT WINDOWS)
   # install tools (skip *.in files)
   install(
     DIRECTORY lib/tools/
-    DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
     PATTERN "*.in" EXCLUDE
   )
 
   install(
     FILES "${WORK}/mccode_config.perl"
           "${WORK}/mccode_reconfigure"
-    DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}/perl/"
+    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}/perl/"
   )
 
   # Generate man pages
@@ -159,7 +159,7 @@ if(NOT WINDOWS)
     set(filepath "${WORK}/doc/man/${P}${NAME}-${MCCODE_VERSION}.1")
 
     configure_file("doc/man/${P}${NAME}.1.in" "${filepath}" @ONLY)
-    install(FILES "${filepath}" DESTINATION ${man}/man1)
+    install(FILES "${filepath}" DESTINATION ${FLAVOR}/${MCCODE_VERSION}/doc/man/man1)
 
   endforeach()
 endif()

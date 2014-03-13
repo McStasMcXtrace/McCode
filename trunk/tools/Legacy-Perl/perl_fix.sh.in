@@ -37,7 +37,7 @@ fi
     fi
 ) |
 sed -e 's+#! /usr/bin/perl+#! '${PERL}'+' \
-	  -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'${LIB}'"+' \
+	  -e 's+\$MCSTAS::sys_dir = "/usr/local/mcstas"+\$MCSTAS::sys_dir = "'${LIB}'"+' \
 	  -e 's+"\$MCSTAS::sys_dir/perl"+"'${LIBT}'/perl"+' \
 	> ${OUT}
 

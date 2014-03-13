@@ -31,8 +31,6 @@ set(P "${MCCODE_PREFIX}")
 
 set(TOOLS_NAME "${FLAVOR}-tools-python-${P}run-${MCCODE_VERSION}")
 
-set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
-
 # Set some extra options for mccode_config
 set(CC "${CMAKE_C_COMPILER}")
 set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
@@ -65,28 +63,20 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
+# Program files
+if(WINDOWS)
+  set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py")
+  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
+else()
+  set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py" "${WORK}/mcrun")
+  set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
+endif()
 
 # Configure fallback script
 configure_file("${CMAKE_SOURCE_DIR}/mcrun.in" "${WORK}/mcrun" @ONLY)
 
 # Configure Python files
 configure_file(config.py "${WORK}/config.py"  @ONLY)
-
-install(FILES "${WORK}/config.py" DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
-
-foreach(NAME "__init__.py" "log.py" "mcstas.py" "optimisation.py")
-    install(
-      FILES "${PROJECT_SOURCE_DIR}/${NAME}"
-      DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-      )
-endforeach()
-
-# Program files
-if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py")
-else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py" "${WORK}/mcrun")
-endif()
 
 if(WINDOWS)
   install(
@@ -108,18 +98,18 @@ if(WINDOWS)
 endif()
 
 if(NOT WINDOWS)
-  install(FILES "${WORK}/config.py" DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
+  install(FILES "${WORK}/config.py" DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
 
   foreach(NAME "__init__.py" "log.py" "mcstas.py" "optimisation.py")
     install(
       FILES "${PROJECT_SOURCE_DIR}/${NAME}"
-      DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+      DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
       )
   endforeach()
 
-  install(
+  Install(
     FILES ${BINS}
-    DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
     PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
@@ -139,7 +129,7 @@ if(NOT WINDOWS)
 
   install(
     PROGRAMS "${WORK}/${P}run-py"
-    DESTINATION ${lib}/${FLAVOR}/${MCCODE_VERSION}/bin
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}run-py${DOT_PYTHON_SUFFIX}"
     )
 endif()
