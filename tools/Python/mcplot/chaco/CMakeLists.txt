@@ -75,14 +75,6 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/mcplot" @ONLY)
 
-# Python files
-foreach(name mcdata.py plotting.py)
-  install(
-    FILES "${PROJECT_SOURCE_DIR}/${name}"
-    DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
-    )
-endforeach()
-
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py")
 else()
@@ -92,6 +84,14 @@ endif()
 
 # Program files
 if(WINDOWS)
+  # Python files
+  foreach(name mcdata.py plotting.py)
+    install(
+      FILES "${PROJECT_SOURCE_DIR}/${name}"
+      DESTINATION "${lib}/${TOOLS_NAME}"
+      )
+  endforeach()
+
   install(
     FILES ${BINS}
     DESTINATION "${lib}/${TOOLS_NAME}"
@@ -103,6 +103,14 @@ if(WINDOWS)
 endif()
 
 if(NOT WINDOWS)
+  # Python files
+  foreach(name mcdata.py plotting.py)
+    install(
+      FILES "${PROJECT_SOURCE_DIR}/${name}"
+      DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+      )
+  endforeach()
+
   install(
     FILES ${BINS}
     DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"

@@ -30,6 +30,7 @@ set(P "${MCCODE_PREFIX}")
 
 
 set(TOOLS_NAME "${FLAVOR}-tools-python-${P}run-${MCCODE_VERSION}")
+
 set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
 
 # Set some extra options for mccode_config
@@ -96,9 +97,26 @@ if(WINDOWS)
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
+  install(FILES "${WORK}/config.py" DESTINATION "${lib}/${TOOLS_NAME}")
+
+  foreach(NAME "__init__.py" "log.py" "mcstas.py" "optimisation.py")
+    install(
+      FILES "${PROJECT_SOURCE_DIR}/${NAME}"
+      DESTINATION "${lib}/${TOOLS_NAME}"
+      )
+  endforeach()
 endif()
 
 if(NOT WINDOWS)
+  install(FILES "${WORK}/config.py" DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
+
+  foreach(NAME "__init__.py" "log.py" "mcstas.py" "optimisation.py")
+    install(
+      FILES "${PROJECT_SOURCE_DIR}/${NAME}"
+      DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
+      )
+  endforeach()
+
   install(
     FILES ${BINS}
     DESTINATION "${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
