@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: test (rename also the example and DEFINE lines below)
+* Instrument: Test_Mask
 *
 * %Identification
 * Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
@@ -17,18 +17,17 @@
 * A non-divergent beam imponges on a masking image, with 2d-detectors up- and downstream
 * of the mask.
 *
-* %Example: Test_Mask_png.instr invert=0 Detector: psd1_I=0.223645
-* %Example: Test_Mask_png.instr invert=1 Detector: psd1_I=0.670667
+* %Example: Test_Mask.instr invert=0 Detector: psd1_I=0.223645
+* %Example: Test_Mask.instr invert=1 Detector: psd1_I=0.670667
 *
 * %Parameters
 * invert ( ) If nonzero the transparency/opacity sense of the masking image is reversed.
-*
 *
 * %End
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_Mask_png(invert=0)
+DEFINE INSTRUMENT Test_Mask(invert=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
