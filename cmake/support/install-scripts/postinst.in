@@ -25,8 +25,26 @@ then
 	cp ${RPM_INSTALL_PREFIX}/${FLAVOR}/${VERSION}/module /etc/modulefiles/${FLAVOR}/${VERSION}
     fi
 else    
-    cd ${PREFIX}/bin
-    ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/bin/* .
+    # Try to figure out if this is a Debian package, a Mac OS X bundle or a generic unix...
+    if [[ ${PREFIX} = /usr/share* ]]; 
+    then
+	# Looks like a Debian package - should really be handled via update-alternatives...
+	BINTARGET="/usr/bin"
+    elif [[ ${PREFIX} = /Applications* ]]
+    then
+	# Looks like a Mac - dump links in /usr/local/bin
+	BINTARGET="/usr/local/bin"
+    else
+	# OK - nothing clever then
+	BINTARGET=${PREFIX}/bin
+    fi
+    if [ -d ${BINTARGET} ];
+    then
+	cd ${BINTARGET}
+	ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/bin/* .
+    else
+	echo "Sorry, your ${BINTARGET} folder does not exist, dopping link creation"
+    fi
 fi
 
 # Check if mcdoc is installed and if it needs to run
