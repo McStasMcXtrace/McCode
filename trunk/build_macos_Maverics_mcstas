@@ -6,6 +6,11 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
+if [ "x$2" != "x" ]; then
+    # If this is a meta-package being built, we should aim for installation in /Applications...
+    export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
+fi
+
 # 64-bit Mac OS
 ./mkdist mcstas $1 "" "" mac_maverics -- OSXpkg
 ./mkdist mcstas-comps $1 "" "" mac_maverics -- OSXpkg
