@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Shellscript snippet for extracting mcdoc info from named components in subdir
+# Shellscript snippet for extracting mxdoc info from named components in subdir
 #
 #
 
@@ -10,12 +10,12 @@ PW=$PWD
 PREFIX=$PWD/COMPprefix
 HEADER=$PWD/COMPheader
 FOOTER=$PWD/COMPfooter
-for COMP in `cat $DIRNAME/mcdoc_index`
+for COMP in `cat $DIRNAME/mxdoc_index`
 do
     cd $DIRNAME/
     sed s/@COMP@/$COMP/g $PREFIX | sed s/@CAT@/$DIRNAME/g > $COMP.parms
     cat $HEADER >> $COMP.parms
-    mcdoc -t $COMP.comp | grep -A1000 \#\ Input | grep -B1000 \#\ Output | grep -v \#  >> $COMP.parms
+    mxdoc -t $COMP.comp | grep -A1000 \#\ Input | grep -B1000 \#\ Output | grep -v \#  >> $COMP.parms
     cat $FOOTER >> $COMP.parms
     cd $PW
 done
