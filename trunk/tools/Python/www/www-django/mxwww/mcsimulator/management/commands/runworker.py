@@ -63,7 +63,7 @@ except Exception, e:
     plot = mxplot
 
 
-def display(instr, params, outfile, log, fmt="png"):
+def display(instr, params, outfile, log, fmt=IMAGE_FORMAT):
     ''' Display instrument '''
     # VRML needs --format, which does not seem to work with gif/ps
     fmt_arg = fmt == 'vrml' and '--format=vrml' or '-'+fmt
