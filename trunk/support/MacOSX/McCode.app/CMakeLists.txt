@@ -15,8 +15,10 @@ include(MCUtil)
 
 if (${enable_mcxtrace})
   set(FLAVOR "mcxtrace")
+  set(GUIPREFIX "mx")
 elseif(${enable_mcstas})
   set(FLAVOR "mcstas")
+  set(GUIPREFIX "mc")
 else()
   message(FATAL_ERROR "No flavor specified!\n"
     "Please use either -Denable_mcstas=1 or -Denable_mcxtrace=1")
@@ -65,3 +67,8 @@ install(
     DESTINATION "Contents/MacOS/"
   )
 
+install(
+    FILES "Contents/Resources/${FLAVOR}.icns"
+    DESTINATION "Contents/Resources/"
+    RENAME "droplet.icns"
+  )
