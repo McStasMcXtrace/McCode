@@ -6,6 +6,13 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
+if [ "x$2" != "x" ]; then
+    # If this is a meta-package being built, we should aim for installation in /Applications...
+    # For the actual mcxtrace part, the packages need a 'deep' PREFIX
+    export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
+fi
+
+
 # 64-bit Mac OS
 ./mkdist mcxtrace $1 "" "" mac_maverics -- OSXpkg
 ./mkdist mcxtrace-comps $1 "" "" mac_maverics -- OSXpkg
@@ -14,9 +21,16 @@ fi
 ./mkdist mcxtrace-tools-Python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_maverics -- OSXpkg
 ./mkdist mcxtrace-tools-Python-mxrun $1 tools/Python/mcrun/ "" mac_maverics -- OSXpkg
 ./mkdist mcxtrace-tools-Python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" mac -- OSXpkg
+./mkdist mcxtrace-tools-Python-mxdisplay-r $1 tools/Python/mcdisplay/R/ "" mac -- OSXpkg
+./mkdist mcxtrace-tools-Python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac -- OSXpkg
+./mkdist mcxtrace-tools-Python-mxdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac -- OSXpkg
 
 if [ "x$2" != "x" ]; then
-    # Build the meta-package also
+    # Build the App bundle and meta-package also.
+    # The App needs a higher-level PREFIX
+    export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/
+    ./mkdist mcxtrace-app $1 support/MacOSX/McCode.app/ "" mac_maverics -- OSXpkg
+
     OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
     
     cd dist
@@ -38,10 +52,5 @@ if [ "x$2" != "x" ]; then
     rm *.bak
     rm *.bak2
     cd ..
-    cp -rp ../support/MacOSX/McXtrace.app McXtrace-${1}.app
-    cd McXtrace-${1}.app/Contents/Resources
-    sed -i\.bak $REGEX launcher.sh
-    cd -
-   
     open McXtrace-Metapackage.pmdoc
 fi
