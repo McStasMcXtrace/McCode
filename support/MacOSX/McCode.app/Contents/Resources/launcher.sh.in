@@ -6,7 +6,7 @@
 #
 
 # program name
-PROGRAM=mcgui
+PROGRAM=@GUIPREFIX@gui
 
 # program arguments
 ARGUMENTS=""
