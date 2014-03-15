@@ -8,7 +8,7 @@ fi
 
 if [ "x$2" != "x" ]; then
     # If this is a meta-package being built, we should aim for installation in /Applications...
-    # For the actual mcstas part, the packages need a 'deep' PREFIX
+    # For the actual mcxtrace part, the packages need a 'deep' PREFIX
     export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
 fi
 
@@ -28,7 +28,7 @@ if [ "x$2" != "x" ]; then
     # Build the App bundle and meta-package also.
     # The App needs a higher-level PREFIX
     export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/
-    ./mkdist mcstas-app $1 support/MacOSX/McCode.app/ "" mac -- OSXpkg
+    ./mkdist mcxtrace-app $1 support/MacOSX/McCode.app/ "" mac -- OSXpkg
 
     OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
     
