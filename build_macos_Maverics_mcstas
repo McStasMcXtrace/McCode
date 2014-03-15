@@ -8,6 +8,7 @@ fi
 
 if [ "x$2" != "x" ]; then
     # If this is a meta-package being built, we should aim for installation in /Applications...
+    # For the actual mcstas part, the packages need a 'deep' PREFIX
     export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 fi
 
@@ -25,7 +26,11 @@ fi
 ./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" mac -- OSXpkg
 
 if [ "x$2" != "x" ]; then
-    # Build the meta-package also
+    # Build the App bundle and meta-package also.
+    # The App needs a higher-level PREFIX
+    export MCINSTALL_PREFIX=/Applications/McStas-$1.app/
+    ./mkdist mcstas-app $1 support/MacOSX/McCode.app/ "" mac_maverics -- OSXpkg
+
     OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
     
     cd dist
@@ -47,10 +52,5 @@ if [ "x$2" != "x" ]; then
     rm *.bak
     rm *.bak2
     cd ..
-    cp -rp ../support/MacOSX/McStas.app McStas-${1}.app
-    cd McStas-${1}.app/Contents/Resources
-    sed -i\.bak $REGEX launcher.sh
-    cd -
-   
     open McStas-Metapackage.pmdoc
 fi

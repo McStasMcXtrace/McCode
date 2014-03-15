@@ -1,14 +1,29 @@
 cmake_minimum_required(VERSION 2.6)
 
-# This will install the McStas app bundle
+# This will install the McCode app bundle
 project(mcstas-app NONE)
+
+# Choose between McStas or McXtrace
+option(enable_mcstas   "Choose the McStas flavor" off)
+option(enable_mcxtrace "Choose the McXtrace flavor (trumps enable_mcstas)" Off)
 
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
-setupMCCODE("mcstas")
+
+if (${enable_mcxtrace})
+  set(FLAVOR "mcxtrace")
+elseif(${enable_mcstas})
+  set(FLAVOR "mcstas")
+else()
+  message(FATAL_ERROR "No flavor specified!\n"
+    "Please use either -Denable_mcstas=1 or -Denable_mcxtrace=1")
+endif()
+
+message("Enabling ${FLAVOR} flavor")
+setupMCCODE("${FLAVOR}")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-app-${MCCODE_VERSION}")
@@ -19,18 +34,19 @@ set(CPACK_PACKAGE_VERSION       "1.0")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 
-set(WORK "${PROJECT_BINARY_DIR}/work")
-
-# Not too nice, hardcoded PREFIX
-set(dest "/Applications/${NAME}-${MCCODE_VERSION}.app/")
 include(CPack)
+
+set(WORK "${PROJECT_BINARY_DIR}/work")
 
 configure_file(Contents/Resources/launcher.sh.in ${WORK}/launcher.sh @ONLY)
 
+exec_program(chmod ARGS 755 work/launcher.sh)
+exec_program(chmod ARGS 755 work/Contents/MacOS/droplet)
+
 # Include the Contents subfolder...
 install (
-  DIRECTORY "Contents"
-  DESTINATION "${dest}"
+  DIRECTORY "Contents/"
+  DESTINATION "Contents/"
   PATTERN "Makefile*" EXCLUDE  # skip makefiles
   PATTERN "#*"        EXCLUDE  # skip backup files
   PATTERN ".*"        EXCLUDE  # skip hidden files
@@ -40,11 +56,12 @@ install (
 install(
     FILES "${WORK}/launcher.sh"
     PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ 
-    DESTINATION "${dest}/Contents/Resources/"
+    DESTINATION "Contents/Resources/"
   )
 
 install(
     FILES "Contents/MacOS/droplet"
     PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ 
-    DESTINATION "${dest}/Contents/MacOS/"
+    DESTINATION "Contents/MacOS/"
   )
+
