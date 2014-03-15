@@ -34,6 +34,9 @@ else
     then
 	# Looks like a Mac - dump links in /usr/local/bin
 	BINTARGET="/usr/local/bin"
+	# Also drop a link to the mccode "system folder" as it may otherwise be hard to find for "expert users"
+	mkdir -p /usr/local/mcstas
+	ln -s ${PREFIX}/${FLAVOR}/${VERSION} /usr/local/mcstas/${VERSION}
     else
 	# OK - nothing clever then
 	BINTARGET=${PREFIX}/bin
