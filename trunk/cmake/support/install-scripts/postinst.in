@@ -36,7 +36,7 @@ else
 	BINTARGET="/usr/local/bin"
 	# Also drop a link to the mccode "system folder" as it may otherwise be hard to find for "expert users"
 	mkdir -p /usr/local/${FLAVOR}
-	ln -s ${PREFIX}/${FLAVOR}/${VERSION} /usr/local/${FLAVOR}/${VERSION}
+	ln -s ${PREFIX}/${FLAVOR}/Contents/Resources/${VERSION} /usr/local/${FLAVOR}/${VERSION}
     else
 	# OK - nothing clever then
 	BINTARGET=${PREFIX}/bin
