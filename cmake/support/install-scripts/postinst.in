@@ -50,6 +50,7 @@ else
     then
 	cd ${BINTARGET}
 	ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/bin/* .
+	ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/environment ${FLAVOR}-${VERSION}-environment
     else
 	echo "Sorry, your ${BINTARGET} folder does not exist, dopping link creation"
     fi
