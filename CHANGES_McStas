@@ -38,7 +38,11 @@
 *******************************************************************************/
 Changes in McStas v2.1, March, 2014
 
- McStas 2.1 is the second release in the 2.x series and fixes various issues with McStas 2.0
+ McStas 2.1 is the second release in the 2.x series and fixes various issues with McStas 2.0,
+ plus provide important new developments.
+
+ IMPORTANT: Please ensure to use our "migration scripts" for McStas 2.0 and 1.12c if you want
+ these to co-exist with 2.1. Also, please read the platform-specific notes below!
 
  Thanks:
  - Thanks to all contributors of components, instruments etc.! This is what Open Source
@@ -82,6 +86,7 @@ Changes in McStas v2.1, March, 2014
    below) The content of these packages are:
 
    * Windows:
+     - See http://www.mcstas.org/download/install_windows for details
      - Strawberry Perl (including a gcc compiler)
      - Perl PPD extensions for PDL, PGPLOT and Tk
      - The core mcstas package
@@ -108,6 +113,11 @@ Changes in McStas v2.1, March, 2014
 	    c:\strawberry\perl\bin (Right-click, Properties, Security, Authenticated users -> Edit)
 
    * Mac OS X:
+     - IMPORTANT: Please ensure to use our "migration scripts" for McStas 2.0 and 1.12c if you want
+       these to co-exist with 2.1. They MUST be applied before installing 2.1!
+     - See http://www.mcstas.org/download/install_mac_os_x for details
+     - A McStas 'app' bundle in /Applications/McStas-2.1.app - you can uninstall all of McStas 2.1
+       by dragging this bundle to the trash bin.
      - Tk perl package for mcgui
      - SciPDL package for mcplot, including the core pgplot package
      - The core mcstas package
@@ -122,12 +132,28 @@ Changes in McStas v2.1, March, 2014
        - Most other needed dependencies for the Python packages are available through the 
        	 SciPy superpack available from http://fonnesbeck.github.io/ScipySuperpack/
        - You may also choose the commerical Anaconda or Enthought Python distributions
+       
+   - ! The install location of the McStas components and libraries on Mac OS X has changed! Your files
+       are now placed in /Applications/McStas-2.1.app/Contents/Resources/mcstas/2.1/ - but for ease
+       of use, a link is also available in /usr/local/mcstas/2.1/ (Note that we have dropped 'lib' in 
+       that path.) Links to binaries are in /usr/local/bin.
 
- - For the Linux (Debian and RPM based) systems we provide a set of APT and YUM repos,
-   see http://www.mcstas.org/download/apt_n_yum/
-     - Simply choose to install mcstas-suite-perl (perl tools), mcstas-suite-python (python tools)
-       or mcstas-suite (both toolsets) and all dependencies should be taken care of
+   * For Linux (Debian and RPM based)
+     - IMPORTANT: Please ensure to use our "migration scripts" for McStas 2.0 and 1.12c if you want
+       these to co-exist with 2.1. They MUST be applied before installing 2.1! 
+     - See http://www.mcstas.org/download/install_linux for details
+     - For Deb and RPM type systems we provide a set of APT and YUM repositories. Simply follow the
+       instructions on the link provided to add the relevant repository to your Linux.
+     - Afterwards, simply choose to install mcstas-suite-perl (perl tools), mcstas-suite-python 
+       (python tools) or mcstas-suite (both toolsets) and all dependencies should be taken care of.
 
+   - ! The install location of the McStas components and libraries on Linux X has changed! 
+       * On Debian, your files are now placed in /usr/share/mcstas/2.1/ - links to binaries are in /usr/bin
+       * On RedHat, your files are now placed in /usr/local/mcstas/2.1/ - links to binaries are in /usr/local/bin
+       (Note that we have dropped 'lib' in the mcstas system path.)
+
+
+  
  - A given McStas 2.x release is "self-contained" and can be installed in parallel with other versions
    of McStas and McXtrace 
  - We provide a "migration tool" for Unix based systems (i.e. Linux & Mac) to let your already
