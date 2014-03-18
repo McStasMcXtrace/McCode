@@ -80,7 +80,23 @@ Changes in McStas v2.1, March, 2014
    roughly like an "iterative group" that loops on the ASSEMBLY of components until no furhter
    scattering is achieved, but always scatters first on the component which is closest (in time)
    to the neutron.
-   
+
+ - "Scatter logging": With this release we provide this special ensemble of instrument examples
+   - Test_Scatter_log_losses.instr
+   - Test_Scatter_log_mvalues.instr
+   - Test_Scatter_log_ssw_mcnp.instr
+   that together with the (misc cathegory) components
+   - Scatter_log_iterator.comp
+   - Scatter_log_iterator_stop.comp
+   - Scatter_logger.comp
+   - Scatter_logger_stop.comp
+   provide a powerful post-processing mechanism, mainly for guide systems - that for instance
+   can be used to study the non-propagated, i.e. absorbed neutron flux along the guide. For
+   more information, a paper by Esben Klinkby et. al. will be available in one of the next 
+   issues of Journal of Physics: Conference Series, proceedings of the NOP&D 2013 meeting in
+   Ismaning. Slides from Esbens talk are available here:
+   http://orbit.dtu.dk/files/57025387/prod11375088187360.NO_P_v8.pdf
+
  - As of this release, McStas is distributed using easy-to-use meta-packages for the Windows
    and Mac OS X systems. (these already existed for the deb and rpm based Linux packages, see
    below) The content of these packages are:
@@ -193,6 +209,10 @@ Changes in McStas v2.1, March, 2014
    * much simplified input-parameter setup
    * various fixes wrt. McStas 2.0 and later updated source modules
  - Monitor_Sqw - generates an Sqw between a sample and a detector, a kind of inelastic resolution monitor.
+ - Scatter_log_iterator.comp, see above notice about "Scatter logging"
+ - Scatter_log_iterator_stop.comp, see above notice about "Scatter logging"
+ - Scatter_logger.comp, see above notice about "Scatter logging"
+ - Scatter_logger_stop.comp, see above notice about "Scatter logging"
 
  Updated Components:
  - ISIS moderator component allow specification of the accellerator current. The component performance
@@ -213,8 +233,10 @@ Changes in McStas v2.1, March, 2014
  - ISIS_SANS2d geometry contributed by R. Heenan, ISIS
  - Test_Guide_Curved - test instrument for simple, curved guide types
  - HZB_FLEX contributed by Klaus Habicht and Markos Skoulatos, HZB
-
-
+ - Test_Scatter_log_losses.instr, see above notice about "Scatter logging"
+ - Test_Scatter_log_mvalues.instr, see above notice about "Scatter logging"
+ - Test_Scatter_log_ssw_mcnp.instr, see above notice about "Scatter logging"
+ 
 Changes in McStas v2.0, December 21st, 2012
 
  McStas 2.0 is the long-awaited major release of McStas
