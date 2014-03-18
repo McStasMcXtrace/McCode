@@ -14,8 +14,9 @@ fi
 MCSTAS_BINDIR=`dirname $MCSTAS_WHERE`
 MCSTAS_LIBDIR=`dirname $MCSTAS_BINDIR`/lib/mcstas-2.0
 MCSTAS_MANDIR=`dirname $MCSTAS_BINDIR`/man/man1
-MCSTAS_NEWLIBDIR=$MCSTAS_LIBDIR
-MCSTAS_NEWBINDIR=$MCSTAS_LIBDIR/bin
+MCSTAS_PREFIX=`dirname $MCSTAS_BINDIR`
+MCSTAS_NEWLIBDIR=$MCSTAS_PREFIX/mcstas/$MCSTAS_VERSION
+MCSTAS_NEWBINDIR=$MCSTAS_NEWLIBDIR/bin
 MCSTAS_NEWMANDIR=$MCSTAS_NEWLIBDIR/man
 MOVE_SCRIPT=/tmp/mcstas-$MCSTAS_VERSION-move
 ENV_SCRIPT=/tmp/mcstas-$MCSTAS_VERSION-environment
@@ -58,10 +59,14 @@ cat <<EOF > $MOVE_SCRIPT
 # Script for moving your McStas $MCSTAS_VERSION installation out of the way
 # before installation of 2.0
 
+# Create top-level mcstas dir if it was not there already
+sudo mkdir -p $MCSTAS_PREFIX/mcstas
+
+# Move component library to $MCSTAS_NEWLIBDIR
+sudo cp -rp $MCSTAS_LIBDIR $MCSTAS_NEWLIBDIR
+
 # Create directory for the binaries and man-pages
 sudo mkdir -p $MCSTAS_NEWBINDIR $MCSTAS_NEWMANDIR
-# Move component library to $MCSTAS_NEWLIBDIR
-# sudo cp -rp $MCSTAS_LIBDIR $MCSTAS_NEWLIBDIR
 
 # Move the binaries to $MCSTAS_NEWBINDIR
 EOF
@@ -84,7 +89,7 @@ done
 # Add some code to remove McStas binaries and man-pages if needed
 if ! ${HAS_DPKG}; then
     # Build list of files to remove
-    FILES="" #$MCSTAS_LIBDIR"
+    FILES="$MCSTAS_LIBDIR"
     for bincomp in ${BINS}; do
         BIN=$MCSTAS_BINDIR/$bincomp;
         if [ -f $BIN ]; then
