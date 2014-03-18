@@ -15,14 +15,14 @@ fi
 # 64-bit Mac OS
 ./mkdist mcstas $1 "" "" mac_maverics -- OSXpkg
 ./mkdist mcstas-comps $1 "" "" mac_maverics -- OSXpkg
-./mkdist mcstas-tools-Perl $1 tools/Legacy-Perl/ "" mac_maverics -- OSXpkg
-./mkdist mcstas-tools-Python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_maverics -- OSXpkg
-./mkdist mcstas-tools-Python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_maverics -- OSXpkg
-./mkdist mcstas-tools-Python-mcrun $1 tools/Python/mcrun/ "" mac_maverics -- OSXpkg
-./mkdist mcstas-tools-Python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mac -- OSXpkg
-./mkdist mcstas-tools-Python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mac -- OSXpkg
-./mkdist mcstas-tools-Python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac -- OSXpkg
-./mkdist mcstas-tools-Python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac -- OSXpkg
+./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" mac_maverics -- OSXpkg
+./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_maverics -- OSXpkg
+./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_maverics -- OSXpkg
+./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac_maverics -- OSXpkg
+./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mac -- OSXpkg
+./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mac -- OSXpkg
+./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac -- OSXpkg
+./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac -- OSXpkg
 ./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" mac -- OSXpkg
 
 if [ "x$2" != "x" ]; then
