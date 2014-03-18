@@ -46,6 +46,7 @@ macro(installMCCODE)
   ## Debian
   set(CPACK_DEBIAN_PACKAGE_DEPENDS       "gcc, libc6-dev")
   set(CPACK_DEBIAN_PACKAGE_RECOMMENDS    "${FLAVOR}-comps-${MCCODE_VERSION}")
+  set(CPACK_DEBIAN_PACKAGE_CONFLICTS    "${FLAVOR}-2.1rc1")
   set(CPACK_DEBIAN_PACKAGE_SUGGESTS      "openmpi-bin, openmpi-dev")
 
   ## NSIS
