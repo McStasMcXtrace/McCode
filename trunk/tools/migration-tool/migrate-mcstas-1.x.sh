@@ -15,8 +15,9 @@ fi
 MCSTAS_BINDIR=`dirname $MCSTAS_WHERE`
 MCSTAS_LIBDIR=`dirname $MCSTAS_BINDIR`/lib/mcstas
 MCSTAS_MANDIR=`dirname $MCSTAS_BINDIR`/man/man1
-MCSTAS_NEWBINDIR=$MCSTAS_BINDIR/McStas-$MCSTAS_VERSION
-MCSTAS_NEWLIBDIR=$MCSTAS_LIBDIR-$MCSTAS_VERSION
+MCSTAS_PREFIX=`dirname $MCSTAS_BINDIR`
+MCSTAS_NEWLIBDIR=$MCSTAS_PREFIX/mcstas/$MCSTAS_VERSION
+MCSTAS_NEWBINDIR=$MCSTAS_NEWLIBDIR/bin
 MCSTAS_NEWMANDIR=$MCSTAS_NEWLIBDIR/man
 
 MOVE_SCRIPT=/tmp/mcstas-$MCSTAS_VERSION-move
@@ -41,7 +42,7 @@ Your existing mcstas executable is this one: $MCSTAS_WHERE
  - with component library in $MCSTAS_LIBDIR
 
 The suggested new location for the $MCSTAS_VERSION binaries is:
-  $MCSTAS_BINDIR/McStas-$MCSTAS_VERSION
+  $MCSTAS_NEWLIBDIR/bin
 
 With the component library in:
   $MCSTAS_NEWLIBDIR
@@ -54,12 +55,16 @@ EOF
 cat <<EOF > $MOVE_SCRIPT
 #!/bin/sh
 # Script for moving your McStas $MCSTAS_VERSION installation out of the way
-# before installation of 2.0
+# before installation of 2.1
+
+# Create top-level mcstas dir if it was not there already
+sudo mkdir -p $MCSTAS_PREFIX/mcstas
+
+# Move component library to $MCSTAS_NEWLIBDIR
+sudo cp -rp $MCSTAS_LIBDIR $MCSTAS_NEWLIBDIR
 
 # Create directory for the binaries and man-pages
 sudo mkdir -p $MCSTAS_NEWBINDIR $MCSTAS_NEWMANDIR
-# Move component library to $MCSTAS_NEWLIBDIR
-sudo cp -rp $MCSTAS_LIBDIR $MCSTAS_NEWLIBDIR
 
 # Move the binaries to $MCSTAS_NEWBINDIR
 EOF
@@ -159,7 +164,7 @@ chmod a+x $ENV_SCRIPT
 chmod a+x $MOVE_SCRIPT
 
 # If this is Debian and mcstas is installed,
-# recommend to uninstall before installing 2.0
+# recommend to uninstall before installing 2.1
 if ${HAS_DPKG}; then
     echo "Debian machine - checking if mcstas was previously installed";
     dpkg -l "*mcstas*" 2>&1 | grep ^ii > /dev/null
