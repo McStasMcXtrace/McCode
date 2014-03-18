@@ -9,17 +9,17 @@ fi
 # 64-bit
 ./mkdist mcxtrace $1 "" "" linux64 -- deb
 ./mkdist mcxtrace-comps $1 "" "" linux64 -- deb
-./mkdist mcxtrace-tools-Perl $1 tools/Legacy-Perl/ "" linux64 -- deb
-./mkdist mcxtrace-tools-Python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" linux64 -- deb
-./mkdist mcxtrace-tools-Python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 -- deb
-./mkdist mcxtrace-tools-Python-mxrun $1 tools/Python/mcrun/ "" linux64 -- deb
-./mkdist mcxtrace-tools-Python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux64 -- deb
+./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" linux64 -- deb
+./mkdist mcxtrace-tools-python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" linux64 -- deb
+./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 -- deb
+./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" linux64 -- deb
+./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux64 -- deb
 
 # 32-bit
 ./mkdist mcxtrace $1 "" "" linux32 -- deb
 ./mkdist mcxtrace-comps $1 "" "" linux32 -- deb
-./mkdist mcxtrace-tools-Perl $1 tools/Legacy-Perl/ "" linux32 -- deb
-./mkdist mcxtrace-tools-Python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" linux32 -- deb
-./mkdist mcxtrace-tools-Python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux32 -- deb
-./mkdist mcxtrace-tools-Python-mxrun $1 tools/Python/mcrun/ "" linux32 -- deb
-./mkdist mcxtrace-tools-Python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 -- deb
+./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" linux32 -- deb
+./mkdist mcxtrace-tools-python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" linux32 -- deb
+./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux32 -- deb
+./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" linux32 -- deb
+./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 -- deb
