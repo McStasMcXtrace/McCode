@@ -35,7 +35,7 @@ set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
 
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-${MCCODE_VERSION}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-perl-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../COPYING")
 set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
@@ -43,7 +43,7 @@ set(CPACK_PACKAGE_VERSION       "1.0")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 
-set(TOOLS_NAME "${FLAVOR}-tools-${MCCODE_VERSION}")
+set(TOOLS_NAME "${FLAVOR}-tools-perl-${MCCODE_VERSION}")
 
 # NSIS
 set(NSIS_NAME "Perl Tools, ${MCCODE_VERSION}")
