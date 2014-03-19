@@ -55,3 +55,11 @@ foreach(name cpp g++ gcc gcc-ar gcc-nm gcc-ranlib gcov gfortran)
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/bin"
   )
 endforeach()
+
+foreach(name cc1 cc1plus collect2 f951 lto-wrapper)
+  install(
+    FILES "gcc-4.7/libexec/gcc/x86_64-apple-darwin11.4.0/4.7.1/${name}"
+    PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ 
+    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/libexec/gcc/x86_64-apple-darwin11.4.0/4.7.1/"
+  )
+endforeach()
