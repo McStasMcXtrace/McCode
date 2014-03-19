@@ -24,6 +24,7 @@ fi
 ./mkdist mcxtrace-tools-python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac -- OSXpkg
 ./mkdist mcxtrace-tools-python-mxdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac -- OSXpkg
 ./mkdist mcxtrace-gcc $1 support/MacOSX/gcc-hpc/10.8 "" mac -- OSXpkg
+./mkdist mcxtrace-openmpi $1 support/MacOSX/openmpi/10.8 "" mac -- OSXpkg
 
 if [ "x$2" != "x" ]; then
     # Build the App bundle and meta-package also.

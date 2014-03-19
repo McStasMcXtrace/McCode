@@ -25,6 +25,7 @@ fi
 ./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac -- OSXpkg
 ./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" mac -- OSXpkg
 ./mkdist mcstas-gcc $1 support/MacOSX/gcc-hpc/10.7 "" mac -- OSXpkg
+./mkdist mcstas-openmpi $1 support/MacOSX/openmpi/10.7 "" mac -- OSXpkg
 
 if [ "x$2" != "x" ]; then
     # Build the App bundle and meta-package also.
