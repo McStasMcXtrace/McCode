@@ -29,7 +29,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ESS_Brilliance_2014(frac=1, power=5, flat=0, string srcdef="2014",yheight=0.01, width=0.01,np=1)
+DEFINE INSTRUMENT ESS_Brilliance_2014(frac=1, power=5, flat=0, string srcdef="2014",yheight=0.01, width=0.01,np=1,uniform)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -61,7 +61,7 @@ TRACE
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
-COMPONENT Source=ESS_moderator(yheight_t=yheight,yheight_c=yheight,width_c=width,width_t=width,cyl_radius=0.0,dist=1,focus_xw=0.01,focus_yh=0.01,Lmin=lambdamin,Lmax=lambdamax, cold_frac=frac, sourcedef=srcdef, acc_power=power, planar=flat, n_pulses=np)
+COMPONENT Source=ESS_moderator(yheight_t=yheight,yheight_c=yheight,width_c=width,width_t=width,cyl_radius=0.0,dist=1,focus_xw=0.01,focus_yh=0.01,Lmin=lambdamin,Lmax=lambdamax, cold_frac=frac, sourcedef=srcdef, acc_power=power, planar=flat, n_pulses=np, uniform=uniform)
   AT (0, 0, 0) RELATIVE Origin
 EXTEND %{
   IsCold=cold;

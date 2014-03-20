@@ -40,16 +40,33 @@ double Mezei_F(double t, double tau, int n)
       return (exp(-t/tau)-exp(-n*t/tau))*n/(n-1)/tau;
     }
 
-double Schoenfeldt_cold(double I_SD, double alpha_SD, double lambda_SD, double alpha_l, double lambda_l, double Exponent, double I_1, double alpha_1, double I_2, double alpha_2, double lambda) 
+double ESS_2013_Schoenfeldt_cold_spectrum(double I_SD, double alpha_SD, double lambda_SD, double alpha_l, double lambda_l, double Exponent, double I_1, double alpha_1, double I_2, double alpha_2, double lambda) 
 {
   return (I_1 * exp(-alpha_1 * lambda) + I_2 * exp(-alpha_2 * lambda)) * 1 / pow(1 + exp(alpha_l * (lambda - lambda_l)),-Exponent) + I_SD * (1/lambda) * 1/( 1 + exp(alpha_SD * (lambda - lambda_SD)));
 }
 
-double Schoenfeldt_thermal(double I_th, double T, double I_SD, double alpha, double lambda_cf, double lambda) 
+double ESS_2013_Schoenfeldt_thermal_spectrum(double I_th, double T, double I_SD, double alpha, double lambda_cf, double lambda) 
 {
   double k_Th=949;
   return I_th * exp(-k_Th/(T*lambda*lambda))*(2*k_Th*k_Th)/(T*T*pow(lambda,5)) + I_SD * (1/lambda) * 1/(1+exp(alpha*(lambda - lambda_cf)));
 }
+
+double ESS_2014_Schoenfeldt_cold_spectrum(double lambda,double height){
+    return 
+        (4.04537e+012-2.48778e+011*height)/((1+exp(2.5*(lambda-2.2)))*lambda)
+        +
+        pow((1+exp((-3.54487e+001*exp(-3.04988e-001*height)-5.34339e+000)*(lambda-(2.5105+0.010624*height)))),-0.0333143-0.0423918*height)
+        *
+        ((4.73349e+014*exp(-3.75102e-001*height)+6.11093e+013)*(exp(-0.72337*lambda)+(3.68630e-002*(1-exp(-8.13375e-001*height)))*exp(-0.293784*lambda)));
+}
+
+double ESS_2014_Schoenfeldt_thermal_spectrum(double lambda, double height){
+    if(lambda<=0)return 0;
+    double aOlsqr=949./(325*lambda*lambda);
+    return (3.63308e+013*exp(-1.30546e-001*height)+6.34710e+012)*2.*aOlsqr*aOlsqr/lambda*exp(-aOlsqr)
+      + (4.64873e+012*exp(-1.80747e-001*height)+1.74845e+012)/((1+exp(2.5*(lambda-0.88)))*lambda);
+}
+
 
 /* This is the cold Mezei moderator from 2012 (updated I0 and I2) */
 double ESS_Mezei_cold_2012(double *t, double *p, double lambda, double tfocus_width, double tfocus_time, double dt, ess_moderator_struct extras) 
@@ -389,7 +406,7 @@ double ESS_2012_Lieutenant_cold(double *t, double *p, double lambda, double tfoc
 
 /* This is the cold moderator with 2013 updates, fits from Troels Schoenfeldt */
 /* Parametrization including moderator height for the "pancake" moderator */
-double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
+double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
     /* From the forthcoming Schoenfeldt et al.
        S_cold(\lambda) = (I_1*exp(-\alpha_1*lambda)  + I_2*exp(-\alpha_2*\lambda)) * 1/(1+exp(\alpha_l * (\lambda-lambda_l)))^(1/\gamma)
@@ -415,15 +432,15 @@ double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
   if ((extras.height_c <= height[0]) && (extras.height_c >= height[6])) {
     for (j=0; j<7; j++) {
       if (extras.height_c == height[j]) {
-	  S_a = Schoenfeldt_cold(I_SD[j], alpha_SD[j], lambda_SD[j], alpha_l[j], lambda_l[j], Exponent[j], I_1[j], alpha_1[j], I_2[j], alpha_2[j], lambda);
+	S_a = ESS_2013_Schoenfeldt_cold_spectrum(I_SD[j], alpha_SD[j], lambda_SD[j], alpha_l[j], lambda_l[j], Exponent[j], I_1[j], alpha_1[j], I_2[j], alpha_2[j], lambda);
 	  *p = S_a;
 	  break;
 	  
 	} else if (extras.height_c < height[j] && extras.height_c > height[j+1]) {
 	  dS = (height[j]-extras.height_c)/(height[j]-height[j+1]);
 	  /* Linear interpolation between the two closest heights */
-	  S_a = Schoenfeldt_cold(I_SD[j], alpha_SD[j], lambda_SD[j], alpha_l[j], lambda_l[j], Exponent[j], I_1[j], alpha_1[j], I_2[j], alpha_2[j], lambda);
-	  S_b = Schoenfeldt_cold(I_SD[j+1], alpha_SD[j+1], lambda_SD[j+1], alpha_l[j+1], lambda_l[j+1], Exponent[j+1], I_1[j+1], alpha_1[j+1], I_2[j+1], alpha_2[j+1], lambda);
+	  S_a = ESS_2013_Schoenfeldt_cold_spectrum(I_SD[j], alpha_SD[j], lambda_SD[j], alpha_l[j], lambda_l[j], Exponent[j], I_1[j], alpha_1[j], I_2[j], alpha_2[j], lambda);
+	  S_b = ESS_2013_Schoenfeldt_cold_spectrum(I_SD[j+1], alpha_SD[j+1], lambda_SD[j+1], alpha_l[j+1], lambda_l[j+1], Exponent[j+1], I_1[j+1], alpha_1[j+1], I_2[j+1], alpha_2[j+1], lambda);
 	  *p = (1-dS)*S_a + dS*S_b;
 	  break;
       }
@@ -435,24 +452,38 @@ double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
 
   /* Next is time structure... */
   *t=0;
-
-  /* Exponential decay fct. in time - is in principle wavelength-dependent */
-  double alpha_decay=3277.8;
-  /* Normalization constant to achieve that int(pulse)=1. */
-  /* NOTE: Assumption is that ~ 20% of intensity comes after the main pulse */
-  double gamma = ESS_SOURCE_DURATION/(0.8);
-
-  /* Assign 80% of statistics within the pulse duration */
-  if (rand01()>0.2) {
-    *t = ESS_SOURCE_DURATION*(rand01());
-  } else {
-    *t =  ESS_SOURCE_DURATION -1e-3*log(1e-12+rand01());
-  }
+  *t = extras.tmultiplier*ESS_SOURCE_DURATION*(rand01());
   /* Troels Schoenfeldt function for timestructure */
-  *p *= TSC_TimeDist_cold(*t, lambda, 100*extras.height_c, ESS_SOURCE_DURATION,gamma);
-  *p *= TSC_y0_cold(100*extras.Y, 100*extras.height_c);
-} /* end of ESS_2014_Schoenfeldt_cold */
+  *p *= extras.tmultiplier*ESS_2014_Schoenfeldt_cold_timedist(*t, lambda, 100*extras.height_c, ESS_SOURCE_DURATION);
+} /* end of ESS_2013_Schoenfeldt_cold */
 
+/* This is the cold moderator with 2014 updates, fits from Troels Schoenfeldt */
+/* Parametrization including moderator height for the "pancake" moderator */
+double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
+{
+  if ((extras.height_c <= 0.12) && (extras.height_c >= 0.01)) {
+    *p = ESS_2014_Schoenfeldt_cold_spectrum(lambda,100*extras.height_c);
+  } else {
+    printf("Sorry! Moderator height must be between %g and %g m\n",0.12,0.01);
+    exit(-1);
+  }
+
+  /* /\* Next is time structure... *\/ */
+  /* *t=0; */
+  /* if (rand01()<extras.tailfrac) { */
+  /*   *t = ESS_SOURCE_DURATION+(extras.tmultiplier-1)*ESS_SOURCE_DURATION*(rand01()); */
+  /*   *p *=(extras.tmultiplier-1)/extras.tailfrac; */
+  /* } else { */
+  /*   *t = ESS_SOURCE_DURATION*(rand01()); */
+  /*   *p /= (1-extras.tailfrac); */
+  /* } */
+  /* Next is time structure... */
+  *t=0;
+  *t = extras.tmultiplier*ESS_SOURCE_DURATION*(rand01());
+  /* Troels Schoenfeldt function for timestructure */
+  *p *= extras.tmultiplier*ESS_2014_Schoenfeldt_cold_timedist(*t, lambda, 100*extras.height_c, ESS_SOURCE_DURATION);
+  if (extras.Uniform==0) *p *= TSC_y0_cold(100*extras.Y, 100*extras.height_c);
+} /* end of ESS_2014_Schoenfeldt_cold */
 
 /* This is TSC_y0_cold - vertical intensity distribution for the 2014 Schoenfeldt cold moderator */
 double TSC_y0_cold(double y0,double height){
@@ -470,16 +501,29 @@ double TSC_alpha_of_lambda_for_t_cold(double lambda,double height){
   return (-4.12609e-006*height+0.000214586)*pow(lambda-0.43,0.33333);
 } /* end of TSC_alpha_of_lambda_for_t_cold */
 
-/* This is TSC_TimeDist_cold time-distribution of the 2014 Schoenfeldt cold moderator */ 
-double TSC_TimeDist_cold(double t,double lambda,double height, double pulselength, double gamma){
-  double normalizer=1;//gamma/pulselength;
+/* This is ESS_2014_Schoenfeldt_cold_timedist time-distribution of the 2014 Schoenfeldt cold moderator */ 
+double ESS_2014_Schoenfeldt_cold_timedist(double t,double lambda,double height, double pulselength){
+  double normalizer=1;
   if(t<0)return 0;
   if(t<pulselength)return (1-exp(-(t)/TSC_alpha_of_lambda_for_t_cold(lambda,height)));
-  return (2-exp(-pulselength/TSC_alpha_of_lambda_for_t_cold(lambda,height))-1)*exp(-(t-pulselength)/TSC_alpha_of_lambda_for_t_cold(lambda,height));
-} /* end of TSC_TimeDist_cold */
+  return (1-exp(-pulselength/TSC_alpha_of_lambda_for_t_cold(lambda,height)))*exp(-(t-pulselength)/TSC_alpha_of_lambda_for_t_cold(lambda,height));
+} /* end of ESS_2014_Schoenfeldt_cold_timedist */
+
+/* This is TSC_alpha_of_lambda_for_t_thermal for the time-distributiob of the 2014 Schoenfeldt thermal moderator */
+double TSC_alpha_of_lambda_for_t_thermal(double lambda,double height){
+  if(lambda<0.43)return 1e-13;
+  return (-3.06866e-006*height+0.00033976)*pow(lambda-0.43,0.125);
+} /* end of TSC_alpha_of_lambda_for_t_thermal */
+
+/* This is ESS_2014_Schoenfeldt_thermal_timedist time-distribution of the 2014 Schoenfeldt cold moderator */ 
+double ESS_2014_Schoenfeldt_thermal_timedist(double t,double lambda,double height, double pulselength){
+  if(t<0)return 0;
+  if(t<pulselength)return (1-exp(-(t)/TSC_alpha_of_lambda_for_t_thermal(lambda,height)));
+  return (1-exp(-pulselength/TSC_alpha_of_lambda_for_t_thermal(lambda,height)))*exp(-(t-pulselength)/TSC_alpha_of_lambda_for_t_thermal(lambda,height));
+} /* end of ESS_2014_Schoenfeldt_thermal_timedist */
 
 /* This is the thermal moderator with 2013 updates, fits from Troels Schoenfeldt */
-double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
+double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
   /*  From the forthcoming Schoenfeldt et al.
      S_Th(\lambda) = I_Th * exp(k_Th/(T*\lambda^2))*(2*k_Th^2)/(T^2*\lambda^5) + I_SD * \lambda^-1 * 1/(1+exp(\alpha*(\lambda - \lambda_cf))
@@ -499,14 +543,14 @@ double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
   if ((extras.height_t <= height[0]) && (extras.height_t >= height[6])) {
     for (j=0; j<6; j++) {
       if (extras.height_c == height[j]) {
-	S_a = Schoenfeldt_thermal(I_th[j], T[j], I_SD[j], alpha[j], lambda_cf[j], lambda);
+	S_a = ESS_2013_Schoenfeldt_thermal_spectrum(I_th[j], T[j], I_SD[j], alpha[j], lambda_cf[j], lambda);
 	*p = S_a;
 	break;
       } else if (extras.height_t <= height[j] && extras.height_t > height[j+1]) {
 	dS = (height[j]-extras.height_t)/(height[j]-height[j+1]);
 	/* Linear interpolation between the two closest heights */
-	S_a = Schoenfeldt_thermal(I_th[j], T[j], I_SD[j], alpha[j], lambda_cf[j], lambda);
-	S_b = Schoenfeldt_thermal(I_th[j+1], T[j+1], I_SD[j+1], alpha[j+1], lambda_cf[j+1], lambda);;
+	S_a = ESS_2013_Schoenfeldt_thermal_spectrum(I_th[j], T[j], I_SD[j], alpha[j], lambda_cf[j], lambda);
+	S_b = ESS_2013_Schoenfeldt_thermal_spectrum(I_th[j+1], T[j+1], I_SD[j+1], alpha[j+1], lambda_cf[j+1], lambda);;
 	*p = (1-dS)*S_a + dS*S_b;
 	break;
       }
@@ -517,21 +561,28 @@ double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
   }
   /* Next is time structure... */
   *t=0;
+  *t = extras.tmultiplier*ESS_SOURCE_DURATION*(rand01());
+  /* Troels Schoenfeldt function for timestructure */
+  *p *= extras.tmultiplier*ESS_2014_Schoenfeldt_thermal_timedist(*t, lambda, 100*extras.height_t, ESS_SOURCE_DURATION);
+  /* No corrections for "geometrical anisotropy" at this point */
+  
+} /* end of ESS_2013_Schoenfeldt_thermal */
 
-  /* Exponential decay fct. in time - is in principle wavelength-dependent */
-  double alpha_decay=3277.8;
-  /* Normalization constant to achieve that int(pulse)=1. */
-  /* NOTE: Assumption is that ~ 20% of intensity comes after the main pulse */
-  double gamma = ESS_SOURCE_DURATION/(0.8);
-
-  /* Assign 80% of statistics within the pulse duration */
-  if (rand01()>0.2) {
-    *t = ESS_SOURCE_DURATION*(rand01());
+/* This is the thermal moderator with 2013 updates, fits from Troels Schoenfeldt */
+double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
+{
+ 
+  if ((extras.height_t <= 0.12) && (extras.height_t >= 0.01)) {
+    *p = ESS_2014_Schoenfeldt_thermal_spectrum(lambda, 100*extras.height_t);
   } else {
-    *t =  ESS_SOURCE_DURATION -1e-3*log(1e-12+rand01());
+    printf("Sorry! Moderator height must be between %g and %g cm\n",0.12,0.01);
+    exit(-1);
   }
-  /* Troels Schoenfeldt function for timestructure - for now, the cold structure is used... */
-  *p *= TSC_TimeDist_cold(*t, lambda, 100*extras.height_t, ESS_SOURCE_DURATION,gamma);
+  /* Next is time structure... */
+  *t=0;
+  *t = extras.tmultiplier*ESS_SOURCE_DURATION*(rand01());
+  /* Troels Schoenfeldt function for timestructure */
+  *p *= extras.tmultiplier*ESS_2014_Schoenfeldt_thermal_timedist(*t, lambda, 100*extras.height_t, ESS_SOURCE_DURATION);
   /* No corrections for "geometrical anisotropy" at this point */
   
 } /* end of ESS_2014_Schoenfeldt_thermal */
