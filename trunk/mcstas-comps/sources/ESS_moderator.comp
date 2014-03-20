@@ -73,11 +73,13 @@
 * tfocus_dist: (m) Position of time window
 * tfocus_time: (s) Time position of window
 * tfocus_width: (s) Time width of window
+* tmax_multiplier: (1) Defined maximum emission time at moderator, tmax= tmax_multiplier * ESS_PULSE_DURATION. Only in combination with sourcedef="2013" or "2014"
 * beamport_angle: (deg) Direction within the beamport sector (0 < angle < 60) to direct neutrons
 * acc_power: (MW) Accelerator power in MW
 * sourcedef: (string) ESS source "database", values: "TDR", "2001", "2013", "2014"
 * planar: (boolean) If set to 1, source geometry is flat and rectangular. Can only be used if cold_frac is 1 or 0, i.e. for fully thermal or fully cold source. May overwrite other geometry input.
 * isleft: (boolean) If set to 1, place thermal wing left of cold cylinder, if set to 0, place thermal wing right of cold cylinder.
+* uniform: (boolean) If set ot 0, applies vertical and horizontal anisotropy of brilliance. Only in combination with sourcedef="2014"
 *
 * %E
 *******************************************************************************/
@@ -87,9 +89,9 @@ DEFINITION PARAMETERS ()
   SETTING PARAMETERS (cyl_radius=0.085, width_c=0, yheight_c=0.12, yheight_t=0.12, width_t=0.12, beamport_angle=30, planar=0, isleft=1,
 		      Lmin, Lmax, cold_frac=1.0,
 		      dist=0, focus_xw, focus_yh, int target_index=0, 
-		      tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0,
+		      tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0, tmax_multiplier=3, int uniform=0,
 		      int n_pulses=1, string sourcedef="TDR", acc_power=5)
-  OUTPUT PARAMETERS (cold_bril, thermal_bril, l_range, w_mult, w_geom, w_geom, w_geom_t, yheight, cold)
+  OUTPUT PARAMETERS (cold_bril, thermal_bril, l_range, w_mult, w_geom, w_geom, w_geom_t, yheight_c, yheight_t, cold, tmax_multiplier, uniform)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{
@@ -215,12 +217,23 @@ INITIALIZE
     printf("Using ESS 2001 brilliance\n");
     cold_bril=ESS_Mezei_cold;
     thermal_bril=ESS_Mezei_thermal;
-  } else if (strcasestr(sourcedef,"2014")) {
+   } else if (strcasestr(sourcedef,"2013")) {
     // w_mult *= ESS_SOURCE_FREQUENCY;               /* Is already in per-second units */
     w_mult *= acc_power;                             /* Is already in per-MW units */
+    printf("Using ESS 2013 brilliance\n");
+    modextras.height_c=yheight_c;
+    modextras.height_t=yheight_t;
+    modextras.tmultiplier=tmax_multiplier;
+    cold_bril=ESS_2013_Schoenfeldt_cold;
+    thermal_bril=ESS_2013_Schoenfeldt_thermal;
+  } else if (strcasestr(sourcedef,"2014")) {
+    // w_mult *= ESS_SOURCE_FREQUENCY;               /* Is already in per-second units */
+    w_mult *= acc_power/5;                           
     printf("Using ESS 2014 brilliance\n");
     modextras.height_c=yheight_c;
     modextras.height_t=yheight_t;
+    modextras.tmultiplier=tmax_multiplier;
+    modextras.Uniform=uniform;
     cold_bril=ESS_2014_Schoenfeldt_cold;
     thermal_bril=ESS_2014_Schoenfeldt_thermal;
   } else {

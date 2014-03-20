@@ -37,6 +37,8 @@ struct ess_struct {
   double Z;
   double height_t;
   double height_c;
+  double tmultiplier;
+  int Uniform;
 };
 
 typedef struct ess_struct ess_moderator_struct;
@@ -49,16 +51,21 @@ typedef double (*functype)(double* t , double* p, double lambda,  double tfocus_
 /* Maths for the curves below */
 double Mezei_M(double l, double temp);
 double Mezei_F(double t, double tau, int n);
-double Schoenfeldt_cold(double I_SD, double alpha_SD, double lambda_SD, double alpha_l, double lambda_l, double Exponent, double I_1, double alpha_1, double I_2, double alpha_2, double lambda);
-double Schoenfeldt_thermal(double I_th, double T, double I_SD, double alpha, double lambda_cf, double lambda);
+double ESS_2013_Schoenfeldt_cold_spectrum(double I_SD, double alpha_SD, double lambda_SD, double alpha_l, double lambda_l, double Exponent, double I_1, double alpha_1, double I_2, double alpha_2, double lambda);
+double ESS_2013_Schoenfeldt_thermal_spectrum(double I_th, double T, double I_SD, double alpha, double lambda_cf, double lambda);
+double ESS_2014_Schoenfeldt_cold_spectrum(double lambda,double height);
+double ESS_2014_Schoenfeldt_thermal_spectrum(double lambda, double height);
 
 /* List of brilliance definitions */
 double ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
 double ESS_Mezei_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
 double ESS_Mezei_cold_2012(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
 double ESS_2012_Lieutenant_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
+double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
+double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras);
 double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
 double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras);
+
 
 /* List of pulse-shape definitions */
 double TSC_Simple_TimeDist_Model(double t, double alpha, double pulselength, double gamma);
@@ -73,7 +80,9 @@ void ESS_mcdisplay_TDRlike(double geometry);
 
 double TSC_y0_cold(double y0,double height);
 double TSC_alpha_of_lambda_for_t_cold(double lambda,double height);
-double TSC_TimeDist_cold(double t, double lambda, double height, double pulselength, double gamma);
+double TSC_alpha_of_lambda_for_t_thermal(double lambda,double height);
+double ESS_2014_Schoenfeldt_cold_timedist(double t, double lambda, double height, double pulselength);
+double ESS_2014_Schoenfeldt_thermal_timedist(double t, double lambda, double height, double pulselength);
 
 /* end of ess_source-lib.h */
 #endif
