@@ -1,0 +1,17 @@
+{
+  "keyboard_shortcut": "Meta+Shift+D", 
+  "name": "mcdisplay", 
+  "language": "JavaScript", 
+  "trigger_enabled": false, 
+  "value": [
+    "// Macro recorded on: Wed Mar 19 2014 16:43:54 GMT+0100 (CET)", 
+    "komodo.assertMacroVersion(3);", 
+    "if (komodo.view) { komodo.view.setFocus(); }", 
+    "ko.run.runEncodedCommand(window, 'mcdisplay %F');"
+  ], 
+  "trigger": "trigger_postopen", 
+  "rank": 100, 
+  "version": "1.0.12", 
+  "async": false, 
+  "type": "macro"
+}

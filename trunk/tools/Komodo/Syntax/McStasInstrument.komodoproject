@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Komodo Project File - DO NOT EDIT -->
+<project id="5d3fde61-6afe-b94f-9ed1-09075616c3b9" kpf_version="5" name="McStasInstrument.komodoproject">
+<preference-set idref="5d3fde61-6afe-b94f-9ed1-09075616c3b9" id="project" preftype="project">
+  <boolean id="configured">1</boolean>
+  <string id="koextgen.target">komodolang</string>
+</preference-set>
+</project>
