@@ -89,7 +89,7 @@ DEFINITION PARAMETERS ()
 		      dist=0, focus_xw, focus_yh, int target_index=0, 
 		      tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0,
 		      int n_pulses=1, string sourcedef="TDR", acc_power=5)
-  OUTPUT PARAMETERS (cold_bril, thermal_bril, l_range, w_mult, w_geom, w_geom, w_geom_t, yheight)
+  OUTPUT PARAMETERS (cold_bril, thermal_bril, l_range, w_mult, w_geom, w_geom, w_geom_t, yheight, cold)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{
@@ -101,6 +101,7 @@ DECLARE
   double l_range, w_mult, w_geom, w_geom_c, w_geom_t, yheight;
   double tx,ty,tz;
   double t1x,t1y,t1z,t2x,t2y,t2z;
+  int cold;
   
   /* Target station geometry... */
   double r_empty = 2.0; /* two meters from moderator surface and out... */
@@ -236,7 +237,7 @@ TRACE
   double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag,cor,dt,xprime,yprime,zprime;
 
   /* Bispectral source - choice of spectrum and initial position */
-  int cold = ( rand01() < cold_frac ) ? 1 : 0;
+  cold = ( rand01() < cold_frac );
 
   /* Geometry adapted from ESS MCNPX model, mid 2012 */
   if (cold) {          //case: cold moderator
