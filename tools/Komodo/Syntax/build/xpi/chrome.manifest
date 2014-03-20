@@ -1,5 +1,5 @@
-content mcstasinstrumentlanguage content/
-skin mcstasinstrumentlanguage classic/1.0 skin/
-locale mcstasinstrumentlanguage en-US locale/en-US/
+content mcstasinstrument language content/
+skin mcstasinstrument language classic/1.0 skin/
+locale mcstasinstrument language en-US locale/en-US/
 
 manifest components/component.manifest

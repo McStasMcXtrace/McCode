@@ -19,7 +19,7 @@ class KoMcStasLanguage(KoUDLLanguage):
     _reg_desc_ = "%s Language" % name
     _reg_contractid_ = "@activestate.com/koLanguage?language=%s;1" % name
     _reg_categories_ = [("komodo-language", name)]
-    _reg_clsid_ = "02a1a212-d5a1-4910-9112-dc17c7d43950"
+    _reg_clsid_ = "35c8954f-2453-487b-9ded-a2a955291212"
     defaultExtension = '.instr'
 
     # ------------ Commenting Controls ------------ #
