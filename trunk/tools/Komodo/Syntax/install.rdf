@@ -2,12 +2,12 @@
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
     <Description about="urn:mozilla:install-manifest">
-        <em:id>mcstasinstrument_language@yourdomain.org</em:id>
-        <em:name>mcstasinstrument_language</em:name>
+        <em:id>mcstas_instrument_language@mcstas.org</em:id>
+        <em:name>mcstas_instrument_language</em:name>
         <em:version>0.1</em:version>
-        <em:description></em:description>
-        <em:creator>Me</em:creator>
-        <em:homepageURL>http://yourdomain.org/mcstasinstrument_language</em:homepageURL>
+        <em:description>Syntax highlighting and other functionality for McStas in Komodo Edit</em:description>
+        <em:creator>Peter Willendrup</em:creator>
+        <em:homepageURL>http://www.mcstas.org</em:homepageURL>
         <em:type>2</em:type> <!-- type=extension --> 
 
         <em:targetApplication>
