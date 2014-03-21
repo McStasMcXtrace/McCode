@@ -78,7 +78,10 @@ double TSC_y0_Model(double y,double height, double center);
 void ESS_mcdisplay_flat(double geometry);
 void ESS_mcdisplay_TDRlike(double geometry);
 
-double TSC_y0_cold(double y0,double height);
+double ESS_2014_Schoenfeldt_cold_y0(double y0,double height);
+double ESS_2014_Schoenfeldt_cold_x0(double x0,double height);
+double ESS_2014_Schoenfeldt_thermal_x0(double x0,double height);
+
 double TSC_alpha_of_lambda_for_t_cold(double lambda,double height);
 double TSC_alpha_of_lambda_for_t_thermal(double lambda,double height);
 double ESS_2014_Schoenfeldt_cold_timedist(double t, double lambda, double height, double pulselength);

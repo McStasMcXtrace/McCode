@@ -91,7 +91,7 @@ DEFINITION PARAMETERS ()
 		      dist=0, focus_xw, focus_yh, int target_index=0, 
 		      tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0, tmax_multiplier=3, int uniform=0,
 		      int n_pulses=1, string sourcedef="TDR", acc_power=5)
-  OUTPUT PARAMETERS (cold_bril, thermal_bril, l_range, w_mult, w_geom, w_geom, w_geom_t, yheight_c, yheight_t, cold, tmax_multiplier, uniform)
+//OUTPUT PARAMETERS (cold_bril, thermal_bril, l_range, w_mult, w_geom, w_geom, w_geom_t, yheight_c, yheight_t, cold, tmax_multiplier, uniform)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{
@@ -115,6 +115,8 @@ DECLARE
 
 INITIALIZE
 %{
+
+  //printf("Width and height... %g %g %g %g\n",width_c, yheight_c,width_t, yheight_t);
   n_pulses=(double)floor(n_pulses);
   if (n_pulses == 0) n_pulses=1;
  
@@ -243,10 +245,11 @@ INITIALIZE
 
   /* For drawing */ 
   yheight = fmax(yheight_t, yheight_c);
-
+  //printf("Width and height... %g %g %g %g\n",width_c, yheight_c,width_t, yheight_t);
 %}
 TRACE
 %{
+  //printf("xxxWidth and height... %g %g %g %g\n",width_c, yheight_c,width_t, yheight_t);
   double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag,cor,dt,xprime,yprime,zprime;
 
   /* Bispectral source - choice of spectrum and initial position */
@@ -257,6 +260,7 @@ TRACE
     if (planar==1) {
       x = 0.5*randpm1()*width_c;
       y = 0.5*randpm1()*yheight_c;
+      //printf("X and Y: %g %g %g\n",x,y,yheight_c);
       z = 0;
     } else {
       double theta_tmp;
@@ -293,7 +297,7 @@ TRACE
   }
 
   randvec_target_rect_real(&xf, &yf, &r, &w_focus,
-			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 0);
  
   dx = xf-x;
   dy = yf-y;
@@ -319,6 +323,7 @@ TRACE
     thermal_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
   }
   p*=w_focus*w_geom*w_mult;
+  //  p*=w_focus*w_geom*w_mult;
   t+=(double)floor((n_pulses)*rand01())/ESS_SOURCE_FREQUENCY;   /* Select a random pulse */
 
   /* Correct weight for sampling of cold vs. thermal events. */
