@@ -3073,8 +3073,7 @@ void mt_srandom(unsigned long s)
 /* initialize by an array with array-length */
 /* init_key is the array for initializing keys */
 /* key_length is its length */
-void init_by_array(init_key, key_length)
-unsigned long init_key[], key_length;
+void init_by_array(unsigned long init_key[], unsigned long key_length)
 {
     int i, j, k;
     mt_srandom(19650218UL);
