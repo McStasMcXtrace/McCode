@@ -233,6 +233,7 @@ INITIALIZE
     w_mult *= acc_power/5;                           
     printf("Using ESS 2014 brilliance\n");
     modextras.height_c=yheight_c;
+    modextras.Width_c=width_c;
     modextras.height_t=yheight_t;
     modextras.tmultiplier=tmax_multiplier;
     modextras.Uniform=uniform;
