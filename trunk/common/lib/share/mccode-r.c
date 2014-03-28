@@ -68,7 +68,7 @@ int      mcallowbackprop             = 0;         /* flag to enable negative/bac
 mcstatic unsigned long long int mcncount             = 1;
 mcstatic unsigned long long int mcrun_num            = 0;
 #else
-mcstatic unsigned long long int mcncount             = 1e6;
+mcstatic unsigned long long int mcncount             = 1000000;
 mcstatic unsigned long long int mcrun_num            = 0;
 #endif /* NEUTRONICS */
 
