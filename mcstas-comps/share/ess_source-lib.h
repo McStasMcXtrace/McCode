@@ -37,8 +37,10 @@ struct ess_struct {
   double Z;
   double height_t;
   double height_c;
+  double Width_c;
   double tmultiplier;
   int Uniform;
+  int is60degs;
 };
 
 typedef struct ess_struct ess_moderator_struct;
@@ -55,6 +57,8 @@ double ESS_2013_Schoenfeldt_cold_spectrum(double I_SD, double alpha_SD, double l
 double ESS_2013_Schoenfeldt_thermal_spectrum(double I_th, double T, double I_SD, double alpha, double lambda_cf, double lambda);
 double ESS_2014_Schoenfeldt_cold_spectrum(double lambda,double height);
 double ESS_2014_Schoenfeldt_thermal_spectrum(double lambda, double height);
+double ESS_2014_Schoenfeldt_cold_Geom_120_over_60=1;
+double ESS_2014_Schoenfeldt_thermal_Geom_120_over_60=1;
 
 /* List of brilliance definitions */
 double ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
@@ -79,8 +83,15 @@ void ESS_mcdisplay_flat(double geometry);
 void ESS_mcdisplay_TDRlike(double geometry);
 
 double ESS_2014_Schoenfeldt_cold_y0(double y0,double height);
-double ESS_2014_Schoenfeldt_cold_x0(double x0,double height);
-double ESS_2014_Schoenfeldt_thermal_x0(double x0,double height);
+double ESS_2014_Schoenfeldt_cold_x0(double x0,double height, double width);
+double ESS_2014_Schoenfeldt_thermal_y0(double y0,double height);
+double ESS_2014_Schoenfeldt_thermal_x0(double x0,double height, double width);
+double ESS_2014_Schoenfeldt_cold_Y(double x0,double height);
+double ESS_2014_Schoenfeldt_thermal_Y(double y0,double height);
+double ESS_2014_Schoenfeldt_cold_Theta120(double x0,double height);
+double ESS_2014_Schoenfeldt_thermal_Theta120(double y0,double height);
+double ESS_2014_Schoenfeldt_cold_Theta60(double x0,double height);
+double ESS_2014_Schoenfeldt_thermal_Theta60(double y0,double height);
 
 double TSC_alpha_of_lambda_for_t_cold(double lambda,double height);
 double TSC_alpha_of_lambda_for_t_thermal(double lambda,double height);
