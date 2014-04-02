@@ -39,6 +39,7 @@ struct ess_struct {
   double height_c;
   double Width_c;
   double tmultiplier;
+  double Radius_c;
   int Uniform;
   int is60degs;
 };

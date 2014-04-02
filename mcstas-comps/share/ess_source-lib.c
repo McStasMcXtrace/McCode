@@ -631,7 +631,15 @@ double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
   *t = extras.tmultiplier*ESS_SOURCE_DURATION*(rand01());
   /* Troels Schoenfeldt function for timestructure */
   *p *= extras.tmultiplier*ESS_2014_Schoenfeldt_thermal_timedist(*t, lambda, 100*extras.height_t, ESS_SOURCE_DURATION);   /* Using Width_c is NOT a typo - dependent on cold moderator geometry */
-  if (extras.Uniform==0) *p *= ESS_2014_Schoenfeldt_thermal_y0(100*extras.X, 100*extras.height_t) * ESS_2014_Schoenfeldt_thermal_x0(100*extras.X, 100*extras.height_t, 100*extras.Width_c/2.0);
+  if (extras.Uniform==0) {
+    double W;
+    if (extras.is60degs) {
+      W = extras.Radius_c*cos(30);
+    } else {
+      W = extras.Radius_c*cos(60);
+    }
+    *p *= ESS_2014_Schoenfeldt_thermal_y0(100*extras.X, 100*extras.height_t) * ESS_2014_Schoenfeldt_thermal_x0(100*extras.X, 100*extras.height_t, 100*W);
+  }
   /* No corrections for "geometrical anisotropy" at this point */
   
 } /* end of ESS_2014_Schoenfeldt_thermal */

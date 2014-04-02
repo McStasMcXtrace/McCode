@@ -113,6 +113,7 @@ DECLARE
   ess_moderator_struct modextras;
   functype cold_bril;
   functype thermal_bril;
+  double theta_tmp;
 %}
 
 INITIALIZE
@@ -239,6 +240,12 @@ INITIALIZE
     modextras.height_t=yheight_t;
     modextras.tmultiplier=tmax_multiplier;
     modextras.Uniform=uniform;
+    if (extraction_width == 60) {
+      modextras.is60degs=1;
+    } else {
+      modextras.is60degs=0;
+    }
+    modextras.Radius_c=cyl_radius;
     cold_bril=ESS_2014_Schoenfeldt_cold;
     thermal_bril=ESS_2014_Schoenfeldt_thermal;
   } else {
@@ -252,6 +259,7 @@ INITIALIZE
 %}
 TRACE
 %{
+
   //printf("xxxWidth and height... %g %g %g %g\n",width_c, yheight_c,width_t, yheight_t);
   double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag,cor,dt,xprime,yprime,zprime;
 
@@ -266,7 +274,7 @@ TRACE
       //printf("X and Y: %g %g %g\n",x,y,yheight_c);
       z = 0;
     } else {
-      double theta_tmp;
+
       
       //choose random point on cylinder surface
       theta_tmp = randpm1()*PI/6 + PI/2 + (- extraction_width/2 + beamport_angle)*DEG2RAD;
