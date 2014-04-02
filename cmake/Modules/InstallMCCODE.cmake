@@ -239,6 +239,12 @@ macro(installMCCODE)
     WORKING_DIRECTORY work/src
   )
 
+  # Handling of system-provided random functions on windows - 
+  # needed only in the link step for mccode and -format
+  if(WINDOWS)
+    AppendDef(random=rand)
+    AppendDef(srandom=srand)
+  endif()
 
   ## Build executable for flavor
   add_executable(
