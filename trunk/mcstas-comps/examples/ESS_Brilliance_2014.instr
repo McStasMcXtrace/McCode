@@ -29,7 +29,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ESS_Brilliance_2014(frac=1, power=5, flat=0, string srcdef="2014",Yheight=0.1, WidthC=0.1,WidthT=0.1,np=1,uniform=0)
+DEFINE INSTRUMENT ESS_Brilliance_2014(frac=1, power=5, flat=0, string srcdef="2014",Yheight=0.1, WidthC=0.2,WidthT=0.6,np=1,uniform=0, ISleft=0.5)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -65,7 +65,7 @@ TRACE
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
-COMPONENT Source=ESS_moderator(yheight_t=Yheight,yheight_c=Yheight,width_c=WidthC,width_t=WidthT,cyl_radius=0.0,dist=1,focus_xw=0.01,focus_yh=0.01,Lmin=lambdamin,Lmax=lambdamax, cold_frac=frac, sourcedef=srcdef, acc_power=power, planar=flat, n_pulses=np, uniform=uniform)
+  COMPONENT Source=ESS_moderator(yheight_t=Yheight,yheight_c=Yheight,width_c=WidthC,width_t=WidthT,cyl_radius=0.0,dist=1,focus_xw=0.01,focus_yh=0.01,Lmin=lambdamin,Lmax=lambdamax, cold_frac=frac, sourcedef=srcdef, acc_power=power, planar=flat, n_pulses=np, uniform=uniform, isleft=ISleft)
   AT (0, 0, 0) RELATIVE Origin
 EXTEND %{
   IsCold=cold;
@@ -108,6 +108,9 @@ EXTEND %{
 
 
   COMPONENT MonND2 = Monitor_nD(xwidth=0.5, yheight=0.5, user1=SrcY, options="user1 bins=201 limits=[-0.5,0.5]")
+ AT (0, 0, 1) RELATIVE Source
+
+  COMPONENT MonND3 = Monitor_nD(xwidth=0.5, yheight=0.5, user1=SrcX, user2=SrcY, options="user1 bins=201 limits=[-0.5,0.5], user2 bins=201 limits=[-0.5,0.5]")
  AT (0, 0, 1) RELATIVE Source
 
 /* Brilliance monitor. Note use of geometry in srcarea definition */
