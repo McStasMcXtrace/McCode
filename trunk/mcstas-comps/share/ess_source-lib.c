@@ -648,9 +648,9 @@ double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
     }
     *p *= ESS_2014_Schoenfeldt_thermal_y0(100*X0, 100*extras.height_t) * ESS_2014_Schoenfeldt_thermal_x0(100*X0, 100*extras.height_t, 100*W);
     if (extras.Wasleft) {
-      // *p /= cos(DEG2RAD*(extras.BeamPortAngle-90));
+      *p /= cos(DEG2RAD*(extras.BeamPortAngle-90));
     } else {
-      //*p /= cos(DEG2RAD*((ExtractionWidth - extras.BeamPortAngle)-90));
+      *p /= cos(DEG2RAD*((ExtractionWidth - extras.BeamPortAngle)-90));
     }
     
   }
