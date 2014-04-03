@@ -115,6 +115,7 @@ DECLARE
   functype cold_bril;
   functype thermal_bril;
   double theta_tmp;
+  double Wconst;
 %}
 
 INITIALIZE
@@ -272,6 +273,9 @@ INITIALIZE
 
   /* For drawing */ 
   yheight = fmax(yheight_t, yheight_c);
+  double ttmp;
+  randvec_target_rect_real(&ttmp, &ttmp, &ttmp, &Wconst,
+			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, 0, 0, 0, 0);
 %}
 TRACE
 %{
@@ -298,6 +302,7 @@ TRACE
       x     = cyl_radius * sin(theta_tmp);
       y     = 0.5*randpm1()*yheight;
       z     = cyl_radius * cos(theta_tmp);
+      cosine = 0;
     }
     w_geom = w_geom_c;
   }  else  {                      //case: thermal moderator
@@ -321,6 +326,7 @@ TRACE
 	z = t2z * poshorz;
       }
       y = posvert;
+      cosine = 0;
     }
     w_geom = w_geom_t;
   }
@@ -335,9 +341,9 @@ TRACE
     } else {
       /* Apply a cosine wrt. beamport angle vs. normal of the thermal extensions */
       if (wasleft==1) {
-	w_focus *= cos(DEG2RAD*(90 - beamport_angle))/cos(DEG2RAD*extraction_width/2);
+	w_focus = Wconst * cos(DEG2RAD*(beamport_angle-90))/cos(DEG2RAD*extraction_width/2);
       } else {
-	w_focus *= cos(DEG2RAD*(90 - (extraction_width - beamport_angle)))/cos(DEG2RAD*extraction_width/2);
+	w_focus = Wconst * cos(DEG2RAD*((extraction_width - beamport_angle)-90))/cos(DEG2RAD*extraction_width/2);
       }
     }
   }

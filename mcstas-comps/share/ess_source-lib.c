@@ -642,15 +642,15 @@ double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
       ExtractionWidth=120;
     }
     if (extras.Wasleft) {
-      X0 = extras.X*cos(DEG2RAD*(90 - extras.BeamPortAngle));
+      X0 = extras.X*cos(DEG2RAD*(extras.BeamPortAngle-90));
     } else {
-      X0 = extras.X*cos(DEG2RAD*(90 - (ExtractionWidth - extras.BeamPortAngle)));
+      X0 = extras.X*cos(DEG2RAD*((ExtractionWidth - extras.BeamPortAngle)-90));
     }
     *p *= ESS_2014_Schoenfeldt_thermal_y0(100*X0, 100*extras.height_t) * ESS_2014_Schoenfeldt_thermal_x0(100*X0, 100*extras.height_t, 100*W);
     if (extras.Wasleft) {
-      *p /= cos(DEG2RAD*(90 - extras.BeamPortAngle));
+      // *p /= cos(DEG2RAD*(extras.BeamPortAngle-90));
     } else {
-      *p /= cos(DEG2RAD*(90 - (ExtractionWidth - extras.BeamPortAngle)));
+      //*p /= cos(DEG2RAD*((ExtractionWidth - extras.BeamPortAngle)-90));
     }
     
   }
