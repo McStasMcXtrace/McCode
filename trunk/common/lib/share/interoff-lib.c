@@ -707,18 +707,17 @@ int off_intersect(double* t0, double* t3,
     off_cleanDouble(t, &t_size);
     off_cleanInOut(t,  &t_size);
 
-    if(t_size>0)
-    {
+    /*find intersections "closest" to 0 (favouring positive ones)*/
+    if(t_size>0){
       int i=0;
-      if (t0) *t0 = t[0].time;
-      if (n0) *n0 = t[0].normal;;
       if(t_size>1) {
         for (i=1; i < t_size; i++)
-          if (t[i].time > 0 && t[i].time > t[0].time) break;
-        if(i!=t_size){
-          if (t3) *t3 = t[i].time;
-          if (n3) *n3 = t[i].normal;
-        }
+          if (t[i-1].time > 0 && t[i].time > 0)
+            break;
+        if (t0) *t0 = t[i-1].time;
+        if (n0) *n0 = t[i-1].normal;;
+        if (t3) *t3 = t[i].time;
+        if (n3) *n3 = t[i].normal;
       }
       /* should also return t[0].index and t[i].index as polygon ID */
       return t_size;
