@@ -41,7 +41,7 @@ DECLARE
   double Theta;
   double MonTransl;
   double XW, YH;
-  char options1[256],options2[256];
+  char options1[256],options2[256],options3[256],options4[256];
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -53,7 +53,9 @@ INITIALIZE
   XW=1.05*(WidthC+2*WidthT);
   YH=1.05*Yheight;
   sprintf(options1,"user1 bins=201 limits=[-%g,%g]",XW/2,XW/2);
+  sprintf(options4,"user1 bins=201 limits=[-%g,%g]",YH/2,YH/2);
   sprintf(options2,"user1 bins=201 limits=[-%g,%g], user2 bins=201 limits=[-%g,%g]",XW/2,XW/2,YH/2,YH/2);
+  sprintf(options3,"user1 bins=201 limits=[-%g,%g], user2 bins=201 limits=[-%g,%g]",1.05*(WidthC/2),1.05*(WidthC/2),1.05*Yheight/2,1.05*Yheight/2);
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -114,14 +116,17 @@ EXTEND %{
 /*   AT (0, 0, 0.2111) RELATIVE Source */
 /*   ROTATED(0,0,0) RELATIVE Source */
 
-  COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, options=options1)
+  COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, options=options1, restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
 
 
-  COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1=Theta, options="auto user1")
+  COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, options=options4, restore_neutron=1)
   WHEN(cold) AT (0, 0, 1) RELATIVE Source
 
-  COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, user2=SrcY, options=options2)
+  COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, user2=SrcY, options=options2, restore_neutron=1)
+ AT (0, 0, 1) RELATIVE Source
+
+  COMPONENT MonND4 = Monitor_nD(xwidth=1.05*WidthC/2, yheight=1.05*Yheight/2, user1=SrcX, user2=SrcY, options=options3, restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
 
 /* Brilliance monitor. Note use of geometry in srcarea definition */
