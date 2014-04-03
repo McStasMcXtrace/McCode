@@ -40,8 +40,10 @@ struct ess_struct {
   double Width_c;
   double tmultiplier;
   double Radius_c;
+  double BeamPortAngle;
   int Uniform;
   int is60degs;
+  int Wasleft;
 };
 
 typedef struct ess_struct ess_moderator_struct;

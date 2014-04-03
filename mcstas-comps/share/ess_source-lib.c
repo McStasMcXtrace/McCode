@@ -632,16 +632,28 @@ double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
   /* Troels Schoenfeldt function for timestructure */
   *p *= extras.tmultiplier*ESS_2014_Schoenfeldt_thermal_timedist(*t, lambda, 100*extras.height_t, ESS_SOURCE_DURATION);   /* Using Width_c is NOT a typo - dependent on cold moderator geometry */
   if (extras.Uniform==0) {
-    double W;
+    double W, ExtractionWidth, X0;
+    /* Arc-length to projected width, cold moderator in 60 vs 120 setting */
     if (extras.is60degs) {
       W = extras.Radius_c*cos(30);
+      ExtractionWidth=60;
     } else {
       W = extras.Radius_c*cos(60);
+      ExtractionWidth=120;
     }
-    *p *= ESS_2014_Schoenfeldt_thermal_y0(100*extras.X, 100*extras.height_t) * ESS_2014_Schoenfeldt_thermal_x0(100*extras.X, 100*extras.height_t, 100*W);
+    if (extras.Wasleft) {
+      X0 = extras.X*cos(DEG2RAD*(90 - extras.BeamPortAngle));
+    } else {
+      X0 = extras.X*cos(DEG2RAD*(90 - (ExtractionWidth - extras.BeamPortAngle)));
+    }
+    *p *= ESS_2014_Schoenfeldt_thermal_y0(100*X0, 100*extras.height_t) * ESS_2014_Schoenfeldt_thermal_x0(100*X0, 100*extras.height_t, 100*W);
+    if (extras.Wasleft) {
+      *p /= cos(DEG2RAD*(90 - extras.BeamPortAngle));
+    } else {
+      *p /= cos(DEG2RAD*(90 - (ExtractionWidth - extras.BeamPortAngle)));
+    }
+    
   }
-  /* No corrections for "geometrical anisotropy" at this point */
-  
 } /* end of ESS_2014_Schoenfeldt_thermal */
 
 double TSC_Simple_TimeDist_Model(double t, double alpha, double pulselength, double gamma){
