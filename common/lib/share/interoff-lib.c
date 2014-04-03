@@ -727,7 +727,7 @@ int off_intersect(double* t0, double* t3,
 
 
 /*****************************************************************************
-* int off_intersectx(double* l0, double* l3,
+* int off_x_intersect(double* l0, double* l3,
      Coords *n0, Coords *n3,
      double x, double y, double z,
      double kx, double ky, double kz,
