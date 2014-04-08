@@ -361,7 +361,7 @@
               X = 0;
             else if (!strncasecmp(lexeme,"Inf",3) || !strncasecmp(lexeme,"+Inf",4))
               X = FLT_MAX;
-            else if (!strncasecmp(lexeme,"-Inf",3))
+            else if (!strncasecmp(lexeme,"-Inf",4))
               X = -FLT_MAX;
             else
               count = sscanf(lexeme,"%lg",&X);

@@ -142,13 +142,13 @@ INITIALIZE %{
   
   if (geometry && strlen(geometry))
     if (!off_init(  geometry, xwidth, yheight, zdepth, 0, &offdata )) {
-      printf("Monitor_nD: %s could not initiate the OFF geometry. \n"
+      printf("Monitor_Sqw: %s could not initiate the OFF geometry. \n"
              "            Defaulting to normal Monitor dimensions.\n", NAME_CURRENT_COMP);
       strcpy(geometry, "");
     }
   
   if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax && !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
-    exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
+    exit(printf("Monitor_Sqw: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax);
 
@@ -157,8 +157,7 @@ INITIALIZE %{
   
   Vars.Flag_parallel=1;
   detector.m = 0;
-  
-  printf("Monitor_nM: %s: options=\"%s\"\n", NAME_CURRENT_COMP, Vars.option);
+
 %}
 
 TRACE %{
@@ -260,18 +259,6 @@ TRACE %{
     Vars.cvz = vz;
     Vars.csz = sz;
     Vars.ct  = t;
-
-    /*Vars.cp  = p;
-    Vars.cx  = x -rx;
-    Vars.cvx = vx-rvx;
-    Vars.csx = sx-rsx;
-    Vars.cy  = y -ry;
-    Vars.cvy = vy-rvy;
-    Vars.csy = sy-rsy;
-    Vars.cz  = z -rz;
-    Vars.cvz = vz-rvz;
-    Vars.csz = sz-rsz;
-    Vars.ct  = t;*/
 
     pp = Monitor_nD_Trace(&DEFS, &Vars);
     SCATTER;
