@@ -14,8 +14,8 @@
 # density   1.843   in [g/cm^3]
 # weight    132.90  in [g/mol]
 # v_sound   1090    in [m/s] in liquid
-# T_m       301.6   melting temperature in [K]
-# T_b       944     boiling temperature in [K]
+# T_m       301.6   melting T in [K]
+# T_b       944     boiling T in [K]
 # At_number 55      atomic number Z
 # Temperature 308   in [K]
 # classical   1      symmetric, does not include Bose factor

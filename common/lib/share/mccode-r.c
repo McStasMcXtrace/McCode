@@ -2012,7 +2012,6 @@ mcuse_dir(char *dir)
 #ifndef DANSE
       fprintf(stderr, "Error: unable to create directory '%s' (mcuse_dir)\n", dir);
       fprintf(stderr, "(Maybe the directory already exists?)\n");
-      exit(1);
 #endif
     }
   ); /* MPI_MASTER */

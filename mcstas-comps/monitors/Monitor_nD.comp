@@ -297,9 +297,11 @@ INITIALIZE
   detector.m = 0;
   
 #ifdef USE_MPI
+MPI_MASTER(
   if (strstr(Vars.option, "auto") && mpi_node_count > 1)
     printf("Monitor_nD: %s is using automatic limits option 'auto' together with MPI.\n"
            "WARNING     this may create incorrect distributions (but integrated flux will be right).\n", NAME_CURRENT_COMP);
+);
 #endif
 %}
 
