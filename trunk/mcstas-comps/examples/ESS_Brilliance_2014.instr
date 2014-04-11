@@ -29,7 +29,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ESS_Brilliance_2014(frac=1, power=5, flat=0, string srcdef="2014",Yheight=0.1, WidthC=0.2,WidthT=0.6,np=1,uniform=0, ISleft=0.5, angle=-1, lambdamin=0.2, lambdamax=20)
+DEFINE INSTRUMENT ESS_Brilliance_2014(frac=1, power=5, flat=0, string srcdef="2014",Yheight=0.1, WidthC=0.2,WidthT=0.25,np=1,uniform=0, ISleft=0.5, angle=-1, lambdamin=0.2, lambdamax=20)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -131,10 +131,11 @@ EXTEND %{
 
 /* Brilliance monitor. Note use of geometry in srcarea definition */
 COMPONENT Brillmon = Brilliance_monitor(
-    nlam = 196, nt = 601, filename = "brill", t_0 = 0,
+    nlam = 101, nt = 101, filename = "brill", t_0 = 0,
     t_1 =10000, lambda_0 = lambdamin, lambda_1 = lambdamax,
     Freq =14, toflambda=1,tofcuts=1, srcarea=(100*WidthC*100*Yheight))
   AT (0, 0, 1) RELATIVE Source
+
 
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */
