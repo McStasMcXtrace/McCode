@@ -359,7 +359,13 @@ TRACE
   vz = v*dist/r;
   vy = v*dy/r;
   vx = v*dx/r;
-  
+
+  if (!planar) {
+    double t1,t2;
+    cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, cyl_radius-1e-6, yheight_c);
+    if(t1>0 || t2>0) {PROP_DT(fmax(t1,t2)); SCATTER; ABSORB;}
+  }
+
   modextras.X=x; modextras.Y=y; modextras.Z=z; modextras.Wasleft=wasleft;
   /* Determine delta-t needed to reach first chopper */
   if (tfocus_width>0) {

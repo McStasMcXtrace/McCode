@@ -52,19 +52,18 @@ double ESS_2013_Schoenfeldt_thermal_spectrum(double I_th, double T, double I_SD,
 }
 
 double ESS_2014_Schoenfeldt_cold_spectrum(double lambda,double height){
-    return 
-        (4.04537e+012-2.48778e+011*height)/((1+exp(2.5*(lambda-2.2)))*lambda)
-        +
-        pow((1+exp((-3.54487e+001*exp(-3.04988e-001*height)-5.34339e+000)*(lambda-(2.5105+0.010624*height)))),-0.0333143-0.0423918*height)
-        *
-        ((4.73349e+014*exp(-3.75102e-001*height)+6.11093e+013)*(exp(-0.72337*lambda)+(3.68630e-002*(1-exp(-8.13375e-001*height)))*exp(-0.293784*lambda)));
+	if(lambda<=0)return 0;
+	return pow((1+exp((-7.84092e+001*exp(-1.00000e+000*height)-8.46887e+000+3)
+		*(lambda-(2.48787-0.00729329*height)))),(1.17068e+000*exp(-2.52666e-001*height)-9.29703e-001))
+		*((5.17542e+014*exp(-3.91646e-001*height)+7.19417e+013)
+		*(exp(-0.77*(lambda))+(-5.03315e-002*exp(-5.79174e-001*height)+5.72765e-002)*exp(-0.323784*(lambda))))
+		+(4.12442e+012*exp(-1.25186e-001*height)+8.53849e+011)/((1+exp(2.5*(lambda-2.2)))*lambda);
 }
 
 double ESS_2014_Schoenfeldt_thermal_spectrum(double lambda, double height){
-    if(lambda<=0)return 0;
-    double aOlsqr=949./(325*lambda*lambda);
-    return (3.63308e+013*exp(-1.30546e-001*height)+6.34710e+012)*2.*aOlsqr*aOlsqr/lambda*exp(-aOlsqr)
-      + (4.64873e+012*exp(-1.80747e-001*height)+1.74845e+012)/((1+exp(2.5*(lambda-0.88)))*lambda);
+	if(lambda<=0)return 0;
+	double aOlsqr=949./(325*lambda*lambda);
+	return 2*(3.46910e+013*exp(-1.65602e-001*height)+8.08542e+012)*aOlsqr*aOlsqr/lambda*pow(lambda,(3.11752e-001*(1-exp(-3.45363e-001*height))+9.17072e-002))*exp(-aOlsqr)+4.64873e+012*exp(-1.80747e-001*height)+1.74845e+012/((1+exp(2.5*(lambda-0.88)))*lambda);
 }
 
 
@@ -550,11 +549,15 @@ double TSC_alpha_of_lambda_for_t_cold(double lambda,double height){
 } /* end of TSC_alpha_of_lambda_for_t_cold */
 
 /* This is ESS_2014_Schoenfeldt_cold_timedist time-distribution of the 2014 Schoenfeldt cold moderator */ 
-double ESS_2014_Schoenfeldt_cold_timedist(double t,double lambda,double height, double pulselength){
-  double normalizer=1;
-  if(t<0)return 0;
-  if(t<pulselength)return (1-exp(-(t)/TSC_alpha_of_lambda_for_t_cold(lambda,height)));
-  return (1-exp(-pulselength/TSC_alpha_of_lambda_for_t_cold(lambda,height)))*exp(-(t-pulselength)/TSC_alpha_of_lambda_for_t_cold(lambda,height));
+double ESS_2014_Schoenfeldt_cold_timedist(double time,double lambda,double height, double pulselength){
+        if(time<0)return 0;
+        double tau=3.00094e-004*(4.15681e-003*lambda*lambda+2.96212e-001*exp(-1.78408e-001*height)+7.77496e-001)*exp(-6.63537e+001*pow(fmax(1e-13,lambda+.9),-8.64455e+000));
+        if(time<pulselength)return (1/pulselength*(1-exp(-time/tau))/ESS_SOURCE_FREQUENCY);
+        return (1/pulselength*(1-exp(-pulselength/tau))*exp(-(time-pulselength)/tau)/ESS_SOURCE_FREQUENCY);
+  /* double normalizer=1; */
+  /* if(t<0)return 0; */
+  /* if(t<pulselength)return (1-exp(-(t)/TSC_alpha_of_lambda_for_t_cold(lambda,height))); */
+  /* return (1-exp(-pulselength/TSC_alpha_of_lambda_for_t_cold(lambda,height)))*exp(-(t-pulselength)/TSC_alpha_of_lambda_for_t_cold(lambda,height)); */
 } /* end of ESS_2014_Schoenfeldt_cold_timedist */
 
 /* This is TSC_alpha_of_lambda_for_t_thermal for the time-distributiob of the 2014 Schoenfeldt thermal moderator */
@@ -564,10 +567,14 @@ double TSC_alpha_of_lambda_for_t_thermal(double lambda,double height){
 } /* end of TSC_alpha_of_lambda_for_t_thermal */
 
 /* This is ESS_2014_Schoenfeldt_thermal_timedist time-distribution of the 2014 Schoenfeldt cold moderator */ 
-double ESS_2014_Schoenfeldt_thermal_timedist(double t,double lambda,double height, double pulselength){
-  if(t<0)return 0;
-  if(t<pulselength)return (1-exp(-(t)/TSC_alpha_of_lambda_for_t_thermal(lambda,height)));
-  return (1-exp(-pulselength/TSC_alpha_of_lambda_for_t_thermal(lambda,height)))*exp(-(t-pulselength)/TSC_alpha_of_lambda_for_t_thermal(lambda,height));
+double ESS_2014_Schoenfeldt_thermal_timedist(double time,double lambda,double height, double pulselength){
+        if(time<0)return 0;
+        double tau=3.00000e-004*(1.23048e-002*lambda*lambda+1.75628e-001*exp(-1.82452e-001*height)+9.27770e-001)*exp(-3.91090e+001*pow(fmax(1e-13,lambda+9.87990e-001),-7.65675e+000));
+        if(time<pulselength)return (1/pulselength*(1-exp(-time/tau))/ESS_SOURCE_FREQUENCY);
+        return (1/pulselength*(1-exp(-pulselength/tau))*exp(-(time-pulselength)/tau)/ESS_SOURCE_FREQUENCY);
+  /* if(t<0)return 0; */
+  /* if(t<pulselength)return (1-exp(-(t)/TSC_alpha_of_lambda_for_t_thermal(lambda,height))); */
+  /* return (1-exp(-pulselength/TSC_alpha_of_lambda_for_t_thermal(lambda,height)))*exp(-(t-pulselength)/TSC_alpha_of_lambda_for_t_thermal(lambda,height)); */
 } /* end of ESS_2014_Schoenfeldt_thermal_timedist */
 
 /* This is the thermal moderator with 2013 updates, fits from Troels Schoenfeldt */
