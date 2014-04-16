@@ -72,10 +72,11 @@ SHARE
     double w[6];/*natural width of line FWHM*/
     double i[6];/*relative intensity*/
   } xray_mat_data[]={
-    {29,8.979 ,0.407,2,{8.02783,8.04778,0,0,0},{2.11e-3,2.17e-3,0,0,0},{0.51,1.0,0,0,0}},
-    {42,20.00 ,0.770,5,{17.3743,17.47934,19.5903, 19.6083, 19.965},{6.31e-3,6.49e-3,12e-3, 12e-3, 12e-3},{0.52,1.0,0.08,0.15,0.03}},
-    {74,69.525,0.945,2,{57.9817,59.31824,0,0,0},{44.9e-3,45.2e-3,0,0,0},{0.58,1.0,0,0,0}},
-    {NULL}
+    {29,8.979 ,0.407,2,{8.02783,8.04778,0,0,0,0},{2.11e-3,2.17e-3,0,0,0,0},{0.51,1.0,0,0,0,0}},
+    {31,10.367,0.0  ,2,{9.22482,9.25174,0,0,0,0},{2.59e-3,2.66e-3,0,0,0,0},{0.51,1.0,0,0,0,0}},
+    {42,20.00 ,0.770,5,{17.3743,17.47934,19.5903, 19.6083, 19.965,0},{6.31e-3,6.49e-3,12e-3, 12e-3, 12e-3,0},{0.52,1.0,0.08,0.15,0.03,0}},
+    {74,69.525,0.945,2,{57.9817,59.31824,0,0,0,0},{44.9e-3,45.2e-3,0,0,0,0},{0.58,1.0,0,0,0,0}},
+    {0,0.0,0.0,0,{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0}}
   };
 
 %}
@@ -89,7 +90,7 @@ DECLARE
     int Z;
     double At,rho;
     t_Table T;
-    struct xray_em_data *em_p;
+    const struct xray_em_data *em_p;
     double Icont,Ichar;
   } prms; 
   double p_continous;
@@ -129,8 +130,8 @@ INITIALIZE
   prms.em_p=&(xray_mat_data[0]);
   while (prms.Z!=prms.em_p->Z){
     prms.em_p++;
-    if ((prms.em_p)==NULL){
-      fprintf(stderr,"Error: %s (Z=%d) anode not implemented yet. Aborting\n",material_datafile,prms.Z);
+    if ((prms.em_p->Z)==0){
+      fprintf(stderr,"Error: %s (Z=%d) anode not implemented yet. Please contact the McXtrace team to fix this. Aborting.\n",material_datafile,prms.Z);
       exit(-1);
     }
   }
@@ -174,11 +175,17 @@ TRACE
   y1=log(rand01())*mu;
 
   double px,py,pz; 
+  Coords P;
+
   /* transform initial coords to ones relative to the exit window which is our reference point*/
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
+  P=coords_set(x1,y1,z1);
+  P=coords_add(rot_apply(R_xray_gen,P),O_xray_gen);
+  coords_get(P,&x,&y,&z);
+
+  //mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1, 0,0,0, 0,0,0);
 
   /*set a scatter pt at the generation pt*/
-  x=x1;y=y1;z=z1;
+  //x=x1;y=y1;z=z1;
   SCATTER;
 
   /*randvec_target_rect_real computes a target point and a solid angle correction factor, hence the k-vector has to be computed from
@@ -204,7 +211,7 @@ TRACE
     /*correct for monte-carlo statistics*/
     pmul*=p_continous/frac;
   }else{
-    struct xray_em_data *pt=prms.em_p;
+    const struct xray_em_data *pt=prms.em_p;
     /*characteristic radiation*/
     /*first pick a possible line*/
     r=rand01()*pt->linec;
@@ -256,61 +263,64 @@ MCDISPLAY
   magnify("xy");
   double x1,y1,z1,x2,y2,z2,width_2,height_2;
   double dx,dy,dz;
+  /*these are just dummies*/
+  double d1,d2,d3,d4,d5,d6;  
+
   width_2=width/2.0;
   height_2=height/2.0;
   x1=-width_2;y1=0;z1=-height_2;
   x2=-width_2;y2=0;z2= height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
   line(x1,y1,z1,x2,y2,z2);
 
   x1=width_2;y1=0;z1=height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
   line(x2,y2,z2,x1,y1,z1);
   
   x2=width_2;y2=0;z2=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
   line(x1,y1,z1,x2,y2,z2);
 
   x1=-width_2;y1=0;z1=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
   line(x2,y2,z2,x1,y1,z1);
 
   /*this is the mean penetration depth of electron that get converted to x-rays*/  
   x1=-width_2;y1=-mu;z1=-height_2;
   x2=-width_2;y2=-mu;z2= height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
   dashed_line(x1,y1,z1,x2,y2,z2,5);
   x1=width_2;y1=-mu;z1=height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
   dashed_line(x2,y2,z2,x1,y1,z1,5);
   x2= width_2;y2=-mu;z2=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
   dashed_line(x1,y1,z1,x2,y2,z2,5);
   x1=-width_2;y1=-mu;z1=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
   dashed_line(x2,y2,z2,x1,y1,z1,5);
   
   x1=-width_2;y1=-mu;z1=-height_2;
   x2=-width_2;y2=0;z2=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
   line(x2,y2,z2,x1,y1,z1);
   x1=width_2;y1=-mu;z1=-height_2;
   x2=width_2;y2=0;z2=-height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
   line(x2,y2,z2,x1,y1,z1);
   x1=-width_2;y1=-mu;z1=height_2;
   x2=-width_2;y2=0;z2=height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
   line(x2,y2,z2,x1,y1,z1);
   x1=width_2;y1=-mu;z1=height_2;
   x2=width_2;y2=0;z2=height_2;
-  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,NULL,NULL,NULL,NULL,NULL,NULL);
-  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,NULL,NULL,NULL,NULL,NULL,NULL);
+  mccoordschange(O_xray_gen,R_xray_gen,&x1,&y1,&z1,&d1,&d2,&d3,&d4,&d5,&d6);
+  mccoordschange(O_xray_gen,R_xray_gen,&x2,&y2,&z2,&d1,&d2,&d3,&d4,&d5,&d6);
   line(x2,y2,z2,x1,y1,z1);
 
 
