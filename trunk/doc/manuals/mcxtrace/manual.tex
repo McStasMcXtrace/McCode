@@ -1,43 +1,10 @@
 \documentclass[twoside,notitlepage,11pt]{report}
-% Here's a comment again - probably no more testing...
-%\usepackage{a4paper}
-\usepackage{graphicx}
-\usepackage{psfrag}
-\usepackage{amsfonts}
-\usepackage{amsbsy}
-\usepackage{verbatimfile}
-\usepackage{fancyhdr}
-\usepackage{pstricks,pst-node}
-% The next rawfonts package one is used in the ``datablad''.
-\usepackage[only,egtrm]{rawfonts}
-% Handle sorting in reference list
-\usepackage{citesort}
-% Create an index table
-\usepackage{makeidx}
-% For html links in install chapter (install latex2html package to get
-% this style)
-\usepackage{html}
-
-
-
-\newcommand{\MCX}{{McXtrace}}
-\newcommand{\MCS}{{McStas}}
-\newcommand{\version}{{1.0}}
-\newcommand{\reldate}{{May 2012}}
-\newcommand{\Ombold}{\mbox{\boldmath $\Omega$}}
-
-\newcommand{\NBIlong}{Niels Bohr Institute, Univeristy of Copenhagen, Copenhagen, Denmark}
-\newcommand{\Lifelong}{Faculty for Life Sciences, University of Copenhagen, Copenhagen, Denmark}
-
-% enable index generation
-\makeindex
-
+\input{preamble.tex}
 
 \begin{document}
 \include{title}
 
 \maketitle
-%\input{risoe-rep-title}
 
 \thispagestyle{empty}
 \include{abstractpage}
