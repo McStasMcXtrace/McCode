@@ -1,0 +1,53 @@
+% !TeX root = manual.tex
+\usepackage{graphicx}
+\usepackage{amsfonts}
+\usepackage{amsbsy}
+
+\usepackage{color}
+\usepackage{xcolor}
+
+\input{syntaxhighlighting}
+
+\usepackage{xspace}
+ 
+\newcommand{\smallverbatimfile}[1]{{\footnotesize\verbatimfile{#1}}}
+
+\def\reportnum{DTU}
+
+
+\newcommand{\NBIlong}{Niels Bohr Institute, Univeristy of Copenhagen, Copenhagen, Denmark}
+\newcommand{\Lifelong}{Faculty for Life Sciences, University of Copenhagen, Copenhagen, Denmark}
+
+\input{syntaxhighlighting}
+
+\newcommand{\MCX}{McXtrace\xspace}
+\newcommand{\MCS}{McStas\xspace}
+\newcommand{\version}{{1.2\xspace}
+\newcommand{\reldate}{{Apr. 2014\xspace}
+\newcommand{\Ombold}{\mbox{\boldmath $\Omega$}}
+
+\usepackage[%
+backend=bibtex8,%
+style=alphabetic,%
+sorting=nyt,%
+doi=true,%
+isbn=true,%
+hyperref=true,%
+backref=true,%
+url=false]{biblatex}
+
+\bibliography{mcxtrace}
+%\bibliographystyle{jacs}
+
+\usepackage{hyperref} %LOAD AT LAST!
+
+\hypersetup{%
+  colorlinks=false,   % 
+  pdfpagemode=UseNone,  % PDF-Viewer TOC settings
+  pdfstartview=FitH, % PDF-Viewer 
+  pdfauthor={E. B. Knudsen, A. Prodi, P. Willendrup, E. Farhi, K. Lefmann, S. Schmidt},%
+  pdftitle=User and programmers guide to the neutron ray-tracing package McXtrace%
+}
+
+
+\makeindex % enable index generation
