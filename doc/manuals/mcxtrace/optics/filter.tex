@@ -10,10 +10,10 @@ Neccessary paramters are nominal density and a parametrization of mu as a functi
 The model is very simple: Firstly the X-ray is traced to find intersection points between ray and filter (0 or 2).
 If no intersection is found the xray is left untouched and nothing further happens.
 Assuming the ray intersects the filter: Secondly, the path length d$l$ within the filter is computed.
-Thirdly a $\mu = f(\lambda,\mathrm{material})$ is computed by interpolating in a datafile, and the xray weight is adjusted according to $p=p\exp(-\mathrm{d}l*\mu)$. The xray is left at the point where it exits the filter block (the $2\nd$ ntersection).
+Thirdly a $\mu = f(\lambda,\mathrm{material})$ is computed by interpolating in a datafile, and the xray weight is adjusted according to $p=p\exp(-\mathrm{d}l*\mu)$. The xray is left at the point where it exits the filter block (the $2$nd ntersection).
 
-Some example data files are distributed with \MCX\ in the
-\verb+MCSTAS/data+ directory as \verb+*.txt+ files. These tables have been extracted from the NIST x-ray database.
+Example data files corresponding to all elements up to $Z=92$ are distributed with \MCX in the
+\verb+MCXTRACE/data+ directory as \verb+*.txt+ files. These tables have been extracted from the NIST x-ray database.
 To generate other datafiles see below-
 from the same source a simple shell script: \verb+MCSTAS/data/get_xray_db_data+ is also distributed with \MCX
 Running this script will connect to the NIST webiste and download a
