@@ -38,6 +38,6 @@ cd ${WORK};
 
 (
     cd McCode;
-    ln -s "${MCCODE}/mcstas-comps" "${MCCODE}/doc" . ||
+    ln -s "${MCCODE}/mcstas-comps" . ||
     (echo "Error: ${MCCODE} is not a valid McCode trunk"; exit 1);
 )
