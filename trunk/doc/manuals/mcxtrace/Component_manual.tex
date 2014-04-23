@@ -1,9 +1,11 @@
-\documentclass[twoside,notitlepage,11pt]{report}
+\documentclass[twoside,notitlepage,11pt]{scrreprt}
 
 \input{preamble_comp.tex}
+
 \begin{document}
 
-\maketitle
+\include{title_comp}
+
 %\input{risoe-rep_comp-title}
 %\begin{center}
 %  \includegraphics[width=4.5in]{figures/sqw.eps}
@@ -35,11 +37,11 @@
 \include{terms}       % as in manual
 
 \addcontentsline{toc}{chapter}{\protect\numberline{}{Bibliography}}
-\bibliography{mcxtrace}
-\bibliographystyle{jacs}
+%\bibliography{mcxtrace}
+%\bibliographystyle{jacs}
 
 \addcontentsline{toc}{chapter}{\protect\numberline{}{Index and keywords}}
-\printindex
+%\printindex
 %\include{datablad_comp}
 
 \end{document}
