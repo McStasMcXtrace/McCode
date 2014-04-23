@@ -70,7 +70,7 @@ file(COPY COMPfooter DESTINATION "${WORK}")
 foreach(NAME sources samples optics monitors misc)
   add_custom_command(
     OUTPUT "${WORK}/${NAME}.done"
-    COMMAND "${PROJECT_SOURCE_DIR}/get_mcdoc_snippets.sh" "${NAME} ${PROJECT_SOURCE_DIR}";
+    COMMAND "${PROJECT_SOURCE_DIR}/get_mcdoc_snippets.sh" "${NAME} ${PROJECT_SOURCE_DIR}"
     WORKING_DIRECTORY "${WORK}"
     )
 endforeach()
@@ -83,7 +83,7 @@ foreach(NAME manual Component_manual)
     DEPENDS "${WORK}/optics.done"
     DEPENDS "${WORK}/monitors.done"
     DEPENDS "${WORK}/misc.done"
-    COMMAND "${PROJECT_SOURCE_DIR}/compile_pdf.sh" "${NAME}";
+    COMMAND "${PROJECT_SOURCE_DIR}/compile_pdf.sh" "${NAME}"
     WORKING_DIRECTORY "${WORK}"
     )
   add_custom_target(
