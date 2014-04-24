@@ -555,7 +555,7 @@ Within a \texttt{GROUP}, \emph{all} \texttt{EXTEND} sections of the group are ex
 Components \emph{name1} and \emph{name2} are at the same position. If the first one intercepts the x-ray (and has a SCATTER within its \texttt{TRACE} section), the SCATTERED variable becomes true, the code extension will result in printing "I scatter", and the second component will be skipped.
 Thus, we recommend to make use of the SCATTER keyword each time a component 'uses' the x-ray (scatters, detects, \ldots) within component definitions (see section \ref{s:compdefs}). Also, the components to be grouped should be consecutive in the TRACE section of the instrument, and the GROUPed section should not contain components which are not part of the group.
 
-Note that a \texttt{GROUP} construct is \emph{not} applicable to a situation where an x-ray which has interacted (\texttt{SCATTER}ed) with one component in the group, may interact with another. In this case a more complex arrangement is needed\cite{willendrup_10}.
+Note that a \texttt{GROUP} construct is \emph{not} applicable to a situation where an x-ray which has interacted (\texttt{SCATTER}ed) with one component in the group, may interact with another. In this case a more complex arrangement is needed. See \cite{willendrup2011using} for a description of hwo to do this in \MCS. This is approach is \emph{directly} applicable in \MCX without modification. 
 
 Combining EXTEND, GROUP and WHEN can result in unexpected behaviour. Please read the related warning at the end of section \ref{s:instrdefs-extend-when}.
 
@@ -1362,9 +1362,9 @@ Two forms of documentation can be generated. One
 is the component entry dialog in the \verb+mxgui+ front-end, see
 section~\ref{s:mxgui}. The other is a collection of web pages documenting
 the components and instruments, handled via the \verb+mxdoc+ front-end (see section~\ref{s:mxdoc-run}), and the complete documentation for all available
-McStas components and instruments may be found at the \MCX\
-webpage~\cite{mxtrace_webpage}, as well as in the \MCX\ library
-(see~\ref{s:comp-overview}). All available \MCX\ documentation is accessible from the \verb+mcgui+ 'Help' menu.
+McStas components and instruments may be found at the \MCX
+webpage~\cite{mcxtrace_webpage}, as well as in the \MCX library
+(see~\ref{s:comp-overview}). All available \MCX documentation is accessible from the \verb+mcgui+ 'Help' menu.
 
 Note that MxDoc-compliant comments in the source code are no substitute
 for a good reference manual entry. The mathematical equations describing
