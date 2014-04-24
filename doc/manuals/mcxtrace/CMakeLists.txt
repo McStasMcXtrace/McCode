@@ -43,8 +43,6 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-message("work= ${WORK}")
-
 add_custom_command(
   OUTPUT "${WORK}/McCode"
   COMMAND "./setup_links.sh" "${WORK}"
@@ -76,8 +74,6 @@ foreach(NAME sources samples optics monitors misc)
     WORKING_DIRECTORY "${WORK}"
     )
 endforeach()
-
-message("projsourcedir = ${PROJECT_SOURCE_DIR}")
 
 
 foreach(NAME manual Component_manual)
