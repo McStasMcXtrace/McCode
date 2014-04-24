@@ -4,7 +4,7 @@ NAME="$1"
 
 echo "Building ${NAME}"
 
-latexmk -gg -bibtex -pdf ${NAME}.tex 
+latexmk -silent -bibtex -pdf ${NAME}.tex
 #for prog in pdflatex bibtex makeindex pdflatex pdflatex; do
 #    echo "> ${prog}";
 #    ${prog} "${NAME}" > /dev/null || exit 1;
