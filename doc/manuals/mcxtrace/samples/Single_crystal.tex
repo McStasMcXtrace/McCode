@@ -17,7 +17,7 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %mosaic is broken - always use a non-zero isotropic mosaic. Also, always use a
 %non-zero value of the $\Delta d/d$ parameter.}
 
-%The {\bf Single\_crystal} component models a thick, flat single crystal
+%The \textbf{Single\_crystal} component models a thick, flat single crystal
 %with multiple scattering and absorption with elastic coherent scattering.
 %An elastic incoherent background may also be simulated.
 %It may be used to describe samples for diffraction,
@@ -53,12 +53,12 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %$\boldsymbol{b}$, and $\boldsymbol{c}$, from which the reciprocal lattice
 %will be computed. See section \ref{s:Single_crystal_implement} for file format specifications.
 %
-%In addition to coherent scattering, {\bf Single\_crystal} also
+%In addition to coherent scattering, \textbf{Single\_crystal} also
 %handles incoherent scattering and absorption. The incoherent scattering
 %cross-section is supplied by the user as a constant
-%$\sigma_{\rm inc}$. The absorption cross-section is supplied by the user at
+%$\sigma_\mathrm{inc}$. The absorption cross-section is supplied by the user at
 %2200~m/s, so the actual cross-section for a neutron of velocity $v$ is
-%$\sigma_{\rm abs} = \sigma_{2200} \frac{\rm 2200~m/s}{v}$.
+%$\sigma_\mathrm{abs} = \sigma_{2200} \frac\mathrm{2200~m/s}{v}$.
 %
 %\subsection{The physical model}
 %
@@ -66,25 +66,25 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %is~\cite[ch.3]{squires}:
 %\begin{equation}
 %\label{eq:sigma_coh_el}
-%\left(\frac{d\sigma}{d\Omega}\right)_{\rm coh.el.} =
+%\left(\frac{d\sigma}{d\Omega}\right)_\mathrm{coh.el.} =
 %        N\frac{(2\pi)^3}{V_0}\sum_{\boldsymbol{\tau}}
 %        \delta(\boldsymbol{\tau} - \boldsymbol{\kappa})|F_{\boldsymbol{\tau}}|^2
 %\end{equation}
 %Here $|F_{\boldsymbol{\tau}}|^2$ is the structure factor
 %(defined in section~\ref{powder}), $N$ is the
 %number of unit cells, $V_0$ is the volume of an
-%individual unit cell, and $\boldsymbol{\kappa} (= {\bf k}_i - {\bf k}_f)$
+%individual unit cell, and $\boldsymbol{\kappa} (= \boldsymbol{k}_i - \boldsymbol{k}_f)$
 %is the scattering vector. $\delta(\boldsymbol{x})$ is a 3-dimensional delta
 %function in reciprocal space,
-%so for given incoming wave vector ${\bf k}_i$ and lattice vector
-%${\boldsymbol{\tau}}$, only a single final wave vector ${\bf k}_f$ is allowed.
+%so for given incoming wave vector $\boldsymbol{k}_i$ and lattice vector
+%${\boldsymbol{\tau}}$, only a single final wave vector $\boldsymbol{k}_f$ is allowed.
 %In general, this wavevector will not fulfill the conditions for elastic
 %scattering $(k_f = k_i)$.
 %In a real crystal, however, reflections are not perfectly sharp. Because
 %of imperfection and finite-size effects, there will be a small region
 %around $\boldsymbol{\tau}$ in reciprocal space of possible scattering vectors.
 %
-%{\bf Single\_crystal} simulates a crystal with a mosaic spread
+%\textbf{Single\_crystal} simulates a crystal with a mosaic spread
 %$\eta$ and a lattice plane spacing uncertainty $\Delta d/d$. In such
 %crystals the reflections will not be completely sharp;
 %there will be a small region around each reciprocal lattice point of the
@@ -101,8 +101,8 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %coordinates.
 %\begin{figure}[t]
 %  \begin{center}
-%    \psfrag{ki}[r][r]{$\boldsymbol{k}_{\rm i}$}
-%    \psfrag{kf}[l][l]{$\boldsymbol{k}_{\rm f}$}
+%    \psfrag{ki}[r][r]{$\boldsymbol{k}_\mathrm{i}$}
+%    \psfrag{kf}[l][l]{$\boldsymbol{k}_\mathrm{f}$}
 %    \psfrag{tau}[r][r]{$\boldsymbol{\tau}$}
 %    \psfrag{mosaic}[l][l]{$\eta$}
 %    \psfrag{del-d-d}[l][l]{$\Delta d/d$}
@@ -121,7 +121,7 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %normal vectors of equal length given by the mosaic. But if the mosaic
 %is anisotropic, the two perpendicular axes will in general be different
 %for each scattering vector. In the absence of anything better,
-%{\bf Single\_crystal} uses a model which is at least mathematically
+%\textbf{Single\_crystal} uses a model which is at least mathematically
 %plausible and which works as expected in the two common cases:
 %(1)~isotropic mosaic, and (2)~two mosaic directions (``horizontal and
 %vertical mosaic'') perpendicular to a scattering vector.
@@ -180,7 +180,7 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %\begin{equation}
 %  G(\boldsymbol{x}) =
 %  \frac{1}{(\sqrt{2\pi})^3}\frac{1}{\sigma_1\sigma_2\sigma_3}
-%  e^{-\boldsymbol{x}^{\rm T} D \boldsymbol{x}}
+%  e^{-\boldsymbol{x}^\mathrm{T} D \boldsymbol{x}}
 %\end{equation}
 %again with $\boldsymbol{x}=(x_1,x_2,x_3)$ written in local coordinates.
 %
@@ -190,28 +190,28 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %reciprocal lattice, then $U(\boldsymbol{y} + \boldsymbol{\tau})$ are the
 %coordinates in the local coordinate system for $\boldsymbol{\tau}$. The
 %matrix $U$ is given by
-%$$ U^{\rm T} = (\hat{u}_1, \hat{u}_2, \hat{u}_3), $$
+%$$ U^\mathrm{T} = (\hat{u}_1, \hat{u}_2, \hat{u}_3), $$
 %where $\hat{u}_1$, $\hat{u}_2$, and $\hat{u}_3$ are the axes of the
 %local coordinate system, written in the global coordinates of the
 %reciprocal lattice. Thus
 %$\hat{u}_1 = \boldsymbol{\tau}/\tau$,  and $\hat{u}_2$ and $\hat{u}_3$ are
 %unit vectors perpendicular to $\hat{u}_1$ and to each other.
 %The matrix $U$ is unitarian, that is
-%$U^{-1} = U^{\rm T}$. The translation between global and local
+%$U^{-1} = U^\mathrm{T}$. The translation between global and local
 %coordinates is
 %$$ \boldsymbol{x} = U(\boldsymbol{y} + \boldsymbol{\tau}) \qquad
-%   \boldsymbol{y} = U^{\rm T} \boldsymbol{x} - \boldsymbol{\tau} $$
+%   \boldsymbol{y} = U^\mathrm{T} \boldsymbol{x} - \boldsymbol{\tau} $$
 %
 %The expression for the 3-dimensional Gaussian in global coordinates is
 %\begin{equation}
 %  G(\boldsymbol{y}) =
 %  \frac{1}{(\sqrt{2\pi})^3}\frac{1}{\sigma_1\sigma_2\sigma_3}
-%  e^{-(U(\boldsymbol{y}+\boldsymbol{\tau}))^{\rm T} D (U(\boldsymbol{y}+\boldsymbol{\tau}))}
+%  e^{-(U(\boldsymbol{y}+\boldsymbol{\tau}))^\mathrm{T} D (U(\boldsymbol{y}+\boldsymbol{\tau}))}
 %\end{equation}
 %The elastic coherent cross-section is then given by
 %\begin{equation}
 %  \label{eq:crystal-cross-section}
-%  \left(\frac{d\sigma}{d\Omega}\right)_{\rm coh.el.} =
+%  \left(\frac{d\sigma}{d\Omega}\right)_\mathrm{coh.el.} =
 %        N\frac{(2\pi)^3}{V_0}\sum_{\boldsymbol{\tau}}
 %        G(\boldsymbol{\tau} - \boldsymbol{\kappa})
 %         |F_{\boldsymbol{\tau}}|^2
@@ -227,12 +227,12 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %\item\label{enum:crystal-2} Search through a list of reciprocal lattice
 %  points of interest, selecting those that are close enough to the Ewald
 %  sphere to have a non-vanishing scattering probability. From these,
-%  compute the total coherent cross-section $\sigma_{\rm coh}$ (see
-%  below), the absorption cross-section $\sigma_{\rm abs} = \sigma_{\rm
-%  2200} \frac{{\rm 2200~m/s}}{v}$, and the total cross-section
-%  $\sigma_{\rm tot} = \sigma_{\rm coh}+\sigma_{\rm inc}+\sigma_{\rm abs}$.
+%  compute the total coherent cross-section $\sigma_\mathrm{coh}$ (see
+%  below), the absorption cross-section $\sigma_\mathrm{abs} = \sigma_\mathrm{
+%  2200} \frac{\mathrm{2200~m/s}}{v}$, and the total cross-section
+%  $\sigma_\mathrm{tot} = \sigma_\mathrm{coh}+\sigma_\mathrm{inc}+\sigma_\mathrm{abs}$.
 %\item\label{enum:crystal-3} The transmission probability is
-%  $\exp(- \frac{\sigma_{\rm tot}}{V_0}\ell)$ where $\ell$ is the length of
+%  $\exp(- \frac{\sigma_\mathrm{tot}}{V_0}\ell)$ where $\ell$ is the length of
 %  the flight path through the crystal. A Monte Carlo choice is
 %  performed to determine
 %  whether the neutron is transmitted. Optionally, the user may
@@ -244,10 +244,10 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %  coherently or incoherently. Absorption is treated by weight adjustment
 %  (see below).
 %\item\label{enum:crystal-5} For incoherent scattering, the outgoing wave
-%  vector $\boldsymbol{k}_{\rm f}$ is selected with a random direction.
+%  vector $\boldsymbol{k}_\mathrm{f}$ is selected with a random direction.
 %\item\label{enum:crystal-6} For coherent scattering, a reciprocal
 %  lattice vector is selected by a Monte Carlo choice, and
-%  $\boldsymbol{k}_{\rm f}$ is found (see below).
+%  $\boldsymbol{k}_\mathrm{f}$ is found (see below).
 %\item\label{enum:crystal-7} Adjust the neutron weight as dictated by the
 %  Monte Carlo choices made.
 %\item\label{enum:crystal-8} Repeat from~(\ref{enum:crystal-2}) until the
@@ -262,21 +262,21 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %
 %\subsection{Choosing the outgoing wave vector}
 %
-%The final wave vector $\boldsymbol{k}_{\rm f}$ must lie on the
+%The final wave vector $\boldsymbol{k}_\mathrm{f}$ must lie on the
 %intersection between the Ewald sphere and the Gaussian ellipsoid. Since
 %$\eta$ and $\Delta d/d$ are assumed small, the intersection can be
 %approximated with a plane tangential to the sphere, see
 %figure~\ref{fig:crystal-scattering-tri}. The tangential point is taken
 %to lie on the line between the center of the Ewald sphere
-%$-\boldsymbol{k}_{\rm i}$ and the reciprocal lattice point
-%$\boldsymbol{\tau}$. Since the radius of the Ewald sphere is $k_{\rm
+%$-\boldsymbol{k}_\mathrm{i}$ and the reciprocal lattice point
+%$\boldsymbol{\tau}$. Since the radius of the Ewald sphere is $k_\mathrm{
 %  i}$, this point is
-%$$ \boldsymbol{o}=(k_{\rm i}/\rho - 1)\boldsymbol{\rho} - \boldsymbol{\tau} $$
-%where $\boldsymbol{\rho} = \boldsymbol{k}_{\rm i} - \boldsymbol{\tau}$.
+%$$ \boldsymbol{o}=(k_\mathrm{i}/\rho - 1)\boldsymbol{\rho} - \boldsymbol{\tau} $$
+%where $\boldsymbol{\rho} = \boldsymbol{k}_\mathrm{i} - \boldsymbol{\tau}$.
 %\begin{figure}[t]
 %  \begin{center}
-%    \psfrag{ki}[r][r]{$\boldsymbol{k}_{\rm i}$}
-%    \psfrag{kf}[l][l]{$\boldsymbol{k}_{\rm f}$}
+%    \psfrag{ki}[r][r]{$\boldsymbol{k}_\mathrm{i}$}
+%    \psfrag{kf}[l][l]{$\boldsymbol{k}_\mathrm{f}$}
 %    \psfrag{rho}[r][r]{$\boldsymbol{\rho}$}
 %    \psfrag{tau}[r][r]{$\boldsymbol{\tau}$}
 %    \psfrag{x}[l][l]{$\boldsymbol{x}$}
@@ -304,39 +304,39 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %\boldsymbol{\rho}/\rho$.
 %
 %Each $\boldsymbol{t}$ defines a potential final wave vector
-%$\boldsymbol{k}_{\rm f}(\boldsymbol{t}) = \boldsymbol{k}_{\rm i} +
+%$\boldsymbol{k}_\mathrm{f}(\boldsymbol{t}) = \boldsymbol{k}_\mathrm{i} +
 %\boldsymbol{P}(\boldsymbol{t})$. The value of the 3-dimensional Gaussian
-%for this $\boldsymbol{k}_{\rm f}$ is
+%for this $\boldsymbol{k}_\mathrm{f}$ is
 %\begin{equation}
 %  \label{eq:crystal-gauss-t-1}
 %  G(\boldsymbol{x}(\boldsymbol{t})) =
 %  \frac{1}{(\sqrt{2\pi})^3}\frac{1}{\sigma_1\sigma_2\sigma_3}
-%  e^{-\boldsymbol{x}(\boldsymbol{t})^{\rm T} D \boldsymbol{x}(\boldsymbol{t})}
+%  e^{-\boldsymbol{x}(\boldsymbol{t})^\mathrm{T} D \boldsymbol{x}(\boldsymbol{t})}
 %\end{equation}
 %where $\boldsymbol{x}(\boldsymbol{t}) = \boldsymbol{\tau} -
-%(\boldsymbol{k}_{\rm i} - \boldsymbol{k}_{\rm f}(\boldsymbol{t}))$ is
+%(\boldsymbol{k}_\mathrm{i} - \boldsymbol{k}_\mathrm{f}(\boldsymbol{t}))$ is
 %given in local coordinates for $\boldsymbol{\tau}$. It can be shown that
 %equation~(\ref{eq:crystal-gauss-t-1}) can be re-written as
 %\begin{equation}
 %  \label{eq:crystal-gauss-2}
 %  G(\boldsymbol{x}(\boldsymbol{t})) =
 %  \frac{1}{(\sqrt{2\pi})^3}\frac{1}{\sigma_1\sigma_2\sigma_3} e^{-\alpha}
-%  e^{-(\boldsymbol{t}-\boldsymbol{t}_0)^{\rm T} M
+%  e^{-(\boldsymbol{t}-\boldsymbol{t}_0)^\mathrm{T} M
 %    (\boldsymbol{t}-\boldsymbol{t}_0)}
 %\end{equation}
-%where $M = B^{\rm T} D B$ is a $2 \times 2$ symmetric and positive
-%definite matrix, $\boldsymbol{t}_0 = -M^{-1}B^{\rm T} D \boldsymbol{o}$
-%is a 2-vector, and $\alpha = -\boldsymbol{t}_0^{\rm T} M
-%\boldsymbol{t}_0 + \boldsymbol{o}^{\rm T} D \boldsymbol{o}$ is a real
+%where $M = B^\mathrm{T} D B$ is a $2 \times 2$ symmetric and positive
+%definite matrix, $\boldsymbol{t}_0 = -M^{-1}B^\mathrm{T} D \boldsymbol{o}$
+%is a 2-vector, and $\alpha = -\boldsymbol{t}_0^\mathrm{T} M
+%\boldsymbol{t}_0 + \boldsymbol{o}^\mathrm{T} D \boldsymbol{o}$ is a real
 %number.  Note that this is a two-dimensional Gaussian (not necessarily
 %normalized) in $\boldsymbol{t}$ with center $\boldsymbol{t}_0$ and axis
 %defined by $M$.
 %
-%To choose $\boldsymbol{k}_{\rm f}$ we sample $\boldsymbol{t}$ from the
+%To choose $\boldsymbol{k}_\mathrm{f}$ we sample $\boldsymbol{t}$ from the
 %2-dimensional Gaussian distribution~(\ref{eq:crystal-gauss-2}). To do
 %this, we first construct the Cholesky decomposition of the matrix
 %$(\frac{1}{2}M^{-1})$. This gives a $2\times 2$ matrix $L$ such that $L
-%L^{\rm T} = \frac{1}{2}M^{-1}$ and is possible since $M$ is symmetric
+%L^\mathrm{T} = \frac{1}{2}M^{-1}$ and is possible since $M$ is symmetric
 %and positive definite. It is given by
 %$$
 %  L = \left(
@@ -358,12 +358,12 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %\begin{eqnarray}
 %  P(\boldsymbol{t})d\boldsymbol{t}
 %    &=& \frac{1}{2\pi}
-%      e^{-\frac{1}{2}\boldsymbol{g}^{\rm T}\boldsymbol{g}} d\boldsymbol{g} \\
+%      e^{-\frac{1}{2}\boldsymbol{g}^\mathrm{T}\boldsymbol{g}} d\boldsymbol{g} \\
 %    &=& \frac{1}{2\pi}\frac{1}{\det L}
-%      e^{-\frac{1}{2}(L^{-1}(\boldsymbol{t}-\boldsymbol{t}_0))^{\rm T}
+%      e^{-\frac{1}{2}(L^{-1}(\boldsymbol{t}-\boldsymbol{t}_0))^\mathrm{T}
 %          (L^{-1}(\boldsymbol{t}-\boldsymbol{t}_0))} d\boldsymbol{t} \\
 %    &=& \frac{1}{2\pi}\frac{1}{\det L}
-%      e^{-(\boldsymbol{t}-\boldsymbol{t}_0)^{\rm T}
+%      e^{-(\boldsymbol{t}-\boldsymbol{t}_0)^\mathrm{T}
 %          M(\boldsymbol{t}-\boldsymbol{t}_0)} d\boldsymbol{t}
 %  \label{eq:crystal-gauss-prob-1}
 %\end{eqnarray}
@@ -371,10 +371,10 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %$\boldsymbol{g}=L^{-1}(\boldsymbol{t}-\boldsymbol{t}_0)$ so that
 %$d\boldsymbol{g} = \frac{1}{\det L}d\boldsymbol{t}$. This is just the
 %normalized form of~(\ref{eq:crystal-gauss-2}). Finally we set
-%$\boldsymbol{k}'_{\rm f} = \boldsymbol{k}_{\rm i} +
+%$\boldsymbol{k}'_\mathrm{f} = \boldsymbol{k}_\mathrm{i} +
 %\boldsymbol{P}(\boldsymbol{t})$ and
-%$\boldsymbol{k}_{\rm f} = (k_{\rm i}/k'_f)\boldsymbol{k}'_{\rm f}$ to
-%normalize the length of $\boldsymbol{k}_{\rm f}$ to correct for the
+%$\boldsymbol{k}_\mathrm{f} = (k_\mathrm{i}/k'_f)\boldsymbol{k}'_\mathrm{f}$ to
+%normalize the length of $\boldsymbol{k}_\mathrm{f}$ to correct for the
 %(small) error introduced by approximating the Ewald sphere with a plane.
 %
 %\subsection{Computing the total coherent cross-section}
@@ -382,27 +382,27 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %To determine the total coherent scattering cross-section, the differential
 %cross-section must be integrated over the Ewald sphere:
 %$$
-%\sigma_{\rm coh} = \int_{\rm Ewald}
-%\left(\frac{d\sigma}{d\Omega}\right)_{\rm coh.el.} d\Omega
+%\sigma_\mathrm{coh} = \int_\mathrm{Ewald}
+%\left(\frac{d\sigma}{d\Omega}\right)_\mathrm{coh.el.} d\Omega
 %$$
 %For small mosaic we may approximate the sphere with the tangential
 %plane, and we thus get from~(\ref{eq:crystal-cross-section})
 %and~(\ref{eq:crystal-gauss-2}):
 %\begin{eqnarray}
 %  \label{eq:crystal-coh-cs}
-%  \sigma_{{\rm coh},\boldsymbol{\tau}} &=& \int N\frac{(2\pi)^3}{V_0}
+%  \sigma_{\mathrm{coh},\boldsymbol{\tau}} &=& \int N\frac{(2\pi)^3}{V_0}
 %        G(\boldsymbol{\tau} - \boldsymbol{\kappa})
 %         |F_{\boldsymbol{\tau}}|^2 d\Omega \\
 %  &=& \frac{1}{\boldsymbol{k}_i^2} N\frac{(2\pi)^3}{V_0}
 %         \frac{1}{(\sqrt{2\pi})^3}\frac{e^{-\alpha}}{\sigma_1\sigma_2\sigma_3}
 %         |F_{\boldsymbol{\tau}}|^2
-%         \int e^{-(\boldsymbol{t}-\boldsymbol{t}_0)^{\rm T} M
+%         \int e^{-(\boldsymbol{t}-\boldsymbol{t}_0)^\mathrm{T} M
 %         (\boldsymbol{t}-\boldsymbol{t}_0)}
 %         d\boldsymbol{t} \\
 %  &=& \det(L) \frac{1}{\boldsymbol{k}_i^2} N\frac{(2\pi)^{3/2}}{V_0}
 %         \frac{e^{-\alpha}}{\sigma_1\sigma_2\sigma_3}
 %         |F_{\boldsymbol{\tau}}|^2
-%         \int e^{-\frac{1}{2}\boldsymbol{g}^{\rm T}\boldsymbol{g}}
+%         \int e^{-\frac{1}{2}\boldsymbol{g}^\mathrm{T}\boldsymbol{g}}
 %         d\boldsymbol{g} \\
 %  &=& 2\pi\det(L) \frac{1}{\boldsymbol{k}_i^2} N\frac{(2\pi)^{3/2}}{V_0}
 %         \frac{e^{-\alpha}}{\sigma_1\sigma_2\sigma_3}
@@ -410,7 +410,7 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %  &=& \frac{\det(L)}{\boldsymbol{k}_i^2} N\frac{(2\pi)^{5/2}}{V_0}
 %         \frac{e^{-\alpha}}{\sigma_1\sigma_2\sigma_3}
 %         |F_{\boldsymbol{\tau}}|^2 \\
-%  \sigma_{\rm coh} &=& \sum_{\boldsymbol{\tau}} \sigma_{{\rm coh},\boldsymbol{\tau}}
+%  \sigma_\mathrm{coh} &=& \sum_{\boldsymbol{\tau}} \sigma_{\mathrm{coh},\boldsymbol{\tau}}
 %\end{eqnarray}
 %As before, we let $\boldsymbol{g} = L^{-1}(\boldsymbol{t} -
 %\boldsymbol{t}_0)$ so that $d\boldsymbol{t} = \det(L) d\boldsymbol{g}$.
@@ -424,50 +424,50 @@ reflections}{$\sigma_{abs}, \sigma_{inc}$, ...}{Pending documentation}
 %simulating absorption, and when selecting the reciprocal lattice vector
 %$\boldsymbol{\tau}$ to scatter from.
 %
-%If the user has choosen a fixed transmission probability $f({\rm
-%  transmit}) = p_{\rm transmit}$, the neutron weight must be adjusted by
-%$$ \pi({\rm transmit}) = \frac{P({\rm transmit})}{f({\rm transmit})}
+%If the user has choosen a fixed transmission probability $f(\mathrm{
+%  transmit}) = p_\mathrm{transmit}$, the neutron weight must be adjusted by
+%$$ \pi(\mathrm{transmit}) = \frac{P(\mathrm{transmit})}{f(\mathrm{transmit})}
 %$$
-%where $P({\rm transmit}) = \exp(-\frac{\sigma_{\rm tot}}{V_0}\ell)$ is
+%where $P(\mathrm{transmit}) = \exp(-\frac{\sigma_\mathrm{tot}}{V_0}\ell)$ is
 %the physical transmission probability. Likewise, for non-transmission
 %the adjustment is
-%$$ \pi({\rm no~transmission}) = \frac{1-P({\rm transmit})}{1-f({\rm transmit})}.
+%$$ \pi(\mathrm{no~transmission}) = \frac{1-P(\mathrm{transmit})}{1-f(\mathrm{transmit})}.
 %$$
 %
 %Absorption is never explicitly simulated, so the Monte Carlo probability
 %of coherent or incoherent scattering is
-%$f({\rm coh})+f({\rm inc}) = 1$.
+%$f(\mathrm{coh})+f(\mathrm{inc}) = 1$.
 %The physical probability of coherent or incoherent scattering is
-%$$ P({\rm coh})+P({\rm inc}) = \frac{\sigma_{\rm coh} + \sigma_{\rm
-%    inc}}{\sigma_{\rm tot}}, $$
-%so again a weight adjustment $\pi({\rm coh}|{\rm inc}) = \Pi({\rm
-%    coh}|{\rm inc})/f({\rm coh}|{\rm inc})$ is needed.
+%$$ P(\mathrm{coh})+P(\mathrm{inc}) = \frac{\sigma_\mathrm{coh} + \sigma_\mathrm{
+%    inc}}{\sigma_\mathrm{tot}}, $$
+%so again a weight adjustment $\pi(\mathrm{coh}|\mathrm{inc}) = \Pi(\mathrm{
+%    coh}|\mathrm{inc})/f(\mathrm{coh}|\mathrm{inc})$ is needed.
 %
 %When choosing the reciprocal lattice vector $\boldsymbol{\tau}$ to
 %scatter from, the relative probability for $\boldsymbol{\tau}$ is
-%$r_{\boldsymbol{\tau}} = \sigma_{{\rm
+%$r_{\boldsymbol{\tau}} = \sigma_{\mathrm{
 %    coh},\boldsymbol{\tau}}/|F_{\boldsymbol{\tau}}|^2$. This is done to
 %get better statistics for weak reflections. The Monte Carlo probability
 %for the reciprocal lattice vector $\boldsymbol{\tau}$ is thus
 %$$ f(\boldsymbol{\tau}) =
 %\frac{r_{\boldsymbol{\tau}}}{\sum_{\boldsymbol{\tau}} r_{\boldsymbol{\tau}}}
 %$$
-%whereas the physical probability is $P(\boldsymbol{\tau}) = \sigma_{{\rm
-%    coh},\boldsymbol{\tau}}/\sigma_{\rm coh}$. A weight adjustment is
+%whereas the physical probability is $P(\boldsymbol{\tau}) = \sigma_{\mathrm{
+%    coh},\boldsymbol{\tau}}/\sigma_\mathrm{coh}$. A weight adjustment is
 %thus needed of
 %$$
 %\pi(\boldsymbol{\tau}) =
 % \frac{P(\boldsymbol{\tau})}{f(\boldsymbol{\tau})} =
-% \frac{\sigma_{{\rm coh},\boldsymbol{\tau}}
+% \frac{\sigma_{\mathrm{coh},\boldsymbol{\tau}}
 %  \sum_{\boldsymbol{\tau}} r_{\boldsymbol{\tau}}}
-% {\sigma_{\rm coh} \; r_{\boldsymbol{\tau}}}.$$
+% {\sigma_\mathrm{coh} \; r_{\boldsymbol{\tau}}}.$$
 %
 %In most cases, however, only one reflection is possible, whence $\pi=1$.
 %
 %\subsection{Implementation details}
 %\label{s:Single_crystal_implement}
 %
-%The equations describing {\bf Single\_crystal} are quite
+%The equations describing \textbf{Single\_crystal} are quite
 %complex, and consequently the code is fairly sizeable. Most of it is
 %just the expansion of the vector and matrix equations in individual
 %coordinates, and should thus be straightforward to follow.

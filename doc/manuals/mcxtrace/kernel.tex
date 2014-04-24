@@ -313,7 +313,7 @@ It is possible to set the type of NeXus file with a string argument, containing 
 
 You may choose the name of the output file with the \verb+-f filename+ option from the instrument executable or \verb+mxrun+ (see Sections \ref{s:run-sim}, \ref{s:mxrun} and Table \ref{f:simoptions2}).
 
-Then, the output format is chosen as usual with the \verb+--format=NeXus+ option when launching the simulation. All output files are stored in the output {\it filename}, as well as the instrument description itself. Other formats are still available. When run on a distributed system (e.g. MPI), detectors are gathered, but list of events (see e.g. component Virtual\_output) are stored as one data set per node.
+Then, the output format is chosen as usual with the \verb+--format=NeXus+ option when launching the simulation. All output files are stored in the output \textit{filename}, as well as the instrument description itself. Other formats are still available. When run on a distributed system (e.g. MPI), detectors are gathered, but list of events (see e.g. component Virtual\_output) are stored as one data set per node.
 
 \subsection{The \texttt{TRACE} section}
 \index{Keyword!TRACE}
@@ -360,7 +360,7 @@ Beware about variable type conversion when setting numerical parameter values, a
 
 The \MCX\ compiler will automatically search for a file containing a
 definition of the component if it has not been declared previously. The
-definition is searched for in a file called ``{\it name\/}{\tt .comp}''. See
+definition is searched for in a file called ``\textit{name\/}\texttt{.comp}''. See
 section~\ref{s:files} for details on which directories are searched. This
 facility is often used to refer to existing component definitions in
 standard component libraries. It is also possible to write component
@@ -411,7 +411,7 @@ allow components to overlap, except for particular cases (see the \texttt{GROUP}
 Indeed, many components of the \MCX\ library \index{Library!Components} start
 by propagating the x-ray event to the begining of the component itself.
 Anyway, when the corresponding propagation time is found to be negative
-({\it i.e.} the x-ray is already \emph{after} or \emph{aside} the component, and has thus
+(\textit{i.e.} the x-ray is already \emph{after} or \emph{aside} the component, and has thus
 passed the 'active' position), the x-ray event is ABSORBed, resulting in a zero intensity and event counts after a given position. The number of such removed x-rays is indicated at the end of the simulation.
 Getting such warning messages is an indication that either some
 components overlap, or some x-rays are getting outside of the
@@ -503,7 +503,7 @@ where each inserted instrument is a valid full instrument. In order to avoid som
 \begin{verbatim}
 INSTRUMENT COMPONENT a=...
 \end{verbatim}
-marks the component {\it a} as removable when inserted. In principle, inserted instruments may themselves use \texttt{\%include}.
+marks the component \textit{a} as removable when inserted. In principle, inserted instruments may themselves use \texttt{\%include}.
 
 \subsection{Groups and component extensions - GROUP - EXTEND}
 \index{Keyword!GROUP}
@@ -571,7 +571,7 @@ The syntax for instance copy is
 \begin{quote}
   \texttt{COMPONENT} name = \texttt{COPY}(instance\_name)
 \end{quote}
-where {\it instance\_name} is the name of a preceeding component instance in the instrument. It may be 'PREVIOUS' as well.
+where \textit{instance\_name} is the name of a preceeding component instance in the instrument. It may be 'PREVIOUS' as well.
 
 If you would like to change only some of the parameters in the instance copy, you may write, e.g.:
 \begin{quote}
@@ -585,7 +585,7 @@ In the case where there are many duplicated components all originating from the 
 \begin{quote}
   \texttt{COMPONENT} \texttt{COPY}(root\_name) = \texttt{COPY}(instance\_name)
 \end{quote}
-will append a unique number to {\it root\_name}, to avoid name
+will append a unique number to \textit{root\_name}, to avoid name
 conflicts. As a side effect, referring to this component instance (for
 e.g. further positioning) is not straight forward as the name is
 determined by \MCX\ and does not depend completely on the user's
@@ -619,7 +619,7 @@ One of the most useful features of the extended \MCX\ syntax is the conditional 
 
 \begin{quote}
   \texttt{COMPONENT} $\textit{name} = \textit{comp}(p_1 = e_1, p_2 = e_2, \ldots)$
-  \texttt{WHEN} {\it condition}
+  \texttt{WHEN} \textit{condition}
 \end{quote}
 The condition has the same scope as the EXTEND modifier, i.e. may use component internal variables as well as all the \texttt{DECLARE} instrument variables, \emph{except} instrument parameters. To use instrument parameters, you should copy them into global variables in the DECLARE instrument section, and refer to these latter.
 It is evaluated before the component TRACE section.
@@ -661,17 +661,17 @@ The jump may depend on a condition:
 \begin{quote}
   \texttt{COMPONENT} $\textit{name} = \textit{comp}(p_1 = e_1, p_2 = e_2, \ldots)$
   \texttt{AT} (...)
-  \texttt{JUMP} {\it reference} WHEN {\it condition}
+  \texttt{JUMP} \textit{reference} WHEN \textit{condition}
 \end{quote}
-in which case the instrument TRACE will jump to the {\it reference} when {\it condition} is true.
+in which case the instrument TRACE will jump to the \textit{reference} when \textit{condition} is true.
 
-The {\it reference} may be an instance name, as well as PREVIOUS, PREVIOUS($n$), MYSELF, NEXT, and NEXT($n$), where $n$ is the index gap to the target either backward (PREVIOUS) or forward (NEXT), so that PREVIOUS(1) is PREVIOUS and NEXT(1) is NEXT. MYSELF means that the component will be iterated as long as the condition is true. This may be a way to handle multiple scattering, if the component has been designed for that.
+The \textit{reference} may be an instance name, as well as PREVIOUS, PREVIOUS($n$), MYSELF, NEXT, and NEXT($n$), where $n$ is the index gap to the target either backward (PREVIOUS) or forward (NEXT), so that PREVIOUS(1) is PREVIOUS and NEXT(1) is NEXT. MYSELF means that the component will be iterated as long as the condition is true. This may be a way to handle multiple scattering, if the component has been designed for that.
 
 The jump arrives directly inside the target component, in the local coordinate system (i.e. without applying the AT and ROTATED keywords). In order to control better the target positions, it is \emph{required} that, except for looping MYSELF, the target component type should be an \emph{Arm}.
 %
 %There is a more general way to iterate components, which consists in repeating the loop for a given number of times.
 %\begin{quote}
-%  \texttt{JUMP} {\it reference} ITERATE {\it number\_of\_times}
+%  \texttt{JUMP} \textit{reference} ITERATE \textit{number\_of\_times}
 %\end{quote}
 %This method is specially suited for very long curved guides of similar components, but in order to take into account rotation and translation between guide sections, the iterations are performed between Arm's.
 %
@@ -714,7 +714,7 @@ If some components make extensive use of random numbers (MC choices), they shuff
 \end{quote}
 
 where the optional number $r$ specifies the number of repetitions for each event. Default is $r=10$.
-Each x-ray event reaching component {\it name} will be repeated $r$ times with a weight divided by $r$, so that in practice the number of events for the remaining part of the simulation (down to the END), will potentially have more statistics. This is only true if following components (and preferably component {\it name}) use random numbers. You may use this method as many times as you wish in the same instrument, e.g. at the monochromator and sample position. This keyword can also be used within a GROUP. The efficiency is roughtly $r$ raised to the number of occurences in the instrument, so that enhancing two components with the default $r=10$ will produce at the end an enhancement effect of 100 in the number of events. The execution time will usually get slightly longer. This technique is known as the \emph{stratified sampling} (see Appendix \ref{s:MCtechniques}). If the instrument makes use of global variables - e.g. in conjunction with a WHEN or User Variable monitoring (see Monitor\_nD) - you should take care that these variables are set properly for each SPLIT loop, which usually means that they must be reset inside the SPLITed section and assigned/used further on. \index{Bugs}
+Each x-ray event reaching component \textit{name} will be repeated $r$ times with a weight divided by $r$, so that in practice the number of events for the remaining part of the simulation (down to the END), will potentially have more statistics. This is only true if following components (and preferably component \textit{name}) use random numbers. You may use this method as many times as you wish in the same instrument, e.g. at the monochromator and sample position. This keyword can also be used within a GROUP. The efficiency is roughtly $r$ raised to the number of occurences in the instrument, so that enhancing two components with the default $r=10$ will produce at the end an enhancement effect of 100 in the number of events. The execution time will usually get slightly longer. This technique is known as the \emph{stratified sampling} (see Appendix \ref{s:MCtechniques}). If the instrument makes use of global variables - e.g. in conjunction with a WHEN or User Variable monitoring (see Monitor\_nD) - you should take care that these variables are set properly for each SPLIT loop, which usually means that they must be reset inside the SPLITed section and assigned/used further on. \index{Bugs}
 
 A usage example of the SPLIT keyword can be found in the \\
 \verb+Neutron site/ILL/ILL_H15_IN6+ instrument from the \verb+mcgui+, to enhance statistics for x-rays scattering on monochromators and sample.
@@ -806,7 +806,7 @@ Setting parameters may optionally be declared to be of type
 \index{Keyword!OUTPUT PARAMETERS}
 \index{Parameters!Protecting|see{Keyword/OUTPUT}}
 This declares a list of C identifiers (variables, functions) that are
-output parameters ({\it i.e.} global) for the
+output parameters (\textit{i.e.} global) for the
 component. Output parameters are used to hold values that are computed
 by the component itself, rather than being passed as input. This could
 for example be a count of x-rays in a detector or a constant that is
@@ -1019,13 +1019,13 @@ integral $p$ of the monitor bins, as well as the 2$^{nd}$ moment $\sigma$
 and the number of statistical events $N$. This will result in a line such as:
 
 \begin{quote}
-\verb+Detector:+ {\it CompName}\_I=$p$ {\it CompName}\_ERR=$\sigma$ {\it CompName}\_N=$N$ "{\it filename}"
+\verb+Detector:+ \textit{CompName}\_I=$p$ \textit{CompName}\_ERR=$\sigma$ \textit{CompName}\_N=$N$ "\textit{filename}"
 \end{quote}
 
 For 1D, 2D and 3D monitors/detectors, the data histogram store in the files
-is given {\emph per bin} when the signal is the x-ray intensity ({\it i.e.} most of the cases). Most monitors define binning for an $x_n$ axis value as the sum of events falling into the $[ x_n x_{n+1} ]$ range, {\it i.e} the bins are {\emph not} centered, but left aligned.
+is given {\emph per bin} when the signal is the x-ray intensity (\textit{i.e.} most of the cases). Most monitors define binning for an $x_n$ axis value as the sum of events falling into the $[ x_n x_{n+1} ]$ range, \textit{i.e} the bins are {\emph not} centered, but left aligned.
 Using the Monitor\_nD component, it is possible to monitor other signals using the
-'\verb+signal=+{\it variable\_name}' in the 'options' parameter (refer to that
+'\verb+signal=+\textit{variable\_name}' in the 'options' parameter (refer to that
 component documentation).
 
 \paragraph{Single detectors/monitors}
@@ -1035,7 +1035,7 @@ component documentation).
 The results of a single detector/monitor are written using the following
 macro:
 \begin{quote}
-  \texttt{DETECTOR\_OUT\_0D({\it t}, $N$, $p$, {\it p2})}
+  \texttt{DETECTOR\_OUT\_0D(\textit{t}, $N$, $p$, \textit{p2})}
 \end{quote}
 Here, \textit{t} is a string giving a short descriptive title for the
 results, {\em e.g.}\ ``Single monitor''.
@@ -1046,13 +1046,13 @@ results, {\em e.g.}\ ``Single monitor''.
 The results of a one-dimensional detector/\discretionary{}{}{}mon\-i\-tor are written using the
 following macro:
 \begin{quote}
-  \texttt{DETECTOR\_OUT\_1D({\it t},
-        {\it xlabel},
-        {\it ylabel},
-        {\it xvar}, $x_{\rm min}$, $x_{\rm max}$, $m$, \\
+  \texttt{DETECTOR\_OUT\_1D(\textit{t},
+        \textit{xlabel},
+        \textit{ylabel},
+        \textit{xvar}, $x_\mathrm{min}$, $x_\mathrm{max}$, $m$, \\
         \phantom{\texttt{DETECTOR\_OUT\_1D(}}% Paren hack ->)
-          $\&N[0]$, $\&p[0]$, $\&{\it p2}[0]$,
-        {\it filename})}
+          $\&N[0]$, $\&p[0]$, $\&\textit{p2}[0]$,
+        \textit{filename})}
 \end{quote}
 Here,
 \begin{itemize}
@@ -1064,16 +1064,16 @@ Here,
   axis of a plot ({\em e.g.}\ ``Intensity''),
 \item \textit{xvar} is a string giving the name of the variable on the X
   axis ({\em e.g.}\ ``E''),
-\item $x_{\rm min}$ is the lower limit for the X axis,
-\item $x_{\rm max}$ is the upper limit for the X axis,
+\item $x_\mathrm{min}$ is the lower limit for the X axis,
+\item $x_\mathrm{max}$ is the upper limit for the X axis,
 \item $m$ is the number of elements in the detector arrays,
 \item $\&N[0]$ is a pointer to the first element in the array of $N$
   values for the detector component (or NULL, in which case no error
   bars will be computed),
 \item $\&p[0]$ is a pointer to the first element in the array of $p$
   values for the detector component,
-\item $\&{\it p2}[0]$ is a pointer to the first element in the array of
-  {\it p2} values for the detector component (or NULL, in which case no error
+\item $\&\textit{p2}[0]$ is a pointer to the first element in the array of
+  \textit{p2} values for the detector component (or NULL, in which case no error
   bars will be computed),
 \item \textit{filename} is a string giving the name of the file in which
   to store the data.
@@ -1085,13 +1085,13 @@ Here,
 The results of a two-dimensional detector/\discretionary{}{}{}mon\-i\-tor are written to a file using the
 following macro:
 \begin{quote}
-  \texttt{DETECTOR\_OUT\_2D({\it t},
-        {\it xlabel},
-        {\it ylabel},
-        $x_{\rm min}$, $x_{\rm max}$, $y_{\rm min}$, $y_{\rm max}$, $m$, $n$,\\
+  \texttt{DETECTOR\_OUT\_2D(\textit{t},
+        \textit{xlabel},
+        \textit{ylabel},
+        $x_\mathrm{min}$, $x_\mathrm{max}$, $y_\mathrm{min}$, $y_\mathrm{max}$, $m$, $n$,\\
         \phantom{\texttt{DETECTOR\_OUT\_2D(}}% Paren hack ->)
-          $\&N[0][0]$, $\&p[0][0]$, $\&{\it p2}[0][0]$,
-        {\it filename})}
+          $\&N[0][0]$, $\&p[0][0]$, $\&\textit{p2}[0][0]$,
+        \textit{filename})}
 \end{quote}
 Here,
 \begin{itemize}
@@ -1101,18 +1101,18 @@ Here,
   axis in a plot ({\em e.g.}\ ``X position [cm]''),
 \item \textit{ylabel} is a string giving a descriptive label for the Y
   axis of a plot ({\em e.g.}\ ``Y position [cm]''),
-\item $x_{\rm min}$ is the lower limit for the X axis,
-\item $x_{\rm max}$ is the upper limit for the X axis,
-\item $y_{\rm min}$ is the lower limit for the Y axis,
-\item $y_{\rm max}$ is the upper limit for the Y axis,
+\item $x_\mathrm{min}$ is the lower limit for the X axis,
+\item $x_\mathrm{max}$ is the upper limit for the X axis,
+\item $y_\mathrm{min}$ is the lower limit for the Y axis,
+\item $y_\mathrm{max}$ is the upper limit for the Y axis,
 \item $m$ is the number of elements in the detector arrays along the X axis,
 \item $n$ is the number of elements in the detector arrays along the Y axis,
 \item $\&N[0][0]$ is a pointer to the first element in the array of $N$
   values for the detector component,
 \item $\&p[0][0]$ is a pointer to the first element in the array of $p$
   values for the detector component,
-\item $\&{\it p2}[0][0]$ is a pointer to the first element in the array of
-  {\it p2} values for the detector component,
+\item $\&\textit{p2}[0][0]$ is a pointer to the first element in the array of
+  \textit{p2} values for the detector component,
 \item \textit{filename} is a string giving the name of the file in which
   to store the data.
 \end{itemize}
@@ -1127,18 +1127,18 @@ The results of a three-dimensional detector/\discretionary{}{}{}mon\-i\-tor are 
 following macro:
 
 \begin{quote}
-  \texttt{DETECTOR\_OUT\_3D({\it t},
-        {\it xlabel}, {\it ylabel}, {\it zlabel},
-        {\it xvar}, {\it yvar}, {\it zvar},
-        $x_{\rm min}$, $x_{\rm max}$, $y_{\rm min}$, $y_{\rm max}$,
-        $z_{\rm min}$, $z_{\rm max}$, $m$, $n$, $j$\\
+  \texttt{DETECTOR\_OUT\_3D(\textit{t},
+        \textit{xlabel}, \textit{ylabel}, \textit{zlabel},
+        \textit{xvar}, \textit{yvar}, \textit{zvar},
+        $x_\mathrm{min}$, $x_\mathrm{max}$, $y_\mathrm{min}$, $y_\mathrm{max}$,
+        $z_\mathrm{min}$, $z_\mathrm{max}$, $m$, $n$, $j$\\
         \phantom{\texttt{DETECTOR\_OUT\_3D(}}% Paren hack ->)
-          $\&N[0][0][0]$, $\&p[0][0][0]$, $\&{\it p2}[0][0][0]$,
-        {\it filename})}
+          $\&N[0][0][0]$, $\&p[0][0][0]$, $\&\textit{p2}[0][0][0]$,
+        \textit{filename})}
 \end{quote}
 The meaning of parameters is the same as those used in the 1D and 2D
 versions of DETECTOR\_OUT. The available data format currently saves
-the 3D arrays as 2D, with the 3rd dimension specified in the {\it
+the 3D arrays as 2D, with the 3rd dimension specified in the \textit{
   type} field of the data header.
 
 \paragraph{Customizing detectors/monitors}
@@ -1148,10 +1148,10 @@ the 3D arrays as 2D, with the 3rd dimension specified in the {\it
 Users may want to have additional information than the default one written by the DETECTOR\_OUT macros. A mechanism has been implemented for monitor components to output customized meta data. The macro:
 
 \begin{quote}
-  \texttt{DETECTOR\_CUSTOM\_HEADER({\it t})}
+  \texttt{DETECTOR\_CUSTOM\_HEADER(\textit{t})}
 \end{quote}
 
-defines a string to be written during the next \verb+DETECTOR\_OUT*+ call, as a field {\it custom}. This string may additionally use the symbol \verb+%PRE+ which is replaced by the format specific comment character, e.g. '\#' for McStas/PGPLOT, '\%' for Octave/Matlab, '\verb+//+' for Scilab and ';' for IDL, and ' ' for other formats. The argument {\it t} to the macro may be a static string, e.g. {\it "My own additional information"}, or the name of a {\it character array variable} containing the meta data. After the detector/monitor file being written, the custom meta data output is unactivated. This way, each monitor file may have its own meta data definition by repeating the DETECTOR\_CUSTOM\_HEADER call. You may either do that inside the component SAVE section, or within an instrument description in an EXTEND code preceeding the monitor (e.g. following an Arm component).
+defines a string to be written during the next \verb+DETECTOR\_OUT*+ call, as a field \textit{custom}. This string may additionally use the symbol \verb+%PRE+ which is replaced by the format specific comment character, e.g. '\#' for McStas/PGPLOT, '\%' for Octave/Matlab, '\verb+//+' for Scilab and ';' for IDL, and ' ' for other formats. The argument \textit{t} to the macro may be a static string, e.g. \textit{"My own additional information"}, or the name of a \textit{character array variable} containing the meta data. After the detector/monitor file being written, the custom meta data output is unactivated. This way, each monitor file may have its own meta data definition by repeating the DETECTOR\_CUSTOM\_HEADER call. You may either do that inside the component SAVE section, or within an instrument description in an EXTEND code preceeding the monitor (e.g. following an Arm component).
 
 \subsection{The \texttt{FINALLY} section}
 \label{s:comp-finally}
@@ -1189,7 +1189,7 @@ specified in the local coordinate system of the component.
 The MCDISPLAY section is optional. If it is omitted, \verb+mcdisplay+
 will use a default symbol (a small circle) for drawing the component.
 
-\paragraph{The {\tt magnify} command}
+\paragraph{The \texttt{magnify} command}
 
 This command, if present, must be the first in the section. It takes a
 single argument: a string containing zero or more of the letters ``x'',
@@ -1201,18 +1201,18 @@ option. For example:
 \end{verbatim}
 
 
-\paragraph{The {\tt line} command}
+\paragraph{The \texttt{line} command}
 
-The {\tt line} command takes the following form:
+The \texttt{line} command takes the following form:
 \begin{quote}
   \texttt{line($x_1$, $y_1$, $z_1$, $x_2$, $y_2$, $z_2$)}
 \end{quote}
 It draws a line between the points $(x_1, y_1, z_1)$ and $(x_2, y_2,
 z_2)$.
 
-\paragraph{The {\tt dashed\_line} command}
+\paragraph{The \texttt{dashed\_line} command}
 
-The {\tt dashed\_line} command takes the following form:
+The \texttt{dashed\_line} command takes the following form:
 \begin{quote}
   \texttt{dashed\_line($x_1$, $y_1$, $z_1$, $x_2$, $y_2$, $z_2$, $n$)}
 \end{quote}
@@ -1220,9 +1220,9 @@ It draws a dashed line between the points $(x_1, y_1, z_1)$ and $(x_2, y_2,
 z_2)$ with $n$ equidistant spaces.
 
 
-\paragraph{The {\tt multiline} command}
+\paragraph{The \texttt{multiline} command}
 
-The {\tt multiline} command takes the following form:
+The \texttt{multiline} command takes the following form:
 \begin{quote}
   \texttt{multiline($n$, $x_1$, $y_1$, $z_1$, ..., $x_n$, $y_n$, $z_n$)}
 \end{quote}
@@ -1231,7 +1231,7 @@ $(x_2, y_2, z_2)$, \ldots, $(x_n, y_n, z_n)$. It thus accepts a variable
 number of arguments depending on the value of $n$. This exposes
 one of the nasty quirks of C since \emph{no} type checking is
 performed by the C compiler. It is thus very important that all
-arguments to {\tt multiline} (except $n$) are valid numbers of type {\tt
+arguments to \texttt{multiline} (except $n$) are valid numbers of type \texttt{
   double}. A common mistake is to write
 \begin{verbatim}
     multiline(3, x, y, 0, ...)
@@ -1242,38 +1242,38 @@ written as
     multiline(3, (double)x, (double)y, 0.0, ...)
 \end{verbatim}
 
-\paragraph{The {\tt rectangle} command}
+\paragraph{The \texttt{rectangle} command}
 
-The {\tt rectangle} command takes the following form:
+The \texttt{rectangle} command takes the following form:
 \begin{quote}
-  \texttt{rectangle({\it plane}, $x$, $y$, $z$, {\it width}, {\it height})}
+  \texttt{rectangle(\textit{plane}, $x$, $y$, $z$, \textit{width}, \textit{height})}
 \end{quote}
-Here {\it plane} should be either \verb+"xy"+, \verb+"xz"+, or
+Here \textit{plane} should be either \verb+"xy"+, \verb+"xz"+, or
 \verb+"yz"+. The command draws a rectangle in the specified plane with
-the center at $(x, y, z)$ and the size {\it width} $\times$ {\it
-height}. Depending on {\it plane} the width and height are defined as:\\
+the center at $(x, y, z)$ and the size \textit{width} $\times$ \textit{
+height}. Depending on \textit{plane} the width and height are defined as:\\
 \begin{tabular} {ccc}
-  {\it plane} & {\it width} & {\it height} \\
+  \textit{plane} & \textit{width} & \textit{height} \\
   xy & x & y \\
   xz & x & z \\
   yz & y & z \\
  \end{tabular}
 
-\paragraph{The {\tt box} command}
+\paragraph{The \texttt{box} command}
 
-The {\tt box} command takes the following form:
+The \texttt{box} command takes the following form:
 \begin{quote}
-  \texttt{box($x$, $y$, $z$, {\it xwidth}, {\it yheight}, {\it zlength})}
+  \texttt{box($x$, $y$, $z$, \textit{xwidth}, \textit{yheight}, \textit{zlength})}
 \end{quote}
-The command draws a box with the center at $(x, y, z)$ and the size {\it xwidth} $\times$ {\it yheight} $\times$ {\it zlength}.
+The command draws a box with the center at $(x, y, z)$ and the size \textit{xwidth} $\times$ \textit{yheight} $\times$ \textit{zlength}.
 
-\paragraph{The {\tt circle} command}
+\paragraph{The \texttt{circle} command}
 
-The {\tt circle} command takes the following form:
+The \texttt{circle} command takes the following form:
 \begin{quote}
-  \texttt{circle({\it plane}, $x$, $y$, $z$, $r$)}
+  \texttt{circle(\textit{plane}, $x$, $y$, $z$, $r$)}
 \end{quote}
-Here {\it plane} should be either \verb+"xy"+, \verb+"xz"+, or
+Here \textit{plane} should be either \verb+"xy"+, \verb+"xz"+, or
 \verb+"yz"+. The command draws a circle in the specified plane with the center
  at $(x, y, z)$ and the radius $r$.
 
@@ -1311,35 +1311,35 @@ There is a heritage mechanism to create childs of existing components. These are
 
 The syntax for a full component child is
 \begin{quote}
-  \texttt{DEFINE COMPONENT} {\it child\_name} \texttt{COPY} {\it parent\_name}
+  \texttt{DEFINE COMPONENT} \textit{child\_name} \texttt{COPY} \textit{parent\_name}
 \end{quote}
-This single line will copy all parts of the {\it parent} into the {\it child}, except for the documentation header.
+This single line will copy all parts of the \textit{parent} into the \textit{child}, except for the documentation header.
 
-As for normal component definitions, you may add other parameters, \texttt{DECLARE}, \texttt{TRACE}, ... sections. Each of them will replace or extend (be catenated to, with the COPY/EXTEND keywords, see example below) the corresponding {\it parent} definition. In practice, you could copy a component and only rewrite some of it, as in the following example:
+As for normal component definitions, you may add other parameters, \texttt{DECLARE}, \texttt{TRACE}, ... sections. Each of them will replace or extend (be catenated to, with the COPY/EXTEND keywords, see example below) the corresponding \textit{parent} definition. In practice, you could copy a component and only rewrite some of it, as in the following example:
 \begin{quote}
-  \texttt{DEFINE COMPONENT} {\it child\_name} \texttt{COPY} {\it parent\_name} \\
+  \texttt{DEFINE COMPONENT} \textit{child\_name} \texttt{COPY} \textit{parent\_name} \\
 
   \texttt{SETTING PARAMETERS} (newpar1, newpar2) \\
-  \texttt{INITIALIZE} \texttt{COPY} {\it parent\_name} \texttt{EXTEND} \\
+  \texttt{INITIALIZE} \texttt{COPY} \textit{parent\_name} \texttt{EXTEND} \\
   \verb|%{|  \\
-  \hbox to 3em{}\ldots C code to be catenated to the {\it parent\_name} INITIALIZE \ldots  \\
+  \hbox to 3em{}\ldots C code to be catenated to the \textit{parent\_name} INITIALIZE \ldots  \\
   \verb|%}| \\
   \texttt{SAVE} \\
   \verb|%{|  \\
-  \hbox to 3em{}\ldots C code to replace the {\it parent\_name} SAVE \ldots  \\
+  \hbox to 3em{}\ldots C code to replace the \textit{parent\_name} SAVE \ldots  \\
   \verb|%}| \\
 \end{quote}
 where two additional parameters have been defined, and should be handled in the extension of the original INITIALIZE section.
 
 On the other hand, if you do not derive a component as a whole from a parent, you may still use specific parts from any component:
 \begin{quote}
-  \texttt{DEFINE COMPONENT} {\it name} \ldots \\
-  \texttt{DECLARE} \texttt{COPY} {\it parent1} \\
-  \texttt{INITIALIZE} \texttt{COPY} {\it parent2} \texttt{EXTEND} \\
+  \texttt{DEFINE COMPONENT} \textit{name} \ldots \\
+  \texttt{DECLARE} \texttt{COPY} \textit{parent1} \\
+  \texttt{INITIALIZE} \texttt{COPY} \textit{parent2} \texttt{EXTEND} \\
   \verb|%{|  \\
-  \hbox to 3em{}\ldots C code to be catenated to the {\it parent2} INITIALIZE \ldots  \\
+  \hbox to 3em{}\ldots C code to be catenated to the \textit{parent2} INITIALIZE \ldots  \\
   \verb|%}| \\
-  \texttt{TRACE} \texttt{COPY} {\it parent3}
+  \texttt{TRACE} \texttt{COPY} \textit{parent3}
 \end{quote}
 
 This mechanism may lighten the component code, but a special care should be taken in mixing bits from different sources, specially concerning variables. This may result in difficulties to compile components.\index{Can not compile}
@@ -1403,8 +1403,8 @@ Additionally, optional keys \verb+%VALIDATION+ and \verb+%BUGS+ may be found to 
   component.
 \item In the \verb+%PARAMETERS+
   section, descriptions have the form
-  \hbox{``\texttt{{\it name\/}:~[{\it unit\/}] {\it text\/}}''}
-  or \hbox{``\texttt{{\it name\/}:~{\it text\/} [{\it unit\/}]}''}.
+  \hbox{``\texttt{\textit{name\/}:~[\textit{unit\/}] \textit{text\/}}''}
+  or \hbox{``\texttt{\textit{name\/}:~\textit{text\/} [\textit{unit\/}]}''}.
   These may span multiple lines, but subsequent lines must be
   indented by at least four spaces. Note that square brackets \verb+[]+ should
   be used for units. Normal parenthesis are also supported for backwards

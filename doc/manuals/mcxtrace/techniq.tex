@@ -178,29 +178,29 @@ equals the actual physical properties we like to model.
 Let us follow up on the simple example of transmission.
 The probability of transmitting the real x-ray is $P$, but we make
 the Monte Carlo choice of transmitting the x-ray every time:
-$f_{\rm MC}=1$. This must be reflected on the choice of weight multiplier
+$f_\mathrm{MC}=1$. This must be reflected on the choice of weight multiplier
 $\pi_j$ given by the master equation
 %In the ``real'' semi-classical world, there is a distribution
 %(probability density) for the x-rays in the six dimensional
 %(energy, direction, position) space of
-%$\Pi(E,\Ombold,{\bf r}) = dP/(dE d\Ombold d^3{\bf r})$ depending upon
+%$\Pi(E,\Ombold,{\bfseries r}) = dP/(dE d\Ombold d^3{\bfseries r})$ depending upon
 %the source temperature, geometry {\em etc.}\ In the
 %Monte Carlo simulations, the six coordinates are for efficiency reasons
 %in general picked from another distribution:
-%$f_{\rm MC}(E,\Ombold,{\bf r}) \neq \Pi(E, \Ombold,{\bf r})$,
+%$f_\mathrm{MC}(E,\Ombold,{\bfseries r}) \neq \Pi(E, \Ombold,{\bfseries r})$,
 %since one would {\em e.g.} often generate
 %only x-rays within a certain parameter interval.
 %However, we must then require that the weights are adjusted
 %by a factor $\pi_j$ (in this case: $j=1$) so that
 \begin{equation} \label{probrule}
-f_{\rm MC} \pi_j = P .
+f_\mathrm{MC} \pi_j = P .
 \end{equation}
 %For the sources present in version \version,
-%only the $(\Ombold, {\bf r})$ dependence of the correction factors
+%only the $(\Ombold, {\bfseries r})$ dependence of the correction factors
 %are taken into account.
 
 This probability rule is general, and holds also if, e.g., it is decided to
-transmit only half of the rays $(f_{\rm MC}=0.5)$.
+transmit only half of the rays $(f_\mathrm{MC}=0.5)$.
 An important different example
 is elastic scattering from a powder sample,
 where the Monte-Carlo choices are the particular powder line to scatter from,
@@ -251,7 +251,7 @@ we cut x-rays rays that should have reached the final detector.
 %the most interesting directions and gradually change
 %the focusing according to that.
 %Implementation of this idea is
-%found in the {\bf Source\_adapt} and {\bf Source\_Optimizer} components.
+%found in the {\bfseries Source\_adapt} and {\bfseries Source\_Optimizer} components.
 %, described in section~\ref{s:Source_adapt}.
 
 One particular efficiency improvement technique is the so-called
