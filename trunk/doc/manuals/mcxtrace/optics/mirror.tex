@@ -12,7 +12,7 @@ in section~\ref{ss:mirrorreflect}.
 \component{Multilayer\_elliptic}{System}{$\theta$, $s1$, $s2$, $length$, $width$, $R$}{}{validated}
 %{$R_0, Q_c, W, \alpha, reflect$}{validated}
 
-The component {\bf Multilayer\_elliptic}
+The component \textbf{Multilayer\_elliptic}
 models a single rectangular reflecting multilayer mirror plate with elliptical curvature. It can be used
 as a sample component, to \textit{e.g.}~assemble a Kirkpatrick-Baez focusing system 
 or in combination with a double-crystal monochromator.
@@ -104,7 +104,7 @@ coordinate system.
 \centering
 \includegraphics[width=0.3\linewidth]{figures/Dotproduct.eps}
  \caption{The reflection of the unit vector $\bf{V}_\textrm{in}$ in the mirror with the normal unit
- vector ${\bf{N}}$ is ${\bf{V}}_\textrm{out} = {\bf{V}}_\textrm{in} -2({\bf{N}}\cdot{\bf{V}}_\textrm{in}){\bf{N}}$}\label{fig:dotProduct}
+ vector $\boldsymbol{{N}}$ is $\boldsymbol{{V}}_\textrm{out} = \boldsymbol{{V}}_\textrm{in} -2(\boldsymbol{{N}}\cdot\boldsymbol{{V}}_\textrm{in})\boldsymbol{{N}}$}\label{fig:dotProduct}
 \end{figure}
 
 The tangent and normal to the ellipse $z^2/a^2 + y^2/b^2=1$ at the
@@ -116,13 +116,13 @@ inverse of the tangent slope, so the coordinates of the mirror
 normal are \begin{equation} N_x = 0 \quad N_y = \frac{a^2\,Y}{b^2\,Z} \quad N_z =
 1\,. \end{equation} With $\bf{V}_\textrm{in}$ and $\bf{N}$ denoting unit
 vectors (direction and normal respectively), the direction of the
-reflected ray is calculated as \begin{equation} {\bf{V}}_\textrm{out} =
-{\bf{V}}_\textrm{in} -2({\bf{N}}\cdot{\bf{V}}_\textrm{in}){\bf{N}} =
+reflected ray is calculated as \begin{equation} \boldsymbol{{V}}_\textrm{out} =
+\boldsymbol{{V}}_\textrm{in} -2(\boldsymbol{{N}}\cdot\boldsymbol{{V}}_\textrm{in})\boldsymbol{{N}} =
         \left(
       \begin{array}{c}
-        V_{\textrm{in}x} - 2({\bf{N}}\cdot{\bf{V}}_\textrm{in})N_x \\
-               V_{\textrm{in}y} - 2({\bf{N}}\cdot{\bf{V}}_\textrm{in})N_y \\
-                V_{\textrm{in}z} - 2({\bf{N}}\cdot{\bf{V}}_\textrm{in})N_z \\
+        V_{\textrm{in}x} - 2(\boldsymbol{{N}}\cdot\boldsymbol{{V}}_\textrm{in})N_x \\
+               V_{\textrm{in}y} - 2(\boldsymbol{{N}}\cdot\boldsymbol{{V}}_\textrm{in})N_y \\
+                V_{\textrm{in}z} - 2(\boldsymbol{{N}}\cdot\boldsymbol{{V}}_\textrm{in})N_z \\
       \end{array}
     \right)
 \end{equation}

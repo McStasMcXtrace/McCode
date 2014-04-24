@@ -34,17 +34,17 @@ catalog of the \MCX\ library, e.g using: \index{Tools!mxdoc}
 \end{quote}
 as well as the documentation of specific components, e.g with:
 \begin{quote}
-  \verb|mxdoc --text| {\it name} \\
-  \verb|mxdoc| {\it file.comp}
+  \verb|mxdoc --text| \textit{name} \\
+  \verb|mxdoc| \textit{file.comp}
 \end{quote}
-The first line will search for all components matching the {\it name}, and display their help section as text, where as the second example will display the help corresponding to the {\it file.comp} component, using your BROWSER\index{Environment variable!BROWSER} setting, or as text if unset. The \verb+--help+ option will display the command help, as usual.
+The first line will search for all components matching the \textit{name}, and display their help section as text, where as the second example will display the help corresponding to the \textit{file.comp} component, using your BROWSER\index{Environment variable!BROWSER} setting, or as text if unset. The \verb+--help+ option will display the command help, as usual.
 
 \begin{table}
   \begin{center}
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf \MCX/sources} & Description \\
+       {\bfseries \MCX/sources} & Description \\
        \hline
 Source\_pt & Point source with uniform, Gaussian or general wavelength/energy distribution.\\
 Source\_flat & Flat surface source with uniform, Gaussian or general wavelength/energy distribution.\\
@@ -66,7 +66,7 @@ Source\_lab & Full featured model of a laboratory X-ray source.\\
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf MCXTAS/optics} & Description \\
+       {\bfseries MCXTAS/optics} & Description \\
        \hline
  Arm                &  Arm/optical bench. \\
  Beamstop          &   Rectangular/circular beam stop. \\
@@ -92,7 +92,7 @@ Source\_lab & Full featured model of a laboratory X-ray source.\\
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf \MCX\/samples} & Description \\
+       {\bfseries \MCX\/samples} & Description \\
        \hline
   PowderN      &  General powder sample with N
                 scattering vectors, using a data file. Can assume \emph{concentric} shape,
@@ -115,7 +115,7 @@ Source\_lab & Full featured model of a laboratory X-ray source.\\
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf \MCX\/monitors} & Description \\
+       {\bfseries \MCX\/monitors} & Description \\
        \hline
 %DivLambda\_monitor &  Divergence/wavelength monitor. \\
 DivPos\_monitor  &    Divergence/position monitor (acceptance diagram). \\
@@ -160,7 +160,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf \MCX\/misc} & Description \\
+       {\bfseries \MCX\/misc} & Description \\
        \hline
  Progress\_bar     &  Displays status of a running simulation.
                       May also trigger intermediate SAVE.\\
@@ -179,7 +179,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
 %    {\let\my=\\
 %    \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
 %      \hline
-%       {\bf \MCX\/contrib} & Description \\
+%       {\bfseries \MCX\/contrib} & Description \\
 %       \hline
 % Al\_window     &         Aluminium transmission window. \\
 % Collimator\_ROC   &      Radial Oscillating Collimator (ROC). \\
@@ -219,12 +219,12 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
 %    {\let\my=\\
 %    \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
 %      \hline
-%       {\bf MCXTAS/share} & Description \\
+%       {\bfseries MCXTAS/share} & Description \\
 %       \hline
 %       adapt\_tree-lib  & Handles a simulation optimisation space for
 %       adatative importance sampling.
 %                          Used by the Source\_adapt component. \\
-%       {\bf mcstas-r}      &   Main Run-time library (always included). \\
+%       {\bfseries mcstas-r}      &   Main Run-time library (always included). \\
 %       monitor\_nd-lib & Handles multiple monitor types.
 %                        Used by Monitor\_nD, Res\_monitor, \ldots \\
 %       read\_table-lib  & Enables to read a data table (text/binary) to be used within
@@ -246,7 +246,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf MCXTAS/data} & Description \\
+       {\bfseries MCXTAS/data} & Description \\
        \hline
  Al.txt, Al.txt, Be.txt, Cu.txt, Fe.txt, I.txt, Mo.txt, Si.txt, Sn.txt & Data files from the NIST-database to be used for absorption and refraction.\\
  get\_xray\_db\_data & script to access NIST-database.\\  
@@ -264,7 +264,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf MCXTAS/examples} & Description \\
+       {\bfseries MCXTAS/examples} & Description \\
       \hline
       *.instr & This directory contains example instruments, accessible throught the \verb+mxgui+ ``X-ray site'' menu. \\
       \hline
