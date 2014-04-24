@@ -20,9 +20,16 @@
 * Radial Soller collimator with rectangular opening and specified length.
 * The collimator is made of many rectangular channels stacked radially.
 * Each channel is a set of transmitting layers (nslit), separated by an absorbing
-* material (infinitely thin), the whole stuff is inside an absorbing housing. 
+* material (infinitely thin), the whole stuff is inside an absorbing housing.
+*
+* When specifying the number of channels (nchan), each channel has a total
+* entrance width=radius*fabs(theta_max-theta_min)/nchan, but only the central
+* portion 'xwidth' accepts neutrons. When xwidth=0, it is set to the full
+* apperture so that all neutrons enter the channels (all walls are infinitely thin).
+*   
 * When using zero as the number of channels (nchan), the collimator is continuous, 
 * whithout shadowing effect.
+*
 * The component should be positioned at the radius center.
 * The component can be made oscillating (usual on diffractometers and TOF
 * machines) with the 'roc' parameter.
@@ -53,7 +60,7 @@
 * radius:     (m)          Radius of the collimator (to entry window).
 *
 * Optional parameters
-* transmission:(1)         Transmission of Soller (0<=t<=1).
+* transmission:(1)         Maximum transmission of Soller (0<=t<=1).
 * nslit:       (1)         Number of blades composing each Soller. Overrides
 *                            the divergence parameter.
 * roc:         (deg)       Amplitude of oscillation of collimator. 0=fixed.
