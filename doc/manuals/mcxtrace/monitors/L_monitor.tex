@@ -1,15 +1,10 @@
-% Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
-
-
 \section{L\_monitor: The wavelength sensitive monitor}
 \label{s:L_monitor}
 \index{Monitors!Wavelength monitor}
-
-\component{L\_monitor}{System}{$x_\mathrm{width}$, $y_\mathrm{height}$, $y_\mathrm{max}$, $n_\mathrm{\lambda}$, $\lambda_\mathrm{min}$, $\lambda_\mathrm{max}$, filename}{ $x_\mathrm{min}$,$x_\mathrm{max}$, $y_\mathrm{min}$,$y_\mathrm{max}$,restore\_xray},{}
-
+\mcdoccomp{monitors/L_monitor.parms}
 
 The component \textbf{L\_monitor} is very similar to
-\textbf{TOF\_monitor} and \textbf{E\_monitor}.
+\textbf{E\_monitor}.
 This component is just sensitive to the xray wavelength.
 The wavelength spectrum is output in a one-dimensional histogram.
 between $\lambda_\mathrm{min}$ and $\lambda_\mathrm{max}$ (measured in \AA ).
