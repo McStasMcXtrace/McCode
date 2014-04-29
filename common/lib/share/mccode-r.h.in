@@ -441,7 +441,8 @@ void normal_vec(double *nx, double *ny, double *nz,
     double x, double y, double z);
 
 /**
- * Rotate the given xyz in a certain way. Used in pol-lib
+ * Rotate the vector vx,vy,vz psi radians around the vector ax,ay,az
+ * and put the result in x,y,z.
  */
 #define rotate(x, y, z, vx, vy, vz, phi, ax, ay, az) \
   do { \
