@@ -218,10 +218,16 @@ TRACE
       alpha=(q-prms[state].q[r-1])/(prms[state].q[r]-prms[state].q[r-1]);
       f2=(1-alpha)*prms[state].f2[r-1] + alpha*prms[state].f2[r];
       /*apply psi and eta rotations to k to get the new vector*/
-      /*compute new k using random eta in eta interval if any*/
-      kx=k*cos(eta)*sin(psi);
-      ky=k*-sin(eta)*sin(psi);
-      kz=k*cos(psi);
+      /*first find a vector to rotate psi around - this is the projection of y
+       * onto the plane normal to k*/
+      double ktx,kty,ktz;
+      double ax,ay,az;
+      ax= 0 - ky/k * kx/k;
+      ay= 1 - ky/k * ky/k;
+      az= 0 - ky/k * kz*k;
+      rotate(ktx,kty,ktz,kx,ky,kz,psi,ax,ay,az);
+      /*now rotate eta around the initial k-vector*/
+      rotate(kx,ky,kz, ktx,kty,ktz, eta, kx,ky,kz);
       
       /*using this new vector, recompute the intersections to find length to go to correct for multiple scattering and absorption*/ 
       if (shape==CYLINDER){
