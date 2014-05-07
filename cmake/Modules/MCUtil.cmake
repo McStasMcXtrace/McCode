@@ -13,6 +13,7 @@ macro(installLib path)
     PATTERN "#*"        EXCLUDE  # skip backup files
     PATTERN ".*"        EXCLUDE  # skip hidden files
     PATTERN "*.out"     EXCLUDE  # skip binary files
+    PATTERN "*.*.in"    EXCLUDE  # skip configure processed template files
   )
 endmacro()
 
