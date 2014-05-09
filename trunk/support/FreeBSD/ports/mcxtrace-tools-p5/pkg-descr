@@ -1,0 +1,18 @@
+McXtrace perl tools for aiding in running X-ray simulations.
+
+McXtrace is a tool for simulating X-ray instrumentation and experiments using a
+ray-tracing formalism. Currently the mainuse of McXtrace is in the field of 
+synchrotron beamline instrumentation design, but various other uses have been 
+found, such as designig X-ray telescopes or for laboratory sources. 
+
+This port contains a few perl-based helper tools (including a GUI) to aid the
+user in setting up and running simulations. The tools are:
+mxgui: A Tk/Perl based GUI.
+mxrun: A Script that makes it easy to run sims and perform
+  point scans and simple optimizations.
+mxplot: Tool for plotting McXtrace-generated results.
+mxdisplay: Visual ray-tracing displaying x-ray phton trajectories.  
+mxformatgui: front-end to mxformat to help reformatting data-files (obsolescent).
+mxdaemon: deamon to dynamically monitor and plot incoming results (obsolescent).
+
+WWW: http://www.mcxtrace.org
