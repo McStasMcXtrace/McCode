@@ -29,7 +29,7 @@ GNU_CONFIGURE= yes
 #USE_GMAKE= yes
 #USE_BISON= yes
 
-RUN_DEPENDS= ${LOCALBASE}/mcxtrace/${PORTVERSION}/bin/mcxtrace:/home/erkn/mcxtrace
+RUN_DEPENDS= ${LOCALBASE}/mcxtrace/${PORTVERSION}/bin/mcxtrace:${PORTSDIR}/science/mcxtrace
 
 .include <bsd.port.pre.mk>
 

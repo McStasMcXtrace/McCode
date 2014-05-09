@@ -29,8 +29,8 @@ GNU_CONFIGURE= yes
 #USE_GMAKE= yes
 #USE_BISON= yes
 
-RUN_DEPENDS= ${LOCALBASE}/mcxtrace/${PORTVERSION}/bin/mcxtrace:/home/erkn/mcxtrace\
- ${LOCALBASE}/mcxtrace/${PORTVERSION}/examples:/home/erkn/mcxtrace-comps\
+RUN_DEPENDS= ${LOCALBASE}/mcxtrace/${PORTVERSION}/bin/mcxtrace:${PORTSDIR}/science/mcxtrace\
+ ${LOCALBASE}/mcxtrace/${PORTVERSION}/examples:${PORTSDIR}/science/mcxtrace-comps\
  p5-Tk>=804:${PORTSDIR}/x11-toolkits/p5-Tk\
  PDL>0:${PORTSDIR}/math/PDL\
  p5-PGPLOT>=2.21:${PORTSDIR}/graphics/p5-PGPLOT
