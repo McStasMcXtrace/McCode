@@ -30,11 +30,15 @@ else
     then
 	# Looks like a Debian package - should really be handled via update-alternatives...
 	BINTARGET="/usr/bin"
+	APPTARGET="/usr/share/applications"
+	LOGOTARGET="/usr/share/pixmaps"
     elif [[ ${PREFIX} = /Applications* ]]
     then
 	# Looks like a Mac - dump links in /usr/local/bin
 	BINTARGET="/usr/local/bin"
-	# Also drop a link to the mccode "system folder" as it may otherwise be hard to find for "expert users"
+	APPTARGET="none"
+	LOGOTARGET="none"
+       	# Also drop a link to the mccode "system folder" as it may otherwise be hard to find for "expert users"
 	mkdir -p /usr/local/${FLAVOR}
 	# - Should not be done if called from the 'app bundle' installer - and only once
 	if [[ ${PREFIX} = */Contents/Resources ]]; then
@@ -45,6 +49,8 @@ else
     else
 	# OK - nothing clever then
 	BINTARGET=${PREFIX}/bin
+	APPTARGET="/usr/share/applications"
+	LOGOTARGET="/usr/share/pixmaps"
     fi
     if [ -d ${BINTARGET} ];
     then
@@ -53,6 +59,20 @@ else
 	ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/environment ${FLAVOR}-${VERSION}-environment
     else
 	echo "Sorry, your ${BINTARGET} folder does not exist, dopping link creation"
+    fi
+    if [ -d ${APPTARGET} ];
+    then
+	cd ${APPTARGET}
+	ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/${FLAVOR}-tools-perl-${VERSION}/launcher/*.desktop .
+    else
+	echo "Sorry, your ${APPTARGET} folder does not exist, dopping link creation"
+    fi
+    if [ -d ${LOGOTARGET} ];
+    then
+	cd ${LOGOTARGET}
+	ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/${FLAVOR}-tools-perl-${VERSION}/launcher/*.png .
+    else
+	echo "Sorry, your ${LOGOTARGET} folder does not exist, dopping link creation"
     fi
 fi
 
