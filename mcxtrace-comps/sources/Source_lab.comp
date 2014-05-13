@@ -21,10 +21,14 @@
 * Model of a laboratory x-ray tube, generating x-rays by bombarding a target by electrons.
 * Given a input energy E0 of the electron beam, x-rays are emitted from the accessible emission lines
 * The geometry of the tube is assumed to be:
-*  The electron beam hits a slab of surface material surface at a at a right angle illuminating an area of width by height,
-*  where width is measured along the component X-axis. 
-*  A window is situated at the origin of the component, which is at an angle take_off wrt. the surface plane of the anode. 
-*  The origin of the component is the centre of the exit window with the beam direction (Z) perpendicular to it
+* # The electron beam hits a slab of surface material surface at a right angle illuminating an area of width by height,
+* # where width is measured along the component X-axis.
+* # The centre of the electron beam at the anode surface is the origin of the component.
+* # The Z-axis of the component points at the centre of the exit window (focus_xw by focus yh) 
+* placed at a distance dist from the origin.
+* # The angle between the Z-axis and the anode surface is the take_off angle.
+* For a detailed sketch of the geometry see the componnent manual.
+* 
 * The Bremsstrahlung emitted is modelled using the model of Kramer (1923) as restated in International
 * Tables of Crystallography C 4.1
 * Characteristic radiation is modelled by Gaussian energy profiles with line-energies from Bearden (1967), widths from
@@ -73,7 +77,7 @@ SHARE
     double i[6];/*relative intensity*/
   } xray_mat_data[]={
     {29,8.979 ,0.407,2,{8.02783,8.04778,0,0,0,0},{2.11e-3,2.17e-3,0,0,0,0},{0.51,1.0,0,0,0,0}},
-    {31,10.367,0.0  ,2,{9.22482,9.25174,0,0,0,0},{2.59e-3,2.66e-3,0,0,0,0},{0.51,1.0,0,0,0,0}},
+    {31, I think,10.367,0.0  ,2,{9.22482,9.25174,0,0,0,0},{2.59e-3,2.66e-3,0,0,0,0},{0.51,1.0,0,0,0,0}},
     {42,20.00 ,0.770,5,{17.3743,17.47934,19.5903, 19.6083, 19.965,0},{6.31e-3,6.49e-3,12e-3, 12e-3, 12e-3,0},{0.52,1.0,0.08,0.15,0.03,0}},
     {74,69.525,0.945,2,{57.9817,59.31824,0,0,0,0},{44.9e-3,45.2e-3,0,0,0,0},{0.58,1.0,0,0,0,0}},
     {0,0.0,0.0,0,{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0}}
