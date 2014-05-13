@@ -554,7 +554,7 @@ Transform {
             }           
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
 	      # Line elements for Mantid
-	      if (!($comp =~ /nD_Mantid/i) &&  !($comp =~ /sample/i) &&  !($comp =~ /source/i)) {
+	      if (!($comp =~ /nD_Mantid/i)) {
 		my $looper;
 		for ($looper =  0; $looper < $count-1; $looper++) {
 		  # Coordinates to look at
