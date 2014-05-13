@@ -196,6 +196,10 @@ macro(setupMCCODE FLAVOR)
     set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postinst;")
     set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/work/support/postrm;")
 
+    # Define dependencies for gcc and the like
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "build-essential")
+    set(CPACK_RPM_PACKAGE_REQUIRES "gcc")
+    
     # Generate postinst and postrm scripts
     configure_file(
       cmake/support/install-scripts/postinst.in
