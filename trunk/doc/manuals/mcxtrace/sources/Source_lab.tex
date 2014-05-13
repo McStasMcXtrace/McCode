@@ -1,29 +1,46 @@
 \section{Source\_lab: X-ray tube laboratory source}
-\label{s:source-div}
+\label{s:source-lab}
 \index{Sources!X-ray tube laboratory source}
 
 \mcdoccomp{sources/Source_lab.parms}
 
 \textbf{Source\_lab} is a model of a laboratory X-ray tube. An electron ray hits a
-target of specified material. Currently, only single materiual targets are
+target of specified material. Currently, only single material targets are
 allowed\footnote{To model multiple material targets one could construct a model with two
 or more sources simultaneously. This has consequences for intensity of the source which should be downscaled accordingly.}.
 
-An electron beam of transverse crossection ($x_0,z_0$) and energy $E_0$
+An electron beam of rectangular transverse crossection (\emph{width,height}) and energy \emph{E0}
 impinges on the target of material. Wrt. the electron beam, the target is
 considereded infinitely thick. The beam is considered to have uniform
 intenisty. Thus, the spatial distribution of x-ray generation will be
 exponential in the depth of the material.
 
-Further, an exit aperture is defined with dimensions ($x_{width},y_{height}$). The centre of the aperture is situated at a distance $wd$ m from where the electron beam hits the target slab at an elevation of $take\_off$ (see Figure~\ref{f:source_lab}).  
-Note that the center of the exit aperture is the reference point of the
-\verb+Source\_lab+ coordinate system. In other words, the position specified in
-the instrument file \verb+AT (x,y,z) RELATIVE somewhere+ is the center of the
-exit aperture. Also note that the exit aperture is merely an opening. If the material absorption of the window, e.g. Be, is to be taken into account a \verb+Filter.comp+ (section~\ref{s:filter}) could be inserted after the exit aperture. 
+Further, an exit aperture is defined with dimensions
+(\emph{focus\_xw,focus\_yh}). The centre of the aperture is situated at a
+distance \emph{dist} \si{m} from where the electron beam hits the target slab
+at an elevation of $take\_off$ (see Figure~\ref{f:source_lab}).  
+
+The \textbf{Source\_lab} coordinate system has its origin in the center of the
+elctron beam at the surface of the
+anode material and is oriented such that the z-axis points at the center of the
+exit window, and the x-axis is parallel to the \emph{width} of the electron
+beam. 
+
+Note that the exit aperture is merely an opening. If the
+material absorption of a window, e.g. Be, is to be taken into account a
+\textbf{Filter} (section~\ref{s:filter}) should be inserted after the exit
+aperture. 
 
 \begin{figure}
 \label{f:source_lab}
-\caption{Geometry of the \texttt{Source\_lab} component} 
+\centering
+\def\svgwidth{\columnwidth}
+%\input{../figures/source_lab.pdf_tex}
+\import{figures/}{source_lab.pdf_tex}
+\caption{Geometry of the \textbf{Source\_lab} component. A electron beam impinges at a right angle on
+an anode material, where X-rays are generated. The Origin is defined to be a the centre of the electron beam
+on the anode surface, and the coodrinate system is oriented such that the $\boldsymbol{z}$-axis point towards
+the exit aperture.} 
 \end{figure}
 
 For each photon to be generated, a monte carlo choice is made to either
@@ -47,5 +64,5 @@ spectral widths taken from \cite{krause1979natural}.
 An example of beam spectral characteristics emitted from a Cu-anode targate detected $1$ mm  from an exit aperture of $1\times 1$ cm $10$ cm fround the target at a $take\_off$ angle of $6^\circ$. is seen in figure~\ref{f:source_lab_spectrum}.
 \begin{figure}
 \label{f:source_lab_spectrum}
-\caption{Intensity vs. wavlenghth for a Cu-anode laboratory source.}
+\caption{Intensity vs. wavelenghth for a Cu-anode laboratory source.}
 \end{figure}
