@@ -136,6 +136,9 @@ configure_file(lib/tools/perl/mccode_reconfigure.in work/mccode_reconfigure @ONL
 configure_file(perl_env_header.pl.in work/perl_env_header.pl @ONLY immediate)
 configure_file(perl_fix.sh.in work/perl_fix.sh @ONLY immediate)
 
+# Configure launcher
+configure_file(lib/tools/launcher/McCode.desktop.in work/@NAME@.desktop @ONLY)
+
 exec_program(chmod ARGS 755  work/perl_env_header.pl work/perl_fix.sh)
 
 if(NOT WINDOWS)
@@ -151,6 +154,11 @@ if(NOT WINDOWS)
           "${WORK}/mccode_reconfigure"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}/perl/"
   )
+  
+  install(
+    FILES "${WORK}/@NAME@.desktop"
+    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}/launcher/"
+  ) 
 
   # Generate man pages
   set(LIST display doc gui plot run)
