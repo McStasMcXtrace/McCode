@@ -14,6 +14,10 @@ components your simulations will be biased. The aperture is simply there to prov
 If a \textit{spectrum\_file} is not supplied, the xray
 is given a weight which is the total wavelength-integrated intensity downscaled
 by the solid angle subtended by the defining aperture.
+The Energy/wavelength spectrum of the emitted photons is centered around \textit{E0} or  $\lambda 0$ with a width of \textit{dE} or $d\lambda$ respectively. 
+\textit{E0} takes precedence over $\lambda0$. Thus if $E0\neq0$ the the combination \textit{E0, dE} is used, $\lambda0,d\lambda$ otherwise.
+If \textit{gauss} (the default) is set to be non-zero the spectrum is Gaussian with mean \textit{E0} ($\lambda 0$) and standard deviation \textit{dE} ($d\lambda$), otherwise the
+spectrum is uniform in \textit{E0}$\pm$\textit{dE} ($\lambda 0\pm d\lambda$).
 
 If a \textit{spectrum\_file} \emph{is} supplied, a slightly different strategy is adopted. In this case the
 wavelength/energy range implied by the datafile is sampled unformly and each ray is assigned
@@ -24,7 +28,3 @@ Currently only completely coherent or fully incoherent beams are supported. If
 \textit{randomphase} is specified emitted photons will be assigned a random phase, otherwise it is
 set to the value of \textit {phase}.
 
-The Energy/wavelength spectrum of the emitted photons is centered around \textit{E0} or  $\lambda 0$ with a width of \textit{dE} or $d\lambda$ respectively. 
-\textit{E0} takes precedence over $\lambda0$. Thus if $E0\neq0$ the the combination \textit{E0, dE} is used, $\lambda0,d\lambda$ otherwise.
-If \textit{gauss} (the default) is set to be non-zero the spectrum is Gaussian with mean \textit{E0} ($\lambda 0$) and standard deviation \textit{dE} ($d\lambda$), otherwise the
-spectrum is uniform in \textit{E0}$\pm$\textit{dE} ($\lambda 0\pm d\lambda$).
