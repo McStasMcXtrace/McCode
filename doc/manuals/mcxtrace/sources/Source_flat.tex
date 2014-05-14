@@ -7,11 +7,12 @@ A simple source model, with a flat surface emitting photons. The surface in the
 $xy$-plane is specified as a rectangle with dimensions
 $x_{width}\times y_{height}$ m, or as a circle w radius,$r$. 
 The initial xray position is chosen randomly in the source surface --- its
-wavevector is chosen randomly (exactly as in the case of \verb+Source\_pt+ (section \ref{source_pt}) in the defining aperture with height $h$ and
+wavevector is chosen randomly (exactly as in the case of \textbf{Source\_pt}
+(section \ref{source-pt}) in the defining aperture with height $h$ and
 width $w$ placed at $(0,0,dist)$. 
 
-Just as for \verb+Source\_pt+ the aperture is for efficiency purposes and, if misused, may cause biasing
+Just as for \textbf{Source\_pt} the aperture is for efficiency purposes and, if misused, may cause biasing.
 
-A spectrum file may be supplied as for \verb+Source\_pt+.
-
-Currently only fully coherent or incoherent beams are supported. If $phase$ is set (and not $randomphase$ which takes precedence) a phase is set such that a photon emitted from $(x,y,0)$ will be in phass with a photon at $(0,0,0)$, which has the phase $phase$..
+With the exception of source size related parameters, all other parameters are identical to \textbf{Source\_pt} 
+Not that this also applies to coherence and photon phase. If \textit{randomphase}$=0$ then a photon emitted from $(x_0,y_0,0)$ will in phase with a photon
+emitted from $(x_1,y_1,0)$. I.e. full transversal coherence.
