@@ -3,7 +3,13 @@
 \index{Sources!Source\_gaussian}
 \mcdoccomp{sources/Source_gaussian.parms}
 
-A simplified version of a completely incoherent source of horizontal and vertical sizes $sig_x$ and $sig_y$ respectively with angular divergence $sigPr_x$ and $sigPr_y$. Can be well used to model an undulator source emitting a photon beam that has gaussian distribution.
-At first, there is a random seeding of photons (the way they are defined within the code, i.e. their position's coordinates and their wavevector's projections) emanating from the earlier specified source area. Even though the seeding is random, it is still happening in accordance with gaussian distribution. 
-Secondly, in accordance with laws of geometrical optics, at a certain significant distance contribution of divergence plays a great part in formation of the final beam size.
-Therefore at a $dist$ one gets a beam with intensity, proportional to initial $flux$. 
+A simplified version of a completely incoherent source of horizontal and
+vertical sizes \textit{sig\_x} and \textit{sig\_y} respectively with angular divergence
+\textit{sigPr\_x} and \textit{sigPr\_y}. Can be used to model an undulator source emitting
+a photon beam that has gaussian distribution.
+This naturally generates a larger Gaussian profile at a distance. A sampling window at $(0,0,\mathit{dist})$
+may be specified by the parameters \textit{focus\_xw} and \textit{focus\_yh}, which restricts the
+sampling phases space of the emitted photons (See section~\ref{source\_pt} for details).
+
+The energy spectrum emitted by \textbf{Source\_gaussian} source is completely analogous to \textbf{Source\_pt}, as is 
+its photon phase functionality.
