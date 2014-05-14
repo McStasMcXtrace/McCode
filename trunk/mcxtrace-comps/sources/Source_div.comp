@@ -56,8 +56,8 @@
 DEFINE COMPONENT Source_div
 DEFINITION PARAMETERS (string spectrum_file=NULL)
 SETTING PARAMETERS (xwidth, yheight, focus_aw, focus_ah, 
-    E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, incoherent=1, phase=0)
-OUTPUT PARAMETERS (prms,thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist)
+    E0=0, dE=0, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, incoherent=1, randomphase=1, phase=0)
+OUTPUT PARAMETERS (prms, p_init, dist)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -70,7 +70,7 @@ SHARE
 
 DECLARE
 %{
-  double thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist;
+  double  p_init, dist;
   struct {
     double K,dK,xmin,xmax,xw_2,focus_xw_2,ymin,ymax,yh_2,focus_yh_2,pmul,pint;
     t_Table T;
@@ -116,6 +116,11 @@ INITIALIZE
     prms.pmul=1;
   }
   prms.pmul*=1.0/((double) mcget_ncount());
+
+  if (incoherent!=randomphase){
+    fprintf("Warning(%s): Parameter incoherent=%d overridden by randomphase=%d\n",NAME_CURRENT_COMP,(int)incoherent, (int) randomphase);
+    incoherent=randomphase;
+  }
 
 %}
 
