@@ -252,7 +252,7 @@
   %E
  */
 
-DEFINE COMPONENT Protein_crystal
+DEFINE COMPONENT Single_crystal
 DEFINITION PARAMETERS(mosaic_AB=Mosaic_AB_Undefined)
 SETTING PARAMETERS(string reflections=0, string geometry=0,
             xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
