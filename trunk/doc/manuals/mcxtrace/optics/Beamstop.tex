@@ -16,9 +16,8 @@ of the (real) beamstop, or penetrate the absorbing material.
 Further, the holder of the beamstop is not simulated.
 
 \textbf{Beamstop} can be either circular or rectangular.
-The input parameters of \textbf{Beamstop} are either height and width $(x_{width},y_{height})$ or the four coordinates,
-$(x_\mathrm{min}, x_\mathrm{max}, y_\mathrm{min}, y_\mathrm{max})$
-defining the opening of a rectangle, or the radius $r$ of
+The input parameters of \textbf{Beamstop} are either height and width \textit{(xwidth, yheight)} or the four coordinates,\textit{(xmin, xmax, ymin, ymax)}
+defining the opening of a rectangle, or the \textit{radius} of
 a circle, depending on which parameters are specified.
 
 If the "direct beam" (e.g. after a monochromator or sample) should not be
@@ -28,9 +27,9 @@ without the use of \textbf{Beamstop}:
 This method is useful for instance in the case where only photons 
 scattered from a sample are of interest. 
 The example below removes the direct beam and 
-any background signal from other parts of the instrument
+any background signal from other parts of the beamline
 \begin{verbatim}
-COMPONENT MySample=V_sample(...) AT (...)
+COMPONENT MySample=PowderN(...) AT (...)
 EXTEND
 %{
   if (!SCATTERED) ABSORB;
