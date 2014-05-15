@@ -22,12 +22,12 @@
 *
 * %P
 * Input parameters:
-* r - radius of curvature (circular approximation at the tip of the profile) [m];
-* yheight - the CRL's dimensions along Y, aka aperture[m];
-* xwidth - the CRL's dimensions along X [m];
-* d - distance between two surfaces of the lens along the propagation axis;
-* N - amount of single lenses in a stack.
-* T - transmission of the lens
+* r: radius of curvature (circular approximation at the tip of the profile) [m]
+* yheight: the CRL's dimensions along Y, aka aperture. [m]
+* xwidth: the CRL's dimensions along X. [m]
+* d: distance between two surfaces of the lens along the propagation axis. [m]
+* N: amount of single lenses in a stack. [m]
+* T: transmission of the lens. [m]
 * 
 * attenuation coefficient mu is taken from the NIST database and 
 * Be.txt
@@ -38,7 +38,7 @@
 
 DEFINE COMPONENT Lens_parab
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (r=0.5e-3,yheight=1.4e-3,xwidth=1.4e-3,d=.1e-3,T=1,N=1,deltaN=0)
+SETTING PARAMETERS (r=0.5e-3,yheight=1.4e-3,xwidth=1.4e-3,d=.1e-3,T=0,N=1)
 OUTPUT PARAMETERS (prms,parab)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -276,11 +276,9 @@ TRACE
 
   rhoel= f*Na*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
   
-  if (deltaN==0){
-    delta= 2.0*M_PI*Re*rhoel/(k*k);
-  } else delta=deltaN;
+  delta= 2.0*M_PI*Re*rhoel/(k*k);
   beta=mu/(2.0*k);          /*mu and k in  A^-1*/
-  //printf("Delta=%g\n",delta);
+  
   Refractive_Index_Re = 1.0-delta; 
   Refractive_Index_Im = beta; 
 
