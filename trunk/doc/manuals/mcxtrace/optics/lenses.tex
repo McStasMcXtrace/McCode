@@ -2,19 +2,8 @@
 \label{lens-parab}
 \index{Optics!Lens\_parab}
 
-\component{Lens\_parab}{System}{$r$,$yheight$,$xwidth$,$d$,$T$,$N$,$deltaN$,$material\_database$}
-Parametrical description of an ideal x-ray lens has two uncoupled attributes $xwidth$ and $yheight$ that correspond to geometrical horizontal and vertical apertures consequently.
+An X-ray refractive lens, often referred to as a Compund Refractive Lens (CRL), is a fairly new type of device, which has gained popularity in
+the last few years. An early study showing the feasiblity of such devices may be found in~\cite{snigirev1996}. As the refractive index of X-rays
+is $n\approx1$ a number of lenses, stacked together is usually necessary to bring the focal length to practical values. 
+\MCX includes a few lens components, which all have slightly different charactertics.
 
-This is a model of an ideal x-ray lens that has a paraboloid of rotation as its profile. Such surface allows it to focus in two dimensions. A user-defined number $N$ of individual lenses configures a compound refractive lens (CRL).
-
-The logic behind the model is the following: a photon interacts with the surface of the lens at a certain angle $\Theta$, which alters in accordance with Snell's law upon photon's entering the lens's material. The combination of the refractive process inside material (that is characterized by a material datafile) and the interaction with a geometrical surface results in a photon's new trajectory, i.e. in focusing.
-
-$deltaN$ is a refractive index decrement $\delta$ multiplied by the number of the lenses in case of a CRL, this number allows to set in a particular value for the parameter, bypassing the material datafile (in case when it isn't available). It is also appropriate when using a thin lens approximation to a thick lens problem.  
-  
-\section{Lens\_parab\_Cyl: an x-ray lens of a parabolic cylinder profile; could extend to many lenses, forming a compound refractive lens (CRL)}
-\label{lens-parab-cyl}
-\index{Optics! Lens\_parab\_Cyl}
-
-\component{Lens\_parab\_Cyl}{System}{$r$,$yheight$,$xwidth$,$d$,$T$,$N$,$deltaN$,$material\_database$}
-
-This component is based on the same logical approach as the {Lens\_parab} with one significant difference - geometrical surface. Parabolic cylinder (parabolic curvature along the vertical axes only, invariant along the horizontal) allows to focus the beam in one dimension - vertical.
