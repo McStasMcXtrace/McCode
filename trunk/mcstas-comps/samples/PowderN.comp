@@ -210,9 +210,7 @@ SETTING PARAMETERS (string reflections=0, string geometry=0,
                     pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
                     DW=0, nb_atoms=1, d_phi=0, p_interact=0,
                     concentric=0, density=0, weight=0, barns=1, Strain=0)
-OUTPUT PARAMETERS (line_info, my_s_v2, XsectionFactor,
-  my_s_v2_sum, my_a_v, my_inc, q_v, w_v, columns,
-  radius_i, xwidth_i, yheight_i, zdepth_i, offdata)
+OUTPUT PARAMETERS (line_info, columns, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 SHARE
 %{
@@ -260,6 +258,15 @@ SHARE
       char   type;  /* interaction type of event t=Transmit, i=Incoherent, c=Coherent */
       double dq;    /* wavevector transfer [Angs-1] */
       double Epsilon; /* global strain in ppm */
+      double XsectionFactor;
+      double my_s_v2_sum;
+      double my_a_v;
+      double my_inc;
+      double *w_v,*q_v, *my_s_v2;
+      double radius_i,xwidth_i,yheight_i,zdepth_i;
+      double v; /* last velocity (cached) */
+      double Nq;
+      int    nb_reuses, nb_refl, nb_refl_count;
     };
 
   off_struct offdata;
@@ -449,7 +456,20 @@ SHARE
     info->count = list_count;
 
     return(list_count);
+  } /* read_line_data */
+  
+int calc_xsect(double v, double *qv, double *my_sv2, int count, double *sum) {
+  int    Nq = 0, line=0;
+  *sum=0;
+  for(line=0; line<count; line++) {
+    if (qv[line] <= 2*v) { /* q < 2*kf: restrict structural range */
+      *sum += my_sv2[line];
+      if (Nq < line+1) Nq=line+1; /* determine maximum line index which can scatter */
+    } else break;
   }
+  return(Nq);
+} /* calc_xsect */
+
 #endif /* !POWDERN_DECL */
 
 %}
@@ -457,12 +477,8 @@ SHARE
 DECLARE
 %{
   struct line_info_struct line_info;
-  double my_s_v2_sum=0;
-  double my_a_v=0, my_inc=0;
-  double *w_v,*q_v, *my_s_v2;
+
   int    columns[9] = format;
-  double XsectionFactor;
-  double radius_i=0, xwidth_i=0, yheight_i=0, zdepth_i=0;
 
   off_struct offdata;
 %}
@@ -482,6 +498,10 @@ INITIALIZE
   line_info.shape    = 0;
   line_info.flag_warning=0;
   line_info.Epsilon  = Strain;
+  line_info.radius_i =line_info.xwidth_i=line_info.yheight_i=line_info.zdepth_i=0;
+  line_info.v  = 0;
+  line_info.Nq = 0;
+  line_info.nb_reuses = line_info.nb_refl = line_info.nb_refl_count = 0;
   for (i=0; i< 9; i++) line_info.column_order[i] = columns[i];
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
 
@@ -519,29 +539,29 @@ INITIALIZE
 
   if (thickness>0) {
     if (radius>thickness) {
-      radius_i=radius-thickness;
+      line_info.radius_i=radius-thickness;
     } else {
-      if (xwidth>2*thickness)  xwidth_i =xwidth -2*thickness;
-      if (yheight>2*thickness) yheight_i=yheight-2*thickness;
-      if (zdepth>2*thickness)  zdepth_i =zdepth -2*thickness;
+      if (xwidth>2*thickness)  line_info.xwidth_i =xwidth -2*thickness;
+      if (yheight>2*thickness) line_info.yheight_i=yheight-2*thickness;
+      if (zdepth>2*thickness)  line_info.zdepth_i =zdepth -2*thickness;
     }
   } else if (thickness<0) {
     thickness = fabs(thickness);
     if (radius) {
-      radius_i=radius;
-      radius=radius_i+thickness;
+      line_info.radius_i=radius;
+      radius=line_info.radius_i+thickness;
     } else {
-      xwidth_i =xwidth;
-      yheight_i=yheight;
-      zdepth_i =zdepth;
+      line_info.xwidth_i =xwidth;
+      line_info.yheight_i=yheight;
+      line_info.zdepth_i =zdepth;
       xwidth   =xwidth +2*thickness;
       yheight  =yheight+2*thickness;
       zdepth   =zdepth +2*thickness;
     }
   }
 
-  if (!yheight_i) {
-    yheight_i = yheight;
+  if (!line_info.yheight_i) {
+    line_info.yheight_i = yheight;
   }
   if (p_interact) {
     if (p_interact < p_inc) { double tmp=p_interact; p_interact=p_inc; p_inc=tmp; }
@@ -602,34 +622,34 @@ INITIALIZE
   }
 
   if (line_info.flag_barns) { /* Factor 100 to convert from barns to fm^2 */
-    XsectionFactor = 100;
+    line_info.XsectionFactor = 100;
   } else {
-    XsectionFactor = 1;
+    line_info.XsectionFactor = 1;
   }
 
   if (line_info.V_0 && i) {
     L = line_info.list;
 
-    q_v = malloc(line_info.count*sizeof(double));
-    w_v = malloc(line_info.count*sizeof(double));
-    my_s_v2 = malloc(line_info.count*sizeof(double));
-    if (!q_v || !w_v || !my_s_v2)
+    line_info.q_v = malloc(line_info.count*sizeof(double));
+    line_info.w_v = malloc(line_info.count*sizeof(double));
+    line_info.my_s_v2 = malloc(line_info.count*sizeof(double));
+    if (!line_info.q_v || !line_info.w_v || !line_info.my_s_v2)
       exit(fprintf(stderr,"PowderN: %s: ERROR allocating memory (init)\n", NAME_CURRENT_COMP));
     for(i=0; i<line_info.count; i++)
     {
-      my_s_v2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
+      line_info.my_s_v2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
                  /(line_info.V_0*line_info.V_0*V2K*V2K)
-                 *(L[i].j * L[i].F2 / L[i].q)*XsectionFactor;
+                 *(L[i].j * L[i].F2 / L[i].q)*line_info.XsectionFactor;
       /* Is not yet divided by v^2 */
       /* Squires [3.103] */
-      q_v[i] = L[i].q*K2V;
-      w_v[i] = L[i].w;
+      line_info.q_v[i] = L[i].q*K2V;
+      line_info.w_v[i] = L[i].w;
     }
   }
   if (line_info.V_0) {
     /* Is not yet divided by v */
-    my_a_v = pack*line_info.sigma_a/line_info.V_0*2200*100;   // Factor 100 to convert from barns to fm^2
-    my_inc = pack*line_info.sigma_i/line_info.V_0*100;   // Factor 100 to convert from barns to fm^2
+    line_info.my_a_v = pack*line_info.sigma_a/line_info.V_0*2200*100;   // Factor 100 to convert from barns to fm^2
+    line_info.my_inc = pack*line_info.sigma_i/line_info.V_0*100;   // Factor 100 to convert from barns to fm^2
 
     printf("PowderN: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn] reflections=%s\n",
       NAME_CURRENT_COMP, line_info.V_0, line_info.sigma_a, line_info.sigma_i, reflections && strlen(reflections) ? reflections : "NULL");
@@ -641,22 +661,22 @@ TRACE
   double t0, t1, t2, t3, v, v1,l_full, l, l_1, dt, alpha0, alpha, theta, my_s, my_s_n;
   double solid_angle, neutrontype;
   double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z, nx, ny, nz, pmul=1;
-  int    line, Nq;
+  int    line;
   char   intersect=0;
   char   intersecti=0;
 
   line_info.type = '\0';
 
-  if (line_info.V_0 && (line_info.count || my_inc)) {
+  if (line_info.V_0 && (line_info.count || line_info.my_inc)) {
     if (line_info.shape == 1) {
       intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
-      intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
+      intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, line_info.xwidth_i, line_info.yheight_i, line_info.zdepth_i);
     } else if (line_info.shape == 0) {
       intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
-      intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
+      intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, line_info.radius_i, line_info.yheight_i);
     } else if (line_info.shape == 2) {
       intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
-      intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, radius_i);
+      intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
     } else if (line_info.shape == 3) {
       intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
       intersecti = 0;
@@ -690,14 +710,14 @@ TRACE
     l_full = v * (t3 - t2 + t1 - t0);
 
     /* Calculate total scattering cross section at relevant velocity */
-    my_s_v2_sum=0;
-    Nq = 0;
-    for(line=0; line<line_info.count; line++) {
-      if (q_v[line] <= 2*v) { /* q < 2*kf: restrict structural range */
-        my_s_v2_sum+=my_s_v2[line];
-        if (Nq < line+1) Nq=line+1; /* determine maximum line index which can scatter */
+    if ( fabs(v - line_info.v) < 1e-6) {
+        line_info.nb_reuses++;
+      } else {
+        line_info.Nq = calc_xsect(v, line_info.q_v, line_info.my_s_v2, line_info.count, &line_info.my_s_v2_sum);
+        line_info.v = v;
+        line_info.nb_refl += line_info.Nq;
+        line_info.nb_refl_count++;
       }
-    }
 
     if (t3 < 0) {
       t3=0; /* Already past sample?! */
@@ -712,7 +732,7 @@ TRACE
         dt = dt * (t3 - t2) + (t2-t0) ; /* Possibly also 'backside' part */
       }
 
-      my_s = my_s_v2_sum/(v*v)+my_inc;
+      my_s = line_info.my_s_v2_sum/(v*v)+line_info.my_inc;
       /* Total attenuation from scattering */
 
       neutrontype = rand01();
@@ -738,13 +758,13 @@ TRACE
       if (neutrontype == 3) { /* Make coherent scattering event */
         if (line_info.count > 0) {
           /* choose line */
-          if (Nq > 1) line=floor(Nq*rand01());  /* Select between Nq powder lines */
+          if (line_info.Nq > 1) line=floor(line_info.Nq*rand01());  /* Select between Nq powder lines */
           else line = 0;
-          if (w_v[line])
-            arg = q_v[line]*(1+w_v[line]*randnorm())/(2.0*v);
+          if (line_info.w_v[line])
+            arg = line_info.q_v[line]*(1+line_info.w_v[line]*randnorm())/(2.0*v);
           else
-            arg = q_v[line]/(2.0*v);
-            my_s_n = my_s_v2[line]/(v*v);
+            arg = line_info.q_v[line]/(2.0*v);
+            my_s_n = line_info.my_s_v2[line]/(v*v);
           if(fabs(arg) > 1)
             ABSORB;                   /* No bragg scattering possible*/
           theta = asin(arg);          /* Bragg scattering law */
@@ -798,13 +818,13 @@ TRACE
           /* Since now scattered and new direction given, calculate path to exit */
           if (line_info.shape == 1) {
             intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
-            intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
+            intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, line_info.xwidth_i, line_info.yheight_i, line_info.zdepth_i);
           } else if (line_info.shape == 0) {
             intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
-            intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
+            intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, line_info.radius_i, line_info.yheight_i);
           } else if (line_info.shape == 2) {
             intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
-            intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, radius_i);
+            intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
           } else if (line_info.shape == 3) {
             intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
             intersecti = 0;
@@ -836,12 +856,13 @@ TRACE
 
           l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
 
-          pmul  = Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
+          pmul  = line_info.Nq*l_full*my_s_n*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))
+                                  /(1-(p_inc+p_transmit));
           /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
           if (d_phi) pmul *= alpha/PI;
 
           line_info.type = 'c';
-          line_info.dq = q_v[line]*V2K;
+          line_info.dq = line_info.q_v[line]*V2K;
         } /* else transmit <-- No powder lines in file */
       }  /* Coherent scattering event */
       else if (neutrontype == 2) {  /* Make incoherent scattering event */
@@ -861,13 +882,13 @@ TRACE
         /* Since now scattered and new direction given, calculate path to exit */
         if (line_info.shape == 1) {
           intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
-          intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
+          intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, line_info.xwidth_i, line_info.yheight_i, line_info.zdepth_i);
         } else if (line_info.shape == 0) {
           intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
-          intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
+          intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, line_info.radius_i, line_info.yheight_i);
         } else if (line_info.shape == 2) {
           intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
-          intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, radius_i);
+          intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, line_info.radius_i);
         } else if (line_info.shape == 3) {
           intersect  = off_intersect  (&t0, &t3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
           intersecti = 0;
@@ -899,7 +920,7 @@ TRACE
 
         l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
 
-        pmul = l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(p_inc);
+        pmul = l_full*line_info.my_inc*exp(-(line_info.my_a_v/v+my_s)*(l+l_1))/(p_inc);
         pmul *= solid_angle/(4*PI);
 
         line_info.type = 'i';
@@ -908,7 +929,7 @@ TRACE
       else if (neutrontype == 1) {
         /* Make transmitted (absorption-corrected) event */
         /* No coodinate changes here, simply change neutron weight */
-        pmul = exp(-(my_a_v/v+my_s)*(l))/(p_transmit);
+        pmul = exp(-(line_info.my_a_v/v+my_s)*(l))/(p_transmit);
 
         line_info.type = 't';
       }
@@ -921,12 +942,24 @@ TRACE
 FINALLY
 %{
   free(line_info.list);
-  free(q_v);
-  free(w_v);
-  free(my_s_v2);
+  free(line_info.q_v);
+  free(line_info.w_v);
+  free(line_info.my_s_v2);
   if (line_info.flag_warning)
     fprintf(stderr, "PowderN: %s: Error message was repeated %i times with absorbed neutrons.\n",
       NAME_CURRENT_COMP, line_info.flag_warning);
+      
+  /* in case this instance is used in a SPLIT, we can recommend the 
+     optimal iteration value */
+  if (line_info.nb_refl_count) {
+    double split_iterations = (double)line_info.nb_reuses/line_info.nb_refl_count + 1;
+    double split_optimal    = (double)line_info.nb_refl/line_info.nb_refl_count;
+    if (split_optimal > split_iterations + 5)
+      printf("PowderN: %s: you may highly improve the computation efficiency by using\n"
+        "    SPLIT %i COMPONENT %s=Single_crystal(order=1, ...)\n"
+        "  in the instrument description %s.\n", 
+        NAME_CURRENT_COMP, (int)split_optimal, NAME_CURRENT_COMP, mcinstrument_source);
+  }
 
 %}
 
@@ -971,13 +1004,13 @@ MCDISPLAY
       line(xmax, ymin, zmin, xmax, ymin, zmax);
       line(xmin, ymax, zmin, xmin, ymax, zmax);
       line(xmax, ymax, zmin, xmax, ymax, zmax);
-      if (zdepth_i) {
-        xmin = -0.5*xwidth_i;
-        xmax =  0.5*xwidth_i;
-        ymin = -0.5*yheight_i;
-        ymax =  0.5*yheight_i;
-        zmin = -0.5*zdepth_i;
-        zmax =  0.5*zdepth_i;
+      if (line_info.zdepth_i) {
+        xmin = -0.5*line_info.xwidth_i;
+        xmax =  0.5*line_info.xwidth_i;
+        ymin = -0.5*line_info.yheight_i;
+        ymax =  0.5*line_info.yheight_i;
+        zmin = -0.5*line_info.zdepth_i;
+        zmax =  0.5*line_info.zdepth_i;
         multiline(5, xmin, ymin, zmin,
                   xmax, ymin, zmin,
                   xmax, ymax, zmin,
@@ -994,10 +1027,10 @@ MCDISPLAY
         line(xmax, ymax, zmin, xmax, ymax, zmax);
       }
     } if (line_info.shape == 2) { /* sphere */
-      if (radius_i) {
-        circle("xy",0,0,0,radius_i);
-        circle("xz",0,0,0,radius_i);
-        circle("yz",0,0,0,radius_i);
+      if (line_info.radius_i) {
+        circle("xy",0,0,0,line_info.radius_i);
+        circle("xz",0,0,0,line_info.radius_i);
+        circle("yz",0,0,0,line_info.radius_i);
       }
       circle("xy",0,0,0,radius);
       circle("xz",0,0,0,radius);
