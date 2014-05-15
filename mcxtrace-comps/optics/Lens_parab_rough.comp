@@ -30,7 +30,6 @@
 * T - transmission of the lens
 * rough_xy [rms] - waviness along x and y
 * rough_z [rms] -waviness along z
-* deltaN- auxiliary parameter = delta*Number of lenses, valuable in cases when applying thin lens approximation to thick lens properties.
 * 
 * attenuation coefficient mu is taken from the NIST database and 
 * Be.txt
@@ -41,7 +40,7 @@
 
 DEFINE COMPONENT Lens_parab_rough
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (r=0.5e-3,yheight=1.4e-3,xwidth=1.4e-3,d=.1e-3,T=.99,N=1,deltaN=0,rough_z=0,rough_xy=0)
+SETTING PARAMETERS (r=0.5e-3,yheight=1.4e-3,xwidth=1.4e-3,d=.1e-3,T=.99,N=1,rough_z=0,rough_xy=0)
 OUTPUT PARAMETERS (prms,parab)
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 
@@ -300,9 +299,7 @@ TRACE
 
   rhoel= f*Na*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
   
-  if (deltaN==0){
-    delta= 2.0*M_PI*Re*rhoel/(k*k);
-  } else delta=deltaN;
+  delta= 2.0*M_PI*Re*rhoel/(k*k);
   //beta=mu/(2.0*k);          /*mu and k in  A^-1*/
   //printf("Delta=%g\n",delta);
   Refractive_Index_Re = 1.0-delta; 

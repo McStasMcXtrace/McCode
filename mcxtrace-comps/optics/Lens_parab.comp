@@ -22,12 +22,12 @@
 *
 * %P
 * Input parameters:
-* r: radius of curvature (circular approximation at the tip of the profile) [m]
-* yheight: the CRL's dimensions along Y, aka aperture. [m]
-* xwidth: the CRL's dimensions along X. [m]
-* d: distance between two surfaces of the lens along the propagation axis. [m]
-* N: amount of single lenses in a stack. [m]
-* T: transmission of the lens. [m]
+* r: Radius of curvature (circular approximation at the tip of the profile) [m]
+* yheight: The CRL's dimensions along Y, aka aperture. [m]
+* xwidth: The CRL's dimensions along X. [m]
+* d: Distance between two surfaces of the lens along the propagation axis. [m]
+* N: Number of single lenses in a stack. [m]
+* T: Transmission of the lens. [m]
 * 
 * attenuation coefficient mu is taken from the NIST database and 
 * Be.txt
