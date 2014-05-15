@@ -61,13 +61,13 @@ SHARE
   incom intersection_lens_parab(incom a,lens b){
     incom result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};  
     int i;
-    double A,B,C,D,r;
+    double A,B,C,D,rr;
     double t[2],p[3],knorm[3],k[3],pos1_tmp[3],pos_tmp[3];
   
     double nxn,nyn,nzn,Nx,Ny,Nz,NORM,Knorm;
     double cos_theta,cos_theta1,Arg,Arg1,s,q;
-    double k_new[3],k_new1[3],M,Sign,d;
-    double yheight,xwidth;
+    double k_new[3],k_new1[3],M,Sign,dd;
+    double yh,xw;
     
     double tx,ty,tz,tnorm,txn,tyn,tzn;
     double v,w;
@@ -83,16 +83,16 @@ SHARE
     knorm[1]=k[1]/Knorm; 
     knorm[2]=k[2]/Knorm;
     
-    r=b.constants[0]; 
-    yheight=b.constants[1]; 
-    xwidth=b.constants[2]; 
-    d=b.constants[3]; 
+    rr=b.constants[0];
+    yh=b.constants[1];
+    xw=b.constants[2];
+    dd=b.constants[3];
     M=b.constants[4]; 
     Sign=b.constants[5];
   
     A=knorm[0]*knorm[0]+knorm[1]*knorm[1]; 
-    B= 2.0*(p[0]*knorm[0]+p[1]*knorm[1] - Sign*r*knorm[2]); 
-    C=p[0]*p[0]+p[1]*p[1] - Sign*2*r*p[2] + Sign*r*2*d; 
+    B= 2.0*(p[0]*knorm[0]+p[1]*knorm[1] - Sign*rr*knorm[2]); 
+    C=p[0]*p[0]+p[1]*p[1] - Sign*2*rr*p[2] + Sign*rr*2*dd; 
     D=B*B-4.0*A*C;     
     
     if (D<0) { /*ray does not intersect the parabola*/
@@ -122,11 +122,11 @@ SHARE
 	  pos_tmp[i]=p[i]+t[0]*knorm[i]; 
 	  pos1_tmp[i]=p[i]+t[1]*knorm[i];
 	} 
-	if ( fabs(pos_tmp[1])<=fabs(yheight/2) && fabs(pos_tmp[0])<=fabs(xwidth/2) ){
+	if ( fabs(pos_tmp[1])<=fabs(yh/2) && fabs(pos_tmp[0])<=fabs(xw/2) ){
 	  for(i=0;i<=2;i++){
 	  result.coord[i]=pos_tmp[i];
 	  }
-	} else if ( fabs(pos1_tmp[1])<=fabs(yheight/2) && fabs(pos1_tmp[0])<=fabs(xwidth/2) ){
+	} else if ( fabs(pos1_tmp[1])<=fabs(yh/2) && fabs(pos1_tmp[0])<=fabs(xw/2) ){
 	       for(i=0;i<=2;i++){
 		  result.coord[i]=pos1_tmp[i];
 	       }
