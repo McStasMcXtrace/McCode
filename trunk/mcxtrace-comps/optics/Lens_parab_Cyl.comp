@@ -28,12 +28,11 @@
 *
 * %P
 * Input parameters:
-* r - raduis of curvature (circular approximation at the tip of the profile) [mm];
-* yheight [mm]
-* xwidth [mm]
-* d - distance between two surfaces of the lens along the propagation axis;
-* N - amount of single lenses in a stack.
-* deltaN- auxiliary parameter = delta*Number of lenses, valuable in cases when applying thin lens approximation to thick lens properties.
+* r [m] radius of curvature (circular approximation at the tip of the profile) [m];
+* yheight [m]
+* xwidth [m]
+* d [m] Distance between two surfaces of the lens along the propagation axis;
+* N [m] Number of single lenses in a stack.
 * 
 * 
 * attenuation coefficient mu is taken from the NIST database and 
@@ -44,7 +43,7 @@
 
 DEFINE COMPONENT Lens_parab_Cyl
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (r=.5e-3,yheight=1.2e-3,xwidth=1.2e-3,d=.1e-3,T=.99,N=1,deltaN=0)
+SETTING PARAMETERS (r=.5e-3,yheight=1.2e-3,xwidth=1.2e-3,d=.1e-3,T=.99,N=1)
 OUTPUT PARAMETERS (prms,parab)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -246,9 +245,7 @@ TRACE
   /*Calculation of Refractive Index */
 
   rhoel= f*Na*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
-  if (deltaN==0) {
-      delta= 2.0*M_PI*Re*rhoel/(k*k);
-  } else delta=deltaN; 
+  delta= 2.0*M_PI*Re*rhoel/(k*k);
   beta=mu/(2.0*k);          /*mu and k in  A^-1*/
   //delta=3.40754082e-6; Oleg's value for Be at 10 keV
   

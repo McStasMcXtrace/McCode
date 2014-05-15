@@ -27,7 +27,6 @@
 * xwidth [mm]
 * d - distance between two surfaces of the lens along the propagation axis;
 * N - amount of single lenses in a stack.
-* deltaN- auxiliary parameter = delta*Number of lenses, valuable in cases when applying thin lens approximation to thick lens properties.
 * rough_xy [rms] - waviness along x and y
 * rough_z [rms] -waviness along z
 * 
@@ -39,7 +38,7 @@
 
 DEFINE COMPONENT Lens_parab_Cyl_rough
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (r=.5e-3,yheight=1.2e-3,xwidth=1.2e-3,d=.1e-3,T=.99,N=1,deltaN=0,rough_z=0, rough_xy=0)
+SETTING PARAMETERS (r=.5e-3,yheight=1.2e-3,xwidth=1.2e-3,d=.1e-3,T=.99,N=1,rough_z=0, rough_xy=0)
 OUTPUT PARAMETERS (prms,parab)
 /*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
@@ -260,9 +259,7 @@ TRACE
   /*Calculation of Refractive Index */
 
   rhoel= f*Na*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
-  if (deltaN==0) {
-      delta= 2.0*M_PI*Re*rhoel/(k*k);
-  } else delta=deltaN; 
+  delta= 2.0*M_PI*Re*rhoel/(k*k);
   //beta=mu/(2.0*k);          /*mu and k in  A^-1*/
   //delta=3.40754082e-6; Oleg's value for Be at 10 keV
   
