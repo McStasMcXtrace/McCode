@@ -35,7 +35,7 @@
 * t_rise [s] Rise time of the chopper pulse.
 * xwidth:[m] height of the chopper opening
 * yheight:[m] width of the chopeper opening
-* isfirst: [] is the chopper the first chopper on a continous source.
+* isfirst: [ ] is the chopper the first chopper on a continous source.
 *
 * %E
 *******************************************************************************/
@@ -43,7 +43,7 @@
 DEFINE COMPONENT Chopper_simple
 DEFINITION PARAMETERS ()
   SETTING PARAMETERS (t0=0,T=1,tau=0.1,xwidth=0.1,yheight=0.1,isfirst=0,t_rise=0)
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS ( )
 /*X-ray PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 
 INITIALIZE
