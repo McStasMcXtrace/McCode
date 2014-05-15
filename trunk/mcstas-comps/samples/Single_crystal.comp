@@ -170,6 +170,7 @@
 * RX:        Radius of horizontal along X lattice curvature. flat for 0 (m)
 * RY:        Radius of vertical lattice curvature. flat for 0 (m)
 * RZ:        Radius of horizontal along Z lattice curvature. flat for 0 (m)
+* powder:    Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation (1)
 *
 * OUTPUT PARAMETERS:
 *
@@ -262,7 +263,7 @@ SETTING PARAMETERS(string reflections=0, string geometry=0,
             bx = 0, by = 0, bz = 0,
             cx = 0, cy = 0, cz = 0,
             p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
-            aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0)
+		   aa=0, bb=0, cc=0, order=0, RX=0, RY=0, RZ=0, powder=0)
 OUTPUT PARAMETERS(hkl_info, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
@@ -871,6 +872,19 @@ SHARE
       }
       return j;
     }
+    
+    void randrotate(double *nx, double *ny, double *nz, double a, double b) {
+      double nvx, nvy, nvz;
+      rotate(nvx,nvy,nvz, *nx, *ny, *nz, a, 1, 0, 0);
+      rotate(*nx,*ny,*nz, nvx,nvy,nvz, b, 0, 1, 0);
+    }
+    
+    void randderotate(double *nx, double *ny, double *nz, double a, double b) {
+      double nvx, nvy, nvz;
+      rotate(nvx,nvy,nvz,*nx,*ny,*nz, -b, 0, 1, 0);
+      rotate(*nx, *ny, *nz, nvx,nvy,nvz, -a, 1, 0, 0);
+    }
+
 #endif /* !SINGLE_CRYSTAL_DECL */
 %}
 
@@ -1028,7 +1042,9 @@ TRACE
     hkl_info.type = '\0';
     
     do {  /* Loop over multiple scattering events */
-    
+      /* Angles for powder randomization */
+      double Alpha, Beta;
+      
       if (hkl_info.shape == 0)
         intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
       else if (hkl_info.shape == 1)
@@ -1052,7 +1068,11 @@ TRACE
       l_full = t2*v;
 
       /* (1). Compute incoming wave vector ki */
-      
+      if (powder) { /* orientation of crystallite is random */
+	Alpha = randpm1()*PI;
+	Beta = randpm1()*PI/2;
+	randrotate(&vx, &vy, &vz, Alpha, Beta);
+      }
       /* lattice curvature option: rotate neutron velocity */
       if (RX || RY || RZ) { 
         if (RX) { rotate(b1x,b1y,b1z,vx,vy,vz,    atan2(x,RX),0,0,1); }
@@ -1125,13 +1145,22 @@ TRACE
       if(mc_trans > 0 && (mc_trans >= 1 || rand01() < mc_trans))  /* Transmit */
       {
         p *= p_trans/mc_trans;
-        intersect=0; break;
+        intersect=0; 
+	if (powder) { /* orientation of crystallite is longer random */
+	  randderotate(&vx, &vy, &vz, Alpha, Beta);
+	}
+	break;
       }
       if(tot_xlen <= 0){
         ABSORB;
       }
       if(mc_interact <= 0)        /* Protect against rounding errors */
-        { intersect=0; break; }
+        { intersect=0; 
+	  if (powder) { /* orientation of crystallite is no longer random */
+	    randderotate(&vx, &vy, &vz, Alpha, Beta);
+	  }
+	  break; 
+	}
       if (!event_counter) p *= fabs(1 - p_trans)/mc_interact;
       /* Select a point at which to scatter the neutron, taking
          secondary extinction into account. */
@@ -1214,6 +1243,9 @@ TRACE
 	    }
       
       SCATTER;
+      if (powder) { /* orientation of crystallite is no longer random */
+	  randderotate(&vx, &vy, &vz, Alpha, Beta);	
+      }
       /* exit if multiple scattering order has been reached */
       if (order && event_counter >= order) { intersect=0; break; }
       /* Repeat loop for next scattering event. */
