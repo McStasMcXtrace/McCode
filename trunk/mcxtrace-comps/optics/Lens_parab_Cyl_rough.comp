@@ -64,15 +64,15 @@ SHARE
   data intersect_Parab_Cyl_rough(data a, param b){
     data result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
     int i;
-    double A,B,C,D,r;
+    double A,B,C,D,rr;
     double t[2],p[3],knorm[3],k[3],Knorm,p_tmp[3],p1_tmp[3];
-    double Sign,d,M;
+    double Sign,dd,M;
     
     double N[3],Nx,Ny,Nz,Nnorm;
     double Arg,s,q,alpha,beta;
     double k_new[3];
     double cos_theta,cos_theta1;
-    double yheight,xwidth;
+    double yh,xw;
     double rough_xy,rough_z;
     
     for(i=0;i<=2;i++){
@@ -85,10 +85,10 @@ SHARE
     knorm[1]=k[1]/Knorm; 
     knorm[2]=k[2]/Knorm;
        
-    r=b.constants[0];
-    yheight=b.constants[1];
-    xwidth=b.constants[2];
-    d=b.constants[3];
+    rr=b.constants[0];
+    yh=b.constants[1];
+    xw=b.constants[2];
+    dd=b.constants[3];
     M=b.constants[4];
     Sign=b.constants[5];
     
@@ -96,8 +96,8 @@ SHARE
     rough_z=b.constants[7];
     
     A=knorm[1]*knorm[1];
-    B=2*(p[1]*knorm[1]-Sign*r*knorm[2]);
-    C=p[1]*p[1]-Sign*2*r*p[2]+Sign*d*2*r; 
+    B=2*(p[1]*knorm[1]-Sign*rr*knorm[2]);
+    C=p[1]*p[1]-Sign*2*rr*p[2]+Sign*dd*2*rr;
     D=B*B-4.0*A*C;
  
     if (D<0) {
@@ -127,11 +127,11 @@ SHARE
 	p1_tmp[i]=p[i]+t[1]*knorm[i];
       }
   
-      if ( fabs(p_tmp[1])<=fabs(yheight/2) && fabs(p_tmp[0])<=fabs(xwidth/2) ){
+      if ( fabs(p_tmp[1])<=fabs(yh/2) && fabs(p_tmp[0])<=fabs(xw/2) ){
 	for(i=0;i<=2;i++){
 	  result.coord[i]=p_tmp[i];
 	}
-      }	else if ( fabs(p1_tmp[1])<=fabs(yheight/2) && fabs(p1_tmp[0])<=fabs(xwidth/2) ){
+      }	else if ( fabs(p1_tmp[1])<=fabs(yh/2) && fabs(p1_tmp[0])<=fabs(xw/2) ){
 	for(i=0;i<=2;i++){
 	  result.coord[i]=p1_tmp[i];
 	}
