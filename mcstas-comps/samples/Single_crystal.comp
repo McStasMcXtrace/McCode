@@ -31,7 +31,7 @@
 *
 * In order to dramatically improve the simulation efficiency, we recommend to
 * use a SPLIT keyword on this component (or prior to it), as well as to disable
-* the multiple scattering handling by setting order=1. This especially powerfull
+* the multiple scattering handling by setting order=1. This is especially powerfull
 * for large reflection lists such as with macromolecular proteins.
 *
 * <b>Sample shape:</b>
@@ -97,11 +97,11 @@
 *     bx = 0,    by = 0,    bz =  2.47,
 *     cx = 6.71, cy = 0,    cz =  0)
 *
-* A leucine protein
+* A leucine protein, without multiple scattering
 *   Single_crystal(xwidth=0.005, yheight=0.005, zdepth=0.005,
-*     mosaic = 5,, reflections="leucine.lau")
+*     mosaic = 5, reflections="leucine.lau", order=1)
 *
-* Vanadium incoherent elastic scattering with multiple scattering
+* A Vanadium incoherent elastic scattering with multiple scattering
 *   Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01,
 *           reflections="", sigma_abs=5.08, sigma_inc=4.935,
 *           ax=3.0282, by=3.0282, cz=3.0282/2)
@@ -335,6 +335,7 @@ SHARE
       int    tau_count;           /* Number of reflections within cutoff */
       double coh_refl, coh_xsect; /* cross section computed with last tau_list */
       double kix, kiy, kiz;       /* last incoming neutron ki */
+      int    nb_reuses, nb_refl, nb_refl_count;
     };
 
   /* ------------------------------------------------------------------------ */
@@ -877,9 +878,7 @@ SHARE
 DECLARE
 %{
   struct hkl_info_struct hkl_info;
-  off_struct offdata;
-  
-  int nb_reuses=0, nb_refl=0, nb_refl_count=0;
+  off_struct             offdata;
 %}
 
 INITIALIZE
@@ -915,6 +914,7 @@ INITIALIZE
   hkl_info.column_order[3]=0;
   hkl_info.column_order[4]=7;
   hkl_info.kix = hkl_info.kiy = hkl_info.kiz = 0;
+  hkl_info.nb_reuses = hkl_info.nb_refl = hkl_info.nb_refl_count = 0;
   hkl_info.tau_count = 0;
 
   /*this is necessary to allow a numerical array to be passed through as a DEFINITION parameter*/ 
@@ -1077,7 +1077,7 @@ TRACE
       if ( fabs(kix - hkl_info.kix) < 1e-6
         && fabs(kiy - hkl_info.kiy) < 1e-6
         && fabs(kiz - hkl_info.kiz) < 1e-6) {
-        nb_reuses++;
+        hkl_info.nb_reuses++;
       } else {
 
         /* Max possible tau for this ki with 5*sigma delta-d/d cutoff. */
@@ -1098,8 +1098,8 @@ TRACE
         
         hkl_info.coh_refl  = coh_refl;
         hkl_info.coh_xsect = coh_xsect;
-        nb_refl += hkl_info.tau_count;
-        nb_refl_count++;
+        hkl_info.nb_refl += hkl_info.tau_count;
+        hkl_info.nb_refl_count++;
       }
 
       /* (3). Probabilities of the different possible interactions. */
@@ -1229,13 +1229,15 @@ FINALLY
       
   /* in case this instance is used in a SPLIT, we can recommend the 
      optimal iteration value */
-  double split_iterations = (double)nb_reuses/nb_refl_count + 1;
-  double split_optimal    = (double)nb_refl/nb_refl_count;
-  if (split_optimal > split_iterations + 5)
-    printf("Single_crystal: %s: you may highly improve the computation efficiency by using\n"
-      "    SPLIT %i COMPONENT %s=Single_crystal(order=1, ...)\n"
-      "  in the instrument description %s.\n", 
-      NAME_CURRENT_COMP, (int)split_optimal, NAME_CURRENT_COMP, mcinstrument_source);
+  if (hkl_info.nb_refl_count) {
+    double split_iterations = (double)hkl_info.nb_reuses/hkl_info.nb_refl_count + 1;
+    double split_optimal    = (double)hkl_info.nb_refl/hkl_info.nb_refl_count;
+    if (split_optimal > split_iterations + 5)
+      printf("Single_crystal: %s: you may highly improve the computation efficiency by using\n"
+        "    SPLIT %i COMPONENT %s=Single_crystal(order=1, ...)\n"
+        "  in the instrument description %s.\n", 
+        NAME_CURRENT_COMP, (int)split_optimal, NAME_CURRENT_COMP, mcinstrument_source);
+  }
 %}
 
 MCDISPLAY
