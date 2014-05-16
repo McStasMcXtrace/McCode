@@ -339,6 +339,16 @@ SHARE
       int    nb_reuses, nb_refl, nb_refl_count;
     };
 
+  int SX_list_compare (void const *a, void const *b)
+  {
+     struct hkl_data const *pa = a;
+     struct hkl_data const *pb = b;
+     double s = pa->tau - pb->tau;
+     
+     if (!s) return 0;
+     else    return (s < 0 ? -1 : 1);
+  } /* PN_list_compare */
+  
   /* ------------------------------------------------------------------------ */
   int
   read_hkl_data(char *SC_file, struct hkl_info_struct *info,
@@ -739,6 +749,10 @@ SHARE
           list[i].cutoff = 5*sig3;
     }
     Table_Free(&sTable);
+    
+    /* sort the list with increasing tau */
+    qsort(list, i, sizeof(struct hkl_data),  SX_list_compare);
+    
     info->list = list;
     info->count = i;
     info->tau_list = malloc(i*sizeof(*info->tau_list));
@@ -747,7 +761,7 @@ SHARE
       fprintf(stderr, "Single_crystal: Error: Out of memory!\n");
       return(0);
     }
-    return(info->count = i);
+    return(info->count);
   } /* read_hkl_data */
 
   /* ------------------------------------------------------------------------ */
