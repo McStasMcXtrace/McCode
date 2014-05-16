@@ -270,6 +270,18 @@ SHARE
     };
 
   off_struct offdata;
+  
+  // PN_list_compare *****************************************************************
+
+  int PN_list_compare (void const *a, void const *b)
+  {
+     struct line_data const *pa = a;
+     struct line_data const *pb = b;
+     double s = pa->q - pb->q;
+     
+     if (!s) return 0;
+     else    return (s < 0 ? -1 : 1);
+  } /* PN_list_compare */
 
   int read_line_data(char *SC_file, struct line_info_struct *info)
   {
@@ -449,9 +461,16 @@ SHARE
         flag=0;
       }
       list_count++;
-    } /* end for */
-    printf("PowderN: %s: File %s done (%i valid lines).\n", info->compname, SC_file, list_count);
+    } /* end for */ 
+    
     Table_Free(&sTable);
+    
+    /* sort the list with increasing q */
+    qsort(list, list_count, sizeof(struct line_data),  PN_list_compare);
+    
+    printf("PowderN: %s: Read %i reflections from file '%s'\n", 
+      info->compname, list_count, SC_file);
+    
     info->list  = list;
     info->count = list_count;
 
