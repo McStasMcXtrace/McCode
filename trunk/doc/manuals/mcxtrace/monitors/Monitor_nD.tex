@@ -5,18 +5,17 @@
 
 %FIXME
 The component \textbf{Monitor\_nD} is a general Monitor that may output any
-set of physical parameters regarding the passing neutrons. The
+set of physical parameters regarding the passing photons. The
 generated files are either a set of 1D signals ([Intensity] \textit{vs.}
 [Variable]), or a single 2D signal ([Intensity] \textit{vs.} [Variable 1]
-\textit{vs.} [Variable 1]), and possibly a simple long list of selected
-physical parameters for each neutron.
+\textit{vs.} [Variable 2]), and possibly a simple long list of selected
+physical parameters for each photon ray.
 
-The input parameters for \textbf{Monitor\_nD} are its dimensions $x_\mathrm{
-  min}, x_\mathrm{max}, y_\mathrm{min}$, $y_\mathrm{max}$ (in meters) and an \textit{
+The input parameters for \textbf{Monitor\_nD} are its dimensions \textit{xmin, xmax, ymin, ymax} (in metres) and an \textit{
   options} string describing what to detect, and what to do with the
-signals, in clear language. The $x_{width}, y_{height}, z_{depth}$ may also be used to enter dimensions.
+  signals, in clear language. The \textit{xwidth, yheight, zdepth} may also be used to enter dimensions.
 
-Eventhough the possibilities of Monitor\_nD are numerous, its usage remains as simple as possible, specially in the \verb+options+ parameter, which 'understands' normal language.
+  Eventhough the possibilities of Monitor\_nD are numerous, its usage remains as simple as possible, specially in the \textit{options} parameter, which 'understands' normal language.
 The formatting of the \textit{options}
 parameter is free, as long as it contains some specific keywords, that
 can be sometimes followed by values. The \textit{no} or \textit{not} option
@@ -53,23 +52,23 @@ The monitor shape can be selected among seven geometries:
     \end{equation}
     }
 \item{(\textit{banana}) The same as the cylinder, but without the top/bottom caps, and on a restricted angular range. The angular range is specified using a \verb+theta+ variable limit specification in the \verb+options+.}
-\item{(\textit{previous}) The detector has the shape of the previous component. This may be a surface or a volume. In this case, the neutron is detected on previous component, and there is not neutron propagation.}
+\item{(\textit{previous}) The detector has the shape of the previous component. This may be a surface or a volume. In this case, the photon is detected on the previous component, and there is no photon propagation.}
 \end{enumerate}
 
 By default, the monitor is flat, rectangular. Of course, you can choose
 the orientation of the \textbf{Monitor\_nD} in the instrument description
 file with the usual \texttt{ROTATED} modifier.
 
-For the \textit{box}, \textit{sphere} and \textit{cylinder}, the outgoing neutrons are
-monitored by default, but you can choose to monitor incoming neutron
+For the \textit{box}, \textit{sphere} and \textit{cylinder}, the outgoing photons are
+monitored by default, but you can choose to monitor incoming photons
 with the \textit{incoming} option.
 
 At last, the \textit{slit} or \textit{absorb} option will ask the component to
-absorb the neutrons that do not intersect the monitor. The \textit{exclusive} option word removes neutrons which are similarly outside the monitor limits (that may be other than geometrical).
+absorb the photons that do not intersect the monitor. The \textit{exclusive} option word removes photons which are similarly outside the monitor limits (that may be other than geometrical).
 
-The \textit{parallel} option keyword is of common use in the case where the \textbf{Monitor\_nD} is superposed with other components. It ensures that neutrons are detected independently of other geometrical constrains. This is generally the case when you need e.g. to place more than one monitor at the same place.
+The \textit{parallel} option keyword is of common use in the case where the \textbf{Monitor\_nD} is superposed with other components. It ensures that photons are detected independently of other geometrical constrains. This is generally the case when you need e.g. to place more than one monitor at the same place.
 
-\subsection{The neutron parameters that can be monitored}
+\subsection{The photon parameters that can be monitored}
 
 There are many different variables that can be monitored at the same time
 and position. Some can have more than one name (e.g. \texttt{energy} or
@@ -93,7 +92,7 @@ and position. Some can have more than one name (e.g. \texttt{energy} or
     theta longitude       [deg]    longitude (x/z) [for sphere and cylinder]
     phi   lattitude       [deg]    lattitude (y/z) [for sphere and cylinder]
 \end{verbatim}
-as well as two other special variables
+as well as four other special variables
 \begin{verbatim}
     user user1            will monitor the [Mon_Name]_Vars.UserVariable{1|2}
     user2 user3           to be assigned in an other component (see below)
@@ -109,12 +108,16 @@ determine what limits should be used to have a good sampling of signals.
 
 Each monitoring records the flux (sum of weights $p$) versus the
 given variables, except if the \verb+signal=<variable>+ word is used in the \verb+options+.
-The \textit{cm2} option will ask to normalize the flux to the monitor section surface, and the \verb+capture+ option uses the gold foil integrated 'capture' flux weightening (up to the cadmium cut-off):\index{Monitors!Capture flux}
-\begin{equation}
-\Phi_c = \int_0^{0.5 eV}{\frac{d\Phi}{d\lambda} \frac{\lambda}{\lambda_{2200 m/s}} d\lambda}
-\end{equation}
+%The \textit{cm2} option will ask to normalize the flux to the monitor section surface, and the \verb+capture+ option uses the gold foil integrated 'capture' flux weightening (up to the cadmium cut-off):\index{Monitors!Capture flux}
+%\begin{equation}
+%\Phi_c = \int_0^{0.5 eV}{\frac{d\Phi}{d\lambda} \frac{\lambda}{\lambda_{2200 m/s}} d\lambda}
+%\end{equation}
 
-The \verb+auto+ option is probably the most useful one: it asks the monitor to determine automatically the best limits for each variable, in order to obtain the most significant monitored histogram. This option should preceed each variable, or be located after all variables in which case they are all affected.
+The \verb+auto+ option is probably the most useful one: it asks the monitor to
+determine automatically the best limits for each variable, in order to obtain
+the most significant monitored histogram. This option should preceed each
+variable, or be located after all variables in which case they are all
+affected.
 On the other hand, one may manually set the limits with the \verb+limits=[min max]+ option.
 
 The \verb+log+ and \verb+abs+ options should be positioned before each variable to specify logarithmic binning and absolute value respectively.
@@ -132,7 +135,7 @@ with the \textit{file} keyword followed by the file name that you want. The
 extension will then be added if the name does not contain a dot (.).
 Finally, the $filename$ parameter may also be used.
 
-The output files format are standard 1D or 2D McStas detector files.
+The output files format are standard 1D or 2D McXtrace detector files.
 The \textit{no file} option will \textit{unactivate} monitor, and make it a
 single 0D monitor detecting integrated flux and counts.
 The \textit{verbose} option will display the nature of the monitor, and the
@@ -153,15 +156,15 @@ specifying the \textit{multiple} keyword option.
 \subsubsection{The List output}
 
 The \textbf{Monitor\_nD} can additionally produce a \textit{list} of variable
-values for neutrons that pass into the monitor. This feature is additive
+values for photons that pass into the monitor. This feature is additive
 to the 1D or 2D output. By default only 1000 events will be recorded in
-the file, but you can specify for instance "\textit{list} 3000 neutrons" or
-"\textit{list all} neutrons". This last option might require a lot of
+the file, but you can specify for instance "\textit{list} 3000 photons" or
+"\textit{list all} photons". Bear in mind that this last option might require a lot of
 memory and generate huge files.
 
 \subsection{Monitor equivalences}
 
-In the following table \ref{t:monitor-nd-equiv}, we show how the Monitor\_nD may substitute any other \MCS\ monitor.
+In the following table \ref{t:monitor-nd-equiv}, we show how the Monitor\_nD may substitute any other \MCX\ monitor.
 
 \begin{table}
   \begin{center}
@@ -170,28 +173,28 @@ In the following table \ref{t:monitor-nd-equiv}, we show how the Monitor\_nD may
 \hline
 \MCS\ monitor & Monitor\_nD equivalent \\
 \hline
-Divergence\_monitor & \textit{options}="dx bins=$ndiv$ limits=[$-\alpha/2 \alpha/2$],
+%Divergence\_monitor & \textit{options}="dx bins=$ndiv$ limits=[$-\alpha/2 \alpha/2$],
                                 lambda bins=$nlam$ limits=[$\lambda_0$ $\lambda_1$] file=$file$"\\
-DivLambda\_monitor  & \textit{options}="dx bins=$nh$   limits=[$-h_{max}/2 h_{max}/2$],
+%DivLambda\_monitor  & \textit{options}="dx bins=$nh$   limits=[$-h_{max}/2 h_{max}/2$],
                                     dy bins=$nv$   limits=[$-v_{max}/2 v_{max}/2$]" \textit{filename}=$file$\\
-DivPos\_monitor     & \textit{options}="dx bins=$ndiv$ limits=[$-\alpha/2 \alpha/2$],
+%DivPos\_monitor     & \textit{options}="dx bins=$ndiv$ limits=[$-\alpha/2 \alpha/2$],
                                      x bins=$npos$" \textit{xmin}=$x_{min}$ \textit{xmax}=$x_{max}$ \\
 E\_monitor          & \textit{options}="energy bins=$nchan$ limits=[$E_{min} E_{max}$]" \\
 EPSD\_monitor       & \textit{options}="energy bins=$n_E$ limits=[$E_{min} E_{max}$], x bins=$nx$"
                               \textit{xmin}=$x_{min}$ \textit{xmax}=$x_{max}$ \\
-Hdiv\_monitor       & \textit{options}="dx bins=$nh$ limits=[$-h_{max}/2 h_{max}/2$]" \textit{filename}=$file$ \\
+%Hdiv\_monitor       & \textit{options}="dx bins=$nh$ limits=[$-h_{max}/2 h_{max}/2$]" \textit{filename}=$file$ \\
 L\_monitor          & \textit{options}="lambda bins=$nh$ limits=[$-\lambda_{max}/2 \lambda_{max}/2$]" \textit{filename}=$file$ \\
-Monitor\_4PI        & \textit{options}="sphere" \\
+%Monitor\_4PI        & \textit{options}="sphere" \\
 Monitor            & \textit{options}="unactivate" \\
-PSDcyl\_monitor     & \textit{options}="theta bins=$nr$,y bins=$ny$, cylinder"
+%PSDcyl\_monitor     & \textit{options}="theta bins=$nr$,y bins=$ny$, cylinder"
 \textit{filename}=$file$ \textit{yheight}=$height$ \textit{xwidth}=2*radius\\
-PSDlin\_monitor     & \textit{options}="x bins=$nx$" \textit{xmin}=$x_{min}$ \textit{xmax}=$x_{max}$ \textit{ymin}=$y_{min}$ \textit{ymax}=$y_{max}$ \textit{filename}=$file$\\
+%PSDlin\_monitor     & \textit{options}="x bins=$nx$" \textit{xmin}=$x_{min}$ \textit{xmax}=$x_{max}$ \textit{ymin}=$y_{min}$ \textit{ymax}=$y_{max}$ \textit{filename}=$file$\\
 PSD\_monitor\_4PI    & \textit{options}="theta y, sphere" \\
 PSD\_monitor        & \textit{options}="x bins=$nx$, y bins=$ny$" \textit{xmin}=$x_{min}$ \textit{xmax}=$x_{max}$ \textit{ymin}=$y_{min}$ \textit{ymax}=$y_{max}$ \textit{filename}=$file$\\
-TOF\_cylPSD\_monitor & \textit{options}="theta bins=$n_\phi$, time bins=$nt$ limits=[$t_0, t_1$], cylinder" \textit{filename}=$file$ \textit{yheight}=$height$ \textit{xwidth}=2*radius\\
-TOFLambda\_monitor  & \textit{options}="lambda bins=$n_\lambda$ limits=[$\lambda_0$ $\lambda_1$], time bins=$nt$ limits=[$t_0, t_1$]" \textit{filename}=$file$\\
-TOFlog\_mon         & \textit{options}="log time bins=$nt$ limits=[$t_0, t_1$]" \\
-TOF\_monitor        & \textit{options}="time bins=$nt$ limits=[$t_0, t_1$]" \\
+%TOF\_cylPSD\_monitor & \textit{options}="theta bins=$n_\phi$, time bins=$nt$ limits=[$t_0, t_1$], cylinder" \textit{filename}=$file$ \textit{yheight}=$height$ \textit{xwidth}=2*radius\\
+%TOFLambda\_monitor  & \textit{options}="lambda bins=$n_\lambda$ limits=[$\lambda_0$ $\lambda_1$], time bins=$nt$ limits=[$t_0, t_1$]" \textit{filename}=$file$\\
+%TOFlog\_mon         & \textit{options}="log time bins=$nt$ limits=[$t_0, t_1$]" \\
+%TOF\_monitor        & \textit{options}="time bins=$nt$ limits=[$t_0, t_1$]" \\
 \hline
     \end{tabular}
     \caption{Using Monitor\_nD in place of other components. All limits specifications may be advantageously replaced by an \textit{auto} word preceeding each monitored variable. Not all file and dimension specifications are indicated (e.g. filename, xmin, xmax, ymin, ymax).}
@@ -210,7 +213,7 @@ COMPONENT MyMonitor = Monitor_nD(
     ymin = -0.1, ymax = 0.1,
     options = "energy auto limits")
 \end{verbatim}
-will monitor the neutron energy in a single 1D file (a kind of E\_monitor)}
+will monitor the photon energy in a single 1D file (a kind of E\_monitor)}
 \item{\texttt{options = "banana, theta limits=[10,130], bins=120, y bins=30"} \\
     is a theta/height banana detector.\index{Monitors!Banana shape}}
 \item{\texttt{options = "banana, theta limits=[10,130], auto time"} \\
@@ -224,13 +227,13 @@ will monitor the neutron energy in a single 1D file (a kind of E\_monitor)}
     will determine itself the required limits for $x$ and $y$.}
 
 \item{\texttt{options="multiple x bins=30, y limits=[-0.05 0.05], all auto"} \\
-will monitor the neutron $x$ and $y$ in two 1D files.}
+will monitor the photon $x$ and $y$ in two 1D files.}
 \item{\texttt{options="x y z kx ky kz, all auto"} \\
-will monitor each of theses variables in six 1D files.}
+will monitor each of these variables in six 1D files.}
 \item{\texttt{options="x y z kx ky kz, list all, all auto"} \\
-will monitor all theses neutron variables in one long list, one row per neutron event.}
+will monitor all these photons' variables in one long list, one row per photon event.}
 \item{\texttt{options="multiple x y z kx ky kz, and list 2000, all auto"} \\
-    will monitor all theses neutron variables in one list of 2000 events
+    will monitor all the photons' variables in one list of 2000 events
     and in six 1D files.}
 \item{\texttt{options="signal=energy, x y"} \\
     is a PSD monitor recording the mean energy of the beam as a function of $x$ and $y$.\index{Monitors!Position sensitive monitor recording mean energy}}
