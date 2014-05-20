@@ -38,7 +38,7 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    ('Johan Brinch', 'jsbn@fysik.dtu.dk'),
+    ('Mark Lewis', 'lewis@fysik.dtu.dk'),
 )
 
 MANAGERS = ADMINS

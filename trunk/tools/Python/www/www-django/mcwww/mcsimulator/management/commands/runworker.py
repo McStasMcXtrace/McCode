@@ -198,7 +198,7 @@ def processJob(run, workdir):
         for comp in comps:
             for mode in ("lin", "log"):
                 plot(dirname(sim_path) + '/' + comp,
-                     outfile=dirname(sim_path) + ('/plot-%s-%s.gif' % (comp, mode)),
+                     outfile=dirname(sim_path) + ('/plot-%s-%s.png' % (comp, mode)), # Change from .gif -> .png, Mark Lewis 13-5-14
                      logger=appendLog,
                      logy=(mode == "log"))
 

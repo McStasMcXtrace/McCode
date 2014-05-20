@@ -1,3 +1,7 @@
+# Mark Lewis - Edited 2014.
+#
+# Moved Admin classes to admin.py.y
+
 from django.db import models
 from django.db.models import related
 
@@ -31,10 +35,6 @@ class Job(models.Model):
     @staticmethod
     def new(ref, sim, seed=0, samples=1000, npoints=1):
         return Job(None, ref, seed, samples, npoints, sim.id, created=now())
-
-
-class JobAdmin(admin.ModelAdmin):
-    readonly_fields = ('created',)
 
 
 class Simulation(models.Model):
@@ -110,10 +110,6 @@ class SimRun(models.Model):
     def result(self, r):
         self.str_result = dumps(r)
 
-class SimRunAdmin(admin.ModelAdmin):
-    readonly_fields = ('created', 'completed')
-
-
 class Param(models.Model):
     ''' A parameter '''
 
@@ -151,10 +147,6 @@ class Param(models.Model):
 
     def __unicode__(self):
         return '<Param: %s, %s %s>' % (self.name, self.default_value, self.unit)
-
-class ParamAdmin(admin.ModelAdmin):
-    pass
-
 
 
 class ParamValue(models.Model):
