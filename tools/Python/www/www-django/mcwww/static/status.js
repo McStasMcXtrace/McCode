@@ -144,7 +144,7 @@ function createCompImg(path, comp) {
             var parent = mode + 'Plots';
             var id = uniqueID(parent);
             $('#'+parent).append($('<span>').attr('id', id).css('margin', 'auto'));
-            var plot = path + '/plot' + '-' + comp + '-' + mode + '.gif';
+            var plot = path + '/plot' + '-' + comp + '-' + mode + '.png'; // changed gif->png Mark Lewis 13-5-14
             loadImg(id, plot, '250px', '/plot/' + runid + '/' + plot);
         });
 }
