@@ -48,19 +48,15 @@ class Simulation(models.Model):
     # param_set()  gives the parameters
     # job_set()    gives the related jobs
     # simrun_set() gives the related runs
-    
     def shortname(self):
         return self.displayname
-    
     def __repr__(self):
         return self.name
-    
     @staticmethod
     def new(*args, **kwargs):
         return Simulation(None, *args, **kwargs)
-
     def __unicode__(self):
-        return u'<Sim %s>' % self.name
+        return self.name # u'<Sim %s>' % self.name # Changed this to make it look good on the admin page, change back if it breaks something (no reason why it should)
     
 
 class SimRun(models.Model):
@@ -134,24 +130,21 @@ class Param(models.Model):
         param = Param(None, sim.id, name, unit, msg, 'null')
         param.default_value = value
         return param
-
     def simulation(self):
         return Simulation.query.filter_by(id=self.sim_id).one()
-
     @property
     def default_value(self):
         return loads(self.str_default)
     @default_value.setter
     def default_value(self, val):
         self.str_default = dumps(val)
-
     def __unicode__(self):
-        return '<Param: %s, %s %s>' % (self.name, self.default_value, self.unit)
-
-
+        return '<Param: %s, %s>' % (self.id, self.name) # self.default_value, self.unit) # May have to change back if this breaks soimething else (though I can't see how it would. 
+                                                  # Added self.id and commented out the rest of the line. Remember to put in the right number of %s's back in!
+    
 class ParamValue(models.Model):
     ''' A parameter value tied to a specific job '''
-    param     = models.ForeignKey('Param')
+    param     = models.ForeignKey('Param') # I think a 1-to-1 relationship would suit better, one parameter, one value. Maybe not, maybe it is the scan functionality.
     job       = models.ForeignKey('Job')
     str_value = models.TextField()
 
@@ -167,3 +160,6 @@ class ParamValue(models.Model):
     @value.setter
     def value(self, val):
         self.str_value = dumps(val)
+
+    def __unicode__():
+        return self.param.name
