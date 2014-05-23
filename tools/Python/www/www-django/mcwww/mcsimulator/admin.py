@@ -1,19 +1,34 @@
 # Mark Lewis 2014 - changes to admin site. Stage 2.
-#                  ================================
+#                   ===============================
 #                  Finish SimRun and Job Admins
 #                  Extend UserAdmin with some McSim specific thingies.
+#                  
+#                  Future Changes.
+#                  ===============
+#                  SimulationAdmin.delete()
+#                  all the *'d tasks in Job and SimRun Admins
+#
+# - Permission changing code
+#   ------------------------
+'''
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None1):
+        return False
+    def __init__(self, *args, **kwargs):
+        super(<CLASSNAME>, request, self).__init__(*args, **kwargs)
+        self.list_display_links = (None,)
+'''
 
 from mcsimulator.models import *
+from django.forms import ModelForm
 from django.forms.models import BaseInlineFormSet # For customisation of the form in the future, but right now it's a bit complicated
 from django.contrib import admin
 
-# Simulation Parameter Handling
-# -----------------------------
-#
-# - Set the default add permission to False in ParamAdmin and ParamValueAdmin
-#   (does not seem to be inherited by SimulationAdmin - MUST FIND WORKAROUND)
-# 
-# - Setting formating for Simulation and SimRun Admins
+# Trivial Param and ParamValue Admin declarations
+# -----------------------------------------------
 
 class ParamAdmin(admin.ModelAdmin):
     def has_add_permission(self, request, obj=None):
@@ -22,6 +37,29 @@ class ParamAdmin(admin.ModelAdmin):
 class ParamValueAdmin(admin.ModelAdmin):
     def has_add_permission(self, request, obj=None):
         return False
+
+# Formatting classes 
+# ------------------
+#
+# - Trying to make the admin site look nice.
+# - Remove relevent permissions for change, ad and delete.
+
+class TabbedJob(admin.TabularInline):
+    model           = Job
+    exclude         = ('samples', 'npoints')
+    readonly_fields = ('ref', 'created')
+    list_display    = ('ref', 'simdetails', 'created')
+    search_field    = ['ref']
+    actions         = None
+    extra           = 0
+    # remove add permission
+    def has_add_permission(self, request, obj=None):
+        return False
+    def __init_(self, *args, ** kwargs):
+        super(TabbedJob, self).__init__(*args, **kwargs)
+        self.list_display_links = (None,)        
+    class Meta:
+        ordering = ['created']
 
 class TabbedParams(admin.TabularInline):     # May be nice to work out how to customise further.
     model = Param                            # Param = default parameter value simulations not on the stack.
@@ -39,9 +77,15 @@ class TabbedParams(admin.TabularInline):     # May be nice to work out how to cu
         super(TabbedParams, self).__init__(*args, **kwargs)
         self.list_display_links = (None,)
 
-class StackedParamVals(admin.StackedInline):
-    model = ParamValue
-    extra = 0
+class TabbedSim(admin.TabularInline):
+    model           = Simulation
+    readonly_fields = ('name','displayname')
+    actions         = None
+    extra           = 0
+    fieldset        = [
+        ('Sim Name',     {'list_display' : ['name']}),
+        ('Parameters',   {'inlines'      : ['TabbedParams']}),
+        ]
 
 
 # Simulation DB Handling
@@ -51,19 +95,19 @@ class SimulationAdmin(admin.ModelAdmin):
     exclude = ('displayname', 'simgroup')
     readonly_fields =  ('name',)
     inlines = [TabbedParams]
+
     def delete(self, *args, **kwargs):     # want to write a signal to send telling server to move simulations to a sim_trash folder.
         super(SimulationAdmin, self).delete(*args, **kwargs)
-        #non-DB related code here
+        # have to remove from DBs:
+        #   Params
+        #   Simulation (done via super)
+        # non-DB tasks:
+        #   move instrument files to trash (do not physically delete)
 
 
-
-# Running/Stacked Simultaion Handling - not working on this yet, still got to get the simulation page working. * = not urgent
-# -----------------------------------
+# Running/Stacked Simultaion Handling. * = not urgent
+# ------------------------------------
 # 
-# - JobAdmin Handles the non-running, on the stack simulations.
-# - SimRunAdmin handles the running, on the stack simulations.
-# - SimRunAdmin inherits (has a 1-to-1 relationship) with JobAdmin
-#
 # - Should include:
 #         searching/filtering with status
 #         searching by user name
@@ -76,20 +120,28 @@ class SimulationAdmin(admin.ModelAdmin):
 #         Removing Job from stack (server side clean up)
 #         Pause (server side clean up and rebuild) *
 
-
 class JobAdmin(admin.ModelAdmin):
-    readonly_fieldsets = [
-        ('Job Data',          {'fields': ['ref','created']}),
-        ]
+    exclude         = ('samples', 'npoints', 'seed')
+    readonly_fields = ('ref', 'created', 'sim')
+    search_field    = ['ref']
+    list_display    = ('sim_details',)
+#    inlines         = [TabbedSim] # causes: 'has no foreign key to' error - would like to find a way to sort this.
+    def has_add_permission(self, request, obj=None):
+        return False
+    def __init__(self, *args, **kwargs):
+        super(JobAdmin, self).__init__(*args, **kwargs)
+#        self.list_display_links = (None,)
 
-class SimRunAdmin(JobAdmin):
-    readonly_fieldsets = [
-        ('user data',         {'fields' : ['user'], 'classes': ['collapse']}),
-        ('SimRun Data',       {'fields' : ['created', 'status']}),
-        ('RunParameters',     {'fields' : [''], 'classes': ['collapse']}),
-        ]
-    search_fields = ['user']
-    list_filter   = ['status']
+
+  
+class SimRunAdmin(admin.ModelAdmin):
+    exclude         = ('str_params', 'str_result')
+    readonly_fields = ('user', 'status', 'completed', 'ref', 'job', 'sim')
+    list_display    = ('user', '__unicode__', 'created', 'status')
+    search_field    = ['user', 'self.sim.name', 'self.job.ref']
+    list_filter     = ('status',)
+    class Meta:
+        ordering = ['user', 'created']
 
 
 
@@ -99,7 +151,7 @@ class SimRunAdmin(JobAdmin):
 for model, modelA in (
     (Job,        JobAdmin),
     (Simulation, SimulationAdmin),
-    #(SimRun,     SimRunAdmin),
+    (SimRun,     SimRunAdmin),
     #(Param,      ParamAdmin),
     #(ParamValue, ParamValueAdmin)
     ): # Param and ParamValue Admins may not be needed
