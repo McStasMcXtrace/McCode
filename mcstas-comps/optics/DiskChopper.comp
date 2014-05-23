@@ -17,7 +17,7 @@
 * Kaspar Hewitt Klenoe (jan 2006), adjustments by Rob Bewey (march 2006)
 *
 * %D
-* Models a disc chopper with nslit identical slits, which are symmetrically disposed
+* Models a disc chopper with nslit identical slits, which are symmetrically distributed
 * on the disc. At time t=0, the centre of the first slit opening will be situated at the
 * vertical axis when phase=0.
 *
