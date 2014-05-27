@@ -146,8 +146,8 @@ SHARE
       return result; 
     }
     else if (result.coord[0]!=0 && result.coord[1]!=0){
-	   Nx=-Sign*(result.coord[0]/r);  // surface normal
-	   Ny=-Sign*(result.coord[1]/r); 
+	   Nx=-Sign*(result.coord[0]/rr);  // surface normal
+	   Ny=-Sign*(result.coord[1]/rr); 
 	   Nz=1; 
 	   
 	   NORM=sqrt(Nx*Nx+Ny*Ny+Nz*Nz);
@@ -167,11 +167,11 @@ SHARE
     }
     else if (result.coord[0]==0){
 	    tx=0;
-	    ty=Sign*(r/result.coord[1]);
+	    ty=Sign*(rr/result.coord[1]);
 	    tz=1;
     }
     else if (result.coord[1]==0){
-	    tx=Sign*(r/result.coord[0]);
+	    tx=Sign*(rr/result.coord[0]);
 	    ty=0;
 	    tz=1;
     }

@@ -140,7 +140,7 @@ SHARE
      
     Nx=0;
     if (result.coord[1]==0){		Ny=1;	Nz=0; 
-    } else if (result.coord[1]!=0) {	Ny=Sign*r/result.coord[1]; Nz=1;
+    } else if (result.coord[1]!=0) {	Ny=Sign*rr/result.coord[1]; Nz=1;
     }
    
     Nnorm=sqrt(Nx*Nx+Ny*Ny+Nz*Nz);
