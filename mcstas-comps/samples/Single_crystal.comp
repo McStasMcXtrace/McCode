@@ -998,6 +998,23 @@ INITIALIZE
       NAME_CURRENT_COMP, hkl_info.V0, hkl_info.sigma_a, hkl_info.sigma_i, 
       reflections && strlen(reflections) ? reflections : "NULL");
 
+  if (powder && PG) 
+    exit(fprintf(stderr,"Single_crystal: %s: powder and PG modes can not be used together!\n"
+	     "ERROR           Please use EITHER powder or PG mode.\n", NAME_CURRENT_COMP));
+
+  if (powder && !(order==1)) {
+    fprintf(stderr,"Single_crystal: %s: powder mode means implicit choice of no multiple scattering!\n"
+	    "WARNING setting order=1\n", NAME_CURRENT_COMP);
+    order=1;
+  } 
+  
+  if (PG && !(order==1)) {
+    fprintf(stderr,"Single_crystal: %s: PG mode means implicit choice of no multiple scattering!\n"
+	    "WARNING setting order=1\n", NAME_CURRENT_COMP);
+    order=1;
+  } 
+  
+
 %}
 
 TRACE
