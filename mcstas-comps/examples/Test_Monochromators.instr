@@ -42,7 +42,7 @@
 * %End
 ****************************************************************************/
 
-DEFINE INSTRUMENT Test_Monochromators(int Mono=1, lambda=2.0, Moz=40)
+DEFINE INSTRUMENT Test_Monochromators(int Mono=1, lambda=2.0, Moz=40, PG=0, powder=0, order=1)
 
 DECLARE
 %{
@@ -151,12 +151,18 @@ Monochromator_2foc(width = 0.10, height = 0.10,
 
 COMPONENT Mono6 = Single_crystal( 
   xwidth = 0.002, yheight = 0.1, zdepth = 0.1, 
-  mosaic = 30, reflections = "C_graphite.lau", barns=0,
+  mosaic = Moz, delta_d_d=1e-2, reflections = "C_graphite.lau", barns=0,
   ax=0,      ay=2.14,   az=-1.24,
   bx = 0,    by = 0,    bz =  2.47,
   cx = 6.71, cy = 0,    cz =  0, 
-  sigma_abs = 0.014, sigma_inc = 0.004) 
+  sigma_abs = 0.014, sigma_inc = 0.004, order=order, powder=powder, PG=PG) 
      WHEN (Mono == 6) AT (0, 0, 0) RELATIVE Mono_Arm          
+EXTEND %{
+  if(!SCATTERED) ABSORB;
+%}
+
+COMPONENT Sphere1 = PSD_monitor_4PI(filename="sphere", radius=1, restore_neutron=1)
+AT (0, 0, 0) RELATIVE Mono_Out
 
 COMPONENT lam1 = 
 L_monitor(nL = 200, filename = "lambda1.dat", xwidth = 0.10,
