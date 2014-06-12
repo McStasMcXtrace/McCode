@@ -517,18 +517,6 @@ double ESS_2014_Schoenfeldt_thermal_Y(double Y,double height){
   return 1;
 } /* end of ESS_2014_Schoenfeldt_thermal_Y */
 
-/* This is ESS_2014_Schoenfeldt_cold_Theta60 - vertical intensity distribution for the 2014 Schoenfeldt cold moderator */
-double ESS_2014_Schoenfeldt_cold_Theta60(double Theta60,double height){
-  /* Placeholder - we assume that this distribution is flat for now */
-  return 1;
-} /* end of ESS_2014_Schoenfeldt_cold_Theta60 */
-
-/* This is ESS_2014_Schoenfeldt_thermal_Theta60 - vertical intensity distribution for the 2014 Schoenfeldt cold moderator */
-double ESS_2014_Schoenfeldt_thermal_Theta60(double Theta60,double height){
-  /* Placeholder - we assume that this distribution is flat for now */
-  return 1;
-} /* end of ESS_2014_Schoenfeldt_thermal_Theta60 */
-
 /* This is ESS_2014_Schoenfeldt_cold_Theta120 - vertical intensity distribution for the 2014 Schoenfeldt cold moderator */
 double ESS_2014_Schoenfeldt_cold_Theta120(double Theta120,double height){
   /* Placeholder - we assume that this distribution is flat for now */
@@ -540,13 +528,6 @@ double ESS_2014_Schoenfeldt_thermal_Theta120(double Theta120,double height){
   /* Placeholder - we assume that this distribution is flat for now */
   return 1;
 } /* end of ESS_2014_Schoenfeldt_thermal_Theta120 */
-
-
-/* This is TSC_alpha_of_lambda_for_t_cold for the time-distributiob of the 2014 Schoenfeldt cold moderator */
-double TSC_alpha_of_lambda_for_t_cold(double lambda,double height){
-  if(lambda<0.43)return 1e-13;
-  return (-4.12609e-006*height+0.000214586)*pow(lambda-0.43,0.33333);
-} /* end of TSC_alpha_of_lambda_for_t_cold */
 
 /* This is ESS_2014_Schoenfeldt_cold_timedist time-distribution of the 2014 Schoenfeldt cold moderator */ 
 double ESS_2014_Schoenfeldt_cold_timedist(double time,double lambda,double height, double pulselength){
@@ -560,11 +541,6 @@ double ESS_2014_Schoenfeldt_cold_timedist(double time,double lambda,double heigh
   /* return (1-exp(-pulselength/TSC_alpha_of_lambda_for_t_cold(lambda,height)))*exp(-(t-pulselength)/TSC_alpha_of_lambda_for_t_cold(lambda,height)); */
 } /* end of ESS_2014_Schoenfeldt_cold_timedist */
 
-/* This is TSC_alpha_of_lambda_for_t_thermal for the time-distributiob of the 2014 Schoenfeldt thermal moderator */
-double TSC_alpha_of_lambda_for_t_thermal(double lambda,double height){
-  if(lambda<0.43)return 1e-13;
-  return (-3.06866e-006*height+0.00033976)*pow(lambda-0.43,0.125);
-} /* end of TSC_alpha_of_lambda_for_t_thermal */
 
 /* This is ESS_2014_Schoenfeldt_thermal_timedist time-distribution of the 2014 Schoenfeldt cold moderator */ 
 double ESS_2014_Schoenfeldt_thermal_timedist(double time,double lambda,double height, double pulselength){
@@ -662,30 +638,6 @@ double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
     
   }
 } /* end of ESS_2014_Schoenfeldt_thermal */
-
-double TSC_Simple_TimeDist_Model(double t, double alpha, double pulselength, double gamma){
-    if(t<0)return 0;
-    double normalizer=gamma/pulselength;
-    if(t<pulselength)return normalizer*(1-exp(-alpha*t));
-    return normalizer*(exp(alpha*pulselength)-1)*exp(-alpha*t);
-}
-
-double TSC_Time_Model(double time, double lambda, double pulselength, double gamma){
-    double ret;
-    if(time<0)ret=0;
-    double normalizer=gamma/pulselength;
-    if(time<pulselength)return normalizer*(1-exp(-(1.20988e4/lambda/lambda+2.31967e3*exp(-4.24902e-2*lambda))*time));
-    double tmp=normalizer*(exp((1.20988e4/lambda/lambda+2.31967e3*exp(-4.24902e-2*lambda))*pulselength)-1)*exp(-(1.20988e4/lambda/lambda+2.31967e3*exp(-4.24902e-2*lambda))*time);
-    tmp = isinf(tmp) ? 0 : tmp;
-    return isnan(tmp) ? 0 : tmp;
-}
-
-double TSC_y0_Model_Cold(double y,double height, double center){
-    double integral=1; //insert integral from c-h/2 to c+h/2
-    if(y<center-height/2.||y>center+height/2.)return 0;
-    return 1./integral*(exp(-2.2e-001*(y-center-height/2.))+exp(-4.5e-002*height+2.2e-001*(y-center+height/2.)))*(exp(50./sqrt(height)*(y-center-height/2.))-1)*(exp(-50./sqrt(height)*(y-center+height/2.))-1);
-}
-
 
 /* Display of geometry - flat and TDR-like */
 void ESS_mcdisplay_flat(double geometry)

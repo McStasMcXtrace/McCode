@@ -48,10 +48,7 @@ struct ess_struct {
 
 typedef struct ess_struct ess_moderator_struct;
 
-//typedef (double *) (double*, double *, double , double, double, double, ess_moderator_struct) functype;
 typedef double (*functype)(double* t , double* p, double lambda,  double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras);
-//struct ess_moderator_struct modextras;
-//functype ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras) 
 
 /* Maths for the curves below */
 double Mezei_M(double l, double temp);
@@ -73,18 +70,11 @@ double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
 double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
 double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras);
 
-
 /* List of pulse-shape definitions */
-double TSC_Simple_TimeDist_Model(double t, double alpha, double pulselength, double gamma);
-double TSC_Time_Model(double t, double lambda, double pulselength, double gamma);
+double ESS_2014_Schoenfeldt_cold_timedist(double t, double lambda, double height, double pulselength);
+double ESS_2014_Schoenfeldt_thermal_timedist(double t, double lambda, double height, double pulselength);
 
 /* List of moderator-geometry-weighting definitions */
-double TSC_y0_Model(double y,double height, double center);
-
-/* List of geometry definitions - mainly for mcdisplay... */
-void ESS_mcdisplay_flat(double geometry);
-void ESS_mcdisplay_TDRlike(double geometry);
-
 double ESS_2014_Schoenfeldt_cold_y0(double y0,double height);
 double ESS_2014_Schoenfeldt_cold_x0(double x0,double height, double width);
 double ESS_2014_Schoenfeldt_thermal_y0(double y0,double height);
@@ -93,13 +83,12 @@ double ESS_2014_Schoenfeldt_cold_Y(double x0,double height);
 double ESS_2014_Schoenfeldt_thermal_Y(double y0,double height);
 double ESS_2014_Schoenfeldt_cold_Theta120(double x0,double height);
 double ESS_2014_Schoenfeldt_thermal_Theta120(double y0,double height);
-double ESS_2014_Schoenfeldt_cold_Theta60(double x0,double height);
-double ESS_2014_Schoenfeldt_thermal_Theta60(double y0,double height);
 
-double TSC_alpha_of_lambda_for_t_cold(double lambda,double height);
-double TSC_alpha_of_lambda_for_t_thermal(double lambda,double height);
-double ESS_2014_Schoenfeldt_cold_timedist(double t, double lambda, double height, double pulselength);
-double ESS_2014_Schoenfeldt_thermal_timedist(double t, double lambda, double height, double pulselength);
+/* List of geometry definitions - mainly for mcdisplay... */
+void ESS_mcdisplay_flat(double geometry);
+void ESS_mcdisplay_TDRlike(double geometry);
+
+
 
 /* end of ess_source-lib.h */
 #endif
