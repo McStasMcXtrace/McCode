@@ -429,7 +429,7 @@ Transform {
 	      write_process("</component>\n\n");
 	      write_process("<type name=\"".$type."\">\n");
 	      write_process("\t<component type=\"pixel-".$mantidcount2."\">\n"); #(${mantidcount2}*1000000)."\">\n");
-	      write_process("\t\t<locations r=\"".$radius."\" t=\"".$tmin."\" t-end=\"".$tmax."\" n-elements=\"".$nt."\"/>\n");
+	      write_process("\t\t<locations r=\"".$radius."\" t=\"".$tmin."\" t-end=\"".$tmax."\" n-elements=\"".$nt."\" rot=\"".$tmin."\" rot-end=\"".$tmax."\" axis-x=\"0.0\" axis-y=\"1.0\" axis-z=\"0.0\"/>\n");
 	      write_process("\t</component>\n\n");
 	      write_process("</type>\n\n");
 
