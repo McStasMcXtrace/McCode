@@ -2006,7 +2006,9 @@ mcuse_dir(char *dir)
     mcdirname = dir;
   else
     mcdirname = dir+strlen("file://");
-
+  
+  
+  
   MPI_MASTER(
     if(mkdir(mcdirname, 0777)) {
 #ifndef DANSE
@@ -2014,8 +2016,12 @@ mcuse_dir(char *dir)
       fprintf(stderr, "(Maybe the directory already exists?)\n");
 #endif
     }
+#ifdef USE_MPI
+    MPI_Abort(MPI_COMM_WORLD, -1);
+#endif
+    exit(-1);
   ); /* MPI_MASTER */
-
+  
   /* remove trailing PATHSEP (if any) */
   while (strlen(mcdirname) && mcdirname[strlen(mcdirname) - 1] == MC_PATHSEP_C)
     mcdirname[strlen(mcdirname) - 1]='\0';
