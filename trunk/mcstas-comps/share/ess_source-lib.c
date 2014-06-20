@@ -52,7 +52,7 @@ double ESS_2013_Schoenfeldt_thermal_spectrum(double I_th, double T, double I_SD,
 }
 
 double ESS_2014_Schoenfeldt_cold_spectrum(double lambda,double height){
-	if(lambda<=0)return 0;
+if(lambda<=0)return 0;
 	return pow((1+exp((-7.84092e+001*exp(-1.00000e+000*height)-8.46887e+000+3)
 		*(lambda-(2.48787-0.00729329*height)))),(1.17068e+000*exp(-2.52666e-001*height)-9.29703e-001))
 		*((5.17542e+014*exp(-3.91646e-001*height)+7.19417e+013)
@@ -63,7 +63,13 @@ double ESS_2014_Schoenfeldt_cold_spectrum(double lambda,double height){
 double ESS_2014_Schoenfeldt_thermal_spectrum(double lambda, double height){
 	if(lambda<=0)return 0;
 	double aOlsqr=949./(325*lambda*lambda);
-	return 2*(3.46910e+013*exp(-1.65602e-001*height)+8.08542e+012)*aOlsqr*aOlsqr/lambda*pow(lambda,(3.11752e-001*(1-exp(-3.45363e-001*height))+9.17072e-002))*exp(-aOlsqr)+4.64873e+012*exp(-1.80747e-001*height)+1.74845e+012/((1+exp(2.5*(lambda-0.88)))*lambda);
+	return 2*(3.46910e+013*exp(-1.65602e-001*height)+8.08542e+012)
+	  *aOlsqr*aOlsqr/lambda*pow(lambda,(3.11752e-001*(1-exp(-3.45363e-001*height))+9.17072e-002))
+	  *exp(-aOlsqr)
+
+	  +
+
+	  (4.64873e+012*exp(-1.80747e-001*height)+1.74845e+012)/((1+exp(2.5*(lambda-0.88)))*lambda);
 }
 
 
@@ -460,7 +466,7 @@ double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
 /* Parametrization including moderator height for the "pancake" moderator */
 double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
-  if ((extras.height_c <= 0.12) && (extras.height_c >= 0.01)) {
+   if ((extras.height_c <= 0.12) && (extras.height_c >= 0.01)) {
     *p = ESS_2014_Schoenfeldt_cold_spectrum(lambda,100*extras.height_c);
   } else {
     printf("Sorry! Moderator height must be between %g and %g m\n",0.12,0.01);
@@ -469,14 +475,22 @@ double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
 
   /* Next is time structure... */
   *t=0;
+  double pt=0;
+  
+  // Potentially apply russian roulette technique 
+  //while (rand01()>pt) {
   *t = extras.tmultiplier*ESS_SOURCE_DURATION*(rand01());
   /* Troels Schoenfeldt function for timestructure */
-  *p *= extras.tmultiplier*ESS_2014_Schoenfeldt_cold_timedist(*t, lambda, 100*extras.height_c, ESS_SOURCE_DURATION);
+  pt = extras.tmultiplier*ESS_2014_Schoenfeldt_cold_timedist(*t, lambda, 100*extras.height_c, ESS_SOURCE_DURATION);
+  //}
+  
+  *p *= pt;
   if (extras.Uniform==0) *p *= ESS_2014_Schoenfeldt_cold_y0(100*extras.Y, 100*extras.height_c) * ESS_2014_Schoenfeldt_cold_x0(-100*extras.X, 100*extras.height_c, 100*extras.Width_c);
 } /* end of ESS_2014_Schoenfeldt_cold */
 
 /* This is ESS_2014_Schoenfeldt_cold_y0 - vertical intensity distribution for the 2014 Schoenfeldt cold moderator */
 double ESS_2014_Schoenfeldt_cold_y0(double y0,double height){
+  
   double one_over_integral_y0_of_height= height/((0.36434*height*height+2.53796*height-0.107774));
   if(y0 < -height/2. || y0 > height/2. )return 0;
   double cosh_ish=(exp(-7e-1/sqrt(height)*(y0-height/2.))+exp(-7e-1/20.*height+7e-1/sqrt(height)*(y0+height/2.)));
@@ -495,14 +509,22 @@ double ESS_2014_Schoenfeldt_thermal_y0(double y0,double height){
 double ESS_2014_Schoenfeldt_cold_x0(double x0,double height, double width){
   double normalization=1;
   if(x0<-width||x0>width)return 0;
-  return normalization*(0.008*x0+1)*(exp(height/2.*(x0-width))-1)*(exp(-height/2.*(x0+width))-1);
+  return normalization*(0.008*x0+1)*(exp(height/2.*(x0-width/2))-1)*(exp(-height/2.*(x0+width/2))-1);
 } /* end of ESS_2014_Schoenfeldt_cold_x0 */
 
 /* This is ESS_2014_Schoenfeldt_thermal_x0 - horizontal intensity distribution for the 2014 Schoenfeldt cold moderator */
 double ESS_2014_Schoenfeldt_thermal_x0(double x0,double height, double width){
-    if(x0>-width&&x0<width)return 0;
-    if(x0<0)return fmax(0,2.5*(0.0524986*fabs(x0)-1.84817-0.0189762*height+(-1.49712e+002*exp(-4.06814e-001*height))*exp(-4.48657e-001*fabs(x0)))*(exp(7*(x0+width))-1));
-    return fmax(0,2.5*(0.84199+0.00307022*height)*(0.0524986*fabs(x0)-1.84817-0.0189762*height+(-1.49712e+002*exp(-4.06814e-001*height))*exp(-4.48657e-001*fabs(x0)))*(exp(-7*(x0-width))-1));
+  // Kept for reference only...
+  /* if(x0>-width&&x0<width)return 0; */
+  /* if(x0<0)return fmax(0,2.5*(0.0524986*fabs(x0)-1.84817-0.0189762*height+(-1.49712e+002*exp(-4.06814e-001*height))*exp(-4.48657e-001*fabs(x0)))*(exp(7*(x0+width))-1)); */
+  /* return fmax(0,2.5*(0.84199+0.00307022*height)*(0.0524986*fabs(x0)-1.84817-0.0189762*height+(-1.49712e+002*exp(-4.06814e-001*height))*exp(-4.48657e-001*fabs(x0)))*(exp(-7*(x0-width))-1)); */  
+  if(x0>-23./2.&&x0<23./2.)return 0;
+  long double cosh_ish=fmin(0.0524986*fabs(x0)-1.84817-0.0189762*height+(-1.49712e+002*exp(-4.06814e-001*height))*exp(-4.48657e-001*fabs(x0)),0);
+  if(x0<0)return (-1.73518e-003*height*height+2.10277e-002*height+7.65692e-001) // intensity
+	    *cosh_ish*(exp(7.*(x0+23./2.))-1); // slope 
+  return (-1.73518e-003*height*height+2.10277e-002*height+7.65692e-001) // intensity
+    *(0.84199+0.00307022*height) // asumetry
+    *cosh_ish*(exp(-7.*(x0-23./2.))-1); // slope
 } /* end of ESS_2014_Schoenfeldt_thermal_x0 */
 
 /* This is ESS_2014_Schoenfeldt_cold_Y - vertical intensity distribution for the 2014 Schoenfeldt cold moderator */
@@ -524,8 +546,10 @@ double ESS_2014_Schoenfeldt_cold_Theta120(double Theta120,double height){
 } /* end of ESS_2014_Schoenfeldt_cold_Theta120 */
 
 /* This is ESS_2014_Schoenfeldt_thermal_Theta120 - vertical intensity distribution for the 2014 Schoenfeldt cold moderator */
-double ESS_2014_Schoenfeldt_thermal_Theta120(double Theta120,double height){
-  /* Placeholder - we assume that this distribution is flat for now */
+double ESS_2014_Schoenfeldt_thermal_Theta120(double beamportangle,int isleft){
+  if(!isleft)return cos((beamportangle-30)*DEG2RAD)/cos(30*DEG2RAD);
+  return cos((90-beamportangle)*DEG2RAD)/cos(30*DEG2RAD);
+/* Placeholder - we assume that this distribution is flat for now */
   return 1;
 } /* end of ESS_2014_Schoenfeldt_thermal_Theta120 */
 
@@ -533,8 +557,8 @@ double ESS_2014_Schoenfeldt_thermal_Theta120(double Theta120,double height){
 double ESS_2014_Schoenfeldt_cold_timedist(double time,double lambda,double height, double pulselength){
         if(time<0)return 0;
         double tau=3.00094e-004*(4.15681e-003*lambda*lambda+2.96212e-001*exp(-1.78408e-001*height)+7.77496e-001)*exp(-6.63537e+001*pow(fmax(1e-13,lambda+.9),-8.64455e+000));
-        if(time<pulselength)return (1/pulselength*(1-exp(-time/tau))/ESS_SOURCE_FREQUENCY);
-        return (1/pulselength*(1-exp(-pulselength/tau))*exp(-(time-pulselength)/tau)/ESS_SOURCE_FREQUENCY);
+        if(time<pulselength)return ((1-exp(-time/tau)));
+        return ((1-exp(-pulselength/tau))*exp(-(time-pulselength)/tau));
   /* double normalizer=1; */
   /* if(t<0)return 0; */
   /* if(t<pulselength)return (1-exp(-(t)/TSC_alpha_of_lambda_for_t_cold(lambda,height))); */
@@ -542,12 +566,12 @@ double ESS_2014_Schoenfeldt_cold_timedist(double time,double lambda,double heigh
 } /* end of ESS_2014_Schoenfeldt_cold_timedist */
 
 
-/* This is ESS_2014_Schoenfeldt_thermal_timedist time-distribution of the 2014 Schoenfeldt cold moderator */ 
+/* This is ESS_2014_Schoenfeldt_thermal_timedist time-distribution of the 2014 Schoenfeldt cold moderator */    
 double ESS_2014_Schoenfeldt_thermal_timedist(double time,double lambda,double height, double pulselength){
         if(time<0)return 0;
         double tau=3.00000e-004*(1.23048e-002*lambda*lambda+1.75628e-001*exp(-1.82452e-001*height)+9.27770e-001)*exp(-3.91090e+001*pow(fmax(1e-13,lambda+9.87990e-001),-7.65675e+000));
-        if(time<pulselength)return (1/pulselength*(1-exp(-time/tau))/ESS_SOURCE_FREQUENCY);
-        return (1/pulselength*(1-exp(-pulselength/tau))*exp(-(time-pulselength)/tau)/ESS_SOURCE_FREQUENCY);
+        if(time<pulselength)return ((1-exp(-time/tau)));
+        return ((1-exp(-pulselength/tau))*exp(-(time-pulselength)/tau));
   /* if(t<0)return 0; */
   /* if(t<pulselength)return (1-exp(-(t)/TSC_alpha_of_lambda_for_t_thermal(lambda,height))); */
   /* return (1-exp(-pulselength/TSC_alpha_of_lambda_for_t_thermal(lambda,height)))*exp(-(t-pulselength)/TSC_alpha_of_lambda_for_t_thermal(lambda,height)); */
@@ -599,44 +623,24 @@ double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
   
 } /* end of ESS_2013_Schoenfeldt_thermal */
 
-/* This is the thermal moderator with 2013 updates, fits from Troels Schoenfeldt */
+/* This is the thermal moderator with 2014 updates, fits from Troels Schoenfeldt */
 double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
- 
   if ((extras.height_t <= 0.12) && (extras.height_t >= 0.01)) {
     *p = ESS_2014_Schoenfeldt_thermal_spectrum(lambda, 100*extras.height_t);
   } else {
     printf("Sorry! Moderator height must be between %g and %g cm\n",0.12,0.01);
     exit(-1);
   }
+ 
   /* Next is time structure... */
   *t=0;
   *t = extras.tmultiplier*ESS_SOURCE_DURATION*(rand01());
   /* Troels Schoenfeldt function for timestructure */
-  *p *= extras.tmultiplier*ESS_2014_Schoenfeldt_thermal_timedist(*t, lambda, 100*extras.height_t, ESS_SOURCE_DURATION);   /* Using Width_c is NOT a typo - dependent on cold moderator geometry */
-  if (extras.Uniform==0) {
-    double W, ExtractionWidth, X0;
-    /* Arc-length to projected width, cold moderator in 60 vs 120 setting */
-    if (extras.is60degs) {
-      W = extras.Radius_c*cos(30);
-      ExtractionWidth=60;
-    } else {
-      W = extras.Radius_c*cos(60);
-      ExtractionWidth=120;
-    }
-    if (extras.Wasleft) {
-      X0 = extras.X*cos(DEG2RAD*(extras.BeamPortAngle-90));
-    } else {
-      X0 = extras.X*cos(DEG2RAD*((ExtractionWidth - extras.BeamPortAngle)-90));
-    }
-    *p *= ESS_2014_Schoenfeldt_thermal_y0(100*X0, 100*extras.height_t) * ESS_2014_Schoenfeldt_thermal_x0(100*X0, 100*extras.height_t, 100*W);
-    if (extras.Wasleft) {
-      *p /= cos(DEG2RAD*(extras.BeamPortAngle-90));
-    } else {
-      *p /= cos(DEG2RAD*((ExtractionWidth - extras.BeamPortAngle)-90));
-    }
-    
-  }
+  *p *= extras.tmultiplier*ESS_2014_Schoenfeldt_thermal_timedist(*t, lambda, 100*extras.height_t, ESS_SOURCE_DURATION);   /* Using Width_c is NOT a typo - dependent on cold moderator geometry - WTF?*/
+  *p *= ESS_2014_Schoenfeldt_thermal_y0(100*extras.X, 100*extras.height_t) * ESS_2014_Schoenfeldt_thermal_x0(100*extras.X, 100*extras.height_t, 100*extras.Width_t);
+  *p *= ESS_2014_Schoenfeldt_thermal_Theta120(extras.beamportangle,extras.Wasleft);
+  //printf("%g\n",ESS_2014_Schoenfeldt_thermal_Theta120(extras.beamportangle,extras.Wasleft));
 } /* end of ESS_2014_Schoenfeldt_thermal */
 
 /* Display of geometry - flat and TDR-like */
