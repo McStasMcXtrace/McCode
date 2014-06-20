@@ -87,13 +87,10 @@
 
 DEFINE COMPONENT ESS_moderator
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (cyl_radius=0.0, width_c=0.23, yheight_c=0.12, yheight_t=0.12, width_t=0.12, beamport_angle=-1, extraction_width=120, planar=0, isleft=0.9,
-		      Lmin, Lmax, cold_frac=1.0,
-		      dist=0, focus_xw, focus_yh, int target_index=0, 
-		      tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0, tmax_multiplier=3, int uniform=0,
-		      int n_pulses=1, string sourcedef="TDR", acc_power=5)
+SETTING PARAMETERS (isleft=0.9,
+		    Lmin, Lmax, cold_frac=1.0, dist=0, focus_xw, focus_yh, int target_index=0, tmax_multiplier=3,yheight_c=0.12, yheight_t=0.12,
+		    int n_pulses=1, acc_power=5, beamport_angle=-1, string sourcedef="2014", xwidth_c=0.23, xwidth_t=0.12, extraction_opening=120)
 //OUTPUT PARAMETERS (cold_bril, thermal_bril, l_range, w_mult, w_geom, w_geom, w_geom_t, yheight_c, yheight_t, cold, tmax_multiplier, uniform)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{
   %include "ess_source-lib"
@@ -101,31 +98,35 @@ SHARE
 
 DECLARE
 %{
-  double l_range, w_mult, w_geom, w_geom_c, w_geom_t, yheight;
-  double tx,ty,tz;
-  double t1x,t1y,t1z,t2x,t2y,t2z;
+  double l_range, w_mult, w_geom, w_geom_c, w_geom_t, w_stat, Wconst;
   int cold;
   int wasleft;
   int cosine;
-  
+  double tx,ty,tz;
+
   /* Target station geometry... */
-  double r_empty = 2.0; /* two meters from moderator surface and out... */
-  double r_optics;
   ess_moderator_struct modextras;
   functype cold_bril;
   functype thermal_bril;
-  double theta_tmp;
-  double Wconst;
+  double tfocus_width,  tfocus_time,  dt;
 %}
 
 INITIALIZE
 %{
+  /* Weight mulitpliers */
+  w_mult=acc_power/5;
+  w_geom=1;
+  w_geom_c=1;
+  w_geom_t=1;
+  Wconst=1;
+  w_stat=1.0/mcget_ncount();
   
+  tfocus_width=0;  tfocus_time=0;  dt=0;
+
   n_pulses=(double)floor(n_pulses);
   if (n_pulses == 0) n_pulses=1;
- 
-  if (target_index && !dist)
-  {
+  
+  if (target_index && !dist) {
     Coords ToTarget;
     ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
     ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
@@ -137,151 +138,64 @@ INITIALIZE
   } else {
     tx=0, ty=0, tz=dist;
   }
-
-  if (focus_xw < 0 || focus_yh < 0)
-  {
+  
+  if (focus_xw < 0 || focus_yh < 0) {
     printf("ESS_moderator: %s: Please specify both focus_xw and focus_yh as positive numbers.\nExit\n", NAME_CURRENT_COMP);
     exit(-1);
   }
-
-  if (dist < r_empty && dist > 0)
-  {
-    printf("ESS_moderator: %s WARNING: Provided dist parameter is %g and hence inside the vacated zone of the beam extraction system!\nYou might be placing optics in a restricted area!!!\n", NAME_CURRENT_COMP, dist);
-  }
-  
-  if (!(planar)) {
-    if (!(extraction_width==60 || extraction_width==120)) {
-      printf("ESS_moderator: %s: extraction_width must be either 60 or 120 degrees!\n", NAME_CURRENT_COMP, extraction_width);
-      exit(-1);
-    }
     
-    if (extraction_width==120 && !(strcasestr(sourcedef,"2014"))) {
-      printf("ESS_moderator: %s: extraction_width must be 60 degrees when choosing sourcedef %s. Resetting your value of %g to 60\n", NAME_CURRENT_COMP, sourcedef, extraction_width);
-      extraction_width=60;
-    }
-    
-    if (beamport_angle == -1) {
-      beamport_angle=extraction_width/2;
-      printf("ESS_moderator: %s: beamport_angle set to %g degrees\n", NAME_CURRENT_COMP, beamport_angle);
-    }
-    
-    if (beamport_angle < 0 || beamport_angle > extraction_width)
-      {
-	printf("ESS_moderator: %s: Please select a beamport_angle between 0 and %g degrees!\nExit\n", NAME_CURRENT_COMP, extraction_width);
-	exit(-1);
-      }
-    
-    if (width_c && cyl_radius) {
-      printf("ESS_moderator: %s: Please specify EITHER cold-moderator radius (cyl_radius) or length of visible arch (width_c)!\nExit\n", NAME_CURRENT_COMP);
-      exit(-1);
-    } else if (cyl_radius) {
-      width_c = 2*PI*cyl_radius*extraction_width/360;
-    } else {
-      cyl_radius = 360*width_c/(2*PI*extraction_width);
-    }
-    r_optics = 6.0 - r_empty - cyl_radius;
-  }
-
   if (Lmin<=0 || Lmax <=0 || dist == 0)
   {
-    printf("ESS_moderator: %s: Check parameters (lead to Math Error).\n Avoid 0 value for {Lmin Lmax dist d tau branch1/2/tail} and 1 value for {n n2 branch1/2/tail}\n", NAME_CURRENT_COMP);
-    exit(-1);
-  }
-
-  if (planar==1 && !(cold_frac==1 || cold_frac==0))
-  {
-    printf("ESS_moderator: %s: Planar==1 can only be used with cold_frac==1 or cold_frac==0, i.e. purely cold or thermal moderator\n", NAME_CURRENT_COMP);
+    printf("ESS_moderator: %s: Check parameters (lead to Math Error).\n Avoid 0 value for {Lmin Lmax dist} \n", NAME_CURRENT_COMP);
     exit(-1);
   }
   
-  l_range = Lmax-Lmin;
-  w_geom_c  = width_c*yheight_c*1.0e4;     /* source area correction */
-  w_geom_t  = width_t*yheight_t*1.0e4;
-  w_mult  = l_range;            /* wavelength range correction */
-  w_mult *= 1.0/mcget_ncount();   /* Correct for number of rays */
-
-  if (planar==1) {
-    if (cold_frac==0) {
-      /* Flat thermal source, horz basis vector(s) along x */
-      t1x=1;
-      t1y=0;
-      t1z=0;
-      t2x=1;
-      t2y=0;
-      t2z=0;      
-    } /* Flat cold source is handled below */
-    modextras.BeamPortAngle=90;
-  } else if (planar==0){
-    /* Calculate location of thermal wings wrt beamport_angle (z) direction */
-    /* Wing 1 (left) is at -beamport_angle */
-    t1z = cyl_radius*cos(-DEG2RAD*beamport_angle);
-    t1x = cyl_radius*sin(-DEG2RAD*beamport_angle);
-    t1y = 0;
-    /* Wing 2 (right) is at extraction_width-beamport_angle */
-    t2z = cyl_radius*cos(DEG2RAD*(extraction_width-beamport_angle));
-    t2x = cyl_radius*sin(DEG2RAD*(extraction_width-beamport_angle));
-    t2y = 0;
-    /* We want unit vectors... */
-    NORM(t1x,t1y,t1z);
-    NORM(t2x,t2y,t2z);
-    modextras.BeamPortAngle=beamport_angle;
-  } else {
-    printf("ESS_moderator: %s: Planar is a boolean input parameter, please give either 0 or 1\n", NAME_CURRENT_COMP);
-    exit(-1);
-  }
   
-  if (strcasestr(sourcedef,"TDR")) {
-    w_mult *= ESS_SOURCE_FREQUENCY;               /* Correct for frequency */
-    w_mult *= acc_power/5;                        /* Correct for accelerator power */
-    printf("Using ESS TDR brilliance\n");
-    cold_bril=ESS_2012_Lieutenant_cold;
-    thermal_bril=ESS_Mezei_thermal;
-  } else if (strcasestr(sourcedef,"2001")) {
-    w_mult *= ESS_SOURCE_FREQUENCY;               /* Correct for frequency */
-    w_mult *= acc_power/5;                        /* Correct for accelerator power */
-    printf("Using ESS 2001 brilliance\n");
-    cold_bril=ESS_Mezei_cold;
-    thermal_bril=ESS_Mezei_thermal;
-   } else if (strcasestr(sourcedef,"2013")) {
-    w_mult *= acc_power;                             /* Is already in per-MW units */
-    printf("Using ESS 2013 brilliance\n");
-    modextras.height_c=yheight_c;
-    modextras.height_t=yheight_t;
-    modextras.tmultiplier=tmax_multiplier;
-    cold_bril=ESS_2013_Schoenfeldt_cold;
-    thermal_bril=ESS_2013_Schoenfeldt_thermal;
-  } else if (strcasestr(sourcedef,"2014")) {
-    w_mult *= acc_power/5;                           
-    printf("Using ESS 2014 brilliance\n");
-    modextras.height_c=yheight_c;
-    modextras.Width_c=width_c;
-    modextras.height_t=yheight_t;
-    modextras.tmultiplier=tmax_multiplier;
-    modextras.Uniform=uniform;
-    if (extraction_width == 60) {
-      modextras.is60degs=1;
-    } else {
-      modextras.is60degs=0;
+  /* ESS-2014 definition: */
+  /* Geometry parameters */
+  if (strcasestr(sourcedef,"2014")) {
+    if (xwidth_c!=0.23 || xwidth_t!=0.12 || extraction_opening!=120) {
+      fprintf(stderr,"FATAL: sourcedef %s only allows xwidth_c=0.23, xwidth_t=0.12 and extraction_opening=120 !\n",sourcedef);
+      exit(-1);
     }
-    modextras.Radius_c=cyl_radius;
     cold_bril=ESS_2014_Schoenfeldt_cold;
     thermal_bril=ESS_2014_Schoenfeldt_thermal;
-  } else {
-    printf("Soure def %s not implemented!\n",sourcedef);
+    } else {
+    fprintf(stderr,"FATAL: sourcedef %s is not defined!\n",sourcedef);
     exit(-1);
   }
+  modextras.height_c=yheight_c;
+  modextras.Width_c=xwidth_c;
+  modextras.Width_t=xwidth_t;
+  modextras.height_t=yheight_t;
+  modextras.tmultiplier=tmax_multiplier;
+  modextras.extractionangle=extraction_opening;
+  
+  /* Is beamport_angle set at a meaningful angle - otherwise recalc */
+  if ( beamport_angle<0 || beamport_angle>modextras.extractionangle){
+    beamport_angle = modextras.extractionangle/2.0;
+    printf("%s: WARNING: Resetting your beamport_angle to %g (%g/2) - central beamslot\n",NAME_CURRENT_COMP,beamport_angle,modextras.extractionangle);
+  }
+  if (strcasestr(sourcedef,"2014") && beamport_angle != modextras.extractionangle/2.0) {
+    printf("%s: WARNING: beamport_angle is not at central slot. With sourcedef %s this means application of a partially analytical brightness model for B(\\theta) \n",NAME_CURRENT_COMP,sourcedef);
+  }
+  modextras.beamportangle=beamport_angle;
+  
+  l_range = Lmax-Lmin;
+  w_geom_c  = xwidth_c*yheight_c*1.0e4;     /* source area correction */
+  w_geom_t  = xwidth_t*yheight_t*1.0e4;
+  w_mult *= l_range;            /* wavelength range correction */
 
-  /* For drawing */ 
-  yheight = fmax(yheight_t, yheight_c);
+  /* Calculate constant solid-angle for object, as seen from comp origo */
   double ttmp;
+  
   randvec_target_rect_real(&ttmp, &ttmp, &ttmp, &Wconst,
-			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, 0, 0, 0, 0);
+  			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, 0, 0, 0, 0);
 %}
 TRACE
 %{
-
-  //printf("xxxWidth and height... %g %g %g %g\n",width_c, yheight_c,width_t, yheight_t);
-  double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag,cor,dt,xprime,yprime,zprime;
+  p=1;
+  double v,E,lambda,k,r,xf,yf,dx,dy,dz,w_focus,tail_flag,cor,dt,xprime,yprime,zprime;
 
   /* Bispectral source - choice of spectrum and initial position */
   cold = ( rand01() < cold_frac );
@@ -291,99 +205,86 @@ TRACE
   
   /* Geometry adapted from ESS MCNPX model, mid 2012 */
   if (cold) {          //case: cold moderator
-    if (planar==1) {
-      x = 0.5*randpm1()*width_c;
-      y = 0.5*randpm1()*yheight_c;
-      z = 0;
-      cosine = 1;
-    } else {
-      //choose random point on cylinder surface
-      theta_tmp = (rand01()*extraction_width - beamport_angle)*DEG2RAD;
-      x     = cyl_radius * sin(theta_tmp);
-      y     = 0.5*randpm1()*yheight;
-      z     = cyl_radius * cos(theta_tmp);
-      cosine = 0;
-    }
+    x = 0.5*randpm1()*xwidth_c;
+    y = 0.5*randpm1()*yheight_c;
+    z = 0;
+    cosine = 0;
     w_geom = w_geom_c;
-  }  else  {                      //case: thermal moderator
-    double poshorz, posvert;
-    if (planar==1) {
-      x = 0.5*randpm1()*width_t;
-      y = 0.5*randpm1()*yheight_t;
-      z = 0;
-      cosine = 1;
+  }  else  {
+    //case: thermal moderator
+    y = 0.5*randpm1()*yheight_t;
+    if (rand01()<isleft) {
+      wasleft=1;
+      x = -xwidth_c/2.0 - rand01()*xwidth_t;
     } else {
-      poshorz = cyl_radius+rand01()*width_t;
-      posvert = 0.5*randpm1()*yheight;
-      
-      if (rand01()<isleft) {
-	wasleft=1;
-	x = t1x * poshorz;
-	z = t1z * poshorz;
-      } else {
-	wasleft=0;
-	x = t2x * poshorz;
-	z = t2z * poshorz;
-      }
-      y = posvert;
-      cosine = 0;
+      wasleft=0;
+      x = xwidth_c/2.0 + rand01()*xwidth_t;
     }
+    z = 0;
+    // cosine = 1;
+    cosine = 0;
     w_geom = w_geom_t;
   }
-
+  
   randvec_target_rect_real(&xf, &yf, &r, &w_focus,
 			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, cosine);
   
   /* In case of "complicated" geometry, calculate angular-weighting by independently from randvec */
   if (cosine==0) {
     if (cold) {
+      //w_focus=1;
       /* Uniform emission */
     } else {
       /* Apply a cosine wrt. beamport angle vs. normal of the thermal extensions */
       if (wasleft==1) {
-	w_focus = Wconst * cos(DEG2RAD*(beamport_angle-90))/cos(DEG2RAD*extraction_width/2);
+	//w_focus = Wconst ;//* cos(DEG2RAD*(beamport_angle-90))/cos(DEG2RAD*extraction_width/2);
       } else {
-	w_focus = Wconst * cos(DEG2RAD*((extraction_width - beamport_angle)-90))/cos(DEG2RAD*extraction_width/2);
+	//w_focus = Wconst ;//* cos(DEG2RAD*((extraction_width - beamport_angle)-90))/cos(DEG2RAD*extraction_width/2);
       }
     }
   }
   
   dx = xf-x;
   dy = yf-y;
-  r = sqrt(dx*dx+dy*dy+dist*dist);
-
+  dz = r-z;
+  r = sqrt(dx*dx+dy*dy+dz*dz);
+  
   lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
+ 
   k = 2*PI/lambda;
   v = K2V*k;
 
-  vz = v*dist/r;
+  vz = v*dz/r;
   vy = v*dy/r;
   vx = v*dx/r;
-
-  if (!planar) {
-    double t1,t2;
-    cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, cyl_radius-1e-6, yheight_c);
-    if(t1>0 || t2>0) {PROP_DT(fmax(t1,t2)); SCATTER; ABSORB;}
-  }
-
+  
   modextras.X=x; modextras.Y=y; modextras.Z=z; modextras.Wasleft=wasleft;
-  /* Determine delta-t needed to reach first chopper */
-  if (tfocus_width>0) {
-    dt = tfocus_dist/vz;			/* Flight time to time window (chopper) */
-  }
-
+  
   if (cold) {          //case: cold moderator
     cold_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
   }  else  {                      //case: thermal moderator
     thermal_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
   }
-  p*=w_focus*w_geom*w_mult;
+  
+  w_focus=focus_xw*focus_yh/sqrt(tx*tx+ty*ty+tz*tz);
+  // printf("Weights %g %g %g %g %g %g\n",p ,w_stat ,cold_frac ,w_focus ,w_geom, w_mult);
+  // Solid angle of object as seen from origo...
+
+  p*=w_stat*w_focus*w_geom*w_mult;
   //  p*=w_focus*w_geom*w_mult;
   t+=(double)floor((n_pulses)*rand01())/ESS_SOURCE_FREQUENCY;   /* Select a random pulse */
 
   /* Correct weight for sampling of cold vs. thermal events. */
   if (cold) {
     p /=cold_frac;
+    //p=1;
+      /* Correct position to actual physical emission location on cylinder (propagate back from T. Schoenfeldts plane */
+      /* ALLOW_BACKPROP; */
+      /* double t1,t2; */
+      /* cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, cyl_radius-1e-6, yheight_c); */
+      /* printf("Times... %g %g\n",t1,t2); */
+      /* PROP_DT(fmax(t1,t2)); */
+      /* DISALLOW_BACKPROP; */
   } else {
     p/=(1-cold_frac);
     if (wasleft) {
@@ -392,63 +293,74 @@ TRACE
       p/=(1-isleft);
     }
   }
-  
+  //printf("Weights %g %g %g %g %g %g\n",p ,w_stat ,cold_frac ,w_focus ,w_geom, w_mult);
+  /* if (!planar) { */
+  /*   double t1,t2; */
+  /*   cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, cyl_radius-1e-6, yheight_c); */
+  /*   if(t1>0 || t2>0) {PROP_DT(fmax(t1,t2)); SCATTER; ABSORB;} */
+  /* } */
+
 %}
 
 MCDISPLAY
 %{
-  if (planar==0) {
-    /* Draw cold moderator as cylinder */
-    magnify("xz");
-    circle("xz", 0,  yheight_c/2.0, 0, cyl_radius);
-    circle("xz", 0,  -yheight_c/2.0, 0, cyl_radius);
-    line(0, -yheight_c/2.0, cyl_radius, 0, yheight_c/2.0, cyl_radius);
-    line(0, -yheight_c/2.0, -cyl_radius, 0, yheight_c/2.0, -cyl_radius);
-    line(cyl_radius, yheight_c/2.0, 0, cyl_radius, yheight_c/2.0, 0);  
-    line(-cyl_radius, -yheight_c/2.0, 0, -cyl_radius, yheight_c/2.0, 0);
-    /* Draw thermal moderators as a couple of squares + some lines */
-    // Left
-    multiline(4, t1x*cyl_radius, -yheight_t/2.0, t1z*cyl_radius,
-	      t1x*(cyl_radius + width_t), -yheight_t/2.0, t1z*(cyl_radius + width_t),
-	      t1x*(cyl_radius + width_t), yheight_t/2.0,  t1z*(cyl_radius + width_t),
-	      t1x*cyl_radius, yheight_t/2.0, t1z*cyl_radius);
-    // Right
-    multiline(4, t2x*cyl_radius, -yheight_t/2.0, t2z*cyl_radius,
-	      t2x*(cyl_radius + width_t), -yheight_t/2.0, t2z*(cyl_radius + width_t),
-	      t2x*(cyl_radius + width_t), yheight_t/2.0,  t2z*(cyl_radius + width_t),
-	      t2x*cyl_radius, yheight_t/2.0, t2z*cyl_radius);
+  /* if (planar==0) { */
+  /*   /\* Draw cold moderator as cylinder *\/ */
+  /*   magnify("xz"); */
+  /*   circle("xz", 0,  yheight_c/2.0, 0, cyl_radius); */
+  /*   circle("xz", 0,  -yheight_c/2.0, 0, cyl_radius); */
+  /*   line(0, -yheight_c/2.0, cyl_radius, 0, yheight_c/2.0, cyl_radius); */
+  /*   line(0, -yheight_c/2.0, -cyl_radius, 0, yheight_c/2.0, -cyl_radius); */
+  /*   line(cyl_radius, yheight_c/2.0, 0, cyl_radius, yheight_c/2.0, 0);   */
+  /*   line(-cyl_radius, -yheight_c/2.0, 0, -cyl_radius, yheight_c/2.0, 0); */
+  /*   /\* Draw thermal moderators as a couple of squares + some lines *\/ */
+
+  /*   // Left */
+  /*   multiline(4, t1x*cyl_radius, -yheight_t/2.0, t1z*cyl_radius, */
+  /* 	      t1x*cyl_radius + lt1x*width_t, -yheight_t/2.0, t1z*cyl_radius + lt1z*width_t, */
+  /* 	      t1x*cyl_radius + lt1x*width_t, yheight_t/2.0, t1z*cyl_radius + lt1z*width_t, */
+  /* 	      t1x*cyl_radius, yheight_t/2.0, t1z*cyl_radius); */
+  /*   // Right */
+  /*   multiline(4, t2x*cyl_radius, -yheight_t/2.0, t2z*cyl_radius, */
+  /* 	      t2x*cyl_radius + lt2x*width_t, -yheight_t/2.0, t2z*cyl_radius + lt2z*width_t, */
+  /* 	      t2x*cyl_radius + lt2x*width_t, yheight_t/2.0, t2z*cyl_radius + lt2z*width_t, */
+  /* 	      t2x*cyl_radius, yheight_t/2.0, t2z*cyl_radius); */
     
-    /* Dashed lines for indicating "beam extraction" area... */
-    dashed_line(t1x*cyl_radius, -yheight/2.0, t1z*cyl_radius, t1x*r_empty, -yheight/2.0, t1z*r_empty,10);
-    dashed_line(t1x*cyl_radius, yheight/2.0, t1z*cyl_radius, t1x*r_empty, yheight/2.0, t1z*r_empty,10);
-    dashed_line(t2x*cyl_radius, -yheight/2.0, t2z*cyl_radius, t2x*r_empty, -yheight/2.0, t2z*r_empty,5);
-    dashed_line(t2x*cyl_radius, yheight/2.0, t2z*cyl_radius, t2x*r_empty, yheight/2.0, t2z*r_empty,5);
+  /*   /\* Dashed lines for indicating "beam extraction" area... *\/ */
+  /*   dashed_line(t1x*cyl_radius, -yheight/2.0, t1z*cyl_radius, lt1x*r_empty, -yheight/2.0, lt1z*r_empty,10); */
+  /*   dashed_line(t1x*cyl_radius, yheight/2.0, t1z*cyl_radius, lt1x*r_empty, yheight/2.0, lt1z*r_empty,10); */
+  /*   dashed_line(t2x*cyl_radius, -yheight/2.0, t2z*cyl_radius, lt2x*r_empty, -yheight/2.0, lt2z*r_empty,5); */
+  /*   dashed_line(t2x*cyl_radius, yheight/2.0, t2z*cyl_radius, lt2x*r_empty, yheight/2.0, lt2z*r_empty,5); */
     
-    /* Circles indicating extent of the "empty" zone where optics is not allowed */
-    circle("xz", 0,  yheight/2.0, 0, r_empty);
-    circle("xz", 0,  -yheight/2.0, 0, r_empty);
     
-    /* Circles indicating the builk shielding of the target monolith at 6 m */
-    circle("xz", 0,  focus_yh/2.0 , 0, 6);
-    circle("xz", 0, -focus_yh/2.0 , 0, 6);
-    circle("xz", 0,  2, 0, 6);
-    circle("xz", 0, -2, 0, 6);
+  /*   /\* Circles indicating extent of the "empty" zone where optics is not allowed *\/ */
+  /*   circle("xz", 0,  yheight/2.0, 0, r_empty); */
+  /*   circle("xz", 0,  -yheight/2.0, 0, r_empty); */
     
-    /* Rectangle indicating the chosen focus rectangle - where the optics starts... */
+  /*   /\* Circles indicating the builk shielding of the target monolith at 6 m *\/ */
+  /*   circle("xz", 0,  focus_yh/2.0 , 0, 6); */
+  /*   circle("xz", 0, -focus_yh/2.0 , 0, 6); */
+  /*   circle("xz", 0,  2, 0, 6); */
+  /*   circle("xz", 0, -2, 0, 6); */
+    
+  /*   /\* Rectangle indicating the chosen focus rectangle - where the optics starts... *\/ */
+  /*   rectangle("xy",tx,ty,tz,focus_xw,focus_yh); */
+  /* } else { */
+  /*   /\* Simple 'flat', single-spectrum geometry *\/ */
+  /*   double tmpheight,tmpwidth; */
+  /*   if (cold_frac==0) { */
+  /*     tmpheight = yheight_t; */
+  /*     tmpwidth = width_t; */
+  /*   } else { */
+  /*     tmpheight = yheight_c; */
+  /*     tmpwidth = width_c; */
+  /*   } */
+    rectangle("xy",0,0,0,xwidth_c,yheight_c);
+    rectangle("xy",-xwidth_c/2-xwidth_t/2,0,0,xwidth_t,yheight_t);
+    rectangle("xy",xwidth_c/2+xwidth_t/2,0,0,xwidth_t,yheight_t);
     rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
-  } else {
-    /* Simple 'flat', single-spectrum geometry */
-    double tmpheight,tmpwidth;
-    if (cold_frac==0) {
-      tmpheight = yheight_t;
-      tmpwidth = width_t;
-    } else {
-      tmpheight = yheight_c;
-      tmpwidth = width_c;
-    }
-    rectangle("xy",0,0,0,tmpwidth,tmpheight);
-    rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
-  }  
+    
+  /* }   */
 %}
 
 END

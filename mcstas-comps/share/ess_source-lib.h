@@ -38,11 +38,12 @@ struct ess_struct {
   double height_t;
   double height_c;
   double Width_c;
+  double Width_t;
   double tmultiplier;
   double Radius_c;
-  double BeamPortAngle;
+  double beamportangle;
   int Uniform;
-  int is60degs;
+  double extractionangle;
   int Wasleft;
 };
 
@@ -82,7 +83,7 @@ double ESS_2014_Schoenfeldt_thermal_x0(double x0,double height, double width);
 double ESS_2014_Schoenfeldt_cold_Y(double x0,double height);
 double ESS_2014_Schoenfeldt_thermal_Y(double y0,double height);
 double ESS_2014_Schoenfeldt_cold_Theta120(double x0,double height);
-double ESS_2014_Schoenfeldt_thermal_Theta120(double y0,double height);
+double ESS_2014_Schoenfeldt_thermal_Theta120(double beamportangle,int isleft);
 
 /* List of geometry definitions - mainly for mcdisplay... */
 void ESS_mcdisplay_flat(double geometry);
