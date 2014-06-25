@@ -65,7 +65,7 @@ except Exception, e:
 
 def display(instr, params, outfile, log, fmt=IMAGE_FORMAT):
     ''' Display instrument '''
-    # VRML needs --format, which does not seem to work with gif/ps
+    # VRML needs --format, which does not seem to work with gif/ps   MARK NOTE: this may be a good idea to look into.
     fmt_arg = fmt == 'vrml' and '--format=vrml' or '-'+fmt
     args = (["mcdisplay", "-k", "--save", fmt_arg, basename(instr),
              "-n", str(1) # precision (iterations)
@@ -170,7 +170,7 @@ def processJob(run, workdir):
 
     # Generate instrument graphics with mcdisplay
     display(workdir % (name + ".instr"), first_range(params_strs),
-            workdir % "layout.gif", log=appendLog)
+            workdir % "layout.png", log=appendLog) #changed gif -> png
     display(workdir % (name + ".instr"), first_range(params_strs),
             workdir % "layout.wrl", log=appendLog, fmt='vrml')
 
@@ -198,7 +198,7 @@ def processJob(run, workdir):
         for comp in comps:
             for mode in ("lin", "log"):
                 plot(dirname(sim_path) + '/' + comp,
-                     outfile=dirname(sim_path) + ('/plot-%s-%s.png' % (comp, mode)), # Change from .gif -> .png, Mark Lewis 13-5-14
+                     outfile=dirname(sim_path) + ('/plot-%s-%s.png' % (comp, mode)), # gif -> png
                      logger=appendLog,
                      logy=(mode == "log"))
 
