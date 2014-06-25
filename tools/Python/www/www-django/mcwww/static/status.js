@@ -58,7 +58,7 @@ function loadData() {
     loadUrl('mcstas', 'mcstas-' + runid + '.tar.gz');
 
     // load instrument layout
-    loadImg('imgLayout', 'layout.gif', '150px');
+    loadImg('imgLayout', 'layout.png', '150px');
     loadUrl('vrml', 'layout.wrl');
 
     // load list of components

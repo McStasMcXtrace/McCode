@@ -1,3 +1,8 @@
+from mcsimulator.models import *
+from django.forms import ModelForm
+from django.forms.models import BaseInlineFormSet # For customisation of the form in the future, but right now it's a bit complicated
+from django.contrib import admin
+
 # Mark Lewis 2014 - changes to admin site. Stage 2.
 #                   ===============================
 #                  Finish SimRun and Job Admins
@@ -21,11 +26,6 @@
         super(<CLASSNAME>, request, self).__init__(*args, **kwargs)
         self.list_display_links = (None,)
 '''
-
-from mcsimulator.models import *
-from django.forms import ModelForm
-from django.forms.models import BaseInlineFormSet # For customisation of the form in the future, but right now it's a bit complicated
-from django.contrib import admin
 
 # Trivial Param and ParamValue Admin declarations
 # -----------------------------------------------
@@ -148,11 +148,11 @@ class SimRunAdmin(admin.ModelAdmin):
 # Want to get a class here that inherits from UserAdmin and adds a little functionality, like filters by on/off-line etc.
 
 
+
 for model, modelA in (
     (Job,        JobAdmin),
-    (Simulation, SimulationAdmin),
+    (Simulation, None),
     (SimRun,     SimRunAdmin),
-    #(Param,      ParamAdmin),
-    #(ParamValue, ParamValueAdmin)
-    ): # Param and ParamValue Admins may not be needed
+    (Param,      None), #ParamAdmin),
+    (ParamValue, None)):
     admin.site.register(model, modelA)

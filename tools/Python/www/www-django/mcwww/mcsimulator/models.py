@@ -24,8 +24,7 @@ class Job(models.Model):
     samples = models.IntegerField()
     npoints = models.IntegerField()
     # Simulation to run
-#    sim     = models.ForeignKey('Simulation')
-    sim = models.OneToOneField('Simulation')
+    sim     = models.ForeignKey('Simulation')
     # Date and time created
     created = models.DateTimeField(db_index=True, editable=False)
     @staticmethod
@@ -36,6 +35,10 @@ class Job(models.Model):
     def __unicode__(self):
         return "Job Details [ref, sim name]: [%s, %s]" % (self.ref, self.sim.name)
 
+'''
+class JobAdmin(admin.ModelAdmin):
+    readonly_fields = ('created',)
+'''
 
 class Simulation(models.Model):
     ''' A simulation '''
@@ -54,7 +57,8 @@ class Simulation(models.Model):
     def new(*args, **kwargs):
         return Simulation(None, *args, **kwargs)
     def __unicode__(self):
-        return u'<Sim %s>' % self.name 
+        return u'<Sim %s>' % self.name
+
 
 class SimRun(models.Model):
     ''' A particular run of a simulation (configured by Job) '''
@@ -96,6 +100,11 @@ class SimRun(models.Model):
     def __unicode__(self):
         return "SimRun Details [ref, job ref, sim name]: [%s, %s, %s]" % (self.ref, self.job.ref, self.sim.name)
 
+'''
+class SimRunAdmin(admin.ModelAdmin):
+    readonly_fields = ('created', 'completed')
+'''
+
 class Param(models.Model):
     ''' A parameter '''
     # Where to show the parameter in a listing (e.g. on configure page)
@@ -123,9 +132,12 @@ class Param(models.Model):
     def default_value(self, val):
         self.str_default = dumps(val)
     def __unicode__(self):
-        return '<Param: %s, %s, %s>' % (self.name, self.default_value, self.unit) # May have to change back if this breaks soimething else (though I can't see how it would. 
-                                                  # Added self.id and commented out the rest of the line. Remember to put in the right number of %s's back in!
-    
+        return '<Param: %s, %s %s>' % (self.name, self.default_value, self.unit)
+'''
+class ParamAdmin(admin.ModelAdmin):
+    pass
+'''
+
 class ParamValue(models.Model):
     ''' A parameter value tied to a specific job '''
     param     = models.ForeignKey('Param')
