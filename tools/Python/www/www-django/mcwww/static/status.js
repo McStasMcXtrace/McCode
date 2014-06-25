@@ -117,7 +117,7 @@ function populateComps(callback, path) {
             $.getJSON(
                 absPath,
                 function (compList) {
-                    if (compList == 'mcstas.dat') {
+                    if (compList == 'mccode.dat') {
                         populateComps(callback, '/0');
                     } else {
                         COMPS = compList;
@@ -129,7 +129,7 @@ function populateComps(callback, path) {
 }
 
 function createCompImgs() {
-    var comps = npoints > 1 ? ['mcstas.dat'] : COMPS;
+    var comps = npoints > 1 ? ['mccode.dat'] : COMPS;
     $.each(comps, function(_, comp) {
                createCompImg('mcstas', comp);
            });
