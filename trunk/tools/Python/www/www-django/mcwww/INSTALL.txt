@@ -42,8 +42,13 @@ System Setup
 4) In the trunk dir there are a bunch of scripts which build .debs or .rpms for your particular
    OS. Run the correct one.
       cd /trunk/dist
-      dpkg -fi <whichever_you_wish_to_install> (I would just install them all)
-   The -f flag tells the unmet dependencies to be forced to install.
+      dpkg -i <whichever_you_wish_to_install> (I would just install them all)
+   If this fails for some reason run:
+      sudo apt-get -f install   
+   The -f flag tells the unmet dependencies to be forced to install. Then run:
+      dpkg -i <whichever_you_wish_to_install>
+   again. This should install McStas, you can install McXtrace in exactly the same way using the correct
+   build_... script. 
 
 
 Setting up Django Webserver
@@ -58,16 +63,19 @@ Setting up Django Webserver
 6) Move to your shiny new working directory (the one you just made). Run:
      sudo bin/get-dependencies.sh
 
-7) Populate sim/ with at least one instr - 
-     sudo cp /usr/local/lib/mcstas-2.0/examples/PSI_DMC.instr sim
+7) Make a <Group_Dir> in sim/ and populate sim/<Group_Dir> with at least one instr - 
+     sudo cp /usr/local/lib/mcstas-2.0/examples/<choose_one_or_more>.instr sim/<Group_Dir>
 
-side note: Ensure your keyboard is set to a locale that the python scripts are happy with:
-     export LC_ALL="en_US.UTF-8"  
+sidenote_1: You will need to login to <IP ADDRESS>:<PORT>/admin (after creating your users) and put users 
+	    in groups so they can run simulations. Groups correspond to <Group_Dir> names.
+
+sidenote_2: Ensure your keyboard is set to a locale that the python scripts are happy with:
+     	    	   export LC_ALL="en_US.UTF-8"  
 
 8) Run:
-     sudo ./bin/init-db.sh
+     ./bin/init-db.sh
 
-9) Follow the prompts, you should set up a superuser to start with, step 10a shows how to create new users:
+9) Follow the prompts, you should set up a superuser to start with, step (10)a) shows how to create new users:
 
    Username (leave blank to use 'root'): 
    E-mail address:
@@ -76,10 +84,20 @@ side note: Ensure your keyboard is set to a locale that the python scripts are h
    Superuser created successfully.
 
 10) Run the following commands (put the runworker in the background with '&' or open a new terminal):
-   a)  sudo ./manage.py createuser <USERNAME> <PASSWORD>
-   b)  sudo ./bin/update-simulations.sh ; ./manage.py populate_db
+   a)  ./manage.py createuser <USERNAME> <PASSWORD>
+   b)  ./bin/update-simulations.sh ; ./manage.py populate_db
    c)  sudo ./manage.py runworker &
    d)  sudo ./manage.py runserver <IP ADDRESS>:<PORT> (80 is a good listening port)
 
+sidenote_3: When you have compiled the instruments (step (10)b) ) you should copy the .html files into the <GROUP>
+	    folder. This keeps everything tidy, although the server will find them in any of the referenced subfolders
+	    from where you run step (10)c & d).
 
+Adding a Simulation to the DB
+-----------------------------
 
+- If you wisdh to create a new group of simulations follow step (7) and then (10)b). Remember to put your 
+  user in groups that you wish them to be able to select simulations from.
+- Otherwise put your .instr file(s) in an existing group and perform step (10)b).
+- Upon reopening the configuration page the new simulations should be available to the users in the correct 
+  groups.
