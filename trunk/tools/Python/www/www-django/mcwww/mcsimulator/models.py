@@ -28,7 +28,7 @@ class Job(models.Model):
     # Date and time created
     created = models.DateTimeField(db_index=True, editable=False)
     @staticmethod
-    def new(ref, sim, seed=0, samples=1000, npoints=1):
+    def new(ref, sim, seed=0, samples=1000000, npoints=1):
         return Job(None, ref, seed, samples, npoints, sim.id, created=now())
     def sim_details(self):
         return ("Simulation [name, id]: [%s, %s]") % (self.sim.name, self.sim.id)
