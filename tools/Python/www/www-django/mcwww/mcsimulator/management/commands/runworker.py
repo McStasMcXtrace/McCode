@@ -122,7 +122,8 @@ def work():
 
     # mark job as completed
     run.status = "done"
-    run.save()
+    with transaction.commit_on_success():
+        run.save()
     print "Done."
 
 
@@ -220,7 +221,6 @@ class Command(NoArgsCommand):
         while True:
             time.sleep(1)
             try:
-                with transaction.commit_on_success():
                     work()
             except:
                 # print error message to stdout
