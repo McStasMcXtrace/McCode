@@ -39,9 +39,10 @@ automatic transfer of geometry to a Mantid IDF file:
   named sampleMantid
 \item One or more Monitor\_nD components need to be added in either
   rectangular- or cylindrical geometry and with a set of special
-  flags:
-\begin{mcstas}
-COMPONENT nD_Mantid_1 = Monitor_nD(
+  flags, as shown below
+\item Rectangular monitor
+  \begin{mcstas}
+    COMPONENT nD_Mantid_0 = Monitor_nD(
     options ="mantid square x limits=[-0.2 0.2] bins=128 y limits=[-0.2 0.2] bins=128, neutron pixel t, list all neutrons",
     xmin = -0.2,
     xmax = 0.2,
@@ -51,11 +52,47 @@ COMPONENT nD_Mantid_1 = Monitor_nD(
     filename = "bank01_events.dat")
   AT (0, 0, 3.2) RELATIVE sampleMantid 
 \end{mcstas}
-blah
-\begin{mcstas}
-COMPONENT nD_Mantid_0 = Monitor_nD(xwidth=(4.0-0.0005-0.00002)*2, yheight=3,
-				   options="mantid banana, theta limits=[-73.36735 73.36765] bins=100, y limits=[-1.5 1.5] bins=300, neutron pixel t, list all neutrons", restore_neutron=1)
-AT (0,0,0) RELATIVE center_det
+\item Cylindrical monitor
+  \begin{mcstas}
+    COMPONENT nD_Mantid_01 = Monitor_nD(xwidth=(4.0-0.0005-0.00002)*2, yheight=3,
+    options="mantid banana, theta limits=[-73.36735 73.36765] bins=100, y limits=[-1.5 1.5] bins=300, neutron pixel t, list all neutrons", restore_neutron=1)
+    AT (0,0,0) RELATIVE center_det
 \end{mcstas}
 \end{itemize}
+
+Other, ordinary \MCS monitors will also be visible in the resulting
+Mantid workspace, but will not be easily processible using the Mantid
+TOF data reduction schemes.
+
+\subsection{Compiling and running your simulation for Mantid output}
+Geometry information in Mantid is handled via a so-called Instrument
+Definition File (IDF) in xml-format, possibly embedded in a NeXus
+file. The creation of the IDF and related NeXus file is handled in the
+following steps:
+\begin{enumerate}
+\item First of all, enable NeXus in the compilation process:
+ \begin{mcstas} 
+   export MCSTAS_CFLAGS="-g -lm -O2 -DUSE_NEXUS -lNeXus"
+ \end{mcstas}
+\item Compile the instrument via the mcrun utility (add \verb+--mpi+
+  if you need parallelization support):
+ \begin{mcstas} 
+   mcrun -c ILL_H16_IN5_Mantid.instr -n0
+ \end{mcstas}
+\item Generate the IDF via the mcdisplay utility (and press enter
+  until the simulation runs):
+ \begin{mcstas} 
+   mcdisplay --format=Mantid ILL_H16_IN5_Mantid.instr -n0
+ \end{mcstas}
+\item Finally, run a simulation with NeXus output:
+ \begin{mcstas} 
+   mcrun --format=NeXus ILL_H16_IN5_Mantid.instr 
+ \end{mcstas} 
+\end{enumerate}
+
+\subsection{Looking at instrument output in Mantid}
+
+
+
+
 \section{\MCS and MCNP(X)}
