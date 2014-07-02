@@ -59,6 +59,8 @@ automatic transfer of geometry to a Mantid IDF file:
     AT (0,0,0) RELATIVE center_det
 \end{mcstas}
 \end{itemize}
+The two instruments \verb+templateSANS_Mantid.instr+ and
+\verb+ILL_H16_IN5_Mantid.instr+ have these features enabled.
 
 Other, ordinary \MCS monitors will also be visible in the resulting
 Mantid workspace, but will not be easily processible using the Mantid
@@ -90,9 +92,27 @@ following steps:
  \end{mcstas} 
 \end{enumerate}
 
+
 \subsection{Looking at instrument output in Mantid}
-
-
-
+In Mantid, your new NeXus file should behave more or less as usual,
+that is
+\begin{itemize}
+\item Start by loading the file using either the Load button or the
+algorithm LoadMcStas to load the event file. 
+\item After a succesful load, you should have a workspace group with
+this content
+\begin{center}\includegraphics[width=.5\textwidth]{figures/mantid-1}\end{center}
+\item Plot the histogram event data stored in the monitor Cp\_0...\\
+\begin{center}\includegraphics[width=.5\textwidth]{figures/mantid-2}\end{center}
+\item Plot the TOF events on the full instrument geometry. In this
+step a bit of zooming and translation may be needed to show a nice
+view of the instrument.
+\begin{center}\includegraphics[width=.5\textwidth]{figures/mantid-3}\end{center}
+\end{itemize}
+The instrument \verb+ILL_H16_IN5_Mantid.instr+ included in \MCS 2.1 will load and present
+simulated event-data, but the current time-definition of the event data does not comply
+fully with Mantid for data-reduction purposes - this should be
+corrected for the next \MCS release.
 
 \section{\MCS and MCNP(X)}
+
