@@ -115,4 +115,31 @@ fully with Mantid for data-reduction purposes - this should be
 corrected for the next \MCS release.
 
 \section{\MCS and MCNP(X)}
-
+As of \MCS 2.1 we provide a a series of mechanisms to interchange simulated events
+between \MCS and MCNP or MCNPX:
+\begin{enumerate}
+  \item Typically, the intensity parameters in our \MCS source components are
+    derived from MCNP(X) simulations, though parametric fits to MCNP\emph{tallies}.
+  \item The PTRAC method to read MCNP(X) events into McStas has been
+    available since \MCS 1.10 and is a contribution from Chama
+    Hennane, ENSIMAG and Emmanuel Farhi, ILL.
+  \item The SSR/SSW method to send events via the MCNP ``source
+    surface'' mechanism between both codes has been available since
+    \MCS 2.0. This work has mainly been done by Esben Klinkby, DTU
+    Nutech, with contributions from Erik Knudsen and Peter Willendrup,
+    both DTU Physics. \label{SSW}
+  \item With access to an MCNP source-code license and a patch
+    developed by Esben Klinkby, DTU Nutech, it is further
+    possible to directly compile and link a \MCS instrument with
+    MCNP. The method is however quite speed-limited at present, but we
+    envision releasing an improved version later. If interested,
+    please contact Esben Klinkby directly.
+\end{enumerate}
+Especially method \ref{SSW} gives a powerful combination with the
+\emph{scatter logging} mechanism discussed in the paper
+\cite{BergbaeckKnudsen201420}, allowing to estimate $\gamma$ dose-rates
+in MCNP from neutron intensity lost in neutron optics, i.e. the non-transmitted
+fraction of the \MCS neutron beam (and corresponding
+intensity/weight). Through the \MCS example instruments and also the \MCS share at
+\verb+http://mcstas.org/download/share+ we provide a couple of
+examples of the use of the \emph{scatter logger}
