@@ -102,7 +102,8 @@ function update_defaults(sim) {
         // choose between user value or default
         if (chosen[sim]        != undefined &&
             chosen[sim][param] != undefined) {
-            inp.val(chosen[sim][param]);
+	    // Remove spaces and brackets if present (occurs when 'reconfiguring' a scan)
+            inp.val(chosen[sim][param].replace(/[\[\]\ ]+/g,''));
         } else {
             inp.val(defaults[sim][param]["value"]);
         }
