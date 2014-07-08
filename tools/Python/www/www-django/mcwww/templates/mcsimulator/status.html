@@ -25,9 +25,13 @@
 {% block content %}
   <h1>{{ job.sim.name }}:
     <small>{{ run.created|date:'DATETIME_FORMAT' }} ({{ run.created|timesince }} old)</small></h1>
+  <fieldset>
+    <legend>Simulation Parameters:</legend>
   <pre>{% for p in params %} {{ p }} {% endfor %}
-    (<a target="_blank" href="/job/{{ job.ref }}">reconfigure</a>)</pre>
-
+    (<a target="_blank" href="/job/{{ job.ref }}">reconfigure</a>)
+  </pre>
+  <p>Status: <b><font color="#000000">{{ run.status }}</font></b>
+  </fieldset>
   <script language="javascript">
     var runid = "{{ runref }}";
     var sim   = "{{ job.sim.name }}";
@@ -38,7 +42,7 @@
   <script language="javascript">
     $(document).ready(doInit);
   </script>
-
+  
   <fieldset id="linFieldset">
     <legend id="linLegend">
       Data plots [LIN] (click here for logarithmic - or press 'L')</legend>
