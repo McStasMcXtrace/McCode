@@ -46,11 +46,13 @@
 *
 * EXAMPLE:
 * To generate PTRAC files using MCNP/MCNPX, add at the end of your input file:
+*   f1:n          2001              // tally
+*   (...)
 *   ptrac         filename = asc
 *                 max  = -1000000   // number of neutrons to generate and stop
 *                 write = all
 *                 event = sur
-*                 filter = 2001,jsu // surface id
+*                 filter = 2001,jsu // surface tally id
 * To create a 'source' from a MCNP simulation event file for the ILL:
 * COMPONENT source = Virtual_mcnp_input(
 *    filename = "H10p", intensity=4.28e18, nps=11328982,

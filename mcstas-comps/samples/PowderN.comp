@@ -63,7 +63,7 @@
 * cite authors with references bellow (in <a href="#links">Links</a>).
 *
 * Example: PowderN(reflections = "c60.lau", d_phi = 15 , radius = 0.01,
-*   yheight = 0.05, Vc = 1076.89, sigma_abs = 0, Delta_d=0, DW=1,
+*   yheight = 0.05, Vc = 1076.89, sigma_abs = 0, delta_d_d=0, DW=1,
 *   format=Crystallographica)
 *
 * <b>Powder definition file format</b>
@@ -77,7 +77,7 @@
 *   #sigma_abs    <value of Absorption cross section [barns]>
 *   #sigma_inc    <value of Incoherent cross section [barns]>
 *   #Debye_Waller <value of Debye-Waller factor DW>
-*   #Delta_d/d    <value of Detla_d/d width for all lines>
+*   #delta_d_d/d    <value of Detla_d/d width for all lines>
 * These values are not read if entered as component parameters (Vc=...)
 *
 * The signification of the columns in the numerical block may be
@@ -89,7 +89,7 @@
 *
 * An other possibility to define other formats is to set directly
 * the signification of the columns as a vector of indexes in the order
-*   format={j,d,F2,DW,Delta_d/d,1/2d,q,F,Strain}
+*   format={j,d,F2,DW,delta_d_d/d,1/2d,q,F,Strain}
 * Signification of the symbols is given below. Indices start at 1.
 * Indices with zero means that the column are not present, so that:
 *   Crystallographica={ 4,5,7,0,0,0,0,0,0 }
@@ -105,7 +105,7 @@
 *   #column_F2    <index of the squared str. factor '|F|^2' column [b]>
 *   #column_F     <index of the structure factor norm '|F|' column>
 *   #column_DW    <index of the Debye-Waller factor 'DW' column>
-*   #column_Dd    <index of the relative line width Delta_d/d broadening 'Dd' column>
+*   #column_Dd    <index of the relative line width delta_d_d/d broadening 'Dd' column>
 *   #column_inv2d <index of the 1/2d=sin(theta)/lambda 'inv2d' column>
 *   #column_q     <index of the scattering wavevector 'q' column [Angs-1]>
 *   #column_strain <index of the strain line shift Delta/d [ppm]>
@@ -146,9 +146,9 @@
 * d_phi:    Angle corresponding to the vertical angular range
 *             to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
 * pack:     Packing factor [1]
-* Delta_d:  Global relative Delta_d/d broadening when the 'w' column
+* delta_d_d:  Global relative delta_d_d/d broadening when the 'w' column
 *             is not available. Use 0 if ideal. [0-1]
-* Strain:   Global relative Delta_d/d shift when the 'Strain' column
+* Strain:   Global relative delta_d_d/d shift when the 'Strain' column
 *             is not available. Use 0 if ideal. [ppm]
 * format:   Name of the format, or list of column indexes
 *             (see Description). [no quotes]
@@ -207,7 +207,7 @@ DEFINE COMPONENT PowderN
 DEFINITION PARAMETERS (format=Undefined)
 SETTING PARAMETERS (string reflections=0, string geometry=0,
                     radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
-                    pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
+                    pack=1, Vc=0, sigma_abs=0, sigma_inc=0, delta_d_d=0, p_inc=0.1, p_transmit=0.1,
                     DW=0, nb_atoms=1, d_phi=0, p_interact=0,
                     concentric=0, density=0, weight=0, barns=1, Strain=0)
 OUTPUT PARAMETERS (line_info, columns, offdata)
@@ -235,7 +235,7 @@ SHARE
       int j;                      /* Multiplicity */
       double DWfactor;            /* Debye-Waller factor */
       double w;                   /* Intrinsic line width */
-      double Epsilon;             /* Strain=Delta_d/d shift in ppm */
+      double Epsilon;             /* Strain=delta_d_d/d shift in ppm */
     };
 
   struct line_info_struct
@@ -316,7 +316,7 @@ SHARE
       "column_inv2d", "column_1/2d", "column_sintheta/lambda",
       "column_q", /* 14 */
       "DW", "Debye_Waller",
-      "Delta_d/d",
+      "delta_d_d/d",
       "column_F ",
       "V_rho",
       "density",
@@ -412,7 +412,7 @@ SHARE
       j        = (j > 0 ? j : 0);
       q        = (d > 0 ? 2*PI/d : 0); /* this is q */
       if (Epsilon && fabs(Epsilon) < 1e6) {
-        q     -= Epsilon*q; /* dq/q = -Delta_d/d = -Epsilon */
+        q     -= Epsilon*q; /* dq/q = -delta_d_d/d = -Epsilon */
       }
       DWfactor = (DWfactor > 0 ? DWfactor : 1);
       w        = (w>0 ? w : 0); /* this is q and d relative spreading */
@@ -505,7 +505,7 @@ INITIALIZE
 %{
   int i=0;
   struct line_data *L;
-  line_info.Dd       = Delta_d;
+  line_info.Dd       = delta_d_d;
   line_info.DWfactor = DW;
   line_info.V_0      = Vc;
   line_info.rho      = density;

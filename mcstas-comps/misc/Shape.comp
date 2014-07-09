@@ -68,6 +68,7 @@ OUTPUT PARAMETERS(offdata)
 
 SHARE
 %{
+  %include "read_table-lib"
   %include "interoff-lib"
 %}
 
