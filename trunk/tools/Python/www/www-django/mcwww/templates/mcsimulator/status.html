@@ -3,6 +3,7 @@
 
 {% block title %}Results{% endblock %}
 {% block head_extra %}
+  <meta http-equiv="Refresh" content="5">
   <style type="text/css">
     p { color: #336699; }
     div.centered {
@@ -42,7 +43,7 @@
   <script language="javascript">
     $(document).ready(doInit);
   </script>
-  
+
   <fieldset id="linFieldset">
     <legend id="linLegend">
       Data plots [LIN] (click here for logarithmic - or press 'L')</legend>
@@ -86,6 +87,5 @@
       </ul>
     </div>
   </fieldset>
-
 
 {% endblock %}
