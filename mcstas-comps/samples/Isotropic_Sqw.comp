@@ -1835,7 +1835,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       Sqw_Data->SQW[index_w][index_q].Q     = q;
 
       /* compute cumulated probability and take into account Jacobian with additional 'q' factor */
-      Sqw_Data->SQW[index_w][index_q].cumul_proba = Table_Index(Sqw_full, index_q, index_w); /* q*S(q,w) */
+      Sqw_Data->SQW[index_w][index_q].cumul_proba = q*Table_Index(Sqw_full, index_q, index_w); /* q*S(q,w) */
       if (index_q) Sqw_Data->SQW[index_w][index_q].cumul_proba += Sqw_Data->SQW[index_w][index_q-1].cumul_proba;
       else Sqw_Data->SQW[index_w][index_q].cumul_proba = 0;
     }
