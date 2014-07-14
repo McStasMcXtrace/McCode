@@ -42,7 +42,7 @@
 * <li>The component relies on the new ess_source-lib which is expected to become further enriched during design-finaliziation and construciton of the ESS.
 * </ol>
 *
-* Units of flux: n/cm^2/s/AA/ster
+* Units of Brilliance: n/cm^2/s/AA/ster
 * (McStas units are in general neutrons/second)
 *
 * Derived from ESS_moderator_long which was debugged intensively against Mezei note (4/12 2000) and VitESS @ Rencurel 2006.
@@ -319,21 +319,21 @@ MCDISPLAY
   circle("xz", cx,  cy-yheight_c/2.0, cz, cyl_radius);
   line(cx, cy-yheight_c/2.0, cz+cyl_radius, cx, cy+yheight_c/2.0, cz+cyl_radius);
   line(cx, cy-yheight_c/2.0, cz-cyl_radius, cx, cy+yheight_c/2.0, cz-cyl_radius);
-  line(cx+cyl_radius, cy+yheight_c/2.0, cz, cx+cyl_radius, cy+yheight_c/2.0, cz);
+  line(cx+cyl_radius, cy-yheight_c/2.0, cz, cx+cyl_radius, cy+yheight_c/2.0, cz);
   line(cx-cyl_radius, cy-yheight_c/2.0, cz, cx-cyl_radius, cy+yheight_c/2.0, cz);
   
     /* Draw thermal moderators as a couple of squares + some lines */
 
     // Left
-    multiline(4, cx+t1x*cyl_radius, cy+-yheight_t/2.0, cz+t1z*cyl_radius,
+    multiline(5, cx+t1x*cyl_radius, cy-yheight_t/2.0, cz+t1z*cyl_radius,
   	      cx+t1x*cyl_radius + t1x*xwidth_t, cy-yheight_t/2.0, cz+t1z*cyl_radius + t1z*xwidth_t,
   	      cx+t1x*cyl_radius + t1x*xwidth_t, cy+yheight_t/2.0, cz+t1z*cyl_radius + t1z*xwidth_t,
-  	      cx+t1x*cyl_radius, cy+yheight_t/2.0, cz+t1z*cyl_radius);
+  	      cx+t1x*cyl_radius, cy+yheight_t/2.0, cz+t1z*cyl_radius, cx+t1x*cyl_radius, cy-yheight_t/2.0, cz+t1z*cyl_radius);
     // Right
-    multiline(4, t2x*cyl_radius, -yheight_t/2.0, cz+t2z*cyl_radius,
-  	      cx+t2x*cyl_radius + t2x*xwidth_t, cy+yheight_t/2.0, cz+t2z*cyl_radius + t2z*xwidth_t,
-  	      cx+t2x*cyl_radius + t2x*xwidth_t, cy+yheight_t/2.0, cz+t2z*cyl_radius + t2z*xwidth_t,
-  	      cx+t2x*cyl_radius, cy+yheight_t/2.0, cz+t2z*cyl_radius);
+    multiline(5, cx+t2x*cyl_radius, cy-yheight_t/2.0, cz+t2z*cyl_radius,
+	      cx+t2x*cyl_radius + t2x*xwidth_t, cy-yheight_t/2.0, cz+t2z*cyl_radius + t2z*xwidth_t,
+	      cx+t2x*cyl_radius + t2x*xwidth_t, cy+yheight_t/2.0, cz+t2z*cyl_radius + t2z*xwidth_t,
+	      cx+t2x*cyl_radius, cy+yheight_t/2.0, cz+t2z*cyl_radius, cx+t2x*cyl_radius, cy-yheight_t/2.0, cz+t2z*cyl_radius);
     
     /* Dashed lines for indicating "beam extraction" area... */
     dashed_line(cx+t1x*cyl_radius,cy-yheight_c/2.0, cz+t1z*cyl_radius, cx+t1x*r_empty, cy-yheight_c/2.0, cz+t1z*r_empty,10);
