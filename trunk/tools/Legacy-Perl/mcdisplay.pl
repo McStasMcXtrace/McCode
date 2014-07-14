@@ -615,11 +615,11 @@ Transform {
               write_process("sinr = $r*sin(2*pi/24*(0:24));\n");
               write_process("cte  = ones(1, 25);\n");
               if($plane =~ /xy|yx/i) {
-                write_process("x=cosr ; y=sinr ; z=$z*cte;\n");
+                write_process("x=$x+cosr ; y=$y+sinr ; z=$z*cte;\n");
               } elsif($plane =~ /xz|zx/i) {
-                write_process("x=cosr ; y=$y*cte ; z=sinr;\n");
+                write_process("x=$x+cosr ; y=$y*cte ; z=$z+sinr;\n");
               } elsif($plane =~ /yz|zy/i) {
-                write_process("x=$x*cte ; y=cosr ; z=sinr;\n");
+                write_process("x=$x*cte ; y=$y+cosr ; z=$z+sinr;\n");
               }
               write_process("coords=[x;y;z;1+0*z];\n");
               write_process("INSTRUMENT.$comp.K{size(INSTRUMENT.$comp.K,2)+1}=coords;\n");
