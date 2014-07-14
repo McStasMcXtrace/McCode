@@ -103,17 +103,20 @@ DECLARE
   int wasleft;
   int cosine;
   double tx,ty,tz;
-
+  double cx,cy,cz,cyl_radius;
+  double t1x,t1y,t1z,t2x,t2y,t2z;
+  
   /* Target station geometry... */
   ess_moderator_struct modextras;
   functype cold_bril;
   functype thermal_bril;
   double tfocus_width,  tfocus_time,  dt;
+  double r_empty;
 %}
 
 INITIALIZE
 %{
-  /* Weight mulitpliers */
+  /* Weight multipliers */
   w_mult=acc_power/5;
   w_geom=1;
   w_geom_c=1;
@@ -160,7 +163,12 @@ INITIALIZE
     }
     cold_bril=ESS_2014_Schoenfeldt_cold;
     thermal_bril=ESS_2014_Schoenfeldt_thermal;
-    } else {
+    cx = 0; cy=0; cz=-0.12; cyl_radius=0.12;
+    t1x=sin(DEG2RAD*120/2);t1z=cos(DEG2RAD*120/2);
+    t2x=-sin(DEG2RAD*120/2);t2z=cos(DEG2RAD*120/2);
+    t1y=0; t2y=0;
+    r_empty=2;
+  } else {
     fprintf(stderr,"FATAL: sourcedef %s is not defined!\n",sourcedef);
     exit(-1);
   }
@@ -305,62 +313,60 @@ TRACE
 MCDISPLAY
 %{
   /* if (planar==0) { */
-  /*   /\* Draw cold moderator as cylinder *\/ */
-  /*   magnify("xz"); */
-  /*   circle("xz", 0,  yheight_c/2.0, 0, cyl_radius); */
-  /*   circle("xz", 0,  -yheight_c/2.0, 0, cyl_radius); */
-  /*   line(0, -yheight_c/2.0, cyl_radius, 0, yheight_c/2.0, cyl_radius); */
-  /*   line(0, -yheight_c/2.0, -cyl_radius, 0, yheight_c/2.0, -cyl_radius); */
-  /*   line(cyl_radius, yheight_c/2.0, 0, cyl_radius, yheight_c/2.0, 0);   */
-  /*   line(-cyl_radius, -yheight_c/2.0, 0, -cyl_radius, yheight_c/2.0, 0); */
-  /*   /\* Draw thermal moderators as a couple of squares + some lines *\/ */
+  /* Draw cold moderator as cylinder */
+  magnify("xz");
+  circle("xz", cx,  cy+yheight_c/2.0, cz, cyl_radius);
+  circle("xz", cx,  cy-yheight_c/2.0, cz, cyl_radius);
+  line(cx, cy-yheight_c/2.0, cz+cyl_radius, cx, cy+yheight_c/2.0, cz+cyl_radius);
+  line(cx, cy-yheight_c/2.0, cz-cyl_radius, cx, cy+yheight_c/2.0, cz-cyl_radius);
+  line(cx+cyl_radius, cy+yheight_c/2.0, cz, cx+cyl_radius, cy+yheight_c/2.0, cz);
+  line(cx-cyl_radius, cy-yheight_c/2.0, cz, cx-cyl_radius, cy+yheight_c/2.0, cz);
+  
+    /* Draw thermal moderators as a couple of squares + some lines */
 
-  /*   // Left */
-  /*   multiline(4, t1x*cyl_radius, -yheight_t/2.0, t1z*cyl_radius, */
-  /* 	      t1x*cyl_radius + lt1x*width_t, -yheight_t/2.0, t1z*cyl_radius + lt1z*width_t, */
-  /* 	      t1x*cyl_radius + lt1x*width_t, yheight_t/2.0, t1z*cyl_radius + lt1z*width_t, */
-  /* 	      t1x*cyl_radius, yheight_t/2.0, t1z*cyl_radius); */
-  /*   // Right */
-  /*   multiline(4, t2x*cyl_radius, -yheight_t/2.0, t2z*cyl_radius, */
-  /* 	      t2x*cyl_radius + lt2x*width_t, -yheight_t/2.0, t2z*cyl_radius + lt2z*width_t, */
-  /* 	      t2x*cyl_radius + lt2x*width_t, yheight_t/2.0, t2z*cyl_radius + lt2z*width_t, */
-  /* 	      t2x*cyl_radius, yheight_t/2.0, t2z*cyl_radius); */
+    // Left
+    multiline(4, cx+t1x*cyl_radius, cy+-yheight_t/2.0, cz+t1z*cyl_radius,
+  	      cx+t1x*cyl_radius + t1x*xwidth_t, cy-yheight_t/2.0, cz+t1z*cyl_radius + t1z*xwidth_t,
+  	      cx+t1x*cyl_radius + t1x*xwidth_t, cy+yheight_t/2.0, cz+t1z*cyl_radius + t1z*xwidth_t,
+  	      cx+t1x*cyl_radius, cy+yheight_t/2.0, cz+t1z*cyl_radius);
+    // Right
+    multiline(4, t2x*cyl_radius, -yheight_t/2.0, cz+t2z*cyl_radius,
+  	      cx+t2x*cyl_radius + t2x*xwidth_t, cy+yheight_t/2.0, cz+t2z*cyl_radius + t2z*xwidth_t,
+  	      cx+t2x*cyl_radius + t2x*xwidth_t, cy+yheight_t/2.0, cz+t2z*cyl_radius + t2z*xwidth_t,
+  	      cx+t2x*cyl_radius, cy+yheight_t/2.0, cz+t2z*cyl_radius);
     
-  /*   /\* Dashed lines for indicating "beam extraction" area... *\/ */
-  /*   dashed_line(t1x*cyl_radius, -yheight/2.0, t1z*cyl_radius, lt1x*r_empty, -yheight/2.0, lt1z*r_empty,10); */
-  /*   dashed_line(t1x*cyl_radius, yheight/2.0, t1z*cyl_radius, lt1x*r_empty, yheight/2.0, lt1z*r_empty,10); */
-  /*   dashed_line(t2x*cyl_radius, -yheight/2.0, t2z*cyl_radius, lt2x*r_empty, -yheight/2.0, lt2z*r_empty,5); */
-  /*   dashed_line(t2x*cyl_radius, yheight/2.0, t2z*cyl_radius, lt2x*r_empty, yheight/2.0, lt2z*r_empty,5); */
+    /* Dashed lines for indicating "beam extraction" area... */
+    dashed_line(cx+t1x*cyl_radius,cy-yheight_c/2.0, cz+t1z*cyl_radius, cx+t1x*r_empty, cy-yheight_c/2.0, cz+t1z*r_empty,10);
+    dashed_line(cx+t1x*cyl_radius, cy+yheight_c/2.0, cz+t1z*cyl_radius, cx+t1x*r_empty, cy+yheight_c/2.0, cz+t1z*r_empty,10);
+    dashed_line(cx+t2x*cyl_radius, cy-yheight_c/2.0, cz+t2z*cyl_radius, cx+t2x*r_empty, cy-yheight_c/2.0, cz+t2z*r_empty,5);
+    dashed_line(cx+t2x*cyl_radius, cy+yheight_c/2.0, cz+t2z*cyl_radius, cx+t2x*r_empty, cy+yheight_c/2.0, cz+t2z*r_empty,5);
     
     
-  /*   /\* Circles indicating extent of the "empty" zone where optics is not allowed *\/ */
-  /*   circle("xz", 0,  yheight/2.0, 0, r_empty); */
-  /*   circle("xz", 0,  -yheight/2.0, 0, r_empty); */
+    /* Circles indicating extent of the "empty" zone where optics is not allowed */
+    circle("xz", cx,  cy+yheight_c/2.0, cz, r_empty);
+    circle("xz", cx,  cy-yheight_c/2.0, cz, r_empty);
     
-  /*   /\* Circles indicating the builk shielding of the target monolith at 6 m *\/ */
-  /*   circle("xz", 0,  focus_yh/2.0 , 0, 6); */
-  /*   circle("xz", 0, -focus_yh/2.0 , 0, 6); */
-  /*   circle("xz", 0,  2, 0, 6); */
-  /*   circle("xz", 0, -2, 0, 6); */
+    /* Circles indicating the builk shielding of the target monolith at 6 m */
+    circle("xz", cx,  cy+focus_yh/2.0 , cz, 6);
+    circle("xz", cx, cy-focus_yh/2.0 , cz, 6);
+    circle("xz", cx,  cy+2, cz, 6);
+    circle("xz", cx, cy-2, cz, 6);
     
-  /*   /\* Rectangle indicating the chosen focus rectangle - where the optics starts... *\/ */
-  /*   rectangle("xy",tx,ty,tz,focus_xw,focus_yh); */
-  /* } else { */
-  /*   /\* Simple 'flat', single-spectrum geometry *\/ */
-  /*   double tmpheight,tmpwidth; */
-  /*   if (cold_frac==0) { */
-  /*     tmpheight = yheight_t; */
-  /*     tmpwidth = width_t; */
-  /*   } else { */
-  /*     tmpheight = yheight_c; */
-  /*     tmpwidth = width_c; */
-  /*   } */
-    rectangle("xy",0,0,0,xwidth_c,yheight_c);
-    rectangle("xy",-xwidth_c/2-xwidth_t/2,0,0,xwidth_t,yheight_t);
-    rectangle("xy",xwidth_c/2+xwidth_t/2,0,0,xwidth_t,yheight_t);
-    rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
-    
-  /* }   */
+    /* This last bit is relevant only in connection with 2014 source definition */
+    if (strcasestr(sourcedef,"2014")) {
+      /* Arrow indicating proton beam direction */
+      line(cx-5.9,cy,cz,cx-cyl_radius-0.1,cy,cz);
+      line(cx-cyl_radius-0.2*cos(10*DEG2RAD),cy,cz+0.2*sin(10*DEG2RAD),cx-cyl_radius-0.1,cy,cz);
+      line(cx-cyl_radius-0.2*cos(10*DEG2RAD),cy,cz-0.2*sin(10*DEG2RAD),cx-cyl_radius-0.1,cy,cz);
+      
+      /* Rectangle indicating the chosen focus rectangle - where the optics starts... */
+      rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
+      rectangle("xy",0,0,0,xwidth_c,yheight_c);
+      rectangle("xy",-xwidth_c/2-xwidth_t/2,0,0,xwidth_t,yheight_t);
+      rectangle("xy",xwidth_c/2+xwidth_t/2,0,0,xwidth_t,yheight_t);
+      rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
+      
+    }
 %}
 
 END
