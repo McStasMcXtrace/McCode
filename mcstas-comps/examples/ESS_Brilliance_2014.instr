@@ -29,7 +29,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ESS_Brilliance_2014(frac=1, power=5, flat=0, string srcdef="2014",Yheight=0.1, WidthC=0.2,WidthT=0.25,np=1,uniform=0, ISleft=0.5, angle=-1, lambdamin=0.2, lambdamax=20)
+DEFINE INSTRUMENT ESS_Brilliance_2014(frac=0.5, power=5, Yheight=0.015, np=1, ISleft=0.5, lambdamin=0.01, lambdamax=8)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -42,6 +42,8 @@ DECLARE
   double MonTransl;
   double XW, YH;
   char options1[256],options2[256],options3[256],options4[256];
+  char srcdef[128];
+  double WidthC=0.23,WidthT=0.12;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -56,6 +58,7 @@ INITIALIZE
   sprintf(options4,"user1 bins=201 limits=[-%g,%g]",YH/2,YH/2);
   sprintf(options2,"user1 bins=201 limits=[-%g,%g], user2 bins=201 limits=[-%g,%g]",XW/2,XW/2,YH/2,YH/2);
   sprintf(options3,"user1 bins=201 limits=[-%g,%g], user2 bins=201 limits=[-%g,%g]",1.05*(WidthC/2),1.05*(WidthC/2),1.05*Yheight/2,1.05*Yheight/2);
+  sprintf(srcdef,"2014");
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -72,69 +75,51 @@ TRACE
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
-  COMPONENT Source=ESS_moderator(yheight_t=Yheight,yheight_c=Yheight,width_c=WidthC ,width_t=WidthT,cyl_radius=0.0,dist=1,focus_xw=0.01,focus_yh=0.01,Lmin=lambdamin,Lmax=lambdamax, cold_frac=frac, sourcedef=srcdef, acc_power=power, planar=flat, n_pulses=np, uniform=uniform, isleft=ISleft, beamport_angle=angle)
+  COMPONENT Source=ESS_moderator(yheight_t=Yheight,yheight_c=Yheight,dist=1,focus_xw=0.01,focus_yh=0.01,Lmin=lambdamin,Lmax=lambdamax, cold_frac=frac, sourcedef=srcdef, acc_power=power, n_pulses=np, isleft=ISleft)
   AT (0, 0, 0) RELATIVE Origin
 EXTEND %{
   IsCold=cold;
   SrcX=x;SrcY=y;SrcZ=z;
-  if (cold){
-    Theta=(theta_tmp-PI/2)*cyl_radius;
-  } else {
-    Theta=0;
-  }
-
-  //printf("Source emission point width weight: %g %g %g %g\n",x,y,z,p);
 %}
 
-/* Cylindrical Monitor wrapping around the cyl. cold source - NOTE: Only monitors cold neutrons from cold moderator */
-/* COMPONENT Cyl = Monitor_nD( */
-/*   xwidth=2*Width, yheight=1.1*Yheight, filename="cyl.dat", */
-/*   options="banana, theta limits=[-35 35] bins=101, auto y") */
-/* WHEN (IsCold && !flat) AT (0,0,0) RELATIVE PREVIOUS */
-
-/* /\* TOF-lambda montitor at 20cm *\/ */
-/* COMPONENT TOFLmon = TOFLambda_monitor( */
-/*     nL = 196, nt = 601, filename = "tofl", tmin = 0, */
-/*     tmax = 20000, Lmin = lambdamin, Lmax = lambdamax, xwidth=1, yheight=1) */
-/*   AT (0, 0, 0.2) RELATIVE Source */
-
-/* PSD at 21 cm*/
-/* COMPONENT PSDmon = PSD_monitor( */
-/*    filename = "PSD", nx=101, ny=101, */
-/*    xwidth=1.2*Width, yheight=1.2*Yheight) */
-/*   AT (0, 0, 0.21) RELATIVE Source */
-
-/* /\* Vertial linear PSD at 21.1cm *\/ */
-/* COMPONENT PSDlinmonY = PSDlin_monitor(filename = "PSDlinY", nx=101,  */
-/*    xwidth=2.2*Yheight, yheight=2.2*Width) */
-/*   AT (0, 0, 0.211) RELATIVE Source */
-/*   ROTATED(0,0,90) RELATIVE Source */
-
-/* /\* Horz linear PSD at 21.11cm *\/ */
-/* COMPONENT PSDlinmonX = PSDlin_monitor(filename = "PSDlinX", nx=101,  */
-/*    xwidth=2.2*Width, yheight=2.2*Yheight) */
-/*   AT (0, 0, 0.2111) RELATIVE Source */
-/*   ROTATED(0,0,0) RELATIVE Source */
-
-  COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, options=options1, restore_neutron=1)
+  COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
 
-
-  COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, options=options4, restore_neutron=1)
+  COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position / [m]", options=options4, restore_neutron=1)
   WHEN(cold) AT (0, 0, 1) RELATIVE Source
 
-  COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, user2=SrcY, options=options2, restore_neutron=1)
+  COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", user2=SrcY,username2="Vertical position / [m]", options=options2, restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
 
-  COMPONENT MonND4 = Monitor_nD(xwidth=1.05*WidthC/2, yheight=1.05*Yheight/2, user1=SrcX, user2=SrcY, options=options3, restore_neutron=1)
- AT (0, 0, 1) RELATIVE Source
+  COMPONENT MonND4 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", user2=SrcY,username2="Vertical position / [m]", options=options2, restore_neutron=1)
+ WHEN(cold && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.05) AT (0, 0, 1) RELATIVE Source
 
-/* Brilliance monitor. Note use of geometry in srcarea definition */
-COMPONENT Brillmon = Brilliance_monitor(
-    nlam = 101, nt = 101, filename = "brill", t_0 = 0,
+  COMPONENT MonND5 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", user2=SrcY,username2="Vertical position / [m]", options=options2, restore_neutron=1)
+ WHEN ((!cold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.15 && fabs(SrcX)>0.12) AT (0, 0, 1) RELATIVE Source
+
+COMPONENT BrillmonCOLD = Brilliance_monitor(
+    nlam = 101, nt = 101, filename = "brillCOLD", t_0 = 0,
     t_1 =10000, lambda_0 = lambdamin, lambda_1 = lambdamax,
-    Freq =14, toflambda=1,tofcuts=1, srcarea=(100*WidthC*100*Yheight))
-  AT (0, 0, 1) RELATIVE Source
+    Freq =14, toflambda=0,tofcuts=0, srcarea=(100*WidthC*100*Yheight), restore_neutron=1)
+WHEN(cold)  AT (0, 0, 1) RELATIVE Source
+
+COMPONENT BrillmonCOLD_COLL = Brilliance_monitor(
+    nlam = 101, nt = 101, filename = "brillCOLD_COLL", t_0 = 0,
+    t_1 =10000, lambda_0 = lambdamin, lambda_1 = lambdamax,
+    Freq =14, toflambda=0,tofcuts=0, srcarea=(100*0.1*100*2*Yheight/2.5), restore_neutron=1)
+  WHEN(cold && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.05)  AT (0, 0, 1) RELATIVE Source
+
+COMPONENT BrillmonTHRM = Brilliance_monitor(
+    nlam = 101, nt = 101, filename = "brillTHRM", t_0 = 0,
+    t_1 =10000, lambda_0 = lambdamin, lambda_1 = lambdamax,
+    Freq =14, toflambda=0,tofcuts=0, srcarea=(2*100*WidthT*100*Yheight), restore_neutron=1)
+  WHEN (!cold) AT (0, 0, 1) RELATIVE Source
+
+COMPONENT BrillmonTHRM_COLL = Brilliance_monitor(
+    nlam = 101, nt = 101, filename = "brillTHRM_COLL", t_0 = 0,
+    t_1 =10000, lambda_0 = lambdamin, lambda_1 = lambdamax,
+    Freq =14, toflambda=0,tofcuts=0, srcarea=(100*0.03*2*100*2*Yheight/2.5), restore_neutron=1)
+  WHEN ((!cold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.15 && fabs(SrcX)>0.12)  AT (0, 0, 1) RELATIVE Source
 
 
 /* This section is executed when the simulation ends (C code). Other    */
