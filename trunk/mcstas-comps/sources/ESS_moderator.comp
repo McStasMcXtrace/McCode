@@ -275,24 +275,13 @@ TRACE
   }
   
   w_focus=focus_xw*focus_yh/sqrt(tx*tx+ty*ty+tz*tz);
-  // printf("Weights %g %g %g %g %g %g\n",p ,w_stat ,cold_frac ,w_focus ,w_geom, w_mult);
-  // Solid angle of object as seen from origo...
 
   p*=w_stat*w_focus*w_geom*w_mult;
-  //  p*=w_focus*w_geom*w_mult;
   t+=(double)floor((n_pulses)*rand01())/ESS_SOURCE_FREQUENCY;   /* Select a random pulse */
 
   /* Correct weight for sampling of cold vs. thermal events. */
   if (cold) {
     p /=cold_frac;
-    //p=1;
-      /* Correct position to actual physical emission location on cylinder (propagate back from T. Schoenfeldts plane */
-      /* ALLOW_BACKPROP; */
-      /* double t1,t2; */
-      /* cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, cyl_radius-1e-6, yheight_c); */
-      /* printf("Times... %g %g\n",t1,t2); */
-      /* PROP_DT(fmax(t1,t2)); */
-      /* DISALLOW_BACKPROP; */
   } else {
     p/=(1-cold_frac);
     if (wasleft) {
@@ -301,12 +290,6 @@ TRACE
       p/=(1-isleft);
     }
   }
-  //printf("Weights %g %g %g %g %g %g\n",p ,w_stat ,cold_frac ,w_focus ,w_geom, w_mult);
-  /* if (!planar) { */
-  /*   double t1,t2; */
-  /*   cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, cyl_radius-1e-6, yheight_c); */
-  /*   if(t1>0 || t2>0) {PROP_DT(fmax(t1,t2)); SCATTER; ABSORB;} */
-  /* } */
 
 %}
 
