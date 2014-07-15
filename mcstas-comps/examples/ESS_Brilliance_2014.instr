@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McStas instrument definition URL=http://www.mcstas.org
 *
-* Instrument: ESS_Brilliance_2012
+* Instrument: ESS_Brilliance_2014
 *
 * %Identification
 * Written by: Peter Willendrup (pkwi@fysik.dtu.dk)
@@ -11,14 +11,18 @@
 * Version: 0.2
 * %INSTRUMENT_SITE: ESS
 *
-* This instrument produces the ESS 2012 cold brilliance.
+* This instrument produces the ESS 2014 updated brilliance, including the "pancake" moderator option.
 *
 * %Description
-* This instrument produces the ESS 2012 updated cold brilliance. 
+* This instrument produces the ESS 2014 updated brilliance, including the "pancake" moderator option.
 *
-* The Brilliance_monitor is used to determine both the mean and peak brilliances, plus pulse-shapes for different wavelengths
+* The Brilliance_monitor is used to determine both the mean and peak brilliances, plus pulse-shapes for different wavelengths.
 *
-* Example: ESS_Brilliance_2012 Detector: Brillmon_I=3.05e+16 (First detector output)
+* Note that to reproduce the curves listed in Troels Schoenfeldt's paper on the topic, you need to look at the "collimated" monitors that 
+* take neutrons from only part of the moderator surface.
+*
+* Note also that the 2014 version of the moderator spectra emits neutrons from a FLAT surface through the component origo, positioned tangentially to 
+* the cold moderator "bucket". This means that you may need to shift the position of the moderator along z, when introducing it to your existing instruments.
 *
 * %Parameters
 *
@@ -29,7 +33,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ESS_Brilliance_2014(frac=0.5, power=5, Yheight=0.015, np=1, ISleft=0.5, lambdamin=0.01, lambdamax=8)
+DEFINE INSTRUMENT ESS_Brilliance_2014(frac=0.5, power=5, Yheight=0.015, np=1, ISleft=0.5, lambdamin=0.1, lambdamax=20)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
