@@ -1,24 +1,23 @@
 /*******************************************************************************
 *         McStas instrument definition URL=http://www.mcstas.org
 *
-* Instrument: ESS_Brilliance_2001
+* Instrument: ESS_Brilliance_TDR
 *
 * %Identification
 * Written by: Peter Willendrup (pkwi@fysik.dtu.dk)
-* Date: 20130425
+* Date: 201407
 * Origin: DTU Fysik
 * Release: McStas 2.x
 * Version: 0.2
 * %INSTRUMENT_SITE: ESS
 *
-* This instrument produces the legacy ESS 2001 cold brilliance, at 14 Hz 2.86 ms.
+* This instrument produces the ESS TDR brilliance.
 *
 * %Description
-* This instrument produces the legacy ESS 2001 brilliance, at 14 Hz 2.86 ms.
+* This instrument produces the ESS TDR brilliances. 
 *
 * The Brilliance_monitor is used to determine both the mean and peak brilliances, plus pulse-shapes for different wavelengths
 *
-* %Parameters
 *
 * %Link
 * A reference/HTML link for more information
@@ -27,7 +26,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ESS_Brilliance_2001(frac=0.5, power=5, Yheight=0.14, np=1, ISleft=0.5, lambdamin=0.1, lambdamax=20)
+DEFINE INSTRUMENT ESS_Brilliance_TDR(frac=0.5, power=5, Yheight=0.14, np=1, ISleft=0.5, lambdamin=0.1, lambdamax=20)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -56,7 +55,7 @@ INITIALIZE
   sprintf(options4,"user1 bins=201 limits=[-%g,%g]",YH/2,YH/2);
   sprintf(options2,"user1 bins=201 limits=[-%g,%g], user2 bins=201 limits=[-%g,%g]",XW/2,XW/2,YH/2,YH/2);
   sprintf(options3,"user1 bins=201 limits=[-%g,%g], user2 bins=201 limits=[-%g,%g]",1.05*(WidthC/2),1.05*(WidthC/2),1.05*Yheight/2,1.05*Yheight/2);
-  sprintf(srcdef,"2001");
+  sprintf(srcdef,"TDR");
 %}
 
 /* Here comes the TRACE section, where the actual      */
