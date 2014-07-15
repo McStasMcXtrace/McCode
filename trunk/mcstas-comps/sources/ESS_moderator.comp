@@ -108,7 +108,7 @@ DECLARE
   int cosine;
   // Target coordinates (focusing)
   double tx,ty,tz;
-  // Displacement of cold moderator centre from comp origin, cold moderator radius
+  // Displacement of cold moderator centre from comp origin, cold moderator radius 2014 only!
   double cx,cy,cz,cyl_radius;
   // Vectors giving direction of the thermal slabs
   double t1x,t1y,t1z,t2x,t2y,t2z;
@@ -121,7 +121,7 @@ DECLARE
   /* Time-focusing parameters */
   double tfocus_width,  tfocus_time,  dt;
   /* radius of vacated zone around the moderator */
-  double r_empty;
+  double r_empty=2;
 %}
 
 INITIALIZE
@@ -163,10 +163,52 @@ INITIALIZE
     exit(-1);
   }
   
+  /* Calculate cold cylinder radius from extraction_opening */
+  cyl_radius = 360*xwidth_c/(2*PI*extraction_opening);
   
-  /* ESS-2014 definition: */
-  /* Geometry parameters */
-  if (strcasestr(sourcedef,"2014")) {
+  /* Is beamport_angle set at a meaningful angle - otherwise recalc */
+  if ( beamport_angle<0 || beamport_angle>extraction_opening){
+    beamport_angle = extraction_opening/2.0;
+    printf("%s: WARNING: Resetting your beamport_angle to %g (%g/2) - central beamslot\n",NAME_CURRENT_COMP,beamport_angle,extraction_opening);
+  }
+  
+  /* Calculate positioning of thermal slabs and cold cylinder - NOTE: overwritten in case of ESS 2014 */
+  t1z = cyl_radius*cos(-DEG2RAD*beamport_angle);
+  t1x = cyl_radius*sin(-DEG2RAD*beamport_angle);
+  t1y = 0;
+  /* Wing 2 (right) is at extraction_width-beamport_angle */
+  t2z = cyl_radius*cos(DEG2RAD*(extraction_opening-beamport_angle));
+  t2x = cyl_radius*sin(DEG2RAD*(extraction_opening-beamport_angle));
+  t2y = 0;
+  /* We want unit vectors... */
+  NORM(t1x,t1y,t1z);
+  NORM(t2x,t2y,t2z);
+  cx = 0; cy=0; cz=0;  
+
+  /* Geometry parameters and brilliances specified via the sourcedef string */
+  /* ESS-TDR definition: */
+  if (strcasestr(sourcedef,"TDR")) {	    
+    w_mult *= ESS_SOURCE_FREQUENCY;               /* Correct for frequency */
+    printf("Using ESS TDR brilliance\n");
+    cold_bril=ESS_2012_Lieutenant_cold;
+    thermal_bril=ESS_Mezei_thermal;
+ /* ESS-2001 definition: */  
+  } else if (strcasestr(sourcedef,"2001")) {
+    w_mult *= ESS_SOURCE_FREQUENCY;               /* Correct for frequency */
+    printf("Using ESS 2001 brilliance\n");
+    cold_bril=ESS_Mezei_cold;
+    thermal_bril=ESS_Mezei_thermal;
+ /* ESS-2013 post-TDR updated definition, before ESS "pancake": */  
+  } else if (strcasestr(sourcedef,"2013")) {
+    w_mult *= acc_power;                             /* Is already in per-MW units */
+    printf("Using ESS 2013 brilliance\n");
+    modextras.height_c=yheight_c;
+    modextras.height_t=yheight_t;
+    modextras.tmultiplier=tmax_multiplier;
+    cold_bril=ESS_2013_Schoenfeldt_cold;
+    thermal_bril=ESS_2013_Schoenfeldt_thermal;
+  /* ESS-2014 definition: */  
+  } else if (strcasestr(sourcedef,"2014")) {
     if (xwidth_c!=0.23 || xwidth_t!=0.12 || extraction_opening!=120) {
       fprintf(stderr,"FATAL: sourcedef %s only allows xwidth_c=0.23, xwidth_t=0.12 and extraction_opening=120 !\n",sourcedef);
       exit(-1);
@@ -181,8 +223,7 @@ INITIALIZE
     t1x=sin(DEG2RAD*120/2);t1z=cos(DEG2RAD*120/2);
     t2x=-sin(DEG2RAD*120/2);t2z=cos(DEG2RAD*120/2);
     t1y=0; t2y=0;
-    r_empty=2;
-  } else {
+   } else {
     fprintf(stderr,"FATAL: sourcedef %s is not defined!\n",sourcedef);
     exit(-1);
   }
@@ -193,11 +234,6 @@ INITIALIZE
   modextras.tmultiplier=tmax_multiplier;
   modextras.extractionangle=extraction_opening;
   
-  /* Is beamport_angle set at a meaningful angle - otherwise recalc */
-  if ( beamport_angle<0 || beamport_angle>modextras.extractionangle){
-    beamport_angle = modextras.extractionangle/2.0;
-    printf("%s: WARNING: Resetting your beamport_angle to %g (%g/2) - central beamslot\n",NAME_CURRENT_COMP,beamport_angle,modextras.extractionangle);
-  }
   if (strcasestr(sourcedef,"2014") && beamport_angle != modextras.extractionangle/2.0) {
     printf("%s: WARNING: beamport_angle is not at central slot. With sourcedef %s this means application of a partially analytical brightness model for B(\\theta) \n",NAME_CURRENT_COMP,sourcedef);
   }
@@ -220,25 +256,58 @@ TRACE
   /* Use standard McStas routine or -not for specifying emission directionality */
   cosine = 0;
   
-  /* Geometry adapted from ESS MCNPX model, mid 2012 */
-  if (cold) { //case: cold moderator
-    x = 0.5*randpm1()*xwidth_c;
-    y = 0.5*randpm1()*yheight_c;
-    z = 0;
-    cosine = 0;
-    w_geom = w_geom_c;
-  }  else  { //case: thermal moderator
-    y = 0.5*randpm1()*yheight_t;
-    if (rand01()<isleft) {
-      wasleft=1;
-      x = -xwidth_c/2.0 - rand01()*xwidth_t;
-    } else {
-      wasleft=0;
-      x = xwidth_c/2.0 + rand01()*xwidth_t;
+  /* Emission geometry adapted from ESS MCNPX model, mid 2012 */
+  if (strcasestr(sourcedef,"2014")) {
+    if (cold) { //case: cold moderator
+      x = 0.5*randpm1()*xwidth_c;
+      y = 0.5*randpm1()*yheight_c;
+      z = 0;
+      cosine = 0;
+      w_geom = w_geom_c;
+    }  else  { //case: thermal moderator
+      y = 0.5*randpm1()*yheight_t;
+      if (rand01()<isleft) {
+	wasleft=1;
+	x = -xwidth_c/2.0 - rand01()*xwidth_t;
+      } else {
+	wasleft=0;
+	x = xwidth_c/2.0 + rand01()*xwidth_t;
+      }
+      z = 0;
+      cosine = 0;
+      w_geom = w_geom_t;
+    } 
+  } else {
+    if (cold) {          //case: cold moderator
+      //choose random point on cylinder surface
+      double theta_tmp = (rand01()*extraction_opening - beamport_angle)*DEG2RAD;
+      x     = cyl_radius * sin(theta_tmp);
+      y     = 0.5*randpm1()*yheight_c;
+      z     = cyl_radius * cos(theta_tmp);
+      cosine = 0;
+      w_geom = w_geom_c;
+    }  else  {                      //case: thermal moderator
+      double poshorz, posvert;
+      poshorz = cyl_radius+rand01()*xwidth_t;
+      posvert = 0.5*randpm1()*yheight_t;
+      
+      if (rand01()<isleft) {
+	wasleft=1;
+	x = t1x * poshorz;
+	z = t1z * poshorz;
+      } else {
+	wasleft=0;
+	x = t2x * poshorz;
+	z = t2z * poshorz;
+      }
+      y = posvert;
+      cosine = 0;
+      w_geom = w_geom_t;
     }
-    z = 0;
-    cosine = 0;
-    w_geom = w_geom_t;
+    // Correct for comp origin
+    x = x-cx;
+    y = y-cy;
+    z = z-cz;
   }
   
   randvec_target_rect_real(&xf, &yf, &r, &w_focus,
