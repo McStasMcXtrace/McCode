@@ -1,0 +1,17 @@
+dn: olcDatabase={1}hdb,cn=config
+changetype: modify
+delete: olcAccess
+olcAccess: to * by dn="cn=DummyUser,ou=people,dc=fysik,dc=dtu,dc=dk" none by dn="cn=admin,dc=fysik,dc=dtu,dc=dk" manage
+# {0}
+-
+delete: olcAccess
+olcAccess: to attrs=userPassword,shadowLastChange by self write by anonymous auth
+# {1}
+-
+delete: olcAccess
+olcAccess: to attrs=cn,mail,description by self write by group.exact="cn=Student,dc=fysik,dc=dtu,dc=dk" read by group.exact="cn=itStaff,dc=fysik,dc=dtu,dc=dk" write by group.exact="cn=courseStaff,dc=fysik,dc=dtu,dc=dk" write
+# {2}
+-
+delete: olcAccess
+olcAccess: to attrs=telephoneNumber,roomNumber by group.exact="cn=Student,dc=fysik,dc=dtu,dc=dk" read by group.exact="cn=itStaff,dc=fysik,dc=dtu,dc=dk" write by group.exact="cn=courseStaff,dc=fysik,dc=dtu,dc=dk" write
+# {3}

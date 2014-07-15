@@ -1,0 +1,9 @@
+dn: cn=USERNAME,ou=person,dc=fysik,dc=dtu,dc=dk
+changetype: modify
+add|delete|replace
+:
+sn|cn|userPassword|description|displayName|mail|uid|telephoneNumber|departmentNumber|roomNumber|employeeNumber|roomNumber
+ATTRIBUTE: VALUE
+-
+# ADDITIONAL MODIFICATION FIELDS ARE SEPARATED WITH '-' 
+# ENDS ON A BLANK LINE.

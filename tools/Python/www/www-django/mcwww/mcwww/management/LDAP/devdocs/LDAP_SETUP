@@ -1,0 +1,355 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+===============================================================================================================================================================
+Full Install and setup instructions for LDAP with TLSv1/SSLv3 (same thing apparently) - Mark Lewis : 10-7-14 (Debian 7.5) Virtual Neutrons for Teaching elearn1
+===============================================================================================================================================================
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+- What we are aiming to do is get to a dir tree that look like this:	   and a DIT to look like this:			                                      |
+  ../../LDAP  	     	      	       	   	     	       		      dn: dc=fysik,dc=dtu,dc=dk - (SUFFIX)                         <-- this is the front end tree.
+  ├── devdocs/								      ├── dn: ou=person,SUFFIX - (PERSON)			       	       	      |
+  │   ├── LDAP_SETUP							      │   ├── dn: cn=entry_1,PERSON						      |
+  │   ├── proceedure_00-...						      │   ├── dn: cn=entry_...,PERSON						      |
+  │   ├── ..._16-							      │   ├── dn: cn=entry_N,PERSON						      |
+  │   └── slapNldap_notes						      │   └── DummyUser								      |
+  ├── LDIFs/								      ├── dn: ou=groups,SUFFIX - (GROUPS)					      |
+  │   ├── building/							      │   ├── dn: cn=courseStaff,GROUPS						      |
+  │   │   ├── config_pw.ldif						      │   │	  ├── member: first_dn_of_ou=person,SUFFIX_entry		      |
+  │   │   ├── DB_state_build.ldif					      │   │	  ├── member: ...						      |
+  │   │   ├── structure_state_build.ldif				      │   │	  └── member: last_dn_of_ou=person,SUFFIX_entry			      |
+  │   │   ├── TLS_directives.ldif					      │   ├── dn: cn=itStaff,GROUPS						      |
+  │   │   └── user_population_build.ldif				      │   │	  ├── member: first_dn_of_ou=person,SUFFIX_entry		      |
+  │   ├── deletion/							      │   │	  ├── member: ...						      |
+  │   │   ├── access_state_del.ldif					      │   │	  └── member: last_dn_of_ou=person,SUFFIX_entry			      |
+  │   │   ├── structure_state_del.ldif					      │   └── dn: cn=Students,GROUPS						      |
+  │   │   └── zero_access_state.ldif					      │   	  ├── member: first_dn_of_ou=person,SUFFIX_entry		      |
+  │   └── modifying/							      │           ├── member: ...						      |
+  │       └── modify_template.ldif					      │ 	  └── member: last_dn_of_ou=person,SUFFIX_entry			      |
+  ├── nginx/  								      └── dn: ou=access,SUFFIX - (ACCESS)					      |
+  │   └── greenheart.moodle.conf					          └── dn: cn=moodle,ACCESS						      |
+  ├── openSSL/									      	  								      |
+  │   └── certs																		      |
+  │       ├── keys																	      |
+  │       │   └── ldapskey.pem																      |
+  │       └── ldapscert.pem																      |
+  └── python/ 																		      |
+      ├── build_DIT.py																	      |
+      ├── flush_DB.py																	      |
+      ├── LDAPBuilder.py																      |
+      ├── LDAPComm.py																	      |
+      ├── LDAPData.py																	      |
+      └── temp_query_files																      |
+      	  																		      |
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+-----------
+preparation
+-----------
+- First off you want to install all the relevent packages and remove apache, we'll use nginx because it is nicer to read, code and just in general.
+    #apt-get -f install ldap-utils slapd openssl python mediawiki mediawiki-extensions-ldap mysql-<somethings you fancy and other things> nginx
+    #apt-get purge apache2
+  You'll be prompted to set these up with an admin password, remember this: <admin_pwd>
+- Build the directory tree above, make temp files in each of the directories because mistakes will eb made along the way and you'll want to have some backups.
+- The proceedure files in '...'/LDAP/devdocs show you my exact process (it was painful, there is swearing, it made me feel better.) It may help, it may not.
+
+-----
+Notes
+-----
+- There has been a complete migrationg to the Online Configuration version of LDAP so anything you find online talking about slapd.conf is moot.
+- Setting up the DB requires two users, the user that alters how the DB works and the user who alters the content.
+     db_admin  : cn=admin,cn=config
+     usr_admin : cn=admin,dc=fysik,dc=dtu,dc=dk
+- The Backend and Database global scope are in : /etc/ldap/slapd.d/cn=config.ldif                        (db_admin)
+  The Database operation management are in     : /etc/ldap/slapd.d/cn=config/olcDatabase={0}config.ldif  (db_admin)
+  The Database content and DIT are in          : /etc/ldap/slapd.d/cn=config/olcDatabase={1}hdb.ldif     (usr_admin)
+- The python files are yours to build, do them how you like. Mine are basically system calls to the ldap DB based on very little user input (as of writing this setup how to)
+- Only the building LDIF files are documented. Modification and clearing of the database is up to you (a delete example will be put in the bottom.
+
+|============|
+| LDAP SETUP | 
+|============|
+
+---------------------------------------------
+---------------------------------------------
+- Step One : Adding the olcRootPW attribute -
+---------------------------------------------
+---------------------------------------------
+- Do NOT (under any circumstances other than 'I want to rebuild this whole database when I am done setting it up') manually write to any of the .ldifs in /etc/ldap/slapd.d or its subdirectories.
+
+- First we need to build the LDIF file that will allow us to insert a line INTO olcDatabase={0}config.ldif without the correct authority (because we don't have it yet!)
+  -----	   	   	     	       	    	       	     	      	   				   -------
+- $slappasswd 
+    New password: <ADMIN_pwd>
+    Re-enter new password: <ADMIN_pwd>
+  <slappasswd_output>
+
+- config_pw.ldif
+  --------------
+  dn: olcDatabase={0}config,cn=config
+  changetype: modify
+  add: olcRootPW
+  olcRootPW: <slappasswd_output>
+
+- #ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw.ldif
+
+----------------------------------------------------------
+----------------------------------------------------------
+- Step Two : Building the Directory Interface Tree (DIT) -
+----------------------------------------------------------
+----------------------------------------------------------
+- Next is updating the main frontend DB : olcDatabase={1}hdb.ldif with the structure neccessary for our application (VNT McStas, moodle, mediawiki LDAP authentication combination)
+- Make the LDIF containing the DIT and a couple of entries to allow access for moodle, mediawiki and for group creation.
+
+- structure_state_build.ldif (the '|' is a page bundary!)
+  --------------------------
+  #====================#							|      #======================#
+  # Make Main Branches #							|      # Add moodle Bind User #
+  #====================#							|      #======================#
+  dn: ou=person,dc=fysik,dc=dtu,dc=dk						|      dn: cn=moodle,ou=access,dc=fysik,dc=dtu,dc=dk
+  objectclass: organizationalunit						|      objectclass: inetOrgPerson
+  ou: person									|      cn: moodle
+  description: Branch containing inetorgperson entries				|      sn: bind user
+  	       	      		 	       					|      uid: MoodleBindUser
+  dn: ou=groups,dc=fysik,dc=dtu,dc=dk						|      userpassword: traumaroot
+  objectclass: organizationalunit						|      mail: lewis@fysik.dtu.dk
+  ou: groups									|      ou: access
+  description: organisationalunit Groups {Student|courseStaff|itStaff}		|
+  	       			  	 					|      #==========================#
+  dn: ou=access,dc=fysik,dc=dtu,dc=dk						|      # Making ou=groups Subtree #
+  objectclass: organizationalunit						|      #==========================#
+  ou: access   									|      dn: cn=Student,ou=groups,dc=fysik,dc=dtu,dc=dk
+  description: Single User Moodle Bind Branch					|      objectclass: groupofnames
+  	       	      	   	       						|      cn: Student
+  #===============#								|      description: DTU/KU Student
+  # Add DummyUser #								|      member: cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dtu,dc=dk
+  #===============#								|
+  dn: cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk				|	dn: cn=itStaff,ou=groups,dc=fysik,dc=dtu,dc=dk
+  objectclass: inetOrgPerson							|	objectclass: groupofnames
+  cn: DummyUser									|	cn: itStaff
+  sn: Placeholder								|	description: DTU/KU IT Staff
+  uid: DU									|	member: cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dtu,dc=dk
+  userpassword: placeholder 							|
+  mail: lewis@fysik.dtu.dk							|	dn: cn=courseStaff,ou=groups,dc=fysik,dc=dtu,dc=dk
+  description: DummyUser:							|	objectclass: groupofnames
+   - Fake user with zero privs. 						|	cn: courseStaff
+   - Made to initiate group branches.						|	description: DTU/KU Teaching Staff
+   - Member of all groups.  							|	member: cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dtu,dc=dk
+  ou: person   	   								|
+
+- $ldapadd -x -D "cn=admin,dc=fysik,dc=dtu,dc=dk" -f structure_state_build.ldif -w <admin_pwd>
+
+-------------------------------------------------
+-------------------------------------------------
+- Step Three : Adding Access Control Directives -
+-------------------------------------------------
+-------------------------------------------------
+- The DummyUser, moodle bind user, and groups need specific accesses. DUmmyUser, for example should not be able to do anything.
+- Make the LDIF containing the lines to add to olcDatabase={0}config.ldif:
+
+- DB_state_index.ldif (also0 contains the indexing - the indexing may or maynot work, you can remove it from the file if you like)
+  -------------------
+  #=================#									|  -
+  # Dummy and Admin #									|  #===================#
+  #=================#									|  # Staff Information #
+  dn: olcDatabase={0}config,cn=config							|  #===================#
+  changetype: modify									|  add: olcAccess
+  delete: olcAccess									|  olcAccess: {3}to attrs=telephoneNumber,roomNumber
+  olcAccess: to *									|    by group.exact="cn=Student,dc=fysik,dc=dtu,dc=dk" read
+    by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage		|    by group.exact="cn=itStaff,dc=fysik,dc=dtu,dc=dk" write
+    by * break							      			|    by group.exact="cn=courseStaff,dc=fysik,dc=dtu,dc=dk" write
+  -      										|  -
+  add: olcAccess									|  #===============#
+  olcAccess: {0}to *									|  # Index Entries # 
+    by dn="cn=DummyUser,ou=people,dc=fysik,dc=dtu,dc=dk" none				|  #===============#
+    by dn="cn=moodle bind user,ou=access,dc=fysik,dc=dtu,dc=dk" read			|  add: Index
+    by dn="cn=admin,dc=fysik,dc=dtu,dc=dk" manage		      			|  index: sn,cn,ou,uid,employeeNumber eq
+  -    					 						|  -
+  #===========#										|  add: index
+  # Passwords #										|  index: displayName,description eq,sub
+  #===========#										|
+  add: olcAccess									|
+  olcAccess: {1}to attrs=userPassword,shadowLastChange					|
+    by self write	 								|
+    by anonymous auth									|
+  -											|
+  #===================#									|
+  # Student Editables #									|
+  #===================#									|
+  add: olcAccess									|
+  olcAccess: {2}to attrs=cn,mail,description						|
+    by self write	 								|
+    by group.exact="cn=Student,dc=fysik,dc=dtu,dc=dk" read				|
+    by group.exact="cn=itStaff,dc=fysik,dc=dtu,dc=dk" write				|
+    by group.exact="cn=courseStaff,dc=fysik,dc=dtu,dc=dk" write				|
+
+- $ldapadd -x -D "cn=admin,cn=config" -f DB_state_build.ldif -w <ADMIN_pwd>
+
+-------------------------------------------------------
+-------------------------------------------------------
+- Step Four : Adding entities, putting them in groups - : Please populate this LDIFs with the entities that you want to have in your DB, not mine. Though the only person reading this in this form are the VNT team.
+-------------------------------------------------------
+-------------------------------------------------------
+- We are going to put some people into the DB. One person per group so that permissions can be tested.
+- This is the simplest and most commonly used step - adding LDAP entities.
+
+- user_population_build.ldif
+  --------------------------
+  #===================#						|  dn: cn=Linda Udby,ou=person,dc=fysik,dc=dtu,dc=dk
+  # Adding test users #						|  objectclass: inetOrgPerson
+  #===================#						|  cn: Linda Udby
+  dn: cn=Mark Lewis,ou=person,dc=fysik,dc=dtu,dc=dk		|  displayName: Linda
+  objectclass: inetOrgPerson					|  sn: Udby
+  cn: Mark Lewis						|  uid: udby
+  displayName: Mark						|  userpassword: nosering
+  sn: Lewis    							|  mail: udby@nbi.dk
+  uid: lewis							|  telephoneNumber: 000-000-000
+  userpassword: porche						|  departmentNumber: 000
+  mail: lewis@fysik.dtu.dk					|  roomNumber: 000
+  description: NEXMAP sys admin					|  description: Leader of Virtual Neutrons for Teaching project: VNT
+  employeeNumber: 002 	  					|  ou: person
+  ou: person	  						|  
+      								|  #================#
+  dn: cn=Peter Willendrup,ou=person,dc=fysik,dc=dtu,dc=dk	|  # Groupify Users #
+  objectclass: inetOrgPerson					|  #================#
+  cn: Peter Willendrup						|  dn: cn=courseStaff,ou=groups,dc=fysik,dc=dtu,dc=dk
+  displayName: Peter						|  changetype: modify
+  sn: Willendrup						|  add: member
+  uid: pkwi							|  member: cn=Linda Udby,ou=person,dc=fysik,dc=dtu,dc=dk
+  userpassword: paradox						|  
+  mail: pkwi@fysik.dtu.dk					|  dn: cn=Student,ou=groups,dc=fysik,dc=dtu,dc=dk	
+  mail: pkwi@mcc-01.risoe.dk					|  changetype: modify
+  telephoneNumber: 000						|  add: member
+  departmentNumber: 307						|  member: cn=Mark Lewis,ou=person,dc=fysik,dc=dtu,dc=dk
+  roomNumber: blank 						|  
+  description: Head of NEXMAP IT				|  dn: cn=itStaff,ou=groups,dc=fysik,dc=dtu,dc=dk
+  employeeNumber: 000  	      					|  changetype: modify
+  ou: person	  						|  add: member
+      								|  member: cn=Peter Willendrup,ou=person,dc=fysik,dc=dtu,dc=dk
+
+
+---------------------------------------------------------------
+----------------------------------------------------========---
+- Step Five : Transport Layer Security (TLS) setup ]OPTIONAL[ - : This is experimental - as yet not working. In the current setup I have a none-TLS setup connecting to moodle.
+----------------------------------------------------========---
+---------------------------------------------------------------
+- We are setting up Backend/Global directives which now live in cn=config.ldif so we need the strongest authority to change the DB. Done wrong this will break the BD and is difficult to fix (better to purge).
+- Setting up openssl is a bit important! Need to do that first.
+- Make your root certificate first.
+- $openssl req -newkey -x509 rsa:2048 -nodes -days 3650 -keyout ldapskey.pem -out ldapscert.pem
+- Follow the prompts to do this, then put the correct path into the LDIF below.
+
+- TLS_directives.ldif
+  -------------------
+  dn: cn=config
+  add: olcTLSCertificateFile
+  olcTLSCertificateFile: /home/lewis/Documents/LDAP/openSSL/certs/ldapscert.pem
+  -
+  add: olcTLSCACertificateFile
+  olcTLSCACertificateFile: /home/lewis/Documents/LDAP/openSSL/certs/ldapscert.pem
+  -
+  add: olcTLSCertificateKeyFile
+  olcTLSCertificateKeyFile: /home/lewis/Documents/LDAP/openSSL/certs/keys/ldapskey.pem
+  -
+  add: olcTLSVerifyClient
+  olcTLSVerifyClient: never
+
+- $ldapadd -x -D "cn=admin,cn=config" -f TLS_directives.ldif -w <ADMIN_pwd>
+
+
+
+|==============|
+| MOODLE SETUP |
+|==============|
+
+- Get moodle fro-m somewhere, there are a few places to dl it, use google, I mean, come on, the internet, right?
+- Put the moodle directory into your www-root directory (wherever you have pointed nginx to go to find its websites. You didn't do that? Read up on how to use nginx, I am not doing that here...
+- In your browser you want to goto <ip>:<port>/moodle and the first administration and setup page should come up. LDAP Authentication os configured in:
+     Site Administration -> Plugins -> Authentication -> Manage Authentication
+- Allow the LDAP server and set it up, we need to chjange some fields:
+    LDAP Server Settings :
+      	 	Host URL : In here you should put in any of the addresses which are held in SLAPD_SERVICES variable in /etc/default/slapd
+    Bind settings    	 :
+      Distinguished name : You should have set up the bind user in a similar way to the way I did above (it works). Put that dn here.
+                Password : Whatever you set the password as.
+    User lookup settings :
+    	         Context : Which ever context your user entities are held in eg. ou=person,dc=fysik,dc=dtu,dc=dk
+   	  User Attribute : You can use things other than the cn as a login, uid in my case.
+	     ObjectClass : inetorgperson
+- The rest can be left alone. Try to login with one of your entities, it should work. :) (Without TLS it definitely works).
+
+
+
+|=================|
+| MEDIAWIKI SETUP |
+|=================|
+- You got the disrto version of mediawiki at the beginning....---^
+- Put a link to the mediawiki folder in your www-root folder (nginx thingies again, oh yes)
+- Open your second favourite browser and goto <ip>:<port>/mediawiki, HORAY MEDIAWIKI!!
+- Open a terminal and run:
+     $mysql -u <sql_usr> -p
+     mysql> CREATE DATABASE media ;
+     mysql> GRANT ALL ON mediawiki.* TO <msql_usr> ;
+     mysql> exit ;
+- Go through the mediawiki setup in the browser.
+- THIS IS THE STAGE THAT I AM AT RIGHT NOW. SETTING UP MEDIAWIKI AND WRITING PROCESS IN '...'/LDAP/devdocs/proceedure_16-N
+
+
+
+
+|==========|
+| APPENDIX |
+|==========|
+
+-------------------------------------------
+-------------------------------------------
+- Reduced LDAP Homegrown Python Functions -
+-------------------------------------------
+-------------------------------------------
+- I build up the DB using a build script. The easiest way to implement LDAP access is up to you. What follows are basic methods that allow for modification, adding and queries to the database from PREBUILT LDIF files.
+- LDAPComm.py
+  -----------
+  from subprocess import call,check_output,Popen
+  from re import split
+  import sys
+
+  class LDAPComm:
+
+    def __init__(self):
+        self.query_num = 0
+        self.data = []
+
+    def ldapAdd(self, ldif_file, auth_dn, auth_pw):
+        try:
+            check_output(["ldapadd", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw])
+        except:
+            print "Error:", sys.exc_info()[0]
+
+    def ldapMod(self, ldif_file, auth_dn, auth_pw):
+        try:
+            check_output(["ldapmodify", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw])
+        except:
+            print "Error:", sys.exc_info()[0]
+
+    def ldapModV(self, ldif_file, auth_dn, auth_pw):
+        try:
+            call(["ldapmodify", "-x", "-D", auth_dn, "-f", ldif_file, "-v", "-w", auth_pw]) 
+        except:
+            print "Error:", sys.exc_info()[0]
+
+    def ldapSYSROOTmod(self, ldif_file):
+        try:
+            call(["sudo", "ldapadd", "-Y", "EXTERNAL", "-H", "ldapi:///", "-f", ldif_file, "-v"])
+        except:
+            print "Error:", sys.exc_info()[0]
+
+    def ldapQuery(self, auth_dn, auth_pw, query):
+        out_file = "/home/lewis/Documents/LDAP/python/temp_query_files/temp_" + split(",|=", auth_dn)[1] + "_" + str(self.query_num) + "_" + query + ".txt"
+        outfile = open(out_file, "a+")
+        self.query_num += 1
+        try:
+            Popen(["ldapsearch", "-LLL", "-b", "dc=fysik,dc=dtu,dc=dk", "-D", auth_dn, "-w", auth_pw, query],
+                  stdout=outfile,
+                  stderr=outfile)
+        except:
+            print "Error:"
+            for err_item in sys.exc_info():
+                print err_item
+            pass
+        outfile.close()
