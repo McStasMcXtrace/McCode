@@ -98,19 +98,29 @@ SHARE
 
 DECLARE
 %{
-  double l_range, w_mult, w_geom, w_geom_c, w_geom_t, w_stat, Wconst;
+  // Weighting-oriented scalars
+  double l_range, w_mult, w_geom, w_geom_c, w_geom_t, w_stat;
+  // Flag to indicate if originating from cold or thermal moderator
   int cold;
+  // Flag to indicate if originating from left or right thermal slab
   int wasleft;
+  // Flag to indicate if we should apply the solid angle correction from randvec
   int cosine;
+  // Target coordinates (focusing)
   double tx,ty,tz;
+  // Displacement of cold moderator centre from comp origin, cold moderator radius
   double cx,cy,cz,cyl_radius;
+  // Vectors giving direction of the thermal slabs
   double t1x,t1y,t1z,t2x,t2y,t2z;
   
-  /* Target station geometry... */
+  /* Struct for transfer to ess-source-lib funcs */
   ess_moderator_struct modextras;
+  /* Cold and thermal function pointers */
   functype cold_bril;
   functype thermal_bril;
+  /* Time-focusing parameters */
   double tfocus_width,  tfocus_time,  dt;
+  /* radius of vacated zone around the moderator */
   double r_empty;
 %}
 
@@ -121,7 +131,6 @@ INITIALIZE
   w_geom=1;
   w_geom_c=1;
   w_geom_t=1;
-  Wconst=1;
   w_stat=1.0/mcget_ncount();
   
   tfocus_width=0;  tfocus_time=0;  dt=0;
@@ -129,6 +138,7 @@ INITIALIZE
   n_pulses=(double)floor(n_pulses);
   if (n_pulses == 0) n_pulses=1;
   
+  /* Calculation of location of focusing rectangle */
   if (target_index && !dist) {
     Coords ToTarget;
     ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
@@ -161,9 +171,13 @@ INITIALIZE
       fprintf(stderr,"FATAL: sourcedef %s only allows xwidth_c=0.23, xwidth_t=0.12 and extraction_opening=120 !\n",sourcedef);
       exit(-1);
     }
+    /* Specify brilliance fct.'s */
     cold_bril=ESS_2014_Schoenfeldt_cold;
     thermal_bril=ESS_2014_Schoenfeldt_thermal;
+    /* Cold moderator geometry */
+    /* In this mode of operation, the emission is from the x-y plane*/
     cx = 0; cy=0; cz=-0.12; cyl_radius=0.12;
+    /* 120 degree beam extraction opening, defining thermal moderator directions */
     t1x=sin(DEG2RAD*120/2);t1z=cos(DEG2RAD*120/2);
     t2x=-sin(DEG2RAD*120/2);t2z=cos(DEG2RAD*120/2);
     t1y=0; t2y=0;
@@ -194,12 +208,7 @@ INITIALIZE
   w_geom_t  = xwidth_t*yheight_t*1.0e4;
   w_mult *= l_range;            /* wavelength range correction */
 
-  /* Calculate constant solid-angle for object, as seen from comp origo */
-  double ttmp;
-  
-  randvec_target_rect_real(&ttmp, &ttmp, &ttmp, &Wconst,
-  			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, 0, 0, 0, 0);
-%}
+ %}
 TRACE
 %{
   p=1;
@@ -212,14 +221,13 @@ TRACE
   cosine = 0;
   
   /* Geometry adapted from ESS MCNPX model, mid 2012 */
-  if (cold) {          //case: cold moderator
+  if (cold) { //case: cold moderator
     x = 0.5*randpm1()*xwidth_c;
     y = 0.5*randpm1()*yheight_c;
     z = 0;
     cosine = 0;
     w_geom = w_geom_c;
-  }  else  {
-    //case: thermal moderator
+  }  else  { //case: thermal moderator
     y = 0.5*randpm1()*yheight_t;
     if (rand01()<isleft) {
       wasleft=1;
@@ -229,7 +237,6 @@ TRACE
       x = xwidth_c/2.0 + rand01()*xwidth_t;
     }
     z = 0;
-    // cosine = 1;
     cosine = 0;
     w_geom = w_geom_t;
   }
@@ -237,19 +244,9 @@ TRACE
   randvec_target_rect_real(&xf, &yf, &r, &w_focus,
 			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, cosine);
   
-  /* In case of "complicated" geometry, calculate angular-weighting by independently from randvec */
-  if (cosine==0) {
-    if (cold) {
-      //w_focus=1;
-      /* Uniform emission */
-    } else {
-      /* Apply a cosine wrt. beamport angle vs. normal of the thermal extensions */
-      if (wasleft==1) {
-	//w_focus = Wconst ;//* cos(DEG2RAD*(beamport_angle-90))/cos(DEG2RAD*extraction_width/2);
-      } else {
-	//w_focus = Wconst ;//* cos(DEG2RAD*((extraction_width - beamport_angle)-90))/cos(DEG2RAD*extraction_width/2);
-      }
-    }
+  /* In case of 2014 source, solid angle correction is done internally in the brill fcts */
+  if (strcasestr(sourcedef,"2014")) {
+    w_focus=focus_xw*focus_yh/sqrt(tx*tx+ty*ty+tz*tz);
   }
   
   dx = xf-x;
@@ -274,8 +271,6 @@ TRACE
     thermal_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
   }
   
-  w_focus=focus_xw*focus_yh/sqrt(tx*tx+ty*ty+tz*tz);
-
   p*=w_stat*w_focus*w_geom*w_mult;
   t+=(double)floor((n_pulses)*rand01())/ESS_SOURCE_FREQUENCY;   /* Select a random pulse */
 
