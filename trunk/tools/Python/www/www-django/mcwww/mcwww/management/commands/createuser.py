@@ -1,31 +1,51 @@
-from django.core.management.base import BaseCommand, make_option
-
 import sys
+from sys import stdin
+from django.core.management.base import BaseCommand, make_option
+from mcwww.management.LDAP.LDAPUserCreation import *
+from mcwww.management.LDAP.LDAPComm import *
+from django.contrib.auth.models import User, Group
 from getpass import getpass
 
-from django.contrib.auth.models import User, Group
+#
+# Added functionality to call the LDAP modules for LDAP user entry
+# - Completed: 
 
 def main(args):
+    comm = LDAPComm()
+# Checking and creation of username
     if len(args) < 1:
-        print 'usage: %s username [password]' % args[0]
+        print 'usage: createuser username [password]'
+        print "ARGUMENTS: ", args
         sys.exit(1)
-
     username = args[0]
     print 'Username:', username
+# Test to see if users can be added to LDAP DB : no point in continuing if not
+    LDAP_admin_dn = raw_input('Enter your LDAP authentication dn: ')
+    LDAP_admin_pw = getpass('Enter your LDAP authentication pwd: ')
+    if(comm.ldapAdminGroupQuery(LDAP_admin_dn, LDAP_admin_pw)):
+        print "got to here!!!!"
+    else: 
+        print "Insufficient LDAP privs"
+        sys.exit(1)
+# LDAPUserCreation call
+    entity = LDAPUserCreation(username, password)
+    entity.processLDIF(LDAP_admin_dn, LDAP_admin_pw)
 
+# McCode User creation
     if User.objects.filter(username=username).count() > 0:
         print 'Abort: User already exists!'
         sys.exit(1)
-
     if len(args) > 1:
         print 'Password taken from argument'
         password = args[1]
     else:
         password = getpass('Enter password: ')
-    
     user = User.objects.create_user(username, password=password)
     user.save()
-    
+
+
+
+# Add to groups implied in the args
     if len(args) > 2:
         for idx in range(2,len(args)):
             print '- adding user to group '+args[idx]
@@ -35,7 +55,7 @@ def main(args):
             except:
                 print 'Error: Group '+args[idx]+' does not exist!'
 
-    print 'User created.'
+    print 'McCode User created.'
 
 class Command(BaseCommand):
     username = 'username'
