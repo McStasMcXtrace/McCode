@@ -37,7 +37,6 @@ class LDAPUserCreation:
         self.ldap_user.setldif_file("./temp/" + un + ".ldif")
         self.collectData()
         addUserLDIF(self.ldap_user)
-        print "LDAP User Added"
 
     def collectData(self):
         FN = raw_input('Enter Forename : ')

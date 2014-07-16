@@ -1,4 +1,4 @@
-from subprocess import call,check_output,Popen
+from subprocess import call,check_output,Popen,PIPE
 from re import split
 import sys
 from cStringIO import StringIO
@@ -90,20 +90,28 @@ class LDAPComm:
         outfile.close()
 
 # Check of existence in groups with correct security - boolean returns.
-    def ldapAdminGroupQuery(self, auth_dn, auth_pw):
-        cn = split(",", auth_dn)[0]
-        query = "\"(|(cn=itStaff)(cn=courseStaff))\""
-        grep_pipe = "| grep member | grep -v DummyUser | grep " + cn
-        # log LDAP Access
-        print cn + " AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b dc=fysik,dc=dtu,dc=dk -D " + auth_dn + " -w PASSWORD " + query # + grep_pipe + "\n"
-        self.access_file.write( cn + " AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b dc=fysik,dc=dtu,dc=dk -D " + auth_dn + " -w PASSWORD " + query) # + grep_pipe+ "\n")
-        q_return_string = StringIO()
+    def ldapAdminGroupQuery(self, auth_cn):
+# Create query and filters (though the query should be the filter
+        cn = "cn=%s" % auth_cn
+        query = "(|(cn=itStaff)(cn=courseStaff))"
+# log LDAP Access
+        print cn + " AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b ou=groups,dc=fysik,dc=dtu,dc=dk -D cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk " + query
+        self.access_file.write( cn + " AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b ou=groups,dc=fysik,dc=dtu,dc=dk -D cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk -w DummyPW" + query)
+        pipe = PIPE
         try:
-            Popen( ["ldapsearch", "-LLL", "-b", "dc=fysik,dc=dtu,dc=dk", "-D", auth_dn, "-w", auth_pw, query], # , "|", "grep", "member", "|", "grep", "-v", "DummyUser", "|", "grep", "cn=Linda"],#""],
-                   stdout=q_return) 
-            q_string = q_return.getvalue()
-            print "q_string: " + q_string
-            return True
+            fid = Popen(
+                ["ldapsearch", "-LLL", "-b", "dc=fysik,dc=dtu,dc=dk", "-D", "cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk", "-w", "DummyPW", query],
+                stdout=pipe,
+                stderr=pipe)
+            stdout,stderr = fid.communicate()
+            bob = stdout
+            bill = stderr
+            if cn in bob:
+                print "Returning True."
+                return True
+            else:
+                print "Returning False, LDAP privs insufficient."
+                return False
         except:
-            print "Returning False (unless testing)"
-            return True
+            print "Returning False, incorrect search profile."
+            return False
