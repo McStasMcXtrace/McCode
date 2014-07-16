@@ -616,3 +616,93 @@
     ImportError: No module named LDAP
 - Set up the modules properly and reference them correctly in the imports!! Derpo! :3
 - Setup sqlite DB in the server to add users! (haha) Did all teh code things without even having the structure to use it ;)
+---------------------------------------------------
+- Working on ./manage.py createuser LDAP extension : 15/16-7-14
+---------------------------------------------------
+- Made a commit on 15-7-14. Non-working.
+- LDAP Module created in '...'/mcwww/management
+- management tree:
+      management/
+      ├── commands
+      │   ├── createuser.py
+      │   ├── __init__.py
+      ├── __init__.py
+      └── LDAP
+          ├── devdocs
+      	  │   ├── LDAP_SETUP
+    	  │   └── proceedure_16-
+    	  ├── __init__.py
+    	  ├── LDAPComm.py
+	  ├── LDAPData.py
+	  ├── LDAPldiffer.py
+	  ├── LDAPUserCreation.py
+	  └── LDIFs
+	      ├── building
+	      │   ├── config_pw.ldif
+              │   ├── DB_state_build.ldif
+              │   ├── structure_state_build.ldif
+              │   ├── TLS_directives.ldif
+              │   └── user_population_build.ldif
+              ├── deletion
+              │   ├── access_state_del.ldif
+              │   ├── structure_state_del.ldif
+              │   ├── TLS_directives.ldif
+              │   └── zero_access_state.ldif
+              ├── modifying
+              │   └── modify_template.ldif
+              └── templates
+- LDAPldiffer builds ldif files (at the moment only addUserEntity ldifs.
+  LDAPComm is same as in version 16 with (in dev) ldapAdminGroupQuery addition.
+  LDAPData has been massively modified. (see next version)
+  LDAPUserCreation is a fire and forget object that instantiates above classes to add a user entity to the LDAP DB.
+- The ldapAdminGroupQuery is not working... seems like it is grepping the whoile DB when it should only grep the o/p:
+    LDAPComm::ldapAdminGroupQuery()
+    -------------------------------
+    def ldapAdminGroupQuery(self, auth_dn, auth_pw):
+# Create query and filters (though the query should be the filter
+        cn = split(",", auth_dn)[0]
+        query = "\"(|(cn=itStaff)(cn=courseStaff))\""
+        grep_pipe = "| grep member | grep -v DummyUser | grep " + cn
+
+# log LDAP Access
+        print cn + " AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b dc=fysik,dc=dtu,dc=dk -D " + auth_dn + " -w PASSWORD " + query # + grep_pipe + "\n"
+        self.access_file.write( cn + " AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b dc=fysik,dc=dtu,dc=dk -D " + auth_dn + " -w PASSWORD " + query) # + grep_pipe+ "\n")
+
+        q_return_string = StringIO()
+
+        try:
+*           Popen( ["ldapsearch", "-LLL", "-b", "dc=fysik,dc=dtu,dc=dk", "-D", auth_dn, "-w", auth_pw, query, "|", "grep", "member", "|", "grep", "-v", "DummyUser", "|", "grep", "cn=Linda"],  #""],
+                   stdout=q_return) 
+            q_string = q_return.getvalue()
+            print "q_string: " + q_string
+            return True
+
+        except:
+            print "Returning False (unless testing)"
+            return True
+
+- * you can see that the grep filter is actually hardcoded to look for Linda (Linda Udby, who is an LDAP entity) and so the 'correct' return True should be arrived at.
+    This line essentially says:
+         1) find the cn=itStaff and cn=courseStaff LDAP DB entries.
+	 2) find the member lines from that return.
+	 3) remove the DummyUser lines.
+	 4) find the cn=Linda line                                   <--- change to be the cn variable (line 1 of the method) when the group members have the correct permissions.
+
+- o/p from ./manage.py createuser plop:
+  #./manage.py createuser hello
+      Username: hello
+      Enter password: 
+      Enter your LDAP authentication dn: cn=admin,dc=fysik,dc=dtu,dc=dk
+      Enter your LDAP authentication pwd: 
+      cn=admin AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b dc=fysik,dc=dtu,dc=dk -D cn=admin,dc=fysik,dc=dtu,dc=dk -w PASSWORD "(|(cn=itStaff)(cn=courseStaff))"
+      Returning False (unless testing)	    	       	             <--- the filter came back false and the q_string did not print to screen.
+      got to here!!!!
+      Enter Forename : foom
+      Enter Surname : poof
+      Enter Contact mail : slam@bam
+      LDAP User Added
+      McCode User created.
+- #slapcat
+    the user is actually added, so this is ok! ^_^
+- Comment out the grep filter anmd check the o/p.
+  

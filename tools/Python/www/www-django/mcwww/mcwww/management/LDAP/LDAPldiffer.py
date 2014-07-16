@@ -21,6 +21,7 @@ class addUserLDIF:
     def __init__(self, ldap_user):
         out_file = open(ldap_user.ldif(), 'w')
         out_file.write("dn: cn=%s,ou=Person,dc=fysik,dc=dtu,dc=dk\n" % ldap_user.cn())
+        out_file.write("objectClass: inetorgperson\n")
         out_file.write("cn: %s \n" % ldap_user.cn())
         out_file.write("sn: %s \n" % ldap_user.sn())
         out_file.write("displayName: %s \n" % ldap_user.displayname())
