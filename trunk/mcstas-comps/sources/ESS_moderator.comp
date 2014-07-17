@@ -289,7 +289,7 @@ TRACE
 	z = t2z * poshorz;
       }
       y = posvert;
-      cosine = 0;
+      cosine = 1;
       w_geom = w_geom_t;
     }
     // Correct for comp origin
