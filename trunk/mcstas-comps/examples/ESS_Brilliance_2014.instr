@@ -90,40 +90,40 @@ EXTEND %{
  AT (0, 0, 1) RELATIVE Source
 
   COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position / [m]", options=options4, restore_neutron=1)
-  WHEN(cold) AT (0, 0, 1) RELATIVE Source
+  WHEN(IsCold) AT (0, 0, 1) RELATIVE Source
 
   COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", user2=SrcY,username2="Vertical position / [m]", options=options2, restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
 
   COMPONENT MonND4 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", user2=SrcY,username2="Vertical position / [m]", options=options2, restore_neutron=1)
- WHEN(cold && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.05) AT (0, 0, 1) RELATIVE Source
+ WHEN(IsCold && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.05) AT (0, 0, 1) RELATIVE Source
 
   COMPONENT MonND5 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", user2=SrcY,username2="Vertical position / [m]", options=options2, restore_neutron=1)
- WHEN ((!cold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.15 && fabs(SrcX)>0.12) AT (0, 0, 1) RELATIVE Source
+ WHEN ((!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.15 && fabs(SrcX)>0.12) AT (0, 0, 1) RELATIVE Source
 
 COMPONENT BrillmonCOLD = Brilliance_monitor(
     nlam = 101, nt = 101, filename = "brillCOLD", t_0 = 0,
     t_1 =10000, lambda_0 = lambdamin, lambda_1 = lambdamax,
     Freq =14, toflambda=0,tofcuts=0, srcarea=(100*WidthC*100*Yheight), restore_neutron=1)
-WHEN(cold)  AT (0, 0, 1) RELATIVE Source
+WHEN(IsCold)  AT (0, 0, 1) RELATIVE Source
 
 COMPONENT BrillmonCOLD_COLL = Brilliance_monitor(
     nlam = 101, nt = 101, filename = "brillCOLD_COLL", t_0 = 0,
     t_1 =10000, lambda_0 = lambdamin, lambda_1 = lambdamax,
     Freq =14, toflambda=0,tofcuts=0, srcarea=(100*0.1*100*2*Yheight/2.5), restore_neutron=1)
-  WHEN(cold && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.05)  AT (0, 0, 1) RELATIVE Source
+  WHEN(IsCold && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.05)  AT (0, 0, 1) RELATIVE Source
 
 COMPONENT BrillmonTHRM = Brilliance_monitor(
     nlam = 101, nt = 101, filename = "brillTHRM", t_0 = 0,
     t_1 =10000, lambda_0 = lambdamin, lambda_1 = lambdamax,
     Freq =14, toflambda=0,tofcuts=0, srcarea=(2*100*WidthT*100*Yheight), restore_neutron=1)
-  WHEN (!cold) AT (0, 0, 1) RELATIVE Source
+  WHEN (!IsCold) AT (0, 0, 1) RELATIVE Source
 
 COMPONENT BrillmonTHRM_COLL = Brilliance_monitor(
     nlam = 101, nt = 101, filename = "brillTHRM_COLL", t_0 = 0,
     t_1 =10000, lambda_0 = lambdamin, lambda_1 = lambdamax,
     Freq =14, toflambda=0,tofcuts=0, srcarea=(100*0.03*2*100*2*Yheight/2.5), restore_neutron=1)
-  WHEN ((!cold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.15 && fabs(SrcX)>0.12)  AT (0, 0, 1) RELATIVE Source
+  WHEN ((!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.15 && fabs(SrcX)>0.12)  AT (0, 0, 1) RELATIVE Source
 
 
 /* This section is executed when the simulation ends (C code). Other    */
