@@ -3,6 +3,10 @@ from re import split
 import sys
 from cStringIO import StringIO
 
+# THE ERROR PRINTS NEED TO BE SENT TO ERROR LOG FILE
+# THE PRINT STATEMENTS NEED TO BE REMOVED
+# 
+
 # LDAPComm
 # ========
 # ldapAdd:
@@ -24,59 +28,75 @@ from cStringIO import StringIO
 #   Takes a dn and pw of LDAP entity and queries the DB for itStaff and courseStaff groups,
 #   filters the result through grep for the cn of the dn and retunrs true if the entry is a member
 #   of the Staff groups, or false if not. This does not mean the LDAP entry has modify permissions.
+# authenticateMcUser:
+#   Takes auth_cn and auth_pw as argument, checks the LDAP DB ldapwhoami to check existence
+#   returns boolean based on existence of user.
 
 class LDAPComm:
+#=======================================================================================#
 # Builds an access log file and sets the query counter to zero.
+#=======================================================================================#
     def __init__(self):
         self.access_file = open("temp/accesses.txt", 'a+')
         self.query_num = 0
-
-# In a lot of cases ldapAdd works exactly like ldapMod, ldapMod gives much better o/p
+#================#
+# Access logging #
+#================#
+    def log(self, log_str):
+        self.access_file.write(logstr)
+#=======================================================================================#
+# Modification method: 
+#=======================================================================================#
+# General ldapAdd #
+#=================#
     def ldapAdd(self, ldif_file, auth_dn, auth_pw):
         cn = split(",", auth_dn)[0]
-        # log LDAP Access
-        self.access_file.write(cn + " ADDED ENTRY : ldapadd -x -D " + auth_dn + " -f " + ldif_file + " -w PASSWORD")
+        log("%s ADDED ENTRY : ldapadd -x -D %s -f %s -w PASSWORD" % cn, auth_dn, ldif_file)
         try:
             check_output(["ldapadd", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw])
         except:
-            print "Error:", sys.exc_info()[0]
-
-# Modification method: 
+            log("Error: %s" % sys.exc_info()[0])
+#=================#
+# General ldapMod #
+#=================#
     def ldapMod(self, ldif_file, auth_dn, auth_pw):
         cn = split(",", auth_dn)[0]
-        # log LDAP Access
-        self.access_file.write(cn + " MODIFICATION with: ldapmodify -x -D " + auth_dn + "-f" + ldif_file + " -w PASSWORD") 
+        log("%s MODIFICATION with: ldapmodify -x -D %s -f %s -w PASSWORD" % cn, auth_dn, ldif_file) 
         try:
             check_output(["ldapmodify", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw])
         except:
-            print "Error:", sys.exc_info()[0]
-# Verbose modification method
+            log("ldapMod Error: %s" % sys.exc_info()[0]
+#=================#
+# Verbose ldapMod #
+#=================#
     def ldapModV(self, ldif_file, auth_dn, auth_pw):
         cn = split(",", auth_dn)[0]
-        # log LDAP Access
-        self.access_file.write(cn + " MODIFICATION with: ldapmodify -x -D " + auth_dn + " -f " + ldif_file + " -v -w PASSWORD") 
+        log("%s MODIFICATION with: ldapmodify -x -D %s -f %s -v -w PASSWORD" % cn, auth_dn, ldif_file) 
         try:
             call(["ldapmodify", "-x", "-D", auth_dn, "-f", ldif_file, "-v", "-w", auth_pw]) 
         except:
-            print "Error:", sys.exc_info()[0]
-
-# This is a bit of a powerful thing to put in the build script but it should be ok. As it's going to go in the build script then we should actually remove the sudo later :)
+            log("Error: %s" % sys.exc_info()[0])
+#=======================================================================================#
+# This is a bit of a powerful thing to put in the build script but it should be ok. 
+# As it's going to go in the build script then we should actually remove the sudo later
+#=======================================================================================#
     def ldapSYSROOTmod(self, ldif_file):
-        print "sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif"
-        print "System root password prompt follows:"
+        log("sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif")
         try:
             call(["sudo", "ldapadd", "-Y", "EXTERNAL", "-H", "ldapi:///", "-f", ldif_file, "-v"])
         except:
-            print "Error:", sys.exc_info()[0]
-
-# Query Method
+            log("Error: %s" % sys.exc_info()[0])
+#=======================================================================================#
+# Query Methods
+#=======================================================================================#
+# General Query #
+#===============#
     def ldapQuery(self, auth_dn, auth_pw, query):
         cn = split(",", auth_dn)[0]
         out_file = "/home/lewis/Documents/LDAP/python/temp_query_files/temp_" + split(",|=", auth_dn)[1] + "_" + str(self.query_num) + "_" + query + ".txt"
         outfile = open(out_file, "a+")
         self.query_num += 1
-        # log LDAP Access
-        self.access_file.write( cn + " QUERY with: ldapsearch -LLL -b dc=fysik,dc=dtu,dc=dk -D " + auth_dn + " -w PASSWORD " + query + "\n")
+        log("%s QUERY with: ldapsearch -LLL -b dc=fysik,dc=dtu,dc=dk -D %s -w PASSWORD %s" % cn, auth_dn, query)
         try:
             Popen(["ldapsearch", "-LLL", "-b", "dc=fysik,dc=dtu,dc=dk", "-D", auth_dn, "-w", auth_pw, query],
                   stdout=outfile,
@@ -88,15 +108,13 @@ class LDAPComm:
                 print err_item
             pass
         outfile.close()
-
-# Check of existence in groups with correct security - boolean returns.
+#==========================#
+# Check existence in group #
+#==========================#
     def ldapAdminGroupQuery(self, auth_cn):
-# Create query and filters (though the query should be the filter
         cn = "cn=%s" % auth_cn
         query = "(|(cn=itStaff)(cn=courseStaff))"
-# log LDAP Access
-        print cn + " AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b ou=groups,dc=fysik,dc=dtu,dc=dk -D cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk " + query
-        self.access_file.write( cn + " AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b ou=groups,dc=fysik,dc=dtu,dc=dk -D cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk -w DummyPW" + query)
+        log("%s AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b ou=groups,dc=fysik,dc=dtu,dc=dk -D cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk -w DummyPW %s" % cn, query)
         pipe = PIPE
         try:
             fid = Popen(
@@ -104,14 +122,35 @@ class LDAPComm:
                 stdout=pipe,
                 stderr=pipe)
             stdout,stderr = fid.communicate()
-            bob = stdout
-            bill = stderr
-            if cn in bob:
-                print "Returning True."
+            bill = stdout
+            ben = stderr
+            if cn in bill:
                 return True
             else:
-                print "Returning False, LDAP privs insufficient."
+                log("LDAP privs insufficient: %s" % ben)
                 return False
         except:
-            print "Returning False, incorrect search profile."
+            log("Incorrect search profile: %s => %s" % query, sys.exc_info()[0])
             return False
+#=====================#
+# User Identification #
+#=====================#
+        def authenticateMcUser(self, auth_cn, auth_pw):
+            dn = "cn=%s" + auth_cn + "ou=person,dc=fysik,dc=dtu,dc=dk"
+            
+            try:
+                fid = Popen(["ldapwhoami", "-vvv", "-D", dn, "-x", "-w", auth_pw],
+                            stdout=pipe,
+                            stderr=pipe)
+                stout,stderr = fid.communicate()
+                bill = stdout
+                ben = stderr
+                if "Success" in bill:
+                    return True
+                else:
+                    log("Access attempt by %s failed: %s" % dn, ben)
+                    return False
+            except:
+                log("Access attempt by %s failed: %s" % dn, sys.exc_info()[0])
+                ''' MESSAGE BOX SUGGESTING ERROR '''
+                return False
