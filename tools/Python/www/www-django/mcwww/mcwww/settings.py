@@ -1,26 +1,20 @@
 # Django settings for mcwww project.
-
-
 import os
 PROJECT_PATH = os.path.realpath(os.path.dirname(os.path.dirname(__file__)))
-
 
 ## BEGIN McStas configuration; What you need is probably in this block!
 
 # IMAGE_FORMAT is either 'gif' or 'png' - R-based plotter only supports png
 IMAGE_FORMAT = 'png'
 
-
 # Use MPI to utilise N processors (disabled when 0)
 MPI_NP=0
-
 
 # Maximum number of neutrons allowed (ray samples / ncount)
 MAX_RAY_SAMPLES = 10000000
 
 # Maximum number of scan points allowed (npoints)
 MAX_SCAN_POINTS = 1000
-
 
 # Extra datafiles/directories needed by the simulations
 # (implemented with soft/symbolic linking before running a simulation)
@@ -32,8 +26,6 @@ MAX_SCAN_POINTS = 1000
 DATA_FILES = ('sim/datafiles',)
 
 ## END McStas configuration
-
-
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -190,6 +182,5 @@ LOGGING = {
         },
     }
 }
-
 
 LOGIN_URL = '/login'

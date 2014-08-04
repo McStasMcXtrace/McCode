@@ -12,10 +12,6 @@ from mcwww.management.LDAP.LDAPData import *
 
 
 
-class LDAPldiffer:
-    def __init__():
-        ldap_data = []
-
 # Makes an LDIF to add a user.
 class addUserLDIF:
     def __init__(self, ldap_user):
@@ -35,3 +31,13 @@ class addUserLDIF:
         out_file.write("add: member\n")
         out_file.write("member: cn=%s,ou=Person,dc=fysik,dc=dtu,dc=dk\n" % ldap_user.cn())
         out_file.close()
+
+# Makes an LDIF to change a pw
+class changepwLDIF:
+    def __init__(self, ldap_user):
+        out_file = open(ldap_user.ldif(), 'w')
+        out_file.write("dn: cn=%s,ou=Person,dc=fysik,dc=dtu,dc=dk\n" % ldap_user.cn())
+        out_file.write("changetype: modify")
+        out_file.write("replace: userpassword")
+        out_file.write("userpassword: %s" % ldap_user.password())
+

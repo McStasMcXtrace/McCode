@@ -40,7 +40,9 @@ def main(args):
     entity = LDAPUserCreation(username, password)
     LDAP_admin_pw = getpass('Enter your LDAP authentication pwd: ')
     LDAP_admin_dn = "cn=%s,ou=person,dc=fysik,dc=dtu,dc=dk" % LDAP_admin_cn
+
     print "Calling: processLDIF(", LDAP_admin_dn, ",", LDAP_admin_pw, ")"
+
     entity.processLDIF(LDAP_admin_dn, LDAP_admin_pw)
     print "LDAP User Added"
 # McCode User creation

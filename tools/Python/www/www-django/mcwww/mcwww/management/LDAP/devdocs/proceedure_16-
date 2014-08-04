@@ -704,5 +704,29 @@
       McCode User created.
 - #slapcat
     the user is actually added, so this is ok! ^_^
-- Comment out the grep filter anmd check the o/p.
-  
+- Comment out the grep filter and check the o/p.
+    #./manage.py createuser hello
+-   #./manage.py createuser papi
+        Username: papi
+	Enter password: 
+	Enter your LDAP authentication cn (not your uid): Linda Udby
+	cn=Linda Udby AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b ou=groups,dc=fysik,dc=dtu,dc=dk -D cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk (|(cn=itStaff)(cn=courseStaff))
+	got to here!!!!
+	Enter Forename : plop
+	Enter Surname : plap
+	Enter Contact mail : skop 
+	LDAP User Added
+	Enter your LDAP authentication pwd: 
+	ldap_bind: Invalid credentials (49)
+	Error: <class 'subprocess.CalledProcessError'>
+	McCode User created.
+- Working on the correct way to authemnticate the users... group membership does not seem to be handled well by the ACL : 17-7-14
+  current olcAccess line:
+	  olcAccess: {2}to dn="dc=fysik,dc=dtu,dc=dk" 
+	    by group.exact="cn=itStaff,ou=groups,dc=fysik,dc=dtu,dc=dk" write	    <-- has been
+  	    by group.exact="cn=courseStaff,ou=groups,dc=fysik,dc=dtu,dc=dk" write   <-- add/manage/write
+- this line was included as well to try to get round the inability to write to the main DB:
+	  olcAccess: {0}to *
+	    by group.exact="cn=itStaff,ou=groups,dc=fysik,dc=dtu,dc=dk" write	    <-- has been
+  	    by group.exact="cn=courseStaff,ou=groups,dc=fysik,dc=dtu,dc=dk" write   <-- add/manage/write
+- none of these edits worked. Looking for fixes adn ideas from google etc now. Coffee.
