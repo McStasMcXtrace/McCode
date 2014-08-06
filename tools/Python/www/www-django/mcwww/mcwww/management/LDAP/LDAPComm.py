@@ -65,7 +65,7 @@ class LDAPComm:
         try:
             check_output(["ldapmodify", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw])
         except:
-            log("ldapMod Error: %s" % sys.exc_info()[0]
+            log("ldapMod Error: %s" % sys.exc_info()[0])
 #=================#
 # Verbose ldapMod #
 #=================#
@@ -93,21 +93,27 @@ class LDAPComm:
 #===============#
     def ldapQuery(self, auth_dn, auth_pw, query):
         cn = split(",", auth_dn)[0]
+        ret_val = None
+        pie = PIPE
+        '''
         out_file = "/home/lewis/Documents/LDAP/python/temp_query_files/temp_" + split(",|=", auth_dn)[1] + "_" + str(self.query_num) + "_" + query + ".txt"
         outfile = open(out_file, "a+")
+        '''
+                
         self.query_num += 1
         log("%s QUERY with: ldapsearch -LLL -b dc=fysik,dc=dtu,dc=dk -D %s -w PASSWORD %s" % cn, auth_dn, query)
         try:
-            Popen(["ldapsearch", "-LLL", "-b", "dc=fysik,dc=dtu,dc=dk", "-D", auth_dn, "-w", auth_pw, query],
-                  stdout=outfile,
-                  stderr=outfile)
-            print "Results/Errors are held in: " + out_file
+            fid  = Popen(["ldapsearch", "-LLL", "-b", "dc=fysik,dc=dtu,dc=dk", "-D", auth_dn, "-w", auth_pw, query],
+                         stdout=pipe,
+                         stderr=pipe)
+            stdout,stderr = fid.communicate()
+            ret_val = stdout
         except:
-            print "Error:"
+            log("Error:")
             for err_item in sys.exc_info():
-                print err_item
+                log(err_item)
             pass
-        outfile.close()
+        return ret_val.split("\n")
 #==========================#
 # Check existence in group #
 #==========================#

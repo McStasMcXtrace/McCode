@@ -183,4 +183,15 @@ LOGGING = {
     }
 }
 
+#=================#
+# mcUser SETTINGS # - did not work the way I expected it to. more reading req'd
+#=================#
+AUTHENTICATION_BACKENDS = (
+    'mcsimulator.mcUser.mcBackend',
+)
+#MIDDLEWARE_CLASSES = (
+#    'django.contrib.sessions.middleware.Session.Middleware',
+#)
+
+
 LOGIN_URL = '/login'
