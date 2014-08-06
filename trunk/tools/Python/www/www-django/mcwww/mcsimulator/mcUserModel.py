@@ -9,55 +9,137 @@
 '''
 # python imports
 import sys
+import urllib
 from os import remove
 from random import randrange
 from subprocess import Popen,PIPE
 from rn import split
 # django imports
+from django.core.mail import send_mail
+from django.db.models.manager import EmptyManager
+from django.db import models
+from django.utils import timezone
+from django.utils.encoding import smart_str
 from django.contrib.auth.models import AbstractUser,UserManger
+from django.contrib.auth.signals import user_logged_in
+from django.contribn.contenttypes.models import ContentType
 # project imports
 from management.LDAP.LDAPComm import *
 from management.LDAP.LDAPData import *
 from management.LDAP.LDAPldiffer import changepwLDIF
 
+#======================#
+# mcUser login Updater #
+#======================#
+def update_last_login(sender, user, **kwargs):
+    """
+    A signal receiver which updates the last_login date for
+    the user logging in.
+    """
+    mcUser.last_login = timezone.now()
+    mcUser.save()
+user_logged_in.connect(update_last_login)
+#==========================#
+# END mcUser login Updater #
+#==========================#
 
-#
-# mcUser - user      : extension of the user model by including a one-one
-#                      reference/instance.                                     <--REFERENCES TO User MODEL CAN BE CHANGED TO mcUser.user
-#        - ldap_user : LDAPData instance holding the LDAP information 
-#                      on this particular user.
-#        - manager   : instance of the managing object that allows 
-#                      manipulation of the user.
-#        - set_password()
-#          ------------
-#          Open a pipe to record io events from the system in stdout and stderr.
-#          If there is an error quit.
-#          If there is an exception (don't see why) then report that and quit.
-#          Build a pw change LDIF, and run it.
-#          Do not hold the pw.
-#        - get_LDAPData() :  returns the LDAPData object that correspond to the user
-#          ------------
+#----------------------------------------------------------------------------------------------#
 
+#=====================#
+# mcUserManager CLASS #
+#=====================#
+class mcUserManager(models.Manager):
+    self.userMan = models.OneToOneField(UserManger)
+
+    def createMcUser(self, full_name, email=None, password): # PASSWORD IS NECESSARY
+        now = timezone.now()
+        if not full_name:
+            raise ValueError('Please give Users Name')
+        email = UserMan.normailise_email(email)
+    
+        mcuser = self.model()
+
+        mcuser.save(using=self._db) # try to save the mcUser in the mcUserDB
+#=========================#
+# END mcUserManager CLASS #
+#=========================#
+
+#----------------------------------------------------------------------------------------------#
+
+#==============#
+# mcUser CLASS #
+#==============#
 class mcUser(models.Model):
-    # Functional Objects and Variables #
     ident = None
+    password = # TAKEN FROM LOGIN POST FORM, OR NONE
     authenticated = false
     user = models.OneToOneField(AbstractUser)
-    ldap_user = LDAPData(user.username)
-    manager = mcUserManager()
+    ldap_user = LDAPData(user.username)       # HAVE TO BUILD THIS GUY ON INITIALISATION!
     conn = LDAPComm()
-    # Additional DB Fields #
-    UID = models.CharField(_('uid'), max_length=5, unique=True,
-                           help_text=_('Unique id identifies user in LDAP and django sqlite DBs')
-                           )
-    # Logging of 
-    if self.user.get_full_name():
-        self.conn.log("mcUser Opened Connection: %s" % self.user.get_full_name())
+
+    UID         = models.CharField(_('uid'), max_length=5, unique=True, help_text=_('Unique id identifies user in LDAP and django sqlite DBs.') )
+    displayName = models.CharField(_('Nickname'), max_length=10, unique=True, help_text=_('The name that is displayed during the session.') )
+    email       = model.EmailField(_('e-mail address'), blank=True )
+    is_staff    = models.BooleanField(_('Member of Staff'), default=False, help_text=('Allows admin access') )
+    is_active   = models.BoolenaField(_('Enrolled on VNT Course'), default=True, help_text=('Currently enrolled on VNT course'
+                                                                                            'Making this false instead of deleting keeps the user in the DB.') )
+    last_login = models.DateTimeField(_('date joined'), default=timezone.now )
+
+    objects = mcUserManager()
+
+    if self.mcUser.get_full_name():
+        self.conn.log("mcUser Opened Connection: %s" % self.mcUser.get_full_name())
+        
     else:
         self.ident = "mcRnd::"+randRange(30)
         self.conn.log("New mcUser creation: %s" % self.ident)
 
-    # THIS NEEDS A FEW BITS FILLING IN AND MAYBE MOVING TO A MORE SUITABLE LOCATION #
+    class Meta:
+        verbose_name = _('mcUser')
+        verbose_name_plural = _('mcUsers')
+
+    def __unicode__(self):
+        return self.displayName
+    def natural_key(self):
+        return self.UID
+    def get_absolute_url(self):
+        return "/mcUsers/%s/" % urllib.quote(smart_str(self.UID))
+    def get_full_name(self):
+        return self.ldap_user.cn()
+    def getLDAPData(self):
+        return ldap_user
+    def is_anonymous(self):
+        return False
+    def is_authenticated(self, pw):
+        return True
+    '''
+        return self.conn.authenticateMcUser(self.ldap_user.cn(), self.password) # MAYBE THIS, BUT FIND OUT WHERE IS CALLED SO PW CAN BE PASSED.
+                                                                                # IF IT'S INTERNAL, LEAVE IT ALONE!!
+    '''
+    def has_usable_password():
+        return self.checkPasswd()
+    def get_group_permissions(self, obj=None):
+        permissions = set()
+        for backend in auth.get_backends():
+            if hasattr(backend, "get_goup_poermissions"):
+                if obj is not None:
+                    permissions.update(backend.get_group_permissions(self, obj))
+                else:
+                    permissions.update(backend.get_group_permissions(self))
+        return permissions
+    
+    '''
+    def get_all_permissions(self, obj=None):
+        return _user_get_all_permissions()
+    '''
+    def has_perms(self):
+        for perm in perm_list:
+            if not self.has_perm()perm, obj):
+                return False
+        return True
+
+    def set_password(self, pw):
+        self.setPasswd(pw)
     def setPasswd(self, pw):
         pipe = PIPE
         try:
@@ -81,68 +163,83 @@ class mcUser(models.Model):
                 self.ldap_user.setldif_file(None)
                 ldap_user.setpassword(None)
                 ident = None
+                self.password = pw
                 ''' RETURN TO BLANK POST PAGE '''
         except:
             self.conn.log("There was an exception when calling slappasswd: %s" % sys.exc_info()[0])
             # RETURN TO POST PAGE
 
-    def authenticated(self):
-        return self.authenticated(credentials[0].cn(), credentials[1])
-
-    def checkPasswd(self, pw):
+    def check_password(self, pw):
+        self.checkPasswd(pw)
+    def checkPasswd(self, pw=self.password):
         self.conn.authenticateMcUser(self.ldap_user.cn(), pw)
 
-    def getLDAPData(self):
-        return ldap_user
+    def authenticate(self):
+        return mcBackend.authenticated(credentials[0].cn(), credentials[1])
 
-    def getUID(self):
-        return ldap_user.uid()
-    
-# END mcUser CLASS
+    def get_profile(self):
+        if not hasattr(self, '_profile_cache'):
+            from django.conf import settings
+            if not getattr(settings, 'AUTH_PROFILE_MODULE', False):
+                raise SiteProfileNotAvailable(
+                    'You need to set AUTH_PROFILE_MODULE in your project '
+                    'settings')
+            try:
+                app_label, model_name = settings.AUTH_PROFILE_MODULE.split('.')
+            except ValueError:
+                raise SiteProfileNotAvailable(
+                    'app_label and model_name should be separated by a dot in '
+                    'the AUTH_PROFILE_MODULE setting')
+            try:
+                model = models.get_model(app_label, model_name)
+                if model is None:
+                    raise SiteProfileNotAvailable(
+                        'Unable to load the profile model, check '
+                        'AUTH_PROFILE_MODULE in your project settings')
+                self._profile_cache = model._default_manager.using(
+                                   self._state.db).get(user__id__exact=self.id)
+                self._profile_cache.user = self
+            except (ImportError, ImproperlyConfigured):
+                raise SiteProfileNotAvailable
+        return self._profile_cache
+#==================#
+# END mcUser CLASS #
+#==================#
 
+#----------------------------------------------------------------------------------------------#
 
-
-
-# THIS CLASS IS INCOMPLETE, NEED TO FIND HOW TO ACCESS LOGGED IN USER INFO.
-
-class mcUserManager(models.Manager):
-    self.userMan = models.OneToOneField(UserManger)
-    def createMcUser(self, name, email=None, password): # PASSWORD IS NECESSARY
-        LDAP_admin_cn = # GET CURRENT ADMIN USER SOMEHOW - THEY SHOULD BE IN THE LDAP DB AS ADMIN GROUP MEMBERS
-        if(not comm.ldapAdminGroupQuery(LDAP_admin_cn)): 
-            ''' 
-            THERE ACTUALLY NEEDS TO BE A BIT OF PARSING HERE TO DETERMINE THE OP.
-            PUT THIS IN A RESPONSE BOX LIKE THE SIMULATION SAVE ERRORS
-            "Insufficient LDAP privs. Sorry :("
-            '''
-        entity = LDAPUserCreation(username, password)
-        LDAP_admin_pw = # GET THE CURRENTLY LOGGED IN ADMINS PW
-        LDAP_admin_dn = "cn=%s,ou=person,dc=fysik,dc=dtu,dc=dk" % # GET CURRENT LOGGED IN ADMINS CN
-        entity.processLDIF(LDAP_admin_dn, LDAP_admin_pw)
-        
 
 #
-# **credentials[0] = LDAPData object
-# **credentials[1] = password
+# mcBackend: Gets and Authenticates users from the LDAP DB.
+#            Queries LDAP DB for uid and retrieves corresponding 
+#            user from the sqlite DB.
 #
 
 class mcBackend(object):
     conn = LDAPComm()
+    supports_interactive_user = True
+
     def get_user(uid):
-        return '''MCUSER OBJECT'''
-    def authenticate(**credentials):
-        if self.conn.authenticateMcUser():
-            return ''' MCUSER OBJECT BASED ON credentials[0].uid()'''
+        return mcUser.objects.get(uid=uid)
+
+    def authenticate(cn, pw):
+        uid = None
+        if self.conn.authenticateMcUser(cn, pw):
+            from management.LDAP.LDAPData import LDAPDataPopulator
+            data = LDAPDataPopulator(cn, pw).getData()
+            try:
+                user = mcUser.objects.get(uid=data.uid())
+                user.ldap_user = data
+                return user 
+            except User.DoesNotExist:
+                return None
+        return None
+            
+
         
-        # parse the return query for access/authentication
-        # request the specified django user based on uid return
-        # return django user.
-  
-#
-# full_name[0]      = first name
-# full_name[1..n-1] = middle names
-# full_name[N]      = last name
-#
+
+    
+
 
         
 
