@@ -21,7 +21,7 @@ DAEMON_USER=root
 # The process ID of the script when it runs is stored here:
 PIDFILEWRK=/var/run/$DAEMON_NAME-work
 PIDFILESRV=/var/run/$DAEMON_NAME-srv
-IPPORT=130.225.86.47:8000
+IPPORT=127.0.0.1:8000
 NUMWORK=4
 
 . /lib/lsb/init-functions
@@ -35,7 +35,7 @@ do_start () {
 	start-stop-daemon --start --background --pidfile $PIDFILE --make-pidfile --user $DAEMON_USER -d $DIR --chuid $DAEMON_USER --exec $DAEMON -- runworker
 	((i = i + 1))
     done
-    PIDFILE=PIDFILESRV
+    PIDFILE=$PIDFILESRV
     start-stop-daemon --start --background --pidfile $PIDFILE --make-pidfile --user $DAEMON_USER -d $DIR --chuid $DAEMON_USER --exec $DAEMON -- runserver $IPPORT
     log_end_msg $?
 }
@@ -48,7 +48,7 @@ do_stop () {
 	start-stop-daemon --stop --pidfile $PIDFILE --retry 10
 	((i = i + 1))
     done
-    PIDFILE=PIDFILESRV
+    PIDFILE=$PIDFILESRV
     start-stop-daemon --stop --pidfile $PIDFILE --retry 10
     ps -ef | grep manage.py | grep -v grep | cut -b 10-15 | xargs kill -TERM
     log_end_msg $?
