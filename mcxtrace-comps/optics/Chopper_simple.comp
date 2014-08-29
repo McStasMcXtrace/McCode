@@ -36,13 +36,14 @@
 * xwidth:[m] height of the chopper opening
 * yheight:[m] width of the chopeper opening
 * isfirst: [ ] is the chopper the first chopper on a continous source.
+* tjit: [ ] Timing jitter in terms of the opening time tau. For each ray the opening window will be shifted by a random amount within t=[-tjit*.5*tau,tjit*.5*tau]  
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Chopper_simple
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (t0=0,T=1,tau=0.1,xwidth=0.1,yheight=0.1,isfirst=0,t_rise=0)
+  SETTING PARAMETERS (t0=0,T=1,tau=0.1,xwidth=0.1,yheight=0.1,isfirst=0,t_rise=0, tjit=0)
 OUTPUT PARAMETERS ( )
 /*X-ray PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
 
@@ -60,12 +61,14 @@ INITIALIZE
 
 TRACE
 %{
+  double tjitter=0;
   PROP_Z0;
+  if(tjit) tjitter = (rand01()-0.5)*tau*tjit;
   if ( fabs(x)<xwidth/2.0 || fabs(y)<yheight/2.0){
     if (isfirst){
       if (t_rise==0){
         /*this is the first time defining element*/
-        t=t0+rand01()*tau;
+        t=t0+rand01()*tau+tjitter;
         p*=tau/T;/*correct for only sampling part of the time line*/
       }else{
         t=rand01()*(tau+2*t_rise);
@@ -78,7 +81,7 @@ TRACE
       }
     }else{
       int n=(int) floor((t-t0)/T);
-      if(t-(t0+n*T)>tau){
+      if(t-(t0+n*T+tjitter)>tau){
         ABSORB;
       }
     }
