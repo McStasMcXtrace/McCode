@@ -23,15 +23,17 @@
 *
 * %P
 * Input parameters:
-*
-* (none)
+* initial_state: ( ) Which state is Molecule_2state in for t<Dt? Useful for modelling something that chnages state slowly.
 *
 * %E
 *******************************************************************************/
 
-DEFINE COMPONENT Molecule_2state2
+DEFINE COMPONENT Molecule_2state
 DEFINITION PARAMETERS (string form_factors="FormFactors.txt",string state_0_file=NULL,string state_1_file=NULL, nq=201, string material_datafile="Be.txt")
-SETTING PARAMETERS (delta_t=100e-9,excitation_yield=0.2,t_relax=100e-9,psimin=0,psimax=M_PI_2, etamin=0, etamax=2*M_PI, radius=0, yheight=0, xwidth=0, zdepth=0, concentration=1,p_transmit=0.1)
+SETTING PARAMETERS (delta_t=100e-9,excitation_yield=0.2,t_relax=100e-9,initial_state=0,
+    psimin=0,psimax=M_PI_2, etamin=0, etamax=2*M_PI, 
+    radius=0, yheight=0, xwidth=0, zdepth=0, 
+    concentration=1,p_transmit=0.1,q_parametric=0)
 OUTPUT PARAMETERS (delta_q,prms,shape)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -82,67 +84,97 @@ INITIALIZE
       exit(-1);
     }
   }
-  prms[0].f2=malloc(sizeof(double)*nq);/*could be done by read_table-lib*/
-  prms[0].q=malloc(sizeof(double)*nq);
-  prms[1].f2=malloc(sizeof(double)*nq);
-  prms[1].q=malloc(sizeof(double)*nq);
-  
-  if (!psimax) psimax=M_PI;
-  /*compute q-limits*/;
-  prms[0].qnmin=prms[1].qnmin=M_SQRT2*sqrt(1-cos(psimin));
-  prms[0].qnmax=prms[1].qnmax=M_SQRT2*sqrt(1-cos(psimax));
 
-  printf("%s: Computing F2(q) for two states:\n", NAME_CURRENT_COMP);
-  int r,n,m,states;/*do this for two states*/
-  double dq= 6.0/(nq-1);
-  for (states=0;states<2;states++){
-    for (r=0;r<nq;r++){
-      double f2=0;
-      double q=prms[states].qnmin + r*dq;//Table_Index(f0,r,0);
-      for (n=0;n<T[states].rows;n++){
-        int Zn=(int) Table_Index(T[states],n,0);
-        /*figure out Z_n*/
-        double f0n=atomic_form_factor(Zn,0,q);//Table_Index(f0,r,Zn);
-        double nx,ny,nz;
-        nx=Table_Index(T[states],n,1);
-        ny=Table_Index(T[states],n,2);
-        nz=Table_Index(T[states],n,3);
-        f2+=fabs(f0n*f0n);
-        //printf("debug %d %g\n",Zn,f2);
-        for (m=n+1;m<T[states].rows;m++){
-          int Zm=(int) Table_Index(T[states],m,0);
-          double f0m=atomic_form_factor(Zm,0,q);//Table_Index(f0,r,Zm);
-          double mx,my,mz,dr;
-          mx=Table_Index(T[states],m,1);
-          my=Table_Index(T[states],m,2);
-          mz=Table_Index(T[states],m,3);
-          dr=sqrt((nx-mx)*(nx-mx)+(ny-my)*(ny-my)+(nz-mz)*(nz-mz));
-          if (q){
-            f2+=2 * f0m*f0n*sin(q*dr)/(q*dr);
-          }else{
-            f2+=2* f0m*f0n;
+  if (!q_parametric){
+    /*input files are atom positions - use that to compute f2s*/
+    prms[0].f2=malloc(sizeof(double)*nq);/*could be done by read_table-lib*/
+    prms[0].q=malloc(sizeof(double)*nq);
+    prms[1].f2=malloc(sizeof(double)*nq);
+    prms[1].q=malloc(sizeof(double)*nq);
+  
+    if (!psimax) psimax=M_PI;
+    /*compute q-limits*/;
+    prms[0].qnmin=prms[1].qnmin=M_SQRT2*sqrt(1-cos(psimin));
+    prms[0].qnmax=prms[1].qnmax=M_SQRT2*sqrt(1-cos(psimax));
+
+    printf("%s: Computing F2(q) for two states:\n", NAME_CURRENT_COMP);
+    int r,n,m,states;/*do this for two states*/
+    double dq= 6.0/(nq-1);
+    for (states=0;states<2;states++){
+      for (r=0;r<nq;r++){
+        double f2=0;
+        double q=prms[states].qnmin + r*dq;//Table_Index(f0,r,0);
+        for (n=0;n<T[states].rows;n++){
+          int Zn=(int) Table_Index(T[states],n,0);
+          /*figure out Z_n*/
+          double f0n=atomic_form_factor(Zn,0,q);//Table_Index(f0,r,Zn);
+          double nx,ny,nz;
+          nx=Table_Index(T[states],n,1);
+          ny=Table_Index(T[states],n,2);
+          nz=Table_Index(T[states],n,3);
+          f2+=fabs(f0n*f0n);
+          //printf("debug %d %g\n",Zn,f2);
+          for (m=n+1;m<T[states].rows;m++){
+            int Zm=(int) Table_Index(T[states],m,0);
+            double f0m=atomic_form_factor(Zm,0,q);//Table_Index(f0,r,Zm);
+            double mx,my,mz,dr;
+            mx=Table_Index(T[states],m,1);
+            my=Table_Index(T[states],m,2);
+            mz=Table_Index(T[states],m,3);
+            dr=sqrt((nx-mx)*(nx-mx)+(ny-my)*(ny-my)+(nz-mz)*(nz-mz));
+            if (q){
+              f2+=2 * f0m*f0n*sin(q*dr)/(q*dr);
+            }else{
+              f2+=2* f0m*f0n;
+            }
+          }
+        }
+        prms[states].f2[r]=f2;
+        prms[states].q[r]=q;
+        if (r>0){
+          //double dq=q-Table_Index(f0,r-1,0);
+          /*integrate using linear interpolation*/ 
+          prms[states].f2sum+=0.5*(prms[states].f2[r-1]+f2)*dq;
+          if (q>prms[states].qnmin && q<prms[states].qnmax){
+            double q1,q2,alpha;
+            q1=(prms[states].qnmin>q-dq?prms[states].qnmin:q-dq);
+            q2=(prms[states].qnmax<q?prms[states].qnmax:q);
+            alpha=((q1+q2)*0.5-(q-dq))/q;
+            prms[states].f2mcsum+=(q2-q1)*(alpha*prms[states].f2[r-1]+ (1-alpha)*f2);
           }
         }
       }
-      prms[states].f2[r]=f2;
-      prms[states].q[r]=q;
-      if (r>0){
-        //double dq=q-Table_Index(f0,r-1,0);
-        /*integrate using linear interpolation*/ 
-        prms[states].f2sum+=0.5*(prms[states].f2[r-1]+f2)*dq;
-        if (q>prms[states].qnmin && q<prms[states].qnmax){
-          double q1,q2,alpha;
-          q1=(prms[states].qnmin>q-dq?prms[states].qnmin:q-dq);
-          q2=(prms[states].qnmax<q?prms[states].qnmax:q);
-          alpha=((q1+q2)*0.5-(q-dq))/q;
-          prms[states].f2mcsum+=(q2-q1)*(alpha*prms[states].f2[r-1]+ (1-alpha)*f2);
-        }
-      }
+      prms[states].rows=T[states].rows;
+      printf("Integrated f2 for state %d= %g, Mu_s=%g\n",states,prms[states].f2sum,RE*RE*prms[states].f2sum); 
     }
-    prms[states].rows=T[states].rows;
-    printf("Integrated f2 for state %d= %g, Mu_s=%g\n",states,prms[states].f2sum,RE*RE*prms[states].f2sum); 
-  }
+  }else{
+    /*input files contain f2 parametrized by q*/
+    double dq=0.1;
+    int r,states;/*do this for two states*/
+    prms[0].f2=malloc(sizeof(double)*(T[0].rows+1));/*could be done by read_table-lib*/
+    prms[0].q=malloc(sizeof(double)*(T[0].rows+1));
+    prms[1].f2=malloc(sizeof(double)*(T[1].rows+1));
+    prms[1].q=malloc(sizeof(double)*(T[1].rows+1));
   
+    if (!psimax) psimax=M_PI;
+    /*compute q-limits*/;
+    prms[0].qnmin=prms[1].qnmin=M_SQRT2*sqrt(1-cos(psimin));
+    prms[0].qnmax=prms[1].qnmax=M_SQRT2*sqrt(1-cos(psimax));
+
+    printf("%s: Computing F2(q) for two states:\n", NAME_CURRENT_COMP);
+    for (states=0;states<2;states++){
+      for (r=0;r<T[states].rows;r++){
+        prms[states].q[r]=T[states].data[r*2];
+        prms[states].f2[r]=T[states].data[r*2+1];
+        //printf("%d %d %g %g\n",states,r,prms[states].q[r], prms[states].f2[r]);
+        prms[states].f2sum+=prms[states].f2[r]*dq;
+      }
+      prms[states].rows=T[states].rows;
+      printf("Integrated f2 for state %d= %g, Mu_s=%g\n",states,prms[states].f2sum,RE*RE*prms[states].f2sum); 
+      prms[states].f2[r]=prms[states].f2[r-1];
+      prms[states].q[r]=FLT_MAX;
+    }
+  }
   if (radius){
     if (yheight) shape=CYLINDER;
     else shape=SPHERE;
@@ -222,7 +254,7 @@ TRACE
      *the molecule is in an excited state is: excitation_yield* t_relax * exp(-t_relax *(t+delta_t)*/
     if(delta_t<t){
       /*photon arrives before pump pulse - molecule cannot be excited*/
-      state=0;
+      state=initial_state;
     }else {
       double r=rand01();
       if( r< excitation_yield * exp(-(t+delta_t)/t_relax) ){
@@ -263,12 +295,12 @@ TRACE
       
       /*find f2 for this q by interpolation*/
       int r;
-      for(r=1;r<nq;r++){
+      for(r=1;r<prms[state].rows;r++){
         if (prms[state].q[r]>q) break;
       }
       alpha=(q-prms[state].q[r-1])/(prms[state].q[r]-prms[state].q[r-1]);
       f2=(1-alpha)*prms[state].f2[r-1] + alpha*prms[state].f2[r];
-
+      if (f2<0) f2=0;
       /*apply psi and eta rotations to k to get the new vector*/
       /*first find a vector to rotate psi around - this is the
 projection of y
