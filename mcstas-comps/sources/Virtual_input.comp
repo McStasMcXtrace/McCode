@@ -15,15 +15,14 @@
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
 *
-* Source-like component that generates neutron events from an ascii/binary
+* Source-like component that generates neutron events from an ascii
 * 'virtual source' filename.
 *
 * %D
 *   This component reads neutron events stored from a file, and sends them into
 * the instrument. It thus replaces a Source component, using a previously
-* computed neutron set. The 'source' file type may be either of text or binary
-* format. The component may recognize its format automatically, but you may
-* force the filename type ('type' parameter). The number of neutron events for the
+* computed neutron set. The 'source' file type is an ascii text file with the
+* format listed below. The number of neutron events for the
 * simulation is set to the length of the 'source' file times the
 * repetition parameter 'repeat_count' (1 by default).
 *   It is particularly useful to generate a virtual source at a point that few
@@ -31,11 +30,9 @@
 * the 'source' filename. Further simulations are much faster if they start from
 * this low flux position with the 'source' filename.
 *
-* Possible file formats are:
-* 1- text column formatted with lines containing 11 values in the order:
+* The output file format is:
+* text column formatted with lines containing 11 values in the order:
 *       p x y z vx vy vz t sx sy sz stored into about 83 bytes/n.
-* 2- float or double binary files stored into 44 and 88 bytes/n
-* (with the 11 values 'p x y z vx vy vz t sx sy sz') for float/double resp.
 *
 * %BUGS
 * We recommend NOT to use parallel execution (MPI) with this component. If you
@@ -58,8 +55,6 @@
 *
 * Optional input parameters
 * repeat_count: Number of times the source must be generated/repeated [1]
-* type:         May be "text", "float" or "double" to force filename type.
-*                 Default is text filename [str]
 * verbose:      Display additional information about source, recommended [0/1]
 * smooth:       Smooth sparsed event files for filename repetitions. Use this option with MPI.
 *                 This will apply gaussian distributions around initial events from the file [0/1]
@@ -69,7 +64,7 @@
 
 DEFINE COMPONENT Virtual_input
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string filename=0, string type=0, verbose=0,repeat_count=1,smooth=1)
+SETTING PARAMETERS (string filename=0, verbose=0,repeat_count=1,smooth=1)
 OUTPUT PARAMETERS (read_block,pos,nrows,Offset,rTable,repeat_number,filename_ncount,
                    mean_vx, mean_vy, mean_vz, mean_dx, mean_dy, mean_dz, n_neutrons,
                    min_x, min_y, min_z, max_x, max_y, max_z, min_vx, min_vy, min_vz,
@@ -128,10 +123,12 @@ DECLARE
   double min_vx= FLT_MAX, min_vy= FLT_MAX, min_vz= FLT_MAX;
   double max_vx=-FLT_MAX, max_vy=-FLT_MAX, max_vz=-FLT_MAX;
   double n_count_extrapolated=0;
+  char type[10];
 %}
 
 INITIALIZE
 %{
+  sprintf(type,"text");
   Table_Init(&rTable, 0, 0);
 
   if (!filename || !repeat_count)

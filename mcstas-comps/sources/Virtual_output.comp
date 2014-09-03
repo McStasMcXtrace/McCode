@@ -15,8 +15,8 @@
 * Release: McStas 1.11
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
 *
-* Detector-like component that writes neutron state parameters into a 'virtual
-* source' neutron file.
+* Detector-like component that writes neutron state parameters into an ascci-format 
+* 'virtual source' neutron file.
 *
 * %D
 * Detector-like component writing neutron state parameters to a
@@ -29,11 +29,9 @@
 * the upstream 'source' file. Further simulations are much faster if they start
 * from this low flux position with the 'source' filename.
 *
-* Possible file formats are:
-* 1-text column formatted with lines containing 11 values in the order:
+* The output file format is:
+* text column formatted with lines containing 11 values in the order:
 *       p x y z vx vy vz t sx sy sz stored into about 83 bytes/n.
-* 2-float/double binary files (with the 11 values 'p x y z vx vy vz t sx sy sz')
-*       stored into 44 and 88 bytes/n respectively for float/double.
 *
 * Beware the size of generated files ! When saving all events (bufsize=0) the
 * required memory has been optimized and remains very small. On the other hand
@@ -58,8 +56,6 @@
 *           output [string]. If not given, a unique name will be used.
 * bufsize:[1] Size of neutron output buffer
 *           default is 0, i.e. save all - recommended.
-* type: [str] Type of output file 'text','float','double'
-*           default is text
 *
 * %E
 *******************************************************************************/
@@ -67,29 +63,31 @@
 
 DEFINE COMPONENT Virtual_output
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string filename=0, string type=0, bufsize=0)
+SETTING PARAMETERS (string filename=0, bufsize=0)
 OUTPUT PARAMETERS (DEFS, Vars)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
 %{
-%include "monitor_nd-lib"
+  %include "monitor_nd-lib"
 %}
 
 DECLARE
 %{
+  char type[10];
   MonitornD_Defines_type   DEFS;
   MonitornD_Variables_type Vars;
 %}
 
 INITIALIZE
 %{
+  sprintf(type,"text");
   long element_size=85; /* mean size per neutron for ascii storing */
 
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
 
-  if (bufsize > 0) sprintf(Vars.option, "list=%g", bufsize);
-  else strcpy(Vars.option, "list all");
+  if (bufsize > 0) sprintf(Vars.option, "list=%g borders", bufsize);
+  else strcpy(Vars.option, "list all borders");
 
   if (type && strlen(type))
   {
