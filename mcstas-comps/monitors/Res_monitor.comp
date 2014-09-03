@@ -178,10 +178,6 @@ TRACE
         PROP_DT(t0); /* t0 incoming beam */
     }
 
-    /* total intensity received */
-    Vars.Nsum++;
-    Vars.psum += p;
-    Vars.p2sum += p*p;
     /* Now fetch data from the Res_sample. */
     if(p && (!bufsize || buffer_index<bufsize))
     {
