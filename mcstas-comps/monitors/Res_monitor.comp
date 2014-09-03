@@ -105,9 +105,9 @@ INITIALIZE
   if (strstr(tmp, "list"))
     exit(fprintf(stderr, "Res_monitor: %s: Error: Only use geometry keywords (remove list from 'option').\n", NAME_CURRENT_COMP));
   if (!bufsize)
-    sprintf(Vars.option, "%s list all, x vx sx y vy sy z vz sz t ", tmp);
+    sprintf(Vars.option, "%s borders list all, x vx sx y vy sy z vz sz t ", tmp);
   else
-    sprintf(Vars.option, "%s list=%f, x vx sx y vy sy z vz sz t ", tmp, bufsize);
+    sprintf(Vars.option, "%s borders list=%f, x vx sx y vy sy z vz sz t ", tmp, bufsize);
     
   if (radius) xwidth = 2*radius;
 
