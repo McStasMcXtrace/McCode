@@ -1538,7 +1538,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (T) {
     if (Sqw->Temperature < 0)    Sqw->Temperature = fabs(T);
     MPI_MASTER(
-    if (Sqw->verbose_output > 0) {
+    if (Sqw->verbose_output > 0 && T < 3000) {
       printf(  "Isotropic_Sqw: %s: Temperature computed from S(q,w) data from %s is T=%g [K] (not set here).\n",
         Sqw->compname, file, T);
       if (Sqw->Temperature == 0)
@@ -1561,10 +1561,11 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   /* (6) apply detailed balance on Sqw_full for classical or quantum S(q,w) */
   /* compute the \int q^2 S(q) for normalisation */
+  MPI_MASTER(
   if (Sqw->sqw_classical && Sqw->verbose_output > 0 && Sqw->Temperature > 0)
-    printf("Isotropic_Sqw: %s: Applying exp(hw/2kT) factor on %s file (classical/symmetric).\n",
-      Sqw->compname, file);
-
+    printf("Isotropic_Sqw: %s: Applying exp(hw/2kT) factor with T=%g [K] on %s file (classical/symmetric).\n",
+      Sqw->compname, Sqw->Temperature, file);
+  );
   for   (index_q=0; index_q < q_bins; index_q++) {
     double sq          = 0;
     double q           = index_q*q_step;  /* q value in Sqw_full ; q_min = 0 */
