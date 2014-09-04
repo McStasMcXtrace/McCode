@@ -612,7 +612,7 @@ INITIALIZE
     strcpy(Vars.compcurname, NAME_CURRENT_COMP);
     if (bufsize > 0) sprintf(Vars.option, "list=%15g", bufsize);
     else strcpy(Vars.option, "list all");
-    strcat(Vars.option,", x y z vx vy vz t sx sy sz");
+    strcat(Vars.option,", borders, x y z vx vy vz t sx sy sz");
 
     Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0); /* dims for mcdisplay */
     if (filename != NULL)

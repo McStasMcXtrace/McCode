@@ -158,8 +158,12 @@
     /* open the file */
     hfile = Open_File(File, "r", path);
     if (!hfile) return(-1);
-    else if (!offset || (offset && !*offset))
-      printf("Opening input file '%s' (Table_Read)\n", path);
+    else {
+      MPI_MASTER(
+      if (!offset || (offset && !*offset))
+        printf("Opening input file '%s' (Table_Read)\n", path);
+      );
+    }
         
     /* read file state */
     stat(path,&stfile); filesize = stfile.st_size;
@@ -212,8 +216,11 @@
     /* open the file */
     hfile = Open_File(File, "r", path);
     if (!hfile) return(-1);
-    else
+    else {
+      MPI_MASTER(
       printf("Opening input file '%s' (Table_Read, Binary)\n", path);
+      );
+    }
     
     /* read file state */
     stat(File,&stfile);

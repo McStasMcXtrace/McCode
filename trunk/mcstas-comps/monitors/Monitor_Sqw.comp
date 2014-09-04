@@ -112,6 +112,7 @@ INITIALIZE %{
     strncat(Vars.option," user2", CHAR_BUF_LENGTH);
   if (!strstr(Vars.option, "limits") && !strstr(Vars.option, "auto"))
     strncat(Vars.option," all auto", CHAR_BUF_LENGTH);
+  strncat(Vars.option," borders", CHAR_BUF_LENGTH);
   Vars.compcurpos = POS_A_CURRENT_COMP;
 
   if (bins && !strstr(Vars.option, "bins")) { 
