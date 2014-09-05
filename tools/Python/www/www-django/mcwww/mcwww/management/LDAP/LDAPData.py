@@ -66,7 +66,8 @@ class LDAPDataBuilder:
                 uid += name[0]
                 s+=1
             while len(uid) <= 5: 
-                uid += splitname[splitlen][s+=1]
+                uid += splitname[splitlen][s]
+                s+=1
         self.data.setuid(uid)
         self.data.setcn("%s %s" % splitname[0], splitname[splitlen])
         self.data.setsn(splitname[splitlen])
@@ -94,7 +95,7 @@ class LDAPDataPopulator:
             if 'sn' in line:
                 self.data.setsn(split(" ", line)[1])
             if 'email' in line:
-                self.data.setmail(split()" ", line)[1])
+                self.data.setmail(split(" ", line)[1])
             if 'displayname' in line:
                 self.data.setdisplayname(split(" ", line)[1])
 
