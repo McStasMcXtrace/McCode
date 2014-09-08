@@ -711,7 +711,7 @@ int off_intersect(double* t0, double* t3,
     if(t_size>0){
       int i=0;
       if(t_size>1) {
-        for (i=1; i < t_size; i++){
+        for (i=1; i < t_size-1; i++){
           if (t[i-1].time > 0 && t[i].time > 0)
             break;
         }
