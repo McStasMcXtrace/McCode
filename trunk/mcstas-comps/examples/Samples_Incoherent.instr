@@ -49,7 +49,7 @@
 * %Example: SAMPLE=3 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.3196e+06
 * %Example: SAMPLE=4 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.3246e+06
 * %Example: SAMPLE=5 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.3252e+06
-* %Example: SAMPLE=6 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.92856e+06
+* %Example: SAMPLE=6 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.2324e+06
 * %Example: SAMPLE=7 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3225e+06
 * %Example: SAMPLE=8 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3233e+06
 * %Example: SAMPLE=9 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3239e+06
