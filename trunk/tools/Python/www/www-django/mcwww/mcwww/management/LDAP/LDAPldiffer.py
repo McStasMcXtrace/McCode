@@ -11,8 +11,9 @@ from mcwww.management.LDAP.LDAPData import *
 # group.
 
 
-
-# Makes an LDIF to add a user.
+#============================#
+# Add User LDIF file creator #
+#============================#
 class addUserLDIF:
     def __init__(self, ldap_user):
         out_file = open(ldap_user.ldif(), 'w')
@@ -31,8 +32,9 @@ class addUserLDIF:
         out_file.write("add: member\n")
         out_file.write("member: cn=%s,ou=Person,dc=fysik,dc=dtu,dc=dk\n" % ldap_user.cn())
         out_file.close()
-
-# Makes an LDIF to change a pw
+#===================================#
+# Change Password LDIF file creator #
+#===================================#
 class changepwLDIF:
     def __init__(self, ldap_user):
         out_file = open(ldap_user.ldif(), 'w')
