@@ -217,6 +217,7 @@ Changes in McStas v2.1, July, 2014
  - Scatter_log_iterator_stop.comp, see above notice about "Scatter logging"
  - Scatter_logger.comp, see above notice about "Scatter logging"
  - Scatter_logger_stop.comp, see above notice about "Scatter logging"
+ - SANS_benchmark2.comp, benchmarked SANS component from Heinrich Frielinghaus, FZJ
 
  Updated Components:
  - Single_crystal and PowderN have both been optimized for speed - especially in connection with using
@@ -226,7 +227,7 @@ Changes in McStas v2.1, July, 2014
        is a built-in check for whether that kind of neutron was processed before). This means that a set'
        of SPLIT neutron may be scattered across ALL reflection that are allowed for that specific incoming
        direction and wavelength. Further, the components estimate the optimal value of the SPLIT. For large
-       single crystal unit cells (i.e. protein crystals etc.), speedups of a factor of 50 have been observed!
+       single crystal unit cells (i.e. protein crystals etc.), speedups of a factor of 500 have been observed!
        The method works with all orders of scattering, even though the largest gain is seen with order=1.
      * Use is easy, e.g.
           SPLIT 43 COMPONENT SX=Single_crystal(order=1, ...)
@@ -246,18 +247,21 @@ Changes in McStas v2.1, July, 2014
  - Guide_anyshape - various improvements
  - FermiChopper - fixed bug in tangent intersection
  - Elliptic_guide_gravity - support for curvature via horizontal, vectorial addition to gravity
- 
 
  Instruments:
  - Various instruments have been included, allowing to estimate pulsed-source average and peak brilliance.
- - ISIS_SANS2d geometry contributed by R. Heenan, ISIS
+ - ISIS_SANS2d instrument contributed by R. Heenan, ISIS
  - Test_Guide_Curved - test instrument for simple, curved guide types
  - HZB_FLEX contributed by Klaus Habicht and Markos Skoulatos, HZB
  - SEMSANS_instrument.instr by Morten Sales, HZB
  - Test_Scatter_log_losses.instr, see above notice about "Scatter logging"
  - Test_Scatter_log_mvalues.instr, see above notice about "Scatter logging"
  - Test_Scatter_log_ssw_mcnp.instr, see above notice about "Scatter logging"
- 
+ - FZJ_BenchmarkSfin2.instr by Heinrich Frielinghaus, FZJ. Test instrument for the SANS_benchmark2.comp
+ - templateNMX.instr, templateLaue variant demonstrating the Single_crystal speed improvement mentioned above
+
+ Data:
+ - 
 
 Changes in McStas v2.0, December 21st, 2012
 
