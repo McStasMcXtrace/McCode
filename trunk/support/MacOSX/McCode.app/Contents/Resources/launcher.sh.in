@@ -50,6 +50,13 @@ then
   echo "'$PROGRAM' : program not found in path"
   exit 1 # program does not exist in path
 fi
+
+# McCode specific, check if openmpi has been locally installed 
+if [ -d @CMAKE_INSTALL_PREFIX@/Contents/Resources/@FLAVOR@/@MCCODE_VERSION@/lib/openmpi ] 
+then
+  export OPAL_PREFIX=@CMAKE_INSTALL_PREFIX@/Contents/Resources/@FLAVOR@/@MCCODE_VERSION@/
+fi
+
   
 # launch X11 manually if necessary
 if [ $USEX11 -eq 1 ]
