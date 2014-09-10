@@ -45,9 +45,7 @@
 * Filter:      Ni/Ti multilayer band-pass filter, Quasi-Laue (dlambda/lambda<30%)
 * Collimation: Pinholes 0.5 to 2.9 mm
 * Detector:    image plate 1250 x 450 mm2
-* Sample:      at 2.710 mm from eht end of the guide H143.
-
-* %Example: lambda=4.14 Detector: M_theta_t_all_I=152.846
+* Sample:      at 2.710 mm from the end of the guide H143.
 *
 * %Parameters
 * INPUT PARAMETERS:
