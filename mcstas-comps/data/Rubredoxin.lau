@@ -1,5 +1,7 @@
-# Perdeuterated rubredoxin (F^2calc): 'P 21 21 21' (19) orthorhombic
+# Perdeuterated rubredoxin (F^2calc), Fe (III), C263-H384-N60-O94-S5
+# SPCGRP P 21 21 21 (19) orthorhombic
 # a= 33.920 b=34.928, c=43.532; 90 deg;
+# Reference: Protein Eng 1992 Jun;5(4):367-71 ; CAS: 138635-16-2
 #
 # Physical parameters:
 # lattice_a 33.920   lattice parameter a in [Angs]
@@ -8,6 +10,10 @@
 # lattice_aa 90     lattice angle alpha in [deg]
 # lattice_bb 90     lattice angle alpha in [deg]
 # lattice_cc 90     lattice angle alpha in [deg]
+# weight  6436.92   in [g/mol] (single protein)
+# sigma_coh 4669.6  coherent scattering cross section (single protein) in [barn]
+# sigma_inc 817.57  incoherent scattering cross section (single protein) in [barn]
+# sigma_abs 245.31  absorption scattering cross section (single protein) in [barn]
 #
 # Format parameters: Crystallographica format
 # column_F2 4 norm of scattering factor |F|^2 in [fm^2]
