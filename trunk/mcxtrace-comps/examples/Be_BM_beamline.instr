@@ -49,7 +49,7 @@ AT (0,0,0) ABSOLUTE
 
 COMPONENT generic_source=Source_gaussian(
     lambda0=0.413, dlambda=0.412,
-    sig_x=0.08e-3, sig_y=0.08e-3, dist=L1
+    sig_x=0.08e-3, sig_y=0.08e-3, sigPr_x=1e-6, sigPr_y=1e-6, dist=L1
 )
 AT (0,0,0) RELATIVE PREVIOUS
 
