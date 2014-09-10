@@ -31,12 +31,13 @@
 * Modified by: PW May-June 2011: version 1.12c (re-release)
 * Modified by: PW November 2012: version 2.0RC1 (pre-release)
 * Modified by: PW December 2012: version 2.0RC2 (pre-release)
+* Modified by: PW December 2012: version 2.0
 * Modified by: PW February-July 2014: version 2.1 (and the 2.1RC1 pre-release)
-* This file is part of McStas  version 2.1, released July 2014.
+* This file is part of McStas  version 2.1, released September 2014.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v2.1, July, 2014
+Changes in McStas v2.1, September, 2014
 
  McStas 2.1 is the second release in the 2.x series and fixes various issues with McStas 2.0,
  plus provide important new developments.
@@ -261,7 +262,9 @@ Changes in McStas v2.1, July, 2014
  - templateNMX.instr, templateLaue variant demonstrating the Single_crystal speed improvement mentioned above
 
  Data:
- - 
+ - New .lau datafiles for macromolecular structures Rubedoxin and Perdeuterated pyrophosphatase, contributed by
+   Esko Oksanen, ESS.
+
 
 Changes in McStas v2.0, December 21st, 2012
 
