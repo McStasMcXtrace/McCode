@@ -1,16 +1,16 @@
-"" Vim syntax file for writing mcstas instruments
-"" Author: Erik Knudsen erik.knudsen@risoe.dk
-"" version 0.1 (may 2007) 
+"" Vim syntax file for writing McStas and McXtrace instruments
+"" Author: Erik B Knudsen erkn@fysik.dtu.dk
+"" version 0.2 (sep 2014) 
 
 "" insert something like:
-"" augroup mcstas_instr
-""  autocmd BufRead,BufNewFile *.instr,*.comp setfiletype mcstas 
+"" augroup mccode_instr
+""  autocmd BufRead,BufNewFile *.instr,*.comp setfiletype mccode 
 "" augroup END
 ""  in your .vimrc file (_vimrc for windows) and put this file in the 
 ""  .vim/syntax/ directory (or equivalent) and it should be loaded
 ""  when opening a *.instr (or *.comp) -file
 
-" mcstas instruments are mostly c syntax so start with that
+" McStas/McXtrace instruments are mostly c syntax so start with that
 :runtime! syntax/c.vim
 
 "keywords for mcstas statements
@@ -58,10 +58,13 @@
 	\ ROT_A_COMP 
 	\ ROT_R_COMP 
 	\ SCATTER 
-	\ STORE_NEUTRON 
+	\ STORE_XRAY 
+	\ RESTORE_XRAY 
+	\ STORE_NEUTRON
 	\ RESTORE_NEUTRON 
 	\ PROP_GRAV_DT 
 	\ PROP_DT 
+        \ PROP_DL
 	\ PROP_Z0 
 	\ PROP_X0 
 	\ PROP_Y0 
@@ -78,7 +81,9 @@
 	\ box_intersect 
 	\ cylinder_intersect 
 	\ ellipsoid_intersect 
-	\ sphere_intersect 
+	\ sphere_intersect
+        \ off_intersect
+        \ off_intersect_x
 	\ randvec_target_circle 
 	\ randvec_target_rect_angular 
 	\ randvec_target_rect 
