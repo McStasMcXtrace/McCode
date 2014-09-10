@@ -16,7 +16,7 @@
 * %Description
 * 
 *
-* Example: mcrun RTP_SANS.instr lambda=5
+* Example: mcrun RTP_DIFF.instr lambda=2.36
 *
 * %Parameters
 * lambda: [Angs] Monochromator selected wavelength
