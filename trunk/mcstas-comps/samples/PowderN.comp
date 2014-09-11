@@ -975,7 +975,7 @@ FINALLY
     double split_optimal    = (double)line_info.nb_refl/line_info.nb_refl_count;
     if (split_optimal > split_iterations + 5)
       printf("PowderN: %s: you may highly improve the computation efficiency by using\n"
-        "    SPLIT %i COMPONENT %s=Single_crystal(order=1, ...)\n"
+        "    SPLIT %i COMPONENT %s=PowderN(...)\n"
         "  in the instrument description %s.\n", 
         NAME_CURRENT_COMP, (int)split_optimal, NAME_CURRENT_COMP, mcinstrument_source);
   }
