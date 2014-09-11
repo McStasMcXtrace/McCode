@@ -27,6 +27,8 @@ endif()
 message("Enabling ${FLAVOR} flavor")
 setupMCCODE("${FLAVOR}")
 
+set(MCINSTALL_PREFIX "/opt/mccode/")
+
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-openmpi-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../../../COPYING")
@@ -45,14 +47,73 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Include the Contents subfolder...
 install (
   DIRECTORY "openmpi-1.6.5/"
-  DESTINATION "${FLAVOR}/${MCCODE_VERSION}"
+  DESTINATION "openmpi"
 )
 
-foreach(name mpic++ mpic++-vt mpicc mpicc-vt mpicxx mpicxx-vt mpiexec mpif77 mpif77-vt mpif90 mpif90-vt mpirun ompi-clean ompi-iof ompi-probe ompi-profiler ompi-ps ompi-server ompi-top ompi_info opal_wrapper opari orte-bootproxy.sh orte-clean orte-iof orte-ps orte-top orte_wrapper_script ortec++ ortecc orted orterun otfaux otfcompress otfconfig otfdecompress otfinfo otfmerge otfmerge-mpi otfprint otfprofile otfprofile-mpi otfshrink vtc++ vtcc vtcxx vtf77 vtf90 vtfilter vtfilter-mpi vtfiltergen vtfiltergen-mpi vtfort vtrun vtsetup vtsetup.jar vtunify vtunify-mpi vtwrapper)
+foreach(name mpic++
+mpic++-vt
+mpicc
+mpicc-vt
+mpicxx
+mpicxx-vt
+mpiexec
+mpif77
+mpif77-vt
+mpif90
+mpif90-vt
+mpirun
+ompi-clean
+ompi-iof
+ompi-probe
+ompi-profiler
+ompi-ps
+ompi-server
+ompi-top
+ompi_info
+opal_wrapper
+opari
+orte-bootproxy.sh
+orte-clean
+orte-iof
+orte-ps
+orte-top
+orte_wrapper_script
+ortec++
+ortecc
+orted
+orterun
+otfaux
+otfcompress
+otfconfig
+otfdecompress
+otfinfo
+otfmerge
+otfmerge-mpi
+otfprint
+otfprofile
+otfprofile-mpi
+otfshrink
+vtc++
+vtcc
+vtcxx
+vtf77
+vtf90
+vtfilter
+vtfilter-mpi
+vtfiltergen
+vtfiltergen-mpi
+vtfort
+vtrun
+vtsetup
+vtsetup.jar
+vtunify
+vtunify-mpi
+vtwrapper
+)
   install(
     FILES "openmpi-1.6.5/bin/${name}"
     PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ 
-    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/bin"
+    DESTINATION "openmpi/bin"
   )
 endforeach()
 
