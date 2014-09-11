@@ -24,6 +24,11 @@ fi
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac -- OSXpkg
 ./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" mac -- OSXpkg
+
+if [ "x$2" != "x" ]; then
+    # If this is a meta-package being built, we should aim for installation in /opt/mccode
+    export MCINSTALL_PREFIX=/opt/mccode/
+fi
 ./mkdist mcstas-gcc $1 support/MacOSX/gcc-hpc/10.9 "" mac -- OSXpkg
 ./mkdist mcstas-openmpi $1 support/MacOSX/openmpi/10.9 "" mac -- OSXpkg
 
