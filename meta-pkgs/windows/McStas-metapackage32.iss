@@ -7,6 +7,7 @@
 #define MyAppURL "http://www.mcstas.org"
 #define MyAppExeName "setup.exe"
 
+
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
@@ -31,7 +32,7 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "Support\strawberry-perl-5.18.2.1-32bit.msi"; DestDir: "{tmp}"
+;Source: "Support\strawberry-perl-5.18.2.1-32bit.msi"; DestDir: "{tmp}"
 Source: "Support\PPDs.zip"; DestDir: "{tmp}"
 Source: "Support\unzip.exe"; DestDir: "{tmp}"
 Source: "Support\unzip32.dll"; DestDir: "{tmp}"
@@ -45,7 +46,7 @@ Source: "dist\mcstas-tools-python-mcplot-matplotlib-NSIS-@VERSION@-mingw32.exe";
 Source: "dist\mcstas-tools-python-mcdisplay-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 
 [Run]
-Filename: "msiexec"; Parameters: "/i {tmp}\strawberry-perl-5.18.2.1-32bit.msi"
+;Filename: "msiexec"; Parameters: "/i {tmp}\strawberry-perl-5.18.2.1-32bit.msi"
 Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\PPDs.zip"
 Filename: "{tmp}\PPDs\postsetup.bat"
 Filename: "{tmp}\mcstas-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
