@@ -243,9 +243,9 @@ will monitor all theses neutron variables in one long list, one row per neutron 
 
 There are two ways to monitor any quantity with Monitor\_nD. This may be e.g. the number of neutron bounces in a guide, or the wavevector and energy transfer at a sample. The only requirement is to define the \verb+user1+ (and optionally \verb+user2,user3+) variables of a given Monitor\_nD instance.
 
-\subsubsection{Setting directly the user variables (simple)}
+\subsubsection{Directly setting the user variables (simple)}
 
-The first method uses directly the \verb+user1+ and \verb+username1+ component parameters to transfert directly the value and label, such as in the following example:
+The first method uses directly the \verb+user1+ and \verb+username1+ component parameters to directly transfer the value and label, such as in the following example:
 \begin{lstlisting}
 TRACE
 (...)
@@ -256,9 +256,9 @@ COMPONENT UserMonitor = Monitor_nD(
 The values to assign to \verb+user2+ and \verb+user3+ must be global instrument variables, or a component output variables as in \verb+user1=MC_GETPAR(some_comp, outpar)+.
 Similarly, the \verb+user2,user3+ and \verb+username2,username3+ parameters may be used to control the second and third user variable, to produce eventually 2D/3D user variable correlation data and custom event lists.
 
-\subsubsection{Setting indirectly the user variables (only for professionals)}
+\subsubsection{Indirectly setting the user variables (only for professionals)}
 
-It is possible to control the user variables of a given Monitor\_nD instance anywhere in the instrument description. This method requires more coding, but has the advantage that a variable may be defined to store the result of a computation locally, and then transfert it into the UserMonitor, all fitting in an EXTEND block.
+It is possible to control the user variables of a given Monitor\_nD instance anywhere in the instrument description. This method requires more coding, but has the advantage that a variable may be defined to store the result of a computation locally, and then transfer it into the UserMonitor, all fitting in an EXTEND block.
 
 This is performed in a 4 steps process:
 \begin{enumerate}
