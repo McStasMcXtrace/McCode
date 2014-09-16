@@ -92,9 +92,40 @@ may access all \MCX\ data files without making local copies.
 Of course, you are welcome to define your own data files,
 and eventually contribute to \MCX\ if you find them useful.
 
-%File extensions are not compulsory but help in identifying relevant files per
-%application. We list powder and liquid data files from the \MCX\ library in
-%Tables \ref{t:powders-data} and \ref{t:liquids-data}. These files contain an
+File extensions are not interpreted by \MCX but help in identifying relevant files per
+application. \Cref{t:comp-data} lists the current default file extensions.
+\begin{table}
+  \begin{center}
+    {\let\my=\\
+    \begin{tabular}{|p{0.28\textwidth}|p{0.64\textwidth}|}
+      \hline
+       \textbf{MCXTRACE/data} & Description \\
+       \hline
+ *.lau & Laue pattern file, as issued from Crystallographica.
+       For use with Single\_crystal and PowderN.
+       Data: [ h   k   l Mult. d-space 2Theta   F-squared ] \\
+ *.laz & Powder pattern file, as obtained from Lazy/ICSD.
+       For use with PowderN.\\
+ *.txt & General text file, containing ascii data. Currently used for elemental data extracted from NIST\cite{NIST-ffast}.\\
+% *.trm & transmission file, typically for monochromator crystals and filters.
+%       Data: [ k (Angs-1) , Transmission (0-1) ] \\
+% *.rfl & reflectivity file, typically for mirrors and monochromator crystals.
+%       Data: [ k (Angs-1) , Reflectivity (0-1) ] \\
+% *.sqw & $S(q,\omega)$ files for Isotropic\_Sqw component.
+%       Data: [q] [$\omega$] [$S(q,\omega)$]\\
+      \hline
+    \end{tabular}
+    \caption{Data files of the \MCX\ library.}
+    \label{t:comp-data}
+    \index{Library!Components!data}
+    }
+  \end{center}
+\end{table}
+
+
+%We list powder and liquid data files from the \MCX library in
+%Tables \ref{t:powders-data} and \ref{t:liquids-data}. 
+%These files contain an
 %extensive header describing physical properties with references, and are
 %specially suited for the PowderN (see \ref{powder}) and Isotropic\_Sqw
 %components (see \ref{s:isotropic-sqw}).
@@ -265,5 +296,5 @@ package.
 
 Anyway, if you find that either the documentation is not clear, or the behavior
 of the simulation is undoubtedly anomalous, you should report this to us at
-\verb+mcxtrace-users@mcxtrace.org+ and/or refer to our special bug/request reporting service
+\hbox{\texttt{mcxtrace-users@mcxtrace.org}} and/or refer to our special bug/request reporting service
 \cite{mczilla_webpage}.

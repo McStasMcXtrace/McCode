@@ -41,10 +41,11 @@ and the run-time features.
 \label{s:calls:run-time}
 \index{Library!Run-time|textbf}
 \index{Library!mcxtrace-r|see{Library/Run-time}}
-Here we list a number of preprogrammed macros
+Here we list a number of preprogrammed macros and functions
 which may ease the task of writing component and instrument definitions.
+By convention macros are in upper case whereas functions are in lower case.
 
-\subsection{Neutron propagation}
+\subsection{Photon propagation}
 \index{Library!Run-time!SCATTER}
 \index{Library!Run-time!ABSORB}
 \index{Library!Run-time!PROP\_Z0}
@@ -54,31 +55,31 @@ which may ease the task of writing component and instrument definitions.
 \index{Library!Run-time!ALLOW\_BACKPROP}
 Propagation routines perform all necessary operations to transport x-rays
 from one point to an other. Except when using the special
-\verb+ALLOW_BACKPROP;+ call prior to exectuting any \verb+PROP_*+ propagation,
-the x-rays which have negative propagation times are removed automatically.
+\verb+ALLOW_BACKPROP;+ call prior to executing any \verb+PROP_*+ propagation,
+the x-rays which have negative propagation lengths are removed automatically.
 \begin{itemize}
 \item {\bfseries ABSORB}. This macro issues an order to the overall
   \MCX\ simulator to interrupt the simulation of the current x-ray
   history and to start a new one.
 \item {\bfseries PROP\_Z0}. Propagates the x-ray to the $z=0$ plane,
-  by adjusting $(x,y,z)$ and $t$ accordingly from knowledge of the
-  x-ray wavevector $(k_x,k_y,k_z)$.
-  If the propagation time is negative, the x-ray is absorbed, except if a \verb+ALLOW_BACKPROP;+ preceeds it.
+  by adjusting $(x,y,z)$, $\phi$, and $t$ accordingly from knowledge of the
+  x-ray wavevector $(kx,ky,kz)$.
+  If the propagation length is negative, the x-ray is absorbed, except if a \verb+ALLOW_BACKPROP;+ preceeds it.
 
   For components that are centered along the $z$-axis,
   use the \verb+_intersect+ functions to determine intersection time(s),
   and then a \verb+PROP_DL+ call.
-\item {\bfseries PROP\_X0,PROP\_Y0}. These macros are analogous to \verb+PROP_Z0+ except they propaget to the $x=0$ and $y=0$ planes respectively.
+\item {\bfseries PROP\_X0, PROP\_Y0}. These macros are analogous to \verb+PROP_Z0+ except they propagate to the $x=0$ and $y=0$ planes respectively.
 
-\item {\bfseries PROP\_DL}$(dl)$. Propagates the x-ray by the length $dl$, adjusting $(x,y,z)$ and $\phi$ accordingly,
+\item {\bfseries PROP\_DL}$(dl)$. Propagates the x-ray by the length $dl$, adjusting $(x,y,z)$, $\phi$, $t$ accordingly,
   from knowledge of the x-ray wavevector.
 \item {\bfseries ALLOW\_BACKPROP}. Indicates that the next propagation routine
   will not remove the x-ray, even if negative propagation lengths
-  are found. Further propagations are not affected.\index{Removed x-ray events}
+  are found. Subsequent propagations are not affected.\index{Removed x-ray events}
 \item {\bfseries SCATTER}. This macro is used to denote a scattering event
   inside a component.
 %, see section~\ref{s:comp-trace}.
-  It should be used e.g
+  It should be used
   to indicate that a component has interacted with the x-ray
   (e.g. scattered or detected).
   This does not affect the simulation (see, however, {\bfseries Beamstop}),
@@ -101,7 +102,7 @@ the x-rays which have negative propagation times are removed automatically.
 \index{Library!Run-time!SCATTERED}
 \begin{itemize}
 \item {\bfseries MC\_GETPAR}$(comp, outpar)$. This may be used in e.g. the FINALLY section of an
-  instrument definition to reference the output parameters of a
+  instrument definition to reference the parameters of a
   component.
 % See page~\pageref{mcgetpar} for details.
 \item {\bfseries NAME\_CURRENT\_COMP} gives the name of the current component as a string.
@@ -143,12 +144,12 @@ the x-rays which have negative propagation times are removed automatically.
   POS\_A\_COMP\_INDEX$(index).i$ where $i$ is $x$, $y$ or $z$.
 \item {\bfseries POS\_R\_COMP\_INDEX} works the same as above,
   but with relative coordinates.
-\item {\bfseries STORE\_XRAY}$(index, x, y, z, kx, ky, kz, phi$, $Ex, Ey,
+\item {\bfseries STORE\_XRAY}$(index, x, y, z, kx, ky, kz, phi,t, Ex, Ey,
 Ez, p)$ stores the current x-ray state in the trace-history table,
 in local coordinate system. $index$ is usually INDEX\_CURRENT\_COMP.
 This is automatically done when entering each component of an
 instrument.
-\item {\bfseries RESTORE\_XRAY}$(index, x, y, z, kx, ky, kz, phi, Ex, Ey,
+\item {\bfseries RESTORE\_XRAY}$(index, x, y, z, kx, ky, kz, phi,t, Ex, Ey,
 Ez, p)$ restores the x-ray state to the one at the input of the
 component $index$. To ignore a component effect, use
 RESTORE\_XRAY (INDEX\_CURRENT\_COMP, \\
@@ -193,9 +194,9 @@ resulting Coord structure.
 \begin{itemize}
 \item {\bfseries NORM}$(x,y,z)$. Normalizes the vector $(x,y,z)$ to have
   length 1.
-\item {\bfseries scalar\_prod}$(a_x,a_y,a_z,b_x,b_y,b_z)$. Returns the scalar
+\item {\bfseries scalar\_prod}$(a_x,a_y,a_z, b_x,b_y,b_z)$. Returns the scalar
   product of the two vectors $(a_x,a_y,a_z)$ and $(b_x,b_y,b_z)$.
-\item {\bfseries vec\_prod}(\&$a_x$,\&$a_y$,\&$a_z$,$b_x$,$b_y$,$b_z$, $c_x$,$c_y$,$c_z$). Sets
+\item {\bfseries vec\_prod}(\&$a_x$,\&$a_y$,\&$a_z$, $b_x$,$b_y$,$b_z$, $c_x$,$c_y$,$c_z$). Sets
   $(a_x,a_y,a_z)$ equal to the vector product $(b_x,b_y,b_z) \times (c_x,c_y,c_z)$.
 \item {\bfseries rotate}(\&$x$,\&$y$,\&$z$,$v_x$,$v_y$,$v_z$,$\varphi$,$a_x$,$a_y$,$a_z$). Set
   $(x,y,z)$ to the result of rotating the vector $(v_x,v_y,v_z)$
@@ -264,6 +265,7 @@ Details about using these functions are given in the \MCX\ User Manual.
 \end{itemize}
 
 \subsection{Random numbers}
+By default  \MCX uses the included Mersenne Twister\cite{} algorithm for generating pseudo random numbers.
 \begin{itemize}
 \item {\bfseries rand01}(). Returns a random number distributed uniformly between 0 and 1.
 \item {\bfseries randnorm}(). Returns a random number from a normal
@@ -301,7 +303,7 @@ Details about using these functions are given in the \MCX\ User Manual.
   add a \verb+%include "read_table-lib"+ in your component definition
   DECLARE or SHARE section. Tables are structures of type \verb+t_Table+
   (see \verb+read_table-lib.h+ file for details):
-\begin{verbatim}
+  \begin{lstlisting}[language=C]
     /* t_Table structure (most important members) */
     double *data;     /* Use Table_Index(Table, i j) to extract [i,j] element */
     long    rows;     /* number of rows */
@@ -310,7 +312,7 @@ Details about using these functions are given in the \MCX\ User Manual.
     char   *filename; /* file name or title */
     double  min_x;    /* minimum value of 1st column/vector */
     double  max_x;    /* maximum value of 1st column/vector */
-\end{verbatim}
+\end{lstlisting}
 
 Available functions to read \emph{a single} vector/matrix are:
 \begin{itemize}
@@ -359,8 +361,8 @@ The number of blocks is put into $n$.
 \item {\bfseries Table\_Info\_Array}(\&$Table$) display information about all data blocks.
 \end{itemize}
 
-The format of text files is free. Lines starting by '\verb+# ; % /+' characters are considered to be comments, and stored in $Table.header$. Data blocks are vectors and matrices. Block numbers are counted starting from 1, and changing when a comment is found, or the column number changes. For instance, the file 'MCXTAS/data/BeO.trm' (Transmission of a Berylium filter) looks like:
-\begin{verbatim}
+The format of text files is free. Lines starting by '\verb+# ; % /+' characters are considered to be comments, and stored in $Table.header$. Data blocks are vectors and matrices. Block numbers are counted starting from 1, and changing when a comment is found, or the column number changes. For instance, the file 'MCXTRACE/data/BeO.trm' (Transmission of a Berylium filter) looks like:
+\begin{lstlisting}
   # BeO transmission, as measured on IN12
   # Thickness: 0.05 [m]
   # [ k(Angs-1) Transmission (0-1) ]
@@ -369,16 +371,16 @@ The format of text files is free. Lines starting by '\verb+# ; % /+' characters 
   1.0750  0.76727
   1.1000  0.80680
   ...
-\end{verbatim}
+\end{lstlisting}
 Binary files should be of type "float" (i.e. REAL*32) and "double" (i.e. REAL*64),
 and should \emph{not} contain text header lines. These files are platform
 dependent (little or big endian).
 
-The $filename$ is first searched into the current directory (and all user additional locations specified using the \verb+-I+ option, see the 'Running \MCX\ ' chapter in the User Manual), and if not found, in the \verb+data+ sub-directory of the \verb+MCXTAS+ library location. \index{Library!Components!data}
-\index{Environment variable!MCXTAS} This way, you do not need to have local copies of the \MCX\ Library Data files (see table~\ref{t:comp-data}).
+The $filename$ is first searched into the current directory (and all user additional locations specified using the \verb+-I+ option, see the 'Running \MCX\ ' chapter in the User Manual), and if not found, in the \verb+data+ sub-directory of the \verb+MCXTRACE+ library location. \index{Library!Components!data}
+\index{Environment variable!MCXTAS} This way, you do not need to have local copies of the \MCX\ Library Data files (see \cref{t:comp-data}).
 
 A usage example for this library part may be:
-\begin{verbatim}
+\begin{lstlisting}[language=C]
   t_Table Table;       // declare a t_Table structure
   char file[]="BeO.trm";  // a file name
   double x,y;
@@ -391,13 +393,13 @@ A usage example for this library part may be:
   y = Table_Value(Table, 1.45,1);  // look for value 1.45 in 1st column (x axis)
                                 // and extract 2nd column value of that row
   Table_Free(&Table);           // free allocated memory for table
-\end{verbatim}
+\end{lstlisting}
 Additionally, if the block number (3rd) argument of  {\bfseries Table\_Read} is 0, all blocks will be catenated.
 The {\bfseries Table\_Value} function assumes that the 'x' axis is the first column (index 0).
 Other functions are used the same way with a few additional parameters, e.g. specifying an offset for reading files, or reading binary data.
 
 This other example for text files shows how to read many data blocks:
-\begin{verbatim}
+\begin{lstlisting}[language=C]
   t_Table *Table;       // declare a t_Table structure array
   long     n;
   double y;
@@ -408,10 +410,10 @@ This other example for text files shows how to read many data blocks:
   y = Table_Index(Table[0], 2,5);  // read in 1st block the 3rd row, 6th column element
                                    // ONLY use Table[i] with i < n !
   Table_Free_Array(Table);         // free allocated memory for Table
-\end{verbatim}
+\end{lstlisting}
 
 You may look into, for instance, the source files for
-{\bfseries Monochromator\_curved} or {\bfseries Virtual\_input}
+\textbf{Lens\_parab} or \textbf{Filter}
 for other implementation examples.
 
 %\section{Monitor\_nD Library}

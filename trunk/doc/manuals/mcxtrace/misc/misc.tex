@@ -9,10 +9,13 @@ One part of these components deals with splitting simulations
 into two (or more) stages. 
 For example, the front end of a beamline is often not changed much, and a long simulation of photon rays
 ``surviving'' through initial optics could be reused
-for several simulations of the beamlien back-end, speeding up
+for several simulations of the beamline back-end, speeding up
 the simulations by (typically) one or two orders of magnitude.
 The components for doing this trick is \textbf{Virtual\_input} and
 \textbf{Virtual\_output}, which stores and reads photon rays, respectively.
+
+For integration with SHADOW~\cite{sanchez2011shadow3} the components \textbf{Shadow\_inpt} and \textbf{Shadow\_output}
+have been written.
 
 \textbf{Progress\_bar} is a simulation utility that displays the simulation
 status, but assumes the form of a component.

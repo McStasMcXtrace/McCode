@@ -17,7 +17,8 @@ the \MCX\ core team.
       spectrometer. These are considered as Types of elements to be instantiated in an Instrument description.
 \item{\bfseries Component Instance} A named Component (of a given Type) inserted in an Instrument description.
 \item{\bfseries Definition parameter} An input parameter for a component. For
-  example the radius of a sample component or the divergence of a collimator.
+  example the radius of a sample component or the divergence of a collimator. Technically, a definition parameter 
+  is translated into a literal constant, which prevents it from being edited at runtime. 
 \item{\bfseries Input parameter} For a component, either a definition parameter
 or a setting parameter. These parameters are supplied by the user to
 define the characteristics of the particular instance of the component
@@ -35,5 +36,7 @@ simulation run-time.
   distribution, that declare functions and variables used by the
   generated simulations.
 \item{\bfseries Setting parameter} Similar to a definition parameter, but with the
-  restriction that the value of the parameter must be a number.
+  restriction that the type of the parameter must be declared unless it is a number. In technical terms, 
+  a setting parameter is translated into an actual variable (as opposed to a definition parameter) which 
+  may be dynamically updated.
 \end{itemize}
