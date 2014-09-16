@@ -17,18 +17,18 @@ component/instrument descriptions. The other parts
 % (see table~\ref{t:comp-share})
 are dynamic, that is they are not
 pre-loaded, but only imported once when a component requests it
-using the \verb+%include+ \MCX\ keyword. For instance, within a
+using the \verb+%include+ \MCX keyword. For instance, within a
 component C code block, (usually SHARE or DECLARE):
 \index{Keyword!\%include}
-\begin{verbatim}
+\begin{lstlisting}
     %include "read_table-lib"
-\end{verbatim}
+\end{lstlisting}
 will include the 'read\_table-lib.h' file, and the 'read\_table-lib.c'
 (unless the \verb+--no-runtime+ option is used with \verb+mcstas+).
 Similarly,
-\begin{verbatim}
+\begin{lstlisting}
     %include "read_table-lib.h"
-\end{verbatim}
+\end{lstlisting}
 will \emph{only} include the 'read\_table-lib.h'.
 The library embedding is done only once for all components (like the
  SHARE section). \index{Keyword!SHARE} For an example
