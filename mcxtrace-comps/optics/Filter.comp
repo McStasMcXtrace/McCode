@@ -41,6 +41,8 @@ SHARE
   %include "read_table-lib"
   %include "interoff-lib"
 
+  enum shapes_t {NONE=-1,SPHERE, CUBE, ELLIPSOID, ANY};
+
   int filter_refract(double *kx, double *ky, double *kz, double nx, double ny, double nz, double delta0, double delta1){
     const double n2=scalar_prod(nx,ny,nz, nx,ny,nz);
     const double k=sqrt(scalar_prod(*kx,*ky,*kz, *kx,*ky,*kz));
@@ -49,8 +51,6 @@ SHARE
     double kyi=*ky;
     double kzi=*kz;
     double s;
-
-    //printf("%g %g %g\n",1-delta0,1-delta1,nr);
 
     NORM(kxi,kyi,kzi);
     if(n2!=1){
@@ -86,7 +86,7 @@ DECLARE
     double Ar, rho;
     double delta_prefactor,betafact;
     t_Table table;
-    enum shapes {NONE=-1,SPHERE, CUBE, ELLIPSOID, ANY} shape;
+    enum shapes_t shape;
     off_struct offdata;
   } *prms;
   int filter_row;
