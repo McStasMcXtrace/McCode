@@ -75,7 +75,7 @@ and position. Some can have more than one name (e.g. \texttt{energy} or
 \texttt{omega}).
 
 
-\begin{verbatim}
+\begin{lstlisting}
     kx ky kz k wavevector [Angs-1] (    usually axis are
     vx vy vz v            [m/s]         x=horz., y=vert., z=on axis)
     x y z                 [m]      Distance, Position
@@ -91,12 +91,12 @@ and position. Some can have more than one name (e.g. \texttt{energy} or
     angle                 [deg]    divergence from  direction
     theta longitude       [deg]    longitude (x/z) [for sphere and cylinder]
     phi   lattitude       [deg]    lattitude (y/z) [for sphere and cylinder]
-\end{verbatim}
+\end{lstlisting}
 as well as four other special variables
-\begin{verbatim}
+\begin{lstlisting}
     user user1            will monitor the [Mon_Name]_Vars.UserVariable{1|2}
     user2 user3           to be assigned in an other component (see below)
-\end{verbatim}
+\end{lstlisting}
 
 To tell the component what you want to monitor, just add the variable
 names in the \textit{options} parameter. The data will be sorted into \textit{
@@ -207,12 +207,12 @@ In the following table \ref{t:monitor-nd-equiv}, we show how the Monitor\_nD may
 
 \begin{itemize}
 \item{
-\begin{verbatim}
-COMPONENT MyMonitor = Monitor_nD(
+\begin{lstlisting}
+COMPONENT MyMonitor = Monitor\_nD(
     xmin = -0.1, xmax = 0.1,
     ymin = -0.1, ymax = 0.1,
     options = "energy auto limits")
-\end{verbatim}
+\end{lstlisting}
 will monitor the photon energy in a single 1D file (a kind of E\_monitor)}
 \item{\texttt{options = "banana, theta limits=[10,130], bins=120, y bins=30"} \\
     is a theta/height banana detector.\index{Monitors!Banana shape}}
@@ -251,13 +251,13 @@ optionally \verb+user2,user3+) variables of a given Monitor\_nD instance.
 \subsubsection{Directly setting the user variables (simple)}
 
 The first method uses the \verb+user1+ and \verb+username1+ component parameters to directly transfer the value and label, such as in the following example:
-\begin{verbatim}
+\begin{lstlisting}
 TRACE
 (...)
-COMPONENT UserMonitor = Monitor_nD(
+COMPONENT UserMonitor = Monitor\_nD(
   user1    = log(t), username1="Log(time)",
   options  ="auto user1")
-\end{verbatim}
+\end{lstlisting}
 The values to assign to \verb+user2+ and \verb+user3+ must be global instrument variables, or a component output variable as in \verb+user1=MC_GETPAR(some_comp, outpar)+.
 Similarly, the \verb+user2,user3+ and \verb+username2,username3+ parameters may be used to control the second and third user variable, to produce eventually 2D/3D user variable correlation data and custom event lists.
 
@@ -272,40 +272,40 @@ an EXTEND block.
 This is performed in a 4-step process:
 \begin{enumerate}
 \item Declare that you intend to monitor user variables in a Monitor\_nD instance (defined in TRACE):
-\begin{verbatim}
+\begin{lstlisting}
 DECLARE
 %{ (...)
   %include "monitor_nd-lib"
-  MONND_DECLARE(UserMonitor); // will monitor custom things in UserMonitor
+  MONND\_DECLARE(UserMonitor); // will monitor custom things in UserMonitor
 %}
-\end{verbatim}
+\end{lstlisting}
 \item Initialize the label of the user variable (optional):
-\begin{verbatim}
+\begin{lstlisting}
 INITIALIZE
 %{
   (...)
-  MONND_USER_TITLE(UserMonitor, 1, "Log(time)");
+  MONND\_USER\_TITLE(UserMonitor, 1, "Log(time)");
 %}
-\end{verbatim}
+\end{lstlisting}
 The value '1' could be '2' or '3' for the \verb+user2,user3+ variable.
 \item Set the user variable value in a TRACE component EXTEND block:\index{Keyword!EXTEND}
-\begin{verbatim}
+\begin{lstlisting}
 TRACE
 (...)
-COMPONENT blah = blah_comp(...)
+COMPONENT blah = blah\_comp(...)
 EXTEND
-%{  // attach a value to user1 in UserMonitor, could be much more comlex here.
-  MONND_USER_VALUE(UserMonitor, 1, log(t));
+%{  // attach a value to user1 in UserMonitor, could be much more complex here.
+  MONND\_USER\_VALUE(UserMonitor, 1, log(t));
 %}
 (...)
-\end{verbatim}
+\end{lstlisting}
 \item Tell the Monitor\_nD instance to record user variables:
-\begin{verbatim}
+\begin{lstlisting}
 TRACE
 (...)
-COMPONENT UserMonitor = Monitor_nD(options="auto user1")
+COMPONENT UserMonitor = Monitor\_nD(options="auto user1")
 (...)
-\end{verbatim}
+\end{lstlisting}
 \end{enumerate}
 Setting the user variable values may either make use of the photon parameters
 (x,y,z, vx,vy,vz, phi, t, Ex,Ey,Ez, p), access the internal variables of the
