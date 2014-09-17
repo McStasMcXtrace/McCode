@@ -39,9 +39,10 @@ class LDAPUserCreation:
         addUserLDIF(self.ldap_user)
 
     def collectData(self):
-        FN = raw_input('Enter Forename : ')
-        SN = raw_input('Enter Surname : ')
-        MAIL = raw_input('Enter Contact mail : ')
+        FN   = raw_input('Enter Forename         : ')
+        SN   = raw_input('Enter Surname          : ')
+        G    = raw_input('Enter User Group\n{it | teach | student} : ')
+        MAIL = raw_input('Enter Contact mail     : ')
         self.ldap_user.setnames(FN, SN)
         self.ldap_user.setmail(MAIL)
 
