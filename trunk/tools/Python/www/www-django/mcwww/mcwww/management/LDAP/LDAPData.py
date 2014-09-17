@@ -8,6 +8,7 @@ class LDAPData:
         self.SN = None
         self.MAIL = None
         self.displayName = None
+        self.GROUP = None
 
         self.ldif_file = None
         self.PASSWORD = None
@@ -37,6 +38,14 @@ class LDAPData:
         self.displayname = name
     def displayname(self):
         return self.displayName
+
+    def setGroup(self, group):
+        if group == 'it':        group = 'itStaff'
+        elif group == 'teach':   group = 'courseStaff'
+        elif group == 'student': group = 'Students'
+        self.Group = group
+    def group(self):
+        return Group
 
     def setldif_file(self, filepath):
         self.ldif_file = filepath        

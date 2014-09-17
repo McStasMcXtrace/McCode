@@ -1,7 +1,8 @@
 from subprocess import call,check_output,Popen,PIPE
-from re import split
-import sys
+from re import split as spl
 from cStringIO import StringIO
+import sys
+
 
 # THE ERROR PRINTS NEED TO BE SENT TO ERROR LOG FILE
 # THE PRINT STATEMENTS NEED TO BE REMOVED
@@ -50,8 +51,13 @@ class LDAPComm:
 # General ldapAdd #
 #=================#
     def ldapAdd(self, ldif_file, auth_dn, auth_pw):
-        cn = split(",", auth_dn)[0]
-        self.log("%s ADDED ENTRY : ldapadd -x -D %s -f %s -w PASSWORD" % cn, auth_dn, ldif_file)
+        print "ldapAdd op"
+        print auth_dn
+        print ldif_file
+        print auth_pw
+        cn = spl(",", auth_dn)[0]
+        log_str = cn+" ADDED ENTRY : ldapadd -x -D "+auth_dn+" -f %s -w PASSWORD"+ldif_file
+        self.log(log_str)
         try:
             check_output(["ldapadd", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw])
         except:
@@ -61,8 +67,8 @@ class LDAPComm:
 # General ldapMod #
 #=================#
     def ldapMod(self, ldif_file, auth_dn, auth_pw):
-        cn = split(",", auth_dn)[0]
-        log_str = cn +" MODIFICATION with: ldapmodify -x -D "+ auth_dn +" -f "+ ldif_file +" -w PASSWORD"
+        cn = spl(",", auth_dn)[0]
+        log_str = cn+" MODIFICATION with: ldapmodify -x -D "+auth_dn+" -f "+ldif_file+" -w PASSWORD"
         self.log(log_str)
         try:
             check_output(["ldapmodify", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw])
@@ -73,7 +79,7 @@ class LDAPComm:
 # Verbose ldapMod #
 #=================#
     def ldapModV(self, ldif_file, auth_dn, auth_pw):
-        cn = split(",", auth_dn)[0]
+        cn = spl(",", auth_dn)[0]
         log_str = cn +" MODIFICATION with: ldapmodify -x -D "+ auth_dn +" -f "+ ldif_file +" -v -w PASSWORD"
         self.log(log_str)
         try:
@@ -99,7 +105,7 @@ class LDAPComm:
 # General Query #
 #===============#
     def ldapQuery(self, auth_dn, auth_pw, query):
-        cn = split(",", auth_dn)[0]
+        cn = spl(",", auth_dn)[0]
         ret_val = None
         pipe = PIPE
         self.query_num += 1
@@ -116,7 +122,7 @@ class LDAPComm:
             for err_item in sys.exc_info():
                 self.log(err_item)
             pass
-        return ret_val.split("\n")
+        return spl("\n", ret_val)
 #==========================#
 # Check existence in group #
 #==========================#
