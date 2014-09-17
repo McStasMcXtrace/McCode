@@ -18,5 +18,5 @@ module-whatis   "loads the mcstas environment"
 setenv        @FLAVOR_UPPER@ @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@
 setenv        @FLAVOR_UPPER@_TOOLS @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/@FLAVOR@-tools-perl-@MCCODE_VERSION@
 prepend-path  PATH          @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/bin
-prepend-path  MANPATH       @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/man
+prepend-path  MANPATH       @CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/doc/man
 
