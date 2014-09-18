@@ -37,56 +37,11 @@ This combination lets independent scientists work indepently on separate
 modules that they have use for, and contribute to the whole with only a small
 effort.  
 
-
-%The very early implementations of the method for neutron instruments used \emph{home-made} computer programs  (see e.g. papers by J.R.D. Copley, D.F.R. Mildner, J.M. Carpenter, J. Cook), more general packages have been designed, providing models for most parts of the simulations.
-%These present existing packages are: NISP \cite{NISP}, ResTrax \cite{Restrax}, McStas \cite{nn_10_20,mcstas_pb,mcxtrace_webpage}, Vitess \cite{Vitess,vitess_webpage}, and IDEAS \cite{IDEAS}.
-%Their usage usually covers all types of neutron spectrometers, most of the time through a user-friendly graphical interface, without requiring programming skills.
-%
-%The neutron ray-tracing Monte-Carlo method has been used widely for
-%{\em e.g.}\ guide studies \cite{Copley93,Farhi02,Schanzer04},
-%instrument optimization and design \cite{Zsigmond04,Lieutenant05}.
-%Most of the time, the conclusions and general behaviour of such studies
-%may be obtained using the classical analytical approaches,
-%but accurate estimates for the flux, the resolutions,
-%and generally the optimum parameter set, benefit advantageously from MC methods.
-%
-%Recently, the concept of virtual experiments, {\em i.e.}\ full simulations
-%of a complete neutron experiment, has been suggested as the main
-%goal for neutron ray-tracing simulations. The goal is that
-%simulations should be of benefit to not only instrument builders, but also
-%to users for training, experiment planning, diagnostics, and data
-%analysis.
-%
-%In the late 90'ies at Ris\o\ National Laboratory,
-%simulation tools were urgently needed,
-%not only to better utilize existing instruments
-%({\em e.g.} RITA-1 and RITA-2~\cite{cjp_73_697,pb_241_50,pb_283_343}),
-%but also to plan completely new instruments for new sources
-%({\em e.g.} the Spallation Neutron Source, SNS~\cite{sns_webpage}
-%and the planned European Spallation Source, ESS~\cite{ess_webpage}).
-%Writing programs in C or Fortran for
-%each of the different cases involves a huge effort, with debugging presenting
-%particularly difficult problems. A higher level tool specially designed
-%for simulating neutron instruments was needed. As there was
-%no existing simulation software that would fulfill our needs, the \MCX\
-%project was initiated.
-%In addition, the ILL required an efficient and general simulation
-%package in order to achieve renewal of its instruments and guides.
-%A significant contribution to both the component library and the \MCX\
-%kernel itself was early performed at the ILL and included in the package.
-%ILL later became a part of the core \MCX\ team.
-
 \section{Scientific background}
 What makes scientists happy? Probably collect good quality data, pushing the instruments to their limits, and fit that data to physical models.
 Among available measurement techniques, x-ray scattering provides a
 large variety of beamlines to probe structure and dynamics of all
 kinds of samples.
-
-%Unfortunately the neutron flux is often a limitation in the
-%experiments. This then motivates instrument responsibles to improve
-%the flux and the overall efficiency at the spectrometer positions, and
-%even to design new machines. Using both analytical and numerical
-%methods, optimal configurations may be found.
 
 Achieving a satisfactory experiment on the best beamline is not all. Once collected, the data analysis process
 raises some questions concerning the signal: what is the background
@@ -104,7 +59,7 @@ techniques are explained in detail in Chapter \ref{s:MCtechniques}.
 \subsection{The goals of \MCX}
 \label{s:goals}
 
-Initially, the \MCS\ project and hence also the present subject the \MCX\ project had four main objectives
+Initially, the \MCS project and hence also the \MCX project had four main objectives
 that determined its design.
 
 \paragraph{Correctness.}
@@ -148,10 +103,10 @@ achieve this.
 \section{The design of \MCX}
 \label{s:design}
 
-In order to meet these ambitious goals, it was decided that \MCX\ should
+In order to meet these ambitious goals, it was decided that \MCX should
 be based on its own meta-language, specially designed for
 simulating scattering beamlines. Simulations are written in
-this meta-language by the user, and the \MCX\ compiler automatically
+this meta-language by the user, and the \MCX compiler automatically
 translates them into efficient simulation programs written in ANSI-C.
 
 In realizing the design of \MCX, the task was
@@ -235,31 +190,31 @@ power of the C language is available if needed.
 
 \section{Overview}
 
-The \MCX\ system documentation consists of the following major
+The \MCX system documentation consists of the following major
 parts:
 \begin{itemize}
-\item A short list of new features introduced in this \MCX\ release
+\item A short list of new features introduced in this \MCX release
   appears in chapter~\ref{c:changes}
 \item Chapter~\ref{s:install} explains how to obtain, compile
   and install the \MCX\ compiler, associated files and supportive software
 \item Chapter~\ref{s:MCtechniques} concerns Monte Carlo techniques
   and simulation strategies in general
 \item Chapter~\ref{c:running} includes a brief introduction to the
-  \MCX\ system
+  \MCX system
   (section~\ref{s:brief}) as well a section (\ref{s:running}) on running the compiler to produce
   simulations. Section~\ref{s:run-sim} explains how to run the generated
-  simulations. Running \MCX\ on parallel computers require special
+  simulations. Running \MCX on parallel computers require special
   attention and is discussed in section~\ref{s:run-mpi}. A number of front-end programs are used to run the
   simulations and to aid in the data collection and analysis of the
   results. These user interfaces are described in section~\ref{s:frontends}.
-\item The \MCX\ meta-language is described in chapter~\ref{s:kernel}. This
+\item The \MCX meta-language is described in chapter~\ref{s:kernel}. This
   chapter also describes a set of library functions and definitions
   that aid in the writing of simulations. See
   appendix~\ref{c:kernelcalls} for more details.
-\item The \MCX\ component library contains a collection of
-  well-tested, as well as user contributed, beam components that can be used in simulations.
-  The \MCX\ component library is documented in a separate manual
-  and on the \MCX\ web-page~\cite{mcxtrace_webpage}, but a short overview of these
+\item The \MCX component library contains a collection of
+  tested, as well as user contributed, beam components that can be used in simulations.
+  The \MCX component library is documented in a separate manual
+  and on the \MCX web-page~\cite{mcxtrace_webpage}, but a short overview of these
   components is given in chapter~\ref{s:components} of the Manual.
   %This
   %library is documented in detail in chapter~\ref{s:components}. Code
@@ -272,15 +227,15 @@ parts:
 %In addition, some results from
 %simulations with \MCX\ are described in
 %appendix~\ref{testresults}.
-As of this release of \MCX\, some support for simulating neutron
+As of this release of \MCX, some support for simulating neutron
 polarisation is included. As this is the very first release with these
 features, functionality is likely to change. To reflect this, the
 documentation is currently only available in the appendix of the Component manual. %~\ref{c:polarization}.
 A list of library calls that may be used in component definitions
 appears in appendix~\ref{c:kernelcalls}, and
-an explanation of the \MCX\ terminology can be
+an explanation of the \MCX terminology can be
 found in appendix~\ref{s:terminology} of the Manual.
-Plans for future extensions are presented on the \MCX\ web-page~\cite{mcxtrace_webpage} as well as in section~\ref{s:future}.
+Plans for future extensions are presented on the \MCX web-page~\cite{mcxtrace_webpage} as well as in section~\ref{s:future}.
 
 
 %The \MCX\ package consists of four levels:
