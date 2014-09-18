@@ -1,0 +1,50 @@
+=head1 NAME
+
+Tk::InputO - Create and manipulate TIX InputO widgets
+
+=for category Tix Extensions
+
+=head1 SYNOPSIS
+
+I<$inputonly> = I<$parent>-E<gt>B<InputO>(?I<options>?);
+
+=head1 STANDARD OPTIONS
+
+Only the following three standard options are supported by
+B<InputO>:
+
+B<cursor>	B<width>	B<height>
+
+See L<Tk::options> for details of the standard options.
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+B<InputO> does not have any widget specific options.
+
+=head1 DESCRIPTION
+
+The B<InputO> method creates a new window (given by the
+$widget argument) and makes it into a B<InputO>
+widget.  Additional options, described above, may be specified on the
+command line or in the option database to configure aspects of the
+B<InputO> such as its cursor or width.
+
+B<InputO> widgets are not visible to the user. The only
+purpose of B<InputO> widgets are to accept inputs from the
+user, which can be done with the B<bind> method.
+
+=head1 WIDGET METHODS
+
+The B<InputO> method creates a widget object.
+This object supports the B<configure> and B<cget> methods
+described in L<Tk::options> which can be used to enquire and
+modify the options described above.
+The widget also inherits all the methods provided by the generic
+L<Tk::Widget|Tk::Widget> class.
+
+=head1 BINDINGS
+
+B<InputO> widgets have no default bindings.
+
+=cut
+

@@ -1,0 +1,254 @@
+/************************************************************************'
+ * 
+ * McXtrace X-ray tracing software
+ * Copyright, All Rights Reserved
+ * Risoe-DTU, Roskilde, Denmark
+ *
+ *
+ * Component: Source_gaussian
+ *
+ * %I
+ * Written by: Jana Baltser & Erik Knudsen
+ * Date: April, 2011.
+ * Version: 1.0 
+ * Origin: NBI
+ * Release: McXtrace 0.1
+ *
+ * Gaussian cross-section source 
+ * 
+ * %D
+ * A simple source model emitting photons from a gaussian distribution in the X-Y plane with the specified
+ * standard deviations and divergence. A square target centered on the beam (Z-axis)
+ * may be used to restrict the beam to that aperture. If no target aperture is given the full gaussian cross-section is used.
+ * Further, the beam is restricted to emit photons between E0+-dE keV, or lambda0+-dlambda, whichever is given, if a spectrum_file
+ * is not specified, in which case the contents of the file dictates the emitted spectrum. 
+ * 
+ * Example: Source_gaussian(sig_x=10e-6,sig_y=10e-6,dist=15,sigPr_x=9e-6, sigPr_y=9e-6,E0=12.5, dE=0.1)
+ *  
+ * %P
+ * Input Parameters:
+ * sig_x: (m) Horizontal standard deviation of source (rms source size).
+ * sig_y: (m) Vertical standard deviation of source (rms source size).
+ * sigPr_x: (rad) Angular horizontal divergence
+ * sigPr_y: (rad) Angular vertical divergence
+ * Optional Parameters:
+ * spectrum_file: ( ) File from which to read the spectral intensity profile
+ * E0: (keV) Centre of emitted energy spectrum (overrides spectrum_file)  
+ * dE: (kev) Half-width (or std. dev.) of emitted energy spectrum.
+ * lambda0: (AA) Centre of emitted wavelength spectrum. 
+ * dlambda: (AA) Half-width (or std. dev.) of emitted wavelength spectrum.
+ * phase: ( ) The initial phase of the photons (default corresponds to a random phase (incoherent radiation).
+ * flux: ( ) Scaling factor to set the total emitted unrestricted flux.
+ * focus_xw: (m) Width of sampling window dist m downstream from source to allow focused sampling.
+ * focus_yh: (m) Height of sampling window dist m downstream from source to allow focused sampling.
+ * dist: (m) Distance from source plane to sampling window.
+ * brilliance: ( ) Unit in spectrum_file is Brilliance - apply corrections to get to raw flux.
+ * gauss: ( ) Gaussian (1) or uniform (0) spectrum profile. 
+*/
+
+DEFINE COMPONENT Source_gaussian
+DEFINITION PARAMETERS (string spectrum_file=NULL)
+  SETTING PARAMETERS (sig_x=1,sig_y=0,sigPr_x=0,sigPr_y=0,flux=1,brilliance=0,dist=1,gauss=0,focus_xw=0,focus_yh=0,E0=0, dE=0, lambda0=0,dlambda=-1,phase=-1)
+OUTPUT PARAMETERS (prms,spX,spY)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+SHARE
+%{
+  %include "read_table-lib"
+%}
+
+DECLARE
+%{
+  struct {
+    double l0,dl;
+    double pmul,pint;
+    t_Table T;
+  } prms;
+
+  double spX,spY;
+  int uniform_sampling;
+%}
+
+
+INITIALIZE
+%{
+  if (!sig_y) sig_y=sig_x;
+  
+  if (!sigPr_x || !sigPr_y){
+    fprintf(stderr,"Source_gaussian (%s): Must define horizontal and vertical angular divergences \n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+
+  if ( (focus_xw || focus_yh) && (dist*focus_xw*focus_yh == 0.0) ){
+    fprintf(stderr,"Error (%s): Nonsensical definition of sampling window: (focus_xw,focus_yh,dist)=(%g %g %g). Aborting\n",NAME_CURRENT_COMP,focus_xw,focus_yh,dist);
+    exit(1);
+  }
+
+  if (spectrum_file){
+    /*read spectrum from file*/
+    int status=0;
+    if ( (status=Table_Read(&(prms.T),spectrum_file,0))==-1){
+      fprintf(stderr,"Source_gaussian(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file?spectrum_file:"");
+      exit(1);
+    }
+    /*data is now in table t*/
+    /*integrate to get total flux, assuming numbers have been corrected for measuring aperture*/
+    int i;
+    prms.pint=0;
+    t_Table *T=&(prms.T);
+    for (i=0;i<prms.T.rows-1;i++){
+      if (brilliance){
+        /*unit is brilliance - not raw flux per unit angle and source area*/
+        /*correct for the non-uniform energy binning*/
+        prms.pint+=(1.0/(T->data[i*T->columns]*0.01))*((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]);
+      }else{
+        prms.pint+=((T->data[i*T->columns+2]+T->data[(i+1)*T->columns+2])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]);
+      }
+
+    }
+
+    printf("%s: Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
+    if(E0) printf("%s: E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
+  } else if (!E0 && !lambda0){
+    fprintf(stderr,"Error (%s): Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
+    exit(1);
+  }
+  /*calculate the X-ray weight from the flux*/
+  if (flux){//pmul=flux;
+    prms.pmul=flux*1.0/(double)mcget_ncount(); 
+  }else{
+    prms.pmul=1.0/(double)mcget_ncount();
+  }
+
+  /*Beam's footprint at a dist calculation*/
+  spX=sqrt(sig_x*sig_x+sigPr_x*sigPr_x*dist*dist);
+  spY=sqrt(sig_y*sig_y+sigPr_y*sigPr_y*dist*dist);
+
+  uniform_sampling=0;
+  if (focus_xw && focus_yh){
+    /*adjust for a focusing window*/
+    prms.pmul*=erf(focus_xw*0.5*M_SQRT1_2/spX)*erf(focus_yh*0.5*M_SQRT1_2/spY);
+    if ( focus_xw<spX || focus_yh<spY){
+      /*use a uniform sampling scheme for more efficient sampling by adjusting weights*/
+      uniform_sampling=1;
+    }
+  }
+
+
+%}
+
+
+TRACE
+%{
+  double xx,yy,x1,y1,z1;
+  double k,e,l;
+  double F1=1.0;
+  double dx,dy,dz;
+  
+  /* Initial source area. Gaussian distribution at origin*/
+  xx=randnorm();
+  yy=randnorm();
+  x=xx*sig_x;
+  y=yy*sig_y;
+  z=0;
+  p=1.0;
+ 
+
+  if (spectrum_file){
+    double pp=0;
+    l=prms.T.data[0]+ (prms.T.data[(prms.T.rows-1)*prms.T.columns] -prms.T.data[0])*rand01();
+    if(brilliance){
+      /*correct for brilliance being defined in relative wavelength band to get raw flux*/
+      pp=Table_Value(prms.T,l,2)/(Table_Value(prms.T,1,0)*0.01);
+    }else{
+      pp=Table_Value(prms.T,l,2);
+    }
+    p*=pp;
+    
+    /*if E0!=0 assume tables values are in keV, otherwise assume lambda i Å*/
+    if (E0) {
+      k=E2K*l;
+    }else{
+      k=(2*M_PI/l);
+    }
+  }else if (E0){
+    if(!dE){
+      e=E0;
+    }else if (gauss){
+      e=E0+dE*randnorm();
+    }else{
+      e=randpm1()*dE*0.5 + E0;
+    }
+    k=E2K*e;
+  }else if (lambda0){
+    if (!dlambda){
+      l=lambda0;
+    }else if (gauss){
+      l=lambda0+dlambda*randnorm();
+    }else{
+      l=randpm1()*dlambda*0.5 + lambda0;
+    }
+    k=(2*M_PI/l);
+  }
+
+  /* targeted area calculation*/
+  if (focus_xw){
+    if (uniform_sampling){
+      /*sample uniformly but adjust weight*/
+      x1=randpm1()*focus_xw/2.0;
+      p*=exp(-(x1*x1)/(2.0*spX*spX));
+    }else {
+      do {
+        x1=randnorm()*spX;
+      }while (fabs(x1)>focus_xw/2.0);
+    }
+  }else{
+    x1=randnorm()*spX;
+  }
+  if (focus_yh){
+    if (uniform_sampling){
+      /*sample uniformly but adjust weight*/
+      y1=randpm1()*focus_yh/2.0;
+      p*=exp(-(y1*y1)/(2.0*spY*spY));
+    }else {
+      do {
+        y1=randnorm()*spY;
+      }while (fabs(y1)>focus_yh/2.0);
+    }
+  }else{
+    y1=randnorm()*spY;
+  }
+  z1=dist;
+  
+  dx=x1-x;
+  dy=y1-y;
+  dz=sqrt(dx*dx+dy*dy+dist*dist);
+  
+  kx=(k*dx)/dz;
+  ky=(k*dy)/dz;
+  kz=(k*dist)/dz;
+  
+  /*randomly pick phase*/
+  if (phase==-1){
+    phi=rand01()*2*M_PI;
+  }else{
+    phi=phase;
+  }
+
+  /*set polarization vector*/
+  Ex=0;Ey=0;Ez=0;
+  p*=prms.pmul;
+  
+%}
+
+MCDISPLAY
+%{
+  double radius;
+  if (sig_x<sig_y) radius=sig_x;
+  else radius=sig_y; 
+
+  magnify("xy");
+  circle("xy",0,0,0,radius);
+%}
+
+END

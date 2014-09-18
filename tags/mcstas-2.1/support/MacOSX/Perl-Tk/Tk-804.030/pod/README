@@ -1,0 +1,7 @@
+Naming convention:
+
+Widgets have initial upper case letter to match their class name
+e.g. Button.pod
+
+Methods when documented away from a class also match their names
+which should start with lower case e.g. focus.pod

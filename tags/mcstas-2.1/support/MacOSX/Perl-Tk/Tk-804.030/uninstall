@@ -1,0 +1,58 @@
+#!/usr/local/bin/perl -w
+BEGIN {exec('perl5.002',$0,@ARGV)  unless ($] >= 5.002)}
+use Config;
+use Getopt::Long;
+
+$opt_perl = "";
+$opt_site = "";
+$opt_man  = "";
+
+GetOptions('site','perl','inc','man');
+
+my %dirs = ();
+
+
+sub maybe
+{
+ foreach (@_)
+  {
+   $dirs{$_} = 0 if (defined($_) && -d $_ && !exists $dirs{$_});
+  }
+}
+
+maybe($Config{'installarchlib'},$Config{'installprivlib'})  if ($opt_perl);
+maybe($Config{'installsitearch'},$Config{'installsitelib'}) if ($opt_site);
+
+my %done = ();
+my $dir;
+foreach $dir (keys %dirs)
+ {
+  my $file;
+  foreach $file ('Tk.pm','Tk','auto/Tk')
+   {
+    my $path = "$dir/$file";
+    next if (exists $done{$path});
+    $done{$path} = 0;
+    if (-f $path)
+     {
+      print "rm -f $path\n";
+     }
+    elsif (-d $path)
+     {
+      print "rm -rf $path\n";
+     }
+   }
+ }
+
+if ($opt_man)
+ {
+  my $path;
+  foreach $path (<$Config{'installman3dir'}/Tk::*.$Config{'man3ext'}>)
+   {
+    if (-f $path)
+     {
+      print "rm -f $path\n";
+     }
+   }
+ }
+

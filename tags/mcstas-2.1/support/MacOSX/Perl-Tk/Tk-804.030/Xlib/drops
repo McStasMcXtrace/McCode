@@ -1,0 +1,63 @@
+#!/usr/local/bin/perl
+
+
+use Tk;
+
+package Region;
+
+sub new
+{
+ my ($class,%info) = @_;
+
+ return bless \%info,$class;
+}
+
+sub children
+{
+
+}
+
+package Hack;
+use Tk::Xlib;
+require Tk::Button;
+use base  qw(Tk::Button);
+
+sub Inquire
+{
+ my ($obj,$win) = @_;
+ return Region->new(Display => $obj->Display, XID => $win);
+}
+
+sub site
+{
+ my ($w,$x,$y) = @_;
+ my $r = $w->{regions};
+ if (!defined $r)
+  {
+   my $dpy = $w->Display;
+   $w->Inquire($dpy->RootWindow($dpy->DefaultScreen));
+   $w->{regions} = $r;
+  }
+}
+
+sub probe
+{
+ my ($w) = @_;
+ my $e = $w->XEvent;
+ my $x = $e->X;
+ my $y = $e->Y;
+ my $s = $w->site($x,$y);
+ print "At $x,$y\n";
+}
+
+package main;
+
+$top = MainWindow->new;
+
+my $w = Hack->new($top,-text => 'Drag this');
+$w->bind('<Any-Motion>','probe');
+$w->pack;
+
+MainLoop;
+
+

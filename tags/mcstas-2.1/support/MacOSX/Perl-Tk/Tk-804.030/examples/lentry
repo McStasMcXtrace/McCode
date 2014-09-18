@@ -1,0 +1,43 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+
+{
+ # This could/should go in Tk/LEntry.pm
+ package Tk::LEntry;
+ require Tk::Entry;
+use base  qw(Tk::Derived Tk::Entry);
+ Construct Tk::Widget 'LEntry';
+
+ sub Populate
+ {
+  my ($w,$args) = @_;
+  $w->ConfigSpecs(-maxwidth => ['PASSIVE','maxWidth','MaxWidth',12]);
+ }
+
+ sub insert
+  {
+   my ($w,@args) = @_;
+   # Do the insert as Entry does it.
+   $w->SUPER::insert(@args);
+   # Now see if that is 'legal' ...
+   my $max  = $w->cget('-maxwidth');
+   if (length($w->get) > $max)
+    {
+     $w->delete($max,'end');
+     $w->bell;
+    }
+  }
+
+}
+
+
+my $mw = MainWindow->new;
+
+my $e  = $mw->LEntry(-maxwidth => 5, -width => 5);
+
+$e->pack;
+
+MainLoop;
+
+__END__

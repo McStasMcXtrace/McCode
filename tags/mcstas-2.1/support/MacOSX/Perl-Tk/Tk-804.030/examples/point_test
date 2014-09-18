@@ -1,0 +1,37 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+
+my $mw = MainWindow->new;
+my $pick = $mw->Label(-text => 'Pick', -relief => 'raised')->pack;
+$mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+
+$pick->bind('<1>', \&PickStart);
+$pick->bind('<ButtonRelease-1>', [\&PickWin,Ev('X'),Ev('Y')]);
+
+MainLoop;
+
+
+sub PickStart
+{
+ my $w = shift;
+ $w->grabGlobal;
+ $w->configure(-cursor => 'hand2', -relief => 'sunken');
+}
+
+sub PickWin
+{
+ my ($w,$x,$y) = @_;
+ $w->grabRelease;
+ $w->configure(-cursor => undef, -relief => 'raised');
+ my $id = $w->PointToWindow($x,$y);
+ my $depth = 0;
+ while ($id)
+  {
+   my @props = $w->property(list => $id);
+   printf("%s%08X %s\n",' ' x $depth,$id,join(' ',@props));
+   $depth++;
+   $id = $w->PointToWindow($x,$y,$id);
+  }
+}
+

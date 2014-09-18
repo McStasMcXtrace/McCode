@@ -1,0 +1,4 @@
+TextList.pm  is a package that implements a listbox using ROText.
+This allows tags to be placed on individual characters in the listbox,
+rather than being limited to an entire line entry.
+

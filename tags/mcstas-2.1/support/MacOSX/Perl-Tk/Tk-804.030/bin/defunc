@@ -1,0 +1,18 @@
+#!/usr/local/bin/perl
+
+while (<>)
+ {
+  if (defined $func)
+   {
+    if (/__FUNCTION__/)
+     {
+      s/__FUNCTION__/"$func"/g;
+     }
+    undef $func if (/^}/);
+   }
+  else
+   {
+    $func = $1 if (/^(\w+)\s*\(/);
+   }
+  print;
+ }

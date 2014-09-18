@@ -1,0 +1,7 @@
+#!/usr/local/bin/perl -w
+$^I='.bak';
+while (<>)
+ {
+  s/\b(Arg)\b/Tcl_Obj */g;
+  print;
+ }

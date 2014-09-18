@@ -1,0 +1,13 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+use Tk::Xlib;
+
+my $mw = MainWindow->new;
+
+foreach ($mw->Display->XListFonts('-*-Times-*',32768))
+ {
+  print "$_\n";
+ }
+
+

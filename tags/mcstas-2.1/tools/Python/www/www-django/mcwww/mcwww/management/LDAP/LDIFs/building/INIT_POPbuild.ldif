@@ -1,0 +1,62 @@
+#===================#
+# Adding test users #
+#===================#
+dn: cn=Mark Lewis,ou=person,dc=fysik,dc=dtu,dc=dk
+objectclass: inetOrgPerson
+cn: Mark Lewis
+displayName: Mark
+sn: Lewis
+uid: lewis
+userpassword: porche
+mail: lewis@fysik.dtu.dk
+description: NEXMAP sys admin
+employeeNumber: 002
+ou: person
+
+dn: cn=Peter Willendrup,ou=person,dc=fysik,dc=dtu,dc=dk
+objectclass: inetOrgPerson
+cn: Peter Willendrup
+displayName: Peter
+sn: Willendrup
+uid: pkwi
+userpassword: paradox
+mail: pkwi@fysik.dtu.dk
+mail: pkwi@mcc-01.risoe.dk
+telephoneNumber: 000
+departmentNumber: 307
+roomNumber: blank
+description: Head of NEXMAP IT
+employeeNumber: 000
+ou: person
+
+dn: cn=Linda Udby,ou=person,dc=fysik,dc=dtu,dc=dk
+objectclass: inetOrgPerson
+cn: Linda Udby
+displayName: Linda
+sn: Udby
+uid: udby
+userpassword: nosering
+mail: udby@nbi.dk
+telephoneNumber: 000-000-000
+departmentNumber: 000
+roomNumber: 000
+description: Leader of Virtual Neutrons for Teaching project: VNT
+ou: person
+
+#================#
+# Groupify Users #
+#================#
+dn: cn=courseStaff,ou=groups,dc=fysik,dc=dtu,dc=dk
+changetype: modify
+add: member
+member: cn=Linda Udby,ou=person,dc=fysik,dc=dtu,dc=dk
+
+dn: cn=Student,ou=groups,dc=fysik,dc=dtu,dc=dk
+changetype: modify
+add: member
+member: cn=Mark Lewis,ou=person,dc=fysik,dc=dtu,dc=dk
+
+dn: cn=itStaff,ou=groups,dc=fysik,dc=dtu,dc=dk
+changetype: modify
+add: member
+member: cn=Peter Willendrup,ou=person,dc=fysik,dc=dtu,dc=dk

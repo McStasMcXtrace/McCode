@@ -1,0 +1,197 @@
+#!/usr/local/bin/new/perl -w
+
+use strict;
+
+use File::Find;
+use File::Copy;
+use File::Basename;
+use Getopt::Long;
+use blib;
+my %file;
+my @files;
+my %cat;
+my @cat;
+
+my $podindex;
+GetOptions("podindex!" => \$podindex);
+
+sub category
+{
+ my ($cat,$file) = @_;
+ unless (exists $cat{$cat})
+  {
+   $cat{$cat} = [];
+   push(@cat,$cat);
+  }
+ if (defined $file)
+  {
+   if (exists $file{$file})
+    {
+     if ($file{$file} ne $cat)
+      {
+       warn "$file already in $file{$file} not $cat\n";
+      }
+    }
+   else
+    {
+     $file{$file} = $cat;
+     push(@{$cat{$cat}},$file)
+    }
+  }
+}
+
+@ARGV = ("Tk.cmd") if (!@ARGV && -r "Tk.cmd");
+
+if (@ARGV)
+ {
+  my $sec;
+  while (<>)
+   {
+    if (/^beginBookmark\s+'(.*)'\s*$/i)
+     {
+      $sec = $1;
+      category($sec);
+     }
+    elsif (/^file\s+(\S+)/)
+     {
+      my $file = $1;
+      if (-f $file)
+       {
+        category($sec,$file);
+       }
+      else
+       {
+        warn "Cannot find $file\n";
+       }
+     }
+   }
+ }
+
+find(sub {
+          $File::Find::prune = 1 if /\b(blib|doc|pod[3n])\b/;
+	  return if /^Tk.pod$/;
+          push(@files,$File::Find::name) if /\.(pod|pm)$/
+         },
+     '..');
+
+foreach my $file (sort @files)
+ {
+  my $seen = 0;
+  my $pod  = 0;
+  open(F,"$file") || die "Cannot open $file:$!";
+  while (<F>)
+   {
+    if (/^=for\s+category\s+(.*)$/)
+     {
+      category($1,$file);
+      $seen = 1;
+      last;
+     }
+    if (/^=head1\s*NAME/)
+     {
+      $pod = 1;
+     }
+   }
+  category('Other Documents',$file) if ($pod && !$seen);
+  if (!$pod && $file =~ /\.pm$/)
+   {
+
+   }
+  close(F);
+ }
+
+if (-f "Tk.cmd")
+ {
+  copy("Tk.cmd","Tk.cmd.old");
+ }
+
+system("p4",'edit',"Tk.cmd") if (-e 'Tk.cmd' && !-w 'Tk.cmd');
+
+
+
+eval { require Tk };
+
+if ($podindex)
+ {
+  open(POD,">../Tk.pod") || die "Cannot write to Tk.pod: $!";
+  print POD <<'END';
+=head1 NAME
+
+Tk - a graphical user interface toolkit for Perl
+
+=head1 SYNOPSIS
+
+    use Tk;
+    $top = new MainWindow;
+    MainLoop;
+
+=head1 DESCRIPTION
+
+The Perl/Tk manual is split up into a number of sections:
+
+END
+
+  my $no_link = 0;
+  foreach my $cat (@cat)
+   {
+    $no_link = ($cat =~ /C Programming/);
+    print POD "=head2 $cat\n\n=over 4\n\n";
+    foreach my $file (sort { lc($a) cmp lc($b) } @{$cat{$cat}})
+     {
+      my($base) = fileparse($file, ".(pod|pm)");
+      if ($no_link)
+       {
+        print POD "=item *\n\n$base\n\n";
+       }
+      else
+       {
+        my $mod = "Tk::" . $base;
+        print POD "=item *\n\nL<$mod|$mod>\n\n";
+       }
+     }
+    print POD "=back\n\n";
+   }
+
+  print POD <<END;
+
+=head1 AUTHOR
+
+Nick Ing-Simmons
+
+=head1 SEE ALSO
+
+L<perl(1)|perl>, L<wish(1)|wish>.
+
+=cut
+END
+ }
+else
+ {
+  open(CMD,">Tk.cmd") || die "Cannot open Tk.cmd:$!";
+  print CMD <<END;
+# This is a command file for pod2ps
+#
+cover true
+booktitle 'Perl/Tk Reference'
+release 'Version Tk$Tk::VERSION'
+author 'Nick Ing-Simmons'
+linkbox off color
+pagesize a4
+output tkman.ps
+path .
+END
+
+  foreach my $cat (@cat)
+   {
+    print CMD "beginBookmark '$cat'\n";
+    foreach my $file (@{$cat{$cat}})
+     {
+      print CMD "file $file '' '$cat' ''\n";
+     }
+    print CMD "endBookmark\n";
+   }
+
+  print CMD <<END;
+ToC 1
+END
+ }

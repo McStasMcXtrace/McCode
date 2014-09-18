@@ -1,0 +1,32 @@
+This is a collection of Tixish widgets as well as a few other
+miscellaneous widgets that I have found useful. They are distributed
+under the same terms as Perl itself. Documentation for each widget
+is embedded as a pod. Here is a brief one line description of each
+one of the widgets:
+
+BrowseEntry -- poor man's ComboBox; provides labeled entry with a button
+               to popup choices.
+
+NoteBook -- Display several pages within limited space using the notebook
+            metaphor.
+
+DialogBox -- Like Dialog but lets you add any widget to the top frame.
+
+Balloon -- Balloon and status bar help message system.
+
+LabFrame -- Labeled frame with "acrosstop" option.
+
+To install:
+
+perl Makefile.PL
+make test
+make install
+
+You'll have to copy the files balArrow.xbm and cbxarrow.xbm to a
+directory where Tk expects to find bitmaps.
+
+Bug reports to rsi@earthling.net.
+
+Enjoy.
+Rajappa
+

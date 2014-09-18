@@ -1,0 +1,66 @@
+#====================#
+# Make Main Branches #
+#====================#
+dn: ou=person,dc=fysik,dc=dtu,dc=dk
+objectclass: organizationalunit
+ou: person
+description: Branch containing inetorgperson entries
+
+dn: ou=groups,dc=fysik,dc=dtu,dc=dk
+objectclass: organizationalunit
+ou: groups
+description: organisationalunit Groups {Student|courseStaff|itStaff}
+
+dn: ou=access,dc=fysik,dc=dtu,dc=dk
+objectclass: organizationalunit
+ou: access
+description: Single User Moodle Bind Branch
+
+#===============#
+# Add DummyUser #
+#===============#
+dn: cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk
+objectclass: inetOrgPerson
+cn: DummyUser
+sn: Placeholder
+uid: DU
+userpassword: placeholder 
+mail: lewis@fysik.dtu.dk
+description: DummyUser:
+ - Fake user with zero privs. 
+ - Made to initiate group branches.
+ - Member of all groups.
+ou: person
+
+#======================#
+# Add moodle Bind User #
+#======================#
+dn: cn=moodle,ou=access,dc=fysik,dc=dtu,dc=dk
+objectclass: inetOrgPerson
+cn: moodle
+sn: bind user
+uid: MoodleBindUser
+userpassword: traumaroot
+mail: lewis@fysik.dtu.dk
+ou: access
+
+#==========================#
+# Making ou=groups Subtree #
+#==========================#
+dn: cn=Student,ou=groups,dc=fysik,dc=dtu,dc=dk
+objectclass: groupofnames
+cn: Student
+description: DTU/KU Student
+member: cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dtu,dc=dk
+
+dn: cn=itStaff,ou=groups,dc=fysik,dc=dtu,dc=dk
+objectclass: groupofnames
+cn: itStaff
+description: DTU/KU IT Staff
+member: cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dtu,dc=dk
+
+dn: cn=courseStaff,ou=groups,dc=fysik,dc=dtu,dc=dk
+objectclass: groupofnames
+cn: courseStaff
+description: DTU/KU Teaching Staff
+member: cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dtu,dc=dk
