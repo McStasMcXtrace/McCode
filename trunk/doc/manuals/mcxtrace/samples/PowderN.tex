@@ -23,7 +23,8 @@ The description of the powder comes from a file in one of the standard output fo
 
 \subsection{Files formats: powder structures}
 
-Data files of type \verb'lau' and \verb'laz' in the \MCX\ distribution data directory are self-documented in their header. A list of common powder definition files is available in Table \ref{t:powders-data} (page \pageref{t:powders-data}). They do not need any additional parameters to be used, as in the example:
+Data files of type \verb'lau' and \verb'laz' in the \MCX distribution data directory are self-documented in their header. 
+%A list of common powder definition files is available in Table \ref{t:powders-data} (page \pageref{t:powders-data}). They do not need any additional parameters to be used, as in the example:
 \begin{verbatim}
   PowderN(<geometry parameters>, filename="Al.laz")
 \end{verbatim}
@@ -62,7 +63,7 @@ header with lines e.g.:
   #nb_atoms     <value of number of atoms per unit cell>
 \end{verbatim}
 
-Further details on file formats are available in the \verb+mcdoc+ page
+Further details on file formats are available in the \texttt{mxdoc} page
 of the component.
 
 \subsection{Geometry, physical properties, concentricity}
@@ -71,7 +72,8 @@ sample of size $xwidth$ x $yheight$ x $zdepth$. At the users choice, an inner 'h
 specified using the parameter $thickness$. 
 
 
-As the Isotropic\_Sqw component~\ref{s:isotropic-sqw}, PowderN assumes \emph{concentric} shape, i.e.
+%As the Isotropic\_Sqw component~\ref{s:isotropic-sqw}, 
+PowderN can assume a \emph{concentric} shape, i.e.
 can contain other components inside the inner hollow. To allow this, two almost identical copies
 of the PowderN components must be set up \emph{around} the internal component(s), for example:
 
@@ -88,8 +90,8 @@ COMPONENT Cryo2 = COPY(Cryo)(concentric = 0)
 AT (0,0,0) RELATIVE Somewhere
 \end{verbatim}
 
-As outlined, the first instance of PowderN \emph{must} have \verb+concentric = 1+ and the instance \emph{must}
-have \verb+concentric = 0+. Furthermore, the component(s) inside the hollow \emph{must} have a geometry which can
+As outlined, the first instance of PowderN \emph{must} have \texttt{concentric = 1} and the second instance \emph{must}
+have \textt{concentric = 0}. Furthermore, the component(s) inside the hollow \emph{must} have a geometry which can
 be fully contained inside the hollow.
 
 
