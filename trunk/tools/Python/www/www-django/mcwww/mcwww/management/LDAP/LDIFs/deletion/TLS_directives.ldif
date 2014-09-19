@@ -1,8 +1,0 @@
-dn: cn=config
-delete: olcTLSCertificateFile
--
-delete: olcTLSCACertificateFile
--
-delete: olcTLSCertificateKeyFile
--
-delete: olcTLSVerifyClient
