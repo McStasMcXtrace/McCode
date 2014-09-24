@@ -17,7 +17,7 @@ Summary:   %{summary}
 Group:     %{group}
 URL:       http://www.mccode.org
 Buildroot: %{buildroot}
-Requires:  mcstas-2.1 mcstas-comps-2.1 mcstas-tools-python-mcplot-chaco-2.1 mcstas-tools-python-mcplot-matplotlib-2.1 mcstas-tools-python-mcrun-2.1 mcstas-manuals-2.1
+Requires:  mcstas-2.1 mcstas-comps-2.1 mcstas-tools-python-mcplot-matplotlib-2.1 mcstas-tools-python-mcrun-2.1 mcstas-manuals-2.1
 
 %description
 A metapackage for McStas + python tools
