@@ -1,1 +1,0 @@
-mcstas-suite-2.1.spec
