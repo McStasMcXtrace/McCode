@@ -43,7 +43,7 @@ else
 	# - Should not be done if called from the 'app bundle' installer - and only once
 	if [[ ${PREFIX} = */Contents/Resources ]]; then
 	    if [ ! -h /usr/local/${FLAVOR}/${VERSION} ]; then
-		ln -s ${PREFIX}/${FLAVOR}/${VERSION} /usr/local/${FLAVOR}/${VERSION}
+		ln -sf ${PREFIX}/${FLAVOR}/${VERSION} /usr/local/${FLAVOR}/${VERSION}
 	    fi
 	fi
     else
