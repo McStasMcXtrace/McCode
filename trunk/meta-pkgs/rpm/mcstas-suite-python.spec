@@ -1,1 +1,0 @@
-mcstas-suite-python-2.1.spec

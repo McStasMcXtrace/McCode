@@ -1,1 +1,0 @@
-mcstas-suite-perl-2.1.spec
