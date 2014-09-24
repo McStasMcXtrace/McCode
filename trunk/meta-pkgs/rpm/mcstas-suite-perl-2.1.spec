@@ -1,4 +1,4 @@
-%define name			mcstas-suite-perl-2.1
+%define name			mcstas-suite-perl
 %define summary			A metapackage for McStas + perl tools
 %define version			2.1
 %define release			1
