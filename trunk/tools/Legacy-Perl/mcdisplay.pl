@@ -425,7 +425,7 @@ Transform {
 		$rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
 	      }
 	      write_process("<component type=\"".$type."\" name=\"$comp\" idlist=\"".$type."-list\">\n"); #(${mantidcount2}*1000000)."\">\n");
-	      write_process("\t<locations x=\"".$transformations{$comp}[0]."\" y=\"".($transformations{$comp}[1]+$ymin)."\" y-end=\"".($transformations{$comp}[1]+$ymax)."\" rot=\"".($transformations{$comp}[1]+$ymin)."\" rot-end=\"".($transformations{$comp}[1]+$ymax)."\" n-elements=\"".$ny."\" z=\"".$transformations{$comp}[2]."\" $rota /> \n");
+	      write_process("\t<locations x=\"".$transformations{$comp}[0]."\" y=\"".($transformations{$comp}[1]+$ymin)."\" y-end=\"".($transformations{$comp}[1]+$ymax)."\" n-elements=\"".$ny."\" z=\"".$transformations{$comp}[2]."\" $rota /> \n");
 	      write_process("</component>\n\n");
 	      write_process("<type name=\"".$type."\">\n");
 	      write_process("\t<component type=\"pixel-".$mantidcount2."\">\n"); #(${mantidcount2}*1000000)."\">\n");
