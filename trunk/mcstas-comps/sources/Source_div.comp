@@ -47,7 +47,7 @@
 * focus_aw:(deg) FWHM (Gaussian) or maximal (uniform) horz. width divergence
 * focus_ah:(deg) FWHM (Gaussian) or maximal (uniform) vert. height divergence
 * E0:      (meV) Mean energy of neutrons.
-* dE:      (meV) Energy spread of neutrons.
+* dE:      (meV) Energy half spread of neutrons.
 * lambda0: (Ang) Mean wavelength of neutrons (only relevant for E0=0)
 * dlambda: (Ang) Wavelength half spread of neutrons.
 * gauss:  (0|1)  Criterion: 0: uniform, 1: Gaussian distributions
@@ -72,8 +72,8 @@ DECLARE
 %}
 INITIALIZE
 %{
-  sigmah = DEG2RAD*focus_aw/(2.0*sqrt(2.0*log(2.0)));
-  sigmav = DEG2RAD*focus_ah/(2.0*sqrt(2.0*log(2.0)));
+  sigmah = DEG2RAD*focus_aw/(sqrt(8.0*log(2.0)));
+  sigmav = DEG2RAD*focus_ah/(sqrt(8.0*log(2.0)));
 
   if (xwidth < 0 || yheight < 0 || focus_aw < 0 || focus_ah < 0) {
       printf("Source_div: %s: Error in input parameter values!\n"
@@ -143,8 +143,8 @@ TRACE
   }
 
   if (gauss==1) { 
-    thetah = randnorm()*sigmah/2;
-    thetav = randnorm()*sigmav/2;
+    thetah = randnorm()*sigmah;
+    thetav = randnorm()*sigmav;
   } else { 
     thetah = randpm1()*focus_aw*DEG2RAD/2;
     thetav = randpm1()*focus_ah*DEG2RAD/2;
