@@ -30,18 +30,22 @@ Milage reports are welcome (good or bad) to erkn_AT_fysik.dtu.dk
 
 #include <string>
 #include <list>
-#include <sys/stat.h>
+//#include <linux/stat.h>
+//#include <sys/types.h>
+#include <iterator>
+#include <vector>
+#include <cstdlib>
+#include <cerrno>
 
 #include "TMap.h"
 #include "TString.h"
 #include "TObjString.h"
 #include "TObject.h"
 
-
 using std::cout;
 using std::endl;
 
-class mccoderun {
+class mccoderun1234 {
   bool compile,translate;
   string remaining;
   unsigned long long count;
@@ -111,97 +115,310 @@ class mccoderun {
 
 };
 
-mccoderun(string instrument="",int help=0, int mpi=0, int fc=0, int ft=0, int trace=0, string instrument="", string outdir="", unsigned long long n=1000000, ){
-               
-}
-       
+class Mccoderun {
+  TString command;
+  string outfile,cfile;
+  bool compd_with_mpi;
 
-mccoderun(string commandline){
-  
+  public:
+  string instrument,outdir,args;
+  int np,help,trace,fc,ft;
+  unsigned long long ncount;
 
-}
-
-
-class mccodescan {
-
+  //Mccoderun(string instrument="",int help=0, int mpi=0, int fc=0, int ft=0, int trace=0, string instrument="", string outdir="", unsigned long long n=1000000);
+  Mccoderun(string instrument="instrument.instr",unsigned long long n=1000000, string outdir="", string args="", int help=0, int mpi=0, int fc=0, int ft=0, int trace=0);
+  Mccoderun(string,unsigned long long n=1000000,string);
+  Mccoderun(string);
+  int run();
+  int exec();
+  int generate_c();
+  int compile();
 };
 
-int mcplot(const Char_t *infilename, bool verbose=0){
-  /*generate a list of components(monitors) found in the mcstas.sim file*/
-  
-  TString *files[256];
-  TString full(infilename);
-  TString path = full(0,full.Last('/')+1);
-  TString basename = full(full.Last('/')+1,full.Length());
-  Int_t nplots=0;
-  char ifn[512]="";
-  
-  if (basename=="")basename="mcstas.sim";
-  if (basename == "mcstas.sim"){
-    std::string line;
-    strcat(ifn,path.Data());
-    strcat(ifn,basename.Data());
-    ifstream infile(ifn);
-    if(!infile.good()){
-      cout << "Cannot open file: " << ifn << endl;
-      return 0;
+Mccoderun::Mccoderun(string instrument, unsigned long long n, string outdir, string args, int help, int mpi, int fc, int ft, int trace){
+  stringstream tmp;
+  tmp << "mcrun " << instrument << (help?" -h":"") << (fc?" -c":"") << (ft?" -t":"") << (outdir!=""?" -d "+outdir:"") << " -n " << n;
+  this->command = tmp.str();
+  cout << "meh command to run is: " <<this->command<<endl;
+  this->instrument=instrument;
+  this->outfile=instrument.substr(0,instrument.find_last_of('.')) + ".out";
+  this->cfile=instrument.substr(0,instrument.find_last_of('.')) + ".c";
+  this->outdir=outdir;
+  this->help=help;
+  this->ncount=n;
+  this->np=mpi;
+  this->ft=ft;
+}
+
+Mccoderun::Mccoderun(string instrument, unsigned long long ncount,string args){
+  char tmpcommand[512];
+  snprintf(tmpcommand,512,"mcrun %s %s -n %ld\n",instrument.c_str(),args.c_str(),ncount);
+  this->command = tmpcommand;
+  cout << "command to run is: " <<this->command<<endl; 
+  this->instrument=instrument;
+  this->outfile=instrument.substr(0,instrument.find_last_of('.')) + ".out";
+  this->cfile=instrument.substr(0,instrument.find_last_of('.')) + ".c";
+  this->outdir="";
+  this->args=args;
+  this->ft=ft;
+}
+
+Mccoderun::Mccoderun(string instrument){ 
+  cout << "construct from single string"<<endl;
+  /*this shoudl actually try to read default configs from file*/
+  this->instrument=instrument;
+  this->outfile=instrument.substr(0,instrument.find_last_of('.')) + ".out";
+  this->cfile=instrument.substr(0,instrument.find_last_of('.')) + ".c";
+  this->help=0;
+  this->outdir="";
+  this->args="";
+  this->np=1;
+  this->ncount=1000000;
+}
+
+int Mccoderun::run(){
+  /*stat the files referenced and do the system calls necessary*/
+  Long_t ri,rc,ro,id,size,flags,mtime_instr,mtime_c, mtime_out;
+
+  if (this->fc==0){
+    ri=gSystem->GetPathInfo(this->instrument.c_str(),&id,&size,&flags,&mtime_instr);
+    if (ri){
+      cout << "Cannot stat instrument file " << this->instrument.c_str() << ". Aborting!" <<endl;
+      return -1;
     }
-    while (std::getline(infile, line, '\n')){
-      TString tline(line);
-      //cout << line <<endl;
-      if (tline.Contains("filename")){
-        int i=line.find(':');
-        TString t=tline(i+1,tline.Length());
-        files[nplots] = new TString(path + t.Remove(TString::kBoth,' '));
-        /*remove whitespace*/
-        files[nplots]->Remove(TString::kBoth,' ');
-        nplots++;
-        files[nplots]=0;
-      }
+    rc=gSystem->GetPathInfo(this->cfile.c_str(),&id,&size,&flags,&mtime_c);
+    cout << rc <<" "<<mtime_c <<" "<< mtime_instr << endl;
+
+
+    if(rc || mtime_c < mtime_instr){
+      this->generate_c();
     }
-  }else {
-    /*only a single file wanted*/ 
-    if(verbose) cout <<"opening single plot file"<<endl;
-    ifstream infile(infilename);
-    if(!infile.good()){
-      cout << "Cannot open file: " << infilename << endl;
-      return 0;
+ 
+    ro=gSystem->GetPathInfo(this->outfile.c_str(),&id,&size,&flags,&mtime_out);
+    if(ro || mtime_out < mtime_c){
+      this->compile();
     }
-    files[0]=new TString(infilename);
-    files[1]=0;
-    cout <<files[0]->Data()<<endl;
-    nplots=1;
+  }else{
+    /*force compile*/
+    this->generate_c();
+    this->compile();
   }
-  infile.close(); 
+
+  /*and - now run the actual simulation*/
+  this->exec();
+
+}
+
+int Mccoderun::generate_c(){
+  stringstream ss;
+  ss << "mcstas" << " -t " << this->instrument << " -o" << this->cfile;
+  cout << ss.str() <<endl;
+  system(ss.str().c_str());
+  return 0;
+}
+
+int Mccoderun::exec(){
+  string tmp;
+  stringstream cmdlo,total;
+  cout << "About to run this file: "<< this->outfile <<endl;
+  cmdlo << ((this->help)?" -h":"") << ((this->ft)?" -t":"") << ((this->outdir)!=""?" -d "+(this->outdir):"") << " -n " << (this->ncount);
+  total << "./" << this->outfile << cmdlo.str() << " " << this->args;
+  cout <<"Complete command: " << total.str() << endl;
+  system(total.str().c_str());
+}
+
+int Mccoderun::compile(){
+  if(this->np>1){
+    /*compile with mpi and set a flag*/
+    this->compd_with_mpi=true;
+    cout << "mpi not supported yet" <<endl;
+    return 0;
+  }else{
+    this->compd_with_mpi=false;
+    stringstream ss;
+    ss << "cc " << this->cfile << " -o" << this->outfile << " -lm";
+    cout << ss.str() << endl;
+    system(ss.str().c_str());
+    return 0;
+  }
+}
 
 
-  int j;
+
+Mccoderun* mcrun(string instrument, string args){
+  string s;
+  stringstream ss(args); // Insert the string into a stream
+  vector<string> tokens; // Create vector to hold instrument defined arguments
+  
+  Mccoderun *r1= new Mccoderun(instrument);
+  unsigned long long ul;
+
+  while (ss >> s){
+    if(s=="-n"){
+      ss >> s;
+      ul=(unsigned long long) strtod(s.c_str(),NULL);
+      r1->ncount=ul;
+      if(ul==ULONG_MAX){
+        cerr << "Error converting ncount argument: "<< s << ". Aborting" << endl;
+        return 1;
+      }else{
+        cout << "found ncount " <<r1->ncount<<endl;
+      }
+    }else if (s=="-c"){
+      cout <<"Compile flag found"<<endl;
+      r1->fc=1;
+    }else if (s=="--mpi"){
+      ss >> s;
+      ul=strtoul(s.c_str(),NULL,10);
+      r1->np= ul;
+      if(ul){
+        cerr << "Error converting mpi argument: "<< s << ". Aborting" << endl;
+        return 1;
+      }
+    }else if (s=="-h" || s=="--help"){
+      cout << "Print usage" << endl;
+    }else{
+      tokens.push_back(s);
+    }
+  }
+  /*all the non-caught arguments are in the token vector*/
+  for (auto it = tokens.begin(); it!=tokens.end(); ++it){
+    if (!r1->args !="") {
+      r1->args += " ";
+    }
+    r1->args+=*it;
+  }
+  std::cout <<r1->args<< endl;
+  r1->run();
+
+  return r1;
+}
+
+
+
+
+
+
+class Mcplot {
+  TCanvas *c1;
+  int plotc;
+  TObject *plots[256];
+  TPad *pads[256];
+  TString files[256];
+  public:
+  Mcplot();
+  overviewplot();
+  singleplot(int);
+  overviewplotlog();
+  singleplotlog(int);
+};
+
+Mcplot::Mcplot(string infilename="mccode.sim", bool verbose=0, bool doplot=1) {
+  /*basically do what the script below does*/
+  /*this functionality should be in a read method*/
+
+  /*is infilename a directory or a regular file?
+   * if dir ->search for a mccode file and read in the data by parsing the mccode.sim file 
+   * if regular -> set plotc to 1 and only read that data*/
+  cout << infilename << " recieved from outside." <<endl;
+  FileStat_t buf;
+  //gSystem->GetPathInfo(infilename.c_str(),&buf);
+  Long_t r,id,size,flags,mtime;
+  string workdir;
+  c1=NULL;
+
+  r=gSystem->GetPathInfo(infilename.c_str(),&id,&size,&flags,&mtime);
+
+  cout << "stat returns: " << r <<endl;
+  if( !r && (flags & 2)){
+    cout << "Now that\'s a directory."<<endl;
+    /*check for mccode.sim file, else die*/
+    if (infilename[infilename.length()-1]=='/') {
+      infilename += "mccode.sim";
+    }else{
+      infilename += "/mccode.sim";
+    }
+
+  } 
+  r=gSystem->GetPathInfo(infilename.c_str(),&id,&size,&flags,&mtime);
+  if( r || flags){
+    cout << "Cannot open file "<<infilename<<" Aborting." <<endl;
+    return NULL;
+  }
+  /*So we've now caught a single file*/
+  int n=infilename.find("/");
+  if( n==string::npos){
+    workdir="./";
+  }else{
+    workdir=infilename.substr(0,n+1);
+  }
+
+  cout << "So I\'ve figured out that I should open the file: "<<infilename << " in the directory: " << workdir <<endl;
+  /*so now infilename contains what we want to plot*/ 
+  /*open the file and read it*/
+  std::string line;
+  ifstream infile(infilename.c_str());
+  if(!infile.good()){
+    cout << "Cannot open file: " << infilename << endl;
+    return NULL;
+  }
+  this->plotc=0;
+  while (std::getline(infile, line, '\n')){
+    TString tline(line);
+    //cout << line <<endl;
+    if (line.find("filename:")!=string::npos){
+      size_t i=line.find(':');
+      string t=line.substr(i+1,line.length());
+      /*trim t*/
+      i=t.find_last_not_of(" \n\r\t");
+      if( string::npos != i )
+      {
+        t=t.substr(0,i+1);
+      }
+      i = t.find_first_not_of(" \n\r\t");
+      if( string::npos != i)
+      {
+        t=t.substr(i);
+      }
+      files[this->plotc] = workdir + t;
+      this->plotc++;
+      files[this->plotc]=0;
+    }
+  }
+}
+
+int Mcplot::plot(int verbose=0){
   Int_t nx=1;
   Int_t ny=1;
-  while (nx*ny<nplots){
+  while (nx*ny<this->plotc){
     if (nx<=ny) nx++;
     else ny++;
   }
-  TCanvas *c1 = new TCanvas();
+  if(c1==NULL){
+    c1=new TCanvas();
+  }else{
+    c1->Clear();
+  }
   /*iterate through map and plot each datafile in pads on a canvas*/
   c1->Divide(nx,ny);
-  TPad *p[256];
-  TObject *plots[256];
-  for (int i=0; i<nplots; i++){
-    //p[i]=(TPad *)(c1->GetPrimitive("c1_"+i));
+  
+  for (int i=0; i<plotc; i++){
     c1->cd(i+1);
-    char *s=files[i]->Data();
+    char *s=files[i].Data();
     if(verbose) cout <<i<<"Plotting: "<<s<<endl;
-    //if( 
-        plots[i]=mccode_plot_hist(s,"",1.0,1.0,verbose=verbose);
-        //){
-      /*so it worked*/
-      plots[i]->Draw();   
-    //}
+    plots[i]=mccode_plot_hist(s,"",1.0,1.0,verbose=verbose);
+    plots[i]->Draw();   
   }
-  //c1->Update()
   return 0;
 }
+
+Mcplot mcplot(string infilename="mccode.sim", int verbose=0){
+  Mcplot *mp = new Mcplot(infilename,verbose=verbose);
+  mp->plot();
+  return mp;
+}
+
+
 
 /*to add canvas interactivity:
  * add and event handler function to subcanvas that reacts
@@ -212,26 +429,6 @@ int mcplot(const Char_t *infilename, bool verbose=0){
  * ... and then the other way around again when repressed.
  */
 
-
-void mcsingle(const Char_t *filename, bool verbose=0)
-{
-  /*if mcstas.sim file - scan it
-   * else setup a simple map with only one item in it*/
-  
-  
-  /*set up a canvas*/
-  //TCanvas c1 = new TCanvas();
-  TMap *tm=scan_mccode_sim_file("gen_data/mcstas.sim",verbose=1);
-  TIter *ti(tm);
-  
-  while (TPair *tp = (TPair *) ti()){
-    cout << tp->Key();
-  }
-  /*figure out how many plots we need*/
-   
-return;
-
-}
 
 TObject *mccode_plot_hist(const Char_t *filename, const Char_t *histname, Float_t scaleX=1.0,
 		 Float_t scaleY=1.0,
