@@ -30,8 +30,6 @@ Milage reports are welcome (good or bad) to erkn_AT_fysik.dtu.dk
 
 #include <string>
 #include <list>
-//#include <linux/stat.h>
-//#include <sys/types.h>
 #include <iterator>
 #include <vector>
 #include <cstdlib>
@@ -44,76 +42,6 @@ Milage reports are welcome (good or bad) to erkn_AT_fysik.dtu.dk
 
 using std::cout;
 using std::endl;
-
-class mccoderun1234 {
-  bool compile,translate;
-  string remaining;
-  unsigned long long count;
-  int seed;
-
-  TMap *options = new TMap;
-  
-  public:
-  bool check_compile();
-  bool check_translate();
-  int run();
-  mccoderun(){
-    compile=0;
-    translate=0;
-    ncount=1000000;
-  }
-
-  /*constructors - first one with parser*/
-  mccoderun(string commandline=""){
-    /*this code exctracts the running options*/
-    istringstream iss(commandline);
-    string token;
-    while (iss>>token){
-      int valid=0;
-      string argument;
-      if (token[0]=='-'){
-        /*it's an option*/
-        if (token[1]!='-'){
-          /*short option*/
-          switch(token[1]){
-            case 'c':
-              valid=1;
-              compile=1;translate=1;break;
-            case 'n':
-              valid=1;
-              if(token[2]){
-                argument=token.substr(2);
-              }else{
-                iss>>argument;
-              }
-              ncount=strtol(argument.c_str(),NULL,10);
-              break;
-            case 's':
-              valid=1;
-              if(token[2]){
-                argument=token.substr(2);
-              }else{
-                iss>>argument;
-              }
-              seed=strtol(argument.c_str(),NULL,10);
-              break;
-            default:
-              break;
-          }
-
-        }
-      }
-      /*this was not an option*/
-      if (!valid) remaining.append(token+" ");
-
-    }
-
-    /*remaining now has an extra spacehe end*/
-    remaining=remaining.substr(0,remaining.length()-1);
-
-  }
-
-};
 
 class Mccoderun {
   TString command;
@@ -243,8 +171,6 @@ int Mccoderun::compile(){
   }
 }
 
-
-
 Mccoderun* mcrun(string instrument, string args){
   string s;
   stringstream ss(args); // Insert the string into a stream
@@ -294,11 +220,7 @@ Mccoderun* mcrun(string instrument, string args){
   return r1;
 }
 
-
-
-
-
-
+/*--------------------------------*/
 class Mcplot {
   TCanvas *c1;
   int plotc;
