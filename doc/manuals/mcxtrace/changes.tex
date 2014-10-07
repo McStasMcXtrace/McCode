@@ -1,10 +1,10 @@
 % Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
 
-\chapter{New features in \MCX\ \version\ }
+\chapter{New features in \MCX \version}
 \label{c:changes}
 
 This is the first version of \MCX. As such it implements new features. Bugs are
-reported and traced using the \MCX\ Trac system \cite{mccode_trac_webpage}
+reported and traced using the \MCX Trac system \cite{mccode_trac_webpage}
 (shared with its sister project \MCS). We will not present here an extensive
 list of corrections, and we let the reader refer to this bug reporting service
 for details. Only important changes are indicated here.
@@ -20,7 +20,7 @@ Of course, we can not guarantee that the software is bullet proof, but we do our
 \label{s:new-features:kernel}
 \index{Kernel}
 
-The following changes concern the 'Kernel' (i.e. the \MCX\ meta-language and program). See the dedicated chapter in the \textit{User manual} for more details.
+The following changes concern the 'Kernel' (i.e. the \MCXx meta-language and program). See the dedicated chapter in the \textit{User manual} for more details.
 
 \section{Run-time}
 \label{s:new-features:run-time}
@@ -92,7 +92,8 @@ All sources include focussed sampling for optimized calculations
 \index{Installing}
 \subsection{Selected Tool features}
 \begin{itemize}
-%  \item Support for per-user mcxtrace\_config.perl file, located in \verb+$HOME/.mcstas/+ . This folder is also the default
+  \item standard FreeBSD port
+    %  \item Support for per-user mcxtrace\_config.perl file, located in \verb+$HOME/.mcstas/+ . This folder is also the default
 %     location of the 'host list' for use with MPI or gridding, simply name the file 'hosts'.
 %  \item mxgui Save Configuration for saving chosen settings on the 'Configuration options' and 'Run dialogue'.
   \item Possibility to run MPI or grid simulations by default from mxgui.
@@ -109,7 +110,7 @@ All sources include focussed sampling for optimized calculations
      Simulations \emph{always} run in the background, freeing mcgui for other work.
 \item "Any" Linux - reference platforms are Ubuntu 10.04 (and earlier) and Debian 4.0 (and earlier). We have also tested 
   Fedora 8, OpenSuSE 10.3 and CentOS 4 releases recently.
-\item BSD (FreeBSD release 8.0 and Dragonfly BSD release 2.0, tested)
+\item BSD (FreeBSD release 10.0 tested)
 \item Oracle OpenSolaris 10 (Intel tested, Sparc probably OK)
 \item Plus probably any UNIX/POSIX type environment with a bit of effort...
 \end{itemize}
