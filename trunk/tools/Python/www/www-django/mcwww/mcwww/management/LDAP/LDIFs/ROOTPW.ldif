@@ -1,17 +1,18 @@
+#======================================================================#
 # Remember: populate this file with new slappwd created cyphered pwds. #
 # --------                                                             #
 # operations: create pwd for lowest level DB structure access	       #
 #             delete auto created pwd for user db admin		       #
 #             create user defined admin pwd			       #
-# ---------------------------------------------------------------------#
+#======================================================================#
 dn: olcDatabase={0}config,cn=config
 changetype: modify
 add: olcRootPW
-olcRootPW: {MD5}jfHwyMF7n4A41FV2jXan7w==
+olcRootPW: <ROOTPW>
 #
-# dn: cn=admin,dc=fysik,dc=dtu,dc=dk
+# dn: cn=admin,dc=<MACHINE DOMAIN>
 # changetype: modify
 # delete: userPassword
 # -
 # add: userPassword
-# userPassword: {SSHA}TvPUV82yqXzgUwvjEdYB/sQGXFAZ+z+Y 
+# userPassword: <ADMINPW>
