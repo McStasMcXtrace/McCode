@@ -1,13 +1,12 @@
+#=================================================#
+# LDAP DB Modification and Authentication Methods #
+# ----------------------------------------------- #
+# Author: Mark Lewis                              #
+#=================================================#
 from subprocess import call,check_output,Popen,PIPE
 from re import split as spl
 from cStringIO import StringIO
 import sys
-
-
-# THE ERROR PRINTS NEED TO BE SENT TO ERROR LOG FILE
-# THE PRINT STATEMENTS NEED TO BE REMOVED
-# 
-
 # LDAPComm
 # ========
 # ldapAdd:
@@ -32,7 +31,7 @@ import sys
 # authenticateMcUser:
 #   Takes auth_cn and auth_pw as argument, checks the LDAP DB ldapwhoami to check existence
 #   returns boolean based on existence of user.
-
+# ================================================================================================ #
 class LDAPComm:
 #=======================================================================================#
 # Builds an access log file and sets the query counter to zero.
@@ -52,9 +51,6 @@ class LDAPComm:
 #=================#
     def ldapAdd(self, ldif_file, auth_dn, auth_pw):
         print "ldapAdd op"
-        print auth_dn
-        print ldif_file
-        print auth_pw
         cn = spl(",", auth_dn)[0]
         log_str = cn+" ADDED ENTRY : ldapadd -x -D "+auth_dn+" -f %s -w PASSWORD"+ldif_file
         self.log(log_str)
@@ -151,7 +147,7 @@ class LDAPComm:
             self.log(log_str)
             return False
 #=====================#
-# User Identification #
+# User Identification # : in progress
 #=====================#
     def ldapAuthenticate(self, auth_cn, auth_pw):
         dn = "cn=%s" + auth_cn + "ou=person,dc=fysik,dc=dtu,dc=dk"
