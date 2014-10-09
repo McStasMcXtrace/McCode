@@ -47,6 +47,7 @@ class Mccoderun {
   TString command;
   string outfile,cfile;
   bool compd_with_mpi;
+  string flavour;
 
   public:
   string instrument,outdir,args;
@@ -57,6 +58,7 @@ class Mccoderun {
   Mccoderun(string instrument="instrument.instr",unsigned long long n=1000000, string outdir="", string args="", int help=0, int mpi=0, int fc=0, int ft=0, int trace=0);
   Mccoderun(string,unsigned long long n=1000000,string);
   Mccoderun(string);
+  void set_flavour;
   int run();
   int exec();
   int generate_c();
@@ -139,7 +141,7 @@ int Mccoderun::run(){
 
 int Mccoderun::generate_c(){
   stringstream ss;
-  ss << "mcstas" << " -t " << this->instrument << " -o" << this->cfile;
+  ss << this->flavour << " -t " << this->instrument << " -o" << this->cfile;
   cout << ss.str() <<endl;
   system(ss.str().c_str());
   return 0;
@@ -171,12 +173,75 @@ int Mccoderun::compile(){
   }
 }
 
+int set_flavour(string flavour){
+  if ( flavour=="mcstas"||flavour=="McStas" || flavour=="MCSTAS")
+    this->flavour="mcstas";
+  else if (flavour=="mcxtrace" || flavour=="McXtrace" || flavour=="MCXTRACE")
+    this->flavour="mcxtrace";
+  else{
+    cerr << "Unknown flavour: " << flavour <<". Aborting." <<endl;
+    return 1;
+  }
+  return 0;
+}
+
 Mccoderun* mcrun(string instrument, string args){
   string s;
   stringstream ss(args); // Insert the string into a stream
   vector<string> tokens; // Create vector to hold instrument defined arguments
   
   Mccoderun *r1= new Mccoderun(instrument);
+  this->set_flavour("mcstas");
+  unsigned long long ul;
+
+  while (ss >> s){
+    if(s=="-n"){
+      ss >> s;
+      ul=(unsigned long long) strtod(s.c_str(),NULL);
+      r1->ncount=ul;
+      if(ul==ULONG_MAX){
+        cerr << "Error converting ncount argument: "<< s << ". Aborting" << endl;
+        return 1;
+      }else{
+        cout << "found ncount " <<r1->ncount<<endl;
+      }
+    }else if (s=="-c"){
+      cout <<"Compile flag found"<<endl;
+      r1->fc=1;
+    }else if (s=="--mpi"){
+      ss >> s;
+      ul=strtoul(s.c_str(),NULL,10);
+      r1->np= ul;
+      if(ul){
+        cerr << "Error converting mpi argument: "<< s << ". Aborting" << endl;
+        return 1;
+      }
+    }else if (s=="-h" || s=="--help"){
+      cout << "Print usage" << endl;
+    }else{
+      tokens.push_back(s);
+    }
+  }
+  /*all the non-caught arguments are in the token vector*/
+  for (auto it = tokens.begin(); it!=tokens.end(); ++it){
+    if (!r1->args !="") {
+      r1->args += " ";
+    }
+    r1->args+=*it;
+  }
+  std::cout <<r1->args<< endl;
+  r1->run();
+
+  return r1;
+}
+
+Mccoderun* mxrun(string instrument, string args){
+  string s;
+  stringstream ss(args); // Insert the string into a stream
+  vector<string> tokens; // Create vector to hold instrument defined arguments
+  
+  Mccoderun *r1= new Mccoderun(instrument);
+  this->set_flavour("mcxtrace");
   unsigned long long ul;
 
   while (ss >> s){
@@ -335,6 +400,12 @@ int Mcplot::plot(int verbose=0){
 }
 
 Mcplot mcplot(string infilename="mccode.sim", int verbose=0){
+  Mcplot *mp = new Mcplot(infilename,verbose=verbose);
+  mp->plot();
+  return mp;
+}
+
+Mcplot mxplot(string infilename="mccode.sim", int verbose=0){
   Mcplot *mp = new Mcplot(infilename,verbose=verbose);
   mp->plot();
   return mp;
