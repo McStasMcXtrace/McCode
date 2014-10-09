@@ -2,13 +2,13 @@
 
 \chapter{Running \MCX}
 \label{c:running}
-This chapter describes usage of the \MCX\ simulation package. Refer
+This chapter describes usage of the \MCX simulation package. Refer
 to Chapter~\ref{s:install} for installation instructions. In case of
 problems regarding installation or usage, the \MCX\ mailing
 list~\cite{mcxtrace_webpage} or the authors should be contacted.
 
 {\bfseries Important note for Windows users:} It is a known problem that some of
-the \MCX\ tools do not support filenames / directories with spaces.
+the \MCX tools do not support filenames / directories with spaces.
 We are working on a more general approach to this problem, which will
 hopefully be solved in a future release. We recommend to use
 ActiveState {\bfseries Perl 5.10}. (Note that all needed
@@ -20,7 +20,7 @@ written. Alternatively, an example instrument file can be obtained
 from the \verb+examples/+ directory in the distribution or from
 another source.
 
-The structure of \MCX\ is illustrated in Figure~\ref{fig:structure}.
+The structure of \MCX is illustrated in Figure~\ref{fig:structure}.
 
 The input files (instrument and component files) are written in the \MCX\
 meta-language and are edited either by using your favourite editor
@@ -36,8 +36,8 @@ front-end programs for example to present the intensity at the
 detector as a motor position is varied.
 
 The output data may be analyzed and visualized in the same way as
-regular experiments by using the data handling and visualisation tools in \MCX\ based on
-Perl and Matlab, Scilab~\cite{scilab_webpage} or PGPLOT. Further data
+regular experiments by using the data handling and visualisation tools in \MCX based on
+Perl and Matlab, or PGPLOT. Further data
 output formats including NeXus and XML are available, see section \ref{s:analyze}.\index{Tools}
 
 %\begin{figure}[htb!]
@@ -69,8 +69,8 @@ output formats including NeXus and XML are available, see section \ref{s:analyze
 %\caption{The graphical user interface \texttt{mxgui}.}
 %\label{fig:mxgui}
 %\end{figure}
-%\label{p:neutronsite}
-%To load an instrument, select ``Tutorial'' from the ``Neutron site''
+%\label{p:x-raysite}
+%To load an instrument, select ``Tutorial'' from the ``x-ray site''
 %menu and open the file \verb+Samples_vanadium+. Next, check that the current plotting backend setting
 %(select ``Choose backend'' from the ``Simulation'' menu) corresponds
 %to your system setup. The default setting can be adjusted as explained in Chapter \ref{installing}
@@ -160,19 +160,19 @@ output formats including NeXus and XML are available, see section \ref{s:analyze
 \section{Running the instrument compiler}
 \label{s:running}
 
-This section describes how to run the \MCX\ compiler manually. Often,
+This section describes how to run the \MCX compiler manually. Often,
 it will be more convenient to use the front-end program \verb+mxgui+
 (section~\ref{s:mxgui}) or \verb+mxrun+ (section~\ref{s:mxrun}). These
 front-ends will compile and run the simulations automatically.
 \index{Tools!mxgui} \index{Tools!mxrun}
 
-The compiler for the \MCX{} instrument definition
+The compiler for the \MCX instrument definition
 is invoked by typing a command of the form
 \begin{verbatim}
     mcxtrace name.instr
 \end{verbatim}
 This will read the instrument definition \verb+name.instr+ which is
-written in the \MCX\ meta-language. The compiler will translate the
+written in the \MCX meta-language. The compiler will translate the
 instrument definition into a Monte Carlo simulation program provided in
 ISO-C. The output is by default written to a file in the current
 directory with the same name as the instrument file, but with extension
@@ -189,7 +189,7 @@ to represent standard input and standard output, respectively.
 \subsection{Code generation options}
 \index{Code generation options}
 
-By default, the output files from the \MCX\ compiler are in ISO-C with
+By default, the output files from the \MCX compiler are in ISO-C with
 some extensions (currently the only extension is the creation of new
 directories, which is not possible in pure ISO-C). The use of
 extensions may be disabled with the \verb+-p+ or \verb+--portable+
@@ -203,10 +203,10 @@ and orientation of every component. This option is mainly used with the
 \verb+mxdisplay+ front-end as described in section~\ref{s:mxdisplay}.
 
 The code generation options can also be controlled by using preprocessor
-macros in the C compiler, without the need to re-run the \MCX\
+macros in the C compiler, without the need to re-run the \MCX
 compiler. If the preprocessor macro \verb+MC_PORTABLE+ is defined, the
 same result is obtained as with the \verb+--portable+ option of the
-\MCX\ compiler. The effect of the \verb+--trace+ option may be obtained
+\MCX compiler. The effect of the \verb+--trace+ option may be obtained
 by defining the \verb+MC_TRACE_ENABLED+ macro. Most Unix-like C
 compilers allow preprocessor macros to be defined using the \verb+-D+
 option, eg.
@@ -219,7 +219,7 @@ included in the instrument.
 \subsection{Specifying the location of files}
 \label{s:files}
 
-The \MCX\ compiler needs to be able to find various files during
+The \MCX compiler needs to be able to find various files during
 compilation, some explicitly requested by the user (such as component
 definitions and files referenced by \verb+%include+), \index{Keyword!\%include}
 and some used internally to generate the simulation executable. \MCX\ looks for these
@@ -394,7 +394,7 @@ the syntax \textit{name}\verb+=+\textit{val}. For example
     ./Samples_vanadium.out ROT=90
 \end{verbatim}
 \index{Parameters!Instruments}
-The number of neutron histories to simulate may be set using the
+The number of photon histories to simulate may be set using the
 \verb+--ncount+ or \verb+-n+ option, for example
 \verb+--ncount=2e5+. The initial seed for the random number generator is
 by default chosen based on the current time so that it is different for
@@ -410,7 +410,10 @@ placed instead in a newly created directory \textit{dir} (to prevent overwriting
 previous results an error message is given if the directory already exists).
 Alternatively, all output may be written to a single file \textit{file} using
 the \verb+--file=+\textit{file} or \verb+-f+\textit{file} option (which should
-probably be avoided when saving in binary format, see below). If the \verb+file+ is given as \verb+NULL+, the file name is automatically built from the instrument name and a time stamp. The default file name is \verb+mcxtrace+ followed by appropriate extension.
+probably be avoided when saving in binary format, see below). If the
+\verb+file+ is given as \verb+NULL+, the file name is automatically built from
+the instrument name and a time stamp. The default file name is \verb+mcxtrace+
+followed by appropriate extension.
 
 The complete list of options
 and arguments accepted by \MCX\ simulations appears in
@@ -441,7 +444,7 @@ manner, the user will \emph{not} be prompted for any remaining ones. These will
 simply take on their default values.
 
 %It is also possible to create and read \textit{Vitess}, \textit{MCNP/PTRAC} and \textit{Tripoli4/batch}
-%neutron event files using components
+%photon event files using components
 %\begin{itemize}
 %\item \verb+Vitess_input+ and \verb+Vitess_output+
 %\item \verb+Virtual_tripoli4_input+ and \verb+Virtual_tripoli4_output+
@@ -483,7 +486,7 @@ When choosing the HTML format, the simulation results are saved as a web page, w
       sequence. \\
       \hline
       \texttt{-n \textit{count}} \my \texttt{--ncount=\textit{count}}
-        & Set the number of neutron histories to simulate. The default
+        & Set the number of photon histories to simulate. The default
       is 1,000,000. (1e6)\\
       \hline
       \texttt{-d \textit{dir}} \my \texttt{--dir=\textit{dir}}
@@ -500,19 +503,13 @@ When choosing the HTML format, the simulation results are saved as a web page, w
       \hline
       \texttt{-t} \my \texttt{--trace}
         & This option makes the simulation output the state of every
-      neutron as it passes through every component. Requires that the
+      photon as it passes through every component. Requires that the
       \texttt{-t} (or \texttt{--trace}) option is also given to the
       \MCX\ compiler when the simulation is generated. \\
       \hline
       \texttt{--no-output-files}
         & This option disables the writing of data files (output to the
       terminal, such as detector intensities, will still be written). \\
-      \hline
-      \texttt{-g} \my \texttt{--gravitation}
-        & This option toggles the gravitation (approximation) handling
-        for the whole neutron propagation within the instrument. May
-        produce wrong results if the used components do no comply with
-        this option.\\
       \hline
       \texttt{--format=\textit{FORMAT}}
         & This option sets the file format for result simulation and data files. \\
@@ -621,7 +618,7 @@ Once known, it is possible to send one of the signals listed in Table~\ref{t:sig
 \begin{verbatim}
     kill -USR2 13277
 \end{verbatim}
-This will result in a message showing status (here 33 \% achieved), as well as the position in the instrument of the current neutron.
+This will result in a message showing status (here 33 \% achieved), as well as the position in the instrument of the current photon.
 \begin{verbatim}
 # \MCX : [pid 13277] Signal 12 detected SIGUSR2 (Save simulation)
 # Simulation: file (file.instr)
@@ -670,13 +667,13 @@ There are various ways to speed up simulations
 \item Optimize the compilation of the instrument, as explained in section~\ref{s:compile}.
 \item Execute the simulation in parallel on a computer grid or a cluster (with MPI or ssh grid
 ) as explained in section~\ref{s:run-mpi}.
-%\item Divide simulation into parts using a file for saving or generating neutron
-%      events. In this way, a guide may be simulated only once, saving the neutron events
+%\item Divide simulation into parts using a file for saving or generating photons
+%      events. In this way, a guide may be simulated only once, saving the photon events
 %      at the guide exit as a file, which is being read quickly by the second simulation
 %      part. Use the Virtual\_input and Virtual\_output components for this technique.
 %\item Use source optimizers like the components Source\_adapt or
 %      Source\_Optimizer. Such component may sometimes not be very efficient, when no
-%      neutron importance sampling can be achieved, or may even sometimes alter the
+%      photon importance sampling can be achieved, or may even sometimes alter the
 %      simulation results. Be careful and always check results with a
 %      (shorter) non-optimized
 %      computation.
@@ -876,9 +873,9 @@ Configuration in the File menu.
 \end{figure}
 
 
-\noindent The {\bfseries Neutron Site} menu contains a list of
+\noindent The {\bfseries X-ray Site} menu contains a list of
 template/example instruments as found in the \MCX\ library, sorted by
-neutron site. When selecting one of these, a local copy of the
+x-ray site. When selecting one of these, a local copy of the
 instrument description is transfered to the active directory (so that
 users have modification rights) and loaded. One may then view its source (Edit) and use it directly for simulations/trace (3D View).
 
@@ -890,7 +887,7 @@ users have modification rights) and loaded. One may then view its source (Edit) 
 \item[Tools/Dataset convert/merge] Opens a GUI to the \verb+mxformat+ tool, in order to convert datasets to other formats, merge scattered dataset (e.g. from successive or grid simulations), and assemble scan sets. This tool does not handle raw event files.
 \item[Tools/Shortcut keys] displays the shortcut keys used for running and editing instruments.
 \item[Tools/Install DSA key] installs a DSA key to be used for ssh clustering and MPI (see Section \ref{s:run-mpi}).\index{MPI}\index{Grid computing}
-\item[The Histogrammer] In addition to these tools, the \verb+Neutron site/Tools/Histogrammer.instr+ example instrument may read \MCX , Vitess, MCNP and Tripoli event files in order to generate histograms of any type.
+\item[The Histogrammer] In addition to these tools, the \verb+X-ray site/Tools/Histogrammer.instr+ example instrument may read \MCX , Vitess, MCNP and Tripoli event files in order to generate histograms of any type.
 \end{description}
 
 
@@ -944,24 +941,22 @@ The meaning of the different fields is as follows:
   given, the results are stored in the current directory, to be overwritten
   by the next simulation.
 \item[Run:Force] Forces to overwrite existing data files
-\item[Neutron count] sets the number of photon rays to
+\item[Photon count] sets the number of photon rays to
   simulate (the \verb+--ncount+ option).
-\item[Run:Gravity] Activates gravitation handling. Be aware that not all
-    components support the use of gravitation.
 \item[Run:Random seed/Set seed to] selects between using a random seed (different
   in each simulation) for the random number generator, or using a fixed
   seed (to reproduce results for debugging).
 \item[Run:Simulate/Trace (3D)/Optimize] selects between several modes of
   running the simulation:
-  \begin{itemize}
-  \item Simulate: perform a normal simulation or a scan when \#steps
+  \begin{description}
+  \item[Simulate] perform a normal simulation or a scan when \#steps
     is set to non-zero value
-  \item Trace (3D view): View the instrument in 3D tracing indivitual
-    neutrons through the instrument
-  \item Optimize: find the optimum value of the simulation parameters
+  \item[Trace (3D view)] View the instrument in 3D tracing indivitual
+    photons through the instrument
+  \item[Optimize] find the optimum value of the simulation parameters
     in the given ranges (see section \ref{s:optimize}).
-  \item Backgrounding (bg): Simulate or Optimize in the background.
-\end{itemize}
+  \item [Backgrounding (bg)] Simulate or Optimize in the background.
+  \end{description}
 \item[Run:\# steps / \# optim] sets the number of simulation to run when
   performing a parameter scan or the number of iterations to
   perform in optimization mode.
@@ -972,7 +967,7 @@ The meaning of the different fields is as follows:
 \item[Run:Clustering method] selects the mechanism to be used for running on grids and clusters.
   See section~\ref{s:run-mpi} on parallel computing for more informations.
 \item[Run:Number of nodes] sets the number of nodes to use for MPI/ssh clustering.
-\item[Run:Inspect component] (Trace mode) will trace only neutron trajectories that reach a given component (e.g. sample or detector).
+\item[Run:Inspect component] (Trace mode) will trace only photon trajectories that reach a given component (e.g. sample or detector).
 \item[Run:First component] (Trace mode) seletcs the first component to plot (default is first) in order to define a region of interest.
 \item[Run:Last component] (Trace mode) seletcs the last component to plot (default is first) in order to define a region of interest.
 \item[Run:Maximize monitor] (Optimization mode) seletcs up to three monitors which integral value should be maximized, varying instrument parameters. If non is selected, all monitors are used.
@@ -1115,9 +1110,9 @@ The \verb+-h+ option will list valid options. The \verb+mxrun+ front-end require
 The front-end \verb+mxdisplay+ (mxdisplay.pl on Windows) is a graphical debugging tool.
 It presents a schematic drawing of the instrument
 definition, showing the position of the components and the paths of the
-simulated neutrons through the instrument. It is thus very useful for
+simulated photons through the instrument. It is thus very useful for
 debugging a simulation, for example to spot components in the wrong
-position or to find out where neutrons are getting lost.
+position or to find out where photons are getting lost.
 (See figures \ref{fig:mcdisp_PGPLOT}-\ref{fig:mcdisp_Matlab}.)
 
 To use the \verb+mxdisplay+ front-end with a simulation, run it as
@@ -1156,7 +1151,7 @@ simultaneously can be shown using the \verb+--multi+ option:
 \end{quote}
 
 Click the left mouse button in the graphics window or hit the space key
-to see the display of successive neutron trajectories. The `P' key saves
+to see the display of successive photon trajectories. The `P' key saves
 a postscript file containing the current display that can be sent to the
 printer to obtain a hardcopy; the `C' key produces color postscript.
 To stop the simulation
@@ -1173,17 +1168,17 @@ the display may not match the actual angles.
 Another way to see details while maintaining an overview of the
 instrument is to use the \verb+--zoom=+\textit{factor} option. This
 magnifies the display of each component along the selected axis only,
-{\em e.g.} a Soller collimator is magnified perpendicular to the neutron beam
+{\em e.g.} a Soller collimator is magnified perpendicular to the x-ray beam
 but not along it. This option may produce rather strange visual effects
-as the neutron passes between components with different coordinate
+as the photon passes between components with different coordinate
 magnifications, but it is occasionally useful.
 
 When debugging, it is often the case that one is interested only in
-neutrons that reach a particular component in the instrument. For
+photons that reach a particular component in the instrument. For
 example, if there is a problem with the sample one may prefer not to see
-the neutrons that are absorbed in the monochromator shielding. For these
+the photons that are absorbed in the monochromator shielding. For these
 cases, the \verb+--inspect=+\textit{comp\/} option is useful. With this
-option, only neutrons that reach the component named \textit{comp\/} are
+option, only photons that reach the component named \textit{comp\/} are
 shown in the graphics display.
 
 %As of \MCX\ 1.10, the PGPLOT version has a special mode for time of
@@ -1204,7 +1199,7 @@ variable!PGPLOT\_DEV} \index{Tools!Perl libraries}
 
 \paragraph{Matlab and Scilab back-ends}
 
-A 3D view of the instrument, and various operations (zoom, export, print, trace neutrons, \ldots) is available from dedicated Graphical User Interfaces.
+A 3D view of the instrument, and various operations (zoom, export, print, trace photons, \ldots) is available from dedicated Graphical User Interfaces.
 The \verb+--inspect+ option may be used (see previous paragraph), as well as the \verb+--first+ and \verb+--last+ options to specify a region of interest. {\bfseries Note:} The Scilab plotter for \emph{Windows} does not allow to rotate interactively the 3D view, and you are to use the \emph{alpha} and \emph{theta} choices in the pop-up Dialog.
 
 The \verb+mxdisplay+ front-end will then
@@ -1359,15 +1354,15 @@ write one line for each histogram bin. Each line contains a number
 identifying the bin (\textit{i.e}.\ the time-of-flight) followed by
 three numbers: the simulated intensity, an estimate of the statistical
 error as explained in section~\ref{s:staterror}, and the number of
-neutron events for this bin.
+photon events for this bin.
 
 Two-dimensional histogram monitors (position sensitive detectors)
 output $M$ lines of $N$ numbers representing x-ray intensities, where
 $M$ and $N$ are the number of bins in the two dimensions. The
 two-dimentional monitors also store the error estimates and event counts as additional matrices.
 
-Single-point monitors output the neutron intensity, the estimated
-error, and the neutron event count as numbers on the
+Single-point monitors output the photon intensity, the estimated
+error, and the photon event count as numbers on the
 terminal. (The results from a series of simulations may be combined in a
 data file using the \verb+mxrun+ front-end as explained in
 section~\ref{s:mxrun}).
@@ -1473,8 +1468,8 @@ Parallelizing a computation is in general possible when dependencies between
   
 When computing $N$ photon rays with
 $p$ computers, each computer will simulate $\frac{N}{p}$
-neutrons. As a result there will be $p \cdot \frac{N}{p} = N$
-neutrons simulated. As a result, \MCX\ generates two kinds of data sets:
+photons. As a result there will be $p \cdot \frac{N}{p} = N$
+photons simulated. As a result, \MCX\ generates two kinds of data sets:
 \begin{itemize}
 \item intensity measurements, internally represented by three
   values $(p_0, p_1, p_2)$ where $p_0$, $p_1$, $p_2$ are
@@ -1716,7 +1711,7 @@ or the overhead time may become significant compared to total time.
   \begin{center}
     \includegraphics[width=0.55\textwidth]{figures/mpi_efficiency.eps}
   \end{center}
-\caption{\MCX /MPI execution time as a function of computing nodes, with \textit{templateTOF} instrument and 1e8 initial neutron events. Tests performed on Lonestar@TACC (US Teragrid, 2008).}
+\caption{\MCX MPI execution time as a function of computing nodes, with \textit{templateTOF} instrument and 1e8 initial photon events. Tests performed on Lonestar@TACC (US Teragrid, 2008).}
 \label{fig:mpi_efficiency}
 \end{figure}
 
