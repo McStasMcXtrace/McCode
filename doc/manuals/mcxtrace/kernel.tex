@@ -643,7 +643,7 @@ The WHEN keyword only applies to the TRACE section and related EXTEND blocks of 
 Also, the \verb+WHEN+ keyword is a condition for \verb+GROUP+. This means that when the \verb+WHEN+ is false, the component instance is not active in the \verb+GROUP+ it belongs to.\index{Bugs}
 
 A usage example of the WHEN keyword can be found in the \\
-\verb+Neutron site/ILL/ILL_TOF_Env+ instrument from the \verb+mcgui+, to monitor x-ray depending on their fate.
+\verb+X-ray site/ESRF/ESRF_ID11+ instrument from the \verb+mxgui+, where the source model may be chosen by an external parameter.
 
 
 WARNING: Combining WHEN, EXTEND and GROUP can result in unexpeceted behaviour, please use with caution! Let for instance a GROUP of components all have the same WHEN condition, i.e. if the WHEN condition is false, none of the elements SCATTER, meaning that all x-rays will be ABSORBed. As a solution to this problem, we propose to include an EXTENDed Arm component in the GROUP, but with the opposite WHEN condition and a SCATTER keyword in the EXTEND section. This means that when none of the other GROUP elements are present, the Arm will be present and SCATTER.
@@ -716,8 +716,8 @@ If some components make extensive use of random numbers (MC choices), they shuff
 where the optional number $r$ specifies the number of repetitions for each event. Default is $r=10$.
 Each x-ray event reaching component \textit{name} will be repeated $r$ times with a weight divided by $r$, so that in practice the number of events for the remaining part of the simulation (down to the END), will potentially have more statistics. This is only true if following components (and preferably component \textit{name}) use random numbers. You may use this method as many times as you wish in the same instrument, e.g. at the monochromator and sample position. This keyword can also be used within a GROUP. The efficiency is roughtly $r$ raised to the number of occurences in the instrument, so that enhancing two components with the default $r=10$ will produce at the end an enhancement effect of 100 in the number of events. The execution time will usually get slightly longer. This technique is known as the \emph{stratified sampling} (see Appendix \ref{s:MCtechniques}). If the instrument makes use of global variables - e.g. in conjunction with a WHEN or User Variable monitoring (see Monitor\_nD) - you should take care that these variables are set properly for each SPLIT loop, which usually means that they must be reset inside the SPLITed section and assigned/used further on. \index{Bugs}
 
-A usage example of the SPLIT keyword can be found in the \\
-\verb+Neutron site/ILL/ILL_H15_IN6+ instrument from the \verb+mcgui+, to enhance statistics for x-rays scattering on monochromators and sample.
+%A usage example of the SPLIT keyword can be found in the \\
+%\verb+X-ray site/ILL/ILL_H15_IN6+ instrument from the \verb+mcgui+, to enhance statistics for x-rays scattering on monochromators and sample.
 
 \section{Writing component definitions}
 \label{s:compdefs}
@@ -1427,6 +1427,6 @@ Additionally, optional keys \verb+%VALIDATION+ and \verb+%BUGS+ may be found to 
   a list item in the link section of the description web page. This
   usually consists of an \verb+<A HREF="..."> ... </A>+ pointer to some
   other source of information.
-\item Optionally, an \verb+%INSTRUMENT_SITE+ section followed by a single word is used to sort \emph{instruments} by origin/location in the 'Neutron Site' menu in \verb+mcgui+.
+\item Optionally, an \verb+%INSTRUMENT_SITE+ section followed by a single word is used to sort \emph{instruments} by origin/location in the 'X-ray Site' menu in \verb+mxgui+.
 \item After \verb+%END+, no more comment text is read by MxDoc.
 \end{itemize}
