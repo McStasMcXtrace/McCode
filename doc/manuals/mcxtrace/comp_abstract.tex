@@ -4,7 +4,7 @@
 
 This chapter presents an abstract of existing components.
 As a complement to this chapter and the
-detailed description in the \MCX\ component manual,
+detailed description in the \MCX component manual,
 you may use the \verb+mxdoc -s+ command to obtain the on-line
 component documentation and refer to the McXtrace web-page~\cite{mcxtrace_webpage}
 where all components are documented using the MxDoc system.
@@ -20,8 +20,8 @@ tests have been carried out.
 However, no absolute guaranty may be given concerning their accuracy.\index{Environment variable!MCXTAS}
 
 The \verb+contrib+ directory of the library contains components
-that were submitted by \MCX\ users,
-but where responsibility has not (yet) been taken by the \MCX\ core team. \index{Library!Components!contrib}
+that were submitted by \MCX users,
+but where responsibility has not (yet) been taken by the \MCX core team. \index{Library!Components!contrib}
 
 %Additionally the \verb+obsolete+ directory of the library gathers components that were renamed, or considered to be outdated.
 %These component are kept for backwards compatibility and
@@ -42,7 +42,7 @@ The first line will search for all components matching the \textit{name}, and di
 \begin{table}
   \begin{center}
     {\let\my=\\
-    \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
+    \begin{tabular}{|p{0.32\textwidth}|p{0.62\textwidth}|}
       \hline
        {\bfseries \MCX/sources} & Description \\
        \hline
@@ -64,9 +64,9 @@ Source\_lab & Full featured model of a laboratory X-ray source.\\
 \begin{table}
   \begin{center}
     {\let\my=\\
-    \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
+    \begin{tabular}{|p{0.32\textwidth}|p{0.62\textwidth}|}
       \hline
-       {\bfseries MCXTAS/optics} & Description \\
+       {\bfseries \MCX/optics} & Description \\
        \hline
  Arm                &  Arm/optical bench. \\
  Beamstop          &   Rectangular/circular beam stop. \\
@@ -79,8 +79,9 @@ Source\_lab & Full featured model of a laboratory X-ray source.\\
  Multilayer\_elliptic & General, full featured model of an elliptically curved multilayer mirror\\
  Slit & Perfect slit, may be either rectangular or circular\\
  Slit\_N & Multichanneled slit, i.e. a grating\\
+        \hline
 \end{tabular}
-    \caption{Optics components of the \MCX\ library.}
+    \caption{Optics components of the \MCX library.}
     \label{t:comp-optics}
     \index{Library!Components!optics}
     }
@@ -90,9 +91,9 @@ Source\_lab & Full featured model of a laboratory X-ray source.\\
 \begin{table}
   \begin{center}
     {\let\my=\\
-    \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
+    \begin{tabular}{|p{0.32\textwidth}|p{0.62\textwidth}|}
       \hline
-       {\bfseries \MCX\/samples} & Description \\
+       {\bfseries \MCX/samples} & Description \\
        \hline
   PowderN      &  General powder sample with N
                 scattering vectors, using a data file. Can assume \emph{concentric} shape,
@@ -102,8 +103,9 @@ Source\_lab & Full featured model of a laboratory X-ray source.\\
   Saxs\_spheres  & Simple sample for Small Angle X-ray Scattering - hard spheres \\
   Single\_crystal & Mosaic single crystal with multiple scattering vectors
                     using a data file. \\
-    \end{tabular}
-    \caption{Sample components of the \MCX\ library.}
+        \hline
+                  \end{tabular}
+    \caption{Sample components of the \MCX library.}
     \label{t:comp-samples}
     \index{Library!Components!samples}
     }
@@ -113,9 +115,9 @@ Source\_lab & Full featured model of a laboratory X-ray source.\\
 \begin{table}
   \begin{center}
     {\let\my=\\
-    \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
+    \begin{tabular}{|p{0.32\textwidth}|p{0.62\textwidth}|}
       \hline
-       {\bfseries \MCX\/monitors} & Description \\
+       {\bfseries McXtrace/monitors} & Description \\
        \hline
 %DivLambda\_monitor &  Divergence/wavelength monitor. \\
 DivPos\_monitor  &    Divergence/position monitor (acceptance diagram). \\
@@ -140,7 +142,7 @@ PSD\_monitor\_4PI  &   Spherical position-sensitive detector. \\
 %                    vertical position, x. \\
 PreMonitor\_nD    &   This component is a PreMonitor that is to be
                     used with one Monitor\_nD,
-                    in order to record some neutron parameter correlations. \\
+                    in order to record some photon parameter correlations. \\
 TOFLambda\_monitor &  Time-of-flight vs. wavelength monitor. \\
 %TOF\_cylPSD\_monitor & Cylindrical (2pi) PSD Time-of-flight monitor. \\
 TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
@@ -158,9 +160,9 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
 \begin{table}
   \begin{center}
     {\let\my=\\
-    \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
+    \begin{tabular}{|p{0.32\textwidth}|p{0.62\textwidth}|}
       \hline
-       {\bfseries \MCX\/misc} & Description \\
+       {\bfseries \MCX/misc} & Description \\
        \hline
  Progress\_bar     &  Displays status of a running simulation.
                       May also trigger intermediate SAVE.\\
@@ -181,30 +183,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
 %      \hline
 %       {\bfseries \MCX\/contrib} & Description \\
 %       \hline
-% Al\_window     &         Aluminium transmission window. \\
-% Collimator\_ROC   &      Radial Oscillating Collimator (ROC). \\
-% Exact\_radial\_coll &      Radial collimator. \\
-% FermiChopper\_ILL &       Fermi Chopper with rotating frame and SM coating (straight). \\
-% Filter\_graphite  &      Pyrolytic graphite filter (analytical model). \\
-% Filter\_powder   &       Box-shaped powder
-%                        filter based on Single\_crystal (unstable). \\
-% Guide\_curved     &     Non focusing continuous curved guide (shown curved). \\
-% Guide\_honeycomb & Neutron guide with gravity and honeycomb geometry. Can be
-%                        channeled and/or focusing. \\
-% Guide\_tapering  &     Rectangular tapered guide (parabolic, elliptic, sections ...). \\
-% He3\_cell    &           Polarised 3He cell. \\
-% ISIS\_moderator    &     ISIS Target 1 and 2 moderator models based on MCNP calculations. \\
-% Monochromator\_2foc   &  Doubly bent monochromator with multiple slabs. \\
-% multi\_pipe       & a multi pipe slit (for SANS). \\
-% PSD\_Detector  & Realistic detector model, with gas effects. \\
-% PSD\_monitor\_rad & A banana PSD monitor. \\
-% SiC           &         SiC multilayer sample for reflectivity simulations. \\
-% SNS\_source    & SNS moderator models based on MCNP calculations. \\
-% Source\_multi\_surfaces & An array of sources described from spectrum tables. \\
-% Virtual\_mcnp\_input & Reads a PTRAC neutron events file from MCNP. \\
-% Virtual\_mcnp\_output& Writes a PTRAC neutron events file for MCNP. \\
-% Virtual\_tripoli4\_input & Reads a 'Batch' neutron events file from Tripoli 4. \\
-% Virtual\_tripoli4\_output& Writes a 'Batch' neutron events file for Tripoli 4. \\
+%
 %      \hline
 %    \end{tabular}
 %    \caption{Contributed components of the \MCX\ library.}
@@ -233,7 +212,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
 %                        Used by Vitess\_input and Vitess\_output \\
 %      \hline
 %    \end{tabular}
-%    \caption{Shared libraries of the \MCX\ library. See Appendix~\ref{c:kernelcalls} for details.}
+%    \caption{Shared libraries of the \MCX library. See Appendix~\ref{c:kernelcalls} for details.}
 %    \label{t:comp-share}
 %    \index{Library!Components!share}
 %    \index{Library!Run-time}
@@ -244,15 +223,15 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
 \begin{table}
   \begin{center}
     {\let\my=\\
-    \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
+    \begin{tabular}{|p{0.32\textwidth}|p{0.62\textwidth}|}
       \hline
-       {\bfseries MCXTAS/data} & Description \\
+       {\bfseries \MCX/data} & Description \\
        \hline
  Al.txt, Al.txt, Be.txt, Cu.txt, Fe.txt, I.txt, Mo.txt, Si.txt, Sn.txt & Data files from the NIST-database to be used for absorption and refraction.\\
  get\_xray\_db\_data & script to access NIST-database.\\  
 \hline
     \end{tabular}
-    \caption{Data files of the \MCX\ library.}
+    \caption{Data files of the \MCX library.}
     \label{t:comp-data}
     \index{Library!Components!data}
     }
@@ -262,14 +241,14 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
 \begin{table}
   \begin{center}
     {\let\my=\\
-    \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
+    \begin{tabular}{|p{0.32\textwidth}|p{0.62\textwidth}|}
       \hline
-       {\bfseries MCXTAS/examples} & Description \\
+       {\bfseries \MCX/examples} & Description \\
       \hline
       *.instr & This directory contains example instruments, accessible throught the \verb+mxgui+ ``X-ray site'' menu. \\
       \hline
     \end{tabular}
-    \caption{Instrument example files of the \MCX\ library.}
+    \caption{Instrument example files of the \MCX library.}
     \label{t:comp-instr}
     \index{Library!Instruments}
     }
