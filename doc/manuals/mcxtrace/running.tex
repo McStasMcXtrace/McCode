@@ -1392,50 +1392,6 @@ programs that do not know the special \MCX\ file format is
 simplified. The \verb+--file+ option may be used to store all data
 inside the \verb+mcstas.sim+ file instead of in separate files.
 
-%\subsection{Matlab, Scilab and IDL formats}
-%\index{Tools!Matlab} \index{Tools!Scilab} \index{Tools!IDL} \index{Data formats}
-%
-%With these formats \MCX\ automatically writes scripts containing the data as a structure, as well as in-line import and plot functions for the selected language. Usage examples are given in section~\ref{s:run-sim}.
-%Thus, it is not necessary to write a load routine for each format, as the script is itself a program that knows how to handle the data. Alternatively, using \verb+mxplot+ with Matlab and Scilab plotters provide additional functionalities from menus and dialogs (see section~\ref{s:mxplot}).
-%
-%When imported through the data generated script (see section~\ref{s:run-sim}), or using \verb+mxplot+ (see section~\ref{s:mxplot}), a single variable may be created into the Matlab, Scilab or IDL base workspace. This variable is a \emph{structure} constituting a data tree containing many fields, some being themselves structures. Field names are the initial names from the instrument (components, files, \ldots), transformed into valid variable names, e.g containing only letters, digits and the '\_' character, except for the first character which may only be a letter. When using Matlab, an 'm\_' is appended to avoid name clash with existing Matlab commands/variables.\footnote{For instance in most case, the simulation location is './mcstas.m' which turns into field 'm\_mcstas'.}.
-%In this tree, you will find the monitor names, which fields contain the monitored data. The usual structure is
-%\begin{quote}
-%  \texttt{s.\textit{instrument}.\textit{simulation}.\textit{comp\_name}.\textit{file\_name}}
-%\end{quote}
-%
-%For instance, reading the data from a 'test' instrument using Matlab format will look like
-%\begin{verbatim}
-%matlab> s=mcstas; % or mxplot mcstas.m from the terminal
-%matlab> s
-%s =
-%     Format: 'Matlab with text headers'
-%        URL: 'http://neutron.risoe.dk'
-%     Editor: 'farhi on pcfarhi'
-%    Creator: 'test (test.instr) McStas 1.9 - Nov. 15, 2005 simulation'
-%       Date: 1.0529e+09
-%       File: './mcstas'
-%       test: [1x1 struct]
-%    EndDate: 1.0529e+09
-%      class: 'root'
-%matlab> s.test.m_mcstas.monitor1.monitor1_y_kz
-%ans =
-%          ...
-%          Date:       1.0529e+09
-%          File:       'monitor1.y_kz'
-%          type:       'array_2d(20, 10)'
-%          ...
-%          ratio:      '1e+06/1e+06'
-%          signal:     'Min=0; Max=5.54051e-10; Mean= 6.73026e-13;'
-%          statistics: 'X0=0.438302; dX=0.0201232; Y0=51019.6; dY=20557.1;'
-%          ...
-%matlab> eval(s.test.m_mcstas.monitor1.monitor1_y_kz);
-%matlab> dX
-%ans =
-%          0.0201232
-%\end{verbatim}
-%The latter example accesses the data from the 'monitor1.y\_kz' file written by the 'monitor1' component in the 'test' instrument during the './mcstas' simulation. You may evaluate directly the 'signal' and 'statistics' fields of the structure to obtain useful informations.
-
 \subsection{HTML/VRML and XML formats}
 \index{Tools!HTML} \index{Tools!VRML} \index{Data formats}
 
