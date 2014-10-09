@@ -69,6 +69,15 @@ Notes
 -----------
 preparation
 -----------
+- You'll need the the distinguished name (dn) of the machine that you are setting the LDAP up on, this can be found thus:
+  	 $ cat /etc/hosts
+	   127.0.0.1	localhost
+	   127.0.1.1	<machine name>.<machine domain>	<machine name>
+    <MACHINE DOMAIN> is aquired by:
+      infront of <machine domain> put 'dc='
+      replace each '.' in  <machine domain> with ',dc=' (it's ok if there are no '.'s)
+    dn="<MACHINE DOMAIN>"
+  <MACHINE DOMAIN> is needed later for filling in the files that will modify your LDAP DB.
 - Install all the relevent packages:
     #apt-get -f install ldap-utils slapd openssl python mediawiki mediawiki-extensions-ldap mysql- nginx
     #apt-get purge apache2
@@ -228,46 +237,46 @@ NB:
 
 -------------------------------------------------------
 -------------------------------------------------------
-- Step Four : Adding entities, putting them in groups - : Please populate this LDIFs with the entities that you want to have in your DB, not mine.
+- Step Four : Adding entities, putting them in groups -
 -------------------------------------------------------
 -------------------------------------------------------
-- We are going to put some people into the DB. One person per group so that permissions can be tested.
+- Populate this .ldif with the entities that you want to have in your DB. This is the file that you'll have to copy, paste adn fill in the most.
+  Unless you have access to a database of users and write a parser which would be REALLY HELPFUL IN THE LONG RUN. ^_^
 - This is the simplest and most commonly used step - adding LDAP entities.
 
 - user_population_build.ldif
   --------------------------
-  #===================#						|  dn: cn=Linda Udby,ou=person,dc=fysik,dc=dtu,dc=dk
+  #===================#						|  dn: cn=<STAFFNAME 2>,ou=person,dc=<MACHINE DOMAIN>
   # Adding test users #						|  objectclass: inetOrgPerson
-  #===================#						|  cn: Linda Udby
-  dn: cn=Mark Lewis,ou=person,dc=fysik,dc=dtu,dc=dk		|  displayName: Linda
-  objectclass: inetOrgPerson					|  sn: Udby
-  cn: Mark Lewis						|  uid: udby
-  displayName: Mark						|  userpassword: nosering
-  sn: Lewis    							|  mail: udby@nbi.dk
-  uid: lewis							|  telephoneNumber: 000-000-000
-  userpassword: porche						|  departmentNumber: 000
-  mail: lewis@fysik.dtu.dk					|  roomNumber: 000
-  description: NEXMAP sys admin					|  description: Leader of Virtual Neutrons for Teaching project: VNT
-  employeeNumber: 002 	  					|  ou: person
+  #===================#						|  cn: <STAFFNAME 2>
+  dn: cn=<STUDENTNAME>,ou=person,dc=fysik,dc=dtu,dc=dk		|  displayName: <NAME>
+  objectclass: inetOrgPerson					|  sn: <SURNAME>
+  cn: <STUDENTNAME>						|  uid: <UID>
+  displayName: <NAME 2>						|  userpassword: <PASSWORD>
+  sn: <NAME 1> 							|  mail: 
+  uid: <UID>							|  telephoneNumber: 
+  userpassword: <PASSWORD>					|  departmentNumber:
+  mail: <EMAIL ADD>						|  roomNumber:
+  description: <OPTIONAL>					|  description: <OPTIONAL>
+  employeeNumber: <OPTIONAL>  					|  ou: person
   ou: person	  						|  
       								|  #================#
-  dn: cn=Peter Willendrup,ou=person,dc=fysik,dc=dtu,dc=dk	|  # Groupify Users #
+  dn: cn=<STAFFNAME 1>,ou=person,dc=fysik,dc=dtu,dc=dk		|  # Groupify Users #
   objectclass: inetOrgPerson					|  #================#
-  cn: Peter Willendrup						|  dn: cn=courseStaff,ou=groups,dc=fysik,dc=dtu,dc=dk
-  displayName: Peter						|  changetype: modify
-  sn: Willendrup						|  add: member
-  uid: pkwi							|  member: cn=Linda Udby,ou=person,dc=fysik,dc=dtu,dc=dk
-  userpassword: paradox						|  
-  mail: pkwi@fysik.dtu.dk					|  dn: cn=Student,ou=groups,dc=fysik,dc=dtu,dc=dk	
-  mail: pkwi@mcc-01.risoe.dk					|  changetype: modify
-  telephoneNumber: 000						|  add: member
-  departmentNumber: 307						|  member: cn=Mark Lewis,ou=person,dc=fysik,dc=dtu,dc=dk
-  roomNumber: blank 						|  
-  description: Head of NEXMAP IT				|  dn: cn=itStaff,ou=groups,dc=fysik,dc=dtu,dc=dk
-  employeeNumber: 000  	      					|  changetype: modify
+  cn: <STAFFNAME 1>						|  dn: cn=courseStaff,ou=groups,dc=<MACHINE DOMAIN>
+  displayName: <NAME>						|  changetype: modify
+  sn: <SURNAME>							|  add: member
+  uid: <UID>							|  member: cn=<STAFFNAME 1>,ou=person,dc=<MACHINE DOMAIN>
+  userpassword: <PASSWORD>					|  
+  mail: 							|  dn: cn=Student,ou=groups,dc=<MACHINE DOMAIN>
+  mail: 							|  changetype: modify
+  telephoneNumber: 						|  add: member
+  departmentNumber: 						|  member: cn=<STUDENTNAME>,ou=person,dc=<MACHINE DOMAIN>
+  roomNumber:  							|  
+  description: <OPTIONAL>					|  dn: cn=itStaff,ou=groups,dc=<MACHINE DOMAIN>
+  employeeNumber: <STAFFID>    					|  changetype: modify
   ou: person	  						|  add: member
-      								|  member: cn=Peter Willendrup,ou=person,dc=fysik,dc=dtu,dc=dk
-
+      								|  member: cn=<STAFFNAME 2>,ou=person,dc=<MACHINE DOMAIN>
 ----------------------------------------
 ----------------------------------------
 - Step Five : Running the build Script -
@@ -276,8 +285,28 @@ NB:
 - Goto the ../../LDAP directory. This is where the LDIFs and LDAPBuilder that should have been edited by this point are located.
 - In a terminal run:
     #python LDAPBuilder.py
-- You shoudd get a bunch of positive messages if you've done everything correctly:
+- You should get a bunch of positive messages if I've/you've written/done everything correctly:
+       adding olcRootPW to olcDatabase={0}config
+       ldap_initialize( ldapi:///??base )
+       SASL/EXTERNAL authentication started
+       SASL username: gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth
+       SASL SSF: 0
+       add olcRootPW:
+	   {SSHA}T64Q3dryX5B9pgVempq7QOsXovY4Rsl8
+       modifying entry "olcDatabase={0}config,cn=config"
+       modify complete
 
+       Done. If successful please:
+       REMEMBER TO REMOVE THE olcRootPW DIRECTIVE WHEN ALL {0} OR config DB MANIPULATION IS DONE.
+
+       Building tree in olcDatabase={1}hdb
+       cn=admin,dc=mcdomain
+       LDIFs/DITbuild.ldif
+       Building access control in olcDatabase={1}hdb
+       cn=admin,cn=config
+       LDIFs/ACLbuild.ldif
+       
+  
 
 
 |=====|
@@ -299,10 +328,10 @@ NB:
       Distinguished name : You should have set up the bind user in a similar way to the way I did above (it works). Put that dn here.
                 Password : Whatever you set the password as.
     User lookup settings :
-    	         Context : Which ever context your user entities are held in eg. ou=person,dc=fysik,dc=dtu,dc=dk
+    	         Context : Which ever context your user entities are held in eg. ou=person,dc=<MACHINE DOMAIN>
    	  User Attribute : You can use things other than the cn as a login, uid in my case.
 	     ObjectClass : inetorgperson
-- The rest can be left alone. Try to login with one of your entities, it should work. :) (Without TLS it definitely works).
+- The rest can be left alone. Try to login with one of your entities, it should work. :) 
 
 |=================|
 | MEDIAWIKI SETUP |

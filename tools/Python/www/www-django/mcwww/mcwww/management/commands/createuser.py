@@ -34,9 +34,10 @@ def main(args):
     LDAP_admin_cn = raw_input('Enter your LDAP authentication cn (not your uid): ')
 
     if(not comm.ldapAdminGroupQuery(LDAP_admin_cn)): 
-        print "Insufficient LDAP privs, your cn may not be what you input. email admin or put in your surname too."
+        print "Insufficient LDAP privs, your cn may not be what you input.\n Try putting in surname or contact admin.\n"
         sys.exit(1)
 # LDAPUserCreation call
+# PUT REQUEST FOR GROUP MEMBERSHIP IN HERE
     entity = LDAPUserCreation(username, password)
     LDAP_admin_pw = getpass('Enter your LDAP authentication pwd: ')
     LDAP_admin_dn = "cn=%s,ou=person,dc=fysik,dc=dtu,dc=dk" % LDAP_admin_cn
