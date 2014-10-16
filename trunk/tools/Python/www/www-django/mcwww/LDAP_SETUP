@@ -60,8 +60,9 @@ preparation
     dn="<MACHINE DOMAIN>"
   <MACHINE DOMAIN> is needed later for filling in the files that will modify your LDAP DB.
 - Install all the relevent packages:
-    #apt-get -f install ldap-utils slapd openssl python mediawiki mediawiki-extensions-ldap mysql- nginx
-    #apt-get purge apache2
+    #update-rc.d -f apache2 remove
+    #service apache2 stop
+    #apt-get -f install ldap-utils slapd openssl python mediawiki mediawiki-extensions-ldapauth mysql-server nginx
 - Upon LDAP and slapd being installed you'll be prompted to set these up with an _admin password_, remember what you input.
 - Find and dl the latest version of Moodle, the interface with LDAP should change with LDAP version, but we use latest stable.
 - Build the directory tree above, make temp files in each of the directories because mistakes will be made along the way and you'll want to have some backups.
