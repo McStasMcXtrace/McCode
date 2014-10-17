@@ -118,7 +118,7 @@ INITIALIZE
   prms.pmul*=1.0/((double) mcget_ncount());
 
   if (incoherent!=randomphase){
-    fprintf("Warning(%s): Parameter incoherent=%d overridden by randomphase=%d\n",NAME_CURRENT_COMP,(int)incoherent, (int) randomphase);
+    fprintf(stderr,"Warning(%s): Parameter incoherent=%d overridden by randomphase=%d\n",NAME_CURRENT_COMP,(int)incoherent, (int) randomphase);
     incoherent=randomphase;
   }
 
