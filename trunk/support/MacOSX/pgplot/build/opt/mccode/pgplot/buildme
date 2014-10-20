@@ -15,4 +15,4 @@ rm *.o
 # Build an OS X package for installation in /opt/mccode/pgplot
 OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
 cd ../../../..
-/Applications/PackageMaker.app/Contents/MacOS/PackageMaker --root build/ -i dk.dtu.fysik.tk.perl -o mccode_pgplot-${OSXVER}.pkg
+/Applications/PackageMaker.app/Contents/MacOS/PackageMaker --root build/ -i dk.dtu.fysik.tk.pgplot -o mccode_pgplot-${OSXVER}.pkg
