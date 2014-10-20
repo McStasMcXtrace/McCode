@@ -1,0 +1,586 @@
+=head1 NAME
+
+Tk::UserGuide - Writing Tk applications in Perl 5
+
+=for category Introduction
+
+=head1 DESCRIPTION
+
+This document is for beginners.  It assumes you know some B<Perl>, and
+have it and Tk running.  If you are I<not> currently reading this
+document courtesy of the B<widget> demonstration program, please be
+sure to run B<widget>, as it will show you the various widget types
+supported by Tk and how to use them. B<widget> should be installed in
+your default path, so type I<widget> at a command prompt.
+
+Here are links to other novice tutorials:
+
+L<http://www.lehigh.edu/~sol0/ptk/tpj1.html>
+L<http://www.lehigh.edu/~sol0/ptk/perlmonth01/pm1.html>
+
+I<Mastering Perl/Tk> is the definitive book on Perl/Tk:
+
+L<http://www.oreilly.com/catalog/mastperltk>
+
+=head1 Some Background
+
+Tk GUI programming is event-driven.  (This may already be familiar to
+you.)  In event-driven programs, the main GUI loop is outside of the
+user program and inside the GUI library.  This loop - initiated by
+calling B<MainLoop> - watches all events of interest and activates
+the correct handler procedures to handle these events.  Some of these
+handler procedures may be user-supplied; others will be part of the
+library.
+
+For a programmer, this means that you're not watching what is happening;
+instead, you are requested by the toolkit to perform actions whenever
+necessary.
+So, you're not watching for 'raise window / close window / redraw window'
+requests, but you tell the toolkit which routine will handle such cases,
+and the toolkit will call the procedures when required. These procedures
+are known as I<callbacks>, and some of them you write yourself.
+
+=head1 First Requirements
+
+B<Perl> programs that use Tk need to include C<use Tk>.
+A program should also use C<use strict> and the B<-w> switch to ensure
+the program is working without common errors.
+
+Any Perl/Tk application starts by creating the Tk B<L<MainWindow|Tk::MainWindow>>.  You
+then create items inside the B<MainWindow>, and/or create new windows
+called B<L<Toplevel|Tk::Toplevel>>s that also contain child items, before starting the
+B<MainLoop>, which is the last logical statment in your program. You
+can also create more items and windows while you're running, using
+callbacks.  Items are only shown on the display after they have been
+arranged by a I<geometry manager> like B<L<pack|Tk::pack>>; more information on
+this later.  B<MainLoop> starts the GUI and handle all events.  That's
+all there is to it!  A trivial one-window example is shown below:
+
+    #!/usr/bin/perl -w	
+    use Tk;
+    use strict;
+
+    my $mw = MainWindow->new;
+    $mw->Label(-text => 'Hello, world!')->pack;
+    $mw->Button(
+        -text    => 'Quit',
+        -command => sub { exit },
+    )->pack;
+    MainLoop;
+
+Please run this example.  It shows you two widget types, a B<L<Label|Tk::Label>>
+and a B<L<Button|Tk::Button>>, and how they are packed. When clicked, the B<Button>
+widget invokes the callback specified by the C<-command> option.  Finally,
+note the typical Tk style using C<-option> =E<gt> C<value> pairs.
+
+=head1 Widget creation
+
+Tk windows and widgets are hierarchical, S<i.e. one> window includes
+one or more other windows.  You create the first Tk window using
+C<MainWindow-E<gt>new>.  This returns a window handle, assigned to
+C<$mw> in the example above.  Keep track of the main handle, commonly
+called a I<widget reference>.
+
+You can use any Tk handle to create child widgets within the window (or
+widget).  This is done by calling the Tk constructor method on the
+variable.  In the example above, the C<Label> method called from
+C<$mw> creates a B<Label> widget inside the B<MainWindow>.  In the
+constructor call, you can specify various options; you can later add
+or change options for any widget using the B<configure> method, which
+takes the same parameters as the constructor.  The one exception to
+the hierarchical structure is the B<Toplevel> constructor, which
+creates a new outermost window.
+
+After you create any widget (other than the B<MainWindow> or
+B<Toplevel>s, you must render it by calling B<pack>.  (This is not
+entirely true; more later)).  If you do not need to refer to the widget
+after construction and packing, call B<pack> off the constructor
+results, as shown for the B<Label> and B<Button> in the example above.  Note
+that the result of the compound call is the result of B<pack>, which
+is a valid Tk handle.
+
+Windows and widgets are deleted by calling B<destroy> on them;
+this will delete and un-draw the widget and all its children.
+
+=head1 Standard Tk widgets
+
+Here is an itemize of the standard Tk widget set.
+
+=over 4
+
+=item L<Button|Tk::Button>
+
+=item L<Canvas|Tk::Canvas>
+
+=item L<Checkbutton|Tk::Checkbutton>
+
+=item L<Entry|Tk::Entry>
+
+=item L<Frame|Tk::Frame>
+
+=item L<Label|Tk::Label>
+
+=item L<Labelframe|Tk::Labelframe>
+
+=item L<Listbox|Tk::Listbox>
+
+=item L<Menu|Tk::Menu>
+
+=item L<Menubutton|Tk::Menubutton>
+
+=item L<Message|Tk::Message>
+
+=item L<Panedwindow|Tk::Panedwindow>
+
+=item L<Radiobutton|Tk::Radiobutton>
+
+=item L<Scale|Tk::Scale>
+
+=item L<Scrollbar|Tk::Scrollbar>
+
+=item L<Spinbox|Tk::Spinbox>
+
+=item L<Text|Tk::Text>
+
+=item L<Toplevel|Tk::Toplevel>
+
+=back
+
+Perl/Tk provides an equal number of new widgets, above and beyond this
+core set.
+
+=over 4
+
+=item L<Adjuster|Tk::Adjuster>
+
+=item L<Balloon|Tk::Balloon>
+
+=item L<BrowseEntry|Tk::BrowseEntry>
+
+=item L<ColorEditor|Tk::ColorEditor>
+
+=item L<Dialog|Tk::Dialog>
+
+=item L<DialogBox|Tk::DialogBox>
+
+=item L<DirTree|Tk::DirTree>
+
+=item ErrorDialog
+
+=item L<FBox|Tk::FBox>
+
+=item L<FileSelect|Tk::FileSelect>
+
+=item L<HList|Tk::HList>
+
+=item LabEntry
+
+=item L<LabFrame|Tk::LabFrame>
+
+=item L<NoteBook|Tk::NoteBook>
+
+=item L<Optionmenu|Tk::Optionmenu>
+
+=item L<Pane|Tk::Pane>
+
+=item L<ProgressBar|Tk::ProgressBar>
+
+=item L<ROText|Tk::ROText>
+
+=item L<Table|Tk::Table>
+
+=item L<TextUndo|Tk::TextUndo>
+
+=item L<Tiler|Tk::Tiler>
+
+=item L<TList|Tk::TList>
+
+=item L<Tree|Tk::Tree>
+
+=back
+
+=head1 Variables and callback routines
+
+Most graphical interfaces are used to set up a set of values and conditions,
+and then perform the appropriate action.  The Tk toolkit is different
+from your average text-based prompting or menu driven system in that you do
+not collect settings yourself, and decide on an action based on an
+input code; instead, you leave these
+values to your toolkit and only get them when the action is performed.
+
+So, where a traditional text-based system would look like this:
+
+    #!/usr/bin/perl -w
+    use strict;
+
+    print "Please type a font name\n";
+    my $font = <>; chomp $font;
+    # Validate font
+
+    print "Please type a file name\n";
+    my $filename = <>; chomp $filename;
+    # Validate filename
+
+    print "Type <1> to fax, <2> to print\n";
+    my $option = <>; chomp $option;
+    if ($option eq 1) {
+        print "Faxing $filename in font $font\n";
+    } elsif ($option eq 2) {
+        print "Now sending $filename to printer in font $font\n";
+    }
+
+The slightly larger example below shows how to do this in Tk.
+Note the use of callbacks.  Note, also, that Tk handles the values, and
+the subroutine uses the method B<get> to get at the values.
+If a user changes his mind and wants to change the font again,
+the application never notices; it's all handled by Tk.
+
+    #!/usr/bin/perl -w
+    use Tk;
+    use strict;
+
+    my $mw = MainWindow->new;
+
+    $mw->Label(-text => 'File Name')->pack;
+    my $filename = $mw->Entry(-width => 20);
+    $filename->pack;
+
+    $mw->Label(-text => 'Font Name')->pack;
+    my $font = $mw->Entry(-width => 10);
+    $font->pack;
+
+    $mw->Button(
+        -text => 'Fax',
+        -command => sub{do_fax($filename, $font)}
+    )->pack;
+
+    $mw->Button(
+        -text => 'Print',
+        -command => sub{do_print($filename, $font)}
+    )->pack;
+
+    MainLoop;
+
+    sub do_fax {
+        my ($file, $font) = @_;
+        my $file_val = $file->get;
+        my $font_val = $font->get;
+        print "Now faxing $file_val in font $font_val\n";
+    }
+
+    sub do_print {
+        my ($file, $font) = @_;
+        my $file_val = $file->get;
+        my $font_val = $font->get;
+        print "Sending file $file_val to printer in font $font_val\n";
+    }
+
+=head1 The packer - grouping with Frame widgets
+
+In the examples above, you must have noticed the B<pack> calls.  This
+is one of the more complicated parts of Tk.  The basic idea is that
+any window or widget should be subject to a Tk geometry manager; the
+I<packer> is one of the placement managers, and B<L<grid|Tk::grid>> is another.
+
+The actions of the packer are rather simple: when applied
+to a widget, the packer positions that widget on the indicated position
+within the remaining space in its parent.  By default, the position is
+on top; this means the next items will be put below.  You can also
+specify the left, right, or bottom positions.  Specify position
+using B<-side =E<gt> 'right'>.
+
+Additional packing parameters specify the behavior of the widget when
+there is some space left in the B<L<Frame|Tk::Frame>> or when the window size is
+increased.  If widgets should maintain a fixed size, specify nothing;
+this is the default.  For widgets that you want to fill up the current
+horizontal and/or vertical space, specify B<-fill =E<gt> 'x'>, B<'y'>,
+or B<'both'>; for widgets that should grow, specify B<-expand =E<gt> 1>.
+These parameters are not shown in the example below; see the B<widget>
+demonstration.
+
+If you want to group some items within a window that have a different
+packing order than others, you can include them in a Frame.  This is a
+do-nothing window type that is meant for packing or filling (and to
+play games with borders and colors).
+
+The example below shows the use of pack and Frames:
+
+    #!/usr/bin/perl -w
+    use Tk;
+    use strict;
+
+    # Take top and the bottom - now implicit top is in the middle
+    my $mw = MainWindow->new;
+    $mw->title( 'The MainWindow' );
+    $mw->Label(-text => 'At the top (default)')->pack;
+    $mw->Label(-text => 'At the bottom')->pack(-side => 'bottom');
+    $mw->Label(-text => 'The middle remains')->pack;
+
+    # Since left and right are taken, bottom will not work...
+    my $top1 = $mw->Toplevel;
+    $top1->title( 'Toplevel 1' );
+    $top1->Label(-text => 'Left')->pack(-side => 'left');
+    $top1->Label(-text => 'Right')->pack(-side => 'right');
+    $top1->Label(-text => '?Bottom?')->pack(-side => 'bottom');
+
+    # But when you use Frames, things work quite alright
+    my $top2 = $mw->Toplevel;
+    $top2->title( 'Toplevel 2' );
+    my $frame = $top2->Frame;
+    $frame->pack;
+    $frame->Label(-text => 'Left2')->pack(-side => 'left');
+    $frame->Label(-text => 'Right2')->pack(-side => 'right');
+    $top2->Label(-text => 'Bottom2')->pack(-side => 'bottom');
+
+    MainLoop;
+
+=head1 More than one window
+
+Most real applications require more than one window.  As you just saw,
+you can create more outermost windows by using a B<Toplevel> widget.
+Each window is independent; destroying a B<Toplevel> window does not
+affect the others as long as they are not a child of the closed
+B<Toplevel>.  However, exiting the B<MainWindow> will destroy all remaining
+B<Toplevel> widgets and end the application.  The
+example below shows a trivial three-window application:
+
+    #!/usr/bin/perl -w
+    use Tk;
+    use strict;
+
+    my $mw = MainWindow->new;
+    fill_window($mw, 'Main');
+    my $top1 = $mw->Toplevel;
+    fill_window($top1, 'First top-level');
+    my $top2 = $mw->Toplevel;
+    fill_window($top2, 'Second top-level');
+    MainLoop;
+
+    sub fill_window {
+        my ($window, $header) = @_;
+        $window->Label(-text => $header)->pack;
+        $window->Button(
+            -text    => 'close',
+            -command => [$window => 'destroy']
+        )->pack(-side => 'left');
+        $window->Button(
+            -text    => 'exit',
+            -command => [$mw => 'destroy']
+        )->pack(-side => 'right');
+    }
+
+=head1 More callbacks
+
+So far, all callback routines shown called a user procedure.
+You can also have a callback routine call another Tk routine.
+This is the way that scroll bars are implemented: scroll-bars
+can call a Tk item or a user procedure, whenever their position
+has changed.  The Tk item that has a scrollbar attached calls the
+scrollbar when its size or offset has changed.  In this way,
+the items are linked.  You can still ask a scrollbar's position,
+or set it by hand - but the defaults will be taken care of.
+
+The example below shows a B<L<Listbox|Tk::Listbox>> with a scroll bar.  Moving
+the scrollbar moves the B<Listbox>.  Scanning a B<Listbox> (dragging
+an item with the left mouse button) moves the scrollbar.
+
+     #!/usr/bin/perl -w
+     use Tk;
+     use strict;
+
+     my $mw = MainWindow->new;
+     my $box = $mw->Listbox(
+         -relief => 'sunken',
+         -height  => 5,
+         -setgrid => 1,
+    );
+    my @items = qw(One Two Three Four Five Six Seven
+                   Eight Nine Ten Eleven Twelve);
+    foreach (@items) {
+       $box->insert('end', $_);
+    }
+    my $scroll = $mw->Scrollbar(-command => ['yview', $box]);
+    $box->configure(-yscrollcommand => ['set', $scroll]);
+    $box->pack(-side => 'left', -fill => 'both', -expand => 1);
+    $scroll->pack(-side => 'right', -fill => 'y');
+
+    MainLoop;
+
+Note that there's a convenience method B<L<Scrolled|Tk::Scrolled>>
+which helps constructing widgets with automatically managed
+scrollbars.
+
+=head1 Canvases and tags
+
+One of the most powerful widgets in Tk is the B<L<Canvas|Tk::Canvas>> window.
+In a B<Canvas> window, you can draw simple graphics and include
+other widgets.  The B<Canvas> area may be larger than the visible window,
+and may then be scrolled.  Any item you draw on the canvas has its own id,
+and may optionally have one or more I<tags>.  You may refer to any
+item by its id, and may refer to any group of items by a common tag;
+you can move, delete, or change groups of items using these tags,
+and you can I<bind> actions to tags.  For a properly designed (often
+structured) B<Canvas>, you can specify powerful actions quite simply.
+
+In the example below, actions are bound to circles (single click)
+and blue items (double-click); obviously, this can be extended to any
+tag or group of tags.
+
+    #!/usr/bin/perl -w
+    use Tk;
+    use strict;
+
+    # Create B<MainWindow> and canvas
+    my $mw = MainWindow->new;
+    my $canvas = $mw->Canvas;
+    $canvas->pack(-expand => 1, -fill => 'both');
+
+    # Create various items
+    create_item($canvas, 1, 1, 'circle', 'blue', 'Jane');
+    create_item($canvas, 4, 4, 'circle', 'red', 'Peter');
+    create_item($canvas, 4, 1, 'square', 'blue', 'James');
+    create_item($canvas, 1, 4, 'square', 'red', 'Patricia');
+
+    # Single-clicking with left on a 'circle' item invokes a procedure
+    $canvas->bind('circle', '<1>' => sub {handle_circle($canvas)});
+    # Double-clicking with left on a 'blue' item invokes a procedure
+    $canvas->bind('blue', '<Double-1>' => sub {handle_blue($canvas)});
+    MainLoop;
+
+    # Create an item; use parameters as tags (this is not a default!)
+    sub create_item {
+        my ($can, $x, $y, $form, $color, $name) = @_;
+
+        my $x2 = $x + 1;
+        my $y2 = $y + 1;
+        my $kind;
+        $kind = 'oval' if ($form eq 'circle');
+        $kind = 'rectangle' if ($form eq 'square');
+        $can->create(
+            ($kind, "$x" . 'c', "$y" . 'c',
+            "$x2" . 'c', "$y2" . 'c'),
+            -tags => [$form, $color, $name],
+            -fill => $color);
+    }
+
+    # This gets the real name (not current, blue/red, square/circle)
+    # Note: you'll want to return a list in realistic situations...
+    sub get_name {
+        my ($can) = @_;
+        my $item = $can->find('withtag', 'current');
+        my @taglist = $can->gettags($item);
+        my $name;
+        foreach (@taglist) {
+            next if ($_ eq 'current');
+            next if ($_ eq 'red' or $_ eq 'blue');
+            next if ($_ eq 'square' or $_ eq 'circle');
+            $name = $_;
+            last;
+        }
+        return $name;
+    }
+
+    sub handle_circle {
+        my ($can) = @_;
+        my $name = get_name($can);
+        print "Action on circle $name...\n";
+    }
+
+    sub handle_blue {
+        my ($can) = @_;
+        my $name = get_name($can);
+        print "Action on blue item $name...\n";
+    }
+
+=head1 Perl/Tk and Unicode
+
+Perl/Tk follows Perl's model of handling Unicode. That is, if a string
+is correctly flagged as a E<quot>characterE<quot> string in the sense
+like described in L<Encode/TERMINOLOGY>, then Perl/Tk will very
+probably display and handle this string correctly.
+
+Note that every variable which is passed somehow into a Perl/Tk method
+will be implicitely changed into an internally utf8-flagged variable.
+Semantically nothing changes, as the series of codepoints stays the
+same, but things will change when variables with high-bit iso-8859-1
+characters will be passed to the "outer" world. In this case you have
+to explicitely mark the encoding of your output stream if using IO, or
+encode the variables using L<Encode> for other style of communication.
+
+This is the theory, now some examples.
+
+If you use non-iso-8859-1 characters in the source code, then use
+either the C<use utf8;> or C<use encoding 'I<encodingname>'> pragma:
+
+     use utf8;
+     use Tk;
+     my $x = "some characters using utf8 encoding";
+     tkinit->Label(-text => $x)->pack;
+     MainLoop;
+
+For data that comes from a file you have to specify the encoding
+unless it's encoded as ascii or iso-8559-1:
+
+     use Tk;
+     open my $FH, "<:encoding(utf-8)", "filename" or die $!;
+     # or for utf-16 data: open my $FH, "<:encoding(utf-16)", "filename" or die $!;
+     my $data = <$FH>;
+     tkinit->Label(-text => $data)->pack;
+     MainLoop;
+
+Likewise, the encoding must be specified for all data which is read
+from Tk widgets and that shall be output into a file. For the output,
+the encoding should be always specified, even if it is iso-8859-1:
+
+     use Tk;
+     $mw = tkinit;
+     $mw->Entry(-textvariable => \$input)->pack;
+     $mw->Button(
+         -text => "Write to file",
+         -command => sub {
+             open my $FH, ">:encoding(iso-8859-1)", "filename" or die $!;
+             print $FH $input;
+         },
+     )->pack;
+     MainLoop;
+
+Note that Tk is Unicode-capable. So you need to be prepared that the
+user has the appropriate input methods activated to enter non-ascii
+characters. If an output encoding is used which does not cover the
+whole of Unicode codepoints then a warning will be issued when writing
+the file, like this:
+
+    "\x{20ac}" does not map to iso-8859-1 at /usr/local/lib/perl5/site_perl/5.8.8/mach/Tk.pm line 250.
+
+Also, the same hexadecimal notation will be used as replacements for
+the unhandled characters.
+
+Handling encoding in I/O is pretty simple using the C<encoding> PerlIO
+layer, as described above. In other cases, such as when dealing with
+databases, encoding the data usually has to be done manually, unless
+the database driver has some means for automatically do this for you.
+So when working with a MySQL database, one could use:
+
+     use Tk;
+     use DBI;
+     use Encode qw(encode);
+     $mw = tkinit;
+     $mw->Entry(-textvariable => \$input)->pack;
+     $mw->Button(
+         -text => "Write to database",
+         -command => sub {
+             my $dbh = DBI->connect("dbi:mysql:test", "root", "") or die;
+             my $encoded_input = encode("iso-8859-1", $input);
+             $dbh->do("INSERT INTO testtable VALUES (?)", undef, $encoded_input) or die;
+         },
+     )->pack;
+     MainLoop;
+
+Unfortunately, there are still places in Perl ignorant of Unicode. One
+of these places are filenames. Consequently, the file selectors in
+Perl/Tk do not handle encoding of filenames properly. Currently they
+suppose that filenames are in iso-8859-1 encoding, at least on Unix
+systems. As soon as Perl has a concept of filename encodings, then
+Perl/Tk will also implement such schemes.
+
+=cut

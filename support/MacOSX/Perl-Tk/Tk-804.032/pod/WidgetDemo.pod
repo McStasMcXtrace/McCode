@@ -1,0 +1,59 @@
+
+=head1 NAME
+
+Tk::WidgetDemo - create a standard widget demonstration window.
+
+=for pm demos/demos/widget_lib/WidgetDemo.pm
+
+=for category Implementation
+
+=head1 SYNOPSIS
+
+ use WidgetDemo;
+ my $TOP = $MW->WidgetDemo(
+     -name             => $demo,
+     -text             => 'Learn how to write a widget demonstration!',
+     -title            => 'WidgetDemo Demonstration',
+     -iconname         => 'WidgetDemo',
+     -geometry_manager => 'grid',
+     -font             => $FONT,
+ );
+
+=head1 DESCRIPTION
+
+This constructor builds a standard widget demonstration window, composed of
+three frames.  The top frame contains descriptive demonstration text.  The
+bottom frame contains the "Dismiss" and "See Code" buttons.  The middle frame
+is demonstration container, which came be managed by either the pack or grid
+geometry manager.
+
+The -text attribute is supplied to a Label widget, which is left-adjusted
+with -wraplength set to 4 inches.  If you require different specifications
+then pass an array to -text; the first element is the text string and
+the remaining array elements are standard Label widget attributes - WidgetDemo
+will rearrange things as required..
+
+    -text => ['Hello World!', qw/-wraplength 6i/],
+
+=head1 AUTHOR
+
+Steve Lidie <Stephen.O.Lidie@Lehigh.EDU>
+
+=head1 HISTORY
+
+lusol@Lehigh.EDU, LUCC, 97/02/11
+lusol@Lehigh.EDU, LUCC, 97/06/07
+Stephen.O.Lidie@Lehigh.EDU, LUCC, 97/06/07
+ . Add Delegates() call that obviates the need for Top().  Many thanks to
+   Achim Bohnet for this patch.
+ . Fix -title so that it works.
+
+=head1 COPYRIGHT
+
+Copyright (C) 1997 - 1998 Stephen O. Lidie. All rights reserved.
+
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+=cut
+

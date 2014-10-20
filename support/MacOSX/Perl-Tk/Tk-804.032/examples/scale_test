@@ -1,0 +1,23 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+
+$top = MainWindow->new();
+
+$top->title("scale tests");
+
+$f = $top->Frame(-relief => 'ridge', -borderwidth => 3);
+
+$s = $top->Scale("-orient"=>"vertical",
+		"-length" => 280,
+		"-from" => 0,
+		"-to" => 250,
+		"-tickinterval" => 50,
+		"-command" => sub { $f->configure('-width'=> $s->get) }
+		);
+
+$s->pack(-side =>'left', -fill => 'y');
+$f->pack(-side =>'right', -fill => 'y');
+
+Tk::MainLoop;
+

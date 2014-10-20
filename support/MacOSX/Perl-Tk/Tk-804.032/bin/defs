@@ -1,0 +1,65 @@
+#!/usr/local/bin/perl
+
+%def   = ();
+%need  = ();
+%here  = ();
+
+sub read_need
+{
+ my $need = shift;
+ open(NEED,"<$need") || die "Cannot open $need:$!";
+ while (<NEED>)
+  {
+   next if (/^ld:/);
+   next if (/^\s+\./);
+   if (/^([A-Za-z][A-Za-z0-9_]*).*\.o\s*$/)
+    {
+     $need{$1}++;
+    }
+   elsif (/^\s+_([_A-Za-z][A-Za-z0-9_]*)\s*$/)
+    {
+     my $sym = $1;
+     $need{$sym}++ unless($sym =~ /^_/);
+    }
+   else
+    {
+     warn "No match:$_";
+    }
+  }
+ close(NEED);
+}
+
+sub read_nm
+{
+ my $src = shift;
+ open(NM,"nm -p $src|") || die "Cannot open pipe:$!";
+ while (<NM>)
+  {
+   if (/^\S+\s+([A-Z])\s+(\S+)\s*$/)
+    {
+     my $kind = $1;
+     my $sym  = $2;
+     $def{$sym} = $src if ($kind ne "U");
+     $here{$sym}++ if ($kind eq "U");
+    }
+  }
+ close(NM);
+}
+
+&read_need(shift);
+
+foreach (@ARGV)
+ {
+  &read_nm($_);
+ }
+
+#foreach (sort keys %def)
+# {
+#  print "$_ $def{$_} not needed\n" unless (defined($need{$_}) || defined($here{$_}));
+# }
+
+foreach (sort keys %need)
+ {
+  print "$_ IS needed\n" unless (defined $def{$_});
+ }
+

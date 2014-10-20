@@ -1,0 +1,56 @@
+#!/usr/local/bin/perl -w
+
+$file = shift;
+
+@cargs = @ARGV;
+
+@ARGV = grep(!/\.ft\./,<*.c>,<xpm/*.c>);
+
+print STDERR "Scanning .c files for X functions\n";
+while (<>)
+ {
+  if (/\b(X[A-Za-z0-9]*)\s*\(/)
+   {
+    $XFunc{$1} = $ARGV ;
+   }
+ }
+
+open(STDOUT,">$file") || die "Cannot open $file:$!";
+$gard = "\U$file";
+$gard =~ s/\..*$//;
+$gard =~ s#/#_#g;
+
+print "#ifndef _$gard\n";
+print "#define _$gard\n";
+print "#ifndef _${gard}_H_\n";
+
+print STDERR "Extracting protos with gcc\n";
+die if (system("gcc","-aux-info","/tmp/X-info","-S","-o","/dev/null",@cargs));
+
+open(INFO,"</tmp/X-info") || die "Cannot open /tmp/X-info:$!";
+while (<INFO>)
+ {
+  if (m#/X11/X[^/]*\.h:\d+:NC\s*\*/\s*(.*)$#o)
+   {
+    $_ = $1;
+    if (/\b(X[A-Za-z0-9]*)\s*\(/)
+     {
+      if (exists $XFunc{$1})
+       {
+        chomp;
+        s/^(.*?)\(/$1 _ANSI_ARGS_((/;
+        s/\);\s*$/));\n/;
+        print;
+       }
+     }
+    else
+     {
+      warn "No function:$_";
+     }
+   }
+ }
+close(INFO);
+
+print "#endif /* _${gard}_H_ */\n";
+print "#endif /* _$gard */\n";
+

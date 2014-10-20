@@ -1,0 +1,135 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_CreateSelHandler, Tk_DeleteSelHandler - arrange to handle requests for a selection
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_CreateSelHandler>(I<tkwin, selection, target, proc, clientData, format>)
+
+B<Tk_DeleteSelHandler>(I<tkwin, selection, target>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_Window tkwin (in)
+
+Window for which I<proc> will provide selection information.
+
+=item Atom selection (in)
+
+The name of the selection for which I<proc> will provide
+selection information.
+
+=item Atom target (in)
+
+Form in which I<proc> can provide the selection (e.g. STRING
+or FILE_NAME).  Corresponds to I<type> arguments in B<selection>
+commands.
+
+=item Tk_SelectionProc *proc (in)
+
+Procedure to invoke whenever the selection is owned by I<tkwin>
+and the selection contents are requested in the format given by
+I<target>.
+
+=item ClientData clientData (in)
+
+Arbitrary one-word value to pass to I<proc>.
+
+=item Atom format (in)
+
+If the selection requestor isn't in this process, I<format> determines
+the representation used to transmit the selection to its
+requestor.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_CreateSelHandler> arranges for a particular procedure
+(I<proc>) to be called whenever I<selection> is owned by
+I<tkwin> and the selection contents are requested in the
+form given by I<target>.
+I<Target> should be one of
+the entries defined in the left column of Table 2 of the
+X Inter-Client Communication Conventions Manual (ICCCM) or
+any other form in which an application is willing to present
+the selection.  The most common form is STRING.
+
+I<Proc> should have arguments and result that match the
+type B<Tk_SelectionProc>:
+
+ typedef int Tk_SelectionProc(
+ 	ClientData clientData,
+ 	int offset,
+ 	char *buffer,
+ 	int maxBytes);
+
+The I<clientData> parameter to I<proc> is a copy of the
+I<clientData> argument given to B<Tk_CreateSelHandler>.
+Typically, I<clientData> points to a data
+structure containing application-specific information that is
+needed to retrieve the selection.  I<Offset> specifies an
+offset position into the selection, I<buffer> specifies a
+location at which to copy information about the selection, and
+I<maxBytes> specifies the amount of space available at
+I<buffer>.  I<Proc> should place a NULL-terminated string
+at I<buffer> containing I<maxBytes> or fewer characters
+(not including the terminating NULL), and it should return a
+count of the number of non-NULL characters stored at
+I<buffer>.  If the selection no longer exists (e.g. it once
+existed but the user deleted the range of characters containing
+it), then I<proc> should return -1.
+
+When transferring large selections, Tk will break them up into
+smaller pieces (typically a few thousand bytes each) for more
+efficient transmission.  It will do this by calling I<proc>
+one or more times, using successively higher values of I<offset>
+to retrieve successive portions of the selection.  If I<proc>
+returns a count less than I<maxBytes> it means that the entire
+remainder of the selection has been returned.  If I<proc>'s return
+value is I<maxBytes> it means there may be additional information
+in the selection, so Tk must make another call to I<proc> to
+retrieve the next portion.
+
+I<Proc> always returns selection information in the form of a
+character string.  However, the ICCCM allows for information to
+be transmitted from the selection owner to the selection requestor
+in any of several formats, such as a string, an array of atoms, an
+array of integers, etc.  The I<format> argument to
+B<Tk_CreateSelHandler> indicates what format should be used to
+transmit the selection to its requestor (see the middle column of
+Table 2 of the ICCCM for examples).  If I<format> is not
+STRING, then Tk will take the value returned by I<proc> and divided
+it into fields separated by white space.  If I<format> is ATOM,
+then Tk will return the selection as an array of atoms, with each
+field in I<proc>'s result treated as the name of one atom.  For
+any other value of I<format>, Tk will return the selection as an
+array of 32-bit values where each field of I<proc>'s result is
+treated as a number and translated to a 32-bit value.  In any event,
+the I<format> atom is returned to the selection requestor along
+with the contents of the selection.
+
+If B<Tk_CreateSelHandler> is called when there already exists a
+handler for I<selection> and I<target> on I<tkwin>, then the
+existing handler is replaced with a new one.
+
+B<Tk_DeleteSelHandler> removes the handler given by I<tkwin>,
+I<selection>, and I<target>, if such a handler exists.
+If there is no such handler then it has no effect.
+
+=head1 KEYWORDS
+
+format, handler, selection, target

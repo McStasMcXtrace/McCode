@@ -1,0 +1,67 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_InternAtom, Tk_GetAtomName - manage cache of X atoms
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Atom
+B<Tk_InternAtom(>I<tkwin, name>)
+
+char *
+B<Tk_GetAtomName(>I<tkwin, atom>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_Window tkwin (in)
+
+Token for window.  Used to map atom or name relative to a particular display.
+
+=item char *name (in)
+
+String name for which atom is desired.
+
+=item Atom atom (in)
+
+Atom for which corresponding string name is desired.
+
+=back
+
+=head1 DESCRIPTION
+
+These procedures are similar to the Xlib procedures
+B<XInternAtom> and B<XGetAtomName>.  B<Tk_InternAtom>
+returns the atom identifier associated with string given by
+I<name>;  the atom identifier is only valid for the display
+associated with I<tkwin>.
+B<Tk_GetAtomName> returns the string associated
+with I<atom> on I<tkwin>'s display.  The string returned
+by B<Tk_GetAtomName> is in Tk's storage:  the caller need
+not free this space when finished with the string, and the caller
+should not modify the contents of the returned string.
+If there is no atom I<atom> on I<tkwin>'s display,
+then B<Tk_GetAtomName> returns the string ``?bad atom?''.
+
+Tk caches
+the information returned by B<Tk_InternAtom> and B<Tk_GetAtomName>
+so that future calls
+for the same information can be serviced from the cache without
+contacting the server.  Thus B<Tk_InternAtom> and B<Tk_GetAtomName>
+are generally much faster than their Xlib counterparts, and they
+should be used in place of the Xlib procedures.
+
+=head1 KEYWORDS
+
+atom, cache, display

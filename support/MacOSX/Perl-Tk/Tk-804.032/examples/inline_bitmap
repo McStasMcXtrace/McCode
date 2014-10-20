@@ -1,0 +1,31 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+
+my $mw = MainWindow->new;
+
+my $bits = pack("b8"x5,
+	"........",
+	"...11...",
+	"..1111..",
+	".111111.",
+	"........");
+
+$mw->DefineBitmap('increment' => 8,5, $bits);
+#   And of course, decrement is the reverse of increment :-)
+$mw->DefineBitmap('decrement' => 8,5, scalar reverse $bits);
+
+my $value = 1000;
+
+my $up = $mw->Button(-bitmap => 'increment', -pady => 0, -command => sub { $value++ } );
+my $dn = $mw->Button(-bitmap => 'decrement', -pady => 0, -command => sub { $value-- } );
+my $en = $mw->Entry(-textvariable => \$value, -justify => 'right', -width => 6);
+my $qu = $mw->Button(-text => 'Quit', -command => [destroy => $mw]);
+
+Tk::grid($en,$up);
+Tk::grid('^',$dn);
+Tk::grid($qu,'-');
+
+MainLoop;
+
+

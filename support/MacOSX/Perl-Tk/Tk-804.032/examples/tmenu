@@ -1,0 +1,11 @@
+#!perl -w
+use strict;
+use Tk;
+my $mw = MainWindow->new;
+my $menu = $mw->menu;
+$menu->cascade(-label => "Added",-underline => 0, -menuitems => [
+                 [Button => 'Exit', -underline => 1, -command => [destroy => $mw]],
+               ]); 
+$mw->Button(-text => "Press this button to Quit\nthe Appliation",
+            -command => [destroy => $mw])->pack;
+MainLoop;

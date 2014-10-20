@@ -1,0 +1,62 @@
+#!/usr/local/bin/perl -w
+use IO::File;
+
+while (<>)
+ {
+  last if /^static int perl_init()/;
+  print;
+ }
+
+my @head = ($_);
+
+while (<>)
+ {
+  push(@head,$_);
+  last if /^\t+dTHR/;
+ }
+
+
+my $name  = 0;
+my $count = 0;
+new_chunk();
+
+sub new_chunk
+{
+ print "}\n\n" if $count;
+ ++$name;
+ print "static void Chunk_$name (void)\n{\n";
+ push(@head,"\tChunk_$name();\n");
+ $count = 0;
+}
+
+while (<>)
+ {
+  last if /^\s+return/;
+  print;
+  $count++;
+  if (/^\t+\{/)
+   {
+    while (<>)
+     {
+      print;
+      $count++;
+      last if /^\t+\}/;
+     }
+   }
+  new_chunk() if $count > 150;
+ }
+
+print "}\n\n" if $count;
+
+while (@head)
+ {
+  print shift(@head);
+ }
+print;
+
+while (<>)
+ {
+  print;
+ }
+
+warn "$. lines\n";
