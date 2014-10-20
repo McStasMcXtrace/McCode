@@ -1,0 +1,197 @@
+#
+# $Id: makefile.bc,v 1.2 2000/11/03 01:43:19 idiscovery Exp $
+#
+# makefile.bc --
+#
+#	Borland C++ 4.5/5.0 makefile for Tix.
+#
+# Copyright (c) 1996, Expert Interface Technologies
+#
+# See the file "license.terms" for information on usage and redistribution
+# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+# 
+# Edit common.mak to set the common settings
+#
+# uncomment the following two lines to compile with TCL_MEM_DEBUG
+#DEBUGDEFINES	=TCL_MEM_DEBUG
+
+#----------------------------------------------------------------------
+# Environment setting
+
+#
+# ROOT = top of source tree
+
+ROOT	= ..
+
+# TMPDIR = location where .obj files should be stored during build
+#
+!INCLUDE common.mak
+
+#
+# Borland C++ tools
+#
+
+BORLAND = $(TOOLS)
+IMPLIB  = Implib
+BCC32   = Bcc32
+BCC     = Bcc
+RC	= brcc32
+CP      = copy
+RM      = del 
+
+TCL_INCLUDES	= $(TCLDIR)\generic;$(TCLDIR)\win;$(ITCL_INCLUDES)
+TK_INCLUDES	= $(TKDIR)\generic;$(TKDIR)\xlib;$(TKDIR)\win
+TIX_INCLUDES	= $(ROOT)\generic;$(ROOT)\win
+INCLUDES	= $(BORLAND)\include;$(TIX_INCLUDES);$(TK_INCLUDES);$(TCL_INCLUDES)
+
+LIBDIRS		= $(BORLAND)\lib;$(ROOT)\win
+TCLLIBDIR	= $(TCLDIR)\win
+TKLIBDIR	= $(TKDIR)\win
+
+!ifndef DEBUG
+
+# these macros cause maximum optimization and no symbols
+DEBUGLDFLAGS = 
+DEBUGCCFLAGS = -v- -vi- -O2
+
+!else
+
+# these macros enable debugging
+DEBUGLDFLAGS = -v
+DEBUGCCFLAGS = -k -Od -v
+
+!endif
+
+DEFINES = _RTLDLL;$(DEBUGDEFINES);__BORLAND;$(ITCL_DEFINES)
+
+
+PROJECTCCFLAGS= $(DEBUGCCFLAGS) -w-par -w-stu
+
+LNFLAGS_exe = -Tpe -aa -c $(DEBUGLDFLAGS) $(BORLAND)\lib\c0w32
+LNFLAGS_dll = -Tpd -aa -c $(DEBUGLDFLAGS) $(BORLAND)\lib\c0d32
+
+LNLIBS_exe=$(TIXLIB) $(TKLIBDIR)\$(TKLIB) $(TCLLIBDIR)\$(TCLLIB) \
+    $(ITCL_LIBS) import32 cw32i
+LNLIBS_dll=$(TKLIBDIR)\$(TKLIB) $(TCLLIBDIR)\$(TCLLIB) \
+    $(ITCL_LIBS) import32 cw32i
+
+# 
+# Global makefile settings
+#
+
+.AUTODEPEND
+.CACHEAUTODEPEND
+
+.suffixes: .c .dll .lib .obj .exe
+
+.path.c=$(ROOT)\win;$(ROOT)\generic;$(ROOT)\xlib
+.path.obj=$(TMPDIR)
+
+#
+# Targets
+#
+
+all: cfgdll $(TIXDLL) cfgexe $(TIXWISH) cfgcln
+test: cfgdll $(TIXDLL) cfgtest $(TKTEST) cfgcln
+
+# Implicit Targets
+
+.c.obj:
+	@$(BCC32) {$< }
+
+.dll.lib:
+	$(IMPLIB) -c $@ $<
+
+.rc.res:
+	$(RC) -i$(INCLUDES) $<
+
+#
+# Special case object file targets
+#
+
+$(TMPDIR)\testMain.obj : $(ROOT)\win\tixWinMain.c
+	$(BCC32) -c -o$@ $(ROOT)\win\tixWinMain.c
+
+#
+# Configuration file targets - these files are implicitly used by the compiler
+#
+
+cfgdll:
+	@$(CP) &&|
+		-n$(TMPDIR) -I$(INCLUDES) -c -WD
+		-D$(DEFINES) -3 -d $(PROJECTCCFLAGS)
+| bcc32.cfg >NUL
+
+cfgexe:
+	@$(CP) &&|
+		-n$(TMPDIR) -I$(INCLUDES) -c -W
+		-D$(DEFINES) -3 -d $(PROJECTCCFLAGS)
+| bcc32.cfg >NUL
+
+cfgtest:
+	@$(CP) &&|
+		-n$(TMPDIR) -I$(INCLUDES) -c -W
+		-D$(DEFINES);TCL_TEST -3 -d $(PROJECTCCFLAGS)
+| bcc32.cfg >NUL
+
+cfgcln:
+	@$(RM) bcc32.cfg
+
+#
+# Executable targets
+#
+
+$(TIXDLL): $(TIXOBJS) tix.def
+	tlink32 -L$(LIBDIRS) @&&|
+$(LNFLAGS_dll) $(TIXOBJS)
+$@
+-x
+$(LNLIBS_dll)
+tix.def
+|
+
+$(TIXWISH): $(WISHOBJS) $(TIXLIB) $(TIXOBJS)
+	tlink32 -L$(LIBDIRS) @&&|
+$(LNFLAGS_exe) $(WISHOBJS)
+$@
+-x
+$(LNLIBS_exe)
+|, &&|
+EXETYPE WINDOWS
+CODE PRELOAD MOVEABLE DISCARDABLE
+DATA PRELOAD MOVEABLE MULTIPLE
+|,
+
+# 
+# Other dependencies
+#
+
+# The following rule automatically generates a tix.def file containing
+# an export entry for every public symbol in the $(TKDLL) library.
+
+tix.def: $(TIXOBJS)
+	$(TCLLIBDIR)\dumpexts.exe -o $@ $(TKDLL) @&&|
+		$(TIXOBJS)
+|
+
+# remove all generated files
+
+clean:
+	-del $(TMPDIR)\*.obj
+	-del $(TMPDIR)\*.exp
+	-del $(TMPDIR)\*.res
+	-del $(TMPDIR)\*.def
+	-del $(TIXLIB)
+	-del $(TIXDLL)
+	-del $(TIXWISH)
+	-del bcc32.cfg
+
+dist:
+	$(MAKE) TCL_VER=8.0
+	$(MAKE) TCL_VER=2.2i
+
+distclean:
+	$(MAKE) -f makefile.bc TCL_VER=8.0 clean
+	$(MAKE) -f makefile.bc TCL_VER=2.2i clean
+
+

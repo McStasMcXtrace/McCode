@@ -1,0 +1,24 @@
+#!/usr/local/bin/perl -w
+use Data::Dumper;
+use strict;
+use Tk;
+
+my $mw = MainWindow->new;
+
+my @info = $mw->property('get','_MOTIF_DRAG_WINDOW','root');
+if (@info == 2 && $info[0] eq 'WINDOW')
+ {
+  my $dw = $info[1];
+  my @list = $mw->property('list',$dw);
+  my $name;
+  foreach $name (@list)
+   {
+    my $val = $mw->property('get',$name,$dw);
+    print "$name length is ",length($val),"\n";
+    my @val = map(sprintf("%02X",$_),unpack('C*',$val));
+    print join(' ',@val),"\n";
+    print "\n";
+   }
+ }
+
+

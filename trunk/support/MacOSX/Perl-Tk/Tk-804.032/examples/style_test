@@ -1,0 +1,27 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+use Tk::HList;
+use Tk::ItemStyle;
+
+$top = new MainWindow;
+$hl = $top->HList->pack;
+$redstyle  = $top->ItemStyle('text',
+			     -foreground => 'red',
+			     -font => '10x20',
+			     -background => 'green');
+
+print $redstyle,"\n";
+
+$bluestyle = $top->ItemStyle('text',
+			     -foreground => 'blue',
+			     -background => 'white',
+			    );
+
+$hl->add(0, -itemtype => 'text', -text => 'red', -style => $redstyle);
+$hl->add(1, -itemtype => 'text', -text => 'blue', -style => $bluestyle);
+
+$top->after(5000, [ configure => $redstyle, -background => 'cyan' ]);
+
+MainLoop;
+

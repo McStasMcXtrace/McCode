@@ -1,0 +1,168 @@
+Currently building Perl/Tk under cygwin is broken using the native
+Win32 GUI libraries. Therefore the default is to build using X11
+libraries (but note that this may change, so it's best to specify the
+window architecture, see below).
+
+Using the X11 libraries, "make test" will very probably fail due to
+"rebase" problems, but Perl/Tk should be mostly usable after an
+installation and maybe a manual "rebaseall" after.
+
+----------------------------------------------------------------------
+
+This is a brief description of how to get the Tk module working with
+Perl and Cygwin.
+
+CONFIGURE/BUILD
+
+    Use native Win32 GUI calls:
+
+        perl Makefile.PL MSWin32
+
+    Use X11 client libraries (and requires a X server):
+
+        Precompiled X11 client libraries can be downloaded from
+        ftp://sourceware.cygnus.com/pub/cygwin/xfree/xc-4-binaries/
+            xfree86-4.0-DLLs.tar.bz2
+            xfree86-4.0-devel.tar.bz2
+
+        NOTE: Your DISPLAY must be 127.0.0.1:0.0
+              Your PATH must include the DLL directory, /usr/X11R6/bin
+
+        perl Makefile.PL x
+
+    or
+
+        perl Makefile.PL
+
+    make
+
+TEST
+
+    make test
+    perl -Mblib demos/widget
+
+INSTALL
+
+    make install
+
+SIDE-BY-SIDE PORT COMPARISONS (demos/widget)
+
+    X11 (Hummingbird/Exceed X Server, V6.1)
+
+        + Motif look and feel
+        + Scroll wheel does not work with X11 (config?)
+        + Global grabs only affect X11 windows (config?)
+        + Menus, normal style
+          - Alt+x does not post menus (config?)
+        + $Tk::platform => unix
+
+    Win32
+
+        + Windows look and feel
+        + Uses Win32 clipboard
+        + Help on menu bar not all the way to the right
+        + Tear-off menus placed at upper-left instead of near pointer
+        + Tile and Transparent, no tiled camels, third window not
+          transparent
+        + Menus, normal style
+          - File - "Error: unknown option "-label" at Tk.pm line 217
+        + Menus, Perl/Tk style
+          - Menus do not drop as traverse with button press
+          - Alt+x does not post menus
+        + Native Win32 FileSelect dialog, FileSelect/FBox the same
+        + Native Win32 ChooseColor dialog
+        + Balls bouncing, when start restacked below widget demo window
+          (if bounce window not moved)
+        + Global grabs only affect current application
+        + IntelliMouse with IntelliEye (but ok with a trackball, setting?)
+          - Button-2 dragging/scanning does not work well
+          - Button-2 for copy/paste does not work well
+            (seems to flip into a scroll mode)
+        + $Tk::TkwinVtab, $Tk::TkwinintVtab variables
+        + $Tk::platform => MSWin32
+
+    Both
+        + Tear-off menus restack parent below widget demo window
+        + Meta-backspace, Meta-d not working (Meta config?)
+        + Menus, normal and Perl/Tk style
+          - Meta+x accelerators (Control+x okay) not working (config?)
+
+    X11 (Cygwin)   v X11 (Solaris)
+
+        No differences that I could find!
+
+    Win32 (Cygwin) v Win32 (MSWin32/ActiveState)
+
+        + Menus, normal style
+          - Accelerators Win32 bound to Control, Cygwin bound to Meta
+            (see demos/demos/widget_lib/menus.pl, $^O eq 'MSWin32')
+          - Win32 ^A does not work (Meta+A with X11), ^H does
+
+PORTING NOTES
+
+    + $Tk::platform is really the win_arch, where unix is x
+      (sometimes $^O eq 'MSWin32' is used instead of $Tk::platform
+       eq 'MSWin32' assuming they are equivalent and vice versa)
+    + #define distinctions
+        _WIN32                defined by gcc, if X11 need to undef
+        __WIN32__             win_arch MSWin32, also defined in pTk/Lang.h
+        WIN32                 from #include <windows.h>
+                              when precedes #include "perl.h" then need
+                              a #undef WIN32 (otherwise tries to include
+                              Win32 Perl things like win32.h, defined
+                              by native Win32 port)
+    + With native Win32 GUI use Cygwin select() with /dev/windows
+      pseudo-device rather than using Win32 GetMessage() directly
+    + pTk/mTk/win/tkWinX.c, pTk/mTk/generic/tkPort.h part of core Tk,
+      which is ordinarily not touched by Tk Perl module? pTk/Tcl-pTk?
+
+FILES (with Cygwin references)
+
+    README.cygwin MANIFEST
+    * documentation
+
+    Makefile.PL Tk/MMutil.pm pTk/Makefile.PL
+    * make stuff
+
+    pTk/mTk/win/tkWinX.c
+    * GetMessage() via select() on /dev/windows and callback
+
+    Scrollbar/Scrollbar.xs tkWin32Dll.c
+    * defined(__WIN32__) && defined(__CYGWIN__)
+
+    tkGlue.c
+    * refdef XS because __declspec(dllexport) incompatible with static
+    * defined(__WIN32__) && defined(__CYGWIN__) and pTk/tkWin.h
+      includes <windows.h> which defines WIN32
+
+    Tk.pm
+    * set $Tk::platform with help from $Tk::Config::win_arch
+
+    DragDrop/site_test Tk/X11Font.pm t/create.t t/mwm.t
+    * $^O eq 'cygwin' and $Tk::platform eq 'MSWin32'
+
+    DragDrop/Win32Site/Win32Site.xs
+    * #undef WIN32 from <windows.h>
+
+    pTk/mTk/generic/tkPort.h
+    * resolve strcasecmp/stricmp #define mess
+
+    pTk/Lang.h
+    * some defs ordinarily from tkUnixPort.h
+
+    chnGlue.c
+    * Cygwin has O_BINARY
+
+    IO/IO.xs
+    * Cygwin has O_NONBLOCK
+
+TODO
+
+    + Any way to have X11 and native Win32 versions available
+      at the same time?  Build with Xlib/Win32 emulator (see rxvt)?
+    + Fix gcc warnings, mostly in pTk win32 flavor?
+    + Test with cygwin-xfree X Server?
+
+Thu Aug 31 12:54:09 BST 2000
+Eric Fifer
+efifer@dircon.co.uk

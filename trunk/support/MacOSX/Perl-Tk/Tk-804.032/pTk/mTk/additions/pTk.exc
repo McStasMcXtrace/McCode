@@ -1,0 +1,18 @@
+# This file is read by pTk/Makefile.PL
+# The C sources mentioned here (from img extension) are
+# NOT used by perl/Tk
+imgPmap.c
+imgPmap.h
+imgUnixPmap.c
+imgWinPmap.c
+imgPS.c
+imgJPEG.c          # Separate loadable
+tkMacInt.h
+imgDllEntry.c
+imgTIFFjpeg.c
+imgTIFF.c
+imgTIFFzip.c
+imgTIFFpixar.c
+imgPNG.c           # Separate loadable
+tkAppInit.c
+imgGIF.c           # Using core tk version
