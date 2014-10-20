@@ -251,7 +251,6 @@ cleanup() {
     remove_all              \
         "#*#"               \
         ".git" ".svn"       \
-        "*.o"               \
         "lex.yy.c"          \
         "instrument.tab.?"
 
