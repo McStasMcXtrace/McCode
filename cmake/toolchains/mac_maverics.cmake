@@ -4,7 +4,7 @@ set(ARCH   64)
 
 # Commands for running various external tools
 set(BROWSER "open")
-set(VRMLVIEW "freewrl")
+set(VRMLVIEW "open")
 set(MPICC "mpicc")
 set(MPIRUN "mpirun")
 set(PGPLOT "pgxwin_server")
