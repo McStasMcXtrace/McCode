@@ -1,4 +1,4 @@
-cd build/usr/local/pgplot
+cd mccode_pgplot/usr/local/pgplot
 # Assume the mccode-provided gcc/gfortran is in /opt/mccode...
 export PATH=/opt/mccode/gcc/bin:$PATH
 export DYLD_LIBRARY_PATH=/opt/mccode/gcc/lib
@@ -16,4 +16,4 @@ rm *.o
 # Build an OS X package for installation in /opt/mccode/pgplot
 OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
 cd ../../../..
-/Applications/PackageMaker.app/Contents/MacOS/PackageMaker --root build/ -i dk.dtu.fysik.tk.pgplot -o mccode_pgplot-${OSXVER}.pkg
+/Applications/PackageMaker.app/Contents/MacOS/PackageMaker --root mccode_pgplot/ -i dk.dtu.fysik.tk.pgplot -o mccode_pgplot-${OSXVER}.pkg
