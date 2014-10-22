@@ -5,7 +5,7 @@ Description: Portable high-performance MPI implementation
 Version: 1.6.5
 URL: http://www.open-mpi.org/
 #
-prefix=/opt/mccode/openmpi
+prefix=/usr/local
 exec_prefix=${prefix}
 includedir=${prefix}/include
 libdir=${exec_prefix}/lib
@@ -16,4 +16,4 @@ libdir=${exec_prefix}/lib
 #
 Libs: -L${libdir}      -lmpi_f77 -lmpi
 Libs.private:     -lm  
-Cflags: -I${includedir}   
+Cflags: -I${includedir}  -Wl,-commons,use_dylibs 

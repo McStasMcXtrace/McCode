@@ -16,7 +16,7 @@
 if test x"$VT_PREFIX" != x; then
   prefix=$VT_PREFIX
 else
-  prefix=/opt/mccode/openmpi
+  prefix=/usr/local
 fi
 exec_prefix=${prefix}
 bindir=${exec_prefix}/bin
