@@ -27,7 +27,7 @@ endif()
 message("Enabling ${FLAVOR} flavor")
 setupMCCODE("${FLAVOR}")
 
-set(MCINSTALL_PREFIX "/opt/mccode/")
+set(MCINSTALL_PREFIX "/usr/local/")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-openmpi-${MCCODE_VERSION}")
@@ -47,7 +47,7 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Include the Contents subfolder...
 install (
   DIRECTORY "openmpi-1.6.5/"
-  DESTINATION "openmpi"
+  DESTINATION "."
 )
 
 foreach(name mpic++
@@ -112,7 +112,7 @@ vtwrapper
   install(
     FILES "openmpi-1.6.5/bin/${name}"
     PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ 
-    DESTINATION "openmpi/bin"
+    DESTINATION "bin"
   )
 endforeach()
 
