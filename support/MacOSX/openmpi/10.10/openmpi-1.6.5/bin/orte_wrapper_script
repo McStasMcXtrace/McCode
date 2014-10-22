@@ -15,8 +15,8 @@
 use File::Basename;
 use File::Spec::Functions;
 
-my $includedir = "/opt/mccode/openmpi/include";
-my $libdir = "/opt/mccode/openmpi/lib";
+my $includedir = "NONE/include";
+my $libdir = "NONE/lib";
 
 # obey the OPAL_DESTDIR environment variable
 if (exists($ENV{'OPAL_DESTDIR'})

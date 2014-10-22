@@ -5,7 +5,7 @@ Description: Open MPI's run-time environment functionality
 Version: 1.6.5
 URL: http://www.open-mpi.org/
 #
-prefix=/opt/mccode/openmpi
+prefix=/usr/local
 exec_prefix=${prefix}
 includedir=${prefix}/include
 libdir=${exec_prefix}/lib

@@ -20,7 +20,7 @@ PID=$$
 MACOS=1
 HAVE_THREADS=1
 HAVE_MPI=1
-HAVE_FMPI=0
+HAVE_FMPI=1
 HAVE_DYNINST=0
 VTVERSION="5.14.4openmpi"
 VTSEQLIB="libvt`test .$module = .yes && echo .so || echo .dylib`"
@@ -138,7 +138,7 @@ error_msg()
 if test x"$VT_PREFIX" != x; then
   prefix=$VT_PREFIX
 else
-  prefix=/opt/mccode/openmpi
+  prefix=/usr/local
 fi
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib

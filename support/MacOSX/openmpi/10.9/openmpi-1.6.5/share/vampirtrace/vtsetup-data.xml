@@ -737,7 +737,7 @@
         <default>1</default>
       </value>
     </valuedesc>
-    <since major="5" minor="0" patch="0" ></since><available>0</available>
+    <since major="5" minor="0" patch="0" ></since><available>1</available>
     <anchor>VT_SETUP_VT_OMPTRACE</anchor>
   </env>
   <env isdeprecated="0" priority="100" descname="Plugin Counter Metrics" isadvanced="1" group="furthCount"
