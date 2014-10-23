@@ -54,18 +54,18 @@ ssh ${LINUSER}@${LINHOST} cd ${LINPATH}/dist \&\& sudo dpkg -i mcstas-${VER}-lin
 ssh ${LINUSER}@${LINHOST} cd ${LINPATH}/dist \&\& sudo dpkg -i mcxtrace-${VER}-linux64.deb mcxtrace-comps-${VER}-linux64.deb mcxtrace-tools-perl-${VER}-linux64.deb 
 echo Step 4
 # Step 4 Transfer .exes to the Windows host
-scp ${LINUSER}@${LINHOST}:${LINPATH}/dist/\*${VER}\*64.exe ${WINUSER}@${WINHOST}:Downloads/
+scp ${LINUSER}@${LINHOST}:${LINPATH}/dist/\*${VER}\*32.exe ${WINUSER}@${WINHOST}:Downloads/
 echo Step 5
 # Step 5 install .exes on the Windows host
-ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcstas-NSIS-${VER}-mingw64.exe /S
-ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcxtrace-NSIS-${VER}-mingw64.exe /S
+ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcstas-NSIS-${VER}-mingw32.exe /S
+ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcxtrace-NSIS-${VER}-mingw32.exe /S
 # Are backgrounded immediately, hence a sleep before next cmds
 sleep 20
-ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcstas-comps-NSIS-${VER}-mingw64.exe /S
-ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcxtrace-comps-NSIS-${VER}-mingw64.exe /S
+ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcstas-comps-NSIS-${VER}-mingw32.exe /S
+ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcxtrace-comps-NSIS-${VER}-mingw32.exe /S
 # Are backgrounded immediately, hence a sleep before next cmds
-ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcstas-tools-perl-NSIS-${VER}-mingw64.exe /S
-ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcxtrace-tools-perl-NSIS-${VER}-mingw64.exe /S
+ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcstas-tools-perl-NSIS-${VER}-mingw32.exe /S
+ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcxtrace-tools-perl-NSIS-${VER}-mingw32.exe /S
 
 echo Clean, build, install Mac
 # Build the OSX packages at the Mac host
