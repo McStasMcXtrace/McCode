@@ -27,7 +27,7 @@ fi
 
 if [ "x$2" != "x" ]; then
     # If this is a meta-package being built, we should aim for installation in /opt/mccode
-    export MCINSTALL_PREFIX=/opt/mccode/
+    export MCINSTALL_PREFIX=/usr/local/
 fi
 ./mkdist mcstas-gcc $1 support/MacOSX/gcc-hpc/10.8 "" mac -- OSXpkg
 ./mkdist mcstas-openmpi $1 support/MacOSX/openmpi/10.8 "" mac -- OSXpkg
