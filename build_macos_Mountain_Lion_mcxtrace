@@ -23,10 +23,11 @@ fi
 ./mkdist mcxtrace-tools-python-mxdisplay-r $1 tools/Python/mcdisplay/R/ "" mac -- OSXpkg
 ./mkdist mcxtrace-tools-python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac -- OSXpkg
 ./mkdist mcxtrace-tools-python-mxdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac -- OSXpkg
+./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" mac -- OSXpkg
 
 if [ "x$2" != "x" ]; then
     # If this is a meta-package being built, we should aim for installation in /opt/mccode
-    export MCINSTALL_PREFIX=/opt/mccode/
+    export MCINSTALL_PREFIX=/usr/local/
 fi
 ./mkdist mcxtrace-gcc $1 support/MacOSX/gcc-hpc/10.8 "" mac -- OSXpkg
 ./mkdist mcxtrace-openmpi $1 support/MacOSX/openmpi/10.8 "" mac -- OSXpkg
