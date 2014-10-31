@@ -380,7 +380,7 @@ definitions or between component and instrument definitions. It is thus
 possible (and usual) to use a component definition multiple times
 in an instrument description.
 
-Beware about variable type conversion when setting numerical parameter values, as in \verb+p1=12/1000+. In this example, the parameter \verb+p1+ will be set to 0 as the division of the two integers is indeed 0. To avoid that, use explicitely floating type numbers as in \verb+p1=12.0/1000+.\index{Bugs}
+Beware about variable type conversion when setting numerical parameter values, as in \verb+p1=12/1000+. In this example, the parameter \verb+p1+ will be set to 0 as the division of the two integers is indeed 0. To avoid that, use explicitly floating type numbers as in \verb+p1=12.0/1000+.\index{Bugs}
 
 The \MCS compiler will automatically search for a file containing a
 definition of the component if it has not been declared previously. The
@@ -561,7 +561,7 @@ instruments may themselves use \texttt{\%include}.
 \index{Keyword!EXTEND}
 \label{s:instrdefs-extend-group}
 
-It is sometimes desirable to slightly modify an existing component of the \MCS library. One would usually make a copy of the component, and extend the code of its \texttt{TRACE} section. \MCS provides an easy way to change the behaviour of existing components in an instrument definition without duplicating files, using the \texttt{EXTEND} modifier \index{Keyword!EXTEND}
+It is sometimes desirable to slightly modify an existing component of the \MCS library. One would usually make a copy of the component, and extend the code of its \texttt{TRACE} section. \MCS provides an easy way to change the behavior of existing components in an instrument definition without duplicating files, using the \texttt{EXTEND} modifier \index{Keyword!EXTEND}
 \begin{mcstas}
 EXTEND
 %{ 
@@ -631,7 +631,7 @@ components which are not part of the group.
 A usage example of the GROUP keyword can be found in the \\
 \verb+Neutron site/ILL/ILL_H15_IN6+ instrument from the \verb+mcgui+, to model 3 monochromators.
 
-Combining EXTEND, GROUP and WHEN can result in unexpected behaviour. Please read the related warning at the end of section \ref{s:instrdefs-extend-when}.
+Combining EXTEND, GROUP and WHEN can result in unexpected behavior. Please read the related warning at the end of section \ref{s:instrdefs-extend-when}.
 
 \subsection{Duplication of component instances - COPY}
 \index{Keyword!COPY}
@@ -642,13 +642,13 @@ could be e.g. a set of identical monochromator blades, or a set of detectors or
 guide elements.  Together with JUMPs (see below), there is a way to copy a
 component instance, duplicating parameter set, as well as any EXTEND, GROUP,
 JUMP and WHEN keyword.  Position (AT) and rotation (ROTATED) specification must
-be explicitely entered in order to avoid component overlapping.
+be explicitly entered in order to avoid component overlapping.
 
 The syntax for instance copy is
 \begin{mcstas}
 COMPONENT name = COPY (instance_name)
 \end{mcstas}
-where {\it instance\_name} is the name of a preceeding component instance in the
+where {\it instance\_name} is the name of a preceding component instance in the
 instrument. It may be 'PREVIOUS' as well.
 
 If you would like to change only some of the parameters in the instance copy, you may write, e.g.:
@@ -680,7 +680,7 @@ mechanism only for components which should not be referred to in the instrument.
 
 This automatic naming may be used anywhere in the TRACE section of the
 instrument, so that all components which do not need further referring may be
-labelled as COPY(Origin).
+labeled as COPY(Origin).
 
 As an example, we show how to build a guide made of equivalent elements. Only
 the first instance of the Guide component is defined, whereas following
@@ -756,7 +756,7 @@ A usage example of the WHEN keyword can be found in the \\
 neutrons depending on their fate.
 
 
-WARNING: Combining WHEN, EXTEND and GROUP can result in unexpected behaviour,
+WARNING: Combining WHEN, EXTEND and GROUP can result in unexpected behavior,
 please use with caution! Let for instance a GROUP of components all have the
 same WHEN condition, i.e. if the WHEN condition is false, none of the elements
 SCATTER, meaning that all neutrons will be ABSORBed. As a solution to this
@@ -1016,7 +1016,7 @@ explicitly, ``1'' will be used. In contrast, if no value is
   seldom changed. Optional parameters are also useful to preserve backwards
   compatibility with old instrument definitions when a component is updated. New
   parameters can be added with default values that correspond to the old
-  behaviour, and existing instrument definitions can be used with the new
+  behavior, and existing instrument definitions can be used with the new
   component without changes.
 
   However, optional parameters should not be used in cases where no general
@@ -1481,7 +1481,7 @@ component.
 \subsection{Extending from the instrument definition}
 \index{Keyword!EXTEND}
 
-If you only want to \emph{add} something on top of the component existing behaviour, the simplest is to work from the instrument definition \texttt{TRACE} section, using the \texttt{EXTEND} modifier (see section \ref{s:instrdefs-extend-group}). You do not need to write a new component definition, but only add a piece of code to execute.
+If you only want to \emph{add} something on top of the component existing behavior, the simplest is to work from the instrument definition \texttt{TRACE} section, using the \texttt{EXTEND} modifier (see section \ref{s:instrdefs-extend-group}). You do not need to write a new component definition, but only add a piece of code to execute.
 
 \subsection{Component heritage and duplication}
 \index{Keyword!COPY}
@@ -1552,14 +1552,14 @@ is the component entry dialog in the \verb+mcgui+ front-end, see
 section~\ref{s:mcgui}. The other is a collection of web pages documenting
 the components and instruments, handled via the \verb+mcdoc+ front-end (see section~\ref{s:mcdoc-run}), and the complete documentation for all available
 McStas components and instruments may be found at the \MCS
-webpage~\cite{mcstas_webpage}, as well as in the \MCS library
+web page~\cite{mcstas_webpage}, as well as in the \MCS library
 (see~\ref{s:comp-overview}). All available \MCS documentation is accessible from the \verb+mcgui+ 'Help' menu.
 
 Note that McDoc-compliant comments in the source code are no substitute
 for a good reference manual entry. The mathematical equations describing
 the physics and algorithms of the component should still be written up
 carefully for inclusion in the component manual. The McDoc comments are
-useful for describing the general behaviour of the component, the
+useful for describing the general behavior of the component, the
 meaning and units of the input parameters, etc.
 
 

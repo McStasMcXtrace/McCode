@@ -27,7 +27,7 @@ More details are available in the Appendix concerning random numbers.
 % The most widely-used packages are NISP \cite{NISP}, ResTrax \cite{Restrax}, McStas \cite{nn_10_20,mcstas_webpage}, Vitess \cite{Vitess}, and IDEAS \cite{IDEAS}, which allow a wide range of neutron scattering instruments to be simulated.
 
 \subsection{Monte Carlo ray tracing simulations}
-The behaviour of a neutron scattering instrument can in principle be described by a complex integral over all relevant parameters, like initial neutron energy and divergence, scattering vector and position in the sample, etc. However, in most relevant cases, these integrals are not solvable analytically, and we hence turn to Monte Carlo methods. The neutron ray-tracing Monte Carlo method has been used widely for guide studies \cite{Copley93,Farhi02,Schanzer04}, instrument optimisation and design \cite{Zsigmond04,Lieutenant05}. Most of the time, the conclusions and general behaviour of such studies may be obtained using the classical analytical approaches, but accurate estimates for the flux, resolution and generally the optimum parameter set, benefit considerably from MC methods.
+The behavior of a neutron scattering instrument can in principle be described by a complex integral over all relevant parameters, like initial neutron energy and divergence, scattering vector and position in the sample, etc. However, in most relevant cases, these integrals are not solvable analytically, and we hence turn to Monte Carlo methods. The neutron ray-tracing Monte Carlo method has been used widely for guide studies \cite{Copley93,Farhi02,Schanzer04}, instrument optimization and design \cite{Zsigmond04,Lieutenant05}. Most of the time, the conclusions and general behavior of such studies may be obtained using the classical analytic approaches, but accurate estimates for the flux, resolution and generally the optimum parameter set, benefit considerably from MC methods.
 Mathematically, the Monte-Carlo method is an application of the law of large numbers \cite{James80,Grimmett92}. Let $f(u)$ be a finite continuous integrable function of parameter $u$ for which an integral estimate is desirable. The discrete statistical mean value of $f$ (computed as a series) in the uniformly sampled interval $a < u < b$ converges to the mathematical mean value of $f$ over the same interval.
 
 \begin{equation}
@@ -64,7 +64,7 @@ becomes the product of all contributions
 \label{e:probprod}
 p = p_n = p_0 \prod_{j=1}^n \pi_j .
 \end{equation}
-Each adjustement factor should be $0 < \pi_j < 1$, except in special
+Each adjustment factor should be $0 < \pi_j < 1$, except in special
 circumstances, so that total flux can only decrease through the
 simulation, see section \ref{s:weighttransform}. For convenience, the value of $p$ is updated (within each component)
 during the simulation.
@@ -77,7 +77,7 @@ whenever possible. This includes
   selectors
  (in the approximation
  which does not take each blade into account).
-\item Reflection from monochromator (and analyser) crystals
+\item Reflection from monochromator (and analyzer) crystals
  with finite reflectivity and mosaicity.
 \item Reflection from guide walls.
 \item Passage of a continuous beam through a chopper.
@@ -243,23 +243,23 @@ Implementation of this idea is
 found in the {\bf Source\_adapt} and {\bf Source\_Optimizer} components.
 %, described in section~\ref{s:Source_adapt}.
 
-An other class of efficiency improvement technique is the so-called \emph{stratified sampling}. It consists in partitioning the event distributions in representative sub-spaces, which are then all sampled individualy. The advantage is that we are then sure that each sub-space is well represented in the final integrals. This means that instead of shooting $N$ events, we define $D$ partitions and shoot $r=N/D$ events in each partition. In conjunction with adaptive sampling, we may define partitions so that they represent 'interesting' distributions, e.g. from events scattered on a monochromator or a sample. The sum of partitions should equal the total space integrated by the Monte Carlo method, and each partition must be sampled randomly.
+An other class of efficiency improvement technique is the so-called \emph{stratified sampling}. It consists in partitioning the event distributions in representative sub-spaces, which are then all sampled individually. The advantage is that we are then sure that each sub-space is well represented in the final integrals. This means that instead of shooting $N$ events, we define $D$ partitions and shoot $r=N/D$ events in each partition. In conjunction with adaptive sampling, we may define partitions so that they represent 'interesting' distributions, e.g. from events scattered on a monochromator or a sample. The sum of partitions should equal the total space integrated by the Monte Carlo method, and each partition must be sampled randomly.
 
 In the case of \MCS, an ad-hoc implementation of adaptive stratified is used when repeating events, such as in the Virtual sources (Virtual\_input, Vitess\_input, Virtual\_mcnp\_input, Virtual\_tripoli4\_input) and when using the SPLIT keyword in the TRACE section on instrument descriptions. We emphasize here that the number of repetitions $r$ should not exceed the dimensionality of the Monte Carlo integration space (which is $d=10$ for neutron events) and the dimensionality of the partition spaces, i.e. the number of random generators following the stratified sampling location in the instrument.
 
 \section{Accuracy of Monte Carlo simulations}
 \index{Monte Carlo method!Accuracy}
 
-When running a Monte Carlo, the meaningfull quantities are obtained by integrating random events into a single value (e.g. flux), or onto an histogram grid. The theory \cite{James80} shows that the accuracy of these estimates is a function of the space dimension $d$ and the number of events $N$. For large numbers $N$, the central limit theorem provides an estimate of the relative error as $1/\sqrt{N}$. However, the exact expression depends on the random distributions.
+When running a Monte Carlo, the meaningful quantities are obtained by integrating random events into a single value (e.g. flux), or onto an histogram grid. The theory \cite{James80} shows that the accuracy of these estimates is a function of the space dimension $d$ and the number of events $N$. For large numbers $N$, the central limit theorem provides an estimate of the relative error as $1/\sqrt{N}$. However, the exact expression depends on the random distributions.
 
-\MCS uses a space with $d=10$ parameters to describe neutrons (position, velocity, spin, time). We show in Table \ref{t:mc_accuracy} a rough estimate of the accurarcy on integrals as a function of the number of records reaching the integration point. This stands both for integrated flux, as well as for histogram bins - for which the number of events per bin should be used for $N$.
+\MCS uses a space with $d=10$ parameters to describe neutrons (position, velocity, spin, time). We show in Table \ref{t:mc_accuracy} a rough estimate of the accuracy on integrals as a function of the number of records reaching the integration point. This stands both for integrated flux, as well as for histogram bins - for which the number of events per bin should be used for $N$.
 
 \begin{table}
   \begin{center}
   {\let\my=\\
     \begin{tabular}{|c|c|}
     \hline
-    Records       & Accurarcy \\
+    Records       & Accuracy \\
     \hline
     $10^3$ & 10 \% \\
     $10^4$ & 2.5 \% \\

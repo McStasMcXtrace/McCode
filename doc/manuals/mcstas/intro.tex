@@ -41,20 +41,20 @@ These present existing packages are: NISP \cite{NISP}, ResTrax
 \cite{Restrax}, McStas\cite{mcs_ppf,nn_10_20,mcstas_pb,mcstas_2_jnr,mcstas_webpage}
 , Vitess \cite{Vitess,vitess_webpage}, IDEAS \cite{IDEAS} and IB (Instrument
 Builder) \cite{IB_webpage}. Supplementing the Monte Carlo based
-methods, various analytical phase-space simulation methods exist,
+methods, various analytic phase-space simulation methods exist,
 including Neutron Acceptance Diagram Shading (NADS) \cite{NADS_webpage}.
 Their usage usually covers all types of neutron spectrometers, most of the time through a user-friendly graphical interface, without requiring programming skills.
 
 The neutron ray-tracing Monte-Carlo method has been used widely for
 {\em e.g.}\ guide studies \cite{Copley93,Farhi02,Schanzer04},
 instrument optimization and design \cite{Zsigmond04,Lieutenant05}.
-Most of the time, the conclusions and general behaviour of such studies
-may be obtained using the classical analytical approaches,
+Most of the time, the conclusions and general behavior of such studies
+may be obtained using the classical analytic approaches,
 but accurate estimates for the flux, the resolutions,
 and generally the optimum parameter set, benefit advantageously from MC methods.
 
 Recently, the concept of virtual experiments, {\em i.e.}\ full simulations
-of a complete neutron experiment, has been suggested asa major assett for neutron ray-tracing simulations. The goal is that
+of a complete neutron experiment, has been suggested as a major asset for neutron ray-tracing simulations. The goal is that
 simulations should be of benefit to not only instrument builders, but also
 to users for training, experiment planning, diagnostics, and data
 analysis.
@@ -66,11 +66,11 @@ not only to better utilize existing instruments
 but also to plan completely new instruments for new sources
 ({\em e.g.} the Spallation Neutron Source, SNS~\cite{sns_webpage}
 and the planned European Spallation Source, ESS~\cite{ess_webpage}).
-Writing programs in C or Fortran for
+Writing programs in C or FORTRAN for
 each of the different cases involves a huge effort, with debugging presenting
 particularly difficult problems. A higher level tool specially designed
 for simulating neutron instruments was needed. As there was
-no existing simulation software that would fulfil our needs, the \MCS
+no existing simulation software that would fulfill our needs, the \MCS
 project was initiated.
 In addition, the ILL required an efficient and general simulation
 package in order to achieve renewal of its instruments and guides.
@@ -95,8 +95,8 @@ Among available measurement techniques, neutron scattering provides a
 large variety of spectrometers to probe structure and dynamics of all
 kinds of materials.
 
-Neutron scattering instruments are built as a series of neutron optics elements. Each of these elements modifies the beam characteristics (e.g. divergence, wavelength spread, spatial and time distributions) in a way which, for simple neutron beam configurations, may be modelled with analytical methods. This is valid for individual elements such as guides \cite{Leibnitz63,Mildner90}, choppers \cite{Lowde60,Copley03}, Fermi choppers \cite{Fermi47,Peters05}, velocity selectors \cite{Clark66}, monochromators \cite{Freund83,Sears97,Shirane02,Alianelli04}, and detectors \cite{Radeka74,Charpak89,Manzin04}. In the case of a limited number of optical elements, the so-called acceptance diagram theory \cite{Mildner90,Copley93,Cussen03} may be used, within which the neutron beam distributions are considered to be homogeneous, triangular or Gaussian.
-However, real neutron instruments are constituted of a large number of optical elements, and this brings additional complexity by introducing strong correlations between neutron beam parameters like divergence and position - which is the basis of the acceptance diagram method - but also wavelength and time. The usual analytical methods, such as phase-space theory, then reach their limit of validity in the description of the resulting effects.
+Neutron scattering instruments are built as a series of neutron optics elements. Each of these elements modifies the beam characteristics (e.g. divergence, wavelength spread, spatial and time distributions) in a way which, for simple neutron beam configurations, may be modeled with analytic methods. This is valid for individual elements such as guides \cite{Leibnitz63,Mildner90}, choppers \cite{Lowde60,Copley03}, Fermi choppers \cite{Fermi47,Peters05}, velocity selectors \cite{Clark66}, monochromators \cite{Freund83,Sears97,Shirane02,Alianelli04}, and detectors \cite{Radeka74,Charpak89,Manzin04}. In the case of a limited number of optical elements, the so-called acceptance diagram theory \cite{Mildner90,Copley93,Cussen03} may be used, within which the neutron beam distributions are considered to be homogeneous, triangular or Gaussian.
+However, real neutron instruments are constituted of a large number of optical elements, and this brings additional complexity by introducing strong correlations between neutron beam parameters like divergence and position - which is the basis of the acceptance diagram method - but also wavelength and time. The usual analytic methods, such as phase-space theory, then reach their limit of validity in the description of the resulting effects.
 
 In order to cope with this difficulty, Monte Carlo (MC) methods (for a general review, see Ref. \cite{James80}) may be applied to the simulation of neutron instruments.
 The use of probability is common place in the description of microscopic physical processes. Integrating these events (absorption, scattering, reflection, ...) over the neutron trajectories
@@ -108,16 +108,16 @@ The most widely-used packages are NISP \cite{NISP}, ResTrax \cite{Restrax}, McSt
 
 The neutron ray-tracing Monte Carlo method has been used widely for
 guide studies \cite{Copley93,Farhi02,Schanzer04}, instrument
-optimisation and design \cite{Zsigmond04,Lieutenant05}. Most of the
-time, the conclusions and general behaviour of such studies may be
-obtained using the classical analytical approaches, but accurate
+optimization and design \cite{Zsigmond04,Lieutenant05}. Most of the
+time, the conclusions and general behavior of such studies may be
+obtained using the classical analytic approaches, but accurate
 estimates for the flux, resolution and generally the optimum parameter
 set, benefit considerably from MC methods, see ~\ref{s:MCtechniques}.
 
 Neutron instrument resolution (in $q$ and $E$) and flux are often limitations in the
 experiments. This then motivates instrument responsibles to improve
 the resolution, flux and overall efficiency at the spectrometer positions, and
-even to design new machines. Using both analytical and numerical
+even to design new machines. Using both analytic and numerical
 methods, optimal configurations may be found.
 
 But achieving a satisfactory experiment on the best neutron
@@ -130,7 +130,7 @@ been measured? Is possible to identify clearly the purely elastic
 container, the sample environment, and generally the instrument
 itself? And last but not least, how does multiple scattering affect the
 signal? Most of the time, the physicist will elude these questions
-using rough approximations, or applying analytical corrections
+using rough approximations, or applying analytic corrections
 \cite{Copley86}. Monte-Carlo techniques also provide means to evaluate
 some of these quantities.
 
@@ -227,7 +227,7 @@ the meta-language in which simulations are written.
 
 The usage of a special meta-language and an automatic compiler has
 several advantages over writing a big monolithic program or a set of
-library functions in C, Fortran, or another general-purpose programming
+library functions in C, FORTRAN, or another general-purpose programming
 language.  The meta-language is more \textit{powerful}; specifications
 are much simpler to write and easier to read when the syntax of the
 specification language reflects the problem domain. For example, the
@@ -312,9 +312,9 @@ parts:
 %simulations with \MCS are described in
 %appendix~\ref{testresults}.
 As of this release of \MCS support for simulating neutron
-polarisation is strongly improved, e.g. by allowing nested magnetic
-fields, tabulated magnetic fields in numerical inputfiles and by close
-to ``full'' support of polarisation in all components. As this is the
+polarization is strongly improved, e.g. by allowing nested magnetic
+fields, tabulated magnetic fields in numerical input files and by close
+to ``full'' support of polarization in all components. As this is the
 first stable release with these new features, functionality is likely to change. To reflect this, the
 documentation is still only available in the appendix of the Component manual. %~\ref{c:polarization}.
 A list of library calls that may be used in component definitions
