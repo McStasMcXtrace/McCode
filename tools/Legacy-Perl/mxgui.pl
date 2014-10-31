@@ -340,7 +340,7 @@ sub tools_shortcuts {
     -family=>'Helvetica',
     -weight=>'normal',
     -size=>12);
-    my $msg="mcgui has platform dependent shorcut keys.\n\nOn this machine ".
+    my $msg="mcgui has platform dependent shortcut keys.\n\nOn this machine ".
 	    "(OS type $Config{'osname'}) they are:\n\n".
 	    "$shortcuts{'menuopen'} - Open instrument file\n".
 	    "$shortcuts{'menurun'} - Run instrument\n".
@@ -395,7 +395,7 @@ sub tools_dsa {
 		   -icon => 'question',
 		   -default => 'yes');
     if ((lc($do_dsa) eq "no")||(lc($do_dsa) eq "cancel")) {
-	    putmsg($cmdwin, "DSA key generation cancelled!\n", 'msg');
+	    putmsg($cmdwin, "DSA key generation canceled!\n", 'msg');
       return 0;
     }
     if ($key_exist == 1) {
@@ -420,7 +420,7 @@ sub mcdoc_about {
     -family=>'Helvetica',
     -weight=>'normal',
     -size=>12);
-  my $msg="This is the McXtrace Graphical User Interface. McXtrace is a tool for Monte Carlo xray scattering simulations. It provides a complete set of tools, components, and example instruments.\n
+  my $msg="This is the McXtrace Graphical User Interface. McXtrace is a tool for Monte Carlo X-ray scattering simulations. It provides a complete set of tools, components, and example instruments.\n
   This software required a significant effort to be brought to you. If you enjoy it, please use following references in your work:\n
   P. Willendrup, E. Farhi and K. Lefmann, Physica B, 350 (2004) 735.\n
   K. Lefmann and K. Nielsen, Neutron News 10, 20, (1999).\n
@@ -1028,7 +1028,7 @@ sub menu_run_simulation {
               push @command, "--plotter=Matlab";
               my $output_file = save_disp_file($w,'m');
               if (!$output_file) {
-                putmsg($cmdwin, "Trace cancelled...\n");
+                putmsg($cmdwin, "Trace canceled...\n");
                 return;
               }
               $output_file = "\"$output_file\"";
@@ -1045,7 +1045,7 @@ sub menu_run_simulation {
                 # number...
                 my $num_histories = $newsi->{'Ncount'} - 0;
                 if ($num_histories >=1e3) {
-                    my $break = $w->messageBox(-message => "$num_histories is a very large number\nof xray histories when using\nVRML\nContinue ?",
+                    my $break = $w->messageBox(-message => "$num_histories is a very large number\nof X-ray histories when using\nVRML\nContinue ?",
                      -title => "Warning: large number",
                      -type => 'yesnocancel',
                      -icon => 'error',
@@ -1182,7 +1182,7 @@ sub menu_run_simulation {
         if (@multiple > 0 && (($newsi->{'Mode'} == 0 && $newsi->{'NScan'} < 2)
                    || $newsi->{'Mode'} == 1) ) {
             $w->messageBox(-message =>
-                                "Scan range(s) not applicable. Mean value subsituted for parameter(s):\n\n@multiple",
+                                "Scan range(s) not applicable. Mean value substituted for parameter(s):\n\n@multiple",
                                 -title => "No scan here!",
                                 -type => 'OK',
                                 -icon => 'info');
