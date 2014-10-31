@@ -27,7 +27,7 @@ written. Alternatively, an example instrument file can be obtained
 from the \verb+examples/+ directory in the distribution or from
 another source.}
 \item{The input files (instrument and component files) are written in the \MCS
-meta-language and are edited either by using your favourite editor
+meta-language and are edited either by using your favorite editor
 or by using the built in editor of the graphical user interface
 (\texttt{mcgui}).}
 \item{Next, the instrument and component files are compiled using the \MCS
@@ -37,7 +37,7 @@ compiled with a C compiler and run in combination with various
 front-end programs for example to present the intensity at the
 detector as a motor position is varied.}
 \item{The output data may be analyzed and visualized in the same way as regular
-    experiments by using the data handling and visualisation tools in \MCS
+    experiments by using the data handling and visualization tools in \MCS
     based on Perl/Python in combination with \verb+chaco+, \verb+matplotlib+,
     Matlab, GNUPlot or PGPLOT. Further data output formats including NeXus
     are available, see section \ref{s:analyze}.\index{Tools}}
@@ -207,7 +207,7 @@ option, e.g.
 \begin{bash}
     cc -DMC_TRACE_ENABLED -DMC_PORTABLE ...
 \end{bash}
-Finally, the \verb+--verbose+ option will list the components and libraries beeing
+Finally, the \verb+--verbose+ option will list the components and libraries being
 included in the instrument.
 
 \subsection{Specifying the location of files}
@@ -1475,10 +1475,10 @@ The component Virtual\_input transfers all neutron parameters to the \MCS
 definition of the co-ordinate system and the units used. (Of course
 Virtual\_output transfers it back.) This means that 'Compo' works with the
 McStas definition of co-ordinate system and units, while it is used as a VITESS
-module. Be careful with axis labelling.
+module. Be careful with axis labeling.
 
 The original parameters of the component and its position have to be given. The
-origin of this shift is the centre of the end of the previous module, (as it is
+origin of this shift is the center of the end of the previous module, (as it is
 always the case in VITESS).
 
 It is important to notice that, as VITESS uses the standard output stream
@@ -1509,7 +1509,7 @@ grid systems, just as if a longer run was achieved.
 
 The \verb+--scan+ option may be used to reconstruct the scan data from a set of
 directories which vary by instrument parameters. For instance, you ran a scan,
-but finally realised you should have prolonged it. Then simply simulate the
+but finally realized you should have prolonged it. Then simply simulate the
 missing bits, and apply
 \verb+mcformat -d scan_data --format=PGPLOT --scan step0 .. stepN+. The
 resulting scan data is compatible with \verb+mcplot+ only when generating
@@ -1518,7 +1518,7 @@ PGPLOT/McStas format.\index{Tools!mcplot} You may conjugate this option with the
 scan.
 
 The data files are analyzed by searching keywords inside data files
-(e.g. 'Source' for the source instrument description file). If some filenames or
+(e.g. 'Source' for the source instrument description file). If some file names or
 component names match these keywords (e.g. using a file 'Source.psd'), the
 extracted metadata information may be wrong, even though the data itself will be
 correct.\index{Bugs}
@@ -1533,7 +1533,7 @@ output files from simulations are usually simple text files containing headers
 and data blocks. If data blocks are empty they may be accessed referring to an
 external file indicated in the header.
 
-Each data file contains informations about the simulation, the instrument, the
+Each data file contains information about the simulation, the instrument, the
 parameters used, and of course the signal, the estimated error on the signal,
 and the number of events used in each bin. Additionally, all data files indicate
 their first moment (mean value) and second moment (half width) in the
@@ -1548,7 +1548,7 @@ and plot data and instrument consistently (see Section \ref{s:run-sim}).
 
 Note that the neutron event counts in detectors are typically not very
 meaningful except as a way to measure the performance of the
-simulation. Use the simulated intensity instead whenever analysing
+simulation. Use the simulated intensity instead whenever analyzing
 simulation data.
 
 \subsection{\MCS and PGPLOT format}
@@ -1682,7 +1682,7 @@ syntax is:
   (multi-core/cpu), this option may be omitted.
 \item \verb'--force-compile': this option is required on heterogeneous systems.
   The C code is sent to all slaves and simulation is compiled on each node
-  before starting computation. The default is to send directly the executatble
+  before starting computation. The default is to send directly the executable
   from the master node, which only works on homogeneous systems.  computation.
 \end{itemize}
 
@@ -1736,7 +1736,7 @@ launch long runs on fewer nodes rather than many short runs on many nodes.
 The MPI support requires that MPICH (recommended), or alternatively LAM-MPI or
 OpenMPI, is installed on a set of nodes. This usually also requires properly
 setup \texttt{ssh} connections and keys as indicated in the ssh grid system
-(Section \ref{s:ssh-grid}). Some OpenMPI implementations do not recognise
+(Section \ref{s:ssh-grid}). Some OpenMPI implementations do not recognize
 multi-cores as separate nodes. In this case, you should use MPICH, or the SSH
 grid.
 
@@ -1758,7 +1758,7 @@ lighter configuration.
 To use MPI you will need
   \begin{enumerate}
   \item{A master machine with an SSH client/server, and \MCS installation.}
-  \item{A set of unix machines of the same architecture (binary compatible) with
+  \item{A set of Unix machines of the same architecture (binary compatible) with
       SSH servers.}
   \item{ \texttt{ssh} access from the master node (where \MCS is
       installed) to the slaves through e.g. DSA keys \emph{without} a
