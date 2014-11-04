@@ -1,8 +1,10 @@
 \chapter{Random numbers in \MCS}
 \label{s:random}
-\index{Monte Carlo method}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Transformation of random numbers}
+\index{Random numbers!transformations|textbf}
+
 In order to perform the Monte Carlo choices, one needs to be able to pick a
 random number from a given distribution. However, most random number generators
 only give a uniform distribution over a certain interval.  We thus need to be
@@ -76,8 +78,11 @@ transformation of a uniform distribution.
 In stead, we rely on a specific algorithm for selecting random
 numbers with this distribution.
 
-\section{Random generators}
-\index{Monte Carlo method!Random number, Mersenne Twister} Even though there is
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Random generator}
+\index{Random numbers!generator|textbf}
+
+Even though there is
 the possibility to use the system random generator, as well as the initial \MCS
 version 1.1 random generator, the default algorithm is the so-called "Mersenne
 Twister", by Makoto Matsumoto and Takuji Nishimura. See \\

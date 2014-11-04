@@ -11,10 +11,12 @@
 \usepackage{ifdraft}
 \ifdraft{\usepackage{showidx}}{}
 \usepackage{imakeidx}
-\newcommand{\indexEV}[1]{\index{Environment variables!#1}\index{#1 (environment variable)}}
-\newcommand{\indexKW}[1]{\index{Keywords!#1}\index{#1 (keyword)}}
+\newcommand{\indexEV}[1]{\index{Environment variables!\texttt{#1}}\index{#1@\texttt{#1} (environment variable)}}
+\newcommand{\indexKW}[1]{\index{#1@\texttt{#1} (keyword)}}
+\newcommand{\indexDOCSEC}[3]{\index{#1 (McDoc)@\texttt{#2} (McDoc section)|#3}}
+\newcommand{\indexDOCKEY}[2]{\index{#1 (McDoc)@\texttt{#1} (McDoc keyword)|#2}}
 \newcommand{\indexTOOL}[1]{\index{#1}}
-
+\newcommand{\indexSIG}[2]{\index{#1 (signal)@\texttt{#1} (signal)|#2}\index{SIG#1@\texttt{SIG#1}|#2}\index{Signal handler!\texttt{#1} signal|#2}}
 \makeindex % enable index generation
 \index{Tools!McStas|see{mcdisplay, mcdoc, mcformat, mcgui, mcplot, mcresplot, mcrun, mcstas, mcstas2vitess}}
 \index{Tools!external|see{IDL, Matlab, NeXus, Perl, PGPLOT, VRML/OpenGL}}

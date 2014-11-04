@@ -92,7 +92,7 @@ and as a compromise we have adopted the following policy of \MCS .
 \section{Brief introduction to the graphical user interface}
 \label{s:brief}
 
-\index{McStas!running through the GUI|(}
+\index{McStas!running from the GUI|(}
 \index{Graphical User Interface|see{mcgui}}
 \index{GUI|see{mcgui}}
 \indexTOOL{mcgui|(textbf}
@@ -657,6 +657,8 @@ If a \textit{file.out} simulation obtained from \MCS is running, the process sta
 where \verb+user+ is your Unix login. The \textit{pid} is there '13277'.
 
 Once known, it is possible to send one of the signals listed in Table~\ref{t:signals} using the 'kill' unix command (or the functionalities of your process manager), e.g.
+\indexSIG{USR2}{}
+\index{kill|textbf}
 \begin{bash}
     kill -USR2 13277
 \end{bash}
@@ -688,6 +690,7 @@ errors appear when using a newly written component, in the \texttt{INITIALIZE},
 \texttt{TRACE} or \texttt{FINALLY} sections. Memory errors usually show up when
 C pointers have not been allocated/unallocated before usage, whereas
 mathematical errors are found when, for instance, dividing by zero.
+\index{Bugs!system errors}
 
 \begin{table}
   \begin{center}
@@ -703,14 +706,20 @@ mathematical errors are found when, for instance, dividing by zero.
     \end{tabular}
     \caption{Signals supported by \MCS simulations.}
     \label{t:signals}
+\indexSIG{USR1}{}
+\indexSIG{USR2}{}
+\indexSIG{HUP}{}
+\indexSIG{INT}{}
+\indexSIG{TERM}{}
     }
   \end{center}
 \end{table}
 
 %-------------------------------------------------------------------------------
 \subsection{Optimizing simulation speed}
-\index{Optimization|textbf}
 \label{s:optim}
+\index{Optimization|textbf}
+
 There are various ways to speed up simulations
 \begin{itemize}
 \item Optimize the compilation of the instrument, as explained in
@@ -1830,6 +1839,9 @@ launch long runs on fewer nodes rather than many short runs on many nodes.
 
 %-------------------------------------------------------------------------------
 \subsection{Parallel computing (MPI)}
+\index{MPI|textbf}
+\index{Parallel computing|see{MPI}}
+
 \label{s:mpi}
 The MPI support requires that MPICH (recommended), or alternatively LAM-MPI or
 OpenMPI, is installed on a set of nodes. This usually also requires properly
@@ -1887,6 +1899,7 @@ To use MPI you will need
   \end{enumerate}
 
 \subsubsection{MPI Basic usage}
+\index{MPI!basic usage}
 
 To enable parallel computation, compile McStas output C-source file
 with \verb'mpicc' with the flag \verb'-DUSE_MPI' and run it using the
@@ -1914,6 +1927,7 @@ If you don't want to spread the simulation, run it as usual:
 
 %-------------------------------------------------------------------------------
 \subsection{McRun script with MPI support (mpich)}
+\index{MPI!mcrun}
 
 The \verb'mcrun' script has been adapted to use MPICH implementation
 of MPI. Two new options have been added:
@@ -1952,6 +1966,7 @@ You can then spread a simulation \verb'sim.instr' using \verb'mcrun' :
 
 %-------------------------------------------------------------------------------
 \subsection{McStas/MPI Performance}
+\index{MPI!performance}
 
 Theoretically, a computation which lasts $T$ seconds on a single computer,
 should lasts at least $\frac{T}{p}$ seconds when it is distributed over $p$
@@ -1989,6 +2004,7 @@ overhead time may become significant compared to total time.
 
 %-------------------------------------------------------------------------------
 \subsection{MPI and Grid Bugs and limitations}
+\index{MPI!limitations}
 \index{Bugs!MPI and grid}
 
 \begin{itemize}
