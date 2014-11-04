@@ -138,10 +138,13 @@ be plotted in a window. Depending on your chosen plotting backend, the
 presented graphics will resemble one of those shown in figure
 \ref{fig:mcplot_figs}.\indexTOOL{mcplot}
 \begin{figure}[htb!]
-  \begin{center}
-    \includegraphics[angle=-90,width=0.49\textwidth]{figures/mcplot_PGPLOT}
-    \includegraphics[width=0.49\textwidth]{figures/mcplot_Matlab}
-  \end{center}
+    \begin{minipage}{.45\textwidth}
+    \includegraphics[angle=-90,width=1\textwidth]{figures/mcplot_PGPLOT.ps}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{.45\textwidth}
+    \includegraphics[width=1\textwidth]{figures/mcplot_Matlab.eps}
+    \end{minipage}
 \caption{Output from \texttt{mcplot} with PGPLOT and Matlab backends}
 \label{fig:mcplot_figs}
 \end{figure}
@@ -1432,9 +1435,9 @@ Matlab are required. \indexTOOL{Matlab}
 \indexTOOL{mcresplot|textbf}
 \indexTOOL{PGPLOT}
 
-\begin{figure}[htb!]
+\begin{figure}[tb!]
   \begin{center}
-    \includegraphics[angle=-90,width=0.9\textwidth]{figures/mcresplot_PGPLOT}
+    \includegraphics[angle=-90,width=0.97\textwidth]{figures/mcresplot_PGPLOT.ps}
   \end{center}
 \caption{Output from \texttt{mcresplot} with PGPLOT backend.
   Use P, C and G keys to write hardcopy files.}
@@ -1976,7 +1979,7 @@ overhead time may become significant compared to total time.
 
 \begin{figure}[htb!]
   \begin{center}
-    \includegraphics[width=0.55\textwidth]{figures/mpi_efficiency}
+    \includegraphics[width=0.55\textwidth]{figures/mpi_efficiency.eps}
   \end{center}
   \caption{McStas/MPI execution time as a function of computing nodes, with
    \textit{templateTOF} instrument and 1e8 initial neutron events. Tests performed on

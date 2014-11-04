@@ -88,10 +88,10 @@ The sample is in turn surrounded by an unphysical $4\pi$-PSD
 monitor with $50 \times 100$ pixels and a radius of $10^{6}$ m.
 The set-up is shown in figure~\ref{f:V-instr}.
 
-\begin{figure}
+\begin{figure}[tbp!]
   \begin{center}
 %FIXME    \psfrag{4pipsd}{$4\pi$ PSD}
-    \includegraphics[width=0.9\textwidth]{figures/vanadium}
+    \includegraphics[width=0.9\textwidth]{figures/vanadium.eps}
   \end{center}
 \caption{A sketch of the test instrument for the component
 V\_sample.}
@@ -107,9 +107,9 @@ is interesting to note that the variation in the scattering intensity is as
 large as 10\%. This is an effect of anisotropic attenuation of the beam in the
 cylindrical sample.
 
-\begin{figure}
+\begin{figure}[tbp!]
   \begin{center}
-    \includegraphics[width=0.6\textwidth]{figures/vanadium-surf-2}
+    \includegraphics[width=0.6\textwidth]{figures/vanadium-surf-2.eps}
   \end{center}
 \caption{Scattering from a V-sample, measured by a spherical
   PSD. The sphere has been transformed onto a plane and the intensity is
@@ -190,9 +190,9 @@ is shown in figure~\ref{f:TAS1}.
 Test results and data from the real spectrometer are shown
 in Appendix~\ref{data:TAS1}.
 
-\begin{figure}
+\begin{figure}[tbp!]
   \begin{center}
-    \includegraphics[width=0.9\textwidth]{figures/tas1}
+    \includegraphics[width=0.9\textwidth]{figures/tas1.eps}
   \end{center}
 \caption{A sketch of the TAS1 instrument.}
 \label{f:TAS1}
@@ -215,21 +215,25 @@ of the peaks, whereas we have not tried to compare
 absolute intensities. Below, we show a few comparisons
 of the simulations and the measurements.
 
-Figure \ref{f:2t_direct} shows a scan of
+Figure \ref{f:2t_ab}a shows a scan of
 $2\theta_m$ on the collimated direct beam in two-axis mode.
 A \hbox{1 mm} slit is placed on the sample position.
 Both the measured width and non-Gaussian peak shape
 are well reproduced by the \MCS simulations.
 
-\begin{figure}[htp!]
+\begin{figure}[tbp!]
   \begin{center}
-    \includegraphics[width=0.6\textwidth]{figures/tas1-2T.pdf}
+    \includegraphics[width=0.47\textwidth]{figures/tas1-2T.eps}
+    \hfill
+    \includegraphics[width=0.47\textwidth]{figures/vanadium-plot-2.eps}
   \end{center}
-\caption{TAS1: Scans of $2\theta_s$ in the direct beam with 1 mm slit on the
+\caption{TAS1. (a) Scans of $2\theta_s$ in the direct beam with 1 mm slit on the
   sample position.
-"$\times$": measurements, "o": simulations, scaled to the same intensity
-Collimations: open-30'-open-open.}
-\label{f:2t_direct}
+"$\times$": measurements, "o": simulations, scaled to the same intensity.
+Collimations: open-30'-open-open.
+(b) Corrected $2\theta_a$ scan on a V-sample.
+Collimations: open-30'-28'-67'. Symbols as before.}
+\label{f:2t_ab}
 \end{figure}
 
 In contrast, a simulated $2\theta_a$ scan in triple-axis
@@ -242,7 +246,7 @@ A subsequent centering of the beam resulted in a nice
 agreement between simulation and measurements.
 For a comparison on a slightly different instrument
 (analyser-detector collimator inserted),
-see Figure~\ref{f:v_2ta_zero}.
+see Figure~\ref{f:2t_ab}b.
 
 %\begin{figure}
 %  \begin{center}
@@ -253,25 +257,15 @@ see Figure~\ref{f:v_2ta_zero}.
 %\label{f:v_2ta_offset}
 %\end{figure}
 
-\begin{figure}[htp!]
-  \begin{center}
-    \includegraphics[width=0.6\textwidth]{figures/vanadium-plot-2}
-  \end{center}
-\caption{TAS1: Corrected $2\theta_a$ scan on a V-sample.
-Collimations: open-30'-28'-67'.
-"$\times$": measurements, "o": simulations.}
-\label{f:v_2ta_zero}
-\end{figure}
-
 The result of a $2\theta_s$ scan on an Al$_2$O$_3$
 powder sample in two-axis mode is shown in Figure \ref{f:al2o3}.
 Both for the scan in focusing mode (+ $-$ +)
 and for the one in defocusing mode (+ + +) (not shown),
 the agreement between simulation and experiment is excellent.
 
-\begin{figure}[htp!]
+\begin{figure}[tbp!]
   \begin{center}
-    \includegraphics[width=0.6\textwidth]{figures/al2o3-focus}
+    \includegraphics[width=0.53\textwidth]{figures/al2o3-focus.eps}
   \end{center}
 \caption{TAS1: $2\theta_s$ scans on Al$_2$O$_3$ in two-axis, focusing mode.
 Collimations: open-30'-28'-67'.
@@ -284,9 +278,9 @@ As a final result, we present a scan of the energy
 transfer $E_a = \hbar \omega$ on a V-sample.
 The data are shown in Figure \ref{f:v_ea}.
 
-\begin{figure}[htp!]
+\begin{figure}[tbp!]
   \begin{center}
-    \includegraphics[width=0.6\textwidth]{figures/ea-scan}
+    \includegraphics[width=0.53\textwidth]{figures/ea-scan.eps}
   \end{center}
 \caption{TAS1: Scans of the analyser energy on a V-sample.
 Collimations: open-30'-28'-67'.
@@ -328,9 +322,9 @@ observed in the detector.
 An illustration of the instrument is shown in figure~\ref{f:PRISMA}.
 Test results are shown in Appendix~\ref{data:PRISMA}.
 
-\begin{figure}[htp!]
+\begin{figure}[tbp!]
   \begin{center}
-    \includegraphics[width=0.9\textwidth]{figures/prisma2}
+    \includegraphics[width=0.9\textwidth]{figures/prisma2.eps}
   \end{center}
 \caption{A sketch of the PRISMA instrument.}
 \label{f:PRISMA}
@@ -346,9 +340,9 @@ spectra of the different analyser blades is caused by different energy
 of scattered neutrons and different flight path length from source to
 detector.  We have not performed any quantitative analysis of the data.
 
-\begin{figure}[htp!]
+\begin{figure}[tbp!]
   \begin{center}
-    \includegraphics[width=0.6\textwidth]{figures/prisma2-a}
+    \includegraphics[width=0.6\textwidth]{figures/prisma2-a.eps}
   \end{center}
 \caption{Test result from PRISMA instrument using ``colored
   neutrons''. Each graph shows the neutrons scattered from one analyser blade.}
