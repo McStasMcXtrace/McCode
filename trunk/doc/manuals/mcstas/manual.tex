@@ -1,6 +1,6 @@
 \documentclass[twoside,11pt]{scrreprt}
+%\documentclass[draft,11pt]{scrreprt}
 \include{preamble} % separate preamble from document
-
 
 %TODO
 % Fix bib file!
@@ -15,36 +15,35 @@
 \tableofcontents
 \include{preface}
 
-\include{intro}
-\include{changes}
+\include{intro} % 1
+\include{changes} % 2
 % FIXME\include{install}
-\include{techniq}
-\include{running}
-\include{kernel}
+\include{techniq} % 3
+\include{running} % 4
+\include{kernel} % 5
 %\include{comp} % now in separate Manual
-\include{links_othercode}
-\include{comp_abstract}
-\include{instrum}
+\include{links_othercode} % 6
+\include{comp_abstract} % 7
+\include{instrum} % 8
 %\include{test}   % now in instrum
 %\include{future} % now in changes
 
 \appendix
 %\include{tutorial}
 %\include{polarisation}
-\include{random}
-\include{kernelcalls}
+\include{random} % A
+\include{kernelcalls} % B
 %\include{compcode}
 %\include{instcode}
 %\include{test}
-\include{terms}
-
+\include{terms} % C
 
 \addcontentsline{toc}{chapter}{\protect\numberline{}{Bibliography}}
-
+\sloppy
+\printbibliography%
 
 \addcontentsline{toc}{chapter}{\protect\numberline{}{Index and keywords}}
 \printindex%
-\printbibliography%
 
 % FIXME \include{datablad}
 
