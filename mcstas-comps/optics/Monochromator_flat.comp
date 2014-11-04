@@ -103,8 +103,8 @@ DECLARE
 
 INITIALIZE
 %{
-  mos_rms_y = MIN2RAD*mosaich/sqrt(8*log(2));
-  mos_rms_z = MIN2RAD*mosaicv/sqrt(8*log(2));
+  mos_rms_y = MIN2RAD*mosaicv/sqrt(8*log(2));
+  mos_rms_z = MIN2RAD*mosaich/sqrt(8*log(2));
   mos_rms_max = mos_rms_y > mos_rms_z ? mos_rms_y : mos_rms_z;
 
   mono_Q = Q;
@@ -161,9 +161,9 @@ TRACE
         theta = asin(q0/(2*k)); /* Actual bragg angle */
         /* Make MC choice: reflect or transmit? */
         delta = asin(fabs(kux)) - theta;
-        p_reflect = r0*exp(-kiz*kiz/(kiy*kiy + kiz*kiz)*(delta*delta)/
+        p_reflect = r0*exp(-kiy*kiy/(kiy*kiy + kiz*kiz)*(delta*delta)/
                            (2*mos_rms_y*mos_rms_y))*
-                       exp(-kiy*kiy/(kiy*kiy + kiz*kiz)*(delta*delta)/
+                       exp(-kiz*kiz/(kiy*kiy + kiz*kiz)*(delta*delta)/
                            (2*mos_rms_z*mos_rms_z));
         if(rand01() < p_reflect)
         {                       /* Reflect */
@@ -201,8 +201,8 @@ TRACE
             cos_phi = cos(zwidth);
             sin_phi = sin(zwidth);
             q_x = c1x + cos_phi*ax + sin_phi*bx;
-            q_y = (c1y + cos_phi*ay + sin_phi*by)/mos_rms_z;
-            q_z = (c1z + cos_phi*az + sin_phi*bz)/mos_rms_y;
+            q_y = (c1y + cos_phi*ay + sin_phi*by)/mos_rms_y;
+            q_z = (c1z + cos_phi*az + sin_phi*bz)/mos_rms_z;
             /* Stop when we get near a factor of 25=5^2. */
             if(q_z*q_z + q_y*q_y < (25/(2.0/3.0))*(q_x*q_x))
               break;
@@ -218,8 +218,8 @@ TRACE
             q_x = c1x + cos_phi*ax + sin_phi*bx;
             q_y = c1y + cos_phi*ay + sin_phi*by;
             q_z = c1z + cos_phi*az + sin_phi*bz;
-            p_reflect = GAUSS((q_z/q_x),0,mos_rms_y)*
-                        GAUSS((q_y/q_x),0,mos_rms_z);
+            p_reflect = GAUSS((q_y/q_x),0,mos_rms_y)*
+                        GAUSS((q_z/q_x),0,mos_rms_z);
             total += Gauss_W[i]*p_reflect;
           }
           total *= zwidth;
@@ -233,8 +233,8 @@ TRACE
           q_x = c1x + cos_phi*ax + sin_phi*bx;
           q_y = c1y + cos_phi*ay + sin_phi*by;
           q_z = c1z + cos_phi*az + sin_phi*bz;
-          p_reflect = GAUSS((q_z/q_x),0,mos_rms_y)*
-                      GAUSS((q_y/q_x),0,mos_rms_z);
+          p_reflect = GAUSS((q_y/q_x),0,mos_rms_y)*
+                      GAUSS((q_z/q_x),0,mos_rms_z);
           x = 0;
           y = y1;
           z = z1;
