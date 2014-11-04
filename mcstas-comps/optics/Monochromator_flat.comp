@@ -49,15 +49,15 @@
 * zmax:    Upper horizontal (z) bound of crystal (m)
 * ymin:    Lower vertical (y) bound of crystal (m)
 * ymax:    Upper vertical (y) bound of crystal (m)
-* zwidth:  Width of crystal, overwrites zmin and zmax (m)
-* yheight: Height of crystal, overwrites ymin and ymax (m)
 * mosaich: Horizontal mosaic (in z direction) (FWHM) (arc minutes)
 * mosaicv: Vertical mosaic (in y direction) (FWHM) (arc minutes)
 * r0:      Maximum reflectivity (1)
 * Q:       Magnitude of scattering vector (1/angstrom)
 *
-* optional parameters
-* DM:      monochromator d-spacing instead of Q = 2*pi/DM (angstrom)
+* alternate parameters:
+* zwidth:  Width of crystal, instead of zmin and zmax (m)
+* yheight: Height of crystal, instead of ymin and ymax (m)
+* DM:      monochromator d-spacing, instead of Q = 2*pi/DM (angstrom)
 *
 * %E
 *******************************************************************************/
