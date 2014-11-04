@@ -54,7 +54,7 @@
 * r0:      Maximum reflectivity (1)
 * Q:       Magnitude of scattering vector (1/angstrom)
 *
-* alternate parameters:
+* optional parameters
 * zwidth:  Width of crystal, instead of zmin and zmax (m)
 * yheight: Height of crystal, instead of ymin and ymax (m)
 * DM:      monochromator d-spacing, instead of Q = 2*pi/DM (angstrom)
