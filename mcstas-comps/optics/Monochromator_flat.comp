@@ -45,19 +45,19 @@
 * %P
 * INPUT PARAMETERS:
 *
-* zmin:    Lower z-bound of crystal (m)
-* zmax:    Upper z-bound of crystal (m)
-* ymin:    Lower y-bound of crystal (m)
-* ymax:    Upper y-bound of crystal (m)
-* zwidth:  horizontal width of an individual slab (m)
-* yheight: vertical height of an individual slab (m)
-* mosaich: Horisontal mosaic (in Z direction) (FWHM) (arc minutes)
-* mosaicv: Vertical mosaic (in Y direction) (FWHM) (arc minutes)
+* zmin:    Lower horizontal (z) bound of crystal (m)
+* zmax:    Upper horizontal (z) bound of crystal (m)
+* ymin:    Lower vertical (y) bound of crystal (m)
+* ymax:    Upper vertical (y) bound of crystal (m)
+* zwidth:  Width of crystal, overwrites zmin and zmax (m)
+* yheight: Height of crystal, overwrites ymin and ymax (m)
+* mosaich: Horizontal mosaic (in z direction) (FWHM) (arc minutes)
+* mosaicv: Vertical mosaic (in y direction) (FWHM) (arc minutes)
 * r0:      Maximum reflectivity (1)
-* Q:       Magnitude of scattering vector (AA-1)
+* Q:       Magnitude of scattering vector (1/angstrom)
 *
 * optional parameters
-* DM:      monochromator d-spacing instead of Q = 2*pi/DM (Angstrom)
+* DM:      monochromator d-spacing instead of Q = 2*pi/DM (angstrom)
 *
 * %E
 *******************************************************************************/
