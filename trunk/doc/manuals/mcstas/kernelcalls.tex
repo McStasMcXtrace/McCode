@@ -37,6 +37,7 @@ of implementation, see \textbf{Res\_monitor}.
 In this Appendix, we present a short list of both each of the library contents
 and the run-time features.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Run-time calls and functions (\texttt{mcstas-r})}
 \label{s:calls:run-time}
 \index{Library!Run-time|textbf}
@@ -44,6 +45,7 @@ and the run-time features.
 Here we list a number of preprogrammed macros
 which may ease the task of writing component and instrument definitions.
 
+%-------------------------------------------------------------------------------
 \subsection{Neutron propagation}
 \index{Library!Run-time!SCATTER}
 \index{Library!Run-time!ABSORB}
@@ -93,6 +95,7 @@ the neutron rays which have negative propagation times are removed automatically
   \indexKW{EXTEND}
 \end{itemize}
 
+%-------------------------------------------------------------------------------
 \subsection{Coordinate and component variable retrieval}
 \index{Library!Run-time!MC\_GETPAR}
 \index{Library!Run-time!NAME\_CURRENT\_COMP}
@@ -175,6 +178,7 @@ systems.
 \item \textbf{mcget\_run\_num}(). Returns the number of neutron histories that have been simulated until now.
 \end{itemize}
 
+%-------------------------------------------------------------------------------
 \subsection{Coordinate transformations}
 \begin{itemize}
 \item \textbf{coords\_set}$(x,y,z)$ returns a Coord structure (like POS\_A\_CURRENT\_COMP) with $x$, $y$ and $z$ members.
@@ -193,6 +197,7 @@ resulting Coord structure.
 \item \textbf{rot\_apply}\textit{(Rotation t, Coords a)} returns a Coord structure which is $t.a$
 \end{itemize}
 
+%-------------------------------------------------------------------------------
 \subsection{Mathematical routines}
 \begin{itemize}
 \item \textbf{NORM}$(x,y,z)$. Normalizes the vector $(x,y,z)$ to have
@@ -212,6 +217,7 @@ resulting Coord structure.
   the smallest positive solution into pointer *$t$.
 \end{itemize}
 
+%-------------------------------------------------------------------------------
 \subsection{Output from detectors}
 Details about using these functions are given in the \MCS User Manual.
 \begin{itemize}
@@ -242,6 +248,7 @@ Details about using these functions are given in the \MCS User Manual.
   Please contact the authors for further information.
 \end{itemize}
 
+%-------------------------------------------------------------------------------
 \subsection{Ray-geometry intersections}
 \begin{itemize}
 \item \textbf{inside\_rectangle}(\&$x$, \&$y$, $x$, $xw$, $yh$).
@@ -264,6 +271,7 @@ Details about using these functions are given in the \MCS User Manual.
   of radius $r$.
 \end{itemize}
 
+%-------------------------------------------------------------------------------
 \subsection{Random numbers}
 \begin{itemize}
 \item \textbf{rand01}(). Returns a random number distributed uniformly between 0 and 1.
@@ -294,6 +302,7 @@ Details about using these functions are given in the \MCS User Manual.
   or analyzer blade.
 \end{itemize}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Reading a data file into a vector/matrix (Table input, \texttt{read\_table-lib})}
 \label{s:read-table}
 \index{Library!read\_table-lib (Read\_Table)|textbf}
@@ -415,6 +424,7 @@ You may look into, for instance, the source files for
 \textbf{Monochromator\_curved} or \textbf{Virtual\_input}
 for other implementation examples.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Monitor\_nD Library}
 \index{Library!monitor\_nd-lib}
 
@@ -422,6 +432,7 @@ This library gathers a few functions used by a set of monitors e.g. Monitor\_nD,
 It may monitor any kind of data, create the data files, and may display many geometries (for \verb+mcdisplay+).
 Refer to these components for implementation examples, and ask the authors for more details.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Adaptive importance sampling Library}
 \index{Library!adapt\_tree-lib}
 
@@ -429,20 +440,21 @@ This library is currently only used by the components \textbf{Source\_adapt}
 and \textbf{Adapt\_check}. It performs adaptive importance sampling of neutrons for simulation efficiency optimization.
 Refer to these components for implementation examples, and ask the authors for more details.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Vitess import/export Library}
-\index{Library!vitess-lib}
+\index{Libraries!vitess-lib}
 
 This library is used by the components
 \textbf{Vitess\_input} and \textbf{Vitess\_output},
 as well as the \verb+mcstas2vitess+ utility.
-% (see section~\ref{s:mcstas2vitess}).
-\index{Tools!mcstas2vitess}
+\index{mcstas2vitess}
 Refer to these components for implementation examples, and ask the authors for more details.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Constants for unit conversion etc.}
 The following predefined constants are useful for conversion
 between units
-\def\textvb{\textbf}
+\def\textvb#1{\textbf{#1}\index{#1 (constant)@\texttt{#1} (constant)|textbf}}
 \begin{center}
 \begin{tabular}{|l|c|p{0.29\textwidth}|p{0.252\textwidth}|}
 \hline
