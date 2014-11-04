@@ -1,7 +1,7 @@
 #!/bin/sh
 
 
-function get_absolute() {
+get_absolute() {
     (
         cd "$1" &&
         echo `pwd`;
