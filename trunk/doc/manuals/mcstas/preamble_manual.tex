@@ -1,0 +1,37 @@
+
+\index{Tools!McStas|see{mcdisplay, mcdoc, mcformat, mcgui, mcplot, mcresplot, mcrun, mcstas, mcstas2vitess}}
+\index{Tools!external|see{IDL, Matlab, NeXus, Perl, PGPLOT, VRML/OpenGL}}
+
+\usepackage[columns=2]{idxlayout}
+
+
+\newcommand{\MCS}{McStas\xspace}
+\newcommand{\version}{2.1\xspace}
+\newcommand{\reldate}{September, 2014}
+\newcommand{\Ombold}{\mbox{\boldmath $\Omega$}}
+
+\usepackage[%
+backend=bibtex8,%
+style=alphabetic,%
+sorting=nyt,%
+doi=true,%
+isbn=true,%
+hyperref=true,%
+backref=true,%
+url=false]{biblatex}
+
+\bibliography{mcstas}
+%\bibliographystyle{jacs}
+
+\PassOptionsToPackage{hyphens}{url}
+\usepackage{hyperref} %LOAD AT LAST!
+
+\hypersetup{%
+  colorlinks=false,   % 
+  pdfpagemode=UseNone,  % PDF-Viewer TOC settings
+  pdfstartview=FitH, % PDF-Viewer 
+  pdfauthor={P. Willendrup, E. Farhi, E. Knudsen, U. Filges, K. Lefmann, J. Stein},%
+  pdftitle=User and programmers guide to the neutron ray-tracing package McStas%
+}
+
+
