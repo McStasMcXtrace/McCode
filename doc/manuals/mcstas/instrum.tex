@@ -9,7 +9,7 @@ Ris\o\ standard triple axis spectrometer TAS1 (\ref{s:TAS1}) and the ISIS
 time-of-flight spectrometer PRISMA (\ref{s:PRISMA}).
 
 But first we present an example of a component test instrument: the instrument
-to test the component {\bf V\_sample} (\ref{s:V-instr}).
+to test the component \textbf{V\_sample} (\ref{s:V-instr}).
 %
 %The source text for the three instrument definitions
 %is listed in Appendix~\ref{instcode}.
@@ -24,7 +24,7 @@ considerably, see the ``Neutron Site'' menu in mcgui (See page
 
 \subsection{Neutron site: Brookhaven}
 
-The former Brookhaven reactor hosted the H8 triple-axis spectrometer. This latter was modelled in order to cross-check the NISP, Vitess, Restrax, McStas and IDEAS neutron propagation Monte Carlo codes. Results were published in {\it Neutron News} {\bf 13} (No. 4), 24-29 (2002).
+The former Brookhaven reactor hosted the H8 triple-axis spectrometer. This latter was modelled in order to cross-check the NISP, Vitess, Restrax, McStas and IDEAS neutron propagation Monte Carlo codes. Results were published in \textit{Neutron News} \textbf{13} (No. 4), 24-29 (2002).
 
 \subsection{Neutron site: Tools}
 
@@ -139,14 +139,14 @@ part of the channel is shared with other instruments.
 In the instrument definition, this is represented by
 three slits.
 For the cold source, we use a flat energy
-distribution (component {\bf Source\_flat})
+distribution (component \textbf{Source\_flat})
 focusing on the third slit.
 
 The real monochromator consist of seven blades, vertically focusing on
 the sample. The angle of curvature is constant so that the focusing is
 perfect at 5.0 meV (20.0 meV for 2nd order reflections) for a 1$\times$1~cm$^2$
 sample. This is modeled directly in the instrument definition using
-seven {\bf Monochromator} components. The mosaicity of the pyrolytic
+seven \textbf{Monochromator} components. The mosaicity of the pyrolytic
 graphite crystals is nominally 30' (FWHM) in both directions.  However, the
 simulations indicated that the horisontal mosaicities of both
 monochromator and analyser were more likely 45'. This was used for all
@@ -221,9 +221,9 @@ A \hbox{1 mm} slit is placed on the sample position.
 Both the measured width and non-Gaussian peak shape
 are well reproduced by the \MCS simulations.
 
-\begin{figure}
+\begin{figure}[htp!]
   \begin{center}
-    \includegraphics[width=0.6\textwidth]{figures/tas1-2T}
+    \includegraphics[width=0.6\textwidth]{figures/tas1-2T.pdf}
   \end{center}
 \caption{TAS1: Scans of $2\theta_s$ in the direct beam with 1 mm slit on the
   sample position.
@@ -253,7 +253,7 @@ see Figure~\ref{f:v_2ta_zero}.
 %\label{f:v_2ta_offset}
 %\end{figure}
 
-\begin{figure}
+\begin{figure}[htp!]
   \begin{center}
     \includegraphics[width=0.6\textwidth]{figures/vanadium-plot-2}
   \end{center}
@@ -269,7 +269,7 @@ Both for the scan in focusing mode (+ $-$ +)
 and for the one in defocusing mode (+ + +) (not shown),
 the agreement between simulation and experiment is excellent.
 
-\begin{figure}
+\begin{figure}[htp!]
   \begin{center}
     \includegraphics[width=0.6\textwidth]{figures/al2o3-focus}
   \end{center}
@@ -284,7 +284,7 @@ As a final result, we present a scan of the energy
 transfer $E_a = \hbar \omega$ on a V-sample.
 The data are shown in Figure \ref{f:v_ea}.
 
-\begin{figure}
+\begin{figure}[htp!]
   \begin{center}
     \includegraphics[width=0.6\textwidth]{figures/ea-scan}
   \end{center}
@@ -304,7 +304,7 @@ simulation of a time-of-flight instrument loosely based on the ISIS
 spectrometer PRISMA. The simulation was used to investigate the effect
 of using a RITA-style analyser instead of the normal PRISMA backend.
 
-We have used the simple time-of-flight source {\bf Tof\_source}.
+We have used the simple time-of-flight source \textbf{Tof\_source}.
 The neutrons pass through a
 beam channel and scatter off from a vanadium sample, pass through
 a collimator on to the analyser.
@@ -328,7 +328,7 @@ observed in the detector.
 An illustration of the instrument is shown in figure~\ref{f:PRISMA}.
 Test results are shown in Appendix~\ref{data:PRISMA}.
 
-\begin{figure}[h]
+\begin{figure}[htp!]
   \begin{center}
     \includegraphics[width=0.9\textwidth]{figures/prisma2}
   \end{center}
@@ -346,7 +346,7 @@ spectra of the different analyser blades is caused by different energy
 of scattered neutrons and different flight path length from source to
 detector.  We have not performed any quantitative analysis of the data.
 
-\begin{figure}
+\begin{figure}[htp!]
   \begin{center}
     \includegraphics[width=0.6\textwidth]{figures/prisma2-a}
   \end{center}

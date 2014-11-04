@@ -37,9 +37,9 @@ as well as the documentation of specific components, e.g with:
 mcdoc --text name
 mcdoc file.comp
 \end{bash}
-The first line will search for all components matching the {\it name}, and
+The first line will search for all components matching the \textit{name}, and
 display their help section as text, where as the second example will display the
-help corresponding to the {\it file.comp} component, using your
+help corresponding to the \textit{file.comp} component, using your
 \texttt{BROWSER}\index{Environment variable!BROWSER} setting, or as text if
 unset. The \verb+--help+ option will display the command help, as usual.
 
@@ -48,7 +48,7 @@ unset. The \verb+--help+ option will display the command help, as usual.
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf MCSTAS/sources} & Description \\
+       \textbf{MCSTAS/sources} & Description \\
        \hline
 Adapt\_check & Optimization specifier for the Source\_adapt component. \\
 ESS\_moderator\_long & A parametrised pulsed source for modelling ESS long pulses. \\
@@ -81,7 +81,7 @@ Virtual\_output &  Detector-like component that writes neutron state
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf MCSTAS/optics} & Description \\
+       \textbf{MCSTAS/optics} & Description \\
        \hline
  Arm                &  Arm/optical bench. \\
  Beamstop          &   Rectangular/circular beam stop. \\
@@ -129,7 +129,7 @@ Virtual\_output &  Detector-like component that writes neutron state
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf MCSTAS/samples} & Description \\
+       \textbf{MCSTAS/samples} & Description \\
        \hline
   Inelastic\_Incoherent & Inelastic incoherent sample with quasielastic and elastic contributions. \\
   Isotropic\_Sqw & A general S(q,$\omega$) scatterer with multiple scattering, for liquids, powders, glasses, polymers. May be concentrically arranged. Coherent/incoherent, elastic/inelastic scattering. \\
@@ -165,7 +165,7 @@ TOF\_Res\_monitor      &   Monitor for resolution function calculations
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf MCSTAS/monitors} & Description \\
+       \textbf{MCSTAS/monitors} & Description \\
        \hline
 %DivLambda\_monitor &  Divergence/wavelength monitor. \\
 DivPos\_monitor  &    Divergence/position monitor (acceptance diagram). \\
@@ -210,7 +210,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf MCSTAS/misc} & Description \\
+       \textbf{MCSTAS/misc} & Description \\
        \hline
  Progress\_bar     &  Displays status of a running simulation.
                       May also trigger intermediate SAVE.\\
@@ -232,7 +232,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf MCSTAS/contrib} & Description \\
+       \textbf{MCSTAS/contrib} & Description \\
        \hline
  Al\_window     &         Aluminium transmission window. \\
  Collimator\_ROC   &      Radial Oscillating Collimator (ROC). \\
@@ -272,12 +272,12 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf MCSTAS/share} & Description \\
+       \textbf{MCSTAS/share} & Description \\
        \hline
        adapt\_tree-lib  & Handles a simulation optimisation space for
        adatative importance sampling.
                           Used by the Source\_adapt component. \\
-       {\bf mcstas-r}      &   Main Run-time library (always included). \\
+       \textbf{mcstas-r}      &   Main Run-time library (always included). \\
        monitor\_nd-lib & Handles multiple monitor types.
                         Used by Monitor\_nD, Res\_monitor, \ldots \\
        read\_table-lib  & Enables to read a data table (text/binary) to be used within
@@ -299,7 +299,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf MCSTAS/data} & Description \\
+       \textbf{MCSTAS/data} & Description \\
        \hline
  *.lau & Laue pattern file, as issued from Crystallographica.
        For use with Single\_crystal, PowderN, and Isotropic\_Sqw.
@@ -326,7 +326,7 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
     {\let\my=\\
     \begin{tabular}{|p{0.24\textwidth}|p{0.7\textwidth}|}
       \hline
-       {\bf MCSTAS/examples} & Description \\
+       \textbf{MCSTAS/examples} & Description \\
       \hline
       *.instr & This directory contains example instruments, accessible throught the \verb+mcgui+ ``Neutron site'' menu. \\
       \hline

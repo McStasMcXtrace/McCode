@@ -1,5 +1,5 @@
 % !TeX root = manual.tex
-\usepackage{graphicx}
+\usepackage[final]{graphicx}
 \usepackage{amsfonts}
 \usepackage{amsbsy}
 
@@ -8,7 +8,19 @@
 % Handle sorting in reference list
 % FIXME \usepackage{citesort}
 % Create an index table
-\usepackage{makeidx}
+\usepackage{ifdraft}
+\ifdraft{\usepackage{showidx}}{}
+\usepackage{imakeidx}
+\newcommand{\indexEV}[1]{\index{Environment variables!#1}\index{#1 (environment variable)}}
+\newcommand{\indexKW}[1]{\index{Keywords!#1}\index{#1 (keyword)}}
+\newcommand{\indexTOOL}[1]{\index{#1}}
+
+\makeindex % enable index generation
+\index{Tools!McStas|see{mcdisplay, mcdoc, mcformat, mcgui, mcplot, mcresplot, mcrun, mcstas, mcstas2vitess}}
+\index{Tools!external|see{IDL, Matlab, NeXus, Perl, PGPLOT, VRML/OpenGL}}
+
+\usepackage[columns=2]{idxlayout}
+
 % For html links in install chapter (install latex2html package to get
 % this style)
 % \usepackage{html}
@@ -43,6 +55,7 @@ url=false]{biblatex}
 \bibliography{mcstas}
 %\bibliographystyle{jacs}
 
+\PassOptionsToPackage{hyphens}{url}
 \usepackage{hyperref} %LOAD AT LAST!
 
 \hypersetup{%
@@ -54,4 +67,3 @@ url=false]{biblatex}
 }
 
 
-\makeindex % enable index generation
