@@ -256,7 +256,10 @@ included in the instrument.
 The \MCS compiler needs to be able to find various files during compilation,
 some explicitly requested by the user (such as component definitions and files
 referenced by \verb+%include+), \indexKW{\%include}
-and some used internally to generate the simulation executable. \MCS looks for
+and some used internally to generate the simulation executable.
+\index{File!search path}
+\index{Path!file search}
+\MCS looks for
 these files in three places: first in the current directory, then in a list of
 directories given by the user, and finally in a special \MCS
 directory. Usually, the user will not need to worry about this as \MCS will
