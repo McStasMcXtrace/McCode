@@ -11,7 +11,7 @@ the \MCX\ core team.
 
 \noindent
 \begin{itemize}
-\item{\bfseries Arm}  A generic \MCX\ component which defines a frame of reference
+\item{\bfseries Arm}  A generic \MCX component which defines a frame of reference
       for other components.
 \item{\bfseries Component} One unit ({\em e.g.} optical element) in an x-ray beamline. These are considered as Types of elements to be instantiated in an Instrument description.
 \item{\bfseries Component Instance} A named Component (of a given Type) inserted in an Instrument description.
@@ -23,15 +23,15 @@ or a setting parameter. These parameters are supplied by the user to
 define the characteristics of the particular instance of the component
 definition. For an instrument, a parameter that can be changed at
 simulation run-time.
-\item{\bfseries Instrument} An assembly of \MCX\ components defining
+\item{\bfseries Instrument} An assembly of \MCX components defining
       an x-ray beamline.
-\item{\bfseries Kernel} The \MCX\ language definition and the associated compiler
+\item{\bfseries Kernel} The \MCX language definition and the associated compiler
 \item{\bfseries Output parameter} An output parameter for a component.
   For example the counts in a monitor. An output parameter may be
   accessed from the instrument in which the component is used using
   \verb`MC_GETPAR`.
 \item{\bfseries Run-time} C code, contained in the files
-  \verb+mcstas-r.c+ and \verb+mcstas-r.h+ included in the \MCX\
+  \verb+mcstas-r.c+ and \verb+mcstas-r.h+ included in the \MCX
   distribution, that declare functions and variables used by the
   generated simulations.
 \item{\bfseries Setting parameter} Similar to a definition parameter, but with the
