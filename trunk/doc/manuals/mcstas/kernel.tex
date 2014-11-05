@@ -36,8 +36,8 @@ with various distributions
 \item Functions for reading or writing information from/to data
   files
 \item Convenient conversion factors between relevant units, etc.
-\index{Library!Run-time}
-\index{Library!Components!share}
+\index{Library!run-time}
+\index{Library!components!share}
 \end{itemize}
 
 The \MCS meta-language was designed to be readable, with a verbose
@@ -65,11 +65,12 @@ that in case of a negative propagation time from one component to the
 next, the neutron ray is by default \emph{absorbed} as this is often
 an indication of unphysical conditions.
 
+\index{Coordinate!system}
 The instrument is given a global, absolute coordinate system. In
 addition, every component in the instrument has its own local coordinate
 system that can be given any desired position and orientation (though
 the position and orientation must remain fixed for the duration of a
-single simulation). \index{Coordinate system}
+single simulation). 
 By convention, the $z$ axis points in the direction of the beam, the $x$ axis
 is perpendicular to the beam in the horizontal plane pointing left as seen
 from the source, and the $y$ axis points upwards (see figure~\ref{f:axis}).
@@ -200,15 +201,17 @@ between the special symbols %{ and %}, as follows:
 \index{Embedded C code|see{C code}}
 \index{C code!embedded}
 The ``%{'' and ``%}'' must appear on a line by themselves (do not add comments after).
-Additionally, if a ``\verb+%include+'' statement is found \emph{within} an embedded C code block, the specified file will be included from the 'share' directory of the standard component library \index{Library!Components!share} (or from the
-current directory and any user-specified search directories) as a C library, just like the usual ``\verb+#include+'' \emph{but only once}. For instance, if many components require to read data from a file, they may all ask for ``\verb+%include "read_table-lib"+'' \index{Library!read\_table-lib (Read\_Table)} without duplicating the code of this library. If the file has no extension, both \verb+.h+ and \verb+.c+ files will be searched and included, otherwise, only the specified file will be imported. The \MCS 'run-time' shared
-library is included by default (equivalent to ``\verb+%include "mcstas-r"+'' in the \texttt{DECLARE} section). \index{Library!Run-time}
+Additionally, if a ``\verb+%include+'' statement is found \emph{within} an embedded C code block, the specified file will be included from the 'share' directory of the standard component library \index{Library!components!share} (or from the
+current directory and any user-specified search directories) as a C library, just like the usual ``\verb+#include+'' \emph{but only once}. For instance, if many components require to read data from a file, they may all ask for ``\verb+%include "read_table-lib"+'' \index{Library!read\_table-lib} without duplicating the code of this library. If the file has no extension, both \verb+.h+ and \verb+.c+ files will be searched and included, otherwise, only the specified file will be imported. The \MCS 'run-time' shared
+library is included by default (equivalent to ``\verb+%include "mcstas-r"+'' in the \texttt{DECLARE} section). \index{Library!run-time}
 For an
 example of \texttt{\%include}, see the monitors/Monitor\_nD component. See also section \ref{s:instrdefs-extend} for insertion of full instruments in instruments (instrument concatenation).
 
 If the instrument description compilation fails, check that the
 keywords syntax is correct, that no semi-colon \verb+;+ sign is
-missing (e.g. in C blocks and after an ABSORB macro), and there are no name conflicts between instrument and component instances variables.\index{Compilation!failure}
+missing (e.g. in C blocks and after an ABSORB macro),
+\indexMCRH{ABSORB}{}
+and there are no name conflicts between instrument and component instances variables.\index{Compilation!failure}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -268,7 +271,7 @@ DEFINE INSTRUMENT test(d1, double d2, int i, char *s1, string s2)
 Here \verb+d1+ and \verb+d2+ will be floating point parameters of C type
 \verb+double+, \verb+i+ will be an integer parameter of C type \verb+int+, and
 \verb+s1+ and \verb+s2+ will be string parameters of C type \verb+char *+.
-\index{Parameters!Optional, default value} The parameters of an instrument may
+\index{Parameters!optional, default value} The parameters of an instrument may
 be given default values. Parameters with default values are called
 \emph{optional parameters}, and need not be given an explicit value when the
 instrument simulation is executed. When executed without any parameter value in
@@ -378,10 +381,10 @@ Components are declared like this:
 \begin{mcstas}
 COMPONENT name = comp(p_1 = e_1, p_2 = e_2, ...)
 \end{mcstas}
-\index{Components}
+\index{Component!declaration (\texttt{TRACE})}
 \indexKW{COMPONENT}
-\index{Parameters!Setting}
-\index{Parameters!Definition}
+\index{Parameters!setting}
+\index{Parameters!definition}
 This declares a component named \textit{name} that is an instance of the
 component definition named \textit{comp}. The parameter list gives the
 setting and definition parameters for the component. The expressions $e_1,
@@ -467,18 +470,20 @@ Invalid \texttt{PREVIOUS} references will be assumed to be absolute placement.
 The order and position of components in the \texttt{TRACE} section does not
 allow components to overlap, except for particular cases (see the \texttt{GROUP}
 keyword below).  Indeed, many components of the \MCS library
-\index{Library!Components} start by propagating the neutron event to the
+\index{Library!components} start by propagating the neutron event to the
 beginning of the component itself.  Anyway, when the corresponding propagation
 time is found to be negative (\textit{i.e.} the neutron ray is already \emph{after}
 or \emph{aside} the component, and has thus passed the 'active' position), the
-neutron event is ABSORBed, resulting in a zero intensity and event counts after
+neutron event is ABSORBed,
+\indexMCRH{ABSORB}{}
+resulting in a zero intensity and event counts after
 a given position. The number of such removed neutrons is indicated at the end of
 the simulation.  Getting such warning messages is an indication that either some
 components overlap, or some neutrons are getting outside of the simulation, for
 instance this usually happens after a monochromator, as the non-reflected beam
 is indeed lost. A special warning appears when no neutron ray has reached some
 part of the simulation. This is usually the sign of either overlapping
-components or a very low intensity. \index{Removed neutron events}
+components or a very low intensity.\index{Absorption}\index{Neutron!absorption}
 
 For experienced users, we recommend as well the usage of the \texttt{WHEN} and
 \texttt{EXTEND} keywords, as well as other syntax extensions presented in
@@ -545,7 +550,7 @@ here shown as an example of the use of \MCS .
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Writing instrument definitions - complex arrangements and syntax}
 \label{s:instrdefs-extend}
-\index{Instrument definitions}
+\index{Instrument definition}
 
 In this section, we describe some additional ways to build instruments using
 groups, code extension, conditions, loops and duplication of components.
@@ -627,7 +632,7 @@ to all involved component declarations.
 \indexKW{GROUP}
 All components of
 the same named group are tested one after the other, until one of them interacts
-(uses the SCATTER macro\index{Library!Run-time!SCATTER}). The selected component
+(uses the SCATTER macro\indexMCRH{SCATTER}{}). The selected component
 acts on the neutron ray, and the rest of the group is skipped. Such groups are
 thus exclusive (only one of the elements is active).
 
@@ -636,8 +641,7 @@ executed. In order to discriminate components that are active from those that
 are skipped, one may use the SCATTERED flag, which is set to zero when entering
 each component or group, and incremented when the neutron is SCATTERed, as in
 the following example
-\index{Library!Run-time!SCATTER}
-\index{Library!Run-time!SCATTERED}
+\indexMCCH{SCATTERED}{}
 \begin{mcstas}
 COMPONENT name0 = comp (
                   p_1 = e_1, 
@@ -658,8 +662,11 @@ AT (...) ROTATED (...)
 GROUP GroupName
 \end{mcstas}
 Components \emph{name1} and \emph{name2} are at the same position. If the first
-one intercepts the neutron (and has a SCATTER within its \texttt{TRACE}
-section), the SCATTERED variable becomes true, the code extension will result in
+one intercepts the neutron
+(and has a SCATTER\indexMCRH{SCATTER}{}
+within its \texttt{TRACE}
+section), the SCATTERED\indexMCCH{SCATTERED}{}
+variable becomes true, the code extension will result in
 printing "I scatter", and the second component will be skipped.  Thus, we
 recommend to make use of the SCATTER keyword each time a component 'uses' the
 neutron (scatters, detects, \ldots) within component definitions (see section
@@ -781,6 +788,7 @@ COMPONENT Sample = V_sample(...) AT ...
 COMPONENT MyMon = Monitor(...) WHEN (flag==1)
   AT ...
 \end{mcstas}
+\indexMCCH{SCATTERED}{}
 
 The WHEN keyword only applies to the TRACE section and related EXTEND blocks of
 instruments/components. Other sections (INITIALIZE, SAVE, MCDISPLAY, FINALLY)
@@ -800,7 +808,10 @@ neutrons depending on their fate.
 WARNING: Combining WHEN, EXTEND and GROUP can result in unexpected behavior,
 please use with caution! Let for instance a GROUP of components all have the
 same WHEN condition, i.e. if the WHEN condition is false, none of the elements
-SCATTER, meaning that all neutrons will be ABSORBed. As a solution to this
+SCATTER, meaning that all neutrons will be ABSORBed.
+\indexMCRH{ABSORB}{}
+\indexMCRH{SCATTER}{}
+As a solution to this
 problem, we propose to include an EXTENDed Arm component in the GROUP, but with
 the opposite WHEN condition and a SCATTER keyword in the EXTEND section. This
 means that when none of the other GROUP elements are present, the Arm will be
@@ -986,8 +997,8 @@ This declares the definition and setting parameters of the component.
 These parameters can be
 accessed from all sections of the component (see below),
 as well as in \verb+EXTEND+ sections of the instrument definition (see section~\ref{s:instrdefs}).
-\index{Parameters!Setting}
-\index{Parameters!Definition}
+\index{Parameters!setting}
+\index{Parameters!definition}
 
 Setting parameters are translated into C variables usually of type
 \verb+double+ in the generated simulation program, so they are usually
@@ -1025,7 +1036,7 @@ OUTPUT PARAMETERS (s_1, s_2, ...)
 \end{mcstas}
 
 \indexKW{OUTPUT PARAMETERS}
-\index{Parameters!Protecting|see{Keyword/OUTPUT}}
+\index{Parameters!protecting|see{Keyword/OUTPUT}}
 This declares a list of C identifiers (variables, functions) that are
 output parameters (\textit{i.e.} global) for the
 component. Output parameters are used to hold values that are computed
@@ -1044,7 +1055,7 @@ defined as OUTPUT parameters.
 The \texttt{OUTPUT} \texttt{PARAMETERS} section is optional.
 
 \subsubsection{Optional component parameters}
-\index{Parameters!Optional, default value}
+\index{Parameters!optional, default value}
 
 Just as for instrument parameters, the definition and setting parameters of a
 component may be given a default value. Parameters with default values are
@@ -1108,7 +1119,7 @@ DECLARE
 \end{mcstas}
 
 \indexKW{OUTPUT PARAMETERS}
-\index{Library!Run-time!MC\_GETPAR}
+\indexMCCH{MC\_GETPAR}{}
 The idea is that the \texttt{counts} variable counts the number of neutrons detected. In
 the instrument definition, the \texttt{counts} parameter may be referenced using
 the \verb+MC_GETPAR+ C macro, as in the following example instrument
@@ -1186,31 +1197,39 @@ TRACE
 %}
 \end{mcstas}
 \indexKW{TRACE}
-\index{Library!Run-time!PROP\_Z0}
+\indexMCRH{PROP\_Z0}{}
 This performs the actual computation of the interaction between the
 neutron ray and the component. The C code should perform the appropriate
 calculations and assign the resulting new neutron state to the state
 parameters. Most components will require propagation routines to reach the component entrance/area. Special macros \verb+PROP_Z0;+ and \verb+PROP_DT();+ are provided to automate this process (see section \ref{s:calls:run-time}).
 
-\index{Library!Run-time!ABSORB}
+\indexMCRH{ABSORB}{textbf}
+\index{Absorption}
+\index{Neutron!absorption}
 The C code may also execute the special macro \texttt{ABSORB} to indicate
 that the neutron has been absorbed in the component and the simulation of
-that neutron will be aborted. On the other hand, if the neutron event
+that neutron will be aborted.
+\indexMCRH{ALLOW\_BACKPROP}{textbf}
+\index{Backpropagation}
+\index{Propagation!backward}
+On the other hand, if the neutron event
 should be \emph{allowed} be backpropagated, the special macro
 \verb+ALLOW_BACKPROP;+ should precede the call to the \verb+PROP_+
 call inside the component.
-\index{Removed neutron events}\index{Library!Run-time!ALLOW\_BACKPROP}
 When the neutron state is changed or detected, for
 instance if the component simulates multiple events as multiple
 reflections in a guide, the
-special macro \texttt{SCATTER} should be called. This does not affect the
+special macro \texttt{SCATTER}\indexMCRH{SCATTER}{textbf}
+should be called. This does not affect the
 results of the simulation in any way, but it allows the front-end
 programs to visualize the scattering events properly, and to handle
 component \texttt{GROUP}s in an instrument definition (see
-section~\ref{s:trace}). It basically increments the SCATTERED counter. The \texttt{SCATTER} macro should be called with
+section~\ref{s:trace}). It basically increments the SCATTERED counter.
+\indexMCCH{SCATTERED}{}
+The \texttt{SCATTER} macro should be called with
 the state parameters set to the proper values for the scattering event, so that neutron events are displayed correctly.
 For an example of \texttt{SCATTER}, see the optics/Guide
-component. \index{Library!Run-time!SCATTER}
+component.
 
 
 %-------------------------------------------------------------------------------
@@ -1261,8 +1280,8 @@ in the 'options' parameter (refer to that component documentation).
 
 \paragraph{Single detectors/monitors}
 \label{s:DETECTOR_OUT}
-\index{Library!Run-time!DETECTOR\_OUT}
 
+\indexMCCH{DETECTOR\_OUT\_0D}{textbf}
 The results of a single detector/monitor are written using the following
 macro:
 \begin{mcstas}
@@ -1274,6 +1293,7 @@ results, {\em e.g.}\ ``Single monitor''.
 
 \paragraph{One-dimensional detectors/monitors}
 
+\indexMCCH{DETECTOR\_OUT\_1D}{textbf}
 The results of a one-dimensional detector/\discretionary{}{}{}mon\-i\-tor are written using the
 following macro:
 \begin{mcstas}
@@ -1311,6 +1331,7 @@ Here,
 
 \paragraph{Two-dimensional detectors/monitors}
 
+\indexMCCH{DETECTOR\_OUT\_2D}{textbf}
 The results of a two-dimensional detector/\discretionary{}{}{}mon\-i\-tor are written to a file using the
 following macro:
 
@@ -1352,6 +1373,7 @@ is a pointer to the first element.
 
 \paragraph{Three-dimensional detectors/monitors}
 
+\indexMCCH{DETECTOR\_OUT\_3D}{textbf}
 The results of a three-dimensional detector/\discretionary{}{}{}mon\-i\-tor are written to a file using the
 following macro:
 \begin{mcstas}
@@ -1368,8 +1390,8 @@ the 3D arrays as 2D, with the 3rd dimension specified in the
 \textit{type} field of the data header.
 
 \paragraph{Customizing detectors/monitors}
-\index{Library!Run-time!DETECTOR\_CUSTOM\_HEADER}
-\index{Data formats!Customization}
+\index{DETECTOR\_CUSTOM\_HEADER (obsolete??)}
+\index{Data formats!customization}
 
 Users may want to have additional information than the default one written by
 the DETECTOR\_OUT macros. A mechanism has been implemented for monitor

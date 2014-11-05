@@ -184,7 +184,7 @@ the \verb+mcgui+ help menu. For more technical details, read on from
 section~\ref{s:running}
 
 \indexTOOL{mcgui|)}
-\index{McStas!running through the GUI|)}
+\index{McStas!running from the GUI|)}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -264,7 +264,9 @@ automatically find the required files. But if users build their own component
 library in a separate directory or if \MCS is installed in an unusual way, it
 will be necessary to tell the compiler where to look for the files.
 
-\index{Library!Components} The location of the special \MCS directory is set
+\index{Library!components}
+\index{Installation!directory}
+The location of the special \MCS directory is set
 when \MCS is compiled. It defaults to \verb+/usr/local/lib/mcstas+ on Unix-like
 systems and \verb+C:\mcstas\lib+ on Windows systems, but it can be changed to
 something else, see section~\ref{s:install} for details. The location can be
@@ -1231,7 +1233,7 @@ file, see section~\ref{s:mcplot}. \indexTOOL{mcplot}
   option is not used, no data files are written from the individual
   simulations (in order to save disk space).
 \item The \verb+mcrun --test+ command will test your \MCS installation,
-  accuracy and plotter. \index{Installing}
+  accuracy and plotter. \index{Installation!test}
 \end{itemize}
 
 The \verb+-h+ option will list valid options. The \verb+mcrun+ front-end
@@ -1492,7 +1494,7 @@ and PDL must all be properly installed on the system.
 
 \MCS provides an easy way to generate automatically an HTML help page about a
 given component or instrument, or the whole \MCS
-library. \index{Library!Components}
+library. \index{Library!components}
 \begin{lstlisting}
 mcdoc
 mcdoc {comp|instr}
@@ -1526,11 +1528,12 @@ available.
 \subsection{Translating \MCS components for Vitess (mcstas2vitess)}
 \label{s:mcstas2vitess}
 \indexTOOL{mcstas2vitess|textbf}
-\index{Library!vitess-lib}
+\indexLIB{vitess-lib}{}
 \index{Vitess!vitess-lib}
 
+\index{Component!translation to Vitess}
 Any \MCS component may be translated for usage with Vitess (starting from
-Vitess version 2.3). The syntax is simply \index{Library!components}
+Vitess version 2.3). The syntax is simply 
 \begin{lstlisting}
 mcstas2vitess Compo.comp
 \end{lstlisting}
