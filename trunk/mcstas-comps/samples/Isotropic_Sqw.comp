@@ -1705,7 +1705,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     /* then scan Ei until we pass q_max */
     for (index_w=0; index_w < Sqw_Data->iqSq_length; index_w++) {
       double Ei = index_w*2*w_max/Sqw_Data->iqSq_length;
-      if (Ei > w_max && sqrt(Ei)+sqrt(Ei-w_max) >= q_max/(SE2V*V2K) 
+      if ( (Ei > w_max && sqrt(Ei)+sqrt(Ei-w_max) >= q_max/(SE2V*V2K))
                      || sqrt(Ei)+sqrt(Ei+w_max) >= q_max/(SE2V*V2K))
         if (Ei < Sqw_Data->Ei_max) {
           Sqw_Data->Ei_max = Ei;
