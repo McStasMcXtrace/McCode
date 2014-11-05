@@ -1389,20 +1389,6 @@ versions of DETECTOR\_OUT. The available data format currently saves
 the 3D arrays as 2D, with the 3rd dimension specified in the
 \textit{type} field of the data header.
 
-\paragraph{Customizing detectors/monitors}
-\index{DETECTOR\_CUSTOM\_HEADER (obsolete??)}
-\index{Data formats!customization}
-
-Users may want to have additional information than the default one written by
-the DETECTOR\_OUT macros. A mechanism has been implemented for monitor
-components to output customized meta data. The macro:
-
-\begin{mcstas}
-DETECTOR_CUSTOM_HEADER(t)
-\end{mcstas}
-
-defines a string to be written during the next \verb+DETECTOR\_OUT*+ call, as a field \textit{custom}. This string may additionally use the symbol \verb+%PRE+ which is replaced by the format specific comment character, e.g. '\#' for McStas/PGPLOT, '\%' for Octave/Matlab, '\verb+//+' for Scilab and ';' for IDL, and ' ' for other formats. The argument \textit{t} to the macro may be a static string, e.g. \textit{"My own additional information"}, or the name of a \textit{character array variable} containing the meta data. After the detector/monitor file being written, the custom meta data output is deactivated. This way, each monitor file may have its own meta data definition by repeating the DETECTOR\_CUSTOM\_HEADER call. You may either do that inside the component SAVE section, or within an instrument description in an EXTEND code preceeding the monitor (e.g. following an Arm component).
-
 %-------------------------------------------------------------------------------
 \subsection{The \texttt{FINALLY} section}
 \label{s:comp-finally}
