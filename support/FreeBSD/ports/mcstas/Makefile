@@ -1,25 +1,25 @@
 # Created by: Erik B Knudsen <erkn@fysik.dtu.dk>
 # $FreeBSD$
 
-PORTNAME= mcxtrace
-PORTVERSION= 1.2beta
+PORTNAME= mcstas
+PORTVERSION= 2.1
 #PORTREVISION= beta
 CATEGORIES= science
-MASTER_SITES= http://download.mcxtrace.org/${PORTVERSION}/
+MASTER_SITES= http://download.mcstas.org/${PORTNAME}-${PORTVERSION}/unix/
 DISTNAME= ${PORTNAME}-${PORTVERSION}-src
-DISTFILES= ${PORTNAME}-${PORTVERSION}-unix-src.tgz
+DISTFILES= McStas-${PORTVERSION}-UNIX-src.tar.gz
 DIST_SUBDIR= ${PORTNAME}
 EXTRACT_ONLY= ${DISTNAME}${EXTRACT_SUFX}
 
 MAINTAINER= erkn@fysik.dtu.dk
-COMMENT= Monte Carlo X-ray tracing package
+COMMENT= Monte Carlo neutron ray tracing package
 
 LICENSE= GPLv2
 
 USES= cmake gmake bison:build
 
 #should perhaps use the toolchain file - but remember the arch
-CMAKE_ARGS= "-Denable_mcxtrace=1"
+CMAKE_ARGS= "-Denable_mcstas=1"
 
 GNU_CONFIGURE= yes
 #USE_GMAKE= yes
@@ -32,7 +32,7 @@ USE_BISON= yes
 post-fetch:
 .if !exists(${DISTDIR}/${DIST_SUBDIR}/${DISTNAME}${EXTRACT_SUFX})
 	cd ${DISTDIR}/${DIST_SUBDIR};\
-	${TAR} -xzf ${DISTFILES} ${DISTNAME}.tar.gz;
+	${TAR} --strip-components 1 -xzf ${DISTFILES} McStas-2.1-UNIX-src/${DISTNAME}.tar.gz;
 .endif
 
 .include <bsd.port.post.mk>
