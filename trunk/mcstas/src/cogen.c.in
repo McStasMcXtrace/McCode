@@ -835,121 +835,10 @@ cogen_init(struct instr_def *instr)
     struct comp_iformal *par;
 
     coutf("    /* Component %s. */", comp->name);
-    coutf("    SIG_MESSAGE(\"%s (Init:Place/Rotate)\");", comp->name); /* signal handler message */
-
-    /* Absolute rotation. */
-    x = exp_tostring(comp->pos->orientation.x);
-    y = exp_tostring(comp->pos->orientation.y);
-    z = exp_tostring(comp->pos->orientation.z);
-    relcomp = comp->pos->orientation_rel;
-    if(relcomp == NULL)
-    {                                /* Absolute orientation. */
-      coutf("    rot_set_rotation(%srota%s,", ID_PRE, comp->name);
-      code_set_source(instr->quoted_source,
-                      exp_getlineno(comp->pos->orientation.x));
-      coutf("      (%s)*%s,", x, d2r);
-      code_set_source(instr->quoted_source,
-                      exp_getlineno(comp->pos->orientation.y));
-      coutf("      (%s)*%s,", y, d2r);
-      code_set_source(instr->quoted_source,
-                      exp_getlineno(comp->pos->orientation.z));
-      coutf("      (%s)*%s);", z, d2r);
-      code_reset_source();
-    }
-    else
-    {
-      coutf("    rot_set_rotation(%str1,", ID_PRE);
-      code_set_source(instr->quoted_source,
-                      exp_getlineno(comp->pos->orientation.x));
-      coutf("      (%s)*%s,", x, d2r);
-      code_set_source(instr->quoted_source,
-                      exp_getlineno(comp->pos->orientation.y));
-      coutf("      (%s)*%s,", y, d2r);
-      code_set_source(instr->quoted_source,
-                      exp_getlineno(comp->pos->orientation.z));
-      coutf("      (%s)*%s);", z, d2r);
-      code_reset_source();
-      coutf("    rot_mul(%str1, %srota%s, %srota%s);",
-            ID_PRE, ID_PRE, relcomp->name, ID_PRE, comp->name);
-    }
-    str_free(z);
-    str_free(y);
-    str_free(x);
-
-    /* Relative rotation. */
-    if(last == NULL)
-    {                                /* First component. */
-      coutf("    rot_copy(%srotr%s, %srota%s);",
-            ID_PRE, comp->name, ID_PRE, comp->name);
-    }
-    else
-    {
-      coutf("    rot_transpose(%srota%s, %str1);", ID_PRE, last->name, ID_PRE);
-      coutf("    rot_mul(%srota%s, %str1, %srotr%s);",
-            ID_PRE, comp->name, ID_PRE, ID_PRE, comp->name);
-    }
-
-    /* Absolute position. */
-    x = exp_tostring(comp->pos->place.x);
-    y = exp_tostring(comp->pos->place.y);
-    z = exp_tostring(comp->pos->place.z);
-    relcomp = comp->pos->place_rel;
-    if(relcomp == NULL)
-    {
-      coutf("    %sposa%s = coords_set(", ID_PRE, comp->name);
-      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
-      coutf("      %s,", x);
-      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
-      coutf("      %s,", y);
-      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
-      coutf("      %s);", z);
-      code_reset_source();
-    }
-    else
-    {
-      coutf("    %stc1 = coords_set(", ID_PRE);
-      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
-      coutf("      %s,", x);
-      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
-      coutf("      %s,", y);
-      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
-      coutf("      %s);", z);
-      code_reset_source();
-      coutf("    rot_transpose(%srota%s, %str1);",
-            ID_PRE, relcomp->name, ID_PRE);
-      coutf("    %stc2 = rot_apply(%str1, %stc1);",
-            ID_PRE, ID_PRE, ID_PRE);
-      coutf("    %sposa%s = coords_add(%sposa%s, %stc2);",
-            ID_PRE, comp->name, ID_PRE, relcomp->name, ID_PRE);
-    }
-
-    str_free(z);
-    str_free(y);
-    str_free(x);
-
-    /* Relative position. */
-    if(last == NULL)
-      coutf("    %stc1 = coords_neg(%sposa%s);", ID_PRE, ID_PRE, comp->name);
-    else
-      coutf("    %stc1 = coords_sub(%sposa%s, %sposa%s);",
-            ID_PRE, ID_PRE, last->name, ID_PRE, comp->name);
-    coutf("    %sposr%s = rot_apply(%srota%s, %stc1);",
-          ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
-
-    coutf("    %sDEBUG_COMPONENT(\"%s\", %sposa%s, %srota%s)",
-          ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name);
-
-    coutf("    %scomp_posa[%i] = %sposa%s;", ID_PRE, comp->index, ID_PRE, comp->name);
-    coutf("    %scomp_posr[%i] = %sposr%s;", ID_PRE, comp->index, ID_PRE, comp->name);
-    coutf("    %sNCounter[%i]  = %sPCounter[%i] = %sP2Counter[%i] = 0;",
-          ID_PRE, comp->index, ID_PRE, comp->index, ID_PRE, comp->index);
-    coutf("    %sAbsorbProp[%i]= 0;", ID_PRE, comp->index);
-
-    last = comp;
-
+    
     coutf("  /* Setting parameters for component %s. */", comp->name);
     coutf("  SIG_MESSAGE(\"%s (Init:SetPar)\");", comp->name); /* signal handler message */
-    /* Setting parameters of the component setting parameters. */
+    /* Setting parameters of the component */
     setpar = list_iterate(comp->def->set_par);
     while((par = list_next(setpar)) != NULL)
     {
@@ -973,6 +862,119 @@ cogen_init(struct instr_def *instr)
     if(list_len(comp->def->set_par) > 0)
       code_reset_source();
     cout("");
+    
+    
+    coutf("  SIG_MESSAGE(\"%s (Init:Place/Rotate)\");", comp->name); /* signal handler message */
+
+    /* Absolute rotation. */
+    x = exp_tostring(comp->pos->orientation.x);
+    y = exp_tostring(comp->pos->orientation.y);
+    z = exp_tostring(comp->pos->orientation.z);
+    relcomp = comp->pos->orientation_rel;
+    if(relcomp == NULL)
+    {                                /* Absolute orientation. */
+      coutf("  rot_set_rotation(%srota%s,", ID_PRE, comp->name);
+      code_set_source(instr->quoted_source,
+                      exp_getlineno(comp->pos->orientation.x));
+      coutf("    (%s)*%s,", x, d2r);
+      code_set_source(instr->quoted_source,
+                      exp_getlineno(comp->pos->orientation.y));
+      coutf("    (%s)*%s,", y, d2r);
+      code_set_source(instr->quoted_source,
+                      exp_getlineno(comp->pos->orientation.z));
+      coutf("    (%s)*%s);", z, d2r);
+      code_reset_source();
+    }
+    else
+    {
+      coutf("  rot_set_rotation(%str1,", ID_PRE);
+      code_set_source(instr->quoted_source,
+                      exp_getlineno(comp->pos->orientation.x));
+      coutf("    (%s)*%s,", x, d2r);
+      code_set_source(instr->quoted_source,
+                      exp_getlineno(comp->pos->orientation.y));
+      coutf("    (%s)*%s,", y, d2r);
+      code_set_source(instr->quoted_source,
+                      exp_getlineno(comp->pos->orientation.z));
+      coutf("    (%s)*%s);", z, d2r);
+      code_reset_source();
+      coutf("  rot_mul(%str1, %srota%s, %srota%s);",
+            ID_PRE, ID_PRE, relcomp->name, ID_PRE, comp->name);
+    }
+    str_free(z);
+    str_free(y);
+    str_free(x);
+
+    /* Relative rotation. */
+    if(last == NULL)
+    {                                /* First component. */
+      coutf("  rot_copy(%srotr%s, %srota%s);",
+            ID_PRE, comp->name, ID_PRE, comp->name);
+    }
+    else
+    {
+      coutf("  rot_transpose(%srota%s, %str1);", ID_PRE, last->name, ID_PRE);
+      coutf("  rot_mul(%srota%s, %str1, %srotr%s);",
+            ID_PRE, comp->name, ID_PRE, ID_PRE, comp->name);
+    }
+
+    /* Absolute position. */
+    x = exp_tostring(comp->pos->place.x);
+    y = exp_tostring(comp->pos->place.y);
+    z = exp_tostring(comp->pos->place.z);
+    relcomp = comp->pos->place_rel;
+    if(relcomp == NULL)
+    {
+      coutf("  %sposa%s = coords_set(", ID_PRE, comp->name);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
+      coutf("    %s,", x);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
+      coutf("    %s,", y);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
+      coutf("    %s);", z);
+      code_reset_source();
+    }
+    else
+    {
+      coutf("  %stc1 = coords_set(", ID_PRE);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
+      coutf("    %s,", x);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
+      coutf("    %s,", y);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
+      coutf("    %s);", z);
+      code_reset_source();
+      coutf("  rot_transpose(%srota%s, %str1);",
+            ID_PRE, relcomp->name, ID_PRE);
+      coutf("  %stc2 = rot_apply(%str1, %stc1);",
+            ID_PRE, ID_PRE, ID_PRE);
+      coutf("  %sposa%s = coords_add(%sposa%s, %stc2);",
+            ID_PRE, comp->name, ID_PRE, relcomp->name, ID_PRE);
+    }
+
+    str_free(z);
+    str_free(y);
+    str_free(x);
+
+    /* Relative position. */
+    if(last == NULL)
+      coutf("  %stc1 = coords_neg(%sposa%s);", ID_PRE, ID_PRE, comp->name);
+    else
+      coutf("  %stc1 = coords_sub(%sposa%s, %sposa%s);",
+            ID_PRE, ID_PRE, last->name, ID_PRE, comp->name);
+    coutf("  %sposr%s = rot_apply(%srota%s, %stc1);",
+          ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
+
+    coutf("  %sDEBUG_COMPONENT(\"%s\", %sposa%s, %srota%s)",
+          ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name);
+
+    coutf("  %scomp_posa[%i] = %sposa%s;", ID_PRE, comp->index, ID_PRE, comp->name);
+    coutf("  %scomp_posr[%i] = %sposr%s;", ID_PRE, comp->index, ID_PRE, comp->name);
+    coutf("  %sNCounter[%i]  = %sPCounter[%i] = %sP2Counter[%i] = 0;",
+          ID_PRE, comp->index, ID_PRE, comp->index, ID_PRE, comp->index);
+    coutf("  %sAbsorbProp[%i]= 0;", ID_PRE, comp->index);
+
+    last = comp;
 
   } /* end while instr->complist */
   list_iterate_end(liter);
