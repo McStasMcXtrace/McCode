@@ -272,9 +272,17 @@ will be necessary to tell the compiler where to look for the files.
 \index{Library!components}
 \index{Installation!directory}
 The location of the special \MCS directory is set
-when \mcs is compiled. It defaults to \verb+/usr/local/lib/mcstas+ on Unix-like
-systems and \verb+C:\mcstas\lib+ on Windows systems, but it can be changed to
-something else, see section~\ref{s:install} for details. The location can be
+when \mcs is compiled.
+It defaults to \nolinkurl{/usr/share/mcstas/version} on Debian and derivatives,
+to \nolinkurl{/usr/local/mcstas/version} on RedHat and derivatives
+and on other Unix-like systems, including Mac OS~X,
+where it is a link to the actual location
+\nolinkurl{/Applications/McStas-version.app/Contents/Resources/mcstas/version}),
+and \nolinkurl{C:\\mcstas-version\\lib} on Windows systems,
+but it can be changed to something else,
+see the installation instructions for details.
+
+The location can be
 overridden by setting the environment variable \verb+MCSTAS+:
 \indexEV{MCSTAS}
 \begin{bash}
