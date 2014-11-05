@@ -124,7 +124,7 @@ INITIALIZE
   }
   /*now parse the header to find boundaries*/
   char **header_parsed;
-  header_parsed=Table_ParseHeader(T.header,"E","Lambda",NULL);
+  header_parsed=Table_ParseHeader(T.header,"Energy","Lambda",NULL);
   if (header_parsed[0] || header_parsed[1]){
     char *p;
     if (header_parsed[0]) p=strchr(header_parsed[0],'[');

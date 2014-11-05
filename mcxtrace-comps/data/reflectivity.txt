@@ -1,13 +1,13 @@
-#d = [40]; �
+#d = [40];
 #N = [100];number of layers
 #SubMat = 'Si_'; substrate
-#sigmaSub = [4]; % � roughness of substrate
+#sigmaSub = [4]; % roughness of substrate
 #BottomMat =[ 'Si_'];
 #TopMat = [ 'W_'];
-#sigma = [4]; � roughness of multilayer
+#sigma = [4]; %roughness of multilayer
 #Gamma = [0.33]; %d of BottomMat is Gamma*dTot
 #grading = [0]; constant d-spacing
-#E = [7:0.05:10];% keV
+#Energy = [7:0.05:10];% keV
 #First column is Q, the next 61 columns are reflectivity 
 
 0	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1
