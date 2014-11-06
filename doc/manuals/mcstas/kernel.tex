@@ -193,14 +193,14 @@ executable from the generated C code, and must contain valid C.
 Embedded C code is used in several instances in the \MCS
 meta-language. Such code is copied by \mcs into the
 generated simulation C program. Embedded C code is written by putting it
-between the special symbols %{ and %}, as follows:
+between the special symbols \%{ and \%}, as follows:
 \begin{lstlisting}
 %{ 
 // Embedded C code...
 %}
 \end{lstlisting} 
 \index{C code!embedded}
-The ``%{'' and ``%}'' must appear on a line by themselves (do not add comments after).
+The \%\{ and \%\} must appear on a line by themselves (do not add comments after).
 Additionally, if a ``\verb+%include+'' statement is found \emph{within} an embedded C code block, the specified file will be included from the 'share' directory of the standard component library \index{Library!components!share} (or from the
 current directory and any user-specified search directories) as a C library, just like the usual ``\verb+#include+'' \emph{but only once}. For instance, if many components require to read data from a file, they may all ask for ``\verb+%include "read_table-lib"+'' \index{Library!read\_table-lib} without duplicating the code of this library. If the file has no extension, both \verb+.h+ and \verb+.c+ files will be searched and included, otherwise, only the specified file will be imported. The \MCS 'run-time' shared
 library is included by default (equivalent to ``\verb+%include "mcstas-r"+'' in the \texttt{DECLARE} section). \index{Library!run-time}
@@ -208,7 +208,7 @@ For an
 example of \texttt{\%include}, see the monitors/Monitor\_nD component. See also section \ref{s:instrdefs-extend} for insertion of full instruments in instruments (instrument concatenation).
 
 If the instrument description compilation fails, check that the
-keywords syntax is correct, that no semi-colon \verb+;+ sign is
+keywords syntax is correct, that no semi-colon (\verb+;+) sign is
 missing (e.g. in C blocks and after an ABSORB macro),
 \indexMCRH{ABSORB}{}
 and there are no name conflicts between instrument and component instances variables.\index{Compilation!failure}
