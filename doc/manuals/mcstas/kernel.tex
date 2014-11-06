@@ -3,9 +3,10 @@
 \chapter{The \MCS kernel and meta-language}
 \label{c:kernel}
 \index{Kernel|(textbf}
+\index{Meta-language}
 
 Instrument definitions are written in a special \MCS meta-language which
-is translated automatically by the \MCS compiler into a C program
+is translated automatically by the compiler \mcs into a C program
 which is in turn compiled to an executable that
 performs the simulation. The meta-language is custom-designed for neutron
 scattering and serves two main purposes: (i) to specify the interaction of a
@@ -16,7 +17,7 @@ components.
 For maximum flexibility and efficiency, the meta-language is based on C.
 Instrument geometry, propagation of neutrons between the different
 components, parameters, data input/output etc.\ is handled in the
-meta-language and by the \MCS compiler. Complex calculations are written in
+meta-language and by the compiler \mcs. Complex calculations are written in
 C embedded in the meta-language description of the
 components. However, it is
 possible to set up an instrument from existing components and
@@ -59,7 +60,7 @@ results with some components.\index{Gravitation}
 
 An instrument consists of a list of components through which the neutron
 ray passes one after the other. The order of components is thus significant
-since \MCS does not automatically check which component is the next to
+since \mcs does not automatically check which component is the next to
 interact with the neutron ray at a given point in the simulation. Note
 that in case of a negative propagation time from one component to the
 next, the neutron ray is by default \emph{absorbed} as this is often
@@ -173,7 +174,7 @@ as C variable names. The list of these reserved keywords is shown in table~\ref{
 It is possible, and usual, to split the input instrument definition
 across several different files. For example, if a component is not
 explicitly defined in the instrument,
-\MCS will search for a file containing the component definition in the
+\mcs will search for a file containing the component definition in the
 standard component library (as well as in the current directory and any
 user-specified search directories, see section~\ref{s:files}). It is
 also possible to explicitly include another file using a line of the
@@ -184,13 +185,13 @@ form \indexKW{\%include}
 Beware of possible confusion with the C language ``\verb+#include+''
 statement, especially when it is used in C code embedded within the
 \MCS meta-language. Files referenced with ``\verb+%include+'' are read
-when the instrument is translated into C by the \MCS compiler, and must
+when the instrument is translated into C by \mcs, and must
 contain valid \MCS meta-language input (and possibly C code). Files referenced with
 ``\verb+#include+'' are read when the C compiler generates an
 executable from the generated C code, and must contain valid C.
 
 Embedded C code is used in several instances in the \MCS
-meta-language. Such code is copied by the \MCS compiler into the
+meta-language. Such code is copied by \mcs into the
 generated simulation C program. Embedded C code is written by putting it
 between the special symbols %{ and %}, as follows:
 \begin{lstlisting}
@@ -198,7 +199,6 @@ between the special symbols %{ and %}, as follows:
 // Embedded C code...
 %}
 \end{lstlisting} 
-\index{Embedded C code|see{C code}}
 \index{C code!embedded}
 The ``%{'' and ``%}'' must appear on a line by themselves (do not add comments after).
 Additionally, if a ``\verb+%include+'' statement is found \emph{within} an embedded C code block, the specified file will be included from the 'share' directory of the standard component library \index{Library!components!share} (or from the
@@ -225,7 +225,7 @@ make up an instrument. Each component is given its own local coordinate
 system, the position and orientation of which may be specified by its
 translation and rotation relative to another component. An example is
 given in section~\ref{s:Samples_vanadium.instr} and some additional
-examples of instrument definitions can be found on the McStas
+examples of instrument definitions can be found on the \MCS
 web-page~\cite{mcstas_webpage} and in the \texttt{example} directory.
 
 As a summary, the usual grammar for instrument descriptions is
@@ -389,7 +389,7 @@ This declares a component named \textit{name} that is an instance of the
 component definition named \textit{comp}. The parameter list gives the
 setting and definition parameters for the component. The expressions $e_1,
 e_2, \ldots$ define the values of the parameters. For setting parameters
-arbitrary ANSI-C expressions may be used, while for definition parameters
+arbitrary ISO-C expressions may be used, while for definition parameters
 only \emph{constant} numbers, strings, names of instrument parameters, or names
 of C identifiers are allowed (see section~\ref{s:comp-header} for details of
 the difference between definition and setting parameters). To assign the
@@ -406,7 +406,7 @@ in an instrument description.
 
 Beware about variable type conversion when setting numerical parameter values, as in \verb+p1=12/1000+. In this example, the parameter \verb+p1+ will be set to 0 as the division of the two integers is indeed 0. To avoid that, use explicitly floating type numbers as in \verb+p1=12.0/1000+.\index{Bugs!integer versus floating-point division}
 
-The \MCS compiler will automatically search for a file containing a
+The compiler \mcs will automatically search for a file containing a
 definition of the component if it has not been declared previously. The
 definition is searched for in a file called ``\textit{name\/}\texttt{.comp}''. See
 section~\ref{s:files} for details on which directories are searched. This
@@ -542,7 +542,7 @@ END
 \subsection{Code for the instrument \texttt{vanadium\_example.instr}}
 \label{s:Samples_vanadium.instr}
 A commented instrument definition taken from the \texttt{examples} directory is
-here shown as an example of the use of \MCS .
+here shown as an example of the use of \MCS.
 %FIXME \smallverbatimfile{McCode/mcstas-comps/examples/Samples_vanadium.instr}
 
 
@@ -721,7 +721,7 @@ COMPONENT COPY(root_name) = COPY(instance_name)
 will concatenate a unique number to \textit{root\_name}, avoiding name
 conflicts. As a side effect, referring to this component instance (for
 e.g. further positioning) is not straight forward as the name is determined by
-\MCS and does not depend completely on the user's choice, even though the
+\mcs and does not depend completely on the user's choice, even though the
 PREVIOUS keyword may still be used. We thus recommend to use this naming
 mechanism only for components which should not be referred to in the instrument.
 
@@ -956,7 +956,7 @@ component definition calculates the state of the neutron ray when it leaves
 the component.  The calculation of the effect of the component on the
 neutron is performed by a block of embedded C code.
 One example of a component definition is given in section~\ref{s:slit}, and all
-component definitions can be found on the McStas
+component definitions can be found on the \MCS
 web-page~\cite{mcstas_webpage} and are described in the \MCS component manual.
 
 There exists a large number of functions and constants available in
@@ -1036,7 +1036,6 @@ OUTPUT PARAMETERS (s_1, s_2, ...)
 \end{mcstas}
 
 \indexKW{OUTPUT PARAMETERS}
-\index{Parameters!protecting|see{Keyword/OUTPUT}}
 This declares a list of C identifiers (variables, functions) that are
 output parameters (\textit{i.e.} global) for the
 component. Output parameters are used to hold values that are computed
@@ -1605,12 +1604,11 @@ This mechanism may lighten the component code, but a special care should be take
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{McDoc, the McStas library documentation tool}
+\section{McDoc, the \MCS library documentation tool}
 \label{s:mcdoc}
-\index{Documentation!generator|see{McDoc}}
 \index{McDoc|(textbf}
 
-McStas includes a facility called McDoc to help maintain good documentation of
+\MCS includes a facility called McDoc to help maintain good documentation of
 components and instruments. In the source code, comments may be
 written that follow a particular format understood by McDoc. The McDoc facility
 will read these comments and automatically produce output documentation in
@@ -1627,7 +1625,7 @@ Two forms of documentation can be generated. One
 is the component entry dialog in the \verb+mcgui+ front-end, see
 section~\ref{s:mcgui}. The other is a collection of web pages documenting
 the components and instruments, handled via the \verb+mcdoc+ front-end (see section~\ref{s:mcdoc-run}), and the complete documentation for all available
-McStas components and instruments may be found at the \MCS
+\MCS components and instruments may be found at the \MCS
 web page~\cite{mcstas_webpage}, as well as in the \MCS library
 (see~\ref{s:comp-overview}). All available \MCS documentation is accessible from the \verb+mcgui+ 'Help' menu.
 

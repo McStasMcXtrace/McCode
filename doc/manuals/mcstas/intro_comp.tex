@@ -13,12 +13,12 @@ spallation sources. The \MCS project was designed to provide such a framework.
 is a fast and versatile software tool for neutron ray-tracing simulations.
 It is based on a meta-language specially designed for neutron
 simulation. Specifications are written in this language by users and
-automatically translated into efficient simulation codes in ANSI-C.
+automatically translated into efficient simulation codes in ISO-C.
 The present version supports both continuous and pulsed source instru-
 ments, and includes a library of standard
 components with in total around 90 components. These enable to simulate all kinds of neutron scattering instruments (diffractometers, triple-axis, reflectometers, small-angle, back-scattering,...) for both continuous and pulsed sources.
 
-The \MCS package is written in ANSI-C and is freely available for down-load
+The \MCS package is written in ISO-C and is freely available for down-load
 from the \MCS web-page~\cite{mcstas_webpage}. The package is actively
 being developed and supported by Ris\o\ National Laboratory 
 and the Institut Laue Langevin (ILL). 
@@ -94,12 +94,14 @@ achieve this.
 
 \section{The design of \MCS}
 \label{s:design}
+\index{McStas!design}
+\index{Meta-language}
 
 In order to meet these ambitious goals, it was decided that \MCS should
 be based on its own meta-language, specially designed for
 simulating neutron scattering instruments. Simulations are written in
 this meta-language by the user, and the \MCS compiler automatically
-translates them into efficient simulation programs written in ANSI-C.
+translates them into efficient simulation programs written in ISO-C.
 
 In realizing the design of \MCS, the task was
 separated into four conceptual layers:
@@ -174,7 +176,7 @@ containing a neutron source, the component to be tested, and whatever
 detectors are useful, and the component can be thoroughly tested before
 being used in a complex simulation with many different components.
 
-The \MCS system is based on ANSI-C, making it both efficient and
+The \MCS system is based on ISO-C, making it both efficient and
 portable. The meta-language allows the user to embed arbitrary C code in
 the specifications. \textit{Flexibility} is thus ensured since the full
 power of the C language is available if needed.

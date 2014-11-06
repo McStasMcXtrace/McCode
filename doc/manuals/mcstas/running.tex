@@ -58,8 +58,6 @@ or contact the authors.
 
 %-------------------------------------------------------------------------------
 \subsection{Important note for Windows users} 
-\index{Microsoft Windows|see{Windows}}
-\index{MS Windows|see{Windows}}
 \index{Windows!file and directory names with spaces}
 \index{Windows!Perl distribution}
 \index{Perl!ActiveState for Windows}
@@ -93,8 +91,6 @@ and as a compromise we have adopted the following policy of \MCS .
 \label{s:brief}
 
 \index{McStas!running from the GUI|(}
-\index{Graphical User Interface|see{\texttt{mcgui}}}
-\index{GUI|see{\texttt{mcgui}}}
 \indexMCTOOL{mcgui}{(textbf}
 
 This section gives an ultra-brief overview of how to use \MCS once it
@@ -192,7 +188,6 @@ section~\ref{s:running}
 \section{Running the instrument compiler}
 \label{s:running}
 
-\index{Compilation!instrument definition|see{mcstas (compiler)}}
 \indexMCSW{mcstas}{compiler}{(textbf}
 This section describes how to run the \MCS compiler \mcs\ manually. Often,
 it will be more convenient to use the front-end program \verb+mcgui+
@@ -490,8 +485,9 @@ Tables \ref{f:simoptions} and \ref{f:simoptions2}.
 Data files contain header lines with information about the simulation from which
 they originate. In case the data must be analyzed with programs that cannot read
 files with such headers, they may be turned off using the \verb+--data-only+ or
-\verb+-a+ option.  \index{Data formats}\index{Formats|see{Data formats}}
+\verb+-a+ option.  
 
+\index{Data formats}
 The format of the output files from \MCS simulations is described in more
 detail in section~\ref{s:analyze}. It may be chosen either with
 \verb+--format=FORMAT+ for each simulation or globally by setting the
@@ -500,7 +496,6 @@ MCSTAS\_FORMAT environment variable.
 The available format list is obtained using the \verb+name.out --help+ option.
 \indexTOOL{PGPLOT}
 \indexTOOL{Matlab}
-\index{Data formats}
 \MCS can presently generate the \MCS /PGPLOT and the NeXus format. 
 
 It is also possible to create and read \textit{Vitess}, \textit{MCNP/PTRAC} and
@@ -1711,7 +1706,6 @@ simplified. The \verb+--file+ option may be used to store all data inside the
 %-------------------------------------------------------------------------------
 \subsection{NeXus format}
 \indexTOOL{NeXus}
-\index{HDF5|see{NeXus format}}
 \index{Data formats}
 \label{r:nexus}
 
@@ -1854,7 +1848,6 @@ launch long runs on fewer nodes rather than many short runs on many nodes.
 %-------------------------------------------------------------------------------
 \subsection{Parallel computing (MPI)}
 \index{MPI|textbf}
-\index{Parallel computing|see{MPI}}
 
 \label{s:mpi}
 The MPI support requires that MPICH (recommended), or alternatively LAM-MPI or
