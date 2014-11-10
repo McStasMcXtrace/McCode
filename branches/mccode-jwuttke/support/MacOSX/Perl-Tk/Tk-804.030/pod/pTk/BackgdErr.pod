@@ -1,0 +1,64 @@
+#  Copyright (c) 1992-1994 The Regents of the University of California.
+#  Copyright (c) 1994 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#  @(#) BackgdErr.3 1.6 95/05/06 15:29:07
+#
+
+=head1 NAME
+
+Tk_BackgroundError - report Tcl error that occurred in background processing
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_BackgroundError>(I<interp>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter in which the error occurred.
+
+=back
+
+=head1 DESCRIPTION
+
+This procedure is typically invoked when a Tcl error occurs during
+``background processing'' such as executing a Tcl command in response
+to a button press or menu entry invocation.
+When such an error occurs, the error condition is reported to Tk
+or to a widget or some other C code, and there is not usually any
+obvious way for that code to report the error to the user.
+In these cases the code calls B<Tk_BackgroundError> with an
+I<interp> argument identifying the interpreter in which the
+error occurred.
+B<Tk_BackgroundError> attempts to invoke the B<tkerror>
+Tcl command to report the error in an application-specific fashion.
+If no B<tkerror> command exists, or if it returns with an error condition,
+then B<Tk_BackgroundError> reports the error itself by printing
+a message on the standard error file.
+
+B<Tk_BackgroundError> does not invoke B<tkerror> immediately
+(in some cases this could interfere with scripts that are in process
+at the time the error occurred).
+Instead, it invokes B<tkerror> later as an idle callback.
+B<Tk_BackgroundError> saves the values of the B<errorInfo> and
+B<errorCode> variables and restores these values just before
+invoking B<tkerror>.
+
+It is possible for many background errors to accumulate before
+B<tkerror> is invoked.  When this happens, each of the errors
+is processed in order.  However, if B<tkerror> returns a
+break exception, then all remaining error reports for the
+interpreter are skipped.
+
+=head1 KEYWORDS
+
+background, error, tkerror

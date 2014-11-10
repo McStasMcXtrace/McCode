@@ -1,0 +1,12 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+use Tk::widgets qw(Button);
+#use Carp ();
+#$SIG{'__DIE__'} = \&Carp::confess;
+
+my $mw = MainWindow->new();
+$mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+$mw->Button(-text => 'Exit', -command => sub { exit } )->pack;
+MainLoop;
+

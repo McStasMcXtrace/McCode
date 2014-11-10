@@ -1,0 +1,730 @@
+#!perl -w
+#
+# PTKSH 2.0
+#
+# A graphical user interface for testing Perl/Tk commands and scripts.
+#
+# VERSION HISTORY:
+# ...truncated earlier stuff...
+# 4/23/98  V1.7    Achim Bohnet  -- some fixes to "o" command
+# 6/08/98  V2.01  M. Beller -- merge in GUI code for "wish"-like interface
+#
+# 2.01d1 6/6/98 First development version
+#
+# 2.01d2 6/7/98
+#  - apply A.B. patch for pod and -option
+#  - fix "use of uninitialized variable" in END{ } block (for -c option)
+#  - support h and ? only for help
+#  - misc. pod fixes (PITFALLS)
+#  - use default fonts and default colors  ## NOT YET--still working on it
+#  - get rid of Data::Dumper for history
+#
+# 2.01d3 6/8/98
+#  - Remove "use Data::Dumper" line
+#  - Put in hack for unix vs. win32 window manager focus problem
+#  - Achim's pod and histfile patch
+#
+# 2.01d4 6/18/98
+#  - Slaven's patch to make <Home> work properly
+#  - Add help message to banner (per Steve Lydie)
+#  - Fix horizontal scrolling (turn off wrapping in console window)
+#  - Clarify <Up> in docs and help means "up arrow"
+#  - Use HOMEDRIVE/HOMEPATH on Win32
+#
+# For more history look at the various Changes files in the Perl/Tk
+# distribution.
+
+=head1 NAME
+
+ptksh - Perl/Tk script to provide a graphical user interface for testing Perl/Tk
+commands and scripts.
+
+=head1 SYNOPSIS
+
+  % ptksh  ?scriptfile?
+  ... version information ...
+  ptksh> $b=$mw->Button(-text=>'Hi',-command=>sub{print 'Hi'})
+  ptksh> $b->pack
+  ptksh> o $b
+  ... list of options ...
+  ptksh> help
+  ... help information ...
+  ptksh> exit
+  %
+
+
+=head1 DESCRIPTION
+
+ptksh is a perl/Tk shell to enter perl commands
+interactively.  When one starts ptksh a L<MainWindow|Tk::MainWindow>
+is automaticly created, along with a ptksh command window.
+One can access the main window by typing commands using the
+variable $mw at the 'ptksh> ' prompt of the command window.
+
+ptksh supports command line editing and history.  Just type "<Up>" at
+the command prompt to see a history list.  The last 50 commands entered
+are saved, then reloaded into history list the next time you start ptksh.
+
+ptksh supports some convenient commands for inspecting Tk widgets.  See below.
+
+To exit ptksh use: C<exit>.
+
+ptksh is B<*not*> a full symbolic debugger.
+To debug perl/Tk programs at a low level use the more powerful
+L<perl debugger|perldebug>.  (Just enter ``O tk'' on debuggers
+command line to start the Tk eventloop.)
+
+=head1 FEATURES
+
+=head2 History
+
+Press <Up> (the Up Arrow) in the perlwish window to obtain a gui-based history list.
+Press <Enter> on any history line to enter it into the perlwish window.
+Then hit return.  So, for example, repeat last command is <Up><Enter><Enter>.
+You can quit the history window with <Escape>.  NOTE: history is only saved
+if exit is "graceful" (i.e. by the "exit" command from the console or by
+quitting all main windows--NOT by interrupt).
+
+=head2 Debugging Support
+
+ptksh provides some convenience function to make browsing
+in perl/Tk widget easier:
+
+=over 4
+
+=item B<?>, or B<h>
+
+displays a short help summary.
+
+=item B<d>, or B<x> ?I<args>, ...?
+
+Dumps recursively arguments to stdout. (see L<Data::Dumper>).
+You must have <Data::Dumper> installed to support this feature.
+
+B<x> was introduced for perl debugger compatibility.
+
+=item B<p> ?I<arg>, ...?
+
+appends "|\n" to each of it's arguments and prints it.
+If value is B<undef>, '(undef)' is printed to stdout.
+
+=item B<o> I<$widget> ?I<-option> ...?
+
+prints the option(s) of I<$widget> one on each line.
+If no options are given all options of the widget are
+listed.  See L<Tk::options> for more details on the
+format and contents of the returned list.
+
+=item B<o> I<$widget> B</>I<regexp>B</>
+
+Lists options of I<$widget> matching the
+L<regular expression|perlre> I<regexp>.
+
+=item B<u> ?I<class>?
+
+If no argument is given it lists the modules loaded
+by the commands you executed or since the last time you
+called C<u>.
+
+If argument is the empty string lists all modules that are
+loaded by ptksh.
+
+If argument is a string, ``text'' it tries to do a ``use Tk::Text;''.
+
+=back
+
+=head2 Packages
+
+Ptksh compiles into package Tk::ptksh.  Your code is eval'ed into package
+main.  The coolness of this is that your eval code should not interfere with
+ptksh itself.
+
+=head2 Multiline Commands
+
+ptksh will accept multiline commands.  Simply put a "\" character immediately
+before the newline, and ptksh will continue your command onto the next line.
+
+=head2 Source File Support
+
+If you have a perl/Tk script that you want to do debugging on, try running the
+command
+
+  ptksh> do 'myscript';
+
+   -- or  (at shell command prompt) --
+
+  % ptksh myscript
+
+Then use the perl/Tk commands to try out different operations on your script.
+
+=head1 ENVIRONMENT
+
+Looks for your .ptksh_history in the directory specified by
+the $HOME environment variable ($HOMEPATH on Win32 systems).
+
+=head1 FILES
+
+=over 4
+
+=item F<.ptksh_init>
+
+If found in current directory it is read in an evaluated
+after the mainwindow I<$mw> is created. F<.ptksh_init>
+can contain any valid perl code.
+
+=item F<~/.ptksh_history>
+
+Contains the last 50 lines entered in ptksh session(s).
+
+=back
+
+=head1 PITFALLS
+
+It is best not to use "my" in the commands you type into ptksh.
+For example "my $v" will make $v local just to the command or commands
+entered until <Return> is pressed.
+For a related reason, there are no file-scopy "my" variables in the
+ptksh code itself (else the user might trounce on them by accident).
+
+=head1 BUGS
+
+B<Tk::MainLoop> function interactively entered or sourced in a
+init or script file will block ptksh.
+
+=head1 SEE ALSO
+
+L<Tk|Tk>
+L<perldebug|perldebug>
+
+=head1 VERSION
+
+VERSION 2.03
+
+=head1 AUTHORS
+
+Mike Beller <beller@penvision.com>,
+Achim Bohnet <ach@mpe.mpg.de>
+
+Copyright (c) 1996 - 1998 Achim Bohnet and Mike Beller. All rights reserved.
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
+
+package Tk::ptksh;
+require 5.004;
+use strict;
+use Tk;
+
+##### Constants
+
+use vars qw($NAME $VERSION $FONT @FONT $WIN32 $HOME $HISTFILE $HISTSAVE $PROMPT $INITFILE);
+
+$NAME = 'ptksh';
+$VERSION = '2.03';
+$WIN32 = 1 if $^O =~ /Win32/;
+$HOME = $WIN32 ? ($ENV{HOMEDRIVE} . $ENV{HOMEPATH} . '\\') || 'C:\\' : $ENV{HOME} . "/";
+@FONT = ($WIN32 ? (-font => 'systemfixed') : () );
+#@FONT = ($WIN32 ? (-font => ['courier', 9, 'normal']) : () );
+$HISTFILE = "${HOME}.${NAME}_history";
+$HISTSAVE = 50;
+$INITFILE = ".${NAME}_init";
+$PROMPT = "$NAME> ";
+
+sub Win32Fix { my $p = shift; $p =~ s'\\'/'g; $p =~ s'/$''; return $p }
+
+use vars qw($mw $st $t @hist $hist $list $isStartOfCommand);
+
+# NOTE: mainwindow creation order seems to impact who gets focus, and
+# order is different on Win32 & *nix!!  So hack is to create the windows
+# in an order dependent on the OS!
+
+$mw = Tk::MainWindow->new unless $WIN32;  # &&& hack to work around focus problem
+
+##### set up user's main window
+package main;
+$main::mw = Tk::MainWindow->new;
+$main::mw->title('$mw');
+$main::mw->geometry("+1+1");
+package Tk::ptksh;
+
+##### Set up ptksh windows
+$mw = Tk::MainWindow->new if $WIN32;  # &&& hack to work around focus problem
+$mw->title($NAME);
+$st = $mw->Scrolled('Text', -scrollbars => 'osoe',
+				-wrap => 'none',
+				-width => 80, -height => 25, @FONT);
+$t = $st->Subwidget('scrolled');
+$st->pack(-fill => 'both', -expand => 'true');
+# $mw_mapped assures that Center is only called exactly twice: first time
+# will determine geometry of window, second time centering will work.
+# I observed a couple of further <Map> events, which are now ignored
+# and thus window creation seems to be faster now.
+my $mw_mapped;
+$mw->bind('<Map>', sub {return if $mw_mapped && $mw_mapped>=2; Center($mw); $mw_mapped++;} );
+
+# Event bindings
+$t->bindtags([$t, ref($t), $t->toplevel, 'all']); # take first crack at events
+$t->bind('<Return>', \&EvalInput);
+$t->bind('<BackSpace>', \&BackSpace);
+$t->bind('<Escape>', \&HistKill);
+$t->bind('<Up>', \&History);
+$t->bind('<Control-a>', \&BeginLine);
+$t->bind('<Home>', \&BeginLine);
+$t->bind('<Any-KeyPress>', [\&Key, Tk::Ev('K'), Tk::Ev('A')]);
+
+my $default_font = $t->cget(-font);
+my %default_font = $t->fontActual($default_font);
+my $normal_font;
+if (!$t->fontMetrics($default_font, '-fixed')) {
+    $normal_font = $t->fontCreate(%default_font, -family => "courier");
+    $t->configure(-font => $normal_font);
+} else {
+    $normal_font = $default_font;
+}
+my %normal_font = $t->fontActual($normal_font);
+my $bold_font = $t->fontCreate(%normal_font, -weight => "bold");
+
+# Set up different colors for the various window outputs
+#$t->tagConfigure('prompt', -underline => 'true');
+$t->tagConfigure('prompt', -foreground => 'blue', -font => $bold_font);
+$t->tagConfigure('result', -foreground => 'purple');
+$t->tagConfigure('error', -foreground => 'red');
+$t->tagConfigure('output', -foreground => 'blue');
+
+# The tag 'limit' is the beginning of the input command line
+$t->markSet('limit', 'insert');
+$t->markGravity('limit', 'left');
+
+# redirect stdout
+#tie (*STDOUT, 'Tk::Text', $t);
+tie (*STDOUT, 'Tk::ptksh');
+#tie (*STDERR, 'Tk::ptksh');
+
+# Print banner
+print "$NAME V$VERSION";
+print " perl V$] Tk V$Tk::VERSION  MainWindow -> \$mw\n";
+print "\n\t\@INC:\n";
+foreach (@INC) { print "\t  $_\n" };
+print "Type 'h<Return>' at the prompt for help\n";
+
+##### Read .ptkshinit
+if ( -r $INITFILE)
+  {
+    print "Reading $INITFILE ...\n";
+    package main;
+    do $Tk::ptksh::INITFILE;
+    package Tk::ptksh;
+  }
+
+###### Source the file if given as argument 0
+if (defined($ARGV[0]) && -r $ARGV[0])
+  {
+    print "Reading $ARGV[0] ...\n";
+    package main;
+    do $ARGV[0];
+    package Tk::ptksh;
+  }
+
+##### Read history
+@hist = ();
+if ( -r $HISTFILE and open(HIST, $HISTFILE) ) {
+	print "Reading history ...\n";
+	my $c = "";
+	while (<HIST>) {
+		chomp;
+		$c .= $_;
+		if ($_ !~ /\\$/) { #end of command if no trailing "\"
+			push @hist, $c;
+			$c = "";
+		} else {
+			chop $c;	# kill trailing "\"
+			$c .= "\n";
+		}
+	}
+    close HIST;
+}
+
+##### Initial prompt
+Prompt($PROMPT);
+$Tk::ptksh::mw->focus;
+$t->focus;
+#$mw->after(1000, sub {print STDERR "now\n"; $mw->focus; $t->focus;});
+
+##### Now enter main loop
+#$mw->afterIdle(sub {Center($mw);});
+MainLoop();
+
+####### Callbacks/etc.
+
+# EvalInput -- Eval the input area (between 'limit' and 'insert')
+#              in package main;
+use vars qw($command $result); # use globals instead of "my" to avoid conflict w/ 'eval'
+sub EvalInput {
+	# If return is hit when not inside the command entry range, reprompt
+	if ($t->compare('insert', '<=', 'limit')) {
+		$t->markSet('insert', 'end');
+		Prompt($PROMPT);
+		Tk->break;
+	}
+
+	# Support multi-line commands
+	if ($t->get('insert-1c', 'insert') eq "\\") {
+		$t->insert('insert', "\n");
+		$t->insert('insert', "> ", 'prompt'); # must use this pattern for continue
+		$t->see('insert');
+		Tk->break;
+	}
+
+	# Get the command and strip out continuations
+	$command = $t->get('limit','end');
+	$t->markSet('insert','end');
+	$command =~ s/\\\n>\s/\n/mg;
+
+	# Eval it
+	if ( $command !~ /^\s*$/) {
+		chomp $command;
+		push(@hist, $command)
+			unless @hist && ($command eq $hist[$#hist]); #could elim more redundancy
+
+		$t->insert('insert', "\n");
+
+		$isStartOfCommand = 1;
+
+		$command = PtkshCommand($command);
+
+		exit if ($command eq 'exit');
+
+		package main;
+		no strict;
+		$Tk::ptksh::result = eval "local \$^W=0; $Tk::ptksh::command;";
+		use strict;
+		package Tk::ptksh;
+
+		if ($t->compare('insert', '!=', 'insert linestart')) {
+			$t->insert('insert', "\n");
+		}
+		if ($@) {
+			$t->insert('insert', '## ' . $@, 'error');
+		} else {
+			$result = "" if !defined($result);
+			$t->insert('insert', '# ' . $result, 'result');
+		}
+	}
+
+	Prompt($PROMPT);
+
+	Tk->break;
+}
+
+sub Prompt {
+	my $pr = shift;
+
+	if ($t->compare('insert', '!=', 'insert linestart')) {
+		$t->insert('insert', "\n");
+	}
+
+	$t->insert('insert', $pr, 'prompt');
+	$t->see('insert');
+	$t->markSet('limit', 'insert');
+
+}
+
+sub BackSpace {
+	if ($t->tagNextrange('sel', '1.0', 'end')) {
+		$t->delete('sel.first', 'sel.last');
+		} elsif ($t->compare('insert', '>', 'limit')) {
+			$t->delete('insert-1c');
+			$t->see('insert');
+		}
+		Tk->break;
+}
+
+sub BeginLine {
+       $t->SetCursor('limit');
+       $t->break;
+}
+
+sub Key {
+	my ($self, $k, $a) = @_;
+	#print "key event: ", $k, "\n";
+	if ($t->compare('insert', '<', 'limit')) {
+		$t->markSet('insert', 'end');
+	}
+	#$t->break; #for testing bindtags
+}
+
+sub History {
+	Tk->break if defined($hist);
+
+	$hist = $mw->Toplevel;
+	$hist->title('History');
+	$list = $hist->ScrlListbox(-scrollbars => 'oe',
+              -width => 30, -height => 10, @FONT)->pack(qw(-fill both -expand 1));
+	Center($hist);
+	$list->insert('end', @hist);
+	$list->see('end');
+	$list->activate('end');
+	$hist->bind('<Double-1>', \&HistPick);
+	$hist->bind('<Return>', \&HistPick);
+	$hist->bind('<Escape>', \&HistKill);
+	my $hist_mapped; # see above for $mw_mapped
+	$hist->bind('<Map>', sub {return if $hist_mapped && $hist_mapped>=2; Center($hist); $hist_mapped++;} );
+	$hist->bind('<Destroy>', \&HistDestroy);
+	$hist->focus;
+	$list->focus;
+	$hist->grab;
+	#$mw->afterIdle(sub {Center($hist);});
+	Tk->break;
+}
+
+sub HistPick {
+	my $item = $list->get('active');
+	return if (!$item);
+	$t->markSet('insert', 'end');
+	$t->insert('insert',$item);
+	$t->see('insert');
+	$mw->focus;
+	$t->focus;
+	HistKill();
+}
+
+sub HistKill {
+	if ($hist) {
+		$hist->grabRelease;
+		$hist->destroy;
+	}
+}
+
+# Called from destroy event mapping
+sub HistDestroy {
+	if (defined($hist) && (shift == $hist)) {
+		$hist = undef;
+		$mw->focus;
+		$t->focus;
+	}
+}
+
+sub LastCommand {
+	if ($t->compare('insert', '==', 'limit')) {
+		$t->insert('insert', $hist[$#hist]);
+		$t->break;
+	}
+}
+
+# Center a toplevel on screen or above parent
+sub Center {
+	my $w = shift;
+	my ($x, $y);
+
+	if ($w->parent) {
+		#print STDERR $w->screenwidth, " ", $w->width, "\n";
+		$x = $w->parent->x + ($w->parent->width - $w->width)/2;
+		$y = $w->parent->y + ($w->parent->height - $w->height)/2;
+	} else {
+		#print STDERR $w->screenwidth, " ", $w->width, "\n";
+		$x = ($w->screenwidth - $w->width)/2;
+		$y = ($w->screenheight - $w->height)/2;
+	}
+	$x = int($x);
+	$y = int($y);
+	my $g = "+$x+$y";
+	#print STDERR "Setting geometry to $g\n";
+	$w->geometry($g);
+}
+
+# To deal with "TIE".
+# We have to make sure the prints don't go into the command entry range.
+
+sub TIEHANDLE {	# just to capture the tied calls
+	my $self = [];
+	return bless $self;
+
+}
+
+sub PRINT {
+	my ($bogus) = shift;
+
+	$t->markSet('insert', 'end');
+
+	if ($isStartOfCommand) {  # Then no prints have happened in this command yet so...
+		if ($t->compare('insert', '!=', 'insert linestart')) {
+			$t->insert('insert', "\n");
+		}
+		# set flag so we know at least one print happened in this eval
+		$isStartOfCommand = 0;
+	}
+
+	while (@_) {
+		$t->insert('end', shift, 'output');
+	}
+
+	$t->see('insert');
+
+	$t->markSet('limit', 'insert'); # don't interpret print as an input command
+}
+
+sub PRINTF
+{
+ my $w = shift;
+ $w->PRINT(sprintf(shift,@_));
+}
+
+###
+### Utility function
+###
+
+sub _o
+  {
+    my $w = shift;
+    my $what = shift;
+
+    $what =~ s/^\s+//;
+    $what =~ s/\s+$//;
+    my (@opt) = split " ", $what;
+
+    print 'o(', join('|', @opt), ")\n";
+    require Tk::Pretty;
+
+    # check for regexp
+    if ($opt[0] =~ s|^/(.*)/$|$1|)
+      {
+	print "options matching /$opt[0]/:\n";
+        foreach ($w->configure())
+          {
+            print Tk::Pretty::Pretty($_),"\n" if $_->[0] =~ /\Q$opt[0]\E/;
+          }
+        return;
+    }
+
+    # list of options (allow as bar words)
+    foreach (@opt)
+      {
+	s/^['"]//;
+	s/,$//;
+	s/['"]$//;
+	s/^([^-])/-$1/;
+      }
+    if (length $what)
+      {
+       foreach (@opt)
+          {
+            print Tk::Pretty::Pretty($w->configure($_)),"\n";
+          }
+      }
+    else
+      {
+        foreach ($w->configure()) { print Tk::Pretty::Pretty($_),"\n" }
+      }
+  }
+
+sub _p {
+    foreach (@_) { print $_, "|\n"; }
+}
+
+use vars qw($u_init %u_last $u_cnt);
+$u_init = 0;
+%u_last = ();
+sub _u {
+    my $module = shift;
+    if (defined($module) and $module ne '') {
+	$module = "Tk/".ucfirst($module).".pm" unless $module =~ /^Tk/;
+	print " --- Loading $module ---\n";
+	require "$module";
+	print $@ if $@;
+    } else {
+        %u_last = () if defined $module;
+	$u_cnt = 0;
+	foreach (sort keys %INC) {
+	    next if exists $u_last{$_};
+            $u_cnt++;
+            $u_last{$_} = 1;
+	    #next if m,^/, and m,\.ix$,; # Ignore autoloader files
+	    #next if m,\.ix$,; # Ignore autoloader files
+
+	    if (length($_) < 20 ) {
+		printf "%-20s -> %s\n", $_, $INC{$_};
+	    } else {
+		print "$_ -> $INC{$_}\n";
+	    }
+        }
+	print STDERR "No modules loaded since last 'u' command (or startup)\n"
+		unless $u_cnt;
+    }
+}
+
+sub _d
+  {
+    require Data::Dumper;
+    local $Data::Dumper::Deparse;
+    $Data::Dumper::Deparse = 1;
+    print Data::Dumper::Dumper(@_);
+  }
+
+sub _h
+  {
+    print <<'EOT';
+
+  ? or h          print this message
+  d or x arg,...  calls Data::Dumper::Dumper
+  p arg,...       print args, each on a line and "|\n"
+  o $w /regexp/   print options of widget matching regexp
+  o $w [opt ...]  print (all) options of widget
+  u xxx           xxx = string : load Tk::Xxx
+			       = ''     : list all modules loaded
+			       = undef  : list modules loaded since last u call
+				              (or after ptksh startup)
+
+  Press <Up> (the "up arrow" key) for command history
+  Press <Escape> to leave command history window
+  Type "exit" to quit (saves history)
+  Type \<Return> for continuation of command to following line
+
+EOT
+}
+
+
+# Substitute our special commands into the command line
+sub PtkshCommand {
+	$_ = shift;
+
+	foreach ($_) {
+		last if s/^\?\s*$/Tk::ptksh::_h /;
+		last if s/^h\s*$/Tk::ptksh::_h /;
+		last if s/^u(\s+|$)/Tk::ptksh::_u /;
+		last if s/^[dx]\s+/Tk::ptksh::_d /;
+		last if s/^u\s+(\S+)/Tk::ptksh::_u('$1')/;
+		last if s/^p\s+(.*)$/Tk::ptksh::_p $1;/;
+		last if s/^o\s+(\S+)\s*?$/Tk::ptksh::_o $1;/;
+		last if s/^o\s+(\S+)\s*,?\s+(.*)?$/Tk::ptksh::_o $1, '$2';/;
+    }
+    %u_last = %INC unless $u_init++;
+
+    # print STDERR "Command is: $_\n";
+
+    $_;
+}
+
+###
+### Save History -- use Data::Dumper to preserve multiline commands
+###
+
+END {
+	if ($HISTFILE) {  # because this is probably perl -c if $HISTFILE is not set
+		$#hist-- if $hist[-1] =~ /^(q$|x$|\s*exit\b)/; # chop off the exit command
+
+	    @hist = @hist[($#hist-$HISTSAVE)..($#hist)] if $#hist > $HISTSAVE;
+
+		if( open HIST, ">$HISTFILE" ) {
+			while ($_ = shift(@hist)) {
+				s/\n/\\\n/mg;
+				print HIST "$_\n";
+			}
+			close HIST;
+		} else {
+			print STDERR "Error: Unable to open history file '$HISTFILE'\n";
+		}
+	}
+}
+
+1;  # just in case we decide to be "use"'able in the future.

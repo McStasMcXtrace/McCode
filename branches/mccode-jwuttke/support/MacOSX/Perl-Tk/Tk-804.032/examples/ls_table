@@ -1,0 +1,56 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+use Tk::Table;
+
+my $now = time;
+
+my $mw = MainWindow->new;
+
+my $t  = $mw->Table(-scrollbars => 'e',-fixedrows => 1, -rows => 20);
+$t->pack(-expand=> 1, -fill => 'both');
+
+$dir = (@ARGV) ? shift : '.';
+opendir(DIR,$dir) || die "Cannot opendir $dir:$!";
+my $r = 1;
+my $c = 0;
+my $name;
+foreach $name ([-text => "Mode",-anchor => 'e'],
+               [-text => "Ln",-anchor => 'e'],
+               [-text => "User",-anchor => 'w'],
+               [-text => "Size",-anchor => 'e'],
+               [-text => "Date",-anchor => 'w'],
+               [-text => "Name",-anchor => 'w'])
+ {
+  $t->put(0,$c++,$t->Label(@$name,-relief => 'raised'));
+ }
+$t->configure(-columns => $c) if ($c > $t->cget('-columns'));
+
+my @opt = (-relief => 'groove');
+
+foreach $name (sort readdir(DIR))
+ {
+  my $c = 0;
+  my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime,
+      $blksize,$blocks) = lstat("$dir/$name");
+  die "Cannot lstat $dir/$name:$!" unless (defined $dev);
+  $t->put($r,$c++,$t->Label(@opt,-text => sprintf("%o",$mode),-anchor => 'e'));
+  $t->put($r,$c++,$t->Label(@opt,-text => $nlink,-anchor => 'e'));
+  $t->put($r,$c++,$t->Label(@opt,-text => $uid,-anchor => 'w'));
+  $t->put($r,$c++,$t->Label(@opt,-text => $size,-anchor => 'e'));
+  $t->put($r,$c++,$t->Label(@opt,-text => fmtdate($mtime),-anchor => 'w'));
+  $t->put($r,$c++,$t->Label(@opt,-text => $name,-anchor => 'w'));
+  $r++;
+ }
+closedir(DIR);
+$t->update;
+$t->focus;
+MainLoop;
+
+sub fmtdate
+{
+ my $t = shift;
+ my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($t);
+ my @mon = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
+ sprintf("%s %2d %2d:%2d", $mon[$mon], $mday,$hour,$min);
+}

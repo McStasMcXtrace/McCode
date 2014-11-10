@@ -1,0 +1,56 @@
+% Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
+
+\chapter{Beam optical components:
+Arms, slits, filters etc.}
+This chapter contains a number of optical components
+used to modify the x-ray beam in various ways,
+as well as the ``generic'' component \textbf{Arm}.
+\index{Library!Components!optics}
+\index{Optics|textbf}
+
+\input{optics/Arm.tex}
+
+\input{optics/Slit.tex}
+
+\input{optics/Slit_N.tex}
+
+\input{optics/Beamstop.tex}
+
+\input{optics/Filter.tex}
+
+\input{optics/Chopper_simple.tex}
+
+\newpage
+\chapter{Refractive optical components: lenses}
+\label{c:lenses}
+
+An X-ray refractive lens, often referred to as a Compund Refractive Lens (CRL), is a fairly new type of device, which has gained popularity in
+the last few years. An early study showing the feasiblity of such devices may be found in~\cite{snigirev1996}. As the refractive index of X-rays
+is $n\approx1$ a number of lenses, stacked together is usually necessary to bring the focal length to practical values. 
+\MCX includes a few lens components, which all have slightly different charactertics.
+
+\index{Optics|textbf}
+%\input{optics/lenses.tex}
+\input{optics/Lens_simple.tex}
+\input{optics/Lens_parab.tex}
+\input{optics/Lens_parab_Cyl.tex}
+\input{optics/Lens_parab_rough.tex}
+\input{optics/Lens_parab_Cyl_rough.tex}
+\input{optics/Lens_Kinoform.tex}
+\input{optics/Lens_elliptical.tex}
+
+\newpage
+\chapter{Reflective optical components: mirrors}
+\label{c:mirrors}
+\index{Optics|textbf}
+This section describes advanced reflective X-ray optics
+components such as mirrors.
+%A description of the reflectivity of a mirror is found
+%in section~\ref{ss:mirrorreflect}.
+%\input{optics/mirror.tex}
+\input{optics/Mirror_curved.tex}
+\input{optics/Mirror_parabolic.tex}
+\input{optics/Mirror_elliptic.tex}
+
+\input{optics/Multilayer_elliptic.tex}
+\input{optics/TwinKB_ML.tex}

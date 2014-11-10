@@ -1,0 +1,8 @@
+@SET PATH=@CPACK_NSIS_INSTALL_ROOT@\\lib\\@FLAVOR@-tools-python-@MCCODE_PREFIX@display-vtk-@MCCODE_VERSION@;%PATH%
+@REM Isn't windows a lovely place???
+@set TMPFILE=trace.%RANDOM%
+@echo Running @MCCODE_PREFIX@display for Python-VTK output 
+@echo - please give a few [return] if nothing happens!!
+@call mcrun %* --trace --no-output-files -n1e2   >   %TMPFILE%
+@call mcdisplay.py %TMPFILE%
+@del %TMPFILE%

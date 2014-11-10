@@ -1,0 +1,84 @@
+#!/usr/local/bin/perl
+
+use File::Find;
+use Time::Local;
+
+my $year = (gmtime)[5];
+
+my $yt   = timegm(0,0,0,1,0,$year);
+
+$year += 1900;
+my $last = $year-1;
+
+warn "This is $year\n";
+
+# $expr = shift;
+
+sub match
+{
+ if (/Copyright/i && /Nick/ && !/$year/)
+  {
+   print "$File::Find::dir/$file:$.:$_"
+  }
+ return 0;
+}
+
+sub wanted
+{
+ my $write = -w $_;
+ $File::Find::prune = 0;
+ if (-T $_ && !/[%~]$/ && !/\.bak/ && (stat($_))[9] >= $yt)
+  {
+   if (/\.c$/)
+    {
+     my $xs = $_;
+     $xs =~ s/\.c$/.xs/;
+     return if -f $xs;
+    }
+   local $file   = ($_);
+   local ($_);
+   @ARGV = ($file);
+   my $changed = 0;
+   $^I = '.bak';
+   while (<>)
+    {
+     if (/Copyright/i && /Nick/ && s/--$year/-$year/)
+      {
+       warn "$File::Find::name:$.:$_";
+       $changed++;
+      }
+     if (/Copyright/i && /Nick/ && /(199|200)[0-9]/ && !/$year/)
+      {
+       $changed++;
+       unless (s/((199|200)[0-9]-)(199|200)[0-9]/$1$year/)
+        {
+         unless (s/$last/$last-$year/)
+          {
+           unless (s/((199|200)[0-9])/$1-$year/)
+            {
+             die "$File::Find::name:$.:$_"
+            }
+          }
+        }
+       warn "$File::Find::name:$.:$_"
+      }
+     print;
+    }
+   if ($changed)
+    {
+     print "p4 edit $File::Find::name\n";
+    }
+   else
+    {
+     rename("$file.bak",$file) || die "Cannot rename $file.bak to $file:$!";
+    }
+  }
+ elsif (-d $_)
+  {
+   # $File::Find::prune = 1 if ($_ eq 'mTk');
+  }
+}
+
+@ARGV = '.' unless (@ARGV);
+
+find(\&wanted,@ARGV);

@@ -1,0 +1,44 @@
+#!/bin/sh
+
+LIB="@MCCODE_LIB@";
+LIBT="@TOOLS_LIB@";
+
+IN="$1";
+OUT="$2";
+
+# Find cutoff surrounding ENV_HEADER macro
+N=$(grep -n ENV_HEADER ${IN} | (IFS=":" read -r N REST && echo $N))
+
+RETVAL=$?;
+if [ $RETVAL -eq 0 ]; then
+    USE_HEADER=true;
+    BEFORE=`expr $N - 1`;
+    AFTER=`expr $N + 1`;
+else
+    USE_HEADER=false;
+fi
+
+# Locate Perl
+PERL="@PERL@";
+if [ "x${PERL}" = "x" ]; then
+    PERL="$(command -v perl)"
+    if [ $? -ne 0 ]; then
+        PERL=/usr/bin/perl;
+    fi
+fi
+
+(
+    if ${USE_HEADER}; then
+        head -n ${BEFORE} ${IN} &&  # Lines before ENV_HEADER
+        cat perl_env_header.pl  &&  # ENV_HEADER
+        tail -n +${AFTER} ${IN}     # Lines after ENV_HEADER
+    else
+        cat ${IN};
+    fi
+) |
+sed -e 's+#! /usr/bin/perl+#! '${PERL}'+' \
+	  -e 's+\$MCSTAS::sys_dir = "/usr/local/mcstas"+\$MCSTAS::sys_dir = "'${LIB}'"+' \
+	  -e 's+"\$MCSTAS::sys_dir/perl"+"'${LIBT}'/perl"+' \
+	> ${OUT}
+
+chmod +x ${OUT}

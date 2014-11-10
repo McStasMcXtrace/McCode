@@ -1,0 +1,45 @@
+# TITLE *Diamond-C-[FD3-MS] Fayos, J.[1999]
+# CELL 3.567000 3.567000 3.567000 90.000000 90.000000 90.000000
+# SPCGRP F D 3 M   CUBIC STRUCTURE
+# ATOM C 1 0.000000 0.000000 0.000000
+# SCATTERING FACTOR  COEFFICIENTS: C      F= 0.665 CM-12
+# Reference:  Journal of Solid State Chemistry (1999) 148, 278-285
+#
+# Physical parameters:
+# sigma_coh 5.551   coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.001   incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 0.0035  absorption scattering cross section (single atom) in [barn]
+# density   3.51    in [g/cm^3]
+# weight    12.01   in [g/mol] (single atom)
+# multiplicity 8    in [atoms/unit cell]
+# Vc        45.39   volume of unit cell in [A^3]
+# v_sound   18350   in [m/s]
+# T_m       4400    melting temperature in [K]
+# At_number 6       atomic number Z
+# lattice_a 3.567   lattice parameter a in [Angs]
+#
+# Format parameters: Lazy format <http://icsd.ill.fr>
+# column_j 17 multiplicity 'j'
+# column_d 6  d-spacing 'd' in [Angs]
+# column_F 13 norm of scattering factor |F| in [barn^0.5]
+# column_h 1
+# column_k 2
+# column_l 3
+#
+# H  K  L  THETA  2THETA D VALUE  1/D**2 SIN2*1000  H  K  L INTENSITY         /F(HKL)/       A(HKL)      B(HKL) PHA.ANG. MULT   LPG
+  1  1  1  14.05  28.10   2.0594  0.2358    58.95   1  1  1    1000.0              5.0        -5.02         0.00  180.00  8  17.49
+  2  2  0  23.36  46.72   1.2611  0.6288   157.19   2  2  0       0.0              0.0         0.00         0.00    0.00 12   6.93
+  3  1  1  27.70  55.41   1.0755  0.8645   216.14   3  1  1     654.6              4.3         4.29         0.00    0.00 24   5.23
+  2  2  2  29.05  58.10   1.0297  0.9431   235.78   2  2  2     779.1              8.4         8.41         0.00    0.00  8   4.85
+  4  0  0  34.10  68.21   0.8917  1.2575   314.38   4  0  0     395.4              7.8         7.77         0.00    0.00  6   3.84
+  3  3  1  37.66  75.32   0.8183  1.4933   373.33   3  3  1     309.5              3.7         3.66         0.00    0.00 24   3.38
+  4  2  2  43.37  86.74   0.7281  1.8863   471.57   4  2  2       0.0              0.0         0.00         0.00    0.00 24   2.92
+  5  1  1  46.75  93.50   0.6865  2.1221   530.51   5  1  1     183.8              3.1        -3.13         0.00  180.00 24   2.75
+  3  3  3  46.75  93.50   0.6865  2.1221   530.51   3  3  3      61.3              3.1        -3.13         0.00  180.00  8   2.75
+  4  4  0  52.46 104.92   0.6306  2.5150   628.76   4  4  0     286.5              5.7         5.67         0.00    0.00 12   2.61
+  5  3  1  56.02 112.05   0.6029  2.7508   687.70   5  3  1     253.9              2.7         2.67         0.00    0.00 48   2.60
+  4  4  2  57.25 114.50   0.5945  2.8294   707.35   4  4  2       0.0              0.0         0.00         0.00    0.00 24   2.61
+  6  2  0  62.44 124.88   0.5640  3.1438   785.95   6  2  0       0.0              0.0         0.00         0.00    0.00 24   2.75
+  5  3  3  66.81 133.61   0.5440  3.3796   844.89   5  3  3     107.1              2.3         2.29         0.00    0.00 24   3.01
+  6  2  2  68.40 136.81   0.5377  3.4582   864.54   6  2  2     430.5              4.5         4.48         0.00    0.00 24   3.14
+  4  4  4  76.20 152.41   0.5149  3.7726   943.14   4  4  4     173.5              4.1         4.14         0.00    0.00  8   4.45

@@ -1,0 +1,40 @@
+#!/bin/sh
+
+LIB="@TOOLS_LIB@"
+TOOL="mcdisplay"
+VERS="@MCCODE_VERSION@"
+
+
+canrun() {
+    if ! [ -x ${LIB}/${TOOL}.py ]; then
+        exit 127;
+    fi
+
+    modules="yaml"
+    cmd=""
+    for name in ${modules}; do
+        cmd="${cmd}import ${name}; "
+    done
+    python -c "${cmd}"
+}
+
+if ( canrun ); then
+    
+    CSVCOMPS=`mktemp -u comps.csv.XXX`
+    CSVLINES=`mktemp -u lines.csv.XXX`
+    echo
+    echo Running ${TOOL}.py for R output 
+    echo - please give a few \[return\] if nothing happens!!
+    echo
+    mcrun  $* --trace --no-output-files -n1e2 | ${LIB}/${TOOL}.py ${CSVCOMPS} ${CSVLINES}
+    R_PROFILE_USER=${LIB}/display.r R ${CSVCOMPS} ${CSVLINES} --no-save
+    rm ${CSVCOMPS} ${CSVLINES}
+
+else
+    echo ":: Failed to run Python ${TOOL}, trying old Perl version."
+    echo ":: If this fails too, consider reinstalling ${TOOL}."
+    echo ""
+
+    # Try old Perl-version of mcplot if Python version cannot run
+    ${TOOL} $*
+fi

@@ -1,0 +1,7 @@
+Lang_WinEvent
+Tk_AttachHWND
+Tk_GetHINSTANCE
+Tk_GetHWND
+Tk_HWNDToWindow
+Tk_PointerEvent
+Tk_TranslateWinEvent

@@ -1,0 +1,178 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#  @(#) FileHndlr.3 1.12 95/05/06 15:29:24
+#
+
+=head1 NAME
+
+Tk_CreateFileHandler, Tk_CreateFileHandler2, Tk_DeleteFileHandler - associate procedure callbacks with files or devices
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_CreateFileHandler>(I<id, mask, proc, clientData>)
+
+B<Tk_CreateFileHandler2>(I<id, proc2, clientData>)
+
+B<Tk_DeleteFileHandler>(I<id>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item int id (in)
+
+Integer identifier for an open file or device (such as returned by
+B<open> system call).
+
+=item int mask (in)
+
+Conditions under which I<proc> should be called:
+OR-ed combination of B<TK_READABLE>, B<TK_WRITABLE>,
+and B<TK_EXCEPTION>.
+
+=item Tk_FileProc *proc (in)
+
+Procedure to invoke whenever the file or device indicated
+by I<id> meets the conditions specified by I<mask>.
+
+=item Tk_FileProc2 *proc2 (in)
+
+Procedure to invoke from event loop to check whether I<fd>
+is ready and, if so, handle it.
+
+=item ClientData clientData (in)
+
+Arbitrary one-word value to pass to I<proc>.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_CreateFileHandler> arranges for I<proc> to be
+invoked in the future whenever I/O becomes possible on a file
+or an exceptional condition exists for the file.  The file
+is indicated by I<id>, and the conditions of interest
+are indicated by I<mask>.  For example, if I<mask>
+is B<TK_READABLE>, I<proc> will be called when
+the file is readable.
+The callback to I<proc> is made by B<Tk_DoOneEvent>, so
+B<Tk_CreateFileHandler> is only useful
+in programs that dispatch events
+through B<Tk_DoOneEvent> or through other Tk procedures that
+call B<Tk_DoOneEvent>, such as B<Tk_MainLoop>.
+
+I<Proc> should have arguments and result that match the
+type B<Tk_FileProc>:
+
+=over 4
+
+typedef void Tk_FileProc(
+
+=over 4
+
+ClientData I<clientData>,
+int I<mask>);
+
+=back
+
+=back
+
+The I<clientData> parameter to I<proc> is a copy
+of the I<clientData>
+argument given to B<Tk_CreateFileHandler> when the callback
+was created.  Typically, I<clientData> points to a data
+structure containing application-specific information about
+the file.  I<Mask> is an integer mask indicating which
+of the requested conditions actually exists for the file;  it
+will contain a subset of the bits in the I<mask> argument
+to B<Tk_CreateFileHandler>.
+
+B<Tk_CreateFileHandler2> also creates a file handler,
+but it provides a lower-level and more flexible interface.
+The callback procedure I<proc2> must have arguments and result
+that match the following prototype:
+
+=over 4
+
+typedef int Tk_FileProc2(
+
+=over 4
+
+ClientData I<clientData>,
+int I<mask>,
+int I<flags>);
+
+=back
+
+=back
+
+Whereas a file handler created by B<Tk_CreateFileHandler> is
+only invoked when the file is known to be ``ready'', a file handler
+created by B<Tk_CreateFileHandler2> is invoked on every pass
+through the the event loop (B<Tk_DoWhenIdle>); it gets to
+determine whether the file is ``ready'' or not.
+The I<mask> argument contains an OR'ed combination of the
+bits B<TK_READABLE>, B<TK_WRITABLE>, and B<TK_EXCEPTION>,
+which indicate whether the file is known to be readable, writable,
+or to have an exceptional condition present (this is the case if
+B<select> has been invoked since the previous call to I<proc2>,
+and if it indicated that the specified conditions were present).
+I<proc2> may use this information along with additional information
+of its own, such as knowledge about buffered data, to decide whether
+the file is really ``ready''.
+The I<flags> argument is a copy of the flags passed to
+B<Tk_DoOneEvent>, which may be used by I<proc2> to ignore
+the file if the appropriate bit, such as B<TK_FILE_EVENTS>,
+is not present.
+
+I<proc2> must return an integer value that is either B<TK_FILE_HANDLED>
+or an OR-ed combination of B<TK_READABLE>, B<TK_WRITABLE>, and
+B<TK_EXCEPTION>.
+If the return value is B<TK_FILE_HANDLED> it means that the file
+was ``ready'' and that I<proc2> handled the ready condition;
+B<Tk_DoOneEvent> will return immediately.
+If the return value is not B<TK_FILE_HANDLED>, then it indicates
+the set of conditions that should be checked for the file if the
+current invocation of B<Tk_DoWhenIdle> invokes B<select>.
+Typically the return value reflects all of the conditions that
+I<proc2> cares about.
+A zero return value means that the file should be ignored if
+B<Tk_DoWhenIdle> calls B<select> (this could happen, for
+example, if the I<flags>
+argument specified that this file's events should be ignored).
+The value returned by I<proc2> only affects a B<select> call
+from the current invocation of B<Tk_DoOneEvent>;  the next
+invocation of B<Tk_DoOneEvent> will call I<proc2> afresh
+to get new information.
+
+There may exist only one handler for a given file at a given
+time.  If B<Tk_CreateFileHandler> or B<Tk_CreateFileHandler2>
+is called when a handler already exists for I<id>, then the
+new callback replaces the information that was
+previously recorded.
+
+B<Tk_DeleteFileHandler> may be called to delete the
+file handler for I<id>;  if no handler exists for the
+file given by I<id> then the procedure has no effect.
+
+The purpose of file handlers is to enable an application to
+respond to X events and other events while waiting for files
+to become ready for I/O.  For this to work correctly, the
+application may need to use non-blocking I/O operations on the
+files for which handlers are declared.  Otherwise the application
+may be put to sleep if it reads or writes too much data;
+while waiting for the I/O to complete the
+application won't be able to service other events.  In BSD-based
+UNIX systems, non-blocking I/O can be specified for a file using
+the B<fcntl> kernel call with the B<FNDELAY> flag.
+
+=head1 KEYWORDS
+
+callback, file, handler

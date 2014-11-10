@@ -1,0 +1,33 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+use strict;
+require Tk::Label;
+
+my $fred = 'Something';
+
+sub toggle
+{
+ use vars qw($callback);
+ my $w = shift;
+ my $r = $w->configure("-relief");
+ $w->configure("-relief" => ($r eq "raised") ? "sunken" : "raised");
+ $fred = reverse($fred);
+ $callback = [\&toggle,$w] unless defined $callback;
+ $w->after(1000,$callback);
+}
+
+
+my $top = MainWindow->new();
+
+
+my $l   = $top->Label('-textvariable'=> \$fred);
+
+$l->pack();
+
+&toggle($l);
+
+$top->update();
+
+Tk::MainLoop();
+

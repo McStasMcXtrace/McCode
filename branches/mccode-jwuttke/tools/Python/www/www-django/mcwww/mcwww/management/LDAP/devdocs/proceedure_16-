@@ -1,0 +1,732 @@
+- Cleaning up the directory tree before starting:
+  	       removing unecc. temp files
+	       collecting python code 
+	       collecting LDIF moodle tweaks to setup LDIFs
+	       Make template ldif for modifications
+  dir tree (inc all files):
+    ../LDAP
+    ├── devdocs/
+    │   ├── proceedure_14-15
+    │   ├── proceedure_16-
+    │   └── slapNldap_notes
+    ├── LDIFs/
+    │   ├── building/
+    │   │   ├── config_pw.ldif
+    │   │   ├── DB_state_build.ldif
+    │   │   ├── structure_state_build.ldif
+    │   │   └── user_population_build.ldif
+    │   ├── deletion/
+    │   │   ├── access_state_del.ldif
+    │   │   ├── structure_state_del.ldif
+    │   │   └── zero_access_state.ldif
+    │   └── modifying/
+    │       └── modify_template.ldif
+    ├── nginx/
+    │   ├── greenheart.moodle.conf
+    │   └── ldap.conf
+    ├── openSSL/
+    │   ├── certs/
+    │   │   ├── localhost.cer
+    │   │   └── root.cer
+    │   ├── config.conf
+    │   ├── index.txt
+    │   ├── index.txt.attr
+    │   ├── index.txt.old
+    │   ├── ldap_localhost.csr
+    │   ├── ldap_localhost.key
+    │   ├── private/ [error opening dir]
+    │   ├── privkey.pem
+    │   ├── serialfile
+    │   ├── serialfile.old
+    │   └── temp/
+    │       └── 0A.pem
+    └── python/
+    	├── build_DIT.py
+    	├── flush_DB.py
+    	├── LDAPBuilder.py
+    	├── LDAPComm.py
+    	├── LDAPData.py
+    	└── temp_query_files/
+----------------------------------------
+- Setting up the moodle-LDAP connection : 9-7-14
+----------------------------------------
+  LDAP Server Settings:
+       Host Name: localhost
+       Use TLS	: Yes
+  Bind Settings: 
+       DN       : cn=moodle,ou=access,dc=fysik,dc=dtu,dc=dk
+       Password	: trauamroot
+  User Lookup:
+       Contexts	: ou=person,dc=fysik,dc=dtu,dc=dk
+       User att : uid
+       ObjClass : inetorgperson
+  Force Change Password:
+       PW Hash  : MD5 hash
+  Cron Sync:
+       Rm Ext	: Full Delete Internal
+- There seems to be no mention of having a web server allowing access to the LDAP DB and as it is running on teh same machine as the moodle DB we can (hopefully)
+  just connect directly. Also LDAP is a DIT server anyway, it listens on port 389, with or without TLS.
+- Setting up the TLS on the LDAP server now, got to think about what the server will actually be called.... maybe I called it something already: fysik.dtu.dk ?
+  TLS Directives:
+  --------------
+     directives to add to olcDatabase={0}config.ldif: (in the global scope in slapd.conf therefore is at the top level DB LDIF file)
+     -----------------------------------------------
+       olcTLSCACertificateFile: /home/lewis/Documents/LDAP/openSSL/certs/root.cer
+       olcTLSCertificateFile: /home/lewis/Documents/LDAP/openSSL/ldap_localhost.key
+       olcTLSCertificateKeyFile: /home/lewis/Documents/LDAP/openSSL/privkey.pem
+  
+- Scrap the openSSL directory as setting up for LDAP nicely. Tree to follow!
+  $mkdir '...'/openSSL/certs
+  $mkdir '...'/openSSL/certs/keys
+  $openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ./certs/keys/ldapskey.pem -out ldapscert.pem
+    Generating a 2048 bit RSA private key
+    .+++
+    ....................................+++
+    writing new private key to 'certs/keys/ldapskey.pem'
+    -----
+    You are about to be asked to enter information that will be incorporated
+    into your certificate request.
+    What you are about to enter is what is called a Distinguished Name or a DN.
+    There are quite a few fields but you can leave some blank
+    For some fields there will be a default value,
+    If you enter '.', the field will be left blank.
+    -----
+    Country Name (2 letter code) [AU]:DK
+    State or Province Name (full name) [Some-State]:Lyngby
+    Locality Name (eg, city) []:Copenhagen
+    Organization Name (eg, company) [Internet Widgits Pty Ltd]:DTU
+    Organizational Unit Name (eg, section) []:fysik
+    Common Name (e.g. server FQDN or YOUR name) []:localhost
+    Email Address []:lewis@fysik.dtu.dk
+  #chown -R openldap:openldap certs/
+  #chmod 0400 certs/keys/ldapskey.pem
+- Make the LDIF to add the olcTLS directives listed above. Put them in the LDIF dir!         -------------------
+  THESE NEED TO BE ADDED TO olcDatabase={0}config.ldif SO PUT THEM IN THE RIGHT BLOODY LDIF: DB_state_build.ldif
+     TLS_directives.ldif    			       	      	      	  	       	     -------------------
+     -------------------
+     dn: dc=fysik,dc=dtu,dc=dk								  
+     changetype: modify
+     add: olcTLSCertificateFile
+     olcTLSCertificateFile: /home/lewis/Documents/LDAP/openSSL/cert/ldapscert.pem
+     -
+     add: olcTLSCertificateKeyFile
+     olcTLSCertificateKeyFile: /home/lewis/Documents/LDAP/openSSL/certs/keys/ldapskey.pem
+     -
+     add: olcTLSCipherSuite
+     olcTLSCipherSuite: TLSv1+RSA:!EXPORT:!NULL
+     -
+     add: olcTLSVerifyClient
+     olcTLSVerifyClient: never
+
+- Add line SLAPD_URLS="$SLAPD_URLS ldapi:/// ldap:/// ldaps:///" to /etc/init.d/slapd
+- Try applying the LDIF file to olcDatabase={0}config.ldif
+    $ldapadd -x -D "cn=admin,cn=config" -f TLS_directives.ldif -w traumaroot
+        modifying entry "olcDatabase={0}config,cn=config"
+	ldap_modify: Object class violation (65)
+	     additional info: attribute 'olcTLSCertificateFile' not allowed
+    #cat /etc/ldap/slapd.d/cn=config/olcDatabase={0}config.ldif             <-- Is there anything added to the DB or has it all stopped... if it's not allowed maybe do it in the higher level DB...
+    	 nope, all not allowed. THE MORE GLOBAL SCOPE IS ACTUALLY IN cn=config SO PUT IT THERE...
+- Change dn to cn=config, try to find the correct permissions to add it to that file.
+- Big trouble with this! Got to find a way to add this to the cn=config scope while the db is offline as it kills slapd!
+  -----------
+    $ldapadd -x -D "cn=admin,cn=config" -f TLS_directives.ldif -w traumaroot
+        modifying entry "cn=config"						 <-- Attempt to update cn=config
+	ldap_result: Can't contact LDAP server (-1)				 <-- Suddenly can't see server (but COULD connect to it to update it above)
+    #service slapd status  	   	       					 <-- is the DB alive?
+        [FAIL] slapd is not running ... failed!					 <-- Nope.
+    #service slapd stop                                                          <-- I didn't stop it first so I thought I'd give it a chance to quit gracefully.
+    	[ ok ] Stopping OpenLDAP: slapd.					 <-- Seems happy with that.
+    #sudo service slapd status	  						 <-- Check if running
+        [FAIL] slapd is not running ... failed!					 <-- Of course not. :) Good.
+    #sudo service slapd start 	    						 <-- Start slapd
+        [ ok ] Starting OpenLDAP: slapd.					 <-- Seems ok...
+    #service slapd status	  						 <-- Check health
+        [ ok ] slapd is running.						 <-- Yep, it's alive.
+    $ldapadd -x -D "cn=admin,cn=config" -f TLS_directives.ldif -w traumaroot	 <-- Try to modify again
+        modifying entry "cn=config"	   		       	  		 <--\
+	   ldap_result: Can't contact LDAP server (-1)				    |
+    $sudo service slapd status	      	   	  				    |
+        [FAIL] slapd is not running ... failed!					    |______ Same results 
+    $sudo service slapd start							    |	    as above..... try slapadd while db is off line?
+    	[ ok ] Starting OpenLDAP: slapd.					    |	       		  I know I can't just manually add the line.
+    #service slapd status	  						    |
+        [ ok ] slapd is running.						 <--/
+-----------
+- 10-7-14 -
+-----------
+- Stop slapd, try to add ldif to cn=config using slap commands (offline configuration)
+    #service slapd stop
+    	[ ok ] Stopping OpenLDAP: slapd.
+    #slapadd -b "cn=config" -d -1 -l ../LDIFs/TLS/TLS_directives.ldif -v        <-- see man slapadd for flags, fairly self explanatory.
+        53be3d98 >>> dnNormalize: <cn=config>
+	53be3d98 <<< dnNormalize: <cn=config>
+	53be3d98 slapadd startup: initiated.
+	53be3d98 backend_startup_one: starting "cn=config"
+	53be3d98 config_back_db_open
+	Backend ACL: access to *
+	    by * none
+
+        53be3d98 config_back_db_open: line 0: warning: cannot assess the validity of the ACL scope within backend naming context
+	53be3d98 => str2entry: "
+		    	       dn: cn=config
+			       changetype: modify
+			       add: olcTLSCertificateFile
+			       olcTLSCertificateFile: /home/lewis/Documents/LDAP/openSSL/cert/ldapscert.pem
+			       -
+			       add: olcTLSCertificateKeyFile
+			       olcTLSCertificateKeyFile: /home/lewis/Documents/LDAP/openSSL/certs/keys/ldapskey.pem
+			       -
+			       add: olcTLSCipherSuite
+			       olcTLSCipherSuite: TLSv1+RSA:!EXPORT:!NULL
+			       -
+			       add: olcTLSVerifyClient
+			       olcTLSVerifyClient: never
+			       "
+        53be3d98 >>> dnPrettyNormal: <cn=config>
+	53be3d98 <<< dnPrettyNormal: <cn=config>, <cn=config>
+	53be3d98 <= str2entry NULL (parse_line)
+	53be3d98 <= str2entry NULL (parse_line)
+	53be3d98 <= str2entry NULL (parse_line)
+	53be3d98 <= str2entry: str2ad(changetype): attribute type undefined                            <-- this again? grrr. I forgot you can't do a modify with slapadd.
+	slapadd: could not parse entry (line=1)
+	53be3d98 slapadd shutdown: initiated
+	53be3d98 slapadd destroy: freeing system resources.
+    #cat /etc/ldap/slapd/cn=config.ldif
+        Nothing was added since last time I checked.
+  Change the ldif to be a simple add type (none of the lines are in cn=config.ldif)
+    #slapadd -b "cn=config" -d -1 -l ../LDIFs/TLS/TLS_directives.ldif -v                               <-- see man slapadd for flags, fairly self explanatory.
+        53be40e2 >>> dnNormalize: <cn=config>			      				           SLAPADD ATTEMPT
+	53be40e2 <<< dnNormalize: <cn=config>
+	53be40e2 slapadd startup: initiated.
+	53be40e2 backend_startup_one: starting "cn=config"
+	53be40e2 config_back_db_open
+	Backend ACL: access to *
+	   by * none
+
+        53be40e2 config_back_db_open: line 0: warning: cannot assess the validity of the ACL scope within backend naming context
+	53be40e2 => str2entry: "
+		    	       dn: cn=config
+			       changetype: add
+			       olcTLSCertificateFile: /home/lewis/Documents/LDAP/openSSL/cert/ldapscert.pem
+			       -
+			       olcTLSCertificateKeyFile: /home/lewis/Documents/LDAP/openSSL/certs/keys/ldapskey.pem
+			       -
+			       olcTLSCipherSuite: TLSv1+RSA:!EXPORT:!NULL
+			       -
+			       olcTLSVerifyClient: never
+			       "
+        53be40e2 >>> dnPrettyNormal: <cn=config>
+	53be40e2 <<< dnPrettyNormal: <cn=config>, <cn=config>
+	53be40e2 <= str2entry NULL (parse_line)
+	53be40e2 <= str2entry NULL (parse_line)
+	53be40e2 <= str2entry NULL (parse_line)
+	53be40e2 <= str2entry: str2ad(changetype): attribute type undefined                     <-- booo, same error. What did I do last time? See proceedure_14-15! :D
+	slapadd: could not parse entry (line=1)
+	53be40e2 slapadd shutdown: initiated
+	53be40e2 slapadd destroy: freeing system resources.
+- Ok, so, the DB needs to be live and I need to use ldapadd with external (system) priviliges. 
+    #service slapd start
+      	[ ok ] Starting OpenLDAP: slapd.  
+    #ldapadd -Y EXTERNAL -H ldapi:/// -f TLS_directives.ldif                                    <-- LDAPADD ATTEMPT
+      	SASL/EXTERNAL authentication started
+	SASL username: gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth
+	SASL SSF: 0
+    #cat /etc/ldap/slapd.d/cn=config.ldif
+    	Not added there....
+    #cat /etc/ldap/slapd.d/cn=config/olcDatabase={0}config.ldif
+        Not added there either...
+    #slapcat                                                                                    <-- don't think the main DB will have it but got to check....
+        Nope... got to find how to add these directives/arrtributes to the DB VERY IMPORTANT!
+- Try connection w/out SASL (-x flag)
+    #ldapadd -x -Y EXTERNAL -H ldapi:/// -f TLS_directives.ldif 
+        ldapadd: incompatible with authentication choice                                        <-- yeah...back to the interwebs for helpings!
+--------------------
+- IMPORTANT EDIT!!!
+--------------------
+    #emacs /etc/defaults/slapd
+        UNCOMMENT OUT THE LINE THAT POINTS TO THE SERVERS AND PORTS!! THIS MAY HELP... HAHA
+- Alter TLS_directives.ldif to make it an add: file (properly)
+    #ldapadd -Y EXTERNAL -H ldapi:/// -f ../LDIFs/TLS/TLS_directives.ldif
+        SASL/EXTERNAL authentication started
+	SASL username: gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth
+	SASL SSF: 0                                                                             <-- Does not look as though this went through... try SASL quiet mode: -Q flag
+    #cat /etc/ldap/slapd.d/cn=config.ldif
+        The change did not go through
+    #ldapadd -QY EXTERNAL -H ldapi:/// -f ../LDIFs/TLS/TLS_directives.ldif
+    #cat /etc/ldap/slapd.d/cn=config.ldif
+    	Change did not apply (being quiet does not mean force change, of course ;) )
+    #ldapadd -IY    #ldapadd -I EXTERNAL -H ldapi:/// -f ../LDIFs/TLS/TLS_directives.ldif			<-- interactive mode (trying known password: traumaroot)
+        Please enter your authorization name: MANY NAMES WENT HERE
+       	    ldap_sasl_interactive_bind_s: Insufficient access (50)
+	        additional info: SASL(-14): authorization failure: Inappropriate authentication <--- all attedmpts at possible user names yeild this.
+- Try this with the ldap server down.
+    #service slapd stop
+        [ ok ] Stopping OpenLDAP: slapd.
+    #ldapadd -Y EXTERNAL -H ldapi:/// -f ../LDIFs/TLS/TLS_directives.ldif
+        ldap_sasl_interactive_bind_s: Can't contact LDAP server (-1)                            <-- As expected.
+    #service slapd start
+        [ ok ] Starting OpenLDAP: slapd.
+    #ldapmodify -Y EXTERNAL -H ldapi:/// -f ../LDIFs/TLS/TLS_directives.ldif
+        ASL/EXTERNAL authentication started
+	SASL username: gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth
+	SASL SSF: 0
+	ldapmodify: wrong attributeType at line 9, entry "cn=config"                             <-- ldapmodify gave me more info (putting in verbose mode only told me about the server connection)
+- removing !EXPORT from olcTLSCipher line in ldif.
+    nope
+- removing !NULL from olcTLSCipher line in ldif
+    nope.
+- removing olcTLSCipher line completely.
+    nope, same error: line 9 is always wrong attr type.
+- changed the verify client line so that it had a TLS in it (big derpington there...)
+    #ldapmodify -Y EXTERNAL -H ldapi:/// -f ../LDIFs/TLS/TLS_directives.ldif -v
+        ldap_initialize( ldapi:///??base )
+	SASL/EXTERNAL authentication started
+	SASL username: gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth
+	SASL SSF: 0
+	add olcTLSCertificateFile:
+	    /home/lewis/Documents/LDAP/openSSL/cert/ldapscert.pem
+	add olcTLSCertificateKeyFile:
+	    /home/lewis/Documents/LDAP/openSSL/certs/keys/ldapskey.pem
+        add olcTLSVerifyClient: never
+	modifying entry "cn=config"
+		  ldap_modify: Insufficient access (50)                                          <-- yay, an access issue! :'(
+- USE THE ADMIN USER OF CONFIG DB TO ACCESS THIS SHIT BABY, OOOOHHHH YEAH!
+      #ldapmodify -x -D "cn=admin,cn=config" -H ldapi:/// -f ../LDIFs/TLS/TLS_directives.ldif -v -w traumaroot
+          ldap_initialize( ldapi:///??base )
+	  add olcTLSCertificateFile:
+	      /home/lewis/Documents/LDAP/openSSL/cert/ldapscert.pem
+	  add olcTLSCACertificateFile:
+	      /home/lewis/Documents/LDAP/openSSL/cert/ldapscert.pem
+          add olcTLSCertificateKeyFile:
+	      /home/lewis/Documents/LDAP/openSSL/certs/keys/ldapskey.pem
+          add olcTLSVerifyClient:
+	      never
+	  modifying entry "cn=config"
+	  modify complete                                                                         <-- YA WEE BEASTIE WIIIIIIIIIIIIIIIIIIIIIIIIIOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOH!
+- #cat /etc/ldap/slapd.d/cn=config.ldif
+     # AUTO-GENERATED FILE - DO NOT EDIT!! Use ldapmodify.
+     # CRC32 ef37cc5c
+     dn: cn=config
+     objectClass: olcGlobal
+     cn: config
+     olcArgsFile: /var/run/slapd/slapd.args
+     olcLogLevel: none
+     olcPidFile: /var/run/slapd/slapd.pid
+     olcToolThreads: 1
+     structuralObjectClass: olcGlobal
+     entryUUID: 8219b8a8-9ac6-1033-9b81-219251e1b7bc
+     creatorsName: cn=config
+     createTimestamp: 20140708083506Z
+     olcTLSCertificateFile: /home/lewis/Documents/LDAP/openSSL/cert/ldapscert.pem          <-\
+     olcTLSCACertificateFile: /home/lewis/Documents/LDAP/openSSL/cert/ldapscert.pem	     |____ HORAY!!!!
+     olcTLSCertificateKeyFile: /home/lewis/Documents/LDAP/openSSL/certs/keys/ldapskey.pem    |	   That's what I like to see!!! :D Now to see if moodle likes it too. :p
+     olcTLSVerifyClient: never								   <-/
+     entryCSN: 20140710082717.106702Z#000000#000#000000
+     modifiersName: cn=admin,cn=config
+     modifyTimestamp: 20140710082717Z				   ===
+- add this in to the python build scripts! - Need to document this NOW the ldap setup has spanned too many files.
+      	      	     	    	  	     	     	      	   ===
+- moving some things around, cleaning the dir tree and changing the python scripts accordingly.
+- LDAP dir tree on end:
+
+      ../LDAP/
+      ├── devdocs/
+      │   ├── proceedure_00-06
+      │   ├── proceedure_07-10
+      │   ├── proceedure_11
+      │   ├── proceedure_12-13
+      │   ├── proceedure_14-15
+      │   ├── proceedure_16-                     <-- this document
+      │   └── slapNldap_notes
+      ├── LDIFs/
+      │   ├── building/				 <-- streamlined fresh DB build LDIFs
+      │   │   ├── config_pw.ldif
+      │   │   ├── DB_state_build.ldif
+      │   │   ├── structure_state_build.ldif
+      │   │   ├── TLS_directives.ldif
+      │   │   └── user_population_build.ldif
+      │   ├── deletion/				 <-- not completed DB entry deletion LDIFs - need to be templatified and then a deletion module built that : searches for entries to delete (for user flushing)
+      │   │   ├── access_state_del.ldif		     	 	      	    	     	   	       		    	       		       	     	   : takes args to delete (for admin)
+      │   │   ├── structure_state_del.ldif														   : maps DIT and removes everthing (for DB reinitialisation)
+      │   │   └── zero_access_state.ldif
+      │   └──modifying/                          <-- first modification template - need to make a modification module that uses this to 1: construct a modification LDIF based on http POST form
+      │      └── modify_template.ldif		     	   			   	   	  	       	      	   	        2: call LDAPComm::ldapMod with user args and constucted LDIF 
+      ├── nginx/
+      │   └── greenheart.moodle.conf             <-- nginx moodle configuration
+      ├── openSSL/
+      │   └── certs/				 <-- TLS/SSL security certificates and keys... the CA cert is the same and the normal cert (in this case.. will probably make a seperate one for elearn1)
+      │       ├── keys
+      │       │   └── ldapskey.pem
+      │       └── ldapscert.pem
+      └── python/				 <-- current state of the server build files - flushDB is out of date! (not had a need to flush the DB in a while... setting up the TLS layer was a biiiiiatch!)
+          ├── build_DIT.py
+	  ├── flush_DB.py
+	  ├── LDAPBuilder.py
+    	  ├── LDAPComm.py
+    	  ├── LDAPData.py
+    	  └── temp_query_files/                  <-- empty because no queries run for a while.
+-----------------
+- END VERSION 16 : 10-7-14 : BACKING UP
+-----------------
+- check that nginx and ldap will restart still... hahaha :'(
+- #service slapd stop
+      [ ok ] Stopping OpenLDAP: slapd.
+  #service nginx stop
+      Stopping nginx: nginx.
+  #service nginx start
+      Starting nginx: nginx.
+  #service slapd start 
+      [FAIL] Starting OpenLDAP: slapd failed!
+- Not great... possibly making the server available in /etc/default/slapd?
+  Try to do the starts in the other order (you never know)
+- #service nginx stop
+      Stopping nginx: nginx.
+  #service slapd start
+      [FAIL] Starting OpenLDAP: slapd failed!
+- nope. This did not work either... there is a second SLAPD_SERVICES line I commented that out.
+  That failed too. How abouit closing the listening on port 389?
+- #fuser -k 389/tcp
+  #service slapd start
+      [FAIL] Starting OpenLDAP: slapd failed!                  <-- NEED MORE INFORMATION!!!
+  $slaptest 
+      53be618b ldif_read_file: Permission denied for "/etc/ldap/slapd.d/cn=config.ldif"            <-- this is the correct config file.
+      slaptest: bad configuration file!
+  #slaptest 
+      config file testing succeeded                            <-- good config file: not the TLS directives...
+
+- GOING TO WRITE EVERYTHING FROM proceedure_0-NOW so I know where I am and how I got here. See '...'/devdocs/LDAP_SETUP
+
+--------------------------==========---------
+- REMOVING THE LDAP SETUP COMPLETELY (AGAIN) : 10-7-14 : pertinent output recorded (not all)
+--------------------------==========---------
+- #apt-get purge ldap-account-manager ldap-utils slapd
+     Errors were encountered while processing:
+      ldap-account-manager
+  #service apache2 start                                         <-- bloody apache! THIS MAY BE THE ROOT OF MY MOODLE WOES!!! GRAAGAAGGAGARGRGAGAGDSGGASYHDGASHGDASHUJGVDF;OQWJHF;OWJHEBA[VB'HADFSVBADSFV; JH
+     [ ok ] Starting web server: apache2.
+  #apt-get auto-remove
+     Removing ldap-account-manager ...
+  #apt-get purge ldap-account-manager
+     Removing ldap-account-manager ...
+  #find / -name slapd
+     /run/slapd
+     /usr/share/slapd
+  #rm -r /run/slapd /usr/share/slapd
+  #apt-get -f install ldap-account-manager ldap-utils slapd
+     Setting up slapd (2.4.31-1+nmu2) ...
+     Moving old database directory to /var/backups:
+       - directory unknown... done.
+     Creating initial configuration... done.
+     Creating LDAP directory... done.
+     [ ok ] Starting OpenLDAP: slapd.
+     Setting up ldap-utils (2.4.31-1+nmu2) ...
+     Setting up ldap-account-manager (3.7-2) ...
+     [ ok ] Restarting web server: apache2 ... waiting .    <--- bloody apache needs to be running, the sxodding sod!!! argetgres\aefds! Right, I need to stop that listening on port 80 completely! ffs.
+- LDAP is all fresh and shiney new again. Now to wrok out how to stop apache from stealing port 80 from nginx.
+- reinstalled and rebuilt LDAP DB. Connected to moodle. IT CONNECTED TO MOODLE!!! good. That is done now. no TLS but it is setup. :)
+- dl'd mediawiki:
+    #apt-get -f install mediawiki mediawiki-extensions-ldap
+- Reading up on how to set up the mediawiki ldap authentication, it is not as easy as moodle... oh dear!!! hahaha :'(
+
+===================
+- MEDIAWIKI SETUP - : 11-7-14
+===================
+-------------------------------------------------------------------------------------------
+- USE mysql CMD LINE TO CREATE THE MEDIAWIKI DATABASE SO IT DOES NOT STALL IN BUILDING IT -
+-------------------------------------------------------------------------------------------
+- $mysql -u <mysql_user> -p
+  mysql> CREATE <mediwikiuser> IDENTIFIED BY <password> ;          <--- (can omit this line if you are happy with ownership of multiple DBs.. should have also doen somethign liek this to get the moodle working, you see...)
+  mysql> CREATE DATABASE mediawiki ;
+  mysql> GRANT ALL TO <mysql_user> ON mediawiki.* ;
+  mysql> exit ;
+- Put a link to the /usr/share/mediawiki/ in one of your favourite www serving folders and connect to it in your least favourite browser, I am using localhost/mediawiki in chrome. :p
+- go through the setup process
+  dl LocalSettings.php from the mediawiki website or when prompted in the installation/setup process and put this in /etc/mediawiki/
+  to set up the LDAP authentication we need to edit:
+
+      /usr/share/mediawiki/extensions/LdapAuthentication/LdapAuthentication.php
+      -------------------------------------------------------------------------
+      Add these lines at the bottom of the file (the require line is already there):
+      	  require_once 'includes/AuthPlugin.php'
+	  #
+	  # LDAP server setup
+	  #
+	  $wgAuth = new LdapAuthenticationPlugin() ;
+	  $wgLDAPUseLocal = true ;
+	  $wgLDAPDomainNames = array( 'fysik.dtu.dk' ) ;
+	  $wgLDAPServerNames = array( 'fysik.dtu.dk' => 'localhost ldap:/// ldapi:///' ) ;
+	  # $wgLDAPEncryptionType( 'fysik.dtu.dk' => 'tls' ) ;
+	  $wgLDAPPort = array( 'fysik.dtu.dk' => 389 ) ;
+	  #
+	  # LDAP connection settings
+	  #
+	  $wgLDAPProxyAgent = array( 'fysik.dtu.dk' => 'cn=moodle,ou=access,dc=fysik,dc=dtu,dc=dk' ) ;
+	  $wgLDAPSearchAttributes = array( 'fysik.dtu.dk' => 'uid' ) ;
+	  $wgLDAPBaseDNs = array( 'fysik.dtu.dk' => 'ou=person,dc=fysik,dc=dtu,dc=dk' ) ;
+	  $wgLDAPPreferences = array( 'fysik.dtu.dk' => array() 'email' => 'mail' ) ) ;
+	  #
+	  # Group restrictions
+	  #
+	  $wgLDAPGroupUseFullDN( "fysik.dtu.dk" => false) ;
+	  $wgLDAPGroupObjectClass = array( 'fysik.dtu.dk' => groupofnames ) ;
+	  $wgLDAPGroupAttribute = array( 'fysik.dtu.dk' => 'memberuid' ) ;
+	  $wgLDAPGroupSearchNestedGroups = array( 'fysik.dtu.dk' => false ) ;
+	  $wgLDAPGroupNameAttribute = array( 'fysik.dtu.dk' => 'cn' ) ;
+	  $wgLDAPRequiredGroups = array( 'fysik.dtu.dk' => array('cn=Student,dc=fysik,dc=dtu,dc=dk', 'cn=itStaff,dc=fysik,dc=dtu,dc=dk', 'cn=courseStaff,dc=fysik,dc=dtu,dc=dk' ) ) ;
+	  $wgLDAPLowerCaseUsername = array( 'fysik.dtu.dk' => true ) ;
+
+- This actually seems to work... no content in the wiki so... maybe I should put some in there and see if this works?
+=====================
+- DO THIS NEXT WEEK - : now I am going to do some reading up on the django implementation of the createuser instruction in manage.py in the django McStas/McXtrace
+=====================
+
+- MOVED INTO '...'/McServer/www-django/mcwww/mcwww/ to produce the LDAP extension to CreateUser and the rest of the django mcstas server.
+- there is now a devdocs folder in there which continues this file
+
+==================
+- END VERSION 17 - : 14-7-14
+==================
+
+------------------------------------
+- manage.py LDIF creation extension : 11-7-14 
+------------------------------------
+- Planning our user creation, commenting file : 
+  	   '...'/McServer/www-django/mcwww/mcwww/management/commands/createuser.py 
+- Copying LDAP and LDIF python files into : 
+  	  '...'/McServer/www-django/mcwww/mcwww/management/LDAP/
+      and '...'/McServer/www-django/mcwww/mcwww/management/LDAP/LDIFs
+- Decision on the LDAP extension of CreateUser.
+- removing the proceedure_* files up to this one (they are clutter)
+- making the LDAP folder acts as a module. (add __init__.py)
+- tree of '...'/McServer/www-django/mcwww/mcwww
+       ../mcwww/
+       ├── __init__.py
+       ├── management
+       │   ├── commands
+       │   │   ├── createuser.py
+       │   │   └── __init__.py
+       │   ├── __init__.py
+       │   └── LDAP					       <--- the LDAP module folder. This will be backed up from version 17 in the LDAP_backups folder.
+       │       ├── __init__.py 				       <--- makes the folder a module.
+       │       ├── devdocs
+       │       │   ├── LDAP_SETUP
+       │       │   └── proceedure_16-                          <--- this document.
+       │       ├── LDAPComm.py                                 <--- Working on this Code|
+       │       ├── LDAPData.py                                 <--- Working on this Code|
+       │       └── LDIFs				       	    --------------------|
+       │           ├── building                                <--- DB Build LDIFs - these are not used yet - the setup script must be written into the server setup INSTALL.txt in '...'/McServer/www-django/mcwww
+       │           │   ├── config_pw.ldif
+       │           │   ├── DB_state_build.ldif
+       │           │   ├── structure_state_build.ldif
+       │           │   ├── TLS_directives.ldif
+       │           │   └── user_population_build.ldif
+       │           ├── deletion                                <--- not being used as yet.
+       │           │   ├── access_state_del.ldif
+       │           │   ├── structure_state_del.ldif
+       │           │   ├── TLS_directives.ldif
+       │           │   └── zero_access_state.ldif
+       │           ├── modifying                               <--- not being used as yet.
+       │           │   └── modify_template.ldif
+       │           └── templates
+       ├── settings.py
+       ├── settings.pyc
+       ├── urls.py
+       ├── views.py
+       └── wsgi.py
+
+- Making LDAPUserCreation.py 'fire and forget' version containing:
+  	 __init__()    : builds the variables, calls the methods.
+	 LDIFCreate()  : makes the temporary LDIF file.                 <--- should be built from the LDIFData container object?
+	 collectData() : requests information from the user.            <--- this should be changed to populate the LDIFData container object.
+	 addUser()     : passes data to LDAPComm.
+- Changing LDAPData container object to hold relevent data for ONE LDIF file.
+- tree of mcwww:
+       mcwww/
+       ├── __init__.py
+       ├── management
+       │   ├── commands
+       │   │   ├── createuser.py
+       │   │   └── __init__.py
+       │   ├── __init__.py
+       │   ├── __init__.pyc
+       │   └── LDAP
+       │       ├── devdocs
+       │       │   ├── LDAP_SETUP
+       │       │   └── proceedure_16-
+       │       ├── __init__.py
+       │       ├── LDAPComm.py                  <---|
+       │       ├── LDAPData.py			    |___New or edited classes for LDAP extension of ./manage.py createuser management command
+       │       ├── LDAPldiffer.py		    |	tried to run as version 18 (ending at base of tree) but got errors (below)
+       │       ├── LDAPUserCreation.py		<---|
+       │       ├── LDIFs
+       │       │   ├── building
+       │       │   │   └── ....ldif
+       │       │   ├── deletion
+       │       │   │   └── ....ldif
+       │       │   ├── modifying
+       │       │   │   └── ....ldif
+       │       │   └── templates
+       │       └── temp
+       ├── settings.py
+       ├── urls.py
+       ├── views.py
+       └── wsgi.py
+	 
+- $./manage.py createuser Traceback (most recent call last):
+  	       File "./manage.py", line 10, in <module>
+	           execute_from_command_line(sys.argv)
+  	       File "/usr/lib/python2.7/dist-packages/django/core/management/__init__.py", line 443, in execute_from_command_line
+ 	           utility.execute()
+  	       File "/usr/lib/python2.7/dist-packages/django/core/management/__init__.py", line 351, in execute
+    	       	   self.autocomplete()
+	       File "/usr/lib/python2.7/dist-packages/django/core/management/__init__.py", line 306, in autocomplete
+	           subcommand_cls = self.fetch_command(cwords[0])
+	       File "/usr/lib/python2.7/dist-packages/django/core/management/__init__.py", line 261, in fetch_command
+	           klass = load_command_class(app_name, subcommand)
+    	       File "/usr/lib/python2.7/dist-packages/django/core/management/__init__.py", line 69, in load_command_class
+	           module = import_module('%s.management.commands.%s' % (app_name, name))
+	       File "/usr/lib/python2.7/dist-packages/django/utils/importlib.py", line 35, in import_module
+	           __import__(name)
+	       File "/home/lewis/Documents/Code/McServer/www-django/mcwww/mcwww/management/commands/createuser.py", line 4, in <module>
+	           from LDAP import LDAPUserCreation
+	       ImportError: No module named LDAP
+
+==================
+- END VERSION 18 - : 14-7-14
+==================
+- cp -r '...'/mcwww/management/LDAP '...'/LDAP_backups/18
+- Need to work out where the import paths are held and put LDAP into it... maybe just one layer up.
+- mv '...'/mcwww/management/LDAP '...'/mcwww/LDAP
+- $./manage.py createuser 
+    Traceback (most recent call last):
+    File "./manage.py", line 10, in <module>
+      execute_from_command_line(sys.argv)
+    File "/usr/lib/python2.7/dist-packages/django/core/management/__init__.py", line 443, in execute_from_command_line
+      utility.execute()
+    File "/usr/lib/python2.7/dist-packages/django/core/management/__init__.py", line 382, in execute
+      self.fetch_command(subcommand).run_from_argv(self.argv)
+    File "/usr/lib/python2.7/dist-packages/django/core/management/__init__.py", line 261, in fetch_command
+      klass = load_command_class(app_name, subcommand)
+    File "/usr/lib/python2.7/dist-packages/django/core/management/__init__.py", line 69, in load_command_class
+      module = import_module('%s.management.commands.%s' % (app_name, name))
+    File "/usr/lib/python2.7/dist-packages/django/utils/importlib.py", line 35, in import_module
+      __import__(name)
+    File "/home/lewis/Documents/Code/McServer/www-django/mcwww/mcwww/management/commands/createuser.py", line 4, in <module>
+      from LDAP import LDAPUserCreation
+    ImportError: No module named LDAP
+- Set up the modules properly and reference them correctly in the imports!! Derpo! :3
+- Setup sqlite DB in the server to add users! (haha) Did all teh code things without even having the structure to use it ;)
+---------------------------------------------------
+- Working on ./manage.py createuser LDAP extension : 15/16-7-14
+---------------------------------------------------
+- Made a commit on 15-7-14. Non-working.
+- LDAP Module created in '...'/mcwww/management
+- management tree:
+      management/
+      ├── commands
+      │   ├── createuser.py
+      │   ├── __init__.py
+      ├── __init__.py
+      └── LDAP
+          ├── devdocs
+      	  │   ├── LDAP_SETUP
+    	  │   └── proceedure_16-
+    	  ├── __init__.py
+    	  ├── LDAPComm.py
+	  ├── LDAPData.py
+	  ├── LDAPldiffer.py
+	  ├── LDAPUserCreation.py
+	  └── LDIFs
+	      ├── building
+	      │   ├── config_pw.ldif
+              │   ├── DB_state_build.ldif
+              │   ├── structure_state_build.ldif
+              │   ├── TLS_directives.ldif
+              │   └── user_population_build.ldif
+              ├── deletion
+              │   ├── access_state_del.ldif
+              │   ├── structure_state_del.ldif
+              │   ├── TLS_directives.ldif
+              │   └── zero_access_state.ldif
+              ├── modifying
+              │   └── modify_template.ldif
+              └── templates
+- LDAPldiffer builds ldif files (at the moment only addUserEntity ldifs.
+  LDAPComm is same as in version 16 with (in dev) ldapAdminGroupQuery addition.
+  LDAPData has been massively modified. (see next version)
+  LDAPUserCreation is a fire and forget object that instantiates above classes to add a user entity to the LDAP DB.
+- The ldapAdminGroupQuery is not working... seems like it is grepping the whoile DB when it should only grep the o/p:
+    LDAPComm::ldapAdminGroupQuery()
+    -------------------------------
+    def ldapAdminGroupQuery(self, auth_dn, auth_pw):
+# Create query and filters (though the query should be the filter
+        cn = split(",", auth_dn)[0]
+        query = "\"(|(cn=itStaff)(cn=courseStaff))\""
+        grep_pipe = "| grep member | grep -v DummyUser | grep " + cn
+
+# log LDAP Access
+        print cn + " AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b dc=fysik,dc=dtu,dc=dk -D " + auth_dn + " -w PASSWORD " + query # + grep_pipe + "\n"
+        self.access_file.write( cn + " AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b dc=fysik,dc=dtu,dc=dk -D " + auth_dn + " -w PASSWORD " + query) # + grep_pipe+ "\n")
+
+        q_return_string = StringIO()
+
+        try:
+*           Popen( ["ldapsearch", "-LLL", "-b", "dc=fysik,dc=dtu,dc=dk", "-D", auth_dn, "-w", auth_pw, query, "|", "grep", "member", "|", "grep", "-v", "DummyUser", "|", "grep", "cn=Linda"],  #""],
+                   stdout=q_return) 
+            q_string = q_return.getvalue()
+            print "q_string: " + q_string
+            return True
+
+        except:
+            print "Returning False (unless testing)"
+            return True
+
+- * you can see that the grep filter is actually hardcoded to look for Linda (Linda Udby, who is an LDAP entity) and so the 'correct' return True should be arrived at.
+    This line essentially says:
+         1) find the cn=itStaff and cn=courseStaff LDAP DB entries.
+	 2) find the member lines from that return.
+	 3) remove the DummyUser lines.
+	 4) find the cn=Linda line                                   <--- change to be the cn variable (line 1 of the method) when the group members have the correct permissions.
+
+- o/p from ./manage.py createuser plop:
+  #./manage.py createuser hello
+      Username: hello
+      Enter password: 
+      Enter your LDAP authentication dn: cn=admin,dc=fysik,dc=dtu,dc=dk
+      Enter your LDAP authentication pwd: 
+      cn=admin AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b dc=fysik,dc=dtu,dc=dk -D cn=admin,dc=fysik,dc=dtu,dc=dk -w PASSWORD "(|(cn=itStaff)(cn=courseStaff))"
+      Returning False (unless testing)	    	       	             <--- the filter came back false and the q_string did not print to screen.
+      got to here!!!!
+      Enter Forename : foom
+      Enter Surname : poof
+      Enter Contact mail : slam@bam
+      LDAP User Added
+      McCode User created.
+- #slapcat
+    the user is actually added, so this is ok! ^_^
+- Comment out the grep filter and check the o/p.
+    #./manage.py createuser hello
+-   #./manage.py createuser papi
+        Username: papi
+	Enter password: 
+	Enter your LDAP authentication cn (not your uid): Linda Udby
+	cn=Linda Udby AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b ou=groups,dc=fysik,dc=dtu,dc=dk -D cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk (|(cn=itStaff)(cn=courseStaff))
+	got to here!!!!
+	Enter Forename : plop
+	Enter Surname : plap
+	Enter Contact mail : skop 
+	LDAP User Added
+	Enter your LDAP authentication pwd: 
+	ldap_bind: Invalid credentials (49)
+	Error: <class 'subprocess.CalledProcessError'>
+	McCode User created.
+- Working on the correct way to authemnticate the users... group membership does not seem to be handled well by the ACL : 17-7-14
+  current olcAccess line:
+	  olcAccess: {2}to dn="dc=fysik,dc=dtu,dc=dk" 
+	    by group.exact="cn=itStaff,ou=groups,dc=fysik,dc=dtu,dc=dk" write	    <-- has been
+  	    by group.exact="cn=courseStaff,ou=groups,dc=fysik,dc=dtu,dc=dk" write   <-- add/manage/write
+- this line was included as well to try to get round the inability to write to the main DB:
+	  olcAccess: {0}to *
+	    by group.exact="cn=itStaff,ou=groups,dc=fysik,dc=dtu,dc=dk" write	    <-- has been
+  	    by group.exact="cn=courseStaff,ou=groups,dc=fysik,dc=dtu,dc=dk" write   <-- add/manage/write
+- none of these edits worked. Looking for fixes adn ideas from google etc now. Coffee.

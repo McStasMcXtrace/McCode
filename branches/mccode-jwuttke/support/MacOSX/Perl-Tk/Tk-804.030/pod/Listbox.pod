@@ -1,0 +1,794 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1997 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::Listbox - Create and manipulate Listbox widgets
+
+=for category  Tk Widget Classes
+
+=head1 SYNOPSIS
+
+I<$listbox> = I<$parent>-E<gt>B<Listbox>(?I<options>?);
+
+=head1 STANDARD OPTIONS
+
+B<-background> B<-borderwidth> B<-cursor> B<-disabledforeground>
+B<-exportselection> B<-font> B<-foreground> B<-height>
+B<-highlightbackground> B<-highlightcolor> B<-highlightthickness>
+B<-offset> B<-relief> B<-selectbackground> B<-selectborderwidth>
+B<-selectforeground> B<-setgrid> B<-state> B<-takefocus> B<-tile>
+B<-width> B<-xscrollcommand> B<-yscrollcommand>
+		
+
+See L<Tk::options> for details of the standard options.
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item Name:	B<activeStyle>
+
+=item Class:	B<ActiveStyle>
+
+=item Switch:	B<-activestyle>
+
+Specifies the style in which to draw the active element. This must be
+one of B<dotbox> (show a focus ring around the active element), B<none>
+(no special indication of active element) or B<underline> (underline the
+active element). The default is B<underline>.
+
+=item Name:	B<height>
+
+=item Class:	B<Height>
+
+=item Switch:	B<-height>
+
+Specifies the desired height for the window, in lines.
+If zero or less, then the desired height for the window is made just
+large enough to hold all the elements in the listbox.
+
+=item Name:	B<listVariable>
+
+=item Class:	B<Variable>
+
+=item Switch:	B<-listvariable>
+
+I<The following is only partially implemented in Perl/Tk:>
+
+Specifies the reference of a variable. The value of the variable is an array
+to be displayed inside the widget; if the variable value changes
+then the widget will automatically update itself to reflect the new
+value. Attempts to assign a variable with an invalid list value to
+B<-listvariable> will cause an error. Attempts to unset a variable in use
+as a B<-listvariable> will fail but will not generate an error.
+
+=item Name:	B<selectMode>
+
+=item Class:	B<SelectMode>
+
+=item Switch:	B<-selectmode>
+
+Specifies one of several styles for manipulating the selection.
+The value of the option may be arbitrary, but the default bindings
+expect it to be either B<single>, B<browse>, B<multiple>,
+or B<extended>;  the default value is B<browse>.
+
+=item Name:	B<state>
+
+=item Class:	B<State>
+
+=item Switch:	B<-state>
+
+Specifies one of two states for the listbox: B<normal> or B<disabled>.
+If the listbox is disabled then items may not be inserted or deleted,
+items are drawn in the B<-disabledforeground> color, and selection
+cannot be modified and is not shown (though selection information is
+retained).
+
+=item Name:	B<width>
+
+=item Class:	B<Width>
+
+=item Switch:	B<-width>
+
+Specifies the desired width for the window in characters.
+If the font doesn't have a uniform width then the width of the
+character ``0'' is used in translating from character units to
+screen units.
+If zero or less, then the desired width for the window is made just
+large enough to hold all the elements in the listbox.
+
+=back
+
+=head1 DESCRIPTION
+
+The B<Listbox> method creates a new window (given by the
+$widget argument) and makes it into a listbox widget.
+Additional
+options, described above, may be specified on the command line
+or in the option database
+to configure aspects of the listbox such as its colors, font,
+text, and relief.  The B<listbox> command returns its
+$widget argument.  At the time this command is invoked,
+there must not exist a window named $widget, but
+$widget's parent must exist.
+
+A listbox is a widget that displays a list of strings, one per line.
+When first created, a new listbox has no elements.
+Elements may be added or deleted using methods described
+below.  In addition, one or more elements may be selected as described
+below.
+If a listbox is exporting its selection (see B<exportSelection>
+option), then it will observe the standard X11 protocols
+for handling the selection.
+Listbox selections are available as type B<STRING>;
+the value of the selection will be the text of the selected elements, with
+newlines separating the elements.
+
+It is not necessary for all the elements to be
+displayed in the listbox window at once;  commands described below
+may be used to change the view in the window.  Listboxes allow
+scrolling in both directions using the standard B<xScrollCommand>
+and B<yScrollCommand> options.
+They also support scanning, as described below.
+
+=head1 INDICES
+
+Many of the methods for listboxes take one or more indices
+as arguments.
+An index specifies a particular element of the listbox, in any of
+the following ways:
+
+=over 4
+
+=item I<number>
+
+Specifies the element as a numerical index, where 0 corresponds
+to the first element in the listbox.
+
+=item B<active>
+
+Indicates the element that has the location cursor.  This element
+will be displayed with an underline when the listbox has the
+keyboard focus, and it is specified with the B<activate>
+method.
+
+=item B<anchor>
+
+Indicates the anchor point for the selection, which is set with the
+B<selection anchor> method.
+
+=item B<end>
+
+Indicates the end of the listbox.
+For most commands this refers to the last element in the listbox,
+but for a few commands such as B<index> and B<insert>
+it refers to the element just after the last one.
+
+=item B<@>I<x>B<,>I<y>
+
+Indicates the element that covers the point in the listbox window
+specified by I<x> and I<y> (in pixel coordinates).  If no
+element covers that point, then the closest element to that
+point is used.
+
+=back
+
+In the method descriptions below, arguments named I<index>,
+I<first>, and I<last> always contain text indices in one of
+the above forms.
+
+=head1 WIDGET METHODS
+
+The B<Listbox> method creates a widget object.
+This object supports the B<configure> and B<cget> methods
+described in L<Tk::options> which can be used to enquire and
+modify the options described above.
+The widget also inherits all the methods provided by the generic
+L<Tk::Widget|Tk::Widget> class.
+
+The following additional methods are available for listbox widgets:
+
+=over 4
+
+=item I<$listbox>-E<gt>B<activate>(I<index>)
+
+Sets the active element to the one indicated by I<index>.
+If I<index> is outside the range of elements in the listbox
+then the closest element is activated.
+The active element is drawn with an underline when the widget
+has the input focus, and its index may be retrieved with the
+index B<active>.
+
+=item I<$listbox>-E<gt>B<bbox>(I<index>)
+
+Returns a list of four numbers describing the bounding box of
+the text in the element given by I<index>.
+The first two elements of the list give the x and y coordinates
+of the upper-left corner of the screen area covered by the text
+(specified in pixels relative to the widget) and the last two
+elements give the width and height of the area, in pixels.
+If no part of the element given by I<index> is visible on the
+screen,
+or if I<index> refers to a non-existent element,
+then the result is an empty string;  if the element is
+partially visible, the result gives the full area of the element,
+including any parts that are not visible.
+
+=item I<$listbox>-E<gt>B<curselection>
+
+Returns a list containing the numerical indices of
+all of the elements in the listbox that are currently selected.
+If there are no elements selected in the listbox then an empty
+string is returned.
+
+=item I<$listbox>-E<gt>B<delete>(I<first, >?I<last>?)
+
+Deletes one or more elements of the listbox.  I<First> and I<last>
+are indices specifying the first and last elements in the range
+to delete.  If I<last> isn't specified it defaults to
+I<first>, i.e. a single element is deleted.
+
+=item I<$listbox>-E<gt>B<get>(I<first, >?I<last>?)
+
+If I<last> is omitted, returns the contents of the listbox
+element indicated by I<first>,
+or an empty string if I<first> refers to a non-existent element.
+If I<last> is specified, the command returns a list whose elements
+are all of the listbox elements between I<first> and I<last>,
+inclusive.
+Both I<first> and I<last> may have any of the standard
+forms for indices.
+
+=item I<$listbox>-E<gt>B<index>(I<index>)
+
+Returns the integer index value that corresponds to I<index>.
+If I<index> is B<end> the return value is a count of the number
+of elements in the listbox (not the index of the last element).
+
+=item I<$listbox>-E<gt>B<insert>(I<index, >?I<element, element, ...>?)
+
+Inserts zero or more new elements in the list just before the
+element given by I<index>.  If I<index> is specified as
+B<end> then the new elements are added to the end of the
+list.  Returns an empty string.
+
+=item I<$listbox>-E<gt>B<itemcget>(I<index>, I<option>)
+
+Returns the current value of the item configuration option given by
+I<option>. Option may have any of the values accepted by the listbox
+B<itemconfigure> command.
+
+=item I<$listbox>-E<gt>B<itemconfigure>(I<index, >?I<option, value,
+option, value, ...>?)
+
+Query or modify the configuration options of an item in the listbox.
+If no option is specified, returns a list describing all of the
+available options for the item (see Tk_ConfigureInfo for information
+on the format of this list). If option is specified with no value,
+then the command returns a list describing the one named option (this
+list will be identical to the corresponding sublist of the value
+returned if no option is specified). If one or more option-value pairs
+are specified, then the command modifies the given widget option(s) to
+have the given value(s); in this case the command returns an empty
+string. The following options are currently supported for items:
+
+=over
+
+=item B<-background> =E<gt> I<color>
+
+I<Color> specifies the background color to use when displaying the
+item. It may have any of the forms accepted by Tk_GetColor.
+
+=item B<-foreground> =E<gt> I<color>
+
+I<Color> specifies the foreground color to use when displaying the
+item. It may have any of the forms accepted by Tk_GetColor.
+
+=item B<-selectbackground> =E<gt> I<color>
+
+I<Color> specifies the background color to use when displaying the
+item while it is selected. It may have any of the forms accepted by
+Tk_GetColor.
+
+=item B<-selectforeground> =E<gt> I<color>
+
+I<Color> specifies the foreground color to use when displaying the
+item while it is selected. It may have any of the forms accepted by
+Tk_GetColor.
+
+=back
+
+=item I<$listbox>-E<gt>B<nearest>(I<y>)
+
+Given a y-coordinate within the listbox window, this command returns
+the index of the (visible) listbox element nearest to that y-coordinate.
+
+=item I<$listbox>-E<gt>B<scan>(I<option, args>)
+
+This command is used to implement scanning on listboxes.  It has
+two forms, depending on I<option>:
+
+=over 8
+
+=item I<$listbox>-E<gt>B<scanMark>(I<x, y>)
+
+Records I<x> and I<y> and the current view in the listbox
+window;  used in conjunction with later B<scan dragto> commands.
+Typically this command is associated with a mouse button press in
+the widget.  It returns an empty string.
+
+=item I<$listbox>-E<gt>B<scanDragto>(I<x, y>.)
+
+This command computes the difference between its I<x> and I<y>
+arguments and the I<x> and I<y> arguments to the last
+B<scan mark> command for the widget.
+It then adjusts the view by 10 times the
+difference in coordinates.  This command is typically associated
+with mouse motion events in the widget, to produce the effect of
+dragging the list at high speed through the window.  The return
+value is an empty string.
+
+=back
+
+=item I<$listbox>-E<gt>B<see>(I<index>)
+
+Adjust the view in the listbox so that the element given by I<index>
+is visible.
+If the element is already visible then the command has no effect;
+if the element is near one edge of the window then the listbox
+scrolls to bring the element into view at the edge;  otherwise
+the listbox scrolls to center the element.
+
+=item I<$listbox>-E<gt>B<selection>(I<option, arg>)
+
+This command is used to adjust the selection within a listbox.  It
+has several forms, depending on I<option>:
+
+=over 8
+
+=item I<$listbox>-E<gt>B<selectionAnchor>(I<index>)
+
+Sets the selection anchor to the element given by I<index>.
+If I<index> refers to a non-existent element, then the closest
+element is used.
+The selection anchor is the end of the selection that is fixed
+while dragging out a selection with the mouse.
+The index B<anchor> may be used to refer to the anchor
+element.
+
+=item I<$listbox>-E<gt>B<selectionClear>(I<first, >?I<last>?)
+
+If any of the elements between I<first> and I<last>
+(inclusive) are selected, they are deselected.
+The selection state is not changed for elements outside
+this range.
+
+=item I<$listbox>-E<gt>B<selectionIncludes>(I<index>)
+
+Returns 1 if the element indicated by I<index> is currently
+selected, 0 if it isn't.
+
+=item I<$listbox>-E<gt>B<selectionSet>(I<first, >?I<last>?)
+
+Selects all of the elements in the range between
+I<first> and I<last>, inclusive, without affecting
+the selection state of elements outside that range.
+
+=back
+
+=item I<$listbox>-E<gt>B<size>
+
+Returns a decimal string indicating the total number of elements
+in the listbox.
+
+=item I<$listbox>-E<gt>B<xview>(I<args>)
+
+This command is used to query and change the horizontal position of the
+information in the widget's window.  It can take any of the following
+forms:
+
+=over 8
+
+=item I<$listbox>-E<gt>B<xview>
+
+Returns a list containing two elements.
+Each element is a real fraction between 0 and 1;  together they describe
+the horizontal span that is visible in the window.
+For example, if the first element is .2 and the second element is .6,
+20% of the listbox's text is off-screen to the left, the middle 40% is visible
+in the window, and 40% of the text is off-screen to the right.
+These are the same values passed to scrollbars via the B<-xscrollcommand>
+option.
+
+=item I<$listbox>-E<gt>B<xview>(I<index>)
+
+Adjusts the view in the window so that the character position given by
+I<index> is displayed at the left edge of the window.
+Character positions are defined by the width of the character B<0>.
+
+=item I<$listbox>-E<gt>B<xviewMoveto>( I<fraction> );
+
+Adjusts the view in the window so that I<fraction> of the
+total width of the listbox text is off-screen to the left.
+I<fraction> must be a fraction between 0 and 1.
+
+=item I<$listbox>-E<gt>B<xviewScroll>( I<number, what> );
+
+This command shifts the view in the window left or right according to
+I<number> and I<what>.
+I<Number> must be an integer.
+I<What> must be either B<units> or B<pages> or an abbreviation
+of one of these.
+If I<what> is B<units>, the view adjusts left or right by
+I<number> character units (the width of the B<0> character)
+on the display;  if it is B<pages> then the view adjusts by
+I<number> screenfuls.
+If I<number> is negative then characters farther to the left
+become visible;  if it is positive then characters farther to the right
+become visible.
+
+=back
+
+=item I<$listbox>-E<gt>B<yview>(I<?args>?)
+
+This command is used to query and change the vertical position of the
+text in the widget's window.
+It can take any of the following forms:
+
+=over 8
+
+=item I<$listbox>-E<gt>B<yview>
+
+Returns a list containing two elements, both of which are real fractions
+between 0 and 1.
+The first element gives the position of the listbox element at the
+top of the window, relative to the listbox as a whole (0.5 means
+it is halfway through the listbox, for example).
+The second element gives the position of the listbox element just after
+the last one in the window, relative to the listbox as a whole.
+These are the same values passed to scrollbars via the B<-yscrollcommand>
+option.
+
+=item I<$listbox>-E<gt>B<yview>(I<index>)
+
+Adjusts the view in the window so that the element given by
+I<index> is displayed at the top of the window.
+
+=item I<$listbox>-E<gt>B<yviewMoveto>( I<fraction> );
+
+Adjusts the view in the window so that the element given by I<fraction>
+appears at the top of the window.
+I<Fraction> is a fraction between 0 and 1;  0 indicates the first
+element in the listbox, 0.33 indicates the element one-third the
+way through the listbox, and so on.
+
+=item I<$listbox>-E<gt>B<yviewScroll>( I<number, what> );
+
+This command adjusts the view in the window up or down according to
+I<number> and I<what>.
+I<Number> must be an integer.
+I<What> must be either B<units> or B<pages>.
+If I<what> is B<units>, the view adjusts up or down by
+I<number> lines;  if it is B<pages> then
+the view adjusts by I<number> screenfuls.
+If I<number> is negative then earlier elements
+become visible;  if it is positive then later elements
+become visible.
+
+=back
+
+=back
+
+=head1 DEFAULT BINDINGS
+
+Tk automatically creates class bindings for listboxes that give them
+Motif-like behavior.  Much of the behavior of a listbox is determined
+by its B<selectMode> option, which selects one of four ways
+of dealing with the selection.
+
+If the selection mode is B<single> or B<browse>, at most one
+element can be selected in the listbox at once.
+In both modes, clicking button 1 on an element selects
+it and deselects any other selected item.
+In B<browse> mode it is also possible to drag the selection
+with button 1.
+
+If the selection mode is B<multiple> or B<extended>,
+any number of elements may be selected at once, including discontiguous
+ranges.  In B<multiple> mode, clicking button 1 on an element
+toggles its selection state without affecting any other elements.
+In B<extended> mode, pressing button 1 on an element selects
+it, deselects everything else, and sets the anchor to the element
+under the mouse;  dragging the mouse with button 1
+down extends the selection to include all the elements between
+the anchor and the element under the mouse, inclusive.
+
+Most people will probably want to use B<browse> mode for
+single selections and B<extended> mode for multiple selections;
+the other modes appear to be useful only in special situations.
+
+Any time the selection changes in the listbox, the virtual event
+B<<< <<ListboxSelect>> >>> will be generated. It is easiest to bind to this
+event to be made aware of any changes to listbox selection.
+
+
+In addition to the above behavior, the following additional behavior
+is defined by the default bindings:
+
+=over 4
+
+=item [1]
+
+In B<extended> mode, the selected range can be adjusted by pressing
+button 1 with the Shift key down:  this modifies the selection to
+consist of the elements between the anchor and the element under
+the mouse, inclusive.
+The un-anchored end of this new selection can also be dragged with
+the button down.
+
+=item [2]
+
+In B<extended> mode, pressing button 1 with the Control key down
+starts a toggle operation: the anchor is set to the element under
+the mouse, and its selection state is reversed.  The selection state
+of other elements isn't changed.
+If the mouse is dragged with button 1 down, then the selection state
+of all elements between the anchor and the element under the mouse
+is set to match that of the anchor element;  the selection state of
+all other elements remains what it was before the toggle operation
+began.
+
+=item [3]
+
+If the mouse leaves the listbox window with button 1 down, the window
+scrolls away from the mouse, making information visible that used
+to be off-screen on the side of the mouse.
+The scrolling continues until the mouse re-enters the window, the
+button is released, or the end of the listbox is reached.
+
+=item [4]
+
+Mouse button 2 may be used for scanning.
+If it is pressed and dragged over the listbox, the contents of
+the listbox drag at high speed in the direction the mouse moves.
+
+=item [5]
+
+If the Up or Down key is pressed, the location cursor (active
+element) moves up or down one element.
+If the selection mode is B<browse> or B<extended> then the
+new active element is also selected and all other elements are
+deselected.
+In B<extended> mode the new active element becomes the
+selection anchor.
+
+=item [6]
+
+In B<extended> mode, Shift-Up and Shift-Down move the location
+cursor (active element) up or down one element and also extend
+the selection to that element in a fashion similar to dragging
+with mouse button 1.
+
+=item [7]
+
+The Left and Right keys scroll the listbox view left and right
+by the width of the character B<0>.
+Control-Left and Control-Right scroll the listbox view left and
+right by the width of the window.
+Control-Prior and Control-Next also scroll left and right by
+the width of the window.
+
+=item [8]
+
+The Prior and Next keys scroll the listbox view up and down
+by one page (the height of the window).
+
+=item [9]
+
+The Home and End keys scroll the listbox horizontally to
+the left and right edges, respectively.
+
+=item [10]
+
+Control-Home sets the location cursor to the the first element in
+the listbox, selects that element, and deselects everything else
+in the listbox.
+
+=item [11]
+
+Control-End sets the location cursor to the the last element in
+the listbox, selects that element, and deselects everything else
+in the listbox.
+
+=item [12]
+
+In B<extended> mode, Control-Shift-Home extends the selection
+to the first element in the listbox and Control-Shift-End extends
+the selection to the last element.
+
+=item [13]
+
+In B<multiple> mode, Control-Shift-Home moves the location cursor
+to the first element in the listbox and Control-Shift-End moves
+the location cursor to the last element.
+
+=item [14]
+
+The space and Select keys make a selection at the location cursor
+(active element) just as if mouse button 1 had been pressed over
+this element.
+
+=item [15]
+
+In B<extended> mode, Control-Shift-space and Shift-Select
+extend the selection to the active element just as if button 1
+had been pressed with the Shift key down.
+
+=item [16]
+
+In B<extended> mode, the Escape key cancels the most recent
+selection and restores all the elements in the selected range
+to their previous selection state.
+
+=item [17]
+
+Control-slash selects everything in the widget, except in
+B<single> and B<browse> modes, in which case it selects
+the active element and deselects everything else.
+
+=item [18]
+
+Control-backslash deselects everything in the widget, except in
+B<browse> mode where it has no effect.
+
+=item [19]
+
+The F16 key (labelled Copy on many Sun workstations) or Meta-w
+copies the selection in the widget to the clipboard, if there is
+a selection.
+
+The behavior of listboxes can be changed by defining new bindings for
+individual widgets or by redefining the class bindings.
+
+=back
+
+=head1 TIED INTERFACE
+
+The Tk::Listbox widget can also be tied to a scalar or array variable, with
+different behaviour depending on the variable type, with the following
+tie commands:
+
+   use Tk;
+
+   my ( @array, $scalar, $other );
+   my %options = ( ReturnType => "index" );
+
+   my $MW = MainWindow->new();
+   my $lbox = $MW->Listbox()->pack();
+
+   my @list = ( "a", "b", "c", "d", "e", "f" );
+   $lbox->insert('end', @list );
+
+   tie @array, "Tk::Listbox", $lbox
+   tie $scalar, "Tk::Listbox", $lbox;
+   tie $other, "Tk::Listbox", $lbox, %options;
+
+currently only one modifier is implemented, a 3 way flag for tied scalars
+"ReturnType" which can have values "element", "index" or "both". The default
+is "element".
+
+=over 4
+
+=item Tied Arrays
+
+If you tie an array to the Listbox you can manipulate the items currently
+contained by the box in the same manner as a normal array, e.g.
+
+    print @array;
+    push(@array, @list);
+    my $popped = pop(@array);
+    my $shifted = shift(@array);
+    unshift(@array, @list);
+    delete $array[$index];
+    print $string if exists $array[$i];
+    @array = ();
+    splice @array, $offset, $length, @list
+
+The delete function is implemented slightly differently from the standard
+array implementation. Instead of setting the element at that index to undef
+it instead physically removes it from the Listbox. This has the effect of
+changing the array indices, so for instance if you had a list on non-continuous
+indices you wish to remove from the Listbox you should reverse sort the list
+and then apply the delete function, e.g.
+
+     my @list = ( 1, 2, 4, 12, 20 );
+     my @remove = reverse sort { $a <=> $b } @list;
+     delete @array[@remove];
+
+would safely remove indices 20, 12, 4, 2 and 1 from the Listbox without
+problems. It should also be noted that a similar warning applies to the
+splice function (which would normally be used in this context to perform
+the same job).
+
+
+=item Tied Scalars
+
+Unlike tied arrays, if you tie a scalar to the Listbox you can retrieve the
+currently selected elements in the box as an array referenced by the scalar,
+for instance
+
+    my @list = ( "a", "b", "c", "d", "e", "f" );
+    $lbox->insert('end', sort @list );
+    $lbox->selectionSet(1);
+
+inserts @list as elements in an already existing listbox and selects the
+element at index 1, which is "b". If we then
+
+     print @$selected;
+
+this will return the currently selected elements, in this case "b".
+
+However, if the "ReturnType" arguement is passed when tying the Listbox to the
+scalar with value "index" then the indices of the selected elements will be
+returned instead of the elements themselves, ie in this case "1". This can be
+useful when manipulating both contents and selected elements in the Listbox at
+the same time.
+
+Importantly, if a value "both" is given the scalar will not be tied to an
+array, but instead to a hash, with keys being the indices and values being
+the elements at those indices
+
+You can also manipulate the selected items using the scalar. Equating the
+scalar to an array reference will select any elements that match elements
+in the Listbox, non-matching array items are ignored, e.g.
+
+    my @list = ( "a", "b", "c", "d", "e", "f" );
+    $lbox->insert('end', sort @list );
+    $lbox->selectionSet(1);
+
+would insert the array @list into an already existing Listbox and select
+element at index 1, i.e. "b"
+
+    @array = ( "a", "b", "f" );
+    $selected = \@array;
+
+would select elements "a", "b" and "f" in the Listbox.
+
+Again, if the "index" we indicate we want to use indices in the options hash
+then the indices are use instead of elements, e.g.
+
+    @array = ( 0, 1, 5 );
+    $selected = \@array;
+
+would have the same effect, selecting elements "a", "b" and "f" if the
+$selected variable was tied with %options = ( ReturnType => "index" ).
+
+If we are returning "both", i.e. the tied scalar points to a hash, both key and
+value must match, e.g.
+
+    %hash = ( 0 => "a", 1 => "b", 5 => "f" );
+    $selected = \%hash;
+
+would have the same effect as the previous examples.
+
+It should be noted that, despite being a reference to an array (or possibly a has), you still can not copy the tied variable without it being untied, instead
+you must pass a reference to the tied scalar between subroutines.
+
+=back
+
+=head1 KEYWORDS
+
+listbox, widget, tied
+
+=head1 SEE ALSO
+
+L<Tk::HList>, L<Tk::TextList>.
+
+=cut
+

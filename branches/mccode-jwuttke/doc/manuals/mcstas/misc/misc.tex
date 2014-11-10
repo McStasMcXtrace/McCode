@@ -1,0 +1,68 @@
+\chapter{Special-purpose components}
+\index{Library!Components!misc}
+
+The chapter deals with components that are not easily included
+in any of the other chapters because of their special nature,
+but which are still part of the \MCS system.
+
+One part of these components deals with splitting simulations
+into two (or more) stages. For example, a guide system is often
+not changed much, and a long simulation of neutron rays
+``surviving'' through the guide system could be reused
+for several simulations of the instrument back-end, speeding up
+the simulations by (typically) one or two orders of magnitude.
+The components for doing this trick is {\bf Virtual\_input} and
+{\bf Virtual\_output}, which stores and reads neutron rays, respectively.
+
+Other components perform the simulation of the instrument
+resolution functions. These are {\bf Res\_sample} and {\bf TOF\_Res\_sample},
+which are to be
+placed at the sample position, and {\bf Res\_monitor}, that should
+be localized at the position of the instrument detector.
+
+{\bf Progress\_bar} is a simulation utility that displays the simulation
+status, but assumes the form of a component.
+
+\newpage
+\input{sources/Virtual_output}
+
+\input{sources/Virtual_input}
+
+\newpage
+\input{misc/Res_sample}
+
+\input{misc/TOFRes_sample}
+
+\input{misc/Res_monitor}
+
+\newpage
+\section{Progress\_bar: Simulation progress and automatic saving}
+\component{Progress\_bar}{System}{percent, flag\_save, profile}{}{}
+\label{s:progress-bar}
+\index{Simulation progress bar}
+
+This component displays the simulation progress and status
+but does not affect the neutron parameters.
+The display is updated in regular intervals of the full simulation;
+the default step size is 10 \%, but it may be changed using
+the \verb+percent+ parameter (from 0 to 100).
+The estimated computation time is displayed at the begining
+and actual simulation time is shown at the end.
+
+Additionally, setting the \verb+flag_save+ to 1 results in
+a regular save of the data files during the simulation.
+This means that is is possible to view the data before the end
+of the computation, and have also a trace of it in case of
+computer crash. The achieved percentage of the simulation is stored in these temporary
+data files. Technically, this save is equivalent to sending regularly
+a USR2 signal to the running simulation.
+
+The optional 'profile' parameter, when set to a file name, will produce the number of statistical events reaching each component in the simulation. This may be used to identify positions where events are lost.
+
+\section{Beam\_spy: A beam analyzer}
+\component{Beam\_spy}{System}{}{}{should overlap previous component}
+\index{Monitors!Beam analyzer}
+
+This component is at the same time an Arm and a simple Monitor. It analyzes all neutrons reaching it, and computes statistics for the beam, as well as the intensity.
+
+This component does not affect the neutron beam, and does not contain any propagation call. Thus it gets neutrons from the previous component in the instrument description, and should better be placed at the same position, with \verb+AT (0,0,0) RELATIVE PREVIOUS+.

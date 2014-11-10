@@ -1,0 +1,72 @@
+Tk is a Graphical User Interface ToolKit.
+
+Copyright (c) 1995-2004 Nick Ing-Simmons. All rights reserved.
+This package is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself, with the exception
+of all the files in the pTk sub-directory which have separate terms
+derived from those of the orignal Tix4.1.3 or Tk8.4.* sources.
+See the files pTk/license.terms, pTk/license.html_lib, and
+pTk/Tix.license for details of this license.
+
+The Tk804 series is considered production worthy since Tk804.027.
+(Previous stable release being Tk800.025.)
+
+This a re-port of a perl interface to Tk8.4.
+C code is derived from Tcl/Tk8.4.5.
+It also includes all the C code parts of Tix8.1.4 from SourceForge.
+The perl code corresponding to Tix's Tcl code is not fully implemented.
+
+Perl API is essentially the same as Tk800 series Tk800.025 but has not
+been verified as compliant. There ARE differences see pod/804delta.pod.
+
+The goal of this release is Unicode support via perl's and
+core-tk's use of UTF-8.
+Tk804.027 builds and loads into a threaded perl but is NOT
+yet thread safe.
+
+This Tk804 works only with perl5.8.0 or later.
+Perl's UTF-8 support has improved since it was introduced in perl5.6.0.
+Some functions (regular expression match in Text widgets) are known
+to only work with perl5.8.1 and later
+
+The latest Perl/Tk version running with perl5.6.x is Tk800.025.
+The latest Perl/Tk version running with perl5.005_xx is Tk800.024.
+
+There are a lot more tests in Tk804. Some notably t/entry.t and
+t/listbox.t very dependant on the available fonts and to a lesser
+extent the window manager used. As a rule of thumb older window
+managers like twm, fvwm2, and windowmaker are more robust than newer
+like Metacity (often used in GNOME), kwin (the KDE window manager), or
+xfwm4.
+
+Others t/JP.t and t/KR.t need oriental fonts and can take a long time to
+run on a machine with a lot of fonts but which lacks the glyphs tests are
+looking for.
+
+By default Perl/Tk makes use of client side fonts via freetype2,
+fontconfig and Xft on Unix systems. This gives anti-aliased fonts for
+regular text (if you have TrueType or Type1 fonts and they are in your
+fontconfig config file). See also http://fontconfig.org .
+To disable this feature run the Makefile.PL
+with "perl Makefile.PL XFT=0".
+
+Note that the default fontconfig configuration may or may not include
+traditional X11 fonts. Please inspect /etc/fonts/fonts.conf or
+/usr/local/etc/fonts/fonts.conf files for the values of the <dir>
+elements. Users may add additional font directories in their
+~/.fonts.conf . See
+http://www.freedesktop.org/software/fontconfig/fontconfig-user.html
+for more information.
+
+For questions on this package try news:comp.lang.perl.tk or e-mail to
+<ptk@lists.stanford.edu> (needs registration to the mailing list) or
+<srezic@cpan.org>
+
+Perl/Tk's source code can be found in the git repository:
+
+	http://github.com/eserte/perl-tk
+
+To clone the repository, just execute
+
+	git clone git://github.com/eserte/perl-tk.git
+

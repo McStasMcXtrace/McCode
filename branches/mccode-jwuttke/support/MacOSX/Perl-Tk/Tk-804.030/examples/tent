@@ -1,0 +1,13 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+use Tk::widgets qw(Button);
+#use Carp ();
+#$SIG{'__DIE__'} = \&Carp::confess;
+
+my $mw = MainWindow->new();
+my $text = "This is 2¢ worth of text";
+$mw->Entry(-textvariable => \$text, -width => 20)->pack;
+$mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+MainLoop;
+

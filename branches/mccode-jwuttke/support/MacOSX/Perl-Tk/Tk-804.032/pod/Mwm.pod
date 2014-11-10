@@ -1,0 +1,109 @@
+
+=head1 NAME
+
+Tk::Mwm - Communicate with the Motif(tm) window manager.
+
+=for category  Tix Extensions
+
+=head1 SYNOPSIS
+
+S<    >B<use Tk::Mwm;>
+
+S<    >I<$toplevel>-E<gt>B<mwm>I<Option>?(I<args>)?
+
+S<    >I<$toplevel>-E<gt>B<mwm>(I<option> ?,I<args>?)
+
+=head1 DESCRIPTION
+
+Interface to special extentions supported by mwm.
+
+=head1 METHODS
+
+=over 4
+
+=item I<$toplevel>-E<gt>B<mwmDecoration>?(?option??=E<gt>value? ?,...?)?
+
+When no options are given, this method returns the values of all the
+decorations options for the toplevel window with the I<$toplevel>.
+When only one option is given without specifying the value, the
+current value of that option is returned.
+When more than one "option-value" pairs are passed to this method,
+the specified values will be assigned to the corresponding options. As
+a result, the appearance of the Motif decorations around the toplevel
+window will be changed.
+Possible options are: B<-border>, B<-menu>, B<-maximize>,
+B<-minimize>, B<-resizeh> and B<-title>. The value must be a
+Boolean value. The values returned by this command are undefined when
+the window is not managed by mwm.
+
+=item I<$toplevel>-E<gt>B<mwmIsmwmrunning>
+
+This returns value is true if mwm is running on the screen where the specified
+window is located, false otherwise.
+
+=item I<$toplevel>-E<gt>B<mwmProtocol>
+
+When no additional options are given, this method returns all
+protocols associated with this toplevel window.
+
+=item I<$toplevel>-E<gt>B<mwmProtocol>(B<activate> =E<gt> I<protocol_name>)
+
+Activate the mwm protocol message in mwm's menu.
+
+=item I<$toplevel>-E<gt>B<MwmProtocol>(B<add> =E<gt> I<protocol_name>, I<menu_message>)
+
+Add a new mwm protocol message for this toplevel window. The
+message is identified by the string name specified in
+I<protocol_name>.  A menu item will be added into mwm's menu as
+specified by I<menu_message>.  Once a new mwm protocol message is
+added to a toplevel, it can be caught by the TK B<protocol>
+method. Here is an example:
+
+S<    >I<$toplevel>-E<gt>B<mwmProtocol>(B<'add'> =E<gt> 'MY_PRINT_HELLO', '"Print Hello"  _H CtrlE<lt>KeyE<gt>H');
+
+S<    >I<$toplevel>-E<gt>B<protocol>(B<'MY_PRINT_HELLO'> =E<gt> sub {print "Hello"});
+
+=item I<$toplevel>-E<gt>B<mwmProtocol>(B<'deactivate'> =E<gt> I<protocol_name>)
+
+Deactivate the mwm protocol message in mwm's menu.
+
+=item I<$toplevel>-E<gt>B<mwmProtocol>(B<'delete'> =E<gt> I<protocol_name>)
+
+Delete the mwm protocol message from mwm's menu. Please note that the
+window manager protocol handler associated with this protocol (by the
+B<protocol> method) is not deleted automatically. You have to
+delete the protocol handle explicitly.  E.g.:
+
+S<    >I<$mw>-E<gt>B<mwmProtocol>(B<'delete'> =E<gt> 'MY_PRINT_HELLO');
+
+S<    >I<$mw>-E<gt>B<protocol>(B<'MY_PRINT_HELLO'> =E<gt> '');
+
+=back
+
+=head1 BUGS
+
+This is a Tix extension which perl/Tk has adopted. It has not been
+tested as perl/Tk's author has not got round to installing a Motif Window
+Manager.
+
+On some versions of mwm, the B<-border> will not disappear unless
+B<-resizeh> is turned off. Also, the B<-title> will not disappear
+unless all of B<-title>, B<-menu>, B<-maximize> and
+B<-minimize> are turned off.
+
+=head1 SEE ALSO
+
+L<Tk::Wm|Tk::Wm>
+L<Tk::tixWm|Tk::tixWm>
+L<Tk::Toplevel|Tk::Toplevel>
+
+=head1 KEYWORDS
+
+window manager, mwm, TIX
+
+=head1 AUTHOR
+
+Ioi Kim Lam - ioi@graphics.cis.upenn.edu
+
+=cut
+

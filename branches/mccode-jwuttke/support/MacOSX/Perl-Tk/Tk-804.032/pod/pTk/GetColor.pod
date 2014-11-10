@@ -1,0 +1,167 @@
+#  Copyright (c) 1990, 1991 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_GetColor, Tk_GetColorByValue, Tk_NameOfColor, Tk_FreeColor - maintain database of colors
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+XColor *
+B<Tk_GetColor>(I<interp, tkwin, nameId>B<)>
+
+XColor *
+B<Tk_GetColorByValue>(I<tkwin, prefPtr>B<)>
+
+char *
+B<Tk_NameOfColor(>I<colorPtr>B<)>
+
+GC
+B<Tk_GCForColor>(I<colorPtr, drawable>)
+
+B<Tk_FreeColor(>I<colorPtr>B<)>
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter to use for error reporting.
+
+=item Tk_Window tkwin (in)
+
+Token for window in which color will be used.
+
+=item Tk_Uid nameId (in)
+
+Textual description of desired color.
+
+=item XColor *prefPtr (in)
+
+Indicates red, green, and blue intensities of desired
+color.
+
+=item XColor *colorPtr (in)
+
+Pointer to X color information.  Must have been allocated by previous
+call to B<Tk_GetColor> or B<Tk_GetColorByValue>, except when passed
+to B<Tk_NameOfColor>.
+
+=item Drawable drawable (in)
+
+Drawable in which the result graphics context will be used.  Must have
+same screen and depth as the window for which the color was allocated.
+
+=back
+
+=head1 DESCRIPTION
+
+The B<Tk_GetColor> and B<Tk_GetColorByValue> procedures
+locate pixel values that may be used to render particular
+colors in the window given by I<tkwin>.  In B<Tk_GetColor>
+the desired color is specified with a Tk_Uid (I<nameId>), which
+may have any of the following forms:
+
+=over 4
+
+=item I<colorname>
+
+Any of the valid textual names for a color defined in the
+server's color database file, such as B<red> or B<PeachPuff>.
+
+=item B<#>I<RGB>
+
+=item B<#>I<RRGGBB>
+
+=item B<#>I<RRRGGGBBB>
+
+=item B<#>I<RRRRGGGGBBBB>
+
+A numeric specification of the red, green, and blue intensities
+to use to display the color.  Each I<R>, I<G>, or I<B>
+represents a single hexadecimal digit.  The four forms permit
+colors to be specified with 4-bit, 8-bit, 12-bit or 16-bit values.
+When fewer than 16 bits are provided for each color, they represent
+the most significant bits of the color.  For example, #3a7 is the
+same as #3000a0007000.
+
+In B<Tk_GetColorByValue>, the desired color is indicated with
+the I<red>, I<green>, and I<blue> fields of the structure
+pointed to by I<colorPtr>.
+
+If B<Tk_GetColor> or B<Tk_GetColorByValue> is successful
+in allocating the desired color, then it returns a pointer to
+an XColor structure;  the structure indicates the exact intensities of
+the allocated color (which may differ slightly from those requested,
+depending on the limitations of the screen) and a pixel value
+that may be used to draw in the color.
+If the colormap for I<tkwin> is full, B<Tk_GetColor>
+and B<Tk_GetColorByValue> will use the closest existing color
+in the colormap.
+If B<Tk_GetColor> encounters an error while allocating
+the color (such as an unknown color name) then NULL is returned and
+an error message is stored in I<interp-E<gt>result>;
+B<Tk_GetColorByValue> never returns an error.
+
+B<Tk_GetColor> and B<Tk_GetColorByValue> maintain a database
+of all the colors currently in use.
+If the same I<nameId> is requested multiple times from
+B<Tk_GetColor> (e.g. by different windows), or if the
+same intensities are requested multiple times from
+B<Tk_GetColorByValue>, then existing pixel values will
+be re-used.  Re-using an existing pixel avoids any interaction
+with the X server, which makes the allocation much more
+efficient.  For this reason, you should generally use
+B<Tk_GetColor> or B<Tk_GetColorByValue>
+instead of Xlib procedures like B<XAllocColor>,
+B<XAllocNamedColor>, or B<XParseColor>.
+
+Since different calls to B<Tk_GetColor> or B<Tk_GetColorByValue>
+may return the same shared
+pixel value, callers should never change the color of a pixel
+returned by the procedures.
+If you need to change a color value dynamically, you should use
+B<XAllocColorCells> to allocate the pixel value for the color.
+
+The procedure B<Tk_NameOfColor> is roughly the inverse of
+B<Tk_GetColor>.  If its I<colorPtr> argument was created
+by B<Tk_GetColor>, then the return value is the I<nameId>
+string that was passed to B<Tk_GetColor> to create the
+color.  If I<colorPtr> was created by a call to B<Tk_GetColorByValue>,
+or by any other mechanism, then the return value is a string
+that could be passed to B<Tk_GetColor> to return the same
+color.  Note:  the string returned by B<Tk_NameOfColor> is
+only guaranteed to persist until the next call to B<Tk_NameOfColor>.
+
+B<Tk_GCForColor> returns a graphics context whose B<Foreground>
+field is the pixel allocated for I<colorPtr> and whose other fields
+all have default values.
+This provides an easy way to do basic drawing with a color.
+The graphics context is cached with the color and will exist only as
+long as I<colorPtr> exists;  it is freed when the last reference
+to I<colorPtr> is freed by calling B<Tk_FreeColor>.
+
+When a pixel value returned by B<Tk_GetColor> or
+B<Tk_GetColorByValue> is no longer
+needed, B<Tk_FreeColor> should be called to release the color.
+There should be exactly one call to B<Tk_FreeColor> for
+each call to B<Tk_GetColor> or B<Tk_GetColorByValue>.
+When a pixel value is no longer in
+use anywhere (i.e. it has been freed as many times as it has been gotten)
+B<Tk_FreeColor> will release it to the X server and delete it from
+the database.
+
+=back
+
+=head1 KEYWORDS
+
+color, intensity, pixel value

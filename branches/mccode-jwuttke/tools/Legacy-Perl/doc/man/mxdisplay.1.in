@@ -1,0 +1,142 @@
+.TH mxdisplay 1  "" "@MCCODE_STRING@" "USER COMMANDS"
+.SH NAME
+mxdisplay \- instrument geometry and x-ray trajectory viewer of the McXtrace x-ray trace simulation package
+.SH SYNOPSIS
+.B mxdisplay
+[\-mzipfh][\-gif|\-ps|\-psc] file.instr param1=val ...
+.SH DESCRIPTION
+The
+.B mxdisplay
+command is the instrument geometry and x-ray trajectory viewer of the McXtrace package. It opens a plot window showing the instrument geometry. Additionally, x-ray trajectories can be followed during their propagation between components. It also compiles the instrument whenever necessary.
+.PP
+.B McXtrace
+is a general tool for simulating x-ray scattering instruments and experiments. It is actively supported by
+.I DTU Physics,
+.I ESRF,
+and
+.I University of Copenhagen
+
+.PP
+McXtrace is based on a compiler [mcxtrace(1)] that reads a high-level specification language defining the instrument to be simulated and produces C code that performs the Monte Carlo Simulation. The system is very fast in use, both when setting up the instrument definition and when doing calculations.
+.PP
+McXtrace supports all x-ray scattering instruments, including triple-axis,  time-of-flight instruments, and polarised x-rays. It comes with a comprehensive manual and a library of well-tested components that include most standard elements of x-ray scattering instruments, including steady-state and pulsed sources, monochromators/analysers, guides, collimators, vanadium and powder samples, velocity selectors and choppers, and a variety of detectors.
+.PP
+The package consists of the following user commands:
+.TP
+mxgui(1)
+is the graphical user interface. Then use the
+.I X-ray Site
+menu to select an example instrument, and access the whole documentation for the
+.I Help
+menu. It contains an instrument editor, methods to plot simulation results, and much more
+.TP
+mxrun(1)
+is the command-line tool for building and running simulations
+.TP
+mxplot(1)
+is the simulation results plotting tool
+.TP
+.B mxdisplay(1)
+is the instrument geometry and x-ray trajectory viewer
+.TP
+mxdoc(1)
+is the documentation tool
+.TP
+mxstas(1)
+is the instrument compiler
+.TP
+mxformat(1)
+can transform any text data set from one format to an other. It does not support conversion from binary data sets. It can also merge equivalent results.
+.PP
+We encourage users to refer to the User and Component Manuals, which are available with the command
+.B
+mxdoc
+.P
+.SH OPTIONS
+.TP
+\-h | \-\-help
+displays the command help
+.TP
+\-m | \-\-multi
+.TP
+Show the three instrument side views
+.TP
+\-T | \-\-TOF
+Special Time Of Flight acceptance diagram mode, only with PGPLOT plotter
+.TP
+\-\-tmax=TMAX
+Maximum TOF [ms] (defaults to 50 ms) to be used together with \-\-TOF, only with PGPLOT plotter
+.TP
+\-iCOMP | \-\-inspect=COMP
+Show only trajectories reaching component COMP
+.TP
+\-pPLOTTER | \-\-plotter=PLOTTER
+Output graphics using PLOTTER={PGPLOT,VRML,Matlab}
+.TP
+\-k | \-\-keep
+Plot all x-rays events together (Primarily for use with PGPLOT and \-psc / \-gif etc.)
+.TP
+\-gif | \-ps | \-psc
+Export figure as gif/b&w ps/color ps and exit
+.SH INSTRUMENT OPTIONS
+These options apply to the generated instrument code (foo.c and foo.out)
+.TP
+\-s SEED | \-\-seed=SEED
+Set random seed (must be non zero)
+.TP
+\-n COUNT | \-\-ncount=COUNT
+Set number of x-rays to simulate
+.TP
+\-d DIR | \-\-dir=DIR
+Put all data files in directory DIR
+.TP
+\-f FILE | \-\-file=FILE
+Put all data in a single file
+.TP
+\-t | \-\-trace
+Enable trace of x-ray through instrument (must have been set during code generation with mcxtrace(1)). This is necessary for mxdisplay(1) to run
+.TP
+\-g | \-\-gravitation
+Enable gravitation for all trajectories
+.TP
+\-a | \-\-data-only
+Do not put any headers in the data files
+.TP
+\-\-no-output-files
+Do not write any data files
+.TP
+\-h | \-\-help
+Show help message for the instrument
+.TP
+\-i | \-\-info
+Detailed instrument information, including valid parameters
+.TP
+\-\-format=FORMAT
+Output data files using format FORMAT (format list obtained from foo.out -h)
+.SH EXAMPLES
+.TP
+Typical usage
+.B mxdisplay
+foo.instr param1=value1 ...
+.TP
+Display 3D view with Matlab (when installed)
+mxdisplay -pMatlab foo.instr param1=value1 ..
+.SH ENVIRONMENT
+The
+.B MCXTRACE
+environment variable may be set to define the McXtrace library location. This is /usr/local/lib/mcxtrace on Linux systems. Executables are usually located in /usr/local/bin.
+.SH BUGS
+McXtrace is a large package, and bugs might be found. If so, please report to
+.B http://trac.mcxtrace.org/
+and the mailing list
+.B mcxtrace-users@mcxtrace.org
+.SH AUTHOR
+Erik B Knudsen, Peter Kjaer Willendrup, Kim Lefmann, and Søren Schmidt
+.SH SEE ALSO
+mcxtrace(1), mxrun(1), mxdisplay(1), mxplot(1), mxgui(1), mxdoc(1), mxformat(1)
+.P
+web site:     <http://www.mcxtrace.org>
+.P
+mailing list: <mailto:mcxtrace-users@mcxtrace.org>
+.P
+matlab(1), octave(1) 

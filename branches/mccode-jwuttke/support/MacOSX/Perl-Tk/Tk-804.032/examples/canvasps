@@ -1,0 +1,152 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+use Data::Dumper;
+warn "Tk$Tk::VERSION\n";
+
+my $ps = page_sizes();
+my $psize = $ARGV[0];
+
+unless (defined $psize && exists $ps->{$psize})
+ {
+  my @sizes = keys %$ps;
+  die "@sizes\n";
+ }
+ 
+my $x = 0;
+my $y = 0;
+
+my $dx = $ARGV[1] || 297;
+my $dy = $ARGV[2] || 210;
+
+my $mw = MainWindow->new;
+my $c  = $mw->Canvas(-width => 640, -height=>480);
+$c->create('rectangle',$x,$y,$x+$dx,$y+$dy);
+$c->create('line',$x,$y,$x+$dx,$y+$dy,-arrow => 'last');
+
+#$c->create('rectangle',0,0,210,297);
+#$c->create('line',0,0,210,297,-arrow => 'last');
+
+
+my %opt = (
+# -pageheight => $ps->{$psize}[1].'m',
+#          -colormode  => $mode
+          );
+@opt{'-x','-y','-width','-height'} = $c->bbox('all');
+$opt{'-width'}  -= $opt{'-x'};
+$opt{'-height'} -= $opt{'-y'};
+
+# PS origin is normally SW so avoid deltaX, deltaY
+$opt{'-pageanchor'} = 'sw';
+$opt{-pagey}  = 0;
+$opt{'-rotate'} = ($opt{'-width'} > $opt{'-height'}) ? 1 : 0;
+if ($opt{-rotate}) 
+ {
+  # x is bigger 
+  $opt{-pagewidth} = $ps->{$psize}[1].'m';
+  # and we have to shift it right to allow for rotate :-(
+  $opt{-pagex} = $ps->{$psize}[0].'m';
+ }
+else
+ {
+  # y is bigger 
+  $opt{-pageheight} = $ps->{$psize}[1].'m';
+  $opt{-pagex} = 0;
+ } 
+
+warn Dumper(\%opt);
+pseudo_code($c,%opt);
+
+my $text = $c->postscript(%opt);
+print $text;
+pos($text) = 0;
+while ($text =~ /\n((%%BoundingBox.*|\s*\d[\s\d\.-]*(translate|rotate|scale)))/g)
+ {
+  warn "$1\n";
+ }
+
+my %page_sizes;
+
+sub page_sizes
+{
+ unless (keys %page_sizes)
+  {
+   my @list;
+   my ($w,$h) = (297,420);
+   for my $size (3..5)
+    {
+     $page_sizes{"A$size"} = [$w,$h];
+     ($h,$w) = ($w,$h/2);
+    }
+  }
+ return \%page_sizes;
+}
+
+sub Points
+{
+ my $s = shift;
+ return undef unless defined $s;
+ $s *= 72.0/25.4 if ($s =~ s/m$//);
+ return $s;
+}
+
+sub pseudo_code
+{
+ my ($c,%opt) = @_;
+ # PostScript transforms are:
+ my $canvW = $opt{-width}  || $c->width;
+ my $canvH = $opt{-height} || $c->height;
+ my $canvX = $opt{-x}      || $c->canvasx(0);
+ my $canvY = $opt{-y}      || $c->canvasy(0);
+ my $pageX = exists $opt{-pagex} ? Points($opt{-pagex}) : (72*4.25); 
+ my $pageY = exists $opt{-pagey} ? Points($opt{-pagey}) : (72*5.5); 
+ my $scale = 1;
+ if ($opt{-pagewidth}) 
+  {
+   $scale = Points($opt{-pagewidth})/$canvW; 
+  } 
+ elsif ($opt{-pageheight}) 
+  {
+   $scale = Points($opt{-pageheight})/$canvH; 
+  } 
+ else 
+  {
+   # $scale = (72/25.4)*ScreenMM/ScreenPixels; 
+  }  
+ my ($deltaX,$deltaY); 
+ for ($opt{-pageanchor} || 'c')
+  { 
+   if (/w/)   { $deltaX = 0 } 
+   elsif (/e/){ $deltaX = -$canvW }
+   else       { $deltaX = -$canvW/2 } 
+   if (/n/)   { $deltaY = -$canvH } 
+   elsif (/s/){ $deltaY = 0 }
+   else       { $deltaY = -$canvH/2 } 
+  }
+  
+ warn "px=$pageX py=$pageY scale=$scale dx=$deltaX dy=$deltaY w=$canvW h=$canvH\n";  
+
+ if (!$opt{-rotate})
+  {
+   warn '%%'.sprintf("BoundingBox: %d %d %d %d\n",
+             $pageX + $scale*$deltaX,
+	     $pageY + $scale*$deltaY,
+	     $pageX + $scale*($deltaX + $canvW)+1,
+	     $pageY + $scale*($deltaY + $canvH)+1);
+  } 
+ else 
+  {
+   warn '%%'.sprintf("BoundingBox: %d %d %d %d\n",
+	     $pageX - $scale*($deltaY + $canvH)+1,
+             $pageY + $scale*$deltaX,
+	     $pageX - $scale*$deltaY+1,
+	     $pageY + $scale*($deltaX + $canvW)+1);
+  } 
+               
+
+ warn sprintf "translate(%g,%g)\n",$pageX,$pageY;
+ warn "rotate(90)\n" if $opt{-rotate};
+ warn sprintf "scale(%g,%g)\n",$scale,$scale;
+ warn sprintf "translate(%g,%g)\n",$deltaX-$canvX,$deltaY;
+}
+

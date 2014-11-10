@@ -1,0 +1,1445 @@
+#!/usr/local/bin/perl -w
+
+# Highly experimental tcl -> perl converter, aimed at eventually
+# completeing Tix merge
+
+use Tk::Pretty;
+use Carp;
+
+@operators  = (
+[qw(return shift next last)],
+[qw(= += -=)],
+[qw(?:)],
+[qw([]),'()'],
+[qw(|| |)],
+[qw(&& &)],
+[qw(< <= > >= == != =~)],
+[qw(+ - .)],
+[qw(* /)],
+[qw(.)],
+['->','&()','eval','bindsub','->{}','++','--','glob'],
+[qw(lindex)],
+[qw(!)]
+);
+
+my $ClassInit;
+
+my $pri = 0;
+my $group;
+foreach $group (@operators)
+ {
+  $pri++;
+  my $op;
+  foreach $op (@$group)
+   {
+    $rightpri{$op} = $pri;
+   }
+ }
+
+%leftpri = %rightpri;
+%perlpri = %rightpri;
+
+$leftpri{'.'} = 0;
+
+
+$global = 1;
+$InBind = 0;
+
+%widget = ();
+
+foreach (qw(entry menu menubutton frame text canvas scale scrollbar
+            button label radiobutton checkbutton))
+ {
+  $widget{$_} = \&tcl_widget;
+ }
+
+sub tokenize
+{
+ my $term = shift;
+ croak unless defined $term;
+ local ($_) = shift if (@_);
+ my @tokens = ();
+ if (/^(\s*(#.*)\n)/)
+  {
+   push(@tokens,$2);
+   substr($_,0,length($1)) = "";
+   $.++;
+   return @tokens;
+  }
+ while (length($_))
+  {
+   if (/^(\s*[$term]?)/s)
+    {
+     my $spc = $1;
+     $. += $spc =~ tr/\n/\n/;
+     substr($_,0,length($spc)) = "";
+     last if ($spc =~ /[$term]/s);
+    }
+   if (/^(\{|!?\[)/)
+    {
+     substr($_,0,length($1)) = "";
+     my $count = 1;
+     my $open  = $1;
+     my $close;
+     my $var = "";
+     if ($open eq '{')
+      {
+       $close = '}';
+      }
+     else
+      {
+       $close = ']';
+       $var   = $open;
+       $open  = '[';
+      }
+     while (length($_))
+      {
+       if (/^"([^\\"]|\\.)*"/)
+        {
+         $var .= $&;
+         $_ = $';
+        }
+       else
+        {
+         my $ch = substr($_,0,1);
+         substr($_,0,1) = "";
+         $count++ if ($ch eq $open);
+         $count-- if ($ch eq $close);
+         last unless ($count);
+         $var .= $ch;
+        }
+      }
+     $var .= ']' if ($close eq ']');
+     push(@tokens,$var);
+    }
+   elsif (/^("([^\\"]|\\.)*"|([^\s$term]|\\\s)+)/)
+    {
+     my $token = $1;
+     die "$_" if ($token =~ /^"/ && $token !~ /"$/);
+     substr($_,0,length($token)) = "";
+     push(@tokens,$token);
+    }
+  }
+ return @tokens;
+}
+
+sub callback
+{
+ local $_ = shift;
+ $_ = $1 if (/^"(.*)"$/);
+ my @stat = block($_);
+ if (@stat == 1)
+  {
+   my @items = @{$stat[0]};
+   my $op = shift(@items);
+   if ($op eq '->' || $op eq '&()')
+    {
+     return ['[]',@items] ;
+    }
+   warn "Weird callback:".Pretty($op,@items);
+  }
+ return ['bindsub',\@stat];
+}
+
+sub tcl_args
+{
+ my $i = 0;
+ my @args = @_;
+ while ($i < @args)
+  {
+   local $_ = $args[$i];
+   if (/^-options$/)
+    {
+     $i++;
+     if ($i < @args)
+      {
+       my @items = tokenize("\0",$args[$i]);
+       $args[$i] = ['[]',@items];
+      }
+    }
+   elsif (/^-\w*command$/)
+    {
+     $i++;
+     $args[$i] = callback($args[$i]) if ($i < @args);
+    }
+   else
+    {
+     $args[$i] = expr($_) unless (/^"/);
+    }
+   $i++;
+  }
+ return @args;
+}
+
+sub tcl_call
+{
+ my @items = ();
+ my $key = shift;
+ if (@_ && $_[0] =~ /\.\w+$/)
+  {
+   my ($base) = ($_[0] =~ /\$?(.*)/);
+   unless (exists $variable{$base})
+    {
+     return tcl_widget("\u$key",@_);
+    }
+  }
+ if (substr($key,0,1) =~ /[\$%[]/)
+  {
+   unless (@_)
+    {
+     return ['->',expr($key),'Call'];
+    }
+   if (@_ && $_[0] =~ /^\w[\w:-]*$/)
+    {
+     return ['->',expr($key),subname(shift),&tcl_args];
+    }
+  }
+ if (@_ && ($_[0] eq '%W' || $_[0] eq '$w'))
+  {
+   my $obj = shift;
+   return ['->',expr($obj),subname($key),&tcl_args];
+  }
+ return [subname($key),&tcl_args];
+}
+
+sub find_widget
+{
+ if (defined(@vars) && @vars)
+  {
+   return $vars[0]->[1];
+  }
+ return '$Widget';
+}
+
+sub primary
+{
+ croak "No string!" unless defined $_;
+ my $start = $_;
+ my $val = undef;
+ s/^\s+//;
+ if (/^\(/)
+  {
+   $_ = $';
+   $val = subexpr(0);
+   if (/^\s*\)/)
+    {
+     $_ = $';
+    }
+   else
+    {
+     die ") missing in '$_' from '$start'";
+    }
+  }
+ elsif (/^\[/)
+  {
+   substr($_,0,1) = "";
+   my $count = 1;
+   my $str = "";
+   while (length($_))
+    {
+     my $ch = substr($_,0,1);
+     substr($_,0,1) = "";
+     $count++ if ($ch eq '[');
+     $count-- if ($ch eq ']');
+     last unless $count;
+     $str .= $ch;
+    }
+   $val = translate(tokenize("\n;",$str));
+  }
+ elsif (/^\{/)
+  {
+   substr($_,0,1) = "";
+   my $count = 1;
+   $val = "";
+   while (length($_))
+    {
+     if (/^"([^\\"]|\\.)*"/)
+      {
+       $val .= $&;
+       $_ = $';
+      }
+     else
+      {
+       my $ch = substr($_,0,1);
+       substr($_,0,1) = "";
+       $count++ if ($ch eq '{');
+       $count-- if ($ch eq '}');
+       last unless $count;
+       $val .= $ch;
+      }
+    }
+  }
+ elsif (/^(\w+)\(/)
+  {
+   my $key = $1;
+   $_   = $';
+   my $str = "";
+   my $count = 1;
+   $val = "";
+   while (length($_))
+    {
+     my $ch = substr($_,0,1);
+     substr($_,0,1) = "";
+     $count++ if ($ch eq '(');
+     $count-- if ($ch eq ')');
+     last unless $count;
+     $val .= $ch;
+    }
+   my @args = tokenize("\0",$str);
+   return [$key,map(expr($_),@args)];
+  }
+ elsif (/^\$(\$*[\w:]+)/)
+  {
+   my $base  = $1;
+   my $vname = $&;
+   my $index = "";
+   $_   = $';
+   if (/^\(/)
+    {
+     my $count = 0;
+     while (length($_))
+      {
+       my $ch = substr($_,0,1);
+       substr($_,0,1) = "";
+       $index .= $ch;
+       $count++ if ($ch eq '(');
+       $count-- if ($ch eq ')');
+       last unless $count;
+      }
+    }
+   if ($base =~ /^(\$\w+)(.+)$/)
+    {
+     $val = ['->{}',$1,$2];
+     $val = ['->{}',$val,$index] if (defined $index);
+    }
+   elsif ($global)
+    {
+     unless (exists $global{$base} || exists $global{$vname})
+      {
+       $global{$base} = '$'.$base;
+      }
+     $val = $global{$base}.$index;
+    }
+   else
+    {
+     unless (exists $variable{$base})
+      {
+       push(@vars,['my',($variable{$base} = '$'.$base)]);
+      }
+     $val  = $variable{$base};
+     $val .= $index if (defined $index);
+    }
+  }
+ elsif (/^((#|0x)[\da-fA-F]+)/ || /^(\d+(\.\d+|[cm])?)/)
+  {
+   $val = $1;
+   $_   = $';
+  }
+ elsif ($_ eq '.' || /^\.\W/)
+  {
+   substr($_,0,1) = "";
+   $val = ['->',find_widget(),'MainWindow'];
+  }
+ elsif (/^(-((\w*|\*)-)+\*)/)
+  {
+   $val = $1;
+   $_ = $';
+  }
+ elsif (/^([-!\/+\@])/)
+  {
+   my $op = $1;
+   $_ = $';
+   return $op unless (length($_));
+   my $rhs = primary();
+   return $op.$rhs if ($op eq '-' && $rhs =~ /^\w+$/);
+   return ['.',$op,$rhs] if ($op eq '/' || $op eq '@');
+   return $rhs if ($op eq '+' && !ref($rhs) && $rhs =~ /\d+/);
+   $val = [$op,$rhs];
+  }
+ elsif (/^([\w:\$]+|"([^\\"]|\\.)*"|%\w|<[\w-]+>)/)
+  {
+   $val = $1;
+   $_ = $';
+   $val = $1 if ($val =~ /^"(\w+)"$/);
+  }
+ unless (defined $val)
+  {
+   die "operand expected '$start'";
+  }
+ return $val;
+}
+
+sub subexpr
+{
+ my $pri  = shift;
+ my $lhs  = primary();
+ while (/^\s*(\.|<=?|>=?|==|&&?|\|\|?|!=|[-+*\/])/ && $pri <= $leftpri{$1})
+  {
+   my $op  = $1;
+   $_ = $';
+   my $rhs = subexpr($rightpri{$op});
+   if (!ref($rhs) && !length($rhs) && ($op eq '==' || $op eq '!='))
+    {
+     $lhs = ['defined',$lhs];
+     $lhs = ['!',$lhs] if ($op eq '==');
+    }
+   elsif (!ref($rhs) && $rhs eq '0' && ($op eq '==' || $op eq '!='))
+    {
+     $lhs = ['!',$lhs] if ($op eq '==');
+    }
+   elsif ($op eq '.')
+    {
+     $lhs = ['->{}',$lhs,'.'.$rhs];
+    }
+   else
+    {
+     $lhs = [$op,$lhs,$rhs];
+    }
+  }
+ return $lhs;
+}
+
+sub expr
+{
+ local ($_) = @_;
+ croak "No arg" unless (defined $_);
+ return "" if (/^\s*$/);
+ my $val;
+ eval { $val = subexpr(0) };
+ croak "$@ in $_[0]" if ($@);
+ croak "Trailing expression:$_ in $_[0]" if (/\S/);
+ return $val;
+}
+
+sub translate;
+sub block;
+
+sub tcl_option
+{
+ my $key = $_[0];
+ if ($key eq 'add')
+  {
+   shift;
+   return class_init(['->','$w','optionAdd',@_]);
+  }
+ else
+  {
+   &tcl_call;
+  }
+}
+
+sub tcl_return
+{
+ @_ = tokenize("\0",shift) if (@_ == 1);
+ return ['return',&tcl_args];
+}
+
+sub class_init
+{
+ unless (defined $ClassInit)
+  {
+   if (defined $subname)
+    {
+     $subname   = 'ClassInit';
+     unshift(@vars,['my','$mw',['shift']]);
+     unshift(@vars,['my','$class',['shift']]);
+     $ClassInit = \@subbody;
+     return @_;
+    }
+   else
+    {
+     $ClassInit = [@_];
+     unshift(@$ClassInit,['my','$mw',['shift']]);
+     unshift(@$ClassInit,['my','$class',['shift']]);
+     return ['sub','ClassInit',$ClassInit];
+    }
+  }
+ push(@$ClassInit,@_);
+ return ();
+}
+
+sub tcl_bind
+{
+ my $obj = shift;
+ my @args = ();
+ my @body = ();
+ my $isclass = 0;
+ if (substr($obj,0,1) eq '$')
+  {
+   $obj = expr($obj);
+  }
+ else
+  {
+   $isclass = 1;
+   unless (defined $class)
+    {
+     $class = $obj;
+     $prefix = "\l$class" unless (defined $prefix);
+    }
+   push(@args,'$class');
+   $obj = '$mw';
+  }
+ push(@args,shift);
+ if (@_)
+  {
+   local $global = 1;
+   local @vars = ();
+   map(s/^"(.*)"$/$1/,@_);
+   my @stat = block(join(' ',@_));
+   @stat = (['->','%W','NoOp']) unless (@stat);
+   if (@stat == 1 && $stat[0]->[1] eq '%W')
+    {
+     my ($op,$junk,$meth,@items) = @{shift(@stat)};
+     foreach (@items)
+      {
+       $_ = ['Ev',$1] if (!ref($_) && /^%(\w)$/);
+      }
+     if (@items)
+      {
+       push(@body,['[]',$meth,@items]);
+      }
+     else
+      {
+       push(@body,$meth);
+      }
+    }
+   else
+    {
+     if (@stat)
+      {
+       unshift(@stat,['my','$Ev',['->','$w','XEvent']]);
+       unshift(@stat,['my','$w',['shift']]);
+      }
+     push(@body,['bindsub',\@stat]);
+    }
+  }
+ my $stat = ['->',$obj,'bind',@args,@body];
+ return class_init($stat) if ($isclass);
+ return $stat;
+}
+
+sub tcl_proc
+{
+ local $global = 0;
+ my @items = ();
+ local (%variable);
+ local $subname = shift(@_);
+ local ($_) = shift(@_);
+ my @args = tokenize("\0");
+ local @subbody = ();
+ local @vars = ();
+ if (@args)
+  {
+   my $arg;
+   foreach $arg (@args)
+    {
+     my @v = tokenize("\0",$arg);
+     my $v = shift(@v);
+     $variable{$v} = '$'.$v;
+     my $i = (!@v) ? ['shift'] : ['?:','@_',['shift'],expr(shift(@v))];
+     push(@vars,['my',$variable{$v},$i]);
+    }
+  }
+ push(@subbody,block(shift(@_)));
+ unshift(@subbody,@vars);
+ push(@items,'sub' => $subname);
+ push(@items,\@subbody);
+ return \@items;
+}
+
+sub variable
+{
+ return expr('$'.shift);
+}
+
+sub tcl_after
+{
+ my @args = ('->',find_widget(),'after',expr(shift));
+ push(@args,callback(join(' ',@_))) if (@_);
+ return \@args;
+}
+
+sub tix_callmethod
+{
+ my @args = ('->',find_widget(),'after',expr(shift));
+ push(@args,callback(join(' ',@_))) if (@_);
+ return \@args;
+}
+
+sub tix_idle
+{
+ my @args = ('->',find_widget(),'afterIdle');
+ push(@args,callback(join(' ',@_)));
+ return \@args;
+}
+
+sub tcl_incr
+{
+ my @items = ();
+ my $var = variable(shift);
+ if (@_)
+  {
+   return ['+=',$var,expr(shift)];
+  }
+ else
+  {
+   return ['++',$var];
+  }
+}
+
+sub tcl_set
+{
+ my $vname = shift(@_);
+ if (@_)
+  {
+   return ['=',variable($vname),expr(shift)];
+  }
+ else
+  {
+   return variable($vname);
+  }
+}
+
+sub tcl_widget
+{
+ my $kind = shift;
+ my $path = shift;
+ my ($parent,$name) = ($path =~ /^(.*)\.([^.]+)$/);
+ if (defined($parent) && defined($name))
+  {
+   unshift(@_,Name => $2);
+   return ['=',expr($path),['->',expr($parent),$kind,&tcl_args]];
+  }
+ else
+  {
+   return ['=',expr($path),['->',find_widget(),$kind,&tcl_args]];
+  }
+}
+
+
+sub tcl_case
+{
+ my @items = ();
+ while($_[0] =~ /^-/) { shift } # XXX -glob and -regexp not used
+ my $what  = expr(shift(@_));
+ my $case  = shift(@_);
+ $case = shift(@_) if ($case eq 'in');
+ push(@items,'if');
+ my @case = tokenize("\0",$case);
+ while (@case >= 2)
+  {
+   my $lab = shift(@case);
+   my $stat= shift(@case);
+   my (@lab) = tokenize("\0",$lab);
+   my $exp = ['==',$what,expr(shift(@lab))];
+   while (@lab)
+    {
+     $exp = ['||',$exp,['==',$what,expr(shift(@lab))]];
+    }
+   $stat = [block($stat)];
+   push(@items,$exp,$stat);
+  }
+ die Pretty(@case) if (@case);
+ return \@items;
+}
+
+sub tcl_catch
+{
+ my @items = ();
+ push(@items,'eval');
+ push(@items,[block(shift(@_))]);
+ return \@items;
+}
+
+sub tcl_string
+{
+ return [@_];
+}
+
+sub tcl_glob
+{
+ while (@_ && $_[0] =~ /^-\w+/)
+  {
+   shift;
+  }
+ return ['glob',@_];
+}
+
+sub tcl_global
+{
+ my $vname;
+ foreach $vname (@_)
+  {
+   $variable{$vname} = '$Tix::'.$vname;
+  }
+ return ();
+}
+
+sub tcl_uplevel
+{
+ if ($_[0] eq '#0')
+  {
+   local $global = 1;
+   shift;
+   &translate;
+  }
+ else
+  {
+   &tcl_call;
+  }
+}
+
+sub tcl_upvar
+{
+ my ($where,$what,$alias) = @_;
+ if ($where eq '#0' && $what =~ /^\$/)
+  {
+   $variable{$alias} = $what.'->';
+   return ();
+  }
+ else
+  {
+   &tcl_call;
+  }
+}
+
+sub tcl_unset
+{
+ my @items = ();
+ my $var = variable(shift);
+ return ['undef',$var];
+ return \@items;
+}
+
+
+
+sub tcl_foreach
+{
+ my @items = ();
+ push(@items,'foreach');
+ push(@items,variable(shift));
+ push(@items,expr(shift));
+ push(@items,[block(shift)]);
+ return \@items;
+}
+
+sub tix_foreach
+{
+ my @items = ();
+ push(@items,'tixforeach');
+ my @vars = tokenize("\0",shift);
+ foreach (@vars)
+  {
+   $_ = variable($_);
+  }
+ push(@items,['[]',@vars]);
+ push(@items,expr(shift));
+ push(@items,[block(shift)]);
+ return \@items;
+}
+
+sub tcl_for
+{
+ my @items = ();
+ push(@items,'for');
+ push(@items,expr('['. shift(@_) .']'));
+ push(@items,expr(shift));
+ push(@items,expr('['. shift(@_) .']'));
+ push(@items,[block(shift)]);
+ return \@items;
+}
+
+sub tcl_while
+{
+ my @items = ();
+ push(@items,'while');
+ push(@items,expr(shift(@_)));
+ push(@items,[block(shift(@_))]);
+ return \@items;
+}
+
+sub tcl_regexp
+{
+ my $regexp = shift;
+ my $val    = shift;
+ return ['=~',$val,"/$regexp/"];
+}
+
+sub tcl_if
+{
+ my @items = ();
+ my $key = 'if';
+ push(@items,'if');
+ while ($key eq 'if' || $key eq 'elseif')
+  {
+   push(@items,expr(shift(@_)));
+   push(@items,[block(shift(@_))]);
+   last unless (@_);
+   $key = shift(@_);
+  }
+ if ($key eq 'else')
+  {
+   push(@items,[block(shift(@_))]);
+  }
+ return \@items;
+}
+
+sub tcl_eval
+{
+ my @items = ();
+ push(@items,'->');
+ push(@items,expr(shift));
+ push(@items,'Call',&tcl_args);
+ return \@items;
+}
+
+sub tcl_info
+{
+ if (@_ == 2 && $_[0] eq 'exists')
+  {
+   return ['exists',variable($_[1])];
+  }
+ return tcl_call('info',@_);;
+}
+
+sub tcl_wm
+{
+ my @items = ();
+ push(@items,'->');
+ my $method = shift;
+ croak "No arg" unless (defined $method);
+ my $widget = expr(shift);
+ push(@items,$widget,$method,&tcl_args);
+ return \@items;
+}
+
+sub tcl_pack
+{
+ my @items = ();
+ push(@items,'->');
+ my $key = 'pack';
+ if ($_[0] =~ /^(forget|info|propagate)$/)
+  {
+   my $sub = shift;
+   $key .= "\u$sub";
+  }
+ my $widget = expr(shift);
+ push(@items,$widget,$key,&tcl_args);
+ return \@items;
+}
+
+sub tcl_expr
+{
+ return expr(join(' ',@_));
+}
+
+sub tcl_format
+{
+ my $fmt = shift;
+ if ($fmt =~ /^%s\(([-\w:]+)\)$/ && @_ == 1)
+  {
+   return ['->{}',expr(shift),$1];
+  }
+ return ['sprintf',$fmt,&tcl_args];
+}
+
+sub tix_class
+{
+ $prefix = shift;
+ %info = tokenize("\0",shift);
+ if (exists $info{-classname})
+  {
+   $class = $info{-classname};
+   $class =~ s/^[Tt]ix//;
+  }
+ return ();
+}
+
+
+%tcl = ( 'proc'     => \&tcl_proc,
+         'bind'     => \&tcl_bind,
+         'case'     => \&tcl_case,
+         'switch'   => \&tcl_case,
+         'eval'     => \&tcl_eval,
+         'info'     => \&tcl_info,
+         'expr'     => \&tcl_expr,
+         'format'   => \&tcl_format,
+         'incr'     => \&tcl_incr,
+         'after'    => \&tcl_after,
+         'tixCallMethod'          => \&tcl_call,
+         'tixDoWhenIdle'          => \&tix_idle,
+         'tixWidgetDoWhenIdle'    => \&tix_idle,   # What is different?
+         'set'      => \&tcl_set,
+         'if'       => \&tcl_if,
+         'regexp'   => \&tcl_regexp,
+         'while'    => \&tcl_while,
+         'pack'     => \&tcl_pack,
+         'wm'       => \&tcl_wm,
+         'winfo'    => \&tcl_wm,
+         'catch'    => \&tcl_catch,
+         'foreach'  => \&tcl_foreach,
+         'tixForEach'  => \&tix_foreach,
+         'for'      => \&tcl_for,
+         'global'   => \&tcl_global,
+         'string'   => \&tcl_string,
+         'glob'     => \&tcl_glob,
+         'return'   => \&tcl_return,
+         'upvar'    => \&tcl_upvar,
+         'uplevel'  => \&tcl_uplevel,
+         'unset'    => \&tcl_unset,
+         'break'    => sub { ['last'] },
+         'continue' => sub { ['next'] },
+         'tixWidgetClass' => \&tix_class,
+         'tixClass' => \&tix_class,
+         'option'   => \&tcl_option,
+       );
+
+sub translate
+{
+# &Tk::Pretty::PrintArgs;
+ if (@_)
+  {
+   my $key   = shift;
+   if (substr($key,0,1) eq '#')
+    {
+     return $key;
+    }
+   elsif (exists $tcl{$key})
+    {
+     return &{$tcl{$key}};
+    }
+   elsif (exists $widget{$key})
+    {
+     return &tcl_widget("\u$key",@_);
+    }
+   else
+    {
+     eval { $what = tcl_call($key,@_) };
+     croak "$@ in ".join(' ',$key,@_) if ($@);
+     return $what;
+    }
+  }
+ return ();
+}
+
+sub block
+{
+ local ($_) = @_;
+ croak unless defined $_;
+ my @stat = ();
+ while (length($_))
+  {
+   push(@stat,translate(tokenize("\n;")));
+  }
+ return @stat;
+}
+
+
+sub indent
+{
+ my $depth = shift;
+ return '' if ($depth <= 0);
+ return ' ' x $depth;
+}
+
+sub statement;
+sub expression;
+
+sub output_block
+{
+ my $depth = shift;
+ my $body  = shift;
+ print indent($depth),"{\n";
+ statements($depth+1,@$body);
+ print indent($depth),"}";
+ print shift if (@_);
+ print "\n";
+}
+
+sub subname
+{
+ local ($_) = shift;
+ croak $_ if (/^&/);
+ carp "Weird name ".Pretty($_) if (ref $_);
+ s/^${class}:+// if (defined $class);
+ s/^${prefix}:+// if (defined $prefix);
+ s/^config-//;
+ s/[:-]/_/g;
+ print STDERR "Bad '$_'\n" if (/[^\w:]/);
+ s/[^\w:]/_/g;
+ return $_;
+}
+
+sub output_sub
+{
+ my ($depth,$key,$name,$body) = @_;
+ print indent($depth),"\nsub ",subname($name),"\n";
+ output_block($depth,$body);
+}
+
+sub output_foreach
+{
+ my ($depth,$key,$var,$list,$body) = @_;
+ print indent($depth),$key," ";
+ expression(0,$var);
+ print " (";
+ expression(0,$list);
+ print ")\n";
+ output_block($depth+1,$body);
+}
+
+sub output_for
+{
+ my ($depth,$key,$start,$cond,$end,$body) = @_;
+ print indent($depth),$key," (";
+ expression(0,$start);
+ print "; ";
+ expression(0,$cond);
+ print "; ";
+ expression(0,$end);
+ print ")\n";
+ output_block($depth+1,$body);
+}
+
+sub output_if
+{
+ my $depth = shift;
+ my $name  = shift;
+ if (@_ <= 3)
+  {
+   my $cond = $_[0];
+   croak Pretty($name,@_) unless defined $cond;
+   if (ref($cond) && @$cond == 2 && $cond->[0] eq '!')
+    {
+     $name = 'unless' if ($name eq 'if');
+     $name = 'until'  if ($name eq 'while');
+     $_[0] = $cond = $cond->[1];
+    }
+   if (@_ == 2 && @{$_[1]} == 1 && ref($_[1]->[0]))
+    {
+     my $kind = $_[1]->[0]->[0];
+     unless (exists $statement{$kind})
+      {
+       print indent($depth);
+       expression(0,$_[1]->[0]);
+       print " $name (";
+       expression(0,$cond);
+       print ");\n";
+       return;
+      }
+    }
+  }
+ while (@_ >= 2)
+  {
+   print indent($depth),$name," (";
+   expression(0,shift);
+   print ")\n";
+   output_block($depth+1,shift);
+   $name = 'elsif';
+  }
+ if (@_)
+  {
+   print indent($depth),"else\n";
+   output_block($depth+1,shift);
+  }
+}
+
+sub output_cond
+{
+ my ($pri,$name,$cond,$true,$false) = @_;
+ print '(';
+ expression(0,$cond);
+ print ') ? ';
+ expression(0,$true);
+ print " : ";
+ expression(0,$false);
+}
+
+sub output_diadic
+{
+ my $pri = shift;
+ my $name = shift;
+ if (@_ == 2)
+  {
+   expression($pri,shift);
+   print " $name ";
+   expression($pri,shift);
+  }
+ else
+  {
+   print $name;
+   expression($pri,shift);
+  }
+}
+
+sub isString
+{
+ my $op = shift;
+ return !ref($op) && ($op !~ /^[$%]/);
+}
+
+%strCmp = ( '<'  => 'lt', '>'  => 'gt',
+            '<=' => 'le', '>=' => 'ge',
+            '==' => 'eq', '!=' => 'ne');
+
+sub output_compare
+{
+ my ($pri,$name,$lhs,$rhs) = @_;
+ $name = $strCmp{$name} if (isString($lhs) || isString($rhs));
+ &Tk::Pretty::PrintArgs unless (defined $name);
+ expression($pri,$lhs);
+ print " $name ";
+ expression($pri,$rhs);
+}
+
+sub output_member
+{
+ my ($pri,$name,$lhs,$rhs) = @_;
+ expression($pri,$lhs);
+ print "->{";
+ expression($pri,$rhs);
+ print "}";
+}
+
+sub output_prefix
+{
+ my ($pri,$name,$right) = @_;
+ print "$name ";
+ expression($pri,$right);
+}
+
+sub output_my
+{
+ my ($depth,$name,$left,$right) = @_;
+ print indent($depth),"my ";
+ expression(0,$left);
+ if (defined $right)
+  {
+   print " = ";
+   expression(0,$right);
+  }
+ print ";\n";
+}
+
+sub output_eval
+{
+ my ($pri,$key,$block) = @_;
+ if (@$block == 1 && ref($block->[0]) && $block->[0]->[0] eq 'undef')
+  {
+   expression($pri,$block->[0]);
+  }
+ else
+  {
+   print "$key\n";
+   output_block($depth+1,$block);
+   print indent($depth);
+  }
+}
+
+sub output_list
+{
+ print "(";
+ while (@_)
+  {
+   expression(0,shift);
+   print "," if (@_);
+  }
+ print ")";
+}
+
+sub output_call
+{
+ my $pri = shift;
+ print subname(shift);
+ &output_list;
+}
+
+sub output_glob
+{
+ my $pri   = shift;
+ my $key   = shift;
+ print "(";
+ while (@_)
+  {
+   print "<",shift,">";
+   print "," if (@_);
+  }
+ print ")";
+}
+
+sub output_return
+{
+ my $pri   = shift;
+ my $key   = shift;
+ print "$key";
+ if (@_)
+  {
+   print " ";
+   if (@_ > 1)
+    {
+     &output_list;
+    }
+   else
+    {
+     expression(0,shift);
+    }
+  }
+}
+
+sub output_method
+{
+ my $pri = shift;
+ my $op  = shift;
+ my $obj = shift;
+ expression($pri,$obj);
+ print $op;
+ if (@_ > 1)
+  {
+   output_call($pri,@_) if (@_);
+  }
+ else
+  {
+   print subname(shift);
+  }
+}
+
+sub output_bind
+{
+ my ($pri,$key,$body) = @_;
+ local $InBind = 1;
+ print "\n";
+ print indent($depth+1),"sub\n";
+ output_block($depth+2,$body);
+ print indent($depth);
+}
+
+sub output_lindex
+{
+ my ($pri,$key,$lhs,$rhs) = @_;
+ expression($pri,$lhs);
+ print '[';
+ expression($pri,$rhs);
+ print ']';
+}
+
+sub output_group
+{
+ my $pri = shift;
+ my $key = shift;
+ print substr($key,0,1);
+ while (@_)
+  {
+   expression($pri,shift);
+   print ',' if (@_);
+  }
+ print substr($key,1,1);
+}
+
+
+%expression = (
+               '=='    => \&output_compare,
+               '!='    => \&output_compare,
+               '<='    => \&output_compare,
+               '<'     => \&output_compare,
+               '>='    => \&output_compare,
+               '>'     => \&output_compare,
+               '='     => \&output_diadic,
+               '.'     => \&output_diadic,
+               '+='    => \&output_diadic,
+               '+'     => \&output_diadic,
+               '||'    => \&output_diadic,
+               '&'    => \&output_diadic,
+               '&&'    => \&output_diadic,
+               '=~'    => \&output_diadic,
+               '[]'    => \&output_group,
+               '()'    => \&output_group,
+               '-'     => \&output_diadic,
+               '*'     => \&output_diadic,
+               '/'     => \&output_diadic,
+               '->'    => \&output_method,
+               '?:'    => \&output_cond,
+               '!'     => \&output_prefix,
+               '++'     => \&output_prefix,
+               'bindsub' => \&output_bind,
+               'eval'  => \&output_eval,
+               'lindex'  => \&output_lindex,
+               'return' => \&output_return,
+               'last'   => \&output_return,
+               'next'   => \&output_return,
+               'shift'  => \&output_return,
+               'glob'   => \&output_glob,
+               '->{}'   => \&output_member,
+              );
+
+
+sub expression
+{
+ my ($pri,$item) = @_;
+ croak "No item" unless defined($item);
+ if (ref($item))
+  {
+   if (ref($item) eq 'ARRAY')
+    {
+     my $kind = $item->[0];
+     if (exists $expression{$kind})
+      {
+       unless (exists $perlpri{$kind})
+        {
+         warn "Don't know priority of $kind";
+         $perlpri{$kind} = $perlpri{'&()'};
+        }
+       my $opri = $perlpri{$kind};
+       print "(" if ($opri < $pri);
+       &{$expression{$kind}}($opri,@$item);
+       print ")" if ($opri < $pri);
+      }
+     else
+      {
+       output_call($pri,@$item);
+      }
+    }
+   else
+    {
+     die "Not an array reference $item";
+    }
+  }
+ else
+  {
+   if ($item =~ /^(\$\w[^(]*)\((.*)\)$/)
+    {
+     expression($pri,"$1");
+     my $index;
+     foreach $index (split(/,/,$2))
+      {
+       print "{";
+       expression(0,$index);
+       print "}";
+      }
+    }
+   elsif ($item =~ /^["\$]/ || $item =~ /^-?\d+(\.\d+)?$/)
+    {
+     print $item;
+    }
+   elsif ($item =~ /^%(\w)$/)
+    {
+     if ($1 eq 'W')
+      {
+       print '$w';
+      }
+     else
+      {
+       print "\$Ev->$1";
+      }
+    }
+   else
+    {
+     warn "$item" if ($item =~ /\(/);
+     if ($item =~ /\$/)
+      {
+       print "\"$item\"";
+      }
+     else
+      {
+       print "'$item'";
+      }
+    }
+  }
+}
+
+
+%statement = ( 'sub'   => \&output_sub,
+               'my'    => \&output_my,
+               'if'    => \&output_if,
+               'while' => \&output_if,
+               'foreach' => \&output_foreach,
+               'tixforeach' => \&output_foreach,
+               'for'     => \&output_for,
+           );
+
+sub statement
+{
+ local $depth = shift;
+ my $item = shift;
+ croak "No item!" unless defined $item;
+ if (ref($item))
+  {
+   if (ref($item) eq 'ARRAY')
+    {
+     if (@$item)
+      {
+       my $kind = $item->[0];
+       if (exists $statement{$kind})
+        {
+         &{$statement{$kind}}($depth,@$item);
+        }
+       else
+        {
+         print indent($depth);
+         expression(0,$item);
+         print ";\n";
+        }
+      }
+     else
+      {
+       print "\n";
+      }
+    }
+   else
+    {
+     die "Not an array reference $item";
+    }
+  }
+ else
+  {
+   print indent($depth),$item,"\n";
+  }
+}
+
+sub statements
+{
+ my $depth = shift;
+ while (@_)
+  {
+   statement($depth,shift);
+  }
+}
+
+$SIG{INT} = sub { croak "Interrupt" };
+
+undef $/;
+foreach $file (@ARGV)
+ {
+  if ($file =~ /\.tcl$/)
+   {
+    my $perl = $file;
+    $perl =~ s/\.tcl/.pm/;
+    open(TCL,"<$file") || die "Cannot open $file:$!";
+    print STDERR "$file => $perl\n";
+    my $prog = <TCL>;
+    close(TCL);
+    $prog =~ s/\\\n/ /sg;
+    my @body = block($prog);
+    push(@$ClassInit,['return','$class']) if (defined $ClassInit);
+    open(PERL,">$perl") || die "Cannot open $perl:$!";
+    my $old = select(PERL);
+    if (defined $class)
+     {
+      print "package Tk::",$class,";\n";
+      if (exists $info{-superclass})
+       {
+        my $superclass = $info{-superclass};
+        $superclass =~ s/^[Tt]ix//;
+        print '@Tk::',$class,'::ISA = qw(Tk::',$superclass,");\n";
+       }
+     }
+    statements(0,@body);
+    select($old);
+    close(PERL);
+    if (system("perl","-wc",$perl) != 0)
+     {
+      rename($perl,"$perl.oops");
+      exit(4)
+     }
+   }
+ }
+

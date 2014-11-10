@@ -1,0 +1,19 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+use Tk::Font;
+
+my $mw = MainWindow->new;
+my $font = $mw->Font(family  => 'courier', point => 140, weight => 'bold', slant => 'r');
+my $lb = $mw->Scrolled('Listbox', -font => $font)->pack(-expand => 1, -fill => 'both');;
+$mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+
+opendir(DIR,".") || die "Cannot opendir '.':$!";
+foreach (sort readdir(DIR))
+ {
+  my $size = (stat($_))[7];
+  $lb->insert('end',sprintf("%6d $_",$size));
+ }
+
+MainLoop;
+
