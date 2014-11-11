@@ -1,18 +1,20 @@
-McXtrace perl tools for aiding in running X-ray simulations.
+McStas perl tools for aiding in running neutron ray tracing simulations.
 
-McXtrace is a tool for simulating X-ray instrumentation and experiments using a
-ray-tracing formalism. Currently the mainuse of McXtrace is in the field of 
-synchrotron beamline instrumentation design, but various other uses have been 
-found, such as designig X-ray telescopes or for laboratory sources. 
+McStas is a tool for simulating neutron instrumentation and experiments using a
+ray-tracing formalism. Currently the main use of McStas is in the field of
+instrumentation design.
 
 This port contains a few perl-based helper tools (including a GUI) to aid the
 user in setting up and running simulations. The tools are:
-mxgui: A Tk/Perl based GUI.
-mxrun: A Script that makes it easy to run sims and perform
+mcgui: A Tk/Perl based GUI.
+mcrun: A Script that makes it easy to run sims and perform
   point scans and simple optimizations.
-mxplot: Tool for plotting McXtrace-generated results.
-mxdisplay: Visual ray-tracing displaying x-ray phton trajectories.  
-mxformatgui: front-end to mxformat to help reformatting data-files (obsolescent).
-mxdaemon: deamon to dynamically monitor and plot incoming results (obsolescent).
+mcdoc: Script for viewing inline component documentation.
+mcplot: Tool for plotting McXtrace-generated results.
+mcdisplay: Visual ray-tracing displaying neutron trajectories.
+mcformatgui: Front-end to mxformat to help reformatting data-files (obsolescent).
+mcdaemon: Deamon to dynamically monitor and plot incoming results (obsolescent).
+mcstas2vitess: Tool to transfer a McStas simulation to ViTESS.
+mcresplot: Script to help plotting resolution functions.
 
-WWW: http://www.mcxtrace.org
+WWW: http://www.mcstas.org
