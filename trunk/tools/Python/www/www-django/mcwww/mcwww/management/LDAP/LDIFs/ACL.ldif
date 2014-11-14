@@ -9,13 +9,13 @@ olcAccess: to *
   by * break
 -
 add: olcAccess
-olcAccess: {0}to dn.children="dc=<MACHINE DOMAIN>"
-  by dn="cn=DummyUser,ou=person,dc=<MACHINE DOMAIN>" read
+olcAccess: {0}to dn.children="dc=DN"
+  by dn="cn=DummyUser,ou=person,dc=DN" read
 -
 add: olcAccess
 olcAccess: {1}to *
-  by dn="cn=moodle bind user,ou=access,dc=<MACHINE DOMAIN>" read
-  by dn="cn=admin,dc=<MACHINE DOMAIN>" manage
+  by dn="cn=moodle bind user,ou=access,dc=DN" read
+  by dn="cn=admin,dc=DN" manage
 -
 #===========#
 # Passwords #
@@ -31,15 +31,15 @@ olcAccess: {1}to attrs=userPassword,shadowLastChange
 add: olcAccess
 olcAccess: {2}to attrs=cn,mail,description
   by self write
-  by group.exact="cn=Student,dc=<MACHINE DOMAIN>" read
-  by group.exact="cn=itStaff,dc=<MACHINE DOMAIN>" write
-  by group.exact="cn=courseStaff,dc=<MACHINE DOMAIN>" write
+  by group.exact="cn=Student,dc=DN" read
+  by group.exact="cn=itStaff,dc=DN" write
+  by group.exact="cn=courseStaff,dc=DN" write
 -
 #===================#
 # Staff Information #
 #===================#
 add: olcAccess
 olcAccess: {3}to attrs=telephoneNumber,roomNumber
-  by group.exact="cn=Student,ou=groups,dc=<MACHINE DOMAIN>" read
-  by group.exact="cn=itStaff,ou=groups,dc=<MACHINE DOMAIN>" write
-  by group.exact="cn=courseStaff,ou=groups,dc=<MACHINE DOMAIN>" write
+  by group.exact="cn=Student,ou=groups,dc=DN" read
+  by group.exact="cn=itStaff,ou=groups,dc=DN" write
+  by group.exact="cn=courseStaff,ou=groups,dc=DN" write
