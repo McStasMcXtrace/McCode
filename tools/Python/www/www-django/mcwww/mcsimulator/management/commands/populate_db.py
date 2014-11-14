@@ -80,8 +80,8 @@ def info(bin):
         print 'Updating existing simulation: ' + sim_name
         sim = fetch(Simulation, name=sim_name)[0]
     else:
-        # Create new simulation
-        sim = Simulation(name=sim_name, simgroup=sim_group, displayname=sim_name)
+        # Create new simulation - changed 14-11-14 Mark L
+        sim = Simulation(name=sim_group+"_"+sim_name, simgroup=sim_group, displayname=sim_name)
         sim.save()
 
     # Delete old params
