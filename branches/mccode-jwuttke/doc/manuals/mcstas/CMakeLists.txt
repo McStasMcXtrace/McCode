@@ -49,7 +49,7 @@ add_custom_command(
   )
 
 
-file(GLOB LIST "*.tex" "*.sty" "*.bib" "*.bst")
+file(GLOB LIST "*.tex" "*.sty" "*.bib" "*.bst" "COMP*" "../common/*.tex" "../common/*.sty" "../common/*.bib" "../common/*.bst" "../common/COMP*")
 foreach(NAME ${LIST})
   file(COPY ${NAME} DESTINATION "${WORK}")
 endforeach()
@@ -62,9 +62,6 @@ file(COPY samples DESTINATION "${WORK}")
 file(COPY optics DESTINATION "${WORK}")
 file(COPY monitors DESTINATION "${WORK}")
 file(COPY misc DESTINATION "${WORK}")
-file(COPY COMPprefix DESTINATION "${WORK}")
-file(COPY COMPheader DESTINATION "${WORK}")
-file(COPY COMPfooter DESTINATION "${WORK}")
 
 foreach(NAME sources samples optics monitors misc)
   add_custom_command(
