@@ -219,9 +219,12 @@
 * %End
 ******************************************************************************/
 DEFINE COMPONENT Monitor_nD
-DEFINITION PARAMETERS (string options=0, string filename=0,string geometry=0, 
+DEFINITION PARAMETERS (, 
   user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX, username1=0, username2=0,username3=0)
-SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0, radius=0)
+SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, 
+  xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, 
+  bins=0, min=-1e40, max=1e40, restore_neutron=0, radius=0,
+  string options="NULL", string filename="NULL", string geometry="NULL")
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, detector)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
@@ -245,7 +248,7 @@ INITIALIZE
 %{
   char tmp[CHAR_BUF_LENGTH];
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
-  if (options != NULL)
+  if (options != NULL && strcmp(options,"NULL") && strcmp(options,"0"))
     strncpy(Vars.option, options, CHAR_BUF_LENGTH);
   else {
     strcpy(Vars.option, "x y");
