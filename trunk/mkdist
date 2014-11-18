@@ -17,7 +17,7 @@ DEFAULT_GENS="src bin"
 export ALL_GENS=$(
     grep '^make_' "$0" | grep -oE '^make_[^(]+' | grep -oE '[^_]+$' | \
         while read gen; do \
-        printf "%s " "$gen"; \
+            printf "%s " "$gen"; \
         done)
 
 # name is mandatory and source and chain can be guessed (they have no defaults)
@@ -166,7 +166,7 @@ fi
 
 # Setup global flavor (mcstas/mcxtrace)
 if [ "x${FLAVOR}" = "x" ]; then
-    if ( echo ${NAME} | grep '^mcx' ) || ( echo ${NAME} | grep '^mx' ) then
+    if ( echo ${NAME} | grep '^mcx' ) || ( echo ${NAME} | grep '^mx' ); then
         FLAVOR="mcxtrace";
         MCCODE_NAME="McXtrace";
         CONFIGURE_FLAGS="-Denable_mcxtrace=1 ${CONFIGURE_FLAGS}";
@@ -198,22 +198,22 @@ MCCODE_STRING="${MCCODE_NAME} ${MCCODE_VERSION} - ${MCCODE_DATE}";
 
 config_mccode() {
     find . -type f                 \
-        -name "CMakeLists.txt" -or \
-        -name "*.cmake"        -or \
-        -name "*.in" |
-    while read file; do
-        for i in 1 2 3 4 5; do
-            # replace variables into file.tmp
-            sed -e 's/@MCCODE_NAME@/'"${MCCODE_NAME}"'/' \
-                -e 's/@MCCODE_TARNAME@/'"${MCCODE_TARNAME}"'/' \
-                -e 's/@MCCODE_VERSION@/'"${MCCODE_VERSION}"'/' \
-                -e 's/@MCCODE_DATE@/'"${MCCODE_DATE}"'/' \
-                -e 's/@MCCODE_STRING@/'"${MCCODE_STRING}"'/' \
-                "${file}" > "${file}.tmp"
-            # rename "fixed" version to file
-            mv "${file}.tmp" "${file}";
-        done;
-    done;
+         -name "CMakeLists.txt" -or \
+         -name "*.cmake"        -or \
+         -name "*.in" |
+	while read file; do
+            for i in 1 2 3 4 5; do
+		# replace variables into file.tmp
+		sed -e 's/@MCCODE_NAME@/'"${MCCODE_NAME}"'/' \
+                    -e 's/@MCCODE_TARNAME@/'"${MCCODE_TARNAME}"'/' \
+                    -e 's/@MCCODE_VERSION@/'"${MCCODE_VERSION}"'/' \
+                    -e 's/@MCCODE_DATE@/'"${MCCODE_DATE}"'/' \
+                    -e 's/@MCCODE_STRING@/'"${MCCODE_STRING}"'/' \
+                    "${file}" > "${file}.tmp"
+		# rename "fixed" version to file
+		mv "${file}.tmp" "${file}";
+            done;
+	done;
 }
 
 
@@ -241,11 +241,11 @@ cleanup() {
 
     # automake and CMake directories
     rm -rf autom*.cache       \
-        build* work* CMakeFiles
+       build* work* CMakeFiles
 
     # CMake files
     rm -f CMakeCache.txt cmake_install.cmake       \
-        CPackSourceConfig.cmake CPackConfig.cmake
+       CPackSourceConfig.cmake CPackConfig.cmake
 
     # backup files
     remove_all              \
@@ -271,8 +271,8 @@ prepare_mccode() {
     if [ -f src/instrument.l ]; then
         (
             cd src &&
-            flex instrument.l  &&
-            bison instrument.y
+		flex instrument.l  &&
+		bison instrument.y
         )
     fi
 }
@@ -288,7 +288,7 @@ build_mccode() {
 
 fresh_copy() {
     rm -rf "${2}" &&
-    cp -LR "${1}" "${2}";
+	cp -LR "${1}" "${2}";
 }
 
 fresh_clean_copy() {
@@ -298,7 +298,7 @@ fresh_clean_copy() {
 
         cd "${DEST}";
         cleanup &&
-        config_mccode
+            config_mccode
     )
 }
 
@@ -313,9 +313,9 @@ prepare_cpack() {
 
         TOOLCHAIN_FILE="${TOP}/cmake/toolchains/${CHAIN}.cmake"
         cmake ${CONFIGURE_FLAGS} \
-            -DCMAKE_INSTALL_PREFIX=${MCINSTALL_PREFIX} \
-            -DNO_ALTERNATIVES=${MCNO_ALTERNATIVES} \
-            -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} .
+              -DCMAKE_INSTALL_PREFIX=${MCINSTALL_PREFIX} \
+              -DNO_ALTERNATIVES=${MCNO_ALTERNATIVES} \
+              -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} .
     )
 }
 
@@ -342,7 +342,7 @@ simple_cpack() {
         echo ""
 
         cd "${DEST}" &&
-        ${CMD} cpack -G "${GEN}";
+            ${CMD} cpack -G "${GEN}";
     )
 }
 
@@ -356,6 +356,8 @@ simple_cpack_file() {
         OUT="${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}${EXT}"
         WORK="${OUT}.work"
 
+	echo "mkdist: simple_cpack_file OUT=${OUT} GEN=${GEN} HINT=${HINT}"
+
         simple_cpack "${GEN}" "${WORK}" || exit 1;
 
         # Remove old packed version if present
@@ -364,19 +366,19 @@ simple_cpack_file() {
         # Pull out packed file and clean up
         find "${WORK}" -name "*${HINT}${EXT}" -exec mv {} "${OUT}" \;
 
-	      # If this is PackageMaker, the postinst script needs special handing
-	      if [ "${GEN}" = "PackageMaker" ]; then
-	          POSTINST=`find "${WORK}" -name postinst`;
-	          cp "${POSTINST}" "${OUT}/Contents/Resources/postinstall";
-	          cp "${POSTINST}" "${OUT}/Contents/Resources/postupgrade";
-	          chmod a+x "${OUT}/Contents/Resources/postinstall";
-	          chmod a+x "${OUT}/Contents/Resources/postupgrade";
-	          OSXVER=`sw_vers | grep ProductVersion | awk '{print $2}' |cut -f1-2 -d.`
-	          mv "${OUT}" "${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}-${OSXVER}${EXT}"
-	          OUT="${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}-${OSXVER}${EXT}"
-	      fi
+	# If this is PackageMaker, the postinst script needs special handing
+	if [ "${GEN}" = "PackageMaker" ]; then
+	    POSTINST=`find "${WORK}" -name postinst`;
+	    cp "${POSTINST}" "${OUT}/Contents/Resources/postinstall";
+	    cp "${POSTINST}" "${OUT}/Contents/Resources/postupgrade";
+	    chmod a+x "${OUT}/Contents/Resources/postinstall";
+	    chmod a+x "${OUT}/Contents/Resources/postupgrade";
+	    OSXVER=`sw_vers | grep ProductVersion | awk '{print $2}' |cut -f1-2 -d.`
+	    mv "${OUT}" "${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}-${OSXVER}${EXT}"
+	    OUT="${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}-${OSXVER}${EXT}"
+	fi
 
-	      rm -rf "${WORK}" || exit 1;
+	rm -rf "${WORK}" || exit 1;
 
         echo "Build: ${OUT}";
     )
@@ -391,11 +393,11 @@ make_src() {
 
         (
             cd "${WORK}" &&
-            prepare_mccode
+		prepare_mccode
         ) || exit 1;
 
         tar czf "${OUT}" "${WORK}" &&
-        rm -rf "${WORK}" || exit 1;
+            rm -rf "${WORK}" || exit 1;
 
         echo "Build: ${DEST}/${OUT}";
     )
@@ -457,7 +459,7 @@ for gen in ${GENS}; do
     echo "=== ${gen} ===";
     echo ""
 
-    # run generator
+    # run generator function defined above
     (
         make_${gen};
     )
