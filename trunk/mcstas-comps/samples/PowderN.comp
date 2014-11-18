@@ -267,6 +267,11 @@ SHARE
       double v; /* last velocity (cached) */
       double Nq;
       int    nb_reuses, nb_refl, nb_refl_count;
+      double v_min, v_max;
+      double xs_Nq[CHAR_BUF_LENGTH];
+      double xs_sum[CHAR_BUF_LENGTH];
+      double neutron_passed;
+      long   xs_compute, xs_reuse, xs_calls;
     };
 
   off_struct offdata;
@@ -476,16 +481,46 @@ SHARE
 
     return(list_count);
   } /* read_line_data */
-  
-int calc_xsect(double v, double *qv, double *my_sv2, int count, double *sum) {
-  int    Nq = 0, line=0;
+
+
+/* computes the number of possible reflections (return value), and the total xsection 'sum' */
+/* this routine looks for a pre-computed value in the Nq and sum cache tables               */
+/* when found, the earch starts from the corresponding lower element in the table           */
+int calc_xsect(double v, double *qv, double *my_sv2, int count, double *sum, 
+  struct line_info_struct *line_info) {
+  int    Nq = 0, line=0, line0=0;
   *sum=0;
-  for(line=0; line<count; line++) {
+  
+  /* check if a line_info element has been recorded already */
+  if (v >= line_info->v_min && v <= line_info->v_max && line_info->neutron_passed >= CHAR_BUF_LENGTH) {
+    line = (int)floor(v - line_info->v_min)*CHAR_BUF_LENGTH/(line_info->v_max - line_info->v_min);
+    Nq    = line_info->xs_Nq[line];
+    *sum  = line_info->xs_sum[line];
+    if (!Nq && *sum == 0) {
+      /* not yet set: we compute the sum up to the corresponding speed in the table cache */
+      double line_v = line_info->v_min + line*(line_info->v_max - line_info->v_min)/CHAR_BUF_LENGTH;
+      for(line0=0; line0<count; line0++) {
+        if (qv[line0] <= 2*line_v) { /* q < 2*kf: restrict structural range */
+          *sum += my_sv2[line0];
+          if (Nq < line0+1) Nq=line0+1; /* determine maximum line index which can scatter */
+        } else break;
+      }
+      line_info->xs_Nq[line] = Nq;
+      line_info->xs_sum[line]= *sum;
+      line_info->xs_compute++;
+    } else line_info->xs_reuse++;
+    line0 = Nq - 1;
+  }
+  
+  line_info->xs_calls++;
+  
+  for(line=line0; line<count; line++) {
     if (qv[line] <= 2*v) { /* q < 2*kf: restrict structural range */
       *sum += my_sv2[line];
       if (Nq < line+1) Nq=line+1; /* determine maximum line index which can scatter */
     } else break;
   }
+  
   return(Nq);
 } /* calc_xsect */
 
@@ -520,7 +555,10 @@ INITIALIZE
   line_info.radius_i =line_info.xwidth_i=line_info.yheight_i=line_info.zdepth_i=0;
   line_info.v  = 0;
   line_info.Nq = 0;
+  line_info.v_min = FLT_MAX; line_info.v_max = 0;
+  line_info.neutron_passed=0;
   line_info.nb_reuses = line_info.nb_refl = line_info.nb_refl_count = 0;
+  line_info.xs_compute= line_info.xs_reuse= line_info.xs_calls =0;
   for (i=0; i< 9; i++) line_info.column_order[i] = columns[i];
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
 
@@ -727,12 +765,18 @@ TRACE
     if(t2 < 0) t2=0; /* already past inner hollow */
     v = sqrt(vx*vx + vy*vy + vz*vz);
     l_full = v * (t3 - t2 + t1 - t0);
+    
+    if (line_info.neutron_passed < CHAR_BUF_LENGTH) {
+      if (v < line_info.v_min) line_info.v_min = v;
+      if (v > line_info.v_max) line_info.v_max = v;
+      line_info.neutron_passed++;
+    }
 
     /* Calculate total scattering cross section at relevant velocity */
     if ( fabs(v - line_info.v) < 1e-6) {
         line_info.nb_reuses++;
       } else {
-        line_info.Nq = calc_xsect(v, line_info.q_v, line_info.my_s_v2, line_info.count, &line_info.my_s_v2_sum);
+        line_info.Nq = calc_xsect(v, line_info.q_v, line_info.my_s_v2, line_info.count, &line_info.my_s_v2_sum, &line_info);
         line_info.v = v;
         line_info.nb_refl += line_info.Nq;
         line_info.nb_refl_count++;
@@ -964,6 +1008,7 @@ FINALLY
   free(line_info.q_v);
   free(line_info.w_v);
   free(line_info.my_s_v2);
+  MPI_MASTER(
   if (line_info.flag_warning)
     fprintf(stderr, "PowderN: %s: Error message was repeated %i times with absorbed neutrons.\n",
       NAME_CURRENT_COMP, line_info.flag_warning);
@@ -974,11 +1019,12 @@ FINALLY
     double split_iterations = (double)line_info.nb_reuses/line_info.nb_refl_count + 1;
     double split_optimal    = (double)line_info.nb_refl/line_info.nb_refl_count;
     if (split_optimal > split_iterations + 5)
-      printf("PowderN: %s: you may highly improve the computation efficiency by using\n"
+      printf("PowderN: %s: Info: you may highly improve the computation efficiency by using\n"
         "    SPLIT %i COMPONENT %s=PowderN(...)\n"
         "  in the instrument description %s.\n", 
         NAME_CURRENT_COMP, (int)split_optimal, NAME_CURRENT_COMP, mcinstrument_source);
   }
+  );
 
 %}
 

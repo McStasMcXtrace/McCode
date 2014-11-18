@@ -21,7 +21,7 @@
 * The component Mirror models a single rectangular neutron mirror plate.
 * It can be used as a sample component or to e.g. assemble a complete neutron
 * guide by putting multiple mirror components at appropriate locations and
-* orientations in the instrument deﬁnition, much like a real guide is build
+* orientations in the instrument definition, much like a real guide is build
 * from individual mirrors.
 * Additionally, it may be centered in order to be used as a sample or
 * monochromator plate, else it starts from AT position.

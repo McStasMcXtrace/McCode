@@ -363,7 +363,7 @@ INITIALIZE
     exit(-1); }
 
   if (!w1 || !h1)
-  { fprintf(stderr,"Guide_gravity: %s: input widow is closed (w1=h1=0).\n", NAME_CURRENT_COMP);
+  { fprintf(stderr,"Guide_gravity: %s: input window is closed (w1=h1=0).\n", NAME_CURRENT_COMP);
     exit(-1); }
     
   if (d*nslit > w1) exit(fprintf(stderr, "Guide_gravity: %s: absorbing walls fill input window. No space left for transmission (d*nslit > w1).\n", NAME_CURRENT_COMP));
