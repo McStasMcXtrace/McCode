@@ -312,6 +312,7 @@ prepare_cpack() {
         cd "${DEST}";
 
         TOOLCHAIN_FILE="${TOP}/cmake/toolchains/${CHAIN}.cmake"
+	echo "mkdist: prepare_cpack: cmake ${CONFIGURE_FLAGS} -DCMAKE_INSTALL_PREFIX=${MCINSTALL_PREFIX} -DNO_ALTERNATIVES=${MCNO_ALTERNATIVES} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} ."
         cmake ${CONFIGURE_FLAGS} \
               -DCMAKE_INSTALL_PREFIX=${MCINSTALL_PREFIX} \
               -DNO_ALTERNATIVES=${MCNO_ALTERNATIVES} \
