@@ -88,14 +88,15 @@ sub plot_array_2d {
     pglab($info->{'Xlabel'}, $info->{'Ylabel'}, "");
     my $title = "$info->{'Component'}"; # removed {'Title'} which is often too long
     if ($info->{'Logmode'} == 1) { $title = "[LOG] $title"; }
+    my $fileshort = basename($info->{'Filename'});
     if ($info->{'ShowI'}) {
       my $vars=$info->{'Values'};
       if ($vars->[0]) { pgmtxt("T", 0.25, 0.5, 0.5, "I=$vars->[0] Err=$vars->[1] N=$vars->[2]"); }
       pgmtxt("T", 1.50, 0.5, 0.5, "$info->{'Stats'}");
-      pgmtxt("T", 2.75, 0.5, 0.5, "$title [$info->{'Filename'}]");
+      pgmtxt("T", 2.75, 0.5, 0.5, "$title [$fileshort]");
     } else {
       pgmtxt("T", 1.75, 0.5, 0.5, $info->{'Title'});
-      pgmtxt("T", 0.25, 0.5, 0.5, "$title [$info->{'Filename'}]");
+      pgmtxt("T", 0.25, 0.5, 0.5, "$title [$fileshort]");
     }
     pgiden();
     pgebuf;
@@ -149,15 +150,16 @@ sub plot_array_1d {
     pglab($info->{'Xlabel'}, $info->{'Ylabel'}, "");
     my $title = "$info->{'Component'}"; # removed {'Title'} which is often too long
     if ($info->{'Logmode'} == 1) { $title = "[LOG] $title"; }
+    my $fileshort = basename($info->{'Filename'});
     if ($info->{'ShowI'}) {
       my $vars=$info->{'Values'};
       if ($vars->[0]) { pgmtxt("T", 0.25, 0.5, 0.5, "I=$vars->[0] Err=$vars->[1] N=$vars->[2] ; $info->{'Stats'}"); }
       else { pgmtxt("T", 0.25, 0.5, 0.5, "$info->{'Stats'}"); }
       pgmtxt("T", 1.50, 0.5, 0.5, $info->{'Title'});
-      pgmtxt("T", 2.75, 0.5, 0.5, "$title [$info->{'Filename'}]");
+      pgmtxt("T", 2.75, 0.5, 0.5, "$title [$fileshort]");
     } else {
       pgmtxt("T", 1.75, 0.5, 0.5, $info->{'Title'});
-      pgmtxt("T", 0.25, 0.5, 0.5, "$title [$info->{'Filename'}]");
+      pgmtxt("T", 0.25, 0.5, 0.5, "$title [$fileshort]");
     }
     pgiden();
     pgebuf;
