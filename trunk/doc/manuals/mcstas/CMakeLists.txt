@@ -23,15 +23,14 @@ set(NSIS_NAME "Manuals, ${MCCODE_VERSION}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
+set(MANUAL "mcstas-manual.pdf")
+set(CMANUAL "mcstas-components.pdf")
+
 if(WINDOWS)
   set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/")
-  set(MANUAL "mcstas-manual.pdf")
-  set(CMANUAL "mcstas-components.pdf")
   set(MANDEST "${lib}/doc/manuals")
 else()
   set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}")
-  set(MANUAL "mcstas-manual.pdf")
-  set(CMANUAL "mcstas-components.pdf")
   set(MANDEST "${FLAVOR}/${MCCODE_VERSION}/doc/manuals")
 endif()
 
