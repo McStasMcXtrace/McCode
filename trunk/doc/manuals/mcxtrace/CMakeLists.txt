@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 2.6)
 
 # This will install McStas components
-project(mcxtracetex)
-
 set(FLAVOR mcxtrace)
+project(${FLAVOR}_manuals)
+
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 include(MCUtil)
-setupMCCODE("mcxtrace")
+setupMCCODE("${FLAVOR}")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-manuals-${MCCODE_VERSION}")
@@ -23,8 +23,8 @@ set(NSIS_NAME "Manuals, ${MCCODE_VERSION}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
-set(MANUAL "mcxtrace-manual.pdf")
-set(CMANUAL "mcxtrace-components.pdf")
+set(MANUAL "${FLAVOR}-manual.pdf")
+set(CMANUAL "${FLAVOR}-components.pdf")
 
 if(WINDOWS)
   set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/")
