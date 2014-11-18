@@ -278,7 +278,7 @@ INITIALIZE
     }
   }
   
-  if (geometry && strlen(geometry))
+  if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
     if (!off_init(  geometry, xwidth, yheight, zdepth, 0, &offdata )) {
       printf("Monitor_nD: %s could not initiate the OFF geometry. \n"
              "            Defaulting to normal Monitor dimensions.\n", NAME_CURRENT_COMP);
