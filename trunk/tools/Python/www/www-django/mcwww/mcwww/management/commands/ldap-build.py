@@ -3,7 +3,7 @@
 #==============================#
 import sys, os
 from sys import stdin
-import management.LDAP.LDAPBuilder as bob_the # <---------- need this import to work from .../management/commands/
+from management.LDAP import LDAPBuilder as bob_the
 
 def main(args):
     if len(args) < 5:
@@ -19,12 +19,11 @@ def main(args):
     ldif_dir = 'management/LDAP/LDIFs/'                  # ... see the sandbox mcUser
     '''
 
-    out_dir = '../management/LDAP/temp/'
-    ldif_dir = '../management/LDAP/LDIFs/'
+    out_dir = './management/LDAP/LDIFs/temp/'
+    ldif_dir = './management/LDAP/LDIFs/'
 
     kwds = {'DN':args[1], 'RPW':args[2],'BPW':args[3]}
     for ldif in os.listdir(ldif_dir):
-        print "ldif: ",ldif
         if '.ldif' in ldif:
             print "dir:",out_dir," file:", ldif
             outfile = open('%s%s'%(out_dir,ldif),'w')
@@ -33,12 +32,12 @@ def main(args):
                     line = line.replace(kwd,replacement)
                 outfile.write(line)
             outfile.close()
-#    print "Data:",args[1],args[4],args[2]
+    print "Data:",args[1],args[4],args[2]
     dat = BuildData(args[1], args[4], args[2])
-    # auth = bob_the.LDAPBuilder(dat)
-    # auth.insertRootPW()
-    # auth.buildTree()
-    # auth.buildAcl()
+    auth = bob_the.LDAPBuilder(dat)
+    auth.insertRootPW()
+    auth.buildTree()
+    auth.buildAcl()
 
 
 

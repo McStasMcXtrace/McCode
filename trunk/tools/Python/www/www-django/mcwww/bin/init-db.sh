@@ -1,5 +1,5 @@
 #!/bin/sh
-
+export PYTHONPATH=$PYTHONPATH:./
 #------------------------------------------#
 # Get host name for populating .ldif files #
 #------------------------------------------#
@@ -41,17 +41,8 @@ done
 echo Access by admin accepted.
 echo " "
 
-#--------------#
-# Output check #
-#--------------#
-echo ROOTPW cipher: $ROOTPW
-echo BINDPW cipher: $BINDPW
-echo TREEPW : $TREEPW
-echo name: $NAME
-echo $DN
-
 #---------------------#
 # Calling DB builders #
 #---------------------#
-python ldap-build.py $DN $ROOTPW $BINDPW $TREEPW
+python ./bin/ldap-build.py $DN $ROOTPW $BINDPW $TREEPW
 #python manage.py syncdb
