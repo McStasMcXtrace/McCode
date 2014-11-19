@@ -17,7 +17,7 @@ class LDAPBuilder:
         self.access = LDAPData()
         self.buildWith = data
 # DB modification files
-        self.ldif_build_path = './LDAP/LDIF/temp/'
+        self.ldif_build_path = './mcwww/management/LDAP/LDIFs/temp/'
         self.rootPW = "RPW.ldif"
         self.tree = "DIT.ldif"
         self.acl = "ACL.ldif"
