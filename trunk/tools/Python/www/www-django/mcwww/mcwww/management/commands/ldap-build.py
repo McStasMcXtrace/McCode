@@ -3,10 +3,10 @@
 #==============================#
 import sys, os
 from sys import stdin
-import LDAP.LDAPBuilder as bob_the # <---------- need this import to work from .../management/commands/
+import management.LDAP.LDAPBuilder as bob_the # <---------- need this import to work from .../management/commands/
 
 def main(args):
-    if len(args) < 4:
+    if len(args) < 5:
         print  "usage: python ldap-build.py <dn> <rootpw> <bindpw> <your pw>\n"
         print "Not enough args: "
         print "GIVEN ARGUMENTS: ",args,"\n"
@@ -19,8 +19,8 @@ def main(args):
     ldif_dir = 'management/LDAP/LDIFs/'                  # ... see the sandbox mcUser
     '''
 
-    out_dir = './LDAP/temp/'
-    ldif_dir = './LDAP/LDIFs/'
+    out_dir = '../management/LDAP/temp/'
+    ldif_dir = '../management/LDAP/LDIFs/'
 
     kwds = {'DN':args[1], 'RPW':args[2],'BPW':args[3]}
     for ldif in os.listdir(ldif_dir):
@@ -65,6 +65,14 @@ class BuildData:
     def root_pw(self):
         return self.rootpw
 
+#-------------------------------------------#
+# Call to main with cmd line args:          #
+#   argv[0] =  'ldap-build.py'              #
+#   argv[1] = LDAP DN                       #
+#   argv[2] = LDAP Backend DB pw            #
+#   argv[3] = moodle/mediawiki bind user pw #
+#   argv[4] = LDAP Frontend DB  pw          #
+#-------------------------------------------#
 main(sys.argv)
 
 
