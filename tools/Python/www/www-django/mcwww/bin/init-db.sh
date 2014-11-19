@@ -8,7 +8,7 @@ NAME=`cat /etc/hostname`
 DN=${DN%$NAME*}                     # all before (repeated) NAME
 DN=${DN##*$NAME.}                   # get after first NAME on line 
 DN=$(echo $DN | sed 's/ *$//')      # trim whitespace at end
-DN="dc=${DN//./,dc=}"               # replacing '.' with ',dc='
+DN="${DN//./,dc=}"               # replacing '.' with ',dc='
 echo Obtained LDAP database DN: $DN
 echo " "
 #---------------#
@@ -17,9 +17,9 @@ echo " "
 count=0
 warn="."
 until [[ ${ROOTPW:0:1} == "{" ]]; do
-    echo "Please input your LDAP root password"$warn
-    warn=", ensuring passwords match."
-    ROOTPW=`slappasswd`
+    echo "Please input your LDAP root password"
+    read -s PROOTPW
+    ROOTPW=`slappasswd -s $PROOTPW`
     echo " "
 done
 warn="."
@@ -36,7 +36,7 @@ until [[ ${LDAPOP:0:1} == "d" ]]; do
     read -s TREEPW
     echo " "
     echo Testing LDAP accesses.
-    LDAPOP=`ldapwhoami -D cn=admin,$DN -w $TREEPW`
+    LDAPOP=`ldapwhoami -D cn=admin,dc=$DN -w $TREEPW`
 done
 echo Access by admin accepted.
 echo " "
@@ -44,5 +44,5 @@ echo " "
 #---------------------#
 # Calling DB builders #
 #---------------------#
-python ./bin/ldap-build.py $DN $ROOTPW $BINDPW $TREEPW
+python ./bin/ldap-build.py $DN $ROOTPW $BINDPW $TREEPW $PROOTPW
 #python manage.py syncdb
