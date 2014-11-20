@@ -140,7 +140,7 @@
 
 DEFINE COMPONENT Source_gen
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string flux_file=0, string xdiv_file=0, string ydiv_file=0,
+SETTING PARAMETERS (string flux_file="NULL", string xdiv_file="NULL", string ydiv_file="NULL",
 		    radius=0.0, dist=0, focus_xw=0.045, focus_yh=0.12, focus_aw=0, focus_ah=0,
                     E0=0, dE=0, lambda0=0, dlambda=0, I1=1,
                     yheight=0.1, xwidth=0.1, verbose=0, T1=0,
@@ -228,12 +228,12 @@ INITIALIZE
   }
 
   /* spectrum characteristics */
-  if (flux_file && strlen(flux_file) > 0) {
+  if (flux_file && strlen(flux_file) && strcmp(flux_file,"NULL") && strcmp(flux_file,"0")) {
     if (Table_Read(&pTable, flux_file, 1) <= 0) /* read 1st block data from file into pTable */
-      exit(fprintf(stderr, "Source_gen: %s: can not read file %s\n", NAME_CURRENT_COMP, flux_file));
+      exit(fprintf(stderr, "Source_gen: %s: can not read flux file %s\n", NAME_CURRENT_COMP, flux_file));
     /* put table in Log scale */
     int i;
-    if (pTable.columns < 2) exit(fprintf(stderr, "Source_gen: %s: Flux file %s should contain at least 2 columns [lambda,flux].\n", NAME_CURRENT_COMP, flux_file));
+    if (pTable.columns < 2) exit(fprintf(stderr, "Source_gen: %s: Flux file %s should contain at least 2 columns [wavelength in Angs,flux].\n", NAME_CURRENT_COMP, flux_file));
     double table_lmin=FLT_MAX, table_lmax=-FLT_MAX;
     double tmin=FLT_MAX, tmax=-FLT_MAX;
     for (i=0; i<pTable.rows; i++) {
@@ -290,10 +290,10 @@ INITIALIZE
   }
 
   /* now read position-divergence files, if any */
-  if (xdiv_file && strlen(xdiv_file) > 0) {
+  if (xdiv_file && strlen(xdiv_file) && strcmp(xdiv_file,"NULL") && strcmp(xdiv_file,"0")) {
     int i,j;
     if (Table_Read(&pTable_x, xdiv_file, 1) <= 0) /* read 1st block data from file into pTable */
-      exit(fprintf(stderr, "Source_gen: %s: can not read file %s\n", NAME_CURRENT_COMP, xdiv_file));
+      exit(fprintf(stderr, "Source_gen: %s: can not read XDiv file %s\n", NAME_CURRENT_COMP, xdiv_file));
     pTable_xsum = 0;
     for (i=0; i<pTable_x.rows; i++)
       for (j=0; j<pTable_x.columns; j++)
@@ -327,10 +327,10 @@ INITIALIZE
     if (!focus_xw && !dist) focus_xw=fabs(pTable_dxmax-pTable_dxmin);
   } /* end xdiv file */
 
-  if (ydiv_file && strlen(ydiv_file) > 0) {
+  if (ydiv_file && strlen(ydiv_file) && strcmp(ydiv_file,"NULL") && strcmp(ydiv_file,"0")) {
     int i,j;
     if (Table_Read(&pTable_y, ydiv_file, 1) <= 0) /* read 1st block data from file into pTable */
-      exit(fprintf(stderr, "Source_gen: %s: can not read file %s\n", NAME_CURRENT_COMP, ydiv_file));
+      exit(fprintf(stderr, "Source_gen: %s: can not read YDiv file %s\n", NAME_CURRENT_COMP, ydiv_file));
     pTable_ysum = 0;
     for (i=0; i<pTable_y.rows; i++)
       for (j=0; j<pTable_y.columns; j++)
@@ -413,7 +413,8 @@ INITIALIZE
   Lmax = lambda0 + dlambda;
 
   /* compute initial weight factor p_in to get [n/s] */
-  if ((I1 > 0  && T1 >= 0) || (flux_file && strlen(flux_file) > 0))
+  if ((I1 > 0  && T1 >= 0) 
+     || (flux_file && strlen(flux_file) && strcmp(flux_file,"NULL") && strcmp(flux_file,"0")))
   { /* the I1,2,3 are usually in [n/s/cm2/st/AA] */
     if (radius)
       source_area = radius*radius*PI*1e4; /* circular cm^2 */
@@ -421,7 +422,8 @@ INITIALIZE
       source_area = yheight*xwidth*1e4; /* square cm^2 */
     p_in  = source_area; /* cm2 */
     p_in *= (Lmax-Lmin); /* AA. 1 bin=AA/n */
-    if (flux_file && strlen(flux_file) && !flux_file_perAA)  p_in *= pTable.rows/(Lmax-Lmin);
+    if (flux_file && strlen(flux_file) && strcmp(flux_file,"NULL") && strcmp(flux_file,"0")
+      && !flux_file_perAA)  p_in *= pTable.rows/(Lmax-Lmin);
   }
   else
     p_in = 1.0/4/PI; /* Small angle approx. */
@@ -452,7 +454,7 @@ INITIALIZE
     printf("            spectra ");
     printf("%.3f to %.3f AA (%.3f to %.3f meV)", Lmin, Lmax, 81.81/Lmax/Lmax, 81.81/Lmin/Lmin);
     printf("\n");
-    if (flux_file && strlen(flux_file) > 0)
+    if (flux_file && strlen(flux_file) && strcmp(flux_file,"NULL") && strcmp(flux_file,"0"))
     { printf("  File %s for flux distribution used. Flux is dPhi/dlambda in [n/s/AA]. \n", flux_file);
       Table_Info(pTable);
     }
@@ -469,7 +471,7 @@ INITIALIZE
     else
     { printf("  Flux is Phi in [n/s].\n");
     }
-    if (xdiv_file && strlen(xdiv_file) > 0)
+    if (xdiv_file && strlen(xdiv_file) && strcmp(xdiv_file,"NULL") && strcmp(xdiv_file,"0"))
       printf("  File %s x=[%g:%g] [m] xdiv=[%g:%g] [deg] used as horizontal phase space distribution.\n", xdiv_file, pTable_xmin, pTable_xmax, pTable_dxmin, pTable_dxmax);
     if (ydiv_file && strlen(ydiv_file) > 0)
       printf("  File %s y=[%g:%g] [m] ydiv=[%g:%g] [deg] used as vertical phase space distribution.\n", ydiv_file, pTable_ymin, pTable_ymax, pTable_dymin, pTable_dymax);
@@ -530,7 +532,7 @@ TRACE
     p = p_in*pdir;
     
     /* spectral dependency from files or Maxwellians */
-    if (flux_file && strlen(flux_file) > 0)
+    if (flux_file && strlen(flux_file) && strcmp(flux_file,"NULL") && strcmp(flux_file,"0"))
     {
        double xwidth=Table_Value(pTable, lambda, 1);
        if (flux_file_log) xwidth=exp(xwidth);
@@ -552,14 +554,16 @@ TRACE
     }
 
     /* optional x-xdiv and y-ydiv weightening: position=along columns, div=along rows */
-    if (xdiv_file && strlen(xdiv_file) > 0 && pTable_xsum > 0) {
+    if (xdiv_file && strlen(xdiv_file) 
+      && strcmp(xdiv_file,"NULL") && strcmp(xdiv_file,"0") && pTable_xsum > 0) {
       double i,j;
       j = (x-            pTable_xmin) /(pTable_xmax -pTable_xmin) *pTable_x.columns;
       i = (atan2(dx,rf)*RAD2DEG-pTable_dxmin)/(pTable_dxmax-pTable_dxmin)*pTable_x.rows;
       r = Table_Value2d(pTable_x, i,j); /* row, column */
       p *= r/pTable_xsum;
     }
-    if (ydiv_file && strlen(ydiv_file) > 0 && pTable_ysum > 0) {
+    if (ydiv_file && strlen(ydiv_file)
+       && strcmp(ydiv_file,"NULL") && strcmp(ydiv_file,"0") && pTable_ysum > 0) {
       double i,j;
       j = (y-            pTable_ymin) /(pTable_ymax -pTable_ymin) *pTable_y.columns;
       i = (atan2(dy,rf)*RAD2DEG-  pTable_dymin)/(pTable_dymax-pTable_dymin)*pTable_y.rows;

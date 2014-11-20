@@ -39,7 +39,7 @@
 
 DEFINE COMPONENT Progress_bar
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string profile=0, percent=10,flag_save=0,minutes=0)
+SETTING PARAMETERS (string profile="NULL", percent=10,flag_save=0,minutes=0)
 OUTPUT PARAMETERS (IntermediateCnts,StartTime,EndTime)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
@@ -112,9 +112,9 @@ TRACE
 SAVE
 %{
   MPI_MASTER(fprintf(stdout, "\nSave [%s]\n", mcinstrument_name););
-  if (profile && strlen(profile)) {
+  if (profile && strlen(profile) && strcmp(profile,"NULL") && strcmp(profile,"0")) {
     char filename[256];
-    if (!strlen(profile)) strcpy(filename, mcinstrument_name);
+    if (!strlen(profile) || !strcmp(profile,"NULL") || !strcmp(profile,"0")) strcpy(filename, mcinstrument_name);
     else strcpy(filename, profile);
     DETECTOR_OUT_1D(
         "Intensity profiler",
