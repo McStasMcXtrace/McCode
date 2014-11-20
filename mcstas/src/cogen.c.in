@@ -854,7 +854,7 @@ cogen_init(struct instr_def *instr)
       }
       else
       {
-        coutf("  if(%s) strncpy(%sc%s_%s,%s, 16384); else %sc%s_%s[0]='\\0';", val, ID_PRE, comp->name, par->id, val, ID_PRE, comp->name, par->id);
+        coutf("  if(%s) strncpy(%sc%s_%s,%s ? %s : "", 16384); else %sc%s_%s[0]='\\0';", val, ID_PRE, comp->name, par->id, val, ID_PRE, comp->name, par->id);
       }
       str_free(val);
     }
