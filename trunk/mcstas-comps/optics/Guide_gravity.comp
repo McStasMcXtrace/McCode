@@ -125,7 +125,7 @@ SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   aleft=-1, aright=-1, atop=-1, abottom=-1,
   wavy=0, wavy_z=0, wavy_tb=0, wavy_lr=0,
   chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
-  nu=0, phase=0, string reflect=0)
+  nu=0, phase=0, string reflect="NULL")
 OUTPUT PARAMETERS (GVars, pTable)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
@@ -349,7 +349,7 @@ INITIALIZE
   Coords mcLocG;
   int i;
 
-  if (reflect && strlen(reflect)) {
+  if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0")) {
     if (Table_Read(&pTable, reflect, 1) <= 0) /* read 1st block data from file into pTable */
       exit(fprintf(stderr,"Guide_gravity: %s: can not read file %s\n", NAME_CURRENT_COMP, reflect));
   } else {
@@ -532,7 +532,7 @@ TRACE
         /* scattering q=|n_i-n_f| = V2Q*|vf - v| = V2Q*2*n.v/|n| */
         q = 2*V2Q*fabs(B)/GVars.norm_n[side];
 
-        if (reflect && strlen(reflect))
+        if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0"))
           TableReflecFunc(q, &pTable, &B);
         else {
           double par[] = {R0, Qc, GVars.Alpha[side], GVars.M[side], W};
