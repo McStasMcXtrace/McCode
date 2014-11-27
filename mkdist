@@ -37,13 +37,16 @@ fi
 
 
 usage() {
-    echo "usage: $0 name [version] [source] [target] [chain] [-- gens ...] ";
+    echo "usage: $0 name [version] [source] [target] [chain] [flags] [-- gens ...] ";
     echo "";
     echo "  name:      The name of the distribution (e.g. mcstas)";
     echo "  version:   The version (default: current date)";
     echo "  source:    The source directory (default: name)";
     echo "  target:    The target directory (default: ${DEFAULT_TARGET})";
     echo "  chain:     The toolchain to use (default: ${DEFAULT_CHAIN})";
+    echo "  flags:     Any of the following characters (default: '')";
+    echo "     o          Out-of-place compilation (don't copy files)";
+    echo "     k          Keep working directory (don't clean up)";
     echo "  gens:      Generators to use (default: ${DEFAULT_GENS})";
     echo "";
     echo "A default value can be chosen by supplying an empty value like ''.";
@@ -62,7 +65,7 @@ fi
 
 
 # Parse arguments into variables; stop at --
-args="NAME MCCODE_VERSION SOURCE DEST CHAIN"
+args="NAME MCCODE_VERSION SOURCE DEST CHAIN FLAGS"
 for a in ${args}; do
     VAL="$1";
 
@@ -81,6 +84,17 @@ for a in ${args}; do
     export ${a}="$1";
     shift;
 done
+
+CP_SRC="y"
+CLEANUP="y"
+if expr "${FLAGS}" : ".*o.*" > /dev/null; then
+    CP_SRC="n"
+    echo Not copying code for project
+fi
+if expr "${FLAGS}" : ".*k.*" > /dev/null; then
+    CLEANUP="n"
+    echo Not clearing out code for project
+fi
 
 # Any arguments from here on are generators (e.g. src, bin, deb or rpm)
 GENS="$*"
@@ -307,16 +321,24 @@ prepare_cpack() {
     # copy source files
     (
         DEST="${1}"
-        fresh_clean_copy "${DEST}";
-
+	if [ "${CP_SRC}" = "y" ]; then
+            fresh_clean_copy "${DEST}";
+	    CMAKE_SRC="."
+        else
+	    mkdir "${DEST}"
+            CMAKE_SRC="${SOURCE}";
+        fi
+	
         cd "${DEST}";
 
         TOOLCHAIN_FILE="${TOP}/cmake/toolchains/${CHAIN}.cmake"
-	echo "mkdist: prepare_cpack: cmake ${CONFIGURE_FLAGS} -DCMAKE_INSTALL_PREFIX=${MCINSTALL_PREFIX} -DNO_ALTERNATIVES=${MCNO_ALTERNATIVES} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} ."
+	echo "mkdist: prepare_cpack: cmake ${CONFIGURE_FLAGS} -DCMAKE_INSTALL_PREFIX=${MCINSTALL_PREFIX} -DNO_ALTERNATIVES=${MCNO_ALTERNATIVES} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} ${CMAKE_SRC}"
         cmake ${CONFIGURE_FLAGS} \
               -DCMAKE_INSTALL_PREFIX=${MCINSTALL_PREFIX} \
               -DNO_ALTERNATIVES=${MCNO_ALTERNATIVES} \
-              -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} .
+              -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
+	      -DCMAKE_VERBOSE_MAKEFILE=ON \
+	      ${CMAKE_SRC}
     )
 }
 
@@ -341,7 +363,7 @@ simple_cpack() {
         esac
 
         echo ""
-
+	echo "mkdist: simple_cpack: cd ${DEST} && ${CMD} cpack -G ${GEN}"
         cd "${DEST}" &&
             ${CMD} cpack -G "${GEN}";
     )
@@ -379,7 +401,9 @@ simple_cpack_file() {
 	    OUT="${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}-${OSXVER}${EXT}"
 	fi
 
-	rm -rf "${WORK}" || exit 1;
+	if [ ${CLEANUP} = "y" ]; then
+	    rm -rf "${WORK}" || exit 1;
+	fi
 
         echo "Build: ${OUT}";
     )
