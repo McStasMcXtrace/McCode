@@ -7,9 +7,9 @@ if [ "x$1" = "x" ]; then
 fi
 
 # Workaround for having CRLF linefeeds in a couple of windows packages
-rsync -avz "" --delete "" --exclude=".svn/" mcstas-comps/ mcstas-comps-win
+rsync -avz --delete --exclude=".svn/" mcstas-comps/ mcstas-comps-win
 find mcstas-comps-win -type f -not -name \*.off -exec todos \{\} \;
-rsync -avz "" --delete "" --exclude=".svn/" tools/Legacy-Perl/ tools/Legacy-Perl-win
+rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl/ tools/Legacy-Perl-win
 find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 
 # 32-bit
