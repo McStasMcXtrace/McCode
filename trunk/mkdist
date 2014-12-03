@@ -312,7 +312,7 @@ fresh_clean_copy() {
 
         cd "${DEST}";
         cleanup &&
-            config_mccode
+        config_mccode
     )
 }
 
@@ -327,6 +327,11 @@ prepare_cpack() {
         else
 	    mkdir "${DEST}"
             CMAKE_SRC="${SOURCE}";
+	    cp -rp ${TOP}/cmake ${SOURCE}/cmake
+	    cd ${SOURCE}/cmake
+	    cleanup &&
+            config_mccode
+	    cd -
         fi
 	
         cd "${DEST}";
