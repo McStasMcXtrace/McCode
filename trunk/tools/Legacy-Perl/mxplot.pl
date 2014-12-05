@@ -190,7 +190,7 @@ if ($Config{'osname'} eq 'MSWin32') {
 if ($plotter =~ /Matlab/i && $MCSTAS::mcstas_config{'MATLAB'} ne "no") {
   my $tosend = "$MCSTAS::mcstas_config{'MATLAB'} ";
   if ($nowindow) { $tosend .= "-nojvm -nosplash "; }
-  $tosend .= "-r \"if(exist('iData'));s=iData('$file');subplot(s);else;addpath('$MCSTAS::perl_dir/../matlab');addpath(pwd);s=mxplot('$file',[],'$inspect');end;";
+  $tosend .= "-r \"if(exist('iData'));s=iData('$file');subplot(s);else;addpath('$MCSTAS::perl_dir/../matlab');addpath(pwd);s=mcplot('$file',[],'$inspect');end;";
 
   print $tosend;
   if ($passed_arg_str_quit) {

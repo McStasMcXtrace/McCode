@@ -423,7 +423,8 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
     if ($res eq 'Start') {
       # update Plotter in case of change in this dialog (instead of Preferences)
       if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
-      elsif ($formatchoice_val =~ /McXtrace|PGPLOT|Gnuplot/i)  { $plotter= 'PGPLOT'; }
+      elsif ($formatchoice_val =~ /Gnuplot/i)  { $plotter= 'Gnuplot'; }
+      elsif ($formatchoice_val =~ /McXtrace|PGPLOT/i)  { $plotter= 'PGPLOT'; }
       elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
       elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }
 
@@ -529,6 +530,7 @@ sub plot_dialog {
     }
     push @plot_cmd, "$plotcmd$suffix";
     push @plot_cmd, $sim_file_name;
+    push @plot_cmd, "--format=$MCSTAS::mcstas_config{'PLOTTER'}"
     my $cmd=join(' ',@plot_cmd);
     spawn_external($w, $cmd);
 
@@ -692,9 +694,10 @@ sub preferences_dialog {
     my $res = $dlg->Show;
 
     if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
-      elsif ($formatchoice_val =~ /McXtrace|PGPLOT|Gnuplot/i)  { $plotter= 'PGPLOT'; }
-      elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
-      elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }
+    elsif ($formatchoice_val =~ /Gnuplot/i)  { $plotter= 'Gnuplot'; }
+    elsif ($formatchoice_val =~ /McXtrace|PGPLOT|Gnuplot/i)  { $plotter= 'PGPLOT'; }
+    elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
+    elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }
 
     if ($formatchoice_val =~ /scriptfile/i && $plotter =~ /Matlab/i) {
       $plotter .= "_scriptfile";
