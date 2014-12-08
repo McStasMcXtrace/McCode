@@ -401,8 +401,10 @@ cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
       coutf("/* '%s=%s()' component instance extend code */",comp->name, comp->type);
       coutf("    SIG_MESSAGE(\"%s (Trace:Extend)\");", comp->name); /* signal handler message */
       if (comp->when)
-        coutf("if (%s)\n", exp_tostring(comp->when));
+        coutf("if (%s) {\n", exp_tostring(comp->when));
       codeblock_out(comp->extend);
+      if (comp->when)
+        cout("}\n");
     }
     if (infunc==2 && list_len(comp->jump) > 0) {
       List_handle liter2;
