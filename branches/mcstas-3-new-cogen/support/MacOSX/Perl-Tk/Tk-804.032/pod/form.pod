@@ -1,0 +1,397 @@
+#  Copyright (c) 1996, Expert Interface Technologies
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#  The file man.macros and some of the macros used by this file are
+#  copyrighted: (c) 1990 The Regents of the University of California.
+#               (c) 1994-1995 Sun Microsystems, Inc.
+#  The license terms of the Tcl/Tk distribution are in the file
+#  license.tcl.
+
+=head1 NAME
+
+Tk::form - Geometry manager based on attachment rules
+
+=for category  Tk Geometry Management
+
+=head1 SYNOPSIS
+
+S<    >I<$widget>->B<form>?(I<args>)?
+
+S<    >I<$widget>->B<form>I<Option>?(I<args>)?
+
+=head1 DESCRIPTION
+
+The B<form> method is used to communicate with the
+B<form> Geometry Manager, a geometry manager that arranges the
+geometry of the children in a parent window according to attachment
+rules. The B<form> geometry manager is very flexible and
+powerful; it can be used to emulate all the existing features of the
+Tk packer and placer geometry managers (see L<pack|Tk::pack>,
+L<place|Tk::place>).
+The B<form> method can have any of several forms,
+depending on I<Option>:
+
+=over 4
+
+=item I<$slave>->B<form>?(I<options>)?
+
+Sets or adjusts the attachment values of the slave window
+according to the I<-option>=>I<value> argument pairs.
+
+=over 8
+
+=item B<-b> => I<attachment>
+
+Abbreviation for the B<-bottom> option.
+
+=item B<-bottom> => I<attachment>
+
+Specifies an attachment for the bottom edge of the slave window. The
+attachment must specified according to L<"SPECIFYING ATTACHMENTS"> below.
+
+=item B<-bottomspring> => I<weight>
+
+Specifies the weight of the spring at the bottom edge of the slave
+window. See L<"USING SPRINGS"> below.
+
+=item B<-bp> => I<value>
+
+Abbreviation for the B<-padbottom> option.
+
+=item B<-bs> => I<weight>
+
+Abbreviation for the B<-bottomspring> option.
+
+=item B<-fill> => I<style>
+
+Specifies the fillings when springs are used for this widget. The
+value must be B<x>, B<y>, B<both> or B<none>.
+
+=item B<-in> => I<$master>
+
+Places the slave window into the specified I<$master> window. If the slave
+was originally in another master window, all attachment values with
+respect to the original master window are discarded. Even if the
+attachment values are the same as in the original master window, they
+need to be specified again.  The B<-in> flag, when needed, must appear
+as the first flag of I<options>. Otherwise an error is
+generated.
+
+=item B<-l> => I<attachment>
+
+Abbreviation for the B<-left> option.
+
+=item B<-left> => I<attachment>
+
+Specifies an attachment for the left edge of the slave window. The
+attachment must specified according to L<"SPECIFYING ATTACHMENTS"> below.
+
+=item B<-leftspring> => I<weight>
+
+Specifies the weight of the spring at the left edge of the slave
+window. See L<"USING SPRINGS"> below.
+
+=item B<-lp> => I<value>
+
+Abbreviation for the B<-padleft> option.
+
+=item B<-ls> => I<weight>
+
+Abbreviation for the B<-leftspring> option.
+
+=item B<-padbottom> => I<value>
+
+Specifies the amount of external padding to leave on the bottom side
+of the slave. The I<value> may have any of the forms acceptable to
+B<Tk_GetPixels>.
+
+=item B<-padleft> => I<value>
+
+Specifies the amount of external padding to leave on the left side of
+the slave.
+
+=item B<-padright> => I<value>
+
+Specifies the amount of external padding to leave on the right side of
+the slave.
+
+=item B<-padtop> => I<value>
+
+Specifies the amount of external padding to leave on the top side of
+the slave.
+
+=item B<-padx> => I<value>
+
+Specifies the amount of external padding to leave on both the left and
+the right sides of the slave.
+
+=item B<-pady> => I<value>
+
+Specifies the amount of external padding to leave on both the top and
+the bottom sides of the slave.
+
+=item B<-r> => I<attachment>
+
+Abbreviation for the B<-right> option.
+
+=item B<-right> => I<attachment>
+
+Specifies an attachment for the right edge of the slave window. The
+attachment must specified according to L<"SPECIFYING ATTACHMENTS"> below.
+
+=item B<-rightspring> => I<weight>
+
+Specifies the weight of the spring at the right edge of the slave
+window. See L<"USING SPRINGS"> below.
+
+=item B<-rp>  => I<value>
+
+Abbreviation for the B<-padright> option.
+
+=item B<-rs> => I<weight>
+
+Abbreviation for the B<-rightspring> option.
+
+=item B<-t> => I<attachment>
+
+Abbreviation for the B<-top> option.
+
+=item B<-top> => I<attachment>
+
+Specifies an attachment for the top edge of the slave window. The
+attachment must specified according to L<"SPECIFYING ATTACHMENTS"> below.
+
+=item B<-topspring> => I<weight>
+
+Specifies the weight of the spring at the top edge of the slave
+window. See L<"USING SPRINGS"> below.
+
+=item B<-tp> => I<value>
+
+Abbreviation for the B<-padtop> option.
+
+=item B<-ts> => I<weight>
+
+Abbreviation for the B<-topspring> option.
+
+=back
+
+=item I<$master>->B<formCheck>
+
+This method checks whether there is circular dependency in the
+attachments of the master's slaves (see L<"CIRCULAR DEPENDENCY"> below).
+It returns the Boolean value B<TRUE> if it
+discover circular dependency and B<FALSE> otherwise.
+
+=item I<$slave>->B<formForget>
+
+Removes the slave from its master and unmaps its window.
+The slave will no longer be managed by form. All attachment values
+with respect to its master window are discarded. If another slave
+is attached to this slave, then the attachment of the other slave will
+be changed to grid attachment based on its geometry.
+
+=item I<$master>->B<formGrid>?(I<x_size, y_size>)?
+
+When I<x_size> and I<y_size> are given, this method returns the
+number of grids of the I<$master> window in a pair of integers of the form
+(I<x_size, y_size>). When both I<x_size> and I<y_size> are
+given, this method changes the number of horizontal and vertical
+grids on the master window.
+
+=item I<$slave>->B<formInfo>?(I<-option)>?
+
+Queries the attachment options of a slave window. I<-option> can be
+any of the options accepted by the B<form> method. If
+I<-option> is given, only the value of that option is returned.
+Otherwise, this method returns a list whose elements are the current
+configuration state of the slave given in the same I<option-value> form
+that might be specified to B<form>. The first two
+elements in this list list are "B<-in>=>I<$master>" where
+I<$master> is the slave's master window.
+
+=item I<$master>->B<formSlaves>
+
+Returns a list of all of the slaves for the master window. The order
+of the slaves in the list is the same as their order in the packing
+order. If master has no slaves then an empty string is returned.
+
+=back
+
+=head1 SPECIFYING ATTACHMENTS
+
+One can specify an attachment for each side of a slave window managed
+by form. An attachment is specified in the the form "-I<side> =>
+[I<anchor_point>, I<offset>]". -I<side> can be one of
+B<-top>, B<-bottom>, B<-left> or B<-right>.
+
+I<Offset> is given in screen units (i.e. any of the forms
+acceptable to B<Tk_GetPixels>).  A positive offset indicates
+shifting to a position to the right or bottom of an anchor point. A
+negative offset indicates shifting to a position to the left or top of
+an anchor point.
+
+I<Anchor_point> can be given in one of the
+following forms:
+
+=over 4
+
+=item B<Grid Attachment>
+
+The master window is divided into a number of horizontal and vertical
+grids. By default the master window is divided into 100x100 grids; the
+number of grids can be adjusted by the B<formGrid> method. A
+grid attachment anchor point is given by a B<%> sign followed by an
+integer value. For example, B<'%0'> specifies the first grid
+line (the top or left edge of the master window). B<'%100'> specifies
+the last grid line (the bottom or right edge of the master window).
+
+=item B<Opposite Side Attachment>
+
+Opposite attachment specifies an anchor point located on the
+B<opposite> side of another slave widget, which must be managed by
+form in the same master window. An opposite attachment anchor point
+is given by the name of another widget. For example,
+"I<$b>->B<form>(B<-top>=>[I<$a>,0])" attaches the top side of the widget I<$b> to the
+bottom of the widget I<$a>.
+
+=item B<Parallel Side Attachment>
+
+Opposite attachment specifies an anchor point located on the
+B<same> side of another slave widget, which must be managed by
+form in the same master window. An parallel attachment anchor point
+is given by the sign B<E<amp>> follwed by the name of another widget.
+For example, "I<$b>->B<form>(B<-top>=>['&',I<$a>,0])" attaches the top side of
+the widget I<$b> to the top of the widget I<$a>, making
+the top sides of these two widgets at the same vertical position
+in their parent window.
+
+=item B<No Attachment>
+
+Specifies a side of the slave to be attached to nothing, indicated by
+the keyword B<none>. When the B<none> anchor point is given, the
+offset must be zero (or not present).
+When a side of a slave is attached to B<['none', 0]>, the position
+of this side is calculated by the position of the other side and the
+natural size of the slave. For example, if a the left side of a
+widget is attached to B<['%0', 100]>, its right side attached to
+B<['none', 0]>, and the natural size of the widget is B<50> pixels,
+the right side of the widget will be positioned at pixel
+B<['%0', 149]>.
+When both B<-top> and B<-bottom> are attached to B<none>,
+then by default B<-top> will be attached to B<['%0', 0]>. When both
+B<-left> and B<-right> are attached to none, then by default
+B<-left> will be attached to B<['%0', 0]>.
+
+=back
+
+Shifting effects can be achieved by specifying a non-zero offset with
+an anchor point. In the following example, the top side of
+widget I<\$b> is attached to the bottom of
+I<\$a>; hence I<\$b>
+always appears below I<\$a>.  Also, the left edge of I<\$b>
+is attached to the left side of I<\$a> with a 10
+pixel offest.  Therefore, the left edge of I<\$b> is always
+shifted 10 pixels to the right of I<\$a>'s left edge:
+
+S<    >I<$b>->B<form>(B<-left>=>[I<$a>,10], B<-top>=>[I<$a>,0]);
+
+=head2 ABBREVIATIONS:
+
+Certain abbreviations can be made on the
+attachment specifications: First an offset of zero can be omitted.
+Thus, the following two lines are equivalent:
+
+S<    >I<$b>->B<form>(B<-top>=>[I<$a>,0], B<-right>=>['%100',0]);
+
+S<    >I<$b>->B<form>(B<-top>=>[I<$a>], B<-right>=>'%100');
+
+In the second case, when the anchor point is omitted, the offset must
+be given. A default anchor point is chosen according to the value of
+the offset. If the anchor point is B<0> or positive, the default
+anchor point %0 is used; thus, "I<$b>->B<form>(B<-top>=>15)" attaches the top
+edge of I<$b> to a position 15 pixels below the top edge of the
+master window. If the anchor point is "B<-0>" or negative, the
+default anchor point B<%100> is used; thus, "I<$a>->B<form>(B<-right>=>-2)"
+attaches the right edge of I<\$a> to a position 2 pixels to
+the left of the master window's right edge.  An further example
+below shows a method with its equivalent abbreviation.
+
+S<    >I<$b>->B<form>(B<-top>=>['%0',10], B<-bottom>=>['%100',0]);
+
+S<    >I<$b>->B<form>(B<-top>=>10, B<-bottom>=>-0);
+
+=head1 USING SPRINGS
+
+To be written.
+
+=head1 ALGORITHM OF FORM
+
+B<form> starts with any slave in the list of slaves of the master
+window. Then it tries to determine the position of each side of the
+slave.
+
+If the attachment of a side of the slave is grid attachment, the
+position of the side is readily determined.
+
+If the attachment of this side is B<none>, then form tries to
+determine the position of the opposite side first, and then use the
+position of the opposite side and the natural size of the slave to
+determine the position of this side.
+
+If the attachment is opposite or parallel widget attachments, then
+form tries to determine the positions of the other widget first,
+and then use the positions of the other widget and the natural size of
+the slave determine the position of this side. This recursive
+algorithmis carried on until the positions of all slaves are
+determined.
+
+=head1 CIRCULAR DEPENDENCY
+
+The algorithm of form will fail if a circular dependency exists in
+the attachments of the slaves. For example:
+
+S<    >I<$c>->B<form>(B<-left>=>I<$b>);
+
+S<    >I<$b>->B<form>(B<-right>=>I<$c>);
+
+In this example, the position of the left side of I<$b> depends on
+the right side of I<$c>, which in turn depends on the left side of I<$b>.
+
+When a circular dependency is discovered during the execution of the
+form algorithm, form will generate a background error and the
+geometry of the slaves are undefined (and will be arbitrary). Notice
+that form only executes the algorithm when the specification of the
+slaves' attachments is complete.  Therefore, it allows intermediate
+states of circular dependency during the specification of the slaves'
+attachments.  Also, unlike the Motif Form manager widget, form
+defines circular dependency as
+``I<dependency in the same dimension>''.
+Therefore, the following code fragment will does not
+have circular dependency because the two widgets do not depend on each
+other in the same dimension (I<$b> depends I<$c> in the
+horizontal dimension and I<$c> depends on I<$b> in the vertical
+dimension):
+
+S<    >I<$b>->B<form>(B<-left>=>I<$c>);
+
+S<    >I<$c>->B<form>(B<-top>=>I<$b>);
+
+=head1 BUGS
+
+Springs have not been fully implemented yet.
+
+=head1 SEE ALSO
+
+L<Tk::grid|Tk::grid>
+L<Tk::pack|Tk::pack>
+L<Tk::place|Tk::place>
+
+=head1 KEYWORDS
+
+geometry manager, form, attachment, spring, propagation, size, pack,
+tix, master, slave
+
+=cut
+

@@ -1,0 +1,102 @@
+
+=head1 NAME
+
+Tk::Table - Scrollable 2 dimensional table of Tk widgets
+
+=for pm Tk/Table.pm
+
+=for category Tk Geometry Management
+
+=head1 SYNOPSIS
+
+  use Tk::Table;
+
+  $table = $parent->Table(-rows => number,
+                          -columns => number,
+                          -scrollbars => anchor,
+                          -fixedrows => number,
+                          -fixedcolumns => number,
+                          -takefocus => boolean);
+
+  $widget = $table->Button(...);
+
+  $old = $table->put($row,$col,$widget);
+  $old = $table->put($row,$col,"Text");  # simple Label
+  $widget = $table->get($row,$col);
+
+  $cols = $table->totalColumns;
+  $rows = $table->totalRows;
+
+  $table->see($widget);
+  $table->see($row,$col);
+
+  ($row,$col) = $table->Posn($widget);
+
+=head1 DESCRIPTION
+
+Tk::Table is an all-perl widget/geometry manager which allows a two dimensional
+table of arbitary perl/Tk widgets to be displayed.
+
+Entries in the Table are simply ordinary perl/Tk widgets. They should
+be created with the Table as their parent. Widgets are positioned in the
+table using:
+
+ $table->put($row,$col,$widget)
+
+If I<$widget> is not a reference it is treated as a string, and
+a Lable widget is created with the string as its text.
+
+All the widgets in each column are set to the same width - the requested
+width of the widest widget in the column.
+Likewise, all the widgets in each row are set to the same height - the requested
+height of the tallest widget in the column.
+
+A number of rows and/or columns can be marked as 'fixed' - and so can serve
+as 'headings' for the remainder the rows which are scrollable.
+
+The requested size of the table as a whole is such that the number of rows
+specified by -rows (default 10), and number of columns specified by -columns
+(default 10) can be displayed.
+
+If the Table is told it can take the keyboard focus then cursor and scroll
+keys scroll the displayed widgets.
+
+The Table will create and manage its own scrollbars if requested via
+-scrollbars.
+
+The table can be emptied using
+
+ $table->clear
+
+the widgets which were in the table are destroyed.
+
+
+The Tk::Table widget is derived from a Tk::Frame, so inherits all its
+configure options.
+
+The default focus traversal is giving the focus only to the table
+widget as a whole. To enable focus traversal into table cells (e.g. if
+there are embedded entry widgets), then the option C<-takefocus> has
+to be set to C<0>.
+
+=head1 BUGS / Snags / Possible enhancements
+
+=over 4
+
+=item *
+
+Very large Tables consume a lot of X windows.
+
+=item *
+
+No equivalent of pack's -anchor/-pad etc. options
+
+=back
+
+=head1 SEE ALSO
+
+L<Tk::grid>, L<Tk::HList>, L<Tk::TableMatrix>, L<Tk::MListbox>,
+L<Tk::Columns>
+
+=cut
+

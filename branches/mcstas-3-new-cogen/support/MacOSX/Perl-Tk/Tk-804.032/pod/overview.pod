@@ -1,0 +1,138 @@
+
+=head1 NAME
+
+Tk::overview - An overview of an Object Oriented Tk8 extension for perl5
+
+=for category  Introduction
+
+=head1 SYNOPSIS
+
+C<< use Tk; >>
+
+C<< $main = MainWindow-E<gt>new(); >>
+
+C<< $widget = $main-E<gt>I<Widget>(...); >>
+
+C<< $widget-E<gt>pack(...); >>
+
+...
+
+C<< MainLoop; >>
+
+=head1 DESCRIPTION
+
+In writing the perl Tk extension, the goals were to provide a complete
+interface to the latest production version of John Ousterhout's Tk, while providing
+an Object Oriented interface to perl code.
+
+=head1 CONTENTS
+
+The package is composed of three loosely connected parts:
+
+=over 4
+
+=item I<pTk> - Converted Tk source
+
+The I<pTk> sub-directory is a copy of the C code of Tk8.x, modified
+to allow use by languages other than the original Tcl.
+(The pTk can be read as 'perl' Tk or 'portable' Tk, depending on
+your sensibilities.)
+
+=item B<Tk> to Perl 'Glue'
+
+The top level directory provides I<Tk.xs> and I<tkGlue.c>
+which provide the perl-callable interfaces to pTk
+
+=item Perl code for 'Widget' Classes
+
+The I<Tk> sub-directory contains the various perl modules that comprise
+the "Classes" that are visible to Tk applications.
+
+The "major" widgets such as B<Tk::Text> are actually in separate directories
+at the top level (e.g. I<Text/*> for B<Tk::Text>) and are dynamically
+loaded as needed on platforms which support perl5's B<DynaLoader>.
+
+=back
+
+=head1 CLASS HIERARCHY
+
+=over 4
+
+=item B<package Tk;> - the 'base class'
+
+All the "command names" documented in Tcl/Tk are made to look like perl
+sub's and reside in the Tk package. Their names are all lower case.
+Typically there are very few commands at this level which are called
+directly by applications.
+
+=item B<package Tk::Widget;> - the 'Widget class'
+
+There are no actual objects of the B<Tk::Widget> class; however all
+the various Tk window "widgets" inherit from it, and it in turn
+inherits all the core Tk functions from Tk.
+
+B<Tk::Widget> provides various functions and interfaces which are
+common to all Widgets.
+
+A widget is represented to perl as a blessed reference to a hash. There are some
+members of the hash which are private to Tk and its tkGlue code.  Keys
+starting with B<'.'> and of the form  B</_[A-Z][A-Za-z_]+_/>
+(i.e. starting and ending in _ and with  first char after _ being upper case) should be
+considered reserved to B<Tk>.
+
+=item B<Tk::Button>, B<Tk::Entry>, B<Tk::Text> ...
+
+There is one class for each of the "Tk" widget item types.
+Some of them like B<Tk::Frame> do very little indeed, and really
+only exist so that they can be derived from or so that focus or menu
+traversal can discover the "kind" of window being processed.
+
+Other classes, B<Tk::Text> for example, provide a lot of methods
+used with Tk's "bind" to provide a rich keyboard/mouse interface
+to the widgets' data.
+
+These widget classes also include conversions of the Tcl code for
+event bindings, keyboard focus traversal, menu bars, and menu keyboard
+traversal. All the Tcl functions have been converted, but the names have
+changed (systematically) and they have been split up between the various
+classes in what I hope is an appropriate manner.
+Name changes are normally: dropping initial tk_ as the Tk-ness is implicit
+in the B<Tk::> prefix, and similarly dropping say Menu from the name if it
+has been moved the Tk::Menu class.
+Thus 'proc tkMenuNextEntry' becomes 'sub NextEntry' in the Tk::Menu package.
+
+=item B<Tk::Image>
+
+This does for Tk8.x's "images" what B<Tk::Widget> does for widgets.
+Images are new to Tk8.x and the class structure is not mature either.
+
+There are three sub-classes B<Tk::Bitmap>, B<Tk::Pixmap> and B<Tk::Photo>.
+
+It is possible to create dynamic or auto-loaded image types inherited
+from B<Tk::Image> for other image types or photo formats (e.g. support
+for TIFF format).
+
+=item Composite Widgets
+
+A composite is some kind of 'frame' with subwidgets which give it useful behaviour.
+B<Tk::Dialog> is an example of
+a composite widget classes built from the basic B<Tk> ones.
+It is intended that user code should not need to be aware that a particular
+class is a composite, and create and configure such widgets in the same manner
+as any other kind. The B<configure> mechanism and the methods of the
+class manipulate the subwidgets as required.
+
+Composite widgets are implemented via B<Tk::Frame> and multiple inheritance.
+The two 'frame' base classes B<Tk::Frame> and
+B<Tk::Toplevel> include the additional class B<Tk::Derived>
+in their inheritance. B<Tk::Derived> provides methods to allow additional
+B<configure> options to be defined for a widget.
+
+A Composite widget is typically defined as derived
+from B<Tk::Frame> or B<Tk::Toplevel>
+(e.g. B<Tk::Dialog>).
+
+=back
+
+=cut
+

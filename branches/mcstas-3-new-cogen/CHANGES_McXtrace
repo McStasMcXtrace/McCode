@@ -1,0 +1,141 @@
+/************************************************************************'
+* 
+* McXtrace X-ray tracing software
+* Copyright, All Rights Reserved
+* DTU-Physics, Kgs. Lyngby, Denmark
+* ESRF, Grenoble, France
+* Univeristy of Copenhagen, Copenhagen Denmark
+* 
+*
+*
+*
+*************************************************************************/
+CHANGES from 1.0
+
+- Packaging completely redone. We now use cmake instead of GNU autotools. Thus the steps to build mcxtrace from source are
+now altered (see below)
+  - Binary packages are now provided as a suite of package files, instead of a single file. This has a few implications:
+1. Bugs in the component library may be fixed more quickly as the component library may be updated independently
+2. Users not needing a GUI are not bothered with installing supporting libraries
+3. Users may replace the perl mxrun.pl with a new (experimental) python based version mxrun.py with additional features such as 2d-scans
+4. More than one version of mcxtrace may be present on the same system, with some caveats
+In the general the packages files are named as:
+   - mcxtrace, contains code generator and runtime codes
+     * Dependencies: a C-compiler (and mcxtrace-comps)
+     * Optional: an MPI environment
+   - mcxtrace-comps, contains component- and instrument example libraries 
+     * Dependencies: mcxtrace
+   - mcxtrace-tools-Perl, contains our "legacy" set of perl tools 
+     * Dependencies: mcxtrace, Perl, Perl::Tk, pgplot, perl-PGPLOT, Gnuplot
+     * Optional: Perl::Tk::CodeText, Perl::Math::Amoeba, Matlab, a VRML-viewer, (Scilab 4.0)
+     * Remark: As far as possible, we provide dependencies in the installation bundles
+     * Remark: mcgui can be configured to run python-based tools for sub-tasks
+   - mcxtrace-doc, contains our PDF manuals
+   - mcxtrace-tools-Python-mxrun, contains our new, python-based compile/run script
+     * Dependencies: python-yaml
+     * Remark: The script falls back to the perl version if dependencies do not resolve
+   - mcxtrace-tools-Python-mxplot-matplotlib, contains a new matplotlib mcplot solution
+     * Dependencies: python-matplotlib
+     * Remark: A bit on the slow side for large datasets
+     * Remark: Features zooming on individual plots
+     * Remark: "Standard" mcplot shortcuts for graphics dumps etc.
+     * Remark: Recommendations for platform-specific python-distributions below
+     * Remark: The script falls back to the perl version if dependencies do not resolve
+   - mcxtrace-tools-Python-mxplot-chaco, contains a draft implementation of mcplot based on chaco
+     * Dependencies: python-chaco
+     * Remark: Faster than matplotlib-solution, but a bit on the slow side for large datasets
+     * Remark: Features zooming on individual plots
+     * Remark: Recommendations for platform-specific python-distributions below
+     * Remark: Not easy to install dependencies for chaco if not in your python distro
+     * Remark: The script falls back to the perl version if dependencies do not resolve
+
+The recommended order of installation is
+mcxtrace, mcxtrace-comps, mcxtrace-tools-Perl, 
+and then optionally
+mcxtrace-tools-Python-mxrun and/or  mcxtrace-tools-Python-mxplot-matplotlib or mcxtrace-tools-Python-mxplot-chaco.
+
+- STATE PARAMETERS line is now obsolete and is ignored with a warning
+Instead the state parameter vector is _always_ (x,y,z, kx,ky,kz, t, phi, Ex,Ey,Ez, p) inside
+all components.
+ 
+INSTALLATION instructions
+
+WINDOWS:
+1. Download the Windows executable installation file appropriate for your system (32 or 64 bit)
+2. Install first kernel packages followed by component library (mctrace, mcxtrace-comps)
+--additional steps for GUI and plotting tools
+3. Make sure your system has perl installed. We recommend strawberry perl (www.strawberryperl.com) as the distribution includes the necessary perl modules to run McXtrace.
+It alsos includes a port of gcc - so you do not need to install a c-compiler separately if you do not want to do so.
+4. Install the mcxtrace-tools-perl package. 
+--optional steps to get the epxerimental python based tools
+5. Install a python distribution. We recommend PythonXY (http://www.pythonxy.com) or Anaconda CE (http://store.continuum.io/cshop/anaconda).
+6. Install wanted python packages. The python tools will use the old perl tools as a fallback in case of a missing dependency package 
+  
+MAC-OSX:
+1. Download the appropriate Mac OS installer bundle
+2. Unpack it
+3. Install the supporting packages: PDL and Tk-bundle
+4. Install McXtrace (kernel, component, tools - in that order) using the installer packages as you would usually.
+
+DEBIAN-based systems:
+1. Untar the package tarball and cd into the directory
+2. Install kernel, components and optionally tools packages (in that order) by:
+dpkg --install <package file>
+In this process you may be asked to install some dependencies such as perl, perl-tk etc. from 
+the regulr apt repositories. Please go ahead and do so if you intended to install the tools-package.
+3. Optionally install the python based experimental tools using dpkg analogously to above
+... you should now be able to run mxgui, mxrun and so on.
+
+
+SOURCE-TARBALLS:
+N.B. This requires cmake (version >2.8) to be installed on your target system
+1. Unpack the kernel package. Change Directory to the unpacked tar-ball. Build and install the mcxtrace kernel using:
+ cmake . && make && make install
+2. Do tha same for the component tarball
+3. Unpack the perl-tools tarball and mocve into it. Then do:
+ cmake -Denable-mcxtrace=1 && make && make install
+N.B. This assumes that you have permission to put files in the default installation directory e.g. /usr/local. If you do not you can either
+install to a different location by replacing the command with e.g.
+ cmake -DCMAKE_INSTALL_PREFIX:PATH=$HOME . && make && make install
+which will install to your users' HOME directory instead.
+Alternatively (if you have root access), replace "make install" by "sudo make install"
+
+- New components:
+1. Source_lab
+2. Chopper_simple
+3. Mirror_parabolic
+4. Twin_KB_ML
+5. EPSD_monitor
+6. Molecule_2state
+- New example instruments
+1. XFEL-SPB: first version a model of the SPB-instrument at XFEL
+2. Pump_probe: generci pump-and-probe style instrument
+3. Various unit tests
+
+
+CHANGES from 0.9
+- New components:
+1. Source_gaussian
+2. Beamstop
+3. Filter
+4. Lens_parab_Cyl
+5. Multilayer_elliptic
+6. Monitor
+7. Monitor_nD
+8. PreMonitor_nD
+9. PSD_monitor_coh
+10. W_psd_monitor
+11. Shadow_input
+12. Shadow_output
+13. Single_crystal
+14. Perfect_crystal
+15. Absorption_sample
+
+
+CHANGES from beta
+- New components:
+1. Lens_parab
+2. Mirror_elliptic
+3. Slit_N
+4. Saxs_spheres
+5. PowderN

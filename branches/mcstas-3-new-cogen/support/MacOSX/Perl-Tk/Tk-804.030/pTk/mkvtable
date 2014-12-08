@@ -1,0 +1,250 @@
+#!/tools/local/perl5.7.0 -w
+use strict;
+use Data::Dumper;
+use Getopt::Std;
+
+my %opt;
+
+getopts('e',\%opt);
+
+my %eup;
+my %hup;
+
+sub do_nm
+{
+ my ($obj,$def,$ref,$file) = @_;
+ $def  = {} unless defined $def;
+ $ref  = {} unless defined $ref;
+ $file = {} unless defined $file;
+ open(my $fh,"nm -p $obj|") || die "Cannot open nm $obj:$!";
+ $file->{$obj} = {};
+ while (<$fh>)
+  {
+   if (/\b([A-Z])\b\s*_?(.*)$/)
+    {
+     my ($kind,$name) = ($1,$2);
+     $file->{$obj}{$name} = $kind;
+     if ($kind ne 'U')
+      {
+       if (exists $def->{$name})
+        {
+         warn "$name " . Dumper($def->{$name}) . " and [$kind,$obj]\n";
+        }
+       $def->{$name} = [$kind,$obj];
+      }
+     else
+      {
+       $ref->{$name} = [] unless (exists $ref->{$name});
+       push(@{$ref->{$name}},$obj);
+      }
+    }
+  }
+ close($fh);
+}
+
+sub read_exc
+{
+ my ($file,$exc) = @_;
+ my $efile = $file;
+ $efile =~ s/\.h$/.exc/;
+ if (open(my $fh,$efile))
+  {
+   while (<$fh>)
+    {
+     s/^\s+|\s+$//g;
+     if (exists $exc->{$_})
+      {
+       warn "Duplicate $_ in $efile\n";
+       $eup{$file} = 1;
+      }
+     else
+      {
+       $exc->{$_} = 1;
+      }
+    }
+   close($fh);
+  }
+ else
+  {
+   warn "Cannot open $efile:$!";
+  }
+}
+
+sub write_exc
+{
+ my ($file,$exc) = @_;
+ my $efile = $file;
+ $efile =~ s/\.h$/.exc/;
+ if (-f $efile)
+  {
+   system("p4",'edit',$efile) unless -w $efile;
+  }
+ open(my $fh,">$efile") || die "Cannot open $efile:$!";
+ foreach my $sym (sort keys %$exc)
+  {
+   print $fh $sym,"\n";
+  }
+ close($fh);
+}
+
+sub read_h
+{
+ my ($file,$def,$ext,$sym) = @_;
+ $def  = {} unless defined $def;
+ $ext  = {} unless defined $ext;
+ $sym  = {} unless defined $sym;
+ open(my $fh,$file) || die "Cannot open $file:$!";
+LOOP:
+ while (<$fh>)
+  {
+   if (m#/\*# && !m#\*/#)
+    {
+     $_ .= <$fh>;
+     redo LOOP;
+    }
+   s#/\*.*?\*/##sg;
+   if (/\\$/s)
+    {
+     $_ .= <$fh>;
+     redo LOOP;
+    }
+   next if /^\s*$/;
+   if (/^\s*#\s*define\s+(\w+)/)
+    {
+     my $name = $1;
+     $def->{$name} = $_;
+    }
+   elsif (/^\s*extern\s+"C"\s+\{|\s*\}\s*$/)
+    {
+     next;
+    }
+   elsif (/^\s*(EXTERN|extern)\s+(\S.*?)\s*(\w+|\(.*?\))\s*?(\s+_ANSI_ARGS_|;|\{)/)
+    {
+     my $name = $3;
+     unless (/;\s*$/)
+      {
+       $_ .= <$fh>;
+       redo LOOP;
+      }
+     $ext->{$name} = $_;
+     $sym->{$name}{$file} = 1;
+    }
+   elsif (/^\s*#\s*(if(n?def)?|endif|undef|include|else|pragma)/)
+    {
+
+    }
+   elsif (/^\s*(typedef|struct)\s+/)
+    {
+     if (tr/{/{/ != tr/}/}/ || !/;\s*$/)
+      {
+       $_ .= <$fh>;
+       redo LOOP;
+      }
+    }
+   else
+    {
+     die "$file:$.:$_";
+    }
+  }
+ close($fh);
+}
+
+sub write_h
+{
+ my ($file,$defs,$ext) = @_;
+ if (-f $file)
+  {
+   system('p4','edit',$file) unless -w $file;
+  }
+ my $key = '_'.uc($file);
+ $key =~ s/\.H//;
+ delete $defs->{$key};
+ open(my $fh,">$file") || die "Cannot open $file:$!";
+ print $fh "#ifndef $key\n#define $key\n\n";
+
+ foreach my $def (sort keys %{$defs})
+  {
+   print $fh $defs->{$def};
+  }
+
+ print $fh "\n";
+
+ foreach my $def (sort keys %{$ext})
+  {
+   print $fh $ext->{$def};
+  }
+
+ print $fh "#endif /* $key */\n";
+}
+
+my %src;
+my %ext;
+my %def;
+my %sym;
+my %exc;
+
+foreach my $src (qw(tclDecls.h tk.h tkInt.h tkDecls.h tkIntDecls.h Lang.h))
+ {
+  read_h($src,{},\%src,\%sym);
+  $exc{$src} = {};
+  read_exc($src,$exc{$src});
+  foreach my $sym (keys %{$exc{$src}})
+   {
+    unless ($sym{$sym}{$src})
+     {
+      warn "excluded $sym not in $src\n";
+      delete $exc{$src}{$sym};
+      $eup{$src} = 1;
+     }
+   }
+ }
+
+my $file = shift;
+read_h($file,\%def,\%ext,\%sym);
+
+while (@ARGV)
+ {
+  my $obj = shift;
+  my %def;
+  do_nm($obj,\%def);
+  foreach my $sym (keys %def)
+   {
+    if ($def{$sym}[0] eq 'T')
+     {
+      if (exists($src{$sym}) && !exists($ext{$sym}))
+       {
+        warn "$sym from $obj not in $file\n";
+        $ext{$sym} = $src{$sym};
+        foreach my $src (keys %{$sym{$sym}})
+         {
+          next if $src eq $file;
+          $exc{$src}{$sym} = 1;
+          $eup{$src} = 1;
+         }
+       }
+     }
+   }
+ }
+
+exit unless $opt{'e'};
+
+foreach my $key (sort keys %ext)
+ {
+  if (exists $src{$key})
+   {
+   }
+  else
+   {
+    # warn "No source for $key\n";
+   }
+ }
+
+write_h($file,\%def,\%ext);
+
+foreach my $file (keys %eup)
+ {
+  write_exc($file,$exc{$file});
+ }
+
+
+

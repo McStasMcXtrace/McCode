@@ -1,0 +1,32 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+
+
+$path = Tk->findINC("demos/images");
+
+$top = MainWindow->new();
+
+$bitmap = $top->Bitmap( '-file' => "$path/dir.icon",
+                        '-maskfile' => "$path/dir.mask");
+
+$photo  = $top->Photo( 'photo');
+
+$pixmap = $top->Pixmap( 'quit' ,  '-file' => "$path/QuitPB.xpm");
+
+$top->Label('-image'=> $bitmap)->pack;
+$top->Label('-image'=> $photo  )->pack;
+my $f = $top->Frame->pack;
+$f->Button('-text' => 'PPM', '-command'
+             => ['configure',$photo, -file => "$path/teapot.ppm" ] )->pack(-side => 'left');
+$f->Button('-text' => 'GIF', '-command'
+             => ['configure',$photo, -file => "$path/mickey.gif" ] )->pack(-side => 'left');
+
+$f->Button('-text' => 'XBM', '-command'
+             => ['configure',$photo, -file => "$path/face" ] )->pack(-side => 'left');
+$f->Button('-text' => 'XPM', '-command'
+             => ['configure',$photo, -file => "$path/QuitPBa.xpm" ] )->pack(-side => 'left');
+$f->Button('-text' => 'Blank', '-command' => ['blank',$photo] )->pack;
+$top->Button('-image'=> $pixmap, '-command'=>['destroy',$top] )->pack;
+
+MainLoop;

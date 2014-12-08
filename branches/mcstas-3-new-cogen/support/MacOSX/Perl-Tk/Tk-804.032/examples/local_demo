@@ -1,0 +1,29 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk qw(MainLoop *widget);
+use Carp;
+
+my $mw = MainWindow->new;
+
+$mw->Button(-text => 'Button_1', -command => \&callback)->pack;
+my $w = $mw->Button(-text => 'Button_2', -command => \&callback)->pack;
+
+$mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+
+$w->after(1000,\&callback);
+
+MainLoop;
+
+sub callback
+{
+ print $widget->PathName,"\n";
+ my $w = $Tk::widget;
+ if (defined $w)
+  {
+   print "Callback for ",$w->cget('-text'),"\n";
+  }
+ else
+  {
+   carp "No widget!";
+  }
+}

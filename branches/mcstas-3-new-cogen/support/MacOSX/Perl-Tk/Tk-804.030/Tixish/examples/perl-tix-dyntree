@@ -1,0 +1,88 @@
+#!/usr/bin/perl -w
+#
+# Perl/Tk version of Tix4.1.0/demos/samples/DynTree.tcl.
+#
+# Chris Dean <ctdean@cogit.com>
+
+use lib "..";
+
+use strict;
+use Tk;
+use Tk::Tree;
+
+my $top = new MainWindow( -title => "Tree (Dynamic)" );
+
+my $tree = $top->ScrlTree( qw(-separator / -width 35 -height 25
+                              -scrollbars osoe) );
+$tree->pack( qw/-expand yes -fill both -padx 10 -pady 10 -side top/ );
+
+$tree->configure( -opencmd => sub { dyntree_opendir( $tree, @_ ); } );
+
+# Add the root directory the TixTree widget
+dyntree_adddir( $tree, "/" );
+
+# The / directory is added in the "open" mode. The user can open it
+# and then browse its subdirectories ...
+
+my $ok = $top->Button( qw/-text Ok -underline 0 -width 6/,
+                       -command => sub { exit } );
+my $cancel = $top->Button( qw/-text Cancel -underline 0 -width 6/,
+                           -command => sub { exit } );
+
+$ok->pack(     qw/-side left  -padx 10 -pady 10/ );
+$cancel->pack( qw/-side right -padx 10 -pady 10/ );
+
+MainLoop();
+
+sub dyntree_adddir {
+    my( $tree, $dir ) = @_;
+
+    my $text = $dir;
+    $text = (split( "/", $dir ))[-1] unless $text eq "/";
+
+    $tree->add( $dir, -text => $text, -image => $tree->Getimage("folder") );
+    $tree->setmode( $dir, -d $dir ? "open" : "none" );
+}
+
+# This command is called whenever the user presses the (+) indicator or
+# double clicks on a directory whose mode is "open". It loads the files
+# inside that directory into the Tree widget.
+#
+# Note we didn't specify the -closecmd option for the Tree widget, so it
+# performs the default action when the user presses the (-) indicator or
+# double clicks on a directory whose mode is "close": hide all of its child
+# entries
+#
+sub dyntree_opendir {
+    my( $tree, $dir ) = @_;
+
+    if( my @kids = $tree->infoChildren( $dir ) ) {
+	# We have already loaded this directory. Let's just
+	# show all the child entries
+	#
+	# Note: since we load the directory only once, it will not be
+	#       refreshed if the you add or remove files from this
+	#	directory.
+	#
+	foreach my $kid (@kids) {
+            $tree->show( -entry => $kid );
+	}
+	return;
+    }
+
+    my $image = $tree->Getimage("folder");
+
+    opendir D, $dir or return;
+    foreach my $file (sort readdir( D )) {
+        next if $file =~ /^\./;
+        my $path = "$dir/$file";
+        $path = "/$file" if $dir eq "/";
+        if( -d $path ) {
+	    dyntree_adddir( $tree, $path );
+	} else {
+            $tree->add( $path, -text => $file, -image => $image );
+	}
+    }
+    closedir D;
+}
+

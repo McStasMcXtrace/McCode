@@ -1,0 +1,260 @@
+#!/usr/bin/perl -w
+use open IO => ':bytes'; # Avoid UTF-8 issues with some perl5.8.0 (RedHat)
+use Carp;
+my $verbose = 0;
+
+$SIG{'__WARN__'} = sub { print STDERR $_; Carp::confess(shift) };
+
+$src = shift;
+$dst = shift;
+
+die "Usage: $0 <src> <dst> \n" unless (defined $src and defined $dst);
+
+chmod(0666, $dst);
+chmod(0666, "$dst~");
+unlink($dst);
+open(DST,">$dst~") || die "Cannot open $dst~: $!";
+select(DST);
+
+my $copyright;
+
+@ARGV = ($src);
+
+undef $undone;
+
+sub getline
+{
+ local $_;
+ if (defined $undone)
+  {
+   $_ = $undone;
+   undef $undone;
+  }
+ else
+  {
+   $_ = <>;
+  }
+ return $_;
+}
+
+sub int_results
+{my $fmt = shift;
+ my $type = shift;
+ my @fmt = split(/\s+/,$fmt);
+ my $cnt = @fmt;
+ # print STDERR "'$fmt' => $cnt\n";
+ return "Tcl_${type}Results(interp,$cnt,0";
+}
+
+sub result
+{my ($interp,$value,$tail) = @_;
+ my $line = &getline;
+ my $kind = "TCL_STATIC";
+ if (defined $line)
+  {
+   if ($line =~ /^\s*$interp\s*->\s*freeProc\s*=\s*(.*)\s*;\s*$/)
+    {
+     $kind = $1;
+    }
+   else
+    {
+     $undone = $line if (defined $line);
+    }
+  }
+ return "Tcl_SetResult($interp,$value,$kind)$tail";
+}
+
+sub complete
+{
+ my $tail = "";
+ until (/;/)
+  {
+   my $line = &getline;
+   last unless defined($line);
+   s/\s*$//;
+   $line =~ s/^\s*//;
+   $_ .= " " . $line;
+   $tail .= "\n";
+  }
+ $_ .= $tail;
+}
+
+#use Carp;
+#$SIG{'INT'} = sub {  Carp::confess($_) };
+
+
+PROCESS:
+while ($_ = &getline)
+ {
+  s/^\s*#\s*include\s*[<"]tcl\.h[">]\s*$/#include "Lang.h"\n/;
+
+  s/^\s*#\s*include\s*<((tk|tkInt|tkPort|tix|tixInt)\.h)>\s*$/#include "$1"\n/;
+
+  next if (/^\s*extern.*\bpanic\s*\(/);
+
+  s/\(char\s*\*\)\s*NULL\b/         NULL/g;
+
+  if (/^#(define|ifn?def|endif)\b/)
+   {
+    print;
+    while (/\\$/)
+     {
+      $_ = &getline;
+      print;
+     }
+    next;
+   }
+
+  if (m#^ */\*# && !m#\*/#)
+   {
+    print;
+    while (!m#\*/#)
+     {
+      $_ = &getline;
+      print;
+     }
+    next;
+   }
+
+  s/tclStubs\.t(\w+)/TkeventVptr->V_T$1/;
+
+  s/\bpanic\b/Tcl_Panic/g;
+
+  s/\b(\w+Ptr)->internalRep\./TclObjInternal($1)->/g;
+
+  s/(\w+bjPtr)->typePtr\s*=\s*(.*);/TclObjSetType($1,$2);/g;
+
+  s/\b(\w*bjPtr)->typePtr\b/TclObjGetType($1)/g;
+
+  if (/if\s*\(\(c == '.'\)\s*$/)
+   {
+    my $line = &getline;
+    if (defined($line))
+     {
+      s/\s*$//;
+      $line =~ s/^\s*//;
+      $_ .= " " . $line . "\n";
+     }
+   }
+
+  if (/Tcl_DeleteCommandFromToken/)
+   {
+    if (/Tcl_DeleteCommandFromToken[^;{]*$/)
+     {
+      &complete;
+      redo PROCESS;
+     }
+    s/Tcl_DeleteCommandFromToken(.*imageCmd)/Lang_DeleteObject$1/;
+    s/Tcl_DeleteCommandFromToken(.*widgetCmd)/Lang_DeleteWidget$1/;
+   }
+
+  if (/Tcl_(Create|Delete)Command/)
+   {
+    if (/Tcl_(Create|Delete)Command[^;{]*$/)
+     {
+      &complete;
+      redo PROCESS;
+     }
+    s/Tcl_CreateCommand\s*\(\s*((\w+->)*interp)\s*,\s*Tk_PathName\s*\(([^\)]+)\)/Lang_CreateWidget($1,$3/;
+    s/Tcl_DeleteCommand\s*\(\s*((\w+->)*(\w+\.)?interp)\s*,\s*Tcl_GetCommandName\s*\([^,]+,\s*([^\)]+->(\w+\.style|image)Cmd)\)/Lang_DeleteObject($1,$4/;
+    s/Tcl_DeleteCommand\s*\(\s*((\w+->)*(\w+\.)?interp)\s*,\s*Tcl_GetCommandName\s*\([^,]+,\s*([^\)]+->widgetCmd)\)/Lang_DeleteWidget($1,$4/;
+   }
+
+  s/\(char \*\*\)\s*objv\b/objv/g;
+
+# s/Tcl_Obj\s+\*(CONST\s+)?objv\b/Tcl_Obj *objv/;
+  if (/\bargv\w*\b/)
+   {
+    if (/\bargv\w*\s*\[([^[]*)\]\s*=[^=][^;{]*$/)
+     {
+      &complete;
+      redo PROCESS;
+     }
+    s/Tcl_Obj\s+\*(CONST\s+)?argv\b/Tcl_Obj *objv/;
+    if (/\bchar\b.*\bargv\w*\b/)
+     {
+      # convert char *argv[] to char **argv
+      s/char\s*\*\s*\bargv\s*\[\s*\]/char **argv/;
+      # convert char **argv to Tcl_Obj **objv
+      s/(CONST\s+)?char\s*\*\*\s*\bargv\b/Tcl_Obj *CONST *objv/;
+      # convert char *argv[n] to Tcl_Obj **objv = LangAllocVec(n)
+      s/char\s*\*\s*\bargv\s*\[\s*([^[]+)\]/Tcl_Obj **objv = LangAllocVec($1)/;
+     }
+    else
+     {
+      s/([^*])\*(argv\w*(\[[^[]*\])?)/${1}${2}[0]/g;
+     }
+    s/\(Tcl_Obj\s\*\)\s*argv\b/objv/g;
+    s/\bargv\s*\[([^[]*)\]\s*=([^=].*);\s*$/LangSetString(objv+$1,$2);\n/;
+    s/\bargv\s*\[([^[]*)\]\+\+/objv[$1] = Tcl_NewStringObj(Tcl_GetString(objv[$1])+1,-1)/;
+    s/\bargv\s*\[([^[]*)\]\+([0-9])/Tcl_NewStringObj(Tcl_GetString(objv[$1])+$2,-1)/;
+    if (/Tcl_Get(Boolean|Int|Double)/ || /Tk_Get(Cursor)/)
+     {
+      s/\bargv(\w*)\b/objv$1/g;
+     }
+    s/\bargv\s*(\[[^[]*\])/Tcl_GetString(objv$1)/g;
+    if (/\bargv\b/)
+     {
+      warn "Leak: $_" if ($verbose && !/\bargv\s*\)/);
+      s/\bargv\b/objv/;
+     }
+   }
+  if (/->\s*result\b/)
+   {
+    s/\s*->\s*result\b/->result/g;
+
+    s/\bsprintf\s*\(\s*interp->result\s*,\s*"((\s*%d)+)"/&int_results($1,"Int")/e;
+
+    s/\bsprintf\s*\(\s*interp->result\s*,\s*"((\s*%g)+)"/&int_results($1,"Double")/e;
+
+    s/\bsprintf\s*\(\s*interp->result\b/Tcl_SprintfResult(interp/;
+    if (/\binterp->result\s*=[^;]*$/)
+     {
+      &complete;
+      redo PROCESS;
+     }
+    s/\b((\w+\s*->\s*)*interp)->result\s*=([^;]*);/&result($1,$3,";")/e;
+    s/\b((\w+\s*->\s*)*interp)->result\s*=(.*);\s*$/&result($1,$3,";\n")/e;
+    s/\b((\w+\s*->\s*)*interp)->result/Tcl_GetResult($1)/;
+   }
+
+  if (/\bTcl_SetResult\s*\(/)
+   {
+    if (/Tcl_SetResult\s*\([^;{]*$/)
+     {
+      &complete;
+      redo PROCESS;
+     }
+    s/Tcl_SetResult\s*\(\s*((\w+->)*interp),\s*"(\d+)",\s*TCL_STATIC\s*\)/Tcl_SetObjResult($1, Tcl_NewIntObj($3))/;
+    s/Tcl_SetResult\s*\(\s*((\w+->)*interp),\s*Tk_PathName\(([^)]+)\),\s*TCL_STATIC\s*\)/Tcl_SetObjResult($1,LangWidgetObj($1,$3))/;
+    s/Tcl_SetResult\s*\(\s*((\w+->)*interp),\s*((\w+->)*\w+)->pathName\s*,\s*TCL_STATIC\s*\)/Tcl_SetObjResult($1,LangWidgetObj($1,(Tk_Window)($3)))/;
+    die $_ if /(Tk_PathName|->pathName)/;
+   }
+#            1             2                 3           4                  5                           6
+  s/\(c == '(.)'\)\s*&&\s*(\(?)\(strncmp\(([^,]+),\s*("-\1[^"]*"),\s*(\w+|strlen\(\3\))\s*\)\s*==\s*0\)(\)?)/(c == '$1') && $2 LangCmpOpt($4,$3,$5) == 0 $6/g;
+  s/\(c == '(.)'\)\s*&&\s*\(strcmp\(([^,]+),\s*("-\1[^"]*")\s*\)\s*==\s*0\)/(c == '$1') && LangCmpOpt($3,$2,0) == 0/g;
+
+  if (defined($copyright) && !/^\s\*\s*Copyright/)
+   {
+    print $copyright;
+    undef $copyright;
+   }
+
+  s/[^\S\n]+$//;
+  print;
+
+  if (0 && /^((\s\*)\s*)Copyright/)
+   {
+    $copyright = "$2\n$1Modifications Copyright (c) 1994-2003 Nick Ing-Simmons\n";
+   }
+ }
+
+select(STDOUT);
+close(DST) or die "While writing to $dst~: $!";
+
+rename "$dst~", $dst or die "Could not rename $dst~ to $dst: $!";
+
+chmod(0444,$dst);
+
+exit 0;
+

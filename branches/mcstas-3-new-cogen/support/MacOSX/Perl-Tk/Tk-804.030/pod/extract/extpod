@@ -1,0 +1,111 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Getopt::Std;
+use ExtUtils::Manifest "/mani/";
+my $tkdir = "../..";
+my %opt;
+getopts('e',\%opt);
+
+my $files = maniread("$tkdir/MANIFEST");
+
+@ARGV = grep(/\.pm$/,map("$tkdir/$_",sort keys %$files));
+
+die "No pm files" unless @ARGV;
+
+BEGIN
+  {
+    mkdir 'podnew',  0755 unless -d 'podnew';	# extracted POD
+    mkdir 'podcoll', 0755 unless -d 'podcoll';  # exists  already in ../pod/
+    mkdir 'tmppm',   0755 unless -d 'tmppm';	# finaly modified .pm?
+  }
+
+my $modified;  # has pod
+my $outfile;   # tmp pm file
+my $infile;
+my $podname;
+my $inpod = 0;
+
+while (<>)
+ {
+  if ($. == 1)
+   {
+    $infile = $ARGV;
+    my ($leaf) = $ARGV =~ m#/([^/]+)$#;
+    $outfile    = "tmppm/$leaf";
+    close(FILE) if (defined fileno(FILE));
+    close(POD) if (defined fileno(POD));
+    open(FILE,">$outfile") || die "Cannot open $outfile:$!";
+    $modified = 0;
+    $inpod = 0;
+    ($podname = $leaf ) =~ s/[^.]+$/pod/;
+   }
+######
+
+  if (/^=[a-z]/ && !defined(fileno(POD)))
+   {
+	    if (-f "$tkdir/pod/$podname")
+	      {
+		print "# Oops, pod name collision: $podname\n";
+		open POD, ">podcoll/$podname" or die "can't open podcoll/$podname";
+              }
+            else
+              {
+		open POD, ">podnew/$podname"  or die "can't open podnew/$podname";
+	      }
+	    my ($targ) = $ARGV =~ m#^$tkdir/(.*)$#;
+	    print POD "\n=for pm $targ\n\n";
+
+   }
+
+  if (/^=cut/)
+    {
+	$inpod = 0;
+	print POD "\n" or die "can't print \\n for =cut";
+    }
+  elsif (/^=[a-z]/)
+    {
+     $inpod = 1;
+    }
+
+    if ($inpod)
+      {
+        $modified++;
+	print POD;
+      }
+    else
+      {
+	print FILE;
+      }
+
+######
+  if (eof)
+   {
+    close(FILE) if (defined fileno(FILE));
+    if ($modified)
+      {
+	warn "$infile modified";
+	print POD "\n\n=cut\n\n";
+        close POD;
+	if ($opt{'e'})
+          {
+	    if (-f "$infile.bak")
+             {
+              chmod(0644,"$infile.bak") unless -w "$infile.bak";
+              unlink "$infile.bak";
+             }
+	    rename $infile, "$infile.bak";
+	    system('p4',edit => $infile);
+	    rename $outfile, $infile or die "can't rename $ARGV $outfile: $!";
+          }
+        print "diff -u $infile $outfile\t# $podname $modified POD lines\n";
+      }
+    else
+      {
+        unlink $outfile;
+      }
+    $modified = 0;
+    $inpod = 0;
+    $. = 0;
+   }
+ }
+

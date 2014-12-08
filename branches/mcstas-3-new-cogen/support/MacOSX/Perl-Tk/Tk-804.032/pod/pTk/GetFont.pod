@@ -1,0 +1,85 @@
+#  Copyright (c) 1990-1992 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_GetFont, Tk_NameOfFont, Tk_FreeFont - maintain database of fonts
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Tk_Font
+B<Tk_GetFont(>I<interp, tkwin, string>B<)>
+
+char *
+B<Tk_NameOfFont(>I<tkfont>B<)>
+
+void
+B<Tk_FreeFont(>I<tkfont>B<)>
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item "Tcl_Interp" *interp (in)
+
+Interpreter to use for error reporting.
+
+=item Tk_Window tkwin (in)
+
+Token for window on the display in which font will be used.
+
+=item "const char" *string (in)
+
+Name or description of desired font.  See documentation for the B<font>
+command for details on acceptable formats.
+
+=item Tk_Font tkfont (in)
+
+Opaque font token.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_GetFont> finds the font indicated by I<string> and returns a
+token that represents the font.  The return value can be used in subsequent
+calls to procedures such as B<Tk_FontMetrics>, B<Tk_MeasureChars>, and
+B<Tk_FreeFont>.  The token returned by B<Tk_GetFont> will remain
+valid until B<Tk_FreeFont> is called to release it.  I<String> can
+be either a symbolic name or a font description; see the documentation for
+the B<font> command for a description of the valid formats.  If
+B<Tk_GetFont> is unsuccessful (because, for example, I<string> was
+not a valid font specification) then it returns B<NULL> and stores an
+error message in I<interp-E<gt>result>.
+
+B<Tk_GetFont> maintains a database of all fonts it has allocated.  If
+the same I<string> is requested multiple times (e.g. by different
+windows or for different purposes), then additional calls for the same
+I<string> will be handled without involving the platform-specific
+graphics server.
+
+The procedure B<Tk_NameOfFont> is roughly the inverse of
+B<Tk_GetFont>.  Given a I<tkfont> that was created by
+B<Tk_GetFont>, the return value is the I<string> argument that was
+passed to B<Tk_GetFont> to create the font.  The string returned by
+B<Tk_NameOfFont> is only guaranteed to persist until the I<tkfont>
+is deleted.  The caller must not modify this string.
+
+When a font returned by B<Tk_GetFont> is no longer needed,
+B<Tk_FreeFont> should be called to release it.  There should be
+exactly one call to B<Tk_FreeFont> for each call to B<Tk_GetFont>.
+When a font is no longer in use anywhere (i.e. it has been freed as many
+times as it has been gotten) B<Tk_FreeFont> will release any
+platform-specific storage and delete it from the database.
+
+=head1 KEYWORDS
+
+font

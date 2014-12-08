@@ -1,0 +1,120 @@
+#  Copyright (c) 1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_GetVisual - translate from string to visual
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Visual *
+B<Tk_GetVisual(>I<interp, tkwin, string, depthPtr, colormapPtr>B<)>
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter to use for error reporting.
+
+=item Tk_Window tkwin (in)
+
+Token for window in which the visual will be used.
+
+=item char *string (in)
+
+String that identifies the desired visual.  See below for
+valid formats.
+
+=item int *depthPtr (out)
+
+Depth of returned visual gets stored here.
+
+=item Colormap *colormapPtr (out)
+
+If non-NULL then a suitable colormap for visual is found and its
+identifier is stored here.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_GetVisual> takes a string description of a visual and
+finds a suitable X Visual for use in I<tkwin>, if there is one.
+It returns a pointer to the X Visual structure for the visual
+and stores the number of bits per pixel for it at I<*depthPtr>.
+If I<string> is unrecognizable or if no suitable visual could
+be found, then NULL is returned and B<Tk_GetVisual> leaves
+an error message in I<interp-E<gt>result>.
+If I<colormap> is non-NULL then B<Tk_GetVisual>
+also locates an appropriate colormap for use with the result visual
+and stores its X identifier at I<*colormapPtr>.
+
+The I<string> argument specifies the desired visual in one
+of the following ways:
+
+=over 4
+
+=item I<class depth>
+
+The string consists of a class name followed by an integer depth,
+with any amount of white space (including none) in between.
+I<class> selects what sort of visual is desired and must be one of
+B<directcolor>, B<grayscale>, B<greyscale>, B<pseudocolor>,
+B<staticcolor>, B<staticgray>, B<staticgrey>, or
+B<truecolor>, or a unique abbreviation.
+I<depth> specifies how many bits per pixel are needed for the
+visual.
+If possible, B<Tk_GetVisual> will return a visual with this depth;
+if there is no visual of the desired depth then B<Tk_GetVisual>
+looks first for a visual with greater depth, then one with less
+depth.
+
+=item B<default>
+
+Use the default visual for I<tkwin>'s screen.
+
+=item $widget
+
+Use the visual for the window given by $widget.
+$widget must be the name of a window on the same screen
+as I<tkwin>.
+
+=item I<number>
+
+Use the visual whose X identifier is I<number>.
+
+=item B<best> ?I<depth>?
+
+Choose the ``best possible'' visual, using the following rules, in
+decreasing order of priority:
+(a) a visual that has exactly the desired depth is best, followed
+by a visual with greater depth than requested (but as little extra
+as possible), followed by a visual with less depth than requested
+(but as great a depth as possible);
+(b) if no I<depth> is specified, then the deepest available visual
+is chosen;
+(c) B<pseudocolor> is better than B<truecolor> or B<directcolor>,
+which are better than B<staticcolor>, which is better than
+B<staticgray> or B<grayscale>;
+(d) the default visual for the screen is better than any other visual.
+
+=back
+
+=head1 CREDITS
+
+The idea for B<Tk_GetVisual>, and the first implementation, came
+from Paul Mackerras.
+
+=head1 KEYWORDS
+
+colormap, screen, visual

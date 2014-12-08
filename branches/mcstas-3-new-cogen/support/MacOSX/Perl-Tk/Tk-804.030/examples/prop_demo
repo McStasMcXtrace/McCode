@@ -1,0 +1,27 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+
+sub show_props
+{my $w = shift;
+ print "Props $w:\n";
+ foreach ($w->property("list",@_))
+  {
+   print " $_:",join(',',$w->property("get",$_,@_)),"\n";
+  }
+}
+
+$top = MainWindow->new();
+$top->withdraw;
+
+$top->property("set",MYPROP,AREA,32,[1,2,3,4,5]);
+
+$top->command([$0,@ARGV]);
+
+print "Command:",join(' ',@{$top->command}),"\n";
+
+$top->idletasks;
+
+&show_props($top);
+
+

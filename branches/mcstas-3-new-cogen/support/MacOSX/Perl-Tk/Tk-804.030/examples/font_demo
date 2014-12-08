@@ -1,0 +1,32 @@
+#!/usr/local/bin/perl -w
+use Tk;
+use Tk::X11Font;
+use Tk::ROText;
+
+my $mw   = MainWindow->new;
+my $font = $mw->X11Font(space   => 'm',
+			weight  => 'medium',
+			point   => 140);
+my $mb    = $mw->Frame->pack(-fill => 'x');
+my $text  = $mw->ROText(-font => $font)->pack(-expand => 1, -fill => 'both');
+my $bfont = $font->Clone(weight =>'bold');
+my $bold  = $text->Tag('bold',-font => $bfont);
+
+print "Bold is ",scalar($bfont->Name),"\n ascent=",
+       $bfont->ascent," descent=",$bfont->descent,"\n";
+
+$mb->Optionmenu(-text => 'Font', -underline => 0,
+                -options => [sort $font->Name],
+                -command => [configure => $text, '-font' ])
+               ->pack(-side => 'right');
+$mb->Button(-text => 'Quit', -command => [destroy => $mw ])->pack(-side => 'left');;
+my $file = __FILE__;
+open(FILE,"<$file") || die "Cannot open $file:$!";
+while (<FILE>)
+ {
+  $text->insert(end => $_);
+ }
+
+$text->bind('<b>',[$bold,'add',Ev('index' => 'sel.first'),Ev('index' => 'sel.last')]);
+
+MainLoop;

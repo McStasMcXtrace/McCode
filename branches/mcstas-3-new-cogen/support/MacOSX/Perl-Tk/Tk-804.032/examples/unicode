@@ -1,0 +1,163 @@
+#!/tools/local/perl -w
+use strict;
+use Tk;
+use Unicode::UCD qw(charinfo charblock);
+use Tk::widgets qw(TixGrid ItemStyle Font);
+use Carp;
+#$SIG{__WARN__} = \&Carp::confess;
+
+eval { require Unicode::Unihan };
+my $unihan;
+my %info = %{charinfo(ord(' '))};
+if (defined  $Unicode::Unihan::VERSION)
+ {
+  $unihan = Unicode::Unihan->new;
+  $info{Definition} = '';
+ }
+
+
+my $mw  = MainWindow->new;
+
+my $page = 0;
+my $pagehex = '0x00';
+my $tp = $mw->Frame->pack(-fill => 'x');
+my $l = $tp->Label(-text => 'Page:',-justify => 'right',-anchor => 'e');
+my $s = $tp->Spinbox(-width => 4, -to => 255, -from => 0, -format => "%3.0f", -textvariable => \$page,-justify => 'left');
+my $h = $tp->Label(-width => 4, -textvariable => \$pagehex, -justify => 'left');
+Tk::grid($l,$s,$h,-sticky => 'ew');
+$s->configure(-command =>\&set_page);
+my $uf = $mw->fontCreate(-family => 'lucida sans', -size => 16);
+my $lf = $mw->fontCreate(-family => 'courier', -size => 12);
+print join(' ',$mw->fontActual($uf)),"\n";
+my $grid = $mw->Scrolled( TixGrid => -width => 17, -height => 17,
+                -scrollbars => 'w',
+                -browsecmd => \&browse,
+                -formatcmd => \&doFormat,
+                -leftmargin => 1,
+                -topmargin  => 1,
+                -selectunit => 'cell',
+                -itemtype => 'text')
+           ->pack(-fill => 'both', -expand => 1);
+
+my $bt = $mw->Frame->pack(-fill => 'x');
+my @foot;
+my $row = 0;
+my $col = 0;
+foreach my $key (sort keys %info)
+ {
+  my $l = $bt->Label(-text => $key, -justify => 'right', -anchor => 'e');
+  my $v = $bt->Label(-textvariable => \$info{$key}, -justify => 'left', -anchor => 'w');
+  Tk::grid($l,-row =>$row,-column => $col,-sticky => 'w');
+  Tk::grid($v,-row =>$row,-column => $col+1,-sticky => 'ew');
+  $bt->gridColumnconfigure($col+1,-weight => 1);
+  $col += 2;
+  if ($col >= 6)
+   {
+    $row++;
+    $col = 0;
+   }
+ }
+
+my $header = $grid->ItemStyle('text', -font => $lf);
+my $uni    = $grid->ItemStyle('text', -font => $uf, -justify => 'center');
+
+$grid->sizeRow('default',-size => 'auto',-pad0 => 0, -pad1 => 0);
+$grid->sizeColumn('default',-size => 'auto',-pad0 => 0, -pad1 => 0);
+
+for my $i (0x0..0xf)
+ {
+  $grid->set($i+1,0,-itemtype => 'text', -style => $header,
+                       -text => sprintf("0x%04X",$i));
+ }
+
+my @page;
+
+$row = 1;
+for (my $base = 0; $base < 0x10000; $base += 16)
+ {
+  $grid->set(0,$row++,-itemtype => 'text', -style => $header,
+               -text => sprintf("0x%04X",$base));
+ }
+
+$mw->update;
+$mw->packPropagate(0);
+MainLoop;
+
+sub fill_row
+{
+ my ($row) = @_;
+ my $base  = ($row-1) << 4;
+ my $seen = 0;
+ my $block = charblock($base);
+ return 0 if !defined($block) || $block =~ /Surrogate/i;
+ for my $i (0x0..0xf)
+  {
+   my $u = $base + $i;
+   my $info = charinfo($u);
+   if (keys(%$info))
+    {
+     $seen++;
+     my $c = chr($u);
+     $grid->set($i+1,$row,-style => $uni, -text => $c);
+    }
+  }
+ if ($seen)
+  {
+   if (!defined($block))
+    {
+     warn "$base has no block but saw $seen\n";
+    }
+  }
+ return $seen;
+}
+
+my @filled;
+
+sub doFormat
+{
+ my ($area,$x1,$y1,$x2,$y2) = @_;
+ if ($area =~ /([xys])_margin/)
+  {
+   # s = The top corner, x = left margin, y = top margin ?
+   my $rel = ($1 eq 's') ? 'flat' : 'sunken';
+   $grid->formatBorder($x1,$y1,$x2,$y2,-relief => $rel, -bd => 2);
+  }
+ elsif ($area eq 'main')
+  {
+   for my $row ($y1..$y2)
+    {
+     unless ($filled[$row]++)
+      {
+       fill_row($row);
+      }
+    }
+   $grid->formatGrid($x1,$y1,$x2,$y2,-relief => 'raised', -bd => 2);
+  }
+ else
+  {
+   print "format @_\n";
+  }
+}
+
+sub browse
+{
+ my ($row,$col) = @_;
+ my $c = eval { $grid->entrycget($row,$col,'-text') };
+ if (defined $c)
+  {
+   my $u = ord($c);
+   my $h = charinfo($u);
+   foreach my $k (keys %$h)
+    {
+     $info{$k} = $h->{$k};
+    }
+   $info{Definition} = $unihan->Definition($c) if $unihan;
+  }
+}
+
+sub set_page
+{
+ my ($e) = @_;
+ $pagehex = sprintf("0x%02X",$page);
+ $grid->see(0,($page << 4)+1);
+}

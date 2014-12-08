@@ -1,0 +1,45 @@
+#=========================#
+# Dummy, Moodle and Admin #
+#=========================#
+dn: olcDatabase={0}config,cn=config
+changetype: modify
+delete: olcAccess
+olcAccess: to *
+  by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage
+  by * break
+-
+add: olcAccess
+olcAccess: {0}to dn.children="dc=DN"
+  by dn="cn=DummyUser,ou=person,dc=DN" read
+-
+add: olcAccess
+olcAccess: {1}to *
+  by dn="cn=moodle bind user,ou=access,dc=DN" read
+  by dn="cn=admin,dc=DN" manage
+-
+#===========#
+# Passwords #
+#===========#
+add: olcAccess
+olcAccess: {1}to attrs=userPassword,shadowLastChange
+  by self write
+  by anonymous auth
+-
+#===================#
+# Student Editables #
+#===================#
+add: olcAccess
+olcAccess: {2}to attrs=cn,mail,description
+  by self write
+  by group.exact="cn=Student,dc=DN" read
+  by group.exact="cn=itStaff,dc=DN" write
+  by group.exact="cn=courseStaff,dc=DN" write
+-
+#===================#
+# Staff Information #
+#===================#
+add: olcAccess
+olcAccess: {3}to attrs=telephoneNumber,roomNumber
+  by group.exact="cn=Student,ou=groups,dc=DN" read
+  by group.exact="cn=itStaff,ou=groups,dc=DN" write
+  by group.exact="cn=courseStaff,ou=groups,dc=DN" write

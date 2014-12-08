@@ -1,0 +1,147 @@
+#  Copyright (c) 1990-1992 The Regents of the University of California.
+#  Copyright (c) 1994-1995 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#  @(#) DoOneEvent.3 1.12 95/05/06 15:29:18
+#
+
+=head1 NAME
+
+Tk_DoOneEvent, Tk_MainLoop, Tk_HandleEvent - wait for events and
+invoke event handlers
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+int
+B<Tk_DoOneEvent>(I<flags>)
+
+B<Tk_MainLoop>()
+
+B<Tk_HandleEvent>(I<eventPtr>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item int flags (in)
+
+This parameter is normally zero.  It may be an OR-ed combination
+of any of the following flag bits:  TK_X_EVENTS, TK_FILE_EVENTS,
+TK_TIMER_EVENTS, TK_IDLE_EVENTS, TK_ALL_EVENTS, or TK_DONT_WAIT.
+
+=item XEvent *eventPtr (in)
+
+Pointer to X event to dispatch to relevant handler(s).
+
+=back
+
+=head1 DESCRIPTION
+
+These three procedures are responsible for waiting for events
+and dispatching to event handlers created with the procedures
+B<Tk_CreateEventHandler>, B<Tk_CreateFileHandler>,
+B<Tk_CreateTimerHandler>, and B<Tk_DoWhenIdle>.
+B<Tk_DoOneEvent> is the key procedure.  It waits for a single
+event of any sort to occur, invokes the handler(s) for that
+event, and then returns.  B<Tk_DoOneEvent> first checks
+for X events and file-related events;  if one is found then
+it calls the handler(s) for the event and returns.  If there
+are no X or file events pending, then B<Tk_DoOneEvent>
+checks to see if timer callbacks are ready;  if so, it
+makes a single callback and returns.  If no timer callbacks
+are ready, B<Tk_DoOneEvent> checks for B<Tk_DoWhenIdle>
+callbacks;  if any are found, it invokes all of them and returns.
+Finally, if no events or work have been found, B<Tk_DoOneEvent>
+sleeps until a timer, file, or X event occurs;  then it processes
+the first event found (in the order given above) and returns.
+The normal return value is 1 to signify that some event or callback
+was processed.
+If no event or callback is processed (under various conditions
+described below), then 0 is returned.
+
+If the I<flags> argument to B<Tk_DoOneEvent> is non-zero then
+it restricts the kinds of events that will be processed by
+B<Tk_DoOneEvent>.
+I<Flags> may be an OR-ed combination of any of the following bits:
+
+=over 4
+
+=item B<TK_X_EVENTS> -
+
+Process X events.
+
+=item B<TK_FILE_EVENTS> -
+
+Process file events.
+
+=item B<TK_TIMER_EVENTS> -
+
+Process timer events.
+
+=item B<TK_IDLE_EVENTS> -
+
+Process B<Tk_DoWhenIdle> callbacks.
+
+=item B<TK_ALL_EVENTS> -
+
+Process all kinds of events:  equivalent to OR-ing together all of the
+above flags or specifying none of them.
+
+=item B<TK_DONT_WAIT> -
+
+Don't sleep:  process only events that are ready at the time of the
+call.
+
+=back
+
+If any of the flags B<TK_X_EVENTS>, B<TK_FILE_EVENTS>,
+B<TK_TIMER_EVENTS>, or B<TK_IDLE_EVENTS> is set, then the only
+events that will be considered are those for which flags are set.
+Setting none of these flags is equivalent to the value
+B<TK_ALL_EVENTS>, which causes all event types to be processed.
+
+The B<TK_DONT_WAIT> flag causes B<Tk_DoWhenIdle> not to put
+the process to sleep:  it will check for events but if none are found
+then it returns immediately with a return value of 0 to indicate
+that no work was done.
+B<Tk_DoOneEvent> will also return 0 without doing anything if
+I<flags> is B<TK_IDLE_EVENTS> and there are no
+B<Tk_DoWhenIdle> callbacks pending.
+Lastly, B<Tk_DoOneEvent> will return 0 without doing anything
+if there are no events or work found and if there are no files,
+displays, or timer handlers to wait for.
+
+B<Tk_MainLoop> is a procedure that loops repeatedly
+calling B<Tk_DoOneEvent>.  It returns only when there
+are no applications left in this process (i.e. no main windows
+exist anymore).  Most X applications will
+call B<Tk_MainLoop> after initialization;  the main
+execution of the application will consist entirely of
+callbacks invoked by B<Tk_DoOneEvent>.
+
+B<Tk_HandleEvent> is a lower-level procedure invoked
+by B<Tk_DoOneEvent>.  It makes callbacks to any event
+handlers (created by calls to B<Tk_CreateEventHandler>)
+that match I<eventPtr> and then returns.  In some cases
+it may be useful for an application to read events directly
+from X and dispatch them by calling B<Tk_HandleEvent>,
+without going through the additional mechanism provided
+by B<Tk_DoOneEvent>.
+
+These procedures may be invoked recursively.  For example,
+it is possible to invoke B<Tk_DoOneEvent> recursively
+from a handler called by B<Tk_DoOneEvent>.  This sort
+of operation is useful in some modal situations, such
+as when a
+notifier has been popped up and an application wishes to
+wait for the user to click a button in the notifier before
+doing anything else.
+
+=head1 KEYWORDS
+
+callback, event, handler, idle, timer

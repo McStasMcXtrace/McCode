@@ -1,0 +1,145 @@
+#  Copyright (c) 1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::Image - Create and manipulate images
+
+=for category  Tk Image Classes
+
+=head1 SYNOPSIS
+
+I<$image> = I<$widget>-E<gt>I<type>(?I<arg arg ...>?)
+
+I<$image>-E<gt>I<method>(?I<arg arg ...>?)
+
+=head1 DESCRIPTION
+
+The B<image> constructors and methods are used to create, delete, and query images.
+It can take several different forms, depending on the
+I<type>.
+
+The constructors require a I<$widget> to invoke them, this is used
+to locate a B<MainWindow>. (This is because the underlying Tk code
+registers the images in the data structure for the B<MainWindow>.)
+
+The legal forms are:
+
+=over 4
+
+=item I<$widget>-E<gt>I<type>?(?I<name>?,?I<option>=E<gt>I<value ...>)?
+
+Creates a new image and returns an object.
+I<type> specifies the type of the image, which must be one of
+the types currently defined (e.g., B<Bitmap>).
+I<name> specifies the name for the image;  if it is omitted then
+Tk picks a name of the form B<image>I<x>, where I<x> is
+an integer.
+There may be any number of I<option>=E<gt>I<value> pairs,
+which provide configuration options for the new image.
+The legal set of options is defined separately for each image
+type;  see below for details on the options for built-in image types.
+If an image already exists by the given name then it is replaced
+with the new image and any instances of that image will redisplay
+with the new contents.
+
+=item I<$image>-E<gt>B<delete>
+
+Deletes the image I<$image> and returns an empty string.
+If there are instances of the image displayed in widgets,
+the image won't actually be deleted until all of the instances
+are released.
+However, the association between the instances and the image
+manager will be dropped.
+Existing instances will retain their sizes but redisplay as
+empty areas.
+If a deleted image is recreated (with the same I<name>)
+the existing instances will use the new image.
+
+=item I<$image>-E<gt>B<height>
+
+Returns a decimal string giving the height of image I<name>
+in pixels.
+
+=item I<$image>-E<gt>B<inuse>
+
+Returns a boolean value indicating whether or not the image is in use
+by any widgets.
+
+=item I<$widget>-E<gt>B<imageNames>
+
+Returns a list containing all existing images for I<$widget>'s
+B<MainWindow>.
+
+=item I<$image>-E<gt>B<type>
+
+Returns the type of  I<$image> (the value of the I<type>
+method when the image was created).
+
+=item I<$widget>-E<gt>B<imageTypes>
+
+Returns a list whose elements are all of the valid image types
+(i.e., all of the values that may be supplied for the I<type>
+to create an image).
+
+=item I<$image>-E<gt>B<width>
+
+Returns a decimal string giving the width of image I<name>
+in pixels.
+
+=back
+
+=head1 BUILT-IN IMAGE TYPES
+
+The following image types are defined by Tk so they will be available
+in any Tk application.
+Individual applications or extensions may define additional types.
+
+=over 4
+
+=item B<Bitmap>
+
+Each pixel in the image displays a foreground color, a background
+color, or nothing.
+See L<Tk::Bitmap> for more information.
+
+=item B<Pixmap>
+
+B<Pixmap> is slightly more general than B<Bitmap>, each pixel can
+be any available color or "transparent" (rendered as background color of the
+widget image is displayed in). B<Pixmap> is best used for icons and other
+simple graphics with only a few colors.
+
+B<Pixmap> is derived from Tix. See L<Tk::Pixmap> for more information.
+
+=item B<Photo>
+
+Displays a variety of full-color images, using dithering to
+approximate colors on displays with limited color capabilities.
+See L<Tk::Photo> documentation for more information.
+
+=back
+
+=head1 CAVEATS
+
+It's necessary to use the L</delete> method to delete an image object
+and free memory associated with it. Just using a lexical variable for
+storing the image object and letting the variable to go out of scope
+or setting to C<undef> is not sufficient.
+
+=head1 SEE ALSO
+
+L<Tk::Bitmap|Tk::Bitmap>
+L<Tk::Pixmap|Tk::Pixmap>
+L<Tk::Photo|Tk::Photo>
+
+=head1 KEYWORDS
+
+height, image, types of images, width
+
+=cut
+

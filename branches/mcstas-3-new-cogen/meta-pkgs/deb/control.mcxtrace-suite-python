@@ -1,0 +1,9 @@
+Package: mcxtrace-suite-python
+Version: 1.1
+Section: main
+Priority: optional
+Architecture: all
+Depends: mcxtrace-1.1, mcxtrace-comps-1.1, mcxtrace-tools-python-mxplot-chaco-1.1, mcxtrace-tools-python-mxplot-matplotlib-1.1, mcxtrace-tools-python-mxrun-1.1
+Installed-Size:
+Maintainer: Peter Willendrup
+Description: A metapackage for McXtrace + python tools

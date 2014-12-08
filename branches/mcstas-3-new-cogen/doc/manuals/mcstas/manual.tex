@@ -1,0 +1,53 @@
+\documentclass[twoside,11pt]{scrreprt}
+%\documentclass[draft,11pt]{scrreprt}
+\include{preamble_common} 
+\include{preamble_manual}
+
+%TODO
+% Fix bib file!
+
+\begin{document}
+\include{title}
+%\input{risoe-rep-title}
+
+\thispagestyle{empty}
+\include{abstractpage}
+
+\tableofcontents
+\include{preface}
+
+\include{intro} % 1
+\include{changes} % 2
+% FIXME\include{install}
+\include{techniq} % 3
+\include{running} % 4
+\include{kernel} % 5
+%\include{comp} % now in separate Manual
+\include{links_othercode} % 6
+\include{comp_abstract} % 7
+\include{instrum} % 8
+%\include{test}   % now in instrum
+%\include{future} % now in changes
+
+\appendix
+%\include{tutorial}
+%\include{polarisation}
+\include{random} % A
+\include{kernelcalls} % B
+%\include{compcode}
+%\include{instcode}
+%\include{test}
+\include{terms} % C
+
+\addcontentsline{toc}{chapter}{\protect\numberline{}{Bibliography}}
+\sloppy
+\printbibliography%
+
+\addcontentsline{toc}{chapter}{\protect\numberline{}{Index and keywords}}
+\small
+\printindex%
+
+% FIXME \include{datablad}
+
+
+\end{document}

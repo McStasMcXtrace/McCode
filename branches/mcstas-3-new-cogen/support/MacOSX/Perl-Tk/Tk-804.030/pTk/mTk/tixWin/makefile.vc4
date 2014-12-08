@@ -1,0 +1,147 @@
+#
+# $Id: makefile.vc4,v 1.2 2000/11/03 01:57:45 idiscovery Exp $
+#
+# makefile.vc --
+#
+#	Visual C++ 4.x makefile for Tix.
+#
+# Copyright (c) 1996, Expert Interface Technologies
+#
+# See the file "license.terms" for information on usage and redistribution
+# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+# 
+# Edit common.mak to set the common settings
+#----------------------------------------------------------------------
+# Environment setting
+#
+# You can set these variables in the command line to nmake. E.g.:
+#
+#	nmake TCL_VER=8.0 -f makefile.vc
+#
+# TOOLS32     = location of VC++ 32-bit development tools.
+# TIX_DEBUG   = Compile Tix with debug information.
+# TCL_VER     = version of Tcl to compile with. Should be either 8.0 8.1
+#               or 8.2
+#----------------------------------------------------------------------
+
+!IFNDEF TOOLS32
+TOOLS32	= C:\msdev
+!ENDIF
+
+!IFNDEF TIX_DEBUG
+NODEBUG=1
+!ENDIF
+
+# Project directories
+#
+# ROOT = top of source tree
+
+ROOT	= ..
+
+# TMPDIR = location where .obj files should be stored during build
+# TCLDIR = location of top of Tcl source heirarchy
+#
+!INCLUDE common.mak
+
+# uncomment the following two lines to compile with TCL_MEM_DEBUG
+#DEBUGDEFINES	=-DTCL_MEM_DEBUG
+
+# Make sure the VC++ tools are at the head of the path
+PATH=$(TOOLS32)\bin;$(PATH)
+
+TCLLIBDIR       = $(TCLDIR)\win
+TKLIBDIR	= $(TKDIR)\win
+WINDIR		= $(ROOT)\win
+GENERICDIR	= $(ROOT)\generic
+XLIBDIR		= $(ROOT)\xlib
+
+cc32 = $(TOOLS32)\bin\cl -I$(TOOLS32)\include
+rc32 = $(TOOLS32)\bin\rc
+link32 = $(TOOLS32)\bin\link
+
+#----------------------------------------------------------------------
+# You shouldn't normally modify anything below this line
+#----------------------------------------------------------------------
+
+X_TK_INCLUDES = -I$(TOOLS32)\include \
+	-I$(ROOT)\win -I$(ROOT)\generic \
+	-I$(TKDIR)\generic -I$(TKDIR)\win -I$(TKDIR)\xlib \
+	-I$(TCLDIR)\generic
+
+TK_INCLUDES = /ML -D_Windows $(X_TK_INCLUDES)
+
+TK_DEFINES = \
+	-nologo $(DEBUGDEFINES)
+
+CP = copy
+
+!include    <ntwin32.mak>
+
+all:    $(TIXDLL) $(TIXWISH)
+
+$(TMPDIR)\tixvc.def: $(TIXOBJS)
+	$(TCLLIBDIR)\dumpexts.exe -o $@ $(TIXDLL) @<<
+		$(TIXOBJS)
+<<
+
+# USE THESE IF YOU DO NOT WANT TO LINK TO ON MSVCRT.DLL
+#XGUILIBS = $(guilibs)
+#XCVARS   = $(cvars)
+
+XGUILIBS = $(guilibsdll)
+XCVARS   = $(cvarsdll)
+
+# (ToDo) $(TIXDLL) doesn't have resources to define its icon, etc.
+#
+$(TIXDLL): $(TIXOBJS) $(TMPDIR)\tixvc.def
+	$(link32) $(linkdebug) $(dlllflags) -def:$(TMPDIR)\tixvc.def \
+		$(TKLIBDIR)\$(TKLIB) $(TCLLIBDIR)\$(TCLLIB) $(XGUILIBS) \
+		$(ITCL_LIBS) \
+		-out:$(TIXDLL) @<<
+		$(TIXOBJS)
+<<
+
+
+$(TIXWISH): $(WISHOBJS) $(TIXOBJS) $(TIXLIB) $(TMPDIR)\tixwish.res
+	$(link32) $(linkdebug) $(guilflags) \
+		$(WISHOBJS) $(TMPDIR)\tixwish.res $(TIXLIB) \
+		$(TKLIBDIR)\$(TKLIB) $(TCLLIBDIR)\$(TCLLIB) $(XGUILIBS) \
+		$(ITCL_LIBS) \
+		-out:$(TIXWISH) 
+
+
+#
+# Special case object file targets
+#
+
+$(TMPDIR)\testMain.obj: $(ROOT)\win\tixWinMain.c
+	$(cc32) $(cdebug) $(cflags) $(ITCL_CFLAGS) $(XCVARS) $(TK_INCLUDES) \
+		$(TK_DEFINES) -DTK_TEST -Fo$@ $?
+
+#
+# Implicit rules
+#
+
+{$(ROOT)\xlib}.c{$(TMPDIR)}.obj:
+	$(cc32) $(cdebug) $(cflags) $(ITCL_CFLAGS) $(XCVARS) $(TK_INCLUDES) \
+		$(TK_DEFINES) -Fo$(TMPDIR)\ $<
+
+{$(ROOT)\generic}.c{$(TMPDIR)}.obj:
+	$(cc32) $(cdebug) $(cflags) $(ITCL_CFLAGS) $(XCVARS) $(TK_INCLUDES) \
+		$(TK_DEFINES) -Fo$(TMPDIR)\ $<
+
+{$(ROOT)\win}.c{$(TMPDIR)}.obj:
+	$(cc32) $(cdebug) $(cflags) $(ITCL_CFLAGS) $(XCVARS) $(TK_INCLUDES) \
+		$(TK_DEFINES) -Fo$(TMPDIR)\ $<
+
+{$(ROOT)\win\rc}.rc{$(TMPDIR)}.res:
+	$(rc32) -fo $@ -r -i $(ROOT)\generic -i $(X_TK_INCLUDES) $<
+
+clean:
+	-del $(TMPDIR)\*.obj
+	-del $(TMPDIR)\*.exp
+	-del $(TMPDIR)\*.res
+	-del $(TMPDIR)\*.def
+	-del $(TIXLIB)
+	-del $(TIXDLL)
+	-del $(TIXWISH)

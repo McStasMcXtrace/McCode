@@ -1,0 +1,18 @@
+
+As of perl5.002b1f the MakeMaker shipped with perl moans a lot
+building dynamic loaded extension on AIX. They have been reported to work.
+
+There may be 'make install' problems too.
+
+Getting latest MakeMaker from CPAN may help.
+
+Tk800.018 was giving core dumps with some compilers:
+
+James Walden <jamesw@ichips.intel.com>
+Reports:
+
+I fixed the problem by upgrading to from VAC 4.4.0.0 to 4.4.0.2.
+This might be worth adding to the README for AIX.
+
+> lslpp -L | grep -i vac
+  vac.C                      4.4.0.2    A    C for AIX Compiler

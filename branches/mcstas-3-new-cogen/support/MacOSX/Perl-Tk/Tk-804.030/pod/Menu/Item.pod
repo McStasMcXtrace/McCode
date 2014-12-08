@@ -1,0 +1,96 @@
+
+=head1 NAME
+
+Tk::Menu::Item - Base class for Menu items
+
+=for pm Tk/Menu/Item.pm
+
+=for category Implementation
+
+=head1 SYNOPSIS
+
+   require Tk::Menu::Item;
+
+   my $but = $menu->Button(...);
+   $but->configure(...);
+   my $what = $but->cget();
+
+   package Whatever;
+   require Tk::Menu::Item;
+   @ISA = qw(Tk::Menu::Item);
+
+   sub PreInit
+   {
+    my ($class,$menu,$info) = @_;
+    $info->{'-xxxxx'} = ...
+    my $y = delete $info->{'-yyyy'};
+   }
+
+=head1 DESCRIPTION
+
+Tk::Menu::Item is the base class from which Tk::Menu::Button,
+Tk::Menu::Cascade, Tk::Menu::Radiobutton and Tk::Menu::Checkbutton are derived.
+There is also a Tk::Menu::Separator.
+
+Constructors are declared so that $menu-E<gt>Button(...) etc. do what you would
+expect.
+
+The C<-label> option is pre-processed allowing ~ to be prefixed to the character
+to derive a C<-underline> value. Thus
+
+    $menu->Button(-label => 'Goto ~Home',...)
+
+    is equivalent to
+
+    $menu->Button(-label => 'Goto Home', -underline => 6, ...)
+
+The C<Cascade> menu item creates a sub-menu and accepts
+these options:
+
+=over 4
+
+=item B<-menuitems>
+
+A list of items for the sub-menu.
+Within this list (which is also accepted by Menu and Menubutton) the first
+two elements of each item should be the "constructor" name and the label:
+
+    -menuitems => [
+                   [Button      => '~Quit', -command => [destroy => $mw]],
+                   [Checkbutton => '~Oil',  -variable => \$oil],
+                  ]
+
+=item B<-postcommand>
+
+A callback to be invoked before posting the menu.
+
+=item B<-tearoff>
+
+Specifies whether sub-menu can be torn-off or not.
+
+=item B<-menuvar>
+
+Scalar reference that will be set to the newly-created sub-menu.
+
+=back
+
+The returned object is currently a blessed reference to an array of two items:
+the containing Menu and the 'label'.
+Methods C<configure> and C<cget> are mapped onto underlying C<entryconfigure>
+and C<entrycget>.
+
+The main purpose of the OO interface is to allow derived item classes to
+be defined which pre-set the options used to create a more basic item.
+
+=head1 BUGS
+
+This OO interface is very new. Using the label as the "key" is a problem
+for separaror items which don't have one. The alternative would be to
+use an index into the menu but that is a problem if items are deleted
+(or inserted other than at the end).
+
+There should probably be a PostInit entry point too, or a more widget like
+defered 'configure'.
+
+=cut
+
