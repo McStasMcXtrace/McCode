@@ -374,7 +374,9 @@ struct code_block
    synchronized with the one in mcstas-r.h. */
 enum instr_formal_types
   {
-    instr_type_double, instr_type_int, instr_type_string
+    instr_type_mcnum, instr_type_int, 
+    instr_type_string, instr_type_char, 
+    instr_type_pdouble, instr_type_double
   };
 
 /* Component formal input parameters. */
@@ -390,8 +392,10 @@ struct comp_iformal
 struct comp_def
   {
     char *name;                     /* Component name. */
-    char *source;                   /*  Name of source file for definition */
+    char *source;                   /* Name of source file for definition */
     int  comp_inst_number;          /* Number of this comp in the instrument  */
+    int  flag_defined_structure;    /* set to 1 when the parameter block is generated */
+    int  flag_defined_share;        /* set to 1 when the SHARE block is generated */
     List def_par, set_par, out_par; /* Formal parameters. */
     struct code_block *share_code;  /* Unique Declaration code (shared). */
     struct code_block *decl_code;   /* Declaration code. */
@@ -423,7 +427,6 @@ struct when_condition {
 struct comp_inst
   {
     char *name;     /* Instance name. */
-    char *type;     /* type of component */
     struct comp_def *def;           /* Pointer to definition. */
     struct comp_position *pos;      /* Component position (place & orientation). */
     struct code_block *extend;      /* NULL or code following comp instance */
