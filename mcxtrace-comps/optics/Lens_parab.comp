@@ -252,10 +252,10 @@ TRACE
   int i=0,nr;
   
   parab.constants[0]=r;
-  parab.constants[1]=yheight;
-  parab.constants[2]=xwidth;
+  parab.constants[1]=r_ap;
+  parab.constants[2]=r_ap;
   
-  w=(yheight*yheight)/(8.0*r);
+  w=(r_ap*r_ap)/(8.0*r);
   k=sqrt(kx*kx+ky*ky+kz*kz); 
   e=K2E*k;  /*Energy in KeV, same unit as datafile */
 
