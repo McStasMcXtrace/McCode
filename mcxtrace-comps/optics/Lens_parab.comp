@@ -23,6 +23,7 @@
 * %P
 * Input parameters:
 * r: Radius of curvature (circular approximation at the tip of the profile) [m]
+* r_ap: Radius of circular aperture [m]
 * yheight: The CRL's dimensions along Y, aka aperture. [m]
 * xwidth: The CRL's dimensions along X. [m]
 * d: Distance between two surfaces of the lens along the propagation axis. [m]
@@ -38,7 +39,7 @@
 
 DEFINE COMPONENT Lens_parab
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (r=0.5e-3,yheight=1.4e-3,xwidth=1.4e-3,d=.1e-3,T=0,N=1)
+SETTING PARAMETERS (r=0.5e-3,r_ap=1.4e-3, yheight=0,xwidth=0,d=.1e-3,T=0,N=1)
 OUTPUT PARAMETERS (prms,parab)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -252,8 +253,8 @@ TRACE
   int i=0,nr;
   
   parab.constants[0]=r;
-  parab.constants[1]=r_ap;
-  parab.constants[2]=r_ap;
+  parab.constants[1]=r_ap*2;
+  parab.constants[2]=r_ap*2;
   
   w=(r_ap*r_ap)/(8.0*r);
   k=sqrt(kx*kx+ky*ky+kz*kz); 
