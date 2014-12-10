@@ -1,0 +1,71 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+use Tk::Table;
+use Tk::Entry;
+
+sub Foo::new {
+    return bless {}
+}
+
+
+$MAX_ITEMS = 10;
+$VIEWED_ITEMS = 5;
+
+$f = new Foo;  # Used later for callback setup.
+
+$top = new MainWindow();
+
+my $t  = $top->Table(-scrollbars => 'e',
+		      -rows => $VIEWED_ITEMS,
+		      -columns => 3,
+		      -highlightthickness => 0,
+		      );
+$t->pack(-expand => 1,
+	 -fill => 'both'
+	 );
+
+### Set up the entries and bindings.
+
+foreach $r (0..$MAX_ITEMS-1) {
+    $c = 0;
+    $tmp = ["0,$r","1,$r","2,$r"];
+    foreach (@$tmp) {
+	$e = $t->Entry(-width => 5,
+		       -relief => 'sunken',
+		       -highlightthickness => 0,
+		       -borderwidth => 1,
+		       -textvariable => \$_);
+	$t->put($r, $c++, $e);
+    }
+
+    $t->get($r, 0)->bind('<Return>' => [$f, 'recalc', $r]);
+    $t->get($r, 1)->bind('<Return>' => [$f, 'find', $r]);
+}
+
+MainLoop();
+exit;
+
+sub recalc {
+    my($self, $r) = @_;
+
+    print STDERR "In recalc on row $r\n";
+
+    my $w = $t->get($r,1);
+    $w->focus() ;
+}
+
+
+sub find {
+    my($self, $r) = @_;
+
+    print STDERR "In find on row $r\n";
+
+    if (1 && $r < $MAX_ITEMS) {
+	my $w = $t->get($r+1,0);
+	$w->focus() ;
+	$t->see($w);
+    }
+}
+__END__
+

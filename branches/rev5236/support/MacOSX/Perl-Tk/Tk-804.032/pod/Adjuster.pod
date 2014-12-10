@@ -1,0 +1,223 @@
+
+=head1 NAME
+
+Tk::Adjuster - Allow size of packed widgets to be adjusted by user
+
+=for pm Tk/Adjuster.pm
+
+=for category Tk Geometry Management
+
+=head1 SYNOPSIS
+
+use Tk::Adjuster;
+
+I<$adjuster> = I<$widget>->B<Adjuster>I<(?options?)>;
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item Name: B<restore>
+
+=item Class: B<Restore>
+
+=item Switch: B<-restore>
+
+Specifies a boolean value that determines whether the Adjuster
+should forcibly attempt to make room
+for itself (by reducing the size of its managed widget) when it is
+unmapped (for example, due to a size change in a top level window).
+The default value is 1.
+
+=item Name: B<side>
+
+=item Class: B<Side>
+
+=item Switch: B<-side>
+
+Specifies the side on which the managed widget lies relative to the
+Adjuster. In conjunction with the pack geometry manager, this relates to
+the side of the master against which the managed widget and the Adjuster
+are packed.
+Must be B<left>, B<right>, B<top>, or B<bottom>. Defaults to B<top>.
+
+=item Name: B<widget>
+
+=item Class: B<Widget>
+
+=item Switch: B<-widget>
+
+Specifies the widget which is to be managed by the Adjuster.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk::Adjuster> is a Frame containing a "line" and a "blob".
+
+Dragging with Mouse Button-1 results in a line being dragged
+to indicate new size. Releasing Button-1 submits GeometryRequests
+on behalf of the managed widget which will cause the packer to change the
+widget's size.
+
+If Drag is done with Shift button down, then GeometryRequests are made
+in "real time" so that text-flow effects can be seen, but as a lot more
+work is done behaviour may be sluggish.
+
+If widget is packed with -side => left or -side => right then width is
+adjusted. If packed -side => top or -side => bottom then height is adjusted.
+
+B<packPropagate> is turned off for the master window to prevent adjustment
+changing overall window size. Similarly B<packPropagate> is turned off
+for the managed widget if it has things packed inside it. This is so that
+the GeometryRequests made by B<Tk::Adjuster> are not overridden by pack.
+
+In addition, the managed widget is made non-expandable
+to prevent the geometry manager reallocating freed space in the master
+back to the managed widget.
+Note however that expansion is turned off only after the Adjuster is mapped,
+which allows the managed widget to expand naturally on window creation.
+
+The Tk::Widget method, B<packAdjust>, calls pack on the widget, then
+creates an instance of B<Tk::Adjuster>,
+and packs that "after" the widget. Its use has two disadvantages however: the
+Adjuster widget is not made available to the caller, and
+options cannot be set on the Adjuster. For these reasons, the Tk::Adjuster
+method, B<packAfter> is preferred, but B<packAdjust> is retained
+for backwards compatibility.
+
+=head1 WIDGET METHODS
+
+=over 4
+
+=item I<$adjuster>->B<packAfter>(I<managed_widget, ?pack_options?>)
+
+This command configures the Adjuster's B<-widget> and B<-side> options
+respectively to I<managed_widget> and the B<-side> value specified in
+I<pack_options> (B<top> if not specified). It then packs the Adjuster
+after I<managed_widget>, with B<-fill> set to B<x> or B<y> as appropriate.
+
+=item I<$adjuster>->B<packForget>I<?(boolean)?>
+
+This command calls B<Tk::Widget::packForget> on the Adjuster.
+If a parameter is provided and it has a true boolean value, then
+B<packForget> is also called on the managed widget.
+
+=item I<$adjuster>->B<slave>
+
+This command returns the value I<$adjuster>->I<cget('-widget')>, ie. the
+reference to the managed widget.
+
+=back
+
+=head1 EXAMPLES
+
+B<Using an Adjuster to separate two widgets, whereby the left widget
+is managed, and right widget expands to fill space on a window resize>
+
+a) Using packAfter (preferred interface)
+
+  use Tk;
+  use Tk::Adjuster;
+
+  my $f = MainWindow->new;
+  my $lst1 = $f->Listbox();
+  my $adj1 = $f->Adjuster();
+  my $lst2 = $f->Listbox();
+
+  my $side = 'left';
+  $lst1->pack(-side => $side, -fill => 'both', -expand => 1);
+  $adj1->packAfter($lst1, -side => $side);
+  $lst2->pack(-side => $side, -fill => 'both', -expand => 1);
+  MainLoop;
+
+b) Using packAdjust
+
+  use Tk;
+  use Tk::Adjuster;
+
+  my $f = MainWindow->new;
+  my $lst1 = $f->Listbox();
+  my $lst2 = $f->Listbox();
+
+  my $side = 'left';
+  $lst1->packAdjust(-side => $side, -fill => 'both');
+  $lst2->pack      (-side => $side, -fill => 'both', -expand => 1);
+  MainLoop;
+
+c) Using the standard Tk::Widget::pack
+
+  use Tk;
+  use Tk::Adjuster;
+
+  my $f = MainWindow->new;
+  my $side = 'left';
+  my $lst1 = $f->Listbox();
+  my $adj  = $f->Adjuster(-widget => $lst1, -side => $side);
+  my $lst2 = $f->Listbox();
+
+  $lst1->pack(-side => $side, -fill => 'both', -expand => 1);
+  $adj->pack (-side => $side, -fill => 'y');
+  $lst2->pack(-side => $side, -fill => 'both', -expand => 1);
+
+  MainLoop;
+
+Changing the above examples so that $side has the value 'right' means the
+left widget expands to fill space on a window resize.
+
+Changing the above examples so that $side has the value 'top'
+produces a testcase with a horizontal Adjuster.
+Here the bottom widget expands to fill space on a window resize.
+Packing to the 'bottom' makes the top widget expand to fill space on window
+resize.
+
+B<Using -restore =E<gt> 0 for multiple columns>
+
+In the case of multiple columns (or rows) the "restore" functionality of the
+Adjuster can be inconvenient. When the user adjusts the width of one column
+and thereby pushes the Adjuster of another column off the window, this
+adjuster tries to restore itself by reducing the size of its managed widget.
+This has the effect that column widths shrink; and the original size
+is not restored when
+the user reverses the originating change. The B<-restore> option can be
+used to turn off this functionality. (It makes some sense, however, to
+leave B<-restore>
+turned on for the first-packed Adjuster, so that at least one Adjuster
+always remains visible.)
+
+  use Tk;
+  use Tk::Adjuster;
+  my $f = MainWindow->new;
+  my $lst1 = $f->Listbox();
+  my $adj1 = $f->Adjuster();
+  my $lst2 = $f->Listbox();
+  my $adj2 = $f->Adjuster(-restore => 0);
+  my $lst3 = $f->Listbox();
+
+  my $side = 'left';
+  $lst1->pack(-side => $side, -fill => 'both', -expand => 1);
+  $adj1->packAfter($lst1, -side => $side);
+  $lst2->pack(-side => $side, -fill => 'both', -expand => 1);
+  $adj2->packAfter($lst2, -side => $side);
+  $lst3->pack(-side => $side, -fill => 'both', -expand => 1);
+
+  MainLoop;
+
+=head1 BUGS
+
+It is currently not possible to configure the appearance of the Adjuster.
+It would be nice to be able to set the width and relief of the Adjuster "line"
+and the presence/absence of the "blob" on the Adjuster.
+
+Tk::Adjuster works theoretically with the grid geometry manager but there
+are currently some problems which seem to be due to bugs in grid:
+
+  a) There's never an Unmap event for the adjuster, so the "restore"
+     functionality has no effect.
+  b) After adjusting, widgets protrude into the border of the master.
+  c) grid('Propagate', 0) on MainWindow has no effect - window shrinks/grows
+     when widgets are adjusted.
+  d) Widgets shuffle to correct position on startup
+
+=cut
+

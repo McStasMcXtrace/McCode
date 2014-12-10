@@ -1,0 +1,24 @@
+#!/usr/local/bin/perl -w
+use Tk;
+my $top = MainWindow->new;
+my $i   = $top->Photo(-file => Tk->findINC('icon.gif'));
+my $t = $top->Text->grid;
+my $l = $top->Label(-text => 'Frog');
+$t->insert('end',"A Label '");
+$t->windowCreate('end', -window => $l);
+$t->insert('end',"'\n");
+$t->insert('end',"An Image '");
+$t->imageCreate('end', -image  => $i);
+$t->insert('end',"'\n");
+print join(',', $t->dump('1.0', 'end')), "\n";
+$t->dump(-command => \&dump, '1.0', 'end');
+MainLoop;
+
+sub dump
+{
+ print join(',',@_),"\n";
+}
+
+__END__
+
+

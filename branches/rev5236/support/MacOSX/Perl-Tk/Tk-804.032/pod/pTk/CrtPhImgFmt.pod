@@ -1,0 +1,244 @@
+#  Copyright (c) 1994 The Australian National University
+#  Copyright (c) 1994-1997 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#  Author: Paul Mackerras (paulus@cs.anu.edu.au),
+# 	    Department of Computer Science,
+# 	    Australian National University.
+
+=head1 NAME
+
+Tk_CreatePhotoImageFormat - define new file format for photo images
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+B<#include E<lt>tkPhoto.hE<gt>>
+
+B<Tk_CreatePhotoImageFormat>(I<formatPtr>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_PhotoImageFormat *formatPtr (in)
+
+Structure that defines the new file format.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_CreatePhotoImageFormat> is invoked to define a new file format
+for image data for use with photo images.  The code that implements an
+image file format is called an image file format handler, or
+handler for short.  The photo image code
+maintains a list of handlers that can be used to read and
+write data to or from a file.  Some handlers may also
+support reading image data from a string or converting image data to a
+string format.
+The user can specify which handler to use with the B<-format>
+image configuration option or the B<-format> option to the
+B<read> and B<write> photo image subcommands.
+
+An image file format handler consists of a collection of procedures
+plus a Tk_PhotoImageFormat structure, which contains the name of the
+image file format and pointers to six procedures provided by the
+handler to deal with files and strings in this format.  The
+Tk_PhotoImageFormat structure contains the following fields:
+
+ typedef struct Tk_PhotoImageFormat {
+ 	char *name;
+ 	Tk_ImageFileMatchProc *fileMatchProc;
+ 	Tk_ImageStringMatchProc *stringMatchProc;
+ 	Tk_ImageFileReadProc *fileReadProc;
+ 	Tk_ImageStringReadProc *stringReadProc;
+ 	Tk_ImageFileWriteProc *fileWriteProc;
+ 	Tk_ImageStringWriteProc *stringWriteProc;
+ } Tk_PhotoImageFormat;
+
+The handler need not provide implementations of all six procedures.
+For example, the procedures that handle string data would not be
+provided for a format in which the image data are stored in binary,
+and could therefore contain null characters.  If any procedure is not
+implemented, the corresponding pointer in the Tk_PhotoImageFormat
+structure should be set to NULL.  The handler must provide the
+I<fileMatchProc> procedure if it provides the I<fileReadProc>
+procedure, and the I<stringMatchProc> procedure if it provides the
+I<stringReadProc> procedure.
+
+=head1 B<name>
+
+I<formatPtr-E<gt>name> provides a name for the image type.
+Once B<Tk_CreatePhotoImageFormat> returns, this name may be used
+in the B<-format> photo image configuration and subcommand option.
+The manual page for the photo image (photo(n)) describes how image
+file formats are chosen based on their names and the value given to
+the B<-format> option.
+
+=head1 FILEMATCHPROC
+
+I<formatPtr-E<gt>fileMatchProc> provides the address of a procedure for
+Tk to call when it is searching for an image file format handler
+suitable for reading data in a given file.
+I<formatPtr-E<gt>fileMatchProc> must match the following prototype:
+
+ typedef int Tk_ImageFileMatchProc(
+ 	Tcl_Channel chan,
+ 	char *fileName,
+ 	char *formatString,
+ 	int *widthPtr,
+ 	int *heightPtr);
+
+The I<fileName> argument is the name of the file containing the
+image data, which is open for reading as I<chan>.  The
+I<formatString> argument contains the value given for the
+B<-format> option, or NULL if the option was not specified.
+If the data in the file appears to be in the format supported by this
+handler, the I<formatPtr-E<gt>fileMatchProc> procedure should store the
+width and height of the image in *I<widthPtr> and *I<heightPtr>
+respectively, and return 1.  Otherwise it should return 0.
+
+=head1 STRINGMATCHPROC
+
+I<formatPtr-E<gt>stringMatchProc> provides the address of a procedure for
+Tk to call when it is searching for an image file format handler for
+suitable for reading data from a given string.
+I<formatPtr-E<gt>stringMatchProc> must match the following prototype:
+
+ typedef int Tk_ImageStringMatchProc(
+ 	char *string,
+ 	char *formatString,
+ 	int *widthPtr,
+ 	int *heightPtr);
+
+The I<string> argument points to the string containing the image
+data.  The I<formatString> argument contains the value given for
+the B<-format> option, or NULL if the option was not specified.
+If the data in the string appears to be in the format supported by
+this handler, the I<formatPtr-E<gt>stringMatchProc> procedure should
+store the width and height of the image in *I<widthPtr> and
+*I<heightPtr> respectively, and return 1.  Otherwise it should
+return 0.
+
+=head1 FILEREADPROC
+
+I<formatPtr-E<gt>fileReadProc> provides the address of a procedure for
+Tk to call to read data from an image file into a photo image.
+I<formatPtr-E<gt>fileReadProc> must match the following prototype:
+
+ typedef int Tk_ImageFileReadProc(
+ 	Tcl_Interp *interp,
+ 	Tcl_Channel chan,
+ 	char *fileName,
+ 	char *formatString,
+ 	PhotoHandle imageHandle,
+ 	int destX, int destY,
+ 	int width, int height,
+ 	int srcX, int srcY);
+
+The I<interp> argument is the interpreter in which the command was
+invoked to read the image; it should be used for reporting errors.
+The image data is in the file named I<fileName>, which is open for
+reading as I<chan>.  The I<formatString> argument contains the
+value given for the B<-format> option, or NULL if the option was
+not specified.  The image data in the file, or a subimage of it, is to
+be read into the photo image identified by the handle
+I<imageHandle>.  The subimage of the data in the file is of
+dimensions I<width> x I<height> and has its top-left corner at
+coordinates (I<srcX>,I<srcY>).  It is to be stored in the photo
+image with its top-left corner at coordinates
+(I<destX>,I<destY>) using the B<Tk_PhotoPutBlock> procedure.
+The return value is a standard Tcl return value.
+
+=head1 STRINGREADPROC
+
+I<formatPtr-E<gt>stringReadProc> provides the address of a procedure for
+Tk to call to read data from a string into a photo image.
+I<formatPtr-E<gt>stringReadProc> must match the following prototype:
+
+ typedef int Tk_ImageStringReadProc(
+ 	Tcl_Interp *interp,
+ 	char *string,
+ 	char *formatString,
+ 	PhotoHandle imageHandle,
+ 	int destX, int destY,
+ 	int width, int height,
+ 	int srcX, int srcY);
+
+The I<interp> argument is the interpreter in which the command was
+invoked to read the image; it should be used for reporting errors.
+The I<string> argument points to the image data in string form.
+The I<formatString> argument contains the
+value given for the B<-format> option, or NULL if the option was
+not specified.  The image data in the string, or a subimage of it, is to
+be read into the photo image identified by the handle
+I<imageHandle>.  The subimage of the data in the string is of
+dimensions I<width> x I<height> and has its top-left corner at
+coordinates (I<srcX>,I<srcY>).  It is to be stored in the photo
+image with its top-left corner at coordinates
+(I<destX>,I<destY>) using the B<Tk_PhotoPutBlock> procedure.
+The return value is a standard Tcl return value.
+
+=head1 FILEWRITEPROC
+
+I<formatPtr-E<gt>fileWriteProc> provides the address of a procedure for
+Tk to call to write data from a photo image to a file.
+I<formatPtr-E<gt>fileWriteProc> must match the following prototype:
+
+ typedef int Tk_ImageFileWriteProc(
+ 	Tcl_Interp *interp,
+ 	char *fileName,
+ 	char *formatString,
+ 	Tk_PhotoImageBlock *blockPtr);
+
+The I<interp> argument is the interpreter in which the command was
+invoked to write the image; it should be used for reporting errors.
+The image data to be written are in memory and are described by the
+Tk_PhotoImageBlock structure pointed to by I<blockPtr>; see the
+manual page FindPhoto(3) for details.  The I<fileName> argument
+points to the string giving the name of the file in which to write the
+image data.  The I<formatString> argument contains the
+value given for the B<-format> option, or NULL if the option was
+not specified.  The format string can contain extra characters
+after the name of the format.  If appropriate, the
+I<formatPtr-E<gt>fileWriteProc> procedure may interpret these
+characters to specify further details about the image file.
+The return value is a standard Tcl return value.
+
+=head1 STRINGWRITEPROC
+
+I<formatPtr-E<gt>stringWriteProc> provides the address of a procedure for
+Tk to call to translate image data from a photo image into a string.
+I<formatPtr-E<gt>stringWriteProc> must match the following prototype:
+
+ typedef int Tk_ImageStringWriteProc(
+ 	Tcl_Interp *interp,
+ 	Tcl_DString *dataPtr,
+ 	char *formatString,
+ 	Tk_PhotoImageBlock *blockPtr);
+
+The I<interp> argument is the interpreter in which the command was
+invoked to convert the image; it should be used for reporting errors.
+The image data to be converted are in memory and are described by the
+Tk_PhotoImageBlock structure pointed to by I<blockPtr>; see the
+manual page FindPhoto(3) for details.  The data for the string
+should be appended to the dynamic string given by I<dataPtr>.
+The I<formatString> argument contains the
+value given for the B<-format> option, or NULL if the option was
+not specified.  The format string can contain extra characters
+after the name of the format.  If appropriate, the
+I<formatPtr-E<gt>stringWriteProc> procedure may interpret these
+characters to specify further details about the image file.
+The return value is a standard Tcl return value.
+
+=head1 SEE ALSO
+
+L<Tk::FindPhoto>, L<Tk::FindPhoto>
+
+=head1 KEYWORDS
+
+photo image, image file

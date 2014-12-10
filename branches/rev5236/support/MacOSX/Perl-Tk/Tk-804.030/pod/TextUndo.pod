@@ -1,0 +1,73 @@
+
+=head1 NAME
+
+Tk::TextUndo - perl/tk text widget with bindings to undo changes.
+
+=for pm Tk/TextUndo.pm
+
+=for category Derived Widgets
+
+=head1 SYNOPSIS
+
+S<    >B<use Tk::TextUndo;>
+
+S<    >I<$testundo> = I<$parent>-E<gt>B<TextUndo>(?I<-option>=E<gt>I<value>, ...?);
+
+=head1 DESCRIPTION
+
+This IS-A text widget with an unlimited 'undo' history but without
+a re'undo' capability.
+
+=head2 Bindings
+
+The C<TextUndo> widget has the same bindings as the L<Text|Tk::Text> widget.
+In addition there are the following bindings:
+
+=over 4
+
+=item Event <L4> <<Undo>>
+
+undo the last change.  Pressing <L4> several times undo
+step by step the changes made to the text widget.
+
+=back
+
+=head2 Methods
+
+The C<TextUndo> widget has the same methods as C<Text> widget.
+Additional methods for the C<TextUndo> widget are:
+
+=over 4
+
+=item $text->Load($filename);
+
+Loads the contents of the $filename into the text widget. Load()
+delete the previous contents of the text widget as well as it's
+undo history of the previous file.
+
+=item $text->Save(?$otherfilename?)
+
+Save contents of the text widget to a file. If the
+$otherfilename is not specified, the text widget contents
+writes the file of $filename used in the last Load()
+call.  If no file was previously Load()'ed an error message
+pops up.  The default filename of the last Load() call
+is not overwriten by $otherfilename.
+
+=item $text->FileName(?$otherfilename?)
+
+If passed an argument sets the file name associated with the loaded
+document. Returns the current file name associated with the document.
+
+=back
+
+=head1 KEYS
+
+widget, text, undo
+
+=head1 SEE ALSO
+
+L<Tk::Text>, L<Tk::ROText>
+
+=cut
+

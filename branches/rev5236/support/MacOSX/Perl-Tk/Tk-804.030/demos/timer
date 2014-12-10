@@ -1,0 +1,65 @@
+#!/usr/bin/env perl
+#
+# This script generates a counter with start and stop buttons.  Exit with
+# Ctrl/c or Ctrl/q.
+#
+# This a more advanced version of `timer', where we conform to a strict style
+# of Perl programming and thus use lexicals.  Also, the counter is updated via
+# a -textvariable rather than a configure() method call.
+#
+# Tcl/Tk -> Perl translation by Stephen O. Lidie.  lusol@Lehigh.EDU  96/01/25
+
+require 5.002;
+use Tk;
+use strict;
+sub tick;
+
+my $MW = MainWindow->new;
+$MW->bind('<Control-c>' => \&exit);
+$MW->bind('<Control-q>' => \&exit);
+
+# %tinfo:  the Timer Information hash.
+#
+# Key       Contents
+#
+# w         Reference to MainWindow.
+# s         Accumulated seconds.
+# h         Accumulated hundredths of a second.
+# p         1 IIF paused.
+# t         Value of $counter -textvariable.
+
+my(%tinfo) = ('w' => $MW, 's' => 0, 'h' => 0, 'p' => 1, 't' => '0.00');
+
+my $start = $MW->Button(
+    -text         => 'Start',
+    -command      => sub {if($tinfo{'p'}) {$tinfo{'p'} = 0; tick}},
+);
+
+my $stop = $MW->Button(-text => 'Stop', -command => sub {$tinfo{'p'} = 1;});
+
+my $counter = $MW->Label(
+    -relief       => 'raised',
+    -width        => 10,
+    -textvariable => \$tinfo{'t'},
+);
+
+$counter->pack(-side => 'bottom', -fill => 'both');
+$start->pack(-side => 'left', -fill => 'both', -expand => 'yes');
+$stop->pack(-side => 'right', -fill => 'both', -expand => 'yes');
+
+sub tick {
+
+    # Update the counter every 50 milliseconds, or 5 hundredths of a second.
+
+    return if $tinfo{'p'};
+    $tinfo{'h'} += 5;
+    if ($tinfo{'h'} >= 100) {
+	$tinfo{'h'} = 0;
+	$tinfo{'s'}++;
+    }
+    $tinfo{'t'} = sprintf("%d.%02d", $tinfo{'s'}, $tinfo{'h'});
+    $tinfo{'w'}->after(50, \&tick);
+
+} # end tick
+
+MainLoop;

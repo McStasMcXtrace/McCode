@@ -1,0 +1,550 @@
+=head1 NAME
+
+Tk2portableTk - how to make your B<Tk> source portable to other
+interpreted languages.
+
+=for category  C Programming
+
+=head1 Author
+
+Ilya Zakharevich <ilya@math.ohio-state.edu>  has contributed most of
+this document. Many thanks.
+
+=head1 DESCRIPTION
+
+B<PortableTk> is an attempt to make B<Tk> useful from other
+languages. Currently tk4.0 runs under Perl using this
+approach. Below, I<Lang> is the notation for an external language to
+which B<PortableTk> glues B<Tk> code.
+
+The main problem with using the code developed for B<TCL> with
+different languages is the absence of data types: almost anything is
+C<char*>. It makes automatic translation hopeless. However, if you
+C<typedef> several new symbols to be C<char*>, you can still use your
+code in B<TCL>, I<and> it will make the automatic translation
+possible.
+
+Another problem with the approach that "everything is a string" is
+impossibility to have a result that says "NotApplicable" without
+setting an error. Thus different B<Tk> command return different string
+values that mean "error happened", like C<"">, C<" "> or
+C<"??">. Other languages can be more flexible, so in B<portableTk> you
+should inform the compiler that what you want to return means "error"
+(see L<Setting variables>).
+
+Currently B<PortableTk> uses several different approachs
+to simplify translation: several B<TCL> functions that are especially
+dangerous to use are undefined, so you can easily find places that
+need to be updated to use Language-independent functions based on
+compiler warnings.  Eventually a way to use these Language-independent
+functions under proper B<TCL> will be also provided.  The end of this
+document provides a starting point for such a project.
+
+=head1 Structure of B<pTk>, porting your code
+
+B<pTk>, that is a port of B<Tk>, is very special with respect to porting
+of other code to B<portableTk>. The problem is that currently there is
+very little hope to merge the modifications back into B<Tk>, so a
+special strategy is needed to maintain this port. Do not use this
+strategy to port your own code.
+
+B<pTk> is produced from B<Tk> via a two-step process: first, some
+manual editing (the result is in the subdirectory C<mTk>), and second,
+automatic conversion by the C<munge> script (written in Perl). Thus the
+subdirectory C<pTk/mTk> contains code with minimal possible difference
+from the virgin B<Tk> code, so it is easier to merge(1) the
+differences between B<Tk> versions into modified code.
+
+It looks like the strategy for a portable code should be exactly
+opposite: starting from B<TCL>-based code, apply C<munge>, and then
+hand-edit the resulting code. Probably it is also possible to target
+your code to B<portableTk> from scratch, since this will make it
+possible to run it under a lot of I<Lang>uages.
+
+The only reason anyone would like to look into contents of C<pTk/mTk>
+directory is to find out which constructs are not supported by
+C<munge>. On the other hand, C<pTk> directory contains code that is
+conformant to B<portableTk>, so you can look there to find example code.
+
+C<munge> is the script that converts most common B<Tk> constructs to
+their C<portableTk> equivalent. For your code to qualify, you should
+follow B<Tk> conventions on indentation and names of variables, in
+particular, the array of arguments for the C<...CmdProc> should be
+called C<argv>.
+
+For details on what C<munge> can do, see
+L<Translation of some TCL functions>.
+
+=head1 B<PortableTk> API
+
+=head2 Checking what you are running under
+
+B<PortableTk> provides a symbol C<????>. If this symbol is defined,
+your source is compiled with it.
+
+=head2 New types of configuration options
+
+B<PortableTk> defines several new types of configuration options:
+
+ TK_CONFIG_CALLBACK
+ TK_CONFIG_LANGARG
+ TK_CONFIG_SCALARVAR
+ TK_CONFIG_HASHVAR
+ TK_CONFIG_ARRAYVAR
+ TK_CONFIG_IMAGE
+
+You should use them instead of TK_CONFIG_STRING whenever
+appropriate. This allows your application to receive a direct
+representation of the corresponding resource instead of the string
+representation, if this is possible under given language.
+
+???? It looks like C<TK_CONFIG_IMAGE> and C<TK_CONFIG_SCALARVAR> set
+variables of type C<char*>.
+
+=head2 Language data
+
+The following data types are defined:
+
+=over 4
+
+=item C<Tcl_Obj *>
+
+is the main datatype of the language.  This is a type that your C
+function gets pointers to for arguments when the corresponding I<Lang>
+function is called.  The corresponding config type is
+C<TK_CONFIG_LANGARG>.
+
+This is also a type that keeps information about contents of I<Lang>
+variable.
+
+=item C<Var>
+
+Is a substitute for a C<char *> that contains name of variable. In
+I<Lang> it is an object that contains reference to another I<Lang>
+variable.
+
+=item C<LangResultSave>
+
+????
+
+=item C<LangCallback>
+
+C<LangCallback*> a substitute for a C<char *> that contains command to
+call. The corresponding config type is C<TK_CONFIG_CALLBACK>.
+
+=item C<LangFreeProc>
+
+It is the type that the C<Lang_SplitList> sets. Before you call it,
+declare
+
+    Args *args;
+    LangFreeProc *freeProc = NULL;
+    ...
+    code = Lang_SplitList(interp, value,
+	&argc, &args, &freeProc);
+
+After you use the split values, call
+
+    if (args != NULL && freeProc) (*freeProc)(argc,args);
+
+It is not guaranteed that the C<args> can survive deletion of C<value>.
+
+=back
+
+=head2 Conversion
+
+The following macros and functions are used for conversion between
+strings and the additional types:
+
+ LangCallback * LangMakeCallback(Tcl_Obj *)
+ Tcl_Obj * LangCallbackArg(LangCallback *)
+ char * LangString(Tcl_Obj *)
+
+After you use the result of LangCallbackArg(), you should free it with
+C<freeProc> C<LANG_DYNAMIC> (it is not guaranteed that any change of
+C<Tcl_Obj *> will not be reflected in <LangCallback>, so you cannot do
+LangSet...() in between, and you should reset it to C<NULL> if you
+want to do any further assignments to this C<Tcl_Obj *>).
+
+The following function returns the C<Tcl_Obj *> that is a reference to C<Var>:
+
+ Tcl_Obj * LangVarArg(Var)
+
+???? It is very anti-intuitive, I hope the name is changed.
+
+ int LangCmpCallback(LangCallback *a,Tcl_Obj * b)
+
+(currently only a stub), and, at last,
+
+ LangCallback * LangCopyCallback(LangCallback *)
+
+=head2 Callbacks
+
+Above we have seen the new datatype C<LangCallback> and the
+corresponding I<Config option>  C<TK_CONFIG_CALLBACK>. The following
+functions are provided for manipulation of C<LangCallback>s:
+
+ void LangFreeCallback(LangCallback *)
+ int LangDoCallback(Tcl_Interp *,LangCallback *,
+	int result,int argc, char *format,...)
+
+The argument C<format> of C<LangDoCallback> should contain a string that is
+suitable for C<sprintf> with optional arguments of C<LangDoCallback>.
+C<result> should be false if result of callback is not needed.
+
+ int LangMethodCall(Tcl_Interp *,Tcl_Obj *,char *method,
+	int result,int argc,...)
+
+????
+
+Conceptually, C<LangCallback*> is a substitute for ubiquitous C<char *>
+in B<TCL>. So you should use C<LangFreeCallback> instead of C<ckfree>
+or C<free> if appropriate.
+
+=head2 Setting variables
+
+ void LangFreeArg (Tcl_Obj *, Tcl_FreeProc *freeProc)
+ Tcl_Obj *  LangCopyArg (Tcl_Obj *);
+ void Tcl_AppendArg (Tcl_Interp *interp, Tcl_Obj *)
+ void LangSetString(Tcl_Obj * *, char *s)
+ void LangSetDefault(Tcl_Obj * *, char *s)
+
+These two are equivalent unless s is an empty string. In this case
+C<LangSetDefault> behaves like C<LangSetString> with C<s==NULL>, i.e.,
+it sets the current value of the I<Lang> variable to be false.
+
+ void LangSetInt(Tcl_Obj * *,int)
+ void LangSetDouble(Tcl_Obj * *,double)
+
+The I<Lang> functions separate uninitialized and initialized data
+comparing data with C<NULL>. So the declaration for an C<Tcl_Obj *> should
+look like
+
+ Tcl_Obj * arg = NULL;
+
+if you want to use this C<arg> with the above functions. After you are
+done, you should use C<LangFreeArg> with C<TCL_DYNAMIC> as C<freeProc>.
+
+=head2 Language functions
+
+Use
+
+=over 4
+
+=item C<int  LangNull(Tcl_Obj *)>
+
+to check that an object is false;
+
+=item C<int  LangStringMatch(char *string, Tcl_Obj * match)>
+
+????
+
+=item C<void LangExit(int)>
+
+to make a proper shutdown;
+
+=item C<int LangEval(Tcl_Interp *interp, char *cmd, int global)>
+
+to call I<Lang> C<eval>;
+
+=item C<void Lang_SetErrorCode(Tcl_Interp *interp,char *code)>
+
+=item C<char *Lang_GetErrorCode(Tcl_Interp *interp)>
+
+=item C<char *Lang_GetErrorInfo(Tcl_Interp *interp)>
+
+=item C<void LangCloseHandler(Tcl_Interp *interp,Tcl_Obj * arg,FILE *f,Lang_FileCloseProc *proc)>
+
+currently stubs only;
+
+=item C<int LangSaveVar(Tcl_Interp *,Tcl_Obj * arg,Var *varPtr,int type)>
+
+to save the structure C<arg> into I<Lang> variable C<*varPtr>;
+
+=item C<void LangFreeVar(Var var)>
+
+to free the result;
+
+=item C<int LangEventCallback(Tcl_Interp *,LangCallback *,XEvent *,KeySym)>
+
+????
+
+=item C<int LangEventHook(int flags)>
+
+=item C<void LangBadFile(int fd)>
+
+=item C<int LangCmpConfig(char *spec, char *arg, size_t length)>
+
+unsupported????;
+
+=item  C<void Tcl_AppendArg (Tcl_Interp *interp, Tcl_Obj *)>
+
+=back
+
+Another useful construction is
+
+ Tcl_Obj * variable = LangFindVar(interp, Tk_Window tkwin, char *name);
+
+After using the above function, you should call
+
+ LangFreeVar(Var variable);
+
+???? Note discrepancy in types!
+
+If you want to find the value of a variable (of type C<Tcl_Obj *>) given the
+variable name, use C<Tcl_GetVar(interp, varName, flags)>. If you are
+interested in the string value of this variable, use
+C<LangString(Tcl_GetVar(...))>.
+
+To get a B<C> array of C<Tcl_Obj *> of length C<n>, use
+
+    Tcl_Obj * *args = LangAllocVec(n);
+    ...
+    LangFreeVec(n,args);
+
+You can set the values of the C<Tcl_Obj *>s using C<LangSet...> functions,
+and get string value using C<LangString>.
+
+If you want to merge an array of C<Tcl_Obj *>s into one C<Tcl_Obj *> (that will
+be an array variable), use
+
+    result = Tcl_Merge(listLength, list);
+
+=head2 Translation of some TCL functions
+
+We mark items that can be dealt with by C<munge> by I<Autoconverted>.
+
+=over 4
+
+=item C<Tcl_AppendResult>
+
+does not take C<(char*)NULL>, but C<NULL> as delimiter. I<Autoconverted>.
+
+=item C<Tcl_CreateCommand>, C<Tcl_DeleteCommand>
+
+C<Tk_CreateWidget>, C<Tk_DeleteWidget>, the second argument is the
+window itself, not the pathname. I<Autoconverted>.
+
+=item C<sprintf(interp-E<gt>result, "%d %d %d %d",...)>
+
+C<Tcl_IntResults(interp,4,0,...)>. I<Autoconverted>.
+
+=item C<interp-E<gt>result = "1";>
+
+C<Tcl_SetResult(interp,"1", TCL_STATIC)>. I<Autoconverted>.
+
+=item Reading C<interp-E<gt>result>
+
+C<Tcl_GetResult(interp)>. I<Autoconverted>.
+
+=item C<interp-E<gt>result = Tk_PathName(textPtr-E<gt>tkwin);>
+
+C<Tk_WidgetResult(interp,textPtr-E<gt>tkwin)>. I<Autoconverted>.
+
+=item Sequence C<Tcl_PrintDouble, Tcl_PrintDouble, ..., Tcl_AppendResult>
+
+Use a single command
+
+ void Tcl_DoubleResults(Tcl_Interp *interp, int append,
+	int argc,...);
+
+C<append> governs whether it is required to clear the result first.
+
+A similar command for C<int> arguments is C<Tcl_IntResults>.
+
+=item C<Tcl_SplitList>
+
+Use C<Lang_SplitList> (see the description above).
+
+=back
+
+=head1 Translation back to TCL
+
+To use your B<portableTk> program with B<TCL>, put
+
+ #include "ptcl.h"
+
+I<before> inclusion of C<tk.h>, and link the resulting code with
+C<ptclGlue.c>.
+
+These files currently implement the following:
+
+=over 4
+
+=item Additional config types:
+
+ TK_CONFIG_CALLBACK
+ TK_CONFIG_LANGARG
+ TK_CONFIG_SCALARVAR
+ TK_CONFIG_HASHVAR
+ TK_CONFIG_ARRAYVAR
+ TK_CONFIG_IMAGE
+
+=item Types:
+
+ Var, Tcl_Obj *, LangCallback, LangFreeProc.
+
+=item Functions and macros:
+
+ Lang_SplitList, LangString, LangSetString, LangSetDefault,
+ LangSetInt, LangSetDouble Tcl_ArgResult, LangCallbackArg,
+ LangSaveVar, LangFreeVar,
+ LangFreeSplitProc, LangFreeArg, Tcl_DoubleResults, Tcl_IntResults,
+ LangDoCallback, Tk_WidgetResult, Tcl_CreateCommand,
+ Tcl_DeleteCommand, Tcl_GetResult.
+
+=back
+
+Current implementation contains enough to make it possible to compile
+C<mTk/tkText*.[ch]> with the virgin B<Tk>.
+
+=head2 New types of events ????
+
+PortableTk defines following new types of events:
+
+ TK_EVENTTYPE_NONE
+ TK_EVENTTYPE_STRING
+ TK_EVENTTYPE_NUMBER
+ TK_EVENTTYPE_WINDOW
+ TK_EVENTTYPE_ATOM
+ TK_EVENTTYPE_DISPLAY
+ TK_EVENTTYPE_DATA
+
+and a function
+
+ char *	Tk_EventInfo(int letter,
+	    Tk_Window tkwin, XEvent *eventPtr,
+ 	    KeySym keySym, int *numPtr, int *isNum, int *type,
+            int num_size, char *numStorage)
+
+=head1 Checking for trouble
+
+If you start with working TCL code, you can start convertion using
+the above hints. Good indication that you are doing is OK is absence
+of C<sprintf> and C<sscanf> in your code (at least in the part that is
+working with interpreter).
+
+=head1 Additional API
+
+What is described here is not included into base B<portableTk>
+distribution. Currently it is coded in B<TCL> and as Perl macros (core
+is coded as functions, so theoretically you can use the same object
+files with different interpreted languages).
+
+=head2 C<ListFactory>
+
+Dynamic arrays in B<TCL> are used for two different purposes: to
+construct strings, and to construct lists. These two usages will have
+separate interfaces in other languages (since list is a different type
+from a string), so you should use a different interface in your code.
+
+The type for construction of dynamic lists is C<ListFactory>. The API
+below is a counterpart of the API for construction of dynamic lists
+in B<TCL>:
+
+ void ListFactoryInit(ListFactory *)
+ void ListFactoryFinish(ListFactory *)
+ void ListFactoryFree(ListFactory *)
+ Tcl_Obj * * ListFactoryArg(ListFactory *)
+ void ListFactoryAppend(ListFactory *, Tcl_Obj * *arg)
+ void ListFactoryAppendCopy(ListFactory *, Tcl_Obj * *arg)
+ ListFactory * ListFactoryNewLevel(ListFactory *)
+ ListFactory * ListFactoryEndLevel(ListFactory *)
+ void ListFactoryResult(Tcl_Interp *, ListFactory *)
+
+The difference is that a call to C<ListFactoryFinish> should precede the
+actual usage of the value of C<ListFactory>, and there are two
+different ways to append an C<Tcl_Obj *> to a C<ListFactory>:
+ListFactoryAppendCopy() guarantees that the value of C<arg> is copied
+to the list, but ListFactoryAppend() may append to the list a
+reference to the current value of C<arg>. If you are not going to change
+the value of C<arg> after appending, the call to ListFactoryAppend may
+be quicker.
+
+As in B<TCL>, the call to ListFactoryFree() does not free the
+C<ListFactory>, only the objects it references.
+
+The functions ListFactoryNewLevel() and ListFactoryEndLevel() return a
+pointer to a C<ListFactory> to fill. The argument of
+ListFactoryEndLevel() cannot be used after a call to this function.
+
+=head2 DStrings
+
+Production of strings are still supported in B<portableTk>.
+
+=head2 Accessing C<Tcl_Obj *>s
+
+The following functions for getting a value of an C<Tcl_Obj *> I<may> be
+provided:
+
+ double LangDouble(Tcl_Obj *)
+ int LangInt(Tcl_Obj *)
+ long LangLong(Tcl_Obj *)
+ int LangIsList(Tcl_Obj * arg)
+
+The function LangIsList() is supported only partially under B<TCL>,
+since there is no data types. It checks whether there is a space
+inside the string C<arg>.
+
+=head2 Assigning numbers to C<Tcl_Obj *>s
+
+While LangSetDouble() and LangSetInt() are supported ways to assign
+numbers to assign an integer value to a variable, for the sake of
+efficiency under B<TCL> it is supposed that the destination of these
+commands was massaged before the call so it contains a long enough
+string to sprintf() the numbers inside it. If you are going to
+immediately use the resulting C<Tcl_Obj *>, the best way to do this is to
+declare a buffer in the beginning of a block by
+
+   dArgBuffer;
+
+and assign this buffer to the C<Tcl_Obj *> by
+
+   void LangSetDefaultBuffer(Tcl_Obj * *)
+
+You can also create the buffer(s) manually and assign them using
+
+   void LangSetBuffer(Tcl_Obj * *, char *)
+
+This is the only choice if you need to assign numeric values to
+several C<Tcl_Obj *>s simultaneously. The advantage of the first approach is
+that the above declarations can be made C<nop>s in different languages.
+
+Note that if you apply C<LangSetDefaultBuffer> to an C<Tcl_Obj *> that
+contains some value, you can create a leak if you do not free that
+C<Tcl_Obj *> first. This is a non-problem in real languages, but can be a
+trouble in C<TCL>, unless you use only the above API.
+
+=head2 Creating new C<Tcl_Obj *>s
+
+The API for creating a new C<Tcl_Obj *> is
+
+ void LangNewArg(Tcl_Obj * *, LangFreeProc *)
+
+The API for creating a new C<Tcl_Obj *> is absent. Just initialize C<Tcl_Obj *> to
+be C<NULL>, and apply one of C<LangSet...> methods.
+
+After you use this C<Tcl_Obj *>, it should be freed thusly:
+
+C<LangFreeArg(arg, freeProc)>.
+
+=head2 Evaluating a list
+
+Use
+
+ int LangArgEval(Tcl_Interp *, Tcl_Obj * arg)
+
+Here C<arg> should be a list to evaluate, in particular, the first
+element should be a C<LangCallback> massaged to be an C<Tcl_Obj *>. The
+arguments can be send to the subroutine by reference or by value in
+different languages.
+
+=head2 Getting result as C<Tcl_Obj *>
+
+Use C<Tcl_ArgResult>. It is not guaranteed that result survives this
+operation, so the C<Tcl_Obj *> you get should be the only mean to access the
+data from this moment on. After you use this C<Tcl_Obj *>, you should free
+it with C<freeProc> C<LANG_DYNAMIC> (you can do LangSet...() in between).
+
+=cut
+

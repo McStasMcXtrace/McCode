@@ -1,0 +1,176 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_CreateErrorHandler, Tk_DeleteErrorHandler - handle X protocol errors
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Tk_ErrorHandler
+B<Tk_CreateErrorHandler>(I<display, error, request, minor, proc, clientData>)
+
+B<Tk_DeleteErrorHandler>(I<handler>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Display *display (in)
+
+Display whose errors are to be handled.
+
+=item int error (in)
+
+Match only error events with this value in the I<error_code>
+field.  If -1, then match any I<error_code> value.
+
+=item int request (in)
+
+Match only error events with this value in the I<request_code>
+field.  If -1, then match any I<request_code> value.
+
+=item int minor (in)
+
+Match only error events with this value in the I<minor_code>
+field.  If -1, then match any I<minor_code> value.
+
+=item Tk_ErrorProc *proc (in)
+
+Procedure to invoke whenever an error event is received for
+I<display> and matches I<error>, I<request>, and I<minor>.
+NULL means ignore any matching errors.
+
+=item ClientData clientData (in)
+
+Arbitrary one-word value to pass to I<proc>.
+
+=item Tk_ErrorHandler handler (in)
+
+Token for error handler to delete (return value from a previous
+call to B<Tk_CreateErrorHandler>).
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_CreateErrorHandler> arranges for a particular procedure
+(I<proc>) to be called whenever certain protocol errors occur on a
+particular display (I<display>).  Protocol errors occur when
+the X protocol is used incorrectly, such as attempting to map a window
+that doesn't exist.  See the Xlib documentation for B<XSetErrorHandler>
+for more information on the kinds of errors that can occur.
+For I<proc> to be invoked
+to handle a particular error, five things must occur:
+
+=over 4
+
+=item [1]
+
+The error must pertain to I<display>.
+
+=item [2]
+
+Either the I<error> argument to B<Tk_CreateErrorHandler>
+must have been -1, or the I<error> argument must match
+the I<error_code> field from the error event.
+
+=item [3]
+
+Either the I<request> argument to B<Tk_CreateErrorHandler>
+must have been -1, or the I<request> argument must match
+the I<request_code> field from the error event.
+
+=item [4]
+
+Either the I<minor> argument to B<Tk_CreateErrorHandler>
+must have been -1, or the I<minor> argument must match
+the I<minor_code> field from the error event.
+
+=item [5]
+
+The protocol request to which the error pertains must have been
+made when the handler was active (see below for more information).
+
+I<Proc> should have arguments and result that match the
+following type:
+
+ typedef int Tk_ErrorProc(
+ 	ClientData clientData,
+ 	XErrorEvent *errEventPtr);
+
+The I<clientData> parameter to I<proc> is a copy of the I<clientData>
+argument given to B<Tcl_CreateErrorHandler> when the callback
+was created.  Typically, I<clientData> points to a data
+structure containing application-specific information that is
+needed to deal with the error.  I<ErrEventPtr> is
+a pointer to the X error event.
+The procedure I<proc> should return an integer value.  If it
+returns 0 it means that I<proc> handled the error completely and there
+is no need to take any other action for the error.  If it returns
+non-zero it means I<proc> was unable to handle the error.
+
+If a value of NULL is specified for I<proc>, all matching errors
+will be ignored:  this will produce the same result as if a procedure
+had been specified that always returns 0.
+
+If more than more than one handler matches a particular error, then
+they are invoked in turn.  The handlers will be invoked in reverse
+order of creation:  most recently declared handler first.
+If any handler returns 0, then subsequent (older) handlers will
+not be invoked.  If no handler returns 0, then Tk invokes X'es
+default error handler, which prints an error message and aborts the
+program.  If you wish to have a default handler that deals with errors
+that no other handler can deal with, then declare it first.
+
+The X documentation states that ``the error handler should not call
+any functions (directly or indirectly) on the display that will
+generate protocol requests or that will look for input events.''
+This restriction applies to handlers declared by B<Tk_CreateErrorHandler>;
+disobey it at your own risk.
+
+B<Tk_DeleteErrorHandler> may be called to delete a
+previously-created error handler.  The I<handler> argument
+identifies the error handler, and should be a value returned by
+a previous call to B<Tk_CreateEventHandler>.
+
+A particular error handler applies to errors resulting
+from protocol requests generated between
+the call to B<Tk_CreateErrorHandler> and the call to
+B<Tk_DeleteErrorHandler>.  However, the actual callback
+to I<proc> may not occur until after the B<Tk_DeleteErrorHandler>
+call, due to buffering in the client and server.
+If an error event pertains to
+a protocol request made just before calling B<Tk_DeleteErrorHandler>,
+then the error event may not have been processed
+before the B<Tk_DeleteErrorHandler>
+call.  When this situation arises, Tk will save information about
+the handler and
+invoke the handler's I<proc> later when the error event
+finally arrives.
+If an application wishes to delete an error handler and know
+for certain that all relevant errors have been processed,
+it should first call B<Tk_DeleteErrorHandler> and then
+call B<XSync>;  this will flush out any buffered requests and errors,
+but will result in a performance penalty because
+it requires communication to and from the X server.  After the
+B<XSync> call Tk is guaranteed not to call any error
+handlers deleted before the B<XSync> call.
+
+For the Tk error handling mechanism to work properly, it is essential
+that application code never calls B<XSetErrorHandler> directly;
+applications should use only B<Tk_CreateErrorHandler>.
+
+=back
+
+=head1 KEYWORDS
+
+callback, error, event, handler

@@ -1,0 +1,99 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+
+{
+ package Packer;
+use base  qw(Tk::Frame);
+ Construct Tk::Widget 'Packer';
+
+ sub new
+  {my $class  = shift;
+   my $parent = shift;
+   my $obj = $parent->Frame('-class' => Packer);
+   $obj->{Slaves} = [];
+   $obj->{LayoutPending} = 0;
+   bless $obj,$class;
+  }
+
+ sub Layout
+ {
+  my $m = shift;
+  $m->{LayoutPending} = 0;
+  my $w = 0;
+  my $h = 0;
+  my $x = 0;
+  my $y = 0;
+  my $s;
+  # find size of largest slave
+  foreach $s (@{$m->{Slaves}})
+   {
+    my $sw = $s->ReqWidth;
+    my $sh = $s->ReqHeight;
+    $w = $sw if ($sw > $w);
+    $h = $sh if ($sh > $h);
+   }
+  # Set size and position of slaves
+  foreach $s (@{$m->{Slaves}})
+   {
+    $s->MoveResizeWindow($x,$y,$w,$h);
+    $s->MapWindow;
+    $y += $h;
+   }
+  # Now ask for enough space
+  $m->GeometryRequest($w,$y);
+ }
+
+ sub QueueLayout
+ {
+  my $m = shift;
+  $m->afterIdle(['Layout',$m]) unless ($m->{LayoutPending}++);
+ }
+
+ sub SlaveGeometryRequest
+ {
+  shift->QueueLayout;
+ }
+
+ sub LostSlave
+ {
+  my ($m,$s) = @_;
+  @{$m->{Slaves}} = grep($_ != $s,@{$m->{Slaves}});
+  $m->QueueLayout;
+ }
+
+ sub Manage
+ {
+  my ($m,$s) = @_;
+  $m->ManageGeometry($s);
+  push(@{$m->{Slaves}},$s);
+  $m->QueueLayout;
+ }
+
+}
+
+$top = MainWindow->new();
+
+$packer = $top->Packer();
+
+$var = "This can grow";
+
+$one  = $top->Label('-text' => 'Label One');
+
+$packer->Manage($one);
+$packer->Manage($packer->Label('-textvariable' => \$var));
+$packer->Manage($packer->Label('-text' => 'A Very Long Label'));
+
+$packer->pack;
+
+$top->Button('-text' => 'Grow', '-command' => sub { $var .= " more" })->pack;
+$top->Button('-text' => 'Loose', '-command' => [ 'pack' , $one])->pack;
+$top->Button('-text' => 'Add', '-command' => [
+   sub
+   {
+    my $packer = shift;
+     $packer->Manage($packer->Label('-text' => 'Added thing'));
+   }, $packer ])->pack;
+  $top->Button('-text' => 'Quit', '-command' => [ 'destroy' , $top ])->pack;
+
+MainLoop;

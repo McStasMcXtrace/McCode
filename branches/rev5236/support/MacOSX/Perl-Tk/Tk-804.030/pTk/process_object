@@ -1,0 +1,68 @@
+use Data::Dumper;
+
+sub do_nm
+{
+ my $obj = shift;
+ open(NM,"nm -p $obj|") || die "Cannot open nm $obj:$!";
+ $file{$obj} = {};
+ while (<NM>)
+  {
+   if (/\b([A-Z])\b\s*_?(.*)$/)
+    {
+     my ($kind,$name) = ($1,$2);
+     $file{$obj}{$name} = $kind;
+     if ($kind ne 'U')
+      {
+       if (exists($def{$name}) && ($def{$name}[0] ne $kind || $def{$name}[1] ne $obj))
+        {
+         warn "$name " . Dumper($def{$name}) . " and [$kind,$obj]\n";
+        }
+       $def{$name} = [$kind,$obj];
+      }
+     else
+      {
+       $ref{$name} = [] unless (exists $ref{$name});
+       push(@{$ref{$name}},$obj);
+      }
+    }
+  }
+ close(NM);
+}
+
+sub do_need
+{
+ my ($obj,$depth,$why)  = @_;
+ die "No object" unless (defined $obj);
+ my $hash = $file{$obj};
+ die "No hash for $obj" unless (defined $hash);
+ if (exists $need{$obj})
+  {
+   push(@{$need{$obj}},[$name,$why]);
+   $depth{$obj} = $depth if ($depth < $depth{$obj});
+  }
+ else
+  {
+   $depth{$obj} = $depth;
+   $need{$obj} = [];
+   push(@{$need{$obj}},[$name,$why]);
+   foreach $name (sort keys %$hash)
+    {
+     my $kind = $hash->{$name};
+     if ($kind eq 'U')
+      {
+       if (exists $def{$name})
+        {
+         my ($kind,$file) = @{$def{$name}};
+         do_need($file,$depth+1,$obj);
+        }
+       else
+        {
+         $unres{$name} = [] unless  (exists $unres{$name});
+         push(@{$unres{$name}},$obj);
+        }
+      }
+    }
+  }
+}
+
+1;

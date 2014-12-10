@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block title %}Simulations{% endblock %}
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+    .important { color: #336699; }
+  </style>
+{% endblock %}
+{% block content %}
+  <h1>Step 1: Choose your simulation</h1>
+  <p class="important">
+    This page lists all available simulations. Pick one to configure and run
+    it.</p>
+
+  <ul>
+  {% for sim in sims %}
+      <li><a href="{{ url_for('configure', sim=sim) }}">{{ sim|safe }}</a></li>
+  {% endfor %}
+  </ul>
+
+{% endblock %}

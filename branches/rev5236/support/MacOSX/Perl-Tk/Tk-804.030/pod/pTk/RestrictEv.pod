@@ -1,0 +1,91 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_RestrictEvents - filter and selectively delay X events
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Tk_RestrictProc *
+B<Tk_RestrictEvents>(I<proc, clientData, prevClientDataPtr>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_RestrictProc *proc (in)
+
+Predicate procedure to call to filter incoming X events.
+NULL means do not restrict events at all.
+
+=item ClientData clientData (in)
+
+Arbitrary argument to pass to I<proc>.
+
+=item ClientData *prevClientDataPtr (out)
+
+Pointer to place to save argument to previous restrict procedure.
+
+=back
+
+=head1 DESCRIPTION
+
+This procedure is useful in certain situations where applications
+are only prepared to receive certain X events.  After
+B<Tk_RestrictEvents> is called, B<Tk_DoOneEvent> (and
+hence B<Tk_MainLoop>) will filter X input events through
+I<proc>.  I<Proc> indicates whether a
+given event is to be processed immediately, deferred until some
+later time (e.g. when the event restriction is lifted), or discarded.
+I<Proc>
+is a procedure with arguments and result that match
+the type B<Tk_RestrictProc>:
+
+ typedef Tk_RestrictAction Tk_RestrictProc(
+ 	ClientData clientData,
+ 	XEvent *eventPtr);
+
+The I<clientData> argument is a copy of the I<clientData> passed
+to B<Tk_RestrictEvents>; it may be used to provide I<proc> with
+information it needs to filter events.  The I<eventPtr> points to
+an event under consideration.  I<Proc> returns a restrict action
+(enumerated type B<Tk_RestrictAction>) that indicates what
+B<Tk_DoOneEvent> should do with the event.  If the return value is
+B<TK_PROCESS_EVENT>, then the event will be handled immediately.
+If the return value is B<TK_DEFER_EVENT>, then the event will be
+left on the event queue for later processing.  If the return value is
+B<TK_DISCARD_EVENT>, then the event will be removed from the event
+queue and discarded without being processed.
+
+B<Tk_RestrictEvents> uses its return value and I<prevClientDataPtr>
+to return information about the current event restriction procedure
+(a NULL return value means there are currently no restrictions).
+These values may be used to restore the previous restriction state
+when there is no longer any need for the current restriction.
+
+There are very few places where B<Tk_RestrictEvents> is needed.
+In most cases, the best way to restrict events is by changing the
+bindings with the B<bind> Tcl command or by calling
+B<Tk_CreateEventHandler> and B<Tk_DeleteEventHandler> from C.
+The main place where B<Tk_RestrictEvents> must be used is when
+performing synchronous actions (for example, if you need to wait
+for a particular event to occur on a particular window but you don't
+want to invoke any handlers for any other events).  The ``obvious''
+solution in these situations is to call B<XNextEvent> or
+B<XWindowEvent>, but these procedures cannot be used because
+Tk keeps its own event queue that is separate from the X event
+queue.  Instead, call B<Tk_RestrictEvents> to set up a filter,
+then call B<Tk_DoOneEvent> to retrieve the desired event(s).
+
+=head1 KEYWORDS
+
+delay, event, filter, restriction

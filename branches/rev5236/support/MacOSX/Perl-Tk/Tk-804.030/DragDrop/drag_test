@@ -1,0 +1,53 @@
+#!/usr/local/bin/perl -w
+use Tk;
+use strict;
+use Tk::DragDrop qw(Sun);
+#use Tk::DropSite qw(Sun);
+
+my $top = MainWindow->new();
+
+my $thing = $top->Message('-text' => "Drag This with B1")->pack;
+$thing->DragDrop(-event => '<B1-Motion>', -sitetypes => [qw(Sun)], -handlers => [[\&handler]]);
+
+$top->Button('-text' => "Sites", '-command' => [\&ShowSites,$top])->pack('-side'=>'left');
+$top->Button('-text' => "Quit", '-command' => ['destroy',$top])->pack('-side'=>'right');
+
+MainLoop;
+
+sub handler
+{
+ my ($offset,$max) = @_;
+ return "These are dropped Data";
+}
+
+sub ShowIt
+{
+ my $w = shift;
+ my ($id,$x,$y,$width,$height) = @_;
+ my $t = $w->Toplevel;
+ $t->Button('-text'=>$id,'-command'=>['destroy',$t])->pack('-anchor'=>'c','-fill'=>'both');
+ $t->overrideredirect(1);
+ $t->update('idletasks');
+ $t->MoveResizeWindow($x,$y,$width,$height);
+}
+
+sub ShowSites
+{
+ my $w = shift;
+ print "Getting via $w ",$w->PathName,"\n";
+ my @dnd = $w->SelectionGet('-selection'=>"_SUN_DRAGDROP_DSDM",
+                            "_SUN_DRAGDROP_SITE_RECTS");
+ while (@dnd)
+  {
+   my $version = shift(@dnd);
+   my $site    = shift(@dnd);
+   my $win     = shift(@dnd);
+   my $x       = shift(@dnd);
+   my $y       = shift(@dnd);
+   my $width   = shift(@dnd);
+   my $height  = shift(@dnd);
+   my $flags   = shift(@dnd);
+   ShowIt($w,sprintf("%x:%d",$win,$site),$x,$y,$width,$height);
+  }
+
+}

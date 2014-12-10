@@ -1,0 +1,262 @@
+# $Id: configspec.pod 1.2 Wed, 12 Nov 1997 00:30:45 +0100 ach $
+
+=head1 NAME
+
+Tk::ConfigSpecs - Defining behaviour of 'configure' for composite widgets.
+
+=for category Derived Widgets
+
+=head1 SYNOPSIS
+
+    sub Populate
+    {
+     my ($composite,$args) = @_;
+     ...
+     $composite->ConfigSpecs('-attribute' => [ where,dbName,dbClass,default ]);
+     $composite->ConfigSpecs('-alias' => '-otherattribute');
+     $composite->ConfigSpecs('DEFAULT' => [ where ]);
+     $composite->ConfigSpecs($subwidget->ConfigSpecs);
+     ...
+    }
+
+    $composite->configure(-attribute => value);
+
+=head1 DESCRIPTION
+
+The aim is to make the composite widget configure method look as much like
+a regular Tk widget's configure as possible.
+(See L<Tk::options> for a description of this behaviour.)
+To enable this the attributes that the composite as a whole accepts
+needs to be defined.
+
+=head2 Defining the ConfigSpecs for a class.
+
+Typically a widget will have one or more calls like the following
+
+    $composite->ConfigSpecs(-attribute => [where,dbName,dbClass,default]);
+
+in its B<Populate> method. When B<ConfigSpecs> is called this way
+(with arguments) the arguments are used to construct or augment/replace
+a hash table for the widget. (More than one I<-option>=E<gt>I<value>
+pair can be specified to a single call.)
+
+B<dbName>, B<dbClass> and default are only used by B<ConfigDefault> described
+below, or to respond to 'inquiry' configure commands.
+
+It may be either one of the values below, or a list of such values
+enclosed in B<[]>.
+
+The currently permitted values of B<where> are:
+
+=over 4
+
+=item B<'ADVERTISED'>
+
+Apply B<configure> to I<advertised> subwidgets.
+
+=item B<'DESCENDANTS'>
+
+Apply B<configure> recursively to all descendants.
+
+=item B<'CALLBACK'>
+
+Setting the attribute does C<Tk::Callback-E<gt>new($value)> before storing
+in C<$composite-E<gt>{Configure}{-attribute}>. This is appropriate for
+C<-command =E<gt> ...> attributes that are handled by the composite and not
+forwarded to a subwidget. (E.g. B<Tk::Tiler> has C<-yscrollcommand> to
+allow it to have scrollbar attached.)
+
+This may be the first of several 'validating' keywords (e.g. font, cursor,
+anchor etc.) that core Tk makes special for C code.
+
+=item B<'CHILDREN'>
+
+Apply B<configure> to all children.  (Children are the immediate
+descendants of a widget.)
+
+=item B<'METHOD'>
+
+Call C<$cw-E<gt>attribute(value)>
+
+This is the most general case. Simply have a method of the composite
+class with the same name as the attribute.  The method may do any
+validation and have whatever side-effects you like.  (It is probably
+worth 'queueing' using B<afterIdle> for more complex side-effects.)
+
+=item B<'PASSIVE'>
+
+Simply store value in C<$composite-E<gt>{Configure}{-attribute}>.
+
+This form is also a useful placeholder for attributes which you
+currently only handle at create time.
+
+=item B<'SELF'>
+
+Apply B<configure> to the core widget (e.g. B<Frame>) that is the basis of
+the composite. (This is the default behaviour for most attributes which
+makes a simple Frame behave the way you would expect.) Note that once
+you have specified B<ConfigSpecs> for an attribute you must explicitly
+include C<'SELF'> in the list if you want the attribute to apply to the
+composite itself (this avoids nasty infinite recursion problems).
+
+=item B<$reference> (blessed)
+
+Call B<$reference>->configure(-attribute => value)
+
+A common case is where B<$reference> is a subwidget.
+
+$reference may also be result of
+
+     Tk::Config->new(setmethod,getmethod,args,...);
+
+B<Tk::Config> class is used to implement all the above keyword types.  The
+class has C<configure> and C<cget> methods so allows higher level code to
+I<always> just call one of those methods on an I<object> of some kind.
+
+=item B<hash reference>
+
+Defining:
+
+	$cw->ConfigSpecs(
+		...
+		-option => [ { -optionX=>$w1, -optionY=>[$w2, $w3] },
+				dbname dbclass default ],
+		...
+		);
+
+So C<$cw-E<gt>configure(-option =E<gt> value)> actually does
+
+	$w1->configure(-optionX => value);
+	$w2->configure(-optionY => value);
+	$w3->configure(-optionY => value);
+
+=item B<'otherstring'>
+
+Call
+
+    $composite->Subwidget('otherstring')->configure( -attribute => value );
+
+While this is here for backward compatibility with Tk-b5, it is probably
+better just to use the subwidget reference directly.  The only
+case for retaining this form is to allow an additional layer of
+abstraction - perhaps having a 'current' subwidget - this is unproven.
+
+=item B<Aliases>
+
+C<ConfigSpecs( -alias =E<gt> '-otherattribute' )> is used to make C<-alias>
+equivalent to C<-otherattribute>. For example the aliases
+
+    -fg => '-foreground',
+    -bg => '-background'
+
+are provided automatically (if not already specified).
+
+=back
+
+=head2 Delegating all options of a widget class to a subwidget
+
+    $composite->ConfigSpecs($subwidget->ConfigSpecs);
+
+The above generates a list of I<composite> ConfigSpecs arguments, one
+for each valid option in $subwidget's class, and delegates said option
+to $subwidget.  See L<Tk::Widget> and the I<widget> method
+ConfigSpecs.  Duplicating I<composite> ConfigSpecs and I<widget>
+ConfigSpecs keys will yield undefined results.
+
+
+=head2 Default values
+
+When the B<Populate> method returns B<ConfigDefault> is called.  This calls
+
+    $composite->ConfigSpecs;
+
+(with no arguments) to return a reference to a hash. Entries in the hash
+take the form:
+
+    '-attribute' => [ where, dbName, dbClass, default ]
+
+B<ConfigDefault> ignores 'where' completely (and also the DEFAULT entry) and
+checks the 'options' database on the widget's behalf, and if an entry is
+present matching dbName/dbClass
+
+    -attribute => value
+
+is added to the list of options that B<new> will eventually apply to the
+widget. Likewise if there is not a match and default is defined this
+default value will be added.
+
+Alias entries in the hash are used to convert user-specified values for the
+alias into values for the real attribute.
+
+=head2 B<New()-time configure>
+
+Once control returns to B<new>, the list of user-supplied options
+augmented by those from B<ConfigDefault> are applied to the widget using the
+B<configure> method below.
+
+Widgets are most flexible and most Tk-like if they handle the majority of
+their attributes this way.
+
+=head2 Configuring composites
+
+Once the above have occurred calls of the form:
+
+    $composite->configure( -attribute => value );
+
+should behave like any other widget as far as end-user code is concerned.
+B<configure> will be handled by B<Tk::Derived::configure> as follows:
+
+    $composite->ConfigSpecs;
+
+is called (with no arguments) to return a reference to a hash B<-attribute> is
+looked up in this hash, if B<-attribute> is not present in the hash then
+B<'DEFAULT'> is looked for instead.  (Aliases are tried as well and cause
+redirection to the aliased attribute).  The result should be a reference to a
+list like:
+
+  [ where, dbName, dbClass, default ]
+
+at this stage only I<where> is of interest, it maps to a list of object
+references (maybe only one) foreach one
+
+   $object->configure( -attribute => value );
+
+is B<eval>ed.
+
+=head2 Inquiring attributes of composites
+
+   $composite->cget( '-attribute' );
+
+This is handled by  B<Tk::Derived::cget> in a similar manner to configure. At
+present if I<where> is a list of more than one object it is ignored completely
+and the "cached" value in
+
+   $composite->{Configure}{-attribute}.
+
+is returned.
+
+=head1 CAVEATS
+
+The C<-background> and C<-foreground> option values are automatically
+propagated down to all composite widget's children. This may be
+sometimes not desirable, especially if some subwidgets should use own
+color schemes, either by using explicit options or by option database
+definitions. If this is the case, then just add
+
+    -foreground => 'SELF',
+    -background => 'SELF',
+
+to C<ConfigSpecs>.
+
+It is the author's intention to port as many of the "Tix" composite widgets
+as make sense. The mechanism described above may have to evolve in order to
+make this possible, although now aliases are handled I think the above is
+sufficient.
+
+=head1 SEE ALSO
+
+L<Tk::composite|Tk::composite>,
+L<Tk::options|Tk::options>,
+L<Tk::Widget>
+
+=cut

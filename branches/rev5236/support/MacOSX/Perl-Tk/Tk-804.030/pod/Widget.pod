@@ -1,0 +1,678 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1997 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::Widget - Base class of all widgets
+
+=for pm Tk/Widget.pm
+
+=for category Tk Generic Methods
+
+=head1 SYNOPSIS
+
+   package Tk::Whatever;
+   require Tk::Widget;
+   @ISA = qw(Tk::Widget);
+   Construct Tk::Widget 'Whatever';
+
+   sub Tk_cmd { \&Tk::whatever }
+
+S<   >I<$widget>-E<gt>I<method>(?I<arg, arg, ...>?)
+
+=head1 DESCRIPTION
+
+The B<Tk::Widget> is an abstract base class for all Tk widgets.
+
+Generic methods available to all widgets include the methods based on core
+C<winfo> mechanism and are used to retrieve information about windows managed by
+Tk. They can take any of a number of different forms, depending on the I<method>.
+The legal forms are:
+
+=over 4
+
+=item I<$widget>-E<gt>B<appname>?(I<newName>)?
+
+If I<newName> isn't specified, this method returns the name
+of the application (the name that may be used in B<send>
+commands to communicate with the application).
+If I<newName> is specified, then the name of the application
+is changed to I<newName>.
+If the given name is already in use, then a suffix of the form
+``B< #2>'' or ``B< #3>'' is appended in order to make the name unique.
+The method's result is the name actually chosen.
+I<newName> should not start with a capital letter.
+This will interfere with L<option|Tk::option> processing, since names starting with
+capitals are assumed to be classes;  as a result, Tk may not
+be able to find some options for the application.
+If sends have been disabled by deleting the B<send> command,
+this command will reenable them and recreate the B<send>
+command.
+
+=item I<$widget>-E<gt>B<atom>(I<name>)
+
+Returns a decimal string giving the integer identifier for the
+atom whose name is I<name>.  If no atom exists with the name
+I<name> then a new one is created.
+
+=item I<$widget>-E<gt>B<atomname>(I<id>)
+
+Returns the textual name for the atom whose integer identifier is
+I<id>.
+This command is the inverse of the I<$widget>-E<gt>B<atom> command.
+It generates an error if no such atom exists.
+
+=item I<$widget>-E<gt>B<bell>( ?-nice? );
+
+This command rings the bell on the display for I<$widget> and
+returns an empty string.
+The command uses the current bell-related settings for the display, which
+may be modified with programs such as B<xset>.
+
+If I<-nice>  is  not specified, this command also resets the screen saver
+for the screen.  Some screen savers will ignore this, but  others  will
+reset so that the screen becomes visible again.
+
+=item I<$widget>-E<gt>B<bindDump>
+
+This command returns a list of strings suitable for printing detailing
+binding information for a widget.  It prints a widget's
+bindtags.  For each binding tag it prints all the bindings, comprised
+of the event descriptor and the callback.  Callback arguments are
+printed, and B<Tk::Ev> objects are expanded.
+
+=item I<$widget>-E<gt>B<Busy>?(?-recurse => 1?,I<-option> => I<value>?)?
+
+This method B<configure>s a B<-cursor> option for I<$widget> and
+(if B<-recurse => 1> is specified) all its descendants. The cursor to
+be set may be passed as S<B<-cursor> => I<cursor>> or defaults to 'watch'.
+Additional B<configure> options are applied to I<$widget> only.
+It also adds a special tag B<'Busy'> to the B<bindtags> of the widgets so
+configured so that  B<KeyPress>, B<KeyRelease>, B<ButtonPress> and
+B<ButtonRelease> events are ignored (with press events generating a call to
+B<bell>). It then acquires a local B<grab> for I<$widget>.
+The state of the widgets and the grab is restored by a call to
+I<$widget>-E<gt>B<Unbusy>.
+
+=item I<$widget>-E<gt>B<caret>( ?-x => I<x>?, ?-y => I<y>?, ?-height
+=> I<height>? );
+
+Sets and queries the caret location for the display of the specified
+Tk window window.  The caret is the per-display cursor location used
+for indicating global focus (e.g. to comply with Microsoft
+Accessibility guidelines), as well as for location of the
+over-the-spot XIM (X Input Methods) or Windows IME windows. If no
+options are specified, the last values used for setting the caret are
+return in option-value pair format.  -x and -y represent
+window-relative coordinates, and -height is the height of the current
+cursor location, or the height of the specified window if none is
+given.
+
+=item I<$widget>-E<gt>B<cells>
+
+Returns a decimal string giving the number of cells in the
+color map for I<$widget>.
+
+=item I<$widget>-E<gt>B<children>
+
+I<$widget->>B<children>
+Returns a list containing all the children
+of $widget.  The list is in stacking order, with the lowest
+window first.  Top-level windows are returned as children
+of their logical parents.
+
+=item I<$widget>-E<gt>B<class>
+
+Returns the class name for I<$widget>.
+
+=item I<$widget>-E<gt>B<colormapfull>
+
+Returns 1 if the colormap for I<$widget> is known to be full, 0
+otherwise.  The colormap for a window is ``known'' to be full if the last
+attempt to allocate a new color on that window failed and this
+application hasn't freed any colors in the colormap since the
+failed allocation.
+
+=item I<$widget>-E<gt>B<ConfigSpecs>
+
+Used to perform delegated option configuration for a mega-widget.
+Returns, in Tk::Derived::ConfigSpecs notation (see L<Tk::ConfigSpecs>),
+all possible options for a widget. For example,
+
+ $s = $self->Scale;
+ $self->ConfigSpecs(
+     $s->ConfigSpecs,
+     .... more ConfigSpecs specifications
+ );
+
+returns a hash of all Tk::Scale options, delegated to $s - e.g. some
+representative examples:
+
+ -bigincrement => [$s, bigIncrement, BigIncrement, 0, 0]
+ -digits       => [$s, digits, Digits, 0, 0]
+ -sliderlength => [$s, sliderLength, SliderLength, 10m, 30]
+ -troughcolor  => [$s, troughColor, Background, #c3c3c3, #c3c3c3]
+
+This provides an easy means of populating a mega-widget's ConfigSpecs
+with initializers.
+
+=item I<$widget>-E<gt>B<containing>(I<rootX,rootY>)
+
+Returns the window containing the point given
+by I<rootX> and I<rootY>.
+I<RootX> and I<rootY> are specified in screen units (i.e.
+any form acceptable to B<Tk_GetPixels>) in the coordinate
+system of the root window (if a virtual-root window manager is in
+use then the coordinate system of the virtual root window is used).
+If no window in this application contains the point then an empty
+string is returned.
+In selecting the containing window, children are given higher priority
+than parents and among siblings the highest one in the stacking order is
+chosen.
+
+=item I<$widget>-E<gt>B<depth>
+
+Returns a decimal string giving the depth of I<$widget> (number
+of bits per pixel).
+
+=item I<$widget>-E<gt>B<destroy>
+
+This command deletes the window related to
+I<$widget>, plus all its descendants.
+If all the B<MainWindows> are deleted then the entire application
+will be destroyed.
+
+The perl object I<$widget> continues to exist while references
+to it still exist, e.g. until variable goes out of scope.
+However any attempt to use Tk methods on the object will fail.
+B<Exists>(I<$widget>) will return false on such objects.
+
+Note however that while a window exists for I<$widget> the
+perl object is maintained (due to "references" in perl/Tk internals)
+even though original variables may have gone out of scope.
+(Normally this is intuitive.)
+
+=item B<Exists>(I<$widget>)
+
+Returns 1 if there exists a window for I<$widget>, 0 if no such
+window exists.
+
+=item I<$widget>-E<gt>B<font>(I<option>?, I<arg, arg, ...>?)
+
+Create and inspect fonts. See L<Tk::Font> for further details.
+
+=item I<$widget>-E<gt>B<fpixels>(I<number>)
+
+Returns a floating-point value giving the number of pixels
+in I<$widget> corresponding to the distance given by I<number>.
+I<Number> may be specified in any of the forms acceptable
+to B<Tk_GetScreenMM>, such as ``2.0c'' or ``1i''.
+The return value may be fractional;  for an integer value, use
+I<$widget>-E<gt>B<pixels>.
+
+=item I<$widget>-E<gt>B<Getimage>(I<name>)
+
+Given I<name>, look for an image file with that base name and return
+a L<Tk::Image>.  File extensions are tried in this order: F<xpm>,
+F<gif>, F<ppm>, F<xbm> until a valid iamge is found.  If no image is
+found, try a builtin image with that name.
+
+=item I<$widget>-E<gt>B<geometry>
+
+Returns the geometry for I<$widget>, in the form
+I<width>B<x>I<height>B<+>I<x>B<+>I<y>.  All dimensions are
+in pixels.
+
+=item I<$widget>-E<gt>B<height>
+
+Returns a decimal string giving I<$widget>'s height in pixels.
+When a window is first created its height will be 1 pixel;  the
+height will eventually be changed by a geometry manager to fulfill
+the window's needs.
+If you need the true height immediately after creating a widget,
+invoke B<update> to force the geometry manager to arrange it,
+or use I<$widget>-E<gt>B<reqheight> to get the window's requested height
+instead of its actual height.
+
+=item I<$widget>-E<gt>B<id>
+
+Returns a hexadecimal string giving a low-level platform-specific
+identifier for $widget.  On Unix platforms, this is the X
+window identifier.  Under Windows, this is the Windows
+HWND.  On the Macintosh the value has no meaning outside Tk.
+
+=item I<$widget>-E<gt>B<idletasks>
+
+One of two methods which are used to bring the application ``up to date''
+by entering the event loop repeated until all pending events
+(including idle callbacks) have been processed.
+
+If the B<idletasks> method is specified, then no new events or errors
+are processed; only idle callbacks are invoked. This causes operations
+that are normally deferred, such as display updates and window layout
+calculations, to be performed immediately.
+
+The B<idletasks> command is useful in scripts where changes have been
+made to the application's state and you want those changes to appear
+on the display immediately, rather than waiting for the script to
+complete. Most display updates are performed as idle callbacks, so
+B<idletasks> will cause them to run. However, there are some kinds of
+updates that only happen in response to events, such as those
+triggered by window size changes; these updates will not occur in
+B<idletasks>.
+
+=item I<$widget>-E<gt>B<interps>
+
+Returns a list whose members are the names of all Tcl interpreters
+(e.g. all Tk-based applications) currently registered for
+a particular display.
+The return value refers
+to the display of I<$widget>.
+
+=item I<$widget>-E<gt>B<ismapped>
+
+Returns B<1> if I<$widget> is currently mapped, B<0> otherwise.
+
+=item I<$widget->>B<lower>(?I<belowThis>?)
+
+If the I<belowThis> argument is omitted then the command lowers
+$widget so that it is below all of its siblings in the stacking
+order (it will be obscured by any siblings that overlap it and
+will not obscure any siblings).
+If I<belowThis> is specified then it must be the path name of
+a window that is either a sibling of $widget or the descendant
+of a sibling of $widget.
+In this case the B<lower> command will insert
+$widget into the stacking order just below I<belowThis>
+(or the ancestor of I<belowThis> that is a sibling of $widget);
+this could end up either raising or lowering $widget.
+
+=item I<$widget>-E<gt>B<MapWindow>
+
+Cause I<$widget> to be "mapped" i.e. made visible on the display.
+May confuse the geometry manager (pack, grid, place, ...)
+that thinks it is managing the widget.
+
+=item I<$widget>-E<gt>B<manager>
+
+Returns the name of the geometry manager currently
+responsible for I<$widget>, or an empty string if I<$widget>
+isn't managed by any geometry manager.
+The name is usually the name of the method for the geometry
+manager, such as B<pack> or B<place>.
+If the geometry manager is a widget, such as canvases or text, the
+name is the widget's class command, such as B<canvas>.
+
+=item I<$widget>-E<gt>B<name>
+
+Returns I<$widget>'s name (i.e. its name within its parent, as opposed
+to its full path name).
+The command I<$mainwin>-E<gt>B<name> will return the name of the application.
+
+=item I<$widget>-E<gt>B<OnDestroy>(I<callback>);
+
+OnDestroy accepts a standard perl/Tk I<callback>.
+When the window associated with I<$widget> is destroyed then
+the callback is invoked. Unlike I<$widget->>bind('E<lt>DestroyE<gt>',...)
+the widgets methods are still available when I<callback> is executed,
+so (for example) a B<Text> widget can save its contents to a file.
+
+OnDestroy was required for new B<after> mechanism.
+
+=item I<$widget>-E<gt>B<parent>
+
+Returns I<$widget>'s parent, or an empty string
+if I<$widget> is the main window of the application.
+
+=item I<$widget>-E<gt>B<PathName>
+
+Returns the Tk path name of I<$widget>. This is the inverse of the
+L</Widget> method. (This is an import from the C interface.)
+
+=item I<$widget>-E<gt>B<pathname>(I<id>)
+
+Returns an object whose X identifier is I<id>.
+The identifier is looked up on the display of I<$widget>.
+I<Id> must be a decimal, hexadecimal, or octal integer and must
+correspond to a window in the invoking application, or an error
+occurs which can be trapped with C<eval { }> or C<Tk::catch { }>.
+If the window belongs to the application, but is not an object
+(for example wrapper windows, HList header, etc.) then C<undef>
+is returned.
+
+=item I<$widget>-E<gt>B<pixels>(I<number>)
+
+Returns the number of pixels in I<$widget> corresponding
+to the distance given by I<number>.
+I<Number> may be specified in any of the forms acceptable
+to B<Tk_GetPixels>, such as ``2.0c'' or ``1i''.
+The result is rounded to the nearest integer value;  for a
+fractional result, use I<$widget>-E<gt>B<fpixels>.
+
+=item I<$widget>-E<gt>B<pointerx>
+
+If the mouse pointer is on the same screen as I<$widget>, returns the
+pointer's x coordinate, measured in pixels in the screen's root window.
+If a virtual root window is in use on the screen, the position is
+measured in the virtual root.
+If the mouse pointer isn't on the same screen as I<$widget> then
+-1 is returned.
+
+=item I<$widget>-E<gt>B<pointerxy>
+
+If the mouse pointer is on the same screen as I<$widget>, returns a list
+with two elements, which are the pointer's x and y coordinates measured
+in pixels in the screen's root window.
+If a virtual root window is in use on the screen, the position
+is computed in the virtual root.
+If the mouse pointer isn't on the same screen as I<$widget> then
+both of the returned coordinates are -1.
+
+=item I<$widget>-E<gt>B<pointery>
+
+If the mouse pointer is on the same screen as I<$widget>, returns the
+pointer's y coordinate, measured in pixels in the screen's root window.
+If a virtual root window is in use on the screen, the position
+is computed in the virtual root.
+If the mouse pointer isn't on the same screen as I<$widget> then
+-1 is returned.
+
+=item I<$widget>-E<gt>B<raise>(?I<aboveThis>?)
+
+If the I<aboveThis> argument is omitted then the command raises
+$widget so that it is above all of its siblings in the stacking
+order (it will not be obscured by any siblings and will obscure
+any siblings that overlap it).
+If I<aboveThis> is specified then it must be the path name of
+a window that is either a sibling of $widget or the descendant
+of a sibling of $widget.
+In this case the B<raise> command will insert
+$widget into the stacking order just above I<aboveThis>
+(or the ancestor of I<aboveThis> that is a sibling of $widget);
+this could end up either raising or lowering $widget.
+
+=item I<$widget>-E<gt>B<reqheight>
+
+Returns a decimal string giving I<$widget>'s requested height,
+in pixels.  This is the value used by I<$widget>'s geometry
+manager to compute its geometry.
+
+=item I<$widget>-E<gt>B<reqwidth>
+
+Returns a decimal string giving I<$widget>'s requested width,
+in pixels.  This is the value used by I<$widget>'s geometry
+manager to compute its geometry.
+
+=item I<$widget>-E<gt>B<rgb>(I<color>)
+
+Returns a list containing three decimal values, which are the
+red, green, and blue intensities that correspond to I<color> in
+the window given by I<$widget>.  I<Color>
+may be specified in any of the forms acceptable for a color
+option.
+
+=item I<$widget>-E<gt>B<rootx>
+
+Returns a decimal string giving the x-coordinate, in the root
+window of the screen, of the
+upper-left corner of I<$widget>'s border (or I<$widget> if it
+has no border).
+
+=item I<$widget>-E<gt>B<rooty>
+
+Returns a decimal string giving the y-coordinate, in the root
+window of the screen, of the
+upper-left corner of I<$widget>'s border (or I<$widget> if it
+has no border).
+
+=item I<$widget>-E<gt>B<scaling>?(I<number>)?
+
+Sets and queries the current scaling factor used by Tk to convert between
+physical units (for example, points, inches, or millimeters) and pixels.  The
+I<number> argument is a floating point number that specifies the number of
+pixels per point on $widget's display. If the I<number> argument is
+omitted, the current value of the scaling factor is returned.
+
+A ``point'' is a unit of measurement equal to 1/72 inch.  A scaling factor
+of 1.0 corresponds to 1 pixel per point, which is equivalent to a standard
+72 dpi monitor.  A scaling factor of 1.25 would mean 1.25 pixels per point,
+which is the setting for a 90 dpi monitor; setting the scaling factor to
+1.25 on a 72 dpi monitor would cause everything in the application to be
+displayed 1.25 times as large as normal.  The initial value for the scaling
+factor is set when the application starts, based on properties of the
+installed monitor (as reported via the window system),
+but it can be changed at any time.  Measurements made
+after the scaling factor is changed will use the new scaling factor, but it
+is undefined whether existing widgets will resize themselves dynamically to
+accomodate the new scaling factor.
+
+=item I<$widget>-E<gt>B<screen>
+
+Returns the name of the screen associated with I<$widget>, in
+the form I<displayName>.I<screenIndex>.
+
+=item I<$widget>-E<gt>B<screencells>
+
+Returns a decimal string giving the number of cells in the default
+color map for I<$widget>'s screen.
+
+=item I<$widget>-E<gt>B<screendepth>
+
+Returns a decimal string giving the depth of the root window
+of I<$widget>'s screen (number of bits per pixel).
+
+=item I<$widget>-E<gt>B<screenheight>
+
+Returns a decimal string giving the height of I<$widget>'s screen,
+in pixels.
+
+=item I<$widget>-E<gt>B<screenmmheight>
+
+Returns a decimal string giving the height of I<$widget>'s screen,
+in millimeters.
+
+=item I<$widget>-E<gt>B<screenmmwidth>
+
+Returns a decimal string giving the width of I<$widget>'s screen,
+in millimeters.
+
+=item I<$widget>-E<gt>B<screenvisual>
+
+Returns one of the following strings to indicate the default visual
+class for I<$widget>'s screen: B<directcolor>, B<grayscale>,
+B<pseudocolor>, B<staticcolor>, B<staticgray>, or
+B<truecolor>.
+
+=item I<$widget>-E<gt>B<screenwidth>
+
+Returns a decimal string giving the width of I<$widget>'s screen,
+in pixels.
+
+=item I<$widget>-E<gt>B<server>
+
+Returns a string containing information about the server for
+I<$widget>'s display.  The exact format of this string may vary
+from platform to platform.  For X servers the string
+has the form ``B<X>I<major>B<R>I<minor vendor vendorVersion>''
+where I<major> and I<minor> are the version and revision
+numbers provided by the server (e.g., B<X11R5>), I<vendor>
+is the name of the vendor for the server, and I<vendorRelease>
+is an integer release number provided by the server.
+
+=item I<$widget>-E<gt>B<toplevel>
+
+Returns the reference of the top-level window containing I<$widget>.
+
+=item I<$widget>-E<gt>B<Unbusy>
+
+Restores widget state after a call to  I<$widget>-E<gt>B<Busy>.
+
+=item I<$widget>-E<gt>B<UnmapWindow>
+
+Cause I<$widget> to be "unmapped" i.e. removed from the display.
+This does for any widget what I<$widget>-E<gt>withdraw does for
+toplevel widgets. May confuse the geometry manager (pack, grid, place, ...)
+that thinks it is managing the widget.
+
+=item I<$widget>-E<gt>B<update>
+
+One of two methods which are used to bring the application ``up to date''
+by entering the event loop repeated until all pending events
+(including idle callbacks) have been processed.
+
+The B<update> method is useful in scripts where you are performing a
+long-running computation but you still want the application to respond
+to events such as user interactions; if you occasionally call
+B<update> then user input will be processed during the next call to
+B<update>.
+
+=item  I<$widget>-E<gt>B<useinputmethods>( ?I<boolean>? )
+
+Sets and queries the state of whether Tk should use XIM (X Input
+Methods) for filtering events.  The resulting state is returned.
+XIM  is  used  in some locales (ie: Japanese, Korean), to handle
+special input devices.  This feature is only significant  on  X.
+If  XIM support is not available, this will always return 0.
+If  the  boolean  argument  is  omitted,  the  current  state is
+returned.  This is turned on by default for the main display.
+
+=item I<$widget>-E<gt>B<viewable>
+
+Returns 1 if I<$widget> and all of its ancestors up through the
+nearest toplevel window are mapped.  Returns 0 if any of these
+windows are not mapped.
+
+=item I<$widget>-E<gt>B<visual>
+
+Returns one of the following strings to indicate the visual
+class for I<$widget>: B<directcolor>, B<grayscale>,
+B<pseudocolor>, B<staticcolor>, B<staticgray>, or
+B<truecolor>.
+
+=item I<$widget>-E<gt>B<visualid>
+
+Returns the X identifier for the visual for $widget.
+
+=item I<$widget>-E<gt>B<visualsavailable>(?B<includeids>?)
+
+Returns a list whose elements describe the visuals available for
+I<$widget>'s screen.
+Each element consists of a visual class followed by an integer depth.
+The class has the same form as returned by I<$widget>-E<gt>B<visual>.
+The depth gives the number of bits per pixel in the visual.
+In addition, if the B<includeids> argument is provided, then the
+depth is followed by the X identifier for the visual.
+
+=item I<$widget>-E<gt>B<vrootheight>
+
+Returns the height of the virtual root window associated with I<$widget>
+if there is one;  otherwise returns the height of I<$widget>'s screen.
+
+=item I<$widget>-E<gt>B<vrootwidth>
+
+Returns the width of the virtual root window associated with I<$widget>
+if there is one;  otherwise returns the width of I<$widget>'s screen.
+
+=item I<$widget>-E<gt>B<vrootx>
+
+Returns the x-offset of the virtual root window associated with I<$widget>,
+relative to the root window of its screen.
+This is normally either zero or negative.
+Returns 0 if there is no virtual root window for I<$widget>.
+
+=item I<$widget>-E<gt>B<vrooty>
+
+Returns the y-offset of the virtual root window associated with I<$widget>,
+relative to the root window of its screen.
+This is normally either zero or negative.
+Returns 0 if there is no virtual root window for I<$widget>.
+
+=item I<$widget->>B<waitVariable>(\$I<name>)
+
+=item I<$widget->>B<waitVisibility>
+
+=item I<$widget->>B<waitWindow>
+
+The B<tk wait> methods wait for one of several things to happen,
+then it returns without taking any other actions.
+The return value is always an empty string.
+B<waitVariable> expects a reference to a perl
+variable and the command waits for that variable to be modified.
+This form is typically used to wait for a user to finish interacting
+with a dialog which sets the variable as part (possibly final)
+part of the interaction.
+B<waitVisibility> waits for a change in I<$widget>'s
+visibility state (as indicated by the arrival of a VisibilityNotify
+event).  This form is typically used to wait for a newly-created
+window to appear on the screen before taking some action.
+B<waitWindow> waits for I<$widget> to be destroyed.
+This form is typically used to wait for a user to finish interacting
+with a dialog box before using the result of that interaction.
+Note that creating and destroying the window each time a dialog is required
+makes code modular but imposes overhead which can be avoided by B<withdrawing>
+the window instead and using B<waitVisibility>.
+
+While the B<tk wait> methods are waiting they processes events in
+the normal fashion, so the application will continue to respond
+to user interactions.
+If an event handler invokes B<tkwait> again, the nested call
+to B<tkwait> must complete before the outer call can complete.
+
+=item I<$widget>-E<gt>B<Walk>(I<proc>?, I<arg, ...>?)
+
+Traverse a widget hierarchy starting at I<$widget> while executing the
+subroutine I<proc> to every visited widget. The arguments I<arg, ...>
+are supplied to the subroutine.
+
+=item I<$widget>-E<gt>B<Widget>(I<pathname>)
+
+Returns the widget reference for the given Tk path name, or C<undef>
+if the path name does not match a Tk widget. This is the inverse of
+the L</PathName> method. (This is an import from the C interface.)
+
+=item I<$widget>-E<gt>B<width>
+
+Returns a decimal string giving I<$widget>'s width in pixels.
+When a window is first created its width will be 1 pixel;  the
+width will eventually be changed by a geometry manager to fulfill
+the window's needs.
+If you need the true width immediately after creating a widget,
+invoke B<update> to force the geometry manager to arrange it,
+or use I<$widget>-E<gt>B<reqwidth> to get the window's requested width
+instead of its actual width.
+
+=item I<$widget>-E<gt>B<windowingsystem>
+
+Returns the current Tk windowing system, one of B<x11> (X11-based),
+B<win32> (MS Windows), B<classic> (Mac OS Classic), or B<aqua> (Mac OS  X Aqua).
+
+=item I<$widget>-E<gt>B<x>
+
+Returns a decimal string giving the x-coordinate, in I<$widget>'s
+parent, of the upper-left corner of I<$widget>'s border (or I<$widget>
+if it has no border).
+
+=item I<$widget>-E<gt>B<y>
+
+Returns a decimal string giving the y-coordinate, in I<$widget>'s
+parent, of the
+upper-left corner of I<$widget>'s border (or I<$widget> if it
+has no border).
+
+=back
+
+=head1 CAVEATS
+
+The above documentaion on generic methods is incomplete.
+
+=head1 KEYWORDS
+
+atom, children, class, geometry, height, identifier, information, interpreters,
+mapped, parent, path name, screen, virtual root, width, window
+
+=cut
+

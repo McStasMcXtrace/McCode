@@ -1,0 +1,25 @@
+#!/usr/local/bin/perl -w
+use strict;
+my $file = (@ARGV) ? shift : 'README';
+
+use Tk;
+
+        my $top = MainWindow->new;
+        init_check();
+        MainLoop;
+
+sub init_check {
+        my $cmd = "/usr/bin/tail +0f $file";
+
+        my $open_pid = open (TAIL, "$cmd|") || die "Can't open $cmd: $!";
+
+        select (TAIL); $| = 1;
+        select (STDOUT); $| = 1;
+
+        $top->fileevent(\*TAIL, 'readable',
+                sub {
+                        $_ = <TAIL>;
+                        print "debug : $_";
+                });
+}
+

@@ -1,0 +1,156 @@
+% Emacs settings: -*-mode: latex; TeX-master: "manual.tex"; -*-
+
+\chapter{New features in \MCX \version}
+\label{c:changes}
+
+This is the first version of \MCX. As such it implements new features. Bugs are
+reported and traced using the \MCX Trac system \cite{mccode_trac_webpage}
+(shared with its sister project \MCS). We will not present here an extensive
+list of corrections, and we let the reader refer to this bug reporting service
+for details. Only important changes are indicated here.
+
+Of course, we can not guarantee that the software is bullet proof, but we do our best to correct bugs, when they are reported.\index{Bugs}
+
+%\section{General}
+%\label{s:new-features:general}
+%\begin{itemize}
+%\end{itemize}
+
+\section{Kernel}
+\label{s:new-features:kernel}
+\index{Kernel}
+
+The following changes concern the 'Kernel' (i.e. the \MCX meta-language and program). See the dedicated chapter in the \textit{User manual} for more details.
+
+\section{Run-time}
+\label{s:new-features:run-time}
+\index{Library!Run-time}
+New intersection routines include \verb+ellipsoid_intersect+ and \verb+sphere_intersect+.
+
+
+\section{Components and Library}
+\label{s:new-features:components}
+\index{Components} \index{Library!Components}
+We here list the new and updated components (found in the \MCX \verb+lib+ directory)
+which are detailed in the \textit{Component manual}. For an overview see the \textit{Component Overview} of the \textit{User Manual}(This Document).
+%\subsection{General}
+\subsection{New components}
+
+\subsubsection*{Sources}  
+All sources include focussed sampling for optimized calculations
+\begin{description}
+\item[Source\_pt] Point source
+\item[Source\_flat] Flat surface uniform source
+\item[Source\_div] Flat surface uniform source with divergence distribution
+\item[Source\_gaussian] Gaussian crossection source approximating a Bending Magnet
+\end{description}
+\subsubsection*{Samples}
+\begin{description}
+\item[Saxs\_spheres] Hard spheres in dilute solution
+\item[Powder\_N] General Powder diffraction component
+\end{description}
+\subsubsection*{Optics}
+\begin{description}
+\item[Lens\_simple] Thin lens approximation of a compund refractive lens (CRL) of any material
+\item[Lens\_parab] Parabolic CRL of any material
+\item[SLit.comp] Perfectly absorbing aperture
+\item[Slit\_N.comp] Multiple absorbing apertures (i.e. a transmission grating)
+\item[Multilayer\_elliptic] Elliptical mulitlayer optic.
+\item[Mirror\_elliptic] Elliptical shape mirror
+\item[Mirror\_parabolic] Parabolic shape mirror
+\item[Mirror\_curved] Cylindrical mirror
+\end{description}
+\subsubsection*{Miscellaneous}
+\begin{description}
+\item[Arm] Coordinate transformation
+\item[Progress\_bar] Display progress of simulation
+\end{description}
+\subsubsection*{Monitors}
+\begin{description}
+\item[E\_monitor] Int. vs. X-ray energy
+\item[L\_monitor] Int. vs. X-ray wavelength
+\item[PSD\_monitor] Int. spatial coordinates
+\item[PSD\_monitor\_4P] Int. vs. latitude and longitude
+\end{description}
+
+
+\subsection{New example instruments}
+
+
+\begin{itemize}
+\item \verb+SAXSLAB_SAXS.instr+ The SAXLAB (formerly JJ-Xray Systems) saxs-machine situated at Faculty of Life-Sciences, Univeristy of Copenhagen. 
+\item \verb+ESRF_ID11.instr+ Model of the 3DXRD-microscope at ID11, ESRF
+\item \verb+Be_BM.instr+ A model beamline to explore the idea of a "pink"-beam beamline using CRLs\cite{vaughan2011x}.
+\end{itemize}
+
+%\section{Documentation}
+%\label{s:new-features:documentation}
+
+\section{Tools, installation}
+\label{s:new-features:tools}
+\index{Tools}
+\index{Installing}
+\subsection{Selected Tool features}
+\begin{itemize}
+  \item standard FreeBSD port
+    %  \item Support for per-user mcxtrace\_config.perl file, located in \verb+$HOME/.mcstas/+ . This folder is also the default
+%     location of the 'host list' for use with MPI or gridding, simply name the file 'hosts'.
+%  \item mxgui Save Configuration for saving chosen settings on the 'Configuration options' and 'Run dialogue'.
+  \item Possibility to run MPI or grid simulations by default from mxgui.
+%  \item When scanning parameters, mxrun now terminates with a relevant error message if one or more scan steps
+%     failed (intensities explicitly set to 0 in those cases).
+%  \item When running parameter optimisations, a logfile (default name is "mcoptim\_XXXX.dat" where XXXX is a
+%     pseudo-random string) is created during the optimisation, updated at each optim step.
+  \item We provide syntax-highlighting setup files for eamcs, vim and gedit editors.
+\end{itemize}
+\subsection{Platform support}
+\begin{itemize}
+\item Mac OS X 10.8 Mountain Lion, 10.9 Mavericks.
+\item Windows 8, Windows 7, Windows XP.
+\item "Any" Linux - reference platform is Debian 7.0.
+\item BSD (FreeBSD release 10.0 tested)
+\item Oracle OpenSolaris 10 (Intel tested, Sparc probably OK)
+\item Plus probably any UNIX/POSIX type environment with a bit of effort...
+\end{itemize}
+Details about the installation and the available tools are given in chapter \ref{installing}.
+
+%\subsection{Various}
+
+\subsection{Warnings}
+{\bfseries WARNING:} The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 7.04) makes the 'Cancel' and 'Update' 
+buttons fail in mcgui. Solutions are:
+\begin{itemize}
+\item[a)] If your system is a Debian or Ubuntu, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh
+\item[b)] If you run another Linux with /bin/sh beeing dash, please install bash and manually change the /bin/sh link to point at bash.
+\end{itemize}
+
+%\section{Future extensions}
+%\label{s:future}
+%The following features are planned for the oncoming releases of \MCX\
+%(not an ordered list):
+%\begin{itemize}
+%\item Increased validation and testing.
+%\item Extend test cases to all (most) components. One instrument
+%  pr. component. (Probably not in \verb+examples/+.
+%\item Updates to mcresplot to support the Matlab and Scilab backends.
+%\item Global changes of components relating to polarisation
+%  visualisation.
+%\item Visualisation of neutron spins in magnetic fields for all
+%  graphical backends.
+%\item \emph{Array} \verb+AT+ specifiers for components, i.e. \\
+%  \verb+COMPONENT MyComp=Comp(...)+\\\verb+AT([Xarray],[Yarray],[Zarray])+ and\\
+%  \verb+AT Positions('filename')+
+%\item Gui support for array AT specifiers.
+%\item More complete polarisation support including numerically defined
+%  magnetic fields and advanced sample components.
+%\item Perl or python plotting alternative to PGPLOT.
+%\item Larger variety of sample components.
+%\end{itemize}
+
+
+
+
+
+
+
+

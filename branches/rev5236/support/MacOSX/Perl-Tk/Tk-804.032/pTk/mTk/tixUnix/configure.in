@@ -1,0 +1,35 @@
+dnl $Id: configure.in,v 1.2 2000/11/03 00:43:33 idiscovery Exp $
+dnl	This file is an input file used by the GNU "autoconf" program to
+dnl	generate the file "configure", which is run to configure the
+dnl	Makefile in this directory.
+
+AC_INIT(../generic/tixInit.c)
+
+AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+AC_SUBST(SHELL)
+
+#----------------------------------------------------------------------
+# We don't want to use any relative path because we need to generate
+# Makefile's in subdirectories
+#----------------------------------------------------------------------
+if test "$INSTALL" = "./install.sh"; then
+    INSTALL=`pwd`/install.sh
+fi
+SRC_DIR=`cd ${srcdir}/..; pwd`
+AC_SUBST(SRC_DIR)
+
+# Check for Tcl and Tk.
+CYG_AC_PATH_TCLCONFIG
+CYG_AC_LOAD_TCLCONFIG
+CYG_AC_PATH_TKCONFIG
+CYG_AC_LOAD_TKCONFIG
+CYG_AC_PATH_TCLH
+# FIXME: consider only doing this if --with-x given.
+CYG_AC_PATH_TKH
+
+TIX_VERSION=8.1
+AC_SUBST(TIX_VERSION)
+AC_SUBST(TCL_PACKAGE_PATH)
+
+AC_OUTPUT(Makefile)

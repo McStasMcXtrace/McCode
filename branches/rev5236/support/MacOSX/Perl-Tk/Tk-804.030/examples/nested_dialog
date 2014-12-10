@@ -1,0 +1,17 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+use Tk::Dialog;
+
+my $mw  = MainWindow->new;
+my $d1  = $mw->Dialog(-text => 'First Dialog',
+                      -popover => $mw,
+                      -overanchor => 's',-popanchor => 'n');
+my $d2  = $mw->Dialog(-text => 'Second Dialog',
+                      -popover => $d1,
+                      -overanchor => 'e',-popanchor => 'w');
+$d1->Button(-text => 'Again',-command => [$d2,'Show'])->pack;
+
+$mw->Button(-text => 'Popup',-command => [$d1,'Show'])->pack;
+
+MainLoop;

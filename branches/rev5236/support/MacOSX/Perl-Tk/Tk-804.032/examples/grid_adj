@@ -1,0 +1,36 @@
+#!/usr/local/bin/perl  -w
+use Tk;
+require Tk::TextUndo;
+require Tk::Adjuster;
+require Tk::Listbox;
+
+use Carp;
+
+$SIG{__DIE__} = \&Carp::confess;
+
+my $mw = MainWindow->new;
+
+
+# Uncomment next line to avoid the warning - this a test of the warning
+# use Tk::TextUndo;
+my $t1  = $mw->Scrolled('TextUndo', -wrap => 'none');
+my $lb  = $mw->Scrolled('Listbox');
+my $aj  = $mw->Adjuster(-widget => $lb, -side => 'left', -delay => 1);
+$lb->grid(-column => 0, -row => 0, -sticky => 'nsew');
+$aj->grid(-column => 1, -row => 0, -sticky => 'nsew');
+$t1->grid(-column => 2, -row => 0, -sticky => 'nsew');
+$mw->gridColumnconfigure(2, -weight => 1);
+$lb->bind('<Double-ButtonRelease-1>',sub { $t1->Load($lb->getSelected) });
+
+# $mw->idletasks;
+# $mw->gridPropagate(0);
+
+
+opendir(DIR,'.');
+my $name;
+foreach $name (readdir(DIR))
+ {
+  $lb->insert('end',$name) if (-T $name);
+ }
+closedir(DIR);
+MainLoop;

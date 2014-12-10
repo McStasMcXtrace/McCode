@@ -1,0 +1,204 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component: Absorption_sample
+*
+* %I
+*
+* Written by:Erik B Knudsen
+* Date: March 2011
+* Version: 1.0
+* Release: McXtrace 1.0
+* Origin: Risoe
+*
+* Sample component with absorbing materials.
+*
+* %D
+* A sample component consisting of a box/cylinder of one material and a box/cylinder of another 
+* material inside. This is useful as a phantom for simulating tomography experiments.
+*
+* %P
+* Input parameters: 
+* radius_o: [m] Radius of "outer" enclosing material cylinder (0)
+* xwidth_o: [m] Width of "outer" enclosing material box (yheight)
+* yheight_o: [m] Height of "outer enclosing material box (1) 
+* zdepth_o: [m] Thickness of outer enclosing material box (yheight)
+* radius_i: [m] Radius of "inner" enclosed material cylinder (0)
+* xwidth_i: [m] Width of "inner" enclosed material box (yheight)
+* yheight_i: [m] Height of "inner enclosed material (1) 
+* zdepth_i: [m] Thickness of inner enclosed material box (yheight)
+* x_i: [m] center x-coordinate of "inner" object
+* y_i: [m] center y-coordinate of "inner" object
+* z_i: [m] center z-coordinate of "inner" object
+* r_x: [1] x-component of y-axis of inner object. Used to orient the inner object relative to the outer
+* r_y: [1] y-component of y-axis of inner object. Used to orient the inner object relative to the outer
+* r_z: [1] z-component of y-axis of inner object. Used to orient the inner object relative to the outer
+* mu_i: [] absorption cross-section of inner material
+* mu_o: [] absorption cross-section of outer material
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Absorption_sample
+DEFINITION PARAMETERS (string material_datafile_i="",string material_datafile_o="")
+SETTING PARAMETERS (radius_o=0,xwidth_o=0,yheight_o=1,zdepth_o=0,radius_i=0,xwidth_i=0,yheight_i=0.0,zdepth_i=0,x_i=0,y_i=0,z_i=0)
+OUTPUT PARAMETERS (prms_i,prms_o,t_i,t_o)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+SHARE
+%{
+  %include "read_table-lib"
+%}
+
+DECLARE
+%{
+  struct {
+    double Z_A,rho,V;
+    int E_c,l_c,mu_c;
+  } prms_o,prms_i;
+  t_Table t_o,t_i;
+%}
+
+INITIALIZE
+%{
+  int status;
+  if (yheight_o && !radius_o){
+    if (!zdepth_o) zdepth_o=yheight_o;
+    if (!xwidth_o) xwidth_o=yheight_o;
+  }else if (!yheight_o && !radius_o){
+    fprintf(stderr,"Absorption_sample(%s): Error: Unmeaningful outer volume description\n",NAME_CURRENT_COMP);
+    exit(0);
+  }
+  if (yheight_i && !radius_i){
+    if (!zdepth_i) zdepth_i=yheight_i;
+    if (!xwidth_i) xwidth_i=yheight_i;
+  }else if (!yheight_i && !radius_i){
+    fprintf(stderr,"Absorption_sample(%s): Warning: Inner volume = 0\n",NAME_CURRENT_COMP);
+    prms_i.V=0;
+  }
+
+  if ( material_datafile_o && (status=Table_Read(&t_o,material_datafile_o,0))==-1){
+    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile_o,NAME_CURRENT_COMP);
+    exit(-1);
+  }
+  /*which column i sthe energu in and which holds mu*/
+  if (t_o.columns==3) {
+    prms_o.E_c=0;prms_o.mu_c=1;
+  }else{
+    prms_o.E_c=0;prms_o.mu_c=5;
+  }
+  if (prms_i.V){
+    /*if volume is zero - don't bother to read the file*/
+    if ( material_datafile_i && (status=Table_Read(&t_i,material_datafile_i,0))==-1){
+      fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile_i,NAME_CURRENT_COMP);
+      exit(-1);
+    }
+    if (t_i.columns==3) {
+      prms_i.E_c=0;prms_i.mu_c=1;
+    }else{
+      prms_i.E_c=0;prms_i.mu_c=5;
+    }
+    char **header_parsed;
+    header_parsed=Table_ParseHeader(t_o.header,"Z","A[r]","rho","Z/A",NULL);
+    if(header_parsed[3]){
+      /*assuming that a Z/A is given, i.e. Z and A[r] are redundant*/
+      prms_o.Z_A=strtod(header_parsed[3],NULL);
+    }else if ( (strlen(header_parsed[0])) && (strlen(header_parsed[1])) ){
+      prms_o.Z_A=strtod(header_parsed[0],NULL)/strtod(header_parsed[1],NULL);
+    }
+    if(strlen(header_parsed[2])){
+      prms_o.rho=strtod(header_parsed[2],NULL);
+      printf("rho_o %g\n",prms_o.rho);
+    }
+    header_parsed=Table_ParseHeader(t_i.header,"Z","A[r]","rho","Z/A",NULL);
+    if(header_parsed[3]){
+      /*assuming that a Z/A is given, i.e. Z and A[r] are redundant*/
+      prms_i.Z_A=strtod(header_parsed[3],NULL);
+    }else if ( (strlen(header_parsed[0])) && (strlen(header_parsed[1])) ){
+      prms_i.Z_A=strtod(header_parsed[0],NULL)/strtod(header_parsed[1],NULL);
+    }
+    if(strlen(header_parsed[2])){
+      prms_i.rho=strtod(header_parsed[2],NULL);
+      printf("rho_i %g\n",prms_i.rho);
+    }
+  }
+%}
+
+TRACE
+%{
+  double l0o=0,l1o=0,l0i=0,l1i=0,mu_o=0,mu_i=0;
+  int status,status_i;
+  if (radius_o && yheight_o){
+    status=cylinder_intersect(&l0o,&l1o,x,y,z,kx,ky,kz,radius_o,yheight_o);
+  }else{
+    status=box_intersect(&l0o,&l1o,x,y,z,kx,ky,kz,xwidth_o,yheight_o,zdepth_o);
+  }
+  if (status ){
+    /*rays intersects the enclosing material*/
+    PROP_DL(l0o);
+    SCATTER;
+    status_i=0;
+    double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
+    if (radius_i && !yheight_i){
+      status_i=sphere_intersect(&l0i,&l1i,(x-x_i),(y-y_i),(z-z_i),kx,ky,kz,radius_i);
+    }else if (radius_i && yheight_i){
+      status_i=cylinder_intersect(&l0i,&l1i,(x-x_i),(y-y_i),(z-z_i),kx,ky,kz,radius_i,yheight_i);
+    }else if (xwidth_i && yheight_i && zdepth_i){
+      status_i=box_intersect(&l0i,&l1i,(x-x_i),(y-y_i),(z-z_i),kx,ky,kz,xwidth_i,yheight_i,zdepth_i);
+    }
+    if(status_i){
+      /*rays intersect the inclusion*/
+      PROP_DL(l0i);
+      SCATTER;
+      PROP_DL(l1i-l0i);
+      SCATTER;
+      
+      /*now calculate the mu*/
+      mu_i=Table_Value(t_i,k*K2E,prms_i.mu_c)*prms_i.rho;
+      p*=exp(-(l1i-l0i)*mu_i*1e2);
+    }
+    PROP_DL(l1o-l0o-l1i);
+    SCATTER;
+    mu_o=Table_Value(t_o,k*K2E,prms_o.mu_c)*prms_o.rho;
+    p*=exp(-(l1o-l0o-(l1i-l0i))*mu_o*1e2);
+  }
+%}
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. */
+  magnify("");
+  if (radius_o && yheight_o){
+    circle("xz",0, yheight_o/2.0,0,radius_o);
+    circle("xz",0,-yheight_o/2.0,0,radius_o);
+    line(-radius_o,-yheight_o/2.0,0,-radius_o,yheight_o/2.0,0);
+    line( radius_o,-yheight_o/2.0,0, radius_o,yheight_o/2.0,0);
+    line(0,-yheight_o/2.0,-radius_o,0,yheight_o/2.0,-radius_o);
+    line(0,-yheight_o/2.0, radius_o,0,yheight_o/2.0, radius_o);
+  }else{
+    box(0,0,0,xwidth_o,yheight_o,zdepth_o);
+  }
+
+  if (prms_i.V){
+    if(radius_i && !yheight_i){
+      circle("xz",x_i,y_i,z_i,radius_i);
+      circle("yz",x_i,y_i,z_i,radius_i);
+      circle("xy",x_i,y_i,z_i,radius_i);   
+    }else if (radius_i && yheight_i){
+      circle("xz",x_i,z_i+yheight_i/2.0,z_i,radius_i);
+      circle("xz",x_i,z_i-yheight_i/2.0,z_i,radius_i);
+      line(x_i-radius_i,y_i-yheight_i/2.0,z_i,x_i-radius_i,yheight_i/2.0,z_i);
+      line(x_i+radius_i,y_i-yheight_i/2.0,z_i,x_i+radius_i,yheight_i/2.0,z_i);
+      line(x_i,y_i-yheight_i/2.0,z_i-radius_i,x_i,y_i+yheight_i/2.0,z_i-radius_i);
+      line(x_i,y_i-yheight_i/2.0,z_i+radius_i,x_i,y_i+yheight_i/2.0,z_i+radius_i);
+    }else{
+      box(x_i,y_i,z_i,xwidth_i,yheight_i,zdepth_i);
+    }
+  }
+%}
+
+END

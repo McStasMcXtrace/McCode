@@ -1,0 +1,28 @@
+#!/usr/local/bin/nperl -w
+use strict;
+use Tk;
+
+my $mw = MainWindow->new;
+
+$mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+
+my $fr = $mw->Frame->pack;
+
+$fr->bind('<KeyPress>', 'Whatever');
+
+my $lab = $fr->Label(-bg => 'Yellow', -width => 50, -height => 17)->pack;
+
+$lab->bind('<KeyPress>',[ForwardEvent => Ev(['Parent'])]);
+
+sub Tk::Frame::Whatever
+{
+ my $w = shift;
+ print "Whatever $w ",$w->XEvent->A,"\n";
+}
+
+$mw->update;
+$lab->focus;
+
+MainLoop;
+
+__END__

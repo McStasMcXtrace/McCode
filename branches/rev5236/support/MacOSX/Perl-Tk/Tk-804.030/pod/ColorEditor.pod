@@ -1,0 +1,120 @@
+
+=head1 NAME
+
+Tk::ColorEditor - a general purpose Tk widget Color Editor
+
+=for pm Tk/ColorEditor.pm
+
+=for category Popups and Dialogs
+
+=head1 SYNOPSIS
+
+   use Tk::ColorEditor;
+
+   $cref = $mw->ColorEditor(-title => $title, -cursor => @cursor);
+
+   $cref->Show;
+
+=head1 DESCRIPTION
+
+ColorEditor is implemented as an object with various methods, described
+below.  First, create your ColorEditor object during program initialization
+(one should be sufficient), and then configure it by specifying a list of Tk
+widgets to colorize. When it's time to use the editor, invoke the Show()
+method.
+
+ColorEditor allows some customization: you may alter the color attribute
+menu by adding and/or deleting menu items and/or separators, turn the status
+window on or off, alter the configurator's list of color widgets, or even
+supply your own custom color configurator callback.
+
+=over 4
+
+=item 1.
+
+Call the constructor to create the editor object, which in turn returns a
+blessed reference to the new object:
+
+   use Tk::ColorEditor;
+
+   $cref = $mw->ColorEditor(
+       -title  => $title,
+       -cursor => @cursor,
+   );
+
+      mw     - a window reference, usually the result of a MainWindow->new
+               call.  As the default root of a widget tree, $mw and all
+               descendant widgets at object-creation-time are configured
+               by the default color configurator procedure.  (You probably
+               want to change this though or you might end up colorizing
+               ColorEditor!)
+      title  - Toplevel title, default = ' '.
+      cursor - a valid Tk '-cursor' specification (default is
+               'top_left_arrow').  This cursor is used over all ColorEditor
+               "hot spots".
+
+=item 2.
+
+Invoke the configure() method to change editor characteristics:
+
+   $cref->configure(-option => value, ..., -option-n => value-n);
+
+      options:
+        -command             : a callback to a  `set_colors' replacement.
+        -widgets             : a reference to a list of widget references
+                               for the color configurator.
+        -display_status      : TRUE IFF display the ColorEditor status
+                               window when applying colors.
+        -add_menu_item       : 'SEP', or a color attribute menu item.
+        -delete_menu_item    : 'SEP', a color attribute menu item, or color
+                               attribute menu ordinal.
+
+   For example:
+
+      $cref->configure(-delete_menu_item   => 3,
+          -delete_menu_item   => 'disabledforeground',
+          -add_menu_item      => 'SEP',
+          -add_menu_item      => 'New color attribute',
+          -widgets            => [$ce, $qu, $f2b2],
+          -widgets            => [$f2->Descendants],
+          -command            => [\&my_special_configurator, some, args ]
+      );
+
+=item 3.
+
+Invoke the Show() method on the editor object, say, by a button or menu press:
+
+   $cref->Show;
+
+=item 4.
+
+The cget(-widgets) method returns a reference to a list of widgets that
+are colorized by the configurator.  Typically, you add new widgets to
+this list and then use it in a subsequent configure() call to expand your
+color list.
+
+   $cref->configure(
+       -widgets => [
+           @{$Filesystem_ref->cget(-widgets)}, @{$cref->cget(-widgets)},
+       ]
+   );
+
+=item 5.
+
+The delete_widgets() method expects a reference to a list of widgets which are
+then removed from the current color list.
+
+   $cref->delete_widgets($OBJTABLE{$objname}->{'-widgets'})
+
+=back
+
+=head1 AUTHORS
+
+Stephen O. Lidie, Lehigh University Computing Center.  95/03/05
+lusol@Lehigh.EDU
+
+Many thanks to Guy Decoux (decoux@moulon.inra.fr) for doing the initial
+translation of tcolor.tcl to TkPerl, from which this code has been derived.
+
+=cut
+

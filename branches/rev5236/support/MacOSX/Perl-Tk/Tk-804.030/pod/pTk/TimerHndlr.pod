@@ -1,0 +1,90 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#  @(#) TimerHndlr.3 1.9 95/05/28 13:52:12
+#
+
+=head1 NAME
+
+Tk_CreateTimerHandler, Tk_DeleteTimerHandler - call a procedure at a
+given time
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Tk_TimerToken
+B<Tk_CreateTimerHandler>(I<milliseconds, proc, clientData>)
+
+B<Tk_DeleteTimerHandler>(I<token>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item int milliseconds (in)
+
+How many milliseconds to wait before invoking I<proc>.
+
+=item Tk_TimerProc *proc (in)
+
+Procedure to invoke after I<milliseconds> have elapsed.
+
+=item ClientData clientData (in)
+
+Arbitrary one-word value to pass to I<proc>.
+
+=item Tk_TimerToken token (in)
+
+Token for previously-created timer handler (the return value
+from some previous call to B<Tk_CreateTimerHandler>).
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_CreateTimerHandler> arranges for I<proc> to be
+invoked at a time I<milliseconds> milliseconds in the
+future.
+The callback to I<proc> will be made by B<Tk_DoOneEvent>,
+so B<Tk_CreateTimerHandler> is only useful in
+programs that dispatch events
+through B<Tk_DoOneEvent> or through other Tk procedures that
+call B<Tk_DoOneEvent>, such as B<Tk_MainLoop>.  The call
+to I<proc> may not be made at the exact time given by
+I<milliseconds>:  it will be made at the next opportunity
+after that time.  For example, if B<Tk_DoOneEvent> isn't
+called until long after the time has elapsed, or if there
+are other pending events to process before the call to
+I<proc>, then the call to I<proc> will be delayed.
+
+I<Proc> should have arguments and return value that match
+the type B<Tk_TimerProc>:
+
+=over 4
+
+typedef void Tk_TimerProc(ClientData I<clientData>);
+
+=back
+
+The I<clientData> parameter to I<proc> is a
+copy of the I<clientData> argument given to
+B<Tcl_CreateTimerHandler> when the callback
+was created.  Typically, I<clientData> points to a data
+structure containing application-specific information about
+what to do in I<proc>.
+
+B<Tk_DeleteTimerHandler> may be called to delete a
+previously-created timer handler.  It deletes the handler
+indicated by I<token> so that no call to I<proc>
+will be made;  if that handler no longer exists
+(e.g. because the time period has already elapsed and I<proc>
+has been invoked) then B<Tk_DeleteTimerHandler> does nothing.
+
+=head1 KEYWORDS
+
+callback, clock, handler, timer

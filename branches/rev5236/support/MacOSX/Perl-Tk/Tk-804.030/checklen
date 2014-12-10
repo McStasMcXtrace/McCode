@@ -1,0 +1,18 @@
+#!/usr/local/bin/perl -w
+
+use ExtUtils::Manifest "/mani/";
+
+$files = maniread();
+
+foreach $file (keys %$files)
+ {
+  my $elm;
+  foreach $elm (split(m,/,,$file))
+   {
+    my $l = length($elm);
+    if (length($elm) > 14)
+     {
+      print "$l > 14 for $elm of $file\n";
+     }
+   }
+ }

@@ -1,0 +1,13 @@
+use strict;
+use Tk;
+use Tk::Button;
+use Tk::FloatEntry;
+
+my $mw = MainWindow->new();
+my $fe = $mw->FloatEntry();
+
+my $ex = $mw->Button(-text=>'exit', -command=>[$mw,'destroy'])->grid;
+$fe->post(10,10);
+
+Tk::MainLoop;
+

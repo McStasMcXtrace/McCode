@@ -1,0 +1,107 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::bindtags - Determine which bindings apply to a window, and order of evaluation
+
+=for category Binding Events and Callbacks
+
+=head1 SYNOPSIS
+
+I<$widget>-E<gt>B<bindtags>([I<tagList>]);
+
+I<@tags> = I<$widget>-E<gt>B<bindtags>;
+
+=head1 DESCRIPTION
+
+When a binding is created with the B<bind> command, it is
+associated either with a particular window such as I<$widget>,
+a class name such as B<Tk::Button>, the keyword B<all>, or any
+other string.
+All of these forms are called I<binding tags>.
+Each window has a list of binding tags that determine how
+events are processed for the window.
+When an event occurs in a window, it is applied to each of the
+window's tags in order:  for each tag, the most specific binding
+that matches the given tag and event is executed.
+See the L<Tk::bind> documentation for more information on the matching
+process.
+
+By default, each window has four binding tags consisting of the
+the window's class name, name of the window, the name of the window's
+nearest toplevel ancestor, and B<all>, in that order.
+Toplevel windows have only three tags by default, since the toplevel
+name is the same as that of the window.
+
+Note that this order is I<different> from order used by Tcl/Tk.
+Tcl/Tk has the window ahead of the class name in the binding order.
+This is because Tcl is procedural rather than object oriented and
+the normal way for Tcl/Tk applications to override class bindings
+is with an instance binding. However, with perl/Tk the normal way
+to override a class binding is to derive a class. The perl/Tk order
+causes instance bindings to execute after the class binding, and
+so instance bind callbacks can make use of state changes (e.g. changes
+to the selection) than the class bindings have made.
+
+The B<bindtags> command allows the binding tags for a window to be
+read and modified.
+
+If I<$widget>-E<gt>B<bindtags> is invoked without an argument, then the
+current set of binding tags for $widget is returned as a list.
+If the I<tagList> argument is specified to B<bindtags>,
+then it must be a reference to and array; the tags for $widget are changed
+to the elements of the array. (A reference to an anonymous array can
+be created by enclosin the elements in B<[ ]>.)
+The elements of I<tagList> may be arbitrary strings or widget objects,
+if no window exists for an object at the time an event is processed,
+then the tag is ignored for that event.
+The order of the elements in I<tagList> determines the order in
+which binding callbacks are executed in response to events.
+For example, the command
+
+ $b->bindtags([$b,ref($b),$b->toplevel,'all'])
+
+applies the Tcl/Tk binding order which binding callbacks will be
+evaluated for a button (say) B<$b> so that B<$b>'s instance bindings
+are invoked first, following by bindings for B<$b>'s class, followed by
+bindings for B<$b>'s toplevel, followed by 'B<all>' bindings.
+
+If I<tagList> is an empty list i.e. B<[]>, then the binding
+tags for $widget are returned to the perl/Tk default state described above.
+
+The B<bindtags> command may be used to introduce arbitrary
+additional binding tags for a window, or to remove standard tags.
+For example, the command
+
+ $b->bindtags(['TrickyButton',$b->toplevel,'all'])
+
+replaces the (say) B<Tk::Button> tag for B<$b> with B<TrickyButton>.
+This means that the default widget bindings for buttons, which are
+associated with the B<Tk::Button> tag, will no longer apply to B<$b>,
+but any bindings associated with B<TrickyButton> (perhaps some
+new button behavior) will apply.
+
+=head1 BUGS
+
+The current mapping of the 'native' Tk behaviour of this method
+i.e. returning a list but only accepting a reference to an array is
+counter intuitive. The perl/Tk interface  may be tidied up, returning
+a list is sensible so, most likely fix will be to allow a list to be
+passed to I<set> the bindtags.
+
+=head1 SEE ALSO
+
+L<Tk::bind|Tk::bind>
+L<Tk::callbacks|Tk::callbacks>
+
+=head1 KEYWORDS
+
+binding, event, tag
+
+=cut
+

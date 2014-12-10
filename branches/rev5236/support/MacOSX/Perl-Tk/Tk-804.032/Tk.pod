@@ -1,0 +1,865 @@
+=head1 NAME
+
+Tk - a graphical user interface toolkit for Perl
+
+=head1 SYNOPSIS
+
+    use Tk;
+    $top = new MainWindow;
+    MainLoop;
+
+=head1 DESCRIPTION
+
+The Perl/Tk manual is split up into a number of sections:
+
+=head2 Introduction
+
+=over 4
+
+=item *
+
+L<Tk::overview|Tk::overview>
+
+=item *
+
+L<Tk::UserGuide|Tk::UserGuide>
+
+=back
+
+=head2 Tk Geometry Management
+
+=over 4
+
+=item *
+
+L<Tk::Adjuster|Tk::Adjuster>
+
+=item *
+
+L<Tk::form|Tk::form>
+
+=item *
+
+L<Tk::grid|Tk::grid>
+
+=item *
+
+L<Tk::pack|Tk::pack>
+
+=item *
+
+L<Tk::place|Tk::place>
+
+=item *
+
+L<Tk::Table|Tk::Table>
+
+=item *
+
+L<Tk::Tiler|Tk::Tiler>
+
+=item *
+
+L<Tk::Wm|Tk::Wm>
+
+=back
+
+=head2 Binding Events and Callbacks
+
+=over 4
+
+=item *
+
+L<Tk::after|Tk::after>
+
+=item *
+
+L<Tk::bind|Tk::bind>
+
+=item *
+
+L<Tk::bindtags|Tk::bindtags>
+
+=item *
+
+L<Tk::callbacks|Tk::callbacks>
+
+=item *
+
+L<Tk::Error|Tk::Error>
+
+=item *
+
+L<Tk::event|Tk::event>
+
+=item *
+
+L<Tk::exit|Tk::exit>
+
+=item *
+
+L<Tk::fileevent|Tk::fileevent>
+
+=item *
+
+L<Tk::IO|Tk::IO>
+
+=back
+
+=head2 Tk Image Classes
+
+=over 4
+
+=item *
+
+L<Tk::Animation|Tk::Animation>
+
+=item *
+
+L<Tk::Bitmap|Tk::Bitmap>
+
+=item *
+
+L<Tk::Compound|Tk::Compound>
+
+=item *
+
+L<Tk::Image|Tk::Image>
+
+=item *
+
+L<Tk::JPEG|Tk::JPEG>
+
+=item *
+
+L<Tk::Photo|Tk::Photo>
+
+=item *
+
+L<Tk::Pixmap|Tk::Pixmap>
+
+=item *
+
+L<Tk::PNG|Tk::PNG>
+
+=back
+
+=head2 Tk Widget Classes
+
+=over 4
+
+=item *
+
+L<Tk::Button|Tk::Button>
+
+=item *
+
+L<Tk::Canvas|Tk::Canvas>
+
+=item *
+
+L<Tk::Checkbutton|Tk::Checkbutton>
+
+=item *
+
+L<Tk::Entry|Tk::Entry>
+
+=item *
+
+L<Tk::Frame|Tk::Frame>
+
+=item *
+
+L<Tk::HList|Tk::HList>
+
+=item *
+
+L<Tk::Label|Tk::Label>
+
+=item *
+
+L<Tk::Listbox|Tk::Listbox>
+
+=item *
+
+L<Tk::Menu|Tk::Menu>
+
+=item *
+
+L<Tk::Menubutton|Tk::Menubutton>
+
+=item *
+
+L<Tk::Message|Tk::Message>
+
+=item *
+
+L<Tk::Optionmenu|Tk::Optionmenu>
+
+=item *
+
+L<Tk::Radiobutton|Tk::Radiobutton>
+
+=item *
+
+L<Tk::Scale|Tk::Scale>
+
+=item *
+
+L<Tk::Scrollbar|Tk::Scrollbar>
+
+=item *
+
+L<Tk::Text|Tk::Text>
+
+=item *
+
+L<Tk::Toplevel|Tk::Toplevel>
+
+=back
+
+=head2 Tix Extensions
+
+=over 4
+
+=item *
+
+L<Tk::Balloon|Tk::Balloon>
+
+=item *
+
+L<Tk::BrowseEntry|Tk::BrowseEntry>
+
+=item *
+
+L<Tk::DialogBox|Tk::DialogBox>
+
+=item *
+
+L<Tk::DirTree|Tk::DirTree>
+
+=item *
+
+L<Tk::DItem|Tk::DItem>
+
+=item *
+
+L<Tk::InputO|Tk::InputO>
+
+=item *
+
+L<Tk::LabFrame|Tk::LabFrame>
+
+=item *
+
+L<Tk::Mwm|Tk::Mwm>
+
+=item *
+
+L<Tk::NoteBook|Tk::NoteBook>
+
+=item *
+
+L<Tk::TixGrid|Tk::TixGrid>
+
+=item *
+
+L<Tk::tixWm|Tk::tixWm>
+
+=item *
+
+L<Tk::TList|Tk::TList>
+
+=item *
+
+L<Tk::Tree|Tk::Tree>
+
+=back
+
+=head2 Tk Generic Methods
+
+=over 4
+
+=item *
+
+L<Tk::Font|Tk::Font>
+
+=item *
+
+L<Tk::send|Tk::send>
+
+=item *
+
+L<Tk::tkvars|Tk::tkvars>
+
+=item *
+
+L<Tk::Widget|Tk::Widget>
+
+=item *
+
+L<Tk::X11Font|Tk::X11Font>
+
+=back
+
+=head2 User Interaction
+
+=over 4
+
+=item *
+
+L<Tk::DropSite|Tk::DropSite>
+
+=item *
+
+L<Tk::Clipboard|Tk::Clipboard>
+
+=item *
+
+L<Tk::focus|Tk::focus>
+
+=item *
+
+L<Tk::grab|Tk::grab>
+
+=item *
+
+L<Tk::selection|Tk::selection>
+
+=back
+
+=head2 Creating and Configuring Widgets
+
+=over 4
+
+=item *
+
+L<Tk::CmdLine|Tk::CmdLine>
+
+=item *
+
+L<Tk::MainWindow|Tk::MainWindow>
+
+=item *
+
+L<Tk::option|Tk::option>
+
+=item *
+
+L<Tk::options|Tk::options>
+
+=item *
+
+L<Tk::palette|Tk::palette>
+
+=item *
+
+L<Tk::Xrm|Tk::Xrm>
+
+=back
+
+=head2 Popups and Dialogs
+
+=over 4
+
+=item *
+
+L<Tk::chooseColor|Tk::chooseColor>
+
+=item *
+
+L<Tk::chooseDirectory|Tk::chooseDirectory>
+
+=item *
+
+L<Tk::ColorEditor|Tk::ColorEditor>
+
+=item *
+
+L<Tk::Dialog|Tk::Dialog>
+
+=item *
+
+L<Tk::DialogBox|Tk::DialogBox>
+
+=item *
+
+L<Tk::FBox|Tk::FBox>
+
+=item *
+
+L<Tk::FileSelect|Tk::FileSelect>
+
+=item *
+
+L<Tk::getOpenFile|Tk::getOpenFile>
+
+=item *
+
+L<Tk::messageBox|Tk::messageBox>
+
+=item *
+
+L<Tk::MsgBox|Tk::MsgBox>
+
+=back
+
+=head2 Derived Widgets
+
+=over 4
+
+=item *
+
+L<Tk::composite|Tk::composite>
+
+=item *
+
+L<Tk::configspec|Tk::configspec>
+
+=item *
+
+L<Tk::Derived|Tk::Derived>
+
+=item *
+
+L<Tk::mega|Tk::mega>
+
+=item *
+
+L<Tk::ROText|Tk::ROText>
+
+=item *
+
+L<Tk::Scrolled|Tk::Scrolled>
+
+=item *
+
+L<Tk::TextUndo|Tk::TextUndo>
+
+=item *
+
+L<Tk::Reindex|Tk::Reindex>
+
+=item *
+
+L<Tk::Pane|Tk::Pane>
+
+=item *
+
+L<Tk::ProgressBar|Tk::ProgressBar>
+
+=back
+
+=head2 C Programming
+
+=over 4
+
+=item *
+
+Internals
+
+=item *
+
+pTk
+
+=item *
+
+3DBorder
+
+=item *
+
+BackgdErr
+
+=item *
+
+BindTable
+
+=item *
+
+CanvPsY
+
+=item *
+
+CanvTkwin
+
+=item *
+
+CanvTxtInfo
+
+=item *
+
+Clipboard
+
+=item *
+
+ClrSelect
+
+=item *
+
+ConfigWidg
+
+=item *
+
+ConfigWind
+
+=item *
+
+CoordToWin
+
+=item *
+
+CrtErrHdlr
+
+=item *
+
+CrtGenHdlr
+
+=item *
+
+CrtImgType
+
+=item *
+
+CrtItemType
+
+=item *
+
+CrtMainWin
+
+=item *
+
+CrtPhImgFmt
+
+=item *
+
+CrtSelHdlr
+
+=item *
+
+CrtWindow
+
+=item *
+
+DeleteImg
+
+=item *
+
+DoOneEvent
+
+=item *
+
+DoWhenIdle
+
+=item *
+
+DrawFocHlt
+
+=item *
+
+EventHndlr
+
+=item *
+
+EventInit
+
+=item *
+
+FileHndlr
+
+=item *
+
+FindPhoto
+
+=item *
+
+FontId
+
+=item *
+
+FreeXId
+
+=item *
+
+GeomReq
+
+=item *
+
+GetAnchor
+
+=item *
+
+GetBitmap
+
+=item *
+
+GetCapStyl
+
+=item *
+
+GetClrmap
+
+=item *
+
+GetColor
+
+=item *
+
+GetCursor
+
+=item *
+
+GetFont
+
+=item *
+
+GetFontStr
+
+=item *
+
+GetGC
+
+=item *
+
+GetImage
+
+=item *
+
+GetJoinStl
+
+=item *
+
+GetJustify
+
+=item *
+
+GetOption
+
+=item *
+
+GetPixels
+
+=item *
+
+GetPixmap
+
+=item *
+
+GetRelief
+
+=item *
+
+GetRootCrd
+
+=item *
+
+GetScroll
+
+=item *
+
+GetSelect
+
+=item *
+
+GetUid
+
+=item *
+
+GetVisual
+
+=item *
+
+GetVRoot
+
+=item *
+
+HandleEvent
+
+=item *
+
+IdToWindow
+
+=item *
+
+ImgChanged
+
+=item *
+
+InternAtom
+
+=item *
+
+MainLoop
+
+=item *
+
+MaintGeom
+
+=item *
+
+MainWin
+
+=item *
+
+ManageGeom
+
+=item *
+
+MapWindow
+
+=item *
+
+MeasureChar
+
+=item *
+
+MoveToplev
+
+=item *
+
+Name
+
+=item *
+
+NameOfImg
+
+=item *
+
+OwnSelect
+
+=item *
+
+ParseArgv
+
+=item *
+
+Preserve
+
+=item *
+
+QWinEvent
+
+=item *
+
+Restack
+
+=item *
+
+RestrictEv
+
+=item *
+
+SetAppName
+
+=item *
+
+SetClass
+
+=item *
+
+SetGrid
+
+=item *
+
+SetVisual
+
+=item *
+
+Sleep
+
+=item *
+
+StrictMotif
+
+=item *
+
+TextLayout
+
+=item *
+
+TimerHndlr
+
+=item *
+
+Tk_Init
+
+=item *
+
+WindowId
+
+=back
+
+=head2 Implementation
+
+=over 4
+
+=item *
+
+L<Tk::Eventloop|Tk::Eventloop>
+
+=item *
+
+L<Tk::Menu::Item|Tk::Menu::Item>
+
+=item *
+
+L<Tk::Submethods|Tk::Submethods>
+
+=item *
+
+L<Tk::WidgetDemo|Tk::WidgetDemo>
+
+=item *
+
+L<Tk::widgets|Tk::widgets>
+
+=back
+
+=head2 Experimental Modules
+
+=over 4
+
+=item *
+
+L<Tk::Common|Tk::Common>
+
+=item *
+
+L<Tk::SunConst|Tk::SunConst>
+
+=item *
+
+L<Tk::WinPhoto|Tk::WinPhoto>
+
+=back
+
+=head2 Other Modules and Languages
+
+=over 4
+
+=item *
+
+Tk::Compile
+
+=item *
+
+L<Tk::Tcl-perl|Tk::Tcl-perl>
+
+=item *
+
+L<Tk::X|Tk::X>
+
+=back
+
+
+=head1 AUTHOR
+
+Nick Ing-Simmons
+
+=head1 SEE ALSO
+
+L<perl>, L<wish(1)>.
+
+Alternative Perl modules implementing the Tk toolkit: L<Tkx>,
+L<Tcl::Tk>.
+
+=cut

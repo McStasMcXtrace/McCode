@@ -1,0 +1,43 @@
+#!/usr/bin/perl
+use strict;
+use Tk;
+use Tk::Table;
+
+use vars qw/ @Testat /;
+@Testat= (-3,-3,-3,-3,-3,-3);
+
+### ATTENTION  an array MUST be assigned something before it can be
+###            used as a '-variable' in a (Radio/Check/) Button
+###            NEVER use a list assign like  @Testat= (list)
+###            since this reallocates @Testat
+
+my $MW = new MainWindow;
+
+my $Table= $MW->Table(-columns => 7, -rows => 4, -fixedrows => 1,
+                                                -scrollbars => '')
+              ->pack(-pady=> '2c');
+
+# init Table
+
+$Table->Create(1,0,'Label',-text => '  Testat OK ->  ');
+$Table->Create(2,0,'Label',-text => '  No Testat ->  ');
+$Table->Create(3,0,'Label',-text => '  - UNDEF - ->  ');
+
+my $Mode;
+my $Alab;
+
+for (my $c= 1; $c <= 6; $c++)
+{ $Mode = ( $Testat[$c-1] >= 0 ? 'disabled' : 'normal' );
+  $Alab= ( $c < 6 ? "A$c" : "T" );
+  $Table->Create(0,$c,'Label',-text => $Alab );
+  $Table->Create(1,$c,'Radiobutton', -value => 1,  -state => $Mode,
+                                     -variable => \$Testat[$c-1] );
+  $Table->Create(2,$c,'Radiobutton', -value => 0,  -state => $Mode,
+                                     -variable => \$Testat[$c-1] );
+  $Table->Create(3,$c,'Radiobutton', -value => -3,  -state => $Mode,
+                                     -variable => \$Testat[$c-1] );
+}
+
+
+MainLoop;
+

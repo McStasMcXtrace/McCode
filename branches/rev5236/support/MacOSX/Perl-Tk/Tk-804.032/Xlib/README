@@ -1,0 +1,6 @@
+
+This module will is designed to be "loaded" after its parent nTk.
+
+It should be regared as very experimental.
+
+It works a bit under Solaris2.3, it is broken under SunOS4.1.3...

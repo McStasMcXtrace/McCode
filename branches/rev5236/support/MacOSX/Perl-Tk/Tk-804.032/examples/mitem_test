@@ -1,0 +1,40 @@
+#!/usr/local/bin/perl -w
+
+require 5.003;
+use English;
+use Tk;
+use Tk::Menu;
+use Tk::Menubutton;
+
+{
+ package NoisyButton;
+ require Tk::Menu::Item;
+ use base  'Tk::Menu::Button';
+
+ Construct Tk::Menu 'NoisyButton';
+
+ sub PreInit
+ {
+  my ($class,$menu,$minfo) = @_;
+  $minfo->{'-command'} = sub { print "$minfo->{-label} pressed.\n";};
+ }
+
+}
+
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+$mw     = MainWindow->new;
+$mw->title('Menuitem demo');
+
+$MB = $mw->Menubutton(-text => 'File');
+$M = $MB->Menu(-menuitems => [
+                         [Button => 'Howdy', -command => sub{print "Howdy\n";}],
+                         [NoisyButton => 'Noisy'],
+                         [Button => 'Quit', -command => sub{exit}],
+                ]);
+$MB->configure(-menu => $M);
+$MB->pack(-side => 'top');
+
+MainLoop;
+exit;
+# End of Menuitem demo

@@ -1,0 +1,107 @@
+#  Copyright (c) 1992 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::Dialog - Create modal dialog and wait for a response.
+
+=for pm Tk/Dialog.pm
+
+=for category Popups and Dialogs
+
+=head1 SYNOPSIS
+
+S<    >I<$dialog> = I<$parent>-E<gt>B<Dialog>(I<-option> =E<gt> I<value>, ... );
+
+=head1 DESCRIPTION
+
+This procedure is part of the Tk script library - its arguments
+describe a dialog box.  After creating a dialog box, B<Dialog> waits
+for the user to select one of the Buttons either by clicking on the
+Button with the mouse or by typing return to invoke the default Button
+(if any).  Then it returns the text string of the selected Button.
+
+While waiting for the user to respond, B<Dialog> sets a local
+grab.  This prevents the user from interacting with the application
+in any way except to invoke the dialog box.  See the B<Show()> method.
+
+=head1 OPTIONS
+
+The following option/value pairs are supported:
+
+=over 4
+
+=item B<-title>
+
+Text to appear in the window manager's title bar for the dialog.
+
+=item B<-text>
+
+Message to appear in the top portion of the Dialog.
+
+=item B<-bitmap>
+
+If non-empty, specifies a bitmap to display in the top portion of the
+Dialog, to the left of the text.  If this is an empty string then no
+bitmap is displayed in the Dialog.
+
+=item B<-default_button>
+
+Text label string of the Button that displays the default ring.
+
+=item B<-buttons>
+
+A reference to a list of Button label strings.  Each I<string>
+specifies text to display in a Button, in order from left to right.
+
+=back
+
+=head1 METHODS
+
+=over 4
+
+=item I<$answer> = $dialog-E<gt>B<Show(>?-global?B<)>;
+
+This method displays the Dialog, waits for the user's response, and stores
+the text string of the selected Button in I<$answer>.  If I<-global> is
+specified a global (rather than local) grab is performed.
+
+The actual Dialog is shown using the B<Popup> method. Any other
+options supplied to B<Show> are passed to B<Popup>, and can be used to
+position the Dialog on the screen. Please read Tk::Popup for details.
+
+=back
+
+=head1 ADVERTISED WIDGETS
+
+Because Tk::Dialog is a subclass of Tk::DialogBox it inherits all the
+advertised subwidgets of its superclass: e.g. "B_button-text", where
+'button-text' is a Button's -text value. Additionally, Tk::Dialog
+advertises:
+
+=over 4
+
+=item B<message>
+
+The dialog's Label widget containing the message text.
+
+=item B<bitmap>
+
+The dialog's Label widget containing the bitmap image.
+
+=back
+
+=head1 EXAMPLE
+
+I<$dialog> = I<$mw>-E<gt>B<Dialog>(-text =E<gt> 'Save File?', -bitmap =E<gt> 'question', -title =E<gt> 'Save File Dialog', -default_button =E<gt> 'Yes', -buttons =E<gt> [qw/Yes No Cancel/);
+
+=head1 KEYWORDS
+
+bitmap, dialog, modal, messageBox
+
+=cut
+

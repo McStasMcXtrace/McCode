@@ -1,0 +1,124 @@
+#!/usr/local/bin/perl -w
+
+$dst = shift;
+
+while (<>)
+ {
+  if (defined $Widget)
+   {
+    undef $Widget if (/^}/);
+    if (/strn?cmp\s*\(\s*LangString\(args\[1\]\)\s*,\s*("[^"]*")\s*/)
+     {
+      if ($1 ne '"configure"' and $1 ne '"cget"')
+       {
+        push(@{$table{WIDGET}{$Widget}},$1);
+       }
+     }
+   }
+  elsif (defined $Image)
+   {
+    undef $Image if (/^}/);
+    if (/strn?cmp\s*\(\s*LangString\(args\[1\]\)\s*,\s*("[^"]*")\s*/)
+     {
+      if ($1 ne '"configure"' and $1 ne '"cget"')
+       {
+        push(@{$table{IMAGE}{$Image}},$1);
+       }
+     }
+   }
+  elsif (defined $Command)
+   {
+    undef $Command if (/^}/);
+    if (/strn?cmp\s*\(\s*LangString\(args\[1\]\)\s*,\s*("[^"]*")\s*/)
+     {my $string = $1;
+      push(@{$table{COMMAND}{$Command}},$string) unless ($string =~ /^"-/);
+     }
+   }
+  elsif (defined $Tag)
+   {
+    undef $Tag if (/^}/);
+    if (/strn?cmp\s*\(\s*LangString\(args\[2\]\)\s*,\s*("[^"]*")\s*/)
+     {
+      push(@{$tags{$Tag}},$1);
+      print "$Tag : $1\n";
+     }
+   }
+  else
+   {
+    if (/^(\w+)WidgetCmd\s*\(/)
+     {
+      $Widget = "\L$1";
+      $Widget = "\u$Widget";
+      printf STDERR "Widget : $Widget\n";
+      $table{WIDGET}{$Widget} = [];
+     }
+    elsif (/^Img(\w+)Cmd\s*\(/)
+     {
+      $Image = "\L$1";
+      $Image = "\u$Image";
+      printf STDERR "Image : $Image\n";
+      $table{IMAGE}{$Image} = [];
+     }
+    elsif (/^(Tk)?([A-Z][a-z]+[A-Z][a-z]+)Cmd\s*\(/)
+     {
+      $Tag = $2;
+      printf STDERR "Tag : $Tag\n";
+      $tags{$Tag} = [];
+     }
+    elsif (/^Tk_([A-Z][a-z]+)Cmd2?\s*\(/)
+     {
+      $Command = "\L$1";
+      printf STDERR "Command : $Command\n";
+      $table{COMMAND}{$Command} = [];
+     }
+   }
+ }
+
+if (%{$table{WIDGET}} || %{$table{COMMAND}} || %{$table{IMAGE}})
+ {
+  if (open(SRC,"<$dst"))
+   {
+    while (<SRC>)
+     {
+      my ($kind,$Widget,$list) =  /^(WIDGET|COMMAND|IMAGE)\(\("(\w+)",(("[^"]*",)*)NULL\)\)$/;
+      if (defined $Widget)
+       {
+        if (!defined ${$table{$kind}}{$Widget})
+         {
+          chop($list);
+          print STDERR "Keep $kind $Widget : $list\n";
+          my @list = split(/,/,$list);
+          @list = grep(!/^(configure|cget)$/,@list);
+          ${$table{$kind}}{$Widget} = \@list;
+         }
+       }
+      else
+       {
+        chomp($_);
+        die "Mismatch : $_" unless (/^\s*$/);
+       }
+     }
+    close(SRC);
+   }
+
+  open(SRC,">$dst") || die "Cannot open $dst:$!";
+  foreach $kind (sort keys %table)
+   {
+    foreach $Widget (sort keys %{$table{$kind}})
+     {
+      if (@{$table{$kind}{$Widget}})
+       {
+        print SRC "$kind((\"$Widget\",";
+        foreach (sort @{$table{$kind}{$Widget}})
+         {
+          print SRC "$_,";
+         }
+        print SRC "NULL))\n";
+       }
+     }
+   }
+  close(SRC);
+
+ }
+
+

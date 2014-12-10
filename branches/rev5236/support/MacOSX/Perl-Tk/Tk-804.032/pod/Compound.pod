@@ -1,0 +1,298 @@
+#  Copyright (c) 1996, Expert Interface Technologies
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#  The file man.macros and some of the macros used by this file are
+#  copyrighted: (c) 1990 The Regents of the University of California.
+#               (c) 1994-1995 Sun Microsystems, Inc.
+#  The license terms of the Tcl/Tk distrobution are in the file
+#  license.tcl.
+
+=head1 NAME
+
+Tk::Compound - Create multi-line compound images.
+
+=for category  Tk Image Classes
+
+=head1 SYNOPSIS
+
+    use Tk::Compound;
+    $image = $widget->Compound(name,options);
+    $image->Line(options);
+    $image->Text(options);
+    $image->Bitmap(options);
+    $image->Image(options);
+    $image->Space(options);
+
+=for comment
+This paragraph used to be written different, but perldoc 3.14 cannot
+display this paragraph.
+S<    >use Tk::Compound;
+S<    >I<$image> = I<$widget>-E<gt>B<Compound>?(I<name>??,I<options>?)
+S<    >I<$image>-E<gt>B<Line>?(I<options>?)
+S<    >I<$image>-E<gt>B<Text>?(I<options>?)
+S<    >I<$image>-E<gt>B<Bitmap>?(I<options>?)
+S<    >I<$image>-E<gt>B<Image>?(I<options>?)
+S<    >I<$image>-E<gt>B<Space>?(I<options>?)
+
+=head1 DESCRIPTION
+
+Compound image types can be used to create images that consists of
+multiple horizontal lines; each line is composed of a series of items
+(texts, bitmaps, images or spaces) arranged from left to
+right. Compound images are mainly used to embed complex drawings into
+widgets that support the B<-image> option. As shown in the EXAMPLE
+section below, a compound image can be used to display a bitmap and a
+text string simutaneously in a Tk B<Button> widget.
+
+Compound images can only be used on windows on the same display as, and
+with the same pixel depth and visual as the I<$widget> used to create them.
+
+=head1 CREATING COMPOUND IMAGES
+
+Compounds are created using I<$widget>-E<gt>B<Compound>.
+Compounds support the following I<options>:
+
+=over 4
+
+=item B<-background> =E<gt> I<color>
+
+Specifies the background color of the compound image. This color is
+also used as the default background color for the bitmap items in the
+compound image.
+
+=item B<-borderwidth> =E<gt> I<pixels>
+
+Specifies a non-negative value indicating the width of the 3-D border
+drawn around the compound image.
+
+=item B<-font> =E<gt> I<font>
+
+Specifies the default font for the text items in the compound image.
+
+=item B<-foreground> =E<gt> I<color>
+
+Specifies the default foreground color for the bitmap and text items
+in the compound image.
+
+=item B<-padx> =E<gt> I<value>
+
+Specifies a non-negative value indicating how much extra space to
+request for the compound image in the X-direction. The I<value> may
+have any of the forms acceptable to B<Tk_GetPixels(3)>.
+
+=item B<-pady> =E<gt> I<value>
+
+Specifies a non-negative value indicating how much extra space to
+request for the compound image in the Y-direction.
+
+=item B<-relief> =E<gt> I<value>
+
+Specifies the 3-D effect desired for the background of the compound
+image. Acceptable values are B<raised>, B<sunken>, B<flat>,
+B<ridge>, and B<groove>.
+
+=item B<-showbackground> =E<gt> I<value>
+
+Specifies whether the background and the 3D borders should be drawn.
+Must be a valid boolean value. By default the background is not drawn
+and the compound image appears to have a transparent background.
+
+
+=back
+
+=head1 IMAGE COMMAND
+
+When a compound image is created, Tk also creates a new object.
+This object supports the B<configure> and B<cget> methods
+described in L<Tk::options> which can be used to enquire and
+modify the options described above.
+
+The object also supports the following methods:
+
+=over 4
+
+=item I<$compound>-E<gt>B<Line>?(I<option => value ...>)?
+
+Creates a new line at the bottom of the compound image. Lines support
+the following I<options>:
+
+=over 4
+
+=item B<-anchor> value
+
+Specifies how the line should be aligned along the horizontal axis.
+When the values are B<w>, B<sw> or B<nw>, the line is aligned
+to the left. When the values are B<c>, B<s> or B<n>, the line
+is aligned to the middle.  When the values are B<e>, B<se> or
+B<ne>, the line is aligned to the right.
+
+=item B<-padx> =E<gt> I<value>
+
+Specifies a non-negative value indicating how much extra space to
+request for this line in the X-direction.
+
+=back
+
+=item I<$compound>-E<gt>I<Itemtype>?(I<option => value ...>)?
+
+Creates a new item of the type I<Itemtype> at the end of the last
+line of the compound image. All types of items support
+these following common I<options>:
+
+=over 4
+
+=item B<-anchor> value
+
+Specifies how the item should be aligned along the vertical axis. When
+the values are B<n>, B<nw> or B<ne>, the item is aligned to
+the top of the line. When the values are B<c>, B<w> or B<e>,
+the item is aligned to the middle of the line.  When the values are
+B<s>, B<se> or B<sw>, the item is aligned to the bottom of
+the line.
+
+=item B<-padx> =E<gt> I<value>
+
+Specifies a non-negative value indicating how much extra space to
+request for this item in the X-direction.
+
+=item B<-pady> =E<gt> I<value>
+
+Specifies a non-negative value indicating how much extra space to
+request for this item in the Y-direction.
+
+=item I<item-type> can be any of the following:
+
+=back
+
+=item I<$compound>-E<gt>B<Bitmap>?(I<option => value ...>)?
+
+Creates a new bitmap item of at the end of the last
+line of the compound image. Additional I<options> accepted by the
+bitmap type are:
+
+=over 4
+
+=item B<-background> =E<gt> I<color>
+
+Specifies the background color of the bitmap item.
+
+=item B<-bitmap> =E<gt> I<name>
+
+Specifies a bitmap to display in this item, in any of the forms
+acceptable to B<Tk_GetBitmap(3)>.
+
+=item B<-foreground> =E<gt> I<color>
+
+Specifies the foreground color of the bitmap item.
+
+=back
+
+=item I<$compound>-E<gt>B<Image>?(I<option => value ...>)?
+
+Creates a new image item of at the end of the last
+line of the compound image. Additional I<options> accepted by the
+image type are:
+
+=over 4
+
+=item B<-image> =E<gt> I<name>
+
+Specifies an image to display in this item. I<name>
+must have been created with the B<image create> command.
+
+=back
+
+=item I<$compound>-E<gt>B<Space>?(I<option => value ...>)?
+
+Creates a new space item of at the end of the last line of the
+compound image. Space items do not display anything. They just acts as
+space holders that add additional spaces between items inside a
+compound image. Additional I<options> accepted by the image type
+are:
+
+=over 4
+
+=item B<-width> =E<gt> I<value>
+
+Specifies the width of this space. The I<value> may have any of the
+forms acceptable to B<Tk_GetPixels(3)>.
+
+=item B<-height> =E<gt> I<value>
+
+Specifies the height of this space. The I<value> may have any of
+the forms acceptable to B<Tk_GetPixels(3)>.
+
+=back
+
+=item I<$compound>-E<gt>B<Text>?(I<option => value ...>)?
+
+Creates a new text item of at the end of the last line of the compound
+image. Additional I<options> accepted by the text type are:
+
+=over 4
+
+=item B<-background> =E<gt> I<color>
+
+Specifies the background color of the text item.
+
+=item B<-font> =E<gt> I<name>
+
+Specifies the font to be used for this text item.
+
+=item B<-foreground> =E<gt> I<color>
+
+Specifies the foreground color of the text item.
+
+=item B<-justify> I<value>
+
+When there are multiple lines of text displayed in a text item, this
+option determines how the lines line up with each other. I<value>
+must be one of B<left>, B<center>, or B<right>.  B<Left>
+means that the lines' left edges all line up, B<center> means that
+the lines' centers are aligned, and B<right> means that the lines'
+right edges line up.
+
+=item B<-text> =E<gt> I<string>
+
+Specifies a text string to display in this text item.
+
+=item B<-underline> I<value>
+
+Specifies the integer index of a character to underline in the text
+item. 0 corresponds to the first character of the text displayed in
+the text item, 1 to the next character, and so on.
+
+=item B<-wraplength> I<value>
+
+This option specifies the maximum line length of the label string on
+this text item. If the line length of the label string exceeds this
+length, it is wrapped onto the next line, so that no line is longer
+than the specified length. The value may be specified in any of the
+standard forms for screen distances. If this value is less than or
+equal to 0 then no wrapping is done: lines will break only at newline
+characters in the text.
+
+=back
+
+=back
+
+=head1 EXAMPLE
+
+The following example creates a compound image with a bitmap and a
+text string and places this image into a B<Button(n)>
+widget. Notice that the image must be created using the widget
+that it resides in.
+
+  my $b = $parent->Button;
+  my $c = $b->Compound;
+  $b->configure(-image => $c);
+  $c->Line;
+  $c->Bitmap(-bitmap => 'warning');
+  $c->Space(-width => 8);
+  $c->Text(-text => "Warning", -underline => 0);
+  $b->pack;
+
+=head1 KEYWORDS
+
+image(n), Tix(n)

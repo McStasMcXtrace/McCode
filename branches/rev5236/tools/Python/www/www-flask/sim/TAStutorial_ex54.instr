@@ -1,0 +1,178 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Your name (email)
+* Date: Current Date
+* Origin: Your institution
+* Release: McStas CVS-080208
+* Version: 0.2
+* %INSTRUMENT_SITE: Institution_name_as_a_single word
+*
+* Instrument short description
+*
+* %Description
+* Instrument longer description (type, elements, usage...)
+*
+* Example: mcrun test.instr <parameters=values>
+*
+* %Parameters
+* FOCUSW: [m] Focus width of the source
+* FOCUSH: [m] Focus height of the source
+* DIST: [m] Focus dist of the source
+* Llow: [Angs] Lower boundary of traced rays
+* Lhigh: [Angs] Higher boundary of traced rays
+* OMM: [deg] Monochromator horizontal rotation angle 
+* TTM: [deg] Monochromator scattering angle
+* KAPPAMONO:[Angs-1] Monochromator scattering vector
+* SAMPLE: [1] Choice of 1) Vanadium, 2) 2-line powder, 3) Na2Ca3Al2F14
+* BEAMSTOP: [1] Choose if beamstop is inserted or not
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT TAStutorial(FOCUSW=0.1,FOCUSH=0.1,DIST=1,Llow=0.1, Lhigh=10,OMM=36.607,TTM=73.214,KAPPAMONO=1.8734, SAMPLE=1, BEAMSTOP=0, string SAMPLEFILE="Na2Ca3Al2F14.laz")
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT Source = Source_Maxwell_3(
+    size = 0.1, l_low = Llow, l_high = Lhigh, dist = DIST, xw = FOCUSW,
+    yh = FOCUSH, T1 = 50, T2 = 50, T3 = 50, I1 = 1e14, I2 = 0,
+    I3 = 0)
+  AT (0, 0, 0) RELATIVE Origin
+
+// COMPONENT Source = Source_gen(
+//     radius = 0.01, Lmin= Llow, Lmax = Lhigh, dist = 1, xw = 0.1,
+//     yh = 0.1, T1 = 300, T2 = 300, T3 = 300, I1 = 1e14, I2 = 0,
+//     I3 = 0)
+//   AT (0, 0, 0) RELATIVE Origin
+// 
+
+// COMPONENT PSD_4pi = PSD_monitor_4PI(
+//     filename = "PSD_4pi", restore_neutron = 1, radius = 1)
+//   AT (0, 0, 0) RELATIVE Source
+
+COMPONENT PSD_1m = PSD_monitor(
+    filename = "PSD_1m", restore_neutron = 1, xwidth = 0.1,
+    yheight = 0.1)
+  AT (0, 0, 1) RELATIVE Origin
+
+
+COMPONENT Lmon_1m = L_monitor(
+    filename = "Lmon_1m", restore_neutron = 1, xwidth = 0.1,
+    yheight = 0.1, Lmin = Llow*0.9, Lmax = Lhigh*1.1, nchan=1000)
+  AT (0, 0, 1) RELATIVE Origin
+
+
+COMPONENT A1 = Arm(
+    )
+  AT (0, 0, 2) RELATIVE Source
+  ROTATED (0, OMM, 0) RELATIVE Source
+
+COMPONENT A2 = Arm(
+    )
+  AT (0, 0, 2) RELATIVE Source
+  ROTATED (0, TTM, 0) RELATIVE Source
+
+
+COMPONENT Mono = Monochromator_flat(
+    width = 0.1, height = 0.1,Q=KAPPAMONO)
+  AT (0, 0, 0) RELATIVE A1
+
+COMPONENT PSD_samplepos = PSD_monitor(
+    filename = "PSD_samplepos", restore_neutron = 1, xwidth = 0.01,
+    yheight = 0.01)
+  AT (0, 0, 1.5) RELATIVE A2
+
+
+COMPONENT Lmon_samplepos = L_monitor(
+    filename = "Lmon_samplepos", restore_neutron = 1, xwidth = 0.01,
+    yheight = 0.01, Lmin = Llow*0.9 , Lmax = Lhigh*1.1, nchan=1000)
+  AT (0, 0, 1.5) RELATIVE A2
+
+
+COMPONENT Vsample = V_sample(
+     radius_i = 0.003, radius_o = 0.005, h = 0.01)
+WHEN (SAMPLE==1)   AT (0, 0, 1.5) RELATIVE A2
+
+COMPONENT sample2line = PowderN(radius=0.01,h=0.01, d_phi=0.1, pack=0.5, 
+    DW=0.9, frac=0.5, reflections=SAMPLEFILE,
+    Vc=3.86*3.86*11.82, sigma_abs=0, sigma_inc=2, barns=1)
+WHEN (SAMPLE==2)   AT (0, 0, 1.5) RELATIVE A2
+
+COMPONENT sample = PowderN(
+    reflections = SAMPLEFILE, d_phi = 0.1, radius = 0.004,
+    h = 0.01, DW = 0.9, barns = 1, pack = 0.7, frac = 0, tfrac=0)
+WHEN (SAMPLE==3)  AT (0, 0, 1.5) RELATIVE A2
+EXTEND %{ 
+  if (mcipSAMPLE==3) {
+    if (!SCATTERED) ABSORB;
+  }
+%}
+
+COMPONENT BananaDetector = Monitor_nD(
+   xwidth=2, yheight = 0.09, 
+   options="banana, theta limits [-130 -10] bins=360, file =detector.dat")
+  AT (0,0,0) RELATIVE sample
+
+
+COMPONENT Beamstop = Beamstop(
+     radius = 0.1)
+WHEN (BEAMSTOP==1)   AT (0, 0, 1.7) RELATIVE A2
+ 
+
+COMPONENT PSD_4pi = PSD_monitor_4PI(
+     filename = "PSD_4pi", restore_neutron = 1, radius = 0.5)
+   AT (0, 0, 1.5) RELATIVE A2
+ 
+
+
+
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+
+
+
+
+
+
+
+

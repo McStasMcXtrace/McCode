@@ -1,0 +1,38 @@
+#!/usr/local/bin/perl -w
+
+sub translate
+{
+ my ($src,$dst,$ext,$ref) = @_;
+ $ref = "\L$ref";
+ my $Ref = "\u$ref";
+ open(TEXT,"<$src") || die "Cannot open $src:$!";
+ open(MINE,">$dst") || die "Cannot open $dst:$!";
+ while (<TEXT>)
+  {
+   s/\b$Ref\b/$ext/g;
+   s/${Ref}Cmd/${ext}Cmd/g;
+   s/\b$ref\b/\L$ext/g;
+   print MINE $_;
+  }
+ close(TEXT);
+ close(MINE);
+}
+
+sub mkExt
+{my ($ref,$ext) = @_;
+ mkdir($ext,0777) unless (-d $ext);
+ if (-f "Tk/$ext.pm")
+  {
+   rename("Tk/$ext.pm","$ext/$ext.pm");
+  }
+ translate("$ref/GNUmakefile","$ext/GNUmakefile",$ext,$ref);
+ translate("$ref/Makefile.PL","$ext/Makefile.PL",$ext,$ref);
+ translate("$ref/$ref.xs","$ext/$ext.xs",$ext,$ref);
+}
+
+my $ref = shift;
+
+foreach $ext (@ARGV)
+ {
+  mkExt($ref,$ext);
+ }

@@ -1,0 +1,62 @@
+MkXSUB("Tk::bind", XS_Tk_bind, XStoBind, Tk_BindObjCmd)
+MkXSUB("Tk::pack", XS_Tk_pack, XStoAfterSub, Tk_PackObjCmd)
+MkXSUB("Tk::grid", XS_Tk_grid, XStoGrid, Tk_GridObjCmd)
+MkXSUB("Tk::place", XS_Tk_place, XStoAfterSub, Tk_PlaceObjCmd)
+MkXSUB("Tk::form", XS_Tk_form, XStoAfterSub, Tix_FormCmd)
+MkXSUB("Tk::itemstyle", XS_Tk_itemstyle, XStoTclCmd, Tix_ItemStyleCmd)
+MkXSUB("Tk::winfo", XS_Tk_winfo, XStoSubCmd, Tk_WinfoObjCmd)
+MkXSUB("Tk::font", XS_Tk_font, XStoFont, Tk_FontObjCmd)
+MkXSUB("Tk::wm", XS_Tk_wm, XStoAfterSub, Tk_WmObjCmd)
+MkXSUB("Tk::grab", XS_Tk_grab, XStoSubCmd, Tk_GrabObjCmd)
+MkXSUB("Tk::focus", XS_Tk_focus, XStoSubCmd, Tk_FocusObjCmd)
+MkXSUB("Tk::event", XS_Tk_event, XStoEvent, Tk_EventObjCmd)
+MkXSUB("Tk::property", XS_Tk_property, XStoSubCmd, Tk_PropertyCmd)
+MkXSUB("Tk::clipboard", XS_Tk_clipboard, XStoDisplayof, Tk_ClipboardObjCmd)
+MkXSUB("Tk::bell", XS_Tk_bell, XStoDisplayof, Tk_BellObjCmd)
+MkXSUB("Tk::bindtags", XS_Tk_bindtags, XStoTk, Tk_BindtagsObjCmd)
+MkXSUB("Tk::destroy", XS_Tk_destroy, XStoTk, Tk_DestroyObjCmd)
+MkXSUB("Tk::raise", XS_Tk_raise, XStoTk, Tk_RaiseObjCmd)
+MkXSUB("Tk::lower", XS_Tk_lower, XStoTk, Tk_LowerObjCmd)
+MkXSUB("Tk::option", XS_Tk_option, XStoOption, Tk_OptionObjCmd)
+MkXSUB("Tk::image", XS_Tk_image, XStoImage, Tk_ImageObjCmd)
+MkXSUB("Tk::selection", XS_Tk_selection, XStoTk, Tk_SelectionObjCmd)
+
+#if defined(__WIN32__) || defined(MAC_TCL)
+MkXSUB("Tk::tk_chooseColor", XS_Tk_tk_chooseColor, XStoTk, Tk_ChooseColorObjCmd)
+MkXSUB("Tk::tk_chooseDirectory", XS_Tk_tk_chooseDirectory, XStoTk, Tk_ChooseDirectoryObjCmd)
+MkXSUB("Tk::tk_getOpenFile", XS_Tk_tk_getOpenFile, XStoTk, Tk_GetOpenFileObjCmd)
+MkXSUB("Tk::tk_getSaveFile", XS_Tk_tk_getSaveFile, XStoTk, Tk_GetSaveFileObjCmd)
+#endif
+#if defined(__WIN32__)
+MkXSUB("Tk::tk_messageBox", XS_Tk_tk_messageBox, XStoTk, Tk_MessageBoxObjCmd)
+#endif
+
+MkXSUB("Tk::tk", XS_Tk_tk, XStoTclCmd, Tk_TkObjCmd)
+
+#if 0
+MkXSUB("Tk::exit", XS_Tk_exit, XStoNoWindow, Tcl_ExitCmd)
+MkXSUB("Tk::fileevent", XS_Tk_fileevent, XStoNoWindow, Tcl_FileeventCmd)
+#endif
+MkXSUB("Tk::after", XS_Tk_after, XStoNoWindow, Tcl_AfterObjCmd)
+#ifndef WIN32
+MkXSUB("Tk::send", XS_Tk_send, XStoTclCmd, Tk_SendCmd)
+#endif
+
+MkXSUB("Tk::button", XS_Tk_button, XStoTclCmdNull, Tk_ButtonObjCmd)
+MkXSUB("Tk::checkbutton", XS_Tk_checkbutton, XStoTclCmdNull, Tk_CheckbuttonObjCmd)
+MkXSUB("Tk::label", XS_Tk_label, XStoTclCmdNull, Tk_LabelObjCmd)
+MkXSUB("Tk::radiobutton", XS_Tk_radiobutton, XStoTclCmdNull, Tk_RadiobuttonObjCmd)
+MkXSUB("Tk::_menu", XS_Tk__menu, XStoTclCmdNull, 0)
+
+MkXSUB("Tk::message", XS_Tk_message, XStoTclCmd, Tk_MessageObjCmd)
+MkXSUB("Tk::frame", XS_Tk_frame, XStoTclCmd, Tk_FrameObjCmd)
+MkXSUB("Tk::labelframe", XS_Tk_labelframe, XStoTclCmd, Tk_LabelframeObjCmd)
+MkXSUB("Tk::panedwindow", XS_Tk_panedwindow, XStoTclCmd, Tk_PanedWindowObjCmd)
+MkXSUB("Tk::toplevel", XS_Tk_toplevel, XStoTclCmd, Tk_ToplevelObjCmd)
+MkXSUB("Tk::update", XS_Tk_update, XStoTclCmd, Tk_UpdateObjCmd)
+MkXSUB("Tk::tkwait", XS_Tk_tkwait, XStoTclCmd, Tk_TkwaitObjCmd)
+MkXSUB("Tk::configure", XS_Tk_configure, XStoWidget, newSVpv("configure",0))
+MkXSUB("Tk::cget", XS_Tk_cget, XStoWidget, newSVpv("cget",0))
+
+
+

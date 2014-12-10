@@ -1,0 +1,107 @@
+#!/usr/local/bin/perl -w
+
+use strict;
+
+my %ref;
+my %def;
+my %file;
+
+sub read_object
+{
+ my $obj = shift;
+ open(NM,"nm -p $obj|") || die "Cannot open nm $obj:$!";
+ $def{$obj} = {};
+ $file{$obj} = {};
+ my @refs = ();
+ while (<NM>)
+  {
+   if (/\b([A-Z])\b\s*_?(.*)$/)
+    {
+     my ($kind,$name) = ($1,$2);
+     $file{$obj}{$name} = $kind;
+     if ($kind ne 'U')
+      {
+       $def{$obj}{$name} = $kind;
+      }
+     else
+      {
+       $ref{$name} = [] unless (exists $ref{$name});
+       push(@{$ref{$name}},$obj);
+       push(@refs,$name);
+      }
+    }
+  }
+ close(NM);
+ return @refs;
+}
+
+warn "Scanning object files\n";
+foreach my $obj (<*.o>,<../*.o>)
+ {
+  # next if $obj =~ /_f\.o$/;
+  read_object($obj);
+ }
+
+warn "Analysing...\n";
+if (@ARGV)
+ {
+  FILE:
+  foreach my $file (@ARGV)
+   {
+    if (exists $file{$file})
+     {
+      foreach my $sym (keys %{$def{$file}})
+       {
+        if (exists $ref{$sym})
+         {
+          my @files = grep(!/_f\.o$/,@{$ref{$sym}});
+          if (@files)
+           {
+            print "$file defines $sym for ",join(',',@files),"\n";
+            next FILE;
+           }
+         }
+       }
+      warn "No good reason for $file!\n";
+     }
+    else
+     {
+      my %exc;
+      my @sym = read_object($file);
+      foreach my $sym (sort @sym)
+       {
+        next unless $sym =~ /^[TL]/;
+        if (exists $ref{$sym})
+         {
+          my @files = grep($_ ne $file,grep(!/_f\.o$/,@{$ref{$sym}}));
+          if (@files)
+           {
+            print "$sym needed by ",join(',',@files),"\n";
+           }
+          else
+           {
+            @files = grep(/_f\.o$/,@{$ref{$sym}});
+            if (@files)
+             {
+              warn "$sym only used in ",join(',',@files),"\n";
+              if (@files == 1)
+               {
+                my $exc = $files[0];
+                die "Strange $exc" unless $exc =~ s/_f\.o$/.nexc/;
+                $exc{$exc} = [] unless exists  $exc{$exc};
+                push(@{$exc{$exc}},$sym);
+               }
+             }
+           }
+         }
+       }
+      foreach my $exc (keys %exc)
+       {
+        open(EXC,">$exc") || die "Cannot open $exc:$!";
+        print EXC join("\n",@{$exc{$exc}},'');
+        close(EXC);
+       }
+     }
+   }
+ }
+

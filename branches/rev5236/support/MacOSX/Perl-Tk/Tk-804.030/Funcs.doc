@@ -1,0 +1,187 @@
+From  michael@santafe.edu  Fri Mar  3 07:06:55 1995
+Return-Path: <michael@santafe.edu>
+Date: Fri, 3 Mar 95 00:03:19 MST
+From: michael@santafe.edu (Michael I Angerman)
+Message-Id: <9503030703.AA00785@sfi.santafe.edu>
+To: nTk@franz.ww.tu-berlin.de
+Cc: Nick.Ing-Simmons@tiuk.ti.com
+Cc: perl5-porters@africa.nicoh.com
+Cc: john@wpi.edu
+Cc: michael@santafe.edu
+Subject: Documentation on tkGlue.c
+P-From: michael@santafe.edu (Michael I Angerman)
+
+	This is a complete listing of all the functions found in
+tkGlue.c as of version Tk-a13.tar.gz
+
+	tkGlue.c is a very important file in the Tk distribution and
+so I thought I would begin to document this file since currently there
+are very few comments.  I think one should consider possibly breaking
+up tkGlue.c into several files possibly based on the organization
+below.  Any way, this documentation may be valuable to someone who has
+never looked at tkGlue.c before and wants to get an initial idea of
+what functions are located in this file.
+
+Enjoy perusing,
+
+Michael I Angerman
+The Santa Fe Institute
+1399 Hyde Park Road
+Santa Fe, New Mexico 87501
+michael@santafe.edu
+505-984-8800
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Cut Here >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+Functions Based on Tcl
+----------------------
+
+Tcl_AddErrorInfo(interp, message)
+Tcl_AppendArg(interp, arg)
+Tcl_AppendElement(interp, string)
+Tcl_AppendResult(interp, va_alist)
+Tcl_ArgResult(interp, sv)
+Tcl_CallWhenDeleted(interp, proc, clientData)
+Tcl_CallbackResult(interp, sv)
+Tcl_CreateCommand(interp, cmdName, proc, clientData, deleteProc)
+Tcl_DeleteInterp(interp)
+Tcl_DoubleResults(interp, count, append, va_alist)
+Tcl_GetBoolean(interp, sv, boolPtr)
+Tcl_GetDouble(interp, sv, doublePtr)
+Tcl_GetInt(interp, sv, intPtr)
+Tcl_GetOpenFile(interp, string, doWrite, checkUsage, filePtr)
+Tcl_GetResult(interp)
+Tcl_GetVar(interp, varName, flags)
+Tcl_GetVar2(interp, sv, part2, flags)
+Tcl_IntResults(interp, count, append, va_alist)
+Tcl_Merge(argc, args)
+Tcl_Panic(char *fmt,...)
+Tcl_PosixError(interp)
+Tcl_RegExpCompile(interp, string)
+Tcl_RegExpExec(interp, re, string, start)
+Tcl_RegExpRange(re, index, startPtr, endPtr)
+Tcl_ResetResult(interp)
+Tcl_SetResult(interp, string, freeProc)
+Tcl_SetVar(interp, varName, newValue, flags)
+Tcl_SetVar2(interp, sv, part2, newValue, flags)
+Tcl_SprintfResult(Tcl_Interp * interp, char *fmt,...)
+Tcl_SprintfResult(interp, fmt, va_alist)
+Tcl_TildeSubst(interp, name, bufferPtr)
+Tcl_TraceVar(interp, varName, flags, proc, clientData)
+Tcl_TraceVar2(interp, sv, part2, flags, tkproc, clientData)
+Tcl_UntraceVar(interp, varName, flags, proc, clientData)
+Tcl_UntraceVar2(interp, sv, part2, flags, tkproc, clientData)
+
+Functions Based on Tk
+---------------------
+
+Tk_AppendImage(interp, name)
+Tk_AppendWidget(interp, tkwin)
+Tk_BackgroundError(interp)
+Tk_ChangeScreen(interp, dispName, screenIndex)
+Tk_CreateImage(interp, cmdName, proc, clientData, deleteProc, typePtr)
+Tk_CreateWidget(interp, tkwin, proc, clientData, deleteProc)
+Tk_DeleteWidget(interp, tkwin)
+Tk_ImageResult(interp, name)
+Tk_MainWindow(interp)
+Tk_WidgetResult(interp, tkwin)
+
+Functions Based on Lang
+-----------------------
+
+LangAllocVec(n)
+LangBadFile(fd)
+LangCallbackArg(sv)
+LangCatArg(out, sv, refs)
+LangClientMessage(interp, tkwin, event)
+LangCloseHandler(interp, arg, f, proc)
+LangCmpCallback(a, b)
+LangCopyArg(sv)
+LangCopyCallback(sv)
+LangDeadWindow(interp, tkwin)
+LangDoCallback(interp, sv, result, argc, va_alist)
+LangEval(interp, cmd, global)
+LangEventCallback(interp, sv, event, keySym)
+LangEventHook(flags)
+LangExit(value)
+LangFindVar(interp, tkwin, name)
+LangFreeArg(sv, freeProc)
+LangFreeCallback(sv)
+LangFreeVar(sv)
+LangFreeVec(count, p)
+LangMakeCallback(sv)
+LangMergeString(argc, args)
+LangMethodCall(interp, sv, method, result, argc, va_alist)
+LangNull(sv)
+LangPrint(sv)
+LangRestoreResult(interp, old)
+LangSaveResult(interp)
+LangSaveVar(interp,sv,vp,type)
+LangSetArg(sp, arg)
+LangSetDefault(sp, s)
+LangSetDouble(sp, v)
+LangSetImage(interp, argp, name)
+LangSetInt(sp, v)
+LangSetString(sp, s)
+LangSetSv(sp, arg)
+LangSetWidget(interp, argp, tkwin)
+LangString(sv)
+LangStringMatch(string, match)
+LangVarArg(sv)
+Lang_GetErrorCode(interp)
+Lang_GetErrorInfo(interp)
+Lang_SetErrorCode(interp, code)
+Lang_SplitList(interp, sv, argcPtr, argvPtr, freeProc)
+
+Other Function Definitions
+--------------------------
+
+CopyAv(dst, src)
+FindAv(interp, who, create, key)
+FindHv(interp, who, create, key)
+InterpHv(interp)
+NameFromCv(cv)
+ResultAv(interp, who, create)
+
+Blessed(package, sv)
+Boot_Glue
+CallCallback(sv, flags)
+Call_Tk(info, items, args)
+Check_Eval(interp)
+Decrement(SV * sv, char *who)
+DumpStack _((void))
+Dump_vec(who, count, data)
+EnterSubCommands(package, va_alist)
+EnterWidgetMethods(package, va_alist)
+EventToSv(ix,obj)
+GetWindow(sv)
+HandleBgErrors(clientData)
+ImageRef(interp, path)
+Increment(SV * sv, char *who)
+MakeReference(sv)
+Perl_GeomLostSlave(clientData,tkwin)
+Perl_GeomRequest(clientData,tkwin)
+Perl_Trace(ix, sv)
+PushCallbackArgs(interp, svp ,obj)
+PushVarArgs(ap,argc)
+SelGetProc(clientData,interp,portion,numItems,format,type,tkwin)
+TkToMainWindow(tkwin)
+TkToWidget(tkwin,pinterp)
+WidgetRef(interp, path)
+WindowCommand(sv, hv_ptr)
+
+XS(BindClientMessage)
+XS(DoWhenIdle)
+XS(FreeAbstract)
+XS(ManageGeometry)
+XS(SelectionGet)
+XS(XEventInfo)
+XS(XStoBind)
+XS(XStoSubCmd)
+XS(XStoTk)
+XS(XStoWidget)
+
+do_watch(void)
+handle_generic(clientData, eventPtr)
+handle_idle(clientData)
+SetTclResult(interp,count)

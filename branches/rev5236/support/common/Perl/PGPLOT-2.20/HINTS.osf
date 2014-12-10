@@ -1,0 +1,39 @@
+
+Digital Unix (dec_osf)
+----------------------
+
+Often a problem like this:
+
+apollo% perl -Iblib test.pl
+Default Device for plot tests [recommend /XSERVE] ?
+ ============== Running test1.p ==============
+Can't load
+'/scratch/astrop/vjm/build/PGPLOT-2.11/blib/arch/auto/PGPLOT/PGPLOT.so' for
+module PGPLOT: dlopen: cannot load
+/scratch/astrop/vjm/build/PGPLOT-2.11/blib/arch/auto/PGPLOT/PGPLOT.so at
+/usr/physics/lib/perl5/DynaLoader.pm line  140, <STDIN> chunk 1.
+ 
+ at /scratch/astrop/vjm/build/PGPLOT-2.11/blib/lib/PGPLOT.pm line 29
+BEGIN failed--compilation aborted at test1.p line 3, <STDIN> chunk 1.
+
+The answer:
+
+From: Vince McIntyre <vjm@Physics.usyd.edu.au>
+ 
+
+Karl
+the immediate problem was LD_LIBRARY_PATH and the bastard OSF/1 ld.
+
+When I added /usr/X11R6/lib to LD_LIBRARY_PATH, the module loads ok.
+The problem appears to be that our libcpgplot doesn't have runtime paths
+embedded, and we need LD_LIBRARY_PATH.
+So you're off the hook :-)
+
+All I have to do now is figure out what's wrong with our installation of the
+pgplot x11 devices... 
+
+Thanks for listening
+Vince
+
+------------------------------------------------------------------------------
+

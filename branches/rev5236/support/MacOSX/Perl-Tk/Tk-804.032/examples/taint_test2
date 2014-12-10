@@ -1,0 +1,15 @@
+use Tk ();
+my $mw = Tk::MainWindow->new();
+my $l = $mw->Label(-text=>'see the error')->grid;
+if (@ARGV)
+  {
+    # trigger a error to see how a 'normal' error looks like
+    $l->afterIdle([$l, 'configurex', '-text', 'no error found']);
+  }
+else
+  {
+    # Fails with -T
+    $l->afterIdle([$l, 'configurex', '-text', 'no error found']);
+  }
+Tk::MainLoop;
+

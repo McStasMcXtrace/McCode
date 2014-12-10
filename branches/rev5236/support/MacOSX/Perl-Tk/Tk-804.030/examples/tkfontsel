@@ -1,0 +1,55 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+use Tk::Font;
+use Tk::widgets qw(BrowseEntry Text Spinbox);
+my %fopt = (-family => 'fixed', -weight => 'medium',
+            -slant => 'roman', -size => 12);
+my $mw   = MainWindow->new();
+my $font = $mw->Font(%fopt);
+my $family  = $mw->BrowseEntry(-variable => \$fopt{-family},
+                           -options => [sort $mw->fontFamilies()],
+                           -command => [\&SetFont,$font,\%fopt]);
+my $size = $mw->Spinbox(-width => 3, -textvariable => \$fopt{-size},
+                        -from => 6, -to => 72,
+                        -command => [\&SetFont,$font,\%fopt]);
+my $weight = $mw->Optionmenu(-width => 3, -variable => \$fopt{-weight},
+                        -options => [qw(medium bold)],
+                        -command => [\&SetFont,$font,\%fopt]);
+
+Tk::grid($mw->Label(-text => 'Family:',-justify => 'right'), $family,
+         $mw->Label(-text => 'Size:',-justify => 'right'), $size,
+         $mw->Label(-text => 'Weight:',-justify => 'right'), $weight,
+         -sticky => 'ew',
+        );
+
+my $text = $mw->Scrolled(Text => -font => $font, -width => 40, -height => 20)->grid(-sticky => 'nsew', -columnspan => 6);
+
+my $l = '';
+for my $ch (0x20..0x7E,0xa0..0xff)
+ {
+  $l .= chr($ch);
+  if (length($l) == 16)
+   {
+    $text->insert(end => "$l\n");
+    $l = '';
+   }
+ }
+
+#$text->insert('end',<<"END");
+#Example Text - list
+#\x{20ac}40 Only.
+#END
+
+MainLoop;
+
+sub SetFont
+{
+ my ($font,$fopt) = @_;
+ my @opt = %$fopt;
+ print "@opt\n";
+ $font->configure(%$fopt);
+ @opt = $font->actual;
+ print "$$font @opt\n";
+}
+

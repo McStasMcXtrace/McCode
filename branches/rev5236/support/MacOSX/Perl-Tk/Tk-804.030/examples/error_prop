@@ -1,0 +1,23 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+use Tk::ErrorDialog;
+
+# $SIG{__DIE__} = sub { print "die(",join(',',@_),")\n" };
+
+sub one
+{
+ shift->BackTrace("dying");
+}
+
+sub two
+{
+ my $w = shift;
+ eval { one($w) };
+ $w->BackTrace($@) if ($@);
+}
+
+my $mw = MainWindow->new;
+my $b  = $mw->Button(-text => 'Moan',
+              -command => sub { after(1000, \&two, $mw) })->pack(-expand => 0);
+MainLoop;

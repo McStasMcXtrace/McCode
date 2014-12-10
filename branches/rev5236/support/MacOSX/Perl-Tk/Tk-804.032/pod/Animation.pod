@@ -1,0 +1,92 @@
+
+=head1 NAME
+
+Tk::Animation - Display sequence of Tk::Photo images
+
+=for pm Tk/Animation.pm
+
+=for category Tk Image Classes
+
+=head1 SYNOPSIS
+
+  use Tk::Animation
+  my $img = $widget->Animation('-format' => 'gif', -file => 'somefile.gif');
+
+  $img->add_frame(@images);
+
+  $img->start_animation;
+  $img->start_animation( $period );
+
+  $img->next_image;
+  $img->prev_image;
+  $img->set_image( 0 .. $#frames );
+
+  $img->pause_animation;
+  $img->resume_animation( $period );
+
+  $img->fast_forward( $multiplier );
+  $img->fast_reverse( $multiplier );
+
+  $img->stop_animation;
+
+  $img->set_disposal_method( $boolean );
+
+=head1 DESCRIPTION
+
+In the simple case when C<Animation> is passed a GIF89 style GIF with
+multiple 'frames', it will build an internal array of C<Photo> images.
+
+The C<add_frame> method adds images to the sequence. It is provided
+to allow animations to be constructed from separate images.
+All images must be C<Photo>s and should all be the same size.
+
+C<start_animation($period)> then initiates a C<repeat> with specified
+I<$period> to sequence through these images. As for raw C<repeat>
+I<$period> is in milliseconds, for a 50Hz monitor it should be at
+least 20ms. If I<$period> is omitted it is determined from the GIF
+metadata (see below), or if this is not possible it defaults to 100
+milliseconds.
+
+C<stop_animation> cancels the C<repeat> and resets the image to the first
+image in the sequence.
+
+For fine-grained control C<next_image> and C<prev_image> move one frame forward
+or backward.  C<set_image> randomly positions the animation to a particular frame.
+
+C<pause_animation> pauses the movie and C<resume_animation> continues from the
+pause point.
+
+C<fast_forward> and C<fast_reverse> speed through the movie either
+forwards or backwards.  $multiplier specifies how much faster the
+animation moves.
+
+If L<Image::Info> is installed, then the repeat period time and
+disposal method of GIF animations are determined from the GIF metadata
+directly. Otherwise the disposal method must be set manually by using
+C<set_disposal_method> (1 for blanking the previous images, 0 for
+leaving the previous images as is). The repeat period time may be
+given in the C<start_animation> method.
+
+=head1 NOTES
+
+C<set_disposal_method> was formerly known as C<blank> method, but the
+naming of this method was a mistake.
+
+If the disposal method is not set correctly, either by
+C<set_disposal_method> or by determining from the GIF metadata, then
+the following may happen: By default Animation leaves the previous
+movie frame in the animation photo. Many times overlaying subsequent
+frames produces a composite that looks blurred.
+
+=head1 BUGS
+
+This module should not depend on a module which is not declared as a
+dependency (Image::Info).
+
+The delays between images may vary in a GIF animation. This cannot be
+handled by this module yet.
+
+The handling of the various disposal methods is not correct.
+
+=cut
+

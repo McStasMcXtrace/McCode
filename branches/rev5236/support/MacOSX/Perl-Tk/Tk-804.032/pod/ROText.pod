@@ -1,0 +1,48 @@
+
+=head1 NAME
+
+Tk::ROText - 'readonly' perl/Tk Text widget
+
+=for pm Tk/ROText.pm
+
+=for category Derived Widgets
+
+=head1 SYNOPSIS
+
+    use Tk::ROText;
+    ...
+    $ro = $mw->ROText(?options,...?);
+
+=head1 DESCRIPTION
+
+This "I<IS A>" text widget with all bindings removed that would alter
+the contents of the text widget. The contents can still be modified
+via method calls.
+
+=head2 BINDINGS
+
+Only read-only bindings from L<Tk::Text> are available in
+B<Tk::ROText>. Additionally the following bindings are defined:
+
+=over
+
+=item <space>
+
+Move the cursor forward by one screenful.
+
+=item <BackSpace>
+
+Move the cursor backward by one screenful.
+
+=back
+
+=head1 KEYWORDS
+
+widget, text, readonly
+
+=head1 SEE ALSO
+
+L<Tk::Text>
+
+=cut
+

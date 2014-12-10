@@ -1,0 +1,159 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::Selection - Manipulate the X selection
+
+=for category User Interaction
+
+=head1 SYNOPSIS
+
+I<$widget>-E<gt>B<Selection>I<Option>?(I<args>)?
+
+=head1 DESCRIPTION
+
+This command provides an interface to the X selection mechanism and
+implements the full selection functionality described in the
+X Inter-Client Communication Conventions Manual (ICCCM).
+
+The widget object used to invoke the methods below determines which
+display is used to access the selection.
+In order to avoid conflicts with B<selection> methods of widget classes
+(e.g. B<Text>) this set of methods uses the prefix B<Selection>.
+The following methods are currently supported:
+
+=over 4
+
+=item I<$widget>-E<gt>B<SelectionClear>?(B<-selection>=E<gt>I<selection>)?
+
+If I<selection> exists anywhere on I<$widget>'s display, clear it
+so that no window owns the selection anymore.  I<Selection>
+specifies the X selection that should be cleared, and should be an
+atom name such as PRIMARY or CLIPBOARD; see the Inter-Client
+Communication Conventions Manual for complete details.
+I<Selection> defaults to PRIMARY.
+Returns an empty string.
+
+=item I<$widget>-E<gt>B<SelectionGet>?(?B<-selection>=E<gt>I<selection>?,?B<-type>=E<gt>I<type>?)?
+
+Retrieves the value of I<selection> from I<$widget>'s display and
+returns it as a result.  I<Selection> defaults to PRIMARY.
+
+I<Type> specifies the form in which the selection is to be returned
+(the desired ``target'' for conversion, in ICCCM terminology), and
+should be an atom name such as STRING or FILE_NAME; see the
+Inter-Client Communication Conventions Manual for complete details.
+I<Type> defaults to STRING.  The selection owner may choose to
+return the selection in any of several different representation
+formats, such as STRING, ATOM, INTEGER, etc. (this format is different
+than the selection type; see the ICCCM for all the confusing details).
+
+If I<format> is not STRING then things get messy, the following
+description is from the Tcl/Tk man page as yet incompetely translated for
+the perl version - it is misleading at best.
+
+If the selection is returned in a non-string format, such as INTEGER
+or ATOM, the B<SelectionGet> converts it to a list of perl
+values: atoms are converted to their
+textual names, and anything else is converted integers.
+
+A goal of the perl port is to provide better handling of different
+formats than Tcl/Tk does, which should be possible given perl's
+wider range of ``types''. Although some thought went into this
+in very early days of perl/Tk what exactly happens is still
+"not quite right" and subject to change.
+
+=item I<$widget>-E<gt>B<SelectionHandle>(?B<-selection>=E<gt>I<selection>?,?B<-type>=E<gt>I<type>?,?B<-format>=E<gt>I<format>? I<callback>)
+
+Creates a handler for selection requests, such that I<callback> will
+be executed whenever I<selection> is owned by I<$widget> and
+someone attempts to retrieve it in the form given by I<type>
+(e.g. I<type> is specified in the B<selection get> command).
+I<Selection> defaults to PRIMARY, I<type> defaults to STRING, and
+I<format> defaults to STRING.  If I<callback> is an empty string
+then any existing handler for I<$widget>, I<type>, and
+I<selection> is removed.
+
+When I<selection> is requested, I<$widget> is the selection owner,
+and I<type> is the requested type, I<callback> will be executed
+with two additional arguments.
+The two additional arguments
+are I<offset> and I<maxBytes>:  I<offset> specifies a starting
+character position in the selection and I<maxBytes> gives the maximum
+number of bytes to retrieve.  The command should return a value consisting
+of at most I<maxBytes> of the selection, starting at position
+I<offset>.  For very large selections (larger than I<maxBytes>)
+the selection will be retrieved using several invocations of I<callback>
+with increasing I<offset> values.  If I<callback> returns a string
+whose length is less than I<maxBytes>, the return value is assumed to
+include all of the remainder of the selection;  if the length of
+I<callback>'s result is equal to I<maxBytes> then
+I<callback> will be invoked again, until it eventually
+returns a result shorter than I<maxBytes>.  The value of I<maxBytes>
+will always be relatively large (thousands of bytes).
+
+If I<callback> returns an error (e.g. via B<die>)
+then the selection retrieval is rejected
+just as if the selection didn't exist at all.
+
+The I<format> argument specifies the representation that should be
+used to transmit the selection to the requester (the second column of
+Table 2 of the ICCCM), and defaults to STRING.  If I<format> is
+STRING, the selection is transmitted as 8-bit ASCII characters (i.e.
+just in the form returned by I<command>).
+
+If I<format> is not STRING then things get messy, the following
+description is from the Tcl/Tk man page as yet untranslated for
+the perl version - it is misleading at best.
+
+If I<format> is
+ATOM, then the return value from I<command> is divided into fields
+separated by white space;  each field is converted to its atom value,
+and the 32-bit atom value is transmitted instead of the atom name.
+For any other I<format>, the return value from I<command> is
+divided into fields separated by white space and each field is
+converted to a 32-bit integer;  an array of integers is transmitted
+to the selection requester.
+
+The I<format> argument is needed only for compatibility with
+many selection requesters, except Tcl/Tk.  If Tcl/Tk is being
+used to retrieve the selection then the value is converted back to
+a string at the requesting end, so I<format> is
+irrelevant.
+
+A goal of the perl port is to provide better handling of different
+formats than Tcl/Tk does, which should be possible given perl's
+wider range of ``types''. Although some thought went into this
+in very early days of perl/Tk what exactly happens is still
+"not quite right" and subject to change.
+
+=item I<$widget>-E<gt>B<SelectionOwner>?(B<-selection>=E<gt>I<selection>)?
+
+B<SelectionOwner> returns the
+window in this application that owns I<selection> on the display
+containing I<$widget>, or an empty string if no window in this
+application owns the selection.  I<Selection> defaults to PRIMARY.
+
+=item I<$widget>-E<gt>B<SelectionOwn>?(?B<-command>=E<gt>I<callback>?,?B<-selection>=E<gt>I<selection>?)?
+
+B<SelectionOwn> causes I<$widget> to become
+the new owner of I<selection> on I<$widget>'s display, returning
+an empty string as result. The existing owner, if any, is notified
+that it has lost the selection.
+If I<callback> is specified, it will be executed when
+some other window claims ownership of the selection away from
+I<$widget>.  I<Selection> defaults to PRIMARY.
+
+=back
+
+=head1 KEYWORDS
+
+clear, format, handler, ICCCM, own, selection, target, type
+
+=cut
+

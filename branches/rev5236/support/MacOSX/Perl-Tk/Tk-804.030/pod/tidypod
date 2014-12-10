@@ -1,0 +1,39 @@
+#!/usr/local/bin/new/perl -w
+
+undef $/;
+$^I = '.bak';
+
+my @undo;
+
+my $edits = 0;
+while (<>)
+ {
+  $edits += s/[\t ]+(?=\n)//mg;
+  $edits += s/\n=back\n+=over\s+\d+\n/\n\n/mg;
+  $edits += s/\n{3,}/\n\n/mg;
+  $edits += s/L<(\w+)\.pod>/L<Tk::$1>/mg;
+  $edits += s/I<(\$\w+)-E<gt>>/I<$1>-E<gt>/mg;
+  $edits += s/^See the L<Tk::options> documentation for details[^\.]*\.\n/See L<Tk::options> for details of the standard options.\n/mg;
+
+  # I<$this>-E<gt>B<...   -->       I<$this>->B<...
+  # B<-\w+> =E<gt>  -->  B<-$1> =>
+  # $edits += s/I<\$(\w+)>-E<gt>/I<\$$1>->/mg;
+  # $edits += s/([IB]<-?\w+>\s*)=E<gt>/$1=>/mg;
+
+  print;
+  if (eof)
+   {
+    warn "$edits $ARGV\n";
+    push(@undo,$ARGV) unless $edits;
+    $edits = 0;
+   }
+ }
+
+foreach my $file (@undo)
+ {
+  if (-f "$file$^I")
+   {
+    unlink($file) if -f $file;
+    rename("$file$^I",$file);
+   }
+ }

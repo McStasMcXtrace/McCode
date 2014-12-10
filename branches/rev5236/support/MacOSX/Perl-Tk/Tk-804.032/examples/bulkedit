@@ -1,0 +1,160 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+use Tk::LabEntry;
+use Tk::ErrorDialog;
+use File::Find;
+use ExtUtils::Manifest "/mani/";
+
+my $containing = '/perl\b';
+my $matching   = '\.p[ml]$';
+my $mode       = 'MANIFEST';
+my %filefunc   = ( MANIFEST => \&manifiles,
+                   Dummy    => \&dummyfiles,
+                   'find' => \&findfiles );
+
+sub accept_file
+{
+ my ($file) = @_;
+ return 0 unless (-w $file);
+ my $accept = $matching && ($file =~ /$matching/);
+ if (!$accept && $containing)
+  {
+   open(FILE,"<$file") || die "Cannot open $file:$!";
+   my $line = <FILE>;
+   close(FILE);
+   $accept = $line && $line =~ m#$containing#;
+  }
+ return $accept;
+}
+
+sub findfiles
+{
+ my ($dir) = @_;
+ my @files = ();
+ die "Not a directory $dir\n", unless (-d $dir);
+ find(sub {
+ $File::Find::prune = 0;
+ if (-T $_ && !/%$/)
+  {
+   push(@files,"$File::Find::dir/$_") if (accept_file($_));
+  }
+ elsif (-d $_)
+  {
+   $File::Find::prune = 1 if ($_ eq 'blib');
+  }},$dir);
+ return @files;
+}
+
+sub dummyfiles
+{
+ my ($dir) = @_;
+ my @files = ();
+ my $file;
+ foreach $file (map("$dir/$_",'aaaa'...'aaaz'))
+  {
+   push(@files,$file);
+  }
+ return @files;
+}
+
+sub manifiles
+{
+ my ($dir) = @_;
+ my @files = ();
+ if (-d $dir && -f "$dir/MANIFEST")
+  {
+   my $list = maniread("$dir/MANIFEST");
+   my $file;
+   foreach $file (map("$dir/$_",keys %$list))
+    {
+     push(@files,$file) if (accept_file($file));
+    }
+  }
+ else
+  {
+   die "No $dir/MANIFEST\n";
+  }
+ return @files;
+}
+
+sub undo
+{
+ my $file;
+ foreach $file (@_)
+  {
+   if (-f "$file.bak")
+    {
+     rename("$file.bak",$file) || die "Cannot rename $file $file.undone:$!";
+    }
+   else
+    {
+     warn "No $file.bak\n";
+    }
+  }
+}
+
+sub apply
+{
+ my $expr = shift;
+ if (@_)
+  {
+   local $^I = ".bak";
+   my $sub = eval "sub { $expr }";
+   die "$@" if ($@);
+   my @undo = ();
+   @ARGV = @_;
+   my $changes = 0;
+   while (<>)
+    {
+     my $line = $_;
+     if (&$sub)
+      {
+       print STDERR "$ARGV:$.:$_";
+       $changes++ if ($line ne $_);
+      }
+     print;
+     if (eof)
+      {
+       if ($changes)
+        {
+         print STDERR "$changes in $ARGV due to $expr\n";
+         $changes = 0;
+        }
+       else
+        {
+         print STDERR "No changes in $ARGV due to $expr\n";
+         push(@undo,$ARGV);
+        }
+      }
+    }
+   undo(@undo) if (@undo);
+  }
+}
+
+sub populate
+{
+ my ($lb,$dir) = @_;
+ $lb->delete(0,'end');
+ $lb->Busy;
+ $lb->insert('end',sort &{$filefunc{$mode}}($dir));
+ $lb->Unbusy;
+}
+
+my $mw   = MainWindow->new;
+my $ft   = $mw->Frame->pack(-fill => 'x');
+my $expr = "";
+my $dir  = `pwd`;
+chomp($dir);
+my $ed   = $mw->LabEntry(-label => 'Directory: ', -textvariable => \$dir,  -width => 60)->pack(-fill => 'x');
+$ed->bind('<Return>', sub { populate(shift,$dir)});
+$mw->LabEntry(-label => 'Matching: ', -textvariable => \$matching,  -width => 20)->pack(-fill => 'x');
+$mw->LabEntry(-label => 'Containing: ', -textvariable => \$containing,  -width => 20)->pack(-fill => 'x');
+my $lb   = $mw->Scrolled('Listbox')->pack(-fill => 'both', -expand => 1);
+my $ee   = $mw->LabEntry(-label => 'Expression: ',-textvariable => \$expr, -width => 60)->pack(-fill => 'x');
+$ft->Button(-text => 'Quit', -command => [destroy => $mw])->pack(-side => 'left');
+$ft->Button(-text => 'Files', -command => sub { populate($lb,$dir)})->pack(-side => 'left');
+$ft->Button(-text => 'Apply', -command => sub { apply($expr,$lb->get(0,'end')) })->pack(-side => 'left');
+$ft->Button(-text => 'Undo',  -command => sub { undo($lb->get(0,'end')) })->pack(-side => 'left');
+$ft->Optionmenu(-options => [ keys %filefunc ], -textvariable => \$mode )->pack(-side => 'right');
+MainLoop;

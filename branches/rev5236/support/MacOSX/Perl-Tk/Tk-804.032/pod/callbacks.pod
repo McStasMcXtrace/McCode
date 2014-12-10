@@ -1,0 +1,104 @@
+# $Id: callbacks.pod 1.3 Thu, 27 Nov 1997 00:26:00 +0100 ach $
+
+=head1 NAME
+
+Tk::callbacks - Specifying code for Tk to call.
+
+=for category Binding Events and Callbacks
+
+=head1 SYNOPSIS
+
+One can specify a callback in one of the following ways:
+
+Without arguments:
+
+    ... => \&subname, ...
+    ... => sub { ... }, ...
+    ... => 'methodname', ...
+
+or with arguments:
+
+    ... => [ \&subname, args ... ], ...
+    ... => [ sub { ... }, args... ], ...
+    ... => [ 'methodname', args... ], ...
+
+=head1 DESCRIPTION
+
+Perl/Tk has a callback, where Tcl/Tk has a command string (i.e. a fragment of
+Tcl to be executed).  A perl/Tk callback can take one of the following
+basic forms:
+
+=over 4
+
+=item * Reference to a subroutine C<\E<amp>subname>
+
+=item * Anonymous subroutine (closure) C<sub { ... }>
+
+=item * A method name C<'methodname'>
+
+=back
+
+Any of these can be provided with arguments by enclosing them and the
+arguments in B<[]>. Here are some examples:
+
+I<$mw>->B<bind>(I<$class,> B<"E<lt>DeleteE<gt>" =E<gt> 'Delete'>);
+
+This will call I<$widget>->B<Delete>, the I<$widget> being provided (by bind) as
+the one where the Delete key was pressed.
+
+While having bind provide a widget object for you is ideal in many cases
+it can be irritating in others. Using the list form this behaviour
+can be modified:
+
+I<$a>-E<gt>B<bind>(B<"E<lt>DeleteE<gt>">,[I<$b> =E<gt> 'Delete']);
+
+because the first element I<$b> is an object bind
+will call I<$b>-E<gt>B<Delete>.
+
+Note that method/object ordering only matters for C<bind> callbacks,
+the auto-quoting in perl5.001 makes the first of these a little more readable:
+
+    $w->configure(-yscrollcommand => [ set => $ysb]);
+    $w->configure(-yscrollcommand => [ $ysb => 'set' ]);
+
+but both will call C<$ysb>-E<gt>set(args provided by Tk)
+
+Another use of arguments allows you to write generalized methods which are
+easier to re-use:
+
+    $a->bind("<Next>",['Next','Page']);
+    $a->bind("<Down>",['Next','Line']);
+
+This will call C<$a>-E<gt>I<Next>('Page') or C<$a>-E<gt>I<Next>('Line') respectively.
+
+Note that the contents of the C<[]> are evaluated by perl when the
+callback is created. It is often desirable for the arguments provided
+to the callback to depend on the details of the event which caused
+it to be executed. To allow for this callbacks can be nested using the
+C<Ev(...)> "constructor".
+C<Ev(...)> inserts callback objects into the
+argument list. When perl/Tk glue code is preparing the argument list for
+the callback it is about to call it spots these special objects and
+recursively applies the callback process to them.
+
+=head1 EXAMPLES
+
+    $entry->bind('<Return>' => [$w , 'validate', Ev(['get'])]);
+
+    $toplevel->bind('all', '<Visibility>', [\&unobscure, Ev('s')]);
+
+    $mw->bind($class, '<Down>', ['SetCursor', Ev('UpDownLine',1)]);
+
+=head1 SEE ALSO
+
+L<Tk::bind|Tk::bind>
+L<Tk::after|Tk::after>
+L<Tk::options|Tk::options>
+L<Tk::fileevent|Tk::fileevent>
+
+=head1 KEYWORDS
+
+callback, closure, anonymous subroutine, bind
+
+=cut
+

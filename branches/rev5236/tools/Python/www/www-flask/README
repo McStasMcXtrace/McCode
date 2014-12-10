@@ -1,0 +1,28 @@
+* Application layout
+
+Paths:
+data/app.db:   The sqlite3 database file.
+sim/:          Stores the available instrument source files and documentation.
+
+Scripts:
+bin/get-dependencies.sh
+               Retrieves external dependencies (Python modules etc.)
+
+bin/update-simulations.sh
+               Visits files in sim/src and updates sim/bin and data/app.db.
+               Run this script whenever the instrument files have changed.
+
+bin/start-worker.sh
+               Starts a worker that can run simulations.
+
+bin/start-server.sh
+               Starts a web-server for the application.
+
+
+
+* Using the application
+
+1. Copy instrument source files (*.instr) to sim/src
+2. Run update_sim.sh
+3. Start a worker by running worker.py
+4. Run run.py

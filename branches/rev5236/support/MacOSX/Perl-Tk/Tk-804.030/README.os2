@@ -1,0 +1,84 @@
+There are 3 different ways to compile Tk under OS/2: for XFree86, for Open32
+(this is IBM's porting level above Win32), and for PM.
+
+To compile for Open32 and PM you need additional files, available in
+$CPAN/ports/os2/tk/.  To be safe, download all of them, and unzip the files
+with patches to be ready to apply.  If you work with a release of Tk later
+than 402.001, some of the patches may be already applied, so use your
+best judgement.
+
+!!! You do not need to apply patches to .../os2/* files, they are
+already applied !!!  Just ignore the patches not mentioned below.  (You
+may want to apply one of them in reverse (-R to gnupatch) to get a source for
+tcl/Tk.  Another one need to stay, it corrects bugs.)
+
+A lot of problems are unresolved.  Please be patient.  All the Tk-ish
+problem in tcl/tk port PLUS unability to do fileevents are
+
+Building for PM
+~~~~~~~~~~~~~~~
+a) Unzip both
+	perltk_os2_pm.zip
+	perltk_os2_common.zip
+   inside the main Tk directory.
+b) Apply the patches in
+	diff_pTk_for_os2_402
+	diff_mTk_for_os2_402
+   with
+	gnupatch -p1 < patch-file-name |& tee 00patch
+   or
+	gnupatch -p1 < patch-file-name
+c) Do
+	perl Makefile.PM pm
+	make
+	addres
+	perl__ -Mblib basic_demo
+	perl__ -Mblib demos/widget
+	make install
+d) Do not forget you need to use perl__ to run PM programs instead of
+   just perl!
+
+Building for Open32
+~~~~~~~~~~~~~~~~~~~
+a) Unzip
+	perltk_os2_common.zip
+   inside the main Tk directory.
+b) Apply the patches in
+	diff_pTk_for_os2_402
+	diff_mTk_for_os2_402
+   with
+	gnupatch -p1 < patch-file-name |& tee 00patch
+   or
+	gnupatch -p1 < patch-file-name
+c) Do
+	perl Makefile.PM open32
+	make
+	addres
+	perl__ -Mblib basic_demo
+	perl__ -Mblib demos/widget
+	make install
+d) Do not forget you need to use perl__ to run PM programs!
+
+Building for XFree86
+~~~~~~~~~~~~~~~~~~~~
+a) Apply the patches in
+	diff_pTk_for_os2_402
+	diff_mTk_for_os2_402
+   with
+	gnupatch -p1 < patch-file-name |& tee 00patch
+   or
+	gnupatch -p1 < patch-file-name
+b) Do
+	perl Makefile.PM x
+	make
+	perl -Mblib basic_demo
+	perl -Mblib demos/widget
+	make install
+
+Authors:
+~~~~~~~
+
+PM code for tcl/Tk:
+	Illya Vaes, ivaes@hr.ns.nl
+Port to Open32, XFree86-OS/2, adaptation of PM code to Perl/Tk:
+	Ilya Zakharevich, ilya@math.ohio-state.edu

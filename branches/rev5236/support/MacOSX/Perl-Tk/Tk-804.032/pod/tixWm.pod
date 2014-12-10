@@ -1,0 +1,73 @@
+
+
+=head1 NAME
+
+Tk::tixWm - Tix's addition to the standard TK wm command.
+
+=for category  Tix Extensions
+
+=head1 SYNOPSIS
+
+S<    >I<$widget>-E<gt>B<wmCapture>
+
+S<    >I<$widget>-E<gt>B<wmRelease>
+
+=head1 DESCRIPTION
+
+The B<wmCapture> and the B<wmRelease> methods change the
+toplevel attribute of Tk widgets.
+
+=head1 METHODS
+
+=over 4
+
+=item I<$widget>-E<gt>B<wmCapture>
+
+Converts the toplevel window specified by I<$widget> into a non-toplevel
+widget. Normally this command is called to convert a L<Toplevel|Tk::Toplevel> widget
+into a L<Frame|Tk::Frame> widget. The newly-converted frame widget is
+un-mapped from the screen. To make it appear inside its parent, you
+must call a geometry manager (e.g. grid or pack) explictly.
+
+=item I<$widget>-E<gt>B<wmRelease>
+
+Makes the non-toplevel window specified by I<$widget> into a toplevel
+widget. Normally this command is called to convert a L<Frame|Tk::Frame> widget
+into a L<Toplevel|Tk::Toplevel> widget, but it can also be used on any
+non-toplevel widget (e.g, label). The newly-converted toplevel window
+is in a B<withdrawn> state. To make it appear on the screen, you must call
+B<deiconify> after calling B<wmRelease>.
+
+Any data associated with I<$widget> via B<wm> methods (icon, protocol,
+command etc.) are released, and must be re-established if window is later
+re-captured.
+
+=back
+
+=head1 BUGS
+
+B<wmCapture> does not exist in the Win32 window manager code.
+
+How these methods interact with perl/Tk's class hierarchy is not yet clear.
+In particular a B<wmRelease>d window will not automatically ``I<inherit>''
+the B<Tk::Wm> methods, however a B<wmCapture>d window still will.
+(A B<release>d B<Label> might make a good candidate for an B<Icon>.)
+
+=head1 AUTHORS
+
+Ioi Kim Lam - ioi@graphics.cis.upenn.edu wrote original Tix version.
+Updated for tk8.0, Win32 and perl by Nick Ing-Simmons.
+
+=head1 SEE ALSO
+
+L<Tk::Wm|Tk::Wm>
+L<Tk::Mwm|Tk::Mwm>
+L<Tk::Frame|Tk::Frame>
+L<Tk::Toplevel|Tk::Toplevel>
+
+=head1 KEYWORDS
+
+window manager, wm, TIX
+
+=cut
+

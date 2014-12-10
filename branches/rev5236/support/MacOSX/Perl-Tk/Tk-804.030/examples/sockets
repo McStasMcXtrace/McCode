@@ -1,0 +1,86 @@
+#!/usr/local/bin/perl -w
+
+# XXX Does not work:
+# "Bad arg length for Socket::pack_sockaddr_in, length is 9, should be 4"
+
+use IO::Socket;
+use Tk::IO;
+use Tk;
+my $mw = MainWindow->new;
+
+my $server = IO::Socket::INET->new(Listen => 5, LocalAddr => 'localhost', Proto => 'tcp');
+Tk::IO::make_nonblock($server,$smode,$snew);
+$mw->fileevent($server, 'readable', [\&server_acceptable,$server,'r']);
+# $mw->fileevent($server, 'writeable', [\&server_acceptable,$server,'w']);
+
+my $port = $server->sockport;
+
+print "Port=$port\n";
+
+my $client = IO::Socket::INET->new;
+
+$client->socket(AF_INET, SOCK_STREAM, (getprotobyname('tcp'))[2]) || warn "Cannot socket:$!";
+Tk::IO::make_nonblock($client,$cmode,$cnew);
+$client->connect($port,'localhost') || warn "Cannot connect:$! ".($!+0);
+
+my $h = IO::Socket::INET->new;
+while (1)
+ {
+  last if accept($h,$server);
+  warn "accept $! ".($!+0);
+  $client->sockport;
+  die "accept $! ".($!+0) unless ($! == 11);
+  sleep(1);
+ }
+
+
+# my $h = $server->accept or warn "accept $! ".($!+0);
+print 'h peer=',$h->peerport,' sock=',$h->sockport,"\n";
+print 'c peer=',$client->peerport,' sock=',$client->sockport,"\n";
+
+exit;
+
+$mw->fileevent( $client, 'writeable', [\&client_writeable,$client]);
+$mw->fileevent( $client, 'readable', [\&client_readable, $client]);
+
+MainLoop;
+
+sub client_readable
+{
+ print 'cr(',join(',',@_),")\n";
+ my $data = <$client>;
+ print "cr:$data";
+ $client->close;
+}
+
+sub client_writable
+{
+ print 'cw(',join(',',@_),")\n";
+ my $client = shift;
+ print $client "Hello\n";
+}
+
+sub server_acceptable
+{
+ print 'sa(',join(',',@_),")\n";
+ my $server = shift;
+ my $h = $server->accept;
+ $mw->fileevent($h, 'readable', [\&server_readable,$h]);
+ print "New socket ",$h->fileno,"\n";
+}
+
+sub server_readable
+{
+ print 'sr(',join(',',@_),")\n";
+ my $h = shift;
+ my $data = <$client>;
+ if (defined $data)
+  {
+   print "cr:$data";
+   print $h "ACK:$data";
+  }
+ else
+  {
+   $h->close;
+  }
+}

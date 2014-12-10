@@ -1,0 +1,39 @@
+package Perlfiles;
+
+use File::Find;
+
+@wanted = ();
+
+sub perlscript
+{
+ my ($file) = @_;
+ open(SCRIPT,"<$file") || die "Cannot open $file:$!";
+ my $line = <SCRIPT>;
+ close(SCRIPT);
+ return (defined $line && $line =~ /#!.*perl/);
+}
+
+sub wanted
+{
+ $File::Find::prune = 0;
+ if (-T $_ && !/%$/)
+  {
+   push(@wanted,$File::Find::name) if (/\.p[ml]$/ || perlscript($_));
+  }
+ elsif (-d $_)
+  {
+   $File::Find::prune = 1 if ($_ eq 'blib');
+  }
+}
+
+sub main::perlfiles
+{
+ print STDERR "Finding perl scripts and modules\n";
+ @wanted = ();
+ @_ = '.' unless (@_);
+ find(\&wanted,@_);
+ return @wanted;
+}
+
+1;
+

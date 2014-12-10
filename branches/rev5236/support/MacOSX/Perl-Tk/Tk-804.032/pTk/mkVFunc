@@ -1,0 +1,433 @@
+#!/usr/bin/perl -w
+use strict;
+
+
+my %Ignore;
+my %Ignored;
+my %WinIgnore;
+my %Exclude;
+
+my $oops = 0;
+
+use Getopt::Std;
+my %opt;
+getopts('mt',\%opt);
+my @Files;
+
+sub openRO
+{
+ my ($fh,$file) = @_;
+ if (-f $file && !-w $file)
+  {
+   chmod(0666,$file) || warn "Cannot change permissions on $file:$!";
+  }
+ open($fh,">","$file~") || return 0;
+ push(@Files,$file);
+ return 1;
+}
+
+END
+ {
+  while (@Files)
+   {
+    my $file = pop(@Files);
+    if (-f $file)
+     {
+      chmod(0444,"$file~") || warn "Cannot change permissions on $file:$!";
+      if (!rename("$file~",$file))
+       {
+	warn "Cannot rename $file to $file~ ($!), trying again with deleting $file before...";
+        unlink($file) || warn "Cannot delete $file:$!";
+	rename("$file~",$file) || warn "Cannot rename $file~ to $file ($!), expect major problems now...";
+       }
+     }
+   }
+ }
+
+my $win_arch = shift;
+die "Unknown \$win_arch" unless $win_arch eq 'open32'
+                                or $win_arch eq 'pm'
+                                or $win_arch eq 'x'
+                                or $win_arch eq 'MSWin32';
+my $xexcl = <<EOM;
+#if (defined(__WIN32__) || defined(__PM__)) && !defined(DO_X_EXCLUDE)
+#  define DO_X_EXCLUDE
+#endif
+EOM
+
+sub Ignore
+{
+ my $cfile = shift;
+ if (open(C,"<$cfile"))
+  {
+   warn "Ignoring from $cfile\n";
+   while (<C>)
+    {
+     if (/^([A-Za-z][A-Za-z0-9_]*)/)
+      {
+       $Ignore{$1} = $cfile;
+      }
+    }
+   close(C);
+  }
+ else
+  {
+   warn "Cannot open $cfile:$!";
+  }
+}
+
+sub WinIgnore
+{
+ my $cfile = shift;
+ if (open(C,"<$cfile"))
+  {
+   warn "WinIgnoring from $cfile\n";
+   while (<C>)
+    {
+     if (/^([A-Za-z][A-Za-z0-9_]*)/)
+      {
+       $WinIgnore{$1} = $cfile;
+      }
+    }
+   close(C);
+  }
+ else
+  {
+   warn "Cannot open $cfile:$!";
+  }
+}
+
+sub Exclude
+{
+ my $cfile = shift;
+ if (open(C,"<$cfile"))
+  {
+   while (<C>)
+    {
+     if (/{\s*\"[^\"]+\"\s*,\s*(\w+)\s*}/)
+      {
+       $Exclude{$1} = $cfile;
+      }
+    }
+   close(C);
+  }
+ else
+  {
+   warn "Cannot open $cfile:$!";
+  }
+}
+
+sub Vfunc
+{
+ my $hfile = shift;
+ my %VFunc = ();
+ my %VVar  = ();
+ my %VError= ();
+ my $errors = 0;
+ my @ifdef  = ('');
+ open(H,"<$hfile") || die "Cannot open $hfile:$!";
+ my $gard = "\U$hfile";
+ $gard =~ s/\..*$//;
+ $gard =~ s#/#_#g;
+
+ while (<H>)
+  {
+   if (/^\s*#\s*if/)
+    {
+     s#//.*##;
+     s#/\*.*?\*/# #g;
+     s/\s+$//;
+     s/^\s*#\s*ifndef\s+_$gard\b.*//;
+     s/^\s*#\s*ifndef\s+_\w+_H_\b.*//;
+     warn "'$gard' in '$_'" if /$gard/;
+     push(@ifdef,$_);
+    }
+   elsif (/^\s*#\s*else/)
+    {
+     s/\s+$//;
+     #warn "$hfile:$.:$_\n";
+     $ifdef[-1] = $_;
+    }
+   elsif (/^\s*#\s*endif\b/)
+    {
+     pop(@ifdef);
+    }
+   elsif (/^\s*(MOVEXT|COREXT|EXTERN|extern)\s*(.*?)\s*(\w+)\s+_ANSI_ARGS_\s*\((TCL_VARARGS)?\(/)
+    {
+     my ($type,$name,$op) = ($2,$3,$4);
+     if ($1 eq 'MOVEXT' || $1 eq 'COREXT')
+      {
+       warn "$1 $name\n";
+       $oops++;
+       $Ignore{$name} = $hfile;
+      }
+     $op = "" unless (defined $op);
+     my $defn =  "VFUNC($type,$name,V_$name,_ANSI_ARGS_($op(";
+     $_ = $';
+     until (/\)\);\s*$/)
+      {
+       $defn .= $_;
+       $_ = <H>;
+       if (/^\S/)
+        {
+         chomp($_);
+         die $_;
+        }
+      }
+     s/\)\);\s*$/\)\)\)\n/;
+     $defn .= $_;
+     die "$hfile:$.:$ifdef[-1]\n" if  $ifdef[-1] =~ /\belse\b/;
+     if (exists($VFunc{$name}{$ifdef[-1]}) && $defn ne $VFunc{$name}{$ifdef[-1]})
+      {
+       warn "Function (@ifdef) $name is $defn and $VFunc{$name}{$ifdef[-1]}";
+       $errors++;
+      }
+     else
+      {
+       $VFunc{$name}{$ifdef[-1]} = $defn;
+      }	
+    }
+   elsif (/^\s*(MOVEXT|COREXT|EXTERN|extern)\s*(.*?)\s*(\w+)\s*;/)
+    {
+     my ($type,$name) = ($2,$3);
+     if ($1 eq 'MOVEXT' || $1 eq 'COREXT')
+      {
+       warn "$1 $name\n";
+       $oops++;
+       $Ignore{$name} = $hfile;
+      }
+     my $defn = "VVAR($type,$name,V_$name)\n";
+     die "$hfile:$.:$ifdef[-1]\n" if  $ifdef[-1] =~ /\belse\b/;
+     if (exists $VVar{$name}{$ifdef[-1]})
+      {
+       warn "Variable (@ifdef) $name is $defn and $VVar{$name}{$ifdef[-1]}";
+       $errors++;
+      }
+     else
+      {
+       $VVar{$name}{$ifdef[-1]} = $defn;
+      }	
+    }
+   elsif (/\b(EXTERN|extern)\s+[\w_]+\s+[\w_]+\[\];$/)
+    {
+
+    }
+   elsif (/\b(EXTERN|extern)\s*"C"\s*\{\s*$/)
+    {
+
+    }
+   elsif (/\b(EXTERN|extern)\b/)
+    {
+     warn "$hfile:$.: $_" unless (/^\s*\#\s*define/);
+    }
+  }
+ close(H);
+ die "Multiple definitions\n" if $errors;
+
+
+ if (keys %VFunc || keys %VVar)
+  {
+   my $name = "\u\L${gard}\UV";
+   my $fdef = $hfile;
+   $fdef =~ s/\..*$/.t/;
+   my $mdef = $hfile;
+   $mdef =~ s/\..*$/.m/;
+
+   $mdef .= 'dmy' unless $opt{'m'};
+   $fdef .= 'dmy' unless $opt{'t'};
+
+   my $htfile = $hfile;
+   $htfile =~ s/\..*$/_f.h/;
+   unless (-r $htfile)
+    {
+     openRO(\*C,$htfile) || die "Cannot open $htfile:$!";
+     print C "#ifndef ${gard}_VT\n";
+     print C "#define ${gard}_VT\n";
+     print C "typedef struct ${name}tab\n{\n";
+     print C " unsigned (*tabSize)(void);\n";
+     print C "#define VFUNC(type,name,mem,args) type (*mem) args;\n";
+     print C "#define VVAR(type,name,mem)       type (*mem);\n";
+     print C "#include \"$fdef\"\n";
+     print C "#undef VFUNC\n";
+     print C "#undef VVAR\n";
+     print C "} ${name}tab;\n";
+     print C "extern ${name}tab *${name}ptr;\n";
+     print C "extern ${name}tab *${name}Get(void);\n";
+     print C "#endif /* ${gard}_VT */\n";
+     close(C);
+    }
+
+   my $cfile = $hfile;
+   $cfile =~ s/\..*$/_f.c/;
+   unless (-r $cfile)
+    {
+     openRO(\*C,$cfile) || die "Cannot open $cfile:$!";
+     print C "#include \"$hfile\"\n";
+     print C "#include \"$htfile\"\n";
+     print C "static unsigned ${name}Size(void) { return sizeof(${name}tab);}\n";
+     print C "static ${name}tab ${name}table =\n{\n";
+     print C " ${name}Size,\n";
+     print C "#define VFUNC(type,name,mem,args) name,\n";
+     print C "#define VVAR(type,name,mem)      &name,\n";
+     print C "#include \"$fdef\"\n";
+     print C "#undef VFUNC\n";
+     print C "#undef VVAR\n";
+     print C "};\n";
+     print C "${name}tab *${name}ptr;\n";
+     print C "${name}tab *${name}Get() { return ${name}ptr = &${name}table;}\n";
+     close(C);
+    }
+
+   print STDERR "$gard\n";
+   openRO(\*VFUNC,$fdef)   || die "Cannot open $fdef:$!";
+   openRO(\*VMACRO,$mdef)  || die "Cannot open $mdef:$!";
+   print VFUNC  "#ifdef _$gard\n";
+   print VMACRO "#ifndef _${gard}_VM\n";
+   print VMACRO "#define _${gard}_VM\n";
+   print VMACRO "#include \"$htfile\"\n";
+   print VMACRO "#ifndef NO_VTABLES\n";
+   print VMACRO $xexcl if %WinIgnore;
+   print VFUNC  $xexcl if %WinIgnore;
+   foreach my $func (sort keys %VVar)
+    {
+     if (!exists($Exclude{$func}) && !exists($Ignore{$func}))
+      {
+       foreach my $ifdef (sort keys %{$VVar{$func}})
+        {
+	 print VFUNC "$ifdef\n" if ($ifdef);
+         print VFUNC $VVar{$func}{$ifdef};
+	 print VFUNC "#endif /* $ifdef */\n" if ($ifdef);
+        }
+       print VMACRO "#define $func (*${name}ptr->V_$func)\n";
+      }
+     $Ignored{$func} = delete $Ignore{$func} if exists $Ignore{$func};
+    }
+   foreach my $func (sort keys %VFunc)
+    {
+     if (!exists($Exclude{$func}) && !exists($Ignore{$func}))
+      {
+       print VFUNC "#ifndef DO_X_EXCLUDE\n" if exists($WinIgnore{$func});
+       print VFUNC "#ifndef $func\n";
+       foreach my $ifdef (sort keys %{$VFunc{$func}})
+        {
+	 print VFUNC "$ifdef\n" if ($ifdef);
+         print VFUNC $VFunc{$func}{$ifdef};
+	 print VFUNC "#endif /* $ifdef */\n" if ($ifdef);
+	}
+       print VFUNC "#endif /* #ifndef $func */\n";
+       print VFUNC "#endif /* !DO_X_EXCLUDE */\n" if exists($WinIgnore{$func});
+       print VFUNC "\n";
+
+       print VMACRO "#ifndef DO_X_EXCLUDE\n" if exists($WinIgnore{$func});
+       print VMACRO "#ifndef $func\n";
+       print VMACRO "#  define $func (*${name}ptr->V_$func)\n";
+       print VMACRO "#endif\n";
+       print VMACRO "#endif /* !DO_X_EXCLUDE */\n" if exists($WinIgnore{$func});
+       print VMACRO "\n";
+      }
+     $Ignored{$func} = delete $Ignore{$func} if exists $Ignore{$func};
+    }
+   print VMACRO "#endif /* NO_VTABLES */\n";
+   print VMACRO "#endif /* _${gard}_VM */\n";
+   close(VMACRO);
+   print VFUNC  "#endif /* _$gard */\n";
+   close(VFUNC); # Close this last - Makefile dependency
+
+   unlink($mdef) unless $opt{'m'};
+   unlink($fdef) unless $opt{'t'};
+  }
+ else
+  {
+   die "No entries in $hfile\n";
+  }
+}
+
+foreach (<tk*Tab.c>)
+ {
+  Exclude($_);
+ }
+
+die "Usage: $0 <some.h>\n" if (@ARGV != 1);
+
+my $h = shift;
+my $x = $h;
+$x =~ s/\.h/.exc/;
+Ignore($x) if (-f $x);
+$x =~ s/\.exc/.excwin/;
+WinIgnore($x) if (-f $x);
+Vfunc($h);
+
+foreach my $s (sort keys %Ignore)
+ {
+  warn "$s is not in $h\n";
+  $oops++;
+ }
+
+if ($oops)
+ {
+  $x = $h;
+  $x =~ s/\.h/.exc/;
+  rename($x,"$x.old") || die "Cannot rename $x to $x.old:$!";
+  open(EXC,">$x") || die "Cannot open $x:$!";
+  foreach my $s (sort keys %Ignored)
+   {
+    print EXC $s,"\n";
+   }
+  close(EXC);
+ }
+
+__END__
+
+=head1 NAME
+
+mkVFunc - Support for "nested" dynamic loading
+
+=head1 SYNOPSIS
+
+ mkVFunc xxx.h
+
+=head1 DESCRIPTION
+
+B<perl/Tk> is designed so that B<Tk> can be dynamically loaded 'on top of'
+perl. That is the easy bit. What it also does is allow Tk::Xxxx to be
+dynamically loaded 'on top of' the B<perl/Tk> composite. Thus when
+you 'require Tk::HList' the shared object F<.../HList.so> needs to be
+able to call functions defined in perl I<and> functions defined in loadable
+.../Tk.so . Now functions in 'base executable' are a well known problem,
+and are solved by DynaLoader. However most of dynamic loading schemes
+cannot handle one loadable calling another loadable.
+
+Thus what Tk does is build a table of functions that should be callable.
+This table is auto-generated from the .h file by looking for
+'extern' (and EXTERN which is #defined to 'extern').
+Thus any function marked as 'extern' is 'referenced' by the table.
+The address of the table is then stored in a perl variable when Tk is loaded.
+When HList is loaded it looks in the perl variable (via functions
+in perl - the 'base executable') to get the address of the table.
+
+The same utility that builds the table also builds a set of #define's.
+HList.c (and any other .c files which comprise HList) #include these
+#define's. So that
+
+  Tk_SomeFunc(x,y,z)
+
+Is actually compiled as
+
+  (*TkVptr->V_Tk_SomeFunc)(x,y,z)
+
+Where Tk_ptr is pointer to the table.
+
+See:
+
+ Tk-b*/pTk/mkVFunc - perl script that produces tables
+          /tk.h        - basis from which table is generated
+          /tk.m        - #define's to include in sub-extension
+          /tk_f.h      - #included both sides.
+          /tk_f.c      - Actual table definition.
+          /tk.t        - 'shared' set of macros which produce table
+                         included in tk_f.c and tk_f.h
+          /tkVMacro.h  - Wrapper to include *.m files
+
+In addition to /tk* there are /tkInt*, /Lang* and /tix*
+
+=cut

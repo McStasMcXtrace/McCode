@@ -1,0 +1,77 @@
+Subject: Adjuster
+Date: Wed, 16 Dec 1998 22:23:23 +0100
+From: Stephen Kun <stephen.kun@is.gaertner.de>
+To: Nick Ing-Simmons <nick@ni-s.u-net.com>
+
+
+
+
+3. How do I find out whether slave is a pack or grid master or if it is not a
+master (for setting packPropagate(0))
+Currently I set both on the slave.
+
+4. In setting position of drag bar, I do a lot of calcs for each motion event.
+Some could be done one for first, then used again for subsequent calls, eg:
+borderwidth of master, etc.
+I've now partially done this and store them on the widget.
+
+5. Do I need XSync and idletasks calls in Adjuster.pm?
+XSync causes a bug. idletasks doesn't make any difference in practice, from
+what I can see. I've commented both out.
+Bug when using XSync:
+  Run pack_adj_4r
+  Shorten whole window from right so that left window edge crosses leftmost
+    adjuster. Buttons on other adjusters disappear
+
+6. Sometimes the effect given by the Restore method, is undesirable. Eg.
+for multi-columns. Then when you expand say the 1st column, the size of the
+col at the end gets reduced to 0 width when the Adjuster forces itself in.
+Then when you reduce the size of the first column again, the end col is still
+0 width.
+Better would be:
+a) put the restore functionality on a flag OR
+b) when a col is reduced because of a Restore, it saves previous width of
+its slave, and attempts to restore it when the space becomes availabe. (Sounds
+impracticable.)
+I've implemented a) with default ON. In the documentation I'll recommend the
+default for the 1st Adjuster, then OFF for the remaining.
+
+8. What about a packAdjustForget? Given that Adjuster doesn't work well for
+grid anyway, and doesn't consider other managers, that wouldn't be too bad.
+I'm not going to do this, but someone mentioned it a while ago. I can
+see me probably wanting it too at some point.
+Are you for the idea?
+
+10. Grid doesn't work well with Adjuster, didn't before either. I think
+this has to do with grid, rather than adjuster. You get the same effect
+if you grid a row of widgets, then reduce the width of the window.
+Bugs demonstrated by grid_adj_4l:
+a) there's never an Unmap event for the adjuster.
+b) after adjusting, widgets protrude into border on right.
+c) grid('Propagate', 0) on MainWindow has no effect - window shrinks/grows
+   when widgets are adjusted
+d) widgets shuffle to correct position on startup
+I don't recommend use of grid with Adjust!
+
+11. Have taken out __END__ temporarily for testing
+Will put it back before publishing on the mailing list.
+
+12. Why do the adjusters in my testcases come out grey? That's not the
+default background.
+
+13. Could packAdjust return ($adj, $w). Could then do:
+    my $canv = $top->Canvas()->packAdjust();
+OR
+    my ($adj, $canv) = $top->Canvas()->packAdjust();
+Latter is good if you want to configure or unpack adjuster later.
+I realise this is very Kludgy, but there's no other way to get the
+Adjuster from packAdjust.
+I suppose the workaround of creating the Adjuster yourself is OK. When
+you do it by hand though, there's more chance of making mistakes, eg
+forgetting the -side (which defaults then to 'top') which would cause havoc.
+What's your opinion.
+
+14. Run the script adj_button_bug: You can't reduce size of button.
+Button can be expanded, but as soon as focus enters button, it springs back
+to its original size. Why?
+It's not important though.

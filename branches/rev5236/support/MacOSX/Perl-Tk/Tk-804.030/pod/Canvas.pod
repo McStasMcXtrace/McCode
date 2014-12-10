@@ -1,0 +1,2394 @@
+#  Copyright (c) 1992-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+
+=head1 NAME
+
+Tk::Canvas - Create and manipulate Canvas widgets
+
+=for category  Tk Widget Classes
+
+=head1 SYNOPSIS
+
+I<$canvas> = I<$parent>-E<gt>B<Canvas>(?I<options>?);
+
+=head1 STANDARD OPTIONS
+
+B<-background>	B<-highlightthickness>	B<-insertwidth>	B<-state>
+B<-borderwidth>	B<-insertbackground>	B<-relief>	B<-tile>
+B<-cursor>	B<-insertborderwidth>	B<-selectbackground>	B<-takefocus>
+B<-highlightbackground>	B<-insertofftime>	B<-selectborderwidth>	B<-xscrollcommand>
+B<-highlightcolor>	B<-insertontime>	B<-selectforeground>	B<-yscrollcommand>
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item Name:	B<closeEnough>
+
+=item Class:	B<CloseEnough>
+
+=item Switch:	B<-closeenough>
+
+Specifies a floating-point value indicating how close the mouse cursor
+must be to an item before it is considered to be ``inside'' the item.
+Defaults to 1.0.
+
+=item Name:	B<confine>
+
+=item Class:	B<Confine>
+
+=item Switch:	B<-confine>
+
+Specifies a boolean value that indicates whether or not it should be
+allowable to set the canvas's view outside the region defined by the
+B<scrollRegion> argument.
+Defaults to true, which means that the view will
+be constrained within the scroll region.
+
+=item Name:	B<height>
+
+=item Class:	B<Height>
+
+=item Switch:	B<-height>
+
+Specifies a desired window height that the canvas widget should request from
+its geometry manager.  The value may be specified in any
+of the forms described in the L<"COORDINATES"> section below.
+
+=item Name:	B<scrollRegion>
+
+=item Class:	B<ScrollRegion>
+
+=item Switch:	B<-scrollregion>
+
+Specifies a list with four coordinates describing the left, top, right, and
+bottom coordinates of a rectangular region.
+This region is used for scrolling purposes and is considered to be
+the boundary of the information in the canvas.
+Each of the coordinates may be specified
+in any of the forms given in the L<"COORDINATES"> section below.
+
+=item Name:	B<state>
+
+=item Class:	B<State>
+
+=item Switch:	B<-state>
+
+Modifies the default state of the canvas where I<state> may be set to one of:
+normal, disabled, or hidden. Individual canvas objects all have their own
+state option, which overrides the default state. Many options can take
+separate specifications such that the appearance of the item can be different
+in different situations. The options that start with "active" control the
+appearence when the mouse pointer is over it, while the option starting
+with "disabled" controls the appearence when the state is disabled.
+
+=item Name:	B<width>
+
+=item Class:	B<width>
+
+=item Switch:	B<-width>
+
+Specifies a desired window width that the canvas widget should request from
+its geometry manager.  The value may be specified in any
+of the forms described in the L<"COORDINATES"> section below.
+
+=item Name:	B<xScrollIncrement>
+
+=item Class:	B<ScrollIncrement>
+
+=item Switch:	B<-xscrollincrement>
+
+Specifies an increment for horizontal scrolling, in any of the usual forms
+permitted for screen distances.  If the value of this option is greater
+than zero, the horizontal view in the window will be constrained so that
+the canvas x coordinate at the left edge of the window is always an even
+multiple of B<xScrollIncrement>;  furthermore, the units for scrolling
+(e.g., the change in view when the left and right arrows of a scrollbar
+are selected) will also be B<xScrollIncrement>.  If the value of
+this option is less than or equal to zero, then horizontal scrolling
+is unconstrained.
+
+=item Name:	B<yScrollIncrement>
+
+=item Class:	B<ScrollIncrement>
+
+=item Switch:	B<-yscrollincrement>
+
+Specifies an increment for vertical scrolling, in any of the usual forms
+permitted for screen distances.  If the value of this option is greater
+than zero, the vertical view in the window will be constrained so that
+the canvas y coordinate at the top edge of the window is always an even
+multiple of B<yScrollIncrement>;  furthermore, the units for scrolling
+(e.g., the change in view when the top and bottom arrows of a scrollbar
+are selected) will also be B<yScrollIncrement>.  If the value of
+this option is less than or equal to zero, then vertical scrolling
+is unconstrained.
+
+=back
+
+=head1 DESCRIPTION
+
+The B<Canvas> method creates a new window (given
+by the $canvas argument) and makes it into a canvas widget.
+Additional options, described above, may be specified on the
+command line or in the option database
+to configure aspects of the canvas such as its colors and 3-D relief.
+The B<canvas> command returns its
+$canvas argument.  At the time this command is invoked,
+there must not exist a window named $canvas, but
+$canvas's parent must exist.
+
+Canvas widgets implement structured graphics.
+A canvas displays any number of I<items>, which may be things like
+rectangles, circles, lines, and text.
+Items may be manipulated (e.g. moved or re-colored) and
+L<callbacks|Tk::callbacks> may
+be associated with items in much the same way that the L<bind|Tk::bind>
+method allows callbacks to be bound to widgets.  For example,
+a particular callback may be associated with the B<E<lt>Button-1E<gt>> event
+so that the callback is invoked whenever button 1 is pressed with
+the mouse cursor over an item.
+This means that items in a canvas can have behaviors defined by
+the Callbacks bound to them.
+
+=head1 DISPLAY LIST
+
+The items in a canvas are ordered for purposes of display,
+with the first item in the display list being displayed
+first, followed by the next item in the list, and so on.
+Items later in the display list obscure those that are
+earlier in the display list and are sometimes referred to
+as being I<``on top''> of earlier items.
+When a new item is created it is placed at the end of the
+display list, on top of everything else.
+Widget methods may be used to re-arrange the order of the
+display list.
+
+Window items are an exception to the above rules.  The underlying
+window systems require them always to be drawn on top of other items.
+In addition, the stacking order of window items
+is not affected by any of the canvas methods; you must use
+the L<raise|Tk::Widget> and L<lower|Tk::Widget> Tk widget methods instead.
+
+=head1 ITEM IDS AND TAGS
+
+Items in a canvas widget may be named in either of two ways:
+by id or by tag.
+Each item has a unique identifying number which is assigned to
+that item when it is created.  The id of an item never changes
+and id numbers are never re-used within the lifetime of a
+canvas widget.
+
+Each item may also have any number of I<tags> associated
+with it.  A tag is just a string of characters, and it may
+take any form except that of an integer.
+For example, ``x123'' is OK but ``123'' isn't.
+The same tag may be associated with many different items.
+This is commonly done to group items in various interesting
+ways;  for example, all selected items might be given the
+tag ``selected''.
+
+The tag B<all> is implicitly associated with every item
+in the canvas;  it may be used to invoke operations on
+all the items in the canvas.
+
+The tag B<current> is managed automatically by Tk;
+it applies to the I<current item>, which is the
+topmost item whose drawn area covers the position of
+the mouse cursor.
+If the mouse is not in the canvas widget or is not over
+an item, then no item has the B<current> tag.
+
+When specifying items in canvas methods, if the
+specifier is an integer then it is assumed to refer to
+the single item with that id.
+If the specifier is not an integer, then it is assumed to
+refer to all of the items in the canvas that have a tag
+matching the specifier.
+The symbol I<tagOrId> is used below to indicate that
+an argument specifies either an id that selects a single
+item or a tag that selects zero or more items.
+
+I<tagOrId> may contain a logical expressions of
+tags by using operators: 'E<amp>E<amp>', '||', '^' '!', and parenthezised
+subexpressions.  For example:
+
+$c-E<gt>find('withtag',  '(aE<amp>E<amp>!b)|(!aE<amp>E<amp>b)');
+
+or equivalently:
+
+$c-E<gt>find('withtag', 'a^b');
+
+will find only those items with either "a" or "b" tags, but not both.
+
+Some methods only operate on a single item at a
+time;  if I<tagOrId> is specified in a way that
+names multiple items, then the normal behavior is for
+the methods is to use the first (lowest) of these items in
+the display list that is suitable for the method.
+Exceptions are noted in the method descriptions
+below.
+
+=head1 COORDINATES
+
+All coordinates related to canvases are stored as floating-point
+numbers.
+Coordinates and distances are specified in screen units,
+which are floating-point numbers optionally followed
+by one of several letters.
+If no letter is supplied then the distance is in pixels.
+If the letter is B<m> then the distance is in millimeters on
+the screen;  if it is B<c> then the distance is in centimeters;
+B<i> means inches, and B<p> means printers points (1/72 inch).
+Larger y-coordinates refer to points lower on the screen;  larger
+x-coordinates refer to points farther to the right.
+
+=head1 TRANSFORMATIONS
+
+Normally the origin of the canvas coordinate system is at the
+upper-left corner of the window containing the canvas.
+It is possible to adjust the origin of the canvas
+coordinate system relative to the origin of the window using the
+B<xview> and B<yview> methods;  this is typically used
+for scrolling.
+Canvases do not support scaling or rotation of the canvas coordinate
+system relative to the window coordinate system.
+
+Individual items may be moved or scaled using methods
+described below, but they may not be rotated.
+
+=head1 INDICES
+
+Text items support the notion of an I<index> for identifying
+particular positions within the item.
+
+Indices are used for methods such as inserting text, deleting
+a range of characters, and setting the insertion cursor position.
+An index may be specified in any of a number of ways, and
+different types of items may support different forms for
+specifying indices.
+
+In a similar fashion, line and polygon items support I<index> for
+identifying, inserting and deleting subsets of their coordinates.
+Indices are used for commands such as inserting or deleting
+a range of characters or coordinates, and setting the insertion
+cursor position. An index may be specified in any of a number
+of ways, and different types of items may support different forms
+for specifying indices.
+
+Text items support the following forms for an index;  if you
+define new types of text-like items, it would be advisable to
+support as many of these forms as practical.
+Note that it is possible to refer to the character just after
+the last one in the text item;  this is necessary for such
+tasks as inserting new text at the end of the item.
+Lines and Polygons don't support the insertion cursor
+and the selection. Their indices are supposed to be even
+always, because coordinates always appear in pairs.
+
+=over 4
+
+=item I<number>
+
+A decimal number giving the position of the desired character
+within the text item.
+0 refers to the first character, 1 to the next character, and
+so on. If indexes are odd for lines and polygons, they will be
+automatically decremented by one.
+A number less than 0 is treated as if it were zero, and a
+number greater than the length of the text item is treated
+as if it were equal to the length of the text item. For
+polygons, numbers less than 0 or greater then the length
+of the coordinate list will be adjusted by adding or substracting
+the length until the result is between zero and the length,
+inclusive.
+
+=item B<end>
+
+Refers to the character or coordinate just after the last one
+in the item (same as the number of characters or coordinates
+in the item).
+
+=item B<insert>
+
+Refers to the character just before which the insertion cursor
+is drawn in this item. Not valid for lines and polygons.
+
+=item B<sel.first>
+
+Refers to the first selected character in the item.
+If the selection isn't in this item then this form is illegal.
+
+=item B<sel.last>
+
+Refers to the last selected character in the item.
+If the selection isn't in this item then this form is illegal.
+
+=item B<[>I<x,y>B<]>
+
+Refers to the character or coordinate at the point given by I<x> and
+I<y>, where I<x> and I<y> are specified in the coordinate
+system of the canvas.
+If I<x> and I<y> lie outside the coordinates covered by the
+text item, then they refer to the first or last character in the
+line that is closest to the given point.
+The Tcl string form "@x,y" is also allowed.
+
+=back
+
+=head1 DASH PATTERNS
+
+Many items support the notion of an dash pattern for outlines.
+
+The first possible syntax is a list of integers. Each element
+represents the number of pixels of a line segment. Only the odd
+segments are drawn using the "outline" color. The other segments
+are drawn transparent.
+
+The second possible syntax is a character list containing only
+5 possible characters B<[.,-_ ]>,  with the first 4 characters
+producing a segment of length 1 to 4, respectively, followed
+by a transparent segment of length 2. The space can be used
+repeatedly to enlarge the space between other line elements
+by 1, and can not occur as the first position in the string.
+The main difference of this syntax with the previous one is 
+that it it shape-conserving. This means that all values in the dash
+list will be multiplied by the line width before display. This
+assures that "." will always be displayed as a dot and "-"
+always as a dash regardless of the line width.
+
+Some examples, for a line width of 2:
+
+ -dash .     = -dash [2,4]
+ -dash -     = -dash [6,4]
+ -dash -.    = -dash [6,4,2,4]
+ -dash -..   = -dash [6,4,2,4,2,4]
+ -dash '.  ' = -dash [2,8]
+ -dash ','   = -dash [4,4]
+
+On systems where only a limited set of dash patterns is available,
+the dash pattern will be displayed as the closest available dash 
+pattern. For example, on Windows only the first 4 of the
+above examples are available. The last 2 examples will be
+displayed identically as the first one.
+
+=head1 WIDGET METHODS
+
+The B<Canvas> method creates a widget object.
+This object supports the B<configure> and B<cget> methods
+described in L<Tk::options> which can be used to enquire and
+modify the options described above.
+The widget also inherits all the methods provided by the generic
+L<Tk::Widget|Tk::Widget> class.
+
+The following additional methods are available for canvas widgets:
+
+=over 4
+
+=item I<$canvas>-E<gt>B<addtag>(I<tag, searchSpec, >?I<arg, arg, ...>?)
+
+For each item that meets the constraints specified by
+I<searchSpec> and the I<arg>s, add
+I<tag> to the list of tags associated with the item if it
+isn't already present on that list.
+It is possible that no items will satisfy the constraints
+given by I<searchSpec> and I<arg>s, in which case the
+method has no effect.
+This command returns an empty string as result.
+I<SearchSpec> and I<arg>'s may take any of the following
+forms:
+
+=over 8
+
+=item B<above >I<tagOrId>
+
+Selects the item just after (above) the one given by I<tagOrId>
+in the display list.
+If I<tagOrId> denotes more than one item, then the last (topmost)
+of these items in the display list is used.
+
+=item B<all>
+
+Selects all the items in the canvas.
+
+=item B<below >I<tagOrId>
+
+Selects the item just before (below) the one given by I<tagOrId>
+in the display list.
+If I<tagOrId> denotes more than one item, then the first (lowest)
+of these items in the display list is used.
+
+=item B<closest >I<x y >?I<halo>? ?I<start>?
+
+Selects the item closest to the point given by I<x> and I<y>.
+If more than one item is at the same closest distance (e.g. two
+items overlap the point), then the top-most of these items (the
+last one in the display list) is used.
+If I<halo> is specified, then it must be a non-negative
+value.
+Any item closer than I<halo> to the point is considered to
+overlap it.
+The I<start> argument may be used to step circularly through
+all the closest items.
+If I<start> is specified, it names an item using a tag or id
+(if by tag, it selects the first item in the display list with
+the given tag).
+Instead of selecting the topmost closest item, this form will
+select the topmost closest item that is below I<start> in
+the display list;  if no such item exists, then the selection
+behaves as if the I<start> argument had not been specified.
+
+=item B<enclosed> I<x1> I<y1> I<x2> I<y2>
+
+Selects all the items completely enclosed within the rectangular
+region given by I<x1>, I<y1>, I<x2>, and I<y2>.
+I<X1> must be no greater then I<x2> and I<y1> must be
+no greater than I<y2>.
+
+=item B<overlapping> I<x1> I<y1> I<x2> I<y2>
+
+Selects all the items that overlap or are enclosed within the
+rectangular region given by I<x1>, I<y1>, I<x2>,
+and I<y2>.
+I<X1> must be no greater then I<x2> and I<y1> must be
+no greater than I<y2>.
+
+=item B<withtag >I<tagOrId>
+
+Selects all the items given by I<tagOrId>.
+
+=back
+
+=item I<$canvas>-E<gt>B<bbox>(I<tagOrId, >?I<tagOrId, tagOrId, ...>?)
+
+Returns a list with four elements giving an approximate bounding box
+for all the items named by the I<tagOrId> arguments.
+The list has the form ``I<x1 y1 x2 y2>'' such that the drawn
+areas of all the named elements are within the region bounded by
+I<x1> on the left, I<x2> on the right, I<y1> on the top,
+and I<y2> on the bottom.
+The return value may overestimate the actual bounding box by
+a few pixels.
+If no items match any of the I<tagOrId> arguments or if the
+matching items have empty bounding boxes (i.e. they have nothing
+to display)
+then an empty string is returned.
+
+=item I<$canvas>-E<gt>B<bind>(I<tagOrId>?, I<sequence>? ?,I<callback>?)
+
+This method associates I<callback> with all the items given by
+I<tagOrId> such that whenever the event sequence given by
+I<sequence> occurs for one of the items the callback will
+be invoked.
+This method is similar to the B<bind> method except that
+it operates on items in a canvas rather than entire widgets.
+See L<Tk::bind> for complete details
+on the syntax of I<sequence> and the substitutions performed
+on I<callback> before invoking it.
+If all arguments are specified then a new binding is created, replacing
+any existing binding for the same I<sequence> and I<tagOrId>
+(if the first character of I<command> is ``+'' then I<command>
+augments an existing binding rather than replacing it).
+In this case the return value is an empty string.
+If I<callback> is omitted then the method returns the I<callback>
+associated with I<tagOrId> and I<sequence> (an error occurs
+if there is no such binding).
+If both I<callback> and I<sequence> are omitted then the method
+returns a list of all the sequences for which bindings have been
+defined for I<tagOrId>.
+
+=over 8
+
+The only events for which bindings may be specified are those related to
+the mouse and keyboard (such as B<Enter>, B<Leave>,
+B<ButtonPress>, B<Motion>, and B<KeyPress>) or virtual events.
+The handling of events in canvases uses the current item defined
+in L<"ITEM IDS AND TAGS"> above.  B<Enter> and B<Leave> events trigger for an
+item when it becomes the current item or ceases to be the current item;
+note that these events are different than B<Enter> and B<Leave>
+events for windows.  Mouse-related events are directed to the current
+item, if any.  Keyboard-related events are directed to the focus item, if
+any (see the L<focus|/focus> method below for more on this).  If a
+virtual event is used in a binding, that binding can trigger only if the
+virtual event is defined by an underlying mouse-related or
+keyboard-related event.
+
+It is possible for multiple bindings to match a particular event.
+This could occur, for example, if one binding is associated with the
+item's id and another is associated with one of the item's tags.
+When this occurs, all of the matching bindings are invoked.
+A binding associated with the B<all> tag is invoked first,
+followed by one binding for each of the item's tags (in order),
+followed by a binding associated with the item's id.
+If there are multiple matching bindings for a single tag,
+then only the most specific binding is invoked.
+A B<continue> in a callback terminates that
+subroutine, and a B<break> method terminates that subroutine
+and skips any remaining callbacks for the event, just as for the
+B<bind> method.
+
+If bindings have been created for a canvas window using the B<CanvasBind>
+method, then they are invoked in addition to bindings created for
+the canvas's items using the B<bind> method.
+The bindings for items will be invoked before any of the bindings
+for the window as a whole.
+
+=back
+
+=item I<$canvas>-E<gt>B<canvasx>(I<screenx>?, I<gridspacing>?)
+
+Given a window x-coordinate in the canvas I<screenx>, this method returns
+the canvas x-coordinate that is displayed at that location.
+If I<gridspacing> is specified, then the canvas coordinate is
+rounded to the nearest multiple of I<gridspacing> units.
+
+=item I<$canvas>-E<gt>B<canvasy>(I<screeny, >?I<gridspacing>?)
+
+Given a window y-coordinate in the canvas I<screeny> this method returns
+the canvas y-coordinate that is displayed at that location.
+If I<gridspacing> is specified, then the canvas coordinate is
+rounded to the nearest multiple of I<gridspacing> units.
+
+=item I<$canvas>-E<gt>B<coords>(I<tagOrId >?I<x0,y0 ...>?)
+
+Query or modify the coordinates that define an item.
+If no coordinates are specified, this method returns a list
+whose elements are the coordinates of the item named by
+I<tagOrId>.
+If coordinates are specified, then they replace the current
+coordinates for the named item.
+If I<tagOrId> refers to multiple items, then
+the first one in the display list is used.
+
+=item I<$canvas>-E<gt>B<create>(I<type, x, y, >?I<x, y, ...>?, ?I<option, value, ...>?)
+
+Create a new item in I<$canvas> of type I<type>.
+The exact format of the arguments after B<type> depends
+on B<type>, but usually they consist of the coordinates for
+one or more points, followed by specifications for zero or
+more item options.
+See the subsections on individual item types below for more
+on the syntax of this method.
+This method returns the id for the new item.
+
+=item I<$canvas>-E<gt>B<dchars>(I<tagOrId, first, >?I<last>?)
+
+For each item given by I<tagOrId>, delete the characters, or coordinates,
+in the range given by I<first> and I<last>, inclusive.
+If some of the items given by I<tagOrId> don't support
+Text items interpret I<first> and I<last> as indices to a character,
+line and polygon items interpret them indices to a coordinate (an x,y pair).
+within the item(s) as described in L<"INDICES"> above.
+If I<last> is omitted, it defaults to I<first>.
+This method returns an empty string.
+
+=item I<$canvas>-E<gt>B<delete>(?I<tagOrId, tagOrId, ...>?)
+
+Delete each of the items given by each I<tagOrId>, and return
+an empty string.
+
+=item I<$canvas>-E<gt>B<dtag>(I<tagOrId, >?I<tagToDelete>?)
+
+For each of the items given by I<tagOrId>, delete the
+tag given by I<tagToDelete> from the list of those
+associated with the item.
+If an item doesn't have the tag I<tagToDelete> then
+the item is unaffected by the method.
+If I<tagToDelete> is omitted then it defaults to I<tagOrId>.
+This method returns an empty string.
+
+=item I<$canvas>-E<gt>B<find>(I<searchCommand, >?I<arg, arg, ...>?)
+
+This method returns a list consisting of all the items that
+meet the constraints specified by I<searchCommand> and
+I<arg>'s.
+I<SearchCommand> and I<args> have any of the forms
+accepted by the B<addtag> method.
+The items are returned in stacking order, with the lowest item first.
+
+=item focus
+
+=item I<$canvas>-E<gt>B<focus>(?I<tagOrId>?)
+
+Set the keyboard focus for the canvas widget to the item given by
+I<tagOrId>.
+If I<tagOrId> refers to several items, then the focus is set
+to the first such item in the display list that supports the
+insertion cursor.
+If I<tagOrId> doesn't refer to any items, or if none of them
+support the insertion cursor, then the focus isn't changed.
+If I<tagOrId> is an empty
+string, then the focus item is reset so that no item has the focus.
+If I<tagOrId> is not specified then the method returns the
+id for the item that currently has the focus, or an empty string
+if no item has the focus.
+
+=over 8
+
+Once the focus has been set to an item, the item will display
+the insertion cursor and all keyboard events will be directed
+to that item.
+The focus item within a canvas and the focus window on the
+screen (set with the B<focus> method) are totally independent:
+a given item doesn't actually have the input focus unless (a)
+its canvas is the focus window and (b) the item is the focus item
+within the canvas.
+In most cases it is advisable to follow the B<focus> widget
+method with the B<CanvasFocus> method to set the focus window to
+the canvas (if it wasn't there already).
+
+=back
+
+=item I<$canvas>-E<gt>B<gettags>(I<tagOrId>)
+
+Return a list whose elements are the tags associated with the
+item given by I<tagOrId>.
+If I<tagOrId> refers to more than one item, then the tags
+are returned from the first such item in the display list.
+If I<tagOrId> doesn't refer to any items, or if the item
+contains no tags, then an empty string is returned.
+
+=item I<$canvas>-E<gt>B<icursor>(I<tagOrId, index>)
+
+Set the position of the insertion cursor for the item(s) given by I<tagOrId>
+to just before the character whose position is given by I<index>.
+If some or all of the items given by I<tagOrId> don't support
+an insertion cursor then this method has no effect on them.
+See L<"INDICES"> above for a description of the
+legal forms for I<index>.
+Note:  the insertion cursor is only displayed in an item if
+that item currently has the keyboard focus (see the widget
+method B<focus>, below), but the cursor position may
+be set even when the item doesn't have the focus.
+This method returns an empty string.
+
+=item I<$canvas>-E<gt>B<index>(I<tagOrId, index>)
+
+This method returns a decimal string giving the numerical index
+within I<tagOrId> corresponding to I<index>.
+I<Index> gives a textual description of the desired position
+as described in L<"INDICES"> above.
+Text items interpret I<index> as an index to a  character,
+line and polygon items interpret it as an index to a coordinate (an x,y pair).
+The return value is guaranteed to lie between 0 and the number
+of characters, or coordinates, within the item, inclusive.
+If I<tagOrId> refers to multiple items, then the index
+is processed in the first of these items that supports indexing
+operations (in display list order).
+
+=item I<$canvas>-E<gt>B<insert>(I<tagOrId, beforeThis, string>)
+
+For each of the items given by I<tagOrId>, if the item supports
+text or coordinate, insertion then I<string> is inserted into the item's
+text just before the character, or coordinate, whose index is I<beforeThis>.
+Text items interpret I<beforethis> as an index to a  character,
+line and polygon items interpret it as an index to a coordinate (an x,y pair).
+For lines and polygons the I<string> must be a valid coordinate
+sequence.
+See L<"INDICES"> above for information about the forms allowed
+for I<beforeThis>.
+This method returns an empty string.
+
+=item I<$canvas>-E<gt>B<itemcget>(I<tagOrId, >I<option>)
+
+Returns the current value of the configuration option for the
+item given by I<tagOrId> whose name is I<option>.
+This method is similar to the L<cget|Tk::option> method except that
+it applies to a particular item rather than the widget as a whole.
+I<Option> may have any of the values accepted by the B<create>
+method when the item was created.
+If I<tagOrId> is a tag that refers to more than one item,
+the first (lowest) such item is used.
+
+=item I<$canvas>-E<gt>B<itemconfigure>(I<tagOrId, >?I<option>?, ?I<value>?, ?I<option, value, ...>?)
+
+This method is similar to the L<configure|Tk::option> method except
+that it modifies item-specific options for the items given by
+I<tagOrId> instead of modifying options for the overall
+canvas widget.
+If no I<option> is specified, returns a list describing all of
+the available options for the first item given by I<tagOrId>
+(see L<Tk::options> for
+information on the format of this list).  If I<option> is specified
+with no I<value>, then the method returns a list describing the
+one named option (this list will be identical to the corresponding
+sublist of the value returned if no I<option> is specified).  If
+one or more I<option-value> pairs are specified, then the method
+modifies the given widget option(s) to have the given value(s) in
+each of the items given by I<tagOrId>;  in
+this case the method returns an empty string.
+The I<option>s and I<value>s are the same as those permissible
+in the B<create> method when the item(s) were created;
+see the sections describing individual item types below for details
+on the legal options.
+
+=item I<$canvas>-E<gt>B<lower>(I<tagOrId, >?I<belowThis>?)
+
+Move all of the items given by I<tagOrId> to a new position
+in the display list just before the item given by I<belowThis>.
+If I<tagOrId> refers to more than one item then all are moved
+but the relative order of the moved items will not be changed.
+I<BelowThis> is a tag or id;  if it refers to more than one
+item then the first (lowest) of these items in the display list is used
+as the destination location for the moved items.
+Note: this method has no effect on window items.  Window items always
+obscure other item types, and the stacking order of window items is
+determined by the B<raise> and B<lower> methods of the widget, not the
+B<raise> and B<lower> methods for canvases.
+This method returns an empty string.
+
+=item I<$canvas>-E<gt>B<move>(I<tagOrId, xAmount, yAmount>)
+
+Move each of the items given by I<tagOrId> in the canvas coordinate
+space by adding I<xAmount> to the x-coordinate of each point
+associated with the item and I<yAmount> to the y-coordinate of
+each point associated with the item.
+This method returns an empty string.
+
+=item I<$canvas>-E<gt>B<postscript>(?I<option, value, option, value, ...>?)
+
+Generate a Postscript representation for part or all of the canvas.
+If the B<-file> option is specified then the Postscript is written
+to a file and an empty string is returned;  otherwise the Postscript
+is returned as the result of the method.
+If the interpreter that owns the canvas is marked as safe, the operation
+will fail because safe interpreters are not allowed to write files.
+If the B<-channel> option is specified, the argument denotes the name
+of a channel already opened for writing. The Postscript is written to
+that channel, and the channel is left open for further writing at the end
+of the operation.
+The Postscript is created in Encapsulated Postscript form using
+version 3.0 of the Document Structuring Conventions.
+Note: by default Postscript is only generated for information that
+appears in the canvas's window on the screen.  If the canvas is
+freshly created it may still have its initial size of 1x1 pixel
+so nothing will appear in the Postscript.  To get around this problem
+either invoke the B<update> method to wait for the canvas window
+to reach its final size, or else use the B<-width> and B<-height>
+options to specify the area of the canvas to print.
+The I<option>-I<value> argument pairs provide additional
+information to control the generation of Postscript.  The following
+options are supported:
+
+=over 8
+
+=item B<-colormap> =E<gt> I<hashRef>
+
+I<HashRef> must be a reference to a hash variable or an anonymous hash
+that specifies a color mapping to use in the Postscript.
+Each value of the hash must consist of Postscript
+code to set a particular color value (e.g. ``B<1.0 1.0 0.0 setrgbcolor>'').
+When outputting color information in the Postscript, Tk checks
+to see if there is a key in the hash with the same
+name as the color.
+If so, Tk uses the value of the element as the Postscript method
+to set the color.
+If this option hasn't been specified, or if there isn't a key
+in I<hashRef> for a given color, then Tk uses the red, green,
+and blue intensities from the X color.
+
+=item B<-colormode> =E<gt> I<mode>
+
+Specifies how to output color information.  I<Mode> must be either
+B<color> (for full color output), B<gray> (convert all colors
+to their gray-scale equivalents) or B<mono> (convert all colors
+to black or white).
+
+=item B<-file> =E<gt> I<fileName>
+
+Specifies the name of the file in which to write the Postscript.
+If this option isn't specified then the Postscript is returned as the
+result of the method instead of being written to a file.
+
+=item B<-fontmap> =E<gt> I<hashRef>
+
+I<HashRef> must be a reference to a hash variable or an anonymous hash
+that specifies a font mapping to use in the Postscript.
+Each value of the hash must consist of an array reference with
+two elements, which are the name and point size of a Postscript font.
+When outputting Postscript commands for a particular font, Tk
+checks to see if I<hashRef> contains a value with the same
+name as the font.
+If there is such an element, then the font information contained in
+that element is used in the Postscript.
+Otherwise Tk attempts to guess what Postscript font to use.
+Tk's guesses generally only work for well-known fonts such as
+Times and Helvetica and Courier, and only if the X font name does not
+omit any dashes up through the point size.
+For example, B<-*-Courier-Bold-R-Normal--*-120-*> will work but
+B<*Courier-Bold-R-Normal*120*> will not;  Tk needs the dashes to
+parse the font name).
+
+=item B<-height> =E<gt> I<size>
+
+Specifies the height of the area of the canvas to print.
+Defaults to the height of the canvas window.
+
+=item B<-pageanchor> =E<gt> I<anchor>
+
+Specifies which point of the printed area of the canvas should appear over
+the positioning point on the page (which is given by the B<-pagex>
+and B<-pagey> options).
+For example, B<-pageanchor>=>B<n> means that the top center of the
+area of the canvas being printed (as it appears in the canvas window)
+should be over the positioning point. Defaults to B<center>.
+
+=item B<-pageheight> =E<gt> I<size>
+
+Specifies that the Postscript should be scaled in both x and y so
+that the printed area is I<size> high on the Postscript page.
+I<Size> consists of a floating-point number followed by
+B<c> for centimeters, B<i> for inches, B<m> for millimeters,
+or B<p> or nothing for printer's points (1/72 inch).
+Defaults to the height of the printed area on the screen.
+If both B<-pageheight> and B<-pagewidth> are specified then
+the scale factor from B<-pagewidth> is used (non-uniform scaling
+is not implemented).
+
+=item B<-pagewidth> =E<gt> I<size>
+
+Specifies that the Postscript should be scaled in both x and y so
+that the printed area is I<size> wide on the Postscript page.
+I<Size> has the same form as for B<-pageheight>.
+Defaults to the width of the printed area on the screen.
+If both B<-pageheight> and B<-pagewidth> are specified then
+the scale factor from B<-pagewidth>  is used (non-uniform scaling
+is not implemented).
+
+=item B<-pagex> =E<gt> I<position>
+
+I<Position> gives the x-coordinate of the positioning point on
+the Postscript page, using any of the forms allowed for B<-pageheight>.
+Used in conjunction with the B<-pagey> and B<-pageanchor> options
+to determine where the printed area appears on the Postscript page.
+Defaults to the center of the page.
+
+=item B<-pagey> =E<gt> I<position>
+
+I<Position> gives the y-coordinate of the positioning point on
+the Postscript page, using any of the forms allowed for B<-pageheight>.
+Used in conjunction with the B<-pagex> and B<-pageanchor> options
+to determine where the printed area appears on the Postscript page.
+Defaults to the center of the page.
+
+=item B<-rotate> =E<gt> I<boolean>
+
+I<Boolean> specifies whether the printed area is to be rotated 90
+degrees.
+In non-rotated output the x-axis of the printed area runs along
+the short dimension of the page (``portrait'' orientation);
+in rotated output the x-axis runs along the long dimension of the
+page (``landscape'' orientation).
+Defaults to non-rotated.
+
+=item B<-width> =E<gt> I<size>
+
+Specifies the width of the area of the canvas to print.
+Defaults to the width of the canvas window.
+
+=item B<-x> => I<position>
+
+Specifies the x-coordinate of the left edge of the area of the
+canvas that is to be printed, in canvas coordinates, not window
+coordinates.
+Defaults to the coordinate of the left edge of the window.
+
+=item B<-y> => I<position>
+
+Specifies the y-coordinate of the top edge of the area of the
+canvas that is to be printed, in canvas coordinates, not window
+coordinates.
+Defaults to the coordinate of the top edge of the window.
+
+=back
+
+=item I<$canvas>-E<gt>B<raise>(I<tagOrId, >?I<aboveThis>?)
+
+Move all of the items given by I<tagOrId> to a new position
+in the display list just after the item given by I<aboveThis>.
+If I<tagOrId> refers to more than one item then all are moved
+but the relative order of the moved items will not be changed.
+I<AboveThis> is a tag or id;  if it refers to more than one
+item then the last (topmost) of these items in the display list is used
+as the destination location for the moved items.
+Note: this method has no effect on window items.  Window items always
+obscure other item types, and the stacking order of window items is
+determined by the B<raise> and B<lower> widget commands, not the
+B<raise> and B<lower> methods for canvases.
+This method returns an empty string.
+
+=item I<$canvas>-E<gt>B<scale>(I<tagOrId, xOrigin, yOrigin, xScale, yScale>)
+
+Rescale all of the items given by I<tagOrId> in canvas coordinate
+space.
+I<XOrigin> and I<yOrigin> identify the origin for the scaling
+operation and I<xScale> and I<yScale> identify the scale
+factors for x- and y-coordinates, respectively (a scale factor of
+1.0 implies no change to that coordinate).
+For each of the points defining each item, the x-coordinate is
+adjusted to change the distance from I<xOrigin> by a factor
+of I<xScale>.
+Similarly, each y-coordinate is adjusted to change the distance
+from I<yOrigin> by a factor of I<yScale>.
+This method returns an empty string.
+
+=item I<$canvas>-E<gt>B<scan>(I<option, args>)
+
+This method is used to implement scanning on canvases.  It has
+two forms, depending on I<option>:
+
+=over 8
+
+=item I<$canvas>-E<gt>B<scanMark>(I<x, y>)
+
+Records I<x> and I<y> and the canvas's current view;  used
+in conjunction with later B<scanDragto> method.
+Typically this method is associated with a mouse button press in
+the widget and I<x> and I<y> are the coordinates of the
+mouse.  It returns an empty string.
+
+=item I<$canvas>-E<gt>B<scanDragto>(I<x, y, ?gain?>.)
+
+This method computes the difference between its I<x> and I<y>
+arguments (which are typically mouse coordinates) and the I<x> and
+I<y> arguments to the last B<scanMark> method for the widget.
+It then adjusts the view by 10 times the
+difference in coordinates.  This method is typically associated
+It then adjusts the view by I<gain> times the
+difference in coordinates, where I<gain> defaults to 10.
+This command is typically associated
+with mouse motion events in the widget, to produce the effect of
+dragging the canvas at high speed through its window.  The return
+value is an empty string.
+
+=back
+
+=item I<$canvas>-E<gt>B<select>(I<option, >?I<tagOrId, arg>?)
+
+Manipulates the selection in one of several ways, depending on
+I<option>.
+The method may take any of the forms described below.
+In all of the descriptions below, I<tagOrId> must refer to
+an item that supports indexing and selection;  if it refers to
+multiple items then the first of
+these that supports indexing and the selection is used.
+I<Index> gives a textual description of a position
+within I<tagOrId>, as described in L<"INDICES"> above.
+
+=over 8
+
+=item I<$canvas>-E<gt>B<selectAdjust>(I<tagOrId, index>)
+
+Locate the end of the selection in I<tagOrId> nearest
+to the character given by I<index>, and adjust that
+end of the selection to be at I<index> (i.e. including
+but not going beyond I<index>).
+The other end of the selection is made the anchor point
+for future B<selectTo> method calls.
+If the selection isn't currently in I<tagOrId> then
+this method behaves the same as the B<selectTo> widget
+method.
+Returns an empty string.
+
+=item I<$canvas>-E<gt>B<selectClear>
+
+Clear the selection if it is in this widget.
+If the selection isn't in this widget then the method
+has no effect.
+Returns an empty string.
+
+=item I<$canvas>-E<gt>B<selectFrom>(I<tagOrId, index>)
+
+Set the selection anchor point for the widget to be just
+before the character
+given by I<index> in the item given by I<tagOrId>.
+This method doesn't change the selection;  it just sets
+the fixed end of the selection for future B<selectTo>
+method calls.
+Returns an empty string.
+
+=item I<$canvas>-E<gt>B<selectItem>
+
+Returns the id of the selected item, if the selection is in an
+item in this canvas.
+If the selection is not in this canvas then an empty string
+is returned.
+
+=item I<$canvas>-E<gt>B<selectTo>(I<tagOrId, index>)
+
+Set the selection to consist of those characters of I<tagOrId>
+between the selection anchor point and
+I<index>.
+The new selection will include the character given by I<index>;
+it will include the character given by the anchor point only if
+I<index> is greater than or equal to the anchor point.
+The anchor point is determined by the most recent B<selectAdjust>
+or B<selectFrom> method calls for this widget.
+If the selection anchor point for the widget isn't currently in
+I<tagOrId>, then it is set to the same character given
+by I<index>.
+Returns an empty string.
+
+=back
+
+=item I<$canvas>-E<gt>B<type>(I<tagOrId>)
+
+Returns the type of the item given by I<tagOrId>, such as
+B<rectangle> or B<text>.
+If I<tagOrId> refers to more than one item, then the type
+of the first item in the display list is returned.
+If I<tagOrId> doesn't refer to any items at all then
+an empty string is returned.
+
+=item I<$canvas>-E<gt>B<xview>(?I<args>?)
+
+This method is used to query and change the horizontal position of the
+information displayed in the canvas's window.
+It can take any of the following forms:
+
+=over 8
+
+=item I<$canvas>-E<gt>B<xview>
+
+Returns a list containing two elements.
+Each element is a real fraction between 0 and 1;  together they describe
+the horizontal span that is visible in the window.
+For example, if the first element is .2 and the second element is .6,
+20% of the canvas's area (as defined by the B<-scrollregion> option)
+is off-screen to the left, the middle 40% is visible
+in the window, and 40% of the canvas is off-screen to the right.
+These are the same values passed to scrollbars via the B<-xscrollcommand>
+option.
+
+=item I<$canvas>-E<gt>B<xviewMoveto>(I<fraction>)
+
+Adjusts the view in the window so that I<fraction> of the
+total width of the canvas is off-screen to the left.
+I<Fraction> must be a fraction between 0 and 1.
+
+=item I<$canvas>-E<gt>B<xviewScroll>(I<number, what>)
+
+This method shifts the view in the window left or right according to
+I<number> and I<what>.
+I<Number> must be an integer.
+I<What> must be either B<units> or B<pages> or an abbreviation
+of one of these.
+If I<what> is B<units>, the view adjusts left or right in units
+of the B<xScrollIncrement> option, if it is greater than zero,
+or in units of one-tenth the window's width otherwise.
+If I<what is >B<pages> then the view
+adjusts in units of nine-tenths the window's width.
+If I<number> is negative then information farther to the left
+becomes visible;  if it is positive then information farther to the right
+becomes visible.
+
+=back
+
+=item I<$canvas>-E<gt>B<yview>(I<?args>?)
+
+This method is used to query and change the vertical position of the
+information displayed in the canvas's window.
+It can take any of the following forms:
+
+=over 8
+
+=item I<$canvas>-E<gt>B<yview>
+
+Returns a list containing two elements.
+Each element is a real fraction between 0 and 1;  together they describe
+the vertical span that is visible in the window.
+For example, if the first element is .6 and the second element is 1.0,
+the lowest 40% of the canvas's area (as defined by the B<-scrollregion>
+option) is visible in the window.
+These are the same values passed to scrollbars via the B<-yscrollcommand>
+option.
+
+=item I<$canvas>-E<gt>B<yviewMoveto>(I<fraction>)
+
+Adjusts the view in the window so that I<fraction> of the canvas's
+area is off-screen to the top.
+I<Fraction> is a fraction between 0 and 1.
+
+=item I<$canvas>-E<gt>B<yviewScroll>(I<number, what>)
+
+This method adjusts the view in the window up or down according to
+I<number> and I<what>.
+I<Number> must be an integer.
+I<What> must be either B<units> or B<pages>.
+If I<what> is B<units>, the view adjusts up or down in units
+of the B<yScrollIncrement> option, if it is greater than zero,
+or in units of one-tenth the window's height otherwise.
+If I<what> is B<pages> then
+the view adjusts in units of nine-tenths the window's height.
+If I<number> is negative then higher information becomes
+visible;  if it is positive then lower information
+becomes visible.
+
+=back
+
+=back
+
+=head1 OVERVIEW OF ITEM TYPES
+
+The sections below describe the various types of items supported
+by canvas widgets.  Each item type is characterized by two things:
+first, the form of the B<create> method used to create
+instances of the type;  and second, a set of configuration options
+for items of that type, which may be used in the
+B<create> and B<itemconfigure> methods.
+Most items don't support indexing or selection or the methods
+related to them, such as B<index> and B<insert>.
+Where items do support these facilities, it is noted explicitly
+in the descriptions below.
+At present, text, line and polygon items provide this support.
+For lines and polygons the indexing facility is used to manipulate
+the coordinates of the item.
+
+=head1 ARC ITEMS
+
+Items of type B<arc> appear on the display as arc-shaped regions.
+An arc is a section of an oval delimited by two angles (specified
+by the B<-start> and B<-extent> options) and displayed in
+one of several ways (specified by the B<-style> option).
+Arcs are created with methods of the following form:
+
+ $canvas->createArc(x1, y1, x2, y2, ?option, value, option, value, ...?)
+
+The arguments I<x1>, I<y1>, I<x2>, and I<y2> give
+the coordinates of two diagonally opposite corners of a
+rectangular region enclosing the oval that defines the arc.
+After the coordinates there may be any number of I<option>-I<value>
+pairs, each of which sets one of the configuration options
+for the item.  These same I<option>-I<value> pairs may be
+used in B<itemconfigure> methods to change the item's
+configuration.
+The following options are supported for arcs:
+
+=over 4
+
+=item B<-dash> =E<gt> I<pattern>
+
+=item B<-activedash> =E<gt> I<pattern>
+
+=item B<-disableddash> =E<gt> I<pattern>
+
+This option specifies dash patterns for the normal state, the active
+state, and the disabled state of an arc item.
+I<pattern> may have any of the forms accepted by B<Tk_GetDash>.
+If the dash options are omitted then the default is a solid outline.
+
+=item B<-dashoffset> =E<gt> I<offset>
+
+The starting I<offset> into the pattern provided by the
+B<-dash> option.
+B<-dashoffset> is ignored if there is no B<-dash> pattern.
+
+=item B<-extent> =E<gt> I<degrees>
+
+Specifies the size of the angular range occupied by the arc.
+The arc's range extends for I<degrees> degrees counter-clockwise
+from the starting angle given by the B<-start> option.
+I<Degrees> may be negative.
+If it is greater than 360 or less than -360, then I<degrees>
+modulo 360 is used as the extent.
+
+=item B<-fill> =E<gt> I<color>
+
+=item B<-activefill> =E<gt> I<color>
+
+=item B<-disabledfill> =E<gt> I<color>
+
+Specifies the color to be used to fill the arc region in its normal, active, and
+disabled states,
+I<Color> may have any of the forms accepted by B<Tk_GetColor>.
+If I<color> is an empty string (the default), then
+then the arc will not be filled.
+
+=item B<-outline> =E<gt> I<color>
+
+=item B<-activeoutline> =E<gt> I<color>
+
+=item B<-disabledoutline> =E<gt> I<color>
+
+This option specifies the color that should be used to draw the
+outline of the arc in its normal, active and disabled states.
+I<Color> may have any of the forms accepted by B<Tk_GetColor>.
+This option defaults to B<black>.  If I<color> is specified
+as undef then no outline is drawn for the arc.
+
+=item B<-outlinestipple> =E<gt> I<bitmap>
+
+=item B<-activeoutlinestipple> =E<gt> I<bitmap>
+
+=item B<-disabledoutlinestipple> =E<gt> I<bitmap>
+
+This option specifies stipple patterns that should be used to draw the
+outline of the arc in its normal, active and disabled states.
+Indicates that the outline for the arc should be drawn with a stipple pattern;
+I<bitmap> specifies the stipple pattern to use, in any of the
+forms accepted by B<Tk_GetBitmap>.
+If the B<-outline> option hasn't been specified then this option
+has no effect.
+If I<bitmap> is an empty string (the default), then the outline is drawn
+in a solid fashion.
+
+=item B<-start> =E<gt> I<degrees>
+
+Specifies the beginning of the angular range occupied by the
+arc.
+I<Degrees> is given in units of degrees measured counter-clockwise
+from the 3-o'clock position;  it may be either positive or negative.
+
+=item B<-state> =E<gt> I<state>
+
+Modifies the state of the arc item where I<state> may be set to one of:
+normal, disabled, hidden or "". If set to empty, the state of the canvas
+itself is used. An arc item may also be in the "active"
+state if the mouse is currently over it.  Many options can take
+separate specifications in normal, active and disabled states such that the
+appearance of the item can be different in each state.
+
+=item B<-stipple> =E<gt> I<bitmap>
+
+=item B<-activestipple> =E<gt> I<bitmap>
+
+=item B<-disabledstipple> =E<gt> I<bitmap>
+
+This option specifies stipple patterns that should be used to fill the
+the arc in its normal, active and disabled states.
+I<bitmap> specifies the stipple pattern to use, in any of the
+forms accepted by B<Tk_GetBitmap>.
+If the B<-fill> option hasn't been specified then this option
+has no effect.
+If I<bitmap> is an empty string (the default), then filling is done
+in a solid fashion.
+
+=item B<-style> =E<gt> I<type>
+
+Specifies how to draw the arc.  If I<type> is B<pieslice>
+(the default) then the arc's region is defined by a section
+of the oval's perimeter plus two line segments, one between the center
+of the oval and each end of the perimeter section.
+If I<type> is B<chord> then the arc's region is defined
+by a section of the oval's perimeter plus a single line segment
+connecting the two end points of the perimeter section.
+If I<type> is B<arc> then the arc's region consists of
+a section of the perimeter alone.
+In this last case the B<-fill> option is ignored.
+
+=item B<-tags> =E<gt> I<tagList>
+
+Specifies a set of tags to apply to the item.
+I<TagList> consists of a list of tag names, which replace any
+existing tags for the item.
+I<TagList> may be an empty list.
+
+=item B<-updatecommand> =E<gt> I<command>
+
+Specifies a callback that is to be executed every time
+the arc item is updated on the screen.
+
+=item B<-width> =E<gt> I<outlineWidth>
+
+=item B<-activewidth> =E<gt> I<outlineWidth>
+
+=item B<-disabledwidth> =E<gt> I<outlineWidth>
+
+Specifies the width of the outline to be drawn around
+the arc's region, in its normal, active and disabled states.
+I<outlineWidth> may be in any of the forms described in
+the L<"COORDINATES"> section above.
+If the B<-outline> option has been specified as undef
+then this option has no effect.
+Wide outlines will be drawn centered on the edges of the arc's region.
+This option defaults to 1.0.
+
+=back
+
+=head1 BITMAP ITEMS
+
+Items of type B<bitmap> appear on the display as images with
+two colors, foreground and background.
+Bitmaps are created with methods of the following form:
+
+ $canvas->createBitmap(x, y, ?option, value, option, value, ...?)
+
+The arguments I<x> and I<y> specify the coordinates of a
+point used to position the bitmap on the display (see the B<-anchor>
+option below for more information on how bitmaps are displayed).
+After the coordinates there may be any number of I<option>-I<value>
+pairs, each of which sets one of the configuration options
+for the item.  These same I<option>-I<value> pairs may be
+used in B<itemconfigure> methods to change the item's
+configuration.
+The following options are supported for bitmaps:
+
+=over 4
+
+=item B<-anchor> =E<gt> I<anchorPos>
+
+I<AnchorPos> tells how to position the bitmap relative to the
+positioning point for the item;  it may have any of the forms
+accepted by B<Tk_GetAnchor>.  For example, if I<anchorPos>
+is B<center> then the bitmap is centered on the point;  if
+I<anchorPos> is B<n> then the bitmap will be drawn so that
+its top center point is at the positioning point.
+This option defaults to B<center>.
+
+=item B<-background> =E<gt> I<color>
+
+=item B<-activebackground> =E<gt> I<color>
+
+=item B<-disabledbackground> =E<gt> I<color>
+
+Specifies the color to use for each of the bitmap's '0' valued pixels
+in its normal, active and disabled states.
+I<Color> may have any of the forms accepted by B<Tk_GetColor>.
+If this option isn't specified, or if it is specified as undef,
+then nothing is displayed where the bitmap pixels are 0;  this
+produces a transparent effect.
+
+=item B<-bitmap> =E<gt> I<bitmap>
+
+=item B<-activebitmap> =E<gt> I<bitmap>
+
+=item B<-disabledbitmap> =E<gt> I<bitmap>
+
+Specifies the bitmaps to display in the item in its normal, active and
+disabled states. All bitmaps must have the same width and height.
+I<Bitmap> may have any of the forms accepted by B<Tk_GetBitmap>.
+
+=item B<-foreground> =E<gt> I<color>
+
+=item B<-activeforeground> =E<gt> I<color>
+
+=item B<-disabledforeground> =E<gt> I<color>
+
+Specifies the color to use for each of the bitmap's '1' valued pixels
+in its normal, active and disabled states.
+I<Color> may have any of the forms accepted by B<Tk_GetColor> and
+defaults to B<black>.
+
+=item B<-state> =E<gt> I<state>
+
+Modifies the state of the bitmap item where I<state> may be set to one of:
+normal, disabled, or hidden.  An bitmap item may also be in the "active"
+state if the mouse is currently over it.  Many options can take
+separate specifications in normal, active and disabled states such that the
+appearance of the item can be different in each state.
+
+=item B<-tags> =E<gt> I<tagList>
+
+Specifies a set of tags to apply to the item.
+I<TagList> consists of a list of tag names, which replace any
+existing tags for the item.
+I<TagList> may be an empty list.
+
+=item B<-updatecommand> =E<gt> I<command>
+
+Specifies a callback that is to be executed every time
+the bitmap item is updated on the screen.
+
+=back
+
+=head1 GRID ITEMS
+
+Items of type B<grid> are intended for producing a visual reference for
+interpreting other items. They can be drawn as either lines (with dash
+style) or as rectangular "dots" at each grid point.
+
+Items of type B<grid> are unlike other items they always cover the
+whole of the canvas, but are never enclosed by nor overlap any area
+and are not near any point. That is they are intended to be always visible
+but not "pickable", as such they do support the "active" state.
+They are like other items in that: multiple
+grids are permitted, they can be raised and lowered relative to other
+items, they can be moved and scaled. As yet grids do not appear in
+PostScript output.
+
+Grids have outline like configure options. Grids are created with methods of the
+following form:
+
+ $canvas->createGrid(x1, y1, x2, y2, ?option, value, option, value, ...?)
+
+The arguments I<x1>, I<y1> give the origin of the grid. I<x2>, and I<y2> give
+the coordinates of the next grid point in their respective directions.
+After the coordinates there may be any number of I<option>-I<value>
+pairs, each of which sets one of the configuration options
+for the item.  These same I<option>-I<value> pairs may be
+used in B<itemconfigure> methods to change the item's
+configuration.
+
+The following options are supported for grids:
+
+=over 4
+
+=item B<-lines> =E<gt> I<boolean>
+
+If B<-lines> is set to a true value then lines are drawn for both X and Y
+grids in the style determined by B<-dash>. Otherwise retangular "dots"
+are drawn at each grid point.
+
+=item B<-dash> =E<gt> I<pattern>
+
+=item B<-disableddash> =E<gt> I<pattern>
+
+This option specifies dash patterns for the normal state,
+and the disabled state of a grid item.
+I<pattern> may have any of the forms accepted by B<Tk_GetDash>.
+If the dash options are omitted then the default is a solid outline.
+
+=item B<-dashoffset> =E<gt> I<offset>
+
+The starting I<offset> into the pattern provided by the
+B<-dash> option.
+B<-dashoffset> is ignored if there is no B<-dash> pattern.
+
+=item B<-color> =E<gt> I<color>
+
+=item B<-disabledcolor> =E<gt> I<color>
+
+This option specifies the color that should be used to draw the
+outline of the grid in its normal and disabled states.
+I<Color> may have any of the forms accepted by B<Tk_GetColor>.
+This option defaults to B<black>.
+If I<color> is undef then no grid will be drawn.
+
+=item B<-stipple> =E<gt> I<bitmap>
+
+=item B<-disabledstipple> =E<gt> I<bitmap>
+
+This option specifies stipple patterns that should be used to draw the
+outline of the rectangle in its normal and disabled states.
+I<bitmap> specifies the stipple pattern to use, in any of the
+forms accepted by B<Tk_GetBitmap>.
+If I<bitmap> is an empty string (the default), then the outline is drawn
+in a solid fashion.
+
+=item B<-state> =E<gt> I<state>
+
+Modifies the state of the rectangle item where I<state> may be set to one of:
+normal, disabled, or hidden. Many options can take
+separate specifications in normal and disabled states such that the
+appearance of the item can be different in each state.
+
+=item B<-tags> =E<gt> I<tagList>
+
+Specifies a set of tags to apply to the item.
+I<TagList> consists of a list of tag names, which replace any
+existing tags for the item.
+I<TagList> may be an empty list.
+
+=item B<-updatecommand> =E<gt> I<command>
+
+Specifies a callback that is to be executed every time
+the grid item is updated on the screen.
+
+=item B<-width> =E<gt> I<outlineWidth>
+
+=item B<-disabledwidth> =E<gt> I<outlineWidth>
+
+Specifies the width of the lines drawn by the grid or the size (in both X and Y)
+of the dots, in its normal and disabled states.
+This option defaults to 1.0.
+
+=back
+
+=head1 IMAGE ITEMS
+
+Items of type B<image> are used to display images on a
+canvas.
+Images are created with methods of the following form:
+
+ $canvas->createImage(x, y, ?option, value, option, value, ...?)
+
+The arguments I<x> and I<y> specify the coordinates of a
+point used to position the image on the display (see the B<-anchor>
+option below for more information).
+After the coordinates there may be any number of I<option>-I<value>
+pairs, each of which sets one of the configuration options
+for the item.  These same I<option>-I<value> pairs may be
+used in B<itemconfigure> methods to change the item's
+configuration.
+The following options are supported for images:
+
+=over 4
+
+=item B<-anchor> =E<gt> I<anchorPos>
+
+I<AnchorPos> tells how to position the image relative to the
+positioning point for the item;  it may have any of the forms
+accepted by B<Tk_GetAnchor>.  For example, if I<anchorPos>
+is B<center> then the image is centered on the point;  if
+I<anchorPos> is B<n> then the image will be drawn so that
+its top center point is at the positioning point.
+This option defaults to B<center>.
+
+=item B<-image> =E<gt> I<name>
+
+=item B<-activeimage> =E<gt> I<name>
+
+=item B<-disabledimage> =E<gt> I<name>
+
+Specifies the name of the images to display in the item in is normal,
+active and disabled states. This image must have been created
+previously, see L<Tk::Image>.
+
+=item B<-state> =E<gt> I<state>
+
+Modifies the state of the image item where I<state> may be set to one of:
+normal, disabled, or hidden.  An image item may also be in the "active"
+state if the mouse is currently over it.  Many options can take
+separate specifications in normal, active and disabled states such that the
+appearance of the item can be different in each state.
+
+=item B<-tags> =E<gt> I<tagList>
+
+Specifies a set of tags to apply to the item.
+I<TagList> consists of a list of tag names, which replace any
+existing tags for the item;  it may be an empty list.
+
+=item B<-updatecommand> =E<gt> I<command>
+
+Specifies a callback that is to be executed every time
+the image item is updated on the screen.
+
+=back
+
+=head1 LINE ITEMS
+
+Items of type B<line> appear on the display as one or more connected
+line segments or curves.
+Line items support coordinate indexing operations using the canvas
+methods: B<dchars, index, insert.>
+Lines are created with methods of the following form:
+
+ $canvas->createLine(x1, y1..., xn, yn, ?option, value, option, value, ...?)
+
+The arguments I<x1> through I<yn> give
+the coordinates for a series of two or more points that describe
+a series of connected line segments.
+After the coordinates there may be any number of I<option>-I<value>
+pairs, each of which sets one of the configuration options
+for the item.  These same I<option>-I<value> pairs may be
+used in B<itemconfigure> methods to change the item's
+configuration.
+The following options are supported for lines:
+
+=over 4
+
+=item B<-arrow> =E<gt> I<where>
+
+Indicates whether or not arrowheads are to be drawn at one or both
+ends of the line.
+I<Where> must have one of the values B<none> (for no arrowheads),
+B<first> (for an arrowhead at the first point of the line),
+B<last> (for an arrowhead at the last point of the line), or
+B<both> (for arrowheads at both ends).
+This option defaults to B<none>.
+
+=item B<-arrowshape> =E<gt> I<shape>
+
+This option indicates how to draw arrowheads.
+The I<shape> argument must be a list with three elements, each
+specifying a distance in any of the forms described in
+the L<"COORDINATES"> section above.
+The first element of the list gives the distance along the line
+from the neck of the arrowhead to its tip.
+The second element gives the distance along the line from the
+trailing points of the arrowhead to the tip, and the third
+element gives the distance from the outside edge of the line to the
+trailing points.
+If this option isn't specified then Tk picks a ``reasonable'' shape.
+
+=item B<-capstyle> =E<gt> I<style>
+
+Specifies the ways in which caps are to be drawn at the endpoints
+of the line.
+I<Style> may have any of the forms accepted by B<Tk_GetCapStyle>
+(B<butt>, B<projecting>, or B<round>).
+If this option isn't specified then it defaults to B<butt>.
+Where arrowheads are drawn the cap style is ignored.
+
+=item B<-dash> =E<gt> I<pattern>
+
+=item B<-activedash> =E<gt> I<pattern>
+
+=item B<-disableddash> =E<gt> I<pattern>
+
+This option specifies dash patterns for the normal state, the active
+state, and the disabled state of a line item.
+I<pattern> may have any of the forms accepted by B<Tk_GetDash>.
+If the dash options are omitted then the default is a solid outline.
+
+=item B<-dashoffset> =E<gt> I<offset>
+
+The starting I<offset> into the pattern provided by the
+B<-dash> option.
+B<-dashoffset> is ignored if there is no B<-dash> pattern.
+
+=item B<-fill> =E<gt> I<color>
+
+=item B<-activefill> =E<gt> I<color>
+
+=item B<-disabledfill> =E<gt> I<color>
+
+Specifies the color to be used to fill the line in its normal, active, and
+disabled states.
+I<Color> may have
+any of the forms acceptable to B<Tk_GetColor>.  It may also be undef,
+in which case the line will be transparent.
+This option defaults to B<black>.
+
+=item B<-joinstyle> =E<gt> I<style>
+
+Specifies the ways in which joints are to be drawn at the vertices
+of the line.
+I<Style> may have any of the forms accepted by B<Tk_GetCapStyle>
+(B<bevel>, B<miter>, or B<round>).
+If this option isn't specified then it defaults to B<miter>.
+If the line only contains two points then this option is
+irrelevant.
+
+=item B<-smooth> =E<gt> I<boolean>
+
+I<Boolean> must have one of the forms accepted by B<Tk_GetBoolean>.
+It indicates whether or not the line should be drawn as a curve.
+If so, the line is rendered as a set of parabolic splines: one spline
+is drawn for the first and second line segments, one for the second
+and third, and so on.  Straight-line segments can be generated within
+a curve by duplicating the end-points of the desired line segment.
+
+=item B<-splinesteps> =E<gt> I<number>
+
+Specifies the degree of smoothness desired for curves:  each spline
+will be approximated with I<number> line segments.  This
+option is ignored unless the B<-smooth> option is true.
+
+=item B<-state> =E<gt> I<state>
+
+Modifies the state of the line item where I<state> may be set to one of:
+normal, disabled, or hidden.  A line item may also be in the "active"
+state if the mouse is currently over it.  Many options can take
+separate specifications in normal, active and disabled states such that the
+appearance of the item can be different in each state.
+
+=item B<-stipple> =E<gt> I<bitmap>
+
+=item B<-activestipple> =E<gt> I<bitmap>
+
+=item B<-disabledstipple> =E<gt> I<bitmap>
+
+This option specifies stipple patterns that should be used to fill the
+the line in its normal, active and disabled states.
+I<bitmap> specifies the stipple pattern to use, in any of the
+forms accepted by B<Tk_GetBitmap>.
+If I<bitmap> is an empty string (the default), then filling is
+done in a solid fashion.
+
+=item B<-tags> =E<gt> I<tagList>
+
+Specifies a set of tags to apply to the item.
+I<TagList> consists of a list of tag names, which replace any
+existing tags for the item.
+I<TagList> may be an empty list.
+
+=item B<-updatecommand> =E<gt> I<command>
+
+Specifies a callback that is to be executed every time
+the line item is updated on the screen.
+
+=item B<-width> =E<gt> I<lineWidth>
+
+=item B<-activewidth> =E<gt> I<lineWidth>
+
+=item B<-disabledwidth> =E<gt> I<lineWidth>
+
+Specifies the width of the line
+in its normal, active and disabled states.
+I<lineWidth> may be in any of the forms
+described in the L<"COORDINATES"> section above.
+
+Wide lines will be drawn centered on the path specified by the
+points.
+If this option isn't specified then it defaults to 1.0.
+
+=back
+
+=head1 OVAL ITEMS
+
+Items of type B<oval> appear as circular or oval regions on
+the display.  Each oval may have an outline, a fill, or
+both.  Ovals are created with methods of the
+following form:
+
+ $canvas->createOval(x1, y1, x2, y2, ?option, value, option, value, ...?)
+
+The arguments I<x1>, I<y1>, I<x2>, and I<y2> give
+the coordinates of two diagonally opposite corners of a
+rectangular region enclosing the oval.
+The oval will include the top and left edges of the rectangle
+not the lower or right edges.
+If the region is square then the resulting oval is circular;
+otherwise it is elongated in shape.
+After the coordinates there may be any number of I<option>-I<value>
+pairs, each of which sets one of the configuration options
+for the item.  These same I<option>-I<value> pairs may be
+used in B<itemconfigure> methods to change the item's
+configuration.
+The following options are supported for ovals:
+
+=over 4
+
+=item B<-dash> =E<gt> I<pattern>
+
+=item B<-activedash> =E<gt> I<pattern>
+
+=item B<-disableddash> =E<gt> I<pattern>
+
+This option specifies dash patterns for the normal state, the active
+state, and the disabled state of an oval item.
+I<pattern> may have any of the forms accepted by B<Tk_GetDash>.
+If the dash options are omitted then the default is a solid outline.
+
+=item B<-dashoffset> =E<gt> I<offset>
+
+The starting I<offset> into the pattern provided by the
+B<-dash> option.
+B<-dashoffset> is ignored if there is no B<-dash> pattern.
+
+=item B<-fill> =E<gt> I<color>
+
+=item B<-activefill> =E<gt> I<color>
+
+=item B<-disabledfill> =E<gt> I<color>
+
+Specifies the color to be used to fill the oval in its normal, active, and
+disabled states.
+I<Color> may have any of the forms accepted by B<Tk_GetColor>.
+If I<color> is undef (the default), then
+then the oval will not be filled.
+
+=item B<-outline> =E<gt> I<color>
+
+=item B<-activeoutline> =E<gt> I<color>
+
+=item B<-disabledoutline> =E<gt> I<color>
+
+This option specifies the color that should be used to draw the
+outline of the oval in its normal, active and disabled states.
+I<Color> may have any of the forms accepted by B<Tk_GetColor>.
+This option defaults to B<black>.
+If I<color> is undef then no outline will be
+drawn for the oval.
+
+=item B<-outlinestipple> =E<gt> I<bitmap>
+
+=item B<-activeoutlinestipple> =E<gt> I<bitmap>
+
+=item B<-disabledoutlinestipple> =E<gt> I<bitmap>
+
+This option specifies stipple patterns that should be used to draw the
+outline of the oval in its normal, active and disabled states.
+I<bitmap> specifies the stipple pattern to use, in any of the
+forms accepted by B<Tk_GetBitmap>.
+If the B<-outline> option hasn't been specified then this option
+has no effect.
+If I<bitmap> is an empty string (the default), then the outline is drawn
+in a solid fashion.
+
+=item B<-state> =E<gt> I<state>
+
+Modifies the state of the oval item where I<state> may be set to one of:
+normal, disabled, or hidden.  An oval item may also be in the "active"
+state if the mouse is currently over it.  Many options can take
+separate specifications in normal, active and disabled states such that the
+appearance of the item can be different in each state.
+
+=item B<-stipple> =E<gt> I<bitmap>
+
+=item B<-activestipple> =E<gt> I<bitmap>
+
+=item B<-disabledstipple> =E<gt> I<bitmap>
+
+This option specifies stipple patterns that should be used to fill the
+the oval in its normal, active and disabled states.
+I<bitmap> specifies the stipple pattern to use, in any of the
+forms accepted by B<Tk_GetBitmap>.
+If the B<-fill> option hasn't been specified then this option
+has no effect.
+If I<bitmap> is an empty string (the default), then filling is done
+in a solid fashion.
+
+=item B<-tags> =E<gt> I<tagList>
+
+Specifies a set of tags to apply to the item.
+I<TagList> consists of a list of tag names, which replace any
+existing tags for the item.
+I<TagList> may be an empty list.
+
+=item B<-updatecommand> =E<gt> I<command>
+
+Specifies a callback that is to be executed every time
+the oval item is updated on the screen.
+
+=item B<-width> =E<gt> I<outlineWidth>
+
+=item B<-activewidth> =E<gt> I<outlineWidth>
+
+=item B<-disabledwidth> =E<gt> I<outlineWidth>
+
+Specifies the width of the outline to be drawn around
+the oval, in its normal, active and disabled states.
+I<outlineWidth> specifies the width of the outline to be drawn around
+the oval, in any of the forms described in the L<"COORDINATES"> section above.
+
+If the B<-outline> option hasn't been specified then this option
+has no effect.
+Wide outlines are drawn centered on the oval path defined by
+I<x1>, I<y1>, I<x2>, and I<y2>.
+This option defaults to 1.0.
+
+=back
+
+=head1 POLYGON ITEMS
+
+Items of type B<polygon> appear as polygonal or curved filled regions
+on the display.
+Polygon items support coordinate indexing operations using the canvas
+methods: B<dchars, index, insert.>
+Polygons are created with methods of the following form:
+
+ $canvas->createPolygon(x1, y1, ..., xn, yn, ?option, value, option, value, ...?)
+
+The arguments I<x1> through I<yn> specify the coordinates for
+three or more points that define a closed polygon.
+The first and last points may be the same;  whether they are or not,
+Tk will draw the polygon as a closed polygon.
+After the coordinates there may be any number of I<option>-I<value>
+pairs, each of which sets one of the configuration options
+for the item.  These same I<option>-I<value> pairs may be
+used in B<itemconfigure> methods to change the item's
+configuration.
+The following options are supported for polygons:
+
+=over 4
+
+=item B<-dash> =E<gt> I<pattern>
+
+=item B<-activedash> =E<gt> I<pattern>
+
+=item B<-disableddash> =E<gt> I<pattern>
+
+This option specifies dash patterns for the normal state, the active
+state, and the disabled state of an polygon item.
+I<pattern> may have any of the forms accepted by B<Tk_GetDash>.
+If the dash options are omitted then the default is a solid outline.
+
+=item B<-dashoffset> =E<gt> I<offset>
+
+The starting I<offset> into the pattern provided by the
+B<-dash> option.
+B<-dashoffset> is ignored if there is no B<-dash> pattern.
+
+=item B<-fill> =E<gt> I<color>
+
+=item B<-activefill> =E<gt> I<color>
+
+=item B<-disabledfill> =E<gt> I<color>
+
+Specifies the color to be used to fill the polygon in its normal, active, and
+disabled states.
+I<Color>
+may have any of the forms acceptable to B<Tk_GetColor>.
+If I<color> is undef then the polygon will be
+transparent.
+This option defaults to B<black>.
+
+=item B<-joinstyle> =E<gt> I<style>
+
+Specifies the ways in which joints are to be drawn at the vertices
+of the outline.
+I<Style> may have any of the forms accepted by B<Tk_GetCapStyle>
+(B<bevel>, B<miter>, or B<round>).
+If this option isn't specified then it defaults to B<miter>.
+
+=item B<-outline> =E<gt> I<color>
+
+=item B<-activeoutline> =E<gt> I<color>
+
+=item B<-disabledoutline> =E<gt> I<color>
+
+This option specifies the color that should be used to draw the
+outline of the polygon in its normal, active and disabled states.
+I<Color> may have any of the forms accepted by B<Tk_GetColor>.
+If I<color> is undef then no outline will be
+drawn for the polygon.
+This option defaults to undef (no outline).
+
+=item B<-outlinestipple> =E<gt> I<bitmap>
+
+=item B<-activeoutlinestipple> =E<gt> I<bitmap>
+
+=item B<-disabledoutlinestipple> =E<gt> I<bitmap>
+
+This option specifies stipple patterns that should be used to draw the
+outline of the polygon in its normal, active and disabled states.
+I<bitmap> specifies the stipple pattern to use, in any of the
+forms accepted by B<Tk_GetBitmap>.
+If the B<-outline> option hasn't been specified then this option
+has no effect.
+If I<bitmap> is an empty string (the default), then the outline is drawn
+in a solid fashion.
+
+=item B<-smooth> =E<gt> I<boolean>
+
+I<Boolean> must have one of the forms accepted by B<Tk_GetBoolean>
+It indicates whether or not the polygon should be drawn with a
+curved perimeter.
+If so, the outline of the polygon becomes a set of parabolic splines,
+one spline for the first and second line segments, one for the second
+and third, and so on.  Straight-line segments can be generated in a
+smoothed polygon by duplicating the end-points of the desired line segment.
+
+=item B<-splinesteps> =E<gt> I<number>
+
+Specifies the degree of smoothness desired for curves:  each spline
+will be approximated with I<number> line segments.  This
+option is ignored unless the B<-smooth> option is true.
+
+=item B<-state> =E<gt> I<state>
+
+Modifies the state of the polygon item where I<state> may be set to one of:
+normal, disabled, or hidden.  A polygon item may also be in the "active"
+state if the mouse is currently over it.  Many options can take
+separate specifications in normal, active and disabled states such that the
+appearance of the item can be different in each state.
+
+=item B<-stipple> =E<gt> I<bitmap>
+
+=item B<-activestipple> =E<gt> I<bitmap>
+
+=item B<-disabledstipple> =E<gt> I<bitmap>
+
+This option specifies stipple patterns that should be used to fill the
+the polygon in its normal, active and disabled states.
+I<bitmap> specifies the stipple pattern to use, in any of the
+forms accepted by B<Tk_GetBitmap>.
+If I<bitmap> is an empty string (the default), then filling is
+done in a solid fashion.
+
+=item B<-tags> =E<gt> I<tagList>
+
+Specifies a set of tags to apply to the item.
+I<TagList> consists of a list of tag names, which replace any
+existing tags for the item.
+I<TagList> may be an empty list.
+
+=item B<-updatecommand> =E<gt> I<command>
+
+Specifies a callback that is to be executed every time
+the polygon item is updated on the screen.
+
+=item B<-width> =E<gt> I<outlineWidth>
+
+=item B<-activewidth> =E<gt> I<outlineWidth>
+
+=item B<-disabledwidth> =E<gt> I<outlineWidth>
+
+=item Specifies the width of the outline to be drawn around
+
+the polygon, in its normal, active and disabled states.
+I<outlineWidth> may be in any of the forms described in the COORDINATES
+section above.
+I<OutlineWidth> specifies the width of the outline to be drawn around
+the polygon, in any of the forms described in the L<"COORDINATES"> section above.
+If the B<-outline> option hasn't been specified then this option
+has no effect.  This option defaults to 1.0.
+
+Polygon items are different from other items such as rectangles, ovals
+and arcs in that interior points are considered to be ``inside'' a
+polygon (e.g. for purposes of the B<find closest> and
+B<find overlapping> methods) even if it is not filled.
+For most other item types, an
+interior point is considered to be inside the item only if the item
+is filled or if it has neither a fill nor an outline.  If you would
+like an unfilled polygon whose interior points are not considered
+to be inside the polygon, use a line item instead.
+
+=back
+
+=head1 RECTANGLE ITEMS
+
+Items of type B<rectangle> appear as rectangular regions on
+the display.  Each rectangle may have an outline, a fill, or
+both.  Rectangles are created with methods of the
+following form:
+
+ $canvas->createRectangle(x1, y1, x2, y2, ?option, value, option, value, ...?)
+
+The arguments I<x1>, I<y1>, I<x2>, and I<y2> give
+the coordinates of two diagonally opposite corners of the rectangle
+(the rectangle will include its upper and left edges but not
+its lower or right edges).
+After the coordinates there may be any number of I<option>-I<value>
+pairs, each of which sets one of the configuration options
+for the item.  These same I<option>-I<value> pairs may be
+used in B<itemconfigure> methods to change the item's
+configuration.
+The following options are supported for rectangles:
+
+=over 4
+
+=item B<-dash> =E<gt> I<pattern>
+
+=item B<-activedash> =E<gt> I<pattern>
+
+=item B<-disableddash> =E<gt> I<pattern>
+
+This option specifies dash patterns for the normal state, the active
+state, and the disabled state of a rectangle item.
+I<pattern> may have any of the forms accepted by B<Tk_GetDash>.
+If the dash options are omitted then the default is a solid outline.
+
+=item B<-dashoffset> =E<gt> I<offset>
+
+The starting I<offset> into the pattern provided by the
+B<-dash> option.
+B<-dashoffset> is ignored if there is no B<-dash> pattern.
+
+=item B<-fill> =E<gt> I<color>
+
+=item B<-activefill> =E<gt> I<color>
+
+=item B<-disabledfill> =E<gt> I<color>
+
+Specifies the color to be used to fill the rectangle in its normal, active, and
+disabled states.
+I<Color>
+may be specified in any of the forms accepted by B<Tk_GetColor>.
+If I<color> is undef (the default),
+then the rectangle will not be filled.
+
+=item B<-outline> =E<gt> I<color>
+
+=item B<-activeoutline> =E<gt> I<color>
+
+=item B<-disabledoutline> =E<gt> I<color>
+
+This option specifies the color that should be used to draw the
+outline of the rectangle in its normal, active and disabled states.
+I<Color> may have any of the forms accepted by B<Tk_GetColor>.
+This option defaults to B<black>.
+If I<color> is undef then no outline will be
+drawn for the rectangle.
+
+=item B<-outlinestipple> =E<gt> I<bitmap>
+
+=item B<-activeoutlinestipple> =E<gt> I<bitmap>
+
+=item B<-disabledoutlinestipple> =E<gt> I<bitmap>
+
+This option specifies stipple patterns that should be used to draw the
+outline of the rectangle in its normal, active and disabled states.
+I<bitmap> specifies the stipple pattern to use, in any of the
+forms accepted by B<Tk_GetBitmap>.
+If the B<-outline> option hasn't been specified then this option
+has no effect.
+If I<bitmap> is an empty string (the default), then the outline is drawn
+in a solid fashion.
+
+=item B<-state> =E<gt> I<state>
+
+Modifies the state of the rectangle item where I<state> may be set to one of:
+normal, disabled, or hidden.  A rectangle item may also be in the "active"
+state if the mouse is currently over it.  Many options can take
+separate specifications in normal, active and disabled states such that the
+appearance of the item can be different in each state.
+
+=item B<-stipple> =E<gt> I<bitmap>
+
+=item B<-activestipple> =E<gt> I<bitmap>
+
+=item B<-disabledstipple> =E<gt> I<bitmap>
+
+This option specifies stipple patterns that should be used to fill the
+the rectangle in its normal, active and disabled states.
+I<bitmap> specifies the stipple pattern to use, in any of the
+forms accepted by B<Tk_GetBitmap>.
+If the B<-fill> option hasn't been specified then this option
+has no effect.
+If I<bitmap> is an empty string (the default), then filling
+is done in a solid fashion.
+
+=item B<-tags> =E<gt> I<tagList>
+
+Specifies a set of tags to apply to the item.
+I<TagList> consists of a list of tag names, which replace any
+existing tags for the item.
+I<TagList> may be an empty list.
+
+=item B<-updatecommand> =E<gt> I<command>
+
+Specifies a callback that is to be executed every time
+the rectangle item is updated on the screen.
+
+=item B<-width> =E<gt> I<outlineWidth>
+
+=item B<-activewidth> =E<gt> I<outlineWidth>
+
+=item B<-disabledwidth> =E<gt> I<outlineWidth>
+
+Specifies the width of the outline to be drawn around
+the rectangle, in its normal, active and disabled states.
+I<OutlineWidth> specifies the width of the outline to be drawn around
+the rectangle, in any of the forms described in the L<"COORDINATES"> section above.
+
+If the B<-outline> option hasn't been specified then this option
+has no effect.
+Wide outlines are drawn centered on the rectangular path
+defined by I<x1>, I<y1>, I<x2>, and I<y2>.
+This option defaults to 1.0.
+
+=back
+
+=head1 TEXT ITEMS
+
+A text item displays a string of characters on the screen in one
+or more lines.
+Text items support indexing and selection, along with the
+following text-related canvas methods:  B<dchars>,
+B<focus>, B<icursor>, B<index>, B<insert>,
+B<select>.
+Text items are created with methods of the following
+form:
+
+ $canvas->createText(x, y, ?option, value, option, value, ...?)
+
+The arguments I<x> and I<y> specify the coordinates of a
+point used to position the text on the display (see the options
+below for more information on how text is displayed).
+After the coordinates there may be any number of I<option>-I<value>
+pairs, each of which sets one of the configuration options
+for the item.  These same I<option>-I<value> pairs may be
+used in B<itemconfigure> methods to change the item's
+configuration.
+The following options are supported for text items:
+
+=over 4
+
+=item B<-anchor> =E<gt> I<anchorPos>
+
+I<AnchorPos> tells how to position the text relative to the
+positioning point for the text;  it may have any of the forms
+accepted by B<Tk_GetAnchor>.  For example, if I<anchorPos>
+is B<center> then the text is centered on the point;  if
+I<anchorPos> is B<n> then the text will be drawn such that
+the top center point of the rectangular region occupied by the
+text will be at the positioning point.
+This option defaults to B<center>.
+
+=item B<-fill> =E<gt> I<color>
+
+=item B<-activefill> =E<gt> I<color>
+
+=item B<-disabledfill> =E<gt> I<color>
+
+Specifies the color to be used to fill the text in its normal, active, and
+disabled states.
+I<Color> may have any of the forms accepted by B<Tk_GetColor>.
+If I<color> is undef then the text will be transparent.
+If this option isn't specified then it defaults to B<black>.
+
+=item B<-font> =E<gt> I<fontName>
+
+Specifies the font to use for the text item.
+I<FontName> may be any string acceptable to B<Tk_GetFontStruct>.
+If this option isn't specified, it defaults to a system-dependent
+font.
+
+=item B<-justify> =E<gt> I<how>
+
+Specifies how to justify the text within its bounding region.
+I<How> must be one of the values B<left>, B<right>,
+or B<center>.
+This option will only matter if the text is displayed as multiple
+lines.
+If the option is omitted, it defaults to B<left>.
+
+=item B<-state> =E<gt> I<state>
+
+Modifies the state of the text item where I<state> may be set to one of:
+normal, disabled, or hidden.  A text item may also be in the "active"
+state if the mouse is currently over it.  Many options can take
+separate specifications in normal, active and disabled states such that the
+appearance of the item can be different in each state.
+
+=item B<-stipple> =E<gt> I<bitmap>
+
+=item B<-activestipple> =E<gt> I<bitmap>
+
+=item B<-disabledstipple> =E<gt> I<bitmap>
+
+This option specifies stipple patterns that should be used to fill the
+the text in its normal, active and disabled states.
+I<bitmap> specifies the stipple pattern to use, in any of the
+forms accepted by B<Tk_GetBitmap>.
+If I<bitmap> is an empty string (the default) then the text
+is drawn in a solid fashion.
+
+=item B<-tags> =E<gt> I<tagList>
+
+Specifies a set of tags to apply to the item.
+I<TagList> consists of a list of tag names, which replace any
+existing tags for the item.
+I<TagList> may be an empty list.
+
+=item B<-text> =E<gt> I<string>
+
+I<String> specifies the characters to be displayed in the text item.
+Newline characters cause line breaks.
+The characters in the item may also be changed with the
+B<insert> and B<delete> methods.
+This option defaults to an empty string.
+
+=item B<-updatecommand> =E<gt> I<command>
+
+Specifies a callback that is to be executed every time
+the text item is updated on the screen.
+
+=item B<-width> =E<gt> I<lineLength>
+
+Specifies a maximum line length for the text, in any of the forms
+described in the L<"COORDINATES"> section above.
+If this option is zero (the default) the text is broken into
+lines only at newline characters.
+However, if this option is non-zero then any line that would
+be longer than I<lineLength> is broken just before a space
+character to make the line shorter than I<lineLength>;  the
+space character is treated as if it were a newline
+character.
+
+=back
+
+=head1 WINDOW ITEMS
+
+Items of type B<window> cause a particular window to be displayed
+at a given position on the canvas.
+Window items are created with methods of the following form:
+
+S<    >I<$canvas>->B<createWindow>(I<x, y>?, I<-option>=>I<value>, I<-option>=>I<value>, ...?)
+
+The arguments I<x> and I<y> specify the coordinates of a
+point used to position the window on the display (see the B<-anchor>
+option below for more information on how bitmaps are displayed).
+After the coordinates there may be any number of I<option-value>
+pairs, each of which sets one of the configuration options
+for the item.  These same I<option>-I<value> pairs may be
+used in B<itemconfigure> method to change the item's
+configuration.
+The following options are supported for window items:
+
+=over 4
+
+=item B<-anchor> =E<gt> I<anchorPos>
+
+I<AnchorPos> tells how to position the window relative to the
+positioning point for the item;  it may have any of the forms
+accepted by B<Tk_GetAnchor>.  For example, if I<anchorPos>
+is B<center> then the window is centered on the point;  if
+I<anchorPos> is B<n> then the window will be drawn so that
+its top center point is at the positioning point.
+This option defaults to B<center>.
+
+=item B<-height> =E<gt> I<pixels>
+
+Specifies the height to assign to the item's window.
+I<Pixels> may have any of the
+forms described in the L<"COORDINATES"> section above.
+If this option isn't specified, or if it is specified as an empty
+string, then the window is given whatever height it requests internally.
+
+=item B<-state> =E<gt> I<state>
+
+Modifies the state of the window item where I<state> may be set to one of:
+normal, disabled, or hidden.
+
+=item B<-tags> =E<gt> I<tagList>
+
+Specifies a set of tags to apply to the item.
+I<TagList> consists of a list of tag names, which replace any
+existing tags for the item.
+I<TagList> may be an empty list.
+
+=item B<-updatecommand> =E<gt> I<command>
+
+Specifies a callback that is to be executed every time
+the window item is updated on the screen.
+
+=item B<-width> =E<gt> I<pixels>
+
+Specifies the width to assign to the item's window.
+I<Pixels> may have any of the
+forms described in the L<"COORDINATES"> section above.
+If this option isn't specified, or if it is specified as an empty
+string, then the window is given whatever width it requests internally.
+
+=item B<-window> =E<gt> I<$widget>
+
+Specifies the window to associate with this item.
+The window specified by $widget must either be a child of
+the canvas widget or a child of some ancestor of the canvas widget.
+I<PathName> may not refer to a top-level window.
+
+Note:  due to restrictions in the ways that windows are managed, it is not
+possible to draw other graphical items (such as lines and images) on top
+of window items.  A window item always obscures any graphics that
+overlap it, regardless of their order in the display list.
+
+=back
+
+=head1 APPLICATION-DEFINED ITEM TYPES
+
+It is possible for individual applications to define new item
+types for canvas widgets using C code.
+See the documentation for B<Tk_CreateItemType>.
+
+=head1 BINDINGS
+
+Canvas has default bindings to allow scrolling if necessary:
+<Up>, <Down>, <Left> and <Right> (and their <Control-*> counter
+parts).  Further <Proir>, <Next>, <Home> and <End>.  These
+bindings allow you to navigate the same way as in other
+widgets that can scroll.
+
+=head1 Perl/Tk Methods
+
+The following methods are added as perl code:
+
+=over 4
+
+=item $canvas->get_corners
+
+Returns the bounding box in Canvas coordinates of the visible portion
+of the Canvas. (Written by Slaven Rezic.)
+
+=back
+
+=head1 CREDITS
+
+Tk's canvas widget is a blatant ripoff of ideas from Joel Bartlett's
+I<ezd> program.  I<Ezd> provides structured graphics in a Scheme
+environment and preceded canvases by a year or two.  Its simple
+mechanisms for placing and animating graphical objects inspired the
+functions of canvases.
+
+=head1 KEYWORDS
+
+canvas, widget
+
+=cut
+

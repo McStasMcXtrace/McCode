@@ -1,0 +1,501 @@
+#!/bin/sh
+
+# Set environment constants
+TOP="`pwd`"
+cd `dirname "$0"`;
+
+# Collect date information
+MONTH=`date +"%b"`
+DAY=`date +"%d"`
+YEAR=`date +"%Y"`
+
+DEFAULT_VERSION="${YEAR}-${MONTH}-${DAY}";
+DEFAULT_TARGET="dist"
+DEFAULT_GENS="src bin"
+
+# Trick to extract available generators from this source file
+export ALL_GENS=$(
+    grep '^make_' "$0" | grep -oE '^make_[^(]+' | grep -oE '[^_]+$' | \
+        while read gen; do \
+            printf "%s " "$gen"; \
+        done)
+
+# name is mandatory and source and chain can be guessed (they have no defaults)
+
+
+
+if [ "x${MCINSTALL_PREFIX}" = "x" ]; then
+    MCINSTALL_PREFIX="/usr/local";
+fi
+export MCINSTALL_PREFIX
+
+if [ "x${MCNO_ALTERNATIVES}" = "x" ]; then
+    MCNO_ALTERNATIVES=0;
+else
+    MCNO_ALTERNATIVES=1;
+fi
+
+
+usage() {
+    echo "usage: $0 name [version] [source] [target] [chain] [flags] [-- gens ...] ";
+    echo "";
+    echo "  name:      The name of the distribution (e.g. mcstas)";
+    echo "  version:   The version (default: current date)";
+    echo "  source:    The source directory (default: name)";
+    echo "  target:    The target directory (default: ${DEFAULT_TARGET})";
+    echo "  chain:     The toolchain to use (default: ${DEFAULT_CHAIN})";
+    echo "  flags:     Any of the following characters (default: '')";
+    echo "     o          Out-of-place compilation (don't copy files)";
+    echo "     k          Keep working directory (don't clean up)";
+    echo "  gens:      Generators to use (default: ${DEFAULT_GENS})";
+    echo "";
+    echo "A default value can be chosen by supplying an empty value like ''.";
+    echo "See cmake/toolchains/*.cmake for available toolchains.";
+    echo ""
+    echo "Available generators are: ${ALL_GENS}";
+    echo ""
+    echo "McStas, Johan Brinch <jsbn@fysik.dtu.dk>";
+}
+
+if [ "x$1" = "x" ]; then
+    # No arguments
+    usage;
+    exit 1;
+fi
+
+
+# Parse arguments into variables; stop at --
+args="NAME MCCODE_VERSION SOURCE DEST CHAIN FLAGS"
+for a in ${args}; do
+    VAL="$1";
+
+    if [ "x${VAL}" = "x--help" ] || [ "x${VAL}" = "x-h" ]; then
+        usage;
+        exit 0;
+    fi
+
+    # Break on EOF or --
+    if [ "x${VAL}" = "x--" ]; then
+        shift;
+        break;
+    fi
+
+    # Set argument from args and shift to next
+    export ${a}="$1";
+    shift;
+done
+
+CP_SRC="y"
+CLEANUP="y"
+if expr "${FLAGS}" : ".*o.*" > /dev/null; then
+    CP_SRC="n"
+    echo Not copying code for project
+fi
+if expr "${FLAGS}" : ".*k.*" > /dev/null; then
+    CLEANUP="n"
+    echo Not clearing out code for project
+fi
+
+# Any arguments from here on are generators (e.g. src, bin, deb or rpm)
+GENS="$*"
+
+# Set default generators
+if [ "x${GENS}" = "x" ]; then
+    GENS="${DEFAULT_GENS}";
+fi
+
+# Convert any path to an absolute path
+get_absolute() {
+    (
+        cd $(dirname "$1");
+        echo `pwd`/$(basename "$1");
+    )
+}
+
+# Sanitise name and version (lowercase)
+NAME_SANE=$(echo "${NAME}" | tr '[:upper:]' '[:lower:]');
+if ! [ "x${NAME}" = "x${NAME_SANE}" ]; then
+    echo "!! Changing name from '${NAME}' to '${NAME_SANE}'";
+    NAME="${NAME_SANE}";
+fi
+MCCODE_VERSION_SANE=$(echo "${MCCODE_VERSION}" | tr '[:upper:]' '[:lower:]');
+if ! [ "x${MCCODE_VERSION}" = "x${MCCODE_VERSION_SANE}" ]; then
+    echo "!! Changing version from '${MCCODE_VERSION}'to '${MCCODE_VERSION_SANE}'";
+    MCCODE_VERSION="${MCCODE_VERSION_SANE}";
+fi
+
+
+# Set default version
+if [ "x${MCCODE_VERSION}" = "x" ]; then
+    MCCODE_VERSION="${DEFAULT_VERSION}";
+fi
+
+
+# Set source directory
+if [ "x${SOURCE}" = "x" ]; then
+    SOURCE="`pwd`/${NAME}";
+fi
+
+# Make absolute
+if [ -d "${SOURCE}" ]; then
+    SOURCE="`get_absolute "${SOURCE}"`";
+else
+    echo "Error: source directory not found: ${SOURCE}"
+    exit 1;
+fi
+
+
+# Set default distination directory
+if [ "x${DEST}" = "x" ]; then
+    DEST="${TOP}/${DEFAULT_TARGET}";
+else
+    # Make absolute
+    DEST="`get_absolute "${DEST}"`";
+fi
+
+if [ -d "${DEST}/.git" ] || [ -d "${DEST}/.svn" ]; then
+    echo "Error: distination dir looks like a source repository: ${DEST}";
+    echo "> Refusing to delete it!"
+    exit 1;
+fi
+
+
+# Try to guess chain if not set
+if [ "x${CHAIN}" = "x" ]; then
+    case "`uname`" in
+        "Darwin")
+            CHAIN=mac;
+            ;;
+        "Linux")
+            if [ "x`uname -m`" = "xx86_64" ]; then
+                CHAIN=linux64;
+            else
+                CHAIN=linux32;
+            fi
+            ;;
+    esac
+    echo "Using default tool chain: ${CHAIN}";
+fi
+
+
+# Setup global flavor (mcstas/mcxtrace)
+if [ "x${FLAVOR}" = "x" ]; then
+    if ( echo ${NAME} | grep '^mcx' ) || ( echo ${NAME} | grep '^mx' ); then
+        FLAVOR="mcxtrace";
+        MCCODE_NAME="McXtrace";
+        CONFIGURE_FLAGS="-Denable_mcxtrace=1 ${CONFIGURE_FLAGS}";
+    else
+        FLAVOR="mcstas";
+        MCCODE_NAME="McStas";
+        CONFIGURE_FLAGS="-Denable_mcstas=1 ${CONFIGURE_FLAGS}";
+    fi
+fi
+
+
+# Setup toolchain
+TOOLCHAIN_FILE="${TOP}/cmake/toolchains/${CHAIN}.cmake"
+if ! [ -f "${TOOLCHAIN_FILE}" ]; then
+    echo "Error: No such toolchain ${CHAIN} (${TOOLCHAIN_FILE})."
+    exit 1;
+fi
+
+
+echo ""
+echo "=== Picked flavor: ${FLAVOR}"
+echo ""
+
+
+MCCODE_TARNAME="${FLAVOR}"
+MCCODE_DATE="${MONTH}. ${DAY}, ${YEAR}";
+MCCODE_STRING="${MCCODE_NAME} ${MCCODE_VERSION} - ${MCCODE_DATE}";
+
+
+config_mccode() {
+    find . -type f                 \
+         -name "CMakeLists.txt" -or \
+         -name "*.cmake"        -or \
+         -name "*.in" |
+	while read file; do
+            for i in 1 2 3 4 5; do
+		# replace variables into file.tmp
+		sed -e 's/@MCCODE_NAME@/'"${MCCODE_NAME}"'/' \
+                    -e 's/@MCCODE_TARNAME@/'"${MCCODE_TARNAME}"'/' \
+                    -e 's/@MCCODE_VERSION@/'"${MCCODE_VERSION}"'/' \
+                    -e 's/@MCCODE_DATE@/'"${MCCODE_DATE}"'/' \
+                    -e 's/@MCCODE_STRING@/'"${MCCODE_STRING}"'/' \
+                    "${file}" > "${file}.tmp"
+		# rename "fixed" version to file
+		mv "${file}.tmp" "${file}";
+            done;
+	done;
+}
+
+
+remove_all() {
+    # Recursively REMOVE everything matched by glob
+    while true; do
+        # Next pattern
+        P="$1"
+        if [ "x${P}" = "x" ]; then
+            break;
+        fi
+        # Remove files
+        find . -name "${P}" -exec rm -vrf {} \;
+        # Move to next argument
+        shift;
+    done
+}
+
+
+cleanup() {
+    # if there's a makefile, try "make clean"
+    if [ -f Makefile ]; then
+        make clean &>/dev/null
+    fi
+
+    # automake and CMake directories
+    rm -rf autom*.cache       \
+       build* work* CMakeFiles
+
+    # CMake files
+    rm -f CMakeCache.txt cmake_install.cmake       \
+       CPackSourceConfig.cmake CPackConfig.cmake
+
+    # backup files
+    remove_all              \
+        "#*#"               \
+        ".git" ".svn"       \
+        "lex.yy.c"          \
+        "instrument.tab.?"
+
+    # remove generated files with a corresponding *.in file
+    for f in $(find . -iname "*.in"); do
+        genf=$(echo $f | rev | cut -f2-100 -d'.' | rev);
+        rm -f "${genf}";
+    done
+}
+
+prepare_mccode() {
+    config_mccode;
+
+    if [ -f configure.in ]; then
+        autoconf;
+    fi
+
+    if [ -f src/instrument.l ]; then
+        (
+            cd src &&
+		flex instrument.l  &&
+		bison instrument.y
+        )
+    fi
+}
+
+build_mccode() {
+    # prepare_mccode;
+    # ./configure $1 &&
+    # make
+    mkdir build && cd build;
+    cmake $1 ..
+}
+
+
+fresh_copy() {
+    rm -rf "${2}" &&
+	cp -LR "${1}" "${2}";
+}
+
+fresh_clean_copy() {
+    (
+        DEST="${1}"
+        fresh_copy "${SOURCE}" "${DEST}";
+
+        cd "${DEST}";
+        cleanup &&
+        config_mccode
+    )
+}
+
+
+prepare_cpack() {
+    # copy source files
+    (
+        DEST="${1}"
+	if [ "${CP_SRC}" = "y" ]; then
+            fresh_clean_copy "${DEST}";
+	    CMAKE_SRC="."
+        else
+	    mkdir "${DEST}"
+            CMAKE_SRC="${SOURCE}";
+	    cp -rp ${TOP}/cmake ${SOURCE}/cmake
+	    cd ${SOURCE}/cmake
+	    cleanup &&
+            config_mccode
+	    cd -
+        fi
+	
+        cd "${DEST}";
+
+        TOOLCHAIN_FILE="${TOP}/cmake/toolchains/${CHAIN}.cmake"
+	echo "mkdist: prepare_cpack: cmake ${CONFIGURE_FLAGS} -DCMAKE_INSTALL_PREFIX=${MCINSTALL_PREFIX} -DNO_ALTERNATIVES=${MCNO_ALTERNATIVES} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} ${CMAKE_SRC}"
+        cmake ${CONFIGURE_FLAGS} \
+              -DCMAKE_INSTALL_PREFIX=${MCINSTALL_PREFIX} \
+              -DNO_ALTERNATIVES=${MCNO_ALTERNATIVES} \
+              -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
+	      -DCMAKE_VERBOSE_MAKEFILE=ON \
+	      ${CMAKE_SRC}
+    )
+}
+
+simple_cpack() {
+    # make a CPack package from GEN and destination
+    # e.g. simple_cpack DEB "dist/deb"
+    (
+        GEN="$1"
+        DEST="$2"
+
+        prepare_cpack "${DEST}";
+
+        # Choose architecture for CPack
+        CMD="";
+        case "${GEN},${CHAIN}" in
+            "RPM,linux32")
+                CMD="setarch i686";
+                ;;
+            "RPM,linux64")
+                CMD="setarch x86_64";
+                ;;
+        esac
+
+        echo ""
+	echo "mkdist: simple_cpack: cd ${DEST} && ${CMD} cpack -G ${GEN}"
+        cd "${DEST}" &&
+            ${CMD} cpack -G "${GEN}";
+    )
+}
+
+simple_cpack_file() {
+    (
+        GEN="$1"
+        NAME="$2"
+        EXT="$3"
+        HINT="$4"
+
+        OUT="${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}${EXT}"
+        WORK="${OUT}.work"
+
+	echo "mkdist: simple_cpack_file OUT=${OUT} GEN=${GEN} HINT=${HINT}"
+
+        simple_cpack "${GEN}" "${WORK}" || exit 1;
+
+        # Remove old packed version if present
+        rm -rf ${OUT}
+
+        # Pull out packed file and clean up
+        find "${WORK}" -name "*${HINT}${EXT}" -exec mv {} "${OUT}" \;
+
+	# If this is PackageMaker, the postinst script needs special handing
+	if [ "${GEN}" = "PackageMaker" ]; then
+	    POSTINST=`find "${WORK}" -name postinst`;
+	    cp "${POSTINST}" "${OUT}/Contents/Resources/postinstall";
+	    cp "${POSTINST}" "${OUT}/Contents/Resources/postupgrade";
+	    chmod a+x "${OUT}/Contents/Resources/postinstall";
+	    chmod a+x "${OUT}/Contents/Resources/postupgrade";
+	    OSXVER=`sw_vers | grep ProductVersion | awk '{print $2}' |cut -f1-2 -d.`
+	    mv "${OUT}" "${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}-${OSXVER}${EXT}"
+	    OUT="${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}-${OSXVER}${EXT}"
+	fi
+
+	if [ ${CLEANUP} = "y" ]; then
+	    rm -rf "${WORK}" || exit 1;
+	fi
+
+        echo "Build: ${OUT}";
+    )
+}
+
+make_src() {
+    (
+        cd "${DEST}";
+        WORK="${NAME}-${MCCODE_VERSION}-src";
+        OUT="${WORK}.tar.gz"
+        fresh_clean_copy "${WORK}";
+
+        (
+            cd "${WORK}" &&
+		prepare_mccode
+        ) || exit 1;
+
+        tar czf "${OUT}" "${WORK}" &&
+            rm -rf "${WORK}" || exit 1;
+
+        echo "Build: ${DEST}/${OUT}";
+    )
+}
+
+sane_toolchain() {
+    if ! $(echo $CHAIN | $1 >/dev/null); then
+        echo "!! Warning: Overriding toolchain with $2 (replacing ${CHAIN})"
+        echo ""
+        CHAIN=$2;
+    fi
+}
+
+make_bin() {
+    simple_cpack_file TGZ "${NAME}" ".tar.gz";
+}
+
+make_deb() {
+    # default to linux32 when toolchain is incompatible
+    sane_toolchain "grep linux" linux32;
+    simple_cpack_file DEB "${NAME}" ".deb";
+}
+
+make_rpm() {
+    # Default to linux32 when toolchain is incompatible
+    sane_toolchain "grep linux" linux32;
+    simple_cpack_file RPM "${NAME}" ".rpm";
+}
+
+make_OSXpkg() {
+    # Default to mac toolchain when something else was chosen
+    sane_toolchain "grep mac" mac;
+    simple_cpack_file PackageMaker "${NAME}-OSXpkg" ".pkg";
+}
+
+make_nsis() {
+    # Default to mingw32 when toolchain is incompatible
+    sane_toolchain "grep mingw" mingw32;
+    simple_cpack_file NSIS "${NAME}-NSIS" ".exe" "win32";
+}
+
+# create dist
+echo "${SOURCE} -> ${DEST}"
+mkdir -p "${DEST}"
+
+# copy needed files to dist
+cp mkinstalldirs "${DEST}"
+
+# move into dist
+cd "${DEST}" || exit 1
+
+
+for gen in ${GENS}; do
+    if [ "x${gen}" = "x--" ]; then
+        continue;
+    fi
+
+    echo ""
+    echo "=== ${gen} ===";
+    echo ""
+
+    # run generator function defined above
+    (
+        make_${gen};
+    )
+
+done
+
+
+# clean up
+rm -f "${DEST}"/mkinstalldirs

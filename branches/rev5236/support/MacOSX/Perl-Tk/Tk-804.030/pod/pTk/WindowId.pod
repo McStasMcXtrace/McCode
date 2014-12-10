@@ -1,0 +1,156 @@
+#  Copyright (c) 1990-1993 The Regents of the University of California.
+#  Copyright (c) 1994-1997 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_WindowId, Tk_Parent, Tk_Display, Tk_DisplayName, Tk_ScreenNumber, Tk_Screen, Tk_X, Tk_Y, Tk_Width, Tk_Height, Tk_Changes, Tk_Attributes, Tk_IsMapped, Tk_IsTopLevel, Tk_ReqWidth, Tk_ReqHeight, Tk_InternalBorderWidth, Tk_Visual, Tk_Depth, Tk_Colormap  - retrieve information from Tk's local data structure
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Window
+B<Tk_WindowId>(I<tkwin>)
+
+Tk_Window
+B<Tk_Parent>(I<tkwin>)
+
+Display *
+B<Tk_Display>(I<tkwin>)
+
+char *
+B<Tk_DisplayName>(I<tkwin>)
+
+int
+B<Tk_ScreenNumber>(I<tkwin>)
+
+Screen *
+B<Tk_Screen>(I<tkwin>)
+
+int
+B<Tk_X>(I<tkwin>)
+
+int
+B<Tk_Y>(I<tkwin>)
+
+int
+B<Tk_Width>(I<tkwin>)
+
+int
+B<Tk_Height>(I<tkwin>)
+
+XWindowChanges *
+B<Tk_Changes>(I<tkwin>)
+
+XSetWindowAttributes *
+B<Tk_Attributes>(I<tkwin>)
+
+int
+B<Tk_IsMapped>(I<tkwin>)
+
+int
+B<Tk_IsTopLevel>(I<tkwin>)
+
+int
+B<Tk_ReqWidth>(I<tkwin>)
+
+int
+B<Tk_ReqHeight>(I<tkwin>)
+
+int
+B<Tk_InternalBorderWidth>(I<tkwin>)
+
+Visual *
+B<Tk_Visual>(I<tkwin>)
+
+int
+B<Tk_Depth>(I<tkwin>)
+
+Colormap
+B<Tk_Colormap>(I<tkwin>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_Window tkwin (in)
+
+Token for window.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_WindowID> and the other names listed above are
+all macros that return fields from Tk's local data structure
+for I<tkwin>.  None of these macros requires any
+interaction with the server;  it is safe to assume that
+all are fast.
+
+B<Tk_WindowId> returns the X identifier for I<tkwin>,
+or B<NULL> if no X window has been created for I<tkwin>
+yet.
+
+B<Tk_Parent> returns Tk's token for the logical parent of
+I<tkwin>.  The parent is the token that was specified when
+I<tkwin> was created, or NULL for main windows.
+
+B<Tk_Display> returns a pointer to the Xlib display structure
+corresponding to I<tkwin>.  B<Tk_DisplayName> returns an
+ASCII string identifying I<tkwin>'s display.  B<Tk_ScreenNumber>
+returns the index of I<tkwin>'s screen among all the screens
+of I<tkwin>'s display.  B<Tk_Screen> returns a pointer to
+the Xlib structure corresponding to I<tkwin>'s screen.
+
+B<Tk_X>, B<Tk_Y>, B<Tk_Width>, and B<Tk_Height>
+return information about I<tkwin's> location within its
+parent and its size.  The location information refers to the
+upper-left pixel in the window, or its border if there is one.
+The width and height information refers to the interior size
+of the window, not including any border.  B<Tk_Changes>
+returns a pointer to a structure containing all of the above
+information plus a few other fields.  B<Tk_Attributes>
+returns a pointer to an XSetWindowAttributes structure describing
+all of the attributes of the I<tkwin>'s window, such as background
+pixmap, event mask, and so on (Tk keeps track of all this information
+as it is changed by the application).  Note: it is essential that
+applications use Tk procedures like B<Tk_ResizeWindow> instead
+of X procedures like B<XResizeWindow>, so that Tk can keep its
+data structures up-to-date.
+
+B<Tk_IsMapped> returns a non-zero value if I<tkwin>
+is mapped and zero if I<tkwin> isn't mapped.
+
+B<Tk_IsTopLevel> returns a non-zero value if I<tkwin>
+is a top-level window (its X parent is the root window of the
+screen) and zero if I<tkwin> isn't a top-level window.
+
+B<Tk_ReqWidth> and B<Tk_ReqHeight> return information about
+the window's requested size.  These values correspond to the last
+call to B<Tk_GeometryRequest> for I<tkwin>.
+
+B<Tk_InternalBorderWidth> returns the width of internal border
+that has been requested for I<tkwin>, or 0 if no internal border
+was requested.  The return value is simply the last value passed
+to B<Tk_SetInternalBorder> for I<tkwin>.
+
+B<Tk_Visual>, B<Tk_Depth>, and B<Tk_Colormap> return
+information about the visual characteristics of a window.
+B<Tk_Visual> returns the visual type for
+the window, B<Tk_Depth> returns the number of bits per pixel,
+and B<Tk_Colormap> returns the current
+colormap for the window.  The visual characteristics are
+normally set from the defaults for the window's screen, but
+they may be overridden by calling B<Tk_SetWindowVisual>.
+
+=head1 KEYWORDS
+
+attributes, colormap, depth, display, height, geometry manager,
+identifier, mapped, requested size, screen, top-level,
+visual, width, window, x, y

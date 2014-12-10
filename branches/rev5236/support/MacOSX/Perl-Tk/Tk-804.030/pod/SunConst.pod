@@ -1,0 +1,18 @@
+
+=head1 NAME
+
+Tk::DragDrop::SunConst - Constants for Sun's Drag&Drop protocol
+
+=for pm DragDrop/DragDrop/SunConst.pm
+
+=for category Experimental Modules
+
+=head1 DESCRIPTION
+
+This module defines symbolic name subs for the numeric constants that
+make up Sun's Drag&Drop protocol. They are in this module with Exporter
+as they are shared between the two halves (Dropper and Receiver) of
+the protocol.
+
+=cut
+

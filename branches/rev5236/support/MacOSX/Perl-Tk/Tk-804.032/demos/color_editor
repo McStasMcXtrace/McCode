@@ -1,0 +1,72 @@
+#!/usr/bin/env perl
+#
+# ColorEditor demonstration.
+
+
+use Tk;
+require Tk::ColorEditor;
+require Tk::ErrorDialog;
+use English;
+use strict;
+
+my $MW = MainWindow->new;
+my $f = $MW->Frame(-bg => 'blue');
+$f->pack;
+my $ce = $f->Button(-text => 'Color Editor');
+$ce->pack;
+my $qu = $f->Button(-text => 'Quit', -command => \&exit);
+$qu->pack;
+
+my $f2=$f->Frame;
+$f2->pack;
+my $f2b1=$f2->Button(-text => 'f2b1');
+$f2b1->pack(-side=>'left');
+my $f2b2=$f2->Button(-text => 'f2b1');
+$f2b2->pack(-side=>'left');
+
+my $cref = $MW->ColorEditor(
+    -title  => 'Test CE',
+    -cursor => ['@' . Tk->findINC('demos/images/cursor.xbm'),
+                 Tk->findINC('demos/images/cursor.mask'), 'red', 'green'],
+);
+$ce->configure(-command => [$cref => 'Show']);
+
+# Configure the color menu slightly.  The default color_list explicity
+# references only three of the four buttons so applying colors only effects
+# them.  If you uncomment the `get_widget_tree' call the color_list then
+# becomes those widgets of the hierarchy starting at $f2, i.e. only the last
+# two buttons.  The "color_configurator" option allows you to supply your
+# own color configurator.
+
+sub my_special_configurator {
+
+    # If you choose to supply a non-standard color configurator use the
+    # default code `configure_application_colors' in ColorEditor.pm as a
+    # guide to the internals of the ColorEditor object.
+
+    my($objref, $type, $color) = @_;
+
+    print "\nColorEditor object reference : $objref\n";
+    print "Color attribute              : $type\n";
+    print "New color                    : $color\n";
+    print "display_status               : ", $objref->cget('-display_status'), "\n";
+    print "color_list widget references :\n";
+    print join("\n", @{$objref->cget('-widgets')}), "\n";
+
+} # end my_special_configurator
+
+$cref->delete_menu_item(3);
+$cref->delete_menu_item('disabledForeground','troughColor');
+$cref->add_menu_item('SEP','frog colors');
+
+$cref->configure(
+    -display_status     => 1,
+    -widgets            => [$ce, $qu, $f2b2],
+#    -widgets           => [$f2->Descendants],
+#    -command           => [\&my_special_configurator,$cref]
+);
+
+my $e = $MW->ErrorDialog;
+$e->Subwidget('error_dialog')->Subwidget('message')->configure(-bg => 'red');
+
+MainLoop;

@@ -1,0 +1,31 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+
+my $top = MainWindow->new();
+# $top->CreateGenericHandler(\&handler);
+# $top->wmTracing(1);
+
+my $img = $top->Pixmap('-file' => Tk->findINC("demos/images/QuitPB.xpm"));
+
+# $top->iconify;
+
+$top->Icon('-image' => $img);
+$top->iconname("Foo");
+$top->title("Mail : Trial");
+
+#$top->after(3000, [ 'Icon', $top, '-background' => 'green' ]);
+
+$top->after(3000, [ iconify => $top ]);
+$top->after(6000, [ deiconify => $top ]);
+
+MainLoop();
+
+sub handler
+{
+ my ($e,$w) = @_;
+
+ print $e->T,' ',($w->isa('Tk::Widget') ? $w->PathName : $w),"\n";
+ return 0;
+}
+

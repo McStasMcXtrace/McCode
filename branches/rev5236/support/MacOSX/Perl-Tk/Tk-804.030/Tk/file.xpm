@@ -1,0 +1,18 @@
+/* XPM */
+static char * file_xpm[] = {
+"12 12 3 1",
+" 	s None	c None",
+".	c #000000000000",
+"X	c white",
+" ........   ",
+" .XXXXXX.   ",
+" .XXXXXX... ",
+" .XXXXXXXX. ",
+" .XXXXXXXX. ",
+" .XXXXXXXX. ",
+" .XXXXXXXX. ",
+" .XXXXXXXX. ",
+" .XXXXXXXX. ",
+" .XXXXXXXX. ",
+" .XXXXXXXX. ",
+" .......... "};

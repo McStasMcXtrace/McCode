@@ -1,0 +1,75 @@
+%\documentclass{article}
+%\usepackage{pstricks,pst-node}
+
+%\begin{document}
+\vspace{-1cm}
+\begin{pspicture}*(0.0,0.0)(20,8)%\showgrid
+
+\newcommand{\textsize}{\small}
+\rput(6.0,1.0){\ovalnode{A}{
+   \begin{tabular}{c} {\textsize Executable (binary)} \end{tabular}
+}}
+
+\rput(4.0,3.0){\ovalnode{B}{
+   \begin{tabular}{c} {\textsize Compilation} \\ {\textsize
+       (\texttt{mcstas}, c-compiler)} \end{tabular}
+}}
+
+\rput(8.0,4.5){\ovalnode{C}{
+   \begin{tabular}{c} {\textsize Output data} \\ {\textsize
+       (multi-format File)} \end{tabular}
+}}
+
+\rput(3.0,5.0){\ovalnode{D}{
+    \begin{tabular}{c} {\textsize Input} \\ {\textsize (Meta-language)} \end{tabular}
+}}
+
+%\rput(12.0,5.0){\ovalnode{E}{
+%    \begin{tabular}{c} {\textsize Visualisation} \\ {\textsize (Perl/PDL)} \end{tabular}}}
+
+\rput(8.0,7.0){\ovalnode{F}{
+    \begin{tabular}{c} {\textsize Graphical User Interface} \\ {\textsize (Perl)} \end{tabular}
+}}
+
+\rput(13.5,6){\ovalnode{G}{
+    \begin{tabular}{c} {\textsize Visualisation} \\ {\textsize (PGPLOT +} \\
+        {\textsize pgperl + PDL)} \end{tabular}}}
+
+\rput(13.5,4){\ovalnode{I}{
+    \begin{tabular}{c} {\textsize Visualisation} \\ {\textsize (Matlab)}\end{tabular}}}
+\rput(13.5,2.35){\ovalnode{J}{
+    \begin{tabular}{c} {\textsize Visualisation} \\ {\textsize (IDL)}\end{tabular}}}
+\rput(8.5,2.2){\ovalnode{L}{
+    \begin{tabular}{c} {\textsize Visualisation} \\ {\textsize (Browser)}\end{tabular}}}
+
+%\rput(12.0,2.5){\ovalnode{I}{
+%    \begin{tabular}{c} {\textsize Visualisation} \\ {\textsize (Matlab,
+%        Scilab, IDL,} \\ {\textsize PGPLOT/pgperl/PDL,} \\ {\textsize
+%        \texttt{html}, XML, ...)} \end{tabular}
+%}}
+
+%\rput(12.0,2.5){\ovalnode{J}{
+%    \begin{tabular}{c} {\textsize Visualisation} \\ {\textsize (Matlab,
+%        Scilab, IDL,} \\ {\textsize PGPLOT/pgperl/PDL,} \\ {\textsize
+%        \texttt{html}, XML, ...)} \end{tabular}
+%}}
+
+\pnode(1.0,7.0){H}
+
+\ncline{->}{B}{A}
+\ncline{->}{A}{C}
+\ncline{->}{D}{B}
+%\ncline{->}{C}{E}
+%\ncline{->}{E}{F}
+\ncline[linestyle=dashed]{->}{C}{F}
+\ncline{->}{F}{D}
+\ncline[linestyle=dashed]{->}{C}{G}
+\ncline[linestyle=dotted]{->}{H}{D}
+\ncline[linestyle=dashed]{->}{G}{F}
+\ncline[linestyle=dashed]{->}{C}{I}
+\ncline[linestyle=dashed]{->}{C}{J}
+\ncline[linestyle=dashed]{->}{C}{K}
+\ncline[linestyle=dashed]{->}{C}{L}
+\end{pspicture}
+
+%\end{document}

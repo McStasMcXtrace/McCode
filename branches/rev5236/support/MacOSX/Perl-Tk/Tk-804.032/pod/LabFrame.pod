@@ -1,0 +1,110 @@
+=head1 NAME
+
+Tk::LabFrame - labeled frame.
+
+=for pm Tixish/LabFrame.pm
+
+=for category Tix Extensions
+
+=head1 SYNOPSIS
+
+S<    >B<use Tk::LabFrame;>
+
+S<    >I<$f> = I<$parent>-E<gt>B<LabFrame>(?B<-label>=E<gt>I<text>,
+B<-labelside>=E<gt>I<where>, ...?);
+
+=head1 DESCRIPTION
+
+B<LabFrame> is exactly like B<Frame> and additionaly allows to
+add a label to the frame.
+
+=head1 WIDGET-OPTIONS
+
+B<LabFrame> supports the same options as the
+L<Frame|Tk::Frame/"STANDARD OPTIONS"> widget.
+
+Additional options of B<LabFrame> are:
+
+=over 4
+
+=item B<-font> =E<gt> I<font>
+
+Specifies the label's font
+
+=item B<-foreground> =E<gt> I<color>
+
+Specifies the label's foreground color
+
+=item B<-label> =E<gt> I<text>
+
+The text of the label to be placed with the Frame.
+
+=item B<-labelside> =E<gt> I<where>
+
+I<Where> can be one of B<left>, B<right>, B<top>, B<bottom> or B<acrosstop>.
+The first four work as might be expected and place the label to the
+left, right, above or below the frame respectively. The B<acrosstop>
+creates a grooved frame around the central frame and puts the label
+near the northwest corner such that it appears to "overwrite" the
+groove.
+
+=item B<-labelvariable> =E<gt> I<scalar_ref>
+
+Specifies a reference to a variable and used as an 
+alternative to -label. If the value of the variable changes,
+then the widget will be updated automatically to reflect the
+change. Used like -textvariable.
+
+=back
+
+=head1 ADVERTISED SUBWIDGETS
+
+See L<Tk::mega/"Subwidget"> how to use advertised widgets.
+
+=over 4
+
+=item I<border>
+
+  Frame used to display the border
+
+=item I<frame>
+
+  Frame used to create new LabFrame children. 
+
+=item I<label>
+
+  Label used for displaying text
+
+=back
+
+=head1 EXAMPLE
+
+Run the following test program to see this in action:
+
+    use strict;
+    use Tk;
+    require Tk::LabFrame;
+    require Tk::LabEntry;
+
+    my $test = 'Test this';
+    my $mw = Tk::MainWindow->new;
+    my $f = $mw->LabFrame(-label => "This is a label",
+			   -labelside => "acrosstop");
+    $f->LabEntry(-label => "Testing", -textvariable => \$test)->pack;
+    $f->pack;
+    Tk::MainLoop;
+
+=head1 BUGS
+
+Perhaps B<LabFrame> should be subsumed within the generic pTk
+labeled widget mechanism.
+
+=head1 AUTHOR
+
+B<Rajappa Iyer> rsi@earthling.net
+
+This code is derived from LabFrame.tcl and LabWidg.tcl in the Tix4.0
+distribution by Ioi Lam. The code may be redistributed under the same
+terms as Perl.
+
+=cut

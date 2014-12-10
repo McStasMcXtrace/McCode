@@ -1,0 +1,33 @@
+=head1 NAME
+
+Tk::DropSite - Receive side of Drag & Drop abstraction
+
+=for category User Interaction
+
+=head1 SYNOPSIS
+
+ use Tk::DropSite qw(...);
+ $widget->DropSite(-entercommand => ...,
+                   -dropcommand  => ...,
+                   -motioncommand  => ...,
+                   -dropcommand  => ...,
+                  );
+
+=head1 DESCRIPTION
+
+C<DropSite> creates an object which represents a site on which things
+may be "Dropped".
+
+A DropSite provides the following methods:
+
+=over 4
+
+=item $site->Enter($token,$event)
+
+=item $site->Leave($token,$event)
+
+=item $site->Motion($token,$event)
+
+=item $site->Drop($token,$event)
+
+=back

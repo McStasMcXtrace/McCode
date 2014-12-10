@@ -1,0 +1,21 @@
+#!/usr/local/bin/perl
+use Tk;
+use Tk::widgets qw(Canvas);
+my $mw = MainWindow->new();
+my $tile = $mw->Photo(-file =>Tk->findINC('Camel.xpm'));
+my $c  = $mw->Canvas(
+        -background  => 'yellow',
+        -width       => 300,
+        -height      => 250,
+        -relief      => 'raised',
+        -borderwidth => 3,
+#       -tile        => $tile,
+        -offset      => [-30,-30],
+        )->pack;
+
+$c->createImage(30,30, -image => $tile);
+
+    $c->update;
+    $c->after(1000);
+    $c->configure(-tile => $tile);
+MainLoop;

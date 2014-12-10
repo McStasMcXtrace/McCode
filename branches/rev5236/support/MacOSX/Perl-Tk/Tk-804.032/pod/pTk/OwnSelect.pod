@@ -1,0 +1,63 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_OwnSelection - make a window the owner of the primary selection
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_OwnSelection>(I<tkwin, selection, proc, clientData>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_Window tkwin (in)
+
+Window that is to become new selection owner.
+
+=item Atom selection (in)
+
+The name of the selection to be owned, such as XA_PRIMARY.
+
+=item Tk_LostSelProc *proc (in)
+
+Procedure to invoke when I<tkwin> loses selection ownership later.
+
+=item ClientData clientData (in)
+
+Arbitrary one-word value to pass to I<proc>.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_OwnSelection> arranges for I<tkwin> to become the
+new owner of the selection specified by the atom
+I<selection>.  After this call completes, future requests
+for the selection will be directed to handlers created for
+I<tkwin> using B<Tk_CreateSelHandler>.  When I<tkwin>
+eventually loses the selection ownership, I<proc> will be
+invoked so that the window can clean itself up (e.g. by
+unhighlighting the selection).  I<Proc> should have arguments and
+result that match the type B<Tk_LostSelProc>:
+
+ typedef void Tk_LostSelProc(ClientData clientData);
+
+The I<clientData> parameter to I<proc> is a copy of the
+I<clientData> argument given to B<Tk_OwnSelection>, and is
+usually a pointer to a data structure containing application-specific
+information about I<tkwin>.
+
+=head1 KEYWORDS
+
+own, selection owner

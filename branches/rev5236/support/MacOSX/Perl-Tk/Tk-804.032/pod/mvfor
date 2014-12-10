@@ -1,0 +1,57 @@
+#!/usr/local/bin/new/perl -w
+use strict;
+
+$/ = '';
+$^I = '.bak';
+
+my @undo;
+my $edits = 0;
+my $seen_NAME = 0;
+my @pend;
+
+while (<>)
+ {
+  if (/^=for/ && !$seen_NAME)
+   {
+    print "\n";
+    push(@pend,$_);
+   }
+  else
+   {
+    print;
+    if (@pend && $seen_NAME)
+     {
+      print @pend;
+      $edits += @pend;
+      @pend = ();
+     }
+    if (/^=head1\s+NAME/)
+     {
+      $seen_NAME = 1;
+     }
+   }
+
+  if (eof)
+   {
+    warn "$edits $ARGV\n";
+    if (defined $^I)
+     {
+      push(@undo,$ARGV) unless $edits;
+     }
+    $edits = 0;
+    $seen_NAME = 0;
+   }
+ }
+
+foreach my $file (@undo)
+ {
+  if (-f "$file$^I")
+   {
+    unlink($file) if -f $file;
+    rename("$file$^I",$file);
+   }
+ }
+
+
+# $edits += s/^(\s*\n=for.*)(\n=head1\s+NAME\s*\n)/$2\n$1/s;
+

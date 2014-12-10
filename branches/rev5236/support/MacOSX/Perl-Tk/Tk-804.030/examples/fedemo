@@ -1,0 +1,38 @@
+#!/usr/local/bin/new/perl -w
+use strict;
+my $FILE_LOG = (@ARGV) ? shift : 'README';
+
+use Tk;
+
+my $top = MainWindow->new;
+my $t   = $top->Scrolled('Text')->pack(-expand => 1, -fill => 'both');
+my $b   = $top->Button(-text => 'Quit', -command => [destroy => $top])->pack;
+init_check();
+MainLoop;
+
+sub init_check
+{
+# my $cmd = "/usr/bin/tail +0f $FILE_LOG";
+  my $cmd = "ls -l ";
+
+
+ my $open_pid = open (TAIL, "$cmd|") || die "Can't open $cmd: $!";
+
+ select (TAIL); $| = 1;
+ select (STDOUT); $| = 1;
+
+ $top->fileevent(\*TAIL, 'readable',
+         sub {
+              my $line = <TAIL>;
+              if (defined $line)
+               {
+                $t->insert('end',$line);
+                $top->idletasks;
+               }
+              else
+               {
+                close(TAIL);
+               }
+         });
+}
+

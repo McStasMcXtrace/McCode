@@ -1,0 +1,172 @@
+
+=head1 NAME
+
+Tk::DirTree - Create and manipulate DirTree widgets
+
+=for pm Tixish/DirTree.pm
+
+=for category Tix Extensions
+
+=head1 SYNOPSIS
+
+S<    >B<use Tk::DirTree;>
+
+S<    >I<$dirtree> = I<$parent>-E<gt>B<DirTree>(?I<options>?);
+
+=head1 SUPER-CLASS
+
+The B<DirTree> class is derived from the L<Tree|Tk::Tree> class and inherits
+all the methods, options and subwidgets of its super-class.
+
+=head1 STANDARD OPTIONS
+
+B<Tree> supports all the standard options of a Tree widget.  See
+L<Tk::options> for details on the standard options.
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item Name:		B<browseCmd>
+
+=item Class:		B<BrowseCmd>
+
+=item Switch:		B<-browsecmd>
+
+Specifies a L<callback|Tk::callbacks> to call whenever the user browses on a directory
+(usually by single-clicking on the name of the directory). The callback
+is called with one argument, the complete pathname of the directory.
+
+=item Name:		B<command>
+
+=item Class:		B<Command>
+
+=item Switch:		B<-command>
+
+Specifies the L<callback|Tk::callbacks> to be called when the user activates on a directory
+(usually by double-clicking on the name of the directory). The callback
+is called with one argument, the complete pathname of the directory.
+
+=item Name:		B<dircmd>
+
+=item Class:		B<DirCmd>
+
+=item Switch:		B<-dircmd>
+
+Specifies the L<callback|Tk::callbacks> to be called when a directory listing is needed
+for a particular directory. If this option is not specified, by
+default the DirTree widget will attempt to read the directory as a
+Unix directory. On special occasions, the application programmer may
+want to supply a special method for reading directories: for example,
+when he needs to list remote directories. In this case, the B<-dircmd>
+option can be used. The specified callback accepts two arguments: the
+first is the name of the directory to be listed; the second is a
+Boolean value indicating whether hidden sub-directories should be
+listed. This callback returns a list of names of the sub-directories of
+this directory. For example:
+
+    sub read_dir {
+        my( $dir, $showhidden ) = @_;
+        return( qw/DOS NORTON WINDOWS/ ) if $dir eq "C:\\";
+        return();
+    }
+
+=item Name:		B<showHidden>
+
+=item Class:		B<ShowHidden>
+
+=item Switch:		B<-showhidden>
+
+Specifies whether hidden directories should be shown. By default, a
+directory name starting with a period "." is considered as a hidden
+directory. This rule can be overridden by supplying an alternative
+B<-dircmd> option.
+
+=item Name:		B<directory>
+
+=item Class:		B<Directory>
+
+=item Switch:		B<-directory>
+
+=item Alias:		B<-value>
+
+Specifies the name of the current directory to be displayed in the
+DirTree widget.
+
+=back
+
+=head1 DESCRIPTION
+
+The B<DirTree> constructor method creates a new window (given by the $dirtree
+argument) and makes it into a DirTree widget.  Additional options,
+described above, may be specified on the command line or in the
+option database to configure aspects of the DirTree such as its
+cursor and relief.  The DirTree widget displays a list view of a
+directory, its previous directories and its sub-directories. The
+user can choose one of the directories displayed in the list or
+change to another directory.
+
+=head1 WIDGET METHODS
+
+The B<DirTree> method creates a widget object.
+This object supports the B<configure> and B<cget> methods
+described in L<Tk::options> which can be used to enquire and
+modify the options described above.
+The widget also inherits all the methods provided by the generic
+L<Tk::Widget|Tk::Widget> class.
+
+The following additional methods are available for DirTree widgets:
+
+=over 4
+
+=item I<$dirtree>-E<gt>B<chdir>(I<dir>)
+
+Change the current directory to I<dir>.
+
+=back
+
+=head1 OTHER METHODS
+
+These methods have to be documented or made private:
+
+=over 4
+
+=item OpenCmd
+
+=item Populate
+
+=item add_to_tree
+
+=item dirnames
+
+=item fullpath
+
+=item has_subdir
+
+=item opencmd
+
+=item set_dir
+
+=back
+
+=head1 BINDINGS
+
+The mouse and keyboard bindings of the DirTree widget are the same as
+the bindings of the L<Tree|Tk::Tree> widget.
+
+=head1 KEYWORDS
+
+directory, tree, tix
+
+=head1 SEE ALSO
+
+L<Tk::Tree|Tk::Tree>
+L<Tk::HList|Tk::HList>
+
+=head1 AUTHOR
+
+Perl/TK version by Chris Dean <ctdean@cogit.com>.  Original Tcl/Tix
+version by Ioi Kim Lam.
+
+=cut
+

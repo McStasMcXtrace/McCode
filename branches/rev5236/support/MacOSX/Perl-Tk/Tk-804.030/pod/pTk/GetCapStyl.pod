@@ -1,0 +1,74 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_GetCapStyle, Tk_NameOfCapStyle - translate between strings and cap styles
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+int
+B<Tk_GetCapStyle(>I<interp, string, capPtr>B<)>
+
+char *
+B<Tk_NameOfCapStyle(>I<cap>B<)>
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter to use for error reporting.
+
+=item char *string (in)
+
+String containing name of cap style: one of ```butt'', ``projecting'',
+or ``round''.
+
+=item int *capPtr (out)
+
+Pointer to location in which to store X cap style corresponding to
+I<string>.
+
+=item int cap (in)
+
+Cap style: one of B<CapButt>, B<CapProjecting>, or B<CapRound>.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_GetCapStyle> places in I<*capPtr> the X cap style
+corresponding to I<string>.
+This will be one of the values
+B<CapButt>, B<CapProjecting>, or B<CapRound>.
+Cap styles are typically used in X graphics contexts to indicate
+how the end-points of lines should be capped.
+See the X documentation for information on what each style
+implies.
+
+Under normal circumstances the return value is B<TCL_OK> and
+I<interp> is unused.
+If I<string> doesn't contain a valid cap style
+or an abbreviation of one of these names, then an error message is
+stored in I<interp-E<gt>result>, B<TCL_ERROR> is returned, and
+I<*capPtr> is unmodified.
+
+B<Tk_NameOfCapStyle> is the logical inverse of B<Tk_GetCapStyle>.
+Given a cap style such as B<CapButt> it returns a
+statically-allocated string corresponding to I<cap>.
+If I<cap> isn't a legal cap style, then
+``unknown cap style'' is returned.
+
+=head1 KEYWORDS
+
+butt, cap style, projecting, round

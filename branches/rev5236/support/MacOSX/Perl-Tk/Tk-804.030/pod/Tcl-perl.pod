@@ -1,0 +1,200 @@
+=head1 NAME
+
+Tcl vs perl - very old suspect documentation on porting.
+
+=for category Other Modules and Languages
+
+=head1 DESCRIPTION
+
+This isn't really a .pod yet, nor is it Tcl vs perl
+it is a copy of John's comparison of Malcolm's original perl/Tk
+port with the current one. It is also out-of-date in places.
+
+  From: john@WPI.EDU (John Stoffel )
+
+  Here are some thoughts on the new Tk extension and how I think the
+  organization of the commands looks.  Mostly, I'm happy with it, it
+  makes some things more organized and more consistent with tcl/tk, but
+  since the overlying language is so different, I don't think we need to
+  follow exactly the tcl/tk model for how to call the language.
+
+  The basic structure of the Tk program is:
+
+      require Tk;
+
+      $top = MainWindow->new();
+
+      #
+      # create widgets
+      #
+
+      Tk::MainLoop;
+
+      sub method1 {
+      }
+
+      sub methodN {
+      }
+
+  This is pretty much the same as tkperl5a5, with some cosmetic naming
+  changes, and some more useful command name and usage changes.  A quick
+  comparison in no particular order follows:
+
+  tkperl5a5				Tk
+  -------------------------------	-----------------------------------
+  $top=tkinit(name,display,sync);	$top=MainWindow->new();
+
+  tkpack $w, ... ;		$w->pack(...)
+
+  $w = Class::new($top, ...);	$w = $top->Class(...);
+
+  tkmainloop;			Tk::MainLoop;
+
+  tkbind($w,"<key>",sub);		$w->bind("<key>",sub);
+
+  tkdelete($w, ...);		$w->delete(...);
+
+  $w->scanmark(...);		$w->scan("mark", ...);
+
+  $w->scandragto(...);		$w->scan("dragto", ...);
+
+  $w->tkselect();			$w->Select();
+
+  $w->selectadjust(...);		$w->selection("adjust", ...);
+
+  $w->selectto(...);		$w->selection("to", ...);
+
+  $w->selectfrom(...);		$w->selection("from", ...);
+
+  $w->tkindex(...);		$w->index(...);
+
+  tclcmd("xxx",...);              &Tk::xxx(...)    # all Tk commands, but no Tcl at all
+
+  tclcmd("winfo", xxx, $w, ...);  $w->xxx(...);
+
+  				$w->mark(...);
+
+  				$w->tag(...);
+
+  $w->grabstatus();		$w->grab("status");
+
+  $w->grabrelease(...);		$w->grab("release", ...);
+
+  focus($w);			$w->focus;
+
+  update();			Tk->update();
+
+  idletasks();			Tk->update("idletasks");
+
+  wm("cmd",$w, ...);		$w->cmd(...);
+
+  destroy($w);			$w->destroy();
+
+  				Tk::option(...);
+                                  $w->OptionGet(name,Class)
+
+  				$w->place(...)
+
+  				Tk::property(...);
+
+  $w = Entry::new($parent,...)
+
+  is now
+
+  $w = $parent->Entry(...)
+
+  As this allows new to be inherited from a Window class.
+
+    -method=>x,-slave=>y
+
+   is now
+
+    -command => [x,y]
+
+  1st element of list is treated as "method" if y is an object reference.
+  (You can have -command => [a,b,c,d,e] too; b..e get passed as args).
+
+  Object references are now hashes rather than scalars and there
+  is only ever one such per window.  The Tcl_CmdInfo and PathName
+  are entries in the hash.
+
+  (This allows derived classes to
+  re-bless the hash and keep their on stuff in it too.)
+
+  Tk's "Tcl_Interp" is in fact a ref to "." window.
+  You can find all the Tk windows descended from it as their object
+  references get added (by PathName) into this hash.
+  $w->MainWindow returns this hash from any window.
+
+  I think that it should extend to multiple tkinits / Tk->news
+  with different Display's - if Tk code does.
+
+  Finally "bind" passes window as "extra" (or only)
+  argument. Thus
+
+  Tk::Button->bind(<Any-Enter>,"Enter");
+
+  Binds Enter events to Tk::Button::Enter by default
+  but gets called as $w->Enter so derived class of Button can just
+  define its own Enter method. &EvWref and associated globals and race
+  conditions are no longer needed.
+
+  One thing to beware of : commands bound to events with $widget->bind
+  follow same pattern, but get passed extra args :
+
+  $widget->bind(<Any-1>,[sub {print shift}, $one, $two ]);
+
+  When sub gets called it has :
+
+     $widget $one $two
+
+  passed.
+
+  1st extra arg is reference to the per-widget hash that serves as the
+  perl object for the widget.
+
+  Every time an XEvent a reference to a special class is placed
+  in the widget hash. It can be retrieved by $w->XEvent method.
+
+  The methods of the XEvent class are the
+  Tcl/Tk % special characters.
+
+  Thus:
+
+  $widget->bind(<Any-KeyPress>,
+                sub {
+                 my $w = shift;
+                 my $e = $w->XEvent;
+                 print $w->PathName," ",$e->A," pressed ,$e->xy,"\n");
+                });
+
+  XEvent->xy is a special case which returns "@" . $e->x . "," . $e->y
+  which is common in Text package.
+
+  Because of passing a blessed widget hash to "bound" subs they can be
+  bound to (possibly inherited) methods of the widget's class:
+
+  Class->bind(<Any-Down>,Down);
+
+  sub Class::Down
+  {
+   my $w = shift;
+   # handle down arrow
+  }
+
+  Also:
+
+  -command and friends can take a list the 1st element can be a ref to
+  as sub or a method name. Remaining elements are passed as args to the
+  sub at "invoke" time. Thus :
+
+  $b= $w->Button(blah blah, '-command' => [sub{print shift} , $fred ]);
+
+  Should do the trick, provided $fred is defined at time of button creation.
+
+  Thus 1st element of list is equivalent to Malcolm's -method and second
+  would be his -slave.  Any further elements are a bonus and avoid
+  having to pass ref to an array/hash as a slave.
+
+=cut
+

@@ -1,0 +1,89 @@
+
+=head1 NAME
+
+Tk::Derived - Base class for widgets derived from others
+
+=for pm Tk/Derived.pm
+
+=for category Derived Widgets
+
+=head1 SYNOPSIS
+
+    package Tk::MyNewWidget;
+
+    use Tk::widgets qw/ BaseWidget, list of Tk widgets /;
+    use base qw/ Tk::Derived Tk::BaseWidget /;
+
+    Construct Tk::Widget 'MyNewWidget';
+
+    sub ClassInit {
+        my( $class, $mw ) = @_;
+        #... e.g., class bindings here ...
+        $class->SUPER::ClassInit( $mw );
+    }
+
+    sub Populate {
+        my( $self, $args ) = @_;
+
+        my $flag = delete $args->{-flag};
+        if( defined $flag ) {
+            # handle -flag => xxx which can only be done at create
+            # time the delete above ensures that new() does not try
+            # and do  $self->configure( -flag => xxx );
+        }
+
+        $self->SUPER::Populate( $args );
+
+        $self = $self->Component( ... );
+
+        $self->Delegates( ... );
+
+        $self->ConfigSpecs(
+            '-cursor'    => [ SELF, 'cursor', 'Cursor',   undef ],
+            '-something' => [ METHOD, dbName,  dbClass, default ],
+            '-text'      => [ $label, dbName,  dbClass, default ],
+            '-heading'   => [ {-text => $head},
+                                heading, Heading,  'My Heading' ],
+       ); 
+   }
+
+   sub something {
+       my( $self, $value) = @_;
+       if ( @_ > 1 ) {
+          # set it
+       }
+       return # current value
+   }
+
+=head1 DESCRIPTION
+
+Tk::Derived is used with Perl's multiple inheritance to override some
+methods normally inherited from Tk::Widget.
+
+Tk::Derived should precede any Tk widgets in the class's base class
+definition.
+
+Tk::Derived's main purpose is to apply wrappers to C<configure> and C<cget>
+methods of widgets to allow the derived widget to add to or modify behaviour
+of the configure options supported by the base widget.
+
+The derived class should normally override the C<Populate> method provided
+by Tk::Derived and call C<ConfigSpecs> to declare configure options.
+
+The public methods provided by Tk::Derived are as follows:
+
+=over 4
+
+=item -E<gt>ConfigSpecs(-I<key> =E<gt> [I<kind>, I<name>, I<Class>, I<default>], ...)
+
+=back
+
+=head1 SEE ALSO
+
+L<Tk::ConfigSpecs|Tk::ConfigSpecs>
+L<Tk::mega|Tk::mega>
+L<Tk::composite|Tk::composite>
+
+
+=cut
+

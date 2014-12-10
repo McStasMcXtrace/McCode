@@ -1,0 +1,75 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+
+%Tk::FontMap = ();
+
+sub Tk::Font
+{
+ my ($w,%args)    = @_;
+ $args{'family'}  = 'times'  unless (exists $args{'family'});
+ $args{'weight'}  = 'medium' unless (exists $args{'weight'});
+ $args{'slant'}   = 'r'      unless (exists $args{'slant'});
+ $args{'size'}    = 140      unless (exists $args{'size'});
+ $args{'spacing'} = '*'     unless (exists $args{'spacing'});
+ $args{'foundry'} = '*'     unless (exists $args{'foundry'});
+ $args{'slant'}   = substr($args{'slant'},0,1);
+ my $name = "-$args{'foundry'}-$args{'family'}-$args{'weight'}-$args{'slant'}-*-*-*-$args{'size'}-*-*-$args{'spacing'}-*-iso8859-1";
+ unless (exists $Tk::FontMap{$name})
+  {
+   my $fam = "\u\L$args{'family'}";
+   my $w   = "\u\L$args{'weight'}";
+   my $sz  = $args{'size'}/10;
+   my $sl  = "\L$args{'slant'}";
+   my $an  = "";
+   $w .= "Italic"  if ($sl eq 'i');
+   $w .= "Oblique" if ($sl eq 'o');
+   $Tk::FontMap{$name} = [ "$fam-$w", $sz ];
+   print "$fam-$w","\n";
+  }
+ return $name;
+}
+
+%colormap = ();
+
+sub plot
+{
+ my ($c) = @_;
+ my $ps = $c->postscript('-x' => 0, '-y' => 0, -width => $c->Width, -height => $c->Height,
+                -fontmap => \%Tk::FontMap, -colormap => \%colormap);
+ open(PS,">$0.ps") || die "Cannot open $0.ps:$!";
+ print PS $ps,"\n";
+ close(PS);
+}
+
+$top = MainWindow->new();
+$c   = $top->Canvas();
+$c->pack(-expand => 1, -fill => 'both');
+$b   = $top->Button(-text => 'Quit', -command => [ 'destroy', $top ]);
+$b->pack;
+$b   = $top->Button(-text => 'Plot', -command => [ \&plot, $c ]);
+$b->pack;
+
+$f1 = $c->Font(family => 'courier', weight => 'bold', size => 120);
+
+$c->create('text', 20, 20, -font => $f1, -anchor => 'nw', -fill => 'red',
+           -justify => 'left',
+           -text => 'This is a piece of "courier" Text');
+
+$colormap{'red'} = '0.2 setgray';
+
+$f2 = $c->Font(family => 'times', slant => 'italic', weight => 'bold', size => 140);
+
+$c->create('text', 20, 80, -font => $f2, -anchor => 'nw', -fill => 'green',
+           -justify => 'left',
+           -text => 'This is a piece of "times" Text');
+
+$c->create('text', 20, 120,
+            -font => $c->Font(family => 'times', weight => 'bold', size => 240),
+            -anchor => 'nw',
+           -justify => 'left',
+           -text => 'This is a piece of "times" Text');
+
+$colormap{'green'} = '0.5 setgray';
+
+MainLoop;

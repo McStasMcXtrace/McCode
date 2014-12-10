@@ -1,0 +1,235 @@
+
+=head1 NAME
+
+Tk::NoteBook - display several windows in limited space with notebook metaphor.
+
+=for pm Tixish/NoteBook.pm
+
+=for category Tix Extensions
+
+=head1 SYNOPSIS
+
+  use Tk::NoteBook;
+  ...
+  $w = $frame->NoteBook();
+  $page1 = $w->add("page1", options);
+  $page2 = $w->add("page2", options);
+  ...
+  $page2 = $w->add("page2", options);
+
+=head1 DESCRIPTION
+
+The NoteBook widget provides a notebook metaphor to display several
+windows in limited space. The notebook is divided into a stack of pages
+of which only one is displayed at any time. The other pages can be
+selected by means of choosing the visual "tabs" at the top of the
+widget. Additionally, the <Tab> key may be used to traverse the pages.
+If B<-underline> is used, Alt- bindings will also work.
+
+The widget takes all the options that a Frame does. In addition,
+it supports the following options:
+
+=over 4
+
+=item B<-dynamicgeometry>
+
+If set to false (default and recommended), the size of the NoteBook
+will match the size of the largest page. Otherwise the size will
+match the size of the current page causing the NoteBook to change
+size when different pages of different sizes are selected.
+
+=item B<-ipadx>
+
+The amount of internal horizontal padding around the pages.
+
+=item B<-ipady>
+
+The amount of internal vertical padding around the pages.
+
+=item B<-backpagecolor>
+
+The background color of the tabs and back page.
+
+=item B<-disabledforeground>
+
+XXX
+
+=item B<-focuscolor>
+
+The color of the focus border around the tabs.
+
+=item B<-font>
+
+The font of the tab labels.
+
+=item B<-inactivebackground>
+
+XXX
+
+=item B<-tabpadx>
+
+Horizonzal padding around the tab label.
+
+=item B<-tabpady>
+
+Vertical padding around the tab label.
+
+=back
+
+=head1 METHODS
+
+The following methods may be used with a NoteBook object in addition
+to standard methods.
+
+=over 4
+
+=item B<add(>I<pageName>, I<options>B<)>
+
+Adds a page with name I<pageName> to the notebook. Returns an object
+of type B<Frame>. The recognized I<options> are:
+
+=over 4
+
+=item B<-anchor>
+
+Specifies how the information in a tab is to be displayed. Must be
+one of B<n>, B<ne>, B<e>, B<se>, B<s>, B<sw>, B<w>, B<nw> or
+B<center>.
+
+=item B<-bitmap>
+
+Specifies a bitmap to display on the tab of this page. The bitmap
+is displayed only if none of the B<-label> or B<-image> options
+are specified.
+
+=item B<-image>
+
+Specifies an image to display on the tab of this page. The image
+is displayed only if the B<-label> option is not specified.
+
+=item B<-label>
+
+Specifies the text string to display on the tab of this page.
+
+=item B<-justify>
+
+When there are multiple lines of text displayed in a tab, this
+option determines the justification of the lines.
+
+=item B<-createcmd>
+
+Specifies a L<callback|Tk::callbacks> to be called the first time the page is
+shown on the screen. This option can be used to delay the creation
+of the contents of a page until necessary. It can be useful in
+situations where there are a large number of pages in a NoteBook
+widget; with B<-createcmd> you do not have to make the user wait
+until all pages are constructed before displaying the first page.
+
+=item B<-raisecmd>
+
+Specifies a L<callback|Tk::callbacks> to be called whenever this page is raised
+by the user.
+
+=item B<-state>
+
+Specifies whether this page can be raised by the user. Must be
+either B<normal> or B<disabled>.
+
+=item B<-underline>
+
+Specifies the integer index of a character to underline in the
+tab. This option is used by the default bindings to implement
+keyboard traversal for menu buttons and menu entries. 0
+corresponds to the first character of text displayed on the
+widget, 1 to the next character and so on.
+
+=item B<-wraplength>
+
+This option specifies the maximum line length of the label string
+on this tab. If the line length of the label string exceeds this
+length, then it is wrapped onto the next line so that no line is
+longer than the specified length. The value may be specified in
+any standard forms for screen distances. If this value is less
+than or equal to 0, then no wrapping is done: lines will break
+only at newline characters in the text.
+
+=back
+
+=item B<delete(>I<pageName>B<)>
+
+Deletes the page identified by I<pageName>.
+
+=item B<pagecget(>I<pageName>, I<-option>B<)>
+
+Returns the current value of the configuration option given by
+I<-option> in the page given by I<pageName>. I<Option> may have any of
+the values accepted in the B<add> method.
+
+=item B<pageconfigure(>I<pageName>, I<options>B<)>
+
+Like configure for the page indicated by I<pageName>. I<Options> may
+be any of the options accepted by the B<add> method.
+
+=item B<pages>
+
+Returns a list consisting of the names of all currently defined
+pages, i.e., those created with the B<add> method.
+
+=item B<page_widget(>I<pageName>B<)>
+
+Returns the page with name I<pageName>.
+
+=item B<raise(>I<pageName>B<)>
+
+Raise the page identified by I<pageName>.
+
+=item B<raised()>
+
+Returns the name of the currently raised page.
+
+=item B<geometryinfo>
+
+Return the dimensions of the tab area.
+
+=item B<identify(>I<x>,I<y>B<)>
+
+Identify the tab's page name under the specified coordinates. Return
+an empty string if there's no tab.
+
+=item B<info(E<quot>pagesE<quot>)>
+
+Return a list of all pages.
+
+=item B<info(E<quot>focusE<quot>)>
+
+Return the page name of the tab with the current focus.
+
+=item B<info(E<quot>focusnextE<quot>)>
+
+Return the page name of the tab which would receive the next focus.
+
+=item B<info(E<quot>focusprevE<quot>)>
+
+Return the page name of the tab which had the previous focus.
+
+=item B<info(E<quot>activeE<quot>)>
+
+Return the page name of the active tab.
+
+=back
+
+=head1 BUGS
+
+The options C<-width> and C<-height> do not work.
+
+=head1 AUTHORS
+
+B<Rajappa Iyer>  <rsi@earthling.net>
+Nick Ing-Simmons <nick@ni-s.u-net.com>
+
+This code and documentation was derived from NoteBook.tcl in
+Tix4.0 written by Ioi Lam. It may be distributed under the same
+conditions as Perl itself.
+
+=cut
+

@@ -1,0 +1,300 @@
+# Tix Demostration Program
+#
+# This sample program is structured in such a way so that it can be
+# executed from the Tix demo program "widget": it must have a
+# procedure called "RunSample". It should also have the "if" statment
+# at the end of this file so that it can be run as a standalone
+# program using tixwish.
+
+require Tk;
+require Tk::TixGrid;
+
+# Demonstrates the use of editable entries in a Grid widget.
+#
+
+my %editgrid;
+
+use strict;
+use vars '$mw';
+my $hasmw = (Tk::Exists($mw) ? 1 : 0);
+$mw = Tk::MainWindow->new(-title=>'Edit TixGrid Demo') unless $hasmw;
+RunSample($mw);
+Tk::MainLoop() unless $hasmw;
+
+sub RunSample
+  {
+    my ($w) = shift;
+
+    $w->title("Doe Inc. Performance");
+    #$w->geometry('640x300');
+
+    $w->Label(-justify=>'left', -text =>
+'The left column is calculated automatically. To calculate the right column,
+press the "Calculate" button')
+    	->pack(qw(-side top -anchor c -padx 3 -pady 3));
+
+    # Create the buttons
+    #
+    my $f = $w->Frame(qw/-relief flat/)->pack(qw/-side right -fill y/);
+    my $add  = $f->Button(-text=>"Add Row",  -width=>9, -command=>\&EditGrid_addRow);
+    my $edit = $f->Button(-text=>"Edit",     -width=>9, -command=>\&EditGrid_edit);
+    my $cal  = $f->Button(-text=>"Calculate",-width=>9, -command=>\&EditGrid_calculate);
+    my $close= $f->Button(-text=>"Close",    -width=>9, -command=>[$w=>'destroy']);
+
+    $add->pack(  qw/-side top    -padx 10/);
+    $edit->pack( qw/-side top    -padx 10/);
+    $cal->pack(  qw/-side top    -padx 10 -pady 2/);
+    $close->pack(qw/-side bottom -padx 10/);
+
+    # Create the grid and set options to make it editable.
+    #
+    my $grid = $w->Scrolled('TixGrid', -bd=>0)->
+    			pack(qw/-expand yes -fill both -padx 3 -pady 3/);
+
+    $grid->configure(
+	-formatcmd     => [\&EditGrid_format,$grid],
+	-editnotifycmd => \&EditGrid_editNotify,
+	-editdonecmd   => \&EditGrid_editDone,
+	-selectunit    => \&cell,
+	-selectmode    => \&single);
+
+    # Insert some initial data
+    #
+    $grid->set(0,1, -text=>"City #1");
+    $grid->set(0,2, -text=>"City #2");
+    $grid->set(0,3, -text=>"City #3");
+    $grid->set(0,5, -text=>"Combined");
+
+    $grid->set(2,0, -text=>"Population");
+    $grid->set(4,0, -text=>"Avg. Income");
+
+    $grid->set(qw/2 1 -text 125/);
+    $grid->set(qw/2 2 -text  81/);
+    $grid->set(qw/2 3 -text 724/);
+
+    $grid->set(qw/4 1 -text 24432.12/);
+    $grid->set(qw/4 2 -text 18290.24/);
+    $grid->set(qw/4 3 -text 18906.34/);
+
+    # Global data used by other EditGrid_ procedures.
+    #
+    %editgrid = (
+		g	=> $grid,
+    		top	=> 1,
+		bot	=> 3,
+		result	=> 5,
+		);
+
+    EditGrid_calPop();
+    EditGrid_calIncome();
+  }
+
+# EditGrid_edit --
+#
+#	Prompts the user to edit a cell.
+#
+sub EditGrid_edit
+  {
+    my $grid = $editgrid{g};
+    my @ent = $grid->anchor('get');
+    unless (@ent)
+      {
+	#$grid->edit('set', @ent[0,1]);
+	$grid->editSet(@ent[0,1]);
+      }
+  }
+
+# EditGrid_addRow --
+#
+#	Adds a new row to the table.
+#
+sub EditGrid_addRow
+  {
+    my $grid =  $editgrid{g};
+
+    #$grid->edit('apply');
+    $grid->editApply;
+
+    $grid->move('row', $editgrid{result}, $editgrid{result}, 1);
+    $editgrid{bot}++;
+
+    $editgrid{result} = $editgrid{bot} + 2;
+    $grid->set(0, $editgrid{bot}, -text=>"City #$editgrid{bot}");
+    $grid->set(2, $editgrid{bot}, -text=>0);
+    $grid->set(4, $editgrid{bot}, -text=>0.0);
+
+    EditGrid_calPop();
+    EditGrid_calIncome();
+}
+
+# EditGrid_calPop --
+#
+#	Calculates the total population
+#
+sub EditGrid_calPop
+  {
+    my $grid = $editgrid{g};
+
+    my $pop = 0;
+
+    for (my $i = $editgrid{top}; $i <= $editgrid{bot}; $i++)
+      {
+	$pop += $grid->entrycget(2,$i,'-text');
+      }
+
+    $grid->set(2, $editgrid{result}, -text=>$pop);
+}
+
+# EditGrid_calIncome --
+#
+#	Calculates the average income.
+#
+sub EditGrid_calIncome
+  {
+    my $grid = $editgrid{g};
+
+    my $income = 0;
+    my $total_pop = 0;
+    my ($pop, $inc);
+    for (my $i = $editgrid{top}; $i <= $editgrid{bot}; $i++)
+      {
+	$pop = $grid->entrycget(2, $i, '-text');
+	$inc = $grid->entrycget(4, $i, '-text');
+	$income =  $income + ($pop+0) * $inc;
+	$total_pop += $pop;
+      }
+
+    $grid->set(4, $editgrid{result}, -text=>($income/$total_pop));
+ }
+
+# EditGrid_calculate --
+#
+#	Recalculates both columns.
+#
+sub EditGrid_calculate
+  {
+    my $grid = $editgrid{g};
+
+    #$grid->edit('apply');
+    $grid->editApply;
+    EditGrid_calIncome();
+  }
+
+# EditGrid_editNotify --
+#
+#	Returns true if an entry can be edited.
+#
+sub EditGrid_editNotify
+  {
+    my ($x, $y) = @_;
+    my $grid = $editgrid{g};
+
+    if ($x == 2 || $x == 4)
+      {
+	if ($y >= $editgrid{top} && $y <= $editgrid{bot})
+          {
+	    $editgrid{oldValue} = $grid->entrycget($x, $y, '-text');
+	    return 1;
+	  }
+      }
+    return 0;
+  }
+
+# EditGrid_editDone --
+#
+#	Gets called when the user is done editing an entry.
+#
+sub EditGrid_editDone
+  {
+    my ($x, $y) = @_;
+    my $grid = $editgrid{g};
+
+    if ($x == 2)
+      {
+	my $pop = $grid->entrycget($x, $y, '-text');
+	my $val;
+        eval { $val = sprintf("%d",$pop); } ;
+        if ($@)
+          {
+	    $grid->entryconfigure($x, $y, -text=>$editgrid{oldValue});
+	    # should be a custom warning.
+	    $grid->TraceBack("$pop is not an valid integer. Try again");
+          }
+        else
+          {
+	    $grid->entryconfigure(4, $editgrid{result}, -text=>"-");
+	    EditGrid_calPop();
+	}
+      }
+    else
+      {
+	my $income = $grid->entrycget($x, $y, '-text');
+	my $val;
+        eval { $val = sprintf("%f",$income); } ;
+        if ($@)
+          {
+	    $grid->entryconfigure($x, $y, -text=>$editgrid{oldValue});
+	    # should be a custom warning.
+	    $grid->TraceBack("$income is not an valid floating number. Try again");
+          }
+        else
+          {
+	    $grid->entryconfigure(4, $editgrid{result}, -text=>'-');
+	  }
+      }
+  }
+
+# EditGrid_format --
+#
+#	This command is called whenever the background of the grid
+#	needs to be reformatted. The x1, y1, x2, y2 sprcifies the four
+#	corners of the area that needs to be reformatted.
+#
+sub EditGrid_format
+  {
+    my ($w, $area, $x1, $y1, $x2, $y2) = @_;
+    my $grid = $editgrid{g};
+
+    my %bg = qw(
+	s-margin gray65
+	x-margin gray65
+	y-margin gray65
+	main     gray20
+	);
+
+    if ($area eq 'main')
+      {
+	foreach my $col (2, 4)
+          {
+	    $w->format('border', $col, 1, $col, $editgrid{bot},
+		    qw/-relief flat -filled 1 -yon 1 -yoff 1
+		       -bd 0 -bg #b0b0f0 -selectbackground #a0b0ff/);
+	    $w->format('border', $col, 2, $col, $editgrid{bot},
+		    qw/-relief flat -filled 1 -yon 1 -yoff 1
+		    -bd 0 -bg #80b080 -selectbackground #80b0ff/);
+	  }
+
+	  $w->format('grid', $x1, $y1, $x2, $y2, -bordercolor=>$bg{$area},
+		qw/-relief raised -bd 1 -filled 0 -bg red
+		-xon 1 -yon 1 -xoff 0 -yoff 0 -anchor se/
+		);
+      }
+    elsif ($area eq 'y-margin')
+      {
+	$w->format('border', $x1, $y1, $x2, $y2, -bg=>$bg{$area},
+		qw/-filled 1 -relief raised -bd 1 -selectbackground gray80/);
+      }
+    else
+      {
+	$w->format('border', $x1, $y1, $x2, $y2, -bg=>$bg{$area},
+		qw/-filled 1 -relief raised -bd 1 -selectbackground gray80/);
+      }
+
+#    case $area {
+#	{main y-margin} {
+#	    set y [expr $editgrid(bot) + 1]
+#	    $w format border 0 $y 100 $y -bg black -filled 1 -bd 0
+#	}
+#     }
+  }
+

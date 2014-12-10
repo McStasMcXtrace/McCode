@@ -1,0 +1,87 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+
+use Tk::Xlib;
+
+$top = MainWindow->new();
+
+# Check out some of Xlib stuff
+$screen = $top->Screen;
+$sw     = $screen->WidthOfScreen;
+$sh     = $screen->HeightOfScreen;
+$name   = $top->Display->DisplayString;
+print "$name is [$sw,$sh] pixels\n";
+
+sub DoKey
+{my $w = shift;
+ my $e = $w->XEvent;
+ my $msg = "key : " . $e->A;
+ my $dpy = $w->Display;
+ my $id  = $w->WindowId;
+ unless (defined $w->{GC})
+  {
+   $w->{GC} = GC->new($dpy,$id,
+                     Foreground => 5,
+                     Font => $dpy->XLoadFont("-*-Courier-Medium-R-Normal--*-240-*-*-*-*-*-*"));
+  }
+ my $gc  = $w->{GC};
+ $dpy->XDrawString($id,$gc,$e->x,$e->y,$msg);
+}
+
+$top->bind("<Any-KeyPress>",\&DoKey);
+
+$top->bind('<ButtonPress-1>',[\&DrawLine,1]);
+$top->bind('<ButtonRelease-1>',[\&DrawLine,0]);
+$top->bind('<B1-Motion>',[\&DrawLine,1]);
+
+$top->bind('<ButtonPress-2>',[\&DrawWin,1]);
+$top->bind('<ButtonRelease-2>',[\&DrawWin,0]);
+$top->bind('<B2-Motion>',[\&DrawWin,1]);
+
+# XXX Does not work.
+sub DrawLine
+{
+ my $w = shift;
+ my $draw = shift;
+ $w->tmpLine(@{delete $w->{'tmpLine'}},6) if (exists $w->{'tmpLine'});
+ if ($draw)
+  {
+   my $e  = $w->XEvent;
+   my $x  = $e->x;
+   my $y1 = 0;
+   my $y2 = $y1 + $w->Height;
+   $w->{'tmpLine'} = [$x,$y1,$x,$y2];
+   $w->tmpLine(@{$w->{'tmpLine'}},7);
+  }
+}
+
+sub DrawWin
+{
+ my $w = shift;
+ my $draw = shift;
+ my $l = delete $w->{'tmpWin'};
+ if ($draw)
+  {
+   my $e = $w->XEvent;
+   unless (defined $l)
+    {
+     $l = $w->Toplevel(-background => 'black');
+     $l->overrideredirect(1);
+    }
+   $l->MoveResizeWindow($e->X, $w->rooty, 1, $w->Height);
+   $w->{'tmpWin'} = $l;
+  }
+ else
+  {
+   if (defined $l)
+    {
+     $l->destroy;
+    }
+  }
+}
+
+
+MainLoop();
+
+

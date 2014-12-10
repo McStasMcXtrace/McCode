@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# Script for cleaning up old selftest_ directories from mcrun / mxrun --test across a set of virtual machines
+#
+# Requirements - like those of the 'nightly' script
+#
+
+# Cd to SVN area on buildfarm-master
+cd /Users/mccode/McCode/trunk
+
+WINHOST=172.16.97.10
+LINHOST=172.16.97.11
+OSXHOST=localhost
+WEBHOST=mcc-01.risoe.dk
+
+WINUSER=mcstas
+LINUSER=mccode
+OSXUSER=mccode
+WEBUSER=mcstas
+
+echo Clean out selftest dirs on the hosts
+# Build the Linux (deb) and Windows packages at the Linux host
+# Step 0 - cleanup
+ssh ${LINUSER}@${LINHOST} rm -rf selftest_\*
+ssh ${OSXUSER}@${OSXHOST} rm -rf selftest_\*
+ssh ${WEBUSER}@${WEBHOST} rm -rf /srv/web/mccode.org/nightly/Current/\*
+ssh ${WINUSER}@${WINHOST} del \\users\\Public\\Desktop\\mc*.lnk
+ssh ${WINUSER}@${WINHOST} del \\users\\Public\\Desktop\\mx*.lnk
+ssh ${WINUSER}@${WINHOST} for /d %a in \(selftest*\) do rd /s /q %a
+
+
+wait
+echo Done cleaning...

@@ -1,0 +1,17 @@
+
+OpenBSD's default perl Config.pm includes -Bforcearchive in the link
+flags for loadable extensions.
+
+The way Tk build is supposed to work is that all the converted Tcl/Tk
+.c files get compiled in pTk subdirectory and put in the archive library
+libpTk.a .  Then each of Tk widgets and sub-systems links their own
+.o files and libpTk.a - with the intent of only picking the bits from
+libpTk.a they need. But -Bforcearchive tells linker to include ALL
+of the .o files in the .a file - which not only leads to huge loadables
+full of unused code, but also gives multiple definitions
+of symbols in Tk::Event which expects to be able to override some
+of the generic routines.
+
+So Tk/MMutil.pm attempts to remove the option from LDDLFLAGS when
+perl's $^O eq 'openbsd'.
+

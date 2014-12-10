@@ -1,0 +1,17 @@
+#!/usr/local/bin/perl -w
+use File::Find;
+find(\&strip,'blib/arch');
+
+sub strip
+{
+ my $sz;
+ if (-f $_ && ($sz = -s _) && -B _)
+  {
+   if (system("strip",$_) != 0)
+    {
+     warn "Cannot strip $File::Find::name\n";
+    }
+   my $ns = -s $_;
+   print "$ns $sz $File::Find::name\n";
+  }
+}

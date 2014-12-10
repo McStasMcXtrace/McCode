@@ -1,0 +1,7 @@
+#!/bin/sh
+for mod in blib/lib/Tk/*.pm; do
+        echo "********* $mod **************************"
+        perl -Mblib -Mstrict -w $mod 2>&1 | grep -v '^Using /'
+        echo
+done
+

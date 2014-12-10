@@ -1,0 +1,305 @@
+#  Copyright (c) 1990-1993 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_Get3DBorder, Tk_Draw3DRectangle, Tk_Fill3DRectangle, Tk_Draw3DPolygon, Tk_Fill3DPolygon, Tk_3DVerticalBevel, Tk_3DHorizontalBevel, Tk_SetBackgroundFromBorder, Tk_NameOf3DBorder, Tk_3DBorderColor, Tk_3DBorderGC, Tk_Free3DBorder - draw borders with three-dimensional appearance
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Tk_3DBorder
+B<Tk_Get3DBorder(>I<interp, tkwin, colorName>B<)>
+
+void
+B<Tk_Draw3DRectangle(>I<tkwin, drawable, border, x, y, width, height, borderWidth, relief>B<)>
+
+void
+B<Tk_Fill3DRectangle(>I<tkwin, drawable, border, x, y, width, height, borderWidth, relief>B<)>
+
+void
+B<Tk_Draw3DPolygon(>I<tkwin, drawable, border, pointPtr, numPoints, polyBorderWidth, leftRelief>B<)>
+
+void
+B<Tk_Fill3DPolygon(>I<tkwin, drawable, border, pointPtr, numPoints, polyBorderWidth, leftRelief>B<)>
+
+void
+B<Tk_3DVerticalBevel>(I<tkwin, drawable, border, x, y, width, height, leftBevel, relief>B<)>
+
+void
+B<Tk_3DHorizontalBevel>(I<tkwin, drawable, border, x, y, width, height, leftIn, rightIn, topBevel, relief>B<)>
+
+void
+B<Tk_SetBackgroundFromBorder(>I<tkwin, border>B<)>
+
+char *
+B<Tk_NameOf3DBorder(>I<border>B<)>
+
+XColor *
+B<Tk_3DBorderColor(>I<border>B<)>
+
+GC *
+B<Tk_3DBorderGC(>I<tkwin, border, which>B<)>
+
+B<Tk_Free3DBorder(>I<border>B<)>
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter to use for error reporting.
+
+=item Tk_Window tkwin (in)
+
+Token for window (for all procedures except B<Tk_Get3DBorder>,
+must be the window for which the border was allocated).
+
+=item Tk_Uid colorName (in)
+
+Textual description of color corresponding to background (flat areas).
+Illuminated edges will be brighter than this and shadowed edges will
+be darker than this.
+
+=item Drawable drawable (in)
+
+X token for window or pixmap;  indicates where graphics are to be drawn.
+Must either be the X window for I<tkwin> or a pixmap with the
+same screen and depth as I<tkwin>.
+
+=item Tk_3DBorder border (in)
+
+Token for border previously allocated in call to B<Tk_Get3DBorder>.
+
+=item int x (in)
+
+X-coordinate of upper-left corner of rectangle describing border
+or bevel, in pixels.
+
+=item int y (in)
+
+Y-coordinate of upper-left corner of rectangle describing border or
+bevel, in pixels.
+
+=item int width (in)
+
+Width of rectangle describing border or bevel, in pixels.
+
+=item int height (in)
+
+Height of rectangle describing border or bevel, in pixels.
+
+=item int borderWidth (in)
+
+Width of border in pixels. Positive means border is inside rectangle
+given by I<x>, I<y>, I<width>, I<height>, negative means
+border is outside rectangle.
+
+=item int relief (in)
+
+Indicates 3-D position of interior of object relative to exterior;
+should be TK_RELIEF_RAISED, TK_RELIEF_SUNKEN, TK_RELIEF_GROOVE,
+TK_RELIEF_SOLID, or TK_RELIEF_RIDGE (may also be TK_RELIEF_FLAT
+for B<Tk_Fill3DRectangle>).
+
+=item XPoint *pointPtr (in)
+
+Pointer to array of points describing the set of vertices in a polygon.
+The polygon need not be closed (it will be closed automatically if it
+isn't).
+
+=item int numPoints (in)
+
+Number of points at I<*pointPtr>.
+
+=item int polyBorderWidth (in)
+
+Width of border in pixels.  If positive, border is drawn to left of
+trajectory given by I<pointPtr>;  if negative, border is drawn to
+right of trajectory.  If I<leftRelief> is TK_RELIEF_GROOVE or
+TK_RELIEF_RIDGE then the border is centered on the trajectory.
+
+=item int leftRelief (in)
+
+Height of left side of polygon's path relative to right.  TK_RELIEF_RAISED
+means left side should appear higher and TK_RELIEF_SUNKEN means right side
+should appear higher;
+TK_RELIEF_GROOVE and TK_RELIEF_RIDGE mean the obvious things.
+For B<Tk_Fill3DPolygon>, TK_RELIEF_FLAT may also be specified to
+indicate no difference in height.
+
+=item int leftBevel (in)
+
+Non-zero means this bevel forms the left side of the object;  zero means
+it forms the right side.
+
+=item int leftIn (in)
+
+Non-zero means that the left edge of the horizontal bevel angles in,
+so that the bottom of the edge is farther to the right than
+the top.
+Zero means the edge angles out, so that the bottom is farther to the
+left than the top.
+
+=item int rightIn (in)
+
+Non-zero means that the right edge of the horizontal bevel angles in,
+so that the bottom of the edge is farther to the left than the top.
+Zero means the edge angles out, so that the bottom is farther to the
+right than the top.
+
+=item int topBevel (in)
+
+Non-zero means this bevel forms the top side of the object;  zero means
+it forms the bottom side.
+
+=item int which (in)
+
+Specifies which of the border's graphics contexts is desired.
+Must be TK_3D_FLAT_GC, TK_3D_LIGHT_GC, or TK_3D_DARK_GC.
+
+=back
+
+=head1 DESCRIPTION
+
+These procedures provide facilities for drawing window borders in a
+way that produces a three-dimensional appearance.  B<Tk_Get3DBorder>
+allocates colors and Pixmaps needed to draw a border in the window
+given by the I<tkwin> argument.  The I<colorName>
+argument indicates what colors should be used in the border.
+I<ColorName> may be any value acceptable to B<Tk_GetColor>.
+The color indicated by I<colorName> will not actually be used in
+the border;  it indicates the background color for the window
+(i.e. a color for flat surfaces).
+The illuminated portions of the border will appear brighter than indicated
+by I<colorName>, and the shadowed portions of the border will appear
+darker than I<colorName>.
+
+B<Tk_Get3DBorder> returns a token that may be used in later calls
+to B<Tk_Draw3DRectangle>.  If an error occurs in allocating information
+for the border (e.g. I<colorName> isn't a legal color specifier),
+then NULL is returned and an error message is left in I<interp-E<gt>result>.
+
+Once a border structure has been created, B<Tk_Draw3DRectangle> may be
+invoked to draw the border.
+The I<tkwin> argument specifies the
+window for which the border was allocated, and I<drawable>
+specifies a window or pixmap in which the border is to be drawn.
+I<Drawable> need not refer to the same window as I<tkwin>, but it
+must refer to a compatible
+pixmap or window:  one associated with the same screen and with the
+same depth as I<tkwin>.
+The I<x>, I<y>, I<width>, and
+I<height> arguments define the bounding box of the border region
+within I<drawable> (usually I<x> and I<y> are zero and
+I<width> and I<height> are the dimensions of the window), and
+I<borderWidth> specifies the number of pixels actually
+occupied by the border.  The I<relief> argument indicates
+which of several three-dimensional effects is desired:
+TK_RELIEF_RAISED means that the interior of the rectangle should appear raised
+relative to the exterior of the rectangle, and
+TK_RELIEF_SUNKEN means that the interior should appear depressed.
+TK_RELIEF_GROOVE and TK_RELIEF_RIDGE mean that there should appear to be
+a groove or ridge around the exterior of the rectangle.
+
+B<Tk_Fill3DRectangle> is somewhat like B<Tk_Draw3DRectangle> except
+that it first fills the rectangular area with the background color
+(one corresponding
+to the I<colorName> used to create I<border>).  Then it calls
+B<Tk_Draw3DRectangle> to draw a border just inside the outer edge of
+the rectangular area.  The argument I<relief> indicates the desired
+effect (TK_RELIEF_FLAT means no border should be drawn; all that
+happens is to fill the rectangle with the background color).
+
+The procedure B<Tk_Draw3DPolygon> may be used to draw more complex
+shapes with a three-dimensional appearance.  The I<pointPtr> and
+I<numPoints> arguments define a trajectory, I<polyBorderWidth>
+indicates how wide the border should be (and on which side of the
+trajectory to draw it), and I<leftRelief> indicates which side
+of the trajectory should appear raised.  B<Tk_Draw3DPolygon>
+draws a border around the given trajectory using the colors from
+I<border> to produce a three-dimensional appearance.  If the trajectory is
+non-self-intersecting, the appearance will be a raised or sunken
+polygon shape.  The trajectory may be self-intersecting, although
+it's not clear how useful this is.
+
+B<Tk_Fill3DPolygon> is to B<Tk_Draw3DPolygon> what
+B<Tk_Fill3DRectangle> is to B<Tk_Draw3DRectangle>:  it fills
+the polygonal area with the background color from I<border>,
+then calls B<Tk_Draw3DPolygon> to draw a border around the
+area (unless I<leftRelief> is TK_RELIEF_FLAT;  in this case no
+border is drawn).
+
+The procedures B<Tk_3DVerticalBevel> and B<Tk_3DHorizontalBevel>
+provide lower-level drawing primitives that are used by
+procedures such as B<Tk_Draw3DRectangle>.
+These procedures are also useful in their own right for drawing
+rectilinear border shapes.
+B<Tk_3DVerticalBevel> draws a vertical beveled edge, such as the
+left or right side of a rectangle, and B<Tk_3DHorizontalBevel>
+draws a horizontal beveled edge, such as the top or bottom of a
+rectangle.
+Each procedure takes I<x>, I<y>, I<width>, and I<height>
+arguments that describe the rectangular area of the beveled edge
+(e.g., I<width> is the border width for B<Tk_3DVerticalBevel>).
+The I<leftBorder> and I<topBorder> arguments indicate the
+position of the border relative to the ``inside'' of the object, and
+I<relief> indicates the relief of the inside of the object relative
+to the outside.
+B<Tk_3DVerticalBevel> just draws a rectangular region.
+B<Tk_3DHorizontalBevel> draws a trapezoidal region to generate
+mitered corners;  it should be called after B<Tk_3DVerticalBevel>
+(otherwise B<Tk_3DVerticalBevel> will overwrite the mitering in
+the corner).
+The I<leftIn> and I<rightIn> arguments to B<Tk_3DHorizontalBevel>
+describe the mitering at the corners;  a value of 1 means that the bottom
+edge of the trapezoid will be shorter than the top, 0 means it will
+be longer.
+For example, to draw a rectangular border the top bevel should be
+drawn with 1 for both I<leftIn> and I<rightIn>, and the
+bottom bevel should be drawn with 0 for both arguments.
+
+The procedure B<Tk_SetBackgroundFromBorder> will modify the background
+pixel and/or pixmap of I<tkwin> to produce a result compatible
+with I<border>.  For color displays, the resulting background will
+just be the color given by the I<colorName> argument passed to
+B<Tk_Get3DBorder> when I<border> was created;  for monochrome
+displays, the resulting background
+will be a light stipple pattern, in order to distinguish the background from
+the illuminated portion of the border.
+
+Given a token for a border, the procedure B<Tk_NameOf3DBorder>
+will return the I<colorName> string that was passed to
+B<Tk_Get3DBorder> to create the border.
+
+The procedure B<Tk_3DBorderColor> returns the XColor structure
+that will be used for flat surfaces drawn for its I<border>
+argument by procedures like B<Tk_Fill3DRectangle>.
+The return value corresponds to the I<colorName> passed to
+B<Tk_Get3DBorder>.
+The XColor, and its associated pixel value, will remain allocated
+as long as I<border> exists.
+
+The procedure B<Tk_3DBorderGC> returns one of the X graphics contexts
+that are used to draw the border.
+The argument I<which> selects which one of the three possible GC's:
+TK_3D_FLAT_GC returns the context used for flat surfaces,
+TK_3D_LIGHT_GC returns the context for light shadows,
+and TK_3D_DARK_GC returns the context for dark shadows.
+
+When a border is no longer needed, B<Tk_Free3DBorder> should
+be called to release the resources associated with the border.
+There should be exactly one call to B<Tk_Free3DBorder> for
+each call to B<Tk_Get3DBorder>.
+
+=head1 KEYWORDS
+
+3D, background, border, color, depressed, illumination, polygon, raised, shadow, three-dimensional effect

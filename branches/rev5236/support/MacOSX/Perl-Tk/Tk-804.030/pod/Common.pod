@@ -1,0 +1,16 @@
+
+=head1 NAME
+
+Tk::DragDrop::Common - private class used by Drag&Drop
+
+=for pm DragDrop/DragDrop/Common.pm
+
+=for category Experimental Modules
+
+=head1 DESCRIPTION
+
+This class provides methods to automate the the loading and declaring
+of Drop and Site 'types'.
+
+=cut
+

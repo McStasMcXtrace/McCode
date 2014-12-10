@@ -1,0 +1,64 @@
+#  Copyright (c) 1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::chooseColor - pops up a dialog box for the user to select a color.
+
+=for category Popups and Dialogs
+
+=head1 SYNOPSIS
+
+S<    >I<$color> = I<$widget>-E<gt>B<chooseColor>?(I<-option>=E<gt>I<value>, ...)?;
+
+=head1 DESCRIPTION
+
+The method B<chooseColor> is implemented as a perl wrapper
+on the core tk "command" B<tk_chooseColor>, and I<$widget>
+is passed as the argument to the hidden B<-parent> option.
+The implementation of internal B<tk_chooseColor> is platform
+specific, on Win32 it is a native dialog, and on UNIX/X11 it is implemented
+in terms of L<Tk::ColorEditor|Tk::ColorEditor>.
+
+The B<chooseColor> method pops up a dialog box for the
+user to select a color. The following I<option-value> pairs are
+possible as command line arguments:
+
+=over 4
+
+=item B<-initialcolor>=E<gt>I<color>
+
+Specifies the color to display in the color dialog when it pops
+up. I<color> must be in a form acceptable to the B<Tk_GetColor>
+function.
+
+=item B<-parent>=E<gt>$widget
+
+Makes $widget the logical parent of the color dialog. The color
+dialog is displayed on top of its parent window.
+
+=item B<-title>=E<gt>I<titleString>
+
+Specifies a string to display as the title of the dialog box. If this
+option is not specified, then a default title will be displayed.
+
+=back
+
+If the user selects a color, B<tk_chooseColor> will return the
+name of the color in a form acceptable to B<Tk_GetColor>.  If the
+user cancels the operation, the command will return B<undef>.
+
+=head1 EXAMPLE
+
+ $widget->configure(-fg => $parent->chooseColor(-initialcolor => 'gray',
+                                                -title => "Choose color"));
+
+=head1 KEYWORDS
+
+color selection dialog
+
+=cut
+

@@ -1,0 +1,576 @@
+Everything only IMO of course.
+
+Achim Bohnet <ach@mpe.mpg.de>
+
+################## TO DO  ##########################
+
+-----------------------------------------------------------------
+
+
+---- removed by accident ------------
+>
+>	I still have my Tk402.004 html documents here and they include
+>the update.htm file, but I do not see an update document in the latest
+>Tk800.008 distribution.  Are there some documents missing from the
+>latest distribution?
+
+Oh dear what has happened here?
+The update and idletask fragments were merged into Widget.pod (I thought),
+and then the update.pod disposed of. But looks like something has lost
+the stuff from Widget.pod :-(
+--------------------------------------
+
+contrib.pod (idea/skeleton)
+
+=head1 NAME
+
+Tk::contrib - how to find/contribute perl/Tk code
+
+=for category  Introduction
+
+=head1 DESCRIPTION
+
+Here are some guidelines you can use to find a peace
+of code is already available and how to contribute your
+code.
+
+I<If you have perl/Tk code that can be reused or used as an
+example or starting point please check if one could find it
+using the method in the next section.  If it's not findable
+think about to contribute your work (described later).>
+
+=head2 What's already avaiable?
+
+If you are B<seriously> planning to write the beast you are
+looking for when it does not exists you can take the short
+route and ask the ptk list <ptk@lists.stanford.edu>.  Make
+sure to mention Tk::contrib to prevent RTFM replies.
+Otherwise try the checklist below first:
+
+	o http://www.perl.com/ptk/ or Grahams perl/Tk home page ??
+	o tk-modules-list
+	o tcl/tk faq 4&5
+	o http://www.perl.com/CPAN/modules/by-modules/Tk
+		                        /scripts/??????
+	o Archive http://www.xray.mpe.mpg.de/mailing-lists/ptk/
+
+=head2 How to contribute code?
+
+Have spend a lot time of on a specific topic and it was
+not at the end and RFTM?  Yes? Please least take
+the time to post your solution to the perl/Tk mailing
+list ptk@lists.stanford.edu.  So other can find it later
+in the list archive http://www.xray.mpe.mpg.de/mailing-lists/ptk/
+If it's a common problem this may be even enough to enhance/extend
+the perl/Tk FAQ
+
+But wait there is more you can do without much afford:
+
+	?? scripts. What's the status of CPAN/scripts ??
+
+=over 4
+
+=item Perl/Tk Module List
+
+is a central reference of modules B<and> scripts
+
+    http://www.connect.net/gbarr/PerlTk/tk-modlist.html
+
+Send a mail to <ptk@lists.standford.edu> and
+Graham Barr <gbarr@pobox.com> that describes your contribution.
+
+It's enough if would send your contribution on an e-mail request.
+But there more ...
+
+=item CPAN account
+
+Simply send mail to ptk
+	o handling of modules (widget) and scripts (applications)
+	o send code to ptk for comments (widget name!, etc.)
+	o Tk-modules list: register early (even if alpha)
+	o CPAN account. Refer to docs how to do it
+	o Tk-Contrib ask for addition on ptk (also happy users of
+	  an widget for).  Use convenience method
+	  before stuff gets lost.
+	o Still to complicated? :-(  Then post at least your code
+	  to ptk@lists.stanford.edu.  So other could find it later
+	  in the list archive http://www.xray.mpe.mpg.de/mailing-lists/ptk/
+
+=cut
+
+-----------------------------------------------------------------
+
+UserGuild.pod
+=============
+
+section Item creation:  Toplevel exception is a bit ambigious.
+Before talks about 'visual' inclusion.  (Nevertheless Toplevel
+is a child of the parent widget even is visual not true).
+
+options.pod
+===========
+
+$var=$w->configure(-option) is not documented. But there's a
+bug?  Tk::configure and Tk::Derived::configure don't do the
+same, return value and optionname, repectively.
+
+Menuoptions
+===========
+
+	Check args to -command callback. Doc by N.W. as
+	first -textvariablethem -variable 11.25. IMO should
+	be -variable first.  Check!
+
+options.pod:
+
+-takefocus:  Tclish callback describtion.  (uh! Try if this works
+same in perl/tk)
+
+CmdLine:
+
+o09(0) ~/perl > perl -le 'use Tk; MainWindow->new();print @ARGV;MainLoop' -- -a b -bg green -- -c d
+-ab-bggreen---cd
+o09(0) ~/perl >
+
+I think CmdLine should not stop argument processing as soon as
+an unknown unknown switch is found.
+
+Should be fixed and documented.  Also mention priority that the cmd line
+switches have compared to -option name class and resource priority.
+
+Name option:
+===========
+Theo Petersen <theo@acsp.com>:
+Aha, the Name option does this.  I found it while searching docs for
+anything that looked like it assigned a widget's name.  Oddly enough, I
+found it in Tk::Pane's docs (thanks Graham) but not in any generic
+documentation.  Have I missed it in some obvious place?  It's not
+documentend in the Widget or options pod, where standard options are
+listed (perhaps because it wasn't inherited from Tcl).
+
+..Theo
+
+Dialog:
+=======
+
+Docs still very tclish. (Mhmm Dialog should be derived from
+DialogBox and then documented this way).
+
+Menu:
+=====
+
+Check B<tearOffCommand> option.  Still tclish.
+How is it implemented in perl/Tk.
+
+Ditto desc in SPECIAL MENUS IN MENUBARS
+
+Toplevel:
+=========
+
+So it should be moved to 14 The Window Manager or To Toplevel, MainWindow,
+Menu (etc?).  And should be written as:
+
+	$is_a_toplevel->Popup(?I<options>?)
+
+Where options can be
+
+	B<-popover>, B<-popanchor>, B<-overanchor>
+
+or any other I<$is_a_toplevel>.  Mhmm the 3 options above are 'regular'
+Toplevel option that are not mentioned in the Tks pod docs.  Sigh.
+JATI (just another todo item) :-(
+
+
+added ptk special featues:
+==========================
+
+----
+Achim Bohnet <ach@mpe.mpg.de> writes:
+>tagConfigurere returns a -data option for Tk402.003 and Tk800.003
+>tcls Tk8.0 does not have it and therefore it's not in the POD docs.
+>
+>Are there other places where pTk has more options than tcltk that
+>are waiting to be documented?
+
+Not many, but I would not be surprised.
+
+HList and TList elements have -data too.
+
+And of course we have property "command" (at least on X).
+----
+
+fileevent:
+
+o remove tcl remnants like gets.
+o use 'fileevent' thread of Nick and Andreas Borchert
+  to clarify the perl/Tk situation.
+o Add an save EXAMPLE for cut and paste so people don't
+  have to worry how to implenent the described details.
+
+Widget.pod
+
+o misses Busy/Unbusy.  Check how it's implemtented to
+  understand why it works as it does
+
+=item I<$widget>-E<gt>B<Busy>
+
+Turn the pointer into a 'watch' for I<$widget> and all
+decendants.  Beeps on key events for all these widgets.
+(Eh? Beeps on mouse clicks for all widgets in the Toplevel Eh?)
+
+Note: Does only with I<descendants> that have a undefined B<-cursor>
+value.  E.g., B<Entry> and B<Text> widgets don't work with B<Busy>
+by default.  A simple work around it to set B<-cursor>=E<gt>B<undef>.
+
+=item I<$widget>-E<gt>B<Unbusy>
+
+Undo last L<Busy|/Busy>.
+
+Balloon.pod
+===========
+
+	-statusbar: Label + -text has the disadvantage
+		Label may resize for messages that are too
+		long.   Entry + -textvariable has not the problem
+		but it's editable. -> ROEntry ???
+
+configspec.pod
+==============
+	o IMO use 'fallback' instead of 'default' because the default a widget
+	  uses is taken from the resource database and if there's nothing it
+	  fallbacks to the value specified in ConfigSpecs.
+
+        o one should now be able to use $self instead of 'SELF' but I've not
+          verified it so this is more a reminder for my pod/TODO file :-)
+
+STANDARD OPTIONS
+================
+
+o -width  listed in Listbox but not in options.pod
+
+There a need for a check what options are listed
+in STD OPTIONS section and what's really in options.pod
+(maybe same what in options but also listed in widget
+specific WIDGET OPTIONS
+
+
+getOpenFile:
+============
+
+o perlize filePattern when it's clear what it should be
+  (It's not clear if Tcl/Tk scheme will be adopted
+
+o the file box should be probably pop up in the middle of the screen
+
+o check whether the -filetypes option works the same in unix and windows
+
+HList (and some BUGS)
+===========
+
+1) headerSize still returns tclish string. (As documented but this
+   should change)
+2) headerSize err msg for non existant col contains garbage IMO
+
+ptksh> $h->entryconfigure('one.two', -text=>'bar')
+ptksh> $h->headerCreate(0, -text=>'heading')
+ptksh> $h->configure(-header=>1)
+ptksh> p $h->headerSize(0)
+74 22|
+ptksh> p $h->headerSize(1)
+Column "KC@" does not exist at /home/ach/perl/5.004_64/site+standard/Tk/Submethods.pm line 19.
+
+3) Not all Submethods are defined and documented. E.g.
+
+ptksh> p $h->infoSelection
+Goto undefined subroutine &Tk::HList::infoSelection at /home/ach/perl/5.004_64/site+standard/Tk/Widget.pm line 305.
+
+ptksh> p $h->info('selection')
+one|
+one.two|
+
+Wm.pod (BUG?)
+======
+
+Eh? What's that?
+
+ptksh> print "okay\n\n" if defined($mw->wm('aspect') )
+ptksh> print "okay\n\n" if ("" eq $mw->wm('aspect') )
+okay
+
+ptksh> p scalar( $mw->wm('aspect') )
+|
+
+
+Image stuff:
+============
+
+	o ?? Extract standard constructor options like -file, -data into
+	  Tk::Image/"STANDARD OPTIONS"
+	o same for common method, e.g., type()
+	o Use $image or $bitmap, $photo, $pixmap (like $widget and $text, ...)
+
+	o DefineBitmap shares names between mainwindows and croak on dubl. names
+	  (See e.g., Tk::Numentry)
+
+Dunnigan,Jack [Edm] wrote:
+>
+> How does one ingest a bitmap into an icon for a perl/Tk application?
+>
+> The reference guide has:
+>
+>         $main->iconbitmap(?bitmap?);
+>
+> but I'm unsure as to what form (?bitmap?) should be written?
+> My full path name to the file is: /users/im/perlscripts/image/pirep.bmp
+>
+> Can someone show me the proper format?
+
+You need an X11 bitmap (typical "externsion" is .xbm):
+
+        $icbm = $w->iconbitmap('@path_to_bitmap');
+
+The '@' differentiates a pathname from an builtin bitmap name.
+
+Photo.pod
+=========
+
+	o check and perlize RHS lists of =>
+
+	o Photo configure resName, resClass are undefined so
+	  optiondb is not used.  Intention? If yes this should
+	  be mentioned in POD.
+
+options.pod
+===========
+
+	o add note about undef name class prevents optiondb lookup
+
+SYNTAX:
+=======
+
+  o , and ? are not correct
+	(?I<switches>,? I<pattern, index, >?I<stopIndex>?)
+    should be IMO
+	(?I<switches>,? I<pattern, index>?, I<stopIndex>?)
+    But first ,? is correct second isn't.   !!!!
+
+  o Inconsistency in submethod describtion some one methSub, I've
+    added some meth('sub'.. and methSub, other use only methSub
+
+MARKUP:
+======
+	still lot of   $widget  instead of I<$widget>	Maybe still
+	some buggy window->$widget from autoconvertion
+
+LINKS:
+======
+	B<Tk_GetPixels> --> L<Tk_GetPixels|Tk::pTk::GetPixels/"DESCRIPTION">
+	B<Tk_GetBoolean> --> L<Tk_GetBoolean|Tk::pTk::??????????????>
+				Tk_GetBool.* not found in pTk pods
+
+	.... check for other, general case B<Tk_.*> ??
+
+
+POD Conflict:
+=============
+	pod/Font.pod	Tk/Font.pm  	(I assume pod/Font sould be
+					pod/font.pm (my guess first char
+					case script got it wrong) but
+					having Font and font is same mess
+					as grid and Grid before.
+
+STILL TCLISH:
+=============
+	getOpenFile
+	messageBox
+	?...?
+
+Canvas.pod
+==========
+
+o bind method: + to append a binding is not available in perl.  Somewhere
+ (bind.pod?) should be a blurb how to do it.  Or provide a AddBind method.
+
+o Mhmm, ->bind without callback returns an error when no callback is defined
+  bind return undef,  blech!  (check if really the case)
+
+o Tcl B<continue>  -> return from callback or is there more magic. Check it!
+
+o Find Nick's mail that one can't prevent from item callback that canvas
+  callback get invoked.
+
+o No docs for update method in Widget or After.  L<update|Tk::?????>
+  (check also other pod so insert the link)
+
+o No CanvasLower CanvasRaise methods.  ???  Is there a Raise Lower method
+  that always works on the widget?
+
+
+Pixmap.pod
+==========
+	o -id not documented
+
+tk8 font:
+=========
+
+	o I've added L<Tk::Font> to Widget.pod. May be wrong. Deps. on final
+	  name and now tools prefers of name.pod or name.pm
+
+	o L<scaling|Tk::Widget/scaling>  but /scaling will not work I guess
+	  push A<show this|anchorname> support on top of TODO list :-)
+
+	o Add link to Grahams Tk::Font where X11 XFLD  are mentioned. Currently
+	  Font.pm and Font.pod collide
+
+tkerror :
+=========
+
+o *** Add stuff Nick explained on ptk when 'ideal error msg' thread
+  finds an end ***  Old questions of mine:
+
+o Is it save to document that first arg of Tk::Error is a $mainwindow?
+  E.g., $label->Error('shit') works (a widget is-a tk).   So should
+  it be Tk::MainWindow::Error  to disable $label->Error?
+
+o $w->BackTrace not mentioned/explained.  Should it be mentioned?
+  Has someone a BackTrace describtion at hand? :-)
+
+
+o what to do with 'command Tk::Error'?  Use  'method  Tk::Error'?
+  (Hmm Tk.pm provides default Tk::Error so $w->Tk::Error(...)
+  is effectively always the same as Tk::Error($w,...)   So it would
+  IMO make more sense to write  'Tk::Error subroutine'  or use 'Error
+  method'.
+
+o IMO require Tk::ErrorDialog should only be used in
+  perl script and *not* in modules.  I would consider it bad style when
+  a script 'overrides' global error handling (that may occur delayed
+  due to 'require only when need' of such a module.
+
+o I've also have a need for a special Tk::Error function.  How to get
+*all*  die, warn  (even before MainLoop is reached) return a complete
+stack trace.  If this is not easy to achieve (as I think I found out :-( )
+should tkerror include a suggestion to 'use Carp' in Tk:: modules
+to help debugging?
+
+
+
+Geometry manager:
+=================
+
+	o Describe their behaviour if a toplevel widget gets resized so
+	  available space is smaller than the requested x/y of the
+	  widgets.
+
+	o use same style SYNOPSIS and KEYWORDS' section
+
+	o gridSize  $master not managed by grid return (0,0) not
+		documented (intentional)?
+	o Form:
+		o check/verify/understand I<anchor_point> syntax:
+		  	'%$a'  could only work with dyn. var. not lex.
+			\$a  man->pod error?
+		o make undocumented/partial impl. 'spring' invisible
+		  and a add TODO ???
+		o add a intro I<-side>, I<-side>B<spring>, -pad<side> so one
+		  faster sees what's going on
+		o check TRUE FALSE return of formCheck
+		o try formGrid.  the description seem wrong. Missing 'not'?
+		o check form(-top... -left...) != form(-left...-top...)
+		o ABREVIATIONS "-0", versus -0  wasn't there something about
+		  that on p5p?
+
+	o grid mention raise lower to change stacking order.  Works for non
+	  toplevel too.   Try it.  (add links for raise lower)
+
+	o Add a ptkmgr.pod  explaining common stuff (e.g., possible
+	  $master's, command 'submethods' mgr, mgrForget, mgrInfo)
+	  mention manager (wm for toplevels: are there similar wmForget
+	  etc. methods, seams useful).   *Propagate,
+	  Raise Lower explanations.   $master <=> widgettree correlation
+
+composite:
+
+	o note that ..$opt=delete $args->{-opt}.. handles const.
+	  only options is confusing. a) There would not be a
+	  'readonly' option as for -class, visual, ...
+	  Using CreateArgs does not work for composites, cries
+	  for a support method  (where=READONLY in configspec?)
+	o Add skeleton of a Frame based composite?
+
+callbacks:
+
+	o IMO remove BUGs section closure are not 'the' solution
+	  especially they are not (?) useable in ClassInit
+	o add some more 'normal' callback examples.
+	o 'pronouce' that the actual arguments list passed to a
+	   callback may differ.
+	o Then concentate 'special' handling of a bind callback in
+	  it's own section.
+	o Describe how emulate bind in your callback handling
+	o Ev() example/explanations better moved to Tk::bind ?
+	o BUGS entry?: Missing is a -callback switch that treats
+	  callbacks as bind does automaticly
+
+configspec:
+
+	o SETMETHOD, GETMETHOD undocumented (check Derived.pm
+          for more)
+
+Configure:
+
+	o detail about composite widgets are distributed in the
+	  docs. Bundle them into a separate section. First discribe
+	  general interface then go into details about composite:
+
+	o Add section with details about Tk::Configure->new
+
+DItem:
+	o pod markup of ITEM OPTIONS and STYLE OPTIONS is
+	  wrong but fix would conflict with pending
+	  Config:,Name:,Class  change
+
+	o all STANARD OPTIONS still use res. name not option name
+
+	o remove C<>
+
+Text:
+
+o Intentional(?):
+	o Tag and Tags not documented (doc for Text::Tag?)
+	o TIE interface undocumented
+
+o Go through EMB IMAGE and image method stuff
+
+o textBind describtion still tclish. See also same item in Canvas.pod below
+o dump method output already perlish??
+
+o windowCreate -create requires pathname as
+  return value (as documented) but should also
+  accepts
+
+  Fix Text.pod when $w is also okay.
+
+o windowNames return path of emb. widgets.  So IMO there's a
+  windowObjects|Refs missing returning the ref to the widgets
+  (windowSlaves  like in packSlaves, gridSlaves ??)
+
+o Missing (intentional?) Tk::submethods
+
+	x|yview => [ qw(moveto scroll) ]
+
+  a specialcase for  x|yviewPickplace ??????????
+
+o sub Tag; and sub Tags; predeclared.  Isn't this be done
+  by autosplit.ix and AutoLoader ?
+
+o search and regexp, check if perl or tcl regexp are used
+	and document it.
+
+TList:
+======
+
+o Click on 'one' in example at the end does not make it 'one'
+  the 'active item
+
+__END__

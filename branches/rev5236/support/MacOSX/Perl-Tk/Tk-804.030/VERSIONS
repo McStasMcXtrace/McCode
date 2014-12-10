@@ -1,0 +1,20 @@
+This is Tk402.001
+
+The name by the way is Tcl/Tk's 4.2 with three digits for me to mess with.
+
+I hope Sun don't get through more than 100 revisions so two sub-version digits
+will be enough for them.
+
+I will subsume Sun's 'patch' stuff (e.g. '3' in 4.2p2) into my digits as we have
+tended  to be 'ahead' of them on some fixes and behind on others so we don't
+map exactly at that level.
+
+For my digits I will use the 'even'=stable, 'odd'='experimental'
+scheme that linux uses:
+
+ .0xx  - inherently 'alpha'
+ .1xx  - experimental 'beta'
+ .2xx  - stable
+ .3xx  - experimental
+ .4xx  - stable
+

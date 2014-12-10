@@ -1,0 +1,42 @@
+#!/usr/local/bin/perl -w
+use Tk;
+use strict;
+
+my $TOP = MainWindow->new;
+
+my @menubuttons;
+foreach (qw/right/) {
+    my $pos = ucfirst;
+    my $menubutton = $TOP->Menubutton(qw/-underline 0 -relief raised/,
+				      -text => $pos, -direction => $_);
+    push @menubuttons, $menubutton;
+    my $menu = $menubutton->menu(qw/-type menubar -tearoff 0/);
+    $menubutton->configure(-menu => $menu);
+    $menubutton->command(-label => "$pos menu: first item", -command =>
+			 sub {print "You selected the first item from the $pos menu.\n"});
+$menubutton->command(-label => "$pos menu: second item", -command =>
+    sub {print "You selected the second item from the $pos menu.\n"});
+}
+$menubuttons[0]->grid(qw/-row 0 -column 1 -sticky n/);
+
+MainLoop;
+
+__END__
+==========================================================================
+This message was posted through the Stanford campus mailing list
+server.  If you wish to unsubscribe from this mailing list, send the
+message body of "unsubscribe ptk" to majordomo@lists.stanford.edu
+
+The same problem can be reproduced with original Tk8.4 and Tk8.5:
+
+menubutton .mb -text test
+pack .mb 
+menu .mb.menu -type menubar
+.mb configure -menu .mb.menu
+
+$ wish8.4 /tmp/menubug.tk 
+Tk_MoveToplevelWindow called with non-toplevel window
+zsh: 32762 abort (core dumped)  wish8.4 /tmp/menubug.tk
+
+It is reported as 
+https://sourceforge.net/tracker2/?func=detail&aid=2160206&group_id=12997&atid=112997

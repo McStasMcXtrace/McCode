@@ -1,0 +1,42 @@
+#  Copyright (c) 1995-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_DeleteImage - Destroy an image.
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_DeleteImage>(I<interp, name>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter for which the image was created.
+
+=item char *name (in)
+
+Name of the image.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_DeleteImage> deletes the image given by I<interp>
+and I<name>, if there is one.  All instances of that image
+will redisplay as empty regions.  If the given image does not
+exist then the procedure has no effect.
+
+=head1 KEYWORDS
+
+delete image, image manager

@@ -1,0 +1,33 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+use IO::File;
+
+sub readfile
+{
+ my ($t,$fh) = @_;
+ my $size = (stat($fh))[7];
+ my $len  = $size - $t->{'posn'};
+ if ($len > 0)
+  {
+   my $buffer = "";
+   my $got = sysread($fh,$buffer,$len);
+   $t->insert('end',$buffer);
+   $t->{posn} += $got;
+   $t->see('end');
+  }
+}
+
+my $mw = MainWindow->new;
+
+my $fh = IO::File->new("<$ARGV[0]");
+
+my $t  = $mw->Scrolled('Text',-scrollbars => 'w');
+
+$t->pack(-expand => 1, -fill => 'both');
+
+$t->{posn} = 0;
+
+$t->repeat(5000,sub { readfile($t,$fh) } );
+
+MainLoop;

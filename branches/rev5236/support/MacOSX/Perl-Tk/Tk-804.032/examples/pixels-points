@@ -1,0 +1,26 @@
+#!/usr/local/bin/new/perl -w
+use strict;
+use Tk;
+use Tk::Xlib;
+
+my $mw = MainWindow->new;
+
+$mw->scaling($ARGV[0]) if (@ARGV);
+
+my $screen = $mw->Screen;
+
+my $width    = $screen->WidthOfScreen;
+my $widthMM  = $screen->WidthMMOfScreen;
+my $widthIN  = $widthMM/25.4;
+my $height   = $screen->HeightOfScreen;
+my $heightMM = $screen->HeightMMOfScreen;
+my $heightIN = $heightMM/25.4;
+my $s        = $mw->scaling;
+my $ws       = $width/($widthMM*72/25.4);
+my $hs       = $height/($heightMM*72/25.4);
+
+print "Width=$width WidthMM=$widthMM WidthIN=$widthIN\n";
+print "Height=$height HeightMM=$heightMM HeightIN=$heightIN\n";
+
+print "Scale=$s wScale=$ws hScale=$hs\n";
+

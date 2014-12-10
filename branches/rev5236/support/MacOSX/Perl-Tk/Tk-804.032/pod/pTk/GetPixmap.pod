@@ -1,0 +1,71 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_GetPixmap, Tk_FreePixmap - allocate and free pixmaps
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Pixmap
+B<Tk_GetPixmap(>I<display, d, width, height, depth>B<)>
+
+B<Tk_FreePixmap(>I<display, pixmap>B<)>
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Display *display (in)
+
+X display for the pixmap.
+
+=item Drawable d (in)
+
+Pixmap or window where the new pixmap will be used for drawing.
+
+=item "int" width (in)
+
+Width of pixmap.
+
+=item "int" height (in)
+
+Height of pixmap.
+
+=item "int" depth (in)
+
+Number of bits per pixel in pixmap.
+
+=item Pixmap pixmap (in)
+
+Pixmap to destroy.
+
+=back
+
+=head1 DESCRIPTION
+
+These procedures are identical to the Xlib procedures B<XCreatePixmap>
+and B<XFreePixmap>, except that they have extra code to manage X
+resource identifiers so that identifiers for deleted pixmaps can be
+reused in the future.
+It is important for Tk applications to use these procedures rather
+than B<XCreatePixmap> and B<XFreePixmap>;  otherwise long-running
+applications may run out of resource identifiers.
+
+B<Tk_GetPixmap> creates a pixmap suitable for drawing in I<d>,
+with dimensions given by I<width>, I<height>, and I<depth>,
+and returns its identifier.
+B<Tk_FreePixmap> destroys the pixmap given by I<pixmap> and makes
+its resource identifier available for reuse.
+
+=head1 KEYWORDS
+
+pixmap, resource identifier

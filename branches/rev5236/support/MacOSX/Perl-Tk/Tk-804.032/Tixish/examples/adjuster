@@ -1,0 +1,39 @@
+#!/usr/bin/perl -w
+#
+# A Tree with an adjustable text window to the right.
+#
+# Chris Dean <ctdean@cogit.com>
+# Achim Bohnet <ach@mpe.mpg.de>
+
+use lib '..';
+
+use Tk;
+use Tk::Text;
+use Tk::Tree;
+
+use strict;
+
+my $mw = new MainWindow( -title => "Tree with adjuster" );
+
+my $t1 = $mw->Scrolled( qw/Text -wrap word -scrollbars osoe/ );
+
+my $list = $mw->Scrolled('Tree', -scrollbars=>'osoe', -separator => "\\" );
+
+$list->configure( -command => sub { my $d = shift;
+                                    $t1->delete( qw/0.0 end/ );
+                                    $t1->insert( "end", "$d " x 100 ) } );
+
+
+$list->packAdjust(-side => 'left', -fill => 'both', -delay => 1);
+$t1->pack(-side => 'right', -fill => 'both', -expand => 1);
+
+my @directories = qw( C: C:\Dos C:\Windows C:\Windows\System );
+
+foreach my $d (@directories) {
+    my $text = (split( /\\/, $d ))[-1];
+    $list->add( $d, -text => $text );
+}
+
+$list->autosetmode();
+
+MainLoop;

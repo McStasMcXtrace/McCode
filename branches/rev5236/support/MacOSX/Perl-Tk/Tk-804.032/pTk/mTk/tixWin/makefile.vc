@@ -1,0 +1,242 @@
+# 
+# $Id: makefile.vc,v 1.3.2.2 2001/11/24 02:01:14 idiscovery Exp $
+#
+# Visual C++ 5.0 or 6.0 makefile for Tix.
+#
+# Copyright (c) 1996, Expert Interface Technologies
+#
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+# Edit common.mak to set the common settings
+# TIX_DEBUG   = Compile Tix with debug information.
+# TCL_VER     = version of Tcl to compile with. Default is 8.0
+# 		You may also need to change TCLPATCH for the patchlevel
+#----------------------------------------------------------------------
+
+#
+# TOOLS32     = location of VC++ 32-bit development tools.
+# TOOLS32_rc  = location of VC++ rc program
+
+!IFNDEF TOOLS32
+# For VC 5
+TOOLS32 =       c:\DevStudio\vc
+TOOLS32_rc =    c:\DevStudio\sharedide
+# For VC 6
+#TOOLS32	= c:\Progra~1\micros~1\vc98
+#TOOLS32_rc	= c:\Progra~1\micros~1\common\msdev98
+!ENDIF
+
+# Set this to the appropriate value of /MACHINE: for your platform
+MACHINE = IX86
+
+# Project directories
+#
+# ROOT = top of source tree
+
+ROOT    = ..
+
+# TMPDIR = location where .obj files should be stored during build
+# TCLDIR = location of top of Tcl source heirarchy
+
+#----------------------------------------------------------------------
+# You shouldn't normally modify anything below this line
+#----------------------------------------------------------------------
+default:	all
+
+# Common compiler settings
+!include "common.mak"
+
+!IF "$(NODEBUG)" == "1"
+DBGX =
+!ELSE
+DBGX = d
+!ENDIF
+
+cc32   = "$(TOOLS32)\bin\cl.exe"
+rc32   = "$(TOOLS32_rc)\bin\rc.exe"
+link32 = "$(TOOLS32)\bin\link.exe"
+include32 = -I"$(TOOLS32)\include"
+
+TIX_INCLUDES = $(include32) \
+	-I$(ROOT)\win -I$(ROOT)\generic \
+	-I$(TKDIR)\generic -I$(TKDIR)\win -I$(TKDIR)\xlib \
+	-I$(TCLDIR)\generic $(ITCL_CFLAGS)
+
+WINDIR          = $(ROOT)\win
+GENERICDIR      = $(ROOT)\generic
+
+TCLLIBDIR   = $(TCLDIR)\win\Release
+TKLIBDIR        = $(TKDIR)\win\Release
+
+TIX_DEFINES      = -D__WIN32__ $(ITCL_DEFINES)
+
+TIX_CFLAGS      = $(cflagsdll) \
+			  $(TIX_INCLUDES) -Fo$@ $(TIX_DEFINES)
+TEST_CFLAGS     = $(cdebug) $(cflagsdll) \
+			  $(TIX_INCLUDES) $(TIX_DEFINES) -DTK_TEST
+
+CON_CFLAGS	= $(cdebug) $(cflags) $(cvars) $(include32) -DCONSOLE
+DUMPEXTS	= $(TMPDIR)\dumpexts.exe
+
+WISHOBJS = \
+	$(TMPDIR)\tixWinMain.obj
+
+TIXOBJS = \
+	$(TMPDIR)\$(CONSOLE_OBJ)  \
+	$(TMPDIR)\tixClass.obj    \
+	$(TMPDIR)\tixCmds.obj     \
+	$(TMPDIR)\tixCompat.obj   \
+	$(TMPDIR)\tixDiImg.obj    \
+	$(TMPDIR)\tixDiITxt.obj   \
+	$(TMPDIR)\tixDiStyle.obj  \
+	$(TMPDIR)\tixDItem.obj    \
+	$(TMPDIR)\tixDiText.obj   \
+	$(TMPDIR)\tixDiWin.obj    \
+	$(TMPDIR)\tixError.obj    \
+	$(TMPDIR)\tixForm.obj     \
+	$(TMPDIR)\tixFormMisc.obj \
+	$(TMPDIR)\tixGeometry.obj \
+	$(TMPDIR)\tixHLCol.obj    \
+	$(TMPDIR)\tixHLHdr.obj    \
+	$(TMPDIR)\tixHLInd.obj    \
+	$(TMPDIR)\tixImgCmp.obj   \
+	$(TMPDIR)\tixHList.obj    \
+	$(TMPDIR)\tixList.obj     \
+	$(TMPDIR)\tixMethod.obj   \
+	$(TMPDIR)\tixOption.obj   \
+	$(TMPDIR)\tixSmpLs.obj    \
+	$(TMPDIR)\tixWidget.obj   \
+	$(TMPDIR)\tixInit.obj     \
+	$(TMPDIR)\tixItcl.obj     \
+	$(TMPDIR)\tixUtils.obj    \
+	$(TMPDIR)\tixImgXpm.obj   \
+	$(TMPDIR)\tixNBFrame.obj  \
+	$(TMPDIR)\tixTList.obj    \
+	$(TMPDIR)\tixGrid.obj     \
+	$(TMPDIR)\tixGrData.obj   \
+	$(TMPDIR)\tixGrRC.obj     \
+	$(TMPDIR)\tixGrFmt.obj    \
+	$(TMPDIR)\tixGrSel.obj    \
+	$(TMPDIR)\tixGrUtl.obj    \
+	$(TMPDIR)\tixScroll.obj   \
+	$(TMPDIR)\tixWCmpt.obj    \
+	$(TMPDIR)\tixWinDraw.obj  \
+	$(TMPDIR)\tixWinXpm.obj   \
+	$(TMPDIR)\tixWinWm.obj
+
+######################################################################
+# Link flags
+######################################################################
+
+!IF "$(NODEBUG)" == "1"
+ldebug = /RELEASE
+!ELSE
+ldebug = -debug:full -debugtype:cv
+!ENDIF
+
+# declarations common to all linker options
+lcommon = /NODEFAULTLIB /RELEASE /NOLOGO
+
+# declarations for use on Intel i386, i486, and Pentium systems
+!IF "$(MACHINE)" == "IX86"
+DLLENTRY = @12
+lflags	 = $(lcommon) /MACHINE:$(MACHINE)
+!ELSE
+lflags	 = $(lcommon) /MACHINE:$(MACHINE)
+!ENDIF
+
+conlflags = $(lflags) -subsystem:console -entry:mainCRTStartup
+guilflags = $(lflags) -subsystem:windows -entry:WinMainCRTStartup
+dlllflags = $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
+
+libc = libc$(DBGX).lib oldnames.lib
+libcdll = msvcrt$(DBGX).lib oldnames.lib
+
+baselibs   = kernel32.lib $(optlibs) advapi32.lib user32.lib
+winlibs    = $(baselibs) gdi32.lib comdlg32.lib winspool.lib
+
+guilibs    = $(libc) $(winlibs)
+conlibs    = $(libc) $(baselibs)
+guilibsdll = $(libcdll) $(winlibs)
+conlibsdll = $(libcdll) $(baselibs)
+
+######################################################################
+# Compile flags
+######################################################################
+
+# declarations common to all compiler options (makefile.vc in tk
+# claims -O2 is buggy and so uses -Ot, so we do the same)
+#
+cvarsdll  = -D_X86_=1 -DWIN32 -D_WIN32 -D_MT -D_DLL
+cflagsdll = $(cvarsdll) -c -W3 -nologo -Fp$(TMPDIR)\ -YX -MD \
+	    -Oti -Gs -GD
+
+######################################################################
+# Project specific targets
+######################################################################
+
+all:    $(TIXDLL) $(TIXWISH)
+
+$(DUMPEXTS): $(WINDIR)\winDumpExts.c
+	$(cc32) $(CON_CFLAGS) -Fo$(TMPDIR)\ /c $?
+	set LIB="$(TOOLS32)\lib"
+	$(link32) $(ldebug) $(conlflags) $(guilibs) -out:$@ \
+		$(TMPDIR)\winDumpExts.obj 
+
+$(TMPDIR)\tixvc.def: $(TIXOBJS) $(DUMPEXTS)
+	$(DUMPEXTS) -o $@ $(TIXDLL) @<<
+		$(TIXOBJS)
+<<
+
+# (ToDo) $(TIXDLL) doesn't have resources to define its icon, etc.
+#
+$(TIXDLL): $(TIXOBJS) $(TMPDIR)\tixvc.def
+	set LIB="$(TOOLS32)\lib"
+	$(link32) $(ldebug) $(dlllflags) -def:$(TMPDIR)\tixvc.def \
+		$(TKLIBDIR)\$(TKLIB) $(TCLLIBDIR)\$(TCLLIB) $(guilibsdll) \
+		$(ITCL_LIBS) -out:$@ @<<
+		$(TIXOBJS)
+<<
+
+
+$(TIXWISH): $(WISHOBJS) $(TIXOBJS) $(TIXLIB) $(TMPDIR)\tixwish.res
+	set LIB="$(TOOLS32)\lib"
+	$(link32) $(ldebug) $(guilflags) \
+		$(WISHOBJS) $(TMPDIR)\tixwish.res $(TIXLIB) \
+		$(TKLIBDIR)\$(TKLIB) $(TCLLIBDIR)\$(TCLLIB) $(guilibsdll) \
+		$(ITCL_LIBS) -out:$@
+
+
+#
+# Special case object file targets
+#
+
+$(TMPDIR)\testMain.obj: $(ROOT)\win\tixWinMain.c
+	$(cc32) $(TEST_CFLAGS) -Fo$@ $?
+
+#
+# Implicit rules
+#
+
+{$(GENERICDIR)}.c{$(TMPDIR)}.obj:
+	$(cc32) $(TIX_CFLAGS) -DBUILD_tix $<
+
+{$(WINDIR)}.c{$(TMPDIR)}.obj:
+	$(cc32) $(TIX_CFLAGS) -DBUILD_tix $<
+
+# Could use TIX_INCLUDES
+{$(WINDIR)\rc}.rc{$(TMPDIR)}.res:
+	$(rc32) -fo $@ -r -i $(GENERICDIR) -i $(TKDIR)\generic \
+	 -i $(TKDIR)\win -i $(TKDIR)\xlib -i $(TCLDIR)\generic $(include32) $<
+
+clean:
+	-del $(TMPDIR)\*.obj
+	-del $(TMPDIR)\*.exp
+	-del $(TMPDIR)\*.res
+	-del $(TMPDIR)\*.def
+	-del $(TMPDIR)\*.pch
+	-del $(TIXLIB)
+	-del $(TIXDLL)
+	-del $(TIXWISH)
+

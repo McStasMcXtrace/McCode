@@ -1,0 +1,30 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+use Devel::Leak;
+
+$count = 0;
+
+sub flash_widget
+{
+ my($w, $option, $val1, $val2, $interval) = @_;
+ $w->configure($option => $val1);
+ $w->after($interval, [\&flash_widget, $w, $option, $val2, $val1, $interval] );
+ $count++;
+} # end flash_widget
+
+$mw = MainWindow->new;
+$b = $mw->Button(-text => 'Flash', -bg => 'azure');
+$b->pack;
+flash_widget $b, -background, 'azure', 'yellow', 40;
+$mw->update;
+print STDERR "Before ",$start = Devel::Leak::NoteSV($hook),"\n";
+$count = 0;
+#MainLoop;
+while ($count < 100)
+ {
+  Tk::DoOneEvent(0);
+ }
+print STDERR "After  ",$end = Devel::Leak::CheckSV($hook),"\n";
+
+print "Average ",($end-$start)/$count,"\n";

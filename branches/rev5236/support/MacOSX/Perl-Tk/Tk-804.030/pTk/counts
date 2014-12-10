@@ -1,0 +1,76 @@
+#!/usr/local/bin/perl
+
+sub count
+{
+ local($file) = @_;
+ if (open(C,"gcc -E -DHAVE_UNISTD_H $file|"))
+  {
+   my $match = 0;
+   local(%vars);
+   while (<C>)
+   {
+    next if (/^\s*$/);
+    $match = /$file/ if (/^#/);
+    if ($match)
+     {
+      study;
+      &match;
+     }
+   }
+   close(C);
+   $match = 0;
+   foreach (keys %vars)
+    {
+     $file{$_} .= "$file($vars{$_}),";
+     $match += $vars{$_};
+    }
+   printf(STDERR "%5d $file\n",$match);
+  }
+ else
+  {
+   warn "Cannot open pipe to $file";
+  }
+}
+
+open(NEED,"<need") || die;
+while (<NEED>)
+{
+ next if (/^ld:/);
+ next if (/^\s+\./);
+ if (/^([A-Za-z][A-Za-z0-9_]*).*\.o\s*$/)
+  {
+   $need{$1}++;
+  }
+ elsif (/^\s+_([_A-Za-z][A-Za-z0-9_]*)\s*$/)
+  {
+   my $sym = $1;
+   $need{$sym}++ unless($sym =~ /^_/);
+  }
+ else
+  {
+   warn "No match:$_";
+  }
+}
+close(NEED);
+
+print STDERR "Building proc\n";
+$proc = "sub match {\n";
+foreach (keys %need)
+{
+ $proc .= " \$count{\"$_\"}++,\$vars{\"$_\"}++ if (/\\b$_\\b/);\n"
+}
+$proc .= "}\n";
+print STDERR "eval...\n";
+eval ($proc);
+
+foreach (@ARGV)
+ {
+  &count($_);
+ }
+
+foreach (sort keys %need)
+{
+ my $file = $file{$_};
+ chop($file);
+ printf("%6d %-20s %s\n",$count{$_},$_,$file);
+}

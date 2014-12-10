@@ -1,0 +1,12 @@
+#!/bin/sh
+#
+# Shell-script snippet for starting Komodo Edit as mcgui-like editor
+#
+
+DISTRO=`uname`
+
+if [ ${DISTRO} = "Darwin" ]; then
+    alias komodo='open -a "Komodo Edit 8"'
+fi
+
+komodo $*

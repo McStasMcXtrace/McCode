@@ -1,0 +1,46 @@
+#!/usr/local/bin/perl -w
+use Tk;
+require Tk::Text;
+
+{
+ package Tk::Dwidget;
+use base  qw(Tk::Frame);
+ Construct Tk::Widget 'Dwidget';
+
+ sub Populate
+ {
+  my ($cw,$args) = @_;
+  $cw->SUPER::Populate($args);
+  my $w = $cw->Label(-text => 'A Subwidget')->pack;
+  $cw->Advertise('label' => $w);
+  $cw->ConfigSpecs(-foreground => [$w,'foreground','Foreground','yellow'],
+                   -background => ['METHOD','background','Background','white']
+                  );
+ }
+
+ sub background
+ {
+  # print 'background(',join(',',@_),")\n";
+  my $w = shift;
+  if (@_)
+   {
+    $w->Subwidget('label')->configure(-background => @_);
+   }
+  return $w->Subwidget('label')->cget('-background');
+ }
+
+}
+
+my $mw = MainWindow->new;
+$mw->optionAdd('*Dwidget.Foreground' => 'green');
+my $w  = $mw->Dwidget(-bg => 'red')->pack;
+
+$w->repeat(5000,sub { my $fg = $w->cget('-fg');
+                      my $bg = $w->cget('-bg');
+                      $w->configure(-fg => $bg, -bg => $fg)});
+
+$w->after(4000,sub {$w->configure(-fg => 'blue')});
+MainLoop;
+
+
+

@@ -1,0 +1,10 @@
+A pretty pointless extension which makes
+->ImageBackground method available.
+
+As nearly all Tk widgets draw in off-screen Pixmap
+about only use is for bits of Frames not obscured by sub-windows.
+
+(I had hoped to use it for HTML3's background attribute...)
+
+It serves as an example of how an Extension can be built after Tk
+is installed.

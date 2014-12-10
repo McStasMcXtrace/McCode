@@ -1,0 +1,29 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+use IO::File;
+$ENV{'PERL5LIB'} = join(($^O eq 'MSWin32') ? ';' : ':',@INC);
+
+if (@ARGV)
+ {
+  open(STDOUT,">&STDERR");
+  my $id = shift;
+  print "$id\n";
+  my $mw = MainWindow->new('-use' => oct($id));
+  print "id = $id, use=",$mw->cget('-use')," mw id=",$mw->id,"\n";
+  $mw->Label(-text => "This is process $$ using $id")->pack;
+  $mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+
+  MainLoop;
+ }
+else
+ {
+  my $mw = MainWindow->new;
+  my $f  = $mw->Frame(-borderwidth => 6, -relief => 'sunken', -container => 1)->pack;
+  my $id = $f->id;
+  $mw->Label(-text => "This is process $$ providing $id")->pack;
+  $mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+  my $fh = IO::File->new("$^X $0 $id|");
+  MainLoop;
+  $fh->close;
+ }

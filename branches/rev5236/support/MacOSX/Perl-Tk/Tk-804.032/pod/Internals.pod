@@ -1,0 +1,142 @@
+=head1 NAME
+
+Tk::Internals -  what is Perl Tk interface doing when you call Tk functions.
+
+=for category  C Programming
+
+This information is worse than useless for C<perlTk> users, but can of
+some help for people interested in using modified Tk source with
+C<perlTk>.
+
+I<This document is under construction. The information is believed to
+be pertinent to the version of> C<portableTk> I<available when it was
+created. All the details are subject to change.>
+
+=head1 DESCRIPTION
+
+=over 4
+
+=item PreCompiling
+
+Before the actual compilation stage a script scans the source
+and extracts the subcommands of different commands. This information
+resides in the file C<pTk/Methods.def>.
+
+=item Compilation
+
+During compilation the above file is included in the source of booting
+routine of dynamic (or static) library. More precisely, the booting
+code of module C<Tk> calls the subroutine Boot_Glue() from the module
+C<tkGlue.c>, and this subroutine includes the file (with appropriate
+macro definitions).
+
+=item Inside C<use Tk;>
+
+The module bootstraps the C code, then loads the Perl libraries. The
+heart of the Perl code is contained in the C<Tk::Widget> library, all the
+widgets inherit from this module. Code for toplevels is loaded from
+C<Tk::MainWindow>.
+
+During bootstrap of the C glue code the C<Xevent::?> codes and a
+handful of C<Tk::Widget> and C<Tk::Image> routines are defined. (Much
+more XSUBs are created from C<Tk.xs> code.) The widget subcommands are
+glued to Perl basing on the list included from C<pTk/Methods.def>. In
+fact all the subcommands are glued to XSUBs that are related to the
+same C subroutine XStoWidget(), but have different data parts.
+
+During the Perl code bootstrap the method C<Tk::Widget::import> is
+called. This call requires all the code from particular widget
+packages.
+
+Code from the widget packages calls an obscure command like
+
+  (bless \"Text")->WidgetClass;
+
+This command (actually Tk::Widget::WidgetClass()) creates three
+routines: Tk::Widget::Text(), Tk::Widget::isText(), and
+Tk::Text::isText(). The first one is basically C<new> of C<Tk::Text>,
+the other two return constants. It also puts the class into
+depository.
+
+=item Inside C<$top = MainWindow-E<gt>new;>
+
+This is quite intuitive. This call goes direct to
+C<Tk::MainWindow::new>, that calls XSUB
+C<Tk::MainWindow::CreateMainWindow>, that calls C subroutine
+Tk_CreateMainWindow(). It is a C<Tk> subroutine, so here black magic
+ends (almost).
+
+The only remaining black magic is that the C<Tk> initialization
+routine creates a lot of commands, but the subroutine for creation is
+usurped by B<portableTk> and the commands are created in the package
+C<Tk>. They are associated to XSUBs that are related to one of three C
+subroutines XStoSubCmd(), XStoBind(), or XStoTk(), but have different
+data parts.
+
+The result of the call is blessed into C<Tk::MainWindow>, as it should.
+
+=item Inside C<$top-E<gt>title('Text demo');>
+
+The package C<Tk::Toplevel> defines a lot of subroutines on the fly on
+some list. All the commands from the list are converted to the
+corresponding subcommands of C<wm> method of the widget. Here
+subcommand is a command with some particular second argument (in this
+case C<"title">). Recall that the first argument is $self.
+
+Now C<Tk::Toplevel> @ISA C<Tk::Widget>, that in turn @ISA C<Tk>. So a
+call to C<$top-E<gt>wm('title','Text demo')> calls C<Tk::wm>, that is
+defined during call to Tk_CreateMainWindow(). As it is described
+above, the XSUB associated to XStoSubCmd() is called.
+
+This C routine is defined in C<tkGlue.c>. It gets the data part of
+XSUB, creates a C<SV> with the name of the command, and calls
+Call_Tk() with the XSUB data as the first argument, and with the name
+of XSUB stuffed into the Perl stack in the place there C<tk> expects
+it. (In fact it can also reorder the arguments if it thinks it is
+what you want).
+
+The latter procedure extracts name of C<tk> procedure and
+C<clientData> from the first argument and makes a call, using Perl
+stack as C<argv> for the procedure. A lot of black magic is performed
+afterwards to convert result of the procedure to a Perl array return.
+
+=item Inside C<$text = $top-E<gt>Text(background =E<gt> $txtBg);>
+
+Above we discussed how the command C<Tk::Widget::Text> is created. The
+above command calls it via inheritance. It is translated to
+
+  Tk::Text::new($top, background => $txtBg);
+
+The package C<Tk::Text> has no method C<new>, so the
+C<Tk::Widget::new> is called. In turn it calls
+C<Tk::Text-E<gt>DoInit($top)>, that is
+C<Tk::Widget::DoInit(Tk::Text,$top)>, that initializes the bindings if
+necessary. Then it creates the name for the widget of the form
+C<.text0>, and calls C<Tk::text('.text0', background =E<gt> $txtBg)>
+(note lowercase). The result of the call is blessed into C<Tk::Text>,
+and the method C<bindtags> for this object is called.
+
+Now the only thing to discuss is who defines the methods C<text> and
+C<bindtags>. The answer is that they are defined in C<tkWindow.c>,
+and these commands are created in the package C<Tk> in the same sweep
+that created the command C<Tk::wm> discussed above.
+
+So the the same C code that corresponds to the processing of
+corresponding TCL commands is called here as well (this time via
+C<XStoTk> interface).
+
+=item Inside C<$text-E<gt>insert('insert','Hello, world!');>
+
+As we discussed above, the subcommands of widget procedures correspond
+to XSUB C<XStoWidget>. This XSUB substitutes the first argument $text
+(that is a hash reference) to an appropriate value from this hash,
+adds the additional argument after the first one that contains the
+name of the subcommand extracted from the data part of XSUB, and calls
+the corresponding Tk C subroutine via C<Call_Tk>.
+
+=back
+
+Ilya Zakharevich <ilya@math.ohio-state.edu>
+
+=cut
+

@@ -1,0 +1,171 @@
+# $Id: composite.pod 1.2 Wed, 12 Nov 1997 00:30:45 +0100 ach $
+
+=head1 NAME
+
+Tk::composite - Defining a new composite widget class
+
+=for category Derived Widgets
+
+=head1 SYNOPSIS
+
+    package Tk::MyNewWidget;
+
+    use Tk::widgets qw/ list of Tk widgets /;
+    use base qw/ Tk::Frame /;    # or Tk::Toplevel
+
+    Construct Tk::Widget 'MyNewWidget';
+
+    sub ClassInit {
+        my( $class, $mw ) = @_;
+        #... e.g., class bindings here ...
+        $class->SUPER::ClassInit( $mw );
+    }
+
+    sub Populate {
+        my( $self, $args ) = @_;
+
+        my $flag = delete $args->{-flag};
+        if( defined $flag ) {
+            # handle -flag => xxx which can only be done at create
+            # time the delete above ensures that new() does not try
+            # and do  $self->configure( -flag => xxx );
+        }
+
+        $self->SUPER::Populate( $args );
+
+        $self = $self->Component( ... );
+
+        $self->Delegates( ... );
+
+        $self->ConfigSpecs(
+            '-cursor'    => [ SELF, 'cursor', 'Cursor',   undef ],
+            '-something' => [ METHOD, dbName,  dbClass, default ],
+            '-text'      => [ $label, dbName,  dbClass, default ],
+            '-heading'   => [ {-text => $head},
+                                heading, Heading,  'My Heading' ],
+       ); 
+   }
+
+   sub something {
+       my( $self, $value) = @_;
+       if ( @_ > 1 ) {
+          # set it
+       }
+       return # current value
+   }
+
+   1;
+
+   __END__
+
+
+   =head1 NAME
+
+   Tk::Whatever - a whatever widget
+
+   =head1 SYNOPSIS
+
+     use Tk::Whatever;
+
+     $widget = $parent->Whatever(...);
+
+   =head1 DESCRIPTION
+
+   ...
+
+=head1 DESCRIPTION
+
+The intention behind a composite is to create a higher-level widget,
+sometimes called a "super-widget" or "mega-widget".  Most often,
+a composite will be
+built upon other widgets by B<using> them, as opposed to specializing on them.
+For example, the supplied composite widget B<LabEntry> is I<made of> an
+B<Entry> and a B<Label>; it is neither a I<kind-of> B<Label>
+nor is it a I<kind-of> B<Entry>.
+
+Most of the work of a composite widget consistd in creating subwidgets,
+arranging to dispatch configure options to the proper subwidgets and manage
+composite-specific configure options.
+
+=head1 GLORY DETAILS
+
+Depending on your Perl/Tk knowledge this section may be enlighting
+or confusing.
+
+=head2 Composite Widget
+
+Since Perl/Tk is heavilly using an object-oriented approach, it is no
+suprise that creating a composite goes through a B<new()> method.
+However, the composite does not normally define a B<new()> method
+itself: it is usually sufficient to simply inherit it from
+B<Tk::Widget>.
+
+This is what happens when the composite uses
+
+    use base qw/ Tk::Frame /;  # or Tk::Toplevel
+
+to specify its inheritance chain.  To complete the initialisation of the
+widget, it must call the B<Construct> method from class B<Widget>.  That
+method accepts the name of the new class to create, i.e. the package name
+of your composite widget:
+
+    Construct Tk::Widget 'MyNewWidget';
+
+Here, B<MyNewWidget> is the package name (aka the widget's B<class>).  This
+will define a constructor method for B<MyNewWidget>, normally named after the
+widget's class.  Instanciating that composite in client code would
+the look like:
+
+    $mw = MainWindow->new;       # creates a top-level MainWindow
+
+    $self = $mw->MyNewWidget();  # creates an instance of the
+                                 # composite widget MyNewWidget
+
+Whenever a composite is instanciated in client code,
+C<Tk::Widget::new()> will be invoked via the widget's class
+constructor.  That B<new> method will call
+
+    $self->Populate(\%args);
+
+where I<%args> is the arguments passed to the widget's constructor.  Note
+that B<Populate> receives a B<reference> to the hash array
+containing all arguments.
+
+B<Populate> is typically defined in the composite class (package),
+which creates the characteristic subwidgets of the class.
+
+=head2 Creating Subwidgets
+
+Subwidget creation happens usually in B<Populate()>.
+The composite usually calls the
+subwidget's constructor method either directly, for "private" subwidgets,
+or indirectly through the B<Component> method for subwidgets that should
+be advertised to clients.
+
+B<Populate> may call B<Delegates> to direct calls to methods
+of chosen subwidgets. For simple composites, typically most if not all
+methods are directed
+to a single subwidget - e.g. B<ScrListbox> directs all methods to the core
+B<Listbox> so that I<$composite>-E<gt>B<get>(...) calls
+I<$listbox>-E<gt>B<get>(...).
+
+=head2 Defining mega-widget options
+
+B<Populate> should also call B<ConfigSpecs()> to specify the
+way that configure-like options should be handled in the composite.
+Once B<Populate> returns, method B<Tk::Frame::ConfigDefault>
+walks through the B<ConfigSpecs> entries and populates
+%$args hash with defaults for options from X resources (F<.Xdefaults>, etc).
+
+When  B<Populate> returns to B<Tk::Widget::new()>,
+a call to B<$self>-E<gt>I<configure>(%$args) is made which sets *all*
+the options.
+
+=head1 SEE ALSO
+
+L<Tk::ConfigSpecs|Tk::ConfigSpecs>
+L<Tk::mega|Tk::mega>
+L<Tk::Derived|Tk::Derived>
+
+=cut
+

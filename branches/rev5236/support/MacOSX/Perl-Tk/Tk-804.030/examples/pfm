@@ -1,0 +1,144 @@
+#!/usr/local/bin/perl -w
+use POSIX qw(getcwd);
+
+use Tk;
+# use Tk::ErrorDialog;
+use Tk::DragDrop qw(Sun);
+require Tk::Tiler;
+
+{package Dragable;
+ require Tk::Label;
+ use Tk qw(Ev);
+use base  qw(Tk::Label);
+ Construct Tk::Widget Dragable;
+
+ sub ClassInit
+ {
+  my ($class,$mw) = @_;
+  $mw->bind($class,'<FocusIn>','Bell');
+  return $class;
+ }
+
+ sub LabelInfo
+ {
+  my $w = shift;
+  my @config = ();
+  my $option;
+  foreach $option ($w->configure())
+   {
+    next if (@$option == 2 || !defined $$option[4]);
+    next if (defined $$option[3] && $$option[3] eq $$option[4]);
+    push(@config,$$option[0],$$option[4]);
+   }
+  return (@config);
+ }
+
+ sub new
+  {my $class  = shift;
+   my $parent = shift;
+   my $obj = $parent->Label(@_,-takefocus => 1);
+   # $obj->bind('<B1-Motion>',['DragDrop',Ev(['LabelInfo'])]);
+   return bless $obj,$class;
+  }
+
+}
+
+$icon_dir = Tk->findINC("demos/images");
+
+%icons = ();
+
+sub Edit
+{
+ my $w = shift;
+ my $path = shift;
+ if (-T $path)
+  {
+   fork || exec("$ENV{EDITOR} $path");
+  }
+}
+
+sub choose_icon
+{
+ my $w    = shift;
+ my $name = shift;
+ my $icon = (-d $name) ? "dir" : ($name =~ /\.([^\.]+)$/) ? $1 : "page";
+ if (!defined $icons{$icon})
+  {
+   my $file = "$icon_dir/$icon.xpm";
+   if (-f "$file")
+    {
+     $icons{$icon} = $w->Pixmap($icon,-file=>"$file");
+    }
+   else
+    {
+     my $file = "$icon_dir/$icon.icon";
+     my $mask = "$icon_dir/$icon.mask";
+     $file = "$icon_dir/page.icon" unless (-f $file);
+     $mask = "$icon_dir/page.mask" unless (-f $mask);
+     $icons{$icon} = $w->Bitmap($icon,-file=> $file,-maskfile=>$mask);
+    }
+   if ($icons{$icon}->width != 32)
+    {
+     $icons{$icon} = choose_icon($w,"page");
+    }
+  }
+ return $icons{$icon};
+}
+
+
+
+sub handle_string
+{my ($string,$offset,$max) = @_;
+ return $string;
+}
+
+sub do_dir
+{
+ my $w   = shift;
+ my $dir = shift;
+ opendir(DIR,$dir);
+ my @files = readdir(DIR);
+ closedir(DIR);
+ my @windows = ();
+ my $width  = 0;
+ my $height = 0;
+ my @win    = ();
+ foreach (sort @files)
+  {
+   next if (/^\.*$/);
+   my $path = "$dir/$_";
+   my $f = $w->Frame();
+   my $i = $f->Dragable(-image=> choose_icon($w,$path));
+   $i->DragDrop(-image => $i->cget('-image'),-handlers => [[-type =>'FILE_NAME',[\&handle_string,"$dir/$_"]]]);
+   my $l = $f->Label(-text=> $_);
+   $i->bind('<FocusIn>','break');
+   $i->pack(-side=>'top');
+   $l->pack(-side=>'bottom',-fill=> 'x');
+   if (-d $path)
+    {
+     $w->Manage($f);
+    }
+   else
+    {
+     $i->bind('<Double-1>',[\&Edit,$path]);
+     push(@win,$f);
+    }
+  }
+ $w->Manage(@win);
+}
+
+$dir = (@ARGV) ? shift : getcwd();
+
+$top = MainWindow->new();
+
+$t   = $top->Tiler();
+$t->pack(-side=>'right',-fill=>'both',-expand=>1);
+$top->AddScrollbars($t);
+$top->configure('-scrollbars' => 'w');
+do_dir($t,$dir);
+
+$t->update;
+
+$t->focus;
+
+MainLoop;

@@ -1,0 +1,65 @@
+#  Copyright (c) 1992 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_SetWindowVisual - change visual characteristics of window
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+int
+B<Tk_SetWindowVisual>(I<tkwin, visual, depth, colormap>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_Window tkwin (in)
+
+Token for window.
+
+=item Visual *visual (in)
+
+New visual type to use for I<tkwin>.
+
+=item "int" depth (in)
+
+Number of bits per pixel desired for I<tkwin>.
+
+=item Colormap colormap (in)
+
+New colormap for I<tkwin>, which must be compatible with
+I<visual> and I<depth>.
+
+=back
+
+=head1 DESCRIPTION
+
+When Tk creates a new window it assigns it the default visual
+characteristics (visual, depth, and colormap) for its screen.
+B<Tk_SetWindowVisual> may be called to change them.
+B<Tk_SetWindowVisual> must be called before the window has
+actually been created in X (e.g. before B<Tk_MapWindow> or
+B<Tk_MakeWindowExist> has been invoked for the window).
+The safest thing is to call B<Tk_SetWindowVisual> immediately
+after calling B<Tk_CreateWindow>.
+If I<tkwin> has already been created before B<Tk_SetWindowVisual>
+is called then it returns 0 and doesn't make any changes;  otherwise
+it returns 1 to signify that the operation
+completed successfully.
+
+Note:  B<Tk_SetWindowVisual> should not be called if you just want
+to change a window's colormap without changing its visual or depth;
+call B<Tk_SetWindowColormap> instead.
+
+=head1 KEYWORDS
+
+colormap, depth, visual

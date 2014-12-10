@@ -1,0 +1,15 @@
+{
+  "keyboard_shortcut": "", 
+  "name": "Docs - UDL", 
+  "language": "JavaScript", 
+  "trigger": "", 
+  "value": [
+    "ko.help.open('user-defined_languages');"
+  ], 
+  "version": "1.0.12", 
+  "rank": 100, 
+  "trigger_enabled": false, 
+  "async": 1, 
+  "type": "macro", 
+  "icon": "chrome://fugue/skin/icons/information-white.png"
+}

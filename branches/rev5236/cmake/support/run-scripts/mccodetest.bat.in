@@ -1,0 +1,9 @@
+@CALL @CPACK_NSIS_INSTALL_ROOT@\\bin\\mccodeenv.bat
+@ECHO OFF
+@ECHO @NAME@ environment shell:
+@ECHO OFF
+@ECHO OFF
+@@FLAVOR@ -v
+@ECHO OFF
+@ @MCCODE_PREFIX@run --test 
+
