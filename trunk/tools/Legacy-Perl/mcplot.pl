@@ -156,13 +156,13 @@ if (-d $file) { # check if dir containing result file
 if (-e "$file.m" and not -e "$file.sci" and not -e "$file.sim" and not -e "$file.html") { $plotter = "Matlab"; }
 if (-e "$file.sim" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.html" and not ($plotter =~ /gnuplot|Matlab/i)) { $plotter = "PGPLOT"; }
 if (-e "$file.html" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.sim") { $plotter = "HTML";   }
-if (-e "$file.nxs") { $plotter = "NeXus";   }
+if (-e "$file.h5") { $plotter = "NeXus";   }
 
 # set default extension from plotter
 if ($plotter =~ /Matlab/i and -e "$file.m") { $default_ext = ".m"; }
 elsif ($plotter =~ /PGPLOT|McStas|gnuplot|Matlab/i) { $default_ext = ".sim"; }
 elsif ($plotter =~ /HTML/i) { $default_ext = ".html"; }
-elsif ($plotter =~ /NeXus/i) { $default_ext = ".nxs"; }
+elsif ($plotter =~ /NeXus/i) { $default_ext = ".h5"; }
 
 # if no extension in file name, add default extension.
 if ($file !~ m'\.[^/]*$' && $default_ext) { $file .= $default_ext; }
@@ -173,7 +173,7 @@ print "Opening $file\n";
 if ($file =~ m'\.m$')    { $plotter = "Matlab"; }
 if ($file =~ m'\.sim$' and not($plotter =~ /gnuplot|Matlab/i))  { $plotter = "PGPLOT"; }
 if ($file =~ m'\.html$') { $plotter = "HTML"; }
-if ($file =~ m'\.nxs$') { $plotter = "NeXus"; }
+if ($file =~ m'\.h5$') { $plotter = "NeXus"; }
 
 
 

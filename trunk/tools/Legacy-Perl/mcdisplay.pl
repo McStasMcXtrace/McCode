@@ -1440,7 +1440,7 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
  -zZF      --zoom=ZF         Show zoomed view by factor ZF
  -iCOMP    --inspect=COMP    Show only trajectories reaching component COMP
            --param=FILE      Read input parameters from parameter file
- -pPLOTTER --plotter=PLOTTER Output graphics using {PGPLOT,VRML,Matlab,Mantid}
+ -pPLOTTER --plotter=PLOTTER Output graphics using {PGPLOT,VRML,Matlab,Mantid/NeXus}
  --format=PLOTTER            --\"-- 
  -fFNAME   --file=FNAME      Output graphics commands to file FNAME
                              (Only used when PLOTTER = {Matlab})
@@ -1509,6 +1509,11 @@ if ($plotter =~ /scriptfile/i && not $file_output) {
   if ($plotter =~ /Matlab/i) { $file_output .=".m"; }
   elsif ($plotter =~ /VRML/i) { $file_output .=".wrl"; }
   print STDERR "Outputting to file $file_output\n";
+}
+
+if ($plotter =~ /nexus/i) {
+  # Mainly intended for when called from mcgui - gives a way to generate IDF's from gui
+  $plotter="mantid";
 }
 
 if ($plotter =~ /mantid/i && not $file_output) {
