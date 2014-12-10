@@ -248,7 +248,7 @@ TRACE
   incom incid,refr,outg;
   lens parab;
 
-  double E,mu,f,rhoel,dl,e,k,delta,beta,Refractive_Index_Re,Refractive_Index_Im,w; 
+  double E,mu,f,rhoel,dl,d_total,e,k,delta,beta,Refractive_Index_Re,Refractive_Index_Im,w;
 
   int i=0,nr;
   
@@ -293,6 +293,7 @@ TRACE
   incid.coord[1]=y; 
   incid.coord[2]=z;
   
+  d_total=0;
   for (nr=0;nr<=(N-1);nr++){
     parab.constants[3]=nr*d+nr*2*w; // d constant
     parab.constants[4]=1.0/Refractive_Index_Re; // M constant
@@ -319,17 +320,18 @@ TRACE
     
     dl=sqrt( (outg.coord[0]-x)*(outg.coord[0]-x) + (outg.coord[1]-y)*(outg.coord[1]-y) + (outg.coord[2]-z)*(outg.coord[2]-z) );
     PROP_DL(dl);
+    d_total+=dl;
     SCATTER;
 
     kx=outg.k[0]; ky=outg.k[1]; kz=outg.k[2];
     incid=outg;
   }
-   // transmission calculation
-   if (T==0)
-      ABSORB;
-   else 
-     T=exp(-mu*d*N);
-   p*=T;
+  // transmission calculation
+  if (T==0)
+    ABSORB;
+  else 
+    T=exp(-mu*d_total);
+  p*=T;
 
 %}
 
