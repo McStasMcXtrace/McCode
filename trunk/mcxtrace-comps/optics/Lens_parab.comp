@@ -23,12 +23,11 @@
 * %P
 * Input parameters:
 * r: Radius of curvature (circular approximation at the tip of the profile) [m]
-* r_ap: Radius of circular aperture [m]
-* yheight: The CRL's dimensions along Y, aka aperture. [m]
-* xwidth: The CRL's dimensions along X. [m]
+* r_ap: Radius of circular aperture, which also defines the depth of the lens profile. If r_ap==0, yheight/2 will be used instead. [m]
+* yheight: The CRL's dimensions along Y, and if r_ap==0 also the diameter of the aperture [m]
 * d: Distance between two surfaces of the lens along the propagation axis. [m]
-* N: Number of single lenses in a stack. [m]
-* T: Transmission of the lens. [m]
+* N: Number of single lenses in a stack. [ ]
+* T: Transmission of the lens. Only used if material_datafile==NULL. [ ]
 * 
 * attenuation coefficient mu is taken from the NIST database and 
 * Be.txt
@@ -97,12 +96,12 @@ SHARE
     D=B*B-4.0*A*C;     
     
     if (D<0) { /*ray does not intersect the parabola*/
- 	fprintf(stderr,"line 96: D<0 %s\n",NAME_CURRENT_COMP);
-        return result;
+      fprintf(stderr,"line 96: D<0 %s\n","Lens_parab");
+      return result;
     }
     if (A==0){ /*incident k-vector is parallel (exactly) to the z-axis. Thus, the eq. becomes linear*/
       if(B==0){ 
-	fprintf(stderr, "Division by zero in %s\n",NAME_CURRENT_COMP); 
+	fprintf(stderr, "Division by zero in %s\n","Lens_parab");
 	return result; 
       }	  
       t[0]=-C/B;
@@ -238,6 +237,13 @@ INITIALIZE
       prms->f[i]=T.data[1+i*T.columns];
   }
   Table_Free(&T);
+
+  /*check for old parameter use*/
+  if (yheight!=0 && r_ap==0){
+    fprintf(stderr,"Warning(%s): You are using an obsolescent parameter yheight. Please consider r_ap instead.\n", NAME_CURRENT_COMP);
+    r_ap=yheight/2.0;
+  }
+
 %}
 
 
