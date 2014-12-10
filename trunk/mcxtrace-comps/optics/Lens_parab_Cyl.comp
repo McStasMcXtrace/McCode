@@ -198,7 +198,7 @@ INITIALIZE
   int i;
   for(i=0;i<T.rows;i++){
       prms->E[i]=T.data[i*T.columns]; 
-      prms->mu[i]=T.data[5+i*T.columns]*prms->rho*1e2;     /*mu is now in SI, [m^-1]*/          
+      prms->mu[i]=T.data[5+i*T.columns]*prms->rho*1e2; /*mu is now in SI, [m^-1]*/
       prms->f[i]=T.data[1+i*T.columns];
   }
   Table_Free(&T);
