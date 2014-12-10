@@ -343,7 +343,6 @@ MCDISPLAY
   /*draw individiual lenses*/
   /*draw a circle at the maximal aperture and a parabola along x and y*/
   int i,j=0;
-  printf("%g %g\n",N,(N<20?N:20));
   for (j=0;j<(N<20?N:20);j++){
     circle("xy",0,0,-w+j*(d+2*w),yheight/2.0);
     circle("xy",0,0,d+w+j*(d+2*w),yheight/2.0);
@@ -352,7 +351,6 @@ MCDISPLAY
     zz0=zz1=-w;
     dz=w/(64.0-1.0);
     s=j*(d+2*w);
-    printf("%d %g\n",j,s);
     /*first parabola*/
     while(zz1<=0){
       zz1+=dz;
