@@ -42,21 +42,16 @@ OUTPUT PARAMETERS (prms,parab)
 SHARE
 %{
   %include "read_table-lib"
-  struct datastruct{
-    int Z;
-    double Ar, rho;
-    double *E, *mu, *f;
-  }; 
   typedef struct {
     double coord[3];
     double k[3];
-  } incom;
+  } incom_parab;
   typedef struct {
     double constants[6];
-  } lens;
+  } lens_parab;
   
-  incom intersection_lens_parab(incom a,lens b){
-    incom result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};  
+  incom_parab intersection_lens_parab(incom_parab a,lens_parab b){
+    incom_parab result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
     int i;
     double A,B,C,D,rr;
     double t[2],p[3],knorm[3],k[3],pos1_tmp[3],pos_tmp[3];
@@ -205,7 +200,11 @@ SHARE
 
 DECLARE
 %{
-  struct datastruct *prms;
+  struct {
+    int Z;
+    double Ar, rho;
+    double *E, *mu, *f;
+  } *prms;
 %} 
 
 INITIALIZE 
@@ -218,7 +217,7 @@ INITIALIZE
   }
   char **header_parsed;
   header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho",NULL);
-  prms=calloc(1,sizeof(struct datastruct));
+  prms=calloc(1,sizeof(*prms));
   if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
   if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
   if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
@@ -242,8 +241,8 @@ INITIALIZE
 
 TRACE 
 %{
-  incom incid,refr,outg;
-  lens parab;
+  incom_parab incid,refr,outg;
+  lens_parab parab;
 
   double E,mu,f,rhoel,dl,d_total,e,k,delta,beta,Refractive_Index_Re,Refractive_Index_Im,w;
 
