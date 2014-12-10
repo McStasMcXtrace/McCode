@@ -111,31 +111,31 @@ SHARE
       }
     } else {
       double qq;
-        if (B<0){
-          qq=-0.5*(B-sqrt(D));
-        }else{
-          qq=-0.5*(B+sqrt(D)); 
-        }
-        t[0]=qq/A; 
-        t[1]=C/qq;
-        
+      if (B<0){
+        qq=-0.5*(B-sqrt(D));
+      }else{
+        qq=-0.5*(B+sqrt(D));
+      }
+      t[0]=qq/A;
+      t[1]=C/qq;
+
+      for(i=0;i<=2;i++){
+        pos_tmp[i]=p[i]+t[0]*knorm[i];
+        pos1_tmp[i]=p[i]+t[1]*knorm[i];
+      }
+      if ( fabs(pos_tmp[1])<=fabs(yh/2) && fabs(pos_tmp[0])<=fabs(xw/2) ){
         for(i=0;i<=2;i++){
-	  pos_tmp[i]=p[i]+t[0]*knorm[i]; 
-	  pos1_tmp[i]=p[i]+t[1]*knorm[i];
-	} 
-	if ( fabs(pos_tmp[1])<=fabs(yh/2) && fabs(pos_tmp[0])<=fabs(xw/2) ){
-	  for(i=0;i<=2;i++){
-	  result.coord[i]=pos_tmp[i];
-	  }
-	} else if ( fabs(pos1_tmp[1])<=fabs(yh/2) && fabs(pos1_tmp[0])<=fabs(xw/2) ){
-	       for(i=0;i<=2;i++){
-		  result.coord[i]=pos1_tmp[i];
-	       }
-	  }
-	else return result; 
-      }     
+          result.coord[i]=pos_tmp[i];
+        }
+      } else if ( fabs(pos1_tmp[1])<=fabs(yh/2) && fabs(pos1_tmp[0])<=fabs(xw/2) ){
+        for(i=0;i<=2;i++){
+          result.coord[i]=pos1_tmp[i];
+        }
+      }
+      else return result;
+    }
     
-        /* Calculating tangential vector  */
+    /* Calculating tangential vector  */
 	
     if (result.coord[0]==0 && result.coord[1]==0){ // incoming ray is along the axis, so it does not refract
 	k_new[0]=k[0];
@@ -234,7 +234,7 @@ INITIALIZE
   int i;
   for(i=0;i<T.rows;i++){
       prms->E[i]=T.data[i*T.columns]; 
-      prms->mu[i]=T.data[5+i*T.columns]*prms->rho*1e2;     /*mu is now in SI, [m^-1]*/          
+      prms->mu[i]=T.data[5+i*T.columns]*prms->rho*1e2;/*mu is now in SI, [m^-1]*/
       prms->f[i]=T.data[1+i*T.columns];
   }
   Table_Free(&T);
