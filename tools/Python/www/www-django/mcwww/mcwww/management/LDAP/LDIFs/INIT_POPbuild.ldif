@@ -1,0 +1,61 @@
+#==============#
+# Adding users #
+#==============#
+dn: cn=<STUDENTNAME>,ou=person,dc=<MACHINE DOMAIN>
+objectclass: inetOrgPerson
+cn: <STUDENTNAME>
+displayName: <NAME>
+sn: 
+uid: <UID>
+userpassword: <PASSWORD>
+mail: 
+description: Student
+ou: person
+
+dn: cn=<STAFFNAME>,ou=person,dc=<MACHINE DOMAIN>
+objectclass: inetOrgPerson
+cn: <STAFFNAME>
+displayName: <NAME>
+sn: 
+uid: <UID>
+userpassword: <PASSWORD>
+mail: 
+mail: 
+telephoneNumber: 
+departmentNumber:
+roomNumber: 
+description: <OPTIONAL>
+employeeNumber: 
+ou: person
+
+dn: cn=<STAFFNAME>,ou=person,dc=<MACHINE DOMAIN>
+objectclass: inetOrgPerson
+cn: <STAFFNAME>
+displayName: <NAME>
+sn: 
+uid: <UID>
+userpassword: <PASSWORD>
+mail: 
+telephoneNumber: 
+departmentNumber: 
+roomNumber: 
+description: <OPTIONAL>
+ou: person
+
+#================#
+# Groupify Users #
+#================#
+dn: cn=courseStaff,ou=groups,dc=<MACHINE DOMAIN>
+changetype: modify
+add: member
+member: cn=<STAFFNAME>,ou=person,dc=<MACHINE DOMAIN>
+
+dn: cn=Student,ou=groups,dc=<MACHINE DOMAIN>
+changetype: modify
+add: member
+member: cn=Mark Lewis,ou=person,dc=<MACHINE DOMAIN>
+
+dn: cn=itStaff,ou=groups,dc=<MACHINE DOMAIN>
+changetype: modify
+add: member
+member: cn=<STAFFNAME>,ou=person,dc=<MACHINE DOMAIN>

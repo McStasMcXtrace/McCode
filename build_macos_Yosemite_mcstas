@@ -13,30 +13,30 @@ if [ "x$2" != "x" ]; then
 fi
 
 # 64-bit Mac OS
-./mkdist mcstas $1 "" "" mac_yosemite "" -- OSXpkg
-./mkdist mcstas-comps $1 "" "" mac_yosemite "" -- OSXpkg
-./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" mac_yosemite "" -- OSXpkg
-./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_yosemite "" -- OSXpkg
-./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_yosemite "" -- OSXpkg
-./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac_yosemite "" -- OSXpkg
-./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mac_yosemite "" -- OSXpkg
-./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mac_yosemite "" -- OSXpkg
-./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac_yosemite "" -- OSXpkg
-./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac_yosemite "" -- OSXpkg
-./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" mac_yosemite "o" -- OSXpkg
+./mkdist mcstas $1 "" "" mac_yosemite -- OSXpkg
+./mkdist mcstas-comps $1 "" "" mac_yosemite -- OSXpkg
+./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" mac_yosemite -- OSXpkg
+./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_yosemite -- OSXpkg
+./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_yosemite -- OSXpkg
+./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac_yosemite -- OSXpkg
+./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mac_yosemite -- OSXpkg
+./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mac_yosemite -- OSXpkg
+./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac_yosemite -- OSXpkg
+./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac_yosemite -- OSXpkg
+./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" mac_yosemite -- OSXpkg
 
 if [ "x$2" != "x" ]; then
     # If this is a meta-package being built, we should aim for installation in /opt/mccode
     export MCINSTALL_PREFIX=/usr/local/
 fi
-./mkdist mcstas-gcc $1 support/MacOSX/gcc-hpc/10.10 "" mac_yosemite "" -- OSXpkg
-./mkdist mcstas-openmpi $1 support/MacOSX/openmpi/10.10 "" mac_yosemite "" -- OSXpkg
+./mkdist mcstas-gcc $1 support/MacOSX/gcc-hpc/10.10 "" mac_yosemite -- OSXpkg
+./mkdist mcstas-openmpi $1 support/MacOSX/openmpi/10.10 "" mac_yosemite -- OSXpkg
 
 if [ "x$2" != "x" ]; then
     # Build the App bundle and meta-package also.
     # The App needs a higher-level PREFIX
     export MCINSTALL_PREFIX=/Applications/McStas-$1.app/
-    ./mkdist mcstas-app $1 support/MacOSX/McCode.app/ "" mac_yosemite "" -- OSXpkg
+    ./mkdist mcstas-app $1 support/MacOSX/McCode.app/ "" mac_yosemite -- OSXpkg
 
     OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
     

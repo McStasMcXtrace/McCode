@@ -1,74 +1,55 @@
----------------------------------------------------------------------------------------------------------------------------------------------------------------
-===============================================================================================================================================================
-Full Install and setup instructions for LDAP with TLSv1/SSLv3 (same thing apparently) - Mark Lewis : 10-7-14 (Debian 7.5) Virtual Neutrons for Teaching elearn1
-===============================================================================================================================================================
-
-
-
-GET THE NEW DIR TREE AND PUT IT HERE!!!
-
-
-
-
----------------------------------------------------------------------------------------------------------------------------------------------------------------
-- What we are aiming to do is get to a dir tree that look like this:	   and a DIT to look like this:			                                      |
-  ../../LDAP  	     	      	       	   	     	       		      dn: dc=fysik,dc=dtu,dc=dk - (SUFFIX)                         <-- this is the front end tree.
-  ├── devdocs/								      ├── dn: ou=person,SUFFIX - (PERSON)			       	       	      |
-  │   ├── LDAP_SETUP							      │   ├── dn: cn=entry_1,PERSON						      |
-  │   ├── proceedure_00-...						      │   ├── dn: cn=entry_...,PERSON						      |
-  │   ├── ..._16-							      │   ├── dn: cn=entry_N,PERSON						      |
-  │   └── slapNldap_notes						      │   └── DummyUser								      |
-  ├── LDIFs/								      ├── dn: ou=groups,SUFFIX - (GROUPS)					      |
-  │   ├── building/							      │   ├── dn: cn=courseStaff,GROUPS						      |
-  │   │   ├── config_pw.ldif						      │   │	  ├── member: first_dn_of_ou=person,SUFFIX_entry		      |
-  │   │   ├── DB_state_build.ldif					      │   │	  ├── member: ...						      |
-  │   │   ├── structure_state_build.ldif				      │   │	  └── member: last_dn_of_ou=person,SUFFIX_entry			      |
-  │   │   ├── TLS_directives.ldif					      │   ├── dn: cn=itStaff,GROUPS						      |
-  │   │   └── user_population_build.ldif				      │   │	  ├── member: first_dn_of_ou=person,SUFFIX_entry		      |
-  │   ├── deletion/							      │   │	  ├── member: ...						      |
-  │   │   ├── access_state_del.ldif					      │   │	  └── member: last_dn_of_ou=person,SUFFIX_entry			      |
-  │   │   ├── structure_state_del.ldif					      │   └── dn: cn=Students,GROUPS						      |
-  │   │   └── zero_access_state.ldif					      │   	  ├── member: first_dn_of_ou=person,SUFFIX_entry		      |
-  │   └── modifying/							      │           ├── member: ...						      |
-  │       └── modify_template.ldif					      │ 	  └── member: last_dn_of_ou=person,SUFFIX_entry			      |
-  ├── nginx/  								      └── dn: ou=access,SUFFIX - (ACCESS)					      |
-  │   └── greenheart.moodle.conf					          └── dn: cn=moodle,ACCESS						      |
-  ├── openSSL/									      	  								      |
-  │   └── certs																		      |
-  │       ├── keys																	      |
-  │       │   └── ldapskey.pem																      |
-  │       └── ldapscert.pem																      |
-  └── python/ 																		      |
-      ├── build_DIT.py																	      |
-      ├── flush_DB.py																	      |
-      ├── LDAPBuilder.py																      |
-      ├── LDAPComm.py																	      |
-      ├── LDAPData.py																	      |
-      └── temp_query_files																      |
-      	  																		      |
----------------------------------------------------------------------------------------------------------------------------------------------------------------
+=======================
+LDAP setup instructions
+=======================
+9-10-14 (Debian 7.5) Virtual Neutrons for Teaching elearn1
+==========================================================
+Author: Mark Lewis
+------------------
 -----
 Notes
 -----
-- There has been a complete migration to the Online Configuration version of LDAP so anything you find online talking about slapd.conf is moot.
+- There has been a complete migration to the Online Configuration version of LDAP so anything you find online talking about slapd.conf is moot. 
+  EVEN THOUGH there will be a slapd.conf dumped somewhere on your system, just ignore it.
 - Setting up the DB requires two users, the user that alters how the DB works and the user who alters the content.
      db_admin  : cn=admin,cn=config
-     usr_admin : cn=admin,dc=fysik,dc=dtu,dc=dk
+     usr_admin : cn=admin,<MACHINE DOMAIN>
 - The Backend and Database global scope are in : /etc/ldap/slapd.d/cn=config.ldif                        (db_admin)
   The Database operation management are in     : /etc/ldap/slapd.d/cn=config/olcDatabase={0}config.ldif  (db_admin)
   The Database content and DIT are in          : /etc/ldap/slapd.d/cn=config/olcDatabase={1}hdb.ldif     (usr_admin)
-- The python files are yours to build, do them how you like. Mine are basically system calls to the ldap DB based on very little user input (as of writing this setup how to)
-- Only the building LDIF files are documented. Modification and clearing of the database is up to you. 
 - The .ldif files are run from a predefined build script, LDAPBuilder but you can apply them all manually IF YOU CHOOSE:
-- If a command begins with # use root privs.
+  If a command begins with # use root privs.
   If a command begins with $ it doesn't matter.
 - If you run into serious problems you can purge and reinstall ldap-utils and slapd and start again. This is the simplest way to clear the database, however, LDAP _may_ leave some
-  backupfiles in your system and rooting these out is a bit of work. An example delete.ldif for clearing the DB is provided in the ../../LDAP/LDIFs folder. Use the correct privileges
+  backup files in your system and rooting these out is a bit of work. An example delete.ldif for clearing the DB is provided in the ../../LDAP/LDIFs folder. Use the correct privileges
   to delete from the correct DB.
 
 -----------
 preparation
 -----------
+- What we are aiming to do is get to a DIT to look like this: (unfortunately there's no handy tool to look at the LDAP DB tree)
+
+ dn: <MACHINE DOMAIN>               => (SUFFIX)                         	       
+ ├── dn: ou=person,SUFFIX 	    => (PERSON)			       	       
+ │   ├── dn: cn=entry_1,PERSON				   
+ │   ├── dn: cn=entry_...,PERSON			
+ │   ├── dn: cn=entry_N,PERSON				
+ │   └── DummyUser					
+ ├── dn: ou=groups,SUFFIX 	    => (GROUPS)			
+ │   ├── dn: cn=courseStaff,GROUPS			
+ │   │	  ├── member: first_dn_of_ou=person,SUFFIX_entry
+ │   │	  ├── member: ...				
+ │   │	  └── member: last_dn_of_ou=person,SUFFIX_entry	
+ │   ├── dn: cn=itStaff,GROUPS				
+ │   │	  ├── member: first_dn_of_ou=person,SUFFIX_entry
+ │   │	  ├── member: ...				
+ │   │	  └── member: last_dn_of_ou=person,SUFFIX_entry	
+ │   └── dn: cn=Students,GROUPS				
+ │   	  ├── member: first_dn_of_ou=person,SUFFIX_entry
+ │        ├── member: ...				
+ │ 	  └── member: last_dn_of_ou=person,SUFFIX_entry	
+ └── dn: ou=access,SUFFIX 	    => (ACCESS)				       									   	
+ 	   └── dn: cn=moodle,ACCESS				       									   	
+
 - You'll need the the distinguished name (dn) of the machine that you are setting the LDAP up on, this can be found thus:
   	 $ cat /etc/hosts
 	   127.0.0.1	localhost
@@ -79,8 +60,9 @@ preparation
     dn="<MACHINE DOMAIN>"
   <MACHINE DOMAIN> is needed later for filling in the files that will modify your LDAP DB.
 - Install all the relevent packages:
-    #apt-get -f install ldap-utils slapd openssl python mediawiki mediawiki-extensions-ldap mysql- nginx
-    #apt-get purge apache2
+    #update-rc.d -f apache2 remove
+    #service apache2 stop
+    #apt-get -f install ldap-utils slapd openssl python mediawiki mediawiki-extensions-ldapauth mysql-server nginx
 - Upon LDAP and slapd being installed you'll be prompted to set these up with an _admin password_, remember what you input.
 - Find and dl the latest version of Moodle, the interface with LDAP should change with LDAP version, but we use latest stable.
 - Build the directory tree above, make temp files in each of the directories because mistakes will be made along the way and you'll want to have some backups.
@@ -229,10 +211,8 @@ NB:
     by self write	 								|
     by anonymous auth									|
 
-
-- THIS ALSO HANDLED BY BUILDER
-
-
+- HANDLED IN THE BUILD SCRIPT
+- you can manually apply this file with:
 - $ldapadd -x -D "cn=admin,cn=config" -f DB_state_build.ldif -w <ADMIN_pwd>
 
 -------------------------------------------------------

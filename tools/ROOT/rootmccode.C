@@ -422,7 +422,6 @@ Mcplot mxplot(string infilename="mccode.sim", int verbose=0){
  * ... and then the other way around again when repressed.
  */
 
-
 TObject *mccode_plot_hist(const Char_t *filename, const Char_t *histname, Float_t scaleX=1.0,
 		 Float_t scaleY=1.0,
 		 bool verbose=0){
