@@ -3,12 +3,12 @@
 \chapter{New features in \MCX \version}
 \label{c:changes}
 
-This is the first version of \MCX. As such it implements new features. Bugs are
-reported and traced using the \MCX Trac system \cite{mccode_trac_webpage}
+\MCX is an ongoing evolving project with features being added frequently. While we strive to test it's features thoroughly, bugs
+are inevitable. Bugs are generally reported using the user-mailing list: mcxtrace-users@mcxtrace.org and subsequently (after initial triage)
+tracked using the \MCX\ Trac system \cite{mccode_trac_webpage}
 (shared with its sister project \MCS). We will not present here an extensive
-list of corrections, and we let the reader refer to this bug reporting service
+list of improvements and corrections, and we let the reader refer to this bug reporting service
 for details. Only important changes are indicated here.
-
 Of course, we can not guarantee that the software is bullet proof, but we do our best to correct bugs, when they are reported.\index{Bugs}
 
 %\section{General}
@@ -20,7 +20,7 @@ Of course, we can not guarantee that the software is bullet proof, but we do our
 \label{s:new-features:kernel}
 \index{Kernel}
 
-The following changes concern the 'Kernel' (i.e. the \MCX meta-language and program). See the dedicated chapter in the \textit{User manual} for more details.
+The following changes concern the 'Kernel' (i.e. the \MCX\ meta-language and program). See the dedicated chapter in the \textit{User manual}(This document) for more details.
 
 \section{Run-time}
 \label{s:new-features:run-time}
@@ -36,29 +36,35 @@ which are detailed in the \textit{Component manual}. For an overview see the \te
 %\subsection{General}
 \subsection{New components}
 
-\subsubsection*{Sources}  
-All sources include focussed sampling for optimized calculations
+\subsubsection*{Sources}
+We have revised the following source models to make them work as conherently as possible while retaining the backwards compatibility.
 \begin{description}
 \item[Source\_pt] Point source
 \item[Source\_flat] Flat surface uniform source
 \item[Source\_div] Flat surface uniform source with divergence distribution
 \item[Source\_gaussian] Gaussian crossection source approximating a Bending Magnet
 \end{description}
+Furthermore we now also supply an experimental model of a bending magnet \texttt{Bending\_magnet}.
+The following experimental components have been set up to facilitate interfacing with SPECTRA, Simplex, and GENESIS 1.3.
+In general they take the output of the relevant external program to get a phase space distribution of photons from which McXtrace samples rays
+to trace.
+\begin{description}
+\item[Source\_genesis] Reads the output of a GENESIS 1.3 simulation. Useful for FEL-simulations. 
+\item[Source\_spectra] Reads the output of a SPECTRA simulation. Useful for Synchrotron simulations.
+\item[Source\_simplex] Reads the output of a Simplex simulation. Useful for FEL simulations.
+\end{description}
+
 \subsubsection*{Samples}
 \begin{description}
-\item[Saxs\_spheres] Hard spheres in dilute solution
-\item[Powder\_N] General Powder diffraction component
 \end{description}
 \subsubsection*{Optics}
 \begin{description}
-\item[Lens\_simple] Thin lens approximation of a compund refractive lens (CRL) of any material
-\item[Lens\_parab] Parabolic CRL of any material
-\item[SLit.comp] Perfectly absorbing aperture
-\item[Slit\_N.comp] Multiple absorbing apertures (i.e. a transmission grating)
-\item[Multilayer\_elliptic] Elliptical mulitlayer optic.
-\item[Mirror\_elliptic] Elliptical shape mirror
-\item[Mirror\_parabolic] Parabolic shape mirror
-\item[Mirror\_curved] Cylindrical mirror
+\item[Multilayer\_elliptic] Elliptical multilayer mirror. This component now has the option of using a analytical kinematical approximation to compute refleticity as opposed to supplying a datafile. This is faster, but often less accurate.
+\item[Mirror\_elliptic] Elliptical shape mirror. Major geometry bug-fixes. Is scheduled to be merged with \texttt{Mirror\_curved}
+\item[Mirror\_parabolic] Parabolic shape mirror. Major geometry bug-fixes. Is scheduled to be merged with \texttt{Mirror\_curved}
+\item[Mirror\_curved] Cylindrical mirror. Fixed a bug which prevented its use as an azimuthal focusing mirror, with sideways incidence. 
+
+
 \end{description}
 \subsubsection*{Miscellaneous}
 \begin{description}
