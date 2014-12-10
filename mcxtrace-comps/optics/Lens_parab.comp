@@ -27,12 +27,9 @@
 * yheight: The CRL's dimensions along Y, and if r_ap==0 also the diameter of the aperture [m]
 * d: Distance between two surfaces of the lens along the propagation axis. [m]
 * N: Number of single lenses in a stack. [ ]
-* T: Transmission of the lens. Only used if material_datafile==NULL. [ ]
+* T: Obsolete. Ignored but will be removed in next release. [ ]
+* xwidth: Osolete. Ignored but will be removed in next release. [m]
 * 
-* attenuation coefficient mu is taken from the NIST database and 
-* Be.txt
-*
-*
 *******************************************************************************/
 
 
@@ -230,9 +227,9 @@ INITIALIZE
   prms->mu=malloc(sizeof(double)*(T.rows+1));
   int i;
   for(i=0;i<T.rows;i++){
-      prms->E[i]=T.data[i*T.columns]; 
-      prms->mu[i]=T.data[5+i*T.columns]*prms->rho*1e2;/*mu is now in SI, [m^-1]*/
-      prms->f[i]=T.data[1+i*T.columns];
+    prms->E[i]=T.data[i*T.columns];
+    prms->mu[i]=T.data[5+i*T.columns]*prms->rho*1e2;/*mu is now in SI, [m^-1]*/
+    prms->f[i]=T.data[1+i*T.columns];
   }
   Table_Free(&T);
 
@@ -241,11 +238,7 @@ INITIALIZE
     fprintf(stderr,"Warning(%s): You are using an obsolescent parameter yheight. Please consider r_ap instead.\n", NAME_CURRENT_COMP);
     r_ap=yheight/2.0;
   }
-
 %}
-
-
-
 
 TRACE 
 %{
@@ -264,8 +257,7 @@ TRACE
   k=sqrt(kx*kx+ky*ky+kz*kz); 
   e=K2E*k;  /*Energy in KeV, same unit as datafile */
 
-/*Interpolation of Table Values*/
-
+  /*Interpolation of Table Values*/
   while (e>prms->E[i]){
     i++;
     if (prms->E[i]==-1){
@@ -276,14 +268,14 @@ TRACE
   mu=(1-E)*prms->mu[i-1]+E*prms->mu[i];
   mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
   f=(1-E)*prms->f[i-1]+E*prms->f[i]; 
-  
+
   /*Calculation of Refractive Index */
 
-  rhoel= f*NA*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
-  
+  rhoel= f*NA*(prms->rho*1e-24)/prms->Ar; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
+
   delta= 2.0*M_PI*RE*rhoel/(k*k);
-  beta=mu/(2.0*k);          /*mu and k in  A^-1*/
-  
+  beta=mu/(2.0*k); /*mu and k in  A^-1*/
+
   Refractive_Index_Re = 1.0-delta; 
   Refractive_Index_Im = beta; 
 
@@ -330,12 +322,9 @@ TRACE
     kx=outg.k[0]; ky=outg.k[1]; kz=outg.k[2];
     incid=outg;
   }
-  // transmission calculation
-  if (T==0)
-    ABSORB;
-  else 
-    T=exp(-mu*d_total);
-  p*=T;
+
+  /*Add absorption according to the path length inside the lens material*/
+  p*=exp(-mu*d_total);
 
 %}
 
