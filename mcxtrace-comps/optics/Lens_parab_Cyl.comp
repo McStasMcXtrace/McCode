@@ -180,7 +180,7 @@ DECLARE
   
 INITIALIZE
 %{
-    int status=0;
+  int status=0;
   t_Table T;
   if ( (status=Table_Read(&T,material_datafile,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
@@ -213,7 +213,7 @@ TRACE
   
   int i=0,nr;  
   double w;
-  double E,mu,f,rhoel,dl,e,k,delta,beta,Refractive_Index_Re,Refractive_Index_Im;
+  double E,mu,f,rhoel,dl,d_total,e,k,delta,beta,Refractive_Index_Re,Refractive_Index_Im;
  
   w=(yheight*yheight)/(8.0*r); //calculation of the "depth" of the profile
   
@@ -239,14 +239,14 @@ TRACE
   }
   E=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
   mu=(1-E)*prms->mu[i-1]+E*prms->mu[i];
-  mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
+  //mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
   f=(1-E)*prms->f[i-1]+E*prms->f[i]; 
   
   /*Calculation of Refractive Index */
 
-  rhoel= f*Na*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
-  delta= 2.0*M_PI*Re*rhoel/(k*k);
-  beta=mu/(2.0*k);          /*mu and k in  A^-1*/
+  rhoel= f*NA*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
+  delta= 2.0*M_PI*RE*rhoel/(k*k);
+  beta= mu/(2.0*k);          /*mu and k in  A^-1*/
   //delta=3.40754082e-6; Oleg's value for Be at 10 keV
   
   Refractive_Index_Re = 1.0-delta; 
@@ -260,6 +260,7 @@ TRACE
   incid.coord[1]=y;
   incid.coord[2]=z;
  
+  d_total=0;
   for (nr=0;nr<=(N-1);nr++){
     parab_Cyl.constants[3]=nr*d+nr*2*w; // d constant
     parab_Cyl.constants[4]=1.0/Refractive_Index_Re; // M constant
@@ -286,6 +287,7 @@ TRACE
     
     dl=sqrt( (outg.coord[0]-x)*(outg.coord[0]-x) + (outg.coord[1]-y)*(outg.coord[1]-y) + (outg.coord[2]-z)*(outg.coord[2]-z) );
     PROP_DL(dl);
+    d_total+=dl;
     SCATTER;
 
     kx=outg.k[0]; ky=outg.k[1]; kz=outg.k[2];
@@ -296,7 +298,7 @@ TRACE
    if (T==0)
       ABSORB;
    else 
-     T=exp(-mu*d*N);
+     T=exp(-mu*d_total);
    p*=T;
 
 %}
