@@ -17,43 +17,47 @@
 * Simple refractive x-ray lens
 * 
 * %D
-* Models a refractive lens, with a radius of curvature radius
-* a numerical transmission of 0<T<=1
-* the theoretical lens plane is in the X-Y plane at Z=0
+* Models a stack of N refractive lenses, with a radius of curvature, r, at the apex.
+* The model is a thin-lens approximation where photons are refracted in a the XY plane
+* at Z=0. Absorption is generally disregarded may be handled through the use of the optional
+* transmission parameter T, where 0<=T<=1.
+* Thus, the lens has the focal length of f=R/(2*N*&delta) where the x-ray refractive
+* index is written: n = 1 - &delta + i &beta.
 *
 * %P
 * INPUT PARAMETERS
 *
-* xwidth: Width of lens. Overrides xmin,xmax. (m)
-* yheight:Height of lens. Overrides ymin,ymax. (m)
+* xwidth: Width of lens aperture. (m)
+* yheight:Height of lens aperture. (m)
 * material_datafile: file where the material parameters for the lens may be found. Format is similar to what may be found off the NISP website. [Be.txt] 
-*
+* N: The number of successive lenses in the stack. ( )
+* r: The radius of curvature of the lens (m)
+* radius: Obsolete: Used if r==0, but will be removed in next release. (m)
 * Optional parameters:
-* T: Transmission efficiency of the lens. (1)
+* T: Transmission efficiency of the lens. ( )
 *
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Lens_simple
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (xwidth,yheight,T=1,radius=0.3e-3,N=1) 
+SETTING PARAMETERS (xwidth,yheight,T=1,r=0.3e-3,radius=0,N=1)
 OUTPUT PARAMETERS (prms)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
   %include "read_table-lib"
-  struct mat_prms {
-    int Z;
-    double At, rho;
-    double *E,*delta;
-  };
 %}
 
 DECLARE
 %{
   double xmax,xmin,ymax,ymin;
 
-  struct mat_prms *prms;
+  struct {
+    int Z;
+    double At, rho;
+    double *E,*delta;
+  } *prms;
 
 %}
 
@@ -77,7 +81,7 @@ INITIALIZE
   }
   char **header_parsed;
   header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho","sigma[a]");
-  prms=calloc(1,sizeof(struct mat_prms));
+  prms=calloc(1,sizeof(*prms));
   if (!prms->At) prms->At=strtod(header_parsed[1],NULL);
   if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
   if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
@@ -94,6 +98,16 @@ INITIALIZE
   prms->delta[T.rows]=-FLT_MAX;
   
   Table_Free(&T);
+
+  if (r==0 && radius!=0){
+    fprintf(stderr,"Warning (%s): You are using the obsolescent parameter name radius. Please consider changing to r\n"NAME_CURRENT_COMP); 
+    r=radius;
+  }
+  if(r<=0){
+    fprintf(stderr,"Error (%s): No meaningful radius of curvature found r=%g.\n",NAME_CURRENT_COMP,r);
+    exit(-1);
+  }
+
 %}
 
 TRACE
@@ -145,6 +159,11 @@ TRACE
   else{
     ABSORB;
   }
+%}
+
+FINALLY
+%{
+  free(prms);
 %}
 
 
