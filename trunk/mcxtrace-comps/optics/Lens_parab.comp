@@ -204,8 +204,6 @@ SHARE
     return result; 
   }
 
-  const double Re=2.8179402894e-5;     /* Thomson Scattering length [Angstrom] */
-  const double Na=6.02214179e23;       /* Avogadro's number [atoms per gram-mole]*/
 %}
 
 DECLARE
@@ -281,9 +279,9 @@ TRACE
   
   /*Calculation of Refractive Index */
 
-  rhoel= f*Na*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
+  rhoel= f*NA*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
   
-  delta= 2.0*M_PI*Re*rhoel/(k*k);
+  delta= 2.0*M_PI*RE*rhoel/(k*k);
   beta=mu/(2.0*k);          /*mu and k in  A^-1*/
   
   Refractive_Index_Re = 1.0-delta; 
