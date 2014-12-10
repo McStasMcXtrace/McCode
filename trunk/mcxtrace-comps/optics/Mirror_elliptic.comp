@@ -19,8 +19,13 @@
 * %D 
 * Takes a reflectivity (default=1) as input and reflects rays in a ideal geometry
 * elliptic mirror.
-* The mirror is positioned such that the long axis of the mirror ellipsoid is on the
-* z-axis
+* The mirror is positioned such that the a-axis of the mirror ellipsoid is on the
+* z-axis, the b-axis is along the y-axis and the c is along the x-axis.
+* The reference point of the mirror is the ellipsoid centre, offset by one half-axis along the y-axis.
+* (See the component manual for a drawing). Furthermore, the mirror centre may be shifted by z_offset
+* along the z-axis ( -c < z_offset < c ).
+* This means that to position the mirror correctly.
+* the user positions the ellipsoid governing the mirror shape, not the mirror itself.
 *
 * %P
 * INPUT PARAMETERS
@@ -29,14 +34,19 @@
 * a: [m] long half axis (along z).
 * b: [m] 1st short half axis (along x)
 * c: [m] 2nd short half axis (along y)
+* width: [m] width of the mirror (obsolescent - will be removed in later release)
+* length: [m] length of the mirror (obsolescent - will be removed in later release)
+* yheight: [m] yheight (width) of the mirror. Overrides width.
+* zdepth: [m] zdepth (length) of the mirror. Overrides length.
+* z_offset: [m] shift of mirror centre along the z-axis.
 * 
 * %E
 *******************************************************************************/
 
 
-  DEFINE COMPONENT Mirror_elliptic
+DEFINE COMPONENT Mirror_elliptic
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (R=1, a=0, b=0, c=1, xwidth=1,yheight=1,zdepth=1)
+SETTING PARAMETERS (R=1, a=0, b=0, c=1, width=0, length=0, yheight=1, zdepth=1)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -48,6 +58,7 @@ DECLARE
 
 INITIALIZE
 %{
+
   /*check for 0 a or b*/
   Ox=0;Oy=0;Oz=0;
   if(!c){
@@ -61,24 +72,40 @@ INITIALIZE
   a2=a*a;
   b2=b*b;
   c2=c*c;
+
+  /*check for combinations of width, length etc*/
+
+  /* check for valid z_offset*/
+
 %}
 
 TRACE
 %{
-  double A,B,C,k;
+  double A,B,C,k,kxn,kyn,kzn;
   double t0,t1,l0,l1;
+  /*an offset to the mirror parameters perhaps*/
+
   k=sqrt(kx*kx+ky*ky+kz*kz);
-  C=x*x/a2 + y*y/b2 + z*z/c2 -1;
-  B=2*(kx*x/a2 + ky*y/b2 + kz*z/c2);
-  A=kx*kx/a2 + ky*ky/b2 + kz*kz/c2;
+  kxn=kx/k;kyn=ky/k;kzn=kz/k;
+  /*mirror centre may be shifted along z*/
+  zt=z-z_offset;
+  /*the reference point is on the ellipsoid surface such that the ellipsoid mass lies on th epositive
+    x-side of the zy-plane*/ 
+  xt=x-a;
+
+  C=xt*xt/a2 + y*y/b2 + zt*zt/c2 -1;
+  B=2*(kxn*xt/a2 + kyn*y/b2 + kzn*zt/c2);
+  A=kxn*kxn/a2 + kyn*kyn/b2 + kzn*kzn/c2;
+  
   if(solve_2nd_order(&t0,&t1,A,B,C)){
      l0=t0*k;
      l1=t1*k;
      if (l1>0) {
-       fprintf(stderr,"warning: x-ray hits mirror %s on back surface\n",NAME_CURRENT_COMP);
+       fprintf(stderr,"Warning(%s): x-ray hits mirror on back surface\n",NAME_CURRENT_COMP);
      }
      PROP_DL(l0);
-     if (x>-xwidth/2.0 && x<xwidth/2.0 && z>-zdepth/2.0 && z<zdepth/2.0){
+     /*this should use the path length or whatever*/
+     if ( (fabs(y)<yheight/2.0) && (fabs(zt)<zdepth/2.0) ){
        /*reflect through normal vector*/
        double nx,ny,nz,kfx,kfy,kfz,kdotn;
        nx=Ox-x;
