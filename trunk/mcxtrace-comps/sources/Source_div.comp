@@ -137,6 +137,7 @@ TRACE
   }
   x=prms.xmin+rand01()*xwidth;
   y=prms.ymin+rand01()*yheight;
+  z=0;
 
   if (spectrum_file){
     double pp=0;
