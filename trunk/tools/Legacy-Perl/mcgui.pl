@@ -1277,7 +1277,7 @@ sub menu_run_simulation {
         new_simulation_results($w);
         # In case of non-PGPLOT plotter, we can not read the data from disk.
         # Instead, we simply keep $newsi information in $inf_sim
-        if ($plotter !~ /PGPLOT|McStas|Matlab|Gnuplot/i) {
+        if ($plotter !~ /PGPLOT|McStas|Matlab|Gnuplot|NeXus/i) {
             read_sim_data($w);
         } else {
             $inf_sim=$newsi;
