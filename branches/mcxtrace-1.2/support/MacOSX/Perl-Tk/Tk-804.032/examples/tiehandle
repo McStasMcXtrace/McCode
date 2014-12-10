@@ -1,0 +1,23 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+
+my $mw = MainWindow->new;
+my $t  = $mw->Scrolled('Text');
+$t->pack(-expand => 1, -fill => 'both');
+
+tie *TEXT,Tk::Text,$t->Subwidget('text');
+
+print TEXT "Hi there\n";
+
+seek(DATA,0,0);
+while (<DATA>)
+ {
+  print TEXT;
+ }
+
+MainLoop;
+
+__DATA__
+
+

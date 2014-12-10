@@ -1,0 +1,78 @@
+#!/usr/local/bin/perl -w
+
+# XXX Does not work:
+# "Can't locate object method "CLEAR" via package "Tk::Text::Contents" at tietext line 63"
+
+use Tk;
+
+{package Tk::Text::Contents;
+
+ sub TIEARRAY
+ {
+  print "TIEARRAY(",join(',',@_),")\n";
+  my ($class,$text) = @_;
+  return bless [$text],$class;
+ }
+
+ sub FETCH
+ {
+# print "FETCH(",join(',',@_),")\n";
+  my ($obj,$key) = @_;
+  my $text = ${$obj}[0];
+  $key++;
+  return $text->get($key.".0" ,$key.".0+1 line");
+ }
+
+ sub STORE
+ {
+#  print "STORE(",join(',',@_),")\n";
+  my ($obj,$key,$val) = @_;
+  my $text = ${$obj}[0];
+  $key++;
+  while ($text->compare($key.".0",'>','end'))
+   {
+    $text->insert('end',"\n");
+   }
+  if ($text->compare($key.".0+1 line",'<','end'))
+   {
+    $text->delete($key. ".0" ,$key.".0+1 line");
+   }
+# $val .= "\n" unless ($val =~ /\n$/);
+  chomp($val);
+  $text->insert($key . ".0" ,$val."\n");
+  print "$key:$val\n";
+  $text->update;
+ }
+
+ sub LENGTH
+ {
+  my ($obj) = @_;
+  my $text = ${$obj}[0];
+  print $text->index("end"),"\n";
+  my ($line,$col) = split(/\./,$text->index("end"));
+  $line -= 3;
+  return $line;
+ }
+
+}
+
+$top = MainWindow->new;
+
+$text = $top->Text;
+$text->pack;
+
+tie @lines,Tk::Text::Contents,$text;
+
+
+@lines = <>;
+
+my $line;
+
+foreach $line (@lines)
+ {
+#   print "Got $_";
+#  $line = "New:" . $line;
+   s/^/Added:/;
+ }
+
+MainLoop;

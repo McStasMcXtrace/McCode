@@ -1,0 +1,28 @@
+
+use strict;
+use Tk ();
+use Tk::TList;
+
+my $mw = Tk::MainWindow->new();
+my $num = 150;
+$mw->Label(-text=>"\nA TList with $num widgets\n")->pack;
+my ($tl, $orient);
+$mw->Checkbutton(-command => sub{ $tl->configure(-orient=> $orient) },
+                -onvalue  => 'horizontal',
+                -offvalue => 'vertical',
+                -variable => \$orient,
+                -text     => "horizontal Orientation",
+                )->pack;
+$tl = $mw->Scrolled('TList', -scrollbars => 'osow');
+my $sw = $tl->Subwidget('scrolled');
+$tl->pack(-expand=>'yes',-fill=>'both');
+my $l;
+foreach (1 .. $num)
+  {
+    $tl->insert('end', -itemtype => 'window', -window=> $sw->Button(-text=>"**$_**") );
+  }
+Tk::MainLoop;
+__END__
+
+
+

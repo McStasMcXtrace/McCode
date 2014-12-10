@@ -1,0 +1,116 @@
+#!perl
+# -*- cperl -*-
+use strict;
+use Config;
+use File::Copy;
+
+chmod(0666,'Makefile');
+unlink('Makefile');
+
+unless (try_configure())
+ {
+  my $file;
+  if ($^O eq 'MSWin32')
+   {
+    if ($Config{'cc'} =~ /gcc/ && $Config{'make'} =~ /dmake/)
+     {
+      # This is the StrawberryPerl configuration
+      $file = 'scripts/makefile.gcc';
+     }
+    elsif ($Config{'cc'} =~ /gcc/)
+     {
+      $file = 'scripts/makefile.mingw';
+     }
+    elsif ($Config{'cc'} =~ /bcc/)
+     {
+      $file = 'scripts/makefile.bc32';
+     }
+    else
+     {
+      $file = 'scripts/makefile.vcwin32';
+      warn "Assuming ".$Config{'cc'}." is visual C of some kind\n";
+     }
+   }
+  else
+   {
+    if ($Config{'gccversion'})
+     {
+      $file = 'scripts/makefile.gcc';
+     }
+    else
+     {
+      if (($Config{archname} =~ /^IA64\./) && ($^O eq "hpux"))
+       {
+        $file = 'scripts/makefile.hp64';
+       }
+      elsif ($^O eq 'aix') # untested! see http://rt.cpan.org/Ticket/Display.html?id=40064
+       {
+        $file = 'scripts/makefile.aix';
+       }
+      else
+       {
+        $file = 'scripts/makefile.std';
+        my %makefiles = map { /makefile\.(.*)/ && ($1 => $_) } glob('scripts/makefile.*');
+        foreach my $arch (sort keys %makefiles)
+         {
+          if ($^O =~ /$arch/i)
+           {
+            $file = $makefiles{$arch};
+           }
+         }
+       }
+     }
+    warn "Using $file for $^O\nIf make fails read PNG/libpng/INSTALL\n";
+   }
+
+  copy($file,"Makefile")
+   || die "Cannot copy $file to Makefile:$!";
+ }
+
+sub try_configure
+{
+ if ($^O eq 'darwin' ||
+     $Config{'archname'} =~ m{^(?:
+ 			       amd64-.* # e.g. freebsd, netbsd, openbsd
+			      |OpenBSD.amd64-openbsd
+ 			      |i386-freebsd
+			      |x86_64-.* # e.g. linux, dragonfly
+ 			      |[^-]+-solaris # e.g. sun4-solaris, i86pc-solaris
+ 			      |IP35-irix
+ 			      )(?:$|-.*)
+ 			    }x
+    )
+  {
+   local $ENV{CC} = $Config{cc};
+   local $ENV{CFLAGS} = "$Config{ccflags} $Config{cccdlflags}";
+   if ($^O eq 'darwin' && $ENV{CFLAGS} =~ m{-arch .*-arch }) { # multiple architectures not supported --- at least MacOSX is affected
+       $ENV{CFLAGS} =~ s{-arch \S+}{}g;
+   }
+   system(sh => "./configure");
+   if ($? == 0 && -s "Makefile")
+    {
+     open my $fh, ">>", "Makefile" or die "Can't write to Makefile: $!";
+     print $fh <<'EOF';
+
+libpng.a: all
+	cp .libs/libpng.a libpng.a
+
+clean:
+	rm -f libpng.a
+
+# Empty rule needed since ExtUtils::MakeMaker 6.36 (ca.)
+test:
+
+EOF
+     return 1;
+    }
+   else
+    {
+     return 0;
+    }
+  }
+ return 0;
+}
+
+1;
+

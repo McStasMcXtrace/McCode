@@ -1,0 +1,103 @@
+#  Copyright (c) 1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::Bitmap - Images that display two colors
+
+=for category  Tk Image Classes
+
+=head1 SYNOPSIS
+
+S<    >I<$image> = I<$widget>-E<gt>B<Bitmap>?(I<name>??,I<options>?)
+
+=head1 DESCRIPTION
+
+A bitmap is an image whose pixels can display either of two colors
+or be transparent.
+A bitmap image is defined by four things:  a background color,
+a foreground color, and two bitmaps, called the I<source>
+and the I<mask>.
+Each of the bitmaps specifies 0/1 values for a rectangular
+array of pixels, and the two bitmaps must have the same
+dimensions.
+For pixels where the mask is zero, the image displays nothing,
+producing a transparent effect.
+For other pixels, the image displays the foreground color if
+the source data is one and the background color if the source
+data is zero.
+
+=head1 CREATING BITMAPS
+
+Bitmaps are created using I<$widget>-E<gt>B<Bitmap>.
+Bitmaps support the following I<options>:
+
+=over 4
+
+=item B<-background> =E<gt> I<color>
+
+Specifies a background color for the image in any of the standard
+ways accepted by Tk.  If this option is set to an empty string
+then the background pixels will be transparent.  This effect
+is achieved by using the source bitmap as the mask bitmap, ignoring
+any B<-maskdata> or B<-maskfile> options.
+
+=item B<-data> =E<gt> I<string>
+
+Specifies the contents of the source bitmap as a string.
+The string must adhere to X11 bitmap format (e.g., as generated
+by the B<bitmap> program).
+If both the B<-data> and B<-file> options are specified,
+the B<-data> option takes precedence.
+
+=item B<-file> =E<gt> I<name>
+
+I<name> gives the name of a file whose contents define the
+source bitmap.
+The file must adhere to X11 bitmap format (e.g., as generated
+by the B<bitmap> program).
+
+=item B<-foreground> =E<gt> I<color>
+
+Specifies a foreground color for the image in any of the standard
+ways accepted by Tk.
+
+=item B<-maskdata> =E<gt> I<string>
+
+Specifies the contents of the mask as a string.
+The string must adhere to X11 bitmap format (e.g., as generated
+by the B<bitmap> program).
+If both the B<-maskdata> and B<-maskfile> options are specified,
+the B<-maskdata> option takes precedence.
+
+=item B<-maskfile> =E<gt> I<name>
+
+I<name> gives the name of a file whose contents define the
+mask.
+The file must adhere to X11 bitmap format (e.g., as generated
+by the B<bitmap> program).
+
+=back
+
+=head1 IMAGE METHODS
+
+When a bitmap image is created, Tk also creates a new object.
+This object supports the B<configure> and B<cget> methods
+described in L<Tk::options> which can be used to enquire and
+modify the options described above.
+
+=head1 SEE ALSO
+
+L<Tk::Image|Tk::Image>
+L<Tk::Pixmap|Tk::Pixmap>
+L<Tk::Photo|Tk::Photo>
+
+=head1 KEYWORDS
+
+bitmap, image
+
+=cut

@@ -1,0 +1,32 @@
+SPARC Solaris2.5* is what perl/Tk's was originaly delveloped on,
+so most things work. I still build regularly on Solaris2.5.1, Solaris2.6
+and occasionally on Solaris7 (aka Solaris2.7).
+
+I normally use gcc-2.8.1 and egcs-1.1.2 but have tested (occasionally) with
+SunPRO compilers.
+
+*** IMPORTANT Solaris7 and gcc issue ***
+There are problems with certain patches from Sun and certain gcc versions.
+See gcc source distribuition or
+http://gcc.gnu.org/install/specific.html#sparc-sun-solaris2.7
+for details.
+
+In particular Robert <sobrika@erols.com> writes
+"
+By simply removing Solaris 7 patch 107058-01 from my machine I was able to
+re-make Perl/Tk and pass all the post-installation tests.  Just for the record,
+I am using the gcc 2.8.1 and perl 5.00503 binary distributions from the
+sunfreeware site. The perl binary was compiled with gcc 2.8.1.
+"
+
+I have only tested with openwindows, and recommend that as an optimized X11R5
+unless you really need X11R6isms (which I have not tried).
+
+I have one report that /usr/ccs/bin/make fails to build correctly.
+I cannot reproduce the problem with current MakeMaker, but it was
+reported that using GNU make (which is what I _usually_ use) fixed the problem.
+
+There is code to comprehend the way openwindows deals with locale issues.
+The workround may _cause_ problems if you are using another X11 not openwin.
+
+

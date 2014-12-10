@@ -1,0 +1,56 @@
+#!/usr/local/bin/perl -w
+use strict;
+
+use Tk;
+
+my $top = MainWindow->new;
+
+my $p = $top->Menu(-menuitems =>
+                   [ '------',
+                     [Button => 'Quit', -command => ['destroy' => $top]],
+                     '------'
+                   ]);
+
+my $anchor  = "c";
+my $overanchor  = "c";
+my $where   = $top;
+
+sub Show
+{
+ $p->Popup(-popanchor  => $anchor, -overanchor => $overanchor, -popover => $where);
+}
+
+sub Anchor
+{
+ my ($top,$label,$var) = @_;
+ my $out = $top->Frame(-label => $label,-relief => 'ridge',-borderwidth => 3);
+ my $r;
+ foreach $r ([qw(nw n ne)],[qw(w c e)],[qw(sw s se)])
+  {
+   my $f = $out->Frame;
+   foreach $a (@$r)
+    {
+     $b = $f->Radiobutton(-text=> $a, -variable => $var, -value => $a,
+                          -command => \&Show);
+     $b->pack(-side => 'left');
+    }
+   $f->pack;
+  }
+ return $out;
+}
+
+my $w = $top->Frame;
+my $b = $w->Radiobutton(-text => 'Window', -variable => \$where,
+                -value => $top, -command => \&Show);
+$b->pack(-side=>'left');
+
+$w->Radiobutton(-text => 'Screen', -variable => \$where,
+                -value => undef, -command => \&Show)->pack(-side=>'left');
+$w->Radiobutton(-text => 'Cursor', -variable => \$where,
+                -value => 'cursor', -command => \&Show)->pack(-side=>'left');
+$w->pack;
+
+Anchor($top,"Self",\$anchor)->pack(-side => 'left');
+Anchor($top,"Over",\$overanchor)->pack(-side => 'right');
+
+MainLoop;

@@ -1,0 +1,121 @@
+Perl/Tk can be installed using:
+
+    perl Makefile.PL
+    make
+    make test
+    make install
+
+On Windows platform, replace make by either dmake or nmake. Please
+read README-Strawberry.txt and README-ActiveState.txt for additional
+information for Strawberry Perl respective ActivePerl.
+
+For other systems, please refer to the specific README.$OS file for
+additional information.
+
+After installation, a demonstration program may be started using:
+
+    widget
+
+Compiled third-party Perl/Tk modules have to be recompiled after
+installing a new Perl/Tk version. Some known such modules are:
+* Tk::TableMatrix
+* Tk::Zinc
+* Tk::TIFF
+* Tk::Canvas::Point
+
+---------------------------------------------------------
+Older and probabably outdated notes follow:
+
+This file was pre-historic - so I have pruned it to the essentials,
+and the bits that still looked correct.
+
+With modern perl and CPAN.pm you should be able to type:
+
+perl -MCPAN -e shell
+make NI-S/Tk800.0_01.tar.gz
+
+Or do it by hand as follows:
+
+get the Tk800.0_01.tar.gz file - use binary mode if FTP'ing.
+
+Unpack it e.g.
+
+zcat Tk800.0_01.tar.gz | tar xf -
+
+cd to the directory distribution unpacks to.
+
+perl Makefile.PL
+make
+make test
+
+If Makefile.PL reports that it cannot find X, or chooses a version
+you don't like you can specify a version on the command line:
+
+perl Makefile.PL X11=/usr/local/X11R5
+
+If X's include and lib are not under a common parent they can be specified
+separately:
+
+perl Makefile.PL X11INC=/usr/local/share/X11R5/include X11LIB=/usr/local/arch/X11R5/lib
+
+'make test' is a little tedious as it re-checks all the dependencies.
+
+perl -Mblib demos/widget
+
+Does more-or-less the same thing.
+You can also run the less polished 'demos' in the top level directory
+the same way e.g.:
+
+perl -Mblib basic_demo
+
+You should now install using one of
+the make targets:
+
+make install       # normally site unless overridden as above
+
+make INSTALLDIRS=perl  # Force perl
+
+make INSTALLDIRS=site  # Force site
+
+Above call these targets (which may not survive MakeMaker changes):
+
+make install_site  # Force site
+make install_perl  # Force perl
+
+Once installed the demos in the demos sub-directory should run
+(if #! line is right):
+
+./demos/widget
+
+---------------------------------------------------------
+
+For static linking the following is how it is supposed to work
+(I think, but I don't use static linking normally, this scheme
+ worked as far as this on one trial under SunOS4.)
+
+perl Makefile.PL
+make
+make tkperl
+make test   # should work
+
+This builds a perl with Tk statically linked in the Tk directory
+thus:
+
+./tkperl -Mblib demos/widget
+./tkperl -Mblib basic_demo
+
+should now work.
+
+'make install' subject to discussion above is then done.
+I don't want to try it on my system incase is breaks the dynamic version,
+and it gets harder and harder to keep track of all the options.
+
+You may also have to do :
+
+make -f Makefile.aperl
+
+And you will have to change #! line in demo scripts to .../bin/tkperl
+
+
+
+

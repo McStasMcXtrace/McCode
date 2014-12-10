@@ -1,0 +1,407 @@
+#  Copyright (c) 1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::Font - Create and inspect fonts.
+
+=for category  Tk Generic Methods
+
+=head1 SYNOPSIS
+
+S<    >I<$widget>->B<Font>(I<option>?, I<arg, arg, ...>?)
+
+S<    >I<$font>->I<Option>?(I<arg, arg, ...>)?
+
+=head1 DESCRIPTION
+
+The B<Font> method provides several facilities for dealing with
+fonts, such as defining named fonts and inspecting the actual attributes of
+a font.  The command has several different forms, determined by the
+first argument.  The following forms are currently supported:
+
+=over 4
+
+=item I<$font>-E<gt>B<actual>(I<-option>?)
+
+=item I<$widget>-E<gt>B<fontActual>(I<font>?, I<-option>?)
+
+Returns information about the actual attributes that are obtained when
+I<font> is used on I<$font>'s display; the actual attributes obtained
+may differ from the attributes requested due to platform-dependant
+limitations, such as the availability of font families and pointsizes.
+I<font> is a font description; see L<"FONT DESCRIPTION"> below.  If
+I<option> is specified, returns the value of that attribute; if it is
+omitted, the return value is a list of all the attributes and their values.
+See L<"FONT OPTIONS"> below for a list of the possible attributes.
+
+=item I<$font>-E<gt>B<configure>(I<-option>??=>I<value>, I<-option>=>I<value>, ...?)
+
+Query or modify the desired attributes for I<$font>.
+If no I<-option> is specified, returns a list describing
+all the options and their values for I<fontname>.  If a single I<-option>
+is specified with no I<value>, then returns the current value of that
+attribute.  If one or more I<option-value> pairs are specified,
+then the method modifies the given named font to have the given values; in
+this case, all widgets using that font will redisplay themselves using the
+new attributes for the font.  See L<"FONT OPTIONS"> below for a list of the
+possible attributes.
+
+Note: the above behaviour differs in detail to B<configure> on widgets,
+images etc.
+
+=item I<$font> = I<$widget>-E<gt>B<Font>(I<-option>=>I<value>, ...>?)
+
+=item I<$font> = I<$widget>-E<gt>B<fontCreate>(?I<fontname>??, I<-option>=>I<value>, ...>?)
+
+Creates a new font object and returns a reference to it.
+I<fontname> specifies the name for the font; if it is omitted, then Tk generates
+a new name of the form B<font>I<x>, where I<x> is an integer.  There may be any
+number of I<option-value> pairs, which provide the desired attributes for
+the new named font.  See L<"FONT OPTIONS"> below for a list of the possible
+attributes.
+
+Note: the created font is I<not> shared between widgets of different
+L<MainWindow|Tk::MainWindow>s.
+
+=item I<$font>-E<gt>B<delete>
+
+=item I<$widget>-E<gt>B<fontDelete>(I<fontname>?, I<fontname>, ...?)
+
+Delete the specified named fonts.  If there are widgets using the named font,
+the named font won't actually be deleted until all the instances are
+released.  Those widgets will continue to display using the last known values
+for the named font.  If a deleted named font is subsequently recreated with
+another call to B<fontCreate>, the widgets will use the new named font
+and redisplay themselves using the new attributes of that font.
+
+=item I<$widget>-E<gt>B<fontFamilies>
+
+The return value is a list of the case-insensitive names of all font families
+that exist on I<$widget>'s display.
+
+=item I<$font>-E<gt>B<measure>(I<text>)
+
+=item I<$widget>-E<gt>B<fontMeasure>(I<font>, I<text>)
+
+Measures the amount of space the string I<text> would use in the given
+I<font> when displayed in I<$widget>.  I<font> is a font description;
+see L<"FONT DESCRIPTION"> below.
+The return value is the total width in pixels
+of I<text>, not including the extra pixels used by highly exagerrated
+characters such as cursive ``I<f>''.  If the string contains newlines or tabs,
+those characters are not expanded or treated specially when measuring the
+string.
+
+=item I<$font>-E<gt>B<metrics>(I<-option>?)
+
+=item I<$widget>-E<gt>B<fontMetrics>(I<font>?, I<-option>?)
+
+Returns information about the metrics (the font-specific data), for
+I<font> when it is used on I<$widget>'s display.  I<font> is a font
+description; see L<"FONT DESCRIPTION"> below.
+If I<option> is specified,
+returns the value of that metric; if it is omitted, the return value is a
+list of all the metrics and their values.  See L<"FONT METRICS"> below for a list
+of the possible metrics.
+
+=item I<$widget>-E<gt>B<fontNames>
+
+The return value is a list of all font objects that are currently defined for
+I<$widget>'s MainWindow.
+
+=back
+
+=head1 FONT DESCRIPTION
+
+The following formats are accepted as a font description anywhere
+I<font> is specified as an argument above; these same forms are also
+permitted when specifying the B<-font> option for widgets.
+
+=over 4
+
+=item [1] I<fontname>
+
+The name of a named font, created using the B<fontCreate> method.  When
+a widget uses a named font, it is guaranteed that this will never cause an
+error, as long as the named font exists, no matter what potentially invalid
+or meaningless set of attributes the named font has.  If the named font
+cannot be displayed with exactly the specified attributes, some other close
+font will be substituted automatically.
+
+=item [1a] I<$font>
+
+A font object created using the B<Font> method. This is essentially the same
+as using a named font. The object is a reference to the name, and carries
+additional information e.g. which MainWindow it relates to in an manner peculiar
+to perl/Tk.
+
+=item [2] I<systemfont>
+
+The platform-specific name of a font, interpreted by the graphics server.
+This also includes, under X, an XLFD (see L<[4]|/[4]>) for which a single ``B<*>''
+character was used to elide more than one field in the middle of the
+name.  See L<"PLATFORM-SPECIFIC ISSUES"> for a list of the system fonts.
+
+=item [3] [I<family>,?I<size>,??I<style>,??I<style ...>?]
+
+A properly formed list whose first element is the desired font
+I<family> and whose optional second element is the desired I<size>.
+The interpretation of the I<size> attribute follows the same rules
+described for L<-size|/-size> in L<"FONT OPTIONS"> below.  Any additional optional
+arguments following the I<size> are font I<style>s.  Possible values
+for the I<style> arguments are as follows:
+
+    normal	bold	roman	italic
+    underline	overstrike
+
+=item [4] X-font names (XLFD)
+
+A Unix-centric font name of the form
+I<-foundry-family-weight-slant-setwidth-addstyle-pixel-point-resx-resy-spacing-width-charset-encoding>.
+The ``B<*>'' character may be used to skip individual fields that the
+user does not care about.  There must be exactly one ``B<*>'' for each
+field skipped, except that a ``B<*>'' at the end of the XLFD skips any
+remaining fields; the shortest valid XLFD is simply ``B<*>'', signifying
+all fields as defaults.  Any fields that were skipped are given default
+values.  For compatibility, an XLFD always chooses a font of the specified
+pixel size (not point size); although this interpretation is not strictly
+correct, all existing applications using XLFDs assumed that one ``point''
+was in fact one pixel and would display incorrectly (generally larger) if
+the correct size font were actually used.
+
+=item [5] I<option value >?I<option value ...>?
+
+A properly formed list of I<option-value> pairs that specify
+the desired attributes of the font, in the same format used when defining
+a named font; see L<"FONT OPTIONS"> below.
+
+=back
+
+When font description I<font> is used, the system attempts to parse the
+description according to each of the above five rules, in the order specified.
+Cases [1] and [2] must match the name of an existing named font or of a
+system font.  Cases [3], [4], and [5] are accepted on all
+platforms and the closest available font will be used.  In some situations
+it may not be possible to find any close font (e.g., the font family was
+a garbage value); in that case, some system-dependant default font is
+chosen.  If the font description does not match any of the above patterns,
+an error is generated.
+
+=head1 FONT METRICS
+
+The following options are used by the B<metrics>/B<fontMetrics> method to query
+font-specific data determined when the font was created.  These properties are
+for the whole font itself and not for individual characters drawn in that
+font.  In the following definitions, the ``baseline'' of a font is the
+horizontal line where the bottom of most letters line up; certain letters,
+such as lower-case ``g'' stick below the baseline.
+
+=over 4
+
+=item B<-ascent>
+
+The amount in pixels that the tallest letter sticks up above the baseline of
+the font, plus any extra blank space added by the designer of the font.
+(I<$font>-E<gt>B<ascent> is provided for compatibility.)
+
+=item B<-descent>
+
+The largest amount in pixels that any letter sticks down below the baseline
+of the font, plus any extra blank space added by the designer of the font.
+(I<$font>-E<gt>B<descent> is provided for compatibility.)
+
+=item B<-linespace>
+
+Returns how far apart vertically in pixels two lines of text using the same
+font should be placed so that none of the characters in one line overlap any
+of the characters in the other line.  This is generally the sum of the ascent
+above the baseline line plus the descent below the baseline.
+
+=item B<-fixed>
+
+Returns a boolean flag that is ``B<1>'' if this is a fixed-width font,
+where each normal character is the the same width as all the other
+characters, or is ``B<0>'' if this is a proportionally-spaced font, where
+individual characters have different widths.  The widths of control
+characters, tab characters, and other non-printing characters are not
+included when calculating this value.
+
+=back
+
+=head1 FONT OPTIONS
+
+The following options are supported on all platforms, and are used when
+constructing a named font or when specifying a font using style [5] as
+above:
+
+=over 4
+
+=item B<-family> => I<name>
+
+The case-insensitive font family name.  Tk guarantees to support the font
+families named B<Courier> (a monospaced ``typewriter'' font), B<Times>
+(a serifed ``newspaper'' font), and B<Helvetica> (a sans-serif
+``European'' font).  The most closely matching native font family will
+automatically be substituted when one of the above font families is used.
+The I<name> may also be the name of a native, platform-specific font
+family; in that case it will work as desired on one platform but may not
+display correctly on other platforms.  If the family is unspecified or
+unrecognized, a platform-specific default font will be chosen.
+
+=item B<-size> => I<size>
+
+The desired size of the font.  If the I<size> argument is a positive
+number, it is interpreted as a size in points.  If I<size> is a negative
+number, its absolute value is interpreted as a size in pixels.  If a
+font cannot be displayed at the specified size, a nearby size will be
+chosen.  If I<size> is unspecified or zero, a platform-dependent default
+size will be chosen.
+
+The original Tcl/Tk authors believe sizes should normally be specified in points
+so the application will remain the same ruler size on the screen, even when
+changing screen resolutions or moving scripts across platforms. While this is an
+admirable goal it does not work as well in practice as they hoped.
+The mapping between points and  pixels is set when the application starts, based
+on alleged properties of the installed monitor, but it can be overridden by
+calling the  L<scaling|Tk::Widget/scaling> command. However this can be
+problematic when system has no way of telling if (say) an 11" or 22" monitor is
+attached, also if it I<can> tell then some monitor sizes may result in poorer
+quality scaled fonts being used rather than a "tuned" bitmap font.
+In addition specifying pixels is useful in certain circumstances such as when a piece of text
+must line up with respect to a fixed-size bitmap.
+
+At present the Tcl/Tk scheme is used unchanged, with "point" size being returned
+by I<actual> (as an integer), and used internally. Suggestions for work-rounds
+to undesirable behaviour welcome.
+
+=item B<-weight> => I<weight>
+
+The nominal thickness of the characters in the font.  The value
+B<normal> specifies a normal weight font, while B<bold> specifies a
+bold font.  The closest available weight to the one specified will
+be chosen.  The default weight is B<normal>.
+
+=item B<-slant> => I<slant>
+
+The amount the characters in the font are slanted away from the
+vertical.  Valid values for slant are B<roman> and B<italic>.
+A roman font is the normal, upright appearance of a font, while
+an italic font is one that is tilted some number of degrees from upright.
+The closest available slant to the one specified will be chosen.
+The default slant is B<roman>.
+
+=item B<-underline> => I<boolean>
+
+The value is a boolean flag that specifies whether characters in this
+font should be underlined.  The default value for underline is B<false>.
+
+=item B<-overstrike> => I<boolean>
+
+The value is a boolean flag that specifies whether a horizontal line should
+be drawn through the middle of characters in this font.  The default value
+for overstrike is B<false>.
+
+=back
+
+=head1 PLATFORM-SPECIFIC ISSUES
+
+The following named system fonts are supported:
+
+=over 4
+
+=item X Windows:
+
+All valid X font names, including those listed by xlsfonts(1), are available.
+
+=item MS Windows:
+
+ system       ansi       device
+ systemfixed  ansifixed  oemfixed
+
+=item Macintosh:
+
+ system       application
+
+=back
+
+=head1 COMPATIBILITY WITH PREVIOUS VERSIONS
+
+In prior versions of perl/Tk the I<$widget>-E<gt>B<Font> method was a perl
+wrapper on the original "[4] X-font names (XLFD)" style as described above
+(which was the only form supported by versions of core tk prior to version
+tk8.0).
+This module is provided in its original form (it has just been renamed)
+via:
+
+ use Tk::X11Font;
+ I<$widget>-E<gt>B<X11Font>(...)
+
+However the methods of the old scheme have been mimiced as closely as possible
+with the new scheme. It is intended that code should work without modification,
+except for the case of using :
+
+  @names = $font->Name;
+
+i.e. the I<Name> method in an array/list context. This now returns one element
+on all platforms (as it did on Win32), while previously on X systems it returned
+a list of fonts that matched an under-specified pattern.
+
+Briefly the methods supported for compatibilty are as follows:
+
+=over 4
+
+=item $newfont = I<$font>-E<gt>B<Clone>(I<-option>=>I<value>, ...>?)
+
+Returns a new font object I<$newfont> related to the original I<$font> by
+changing the values of the specified I<-option>s.
+
+=item I<$font>-E<gt>Family - maps to -family
+
+=item I<$font>-E<gt>Weight - maps to -weight
+
+=item I<$font>-E<gt>Slant - maps to -slant
+
+=item I<$font>-E<gt>Pixel and Point - map to -size
+
+=back
+
+New code should use I<$font>-E<gt>B<configure> to achieve same effect as last
+four items above.
+
+=over 4
+
+=item Foundry, Swidth, Adstyle, Xres, Yres, Space, Avgwidth, Registry, Encoding
+
+Are all ignored if set, and return '*' if queried.
+
+=item I<$font>-E<gt>B<Name>
+
+Returns the name of a named font, or a string representation of an unnamed
+font. Using I<$font> in a scalar context does the same. Note this is distinctly
+different from behaviour of L<X11Font's Name|Tk::X11Font/Name( [ $max ] )> in
+a list context.
+
+=item I<$font>-E<gt>B<Pattern>
+
+Returns a XLFD string for the font based on I<actual> values, and some heuristics
+to map Tk's forms to the "standard" X conventions.
+
+=back
+
+
+=head1 SEE ALSO
+
+L<Tk::options|Tk::options>
+
+L<Tk::X11Font|Tk::X11Font>
+
+=head1 KEYWORDS
+
+font
+
+=cut
+

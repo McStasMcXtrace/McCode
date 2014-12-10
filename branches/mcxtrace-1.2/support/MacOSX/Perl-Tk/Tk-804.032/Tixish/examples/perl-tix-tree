@@ -1,0 +1,41 @@
+#!/usr/bin/perl -w
+#
+# Perl/Tk version of Tix4.1.0/demos/samples/Tree.tcl.  Not quite as
+# nice as the Tix version: fonts and colors are different, and the
+# collapse/expand buttons are higlighted differently.
+#
+# Chris Dean <ctdean@cogit.com>
+
+use lib "..";
+
+use strict;
+use Tk;
+use Tk::Tree;
+
+my $top = new MainWindow( -title => "Tree" );
+
+my $tree = $top->Scrolled( qw/Tree -separator \ -exportselection 1
+                           -scrollbars osoe / );
+$tree->pack( qw/-expand yes -fill both -padx 10 -pady 10 -side top/ );
+
+my @directories = qw( C: C:\Dos C:\Windows C:\Windows\System );
+
+foreach my $d (@directories) {
+    my $text = (split( /\\/, $d ))[-1];
+    $tree->add( $d, -text => $text, -image => $tree->Getimage("folder") );
+}
+
+$tree->configure( -command => sub { print "@_\n" } );
+
+# The tree is fully expanded by default.
+$tree->autosetmode();
+
+my $ok = $top->Button( qw/-text Ok -underline 0 -width 6/,
+                       -command => sub { exit } );
+my $cancel = $top->Button( qw/-text Cancel -underline 0 -width 6/,
+                           -command => sub { exit } );
+
+$ok->pack(     qw/-side left  -padx 10 -pady 10/ );
+$cancel->pack( qw/-side right -padx 10 -pady 10/ );
+
+MainLoop();

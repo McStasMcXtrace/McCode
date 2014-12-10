@@ -1,0 +1,90 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_CreateEventHandler, Tk_DeleteEventHandler - associate procedure callback with an X event
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_CreateEventHandler>(I<tkwin, mask, proc, clientData>)
+
+B<Tk_DeleteEventHandler>(I<tkwin, mask, proc, clientData>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_Window tkwin (in)
+
+Token for window in which events may occur.
+
+=item "unsigned long" mask (in)
+
+Bit-mask of events (such as B<ButtonPressMask>)
+for which I<proc> should be called.
+
+=item Tk_EventProc *proc (in)
+
+Procedure to invoke whenever an event in I<mask> occurs
+in the window given by I<tkwin>.
+
+=item ClientData clientData (in)
+
+Arbitrary one-word value to pass to I<proc>.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_CreateEventHandler> arranges for I<proc> to be
+invoked in the future whenever one of the event types specified
+by I<mask> occurs in the window specified by I<tkwin>.
+The callback to I<proc> will be made by B<Tk_HandleEvent>;
+this mechanism only works in programs that dispatch events
+through B<Tk_HandleEvent> (or through other Tk procedures that
+call B<Tk_HandleEvent>, such as B<Tk_DoOneEvent> or
+B<Tk_MainLoop>).
+
+I<Proc> should have arguments and result that match the
+type B<Tk_EventProc>:
+
+ typedef void Tk_EventProc(
+ 	ClientData clientData,
+ 	XEvent *eventPtr);
+
+The I<clientData> parameter to I<proc> is a copy of the I<clientData>
+argument given to B<Tk_CreateEventHandler> when the callback
+was created.  Typically, I<clientData> points to a data
+structure containing application-specific information about
+the window in which the event occurred.  I<EventPtr> is
+a pointer to the X event, which will be one of the ones
+specified in the I<mask> argument to B<Tk_CreateEventHandler>.
+
+B<Tk_DeleteEventHandler> may be called to delete a
+previously-created event handler:  it deletes the first handler
+it finds that is associated with I<tkwin> and matches the
+I<mask>, I<proc>, and I<clientData> arguments.  If
+no such handler exists, then B<Tk_EventHandler> returns
+without doing anything.  Although Tk supports it, it's probably
+a bad idea to have more than one callback with the same I<mask>,
+I<proc>, and I<clientData> arguments.
+When a window is deleted all of its handlers will be deleted
+automatically;  in this case there is no need to call
+B<Tk_DeleteEventHandler>.
+
+If multiple handlers are declared for the same type of X event
+on the same window, then the handlers will be invoked in the
+order they were created.
+
+=head1 KEYWORDS
+
+bind, callback, event, handler

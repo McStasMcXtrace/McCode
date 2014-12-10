@@ -1,0 +1,30 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+
+my $mw = MainWindow->new;
+
+my $text = '0123456789';
+
+my $e  = $mw->Entry(-validate => 'all', -textvariable => \$text,
+                    -vcmd => \&validate,
+                    -invcmd  => sub { $mw->bell })->pack;
+my $l  = $mw->Label(-textvariable => \$text)->pack;
+
+$mw->Button(-text => 'Set',  -command => sub { $text = '0123456789' })->pack;
+$mw->Button(-text => 'MisSet',  -command => sub { $text = 'A012345678' })->pack;
+$mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+MainLoop;
+
+sub validate
+{
+ my @args = @_;
+ foreach (@args)
+  {
+   $_ = defined ($_) ? "'$_'" : 'undef';
+  }
+ print 'validate ',join(',',@args),"\n";
+ return $_[0] =~ /^\d*$/;
+}
+
+

@@ -1,0 +1,21 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+use Tk::widgets qw(Button Spinbox);
+#use Carp ();
+#$SIG{'__DIE__'} = \&Carp::confess;
+
+print "Spinbox:$Tk::Spinbox::VERSION\n";
+
+my $mw = MainWindow->new();
+my $sb = $mw->Spinbox(-from => 1, -to => 100)->pack;
+
+#use Data::Dumper;
+#print Dumper([$sb->configure]);
+
+$sb = $mw->Spinbox(-values => [qw[one two three four]])->pack;
+
+
+$mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+MainLoop;
+

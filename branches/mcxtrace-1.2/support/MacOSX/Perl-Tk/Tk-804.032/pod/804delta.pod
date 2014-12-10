@@ -1,0 +1,110 @@
+=head1 NAME
+
+Tk::804delta - what is new for perl/Tk 804
+
+=head1 DESCRIPTION
+
+This document describes differences between the Tk800 series and the
+Tk804 series.
+
+=head1 Incompatible Changes
+
+In Tk804.028, there are some additional incompatible changes:
+
+Return values of some B<Tk::Wm> methods (e.g. B<aspect>, B<wmGrid>,
+B<iconposition>, B<resizable> ...) were changed from returning tclish
+lists (e.g. "1 2 3 4") to perlish lists (1,2,3,4).
+
+B<Tk::Wm::wmTracing> needs argument for setting on/off, without argument
+just return the current value.
+
+All Tk804 releases have the following incompatible changes:
+
+Tk804 will only work with perl 5.8.0 and above. For older perl
+versions look for Tk800.025.
+
+B<curselection> of B<Tk::Listbox> now returns an array reference in
+scalar context. This means you have to write
+
+	my(@selected) = $listbox->curselection
+
+or
+
+	my(@selected) = @{ $listbox->curselection }
+
+now.
+
+The B<fontActual> method now returns the pixel value instead of the
+point value for B<-size>. Pixel values are expressed as negative
+numbers.
+
+Some enhancements from the E<quot>dashE<quot> patches are lost for now
+(i.e. B<-tile>, B<-troughtile> ...).
+
+The B<-state> option is not available anymore for B<Tk::Text> tags.
+Use B<-elide> instead.
+
+=head1 Enhancements
+
+Tk804 is Unicode-aware.
+
+It is possible to build Tk with Xft support on X11. This is strongly
+recommened if you are planning to make use of Unicode rendering
+capabilities of Tk. It also gives anti-aliased fonts for regular text
+(if you have TrueType or Type1 fonts and they are in your fontconfig
+config file).
+
+The new method B<chooseDirectory> is available as a standard directory
+selector.
+
+B<Tk::PNG> and B<Tk::JPEG> are bundled now with the perl/Tk
+distribution, providing support for the image formats B<png> and
+B<jpeg>.
+
+Improvements to B<Tk::Listbox>: new option B<-activestyle>, new
+methods B<itemconfigure> and B<itemcget>, new virtual event B<<<
+<<ListboxSelect>> >>>.
+
+More tests.
+
+=head1 New Widgets
+
+=over
+
+=item Tk::Labelframe
+
+An alternative to B<Tk::LabFrame>.
+
+=item Tk::Panedwindow
+
+An alternative to B<Tk::Adjuster>.
+
+=item Tk::Spinbox
+
+An alternative to the CPAN module B<Tk::NumEntry>.
+
+=back
+
+=head1 Selected Bug Fixes
+
+=head1 Changed Internals
+
+=head1 Platform Specific Problems
+
+=head1 Future Directions
+
+=head1 Reporting Bugs
+
+If you find what you think is a bug, you might check the articles
+recently posted to the comp.lang.perl.tk newsgroup.
+
+If you believe you have an unreported bug, please send a mail to <ptk@lists.stanford.edu> and/or <nick@ing-simmons.net>.  Be sure to trim your bug down
+to a tiny but sufficient test case.
+
+=head1 SEE ALSO
+
+L<Tk>, C<Changes> file in the Perl/Tk distribution.
+
+=cut
+
+

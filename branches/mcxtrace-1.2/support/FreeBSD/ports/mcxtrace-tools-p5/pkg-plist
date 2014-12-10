@@ -1,0 +1,40 @@
+mcxtrace/1.2beta/bin/mxdaemon
+mcxtrace/1.2beta/bin/mxdisplay
+mcxtrace/1.2beta/bin/mxdoc
+mcxtrace/1.2beta/bin/mxformatgui
+mcxtrace/1.2beta/bin/mxgui
+mcxtrace/1.2beta/bin/mxplot
+mcxtrace/1.2beta/bin/mxrun
+mcxtrace/1.2beta/doc/man/man1/mxdisplay-1.2beta.1
+mcxtrace/1.2beta/doc/man/man1/mxdoc-1.2beta.1
+mcxtrace/1.2beta/doc/man/man1/mxgui-1.2beta.1
+mcxtrace/1.2beta/doc/man/man1/mxplot-1.2beta.1
+mcxtrace/1.2beta/doc/man/man1/mxrun-1.2beta.1
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/matlab/CheckNeutNumber.m
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/matlab/CheckTimeout.m
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/matlab/PlotInstrument.m
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/matlab/ReshapeTransform.m
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/matlab/mcdisplay.m
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/matlab/mcplot.m
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/matlab/resume.m
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/matlab/tomo_recon.m
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/matlab/wait.m
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/perl/mccode_config.perl
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/perl/mccode_reconfigure
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/perl/mcfrontlib.pl
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/perl/mcfrontlib2D.pl
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/perl/mcgnuplot.pl
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/perl/mcguilib.pl
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/perl/mcoptimlib.pl
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/perl/mcplotlib.pl
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/perl/mcrunlib.pl
+mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/perl/mxguilib.pl
+@dirrmtry mcxtrace/1.2beta/bin
+@dirrmtry mcxtrace/1.2beta/doc/man/man1
+@dirrmtry mcxtrace/1.2beta/doc/man
+@dirrmtry mcxtrace/1.2beta/doc
+@dirrmtry mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/matlab
+@dirrmtry mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta/perl
+@dirrmtry mcxtrace/1.2beta/mcxtrace-tools-perl-1.2beta
+@dirrmtry mcxtrace/1.2beta
+@dirrmtry mcxtrace

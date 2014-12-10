@@ -1,0 +1,40 @@
+#!/usr/local/bin/perl -w
+use Tk;
+use Tk::widgets qw(ProgressBar);
+
+my $mw = MainWindow->new;
+my $meminfo = "/proc/meminfo";
+if (!-e $meminfo) {
+    $meminfo = "/compat/linux/proc/meminfo";
+    if (!-e $meminfo) {
+	die "Sorry, no /proc/meminfo or /compat/linux/proc/meminfo available";
+    }
+}
+my $info = `cat $meminfo`;
+my ($max) = $info =~ /MemTotal:\s*(\d+)/;
+print "Max = $max\n";
+my %values;
+
+foreach my $name (qw(MemFree MemShared Buffers Cached))
+ {
+  my $lab = $mw->Label(-text => $name);
+  my $pg  = $mw->ProgressBar(-fg => '#404080', '-length' => '3c', -width => '3m',
+                 -to => $max, -variable => \$values{$name});
+  Tk::grid($lab,$pg);
+ }
+
+
+newValue();
+$mw->repeat(5000,\&newValue);
+
+MainLoop;
+
+sub newValue
+{
+ my $info = `cat $meminfo`;
+ foreach my $name (keys %values)
+  {
+   ($values{$name}) = $info =~ /$name:\s*(\d+)/;
+   print "$name ",$values{$name},"\n";
+  }
+}

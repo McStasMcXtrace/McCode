@@ -1,0 +1,19 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+use Devel::Leak;
+use Tk::widgets qw(Button);
+print STDERR "Before ",$start = Devel::Leak::NoteSV($hook),"\n";
+{
+ my $top = MainWindow->new();
+ my $w = $top->Button(-text => 'Quit',-command => ['destroy',$top])->pack;
+ MainLoop;
+}
+
+END
+{
+ print STDERR "After  ",$end = Devel::Leak::CheckSV($hook),"\n";
+ print "Delta ",($end-$start),"\n";
+}
+
+

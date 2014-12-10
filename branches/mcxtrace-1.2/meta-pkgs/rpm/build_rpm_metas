@@ -1,0 +1,8 @@
+#!/bin/sh
+
+ls *.spec | xargs -n1 rpmbuild -bb --target x86_64
+ls *.spec | xargs -n1 rpmbuild -bb --target i686
+
+
+
+

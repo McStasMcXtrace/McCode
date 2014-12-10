@@ -1,0 +1,5 @@
+This directory is an example of how I hope Widgets can be made loadable.
+
+This builds Text widget again as DynaLoader loadable version.
+
+It is disabled by default as testing is incomplete.

@@ -1,0 +1,35 @@
+From  kris@bionmr1.rug.ac.be  Fri Jan 19 16:16:00 1996
+Return-Path: <kris@bionmr1.rug.ac.be>
+From: kris@bionmr1.rug.ac.be (Kris Boulez)
+Message-Id: <9601191714.ZM15917@bionmr1.rug.ac.be>
+Date: Fri, 19 Jan 1996 17:14:30 +0100
+X-Mailer: Z-Mail (3.2.0 26oct94 MediaMail)
+To: ptk@guest.wpi.edu
+Subject: Examples of the Ousterhout book translated to ptk
+Cc: Nick Ing-Simmons <nik@tiuk.ti.com>
+Content-Type: multipart/mixed;
+    boundary="PART-BOUNDARY=.19601191714.ZM15917.rug.ac.be"
+P-From: "Kris Boulez" <kris@bionmr1.rug.ac.be>
+
+--
+--PART-BOUNDARY=.19601191714.ZM15917.rug.ac.be
+Content-Type: text/plain; charset=us-ascii
+
+Hello,
+
+ After reading through the Ousterhout book 'Tcl and the Tk toolkit' I wanted to
+excercise a bit and I translated some of the examples. In an appended tar file
+there are the examples I've already done. The files are called after the figure
+in the book they go with. So the code for Figure 16.2 is called f-16.2pl.
+ Some off the examples aren't -w clean, if anyone knows how to solve this feel
+free to comment. I wasn't able to get the code which goes with figure 16.3 to
+work. If anyone has comments, questions, ... feel free to drop me a line.
+
+
+Kris,
+--
+Kris Boulez		(Kris.Boulez@rug.ac.be)
+Biomolecular NMR unit	<http://bionmr1.rug.ac.be/~kris>
+University of Ghent, Belgium
+
+

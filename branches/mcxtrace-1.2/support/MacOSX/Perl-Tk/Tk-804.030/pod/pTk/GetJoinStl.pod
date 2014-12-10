@@ -1,0 +1,73 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_GetJoinStyle, Tk_NameOfJoinStyle - translate between strings and join styles
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+int
+B<Tk_GetJoinStyle(>I<interp, string, joinPtr>B<)>
+
+char *
+B<Tk_NameOfJoinStyle(>I<join>B<)>
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter to use for error reporting.
+
+=item char *string (in)
+
+String containing name of join style: one of ``bevel'', ``miter'',
+or ``round''.
+
+=item int *joinPtr (out)
+
+Pointer to location in which to store X join style corresponding to
+I<string>.
+
+=item int join (in)
+
+Join style: one of B<JoinBevel>, B<JoinMiter>, B<JoinRound>.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_GetJoinStyle> places in I<*joinPtr> the X join style
+corresponding to I<string>, which will be one of
+B<JoinBevel>, B<JoinMiter>, or B<JoinRound>.
+Join styles are typically used in X graphics contexts to indicate
+how adjacent line segments should be joined together.
+See the X documentation for information on what each style
+implies.
+
+Under normal circumstances the return value is B<TCL_OK> and
+I<interp> is unused.
+If I<string> doesn't contain a valid join style
+or an abbreviation of one of these names, then an error message is
+stored in I<interp-E<gt>result>, B<TCL_ERROR> is returned, and
+I<*joinPtr> is unmodified.
+
+B<Tk_NameOfJoinStyle> is the logical inverse of B<Tk_GetJoinStyle>.
+Given a join style such as B<JoinBevel> it returns a
+statically-allocated string corresponding to I<join>.
+If I<join> isn't a legal join style, then
+``unknown join style'' is returned.
+
+=head1 KEYWORDS
+
+bevel, join style, miter, round

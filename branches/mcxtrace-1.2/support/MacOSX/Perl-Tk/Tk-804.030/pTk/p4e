@@ -1,0 +1,49 @@
+#!/usr/local/bin/perl -w
+use File::Find;
+use Cwd;
+my $path = getcwd;
+
+foreach (@ARGV)
+ {
+  s/\./\\./;
+  s/:\w*$//;
+ }
+
+my $re = '^(?:'.join('|',@ARGV).')$';
+$re = qr/$re/;
+
+find(\&wanted,"$path/mTk");
+
+sub wanted
+ {
+  if ($_ =~ $re)
+   {
+    my $file = "$File::Find::name";
+    unless (-w $file)
+     {
+      system('p4','edit',$file);
+     }
+    my $cmd = $ENV{'EDITOR'}.' '.$file;
+    invoke($cmd);
+    print "$cmd\n";
+   }
+ }
+
+sub invoke
+{
+ if ($^O eq 'MSWin32')
+  {
+   system(1,@_);
+  }
+ else
+  {
+   if ($pid = fork)
+    {
+     return $pid;
+    }
+   else
+    {
+     exec(@_);
+    }
+  }
+}

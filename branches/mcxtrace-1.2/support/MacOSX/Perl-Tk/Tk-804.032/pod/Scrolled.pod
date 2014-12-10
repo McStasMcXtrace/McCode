@@ -1,0 +1,86 @@
+=head1 NAME
+
+Tk::Scrolled - Create a widget with attached scrollbar(s)
+
+=for category Derived Widgets
+
+=for index_group Perl/Tk Constructs
+
+=head1 SYNOPSIS
+
+S<    >I<$whatever> = I<$parent>-E<gt>B<Scrolled>(I<Whatever> ?,B<-scrollbars>=E<gt>I<where>? ?,...?);
+
+=head1 DESCRIPTION
+
+To stop a flood of B<ScrlWhatever> widgets Perl/Tk introcuded the special
+constructor B<Scrolled>.  B<Scrolled> creates a widget of the given Class
+I<Whatever> with attached L<scrollbar(s)|Tk::Scrollbar>.
+
+=head1 OPTIONS
+
+All options beside B<-scrollbars> explained below are passed to
+the I<Whatever> widget constructor.
+
+=over 4
+
+=item -scrollbars
+
+Expects as argument the position where the scrollbars should be
+created:  B<w>, B<e> or B<n>, B<s> or a combination of
+them.  If the one or both positions are prefixed with B<o> the
+scrollbar will only show up if there is a 'real' need to scroll.
+
+=back
+
+=head1 ADVERTISED SUBWIDGETS
+
+See L<Tk::mega/"Subwidget"> how to use advertised widgets.
+
+=over 4
+
+=item scrolled
+
+the scrolled widget
+
+=item I<widget>
+
+same as B<scrolled> above.  I<widget> is the kind of widget passed
+to scrolled as first argument in all lowercase.
+
+=item xscrollbar
+
+the B<Scrollbar> widget used for horizontal scrolling (if it exists)
+
+=item yscrollbar
+
+the B<Scrollbar> widget used for vertical scrolling (if it exists)
+
+=item corner
+
+a frame in the corner between the vertical and horizontal scrolbar
+
+=back
+
+=head1 BUGS
+
+If a widget does not support I<-{x,y}scrollcommand> options,
+B<Scrolled> does not complain if the specified widget class does
+not support them.  E.g.,
+
+S<    >I<$parent>->B<Scrolled>(B<'Button'>, ...)
+
+One does not get an error message or warning when one tries to
+configure scrollbars after the widget construction:
+
+S<    >I<$ascrolled>->B<configure>(B<-scrollbars> => B<'e'>);
+
+=head1 SEE ALSO
+
+L<Tk::Scrollbar|Tk::Scrollbar>
+
+=head1 KEYWORDS
+
+scrolled, scrollbar
+
+=cut
+

@@ -1,0 +1,26 @@
+use Tk;
+use Tk::widgets qw(HList);
+my $mw = MainWindow->new();
+
+# print "'",join("'\n'",$mw->fontFamilies),"'\n";
+
+my $hl = $mw->HList(-columns => 3, -header => 1,
+                     -font => 'times -36'
+                    )->pack(-fill => 'both', -expand => 1);
+
+my $f = $hl->cget('-font');
+print '"',join('","',$mw->fontActual($f)),"\"\n";
+
+$hl->headerCreate(0,-text => "one\x{800}\x{fffd}");
+$hl->headerCreate(1,-text => 'two');
+$hl->columnWidth(1,-char => 5);
+$hl->headerCreate(2,-text => 'three');
+
+for (my $i = 0; $i < 10; $i++)
+ {
+  $hl->add($i, -itemtype => 'text', -text => "Item$i\x{20ac}");
+  $hl->itemCreate($i,1, -text => chr(ord('a')+$i)."$i" x 12);
+  $hl->itemCreate($i,2, -text => "c2$i" x 12);
+ }
+
+MainLoop;

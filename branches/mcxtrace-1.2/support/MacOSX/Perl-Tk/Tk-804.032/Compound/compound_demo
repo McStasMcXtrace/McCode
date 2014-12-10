@@ -1,0 +1,19 @@
+#!/usr/local/bin/perl -w
+use Tk;
+use Tk::Compound;
+my $mw = MainWindow->new;
+my $b  = $mw->Button(-command => [destroy => $mw])->pack;
+my $i  = $b->Compound;
+$i->Line;
+$i->Text(-text => 'Line');
+$i->Space(-width => '3m');
+$i->Text(-text => 'one');
+$i->Line;
+$i->Bitmap(-bitmap => 'warning');
+$i->Line;
+$i->Text(-text => 'Line2');
+$b->configure(-image => $i);
+
+my $b2 = $mw->Button(-command => [destroy => $mw], -image => $i)->pack;
+
+MainLoop;

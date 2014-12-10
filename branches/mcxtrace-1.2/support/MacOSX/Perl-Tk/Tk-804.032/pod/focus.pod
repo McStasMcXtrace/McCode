@@ -1,0 +1,166 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::focus - Manage the input focus
+
+=for category User Interaction
+
+=head1 SYNOPSIS
+
+S<   >I<$widget>-E<gt>B<focus>
+
+S<   >I<$widget>-E<gt>B<focus>I<Option>
+
+S<   >I<$widget>-E<gt>B<focusNext>
+
+S<   >I<$widget>-E<gt>B<focusPrev>
+
+S<   >I<$widget>-E<gt>B<focusFollowsMouse>
+
+=head1 DESCRIPTION
+
+The B<focus> methods are used to manage the Tk input focus.
+At any given time, one window on each display is designated as
+the I<focus window>;  any key press or key release events for the
+display are sent to that window.
+It is normally up to the window manager to redirect the focus among the
+top-level windows of a display.  For example, some window managers
+automatically set the input focus to a top-level window whenever
+the mouse enters it;  others redirect the input focus only when
+the user clicks on a window.
+Usually the window manager will set the focus
+only to top-level windows, leaving it up to the application to
+redirect the focus among the children of the top-level.
+
+Tk remembers one focus window for each top-level (the most recent
+descendant of that top-level to receive the focus);  when the window
+manager gives the focus
+to a top-level, Tk automatically redirects it to the remembered
+window.  Within a top-level Tk uses an I<explicit> focus model
+by default.  Moving the mouse within a top-level does not normally
+change the focus;  the focus changes only when a widget
+decides explicitly to claim the focus (e.g., because of a button
+click), or when the user types a key such as Tab that moves the
+focus.
+
+The method B<focusFollowsMouse> may be invoked to
+create an I<implicit> focus model:  it reconfigures Tk so that
+the focus is set to a window whenever the mouse enters it.
+The methods B<focusNext> and B<focusPrev>
+implement a focus order among the windows of a top-level;  they
+are used in the default bindings for Tab and Shift-Tab, among other
+things.
+
+The B<focus> methods can take any of the following forms:
+
+=over 4
+
+=item I<$widget>-E<gt>B<focusCurrent>
+
+Returns the focus window on the display containing
+the I<$widget>,  or an empty string if no window in
+this application has the focus on that display.
+
+=item I<$widget>-E<gt>B<focus>
+
+If the application currently has the input focus on I<$widget>'s
+display, this command resets the input focus for I<$widget>'s display
+to I<$widget> and returns an empty string.
+If the application doesn't currently have the  input focus on
+I<$widget>'s display, I<$widget> will be remembered as the focus
+for its top-level;  the next time the focus arrives at the top-level,
+Tk will redirect it to I<$widget>.
+
+=item I<$widget>-E<gt>B<focusForce>
+
+Sets the focus of I<$widget>'s display to I<$widget>, even if
+the application doesn't currently have the input focus for the display.
+This command should be used sparingly, if at all.
+In normal usage, an application should not claim the focus for
+itself;  instead, it should wait for the window manager to give it
+the focus.
+
+=item I<$widget>-E<gt>B<focusLastfor>
+
+Returns the name of the most recent window to have the input focus
+among all the windows in the same top-level as I<$widget>.
+If no window in that top-level has ever had the input focus, or
+if the most recent focus window has been deleted, then
+the top-level is returned.  The return value is the window that
+will receive the input focus the next time the window manager gives
+the focus to the top-level.
+
+=item I<$widget>-E<gt>B<focusNext>
+
+=item I<$widget>-E<gt>B<focusPrev>
+
+B<focusNext> is a utility method used for keyboard traversal, but can be
+useful in other contexts.
+It sets the focus to the ``next'' window after I<$widget> in focus order.
+The focus order is determined by
+the stacking order of windows and the structure of the window hierarchy.
+Among siblings, the focus order is the same as the stacking order, with the
+lowest window being first.
+If a window has children, the window is visited first, followed by
+its children (recursively), followed by its next sibling.
+Top-level windows other than I<$widget> are skipped, so that
+B<focusNext> never returns a window in a different top-level
+from I<$widget>.
+
+After computing the next window, B<focusNext> examines the
+window's B<-takefocus> option to see whether it should be skipped.
+If so, B<focusNext> continues on to the next window in the focus
+order, until it eventually finds a window that will accept the focus
+or returns back to I<$widget>.
+
+B<focusPrev> is similar to B<focusNext> except that it
+sets the focus to the window just before I<$widget> in the focus order.
+
+=item I<$widget>-E<gt>B<focusFollowsMouse>
+
+B<focusFollowsMouse> changes the focus model for the application
+to an implicit one where the window under the mouse gets the focus.
+After this procedure is called, whenever the mouse enters a window
+Tk will automatically give it the input focus.
+The B<focus> command may be used to move the focus to a window
+other than the one under the mouse, but as soon as the mouse moves
+into a new window the focus will jump to that window.
+Note: at present there is no built-in support for returning the
+application to an explicit focus model;  to do this you'll have
+to write a script that deletes the bindings created by
+B<focusFollowsMouse>.
+
+=back
+
+=head1 QUIRKS
+
+When an internal window receives the input focus, Tk doesn't actually
+set the X focus to that window;  as far as X is concerned, the focus
+will stay on the top-level window containing the window with the focus.
+However, Tk generates FocusIn and FocusOut events just as if the X
+focus were on the internal window.   This approach gets around a
+number of problems that would occur if the X focus were actually moved;
+the fact that the X focus is on the top-level is invisible unless
+you use C code to query the X server directly.
+
+=head1 CAVEATS
+
+Note that for the B<Canvas> widget, the call to B<focus> has to be
+fully qualified. This is because there is already a focus method for
+the B<Canvas> widget, which sets the focus on individual canvas tags.
+
+S<    >I<$canvas>-E<gt>B<Tk::focus>
+
+
+=head1 KEYWORDS
+
+events, focus, keyboard, top-level, window manager
+
+=cut
+
