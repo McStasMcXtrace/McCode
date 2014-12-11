@@ -371,12 +371,12 @@ struct code_block
   };
 
 /* Note: the enum instr_formal_types definition MUST be kept
-   synchronized with the one in mcstas-r.h. */
+   synchronized with the one in mccode-r.h. */
 enum instr_formal_types
   {
     instr_type_mcnum, instr_type_int, 
     instr_type_string, instr_type_char, 
-    instr_type_pdouble, instr_type_double
+    instr_type_vector, instr_type_double
   };
 
 /* Component formal input parameters. */

@@ -145,7 +145,9 @@
    instr_formal_type_names array in cogen.c. */
 enum instr_formal_types
   {
-    instr_type_double, instr_type_int, instr_type_string
+    instr_type_mcnum, instr_type_int, 
+    instr_type_string, instr_type_char, 
+    instr_type_vector, instr_type_double
   };
 struct mcinputtable_struct { /* defines instrument parameters */
   char *name; /* name of parameter */
@@ -631,6 +633,11 @@ mcstatic FILE *mcsiminfo_file        = NULL;
 #endif
 
 /* I/O function prototypes ================================================== */
+
+#ifndef HAVE_STRCASESTR
+// from msysgit: https://code.google.com/p/msysgit/source/browse/compat/strcasestr.c
+char *strcasestr(const char *haystack, const char *needle);
+#endif
 
 /* output functions */
 MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos);

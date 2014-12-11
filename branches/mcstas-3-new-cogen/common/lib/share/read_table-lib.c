@@ -92,7 +92,7 @@
         snprintf(path, 1024, "%s%c%s%c%s", dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, File);
         hfile = fopen(path, Mode);
       }
-      if (!hfile) /* search in MVCSTAS/contrib */
+      if (!hfile) /* search in MCSTAS/contrib */
       {
         strcpy(dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
         snprintf(path, 1024, "%s%c%s%c%s", dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, File);

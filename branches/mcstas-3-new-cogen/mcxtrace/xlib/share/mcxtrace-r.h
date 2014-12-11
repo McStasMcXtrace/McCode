@@ -34,7 +34,7 @@
 #ifndef MCXTRACE_R_H
 #define MCXTRACE_R_H "$Revision$"
 
-/* Following part is only embedded when not redundant with mcstas.h ========= */
+/* Following part is only embedded when not redundant with mccode.h ========= */
 
 #ifndef MCCODE_H
 

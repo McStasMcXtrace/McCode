@@ -35,7 +35,7 @@
 
 /* Need a pure parser to allow for recursive calls when autoloading component
    definitions. */
-%pure_parser
+%pure-parser
 
 /*******************************************************************************
 * Type definition for semantic values.
@@ -76,10 +76,11 @@
 %token TOK_DEFINITION "DEFINITION"
 %token TOK_END        "END"
 %token TOK_FINALLY    "FINALLY"
-%token TOK_INITIALIZE "INITIALIZE"
+%token TOK_INITIALIZE "INITIALIZE" /* INITIALISE ?? */
 %token TOK_INSTRUMENT "INSTRUMENT"
 %token TOK_MCDISPLAY  "MCDISPLAY"
-%token TOK_OUTPUT     "OUTPUT"
+%token TOK_OUTPUT     "OUTPUT" /* same as DECLARE or PRIVATE PARAMETERS */
+%token TOK_PRIVATE    "PRIVATE"
 %token TOK_PARAMETERS "PARAMETERS"
 %token TOK_RELATIVE   "RELATIVE"
 %token TOK_ROTATED    "ROTATED"
@@ -122,7 +123,7 @@
 %type <actuals> actuallist actuals actuals1
 %type <comp_iformals> comp_iformallist comp_iformals comp_iformals1
 %type <cformal> comp_iformal
-%type <formals> formallist formals formals1 def_par set_par out_par
+%type <formals> def_par set_par out_par
 %type <iformals> instrpar_list instr_formals instr_formals1
 %type <iformal> instr_formal
 %type <parms>   parameters
@@ -315,7 +316,15 @@ out_par:    /* empty */
       {
         $$ = list_create();
       }
-    | "OUTPUT" "PARAMETERS" formallist
+    | "OUTPUT" "PARAMETERS" comp_iformallist
+      {
+        $$ = $3;
+      }
+    | "DECLARE" "PARAMETERS" comp_iformallist
+      {
+        $$ = $3;
+      }
+    | "PRIVATE" "PARAMETERS" comp_iformallist
       {
         $$ = $3;
       }
@@ -325,7 +334,7 @@ state_par:    /* empty */
       {
         /* Do nothing */
       }
-    | "STATE" "PARAMETERS" formallist
+    | "STATE" "PARAMETERS" comp_iformallist
       {
         /* Issue warning */
         print_error(" %s is using STATE PARAMETERS\n    %s %s does NOT support this keyword. Please remove line %d\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION, instr_current_line);
@@ -336,7 +345,7 @@ pol_par:    /* empty */
       {
         /* Do nothing */
       }
-    | "POLARISATION" "PARAMETERS" formallist
+    | "POLARISATION" "PARAMETERS" comp_iformallist
       {
         /* Issue warning */
         print_error(" %s is using POLARISATION PARAMETERS\n    %s %s does NOT support this keyword. Please remove line %d\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION, instr_current_line);
@@ -382,6 +391,8 @@ comp_iformal:  TOK_ID TOK_ID
           formal->type = instr_type_int;
         } else if(!strcmp($1, "string")) {
           formal->type = instr_type_string;
+        } else if(!strcmp($1, "vector")) {
+          formal->type = instr_type_vector;
         } else {
           print_error("Illegal type %s for component "
           "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
@@ -396,6 +407,8 @@ comp_iformal:  TOK_ID TOK_ID
         palloc(formal);
         if(!strcmp($1, "char")) {
           formal->type = instr_type_string;
+        } else if(!strcmp($1, "double")) {
+          formal->type = instr_type_vector;
         } else {
           print_error("Illegal type %s* for component "
           "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
@@ -433,6 +446,8 @@ comp_iformal:  TOK_ID TOK_ID
           formal->type = instr_type_int;
         } else if(!strcmp($1, "string")) {
           formal->type = instr_type_string;
+        } else if(!strcmp($1, "vector")) {
+          formal->type = instr_type_vector;
         } else {
           print_error("Illegal type %s for component "
           "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
@@ -452,6 +467,8 @@ comp_iformal:  TOK_ID TOK_ID
         formal->default_value = $5;
         if(!strcmp($1, "char")) {
           formal->type = instr_type_string;
+        } else if(!strcmp($1, "double")) {
+          formal->type = instr_type_vector;
         } else {
           print_error("Illegal type %s* for component "
           "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
@@ -824,7 +841,7 @@ complist:   /* empty */
                   print_error("Component instance name "
               "'%s' matches an internal OUTPUT parameter of component class %s at "
               "line %s:%d.\nPlease change the instance name.\n", 
-              $2->name, $2->type, instr_current_filename, instr_current_line);
+              $2->name, $2->def->name, instr_current_filename, instr_current_line);
               }
               list_iterate_end(liter);
               
@@ -834,7 +851,7 @@ complist:   /* empty */
                   print_error("Component instance name "
                   "'%s' matches an internal SETTING parameter of component class %s at "
                   "line %s:%d.\nPlease change the instance name.\n", 
-                  $2->name, $2->type, instr_current_filename, instr_current_line);
+                  $2->name, $2->def->name, instr_current_filename, instr_current_line);
               }
               list_iterate_end(liter);
               
@@ -844,19 +861,19 @@ complist:   /* empty */
                   print_error("Component instance name "
                   "'%s' matches an internal DEFINITION parameter of component class %s at "
                   "line %s:%d.\nPlease change the instance name.\n", 
-                  $2->name, $2->type, instr_current_filename, instr_current_line);
+                  $2->name, $2->def->name, instr_current_filename, instr_current_line);
               }
               list_iterate_end(liter);
             }
             /* if we come there, instance is not an OUTPUT name */
             symtab_add(comp_instances, $2->name, $2);
             list_add(comp_instances_list, $2);
-            if (verbose) fprintf(stderr, "Component[%li]: %s = %s().\n", comp_current_index, $2->name, $2->type);
+            if (verbose) fprintf(stderr, "Component[%li]: %s = %s().\n", comp_current_index, $2->name, $2->def->name);
           }
         } /* if shared */
         else
         {
-          if (verbose) fprintf(stderr, "Component[%li]: %s = %s() SKIPPED (REMOVABLE COMPONENT when included)\n", comp_current_index, $2->name, $2->type);
+          if (verbose) fprintf(stderr, "Component[%li]: %s = %s() SKIPPED (REMOVABLE COMPONENT when included)\n", comp_current_index, $2->name, $2->def->name);
         }
       }
     | complist instrument
@@ -883,7 +900,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         struct comp_inst *comp;
         comp_src = $3;
         palloc(comp);
-        comp->type   = comp_src->type;
         comp->def    = comp_src->def;
         comp->extend = comp_src->extend;
         comp->group  = comp_src->group;
@@ -902,7 +918,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         struct comp_inst *comp;
         comp_src = $3;
         palloc(comp);
-        comp->type   = comp_src->type;
         comp->defpar = comp_src->defpar;
         comp->setpar = comp_src->setpar;
         comp->def    = comp_src->def;
@@ -920,7 +935,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         def = read_component($1);
         if (def != NULL) def->comp_inst_number--;
         palloc(comp);
-        comp->type         = $1;
         comp->def          = def;
         comp->extend = codeblock_new();
         comp->group  = NULL;
@@ -956,9 +970,7 @@ component: removable split "COMPONENT" instname '=' instref when place orientati
         
         if (comp->def != NULL) {
           comp->def->comp_inst_number--;
-          comp->type = str_dup(comp->def->name);
-        } else 
-          comp->type = str_dup("Definition not found");
+        }
 
         comp->name  = $4;
         comp->split = $2;
@@ -984,7 +996,7 @@ component: removable split "COMPONENT" instname '=' instref when place orientati
         if (list_len($12))  comp->jump  = $12;
         comp->index = ++comp_current_index;     /* index of comp instance */
 
-        debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $4, $6->type));
+        debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $4, $6->def->name));
         /* this comp will be 'previous' for the next, except if removed at include */
         if (!comp->removable) previous_comp = comp;
         $$ = comp;
@@ -1006,34 +1018,6 @@ split:    /* empty */
       }
 ;
 
-formallist:   '(' formals ')'
-      {
-        $$ = $2;
-      }
-;
-
-
-formals:    /* empty */
-      {
-        $$ = list_create();
-      }
-    | formals1
-      {
-        $$ = $1;
-      }
-;
-
-formals1:   TOK_ID
-      {
-        $$ = list_create();
-        list_add($$, $1);
-      }
-    | formals1 ',' TOK_ID
-      {
-        list_add($1, $3);
-        $$ = $1;
-      }
-;
 
 actuallist:   '(' actuals ')'
       {
@@ -1854,8 +1838,8 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
         /* Use default value for unassigned optional parameter */
         symtab_add(defpar, formal->id, formal->default_value);
       } else {
-        print_error("Unassigned DEFINITION parameter %s for component %s() at line %s:%d. Please set its value.\n",
-              formal->id, comp->type,
+        print_error("Unassigned DEFINITION parameter %s for component %s=%s() at line %s:%d. Please set its value.\n",
+              formal->id, comp->name, comp->def->name,
               instr_current_filename, instr_current_line);
         symtab_add(defpar, formal->id, exp_number("0.0"));
       }
@@ -1868,9 +1852,9 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
          are assigned using #define's. */
       if(!exp_isvalue(entry->val))
       {
-        print_warn(NULL, "Using DEFINITION parameter of component %s() (potential syntax error) at line %s:%d\n"
+        print_warn(NULL, "Using DEFINITION parameter of component %s=%s() (potential syntax error) at line %s:%d\n"
           "  %s=%s\n",
-          comp->type, instr_current_filename, instr_current_line,
+          comp->name, comp->def->name, instr_current_filename, instr_current_line,
           formal->id, exp_tostring(entry->val));
       }
     }
@@ -1889,8 +1873,8 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
         /* Use default value for unassigned optional parameter */
         symtab_add(setpar, formal->id, formal->default_value);
       } else {
-        print_error("Unassigned SETTING parameter %s for component %s() at line %s:%d. Please set its value.\n",
-              formal->id, comp->type,
+        print_error("Unassigned SETTING parameter %s for component %s=%s() at line %s:%d. Please set its value.\n",
+              formal->id, comp->name, comp->def->name,
               instr_current_filename, instr_current_line);
         symtab_add(setpar, formal->id, exp_number("0.0"));
       }
@@ -1910,8 +1894,8 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       Symtab_handle siter2;
       struct Symtab_entry *entry2;
 
-      fprintf(stderr, "\nUnmatched actual parameter %s for component %s() at line %s:%d. Please change its name to a valid one:\n",
-        entry->name, comp->type,
+      fprintf(stderr, "\nUnmatched actual parameter %s for component %s=%s() at line %s:%d. Please change its name to a valid one:\n",
+        entry->name, comp->name, comp->def->name,
         instr_current_filename, instr_current_line);
       siter2 = symtab_iterate(defpar);
       fprintf(stderr,"  Definition parameters: ");
@@ -1936,9 +1920,9 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       print_error("\n");
       if (strlen(misspelled))
       	fprintf(stderr, "Info:    '%s' parameter name used in instrument matches\n"
-                        "         component %s parameter '%s' from library but\n"
+                        "         component %s=%s() parameter '%s' from library but\n"
                         "         may be misspelled. Check component instance.\n",
-                        entry->name, comp->type, misspelled);
+                        entry->name, comp->name, comp->def->name, misspelled);
     }
   }
   symtab_iterate_end(siter);
