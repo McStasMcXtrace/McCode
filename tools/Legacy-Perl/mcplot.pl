@@ -174,7 +174,7 @@ print "Opening $file\n";
 if ($file =~ m'\.m$')    { $plotter = "Matlab"; }
 if ($file =~ m'\.sim$' and not($plotter =~ /gnuplot|Matlab/i))  { $plotter = "PGPLOT"; }
 if ($file =~ m'\.html$') { $plotter = "HTML"; }
-if ($file =~ m'\.h5$') { $plotter = "NXus"; }
+if ($file =~ m'\.h5$') { $plotter = "NeXus"; }
 
 
 
