@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% block title %}Login{% endblock %}
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+    p { color: #336699; }
+    div.centered {
+      margin: 10px 0px 10px 0px;
+      text-align: center;
+    }
+  </style>
+{% endblock %}
+{% block content %}
+  <h1>Login</h1>
+
+  <form method=post>
+    <input type="hidden" name="__nonce" value="{{ nonce }}">
+    <input type="hidden" name="next" value="{{ next }}">
+    <ol>
+      <li>
+        <label for=username>Username:</label>
+        <input type="text" name="username" id="username">
+      </li>
+      <li>
+        <label for=password>Password:</label>
+        <input type="password" name="password" id="password">
+      </li>
+    </ol>
+    <input type=submit>
+  </form>
+
+
+
+{% endblock %}

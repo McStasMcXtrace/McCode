@@ -1,0 +1,135 @@
+{% extends "mcsimulator/layout.html" %}
+{% load static %}
+
+{% block title %}Simulations{% endblock %}
+{% block head_extra %}
+<style type="text/css">
+  p { color: #336699; }
+</style>
+
+  <form method="GET" action="/logout">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}" />
+    <ol>
+      <input type=submit id="btn_logout" value="logout" onclick="logout_user()" />
+    </ol>
+  </form>
+
+{% endblock %}
+{% block content %}
+  <h1>Configure your simulation</h1>
+
+  <p>Select the simulation and its parameters.
+    <a id='latestLink' onclick='switchLatest()'>
+      [List latest simulations]</a></p>
+
+  <div id='latest'></div>
+
+  <script type="text/javascript" src="{% static 'configure.js' %}"></script>
+  <script language="javascript">
+    var jobid = "{{ jobid }}";
+
+    var max_samples = {{ max_samples }},
+        max_npoints = {{ max_npoints }};
+
+    // parameters and default values
+    var defaults = { {% for sim in sims %}
+      "{{ sim.name|escapejs|safe }}": {
+      {% for param in sim.param_set.all %}
+        "{{ param.name|escapejs|safe }}": {
+          "value": "{{ param.default_value|escapejs|safe }}",
+          "unit" : "{{ param.unit|escapejs|safe }}",
+          "msg"  : "{{ param.msg|escapejs|safe }}" },
+      {% endfor %}
+    },{% endfor %} };
+
+    var chosen = {
+      {% if job %}
+      "{{ job.sim.name|escapejs|safe }}": {
+         {% for param in job.paramvalue_set.all %}
+         "{{ param.param.name|escapejs|safe }}": "{{ param.value|escapejs|safe }}",
+         {% endfor %}
+      }{% endif %}
+    };
+
+
+    {% if job %}
+    var defaultSim = "{{ job.sim.name|escapejs|safe }}";
+    {% else %}
+    var defaultSim = "{{ sims.0.name|escapejs|safe }}";
+    {% endif %}
+
+    window.addEventListener("load", function () {
+      update_defaults(defaultSim);
+      params = document.getElementById("sim").children;
+      for(var i = 0; i < params.length; i++) {
+        if(params[i].value == defaultSim) {
+          params[i].selected = true;
+          break;
+        }
+      }
+      // update list of latest simulations
+      setLatest();
+    }, false);
+
+  </script>
+
+
+
+  <form method=post action="/job/update/{{ jobid }}/"
+        onsubmit="return false;" id="form">
+    {% csrf_token %}
+
+    <fieldset>
+      <legend>Step 1: Select simulation</legend>
+      <ol>
+        <li>
+          <label for=sim class="forlabel">Choose simulation:</label>
+          <select size=5 name=sim id=sim
+                  onchange="update_defaults(this.value); set_changed()">
+            {% for sim in sims %}
+            <option value="{{ sim.name }}">{{ sim.name }}</option>
+            {% endfor %}
+          </select>
+        </li>
+      </ol>
+    </fieldset>
+    <fieldset>
+      <legend>Step 2: Configure parameters (
+        <a href="#" id="docLink" target="_blank">Documentation</a>)</legend>
+      <ol id=params></ol>
+    </fieldset>
+    <fieldset>
+      <legend>Step 3: Runtime configuration</legend>
+      <ol>
+        <li>
+          <label for=seed class="forlabel">Seed:</label>
+          <input type=text value="{% firstof job.seed '0' %}"
+                 id=seed name=seed
+                 onchange="set_changed(this)">
+        </li>
+        <li>
+          <label for=samples class="forlabel">Rays (ncount):</label>
+          <input type=text value="{% firstof job.samples '1000000' %}"
+                 id=samples name=samples
+                 onchange="set_changed(this)" >
+        </li>
+        <li>
+          <label for=numpoints class="forlabel">Scan num-points:</label>
+          <input type=text value="{% firstof job.npoints '1' %}"
+                 id=npoints name=npoints
+                 onchange="set_changed(this)" >
+        </li>
+      </ol>
+    </fieldset>
+
+    <fieldset>
+      <input type=submit id="btnSave"
+             value="Save" onclick="save();" />
+      <input type=submit id="btnRun" style="float:right"
+             value="Run this config!" onclick="run();" />
+    </fieldset>
+  </form>
+  <br>
+  <div style="display:none" id="hiddenDiv"></div>
+{% endblock %}

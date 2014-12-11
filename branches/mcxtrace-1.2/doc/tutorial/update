@@ -1,0 +1,18 @@
+#!/bin/sh
+latex tutorial
+latex tutorial
+latex2html -local_icons tutorial
+mv tutorial html
+dvips tutorial.dvi -o tutorial.ps
+whichdvipdf=`which dvipdf`
+if [ -e "$whichdvipdf" ] ;
+then
+  echo "Generate tutorial PDF files using dvipdf (better quality than ps2pdf)"
+  dvipdf tutorial.dvi tutorial.pdf
+else
+  echo "Generate tutorial PDF files using ps2pdf"
+  ps2pdf tutorial.dvi tutorial.pdf
+fi
+rm tutorial.aux
+rm tutorial.log
+rm tutorial.dvi

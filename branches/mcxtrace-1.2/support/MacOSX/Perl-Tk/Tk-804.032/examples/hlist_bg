@@ -1,0 +1,57 @@
+#!/usr/local/bin/perl -w
+use Tk;
+require Tk::HList;
+
+$mw = MainWindow->new;
+my $hl = $mw->Scrolled('HList', -separator => '.',
+                        -width => 25,
+                        -drawbranch => 1,
+                        -selectmode => 'extended',
+                        -indent => 10,
+#                       -bg=>'green'
+                      );
+
+#my $hl = $mw->HList(-separator => '.',
+#                        -width => 25,
+#                        -drawbranch => 1,
+#                        -selectmode => 'extended',
+#                        -indent => 10, -bg=>'green');
+
+print "reconfigure\n";
+
+$hl->configure(-bg=>'red'); # none of these seem to work
+$hl->configure(-background=>'yellow');
+
+$hl->configure( -command => \&PrintLine, -browsecmd => \&PrintBug);
+
+$hl->pack(-expand => 1, -fill => 'both');
+
+@list = qw(one two three);
+
+foreach $item (@list)
+ {
+  $hl->add($item,-itemtype => 'text', -text => $item, -data => {});
+  my $subitem;
+  foreach $subitem (@list)
+   {
+    $hl->addchild($item,-itemtype => 'text', -text => $subitem, -data => []);
+   }
+ }
+
+MainLoop;
+
+sub PrintLine {
+my $row = shift;
+my $data = $hl->info('data',$row);
+foreach ($hl,$row,$data) {
+   print ref($_) ? "ref $_\n" : "string $_\n";
+   }
+print "\n";
+}
+
+sub PrintBug {
+print "Browsecmd callback executed\n";
+}
+
+__END__
+

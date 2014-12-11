@@ -1,0 +1,228 @@
+#  Copyright (c) 1994 The Australian National University
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#  Author: Paul Mackerras (paulus@cs.anu.edu.au),
+# 	    Department of Computer Science,
+# 	    Australian National University.
+#  "@(#) FindPhoto.3 1.11 97/08/22 18:52:33"
+
+=head1 NAME
+
+Tk_FindPhoto, Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock, Tk_PhotoGetImage, Tk_PhotoBlank, Tk_PhotoExpand, Tk_PhotoGetSize, Tk_PhotoSetSize - manipulate the image data stored in a photo image.
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+B<#include E<lt>tkPhoto.hE<gt>>
+
+Tk_PhotoHandle
+B<Tk_FindPhoto>(I<interp, imageName>)
+
+void
+B<Tk_PhotoPutBlock>(I<handle, blockPtr, x, y, width, height>)
+
+void
+B<Tk_PhotoPutZoomedBlock>(I<handle, blockPtr, x, y, width, height,\>
+zoomX, zoomY, subsampleX, subsampleY)
+
+int
+B<Tk_PhotoGetImage>(I<handle, blockPtr>)
+
+void
+B<Tk_PhotoBlank>(I<handle>)
+
+void
+B<Tk_PhotoExpand>(I<handle, width, height>)
+
+void
+B<Tk_PhotoGetSize>(I<handle, widthPtr, heightPtr>)
+
+void
+B<Tk_PhotoSetSize>(I<handle, width, height>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter in which image was created.
+
+=item char *imageName (in)
+
+Name of the photo image.
+
+=item Tk_PhotoHandle handle (in)
+
+Opaque handle identifying the photo image to be affected.
+
+=item Tk_PhotoImageBlock *blockPtr (in)
+
+Specifies the address and storage layout of image data.
+
+=item int x (in)
+
+Specifies the X coordinate where the top-left corner of the block is
+to be placed within the image.
+
+=item int y (in)
+
+Specifies the Y coordinate where the top-left corner of the block is
+to be placed within the image.
+
+=item int width (in)
+
+Specifies the width of the image area to be affected (for
+B<Tk_PhotoPutBlock>) or the desired image width (for
+B<Tk_PhotoExpand> and B<Tk_PhotoSetSize>).
+
+=item int height (in)
+
+Specifies the height of the image area to be affected (for
+B<Tk_PhotoPutBlock>) or the desired image height (for
+B<Tk_PhotoExpand> and B<Tk_PhotoSetSize>).
+
+=item int *widthPtr (out)
+
+Pointer to location in which to store the image width.
+
+=item int *heightPtr (out)
+
+Pointer to location in which to store the image height.
+
+=item int subsampleX (in)
+
+Specifies the subsampling factor in the X direction for input
+image data.
+
+=item int subsampleY (in)
+
+Specifies the subsampling factor in the Y direction for input
+image data.
+
+=item int zoomX (in)
+
+Specifies the zoom factor to be applied in the X direction to pixels
+being written to the photo image.
+
+=item int zoomY (in)
+
+Specifies the zoom factor to be applied in the Y direction to pixels
+being written to the photo image.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_FindPhoto> returns an opaque handle that is used to identify a
+particular photo image to the other procedures.  The parameter is the
+name of the image, that is, the name specified to the B<image create>
+photo command, or assigned by that command if no name was specified.
+
+B<Tk_PhotoPutBlock> is used to supply blocks of image data to be
+displayed.  The call affects an area of the image of size
+I<width> x I<height> pixels, with its top-left corner at
+coordinates (I<x>,I<y>).  All of I<width>, I<height>,
+I<x>, and I<y> must be non-negative.
+If part of this area lies outside the
+current bounds of the image, the image will be expanded to include the
+area, unless the user has specified an explicit image size with the
+B<-width> and/or B<-height> widget configuration options
+(see photo(n)); in that
+case the area is silently clipped to the image boundaries.
+
+The I<block> parameter is a pointer to a
+B<Tk_PhotoImageBlock> structure, defined as follows:
+
+ typedef struct {
+ 	unsigned char *pixelPtr;
+ 	int width;
+ 	int height;
+ 	int pitch;
+ 	int pixelSize;
+ 	int offset[3];
+ } Tk_PhotoImageBlock;
+
+The I<pixelPtr> field points to the first pixel, that is, the
+top-left pixel in the block.
+The I<width> and I<height> fields specify the dimensions of the
+block of pixels.  The I<pixelSize> field specifies the address
+difference between two horizontally adjacent pixels.  Often it is 3
+or 4, but it can have any value.  The I<pitch> field specifies the
+address difference between two vertically adjacent pixels.  The
+I<offset> array contains the offsets from the address of a pixel
+to the addresses of the bytes containing the red, green and blue
+components.  These are normally 0, 1 and 2, but can have other values,
+e.g., for images that are stored as separate red, green and blue
+planes.
+
+The value given for the I<width> and I<height> parameters to
+B<Tk_PhotoPutBlock> do not have to correspond to the values specified
+in I<block>.  If they are smaller, B<Tk_PhotoPutBlock> extracts a
+sub-block from the image data supplied.  If they are larger, the data
+given are replicated (in a tiled fashion) to fill the specified area.
+These rules operate independently in the horizontal and vertical
+directions.
+
+B<Tk_PhotoPutZoomedBlock> works like B<Tk_PhotoPutBlock> except that
+the image can be reduced or enlarged for display.  The
+I<subsampleX> and I<subsampleY> parameters allow the size of the
+image to be reduced by subsampling.
+B<Tk_PhotoPutZoomedBlock> will use only pixels from the input image
+whose X coordinates are multiples of I<subsampleX>, and whose Y
+coordinates are multiples of I<subsampleY>.  For example, an image
+of 512x512 pixels can be reduced to 256x256 by setting
+I<subsampleX> and I<subsampleY> to 2.
+
+The I<zoomX> and I<zoomY> parameters allow the image to be
+enlarged by pixel replication.  Each pixel of the (possibly subsampled)
+input image will be written to a block I<zoomX> pixels wide and
+I<zoomY> pixels high of the displayed image.  Subsampling and
+zooming can be used together for special effects.
+
+B<Tk_PhotoGetImage> can be used to retrieve image data from a photo
+image.  B<Tk_PhotoGetImage> fills
+in the structure pointed to by the I<blockPtr> parameter with values
+that describe the address and layout of the image data that the
+photo image has stored internally.  The values are valid
+until the image is destroyed or its size is changed.
+B<Tk_PhotoGetImage> returns 1 for compatibility with the
+corresponding procedure in the old photo widget.
+
+B<Tk_PhotoBlank> blanks the entire area of the
+photo image.  Blank areas of a photo image are transparent.
+
+B<Tk_PhotoExpand> requests that the widget's image be expanded to be
+at least I<width> x I<height> pixels in size.  The width and/or
+height are unchanged if the user has specified an explicit image width
+or height with the B<-width> and/or B<-height> configuration
+options, respectively.
+If the image data
+are being supplied in many small blocks, it is more efficient to use
+B<Tk_PhotoExpand> or B<Tk_PhotoSetSize> at the beginning rather than
+allowing the image to expand in many small increments as image blocks
+are supplied.
+
+B<Tk_PhotoSetSize> specifies the size of the image, as if the user
+had specified the given I<width> and I<height> values to the
+B<-width> and B<-height> configuration options.  A value of
+zero for I<width> or I<height> does not change the image's width
+or height, but allows the width or height to be changed by subsequent
+calls to B<Tk_PhotoPutBlock>, B<Tk_PhotoPutZoomedBlock> or
+B<Tk_PhotoExpand>.
+
+B<Tk_PhotoGetSize> returns the dimensions of the image in
+*I<widthPtr> and *I<heightPtr>.
+
+=head1 CREDITS
+
+The code for the photo image type was developed by Paul Mackerras,
+based on his earlier photo widget code.
+
+=head1 KEYWORDS
+
+photo, image

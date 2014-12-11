@@ -1,0 +1,232 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Source_flat
+*
+* %I
+* Written by:Erik Knudsen
+* Date: September 25, 2009
+* Version: $Revision$
+* Origin: Risoe
+* Release: McXtrace 0.1_alpha
+*
+* A flat rectangular or circular surface emitting x-rays
+* %D
+* A circular or rectangular xray source. Spectrum may be either gaussian or uniform around a central wavelength/energy
+* or read from a datafile. Xrays are considered emitted uniformly into 4pi, but a square target retricts the beam to 
+* that window and scales the beam intensity accordingly.
+* If an input spectrum datafile (spectrum_file) is not specified, the beam is restricted to emit photons between E0+-dE keV, or lambda0+-dlambda Å, whichever is given.
+* The input spectrum file should be formatted such that x-ray energy/wavelength is in the first column and the intensity in the second. Any preceding
+* lines starting with # are considered part of the file header. If a datafile is given, a nonzero E0 value indicates that is is parametrized by energy (in keV)
+* as opposed to wavelength (in Å). Wavelength is the default. 
+* Flux is set in the unit photons/s
+*
+* %P
+* radius: [m]   Radius of circle in (x,y,0) plane where x-rays
+*               are generated.
+* yheight [m]   Height of rectangle in (x,y,0) plane where x-rays
+*               are generated.
+* xwidth  [m]   Width of rectangle in (x,y,0) plane where x-rays
+*               are generated. Overrides xmin and xmax.
+* xmax    [m]   upper bound of x-interval where photons are generated. 
+* xmin    [m]   Lower bound of x-interval where photons are generated.
+* dist:   [m]   Distance to target along z axis.
+* focus_xw:[m]  Width of target
+* focus_yh:[m]  Height of target
+* E0:     [keV] Mean energy of xrays.
+* dE:     [keV] Energy half spread of x-rays (flat or gaussian sigma).
+* lambda0:[AA]  Mean wavelength of x-rays.
+* dlambda:[AA]  Wavelength half spread of x-rays.
+* gauss:  [1]   Gaussian (1) or Flat (0) energy/wavelength distribution
+* flux: [pht/s] total flux radiated from the source
+* incoherent: [] Source is fully incoherent
+* phase: [] Set phase to something given. 
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Source_flat
+DEFINITION PARAMETERS (string spectrum_file=NULL)
+  SETTING PARAMETERS (radius=0, yheight=0, xwidth=0,xmin=0,xmax=0, 
+  dist=0, focus_xw=.045, focus_yh=.12, 
+  E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0)
+OUTPUT PARAMETERS (prms,square)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+SHARE
+%{
+  %include "read_table-lib"
+%}
+
+DECLARE
+%{
+  double pmul, srcArea;
+  int square;
+  struct {
+    double l0,dl;
+    double pmul,pint;
+    t_Table T;
+  } prms;
+%}
+
+INITIALIZE
+%{
+  square = 0;srcArea=0;
+  /* Determine source area */
+
+  if (xmin && xmax && !xwidth){
+    xwidth=xmax-xmin;
+  }
+
+  if (radius && !yheight && !xwidth ) {
+    square = 0;
+    srcArea = PI*radius*radius;
+  } else if(yheight && xwidth) {
+    square = 1;
+    srcArea = xwidth * yheight;
+  }
+
+  
+  if (srcArea <= 0) {
+    printf("Source_flat: %s: Source area is <= 0 !\n ERROR - Exiting\n",
+           NAME_CURRENT_COMP);
+    exit(0);
+  }
+  if (dist <= 0 || focus_xw <= 0 || focus_yh <= 0) {
+    printf("Source_flat: %s: Target area unmeaningful! (negative dist / focus_xw / focus_yh)\n ERROR - Exiting\n",
+           NAME_CURRENT_COMP);
+    exit(0);
+  }
+  
+  if (spectrum_file){
+    /*read spectrum from file*/
+    int status=0;
+    if ( (status=Table_Read(&(prms.T),spectrum_file,0))==-1){
+      fprintf(stderr,"Source_flat(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,spectrum_file?spectrum_file:"");
+      exit(-1);
+    }
+    /*data is now in table t*/
+    /*integrate to get total flux, assuming raw numbers have been corrected for measuring aperture*/
+    int i;
+    prms.pint=0;
+    t_Table *T=&(prms.T);
+    for (i=0;i<prms.T.rows-1;i++){
+      prms.pint+=((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]); 
+    }
+    printf("Source_flat(%s) Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
+    if(E0) printf("Source_flat(%s) E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
+  }else if ( !E0 && !lambda0){
+    fprintf(stderr,"Source_flat(%s): Error: Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP); 
+    exit(0);  
+  }  
+  /*calculate the X-ray weight from the flux*/
+  if (flux){
+    prms.pmul=flux;
+  }else{
+    prms.pmul=1;
+  }
+  prms.pmul*=1.0/((double) mcget_ncount());
+%}
+
+
+TRACE
+%{
+  double chi,e,k,l,r, xf, yf, rf, dx, dy, pdir;
+
+  phi=0;
+  z=0;
+  if (square == 1) {
+    if (xmin && xmax){
+      x = xmin + xwidth*rand01();
+    }else{
+      x = xwidth * (rand01() - 0.5);
+    }
+    y = yheight * (rand01() - 0.5);
+  } else {
+    chi=2*PI*rand01();                          /* Choose point on source */
+    r=sqrt(rand01())*radius;                    /* with uniform distribution. */
+    x=r*cos(chi);
+    y=r*sin(chi);
+  }
+  randvec_target_rect_real(&xf, &yf, &rf, &pdir,
+      0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+
+  dx = xf-x;
+  dy = yf-y;
+  rf = sqrt(dx*dx+dy*dy+dist*dist);
+  /*pdir contains the unnormalized solid angle weighting */
+  p = prms.pmul*pdir/(4*M_PI);
+
+  if (spectrum_file){
+    double pp=0;
+    //while (pp<=0){ 
+    l=prms.T.data[0]+ (prms.T.data[(prms.T.rows-1)*prms.T.columns] -prms.T.data[0])*rand01();
+    pp=Table_Value(prms.T,l,1);
+    //}
+    p*=pp;
+    /*if E0!=0 the tabled value is assumed to energy in keV*/
+    if (E0!=0){
+      k=E2K*l;
+    }else{
+      k=(2*M_PI/l);
+    }
+  }else if (E0){
+    if(!dE){
+      e=E0;
+    }else if (gauss){
+      e=E0+dE*randnorm();
+    }else{
+      e=randpm1()*dE + E0;
+    }
+    k=E2K*e;
+  }else if (lambda0){
+    if (!dlambda){
+      l=lambda0;
+    }else if (gauss){
+      l=lambda0+dlambda*randnorm();
+    }else{
+      l=randpm1()*dlambda*0.5 + lambda0;
+    }
+    k=(2*M_PI/l);
+  }
+  ky=k*dy/rf;
+  kx=k*dx/rf;
+  kz=k*dist/rf;
+
+  /*randomly pick phase or set to something real*/
+  if (incoherent){
+    phi=rand01()*2*M_PI;
+  }else{
+    phi=phase;
+  }
+
+  /*set polarization vector*/
+  Ex=0;Ey=0;Ez=0;
+%}
+
+FINALLY
+%{
+  Table_Free(&(prms.T));
+%}
+
+MCDISPLAY
+%{
+  if (square == 1) {
+    magnify("xy");
+    rectangle("xy",0,0,0,xwidth,yheight);
+  } else {
+    magnify("xy");
+    circle("xy",0,0,0,radius);
+  }
+  if (dist) {
+    dashed_line(0,0,0, -focus_xw/2,-focus_yh/2,dist, 4);
+    dashed_line(0,0,0,  focus_xw/2,-focus_yh/2,dist, 4);
+    dashed_line(0,0,0,  focus_xw/2, focus_yh/2,dist, 4);
+    dashed_line(0,0,0, -focus_xw/2, focus_yh/2,dist, 4);
+  }
+%}
+
+END

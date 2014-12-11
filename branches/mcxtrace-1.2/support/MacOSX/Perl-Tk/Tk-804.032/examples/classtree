@@ -1,0 +1,49 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+use Tk::widgets qw(Tree Menubar);
+
+my $mw = MainWindow->new;
+my $mb = $mw->Menubar;
+$mb->Menubutton(-text => '~File', -menuitems => [
+ [Button => 'E~xit', -command => ['destroy' => $mw]],
+ ]);
+
+my $cl = $mw->Scrolled('Tree', -width => 60, -height => 40, -separator => '.',-itemtype => 'text');
+
+# do "t/Require.t";
+enter_classes($cl,'Tk::','open');
+
+Tk::grid($cl,-sticky => 'nsew');
+$mw->gridRowconfigure(0, -weight => 1);
+$mw->gridColumnconfigure(0, -weight => 1);
+
+MainLoop;
+
+sub enter_classes
+{
+ my ($cl,$name,$mode) = @_;
+ no strict 'refs';
+ if (defined(%{$name}) && $name =~ /^(.*)::$/)
+  {
+   my $path = $1;
+   $path =~ s/::/./g;
+   my ($leaf) = $path =~ /(?:^|\.)([^\.]+)$/;
+   # print join(' ',$name,$path,$leaf),"\n";
+   $cl->add($path,-text => $leaf);
+   foreach my $child (sort keys %$name)
+    {
+     enter_classes($cl,$name.$child,'close') if $child =~ /::$/;
+    }
+   foreach my $child (sort keys %$name)
+    {
+     if ($child !~ /::$/ && defined &{$name.$child})
+      {
+       my $cp = $path.'.'.$child;
+       $cl->add($cp,-text => $child) unless $cl->infoExists($cp);
+      }
+    }
+   $cl->Activate($path,$mode);
+  }
+}
+

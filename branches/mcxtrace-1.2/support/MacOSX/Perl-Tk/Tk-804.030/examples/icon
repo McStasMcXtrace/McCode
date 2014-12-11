@@ -1,0 +1,7 @@
+#!/tools/local/perl -w
+use Tk;
+my $mw = MainWindow->new;
+my $image = $mw->Photo('-file' => Tk->findINC("icon.gif"));
+$mw->iconimage($image);
+$mw->iconify;
+MainLoop;

@@ -1,0 +1,49 @@
+#  Copyright (c) 1995-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_QueueWindowEvent - Add a window event to the Tcl event queue
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_QueueWindowEvent>(I<eventPtr, position>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item XEvent *eventPtr (in)
+
+An event to add to the event queue.
+
+=item Tcl_QueuePosition position (in)
+
+Where to add the new event in the queue:  B<TCL_QUEUE_TAIL>,
+B<TCL_QUEUE_HEAD>, or B<TCL_QUEUE_MARK>.
+
+=back
+
+=head1 DESCRIPTION
+
+This procedure places a window event on Tcl's
+internal event queue for eventual servicing.  It creates a
+Tcl_Event structure, copies the event into that structure,
+and calls B<Tcl_QueueEvent> to add the event to the queue.
+When the event is eventually removed from the queue it is
+processed just like all window events.
+
+The I<position> argument to B<Tk_QueueWindowEvent> has
+the same significance as for B<Tcl_QueueEvent>;  see the
+documentation for B<Tcl_QueueEvent> for details.
+
+=head1 KEYWORDS
+
+callback, clock, handler, modal timeout

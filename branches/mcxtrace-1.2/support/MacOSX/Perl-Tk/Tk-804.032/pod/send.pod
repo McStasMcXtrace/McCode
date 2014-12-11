@@ -1,0 +1,118 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::send - Execute a command in a different application
+
+=for category Tk Generic Methods
+
+=head1 SYNOPSIS
+
+S<    >I<$result> = I<$widget>-E<gt>B<send>(?I<options>,?I<app>=E<gt>I<cmd>?I<arg arg ...>?)
+
+=head1 DESCRIPTION
+
+This method arranges for I<cmd> (and I<arg>s) to be 'sent' to the
+application named by I<app>.  It returns the result or
+an error (hence above should probably be 'wrapped' in B<eval{}> and $@ tested).
+I<App> may be the name of any application whose main window is
+on the display containing the sender's main window;  it need not
+be within the same process.
+If no I<arg> arguments are present, then the string to be sent
+is contained entirely within the I<cmd> argument.  If one or
+more I<arg>s are present, they are concatenated separated by white space to
+form the string to be sent.
+
+If the initial arguments of the call begin with ``-''
+they are treated as options.  The following options are
+currently defined:
+
+=over 4
+
+=item B<-async>
+
+Requests asynchronous invocation.  In this case the B<send>
+command will complete immediately without waiting for I<cmd>
+to complete in the target application;  no result will be available
+and errors in the sent command will be ignored.
+If the target application is in the same process as the sending
+application then the B<-async> option is ignored.
+
+=item B<-->
+
+Serves no purpose except to terminate the list of options.  This
+option is needed only if I<app> could contain a leading ``-''
+character.
+
+=back
+
+=head1 APPLICATION NAMES
+
+The name of an application is set initially from the name of the
+program or script that created the application.
+You can query and change the name of an application with the
+B<appname> method.
+
+=head1 WHAT IS A SEND
+
+The B<send> mechanism was designed to allow Tcl/Tk applications
+to send Tcl Scripts to each other. This does not map very well onto perl/Tk.
+Perl/Tk "sends" a string to I<app>, what happens as a result of this
+depends on the receiving application. If the other application is a Tcl/Tk4.*
+application it will be treated as a Tcl Script. If the "other" application is
+perl/Tk application (including sends to self) then the string is
+passed as an argument to a method call of the following form:
+
+I<$mainwindow>-E<gt>B<Receive(>I<string>);
+
+There is a default (AutoLoaded) B<Tk::Receive> which returns an error to the
+sending application. A particular application may define its own
+B<Receive> method in any class in B<MainWindow>'s inheritance tree
+to do whatever it sees fit. For example it could B<eval> the string,
+possibly in a B<Safe> "compartment".
+
+If a Tcl/Tk application "sends" anything to a perl/Tk application
+then the perl/Tk application would have to attempt to interpret the
+incoming string as a Tcl Script. Simple cases are should not be too hard to
+emulate (split on white space and treat first element as "command" and other
+elements as arguments).
+
+=head1 SECURITY
+
+The B<send> command is potentially a serious security loophole,
+since any application that can connect to your X server can send
+scripts to your applications. Hence the default behaviour outlined above.
+(With the availability of B<Safe> it may make sense to relax default behaviour
+a little.)
+
+Unmonitored B<eval>'ing of these incoming "scripts" can cause perl to
+read and write files and invoke subprocesses under your name.
+Host-based access control such as that provided by B<xhost>
+is particularly insecure, since it allows anyone with an account
+on particular hosts to connect to your server, and if disabled it
+allows anyone anywhere to connect to your server.
+In order to provide at least a small amount of
+security, core Tk checks the access control being used by the server
+and rejects incoming sends unless (a) B<xhost>-style access control
+is enabled (i.e. only certain hosts can establish connections) and (b) the
+list of enabled hosts is empty.
+This means that applications cannot connect to your server unless
+they use some other form of authorization
+such as that provide by B<xauth>.
+
+=head1 SEE ALSO
+
+L<perlfunc/eval>, L<Safe>,
+system's administrator/corporate security guidelines etc.
+
+=head1 KEYWORDS
+
+application, name, remote execution, security, send
+
+=cut
+

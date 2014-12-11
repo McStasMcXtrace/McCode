@@ -1,0 +1,876 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1997 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::Menu - Create and manipulate Menu widgets
+
+=for category  Tk Widget Classes
+
+=head1 SYNOPSIS
+
+S<    >I<$menu> = I<$parent>-E<gt>B<Menu>(?I<options>?);
+
+=head1 STANDARD OPTIONS
+
+B<-activebackground>	B<-background>	B<-disabledforeground>	B<-relief>
+B<-activeborderwidth>	B<-borderwidth>	B<-font>	B<-takefocus>
+B<-activeforeground>	B<-cursor>	B<-foreground>
+
+See L<Tk::options> for details of the standard options.
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item Name:	B<postCommand>
+
+=item Class:	B<Command>
+
+=item Switch:	B<-postcommand>
+
+If this option is specified then it provides a L<callback|Tk::callbacks> to execute
+each time the menu is posted.  The callback is invoked by the B<post>
+method before posting the menu. Note that in 8.0 on Macintosh
+and Windows, all commands in a menu systems are executed before any
+are posted. This is due to the limitations in the individual platforms'
+menu managers.
+
+=item Name:	B<selectColor>
+
+=item Class:	B<Background>
+
+=item Switch:	B<-selectcolor>
+
+For menu entries that are check buttons or radio buttons, this option
+specifies the color to display in the indicator when the check button
+or radio button is selected.
+
+=item Name:	B<tearOff>
+
+=item Class:	B<TearOff>
+
+=item Switch:	B<-tearoff>
+
+This option must have a proper boolean value, which specifies
+whether or not the menu should include a tear-off entry at the
+top.  If so, it will exist as entry 0 of the menu and the other
+entries will number starting at 1.  The default
+menu bindings arrange for the menu to be torn off when the tear-off
+entry is invoked.
+
+=item Name:	B<tearOffCommand>
+
+=item Class:	B<TearOffCommand>
+
+=item Switch:	B<-tearoffcommand>
+
+If this option has a non-empty value, then it specifies a L<perl/Tk callback|Tk::callbacks>
+to invoke whenever the menu is torn off.  The actual command will
+consist of the value of this option, followed by a space, followed
+by the name of the menu window, followed by a space, followed by
+the name of the name of the torn off menu window.  For example, if
+the option's is ``B<a b>'' and menu B<.x.y> is torn off to
+create a new menu B<.x.tearoff1>, then the command
+``B<a b .x.y .x.tearoff1>'' will be invoked.
+
+=item Name:	B<title>
+
+=item Class:	B<Title>
+
+=item Switch:	B<-title>
+
+The string will be used to title the window created when this menu is
+torn off. If the title is NULL, then the window will have the title
+of the menubutton or the text of the cascade item from which this menu
+was invoked.
+
+=item Name:	B<type>
+
+=item Class:	B<Type>
+
+=item Switch:	B<-type>
+
+This option can be one of B<menubar>, B<tearoff>, or
+B<normal>, and is set when the menu is created. While the string
+returned by the configuration database will change if this option is
+changed, this does not affect the menu widget's behavior. This is used
+by the cloning mechanism and is not normally set outside of the Tk
+library.
+
+=back
+
+=head1 DESCRIPTION
+
+The B<Menu> method creates a new top-level window (given
+by the $widget argument) and makes it into a menu widget.
+Additional
+options, described above, may be specified on the command line
+or in the option database
+to configure aspects of the menu such as its colors and font.
+The B<menu> command returns its
+$widget argument.  At the time this command is invoked,
+there must not exist a window named $widget, but
+$widget's parent must exist.
+
+A menu is a widget that displays a collection of one-line entries arranged
+in one or more columns.  There exist several different types of entries,
+each with different properties.  Entries of different types may be
+combined in a single menu.  Menu entries are not the same as
+entry widgets.  In fact, menu entries are not even distinct widgets;
+the entire menu is one widget.
+
+Menu entries are displayed with up to three separate fields.
+The main field is a label in the form of a text string,
+a bitmap, or an image, controlled by the B<-label>,
+B<-bitmap>, and B<-image> options for the entry.
+If the  B<-accelerator> option is specified for an entry then a second
+textual field is displayed to the right of the label.  The accelerator
+typically describes a keystroke sequence that may be typed in the
+application to cause the same result as invoking the menu entry.
+The third field is an I<indicator>.  The indicator is present only for
+checkbutton or radiobutton entries.  It indicates whether the entry
+is selected or not, and is displayed to the left of the entry's
+string.
+
+In normal use, an entry becomes active (displays itself differently)
+whenever the mouse pointer is over the entry.  If a mouse
+button is released over the entry then the entry is I<invoked>.
+The effect of invocation is different for each type of entry;
+these effects are described below in the sections on individual
+entries.
+
+Entries may be I<disabled>, which causes their labels
+and accelerators to be displayed
+with dimmer colors.
+The default menu bindings will not allow
+a disabled entry to be activated or invoked.
+Disabled entries may be re-enabled, at which point it becomes
+possible to activate and invoke them again.
+
+Whenever a menu's active entry is changed, a E<lt>E<lt>MenuSelectE<gt>E<gt> virtual
+event is sent to the menu. The active item can then be queried from
+the menu, and an action can be taken, such as setting
+context-sensitive help text for the entry.
+
+=head2 COMMAND ENTRIES
+
+The most common kind of menu entry is a command entry, which
+behaves much like a button widget.  When a command entry is
+invoked, a callback is executed.  The callback
+is specified with the B<-command> option.
+
+=head2 SEPARATOR ENTRIES
+
+A separator is an entry that is displayed as a horizontal dividing
+line.  A separator may not be activated or invoked, and it has
+no behavior other than its display appearance.
+
+=head2 CHECKBUTTON ENTRIES
+
+A checkbutton menu entry behaves much like a checkbutton widget.
+When it is invoked it toggles back and forth between the selected
+and deselected states.  When the entry is selected, a particular
+value is stored in a particular global variable (as determined by
+the B<-onvalue> and B<-variable> options for the entry);  when
+the entry is deselected another value (determined by the
+B<-offvalue> option) is stored in the global variable.
+An indicator box is displayed to the left of the label in a checkbutton
+entry.  If the entry is selected then the indicator's center is displayed
+in the color given by the B<-selectcolor> option for the entry;
+otherwise the indicator's center is displayed in the background color for
+the menu.  If a B<-command> option is specified for a checkbutton
+entry, then its value is evaluated each time the entry
+is invoked;  this happens after toggling the entry's
+selected state.
+
+=head2 RADIOBUTTON ENTRIES
+
+A radiobutton menu entry behaves much like a radiobutton widget.
+Radiobutton entries are organized in groups of which only one
+entry may be selected at a time.  Whenever a particular entry
+becomes selected it stores a particular value into a particular
+global variable (as determined by the B<-value> and
+B<-variable> options for the entry).  This action
+causes any previously-selected entry in the same group
+to deselect itself.
+Once an entry has become selected, any change to the entry's
+associated variable will cause the entry to deselect itself.
+Grouping of radiobutton entries is determined by their
+associated variables:  if two entries have the same associated
+variable then they are in the same group.
+An indicator diamond is displayed to the left of the label in each
+radiobutton entry.  If the entry is selected then the indicator's
+center is displayed in the color given by the B<-selectcolor> option
+for the entry;
+otherwise the indicator's center is displayed in the background color for
+the menu.  If a B<-command> option is specified for a radiobutton
+entry, then its value is evaluated each time the entry
+is invoked;  this happens after selecting the entry.
+
+=head2 CASCADE ENTRIES
+
+A cascade entry is one with an associated menu (determined
+by the B<-menu> option).  Cascade entries allow the construction
+of cascading menus.
+The B<postcascade> method can be used to post and unpost
+the associated menu just next to of the cascade entry.
+The associated menu must be a child of the menu containing
+the cascade entry (this is needed in order for menu traversal to
+work correctly).
+
+A cascade entry posts its associated menu by invoking
+
+=over 4
+
+I<$menu>-E<gt>B<post>(I<x,y>)
+
+=back
+
+where I<menu> is the path name of the associated menu, and I<x>
+and I<y> are the root-window coordinates of the upper-right
+corner of the cascade entry.
+On Unix, the lower-level menu is unposted by executing
+
+=over 4
+
+I<$menu>-E<gt>B<unpost>
+
+=back
+
+where I<menu> is the name of the associated menu.
+On other platforms, the platform's native code takes care of unposting the
+menu.
+
+If a B<-command> option is specified for a cascade entry then it is
+evaluated whenever the entry is invoked. This is not supported on Windows.
+
+=head2 TEAR-OFF ENTRIES
+
+A tear-off entry appears at the top of the menu if enabled with the
+B<tearOff> option.  It is not like other menu entries in that
+it cannot be created with the B<add> method and
+cannot be deleted with the B<delete> method.
+When a tear-off entry is created it appears as a dashed line at
+the top of the menu.  Under the default bindings, invoking the
+tear-off entry causes a torn-off copy to be made of the menu and
+all of its submenus.
+
+=head2 MENUBARS
+
+Any menu can be set as a menubar for a toplevel window (see the
+L<Toplevel|Tk::Toplevel> constructor for syntax). On the Macintosh, whenever the
+toplevel is in front, this menu's cascade items will appear in the
+menubar across the top of the main monitor. On Windows and Unix, this
+menu's items will be displayed in a menubar accross the top of the
+window. These menus will behave according to the interface guidelines
+of their platforms. For every menu set as a menubar, a clone menu is
+made. See L<"CLONES"> for more information.
+
+As noted, menubars may behave differently on different platforms.   One
+example  of this concerns the handling of checkbuttons and radiobuttons
+within the menu.  While it is permitted to put these menu  elements  on
+menubars,  they may not be drawn with indicators on some platforms, due
+to system restrictions.
+
+=head2 SPECIAL MENUS IN MENUBARS
+
+Certain menus in a menubar will be treated specially.  On the Macintosh,
+access to the special Apple and Help menus is provided. On Windows,
+access to the Windows System menu in each window is provided. On X Windows,
+a special right-justified help menu is provided. In all cases, these
+menus must be created with the command name of the menubar menu concatenated
+with the special name. So for a menubar named .menubar, on the Macintosh,
+the special menus would be .menubar.apple and .menubar.help; on Windows,
+the special menu would be .menubar.system; on X Windows, the help
+menu would be .menubar.help.
+
+When Tk sees an Apple menu on the Macintosh, that menu's contents make
+up the first items of the Apple menu on the screen whenever the window
+containing the menubar is in front. The menu is the
+first one that the user sees and has a title which is an Apple logo.
+After all of the Tk-defined items, the menu will have a separator,
+followed by all of the items in the user's Apple Menu Items folder.
+Since the System uses a different menu definition procedure for
+the Apple menu than Tk uses for its menus, and the system APIs do
+not fully support everything Tk tries to do, the menu item will only
+have its text displayed. No font attributes, images, bitmaps, or colors
+will be displayed. In addition, a menu with a tearoff item will have
+the tearoff item displayed as "(TearOff)".
+
+When Tk see a Help menu on the Macintosh, the menu's contents are
+appended to the standard help menu on the right of the user's menubar
+whenever the user's menubar is in front. The first items in the menu
+are provided by Apple. Similar to the Apple Menu, cusomization in this
+menu is limited to what the system provides.
+
+When Tk sees a System menu on Windows, its items are appended to the
+system menu that the menubar is attached to. This menu has an icon
+representing a spacebar, and can be invoked with the mouse or by typing
+Alt+Spacebar.  Due to limitations in the Windows API, any font changes,
+colors, images, bitmaps, or tearoff images will not appear in the
+system menu.
+
+When Tk see a Help menu on X Windows, the menu is moved to be last in
+the menubar and is right justified.
+
+=head2 CLONES
+
+When a menu is set as a menubar for a toplevel window, or when a menu
+is torn off, a clone of the menu is made. This clone is a menu widget
+in its own right, but it is a child of the original. Changes in the
+configuration of the original are reflected in the
+clone. Additionally, any cascades that are pointed to are also cloned
+so that menu traversal will work right. Clones are destroyed when
+either the tearoff or menubar goes away, or when the original menu is
+destroyed.
+
+=head2 WIDGET METHODS
+
+The B<Menu> method creates a widget object.
+This object supports the B<configure> and B<cget> methods
+described in L<Tk::options> which can be used to enquire and
+modify the options described above.
+The widget also inherits all the methods provided by the generic
+L<Tk::Widget|Tk::Widget> class, and the L<Tk::Wm|Tk::Wm> class.
+
+Many of the methods for a menu take as one argument an
+indicator of which entry of the menu to operate on.  These
+indicators are called I<index>es and may be specified in
+any of the following forms:
+
+=over 4
+
+=item I<number>
+
+Specifies the entry numerically, where 0 corresponds
+to the top-most entry of the menu, 1 to the entry below it, and
+so on.
+
+=item B<active>
+
+Indicates the entry that is currently active.  If no entry is
+active then this form is equivalent to B<none>.  This form may
+not be abbreviated.
+
+=item B<end>
+
+Indicates the bottommost entry in the menu.  If there are no
+entries in the menu then this form is equivalent to B<none>.
+This form may not be abbreviated.
+
+=item B<last>
+
+Same as B<end>.
+
+=item B<none>
+
+Indicates ``no entry at all'';  this is used most commonly with
+the B<activate> option to deactivate all the entries in the
+menu.  In most cases the specification of B<none> causes
+nothing to happen in the method.
+This form may not be abbreviated.
+
+=item B<@>I<number>
+
+In this form, I<number> is treated as a y-coordinate in the
+menu's window;  the entry closest to that y-coordinate is used.
+For example, ``B<@0>'' indicates the top-most entry in the
+window.
+
+=item I<pattern>
+
+If the index doesn't satisfy one of the above forms then this
+form is used.  I<Pattern> is pattern-matched against the label of
+each entry in the menu, in order from the top down, until a
+matching entry is found.
+(In perl/Tk the matching is under review, but exact match
+should work.)
+
+=back
+
+The following methods are possible for menu widgets:
+
+=over 4
+
+=item I<$menu>-E<gt>B<activate>(I<index>)
+
+Change the state of the entry indicated by I<index> to B<active>
+and redisplay it using its active colors.
+Any previously-active entry is deactivated.  If I<index>
+is specified as B<none>, or if the specified entry is
+disabled, then the menu ends up with no active entry.
+Returns an empty string.
+
+=item I<$menu>-E<gt>B<add>(I<type, >?I<option, value, option, value, ...>?)
+
+Add a new entry to the bottom of the menu.  The new entry's type
+is given by I<type> and must be one of B<cascade>,
+B<checkbutton>, B<command>, B<radiobutton>, or B<separator>,
+or a unique abbreviation of one of the above.  If additional arguments
+are present, they specify any of the following options:
+
+=over 8
+
+=item B<-activebackground> =E<gt> I<value>
+
+Specifies a background color to use for displaying this entry when it
+is active.
+If this option is specified as an empty string (the default), then the
+B<activeBackground> option for the overall menu is used.
+If the B<$Tk::strictMotif> variable has been set to request strict
+Motif compliance, then this option is ignored and the B<-background>
+option is used in its place.
+This option is not available for separator or tear-off entries.
+
+=item B<-activeforeground> =E<gt> I<value>
+
+Specifies a foreground color to use for displaying this entry when it
+is active.
+If this option is specified as an empty string (the default), then the
+B<activeForeground> option for the overall menu is used.
+This option is not available for separator or tear-off entries.
+
+=item B<-accelerator> =E<gt> I<value>
+
+Specifies a string to display at the right side of the menu entry.
+Normally describes an accelerator keystroke sequence that may be
+typed to invoke the same function as the menu entry.  This option
+is not available for separator or tear-off entries.
+
+=item B<-background> =E<gt> I<value>
+
+Specifies a background color to use for displaying this entry when it
+is in the normal state (neither active nor disabled).
+If this option is specified as an empty string (the default), then the
+B<background> option for the overall menu is used.
+This option is not available for separator or tear-off entries.
+
+=item B<-bitmap> =E<gt> I<value>
+
+Specifies a bitmap to display in the menu instead of a textual
+label, in any of the forms accepted by B<Tk_GetBitmap>.
+This option overrides the B<-label> option but may be reset
+to an empty string to enable a textual label to be displayed.
+If a B<-image> option has been specified, it overrides
+B<-bitmap>.
+This option is not available for separator or tear-off entries.
+
+=item B<-columnbreak> =E<gt> I<value>
+
+When this option is zero, the appears below the previous entry. When
+this option is one, the menu appears at the top of a new column in the
+menu.
+
+=item B<-compound> =E<gt> I<value>
+
+Specifies whether the button should display both an image and text,
+and if so, where the image should be placed relative to the text.
+Valid values for this option are B<bottom>, B<center>, B<left>,
+B<none>, B<right> and B<top>.  The default value is B<none>, meaning
+that the button will display either an image or text, depending on the
+values of the -image and -bitmap options.
+
+=item B<-command> =E<gt> I<value>
+
+For command, checkbutton, and radiobutton entries, specifies a
+callback to execute when the menu entry is invoked.
+For cascade entries, specifies a callback to execute
+when the entry is activated (i.e. just before its submenu is
+posted).
+Not available for separator or tear-off entries.
+
+=item B<-font> =E<gt> I<value>
+
+Specifies the font to use when drawing the label or accelerator
+string in this entry.
+If this option is specified as an empty string (the default) then
+the B<font> option for the overall menu is used.
+This option is not available for separator or tear-off entries.
+
+=item B<-foreground> =E<gt> I<value>
+
+Specifies a foreground color to use for displaying this entry when it
+is in the normal state (neither active nor disabled).
+If this option is specified as an empty string (the default), then the
+B<foreground> option for the overall menu is used.
+This option is not available for separator or tear-off entries.
+
+=item B<-hidemargin> =E<gt> I<value>
+
+Specifies whether the standard margins should be drawn for this menu
+entry. This is useful when creating palette with images in them, i.e.,
+color palettes, pattern palettes, etc. 1 indicates that the margin for
+the entry is hidden; 0 means that the margin is used.
+
+=item B<-image> =E<gt> I<value>
+
+Specifies an image to display in the menu instead of a text string
+or bitmap
+The image must have been created by some previous invocation of
+B<image create>.
+This option overrides the B<-label> and B<-bitmap> options
+but may be reset to an empty string to enable a textual or
+bitmap label to be displayed.
+This option is not available for separator or tear-off entries.
+
+=item B<-indicatoron> =E<gt> I<value>
+
+Available only for checkbutton and radiobutton entries.
+I<Value> is a boolean that determines whether or not the
+indicator should be displayed.
+
+=item B<-label> =E<gt> I<value>
+
+Specifies a string to display as an identifying label in the menu
+entry.  Not available for separator or tear-off entries.
+
+=item B<-menu> =E<gt> I<value>
+
+Available only for cascade entries.  Specifies the path name of
+the submenu associated with this entry.
+The submenu must be a child of the menu.
+
+=item B<-offvalue> =E<gt> I<value>
+
+Available only for checkbutton entries.  Specifies the value to
+store in the entry's associated variable when the entry is
+deselected.
+
+=item B<-onvalue> =E<gt> I<value>
+
+Available only for checkbutton entries.  Specifies the value to
+store in the entry's associated variable when the entry is selected.
+
+=item B<-selectcolor> =E<gt> I<value>
+
+Available only for checkbutton and radiobutton entries.
+Specifies the color to display in the indicator when the entry is
+selected.
+If the value is an empty string (the default) then the B<selectColor>
+option for the menu determines the indicator color.
+
+=item B<-selectimage> =E<gt> I<value>
+
+Available only for checkbutton and radiobutton entries.
+Specifies an image to display in the entry (in place of
+the B<-image> option) when it is selected.
+I<Value> is the name of an image, which must have been created
+by some previous invocation of B<image create>.
+This option is ignored unless the B<-image> option has
+been specified.
+
+=item B<-state> =E<gt> I<value>
+
+Specifies one of three states for the entry:  B<normal>, B<active>,
+or B<disabled>.  In normal state the entry is displayed using the
+B<foreground> option for the menu and the B<background>
+option from the entry or the menu.
+The active state is typically used when the pointer is over the entry.
+In active state the entry is displayed using the B<activeForeground>
+option for the menu along with the B<activebackground> option from
+the entry.  Disabled state means that the entry
+should be insensitive:  the default bindings will refuse to activate
+or invoke the entry.
+In this state the entry is displayed according to the
+B<disabledForeground> option for the menu and the
+B<background> option from the entry.
+This option is not available for separator entries.
+
+=item B<-underline> =E<gt> I<value>
+
+Specifies the integer index of a character to underline in the entry.
+This option is also queried by the default bindings and used to
+implement keyboard traversal.
+0 corresponds to the first character of the text displayed in the entry,
+1 to the next character, and so on.
+If a bitmap or image is displayed in the entry then this option is ignored.
+This option is not available for separator or tear-off entries.
+
+=item B<-value> =E<gt> I<value>
+
+Available only for radiobutton entries.  Specifies the value to
+store in the entry's associated variable when the entry is selected.
+If an empty string is specified, then the B<-label> option
+for the entry as the value to store in the variable.
+
+=item B<-variable> =E<gt> I<value>
+
+Available only for checkbutton and radiobutton entries.  Specifies
+the name of a global value to set when the entry is selected.
+For checkbutton entries the variable is also set when the entry
+is deselected.  For radiobutton entries, changing the variable
+causes the currently-selected entry to deselect itself.
+
+=back
+
+The B<add> method returns an empty string.
+
+=item I<$menu>-E<gt>B<clone>(I<$parent> ?, I<cloneType?>)
+
+Makes a clone of the current menu as a child of I<$parent>. This clone
+is a menu in its own right, but any changes to the clone are
+propogated to the original menu and vice versa. I<cloneType> can be
+B<normal>, B<menubar>, or B<tearoff>. Should not normally be
+called outside of the Tk library. See L<"CLONES"> for
+more information.
+
+=item I<$menu>-E<gt>B<delete>(I<index1>?, I<index2>?)
+
+Delete all of the menu entries between I<index1> and
+I<index2> inclusive.
+If I<index2> is omitted then it defaults to I<index1>.
+Attempts to delete a tear-off menu entry are ignored (instead, you
+should change the B<tearOff> option to remove the tear-off entry).
+
+=item I<$menu>-E<gt>B<entrycget>(I<index, option>)
+
+Returns the current value of a configuration option for
+the entry given by I<index>.
+I<Option> may have any of the values accepted by the B<add>
+method.
+
+=item I<$menu>-E<gt>B<entryconfigure>(I<index> ?,I<options>?)
+
+This method is similar to the B<configure> method, except that
+it applies to the options for an individual entry, whereas B<configure>
+applies to the options for the menu as a whole.
+I<Options> may have any of the values accepted by the B<add>
+method.  If I<options> are specified, options are modified
+as indicated
+in the method call and the method returns an empty string.
+If no I<options> are specified, returns a list describing
+the current options for entry I<index> (see L<Tk::options> for
+information on the format of this list).
+
+=item I<$menu>-E<gt>B<index>(I<index>)
+
+Returns the numerical index corresponding to I<index>, or
+B<none> if I<index> was specified as B<none>.
+
+=item I<$menu>-E<gt>B<insert>(I<index, type>?, I<-option>=E<gt>I<value>, ...?)
+
+Same as the B<add> method except that it inserts the new
+entry just before the entry given by I<index>, instead of appending
+to the end of the menu.  The I<type>, I<-option>, and I<value>
+arguments have the same interpretation as for the B<add> widget
+method.  It is not possible to insert new menu entries before the
+tear-off entry, if the menu has one.
+
+=item I<$menu>-E<gt>B<invoke>(I<index>)
+
+Invoke the action of the menu entry.  See the sections on the
+individual entries above for details on what happens.  If the
+menu entry is disabled then nothing happens.  If the
+entry has a callback associated with it then the result of that
+callback is returned as the result of the B<invoke> widget
+method.  Otherwise the result is an empty string.  Note:  invoking
+a menu entry does not automatically unpost the menu;  the default
+bindings normally take care of this before invoking the B<invoke>
+method.
+
+=item I<$menu>-E<gt>B<post>(I<x, y>)
+
+Arrange for the menu to be displayed on the screen at the root-window
+coordinates given by I<x> and I<y>.  These coordinates are
+adjusted if necessary to guarantee that the entire menu is visible on
+the screen.  This method normally returns an empty string.
+If the B<postCommand> option has been specified, then its value is
+executed before posting the menu and the result of
+that callback is returned as the result of the B<post> widget
+method.
+If an error returns while executing the method, then the error is
+returned without posting the menu.
+
+=item I<$menu>-E<gt>B<postcascade>(I<index>)
+
+Posts the submenu associated with the cascade entry given by
+I<index>, and unposts any previously posted submenu.
+If I<index> doesn't correspond to a cascade entry,
+or if I<$menu> isn't posted,
+the method has no effect except to unpost any currently posted
+submenu.
+
+=item I<$menu>-E<gt>B<type>(I<index>)
+
+Returns the type of the menu entry given by I<index>.
+This is the I<type> argument passed to the B<add> widget
+method when the entry was created, such as B<command>
+or B<separator>, or B<tearoff> for a tear-off entry.
+
+=item I<$menu>-E<gt>B<unpost>
+
+Unmap the window so that it is no longer displayed.  If a
+lower-level cascaded menu is posted, unpost that menu.  Returns an
+empty string. This method does not work on Windows and the
+Macintosh, as those platforms have their own way of unposting menus.
+
+=item I<$menu>-E<gt>B<yposition>(I<index>)
+
+Returns a decimal string giving the y-coordinate within the menu
+window of the topmost pixel in the entry specified by I<index>.
+
+=back
+
+=head1 MENU CONFIGURATIONS
+
+The default bindings support four different ways of using menus:
+
+=over 4
+
+=item B<Pulldown Menus in Menubar>
+
+This is the most command case. You create a menu widget that will become the
+menu bar. You then add cascade entries to this menu, specifying the
+pull down menus you wish to use in your menu bar. You then create all
+of the pulldowns. Once you have done this, specify the menu using the
+B<-menu> option of the toplevel's method. See the
+B<toplevel> manual entry for details.
+
+=item B<Pulldown Menus in Menu Buttons>
+
+This is the compatable way to do menu bars.  You create one menubutton
+widget for each top-level menu, and typically you arrange a series of
+menubuttons in a row in a menubar window.  You also create the top-level menus
+and any cascaded submenus, and tie them together with B<-menu>
+options in menubuttons and cascade menu entries.  The top-level menu must
+be a child of the menubutton, and each submenu must be a child of the
+menu that refers to it.  Once you have done this, the default bindings
+will allow users to traverse and invoke the tree of menus via its
+menubutton;  see the B<menubutton> documentation for details.
+
+=item B<Popup Menus>
+
+Popup menus typically post in response to a mouse button press or
+keystroke.  You create the popup menus and any cascaded submenus,
+then you call the B<Post> method at the appropriate time
+to post the top-level menu.
+
+I<$menu>-E<gt>B<Post>(I<$x>,I<$y>?,I<$entry>?)
+
+I<$x> and I<$y> are the root window coordinates at which the I<$menu>
+will be displayed. If I<$entry> is specified then that entry is centred
+on that point, otherwise the top-left corner of the I<$menu> is placed
+at that point.
+
+B<Menu> also inherits methods from L<Tk::Wm> and so the method
+B<Popup> can be used to position menu relative to other windows, the
+mouse cursor or the screen.
+
+=item B<Option Menus>
+
+An option menu consists of a menubutton with an associated menu
+that allows you to select one of several values.  The current value
+is displayed in the menubutton and is also stored in a global
+variable.  Use the L<Tk::Optionmenu> class to create option
+menubuttons and their menus.
+
+=item B<Torn-off Menus>
+
+You create a torn-off menu by invoking the tear-off entry at
+the top of an existing menu.  The default bindings will create a new menu
+that is a copy of the original menu and leave it permanently
+posted as a top-level window.  The torn-off menu behaves just
+the same as the original menu.
+
+=back
+
+=head1 DEFAULT BINDINGS
+
+Tk automatically creates class bindings for menus that give them
+the following default behavior:
+
+=over 4
+
+=item [1]
+
+When the mouse enters a menu, the entry underneath the mouse
+cursor activates;  as the mouse moves around the menu, the active
+entry changes to track the mouse.
+
+=item [2]
+
+When the mouse leaves a menu all of the entries in the menu
+deactivate, except in the special case where the mouse moves from
+a menu to a cascaded submenu.
+
+=item [3]
+
+When a button is released over a menu, the active entry (if any) is invoked.
+The menu also unposts unless it is a torn-off menu.
+
+=item [4]
+
+The Space and Return keys invoke the active entry and
+unpost the menu.
+
+=item [5]
+
+If any of the entries in a menu have letters underlined with
+with B<-underline> option, then pressing one of the underlined
+letters (or its upper-case or lower-case equivalent) invokes that
+entry and unposts the menu.
+
+=item [6]
+
+The Escape key aborts a menu selection in progress without invoking any
+entry.  It also unposts the menu unless it is a torn-off menu.
+
+=item [7]
+
+The Up and Down keys activate the next higher or lower entry
+in the menu.  When one end of the menu is reached, the active
+entry wraps around to the other end.
+
+=item [8]
+
+The Left key moves to the next menu to the left.
+If the current menu is a cascaded submenu, then the submenu is
+unposted and the current menu entry becomes the cascade entry
+in the parent.
+If the current menu is a top-level menu posted from a
+menubutton, then the current menubutton is unposted and the
+next menubutton to the left is posted.
+Otherwise the key has no effect.
+The left-right order of menubuttons is determined by their stacking
+order:  Tk assumes that the lowest menubutton (which by default
+is the first one created) is on the left.
+
+=item [9]
+
+The Right key moves to the next menu to the right.
+If the current entry is a cascade entry, then the submenu is
+posted and the  current menu entry becomes the first entry
+in the submenu.
+Otherwise, if the current menu was posted from a
+menubutton, then the current menubutton is unposted and the
+next menubutton to the right is posted.
+
+Disabled menu entries are non-responsive:  they don't activate and
+they ignore mouse button presses and releases.
+
+The behavior of menus can be changed by defining new bindings for
+individual widgets or by redefining the class bindings.
+
+=back
+
+=head1 BUGS
+
+At present it isn't possible to use the
+option database to specify values for the options to individual
+entries.
+
+=head1 SEE ALSO
+
+L<Tk::callbacks|Tk::callbacks>
+
+=head1 KEYWORDS
+
+menu, widget
+
+=cut
+

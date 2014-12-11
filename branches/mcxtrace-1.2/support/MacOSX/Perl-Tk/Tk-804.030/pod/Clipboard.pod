@@ -1,0 +1,89 @@
+#  Copyright (c) 1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::clipboard - Manipulate Tk clipboard
+
+=for category User Interaction
+
+=head1 SYNOPSIS
+
+I<$widget>-E<gt>B<clipboard>I<Option>?(I<args>)?
+
+=head1 DESCRIPTION
+
+This command provides an interface to the Tk clipboard,
+which stores data for later retrieval using the selection mechanism.
+In order to copy data into the clipboard, B<clipboardClear> must
+be called, followed by a sequence of one or more calls to
+B<clipboardAppend>.  To ensure that the clipboard is updated atomically, all
+appends should be completed before returning to the event loop.
+
+The following methods are currently supported:
+
+=over 4
+
+=item I<$widget>-E<gt>B<clipboardClear>
+
+Claims ownership of the clipboard on I<$widget>'s display and removes
+any previous contents.   Returns an empty string.
+
+=item I<$widget>-E<gt>B<clipboardAppend>(?B<-format>=E<gt>I<format>?,?B<-type>=E<gt>I<type>?,?B<-->?,I<data>)
+
+Appends I<data> to the clipboard on $widget's
+display in the form given by I<type> with the representation given
+by I<format> and claims ownership of the clipboard on $widget's
+display.
+
+=over 4
+
+I<Type> specifies the form in which the selection is to be returned
+(the desired ``target'' for conversion, in ICCCM terminology), and
+should be an atom name such as STRING or FILE_NAME; see the
+Inter-Client Communication Conventions Manual for complete details.
+I<Type> defaults to STRING.
+
+The I<format> argument specifies the representation that should be
+used to transmit the selection to the requester (the second column of
+Table 2 of the ICCCM), and defaults to STRING.  If I<format> is
+STRING, the selection is transmitted as 8-bit ASCII characters.
+See the L<Tk::Selection> documentation for explanation of what happens
+if I<format> is not STRING.
+Note that arguments passed to
+B<clipboardAppend> are concatenated before conversion, so the
+caller must take care to ensure appropriate spacing across string
+boundaries.  All items appended to the clipboard with the same
+I<type> must have the same I<format>.
+
+A B<--> argument may be specified to mark the end of options:  the
+next argument will always be used as I<data>.
+This feature may be convenient if, for example, I<data> starts
+with a B<->.
+
+=back
+
+=back
+
+=over 4
+
+=item I<$widget>-E<gt>B<clipboardGet>( ?-type? );
+
+Retrieve data from the clipboard on  I<widget>'s  display.
+I<-type> specifies the form in which the data is
+to be returned and should be an atom  name  such  as  STRING  or
+FILE_NAME.  Type defaults to STRING.  This command is equivalent 
+to C<SelectionGet( -selection =E<gt> 'CLIPBOARD' )>.
+
+=back
+
+=head1 KEYWORDS
+
+clear, format, clipboard, append, selection, type
+
+=cut
+

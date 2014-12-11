@@ -1,0 +1,417 @@
+#  Copyright (c) 1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::event - Miscellaneous event facilities: define virtual events and generate events
+
+=for category Binding Events and Callbacks
+
+=head1 SYNOPSIS
+
+I<$widget>-E<gt>B<event>I<Action>(?I<arg, arg, ...>?);
+
+=head1 DESCRIPTION
+
+The B<event>I<Action> methods provides several facilities for dealing with
+window system events, such as defining virtual events and synthesizing
+events.  Virtual events are shared by all widgets of the same
+B<MainWindow>.  Different L<MainWindow|Tk::MainWindow>s can have different
+virtual event.
+
+The following methods are currently supported:
+
+=over 4
+
+=item I<$widget>-E<gt>B<eventAdd>(B<'E<lt>E<lt>>I<virtual>B<E<gt>E<gt>'>I<, sequence >?,I<sequence, ...>?)
+
+Associates the virtual event I<virtual> with the physical
+event sequence(s) given by the I<sequence> arguments, so that
+the virtual event will trigger whenever any one of the I<sequence>s
+occurs.
+I<Virtual> may be any string value and I<sequence> may have
+any of the values allowed for the I<sequence> argument to the
+L<bind|Tk::bind> method.
+If I<virtual> is already defined, the new physical event sequences
+add to the existing sequences for the event.
+
+=item I<$widget>-E<gt>B<eventDelete>(B<'E<lt>E<lt>>I<virtual>B<E<gt>E<gt>'> ?,I<sequence,> I<sequence, ...>?)
+
+Deletes each of the I<sequence>s from those associated with
+the virtual event given by I<virtual>.
+I<Virtual> may be any string value and I<sequence> may have
+any of the values allowed for the I<sequence> argument to the
+L<bind|Tk::bind> method.
+Any I<sequence>s not currently associated with I<virtual>
+are ignored.
+If no I<sequence> argument is provided, all physical event sequences
+are removed for I<virtual>, so that the virtual event will not
+trigger anymore.
+
+=item I<$widget>-E<gt>B<eventGenerate>(I<event> ?,I<option =E<gt> value, option =E<gt> value, ...>?)
+
+Generates a window event and arranges for it to be processed just as if
+it had come from the window system.
+I<$window> is a reference to the window for which the event
+will be generated.
+I<Event> provides a basic description of
+the event, such as B<E<lt>Shift-Button-2E<gt>> or B<E<lt>E<lt>PasteE<gt>E<gt>>.
+If I<Window> is empty the whole screen is meant, and coordinates
+are relative to the screen.
+I<Event> may have any of the forms allowed for the I<sequence>
+argument of the L<bind|Tk::bind> method except that it must consist
+of a single event pattern, not a sequence.
+I<Option-value> pairs may be used to specify additional
+attributes of the event, such as the x and y mouse position;
+see L<"EVENT FIELDS"> below.  If the B<-when> option is not specified, the
+event is processed immediately:  all of the handlers for the event
+will complete before the B<eventGenerate> method returns.
+If the B<-when> option is specified then it determines when the
+event is processed.
+
+=item I<$widget>-E<gt>B<eventInfo>(?'B<E<lt>E<lt>>I<virtual>B<E<gt>E<gt>'>?)
+
+Returns information about virtual events.
+If the B<E<lt>E<lt>>I<virtual>B<E<gt>E<gt>> argument is omitted, the return value
+is a list of all the virtual events that are currently defined.
+If B<E<lt>E<lt>>I<virtual>B<E<gt>E<gt>> is specified then the return value is
+a list whose elements are the physical event sequences currently
+defined for the given virtual event;  if the virtual event is
+not defined then B<undef> is returned.
+
+=back
+
+=head1 EVENT FIELDS
+
+The following options are supported for the B<eventGenerate>
+method.  These correspond to the ``%'' expansions
+allowed in binding callback for the L<bind|Tk::bind> method.
+
+=over 4
+
+=item B<-above> => I<window>
+
+I<Window> specifies the I<above> field for the event,
+either as a window path name or as an integer window id.
+Valid for B<Configure> events.
+Corresponds to the L<%a|Tk::bind/'a'> substitution for binding scripts.
+
+=item B<-borderwidth> => I<size>
+
+I<Size> must be a screen distance;  it specifies the
+I<border_width> field for the event.
+Valid for B<Configure> events.
+Corresponds to the L<%B|Tk::bind/'B'> substitution for binding scripts.
+
+=item B<-button> => I<number>
+
+I<Number> must be an integer;  it specifies the I<detail> field
+for a B<ButtonPress> or B<ButtonRelease> event, overriding
+any button  number provided in the base I<event> argument.
+Corresponds to the L<%b|Tk::bind/'b'> substitution for binding scripts.
+
+=item B<-count> => I<number>
+
+I<Number> must be an integer;  it specifies the I<count> field
+for the event.  Valid for B<Expose> events.
+Corresponds to the L<%c|Tk::bind/'c'> substitution for binding scripts.
+
+=item B<-delta> =E<gt> I<number>
+
+B<number> must be an integer; it specifies the B<delta> field for the
+B<MouseWheel> event.  The delta refers to the direction and magnitude the
+mouse wheel was rotated.  Note the value is not a screen distance but
+are units of motion in the mouse wheel.  Typically these values are
+multiples of 120.  For example, 120 should scroll the text widget up 4
+lines and -240 would scroll the text widget down 8 lines.  Of course,
+other widgets may define different behaviors for mouse wheel motion.
+This field corresponds to the %D substitution for binding scripts.
+
+=item B<-detail> => I<detail>
+
+I<Detail> specifies the I<detail> field for the event
+and must be one of the following:
+
+=over 8
+
+ NotifyAncestor	        NotifyNonlinearVirtual
+ NotifyDetailNone       NotifyPointer
+ NotifyInferior	        NotifyPointerRoot
+ NotifyNonlinear        NotifyVirtual
+
+=back
+
+Valid for B<Enter>, B<Leave>, B<FocusIn> and
+B<FocusOut> events.
+Corresponds to the L<%d|Tk::bind/'d'> substitution for binding scripts.
+
+=item B<-focus>I< boolean>
+
+I<Boolean> must be a boolean value;  it specifies the I<focus>
+field for the event.
+Valid for B<Enter> and B<Leave> events.
+Corresponds to the L<%f|Tk::bind/'f'> substitution for binding scripts.
+
+=item B<-height>I< size>
+
+I<Size> must be a screen distance;  it specifies the I<height>
+field for the event.  Valid for B<Configure> events.
+Corresponds to the L<%h|Tk::bind/'h'> substitution for binding scripts.
+
+=item B<-keycode>I< number>
+
+I<Number>  must be an integer;  it specifies the I<keycode>
+field for the event.
+Valid for B<KeyPress> and B<KeyRelease> events.
+Corresponds to the L<%k|Tk::bind/'k'> substitution for binding scripts.
+
+=item B<-keysym>I< name>
+
+I<Name> must be the name of a valid keysym, such as B<g>,
+B<space>, or B<Return>;  its corresponding
+keycode value is used as the I<keycode> field for event, overriding
+any detail specified in the base I<event> argument.
+Valid for B<KeyPress> and B<KeyRelease> events.
+Corresponds to the L<%K|Tk::bind/'K'> substitution for binding scripts.
+
+=item B<-mode>I< notify>
+
+I<Notify> specifies the I<mode> field for the event and must be
+one of B<NotifyNormal>, B<NotifyGrab>, B<NotifyUngrab>, or
+B<NotifyWhileGrabbed>.
+Valid for B<Enter>, B<Leave>, B<FocusIn>, and
+B<FocusOut> events.
+Corresponds to the L<%m|Tk::bind/'m'> substitution for binding scripts.
+
+=item B<-override>I< boolean>
+
+I<Boolean> must be a boolean value;  it specifies the
+I<override_redirect> field for the event.
+Valid for B<Map>, B<Reparent>, and B<Configure> events.
+Corresponds to the L<%o|Tk::bind/'o'> substitution for binding scripts.
+
+=item B<-place>I< where>
+
+I<Where> specifies the I<place> field for the event;  it must be
+either B<PlaceOnTop> or B<PlaceOnBottom>.
+Valid for B<Circulate> events.
+Corresponds to the L<%p|Tk::bind/'p'> substitution for binding scripts.
+
+=item B<-root>I< window>
+
+I<Window> must be either a window path name or an integer window
+identifier;  it specifies the I<root> field for the event.
+Valid for B<KeyPress>, B<KeyRelease>, B<ButtonPress>,
+B<ButtonRelease>, B<Enter>, B<Leave>, and B<Motion>
+events.
+Corresponds to the L<%R|Tk::bind/'R'> substitution for binding scripts.
+
+=item B<-rootx>I< coord>
+
+I<Coord> must be a screen distance;  it specifies the I<x_root>
+field for the event.
+Valid for B<KeyPress>, B<KeyRelease>, B<ButtonPress>,
+B<ButtonRelease>, B<Enter>, B<Leave>, and B<Motion>
+events.  Corresponds to the L<%X|Tk::bind/'X'> substitution for binding scripts.
+
+=item B<-rooty>I< coord>
+
+I<Coord> must be a screen distance;  it specifies the I<y_root>
+field for the event.
+Valid for B<KeyPress>, B<KeyRelease>, B<ButtonPress>,
+B<ButtonRelease>, B<Enter>, B<Leave>, and B<Motion>
+events.
+Corresponds to the L<%Y|Tk::bind/'Y'> substitution for binding scripts.
+
+=item B<-sendevent>I< boolean>
+
+B<Boolean> must be a boolean value;  it specifies the I<send_event>
+field for the event.  Valid for all events.  Corresponds to the
+L<%E|Tk::bind/'E'> substitution for binding scripts.
+
+=item B<-serial>I< number>
+
+I<Number> must be an integer;  it specifies the I<serial> field
+for the event.  Valid for all events.
+Corresponds to the L<%#|Tk::bind/'#'> substitution for binding scripts.
+
+=item B<-state>I< state>
+
+I<State> specifies the I<state> field for the event.
+For B<KeyPress>, B<KeyRelease>, B<ButtonPress>,
+B<ButtonRelease>, B<Enter>, B<Leave>, and B<Motion> events
+it must be an integer value.
+For B<Visibility> events it must be one of B<VisibilityUnobscured>,
+B<VisibilityPartiallyObscured>, or B<VisibilityFullyObscured>.
+This option overrides any modifiers such as B<Meta> or B<Control>
+specified in the base I<event>.
+Corresponds to the L<%s|Tk::bind/'s'> substitution for binding scripts.
+
+=item B<-subwindow>I< window>
+
+I<Window> specifies the I<subwindow> field for the event, either
+as a path name for a Tk widget or as an integer window identifier.
+Valid for B<KeyPress>, B<KeyRelease>, B<ButtonPress>,
+B<ButtonRelease>, B<Enter>, B<Leave>, and B<Motion> events.
+Similar to L<%S|Tk::bind/'S'> substitution for binding scripts.
+
+=item B<-time>I< integer>
+
+I<Integer> must be an integer value;  it specifies the I<time> field
+for the event.
+Valid for B<KeyPress>, B<KeyRelease>, B<ButtonPress>,
+B<ButtonRelease>, B<Enter>, B<Leave>, B<Motion>,
+and B<Property> events.
+Corresponds to the L<%t|Tk::bind/'t'> substitution for binding scripts.
+
+
+=item B<-warp>I< boolean>
+
+I<boolean> must be a boolean value;  it specifies whether
+the screen pointer should be warped as well.
+Valid for B<KeyPress>, B<KeyRelease>, B<ButtonPress>,
+B<ButtonRelease>, and B<Motion> events.
+
+=item B<-width>I< size>
+
+I<Size> must be a screen distance;  it specifies the I<width> field
+for the event.
+Valid for B<Configure> events.
+Corresponds to the L<%w|Tk::bind/'w'> substitution for binding scripts.
+
+=item B<-when>I< when>
+
+I<When> determines when the event will be processed;  it must have one
+of the following values:
+
+=over 8
+
+=item B<now>
+
+Process the event immediately, before the command returns.
+This also happens if the B<-when> option is omitted.
+
+=item B<tail>
+
+Place the event on perl/Tk's event queue behind any events already
+queued for this application.
+
+=item B<head>
+
+Place the event at the front of perl/Tk's event queue, so that it
+will be handled before any other events already queued.
+
+=item B<mark>
+
+Place the event at the front of perl/Tk's event queue but behind any
+other events already queued with B<-when mark>.
+This option is useful when generating a series of events that should
+be processed in order but at the front of the queue.
+
+=back
+
+=item B<-x>I< coord>
+
+I<Coord> must be a screen distance;  it specifies the I<x> field
+for the event.
+Valid for B<KeyPress>, B<KeyRelease>, B<ButtonPress>,
+B<ButtonRelease>, B<Motion>, B<Enter>, B<Leave>,
+B<Expose>, B<Configure>, B<Gravity>, and B<Reparent>
+events.
+Corresponds to the the L<%x|Tk::bind/'x'> substitution for binding scripts.
+If I<Window> is empty the coordinate is relative to the
+screen, and this option corresponds to the L<%X|Tk::bind/'X'> substitution
+for binding scripts.
+
+=item B<-y>I< coord>
+
+I<Coord> must be a screen distance;  it specifies the I<y>
+field for the event.
+Valid for B<KeyPress>, B<KeyRelease>, B<ButtonPress>,
+B<ButtonRelease>, B<Motion>, B<Enter>, B<Leave>,
+B<Expose>, B<Configure>, B<Gravity>, and B<Reparent>
+events.
+Corresponds to the the L<%y|Tk::bind/'y'> substitution for binding scripts.
+If I<Window> is empty the coordinate is relative to the
+screen, and this option corresponds to the L<%Y|Tk::bind/'Y'> substitution
+for binding scripts.
+
+Any options that are not specified when generating an event are filled
+with the value 0, except for I<serial>, which is filled with the
+next X event serial number.
+
+=back
+
+=head1 VIRTUAL EVENT EXAMPLES
+
+In order for a virtual event binding to trigger, two things must
+happen.  First, the virtual event must be defined with the
+B<eventAdd> method.  Second, a binding must be created for
+the virtual event with the B<bind> method.
+Consider the following virtual event definitions:
+
+ $widget->eventAdd('<<Paste>>' => '<Control-y>');
+ $widget->eventAdd('<<Paste>>' => '<Button-2>');
+ $widget->eventAdd('<<Save>>' => '<Control-X><Control-S>');
+ $widget->eventAdd('<<Save>>' => '<Shift-F12>');
+
+In the B<bind> method, a virtual event can be bound like any other
+builtin event type as follows:
+
+ $entry->bind('Tk::Entry', '<<Paste>>' => sub {
+ 		$entry->Insert($entry->selectionGet) });
+
+The double angle brackets are used to specify that a virtual event is being
+bound.  If the user types Control-y or presses button 2, or if
+a B<E<lt>E<lt>PasteE<gt>E<gt>> virtual event is synthesized with B<eventGenerate>,
+then the B<E<lt>E<lt>PasteE<gt>E<gt>> binding will be invoked.
+
+If a virtual binding has the exact same sequence as a separate
+physical binding, then the physical binding will take precedence.
+Consider the following example:
+
+ $mw->eventAdd('<<Paste>>' => '<Control-y>','<Meta-Control-y>');
+ $mw->bind('Tk::Entry', '<Control-y>' => sub{print 'Control-y'});
+ $mw->bind('Tk::Entry', '<<Paste>>'   => sub{print 'Paste'});
+
+When the user types Control-y the B<E<lt>Control-yE<gt>> binding
+will be invoked, because a physical event is considered
+more specific than a virtual event, all other things being equal.
+However, when the user types Meta-Control-y the
+B<E<lt>E<lt>PasteE<gt>E<gt>> binding will be invoked, because the
+B<Meta> modifier in the physical pattern associated with the
+virtual binding is more specific than the B<E<lt>Control-y>E<gt> sequence for
+the physical event.
+
+Bindings on a virtual event may be created before the virtual event exists.
+Indeed, the virtual event never actually needs to be defined, for instance,
+on platforms where the specific virtual event would meaningless or
+ungeneratable.
+
+When a definition of a virtual event changes at run time, all windows
+will respond immediately to the new definition.
+Starting from the preceding example, if the following code is executed:
+
+ $entry->bind(ref($entry), '<Control-y>' => undef);
+ $entry->eventAdd('<<Paste>>' => '<Key-F6>');
+
+the behavior will change such in two ways.  First, the shadowed
+B<E<lt>E<lt>PasteE<gt>E<gt>> binding will emerge.
+Typing Control-y will no longer invoke the B<E<lt>Control-yE<gt>> binding,
+but instead invoke the virtual event B<E<lt>E<lt>PasteE<gt>E<gt>>.  Second,
+pressing the F6 key will now also invoke the B<E<lt>E<lt>PasteE<gt>E<gt>> binding.
+
+=head1 SEE ALSO
+
+L<Tk::bind|Tk::bind>
+L<Tk::callbacks|Tk::callbacks>
+
+=head1 KEYWORDS
+
+event, binding, define, handle, virtual event
+
+=cut
+

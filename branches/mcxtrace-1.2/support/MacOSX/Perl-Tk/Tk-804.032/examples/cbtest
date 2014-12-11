@@ -1,0 +1,22 @@
+#!/usr/local/bin/perl
+
+use Tk;
+use Tk::Pretty;
+
+sub lots
+{
+ &Tk::Pretty::PrintArgs;
+ return (0..10);
+}
+
+sub one
+{
+ &Tk::Pretty::PrintArgs;
+ return "Something";
+}
+
+print Pretty(Tk::Callback->new(\&lots)->Call('a'..'d')),"\n";
+print Pretty(Tk::Callback->new([\&lots,'A'..'F'])->Call('a'..'d')),"\n";
+print Pretty(Tk::Callback->new(\&one)->Call('a'..'d')),"\n";
+print Pretty(Tk::Callback->new([\&one,'A'..'F'])->Call('a'..'d')),"\n";
+

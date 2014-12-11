@@ -1,0 +1,112 @@
+This is what one person had to do to get Tk working on some
+SVR4 machines.
+
+I would appreciate knowing if this is generic to SVR4,
+or if these machines are particularly obscure.
+
+Nick.
+
+From  owner-ptk@WPI.EDU  Thu Jul 27 21:13:26 1995
+Return-Path: <owner-ptk@WPI.EDU>
+Message-Id: <m0sbZHt-0006KIC@holos.com>
+From: mgm@holos.com (Martha Armour)
+Subject: Yet Another SVR4 Update
+To: ptk@WPI.EDU
+Date: Thu, 27 Jul 1995 16:12:08 -0400 (EDT)
+Cc: perl5-porters@nicoh.com
+Reply-To: mgm@holos.com
+X-Mailer: ELM [version 2.4 PL24]
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Content-Length: 3791
+Sender: owner-ptk@WPI.EDU
+Precedence: bulk
+P-From: mgm@holos.com (Martha Armour)
+
+Tk-b5 is finally working on both of my SVR4 platforms.  After much
+gnashing of my teeth and pulling of my hair, I turned my problems over
+to a co-worker.  His trials, tribulations and successes follow:
+
+The following was written by Len Reed <lbr@holos.com>:
+
+I've been fooling with Tk on three platforms:
+
+(A) AT&T GIS (formerly NCR) SVR4.
+	uname gives "4.0 3.0 3360,3430-R 386/486/MC"
+	This is a 3430 Microchannel machine.
+	It uses the "Metaware" compiler.
+(L) Linux (a.out executables), kernel version 1.2.5.  Uses gcc.
+(M) Motorola 88k SVR4 Unix, uname gives "4.0 R40V4.2 m88k mc88100"
+    This machine came from Motorola with gcc (named cc).
+
+I'm using perl5.001m and Tk-b5.
+
+(L) worked fine.
+
+Both SVR4 machines--(A) and (M)--built perl fine.  I used the [svr4] hints:
+note that the ucb stuff was therefore included.
+
+Minor SVR4 troubles
+------------------
+Both SVR4 systems required changes to Tk-b5/pTk/tkPort.h due to conflicts
+between Tk-provided prototypes and the system headers.  I removed tkPort.h's
+gettimeofday and TclOpen prototypes.  (Since open() is defined as TclOpen,
+the TclOpen prototype conflicts the the system open() prototype: the latter
+uses ... for the 3rd parameter.)
+
+The (M) machine exhibited a weird problem generating position independent
+code.  Perl detected that this was gcc and tried to use -fpic.  That
+was pretty well ignored in the perl build.  Then, the Tk build turned
+this into -fPIC.  The -f was ignored, and -P became "run the preprocessor."
+I ended up forcing perl to use -kPIC, which worked fine for both perl and Tk.
+
+
+Major SVR4 troubles
+-------------------
+
+Both SVR4 systems had trouble with dynamic linking.  Specifically, they could
+not find XOpenDisplay().  This was traced to the dlopen semantics.  The
+dlopen(3X) manual says that "objects loaded by a single ... dlopen may
+.. not directly reference symobls from objects loaded by a different dlopen."
+The Tk module could not find the Xwindows stuff.  When I added -lX11 to
+the perl link command and rebuilt perl, the Xwindows library worked fine.
+
+Additional AT&T (NCR) troubles
+------------------------------
+
+The AT&T machine (A) had two additional problems, both of which were hell
+to find.
+
+Tk basic_demo script opens "/dev/tty" and the passes it to an event handler.
+On the AT&T machine, it appears that select (actually its poll at the
+kernel interface level) won't work if one of the descriptors is /dev/tty.
+It returned an error (ENXIO) and Tk went into a loop.  No mouse or keyboard
+input was accepted.  Interestingly, opening `tty`, which gave the name
+of the pseudo tty for my xterm, worked fine.  I'm guessing that this is
+a bug in the /dev/tty driver.
+
+After fixing that, basic_demo (and other perl Tk scripts) worked fine on
+the console but not on other X servers.  I discovered that XOpenDisplay()
+was hanging up on everything except the console.  Even setting DISPLAY
+to something like "nosuchmachine:0" would lock it up.  The fix was to
+remove -lnet from the perl link command.  The /usr/lib/libnet.so library
+appears to contain something that really messes XOpenDisplay(): a
+trivial C program that did nothing but call XOpenDisplay() was the
+key to putting the blame on libnet.so.
+
+After taking -lnet out of perl's list of libraries, I found that Tk
+could not find strcasecmp, which oddly enough was in libnet.so.  I
+then added -lresolv to perl's list--not to Tk's, mind you, for the
+same reason that -lX11 had to been in perl's list.  Anyway, libresolv.so
+gave me strcasecmp.
+
+I dunno how much use any of this is to someone not on a GIS machine.
+Let me (lbr@holos.com) know if you'd like more info leading to easing
+installation on this GIS/NCR machine.
+
+--- End of Len's comments ---
+--
+Martha G. Armour
+Holos Software, Inc.
+Atlanta, Georgia USA
+mgm@holos.com

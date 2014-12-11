@@ -1,0 +1,24 @@
+#!/usr/local/bin/perl -w
+
+
+
+use Tk ;
+$top = MainWindow->new;
+
+chomp(@fonts = `xlsfonts`) ;
+
+$list = $top->ScrlListbox(-scrollbars => 'e', -width => 70) ;
+$list->pack(qw(-fill both -expand 1)) ;
+$list->bind('<1>' => [sub {&changeFont} ] ) ;
+
+grep ($list->insert('end',$_), @fonts) ;
+
+MainLoop ;
+
+sub changeFont {
+	local($w) = shift ;
+	local($fontName) ;
+	$fontName = $w->get($w->curselection) ;
+	$w->configure(-font => $fontName ) ;
+}
+

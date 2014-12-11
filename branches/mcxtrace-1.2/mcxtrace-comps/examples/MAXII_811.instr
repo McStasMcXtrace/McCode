@@ -1,0 +1,355 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: MAXII_811
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@risoe.dtu.dk)
+* Date: Jan 23, 2011
+* Origin: Your institution
+* Release: McXtrace 
+* Version: 1.0
+* %INSTRUMENT_SITE: MAX-lab
+*
+* XAFS and surface diffraction, Materials Science Beamline 811 at MAX-lab.
+*
+* %Description
+* Fed by a wiggler, this beamline operates in monochromatic mode with an
+* operational energy tunable between 2.3 – 20 keV (0.6 - 5.3 Å).
+* The wavelength is chosen by a double monochromator crystal setup where either
+* Si 111 or Si 311 may be chosen. Furthermore a double mirror
+* setup may be used to to focus the beam onto a sample. The rotation of the
+* first mirror defines the position of the second which is computed automatically.
+* If mirrors are in the monochromators are automatically reposistioned to
+* accomadate the deflected beam. 
+*
+* Example: mxrun Max2_811.instr M1=1 M2=1 M1_pitch=1 M2_pitch=1 theta=14.221
+*
+* %Parameters
+* Emin [keV] energy range of radiation emitted from wiggler. 
+* Emax [keV] 
+* prim_h [m] horizaontal and vertical opening of primary slits.
+* prim_v [m]
+* M1 [] Is mirror 1 in the beam?
+* M1_R [m] Radius of curvature of mirror 1.
+* M1_pitch [deg] Central glancing angle of mirror 1.
+* M2 [] Is mirror 2 in the beam?
+* M2_R [m] Radius of curvature of mirror 2.
+* M2_pitch [deg] Central glancing angle of mirror 2.
+* theta [deg] Scattering angle of monochromators
+* TTH [deg] angle at which to put the surface diffraction detector
+* ATT1 [] Should attenuation filter 1 be in the beam? 
+* ATT2 [] Should attenuation filter 2 be in the beam? 
+* ATT3 [] Should attenuation filter 3 be in the beam? 
+
+* %Link
+* A reference/HTML link for more information
+* http://www.maxlab.lu.se/beamlines/bli811/
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT MAXII_811(
+    Emin=1e-3,Emax=12,
+    prim_h=.40e-3,prim_v=0.6e-3,
+    xafs_h=3e-3,xafs_v=3e-3,
+    M1=0,M1_R=2000,M1_pitch=0,M2=0,M2_R=800,M2_pitch=0,
+    theta=0,TTH=0,
+    ATT1=0,ATT2=0,ATT3=0,
+    XAFS=0
+    )
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+  const double prim_slit_L=6.4;
+  const double ap2_L=6;
+  const double ap3_L=7;
+
+  const double att_filter1_L=16;
+  const double c_filter_L=17;
+
+  double mono1_y,mono2_z,mono2_y;
+
+  const double Delta_y=25e-3;
+
+  double mirror1_angle,mirror2_angle;
+  const double M2_L=20;
+
+  double Lmin,Lmax;
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+
+  if (M1 && M1_pitch){
+    mirror1_angle=RAD2DEG*1e-3*M1_pitch;
+  }else{
+    mirror1_angle=0;
+  }
+
+  if (M2 && !M2_pitch){
+    mirror2_angle=mirror1_angle;
+  }else if(M2){
+    mirror2_angle=RAD2DEG*1e-3*M2_pitch;
+  }else{
+    mirror2_angle=0;
+  }
+
+  /*the lower monchromator must be displaced to catch the beam from the mirrors*/
+  mono1_y=8*sin(2*mirror1_angle*DEG2RAD);
+  
+  /*now compute the position of mono2*/
+  double beta=DEG2RAD*(2*theta-2*mirror1_angle);
+  if (mirror2_angle==0){
+    double t=(-mono1_y+Delta_y)/sin(beta);
+    mono2_y=mono1_y+t*sin(beta);
+    mono2_z=8+t*cos(beta);
+  }else{
+    double t,s;
+    s=( (mono1_y+Delta_y) - tan(beta)*(10-8))/(-sin(2*DEG2RAD*mirror2_angle)-cos( 2*DEG2RAD*mirror2_angle)*tan(beta) );
+    printf("%g %g %g\n",beta,mirror2_angle,s);
+    mono2_y=(Delta_y)+s*sin(2*DEG2RAD*mirror2_angle);
+    mono2_z=10-s*cos(2*DEG2RAD*mirror2_angle);
+  }
+  Lmin=2*M_PI/(E2K*Emax);
+  Lmax=2*M_PI/(E2K*Emin);
+
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT wiggler = Source_gaussian(
+ sigPr_x=7e-6*FWHM2RMS, sigPr_y=0.3e-6*FWHM2RMS,
+ sig_x=250e-6*FWHM2RMS, sig_y=50e-6*FWHM2RMS,
+ spectrum_file="characteristics.dc0",E0=(Emin+Emax)/2.0,dE=(Emax-Emin)/2.0,
+// E0=8.045,dE=1e-3,
+ dist=4.454,dlambda=0)
+AT(0,0,0) RELATIVE Origin
+
+COMPONENT source_psd=PSD_monitor(
+  nx=100,ny=100,xwidth=1e-3, yheight=1e-3, filename="source.psd")
+AT (0,0,1) RELATIVE wiggler 
+COMPONENT source_E=E_monitor(
+  nE=200,Emin=Emin*0.99, Emax=Emax*1.01, xwidth=2e-3, yheight=2e-3,
+filename="source.E")
+AT (0,0,1e-9) RELATIVE PREVIOUS 
+COMPONENT source_L=L_monitor(
+  nL=200,Lmin=Lmin*0.99, Lmax=Lmax*1.01, xwidth=2e-3, yheight=2e-3,
+filename="source.L")
+AT (0,0,1e-9) RELATIVE PREVIOUS 
+
+COMPONENT ap1 = Slit(
+  yheight=4e-3, xwidth=28e-3)
+AT(0,0,4.454) RELATIVE wiggler
+
+COMPONENT ap2 = Slit(
+  yheight=6.8e-3,xwidth=46e-3)
+AT(0,0,6) RELATIVE wiggler
+
+/*Frontend carbon Filter*/
+COMPONENT  fe_c_filter= Filter(
+  material_datafile="C.txt", xwidth=.1, yheight=.1, zdepth=12e-6)
+AT(0,0,6.3) RELATIVE wiggler
+
+/*Primary Slits*/
+COMPONENT prim_slitv = Slit(
+  xwidth=.1,yheight=prim_v)
+AT(0,0,6.4) RELATIVE wiggler
+COMPONENT prim_slith = Slit(
+  xwidth=prim_h,yheight=.1)
+AT(0,0,15e-3) RELATIVE PREVIOUS
+
+COMPONENT ap3 = COPY(ap2)
+AT(0,0,7) RELATIVE wiggler
+
+COMPONENT m_entry_psd = COPY(source_psd)(filename="me_psd") 
+AT(0,0,9.4) RELATIVE wiggler
+COMPONENT m_entry_E=E_monitor(
+  nE=200,Emin=Emin*.99, Emax=Emax*1.01, xwidth=2e-3, yheight=2e-3,
+  filename="m_entry.E")
+AT (0,0,1e-9) RELATIVE PREVIOUS 
+COMPONENT m_entry_L=L_monitor(
+  nL=200,Lmin=Lmin*0.99, Lmax=Lmax*1.01, xwidth=2e-3, yheight=2e-3,
+  filename="m_entry.L")
+AT (0,0,1e-9) RELATIVE PREVIOUS 
+
+
+
+
+
+/*Frontend Wall is here*/
+
+
+COMPONENT mirror1_pos = Arm()
+AT(0,0,10) RELATIVE wiggler
+COMPONENT mirror1_mnt = Arm()
+AT (0,0,0) RELATIVE mirror1_pos
+ROTATED (0,0,-90) RELATIVE wiggler
+
+COMPONENT mirror1 = Mirror_curved(
+    coating="Rh.txt", radius=M1_R, R0=0,length=1,width=60e-3
+)
+WHEN (M1) AT(0,0,0) RELATIVE mirror1_mnt
+ROTATED (0,mirror1_angle,0) RELATIVE mirror1_mnt
+
+COMPONENT mirror1_exit = Arm()
+AT(0,0,0) RELATIVE mirror1_mnt
+ROTATED(2*mirror1_angle,0,0) RELATIVE wiggler
+/*Beam pos monitors*/
+
+/*Beam attenuation filters (3 carbon)*/
+COMPONENT att_filter1 = Filter (
+  material_datafile="C.txt",xwidth=0.1,yheight=0.1,zdepth=1e-3)
+WHEN (ATT1) AT(0,0,att_filter1_L) RELATIVE wiggler
+
+COMPONENT att_filter2= COPY(att_filter1)(zdepth=0.3e-3)
+WHEN (ATT2) AT(0,0,2e-3) RELATIVE PREVIOUS  
+
+COMPONENT att_filter3= COPY(att_filter1)(zdepth=0.1e-3)
+WHEN (ATT3) AT(0,0,2e-3) RELATIVE PREVIOUS 
+
+/*100 mu carbon filter*/
+COMPONENT c_filter =COPY(fe_c_filter)(zdepth=1e-4)
+AT(0,0,c_filter_L) RELATIVE wiggler
+
+/*Monochromator crystals*/
+COMPONENT mono_lower = Perfect_crystal(
+  length=0.05,width=0.02,h=1,k=1,l=1,alpha=0)
+AT(0,-mono1_y,8) RELATIVE mirror1_pos
+ROTATED(-(theta-2*mirror1_angle),0,0) RELATIVE mirror1_pos 
+
+COMPONENT mono_upper_mnt = Arm()
+AT(0,mono2_y,mono2_z) RELATIVE mirror1_pos
+ROTATED (0,0,180) RELATIVE wiggler
+
+COMPONENT mono_upper = Perfect_crystal(
+  length=0.05, width=0.02,h=1,k=1,l=1,alpha=0)
+AT(0,0,0) RELATIVE mono_upper_mnt
+ROTATED (theta-2*mirror1_angle,0,0) RELATIVE mono_upper_mnt
+
+COMPONENT mirror2_mnt = Arm()
+AT(0,Delta_y,M2_L) RELATIVE wiggler
+ROTATED (0,0,90) RELATIVE wiggler
+
+COMPONENT mirror2 = Mirror_curved(
+  coating="Rh.txt",radius=M2_R,length=1,width=80e-3,R0=1
+)
+WHEN (M2) AT(0,0,0) RELATIVE mirror2_mnt
+ROTATED (0,-mirror2_angle,0) RELATIVE mirror2_mnt
+
+COMPONENT mirror2_exit = Arm()
+AT(0,0,0) RELATIVE mirror2
+ROTATED (0,-2*mirror2_angle,0) RELATIVE mirror2_mnt
+
+
+/*Safety Shutter*/
+
+/*Be window*/
+COMPONENT be_window = Filter(
+xwidth=0.2, yheight=0.2, zdepth=200e-6)
+AT(0,25e-3,22) RELATIVE wiggler 
+
+COMPONENT hutch_psd = COPY(source_psd)(filename="hutch_psd") 
+AT(0,0,1e-3) RELATIVE PREVIOUS 
+COMPONENT hutch_E=E_monitor(
+  nE=100,Emin=8.04, Emax=8.06, xwidth=2e-1, yheight=2e-1, 
+  filename="hutch.E")
+AT (0,0,1e-9) RELATIVE PREVIOUS 
+COMPONENT hutch_E2=COPY(m_entry_E)(
+    filename="hutch2.E2")
+AT (0,0,1e-9) RELATIVE PREVIOUS 
+COMPONENT hucth_L=L_monitor(
+  nL=100,Lmin=1.538, Lmax=1.542, xwidth=2e-1, yheight=2e-1, 
+  filename="hutch.L")
+AT (0,0,1e-9) RELATIVE PREVIOUS 
+
+
+/*XAFS station*/
+COMPONENT xafs_slit = Slit(
+  xwidth=xafs_h,yheight=xafs_v)
+WHEN (XAFS) AT(0,0,1) RELATIVE PREVIOUS
+
+COMPONENT I0 = Monitor(xwidth=0.1,yheight=0.1)
+WHEN(XAFS) AT(0,0,2) RELATIVE be_window
+
+COMPONENT xafs_sample_pos = Arm()
+WHEN(XAFS) AT(0,0,2.5) RELATIVE be_window
+
+COMPONENT xafs_sample = Absorption_sample(
+  radius_o=0.01,yheight_o=0.04, material_datafile_o="Ag.txt")
+WHEN(XAFS) AT(0,0,0) RELATIVE xafs_sample_pos
+
+COMPONENT I1 = Monitor(xwidth=0.1,yheight=0.1)
+WHEN(XAFS) AT(0,0,2.7) RELATIVE be_window
+
+COMPONENT xafs_ref_sample_pos = Arm()
+WHEN(XAFS) AT(0,0,2.9) RELATIVE be_window
+
+COMPONENT xafs_ref_sample = Filter(
+  xwidth=0.1,yheight=0.1,zdepth=1e-4,material_datafile="Fe.txt")
+WHEN(XAFS) AT (0,0,0) RELATIVE xafs_ref_sample_pos
+
+COMPONENT I2 = Monitor(xwidth=0.1,yheight=0.1)
+WHEN(XAFS) AT(0,0,3.1) RELATIVE be_window
+
+/*Diffraction station*/
+COMPONENT diff_sample_pos = Arm()
+AT(0,0,4) RELATIVE be_window
+
+COMPONENT  diff_sample_psd = PSD_monitor(
+  xwidth=1.2e-3, yheight=1.2e-3,filename="diff_sample_psd",
+  restore_xray=1) 
+AT(0,0,0) RELATIVE diff_sample_pos
+
+COMPONENT si_sample = PowderN(
+  reflections = "Si.laz", format=Lazy, radius = 0.0002,
+  yheight = 0.05, d_phi= 0)
+AT (0, 0, 0) RELATIVE diff_sample_pos
+EXTEND
+%{
+  if (!SCATTERED) ABSORB;
+%}
+COMPONENT tth_arm=Arm()
+AT(0,0,0) RELATIVE diff_sample_pos
+ROTATED (TTH,0,0) RELATIVE diff_sample_pos
+
+COMPONENT square_psd=PSD_monitor(
+    xwidth=0.4,yheight=0.4,nx=201,ny=201,filename="square_psd",restore_xray=1)
+AT(0,0,0.2) RELATIVE si_sample
+
+
+COMPONENT sphere_psd=PSD_monitor_4PI(
+    radius=0.5,filename="sphere_psd")
+AT(0,0,0) RELATIVE tth_arm
+/*
+COMPONENT pilatus100k = PSD_monitor(
+  nx=487, ny=195, xwidth=83.8e-3, yheight=33.5e-3, filename="pil_diff.psd")
+AT(0,0,1.2) RELATIVE tth_arm
+*/
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+
+

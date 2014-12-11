@@ -1,0 +1,669 @@
+#  Copyright (c) 1991-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::Wm - Communicate with window manager
+
+=for category Tk Geometry Management
+
+=head1 SYNOPSIS
+
+S<    >I<$toplevel>-E<gt>I<method>(?I<args>?)
+
+=head1 DESCRIPTION
+
+The B<wm> methods are used to interact with window managers in
+order to control such things as the title for a window, its geometry,
+or the increments in terms of which it may be resized.
+The B<wm> methods can take any of a number of different forms, depending on
+the particular I<method> argument.
+All of the forms expect I<$toplevel>, which must be a
+top-level window object.
+
+The legal forms for the B<wm> methods are:
+
+=over 4
+
+=item I<$toplevel>-E<gt>B<aspect>(?I<minNumer minDenom maxNumer maxDenom>?)
+
+If I<minNumer>, I<minDenom>, I<maxNumer>, and I<maxDenom>
+are all specified, then they will be passed to the window manager
+and the window manager should use them to enforce a range of
+acceptable aspect ratios for I<$toplevel>.  The aspect ratio of
+I<$toplevel> (width/length) will be constrained to lie
+between I<minNumer>/I<minDenom> and I<maxNumer>/I<maxDenom>.
+If I<minNumer> etc. are all specified as empty strings, then
+any existing aspect ratio restrictions are removed.
+If I<minNumer> etc. are specified, then the method returns an
+empty string.  Otherwise, it returns
+a array containing four elements, which are the current values
+of I<minNumer>, I<minDenom>, I<maxNumer>, and I<maxDenom>
+(if no aspect restrictions are in effect, then an empty string is
+returned).
+
+=item I<$widget>-E<gt>B<attributes>( I<?args?> );
+
+This subcommand returns or  sets  platform  specific  attributes
+associated with a window.
+
+=over 4
+
+=item I<$widget>-E<gt>B<attributes>;
+
+Returns a list of the  platform specific  flags  and  their  values. 
+
+=item I<$widget>-E<gt>B<attributes>( I<?option?> );
+
+Returns  the  value for the specific option.
+
+=item I<$widget>-E<gt>B<attributes>( I<?option value option value...?> );
+
+Sets one or more of the values. The values are as follows:
+
+On Windows, B<-disabled> gets or sets whether the window is in  a 
+disabled state. B<-toolwindow> gets or sets the style of the window 
+to toolwindow (as defined in the MSDN). B<-topmost> gets or sets 
+whether this is a topmost window (displays above all other windows).
+
+On Macintosh, there are currently no special attribute values.
+
+On Unix, there are currently no special attribute values.        
+
+=back
+
+=item I<$toplevel>-E<gt>B<client>(?I<name>?)
+
+If I<name> is specified, this method stores I<name> (which
+should be the name of
+the host on which the application is executing) in I<$toplevel>'s
+B<WM_CLIENT_MACHINE> property for use by the window manager or
+session manager.
+The method returns an empty string in this case.
+If I<name> isn't specified, the method returns the last name
+set in a B<client> method for I<$toplevel>.
+If I<name> is specified as an empty string, the method deletes the
+B<WM_CLIENT_MACHINE> property from I<$toplevel>.
+
+=item I<$toplevel>-E<gt>B<colormapwindows>(?I<windowList>?)
+
+This method is used to manipulate the B<WM_COLORMAP_WINDOWS>
+property, which provides information to the window managers about
+windows that have private colormaps.
+If I<windowList> isn't specified, the method returns a list
+whose elements are the names of the windows in the B<WM_COLORMAP_WINDOWS>
+property.
+If I<windowList> is specified, it consists of a list of widgets;
+the method overwrites the B<WM_COLORMAP_WINDOWS>
+property with the given windows and returns an empty string.
+The B<WM_COLORMAP_WINDOWS> property should normally contain a
+list of the internal windows within I<$toplevel> whose colormaps differ
+from their parents.
+The order of the windows in the property indicates a priority order:
+the window manager will attempt to install as many colormaps as possible
+from the head of this list when I<$widget> gets the colormap focus.
+If I<$widget> is not included among the windows in I<windowList>,
+Tk implicitly adds it at the end of the B<WM_COLORMAP_WINDOWS>
+property, so that its colormap is lowest in priority.
+If I<$widget>-E<gt>colormapwindows is not invoked, Tk will automatically set
+the property for each top-level window to all the internal windows
+whose colormaps differ from their parents, followed by the top-level
+itself;  the order of the internal windows is undefined.
+See the ICCCM documentation for more information on the
+B<WM_COLORMAP_WINDOWS> property.
+
+=item I<$toplevel>-E<gt>B<command>(?I<value>?)
+
+If I<value> is specified, this method stores I<value> in I<$toplevel>'s
+B<WM_COMMAND> property for use by the window manager or
+session manager and returns an empty string.
+I<Value> must have proper list structure;  the elements should
+contain the words of the command used to invoke the application.
+If I<value> isn't specified then the method returns the last value
+set in a B<command> method for I<$toplevel>.
+If I<value> is specified as an empty string, the method
+deletes the B<WM_COMMAND> property from I<$toplevel>.
+
+=item I<$toplevel>-E<gt>B<deiconify>
+
+Arrange for I<$toplevel> to be displayed in normal (non-iconified) form.
+This is done by mapping the window.  If the window has never been
+mapped then this method will not map the window, but it will ensure
+that when the window is first mapped it will be displayed
+in de-iconified form.  Returns an empty string.
+
+=item I<$toplevel>-E<gt>B<focusmodel>(?B<active>|B<passive>?)
+
+If B<active> or B<passive> is supplied as an optional argument
+to the method, then it specifies the focus model for I<$toplevel>.
+In this case the method returns an empty string.  If no additional
+argument is supplied, then the method returns the current focus
+model for I<$toplevel>.
+An B<active> focus model means that I<$toplevel> will claim the
+input focus for itself or its descendants, even at times when
+the focus is currently in some other application.  B<Passive> means that
+I<$toplevel> will never claim the focus for itself:  the window manager
+should give the focus to I<$toplevel> at appropriate times.  However,
+once the focus has been given to I<$toplevel> or one of its descendants,
+the application may re-assign the focus among I<$toplevel>'s descendants.
+The focus model defaults to B<passive>, and Tk's B<focus> method
+assumes a passive model of focusing.
+
+=item I<$toplevel>-E<gt>B<frame>
+
+If I<$widget> has been reparented by the window manager into a
+decorative frame, the method returns the platform specific window
+identifier for the outermost frame that contains I<$toplevel> (the
+window whose parent is the root or virtual root).  If I<$toplevel>
+hasn't been reparented by the window manager then the method returns
+the platform specific window identifier for I<$toplevel>.
+
+=item I<$toplevel>-E<gt>B<geometry>(?I<newGeometry>?)
+
+If I<newGeometry> is specified, then the geometry of I<$toplevel>
+is changed and an empty string is returned.  Otherwise the current
+geometry for I<$toplevel> is returned (this is the most recent
+geometry specified either by manual resizing or
+in a B<geometry> method).  I<NewGeometry> has
+the form B<=>I<width>B<x>I<height>B<+->I<x>B<+->I<y>, where
+any of B<=>, I<width>B<x>I<height>, or B<+->I<x>B<+->I<y>
+may be omitted.  I<Width> and I<height> are positive integers
+specifying the desired dimensions of I<$toplevel>.  If I<$toplevel>
+is gridded (see L<"GRIDDED GEOMETRY MANAGEMENT"> below) then the dimensions
+are specified in grid units;  otherwise they are specified in pixel
+units.  I<X> and I<y> specify the desired location of
+I<$toplevel> on the screen, in pixels.
+If I<x> is preceded by B<+>, it specifies
+the number of pixels between the left edge of the screen and the left
+edge of I<$toplevel>'s border;  if preceded by B<-> then
+I<x> specifies the number of pixels
+between the right edge of the screen and the right edge of I<$toplevel>'s
+border.  If I<y> is preceded by B<+> then it specifies the
+number of pixels between the top of the screen and the top
+of I<$toplevel>'s border;  if I<y> is preceded by B<-> then
+it specifies the number of pixels between the bottom of I<$toplevel>'s
+border and the bottom of the screen.
+If I<newGeometry> is specified as an empty string then any
+existing user-specified geometry for I<$toplevel> is cancelled, and
+the window will revert to the size requested internally by its
+widgets.
+
+=item I<$toplevel>-E<gt>B<wmGrid>(?I<baseWidth,baseHeight,widthInc,heightInc>?)
+
+This method indicates that I<$toplevel> is to be managed as a
+gridded window.
+It also specifies the relationship between grid units and pixel units.
+I<BaseWidth> and I<baseHeight> specify the number of grid
+units corresponding to the pixel dimensions requested internally
+by I<$toplevel> using B<Tk_GeometryRequest>.  I<WidthInc>
+and I<heightInc> specify the number of pixels in each horizontal
+and vertical grid unit.
+These four values determine a range of acceptable sizes for
+I<$toplevel>, corresponding to grid-based widths and heights
+that are non-negative integers.
+Tk will pass this information to the window manager;  during
+manual resizing, the window manager will restrict the window's size
+to one of these acceptable sizes.
+Furthermore, during manual resizing the window manager will display
+the window's current size in terms of grid units rather than pixels.
+If I<baseWidth> etc. are all specified as empty strings, then
+I<$toplevel> will no longer be managed as a gridded window.  If
+I<baseWidth> etc. are specified then the return value is an
+empty string.
+Otherwise the return value is a array containing
+four elements corresponding to the current I<baseWidth>,
+I<baseHeight>, I<widthInc>, and I<heightInc>;  if
+I<$toplevel> is not currently gridded, then an empty string
+is returned.
+Note: this command should not be needed very often, since the
+B<Tk_SetGrid> library procedure and the B<-setgrid> option
+provide easier access to the same functionality.
+
+=item I<$toplevel>-E<gt>B<group>(?I<$widget>?)
+
+If I<$widget> is specified, it is the the leader of
+a group of related windows.  The window manager may use this information,
+for example, to unmap all of the windows in a group when the group's
+leader is iconified.  I<$widget> may be specified as an empty string to
+remove I<$toplevel> from any group association.  If I<$widget> is
+specified then the method returns an empty string;  otherwise it
+returns the I<$toplevel>'s current group leader, or an empty
+string if I<$toplevel> isn't part of any group.
+
+=item I<$toplevel>-E<gt>B<iconbitmap>(?I<bitmap>?)
+
+If I<bitmap> is specified, then it names a bitmap in the standard
+forms accepted by Tk (see the B<Tk_GetBitmap> documentation for details).
+This I<black and white> bitmap is passed to the window manager to be displayed
+in I<$toplevel>'s icon, and the method returns an empty string.  If
+an empty string is specified for I<bitmap>, then any current icon
+bitmap or image is cancelled for I<$toplevel>.
+If I<bitmap> is specified then the method returns an empty string.
+Otherwise it returns the name of
+the current icon bitmap associated with I<$toplevel>, or an empty
+string if I<$toplevel> has no icon bitmap.
+
+=item I<$toplevel>-E<gt>B<iconify>
+
+Arrange for I<$toplevel> to be iconified.  It I<$toplevel> hasn't
+yet been mapped for the first time, this method will arrange for
+it to appear in the iconified state when it is eventually mapped.
+
+=item I<$toplevel>-E<gt>B<iconimage>(?I<image>?)
+
+If I<image> is specified, then it names a normal Tk image.
+This image is rendered into a private I<coloured> bitmap which is passed to
+the window manager to be displayed in I<$toplevel>'s icon, and the method returns
+an empty string. If an empty string is specified for I<image>, then any current
+icon bitmap or image is cancelled for I<$toplevel>.
+If I<image> is specified then the method returns an empty string.
+Otherwise it returns the name of
+the current icon image associated with I<$toplevel>, or an empty
+string if I<$toplevel> has no icon image.
+The private pixmap is not pre-cleared so images which are partly "transparent"
+display rubbish in their transparent parts.
+
+The sizes of images that can be used as icons in this manner are platform
+dependant. On Win32 this sets the "large" icon, which should be 32x32, it
+will automatically be scaled down to 16x16 for use as a small icon.
+
+=item I<$toplevel>-E<gt>B<iconmask>(?I<bitmap>?)
+
+If I<bitmap> is specified, then it names a bitmap in the standard
+forms accepted by Tk (see the B<Tk_GetBitmap> documentation for details).
+This bitmap is passed to the window manager to be used as a mask
+in conjunction with the B<iconbitmap> option:  where the mask
+has zeroes no icon will be displayed;  where it has ones, the bits
+from the icon bitmap will be displayed.  If
+an empty string is specified for I<bitmap> then any current icon
+mask is cancelled for I<$toplevel> (this is equivalent to specifying
+a bitmap of all ones).  If I<bitmap> is specified
+then the method returns an empty string.  Otherwise it
+returns the name of the current icon mask associated with
+I<$toplevel>, or an empty string if no mask is in effect.
+
+=item I<$toplevel>-E<gt>B<iconname>(?I<newName>?)
+
+If I<newName> is specified, then it is passed to the window
+manager;  the window manager should display I<newName> inside
+the icon associated with I<$toplevel>.  In this case an empty
+string is returned as result.  If I<newName> isn't specified
+then the method returns the current icon name for I<$toplevel>,
+or an empty string if no icon name has been specified (in this
+case the window manager will normally display the window's title,
+as specified with the B<title> method).
+
+=item I<$toplevel>-E<gt>B<iconphoto>(?-default? I<image1> ?I<image2>
+...?)
+
+Sets the titlebar icon for  window  based  on  the  named  photo
+images.  If -default is specified, this is applied to all future
+created toplevels as well.  The data in the images is taken as a
+snapshot  at  the  time  of invocation.  If the images are later
+changed, this is not reflected to the titlebar icons.   Multiple
+images  are  accepted to allow different images sizes (eg, 16x16
+and 32x32) to be provided.  The window manager  may  scale  pro-
+vided icons to an appropriate size.
+
+On Windows, the images are packed into a Windows icon structure.
+This will override an ico specified to wm iconbitmap,  and  vice
+versa. [NOTE: This is not implemented yet!]
+
+On  X, the images are arranged into the _NET_WM_ICON X property,
+which most modern window managers support.  A wm iconbitmap  may
+exist  simultaneously.  It is recommended to use not more than 2
+icons, placing the larger icon first.
+
+On Macintosh, this is currently does nothing.
+
+=item I<$toplevel>-E<gt>B<iconposition>(?I<x y>?)
+
+If I<x> and I<y> are specified, they are passed to the window
+manager as a hint about where to position the icon for I<$toplevel>.
+In this case an empty string is returned.  If I<x> and I<y> are
+specified as empty strings then any existing icon position hint is cancelled.
+If neither I<x> nor I<y> is specified, then the method returns
+a array containing two values, which are the current icon position
+hints (if no hints are in effect then an empty string is returned).
+
+=item I<$toplevel>-E<gt>B<iconwindow>(?I<$widget>?)
+
+If I<$widget> is specified, it is a window to
+use as icon for I<$toplevel>: when I<$toplevel> is iconified then
+I<$widget> will be mapped to serve as icon, and when I<$toplevel>
+is de-iconified then I<$widget> will be unmapped again.  If
+I<$widget> is specified as an empty string then any existing
+icon window association for I<$toplevel> will be cancelled.  If
+the I<$widget> argument is specified then an empty string is
+returned.  Otherwise the method returns the
+current icon window for I<$toplevel>, or an empty string if there
+is no icon window currently specified for I<$toplevel>.
+Button press events are disabled for I<$toplevel> as long as it is
+an icon window;  this is needed in order to allow window managers
+to ``own'' those events.
+Note: not all window managers support the notion of an icon window.
+
+=item I<$toplevel>-E<gt>B<maxsize>(?I<width,height>?)
+
+If I<width> and I<height> are specified, they give
+the maximum permissible dimensions for I<$toplevel>.
+For gridded windows the dimensions are specified in
+grid units;  otherwise they are specified in pixel units.
+The window manager will restrict the window's dimensions to be
+less than or equal to I<width> and I<height>.
+If I<width> and I<height> are
+specified, then the method returns an empty string.  Otherwise
+it returns a array with two elements, which are the
+maximum width and height currently in effect.
+The maximum size defaults to the size of the screen.
+If resizing has been disabled with the B<resizable> method,
+then this method has no effect.
+See the sections on geometry management below for more information.
+
+=item I<$toplevel>-E<gt>B<minsize>(?I<width,height>?)
+
+If I<width> and I<height> are specified, they give the
+minimum permissible dimensions for I<$toplevel>.
+For gridded windows the dimensions are specified in
+grid units;  otherwise they are specified in pixel units.
+The window manager will restrict the window's dimensions to be
+greater than or equal to I<width> and I<height>.
+If I<width> and I<height> are
+specified, then the method returns an empty string.  Otherwise
+it returns a array with two elements, which are the
+minimum width and height currently in effect.
+The minimum size defaults to one pixel in each dimension.
+If resizing has been disabled with the B<resizable> method,
+then this method has no effect.
+See the sections on geometry management below for more information.
+
+=item I<$toplevel>-E<gt>B<overrideredirect(?>I<boolean>?)
+
+If I<boolean> is specified, it must have a proper boolean form and
+the override-redirect flag for I<$toplevel> is set to that value.
+If I<boolean> is not specified then B<1> or B<0> is
+returned to indicate whether or not the override-redirect flag
+is currently set for I<$toplevel>.
+Setting the override-redirect flag for a window causes
+it to be ignored by the window manager;  among other things, this means
+that the window will not be reparented from the root window into a
+decorative frame and the user will not be able to manipulate the
+window using the normal window manager mechanisms.
+
+=item I<$toplevel>-E<gt>B<positionfrom>(?I<who>?)
+
+If I<who> is specified, it must be either B<program> or
+B<user>, or an abbreviation of one of these two.  It indicates
+whether I<$toplevel>'s current position was requested by the
+program or by the user.  Many window managers ignore program-requested
+initial positions and ask the user to manually position the window;  if
+B<user> is specified then the window manager should position the
+window at the given place without asking the user for assistance.
+If I<who> is specified as an empty string, then the current position
+source is cancelled.
+If I<who> is specified, then the method returns an empty string.
+Otherwise it returns B<user> or $widget to indicate the
+source of the window's current position, or an empty string if
+no source has been specified yet.  Most window managers interpret
+``no source'' as equivalent to B<program>.
+Tk will automatically set the position source to B<user>
+when a B<geometry> method is invoked, unless the source has
+been set explicitly to B<program>.
+
+=item I<$toplevel>-E<gt>B<protocol>(?I<name>?,?I<callback>?)
+
+This method is used to manage window manager protocols such as
+B<WM_DELETE_WINDOW>.
+I<Name> is the name of an atom corresponding to a window manager
+protocol, such as B<WM_DELETE_WINDOW> or B<WM_SAVE_YOURSELF>
+or B<WM_TAKE_FOCUS>.
+If both I<name> and I<callback> are specified, then I<callback>
+is associated with the protocol specified by I<name>.
+I<Name> will be added to I<$toplevel>'s B<WM_PROTOCOLS>
+property to tell the window manager that the application has a
+protocol handler for I<name>, and I<callback> will
+be invoked in the future whenever the window manager sends a
+message to the client for that protocol.
+In this case the method returns an empty string.
+If I<name> is specified but I<callback> isn't, then the current
+callback for I<name> is returned, or an empty string if there
+is no handler defined for I<name>.
+If I<callback> is specified as an empty string then the current
+handler for I<name> is deleted and it is removed from the
+B<WM_PROTOCOLS> property on I<$toplevel>;  an empty string is
+returned.
+Lastly, if neither I<name> nor I<callback> is specified, the
+method returns a list of all the protocols for which handlers
+are currently defined for I<$toplevel>.
+
+=over 8
+
+Tk always defines a protocol handler for B<WM_DELETE_WINDOW>, even if
+you haven't asked for one with B<protocol>.
+If a B<WM_DELETE_WINDOW> message arrives when you haven't defined
+a handler, then Tk handles the message by destroying the window for
+which it was received.
+
+=back
+
+=item I<$toplevel>-E<gt>B<resizable>(?I<width,height>?)
+
+This method controls whether or not the user may interactively
+resize a top-level window.  If I<width> and I<height> are
+specified, they are boolean values that determine whether the
+width and height of I<$toplevel> may be modified by the user.
+In this case the method returns an empty string.
+If I<width> and I<height> are omitted then the method
+returns a list with two 0/1 elements that indicate whether the
+width and height of I<$toplevel> are currently resizable.
+By default, windows are resizable in both dimensions.
+If resizing is disabled, then the window's size will be the size
+from the most recent interactive resize or B<geometry>
+method.  If there has been no such operation then
+the window's natural size will be used.
+
+=item I<$toplevel>-E<gt>B<sizefrom>(?I<who>?)
+
+If I<who> is specified, it must be either B<program> or
+B<user>, or an abbreviation of one of these two.  It indicates
+whether I<$toplevel>'s current size was requested by the
+program or by the user.  Some window managers ignore program-requested
+sizes and ask the user to manually size the window;  if
+B<user> is specified then the window manager should give the
+window its specified size without asking the user for assistance.
+If I<who> is specified as an empty string, then the current size
+source is cancelled.
+If I<who> is specified, then the method returns an empty string.
+Otherwise it returns B<user> or $widget to indicate the
+source of the window's current size, or an empty string if
+no source has been specified yet.  Most window managers interpret
+``no source'' as equivalent to B<program>.
+
+=item I<$toplevel>-E<gt>B<stackorder>( I<?isabove|isbelow $toplevel?> );
+
+The stackorder command returns a list  of  toplevel  windows  in
+stacking  order,  from lowest to highest. When a single toplevel
+window is passed, the returned list recursively includes all  of
+the  window's  children that are toplevels. Only those toplevels
+that are currently mapped  to  the  screen  are  returned.   The
+stackorder command can also be used to determine if one toplevel
+is positioned above or below a second toplevel.  When two window
+arguments  separated  by either isabove or isbelow are passed, a
+boolean result indicates whether or not the first window is
+currently above or below the second window in the stacking order.
+
+
+=item I<$toplevel>-E<gt>B<state>(?I<newstate>?)
+
+If I<newstate> is specified, the window will be set to
+the new state, otherwise it returns the current state of
+I<$toplevel>: either B<normal>, B<iconic>, B<withdrawn>, B<icon>, or
+(Windows only) B<zoomed>. The
+difference between B<iconic> and B<icon> is that B<iconic> refers to a
+window that has been iconified (e.g., with the B<iconify> method)
+while B<icon> refers to a window whose only purpose is to serve as the
+icon for some other window (via the B<iconwindow> method). The
+B<icon> state cannot be set.
+
+
+=item I<$toplevel>-E<gt>B<title>(?I<string>?)
+
+If I<string> is specified, then it will be passed to the window
+manager for use as the title for I<$toplevel> (the window manager
+should display this string in I<$toplevel>'s title bar).  In this
+case the method returns an empty string.  If I<string> isn't
+specified then the method returns the current title for the
+I<$toplevel>.  The title for a window defaults to its name.
+
+=item I<$toplevel>-E<gt>B<transient>(?I<master>?)
+
+If I<master> is specified, then the window manager is informed
+that I<$toplevel> is a transient window (e.g. pull-down menu) working
+on behalf of I<master> (where I<master> is
+a top-level window).  Some window managers will use
+this information to manage I<$toplevel> specially.  If I<master>
+is specified as an empty string then I<$toplevel> is marked as not
+being a transient window any more.  If I<master> is specified,
+then the method returns an empty string.  Otherwise the method
+returns the path name of I<$toplevel>'s current master, or an
+empty string if I<$toplevel> isn't currently a transient window.
+
+=item I<$toplevel>-E<gt>B<withdraw>
+
+Arranges for I<$toplevel> to be withdrawn from the screen.  This
+causes the window to be unmapped and forgotten about by the window
+manager.  If the window
+has never been mapped, then this method
+causes the window to be mapped in the withdrawn state.  Not all
+window managers appear to know how to handle windows that are
+mapped in the withdrawn state.
+Note: it sometimes seems to be necessary to withdraw a
+window and then re-map it (e.g. with B<deiconify>) to get some
+window managers to pay attention to changes in window attributes
+such as group.
+
+=item I<$toplevel>-E<gt>B<wrapper>
+
+Returns a list of two elements: the window id of the wrapper window in
+which Tk has placed I<$toplevel>, and the height of the menu bar. The
+id is the one by which window manager will know I<$toplevel>, and so
+is appropriate place to add X properties. The menu height is only
+returned on X. On Windows, this value is always zero.
+
+=back
+
+=head1 ICON SIZES
+
+The sizes of bitmaps/images that can be used as icons in this manner are platform
+and window manager dependant. Unix window managers are typically more tolerant
+than Win32. It is possible that coloured C<iconimage> icons may cause problems
+on some X window managers.
+
+=over 4
+
+=item * Win32
+
+C<iconimage> and C<iconbitmap> set the "large" icon, which should be
+32x32, it will automatically be scaled down to 16x16 for use as a small icon.
+Win32 ignores C<iconwin> requests.
+
+=item * KDE's "kwm"
+
+Accepts coloured C<iconimage> and black and white C<iconbitmap> but
+will scale either to a small (14x14?) icon. Kwm ignores C<iconwin>.
+
+=item * Sun's "olwm" or "olvwm"
+
+Honours C<iconwin> which will override C<iconimage> or C<iconbitmap>.
+Coloured images work.
+
+=item * Sun's CDE window manager
+
+Coloured images work. ...
+
+=back
+
+=head1 GEOMETRY MANAGEMENT
+
+By default a top-level window appears on the screen in its
+I<natural size>, which is the one determined internally by its
+widgets and geometry managers.
+If the natural size of a top-level window changes, then the window's size
+changes to match.
+A top-level window can be given a size other than its natural size in two ways.
+First, the user can resize the window manually using the facilities
+of the window manager, such as resize handles.
+Second, the application can request a particular size for a
+top-level window using the B<geometry> method.
+These two cases are handled identically by Tk;  in either case,
+the requested size overrides the natural size.
+You can return the window to its natural by invoking B<geometry>
+with an empty I<geometry> string.
+
+Normally a top-level window can have any size from one pixel in each
+dimension up to the size of its screen.
+However, you can use the B<minsize> and B<maxsize> methods
+to limit the range of allowable sizes.
+The range set by B<minsize> and B<maxsize> applies to
+all forms of resizing, including the window's natural size as
+well as manual resizes and the B<geometry> method.
+You can also use the method B<resizable> to completely
+disable interactive resizing in one or both dimensions.
+
+=head1 GRIDDED GEOMETRY MANAGEMENT
+
+Gridded geometry management occurs when one of the widgets of an
+application supports a range of useful sizes.
+This occurs, for example, in a text editor where the scrollbars,
+menus, and other adornments are fixed in size but the edit widget
+can support any number of lines of text or characters per line.
+In this case, it is usually desirable to let the user specify the
+number of lines or characters-per-line, either with the
+B<geometry> method or by interactively resizing the window.
+In the case of text, and in other interesting cases also, only
+discrete sizes of the window make sense, such as integral numbers
+of lines and characters-per-line;  arbitrary pixel sizes are not useful.
+
+Gridded geometry management provides support for this kind of
+application.
+Tk (and the window manager) assume that there is a grid of some
+sort within the application and that the application should be
+resized in terms of I<grid units> rather than pixels.
+Gridded geometry management is typically invoked by turning on
+the B<setGrid> option for a widget;  it can also be invoked
+with the B<wmGrid> method or by calling B<Tk_SetGrid>.
+In each of these approaches the particular widget (or sometimes
+code in the application as a whole) specifies the relationship between
+integral grid sizes for the window and pixel sizes.
+To return to non-gridded geometry management, invoke
+B<grid> with empty argument strings.
+
+When gridded geometry management is enabled then all the dimensions specified
+in B<minsize>, B<maxsize>, and B<geometry> methods
+are treated as grid units rather than pixel units.
+Interactive resizing is also carried out in even numbers of grid units
+rather than pixels.
+
+=head1 BUGS
+
+Most existing window managers appear to have bugs that affect the
+operation of the B<wm> methods.  For example, some changes won't
+take effect if the window is already active:  the window will have
+to be withdrawn and de-iconified in order to make the change happen.
+
+=head1 SEE ALSO
+
+L<Tk::Widget|Tk::Widget>
+L<Tk::tixWm|Tk::tixWm>
+L<Tk::Mwm|Tk::Mwm>
+
+=head1 KEYWORDS
+
+aspect ratio, deiconify, focus model, geometry, grid, group, icon, iconify, increments, position, size, title, top-level window, units, window manager
+
+=cut
+

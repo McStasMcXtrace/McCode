@@ -1,0 +1,2 @@
+# This module builds, but is pointless on Win32
+# as Motif Window Manager does not exist there

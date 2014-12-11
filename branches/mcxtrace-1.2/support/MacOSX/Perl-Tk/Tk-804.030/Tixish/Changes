@@ -1,0 +1,36 @@
+400.202 -> 400.203
+
+o Added the Tix form geometry manager including
+  documentation. Attachments specified as '%n' or '&w' have not been
+  tested yet.
+
+o Implemented the labeled frame widget (LabFrame)
+
+o Got rid of a nasty bug in Balloon that would cause the Balloon help
+  system to fail if it was destroyed.
+
+o The status bar now gets instantly updated when cursor passes over a
+  client while the balloon pops up only if cursor pauses over a
+  client.
+
+o Added -browsecmd and -listcmd options to BrowseEntry.pm
+
+o Added delete() method for BrowseEntry.pm
+
+o Fixed callbacks for -raisecmd and -createcmd in NoteBook.pm /
+  VStack.pm so that they receive the frame representing the page
+  as an argument.
+
+o Fixed menu traversal code in NoteBook.pm so that <Alt> keybindings
+  work as expected.
+
+Thanks to:
+
+	Slaven Rezic <eserte@cs.tu-berlin.de>
+	Stephen Lidie <lusol@turkey.cc.Lehigh.EDU>
+	Achim Bohnet <ach@rosat.mpe-garching.mpg.de>
+
+for bug reports, suggestions and testing.
+
+And of course, thanks to Nick Ing-Simmons <nick@ni-s.u-net.com> for
+writing Perl/Tk in the first place.

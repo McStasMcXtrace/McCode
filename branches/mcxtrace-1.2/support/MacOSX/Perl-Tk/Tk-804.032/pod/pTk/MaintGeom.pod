@@ -1,0 +1,127 @@
+#  Copyright (c) 1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_MaintainGeometry, Tk_UnmaintainGeometry - maintain geometry of one window relative to another
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_MaintainGeometry>(I<slave, master, x, y, width, height>)
+
+B<Tk_UnmaintainGeometry>(I<slave, master>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_Window slave (in)
+
+Window whose geometry is to be controlled.
+
+=item Tk_Window master (in)
+
+Window relative to which I<slave>'s geometry will be controlled.
+
+=item int x (in)
+
+Desired x-coordinate of I<slave> in I<master>, measured in pixels
+from the inside of I<master>'s left border to the outside of
+I<slave>'s left border.
+
+=item int y (in)
+
+Desired y-coordinate of I<slave> in I<master>, measured in pixels
+from the inside of I<master>'s top border to the outside of
+I<slave>'s top border.
+
+=item int width (in)
+
+Desired width for I<slave>, in pixels.
+
+=item int height (in)
+
+Desired height for I<slave>, in pixels.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_MaintainGeometry> and B<Tk_UnmaintainGeometry> make it
+easier for geometry managers to deal with slaves whose masters are not
+their parents.
+Three problems arise if the master for a slave is not its parent:
+
+=over 4
+
+=item [1]
+
+The x- and y-position of the slave must be translated from the
+coordinate system of the master to that of the parent before
+positioning the slave.
+
+=item [2]
+
+If the master window, or any of its ancestors up to the slave's
+parent, is moved, then the slave must be repositioned within its
+parent in order to maintain the correct position relative to the
+master.
+
+=item [3]
+
+If the master or one of its ancestors is mapped or unmapped, then
+the slave must be mapped or unmapped to correspond.
+
+=back
+
+None of these problems is an issue if the parent and master are
+the same.  For example, if the master or one of its ancestors
+is unmapped, the slave is automatically removed by the screen
+by X.
+
+B<Tk_MaintainGeometry> deals with these problems for slaves
+whose masters aren't their parents.
+B<Tk_MaintainGeometry> is typically called by a window manager
+once it has decided where a slave should be positioned relative
+to its master.
+B<Tk_MaintainGeometry> translates the coordinates to the
+coordinate system of I<slave>'s parent and then moves and
+resizes the slave appropriately.
+Furthermore, it remembers the desired position and creates event
+handlers to monitor the master and all of its ancestors up
+to (but not including) the slave's parent.
+If any of these windows is moved, mapped, or unmapped,
+the slave will be adjusted so that it is mapped only when the
+master is mapped and its geometry relative to the master
+remains as specified by I<x>, I<y>, I<width>, and
+I<height>.
+
+When a window manager relinquishes control over a window, or
+if it decides that it does not want the window to appear on the
+screen under any conditions, it calls B<Tk_UnmaintainGeometry>.
+B<Tk_UnmaintainGeometry> unmaps the window and cancels any
+previous calls to B<Tk_MaintainGeometry> for the
+I<master>-I<slave> pair, so that the slave's
+geometry and mapped state are no longer maintained
+automatically.
+B<Tk_UnmaintainGeometry> need not be called by a geometry
+manager if the slave, the master, or any of the master's ancestors
+is destroyed:  Tk will call it automatically.
+
+If B<Tk_MaintainGeometry> is called repeatedly for the same
+I<master>-I<slave> pair, the information from the most
+recent call supersedes any older information.
+If B<Tk_UnmaintainGeometry> is called for a I<master>-I<slave>
+pair that is isn't currently managed, the call has no effect.
+
+=head1 KEYWORDS
+
+geometry manager, map, master, parent, position, slave, unmap

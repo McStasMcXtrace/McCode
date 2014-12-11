@@ -1,0 +1,121 @@
+System prerequisites for Perl/Tk on Linux
+
+Of course a C compiler (e.g. gcc) and a make tool (e.g. GNU make)
+needs to be installed. Additionally, some libraries and include files
+are required:
+
+Debian, Ubuntu:
+
+The following system packages should be installed:
+
+    libx11-dev (minimal requirement for basic compilation of Perl/Tk)
+    libfreetype6-dev libxft-dev (for freetype support, XFT=1)
+    libpng-dev libz-dev (for using system library for Tk::PNG)
+    libjpeg-dev (for using system library for Tk::JPEG)
+
+CentOS, RedHat, Fedora:
+
+The following system packages should be installed:
+
+    libX11-devel (minimal requirement for basic compilation of Perl/Tk)
+    libXft-devel (for freetype support, XFT=1)
+    libpng-devel zlib-devel (for using system library for Tk::PNG)
+    libjpeg-devel (for using system library for Tk::JPEG)
+
+With all these requirements, building Perl/Tk is straightforward:
+
+    perl Makefile.PL
+    make
+    make test
+    make install
+
+XFT (freetype support) is enabled by default if the system
+prerequisites are met (see above). To explicitely turn it off, use
+
+    perl Makefile.PL XFT=0
+
+It's recommended to install system's libpng, zlib, and libjpeg first.
+Otherwise the bundled (and usually older) versions of libpng, zlib,
+and libjpeg are used.
+
+On some systems the default /etc/fonts/fonts.conf does not include
+traditional X11 fonts by default (seen on a CentOS 6.4 installation,
+probably also the case for the equivalent RedHat version). If you need
+traditional X11 fonts (adobe-courier, adobe-helvetica, adobe-times
+etc.), then there are some options:
+
+* Provide a file /etc/fonts/local.conf with appropriate <dir>
+  elements, e.g.
+
+    <fontconfig>
+      <dir>/usr/share/X11/fonts</dir>
+    </fontconfig>
+
+  This change would be global for all users.
+
+* Create a user-specific configuration file in ~/.fonts.conf with the
+  same content.
+
+* Copy or symlink the directories with the X11 fonts into ~/.fonts
+  (for a user only) or a global font directory like
+  /usr/local/share/fonts.
+
+----------------------------------------------------------------------
+Older instructions follow
+
+These days perl/Tk is developed on Linux so things should work.
+Nick uses SuSE Distributions, currently using SuSE 9.0.
+All SuSE's /usr/bin/perl (perl >= perl5.8.0) should work.
+SuSE's fontconfig is fine for building with XFT=1, but
+there are some dodgy TrueType fonts in its set.
+
+RedHat is more variable. Nick uses this version under RedHat7.* and
+RedHat9.0 at work. RedHat9.0 will build with XFT=1 but scalable
+fonts installed by default are limited.
+
+Main snag on RedHat is that /usr/bin/perl tends to be a RedHat
+patched version rather than an approved perl release. Its 5.8.0 has
+bugs which mean that it is worse that official perl5.8.0 in UTF-8
+locales - but UTF-8 locales are default on RedHat :-(
+
+Nick has installed this version with RedHat's perl on RedHat9.
+BUT there are a lot of reports that it doesn't work. If the problem
+hits you try this:
+
+1. Delete the unpacked version that had trouble - the bug mangles
+   some files.
+
+2. Change to a non UTF-8 locale. i.e.
+   echo $LANG            # find out what your locale is
+   export LANG=en_GB     # what above printed but without UTF-8 bit
+
+3. tar xzf Tk804.026.tar.gz  # re-extract
+   cd Tk804.026
+
+4. perl Makefile.PL          # normal build
+   make
+   make test
+
+   (Steps 3 & 4 can be done using CPAN module provided you stay
+    in non-UTF-8 locale.)
+
+5. Optionally:
+   export LANG=en_GB.UTF-8 # or original from step 2
+   make test               # prove it works in the locale
+
+6. make install
+
+Or just get perl5.8.3 kit from CPAN and build a real perl.
+
+
+Other issues are that distributions vary in the fonts they come
+with and window managers vary by user AND distribution.
+So a t/entry.t and t/listbox.t in particular (which are new tests
+compared to Tk800 series) sometimes fail a few subtests.
+Sometimes when run like:
+
+  perl -Mblib t/entry.t
+
+they will pass :-(
+
+Nick Ing-Simmons 2004/03/18

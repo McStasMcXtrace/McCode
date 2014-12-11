@@ -1,0 +1,395 @@
+#  Copyright (c) 1990-1992 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_ParseArgv - process command-line options
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+int
+B<Tk_ParseArgv>(I<interp, tkwin, argcPtr, argv, argTable, flags>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter to use for returning error messages.
+
+=item Tk_Window tkwin (in)
+
+Window to use when arguments specify Tk options.  If NULL, then
+no Tk options will be processed.
+
+=item int argcPtr (in/out)
+
+Pointer to number of arguments in argv;  gets modified to hold
+number of unprocessed arguments that remain after the call.
+
+=item char **argv (in/out)
+
+Command line arguments passed to main program.  Modified to
+hold unprocessed arguments that remain after the call.
+
+=item Tk_ArgvInfo *argTable (in)
+
+Array of argument descriptors, terminated by element with
+type TK_ARGV_END.
+
+=item int flags (in)
+
+If non-zero, then it specifies one or more flags that control the
+parsing of arguments.  Different flags may be OR'ed together.
+The flags currently defined are TK_ARGV_DONT_SKIP_FIRST_ARG,
+TK_ARGV_NO_ABBREV, TK_ARGV_NO_LEFTOVERS, and TK_ARGV_NO_DEFAULTS.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_ParseArgv> processes an array of command-line arguments according
+to a table describing the kinds of arguments that are expected.
+Each of the arguments in I<argv> is processed in turn:  if it matches
+one of the entries in I<argTable>, the argument is processed
+according to that entry and discarded.  The arguments that do not
+match anything in I<argTable> are copied down to the beginning
+of I<argv> (retaining their original order) and returned to
+the caller.  At the end of the call
+B<Tk_ParseArgv> sets I<*argcPtr> to hold the number of
+arguments that are left in I<argv>, and I<argv[*argcPtr]>
+will hold the value NULL.  Normally, B<Tk_ParseArgv>
+assumes that I<argv[0]> is a command name, so it is treated like
+an argument that doesn't match I<argTable> and returned to the
+caller;  however, if the TK_ARGV_DONT_SKIP_FIRST_ARG bit is set in
+I<flags> then I<argv[0]> will be processed just like the other
+elements of I<argv>.
+
+B<Tk_ParseArgv> normally returns the value TCL_OK.  If an error
+occurs while parsing the arguments, then TCL_ERROR is returned and
+B<Tk_ParseArgv> will leave an error message in I<interp-E<gt>result>
+in the standard Tcl fashion.  In
+the event of an error return, I<*argvPtr> will not have been
+modified, but I<argv> could have been partially modified.  The
+possible causes of errors are explained below.
+
+The I<argTable> array specifies the kinds of arguments that are
+expected;  each of its entries has the following structure:
+
+ typedef struct {
+ 	char *key;
+ 	int type;
+ 	char *src;
+ 	char *dst;
+ 	char *help;
+ } Tk_ArgvInfo;
+
+The I<key> field is a string such as ``-display'' or ``-bg''
+that is compared with the values in I<argv>.  I<Type>
+indicates how to process an argument that matches I<key>
+(more on this below).  I<Src> and I<dst> are additional
+values used in processing the argument.  Their exact usage
+depends on I<type>, but typically I<src> indicates
+a value and I<dst> indicates where to store the
+value.  The B<char *> declarations for I<src> and I<dst>
+are placeholders:  the actual types may be different.  Lastly,
+I<help> is a string giving a brief description
+of this option;  this string is printed when users ask for help
+about command-line options.
+
+When processing an argument in I<argv>, B<Tk_ParseArgv>
+compares the argument to each of the I<key>'s in I<argTable>.
+B<Tk_ParseArgv> selects the first specifier whose I<key> matches
+the argument exactly, if such a specifier exists.  Otherwise
+B<Tk_ParseArgv> selects a specifier for which the argument
+is a unique abbreviation.  If the argument is a unique abbreviation
+for more than one specifier, then an error is returned.  If there
+is no matching entry in I<argTable>, then the argument is
+skipped and returned to the caller.
+
+Once a matching argument specifier is found, B<Tk_ParseArgv>
+processes the argument according to the I<type> field of the
+specifier.  The argument that matched I<key> is called ``the matching
+argument'' in the descriptions below.  As part of the processing,
+B<Tk_ParseArgv> may also use the next argument in I<argv>
+after the matching argument, which is called ``the following
+argument''.  The legal values for I<type>, and the processing
+that they cause, are as follows:
+
+=over 4
+
+=item B<TK_ARGV_END>
+
+Marks the end of the table.  The last entry in I<argTable>
+must have this type;  all of its other fields are ignored and it
+will never match any arguments.
+
+=item B<TK_ARGV_CONSTANT>
+
+I<Src> is treated as an integer and I<dst> is treated
+as a pointer to an integer.  I<Src> is stored at I<*dst>.
+The matching argument is discarded.
+
+=item B<TK_ARGV_INT>
+
+The following argument must contain an
+integer string in the format accepted by B<strtol> (e.g. ``0''
+and ``0x'' prefixes may be used to specify octal or hexadecimal
+numbers, respectively).  I<Dst> is treated as a pointer to an
+integer;  the following argument is converted to an integer value
+and stored at I<*dst>.  I<Src> is ignored.  The matching
+and following arguments are discarded from I<argv>.
+
+=item B<TK_ARGV_FLOAT>
+
+The following argument must contain a floating-point number in
+the format accepted by B<strtol>.
+I<Dst> is treated as the address of an double-precision
+floating point value;  the following argument is converted to a
+double-precision value and stored at I<*dst>.  The matching
+and following arguments are discarded from I<argv>.
+
+=item B<TK_ARGV_STRING>
+
+In this form, I<dst> is treated as a pointer to a (char *);
+B<Tk_ParseArgv> stores at I<*dst> a pointer to the following
+argument, and discards the matching and following arguments from
+I<argv>.  I<Src> is ignored.
+
+=item B<TK_ARGV_UID>
+
+This form is similar to TK_ARGV_STRING, except that the argument
+is turned into a Tk_Uid by calling B<Tk_GetUid>.
+I<Dst> is treated as a pointer to a
+Tk_Uid; B<Tk_ParseArgv> stores at I<*dst> the Tk_Uid
+corresponding to the following
+argument, and discards the matching and following arguments from
+I<argv>.  I<Src> is ignored.
+
+=item B<TK_ARGV_CONST_OPTION>
+
+This form causes a Tk option to be set (as if the B<option>
+command had been invoked).  The I<src> field is treated as a
+pointer to a string giving the value of an option, and I<dst>
+is treated as a pointer to the name of the option.  The matching
+argument is discarded.  If I<tkwin> is NULL, then argument
+specifiers of this type are ignored (as if they did not exist).
+
+=item B<TK_ARGV_OPTION_VALUE>
+
+This form is similar to TK_ARGV_CONST_OPTION, except that the
+value of the option is taken from the following argument instead
+of from I<src>.  I<Dst> is used as the name of the option.
+I<Src> is ignored.  The matching and following arguments
+are discarded.  If I<tkwin> is NULL, then argument
+specifiers of this type are ignored (as if they did not exist).
+
+=item B<TK_ARGV_OPTION_NAME_VALUE>
+
+In this case the following argument is taken as the name of a Tk
+option and the argument after that is taken as the value for that
+option.  Both I<src> and I<dst> are ignored.  All three
+arguments are discarded from I<argv>.  If I<tkwin> is NULL,
+then argument
+specifiers of this type are ignored (as if they did not exist).
+
+=item B<TK_ARGV_HELP>
+
+When this kind of option is encountered, B<Tk_ParseArgv> uses the
+I<help> fields of I<argTable> to format a message describing
+all the valid arguments.  The message is placed in I<interp-E<gt>result>
+and B<Tk_ParseArgv> returns TCL_ERROR.  When this happens, the
+caller normally prints the help message and aborts.  If the I<key>
+field of a TK_ARGV_HELP specifier is NULL, then the specifier will
+never match any arguments;  in this case the specifier simply provides
+extra documentation, which will be included when some other
+TK_ARGV_HELP entry causes help information to be returned.
+
+=item B<TK_ARGV_REST>
+
+This option is used by programs or commands that allow the last
+several of their options to be the name and/or options for some
+other program.  If a B<TK_ARGV_REST> argument is found, then
+B<Tk_ParseArgv> doesn't process any
+of the remaining arguments;  it returns them all at
+the beginning of I<argv> (along with any other unprocessed arguments).
+In addition, B<Tk_ParseArgv> treats I<dst> as the address of an
+integer value, and stores at I<*dst> the index of the first of the
+B<TK_ARGV_REST> options in the returned I<argv>.  This allows the
+program to distinguish the B<TK_ARGV_REST> options from other
+unprocessed options that preceded the B<TK_ARGV_REST>.
+
+=item B<TK_ARGV_FUNC>
+
+For this kind of argument, I<src> is treated as the address of
+a procedure, which is invoked to process the following argument.
+The procedure should have the following structure:
+
+=over 4
+
+ int
+ func(dst, key, nextArg)
+ 	char *dst;
+ 	char *key;
+ 	char *nextArg;
+ {
+ }
+
+The I<dst> and I<key> parameters will contain the
+corresponding fields from the I<argTable> entry, and
+I<nextArg> will point to the following argument from I<argv>
+(or NULL if there aren't any more arguments left in I<argv>).
+If I<func> uses I<nextArg> (so that
+B<Tk_ParseArgv> should discard it), then it should return 1.  Otherwise it
+should return 0 and B<TkParseArgv> will process the following
+argument in the normal fashion.  In either event the matching argument
+is discarded.
+
+=back
+
+=item B<TK_ARGV_GENFUNC>
+
+This form provides a more general procedural escape.  It treats
+I<src> as the address of a procedure, and passes that procedure
+all of the remaining arguments.  The procedure should have the following
+form:
+
+=over 4
+
+ int
+ genfunc(dst, interp, key, argc, argv)
+ 	char *dst;
+ 	Tcl_Interp *interp;
+ 	char *key;
+ 	int argc;
+ 	char **argv;
+ {
+ }
+
+The I<dst> and I<key> parameters will contain the
+corresponding fields from the I<argTable> entry.  I<Interp>
+will be the same as the I<interp> argument to B<Tcl_ParseArgv>.
+I<Argc> and I<argv> refer to all of the options after the
+matching one.  I<Genfunc> should behave in a fashion similar
+to B<Tk_ParseArgv>:  parse as many of the remaining arguments as it can,
+then return any that are left by compacting them to the beginning of
+I<argv> (starting at I<argv>[0]).  I<Genfunc>
+should return a count of how many arguments are left in I<argv>;
+B<Tk_ParseArgv> will process them.  If I<genfunc> encounters
+an error then it should leave an error message in I<interp-E<gt>result>,
+in the usual Tcl fashion, and return -1;  when this happens
+B<Tk_ParseArgv> will abort its processing and return TCL_ERROR.
+
+=back
+
+=back
+
+=head1 FLAGS
+
+=over 4
+
+=item B<TK_ARGV_DONT_SKIP_FIRST_ARG>
+
+B<Tk_ParseArgv> normally treats I<argv[0]> as a program
+or command name, and returns it to the caller just as if it
+hadn't matched I<argTable>.  If this flag is given, then
+I<argv[0]> is not given special treatment.
+
+=item B<TK_ARGV_NO_ABBREV>
+
+Normally, B<Tk_ParseArgv> accepts unique abbreviations for
+I<key> values in I<argTable>.  If this flag is given then
+only exact matches will be acceptable.
+
+=item B<TK_ARGV_NO_LEFTOVERS>
+
+Normally, B<Tk_ParseArgv> returns unrecognized arguments to the
+caller.  If this bit is set in I<flags> then B<Tk_ParseArgv>
+will return an error if it encounters any argument that doesn't
+match I<argTable>.  The only exception to this rule is I<argv[0]>,
+which will be returned to the caller with no errors as
+long as TK_ARGV_DONT_SKIP_FIRST_ARG isn't specified.
+
+=item B<TK_ARGV_NO_DEFAULTS>
+
+Normally, B<Tk_ParseArgv> searches an internal table of
+standard argument specifiers in addition to I<argTable>.  If
+this bit is set in I<flags>, then B<Tk_ParseArgv> will
+use only I<argTable> and not its default table.
+
+=back
+
+=head1 EXAMPLE
+
+Here is an example definition of an I<argTable> and
+some sample command lines that use the options.  Note the effect
+on I<argc> and I<argv>;  arguments processed by B<Tk_ParseArgv>
+are eliminated from I<argv>, and I<argc>
+is updated to reflect reduced number of arguments.
+
+ /*
+  * Define and set default values for globals.
+  */
+ int debugFlag = 0;
+ int numReps = 100;
+ char defaultFileName[] = "out";
+ char *fileName = defaultFileName;
+ Boolean exec = FALSE;
+
+ /*
+  * Define option descriptions.
+  */
+ Tk_ArgvInfo argTable[] = {
+ 	{"-X", TK_ARGV_CONSTANT, (char *) 1, (char *) &debugFlag,
+ 		"Turn on debugging printfs"},
+ 	{"-N", TK_ARGV_INT, (char *) NULL, (char *) &numReps,
+ 		"Number of repetitions"},
+ 	{"-of", TK_ARGV_STRING, (char *) NULL, (char *) &fileName,
+ 		"Name of file for output"},
+ 	{"x", TK_ARGV_REST, (char *) NULL, (char *) &exec,
+ 		"File to exec, followed by any arguments (must be last argument)."},
+ 	{(char *) NULL, TK_ARGV_END, (char *) NULL, (char *) NULL,
+ 	    (char *) NULL}
+ };
+
+ main(argc, argv)
+ 	int argc;
+ 	char *argv[];
+ {
+ 	...
+
+ 	if (Tk_ParseArgv(interp, tkwin, &argc, argv, argTable, 0) != TCL_OK) {
+ 		fprintf(stderr, "%s\n", interp->result);
+ 		exit(1);
+ 	}
+
+ 	/*
+ 	 * Remainder of the program.
+ 	 */
+ }
+
+Note that default values can be assigned to variables named in
+I<argTable>:  the variables will only be overwritten if the
+particular arguments are present in I<argv>.
+Here are some example command lines and their effects.
+
+ prog -N 200 infile		# just sets the numReps variable to 200
+ prog -of out200 infile 	# sets fileName to reference "out200"
+ prog -XN 10 infile		# sets the debug flag, also sets numReps
+
+In all of the above examples, I<argc> will be set by B<Tk_ParseArgv> to 2,
+I<argv>[0] will be ``prog'', I<argv>[1] will be ``infile'',
+and I<argv>[2] will be NULL.
+
+=head1 KEYWORDS
+
+arguments, command line, options

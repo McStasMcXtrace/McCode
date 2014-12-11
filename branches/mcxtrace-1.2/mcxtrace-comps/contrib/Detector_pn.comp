@@ -1,0 +1,179 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright 1997-2014, All rights reserved
+*         DTU Physics, Denmark
+*         NBI, Denmark
+*
+* Component: Detector_pn.comp
+*
+* %I
+* Written by: Maria Thomsen (mariath@fys.ku.dk)
+* Date: Jan 24, 2011
+* Version: $Revision: 1.0$
+* Origin: NBI, KU
+* Release: McXtrace 1.2
+*
+* Block of a attenuating material
+* 
+* %D
+* A scintillator detector model taking photoabsorption efficiency into account. As such it consitututes a
+* more physical version of the PSD_monitor. Only direct absorption is taken into account.
+*
+* %P
+* INPUT PARAMETERS
+*
+* xwidth: Width of block. (m) 
+* yheight: Height of block. (m)
+* zdepth:  Thickness of block. (m)
+* material_datafile: file where the material parameters for the scintillator may be found. Format is similar to what may be found off the NISP website. [Be.txt] 
+* nx:       Number of pixel columns (1)
+* ny:       Number of pixel rows (1)
+* filename: Name of file in which to store the detector image (text)
+* restore_xray: If set, the monitor does not influence the xray state (1)
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N:    Array of xray counts
+* PSD_p:    Array of xray weight counts
+* PSD_p2:   Array of second moments
+* %E
+*******************************************************************************/
+DEFINE COMPONENT Detector_pn
+DEFINITION PARAMETERS (string material_datafile="Be.txt",nx=90, ny=90, string filename=0, restore_xray=0)
+SETTING PARAMETERS (xwidth,yheight,zdepth) 
+OUTPUT PARAMETERS (prms, PSD_N, PSD_p, PSD_p2)
+/*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p)*/
+
+SHARE
+%{
+  %include "read_table-lib"
+%}
+
+DECLARE
+%{
+  double xmax,xmin,ymax,ymin;
+
+  struct {
+    int Z;
+    double At, rho;
+    double *E,*mu;
+   } prms;
+
+    double PSD_N[nx][ny];
+    double PSD_p[nx][ny];
+    double PSD_p2[nx][ny];
+  %}
+INITIALIZE
+%{
+  int status=0;
+ 
+  if(!xwidth || !yheight){
+    fprintf(stderr,"%s: Detector has zero effective area\n",NAME_CURRENT_COMP);
+    exit(0);
+  }
+  xmax=xwidth/2.0;
+  xmin=-xmax;
+  ymax=yheight/2.0;
+  ymin=-ymax;
+
+  t_Table T;
+  if ( (status=Table_Read(&T,material_datafile,0))==-1){
+    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
+    exit(-1);
+  }
+  char **header_parsed;
+  header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho","sigma[a]");
+  //if (!prms.At) prms.At=strtod(header_parsed[1],NULL);
+  //if (!prms.Z) prms.Z=strtol(header_parsed[0],NULL,10);
+  if (!prms.rho) prms.rho=strtod(header_parsed[2],NULL);
+  prms.E=malloc(sizeof(double)*(T.rows+1));
+  prms.mu=malloc(sizeof(double)*(T.rows+1));
+
+  int i,j;
+  for (i=0;i<T.rows;i++){
+    prms.E[i]=T.data[i*T.columns];
+    prms.mu[i]=T.data[1+i*T.columns]*prms.rho*1e2;     /*mu is now in SI, [m^-1]*/ 
+  }
+
+  prms.E[T.rows]=-1.0;
+  prms.mu[T.rows]=-FLT_MAX;
+  
+  Table_Free(&T);
+  
+  
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("PSD_monitor: %s: Null detection area !\n"
+                   "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
+
+    for (i=0; i<nx; i++){
+      memset(PSD_N[i],0,sizeof(double)*ny);
+      memset(PSD_p[i],0,sizeof(double)*ny);
+      memset(PSD_p2[i],0,sizeof(double)*ny);
+    }
+%}
+
+TRACE
+%{
+  double alpha,e,k,mu;
+  double l0,l1;
+  int i,j;
+  if (box_intersect(&l0,&l1,x,y,z,kx,ky,kz,xwidth,yheight,zdepth)){
+    PROP_DL(l0);
+    /*table interpolation*/
+    k=sqrt(kx*kx+ky*ky+kz*kz);
+    e=k*K2E;
+    i=0;
+    while (e>prms.E[i]){
+      i++;
+      if (prms.E[i]==-1){
+        fprintf(stderr,"Photon energy (%g keV) is outside the filter's material data\n",e); ABSORB;
+      }
+    }
+    alpha=(e-prms.E[i-1])/(prms.E[i]-prms.E[i-1]);
+    mu=(1-alpha)*prms.mu[i-1]+alpha*prms.mu[i];
+    //mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
+    
+    l1-=l0; 
+    p*=(1-exp(-mu*l1));
+  //photon detected in surface pixel  
+    if (x>xmin && x<xmax && y>ymin && y<ymax)
+    {
+      i = floor((x - xmin)*nx/(xmax - xmin));
+      j = floor((y - ymin)*ny/(ymax - ymin));
+      PSD_N[i][j]++;
+      PSD_p[i][j] += p;
+      PSD_p2[i][j] += p*p;
+      SCATTER;
+    }
+    if (restore_xray) {
+      RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+      }
+    
+  }
+%}
+
+SAVE
+  %{
+    DETECTOR_OUT_2D(
+        "Detector_pn",
+        "X position [cm]",
+        "Y position [cm]",
+        xmin*100.0, xmax*100.0, ymin*100.0, ymax*100.0,
+        nx, ny,
+        &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+        filename);
+  %}
+  
+MCDISPLAY
+%{
+  magnify("xy");
+  box(0,0,0,xwidth,yheight,zdepth);
+%}
+END

@@ -1,0 +1,150 @@
+
+=head1 NAME
+
+Tk::FileSelect - a widget for choosing files
+
+=for pm Tk/FileSelect.pm
+
+=for category Popups and Dialogs
+
+=head1 SYNOPSIS
+
+ use Tk::FileSelect;
+
+ $FSref = $top->FileSelect(-directory => $start_dir);
+               $top            - a window reference, e.g. MainWindow->new
+               $start_dir      - the starting point for the FileSelect
+ $file = $FSref->Show;
+               Executes the fileselector until either a filename is
+               accepted or the user hits Cancel. Returns the filename
+               or the empty string, respectively, and unmaps the
+               FileSelect.
+ $FSref->configure(option => value[, ...])
+               Please see the Populate subroutine as the configuration
+               list changes rapidly.
+
+=head1 DESCRIPTION
+
+This Module pops up a Fileselector box, with a directory entry on
+top, a list of directories in the current directory, a list of
+files in the current directory, an entry for entering/modifying a
+file name, an accept button and a cancel button.
+
+You can enter a starting directory in the directory entry. After
+hitting Return, the listboxes get updated. Double clicking on any
+directory shows you the respective contents. Single clicking on a
+file brings it into the file entry for further consideration,
+double clocking on a file pops down the file selector and calls
+the optional command with the complete path for the selected file.
+Hitting return in the file selector box or pressing the accept
+button will also work. *NOTE* the file selector box will only then
+get destroyed if the file name is not zero length. If you want
+yourself take care of it, change the if(length(.. in sub
+accept_file.
+
+=head1 AUTHORS
+
+Based on original FileSelect by
+Klaus Lichtenwalder, Lichtenwalder@ACM.org, Datapat GmbH, Munich,
+April 22, 1995 adapted by
+Frederick L. Wagner, derf@ti.com, Texas Instruments Incorporated, Dallas,
+21Jun95
+
+=head1 HISTORY
+
+=head2 950621 -- The following changes were made:
+
+=over 4
+
+=item *
+
+Rewrote Tk stuff to take advantage of new Compound widget module, so
+FileSelect is now composed of 2 LabEntry and 2 ScrlListbox2
+subwidgets.
+
+=item *
+
+Moved entry labels (from to the left of) to above the entry fields.
+
+=item *
+
+Caller is now able to control these aspects of widget, in both
+FileSelect (new) and configure :
+
+(Please see subroutine Populate for details, as these options
+change rapidly!)
+
+=item *
+
+I changed from Double-Button-1 to Button-1 in the Files listbox,
+to work with multiple mode in addition to browse mode.  I also
+made some name changes (LastPath --> saved_path, ...).
+
+=item *
+
+The show method is not yet updated.
+
+=item *
+
+The topLevel stuff is not done yet.  I took it out while I toy with
+the idea of FileSelect as a subwidget.  Then the 'normal' topLevel
+thing with Buttons along the bottom could be build on top of it.
+
+=item *
+
+By request of Henry Katz <katz@fs09.webo.dg.com>, I added the functionality
+of using the Directory entry as a filter. So, if you want to only see the
+*.c files, you add a .c (the *'s already there :) and hit return.
+
+=back
+
+=head2 95/10/17, SOL, LUCC.  lusol@Lehigh.EDU
+
+=over 4
+
+=item *
+
+ Allow either file or directory names to be accepted.
+
+=item *
+
+Require double click to move into a new directory rather than a single
+click.  This allows a single click to select a directory name so it can
+be accepted.
+
+=item *
+
+Add -verify list option so that standard Perl file test operators (like
+-d and -x) can be specified for further name validation.  The default
+value is the special value '!-d' (not a directory), so any name can be
+selected as long as it's not a directory - after all, this IS FileSelect!
+
+For example:
+
+    $fs->configure(-verify => ['-d', [\&verify_code, $P1, $P2, ... $Pn]]);
+
+ensures that the selected name is a directory.  Further, if an element of
+the list is an array reference, the first element is a code reference to a
+subroutine and the remaining optional elements are it's parameters.  The
+subroutine is called like this:
+
+    &verify_code($cd, $leaf, $P1, $P2, ... $Pn);
+
+where $cd is the current directory, $leaf is a directory or file name, and
+$P1 .. $Pn are your optional parameters.  The subroutine should return TRUE
+if success or FALSE if failure.
+
+=back
+
+=head2 961008 -- derf@ti.com :
+
+By request of Jim Stern <js@world.northgrum.com> and Brad Vance
+<bvance@ti.com>, I updated the Accept and Show functions to support
+selection of multiple files.  I also corrected a typo in the -verify code.
+
+=head1 SEE ALSO
+
+L<Tk::getOpenFile>, L<Tk::FBox>.
+
+=cut
+

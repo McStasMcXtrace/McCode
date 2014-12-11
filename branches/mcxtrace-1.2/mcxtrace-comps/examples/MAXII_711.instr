@@ -1,0 +1,203 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcstas.org
+*
+* Instrument: MAXII_711
+*
+* %Identification
+* Written by: Your name (email)
+* Date: Current Date
+* Origin: Your institution
+* Release: McStas 1.0
+* Version: 0.2
+* %INSTRUMENT_SITE: Institution_name_as_a_single word
+*
+* Instrument short description
+*
+* %Description
+* Instrument longer description (type, elements, usage...)
+*
+* Example: mcrun test.instr <parameters=values>
+*
+* %Parameters
+* Par1: [unit] Parameter1 description
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT MAXII_711(R=-100,phi_mirror=3,phi_mono=9.25, chi=0, ome=0,phi=0,tth=0)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+	double lambda0=1;
+	double dlambda=0.9;
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+
+COMPONENT source = Source_gaussian(
+    sig_x = 3655.04e-6, sig_y = 160.2e-6, sigPr_x = 4802.92e-6,
+    sigPr_y = 204.129e-6, lambda0 = lambda0, dlambda = dlambda)
+AT (0, 0, 0) RELATIVE Origin
+
+
+COMPONENT source_mon = PSD_monitor(
+    filename = "source_mon.dat", restore_xray=1,xwidth = 2e-2, yheight = 1e-2)
+AT (0, 0, 1) RELATIVE source
+
+COMPONENT slit0 = Slit(
+    xwidth=1e-3, yheight=1e-3)
+AT(0,0,5) RELATIVE source
+
+COMPONENT mirror_mount = Arm()
+AT(0,0,10) RELATIVE source
+ROTATED (0,0,-90) RELATIVE source
+
+COMPONENT mirror = Mirror_curved(
+     coating = "Pt.txt", radius = R, length = 1.2, width = 0.1)
+AT (0, 0, 0) RELATIVE mirror_mount
+ROTATED (0, -phi_mirror, 0) RELATIVE mirror_mount
+
+COMPONENT mirror_exit_0 = Arm()
+AT (0,0,0) RELATIVE mirror
+ROTATED (0,-phi_mirror,0) RELATIVE mirror
+
+COMPONENT mirror_exit = Arm()
+AT(0,0,0) RELATIVE mirror
+ROTATED (0,0,90) RELATIVE mirror_exit_0
+
+COMPONENT mirror_exit_lmon= L_monitor(
+	filename="mi_lmon.dat",xwidth=0.2, yheight=0.2, Lmin=lambda0-dlambda-0.1, Lmax=lambda0+dlambda+0.1, nL=200)
+AT(0,0,1) RELATIVE mirror_exit
+
+COMPONENT mirror_exit_psd = PSD_monitor(
+filename="mi_psd.dat", xwidth=0.02, yheight=0.02)
+AT (0,0,0.001) RELATIVE PREVIOUS
+
+//COMPONENT be_window = Filter(
+//    xwidth = 0.1, yheight = 0.1, zdepth = 100e-6)
+//  AT (0, 0, 2.5) RELATIVE mirror_exit
+
+COMPONENT slit_main = Slit(
+    xwidth = 1e-2, yheight = 1e-2)
+AT (0, 0, 3.5) RELATIVE mirror_exit
+
+COMPONENT mono_mount = Arm()
+AT( 0,0,5) RELATIVE mirror_exit
+ROTATED (0,0,90) RELATIVE mirror_exit
+
+//COMPONENT monochromator = Arm()
+COMPONENT monochromator = Perfect_crystal(
+     length = 30e-2, width = 5e-2, alpha = 0)
+AT (0, 0, 0) RELATIVE mono_mount
+ROTATED (phi_mono,0,0) RELATIVE mono_mount
+
+COMPONENT mono_exit_0 = Arm()
+AT(0,0,0) RELATIVE monochromator
+ROTATED (phi_mono,0,0) RELATIVE monochromator
+
+COMPONENT mono_exit = Arm()
+AT(0,0,0) RELATIVE mono_exit_0
+ROTATED (0,0,-90) RELATIVE mono_exit_0
+
+COMPONENT mono_exit_lmon= L_monitor(
+	filename="me_lmon.dat",xwidth=0.01, yheight=0.01, Lmin=lambda0-dlambda-0.1, Lmax=lambda0+dlambda+0.1, nL=200)
+AT(0,0,1) RELATIVE mono_exit
+
+COMPONENT mono_exit_psd = PSD_monitor(
+filename="me_psd.dat", xwidth=0.01, yheight=0.01)
+AT (0,0,0.001) RELATIVE PREVIOUS
+
+COMPONENT slit_saxs =Slit(
+    xwidth=1e-3,yheight=1e-3)
+AT(0,0,3.85) RELATIVE mono_exit
+
+COMPONENT slit_saxs2=COPY(slit_saxs)()
+AT(0,0,.45) RELATIVE slit_saxs
+
+COMPONENT sample_mon = PSD_monitor(
+    filename = "sample_mon.dat", restore_xray=1, xwidth = 1e-2, yheight = 1e-2)
+  AT (0, 0, 1.02) RELATIVE slit_saxs2
+
+COMPONENT sample_rot_ome = Arm()
+AT(0,0,0)RELATIVE sample_mon
+ROTATED (0,ome,0) RELATIVE sample_mon
+
+COMPONENT sample_rot_chi = Arm()
+AT(0,0,0)RELATIVE sample_rot_ome
+ROTATED (chi,0,0) RELATIVE sample_rot_ome
+
+COMPONENT sample_rot_phi = Arm()
+  AT(0,0,0)RELATIVE sample_rot_chi
+ROTATED (0,phi,0) RELATIVE sample_rot_chi
+
+COMPONENT sample = PowderN(
+    radius=0.0010,yheight=1e-3,reflections="C_diamond.laz",material="C.txt",format=Lazy,d_phi=160,
+    barns=1,p_inc=0    
+)
+AT(0,0,0) RELATIVE sample_rot_phi
+EXTEND
+%{
+  if(!SCATTERED)ABSORB;
+%}
+
+COMPONENT psd4pi = PSD_monitor_4PI(
+    radius=0.1,nx=500,ny=200, restore_xray=1,filename="psd4pi")
+AT(0,0,0) RELATIVE sample_mon
+
+COMPONENT bigpsd = PSD_monitor(
+    xwidth=1,yheight=1,nx=512,ny=512,restore_xray=1, filename="bigpsd")
+AT(0,0,0.333) RELATIVE sample_mon
+
+COMPONENT bigradial = PSD_monitor(
+    radius=0.8,nr=128,restore_xray=1, filename="bigradial")
+AT(0,0,0.333) RELATIVE sample_mon
+
+
+COMPONENT rot_tt = Arm()
+AT(0,0,0) RELATIVE sample_mon
+ROTATED (0,tth,0) RELATIVE sample_mon
+
+COMPONENT detector = PSD_monitor(
+    xwidth=165e-3, yheight=165e-3, filename="psd"
+    )
+AT(0,0,.333) RELATIVE rot_tt
+
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+
+
+

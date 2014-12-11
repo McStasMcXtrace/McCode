@@ -1,0 +1,79 @@
+#!/usr/local/bin/perl -w
+use strict;
+
+my @names = qw(Tcl_CreateEventSource Tcl_DeleteEventSource Tcl_DeleteEvents
+               Tcl_DoOneEvent Tcl_QueueEvent Tcl_ServiceEvent Tcl_WaitForEvent
+               TCL_READABLE TCL_WRITABLE TCL_EXCEPTION
+               TCL_WINDOW_EVENTS TCL_FILE_EVENTS   TCL_TIMER_EVENTS
+               TCL_IDLE_EVENTS TCL_QUEUE_TAIL TCL_QUEUE_HEAD TCL_QUEUE_MARK
+               Tcl_CreateTimerHandler Tcl_DeleteTimerHandler Tcl_SetMaxBlockTime
+               Tcl_SetTimer TclpGetTime
+
+Tcl_AsyncCreate
+Tcl_AsyncDelete
+Tcl_AsyncInvoke
+Tcl_AsyncMark
+Tcl_AsyncReady
+TclInExit
+Tcl_CreateExitHandler
+Tcl_DeleteExitHandler
+Tcl_Exit
+Tcl_Finalize
+Tcl_UpdateCmd
+Tcl_VwaitCmd
+Tcl_CreateEventSource
+Tcl_DeleteEventSource
+Tcl_DeleteEvents
+Tcl_DoOneEvent
+Tcl_GetServiceMode
+Tcl_QueueEvent
+Tcl_ServiceAll
+Tcl_ServiceEvent
+Tcl_SetMaxBlockTime
+Tcl_SetServiceMode
+TclServiceIdle
+Tcl_AfterObjCmd
+Tcl_CancelIdleCall
+Tcl_CreateTimerHandler
+Tcl_DeleteTimerHandler
+Tcl_DoWhenIdle
+Tcl_Sleep
+Tcl_CreateFileHandler
+Tcl_DeleteFileHandler
+Tcl_SetTimer
+Tcl_WaitForEvent
+TclpGetClicks
+TclpGetSeconds
+TclpGetTime
+
+
+
+              );
+my $re = join('|',@names);
+my %count;
+
+while (<>)
+ {
+  while (/\b($re)\b/go)
+   {
+    my $name = $1;
+    $count{$name}++;
+    print "$ARGV:$.:",$_;
+   }
+  $. = 0 if eof;
+ }
+
+my %done;
+foreach my $name (sort @names)
+ {
+  next if $done{$name};
+  $done{$name} = 1;
+  if (exists $count{$name})
+   {
+    # warn sprintf("%4d uses of $name\n",$count{$name});
+   }
+  else
+   {
+    warn "  No uses of $name\n";
+   }
+ }

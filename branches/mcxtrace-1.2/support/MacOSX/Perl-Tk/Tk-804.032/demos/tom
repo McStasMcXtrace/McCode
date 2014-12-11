@@ -1,0 +1,55 @@
+#!/usr/bin/env perl
+#
+# Sample program to get Tom Christiansen going with Perl/Tk.
+
+require 5.002;
+use Tk;
+use strict;
+sub DoIt;
+
+# Set up listbox
+my(@messages) = ('First Message','Second Message','Third Message');
+
+# Dummy function to be called
+sub DoIt
+{
+ print "DoIt(",join(',',@_),")\n";
+}
+
+
+# Initialze Tk
+my $MW = MainWindow->new();
+
+# Create a frame with a label and an entry to input user
+
+my $user = (@ARGV) ? $ARGV[0] : $ENV{USER};
+my $frame   = $MW->Frame();
+my$label   = $frame->Label(-text => 'User : ');
+my $entry   = $frame->Entry(-textvariable => \$user);
+$label->pack(-side => 'left');
+$entry->pack(-side => 'right');
+$frame->pack;
+
+# Create the list box
+
+my $listbox = $MW->Listbox();
+
+# Fill in the list
+$listbox->insert('end',@messages);
+$listbox->pack;
+
+# Create 'execute' button
+my $execute = $MW->Button(-text => 'Execute',
+                        -command => sub
+                          {
+                           DoIt($user,$listbox->get('active'));
+                           $MW->destroy;
+                          });
+$execute->pack;
+
+# Set 1st entry as default
+$listbox->activate(0);
+
+# Interact...
+MainLoop();
+

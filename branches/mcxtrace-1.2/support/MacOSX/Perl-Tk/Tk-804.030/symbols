@@ -1,0 +1,39 @@
+#!/usr/local/bin/perl -w
+
+use Config;
+
+$nm_opt = "";
+$nm_opt = "-g" if ($Config{'osname'} eq 'sunos');
+$nm_opt = "-px" if ($Config{'osname'} eq 'solaris');
+
+chomp(@so_files = `find blib -name '*.so' -print`);
+
+%sym = ();
+
+foreach $module (@so_files)
+ {
+  my ($leaf) = ($module =~ m#/([^/]+)\.so$#);
+  foreach (`nm $nm_opt $module`)
+   {
+    if (/^(0x)?[0-9a-f]{8}\s+([A-Z])\s+_?(.*)$/)
+     {
+      my ($kind,$name) = ($2,$3);
+      if ($kind ne 'U')
+       {
+        $sym{$name} = [] unless (exists $sym{$name});
+        push(@{$sym{$name}},$leaf,$kind);
+       }
+     }
+   }
+ }
+
+foreach $name (sort keys %sym)
+ {
+  my @def = @{$sym{$name}};
+  if (@def != 2)
+   {
+    print "$name defined ",join(',',@def),"\n";
+   }
+ }
+
+

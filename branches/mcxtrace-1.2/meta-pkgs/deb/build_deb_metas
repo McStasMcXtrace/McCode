@@ -1,0 +1,3 @@
+#!/bin/sh
+
+ls control.* | xargs -n1 equivs-build 

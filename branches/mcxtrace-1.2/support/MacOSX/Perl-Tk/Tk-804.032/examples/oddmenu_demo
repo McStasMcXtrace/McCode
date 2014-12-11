@@ -1,0 +1,22 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+
+my $mw = MainWindow->new;
+
+my $mb = $mw->Menubutton(-text => "Strange Menu")->pack;
+
+my $menu = $mb->menu;
+my $lb = $menu->Scrolled('Listbox')->pack;
+$menu->configure(-takefocus => 1);
+$lb->insert('end',grep(-T $_,<*>));
+
+$mw->Message(-text => qq(
+Example of (ab)use of Menu. Creates a list box as a child of Menu and packs it.
+Interaction is tricky. <Escape> should unpost, if menu  as a whole has 'focus'.
+))->pack;
+
+
+$mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+MainLoop;
+

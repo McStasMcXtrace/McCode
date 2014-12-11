@@ -1,0 +1,19 @@
+#!/usr/local/bin/perl -w
+use Tk;
+
+my $mw = MainWindow->new;
+$mw->withdraw;
+my $sun = $mw->SelectionExists('-selection'=>"_SUN_DRAGDROP_DSDM");
+if ($sun)
+ {
+  printf "%x\n",$sun;
+  foreach ($mw->SelectionGet('-selection'=>"_SUN_DRAGDROP_DSDM",'TARGETS'))
+   {
+    print " target:$_\n";
+   }
+  foreach ($mw->property('list',$sun))
+   {
+    print " prop:$_\n";
+   }
+ }
+

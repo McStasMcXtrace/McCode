@@ -1,0 +1,10 @@
+As of release based on tk4.1 this 'mTk' directory
+contains _complete_ sources of Tk and Tix in their minimally modified
+forms.
+
+This is because 'munging' to pTk directory from either modified form
+or original Tk becomes very complex now Tk is split unix/generic.
+
+It should also makes merging changes less error prone.
+
+The mac, win and xlib directories may need attention too.

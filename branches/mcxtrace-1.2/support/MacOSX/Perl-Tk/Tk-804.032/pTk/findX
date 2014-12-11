@@ -1,0 +1,31 @@
+#!/usr/local/bin/perl -w
+
+BEGIN { require Exporter };
+
+use Tk::Pretty;
+
+# %depth = ();
+
+require 'process_object';
+
+
+foreach $obj (<*.o>)
+ {
+  do_nm($obj);
+ }
+
+
+foreach $obj (<*.o>)
+ {
+  do_need($obj,0,"ARGV");
+ }
+
+foreach $name (sort keys %unres)
+ {
+  if ($name =~ /^X[A-Z]/)
+   {
+    print "$name : ",Pretty($unres{$name}),"\n";
+   }
+ }
+
+

@@ -1,0 +1,99 @@
+#!/perl -w
+
+# A very simple demonstration of the tixGrid widget
+
+use strict;
+use vars qw($mw $g);
+use Tk ();
+use Tk::TixGrid;
+
+my $hadMW = 0;
+$hadMW= 1 if defined $mw; #(Tk::Exists($mw));
+
+$mw = Tk::MainWindow->new() unless $hadMW;
+$mw->optionAdd('*selectBackground' => 'lightblue');
+MakeGrid($mw);
+Tk::MainLoop unless $hadMW;
+
+# This command is called whenever the background of the grid needs to
+# be reformatted. The x1, y1, x2, y2 specifies the four corners of the area
+# that needs to be reformatted.
+#
+# area:
+#  x-margin:	the horizontal margin
+#  y-margin:	the vertical margin
+#  s-margin:	the overlap area of the x- and y-margins
+#  main:	The rest
+#
+
+sub SimpleFormat
+  {
+    my ($w, $area, @entbox) = @_;
+    my %bg = (
+	's-margin' => 'gray65',
+	'x-margin' => 'gray65',
+	'y-margin' => 'gray65',
+	'main'     => 'gray20',
+    );
+
+    if ($area eq 'main')
+      {
+	# The "grid" format is consecutive boxes without 3d borders
+	#
+	#$w->formatGrid(@entbox, -bordercolor=>$bg{$area},
+	$w->format('grid', @entbox, -bordercolor=>$bg{$area},
+		qw( -relief raised -bd 1
+	 	    -filled 0 -bg red
+		    -xon 1 -yon 1 -xoff 0 -yoff 0 -anchor se
+		  ) );
+      }
+    elsif ($area =~ /^(x|y|s)-margin$/)
+      {
+	# border specifies consecutive 3d borders
+	#
+	#$w->formatBorder(@entbox,  -bg=>$bg{$area},
+	$w->format('border', @entbox,  -bg=>$bg{$area},
+		qw( -fill 1 -relief raised -bd 1
+		    -selectbackground gray80
+		  ) );
+      }
+  }
+
+sub MakeGrid
+  {
+    my ($w) = @_;
+
+    #$g = $w->TixGrid(qw(-bd 0));
+    $g = $w->Scrolled('TixGrid', -bd=>0);
+
+    $g->pack(qw/-expand yes -fill both -padx 3 -pady 3/);
+
+    $g->configure(-formatcmd=>[\&SimpleFormat, $g]);
+
+
+    # Set the size of the columns
+    #
+    $g->size(qw/col 0 -size 10char/);
+    $g->size(qw/col 1 -size auto/);
+    $g->size(qw/col 2 -size auto/);
+    $g->size(qw/col 3 -size auto/);
+    $g->size(qw/col 4 -size auto/);
+
+    # set the default size of the column and rows. these sizes will be used
+    # if the size of a row or column has not be set via the "size col ?"
+    # command
+    $g->size(qw/col default -size 5char/);
+    $g->size(qw/row default -size 1.1char -pad0 3/);
+
+    for my $x (0..9)
+      {
+	for my $y (0..9)
+          {
+	    $g->set($x,$y, -itemtype=>'text', -text=>"($x,$y)" );
+	  }
+      }
+    $g->configure(-selectunit=>(shift @ARGV)) if @ARGV and $ARGV[0] =~/^(?:row|column|cell)/;
+  }
+
+1;
+__END__

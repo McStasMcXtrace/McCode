@@ -1,0 +1,83 @@
+
+=head1 NAME
+
+Tk::MsgBox - create and manipulate a message dialog
+
+=for pm Tk/MsgBox.pm
+
+=for category Popups and Dialogs
+
+=head1 SYNOPSIS
+
+    use Tk::MsgBox
+    ...
+    $d = $top->MsgBox(-title => "Title", -type => "okcancel");
+    ...
+    $button = $d->Show;
+
+=head1 DESCRIPTION
+
+B<MsgBox> is a simple dialog with predefined buttons.
+
+=head1 OPTIONS
+
+The options recognized by B<MsgBox> are as follows:
+
+=over 4
+
+=item B<-icon>
+
+Specify the icon of the MsgBox. Valid values are B<error>, B<info>,
+B<question>, or B<warning>.
+
+=item B<-type>
+
+Specify the type of the MsgBox. Valid values are B<abortretryignore>,
+B<ok>, B<okcancel>, B<retrycancel>, B<yesno>, or B<yesnocancel>. The
+type determines the buttons to be shown.
+
+=item B<-default>
+
+Specify the default button. This must be one of B<abort>, B<retry>,
+B<ignore>, B<ok>, B<cancel>, B<yes>, or B<no>, depending on the type
+of the MsgBox previously specified.
+
+=item B<-detail>
+
+Specify text for the detail region of the MsgBox.
+
+=item B<-message>
+
+Specify the message text of the MsgBox.
+
+=item B<-title>
+
+Specify the title of the MsgBox.
+
+=back
+
+=head1 METHODS
+
+B<MsgBox> supports only one method as of now:
+
+=over 4
+
+=item B<Show()>
+
+Displays the MsgBox until the user invokes one of the buttons. Returns
+the name of the button invoked.
+
+=back
+
+=head1 AUTHOR
+
+Translated from Tcl/Tk by B<Slaven Rezic> srezic@cpan.org
+
+This code is distributed under the same terms as Perl.
+
+=head1 SEE ALSO
+
+L<Tk::messageBox>, L<Tk::DialogBox>, L<Tk::Dialog>.
+
+=cut
+

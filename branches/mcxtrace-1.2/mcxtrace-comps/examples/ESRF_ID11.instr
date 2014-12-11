@@ -1,0 +1,123 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: ESRF-ID11-nanofocus beamline
+*
+* %Identification
+* Written by: E. Knudsen (erkn@risoe.dtu.dk)
+* Date: Nov. 26th, 2009
+* Origin: Ris&oslash; DTU
+* Release: McXtrace 0.1_alpha
+* Version: $Revision$
+* %INSTRUMENT_SITE: ESRF
+*
+* %Description
+* Model of the ESRF ID11 Transfocator based beamline.
+*
+* %Parameters
+* ANGLE [deg] Rotation (misalignment) of first transfocator 
+* SOURCE [ ] 1) Choose rectangular source with defined divergence. 2) Choose gaussain cross-section source
+* T1_N [ ] Number of Be lenses in transfocator @31.5m
+* T2_N [ ] Number of Al lenses in transfocator @31.5m _currently deactivated by default_
+* T3_N [ ] Number of Al lenses in 2nd IVT transfocator @92.25 m
+* SI_N [ ] Number of Si lenses in Si microfocus chip transfocator @94 m
+* 
+* %Example: ESRF_ID11.instr ANGLE=0 Detector: psd_eh3_sample_I=0.285899 
+* %Link
+* http://www.esrf.eu/UsersAndScience/Experiments/StructMaterials/ID11/ID11Source
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT ESRF_ID11(ANGLE=0,SOURCE=0,T1_N=16,T2_N=16,T3_N=16,SI_N=2)
+
+
+DECLARE
+%{
+  const double source_h=57e-6*FWHM2RMS;
+  const double source_v=10e-6*FWHM2RMS;
+  const double source_div_h=88e-6*FWHM2RMS;
+  const double source_div_v=5e-6*FWHM2RMS;
+
+  double eh1_sample_offset,EH3TFOC_offset,chip2sample,eh3_sample_offset;
+%}
+
+
+INITIALIZE
+%{
+  /*set some geometry parameters*/
+  eh1_sample_offset=0;
+  EH3TFOC_offset=0;
+  chip2sample=0.1;
+  eh3_sample_offset=0;
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT id11_source=Source_div(
+    xwidth=source_h,yheight=source_v,focus_aw=source_div_h,focus_ah=source_div_v, E0=30, dE=0.9, gauss=1
+
+)
+WHEN (SOURCE==0) AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT generic_source=Source_gaussian(
+    lambda0=0.413, dlambda=0.412,
+    sig_x=0.057e-3, sig_y=0.01e-3, 
+    sigPr_x=0.6e-3,sigPr_y=0.6e-3, dist=29
+)
+WHEN (SOURCE==1) AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT psd0 = PSD_monitor(nx=301,ny=301,filename="psd0.dat",xwidth=0.002,yheight=0.002)
+AT (0,0,28.9) RELATIVE Origin
+
+COMPONENT aperture  = Slit(xwidth=0.6e-3, yheight=0.6e-3)
+  AT(0,0,29) RELATIVE Origin
+
+COMPONENT psd1 = PSD_monitor(nx=301,ny=301,filename="psd1.dat",xwidth=0.002,yheight=0.002)
+AT (0,0,29.1) RELATIVE Origin
+
+
+  /*in -vacuum transfocator*/
+COMPONENT transfocator1=Lens_simple(
+      xwidth=2e-1,yheight=2e-1,N=T1_N, material_datafile="Be.txt")
+WHEN(1) AT(0,0,31.5) RELATIVE Origin
+ROTATED (0,ANGLE,0) RELATIVE PREVIOUS
+
+COMPONENT psd2 = PSD_monitor(nx=301,ny=301,filename="psd2.dat",xwidth=0.002,yheight=0.002)
+AT (0,0,0.1) RELATIVE PREVIOUS
+
+COMPONENT transfocator2=Lens_simple(
+    xwidth=2e-3,yheight=2e-3, N=T2_N,material_datafile="Al.txt")
+WHEN (0) AT(0,0,31.5) RELATIVE Origin
+
+/*EH1 sample position*/
+COMPONENT eh1_sample_pt =Arm()
+  AT(0,0,42.5+eh1_sample_offset) RELATIVE Origin
+COMPONENT psd_eh1_sample = PSD_monitor(nx=301,ny=301,filename="psd_eh1.dat",xwidth=2e-3,yheight=2e-3)
+  AT (0,0,1e-5) RELATIVE PREVIOUS
+COMPONENT wavel_eh1_sample=L_monitor(filename="lmon_eh1.dat",Lmin=0,Lmax=3,xwidth=0.5,yheight=0.5,nL=101)
+  AT(0,0,1e-5) RELATIVE PREVIOUS
+
+/*EH3 transfoc*/
+COMPONENT transfocator3=Lens_simple(
+    xwidth=2e-3,yheight=2e-3, radius=2e-3, N=T3_N,material_datafile="Al.txt")
+AT (0,0,92.25+EH3TFOC_offset) RELATIVE Origin
+
+/*Si chip nanofocus*/
+COMPONENT si_chip_nanofocus=Lens_simple(
+    xwidth=1e-3,yheight=1e-3, radius=100e-6, N=SI_N,material_datafile="Si.txt")
+AT (0,0,94-chip2sample) RELATIVE Origin
+
+/*EH3 sample position*/
+COMPONENT eh3_sample_pt = Arm()
+AT(0,0,94+eh3_sample_offset) RELATIVE Origin
+
+COMPONENT psd_eh3_sample = PSD_monitor(nx=301,ny=301,filename="psd_eh3.dat",xwidth=2e-3,yheight=2e-3)
+  AT (0,0,1e-5) RELATIVE PREVIOUS
+COMPONENT wavel_eh3_sample=L_monitor(filename="lmon_eh3.dat",Lmin=0,Lmax=1,xwidth=0.01,yheight=0.01,nL=101)
+  AT(0,0,1e-5) RELATIVE PREVIOUS
+
+END
+

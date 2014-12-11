@@ -1,0 +1,140 @@
+From ach@mpe.mpg.de Mon, 09 Nov 1998 19:04:54 +0100
+Return-Path: <owner-ptk@lists.Stanford.EDU>
+Received: from alfred.itg.ti.com by tiuk.ti.com (SMI-8.6/SMI-SVR4)
+	id SAA14673; Mon, 9 Nov 1998 18:07:04 GMT
+Received: from gatekeep.ti.com (ti.com [192.94.93.61] (may be forged))
+	by alfred.itg.ti.com (8.8.8/8.8.8) with ESMTP id MAA12465;
+	Mon, 9 Nov 1998 12:07:02 -0600 (CST)
+Received: from lists.Stanford.EDU (lists.Stanford.EDU [171.64.14.232]) by gatekeep.ti.com (8.8.8) with ESMTP id MAA21574; Mon, 9 Nov 1998 12:06:59 -0600 (CST)
+Received: (from daemon@localhost) by lists.Stanford.EDU (8.8.5/8.7.1) id KAA28797 for ptk-out271740; Mon, 9 Nov 1998 10:05:29 -0800 (PST)
+Received: from o05.xray.mpe.mpg.de (o05.xray.mpe.mpg.de [130.183.72.185]) by lists.Stanford.EDU (8.8.5/8.7.1) with SMTP id KAA28776 for <ptk@lists.stanford.edu>; Mon, 9 Nov 1998 10:05:04 -0800 (PST)
+Received: (qmail 5764 invoked from network); 9 Nov 1998 18:04:54 -0000
+Received: from o09.xray.mpe.mpg.de (130.183.72.189)
+  by o05.xray.mpe.mpg.de with SMTP; 9 Nov 1998 18:04:54 -0000
+Received: by o09.xray.mpe.mpg.de (5.65v4.0) id AA02416; Mon, 9 Nov 1998 19:04:54 +0100
+Message-Id: <9811091804.AA02416@o09.xray.mpe.mpg.de>
+X-Mailer: exmh version 2.0.2 2/24/98
+X-Uri: http://www.xray.mpe.mpg.de/~ach/
+X-Face: #9R9$}Qu$q4/+(Y7T(Qfo8cup>^yR8B0wY4IH1)}*1E49K8~;Wi0PXITA"<<pYILk<cuT&8
+ )fK)zd6!$t\$BYyV>Pi3$mxf36$b1V'u?%-72[ax;U+^t~XCiBWd5:1aDjts)QDu@{p)e@Nou\8b}Z
+ @`+y-uk-i_7EhtDuv`v$vB0-\83`_-f{aXn%olFdX'UC\9Bl)_U-_,.UPZ9C?Q:E-r@(8/h#OJF8n+
+ OuC0Rl&[^vWU#enrm$xh&
+From: Achim Bohnet <ach@mpe.mpg.de>
+To: ptk@lists.stanford.edu
+Cc: Murray Nesbitt <murray@activestate.com>
+Subject: FYI: PPM recipe for module authors
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Date: Mon, 09 Nov 1998 19:04:54 +0100
+Sender: owner-ptk@lists.Stanford.EDU
+Precedence: bulk
+X-UIDL: d0376b9e195a09450d52590466dca4ba
+X-Netscape-Folder: Ptk
+X-Mozilla-Status: 0005
+
+Due to the explanations of Murray Nesbitt I was able to produce a
+PPM compliant distribution of Tk-Pod that can be installed with
+ActiveStates ppm.pl tool.
+
+I know it's a bit of topic but several people on the list had their
+fights with this subject...
+
+I've tried/verified the procedure below on Digitial Unix with perl 5.005_01
+so some of the pitfalls may not be present using ActivePerl on Win*
+
+	1) Add to WriteMakefile() call in Makefile.PL the attributes
+
+	    ABSTRACT => 'A description of your module',
+	    AUTHOR => 'Author Name (email@addr)',
+
+	   Pitfall:
+
+		o '<' and '>' are not escaped in generated ppd file
+		  so one better used above format instead of a
+		  proper email address like: Author Name <email@addr)
+
+		o ABSTRACT should not be one line because embedded
+		  \n are not escaped properly resulting in a buggy Makefile
+
+		o To ensure that Makefile.PL run without complains with
+		  older perl version I would suggested to wrap the two
+		  attributes between  $] < 5.005 ? () : ( AUTHOR => ..., ...)
+
+		o There seems to be some confusion about modules versus
+		  distributions in the PPM business because PREREQ_PM =>
+		  { This::Module => $min_version, ... }
+		  that is used to track module dependencies, is translated
+		  into a 'distribution like' dependency in the PPD file
+			<DEPENDENCY NAME="This-Module" />
+
+	2) run 'perl Makefile.pl BINARY_LOCATION=x86/Dist-Name.tar.gz'
+	   where Dist-Name is the name of the distribution, e.g., Tk-Pod
+	   in my case.
+
+	3) run 'make ppd'.  This will create a Dist-Name.ppd file, e.g.,
+	   Tk-Pod.ppd in my case.
+
+	   Pitfall:
+
+		o if you are not on Win* system you have to replace
+		  the <OS NAME="my_os" /> with <OS NAME="MSWin32" />
+		  (of course this fix only works for pure perl
+		  distributions)
+
+	4) run 'make'
+
+	   Pitfall:
+
+		o I assume that on Win* scripts listed in EXE_FILES
+		  would be wrapped into a .bat.  Generation
+		  on Unix does not do it of course.
+
+	5) tar and gzip the resulting blib directory
+
+	    'tar cvf module.tar blib'
+	    'gzip module.tar'
+
+	6) Create a directory that is accessible via WWW and copy
+	   the ppd file into it.  Place the tar ball of the blib
+	   directory relative to the ppd file with the relative path
+	   used in step 2)
+
+		/path/to/ppm/Dist-Name.ppd
+		/path/to/ppm/x86/Dist-Name.tar.gz
+
+	7) Now one sould be able to install it with ppm.pl from an
+	   Win* box running ActivePerl with ppm.pl
+
+		ppm> install http://www.our.server/my/ppd/Dist-Name.ppd
+
+	   Pitfall:
+
+		o Look like at least 'search' command uses some more
+		  magic.  Setting the ppm.pl repository to the URL
+		  of the direcotory with the just created .ppd file
+		  returns HTML 'code' of the direcotory listing, generated
+		  by apache, instead of a list of (one) PPM
+		  distribution.
+
+
+That's it.  If someone is adventuresome enough, try with ppm.pl
+
+	install http://www.xray.mpe.mpg.de/~ach/ptk/ppm/Tk-Pod.ppd
+
+or
+
+	set repository ACH http://www.xray.mpe.mpg.de/~ach/ptk/ppm
+	install Tk-Pod
+
+Worked for my on NT 4.03 with ActivePerl build 504.
+
+One can of course inspect http://www.xray.mpe.mpg.de/~ach/ptk/ppm
+with a WWW browser to check the input used by ppm.pl
+
+Hope this helps to create one's own PPM distribution,
+Achim
+==========================================================================
+This message was posted through the Stanford campus mailing list
+server.  If you wish to unsubscribe from this mailing list, send the
+message body of "unsubscribe ptk" to majordomo@lists.stanford.edu
+

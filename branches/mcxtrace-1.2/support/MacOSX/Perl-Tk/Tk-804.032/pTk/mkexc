@@ -1,0 +1,61 @@
+#!/usr/local/bin/perl -w
+use strict;
+use vars qw(%ref %def);
+require "process_object";
+
+my @libs;
+foreach (`ldd $^X`)
+ {
+  push @libs,$1 if (/=>\s+(.*?)\s+/ && -r $1);
+ }  
+warn("@libs");
+
+my $file;
+foreach $file (grep(!/_f\./,glob('*.n')),glob('../*.o'),
+               glob('../Event/*.o'),
+               '/usr/X11R6/lib/libX11.so.6',$^X,@libs)
+ {
+  print STDERR "Scanning $file\n";
+  do_nm($file);
+ }
+
+foreach my $sym (sort keys %ref)
+ {
+  unless (exists $def{$sym})
+   {
+    print "$sym not defined\n";
+   }
+ }
+
+@ARGV = glob('*.t') unless (@ARGV);
+
+my $tab;
+foreach $tab (@ARGV)
+ {
+  my $count = 0;
+  my $x = $tab;
+  $x =~ s/\.t$/.qexc/;
+  my %func;
+  open(T,"<$tab") || die "Cannot open $tab:$!";
+  chmod(0644,$x);
+  open(X,">$x")   || die "Cannot open $x:$!";
+  print STDERR "Checking $tab\n";
+  while (<T>)
+   {
+    if (/^VFUNC\([^,]*,([A-Za-z][A-Za-z0-9_]*)/)
+     {
+      my $sym = $1;
+      unless (exists($ref{$1}) || (exists ($def{$1}) && $x !~ /^tcl/)
+             )
+       {
+        print X "$sym\n";
+        $count++;
+       }
+     }
+   }
+  close(X);
+  unlink($x) unless ($count);
+  close(T);
+ }
+
+

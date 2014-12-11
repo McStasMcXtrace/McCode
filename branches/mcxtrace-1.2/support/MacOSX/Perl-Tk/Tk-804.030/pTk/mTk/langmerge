@@ -1,0 +1,5 @@
+#!/bin/sh
+tcl=${HOME}/tcl
+cp ../Lang.h .
+chmod +w Lang.h
+merge Lang.h $tcl/tcl7.6p2/generic/tcl.h  $tcl/tcl8.0b2/generic/tcl.h

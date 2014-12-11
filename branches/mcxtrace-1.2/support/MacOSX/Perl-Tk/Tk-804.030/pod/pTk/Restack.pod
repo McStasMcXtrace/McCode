@@ -1,0 +1,58 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_RestackWindow - Change a window's position in the stacking order
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+int
+B<Tk_RestackWindow>(I<tkwin, aboveBelow, other>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_Window tkwin (in)
+
+Token for window to restack.
+
+=item int aboveBelow (in)
+
+Indicates new position of I<tkwin> relative to I<other>;
+must be B<Above> or B<Below>.
+
+=item Tk_Window other (in)
+
+I<Tkwin> will be repositioned just above or below this window.
+Must be a sibling of I<tkwin> or a descendant of a sibling.
+If NULL then I<tkwin> is restacked above or below all siblings.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_RestackWindow> changes the stacking order of $widget relative
+to its siblings.
+If I<other> is specified as NULL then $widget is repositioned
+at the top or bottom of its stacking order, depending on whether
+I<aboveBelow> is B<Above> or B<Below>.
+If I<other> has a non-NULL value then $widget is repositioned
+just above or below I<other>.
+
+The I<aboveBelow> argument must have one of the symbolic values
+B<Above> or B<Below>.
+Both of these values are defined by the include file E<lt>X11/Xlib.hE<gt>.
+
+=head1 KEYWORDS
+
+above, below, obscure, stacking order

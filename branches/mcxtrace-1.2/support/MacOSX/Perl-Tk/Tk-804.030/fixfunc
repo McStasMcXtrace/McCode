@@ -1,0 +1,5 @@
+while (<>)
+ {
+  s/__FUNCTION__\s+"\s*(.*?)"/"%s $1",__FUNCTION__/;
+  print;
+ }

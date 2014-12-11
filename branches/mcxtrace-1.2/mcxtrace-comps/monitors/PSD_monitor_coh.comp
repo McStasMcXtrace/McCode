@@ -1,0 +1,214 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright (C), All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: PSD_monitor
+*
+* %I
+* Written by: Erik Knudsen
+* Date: March 13, 2010
+* Version: $Revision$
+* Origin: Risoe
+* Release: McXtrace 0.1
+*
+* Position-sensitive monitor.
+*
+* %D
+* An (n times m) pixel PSD monitor taking phase into account.
+*
+* Example: PSD_coh_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+            nx=90, ny=90, filename="Output.psd")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* xwidth:   Width of detector. Overrides xmin,xmax. (m)
+* yheight:  Height of detector. Overrides ymin,ymax. (m)
+* nx:       Number of pixel columns (1)
+* ny:       Number of pixel rows (1)
+* filename: Name of file in which to store the detector image (text)
+* restore_xray: If set, the monitor does not influence the xray state (1)
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N:    Array of xray counts
+* PSD_p:    Array of xray weight counts
+* PSD_p2:   Array of second ms
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT PSD_monitor_coh
+DEFINITION PARAMETERS (nx=90, ny=90)
+  SETTING PARAMETERS (string filename=0, restore_xray=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0)
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2,PSD_phi)
+/*STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)*/
+
+DECLARE
+  %{
+#include <complex.h>
+    double PSD_N[nx][ny];
+    complex double PSD_phi[nx][ny];
+    double PSD_p[nx][ny];
+    double PSD_p2[nx][ny];
+  %}
+INITIALIZE
+  %{
+    int i,j;
+
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("PSD_monitor: %s: Null detection area !\n"
+                   "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
+
+    for (i=0; i<nx; i++){
+      memset(PSD_N[i],0,sizeof(long long)*ny);
+      memset(PSD_phi[i],0,sizeof(complex double)*ny);
+      memset(PSD_p[i],0,sizeof(double)*ny);
+      memset(PSD_p2[i],0,sizeof(double)*ny);
+    }
+
+  %}
+TRACE
+  %{
+    int i,j;
+    double k,x_o,y_o,z_o,phi_o;
+
+    x_o=x;y_o=y;z_o=z;phi_o=phi;
+    k=sqrt(kx*kx+ky*ky+kz*kz);
+    //printf("%g %g\n",p,phi);
+    PROP_Z0;
+    if (x>xmin && x<xmax && y>ymin && y<ymax)
+    {
+/*      distribute phase among the pixels*/
+/*      for (i=0;i<nx;i++){*/
+/*        double dx;*/
+/*        dx=xwidth*(-0.5 + (i+0.5)/nx) - x_o;*/
+/*        for(j=0;j<ny;j++){*/
+/*          double dy,dl;*/
+/*          dy=yheight*(-0.5 + (j+0.5)/ny) - y_o;*/
+/*          dl=sqrt( dx*dx + dy*dy + z_o*z_o);*/
+/*          double nu;*/
+/*          nu=dl*k;*/
+/*          //printf("(i,j,dx,dy,dz,dl,nu,nu+phi)=(%d %d %g %g %g %g %g %g)\n",i,j,dx,dy,z_o,dl,nu, nu+phi_o);*/
+/*        }*/
+/*      }*/
+
+
+      double dl,nu;
+      dl=sqrt( (x-x_o)*(x-x_o) + (y*y_o)*(y-y_o) + z_o*z_o);
+      nu=dl*k;
+
+      i = floor((x - xmin)*nx/(xmax - xmin));
+      j = floor((y - ymin)*ny/(ymax - ymin));
+      PSD_N[i][j]++;
+      PSD_phi[i][j]+=p*cexp(I*phi);//I*fmod(phi,2*M_PI));
+      //printf("%d %d %g %g, %g +i %g\n",i,j,p,phi,cabs(PSD_phi[i][j]),carg(PSD_phi[i][j]));
+      //PSD_p[i][j] += p;
+      PSD_p2[i][j] += p*p;
+      SCATTER;
+    }
+    if (restore_xray) {
+      RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t,  Ex, Ey, Ez, p);
+    }
+  %}
+SAVE
+  %{
+    
+    char filename_abs[255],filename_arg[255];
+
+    snprintf(filename_abs,255,"%s.abs",filename);
+    double PSD_p_abs[nx][ny];
+    int i,j;
+    /*This should be done differently if MPI*/ 
+    for (i=0;i<nx;i++){
+      for (j=0;j<ny;j++){
+        PSD_p_abs[i][j]=cabs(PSD_phi[i][j]);
+      }
+    }
+
+    double PSD_p_arg[nx][ny];
+    snprintf(filename_arg,255,"%s.arg",filename);
+    for (i=0;i<nx;i++){
+      for (j=0;j<ny;j++){
+        PSD_p_arg[i][j]=carg(PSD_phi[i][j]);
+      }
+    }
+
+#ifdef USE_MPI
+    double *PSD_p_absbuf,*PSD_p_argbuf;
+    int *N_buf;
+    if (mpi_node_rank==0){
+      PSD_p_absbuf=malloc(sizeof(double)*mpi_node_count);
+      PSD_p_argbuf=malloc(sizeof(double)*mpi_node_count);
+      N_buf=malloc(sizeof(int)*mpi_node_count);
+    }
+    for (i=0;i<nx;i++){
+      for(j=0;j<ny;j++){
+        //printf("%s %d %d\n",NAME_CURRENT_COMP,i,j);
+        MPI_Gather(&(PSD_p_abs[i][j]), 1, MPI_DOUBLE, PSD_p_absbuf, 1, MPI_DOUBLE, 0,MPI_COMM_WORLD);
+        MPI_Gather(&(PSD_p_arg[i][j]), 1, MPI_DOUBLE, PSD_p_argbuf, 1, MPI_DOUBLE, 0,MPI_COMM_WORLD);
+        MPI_Gather(&(PSD_N[i][j]),1, MPI_INT, N_buf, 1, MPI_INT, 0,MPI_COMM_WORLD);
+        if (mpi_node_rank==0){
+          complex double tmp_phi=0;
+          int k,tmp_N=0;
+          for (k=0;k<mpi_node_count;k++){
+            tmp_phi+=PSD_p_absbuf[k]*cexp(I*PSD_p_argbuf[k]);
+            tmp_N+=N_buf[k];
+          }
+          PSD_p_abs[i][j]=cabs(tmp_phi);
+          PSD_p_arg[i][j]=carg(tmp_phi);
+          PSD_N[i][j]+=tmp_N;
+        }else{
+          /*this is necessary to ensure that whatever comes from the other nodes is just zeroes*/
+          PSD_p_abs[i][j]=0;
+          PSD_p_arg[i][j]=0;
+          PSD_N[i][j]=0;
+        }
+      }
+    }
+    /*doing it this way is inefficient since we send a lot of zeros across the network - but it should work*/ 
+#endif
+    
+    DETECTOR_OUT_2D(
+        "PSD monitor",
+        "X position [m]",
+        "Y position [m]",
+        xmin, xmax, ymin, ymax,
+        nx, ny,
+        &PSD_N[0][0],&PSD_p_abs[0][0],&PSD_p2[0][0],
+        filename_abs);
+    
+    DETECTOR_OUT_2D(
+        "PSD monitor",
+        "X position [m]",
+        "Y position [m]",
+        xmin, xmax, ymin, ymax,
+        nx, ny,
+        &PSD_N[0][0],&PSD_p_arg[0][0],&PSD_p[0][0],
+        filename_arg);
+  %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END

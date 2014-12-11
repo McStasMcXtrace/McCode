@@ -1,0 +1,180 @@
+#  Copyright (c) 1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_CreateBindingTable, Tk_DeleteBindingTable, Tk_CreateBinding, Tk_DeleteBinding, Tk_GetBinding, Tk_GetAllBindings, Tk_DeleteAllBindings, Tk_BindEvent - invoke scripts in response to X events
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Tk_BindingTable
+B<Tk_CreateBindingTable(>I<interp>B<)>
+
+B<Tk_DeleteBindingTable(>I<bindingTable>B<)>
+
+unsigned long
+B<Tk_CreateBinding(>I<interp, bindingTable, object, eventString, script, append>B<)>
+
+int
+B<Tk_DeleteBinding(>I<interp, bindingTable, object, eventString>B<)>
+
+char *
+B<Tk_GetBinding(>I<interp, bindingTable, object, eventString>B<)>
+
+B<Tk_GetAllBindings(>I<interp, bindingTable, object>B<)>
+
+B<Tk_DeleteAllBindings(>I<bindingTable, object>B<)>
+
+B<Tk_BindEvent(>I<bindingTable, eventPtr, tkwin, numObjects, objectPtr>B<)>
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter to use when invoking bindings in binding table.  Also
+used for returning results and errors from binding procedures.
+
+=item Tk_BindingTable bindingTable (in)
+
+Token for binding table;  must have been returned by some previous
+call to B<Tk_CreateBindingTable>.
+
+=item ClientData object (in)
+
+Identifies object with which binding is associated.
+
+=item char *eventString (in)
+
+String describing event sequence.
+
+=item char *script (in)
+
+Callback to invoke when binding triggers.
+
+=item int append (in)
+
+Non-zero means append I<script> to existing script for binding,
+if any; zero means replace existing script with new one.
+
+=item XEvent *eventPtr (in)
+
+X event to match against bindings in I<bindingTable>.
+
+=item Tk_Window tkwin (in)
+
+Identifier for any window on the display where the event occurred.
+Used to find display-related information such as key maps.
+
+=item int numObjects (in)
+
+Number of object identifiers pointed to by I<objectPtr>.
+
+=item ClientData *objectPtr (in)
+
+Points to an array of object identifiers:  bindings will be considered
+for each of these objects in order from first to last.
+
+=back
+
+=head1 DESCRIPTION
+
+These procedures provide a general-purpose mechanism for creating
+and invoking bindings.
+Bindings are organized in terms of I<binding tables>.
+A binding table consists of a collection of bindings plus a history
+of recent events.
+Within a binding table, bindings are associated with I<objects>.
+The meaning of an object is defined by clients of the binding package.
+For example, Tk keeps uses one binding table to hold all of the bindings
+created by the B<bind> command.
+For this table, objects are pointers to strings such as window names, class
+names, or other binding tags such as B<all>.
+Tk also keeps a separate binding table for each canvas widget, which manages
+bindings created by the canvas's B<bind> method;  within
+this table, an object is either a pointer to the internal structure for a
+canvas item or a Tk_Uid identifying a tag.
+
+The procedure B<Tk_CreateBindingTable> creates a new binding
+table and associates I<interp> with it (when bindings in the
+table are invoked, the scripts will be evaluated in I<interp>).
+B<Tk_CreateBindingTable> returns a token for the table, which
+must be used in calls to other procedures such as B<Tk_CreateBinding>
+or B<Tk_BindEvent>.
+
+B<Tk_DeleteBindingTable> frees all of the state associated
+with a binding table.
+Once it returns the caller should not use the I<bindingTable>
+token again.
+
+B<Tk_CreateBinding> adds a new binding to an existing table.
+The I<object> argument identifies the object with which the
+binding is to be associated, and it may be any one-word value.
+Typically it is a pointer to a string or data structure.
+The I<eventString> argument identifies the event or sequence
+of events for the binding;  see the documentation for the
+B<bind> command for a description of its format.
+I<script> is the Callback to be evaluated when the binding
+triggers.
+I<append> indicates what to do if there already
+exists a binding for I<object> and I<eventString>:  if I<append>
+is zero then I<script> replaces the old script;  if I<append>
+is non-zero then the new script is appended to the old one.
+B<Tk_CreateBinding> returns an X event mask for all the events
+associated with the bindings.
+This information may be useful to invoke B<XSelectInput> to
+select relevant events, or to disallow the use of certain events
+in bindings.
+If an error occurred while creating the binding (e.g., I<eventString>
+refers to a non-existent event), then 0 is returned and an error
+message is left in I<interp-E<gt>result>.
+
+B<Tk_DeleteBinding> removes from I<bindingTable> the
+binding given by I<object> and I<eventString>, if
+such a binding exists.
+B<Tk_DeleteBinding> always returns TCL_OK.
+In some cases it may reset I<interp-E<gt>result> to the default
+empty value.
+
+B<Tk_GetBinding> returns a pointer to the script associated
+with I<eventString> and I<object> in I<bindingTable>.
+If no such binding exists then NULL is returned and an error
+message is left in I<interp-E<gt>result>.
+
+B<Tk_GetAllBindings> returns in I<interp-E<gt>result> a list
+of all the event strings for which there are bindings in
+I<bindingTable> associated with I<object>.
+If there are no bindings for I<object> then an empty
+string is returned in I<interp-E<gt>result>.
+
+B<Tk_DeleteAllBindings> deletes all of the bindings in
+I<bindingTable> that are associated with I<object>.
+
+B<Tk_BindEvent> is called to process an event.
+It makes a copy of the event in an internal history list associated
+with the binding table, then it checks for bindings that match
+the event.
+B<Tk_BindEvent> processes each of the objects pointed to
+by I<objectPtr> in turn.
+For each object, it finds all the bindings that match the current
+event history, selects the most specific binding using the priority
+mechanism described in the documentation for B<bind>,
+and invokes the script for that binding.
+If there are no matching bindings for a particular object, then
+the object is skipped.
+B<Tk_BindEvent> continues through all of the objects, handling
+exceptions such as errors, B<break>, and B<continue> as
+described in the documentation for B<bind>.
+
+=head1 KEYWORDS
+
+binding, event, object, script

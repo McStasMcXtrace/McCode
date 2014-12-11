@@ -1,0 +1,217 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::option - Using the option database in Perl/Tk
+
+=for category Creating and Configuring Widgets
+
+=head1 SYNOPSIS
+
+S<    >I<$widget>-E<gt>B<widgetClass>(B<Name>=E<gt>I<name>, B<-class>=E<gt>I<class>);
+
+S<    >I<$widget>-E<gt>B<PathName>;
+
+S<    >I<$widget>-E<gt>B<optionAdd>(I<pattern>=E<gt>I<value > ?,I<priority>?);
+
+S<    >I<$widget>-E<gt>B<optionClear>;
+
+S<    >I<$widget>-E<gt>B<optionGet>(I<name, class>);
+
+S<    >I<$widget>-E<gt>B<optionReadfile>(I<fileName> ?,I<priority>?);
+
+=head1 DESCRIPTION
+
+The option database (also known as the I<resource database> or the
+I<application defaults database>) is a set of rules for applying
+default options to widgets.  Users and system administrators can
+set up these rules to customize the appearance of applications
+without changing any application code; for example, a user might
+set up personal foreground and background colors, or a site
+might use fonts associated with visual or language preferences.
+Different window managers (and implementations of them) have implemented
+the database differently, but most Xt-based window managers use the
+I<.Xdefaults> file or the I<xrdb> utility to manage user preferences;
+some use both, and/or implement a more complex set of site, user and
+application databases.  Check your site documentation for these topics
+or your window manager's B<RESOURCE_MANAGER> property.
+
+=head2 Being a good citizen
+
+For most applications, the option database "just works."  The B<option...>
+methods are for applications that need to do something unusual, such as
+add new rules or test an option's default.  Even in such cases, the
+application should provide for user preferences.
+Do not hardcode widget options without a B<very> good reason.
+All users have their own tastes and they are all different.
+They choose a special font in a special size and have often spend a
+lot of time working out a color scheme that they will love until death.
+When you respect their choices they will enjoy working with your
+applications much more.  Don't destroy the common look and feel of a
+personal desktop.
+
+=head2 Option rules and widget identification
+
+All widgets in an application are identified hierarchically by I<pathname>,
+starting from the B<MainWindow> and passing through each widget used to create
+the endpoint.  The path elements are I<widget names>, much like the elements
+of a file path from the root directory to a file.  The rules in the option
+database are patterns that are matched against a widget's I<pathname> to
+determine which defaults apply.
+When a widget is created, the B<Name> option can be
+used to assign the widget's name and thus create a distinctive path
+for widgets in an application.  If the B<Name> option isn't given,
+Perl/Tk assigns a default name based on the type of widget; a
+B<MainWindow>'s default name is the B<appname>.  These defaults are fine
+for most widgets, so don't feel you need to find a meaningful name for
+every widget you create.
+A widget must have a distinctive name to allow users to tailor its
+options independently of other widgets in an application.  For instance,
+to create a B<Text> widget that will
+have special options assigned to it, give it a name such as:
+
+  $text = $mw->Text(Name => 'importantText');
+
+You can then tailor the widget's attributes with a rule in the option
+database such as:
+
+  *importantText*foreground: red
+
+The I<class> attribute identifies groups of widgets, usually within an
+application but also to group similar widgets among different applications.
+One typically assigns a class to a B<TopLevel> or B<Frame> so that the
+class will apply to all of that widget's children.  To extend the example,
+we could be more specific about the importantText widget
+by giving its frame a class:
+
+  $frame = $mw->Frame(-class => 'Urgent');
+  $text = $frame->Text(Name => 'importantText');
+
+Then the resource pattern can be specified as so:
+
+  *Urgent*importantText*foreground: red
+
+Similarly, the pattern C<*Urgent*background: cyan> would apply to all
+widgets in the frame.
+
+=head1 METHODS
+
+=over 4
+
+=item I<$widget>-E<gt>B<widgetClass>(B<Name>=E<gt>I<name>, B<-class>=E<gt>I<class>);
+
+Identify a new widget with I<name> and/or I<class>.
+B<Name> specifies the path element for the widget; names generally begin with a
+lowercase letter.  B<-class> specifies the class for the widget and its
+children; classes generally begin with an uppercase letter.
+If not specified, Perl/Tk will assign a unique default name to each widget.
+Only B<MainWindow> widgets have a default class, made by uppercasing the
+first letter of the application name.
+
+=item I<$widget>-E<gt>B<PathName>;
+
+The B<PathName> method returns the widget's I<pathname>, which uniquely
+identifies the widget within the application.
+
+=item I<$widget>-E<gt>B<optionAdd>(I<pattern>=E<gt>I<value >?, I<priority>?);
+
+The B<optionAdd> method adds a new option to the database.
+I<Pattern> contains the option being specified, and consists of
+names and/or classes separated by asterisks or dots, in the usual
+X format.  I<Value> contains a text string to associate with
+I<pattern>; this is the value that will be returned in calls to
+the B<optionGet> method.  If I<priority> is specified, it indicates
+the priority level for this option (see below for legal values);
+it defaults to B<interactive>. This method always returns an empty
+string.
+
+=item I<$widget>-E<gt>B<optionClear>;
+
+The B<optionClear> method clears the option database.  Default
+options (from the B<RESOURCE_MANAGER> property or the B<.Xdefaults>
+file) will be reloaded automatically the next time an option is
+added to the database or removed from it.  This method always returns
+an empty string.
+
+=item I<$widget>-E<gt>B<optionGet>(I<name,class>);
+
+The B<optionGet> method returns the value of the option specified for
+I<$widget> under I<name> and I<class>.  To look up the option,
+B<optionGet> matches the patterns in the resource database against
+I<$widget>'s I<pathname> along with the class of I<$widget>
+(or its parent if I<$widget> has no class specified).  The widget's
+class and name are options set when the widget is created (not
+related to class in the sense of L<bless>); the B<MainWindow>'s name
+is the B<appname> and its class is (by default) derived from the name
+of the script.
+
+If several entries in the option database match I<$widget>'s I<pathname>,
+I<name>, and I<class>, then the method returns whichever was created with
+highest I<priority> level.  If there are several matching
+entries at the same priority level, then it returns whichever entry
+was I<most recently entered> into the option database.  If there are
+no matching entries, then the empty string is returned.
+
+=item I<$widget>-E<gt>B<optionReadfile>(I<fileName>?,I<priority>?);
+
+The B<optionReadfile> method reads I<fileName>, which should have the
+standard format for an X resource database such as B<.Xdefaults>, and
+adds all the options specified in that file to the option database.
+If I<priority> is specified, it indicates the priority level at which
+to enter the options;  I<priority> defaults to B<interactive>.
+
+The I<priority> arguments to the B<option> methods are
+normally specified symbolically using one of the following values:
+
+=over 8
+
+=item B<widgetDefault>
+
+Level 20.  Used for default values hard-coded into widgets.
+
+=item B<startupFile>
+
+Level 40.  Used for options specified in application-specific
+startup files.
+
+=item B<userDefault>
+
+Level 60.  Used for options specified in user-specific defaults
+files, such as B<.Xdefaults>, resource databases loaded into
+the X server, or user-specific startup files.
+
+=item B<interactive>
+
+Level 80.  Used for options specified interactively after the application
+starts running.  If I<priority> isn't specified, it defaults to
+this level.
+
+=back
+
+Any of the above keywords may be abbreviated.  In addition, priorities
+may be specified numerically using integers between 0 and 100,
+inclusive.  The numeric form is probably a bad idea except for new priority
+levels other than the ones given above.
+
+=back
+
+=head1 BUGS
+
+The priority scheme used by core Tk is not the same as used by normal Xlib
+routines. In particular is assumes that the order of the entries is defined,
+but user commands like B<xrdb -merge> can change the order.
+
+=head1 SEE ALSO
+
+L<Tk::Xrm|Tk::Xrm>
+
+=head1 KEYWORDS
+
+database, option, priority, retrieve
+
+=cut

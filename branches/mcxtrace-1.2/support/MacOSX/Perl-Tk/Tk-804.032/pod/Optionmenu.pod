@@ -1,0 +1,100 @@
+
+=head1 NAME
+
+Tk::Optionmenu - Let the user select one of some predefined options values
+
+=for pm Tk/Optionmenu.pm
+
+=for category Tk Widget Classes
+
+=head1 SYNOPSIS
+
+    use Tk::Optionmenu;
+
+    $opt = $w->Optionmenu(
+			-options => REFERENCE_to_OPTIONLIST,
+			-command => CALLBACK,
+			-variable => SCALAR_REF,
+			);
+
+    $opt->addOptions( OPTIONLIST );
+
+    # OPTION LIST is
+    #   a)  $val1, $val2, $val3,...
+    #   b)  [ $lab1=>$val1], [$lab2=>val2], ... ]
+    #   c)  combination of a) and b), e.g.,
+    #       val1, [$lab2=>val2], val3, val4, [...], ...
+
+=head1 DESCRIPTION
+
+The B<Optionmenu> widget allows the user chose between a given set
+of options.
+
+If the user should be able to change the available option have a look
+at L<Tk::BrowseEntry>.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -options
+
+(Re)sets the list of options presented.
+
+=item -command
+
+Defines the L<callback|Tk::callbacks> that is invokes when a new option
+is selected.
+
+=item -variable
+
+Reference to a scalar that contains the current value of the
+selected option.
+
+=item -textvariable
+
+Reference to a scalar that contains the text label of the current value of the
+selected option.
+
+=back
+
+=head1 METHODS
+
+=over 4
+
+=item addOptions
+
+Adds OPTION_LIST to the already available options.
+
+=back
+
+=head1 EXAMPLE
+
+ use Tk;
+ my $mw = MainWindow->new();
+
+ my ($var, $tvar);
+ my $opt = $mw->Optionmenu(
+        -options => [[jan=>1], [feb=>2], [mar=>3], [apr=>4]],
+        -command => sub { print "got: ", shift, "\n" },
+        -variable => \$var,
+        -textvariable => \$tvar
+       )->pack;
+
+ $opt->addOptions([may=>5],[jun=>6],[jul=>7],[aug=>8]);
+
+ my $f = $mw->Frame(-relief=>'groove', -borderwidth => 2)->pack;
+ $f->Label(-textvariable=>\$tvar)->pack(-side => 'left');
+ $f->Label(-text => " -> ")->pack(-side => 'left');
+ $f->Label(-textvariable=>\$var)->pack(-side => 'left');
+
+ $mw->Button(-text=>'Exit', -command=>sub{$mw->destroy})->pack;
+
+ MainLoop;
+
+=head1 SEE ALSO
+
+L<Tk::Menubutton>, L<Tk::BrowseEntry>
+
+=cut
+

@@ -1,0 +1,19 @@
+#!/usr/local/bin/perl -w
+use strict;
+use File::Find;
+
+sub perms
+{
+ my $perm = (stat($_))[2];
+ $perm &= 0777;
+ my $u = $perm >> 6;
+ my $o = $u & 5;
+ my $n = ($u << 6) | ($u << 3) | $o;
+ if ($perm != $n)
+  {
+   printf "$File::Find::dir/$_ is %3o not %3o\n",$perm,$n;
+   chmod($n,$_);
+  }
+}
+
+find(\&perms,'.');

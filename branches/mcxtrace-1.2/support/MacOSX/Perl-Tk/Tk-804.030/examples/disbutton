@@ -1,0 +1,40 @@
+#!/usr/local/bin/perl -w
+
+package StickyButton;
+use Tk;
+require Tk::Widget;
+require Tk::Button;
+use base  qw(Tk::Button);
+Construct Tk::Widget 'StickyButton';
+
+sub invoke
+{
+ my $w = shift;
+ my $state = $w->cget('-state');
+ $w->configure('-state' => 'disabled');
+ $w->update;
+ $w->Callback('-command');
+ $w->configure('-state' => $state);
+}
+
+package main;
+use Tk;
+
+my $mw = MainWindow->new;
+my $b  = $mw->StickyButton(-text => 'Sticky', -command => \&Slow)->pack;
+
+MainLoop;
+
+sub Slow
+{
+ local $| = 1;
+ print "Invoked...";
+ my $var = 0;
+ $mw->after(5000,sub { $var = 1 });
+ $mw->waitVariable(\$var);
+ print " done\n";
+}
+
+__END__
+
+

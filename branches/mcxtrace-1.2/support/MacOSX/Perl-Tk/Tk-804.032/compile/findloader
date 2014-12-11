@@ -1,0 +1,13 @@
+#!/usr/local/bin/perl -w
+use Config;
+my $sfx = $Config{'lib_ext'};
+foreach my $dir (@INC)
+ {
+  my $path = "$dir/auto/DynaLoader/DynaLoader$sfx";
+  if (-f $path)
+   {
+    print $path,"\n";
+    exit(0);
+   }
+ }
+exit(1);

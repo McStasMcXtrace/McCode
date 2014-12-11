@@ -1,0 +1,29 @@
+#!/usr/local/bin/perl -w
+
+use File::Find;
+
+@files = ();
+
+sub wanted
+{
+ if (/^Makefile.PL$/)
+  {
+   push(@files,"$File::Find::dir/$_");
+  }
+}
+
+find(\&wanted,".");
+
+@ARGV = @files;
+
+
+$^I = ".old";
+
+while (<>)
+ {
+  if (s/\$Version\b/\$myVersion/g)
+   {
+    print STDERR "$ARGV:$.:$_";
+   }
+  print;
+ }

@@ -1,0 +1,75 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_GetAnchor, Tk_NameOfAnchor - translate between strings and anchor positions
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+int
+B<Tk_GetAnchor(>I<interp, string, anchorPtr>B<)>
+
+char *
+B<Tk_NameOfAnchor(>I<anchor>B<)>
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter to use for error reporting.
+
+=item char *string (in)
+
+String containing name of anchor point: one of ``n'', ``ne'', ``e'', ``se'',
+``s'', ``sw'', ``w'', ``nw'', or ``center''.
+
+=item int *anchorPtr (out)
+
+Pointer to location in which to store anchor position corresponding to
+I<string>.
+
+=item Tk_Anchor anchor (in)
+
+Anchor position, e.g. B<TCL_ANCHOR_CENTER>.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_GetAnchor> places in I<*anchorPtr> an anchor position
+(enumerated type B<Tk_Anchor>)
+corresponding to I<string>,  which will be one of
+B<TK_ANCHOR_N>, B<TK_ANCHOR_NE>, B<TK_ANCHOR_E>, B<TK_ANCHOR_SE>,
+B<TK_ANCHOR_S>, B<TK_ANCHOR_SW>, B<TK_ANCHOR_W>, B<TK_ANCHOR_NW>,
+or B<TK_ANCHOR_CENTER>.
+Anchor positions are typically used for indicating a point on an object
+that will be used to position that object, e.g. B<TK_ANCHOR_N> means
+position the top center point of the object at a particular place.
+
+Under normal circumstances the return value is B<TCL_OK> and
+I<interp> is unused.
+If I<string> doesn't contain a valid anchor position
+or an abbreviation of one of these names, then an error message is
+stored in I<interp-E<gt>result>, B<TCL_ERROR> is returned, and
+I<*anchorPtr> is unmodified.
+
+B<Tk_NameOfAnchor> is the logical inverse of B<Tk_GetAnchor>.
+Given an anchor position such as B<TK_ANCHOR_N> it returns a
+statically-allocated string corresponding to I<anchor>.
+If I<anchor> isn't a legal anchor value, then
+``unknown anchor position'' is returned.
+
+=head1 KEYWORDS
+
+anchor position

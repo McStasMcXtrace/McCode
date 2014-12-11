@@ -1,0 +1,80 @@
+#!/usr/local/bin/perl -w
+# tixgrid demo
+#	standalone or sourceable in ptksh
+
+### Bugs:	o shouldn't size(dim, idx, -size=>3) mean 3 chars????
+###		o $tg->sizeColumn( 'default', -size=>'1c')
+###		  does resize all but the 0th column
+###		o -widthi=>num is in # of columns (not chars) so should
+###		  not be in standard options
+
+use strict;
+
+use Tk ();
+use Tk::Text;
+use Tk::TixGrid;
+
+use vars qw($mw $demo $tg  $log);
+
+my $inPtksh = defined $mw;
+if ($inPtksh)
+  {
+    print "\$demo=demoframe   \$tg=tixgrid   \$log =text log\n";
+    $demo->destroy if defined($demo);
+  }
+else
+  {
+    require Tk::ErrorDialog;
+    $mw = Tk::MainWindow->new();
+
+
+  }
+$demo = $mw->Frame(-background=>'red')->pack(-expand=>'yes', -fill=>'both');
+
+$tg = $demo->Scrolled('TixGrid',
+#$tg = $demo->TixGrid(
+		-leftmargin=>0,
+		-topmargin=>1,
+		-width=>2,	# in # of columns
+		) ->pack(-expand=>'yes',-fill=>'both');
+
+my $heads = [ qw(Option Name Class Default Value) ];
+my ($i,$j) = (0,0);
+my @colmap = (0,2,3,4,1);
+foreach my $o ($heads, $tg->configure)
+  {
+    next if scalar(@$o) == 2; # ignore aliases
+    foreach my $v (@$o)
+      {
+	$tg->set($colmap[$i],$j, -text=>$v);
+	$i++;
+      }
+    $j++;
+    $i=0;
+  }
+$tg->sizeColumn('default', -size=>'auto');
+
+
+$log = $demo->Text(-width=>50, -height=>5)->pack(-fill=>'x');
+sub Log
+  {
+    my $val;
+    foreach (@_)
+      {
+         $log->insert('end', (defined($_) ? "$_|" : "(undef)|") );
+      }
+    $log->insert('end',"\n");
+    $log->see('end');
+    1;
+  }
+
+$tg->configure(
+	-editdonecmd   => [\&Log, 'editDoneCmd  ='],
+	-editnotifycmd => [\&Log, 'editNotifyCmd='],
+	-formatcmd     => [\&Log, 'formatCmd    ='],
+	);
+
+$tg->focus;
+Tk::MainLoop unless $inPtksh;
+
+__END__

@@ -1,0 +1,82 @@
+
+To build dynamic loaded you need the extra cost compiler, or really up-to-date
+GCC and appropriate 'GNU binutils'. Neither bundled
+compiler or older gcc/binutils can build correct position
+independant code. It will build static with most gcc's.
+
+You will probably have to explcitly specify pathnames to X11, e.g.
+Nick built using GNU gcc-2.6.2 on a 'borrowed' machine like this:
+
+perl Makefile.PL X11=/usr/local/X11R5
+make
+make tkperl
+tkperl basic_demo
+
+
+If you do have the extra cost compiler may also have trouble with some of the
+initialized data structures, causing link errors. However it does work
+with the following configuration, compiler and dynamic loading
+flags are probably important:
+
+From  okamoto@hpcc123.corp.hp.com  Mon Sep 11 19:31:16 1995
+Return-Path: <okamoto@hpcc123.corp.hp.com>
+From: okamoto@hpcc123.corp.hp.com (Jeff Okamoto)
+Message-Id: <199509111831.AA020354270@hpcc123.corp.hp.com>
+Subject: Re: Tk on HP-UX 9.05  - DynaLoader issues.
+To: Nick.Ing-Simmons@tiuk.ti.com
+Date: Mon, 11 Sep 95 11:31:09 PDT
+Cc: dglo@ssec.wisc.edu
+In-Reply-To: <9509111654.AA11145@pluto>; from
+    "Nick.Ing-Simmons@tiuk.ti.com" at Sep 11, 95 5:54 pm
+Mailer: Elm [revision: 70.85]
+P-From: Jeff Okamoto <okamoto@hpcc123.corp.hp.com>
+
+> Try Tk-b8 should be just the same or better, and saves me delving even
+> further into the past if you post patches ;-)
+
+Tk-b8 worked fine for me.  My configuration is:
+
+Summary of my perl5 (patchlevel 1) configuration:
+  Platform:
+    osname=hpux, osver=9, archname=9000/700-hpux
+    uname='hp-ux okamoto a.09.05 e 9000715 2013134500 8-user license '
+    hint=recommended
+  Compiler:
+    cc='cc', optimize='-O', ld='ld'
+    cppflags='-D_HPUX_SOURCE -I/usr/local/include -Aa'
+    ccflags ='-D_HPUX_SOURCE -I/usr/local/include -Aa -DDEBUGGING'
+    ldflags =' -L/usr/local/lib'
+    stdchar='unsigned char', d_stdstdio=define, usevfork=false
+    voidflags=15, castflags=0, d_casti32=define, d_castneg=define
+    intsize=4, alignbytes=8, usemymalloc=y, randbits=15
+  Libraries:
+    so=sl
+    libpth=/lib/pa1.1 /lib /usr/lib /usr/local/lib
+    libs=-lnet -ldld -lm -lc -lndir -lcrypt
+    libc=/lib/libc.sl
+  Dynamic Linking:
+    dlsrc=dl_hpux.xs, dlext=sl, d_dlsymun=undef
+    cccdlflags='+z', ccdlflags='-Wl,-E ', lddlflags='-b'
+
+Jeff
+------------------------------------------------------------------------
+The information I have on using GCC came from:
+
+Subject: Re: Tk-b8 make problem on HP-UX 9.01
+In-Reply-To: Your message of "Fri, 22 Sep 1995 11:26:59 MDT."
+    <199509221726.AA109800819@hpeshai.fc.hp.com>
+Content-Type: text/plain; charset=us-ascii
+Date: Fri, 22 Sep 1995 15:35:51 -0700
+From: garrett@qualcomm.com (Garrett D'Amore)
+Sender: owner-ptk@WPI.EDU
+Precedence: bulk
+P-From: "Garrett D'Amore" <garrett@qualcomm.com>
+
+Since I can't get the commercial version of the compiler, I just installed
+the latest gcc (2.7.0) and built with that.  This version of gcc can build
+dynamic libraries on HP-UX (if you use binutils-2.5.2).  Earlier versions
+of gcc couldn't build PIC code (and hence shared libs) on HP-UX.
+
+Let me know how it goes.
+
+

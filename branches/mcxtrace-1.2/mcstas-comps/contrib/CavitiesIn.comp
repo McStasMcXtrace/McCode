@@ -1,0 +1,92 @@
+/*******************************************************************************
+*         neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: CavitiesIn
+*
+* %I
+* Written by: Henrich Frielinghaus
+* Date: Oct 2007
+* Version: 1.0
+* Origin: JCNS - FZ-Juelich
+* Release: McStas ????
+*
+* Slit - sorting in channels
+*
+* %D
+* This routine sorts the 'full' neutron beam (given by xw,yw)
+* in xc,yc channels. These can be imagined as cavities.
+* CavitiesOut sorts these channels back to normal coordinates. 
+*
+* Example: Slit(xw=0.05, yw=0.05, xc=4, yc=1)
+*
+* %P
+* INPUT PARAMETERS
+*
+* xw: width in X-dir (m)
+* yw: width in Y-dir (m)
+* xc: channels in X-dir (m)
+* yc: channels in Y-dir (m)
+*
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT CavitiesIn
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xw=0.05, yw=0.05, xc=1, yc=1)
+
+DECLARE
+%{
+  int xcc;
+  int ycc;
+  int mcs_xc;
+  int mcs_yc;
+%}
+
+INITIALIZE
+%{
+  xcc = floor(fabs(xc));
+  ycc = floor(fabs(yc));
+  if (xcc==0) xcc=1;
+  if (ycc==0) ycc=1;
+  mcs_xc = 0;
+  mcs_yc = 0;
+%}
+
+TRACE
+%{
+    PROP_Z0;
+    if (x<-0.5*xw || x>0.5*xw || y<-0.5*yw || y>0.5*yw)
+      ABSORB;
+    else
+     {
+      SCATTER;
+      mcs_xc = floor((x+0.5*xw)*xcc/xw);
+      mcs_yc = floor((y+0.5*yw)*ycc/yw);
+      x = x+(-mcs_xc-0.5+0.5*xcc)*xw/xcc;
+      y = y+(-mcs_yc-0.5+0.5*ycc)*yw/ycc;
+     }
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(3, -(double)xw, 0.5*yw, 0.0,
+               -0.5*xw,     0.5*yw, 0.0,
+               -0.5*xw, (double)yw, 0.0);
+  multiline(3,  (double)xw, 0.5*yw, 0.0,
+                0.5*xw,     0.5*yw, 0.0,
+                0.5*xw, (double)yw, 0.0);
+  multiline(3, -(double)xw,-0.5*yw, 0.0,
+               -0.5*xw,    -0.5*yw, 0.0,
+               -0.5*xw,-(double)yw, 0.0);
+  multiline(3,  (double)xw,-0.5*yw, 0.0,
+                0.5*xw,    -0.5*yw, 0.0,
+                0.5*xw,-(double)yw, 0.0);
+%}
+
+END

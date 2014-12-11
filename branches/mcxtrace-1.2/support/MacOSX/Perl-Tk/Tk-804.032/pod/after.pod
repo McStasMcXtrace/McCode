@@ -1,0 +1,168 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk::after - Execute a command after a time delay
+
+=for category  Binding Events and Callbacks
+
+=head1 SYNOPSIS
+
+S<  >I<$widget>-E<gt>B<after>(I<ms>)
+
+S<  >I<$id> = I<$widget>-E<gt>B<after>(I<ms>?,I<callback>?)
+
+S<  >I<$id> = I<$widget>-E<gt>B<repeat>(I<ms>?,I<callback>?)
+
+S<  >I<$widget>-E<gt>B<afterCancel>(I<$id>)
+
+S<  >I<$id> = I<$widget>-E<gt>B<afterIdle>(I<callback>)
+
+S<  >I<$widget>-E<gt>B<afterInfo>?(I<$id>)?
+
+S<  >I<$id>-E<gt>B<time>(?I<delay>?)
+
+=head1 DESCRIPTION
+
+This method is used to delay execution of the program or to execute
+a callback in background sometime in the future.
+
+In perl/Tk I<$widget>-E<gt>B<after> is implemented via the class C<Tk::After>,
+and callbacks are associated with I<$widget>, and are automatically cancelled
+when the widget is destroyed. An almost identical interface, but without
+automatic cancel, and without repeat is provided via Tk::after method.
+
+=head2 Internal Details
+
+The internal Tk::After class has the following synopsis:
+
+  $id = Tk::After->new($widget, tid, $time, 'once',   callback);
+  $id = Tk::After->new($widget, tid, $time, 'repeat', callback);
+  $id->cancel;
+  $id->time(?delay?);
+
+$id is a Tk::After object, an array of 5 elements:	
+
+I<$widget> is the parent widget reference.
+
+I<tid> is the internal timer id, a unique string.
+
+I<$time> is the string 'idle', representing an idle queue timer, or a
+integer millisecond value.
+ 
+I<once> or I<repeat> specifies whether the timer is a one-time B<after>
+event, or a repeating B<repeat> event.
+
+I<callback> specifies a Perl/Tk Tk::Callback object.
+
+=head1 Changing a B<repeat> timer interval 
+
+It's posible to change a B<repeat> timer's delay value, or even cancel
+any timer, using the B<time> method. If I<delay> is specified and
+non-zero, a new timer delay is established.  If I<delay> is zero the
+timer event is canceled just as if I<$id>-E<gt>B<cancel> were invoked.
+In all cases the current millisecond timer delay is returned.
+
+Note: the new timer delay will take effect on the I<subsequent> timer
+event - this command will not cancel the pending timer event and
+re-issue it with the new delay time. 
+
+=head1 The after() method has several forms as follows:
+
+=over 4
+
+=item I<$widget>-E<gt>B<after>(I<ms>)
+
+The value I<ms> must be an integer giving a time in milliseconds.
+The command sleeps for I<ms> milliseconds and then returns.
+While the command is sleeping the application does not respond to
+events.
+
+=item I<$widget>-E<gt>B<after>(I<ms>,I<callback>)
+
+In this form the command returns immediately, but it arranges
+for I<callback> be executed I<ms> milliseconds later as an
+event handler.
+The callback will be executed exactly once, at the given time.
+The command will be executed in context of I<$widget>.
+If an error occurs while executing the delayed command then the
+L<Tk::Error|Tk::Error> mechanism is used to report the error.
+The B<after> command returns an identifier (an object in the perl/Tk
+case) that can be used to cancel the delayed command using B<afterCancel>.
+
+=item I<$widget>-E<gt>B<repeat>(I<ms>,I<callback>)
+
+In this form the command returns immediately, but it arranges
+for I<callback> be executed I<ms> milliseconds later as an
+event handler. After I<callback> has executed it is re-scheduled,
+to be executed in a futher I<ms>, and so on until it is cancelled.
+
+=item I<$widget>-E<gt>B<afterCancel>(I<$id>)
+
+=item I<$id>-E<gt>B<cancel>
+
+Cancels the execution of a delayed command that
+was previously scheduled.
+I<$id> indicates which command should be canceled;  it must have
+been the return value from a previous B<after> command.
+If the command given by I<$id> has already been executed (and
+is not scheduled to be executed again) then B<afterCancel>
+has no effect.
+
+=item I<$widget>-E<gt>B<afterCancel>(I<callback>)
+
+I<This form is not robust in perl/Tk - its use is deprecated.>
+This command should also cancel the execution of a delayed command.
+The I<callback> argument is compared with pending callbacks,
+if a match is found, that callback is
+cancelled and will never be executed;  if no such callback is
+currently pending then the B<afterCancel> has no effect.
+
+=item I<$widget>-E<gt>B<afterIdle>(I<callback>)
+
+Arranges for I<callback> to be evaluated later as an idle callback.
+The script will be run exactly once, the next time the event
+loop is entered and there are no events to process.
+The command returns an identifier that can be used
+to cancel the delayed command using B<afterCancel>.
+If an error occurs while executing the script then the
+L<Tk::Error|Tk::Error> mechanism is used to report the error.
+
+=item I<$widget>-E<gt>B<afterInfo>?(I<$id>)?
+
+This command returns information about existing event handlers.  If no
+I<$id> argument is supplied, the command returns a list of the
+identifiers for all existing event handlers created by the B<after>
+and B<repeat> commands for I<$widget>. If I<$id> is supplied, it
+specifies an existing handler; I<$id> must have been the return value
+from some previous call to B<after> or B<repeat> and it must not have
+triggered yet or been cancelled. In this case the command returns a
+list with three elements.  The first element of the list is the
+callback associated with I<$id>, the second element is either B<idle>
+or the I<integer> timer millisecond value to indicate what kind of
+event handler it is, and the third is a string I<once> or I<repeat> to
+differentiate an B<after> from a B<repeat> event.
+
+=back
+
+The B<after>(I<ms>) and B<afterIdle> forms of the command
+assume that the application is event driven:  the delayed commands
+will not be executed unless the application enters the event loop.
+In applications that are not normally event-driven,
+the event loop can be entered with the B<vwait> and B<update> commands.
+
+=head1 SEE ALSO
+
+L<Tk::Error|Tk::Error>
+L<Tk::callbacks|Tk::callbacks>
+
+=head1 KEYWORDS
+
+cancel, delay, idle callback, sleep, time
+
+=cut

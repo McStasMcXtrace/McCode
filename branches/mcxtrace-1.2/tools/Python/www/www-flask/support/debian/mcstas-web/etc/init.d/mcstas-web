@@ -1,0 +1,57 @@
+#!/bin/sh
+
+## BEGIN INIT INFO
+# Provides:          mcstas-web
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts the McStas web interface
+# Description:       starts the McStas web interface including the nginx webserver and a worker
+## END INIT INFO
+
+PID_WORK=/var/run/mcstas-web-worker.pid
+DIR=/usr/local/mcstas-web
+
+UWSGI_LISTEN=127.0.0.1:9001
+
+case "$1" in
+    start)
+        # worker
+        start-stop-daemon -b --chdir ${DIR} -m --pidfile ${PID_WORK} \
+            --startas ./bin/start-worker.sh \
+		        --start
+        # nginx
+	      start-stop-daemon --chdir ${DIR} --exec /usr/sbin/nginx \
+		        --start -- -c ${DIR}/nginx/nginx.conf
+        # uwsgi (Python webapp)
+        start-stop-daemon -b --chdir ${DIR} \
+            --exec ${DIR}/lib/uwsgi-1.2/uwsgi \
+		        --start -- --workers 10 --socket ${UWSGI_LISTEN} \
+                       --logto logs/uwsgi.log \
+            --module run --callable app
+        ;;
+    stop)
+        # nginx (takes down the site as main entry-point)
+	      start-stop-daemon \
+            --exec /usr/sbin/nginx \
+		        --stop
+        # uwsgi (Python webapp)
+        start-stop-daemon \
+            --exec ${DIR}/lib/uwsgi-1.2/uwsgi \
+		        --stop
+        # worker
+        start-stop-daemon --pidfile ${PID_WORK} \
+            --startas ./bin/start-worker.sh \
+		        --stop
+        ;;
+    status)
+        #start-stop-daemon --pidfile ${PID} --status --startas ${SCRIPT}
+        ;;
+    *)
+        echo "Usage: /etc/init.d/mcstas-web {start|stop}"
+        exit 1
+        ;;
+esac
+
+exit 0

@@ -1,0 +1,46 @@
+#!/bin/sh
+
+section() {
+    echo ''
+    echo '###'
+    echo "### $1"
+    echo '###'
+}
+
+set -e
+
+cd /usr/local/mcstas-web;
+
+section 'Setting up local Python modules..'
+./bin/get-dependencies.sh
+
+section 'Initialising..'
+./bin/init-db.sh
+
+section 'Creating default user: mcstas/mcstas'
+./bin/create-user.sh mcstas mcstas || echo 'Skipping.'
+
+
+# Copy some simulations files from mcstas/examples and compile them
+dir=/usr/local/lib/mcstas/examples
+section "Copying instrument sources from local McStas installation: (${dir})"
+examples="h8_test.instr SANS.instr PSI_DMC.instr"
+for i in ${examples}; do
+    if [ -f ${dir}/${i} ]; then
+        cp -v ${dir}/${i} sim/${i};
+    else
+        echo "-- Skipping: ${dir}/${i} [NOT FOUND]";
+    fi
+done
+
+section 'Running "update_sim.sh" to install instruments from sim/src'
+./bin/update-simulations.sh
+
+
+section 'Updating nginx configuration'
+./bin/write-config.sh
+update-rc.d nginx disable
+
+section 'Updating init scripts and starting services'
+update-rc.d -f mcstas-web defaults
+/etc/init.d/mcstas-web start

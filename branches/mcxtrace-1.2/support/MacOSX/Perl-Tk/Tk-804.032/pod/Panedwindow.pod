@@ -1,0 +1,326 @@
+#  Copyright (c) 1992 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#  RCS: @(#) $Id: panedwindow.n,v 1.2.2.1 2003/07/17 20:49:00 dkf Exp $
+
+=head1 NAME
+
+Tk::Panedwindow - Create and manipulate Panedwindow widgets
+
+=for category  Tk Generic Methods
+
+=head1 SYNOPSIS
+
+I<$panedwindow> = I<$parent>-E<gt>B<Panedwindow>(?I<options>?);
+
+ -background    -height  -width
+ -borderwidth   -orient
+ -cursor        -relief
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item Option:	B<-handlepad>
+
+=item Name:	B<handlePad>
+
+=item Class:	B<HandlePad>
+
+When sash handles are drawn, specifies the distance from the top or
+left end of the sash (depending on the orientation of the widget) at
+which to draw the handle.  May be any value accepted by B<Tk_GetPixels>.
+
+=item Option:	B<-handlesize>
+
+=item Name:	B<handleSize>
+
+=item Class:	B<HandleSize>
+
+Specifies the side length of a sash handle.  Handles are always
+drawn as squares.  May be any value accepted by B<Tk_GetPixels>.
+
+=item Option:	B<-opaqueresize>
+
+=item Name:	B<opaqueResize>
+
+=item Class:	B<OpaqueResize>
+
+Specifies whether panes should be resized as a sash is moved (true),
+or if resizing should be deferred until the sash is placed (false).
+
+=item Option:	B<-sashcursor>
+
+=item Name:	B<sashCursor>
+
+=item Class:	B<SashCursor>
+
+Mouse cursor to use when over a sash.  If null,
+B<sb_h_double_arrow> will be used for horizontal Panedwindows, and
+B<sb_v_double_arrow> will be used for vertical Panedwindows.
+
+=item Option:	B<-sashpad>
+
+=item Name:	B<sashPad>
+
+=item Class:	B<SashPad>
+
+Specifies the amount of padding to leave of each side of a sash.  May
+be any value accepted by B<Tk_GetPixels>.
+
+=item Option:	B<-sashrelief>
+
+=item Name:	B<sashRelief>
+
+=item Class:	B<SashRelief>
+
+Relief to use when drawing a sash.  May be any of the standard Tk
+relief values.
+
+=item Option:	B<-sashwidth>
+
+=item Name:	B<sashWidth>
+
+=item Class:	B<SashWidth>
+
+Specifies the width of each sash.  May be any value accepted by
+B<Tk_GetPixels>.
+
+=item Option:	B<-showhandle>
+
+=item Name:	B<showHandle>
+
+=item Class:	B<ShowHandle>
+
+Specifies whether sash handles should be shown.  May be any valid
+boolean value.
+
+=back
+
+=head1 DESCRIPTION
+
+The B<Panedwindow> method creates a new window (given by the
+$panedwindow argument) and makes it into a Panedwindow widget.
+Additional options, described above, may be specified on the command
+line or in the option database to configure aspects of the Panedwindow
+such as its default background color and relief.
+
+A Panedwindow widget contains any number of panes, arranged
+horizontally or vertically, according to the value of the
+B<-orient> option.  Each pane contains one widget, and each pair of
+panes is separated by a moveable (via mouse movements) sash.  Moving a
+sash causes the widgets on either side of the sash to be resized.
+
+=head1 WIDGET METHODS
+
+The B<Panedwindow> method
+may be used to invoke various operations on the widget.  It has the
+following general form:
+
+ $widget->method(?arg arg ...?);
+
+The following
+commands are possible for Panedwindow widgets:
+
+=over 4
+
+=item I<$widget>-E<gt>B<add>(?window ...? ?option value ...?);
+
+Add one or more windows to the Panedwindow, each in a separate pane.
+The arguments consist of the names of one or more windows
+followed by pairs of arguments that specify how to manage the windows.
+I<Option> may have any of the values accepted by the
+B<configure> subcommand.
+
+=item I<$widget>-E<gt>B<cget>(I<option>);
+
+Returns the current value of the configuration option given by
+I<option>.  I<Option> may have any of the values accepted by the
+B<Panedwindow> command.
+
+=item I<$widget>-E<gt>B<configure>(I<?option?, ?value, option, value, ...?>);
+
+Query or modify the configuration options of the widget.  If no
+I<option> is specified, returns a list describing all of the
+available options for $widget (see L<Tk::configure> for
+information on the format of this list).  If I<option> is specified
+with no I<value>, then the command returns a list describing the
+one named option (this list will be identical to the corresponding
+sublist of the value returned if no I<option> is specified).  If
+one or more I<option-value> pairs are specified, then the command
+modifies the given widget option(s) to have the given value(s);  in
+this case the command returns an empty string. I<Option> may have
+any of the values accepted by the B<Panedwindow> command.
+
+=item I<$widget>-E<gt>B<forget>(?window ...?);
+
+Remove the pane containing $widget from the Panedwindow.  All
+geometry management options for $widget will be forgotten.
+
+=item I<$widget>-E<gt>B<identify>(I<x, y>);
+
+Identify the Panedwindow component underneath the point given by
+I<x> and I<y>, in window coordinates.  If the point is over a
+sash or a sash handle, the result is a two element list containing the
+index of the sash or handle, and a word indicating whether it is over
+a sash or a handle, such as [0, 'sash'] or [2, 'handle'].  If the point is
+over any other part of the Panedwindow, the result is an empty list.
+
+=item I<$widget>-E<gt>B<proxy>(I<?args?>);
+
+This command is used to query and change the position of the sash
+proxy, used for rubberband-style pane resizing. It can take any of
+the following forms:
+
+=over 4
+
+=item I<$widget>-E<gt>B<proxyCoord>;
+
+Return a list containing the x and y coordinates of the most recent
+proxy location.
+
+=item I<$widget>-E<gt>B<proxyForget>;
+
+Remove the proxy from the display.
+
+=item I<$widget>-E<gt>B<proxyPlace>(I<x, y>);
+
+Place the proxy at the given I<x> and I<y> coordinates.
+
+=back
+
+=item I<$widget>-E<gt>B<sash>(I<?args?>);
+
+This command is used to query and change the position of sashes in the
+Panedwindow.  It can take any of the following forms:
+
+=over 4
+
+=item I<$widget>-E<gt>B<sashCoord>(I<index>);
+
+Return the current x and y coordinate pair for the sash given by
+I<index>.  I<Index> must be an integer between 0 and 1 less than
+the number of panes in the Panedwindow.  The coordinates given are
+those of the top left corner of the region containing the sash.
+I<$widget>-E<gt>B<sashDragto>(I<index, x, y>)
+This command computes the difference between the given coordinates and the
+coordinates given to the last B<sash coord> command for the given
+sash.  It then moves that sash the computed difference.  The return
+value is the empty string.
+
+=item I<$widget>-E<gt>B<sashMark>(I<index, x, y>);
+
+Records I<x> and I<y> for the sash given by I<index>; used in
+conjunction with later dragto commands to move the sash.
+
+=item I<$widget>-E<gt>B<sashPlace>(I<index, x, y>);
+
+Place the sash given by I<index> at the given coordinates.
+
+=back
+
+=item $widget I<$widget>-E<gt>B<panecget>(option);
+
+Query a management option for $widget.  I<Option> may be any
+value allowed by the B<paneconfigure> subcommand.
+
+=item $widget I<$widget>-E<gt>B<paneconfigure>(?option? ?value option value ...?);
+
+Query or modify the management options for $widget.  If no
+I<option> is specified, returns a list describing all of the
+available options for $widget (see L<Tk::configure> for
+information on the format of this list).  If I<option> is specified
+with no I<value>, then the command returns a list describing the
+one named option (this list will be identical to the corresponding
+sublist of the value returned if no I<option> is specified).  If
+one or more I<option-value> pairs are specified, then the command
+modifies the given widget option(s) to have the given value(s);  in
+this case the command returns an empty string.  The following options
+are supported:
+
+=over 4
+
+=item B<-after> =E<gt> $widget
+
+Insert the window after the window specified.  $widget should be the
+name of a window already managed by $widget.
+
+=item B<-before> =E<gt> $widget
+
+Insert the window before the window specified.  $widget should be
+the name of a window already managed by $widget.
+
+=item B<-height> =E<gt> I<size>
+
+Specify a height for the window.  The height will be the outer
+dimension of the window including its border, if any.  If I<size>
+is an empty string, or if B<-height> is not specified, then the
+height requested internally by the window will be used initially; the
+height may later be adjusted by the movement of sashes in the
+Panedwindow.  I<Size> may be any value accepted by B<Tk_GetPixels>.
+
+=item B<-minsize> =E<gt> I<n>
+
+Specifies that the size of the window cannot be made less than
+I<n>.  This constraint only affects the size of the widget in the
+paned dimension -- the x dimension for horizontal Panedwindows, the y
+dimension for vertical Panedwindows.  May be any value accepted by
+B<Tk_GetPixels>.
+
+=item B<-padx> =E<gt> I<n>
+
+Specifies a non-negative value indicating how much extra space to
+leave on each side of the window in the X-direction.  The value may
+have any of the forms accepted by B<Tk_GetPixels>.
+
+=item B<-pady> =E<gt> I<n>
+
+Specifies a non-negative value indicating how much extra space to
+leave on each side of the window in the Y-direction.  The value may
+have any of the forms accepted by B<Tk_GetPixels>.
+
+=item B<-sticky> =E<gt> I<style>
+
+If a window's pane is larger than the requested dimensions of the
+window, this option may be used to position (or stretch) the window
+within its pane.  I<Style>  is a string that contains zero or more
+of the characters B<n>, B<s>, B<e> or B<w>.  The string
+can optionally contains spaces or commas, but they are ignored.  Each
+letter refers to a side (north, south, east, or west) that the window
+will "stick" to.  If both B<n> and B<s> (or B<e> and B<w>)
+are specified, the window will be stretched to fill the entire height
+(or width) of its cavity.
+
+=item B<-width> =E<gt> I<size>
+
+Specify a width for the window.  The width will be the outer
+dimension of the window including its border, if any.  If I<size>
+is an empty string, or if B<-width> is not specified, then the
+width requested internally by the window will be used initially; the
+width may later be adjusted by the movement of sashes in the
+Panedwindow.  I<Size> may be any value accepted by B<Tk_GetPixels>.
+
+=back
+
+=item I<$widget>-E<gt>B<panes>;
+
+Returns an ordered list of the widgets managed by $widget.
+
+=back
+
+=head1 RESIZING PANES
+
+A pane is resized by grabbing the sash (or sash handle if present) and
+dragging with the mouse.  This is accomplished via mouse motion
+bindings on the widget.  When a sash is moved, the sizes of the panes
+on each side of the sash, and thus the widgets in those panes, are
+adjusted.
+
+When a pane is resized from outside (eg, it is packed to expand and
+fill, and the containing toplevel is resized), space is added to the final
+(rightmost or bottommost) pane in the window.
+
+=head1 KEYWORDS
+
+Panedwindow, widget, geometry management

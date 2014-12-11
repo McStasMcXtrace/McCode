@@ -1,0 +1,28 @@
+#!perl -w
+use strict;
+use Tk;
+use Encode qw(decode);
+
+my $face = (@ARGV) ? shift : 'fixed';
+
+my @headers = <DATA>;
+
+my $mw = MainWindow->new;
+
+foreach my $text (@headers)
+ {
+  my $str = decode('MIME-Header' => $text);
+  $mw->Label(-text => $str, -font => [$face,14])->pack;
+ }
+MainLoop;
+
+__DATA__
+From: =?Big5?B?qfq8dw==?= <tukb122@ms12.url.com.tw>
+Subject:=?big5?Q?=A9_=A4b=A5=D8=BF=FD=A7=F3=B7s!!?=
+Subject: =?Big5?B?o7Ck+S4uLi4uLi4uLi4uLi4uLi4uLg==?=
+From: =?Big5?B?tW6//bdqtE2k3sC6?= <twpalm@pchome.com.tw>
+Subject: =?Big5?B?rf6xeqq6uvSvuLVuv/23arRNpN7Aug==?=
+Subject:=?big5?Q?=A7K=B6O=A5=F4=A5=B4=A4=A4=B4=E4=AA=F8=B3~=B9q=B8=DC?=
+Subject:=?big5?Q? =A4u=A7@=B2=D6=A4F=A4@=A4=D1=BA=D6=A7Q=B0e=B5=B9=A7A  ^0^  =A6A=A6=B8=B7P=C1=C2=BE=E3=B2z=B3o=A5=F7=B8=EA=AE=C6=AA=BA=A4H!!!    ?=
+Subject:=?big5?Q? =A4u=A7@=B2=D6=A4F=A4@=A4=D1=BA=D6=A7Q=B0e=B5=B9=A7A  ^0^  =A6A=A6=B8=B7P=C1=C2=BE=E3=B2z=B3o=A5=F7=B8=EA=AE=C6=AA=BA=A4H!!!    ?=
+Subject:=?big5?Q? =A4u=A7@=B2=D6=A4F=A4@=A4=D1=BA=D6=A7Q=B0e=B5=B9=A7A  ^0^  =A6A=A6=B8=B7P=C1=C2=BE=E3=B2z=B3o=A5=F7=B8=EA=AE=C6=AA=BA=A4H!!!    ?=

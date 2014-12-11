@@ -1,0 +1,5 @@
+#!/bin/sh
+files=`ls *.o | grep -v '_f\.o$'`
+ld -r -o /tmp/junk $files  ../*Glue.o -lX11 -lm -lc
+nm -p /tmp/junk | grep ' U ' | grep -v 'Perl_' > rneed
+ned rneed

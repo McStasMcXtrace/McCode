@@ -1,0 +1,88 @@
+TODO list for mcstas june 2008
+***************************************
+Next is the 2.0 release (not all from here)
+(*) means priority items
+(D) means DONE
+
+Components:
+ D  Uniform parameter naming for the component classes; Sources, Samples, Monitors, Guides, etc. DONE
+    move some contrib comps as official comps
+(*) DiskChopper bug - rotation by PI in N=2 situation changes time structure?! (Asked Uwe, no response yet)
+    Robert McGreevy 4D- S(Q,w) - Analytical
+(*) Single_crystal, new approaches / validation still..
+ D  Focusing lenses ala VitESS. DONE
+ D  Refraction? lens comp planned for student at ILL
+    Single crystal / powder with magnetic order / polarisation / spin wave comp
+ D  Kill very old comps in obsolete (all? - will then allow "refill during 2.0 series)
+(*) Checkup - use of PROP_DT in all comps?
+    monochromator_reflect (Lucia Alianelli) + resolving IDL dependency
+(*) monochromator_ ... (Lucia Alianelli) full monte carlo
+ D  PowderN, IsotropicSqw: add any shape DONE
+ D  Sans_sphere: add other geometry than box, add target_index+rect area DONE (box,cyl,sphere)
+ D  add 'radius' parameter to Monitor_nD for easier specs
+ D  remove 'searching' messages in SNS and ISIS sources (not useful)
+ D  more V_sample to obsolete and use Incoherent instead
+ D  check Virtual_* comps with MPI
+(*) check MPI examples that fail
+
+Doc:
+    sync with new comp parameter names
+    check new instrument definitions doc in manual
+    update new testing mechanism doc and McDoc %example DONE
+    add doc on mcdetector structure (members)
+    add Iso Sqw qSqw fix in doc
+
+Instruments:
+(*) Laue_diff in examples
+(*) max parm Lucia vs. Monitor_nD (FIXED by _ hack)
+(*) IN22_sample - wrong direction / rotation of samle 2\theta mono ?
+ D  Test_Fermi DONE ; Test_Sources DONE; Test_Guides DONE; Monochromator_test DONE
+(*) TESTS: ILL_D9, ILL_H25_IN22_*, linup-3, Samples_Incoherent_off,  Tomography
+ D  TESTS: accuracy must take into account I_ERR value instead of default 20 % DONE
+ D  use %include where ever possible  DONE
+ D  templateTAS: recompute Ki, Kf, ... when giving angles as input. Check KFIX/FX/KI/KF values. DONE
+
+Metalanguage / runtime
+    New grammar(s) for 'Metacomponents' or 'Multicomponents' : 
+(*) ARRAY positions=filename COMPONENT MyComp = Comp()
+//  SEQUENCE positions=filename COMPONENT MyComp = Comp()
+//  DISTRIBUTION Gauss parms sizes COMPONENT MyComp = Comp()
+(*) GROUP should jump to first member if SCATTERED (allows for multiple scattering, many-mirror setups etc.) Related: Remove ABSORB in samples when t0 < 0!!
+    component initiated SPLIT (Transmit/Reflect)
+ D  save on already opened files: catenate mode DONE
+ D  instrument.y to check for case insensitive comp names in case include fails DONE
+    support zlib (if exists at ./configure) to handle compressed files (.gz, .zip, .bz) either by calling external command extraction to TMP, or in memory.
+    support HTTP file access through wget if available from configure
+ D  MPI: split Reduce/sed/receive into 1e5 blocks DONE
+ D  read-table: handle \r for windows platforms when reading data in event files DONE (to be checked)
+
+Tools/platform:
+    mcresplot widths? FWHM vs. Sigma?  mcresplot port to Matlab/Scilab ?
+(*) mcstas2vitess, only supports double parms, should also do ones with explicit type.
+    mcrun --test: need to add plotter test
+    Update mcrun --test=compatible to include --test=FP6 (etc)
+ D  gfortran update for PGPLOT build
+    SWARM / Genetic algo? 
+(*) Scan over 'strings' filename=whatever.dat;whatever2.dat;whatever3.dat -N 3  (incl optim?)
+(N) 2D-scans?
+    mcgnuplot: DONE (almost)
+    Scan evolvement' plot of psd's (Pick PSD data from scan, plot together) / mcplot opens scan steps in PGPLOT arrow keys
+(*) mcgui signal handling in case of compilation / mpi
+ D  REMOVE threading support that is misleading and not efficient (mcrui,mcstas-r,mcrun) DONE
+ D  mcgui menu item renamed as Intall SSH/DSA key for grid/MPI DONE
+    mcformatgui <dir>: sets input dir (handle args)
+ D  update mcstas.lang for gedit to gtksourceview-2 
+(*) mcrun --test --mpi: some instruments do not scale with n_nodes
+(*) mcrun --test to check under windows
+(*) check installation procedure regarding loosing PGPLOT libs after upgrade
+    
+
+Infrastructure:
+(*) cvs machine / webserver / bugzilla update... 
+    Ruby on rails based mcweb?
+
+Polarisation, magnetic fields: (Mainly Erik)
+    Magnetic field calculations from V. Hugouvieux thesis work (cvs-01) - Freefem call in INITIALIZE %{%}
+(*) More Pol comps
+(*) Pol example instrs
+    read table of precomputed B coordinates (ANSYS, Freefem, ...)

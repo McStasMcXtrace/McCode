@@ -1,0 +1,461 @@
+/*****************************************************************************
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2012 Risoe National Laboratory, Roskilde, Denmark
+
+* Component: Sample_nxs
+*
+* %I
+* Written by: Mirko Boin
+* Date: Mai 2012
+* Origin: Helmholtz Centre Berlin for Materials and Energy (Germany)
+* Version: $Revision: 1.0$
+*
+* General powder/polycrystalline sample with neutron-matter interaction based
+*    on neutron cross section calculations of a unit cell
+*
+* %D
+* Features:
+*      - coherent and incoherent scattering, absorption and transmission
+*      - multiple scattering 
+*      - wavelength-dependent neutron cross section calculation
+*      - unit cell definition (via input file)
+*      - focussing option for scattered neutrons (via d_phi)
+*
+* Geometry is a powder filled cylinder or a box defined by radius or xwidth, 
+* yheight, zthick respectively. The component handles coherent and incoherent
+* scattering (also multiple scattering), absorption and transmission. Hence, it
+* is suitable for diffraction (scattering) and imaging (transmission) instruments
+* at the same time. In order to improve the neutron statistics at the detector
+* these individual features can be enabled/disabled using TransOnly, IncohScat,
+* MultiScat. 
+* For example, if scattering shall not be monitored (e.g. imaging), then TransOnly
+* can be set to 1 to let the component calculate the neutron transmission through
+* the sample only. Likewise, incoherent scattering can be switched on and off.
+* 
+* The decision of whether a neuron shall be scattered, absorbed or transmitted is
+* based on the wavelength-dependent neutron cross sections (nxs), i.e. the neutron
+* velocity is used here. These cross sections represent the individual scattering 
+* and absorption probabilities for each individual neutron. However, the calculation
+* of neutron cross sections depends on the material defined for this sample component.
+* Therefore, several input parameters such as the crystal structure and the atoms
+* involved (isotope mass, coherent scattering length, ...). This information is
+* provided by an input file with the following format:
+* <B># define the unit cell parameters:
+* #   space_group                      - the space group number or Hermann or Hall symbol [string]
+* #   lattice_a, ...b, ...c            - the lattice spacings a,b,c [angstrom]
+* #   lattice_alpha, ...beta, ...gamma - the lattice angles alpha,beta,gamma [degree]
+* 
+* space_group    = -F 4 2 3 # space group number is also allowed (= 225)
+* lattice_a = 4.049
+* lattice_b = 4.049
+* lattice_c = 4.049
+* lattice_alpha = 90
+* lattice_beta = 90
+* lattice_gamma = 90
+*
+* # add atoms to the unit cell:
+* # notation is "atom_number = name b_coh sigma_inc sigma_abs_2200 molar_mass debye_temp x y z"
+* #   name           - labels the current atom/isotope  [string]
+* #   b_coh          - the coherent scattering length [fm]
+* #   sigma_inc      - the incoherent scattering cross section [barns]
+* #   sigma_abs_2200 - the absorption cross sect. at 2200 m/s [barns]
+* #   molar_mass     - the Molar mass [g/mol]
+* #   debye_temp     - the Debye temperature [K]
+* #   x y z          - the Wyckoff postion of the atom inside the unit cell
+* 
+* [atoms]
+* add_atom = Al 3.449 0.008 0.23 26.98 429.0 0.0 0.0 0.0
+* </B>
+* The above example defines a pure (fcc) aluminium. Other example files are provided.
+* Alternatively, a fallback mechanism exists to simulation an alpha-Fe (bcc) sample
+* if an input file is missing.
+*
+*
+*
+* %P
+*
+* INPUT PARAMETERS
+*
+* TransOnly:   Enable/disable (=1/=0) the transmission only option
+* IncohScat:   Enable/disable (=1/=0) incoherent scattering
+* MultiScat:   Enable/disable (=1/=0) multiple scattering
+* xwidth:      Horizontal dimension of sample, as a width [m]
+* yheight:     Vertical dimension of sample, as a height [m]
+* zthick:      Thickness of sample [m]
+* radius:      Radius of sample in (x,z) plane [m]
+* nxsFileName: Filename of the unit cell definition
+* max_hkl:     Maximum (hkl) indices to consider for the nxs calculation, e.g. max_hkl=3 means (hkl)=(333)
+* d_phi=0:     Angle corresponding to the vertical angular range
+*              to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
+* space_group: Sample crystallographic spacegroup [1]
+*
+* OUTPUT PARAMETERS
+* isrect:      True if geometry is rectangular [1] 
+*
+* %L
+* M. Boin (2012), <i>J. Appl. Cryst.</i> <b>45</b>, 603-607, <a href="http://dx.doi.org/10.1107/S0021889812016056">doi:10.1107/S0021889812016056</a>
+* M. Boin, R.C. Wimpory, A. Hilger, N. Kardjilov, S.Y. Zhang, M. Strobl (2012), <i>J. Phys.: Conf. Ser.</i> <b>340</b>, 012022, <a href="http://dx.doi.org/10.1088/1742-6596/340/1/012022">doi:10.1088/1742-6596/340/1/012022</a>
+* M. Boin, A. Hilger, N. Kardjilov, S.Y. Zhang, E.C. Oliver, J.A. James, C. Randau, R.C. Wimpory (2011), <i>J. Appl. Cryst.</i> <b>44</b>, 1040-1046, <a href="http://dx.doi.org/10.1107/S0021889811025970">doi:10.1107/S0021889811025970</a>
+*
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Sample_nxs
+DEFINITION PARAMETERS (int TransOnly=0, int IncohScat=1, int MultiScat=1, int max_hkl=8, string space_group="229", string nxsFileName="")
+SETTING PARAMETERS ( xwidth=0.05, yheight=0.05, zthick=0.05, radius=0.0, d_phi=0 )
+OUTPUT PARAMETERS (isrect)
+
+
+
+
+
+SHARE
+%{
+
+
+%include "nxs.h"
+
+%}
+
+
+
+
+DECLARE
+%{
+
+int isrect;
+int intersect;
+
+/* probabilities */
+double p_transmit;
+
+/* cross sections */
+double xsect_total;
+double xsect_coherent;
+double xsect_incoherent;
+double xsect_absorption;
+
+
+/* wavelength + velocity of the neutron */
+double lambda;
+double velocity;
+
+/* neutron path through the sample */
+double fullpath;
+
+/* intersection times */
+double t1;
+double t2;
+
+/* sample temperature in [K] */
+double temperature;
+
+/* sample */
+NXS_UnitCell uc;
+NXS_AtomInfo ai;
+
+double A;
+double mu_factor;
+
+int debug;
+
+/* velocity to lambda conversion */
+double V2L;
+int i;
+
+%}
+
+
+
+
+INITIALIZE
+%{
+
+isrect = 0;
+/* check sample geometry (box or cylinder?) */
+if ( !radius || !yheight )
+{
+  if ( !xwidth || !yheight || !zthick )
+    exit( fprintf(stderr, "Error: %s has no volume (zero dimension)\n", NAME_CURRENT_COMP) );
+  else
+    isrect = 1;
+}
+
+
+
+if (TransOnly)
+  fprintf(stderr, "%s: Performing neutron transmission only (no scattering)\n", NAME_CURRENT_COMP);
+else
+{
+  if (IncohScat)
+    fprintf(stderr, "%s: Allowing incoherent scattering\n", NAME_CURRENT_COMP);
+  if (MultiScat)
+  {
+    fprintf(stderr, "%s: Allowing multiple scattering\n", NAME_CURRENT_COMP);
+    if (d_phi)
+    {
+      fprintf(stderr, "%s: WARNING: No focussing possible in multiple scattering mode. Setting d_phi=0.\n", NAME_CURRENT_COMP);
+      d_phi = 0;
+    }
+  }
+}
+  
+
+/* read unit cell parameters from file and initialise hkl */
+if( nxs_readParameterFile( nxsFileName, &uc ) )
+{
+  /* fallback solution: if no file exists, use alpha_iron */
+  fprintf(stderr, "WARNING: nxs parameter file %s NOT found! Using default values...\n", nxsFileName);
+  strncpy(uc.spaceGroup,"229",MAX_CHARS_SPACEGROUP);
+  uc.a = 2.866; uc.alpha = 90.0;  
+  strncpy(ai.label,"Fe",MAX_CHARS_ATOMLABEL); ai.b_coherent = 9.45;
+  ai.sigmaIncoherent = 0.4; ai.sigmaAbsorption = 2.56;
+  ai.molarMass = 55.85; ai.debyeTemp = 464.0;
+  ai.x[0] = ai.y[0] = ai.z[0] = 0.0;
+  nxs_initUnitCell( &uc );
+  nxs_addAtomInfo( &uc, ai );
+}
+
+uc.maxHKL_index = max_hkl;
+nxs_initHKL( &uc );
+
+/* factor for the calculation of the attenuation */
+mu_factor = 1.0 / uc.volume;
+
+V2L = 2.0 * PI / V2K;
+
+%}
+
+
+
+TRACE
+%{
+
+
+intersect = 0;
+
+/* box or cylinder? */
+if ( isrect )
+  intersect = box_intersect(&t1,&t2,x,y,z,vx,vy,vz,xwidth, yheight, zthick);
+else
+  intersect = cylinder_intersect(&t1,&t2,x,y,z,vx,vy,vz,radius, yheight);
+
+
+/* neutron intersects? */
+if( intersect && (t2>0) )
+{
+  /* get current velocity and wavelength */
+  velocity  = sqrt( vx*vx + vy*vy + vz*vz );
+  lambda = V2L / velocity;
+
+  xsect_coherent = nxs_CoherentElastic(lambda, &uc ) + nxs_CoherentInelastic(lambda, &uc );
+  xsect_incoherent = nxs_IncoherentElastic(lambda, &uc ) + nxs_IncoherentInelastic(lambda, &uc );
+  xsect_absorption = nxs_Absorption(lambda, &uc );
+  xsect_total = xsect_coherent + xsect_incoherent + xsect_absorption;
+
+  /* Handle transmission only (imaging mode) */
+  if (TransOnly)
+  {
+    /* path through the sample */
+    fullpath = velocity * (t2-t1);
+
+    /* change the neutron weight */
+    p_transmit = exp( -xsect_total * mu_factor * fullpath*1E2 );
+    p *= p_transmit;
+  }
+  /* ...also handle scattering events */
+  else
+  {
+    int ms_loop = 1;
+    if( MultiScat ) ms_loop = 10;
+    double path;
+    while( ms_loop-- )
+    {
+      /* go to an event point (randomly) */
+      path = rand01() * (t2-t1);
+      PROP_DT( path + t1 );
+      // printf("%i: t1=%f  t2=%f\n",ms_loop, t1*1000,t2*1000);
+      path = path * velocity;
+      
+      /* path through the sample */
+      fullpath = velocity * (t2-t1);
+      p_transmit = exp( -xsect_total * mu_factor * fullpath*1E2 );
+
+      /* check if neutron interacts with or transmits through the sample */
+      if( p_transmit < rand01() )
+      {
+        double roulette_ball = rand01() *  (xsect_total);
+        double norm = lambda*lambda*1E-2 / 2.0 / uc.volume;
+      
+        /* ******************** */
+        /*  SCATTER coherently  */
+        /* ******************** */
+        if (roulette_ball <= xsect_coherent)
+        {
+          int j;
+          int Max_hkl = -1;
+          double contrib = 0.0;
+          while( Max_hkl<(int)uc.nHKL-1 && 2.0*uc.hklList[Max_hkl+1].dhkl-lambda > 1E-6 )
+          {
+            Max_hkl++;
+            contrib += uc.hklList[Max_hkl].FSquare * uc.hklList[Max_hkl].multiplicity * uc.hklList[Max_hkl].dhkl;
+          }
+          
+          /* determine lattice plane (for scattering) */
+          roulette_ball = rand01() * contrib;
+          contrib = 0.0;
+          for( j=0; j<Max_hkl; j++ )
+          {
+            contrib += uc.hklList[j].FSquare * uc.hklList[j].multiplicity * uc.hklList[j].dhkl;
+            if( roulette_ball < contrib )
+              break;
+          }
+        
+          /* get scattering angle */
+          double theta = asin( lambda / 2.0 / uc.hklList[j].dhkl );
+          if( isnan(theta) )
+          {
+            /* if rounding errors occur */
+            theta = PI/2.0;
+          }
+
+          /* select random point (or within a smaller range given by d_phi) on Debye Scherrer cone */
+          /* maximum d_phi = 180 */
+          double tmp_vx, tmp_vy, tmp_vz;
+          double vout_x, vout_y, vout_z;
+          double arg, d_phi0;
+          
+          if (d_phi)
+          { 
+            arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
+            if (arg < -1 || arg > 1)
+              d_phi = 0;
+            else
+              d_phi = 2*asin(arg);
+          }
+          if (d_phi)
+          {
+            d_phi0 = 2*rand01()*fabs(d_phi);
+            if (d_phi0 > d_phi)
+            {
+              d_phi0 = PI+(d_phi0-1.5*d_phi);
+            }
+            else
+            {
+              d_phi0=d_phi0-0.5*d_phi;
+            }
+            p *= d_phi/PI;
+          }
+          else
+            d_phi0 = PI*randpm1();
+          
+          
+          vec_prod(tmp_vx,tmp_vy,tmp_vz, vx,vy,vz, 1,0,0);
+          if (!tmp_vx && !tmp_vy && !tmp_vz) { tmp_vx=tmp_vz=0; tmp_vy=1; }
+          /* v_out = rotate 'v' by 2*theta around tmp_v: Bragg angle */
+          rotate(vout_x,vout_y,vout_z, vx,vy,vz, 2.0*theta, tmp_vx,tmp_vy,tmp_vz);
+          /* tmp_v = rotate v_out by d_phi around 'v' (Debye-Scherrer cone) */
+          rotate(tmp_vx,tmp_vy,tmp_vz, vout_x,vout_y,vout_z, d_phi0, vx, vy, vz);
+          vx = tmp_vx;
+          vy = tmp_vy;
+          vz = tmp_vz;
+        }
+        
+        /* ******************** */
+        /* SCATTER incoherently */
+        /* ******************** */
+        else if (roulette_ball <= xsect_coherent+xsect_incoherent)
+        {
+          /* check the incoherent switch */
+          if (IncohScat)
+          {
+            double solid_angle;
+            randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle, 0, 0, 1, 2.0*PI, d_phi*DEG2RAD, ROT_A_CURRENT_COMP);
+            
+            vx *= velocity;
+            vy *= velocity;
+            vz *= velocity;
+            if (d_phi)
+              p *= d_phi/PI;
+
+          } /* end of if (bIncohScat) */
+        }
+        else
+        {
+          /* neutron absorption -> remove neutron from trajectory */
+          ms_loop = 0;
+          ABSORB;
+        } /* end of if-else( roulette_ball <= xsect_coherent ) */
+        
+        
+        int err = 0;
+        if (isrect && !box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zthick) || t2<0) err=1;
+        else if(!isrect && !cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight) || t2<0) err=1;
+
+        if (err) {
+          /* Strange error: did not hit cylinder */
+          fprintf(stderr, "sample_nxs: FATAL ERROR: Did not hit sample from inside.\n, t1=%f  t2=%f\n", t1, t2);
+          ABSORB;
+        }
+        t1 = 0.0;
+        SCATTER;
+        
+      } /* end of if( p_transmit < rand01() ) */
+      else
+      {
+        /* else let the neutron simply transmit through the sample */
+        /* without any interaction or neutron weight change */
+        ms_loop = 0;
+      }
+      
+    } /* end of while( ms_loop-- ) */
+      
+  } /* end of if-else(bTransOnly) */
+  
+} /* end of if(box_intersect) */
+
+
+
+%}
+
+
+
+MCDISPLAY
+%{
+double h;
+h=yheight;
+magnify("xyz");
+if (!isrect) {
+  circle("xz", 0,  h/2.0, 0, radius);
+  circle("xz", 0, -h/2.0, 0, radius);
+  line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
+  line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
+  line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
+  line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
+} else {
+  double xmin = -0.5*xwidth;
+  double xmax =  0.5*xwidth;
+  double ymin = -0.5*yheight;
+  double ymax =  0.5*yheight;
+  double zmin = -0.5*zthick;
+  double zmax =  0.5*zthick;
+  multiline(5, xmin, ymin, zmin,
+            xmax, ymin, zmin,
+            xmax, ymax, zmin,
+            xmin, ymax, zmin,
+            xmin, ymin, zmin);
+  multiline(5, xmin, ymin, zmax,
+            xmax, ymin, zmax,
+            xmax, ymax, zmax,
+            xmin, ymax, zmax,
+            xmin, ymin, zmax);
+  line(xmin, ymin, zmin, xmin, ymin, zmax);
+  line(xmax, ymin, zmin, xmax, ymin, zmax);
+  line(xmin, ymax, zmin, xmin, ymax, zmax);
+  line(xmax, ymax, zmin, xmax, ymax, zmax);
+}
+%}
+
+END

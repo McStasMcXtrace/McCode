@@ -1,0 +1,30 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+require Tk::FileDialog;
+
+my $mw = MainWindow->new();
+
+
+my $fdialog = $mw->FileDialog('Title'=>'Select File',
+ 				     'CreateFlag' => 0);
+$fdialog->configure('Path' => "$ENV{'HOME'}",
+                    'FileMask' => '*',
+                    'ShowAllFlag' => 'NO',
+                    grabflag => 1);
+
+$mw->Button(-text => 'Choose File',
+            -command =>
+            sub
+             {
+              my $fname = $fdialog->Show(ChDirFlag => 1,
+                                         DisableShowAll => 'YES');
+              print "Chose $fname\n";
+             })->pack(-side => 'left', -fill => 'y');
+
+$mw->Button(-text => 'Quit',
+            -command => [$mw, 'destroy']) ->pack(-side => 'left', -fill => 'y');
+
+MainLoop;
+
+

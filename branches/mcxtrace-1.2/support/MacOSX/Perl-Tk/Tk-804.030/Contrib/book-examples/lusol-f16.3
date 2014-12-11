@@ -1,0 +1,76 @@
+From  owner-ptk@lists.Stanford.EDU  Fri May 10 17:56:04 1996
+Return-Path: <owner-ptk@lists.Stanford.EDU>
+From: lusol@Turkey.CC.Lehigh.EDU (Stephen O. Lidie)
+Message-Id: <199605101655.MAA13612@Turkey.CC.Lehigh.EDU>
+Subject: book_examples:  Figure 16.3
+To: ptk@guest.WPI.EDU
+Date: Fri, 10 May 1996 12:55:17 -0400 (EDT)
+X-Mailer: ELM [version 2.4 PL25]
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Sender: owner-ptk@lists.Stanford.EDU
+Precedence: bulk
+P-From: "Stephen O. Lidie" <lusol@Turkey.CC.Lehigh.EDU>
+
+Hey, I never saw those before (;   Here are two ways to handle F16.3, the
+first non-strict/with symbolic references, the second strict/hard refs.
+
+-------------------------------- 1 -------------------------------------------
+#!/usr/local/bin/perl -w
+
+#
+# Figure 16.3, p162
+#
+
+
+# how to do this ?
+# Like this: (;
+
+use Tk;
+#use strict;
+use subs qw(watch);
+
+my $mw = MainWindow->new;
+$country = "Japan";  # can't be a my() variable -  must appear in symbol table
+watch 'country';
+$mw->after(5000, sub {$country = "Great Britain"});
+
+sub watch {
+  my ($name) = @_;
+  $mw->Label(-text => "Value of \"$name\": ")->pack (-side => 'left');
+  $mw->Label(-textvariable => \$$name)->pack(-side => 'left');
+}
+
+MainLoop;
+-------------------------------- 2 -------------------------------------------
+#!/usr/local/bin/perl -w
+
+#
+# Figure 16.3, p162
+#
+
+
+# how to do this ?
+# Like this: (;
+
+use Tk;
+use strict;
+use subs qw(watch);
+
+my $mw = MainWindow->new;
+my $country = "Japan";
+watch 'country', \$country;
+$mw->after(5000, sub {$country = "Great Britain"});
+
+sub watch {
+  my ($name, $var_ref) = @_;
+  $mw->Label(-text => "Value of \"$name\": ")->pack (-side => 'left');
+  $mw->Label(-textvariable => \$var_ref)->pack(-side => 'left');
+}
+
+MainLoop;
+
+==========================================================================
+This message was posted through the Stanford campus mailing list
+server.  If you wish to unsubscribe from this mailing list, send the
+message body of "unsubscribe ptk" to majordomo@lists.stanford.edu

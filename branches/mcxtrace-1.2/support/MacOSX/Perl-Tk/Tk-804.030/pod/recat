@@ -1,0 +1,67 @@
+#!/usr/local/bin/perl -w
+use strict;
+my $sec;
+my %cat;
+my @cat;
+while (<>)
+ {
+  if (/^beginBookmark\s+'(.*)'\s*$/)
+   {
+    $sec = $1;
+    unless (exists $cat{$sec})
+     {
+      $cat{$sec} = [];
+      push(@cat,$sec);
+     }
+    }
+  elsif (/^file\s+(\S+)/)
+   {
+    my $file = $1;
+    push(@{$cat{$sec}},$file);
+   }
+ }
+
+$^I = ".bak";
+foreach my $sec (@cat)
+ {
+  foreach my $file (@{$cat{$sec}})
+   {
+    my $undo = 0;
+    $/ = "";
+    @ARGV = ($file);
+    while (<>)
+     {
+      if (/^=head1\sNAME/)
+       {
+        do {
+             print if (defined $^I);
+             $_ = <>;
+           } until (eof || /^=\w+/);
+        if (/^=for\s+category\s+(.*)\n+/)
+         {
+          if ($1 eq $sec)
+           {
+            warn "$file okay\n";
+            $undo = 1;
+           }
+          else
+           {
+            warn "Change $file $1 -> $sec\n";
+            $_ = "=for category $sec\n\n";
+           }
+         }
+        else
+         {
+          warn "$_ Add $file -> $sec\n";
+          print "=for category $sec\n\n";
+         }
+       }
+      print if (defined $^I);
+     }
+    if ($undo && defined $^I)
+     {
+      unlink($file);
+      rename("$file$^I",$file);
+     }
+   }
+ }

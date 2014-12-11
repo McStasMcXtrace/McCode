@@ -1,0 +1,89 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Test_Mask
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: 12/03/2014
+* Origin: DTU Physics
+* Release: McXtrace 1.2
+* Version: 0.2
+* %INSTRUMENT_SITE: UNKNOWN
+*
+* A unit test instrument of the Mask component 
+*
+* %Description
+* A non-divergent beam imponges on a masking image, with 2d-detectors up- and downstream
+* of the mask.
+*
+* %Example: Test_Mask.instr invert=0 Detector: psd1_I=0.223645
+* %Example: Test_Mask.instr invert=1 Detector: psd1_I=0.670667
+*
+* %Parameters
+* invert ( ) If nonzero the transparency/opacity sense of the masking image is reversed.
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Test_Mask(invert=0)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+  char filename[255];
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  /*write a test mask to a temporary file*/
+  sprintf(filename,"Test_Mask_input_file.mask");
+  FILE *fp=fopen(filename,"wb");
+  fprintf(fp,"#this is a test mask with 10 white pixels, 4 gray, and 2 black\n");
+  fprintf(fp,"1.0 1.0 0.5 0.5\n1.0 1.0 0.5 0.5\n1.0 1.0 1.0 1.0\n1.0 1.0 0.0 0.0\n");
+  fclose(fp);
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+
+COMPONENT src = Source_div(
+    xwidth = 0.1, yheight = 0.1, focus_aw = 0, focus_ah = 0,
+    E0 = 12.5, dE = 10, gauss = 1, incoherent = 0, phase = 0)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT psd0 = PSD_monitor(
+	xwidth=.12, yheight=.12, nx=200, ny=200, filename="psd0", restore_xray=1)
+AT(0,0,1) RELATIVE src
+
+COMPONENT maske = Mask(
+    xwidth=0.1, yheight=0.1, invert=invert, mask=filename)
+AT(0,0,1e-6) RELATIVE PREVIOUS
+ 
+COMPONENT psd1 = COPY(psd0) (filename="psd1")
+AT(0,0,1e-6) RELATIVE PREVIOUS
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+

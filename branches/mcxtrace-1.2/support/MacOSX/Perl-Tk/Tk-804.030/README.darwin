@@ -1,0 +1,47 @@
+The X11 SDK needs to be installed from the XTools CD. It seems that
+after the installation, the X11 include files are at a unusal
+location. If so, then start installation by specifying the X11INC
+variable, i.e.
+
+    perl Makefile.PL X11INC=/Developer/SDKs/MacOSX10.4u.sdk/usr/X11R6/include
+
+This was seen on a Mac OS X 10.4.8 (Tiger) system.
+
+It is expected that make test passes without failures.
+
+Turning on True Type support with XFT=1 also seems to work, but there
+are some font metrics-related test failures, which are
+harmless:
+
+Failed Test Stat Wstat Total Fail  List of Failed
+-------------------------------------------------------------------------------
+t/entry.t      7  1792   337    7  85 87-88 90 160 166 284
+t/font.t       1   256    34    1  13
+t/listbox.t   19  4864   539   19  280 283-287 443-444 446-449 451 453 455-456
+                                   459 461 492
+ (24 subtests UNEXPECTEDLY SUCCEEDED), 188 subtests skipped.
+
+----------------------------------------------------------------------
+Older notes:
+
+For Tk804.025 to build properly on Mac OS X 10.2 (Jaguar) or 10.3
+(Panther), Perl must be built dynamic, rather that the default of
+static.  Use a Configure incantation similar to this:
+
+sh Configure -des -Duseshrplib [-Dprefix=/path/to/your/private/perl]
+
+Be sure you install the X11 SDK from the XTools developer CD - this
+installs the X11 C headers files, else the make will fail:
+
+    I installed the latest X11 from Apple, but the latest TK804 beta
+    gives me the following:
+
+    Using -L/usr/X11R6/lib to find /usr/X11R6/lib/libX11.dylib
+    Cannot find X include files via /usr/X11R6/include
+    Cannot find X include files anywhere at ./myConfig line 332.
+    Compilation failed in require at Makefile.PL line 32.
+    BEGIN failed--compilation aborted at Makefile.PL line 34.
+
+On my Panther (10.3.2) system, it can be found in:
+    
+    Applications->Installers->Developer Tools->Packages.

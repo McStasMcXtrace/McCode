@@ -1,0 +1,33 @@
+Copyright (c) 1997-1998 Jan Nijtmans, and possibly others.
+Copyright (c) 1998 Nick Ing-Simmons.
+All rights reserved. This package believed to be free software; you can
+redistribute it and/or modify it under the same terms as Perl itself.
+
+This module contains one a collection of format handlers for Tk
+written by Jan Nijtmans, adapted for perl/Tk by Nick Ing-Simmons.
+
+It can be used in combination with Tk800.005 or later.
+
+The "zlib" library must already be installed.
+The "png" library is bundled with this module as libpng directory.
+If you don't already have libpng then you can install it from there,
+but this process is not automated.
+
+More info about the PNG format (and sources) can be found via
+http://www.wco.com/~png/
+
+Valid format specifiers for reading photo's:
+  "png"
+
+Valid format specifiers for writing photo's:
+  "png Author <name> Title <title> Description ....."
+  	Each pair of arguments will add a named text chunk to the file.
+
+
+THANKS TO
+
+		Jan Nijtmans
+		CMG (Computer Management Group) Arnhem
+		email: nijtmans@worldaccess.nl (private)
+		       Jan.Nijtmans@cmg.nl (work)
+		url:   http://www.worldaccess.nl/~nijtmans/

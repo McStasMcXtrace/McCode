@@ -1,0 +1,55 @@
+#!/usr/local/bin/perl -w
+use blib;
+use Tk;
+use strict;
+no strict 'refs';
+BEGIN { $ENV{'PERL_DL_NONLAZY'} = 1 }
+require Tk;
+# $SIG{__WARN__} = sub { die shift };
+my ($dir) = $INC{'Tk.pm'} =~ /^(.*)\.pm$/;
+opendir(TK,$dir) || die "Cannot opendir $dir:$!";
+my @files = grep(/\.pm$/,readdir(TK));
+closedir(TK);
+my $file;
+my $count = 1;
+foreach $file (@files)
+ {
+  if ($file =~ /\.pm$/)
+   {
+    eval { require "Tk/$file" };
+    if ($@)
+     {
+      warn "Tk/$file: $@";
+     }
+   }
+ }
+
+use File::Find;
+my @al = ();
+find(sub { push(@al,$File::Find::name) if (/\.al$/); }, "$dir/../auto/Tk" );
+
+while (@al)
+ {
+  my $file = shift(@al);
+  require $file;
+ }
+
+sub dump_subs
+{
+ my $pack = shift;
+ warn "Dumping $pack\n";
+ foreach (sort keys %{$pack."::"})
+  {
+   local *foo = *{$pack."::$_"};
+   if (defined &foo)
+    {
+     print $pack."::$_\n";
+    }
+   elsif (/^(.*)::$/)
+    {
+     dump_subs($pack.'::'.$1);
+    }
+  }
+}
+
+dump_subs('Tk');

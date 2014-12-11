@@ -1,0 +1,17 @@
+#!/usr/local/bin/perl -w
+
+# XXX Does not work anymore: 
+# "can't pack ".dialog": it's a top-level window"
+
+use Tk;
+use Tk::Dialog;
+my $mw = MainWindow->new;
+
+my $b  = $mw->Button(-text => 'A button', -command => sub { print "A button\n"});
+my $t  = $mw->Dialog(-title => 'A Dialog', -text => 'A dialog has text');
+$t->withdraw;
+$t->idletasks;
+$t->wmCapture;
+$t->pack;
+$b->wmRelease;
+MainLoop;

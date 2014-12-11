@@ -1,0 +1,368 @@
+#!/usr/local/bin/perl
+
+# XXX Seems not to work, exits without an error message
+
+# use Memory (2440);
+
+# BEGIN { $ENV{'PERL_DL_NONLAZY'} = 1 }
+
+use Carp;
+
+$SIG{__DIE__} = sub { print "die ",shift,"\n" };
+
+
+use Tk qw(exit);
+# use Tk::Xrm;
+
+use Tk::widgets qw(Button Label Menu Photo Optionmenu Pixmap);
+use Tk::widgets qw(ErrorDialog Checkbutton Radiobutton Entry Message Listbox);
+
+
+use Config;
+
+sub showbinding
+{
+ my $w = shift;
+ foreach ($w->bind())
+  {
+   print "$w $_ = ",$w->bind($_),"\n";
+  }
+}
+
+sub test_back_trace
+{
+ my ($w,$count) = @_;
+ if ($count)
+  {
+   test_back_trace($w,$count-1);
+  }
+ else
+  {
+   $w->BackTrace("Moan");
+  }
+}
+
+sub back_trace
+{
+ my @info;
+ my $i = 0;
+ while (@info = caller($i))
+  {
+   print "$i: ",join(' ',@info),"\n";
+   $i++;
+  }
+}
+
+sub send_test
+{
+ my ($w) = @_;
+ my $result = eval { $w->send('basic_demo',"Hi there") };
+ die "Send failed '$@'" if ($@);
+ print "Send returned '$result'\n";
+}
+
+sub entry
+{
+ my $top = shift;
+ my $scroll = shift;
+ my $f  = ($scroll) ? $top->Frame() : $top;
+ my $e  = $f->Entry("-relief","ridge",@_);
+ $e->pack("-side"=>"top","-fill"=>"x","-expand"=>"yes");
+ $e->bind("<Any-Enter>", sub { shift->focus() });
+ $e->bind("<Any-FocusIn>",  sub { shift->configure("-relief" => "sunken") });
+ $e->bind("<Any-FocusOut>", sub { shift->configure("-relief" => "ridge" ) });
+ if ($scroll)
+  {
+   my $es = $f->Scrollbar("-orient"=>"horizontal","-command",["view",$e]);
+   $e->configure("-scrollcommand",["set",$es]);
+   $es->pack("-side"=>"bottom","-fill"=>"x");
+   $f->pack("-side","top");
+  }
+ return $e;
+}
+
+sub listbox
+{
+ my $top = shift;
+ my $l = $top->ScrlListbox("-selectmode"=>"extended",-label => 'Listbox');
+ foreach (@_)
+  {
+   $l->insert("end", "item" . $_);
+  }
+ $l->pack("-side","top","-fill","both","-expand","yes");
+ return $l;
+}
+
+sub button
+{
+ return shift->Button(@_)->pack(-side => 'left');
+}
+
+sub checkbutton
+{
+ my $top = shift;
+ my $b = $top->Checkbutton(@_);
+ $b->pack(-side => 'left');
+ return $b;
+}
+
+sub radiobutton
+{
+ my $top = shift;
+ my $b = $top->Radiobutton(@_);
+ $b->pack(-side => 'left');
+ return $b;
+}
+
+sub label
+{
+ my $top = shift;
+ my $w = $top->Label((@_) ? @_ : ('-text' => "A Label") );
+ $w->pack("-side"=>"bottom","-fill"=>"x");
+ return $w;
+}
+
+sub message
+{
+ my $top = shift;
+ my $w = $top->Message("-text","Press keys in blue square");
+ configure $w "-foreground","blue";
+ $w->pack("-fill"=>"x");
+ return $w;
+}
+
+sub keys
+{my $top = shift;
+ my $w = $top->Frame("-width",40, "-height",40,"-relief" => "ridge",
+                     "-background" => "blue", "-border" => 7,
+                     "-takefocus" => 1);
+ $w->bind("<Enter>", "focus");
+ $w->bind("<FocusIn>", NoOp);
+ $w->bind("<Any-Escape>",  sub { shift->toplevel->destroy()});
+ $w->bind("<Any-KeyPress>",
+      sub { my $w = shift;
+            my $e = $w->XEvent;
+            # print "Key(",join(',',@_),")\n";
+            my $K = $e->K();
+            my $A = $e->A();
+            print "press $K $A\n"
+          });
+ $w->pack();
+ return $w;
+}
+
+sub menubar
+{my $top  = shift;
+ require Tk::Menubar;
+ my $menu = $top->Menubar;
+ my $file = $menu->Menubutton("-text" => "File","-underline" => 0, -bg => 'ivory',
+            -tearoff => 0
+           );
+ $file->command("-label","Save","-command" => sub { print "Save\n" },"-underline" => 0);
+ $file->command("-label","Delete","-command" => sub { print "Delete\n" },"-underline" => 0);
+ $file->separator;
+ $file->command("-label","Quit","-command" => sub { $top->destroy },"-underline" => 0);
+ $file->pack("-side" => "left");
+
+ $file = $menu->Menubutton(-text => "Options", -underline => 0, -font => 'fixed');
+
+ $file->checkbutton('-label' => 'Strict ~Motif', '-variable' => 'Tk::strictMotif');
+
+ $file->separator;
+ $file->checkbutton('-label' => 'Oil checked', '-variable' => 'main::oil');
+ $file->checkbutton('-label' => 'Water checked', '-variable' => \$Water);
+ $file->cget('-menu')->bind('<ButtonRelease-1>',sub {print "Hey\n";});
+ $file->command("-label","Interps", "-underline" => 0,
+   "-command"  =>  sub { print 'Interps(',join(',',$file->interps),")\n" } );
+ $file->pack("-side" => "left");
+
+ $file = $menu->Menubutton(-text => "Exceptions",  -underline => 0);
+
+ $file->command("-label","Exit","-command"  => sub { exit 0 },"-underline" => 0);
+ $file->command("-label","Close","-command" => sub { close Gibberish },"-underline" => 0);
+ $file->command("-label","Moan","-command"  => [ \&test_back_trace, $file, 3 ],"-underline" => 0);
+ $file->command("-label","Trace","-command" => \&back_trace,"-underline" => 0);
+ $file->command("-label","Send","-command"  => [\&send_test,$top] );
+
+ $file->pack("-side" => "left");
+
+ my $help = $menu->Menubutton(-text => 'Help', -underline => 0,
+                              -menuitems => [[ Command => '~Versions', -command => [\&ShowVersion, $top ]]]
+                             );
+ $help->pack(-side => 'right');
+ return $menu;
+}
+
+sub entry_check
+{
+ my ($i);
+ for ($i = 0; $i < $entry->width; $i++)
+  {
+   my $cur = $entry->index('@'.$i);
+   print "$i => $cur\n";
+  }
+}
+
+sub popup
+{my $w = shift;
+ my $top = $w->MainWindow;
+ $w->{Cursor} = $top->cget("-cursor");
+ $top->configure("-cursor"=>"watch");
+ print "Event ",$Tk::event,"\n";
+ if (defined $e)
+  {
+   $w->wm("geometry",$e->X . "x" . $e->Y);
+  }
+ $w->deiconify;
+ $w->update;
+ $w->grab;
+}
+
+sub popdown
+{
+ my $w = shift;
+ my $top = $w->MainWindow;
+ $top->configure("-cursor"=> $w->{Cursor});
+ $w->grab("release");
+ $w->withdraw;
+}
+
+
+sub dialogue
+{my $top = shift;
+ my $t = $top->Toplevel("-class","Dialogue",-screen => $ENV{'DISPLAY'});
+ my $l = &label($t,@_);
+ my $b = &button($t,"-text","OK","-command"=>[ \&popdown ,$t]);
+ $t->wm("group",$top);
+ $t->wm("transient",$top);
+ $t->wm("withdraw");
+ $t->wm("minsize",0,0);
+ $l->pack("-side"=> "top", "-expand" => 1, "-fill" => "both");
+ $b->pack("-side"=> "bottom");
+ $t->wm("protocol","WM_DELETE_WINDOW",[\&popdown,$t]);
+ return $t;
+}
+
+$top = MainWindow->new();
+
+$con = $top->Scrolled('Text', -height => 6)->pack(-side => 'bottom', -fill => 'x');
+
+tie *STDOUT,Tk::Text,$con->Subwidget('text');
+tie *STDERR,Tk::Text,$con->Subwidget('text');
+
+$top->optionAdd($top->Name.'*Dialog*Background', 'yellow');
+
+$Tk::_mw_ = $top;
+
+$top->bind('MainWindow','<Map>',
+            sub {
+                 printf "Mapped %.3g Sec. after bootstrap (u=%.3g s=%.3g)\n",Tk::Time_So_Far,times;
+                 printf("%gK\n",Memory->used/1024) if (defined &Memory::used);
+                 system("/bin/ps","-o",'vsz,osz,rss,pmem,time','-p',$$) if ($^O eq 'solaris');
+                }
+          );
+
+$camel   = $top->Photo('-file'  => Tk->findINC("Xcamel.gif"));
+
+# print "camel is ",$camel->width," wide\n";
+
+if (@ARGV)
+ {
+  $top->CmdLine;
+  print "ARGV now ",join(' ',@ARGV),"\n"
+ }
+
+sub ShowVersion
+{my ($top) = @_;
+ my $d = $top->Dialog(-title => 'Versions',
+                      -popover => $top,
+                      -image => $camel,
+                      -text =>
+"Core Tk version : $Tk::version
+Tk patchLevel : $Tk::patchLevel
+library : $Tk::library
+perl/Tk Version : $Tk::VERSION\n",-justify => 'center');
+ $d->Show;
+}
+
+
+$fred = "Initial Text";
+$oil  = 1;
+my $bl = $top->Balloon;
+
+&menubar($top);
+
+my $bf = $top->Frame->pack(-fill => 'x');
+
+$bf->Optionmenu(-textvariable => \$option,
+                 -options => [qw(one two three four)],
+                 -command => sub { print "Optionmenu set to: ",shift,"\n"}
+                )->pack(-side => 'right');
+
+my $be = $bf->BrowseEntry(-variable => \$option )->pack(-side => 'right');
+$be->insert('end',qw(one two three four));
+
+$QuitPB  = $top->Pixmap('-file' => Tk->findINC("demos/images/QuitPB.xpm"));
+$QuitPBa = $top->Pixmap('-file' => Tk->findINC("demos/images/QuitPBa.xpm"));
+
+my $q = &button($bf,"-image",$QuitPB,"-activeimage",$QuitPBa,
+        "-command", sub { $top->destroy });
+$bl->attach($q, -msg => "Exit Application");
+
+&button($bf,"-text","Push me","-command",
+         [ sub {print "push(",join(',',@_),")\n"}, 1, Two , "iii" ]);
+&checkbutton($bf,"-text","oil","-variable",\$oil);
+&checkbutton($bf,"-text","water","-variable",main::Water);
+&radiobutton($bf,"-text","one","-variable",\$option,"-value"=>"one");
+&radiobutton($bf,"-text","two","-variable",\$option,"-value"=>"two");
+&radiobutton($bf,"-text","three","-variable",\$option,"-value"=>"three");
+&button($bf,"-text","State","-command",
+         sub {print "water=$main::Water oil=$oil option=$option\n"});
+&button($bf,"-text","Chop","-command", sub { chop($fred) });
+
+$main::Water = 1;
+
+
+$entry = &entry($top,0,"-width","30","-textvariable",\$fred);
+&message($top);
+&keys($top);
+&label($top,"-bitmap"=>"info");
+
+
+$l = &listbox($top,1..25);
+&button($top,"-bitmap",'@'.Tk->findINC("demos/images/c.icon"),"-command", [ sub { shift->SetList(<*.c>) }, $l ] );
+
+$pic = $top->Photo("-file" => Tk->findINC("demos/images/earthris.gif"));
+
+$d = dialogue($top, "-image" => $pic );
+
+$p = &button($top,"-text" => "popup picture", "-command" => [ \&popup , $d ]);
+$p = &button($top,"-text" => "bisque", "-command" => [ 'bisque', $top ]);
+$p = &button($top,"-text" => "Busy",
+     "-command" => sub { $top->Busy; $top->after(5000); $top->Unbusy });
+
+# Check that we have not broken array context again...
+
+# print join(',',$top->children),"\n";
+
+$top->Icon(-image => $camel);
+
+$top->property("set",MYPROP,AREA,32,[1,2,3,4,5]);
+
+$top->update("idletasks");
+
+if (open(Gibberish,"</dev/tty"))
+ {
+  $top->fileevent(Gibberish,'readable',[sub { my ($fh) = @_; print "stdin:",scalar <$fh> },\*Gibberish]);
+ }
+else
+ {
+  warn "Cannot open /dev/tty:$!";
+ }
+
+# print "imageNames(",join(',',$top->imageNames),")\n";
+# print "imageTypes(",join(',',$top->imageTypes),")\n";
+
+Tk::MainLoop();
+
+

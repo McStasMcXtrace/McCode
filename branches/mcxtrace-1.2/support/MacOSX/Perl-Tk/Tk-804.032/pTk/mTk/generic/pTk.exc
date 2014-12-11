@@ -1,0 +1,10 @@
+# This file is read by pTk/Makefile.PL
+# The generic tk C sources mentioned here are
+# NOT used by perl/Tk
+tkArgv.c       # perl does our command line
+tkConsole.c
+tkMain.c       # perl is our main
+tkTest.c
+# tkImgGIF.c
+tkStubInit.c   # we have our own nested loadable scheme
+tkStubLib.c    # we have our own nested loadable scheme

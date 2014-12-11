@@ -1,0 +1,35 @@
+#!/usr/local/bin/perl
+
+@files = @ARGV;
+
+$^I = ".bak";
+
+# Converts Text->new($parent) into $parent->Text()
+# Converts -variable => $fred into -variable => \$fred
+
+foreach $file (@files)
+ {
+  print STDERR "$file:\n";
+  @ARGV = ($file);
+  while (<>)
+   {
+    if (/[A-Z][a-z]+->new/)
+     {
+      s/([A-Z][A-Z0-9_a-z]+)->new\(\s*([^),]+)(,\s*)?/$2->$1(/;
+      print STDERR;
+     }
+    if (/\b[A-Z]*VARIABLE\s*=>\s*\$/)
+     {
+      s/\b([A-Z]*VARIABLE\s*=>\s*)(\$)/$1\\$2/g;
+      print STDERR;
+     }
+    if (/'-[a-z]*variable'\s*=>\s*\$/)
+     {
+      s/('-[a-z]*variable'\s*=>\s*)(\$)/$1\\$2/g;
+      print STDERR;
+     }
+    print;
+   }
+ }
+
+

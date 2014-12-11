@@ -1,0 +1,90 @@
+#define IMPORT_VTABLE(ptr,type,name) do {                       \
+  ptr = INT2PTR(type *,SvIV(get_sv(name,GV_ADDWARN|GV_ADD)));   \
+  if ((*ptr->tabSize)() != sizeof(type)) {                      \
+    Perl_warn(aTHX_ "%s wrong size for %s",name,#type);         \
+  }                                                             \
+ } while (0)
+
+#ifdef WIN32
+#define DECLARE_VTABLES	\
+LangVtab           *LangVptr;          \
+TcldeclsVtab       *TcldeclsVptr;      \
+TkVtab             *TkVptr;            \
+TkdeclsVtab        *TkdeclsVptr;       \
+TkeventVtab        *TkeventVptr;       \
+TkglueVtab         *TkglueVptr;        \
+TkintVtab          *TkintVptr;         \
+TkintdeclsVtab     *TkintdeclsVptr;    \
+TkintplatdeclsVtab *TkintplatdeclsVptr;\
+TkintxlibdeclsVtab *TkintxlibdeclsVptr;\
+TkoptionVtab       *TkoptionVptr;      \
+TkplatdeclsVtab    *TkplatdeclsVptr
+
+#define IMPORT_VTABLES	do { \
+IMPORT_VTABLE(LangVptr          ,          LangVtab,"Tk::LangVtab");           \
+IMPORT_VTABLE(TcldeclsVptr      ,      TcldeclsVtab,"Tk::TcldeclsVtab");       \
+IMPORT_VTABLE(TkVptr            ,            TkVtab,"Tk::TkVtab");             \
+IMPORT_VTABLE(TkdeclsVptr       ,       TkdeclsVtab,"Tk::TkdeclsVtab");        \
+IMPORT_VTABLE(TkeventVptr       ,       TkeventVtab,"Tk::TkeventVtab");        \
+IMPORT_VTABLE(TkglueVptr        ,        TkglueVtab,"Tk::TkglueVtab");         \
+IMPORT_VTABLE(TkintVptr         ,         TkintVtab,"Tk::TkintVtab");          \
+IMPORT_VTABLE(TkintdeclsVptr    ,    TkintdeclsVtab,"Tk::TkintdeclsVtab");     \
+IMPORT_VTABLE(TkintplatdeclsVptr,TkintplatdeclsVtab,"Tk::TkintplatdeclsVtab"); \
+IMPORT_VTABLE(TkintxlibdeclsVptr,TkintxlibdeclsVtab,"Tk::TkintxlibdeclsVtab"); \
+IMPORT_VTABLE(TkoptionVptr      ,      TkoptionVtab,"Tk::TkoptionVtab");       \
+IMPORT_VTABLE(TkplatdeclsVptr   ,   TkplatdeclsVtab,"Tk::TkplatdeclsVtab");    \
+} while (0)
+#else
+#define DECLARE_VTABLES	\
+LangVtab           *LangVptr;          \
+TcldeclsVtab       *TcldeclsVptr;      \
+TkVtab             *TkVptr;            \
+TkdeclsVtab        *TkdeclsVptr;       \
+TkeventVtab        *TkeventVptr;       \
+TkglueVtab         *TkglueVptr;        \
+TkintVtab          *TkintVptr;         \
+TkintdeclsVtab     *TkintdeclsVptr;    \
+TkoptionVtab       *TkoptionVptr;      \
+XlibVtab           *XlibVptr
+
+#define IMPORT_VTABLES	do { \
+IMPORT_VTABLE(LangVptr          ,          LangVtab,"Tk::LangVtab");           \
+IMPORT_VTABLE(TcldeclsVptr      ,      TcldeclsVtab,"Tk::TcldeclsVtab");       \
+IMPORT_VTABLE(TkVptr            ,            TkVtab,"Tk::TkVtab");             \
+IMPORT_VTABLE(TkdeclsVptr       ,       TkdeclsVtab,"Tk::TkdeclsVtab");        \
+IMPORT_VTABLE(TkeventVptr       ,       TkeventVtab,"Tk::TkeventVtab");        \
+IMPORT_VTABLE(TkglueVptr        ,        TkglueVtab,"Tk::TkglueVtab");         \
+IMPORT_VTABLE(TkintVptr         ,         TkintVtab,"Tk::TkintVtab");          \
+IMPORT_VTABLE(TkintdeclsVptr    ,    TkintdeclsVtab,"Tk::TkintdeclsVtab");     \
+IMPORT_VTABLE(TkoptionVptr      ,      TkoptionVtab,"Tk::TkoptionVtab");       \
+IMPORT_VTABLE(XlibVptr          ,          XlibVtab,"Tk::XlibVtab");           \
+} while (0)
+#endif
+#define DECLARE_TIX	\
+TixVtab            *TixVptr;           \
+TixintVtab         *TixintVptr
+
+#define IMPORT_TIX	do { \
+IMPORT_VTABLE(TixVptr           ,           TixVtab,"Tk::TixVtab");            \
+IMPORT_VTABLE(TixintVptr        ,        TixintVtab,"Tk::TixintVtab");         \
+} while (0)
+#define DECLARE_PHOTO	\
+ImgintVtab         *ImgintVptr;        \
+TkimgphotoVtab     *TkimgphotoVptr
+
+#define IMPORT_PHOTO	do { \
+IMPORT_VTABLE(ImgintVptr        ,        ImgintVtab,"Tk::ImgintVtab");         \
+IMPORT_VTABLE(TkimgphotoVptr    ,    TkimgphotoVtab,"Tk::TkimgphotoVtab");     \
+} while (0)
+#define DECLARE_EVENT	\
+TkeventVtab        *TkeventVptr
+
+#define IMPORT_EVENT	do { \
+IMPORT_VTABLE(TkeventVptr       ,       TkeventVtab,"Tk::TkeventVtab");        \
+} while (0)
+#define DECLARE_TIXXPM	\
+TiximgxpmVtab      *TiximgxpmVptr
+
+#define IMPORT_TIXXPM	do { \
+IMPORT_VTABLE(TiximgxpmVptr     ,     TiximgxpmVtab,"Tk::TiximgxpmVtab");      \
+} while (0)

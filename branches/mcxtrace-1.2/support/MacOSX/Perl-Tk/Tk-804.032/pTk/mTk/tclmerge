@@ -1,0 +1,82 @@
+#!/usr/local/bin/perl -w
+
+use strict;
+
+use File::Copy;
+use File::Compare;
+
+my $tdir = $ENV{'HOME'}."/tcl";
+my $ntcl = "$tdir/tcl8.0b2";
+my $otcl = "$tdir/tcl7.6p2";
+my $ntk  = "$tdir/tk8.0b2";
+my $otk  = "$tdir/tk4.2p2";
+
+open(FIXUP,">Fixup");
+
+sub mergedir
+{
+ foreach (@_)
+  {
+   die "No $_\n" unless (-d $_);
+  }
+ my ($ptk,$old,$new) = @_;
+ my %done;
+ opendir(DIR,$new) || die "Cannot open $new:$!";
+ my $file;
+ while (defined($file = readdir(DIR)))
+  {
+   if ($file =~ /\.[ch]$/)
+    {
+     my $nf = "$new/$file";
+     next unless -r $nf;
+     my $of = "$old/$file";
+     my $pf = "$ptk/$file";
+     unless (-r $pf)
+      {
+       copy($nf,$pf);
+       my $code = system('p4','add',$pf);
+       die "Cannot add $pf\n" if $code;
+       print "$pf added\n";
+       next;
+      }
+     $of = "/dev/null" unless (-r $of);
+     if (compare($of,$nf))
+      {
+       # Tcl/Tk version has changed
+       if (compare($nf,$pf))
+        {
+         my $code = system('p4','edit',$pf);
+         die "Cannot edit $pf\n" if $code;
+         $code = system('merge',$pf,$of,$nf);
+         if ($code)
+          {
+           print "$pf needs fixing\n";
+           print FIXUP "$pf\n";
+          }
+         else
+          {
+           print "$pf merged okay\n";
+          }
+        }
+       else
+        {
+         print "cmp $nf $pf - idential to source\n";
+        }
+      }
+     else
+      {
+       print "cmp $of $nf - unchanged in source\n";
+      }
+    }
+  }
+ closedir(DIR);
+}
+
+mergedir("unix","$otk/unix","$ntk/unix");
+mergedir("tclGeneric","$otcl/generic","$ntcl/generic");
+mergedir("tclUnix","$otcl/unix","$ntcl/unix");
+mergedir("tclWin","$otcl/win","$ntcl/win");
+mergedir("generic","$otk/generic","$ntk/generic");
+mergedir("win","$otk/win","$ntk/win");
+
+close(FIXUP);

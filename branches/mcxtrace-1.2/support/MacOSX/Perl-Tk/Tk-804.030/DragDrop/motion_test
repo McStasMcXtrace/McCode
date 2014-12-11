@@ -1,0 +1,56 @@
+#!/usr/local/bin/perl -w
+use Tk;
+use strict;
+use Tk::DragDrop;
+use Tk::DropSite;
+
+Tk::DragDrop->import(@ARGV);
+Tk::DropSite->import(@ARGV);
+
+my $top = MainWindow->new();
+$top->Button('-text' => "Quit", '-command' => ['destroy',$top])->pack;
+
+my $f = $top->Frame->pack;
+
+my $sun = $f->Label(-relief => 'ridge','-text' => "Sun")->pack(-side => 'left');
+$sun->DragDrop(-event => '<B1-Motion>', -text => 'Sun', -sitetypes => [qw(Sun)]);
+
+my $either = $f->Label(-relief => 'ridge','-text' => "Either")->pack(-side => 'left');
+$either->DragDrop(-event => '<B1-Motion>', -text => 'Either', -sitetypes => [qw(Local Sun)]);
+
+my $loc = $f->Label(-relief => 'ridge','-text' => "Loc")->pack(-side => 'right');
+$loc->DragDrop(-event => '<B1-Motion>', -text => 'Local', -sitetypes => [qw(Local)]);
+
+my $canvas = $top->Canvas(-width => 200, -height => 200,
+                          -relief => 'groove', -borderwidth => 3)->pack;
+
+my $sid = $canvas->create('oval',0,0,10,10,-fill => 'red');
+my $lid = $canvas->create('oval',0,0,10,10,-fill => 'blue');
+
+$canvas->DropSite(-motioncommand => [\&Motion,$canvas,"Sun",$sid],
+                       -dropcommand   => [\&Drop,$canvas,"Sun",$sid],
+                       -droptypes => 'Sun' );
+$canvas->DropSite(-motioncommand => [\&Motion,$canvas,"Loc",$lid],
+                  -dropcommand   => [\&Drop,$canvas,"Sun",$lid],
+                  -droptypes => 'Local' );
+
+MainLoop;
+
+sub Motion
+{
+ my ($canvas,$type,$id,$x,$y) = @_;
+ $canvas->coords($id,$x-5,$y-5,$x+5,$y+5);
+ # printf "$type x=%3d y=%3d\n",$x,$y;
+}
+
+sub Drop
+{
+ my ($canvas,$type,$id,$seln,$x,$y) = @_;
+ Motion($canvas,$type,$id,$x,$y);
+ my $text = $canvas->SelectionGet(-selection => $seln);
+ my $col  = $canvas->itemcget($id,'-fill');
+ $canvas->create('text',$x,$y,-text => $text, -justify => 'center', -fill => $col);
+}
+
+
+

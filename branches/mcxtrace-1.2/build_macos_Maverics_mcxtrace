@@ -1,0 +1,64 @@
+#!/bin/sh
+
+if [ "x$1" = "x" ]; then
+    # No arguments
+    echo Please provide one argument,e.g : $0 2.0
+    exit 1;
+fi
+
+if [ "x$2" != "x" ]; then
+    # If this is a meta-package being built, we should aim for installation in /Applications...
+    # For the actual mcxtrace part, the packages need a 'deep' PREFIX
+    export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/Contents/Resources/
+fi
+
+
+# 64-bit Mac OS
+./mkdist mcxtrace $1 "" "" mac_maverics "" -- OSXpkg
+./mkdist mcxtrace-comps $1 "" "" mac_maverics "" -- OSXpkg
+./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" mac_maverics "" -- OSXpkg
+./mkdist mcxtrace-tools-python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_maverics "" -- OSXpkg
+./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_maverics "" -- OSXpkg
+./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mac_maverics "" -- OSXpkg
+./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" mac "" -- OSXpkg
+./mkdist mcxtrace-tools-python-mxdisplay-r $1 tools/Python/mcdisplay/R/ "" mac "" -- OSXpkg
+./mkdist mcxtrace-tools-python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac "" -- OSXpkg
+./mkdist mcxtrace-tools-python-mxdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac "" -- OSXpkg
+./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" mac_maverics "" -- OSXpkg
+
+if [ "x$2" != "x" ]; then
+    # If this is a meta-package being built, we should aim for installation in /opt/mccode
+    export MCINSTALL_PREFIX=/usr/local/
+fi
+./mkdist mcxtrace-gcc $1 support/MacOSX/gcc-hpc/10.9 "" mac "" -- OSXpkg
+./mkdist mcxtrace-openmpi $1 support/MacOSX/openmpi/10.9 "" mac "" -- OSXpkg
+
+if [ "x$2" != "x" ]; then
+    # Build the App bundle and meta-package also.
+    # The App needs a higher-level PREFIX
+    export MCINSTALL_PREFIX=/Applications/McXtrace-$1.app/
+    ./mkdist mcxtrace-app $1 support/MacOSX/McCode.app/ "" mac_maverics "" -- OSXpkg
+
+    OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
+    
+    cd dist
+    DISTDIR=$PWD
+    # For now, use the Tk for perl5.12 from Mountain Lion...
+    unzip ../support/MacOSX/Perl-Tk/Tk-*10_8*zip
+    unzip ../support/MacOSX/SciPDL/SciPDL-v2.4.10-Lion.pkg.zip
+    cd -
+    # A hack for creating a metapackage
+    cp -rp meta-pkgs/OSX/McXtrace-Metapackage_10_9.pmdoc dist/McXtrace-Metapackage.pmdoc
+    cp -rp meta-pkgs/OSX/mcxtrace_logos_etc dist/logos_etc
+    cd dist/McXtrace-Metapackage.pmdoc    
+
+    REGEX="s/@VERSION@/${1}/g"
+    REGEXDIR="s+@DISTDIR@+${DISTDIR}+g"
+    
+    find . -name \*xml -exec sed -i\.bak $REGEX \{\} \;
+    find . -name \*xml -exec sed -i\.bak2 $REGEXDIR \{\} \;
+    rm *.bak
+    rm *.bak2
+    cd ..
+    open McXtrace-Metapackage.pmdoc
+fi

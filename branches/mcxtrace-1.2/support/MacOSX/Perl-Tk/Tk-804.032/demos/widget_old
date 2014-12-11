@@ -1,0 +1,252 @@
+#!/usr/bin/env perl
+#
+# This script demonstrates the various widgets provided by Tk, along with many of the features of the Tk toolkit.  This file
+# only contains code to generate the main window for the application, which invokes individual demonstrations.  The code for
+# the actual demonstrations is contained in separate ".pl" files in the directory "widget_lib", which are auto-loaded by Perl
+# when they are needed.  To find the code for a particular demo, look below for the procedure that's invoked by its menu entry,
+# then grep for the file that contains the procedure definition.
+#
+# Tcl/Tk -> Perl translation by Stephen O. Lidie.  lusol@Lehigh.EDU  95/01/08
+
+
+require 5.001;
+
+use Tk;
+use Tk::Dialog;
+use English;
+
+$auto_path = "Tk/demos/widget_lib";
+
+sub AUTOLOAD {
+
+    # This routine handles the loading of most menu button methods.
+
+    my($prefix, $method) = $AUTOLOAD =~ /(.*)::(.+)$/;
+    eval "require \"$auto_path/${method}.pl\"";
+    die $@ if $@;
+    goto &$AUTOLOAD;
+
+} # end AUTOLOAD
+
+
+sub dpos {
+
+    # Position a window at a reasonable place on the screen.
+
+    shift->geometry('+300+300');
+
+} # end dpos
+
+
+sub insert_with_tags {
+
+    # The procedure below inserts text into a given text widget and applies one or more tags to that text.  The arguments are:
+    #
+    # w		Window in which to insert
+    # text	Text to insert (it's inserted at the "insert" mark)
+    # args	One or more tags to apply to text.  If this is empty then all tags are removed from the text.
+
+    my($w, $text, @args) = @_;
+    my($tag, $i, $start);
+
+    $start = $w->index('insert');
+    $w->insert('insert', $text);
+    foreach $tag ($w->tag('names', $start)) {
+	$w->tag('remove', $tag, $start, 'insert');
+    }
+    foreach $i (@args) {
+	$w->tag('add', $i, $start, 'insert');
+    }
+
+} # end insert_with_tags
+
+
+sub lsearch {
+
+    # Search the list using the supplied regular expression and return it's ordinal, or -1 if not found.
+
+    my($regexp, @list) = @_;
+    my($i);
+
+    for ($i=0; $i<=$#list; $i++) {
+        return $i if $list[$i] =~ /$regexp/;
+    }
+    return -1;
+
+} # end lsearch
+
+
+sub mkmb {
+
+    # Make a Menubutton widget; note that the menu is automatically created.  We maintain a list of the Menubutton references
+    # since some callers need to refer to the Menubutton, as well as to suppress stray name warnings with Perl -w.
+
+    my($mb_label, $mb_label_underline, $mb_list_ref) = @_;
+
+    my $mb = $menu->Menubutton(-text => $mb_label, -underline => $mb_label_underline);
+    foreach $mb_list (@{$mb_list_ref}) {
+	$mb->command(-label => $mb_list->[0], -command => $mb_list->[1] , -underline => $mb_list->[2]);
+    }
+    $mb->pack(-side => 'left');
+    push @menu_button_list, $mb;
+
+} # end mkmb
+
+
+$top = MainWindow->new;
+$top->title('Widget Demonstration');
+
+# The code below creates the main window, consisting of a menu bar and a message explaining the basic operation of the program.
+
+$menu = $top->Frame(-relief => 'raised', -borderwidth => 1);
+$mess = $top->Message(-font => '-Adobe-times-medium-r-normal--*-180-*-*-*-*-*-*', -relief => 'raised', -width => 500,
+		     -borderwidth => 1, -text => "This application demonstrates the widgets provided by the Tk toolkit.  " .
+		     "The menus above are organized by widget type:  each menu contains one or more demonstrations of a " .
+		     "particular type of widget.  To invoke a demonstration, press mouse button 1 over one of the menu " .
+		     "buttons above, drag the mouse to the desired entry in the menu, then release the mouse button.\n\nTo " .
+		     "exit this demonstration, invoke the \"Quit\" entry in the \"Misc\" menu.");
+
+$menu->pack(-side => 'top', -fill => 'x');
+$mess->pack(-side, 'bottom', -expand => 'yes', -fill => 'both');
+
+# The code below creates all the Dialog objects required by this widget demonstration program.
+
+$DialogRef_bml = $top->Dialog(-title => 'Bitmap menu label');
+
+$DialogRef_bml->Subwidget('message')->configure(-wraplength => '2.5i', -text => 'The menu entry you invoked displays a bitmap ' .
+			  'rather than a text string.  Other than this, it is just like any other menu entry.');
+
+$DialogRef_lg = $top->Dialog(-title => 'Modal dialog (local grab)');
+$DialogRef_lg->Subwidget('message')->configure(-wraplength => '4i', -justify => 'left', -text =>'This dialog box is a modal one.  ' .
+			 'It uses Tk\'s "grab" command to create a "local grab" on the dialog box.  The grab ' .
+			 'prevents any pointer-related events from getting to any other windows in the application.  ' .
+			 'If you press the "OK" button below (or hit the Return key) then the dialog box will go ' .
+			 'away and things will return to normal.');
+
+$DialogRef_gg = $top->Dialog(-title => 'Modal dialog (global grab)');
+$DialogRef_gg->Subwidget('message')->configure(-wraplength => '4i', -text => 'This is another modal dialog box.  However, in this ' .
+		         'case a "global grab" is used, which locks up the display so you can\'t talk to any windows in ' .
+			 'any applications anywhere, except for the dialog.  If you press the "OK" button below (or hit ' .
+			 'the Return key) then the dialog box will go away and things will return to normal.');
+
+# The code below creates all the menus, which invoke procedures to create particular demonstrations of various widgets.
+
+mkmb('Labels_Buttons', 7,
+     [
+      ['Labels',                     \&mkLabel,                                          0],
+      ['Buttons',                    \&mkButton,                                         0],
+      ['Checkbuttons',               \&mkCheck,                                          0],
+      ['Radiobuttons',               \&mkRadio,                                          0],
+      ['15-puzzle',                  \&mkPuzzle,                                         0],
+      ['Iconic buttons',             \&mkIcon,                                           0],
+     ]);
+$menu_button_list[$#menu_button_list]->configure(-text => 'Labels/Buttons');
+
+mkmb('Listboxes',      0,
+     [
+      ['States',                     \&mkListbox,                                        0],
+      ['Colors',                     \&mkListbox2,                                       0],
+      ['Well-known sayings',         \&mkListbox3,                                       0],
+     ]);
+
+mkmb('Entries',        0,
+     [
+      ['Without scrollbars',         \&mkEntry,                                          4],
+      ['With scrollbars',            \&mkEntry2,                                         0],
+      ['Simple form',                \&mkForm,                                           0],
+     ]);
+
+mkmb('Text',           0,
+     [
+      ['Basic text',                 \&mkBasic,                                          0],
+      ['Display styles',             \&mkStyles,                                         0],
+      ['Command bindings',           \&mkTextBind,                                       0],
+      ['Embedded windows',           \&mkTextWind,                                       0],
+      ['Search',                     \&mkTxtSearch,                                     0],
+     ]);
+
+mkmb('Scrollbars',     0,
+     [
+      ['Vertical',                   \&mkListbox2,                                       0],
+      ['Horizontal',                 \&mkEntry2,                                         0],
+     ]);
+
+mkmb('Scales',         2,
+     [
+      ['Vertical',                   \&mkVScale,                                         0],
+      ['Horizontal',                 \&mkHScale,                                         0],
+     ]);
+
+mkmb('Canvases',       0,
+     [
+      ['Item types',                 \&mkItems,                                          0],
+      ['2-D plot',                   \&mkPlot,                                           0],
+      ['Text',                       \&mkCanvText,                                       0],
+      ['Arrow shapes',               \&mkArrow,                                          0],
+      ['Ruler',                      \&mkRuler,                                          0],
+      ['Scrollable canvas',          \&mkScroll,                                         0],
+      ['Floor plan',                 \&mkFloor,                                          0],
+     ]);
+
+$MENUS_HI = 'Print hello';
+$MENUS_BY = 'Print goodbye';
+$MENUS_CB = 'Check buttons';
+$MENUS_RB = 'Radio buttons';
+mkmb('Menus',          0,
+     [
+      [$MENUS_HI,                    sub {print STDOUT "Hello\n"},                       6],
+      [$MENUS_BY,                    sub {print STDOUT "Goodbye\n"},                     6],
+      ['Light blue background',      sub {$mess->configure(-background => 'LightBlue1')}, 0],
+     ]);
+$mess->bind('<Any-Enter>' => sub {shift->focus});
+$mess->bind('<Control-a>' => sub {print STDOUT "Hello\n"});
+$mess->bind('<Control-b>' => sub {print STDOUT "Goodbye\n"});
+my $menus = $menu_button_list[$#menu_button_list]->cget('-menu'); # get Menubutton "Menus" auto-created menu
+$menus->entryconfigure($MENUS_HI, -accelerator => 'Control+a');
+$menus->entryconfigure($MENUS_BY, -accelerator => 'Control+b');
+$menus->cascade(-label => $MENUS_CB, -underline => 0);
+$menus->cascade(-label => $MENUS_RB, -underline => 0);
+$menus->command(-bitmap => '@'.Tk->findINC('demos/images/pattern'), -command => sub {$DialogRef_bml->Show});
+
+my $menus_check = $menus->Menu();
+$menus->entryconfigure($MENUS_CB, -menu => $menus_check);
+$oil = 0;
+$trans = 0;
+$brakes = 0;
+$lights = 0;
+$menus_check->checkbutton(-label => 'Oil checked', -variable => \$oil);
+$menus_check->checkbutton(-label => 'Transmission checked', -variable => \$trans);
+$menus_check->checkbutton(-label => 'Brakes checked', -variable => \$brakes);
+$menus_check->checkbutton(-label => 'Lights checked', -variable => \$lights);
+$menus_check->separator;
+$menus_check->command(-label => 'Show current values', -command => [\&showVars, $top, qw(oil trans brakes lights)]);
+$menus_check->invoke(1);
+$menus_check->invoke(3);
+
+my $menus_radio = $menus->Menu();
+$menus->entryconfigure($MENUS_RB, -menu => $menus_radio);
+$pointSize = 0;
+$style = 'roman';
+$menus_radio->radiobutton(-label => '10 point', -variable => \$pointSize, -value => 10);
+$menus_radio->radiobutton(-label => '14 point', -variable => \$pointSize, -value => 14);
+$menus_radio->radiobutton(-label => '18 point', -variable => \$pointSize, -value => 18);
+$menus_radio->radiobutton(-label => '24 point', -variable => \$pointSize, -value => 24);
+$menus_radio->radiobutton(-label => '32 point', -variable => \$pointSize, -value => 32);
+$menus_radio->separator;
+$menus_radio->radiobutton(-label => 'Roman', -variable => \$style, -value => 'roman');
+$menus_radio->radiobutton(-label => 'Bold', -variable => \$style, -value => 'bold');
+$menus_radio->radiobutton(-label => 'Italic', -variable => \$style, -value => 'italic');
+$menus_radio->separator;
+$menus_radio->command(-label => 'Show current values', -command => [\&showVars, $top, 'pointSize', 'style']);
+$menus_radio->invoke(1);
+$menus_radio->invoke(7);
+
+mkmb('Misc',           1,
+     [
+      ['Modal dialog (local grab)',  sub {$DialogRef_lg->Show},                         14],
+      ['Modal dialog (global grab)', sub {$DialogRef_gg->Show('-global')},              14],
+      ['Built-in bitmaps',           \&mkBitmaps,                                        0],
+      ['Quit', \&exit, 0],
+     ]);
+
+MainLoop;

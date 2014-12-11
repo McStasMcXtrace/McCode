@@ -1,0 +1,72 @@
+#  Copyright (c) 1994 The Regents of the University of California.
+#  Copyright (c) 1994 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#  @(#) EventInit.3 1.4 95/05/06 15:29:22
+#
+
+=head1 NAME
+
+Tk_EventInit - Use the Tk event loop without the rest of Tk
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+int
+B<Tk_EventInit>(I<interp>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter in which event-related Tk commands are to be created.
+
+=back
+
+=head1 DESCRIPTION
+
+This procedure may be invoked to use the Tk event management functions
+without the rest of Tk (e.g., in applications that do not have access
+to a display).
+B<Tk_EventInit> creates the B<after> and B<fileevent> commands
+in I<interp>.
+It also creates versions of the B<tkwait> and B<update> commands
+with reduced functionality:  the B<tkwait> command supports only
+the B<variable> option, not B<visibility> or $widget,
+and B<update> does not check for X events.
+B<Tk_EventInit> always returns B<TCL_OK> to signal that it
+completed successfully.
+
+The event-management procedures in Tk are divided into two
+groups, those that can be used stand-alone and those that
+require the full Tk library to be present.
+The following procedures may be used stand-alone:
+B<Tk_CreateFileHandler>, B<Tk_CreateFileHandler2>,
+B<Tk_DeleteFileHandler>, B<Tk_CreateTimerHandler>,
+B<Tk_DeleteTimerHandler>, B<Tk_DoWhenIdle>, B<Tk_CancelIdleCall>,
+B<Tk_DoOneEvent>, B<Tk_Sleep>, and B<Tk_BackgroundError>.
+Note that B<Tk_MainLoop> cannot be used without the full Tk library,
+since it checks to see if windows are still open.
+If an application uses the event procedures stand-alone, it must
+include its own main loop that invokes B<Tk_DoOneEvent> repeatedly.
+
+B<Tk_EventInit> is typically called from an application's
+B<Tcl_AppInit> procedure;  it should not be invoked in applications
+that use the full Tk library (e.g., those that have already invoked
+B<Tk_CreateMainWindow>).
+However, it is OK for an application to start up using B<Tk_EventInit>,
+compute without X for a while, and later invoke B<Tk_CreateMainWindow>.
+When B<Tk_CreateMainWindow> is invoked, the full suite of windowing
+Tcl commands will become available, and the full-blown versions of
+B<tkwait> and B<update> will replace the abridged versions
+created with B<Tk_EventInit>.
+
+=head1 KEYWORDS
+
+event management, Tcl_AppInit

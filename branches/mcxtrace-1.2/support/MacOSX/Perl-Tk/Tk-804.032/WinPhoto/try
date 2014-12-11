@@ -1,0 +1,58 @@
+#!/usr/local/bin/perl -w
+use Tk;
+use Tk::WinPhoto;
+use Cwd;
+
+my $mw = MainWindow->new;
+my $img = $mw->Photo();
+my @fmt = grep(!/^window$/i,$img->formats);
+my $frm  = $mw->Frame->pack;
+$frm->Button(-text => 'Quit', -command => [destroy => $mw ])
+    ->pack(-side => 'left');
+my $b = $frm->Button(-text => 'Capture This', -command => \&Self)
+    ->pack(-side => 'left');
+my $grab = $frm->Label(-text => 'Grab',-relief => 'raised')->pack(-side => 'left');
+$frm->Button(-text => 'Save', -command => \&Save)->pack(-side => 'left');
+my $fmt  = $frm->Optionmenu(-variable => \$format,
+                            -options => \@fmt)->pack(-side => 'left');
+$grab->bind('<1>', \&GrabStart);
+$grab->bind('<ButtonRelease-1>', [\&GrabWin,Ev('X'),Ev('Y')]);
+
+print join(' ',$img->formats),"\n";
+
+my $lab = $mw->Label(-image => $img)->pack;
+MainLoop;
+
+sub Save
+{
+ my $file = $mw->getSaveFile(-defaultextension => "\L$format",
+                             -initialdir => getcwd());
+ if (defined $file)
+  {
+   $img->write($file, -format => $format);
+  }
+}
+
+sub GrabStart
+{
+ my $w = shift;
+ $w->grabGlobal;
+ $w->configure(-cursor => 'hand2', -relief => 'sunken');
+}
+
+sub Self
+{
+ my $id = hex($b->id);
+ print "id = $id\n";
+ $img->configure(-format => "Window", -data => $id);
+}
+
+sub GrabWin
+{
+ my ($w,$x,$y) = @_;
+ $w->grabRelease;
+ $w->configure(-cursor => undef, -relief => 'raised');
+ my $id = $w->PointToWindow($x,$y);
+ print "id = $id\n";
+ $img->configure(-format => "Window", -data => $id);
+}

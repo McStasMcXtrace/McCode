@@ -1,0 +1,87 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_GetJustify, Tk_NameOfJustify - translate between strings and justification styles
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Tk_Justify
+B<Tk_GetJustify(>I<interp, string, justifyPtr>B<)>
+
+char *
+B<Tk_NameOfJustify(>I<justify>B<)>
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter to use for error reporting.
+
+=item char *string (in)
+
+String containing name of justification style (``left'', ``right'', or
+``center'').
+
+=item int *justifyPtr (out)
+
+Pointer to location in which to store justify value corresponding to
+I<string>.
+
+=item Tk_Justify justify (in)
+
+Justification style (one of the values listed below).
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_GetJustify> places in I<*justifyPtr> the justify value
+corresponding to I<string>.  This value will be one of the following:
+
+=over 4
+
+=item B<TK_JUSTIFY_LEFT>
+
+Means that the text on each line should start at the left edge of
+the line;  as a result, the right edges of lines may be ragged.
+
+=item B<TK_JUSTIFY_RIGHT>
+
+Means that the text on each line should end at the right edge of
+the line;  as a result, the left edges of lines may be ragged.
+
+=item B<TK_JUSTIFY_CENTER>
+
+Means that the text on each line should be centered;  as a result,
+both the left and right edges of lines may be ragged.
+
+Under normal circumstances the return value is B<TCL_OK> and
+I<interp> is unused.
+If I<string> doesn't contain a valid justification style
+or an abbreviation of one of these names, then an error message is
+stored in I<interp-E<gt>result>, B<TCL_ERROR> is returned, and
+I<*justifyPtr> is unmodified.
+
+B<Tk_NameOfJustify> is the logical inverse of B<Tk_GetJustify>.
+Given a justify value it returns a statically-allocated string
+corresponding to I<justify>.
+If I<justify> isn't a legal justify value, then
+``unknown justification style'' is returned.
+
+=back
+
+=head1 KEYWORDS
+
+center, fill, justification, string

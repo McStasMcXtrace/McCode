@@ -1,0 +1,206 @@
+#  Copyright (c) 1990-1994 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#  RCS: @(#) $Id: labelframe.n,v 1.1 2001/09/26 21:36:19 pspjuth Exp $
+
+=head1 NAME
+
+Tk::Labelframe - Create and manipulate Labelframe widgets
+
+=for category  Tk Generic Methods
+
+=head1 SYNOPSIS
+
+I<$labelframe> = I<$parent>-E<gt>B<Labelframe>(?I<options>?);
+
+ -borderwidth -highlightbackground -pady
+ -cursor      -highlightcolor      -relief
+ -font        -highlightthickness  -takefocus
+ -foreground  -padx                -text
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item Option:	B<-background>
+
+=item Name:	B<background>
+
+=item Class:	B<Background>
+
+This option is the same as the standard B<background> option
+except that its value may also be specified as an empty string.
+In this case, the widget will display no background or border, and
+no colors will be consumed from its colormap for its background
+and border.
+
+=item Option:	B<-class>
+
+=item Name:	B<class>
+
+=item Class:	B<Class>
+
+Specifies a class for the window.
+This class will be used when querying the option database for
+the window's other options, and it will also be used later for
+other purposes such as bindings.
+The B<class> option may not be changed with the B<configure>
+method.
+
+=item Option:	B<-colormap>
+
+=item Name:	B<colormap>
+
+=item Class:	B<Colormap>
+
+Specifies a colormap to use for the window.
+The value may be either B<new>, in which case a new colormap is
+created for the window and its children, or the name of another
+window (which must be on the same screen and have the same visual
+as $widget), in which case the new window will use the colormap
+from the specified window.
+If the B<colormap> option is not specified, the new window
+uses the same colormap as its parent.
+This option may not be changed with the B<configure>
+method.
+
+=item Option:	B<-container>
+
+=item Name:	B<container>
+
+=item Class:	B<Container>
+
+The value must be a boolean.  If true, it means that this window will
+be used as a container in which some other application will be embedded
+(for example, a Tk toplevel can be embedded using the B<-use> option).
+The window will support the appropriate window manager protocols for
+things like geometry requests.  The window should not have any
+children of its own in this application.
+This option may not be changed with the B<configure>
+method.
+
+=item Option:	B<-height>
+
+=item Name:	B<height>
+
+=item Class:	B<Height>
+
+Specifies the desired height for the window in any of the forms
+acceptable to B<Tk_GetPixels>.
+If this option is less than or equal to zero then the window will
+not request any size at all.
+
+=item Option:	B<-labelanchor>
+
+=item Name:	B<labelAnchor>
+
+=item Class:	B<LabelAnchor>
+
+Specifies where to place the label. A label is only displayed if the
+B<-text> option is not the empty string.
+Valid values for this option are (listing them clockwise)
+B<nw>, B<n>, B<ne>, B<en>, B<e>, B<es>,
+B<se>, B<s>,B<sw>, B<ws>, B<w> and B<wn>.
+The default value is B<nw>.
+
+=item Option:	B<-labelwidget>
+
+=item Name:	B<labelWidget>
+
+=item Class:	B<LabelWidget>
+
+Specifies a widget to use as label. This overrides any B<-text>
+option. The widget must exist before being used as B<-labelwidget>
+and if it is not a descendant of this window, it will be raised
+above it in the stacking order.
+
+=item Option:	B<-visual>
+
+=item Name:	B<visual>
+
+=item Class:	B<Visual>
+
+Specifies visual information for the new window in any of the
+forms accepted by B<Tk_GetVisual>.
+If this option is not specified, the new window will use the same
+visual as its parent.
+The B<visual> option may not be modified with the B<configure>
+method.
+
+=item Option:	B<-width>
+
+=item Name:	B<width>
+
+=item Class:	B<Width>
+
+Specifies the desired width for the window in any of the forms
+acceptable to B<Tk_GetPixels>.
+If this option is less than or equal to zero then the window will
+not request any size at all.
+
+=back
+
+=head1 DESCRIPTION
+
+The B<Labelframe> method creates a new window (given by the
+$labelframe argument) and makes it into a Labelframe widget.
+Additional
+options, described above, may be specified on the command line
+or in the option database
+to configure aspects of the Labelframe such as its background color
+and relief.
+
+A Labelframe is a simple widget.  Its primary purpose is to act as a
+spacer or container for complex window layouts.  It has the features
+of a B<Frame> plus the ability to display a label.
+
+=head1 WIDGET METHODS
+
+The B<Labelframe> method
+may be used to invoke various operations on the widget.  It has the
+following general form:
+
+ $widget->method(?arg arg ...?);
+
+The following
+methods are possible for Labelframe widgets:
+
+=over 4
+
+=item I<$widget>-E<gt>B<cget>(I<option>);
+
+Returns the current value of the configuration option given
+by I<option>.
+I<Option> may have any of the values accepted by the B<Labelframe>
+command.
+
+=item I<$widget>-E<gt>B<configure>(?I<option>?, I<?value, option, value, ...>?);
+
+Query or modify the configuration options of the widget.
+If no I<option> is specified, returns a list describing all of
+the available options for $widget (see L<Tk::configure> for
+information on the format of this list).  If I<option> is specified
+with no I<value>, then the command returns a list describing the
+one named option (this list will be identical to the corresponding
+sublist of the value returned if no I<option> is specified).  If
+one or more I<option-value> pairs are specified, then the command
+modifies the given widget option(s) to have the given value(s);  in
+this case the command returns an empty string.
+I<Option> may have any of the values accepted by the B<Labelframe>
+command.
+
+=back
+
+=head1 BINDINGS
+
+When a new Labelframe is created, it has no default event bindings:
+Labelframes are not intended to be interactive.
+
+=head1 SEE ALSO
+
+L<Tk::Frame>, L<Tk::Label>
+
+=head1 KEYWORDS
+
+Labelframe, widget

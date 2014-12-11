@@ -1,0 +1,54 @@
+#  Copyright (c) 1990-1992 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_HandleEvent - invoke event handlers for window system events
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_HandleEvent>(I<eventPtr>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item XEvent *eventPtr (in)
+
+Pointer to X event to dispatch to relevant handler(s).
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_HandleEvent> is a lower-level procedure that deals with window
+events.  It is called by B<Tk_ServiceEvent> (and indirectly by
+B<Tk_DoOneEvent>), and in a few other cases within Tk.
+It makes callbacks to any window event
+handlers (created by calls to B<Tk_CreateEventHandler>)
+that match I<eventPtr> and then returns.  In some cases
+it may be useful for an application to bypass the Tk event
+queue and call B<Tk_HandleEvent> directly instead of
+calling B<Tk_QueueEvent> followed by
+B<Tk_ServiceEvent>.
+
+This procedure may be invoked recursively.  For example,
+it is possible to invoke B<Tk_HandleEvent> recursively
+from a handler called by B<Tk_HandleEvent>.  This sort
+of operation is useful in some modal situations, such
+as when a
+notifier has been popped up and an application wishes to
+wait for the user to click a button in the notifier before
+doing anything else.
+
+=head1 KEYWORDS
+
+callback, event, handler, window

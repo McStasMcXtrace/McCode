@@ -1,0 +1,322 @@
+#  Copyright (c) 1990 The Regents of the University of California.
+#  Copyright (c) 1994-1996 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_GetBitmap, Tk_DefineBitmap, Tk_NameOfBitmap, Tk_SizeOfBitmap, Tk_FreeBitmap, Tk_GetBitmapFromData - maintain database of single-plane pixmaps
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+Pixmap
+B<Tk_GetBitmap(>I<interp, tkwin, id>B<)>
+
+int
+B<Tk_DefineBitmap(>I<interp, nameId, source, width, height>B<)>
+
+Tk_Uid
+B<Tk_NameOfBitmap(>I<display, bitmap>B<)>
+
+B<Tk_SizeOfBitmap(>I<display, bitmap, widthPtr, heightPtr>B<)>
+
+B<Tk_FreeBitmap(>I<display, bitmap>B<)>
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tcl_Interp *interp (in)
+
+Interpreter to use for error reporting.
+
+=item Tk_Window tkwin (in)
+
+Token for window in which the bitmap will be used.
+
+=item Tk_Uid id (in)
+
+Description of bitmap;  see below for possible values.
+
+=item Tk_Uid nameId (in)
+
+Name for new bitmap to be defined.
+
+=item char *source (in)
+
+Data for bitmap, in standard bitmap format.
+Must be stored in static memory whose value will never change.
+
+=item "int" width (in)
+
+Width of bitmap.
+
+=item "int" height (in)
+
+Height of bitmap.
+
+=item "int" *widthPtr (out)
+
+Pointer to word to fill in with I<bitmap>'s width.
+
+=item "int" *heightPtr (out)
+
+Pointer to word to fill in with I<bitmap>'s height.
+
+=item Display *display (in)
+
+Display for which I<bitmap> was allocated.
+
+=item Pixmap bitmap (in)
+
+Identifier for a bitmap allocated by B<Tk_GetBitmap>.
+
+=back
+
+=head1 DESCRIPTION
+
+These procedures manage a collection of bitmaps (one-plane pixmaps)
+being used by an application.  The procedures allow bitmaps to be
+re-used efficiently, thereby avoiding server overhead, and also
+allow bitmaps to be named with character strings.
+
+B<Tk_GetBitmap> takes as argument a Tk_Uid describing a bitmap.
+It returns a Pixmap identifier for a bitmap corresponding to the
+description.  It re-uses an existing bitmap, if possible, and
+creates a new one otherwise.  At present, I<id> must have
+one of the following forms:
+
+=over 4
+
+=item B<@>I<fileName>
+
+I<FileName> must be the name of a file containing a bitmap
+description in the standard X11 or X10 format.
+
+=item I<name>
+
+I<Name> must be the name of a bitmap defined previously with
+a call to B<Tk_DefineBitmap>.  The following names are pre-defined
+by Tk:
+
+=over 4
+
+=item B<error>
+
+The international "don't" symbol:  a circle with a diagonal line
+across it.
+
+=item B<gray75>
+
+75% gray: a checkerboard pattern where three out of four bits are on.
+
+=item B<gray50>
+
+50% gray: a checkerboard pattern where every other bit is on.
+
+=item B<gray25>
+
+25% gray: a checkerboard pattern where one out of every four bits is on.
+
+=item B<gray12>
+
+12.5% gray: a pattern where one-eighth of the bits are on, consisting of
+every fourth pixel in every other row.
+
+=item B<hourglass>
+
+An hourglass symbol.
+
+=item B<info>
+
+A large letter ``i''.
+
+=item B<questhead>
+
+The silhouette of a human head, with a question mark in it.
+
+=item B<question>
+
+A large question-mark.
+
+=item B<warning>
+
+A large exclamation point.
+
+In addition, the following pre-defined names are available only on the
+B<Macintosh> platform:
+
+=item B<document>
+
+A generic document.
+
+=item B<stationery>
+
+Document stationery.
+
+=item B<edition>
+
+The I<edition> symbol.
+
+=item B<application>
+
+Generic application icon.
+
+=item B<accessory>
+
+A desk accessory.
+
+=item B<folder>
+
+Generic folder icon.
+
+=item B<pfolder>
+
+A locked folder.
+
+=item B<trash>
+
+A trash can.
+
+=item B<floppy>
+
+A floppy disk.
+
+=item B<ramdisk>
+
+A floppy disk with chip.
+
+=item B<cdrom>
+
+A cd disk icon.
+
+=item B<preferences>
+
+A folder with prefs symbol.
+
+=item B<querydoc>
+
+A database document icon.
+
+=item B<stop>
+
+A stop sign.
+
+=item B<note>
+
+A face with ballon words.
+
+=item B<caution>
+
+A triangle with an exclamation point.
+
+=back
+
+=back
+
+Under normal conditions, B<Tk_GetBitmap>
+returns an identifier for the requested bitmap.  If an error
+occurs in creating the bitmap, such as when I<id> refers
+to a non-existent file, then B<None> is returned and an error
+message is left in I<interp-E<gt>result>.
+
+B<Tk_DefineBitmap> associates a name with
+in-memory bitmap data so that the name can be used in later
+calls to B<Tk_GetBitmap>.  The I<nameId>
+argument gives a name for the bitmap;  it must not previously
+have been used in a call to B<Tk_DefineBitmap>.
+The arguments I<source>, I<width>, and I<height>
+describe the bitmap.
+B<Tk_DefineBitmap> normally returns TCL_OK;  if an error occurs
+(e.g. a bitmap named I<nameId> has already been defined) then
+TCL_ERROR is returned and an error message is left in
+I<interp-E<gt>result>.
+Note:  B<Tk_DefineBitmap> expects the memory pointed to by
+I<source> to be static:  B<Tk_DefineBitmap> doesn't make
+a private copy of this memory, but uses the bytes pointed to
+by I<source> later in calls to B<Tk_GetBitmap>.
+
+Typically B<Tk_DefineBitmap> is used by B<#include>-ing a
+bitmap file directly into a C program and then referencing
+the variables defined by the file.
+For example, suppose there exists a file B<stip.bitmap>,
+which was created by the B<bitmap> program and contains
+a stipple pattern.
+The following code uses B<Tk_DefineBitmap> to define a
+new bitmap named B<foo>:
+
+ Pixmap bitmap;
+ #include "stip.bitmap"
+ Tk_DefineBitmap(interp, Tk_GetUid("foo"), stip_bits,
+ 	stip_width, stip_height);
+  ...
+ bitmap = Tk_GetBitmap(interp, tkwin, Tk_GetUid("foo"));
+
+This code causes the bitmap file to be read
+at compile-time and incorporates the bitmap information into
+the program's executable image.  The same bitmap file could be
+read at run-time using B<Tk_GetBitmap>:
+
+ Pixmap bitmap;
+ bitmap = Tk_GetBitmap(interp, tkwin, Tk_GetUid("@stip.bitmap"));
+
+The second form is a bit more flexible (the file could be modified
+after the program has been compiled, or a different string could be
+provided to read a different file), but it is a little slower and
+requires the bitmap file to exist separately from the program.
+
+B<Tk_GetBitmap> maintains a
+database of all the bitmaps that are currently in use.
+Whenever possible, it will return an existing bitmap rather
+than creating a new one.
+This approach can substantially reduce server overhead, so
+B<Tk_GetBitmap> should generally be used in preference to Xlib
+procedures like B<XReadBitmapFile>.
+
+The bitmaps returned by B<Tk_GetBitmap>
+are shared, so callers should never modify them.
+If a bitmap must be modified dynamically, then it should be
+created by calling Xlib procedures such as B<XReadBitmapFile>
+or B<XCreatePixmap> directly.
+
+The procedure B<Tk_NameOfBitmap> is roughly the inverse of
+B<Tk_GetBitmap>.
+Given an X Pixmap argument, it returns the I<id> that was
+passed to B<Tk_GetBitmap> when the bitmap was created.
+I<Bitmap> must have been the return value from a previous
+call to B<Tk_GetBitmap>.
+
+B<Tk_SizeOfBitmap> returns the dimensions of its I<bitmap>
+argument in the words pointed to by the I<widthPtr> and
+I<heightPtr> arguments.  As with B<Tk_NameOfBitmap>,
+I<bitmap> must have been created by B<Tk_GetBitmap>.
+
+When a bitmap returned by B<Tk_GetBitmap>
+is no longer needed, B<Tk_FreeBitmap> should be called to release it.
+There should be exactly one call to B<Tk_FreeBitmap> for
+each call to B<Tk_GetBitmap>.
+When a bitmap is no longer in use anywhere (i.e. it has been freed as
+many times as it has been gotten) B<Tk_FreeBitmap> will release
+it to the X server and delete it from the database.
+
+=head1 BUGS
+
+In determining whether an existing bitmap can be used to satisfy
+a new request, B<Tk_GetBitmap>
+considers only the immediate value of its I<id> argument.  For
+example, when a file name is passed to B<Tk_GetBitmap>,
+B<Tk_GetBitmap> will assume it is safe to re-use an existing
+bitmap created from the same file name:  it will not check to
+see whether the file itself has changed, or whether the current
+directory has changed, thereby causing the name to refer to
+a different file.
+
+=head1 KEYWORDS
+
+bitmap, pixmap

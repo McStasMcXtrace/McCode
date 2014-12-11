@@ -1,0 +1,308 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: End of the World
+* Origin: DTU Fysik
+* Release: McXtrace 1.1
+* Version: 0.3
+* %INSTRUMENT_SITE: XFEL
+*
+* European XFEL SPB beamline (on SASE1)
+*
+* %Description
+* Instrument longer description (type, elements, usage...)
+*
+* Example: XFEL-SPB.instr <parameters=values>
+*
+* %Parameters
+* Par1: [unit] Parameter1 description
+*
+* %Link
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT XFEL_SPB(L0=1.54,DL=0.01, D=10,offset_omega_rad=3.6e-3,offset2_rad=50000,preCRL=0,FXE=0, R1=20000,R2=20000)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+  double theta=12,theta1=12,theta2=12;
+  double l_mono=2;
+  double delta_mono=0.2;
+  double delta_kbm1=0.5,delta_kbm2=0.5;
+  double gamma1=1.5e-3*RAD2DEG,gamma2=1.5e-3*RAD2DEG;
+
+/*source parameters*/
+  double src_sig_x=2e-6;
+  double src_sig_y=1e-6;
+  double src_div_x=1e-6;
+  double src_div_y=2e-6;
+
+  double distr1_omega=1.35e-3*RAD2DEG;
+  double offset_omega;
+
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  offset_omega=offset_omega_rad*RAD2DEG;
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  *./
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/*primary optics SASE1, collimators, offset-mirror,deflector etc.*/
+COMPONENT src = Source_gaussian(
+    sig_x = src_sig_x, sig_y = src_sig_x, sigPr_x = src_div_x,
+    sigPr_y = src_div_y, lambda0 = L0, dlambda = DL, phase = 0)
+AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT psd0=PSD_monitor(
+    xwidth=1e-3, yheight=1e-3, nx=101,ny=101)
+AT(0,0,1e-5) RELATIVE PREVIOUS
+COMPONENT emon0 =E_monitor(
+    xwidth=1e-3, yheight=1e-3, nE=512, Emin=5, Emax=15)
+AT(0,0,1e-5) RELATIVE PREVIOUS
+
+
+COMPONENT crl_230 = Lens_simple(xwidth=1e-5, yheight=1e-5, material_datafile="Be.txt",N=100,radius=0.3e-3)
+WHEN (preCRL) AT(0,0,23) RELATIVE src
+COMPONENT psd_l=COPY(psd0)(filename="psd1")
+AT(0,0,1e-5) RELATIVE PREVIOUS
+COMPONENT emon_l =COPY(emon0)(filename="emon1")
+AT(0,0,1e-5) RELATIVE PREVIOUS
+
+
+
+/*offset mirror section*/
+/*assumes mirrors are vertical-ish. Check if this is true.*/
+COMPONENT offset_mirror1= Mirror_curved(
+    coating="Rh.txt", radius=1e6, length=.8, width=0.2)
+AT(0,0,27) RELATIVE src
+ROTATED (0,offset_omega,0) RELATIVE src
+
+COMPONENT offset_mirror1_exit = Arm()
+AT(0,0,0) RELATIVE offset_mirror1
+ROTATED (0,offset_omega,0) RELATIVE offset_mirror1
+
+COMPONENT offset_mirror2 = COPY(offset_mirror1)(
+    radius=-offset2_rad)
+AT(0,0,1) RELATIVE offset_mirror1_exit
+ROTATED (0,-offset_omega,0) RELATIVE offset_mirror1_exit
+
+COMPONENT offset_exit = Arm()
+  AT(0,0,0) RELATIVE offset_mirror2
+  ROTATED (0,-offset_omega,0) RELATIVE offset_mirror2 
+
+COMPONENT psd_om=COPY(psd0)(filename="psd2")
+AT(0,0,1) RELATIVE PREVIOUS
+COMPONENT emon_om =COPY(emon0)(filename="emon2")
+AT(0,0,1e-5) RELATIVE PREVIOUS
+
+
+  COMPONENT distr_orig = Arm()
+  AT(0,0,9) RELATIVE offset_exit
+
+/*distribution mirror (vertical)*/
+COMPONENT distr_mnt = Arm()
+  WHEN(FXE)  AT(0,0,0) RELATIVE distr_orig
+  ROTATED (0,distr1_omega,0) RELATIVE distr_orig
+
+COMPONENT distribution_mirror = Mirror_curved(
+  length=0.8,coating="Rh.txt",width=.2
+)
+WHEN (FXE)  AT (0,0,0) RELATIVE distr_mnt
+ROTATED (0,0,90) RELATIVE distr_mnt
+
+COMPONENT distr_exit = Arm()
+WHEN (FXE)  AT(0,0,0) RELATIVE distr_mnt
+ROTATED (0,distr1_omega,0) RELATIVE distr_mnt
+/*here's where spb specifics start*/
+COMPONENT psd_dm=COPY(psd0)(filename="psd3")
+AT(0,0,1e-5) RELATIVE PREVIOUS
+COMPONENT emon_dm =COPY(emon0)(filename="emon3")
+AT(0,0,1e-5) RELATIVE PREVIOUS
+
+/*a double bounce monochromator*/
+COMPONENT mono_origin = Arm()
+  AT(0,0,53) RELATIVE distr_orig
+ROTATED (0,0,-90) RELATIVE src
+
+COMPONENT mono1 = Perfect_crystal(
+    material = "Si.txt", length = 0.05, width = 0.02,
+    V = 160.1826, h = 1, k = 1, l = 1)
+AT (0, 0, 0) RELATIVE mono_origin
+ROTATED (-theta1,0,0) RELATIVE mono_origin
+EXTEND
+%{
+  if(!SCATTERED) ABSORB;
+%}
+
+COMPONENT mono1_out = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (-2*theta,0,0) RELATIVE mono_origin
+
+COMPONENT mono2 = COPY(mono1)
+AT(0,0,delta_mono) RELATIVE PREVIOUS
+ROTATED (theta2,0,0) RELATIVE PREVIOUS
+EXTEND
+%{
+  if(!SCATTERED) ABSORB;
+%}
+
+COMPONENT mono2_out = Arm()
+AT(0,0,0) RELATIVE mono2
+ROTATED (0,0,0) RELATIVE mono_origin
+
+COMPONENT psd_dcm=COPY(psd0)(filename="psd4")
+AT(0,0,0.5) RELATIVE PREVIOUS
+COMPONENT emon_dcm =COPY(emon0)(filename="emon4")
+AT(0,0,1e-5) RELATIVE PREVIOUS
+
+
+/*first kb-mirror, 1 mu m*/
+COMPONENT kb_mirror1_origin = Arm()
+AT(0,0,1) RELATIVE mono2_out
+
+COMPONENT kb_mirror1h_mnt = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (0,0,90) RELATIVE PREVIOUS
+
+COMPONENT kb_mirror1h = Mirror_curved(
+    coating = "Rh.txt", radius = R1, length = 0.4, width = 0.6)
+AT (0, 0, 0) RELATIVE kb_mirror1h_mnt
+ROTATED (0,gamma1,0) RELATIVE kb_mirror1h_mnt
+EXTEND
+%{
+  if(!SCATTERED) ABSORB;
+%}
+
+COMPONENT kb_mirror1h_ex= Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (-2*gamma1,0,0) RELATIVE kb_mirror1_origin
+
+COMPONENT kb_mirror1v_mnt = Arm()
+AT (0,0,delta_kbm1) RELATIVE PREVIOUS
+ROTATED (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT kb_mirror1v = COPY(kb_mirror1h)()
+AT( 0,0,0) RELATIVE PREVIOUS
+ROTATED (0,gamma2,0) RELATIVE PREVIOUS
+EXTEND
+%{
+  if(!SCATTERED) ABSORB;
+%}
+
+COMPONENT kb_mirror1_ex = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (0,2*gamma2,0) RELATIVE kb_mirror1v_mnt
+
+
+COMPONENT psd4pi_kb1=PSD_monitor_4PI(filename="psd4pi5.dat",radius=0.5,restore_xray=1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT psd_kb1=PSD_monitor(restore_xray=1,xwidth=0.2,yheight=0.2, filename="psd5")
+AT(0,0,0.5) RELATIVE PREVIOUS
+
+COMPONENT psd_kb1s=PSD_monitor(restore_xray=1,xwidth=0.002,yheight=0.002, filename="psd5s")
+AT(0,0,1e-6) RELATIVE PREVIOUS
+
+/*beam diagnostics section (4m long)*/
+/*starts 35 m downstream from optics hutch*/
+/*COMPONENT beam_diagnotics_zone = Arm()*/
+/*AT(0,0,35) RELATIVE src*/
+
+/*2nd kb-mirror set, 100nm */
+COMPONENT kb_mirror2_origin = Arm()
+  AT(0,0,1) RELATIVE kb_mirror1_ex
+
+COMPONENT kb_mirror2h_mnt = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (0,0,90) RELATIVE PREVIOUS
+
+COMPONENT kb_mirror2h = Mirror_curved(
+    coating = "Rh.txt", radius = R2, length = 0.4, width = 0.6)
+AT (0, 0, 0) RELATIVE kb_mirror2h_mnt
+ROTATED (0,gamma2,0) RELATIVE kb_mirror2h_mnt
+
+COMPONENT kb_mirror2h_ex= Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (-2*gamma2,0,0) RELATIVE kb_mirror2_origin
+
+COMPONENT kb_mirror2v_mnt = Arm()
+AT (0,0,delta_kbm1) RELATIVE PREVIOUS
+ROTATED (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT kb_mirror2v = COPY(kb_mirror2h)()
+AT( 0,0,0) RELATIVE PREVIOUS
+ROTATED (0,gamma2,0) RELATIVE PREVIOUS
+
+COMPONENT kb_mirror2_ex = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+ROTATED (0,2*gamma2,0) RELATIVE kb_mirror2v_mnt
+
+COMPONENT psd4pi_kb2=PSD_monitor_4PI(filename="psd4pi6.dat",radius=0.5,restore_xray=1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT psd_kb2=PSD_monitor(xwidth=0.2,yheight=0.2, filename="psd6")
+AT(0,0,1) RELATIVE PREVIOUS
+
+COMPONENT psd_kb2s=PSD_monitor(xwidth=0.002,yheight=0.002, filename="psd6s")
+AT(0,0,1e-6) RELATIVE PREVIOUS
+
+/*focal plane - sample position*/
+COMPONENT psd_sample = PSD_monitor(
+    xwidth=1e-3,yheight=1e-3,restore_xray=1,filename="psd7")
+AT(0,0,4) RELATIVE kb_mirror2_ex
+
+COMPONENT emon_sample = E_monitor(Emin=5, Emax=15, nE=201, filename="emon7")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT bstop = Beamstop(
+    xwidth=1e-4, yheight=1e-4)
+AT(0,0,D-1e-3) RELATIVE psd_sample
+
+
+/*moveable detector 0-10m*/
+COMPONENT detector= PSD_monitor(
+    xwidth=0.1, yheight=0.1, ny=200, nx=200, filename="det.dat", restore_xray=1)
+AT (0,0,D) RELATIVE psd_sample
+
+
+COMPONENT det_event= Monitor_nD(
+    xwidth=0.1, yheight=0.1, options="list,all", filename="det_ev.dat")
+AT(0,0,0) RELATIVE PREVIOUS
+
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+
+

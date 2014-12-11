@@ -1,0 +1,38 @@
+#!/usr/local/bin/perl -w
+use File::Find;
+use Cwd;
+my $root = getcwd();
+
+find(sub {
+	if (/\.so$/)
+          {
+           do_syms($File::Find::name);
+          }
+     },'.');
+
+
+sub do_syms
+{
+ my $path = shift;
+ open(NM,"nm -DPp $root/$path|") || die "Cannot open pipe:$!";
+ while (<NM>)
+  {
+   my ($sym,$kind) = /^(\w+)\s+(\S)/;
+   next if ($kind =~ /^[UBAw]$/ || $sym =~ /^_(init|fini)$/);
+   $def{$sym}{$path} = $kind;
+  }
+}
+
+foreach my $sym (sort keys %def)
+ {
+  my @where = keys %{$def{$sym}};
+  if (@where > 1)
+   {
+    print "$sym :\n";
+    foreach my $path (sort @where)
+     {
+      print " $def{$sym}{$path} $path\n";
+     }
+    print "\n";
+   }
+ }

@@ -1,0 +1,82 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Be_BM_beamline
+*
+* %Identification
+* Written by: E. Knudsen (erkn@risoe.dtu.dk)
+* Date: Sept. 15th, 2009
+* Origin: Ris&oslash; DTU
+* Release: McXtrace 0.1_alpha
+* Version: $Revision$
+* %INSTRUMENT_SITE: None
+*
+* Be-lens Bending Magnet, Low Budget Monochromatic (pink) X-ray beamline
+*
+* %Description
+* This is a proof of concept beamline to test an idea of how to build a low-cost
+* monochromtic beamline. Idea is to let a åolychromatic beam impinge on a focusing
+* Be-lens and put a slit in the focal pt. of the lens for the desired wavelength. Any
+* other wavelengths present in the beam will not be focussed prefectly and may be
+* by the slit.
+*
+* %Parameters
+* L1: [m] Distance between source and lens
+* L2: [m] Distance between lens and and slit
+* dS: [m] Slit opening. Slit opening is quadratic.
+* N:  [1] NUmber of Lenses in the compund lens arrangement
+ %Link
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT Be_BM_beamline(L1=10,L2=1,dS=1e-2, N=1)
+
+
+DECLARE
+%{
+%}
+
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+
+COMPONENT generic_source=Source_gaussian(
+    lambda0=0.413, dlambda=0.412,
+    sig_x=0.08e-3, sig_y=0.08e-3, sigPr_x=1e-6, sigPr_y=1e-6, dist=L1
+)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT psd0 = PSD_monitor(filename="psd0.dat",xwidth=0.2,yheight=0.2)
+  AT (0,0,0.1) RELATIVE PREVIOUS
+COMPONENT wavel_mon0=L_monitor(filename="lmon0.dat",Lmin=0,Lmax=1,xwidth=0.5,yheight=0.5,nL=101)
+  AT(0,0,0.01) RELATIVE PREVIOUS
+
+COMPONENT Be_lens = Lens_simple(xwidth=10.5,yheight=10.5,N=N)
+AT(0,0,L1) RELATIVE generic_source
+
+COMPONENT Be_lens2 = Lens_simple(xwidth=10.5,yheight=10.5,N=N)
+AT(0,0,0.01) RELATIVE PREVIOUS
+ROTATED (0,0,90) RELATIVE PREVIOUS
+
+COMPONENT slit = Slit(xwidth=dS, yheight=dS)
+AT(0,0,L2) RELATIVE Be_lens
+ROTATED (0,0,0) RELATIVE Be_lens
+
+COMPONENT psd1 = PSD_monitor(filename="psd1.dat",xwidth=0.2,yheight=0.2)
+  AT (0,0,0) RELATIVE slit
+
+COMPONENT wavel_mon=L_monitor(filename="lmon.dat",Lmin=0,Lmax=1,xwidth=10.1,yheight=10.1,nL=101)
+  AT(0,0,1e-3) RELATIVE PREVIOUS
+
+COMPONENT psd2 = PSD_monitor(filename="psd2.dat",xwidth=0.2,yheight=0.2)
+  AT (0,0,1e-3) RELATIVE PREVIOUS
+
+END
+

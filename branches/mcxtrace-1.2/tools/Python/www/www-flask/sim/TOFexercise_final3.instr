@@ -1,0 +1,324 @@
+/*****************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: TOFexercise_final
+*
+* %Identification
+* Written by:       Pia Jensen (bozack@bozack.dk)
+* Date:             13.07.2012
+* Origin:           Niels Bohr Institute, University of Copenhagen
+* Release:          McStas CVS-080208
+* Version:          0.2
+* %INSTRUMENT_SITE: NielsBohrInstitute
+*
+* %Description
+* A ToF powder diffractometer made as a part of going through the INSIS school
+* exercise. This instrument is the full instrument, after going through the full
+* exercise, and has the possibility of chosing which guide-type to use, as well as
+* setting a lot of other parameters (making it possible to go through the full
+* exercise with all the questions using only this instrument file, if wanted).
+*
+* Example: mcrun TOFexercise_final.instr <parameters=values>
+*
+* %Parameters
+*   guidetype               0-4     none(0), straight(1), elliptical(2), parabolical(3), ballistic(4)
+*   lambda_min              [AA]    minimum value of wavelength (source and monitors)
+*   lambda_max              [AA]    maximum value of wavelength (source and monitors)
+*   more_pulses_bool        0/1     one pulse(0), or two pulses(1)
+*   pulse_length            [s]     source pulse_length
+*   frequency               [Hz]    source frequency
+*   source_focus_pos        1/2     at back monitor(1), or guide opening(2)
+*   t_min_atsource          [mu s]  TOF time minimum for monitor at 0 m
+*   t_max_atsource          [mu s]  TOF time maximum for monitor at 0 m
+*   t_min_atguidestart      [mu s]  TOF time minimum for monitor at 6 m
+*   t_max_atguidestart      [mu s]  TOF time maximum for monitor at 6 m
+*   t_min_atsample          [mu s]  TOF time minimum for monitor at 149.9 m
+*   t_max_atsample          [mu s]  TOF time maximum for monitor at 149.9 m
+*   guide_ell_focusdist_in  [m]     Distance from focus point to guide in (elliptical)
+*   guide_ell_focusdist_out [m]     Distance from focus point to guide out (elliptical)
+*   guide_par_focusdist_out [m]     Distance from focus point to guide out (parabolical)
+*   guide_bal_linearlength  [m]     Length of linear parts of ballistic guide
+*   divmon_big_bool         0/1     Normal divergence monitor(0), or big one(1)
+*   small_detector_angle    [deg]   Angle of the small line-detector
+*
+* %Output files
+*   mon_TOF_atsource.dat           ToF monitor at moderator surface
+*   mon_lambdaTOF_atsource.dat     ToF and wavelength monitor at moderator surface
+*   mon_TOF_atguidestart.dat       ToF monitor at guide entrance
+*   mon_lambdaTOF_atguidestart.dat ToF and wavelength monitor at guide entrance
+*   mon_TOF_atsample.dat           ToF monitor at sample position
+*   mon_lambdaTOF_atsample.dat     ToF and wavelength monitor at sample position
+*   mon_DivLambda_atsample.dat     Divergence and wavelength monitor at sample position
+*   Detector.dat                   Cylindrical detector around sample
+*   LineDetector.dat               A small line ToF detector on the cylindrical detector
+*
+* %End
+*******************************************************************************/
+
+/* Name of instrument and input parameters with default values */
+DEFINE INSTRUMENT TOFexercise_final(
+   guidetype        = 1,
+   lambda_min             = 0.5,
+   lambda_max             = 3.0,
+   more_pulses_bool       = 0,
+   pulse_length      = 2.86e-3,
+   frequency        = 14,
+   source_focus_pos      = 2,
+   t_min_atsource          = 0,
+   t_max_atsource          = 6e3,
+   t_min_atguidestart          = 0,
+   t_max_atguidestart          = 1e4,
+   t_min_atsample          = 0,
+   t_max_atsample          = 1.3e5,
+   guide_ell_focusdist_in   = 12,
+   guide_ell_focusdist_out  = 2.6125,
+   guide_par_focusdist_out  = 15,
+   guide_bal_linearlength      = 15,
+   divmon_big_bool       = 0,
+   small_detector_angle = 130)
+
+/* DECLARE section for variables or small functions */
+DECLARE
+%{
+    double source_focus_pos_dist, source_focus_pos_xw, source_focus_pos_yh;
+    double divmon_w, divmon_maxdiv;
+    double guide_bal_ml;
+%}
+
+/* INITIALIZE for component parameter values */
+INITIALIZE
+%{
+    if (source_focus_pos == 1) {
+        //focus source on back detector
+        source_focus_pos_dist = 149.9;
+        source_focus_pos_xw = 0.02;
+        source_focus_pos_yh = 0.02;  }
+    else if (source_focus_pos == 2) {
+        //focus source on guide entrance
+        source_focus_pos_dist = 6.01;
+        source_focus_pos_xw = 0.05;
+        source_focus_pos_yh = 0.05;  }
+    if (divmon_big_bool == 0) {
+        //small divergence monitor (normal)
+        divmon_w = 0.02;
+        divmon_maxdiv = 0.2;  } 
+    else if (divmon_big_bool == 1) {
+        //big divergence monitor
+        divmon_w = 0.12;
+        divmon_maxdiv = 0.4;  }    
+    guide_bal_ml = 141.9 - 2*guide_bal_linearlength;
+%}
+
+/* TRACE section, where instrument is defined */
+TRACE
+
+/* Define origin, using a progress bar to show output */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* ESS moderator (thermal neutrons) */
+COMPONENT Moderator = ESS_moderator_long(
+    size = 0.02, 
+    l_low = lambda_min, 
+    l_high = lambda_max, 
+    dist = source_focus_pos_dist, 
+    xw = source_focus_pos_xw, 
+    yh = source_focus_pos_yh, 
+    freq = frequency, 
+    d = pulse_length, 
+    T = 325, 
+    tau = 80e-6, 
+    tau1 = 400e-6,
+    tau2 = 12e-6, 
+    n = 20, 
+    n2 = 5, 
+    chi2 = 2.5,
+    I0 = 13.5e11, 
+    I2 = 27.6e10, 
+    branch1 = 0.5, 
+    branch2 = 0.5,
+    twopulses = more_pulses_bool)
+  AT (0, 0, 0) RELATIVE Origin
+
+/* TOF monitors at moderator surface */
+COMPONENT TOF_mon_1 = TOF_monitor(
+    nchan = 200, 
+    filename = "mon_TOF_atsource.dat", 
+    xwidth = 0.02,
+    yheight = 0.02, 
+    t0 = t_min_atsource, 
+    t1 = t_max_atsource, 
+    restore_neutron = 1)
+  AT (0, 0, 0) RELATIVE Moderator
+
+COMPONENT TOF_lmon_1 = TOFLambda_monitor(
+    nlam = 200, 
+    nt = 100, 
+    filename = "mon_lambdaTOF_atsource.dat", 
+    t_0 = t_min_atsource,
+    t_1 = t_max_atsource, 
+    xwidth = 0.02, 
+    yheight = 0.02, 
+    lambda_0 = lambda_min,
+    lambda_1 = lambda_max, 
+    restore_neutron = 1)
+  AT (0, 0, 0) RELATIVE Moderator
+
+/* TOF monitors before guide */
+COMPONENT TOF_mon_2 = TOF_monitor(
+    nchan = 200, 
+    filename = "mon_TOF_atguidestart.dat", 
+    xwidth = 0.02,
+    yheight = 0.02, 
+    t0 = t_min_atguidestart, 
+    t1 = t_max_atguidestart, 
+    restore_neutron = 1)
+  AT (0, 0, 6) RELATIVE Moderator
+
+COMPONENT TOF_lmon_2 = TOFLambda_monitor(
+    nlam = 200, 
+    nt = 100, 
+    filename = "mon_lambdaTOF_atguidestart.dat", 
+    t_0 = t_min_atguidestart,
+    t_1 = t_max_atguidestart, 
+    xwidth = 0.02, 
+    yheight = 0.02, 
+    lambda_0 = lambda_min,
+    lambda_1 = lambda_max, 
+    restore_neutron = 1)
+  AT (0, 0, 6) RELATIVE Moderator
+
+/* Guide */
+COMPONENT Guide1 = Guide(
+    w1 = 0.05, 
+    h1 = 0.05, 
+    w2 = 0.05, 
+    h2 = 0.05, 
+    l = 141.9)
+  WHEN (guidetype==1) AT (0, 0, 6.01) RELATIVE Moderator
+
+COMPONENT Guide2 = Guide_tapering(
+    option = "elliptical", 
+    segno = 400, 
+    w1 = 0.05, 
+    h1 = 0.05,
+    linw = guide_ell_focusdist_in, 
+    linh = guide_ell_focusdist_in, 
+    louth = guide_ell_focusdist_out, 
+    loutw = guide_ell_focusdist_out,
+    mx = 2, 
+    my = 2, 
+    l = 141.9)
+  WHEN (guidetype==2) AT (0, 0, 6.01) RELATIVE Moderator
+
+COMPONENT Guide3 = Guide_tapering(
+    option = "parabolical", 
+    segno = 400, 
+    w1 = 0.05, 
+    h1 = 0.05,
+    louth = guide_par_focusdist_out, 
+    loutw = guide_par_focusdist_out,
+    mx = 2, 
+    my = 2, 
+    l = 141.9)
+  WHEN (guidetype==3) AT (0, 0, 6.01) RELATIVE Moderator
+
+COMPONENT Guide4a = Guide(
+    w1 = 0.05, 
+    h1 = 0.05, 
+    w2 = 0.08, 
+    h2 = 0.08, 
+    l = guide_bal_linearlength)
+  WHEN (guidetype==4) AT (0, 0, 6.01) RELATIVE Moderator
+
+COMPONENT Guide4b = Guide(
+    w1 = 0.08, 
+    h1 = 0.08, 
+    w2 = 0.08, 
+    h2 = 0.08, 
+    l = guide_bal_ml)
+  WHEN (guidetype==4) AT (0, 0, guide_bal_linearlength) RELATIVE PREVIOUS
+
+COMPONENT Guide4c = Guide(
+    w1 = 0.08, 
+    h1 = 0.08, 
+    w2 = 0.05, 
+    h2 = 0.05, 
+    l = guide_bal_linearlength)
+  WHEN (guidetype==4) AT (0, 0, guide_bal_ml) RELATIVE PREVIOUS
+
+/* TOF monitors at sample position */
+COMPONENT TOF_mon_3 = TOF_monitor(
+    nchan = 200, 
+    filename = "mon_TOF_atsample.dat", 
+    xwidth = 0.02,
+    yheight = 0.02, 
+    t0 = t_min_atsample, 
+    t1 = t_max_atsample, 
+    restore_neutron = 1)
+  AT (0, 0, 149.9) RELATIVE Moderator
+
+COMPONENT TOF_lmon_3 = TOFLambda_monitor(
+    nlam = 200, 
+    nt = 100, 
+    filename = "mon_lambdaTOF_atsample.dat", 
+    t_0 = t_min_atsample,
+    t_1 = t_max_atsample, 
+    xwidth = 0.02, 
+    yheight = 0.02, 
+    lambda_0 = lambda_min,
+    lambda_1 = lambda_max, 
+    restore_neutron = 1)
+  AT (0, 0, 149.9) RELATIVE Moderator
+
+/* Divergence monitor at sample position */
+COMPONENT DivLambda_mon = DivLambda_monitor(
+    nlam = 200, 
+    ndiv = 100, 
+    filename = "mon_DivLambda_atsample.dat",
+    restore_neutron = 1, 
+    xwidth = divmon_w, yheight = divmon_w, maxdiv = divmon_maxdiv,
+    lambda_0 = lambda_min, 
+    lambda_1 = lambda_max)
+  AT (0, 0, 149.9) RELATIVE Moderator
+
+/* Sample */
+COMPONENT Sample = Powder1(
+    radius = 0.006, 
+    q = 5)
+  AT (0, 0, 150) RELATIVE Moderator
+
+/* Detector */
+COMPONENT Detector = TOF_cylPSD_monitor(
+    nt = 200, 
+    filename = "Detector.dat", 
+    nphi = 200, 
+    radius = 2,
+    height = 0.2, 
+    t_0 = t_min_atsample, 
+    t_1 = t_max_atsample,
+    restore_neutron = 1)
+  AT (0, 0, 0) RELATIVE Sample
+
+/* Smaller line-detector for analysis */
+COMPONENT arm1 = Arm()
+  AT (0, 0, 0) RELATIVE Sample
+  ROTATED (0, small_detector_angle, 0) RELATIVE Sample
+COMPONENT LineDetector = TOF_monitor(
+    nchan = 200, 
+    filename = "LineDetector.dat", 
+    xwidth = 0.01,
+    yheight = 0.2, 
+    t0 = t_min_atsample, 
+    t1 = t_max_atsample,
+    restore_neutron = 1)
+  AT (0, 0, 1.01) RELATIVE arm1
+
+
+/* FINALLY is executed when the simulation ends */
+FINALLY
+%{
+%}
+
+/* The END token marks the instrument definition end */
+END

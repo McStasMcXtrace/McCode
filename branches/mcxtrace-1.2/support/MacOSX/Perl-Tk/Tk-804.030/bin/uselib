@@ -1,0 +1,78 @@
+#!/usr/local/bin/perl
+
+use File::Find;
+
+$expr = '^\s*BEGIN\s*\{\s*unshift\s*\(\s*@INC\s*,(.*)\)\s*;?\s*\}\s*$';
+
+@todo = ();
+
+sub match
+{
+ if ($unsure)
+  {
+   return 1 unless (/#!.*perl/);
+   $unsure = 0;
+  }
+ if (/$expr/o)
+  {
+   my $name = "$File::Find::dir/$file";
+   print "$name:$.: $_";
+   push(@todo,$name);
+   return 1;
+  }
+ return 0;
+}
+
+sub wanted
+{
+ $File::Find::prune = 0;
+ if (-x $_ && -T $_ && !/%$/)
+  {
+   local $unsure = !/\.p[ml]$/;
+   local $file   = ($_);
+   local ($_);
+   open($file,"<$file") || die "Cannot open $file:$!";
+   while (<$file>)
+    {
+     last if &match;
+    }
+   close($file);
+  }
+ elsif (-d $_)
+  {
+   $File::Find::prune = 1 if ($_ eq 'blib');
+  }
+}
+
+@ARGV = '.' unless (@ARGV);
+
+sub de_bak
+{
+ if (/^(.*)\.bak$/)
+  {
+   unlink("$1.oops");
+   rename($1,"$1.oops") if (-f $1);
+   rename($_,$1);
+  }
+}
+
+
+# find(\&de_bak,@ARGV);
+
+find(\&wanted,@ARGV);
+
+print join(',',@todo),"\n";
+
+
+$^I = ".bak";
+
+if (@todo)
+ {
+  @ARGV = @todo;
+  while (<>)
+   {
+    s/$expr/use lib ($1);\n/;
+    print;
+   }
+ }
+

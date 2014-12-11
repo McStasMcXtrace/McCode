@@ -1,0 +1,39 @@
+#!/usr/local/bin/perl -w
+use strict;
+use Tk;
+use Data::Dumper;
+
+my $mw = MainWindow->new;
+my $menu = $mw->Menu;
+for my $i (1..24)
+ {
+  my $sm = $menu->cascade(-label => "Button$i");
+  $sm->command(-label => 'Quit', -command => \&lrw);
+ }
+my $h = $menu->cascade(-label => "Help");
+$h->command(-label => 'Quit', -command => [destroy => $mw]);
+
+$mw->configure(-menu => $menu);
+$mw->Scrolled('Text')->pack(-fill => 'both', -expand => 1);
+$mw->Button(-text => 'Quit', -command => [destroy => $mw])->pack;
+
+MainLoop;
+
+sub lrw
+{
+ my $menu = $mw->Menu;
+ my $h = $menu->cascade(-label => "Help");
+ $h->command(-label => 'Quit', -command => [destroy => $mw]);
+ for my $i (1..5)
+  {
+   my $sm = $menu->cascade(-label => "Left$i");
+   $sm->command(-label => 'Quit', -command => [destroy => $mw]);
+  }
+ $menu->separator;
+ for my $i (1..5)
+  {
+   my $sm = $menu->cascade(-label => "Right$i");
+   $sm->command(-label => 'Quit', -command => [destroy => $mw]);
+  }
+ $mw->configure(-menu => $menu);
+}

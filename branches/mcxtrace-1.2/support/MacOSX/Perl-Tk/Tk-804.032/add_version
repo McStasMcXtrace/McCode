@@ -1,0 +1,160 @@
+#!/usr/local/bin/perl -w
+use strict;
+use File::Find;
+use Getopt::Std;
+use Cwd;
+my %opt = ('p' => '4');
+getopts('oqeap:',\%opt);
+my $path = getcwd();
+chdir($path);
+$path = getcwd();
+my $dep;
+my $rel;
+my ($wh) = `p4 where ./...`;
+
+if ($wh =~ m#^\s*(.*)/\.\.\.\s+(.*)/\.\.\.\s*$#)
+ {
+  $dep  = $1;
+  $rel  = $2;
+ }
+else
+ {
+  die $wh;
+ }
+
+if ($opt{'o'})
+ {
+  foreach (`p4 opened $path/...`)
+   {
+    unless (/\(kx?text\)/)
+     {
+      warn "Not ktext : $_";
+      next;
+     }
+    chomp;
+    s/#\d+\s+-.*$//;
+    $_ = `p4 have $_`;
+    s/^.*#\d+\s+-\s+//;
+    chomp;
+    print "'$_'\n";
+    push(@ARGV,$_);
+   }
+ }
+elsif ($opt{'a'})
+ {
+  find(sub
+       {
+        $File::Find::prune = 1 if (/^blib$/);
+        push(@ARGV,$File::Find::name) if (/\.pm$/)
+       },'.');
+ }
+
+@ARGV = grep(!m#(Tk|Config)\.pm$#,@ARGV);
+
+unless (@ARGV)
+ {
+  warn "No files specified\n";
+  exit;
+ }
+
+my @undo = ();
+
+sub VERSION
+{
+ my $have = `p4 have $ARGV`;
+ my ($path,$need)  = $have =~ /^(.*#(\d+))\s+-/;
+ $need++ if (-w $ARGV);
+ return ($need,sprintf "\$VERSION = sprintf '%d.%%03d', q\$Revision: #%d\$ =~ /\\D(\\d+)\\s*\$/;\n",$opt{'p'},$need);
+}
+
+
+$^I = ".old" if $opt{'e'};
+my $seen = 0;
+my $edit = 0;
+while (<>)
+ {
+  $edit |= s/\r//g;
+  s/ +$//;
+  if (/^\s*\$VERSION\s*=\s*'(\d+)\.0*(\d+)'\s*;\s*#\s*\$Id[:\s]+(.*)\$\s*(?:\+(\d+))?.*$/)
+   {
+    $seen = 1;
+    my $have = $2;
+    my ($want,$str) = VERSION();
+    if ($opt{q} && $have ne $want)
+     {
+      warn "!$ARGV:$have ne $want\n";
+      warn "-$ARGV:$_";
+      $_ = $str;
+      warn "+$ARGV:$_";
+      $edit = 1;
+     }
+   }
+  elsif (/^\s*(our\s+)?\$VERSION\s*=[^#]*\$Revision[:\s]+#(\d+)\s*\$/)
+   {
+    $seen = 1;
+    my $have = $2;
+    my ($want,$str) = VERSION();
+    if ($have ne $want)
+     {
+      warn "-$ARGV:$_";
+      $_ = $str;
+      warn "+$ARGV:$_";
+      $edit = 1;
+     }
+   }
+  elsif (/\$[\w:]*\bVERSION\s*=/)
+   {
+    if ($seen == 1)
+     {
+      warn "DUPLICATE $ARGV already had $_";
+     }
+   }
+  elsif (/\$(Id|Revision):/ || m#//depot#)
+   {
+    warn "Did not match:$_";
+   }
+  elsif (!$seen && /^\s*(\@ISA|bootstrap|use\s+(Tk)|sub)/)
+   {
+    warn "$ARGV:$.:insert before\n$_\n";
+    print "\nuse vars qw(\$VERSION);\n";
+    my ($want,$str) = VERSION();
+    print  $str;
+    $seen = $edit = 1;
+   }
+  print if $opt{'e'};;
+  if (!$seen && (eof || /__END__/))
+   {
+    warn "No insert point found in $ARGV\n";
+    $seen = 1;
+   }
+  if (eof)
+   {
+    if ($opt{'e'})
+     {
+      if ($edit && $opt{'e'})
+       {
+        system('p4','edit','-t','ktext',$ARGV) unless -w $ARGV;
+       }
+      else
+       {
+        push(@undo,$ARGV);
+       }
+     }
+    else
+     {
+      if ($edit)
+       {
+        warn "$ARGV needs changing?\n";
+       }
+     }
+    $seen = $edit = 0;
+    $.    = 0;
+   }
+ }
+
+foreach my $file (@undo)
+ {
+  chmod(0666,$file) unless -w $file;
+  unlink($file);
+  rename("$file$^I",$file);
+ }

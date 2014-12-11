@@ -1,0 +1,266 @@
+#  Copyright (c) 1994 The Regents of the University of California.
+#  Copyright (c) 1994-1997 Sun Microsystems, Inc.
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+#
+
+=head1 NAME
+
+Tk_CreateImageType, Tk_GetImageMasterData - define new kind of image
+
+=for category C Programming
+
+=head1 SYNOPSIS
+
+B<#include E<lt>tk.hE<gt>>
+
+B<Tk_CreateImageType>(I<typePtr>)
+ClientData
+
+B<Tk_GetImageMasterData>(I<interp, name, typePtrPtr>)
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item Tk_ImageType *typePtr (in)
+
+Structure that defines the new type of image.
+Must be static: a
+pointer to this structure is retained by the image code.
+
+=item Tcl_Interp *interp (in)
+
+Interpreter in which image was created.
+
+=item char *name (in)
+
+Name of existing image.
+
+=item Tk_ImageType **typePtrPtr (out)
+
+Points to word in which to store a pointer to type information for
+the given image, if it exists.
+
+=back
+
+=head1 DESCRIPTION
+
+B<Tk_CreateImageType> is invoked to define a new kind of image.
+An image type corresponds to a particular value of the I<type>
+argument for the B<image create> command.  There may exist
+any number of different image types, and new types may be defined
+dynamically by calling B<Tk_CreateImageType>.
+For example, there might be one type for 2-color bitmaps,
+another for multi-color images, another for dithered images,
+another for video, and so on.
+
+The code that implements a new image type is called an
+I<image manager>.
+It consists of a collection of procedures plus three different
+kinds of data structures.
+The first data structure is a Tk_ImageType structure, which contains
+the name of the image type and pointers to five procedures provided
+by the image manager to deal with images of this type:
+
+ typedef struct Tk_ImageType {
+ 	char *name;
+ 	Tk_ImageCreateProc *createProc;
+ 	Tk_ImageGetProc *getProc;
+ 	Tk_ImageDisplayProc *displayProc;
+ 	Tk_ImageFreeProc *freeProc;
+ 	Tk_ImageDeleteProc *deleteProc;
+ } Tk_ImageType;
+
+The fields of this structure will be described in later subsections
+of this entry.
+
+The second major data structure manipulated by an image manager
+is called an I<image master>;  it contains overall information
+about a particular image, such as the values of the configuration
+options specified in an B<image create> command.
+There will usually be one of these structures for each
+invocation of the B<image create> command.
+
+The third data structure related to images is an I<image instance>.
+There will usually be one of these structures for each usage of an
+image in a particular widget.
+It is possible for a single image to appear simultaneously
+in multiple widgets, or even multiple times in the same widget.
+Furthermore, different instances may be on different screens
+or displays.
+The image instance data structure describes things that may
+vary from instance to instance, such as colors and graphics
+contexts for redisplay.
+There is usually one instance structure for each B<-image>
+option specified for a widget or canvas item.
+
+The following subsections describe the fields of a Tk_ImageType
+in more detail.
+
+=head1 B<name>
+
+I<typePtr-E<gt>name> provides a name for the image type.
+Once B<Tk_CreateImageType> returns, this name may be used
+in B<image create> commands to create images of the new
+type.
+If there already existed an image type by this name then
+the new image type replaces the old one.
+
+=for category  Tk Library Procedures
+
+=head1 CREATEPROC
+
+I<typePtr-E<gt>createProc> provides the address of a procedure for
+Tk to call whenever B<image create> is invoked to create
+an image of the new type.
+I<typePtr-E<gt>createProc> must match the following prototype:
+
+ typedef int Tk_ImageCreateProc(
+ 	Tcl_Interp *interp,
+ 	char *name,
+ 	int argc,
+ 	char **argv,
+ 	Tk_ImageType *typePtr,
+ 	Tk_ImageMaster master,
+ 	ClientData *masterDataPtr);
+
+The I<interp> argument is the interpreter in which the B<image>
+command was invoked, and I<name> is the name for the new image,
+which was either specified explicitly in the B<image> command
+or generated automatically by the B<image> command.
+The I<argc> and I<argv> arguments describe all the configuration
+options for the new image (everything after the name argument to
+B<image>).
+The I<master> argument is a token that refers to Tk's information
+about this image;  the image manager must return this token to
+Tk when invoking the B<Tk_ImageChanged> procedure.
+Typically I<createProc> will parse I<argc> and I<argv>
+and create an image master data structure for the new image.
+I<createProc> may store an arbitrary one-word value at
+*I<masterDataPtr>, which will be passed back to the
+image manager when other callbacks are invoked.
+Typically the value is a pointer to the master data
+structure for the image.
+
+If I<createProc> encounters an error, it should leave an error
+message in I<interp-E<gt>result> and return B<TCL_ERROR>;  otherwise
+it should return B<TCL_OK>.
+
+I<createProc> should call B<Tk_ImageChanged> in order to set the
+size of the image and request an initial redisplay.
+
+=head1 GETPROC
+
+I<typePtr-E<gt>getProc> is invoked by Tk whenever a widget
+calls B<Tk_GetImage> to use a particular image.
+This procedure must match the following prototype:
+
+ typedef ClientData Tk_ImageGetProc(
+ 	Tk_Window tkwin,
+ 	ClientData masterData);
+
+The I<tkwin> argument identifies the window in which the
+image will be used and I<masterData> is the value
+returned by I<createProc> when the image master was created.
+I<getProc> will usually create a data structure for the new
+instance, including such things as the resources needed to
+display the image in the given window.
+I<getProc> returns a one-word token for the instance, which
+is typically the address of the instance data structure.
+Tk will pass this value back to the image manager when invoking
+its I<displayProc> and I<freeProc> procedures.
+
+=head1 DISPLAYPROC
+
+I<typePtr-E<gt>displayProc> is invoked by Tk whenever an image needs
+to be displayed (i.e., whenever a widget calls B<Tk_RedrawImage>).
+I<displayProc> must match the following prototype:
+
+ typedef void Tk_ImageDisplayProc(
+ 	ClientData instanceData,
+ 	Display *display,
+ 	Drawable drawable,
+ 	int imageX,
+ 	int imageY,
+ 	int width,
+ 	int height,
+ 	int drawableX,
+ 	int drawableY);
+
+The I<instanceData> will be the same as the value returned by
+I<getProc> when the instance was created.
+I<display> and I<drawable> indicate where to display the
+image;  I<drawable> may be a pixmap rather than
+the window specified to I<getProc> (this is usually the case,
+since most widgets double-buffer their redisplay to get smoother
+visual effects).
+I<imageX>, I<imageY>, I<width>, and I<height>
+identify the region of the image that must be redisplayed.
+This region will always be within the size of the image
+as specified in the most recent call to B<Tk_ImageChanged>.
+I<drawableX> and I<drawableY> indicate where in I<drawable>
+the image should be displayed;  I<displayProc> should display
+the given region of the image so that point (I<imageX>, I<imageY>)
+in the image appears at (I<drawableX>, I<drawableY>) in I<drawable>.
+
+=head1 FREEPROC
+
+I<typePtr-E<gt>freeProc> contains the address of a procedure that
+Tk will invoke when an image instance is released (i.e., when
+B<Tk_FreeImage> is invoked).
+This can happen, for example, when a widget is deleted or a image item
+in a canvas is deleted, or when the image displayed in a widget or
+canvas item is changed.
+I<freeProc> must match the following prototype:
+
+ typedef void Tk_ImageFreeProc(
+ 	ClientData instanceData,
+ 	Display *display);
+
+The I<instanceData> will be the same as the value returned by
+I<getProc> when the instance was created, and I<display>
+is the display containing the window for the instance.
+I<freeProc> should release any resources associated with the
+image instance, since the instance will never be used again.
+
+=head1 DELETEPROC
+
+I<typePtr-E<gt>deleteProc> is a procedure that Tk invokes when an
+image is being deleted (i.e. when the B<image delete> command
+is invoked).
+Before invoking I<deleteProc> Tk will invoke I<freeProc> for
+each of the image's instances.
+I<deleteProc> must match the following prototype:
+
+ typedef void Tk_ImageDeleteProc(
+ 	ClientData masterData);
+
+The I<masterData> argument will be the same as the value
+stored in I<*masterDataPtr> by I<createProc> when the
+image was created.
+I<deleteProc> should release any resources associated with
+the image.
+
+=head1 TK_GETIMAGEMASTERDATA
+
+The procedure B<Tk_GetImageMasterData> may be invoked to retrieve
+information about an image.  For example, an image manager can use this
+procedure to locate its image master data for an image.
+If there exists an image named I<name>
+in the interpreter given by I<interp>, then I<*typePtrPtr> is
+filled in with type information for the image (the I<typePtr> value
+passed to B<Tk_CreateImageType> when the image type was registered)
+and the return value is the ClientData value returned by the
+I<createProc> when the image was created (this is typically a
+pointer to the image master data structure).  If no such image exists
+then NULL is returned and NULL is stored at I<*typePtrPtr>.
+
+=head1 SEE ALSO
+
+L<Tk::ImgChanged>, L<Tk::GetImage>, L<Tk::GetImage>, L<Tk::GetImage>, L<Tk::GetImage>
+
+=head1 KEYWORDS
+
+image manager, image type, instance, master

@@ -1,0 +1,293 @@
+
+=head1 NAME
+
+Tk::Balloon - pop up help balloons.
+
+=for pm Tixish/Balloon.pm
+
+=for category Tix Extensions
+
+=head1 SYNOPSIS
+
+    use Tk::Balloon;
+    ...
+    $b = $top->Balloon(-statusbar => $status_bar_widget);
+
+    # Normal Balloon:
+    $b->attach($widget,
+	       -balloonmsg => "Balloon help message",
+	       -statusmsg => "Status bar message");
+
+    # Balloon attached to entries in a menu widget:
+    $b->attach($menu, -state => 'status',
+		      -msg => ['first menu entry',
+			       'second menu entry',
+			       ...
+			      ],
+	      );
+
+    # Balloon attached to individual items in a canvas widget:
+    $b->attach($canvas, -balloonposition => 'mouse',
+			-msg => {'item1' => 'msg1',
+				 'tag2'  => 'msg2',
+				  ...
+				},
+	      );
+
+    # Balloon attached to items in a listbox widget:
+    $b->attach($listbox, -balloonposition => 'mouse',
+			 -msg => ['first listbox element',
+				  '2nd listbox element',
+				  ...
+				 ],
+	      );
+
+=head1 DESCRIPTION
+
+B<Balloon> provides the framework to create and attach help
+balloons to various widgets so that when the mouse pauses over the
+widget for more than a specified amount of time, a help balloon is
+popped up.
+
+=head2 Balloons and Menus or Listboxes
+
+If the balloon is attached to a B<Menu> or B<Listbox> widget and the
+message arguments are array references, then each element in the array
+will be the message corresponding to a menu entry or listbox element.
+The balloon message will then be shown for the entry which the mouse
+pauses over. Otherwise it is assumed that the balloon is to be
+attached to the B<Menu> or B<Listbox> as a whole. You can have
+separate status and balloon messages just like normal balloons.
+
+=head2 Balloons and Canvases
+
+If the balloon is attached to a B<Canvas> widget and the message
+arguments are hash references, then each hash key should correspond to
+a canvas item ID or tag and the associated value will correspond to the
+message for that canvas item. The balloon message will then be shown for
+the current item (the one at the position of the mouse). Otherwise it is
+assumed that the balloon is to be attached to the B<Canvas> as a whole.
+You can have separate status and balloon messages just like normal
+balloons.
+
+=head2 Balloons and HLists
+
+If the balloon is attached to a B<HList> widget and the message
+arguments are hash references, then each hash key should correspond to
+a HList path and the associated value will correspond to the message
+for that HList item. The balloon message will then be shown for the
+current item (the one at the position of the mouse). Otherwise it is
+assumed that the balloon is to be attached to the B<HList> as a whole.
+You can have separate status and balloon messages just like normal
+balloons.
+
+=head2 Balloon Position
+
+By default, the balloon pops up at the lower right side of the client.
+If it would extend outside the lower screen border, its positioned at the
+upper right side. If it would extend outside the right screen border
+it's shown on the lower left side of the client. If it would extend
+outside both the lower and the right screen border, it's positioned
+at the upper left side of the client. Thus, the little arrow always
+points to the attached client.
+
+=head1 OPTIONS
+
+B<Balloon> accepts all of the options that the B<Frame> widget
+accepts. In addition, the following options are also recognized.
+
+=over 4
+
+=item B<-initwait>
+
+Specifies the amount of time to wait without activity before
+popping up a help balloon. Specified in milliseconds. Defaults to
+350 milliseconds. This applies to both the popped up balloon and
+the status bar message.
+
+=item B<-state>
+
+Can be one of B<'balloon'>, B<'status'>, B<'both'> or B<'none'>
+indicating that the help balloon, status bar help, both or none
+respectively should be activated when the mouse pauses over the
+client widget. Default is B<'both'>.
+
+=item B<-statusbar>
+
+Specifies the widget used to display the status message. This
+widget should accept the B<-text> option and is typically a
+B<Label>. If the widget accepts the B<-textvariable> option and
+that option is defined then it is used instead of the B<-text>
+option.
+
+=item B<-balloonposition>
+
+Can be one of B<'widget'> or B<'mouse'>. It controls where the balloon
+will popup. B<'widget'> makes the balloon appear at the lower right
+corner of the widget it is attached to (default), and B<'mouse'> makes
+the balloon appear below and to the right of the current mouse position.
+
+=item B<-postcommand>
+
+This option takes a B<CODE> reference which will be executed before the
+balloon and statusbar messages are displayed and should return a true
+or false value to indicate whether you want the balloon to be displayed
+or not. This also lets you control where the balloon is positioned by
+returning a true value that looks like I<X,Y> (matches this regular
+expression: C</^(\d+),(\d+)$/>). If the postcommand returns a value that
+matches that re then those coordinates will be used as the position to
+post the balloon. I<Warning:> this subroutine should return quickly or
+the balloon response will appear slow.
+
+=item B<-cancelcommand>
+
+This option takes a B<CODE> reference which will be executed before the
+balloon and statusbar messages are canceled and should return a true
+or false value to indicate whether you want the balloon to be canceled
+or not. I<Warning:> this subroutine should return quickly or the balloon
+response will appear slow.
+
+=item B<-motioncommand>
+
+This option takes a B<CODE> reference which will be executed for any
+motion event and should return a true or false value to indicate
+whether the currently displayed balloon should be canceled (deactivated).
+If it returns true then the balloon will definitely be canceled, if it
+returns false then it may still be canceled depending the internal rules.
+I<Note:> a new balloon may be posted after the B<-initwait> time
+interval, use the B<-postcommand> option to control that behavior.
+I<Warning:> the subroutine should be extremely fast or the balloon
+response will appear slow and consume a lot of CPU time (it is executed
+every time the mouse moves over the widgets the balloon is attached to).
+
+=item B<-numscreens>
+
+This option accepts an integer 1 or greater. This option should be used
+to avoid disjointed balloons across multiple screens in single logical
+sceen (SLS) mode. This only currently works in the horizontal direction.
+Example: If you are running dual screens in SLS mode then you would set
+this value to 2. Default value is 1.
+
+=back
+
+=head1 METHODS
+
+The B<Balloon> widget supports only three non-standard methods:
+
+=head2 B<attach(>I<widget>, I<options>B<)>
+
+Attaches the widget indicated by I<widget> to the help system. The
+allowed options are:
+
+=over 4
+
+=item B<-statusmsg>
+
+The argument is the message to be shown on the status bar when the
+mouse pauses over this client. If this is not specified, but
+B<-msg> is specified then the message displayed on the status bar
+is the same as the argument for B<-msg>. If you give it a scalar
+reference then it is dereferenced before being displayed. Useful
+if the postcommand is used to change the message.
+
+=item B<-balloonmsg>
+
+The argument is the message to be displayed in the balloon that
+will be popped up when the mouse pauses over this client. As with
+B<-statusmsg> if this is not specified, then it takes its value
+from the B<-msg> specification if any. If neither B<-balloonmsg>
+nor B<-msg> are specified, or they are the empty string then
+no balloon is popped up instead of an empty balloon. If you
+give it a scalar reference then it is dereferenced before being
+displayed. Useful if the postcommand is used to change the message.
+
+=item B<-msg>
+
+The catch-all for B<-statusmsg> and B<-balloonmsg>. This is a
+convenient way of specifying the same message to be displayed in
+both the balloon and the status bar for the client.
+
+=item B<-initwait>
+
+=item B<-state>
+
+=item B<-statusbar>
+
+=item B<-balloonposition>
+
+=item B<-postcommand>
+
+=item B<-cancelcommand>
+
+=item B<-motioncommand>
+
+These options allow you to override the balloon's default value for
+those option for some of the widgets it is attached to. It accepts the
+same values as above and will default to the B<Balloon>'s value.
+
+=back
+
+=head2 B<detach(>I<widget>B<)>
+
+Detaches the specified I<widget> from the help system.
+
+=head2 B<destroy>
+
+Destroys the specified balloon.
+
+=head1 ADVERTISED SUBWIDGETS
+
+The balloon label is advertised as C<message>.
+
+=head1 EXAMPLES
+
+See the balloon demo included with the widget demo script that came with
+the distribution for examples on various ways to use balloons.
+
+=head1 NOTES
+
+Because of the overhead associated with each balloon you create (from
+tracking the mouse movement to know when to activate and deactivate
+them) you will see the best performance (low CPU consumption) if you
+create as few balloons as possible and attach them to as many widgets
+as you can.  In other words, don't create a balloon for each widget
+you want to attach one to.
+
+=head1 CAVEATS
+
+Pressing any button will deactivate (cancel) the current balloon,
+if one exists. You can usually make the balloon reappear by moving
+the mouse a little. Creative use of the 3 command options can help
+you out also. If the mouse is over the balloon when a menu is unposted
+then the balloon will remain until you move off of it.
+
+=head1 BUGS
+
+If using balloons attached to listbox entries or canvas items in a
+scrolled widget, then the subwidget have to be used:
+
+    $balloon->attach($w->Subwidget("scrolled"), -msg => ...);
+
+=head1 AUTHORS
+
+B<Rajappa Iyer> <rsi@earthling.net> did the original coding.
+
+B<Jason A. Smith> <smithj4@rpi.edu> added support for menus and made some
+other enhancements.
+
+B<Slaven Rezic> <srezic@cpan.org> added support for canvas items.
+
+B<Gerhard Petrowitsch> <gerhard@petrowitsch.de> added intelligent positioning
+
+B<Jack Dunnigan> <dunniganj@cpan.org> Made positioning I<more> intelligent and
+added support for multiple monitors under single logical screen.
+
+=head1 HISTORY
+
+The code and documentation was derived from Balloon.tcl from the
+Tix4.0 distribution by Ioi Lam and modified by the above mentioned
+authors. This code may be redistributed under the same terms as Perl.
+
+=cut
+
+

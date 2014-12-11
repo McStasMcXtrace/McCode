@@ -1,0 +1,186 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Lens_simple
+*
+* %I
+* Written by: Erik Knudsen
+* Date: June 16, 2009
+* Version: $Revision: 1.0$
+* Origin: Risoe
+* Release: McXtrace 0.1
+*
+* Simple refractive x-ray lens
+* 
+* %D
+* Models a stack of N refractive lenses, with a radius of curvature, r, at the apex.
+* The model is a thin-lens approximation where photons are refracted in a the XY plane
+* at Z=0. Absorption is generally disregarded may be handled through the use of the optional
+* transmission parameter T, where 0<=T<=1.
+* Thus, the lens has the focal length of f=R/(2*N*&delta) where the x-ray refractive
+* index is written: n = 1 - &delta + i &beta.
+*
+* %P
+* INPUT PARAMETERS
+*
+* xwidth: Width of lens aperture. (m)
+* yheight:Height of lens aperture. (m)
+* material_datafile: file where the material parameters for the lens may be found. Format is similar to what may be found off the NISP website. [Be.txt] 
+* N: The number of successive lenses in the stack. ( )
+* r: The radius of curvature of the lens (m)
+* radius: Obsolete: Used if r==0, but will be removed in next release. (m)
+* Optional parameters:
+* T: Transmission efficiency of the lens. ( )
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT Lens_simple
+DEFINITION PARAMETERS (string material_datafile="Be.txt")
+SETTING PARAMETERS (xwidth,yheight,T=1,r=0.3e-3,radius=0,N=1)
+OUTPUT PARAMETERS (prms)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+SHARE
+%{
+  %include "read_table-lib"
+%}
+
+DECLARE
+%{
+  double xmax,xmin,ymax,ymin;
+
+  struct {
+    int Z;
+    double At, rho;
+    double *E,*delta;
+  } *prms;
+
+%}
+
+INITIALIZE
+%{
+  int status=0;
+ 
+  if(!xwidth || !yheight){
+    fprintf(stderr,"%s: Lens has zero effective area\n",NAME_CURRENT_COMP);
+    exit(0);
+  }
+  xmax=xwidth/2.0;
+  xmin=-xmax;
+  ymax=yheight/2.0;
+  ymin=-ymax;
+
+  t_Table T;
+  if ( (status=Table_Read(&T,material_datafile,0))==-1){
+    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
+    exit(-1);
+  }
+  char **header_parsed;
+  header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho","sigma[a]");
+  prms=calloc(1,sizeof(*prms));
+  if (!prms->At) prms->At=strtod(header_parsed[1],NULL);
+  if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
+  if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
+  prms->E=malloc(sizeof(double)*(T.rows+1));
+  prms->delta=malloc(sizeof(double)*(T.rows+1));
+
+  int i;
+  for (i=0;i<T.rows;i++){
+    prms->E[i]=T.data[i*T.columns];
+    prms->delta[i]=pow(2*M_PI/(T.data[i*T.columns]*E2K),2)*1e-20 * T.data[1+i*T.columns] * prms->rho/prms->At*1e6 * RE *1e-10 * NA* 0.5*M_1_PI;
+  }
+
+  prms->E[T.rows]=-1.0;
+  prms->delta[T.rows]=-FLT_MAX;
+  
+  Table_Free(&T);
+
+  if (r==0 && radius!=0){
+    fprintf(stderr,"Warning (%s): You are using the obsolescent parameter name radius. Please consider changing to r\n"NAME_CURRENT_COMP); 
+    r=radius;
+  }
+  if(r<=0){
+    fprintf(stderr,"Error (%s): No meaningful radius of curvature found r=%g.\n",NAME_CURRENT_COMP,r);
+    exit(-1);
+  }
+
+%}
+
+TRACE
+%{
+  double sx,sy,sz,s;  
+  double F,k,e,theta,alpha,delta;
+  PROP_Z0;
+  if (x >xmin && x<xmax && y>ymin && y<ymax){
+    SCATTER;
+    if(T==0) 
+      ABSORB;
+    else
+      p*=T;
+    
+    /*change direction towards focal*/
+    /*Focal length given by lambda and delta*/
+    k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
+    e=K2E*k;
+    int i=0;
+    double alpha,delta;
+    while (e>prms->E[i])
+    {
+      i++;
+      if (prms->E[i]==-1) {
+        fprintf(stderr,"Photon energy (%g keV) outside Lens data range",e);ABSORB;
+      } 
+    }
+    /*protect against out of range errors*/
+    alpha=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
+    delta=(1-alpha)*prms->delta[i-1] + alpha*prms->delta[i];
+    F=radius/2/delta/N;
+    /*Only focusing in the y-direction for now.*/
+    /*auxiliary vector s*/ 
+    sx=0;sy=-y;sz=F;
+    s=sqrt(scalar_prod(sx,sy,sz,sx,sy,sz));
+    theta=acos(scalar_prod(sx,sy,sz,0,0,1)/s);
+    if (y<0)theta=-theta; /*if y is negative rotation should be ccw*/
+    /*apply the rotation around the x-axis to focus in y*/
+    Rotation R;
+    R[0][0]=1; R[0][1]=0;R[0][2]=0;
+    R[1][0]=0; R[1][1]=cos(theta); R[1][2]=-sin(theta);
+    R[2][0]=0; R[2][1]=sin(theta); R[2][2]=cos(theta);
+    /*reuse the vector s as temp storage*/
+    sx=kx;
+    sy=ky*R[1][1]+kz*R[1][2];
+    sz=ky*R[2][1]+kz*R[2][2];
+    kx=sx;ky=sy;kz=sz;
+  }
+  else{
+    ABSORB;
+  }
+%}
+
+FINALLY
+%{
+  free(prms);
+%}
+
+
+MCDISPLAY
+%{
+  double delta;
+  int N=8,i;
+  magnify("xy");
+  rectangle("xy",0,0,0,xwidth,yheight);
+  if (yheight<xwidth){
+    delta=yheight/N;
+  } else {
+    delta=xwidth/N;
+  }
+  for (i=1;i<=N;i++){
+    circle("xy",0,0,0,sqrt(delta*i));
+  }
+%}
+
+END

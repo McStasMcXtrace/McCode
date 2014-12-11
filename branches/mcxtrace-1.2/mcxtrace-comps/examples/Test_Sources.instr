@@ -1,0 +1,121 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Feb 1st 2013
+* Origin: DTU Fysik 
+* Release: McXtrace 1.1
+* Version: 1.0
+* %INSTRUMENT_SITE: Tests_optics
+*
+* Test instrument to show that the source components work
+*
+* %Description
+* This instrument is a unit test for the source components
+*
+* %Example: Test_Sources.instr SRC=0 Detector: emon_I=0.999586
+* %Example: Test_Sources.instr SRC=1 Detector: psd_I=0.999601
+* %Example: Test_Sources.instr SRC=2 Detector: lmon_I=7.95755e-06
+* %Example: Test_Sources.instr SRC=3 Detector: emon_I=7.95649e-06
+* %Example: Test_Sources.instr SRC=4 Detector: lmon_I=7.95748e-06 
+* %Example: Test_Sources.instr SRC=5 Detector: psd_I=7.95748e-06
+* %Example: Test_Sources.instr SRC=6 Detector: emon_I=1
+* %Example: Test_Sources.instr SRC=7 Detector: lmon_I=0.993603
+*
+* %Parameters
+* SRC: [ ] Integer parameter picks a source model. 
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Test_Sources(SRC=0)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT s1g = Source_gaussian(
+    sig_x = 1e-3, sig_y = 2e-3, sigPr_x = 1e-3, sigPr_y = 2e-3,
+    flux = 1, dist = 1, gauss = 0, E0 = 5, dE = 1)
+WHEN (SRC==0)  AT (0, 0, 0) RELATIVE Origin
+COMPONENT s2g = Source_gaussian(
+    sig_x = 1e-3, sig_y = 2e-3, sigPr_x = 1e-3, sigPr_y = 2e-3,
+    flux = 1, dist = 1, gauss = 1, lambda0 = 2.5, dlambda = 0.2)
+WHEN (SRC==1)  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT s1p = Source_pt(
+    focus_xw = 0.01, focus_yh = 0.01, flux = 1, dist = 1, E0 = 5,
+    dE = 1, gauss = 0)
+WHEN (SRC==2)  AT (0, 0, 0) RELATIVE Origin
+COMPONENT s2p = Source_pt(
+    focus_xw = 0.01, focus_yh = 0.01, flux = 1, dist = 1, lambda0 = 2.5,
+    dlambda = 0.2, gauss = 1)
+WHEN (SRC==3)  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT s1f = Source_flat(
+    xwidth=1e-3, yheight=2e-3, focus_xw = 0.01, focus_yh = 0.01, flux = 1, dist = 1, E0 = 5,
+     dE = 1, gauss = 0)
+WHEN (SRC==4)  AT (0, 0, 0) RELATIVE Origin
+COMPONENT s2f = Source_flat(
+    xwidth=1e-3, yheight=2e-3, focus_xw = 0.01, focus_yh = 0.01, flux = 1, dist = 1, lambda0 = 2.5,
+     dlambda = 0.2, gauss = 1)
+WHEN (SRC==5)  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT s1d = Source_div(
+    xwidth=1e-3, yheight=1e-3, focus_aw=2e-3, focus_ah=0.5e-3, E0=5, dE=1, gauss=0, gauss_a=1
+)
+WHEN (SRC==6) AT (0,0,0) RELATIVE Origin
+COMPONENT s2d = Source_div(
+    xwidth=1e-3, yheight=1e-3, focus_aw=2e-3, focus_ah=0.5e-3, lambda0=2.5, dlambda=0.2, gauss=1, gauss_a=0
+)
+WHEN (SRC==7) AT (0,0,0) RELATIVE Origin
+
+
+
+
+COMPONENT lmon= L_monitor(
+   restore_xray=1, xwidth=0.02, yheight=0.02,Lmin=2,Lmax=3.2,filename="lmon.dat")
+AT(0,0,1) RELATIVE Origin
+COMPONENT emon= E_monitor(
+   restore_xray=1, xwidth=0.02, yheight=0.02,Emin=3,Emax=7,filename="emon.dat")
+AT(0,0,1) RELATIVE Origin
+COMPONENT psd= PSD_monitor(
+   restore_xray=1, xwidth=0.02, yheight=0.02,nx=101, ny=101,filename="psdmon.dat")
+AT(0,0,1) RELATIVE Origin
+
+
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+

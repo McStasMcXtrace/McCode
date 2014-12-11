@@ -1,0 +1,317 @@
+#!/tools/bin/perl5.005 -w
+use strict;
+use Data::Dumper;
+use Tk;
+
+my $hc = qr/[-\*<>]/;
+my $vc = qr/[\|\^v\*]/;
+
+my $mw = MainWindow->new;
+my $menu = $mw->Menu;
+$mw->configure(-menu => $menu);
+$menu->cascade(-label => '~File', -menuitems => [
+                         [Command => 'E~xit', -command => [destroy => $mw]]
+                         ]);
+
+my $txt = text_image();
+
+my $c  = $mw->Scrolled('Canvas',-bg => 'white',
+                       -width => 10*@{$txt->[0]},
+                       -height => 10 * @$txt,
+		       -scrollbars => 'osow');
+$c->pack(-expand => 1, -fill => 'both');
+
+my @v = find_vertical($txt);
+my @h = find_horizontal($txt);
+
+my @box = find_boxes(\@v,\@h);
+
+make_varrows($txt,@v);
+make_harrows($txt,@h);
+
+foreach my $box (@box)
+ {
+  $c->createRectangle(map(10*$_,@$box),-width => 3, -outline => 'black', -fill => '#f0f0f0');
+ }
+
+foreach my $line (@v,@h)
+ {
+  my @line = @$line;
+  $c->createLine(map(10*$_,splice(@line,0,4)),@line,-fill => 'black');
+ }
+
+foreach my $box (@box)
+ {
+  my ($x1,$y1,$x2,$y2) = @$box;
+  my @s;
+  for (my $y = $y1+1; $y < $y2; $y++)
+   {
+    my $l = '';
+    for (my $x = $x1+1; $x < $x2; $x++)
+     {
+      $l .= $txt->[$y][$x];
+     }
+    $l =~ s/^\s+//;
+    $l =~ s/\s+$//;
+    push(@s,$l) if length($l);
+   }
+  $c->createText(int(10*($x1+$x2)/2),int(10*($y1+$y2)/2),-text => join("\n",@s),
+                 -justify => 'center', -anchor => 'center');
+ }
+
+$c->configure(-scrollregion => [$c->bbox('all')]);
+
+$mw->update;
+
+MainLoop;
+
+sub make_varrows
+{
+ my $txt = shift;
+ foreach my $line (@_)
+  {
+   my $f = 0;
+   my ($x1,$y1,$x2,$y2) = @$line;
+   die unless $x1 == $x2;
+   for my $y ($y1..$y2)
+    {
+     my $ch = $txt->[$y][$x1];
+     $f |= 1 if $ch eq '^';
+     $f |= 2 if $ch eq 'v';
+    }
+   push(@$line,'-arrow',${['','first','last','both']}[$f]) if ($f);
+  }
+}
+
+sub make_harrows
+{
+ my $txt = shift;
+ foreach my $line (@_)
+  {
+   my $f = 0;
+   my ($x1,$y1,$x2,$y2) = @$line;
+   die unless $y1 == $y2;
+   for my $x ($x1..$x2)
+    {
+     my $ch = $txt->[$y1][$x];
+     $f |= 1 if $ch eq '<';
+     $f |= 2 if $ch eq '>';
+    }
+   push(@$line,'-arrow',${['','first','last','both']}[$f]) if ($f);
+  }
+}
+
+sub find_boxes
+{
+ my ($v,$h) = @_;
+ my %x;
+ my %y;
+ foreach my $i (0..@$v-1)
+  {
+   my $line = $v->[$i]; # x,y1,x,y2
+   my $x = $line->[0];
+   my $y = $line->[1];
+   my $e = $line->[3];
+   my $key = $y.'-'.$e;
+   $y{$key} = [] unless exists $y{$key};
+   push(@{$y{$key}},[$x,$i]);
+  }
+ foreach my $i (0..@$h-1)
+  {
+   my $line = $h->[$i]; # x1,y,x2,y
+   my $x = $line->[0];
+   my $y = $line->[1];
+   my $e = $line->[2];
+   my $key = $x.'-'.$e;
+   $x{$key} = [] unless exists $x{$key};
+   push(@{$x{$key}},[$y,$i]);
+  }
+ my @box;
+ my @vd;
+ my @hd;
+ foreach my $xk (keys %x)
+  {
+   my ($x1,$x2) = split(/-/,$xk);
+   my $xp = $x{$xk};
+   my @junk;
+ LOOP:
+   while (@$xp)
+    {
+     my ($y1,$i1) = @{splice(@$xp,0,1)};
+     for my $xi (0..@$xp-1)
+      {
+       my ($y2,$i2) = @{$xp->[$xi]};
+       my $yk = "$y1-$y2";
+       if (exists $y{$yk})
+        {
+         my $yp = $y{$yk};
+         my $yi = 0;
+         for my $yi (0..@$yp-1)
+          {
+           if ($yp->[$yi][0] == $x1)
+            {
+             my $j1 = $yp->[$yi][1];
+             for my $yj ($yi..@$yp-1)
+              {
+               if ($yp->[$yj][0] == $x2)
+                {
+                 my $j2 = $yp->[$yj][1];
+                 push(@box,[$x1,$y1,$x2,$y2]);
+                 splice(@$xp,$xi,1);
+                 splice(@$yp,$yj,1);
+                 splice(@$yp,$yi,1);
+                 push(@hd,$i1,$i2);
+                 push(@vd,$j1,$j2);
+                 delete $y{$yk} unless @$yp;
+                 next LOOP;
+                }
+              }
+            }
+          }
+        }
+      }
+     push(@junk,[$y1,$i1]);
+    }
+   if (@junk)
+    {
+     $x{$xk} = \@junk;
+    }
+   else
+    {
+     delete $x{$xk};
+    }
+  }
+ foreach my $i (sort {$b <=> $a} @vd)
+  {
+   splice(@$v,$i,1);
+  }
+ foreach my $i (sort {$b <=> $a} @hd)
+  {
+   splice(@$h,$i,1);
+  }
+ return @box;
+}
+
+sub find_vertical
+{
+ my $txt = shift;
+ my $h = @$txt;
+ my $w = @{$txt->[0]};
+ my @vert;
+ my @live;
+ for (my $y = 0; $y < $h; $y++)
+  {
+   for (my $x = 0; $x < $w; $x++)
+    {
+     my $s = $live[$x];
+     my $c = $txt->[$y][$x];
+     if (defined $s)
+      {
+       unless ($c =~ $vc || ($c eq '+' && $y+1 < $h && $txt->[$y+1][$x] =~ $vc))
+        {
+         my $e = ($c eq '+') ? $y : $y-1;
+         if ($e - $s > 0)
+          {
+           push(@vert,[$x,$s,$x,$e]);
+          }
+         $live[$x] = undef;
+        }
+      }
+     elsif ($c eq '+')
+      {
+       $live[$x] = $y;
+      }
+    }
+  }
+ my $e = $h-1;
+ for (my $x = 0; $x < $w; $x++)
+  {
+   my $s = $live[$x];
+   if (defined $s)
+    {
+     if ($e - $s > 0)
+      {
+       push(@vert,[$x,$s,$x,$e]);
+      }
+    }
+  }
+ return @vert;
+}
+
+sub find_horizontal
+{
+ my $txt = shift;
+ my $h = @$txt;
+ my $w = @{$txt->[0]};
+ my @horz;
+ my @live;
+ for (my $x = 0; $x < $w; $x++)
+  {
+   for (my $y = 0; $y < $h; $y++)
+    {
+     my $c = $txt->[$y][$x];
+     my $s = $live[$y];
+     if (defined $s)
+      {
+       unless ($c =~ $hc || ($c =~ /[\+\|]/ && $x+1 < $w && $txt->[$y][$x+1] =~ $hc))
+        {
+         my $e = ($c eq '+') ? $x : $x-1;
+         if ($e - $s > 0)
+          {
+           push(@horz,[$s,$y,$e,$y]);
+          }
+         $live[$y] = undef;
+        }
+      }
+     elsif ($c eq '+')
+      {
+       $live[$y] = $x;
+      }
+    }
+  }
+ my $e = $w-1;
+ for (my $y = 0; $y < $h; $y++)
+  {
+   my $s = $live[$y];
+   if (defined $s)
+    {
+     if ($e - $s > 0)
+      {
+       push(@horz,[$s,$y,$e,$y]);
+      }
+    }
+  }
+ return @horz;
+}
+
+sub show_txt
+{
+ my $txt = shift;
+ foreach (@$txt)
+  {
+   print @$_,"\n";
+  }
+}
+
+sub text_image
+{
+ my @txt;
+ my $max = 0;
+ while (<>)
+  {
+   next if m#^/#;
+   s/\s+$//;
+   my $l = length($_);
+   $max = $l if $l > $max;
+   push(@txt,[split('',$_)]);
+  }
+ foreach (@txt)
+  {
+   if (@$_ < $max)
+    {
+     push(@$_,(' ') x ($max - @$_));
+    }
+  }
+ return \@txt;
+}
+

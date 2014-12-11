@@ -1,0 +1,35 @@
+{% load static %}
+
+<!doctype html>
+<html>
+  <head>
+    {% block head %}
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <script type="text/javascript"
+            src="{% static 'jquery.js' %}"></script>
+    <title>McXtrace: {% block title %}{% endblock %}</title>
+    {% block head_extra %}
+    {% endblock %}
+    {% endblock %}
+  </head>
+<body>
+  <!-- Begin information messages //-->
+  <!-- <div id="messages"> //-->
+<!--     { % with messages = get_flashed_messages() % } //-->
+<!--     { % if messages % } //-->
+<!--     { % for message in messages % } //-->
+<!--     <p id="flash">{{ message }}</p> //-->
+<!--     { % endfor % } //-->
+<!--     { % endif % } //-->
+<!--     { % endwith % } //-->
+<!--   </div> //-->
+  <!-- End information messages //-->
+  <!-- Begin page content //-->
+  <div id="content">{% block content %}{% endblock %}</div>
+  <!-- End page content //-->
+  <!-- begin footer //-->
+  <div id="footer">{% block footer %}
+    A web-based interface for <a href="http://mcxtrace.org/">McXtrace</a>.
+    {% endblock %}</div>
+  <!-- end footer //-->
+</body>

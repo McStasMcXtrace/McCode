@@ -1,0 +1,170 @@
+#!/usr/local/bin/perl -w
+
+use Tk;
+
+# one way of doing menu bars that a collegue has come up with
+# not official in any manner yet.
+
+{
+package MenuBar;
+
+sub new
+{
+ my $class = shift;
+ my($parent,@args) = @_;
+ my $me;
+
+ my $f = $parent->Frame('-relief' => "raised",  '-bd' => 1 );
+
+ $me = bless \$f;
+
+ for($i = 0 ; $i < scalar(@args) ; $i += 2)
+  {
+   $me->add($args[$i],$args[$i+1],'-side' => "left");
+  }
+
+ $f->pack('-side' => "top");
+
+ return $me;
+}
+
+sub add
+{
+ my($me,$name,$defn,@args) = @_;
+
+ my $b = ${$me}->Menubutton( '-text' => $name, '-underline' => 0 );
+ my $m = create_menu($b,$defn);
+
+ $b->configure('-menu' => $m);
+ $b->pack(@args);
+ ${$me}->pack();
+}
+
+sub create_menu
+{
+ my($b,$defn) = @_;
+ my $m = $b->Menu();
+
+ foreach $elem (@{$defn})
+  {
+   if(ref($elem) && ref($elem) eq 'ARRAY' && defined($elem->[0]))
+    {
+     if(defined($elem->[1]) && ref($elem->[1]) && ref($elem->[1]) eq 'ARRAY')
+      {
+       $m->cascade('-label' => $elem->[0],
+                   '-menu'  => create_menu($m,$elem->[1])
+                  );
+      }
+     else
+      {
+       my $state = (defined($elem->[2]) && $elem->[2] == 0) ? 'disabled'
+                                                           : 'normal';
+
+       if(defined($elem->[3]) && ref($elem->[3]) eq 'SCALAR')
+        {
+         $m->checkbutton('-label'    => $elem->[0],
+                         '-variable' => $elem->[3],
+                         '-state'    => $state
+                        );
+        }
+       else
+        {
+         $m->command('-label' => $elem->[0],
+                     '-state' => $state
+                    );
+        }
+      }
+    }
+   else
+    {
+     $m->separator;
+    }
+  }
+
+ return $m;
+}
+}
+
+$top = MainWindow->new();
+
+$bar = MenuBar->new($top,@menus::menu);
+
+Tk::MainLoop; #tkmainloop;
+
+exit;
+
+BEGIN {
+package menus;
+$SEPARATOR = undef;
+
+$xile = [
+     ["Open File...\t\tX"               ,'find-file'                    ],
+     ["Open File (Read Only)...\tY"   ,'find-file'                      ],
+     ["Open File (New Screen)..."  ,'find-file-new-screen'              ],
+     ["Open Alternate File..."     ,'find-alternate-file'               ],
+     $SEPARATOR,
+     ["Include File..."            ,'insert-file'                       ],
+     $SEPARATOR,
+     ["Toggle Read Only"           ,'toggle-read-only'                  ],
+     $SEPARATOR,
+     ["Save Buffer"                ,'save-buffer'                       ],
+     ["Save Buffer As..."          ,'write-file'                        ],
+     ["Save Some Buffers"          ,'save-some-buffers'                 ],
+     ["Save Region As..."          ,'write-region'                      ],
+     ["Revert Buffer"              ,'revert-buffer'                     ],
+     $SEPARATOR,
+     ["Print Buffer"               ,'lpr-buffer'                        ],
+     ["Print Region"               ,'lpr-region'                        ],
+     $SEPARATOR,
+     ["Kill Buffer..."             ,'kill-buffer'                       ],
+     ["Exit Emacs"                 ,'save-buffers-kill-emacs'           ]
+     ];
+$readonly = 0;
+$file = [
+     ["Open File..."               ,$xile                               ],
+     ["Open File (Read Only)..."   ,'find-file'                         ],
+     ["Open File (New Screen)..."  ,'find-file-new-screen'              ],
+     ["Open Alternate File..."     ,'find-alternate-file'               ],
+     $SEPARATOR,
+     ["Include File..."            ,'insert-file'                       ],
+     $SEPARATOR,
+     ["Toggle Read Only"           ,'toggle-read-only'                  ,1,\$readonly],
+     $SEPARATOR,
+     ["Save Buffer"                ,'save-buffer'                       ],
+     ["Save Buffer As..."          ,'write-file'                        ],
+     ["Save Some Buffers"          ,'save-some-buffers'                 ],
+     ["Save Region As..."          ,'write-region'                      ],
+     ["Revert Buffer"              ,'revert-buffer'                     ],
+     $SEPARATOR,
+     ["Print Buffer"               ,'lpr-buffer'                        ],
+     ["Print Region"               ,'lpr-region'                        ],
+     $SEPARATOR,
+     ["Kill Buffer..."             ,'kill-buffer'                       ],
+     ["Exit Emacs"                 ,'save-buffers-kill-emacs'           ]
+     ];
+
+$screen = [
+     ["New Screen"                 ,'x-new-screen'                      ,1],
+     ["Delete Screen"              ,'delete-screen'                     ,0],
+     ["One Screen"                 ,'one-screen'                        ,1],
+     $SEPARATOR,
+     ["Split"                      ,'split-window-vertically'           ,1],
+     ["Un-split (Keep This)"       ,'delete-other-windows'              ,1],
+     ["Un-split (Keep Others)"     ,'delete-window'                     ,1],
+     $SEPARATOR,
+     ["Enlarge current window"     ,'enlarge-window',                ,1],
+     ["Shrink current window"      ,'shrink-window',                 ,1],
+     $SEPARATOR,
+     ["Save Configuration..."      ,'window-config-to-register'         ,1],
+     ["Restore Configuration..."   ,'register-to-window-config'         ,1],
+     $SEPARATOR,
+     ["(Un)Truncate Lines"         ,'hscroll-truncate-lines'            ,1]
+     ];
+
+
+@menu = ( "File"   => $file,
+          "Screen" => $screen,
+          "Another Screen" => $screen
+        );
+}
+

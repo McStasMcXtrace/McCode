@@ -1,0 +1,103 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Test_CRL
+*
+* %Identification
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Nov. 14
+* Origin: DTU Physics 
+* Release: McXtrace 1.2
+* Version: 1.0
+* %INSTRUMENT_SITE: Tests_optics
+*
+* Unit test instrument for various lens components.
+*
+* Example: Test_CRL.instr LENS=0 SRC=1 L1=35.047 L2=17.523 line_I=6.00571e-13
+* Example: Test_CRL.instr LENS=1 SRC=1 L1=35.047 L2=17.523 pt_I=3.23877e-13
+* Example: Test_CRL.instr LENS=2 SRC=1 L1=35.047 L2=17.523 line_I=6.47719e-13
+*
+*
+* %Parameters
+* LENS: [ ] Which lens to use: 0=>Lens_parab, 1=>Lens_parab_Cyl, 2=>Lens_simple
+* L1: [ ] Distance from source to lens.
+* L2: [ ] Distance from lens to image plane 
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Test_CRL(LENS=0, L1=1, L2=11)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_flat(
+    focus_xw=1e-4, focus_yh=2e-4, dist=L1,E0=12.60708, dE=0,
+    xwidth=.5e-4,yheight=1e-4)
+AT(0,0,0) RELATIVE Origin
+
+COMPONENT screen0 = PSD_monitor(
+    restore_xray=1, xwidth=1e-3, yheight=1e-3, filename="screen0")
+AT(0,0,0.01) RELATIVE source
+
+
+COMPONENT crl1dsimple = Lens_simple(
+    material_datafile="Be.txt",radius=0.5e-3,xwidth=1e-4,yheight=2e-4,
+    N=10, T=1)
+WHEN(LENS==2) AT (0,0,L1) RELATIVE Origin
+
+COMPONENT crl2d = Lens_parab(
+    material_datafile = "Be.txt", r = 0.5e-3, yheight = 2e-4,
+    d = .1e-3, N = 10, T=1)
+WHEN (LENS==1)  AT (0, 0, L1) RELATIVE Origin
+
+COMPONENT crl1d = Lens_parab_Cyl(
+    material_datafile = "Be.txt", r = 0.5e-3, yheight = 2e-4, xwidth=1e-4,
+    d = .1e-3, N = 10)
+WHEN (LENS==0)  AT (0, 0, L1) RELATIVE Origin
+
+
+COMPONENT screen = PSD_monitor(
+    restore_xray=1, xwidth=1e-3, yheight=1e-3, filename="screen")
+AT(0,0,L2) RELATIVE crl2d
+
+COMPONENT pt = PSD_monitor(
+    restore_xray=1, xwidth=.5e-4/4.0,yheight=1e-4/4.0, filename="pt")
+AT(0,0,L2) RELATIVE crl2d
+
+COMPONENT line = PSD_monitor(
+    restore_xray=1, xwidth=.4e-3,yheight=1e-4/4.0, filename="line")
+AT(0,0,L2) RELATIVE crl2d
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
+

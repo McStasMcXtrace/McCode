@@ -1,0 +1,49 @@
+#!/usr/local/bin/perl -w
+
+my %mTk;
+my $dir;
+my @list;
+if ($^O eq 'MSWin32')
+ {
+  @list = qw(win xlib generic tix tclWin tclGeneric);
+ }
+else
+ {
+  @list = qw(unix generic tix tclUnix tclGeneric );
+ }
+foreach $dir (@list)
+ {
+  my %exc;
+  my $src = catdir("mTk",$dir);
+  next unless -d $src;
+  opendir(DIR,$src) || die "Cannot open $src:$!";
+  open(EXC,">".catfile($src,"pTk.exc"));
+  my $file;
+  while (defined($file = readdir(DIR)))
+   {
+    next if $exc{$_};
+    if ($file =~ /\.[ch]$/)
+     {
+      my $o = $file;
+      $o =~ s/\.c$/.o/;
+      unless (-f $o)
+       {
+        print EXC "$file\n";
+        unlink($file) if (-f $file);
+       }
+     }
+   }
+  closedir(DIR);
+  close(EXC);
+ }
+
+sub catfile
+{
+ return join('/',@_);
+}
+
+sub catdir
+{
+ return join('/',@_);
+}
+
