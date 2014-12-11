@@ -23,6 +23,7 @@
 
 use FileHandle;
 use File::Basename;
+use Cwd;
 
 # Determine the path to the McStas system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
