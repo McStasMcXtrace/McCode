@@ -73,10 +73,12 @@ sidenote_1: You will need to login to <IP ADDRESS>:<PORT>/admin (after creating 
 sidenote_2: Ensure your keyboard is set to a locale that the python scripts are happy with:
      	    	   export LC_ALL="en_US.UTF-8"  
 
-9) SETUP THE LDAP DB HERE.
-
 8) Run:
-     ./bin/init-db.sh    -- NOTE FOR MARK: PLEASE PUT THE LDAP ADMIN USER SETUP IN HERE!
+     # apt-get install -f slapd ldap-utils
+     REMEMBER THE PASSWORD, IT IS REQUESTED AGAIN NEXT:
+     ./bin/init-db.sh
+   This will set up the LDAP authentication DB, the sqlite simulation DBs, and, the file uploading DB (upon completion).
+   you will be prompted for some information to set up the LDAP DB, this is important to keep hold of.                    
 
 9) Follow the prompts, you should set up a superuser to start with, step (10)a) shows how to create new users:
 

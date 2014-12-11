@@ -22,7 +22,7 @@
 * T3_N [ ] Number of Al lenses in 2nd IVT transfocator @92.25 m
 * SI_N [ ] Number of Si lenses in Si microfocus chip transfocator @94 m
 * 
-* %Example: ESRF_ID11 ANGLE=0 Detector: psd_eh3_sample_I=0.285899 
+* %Example: ESRF_ID11.instr ANGLE=0 Detector: psd_eh3_sample_I=0.285899 
 * %Link
 * http://www.esrf.eu/UsersAndScience/Experiments/StructMaterials/ID11/ID11Source
 * %End
