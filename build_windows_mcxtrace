@@ -6,14 +6,11 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
-# 64-bit
-./mkdist mcxtrace $1 "" "" mingw64 "" -- nsis
-./mkdist mcxtrace-comps $1 "" "" mingw64 "" -- nsis
-./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" mingw64 "" -- nsis
-./mkdist mcxtrace-tools-python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" mingw64 "" -- nsis
-./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw64 "" -- nsis
-./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mingw64 "" -- nsis
-./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" mingw64 "" -- nsis
+# Workaround for having CRLF linefeeds in a couple of windows packages
+rsync -avz --delete --exclude=".svn/" mcxtrace-comps/ mcxtrace-comps-win
+find mcxtrace-comps-win -type f -not -name \*.off -exec todos \{\} \;
+rsync -avz --delete --exclude=".svn/" tools/Legacy-Perl/ tools/Legacy-Perl-win
+find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 
 # 32-bit
 ./mkdist mcxtrace $1 "" "" mingw32 "" -- nsis
@@ -23,16 +20,14 @@ fi
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mingw32 "" -- nsis
 ./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" mingw32 "" -- nsis
+./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" mingw32 "o" -- nsis
 
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
     cd meta-pkgs/windows
 
     sed s/@VERSION@/${1}/g McXtrace-metapackage32.iss > McXtrace-${1}-metapackage32.iss
-    sed s/@VERSION@/${1}/g McXtrace-metapackage64.iss > McXtrace-${1}-metapackage64.iss
     ./iscc McXtrace-${1}-metapackage32.iss
     mv Output/setup.exe dist/McXtrace-Metapackage-${1}-win32.exe
-    ./iscc McXtrace-${1}-metapackage64.iss
-    mv Output/setup.exe dist/McXtrace-Metapackage-${1}-win64.exe
 
 fi
