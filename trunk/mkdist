@@ -327,6 +327,7 @@ prepare_cpack() {
         else
 	    mkdir "${DEST}"
             CMAKE_SRC="${SOURCE}";
+	    rm -rf ${SOURCE}/cmake
 	    cp -rp ${TOP}/cmake ${SOURCE}/cmake
 	    cd ${SOURCE}/cmake
 	    cleanup &&
