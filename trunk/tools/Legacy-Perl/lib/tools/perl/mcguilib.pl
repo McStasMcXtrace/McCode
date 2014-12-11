@@ -424,7 +424,7 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
       # update Plotter in case of change in this dialog (instead of Preferences)
       if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
       elsif ($formatchoice_val =~ /Gnuplot/i)  { $plotter= 'Gnuplot'; }
-      elsif ($formatchoice_val =~ /McStas|PGPLOT|Gnuplot/i)  { $plotter= 'PGPLOT'; }
+      elsif ($formatchoice_val =~ /McStas|PGPLOT/i)  { $plotter= 'PGPLOT'; }
       elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
       elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }
 
