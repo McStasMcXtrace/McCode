@@ -1,9 +1,0 @@
-Package: mcstas-suite
-Version: 2.1
-Section: main
-Priority: optional
-Architecture: all
-Depends: mcstas-suite-perl, mcstas-suite-python
-Installed-Size:
-Maintainer: Peter Willendrup
-Description: A metapackage for McStas + perl and python tools

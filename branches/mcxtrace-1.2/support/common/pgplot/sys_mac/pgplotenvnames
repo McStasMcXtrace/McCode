@@ -1,6 +1,0 @@
-PGPLOT_FONT 'APS Drive:MPW:pgplot:fonts:grfont.dat'
-PGPLOT_DIR 'APS Drive:MPW:pgplot:'
-PGPLOT_RGB 'APS Drive:MPW:pgplot:rgb.txt'
-PGPLOT_DEV '/MAC'
-PGPLOT_DEBUG 'OFF'
-PGPLOT_MACPICTURE 'ON'

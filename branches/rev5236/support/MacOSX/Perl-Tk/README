@@ -1,5 +1,0 @@
-Snapshot of Perl-Tk from CPAN, added 20121105 by P Willendrup:
-
-wget http://search.cpan.org/CPAN/authors/id/S/SR/SREZIC/Tk-804.030.tar.gz
-
-Added Tk-804.030/Build.sh which builds Perl-Tk and creates a Mac OS X .pkg

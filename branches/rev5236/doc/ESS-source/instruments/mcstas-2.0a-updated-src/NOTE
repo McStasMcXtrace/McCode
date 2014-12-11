@@ -1,9 +1,0 @@
-Brilliance detector moved to 1 metre for safety - cyl_radius put to 9.5493e-03 m to give a 1cmx1cm surface
-
-Thermal brilliance seems slightly off from 1.12c version?
-
-src_2012 flag only applies to the cold source
-
-Mixing, i.e. for bispectral sources is faulty with this version of the comp as weighting is not done correctly! Can be a factor of 2 off!
-
-Full brilliance of the thermal source is distributed over double area - but not multiplied...

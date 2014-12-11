@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="A35B9DB2-5886-48DC-91C6-43D8E2BCB3D0"><config><identifier>com.Humanity.mcxtrace-tools-python-mxdisplay-vtk-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (http://www.cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"></packageStore><mod>installTo</mod><mod>parent</mod></config><scripts><scripts-dir>@DISTDIR@/mcxtrace-tools-python-mxdisplay-vtk-OSXpkg-@VERSION@-mac-10.10.pkg/Contents/Resources</scripts-dir></scripts><extra><packagePath>@DISTDIR@/mcxtrace-tools-python-mxdisplay-vtk-OSXpkg-@VERSION@-mac-10.10.pkg</packagePath><title>mcxtrace-tools-python-mxdisplay-vtk-@VERSION@</title></extra></pkgref>

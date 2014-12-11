@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="A9E3BE9F-7FC8-4005-8E6E-0BA14112D379"><config><identifier>com.Humanity.mcxtrace-openmpi-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (http://www.cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"></packageStore><mod>installTo</mod><mod>parent</mod></config><scripts><scripts-dir>@DISTDIR@/mcxtrace-openmpi-OSXpkg-@VERSION@-mac-10.10.pkg/Contents/Resources</scripts-dir></scripts><extra><packagePath>@DISTDIR@/mcxtrace-openmpi-OSXpkg-@VERSION@-mac-10.10.pkg</packagePath><title>mcxtrace-openmpi-@VERSION@</title></extra></pkgref>

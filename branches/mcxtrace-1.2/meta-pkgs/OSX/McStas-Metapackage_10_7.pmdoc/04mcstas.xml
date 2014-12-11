@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="FA5C6EC5-CF2A-4B7C-A354-5E5C591DD65D"><config><identifier>com.Humanity.mcstas-manuals-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (http://www.cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"/><mod>parent</mod><mod>installTo</mod></config><scripts><scripts-dir>mcstas-manuals-OSXpkg-@VERSION@-mac-10.7.pkg/Contents/Resources</scripts-dir></scripts><contents><file-list>04mcstas-contents.xml</file-list><filter>/CVS$</filter><filter>/\.svn$</filter><filter>/\.cvsignore$</filter><filter>/\.cvspass$</filter><filter>/\.DS_Store$</filter></contents><extra><packagePath>mcstas-manuals-OSXpkg-@VERSION@-mac-10.7.pkg</packagePath><title>mcstas-manuals-@VERSION@</title></extra></pkgref>

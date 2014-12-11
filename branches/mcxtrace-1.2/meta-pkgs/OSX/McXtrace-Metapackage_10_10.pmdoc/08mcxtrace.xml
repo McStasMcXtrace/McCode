@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="1A6BD8D5-5015-45B6-B2BA-A492F9AE7C67"><config><identifier>com.Humanity.mcxtrace-comps-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (http://www.cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"></packageStore><mod>installTo</mod><mod>parent</mod></config><scripts><scripts-dir>@DISTDIR@/mcxtrace-comps-OSXpkg-@VERSION@-mac_yosemite-10.10.pkg/Contents/Resources</scripts-dir></scripts><extra><packagePath>@DISTDIR@/mcxtrace-comps-OSXpkg-@VERSION@-mac_yosemite-10.10.pkg</packagePath><title>mcxtrace-comps-@VERSION@</title></extra></pkgref>

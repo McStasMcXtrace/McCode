@@ -1,6 +1,0 @@
-<pkgref spec="1.12" uuid="9E5C5C75-4B9E-4377-AD74-FE259FB24BB0"><config><identifier>com.Humanity.mcxtrace-manuals-@VERSION@</identifier><version>1.0</version><description>DESCRIPTION
-===========
-
-This is an installer created using CPack (http://www.cmake.org). No additional installation instructions provided.
-
-</description><post-install type="none"/><requireAuthorization/><installTo relocatable="true">/</installTo><flags><followSymbolicLinks/><overwriteDirectoryPermissions/></flags><packageStore type="internal"/><mod>parent</mod><mod>installTo</mod></config><scripts><scripts-dir>@DISTDIR@/mcxtrace-manuals-OSXpkg-@VERSION@-mac_yosemite-10.10.pkg/Contents/Resources</scripts-dir></scripts><contents><file-list>15mcxtrace-contents.xml</file-list><filter>/CVS$</filter><filter>/\.svn$</filter><filter>/\.cvsignore$</filter><filter>/\.cvspass$</filter><filter>/\.DS_Store$</filter></contents><extra><packagePath>@DISTDIR@/mcxtrace-manuals-OSXpkg-@VERSION@-mac_yosemite-10.10.pkg</packagePath><title>mcxtrace-manuals-@VERSION@</title></extra></pkgref>
