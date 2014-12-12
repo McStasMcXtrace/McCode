@@ -1068,7 +1068,7 @@ char **Table_ParseHeader_backend(char *header, ...){
       exit_flag = 1; break;
     }
     /* search for the symbol in the header */
-    pos = strcasestr(header, arg_char);
+    pos = (char *)strcasestr(header, arg_char);
     if (pos) {
       char *eol_pos;
       eol_pos = strchr(pos+strlen(arg_char), '\n');

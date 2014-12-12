@@ -374,7 +374,7 @@ struct code_block
    synchronized with the one in mccode-r.h. */
 enum instr_formal_types
   {
-    instr_type_mcnum, instr_type_int, 
+    instr_type_int, 
     instr_type_string, instr_type_char, 
     instr_type_vector, instr_type_double
   };

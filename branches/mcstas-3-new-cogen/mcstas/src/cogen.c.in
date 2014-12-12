@@ -152,14 +152,14 @@
 /* Functions for outputting code. */
 
 /* Handle for output file. */
-static FILE *output_handle = NULL;/* Handle for output file. */
-static int num_next_output_line = 1; /* Line number for next output line. */
-static char *quoted_output_file_name = NULL; /* str_quote()'ed name
-                                                of output file. */
+static FILE *output_handle           = NULL;  /* Handle for output file. */
+static int   num_next_output_line    = 1;     /* Line number for next output line. */
+static char *quoted_output_file_name = NULL;  /* str_quote()'ed name
+                                                 of output file. */
 
 /* Convert instrument formal parameter type numbers to their enum name. */
 char *instr_formal_type_names[] =
-  { "instr_type_int", "instr_type_string", "", "instr_type_array", "instr_type_double" };
+  { "instr_type_int", "instr_type_string", "instr_type_char", "instr_type_vector", "instr_type_double" };
 
 char *instr_formal_type_names_real[] =
   { "long", "char*", "char", "MCNUM*", "MCNUM"}; /* 'char' and 'double' are for static array allocations */
@@ -388,8 +388,9 @@ int cogen_decls(struct instr_def *instr)
   coutf("/* ***************** instrument %s and components DECLARE ********************** */",
     instr->name);
   cout("");
+  
   /* 1. particle definition */
-  coutf(
+  cout(
     "typedef struct {\n"
     "  double x,y,z; /* position [m] */\n"
 #if MCCODE_PROJECT == 1   /* neutron */
@@ -404,11 +405,11 @@ int cogen_decls(struct instr_def *instr)
     "  long cid; /* event current component ID */\n"
     "} " ID_PRE "particle;");
   cout("");
+  cout("#define " ID_PRE MCCODE_PARTICLE " " ID_PRE "particle");
+  
 #if MCCODE_PROJECT == 1   /* neutron */
-  cout("#define " ID_PRE "neutron " ID_PRE "particle");
   cout("particle " ID_PRE "null_particle = {0,0,0, 0,0,0, 0,0,0, 0,0,0,0};");
 #elif MCCODE_PROJECT == 2 /* xray */
-  cout("#define " ID_PRE "photon " ID_PRE "particle");
   cout("particle " ID_PRE "null_particle = {0,0,0, 0,0,0, 0,0,0,0, 0,0,0,0};");
 #endif
   cout("");
@@ -434,7 +435,6 @@ int cogen_decls(struct instr_def *instr)
   cout("");
   
   /* 5. Compatibility definitions */
-    
   /* TODO: misses: ABSORB, Group, SCATTERED, RESTORE */  
   coutf("#define " ID_PRE "ip " ID_PRE "instrument_parameters");
   coutf("#define %scompcurname  %s", ID_PRE, instr->name);
@@ -466,8 +466,9 @@ int cogen_decls(struct instr_def *instr)
   cout("");
   
   /* 4. User's declarations from the instrument definition file. */
+  fprintf(stderr, "DEBUG: User's declarations from the instrument definition\n"); fflush(NULL);
   cout("/* User declarations from instrument definition. */");
-  cogen_instrument_scope(instr, (void (*)(void *))codeblock_out, instr->decls);
+  codeblock_out(instr->decls);
   cout("");
   
   /* 6. Component SHAREs. */
@@ -547,7 +548,7 @@ int cogen_init(struct instr_def *instr)
   coutf("/* ***************** instrument %s and components INITIALIZE ******************* */",
     instr->name);
     
-  /* first call component init functions to write their init code */
+  /* call component init functions to write their init code */
   liter = list_iterate(instr->complist);
   last  = NULL;
   coutf("    %sDEBUG_INSTR()", ID_PRE);
@@ -570,8 +571,7 @@ int cogen_init(struct instr_def *instr)
   
   /* User initialisations from instrument definition. */
   coutf("  /* Instrument %s INITIALIZE */", instr->name);
-  cogen_instrument_scope(instr, (void (*)(void *))codeblock_out_brace,
-                         instr->inits);
+  codeblock_out_brace(instr->inits);
   
   /* component init calls: one call for each component instance */
   cout("  /* Component initialisations: call iteratively all components INITIALIZE */");
@@ -1007,8 +1007,7 @@ int cogen_comp_init(struct comp_inst *comp, struct comp_inst *last, struct instr
   /* init code. Can use component instance parameters */
   /* Users initializations. */
   if(list_len(comp->def->init_code->lines) > 0)
-    cogen_comp_scope(comp, 0, (void (*)(void *))codeblock_out_brace,
-                     comp->def->init_code);
+    codeblock_out_brace(comp->def->init_code);
 
   /* undefine aliases */
   cogen_comp_init_defundef(comp, comp->def->set_par, 0);
@@ -1167,8 +1166,8 @@ cogen(char *output_name, struct instr_def *instr)
   cout(" */\n");
   cout("");
   coutf("#define MCCODE_STRING \"%s\"", MCCODE_STRING);
-  coutf("#define FLAVOR \"%s\"", FLAVOR);
-  coutf("#define FLAVOR_UPPER \"%s\"", FLAVOR_UPPER);
+  coutf("#define FLAVOR        \"%s\"", FLAVOR);
+  coutf("#define FLAVOR_UPPER  \"%s\"", FLAVOR_UPPER);
   
   /* and we now call the writers */
   cogen_runtime(instr);
@@ -1181,7 +1180,7 @@ cogen(char *output_name, struct instr_def *instr)
   cogen_mcdisplay(instr);
   */
   if (warnings)
-    fprintf(stderr,"Warning: The instrument C code %s has %i warning/errors.\n",
+    fprintf(stderr,"Warning: The build of the instrument %s has %i warning/errors.\n",
         	instr->name, warnings);
   coutf("/* end of generated C code %s */", output_name);
 } /* cogen */

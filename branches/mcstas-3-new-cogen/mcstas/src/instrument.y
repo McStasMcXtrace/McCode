@@ -320,10 +320,6 @@ out_par:    /* empty */
       {
         $$ = $3;
       }
-    | "DECLARE" "PARAMETERS" comp_iformallist
-      {
-        $$ = $3;
-      }
     | "PRIVATE" "PARAMETERS" comp_iformallist
       {
         $$ = $3;
@@ -1508,15 +1504,18 @@ char verbose;
 /* Map of already-read components. */
 Symtab read_components = NULL;
 
+/* name of executable, e.g. mcstas or mcxtrace */
+char *executable_name=NULL;
+
 /* Print a summary of the command usage and exit with error. */
 static void
 print_usage(void)
 {
-  fprintf(stderr, MCCODE_NAME " version " MCCODE_STRING " (" MCCODE_DATE ")\n");
+  fprintf(stderr, MCCODE_STRING " version " MCCODE_VERSION " (" MCCODE_DATE ") " MCCODE_H "\n");
   fprintf(stderr, "Compiler of the " MCCODE_NAME " ray-trace simulation package\n");
   fprintf(stderr, "Usage:\n"
-    "  " MCCODE_NAME " [-o file] [-I dir1 ...] [-t] [-p] [-v] "
-    "[--no-main] [--no-runtime] [--verbose] file\n");
+    "  %s [-o file] [-I dir1 ...] [-t] [-p] [-v] "
+    "[--no-main] [--no-runtime] [--verbose] file\n", executable_name);
   fprintf(stderr, "      -o FILE --output-file=FILE Place C output in file FILE.\n");
   fprintf(stderr, "      -I DIR  --search-dir=DIR   Append DIR to the component search list. \n");
   fprintf(stderr, "      -t      --trace            Enable 'trace' mode for instrument display.\n");
@@ -1524,15 +1523,15 @@ print_usage(void)
   fprintf(stderr, "      --no-main                  Do not create main(), for external embedding.\n");
   fprintf(stderr, "      --no-runtime               Do not embed run-time libraries.\n");
   fprintf(stderr, "      --verbose                  Display compilation process steps.\n");
-  fprintf(stderr, "  The file will be processed and translated into a C code program.\n");
+  fprintf(stderr, "  The instrument description file will be processed and translated into a C code program.\n");
   fprintf(stderr, "  If run-time libraries are not embedded, you will have to pre-compile\n");
   fprintf(stderr, "    them (.c -> .o) before assembling the program.\n");
   fprintf(stderr, "  The default component search list is usually defined by the environment\n");
-  fprintf(stderr, "    variable '" MCCODE_STRING "' (default is " MCSTAS ") \n");
-  fprintf(stderr, "  Use 'mcrun' to both run " MCCODE_NAME " and the C compiler.\n");
-  fprintf(stderr, "  Use 'mcgui' to run the " MCCODE_NAME " GUI.\n");
+  fprintf(stderr, "    variable '" MCCODE_LIBENV "' (default is " MCSTAS ") \n");
+  fprintf(stderr, "  Use '" ID_PRE "run' to both run " MCCODE_NAME " and the C compiler.\n");
+  fprintf(stderr, "  Use '" ID_PRE "gui' to run the " MCCODE_NAME " GUI.\n");
   fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui, mcformat, mcdoc\n");
-  fprintf(stderr, "DOC:      Please visit " MCCODE_BUGREPORT "\n");
+  fprintf(stderr, "DOC:      Please visit <" MCCODE_BUGREPORT ">\n");
   exit(1);
 }
 
@@ -1540,9 +1539,9 @@ print_usage(void)
 static void
 print_version(void)
 {
-  printf(MCCODE_NAME " version " MCCODE_VERSION " (" MCCODE_DATE ")\n"
-    "Copyright (C) Risoe National Laboratory, 1997-2010\n"
-    "Additions (C) Institut Laue Langevin, 2003-2010\n"
+  printf(MCCODE_NAME " version " MCCODE_VERSION " (" MCCODE_DATE ") " MCCODE_H "\n"
+    "Copyright (C) Risoe National Laboratory, 1997-2014\n"
+    "Additions (C) Institut Laue Langevin, 2003-2014\n"
     "All rights reserved\n");
   exit(0);
 }
@@ -1590,13 +1589,14 @@ parse_command_line(int argc, char *argv[])
 {
   int i;
 
-  output_filename = NULL;
-  verbose = 0;
-  instr_current_filename = NULL;
-  instrument_definition->use_default_main = 1;
+  output_filename                        = NULL;
+  verbose                                = 0;
+  instr_current_filename                 = NULL;
+  instrument_definition->use_default_main= 1;
   instrument_definition->include_runtime = 1;
-  instrument_definition->enable_trace = 0;
-  instrument_definition->portable = 0;
+  instrument_definition->enable_trace    = 0;
+  instrument_definition->portable        = 0;
+  executable_name                        = argv[0];
   for(i = 1; i < argc; i++)
   {
     if(!strcmp("-o", argv[i]) && (i + 1) < argc)
