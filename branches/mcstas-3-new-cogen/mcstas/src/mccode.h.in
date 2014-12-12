@@ -396,6 +396,7 @@ struct comp_def
     int  comp_inst_number;          /* Number of this comp in the instrument  */
     int  flag_defined_structure;    /* set to 1 when the parameter block is generated */
     int  flag_defined_share;        /* set to 1 when the SHARE block is generated */
+    int  flag_defined_init;         /* set to 1 when the SHARE block is generated */
     List def_par, set_par, out_par; /* Formal parameters. */
     struct code_block *share_code;  /* Unique Declaration code (shared). */
     struct code_block *decl_code;   /* Declaration code. */

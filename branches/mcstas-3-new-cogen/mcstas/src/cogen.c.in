@@ -359,7 +359,7 @@ int cogen_decls(struct instr_def *instr)
   cout("");
   
   /* 2. Global variables for instrument parameters. */
-  cout("/* Instrument parameters: structure and a table for the initialisation\n");
+  cout("/* Instrument parameters: structure and a table for the initialisation");
   cout("   (Used in e.g. " ID_PRE "inputparse and I/O function (e.g. detector_out) */");
   cout("");
   
@@ -707,14 +707,14 @@ static void cogen_comp_init_outpar(struct comp_inst *comp, struct instr_def *ins
         char *val =  exp_tostring(par->default_value);
 
         if (par->type == instr_type_string) {
-        coutf("  if(%s && strlen(%s))", val, val);
-        coutf("    strncpy(" ID_PRE "%s_instance.parameters.%s, %s ? %s : \"\", 16384);", 
-          comp->name, par->id, val, val);
-        coutf("  else " ID_PRE "%s_instance.parameters.%s[0]='\\0';", 
-          comp->name, par->id);
-      } else
-        coutf("  " ID_PRE "%s_instance.parameters.%s = %s;", comp->name, par->id, val);
-      str_free(val);
+          coutf("  if(%s && strlen(%s))", val, val);
+          coutf("    strncpy(" ID_PRE "%s_instance.parameters.%s, %s ? %s : \"\", 16384);", 
+            comp->name, par->id, val, val);
+          coutf("  else " ID_PRE "%s_instance.parameters.%s[0]='\\0';", 
+            comp->name, par->id);
+        } else
+          coutf("  " ID_PRE "%s_instance.parameters.%s = %s;", comp->name, par->id, val);
+        str_free(val);
       }
     }
     list_iterate_end(outpar);
@@ -766,7 +766,7 @@ int cogen_comp_init_defpar(struct comp_inst *comp)
 /* *****************************************************************************
 * cogen_comp_init_defundef: define/undefine a symbol from a List
 * input:  a list
-*         a flag: 1=define, 0=undefine
+*         a flag: 1=define, 2=define with 'comp' as structure name, 0=undefine
 *
 * code is generated in function [comp]_init
 * called by: cogen_comp_init
@@ -779,9 +779,12 @@ static void cogen_comp_init_defundef(struct comp_inst *comp, List l, char define
   
     liter = list_iterate(l);
     while(c_formal = list_next(liter)) {
-      if (define_it)
+      if (define_it == 1)
         coutf("  #define %s " ID_PRE "%s_instance.parameters.%s", 
           c_formal->id, comp->name, c_formal->id);
+      else if (define_it == 2)
+        coutf("  #define %s " ID_PRE "comp.parameters.%s", 
+          c_formal->id, c_formal->id);
       else
         coutf("  #undef %s", c_formal->id);
     }
@@ -842,13 +845,13 @@ static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *l
   /* Relative rotation. */
   if(last == NULL)
   {                                /* First component. */
-    coutf("  rot_copy(%srotr%s, %s%s_instance.rotation_absolute);",
+    coutf("    rot_copy(%srotr%s, %s%s_instance.rotation_absolute);",
           ID_PRE, comp->name, ID_PRE, comp->name);
   }
   else
   {
-    coutf("  rot_transpose(%s%s_instance.rotation_absolute, %str1);", ID_PRE, last->name, ID_PRE);
-    coutf("  rot_mul(%s%s_instance.rotation_absolute, %str1, %srotr%s);",
+    coutf("    rot_transpose(%s%s_instance.rotation_absolute, %str1);", ID_PRE, last->name, ID_PRE);
+    coutf("    rot_mul(%s%s_instance.rotation_absolute, %str1, %srotr%s);",
           ID_PRE, comp->name, ID_PRE, ID_PRE, comp->name);
   }
 
@@ -859,30 +862,22 @@ static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *l
   relcomp = comp->pos->place_rel;
   if(relcomp == NULL)
   {
-    coutf("  %sposa%s = coords_set(", ID_PRE, comp->name);
+    coutf("    %sposa%s = coords_set(", ID_PRE, comp->name);
     code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
-    coutf("    %s,", x);
-    code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
-    coutf("    %s,", y);
-    code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
-    coutf("    %s);", z);
+    coutf("      %s, %s, %s);", x,y ,z);
     code_reset_source();
   }
   else
   {
-    coutf("  %stc1 = coords_set(", ID_PRE);
+    coutf("    %stc1 = coords_set(", ID_PRE);
     code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
-    coutf("    %s,", x);
-    code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
-    coutf("    %s,", y);
-    code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
-    coutf("    %s);", z);
+    coutf("      %s, %s, %s);", x,y ,z);
     code_reset_source();
-    coutf("  rot_transpose(%s%s_instance.rotation_absolute, %str1);",
+    coutf("    rot_transpose(%s%s_instance.rotation_absolute, %str1);",
           ID_PRE, relcomp->name, ID_PRE);
-    coutf("  %stc2 = rot_apply(%str1, %stc1);",
+    coutf("    %stc2 = rot_apply(%str1, %stc1);",
           ID_PRE, ID_PRE, ID_PRE);
-    coutf("  %sposa%s = coords_add(%sposa%s, %stc2);",
+    coutf("    %sposa%s = coords_add(%sposa%s, %stc2);",
           ID_PRE, comp->name, ID_PRE, relcomp->name, ID_PRE);
   }
 
@@ -892,12 +887,13 @@ static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *l
 
   /* Relative position. */
   if(last == NULL)
-    coutf("  %stc1 = coords_neg(%sposa%s);", ID_PRE, ID_PRE, comp->name);
+    coutf("    %stc1 = coords_neg(%sposa%s);", ID_PRE, ID_PRE, comp->name);
   else
-    coutf("  %stc1 = coords_sub(%sposa%s, %sposa%s);",
+    coutf("    %stc1 = coords_sub(%sposa%s, %sposa%s);",
           ID_PRE, ID_PRE, last->name, ID_PRE, comp->name);
-  coutf("  %sposr%s = rot_apply(%s%s_instance.rotation_absolute, %stc1);",
+  coutf("    %sposr%s = rot_apply(%s%s_instance.rotation_absolute, %stc1);",
         ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
+  cout("  }");
 
   coutf("  %sDEBUG_COMPONENT(\"%s\", %sposa%s, %s%s_instance.rotation_absolute)",
         ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name);
@@ -926,6 +922,30 @@ int cogen_comp_init(struct comp_inst *comp, struct comp_inst *last, struct instr
   
   coutf("/* component %s=%s() INITIALIZE */",
     comp->name, comp->def->name);
+  if (list_len(comp->def->def_par) == 0 
+      && list_len(comp->def->init_code->lines) > 0
+      && !comp->def->flag_defined_init) {
+    /* we may use a common init function for each comp type */
+    comp->def->flag_defined_init = 1;
+    cout("");
+    coutf("/* this function is common to all component type %s with INIT code */", 
+      comp->def->name);
+    coutf("struct " ID_PRE "%s_definition_struct " ID_PRE "%s_definition_init("
+            "struct " ID_PRE "%s_definition_struct " ID_PRE "comp)",
+      comp->def->name, comp->def->name, comp->def->name);
+    cout("{");
+    cogen_comp_init_defundef(comp, comp->def->set_par, 2);
+    cogen_comp_init_defundef(comp, comp->def->out_par, 2);
+
+    codeblock_out(comp->def->init_code); // common to all instances, needs defines
+    
+    /* undefine aliases */
+    cogen_comp_init_defundef(comp, comp->def->set_par, 0);
+    cogen_comp_init_defundef(comp, comp->def->out_par, 0);
+    coutf("} /* " ID_PRE "%s_definition_init */", comp->def->name);
+    cout("");
+  }
+  
   coutf("void " ID_PRE "%s_instance_init(void)", 
     comp->name, comp->def->name);
   cout("{");
@@ -940,34 +960,40 @@ int cogen_comp_init(struct comp_inst *comp, struct comp_inst *last, struct instr
   coutf("  strncpy(" ID_PRE "%s_instance.name, \"%s\", 16384);", comp->name, comp->name);
   coutf("  strncpy(" ID_PRE "%s_instance.type, \"%s\", 16384);", comp->name, comp->def->name);
   cout("");
-  warnings += cogen_comp_init_defpar(comp);
+  warnings += cogen_comp_init_defpar(comp); // specific to each instance
 
   /* setting parameters of the component */
-  cogen_comp_init_setpar(comp, instr);
+  cogen_comp_init_setpar(comp, instr);  // specific to each instance
   
   /* output parameters of the component (private/declare) */
-  cogen_comp_init_outpar(comp, instr);
+  cogen_comp_init_outpar(comp, instr);  // specific to each instance
   
   /* define alias to SETTING and OUTPUT parameters */
   cogen_comp_init_defundef(comp, comp->def->set_par, 1);
   cogen_comp_init_defundef(comp, comp->def->out_par, 1);
   cout("");
-  cogen_comp_init_position(comp, last, instr);
+  cogen_comp_init_position(comp, last, instr); // specific to each instance
   
-  coutf("  %sNCounter[%i]  = %sPCounter[%i] = %sP2Counter[%i] = 0;",
-        ID_PRE, comp->index, ID_PRE, comp->index, ID_PRE, comp->index);
-  coutf("  %sAbsorbProp[%i]= 0;", ID_PRE, comp->index);
-
   /* init code. Can use component instance parameters */
   /* Users initializations. Embraced as it may contain local C definitions */
-  if(list_len(comp->def->init_code->lines) > 0)
-    codeblock_out_brace(comp->def->init_code);
-
+  cout("");
+  /* if there are definition parameters, we must put the specific INIT code here */
+  if (list_len(comp->def->init_code->lines) > 0) {
+    if (list_len(comp->def->def_par) > 0)
+      codeblock_out_brace(comp->def->init_code);
+    else /* else we call the common init function for each comp type */
+      coutf("  " ID_PRE "%s_instance=" ID_PRE "%s_definition_init(" ID_PRE "%s_instance);",
+        comp->name, comp->def->name, comp->name);
+  }
+  cout("");
   /* undefine aliases */
   cogen_comp_init_defundef(comp, comp->def->set_par, 0);
   cogen_comp_init_defundef(comp, comp->def->out_par, 0);
   cogen_comp_init_defundef(comp, comp->def->def_par, 0);
   
+  coutf("  %sNCounter[%i]  = %sPCounter[%i] = %sP2Counter[%i] = 0;",
+        ID_PRE, comp->index, ID_PRE, comp->index, ID_PRE, comp->index);
+  coutf("  %sAbsorbProp[%i]= 0;", ID_PRE, comp->index);
   coutf("  #undef %scompcurname", ID_PRE);
   coutf("  #undef %scompcurtype", ID_PRE);
   coutf("  #undef %scompcurindex", ID_PRE);
@@ -1117,7 +1143,7 @@ cogen(char *output_name, struct instr_def *instr)
   coutf(" * Instrument: %s (%s)", instr->source, instr->name);
   coutf(" * Date:       %s", date);
   coutf(" * File:       %s", output_name);
-  cout(" */\n");
+  cout(" */");
   cout("");
   coutf("#define MCCODE_STRING \"%s\"", MCCODE_STRING);
   coutf("#define FLAVOR        \"%s\"", FLAVOR);
