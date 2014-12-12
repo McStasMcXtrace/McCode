@@ -1698,7 +1698,7 @@ main(int argc, char *argv[])
   instrument_definition->quoted_source =
     str_quote(instrument_definition->source);
   if (verbose) {
-    fprintf(stderr, MCCODE_NAME " version " MCCODE_VERSION "\n");
+    fprintf(stderr, MCCODE_NAME " version " MCCODE_VERSION " (" MCCODE_DATE ") " MCCODE_H "\n");
     fprintf(stderr, "Analyzing file            %s\n", instrument_definition->quoted_source);
   }
   instr_current_line = 1;
