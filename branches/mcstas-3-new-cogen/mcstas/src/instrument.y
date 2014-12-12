@@ -166,6 +166,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         c->comp_inst_number = 0;
         c->flag_defined_structure=0;
         c->flag_defined_share=0;
+        c->flag_defined_init=0;
 
         /* Check definition and setting params for uniqueness */
         check_comp_formals(c->def_par, c->set_par, c->name);
