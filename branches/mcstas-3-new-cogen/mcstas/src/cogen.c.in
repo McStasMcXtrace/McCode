@@ -372,7 +372,6 @@ int cogen_decls(struct instr_def *instr)
   
   liter = list_iterate(instr->formals);
   int numipar=0;
-  /* TODO: what if no instrument parameters ? empty structure ? */
   cout("struct " ID_PRE "instrument_parameters_struct {");
   while(i_formal = list_next(liter))
   {
@@ -394,6 +393,21 @@ int cogen_decls(struct instr_def *instr)
   coutf("#define %scompcurtype  %s", ID_PRE, "instrument");
   coutf("#define %scompcurindex %i", ID_PRE, 0);
   cout("");
+  /* Tables to store position (abs/rel) for each component and event counters */
+  cout("/* Components position table (absolute and relative coords) */");
+  coutf("Coords %scomp_posa[%i];", ID_PRE, list_len(instr->complist)+2);
+  coutf("Coords %scomp_posr[%i];", ID_PRE, list_len(instr->complist)+2);
+  cout("/* Counter for each comp to check for inactive ones */");
+  coutf("MCNUM  %sNCounter[%i];", ID_PRE, list_len(instr->complist)+2);
+  coutf("MCNUM  %sPCounter[%i];", ID_PRE, list_len(instr->complist)+2);
+  coutf("MCNUM  %sP2Counter[%i];", ID_PRE, list_len(instr->complist)+2);
+  cout("/* Counter for PROP ABSORB */");
+  coutf("MCNUM  %sAbsorbProp[%i];", ID_PRE, list_len(instr->complist)+2);
+  cout("/* Flag true when previous component acted on the @MCCODE_PARTICLE@ (SCATTER) */");
+  coutf("MCNUM %sScattered=0;", ID_PRE);
+  
+  cout("/* Flag true when @MCCODE_PARTICLE@ should be restored (RESTORE) */");
+  coutf("MCNUM %sRestore=0;", ID_PRE);
   
   /* 3. Table of instrument parameters. Used in mcparseoptions and various output functions */
   coutf("int %snumipar = %d;", ID_PRE, numipar);
@@ -405,11 +419,11 @@ int cogen_decls(struct instr_def *instr)
     if (strlen(i_formal->id)) {
       if (i_formal->isoptional 
           && !strcmp(instr_formal_type_names[i_formal->type],"instr_type_string"))
-        coutf("  \"%s\", &%sip.%s, %s, %s, ", i_formal->id, ID_PRE,
+        coutf("  \"%s\", &%sinstrument_parameters.%s, %s, %s, ", i_formal->id, ID_PRE,
             i_formal->id, instr_formal_type_names[i_formal->type],
             exp_tostring(i_formal->default_value));
       else
-        coutf("  \"%s\", &%sip%s, %s, \"%s\", ", i_formal->id, ID_PRE, i_formal->id,
+        coutf("  \"%s\", &%sinstrument_parameters.%s, %s, \"%s\", ", i_formal->id, ID_PRE, i_formal->id,
             instr_formal_type_names[i_formal->type],
             i_formal->isoptional ? exp_tostring(i_formal->default_value) : "");
     }
@@ -517,7 +531,7 @@ static void cogen_defundef(struct comp_inst *comp, List l, char define_it)
 * cogen_section: write a section part from the instrument description
 *   and calls all component definition sections
 * input:  an instrument definition structure
-*         a section as "INITIALIZE", "SAVE", "FINALLY", "DISPLAY"
+*         a section as "INITIALISE", "SAVE", "FINALLY", "DISPLAY"
 *
 * generates the mc[section] function, called by mccode_main
 *   after mcparseoptions, calling itself mcreadparams
@@ -532,7 +546,7 @@ int cogen_section(struct instr_def *instr, char *section)
   struct code_block *code=NULL;
   
   /* sets hooks to each section information */
-  if (!strcmp(section, "INITIALIZE")) 
+  if (!strcmp(section, "INITIALISE")) 
   {
     strcpy(section_lower, "init");
     code = instr->inits;
@@ -566,7 +580,7 @@ int cogen_section(struct instr_def *instr, char *section)
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
   {
-    if (!strcmp(section, "INITIALIZE"))
+    if (!strcmp(section, "INITIALISE"))
       warnings += cogen_comp_init(comp, last, instr);
     else if (!strcmp(section, "SAVE"))
       warnings += cogen_comp_save(comp, instr);
@@ -585,7 +599,7 @@ int cogen_section(struct instr_def *instr, char *section)
     ID_PRE, instr->name, section);
   cout("");
   
-  if (!strcmp(section, "INITIALIZE")) 
+  if (!strcmp(section, "INITIALISE")) 
   {
     coutf("  %sDEBUG_INSTR()", ID_PRE);
     cout("");
@@ -606,7 +620,7 @@ int cogen_section(struct instr_def *instr, char *section)
   /* User code from instrument definition. */
   if (code && list_len(code->lines) > 0) {
     coutf("  /* Instrument %s %s */", instr->name, section);
-    coutf("  SIG_MESSAGE(\"%%s:%%i:[%s%s] instrument %s %s\", __FILE, __LINE__);", 
+    coutf("  SIG_MESSAGE(\"%%s:%%i:[%s%s] instrument %s %s\", __FILE__, __LINE__);", 
       ID_PRE, section_lower, instr->name, section);
     /* defines for the instrument parameters */
     cogen_defundef(NULL, instr->formals, 3);
@@ -626,7 +640,7 @@ int cogen_section(struct instr_def *instr, char *section)
   }
   cout("");
   
-  if (!strcmp(section, "INITIALIZE")) {
+  if (!strcmp(section, "INITIALISE")) {
     /* Output graphics representation of components. */
     coutf("  if (%sdotrace) %sdisplay();", ID_PRE, ID_PRE);
     coutf("    %sDEBUG_INSTR_END()", ID_PRE);
@@ -655,7 +669,7 @@ int cogen_section(struct instr_def *instr, char *section)
 ***************************************************************************** */
 int cogen_init(struct instr_def *instr)
 {
-  return(cogen_section(instr, "INITIALIZE"));
+  return(cogen_section(instr, "INITIALISE"));
 } /* cogen_init */
 
 /* *****************************************************************************
@@ -765,7 +779,7 @@ int cogen_comp_declare(struct comp_inst *comp)
       }
       if (warnings)
         fprintf(stderr,"Warning: Component %s=%s() DECLARE block contains %i assignments (= sign).\n"
-                       "         Move them into the INITIALIZE section.\n"
+                       "         Move them into the INITIALISE section.\n"
                        "         File: %s\n",
         	comp->name, comp->def->name, warnings, comp->def->decl_code->quoted_filename);
     }
@@ -968,13 +982,13 @@ static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *l
   /* Relative rotation. */
   if(last == NULL)
   {                                /* First component. */
-    coutf("    rot_copy(%srotr%s, %s%s_instance.rotation_absolute);",
+    coutf("    rot_copy(%s%s_instance.rotation_relative, %s%s_instance.rotation_absolute);",
           ID_PRE, comp->name, ID_PRE, comp->name);
   }
   else
   {
     coutf("    rot_transpose(%s%s_instance.rotation_absolute, %str1);", ID_PRE, last->name, ID_PRE);
-    coutf("    rot_mul(%s%s_instance.rotation_absolute, %str1, %srotr%s);",
+    coutf("    rot_mul(%s%s_instance.rotation_absolute, %str1, %s%s_instance.rotation_relative);",
           ID_PRE, comp->name, ID_PRE, ID_PRE, comp->name);
   }
 
@@ -985,7 +999,7 @@ static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *l
   relcomp = comp->pos->place_rel;
   if(relcomp == NULL)
   {
-    coutf("    %sposa%s = coords_set(", ID_PRE, comp->name);
+    coutf("    %s%s_instance.position_absolute = coords_set(", ID_PRE, comp->name);
     code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
     coutf("      %s, %s, %s);", x,y ,z);
     code_reset_source();
@@ -1000,7 +1014,7 @@ static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *l
           ID_PRE, relcomp->name, ID_PRE);
     coutf("    %stc2 = rot_apply(%str1, %stc1);",
           ID_PRE, ID_PRE, ID_PRE);
-    coutf("    %sposa%s = coords_add(%sposa%s, %stc2);",
+    coutf("    %s%s_instance.position_absolute = coords_add(%s%s_instance.position_absolute, %stc2);",
           ID_PRE, comp->name, ID_PRE, relcomp->name, ID_PRE);
   }
 
@@ -1010,19 +1024,19 @@ static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *l
 
   /* Relative position. */
   if(last == NULL)
-    coutf("    %stc1 = coords_neg(%sposa%s);", ID_PRE, ID_PRE, comp->name);
+    coutf("    %stc1 = coords_neg(%s%s_instance.position_absolute);", ID_PRE, ID_PRE, comp->name);
   else
-    coutf("    %stc1 = coords_sub(%sposa%s, %sposa%s);",
+    coutf("    %stc1 = coords_sub(%s%s_instance.position_absolute, %s%s_instance.position_absolute);",
           ID_PRE, ID_PRE, last->name, ID_PRE, comp->name);
-  coutf("    %sposr%s = rot_apply(%s%s_instance.rotation_absolute, %stc1);",
+  coutf("    %s%s_instance.position_relative = rot_apply(%s%s_instance.rotation_absolute, %stc1);",
         ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
   coutf("  } /* %s=%s() AT ROTATED */", comp->name, comp->def->name);
 
-  coutf("  %sDEBUG_COMPONENT(\"%s\", %sposa%s, %s%s_instance.rotation_absolute)",
+  coutf("  %sDEBUG_COMPONENT(\"%s\", %s%s_instance.position_absolute, %s%s_instance.rotation_absolute)",
         ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name);
 
-  coutf("  %scomp_posa[%i] = %sposa%s;", ID_PRE, comp->index, ID_PRE, comp->name);
-  coutf("  %scomp_posr[%i] = %sposr%s;", ID_PRE, comp->index, ID_PRE, comp->name);
+  coutf("  %scomp_posa[%i] = %s%s_instance.position_absolute;", ID_PRE, comp->index, ID_PRE, comp->name);
+  coutf("  %scomp_posr[%i] = %s%s_instance.position_relative;", ID_PRE, comp->index, ID_PRE, comp->name);
 
 } /* cogen_comp_init_position */
 
@@ -1046,7 +1060,7 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
   int   *flag_defined_common=NULL;
   
   /* sets hooks to each section information */
-  if (!strcmp(section, "INITIALIZE")) 
+  if (!strcmp(section, "INITIALISE")) 
   {
     strcpy(section_lower, "init");
     code = comp->def->init_code;
@@ -1084,13 +1098,23 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
     cout("");
     coutf("/* this function is common to all component type %s with %s code (SHARE) */", 
       comp->def->name, section);
+    if (!strcmp(section, "DISPLAY")) { /* TODO: move that in mccode-r.h ? */
+      /* User FINALLY code from component definitions (for each instance). */
+      cout("#define magnify mcdis_magnify");
+      cout("#define line mcdis_line");
+      cout("#define dashed_line mcdis_dashed_line");
+      cout("#define multiline mcdis_multiline");
+      cout("#define rectangle mcdis_rectangle");
+      cout("#define box mcdis_box");
+      cout("#define circle mcdis_circle");
+    }
     coutf("struct " ID_PRE "%s_definition_struct " ID_PRE "%s_definition_%s("
             "struct " ID_PRE "%s_definition_struct " ID_PRE "comp)",
       comp->def->name, comp->def->name, section_lower, comp->def->name);
     cout("{");
     cogen_defundef(comp, comp->def->set_par, 2);
     cogen_defundef(comp, comp->def->out_par, 2);
-    coutf("  SIG_MESSAGE(\"%%s:%%i:[%s%s_definition_%s] component %s=%s() %s\", __FILE, __LINE__);", 
+    coutf("  SIG_MESSAGE(\"%%s:%%i:[%s%s_definition_%s] component %s=%s() %s\", __FILE__, __LINE__);", 
       ID_PRE, comp->def->name, section_lower, comp->name, comp->def->name, section);
     codeblock_out(code); // common to all instances, needs defines
     
@@ -1098,23 +1122,32 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
     cogen_defundef(comp, comp->def->set_par, 0);
     cogen_defundef(comp, comp->def->out_par, 0);
     coutf("} /* " ID_PRE "%s_definition_%s */", comp->def->name, section_lower);
+    if (!strcmp(section, "DISPLAY")) {
+      cout("#undef magnify");
+      cout("#undef line");
+      cout("#undef dashed_line");
+      cout("#undef multiline");
+      cout("#undef rectangle");
+      cout("#undef box");
+      cout("#undef circle");
+    }
     cout("");
   }
   
-  coutf("void " ID_PRE "%s_instance_%s(void)", 
+  coutf("int " ID_PRE "%s_instance_%s(void)", 
     comp->name, section_lower);
   cout("{");
   
   /* init parameters. These can then be used in position/rotation syntax */
   /* all these parameters have a #define pointing to the real name space in structure */
-  coutf("  SIG_MESSAGE(\"%%s:%%i:[%s%s_instance_%s] component %s=%s() %s\", __FILE, __LINE__);", 
+  coutf("  SIG_MESSAGE(\"%%s:%%i:[%s%s_instance_%s] component %s=%s() %s\", __FILE__, __LINE__);", 
       ID_PRE, comp->name, section_lower, comp->name, comp->def->name, section);
   
   /* definition parameters of the component */
   coutf("  #define %scompcurname  %s", ID_PRE, comp->name);
   coutf("  #define %scompcurtype  %s", ID_PRE, comp->def->name);
   coutf("  #define %scompcurindex %i", ID_PRE, comp->index);
-  if (!strcmp(section, "INITIALIZE")) {
+  if (!strcmp(section, "INITIALISE")) {
     coutf("  strncpy(" ID_PRE "%s_instance.name, \"%s\", 16384);", comp->name, comp->name);
     coutf("  strncpy(" ID_PRE "%s_instance.type, \"%s\", 16384);", comp->name, comp->def->name);
     coutf("  " ID_PRE "%s_instance.index=%i;", comp->name, comp->index);
@@ -1123,7 +1156,7 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
   
   warnings += cogen_comp_init_defpar(comp); // specific to each instance
   
-  if (!strcmp(section, "INITIALIZE")) {
+  if (!strcmp(section, "INITIALISE")) {
     /* setting parameters of the component */
     cogen_comp_init_setpar(comp, instr);  // specific to each instance
   
@@ -1134,7 +1167,7 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
   cogen_defundef(comp, comp->def->set_par, 1);
   cogen_defundef(comp, comp->def->out_par, 1);
   cout("");
-  if (!strcmp(section, "INITIALIZE"))
+  if (!strcmp(section, "INITIALISE"))
     cogen_comp_init_position(comp, last, instr); // specific to each instance
   
   /* init code. Can use component instance parameters */
@@ -1142,9 +1175,28 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
   cout("");
   /* if there are definition parameters, we must put the specific INIT code here */
   if (list_len(comp->def->init_code->lines) > 0) {
-    if (list_len(comp->def->def_par) > 0)
+    if (list_len(comp->def->def_par) > 0) {
+      if (!strcmp(section, "DISPLAY")) { /* TODO: move that in mccode-r.h ? */
+        /* User FINALLY code from component definitions (for each instance). */
+        cout("#define magnify mcdis_magnify");
+        cout("#define line mcdis_line");
+        cout("#define dashed_line mcdis_dashed_line");
+        cout("#define multiline mcdis_multiline");
+        cout("#define rectangle mcdis_rectangle");
+        cout("#define box mcdis_box");
+        cout("#define circle mcdis_circle");
+      }
       codeblock_out_brace(comp->def->init_code);
-    else /* else we call the common init function for each comp type */
+      if (!strcmp(section, "DISPLAY")) {
+        cout("#undef magnify");
+        cout("#undef line");
+        cout("#undef dashed_line");
+        cout("#undef multiline");
+        cout("#undef rectangle");
+        cout("#undef box");
+        cout("#undef circle");
+      }
+    } else /* else we call the common init function for each comp type */
       coutf("  " ID_PRE "%s_instance=" ID_PRE "%s_definition_%s(" ID_PRE "%s_instance);",
         comp->name, comp->def->name, section_lower, comp->name);
   }
@@ -1154,7 +1206,7 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
   cogen_defundef(comp, comp->def->out_par, 0);
   cogen_defundef(comp, comp->def->def_par, 0);
   
-  if (!strcmp(section, "INITIALIZE")) {
+  if (!strcmp(section, "INITIALISE")) {
     coutf("  %sNCounter[%i]  = %sPCounter[%i] = %sP2Counter[%i] = 0;",
           ID_PRE, comp->index, ID_PRE, comp->index, ID_PRE, comp->index);
     coutf("  %sAbsorbProp[%i]= 0;", ID_PRE, comp->index);
@@ -1162,6 +1214,7 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
   coutf("  #undef %scompcurname", ID_PRE);
   coutf("  #undef %scompcurtype", ID_PRE);
   coutf("  #undef %scompcurindex", ID_PRE);
+  cout("  return(0);");
   
   coutf("} /* " ID_PRE "%s_instance_%s */", comp->name, section_lower);
   cout("");
@@ -1170,7 +1223,7 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
 
 int cogen_comp_init(struct comp_inst *comp, struct comp_inst *last, struct instr_def *instr)
 {
-  return(cogen_comp_section(comp, last, instr, "INITIALIZE"));
+  return(cogen_comp_section(comp, last, instr, "INITIALISE"));
 }
 
 int cogen_comp_save(struct comp_inst *comp, struct instr_def *instr)
@@ -1313,7 +1366,7 @@ cogen(char *output_name, struct instr_def *instr)
 {
   int warnings=0;
 
-  /* Initialize output file. */
+  /* INITIALISE output file. */
   if(!output_name || !output_name[0] || !strcmp(output_name, "-"))
   {
     output_handle = fdopen(1, "w");

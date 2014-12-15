@@ -76,7 +76,7 @@
 %token TOK_DEFINITION "DEFINITION"
 %token TOK_END        "END"
 %token TOK_FINALLY    "FINALLY"
-%token TOK_INITIALIZE "INITIALIZE" 
+%token TOK_INITIALISE "INITIALISE" 
 %token TOK_INSTRUMENT "INSTRUMENT"
 %token TOK_DISPLAY    "DISPLAY"
 %token TOK_PRIVATE    "PRIVATE" /* same as OUTPUT PARAMETERS */
@@ -516,7 +516,7 @@ initialize:   /* empty */
       {
         $$ = codeblock_new();
       }
-    | "INITIALIZE" "COPY" TOK_ID
+    | "INITIALISE" "COPY" TOK_ID
       {
         struct comp_def *def;
         def = read_component($3);
@@ -525,7 +525,7 @@ initialize:   /* empty */
         else
           $$ = codeblock_new();
       }
-    | "INITIALIZE" "COPY" TOK_ID "EXTEND" codeblock
+    | "INITIALISE" "COPY" TOK_ID "EXTEND" codeblock
       {
         struct comp_def   *def;
         struct code_block *cb;
@@ -540,7 +540,7 @@ initialize:   /* empty */
         } 
         $$ = cb;
       }
-    | "INITIALIZE" codeblock
+    | "INITIALISE" codeblock
       {
         $$ = $2;
       }
