@@ -111,19 +111,21 @@ DECLARE       return TOK_DECLARE;
 DEFINE        return TOK_DEFINE;
 DEFINITION    return TOK_DEFINITION;
 END           return TOK_END;
-MCDISPLAY     return TOK_MCDISPLAY;
+MCDISPLAY     return TOK_DISPLAY;
+DISPLAY       return TOK_DISPLAY; /* DISPLAY is alias to MCDISPLAY */
 FINALLY       return TOK_FINALLY;
-INITIALIZE    return TOK_INITIALIZE; /* INITIALISE ?? */
+INITIALIZE    return TOK_INITIALIZE;
+INITIALISE    return TOK_INITIALIZE;  /* INITIALISE is alias to INITIALIZE */
 INSTRUMENT    return TOK_INSTRUMENT;
-OUTPUT        return TOK_OUTPUT;
-PRIVATE       return TOK_PRIVATE;
+OUTPUT        return TOK_PRIVATE;
+PRIVATE       return TOK_PRIVATE; /* PRIVATE is alias to OUTPUT */
 PARAMETERS    return TOK_PARAMETERS;
 RELATIVE      return TOK_RELATIVE;
 ROTATED       return TOK_ROTATED;
 PREVIOUS      return TOK_PREVIOUS;
 SETTING       return TOK_SETTING;
-STATE         return TOK_STATE;
-POLARISATION  return TOK_POL;
+STATE         return TOK_STATE; /* obsolete -> error */
+POLARISATION  return TOK_POL;   /* obsolete -> error */
 TRACE         return TOK_TRACE;
 SHARE         return TOK_SHARE;
 EXTEND        return TOK_EXTEND;

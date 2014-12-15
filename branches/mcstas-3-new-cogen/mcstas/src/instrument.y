@@ -76,11 +76,10 @@
 %token TOK_DEFINITION "DEFINITION"
 %token TOK_END        "END"
 %token TOK_FINALLY    "FINALLY"
-%token TOK_INITIALIZE "INITIALIZE" /* INITIALISE ?? */
+%token TOK_INITIALIZE "INITIALIZE" 
 %token TOK_INSTRUMENT "INSTRUMENT"
-%token TOK_MCDISPLAY  "MCDISPLAY"
-%token TOK_OUTPUT     "OUTPUT" /* same as DECLARE or PRIVATE PARAMETERS */
-%token TOK_PRIVATE    "PRIVATE"
+%token TOK_DISPLAY    "DISPLAY"
+%token TOK_PRIVATE    "PRIVATE" /* same as OUTPUT PARAMETERS */
 %token TOK_PARAMETERS "PARAMETERS"
 %token TOK_RELATIVE   "RELATIVE"
 %token TOK_ROTATED    "ROTATED"
@@ -117,7 +116,7 @@
 
 %type <instance> component compref reference instref
 %type <groupinst> groupdef groupref
-%type <ccode>   code codeblock share declare initialize trace extend save finally mcdisplay
+%type <ccode>   code codeblock share declare initialize trace extend save finally display
 %type <coords>  coords
 %type <exp>     exp topexp topatexp genexp genatexp when split
 %type <actuals> actuallist actuals actuals1
@@ -147,7 +146,7 @@ compdefs:   /* empty */
     | compdefs compdef
 ;
 
-compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trace save finally mcdisplay "END"
+compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trace save finally display "END"
       {
         struct comp_def *c;
         palloc(c);
@@ -162,11 +161,14 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         c->trace_code = $8;
         c->save_code = $9;
         c->finally_code = $10;
-        c->mcdisplay_code = $11;
+        c->display_code = $11;
         c->comp_inst_number = 0;
         c->flag_defined_structure=0;
         c->flag_defined_share=0;
         c->flag_defined_init=0;
+        c->flag_defined_save=0;
+        c->flag_defined_finally=0;
+        c->flag_defined_display=0;
 
         /* Check definition and setting params for uniqueness */
         check_comp_formals(c->def_par, c->set_par, c->name);
@@ -174,7 +176,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         symtab_add(read_components, c->name, c);
         if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
       }
-    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters share declare initialize trace save finally mcdisplay "END"
+    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters share declare initialize trace save finally display "END"
       {
         /* create a copy of a comp, and initiate it with given blocks */
         /* all redefined blocks override */
@@ -201,7 +203,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
           c->trace_code = ($10->linenum ? $10 : def->trace_code);
           c->save_code  = ($11->linenum ? $11 : def->save_code);
           c->finally_code = ($12->linenum ? $12 : def->finally_code);
-          c->mcdisplay_code = ($13->linenum ? $13 : def->mcdisplay_code);
+          c->display_code = ($13->linenum ? $13 : def->display_code);
           c->comp_inst_number = 0;
 
           /* Check definition and setting params for uniqueness */
@@ -612,34 +614,34 @@ finally:    /* empty */
       }
 ;
 
-mcdisplay:    /* empty */
+display:    /* empty */
       {
         $$ = codeblock_new();
       }
-    | "MCDISPLAY" codeblock
+    | "DISPLAY" codeblock
       {
         $$ = $2;
       }
-    | "MCDISPLAY" "COPY" TOK_ID
+    | "DISPLAY" "COPY" TOK_ID
       {
         struct comp_def *def;
         def = read_component($3);
         if (def)
-          $$ = def->mcdisplay_code;
+          $$ = def->display_code;
         else
           $$ = codeblock_new();
       }
-    | "MCDISPLAY" "COPY" TOK_ID "EXTEND" codeblock
+    | "DISPLAY" "COPY" TOK_ID "EXTEND" codeblock
       {
         struct comp_def *def;
         struct code_block *cb;
         cb = codeblock_new();
         def = read_component($3);
         if (def) {
-          cb->filename        = def->mcdisplay_code->filename;
-          cb->quoted_filename = def->mcdisplay_code->quoted_filename;
-          cb->linenum         = def->mcdisplay_code->linenum;
-          list_cat(cb->lines, def->mcdisplay_code->lines);
+          cb->filename        = def->display_code->filename;
+          cb->quoted_filename = def->display_code->quoted_filename;
+          cb->linenum         = def->display_code->linenum;
+          list_cat(cb->lines, def->display_code->lines);
           list_cat(cb->lines, $5->lines);
         }
         $$ = cb;
@@ -865,12 +867,13 @@ complist:   /* empty */
             /* if we come there, instance is not an OUTPUT name */
             symtab_add(comp_instances, $2->name, $2);
             list_add(comp_instances_list, $2);
-            if (verbose) fprintf(stderr, "Component[%li]: %s = %s().\n", comp_current_index, $2->name, $2->def->name);
+            if (verbose && $2->def) 
+              fprintf(stderr, "Component[%li]: %s = %s().\n", comp_current_index, $2->name, $2->def->name);
           }
         } /* if shared */
         else
         {
-          if (verbose) fprintf(stderr, "Component[%li]: %s = %s() SKIPPED (REMOVABLE COMPONENT when included)\n", comp_current_index, $2->name, $2->def->name);
+          if (verbose && $2->def) fprintf(stderr, "Component[%li]: %s = %s() SKIPPED (REMOVABLE COMPONENT when included)\n", comp_current_index, $2->name, $2->def->name);
         }
       }
     | complist instrument
@@ -931,6 +934,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         struct comp_inst *comp;
         def = read_component($1);
         if (def != NULL) def->comp_inst_number--;
+        
         palloc(comp);
         comp->def          = def;
         comp->extend = codeblock_new();

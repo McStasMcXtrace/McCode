@@ -3552,9 +3552,6 @@ mcparseoptions(int argc, char *argv[])
 } /* mcparseoptions */
 
 #ifndef NOSIGNALS
-mcstatic char  mcsig_message[256];
-
-
 /*******************************************************************************
 * sighandler: signal handler that makes simulation stop, and save results
 *******************************************************************************/

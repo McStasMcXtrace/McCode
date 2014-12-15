@@ -159,7 +159,7 @@ char *instr_formal_type_names_real[] =
   { "long", "char*", "char", "MCNUM*", "MCNUM"}; 
   
 /*******************************************************************************
-* Output a line of code
+* Output a single line of code
 * Assumes that the output does not contain newlines.
 *******************************************************************************/
 static void
@@ -170,7 +170,7 @@ cout(char *s)
 }
 
 /*******************************************************************************
-* Output a line of code using printf-style format string.
+* Output a single line of code using printf-style format string.
 * Assumes that the output does not contain newlines.
 *******************************************************************************/
 static void
@@ -206,7 +206,9 @@ code_reset_source(void)
   coutf("#line %d \"%s\"", num_next_output_line + 1, quoted_output_file_name);
 }
 
-
+/*******************************************************************************
+* Output a list of lines of code
+*******************************************************************************/
 static void
 codeblock_out(struct code_block *code)
 {
@@ -226,6 +228,9 @@ codeblock_out(struct code_block *code)
   code_reset_source();
 }
 
+/*******************************************************************************
+* Output a list of lines of code, embraced in { ... }
+*******************************************************************************/
 static void
 codeblock_out_brace(struct code_block *code)
 {
@@ -247,7 +252,9 @@ codeblock_out_brace(struct code_block *code)
   code_reset_source();
 }
 
-
+/*******************************************************************************
+* Create an empty code list
+*******************************************************************************/
 struct code_block *
 codeblock_new(void)
 {
@@ -307,7 +314,7 @@ embed_file(char *name)
   } /* else file has already been embedded */
 } /* embed_file */
 
-/* *****************************************************************************
+/*******************************************************************************
 * cogen_decls: write the declaration part from the instrument description
 *   that is the particle definition, the instrument parameters, the DECLARE part,
 *   and all SHARE sections from components.
@@ -316,7 +323,7 @@ embed_file(char *name)
 *
 * code is generated at root level of C file: only C definitions, no initialisers !
 * calls: cogen_comp_declare
-***************************************************************************** */
+*******************************************************************************/
 int cogen_decls(struct instr_def *instr)
 {
   List_handle liter;            /* For list iteration. */
@@ -325,7 +332,7 @@ int cogen_decls(struct instr_def *instr)
   long index   =0;
   int  warnings=0;
   
-  /* a previous call to cogen_runtime writes the file header */
+  /* a previous call to cogen_header writes the file header */
   
   if (verbose) fprintf(stderr, "Writing instrument %s and components DECLARE\n", instr->name);
   cout("");
@@ -381,7 +388,7 @@ int cogen_decls(struct instr_def *instr)
   cout("");
   
   /* 5. Compatibility definitions */
-  /* TODO: misses: ABSORB, Group, SCATTERED, RESTORE */  
+  /* TODO: misses: ABSORB, Group, SCATTERED, RESTORE: see legacy cogen.c.in: cogen_decls */  
   coutf("#define " ID_PRE "ip " ID_PRE "instrument_parameters");
   coutf("#define %scompcurname  %s", ID_PRE, instr->name);
   coutf("#define %scompcurtype  %s", ID_PRE, "instrument");
@@ -472,76 +479,220 @@ int cogen_decls(struct instr_def *instr)
 } /* cogen_decls */
 
 /* *****************************************************************************
-* cogen_init: write the INITIALIZE part from the instrument description
-*   and calls all component definition init
-* input:  an instrument definition structure
+* cogen_defundef: define/undefine a symbol from a List
+* input:  a list
+*         a flag: 1=define with component name, 
+*                 2=define with 'comp' as structure name, 
+*                 3=define with 'instrument_name' as structure name
+*                 0=un-define
 *
-* generates a mcinit() function, called by mccode_main
+* code is generated in function [comp]_init
+* called by: cogen_comp_init
+***************************************************************************** */
+static void cogen_defundef(struct comp_inst *comp, List l, char define_it)
+{
+  if(list_len(l) > 0) {
+    List_handle liter;
+    struct comp_iformal *c_formal;/* Name of component formal input parameter */
+  
+    liter = list_iterate(l);
+    while(c_formal = list_next(liter)) {
+      if (define_it == 1)
+        coutf("  #define %s " ID_PRE "%s_instance.parameters.%s", 
+          c_formal->id, comp->name, c_formal->id);
+      else if (define_it == 2)
+        coutf("  #define %s " ID_PRE "comp.parameters.%s", 
+          c_formal->id, c_formal->id);
+      else if (define_it == 3)
+        coutf("  #define %s " ID_PRE "instrument_parameters.%s", 
+          c_formal->id, c_formal->id);
+      else
+        coutf("  #undef %s", c_formal->id);
+    }
+    list_iterate_end(liter);
+  }
+} /* cogen_defundef */
+
+/* *****************************************************************************
+* cogen_section: write a section part from the instrument description
+*   and calls all component definition sections
+* input:  an instrument definition structure
+*         a section as "INITIALIZE", "SAVE", "FINALLY", "DISPLAY"
+*
+* generates the mc[section] function, called by mccode_main
 *   after mcparseoptions, calling itself mcreadparams
 ***************************************************************************** */
-int cogen_init(struct instr_def *instr)
+int cogen_section(struct instr_def *instr, char *section)
 {
   long        index    =0;
   int         warnings =0;
   List_handle liter;
-  struct comp_inst *comp, *last;
+  struct comp_inst *comp=NULL, *last=NULL;
+  char        section_lower[256];
+  struct code_block *code=NULL;
   
-  /* instrument initialisation */
-  if (verbose) fprintf(stderr, "Writing instrument %s and components INITIALIZE\n", instr->name);
+  /* sets hooks to each section information */
+  if (!strcmp(section, "INITIALIZE")) 
+  {
+    strcpy(section_lower, "init");
+    code = instr->inits;
+  }
+  else if (!strcmp(section, "SAVE")) 
+  {
+    strcpy(section_lower, "save");
+    code = instr->saves;
+  }
+  else if (!strcmp(section, "FINALLY"))
+  {
+    strcpy(section_lower, "finally");
+    code = instr->finals;
+  }
+  else if (!strcmp(section, "DISPLAY"))
+  {
+    strcpy(section_lower, "display");
+    code = NULL;
+  }
+  
+  /* instrument section comment */
+  if (verbose) fprintf(stderr, "Writing instrument %s and components %s\n", 
+    instr->name, section);
   
   cout("/* *****************************************************************************");
-  coutf("* instrument %s and components INITIALIZE", instr->name);
+  coutf("* instrument %s and components %s", instr->name, section);
   cout("***************************************************************************** */");
   cout("");
   
-  /* call component init functions to write their init code */
-  liter = list_iterate(instr->complist);
-  last  = NULL;
+  /* call components to write their code section */
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
   {
-    warnings += cogen_comp_init(comp, last, instr);
+    if (!strcmp(section, "INITIALIZE"))
+      warnings += cogen_comp_init(comp, last, instr);
+    else if (!strcmp(section, "SAVE"))
+      warnings += cogen_comp_save(comp, instr);
+    else if (!strcmp(section, "FINALLY"))
+      warnings += cogen_comp_finally(comp, instr);
+    else if (!strcmp(section, "DISPLAY"))
+      warnings += cogen_comp_display(comp, instr);
     last = comp;
   }
   cout("");
   
-  /* then write the instrument main init code, which calls component ones */
-  coutf("int %sinit(void) { /* called by %scode_main for INITIALIZE */", ID_PRE, ID_PRE);
-  cout("");
-  coutf("  %sDEBUG_INSTR()", ID_PRE);
-  cout("");
-  /* default values for instrument parameters are set in mcreadparams */
-  cout("  /* " ID_PRE "code_main/" ID_PRE "parseoptions/" ID_PRE "readparams "
-    "sets instrument parameters value */");
+  /* then write the instrument main code, which calls component ones */
+  coutf("int %s%s(%s) { /* called by %scode_main for %s:%s */", 
+    ID_PRE, section_lower, 
+    !strcmp(section, "SAVE") ? "FILE *handle" : "void",
+    ID_PRE, instr->name, section);
   cout("");
   
-  /* User initialisations from instrument definition. */
+  if (!strcmp(section, "INITIALIZE")) 
+  {
+    coutf("  %sDEBUG_INSTR()", ID_PRE);
+    cout("");
+    /* default values for instrument parameters are set in mcreadparams */
+    cout("  /* " ID_PRE "code_main/" ID_PRE "parseoptions/" ID_PRE "readparams "
+      "sets instrument parameters value */");
+  } 
+  else if (!strcmp(section, "SAVE"))
+    coutf("  if (!handle) %ssiminfo_init(NULL);", ID_PRE);
+  else if (!strcmp(section, "FINALLY")) {
+    coutf("  %ssiminfo_init(NULL);", ID_PRE);
+    coutf("  %ssave(%ssiminfo_file); /* save data when simulation ends */", ID_PRE, ID_PRE);
+  }
+  else if (!strcmp(section, "DISPLAY"))
+    cout("  printf(\"MCDISPLAY: start\\n\");");
+  cout("");
   
-  if (list_len(instr->inits->lines) > 0) {
-    coutf("  /* Instrument %s INITIALIZE */", instr->name);
-    codeblock_out(instr->inits);
+  /* User code from instrument definition. */
+  if (code && list_len(code->lines) > 0) {
+    coutf("  /* Instrument %s %s */", instr->name, section);
+    coutf("  SIG_MESSAGE(\"%%s:%%i:[%s%s] instrument %s %s\", __FILE, __LINE__);", 
+      ID_PRE, section_lower, instr->name, section);
+    /* defines for the instrument parameters */
+    cogen_defundef(NULL, instr->formals, 3);
+    codeblock_out(code);
+    /* un-defines for the instrument parameters */
+    cogen_defundef(NULL, instr->formals, 0);
   }
   
-  /* component init calls: one call for each component instance */
-  cout("  /* Component initialisations: call iteratively all components INITIALIZE */");
+  /* component calls: one call for each component instance */
+  coutf("  /* call iteratively all components %s */", section);
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
   {
     index++;
-    coutf("  if (" ID_PRE"%s_instance_init()) return(%i); /* type %s */", 
-      comp->name, index, comp->def->name);
+    coutf("  if (" ID_PRE "%s_instance_%s()) return(%i); /* type %s */", 
+      comp->name, section_lower, index, comp->def->name);
   }
   cout("");
-  /* Output graphics representation of components. */
-  coutf("  if (%sdotrace) %sdisplay();", ID_PRE, ID_PRE);
-  coutf("  %sDEBUG_INSTR_END()", ID_PRE);
   
+  if (!strcmp(section, "INITIALIZE")) {
+    /* Output graphics representation of components. */
+    coutf("  if (%sdotrace) %sdisplay();", ID_PRE, ID_PRE);
+    coutf("    %sDEBUG_INSTR_END()", ID_PRE);
+  }
+  else if (!strcmp(section, "SAVE"))
+    coutf("  if (!handle) %ssiminfo_close(); ", ID_PRE);
+  else if (!strcmp(section, "FINALLY"))
+    coutf("  %ssiminfo_close(); ", ID_PRE);
+  else if (!strcmp(section, "DISPLAY"))
+    cout("  printf(\"MCDISPLAY: end\\n\");");
+  cout("");
   cout("  return(0);");
-  cout("} /* " ID_PRE"init */");
+  coutf("} /* " ID_PRE"%s */", section_lower);
   cout("");
   
   return(warnings);
+} /* cogen_section */
+
+/* *****************************************************************************
+* cogen_init: write the INIT part from the instrument description
+*   and calls all component definition sections
+* input:  an instrument definition structure
+* 
+* generates the mcinit function, called by mccode_main
+*   after mcparseoptions, calling itself mcreadparams
+***************************************************************************** */
+int cogen_init(struct instr_def *instr)
+{
+  return(cogen_section(instr, "INITIALIZE"));
 } /* cogen_init */
+
+/* *****************************************************************************
+* cogen_save: write the SAVE part from the instrument description
+*   and calls all component definition sections
+* input:  an instrument definition structure
+* 
+* generates the mcsave function, called by mccode_main
+***************************************************************************** */
+int cogen_save(struct instr_def *instr)
+{
+  return(cogen_section(instr, "SAVE"));
+} /* cogen_save */
+
+/* *****************************************************************************
+* cogen_finally: write the SAVE part from the instrument description
+*   and calls all component definition sections
+* input:  an instrument definition structure
+* 
+* generates the mcfinally function, called by mccode_main
+***************************************************************************** */
+int cogen_finally(struct instr_def *instr)
+{
+  return(cogen_section(instr, "FINALLY"));
+} /* cogen_finally */
+
+/* *****************************************************************************
+* cogen_display: write the DISPLAY part from the instrument description
+*   and calls all component definition sections
+* input:  an instrument definition structure
+* 
+* generates the display function, called by mccode_main
+***************************************************************************** */
+int cogen_display(struct instr_def *instr)
+{
+  return(cogen_section(instr, "DISPLAY"));
+} /* cogen_display */
 
 /* *****************************************************************************
 * cogen_comp_declare: write the declaration part from the component instance
@@ -603,7 +754,8 @@ int cogen_comp_declare(struct comp_inst *comp)
     if (list_len(comp->def->decl_code->lines) > 0) {
       List_handle liter;                /* For list iteration. */
       char *line;                       /* Single code line. */
-      coutf("  /* Component type '%s' DECLARE code stored as structure members */", comp->def->name);
+      coutf("  /* Component type '%s' DECLARE code stored as structure members */", 
+        comp->def->name);
       codeblock_out(comp->def->decl_code);
       /* warning/error if decl_code contains '=' char */
       if(list_len(comp->def->decl_code->lines) > 0) {
@@ -764,35 +916,6 @@ int cogen_comp_init_defpar(struct comp_inst *comp)
 } /* cogen_comp_init_defpar */
 
 /* *****************************************************************************
-* cogen_comp_init_defundef: define/undefine a symbol from a List
-* input:  a list
-*         a flag: 1=define, 2=define with 'comp' as structure name, 0=undefine
-*
-* code is generated in function [comp]_init
-* called by: cogen_comp_init
-***************************************************************************** */
-static void cogen_comp_init_defundef(struct comp_inst *comp, List l, char define_it)
-{
-  if(list_len(l) > 0) {
-    List_handle liter;
-    struct comp_iformal *c_formal;/* Name of component formal input parameter */
-  
-    liter = list_iterate(l);
-    while(c_formal = list_next(liter)) {
-      if (define_it == 1)
-        coutf("  #define %s " ID_PRE "%s_instance.parameters.%s", 
-          c_formal->id, comp->name, c_formal->id);
-      else if (define_it == 2)
-        coutf("  #define %s " ID_PRE "comp.parameters.%s", 
-          c_formal->id, c_formal->id);
-      else
-        coutf("  #undef %s", c_formal->id);
-    }
-    list_iterate_end(liter);
-  }
-} /* cogen_comp_init_defundef */
-
-/* *****************************************************************************
 * cogen_comp_init_position: write the position/rotation data
 * input:  a component instance structure pointer (not modified)
 *         previous component pointer or NULL (for relative stuff)
@@ -893,7 +1016,7 @@ static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *l
           ID_PRE, ID_PRE, last->name, ID_PRE, comp->name);
   coutf("    %sposr%s = rot_apply(%s%s_instance.rotation_absolute, %stc1);",
         ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
-  cout("  }");
+  coutf("  } /* %s=%s() AT ROTATED */", comp->name, comp->def->name);
 
   coutf("  %sDEBUG_COMPONENT(\"%s\", %sposa%s, %s%s_instance.rotation_absolute)",
         ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name);
@@ -904,75 +1027,115 @@ static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *l
 } /* cogen_comp_init_position */
 
 /* *****************************************************************************
-* cogen_comp_init: write the INITIALIZE part for each component instance
-*   generates an init(*comp) function which sets all component parameters
-*   computes absolute position and rotation, and executes INIT code.
+* cogen_comp_section: write a section part for each component instance
+*   generates an mc[comp]_instance_[section](*comp) function.
+*   when no DEFINITION parameters are used, a SHARED function is used for all
+*   instances of the same component type definition.
 *
 * input:  a component instance structure pointer
 * output: 0 when all is fine, non-0 when error found
 *
 * called by: cogen_init
 ***************************************************************************** */
-int cogen_comp_init(struct comp_inst *comp, struct comp_inst *last, struct instr_def *instr)
+int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last, 
+                       struct instr_def *instr, char *section)
 {
-  int warnings=0;
+  int    warnings=0;
+  char   section_lower[256];
+  struct code_block *code   =NULL;
+  int   *flag_defined_common=NULL;
   
-  if (verbose) fprintf(stderr, "Writing component instance %s=%s() [%i] INITIALIZE\n", 
-    comp->name, comp->def->name, comp->index);
+  /* sets hooks to each section information */
+  if (!strcmp(section, "INITIALIZE")) 
+  {
+    strcpy(section_lower, "init");
+    code = comp->def->init_code;
+    flag_defined_common = &(comp->def->flag_defined_init);
+  }
+  else if (!strcmp(section, "SAVE")) 
+  {
+    strcpy(section_lower, "save");
+    code = comp->def->save_code;
+    flag_defined_common = &(comp->def->flag_defined_save);
+  }
+  else if (!strcmp(section, "FINALLY"))
+  {
+    strcpy(section_lower, "finally");
+    code = comp->def->finally_code;
+    flag_defined_common = &(comp->def->flag_defined_finally);
+  }
+  else if (!strcmp(section, "DISPLAY"))
+  {
+    strcpy(section_lower, "display");
+    code = comp->def->display_code;
+    flag_defined_common = &(comp->def->flag_defined_display);
+  }
   
-  coutf("/* component %s=%s() INITIALIZE */",
-    comp->name, comp->def->name);
+  if (verbose) fprintf(stderr, "Writing component instance %s=%s() [%i] %s\n", 
+    comp->name, comp->def->name, comp->index, section);
+  
+  coutf("/* component %s=%s() %s */",
+    comp->name, comp->def->name, section);
+    
   if (list_len(comp->def->def_par) == 0 
-      && list_len(comp->def->init_code->lines) > 0
-      && !comp->def->flag_defined_init) {
-    /* we may use a common init function for each comp type */
-    comp->def->flag_defined_init = 1;
+      && code && list_len(code->lines) > 0 && !*flag_defined_common) {
+    /* we may use a common function for each comp type */
+    *flag_defined_common = 1;
     cout("");
-    coutf("/* this function is common to all component type %s with INIT code */", 
-      comp->def->name);
-    coutf("struct " ID_PRE "%s_definition_struct " ID_PRE "%s_definition_init("
+    coutf("/* this function is common to all component type %s with %s code (SHARE) */", 
+      comp->def->name, section);
+    coutf("struct " ID_PRE "%s_definition_struct " ID_PRE "%s_definition_%s("
             "struct " ID_PRE "%s_definition_struct " ID_PRE "comp)",
-      comp->def->name, comp->def->name, comp->def->name);
+      comp->def->name, comp->def->name, section_lower, comp->def->name);
     cout("{");
-    cogen_comp_init_defundef(comp, comp->def->set_par, 2);
-    cogen_comp_init_defundef(comp, comp->def->out_par, 2);
-
-    codeblock_out(comp->def->init_code); // common to all instances, needs defines
+    cogen_defundef(comp, comp->def->set_par, 2);
+    cogen_defundef(comp, comp->def->out_par, 2);
+    coutf("  SIG_MESSAGE(\"%%s:%%i:[%s%s_definition_%s] component %s=%s() %s\", __FILE, __LINE__);", 
+      ID_PRE, comp->def->name, section_lower, comp->name, comp->def->name, section);
+    codeblock_out(code); // common to all instances, needs defines
     
     /* undefine aliases */
-    cogen_comp_init_defundef(comp, comp->def->set_par, 0);
-    cogen_comp_init_defundef(comp, comp->def->out_par, 0);
-    coutf("} /* " ID_PRE "%s_definition_init */", comp->def->name);
+    cogen_defundef(comp, comp->def->set_par, 0);
+    cogen_defundef(comp, comp->def->out_par, 0);
+    coutf("} /* " ID_PRE "%s_definition_%s */", comp->def->name, section_lower);
     cout("");
   }
   
-  coutf("void " ID_PRE "%s_instance_init(void)", 
-    comp->name, comp->def->name);
+  coutf("void " ID_PRE "%s_instance_%s(void)", 
+    comp->name, section_lower);
   cout("{");
   
   /* init parameters. These can then be used in position/rotation syntax */
   /* all these parameters have a #define pointing to the real name space in structure */
+  coutf("  SIG_MESSAGE(\"%%s:%%i:[%s%s_instance_%s] component %s=%s() %s\", __FILE, __LINE__);", 
+      ID_PRE, comp->name, section_lower, comp->name, comp->def->name, section);
   
   /* definition parameters of the component */
   coutf("  #define %scompcurname  %s", ID_PRE, comp->name);
   coutf("  #define %scompcurtype  %s", ID_PRE, comp->def->name);
   coutf("  #define %scompcurindex %i", ID_PRE, comp->index);
-  coutf("  strncpy(" ID_PRE "%s_instance.name, \"%s\", 16384);", comp->name, comp->name);
-  coutf("  strncpy(" ID_PRE "%s_instance.type, \"%s\", 16384);", comp->name, comp->def->name);
-  cout("");
+  if (!strcmp(section, "INITIALIZE")) {
+    coutf("  strncpy(" ID_PRE "%s_instance.name, \"%s\", 16384);", comp->name, comp->name);
+    coutf("  strncpy(" ID_PRE "%s_instance.type, \"%s\", 16384);", comp->name, comp->def->name);
+    coutf("  " ID_PRE "%s_instance.index=%i;", comp->name, comp->index);
+    cout("");
+  }  
+  
   warnings += cogen_comp_init_defpar(comp); // specific to each instance
-
-  /* setting parameters of the component */
-  cogen_comp_init_setpar(comp, instr);  // specific to each instance
   
-  /* output parameters of the component (private/declare) */
-  cogen_comp_init_outpar(comp, instr);  // specific to each instance
+  if (!strcmp(section, "INITIALIZE")) {
+    /* setting parameters of the component */
+    cogen_comp_init_setpar(comp, instr);  // specific to each instance
   
+    /* output parameters of the component (private/declare) */
+    cogen_comp_init_outpar(comp, instr);  // specific to each instance
+  }
   /* define alias to SETTING and OUTPUT parameters */
-  cogen_comp_init_defundef(comp, comp->def->set_par, 1);
-  cogen_comp_init_defundef(comp, comp->def->out_par, 1);
+  cogen_defundef(comp, comp->def->set_par, 1);
+  cogen_defundef(comp, comp->def->out_par, 1);
   cout("");
-  cogen_comp_init_position(comp, last, instr); // specific to each instance
+  if (!strcmp(section, "INITIALIZE"))
+    cogen_comp_init_position(comp, last, instr); // specific to each instance
   
   /* init code. Can use component instance parameters */
   /* Users initializations. Embraced as it may contain local C definitions */
@@ -982,40 +1145,52 @@ int cogen_comp_init(struct comp_inst *comp, struct comp_inst *last, struct instr
     if (list_len(comp->def->def_par) > 0)
       codeblock_out_brace(comp->def->init_code);
     else /* else we call the common init function for each comp type */
-      coutf("  " ID_PRE "%s_instance=" ID_PRE "%s_definition_init(" ID_PRE "%s_instance);",
-        comp->name, comp->def->name, comp->name);
+      coutf("  " ID_PRE "%s_instance=" ID_PRE "%s_definition_%s(" ID_PRE "%s_instance);",
+        comp->name, comp->def->name, section_lower, comp->name);
   }
   cout("");
   /* undefine aliases */
-  cogen_comp_init_defundef(comp, comp->def->set_par, 0);
-  cogen_comp_init_defundef(comp, comp->def->out_par, 0);
-  cogen_comp_init_defundef(comp, comp->def->def_par, 0);
+  cogen_defundef(comp, comp->def->set_par, 0);
+  cogen_defundef(comp, comp->def->out_par, 0);
+  cogen_defundef(comp, comp->def->def_par, 0);
   
-  coutf("  %sNCounter[%i]  = %sPCounter[%i] = %sP2Counter[%i] = 0;",
-        ID_PRE, comp->index, ID_PRE, comp->index, ID_PRE, comp->index);
-  coutf("  %sAbsorbProp[%i]= 0;", ID_PRE, comp->index);
+  if (!strcmp(section, "INITIALIZE")) {
+    coutf("  %sNCounter[%i]  = %sPCounter[%i] = %sP2Counter[%i] = 0;",
+          ID_PRE, comp->index, ID_PRE, comp->index, ID_PRE, comp->index);
+    coutf("  %sAbsorbProp[%i]= 0;", ID_PRE, comp->index);
+  }
   coutf("  #undef %scompcurname", ID_PRE);
   coutf("  #undef %scompcurtype", ID_PRE);
   coutf("  #undef %scompcurindex", ID_PRE);
   
-  coutf("} /* " ID_PRE "%s_instance_init */", comp->name);
+  coutf("} /* " ID_PRE "%s_instance_%s */", comp->name, section_lower);
   cout("");
   return(warnings);
-} /* cogen_comp_init */
+} /* cogen_comp_section */
 
-cogen_comp_trace()
+int cogen_comp_init(struct comp_inst *comp, struct comp_inst *last, struct instr_def *instr)
 {
+  return(cogen_comp_section(comp, last, instr, "INITIALIZE"));
 }
 
-cogen_comp_save()
+int cogen_comp_save(struct comp_inst *comp, struct instr_def *instr)
 {
+  return(cogen_comp_section(comp, NULL, instr, "SAVE"));
 }
 
-cogen_comp_finally()
+int cogen_comp_finally(struct comp_inst *comp, struct instr_def *instr)
 {
+  return(cogen_comp_section(comp, NULL, instr, "FINALLY"));
 }
 
-cogen_comp_display()
+int cogen_comp_display(struct comp_inst *comp, struct instr_def *instr)
+{
+  return(cogen_comp_section(comp, NULL, instr, "DISPLAY"));
+}
+
+
+
+int cogen_comp_trace()
 {
 }
 
@@ -1026,14 +1201,40 @@ cogen_comp_display()
 * the --no-runtime compiler switch.
 *******************************************************************************/
 static void
-cogen_runtime(struct instr_def *instr)
+cogen_header(struct instr_def *instr, char *output_name)
 {
   char *sysdir_orig;
   char *sysdir_new;
   char  pathsep[3];
   int   i,j=0;
+  time_t t;
+  char  date[64];
+  
+  time(&t);
+  strncpy(date, ctime(&t), 64);
+  if (strlen(date)) date[strlen(date)-1] = '\0';
+  
+  /* the file header */
+  cout("/* Automatically generated file. Do not edit. ");
+  cout(" * Format:     ANSI C source code");
+#if MCCODE_PROJECT == 1     /* neutron */
+  cout(" * Creator:    McStas <http://www.mcstas.org>");
+#elif MCCODE_PROJECT == 2   /* xray */
+  cout(" * Creator:    McXtrace <http://www.mcxtrace.org>");
+#endif
+  coutf(" * Instrument: %s (%s)", instr->source, instr->name);
+  coutf(" * Date:       %s", date);
+  coutf(" * File:       %s", output_name);
+  cout(" */");
+  cout("");
+  coutf("#define MCCODE_STRING \"%s\"", MCCODE_STRING);
+  coutf("#define FLAVOR        \"%s\"", FLAVOR);
+  coutf("#define FLAVOR_UPPER  \"%s\"", FLAVOR_UPPER);
+  cout("");
   /* handles Windows '\' chararcters for embedding sys_dir into source code */
-  if (MC_PATHSEP_C != '\\') strcpy(pathsep, MC_PATHSEP_S); else strcpy(pathsep, "\\\\");
+  if (MC_PATHSEP_C != '\\') strcpy(pathsep, MC_PATHSEP_S); 
+  else strcpy(pathsep, "\\\\");
+  
   sysdir_orig = get_sys_dir();
   sysdir_new  = (char *)mem(2*strlen(sysdir_orig));
   for (i=0; i < strlen(sysdir_orig); i++)
@@ -1094,13 +1295,14 @@ cogen_runtime(struct instr_def *instr)
   
   coutf("#define MCSTAS \"%s%s\"", sysdir_new,pathsep); /* TODO: use MCXTRACE for xrays ? */
   
-  coutf("int %sdefaultmain = %d;", ID_PRE, instr->use_default_main);
-  coutf("char %sinstrument_name[] = \"%s\";", ID_PRE, instr->name);
-  coutf("char %sinstrument_source[] = \"%s\";", ID_PRE, instr->source);
-  coutf("char *%sinstrument_exe=NULL; /* will be set to argv[0] in main */", ID_PRE);
+  coutf("int   %sdefaultmain         = %d;", ID_PRE, instr->use_default_main);
+  coutf("char  %sinstrument_name[]   = \"%s\";", ID_PRE, instr->name);
+  coutf("char  %sinstrument_source[] = \"%s\";", ID_PRE, instr->source);
+  coutf("char *%sinstrument_exe      = NULL; /* will be set to argv[0] in main */", ID_PRE);
+  cout("");
   if(instr->use_default_main)
     cout("int main(int argc, char *argv[]){return mccode_main(argc, argv);}");
-} /* cogen_runtime */
+} /* cogen_header */
 
 /*******************************************************************************
 * cogen: the code generator
@@ -1109,13 +1311,7 @@ cogen_runtime(struct instr_def *instr)
 void
 cogen(char *output_name, struct instr_def *instr)
 {
-  time_t t;
-  char date[64];
   int warnings=0;
-
-  time(&t);
-  strncpy(date, ctime(&t), 64);
-  if (strlen(date)) date[strlen(date)-1] = '\0';
 
   /* Initialize output file. */
   if(!output_name || !output_name[0] || !strcmp(output_name, "-"))
@@ -1131,34 +1327,18 @@ cogen(char *output_name, struct instr_def *instr)
   num_next_output_line = 1;
   if(output_handle == NULL)
     fatal_error("Error opening output file '%s'\n", output_name);
-
-  /* the file header */
-  cout("/* Automatically generated file. Do not edit. ");
-  cout(" * Format:     ANSI C source code");
-#if MCCODE_PROJECT == 1     /* neutron */
-  cout(" * Creator:    McStas <http://www.mcstas.org>");
-#elif MCCODE_PROJECT == 2   /* xray */
-  cout(" * Creator:    McXtrace <http://www.mcxtrace.org>");
-#endif
-  coutf(" * Instrument: %s (%s)", instr->source, instr->name);
-  coutf(" * Date:       %s", date);
-  coutf(" * File:       %s", output_name);
-  cout(" */");
-  cout("");
-  coutf("#define MCCODE_STRING \"%s\"", MCCODE_STRING);
-  coutf("#define FLAVOR        \"%s\"", FLAVOR);
-  coutf("#define FLAVOR_UPPER  \"%s\"", FLAVOR_UPPER);
   
   /* and we now call the writers */
-  cogen_runtime(instr);
+  cogen_header(instr, output_name);
   warnings += cogen_decls(instr); /* return nb of warnings */
   warnings += cogen_init(instr);
   /*
-  cogen_trace(instr);
-  cogen_save(instr);
-  cogen_finally(instr);
-  cogen_mcdisplay(instr);
+  warnings += cogen_trace(instr);
   */
+  warnings += cogen_save(instr);
+  warnings += cogen_finally(instr);
+  warnings += cogen_display(instr);
+  
   if (warnings)
     fprintf(stderr,"Warning: The build of the instrument %s has %i warning/errors.\n",
         	instr->name, warnings);

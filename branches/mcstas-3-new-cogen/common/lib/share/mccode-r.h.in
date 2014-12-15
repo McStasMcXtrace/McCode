@@ -235,7 +235,8 @@ unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:
 
 #ifndef NOSIGNALS
 #include <signal.h>
-#define SIG_MESSAGE(msg) strcpy(mcsig_message, msg);
+mcstatic char  mcsig_message[256];
+#define SIG_MESSAGE(...) snprintf(mcsig_message, 256, __VA_ARGS__);
 #else
 #define SIG_MESSAGE(msg)
 #endif /* !NOSIGNALS */
@@ -361,11 +362,11 @@ unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:
 #define test_printf while(0) printf
 #endif
 
-/* send MCDISPLAY message to stdout to show gemoetry */
+/* send MCDISPLAY message to stdout to show geometry */
 void mcdis_magnify(char *what);
 void mcdis_line(double x1, double y1, double z1,
                 double x2, double y2, double z2);
-void mcdis_dashed_linemcdis_dashed_line(double x1, double y1, double z1,
+void mcdis_dashed_line(double x1, double y1, double z1,
 		       double x2, double y2, double z2, int n);
 void mcdis_multiline(int count, ...);
 void mcdis_rectangle(char* plane, double x, double y, double z,
