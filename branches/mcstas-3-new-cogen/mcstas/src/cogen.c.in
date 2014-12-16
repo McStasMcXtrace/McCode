@@ -334,10 +334,10 @@ int cogen_decls(struct instr_def *instr)
   
   /* a previous call to cogen_header writes the file header */
   
-  if (verbose) fprintf(stderr, "Writing instrument %s and components DECLARE\n", instr->name);
+  if (verbose) fprintf(stderr, "Writing instrument '%s' and components DECLARE\n", instr->name);
   cout("");
   cout("/* *****************************************************************************");
-  coutf("* instrument %s and components DECLARE", instr->name);
+  coutf("* instrument '%s' and components DECLARE", instr->name);
   cout("***************************************************************************** */");
   cout("");
   
@@ -353,7 +353,7 @@ int cogen_decls(struct instr_def *instr)
 #endif
   cout("  double t, p; /* time, event weight */");
   cout("  long long uid; /* event ID */");
- cout("  long cid; /* event current component ID */");
+ cout("  long index; /* component index where to send this event */");
  cout("} " ID_PRE "particle;");
   cout("");
   cout("#define " ID_PRE MCCODE_PARTICLE " " ID_PRE "particle");
@@ -423,8 +423,8 @@ int cogen_decls(struct instr_def *instr)
             i_formal->id, instr_formal_type_names[i_formal->type],
             exp_tostring(i_formal->default_value));
       else
-        coutf("  \"%s\", &%sinstrument_parameters.%s, %s, \"%s\", ", i_formal->id, ID_PRE, i_formal->id,
-            instr_formal_type_names[i_formal->type],
+        coutf("  \"%s\", &%sinstrument_parameters.%s, %s, \"%s\", ", i_formal->id, ID_PRE, 
+            i_formal->id, instr_formal_type_names[i_formal->type],
             i_formal->isoptional ? exp_tostring(i_formal->default_value) : "");
     }
   }
@@ -485,7 +485,7 @@ int cogen_decls(struct instr_def *instr)
   coutf("#undef %scompcurtype", ID_PRE);
   coutf("#undef %scompcurindex", ID_PRE);
   
-  coutf("/* end of instrument %s and components DECLARE */", instr->name);
+  coutf("/* end of instrument '%s' and components DECLARE */", instr->name);
   cout("");
   
   return(warnings);
@@ -500,8 +500,8 @@ int cogen_decls(struct instr_def *instr)
 *                 3=define with 'instrument_name' as structure name
 *                 0=un-define
 *
-* code is generated in function [comp]_init
-* called by: cogen_comp_init
+* code is generated in function [comp]_[section=init/save/finally/display]
+* called by: cogen_comp_[section]
 ***************************************************************************** */
 static void cogen_defundef(struct comp_inst *comp, List l, char define_it)
 {
@@ -534,11 +534,9 @@ static void cogen_defundef(struct comp_inst *comp, List l, char define_it)
 *         a section as "INITIALISE", "SAVE", "FINALLY", "DISPLAY"
 *
 * generates the mc[section] function, called by mccode_main
-*   after mcparseoptions, calling itself mcreadparams
 ***************************************************************************** */
 int cogen_section(struct instr_def *instr, char *section)
 {
-  long        index    =0;
   int         warnings =0;
   List_handle liter;
   struct comp_inst *comp=NULL, *last=NULL;
@@ -568,11 +566,11 @@ int cogen_section(struct instr_def *instr, char *section)
   }
   
   /* instrument section comment */
-  if (verbose) fprintf(stderr, "Writing instrument %s and components %s\n", 
+  if (verbose) fprintf(stderr, "Writing instrument '%s' and components %s\n", 
     instr->name, section);
   
   cout("/* *****************************************************************************");
-  coutf("* instrument %s and components %s", instr->name, section);
+  coutf("* instrument '%s' and components %s", instr->name, section);
   cout("***************************************************************************** */");
   cout("");
   
@@ -598,6 +596,7 @@ int cogen_section(struct instr_def *instr, char *section)
     !strcmp(section, "SAVE") ? "FILE *handle" : "void",
     ID_PRE, instr->name, section);
   cout("");
+  cout("  int " ID_PRE "ret=0;");
   
   if (!strcmp(section, "INITIALISE")) 
   {
@@ -619,8 +618,8 @@ int cogen_section(struct instr_def *instr, char *section)
   
   /* User code from instrument definition. */
   if (code && list_len(code->lines) > 0) {
-    coutf("  /* Instrument %s %s */", instr->name, section);
-    coutf("  SIG_MESSAGE(\"%%s:%%i:[%s%s] instrument %s %s\", __FILE__, __LINE__);", 
+    coutf("  /* Instrument '%s' %s */", instr->name, section);
+    coutf("  SIG_MESSAGE(\"%%s:%%i:[%s%s] instrument '%s' %s\", __FILE__, __LINE__);", 
       ID_PRE, section_lower, instr->name, section);
     /* defines for the instrument parameters */
     cogen_defundef(NULL, instr->formals, 3);
@@ -634,9 +633,22 @@ int cogen_section(struct instr_def *instr, char *section)
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
   {
-    index++;
-    coutf("  if (" ID_PRE "%s_instance_%s()) return(%i); /* type %s */", 
-      comp->name, section_lower, index, comp->def->name);
+    /* get the component code: no call to it when no code exists (except INIT) */
+    struct code_block *comp_code=NULL;
+    if (!strcmp(section, "INITIALISE")) 
+      comp_code = comp->def->init_code;
+    else if (!strcmp(section, "SAVE")) 
+      comp_code = comp->def->save_code;
+    else if (!strcmp(section, "FINALLY"))
+      comp_code = comp->def->finally_code;
+    else if (!strcmp(section, "DISPLAY"))
+      comp_code = comp->def->display_code;
+    if (!strcmp(section, "INITIALISE") || list_len(comp_code->lines) > 0) {
+      /* each component code is executed once, iteratively */
+      /* a return code can be set, but does not prevent other components to execute */
+      coutf("  ret += " ID_PRE "%s_instance_%s(); /* type %s */", 
+        comp->name, section_lower, comp->def->name);
+    }
   }
   cout("");
   
@@ -652,7 +664,7 @@ int cogen_section(struct instr_def *instr, char *section)
   else if (!strcmp(section, "DISPLAY"))
     cout("  printf(\"MCDISPLAY: end\\n\");");
   cout("");
-  cout("  return(0);");
+  cout("  return(" ID_PRE "ret);");
   coutf("} /* " ID_PRE"%s */", section_lower);
   cout("");
   
@@ -708,6 +720,48 @@ int cogen_display(struct instr_def *instr)
   return(cogen_section(instr, "DISPLAY"));
 } /* cogen_display */
 
+/*******************************************************************************
+* cogen_trace: Generate the TRACE section.
+* Extended Grammar: uses goto and labels and installs tests
+*   WHEN: the trace section of comp is embraced in a: if (when) { ...  }
+*   GROUP: defines a global Group_<name> flag which gets true when one of the
+*          comps SCATTER. Rest of GROUP is then skipped, using goto's.
+*          ABSORB @MCCODE_PARTICLE@ are sent to label absorbComp at the end of component
+*          and next comp in GROUP is tested.
+*   JUMP:  sends @MCCODE_PARTICLE@ to the JumpTrace labels, either with condition
+*          or condition is (counter < iterations)
+*   SPLIT: loops from comp/group TRACE to END, incrementing mcrun_num
+*******************************************************************************/
+int cogen_trace(struct instr_def *instr)
+{
+
+  /* TODO *?
+  /* must support: WHEN
+     JUMP WHEN
+     JUMP ITERATE
+     EXTEND
+     GROUP
+     ARRAY
+   */
+   /*
+  neutron = mcraytrace(neutron)
+  {
+    define state parameter alias to neutron.[var] 
+    normal output 
+    if (when) {
+      neutron = [comp]_instance_trace(neutron);
+      {
+        defines
+        EXTEND code
+        undef
+      }
+    }
+    
+    absorbAll:
+  } 
+  */
+}
+
 /* *****************************************************************************
 * cogen_comp_declare: write the declaration part from the component instance
 *   that is the component parameter structure, with positioning stuff
@@ -735,6 +789,7 @@ int cogen_comp_declare(struct comp_inst *comp)
     comp->def->flag_defined_structure = 1;
     coutf("/* Parameter definition for component type '%s' */", 
       comp->def->name);
+    cogen_comp_init_defpar(comp);
     coutf("struct " ID_PRE "%s_parameters_struct {", comp->def->name);
     
     /* put there setting, output and declare code */
@@ -744,7 +799,7 @@ int cogen_comp_declare(struct comp_inst *comp)
       if(list_len(l) > 0)
       {
         List_handle liter;
-        liter = list_iterate(comp->def->set_par);
+        liter = list_iterate(l);
         struct comp_iformal *c_formal;/* Name of component formal input parameter */
         
         coutf("  /* Component type '%s' %s parameters */", 
@@ -752,9 +807,36 @@ int cogen_comp_declare(struct comp_inst *comp)
         
         while(c_formal = list_next(liter))
         {
+          /* check if the SETTING/PRIVATE parameter name also appears in the DECLARE code */
+          char flag_is_in_declare_code=0;
           nb_parameters++;
+
+          if(list_len(comp->def->decl_code->lines) > 0) {
+            List_handle liter = list_iterate(comp->def->decl_code->lines);
+            char *line;                       /* Single code line. */
+            while(line = list_next(liter))
+            {
+              char *p=strstr(line, c_formal->id);
+              /* the parameter name must appear in DECLARE code as a single word */
+              if (p != NULL) {
+                int char_before=0;
+                int char_after =0;
+                if (p > line) 
+                  char_before=*(p-1); /* char before the match */
+                if (p+strlen(c_formal->id) <= line+strlen(line)) 
+                  char_after=*(p+strlen(c_formal->id)); /* char after the match */
+                if ( (!char_before || (char_before && strchr(" ,\t*",  char_before))) &&
+                     (!char_after  || (char_after  && strchr(" ,\t;[", char_after ))) )
+                  flag_is_in_declare_code++;
+              }
+            }
+            list_iterate_end(liter);
+          }
+          if (flag_is_in_declare_code)  
+            continue; /* already in DECLARE code, no need to add it to the structure */
+
           /* scalar parameter */
-          if (c_formal->type != instr_type_string)
+          if (c_formal->type != instr_type_string && c_formal->type != instr_type_vector)
             coutf("  %s %s;", instr_formal_type_names_real[c_formal->type], c_formal->id);
           else  /* array parameter */
             coutf("  %s %s[16384];", 
@@ -786,6 +868,7 @@ int cogen_comp_declare(struct comp_inst *comp)
     if (!nb_parameters)
       coutf("  char %s_has_no_parameters;", comp->def->name);
     coutf("}; /* " ID_PRE "%s_parameters_struct */", comp->def->name);
+    cogen_defundef(comp, comp->def->def_par, 0);
     cout("");
     
     coutf("/* Parameters for component type '%s' */", 
@@ -813,65 +896,40 @@ int cogen_comp_declare(struct comp_inst *comp)
 } /* cogen_comp_declare */
 
 /* *****************************************************************************
-* cogen_comp_init_setpar: write the setting parameter allocation in INIT
+* cogen_comp_init_par: write the setting/output parameter allocation in [section]
 * input:  a component instance structure pointer (not modified)
+*         an instrument structure pointer (not modified)
+*         a section as "SETTING" or "PRIVATE"/"OUTPUT"
 *
-* code is generated in function [comp]_init
-* called by: cogen_comp_init
+* code is generated in function [comp]_[section=init/save/display/finally]
+* called by: cogen_comp_section
 ***************************************************************************** */
 /* TODO: handle vectors */
-static void cogen_comp_init_setpar(struct comp_inst *comp, struct instr_def *instr)
+static void cogen_comp_init_par(struct comp_inst *comp, struct instr_def *instr, 
+                                char *section)
 {
-  if(list_len(comp->def->set_par) > 0)
+  List l = !strcmp(section, "SETTING") ? 
+             comp->def->set_par : comp->def->out_par;
+  
+  if(list_len(l) > 0)
   {
-    List_handle setpar = list_iterate(comp->def->set_par);
+    List_handle list_par = list_iterate(l);
     struct comp_iformal *par;
     
-    while((par = list_next(setpar)) != NULL)
+    while((par = list_next(list_par)) != NULL)
     {
-      char *val;
-      struct Symtab_entry *entry;
+      char *val=NULL;
 
-      entry = symtab_lookup(comp->setpar, par->id);
-      val   = exp_tostring(entry->val);
-      code_set_source(instr->quoted_source, exp_getlineno(entry->val));
-
-      if (par->type == instr_type_string) {
-        coutf("  if(%s && strlen(%s))", val, val);
-        coutf("    strncpy(" ID_PRE "%s_instance.parameters.%s, %s ? %s : \"\", 16384);", 
-          comp->name, par->id, val, val);
-        coutf("  else " ID_PRE "%s_instance.parameters.%s[0]='\\0';", 
-          comp->name, par->id);
-      } else
-        coutf("  " ID_PRE "%s_instance.parameters.%s = %s;", comp->name, par->id, val);
-      str_free(val);
-    }
-    list_iterate_end(setpar);
-    if(list_len(comp->def->set_par) > 0)
-      code_reset_source();
-    cout("");
-  }
-} /* cogen_comp_init_setpar */
-
-/* *****************************************************************************
-* cogen_comp_init_outpar: write the private parameter allocation in INIT
-* input:  a component instance structure pointer (not modified)
-*
-* code is generated in function [comp]_init
-* called by: cogen_comp_init
-***************************************************************************** */
-/* TODO: handle vectors */
-static void cogen_comp_init_outpar(struct comp_inst *comp, struct instr_def *instr)
-{
-  if(list_len(comp->def->out_par) > 0) 
-  {
-    List_handle outpar = list_iterate(comp->def->out_par);
-    struct comp_iformal *par;
-    while((par = list_next(outpar)) != NULL)
-    {
-      if (par->isoptional) {
-        char *val =  exp_tostring(par->default_value);
-
+      if (!strcmp(section, "SETTING")) {
+        struct Symtab_entry *entry;
+        entry = symtab_lookup(comp->setpar, par->id);
+        val   = exp_tostring(entry->val);
+        code_set_source(instr->quoted_source, exp_getlineno(entry->val));
+      } else {
+        val =  par->isoptional ? exp_tostring(par->default_value) : NULL;
+      }
+      
+      if (val) {
         if (par->type == instr_type_string) {
           coutf("  if(%s && strlen(%s))", val, val);
           coutf("    strncpy(" ID_PRE "%s_instance.parameters.%s, %s ? %s : \"\", 16384);", 
@@ -882,11 +940,15 @@ static void cogen_comp_init_outpar(struct comp_inst *comp, struct instr_def *ins
           coutf("  " ID_PRE "%s_instance.parameters.%s = %s;", comp->name, par->id, val);
         str_free(val);
       }
+      /* define the symbol right after assignment so that we can use it in further parameters */
+      coutf("  #define %s " ID_PRE "%s_instance.parameters.%s", par->id, comp->name, par->id);
     }
-    list_iterate_end(outpar);
+    list_iterate_end(list_par);
+    if(list_len(l) > 0 && !strcmp(section, "SETTING"))
+      code_reset_source();
     cout("");
   }
-} /* cogen_comp_init_outpar */
+} /* cogen_comp_init_par */
 
 /* *****************************************************************************
 * cogen_comp_init_defpar: write the definition parameters in INIT
@@ -1049,7 +1111,7 @@ static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *l
 * input:  a component instance structure pointer
 * output: 0 when all is fine, non-0 when error found
 *
-* called by: cogen_init
+* called by: cogen_[section]
 ***************************************************************************** */
 int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last, 
                        struct instr_def *instr, char *section)
@@ -1084,6 +1146,10 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
     code = comp->def->display_code;
     flag_defined_common = &(comp->def->flag_defined_display);
   }
+  
+  /* nothing to do when no component code, except for INITIALISE */
+  if (strcmp(section, "INITIALISE") && list_len(code->lines) <= 0)
+    return(0);
   
   if (verbose) fprintf(stderr, "Writing component instance %s=%s() [%i] %s\n", 
     comp->name, comp->def->name, comp->index, section);
@@ -1158,14 +1224,15 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
   
   if (!strcmp(section, "INITIALISE")) {
     /* setting parameters of the component */
-    cogen_comp_init_setpar(comp, instr);  // specific to each instance
+    cogen_comp_init_par(comp, instr, "SETTING");  // specific to each instance
   
     /* output parameters of the component (private/declare) */
-    cogen_comp_init_outpar(comp, instr);  // specific to each instance
+    cogen_comp_init_par(comp, instr, "PRIVATE");  // specific to each instance
+  } else {
+   /* define alias to SETTING and OUTPUT parameters */
+    cogen_defundef(comp, comp->def->set_par, 1);
+    cogen_defundef(comp, comp->def->out_par, 1);
   }
-  /* define alias to SETTING and OUTPUT parameters */
-  cogen_defundef(comp, comp->def->set_par, 1);
-  cogen_defundef(comp, comp->def->out_par, 1);
   cout("");
   if (!strcmp(section, "INITIALISE"))
     cogen_comp_init_position(comp, last, instr); // specific to each instance
@@ -1174,7 +1241,7 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
   /* Users initializations. Embraced as it may contain local C definitions */
   cout("");
   /* if there are definition parameters, we must put the specific INIT code here */
-  if (list_len(comp->def->init_code->lines) > 0) {
+  if (list_len(code->lines) > 0) {
     if (list_len(comp->def->def_par) > 0) {
       if (!strcmp(section, "DISPLAY")) { /* TODO: move that in mccode-r.h ? */
         /* User FINALLY code from component definitions (for each instance). */
@@ -1186,7 +1253,10 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
         cout("#define box mcdis_box");
         cout("#define circle mcdis_circle");
       }
-      codeblock_out_brace(comp->def->init_code);
+      
+      /* the component code is here */
+      codeblock_out_brace(code);
+      
       if (!strcmp(section, "DISPLAY")) {
         cout("#undef magnify");
         cout("#undef line");
@@ -1336,17 +1406,21 @@ cogen_header(struct instr_def *instr, char *output_name)
 
     fprintf(stderr,"Dependency: %s.o\n", "mcstas-r");
     fprintf(stderr,"Dependency: '-DUSE_NEXUS -lNeXus' to enable NeXus support\n");
-    fprintf(stderr,"To build instrument %s, compile and link with these libraries (in %s%sshare)\n",
+    fprintf(stderr,"To build instrument '%s', compile and link with these libraries (in %s%sshare)\n",
       instrument_definition->quoted_source, sysdir_new, pathsep);
   }
-
+  cout("");
+  cout("/* *****************************************************************************");
+  coutf("* Start of instrument '%s' generated code", instr->name);
+  cout("***************************************************************************** */");
+  cout("");
   coutf("#ifdef MC_TRACE_ENABLED");
   coutf("int %straceenabled = 1;", ID_PRE);
   coutf("#else");
   coutf("int %straceenabled = 0;", ID_PRE);
   coutf("#endif");
   
-  coutf("#define MCSTAS \"%s%s\"", sysdir_new,pathsep); /* TODO: use MCXTRACE for xrays ? */
+  coutf("#define " MCCODE_LIBENV " \"%s%s\"", sysdir_new,pathsep);
   
   coutf("int   %sdefaultmain         = %d;", ID_PRE, instr->use_default_main);
   coutf("char  %sinstrument_name[]   = \"%s\";", ID_PRE, instr->name);
@@ -1393,7 +1467,7 @@ cogen(char *output_name, struct instr_def *instr)
   warnings += cogen_display(instr);
   
   if (warnings)
-    fprintf(stderr,"Warning: The build of the instrument %s has %i warning/errors.\n",
+    fprintf(stderr,"Warning: The build of the instrument '%s' has %i warning/errors.\n",
         	instr->name, warnings);
   coutf("/* end of generated C code %s */", output_name);
 } /* cogen */

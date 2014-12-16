@@ -75,7 +75,7 @@ mknonvalueexp(char *s)
 CExp
 exp_id(char *id)
 {
-  return mkvalueexp(str_cat(ID_PRE, "ip", id, NULL));
+  return mkvalueexp(str_cat(ID_PRE, "instrument_parameters.", id, NULL));
 }
 
 CExp

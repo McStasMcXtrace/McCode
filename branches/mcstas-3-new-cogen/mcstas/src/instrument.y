@@ -1970,7 +1970,7 @@ read_component(char *name)
     {
       print_error(
         "Cannot find file containing definition of component '%s'.\n"
-        "Check the McStas library installation or your MCSTAS environment variable\n"
+        "Check the " MCCODE_LIBENV " library installation and environment variable\n"
         "or copy the component definition file locally.\n", name);
       return NULL;
     }
