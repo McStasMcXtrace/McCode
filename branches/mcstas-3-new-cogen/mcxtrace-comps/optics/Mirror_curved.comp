@@ -65,12 +65,13 @@ INITIALIZE
 
 TRACE
 %{
-  double l0,l1,dl,alpha,n,nx,nz,s,k,knx,kny,knz;
+  double l0,l1,dl,alpha,n,nx,nz,s,k,knx,knz;
 
   /*do we hit the mirror within range?*/
   //PROP_Z0;
-  k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
-  knx=kx/k;kny=ky/k;knz=kz/k;
+  k=sqrt(scalar_prod(kx,0,kz,kx,0,kz));
+  knx=kx/k;
+  knz=kz/k;
   if (solve_2nd_order(&l0,&l1, knx*knx+knz*knz,2*(x*knx+z*knz-radius*knx),x*x-2*x*radius+z*z))
   {
     if (l0<0 && l1>0){
@@ -92,8 +93,7 @@ TRACE
 
     PROP_DL(dl);
     alpha=asin(z/radius);
-    if (length<radius*alpha){
-      //ABSORB;
+    if ( (length<radius*alpha) || (fabs(y)>width/2.0)) {
       RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
     }else{
       SCATTER;
@@ -157,7 +157,14 @@ TRACE
         p*=R0;
       }
     }
+  }else if(fabs(kx)<DBL_EPSILON && fabs(kz)<DBL_EPSILON && ky!=0){
+    /*This to catch the extreme case where k//y.*/
+    if (y==0){
+      /*We hit the "side" of the mirror.*/
+      ABSORB;
+    }
   }
+
 %}
 
 MCDISPLAY

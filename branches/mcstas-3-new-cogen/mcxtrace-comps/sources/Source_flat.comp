@@ -21,7 +21,7 @@
 * that window and scales the beam intensity accordingly.
 * If an input spectrum datafile (spectrum_file) is not specified, the beam is restricted to emit photons between E0+-dE keV, or lambda0+-dlambda Å, whichever is given.
 * The input spectrum file should be formatted such that x-ray energy/wavelength is in the first column and the intensity in the second. Any preceding
-* lines starting with # are considered part of the file header. If a datafile is given, a nonzero E0 value indicates that is is parametrized by energy ( in keV)
+* lines starting with # are considered part of the file header. If a datafile is given, a nonzero E0 value indicates that is is parametrized by energy (in keV)
 * as opposed to wavelength (in Å). Wavelength is the default. 
 * Flux is set in the unit photons/s
 *
@@ -179,7 +179,7 @@ TRACE
     }else if (gauss){
       e=E0+dE*randnorm();
     }else{
-      e=randpm1()*dE*0.5 + E0;
+      e=randpm1()*dE + E0;
     }
     k=E2K*e;
   }else if (lambda0){

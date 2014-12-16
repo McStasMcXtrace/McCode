@@ -28,16 +28,12 @@
 *
 * %P
 * Input parameters:
-* r [m] radius of curvature (circular approximation at the tip of the profile) [m];
-* yheight [m]
-* xwidth [m]
+* r [m] Radius of curvature (circular approximation at the tip of the profile) [m];
+* yheight [m] The CRL's dimensions along Y, and if r_ap==0 also the diameter of the aperture.
+* xwidth [m] The width of the CRL in the invariant direction x.
 * d [m] Distance between two surfaces of the lens along the propagation axis;
-* N [m] Number of single lenses in a stack.
-* 
-* 
-* attenuation coefficient mu is taken from the NIST database and 
-* Be.txt
-*
+* N [ ] Number of single lenses in a stack.
+* T [ ] Obsolete. Ignored but will be removed in next release.
 *
 *******************************************************************************/
 
@@ -50,23 +46,18 @@ OUTPUT PARAMETERS (prms,parab)
 SHARE
 %{
   %include "read_table-lib"
-  struct datastruct{
-    int Z;
-    double Ar, rho;
-    double *E, *mu, *f;
-  }; 
   typedef struct {
   double coord[3];
   double k[3];
-  } data;
+  } data_lens_parab_Cyl;
   typedef struct {
   double constants[6];
-  } param;
+  } param_lens_parab_Cyl;
  
-  // intersect_Parab_Cyl function calculates the intersection point on a surface of a parabolic cylinder with the photon's trajectory, estimates two points of intersection (if only) and chooses the one that lies within the interval (-yheight/2<=y=<yheight/2 && -xwidth/2<=x=<xwidth/2) and returns it.
+  // intersect_parab_Cyl function calculates the intersection point on a surface of a parabolic cylinder with the photon's trajectory, estimates two points of intersection (if only) and chooses the one that lies within the interval (-yheight/2<=y=<yheight/2 && -xwidth/2<=x=<xwidth/2) and returns it.
    
-  data intersect_Parab_Cyl(data a, param b){
-    data result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
+  data_lens_parab_Cyl intersect_parab_Cyl(data_lens_parab_Cyl a, param_lens_parab_Cyl b){
+    data_lens_parab_Cyl result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
     int i;
     double A,B,C,D,rr;
     double t[2],p[3],knorm[3],k[3],Knorm,p_tmp[3],p1_tmp[3];
@@ -169,18 +160,20 @@ SHARE
     
    return result;
   }
-  const double Re=2.8179402894e-5;     /* Thomson Scattering length [Angstrom] */
-  const double Na=6.02214179e23;       /* Avogadro's number [atoms per gram-mole]*/ 
 %}
 
 DECLARE
 %{
-  struct datastruct *prms;
+  struct {
+    int Z;
+    double Ar, rho;
+    double *E, *mu, *f;
+  } *prms;
 %}   
   
 INITIALIZE
 %{
-    int status=0;
+  int status=0;
   t_Table T;
   if ( (status=Table_Read(&T,material_datafile,0))==-1){
     fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",material_datafile,NAME_CURRENT_COMP);
@@ -188,7 +181,7 @@ INITIALIZE
   }
   char **header_parsed;
   header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho",NULL);
-  prms=calloc(1,sizeof(struct datastruct));
+  prms=calloc(1,sizeof(*prms));
   if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
   if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
   if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
@@ -198,7 +191,7 @@ INITIALIZE
   int i;
   for(i=0;i<T.rows;i++){
       prms->E[i]=T.data[i*T.columns]; 
-      prms->mu[i]=T.data[5+i*T.columns]*prms->rho*1e2;     /*mu is now in SI, [m^-1]*/          
+      prms->mu[i]=T.data[5+i*T.columns]*prms->rho*1e2; /*mu is now in SI, [m^-1]*/
       prms->f[i]=T.data[1+i*T.columns];
   }
   Table_Free(&T);
@@ -208,20 +201,15 @@ INITIALIZE
 TRACE
 %{
    // calculation of the parabolic parameters
-  param parab_Cyl;
-  data incid,refr,outg;
+  param_lens_parab_Cyl parab_Cyl;
+  data_lens_parab_Cyl incid,refr,outg;
   
   int i=0,nr;  
   double w;
-  double E,mu,f,rhoel,dl,e,k,delta,beta,Refractive_Index_Re,Refractive_Index_Im;
+  double E,mu,f,rhoel,dl,d_total,e,k,delta,beta,Refractive_Index_Re,Refractive_Index_Im;
  
   w=(yheight*yheight)/(8.0*r); //calculation of the "depth" of the profile
   
-  if ((yheight/2)<r){
-    fprintf(stderr,"Error: the aperture must be greater than radius of curvature in the %s\n",NAME_CURRENT_COMP);
-    exit(-1);
-  }
- 
   parab_Cyl.constants[0]=r;
   parab_Cyl.constants[1]=yheight;
   parab_Cyl.constants[2]=xwidth;
@@ -239,14 +227,14 @@ TRACE
   }
   E=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
   mu=(1-E)*prms->mu[i-1]+E*prms->mu[i];
-  mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
+  //mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
   f=(1-E)*prms->f[i-1]+E*prms->f[i]; 
   
   /*Calculation of Refractive Index */
 
-  rhoel= f*Na*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
-  delta= 2.0*M_PI*Re*rhoel/(k*k);
-  beta=mu/(2.0*k);          /*mu and k in  A^-1*/
+  rhoel= f*NA*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
+  delta= 2.0*M_PI*RE*rhoel/(k*k);
+  beta= mu/(2.0*k);          /*mu and k in  A^-1*/
   //delta=3.40754082e-6; Oleg's value for Be at 10 keV
   
   Refractive_Index_Re = 1.0-delta; 
@@ -260,12 +248,13 @@ TRACE
   incid.coord[1]=y;
   incid.coord[2]=z;
  
+  d_total=0;
   for (nr=0;nr<=(N-1);nr++){
     parab_Cyl.constants[3]=nr*d+nr*2*w; // d constant
     parab_Cyl.constants[4]=1.0/Refractive_Index_Re; // M constant
     parab_Cyl.constants[5]=-1.0; //Sign constant
     
-    refr=intersect_Parab_Cyl(incid,parab_Cyl);
+    refr=intersect_parab_Cyl(incid,parab_Cyl);
     
     if(refr.k[0]==0 && refr.k[1]==0 && refr.k[2]==0) continue;   
     
@@ -282,22 +271,19 @@ TRACE
     parab_Cyl.constants[4]=Refractive_Index_Re;
     parab_Cyl.constants[5]=1.0; 
  
-    outg=intersect_Parab_Cyl(refr,parab_Cyl);
+    outg=intersect_parab_Cyl(refr,parab_Cyl);
     
     dl=sqrt( (outg.coord[0]-x)*(outg.coord[0]-x) + (outg.coord[1]-y)*(outg.coord[1]-y) + (outg.coord[2]-z)*(outg.coord[2]-z) );
     PROP_DL(dl);
+    d_total+=dl;
     SCATTER;
 
     kx=outg.k[0]; ky=outg.k[1]; kz=outg.k[2];
     incid=outg;
    }
 
-    // transmission calculation
-   if (T==0)
-      ABSORB;
-   else 
-     T=exp(-mu*d*N);
-   p*=T;
+  // transmission calculation
+  p*=exp(-mu*d_total);
 
 %}
 

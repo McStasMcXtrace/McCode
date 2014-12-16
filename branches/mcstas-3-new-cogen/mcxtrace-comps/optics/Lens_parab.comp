@@ -23,43 +23,35 @@
 * %P
 * Input parameters:
 * r: Radius of curvature (circular approximation at the tip of the profile) [m]
-* yheight: The CRL's dimensions along Y, aka aperture. [m]
-* xwidth: The CRL's dimensions along X. [m]
+* r_ap: Radius of circular aperture, which also defines the depth of the lens profile. If r_ap==0, yheight/2 will be used instead. [m]
+* yheight: The CRL's dimensions along Y, and if r_ap==0 also the diameter of the aperture [m]
 * d: Distance between two surfaces of the lens along the propagation axis. [m]
-* N: Number of single lenses in a stack. [m]
-* T: Transmission of the lens. [m]
+* N: Number of single lenses in a stack. [ ]
+* T: Obsolete. Ignored but will be removed in next release. [ ]
+* xwidth: Osolete. Ignored but will be removed in next release. [m]
 * 
-* attenuation coefficient mu is taken from the NIST database and 
-* Be.txt
-*
-*
 *******************************************************************************/
 
 
 DEFINE COMPONENT Lens_parab
 DEFINITION PARAMETERS (string material_datafile="Be.txt")
-SETTING PARAMETERS (r=0.5e-3,yheight=1.4e-3,xwidth=1.4e-3,d=.1e-3,T=0,N=1)
+SETTING PARAMETERS (r=0.5e-3,r_ap=1.4e-3, yheight=0,xwidth=0,d=.1e-3,T=0,N=1)
 OUTPUT PARAMETERS (prms,parab)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
 %{
   %include "read_table-lib"
-  struct datastruct{
-    int Z;
-    double Ar, rho;
-    double *E, *mu, *f;
-  }; 
   typedef struct {
     double coord[3];
     double k[3];
-  } incom;
+  } incom_parab;
   typedef struct {
     double constants[6];
-  } lens;
+  } lens_parab;
   
-  incom intersection_lens_parab(incom a,lens b){
-    incom result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};  
+  incom_parab intersection_lens_parab(incom_parab a,lens_parab b){
+    incom_parab result={a.coord[0],a.coord[1],a.coord[2],a.k[0],a.k[1],a.k[2]};
     int i;
     double A,B,C,D,rr;
     double t[2],p[3],knorm[3],k[3],pos1_tmp[3],pos_tmp[3];
@@ -96,12 +88,12 @@ SHARE
     D=B*B-4.0*A*C;     
     
     if (D<0) { /*ray does not intersect the parabola*/
- 	fprintf(stderr,"line 96: D<0 %s\n",NAME_CURRENT_COMP);
-        return result;
+      fprintf(stderr,"line 96: D<0 %s\n","Lens_parab");
+      return result;
     }
     if (A==0){ /*incident k-vector is parallel (exactly) to the z-axis. Thus, the eq. becomes linear*/
       if(B==0){ 
-	fprintf(stderr, "Division by zero in %s\n",NAME_CURRENT_COMP); 
+	fprintf(stderr, "Division by zero in %s\n","Lens_parab");
 	return result; 
       }	  
       t[0]=-C/B;
@@ -110,31 +102,31 @@ SHARE
       }
     } else {
       double qq;
-        if (B<0){
-          qq=-0.5*(B-sqrt(D));
-        }else{
-          qq=-0.5*(B+sqrt(D)); 
-        }
-        t[0]=qq/A; 
-        t[1]=C/qq;
-        
+      if (B<0){
+        qq=-0.5*(B-sqrt(D));
+      }else{
+        qq=-0.5*(B+sqrt(D));
+      }
+      t[0]=qq/A;
+      t[1]=C/qq;
+
+      for(i=0;i<=2;i++){
+        pos_tmp[i]=p[i]+t[0]*knorm[i];
+        pos1_tmp[i]=p[i]+t[1]*knorm[i];
+      }
+      if ( fabs(pos_tmp[1])<=fabs(yh/2) && fabs(pos_tmp[0])<=fabs(xw/2) ){
         for(i=0;i<=2;i++){
-	  pos_tmp[i]=p[i]+t[0]*knorm[i]; 
-	  pos1_tmp[i]=p[i]+t[1]*knorm[i];
-	} 
-	if ( fabs(pos_tmp[1])<=fabs(yh/2) && fabs(pos_tmp[0])<=fabs(xw/2) ){
-	  for(i=0;i<=2;i++){
-	  result.coord[i]=pos_tmp[i];
-	  }
-	} else if ( fabs(pos1_tmp[1])<=fabs(yh/2) && fabs(pos1_tmp[0])<=fabs(xw/2) ){
-	       for(i=0;i<=2;i++){
-		  result.coord[i]=pos1_tmp[i];
-	       }
-	  }
-	else return result; 
-      }     
+          result.coord[i]=pos_tmp[i];
+        }
+      } else if ( fabs(pos1_tmp[1])<=fabs(yh/2) && fabs(pos1_tmp[0])<=fabs(xw/2) ){
+        for(i=0;i<=2;i++){
+          result.coord[i]=pos1_tmp[i];
+        }
+      }
+      else return result;
+    }
     
-        /* Calculating tangential vector  */
+    /* Calculating tangential vector  */
 	
     if (result.coord[0]==0 && result.coord[1]==0){ // incoming ray is along the axis, so it does not refract
 	k_new[0]=k[0];
@@ -204,13 +196,15 @@ SHARE
     return result; 
   }
 
-  const double Re=2.8179402894e-5;     /* Thomson Scattering length [Angstrom] */
-  const double Na=6.02214179e23;       /* Avogadro's number [atoms per gram-mole]*/
 %}
 
 DECLARE
 %{
-  struct datastruct *prms;
+  struct {
+    int Z;
+    double Ar, rho;
+    double *E, *mu, *f;
+  } *prms;
 %} 
 
 INITIALIZE 
@@ -223,7 +217,7 @@ INITIALIZE
   }
   char **header_parsed;
   header_parsed=Table_ParseHeader(T.header,"Z","A[r]","rho",NULL);
-  prms=calloc(1,sizeof(struct datastruct));
+  prms=calloc(1,sizeof(*prms));
   if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
   if (!prms->Ar) prms->Ar=strtod(header_parsed[1],NULL);
   if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
@@ -232,35 +226,37 @@ INITIALIZE
   prms->mu=malloc(sizeof(double)*(T.rows+1));
   int i;
   for(i=0;i<T.rows;i++){
-      prms->E[i]=T.data[i*T.columns]; 
-      prms->mu[i]=T.data[5+i*T.columns]*prms->rho*1e2;     /*mu is now in SI, [m^-1]*/          
-      prms->f[i]=T.data[1+i*T.columns];
+    prms->E[i]=T.data[i*T.columns];
+    prms->mu[i]=T.data[5+i*T.columns]*prms->rho*1e2;/*mu is now in SI, [m^-1]*/
+    prms->f[i]=T.data[1+i*T.columns];
   }
   Table_Free(&T);
+
+  /*check for old parameter use*/
+  if (yheight!=0 && r_ap==0){
+    fprintf(stderr,"Warning(%s): You are using an obsolescent parameter yheight. Please consider r_ap instead.\n", NAME_CURRENT_COMP);
+    r_ap=yheight/2.0;
+  }
 %}
-
-
-
 
 TRACE 
 %{
-  incom incid,refr,outg;
-  lens parab;
+  incom_parab incid,refr,outg;
+  lens_parab parab;
 
-  double E,mu,f,rhoel,dl,e,k,delta,beta,Refractive_Index_Re,Refractive_Index_Im,w; 
+  double E,mu,f,rhoel,dl,d_total,e,k,delta,beta,Refractive_Index_Re,Refractive_Index_Im,w;
 
   int i=0,nr;
   
   parab.constants[0]=r;
-  parab.constants[1]=yheight;
-  parab.constants[2]=xwidth;
+  parab.constants[1]=r_ap*2;
+  parab.constants[2]=r_ap*2;
   
-  w=(yheight*yheight)/(8.0*r);
+  w=(r_ap*r_ap)/(8.0*r);
   k=sqrt(kx*kx+ky*ky+kz*kz); 
   e=K2E*k;  /*Energy in KeV, same unit as datafile */
 
-/*Interpolation of Table Values*/
-
+  /*Interpolation of Table Values*/
   while (e>prms->E[i]){
     i++;
     if (prms->E[i]==-1){
@@ -271,14 +267,14 @@ TRACE
   mu=(1-E)*prms->mu[i-1]+E*prms->mu[i];
   mu= 1e-10*mu;  /*factor conversion from m^-1 to A^-1*/
   f=(1-E)*prms->f[i-1]+E*prms->f[i]; 
-  
+
   /*Calculation of Refractive Index */
 
-  rhoel= f*Na*(prms->rho*1e-24)/prms->Ar;    /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
-  
-  delta= 2.0*M_PI*Re*rhoel/(k*k);
-  beta=mu/(2.0*k);          /*mu and k in  A^-1*/
-  
+  rhoel= f*NA*(prms->rho*1e-24)/prms->Ar; /*Material's Number Density of Electrons [e/A^3] incl f' scattering length correction*/
+
+  delta= 2.0*M_PI*RE*rhoel/(k*k);
+  beta=mu/(2.0*k); /*mu and k in  A^-1*/
+
   Refractive_Index_Re = 1.0-delta; 
   Refractive_Index_Im = beta; 
 
@@ -292,6 +288,7 @@ TRACE
   incid.coord[1]=y; 
   incid.coord[2]=z;
   
+  d_total=0;
   for (nr=0;nr<=(N-1);nr++){
     parab.constants[3]=nr*d+nr*2*w; // d constant
     parab.constants[4]=1.0/Refractive_Index_Re; // M constant
@@ -318,17 +315,15 @@ TRACE
     
     dl=sqrt( (outg.coord[0]-x)*(outg.coord[0]-x) + (outg.coord[1]-y)*(outg.coord[1]-y) + (outg.coord[2]-z)*(outg.coord[2]-z) );
     PROP_DL(dl);
+    d_total+=dl;
     SCATTER;
 
     kx=outg.k[0]; ky=outg.k[1]; kz=outg.k[2];
     incid=outg;
   }
-   // transmission calculation
-   if (T==0)
-      ABSORB;
-   else 
-     T=exp(-mu*d*N);
-   p*=T;
+
+  /*Add absorption according to the path length inside the lens material*/
+  p*=exp(-mu*d_total);
 
 %}
 
@@ -343,7 +338,6 @@ MCDISPLAY
   /*draw individiual lenses*/
   /*draw a circle at the maximal aperture and a parabola along x and y*/
   int i,j=0;
-  printf("%g %g\n",N,(N<20?N:20));
   for (j=0;j<(N<20?N:20);j++){
     circle("xy",0,0,-w+j*(d+2*w),yheight/2.0);
     circle("xy",0,0,d+w+j*(d+2*w),yheight/2.0);
@@ -352,7 +346,6 @@ MCDISPLAY
     zz0=zz1=-w;
     dz=w/(64.0-1.0);
     s=j*(d+2*w);
-    printf("%d %g\n",j,s);
     /*first parabola*/
     while(zz1<=0){
       zz1+=dz;

@@ -1036,6 +1036,10 @@ sub menu_run_simulation {
 
             } elsif ($plotter =~ /Matlab/i) {
               push @command, "--plotter=Matlab";
+            } elsif ($plotter =~ /nexus/i) {
+              # Used to generate an IDF for a subsequent NeXus/Mantid dataset
+	      push @command, "--plotter=Mantid";
+	      $newsi->{'Ncount'}=0;
             } elsif ($plotter =~ /html|vrml/i) {
                 push @command, "--plotter=VRML";
                 # Make a check for # of neutron histories,
@@ -1266,14 +1270,14 @@ sub menu_run_simulation {
         my $ext;
         if ($plotter =~ /PGPLOT|McStas|McXtrace|Matlab|Gnuplot/i) { $ext="sim"; }
         elsif ($plotter =~ /HTML/i)       { $ext="html"; }
-        elsif ($plotter =~ /NeXus|HDF/i)  { $ext="nxs"; }
+        elsif ($plotter =~ /NeXus|HDF/i)  { $ext="h5"; }
         $current_sim_file = $newsi->{'Dir'} ?
             "$newsi->{'Dir'}/mccode.$ext" :
             "mccode.$ext";
         new_simulation_results($w);
         # In case of non-PGPLOT plotter, we can not read the data from disk.
         # Instead, we simply keep $newsi information in $inf_sim
-        if ($plotter !~ /PGPLOT|McStas|Matlab|Gnuplot/i) {
+        if ($plotter !~ /PGPLOT|McStas|Matlab|Gnuplot|NeXus/i) {
             read_sim_data($w);
         } else {
             $inf_sim=$newsi;

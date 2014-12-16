@@ -1,5 +1,5 @@
 \chapter{Monte Carlo Techniques and simulation strategy}
-\label{s:MCtechniques}\index{Monte Carlo method}
+\label{c:MCtechniques}\index{Monte Carlo method}
 
 This chapter explains the simulation strategy and the Monte Carlo
 techniques used in \MCX. We first explain the concept of the x-ray
@@ -18,16 +18,6 @@ Each of these elements modifies the beam characteristics (e.g. divergence,
 wavelength spread, spatial and temporal distributions) in a way which, for simple
 x-ray beam configurations, may be modelled with analytical methods. 
 
-%This is valid for individual elements such as guides \cite{Leibnitz63,Mildner90},
-%choppers \cite{Lowde60,Copley03}, Fermi choppers \cite{Fermi47,Peters05},
-%velocity selectors \cite{Clark66}, monochromators
-%\cite{Freund83,Sears97,Shirane02,Alianelli04}, and detectors
-%\cite{Radeka74,Charpak89,Manzin04}. 
-%In the case of a limited number of optical
-%elements, the so-called acceptance diagram theory
-%\cite{Mildner90,Copley93,Cussen03} may be used, within which the x-ray beam
-%distribution is considered to be homogeneous, triangular or Gaussian.
-
 However, real x-ray beamlines consist of a large number of optical
 elements, and this brings additional complexity by introducing strong
 correlations between x-ray beam parameters like divergence and position - which
@@ -37,7 +27,7 @@ limit of validity in the description of the resulting effects.
 
 %waveprop vs. 
 In order to cope with this difficulty, Monte Carlo (MC) methods (for a general review, see Ref. \cite{James80}) may be
-applied to the simulation of x-ray instruments. The use of probability is commonplace in the description of microscopic
+applied to the simulation of x-ray beamlines. The use of probability is commonplace in the description of microscopic
 physical processes. Integrating these events (absorption, scattering, reflection, ...) over the x-ray trajectories
 results in an estimation of measurable quantities characterizing the beamline. Moreover, using variance reduction
 (importance sampling) where possible, reduces the computation time and gives better accuracy.
@@ -49,24 +39,35 @@ Other implementations of the same concept are \textit{RAY}\cite{schaefers2008bes
 hosted at ANKA
 
 \subsection{Monte Carlo ray tracing simulations}
-Mathematically, the Monte-Carlo method is an application of the law of large numbers \cite{James80,Grimmett92}. Let $f(u)$ be a finite continuous integrable function of parameter $u$ for which an integral estimate is desirable. The discrete statistical mean value of $f$ (computed as a series) in the uniformly sampled interval $a < u < b$ converges to the mathematical mean value of $f$ over the same interval.
+Mathematically, the Monte-Carlo method is an application of the law of large
+numbers \cite{James80,Grimmett92}. Let $f(u)$ be a finite continuous integrable
+function of parameter $u$ for which an integral estimate is desirable. The
+discrete statistical mean value of $f$ (computed as a series) in the uniformly
+sampled interval $a < u < b$ converges to the mathematical mean value of $f$
+over the same interval.
 
 \begin{equation}
 \lim_{n \rightarrow \infty} \frac{1}{n} \sum_{i=1, a \leq u_i \leq b}^n f(u_i) = \frac{1}{b-a}\int_a^b f(u) du
 \end{equation}
 
-In the case were the $u_i$ values are regularly sampled, we come to the well known midpoint integration rule. In the case were the $u_i$ values are randomly (but uniformly) sampled, this is the Monte-Carlo integration technique. As random generators are not perfect, we rather talk about \emph{quasi}-Monte-Carlo technique. We encourage the reader to refer to James \cite{James80} for a detailed review on the Monte-Carlo method.
+In the case were the $u_i$ values are regularly sampled, we come to the well
+known midpoint integration rule. In the case were the $u_i$ values are randomly
+(but uniformly) sampled, this is the Monte-Carlo integration technique. As
+random generators are not perfect, we rather talk about
+\emph{quasi}-Monte-Carlo technique. We encourage the reader to refer to James
+\cite{James80} for a detailed review on the Monte-Carlo method.
 
 \section{The x-ray weight}
 \label{s:probweight}
 A totally realistic semi-classical simulation will require that
 each x-ray is at any time either present or lost.
-On many beamlines, only a very
-small fraction of the initial x-rays will ever be detected, and
+On many beamlines the sheer abundance of x-ray photons makes it impractical to trace each
+and every photon from the source. This is particularly the case at XFELs.
+Additionally, only a very small fraction of the initial x-rays will ever be detected, and
 simulations of this kind will therefore waste much time in dealing
 with x-rays that never hit the detector.
 
-An important way of speeding up calculations is to introduce
+A way of dealing with these issues and speed up calculations is to introduce
 a x-ray "weight factor" for each simulated ray and to
 adjust this weight according to the path of the ray.
 If {\em e.g.}\ the reflectivity of a certain
@@ -79,13 +80,15 @@ would require on average ten incoming x-rays for each reflected one.
 
 Let the initial x-ray weight be $p_0$ and let us denote the weight
 multiplication factor in the $j$'th component by $\pi_j$.  The resulting
-weight factor for the x-ray ray after passage of the whole instrument
+weight factor for the x-ray ray after passage of the whole beamline
 becomes the product of all contributions
 \begin{equation}
 \label{e:probprod}
 p = p_n = p_0 \prod_{j=1}^n \pi_j .
 \end{equation}
-Each adjustement factor should be $0 < \pi_j < 1$, except in special circumstances, so that total flux can only decrease through the simulation. For convenience, the value of $p$ is updated (within each component)
+Each adjustement factor should be $0 < \pi_j < 1$, except in special
+circumstances, so that total flux can only decrease through the simulation. For
+convenience, the value of $p$ is updated (within each component)
 during the simulation.
 
 Simulation by weight adjustment is performed
@@ -101,7 +104,6 @@ whenever possible. This includes
 
 \subsection{Statistical errors of non-integer counts}
 \label{s:staterror}
-
 In a typical simulation, the result will consist of a
 count of x-ray histories ("rays") with different weights. The
 sum of these weights is an estimate of the mean number of x-rays
@@ -180,24 +182,21 @@ The probability of transmitting the real x-ray is $P$, but we make
 the Monte Carlo choice of transmitting the x-ray every time:
 $f_\mathrm{MC}=1$. This must be reflected on the choice of weight multiplier
 $\pi_j$ given by the master equation
-%In the ``real'' semi-classical world, there is a distribution
-%(probability density) for the x-rays in the six dimensional
-%(energy, direction, position) space of
-%$\Pi(E,\Ombold,{\bfseries r}) = dP/(dE d\Ombold d^3{\bfseries r})$ depending upon
-%the source temperature, geometry {\em etc.}\ In the
-%Monte Carlo simulations, the six coordinates are for efficiency reasons
-%in general picked from another distribution:
-%$f_\mathrm{MC}(E,\Ombold,{\bfseries r}) \neq \Pi(E, \Ombold,{\bfseries r})$,
-%since one would {\em e.g.} often generate
-%only x-rays within a certain parameter interval.
-%However, we must then require that the weights are adjusted
-%by a factor $\pi_j$ (in this case: $j=1$) so that
+In the ``real'' semi-classical world, there is a distribution
+(probability density) for the x-rays in the six dimensional
+(energy, direction, position) space of
+$\Pi(E,\Ombold,\mathbf{r}) = dP/(dE d\Ombold d^3\mathbf{r})$ depending upon
+the source type and its parameters (such as gap, period, field strength etc. for an undulator).
+In the Monte Carlo simulations, the six coordinates are for efficiency reasons
+in general picked from another distribution:
+$f_\mathrm{MC}(E,\Ombold,\mathbf{r}) \neq \Pi(E, \Ombold,\mathbf{r})$,
+since one would {\em e.g.} often generate
+only x-rays within a certain parameter interval.
+However, we must then require that the weights are adjusted
+by a factor $\pi_j$ (in this case: $j=1$) so that
 \begin{equation} \label{probrule}
 f_\mathrm{MC} \pi_j = P .
 \end{equation}
-%For the sources present in version \version,
-%only the $(\Ombold, {\bfseries r})$ dependence of the correction factors
-%are taken into account.
 
 This probability rule is general, and holds also if, e.g., it is decided to
 transmit only half of the rays $(f_\mathrm{MC}=0.5)$.
@@ -265,11 +264,11 @@ sample. The sum of partitions should equal the total space integrated by the
 Monte Carlo method, and each partition must be sampled randomly.
 
 In the case of \MCX, the stratified sampling is used when repeating events, i.e. when using the SPLIT
-keyword in the TRACE section on instrument descriptions. We emphasize here that
+keyword in the TRACE section on beamline descriptions. We emphasize here that
 the number of repetitions $r$ should not exceed the dimensionality of the Monte
 Carlo integration space (which is $d=10$ for x-ray events) and the
 dimensionality of the partition spaces, i.e. the number of random generators
-following the stratified sampling location in the instrument.
+following the stratified sampling location in the beamline.
 
 \section{Accuracy of Monte Carlo simulations}
 \index{Monte Carlo method!Accuracy}

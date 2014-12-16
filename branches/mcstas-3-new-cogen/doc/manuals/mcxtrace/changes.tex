@@ -3,13 +3,15 @@
 \chapter{New features in \MCX \version}
 \label{c:changes}
 
-This is the first version of \MCX. As such it implements new features. Bugs are
-reported and traced using the \MCX Trac system \cite{mccode_trac_webpage}
+\MCX is an ongoing evolving project with features being added frequently. While we strive to test it's features thoroughly, bugs
+are inevitable. Bugs are generally reported using the user-mailing list: mcxtrace-users@mcxtrace.org and subsequently (after initial triage)
+tracked using the \MCX\ Trac system \cite{mccode_trac_webpage}
 (shared with its sister project \MCS). We will not present here an extensive
-list of corrections, and we let the reader refer to this bug reporting service
+list of improvements and corrections, and we let the reader refer to this bug reporting service
 for details. Only important changes are indicated here.
-
 Of course, we can not guarantee that the software is bullet proof, but we do our best to correct bugs, when they are reported.\index{Bugs}
+
+The main focus of the 1.2 release has been to improved stability and fixing bug, rather than new developments.
 
 %\section{General}
 %\label{s:new-features:general}
@@ -19,14 +21,14 @@ Of course, we can not guarantee that the software is bullet proof, but we do our
 \section{Kernel}
 \label{s:new-features:kernel}
 \index{Kernel}
-
-The following changes concern the 'Kernel' (i.e. the \MCX meta-language and program). See the dedicated chapter in the \textit{User manual} for more details.
+An important update has been made to the approach of negative propagation lengths. Instead of inplicitly absorbing photons these are now generally restored.
+In many cases the previous behaviour casued confusion and counter-inutitive operation, in particular regarding mutually exclusive monitors with the flag 
+\texttt{restore\_xray} set.
 
 \section{Run-time}
 \label{s:new-features:run-time}
 \index{Library!Run-time}
 New intersection routines include \verb+ellipsoid_intersect+ and \verb+sphere_intersect+.
-
 
 \section{Components and Library}
 \label{s:new-features:components}
@@ -36,51 +38,62 @@ which are detailed in the \textit{Component manual}. For an overview see the \te
 %\subsection{General}
 \subsection{New components}
 
-\subsubsection*{Sources}  
-All sources include focussed sampling for optimized calculations
+\subsubsection*{Sources}
+We have revised the following source models to make them work as conherently as possible while retaining the backwards compatibility.
 \begin{description}
-\item[Source\_pt] Point source
+\item[Source\_pt] Point source.
 \item[Source\_flat] Flat surface uniform source
 \item[Source\_div] Flat surface uniform source with divergence distribution
 \item[Source\_gaussian] Gaussian crossection source approximating a Bending Magnet
 \end{description}
+Furthermore we now also supply an experimental model of a bending magnet \texttt{Bending\_magnet}.
+The following experimental components have been set up to facilitate interfacing with SPECTRA, Simplex, and GENESIS 1.3.
+In general they take the output of the relevant external program to get a phase space distribution of photons from which McXtrace samples rays
+to trace.
+\begin{description}
+  \item[Source\_genesis] Reads the output of a GENESIS 1.3 simulation. Useful for FEL-simulations. 
+  \item[Source\_spectra] Reads the output of a SPECTRA simulation. Useful for Synchrotron simulations.
+  \item[Source\_simplex] Reads the output of a Simplex simulation. Useful for FEL simulations.
+\end{description}
+
 \subsubsection*{Samples}
 \begin{description}
-\item[Saxs\_spheres] Hard spheres in dilute solution
-\item[Powder\_N] General Powder diffraction component
-\end{description}
+  \item [Single\_crystal] Now has support for wavelength dependent absorption.
+  \item [Molecule\_2state] Also includes absorption support.
+  \item [Molecule\_2state] Option for supplying a q-parametrized scattering amplitude curve. This is for instance useful to add the effect of a well known solvent (e.g. Water) to a simulation.
+  \item [SAXS] A whole set of SAXS-related samples is now available for various cases.
+\end{description} 
+
 \subsubsection*{Optics}
 \begin{description}
-\item[Lens\_simple] Thin lens approximation of a compund refractive lens (CRL) of any material
-\item[Lens\_parab] Parabolic CRL of any material
-\item[SLit.comp] Perfectly absorbing aperture
-\item[Slit\_N.comp] Multiple absorbing apertures (i.e. a transmission grating)
-\item[Multilayer\_elliptic] Elliptical mulitlayer optic.
-\item[Mirror\_elliptic] Elliptical shape mirror
-\item[Mirror\_parabolic] Parabolic shape mirror
-\item[Mirror\_curved] Cylindrical mirror
+  \item[Filter] Now has the option of taking any shape (through an .off or .ply-file.
+  \item[Filter] Added a refraction-option. 
+  \item[Multilayer\_elliptic] Elliptical multilayer mirror. This component now has the option of using a analytical kinematical approximation to compute refleticity as opposed to supplying a datafile. This is faster, but often less accurate.
+  \item[Lens\_parab\_*] The lenses now behave in a similar manner wrt. parameter naming etc., also fixes to an error in the absorption computation. Note that the lens version will be merged in the next release (see the component manual).
+  \item[Mirror\_elliptic] Elliptical shape mirror. Major geometry bug-fixes. Is scheduled to be merged with \texttt{Mirror\_curved}.
+  \item[Mirror\_parabolic] Parabolic shape mirror. Major geometry bug-fixes. Is scheduled to be merged with \texttt{Mirror\_curved}.
+  \item[Mirror\_curved] Cylindrical mirror. Fixed a bug which prevented its use as an azimuthal focusing mirror, with sideways incidence. 
+  \item [Chopper\_simple] Optional random jitter was added.
+  \item [Mask] A component that takes an image file as input, which is used to mask the beam. For instance to exmine linited resolution effects.
 \end{description}
-\subsubsection*{Miscellaneous}
-\begin{description}
-\item[Arm] Coordinate transformation
-\item[Progress\_bar] Display progress of simulation
-\end{description}
+
+%\subsubsection*{Miscellaneous}
+%\begin{description}
+%  \item 
+%----nothing has happened here leaving it in as a placeholder.
+%\end{description}
+
 \subsubsection*{Monitors}
 \begin{description}
-\item[E\_monitor] Int. vs. X-ray energy
-\item[L\_monitor] Int. vs. X-ray wavelength
-\item[PSD\_monitor] Int. spatial coordinates
-\item[PSD\_monitor\_4P] Int. vs. latitude and longitude
+\item[TOF\_monitor] New Intensity vs. time of flight monitor. Useful for sime-resolved studies with pulsed sources.
 \end{description}
 
-
-\subsection{New example instruments}
-
-
+\subsection{Example instruments}
+The following beamline models have been added (in addition to unit test models that test specific components):
 \begin{itemize}
-\item \verb+SAXSLAB_SAXS.instr+ The SAXLAB (formerly JJ-Xray Systems) saxs-machine situated at Faculty of Life-Sciences, Univeristy of Copenhagen. 
-\item \verb+ESRF_ID11.instr+ Model of the 3DXRD-microscope at ID11, ESRF
-\item \verb+Be_BM.instr+ A model beamline to explore the idea of a "pink"-beam beamline using CRLs\cite{vaughan2011x}.
+  \item[XFEL\_SPB] A rough model of the SPB beamline at the Euorpean XFEL.
+  \item[MAXII\_711] A model of the 711 powder diffraction beamline at Maxlab in Lund, Sweden.
+  \item[MAXII\_811] Model of the 811 surface diffraction and EXAFS beamline at Maxlab in Lund, Sweden.
 \end{itemize}
 
 %\section{Documentation}
@@ -103,54 +116,12 @@ All sources include focussed sampling for optimized calculations
 %     pseudo-random string) is created during the optimisation, updated at each optim step.
   \item We provide syntax-highlighting setup files for eamcs, vim and gedit editors.
 \end{itemize}
-\subsection{Platform support}
-\begin{itemize}
-\item Mac OS X 10.8 Mountain Lion, 10.9 Mavericks.
-\item Windows 8, Windows 7, Windows XP.
-\item "Any" Linux - reference platform is Debian 7.0.
-\item BSD (FreeBSD release 10.0 tested)
-\item Oracle OpenSolaris 10 (Intel tested, Sparc probably OK)
-\item Plus probably any UNIX/POSIX type environment with a bit of effort...
-\end{itemize}
-Details about the installation and the available tools are given in chapter \ref{installing}.
-
-%\subsection{Various}
 
 \subsection{Warnings}
-{\bfseries WARNING:} The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 7.04) makes the 'Cancel' and 'Update' 
-buttons fail in mcgui. Solutions are:
+{\bfseries WARNING:} The 'dash' shell which is used as /bin/sh on some Linux system makes the 'Cancel' and 'Update' 
+buttons fail in mxgui. Solutions are:
 \begin{itemize}
-\item[a)] If your system is a Debian or Ubuntu, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh
-\item[b)] If you run another Linux with /bin/sh beeing dash, please install bash and manually change the /bin/sh link to point at bash.
+  \item[a)] If your system is a Debian or Ubuntu, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh
+  \item[b)] If you run another Linux with /bin/sh beeing dash, please install bash and manually change the /bin/sh link to point at bash.
 \end{itemize}
-
-%\section{Future extensions}
-%\label{s:future}
-%The following features are planned for the oncoming releases of \MCX\
-%(not an ordered list):
-%\begin{itemize}
-%\item Increased validation and testing.
-%\item Extend test cases to all (most) components. One instrument
-%  pr. component. (Probably not in \verb+examples/+.
-%\item Updates to mcresplot to support the Matlab and Scilab backends.
-%\item Global changes of components relating to polarisation
-%  visualisation.
-%\item Visualisation of neutron spins in magnetic fields for all
-%  graphical backends.
-%\item \emph{Array} \verb+AT+ specifiers for components, i.e. \\
-%  \verb+COMPONENT MyComp=Comp(...)+\\\verb+AT([Xarray],[Yarray],[Zarray])+ and\\
-%  \verb+AT Positions('filename')+
-%\item Gui support for array AT specifiers.
-%\item More complete polarisation support including numerically defined
-%  magnetic fields and advanced sample components.
-%\item Perl or python plotting alternative to PGPLOT.
-%\item Larger variety of sample components.
-%\end{itemize}
-
-
-
-
-
-
-
 

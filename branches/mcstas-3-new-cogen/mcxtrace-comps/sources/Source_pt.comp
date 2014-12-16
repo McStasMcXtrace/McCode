@@ -142,7 +142,7 @@ TRACE
     }else if (gauss){
       e=E0+dE*randnorm();
     }else{
-      e=randpm1()*dE*0.5 + E0;
+      e=randpm1()*dE + E0;
     }
     k=E2K*e;
   }else if (lambda0){

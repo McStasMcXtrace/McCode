@@ -23,6 +23,7 @@
 
 use FileHandle;
 use File::Basename;
+use Cwd;
 
 # Determine the path to the McStas system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
@@ -156,13 +157,13 @@ if (-d $file) { # check if dir containing result file
 if (-e "$file.m" and not -e "$file.sci" and not -e "$file.sim" and not -e "$file.html") { $plotter = "Matlab"; }
 if (-e "$file.sim" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.html" and not ($plotter =~ /gnuplot|Matlab/i)) { $plotter = "PGPLOT"; }
 if (-e "$file.html" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.sim") { $plotter = "HTML";   }
-if (-e "$file.nxs") { $plotter = "NeXus";   }
+if (-e "$file.h5") { $plotter = "NeXus";   }
 
 # set default extension from plotter
 if ($plotter =~ /Matlab/i and -e "$file.m") { $default_ext = ".m"; }
 elsif ($plotter =~ /PGPLOT|McStas|gnuplot|Matlab/i) { $default_ext = ".sim"; }
 elsif ($plotter =~ /HTML/i) { $default_ext = ".html"; }
-elsif ($plotter =~ /NeXus/i) { $default_ext = ".nxs"; }
+elsif ($plotter =~ /NeXus/i) { $default_ext = ".h5"; }
 
 # if no extension in file name, add default extension.
 if ($file !~ m'\.[^/]*$' && $default_ext) { $file .= $default_ext; }
@@ -173,7 +174,7 @@ print "Opening $file\n";
 if ($file =~ m'\.m$')    { $plotter = "Matlab"; }
 if ($file =~ m'\.sim$' and not($plotter =~ /gnuplot|Matlab/i))  { $plotter = "PGPLOT"; }
 if ($file =~ m'\.html$') { $plotter = "HTML"; }
-if ($file =~ m'\.nxs$') { $plotter = "NeXus"; }
+if ($file =~ m'\.h5$') { $plotter = "NeXus"; }
 
 
 
@@ -206,7 +207,27 @@ if ($plotter =~ /Matlab/i && $MCSTAS::mcstas_config{'MATLAB'} ne "no") {
 } elsif ($plotter =~ /HTML|VRML/i && $MCSTAS::mcstas_config{'BROWSER'}) {
   system("$MCSTAS::mcstas_config{'BROWSER'} $file");
 } elsif ($plotter =~ /HDF|NeXus/i && $MCSTAS::mcstas_config{'HDFVIEW'} ne "no") {
-  system("$MCSTAS::mcstas_config{'HDFVIEW'} $file");
+    if ($MCSTAS::mcstas_config{'HDFVIEW'} =~ /Mantid/i) {
+	my ($basename,$dirname)=fileparse($file);
+	# Strip leading ./ and trailing / from the dirname
+	$dirname =~ s+^./++;
+	$dirname =~ s+/\$++;
+	# Write a Python snippet for use with Mantid
+	open(my $fh, '>', $file.".py");
+	print $fh "# Mantid/Python load snippet written by mcplot.pl from McStas \n";
+	print $fh "from mantid.simpleapi import * \n";
+	print $fh "from mantid import api \n";
+	print $fh "import os \n\n";
+	print $fh "wrkdir=os.getcwd(); \n";
+	print $fh "os.chdir('".getcwd()."/".$dirname."'); \n";
+	print $fh "LoadMcStas(Filename='".$basename."',OutputWorkspace='".$dirname."'); \n";
+	print $fh "os.chdir(wrkdir)";
+	close $fh;
+	my $fullpath = getcwd()."/".$dirname."/".$basename.".py";
+	system("$MCSTAS::mcstas_config{'HDFVIEW'} $fullpath");
+    } else {
+	system("$MCSTAS::mcstas_config{'HDFVIEW'} $file");
+    }
 } elsif ($plotter =~ /gnuplot/i) {
   # McStas original mcplot format using GNUPLOT
   require "mcgnuplot.pl";

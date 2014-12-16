@@ -2,43 +2,47 @@
 
 \chapter{Introduction to \MCX}
 
-Efficient design and optimization of xray beamlines are
+Efficient design and optimization of x-ray beamlines are
 formidable challenges. In many cases Monte Carlo techniques are well matched to meet
 these challenges. 
-\MCX is an effort to port the framework provided to the neutron scattering community by the \MCS\ package, to x-ray scattering. \MCS has, since its inception in October \'98, been used successfully at all major neutron scattering facilities in the world. A particular power of \MCS\ is its geometry engine, which has been adopted by \MCX, with little modification. The device library of \MCX\ is not yet as complete as its sibling \MCS\ but is growing rapidly.
-At the time of writing its is complete enough to be able to perform simulations approximating any standard beamline.
+\MCX is an effort to port the framework provided to the neutron scattering
+community by the \MCS package, to x-ray scattering. \MCS has, since its
+inception in October '98, been used successfully at all major neutron
+scattering facilities in the world. A particular power of \MCS is its geometry
+engine, which has been adopted by \MCX, with little modification. The device
+library of \MCX is not yet as complete as its sibling \MCS but is growing
+rapidly.
+At the time of writing it is complete enough to be able to perform simulations
+approximating any standard beamline.
 
-\MCX\ %({\em Monte Carlo Simulations of Triple Axis Spectrometers\/})
-is a fast and versatile software tool for x-ray tracing simulations.
+\MCX is a fast and versatile software tool.
 It is based on a meta-language specially designed for x-ray (and neutron)
 simulation. Specifications are written in this language by users and
 automatically translated into efficient simulation codes in ANSI-C.
-The present version supports both continuous and pulsed source instruments, and includes a library of standard
-components with in total around 100 components. These enable simulation of all kinds of x-ray scattering beamlines.
+The present version supports both continuous and pulsed source beamlines, and includes a library of standard
+components with total around 100 components.
 
 The \MCX\ package is written in ANSI-C and is freely available for download
 from the \MCX\ website~\cite{mcxtrace_webpage}. The package is actively
-developed and supported by  Risø DTU, KU-NBI, KU-Life, ESRF and SAXSLAB Aps.
+developed and supported by \DTUPHYSlong, \NBIlong, \ESRFlong and SAXSLAB Aps.
 The system is tested and is supplied with examples and documentation.
-Besides this manual, a separate component manual exists.
-
+Besides this manual, a separate component manual exists which details each individual component separately.
 
 \section{Development of Monte Carlo x-ray simulation}
-%refer to shadow etc.
 Monte Carlo simulation of x-ray instrumentation has been used for many years --- in particular the SHADOW package 
-%\cite{sanchezdelrio,cerrina}
+\cite{welnak1994shadow,sanchez2011shadow3}
 has found widespread use, and is still actively developed, yet has some
-limitations. \emph{Ray} and \emph{Xtrace} are other packages using th esame
+limitations. \emph{Ray}\cite{schaefers2008bessy} and \emph{Xtrace}\cite{bauer2007simulation} are other packages using the same
 basic techniques. 
 
 What sets \MCX\ apart is, among other things, its open source
 development strategy and its inherent modularity. 
 This combination lets independent scientists work indepently on separate
 modules that they have use for, and contribute to the whole with only a small
-effort.  
+effort.
 
 \section{Scientific background}
-What makes scientists happy? Probably collect good quality data, pushing the instruments to their limits, and fit that data to physical models.
+What makes scientists happy? Probably to collect good quality data, pushing beamlines to their limits, and fit that data to physical models.
 Among available measurement techniques, x-ray scattering provides a
 large variety of beamlines to probe structure and dynamics of all
 kinds of samples.
@@ -47,7 +51,7 @@ Achieving a satisfactory experiment on the best beamline is not all. Once collec
 raises some questions concerning the signal: what is the background
 signal? What proportion of coherent and incoherent scattering has
 been measured? What are the contributions from the sample geometry, the
-container, the sample environment, and generally the instrument
+container, the sample environment, and generally the beamline
 itself? And last but not least, how does multiple scattering affect the
 signal? Most of the time, the physicist will elude these questions
 using rough approximations, or applying analytical corrections
@@ -59,7 +63,7 @@ techniques are explained in detail in Chapter \ref{s:MCtechniques}.
 \subsection{The goals of \MCX}
 \label{s:goals}
 
-Initially, the \MCS project and hence also the \MCX project had four main objectives
+Initially, the \MCS project and hence also the present subject the \MCX project had four main objectives
 that determined its design.
 
 \paragraph{Correctness.}
@@ -78,7 +82,7 @@ testing to maximize the chances of finding existing bugs.
 When you commit yourself to using a tool for an important project, you
 need to know if the tool will satisfy not only your present, but also
 your future requirements. The tool must not have fundamental limitations that
-restrict its potential usage. Thus the \MCX\ systems needs to be
+restrict its potential usage. Thus the \MCX systems needs to be
 flexible enough to simulate different kinds of instruments
 as well as many different kind of
 optical components, and it must also be extensible so that future, as
@@ -114,12 +118,12 @@ separated into four conceptual layers:
 \begin{enumerate}
 \item Modeling the physical processes of scattering, \textit{i.e}.\
   the calculation of the fate of a photon that passes through the
-  individual components of the instrument (absorption, scattering at a
+  individual components of the beamline (absorption, scattering at a
   particular angle, etc.)
-\item Modeling of the overall instrument geometry, mainly consisting
+\item Modeling of the overall beamline geometry, mainly consisting
   of the type and position of the individual components.
 \item Accurate calculation, using Monte Carlo techniques, of
-  instrument properties such as resolution function from the result of
+  beamline properties such as resolution function from the result of
   ray-tracing of a large number of photons. This includes estimating
   the accuracy of the calculation.
 \item Presentation of the calculations, graphical or otherwise.
@@ -134,9 +138,9 @@ without worrying about the details of the calculation. Another user
 may simulate a new instrument without having to reinvent the
 code for simulating the individual components in the instrument. A third
 user may write an intricate simulation of a complex component,
-e.g.\ a detailed description of a rotating velocity selector,
+e.g. a detailed description of a high resolution fast chopper,
 and expect other users to easily
-benefit from his/her work, and so on. \MCX\ attempts to make it
+benefit from his/her work, and so on. \MCX attempts to make it
 possible to work at any combination of layers in isolation by separating
 the layers as much as possible in the design of the system and in
 the meta-language in which simulations are written.
@@ -147,21 +151,21 @@ library functions in C, Fortran, or another general-purpose programming
 language.  The meta-language is more \textit{powerful}; specifications
 are much simpler to write and easier to read when the syntax of the
 specification language reflects the problem domain. For example, the
-geometry of instruments would be much more complex if it were specified
+geometry of beamlines would be much more complex if it were specified
 in C code with static arrays and pointers. The compiler can also take
 care of the low-level details of interfacing the various parts of the
 specification with the underlying C implementation language and each
 other. This way, users do not need to know about \MCX\ internals to
-write new component or instrument definitions, and even if those
+write new component or beamline definitions, and even if those
 internals change in later versions of \MCX, existing definitions can be
 used without modification.
 
-The \MCX\ system also utilizes the meta-language to let the \MCX\
+The \MCX system also utilizes the meta-language to let the \MCX
 compiler generate as much code as possible automatically, letting the
 compiler handle some of the things that would otherwise be the task of
 the user/programmer. \textit{Correctness} is improved by having a well-tested
 compiler generate code that would otherwise need to be specially written
-and debugged by the user for every instrument or component. \textit{Efficiency}
+and debugged by the user for every beamline or component. \textit{Efficiency}
 is also improved by letting the compiler optimize the generated code in
 ways that would be time-consuming or difficult for humans to do. Furthermore, the
 compiler can generate several different simulations from the same
@@ -170,19 +174,19 @@ ways, to generate a simulation that graphically displays x-ray
 trajectories, and possibly other things in the future that were not even
 considered when the original instrument specification was written.
 
-The design of \MCX\ makes it well suited for doing ``what if\ldots''
+The design of \MCX makes it well suited for doing ``what if\ldots''
 types of simulations. Once an instrument has been defined, questions
 such as ``what if a slit was inserted'', ``what if a focusing
 monochromator was used instead of a flat one'', ``what if the sample was
-offset 2~mm from the center of the axis'' and so on are easy to answer. Within
-minutes the instrument definition can be modified and a
+offset 0.2\ mm from the center of the axis'' and so on are easy to answer. Within
+minutes the beamline definition can be modified and a
 new simulation program generated. It also makes it simple to debug new
-components. A test instrument definition may be written
+components. A test beamline definition may be written
 containing a source, the component to be tested, and whatever
 monitors are useful, and the component can be thoroughly tested before
 being used in a complex simulation with many different components.
 
-The \MCX\ system is based on ANSI-C, making it both efficient and
+The \MCX system is based on ANSI-C, making it both efficient and
 portable. The meta-language allows the user to embed arbitrary C code in
 the specifications. \textit{Flexibility} is thus ensured since the full
 power of the C language is available if needed.
@@ -195,15 +199,14 @@ parts:
 \begin{itemize}
 \item A short list of new features introduced in this \MCX release
   appears in chapter~\ref{c:changes}
-\item Chapter~\ref{s:install} explains how to obtain, compile
-  and install the \MCX\ compiler, associated files and supportive software
-\item Chapter~\ref{s:MCtechniques} concerns Monte Carlo techniques
+\item Chapter~\ref{c:install} explains how to obtain, compile
+  and install the \MCX compiler, associated files and supportive software
+\item Chapter~\ref{c:MCtechniques} concerns Monte Carlo techniques
   and simulation strategies in general
 \item Chapter~\ref{c:running} includes a brief introduction to the
-  \MCX system
-  (section~\ref{s:brief}) as well a section (\ref{s:running}) on running the compiler to produce
+  \MCX system (section~\ref{s:brief}) as well a section (\ref{s:running}) on running the compiler to produce
   simulations. Section~\ref{s:run-sim} explains how to run the generated
-  simulations. Running \MCX on parallel computers require special
+  simulations. Running \MCX on parallel computers requires special
   attention and is discussed in section~\ref{s:run-mpi}. A number of front-end programs are used to run the
   simulations and to aid in the data collection and analysis of the
   results. These user interfaces are described in section~\ref{s:frontends}.
@@ -212,25 +215,12 @@ parts:
   that aid in the writing of simulations. See
   appendix~\ref{c:kernelcalls} for more details.
 \item The \MCX component library contains a collection of
-  tested, as well as user contributed, beam components that can be used in simulations.
+  well-tested, as well as user contributed, beam components that can be used in simulations.
   The \MCX component library is documented in a separate manual
   and on the \MCX web-page~\cite{mcxtrace_webpage}, but a short overview of these
   components is given in chapter~\ref{s:components} of the Manual.
-  %This
-  %library is documented in detail in chapter~\ref{s:components}. Code
-  %for the components can be found in appendix~\ref{compcode}.
-\item A collection of example instrument definitions is described in
-  chapter~\ref{s:instrument} of the Manual.%, with source code given in appendix~\ref{instcode}.
-
 \end{itemize}
 
-%In addition, some results from
-%simulations with \MCX\ are described in
-%appendix~\ref{testresults}.
-%As of this release of \MCX, some support for simulating 
-%polarisation is included. As this is the very first release with these
-%features, functionality is likely to change. To reflect this, the
-%documentation is currently only available in the appendix of the Component manual. %~\ref{c:polarization}.
 A list of library calls that may be used in component definitions
 appears in appendix~\ref{c:kernelcalls}, and
 an explanation of the \MCX terminology can be
@@ -238,49 +228,3 @@ found in appendix~\ref{s:terminology} of the Manual.
 Plans for future extensions are presented on the \MCX web-page~\cite{mcxtrace_webpage} as well as in section~\ref{s:future}.
 
 
-%The \MCX\ package consists of four levels:
-%\paragraph{The kernel.} Here are located some geometrical tools
-%({\em e.g.} intersection between a line and various surfaces)
-%and other elemental tools ({\em e.g.} creation and annihilation
-%of a neutron). The kernel is maintained by the Ris\o\ group.
-
-%\paragraph{The components.} Here resides the code for simulation
-% of the individual spectrometer components
-% (sources, detectors, samples, and optical elements).
-% Components may have input parameters, like the angle of divergence of a
-% collimator or the mosaicity of a monochromator crystal.
-% Interested users are encouraged to modify existing components and to
-% design new ones.
-% A library of general and well documented components
-% is being maintained by the Ris\o\ group.
-
-%\paragraph{The instruments.} An instrument definition is written
-% in the \MCX\ meta-language, which is a means of positioning
-% components within an experimental geometry.
-% Instruments may have inout parameters, like {\em e.g.}\ the three
-% $(\omega,2\theta)$ pairs of a standard triple-axis spectrometer.
-% For each specific instrument, a new instrument definition
-% should be written. This will usually be done by the users,
-% possibly in collaboration with the Ris\o\ group.
-
-%\paragraph{The instrument control interface.}
-% Here, the setting parameters of the
-% instrument may be controlled in order to perform a simulation series.
-
-% In the present version 1.0, the control interface
-% consists of a very preliminary MATLAB program,
-% but we expect soon to implement a simulation version of the
-% Ris\o\ spectrometer control software TASCOM.
-% By using the preprogrammed scans or the TASCOM programming features,
-% the user will then be able easily to perform the desired simulations.
-% Later, interfaces to other control software may be implemented.
-
-%\paragraph{Data analysis and visualization}
-% The output data is in the present version written as
-% plain ASCII format, but will later be written in the TASCOM format,
-% from where it may easily be converted into the general
-% NeXus format\cite{NeXus}.
-% This enables the user to choose between various analysis packages
-% for the output side.
-% Both ASCII and TASCOM files may be analysed and plotted through
-% the Ris\o\ MATLAB package MVIEW/MFIT \cite{mview}.

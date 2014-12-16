@@ -435,7 +435,7 @@ char *mcfull_file(char *name, char *ext)
   char *mem   =NULL;
 
   dirlen = mcdirname ? strlen(mcdirname) : 0;
-  mem = malloc(dirlen + strlen(name) + CHAR_BUF_LENGTH);
+  mem = (char*)malloc(dirlen + strlen(name) + CHAR_BUF_LENGTH);
   if(!mem) {
     exit(-fprintf(stderr, "Error: Out of memory %li (mcfull_file)\n", (long)(dirlen + strlen(name) + 256)));
   }
@@ -3422,7 +3422,7 @@ mcparseoptions(int argc, char *argv[])
   char *usedir=NULL;
 
   /* Add one to mcnumipar to avoid allocating zero size memory block. */
-  paramsetarray = malloc((mcnumipar + 1)*sizeof(*paramsetarray));
+  paramsetarray = (int*)malloc((mcnumipar + 1)*sizeof(*paramsetarray));
   if(paramsetarray == NULL)
   {
     fprintf(stderr, "Error: insufficient memory (mcparseoptions)\n");

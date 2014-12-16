@@ -1700,20 +1700,28 @@ struct Sqw_Data_struct *Sqw_readfile(
   /* compute the maximum incoming energy that can be handled */
   Sqw_Data->Ei_max = 2*w_max;
   
-  /* check if the q-range will limit the integration */
-  if ((q_max*K2V)*(q_max*K2V)*VS2E/2 > Sqw_Data->Ei_max) {
-    /* then scan Ei until we pass q_max */
-    for (index_w=0; index_w < Sqw_Data->iqSq_length; index_w++) {
-      double Ei = index_w*2*w_max/Sqw_Data->iqSq_length;
-      if ( (Ei > w_max && sqrt(Ei)+sqrt(Ei-w_max) >= q_max/(SE2V*V2K))
-                     || sqrt(Ei)+sqrt(Ei+w_max) >= q_max/(SE2V*V2K))
-        if (Ei < Sqw_Data->Ei_max) {
-          Sqw_Data->Ei_max = Ei;
-          break;
-        }
+  /* Checked in different ways in Powder and "proper inelastic" case */
+  if (w_step==1) { 
+    /* Powder */
+    double Ei_max_q = (q_max*K2V)*(q_max*K2V)*VS2E/2;
+    if (Ei_max_q > Sqw_Data->Ei_max) Sqw_Data->Ei_max = Ei_max_q;
+  } else {
+    /* Proper inelastic */
+    /* check if the q-range will limit the integration */
+    if ((q_max*K2V)*(q_max*K2V)*VS2E/2 > Sqw_Data->Ei_max) {
+      /* then scan Ei until we pass q_max */
+      for (index_w=0; index_w < Sqw_Data->iqSq_length; index_w++) {
+	double Ei = index_w*2*w_max/Sqw_Data->iqSq_length;
+	if ( (Ei > w_max && sqrt(Ei)+sqrt(Ei-w_max) >= q_max/(SE2V*V2K))
+	     || sqrt(Ei)+sqrt(Ei+w_max) >= q_max/(SE2V*V2K))
+	  if (Ei < Sqw_Data->Ei_max) {
+	    Sqw_Data->Ei_max = Ei;
+	    break;
+	  }
+      }
     }
   }
-    
+  
   MPI_MASTER(
   if (Sqw->verbose_output >= 2)
     printf("Isotropic_Sqw: %s: Creating Sigma(Ei=0:%g [meV]) with %li entries...(%s %s)\n",

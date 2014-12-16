@@ -38,7 +38,7 @@
 * focus_aw:(rd) Standard deviation (Gaussian) or maximal (uniform) horz. width divergence.
 * focus_ah:(rd) Standard deviation (Gaussian) or maximal (uniform) vert. height divergence.
 * E0:      (keV) Mean energy of X-rays.
-* dE:      (keV) Energy spread of X-rays.
+* dE:      (keV) Energy half spread of X-rays. If gauss==0 dE is the half-spread, i.e. E\in[E0-dE,E0+dE], if gauss!=0 it's interpreted as the standard dev. 
 * lambda0: (AA) Mean wavelength of X-rays (only relevant for E0=0).
 * dlambda: (AA) Wavelength half spread of X-rays.
 * gauss:  (1)  Criterion: 0: uniform, 1: Gaussian distribution of energy/wavelength.
@@ -80,8 +80,6 @@ DECLARE
 INITIALIZE
 %{
 
-//  prms.focus_xw_2=focus_xw/2.0;
-//  prms.focus_yh_2=focus_yh/2.0;
   prms.xmin=-xwidth/2.0;
   prms.ymin=-yheight/2.0;
   prms.xmax=xwidth/2.0;
@@ -137,6 +135,7 @@ TRACE
   }
   x=prms.xmin+rand01()*xwidth;
   y=prms.ymin+rand01()*yheight;
+  z=0;
 
   if (spectrum_file){
     double pp=0;
@@ -157,7 +156,7 @@ TRACE
     }else if (gauss){
       e=E0+dE*randnorm();
     }else{
-      e=randpm1()*dE*0.5 + E0;
+      e=randpm1()*dE + E0;
     }
     k=E2K*e;
   }else if (lambda0){

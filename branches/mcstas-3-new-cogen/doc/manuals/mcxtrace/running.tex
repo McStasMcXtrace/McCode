@@ -2,17 +2,15 @@
 
 \chapter{Running \MCX}
 \label{c:running}
-This chapter describes usage of the \MCX simulation package. Refer
-to Chapter~\ref{s:install} for installation instructions. In case of
-problems regarding installation or usage, the \MCX\ mailing
+This chapter describes usage of the \MCX simulation package. In case of
+problems regarding installation or usage, the \MCX mailing
 list~\cite{mcxtrace_webpage} or the authors should be contacted.
 
-{\bfseries Important note for Windows users:} It is a known problem that some of
+\textbf{Important note for Windows users:} It is a known problem that some of
 the \MCX tools do not support filenames / directories with spaces.
 We are working on a more general approach to this problem, which will
 hopefully be solved in a future release. We recommend to use
-ActiveState {\bfseries Perl 5.10}. (Note that all needed
-support tools for Windows are bundled with \MCX\ in a single installer file.)
+Strawberry \textbf{Perl 5.18}. This distribution of perl also includes a free c-compiler. 
 
 To use \MCX, an instrument
 definition file describing the instrument to be simulated must be
@@ -20,14 +18,14 @@ written. Alternatively, an example instrument file can be obtained
 from the \verb+examples/+ directory in the distribution or from
 another source.
 
-The structure of \MCX is illustrated in Figure~\ref{fig:structure}.
+%The structure of \MCX is illustrated in Figure~\ref{fig:structure}.
 
-The input files (instrument and component files) are written in the \MCX\
+The input files (instrument and component files) are written in the \MCX
 meta-language and are edited either by using your favourite editor
 or by using the built in editor of the graphical user interface
 (\texttt{mxgui}).
 
-Next, the instrument and component files are compiled using the \MCX\
+Next, the instrument and component files are compiled using the \MCX
 compiler, relying on built in features from the FLEX and Bison facilities to produce a C program.
 
 The resulting C program can then be
@@ -37,26 +35,28 @@ detector as a motor position is varied.
 
 The output data may be analyzed and visualized in the same way as
 regular experiments by using the data handling and visualisation tools in \MCX based on
-Perl and Matlab, or PGPLOT. Further data
+Perl and Matlab or PGPLOT. Further data
 output formats including NeXus and XML are available, see section \ref{s:analyze}.\index{Tools}
 
+\fxwarning{the structure picture}
 %\begin{figure}[htb!]
 %\begin{center}
 %\input{figures/mcstas_software}
 %\end{center}
-%\caption{An illustration of the structure of \MCX\ .}
+%\caption{An illustration of the structure of \MCX.}
 %\label{fig:structure}
 %\end{figure}
 
 %\section{Brief introduction to the graphical user interface}
 %\label{s:brief}
+%\fxwarning{Documentation pending...}
 %
-%This section gives an ultra-brief overview of how to use \MCX\ once it
+%This section gives an ultra-brief overview of how to use \MCX once it
 %has been properly installed. It is intended for those who do not read
 %manuals if they can avoid it. For details on the different steps, see
 %the following sections. This section uses the
 %\verb+Samples_vanadium.instr+ file supplied in the \verb+examples/+
-%directory of the \MCX\ distribution. %, see appendix~\ref{a:Samples_vanadium.instr}.
+%directory of the \MCX distribution. %, see appendix~\ref{a:Samples_vanadium.instr}.
 %
 %To start the graphical user interface of \MCX , run the command
 %\verb+mxgui+ (\verb+mxgui.pl+ on Windows). This will open a window
@@ -78,9 +78,9 @@ output formats including NeXus and XML are available, see section \ref{s:analyze
 %\item{by editing
 %the \verb+tools/perl/mcstas_config.perl+ setup file of your
 %installation}
-%\item{by setting the \verb+MCSTAS_FORMAT+ environment
+%\item{by setting the \verb+MCXTRACE_FORMAT+ environment
 %variable.}
-%\end{itemize} \index{Environment variable!MCSTAS\_FORMAT}
+%\end{itemize} \index{Environment variable!MCXTRACE\_FORMAT}
 %Next, select ``Run simulation'' from the ``Simulation'' menu.
 %\MCX  will translate the definition into an executable program and pop
 %up a dialog window. Type a value for the ``ROT'' parameter ({\em e.g.}
@@ -88,17 +88,17 @@ output formats including NeXus and XML are available, see section \ref{s:analyze
 %simulation will run, and when it finishes after a while the results will
 %be plotted in a window. Depending on your chosen plotting backend, the
 %presented graphics will resemble one of those shown in figure \ref{fig:mxplot_figs}.\index{Tools!mxplot}
-%\begin{figure}[htb!]
-%  \begin{center}
-%%    \includegraphics[angle=-90,width=0.49\textwidth]{figures/mxplot_PGPLOT.ps}
-%%    \includegraphics[angle=-90,width=0.49\textwidth]{figures/mxplot_Scilab.eps}
-%%    \includegraphics[width=0.49\textwidth]{figures/mxplot_Matlab.eps}
-%  \end{center}
-%\caption{Output from \texttt{mxplot} with PGPLOT, Scilab and Matlab backends}
-%\label{fig:mxplot_figs}
-%\end{figure}
+\begin{figure}[htb!]
+  \begin{center}
+%    \includegraphics[angle=-90,width=0.49\textwidth]{figures/mxplot_PGPLOT.ps}
+%    \includegraphics[angle=-90,width=0.49\textwidth]{figures/mxplot_Scilab.eps}
+%    \includegraphics[width=0.49\textwidth]{figures/mxplot_Matlab.eps}
+  \end{center}
+\caption{Output from \texttt{mxplot} with PGPLOT, Scilab and Matlab backends}
+\label{fig:mxplot_figs}
+\end{figure}
 %When using the Scilab or Matlab backends, full 3D view of plots and
-%different display possibilities are available. Use the attached \MCX\
+%different display possibilities are available. Use the attached \MCX
 %window menus to control these. Features are quite self
 %explanatory. For other options, execute \verb+mxplot --help+
 %(\verb+mxplot.pl --help+ on windows) to get help.
@@ -110,36 +110,28 @@ output formats including NeXus and XML are available, see section \ref{s:analyze
 %Depending on your
 %chosen plotting backend, the presented graphics will resemble one of
 %those shown in figures \ref{fig:mcdisp_PGPLOT}-\ref{fig:mcdisp_Matlab}.
-%\begin{figure}[htb!]
-%  \begin{center}
-%%    \includegraphics[width=0.48\textwidth]{figures/mxdisplay_PGPLOT.ps}
-%%    \includegraphics[width=0.48\textwidth]{figures/mxdisplay_TOF.ps}
-%  \end{center}
-%\caption{Left: Output from \texttt{mxdisplay} with PGPLOT backend.
-%  The left mouse button starts a new photon ray, the middle button zooms, and
-%  the right button resets the zoom. The Q key quits the
-%  program. Right: The new PGPLOT time-of-flight option. See section \ref{s:mxdisplay} for details.}
-%\label{fig:mcdisp_PGPLOT}
-%\end{figure}
-%%\begin{figure}[htb!]
-%%  \begin{center}
-%%    \includegraphics[width=0.55\textwidth]{figures/mxdisplay_Scilab.ps}
-%%    \includegraphics[width=0.25\textwidth]{figures/mxdisplay_Scilab_dialog.ps}
-%%  \end{center}
-%%\caption{Output from \texttt{mxdisplay} with Scilab backend. Display
-%%  can be adjusted using the dialogbox (right).}
-%%\label{fig:mcdisp_Scilab}
-%%\end{figure}
-%\begin{figure}[htb!]
-%  \begin{center}
-%%    \includegraphics[width=0.55\textwidth]{figures/mxdisplay_Matlab.eps}
-%  \end{center}
-%\caption{Output from \texttt{mxdisplay} with Matlab backend. Display
-%  can be adjusted using the window buttons.}
-%\label{fig:mcdisp_Matlab}
-%\end{figure}
-%
-%For a slightly longer gentle introduction to \MCX, see the \MCX\  
+\begin{figure}[htb!]
+  \begin{center}
+%    \includegraphics[width=0.48\textwidth]{figures/mxdisplay_PGPLOT.ps}
+%    \includegraphics[width=0.48\textwidth]{figures/mxdisplay_TOF.ps}
+  \end{center}
+\caption{Left: Output from \texttt{mxdisplay} with PGPLOT backend.
+  The left mouse button starts a new photon ray, the middle button zooms, and
+  the right button resets the zoom. The Q key quits the
+  program. Right: The new PGPLOT time-of-flight option. See section \ref{s:mxdisplay} for details.}
+\label{fig:mcdisp_PGPLOT}
+\end{figure}
+
+\begin{figure}[htb!]
+  \begin{center}
+%    \includegraphics[width=0.55\textwidth]{figures/mxdisplay_Matlab.eps}
+  \end{center}
+\caption{Output from \texttt{mxdisplay} with Matlab backend. Display
+  can be adjusted using the window buttons.}
+\label{fig:mcdisp_Matlab}
+\end{figure}
+
+%For a slightly longer gentle introduction to \MCX, see the \MCX
 %tutorial (available from~\cite{mcxtrace_webpage}), and as of version
 %\version\ built into the \verb+mxgui+ help menu. For more technical
 %details, read on from section~\ref{s:running}
@@ -147,12 +139,12 @@ output formats including NeXus and XML are available, see section \ref{s:analyze
 %\subsection{New releases of \MCX}
 %Releases of new versions of a software package can today be carried out more or less
 %continuously. However, users do not update their software on a daily basis,
-%and as a compromise we have adopted the following policy of \MCX\ .
+%and as a compromise we have adopted the following policy of \MCX .
 %
 %\begin{itemize}
 %\item The versions {\version}.x will possibly contain bug fixes and minor new functionality. A new manual
 %will, however, not be released and the modifications are documented on the
-%\MCX\ web-page. The extensions of forthcoming versions {\version}.x are also listed
+%\MCX web-page. The extensions of forthcoming versions {\version}.x are also listed
 %on the web, and new versions may be released quite frequently when it is requested
 %by the user community.
 %\end{itemize}
@@ -166,12 +158,15 @@ it will be more convenient to use the front-end program \verb+mxgui+
 front-ends will compile and run the simulations automatically.
 \index{Tools!mxgui} \index{Tools!mxrun}
 
-The compiler for the \MCX instrument definition
-is invoked by typing a command of the form
+The compiler for the \MCX instrument definition is invoked by typing a command of the form
 \begin{verbatim}
     mcxtrace name.instr
 \end{verbatim}
-This will read the instrument definition \verb+name.instr+ which is
+in a shell or command prompt. On windows it is convenient to launch the
+command prompt through the desktop icon named mcxtrace-shell. This 
+is a utility script that sets up the necessary environment variables as appropriate.
+
+This will read the beamline definition \verb+name.instr+ which is
 written in the \MCX meta-language. The compiler will translate the
 instrument definition into a Monte Carlo simulation program provided in
 ISO-C. The output is by default written to a file in the current
@@ -222,57 +217,56 @@ included in the instrument.
 The \MCX compiler needs to be able to find various files during
 compilation, some explicitly requested by the user (such as component
 definitions and files referenced by \verb+%include+), \index{Keyword!\%include}
-and some used internally to generate the simulation executable. \MCX\ looks for these
+and some used internally to generate the simulation executable. \MCX looks for these
 files in three places: first in the current directory, then in a list of
-directories given by the user, and finally in a special \MCX\
-directory. Usually, the user will not need to worry about this as \MCX\
+directories given by the user, and finally in a special \MCX
+directory. Usually, the user will not need to worry about this as \MCX
 will automatically find the required files. But if users build their own
-component library in a separate directory or if \MCX\ is installed in an
-unusual way, it will be necessary to tell the compiler where to look
+component library in a separate directory or if \MCX is installed in an
+unusual way, it may be necessary to tell the compiler where to look
 for the files.
 
 \index{Library!Components}
-The location of the special \MCX\ directory is set when \MCX\ is
-compiled. It defaults to \verb+/usr/local/lib/mcxtrace+ on Unix-like systems and \verb+C:\mcxtrace\lib+ on Windows systems, but it can be
-changed to something else, see section~\ref{s:install} for
-details. The location can be overridden by setting the environment
-variable \verb+MCSTAS+: \index{Environment variable!MCSTAS}
+The location of the special \MCX directory is set when \MCX is
+compiled. It defaults to \fxwarning{correct this path}
+\verb+/usr/local/mcxtrace/VERSION/+ on Unix-like systems and \verb+C:\mcxtrace-VERSION\lib+ on Windows systems, but it can be
+changed to something else during the installation process. The location can be overridden by setting the environment
+variable \verb+MCXTRACE+: \index{Environment variable!MCXTRACE}
 \begin{verbatim}
-    setenv MCSTAS /home/joe/mcxtrace
+    setenv MCXTRACE /home/joe/mcxtrace
 \end{verbatim}
 for csh/tcsh users, or
 \begin{verbatim}
-    export MCSTAS=/home/joe/mcxtrace
+    export MCXTRACE=/home/joe/mcxtrace
 \end{verbatim}
 for bash/Bourne shell users.
-For Windows Users, you should define the \verb+MCSTAS+ from the menu 'Start/Settings/Control Panel/System/Advanced/Environment
-Variables' by creating \verb+MCSTAS+ with the value \verb+C:\mcxtrace\lib+
+Windows users, that do not wish to use the desktop shortcut \texttt{mcxtrace-shell-1.2}, should define the \verb+MCXTRACE+ from the menu 'Start/Settings/Control Panel/System/Advanced/Environment
+Variables' by creating \verb+MCXTRACE+ with the value \verb+C:\mcxtrace-1.2\lib+
 
-To make \MCX\ search additional directories for component definitions
-and include files, use the \verb+-I+ switch for the \MCX\ compiler:
+To make \MCX search additional directories for component definitions
+and include files, use the \verb+-I+ switch for the \MCX compiler:
 \begin{verbatim}
     mcxtrace -I/home/joe/components -I/home/joe/xrays/include name.instr
 \end{verbatim}
 Multiple \verb+-I+ options can be given, as shown.
 
-
 \subsection{Embedding the generated simulations in other programs}
 
-By default, \MCX\ will generate a stand-alone C program, which is what
+By default, \MCX will generate a stand-alone C program, which is what
 is needed in most cases. However, for advanced usage, such as embedding
 the generated simulation in another program or even including two or
 more simulations in the same program, a stand-alone program is not
-appropriate. For such usage, the \MCX\ compiler provides the following
+appropriate. For such usage, the \MCX compiler provides the following
 options:
 \begin{itemize}
-\item \verb+--no-main+ This option makes \MCX\ omit the \verb+main()+
+\item \verb+--no-main+ This option makes \MCX omit the \verb+main()+
   function in the generated simulation program. The user must then
   arrange for the function \verb+mcxtrace_main()+ to be called in some
   way.
 \item \verb+--no-runtime+ Normally, the
   generated simulation program contains all the run-time C code necessary for
   declaring functions, variables, etc. used during the simulation.  This
-  option makes \MCX\ omit the run-time code from the generated
+  option makes \MCX omit the run-time code from the generated
   simulation program, and the user must then explicitly link with the file
   \verb+mcxtrace-r.c+ as well as other shared libraries from the \MCX{} distribution.
   \index{Library!Run-time}
@@ -285,30 +279,30 @@ further help.
 \label{s:compile}
 
 After the source code for the simulation program has been generated with
-the \MCX\ compiler, it must be compiled with the C compiler to produce
+the \MCX compiler, it must be compiled with the C compiler to produce
 an executable. The generated C code obeys the ISO-C standard, so it
 should be easy to compile it using any ISO-C (or C++) compiler. \textit{E.g}.\ a
 typical Unix-style command would be
 \begin{verbatim}
     cc -O -o name.out name.c -lm
 \end{verbatim}
-The \MCX\ team recommends these compiler alternatives for the Intel
+The \MCX team recommends these compiler alternatives for the Intel
 (and AMD) hardware architectures:
 \begin{itemize}
-\item[\bfseries A]{\verb+gcc+ which is a very portable, open source, ISO-C
+  \item[\textbf{A}]{\verb+gcc+ which is a very portable, open source, ISO-C
     compatible c compiler, available for most platforms. For Linux it
-    is usually part of your distribution, for Windows the \MCX\
-    distribution package includes a version of \verb+gcc+
-    (in the Dev-CPP sub-package), and for Mac OS X \verb+gcc+ is part
-    of the Xcode tools package available on the installation medium.}
-\item[\bfseries B]{\verb+icc+ or the Intel c compiler is available for Linux, Mac
+    is usually part of your distribution, for Windows the recommended perl distribution
+    (strawberry perl~\cite{strawberry}) includes mingw, a version og gcc for windows.
+    For Mac OS X \verb+gcc+ is part of the Xcode tools package available on the installation medium.}
+  \item[\textbf{B}]{\verb+icc+ or the Intel c compiler is available for Linux, Mac
     OS and Windows systems and is a commercial software
     product. Generally, simulations run with the Intel compiler are
-    {\bfseries a factor of 2 faster} than the identical simulation run using \verb+gcc+. To use \verb+icc+ with \MCX\ on Linux or Mac OS X, set the environment variables
+    \textbf{a factor of 2 faster} than the identical simulation run using \verb+gcc+. To use \verb+icc+ with \MCX on Linux or Mac OS X, set the environment variables
     \begin{itemize}
-      \item{\verb+MCSTAS_CC=icc+}
-      \item{\verb+MCSTAS_CFLAGS="-g -O2 -wd177,266,1011,181"+}
+      \item{\verb+MCXTRACE_CC=icc+}
+      \item{\verb+MCXTRACE_CFLAGS="-g -O2 -wd177,266,1011,181"+}
     \end{itemize}
+    The latter is to silence a number of warnings.
     To use \verb+icc+ with MPI on Unix system (see Section \ref{s:run-mpi})
  installations, it seems that \emph{editing}
     the mpicc shell script and setting the CC variable to "\verb+icc+" is the
@@ -319,7 +313,7 @@ The \MCX\ team recommends these compiler alternatives for the Intel
 
 
 The \verb+-O+ option typically enables the optimization phase of the compiler,
-which can make quite a difference in speed of \MCX\ generated simulations. The
+which can make quite a difference in speed of \MCX generated simulations. The
 \verb+-o name.out+ sets the name of the generated executable. The \verb+-lm+
 options is needed on many systems to link in the math runtime library (like the
 $\cos()$ and $\sin()$ functions). \index{Simulation optimization}
@@ -327,59 +321,50 @@ $\cos()$ and $\sin()$ functions). \index{Simulation optimization}
 Monte Carlo simulations are computationally intensive, and it is
 often desirable to have them run as fast as possible. Some success can
 be obtained by adjusting the compiler optimization
-options. Here are some example platform and compiler combinations that
-have been found to perform well (up-to-date information will be
-available on the \MCX\ WWW home page~\cite{mcxtrace_webpage}):
-\begin{itemize}
-\item Intel x86 (``PC'') with Linux and GCC, using options \verb+gcc -O3+.
-\item Intel x86 with Linux and EGCS (GCC derivate) using
-  options \verb+egcc -O6+.
-\item Intel x86 with Linux and PGCC (pentium-optimized GCC derivate), using
-  options \verb+gcc -O6 -mstack-align-double+.
-\item HPPA machines running HPUX with the optional ISO-C compiler,
-  using the options
-  \verb|-Aa +Oall -Wl,-a,archive| (the \verb+-Aa+ option is necessary to
-  enable the ISO-C standard).
-\item SGI machines running Irix with the options
-  \verb|-Ofast -o32 -w|
-\end{itemize}
-Optimization flags will typically result in a speed improvement by a factor
-about 3, but the compilation of the instrument may be 5 times slower.
+options. 
 
 A warning is in place here: it is tempting to spend far more time
 fiddling with compiler options and benchmarking than is actually saved
-in computation times. Even worse, compiler optimizations are notoriously
-buggy; the options given above for PGCC on Linux and the ISO-C compiler
-for HPUX have been known to generate \emph{incorrect code} in some
-compiler versions. \MCX\ actually puts an effort into making the task of the C compiler
+in computation times. Optimization flags will typically result in a speed improvement by a factor
+about 3, but the compilation of the instrument may be 5 times slower. 
+Even worse, compiler optimizations are notoriously
+buggy; some options have been known to generate \emph{incorrect code} in some
+compiler versions. \MCX actually puts an effort into making the task of the C compiler
 easier, by in-lining code and using variables in an efficient way. As a
-result, \MCX\ simulations generally run quite fast, often fast enough
-that further optimizations are not worthwhile. Also, optimizations are higly
-time and memory consuming during compilation, and thus may fail when dealing
-with large instrument descriptions (e.g. more that 100 elements). The compilation process is simplified when using components of the library making use of shared libraries (see \verb+SHARE+ keyword in chapter~\ref{s:kernel}). Refer to section \ref{s:optim} for other optimization methods.\index{Optimization}
+result, \MCX simulations generally run quite fast, often fast enough
+that further optimizations are not worthwhile. Also, optimizations are highly
+memory consuming during compilation, and thus may fail when dealing
+with large instrument descriptions (e.g. more that 100 elements). The
+compilation process is simplified when using components of the library making
+use of shared libraries (see \verb+SHARE+ keyword in chapter~\ref{s:kernel}).
+Refer to section \ref{s:optim} for other optimization
+methods.\index{Optimization}
 
-\section{Running the simulations}
+\section{Running the simulations in a shell}
 \label{s:run-sim}
 \index{Parameters!Instruments}
 
-Once the simulation program has been generated by the \MCX\ compiler
+Once the simulation program has been generated by the \MCX compiler
 and an executable has been obtained with the C compiler, the simulation
 can be run in various ways. The simplest way is to run it directly from the
 command line or shell:
 \begin{verbatim}
     ./name.out
 \end{verbatim}
+(Or \texttt{name.exe} on windows. In the following we will only list the \texttt{.out}) 
+
 Note the leading ``.'', which is needed if the current directory is not in
 the path searched by the shell. When used in this way, the simulation
 will prompt for the values of any instrument parameters such as motor
-positions, and then run the simulation. Default instrument parameter values (see section~\ref{s:instrdefs}), if any, will be indicated and entered when hitting the \verb+Return+ key.\index{Parameters!Optional, default value}
-This way of running \MCX\ will only give data for one spectrometer
-setting which is normally sufficient for {\em e.g.}, time-of-flight,
-SANS or powder instruments, but not for {\em e.g.} reflectometers or triple-axis spectrometers where a scan over
-various spectrometer settings is required.
+positions, and then run the simulation. Default instrument parameter values
+(see section~\ref{s:instrdefs}), if any, will be indicated and entered when
+hitting the \verb+Return+ key.\index{Parameters!Optional, default value}
+This way of running \MCX will only give data for one beamline
+setting. Sometimes a scan over
+various beamline settings is required, in which case multiple simulation runs are required.
 Often the simulation will be run using one of several
 available front-ends, as described in the next section. These front-ends
-help manage output from the potentially many detectors in the
+help manage output from the potentially many monitors in the
 instruments, as well as running the simulation for each data point in
 a scan.
 
@@ -403,75 +388,55 @@ use the same seed for several runs, so that the same sequence of random
 numbers is used each time. To achieve this, the random seed may be set
 using the \verb+--seed+ or \verb+-s+ option.
 
-By default, \MCX\ simulations write their results into several data files in the
+By default, \MCX simulations write their results into several data files in the
 current directory, overwriting any previous files stored there. The
 \verb+--dir=+\textit{dir} or \verb+-d+\textit{dir} option causes the files to be
 placed instead in a newly created directory \textit{dir} (to prevent overwriting
-previous results an error message is given if the directory already exists).
+previous results the simuation is aborted and an error message is issued if the directory already exists).
 Alternatively, all output may be written to a single file \textit{file} using
 the \verb+--file=+\textit{file} or \verb+-f+\textit{file} option (which should
-probably be avoided when saving in binary format, see below). If the
-\verb+file+ is given as \verb+NULL+, the file name is automatically built from
-the instrument name and a time stamp. The default file name is \verb+mcxtrace+
-followed by appropriate extension.
+probably be avoided when saving in binary format, see below). If the \verb+file+ is given as \verb+NULL+, the file name is automatically built from the instrument name and a time stamp. The default file name is \verb+mccode+ followed by appropriate extension.
 
 The complete list of options
-and arguments accepted by \MCX\ simulations appears in
+and arguments accepted by \MCX simulations appears in
 Tables \ref{f:simoptions} and \ref{f:simoptions2}.
 
-\subsection{Choosing an output data file format}
+Data files contain header lines with information about the
+simulation from which they originate. In case the data must be analyzed
+with programs that cannot read files with such headers, they may be
+turned off using the \verb+--data-only+ or \verb+-a+ option.
+\index{Data formats}
 
-%Data files contain header lines with information about the
-%simulation from which they originate. In case the data must be analyzed
-%with programs that cannot read files with such headers, they may be
-%turned off using the \verb+--data-only+ or \verb+-a+ option.
-%\index{Data formats}
-%
-The format of the output files from \MCX\ simulations is described in
-more detail in section~\ref{s:analyze}. It may be chosen either with \verb+--format=FORMAT+ for each simulation or globally by setting the MCSTAS\_FORMAT environment variable. \index{Environment variable!MCSTAS\_FORMAT}
-The available format list is obtained using the \verb+name.out --help+ option, and shown in Table~\ref{t:formatoptions}. \index{Tools!PGPLOT} \index{Tools!Matlab} \index{Tools!Scilab} \index{Tools!VRML/OpenGL} \index{Tools!HTML} \index{Data formats}
-\MCX\ can presently generate many formats, including the original \MCX /PGPLOT and the Scilab and Matlab formats. All formats, except the \MCX /PGPLOT, may eventually support binary files, which are much smaller and faster to import, but are platform dependent. The simulation data file extensions are appended automatically, depending on the format, if the file names do not contain any. Binary files are particularly recommended for the IDL format (e.g. \verb+--format=IDL_binary+), and the Matlab and Scilab format when handling large detectors (e.g. more than 50x50 bins). For example:
-\begin{verbatim}
-    ./Samples_vanadium.out ROT=90 --format="Scilab_binary"
-\end{verbatim}
-or more generally (for bash/Bourne shell users)
-\begin{verbatim}
-    export MCSTAS_FORMAT="Matlab"
-    ./Samples_vanadium.out ROT=90
-\end{verbatim}
-Note that if one or more parameters are specified on the commmand line in this
-manner, the user will \emph{not} be prompted for any remaining ones. These will
-simply take on their default values.
-
-%It is also possible to create and read \textit{Vitess}, \textit{MCNP/PTRAC} and \textit{Tripoli4/batch}
-%photon event files using components
-%\begin{itemize}
-%\item \verb+Vitess_input+ and \verb+Vitess_output+
-%\item \verb+Virtual_tripoli4_input+ and \verb+Virtual_tripoli4_output+
-%\item \verb+Virtual_mcnp_input+ and \verb+Virtual_mcnp_output+
-%\end{itemize}\index{Vitess} \index{Tripoli} \index{MCNP}
-
+The format of the output files from \MCX simulations is described in
+more detail in section~\ref{s:analyze}. It may be chosen either with
+\verb+--format=FORMAT+ for each simulation or globally by setting the
+MCXTRACE\_FORMAT environment variable. \index{Environment variable!MCXTRACE\_FORMAT}
+The available format list is obtained using the \verb+name.out --help+ option,
+and shown in Table~\ref{t:formatoptions}. \index{Tools!PGPLOT}\index{Tools!VRML/OpenGL}
+\index{Tools!HTML} \index{Data formats}
 Additionally, adding the \texttt{raw} keyword to the FORMAT will produce raw $[N, p, p^2]$ data sets instead of $[N, p, \sigma]$ (see Section \ref{s:staterror}). The former representation is fully additive, and thus enables to add results from separate simulations (e.g. when using a computer Grid - which is automated in the \verb+mxformat+ tool). Other acceptable format modifiers are \verb+transpose+ to transpose data matrices and \verb+append+ to catenate data to existing files.
 
-\subsection{Basic import and plot of results}
-\label{s:run-format}
-The previous example will result in a \verb+mcxtrace.m+ file, that may be read directly from Matlab (using the \textit{sim file} function)
+%\subsection{Choosing an output data file format}
+%
+%\MCX can presently generate many formats, including the original \MCX /PGPLOT and the Scilab and Matlab formats. All formats, except the \MCX /PGPLOT, may eventually support binary files, which are much smaller and faster to import, but are platform dependent. The simulation data file extensions are appended automatically, depending on the format, if the file names do not contain any. Binary files are particularly recommended for the IDL format (e.g. \verb+--format=IDL_binary+), and the Matlab and Scilab format when handling large detectors (e.g. more than 50x50 bins). For example:
+%\begin{verbatim}
+%    ./Samples_vanadium.out ROT=90 --format="Scilab_binary"
+%\end{verbatim}
+%or more generally (for bash/Bourne shell users)
+%\begin{verbatim}
+%    export MCXTRACE_FORMAT="Matlab"
+%    ./Samples_vanadium.out ROT=90
+%\end{verbatim}
+%Note that if one or more parameters are specified on the commmand line in this
+%manner, the user will \emph{not} be prompted for any remaining ones. These will
+%simply take on their default values.
+
+\subsection{Basic import and plot of results in matlab}
+\label{s:matlab-import}
+To import a \MCX ascii data file, while ignoring the header lines, in matlab one may use the following command:
 \begin{verbatim}
-    matlab> s=mcxtrace;
-    matlab> s=mcxtrace('plot')
-\end{verbatim} \index{Tools!Matlab}
-The first line returns the simulation data as a single structure variable, whereas the second one will additionally plot each detector separately.
-%This also equivalently stands for Scilab (using the \verb+get_+\textit{sim file} function, the 'exec' call is required in order to compile the code)
-%\begin{verbatim}
-%    scilab> exec('mcxtrace.sci', -1); s=get_mcxtrace();
-%    scilab> exec('mcxtrace.sci', -1); s=get_mcxtrace('plot')
-%\end{verbatim} \index{Tools!Scilab}
-%and for IDL
-%\begin{verbatim}
-%    idl> s=mcxtrace()
-%    idl> s=mcxtrace(/plot)
-%\end{verbatim} \index{Tools!IDL}
-%See section~\ref{s:mxplot} for an other way of plotting simulation results using the \verb+mxplot+ front-end.\index{Tools!mxplot} \index{Tools!mxplot}
+    matlab> s=textread('plot','CommentStyle','shell');
+\end{verbatim}
 
 When choosing the HTML format, the simulation results are saved as a web page, whereas the monitor data files are saved as VRML files, displayed within the web page.\index{Tools!VRML/OpenGL}
 
@@ -505,7 +470,7 @@ When choosing the HTML format, the simulation results are saved as a web page, w
         & This option makes the simulation output the state of every
       photon as it passes through every component. Requires that the
       \texttt{-t} (or \texttt{--trace}) option is also given to the
-      \MCX\ compiler when the simulation is generated. \\
+      \MCX compiler when the simulation is generated. \\
       \hline
       \texttt{--no-output-files}
         & This option disables the writing of data files (output to the
@@ -522,7 +487,7 @@ When choosing the HTML format, the simulation results are saved as a web page, w
         to prompt for each one. Scans ranges are specified as 'min,max'.\\
       \hline
     \end{tabular}
-    \caption{Options accepted by \MCX\ simulations. For options
+    \caption{Options accepted by \MCX simulations. For options
       specific to MPI and parallel computing, see section \ref{s:run-mpi}.}
     \label{f:simoptions}
     }
@@ -544,10 +509,10 @@ When choosing the HTML format, the simulation results are saved as a web page, w
         & This option sets the file format for result data files from monitors. This enables to have simulation files in one format (e.g. HTML), and monitor files in an other format (e.g. VRML).\\
       \hline
       \texttt{--mpi=\textit{NB\_CPU}}
-        & This option will distribute the simulation over NB\_CPU node (requires MPI to be installed). Performances are ideal.\\
+        & This option will distribute the simulation over NB\_CPU nodes (requires MPI to be installed).\\
       \hline
       \texttt{--multi=\textit{NB\_CPU}} \my \texttt{--grid=\textit{NB\_CPU}}
-        & This option will distribute the simulation over NB\_CPU node (requires SSH to be installed). Performances are ideal.\\
+        & This option will distribute the simulation over NB\_CPU nodes (requires SSH to be installed).\\
       \hline
       \texttt{--machines=\textit{MACHINES}}
         & Specify a list of distant machines/nodes to be used for MPI and grid clustering. Default is to use local SMP cluster.\\
@@ -562,13 +527,13 @@ When choosing the HTML format, the simulation results are saved as a web page, w
         & Sets accuracy criteria to end parameter optimization (default is 10$^{-3}$).\\
       \hline
       \texttt{--test}
-        & Run \MCX\ self test.\\
+        & Run \MCX self test.\\
       \hline
       \texttt{-c} \my \texttt{--force-compile}
         & Force to recompile the instrument.\\
       \hline
     \end{tabular}
-    \caption{Additional options accepted by \MCX\ simulations.}
+    \caption{Additional options accepted by \MCX simulations.}
     \label{f:simoptions2}
     }
   \end{center}
@@ -582,21 +547,20 @@ When choosing the HTML format, the simulation results are saved as a web page, w
       \texttt{\MCX} \my \texttt{PGPLOT} & .sim & Original format for PGPLOT plotter (may be used with -f and -d options) \\
 %      \texttt{Scilab} & .sci & Scilab format (may be used with -f and -d options) \\
 %      \texttt{Scilab\_binary} & & Scilab format with external binary files (may be used with -d option). (-a option implicitly set) \\
-      \texttt{Matlab} & .m & Matlab format (may be used with -f and -d options) \\
-      \texttt{Matlab\_binary} & & Matlab format with external binary files (may be used with -d option). (-a option implicitly set) \\
-      \texttt{Octave} & .m & Octave format (may be used with -f and -d options) \\
-      \texttt{Octave\_binary} & & Octave format with external binary files (may be used with -d option). (-a option implicitly set) \\
+%      \texttt{Matlab} & .m & Matlab format (may be used with -f and -d options) \\
+%      \texttt{Matlab\_binary} & & Matlab format with external binary files (may be used with -d option). (-a option implicitly set) \\
+%      \texttt{Octave} & .m & Octave format (may be used with -f and -d options) \\
+%      \texttt{Octave\_binary} & & Octave format with external binary files (may be used with -d option). (-a option implicitly set) \\
 %      \texttt{IDL} & .pro & IDL format. {\em Must} be used with -f option. \\
 %      \texttt{IDL\_binary} & & IDL format with external binary files (may be used with -d option). (-a option implicitly set) \\
       \texttt{XML} & .xml & XML format, NeXus-like (may be used with -f and -d options). \\
       \texttt{HTML} & .html & HTML format (generates a web page, may be used with -f and -d options). Data files are saved as VRML objects (OpenGL). \\
       \texttt{VRML} & .wrl & Virtual Reality file format for data files. Simulation files are not saved properly, and the HTML format should be used preferably. \\
       \texttt{NeXus} & .nxs & NeXus data files (HDF). All simulation results are stored in a unique compressed binary file. This format requires to have NeXus installed.\\
-      \textit{\MCX  events} & & \MCX  event files in text or binary
-      format. Use \verb+Virtual_input+/\verb+Virtual_output+ components.\\
+      \textit{\MCX  events} & & \MCX  event files in text or binary format. Use \verb+Virtual_input+/\verb+Virtual_output+ components.\\
       \hline
     \end{tabular}
-    \caption{Available formats supported by \MCX\ simulations. Format modifiers include \emph{binary}, \emph{raw}, \emph{transpose}, \emph{append}.}
+    \caption{Available formats supported by \MCX simulations. Format modifiers include \emph{raw}, \emph{transpose}, \emph{append}.}
     \label{t:formatoptions}
     }
   \end{center}
@@ -607,12 +571,12 @@ When choosing the HTML format, the simulation results are saved as a web page, w
 
 Once the simulation has started, it is possible, under Unix, Linux and Mac OS X systems, to interact with the on-going simulation. This feature is not available when using MPI parallelization.
 
-\MCX\ attaches a signal handler to the simulation process. In order to send a signal to the process, the process-id \textit{pid} must be known. Users may look at their running processes with the Unix 'ps' command, or alternatively process managers like 'top' and 'gtop'.
-If a \textit{file.out} simulation obtained from \MCX\ is running, the process status command should output a line resembling
+\MCX attaches a signal handler to the simulation process. In order to send a signal to the process, the process-id \textit{pid} must be known. Users may look at their running processes with the Unix 'ps' command, or alternatively process managers like 'top' and 'gtop'.
+If a \textit{file.out} simulation obtained from \MCX is running, the process status command should output a line resembling
 \begin{quote}
   \verb|<user>| \textit{13277} \verb|7140 99 23:52 pts/2    00:00:13 | \textit{file.out}\\
 \end{quote}
-where \verb+user+ is your Unix login. The \textit{pid} is there '13277'.
+where \verb+user+ is your Unix login. In this case \textit{pid} is '13277'.
 
 Once known, it is possible to send one of the signals listed in Table~\ref{t:signals} using the 'kill' unix command (or the functionalities of your process manager), e.g.
 \begin{verbatim}
@@ -653,7 +617,7 @@ data before ending. Most errors appear when using a newly written component, in 
       \texttt{INT, TERM} & Save and exit before end (status)  \\
       \hline
     \end{tabular}
-    \caption{Signals supported by \MCX\ simulations.}
+    \caption{Signals supported by \MCX simulations.}
     \label{t:signals}
     }
   \end{center}
@@ -667,7 +631,7 @@ There are various ways to speed up simulations
 \item Optimize the compilation of the instrument, as explained in section~\ref{s:compile}.
 \item Execute the simulation in parallel on a computer grid or a cluster (with MPI or ssh grid
 ) as explained in section~\ref{s:run-mpi}.
-%\item Divide simulation into parts using a file for saving or generating photons
+%\item Divide simulation into parts using a file for saving or generating photon
 %      events. In this way, a guide may be simulated only once, saving the photon events
 %      at the guide exit as a file, which is being read quickly by the second simulation
 %      part. Use the Virtual\_input and Virtual\_output components for this technique.
@@ -695,9 +659,9 @@ value to optimize, the initial parameter guess and the simulation
 length all have a large influence on the results.
 The user is adviced to be cautious when interpreting the optimization results.
 
-\subsubsection{Using the Simplex method}
+\subsubsection{Optimization using the Simplex method}
 
-The \MCX\ package comes with a Simplex optimization method to find best
+The \MCX package comes with a Simplex optimization method to find best
 instrument parameters in order to maximize all or some specified monitor
 integrated values. It uses the Downhill Simplex Method in
 Multidimensions~\cite{neldermead,NumRecip} which is a geometric optimization
@@ -727,7 +691,9 @@ divergence constrains, you should for instance simply add a divergence
 collimator before the monitor. Alternatively, write a new component
 that produce the required 'figure-of-merit'.
 
-The optimization search interval constrains the evolution of parameters. It should be chosen carefully. In particular it is safier for it to indeed contain a high signal domain, and be preferably symetric w/r to that maximum.
+The optimization search interval constrains the evolution of parameters. It
+should be chosen carefully. In particular it is safer for it to indeed contain
+a high signal domain, and be preferably symmetric with respect to that maximum.
 
 %\subsubsection{Using custom optimization routines}
 %The user should write a function script or a program that
@@ -762,11 +728,11 @@ The optimization search interval constrains the evolution of parameters. It shou
 \section{Using the simulation tool layer}
 \label{s:frontends}
 
-\MCX\ includes a number of auxilliary programs that extend the
+\MCX includes a number of auxilliary programs that extend the
 functionality of the simulations. For instance the \verb+mcxrun+ front-end program is an interface
 between the user and the simulations, capable of running series of simulations and storing the results in a structured manner.
 
-The list of available \MCX\ front-end programs may be obtained from the \verb+mxdoc --tools+ command:
+The list of available \MCX front-end programs may be obtained from the \verb+mxdoc --tools+ command:
 \begin{verbatim}
     McXtrace Tools
        mxtrace        Main instrument compiler
@@ -778,7 +744,7 @@ The list of available \MCX\ front-end programs may be obtained from the \verb+mx
        mxformat      Conversion tool for text files and MPI/grids
        mxdaemon      Instrument results on-line plotting
     When used with the -h flag, all tools display a specific help.
-    SEE ALSO: mcxtrace, mxdoc, mxplot, mxrun, mxgui, mcresplot, mcstas2vitess
+    SEE ALSO: mcxtrace, mxdoc, mxplot, mxrun, mxgui
     DOC:      Please visit http://www.mcxtrace.org
 \end{verbatim}
 
@@ -787,12 +753,13 @@ The list of available \MCX\ front-end programs may be obtained from the \verb+mx
 \index{Tools!mxgui|textbf}
 
 The front-end \verb+mxgui+ provides a graphical user interface that
-interfaces the various parts of the \MCX  package. It is started using
+interfaces the various parts of the \MCX  package. It is started from a shell/command prompt using
 simply the command
 \begin{verbatim}
     mxgui
 \end{verbatim}
-The mxgui (mxgui.pl on Windows) program may optionally be given the name of an instrument file.
+The mxgui program may optionally be given the name of an instrument file.
+On windows it is probably more convenient to start mxgui using the desktop icon.
 
 When the front-end is started, a main window is opened (see figure \ref{fig:mxgui}). This window
 displays the output from compiling and running simulations, and also
@@ -802,24 +769,20 @@ visualize the results.
 
 \subsubsection{The menus}
 
-The {\bfseries File} menu has the following features:
+The \textbf{File} menu has the following features:
 \begin{description}
 \item[File/Open instrument] selects the name of an instrument file to be used.
 \item[File/Edit current] opens a simple editor window with \MCX  syntax
   highlighting for editing the
   current instrument definition. This function is also available from
-  the {\bfseries Edit} button to the right of the name of the instrument definition in
+  the \textbf{Edit} button to the right of the name of the instrument definition in
   the main window.
-\item[File/Spawn editor] This starts the editor defined in the environment
-  variable \verb+VISUAL+ or \verb+EDITOR+ on the current instrument
-  file. It is also possible to start an external editor manually; in any
-  case \verb+mxgui+ will recompile instrument definitions as necessary based on
-  the modification dates of the files on the disk.
-  \index{Environment variable!EDITOR}
+\item[File/Edit current (detached)] As above but creates a detached process, such that the editor window
+  remains open after the main windows has been closed.
 \item[File/Compile instrument] forces a recompile of the instrument
   definition, regardless of file dates. This is for example useful to
   pick up changes in component definitions, which the front-end will not
-  notice automatically. This might also be required when choosing MPI \index{MPI|textbf} and NeXus options \index{Tools!NeXus}. See section~\ref{s:install} for how to override
+  notice automatically. This might also be required when choosing MPI \index{MPI|textbf} and NeXus options \index{Tools!NeXus}. See \cref{c:install} for how to override
   default C compiler options.
 \item[File/Save log file] saves the text in the window showing output of
   compilations and simulations into a file.
@@ -828,9 +791,9 @@ The {\bfseries File} menu has the following features:
   \item[File/Preferences] Opens the choose backend dialog shown in
   figure~\ref{fig:mxgui-choose}. Several settings can be chosen here:
 \begin{itemize}
-  \item Selection of  the desired (PGPLOT|Scilab|Matlab|HTML/VRML) output
+  \item Selection of  the desired (PGPLOT|HTML/VRML) output
     format and possibility to save 'binary files' when
-  applicable (improved disk I/O).
+        applicable (improved disk I/O).
   \item One- or three-pane view of your instrument in trace mode when
     using PGPLOT.
   \item Clustering option (None|MPI|ssh)
@@ -841,18 +804,18 @@ The {\bfseries File} menu has the following features:
     generated c-code. This is very handy when setting up an instrument model, which requires regular compilations.
   \item Adjustment of final precision when doing parameter optimization.
 \end{itemize}
-To save the chosen settings for your next \MCX\ run, use Save
+To save the chosen settings for your next \MCX run, use Save
 Configuration in the File menu.
 \item[File/Save configuration] saves user settings from Configuration
   options and Run dialogue to disk.
 \item[File/Quit] exits the graphical user interface front-end.
 \end{description}
 
-\noindent The {\bfseries Simulation} menu has the following features:
+\noindent The \textbf{Simulation} menu has the following features:
 \begin{description}\index{Tools!mxplot} \index{Data formats}
 \item[Simulation/Read old simulation] prompts for the name of a file
   from a previous run of a \MCX  simulation (usually called
-  \verb+mcxtrace.sim+). The file will be read and any detector data
+  \verb+mccode.sim+). The file will be read and any detector data
   plotted using the \verb+mxplot+ front-end. The parameters used in the
   simulation will also be made the defaults for the next simulation
   run. This function is also available using the ``Read'' button to the
@@ -873,42 +836,41 @@ Configuration in the File menu.
 \end{figure}
 
 
-\noindent The {\bfseries X-ray Site} menu contains a list of
-template/example instruments as found in the \MCX\ library, sorted by
+\noindent The \textbf{X-ray Site} menu contains a list of
+template/example instruments as found in the \MCX library, sorted by
 x-ray site. When selecting one of these, a local copy of the
 instrument description is transfered to the active directory (so that
 users have modification rights) and loaded. One may then view its source (Edit) and use it directly for simulations/trace (3D View).
 
 
-\noindent The {\bfseries Tools} menu gathers minor tools.
+\noindent The \textbf{Tools} menu gathers minor tools.
 \begin{description}
 \item[Tools/Plot current/other results] Plot current simulation results and other results.
-\item[Tools/Online plotting of results] installs a DSA key to be used for ssh clustering and MPI (see Section \ref{s:run-mpi}).
+\item[Tools/Online plotting of results] installs a DSA key to be used for ssh clustering and MPI (see \cref{s:run-mpi}).
 \item[Tools/Dataset convert/merge] Opens a GUI to the \verb+mxformat+ tool, in order to convert datasets to other formats, merge scattered dataset (e.g. from successive or grid simulations), and assemble scan sets. This tool does not handle raw event files.
 \item[Tools/Shortcut keys] displays the shortcut keys used for running and editing instruments.
-\item[Tools/Install DSA key] installs a DSA key to be used for ssh clustering and MPI (see Section \ref{s:run-mpi}).\index{MPI}\index{Grid computing}
-\item[The Histogrammer] In addition to these tools, the \verb+X-ray site/Tools/Histogrammer.instr+ example instrument may read \MCX , Vitess, MCNP and Tripoli event files in order to generate histograms of any type.
+\item[Tools/Activate MPI/grid (DSA key)] installs a DSA key to be used for ssh clustering and MPI (see \cref{s:run-mpi}).\index{MPI}\index{Grid computing}
 \end{description}
 
 
-\noindent The {\bfseries Help} menu has the following features, through use of
+\noindent The \textbf{Help} menu has the following features, through use of
 \verb+mxdoc+ and a web browser. To customize the used web browser, set
 the \verb+BROWSER+ environment variable. If \verb+BROWSER+ is not set,
 \verb+mxgui+ uses \verb+netscape/mozilla/firefox+ on Unix/Linux and the default browser on
 Windows.
 \begin{description}
-\item[Help/\MCX\ User manual] calls \verb+mxdoc --manual+, brings up the local
+\item[Help/\MCX User manual] calls \verb+mxdoc --manual+, brings up the local
   pdf version of this manual, using a web browser.
-\item[Help/\MCX\ Component manual] calls \verb+mxdoc --comp+, brings up the local
+\item[Help/\MCX Component manual] calls \verb+mxdoc --comp+, brings up the local
   pdf version of the component manual, using a web browser.
 \item[Help/Component library index] displays the component documentation using
-  the component \verb+index.html+ index file.
-\item[Help/\MCX\ web page] calls \verb+mxdoc --web+, brings up the \MCX\
+  the component index file: \verb+index.html+.
+\item[Help/\MCX web page] calls \verb+mxdoc --web+, brings up the \MCX
   website in a web browser.
-\item[Help/Tutorial] opens the \MCX\ tutorial for a quick start.
+\item[Help/Tutorial] Opens the \MCX tutorial for a quick start. (Disabled - Please see the \MCX web page\cite{mcxtrace_webpage} for an updated tutorial).
 \item[Help/Current instrument info] generates a description web-page of the current edited instrument.
-\item[Help/Test \MCX\ installtion] launches a self test procedure to check that the \MCX\ package is installed properly, generates accurate results, and may use the plotter to display the results.
-\item[Help/Generate component index] (re-)generates locally the component \verb+index.html+.
+\item[Help/Test \MCX installation] launches a self test procedure to check that the \MCX package is installed properly, generates accurate results, and may use the plotter to display the results.
+\item[Help/Generate component index] locally (re-)generates the component \verb+index.html+.
 \end{description}
 
 
@@ -925,8 +887,8 @@ Windows.
 The run dialog is used to run simulations. It allows the entry of
 instrument parameters as well as the specifications of options for
 running the simulation (see section~\ref{s:run-sim} for details). It
-also allows to run the \verb+mxdisplay+ (section~\ref{s:mxdisplay}) and
-\verb+mxplot+ (section~\ref{s:mxplot}) front-ends together with the
+also allows to run the \verb+mxdisplay+ (\cref{s:mxdisplay}) and
+\verb+mxplot+ (\cref{s:mxplot}) front-ends together with the
 simulation.\index{Tools!mxplot}
 
 The meaning of the different fields is as follows:
@@ -938,8 +900,8 @@ The meaning of the different fields is as follows:
   denotes integer parameters, and (S) denotes strings. For parameter scans and optimizations, enter the minimum and maximum values to scan/optimize, separated by a comma, e.g. \verb+1,10+ and do not forget to set the {\bfseries \# Scanpoints} to more than 1.
 \item[Run:Output to] allows the entry of a directory for storage of the
   resulting data files in (like the \verb+--dir+ option). If no name is
-  given, the results are stored in the current directory, to be overwritten
-  by the next simulation.
+  given, a new directory with a unique name is created, to avoid overwriting
+  data.
 \item[Run:Force] Forces to overwrite existing data files
 \item[Photon count] sets the number of photon rays to
   simulate (the \verb+--ncount+ option).
@@ -948,46 +910,45 @@ The meaning of the different fields is as follows:
   seed (to reproduce results for debugging).
 \item[Run:Simulate/Trace (3D)/Optimize] selects between several modes of
   running the simulation:
-  \begin{description}
-  \item[Simulate] perform a normal simulation or a scan when \#steps
-    is set to non-zero value
-  \item[Trace (3D view)] View the instrument in 3D tracing indivitual
-    photons through the instrument
-  \item[Optimize] find the optimum value of the simulation parameters
-    in the given ranges (see section \ref{s:optimize}).
-  \item [Backgrounding (bg)] Simulate or Optimize in the background.
-  \end{description}
-\item[Run:\# steps / \# optim] sets the number of simulation to run when
+  \begin{itemize}
+    \item Simulate: Perform a normal simulation or a scan when \#steps
+        is set to non-zero value.
+    \item Trace (3D view): View the instrument in 3D tracing indivitual
+      photons through the instrument
+    \item Simulate (bg): Perform a simulation or scan but put the process in the background.
+      This frees the GUI to continue working while the simulation is running.
+    \item Optimize (bg): Find the optimum value of the simulation parameters
+      in the given ranges (see \cref{s:optimize}). The process is put in the background.
+  \end{itemize}
+\item[Run:\# steps / \# optim] Sets the number of simulation to run when
   performing a parameter scan or the number of iterations to
   perform in optimization mode.
-\item[Run:Plot results] -- if checked, the \verb+mxplot+ front-end will be run
+\item[Run:Plot results] If checked, the \verb+mxplot+ front-end will be run
   after the simulation has finished, and the plot dialog will appear
   (see below).
-\item[Run:Format] quick selection of output format. Binary mode may be checked from the ``Simulation/Configuration options'' dialog box.
-\item[Run:Clustering method] selects the mechanism to be used for running on grids and clusters.
-  See section~\ref{s:run-mpi} on parallel computing for more informations.
-\item[Run:Number of nodes] sets the number of nodes to use for MPI/ssh clustering.
-\item[Run:Inspect component] (Trace mode) will trace only photon trajectories that reach a given component (e.g. sample or detector).
-\item[Run:First component] (Trace mode) seletcs the first component to plot (default is first) in order to define a region of interest.
-\item[Run:Last component] (Trace mode) seletcs the last component to plot (default is first) in order to define a region of interest.
-\item[Run:Maximize monitor] (Optimization mode) seletcs up to three monitors which integral value should be maximized, varying instrument parameters. If non is selected, all monitors are used.
+\item[Run:Format] Quick selection of output format. Binary mode may be checked from the ``Simulation/Configuration options'' dialog box.
+\item[Run:Clustering method] Selects the mechanism to be used for running on grids and clusters.
+  See \cref{s:run-mpi} on parallel computing for more informations.
+\item[Run:Number of nodes] Sets the number of nodes to use for MPI/ssh clustering.
+\item[Run:Inspect component] (Trace mode) Trace only photon trajectories that reach a given component (e.g. sample or detector).
+\item[Run:First component] (Trace mode) Selects the first component to plot (default is first) in order to define a region of interest.
+\item[Run:Last component] (Trace mode) Selects the last component to plot (default is first) in order to define a region of interest.
+\item[Run:Maximize monitor] (Optimization mode) Selects up to three monitors whose integral value should be maximized, varying instrument parameters. If none are selected, all monitors are used.
 \item[Run:Start] runs the simulation.
 \item[Run:Cancel] aborts the dialog.
 \end{description}
-Most of the settings on the run dialog can be saved for your next
-\MCX\ run using 'Save configuration' in the File menu.
+Most of the settings on the run dialog are saved for your next
+\MCX run.
 
 Before running the simulation, the instrument definition is
 automatically compiled if it is newer than the generated C file (or if the C file
 is newer than the executable). The executable is
 assumed to have a \verb+.out+ suffix in the filename. NB: If
 components are changed, automatic compilation is \emph{not}
-performed. Use the File/Compile menu item in mxgui.
-
+performed. Use the File/Compile menu item in the main windows.
 
 
 \subsubsection{The editor window}
-
 The editor window provides a simple editor for creating and modifying
 instrument definitions. Apart from the usual editor functions, the
 ``Insert'' menu provides some functions that aid in the construction of
@@ -1021,7 +982,7 @@ The dialog will also pick up those of the users own components that are
 \index{Tools!PGPLOT}
 To use the \verb+mxgui+ front-end, the programs Perl and Perl/Tk must
 be properly installed on the system. Additionally, if the \MCX /PGPLOT
-back-end is used for data format, PGPLOT, PgPerl, and PDL will be
+back-end is used for data format, PGPLOT, and PDL will be
 required. \index{Tools!Perl libraries} It may be necessary to set the
 \verb+PGPLOT_DIR+ and \verb+PGPLOT_DEV+ environment variable; consult
 the documentation for PGPLOT on the local system in case of
@@ -1080,12 +1041,9 @@ would run the simulation defined in \verb+sim.instr+ four times, with
 \textit{X} having the values 2, 4, 6, and 8, respectively.
 
 After running the simulation, the results will be written to the file
-\verb+mcstas.dat+ by default. This file contains one line for each
+\verb+mccode.dat+ by default. This file contains one line for each
 simulation run giving the values of the scanned input variables along
-with the integrated intensity and estimated error in all monitors. Additionally, a
-file \verb+mcstas.sci+ (when using Scialb format) is written that can be read by the \verb+mxplot+
-front-end to plot the results on the screen or in a Postscript file, see
-section~\ref{s:mxplot}. \index{Tools!mxplot}
+with the integrated intensity and estimated error in all monitors.
 \item When performing a scan, the \texttt{-f \textit{file}} and
   \texttt{--file=\textit{file}} options make \verb+mxrun+ write the output
   to the files \texttt{\textit{file\/}.dat} and \texttt{\textit{file\/}.sim}
@@ -1097,7 +1055,7 @@ section~\ref{s:mxplot}. \index{Tools!mxplot}
   data files output from the different simulations. When the \verb+-d+
   option is not used, no data files are written from the individual
   simulations (in order to save disk space).
-\item The \verb+mxrun --test+ command will test your \MCX\ installation, accuracy and plotter. \index{Installing}
+\item The \verb+mxrun --test+ command will test your \MCX installation. \index{Installing}
 \end{itemize}
 
 The \verb+-h+ option will list valid options. The \verb+mxrun+ front-end requires a working installation of Perl to run.
@@ -1125,17 +1083,17 @@ where \verb+sim+ is the name of either the instrument source \texttt{\textit{sim
 the simulation, as explained above. The \verb+-h+ option will list valid options.
 
 \index{Tools!PGPLOT} \index{Tools!Matlab} \index{Tools!Scilab} \index{Tools!VRML/OpenGL}
-The drawing back-end program may be selected among PGPLOT, VRML, Matlab and Scilab using either the -p\textit{PLOTTER} option or using the current \verb+MCSTAS_FORMAT+ environment variable. \index{Environment variable!MCSTAS\_FORMAT}
+The drawing back-end program may be selected among PGPLOT, VRML, Matlab and Scilab using either the -p\textit{PLOTTER} option or using the current \verb+MCXTRACE_FORMAT+ environment variable. \index{Environment variable!MCXTRACE\_FORMAT}
 For instance, calling
 \begin{quote}
-  \verb+mxdisplay -pScilab ./Samples_vanadium.out ROT=90+
+  \verb+mxdisplay -pmatlab ./Samples_vanadium.out ROT=90+
 \end{quote}
 or (\verb+csh+/\verb+tcsh+ syntax)
 \begin{quote}
-  \verb+setenv MCSTAS_FORMAT Scilab+\\
+  \verb+setenv MCXTRACE_FORMAT matlab+\\
   \verb+mxdisplay ./Samples_vanadium.out ROT=90+
 \end{quote}
-will output graphics using Scilab.
+will output graphics using matlab.
 The \verb+mxdisplay+ front-end can also be run from the \verb+mxgui+ front-end.
 \index{Tools!mxgui}
 Examples of plotter appearence for \verb+mxdisplay+ is shown in figures
@@ -1145,7 +1103,7 @@ Examples of plotter appearence for \verb+mxdisplay+ is shown in figures
 
 This will view the instrument from above. A
 multi-display that shows the instrument from three directions
-simultaneously can be shown using the \verb+--multi+ option:
+simultaneously can be shown using the \verb+--multi+ or \verb+-m+ options:
 \begin{quote}
   \verb+mxdisplay --multi sim.out +\textit{args \ldots}
 \end{quote}
@@ -1167,8 +1125,8 @@ the display may not match the actual angles.
 
 Another way to see details while maintaining an overview of the
 instrument is to use the \verb+--zoom=+\textit{factor} option. This
-magnifies the display of each component along the selected axis only,
-{\em e.g.} a Soller collimator is magnified perpendicular to the x-ray beam
+magnifies the display of each component along the selected axes only,
+\emph{e.g.} a Soller collimator is magnified perpendicular to the photon beam
 but not along it. This option may produce rather strange visual effects
 as the photon passes between components with different coordinate
 magnifications, but it is occasionally useful.
@@ -1181,7 +1139,7 @@ cases, the \verb+--inspect=+\textit{comp\/} option is useful. With this
 option, only photons that reach the component named \textit{comp\/} are
 shown in the graphics display.
 
-%As of \MCX\ 1.10, the PGPLOT version has a special mode for time of
+%As of \MCX 1.10, the PGPLOT version has a special mode for time of
 %flight applications. Using the new commandline options \verb+--TOF/-T+
 %and \verb+--tmax=TMAX+, chopper acceptance diagrams can be generated
 %from the statistical information from the simulated photon rays. As
@@ -1190,24 +1148,27 @@ shown in the graphics display.
 %with e.g. \verb+--gif+.
 
 \index{Tools!PGPLOT}
-The \verb+mxdisplay+ front-end will then require the Perl, the PGPLOT, and the
-PGPerl packages to be installed. It may be necessary to set the
+The \verb+mxdisplay+ front-end will then require the Perl and PGPLOT packages 
+to be installed. It may be necessary to set the
 \verb+PGPLOT_DIR+ and \verb+PGPLOT_DEV+ environment variable; consult the
 documentation for PGPLOT on the local system in case of difficulty.
 \index{Environment variable!PGPLOT\_DIR} \index{Environment
 variable!PGPLOT\_DEV} \index{Tools!Perl libraries}
 
-\paragraph{Matlab and Scilab back-ends}
+\paragraph{\MCX Matlab back-end}
 
-A 3D view of the instrument, and various operations (zoom, export, print, trace photons, \ldots) is available from dedicated Graphical User Interfaces.
-The \verb+--inspect+ option may be used (see previous paragraph), as well as the \verb+--first+ and \verb+--last+ options to specify a region of interest. {\bfseries Note:} The Scilab plotter for \emph{Windows} does not allow to rotate interactively the 3D view, and you are to use the \emph{alpha} and \emph{theta} choices in the pop-up Dialog.
-
-The \verb+mxdisplay+ front-end will then
-require the Perl, and either Scilab or Matlab to be installed. \index{Tools!Matlab} \index{Tools!Scilab}
+A 3D view of the instrument, and various operations (zoom, export, print, trace photons, \ldots) is available from a dedicated Graphical User Interface.
+The \verb+--inspect+ option may be used (see previous paragraph), as well as the \verb+--first+ and \verb+--last+ options to specify a region of interest. 
+The \verb+mxdisplay+ front-end requires Perl and Matlab to be installed. \index{Tools!Matlab}
 
 \paragraph{VRML/OpenGL back-ends}
 
-When using the \verb+-pVRML+ option, the instrument is shown in Virtual Reality (using OpenGL). You may then walk aside instrument, or go inside elements following x-ray trajectories. As all xray trajectories are stored into a VRML file, you better limit the number of stored trajectories below 1000, otherwise file size and processing time becomes significant. The \verb+--inspect+ option is not available in VRML format display.
+When using the \verb+-pVRML+ option, the instrument is shown in Virtual Reality
+(using OpenGL). You may then walk aside instrument, or go inside elements
+following x-ray trajectories. As all xray trajectories are stored into a VRML
+file, we recommend limiting the number of stored trajectories to below 1000, otherwise
+file size and processing time becomes significant. The \verb+--inspect+ option
+is not available in VRML format display.
 
 \subsection{Plotting the results of a simulation (mxplot)}
 \label{s:mxplot}
@@ -1225,15 +1186,26 @@ This will plot any simulation data stored in the current directory,
 which is where simulations store their results by default. If the
 \verb+--dir+ or \verb+--file+ options have been used (see
 section~\ref{s:run-sim}), the name of the file or directory should be
-passed to mxplot, {\em e.g.} ``\texttt{mxplot \textit{dir}}'' or ``\texttt{mxplot
-  \textit{file}}''.
+passed to mxplot, {\em e.g.} ``\texttt{mxplot \textit{dir}}'' or ``\texttt{mxplot\textit{file}}''.
 It is also possible to plot one single text (not binary) data file from a given monitor, passing its name to mxplot.
 
-The drawing back-end program may be selected among PGPLOT, VRML, Matlab and Scilab using either the -p\textit{PLOTTER} option (e.g. \verb+mxplot -pScilab file+) or using the current \verb+MCSTAS_FORMAT+ environment variable. \index{Environment variable!MCSTAS\_FORMAT} Moreover, the drawing back-end program will also be set depending on the \textit{file} extension (see Table~\ref{t:formatoptions}).
+The drawing back-end program may be selected among PGPLOT, VRML, and Matlab using either the -p\textit{PLOTTER} option 
+(e.g. \verb+mxplot -pmatlab file+) or using the current \verb+MCXTRACE_FORMAT+ environment variable.
+\index{Environment variable!MCXTRACE\_FORMAT} Moreover, the drawing back-end
+program will also be set depending on the \textit{file} extension (see
+Table~\ref{t:formatoptions}).
 
-It should be emphasized that \verb+mxplot+ may \emph{only} display simulation results with the format that was chosen during the computation. Indeed, if you request data in a given format from a simulation, you will only be able to display results using that same drawing back-end.
+It should be emphasized that \verb+mxplot+ may \emph{only} display simulation
+results with the format that was chosen during the computation. Indeed, if you
+request data in a given format from a simulation, you will only be able to
+display results using that same drawing back-end.
 
-Anyway, the \verb+mcconvert+ utility may convert a \MCX\ data file between Matlab and Scilab formats (see section \ref{s:mcconvert}), also handling binary data sets. Alternatively, the \verb+mxformat+ utility will convert any \MCX\ result into data format (see section \ref{s:mxformat}), but restricting to text data sets. In this case, we recommend to generate data sets using PGPLOT/\MCX  format, and translate into any other format using \verb+mxformat+.
+%Anyway, the \verb+mxconvert+ utility may convert a \MCX data file between
+%Matlab and Scilab formats (see section \ref{s:mcconvert}), also handling binary
+%data sets. Alternatively, the \verb+mxformat+ utility will convert any \MCX
+%result into data format (see section \ref{s:mxformat}), but restricting to text
+%data sets. In this case, we recommend to generate data sets using PGPLOT/\MCX
+%format, and translate into any other format using \verb+mxformat+.
 
 The \verb+mxplot+ front-end can also be run from the \verb+mxgui+ front-end.
 \index{Tools!mxgui}
@@ -1251,8 +1223,7 @@ produces color postscript.
 The `Q' key quits the program (or CTRL-C in the controlling
 terminal may be used as normal).
 
-To use the \verb+mxplot+ front-end with PGPLOT, the programs Perl, PGPLOT,
-PgPerl, and PDL must all be properly installed on the system.  It may be
+To use the \verb+mxplot+ front-end with PGPLOT, Perl, PGPLOT, and PDL must all be properly installed on the system.  It may be
 necessary to set the \verb+PGPLOT_DIR+ and \verb+PGPLOT_DEV+ environment
 variable; consult the documentation for PGPLOT on the local system in case of
 difficulty. \index{Environment variable!PGPLOT\_DIR} \index{Environment
@@ -1281,80 +1252,51 @@ variable!PGPLOT\_DEV} \index{Tools!Perl libraries}
 \label{s:mxdoc-run}
 \index{Tools!mxdoc|textbf}
 
-\MCX\ provides an easy way to generate automatically an HTML help page about a given component or instrument, or the whole \MCX\ library. \index{Library!Components}
+\MCX provides an easy way to generate automatically an HTML help page about a given component or instrument, or the whole \MCX library. \index{Library!Components}
 \begin{quote}
   \verb|mxdoc|\\
   \verb|mxdoc| \textit{comp|instr}\\
   \verb|mxdoc --tools|
 \end{quote}
-The first example generates an \textit{index.html} catalog file using the available components and instruments (both locally, and in the \MCX\ library). The library catalog of components is opened using the \verb+BROWSER+ environment variable \index{Environment variable!BROWSER} (e.g. netscape, konqueror, nautilus, MSIE, mozilla, \ldots). If the \verb+BROWSER+ is not defined, the help is displayed as text in the current terminal. This latter output may be forced with the \verb+-t+ or \verb+--text+ option.
+The first example generates an \textit{index.html} catalog file using the available components and instruments (both locally, and in the \MCX library).
+The library catalog of components is opened using the \verb+BROWSER+ environment variable \index{Environment variable!BROWSER} (e.g. netscape,
+konqueror, nautilus, MSIE, mozilla, \ldots). If the \verb+BROWSER+ is not defined, the help is displayed as text in the current terminal. This latter
+output may be forced with the \verb+-t+ or \verb+--text+ option.
 
 Alternatively, if a component or instrument \textit{comp} is specified as in the second example, it will be searched within the library, and an HTML help will be created for all available components matching \textit{comp}.
 
-The last example will list the name and description of all \MCX\ tools.
+The last example will list the name and description of all \MCX tools.
 
-Additionally, the options \verb+--web+, \verb+--manual+ and \verb+--comp+ will open the \MCX\ web site page, the User Manual (this document) and the Component Manual, all requiring \verb+BROWSER+ to be defined. Finally, the \verb+--help+ option will display the command help, as usual.
+Additionally, the options \verb+--web+, \verb+--manual+ and \verb+--comp+ will open the \MCX web site page, the User Manual (this document) and the Component Manual, all requiring
+\verb+BROWSER+ to be defined. Finally, the \verb+--help+ option will display the command help, as usual.
 
 See section~\ref{s:mxdoc} for more details about the McDoc usage and header format.
 To use the \verb+mxdoc+ front-end, the program Perl should be available.
-
-\subsection{Translating \MCX\ results files between Matlab and Scilab formats}
-\label{s:mcconvert}
-\index{Tools!mcconvert|textbf}
-\index{Tools!Matlab} \index{Tools!Scilab}
-
-If you have been running a \MCX\ simulation with Scilab output, but finally plan to look at the results with Matlab, or the contrary, you may use
-\begin{quote}
-  \texttt{mcconvert \textit{file.{m|sci}\/}}
-\end{quote}
-to simply translate one file format to the other. This works only for text files of course. The binary files need not be translated.
-
-\subsection{Translating and merging \MCX\ results files (all text formats)}
-\label{s:mxformat}
-\index{Tools!mxformat|textbf}
-\index{Tools!Matlab} \index{Tools!Scilab} \index{Tools!Octave} \index{Tools!IDL} \index{Data formats}
-\index{Grid computing}
-
-If you have been running a \MCX\ simulation with a given text format output, but finally plan to look at the results with an other plotter (e.g. you ran a simulation with PGPLOT output and want to view it using Matlab), you may use
-\begin{quote}
-  \texttt{mxformat \textit{file | dir} -d \textit{target\_dir} --format=TARGET\_FORMAT}
-\end{quote}
-to translate files into format TARGET\_FORMAT. When given a directory, the translation works recursively. The conversion works only for text files. Some problems may be found when translating from HTML/VRML data files, or from binary files.\index{Tools!VRML/OpenGL}
-
-The \verb+--merge+ option may be used to merge similar files, e.g. obtained from grid systems, just as if a longer run was achieved.
-
-The \verb+--scan+ option may be used to reconstruct the scan data from a set of directories which vary instrument parameters. For instance, you ran a scan, but finally realized you should have prolongated it. Then simply simulate the missing bits, and apply \verb+mxformat -d scan_data --format=PGPLOT --scan step0 .. stepN+. The resulting scan data is compatible with \verb+mxplot+ only when generating PGPLOT/McStas format.\index{Tools!mxplot} You may conjugate this option with the \verb+--merge+ in order to add/merge similar data sets before re-building the scan.
-
-The data files are analyzed by searching keywords inside data files (e.g. 'Source' for the source instrument description file). If some filenames or component names match these keywords (e.g. using a file 'Source.psd'), the extracted metadata information may be wrong, eventhough the data itself will be correct.\index{Bugs}
 
 \section{Data formats - Analyzing and visualizing the simulation results}
 \label{s:analyze}
 \index{Data formats}
 
-To analyze simulation results, one uses the same tools as for analyzing
-experimental data, \textit{i.e}. programs such as IDL, Matlab and Scilab.
-The output files from simulations are usually simple text files containing headers and data blocks. If data blocks are empty they may be accessed refering to an external file indicated in the header. This file may also be a binary file (except with the original \MCX /PGPLOT format), which does not contain any header (except if simulation is launched with \verb|+a| option), but are in turn smaller in size and faster to import.
+To analyze simulation results, one uses the same tools as for analyzing experimental data, \textit{i.e}. programs such as IDL, Matlab and Scilab.
+The output files from simulations are usually simple text files containing headers and data blocks. 
+Each data file contains informations about the simulation, the instrument, the parameters used, and of course the signal, the estimated error on the signal, and the number of
+events used in each bin. Additionally, all data files indicate their first (mean value) and second moment (standard deviation) in the 'statistics' field.
 
-Each data file contains informations about the simulation, the instrument, the parameters used, and of course the signal, the estimated error on the signal, and the number of events used in each bin. Additionally, all data files indicate their first (mean value) and second moment (half width) in the 'statistics' field.
+In order for the user to choose the data format, we recommend to set it using the \verb+--format=FORMAT+ or alternatively \textit{via} the MCXTRACE\_FORMAT environment variable,
+which will also make the front-end programs able to import and plot data and instrument consistently (see Section \ref{s:run-sim}). The available format list is shown in
+Table~\ref{t:formatoptions}. \index{Environment variable!MCXTRACE\_FORMAT}
 
-In order for the user to choose the data format, we recommend to set it using the \verb+--format=FORMAT+ or alternatively \textit{via} the MCSTAS\_FORMAT environment variable, which will also make the front-end programs able to import and plot data and instrument consistently (see Section \ref{s:run-sim}). The available format list is shown in Table~\ref{t:formatoptions}. \index{Environment variable!MCSTAS\_FORMAT}
+Note that the x-ray event counts in detectors are typically not very meaningful except as a way to measure the performance of the
+simulation. Use the simulated intensity instead whenever analysing simulation data.
 
-Note that the xray event counts in detectors are typically not very
-meaningful except as a way to measure the performance of the
-simulation. Use the simulated intensity instead whenever analysing
-simulation data.
-
-\subsection{\MCX\ and PGPLOT format}
+\subsection{\MCX and PGPLOT format}
 \index{Tools!PGPLOT} \index{Data formats}
-The \MCX\ original format, which is equivalent to the PGPLOT format, is simply columns of ASCII text that most programs should
+The \MCX original format, which is equivalent to the PGPLOT format, is simply columns of ASCII text that most programs should
 be able to read.
 
-One-dimensional histogram monitors (time-of-flight, energy)
-write one line for each histogram bin. Each line contains a number
-identifying the bin (\textit{i.e}.\ the time-of-flight) followed by
-three numbers: the simulated intensity, an estimate of the statistical
-error as explained in section~\ref{s:staterror}, and the number of
-photon events for this bin.
+One-dimensional histogram monitors (energy, time-of-flight, energy) write one line for each histogram bin. Each line contains a number
+identifying the bin (e.g. the energy) followed by three numbers: the simulated intensity, an estimate of the statistical
+error as explained in \cref{s:staterror}, and the number of photon events for this bin.
 
 Two-dimensional histogram monitors (position sensitive detectors)
 output $M$ lines of $N$ numbers representing x-ray intensities, where
@@ -1364,13 +1306,12 @@ two-dimentional monitors also store the error estimates and event counts as addi
 Single-point monitors output the photon intensity, the estimated
 error, and the photon event count as numbers on the
 terminal. (The results from a series of simulations may be combined in a
-data file using the \verb+mxrun+ front-end as explained in
-section~\ref{s:mxrun}).
+data file using the \verb+mxrun+ front-end as explained in \cref{s:mxrun}).
 
 When using one- and two-dimensional monitors, the integrated
 intensities are written to terminal as for the single-point monitor
 type, supplementing file output of the full one- or two-dimensional
-intensity distribution. Both one- and two-dimensional monitor output by default start with a
+intensity distribution. By default, both one- and two-dimensional monitor output starts with a
 header of comment lines, all beginning with the `\verb+#+' character.
 This header gives such information as the name of the instrument used in
 the simulation, the values of any instrument parameters, the name of the
@@ -1379,35 +1320,35 @@ disabled using the \verb+--data-only+ option in case the file must be
 read by a program that cannot handle the headers.
 
 In addition to the files written for each one- and two-dimensional
-monitor component, another file (by default named \verb+mcstas.sim+) is
-also created. This file is in a special \MCX\ ASCII format. It contains
+monitor component, another file (by default named \verb+mccode.sim+) is
+also created. This file is in a special \MCX ASCII format. It contains
 all available information about the instrument definition used for the
 simulation, the parameters and options used to run the simulation, and
 the monitor components present in the instrument. It is read by the
-\verb+mxplot+ front-end (see section~\ref{s:mxplot}). This file stores
+\verb+mxplot+ front-end (see \cref{s:mxplot}). This file stores
 the results from single monitors, but by default contains only pointers
 (in the form of file names) to data for one- and two-dimensional
 monitors. By storing data in separate files, reading the data with
-programs that do not know the special \MCX\ file format is
+programs that do not know the special \MCX file format is
 simplified. The \verb+--file+ option may be used to store all data
-inside the \verb+mcstas.sim+ file instead of in separate files.
+inside the \verb+mccode.sim+ file instead of in separate files.
 
 \subsection{HTML/VRML and XML formats}
 \index{Tools!HTML} \index{Tools!VRML} \index{Data formats}
 
 Both HTML and XML formats are available. The former may be viewed using any web browser (Netscape/Mozilla/Firefox, Internet Explorer, Nautilus, Konqueror) - showing data sets as VRML objects. XML data sets may be browsed for instance using Internet Explorer (Windows and Mac OS) or Firefox, GXMLViewer and KXMLEditor (under Linux).
 
-The XML format is NeXus-like, but not fully compatible. However, \MCX\ may generate genuine NeXus/HDF format (see bellow).
+The XML format is NeXus-like, but not fully compatible. However, \MCX may generate genuine NeXus/HDF format (see bellow).
 
 \subsection{NeXus format}
 \index{Tools!NeXus} \index{Tools!HDF} \index{Data formats}
 \label{r:nexus}
 
-The NeXus format~\cite{nexus_webpage} is a platform independent HDF binary data file. To have \MCX\ use it
+The NeXus format~\cite{nexus_webpage} is a platform independent HDF binary data file. To have \MCX use it:
 \begin{enumerate}
 \item the HDF and NeXus libraries must have been installed
-\item the \MCX\ installation should be done with NeXus bindings, e.g. on Unix/Linux systems \verb+configure --with-nexus; make; make install+.
-\item  the compilation of instruments must be done with the \verb+-DHUSE_NEXUS -lNeXus+ flag (see Section \ref{s:nexus}). This is automated with the \verb+mxrun+ tool (Section \ref{s:mxrun}).
+\item the \MCX installation should be done with NeXus bindings, e.g. on Unix/Linux systems \verb+configure --with-nexus; make; make install+.
+\item  the compilation of instruments must be done with the \verb+-DUSE_NEXUS -lNeXus+ flags (see Section \ref{s:nexus}). This is automated with the \verb+mxrun+ tool (Section \ref{s:mxrun}).
 \end{enumerate}
 All results are saved in a single file, containing 'groups' of data. To view such files, install and use HDFView (or alternatively HDFExplorer). This Java viewer can show content of all detectors, including metadata (attributes). Basic detector images may also be generated.
 
@@ -1416,8 +1357,8 @@ All results are saved in a single file, containing 'groups' of data. To view suc
 \index{Parallel computing|textbf}
 \index{MPI|textbf}\index{Grid computing|textbf}\index{mcxtrace-hosts}
 
-Parallelizing a computation is in general possible when dependencies between
-  each computation are not too strong. The situation of \MCX\ is
+Parallelizing a computation is in general advantageous when dependencies between
+  parts of computations are not too strong. The situation of \MCX is
   ideal since each photon ray can be simulated without interfering with
   other simulated photon rays. Therefore each photon ray can be simulated
   independently on a set of computers.
@@ -1425,30 +1366,30 @@ Parallelizing a computation is in general possible when dependencies between
 When computing $N$ photon rays with
 $p$ computers, each computer will simulate $\frac{N}{p}$
 photons. As a result there will be $p \cdot \frac{N}{p} = N$
-photons simulated. As a result, \MCX\ generates two kinds of data sets:
+photons simulated. As a result, \MCX generates two kinds of data sets:
 \begin{itemize}
 \item intensity measurements, internally represented by three
   values $(p_0, p_1, p_2)$ where $p_0$, $p_1$, $p_2$ are
   additive. Therefore the final value of $p_0$ is the sum of all
   local value of  $p_0$ computed on each node. The same rule applies
   for $p_1$ and $p_2$. The evaluation of the intensity errors $\sigma$
-  is performed using the final $p_0$, $p_1$, and $p_2$ arrays (see Section \ref{s:staterror}).
+  is performed using the final $p_0$, $p_1$, and $p_2$ arrays (see \cref{s:staterror}).
 \item event lists: the merge of events is done by concatenation
 \end{itemize}
 
-\MCX\ provides three methods in order to distribute computations on many computers.
+\MCX provides three methods in order to distribute computations on many computers.
 \begin{itemize}
 \item when using a set of nodes (grid, cluster or multi-cores), it is possible to distribute simulations on a 
   list of computers and multi-core machines (see section \ref{s:ssh-grid}). Results are automatically 
   merged after completion. 
-  This method is very efficient, and only requires SSH server to be installed/configured on slave machines. 
+  This method is very efficient, and only requires a SSH server to be installed/configured on slave machines. 
   In order to use an heterogeneous system, a C compiler should be optionally installed on slave machines.
 \item when using an homogeneous computer cluster, each simulation (including scan
-  steps) may be computed in parallel using MPI. We recommend this method on clusters (see section \ref{s:mpi}).
+  steps) may be computed in parallel using MPI. We recommend this method on clusters (see \cref{s:mpi}).
 \end{itemize}
 
 Last but not least, you may run simulations manually on a number of machines.
-Once the distributed simulation have been completed, you may merge their results using \verb+mxformat+ (see section \ref{s:mxformat}) \index{Tools!mxformat} in order to obtain a set of files just as if it had been executed on a single machine.
+Once the distributed simulation have been completed, you may merge their results using \verb+mxformat+ (see \cref{s:mxformat}) \index{Tools!mxformat} in order to obtain a set of files just as if it had been executed on a single machine.
 
 All of these methods can be used, when available, from \texttt{mxgui}.
 
@@ -1466,7 +1407,7 @@ All of these methods can be used, when available, from \texttt{mxgui}.
 \item \verb'--machines=<file>': defines a text file where the
   nodes which are to be used for parallel computation are listed; by
   default, \verb'mxrun' will look at \verb'$HOME/.mcxtrace-hosts' and
-  \verb'MCSTAS/tools/perl/mcxtrace-hosts'. When used on a single SMP machine 
+  \verb'MCXTRACE/tools/perl/mcxtrace-hosts'. When used on a single SMP machine 
   (multi-core/cpu), this option may be omitted.
 \item \verb'--force-compile': this option is required on heterogeneous systems. 
   The C code is sent to all slaves and simulation is compiled on each node before 
@@ -1480,16 +1421,16 @@ All of these methods can be used, when available, from \texttt{mxgui}.
   machines (grids), as well as clusters. For Windows master machines,
   we recommend the installation of the PuTTY SSH client. The overhead is proportional to
   the number of nodes and the amount of data files to transfer per simulation. It is 
-  usually larger that the pure MPI method. We thus recommend to launch long runs on fewer nodes
+  usually larger than the pure MPI method. We thus recommend to launch long runs on fewer nodes
   rather than many short runs on many nodes.
   
-\subsubsection{Requirements and limitation (SSH grids)}
+\subsubsection{Requirements and limitations (SSH grids)}
 
   \begin{enumerate}
-  \item{A master machine with an SSH client, and \MCX\ installation.}
+  \item{A master machine with an SSH client, and \MCX installation.}
   \item{A set of machines (homogeneous or heterogeneous) with SSH servers.}
   \item{On heterogeneous grids, a C compiler must also be installed on all slave nodes.}
-  \item{\texttt{ssh} access from the master node (where \MCX\ is
+  \item{\texttt{ssh} access from the master node (where \MCX is
       installed) to the slaves through e.g. DSA keys \emph{without} a
       password. These keys should be generated using the command
       \texttt{ssh-keygen}. Run \emph{e.g.} \texttt{ssh-keygen -t dsa} on
@@ -1499,7 +1440,7 @@ All of these methods can be used, when available, from \texttt{mxgui}.
       may be done automatically for the local machine from the 
       \emph{Help menu/Install DSA key} item of \verb+mxgui+.}
   \item{The machine names listed in the file \texttt{.mcxtrace-hosts} in
-      your home directory or in the \texttt{MCSTAS/tools/perl/mcxtrace-hosts} on
+      your home directory or in the \texttt{MCXTRACE/tools/perl/mcxtrace-hosts} on
       the master node, one node per line. The \verb'--machines=<file>' option
       enables to specify the hosts file to use. If it does not exist, only 
       the current machine will be used (for multi-processor/core machines).}
@@ -1509,44 +1450,43 @@ All of these methods can be used, when available, from \texttt{mxgui}.
   \item{If your simulation/instrument requires \emph{data files} (Powders, Sqw, source 
       description, ...), these must be copied at the same level as the instrument 
       definition. They are sent to all slave nodes before starting each computation.
-      Take care to limit as much as possible the required data file volume in order
+      Take care to limit the requird data file volume as much as possible in order
       to avoid large data transfers.}
   \item Interupting or sending Signals may fail during computations. However, 
   simulation scans can be interrupted as soon as the on-going computation 
   step ends.
   \item With heterogeneous systems, we recommend to use the \verb+mxrun --force-compile+ 
-    command rather than McGUI, which may skip the required simulation compilation
+    command rather than \texttt{mxgui}, which may skip the required simulation compilation
     on slaves.
   \end{enumerate}
 
 \subsection{Parallel computing (MPI)}
 \label{s:mpi}
-The MPI support requires that MPICH (recommended), or alternatively LAM-MPI or 
-  OpenMPI, is installed on a set of nodes. This usually also requires properly 
+The MPI support requires that an implementaiton of the MPI-libraries is intalled on the system.
+We have generally find OpenMPI to be the most user-friendly, but other implementations (such as MPICH and LAM-MPI)
+work equally well. We have found no significant run-time differences.
+Usually MPI also requires properly 
   setup \texttt{ssh} connections and keys as indicated in the ssh grid system 
-  (Section \ref{s:ssh-grid}). Some OpenMPI implementations do not recognize 
-  multi-cores as separate nodes. In this case, you should use MPICH, or the SSH grid.
+  (Section \ref{s:ssh-grid}). 
 
-There are 3 methods for using MPI
+There are 3 methods for using MPI parallellization:
 \begin{itemize}
-\item Basic usage requires to compile and run the simulation by hand (mpicc, mpirun). 
-  This should be used when running LAM-MPI.
-\item A much simpler way is to use \verb+mxrun -c --mpi=NB_CPU ...+ which will 
-  recompile and run MPICH.
-\item The McGUI interface supports MPICH from within the Run Dialog.
+  \item Basic usage requires to compile and run the simulation by hand. See \cref{ss:basic-mpi} for details. 
+  \item A much simpler way is to use \verb+mxrun -c --mpi=NB_CPU ...+. (See \cref{ss:mxrun-mpi})
+\item The \verb+mxgui+ interface supports MPI from within the Run Dialog.
 \end{itemize}
 
-The MPI support is especially suited on clusters. As an alternative, the SSH grid 
-presented above (section \ref{s:ssh-grid}) is very flexible and requires lighter 
+The MPI support is especially suited for clusters. As an alternative, the SSH grid 
+presented above (section \ref{s:ssh-grid}) is very flexible and requires less 
 configuration.
 
-\subsubsection{Requirements and limitation (MPI)}
+\subsubsection{Requirements and limitations (MPI)}
 
 To use MPI you will need
   \begin{enumerate}
-  \item{A master machine with an SSH client/server, and \MCX\ installation.}
+  \item{A master machine with an SSH client/server, and \MCX installation.}
   \item{A set of unix machines of the same architecture (binary compatible) with SSH servers.}
-  \item{ \texttt{ssh} access from the master node (where \MCX\ is
+  \item{ \texttt{ssh} access from the master node (where \MCX is
       installed) to the slaves through e.g. DSA keys \emph{without} a
       password. These keys should be generated using the command
       \texttt{ssh-keygen}. Run \emph{e.g.} \texttt{ssh-keygen -t dsa} on
@@ -1556,7 +1496,7 @@ To use MPI you will need
       may be done automatically for the local machine from the 
       \emph{Help menu/Install DSA key} item of \verb+mxgui+.}
   \item{The machine names listed in the file \texttt{.mcxtrace-hosts} in
-      your home directory or in the \texttt{MCSTAS/tools/perl/mcxtrace-hosts} on
+      your home directory or in the \texttt{MCXTRACE/tools/perl/mcxtrace-hosts} on
       the master node, one node per line. The \verb'--machines=<file>' option
       enables to specify the hosts file to use. If it does not exist, only 
       the current machine will be used (for multi-processor/core machines).}
@@ -1575,42 +1515,41 @@ To use MPI you will need
   \end{enumerate}
 
 \subsubsection{MPI Basic usage}
-
+\label{ss:basic-mpi}
 To enable parallel computation, compile \MCX  output C-source file
 with \verb'mpicc' with the flag \verb'-DUSE_MPI' and run it using the
-wrapper of your MPI implementation (\verb'mpirun' for mpich or lammpi) :
-\begin{verbatim}
-  # generate a C-source file [sim.c]
-  mcxtrace sim.instr
+wrapper of your MPI implementation (e.g. \verb'mpirun'):
+Below is a shell script to this effect:
+\begin{lstlisting}[language=sh]
+#!/bin/sh
+# generate a C-source file [sim.c]
+mcxtrace sim.instr
+# generate an executable with MPI support [sim.mpi]
+mpicc -DUSE_MPI -o sim.mpi sim.c
 
-  # generate an executable with MPI support [sim.mpi]
-  mpicc -DUSE_MPI -o sim.mpi sim.c
-
-  # execute with parallel processing over <N> computers
-  # here you have to list the computers you want to use
-  # in a file [machines.list] (using mpich implementation)
-  # (refer to MPI documentation for a complete description)
-  mpirun -machinefile machines.list -n <N> \
-         ./sim.mpi <instrument parameters>
-  ...
-\end{verbatim}
+# execute with parallel processing over <N> computers
+# here you have to list the computers you want to use
+# in a file [machines.list] (using mpich implementation)
+# (refer to MPI documentation for a complete description)
+mpirun -machinefile machines.list -n <N> \
+       ./sim.mpi <instrument parameters>
+\end{lstlisting}
 
 If you don't want to spread the simulation, run it as usual :
 \begin{verbatim}
   ./sim.mpi <instrument parameters>
 \end{verbatim}
 
-\subsection{McRun script with MPI support (mpich)}
-
-The \verb'mxrun' script has been adapted to use MPICH implementation
-of MPI. Two new options have been added:
+\subsubsection{mxrun script with MPI support}
+\label{ss:mxrun-mpi}
+The \verb'mxrun' script has been adapted to use MPI. Two new options have been added:
 \begin{itemize}
 \item \verb'--mpi=<number>': tells \verb'mxrun' to use MPI, and to
   spread the simulation over \verb'<number>' nodes
 \item \verb'--machines=<file>': defines a text file where the
   nodes which are to be used for parallel computation are listed; by
   default, \verb'mxrun' will look at \verb'$HOME/.mcxtrace-hosts' and
-  \verb'MCSTAS/tools/perl/mcxtrace-hosts'. When used on a single SMP machine (multi-core/cpu), this option may be omitted.
+  \verb'MCXTRACE/tools/perl/mcxtrace-hosts'. When used on a single SMP machine (multi-core/cpu), this option may be omitted.
 \end{itemize}
 When available, the MPI option will show up in the \verb+mxgui+ Run dialog. Specify the number of nodes required.
 
@@ -1637,9 +1576,8 @@ You can then spread a simulation \verb'sim.instr' using \verb'mxrun' :
 \end{paragraph}
 
 \subsection{\MCX /MPI Performance}
-
-Theorically, a computation which lasts $T$ seconds on a single computer,
-should lasts at least $\frac{T}{p}$ seconds when it is distributed
+Theoretically, a computation which lasts $T$ seconds on a single computer,
+should last $\frac{T}{p}$ seconds when it is distributed
 over $p$ computers. In practice, there will be overhead time due to the split
 and merge operations.
 \begin{itemize}
@@ -1652,7 +1590,7 @@ and merge operations.
   \end{itemize}
 \end{itemize}
 
-The efficiency of \MCX\ using MPI has been tested on large clusters, up to 500 nodes.
+The efficiency of \MCX using MPI has been tested on large clusters, up to 500 nodes.
 The computation time decreases in the same proportion as the number of nodes, 
 showing an ideal efficiency. However, a small overhead may appear depending on the cluster 
 internal network load, which may be estimated at most of about 10-20 s. 
@@ -1665,7 +1603,7 @@ or the overhead time may become significant compared to total time.
 
 \begin{figure}[htb!]
   \begin{center}
-    \includegraphics[width=0.55\textwidth]{figures/mpi_efficiency.eps}
+    %\includegraphics[width=0.55\textwidth]{figures/mpi_efficiency.eps}
   \end{center}
 \caption{\MCX MPI execution time as a function of computing nodes, with \textit{templateTOF} instrument and 1e8 initial photon events. Tests performed on Lonestar@TACC (US Teragrid, 2008).}
 \label{fig:mpi_efficiency}
