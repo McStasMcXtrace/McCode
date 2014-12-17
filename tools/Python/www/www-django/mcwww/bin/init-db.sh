@@ -45,4 +45,4 @@ echo " "
 # Calling DB builders #
 #---------------------#
 python ./bin/ldap-build.py $DN $ROOTPW $BINDPW $TREEPW $PROOTPW
-#python manage.py syncdb
+python manage.py syncdb
