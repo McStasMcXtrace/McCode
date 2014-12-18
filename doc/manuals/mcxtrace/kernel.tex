@@ -4,18 +4,18 @@
 \label{s:kernel}
 \index{Kernel|textbf}
 
-Instrument definitions are written in a special \MCX meta-language which
+Beamline definitions are written in a special \MCX meta-language which
 is translated automatically by the \MCX compiler into a C program
 which is in turn compiled to an executable that
 performs the simulation. The meta-language is custom-designed for x-ray
 scattering and serves two main purposes: (i) to specify the interaction of a
 single x-ray with a single optical component, and (ii) to build a
-simulation by constructing a complete instrument from individual
+simulation by constructing a complete beamline from individual
 components.
 
 For maximum flexibility, efficiency and portability, the meta-language is based on C.
 Instrument geometry, propagation of x-rays between the different
-components, parameters, data input/output etc.\ is handled in the
+components, parameters, data input/output etc. is handled in the
 meta-language and by the \MCX compiler. Complex calculations are written in
 C embedded in the meta-language description of the
 components. However, it is
@@ -24,17 +24,15 @@ run a simulation without writing a single line of C code, working
 entirely in the meta-language.
 
 Apart from the meta-language, \MCX also includes a number of C library
-functions and definitions that are useful for x-ray-tracing
+functions and definitions that are useful for x-ray tracing
 simulations. The definitions available for component developers are
 listed in appendix~\ref{c:kernelcalls}. The list includes functions
 for
 \begin{itemize}
-\item Computing the intersection between a flight-path and various
-  objects (such as planes, cylinders, boxes and spheres)
-\item Functions for generating random numbers
-with various distributions
-\item Functions for reading or writing informations from/to data
-  files
+\item Computing the intersection between a photon flight-path and various
+  objects (such as planes, cylinders, boxes and spheres).
+\item Functions for generating random numbers with various distributions.
+\item Functions for reading or writing informations from/to data files.
 \item Convenient conversion factors between relevant units, etc.
 \index{Library!Run-time}
 \index{Library!Components!share}
@@ -68,7 +66,7 @@ the position and orientation must remain fixed for the duration of a
 single simulation). \index{Coordinate system}
 By convention, the $z$ axis points in the direction of the beam, the $x$ axis
 is perpendicular to the beam in the horizontal plane pointing left as seen
-from the source, and the $y$ axis points upwards (see figure~\ref{f:axis}).
+from the source, and the $y$ axis points upwards (see \cref{f:axis}).
 Nothing in the \MCX metalanguage enforces this convention, but if every component used
 different conventions the user would be faced with a severe headache! It is
 therefore necessary that this convention is followed by users implementing
@@ -85,11 +83,11 @@ new components.
 In the instrument definitions, units of length (\textit{e.g}.\ component
 positions) are given in meters and units of angles (\textit{e.g}.\
 rotations) are given in degrees.  The state of the x-ray is given by
-its position $(x,y,z)$ in meters, its velocity $(k_x, k_y, k_z)$ in
-reciprocal Ångströms, the phase $\phi$ in radians, and a polarisation vector
-$\left( E_x, E_y, E_z \right)$, and finally the x-ray weight $p$ described in \ref{s:MCtechniques}.
+its position $(x,y,z)$ in \si{m}, its wavevector $(k_x, k_y, k_z)$ in
+\si{\per\angstrom}, the time in \si{s},, the phase $\phi$ in \si{\radian}, and a polarisation vector
+$\left( E_x, E_y, E_z \right)$, and finally the x-ray weight $p$ in photons~\si{\per s} as described in \cref{c:MCtechniques}.
 
-\section{Syntaxical conventions}
+\section{Syntactical conventions}
 \label{s:syntax}
 
 Comments follow the normal C syntax ``\verb+/* ... */+''. C++ style
@@ -186,10 +184,12 @@ between the special symbols \verb|%{| and \verb|%}|, as follows:
 \end{quote} \index{Embedded C code}
 The ``\verb|%{|'' and ``\verb|%}|'' must appear on a line by themselves (do not add comments after).
 Additionally, if a ``\verb+%include+'' statement is found \emph{within} an embedded C code block, the specified file will be included from the 'share' directory of the standard component library \index{Library!Components!share} (or from the
-current directory and any user-specified search directories) as a C library, just like the usual ``\verb+#include+'' \emph{but only once}. For instance, if many components require to read data from a file, they may all ask for ``\verb+%include "read_table-lib"+'' \index{Library!read\_table-lib (Read\_Table)} without duplicating the code of this library. If the file has no extension, both \verb+.h+ and \verb+.c+ files will be searched and included, otherwise, only the specified file will be imported. The \MCX 'run-time' shared
+current directory and any user-specified search directories) as a C library, just like the usual ``\verb+#include+'' \emph{but only once}. For instance, if many components require
+to read data from a file, they may all ask for ``\verb+%include "read_table-lib"+'' \index{Library!read\_table-lib (Read\_Table)} without duplicating the code of this library. If
+the file has no extension, both \verb+.h+ and \verb+.c+ files will be searched and included, otherwise, only the specified file will be imported. The \MCX 'run-time' shared
 library is included by default (equivalent to ``\verb+%include "mcxtrace-r"+'' in the \texttt{DECLARE} section). \index{Library!Run-time}
-For an
-example of \texttt{\%include}, see the optics/Lens\_simple.comp component. See also section \ref{s:instrdefs-extend} for insertion of full instruments in instruments (instrument catenation).
+For an example of \texttt{\%include}, see the optics/Lens\_simple.comp component. See also section \ref{s:instrdefs-extend} for insertion of full instruments in instruments
+  (instrument catenation).
 
 If the instrument description compilation fails, check that the
 keywords syntax is correct, that no semi-colon \verb+;+ sign is
@@ -200,9 +200,9 @@ missing (e.g. in C blocks and after an ABSORB macro), and there are no name conf
 \label{s:instrdefs}
 \index{Instruments}
 
-The purpose of the instrument definition is to specify a sequence of
+The purpose of the instrument definition file is to specify a sequence of
 components, along with their position and parameters, which together
-make up an instrument. Each component is given its own local coordinate
+make up a beamline. Each component is given its own local coordinate
 system, the position and orientation of which may be specified by its
 translation and rotation relative to another component. 
 %An example is
@@ -239,8 +239,9 @@ generated simulation is started.
 By default, the parameters will be floating point numbers, and will have
 the C type \verb+double+ (double precision floating point). The type of
 each parameter may optionally be declared to be \verb+int+ for the C
-integer type or \verb+char *+ for the C string type. The name
-\verb+string+ may be used as a synonym for \verb+char *+, and floating
+integer type or \verb+char *+ for the C string type. 
+%FIXME note on c++ use here
+The name \verb+string+ may be used as a synonym for \verb+char *+, and floating
 point parameters may be explicitly declared using the name
 \verb+double+. The following example illustrates all possibilities:
 \begin{quote}
@@ -263,7 +264,7 @@ Here \verb+d1+ and \verb+d2+ are optional parameters and if no
 value are given explicitly, ``1'' and ``hello'' will be used.
 
 Optional parameters can greatly increase the convenience for users of
-instruments for which some parameters are seldom changed or of unclear signification to the user. Also, if all instrument parameters have default values, then the simple command \verb+mcdisplay+ \verb+test.instr+ will show the instrument view without requesting any other input, which is usually a good starting point to study the instrument design.
+instruments for which some parameters are seldom changed or of unclear significance to the user. Also, if all instrument parameters have default values, then the simple command \verb+mxdisplay+ \verb+test.instr+ will show the instrument view without requesting any other input, which is usually a good starting point to study the instrument design.
 
 \subsection{The \texttt{DECLARE} section}
 \index{Keyword!DECLARE}
@@ -278,7 +279,9 @@ instruments for which some parameters are seldom changed or of unclear significa
 This gives C declarations that may be referred to in the rest of the
 instrument definition. A typical use is to declare global variables or
 small functions that are used elsewhere in the instrument. The \verb+%include ''file''+ keyword may be used to import a specific
-component definition or a part of an instrument. Variables defined here are global, and may conflict with internal \MCX variables, specially symbols like \verb+x,y,z,sx,sy,sz,vx,vy,vz,t+ and generally all names starting with \verb+mc+ should be avoided. If you can not compile the instrument, this may be the reason. \index{Can not compile}The \texttt{DECLARE} section is optional.
+component definition or a part of an instrument. Variables defined here are global, and may conflict with internal \MCX variables, particularly symbols like
+\verb+x,y,z,Ex,Ey,Ez,kx,ky,kz,t,phi+ and generally all names starting with \verb+mc+ nad \verb+mx+ should be avoided. If you can not compile the instrument, this may be the reason.
+\index{Can not compile}The \texttt{DECLARE} section is optional.
 
 \subsection{The \texttt{INITIALIZE} section}
 \index{Keyword!INITIALIZE}
@@ -290,14 +293,16 @@ component definition or a part of an instrument. Variables defined here are glob
   \hbox to 3em{}\ldots C initializations. \ldots \\
   \verb|%}|
 \end{quote} \index{Embedded C code}
-This gives code that is executed when the simulation starts. This section is
+This section contains code that is executed once when the simulation starts. This section is
 optional. Instrument setting parameters may be modified in this section (e.g. doing tests or automatic settings).
 
 \subsection{The \texttt{NEXUS} extension}
 \index{Keyword!NEXUS} \index{Tools!NeXus} \index{Tools!HDF} \index{Data formats}
 \label{s:nexus}
 
-The NeXus format~\cite{nexus_webpage} requires to link the simulation to additional libraries (HDF and NeXus) which must have been pre-installed. Preferably, \MCX should have been installed with the \verb+./configure --with-nexus+ on Unix/Linux systems. To activate the NeXus output, the compilation of the instrument must be done with flag \verb+-DUSE_NEXUS -lNeXus+. The resulting executable is no longer portable.
+To use the NeXus format~\cite{nexus_webpage} the simulation must be linked with additional libraries (HDF and NeXus) which must have been pre-installed. Preferrably, \MCX should
+have been installed with the \verb+./configure --with-nexus+ on Unix/Linux systems. To activate the NeXus output, the instrument must be compiled with the flags
+\verb+-DUSE_NEXUS -lNeXus+.
 
 The default NeXus format is NeXus 5 with compression. However, that format may be changed with the optional keyword \verb+NEXUS+ to follow the INITIALIZE section, namely:
 
@@ -309,11 +314,15 @@ The default NeXus format is NeXus 5 with compression. However, that format may b
   \verb+NEXUS {"4"|"5"|"XML"|"compress"|"zip"}+
 \end{quote}
 
-It is possible to set the type of NeXus file with a string argument, containing words "4", "5" or "XML". Optionally, if the string also contains the \verb+compress+ or \verb+zip+ word, the NeXus file will use compression for Data Sets. We recommend the syntax \verb+NEXUS "5 compress"+ which is the default.
+It is possible to set the type of NeXus file with a string argument, containing words "4", "5" or "XML". Optionally, if the string also contains the \verb+compress+ or \verb+zip+
+word, the NeXus file will use compression for Data Sets. We recommend the syntax \verb+NEXUS "5 compress"+ which is the default.
 
-You may choose the name of the output file with the \verb+-f filename+ option from the instrument executable or \verb+mxrun+ (see Sections \ref{s:run-sim}, \ref{s:mxrun} and Table \ref{f:simoptions2}).
+You may choose the name of the output file with the \verb+-f filename+ option from the instrument executable or \verb+mxrun+ (see Sections \ref{s:run-sim}, \ref{s:mxrun} and Table
+\ref{f:simoptions2}).
 
-Then, the output format is chosen as usual with the \verb+--format=NeXus+ option when launching the simulation. All output files are stored in the output \textit{filename}, as well as the instrument description itself. Other formats are still available. When run on a distributed system (e.g. MPI), detectors are gathered, but list of events (see e.g. component Virtual\_output) are stored as one data set per node.
+Then, the output format is chosen as usual with the \verb+--format=NeXus+ option when launching the simulation. All output files are stored in the output \textit{filename}, as well
+as the instrument description itself. Other formats are still available. When run on a distributed system (e.g. MPI), detectors are gathered, but list of events (see e.g. component
+Virtual\_output) are stored as one data set per node.
 
 \subsection{The \texttt{TRACE} section}
 \index{Keyword!TRACE}
@@ -353,10 +362,11 @@ value for the parameter.
 The \MCX program takes care to rename parameters appropriately in the
 output so that no conflicts occur between different component
 definitions or between component and instrument definitions. It is thus
-possible (and usual) to use a component definition multiple times
+possible (and common) to use a component definition multiple times
 in an instrument description.
 
-Beware about variable type conversion when setting numerical parameter values, as in \verb+p1=12/1000+. In this example, the parameter \verb+p1+ will be set to 0 as the division of the two integers is indeed 0. To avoid that, use explicitely floating type numbers as in \verb+p1=12.0/1000+.\index{Bugs}
+Be aware of the C variable type conversions when setting numerical parameter values, as in \verb+p1=12/1000+. In this example, the parameter \verb+p1+ will be set to 0 as the division of
+the two integers is indeed 0. To avoid that, use explicitely floating type numbers as in \verb+p1=12.0/1000+.\index{Bugs}
 
 The \MCX compiler will automatically search for a file containing a
 definition of the component if it has not been declared previously. The
@@ -386,20 +396,18 @@ Rotation is achieved similarly by writing \index{Keyword!ROTATED}
 \begin{quote}
   \texttt{ROTATED} $(\phi_x,\phi_y,\phi_z)$ \texttt{RELATIVE} \textit{name}
 \end{quote}
-This will result in a coordinate system that is rotated first the angle
-$\phi_x$ (in degrees) around the $x$ axis, then $\phi_y$ around the $y$ axis, and finally
-$\phi_z$ around the $z$ axis. Rotation may also be specified using
-\texttt{ABSOLUTE} rather than \texttt{RELATIVE}. If no rotation is
-specified, the default is $(0,0,0)$ using the same relative or absolute
-specification used in the \texttt{AT} modifier. We recommend to apply all rotations of an instrument description on Arm class components only, acting as goniometers, and position the optics on top of these. This usually makes it much easier to orient pieces of the instrument, and avoid positioning errors.
+This will result in a coordinate system that is rotated first the angle $\phi_x$ (in degrees) around the $x$ axis, then $\phi_y$ around the $y$ axis, and finally
+$\phi_z$ around the $z$ axis. Rotation may also be specified using \texttt{ABSOLUTE} rather than \texttt{RELATIVE}. If no rotation is
+specified, the default is $(0,0,0)$ using the same relative or absolute specification used in the \texttt{AT} modifier. We recommend to apply all rotations of an instrument
+description on Arm class components only, acting as goniometers, and position the optics on top of these. This usually makes it much easier to orient pieces of the beamline, and
+avoid positioning errors.
 
-The \emph{position} of
-a component is actually the origin of its local coordinate
-system. Usually, this is used as the input window position (e.g. for
-guide-like components), or the center position for
-cylindrical/spherical components.
+The \emph{position} of a component is actually the origin of its local coordinate system. Usually, this is used as the input window position (e.g. for guide-like components), or
+the center position for cylindrical/spherical components.
 
-The \texttt{PREVIOUS} \index{Keyword!PREVIOUS} keyword is a generic name to refer to the previous component in the simulation. Moreover, the \texttt{PREVIOUS(n)} keyword will refer to the $n$-th previous component, starting from the current component, so that \texttt{PREVIOUS} is equivalent to \texttt{PREVIOUS(1)}. This keyword should be used after the \texttt{RELATIVE} keyword, but not for the first component instance of the instrument description.
+The \texttt{PREVIOUS} \index{Keyword!PREVIOUS} keyword is a generic name to refer to the previous component in the simulation. Moreover, the \texttt{PREVIOUS(n)} keyword will refer
+to the $n$-th previous component, starting from the current component, so that \texttt{PREVIOUS} is equivalent to \texttt{PREVIOUS(1)}. This keyword should be used after the
+\texttt{RELATIVE} keyword, but not for the first component instance of the instrument description.
 \begin{quote}
   \texttt{AT} $(x,y,z)$ \texttt{RELATIVE} \texttt{PREVIOUS}
   \texttt{ROTATED} $(\phi_x,\phi_y,\phi_z)$ \texttt{RELATIVE} \texttt{PREVIOUS(2)}
@@ -410,10 +418,10 @@ The order and position of components in the \texttt{TRACE} section does not
 allow components to overlap, except for particular cases (see the \texttt{GROUP} keyword below).
 Indeed, many components of the \MCX library \index{Library!Components} start
 by propagating the x-ray event to the begining of the component itself.
-Anyway, when the corresponding propagation time is found to be negative
+If the corresponding propagation length is found to be negative
 (\textit{i.e.} the x-ray is already \emph{after} or \emph{aside} the component, and has thus
 passed the 'active' position), the x-ray event is ABSORBed, resulting in a zero intensity and event counts after a given position. The number of such removed x-rays is indicated at the end of the simulation.
-Getting such warning messages is an indication that either some
+Getting such warning messages may be an indication that either some
 components overlap, or some x-rays are getting outside of the
 simulation, for instance this usually happens after a monochromator,
 as the non-reflected beam is indeed lost. A special warning appears
@@ -489,7 +497,9 @@ As a summary, the nearly complete grammar definition for component instances wit
 \subsection{Embedding instruments in instruments TRACE}
 \index{Keyword!\%include}
 \label{s:instrdefs-include-instr}
-The \texttt{\%include} insertion mechanism may be used within the TRACE section, in order to catenate instruments together. This way, each DECLARE, INITIALIZE, SAVE, and FINALLY C blocks, as well as instrument parameters from each part are catenated. The TRACE section is made of inserted COMPONENTS from each part. In principle, it then possible to write an instrument as:
+The \texttt{\%include} insertion mechanism may be used within the TRACE section, in order to concatenate instruments. This way, each DECLARE, INITIALIZE, SAVE, and FINALLY C
+ blocks, as well as instrument parameters from each part are catenated. The TRACE section is made of inserted COMPONENTS from each part. In principle, it then possible to write an
+ instrument as:
 \begin{verbatim}
 DEFINE catenated()
 TRACE
@@ -505,22 +515,26 @@ INSTRUMENT COMPONENT a=...
 \end{verbatim}
 marks the component \textit{a} as removable when inserted. In principle, inserted instruments may themselves use \texttt{\%include}.
 
-\subsection{Groups and component extensions - GROUP - EXTEND}
-\index{Keyword!GROUP}
+\subsection{Component extensions - EXTEND}
 \index{Keyword!EXTEND}
-\label{s:instrdefs-extend-group}
+\label{s:instrdefs-extend}
 
-It is sometimes desirable to slighlty modify an existing component of the \MCX library. One would usually make a copy of the component, and extend the code of its \texttt{TRACE} section. \MCX provides an easy way to change the behaviour of existing components in an instrument definition without duplicating files, using the \texttt{EXTEND} modifier \index{Keyword!EXTEND}
+It is sometimes desirable to slightly modify an existing component of the \MCX library. One would usually make a copy of the component, and extend the code of its \texttt{TRACE}
+section. \MCX provides an easy way to change the behaviour of existing components in an instrument definition without duplicating files, using the \texttt{EXTEND} modifier
+\index{Keyword!EXTEND}
 \begin{quote}
   \texttt{EXTEND} \\
   \verb|%{| \\
   \hbox to 3em{}\ldots C code executed after the component TRACE section \ldots \\
   \verb|%}|
 \end{quote} \index{Embedded C code}
-The embeded C code is appended to the component \texttt{TRACE} section, and all its internal variables (as well as all the \texttt{DECLARE} instrument variables, \emph{except} instrument parameters) may be used. To use instrument parameters, you should copy them into global variables in the DECLARE instrument section, and refer to these latter.
-This component declaration modifier is of course optional. You will find numerous usage examples, and in particular in the Sources section of the Component manual.
+The embedded C code is appended to the component \texttt{TRACE} section, and all its internal variables (as well as all the \texttt{DECLARE} instrument variables, \emph{except} instrument parameters) may be used. To use instrument parameters, you should copy them into global variables in the DECLARE instrument section, and refer to these latter.
+This component declaration modifier is of course optional. You will find usage examples in the Component manual\cite{mcxtrace-comp-manual}.
 
-In some peculiar configurations it is neccesary to position one or
+\subsection{Mutually exclusive components in parallell - GROUP} 
+\index{Keyword!GROUP}
+\label{s:instrdefs-group}
+In some configurations it is necessary to position one or
 more groups of components, nested, in parallel, or overlapping. One
 example is a multiple crystal monochromator. One would then like the
 x-ray to interact with \emph{one of} the components of the group
@@ -555,7 +569,8 @@ Within a \texttt{GROUP}, \emph{all} \texttt{EXTEND} sections of the group are ex
 Components \emph{name1} and \emph{name2} are at the same position. If the first one intercepts the x-ray (and has a SCATTER within its \texttt{TRACE} section), the SCATTERED variable becomes true, the code extension will result in printing "I scatter", and the second component will be skipped.
 Thus, we recommend to make use of the SCATTER keyword each time a component 'uses' the x-ray (scatters, detects, \ldots) within component definitions (see section \ref{s:compdefs}). Also, the components to be grouped should be consecutive in the TRACE section of the instrument, and the GROUPed section should not contain components which are not part of the group.
 
-Note that a \texttt{GROUP} construct is \emph{not} applicable to a situation where an x-ray which has interacted (\texttt{SCATTER}ed) with one component in the group, may interact with another. In this case a more complex arrangement is needed. See \cite{willendrup2011using} for a description of hwo to do this in \MCS. This is approach is \emph{directly} applicable in \MCX without modification. 
+Note that a \texttt{GROUP} construct is \emph{not} applicable to a situation where an x-ray which has interacted (\texttt{SCATTER}ed) with one component in the group, may interact
+with another. In this case a more complex arrangement is needed. See \cite{willendrup2011using} for a description of how to do this in \MCS. This is approach is \emph{directly} applicable in \MCX without modification. 
 
 Combining EXTEND, GROUP and WHEN can result in unexpected behaviour. Please read the related warning at the end of section \ref{s:instrdefs-extend-when}.
 
@@ -563,9 +578,9 @@ Combining EXTEND, GROUP and WHEN can result in unexpected behaviour. Please read
 \index{Keyword!COPY}
 \label{s:instrdefs-extend-copy}
 
-Often, one has a set of similar component instances in an instrument. These could be e.g. a set of identical monochromator blades, or a set of detectors or guide elements.
-Together with JUMPs (see below), there is a way to copy a component instance, duplicating parameter set, as well as any EXTEND, GROUP, JUMP and WHEN keyword.
-Position (AT) and rotation (ROTATED) specification must be explicitely entered in order to avoid component overlaping.
+Often, one has a set of similar component instances in an instrument. These could be e.g. a set of identical monochromator blades, or a set of detectors.
+Together with JUMPs (see below), there is a way to copy a component instance, duplicating a parameter set, as well as any EXTEND, GROUP, JUMP and WHEN keyword.
+Position (AT) and rotation (ROTATED) specification must be explicitely entered in order to avoid component overlap.
 
 The syntax for instance copy is
 \begin{quote}
@@ -591,10 +606,10 @@ e.g. further positioning) is not straight forward as the name is
 determined by \MCX and does not depend completely on the user's
 choice, even though the PREVIOUS keyword may still be used. We thus recommend to use this naming mechanism only for components which should not be refered to in the instrument.
 
-This automatic naming may be used anywhere in the TRACE section of the instrument, so that all components which do not need further refering may be labeled as COPY(Origin).
+This automatic naming may be used anywhere in the TRACE section of the instrument, so that all components which do not need further referral may be labeled as COPY(Origin).
 
-As an example, we show how to have a set of three equivalent pinholes (Slits). Only the first instance of the Slit component is defined, whereas following instances are copies of that definition.
-The instance names of Slits components are set automatically.
+As an example, we show how to have a set of three equivalent pinholes (Slits). Only the first instance of the Slit component is defined explicitly, whereas following instances are
+copies of that definition. The instance names of \texttt{Slit} components are set automatically.
 
 \begin{verbatim}
 COMPONENT S_in = Arm() AT (...)
@@ -615,16 +630,17 @@ COMPONENT S_Out = Arm() AT (0,0,d) RELATIVE PREVIOUS
 \index{Keyword!WHEN}
 \label{s:instrdefs-extend-when}
 
-One of the most useful features of the extended \MCX syntax is the conditional \texttt{WHEN} modifier. This optional keyword comes before the AT-ROTATED positioning. It basically enables the component only when a given condition is true (non null).
+One of the most useful features of the extended \MCX syntax is the conditional \texttt{WHEN} modifier. This optional keyword comes before the AT-ROTATED positioning. It basically
+enables the component only when a given condition is true (non null).
 
 \begin{quote}
   \texttt{COMPONENT} $\textit{name} = \textit{comp}(p_1 = e_1, p_2 = e_2, \ldots)$
-  \texttt{WHEN} \textit{condition}
+  \texttt{WHEN} (\textit{condition})
 \end{quote}
-The condition has the same scope as the EXTEND modifier, i.e. may use component internal variables as well as all the \texttt{DECLARE} instrument variables, \emph{except} instrument parameters. To use instrument parameters, you should copy them into global variables in the DECLARE instrument section, and refer to these latter.
-It is evaluated before the component TRACE section.
+The condition has the same scope as the EXTEND modifier, i.e. may use component internal variables as well as all the \texttt{DECLARE} instrument variables.
 
-Usage examples could be to have specific monitors only sensitive to selected processes, or to have components which are only present under given circonstances (e.g. removable guide or radial collimator), or to select a sample among a set of choices.
+Usage examples could be to have specific monitors only sensitive to selected processes, or to have components which are only present under given circumstances (e.g. removable
+filter or radial collimator), or to select a sample among a set of choices.
 
 In the following example, an EXTEND block sets a condition when a scattering event is encoutered, and the following monitor is then activated.
 \begin{verbatim}
@@ -638,15 +654,20 @@ COMPONENT MyMon = Monitor(...) WHEN (flag==1)
   AT ...
 \end{verbatim}
 
-The WHEN keyword only applies to the TRACE section and related EXTEND blocks of instruments/components. Other sections (INITIALIZE, SAVE, MCDISPLAY, FINALLY) are exectuted independently of the condition. As a side effetc, the 3D view of the instrument (mcdisplay) will show all components as if all conditions were true.
-
-Also, the \verb+WHEN+ keyword is a condition for \verb+GROUP+. This means that when the \verb+WHEN+ is false, the component instance is not active in the \verb+GROUP+ it belongs to.\index{Bugs}
+The WHEN keyword only applies to the TRACE section and related EXTEND blocks of instruments/components. Other sections (INITIALIZE, SAVE, MCDISPLAY, FINALLY) are executed
+independently of the condition. As a side effect, the 3D view of the instrument (\texttt{mxdisplay}) will show all components as if all conditions were true.
 
 A usage example of the WHEN keyword can be found in the \\
 \verb+X-ray site/ESRF/ESRF_ID11+ instrument from the \verb+mxgui+, where the source model may be chosen by an external parameter.
 
-
-WARNING: Combining WHEN, EXTEND and GROUP can result in unexpeceted behaviour, please use with caution! Let for instance a GROUP of components all have the same WHEN condition, i.e. if the WHEN condition is false, none of the elements SCATTER, meaning that all x-rays will be ABSORBed. As a solution to this problem, we propose to include an EXTENDed Arm component in the GROUP, but with the opposite WHEN condition and a SCATTER keyword in the EXTEND section. This means that when none of the other GROUP elements are present, the Arm will be present and SCATTER.
+The \texttt{WHEN} keyword is compatible with \texttt{GROUP}, and thus may be used to activate/deactivate members in a \texttt{GROUP} just like non-grouped components. 
+Combining \texttt{WHEN}, \texttt{EXTEND} and \texttt{GROUP} can result in unexpected behaviour, please use them with caution! As an example, let a \texttt{GROUP} of components all
+have the same \texttt{WHEN} condition.
+If the condition is false, none of the elements \texttt{SCATTER}, meaning that all x-rays will be \texttt{ABSORB}ed. As a solution to this problem, we propose to include an
+\texttt{EXTEND}ed Arm
+component in the \texttt{GROUP}, but with the opposite \texttt{WHEN} condition and a \texttt{SCATTER} keyword in the \texttt{EXTEND} section. This means that when none of the other
+\texttt{GROUP} elements are present, the Arm
+will be present and \texttt{SCATTER}.
 
 
 \subsection{Component loops and non sequential propagation - JUMP}
@@ -655,7 +676,8 @@ WARNING: Combining WHEN, EXTEND and GROUP can result in unexpeceted behaviour, p
 \index{Keyword!WHEN}
 \label{s:instrdefs-extend-jump}
 
-There are situations for which one would like to repeat a given component many times, or under a given condition. The JUMP modifier is meant for that and should be mentioned after the positioning, GROUP and EXTEND. This breaks the sequential propagation along components in the instrument description. There may be more than one JUMP per component instance.
+There are situations in which one would like to repeat a given component many times, or under a given condition. The JUMP modifier is meant for that and should be mentioned after
+the positioning, GROUP and EXTEND. This breaks the sequential propagation along components in the instrument description. There may be more than one JUMP per component instance.
 
 The jump may depend on a condition:
 \begin{quote}
@@ -667,7 +689,8 @@ in which case the instrument TRACE will jump to the \textit{reference} when \tex
 
 The \textit{reference} may be an instance name, as well as PREVIOUS, PREVIOUS($n$), MYSELF, NEXT, and NEXT($n$), where $n$ is the index gap to the target either backward (PREVIOUS) or forward (NEXT), so that PREVIOUS(1) is PREVIOUS and NEXT(1) is NEXT. MYSELF means that the component will be iterated as long as the condition is true. This may be a way to handle multiple scattering, if the component has been designed for that.
 
-The jump arrives directly inside the target component, in the local coordinate system (i.e. without applying the AT and ROTATED keywords). In order to control better the target positions, it is \emph{required} that, except for looping MYSELF, the target component type should be an \emph{Arm}.
+The jump arrives directly inside the target component, in the local coordinate system (i.e. without applying the AT and ROTATED keywords). In order to better control the target
+positions, it is \emph{required} that, except for looping MYSELF, the target component type should be an \emph{Arm}.
 %
 %There is a more general way to iterate components, which consists in repeating the loop for a given number of times.
 %\begin{quote}
@@ -694,7 +717,9 @@ The jump arrives directly inside the target component, in the local coordinate s
 %COMPONENT CG_Out = Arm() AT (0,0,L/n) RELATIVE PREVIOUS
 %\end{verbatim}
 %
-Similarly to the \texttt{WHEN} modifier (see section \ref{s:instrdefs-extend-when}), \texttt{JUMP} only applies within the TRACE section of the instrument definition. Other sections (INITIALIZE, SAVE, MCDISPLAY, FINALLY) are exectuted independently of the jump. As a side effetc, the 3D view of the instrument (mcdisplay) will show components as if there was no jump. This means that in the following example, the very long guide 3D view only shows a single guide element.
+Similarly to the \texttt{WHEN} modifier (see section \ref{s:instrdefs-extend-when}), \texttt{JUMP} only applies within the TRACE section of the instrument definition. Other
+sections (INITIALIZE, SAVE, MCDISPLAY, FINALLY) are exectuted independently of the jump. As a side effect, the 3D view of the instrument \texttt{mxdisplay} will show components as if
+there was no jump. This means that in the following example, the very long mirror 3D view only shows a single mirror element.
 
 It is \emph{not} recommended to use the \verb+JUMP+ inside \verb+GROUP+s, as the JUMP condition/counter applies to the component instance within its group.
 
@@ -706,15 +731,25 @@ is difficult to understand the flow of the simulation. We thus recommend the usa
 \index{Keyword!SPLIT}
 \label{s:instrdefs-extend-enhance}
 
-The following method applies when the incoming x-ray event distribution is considered to be representative of the real beam, but x-rays are lost in the course of propagation (with low efficiency processes, absorption, etc). Then, one may think that it's a pity to have so few events reaching the 'interesting' part of the instrument (usually close to the end of the instrument description).
-If some components make extensive use of random numbers (MC choices), they shuffle this way the distributions, so that identical incoming events will not produce the same outgoing event. In this case, you may use the \verb+SPLIT+ keyword with the syntax
+The following method applies when the incoming x-ray event distribution is considered to be representative of the real beam, but x-rays are lost in the course of propagation (with
+low efficiency processes, absorption, etc). Then, one may think that it's a pity to have so few events reaching the 'interesting' part of the beamline (usually close to the end
+of the instrument description).
+If some components make extensive use of random numbers (MC choices), they shuffle this way the distributions, so that identical incoming events will not produce the same outgoing
+event. In this case, you may want to use a technique known as \emph{stratified sampling} (see \cref{c:MCtechniques}) which in \MCX is implemented through the \verb+SPLIT+ keyword with the syntax
 
 \begin{quote}
   \texttt{SPLIT} ${r}$ \texttt{COMPONENT} $\textit{name} = \textit{comp}(\ldots)$
 \end{quote}
 
 where the optional number $r$ specifies the number of repetitions for each event. Default is $r=10$.
-Each x-ray event reaching component \textit{name} will be repeated $r$ times with a weight divided by $r$, so that in practice the number of events for the remaining part of the simulation (down to the END), will potentially have more statistics. This is only true if following components (and preferably component \textit{name}) use random numbers. You may use this method as many times as you wish in the same instrument, e.g. at the monochromator and sample position. This keyword can also be used within a GROUP. The efficiency is roughtly $r$ raised to the number of occurences in the instrument, so that enhancing two components with the default $r=10$ will produce at the end an enhancement effect of 100 in the number of events. The execution time will usually get slightly longer. This technique is known as the \emph{stratified sampling} (see Appendix \ref{s:MCtechniques}). If the instrument makes use of global variables - e.g. in conjunction with a WHEN or User Variable monitoring (see Monitor\_nD) - you should take care that these variables are set properly for each SPLIT loop, which usually means that they must be reset inside the SPLITed section and assigned/used further on. \index{Bugs}
+Each x-ray event reaching component \textit{name} will be repeated $r$ times with a weight divided by $r$, so that in practice the number of events for the remaining part of the
+simulation (down to the END), will potentially have more statistics. This is only true if following components (and preferably component \textit{name}) use random numbers. You may
+use this method as many times as you wish in the same instrument, e.g. at the monochromator and sample position. This keyword can also be used within a GROUP. The efficiency is
+roughly $r$ raised to the number of occurences in the instrument, so that enhancing two components with the default $r=10$ will produce an enhancement effect of $100$ wrt.
+the number of events at the end. The execution time will increase but at a slower rate than the statistical quality, provided that the above criteria are met. If the
+instrument makes use of global variables - e.g. in conjunction with a WHEN or User Variable monitoring (see Monitor\_nD) - you should take care that these variables are set
+properly for each SPLIT loop, which usually means that they must be reset inside the SPLITed section and assigned/used further on. \index{Bugs}
+
 
 %A usage example of the SPLIT keyword can be found in the \\
 %\verb+X-ray site/ILL/ILL_H15_IN6+ instrument from the \verb+mcgui+, to enhance statistics for x-rays scattering on monochromators and sample.
@@ -722,18 +757,18 @@ Each x-ray event reaching component \textit{name} will be repeated $r$ times wit
 \section{Writing component definitions}
 \label{s:compdefs}
 
-The purpose of a \MCX component is to model the interaction of a
-x-ray with a physical component of a real instrument. Given the
+The purpose of a \MCX component is to model the interaction of an
+x-ray with a physical component of a real beamline. Given the
 state of the incoming x-ray, the
 component definition calculates the state of the x-ray when it leaves
 the component.  The calculation of the effect of the component on the
 x-ray is performed by a block of embedded C code.
-One example of a component definition is given in section~\ref{s:slit}, and all
-component definitions can be found on the McStas
+One example of a component definition is given in \cref{s:slit}, and all
+component definitions can be found on the \MCX
 web-page~\cite{mcxtrace_webpage} and described in the \MCX component manual.
 
-There exists a large number of functions and constants available in
-order to write efficient components. See appendix~\ref{c:kernelcalls}
+A large number of functions and constants are available in
+order to write efficient components. See \cref{c:kernelcalls}
 for
 \begin{itemize}
 \item x-ray propagation functions
@@ -820,19 +855,6 @@ be defined as OUTPUT parameters.
 
 The \texttt{OUTPUT} \texttt{PARAMETERS} section is optional.
 
-\begin{quote}
-  \texttt{STATE} \texttt{PARAMETERS} $(x,y,z,k_x,k_y,k_z,phi,E_x,E_y,E_z,p)$
-\end{quote}
-\index{Keyword!STATE PARAMETERS}
-This declares the parameters that define the state of the incoming
-x-ray. The task of the component code is to assign new values to these
-parameters based on the old values and the values of the definition and
-setting parameters. 
-We recommend using the standard \texttt{STATE PARAMETER} names to avoid confusion, although formally they could named
-\begin{quote}
-  \texttt{STATE} \texttt{PARAMETERS} (banana,apple,pear,\ldots)
-\end{quote}
-
 \subsubsection{Optional component parameters}
 \index{Parameters!Optional, default value}
 
@@ -858,8 +880,8 @@ is updated. New parameters can be added with default values that
 correspond to the old behavior, and existing instrument definitions can
 be used with the new component without changes.
 
-However, optional parameters should not be used in cases where no
-general natural default value exists. For example the size of a slit should not be given a default value. 
+Optional parameters should not be used in cases where no
+natural default value exists. For example the size of a slit should not be given a default value. 
 This would prevent the error messages that should be given in the common case of a
 user forgetting to set an important parameter.
 
@@ -914,10 +936,10 @@ FINALLY
 %}
 \end{verbatim}
 \end{quote}
-This way, \MCX takes care to rename transparently the two 'counts'
+This way, \MCX takes care to transparently rename the two 'counts'
 \texttt{OUTPUT} parameters so that they are distinct, and can be
 accessed from elsewhere in the instrument (EXTEND, FINALLY, SAVE, ...)
-or from other components. This particular example is outdated since
+or from other components. Note that this particular example is obsolete rather artificial since
 \MCX monitors will themselves output their contents.
 
 \subsection{The \texttt{SHARE} section}
@@ -931,8 +953,10 @@ or from other components. This particular example is outdated since
 \end{quote}
 \index{Keyword!SHARE}
 
-The \texttt{SHARE} section has the same role as \texttt{DECLARE} except that when using more than one instance of the component, it is inserted \emph{only once} in the simulation code. No occurence of the items to be shared should be in the \texttt{OUTPUT} parameter list (not to have \MCX rename the identifiers).
-This is particularly useful when using many instances of the same component (for instance guide elements). If the declarations were in the \texttt{DECLARE} section, \MCX would duplicate it for each instance (making the simulation code longer).
+The \texttt{SHARE} section has the same role as \texttt{DECLARE} except that when using more than one instance of the component, it is inserted \emph{only once} in the simulation
+code. No occurence of the items to be shared should be in the \texttt{OUTPUT} parameter list (not to have \MCX rename the identifiers).
+This is particularly useful when using many instances of the same component (for instance CRLs) if the declarations were in the \texttt{DECLARE} section, \MCX would
+duplicate it for each instance (making the simulation code longer).
 A typical example is to have shared variables, functions, type and structure definitions that may be used from the component \texttt{TRACE} section. For an
 example of \texttt{SHARE}, see the samples/Single\_crystal
 component. The \verb+%include "file"+ keyword may be used to import
@@ -968,28 +992,27 @@ simulation, usually to initialize any variables declared in the
 This performs the actual computation of the interaction between the
 x-ray and the component. The C code should perform the appropriate
 calculations and assign the resulting new x-ray state to the state
-parameters. Most components will require propagation routines to reach the component entrance/area. Special macros \verb+PROP_Z0;+ and \verb+PROP_DT();+ are provided to automate this process (see section \ref{s:calls:run-time}).
+parameters. Most components will require propagation routines to reach the component entrance/area. Special macros \verb+PROP_Z0;+ and \verb+PROP_DL();+ are provided to automate this process (see section \ref{s:calls:run-time}).
 
 \index{Library!Run-time!ABSORB}
 The C code may also execute the special macro \texttt{ABSORB} to indicate
 that the x-ray has been absorbed in the component and the simulation of
 that x-ray will be aborted. On the other hand, if the x-ray event
 should be \emph{allowed} be backpropagated, the special macro
-\verb+ALLOW_BACKPROP;+ should preceed the call to the \verb+PROP_+
+\verb+ALLOW_BACKPROP;+ should preceed a call to the \verb+PROP_**+
 call inside the component.
 \index{Removed x-ray events}\index{Library!Run-time!ALLOW\_BACKPROP}
 When the x-ray state is changed or detected, for
-instance if the component simulates multiple events as multiple
-reflections in a guide, the
+instance if the component simulates a reflecting mirror, the
 special macro \texttt{SCATTER} should be called. This does not affect the
 results of the simulation in any way, but it allows the front-end
 programs to visualize the scattering events properly, and to handle
 component \texttt{GROUP}s in an instrument definition (see
 section~\ref{s:trace}). It basically increments the SCATTERED counter. The \texttt{SCATTER} macro should be called with
 the state parameters set to the proper values for the scattering event., so that x-ray events are displayed correctly.
-For an example of \texttt{SCATTER}, see the optics/Guide
+For an example of \texttt{SCATTER}, see the optics/Mirror\_curved
 component. \index{Library!Run-time!SCATTER}
-
+Lately a new keyword \texttt{RESTORE} has been added, which generally 
 
 \subsection{The \texttt{SAVE} section}
 \label{s:comp-save}
@@ -1022,8 +1045,8 @@ and the number of statistical events $N$. This will result in a line such as:
 \verb+Detector:+ \textit{CompName}\_I=$p$ \textit{CompName}\_ERR=$\sigma$ \textit{CompName}\_N=$N$ "\textit{filename}"
 \end{quote}
 
-For 1D, 2D and 3D monitors/detectors, the data histogram store in the files
-is given {\emph per bin} when the signal is the x-ray intensity (\textit{i.e.} most of the cases). Most monitors define binning for an $x_n$ axis value as the sum of events falling into the $[ x_n x_{n+1} ]$ range, \textit{i.e} the bins are {\emph not} centered, but left aligned.
+For 1D and 2D monitors/detectors, the data histogram store in the files
+is given \emph{per bin} when the signal is the x-ray intensity (most of the cases). Most monitors define binning for an $x_n$ axis value as the sum of events falling into the $[ x_n x_{n+1} ]$ range, \textit{i.e} the bins are {\emph not} centered, but left aligned.
 Using the Monitor\_nD component, it is possible to monitor other signals using the
 '\verb+signal=+\textit{variable\_name}' in the 'options' parameter (refer to that
 component documentation).
@@ -1035,7 +1058,7 @@ component documentation).
 The results of a single detector/monitor are written using the following
 macro:
 \begin{quote}
-  \texttt{DETECTOR\_OUT\_0D(\textit{t}, $N$, $p$, \textit{p2})}
+  \texttt{DETECTOR\_OUT\_0D(\textit{t}, \textit{N}, \textit{p}, \textit{p2})}
 \end{quote}
 Here, \textit{t} is a string giving a short descriptive title for the
 results, {\em e.g.}\ ``Single monitor''.
@@ -1046,13 +1069,9 @@ results, {\em e.g.}\ ``Single monitor''.
 The results of a one-dimensional detector/\discretionary{}{}{}mon\-i\-tor are written using the
 following macro:
 \begin{quote}
-  \texttt{DETECTOR\_OUT\_1D(\textit{t},
-        \textit{xlabel},
-        \textit{ylabel},
-        \textit{xvar}, $x_\mathrm{min}$, $x_\mathrm{max}$, $m$, \\
+  \texttt{DETECTOR\_OUT\_1D(\textit{t}, \textit{xlabel}, \textit{ylabel},\textit{xvar}, \textit{xmin}, \textit{xmax}, \textit{m}, \\
         \phantom{\texttt{DETECTOR\_OUT\_1D(}}% Paren hack ->)
-          $\&N[0]$, $\&p[0]$, $\&\textit{p2}[0]$,
-        \textit{filename})}
+    \textit{\&N}[0], \textit{\&p}[0], \textit{\&p2}[0],\textit{filename})}
 \end{quote}
 Here,
 \begin{itemize}
@@ -1064,15 +1083,15 @@ Here,
   axis of a plot ({\em e.g.}\ ``Intensity''),
 \item \textit{xvar} is a string giving the name of the variable on the X
   axis ({\em e.g.}\ ``E''),
-\item $x_\mathrm{min}$ is the lower limit for the X axis,
-\item $x_\mathrm{max}$ is the upper limit for the X axis,
-\item $m$ is the number of elements in the detector arrays,
-\item $\&N[0]$ is a pointer to the first element in the array of $N$
+\item \textit{xmin} is the lower limit for the X axis,
+\item \textit{xmax} is the upper limit for the X axis,
+\item \textit{m} is the number of elements in the detector arrays,
+\item \textit{\&N}[0] is a pointer to the first element in the array of \textit{N}
   values for the detector component (or NULL, in which case no error
   bars will be computed),
-\item $\&p[0]$ is a pointer to the first element in the array of $p$
+\item \textit{\&p}[0] is a pointer to the first element in the array of \textit{p}
   values for the detector component,
-\item $\&\textit{p2}[0]$ is a pointer to the first element in the array of
+\item \textit{\&p2}}[0] is a pointer to the first element in the array of
   \textit{p2} values for the detector component (or NULL, in which case no error
   bars will be computed),
 \item \textit{filename} is a string giving the name of the file in which
@@ -1085,13 +1104,10 @@ Here,
 The results of a two-dimensional detector/\discretionary{}{}{}mon\-i\-tor are written to a file using the
 following macro:
 \begin{quote}
-  \texttt{DETECTOR\_OUT\_2D(\textit{t},
-        \textit{xlabel},
-        \textit{ylabel},
-        $x_\mathrm{min}$, $x_\mathrm{max}$, $y_\mathrm{min}$, $y_\mathrm{max}$, $m$, $n$,\\
-        \phantom{\texttt{DETECTOR\_OUT\_2D(}}% Paren hack ->)
-          $\&N[0][0]$, $\&p[0][0]$, $\&\textit{p2}[0][0]$,
-        \textit{filename})}
+  \texttt{DETECTOR\_OUT\_2D(\textit{t}, \textit{xlabel}, \textit{ylabel},
+    \textit{xmin}, \textit{xmax}, \textit{ymin}, \textit{ymax}, \textit{m}, \textit{n},\\
+    \phantom{\texttt{DETECTOR\_OUT\_2D(}}% Paren hack ->)
+    \textit{\&N}[0][0], \textit{\&p}[0][0],\textit{\&p2}[0][0],\textit{filename})}
 \end{quote}
 Here,
 \begin{itemize}
@@ -1101,17 +1117,17 @@ Here,
   axis in a plot ({\em e.g.}\ ``X position [cm]''),
 \item \textit{ylabel} is a string giving a descriptive label for the Y
   axis of a plot ({\em e.g.}\ ``Y position [cm]''),
-\item $x_\mathrm{min}$ is the lower limit for the X axis,
-\item $x_\mathrm{max}$ is the upper limit for the X axis,
-\item $y_\mathrm{min}$ is the lower limit for the Y axis,
-\item $y_\mathrm{max}$ is the upper limit for the Y axis,
-\item $m$ is the number of elements in the detector arrays along the X axis,
-\item $n$ is the number of elements in the detector arrays along the Y axis,
-\item $\&N[0][0]$ is a pointer to the first element in the array of $N$
+\item \textit{xmin} is the lower limit for the X axis,
+\item \textit{xmax} is the upper limit for the X axis,
+\item \textit{ymin} is the lower limit for the Y axis,
+\item \textit{ymax} is the upper limit for the Y axis,
+\item \textit{m} is the number of elements in the detector arrays along the X axis,
+\item \textit{n} is the number of elements in the detector arrays along the Y axis,
+\item \textit{\&N}[0][0]} is a pointer to the first element in the array of \textit{N}
   values for the detector component,
-\item $\&p[0][0]$ is a pointer to the first element in the array of $p$
+\item \textit{\&p}[0][0]} is a pointer to the first element in the array of \tetxit{p}
   values for the detector component,
-\item $\&\textit{p2}[0][0]$ is a pointer to the first element in the array of
+\item \textit{\&p2[0][0]} is a pointer to the first element in the array of
   \textit{p2} values for the detector component,
 \item \textit{filename} is a string giving the name of the file in which
   to store the data.
@@ -1121,25 +1137,25 @@ along the X axis and the second dimension is along the Y axis. This
 means that element $(i_x,i_y)$ can be obtained as $p[i_x*n+i_y]$ if $p$
 is a pointer to the first element.
 
-\paragraph{Three-dimensional detectors/monitors}
-
-The results of a three-dimensional detector/\discretionary{}{}{}mon\-i\-tor are written to a file using the
-following macro:
-
-\begin{quote}
-  \texttt{DETECTOR\_OUT\_3D(\textit{t},
-        \textit{xlabel}, \textit{ylabel}, \textit{zlabel},
-        \textit{xvar}, \textit{yvar}, \textit{zvar},
-        $x_\mathrm{min}$, $x_\mathrm{max}$, $y_\mathrm{min}$, $y_\mathrm{max}$,
-        $z_\mathrm{min}$, $z_\mathrm{max}$, $m$, $n$, $j$\\
-        \phantom{\texttt{DETECTOR\_OUT\_3D(}}% Paren hack ->)
-          $\&N[0][0][0]$, $\&p[0][0][0]$, $\&\textit{p2}[0][0][0]$,
-        \textit{filename})}
-\end{quote}
-The meaning of parameters is the same as those used in the 1D and 2D
-versions of DETECTOR\_OUT. The available data format currently saves
-the 3D arrays as 2D, with the 3rd dimension specified in the \textit{
-  type} field of the data header.
+%\paragraph{Three-dimensional detectors/monitors}
+%
+%The results of a three-dimensional detector/\discretionary{}{}{}mon\-i\-tor are written to a file using the
+%following macro:
+%
+%\begin{quote}
+%  \texttt{DETECTOR\_OUT\_3D(\textit{t},
+%        \textit{xlabel}, \textit{ylabel}, \textit{zlabel},
+%        \textit{xvar}, \textit{yvar}, \textit{zvar},
+%        $x_\mathrm{min}$, $x_\mathrm{max}$, $y_\mathrm{min}$, $y_\mathrm{max}$,
+%        $z_\mathrm{min}$, $z_\mathrm{max}$, $m$, $n$, $j$\\
+%        \phantom{\texttt{DETECTOR\_OUT\_3D(}}% Paren hack ->)
+%          $\&N[0][0][0]$, $\&p[0][0][0]$, $\&\textit{p2}[0][0][0]$,
+%        \textit{filename})}
+%\end{quote}
+%The meaning of parameters is the same as those used in the 1D and 2D
+%versions of DETECTOR\_OUT. The available data format currently saves
+%the 3D arrays as 2D, with the 3rd dimension specified in the \textit{
+%  type} field of the data header.
 
 \paragraph{Customizing detectors/monitors}
 \index{Library!Run-time!DETECTOR\_CUSTOM\_HEADER}
@@ -1151,7 +1167,11 @@ Users may want to have additional information than the default one written by th
   \texttt{DETECTOR\_CUSTOM\_HEADER(\textit{t})}
 \end{quote}
 
-defines a string to be written during the next \verb+DETECTOR\_OUT*+ call, as a field \textit{custom}. This string may additionally use the symbol \verb+%PRE+ which is replaced by the format specific comment character, e.g. '\#' for McStas/PGPLOT, '\%' for Octave/Matlab, '\verb+//+' for Scilab and ';' for IDL, and ' ' for other formats. The argument \textit{t} to the macro may be a static string, e.g. \textit{"My own additional information"}, or the name of a \textit{character array variable} containing the meta data. After the detector/monitor file being written, the custom meta data output is unactivated. This way, each monitor file may have its own meta data definition by repeating the DETECTOR\_CUSTOM\_HEADER call. You may either do that inside the component SAVE section, or within an instrument description in an EXTEND code preceeding the monitor (e.g. following an Arm component).
+defines a string to be written during the next \verb+DETECTOR\_OUT*+ call, as a field \textit{custom}. This string should use the symbol \verb+%PRE+ which is replaced by
+the comment character '\#'. The argument \textit{t} to the macro may be a static string, e.g. \textit{"My own additional information"}, or the name of a \textit{character array variable} containing the meta data. After
+the detector/monitor file being written, the custom meta data output is unactivated. This way, each monitor file may have its own meta data definition by repeating the
+DETECTOR\_CUSTOM\_HEADER call. You may either do that inside the component SAVE section, or within an instrument description in an EXTEND code preceeding the monitor (e.g.
+following an Arm component).
 
 \subsection{The \texttt{FINALLY} section}
 \label{s:comp-finally}
@@ -1178,15 +1198,15 @@ simulated intensity in a detector. This section also triggers the SAVE section t
   \verb|%}|
 \end{quote}
 This gives C code that draws a sketch of the component in the plots
-produced by the \verb+mcdisplay+ front-end (see
-section~\ref{s:mcdisplay}). The section can contain arbitrary C code and
+produced by the \verb+mxdisplay+ front-end (see
+\cref{s:mxdisplay}). The section can contain arbitrary C code and
 may refer to the parameters of the component, but usually it will
 consist of a short sequence of the special commands described below that
 are available only in the MCDISPLAY section.
 When drawing components, all distances and positions are in meters and
 specified in the local coordinate system of the component.
 
-The MCDISPLAY section is optional. If it is omitted, \verb+mcdisplay+
+The MCDISPLAY section is optional. If it is omitted, \verb+mxdisplay+
 will use a default symbol (a small circle) for drawing the component.
 
 \paragraph{The \texttt{magnify} command}
@@ -1194,7 +1214,7 @@ will use a default symbol (a small circle) for drawing the component.
 This command, if present, must be the first in the section. It takes a
 single argument: a string containing zero or more of the letters ``x'',
 ``y'' and ``z''. It causes the drawing to be enlarged along the
-specified axis in case \verb+mcdisplay+ is called with the \verb+--zoom+
+specified axis in case \verb+mxdisplay+ is called with the \verb+--zoom+
 option. For example:
 \begin{verbatim}
     magnify("xy");
@@ -1290,19 +1310,24 @@ This marks the end of the component definition.
 \subsection{A component example: Slit}
 \label{s:slit}
 A simple example of the component \texttt{Slit} is given.
-
-%FIXME \smallverbatimfile{Slit.comp}
-
+\lstinputlisting[language=mccode]{Slit.comp}
 
 \section{Extending component definitions}
 \label{s:compdefs-extend}
 
-Suppose you are interested by one component of the \MCX library, but you would like to customize it a little. There are different ways to extend an existing component.
+Suppose you are interested in one component in the \MCX library, but you would like to customize it a little. There are different ways to extend an existing component.
 
-\subsection{Extending from the instrument definition}
+\subsection{Extending from the instrument definition file}
 \index{Keyword!EXTEND}
 
 If you only want to \emph{add} something on top of the component existing behaviour, the simplest is to work from the instrument definition \texttt{TRACE} section, using the \texttt{EXTEND} modifier (see section \ref{s:instrdefs-extend-group}). You do not need to write a new component definition, but only add a piece of code to execute.
+
+\subsection{Explicitly modify an existing library component}
+Copy the interesting component definition from the \MCX library location (e.g. \verb+/usr/local/mcxtrace/1.2/...+ or \verb+c:\mcxtrace\1.2\...+) into your working directory next to
+your instrument definition file. 
+This will cause \MCX to pick this component definition up before the one in the library.
+Next, modify the local component file until you ae satisfied with it. If you feel that the newly modified componennt may be of use to the \MCX community, please do not hesitate to contact the
+development team concerning the options for contributing. Rest assured that copyright remains with you. 
 
 \subsection{Component heritage and duplication}
 \index{Keyword!COPY}
@@ -1348,7 +1373,6 @@ This mechanism may lighten the component code, but a special care should be take
 \label{s:mxdoc}
 \index{Tools!mxdoc}
 
-%From version 1.3,
 McXtrace includes a facility called MxDoc to help maintain documentation of
 components and instruments. In the source code, comments may be
 written that follow a particular format understood by MxDoc. The MxDoc facility
@@ -1357,14 +1381,13 @@ various forms. By using the source code itself as the source of documentation,
 the documentation is much more likely to be a faithful and up-to-date
 description of how the component/instrument actually works.
 
-%In McStas version 1.4,
 Two forms of documentation can be generated. One
 is the component entry dialog in the \verb+mxgui+ front-end, see
 section~\ref{s:mxgui}. The other is a collection of web pages documenting
 the components and instruments, handled via the \verb+mxdoc+ front-end (see section~\ref{s:mxdoc-run}), and the complete documentation for all available
-McStas components and instruments may be found at the \MCX
+\MCX components and instruments may be found at the \MCX
 webpage~\cite{mcxtrace_webpage}, as well as in the \MCX library
-(see~\ref{s:comp-overview}). All available \MCX documentation is accessible from the \verb+mcgui+ 'Help' menu.
+(see~\ref{s:comp-overview}). All available \MCX documentation is accessible from the \verb+mxgui+ 'Help' menu.
 
 Note that MxDoc-compliant comments in the source code are no substitute
 for a good reference manual entry. The mathematical equations describing
@@ -1407,8 +1430,8 @@ Additionally, optional keys \verb+%VALIDATION+ and \verb+%BUGS+ may be found to 
   or \hbox{``\texttt{\textit{name\/}:~\textit{text\/} [\textit{unit\/}]}''}.
   These may span multiple lines, but subsequent lines must be
   indented by at least four spaces. Note that square brackets \verb+[]+ should
-  be used for units. Normal parenthesis are also supported for backwards
-  compatibility, but nested parenthesis do not work well.
+  be used for units. Normal parentheses are also supported for backwards
+  compatibility, but nested parentheses do not work well.
 \item The \verb+%DESCRIPTION+
   section contains text in free format. The text may contain HTML tags
   like \verb+<IMG>+ (to include pictures) and
