@@ -3250,6 +3250,7 @@ mchelp(char *pgmname)
 "  --no-output-files          Do not write any data files.\n"
 "  -h        --help           Show this help message.\n"
 "  -i        --info           Detailed instrument information.\n"
+"  --source                   Show the instrument code which was compiled.\n"
 "  --format=FORMAT            Output data files using FORMAT="
    FLAVOR_UPPER
 #ifdef USE_NEXUS
@@ -3498,6 +3499,14 @@ mcparseoptions(int argc, char *argv[])
     }
     else if(!strcmp("--no-output-files", argv[i]))
       mcdisable_output_files = 1;
+    else if(!strcmp("--source", argv[i]))
+      printf("Source code %s from %s:\n"
+        "/******************************************************************************/\n"
+        "%s\n", 
+        "/******************************************************************************/\n"
+        "End of source code %s from %s\n",
+        mcinstrument_name, mcinstrument_source, mcinstrument_code, 
+        mcinstrument_name, mcinstrument_source);
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
       *p++ = '\0';

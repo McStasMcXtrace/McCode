@@ -677,7 +677,7 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
         /* Check instrument parameters for uniqueness */
         check_instrument_formals(instrument_definition->formals,
                instrument_definition->name);
-        if (verbose && !error_encountered) fprintf(stderr, "Creating instrument %s (with %li component instances)\n", $3, comp_current_index);
+        if (verbose && !error_encountered) fprintf(stderr, "Creating instrument '%s' (with %li component instances)\n", $3, comp_current_index);
       }
 ;
 
@@ -1530,6 +1530,7 @@ print_usage(void)
   fprintf(stderr, "      --no-main                  Do not create main(), for external embedding.\n");
   fprintf(stderr, "      --no-runtime               Do not embed run-time libraries.\n");
   fprintf(stderr, "      --verbose                  Display compilation process steps.\n");
+  fprintf(stderr, "      --source                   Embed the instrument source code in executable.\n");
   fprintf(stderr, "  The instrument description file will be processed and translated into a C code program.\n");
   fprintf(stderr, "  If run-time libraries are not embedded, you will have to pre-compile\n");
   fprintf(stderr, "    them (.c -> .o) before assembling the program.\n");

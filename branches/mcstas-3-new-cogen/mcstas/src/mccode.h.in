@@ -247,6 +247,8 @@ extern int parse_restricted;
 extern Symtab read_components;
 /* Verbose parsing/code generation */
 extern char verbose;
+/* embed instrument source code */
+extern char embed_instrument_file;
 /* Will store component instance for PREVIOUS reference */
 extern struct comp_inst *previous_comp;
 extern struct comp_inst *myself_comp;

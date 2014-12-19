@@ -336,15 +336,6 @@ int cogen_decls(struct instr_def *instr)
   
   if (verbose) fprintf(stderr, "Writing instrument '%s' and components DECLARE\n", instr->name);
   
-  /* embed instrument file if requested with --source option */
-  if (embed_instrument_file) {
-    char *source=NULL;
-    FILE fid=fopen(instr->source);
-    /* read full file content */
-    source = str_quote(content);
-    coutf("char mcinstrument_code[] = %s", source);
-    str_free(source);
-  }
   cout("");
   cout("/* *****************************************************************************");
   coutf("* instrument '%s' and components DECLARE", instr->name);
@@ -1475,6 +1466,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   int   i,j=0;
   time_t t;
   char  date[64];
+  long  index=0;
   
   time(&t);
   strncpy(date, ctime(&t), 64);
@@ -1569,6 +1561,34 @@ cogen_header(struct instr_def *instr, char *output_name)
   coutf("char  %sinstrument_name[]   = \"%s\";", ID_PRE, instr->name);
   coutf("char  %sinstrument_source[] = \"%s\";", ID_PRE, instr->source);
   coutf("char *%sinstrument_exe      = NULL; /* will be set to argv[0] in main */", ID_PRE);
+  
+  /* embed instrument file if requested with --source option */
+  if (embed_instrument_file) {
+    
+    FILE *fid=fopen(instr->source, "rb");
+    if (fid) {
+      char *content=NULL;
+      char *content_quoted=NULL;
+      fseek(fid, 0, SEEK_END);
+      index = ftell(fid);
+      fseek(fid, 0, SEEK_SET);
+      content = malloc(index + 1);
+      /* read full file content */
+      fread(content, index, 1, fid);
+      fclose(fid);
+      content[index] = '\0';
+      content_quoted = str_quote(content);
+      coutf("char mcinstrument_code[] = \"%s\";\n", content_quoted);
+      str_free(content_quoted);
+      str_free(content);
+    }
+  }
+  /* if option is not set, or source file can not be accessed */
+  if (!index)
+    coutf("char mcinstrument_code[] = "
+    "\"Instrument %s source code %s is not embedded in this executable.\\n"
+    "  Use --source option when running " MCCODE_NAME ".\\n\";", instr->name, instr->source);
+  
   cout("");
   if(instr->use_default_main)
     cout("int main(int argc, char *argv[]){return mccode_main(argc, argv);}");
