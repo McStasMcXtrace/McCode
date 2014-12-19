@@ -3474,7 +3474,7 @@ mcparseoptions(int argc, char *argv[])
       usedir=&argv[i][6];
     else if(!strcmp("-h", argv[i]))
       mcshowhelp(argv[0]);
-    else if(!strcmp("--help", argv[i]))
+    else if(!strcmp("--help", argv[i]) || !strcmp("--version", argv[i]))
       mcshowhelp(argv[0]);
     else if(!strcmp("-i", argv[i])) {
       mcformat=FLAVOR_UPPER;
@@ -3484,7 +3484,7 @@ mcparseoptions(int argc, char *argv[])
       mcinfo();
     else if(!strcmp("-t", argv[i]))
       mcenabletrace();
-    else if(!strcmp("--trace", argv[i]))
+    else if(!strcmp("--trace", argv[i]) || !strcmp("--verbose", argv[i]))
       mcenabletrace();
     else if(!strcmp("--gravitation", argv[i]))
       mcgravitation = 1;

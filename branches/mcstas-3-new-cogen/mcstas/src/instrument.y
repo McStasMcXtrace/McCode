@@ -162,7 +162,6 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         c->save_code = $9;
         c->finally_code = $10;
         c->display_code = $11;
-        c->comp_inst_number = 0;
         c->flag_defined_structure=0;
         c->flag_defined_share=0;
         c->flag_defined_init=0;
@@ -204,7 +203,6 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
           c->save_code  = ($11->linenum ? $11 : def->save_code);
           c->finally_code = ($12->linenum ? $12 : def->finally_code);
           c->display_code = ($13->linenum ? $13 : def->display_code);
-          c->comp_inst_number = 0;
 
           /* Check definition and setting params for uniqueness */
           check_comp_formals(c->def_par, c->set_par, c->name);
@@ -216,7 +214,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
       }
 ;
 
-/* SHARE component block included once. Toggle comp_inst_number sign from neg to pos in cogen.c */
+/* SHARE component block included once. */
 share:    /* empty */
       {
         $$ = codeblock_new();
@@ -336,7 +334,7 @@ state_par:    /* empty */
     | "STATE" "PARAMETERS" comp_iformallist
       {
         /* Issue warning */
-        print_error(" %s is using STATE PARAMETERS\n    %s %s does NOT support this keyword. Please remove line %d\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION, instr_current_line);
+        print_error(" %s is using STATE PARAMETERS\n    %s %s does NOT support this keyword. Please remove line %d.\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION, instr_current_line);
       }
 ;
 
@@ -347,7 +345,7 @@ pol_par:    /* empty */
     | "POLARISATION" "PARAMETERS" comp_iformallist
       {
         /* Issue warning */
-        print_error(" %s is using POLARISATION PARAMETERS\n    %s %s does NOT support this keyword. Please remove line %d\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION, instr_current_line);
+        print_error(" %s is using POLARISATION PARAMETERS\n    %s %s does NOT support this keyword. Please remove line %d.\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION, instr_current_line);
       }
 ;
 
@@ -933,7 +931,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
         struct comp_def *def;
         struct comp_inst *comp;
         def = read_component($1);
-        if (def != NULL) def->comp_inst_number--;
         
         palloc(comp);
         comp->def          = def;
@@ -962,39 +959,42 @@ removable:    /* empty */
       }
 ;
 
-component: removable split "COMPONENT" instname '=' instref when place orientation groupref extend jumps
+component: removable split "COMPONENT" instname '=' instref 
       {
         struct comp_inst *comp;
 
-        comp = $6;
-        myself_comp = comp;
-        
-        if (comp->def != NULL) {
-          comp->def->comp_inst_number--;
-        }
+        myself_comp = comp = $6;
 
         comp->name  = $4;
         comp->split = $2;
         comp->removable = $1;
-
-        if ($7) comp->when  = $7;
+      }
+      when place orientation groupref extend jumps
+      {
+        struct comp_inst *comp = myself_comp;
+        
+        if ($8) comp->when  = $8;
 
         palloc(comp->pos);
-        comp->pos->place           = $8.place;
-        comp->pos->place_rel       = $8.place_rel;
-        comp->pos->orientation     = $9.orientation;
+        comp->pos->place           = $9.place;
+        comp->pos->place_rel       = $9.place_rel;
+        comp->pos->orientation     = $10.orientation;
         comp->pos->orientation_rel =
-            $9.isdefault ? $8.place_rel : $9.orientation_rel;
+            $10.isdefault ? $9.place_rel : $10.orientation_rel;
 
-        if ($10) {
-          comp->group = $10;    /* component is part of an exclusive group */
+        if ($11) {
+          comp->group = $11;    /* component is part of an exclusive group */
           /* store first and last comp of group. Check if a SPLIT is inside */
           if (!comp->group->first_comp) comp->group->first_comp =comp->name;
           comp->group->last_comp=comp->name;
-          if (comp->split && !comp->group->split) comp->group->split = comp->split;
+          if (comp->split)
+            print_error("Component %s=%s() at line %s:%d is in GROUP %s and has a SPLIT.\n"
+              "\tMove the SPLIT keyword before (outside) the component instance %s (first in GROUP)\n",
+              comp->name, comp->def->name, instr_current_filename, instr_current_line, $11->name,
+              comp->group->first_comp);
         }
-        if ($11->linenum)   comp->extend= $11;  /* EXTEND block*/
-        if (list_len($12))  comp->jump  = $12;
+        if ($12->linenum)   comp->extend= $12;  /* EXTEND block*/
+        if (list_len($13))  comp->jump  = $13;
         comp->index = ++comp_current_index;     /* index of comp instance */
 
         debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $4, $6->def->name));
@@ -1119,7 +1119,6 @@ groupdef:   TOK_ID
           group->index      = 0;
           group->first_comp = NULL;
           group->last_comp  = NULL;
-          group->split      = NULL;
           symtab_add(group_instances, $1, group);
           list_add(group_instances_list, group);
         }
@@ -1236,27 +1235,27 @@ jumpcondition: "WHEN" exp
 
 jumpname: "PREVIOUS"
     {
-      $$.name  = NULL;
+      $$.name  = str_dup("PREVIOUS");
       $$.index = -1;
     }
   | "PREVIOUS" '(' TOK_NUMBER ')'
     {
-      $$.name  = NULL;
+      $$.name  = str_cat("PREVIOUS_", $3, NULL);
       $$.index = -atoi($3);
     }
   | "MYSELF"
     {
-      $$.name  = NULL;
+      $$.name  = str_dup("MYSELF");
       $$.index = 0;
     }
   | "NEXT"
     {
-      $$.name  = NULL;
+      $$.name  = str_dup("NEXT");;
       $$.index = +1;
     }
   | "NEXT" '(' TOK_NUMBER ')'
     {
-      $$.name  = NULL;
+      $$.name  = str_cat("NEXT_", $3, NULL);
       $$.index = +atoi($3);    }
   | TOK_ID
     {
@@ -1504,7 +1503,10 @@ List group_instances_list;
 static char *output_filename;
 
 /* Verbose parsing/code generation */
-char verbose;
+char verbose = 0;
+
+/* include instrument source code in executable ? */
+char embed_instrument_file = 0;
 
 /* Map of already-read components. */
 Symtab read_components = NULL;
@@ -1634,6 +1636,8 @@ parse_command_line(int argc, char *argv[])
       print_version();
     else if(!strcmp("--verbose", argv[i]))
       verbose = 1;
+    else if(!strcmp("--source", argv[i]))
+      embed_instrument_file = 1;
     else if(!strcmp("--no-main", argv[i]))
       instrument_definition->use_default_main = 0;
     else if(!strcmp("--no-runtime", argv[i]))
@@ -1704,7 +1708,7 @@ main(int argc, char *argv[])
     str_quote(instrument_definition->source);
   if (verbose) {
     fprintf(stderr, MCCODE_NAME " version " MCCODE_VERSION " (" MCCODE_DATE ") " MCCODE_H "\n");
-    fprintf(stderr, "Analyzing file            %s\n", instrument_definition->quoted_source);
+    fprintf(stderr, "Analyzing file            '%s'\n", instrument_definition->quoted_source);
   }
   instr_current_line = 1;
   lex_new_file(file);
@@ -1715,15 +1719,15 @@ main(int argc, char *argv[])
   if (err != 0 && !error_encountered) error_encountered++;
   if(error_encountered != 0)
   {
-    print_error(MCCODE_NAME ": %i Errors encountered during parse of %s.\n",
+    print_error(MCCODE_NAME ": %i Errors encountered during parse of '%s'.\n",
       error_encountered, instr_current_filename);
     exit(1);
   }
   else
   {
-    if (verbose) fprintf(stderr, "Starting to create C code %s\n", output_filename);
+    if (verbose) fprintf(stderr, "Starting to create  C code '%s' ...\n", output_filename);
     cogen(output_filename, instrument_definition);
-    if (verbose) fprintf(stderr, "Generated          C code %s\n", output_filename);
+    if (verbose) fprintf(stderr, "Generated           C code '%s'.\n", output_filename);
     exit(0);
   }
 }
