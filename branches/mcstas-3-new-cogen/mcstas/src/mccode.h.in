@@ -398,9 +398,10 @@ struct comp_def
     int  flag_defined_structure;    /* set to 1 when the parameter block is generated */
     int  flag_defined_share;        /* set to 1 when the SHARE block is generated */
     int  flag_defined_init;         /* set to 1 when a common INIT block is generated */
-    int  flag_defined_save;         /* set to 1 when a common INIT block is generated */
-    int  flag_defined_finally;         /* set to 1 when a common INIT block is generated */
-    int  flag_defined_display;         /* set to 1 when a common INIT block is generated */
+    int  flag_defined_save;         /* set to 1 when a common SAVE block is generated */
+    int  flag_defined_finally;      /* set to 1 when a common FINALLY block is generated */
+    int  flag_defined_display;      /* set to 1 when a common DISPLAY block is generated */
+    int  flag_defined_trace;        /* set to 1 when a common TRACE block is generated */
     List def_par, set_par, out_par; /* Formal parameters. */
     struct code_block *share_code;  /* Unique Declaration code (shared). */
     struct code_block *decl_code;   /* Declaration code. */
