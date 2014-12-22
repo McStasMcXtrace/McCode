@@ -143,6 +143,29 @@ list_next(List_handle lh)
   }
 }
 
+/*******************************************************************************
+* Get the previous element during a traversal of a list. Returns NULL when no
+* more elements exist in the list.
+*******************************************************************************/
+void *
+list_previous(List_handle lh)
+{
+  if (!lh) return(NULL);
+  /* Check if there are any more elements */
+  if(lh->index < 0)
+  {
+    return NULL;
+  }
+  else
+  {
+    int i = lh->index;
+    if (i == 0) { /* start reverse traversal */
+      i = lh->index = lh->list->size -1;
+    }
+    lh->index--;
+    return lh->list->elements[i];
+  }
+}
 
 /*******************************************************************************
 * End a list traversal, freeing the memory allocated to the handle.
