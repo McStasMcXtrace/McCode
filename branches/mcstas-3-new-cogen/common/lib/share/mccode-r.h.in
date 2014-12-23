@@ -167,10 +167,8 @@ extern struct mcinputtable_struct mcinputtable[]; /* list of instrument paramete
 extern int    mcnumipar;                          /* number of instrument parameters */
 extern char   mcinstrument_name[], mcinstrument_source[]; /* instrument name and filename */
 extern char  *mcinstrument_exe;                           /* executable path = argv[0] or NULL */
-extern MCNUM  mccomp_storein[]; /* 11 coords * number of components in instrument */
-extern MCNUM  mcAbsorbProp[];
-extern MCNUM  mcScattered;      /* number of SCATTER calls in current component */
-extern MCNUM  mcRestore;        /* Flag to indicate if neutron needs to be restored */
+extern char   mcinstrument_code[];                        /* contains the initial 'instr' file */
+
 #ifndef MC_ANCIENT_COMPATIBILITY
 extern int mctraceenabled, mcdefaultmain;
 #endif
@@ -412,11 +410,11 @@ double randnorm(void);
 double randtriangle(void);
 
 #ifndef DANSE
-void mcinit(void);
-void mcraytrace(void);
-void mcsave(FILE *);
-void mcfinally(void);
-void mcdisplay(void);
+int mcinit(void);
+int mcraytrace(mcparticle);
+int mcsave(FILE *);
+int mcfinally(void);
+int mcdisplay(void);
 #endif
 
 /* simple vector algebra ==================================================== */
@@ -507,10 +505,8 @@ void rot_copy(Rotation dest, Rotation src);
 void rot_transpose(Rotation src, Rotation dst);
 Coords rot_apply(Rotation t, Coords a);
 
-void mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
-    double *vx, double *vy, double *vz, double *sx, double *sy, double *sz);
-void
-mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz);
+void mccoordschange(Coords a, Rotation t, mcparticle *particle);
+void mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz);
 
 double mcestimate_error(double N, double p1, double p2);
 void mcreadparams(void);

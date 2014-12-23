@@ -1536,7 +1536,13 @@ print_usage(void)
   fprintf(stderr, "  If run-time libraries are not embedded, you will have to pre-compile\n");
   fprintf(stderr, "    them (.c -> .o) before assembling the program.\n");
   fprintf(stderr, "  The default component search list is usually defined by the environment\n");
-  fprintf(stderr, "    variable '" MCCODE_LIBENV "' (default is " MCSTAS ") \n");
+  fprintf(stderr, "    variable '" MCCODE_LIBENV "' %s (default is " 
+  #if MCCODE_PROJECT == 1
+    MCSTAS
+  #elif MCCODE_PROJECT == 2
+    MCXTRACE
+  #endif
+  ") \n", getenv(MCCODE_LIBENV) ? getenv(MCCODE_LIBENV) : "");
   fprintf(stderr, "  Use '" ID_PRE "run' to both run " MCCODE_NAME " and the C compiler.\n");
   fprintf(stderr, "  Use '" ID_PRE "gui' to run the " MCCODE_NAME " GUI.\n");
   fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui, mcformat, mcdoc\n");

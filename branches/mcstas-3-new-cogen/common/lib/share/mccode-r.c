@@ -2516,23 +2516,24 @@ mcstatic inline double scalar_prod(
 * mccoordschange: applies rotation to (x y z) and (vx vy vz) and Spin (sx,sy,sz)
 *******************************************************************************/
 void
-mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
-               double *vx, double *vy, double *vz, double *sx, double *sy, double *sz)
+mccoordschange(Coords a, Rotation t, mcparticle *particle)
 {
   Coords b, c;
 
-  b.x = *x;
-  b.y = *y;
-  b.z = *z;
+  b.x = particle->x;
+  b.y = particle->y;
+  b.z = particle->z;
   c = rot_apply(t, b);
   b = coords_add(c, a);
-  *x = b.x;
-  *y = b.y;
-  *z = b.z;
+  particle->x = b.x;
+  particle->y = b.y;
+  particle->z = b.z;
 
-  if (*vz != 0.0 || *vx != 0.0 || *vy != 0.0) mccoordschange_polarisation(t, vx, vy, vz);
+  if (particle->vz != 0.0 || particle->vx != 0.0 || particle->vy != 0.0) 
+    mccoordschange_polarisation(t, &(particle->vx), &(particle->vy), &(particle->vz));
 
-  if (*sz != 0.0 || *sx != 0.0 || *sy != 0.0) mccoordschange_polarisation(t, sx, sy, sz);
+  if (particle->sz != 0.0 || particle->sx != 0.0 || particle->sy != 0.0) 
+    mccoordschange_polarisation(t, &(particle->sx), &(particle->sy), &(particle->sz));
 
 }
 
@@ -3502,7 +3503,7 @@ mcparseoptions(int argc, char *argv[])
     else if(!strcmp("--source", argv[i]))
       printf("Source code %s from %s:\n"
         "/******************************************************************************/\n"
-        "%s\n", 
+        "%s\n"
         "/******************************************************************************/\n"
         "End of source code %s from %s\n",
         mcinstrument_name, mcinstrument_source, mcinstrument_code, 
