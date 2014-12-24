@@ -1,0 +1,100 @@
+body {
+    font-family: Georgia, sans-serif;
+    color: 336699;
+    background: #eee;
+    margin-left: auto;
+    margin-right: auto;
+    width: 800px;
+}
+
+a, h1, h2       { color: #377BA8; }
+h1, h2          { font-family: 'Georgia', serif; margin: 0; }
+h1              { border-bottom: 2px solid #eee; }
+h2              { font-size: 1.2em; }
+
+.page           { margin: auto; border: 5px solid #ccc;
+                  padding: 0em; background: white; }
+.entries        { list-style: none; margin: 0; padding: 0; }
+.entries li     { margin: 0.8em 1.2em; }
+.entries li h2  { margin-left: -1em; }
+.add-entry      { font-size: 0.9em; border-bottom: 1px solid #ccc; }
+.add-entry dl   { font-weight: bold; }
+.metanav        { text-align: right; font-size: 0.8em; padding: 0.3em;
+                  margin-bottom: 1em; background: #fafafa; }
+.flash          { background: #CEE5F5; padding: 0.5em;
+                  border: 1px solid #AACBE2; }
+.error          { background: #F0D6D6; padding: 0.5em; }
+
+select#sim {
+    width: 250px;
+}
+
+.forlabel {
+    width: 200px;
+}
+
+
+/* form input { */
+/*     border: 1px solid #000000; */
+/* } */
+
+form {
+    background: #8ADCE6;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    padding: 20px;
+    width: 800px;
+}
+
+form fieldset {
+    border: none;
+    margin-bottom: 10px;
+}
+
+form fieldset:last-of-type {
+    margin-bottom: 0;
+}
+
+form legend {
+    color: #000000;
+    font-size: 16px;
+    font-weight: bold;
+    text-shadow: 0 1px 1px #c0d576;
+}
+
+
+form ol li {
+    background: #8ADCE6;
+    background: rgba(255,255,255,.3);
+    border-color: #e3ebc3;
+    border-color: rgba(255,255,255,.6);
+    border-style: solid;
+    border-width: 2px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    line-height: 30px;
+    list-style: none;
+    padding: 5px 10px;
+    margin-bottom: 2px;
+}
+
+form ol ol li {
+    background: none;
+    border: none;
+    float: left;
+}
+
+form label {
+    float: left;
+    font-size: 14px;
+    width: 150px;
+}
+
+
+.inlinelist li {
+    display: inline;
+    list-style-type: none;
+    padding-right: 50px;
+}
