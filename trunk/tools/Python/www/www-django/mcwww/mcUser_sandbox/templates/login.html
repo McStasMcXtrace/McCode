@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% block title %}Login{% endblock %}
+{% block head_extra %}
+  <style type="text/css">
+    p { color: #336699; }
+    div.centered {
+      margin: 10px 0px 10px 0px;
+      text-align: center;
+    }
+  </style>
+{% endblock %}
+{% block content %}
+  <h1>Login</h1>
+
+  <form method="POST" action="/loginPOST/">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="/Yes">
+    <ol>
+      <li>
+        <label for=username>UID:</label>
+        <input type="text" name="uid" id="uid">
+      </li>
+      <li>
+        <label for=password>Password:</label>
+        <input type="password" name="password" id="password">
+      </li>
+    </ol>
+    <input type=submit value="Logon">
+  </form>
+
+
+
+{% endblock %}
