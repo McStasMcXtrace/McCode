@@ -347,16 +347,22 @@ static struct
     char * (*parminfo)(char *);
     void (*error)(char *, char *);
     void (*printer)(char *, void *);
-} mcinputtypes[] = {
+} mcinputtypes[] = { // int, char*, char, double*, double
   {
-    mcparm_double, mcparminfo_double, mcparmerror_double,
-    mcparmprinter_double
-  }, {
     mcparm_int, mcparminfo_int, mcparmerror_int,
     mcparmprinter_int
   }, {
     mcparm_string, mcparminfo_string, mcparmerror_string,
     mcparmprinter_string
+  }, {
+    mcparm_string, mcparminfo_string, mcparmerror_string,
+    mcparmprinter_string
+  }, {
+    mcparm_double, mcparminfo_double, mcparmerror_double,
+    mcparmprinter_double
+  }, {
+    mcparm_double, mcparminfo_double, mcparmerror_double,
+    mcparmprinter_double
   }
 };
 
@@ -3801,10 +3807,10 @@ int mccode_main(int argc, char *argv[])
 while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
   {
 #ifndef NEUTRONICS
-    mcgenstate();
+    mcparticle mcneutron = mcgenstate();
 #endif
     /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
-    mcraytrace();
+    mcraytrace(mcneutron);
     mcrun_num++;
   }
 

@@ -281,27 +281,22 @@ mcstatic char  mcsig_message[256];
 /* wrapper to get absolute and relative position of comp */
 /* mccomp_posa and mccomp_posr are defined in McStas generated C code */
 #define POS_A_COMP_INDEX(index) \
-    (mccomp_posa[index])
+    (mcinstrument.position_absolute[index])
 #define POS_R_COMP_INDEX(index) \
-    (mccomp_posr[index])
-/* number of SCATTER calls in current comp: mcScattered defined in generated C code */
-#define SCATTERED mcScattered
-/* Flag to indicate if neutron needs to be restored: mcRestore defined in generated C code */
-#define RESTORE mcRestore
-
+    (mcinstrument.position_relative[index])
 
 /* Retrieve component information from the kernel */
 /* Name, position and orientation (both absolute and relative)  */
 /* Any component: For "redundancy", see comment by KN */
 #define tmp_name_comp(comp) #comp
 #define NAME_COMP(comp) tmp_name_comp(comp)
-#define tmp_pos_a_comp(comp) (mcposa ## comp)
+#define tmp_pos_a_comp(comp) (comp ## _instance.position_absolute)
 #define POS_A_COMP(comp) tmp_pos_a_comp(comp)
-#define tmp_pos_r_comp(comp) (mcposr ## comp)
+#define tmp_pos_r_comp(comp) (comp ## _instance.position_relative)
 #define POS_R_COMP(comp) tmp_pos_r_comp(comp)
-#define tmp_rot_a_comp(comp) (mcrota ## comp)
+#define tmp_rot_a_comp(comp) (comp ## _instance.rotation_absolute)
 #define ROT_A_COMP(comp) tmp_rot_a_comp(comp)
-#define tmp_rot_r_comp(comp) (mcrotr ## comp)
+#define tmp_rot_r_comp(comp) (comp ## _instance.rotation_relative)
 #define ROT_R_COMP(comp) tmp_rot_r_comp(comp)
 
 /* Current component name, index, position and orientation */
@@ -318,7 +313,7 @@ mcstatic char  mcsig_message[256];
 
 * Anyway the usage of MCGETPAR requires that we use sometimes bare names...
 */
-#define MC_GETPAR2(comp, par) (mcc ## comp ## _ ## par)
+#define MC_GETPAR2(comp, par) (comp ## _instance.parameters. ## par)
 #define MC_GETPAR(comp, par) MC_GETPAR2(comp,par)
 
 /* MCDISPLAY/trace and debugging message sent to stdout */
@@ -327,30 +322,30 @@ mcstatic char  mcsig_message[256];
 #endif
 
 #ifdef DEBUG
-#define mcDEBUG_INSTR() if(!mcdotrace); else { printf("INSTRUMENT:\n"); printf("Instrument '%s' (%s)\n", mcinstrument_name, mcinstrument_source); }
-#define mcDEBUG_COMPONENT(name,c,t) if(!mcdotrace); else {\
+#define DEBUG_INSTR() if(!mcdotrace); else { printf("INSTRUMENT:\n"); printf("Instrument '%s' (%s)\n", mcinstrument_name, mcinstrument_source); }
+#define DEBUG_COMPONENT(name,c,t) if(!mcdotrace); else {\
   printf("COMPONENT: \"%s\"\n" \
          "POS: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
          name, c.x, c.y, c.z, t[0][0], t[0][1], t[0][2], \
          t[1][0], t[1][1], t[1][2], t[2][0], t[2][1], t[2][2]); \
   printf("Component %30s AT (%g,%g,%g)\n", name, c.x, c.y, c.z); \
   }
-#define mcDEBUG_INSTR_END() if(!mcdotrace); else printf("INSTRUMENT END:\n");
-#define mcDEBUG_ENTER() if(!mcdotrace); else printf("ENTER:\n");
-#define mcDEBUG_COMP(c) if(!mcdotrace); else printf("COMP: \"%s\"\n", c);
-#define mcDEBUG_LEAVE() if(!mcdotrace); else printf("LEAVE:\n");
-#define mcDEBUG_ABSORB() if(!mcdotrace); else printf("ABSORB:\n");
+#define DEBUG_INSTR_END() if(!mcdotrace); else printf("INSTRUMENT END:\n");
+#define DEBUG_ENTER() if(!mcdotrace); else printf("ENTER:\n");
+#define DEBUG_COMP(c) if(!mcdotrace); else printf("COMP: \"%s\"\n", c);
+#define DEBUG_LEAVE() if(!mcdotrace); else printf("LEAVE:\n");
+#define DEBUG_ABSORB() if(!mcdotrace); else printf("ABSORB:\n");
 #else
-#define mcDEBUG_INSTR()
-#define mcDEBUG_COMPONENT(name,c,t)
-#define mcDEBUG_INSTR_END()
-#define mcDEBUG_ENTER()
-#define mcDEBUG_COMP(c)
-#define mcDEBUG_LEAVE()
-#define mcDEBUG_ABSORB()
+#define DEBUG_INSTR()
+#define DEBUG_COMPONENT(name,c,t)
+#define DEBUG_INSTR_END()
+#define DEBUG_ENTER()
+#define DEBUG_COMP(c)
+#define DEBUG_LEAVE()
+#define DEBUG_ABSORB()
 #endif
 
-// mcDEBUG_STATE and mcDEBUG_SCATTER are defined by mcstas-r.h and mcxtrace-r.h
+// DEBUG_STATE and DEBUG_SCATTER are defined by mcstas-r.h and mcxtrace-r.h
 
 
 
@@ -515,7 +510,7 @@ void mcreadparams(void);
 /* void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
                 double t, double sx, double sy, double sz, double p);
 */
-void mcgenstate(void);
+mcparticle mcgenstate(void);
 
 /* trajectory/shape intersection routines */
 int inside_rectangle(double, double, double, double);

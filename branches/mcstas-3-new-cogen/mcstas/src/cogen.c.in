@@ -706,8 +706,8 @@ static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *l
         ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
   coutf("  } /* %s=%s() AT ROTATED */", comp->name, comp->def->name);
 
-  coutf("  %sDEBUG_COMPONENT(\"%s\", %s%s_instance.position_absolute, %s%s_instance.rotation_absolute)",
-        ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name);
+  coutf("  DEBUG_COMPONENT(\"%s\", %s%s_instance.position_absolute, %s%s_instance.rotation_absolute);",
+        comp->name, ID_PRE, comp->name, ID_PRE, comp->name);
   coutf("    " ID_PRE "instrument.position_absolute[%i] = " ID_PRE "%s_instance.position_absolute;",
     comp->index, comp->name);
   coutf("    " ID_PRE "instrument.position_relative[%i] = " ID_PRE "%s_instance.position_relative;",
@@ -737,7 +737,7 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
   int i=0;
   
   static char *statepars_all[] =
-   { /* particle state parameter names are used for defines */
+   { /* particle member names are used for defines */
     #if MCCODE_PROJECT == 1     /* neutron */
     #define NUM_STATE_PARS 11
             "x", "y", "z", "vx", "vy", "vz",
@@ -828,6 +828,11 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
       /* define state parameters */
       for(i = 0; i < NUM_STATE_PARS; i++)
         coutf("  #define %s (" ID_PRE MCCODE_PARTICLE "->%s)", statepars_all[i], statepars_all[i]);
+      /* define SCATTERED, ABSORB and RESTORE macros */
+      coutf("  #define %s (" ID_PRE MCCODE_PARTICLE "->%s)", "SCATTERED", "scattered");
+      coutf("  #define %s (" ID_PRE MCCODE_PARTICLE "->%s)", "RESTORE"  , "restore");
+      coutf("  #define %s (" ID_PRE MCCODE_PARTICLE "->%s)", "ABSORBED" , "absorbed");
+      cout("  #define ABSORB do {DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(" ID_PRE "comp);} while(0)");
       cout("");
     }
     
@@ -841,6 +846,15 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
     /* undefine aliases */
     cogen_defundef(comp, comp->def->set_par, 0);
     cogen_defundef(comp, comp->def->out_par, 0);
+    if (!strcmp(section, "TRACE")) {
+      for(i = 0; i < NUM_STATE_PARS; i++)
+        coutf("  #undef %s", statepars_all[i]);
+      /* undefine SCATTERED, ABSORBED and RESTORE macros */
+      cout("  #undef SCATTERED");
+      cout("  #undef RESTORE"  );
+      cout("  #undef ABSORBED" );
+      cout("  #undef ABSORB");
+    }
     cout("  return(" ID_PRE "comp);");
     coutf("} /* " ID_PRE "%s_definition_%s */", comp->def->name, section_lower);
     if (!strcmp(section, "DISPLAY")) {
@@ -851,9 +865,7 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
       cout("#undef rectangle");
       cout("#undef box");
       cout("#undef circle");
-    } else if (!strcmp(section, "TRACE"))
-      for(i = 0; i < NUM_STATE_PARS; i++)
-        coutf("  #undef %s", statepars_all[i]);
+    }
     cout("");
   } /* generated SHARED [section] for component given type */
   
@@ -884,13 +896,16 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
     /* define state parameters */
     for(i = 0; i < NUM_STATE_PARS; i++)
       coutf("  #define %s (" ID_PRE MCCODE_PARTICLE "->%s)", statepars_all[i], statepars_all[i]);
+    /* define SCATTERED, ABSORBED and RESTORE macros */
+    coutf("  #define %s (" ID_PRE MCCODE_PARTICLE "->%s)", "SCATTERED", "scattered");
+    coutf("  #define %s (" ID_PRE MCCODE_PARTICLE "->%s)", "RESTORE"  , "restore");
+    coutf("  #define %s (" ID_PRE MCCODE_PARTICLE "->%s)", "ABSORBED" , "absorbed");
+    cout("  #define ABSORB do {DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(" ID_PRE MCCODE_PARTICLE ");} while(0)");
     cout("");
-    cout("  " ID_PRE MCCODE_PARTICLE "->absorbed=" ID_PRE MCCODE_PARTICLE "->scattered=" ID_PRE MCCODE_PARTICLE "->restored=0;");
-    coutf("  %sDEBUG_COMP(\"%s\")", ID_PRE, comp->name);
+    cout("  " ID_PRE MCCODE_PARTICLE "->absorbed=" ID_PRE MCCODE_PARTICLE "->scattered=" ID_PRE MCCODE_PARTICLE "->restore=0;");
+    coutf("  DEBUG_COMP(\"%s\");", comp->name);
     /* Debugging (entry into component). */
-    coutf("  %sDEBUG_STATE(", ID_PRE);
-    for(i = 0; i < NUM_STATE_PARS; i++)
-      coutf("    %s%s", statepars_all[i], i < NUM_STATE_PARS-1 ? "," : ");");
+    cout("  DEBUG_STATE();");
       
     /* update component instance counters */
     coutf("  " ID_PRE "instrument.counter_N[%i]  ++;", comp->index);
@@ -966,13 +981,16 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
     }
     
     /* Debugging (exit from component). */
-    coutf("  %sDEBUG_STATE(", ID_PRE);
-    for(i = 0; i < NUM_STATE_PARS; i++)
-      coutf("    %s%s", statepars_all[i], i < NUM_STATE_PARS-1 ? "," : ");");
+    cout("  DEBUG_STATE();");
 
     /* undefine state parameters */
     for(i = 0; i < NUM_STATE_PARS; i++)
       coutf("  #undef %s ", statepars_all[i]);
+    /* undefine SCATTERED, ABSORBED and RESTORE macros */
+    coutf("  #undef %s ", "SCATTERED");
+    coutf("  #undef %s ", "RESTORE"  );
+    coutf("  #undef %s ", "ABSORBED" );
+    coutf("  #undef ABSORB");
   }
   cogen_defundef(comp, comp->def->set_par, 0);
   cogen_defundef(comp, comp->def->out_par, 0);
@@ -986,7 +1004,7 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
   coutf("  #undef %scompcurname", ID_PRE);
   coutf("  #undef %scompcurtype", ID_PRE);
   coutf("  #undef %scompcurindex", ID_PRE);
-  if (!strcmp(section, "TRACE"))
+  if (!strcmp(section, "TRACE")) 
     cout("  return(" ID_PRE MCCODE_PARTICLE ");");
   else
     cout("  return(0);");
@@ -1136,7 +1154,6 @@ int cogen_decls(struct instr_def *instr)
   cout("");
   
   /* 5. Standard definitions */
-  /* TODO: misses: ABSORB, Group, SCATTERED, RESTORE: see legacy cogen.c.in: cogen_decls */  
   coutf("#define %scompcurname  %s", ID_PRE, instr->name);
   coutf("#define %scompcurtype  %s", ID_PRE, "instrument");
   coutf("#define %scompcurindex %i", ID_PRE, 0);
@@ -1301,7 +1318,7 @@ int cogen_section(struct instr_def *instr, char *section)
   
   if (!strcmp(section, "INITIALISE")) 
   {
-    coutf("  %sDEBUG_INSTR()", ID_PRE);
+    cout("  DEBUG_INSTR();");
     cout("");
     /* default values for instrument parameters are set in mcreadparams */
     cout("  /* " ID_PRE "code_main/" ID_PRE "parseoptions/" ID_PRE "readparams "
@@ -1358,7 +1375,7 @@ int cogen_section(struct instr_def *instr, char *section)
   if (!strcmp(section, "INITIALISE")) {
     /* Output graphics representation of components. */
     coutf("  if (%sdotrace) %sdisplay();", ID_PRE, ID_PRE);
-    coutf("  %sDEBUG_INSTR_END()", ID_PRE);
+    cout("  DEBUG_INSTR_END();");
   }
   else if (!strcmp(section, "SAVE"))
     coutf("  if (!handle) %ssiminfo_close(); ", ID_PRE);
@@ -1487,12 +1504,16 @@ int cogen_trace(struct instr_def *instr)
   /* define state parameters */
   for(index = 0; index < NUM_STATE_PARS; index++)
     coutf("  #define %s (" ID_PRE MCCODE_PARTICLE ".%s)", statepars_all[index], statepars_all[index]);
+  /* define SCATTERED, ABSORBED and RESTORE macros */
+  coutf("  #define %s (" ID_PRE MCCODE_PARTICLE ".%s)", "SCATTERED", "scattered");
+  coutf("  #define %s (" ID_PRE MCCODE_PARTICLE ".%s)", "RESTORE"  , "restore");
+  coutf("  #define %s (" ID_PRE MCCODE_PARTICLE ".%s)", "ABSORBED" , "absorbed");
+  
+  cout("  #define ABSORB do {DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
   
   /* Debugging (initial state). */
-  coutf("  %sDEBUG_ENTER()", ID_PRE);
-  coutf("  %sDEBUG_STATE(", ID_PRE);
-  for(index = 0; index < NUM_STATE_PARS; index++)
-    coutf("    %s%s", statepars_all[index], index < NUM_STATE_PARS-1 ? "," : ");");
+  cout("  DEBUG_ENTER();");
+  cout("  DEBUG_STATE();");
     
   /* init counters */
   if (list_len(instr->grouplist)) {
@@ -1526,7 +1547,7 @@ int cogen_trace(struct instr_def *instr)
   cout("");
   cout("  /* the main iteration loop for one incoming neutron */");
   cout("");
-  cout("  while (!" ID_PRE MCCODE_PARTICLE ".absorbed) { /* iterate neutron event until absorbed */");
+  cout("  while (!ABSORBED) { /* iterate neutron event until absorbed */");
   cout("    " ID_PRE "particle " ID_PRE MCCODE_PARTICLE "_save = " ID_PRE MCCODE_PARTICLE ";");
   cout("    " ID_PRE "ret++;");
   cout("    switch (" ID_PRE MCCODE_PARTICLE ".index) { /* send neutron event to component instance */");
@@ -1550,8 +1571,6 @@ int cogen_trace(struct instr_def *instr)
       ID_PRE "%s_instance.position_relative, " 
       ID_PRE "%s_instance.rotation_relative, &" ID_PRE MCCODE_PARTICLE ");", 
       comp->name, comp->name);
-    // for(index = 0; index < NUM_STATE_PARS; index++)
-    //  coutf("        &%s%s", statepars_all[index], index < NUM_STATE_PARS-1 ? "," : ");");
 
     if (comp->group) // GROUP
       if (!strcmp(comp->name, comp->group->first_comp))
@@ -1591,14 +1610,14 @@ int cogen_trace(struct instr_def *instr)
     
     cout("");
     cout("      /* ABSORB: end switch and while loop: quick exit*/");
-    cout("      if (" ID_PRE MCCODE_PARTICLE ".absorbed) break;");
+    cout("      if (ABSORBED) break;");
     cout("");
     if (comp->group) {
       // GROUP (with group1==0)
       cout( "      if (" ID_PRE MCCODE_PARTICLE ".scattered) /* skip other members of the group when scattered */");
       coutf("        " ID_PRE "instrument.logic.Group_%s=" ID_PRE MCCODE_PARTICLE ".index; ", 
         comp->group->name);
-      cout( "      else " ID_PRE MCCODE_PARTICLE ".restore=1;");
+      cout( "      else RESTORE=1;");
       cout("");
     }
 
@@ -1636,7 +1655,7 @@ int cogen_trace(struct instr_def *instr)
   
   /* write de default case */
   cout("    default: /* last case: END -> ABSORB */");
-  cout("      " ID_PRE MCCODE_PARTICLE ".absorbed=1; // normal end of neutron when no other logic/grammar");
+  cout("      ABSORBED=1; // normal end of neutron when no other logic/grammar");
   cout("    } /* end switch component */");
   cout("");
   
@@ -1644,7 +1663,7 @@ int cogen_trace(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while((comp = list_previous(liter)) != NULL) {
     if (comp && comp->split) {
-      coutf("if (" ID_PRE "instrument.logic.Split_%s-- > 0) " 
+      coutf("    if (" ID_PRE "instrument.logic.Split_%s-- > 0) " 
         ID_PRE MCCODE_PARTICLE "=" ID_PRE "instrument.logic.Split_%s_particle;"
         " /* put initial neutron back to split point */",
         comp->name, comp->name);
@@ -1652,8 +1671,8 @@ int cogen_trace(struct instr_def *instr)
   }
   list_iterate_end(liter);
   cout("");
-  cout("  /* if RESTORE, keep propagation, but restore neutron state */");
-  cout("    if (" ID_PRE MCCODE_PARTICLE ".restore)");
+  cout("    /* if RESTORE, keep propagation, but restore neutron state */");
+  cout("    if (RESTORE)");
   cout("      { " ID_PRE MCCODE_PARTICLE "_save.index=" ID_PRE MCCODE_PARTICLE ".index;"
    " " ID_PRE MCCODE_PARTICLE "=" ID_PRE MCCODE_PARTICLE "_save; }");
       
@@ -1662,6 +1681,12 @@ int cogen_trace(struct instr_def *instr)
   /* define state parameters */
   for(index = 0; index < NUM_STATE_PARS; index++)
     coutf("#undef %s", statepars_all[index]);
+  /* undefine SCATTERED, ABSORBED and RESTORE macros */
+  cout("  #undef SCATTERED");
+  cout("  #undef RESTORE");
+  cout("  #undef ABSORBED");
+  cout("  #undef ABSORB");
+  
   cout("");
   cout("  return(" ID_PRE "ret);");
   coutf("} /* " ID_PRE "%s */", "raytrace");
@@ -1742,6 +1767,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   cout("  double t, p;    /* time, event weight */");
   cout("  long long uid;  /* event ID */");
   cout("  long index;     /* component index where to send this event */");
+  /* these are needed for SCATTERED, ABSORB and RESTORE macros */
   cout("  long absorbed;  /* flag set to TRUE when this event is to be removed/ignored */");
   cout("  long scattered; /* flag set to TRUE when this event has interacted with the last component instance */");
   cout("  long restore;   /* set to true if neutron event must be restored */");
