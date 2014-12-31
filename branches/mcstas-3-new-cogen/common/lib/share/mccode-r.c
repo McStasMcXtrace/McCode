@@ -3403,9 +3403,10 @@ mcreadparams(void)
           buf[len] = '\0';
         }
       }
-
-      status = (*mcinputtypes[mcinputtable[i].type].getparm)
+      if (mcinputtypes[mcinputtable[i].type].getparm != NULL)
+        status = (*mcinputtypes[mcinputtable[i].type].getparm)
                    (buf, mcinputtable[i].par);
+      else status=1;
       if(!status)
       {
         (*mcinputtypes[mcinputtable[i].type].error)(mcinputtable[i].name, buf);

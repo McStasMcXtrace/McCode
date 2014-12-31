@@ -736,6 +736,8 @@ instr_formal:   TOK_ID TOK_ID
         palloc(formal);
         if(!strcmp($1, "char")) {
           formal->type = instr_type_string;
+        } else if(!strcmp($1, "double")) {
+          formal->type = instr_type_vector;
         } else {
           print_error("Illegal type $s* for instrument "
           "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
@@ -792,6 +794,8 @@ instr_formal:   TOK_ID TOK_ID
         formal->default_value = $5;
         if(!strcmp($1, "char")) {
           formal->type = instr_type_string;
+        } else if(!strcmp($1, "double")) {
+          formal->type = instr_type_vector;
         } else {
           print_error("Illegal type %s* for instrument "
           "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);

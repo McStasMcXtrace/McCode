@@ -447,7 +447,7 @@ int cogen_comp_declare(struct comp_inst *comp)
             continue; /* already in DECLARE code, no need to add it to the structure */
 
           /* scalar parameter */
-          if (c_formal->type != instr_type_string && c_formal->type != instr_type_vector)
+          if (c_formal->type != instr_type_string)
             coutf("  %s %s;", instr_formal_type_names_real[c_formal->type], c_formal->id);
           else  /* array parameter */
             coutf("  %s %s[16384];", 
@@ -548,6 +548,8 @@ static void cogen_comp_init_par(struct comp_inst *comp, struct instr_def *instr,
             comp->name, par->id, val, val);
           coutf("  else " ID_PRE "%s_instance.parameters.%s[0]='\\0';", 
             comp->name, par->id);
+        } else if (par->type == instr_type_vector) {
+          coutf("  " ID_PRE "%s_instance.parameters.%s = (double [])%s; // static pointer allocation", comp->name, par->id, val);
         } else
           coutf("  " ID_PRE "%s_instance.parameters.%s = %s;", comp->name, par->id, val);
         str_free(val);
@@ -725,7 +727,7 @@ static void cogen_comp_init_position(struct comp_inst *comp, struct comp_inst *l
 *         section can be INITIALISE SAVE FINALLY DISPLAY TRACE
 * output: 0 when all is fine, non-0 when error found
 *
-* called by: cogen_[section]
+* called by: cogen_comp_[section]
 ***************************************************************************** */
 int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last, 
                        struct instr_def *instr, char *section)
@@ -840,7 +842,8 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
     cogen_defundef(comp, comp->def->out_par, 2);
     coutf("  SIG_MESSAGE(\"[%%s:%%i:%s%s_definition_%s] component %s=%s() %s\", __FILE__, __LINE__);", 
       ID_PRE, comp->def->name, section_lower, comp->name, comp->def->name, section);
-      
+    
+    // SHARED code here
     codeblock_out(code); // component definition code common to all instances, needs defines
     
     /* undefine aliases */
@@ -884,8 +887,8 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
       ID_PRE, comp->name, section_lower, comp->name, comp->def->name, section);
   
   /* definition parameters of the component */
-  coutf("  #define %scompcurname  %s", ID_PRE, comp->name);
-  coutf("  #define %scompcurtype  %s", ID_PRE, comp->def->name);
+  coutf("  #define %scompcurname  \"%s\"", ID_PRE, comp->name);
+  coutf("  #define %scompcurtype  \"%s\"", ID_PRE, comp->def->name);
   coutf("  #define %scompcurindex %i", ID_PRE, comp->index);
   if (!strcmp(section, "INITIALISE")) {
     coutf("  strncpy(" ID_PRE "%s_instance.name, \"%s\", 16384);", comp->name, comp->name);
@@ -895,14 +898,14 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
   } else if (!strcmp(section, "TRACE")) {
     /* define state parameters */
     for(i = 0; i < NUM_STATE_PARS; i++)
-      coutf("  #define %s (" ID_PRE MCCODE_PARTICLE "->%s)", statepars_all[i], statepars_all[i]);
+      coutf("  #define %s (" ID_PRE MCCODE_PARTICLE ".%s)", statepars_all[i], statepars_all[i]);
     /* define SCATTERED, ABSORBED and RESTORE macros */
-    coutf("  #define %s (" ID_PRE MCCODE_PARTICLE "->%s)", "SCATTERED", "scattered");
-    coutf("  #define %s (" ID_PRE MCCODE_PARTICLE "->%s)", "RESTORE"  , "restore");
-    coutf("  #define %s (" ID_PRE MCCODE_PARTICLE "->%s)", "ABSORBED" , "absorbed");
+    coutf("  #define %s (" ID_PRE MCCODE_PARTICLE ".%s)", "SCATTERED", "scattered");
+    coutf("  #define %s (" ID_PRE MCCODE_PARTICLE ".%s)", "RESTORE"  , "restore");
+    coutf("  #define %s (" ID_PRE MCCODE_PARTICLE ".%s)", "ABSORBED" , "absorbed");
     cout("  #define ABSORB do {DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(" ID_PRE MCCODE_PARTICLE ");} while(0)");
     cout("");
-    cout("  " ID_PRE MCCODE_PARTICLE "->absorbed=" ID_PRE MCCODE_PARTICLE "->scattered=" ID_PRE MCCODE_PARTICLE "->restore=0;");
+    cout("  " ID_PRE MCCODE_PARTICLE ".absorbed=" ID_PRE MCCODE_PARTICLE ".scattered=" ID_PRE MCCODE_PARTICLE ".restore=0;");
     coutf("  DEBUG_COMP(\"%s\");", comp->name);
     /* Debugging (entry into component). */
     cout("  DEBUG_STATE();");
@@ -1154,8 +1157,8 @@ int cogen_decls(struct instr_def *instr)
   cout("");
   
   /* 5. Standard definitions */
-  coutf("#define %scompcurname  %s", ID_PRE, instr->name);
-  coutf("#define %scompcurtype  %s", ID_PRE, "instrument");
+  coutf("#define %scompcurname  \"%s\"", ID_PRE, instr->name);
+  coutf("#define %scompcurtype  \"%s\"", ID_PRE, "instrument");
   coutf("#define %scompcurindex %i", ID_PRE, 0);
   cout("");
   
@@ -1167,7 +1170,7 @@ int cogen_decls(struct instr_def *instr)
   while(i_formal = list_next(liter))
   {
     if (strlen(i_formal->id)) {
-      if (i_formal->isoptional 
+      if (i_formal->isoptional  // needed to avoid double quotes in strings
           && !strcmp(instr_formal_type_names[i_formal->type],"instr_type_string"))
         coutf("  \"%s\", &%sinstrument.parameters.%s, %s, %s, ", i_formal->id, ID_PRE,
             i_formal->id, instr_formal_type_names[i_formal->type],
@@ -1592,7 +1595,7 @@ int cogen_trace(struct instr_def *instr)
       // in GROUP: test if a previous group member took the token (scattered)
       coutf("      if (" ID_PRE "instrument.logic.Group_%s) /* GROUP logic: SCATTERED occured before: skip */", comp->group->name);
       cout( "        { " ID_PRE MCCODE_PARTICLE ".index++; break; }"
-        " // directly go to next when flag is set (and skip all other group members)");
+        " // directly go to next comp when flag is set (and skip all other group members)");
       cout("");
     }
 
@@ -1604,7 +1607,7 @@ int cogen_trace(struct instr_def *instr)
         str_free(exp);
       }
       /* call the component instance TRACE function */
-      coutf("      " ID_PRE MCCODE_PARTICLE " = %s_instance_trace(" ID_PRE MCCODE_PARTICLE ");%s",
+      coutf("      " ID_PRE MCCODE_PARTICLE " = " ID_PRE "%s_instance_trace(" ID_PRE MCCODE_PARTICLE ");%s",
         comp->name, list_len(comp->extend->lines) ? " /* contains EXTEND code */" : "");
     }
     
