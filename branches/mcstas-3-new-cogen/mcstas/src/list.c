@@ -121,6 +121,20 @@ list_iterate(List l)
   return lh;
 }
 
+/*******************************************************************************
+* Prepare to start traversing a list in reverse order
+*******************************************************************************/
+List_handle
+list_iterate_back(List l)
+{
+  List_handle lh;
+
+  palloc(lh);
+  lh->list = l;
+  lh->index = l->size-1;
+  return lh;
+}
+
 
 /*******************************************************************************
 * Get the next element during a traversal of a list. Returns NULL when no
@@ -159,9 +173,6 @@ list_previous(List_handle lh)
   else
   {
     int i = lh->index;
-    if (i == 0) { /* start reverse traversal */
-      i = lh->index = lh->list->size -1;
-    }
     lh->index--;
     return lh->list->elements[i];
   }

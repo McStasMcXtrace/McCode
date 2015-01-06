@@ -280,41 +280,44 @@ mcstatic char  mcsig_message[256];
 
 /* wrapper to get absolute and relative position of comp */
 /* mccomp_posa and mccomp_posr are defined in McStas generated C code */
+
 #define POS_A_COMP_INDEX(index) \
     (mcinstrument.position_absolute[index])
 #define POS_R_COMP_INDEX(index) \
     (mcinstrument.position_relative[index])
-
-/* Retrieve component information from the kernel */
-/* Name, position and orientation (both absolute and relative)  */
-/* Any component: For "redundancy", see comment by KN */
-#define tmp_name_comp(comp) #comp
-#define NAME_COMP(comp) tmp_name_comp(comp)
-#define tmp_pos_a_comp(comp) (comp ## _instance.position_absolute)
-#define POS_A_COMP(comp) tmp_pos_a_comp(comp)
-#define tmp_pos_r_comp(comp) (comp ## _instance.position_relative)
-#define POS_R_COMP(comp) tmp_pos_r_comp(comp)
-#define tmp_rot_a_comp(comp) (comp ## _instance.rotation_absolute)
-#define ROT_A_COMP(comp) tmp_rot_a_comp(comp)
-#define tmp_rot_r_comp(comp) (comp ## _instance.rotation_relative)
-#define ROT_R_COMP(comp) tmp_rot_r_comp(comp)
-
-/* Current component name, index, position and orientation */
-#define NAME_CURRENT_COMP  NAME_COMP(mccompcurname)
-#define INDEX_CURRENT_COMP mccompcurindex
-#define POS_A_CURRENT_COMP POS_A_COMP(mccompcurname)
-#define POS_R_CURRENT_COMP POS_R_COMP(mccompcurname)
-#define ROT_A_CURRENT_COMP ROT_A_COMP(mccompcurname)
-#define ROT_R_CURRENT_COMP ROT_R_COMP(mccompcurname)
-
+    
 /* Note: The two-stage approach to MC_GETPAR is NOT redundant; without it,
 * after #define C sample, MC_GETPAR(C,x) would refer to component C, not to
 * component sample. Such are the joys of ANSI C.
 
 * Anyway the usage of MCGETPAR requires that we use sometimes bare names...
 */
-#define MC_GETPAR2(comp, par) (comp ## _instance.parameters. ## par)
+#define MC_GETPAR2(comp, par) (mcinstance_ ## comp.parameters.par)
 #define MC_GETPAR(comp, par) MC_GETPAR2(comp,par)
+
+#define MC_GET2(comp, field) (mcinstance_ ## comp.field)
+#define MC_GET(comp, field) MC_GET2(comp,field)
+
+/* Retrieve component information from the kernel */
+/* Name, position and orientation (both absolute and relative)  */
+/* Any component: For "redundancy", see comment by KN */
+
+#define NAME_COMP(comp) MC_GET(comp, name)
+#define TYPE_COMP(comp) MC_GET(comp, type)
+#define INDEX_COMP(comp) MC_GET(comp, index)
+#define POS_A_COMP(comp) MC_GET(comp, position_absolute)
+#define POS_R_COMP(comp) MC_GET(comp, position_relative)
+#define ROT_A_COMP(comp) MC_GET(comp, rotation_absolute)
+#define ROT_R_COMP(comp) MC_GET(comp, rotation_relative)
+
+/* Current component name, index, position and orientation */
+#define INDEX_CURRENT_COMP INDEX_COMP(MYSELF)
+#define NAME_CURRENT_COMP NAME_COMP(MYSELF)
+#define TYPE_CURRENT_COMP TYPE_COMP(MYSELF)
+#define POS_A_CURRENT_COMP POS_A_COMP(MYSELF)
+#define POS_R_CURRENT_COMP POS_R_COMP(MYSELF)
+#define ROT_A_CURRENT_COMP ROT_A_COMP(MYSELF)
+#define ROT_R_CURRENT_COMP ROT_R_COMP(MYSELF)
 
 /* MCDISPLAY/trace and debugging message sent to stdout */
 #ifdef MC_TRACE_ENABLED

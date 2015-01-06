@@ -335,7 +335,7 @@ state_par:    /* empty */
     | "STATE" "PARAMETERS" comp_iformallist
       {
         /* Issue warning */
-        print_error(" %s is using STATE PARAMETERS\n    %s %s does NOT support this keyword. Please remove line %d.\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION, instr_current_line);
+        print_error("ERROR: %s is using STATE PARAMETERS\n    %s %s does NOT support this keyword. Please remove line %d.\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION, instr_current_line);
       }
 ;
 
@@ -346,7 +346,7 @@ pol_par:    /* empty */
     | "POLARISATION" "PARAMETERS" comp_iformallist
       {
         /* Issue warning */
-        print_error(" %s is using POLARISATION PARAMETERS\n    %s %s does NOT support this keyword. Please remove line %d.\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION, instr_current_line);
+        print_error("ERROR: %s is using POLARISATION PARAMETERS\n    %s %s does NOT support this keyword. Please remove line %d.\n", instr_current_filename, MCCODE_NAME,MCCODE_VERSION, instr_current_line);
       }
 ;
 
@@ -392,7 +392,7 @@ comp_iformal:  TOK_ID TOK_ID
         } else if(!strcmp($1, "vector")) {
           formal->type = instr_type_vector;
         } else {
-          print_error("Illegal type %s for component "
+          print_error("ERROR: Illegal type %s for component "
           "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
           formal->type = instr_type_double;
         }
@@ -408,7 +408,7 @@ comp_iformal:  TOK_ID TOK_ID
         } else if(!strcmp($1, "double")) {
           formal->type = instr_type_vector;
         } else {
-          print_error("Illegal type %s* for component "
+          print_error("ERROR: Illegal type %s* for component "
           "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
           formal->type = instr_type_double;
         }
@@ -447,7 +447,7 @@ comp_iformal:  TOK_ID TOK_ID
         } else if(!strcmp($1, "vector")) {
           formal->type = instr_type_vector;
         } else {
-          print_error("Illegal type %s for component "
+          print_error("ERROR: Illegal type %s for component "
           "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
           formal->type = instr_type_double;
         }
@@ -468,7 +468,7 @@ comp_iformal:  TOK_ID TOK_ID
         } else if(!strcmp($1, "double")) {
           formal->type = instr_type_vector;
         } else {
-          print_error("Illegal type %s* for component "
+          print_error("ERROR: Illegal type %s* for component "
           "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
           formal->type = instr_type_double;
         }
@@ -723,7 +723,7 @@ instr_formal:   TOK_ID TOK_ID
         } else if(!strcmp($1, "string")) {
           formal->type = instr_type_string;
         } else {
-          print_error("Illegal type %s for instrument "
+          print_error("ERROR: Illegal type %s for instrument "
           "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
           formal->type = instr_type_double;
         }
@@ -739,7 +739,7 @@ instr_formal:   TOK_ID TOK_ID
         } else if(!strcmp($1, "double")) {
           formal->type = instr_type_vector;
         } else {
-          print_error("Illegal type $s* for instrument "
+          print_error("ERROR: Illegal type $s* for instrument "
           "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
           formal->type = instr_type_double;
         }
@@ -776,7 +776,7 @@ instr_formal:   TOK_ID TOK_ID
         } else if(!strcmp($1, "string")) {
           formal->type = instr_type_string;
         } else {
-          print_error("Illegal type %s for instrument "
+          print_error("ERROR: Illegal type %s for instrument "
           "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
           formal->type = instr_type_double;
         }
@@ -797,7 +797,7 @@ instr_formal:   TOK_ID TOK_ID
         } else if(!strcmp($1, "double")) {
           formal->type = instr_type_vector;
         } else {
-          print_error("Illegal type %s* for instrument "
+          print_error("ERROR: Illegal type %s* for instrument "
           "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
           formal->type = instr_type_double;
         }
@@ -823,7 +823,7 @@ complist:   /* empty */
                         been used before. */
           if(symtab_lookup(comp_instances, $2->name))
           {
-            print_error("Multiple use of component instance name "
+            print_error("ERROR: Multiple use of component instance name "
             "'%s' at line %s:%d.\nPlease change the instance name.\n", $2->name, instr_current_filename, instr_current_line);
             /* Since this is an error condition, we do not
               worry about freeing the memory allocated for
@@ -840,7 +840,7 @@ complist:   /* empty */
               liter = list_iterate($2->def->out_par);
               while(par = list_next(liter)) {
                 if (!strcmp($2->name, par))
-                  print_error("Component instance name "
+                  print_error("ERROR: Component instance name "
               "'%s' matches an internal OUTPUT parameter of component class %s at "
               "line %s:%d.\nPlease change the instance name.\n", 
               $2->name, $2->def->name, instr_current_filename, instr_current_line);
@@ -850,7 +850,7 @@ complist:   /* empty */
               liter = list_iterate($2->def->set_par);
               while(formal = list_next(liter)) {
                 if (!strcmp($2->name, formal->id))
-                  print_error("Component instance name "
+                  print_error("ERROR: Component instance name "
                   "'%s' matches an internal SETTING parameter of component class %s at "
                   "line %s:%d.\nPlease change the instance name.\n", 
                   $2->name, $2->def->name, instr_current_filename, instr_current_line);
@@ -860,7 +860,7 @@ complist:   /* empty */
               liter = list_iterate($2->def->def_par);
               while(formal = list_next(liter)) {
                 if (!strcmp($2->name, formal->id))
-                  print_error("Component instance name "
+                  print_error("ERROR: Component instance name "
                   "'%s' matches an internal DEFINITION parameter of component class %s at "
                   "line %s:%d.\nPlease change the instance name.\n", 
                   $2->name, $2->def->name, instr_current_filename, instr_current_line);
@@ -993,7 +993,7 @@ component: removable split "COMPONENT" instname '=' instref
           if (!comp->group->first_comp) comp->group->first_comp =comp->name;
           comp->group->last_comp=comp->name;
           if (comp->split)
-            print_error("Component %s=%s() at line %s:%d is in GROUP %s and has a SPLIT.\n"
+            print_error("ERROR: Component %s=%s() at line %s:%d is in GROUP %s and has a SPLIT.\n"
               "\tMove the SPLIT keyword before (outside) the component instance %s (first in GROUP)\n",
               comp->name, comp->def->name, instr_current_filename, instr_current_line, $11->name,
               comp->group->first_comp);
@@ -1164,7 +1164,7 @@ compref: "PREVIOUS"
         ent = symtab_lookup(comp_instances, $1);
         comp = NULL;
         if(ent == NULL)
-          print_error("Reference to undefined component instance %s at line %s:%d.\n",
+          print_error("ERROR: Reference to undefined component instance %s at line %s:%d.\n",
           $1, instr_current_filename, instr_current_line);
         else
           comp = ent->val;
@@ -1298,7 +1298,7 @@ topatexp:   "PREVIOUS"
         if (previous_comp) {
           $$ = exp_ctoken(previous_comp->name);
         } else {
-          print_error(NULL, "Found invalid PREVIOUS reference at line %s:%d. Please fix (add a component instance before).\n", instr_current_filename, instr_current_line);
+          print_error("ERROR: Found invalid PREVIOUS reference at line %s:%d. Please fix (add a component instance before).\n", instr_current_filename, instr_current_line);
         }
       }
     | "MYSELF"
@@ -1748,7 +1748,7 @@ main(int argc, char *argv[])
 int
 yyerror(char *s)
 {
-  print_error("%s at line %d.\n", s, instr_current_line);
+  print_error("ERROR: %s at line %d.\n", s, instr_current_line);
   return 0;
 }
 
@@ -1773,7 +1773,7 @@ check_comp_formals(List deflist, List setlist, char *compname)
   {
     entry = symtab_lookup(formals, formal->id);
     if(entry != NULL)
-      print_error("Definition parameter name %s is used multiple times "
+      print_error("ERROR: Definition parameter name %s is used multiple times "
       "in component %s\n", formal->id, compname);
     else
       symtab_add(formals, formal->id, NULL);
@@ -1784,7 +1784,7 @@ check_comp_formals(List deflist, List setlist, char *compname)
   {
     entry = symtab_lookup(formals, formal->id);
     if(entry != NULL)
-      print_error("Setting parameter name %s is used multiple times "
+      print_error("ERROR: Setting parameter name %s is used multiple times "
       "in component %s\n", formal->id, compname);
     else
       symtab_add(formals, formal->id, NULL);
@@ -1859,7 +1859,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
         /* Use default value for unassigned optional parameter */
         symtab_add(defpar, formal->id, formal->default_value);
       } else {
-        print_error("Unassigned DEFINITION parameter %s for component %s=%s() at line %s:%d. Please set its value.\n",
+        print_error("ERROR: Unassigned DEFINITION parameter %s for component %s=%s() at line %s:%d. Please set its value.\n",
               formal->id, comp->name, comp->def->name,
               instr_current_filename, instr_current_line);
         symtab_add(defpar, formal->id, exp_number("0.0"));
@@ -1873,7 +1873,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
          are assigned using #define's. */
       if(!exp_isvalue(entry->val))
       {
-        print_warn(NULL, "Using DEFINITION parameter of component %s=%s() (potential syntax error) at line %s:%d\n"
+        print_warn(NULL, "Warning: Using DEFINITION parameter of component %s=%s() (potential syntax error) at line %s:%d\n"
           "  %s=%s\n",
           comp->name, comp->def->name, instr_current_filename, instr_current_line,
           formal->id, exp_tostring(entry->val));
@@ -1894,7 +1894,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
         /* Use default value for unassigned optional parameter */
         symtab_add(setpar, formal->id, formal->default_value);
       } else {
-        print_error("Unassigned SETTING parameter %s for component %s=%s() at line %s:%d. Please set its value.\n",
+        print_error("ERROR: Unassigned SETTING parameter %s for component %s=%s() at line %s:%d. Please set its value.\n",
               formal->id, comp->name, comp->def->name,
               instr_current_filename, instr_current_line);
         symtab_add(setpar, formal->id, exp_number("0.0"));
@@ -1915,7 +1915,8 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       Symtab_handle siter2;
       struct Symtab_entry *entry2;
 
-      fprintf(stderr, "\nUnmatched actual parameter %s for component %s=%s() at line %s:%d. Please change its name to a valid one:\n",
+      fprintf(stderr, "\nERROR: Unmatched actual parameter %s for component %s=%s() at line %s:%d."
+        "Please change its name to a valid one:\n",
         entry->name, comp->name, comp->def->name,
         instr_current_filename, instr_current_line);
       siter2 = symtab_iterate(defpar);
@@ -1985,7 +1986,7 @@ read_component(char *name)
     if(file == NULL)
     {
       print_error(
-        "Cannot find file containing definition of component '%s'.\n"
+        "ERROR: Cannot find file containing definition of component '%s'.\n"
         "Check the " MCCODE_LIBENV " library installation and environment variable\n"
         "or copy the component definition file locally.\n", name);
       return NULL;
@@ -2008,7 +2009,7 @@ read_component(char *name)
     }
     else
     {
-      print_error("Definition of component %s not found (file was found but does not contain the component definition).\n", name);
+      print_error("ERROR: Definition of component %s not found (file was found but does not contain the component definition).\n", name);
       return NULL;
     }
   }

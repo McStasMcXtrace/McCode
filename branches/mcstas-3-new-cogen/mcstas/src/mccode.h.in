@@ -137,6 +137,7 @@ void list_add(List, void *);        /* Add element at end. */
 void list_free(List, void (*)(void *)); /* Deallocate a list. */
 int list_len(List l);               /* Get list length. */
 List_handle list_iterate(List);     /* Prepare to traverse list. */
+List_handle list_iterate_back(List);     /* Prepare to traverse list. */
 void *list_next(List_handle);       /* Get next element in list. */
 void *list_previous(List_handle);       /* Get previous element in list. */
 void list_iterate_end(List_handle); /* End list traversal. */
