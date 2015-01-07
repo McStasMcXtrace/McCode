@@ -1,9 +1,9 @@
 # FUTURE MARK! PAY ATTENTION!
 #
-# PLEASE RE-IMPLEMENT THIS!!!!
+# PLEASE RE-IMPLEMENT THIS as per the instructions below.
 #
 #=================================================================================#
-# Std Django Middleware edited at line 57 and 58 to look for inactivity.          #
+# Std Django Middleware edited at line 63 and 64 to look for inactivity.          #
 # Better implementation of secure timeout in:                                     #
 #     https://github.com/yourlabs/django-session-security                         #
 # Should implement this asap. AFTER delivering the login functionality (finally). #

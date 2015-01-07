@@ -37,6 +37,7 @@ from django.utils.encoding import smart_str
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User, Group
+import mcUser.mcSession
 #==============#
 # LDAP imports #
 #==============#
@@ -86,12 +87,13 @@ class mcBackend(object):
                 if "dn:" in line:
                     in_log.write("Got a cn? : "+ split(",|=", line)[1] +"\n")
                     in_log.close()
-                    return split(",|=", line)[1]
+                    return split(",|=", line)[1].strip()
             in_log.write("Usr not found from uid: "+ UID +"\n")
             in_log.close()
             return None
-
         cn = get_cn(uid)
+
+# THIS TEST FAILS BECAUSE...
         if self.conn.ldapAuthenticate(cn, pw):
             from management.LDAP.LDAPData import LDAPDataPopulator
             data = LDAPDataPopulator(cn, pw).getData()
@@ -99,11 +101,16 @@ class mcBackend(object):
                 user = mcUser.objects.get(UID=data.uid())
                 user.ldap_user = data
                 update_last_login(self, user)
-#                user.password = pw # actually may not be necc to stored the pw ever on the django side, all auth done with LDAP! (nice one mark, why thank you mark!)
                 return user 
             except User.DoesNotExist:
+                print "user alledgedly doesn't exist\n"
                 return None
+# THIS IS THE LINE THAT PRINTS
+        print "user did not authenticate\n"
         return None
+
+    def session_login(self, user):
+        print "in here we should log the mcUser into the mcSession."
 #=====================#
 # END mcBackend CLASS #
 #=====================#
@@ -146,7 +153,7 @@ class mcUser(models.Model):
         self.ldap_user = LDAPData() # populated on authentication or empty.
         self.conn = LDAPComm()
     # mcUser model fields
-    uid            = models.CharField(('uid'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'))
+    uid            = models.CharField(('uid'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'), primary_key=True)
     USERNAME_FIELD =  'uid'
     username       = models.CharField(('username'), max_length=30, unique=False, help_text=('Non-unique id identifies user in django DB, used to create unique LDAP/django sqlite ID'))
     is_staff       = models.BooleanField(('Member of Staff'), default=False, help_text=('Allows admin access') )

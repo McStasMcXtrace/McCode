@@ -101,18 +101,23 @@ def loginPOST(req):
     nexturl = form.get('next', '/')
     UID = form.get('uid', '')
     PW = form.get('password', '')
-    '''
-    PUT THIS AS THE USER OBJECT
-    '''
+    if PW == None: return redirect('/login/with_a_password')
+
     checker = mcBackend()
     user = checker.authenticate(UID, PW)
+    print "user:", user
 #
-#    if user is None or not user.is_active:
-#        return redirect('/login/?next=' + nexturl)
+    if user is None or not user.is_active:
+        return redirect('/login/Invalid_credentials')
+    else: 
+        checker.session_login(user)
+        return redirect('/login/?next=' + nexturl)
     # if login is correct then log the user into the django session
     # probably need to rewrite the login method too
-    login(reg, user)
-    return redirect(nexturl)
+
+#    
+
+    
 #---------------------------------#
 # logout_user                     #
 # -----------                     #
