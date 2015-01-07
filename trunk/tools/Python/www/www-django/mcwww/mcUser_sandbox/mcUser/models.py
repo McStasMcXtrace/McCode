@@ -12,6 +12,8 @@
 #================#
 import sys
 import urllib
+import time
+from datetime import date
 from os import remove
 #=================#
 # general imports #
@@ -70,36 +72,34 @@ class mcBackend(object):
         # Need to put the LDAP details in the mcUser model at this stage
         return mcUser.objects.get(UID=uid) # have to build the django DB first
 
-
-
-
     def authenticate(self, uid, pw):
         in_log = open("in.log", 'a')
-        in_log.write("\nTrying to find data on: "+ uid +"\n")
+        t = time.time()
+        in_log.write("\nTimestamp: %s:%s\n" % (str(date.fromtimestamp(t)), str(t)) )
+        in_log.write("Trying to find data on: "+ uid +"\n")
         def get_cn(UID):
-            for line in self.conn.ldapQuery('cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk', 
-                                            'DPW', 
-                                            "\"(uid=%s)\"" % UID):
-                in_log.write("%s\n"%line)
+            for line in self.conn.ldapQuery('cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk',    # TEMPLATE LINE
+                                            'DPW',                                             # TEMPLATE LINE
+                                            "uid=%s"%UID):
+                                            #"\"(uid=%s)\"" % UID):
+                if line: in_log.write("%s\n"%line)
                 if "dn:" in line:
-                    in_log.write("Got a cn? : "+ split(",|=", line)[2] +"\n")
+                    in_log.write("Got a cn? : "+ split(",|=", line)[1] +"\n")
                     in_log.close()
-                    return split(",|=", line)[2]
+                    return split(",|=", line)[1]
             in_log.write("Usr not found from uid: "+ UID +"\n")
             in_log.close()
             return None
 
-
-
         cn = get_cn(uid)
-#        print self.conn.ldapAuthenticate(cn, pw)
         if self.conn.ldapAuthenticate(cn, pw):
             from management.LDAP.LDAPData import LDAPDataPopulator
             data = LDAPDataPopulator(cn, pw).getData()
             try:
                 user = mcUser.objects.get(UID=data.uid())
                 user.ldap_user = data
-                user.password = pw # actually may not be necc to stored the pw ever on the django side, all auth done with LDAP! (nice one mark, why thank you mark!)
+                update_last_login(self, user)
+#                user.password = pw # actually may not be necc to stored the pw ever on the django side, all auth done with LDAP! (nice one mark, why thank you mark!)
                 return user 
             except User.DoesNotExist:
                 return None
@@ -123,7 +123,7 @@ class mcUserManager(models.Manager):
         mcuser.is_staff    = usr_details['staff']
         mcuser.is_active   = True
         mcuser.last_login  = timezone.now()
-        mcuser.save(using=self._db) # try to save the mcUser in the mcUserDB
+        mcuser.save(using=self._db) 
         return mcuser
 #=========================#
 # END mcUserManager CLASS #

@@ -1,3 +1,5 @@
+# I mean the session file not this one.
+
 #=======================================================================#
 # Django micro framework                                                #
 # ----------------------                                                #
@@ -40,17 +42,22 @@ def configure(options={}, module=None):
                                            s).replace('\\','/')
         print 'Configuring Settings.'
         opts = dict(
-            STATIC_URL = root_path('static'),
-            DEBUG = True,
-            ROOT_URLCONF = module.__name__,
-            TEMPLATE_DIRS = [os.path.dirname(module.__file__),
-                             root_path('templates')],
-            INSTALLED_APPS = ['mcUser'],
-            STATICFILES_DIRS = (root_path('static/'),
-                                root_path('out/'),
-                                root_path('templates/js_css')
-                ),
-            LDIF_DIR = root_path('management/LDAP/LDIFs/temp/')
+            STATIC_URL                      = root_path('static'),
+            DEBUG                           = True,
+            ROOT_URLCONF                    = module.__name__,
+            TEMPLATE_DIRS                   = [os.path.dirname(module.__file__),
+                                               root_path('templates')],
+            SESSION_ENGINE                  = 'mcUser.mcSession',         # SEE COMMENT AT TOP OF FILE.
+            SESSION_FILE_PATH               = './sqlite3_DB/session_data',
+            SESSION_COOKIE_AGE              = 10*60,
+            SESSION_EXPIRE_AT_BROWSER_CLOSE = True,
+            SESSION_SAVE_EVERY_REQUEST      = True,
+            INSTALLED_APPS                  = ['mcUser', 'django.contrib.sessions'],
+            STATICFILES_DIRS                = (root_path('static/'),
+                                               root_path('out/'),
+                                               root_path('templates/js_css')
+                                               ),
+            LDIF_DIR                        = root_path('management/LDAP/LDIFs/temp/')
             )
         opts.update(options)
         settings.configure(**opts)

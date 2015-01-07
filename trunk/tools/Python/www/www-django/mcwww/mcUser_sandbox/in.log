@@ -43,3 +43,55 @@ Usr not found from uid: mark
 Trying to find data on: mark
 
 Usr not found from uid: mark
+
+Trying to find data on: mark
+
+Usr not found from uid: mark
+
+Timestamp: 2015-01-07:1420622968.2Trying to find data on: mark
+
+Usr not found from uid: mark
+
+Timestamp: 2015-01-07:1420623185.01
+Trying to find data on: mark
+Usr not found from uid: mark
+
+Timestamp: 2015-01-07:1420623784.42
+Trying to find data on: mark
+dn: cn=mark lewis,ou=person,dc=fysik,dc=dtu,dc=dk
+Got a cn? : ou
+
+Timestamp: 2015-01-07:1420624125.72
+Trying to find data on: mark
+dn: cn=mark lewis,ou=person,dc=fysik,dc=dtu,dc=dk
+Got a cn? : ou
+
+Timestamp: 2015-01-07:1420624164.36
+Trying to find data on: mark
+dn: cn=mark lewis,ou=person,dc=fysik,dc=dtu,dc=dk
+Got a cn? : ou
+
+Timestamp: 2015-01-07:1420624209.02
+Trying to find data on: mark
+dn: cn=mark lewis,ou=person,dc=fysik,dc=dtu,dc=dk
+Got a cn? : mark lewis
+
+Timestamp: 2015-01-07:1420624550.12
+Trying to find data on: mark
+dn: cn=mark lewis,ou=person,dc=fysik,dc=dtu,dc=dk
+Got a cn? : mark lewis
+
+Timestamp: 2015-01-07:1420624569.39
+Trying to find data on: mark
+dn: cn=mark lewis,ou=person,dc=fysik,dc=dtu,dc=dk
+Got a cn? : mark lewis
+
+Timestamp: 2015-01-07:1420624677.74
+Trying to find data on: mark
+dn: cn=mark lewis,ou=person,dc=fysik,dc=dtu,dc=dk
+Got a cn? : mark lewis
+
+Timestamp: 2015-01-07:1420638188.8
+Trying to find data on: mark
+dn: cn=mark lewis,ou=person,dc=fysik,dc=dtu,dc=dk
+Got a cn? : mark lewis

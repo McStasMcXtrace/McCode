@@ -22,16 +22,16 @@ import serve_centre
 # app specific config setup #
 #---------------------------#
 config_opts = dict(LOGIN_URL = './login',
-                   AUTHENTICATION_BACKENDS = ('models.mcBackend'),
-                   AUTH_USER_MODEL = ('models.mcUser'),
-                   DATABASES={'default':{'ENGINE':   'django.db.backends.sqlite3',
-                                         'NAME':     './sqlite3_DB/mcUser.db',
-                                         'USER':     '',
-                                         'PASSWORD': '',
-                                         'HOST':     '',
-                                         'PORT':     '',
-                                         }
-                              },
+                   AUTHENTICATION_BACKENDS=('models.mcBackend'),
+                   AUTH_USER_MODEL        =('models.mcUser'),
+                   DATABASES              ={'default':{'ENGINE':   'django.db.backends.sqlite3',
+                                                       'NAME':     './sqlite3_DB/mcUser.db',
+                                                       'USER':     '',
+                                                       'PASSWORD': '',
+                                                       'HOST':     '',
+                                                       'PORT':     '',
+                                                       }
+                                            },
                    )
 #-------------------------------------------#               
 serve_centre.configure(options=config_opts) # <------ do not do this in any other file.
@@ -106,10 +106,9 @@ def loginPOST(req):
     '''
     checker = mcBackend()
     user = checker.authenticate(UID, PW)
-    user = serve_center.authenticate(username=uid, password=passwd)
-    # get the user to authenticate through LDAPComm
-    if user is None or not user.is_active:
-        return redirect('/login/?next=' + nexturl)
+#
+#    if user is None or not user.is_active:
+#        return redirect('/login/?next=' + nexturl)
     # if login is correct then log the user into the django session
     # probably need to rewrite the login method too
     login(reg, user)
