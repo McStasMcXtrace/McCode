@@ -1,5 +1,5 @@
 #---------------------------------------------------------------------------------------------------#
-# Logging - maybe this can be used with a cron to drag data fropm Moodle (THOUGHTS FOR LATER)
+# Logging - maybe this can be used with a cron to drag data from Moodle (THOUGHTS FOR LATER)
 # -------
 ''' 
  A sample logging configuration. The only tangible logging performed by this configuration is to 
