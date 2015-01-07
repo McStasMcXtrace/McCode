@@ -891,6 +891,18 @@ instname: "COPY" '(' TOK_ID ')'
         sprintf(str_index, "_%li", comp_current_index+1);
         $$ = str_cat($3, str_index, NULL);
       }
+    | "MYSELF"
+      {
+        char str_index[10];
+        sprintf(str_index, "_%li", comp_current_index+1);
+        $$ = str_cat("Comp", str_index, NULL);
+      }
+    | "COPY"
+      {
+        char str_index[10];
+        sprintf(str_index, "_%li", comp_current_index+1);
+        $$ = str_cat("Comp", str_index, NULL);
+      }
     | TOK_ID
       {
         $$ = $1;

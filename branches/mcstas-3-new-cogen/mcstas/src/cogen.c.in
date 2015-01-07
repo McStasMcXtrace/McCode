@@ -543,7 +543,7 @@ static void cogen_comp_init_par(struct comp_inst *comp, struct instr_def *instr,
         if (par->type == instr_type_string) {
           if (strcmp(val, "0") && strcmp(val, "NULL")) { /* when value is not NULL (avoid warning at compile) */
             coutf("  if(%s && strlen(%s))", val, val);
-            coutf("    strncpy(" ID_PRE "instance_%s.parameters.%s, %s ? %s : \"\", 16384);", 
+            coutf("    stracpy(" ID_PRE "instance_%s.parameters.%s, %s ? %s : \"\", 16384);", 
               comp->name, par->id, val, val);
             coutf("  else ");
           }
@@ -833,8 +833,8 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
         ID_PRE, comp->name, section_lower, comp->name, comp->def->name, section);
 
   if (!strcmp(section, "INITIALISE")) {
-    coutf("  strncpy(" ID_PRE "instance_%s.name, \"%s\", 16384);", comp->name, comp->name);
-    coutf("  strncpy(" ID_PRE "instance_%s.type, \"%s\", 16384);", comp->name, comp->def->name);
+    coutf("  stracpy(" ID_PRE "instance_%s.name, \"%s\", 16384);", comp->name, comp->name);
+    coutf("  stracpy(" ID_PRE "instance_%s.type, \"%s\", 16384);", comp->name, comp->def->name);
     coutf("  " ID_PRE "instance_%s.index=%i;", comp->name, comp->index);
   } else if (!strcmp(section, "TRACE")) {
     
@@ -882,7 +882,8 @@ int cogen_comp_section(struct comp_inst *comp, struct comp_inst *last,
       codeblock_out_brace(code);
       
       /* Debugging (exit from component). */
-      cout("  DEBUG_STATE();"); /* uses state parameters */
+      if (!strcmp(section, "TRACE"))
+        cout("  DEBUG_STATE();"); /* uses state parameters */
       
     } else {
       /* else we call the common init function for each comp type */
@@ -1290,7 +1291,7 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower, s
     /* default values for instrument parameters are set in mcreadparams */
     cout("  /* " ID_PRE "code_main/" ID_PRE "parseoptions/" ID_PRE "readparams "
       "sets instrument parameters value */");
-    coutf("  strncpy(" ID_PRE "instrument.name, \"%s\", 256);", instr->name);
+    coutf("  stracpy(" ID_PRE "instrument.name, \"%s\", 256);", instr->name);
   } 
   else if (!strcmp(section, "SAVE"))
     coutf("  if (!handle) %ssiminfo_init(NULL);", ID_PRE);
@@ -1309,7 +1310,7 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower, s
       ID_PRE, section_lower, instr->name, section);
     /* defines for the instrument parameters */
     cogen_defundef(NULL, instr->formals, 3);
-    codeblock_out(code);
+    codeblock_out_brace(code);
     /* un-defines for the instrument parameters */
     cogen_defundef(NULL, instr->formals, 0);
   }
@@ -1351,7 +1352,7 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower, s
     cout("  printf(\"MCDISPLAY: end\\n\");");
   cout("");
   cout("  return(" ID_PRE "ret);");
-  coutf("} /* " ID_PRE"%s */", section_lower);
+  coutf("} /* " ID_PRE "%s */", section_lower);
   cout( "#undef " ID_PRE "instance_MYSELF");
   cout("");
   
@@ -1486,7 +1487,7 @@ int cogen_trace(struct instr_def *instr)
   coutf("#define %s (" ID_PRE MCCODE_PARTICLE ".%s)", "SCATTERED", "scattered");
   coutf("#define %s (" ID_PRE MCCODE_PARTICLE ".%s)", "RESTORE"  , "restore");
   coutf("#define %s (" ID_PRE MCCODE_PARTICLE ".%s)", "ABSORBED" , "absorbed");
-  cout( "#define ABSORB do {DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(" ID_PRE MCCODE_PARTICLE ");} while(0)");
+  cout( "#define ABSORB do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(" ID_PRE MCCODE_PARTICLE ");} while(0)");
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
     warnings += cogen_comp_trace(comp, instr);
@@ -1510,7 +1511,7 @@ int cogen_trace(struct instr_def *instr)
   cout("");
   cout("  /* init variables and counters for TRACE */");
   
-  cout("  #define ABSORB do {DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
+  cout("  #define ABSORB do { DEBUG_STATE(); DEBUG_ABSORB(); MAGNET_OFF; ABSORBED++; return(ABSORBED);} while(0)");
   
   /* Debugging (initial state). */
   cout("  DEBUG_ENTER();");
@@ -1678,6 +1679,8 @@ int cogen_trace(struct instr_def *instr)
       
   cout("  } /* end while not absorbed */");
   cout("");
+  cout("  DEBUG_LEAVE()");
+  cout("  DEBUG_STATE()");
   
   /* undefine state parameters */
   for(i = 0; i < NUM_STATE_PARS; i++)
@@ -1710,11 +1713,11 @@ cogen_header(struct instr_def *instr, char *output_name)
   char  pathsep[3];
   int   i,j=0;
   time_t t;
-  char  date[64];
+  char  date[128];
   long  index=0;
   
   time(&t);
-  strncpy(date, ctime(&t), 64);
+  strcpy(date, ctime(&t));
   if (strlen(date)) date[strlen(date)-1] = '\0';
   
   /* the file header */
