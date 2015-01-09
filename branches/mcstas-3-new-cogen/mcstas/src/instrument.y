@@ -1999,8 +1999,8 @@ read_component(char *name)
     {
       print_error(
         "ERROR: Cannot find file containing definition of component '%s'.\n"
-        "Check the " MCCODE_LIBENV " library installation and environment variable\n"
-        "or copy the component definition file locally.\n", name);
+        "  Check the " MCCODE_LIBENV " library installation and environment variable\n"
+        "  or copy the component definition file locally.\n  Current library search path: %s\n", name, get_sys_dir());
       return NULL;
     }
     push_autoload(file);
