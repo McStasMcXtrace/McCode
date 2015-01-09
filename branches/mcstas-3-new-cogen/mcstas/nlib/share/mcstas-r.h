@@ -91,13 +91,13 @@
     y += vy*(dt); \
     z += vz*(dt); \
     t += (dt); \
-    if (isnan(p) || isinf(p)) { mcinstrument.counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }\
+    if (isnan(p) || isinf(p)) { mcinstrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }\
   } while(0)
 
 /* ADD: E. Farhi, Aug 6th, 2001 PROP_GRAV_DT propagation with acceleration */
 #define PROP_GRAV_DT(dt, Ax, Ay, Az) \
   do { \
-    if(dt < 0 && mcallowbackprop == 0) { mcinstrument.counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }\
+    if(dt < 0 && mcallowbackprop == 0) { mcinstrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }\
     if (mcMagnet) printf("Spin precession gravity\n"); \
     x  += vx*(dt) + (Ax)*(dt)*(dt)/2; \
     y  += vy*(dt) + (Ay)*(dt)*(dt)/2; \
@@ -130,7 +130,7 @@
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gz/2, -vz, -z); \
     if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
-    else { if (mcallowbackprop ==0) {mcinstrument.counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
+    else { if (mcallowbackprop ==0) {mcinstrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
     else mcPROP_Z0; \
     DISALLOW_BACKPROP;\
   } while(0)
@@ -138,9 +138,9 @@
 #define mcPROP_Z0 \
   do { \
     double mc_dt; \
-    if(vz == 0) { mcinstrument.counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
+    if(vz == 0) { mcinstrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mc_dt = -z/vz; \
-    if(mc_dt < 0 && mcallowbackprop == 0) { mcinstrument.counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
+    if(mc_dt < 0 && mcallowbackprop == 0) { mcinstrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mcPROP_DT(mc_dt); \
     z = 0; \
     DISALLOW_BACKPROP;\
@@ -154,7 +154,7 @@
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gx/2, -vx, -x); \
     if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
-    else { if (mcallowbackprop ==0) {mcinstrument.counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
+    else { if (mcallowbackprop ==0) {mcinstrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
     else mcPROP_X0; \
     DISALLOW_BACKPROP;\
   } while(0)
@@ -162,9 +162,9 @@
 #define mcPROP_X0 \
   do { \
     double mc_dt; \
-    if(vx == 0) { mcinstrument.counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
+    if(vx == 0) { mcinstrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mc_dt = -x/vx; \
-    if(mc_dt < 0 && mcallowbackprop == 0) { mcinstrument.counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
+    if(mc_dt < 0 && mcallowbackprop == 0) { mcinstrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mcPROP_DT(mc_dt); \
     x = 0; \
     DISALLOW_BACKPROP;\
@@ -178,7 +178,7 @@
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gy/2, -vy, -y); \
     if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
-    else { if (mcallowbackprop ==0) {mcinstrument.counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
+    else { if (mcallowbackprop ==0) {mcinstrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
     else mcPROP_Y0; \
     DISALLOW_BACKPROP;\
   } while(0)
@@ -187,9 +187,9 @@
 #define mcPROP_Y0 \
   do { \
     double mc_dt; \
-    if(vy == 0) { mcinstrument.counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
+    if(vy == 0) { mcinstrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mc_dt = -y/vy; \
-    if(mc_dt < 0 && mcallowbackprop == 0) { mcinstrument.counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
+    if(mc_dt < 0 && mcallowbackprop == 0) { mcinstrument->counter_AbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mcPROP_DT(mc_dt); \
     y = 0; \
     DISALLOW_BACKPROP; \

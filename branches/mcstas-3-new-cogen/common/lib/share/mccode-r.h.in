@@ -282,9 +282,9 @@ mcstatic char  mcsig_message[256];
 /* mccomp_posa and mccomp_posr are defined in McStas generated C code */
 
 #define POS_A_COMP_INDEX(index) \
-    (mcinstrument.position_absolute[index])
+    (mcinstrument->position_absolute[index])
 #define POS_R_COMP_INDEX(index) \
-    (mcinstrument.position_relative[index])
+    (mcinstrument->position_relative[index])
     
 /* Note: The two-stage approach to MC_GETPAR is NOT redundant; without it,
 * after #define C sample, MC_GETPAR(C,x) would refer to component C, not to
@@ -292,10 +292,10 @@ mcstatic char  mcsig_message[256];
 
 * Anyway the usage of MCGETPAR requires that we use sometimes bare names...
 */
-#define MC_GETPAR2(comp, par) (mcinstance_ ## comp.parameters.par)
+#define MC_GETPAR2(comp, par) (mcinstance_ ## comp->parameters.par)
 #define MC_GETPAR(comp, par) MC_GETPAR2(comp,par)
 
-#define MC_GET2(comp, field) (mcinstance_ ## comp.field)
+#define MC_GET2(comp, field) (mcinstance_ ## comp->field)
 #define MC_GET(comp, field) MC_GET2(comp,field)
 
 /* Retrieve component information from the kernel */
