@@ -93,13 +93,13 @@ DECLARE
   Coords pointTop, pointBot, pointLeft, pointRight, pointIn, pointOut; 
   
 #if (useTables)
-  t_Table *rParPtr     = 0;
-  t_Table *rUpParPtr   = 0;
-  t_Table *rDownParPtr = 0;
+  t_Table *rParPtr    ;
+  t_Table *rUpParPtr  ;
+  t_Table *rDownParPtr;
 #else 
-  double rParPtr[]     = rPar;
-  double rUpParPtr[]   = rUpPar;
-  double rDownParPtr[] = rDownPar;
+  double *rParPtr     ;
+  double *rUpParPtr   ;
+  double *rDownParPtr ;
 #endif
   %}
 
@@ -124,6 +124,10 @@ INITIALIZE
 	    NAME_CURRENT_COMP, rDownPar);
     exit(1);
   }
+#else
+  rParPtr = (double [])rPar;
+  rUpParPtr = (double [])rUpPar;
+  rDownParPtr = (double [])rDownPar;
 #endif
   
   if ((xwidth<=0) || (yheight<= 0) || (length<=0)) {

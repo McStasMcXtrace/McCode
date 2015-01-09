@@ -60,7 +60,7 @@ SETTING PARAMETERS (radius=0.1, yheight=0, xwidth=0,
   dist=0, focus_xw=.045, focus_yh=.12, 
   E0=0, dE=0, lambda0=0, dlambda=0, 
   flux=1, gauss=0, int target_index=+1)
-OUTPUT PARAMETERS (pmul)
+OUTPUT PARAMETERS (pmul,square,srcArea)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
 %{

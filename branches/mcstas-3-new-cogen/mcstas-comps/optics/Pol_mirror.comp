@@ -99,11 +99,11 @@ SHARE
 DECLARE
 %{
 #if (useTables)
-  t_Table *rUpParPtr   = 0;
-  t_Table *rDownParPtr = 0;
+  t_Table *rUpParPtr   ;
+  t_Table *rDownParPtr ;
 #else 
-  double rUpParPtr[]   = rUpPar;
-  double rDownParPtr[] = rDownPar;
+  double *rUpParPtr   ;
+  double *rDownParPtr ;
 #endif
 %}
 
@@ -122,6 +122,9 @@ INITIALIZE
             NAME_CURRENT_COMP, rDownPar);
     exit(1);
   }
+#else
+  rUpParPtr   = (double [])rUpPar;
+  rDownParPtr[] = (double [])rDownPar;
 #endif
 
   if ((zwidth<=0) || (yheight <= 0)) {

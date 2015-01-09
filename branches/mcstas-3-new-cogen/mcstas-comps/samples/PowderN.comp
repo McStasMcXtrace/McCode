@@ -532,7 +532,7 @@ DECLARE
 %{
   struct line_info_struct line_info;
 
-  int    columns[9] = format;
+  int    *columns;
 
   off_struct offdata;
 %}
@@ -540,6 +540,9 @@ INITIALIZE
 %{
   int i=0;
   struct line_data *L;
+  
+  columns = (double [])format;
+  
   line_info.Dd       = delta_d_d;
   line_info.DWfactor = DW;
   line_info.V_0      = Vc;

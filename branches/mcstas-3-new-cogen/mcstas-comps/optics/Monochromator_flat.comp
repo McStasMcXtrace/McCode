@@ -122,7 +122,7 @@ TRACE
   double y1,z1,t1,dt,kix,kiy,kiz,ratio,order,q0x,k,q0,theta;
   double bx,by,bz,kux,kuy,kuz,ax,ay,az,phi;
   double cos_2theta,k_sin_2theta,cos_phi,sin_phi,q_x,q_y,q_z;
-  double delta,p_reflect,total,c1x,c1y,c1z,zwidth,mos_sample;
+  double delta,p_reflect,total,c1x,c1y,c1z,zw,mos_sample;
   int i;
 
   if(vx != 0.0 && (dt = -x/vx) >= 0.0)
@@ -197,9 +197,9 @@ TRACE
            * scattering probability as well as for integration limits
            * when integrating the sampled distribution below. */
           for(i=0; i<100; i++) {
-            zwidth = 5*mos_sample;
-            cos_phi = cos(zwidth);
-            sin_phi = sin(zwidth);
+            zw = 5*mos_sample;
+            cos_phi = cos(zw);
+            sin_phi = sin(zw);
             q_x = c1x + cos_phi*ax + sin_phi*bx;
             q_y = (c1y + cos_phi*ay + sin_phi*by)/mos_rms_y;
             q_z = (c1z + cos_phi*az + sin_phi*bz)/mos_rms_z;
@@ -212,7 +212,7 @@ TRACE
            * cut-off at five times sigma. */
           for(i = 0; i < (sizeof(Gauss_X)/sizeof(double)); i++)
           {
-            phi = zwidth*Gauss_X[i];
+            phi = zw*Gauss_X[i];
             cos_phi = cos(phi);
             sin_phi = sin(phi);
             q_x = c1x + cos_phi*ax + sin_phi*bx;
@@ -222,7 +222,7 @@ TRACE
                         GAUSS((q_z/q_x),0,mos_rms_z);
             total += Gauss_W[i]*p_reflect;
           }
-          total *= zwidth;
+          total *= zw;
           /* Choose point on Debye-Scherrer cone. Sample from a Gaussian of
            * zwidth 1/cos(theta) greater than the mosaic and correct for any
            * error by adjusting the neutron weight later. */

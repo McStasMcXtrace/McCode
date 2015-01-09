@@ -40,7 +40,7 @@
 DEFINE COMPONENT Progress_bar
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string profile="NULL", percent=10,flag_save=0,minutes=0)
-OUTPUT PARAMETERS (IntermediateCnts,StartTime,EndTime)
+OUTPUT PARAMETERS (IntermediateCnts,StartTime,EndTime,CurrentTime)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
 %{
@@ -50,14 +50,19 @@ DECLARE
 #error Only one Progress_bar component may be used in an instrument definition.
 #endif
 
-  double IntermediateCnts=0;
-  time_t StartTime       =0;
-  time_t EndTime         =0;
-  time_t CurrentTime     =0;
+  double IntermediateCnts;
+  time_t StartTime       ;
+  time_t EndTime         ;
+  time_t CurrentTime     ;
 %}
 
 INITIALIZE
 %{
+  IntermediateCnts=0;
+  StartTime       =0;
+  EndTime         =0;
+  CurrentTime     =0;
+  
   fprintf(stdout, "[%s] Initialize\n", mcinstrument_name);
   if (percent*mcget_ncount()/100 < 1e5) {
     percent=1e5*100.0/mcget_ncount();
@@ -121,7 +126,7 @@ SAVE
         "Component index [1]",
         "Intensity",
         "prof", 1, mcNUMCOMP, mcNUMCOMP-1,
-        &mcNCounter[1],&mcPCounter[1],&mcP2Counter[1],
+        &(mcinstrument->counter_N[1]),&(mcinstrument->counter_P[1]),&(mcinstrument->counter_P2[1]),
         filename);
 
   }
