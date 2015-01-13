@@ -50,6 +50,7 @@
 #define VS2E     5.22703725e-6     /* Convert (v[m/s])**2 to E[meV] */
 
 #define SCATTER do {DEBUG_SCATTER(); SCATTERED++;} while(0)
+#define RESTORE_NEUTRON(index, ...) RESTORE=1;
 
 #define MAGNET_ON \
   do { \
@@ -73,7 +74,7 @@
 
 #define PROP_MAGNET(dt) \
   do { \
-  }while (0)
+  } while (0)
     /* change coordinates from local system to magnet system */
 /*    Rotation rotLM, rotTemp; \
       Coords   posLM = coords_sub(POS_A_CURRENT_COMP, mcMagnetPos); \
