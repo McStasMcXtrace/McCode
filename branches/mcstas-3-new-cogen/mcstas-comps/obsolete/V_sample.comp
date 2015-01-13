@@ -176,9 +176,6 @@ INITIALIZE
   if (focus_ah) {
     VarsV.ah = DEG2RAD*focus_ah;
   }
-  
-  printf("%s:%i: VarsV.distance=%g\n", __FILE__, __LINE__, VarsV.distance);
-  printf("%s:%i: VarsV.my_s    =%g\n", __FILE__, __LINE__, VarsV.my_s);
 %}
 
 TRACE

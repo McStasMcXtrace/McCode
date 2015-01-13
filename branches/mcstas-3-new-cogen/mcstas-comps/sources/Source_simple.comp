@@ -64,7 +64,8 @@ OUTPUT PARAMETERS (pmul,square,srcArea)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
 %{
-  double pmul, srcArea;
+  double pmul;
+  double srcArea;
   int square;
 %}
 INITIALIZE

@@ -80,12 +80,12 @@ TRACE
       SCATTER;
     }
     if (restore_neutron) {
-      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+      RESTORE=1;
     }
   %}
 SAVE
   %{
-    DETECTOR_OUT_0D("Single monitor " NAME_CURRENT_COMP, Nsum, psum, p2sum);
+    DETECTOR_OUT_0D("Single monitor ", Nsum, psum, p2sum);
   %}
 
 MCDISPLAY
