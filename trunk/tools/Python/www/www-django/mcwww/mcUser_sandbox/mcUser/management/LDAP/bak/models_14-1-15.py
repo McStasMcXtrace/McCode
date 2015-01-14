@@ -78,44 +78,16 @@ class mcBackend(object):
         t = time.time()
         in_log.write("\nTimestamp: %s:%s\n" % (str(date.fromtimestamp(t)), str(t)) )
         in_log.write("Finding data from uid: "+ uid +"\n")
-        self.data = LDAPData()
-        def get_cn(UID):
-            import base64
-            dn = None
-            toby = self.conn.ldapQuery('cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk',    # TEMPLATE LINE
-                                            'DPW',                                             # TEMPLATE LINE
-                                            "uid=%s"%UID)
-            print toby
-            for line in toby:
-                print "evaluating %s"%line
-                if 'uid::' in line:
-                    print "uid"
-                    print line
-                    self.data.setuid(base64.standard_b64decode(split(" ", line)[1]).strip())
-                    print self.data.uid()
-                if 'cn::' in line:
-                    print line
-                    self.data.setcn(base64.standard_b64decode(split(" ", line)[1]).strip())
-                    print self.data.cn()
-                if 'sn::' in line:
-                    print line
-                    self.data.setsn(base64.standard_b64decode(split(" ", line)[1]).strip())
-                    print self.data.sn()
-                if 'mail::' in line:
-                    print line
-                    self.data.setmail(base64.standard_b64decode(split(" ", line)[1]).strip())
-                    print self.data.mail()
-                    print line
-                if 'displayname::' in line:
-                    print line
-                    self.data.setdisplayname(base64.standard_b64decode(split(" ", line)[1]).strip())
-                    print self.data.displayname()
 
+        def get_cn(UID):
+            for line in self.conn.ldapQuery('cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk',    # TEMPLATE LINE
+                                            'DPW',                                             # TEMPLATE LINE
+                                            "uid=%s"%UID):
                 if line: in_log.write("%s\n"%line)
                 if "dn:" in line:
                     in_log.write("Got a cn? : "+ split(",|=", line)[1] +"\n")
-                    dn = split(",|=", line)[1].strip()
-            if dn: return dn
+                    in_log.close()
+                    return split(",|=", line)[1].strip()
             in_log.write("Usr not found from uid: %s\n"%UID)
             in_log.close()
             return None
@@ -125,16 +97,14 @@ class mcBackend(object):
 #================
 # fixing bug here :
 #================
-#            from management.LDAP.LDAPData import LDAPDataPopulator
-#            data = LDAPDataPopulator(cn, pw).getData()
+            from management.LDAP.LDAPData import LDAPDataPopulator
+            data = LDAPDataPopulator(cn, pw).getData()
             try:
 
                 print "Trying to get mcUser from sqlite table:\n"
-                print "UID: "+self.data.uid()+"\n"
-
-                user = mcUser.objects.get(uid=self.data.uid())
-
-                user.ldap_user = self.data
+                print "UID: "+data.uid()+"\n"
+                user = mcUser.objects.get(uid=data.uid())
+                user.ldap_user = data
                 update_last_login(self, user)
                 return user 
 #================
@@ -186,7 +156,7 @@ class mcUser(models.Model):
         self.password = None # TAKEN FROM LOGIN POST FORM, OR NONE
         self.authenticated = False
         self.ldap_user = LDAPData() # populated on authentication or empty.
-        self.conn = LDAPComm.LDAPComm() 
+        self.conn = LDAPComm() 
     #---------------------#
     # mcUser model fields #
     #---------------------#
