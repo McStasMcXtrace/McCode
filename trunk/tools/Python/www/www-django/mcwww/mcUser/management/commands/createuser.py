@@ -86,8 +86,6 @@ def main(args):
     else:
         usr_details['password'] = getpass('Enter password: ')    
 
-    print "\nBefore LDAPData population: ", usr_details,"\n"
-
     #======================#
     # LDAP DB Modification #
     # --------------------
@@ -106,7 +104,7 @@ def main(args):
     uid_n = 0
     usr_details['uid'] = ""
     while True:
-        usr_details['uid'] = makeuid(usr_details['username'], uid_n)
+        usr_details['uid'] = makeuid(username, uid_n)
         if mcUser.objects.filter(uid=usr_details['uid']).count() > 0:
             print mcUser.objects.filter(uid=usr_details['uid']), "\n\n"
             if usrCheck():
@@ -114,16 +112,16 @@ def main(args):
                 sys.exit(1)
         else: break
     # - Set pwd
-    fid = Popen(["slappasswd", "-s", usr_details['password']],
+    fid = Popen(["slappasswd", "-s", password],
                 stdout=PIPE,
                 stderr=PIPE)
     stdout,stderr = fid.communicate()
-    if "{SSHA}" in stdout: usr_details['password'] = stdout
+    if "{SSHA}" in stdout: password = stdout
     else: 
         print "Error in password creation."
         sys.exit(1)
     # - LDAPUserCreation call
-    entity = LDAPUserCreation(usr_details)
+    entity = LDAPUserCreation(uid, password)
     print "Calling: processLDIF(", LDAP_admin_dn, ",", LDAP_admin_pw, ")"
     entity.processLDIF(LDAP_admin_dn, LDAP_admin_pw)                                             # Nice to report success or not (later! get it comitted!!)
     print "LDAP User Added"
@@ -132,13 +130,11 @@ def main(args):
     # End LDAP Modification #
     #=======================#
     
-    print "\nAfter LDAPData population: ", usr_details,"\n"
-
     #======================#
     # McCode User creation #
     #======================#
     user = mcUser.objects.createMcUser(usr_details)
-
+username, email=entity.ldap_user.MAIL,password=password)
     
 
 

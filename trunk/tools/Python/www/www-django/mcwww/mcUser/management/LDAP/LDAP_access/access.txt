@@ -504,3 +504,9 @@ ldapAuthenticate, called from <class 'mcUser.models.mcBackend'>.authenticate()
 
 Timestamp: 2015-01-14:1421247842.91
 cn=mark lewis,ou=person,dc=fysik,dc=dtu,dc=dk authentication success.
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif
+Error: <type 'exceptions.KeyboardInterrupt'>
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=fysik,dc=dtu,dc=dk -f ./mcUser/management/LDAP/LDIFs/temp/DIT.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./mcUser/management/LDAP/LDIFs/temp/ACL.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>

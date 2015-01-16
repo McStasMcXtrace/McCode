@@ -1,1 +1,42 @@
+#==============#
+# Adding users #
+#==============#
+dn: cn=Alfred the Butler,ou=person,dc=fysik,dc=dtu,dc=dk
+objectclass: inetOrgPerson
+cn: Alfred
+displayName: Alf
+sn: 
+uid: alf01
+userpassword: tommygun
+mail: 
+description: Student
+ou: person
+
+dn: cn=Batman,ou=person,dc=fysik,dc=dtu,dc=dk
+objectclass: inetOrgPerson
+cn: Batman
+displayName: Batman
+sn: 
+uid: Bat01
+userpassword: iambatman
+mail: 
+mail: 
+telephoneNumber: 
+departmentNumber:
+roomNumber: 
+description: Batman
+employeeNumber: 
+ou: person
+
+#================#
+# Groupify Users #
+#================#
+dn: cn=courseStaff,ou=groups,dc=fysik,dc=dtu,dc=dk
+changetype: modify
+add: member
+member: cn=Batman,ou=person,dc=fysik,dc=dtu,dc=dk
+
+dn: cn=Student,ou=groups,dc=fysik,dc=dtu,dc=dk
+changetype: modify
+add: member
 member: cn=Alfred the Butler,ou=person,dc=fysik,dc=dtu,dc=dk
