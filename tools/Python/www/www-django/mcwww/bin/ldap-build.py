@@ -6,7 +6,7 @@ from sys import stdin
 
 def main(args):
     if len(args) < 6:
-        print  "usage: python ldap-build.py <dn> <rootpw> <bindpw> <your pw>\n"
+        print  "usage: python 0:ldap-build.py 1:<dn> 2:<rootpw> 3:<bindpw> 4:<your pw>\n"
         print "Not enough args: "
         print "GIVEN ARGUMENTS: ",args,"\n"
         sys.exit(1)
