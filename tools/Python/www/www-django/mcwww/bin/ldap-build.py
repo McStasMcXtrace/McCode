@@ -32,7 +32,7 @@ def main(args):
                     for (kwd, replacement) in kwds.iteritems():
                         line = line.replace(kwd,replacement)
                     outfile.write(line)
-            outfile.close()
+                outfile.close()
     # Templates done             #
     #============================#
     #=====================#
