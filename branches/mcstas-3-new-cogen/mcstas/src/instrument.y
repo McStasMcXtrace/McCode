@@ -1886,9 +1886,9 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
          are assigned using #define's. */
       if(!exp_isvalue(entry->val))
       {
-        print_warn(NULL, "Warning: Using DEFINITION parameter of component %s=%s() (potential syntax error) at line %s:%d\n"
+        print_warn(NULL, "Warning: Using DEFINITION parameter of component %s() (potential syntax error) at line %s:%d\n"
           "  %s=%s\n",
-          comp->name, comp->def->name, instr_current_filename, instr_current_line,
+          comp->def->name, instr_current_filename, instr_current_line,
           formal->id, exp_tostring(entry->val));
       }
     }

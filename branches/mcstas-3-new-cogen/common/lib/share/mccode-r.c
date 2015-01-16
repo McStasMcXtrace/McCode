@@ -3517,14 +3517,16 @@ mcparseoptions(int argc, char *argv[])
     }
     else if(!strcmp("--no-output-files", argv[i]))
       mcdisable_output_files = 1;
-    else if(!strcmp("--source", argv[i]))
-      printf("Source code %s from %s:\n"
+    else if(!strcmp("--source", argv[i])) {
+      printf("/* Source code %s from %s: */\n"
         "/******************************************************************************/\n"
         "%s\n"
         "/******************************************************************************/\n"
-        "End of source code %s from %s\n",
+        "/* End of source code %s from %s */\n",
         mcinstrument_name, mcinstrument_source, mcinstrument_code, 
         mcinstrument_name, mcinstrument_source);
+      exit(1);
+    }
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
       *p++ = '\0';

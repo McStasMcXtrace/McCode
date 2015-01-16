@@ -848,8 +848,8 @@ int cogen_comp_section(struct comp_inst *comp,
   
     /* init parameters. These can then be used in position/rotation syntax */
     /* all these parameters have a #define pointing to the real name space in structure */
-    coutf("  SIG_MESSAGE(\"[%%s:%%i:%sinstance_%s_%s] component %s=%s() %s\", __FILE__, __LINE__);", 
-        ID_PRE, comp->name, section_lower, comp->name, comp->def->name, section);
+    coutf("  SIG_MESSAGE(\"[%s:%sinstance_%s_%s] component %s=%s() %s\");", 
+        instr->name, ID_PRE, comp->name, section_lower, comp->name, comp->def->name, section);
 
   if (!strcmp(section, "TRACE")) {
     
@@ -947,8 +947,8 @@ int cogen_comp_setpos(struct comp_inst *comp, struct comp_inst *last, struct ins
   
   /* init parameters. These can then be used in position/rotation syntax */
   /* all these parameters have a #define pointing to the real name space in structure */
-  coutf("  SIG_MESSAGE(\"[%%s:%%i:%sinstance_%s_%s] component %s=%s() %s\", __FILE__, __LINE__);", 
-      ID_PRE, comp->name, "setpos", comp->name, comp->def->name, "SETTING");
+  coutf("  SIG_MESSAGE(\"[%s:%sinstance_%s_%s] component %s=%s() %s\");", 
+      instr->name, ID_PRE, comp->name, "setpos", comp->name, comp->def->name, "SETTING");
   
   coutf("  stracpy(" ID_PRE "instance_%s->name, \"%s\", 16384);", comp->name, comp->name);
   coutf("  stracpy(" ID_PRE "instance_%s->type, \"%s\", 16384);", comp->name, comp->def->name);
@@ -1363,8 +1363,8 @@ int cogen_section(struct instr_def *instr, char *section, char *section_lower, s
   /* User code from instrument definition. */
   if (code && list_len(code->lines) > 0) {
     coutf("  /* Instrument '%s' %s */", instr->name, section);
-    coutf("  SIG_MESSAGE(\"[%%s:%%i:%s%s] instrument '%s' %s\", __FILE__, __LINE__);", 
-      ID_PRE, section_lower, instr->name, section);
+    coutf("  SIG_MESSAGE(\"[%s] %s\");", 
+      instr->name, section);
     /* defines for the instrument parameters */
     cogen_defundef(NULL, instr->formals, INSTRUMENT_PAR_VALUE);
     codeblock_out_brace(code);
