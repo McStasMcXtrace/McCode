@@ -3748,7 +3748,7 @@ int mccode_main(int argc, char *argv[])
   mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
 
 /* *** parse options ******************************************************* */
-  SIG_MESSAGE("main (Start)");
+  SIG_MESSAGE("[" __FILE__ "] main START");
   mcformat=getenv(FLAVOR_UPPER "_FORMAT") ?
            getenv(FLAVOR_UPPER "_FORMAT") : FLAVOR_UPPER;
   mcinstrument_exe = argv[0]; /* store the executable path */
@@ -3799,7 +3799,7 @@ int mccode_main(int argc, char *argv[])
 #endif
 #endif /* !NOSIGNALS */
   mcsiminfo_init(NULL); /* open SIM */
-  SIG_MESSAGE("main (Init)");
+  SIG_MESSAGE("[" __FILE__ "] main INITIALISE");
   mcinit();
 #ifndef NOSIGNALS
 #ifdef SIGINT
@@ -3865,7 +3865,7 @@ void neutronics_main_(float *inx, float *iny, float *inz, float *invx, float *in
   mcinit();
 
   /* *** parse options *** */
-  SIG_MESSAGE("main (Start)");
+  SIG_MESSAGE("[" __FILE__ "] main START");
   mcformat=getenv(FLAVOR_UPPER "_FORMAT") ?
            getenv(FLAVOR_UPPER "_FORMAT") : FLAVOR_UPPER;
 
