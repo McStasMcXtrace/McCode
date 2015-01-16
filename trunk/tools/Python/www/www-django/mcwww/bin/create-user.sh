@@ -1,3 +1,3 @@
 #!/bin/sh
 
-python create_user.py $*
+python mcUser/management/commands/create_user.py $*
