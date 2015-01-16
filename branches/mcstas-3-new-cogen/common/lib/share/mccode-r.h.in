@@ -233,8 +233,8 @@ unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:
 
 #ifndef NOSIGNALS
 #include <signal.h>
-mcstatic char  mcsig_message[256];
-#define SIG_MESSAGE(msg) strcpy(mcsig_message, __FILE__ " " msg);
+char  *mcsig_message;
+#define SIG_MESSAGE(msg) mcsig_message=(char *)(msg);
 #else
 #define SIG_MESSAGE
 #endif /* !NOSIGNALS */
