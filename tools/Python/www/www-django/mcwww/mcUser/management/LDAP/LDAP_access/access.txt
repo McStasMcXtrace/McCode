@@ -510,3 +510,55 @@ cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=fysik,dc=dtu,dc=dk -f ./mcUser/
 Error: <class 'subprocess.CalledProcessError'>
 cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./mcUser/management/LDAP/LDIFs/temp/ACL.ldif -w PASSWORD
 Error: <class 'subprocess.CalledProcessError'>
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=fysik,dc=dtu,dc=dk -f ./mcUser/management/LDAP/LDIFs/temp/DIT.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./mcUser/management/LDAP/LDIFs/temp/ACL.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=fysik,dc=dtu,dc=dk -f ./mcUser/management/LDAP/LDIFs/temp/DIT.ldif -w PASSWORD
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./mcUser/management/LDAP/LDIFs/temp/ACL.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=fysik,dc=dtu,dc=dk -f ./mcUser/management/LDAP/LDIFs/temp/DIT.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./mcUser/management/LDAP/LDIFs/temp/ACL.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=fysik,dc=dtu,dc=dk -f ./mcUser/management/LDAP/LDIFs/temp/DIT.ldif -w PASSWORD
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./mcUser/management/LDAP/LDIFs/temp/ACL.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=fysik,dc=dtu,dc=dk -f ./mcUser/management/LDAP/LDIFs/temp/DIT.ldif -w PASSWORD
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./mcUser/management/LDAP/LDIFs/temp/ACL.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=fysik,dc=dtu,dc=dk -f ./management/LDAP/LDIFs/temp/DIT.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./management/LDAP/LDIFs/temp/ACL.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=fysik,dc=dtu,dc=dk -f ./management/LDAP/LDIFs/DIT.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./management/LDAP/LDIFs/ACL.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=fysik,dc=dtu,dc=dk -f ./mcUser/management/LDAP/LDIFs/DIT.ldif -w PASSWORD
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./mcUser/management/LDAP/LDIFs/ACL.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=fysik,dc=dtu,dc=dk -f ./mcUser/management/LDAP/LDIFs/DIT.ldif -w PASSWORD
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./mcUser/management/LDAP/LDIFs/ACL.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=fysik,dc=dtu,dc=dk -f ./mcUser/management/LDAP/LDIFs/DIT.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./mcUser/management/LDAP/LDIFs/ACL.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=dc=fysik,dc=dtu,dc=dk -f ./mcUser/management/LDAP/LDIFs/DIT.ldif -w PASSWORD
+Error: <class 'subprocess.CalledProcessError'>
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./mcUser/management/LDAP/LDIFs/ACL.ldif -w PASSWORD
+sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,dc=fysik,dc=dtu,dc=dk -f ./mcUser/management/LDAP/LDIFs/DIT.ldif -w PASSWORD
+cn=admin ADDED ENTRY : ldapadd -x -D cn=admin,cn=config -f ./mcUser/management/LDAP/LDIFs/ACL.ldif -w PASSWORD

@@ -10,7 +10,7 @@ def main(args):
         print "Not enough args: "
         print "GIVEN ARGUMENTS: ",args,"\n"
         sys.exit(1)
-    print args
+    # print "Data Supplied to File Creator:", args
     #============================#
     # Templated file manipulator #
     # - dirs and kwds
@@ -37,8 +37,8 @@ def main(args):
     #============================#
     #=====================#
     # Build LDAP database #
-    from mcUser.management.LDAP import LDAPBuilder as bob_the
-    print "Data:",args[1],args[4],args[5]
+    import LDAPBuilder as bob_the
+    # print "Data supplied to Builder:",args[1],args[4],args[5]
     dat = BuildData(args[1], args[4], args[5])
     auth = bob_the.LDAPBuilder(dat)
     auth.insertRootPW()
@@ -55,7 +55,7 @@ def main(args):
 #======================================#
 class BuildData:
     def __init__(self, dn, treepw, rootpw):
-        self.treedn = 'cn=admin,dc=%s'%dn
+        self.treedn = 'cn=admin,%s'%dn
         self.treepw = treepw
         self.rootdn = 'cn=admin,cn=config'
         self.rootpw = rootpw
@@ -79,6 +79,3 @@ class BuildData:
 #   argv[4] = LDAP Frontend DB  pw          #
 #-------------------------------------------#
 main(sys.argv)
-
-
-

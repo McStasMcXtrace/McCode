@@ -8,7 +8,7 @@ NAME=`cat /etc/hostname`
 DN=${DN%$NAME*}                     # all before (repeated) NAME
 DN=${DN##*$NAME.}                   # get after first NAME on line 
 DN=$(echo $DN | sed 's/ *$//')      # trim whitespace at end
-DN="${DN//./,dc=}"                  # replacing '.' with ',dc='
+DN="dc=${DN//./,dc=}"               # replacing '.' with ',dc=' and putting dc= in front.
 echo Obtained LDAP database DN: $DN
 echo " "
 #---------------#
@@ -44,7 +44,7 @@ until [[ ${LDAPOP:0:1} == "d" ]]; do
     read -s TREEPW
     echo " "
     echo Testing LDAP accesses.
-    LDAPOP=`ldapwhoami -D cn=admin,dc=$DN -w $TREEPW`
+    LDAPOP=`ldapwhoami -D cn=admin,$DN -w $TREEPW`
 done
 echo Access by admin accepted.
 echo " "
