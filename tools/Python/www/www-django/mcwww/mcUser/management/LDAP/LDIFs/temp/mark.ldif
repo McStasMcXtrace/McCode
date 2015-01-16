@@ -1,0 +1,15 @@
+dn: cn=Mark Lewis,ou=person,dc=fysik,dc=dtu,dc=dk
+objectClass: inetorgperson
+cn: Mark Lewis 
+sn: Lewis 
+displayName: Mark 
+uid: mark 
+mail: lewis@fysik.dtu.dk 
+userpassword: {SSHA}In0tFmvnDZLIk4V5cfzoWrPP8ABuFDKC
+ 
+ou: person
+
+dn: cn=Student,ou=groups,dc=fysik,dc=dtu,dc=dk
+changeType: modify
+add: member
+member: cn=Mark Lewis,ou=person,dc=fysik,dc=dtu,dc=dk
