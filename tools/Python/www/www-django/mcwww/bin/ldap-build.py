@@ -10,16 +10,17 @@ def main(args):
         print "Not enough args: "
         print "GIVEN ARGUMENTS: ",args,"\n"
         sys.exit(1)
+    print args
     #============================#
     # Templated file manipulator #
     # - dirs and kwds
     kwds = {'DN':args[1], 'RPW':args[2],'BPW':args[3]}
     in_dirs  = ['./mcUser/management/LDAP/templates/LDIFs/',     
                 './mcUser/management/LDAP/templates/LDAPython/',
-                './management/commands/templates/']
+                './mcUser/management/commands/templates/']
     out_dirs = ['./mcUser/management/LDAP/LDIFs/',
                 './mcUser/management/LDAP/',
-                './management/commands/']
+                './mcUser/management/commands/']
     exts     = ['.ldif', '.py', '.py']
     # - Replacing keywords
     for i in range(3):
@@ -30,7 +31,7 @@ def main(args):
                 for line in open("%s%s"%(in_dirs[i],in_file), 'r'):
                     for (kwd, replacement) in kwds.iteritems():
                         line = line.replace(kwd,replacement)
-                outfile.write(line)
+                    outfile.write(line)
             outfile.close()
     # Templates done             #
     #============================#

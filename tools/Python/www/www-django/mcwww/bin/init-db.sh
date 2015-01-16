@@ -22,6 +22,7 @@ echo " "
 #---------------------#
 # Calling DB builders #
 #---------------------#
+echo python ./bin/ldap-build.py $DN $ROOTPW $BINDPW $TREEPW 7r4um4r00t 7r4um4r00t
 python ./bin/ldap-build.py $DN $ROOTPW $BINDPW $TREEPW 7r4um4r00t 7r4um4r00t
 python ./manage.py syncdb
 
