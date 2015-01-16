@@ -21,8 +21,7 @@ class LDAPBuilder:
 # DB modification files
 
         print "BUILDER IS RUNNING IN: ", os.getcwd()
-
-        self.ldif_build_path = './management/LDAP/LDIFs/temp/'
+        self.ldif_build_path = './mcUser/management/LDAP/LDIFs/'
         self.rootPW = "RPW.ldif"
         self.tree = "DIT.ldif"
         self.acl = "ACL.ldif"
