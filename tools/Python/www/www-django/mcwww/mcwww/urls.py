@@ -11,8 +11,9 @@ urlpatterns = patterns(
 
     url(r'^login/$',     'mcwww.views.login_form' , name='login_form'),
     url(r'^login/try/$', 'mcwww.views.loginPOST',   name='loginPOST'),
+    url(r'^login/Invalid_credentials/$', 'mcwww.views.login_form',   name='login_form'),
     url(r'^logout/$',    'mcwww.views.logout_user', name='logout_user'),
-
+    
     url(r'^sim/latest/', 'mcsimulator.views.latest', name='latest'),
 
     url(r'^$', 'mcsimulator.views.home', name='home'),
@@ -23,9 +24,7 @@ urlpatterns = patterns(
     url(r'^sim/(?P<jobref>\w+)/$', 'mcsimulator.views.simulatePOST', name='simulatePOST'),
 
     url(r'^status/(?P<runref>'+RUNREF_RE+')/$', 'mcsimulator.views.status', name='status'),
-
     url(r'^sim/status/(?P<runref>'+RUNREF_RE+')/$', 'mcsimulator.views.status', name='status'),
-    
     url(r'^sim/status/(?P<runref>'+RUNREF_RE+')/(?P<compN>.+)', 'mcsimulator.views.status', name='status'),
 
     url(r'^plot/(?P<runref>'+RUNREF_RE+')/(?P<name>.+)', 'mcsimulator.views.show_plot', name='show_plot'),

@@ -14,7 +14,6 @@ from django.contrib.auth.decorators import login_required
 from common import *
 from mcUser.models import *
 from common import templated
-
 #---------------#
 #  login_form() #
 #---------------#
@@ -36,7 +35,7 @@ def loginPOST(req):
     nexturl = form.get('next', '/')
     UID = form.get('uid', '')
     PW = form.get('password', '')
-    if PW == None: return redirect('/login/with_a_password')
+    if PW == None: return redirect('/login/')
 
     checker = mcBackend()
     user = checker.authenticate(UID, PW)
