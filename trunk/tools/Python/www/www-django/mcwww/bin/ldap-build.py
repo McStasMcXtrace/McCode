@@ -39,7 +39,7 @@ def main(args):
     #=====================#
     # Build LDAP database #
     import LDAPBuilder as bob_the
-    dat = BuildData(args[1], args[4])
+    dat = BuildData(args[1], args[4], args[5])
     auth = bob_the.LDAPBuilder(dat)
     auth.insertRootPW()
     auth.buildTree()
@@ -72,10 +72,11 @@ class BuildData:
 
 #-------------------------------------------#
 # Call to main with cmd line args:          #
-#   argv[0] =  'ldap-build.py'              #
-#   argv[1] = LDAP DN                       #
-#   argv[2] = LDAP Backend DB pw            #
-#   argv[3] = moodle/mediawiki bind user pw #
-#   argv[4] = LDAP Frontend DB  pw          #
+#   args[0] =  'ldap-build.py'              #
+#   args[1] = LDAP DN                       #
+#   args[2] = LDAP Backend DB pw            #
+#   args[3] = moodle/mediawiki bind user pw #
+#   args[4] = LDAP Frontend DB PWD          #
+#   args[5] = LDAP Admin PWD                #
 #-------------------------------------------#
 main(sys.argv)
