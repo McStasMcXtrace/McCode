@@ -99,7 +99,6 @@ class LDAPComm:
         self.query_num += 1
         log_str = cn + " QUERY with: ldapsearch -LLL -b dc=fysik,dc=dtu,dc=dk -D" + auth_dn + "-w PASSWORD " + query+"\n"
         self.log(log_str)
-        print cn + " QUERY with: ldapsearch -LLL -b dc=fysik,dc=dtu,dc=dk -D " + auth_dn + " -w PASSWORD " + query+"\n"
         try:
             fid  = Popen(["ldapsearch", "-LLL", "-b", "dc=fysik,dc=dtu,dc=dk", "-D", auth_dn, "-w", auth_pw, query],
                          stdout=pipe,
