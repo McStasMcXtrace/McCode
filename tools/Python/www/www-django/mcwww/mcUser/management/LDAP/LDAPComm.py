@@ -139,21 +139,22 @@ class LDAPComm:
 # User Identification #
 #=====================#
     def ldapAuthenticate(self, auth_cn, auth_pw):
-        dn = "cn=%s" + auth_cn + "ou=person,dc=fysik,dc=dtu,dc=dk"
+        print "in authenticate\nauth_cn:%s \nauth_pw:%s"%(auth_cn,auth_pw)
+        dn = "cn="+auth_cn+",ou=person,dc=fysik,dc=dtu,dc=dk"
         try:
             fid = Popen(["ldapwhoami", "-vvv", "-D", dn, "-x", "-w", auth_pw],
-                        stdout=pipe,
-                        stderr=pipe)
+                        stdout=PIPE,
+                        stderr=PIPE)
             stdout,stderr = fid.communicate()
             bill = stdout
             ben = stderr
             if "Success" in bill:
                 return True
             else:
-                self.log("Access attempt by %s failed: %s" % (dn, ben) )
+                self.log("Access attempt by "+dn+" failed: "+ben) 
                 return False
         except:
-            log_str = "Access attempt by" + dn + "failed: " + str(sys.exc_info()[0])
+            log_str = "Access attempt by "+dn+" failed: "+str(sys.exc_info())
             self.log(log_str)
             ''' MESSAGE BOX SUGGESTING ERROR '''
             return False

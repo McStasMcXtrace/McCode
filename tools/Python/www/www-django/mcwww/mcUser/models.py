@@ -81,14 +81,11 @@ class mcBackend(object):
 
         def get_cn(UID):
             import base64
-            print "in models:authenticate, UID=", UID
             dn = None
-            ldap_data = self.conn.ldapQuery('cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk',    # TEMPLATE LINE
-                                            '{SSHA}e5N5FntlOlPzylI/QjCNqUoKGI1dJ/zd',                                             # TEMPLATE LINE
+            ldap_data = self.conn.ldapQuery('cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk',
+                                            'DPW',
                                             "uid=%s"%UID)            
-            print "ldap_data:\n",ldap_data
             for line in ldap_data:
-                print "evaluating %s"%line
                 if 'uid::' in line:
                     self.data.setuid(base64.standard_b64decode(split(" ", line)[1]).strip())
                 if 'cn::' in line:
@@ -111,15 +108,17 @@ class mcBackend(object):
             return None
 
         cn = get_cn(uid)
-        print "uid: ", uid
-        print "cn: ", cn
+        print "uid:", uid
+        print "cn:", cn
         if self.conn.ldapAuthenticate(cn, pw):
             try:
                 user = mcUser.objects.get(uid=self.data.uid())
+                print "user is",user
                 user.ldap_user = self.data
                 update_last_login(self, user)
                 return user 
             except User.DoesNotExist:
+                print "NOPE"
                 return None
         return None
 
