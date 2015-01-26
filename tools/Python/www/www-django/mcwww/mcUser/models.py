@@ -84,7 +84,7 @@ class mcBackend(object):
             print "in models:authenticate, UID=", UID
             dn = None
             ldap_data = self.conn.ldapQuery('cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk',    # TEMPLATE LINE
-                                            '{SSHA}rkQsw4x2o5maMVyP4bm1q2/1sV0kfwwK',                                             # TEMPLATE LINE
+                                            '{SSHA}e5N5FntlOlPzylI/QjCNqUoKGI1dJ/zd',                                             # TEMPLATE LINE
                                             "uid=%s"%UID)            
             print "ldap_data:\n",ldap_data
             for line in ldap_data:
