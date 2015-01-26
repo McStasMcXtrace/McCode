@@ -97,10 +97,10 @@ class LDAPComm:
         ret_val = None
         pipe = PIPE
         self.query_num += 1
-        log_str = cn + " QUERY with: ldapsearch -LLL -b dc=DN -D" + auth_dn + "-w PASSWORD " + query+"\n"
+        log_str = cn + " QUERY with: ldapsearch -LLL -b DN -D" + auth_dn + "-w PASSWORD " + query+"\n"
         self.log(log_str)
         try:
-            fid  = Popen(["ldapsearch", "-LLL", "-b", "dc=DN", "-D", auth_dn, "-w", auth_pw, query],
+            fid  = Popen(["ldapsearch", "-LLL", "-b", "DN", "-D", auth_dn, "-w", auth_pw, query],
                          stdout=pipe,
                          stderr=pipe)
             stdout,stderr = fid.communicate()
@@ -117,11 +117,11 @@ class LDAPComm:
     def ldapAdminGroupQuery(self, auth_cn):
         cn = "cn=%s" % auth_cn
         query = "(|(cn=itStaff)(cn=courseStaff))"
-        self.log("%s AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b ou=groups,dc=DN -D cn=DummyUser,ou=person,dc=DN -w DummyPW %s\n" % (cn, query) )
+        self.log("%s AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b ou=groups,DN -D cn=DummyUser,ou=person,DN -w DummyPW %s\n" % (cn, query) )
         pipe = PIPE
         try:
             fid = Popen(
-                ["ldapsearch", "-LLL", "-b", "dc=DN", "-D", "cn=DummyUser,ou=person,dc=DN", "-w", "DummyPW", query],
+                ["ldapsearch", "-LLL", "-b", "DN", "-D", "cn=DummyUser,ou=person,DN", "-w", "DummyPW", query],
                 stdout=pipe,
                 stderr=pipe)
             stdout,stderr = fid.communicate()
@@ -139,7 +139,7 @@ class LDAPComm:
 # User Identification #
 #=====================#
     def ldapAuthenticate(self, auth_cn, auth_pw):
-        dn = "cn=%s" + auth_cn + "ou=person,dc=DN"
+        dn = "cn=%s" + auth_cn + "ou=person,DN"
         try:
             fid = Popen(["ldapwhoami", "-vvv", "-D", dn, "-x", "-w", auth_pw],
                         stdout=pipe,

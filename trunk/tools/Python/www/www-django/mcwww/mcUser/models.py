@@ -78,14 +78,16 @@ class mcBackend(object):
         in_log.write("\nTimestamp: %s:%s\n" % (str(date.fromtimestamp(t)), str(t)) )
         in_log.write("Finding data from uid: "+ uid +"\n")
         self.data = LDAPData()
+
         def get_cn(UID):
             import base64
+            print "in models:authenticate, UID=", UID
             dn = None
-            toby = self.conn.ldapQuery('cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk',    # TEMPLATE LINE
-                                            'DPW',                                             # TEMPLATE LINE
-                                            "uid=%s"%UID)
-            print toby
-            for line in toby:
+            ldap_data = self.conn.ldapQuery('cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk',    # TEMPLATE LINE
+                                            '123',                                             # TEMPLATE LINE
+                                            "uid=%s"%UID)            
+            print "ldap_data:\n",ldap_data
+            for line in ldap_data:
                 print "evaluating %s"%line
                 if 'uid::' in line:
                     self.data.setuid(base64.standard_b64decode(split(" ", line)[1]).strip())
@@ -99,7 +101,7 @@ class mcBackend(object):
                     self.data.setdisplayname(base64.standard_b64decode(split(" ", line)[1]).strip())
                 if line: in_log.write("%s\n"%line)
                 if "dn:" in line:
-                    in_log.write("Got a cn? : "+ split(",|=", line)[1] +"\n")
+                    in_log.write("Found data: %s \n"% split(",|=", line)[1])
                     dn = split(",|=", line)[1].strip()
             if dn: 
                 in_log.close()
@@ -107,7 +109,10 @@ class mcBackend(object):
             in_log.write("Usr not found from uid: %s\n"%UID)
             in_log.close()
             return None
+
         cn = get_cn(uid)
+        print "uid: ", uid
+        print "cn: ", cn
         if self.conn.ldapAuthenticate(cn, pw):
             try:
                 user = mcUser.objects.get(uid=self.data.uid())
