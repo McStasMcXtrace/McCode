@@ -14,18 +14,18 @@
 
   <form method="POST" action="/login/try/">
     {% csrf_token %}
-    <input type="hidden" name="next" value="{{ next }}">
+    <input type="hidden" name="next" value="/Yes">
     <ol>
       <li>
-        <label for=username>Username:</label>
-        <input type="text" name="username" id="username">
+        <label for=uid>UID:</label>
+        <input type="text" name="uid" id="uid">
       </li>
       <li>
         <label for=password>Password:</label>
         <input type="password" name="password" id="password">
       </li>
     </ol>
-    <input type=submit>
+    <input type=submit value="Logon">
   </form>
 
 

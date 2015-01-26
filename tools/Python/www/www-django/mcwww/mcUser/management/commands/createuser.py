@@ -68,7 +68,7 @@ def usrCheck():
 # - Save user in sqlitedb      
 # - Add group                                  <-- should do this first for entry to LDAP
 def main(args):
-    comm = LDAPComm()
+    comm = LDAPComm.LDAPComm()
     usr_details = {}
     #-----------------------#
     # username and password #
@@ -93,18 +93,18 @@ def main(args):
     # - Check permissions
     LDAP_admin_cn = raw_input('Enter your LDAP authentication cn (not your uid): ')
     LDAP_admin_pw = getpass('Enter your LDAP authentication pwd: ')
-    if LDAP_admin_cn == 'cn=admin,dc=dc=fysik,dc=dtu,dc=dk' :
+    if LDAP_admin_cn == 'cn=admin,dc=fysik,dc=dtu,dc=dk' :
         LDAP_admin_dn = LDAP_admin_cn
     else:
-        LDAP_admin_dn = "cn=%s,ou=person,dc=dc=fysik,dc=dtu,dc=dk" % LDAP_admin_cn
-        if(not comm.ldapAdminGroupQuery(LDAP_admin_cn)): 
+        LDAP_admin_dn = "cn=%s,ou=person,dc=fysik,dc=dtu,dc=dk" % LDAP_admin_cn
+        if(not comm.ldapAdminGroupQuery(LDAP_admin_cn, LDAP_auth_pw)): 
             print "Insufficient LDAP privs, your cn may not be what you have supplied.\nPlease contact admin.\n"
             sys.exit(1)
     # - Check for duplicates
     uid_n = 0
     usr_details['uid'] = ""
     while True:
-        usr_details['uid'] = makeuid(username, uid_n)
+        usr_details['uid'] = makeuid(usr_details['username'], uid_n)
         if mcUser.objects.filter(uid=usr_details['uid']).count() > 0:
             print mcUser.objects.filter(uid=usr_details['uid']), "\n\n"
             if usrCheck():
@@ -112,16 +112,16 @@ def main(args):
                 sys.exit(1)
         else: break
     # - Set pwd
-    fid = Popen(["slappasswd", "-s", password],
+    fid = Popen(["slappasswd", "-s", usr_details['password']],
                 stdout=PIPE,
                 stderr=PIPE)
     stdout,stderr = fid.communicate()
-    if "{SSHA}" in stdout: password = stdout
+    if "{SSHA}" in stdout: usr_details['password'] = stdout
     else: 
         print "Error in password creation."
         sys.exit(1)
     # - LDAPUserCreation call
-    entity = LDAPUserCreation(uid, password)
+    entity = LDAPUserCreation(usr_details)
     print "Calling: processLDIF(", LDAP_admin_dn, ",", LDAP_admin_pw, ")"
     entity.processLDIF(LDAP_admin_dn, LDAP_admin_pw)                                             # Nice to report success or not (later! get it comitted!!)
     print "LDAP User Added"
@@ -134,10 +134,6 @@ def main(args):
     # McCode User creation #
     #======================#
     user = mcUser.objects.createMcUser(usr_details)
-username, email=entity.ldap_user.MAIL,password=password)
-    
-
-
     print "\nMCUSER: ", user, "\n\n"
     user.save()
     

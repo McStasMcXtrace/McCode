@@ -43,7 +43,7 @@ DATA_FILES = ('sim/datafiles',)
 #===============#
 # Django Config #
 #===============#
-DEBUG = False # True # - put this to be true only when dev'ing 
+DEBUG =  True # False - this needs to be set to false. css do not load if ture at the mo. 
 TEMPLATE_DEBUG = DEBUG
 ROOT_URLCONF = 'mcwww.urls'
 
