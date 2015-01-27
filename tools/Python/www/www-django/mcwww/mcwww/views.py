@@ -4,7 +4,7 @@
 #------------------#
 # django imports   #
 #------------------#
-# from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
 from django.conf.urls import include
 from django.contrib.auth.decorators import login_required
@@ -39,12 +39,12 @@ def loginPOST(req):
 
     checker = mcBackend()
     user = checker.authenticate(UID, PW)
-    print "user:", user
     if user is None or not user.is_active:
         return redirect('/login/Invalid_credentials')
     else: 
-        checker.session_login(user)
-        return redirect('/login/?next=' + nexturl)
+        login(req, user)
+        # checker.session_login(user)
+        return redirect(nexturl)
 #----------------------------------------------------#
 #  logout_user()                                     #
 # ===============                                    #

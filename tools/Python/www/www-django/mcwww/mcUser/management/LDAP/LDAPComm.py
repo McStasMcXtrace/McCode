@@ -118,12 +118,11 @@ class LDAPComm:
         cn = "cn=%s" % auth_cn
         query = "(|(cn=itStaff)(cn=courseStaff))"
         self.log("%s AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b ou=groups,dc=fysik,dc=dtu,dc=dk -D cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk -w DummyPW %s\n" % (cn, query) )
-        pipe = PIPE
         try:
             fid = Popen(
                 ["ldapsearch", "-LLL", "-b", "dc=fysik,dc=dtu,dc=dk", "-D", "cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk", "-w", "DummyPW", query],
-                stdout=pipe,
-                stderr=pipe)
+                stdout=PIPE,
+                stderr=PIPE)
             stdout,stderr = fid.communicate()
             bill = stdout
             ben = stderr
@@ -139,8 +138,7 @@ class LDAPComm:
 # User Identification #
 #=====================#
     def ldapAuthenticate(self, auth_cn, auth_pw):
-        print "in authenticate\nauth_cn:%s \nauth_pw:%s"%(auth_cn,auth_pw)
-        dn = "cn="+auth_cn+",ou=person,dc=fysik,dc=dtu,dc=dk"
+        dn = "cn=" + auth_cn + ",ou=person,dc=fysik,dc=dtu,dc=dk"
         try:
             fid = Popen(["ldapwhoami", "-vvv", "-D", dn, "-x", "-w", auth_pw],
                         stdout=PIPE,
@@ -151,10 +149,10 @@ class LDAPComm:
             if "Success" in bill:
                 return True
             else:
-                self.log("Access attempt by "+dn+" failed: "+ben) 
+                self.log("Access attempt by %s failed: %s" % (dn, ben) )
                 return False
         except:
-            log_str = "Access attempt by "+dn+" failed: "+str(sys.exc_info())
+            log_str = "Access attempt by" + dn + "failed: " + str(sys.exc_info()[0])
             self.log(log_str)
             ''' MESSAGE BOX SUGGESTING ERROR '''
             return False

@@ -81,11 +81,14 @@ class mcBackend(object):
 
         def get_cn(UID):
             import base64
+            print "in models:authenticate, UID=", UID
             dn = None
-            ldap_data = self.conn.ldapQuery('cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk',
-                                            'DPW',
+            ldap_data = self.conn.ldapQuery('cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk',    # TEMPLATE LINE
+                                            'DPW',                                             # TEMPLATE LINE
                                             "uid=%s"%UID)            
+            print "ldap_data:\n",ldap_data
             for line in ldap_data:
+                print "evaluating %s"%line
                 if 'uid::' in line:
                     self.data.setuid(base64.standard_b64decode(split(" ", line)[1]).strip())
                 if 'cn::' in line:
@@ -108,17 +111,15 @@ class mcBackend(object):
             return None
 
         cn = get_cn(uid)
-        print "uid:", uid
-        print "cn:", cn
+        print "uid: ", uid
+        print "cn: ", cn
         if self.conn.ldapAuthenticate(cn, pw):
             try:
                 user = mcUser.objects.get(uid=self.data.uid())
-                print "user is",user
                 user.ldap_user = self.data
                 update_last_login(self, user)
                 return user 
             except User.DoesNotExist:
-                print "NOPE"
                 return None
         return None
 
@@ -137,6 +138,7 @@ class mcUserManager(models.Manager):
     def createMcUser(self, usr_details):
         mcuser = self.model()
         mcuser.uid         = usr_details['uid']
+        mcuser.id         = usr_details['uid']
         mcuser.username    = usr_details['username']
         mcuser.displayName = usr_details['displayname']
         mcuser.email       = usr_details['email']
@@ -169,6 +171,7 @@ class mcUser(models.Model):
     # mcUser model fields #
     #---------------------#
     uid            = models.CharField(('uid'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'), primary_key=True)
+    id             = models.CharField(('uid'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'))
     USERNAME_FIELD =  'uid'
     username       = models.CharField(('username'), max_length=30, unique=False, help_text=('Non-unique id identifies user in django DB, used to create unique LDAP/django sqlite ID'))
     is_staff       = models.BooleanField(('Member of Staff'), default=False, help_text=('Allows admin access') )
