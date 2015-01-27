@@ -138,6 +138,7 @@ class mcUserManager(models.Manager):
     def createMcUser(self, usr_details):
         mcuser = self.model()
         mcuser.uid         = usr_details['uid']
+        mcuser.id         = usr_details['uid']
         mcuser.username    = usr_details['username']
         mcuser.displayName = usr_details['displayname']
         mcuser.email       = usr_details['email']
@@ -170,6 +171,7 @@ class mcUser(models.Model):
     # mcUser model fields #
     #---------------------#
     uid            = models.CharField(('uid'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'), primary_key=True)
+    id             = models.CharField(('uid'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'))
     USERNAME_FIELD =  'uid'
     username       = models.CharField(('username'), max_length=30, unique=False, help_text=('Non-unique id identifies user in django DB, used to create unique LDAP/django sqlite ID'))
     is_staff       = models.BooleanField(('Member of Staff'), default=False, help_text=('Allows admin access') )
@@ -209,7 +211,7 @@ class mcUser(models.Model):
     def get_group_permissions(self, obj=None):
         permissions = set()
         for backend in auth.get_backends():
-            if hasattr(backend, "get_goup_poermissions"):
+            if hasattr(backend, "get_group_permissions"):
                 if obj is not None:
                     permissions.update(backend.get_group_permissions(self, obj))
                 else:

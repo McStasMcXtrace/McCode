@@ -138,7 +138,7 @@ class LDAPComm:
 # User Identification #
 #=====================#
     def ldapAuthenticate(self, auth_cn, auth_pw):
-        dn = "cn=%s" + auth_cn + ",ou=person,DN"
+        dn = "cn=" + auth_cn + ",ou=person,DN"
         try:
             fid = Popen(["ldapwhoami", "-vvv", "-D", dn, "-x", "-w", auth_pw],
                         stdout=PIPE,
