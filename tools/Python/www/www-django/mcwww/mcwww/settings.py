@@ -6,14 +6,14 @@ PROJECT_PATH = os.path.realpath(os.path.dirname(os.path.dirname(__file__)))
 # LOGIN_URL = './login',
 LOGIN_URL = '/login'
 AUTHENTICATION_BACKENDS=('models.mcBackend',)
-AUTH_USER_MODEL        =('models.mcUser',)
+AUTH_USER_MODEL        = 'models.mcUser'
 SESSION_COOKIE_AGE              = 10*60
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_SAVE_EVERY_REQUEST      = True
 LDIF_DIR                        = 'mcUser/management/LDAP/LDIFs/temp/'
 # STATIC_URL                      = root_path('static')
 # ROOT_URLCONF                    = module.__name__
-#TEMPLATE_DIRS                   = [os.path.dirname(module.__file__),
+# TEMPLATE_DIRS                   = [os.path.dirname(module.__file__),
 #                                   root_path('templates')]
 # SESSION_ENGINE                  = 'mcUser.mcSession'
 # SESSION_FILE_PATH               = './sqlite3_DB/session_data'
@@ -22,7 +22,7 @@ LDIF_DIR                        = 'mcUser/management/LDAP/LDIFs/temp/'
 #============#
 
 #============================#
-# BEGIN McStas configuration #  What you need is probably in this block!
+# BEGIN McStas configuration #
 #============================#
 # IMAGE_FORMAT is either 'gif' or 'png' - R-based plotter only supports png
 IMAGE_FORMAT = 'png'
@@ -63,6 +63,17 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
+
+MIDDLEWARE_CLASSES = (
+    'django.middleware.common.CommonMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    # Uncomment the next line for simple clickjacking protection:
+    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+)
+
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'mcwww.wsgi.application'
 
@@ -119,7 +130,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    PROJECT_PATH + '/templates/'
+    PROJECT_PATH + '/templates/',
 )
 
 #============================#
@@ -174,16 +185,6 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
 #     'django.template.loaders.eggs.Loader',
-)
-
-MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    # Uncomment the next line for simple clickjacking protection:
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
 # A sample logging configuration. The only tangible logging

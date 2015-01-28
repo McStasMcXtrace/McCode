@@ -39,7 +39,7 @@ objectclass: inetOrgPerson
 cn: moodle
 sn: bind user
 uid: MoodleBindUser
-userpassword: {SSHA}p1aYRf7FuKjj/ixpofeJT1+aoX3ecxFI
+userpassword: {SSHA}7oExlQkdrqwwfAFgBXCia+EBYqFgi08d
 ou: access
 
 #==========================#
