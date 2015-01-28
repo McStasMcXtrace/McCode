@@ -1,12 +1,12 @@
-# Mark Lewis - 1-8-14
-# ===================
-'''
-#-----------------------------------------------------------#
-| - models in this class build the mcUser model and mcAdmin |
-|   model and associated models necessary to connect to the |
-|   LDAP DB and authentication                              |
-#-----------------------------------------------------------#
-'''
+# ==================================#
+# mcUser model, Backend and Manager #
+# ------------                      #
+# Provides authentication through   #
+# LDAP DB                           #
+# ------------------                #
+# Author: Mark Lewis                #
+# ==================================#
+
 #================#
 # system imports #
 #================#
@@ -24,19 +24,16 @@ from re import split
 #================#
 # django imports #
 #================#
-# from django.core.mail import send_mail
+# from django.core.mail import send_mail - could implement so I get an email everytime the DB is accessed.
 from django.db.models.manager import EmptyManager
 from django.db import models
-from django import forms
 from django.utils import timezone
-from django.utils.encoding import smart_str
 #====================#
 # User Model imports #
 #====================#
-# from django.contrib.auth.models import AbstractUser,UserManger
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, AbstractBaseUser#, AbstractUser #, User
 #==============#
 # LDAP imports #
 #==============#
@@ -70,7 +67,10 @@ class mcBackend(object):
     supports_interactive_user = True
     def get_user(self, uid):
         # Need to put the LDAP details in the mcUser model at this stage
-        return mcUser.objects.get(UID=uid) # have to build the django DB first
+        try:
+            return mcUser.objects.get(UID=uid) # have to build the django DB first
+        except User.DoesNotExist:
+            return None
 
     def authenticate(self, uid, pw):
         in_log = open("in.log", 'a')
@@ -156,7 +156,7 @@ class mcUserManager(models.Manager):
 #==============#
 # mcUser CLASS #
 #==============#
-class mcUser(models.Model):
+class mcUser(AbstractBaseUser, models.Model):
     def __init__(self, *args, **kwargs):
         super(mcUser, self).__init__(*args, **kwargs)
         #-------------------------#
@@ -170,15 +170,15 @@ class mcUser(models.Model):
     #---------------------#
     # mcUser model fields #
     #---------------------#
-    uid            = models.CharField(('uid'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'), primary_key=True)
-    id             = models.CharField(('uid'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'))
+    uid            = models.CharField(('uid'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'))#, primary_key=True)
+    id             = models.IntegerField(('id'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'), primary_key=True)
     USERNAME_FIELD =  'uid'
     username       = models.CharField(('username'), max_length=30, unique=False, help_text=('Non-unique id identifies user in django DB, used to create unique LDAP/django sqlite ID'))
     is_staff       = models.BooleanField(('Member of Staff'), default=False, help_text=('Allows admin access') )
     is_active      = models.BooleanField(('Enrolled on VNT Course'), default=True, help_text=('Currently enrolled on VNT course.'
                                                                                               'Making this false instead of deleting keeps the user in the DB',
                                                                                               'but stops them accessing the course.'))
-    last_login      = models.DateTimeField(('date joined'), default=timezone.now )
+#    last_login      = models.DateTimeField(('date joined'), default=timezone.now )
     displayName     = models.CharField(('Nickname'), max_length=10, unique=True, help_text=('The name that is displayed during the session.') )
     email           = models.EmailField(('e-mail address'))
     REQUIRED_FIELDS = ['uid', 'is_staff', 'is_active', 'last_login', 'displayName', 'email']
@@ -211,7 +211,7 @@ class mcUser(models.Model):
     def get_group_permissions(self, obj=None):
         permissions = set()
         for backend in auth.get_backends():
-            if hasattr(backend, "get_goup_poermissions"):
+            if hasattr(backend, "get_group_permissions"):
                 if obj is not None:
                     permissions.update(backend.get_group_permissions(self, obj))
                 else:
@@ -291,6 +291,8 @@ class mcUser(models.Model):
                 raise SiteProfileNotAvailable
         return self._profile_cache
 
+    def __str__():
+        return str(self.id)+":"+uid+":"+username
     # instatiation handling
 #    if get_full_name():
 #       self.conn.log("mcUser Opened Connection: %s" % get_full_name())
