@@ -1,4 +1,4 @@
-#!/bin/sh
+ #!/bin/sh
 export PYTHONPATH=$PYTHONPATH:./
 #------------------------------------------#
 # Get host name for populating .ldif files #
@@ -52,5 +52,6 @@ echo " "
 #---------------------#
 # Calling DB builders #
 #---------------------#
-python ./bin/ldap-build.py $DN $ROOTPW $BINDPW $TREEPW $RPW1
 python manage.py syncdb
+python ./bin/ldap-build.py $DN $ROOTPW $BINDPW $TREEPW $RPW1
+

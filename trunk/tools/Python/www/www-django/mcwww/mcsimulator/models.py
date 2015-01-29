@@ -6,8 +6,8 @@ from django.db import models
 from django.db.models import related
 
 from django.contrib import admin
-from django.contrib.auth.models import User
-
+# from django.contrib.auth.models import User
+from  mcwww import settings
 from django.utils.timezone import now
 
 
@@ -65,7 +65,7 @@ class SimRun(models.Model):
     # Unique permanent reference (for use in links)
     ref = models.CharField(max_length=64, db_index=True)
     # Creator / owner
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
     # Job to run
     job = models.ForeignKey('Job')
     sim = models.ForeignKey('Simulation')

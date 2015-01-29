@@ -1,11 +1,12 @@
+# REMEBER PEBCAK AND Id-10T errors.
 import os
 PROJECT_PATH = os.path.realpath(os.path.dirname(os.path.dirname(__file__)))
 #===============#
 # McUser CONFIG #
 #===============#
 LOGIN_URL                       = '/login'
-AUTHENTICATION_BACKENDS         = ('models.mcBackend',)
-AUTH_USER_MODEL                 = ('models.mcUser')
+AUTHENTICATION_BACKENDS         = ('mcUser.mcBackend',)
+AUTH_USER_MODEL                 = ('mcUser.mcUser')
 SESSION_COOKIE_AGE              = 10*60
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_SAVE_EVERY_REQUEST      = True
