@@ -138,7 +138,6 @@ class mcUserManager(models.Manager):
     def createMcUser(self, usr_details):
         mcuser = self.model()
         mcuser.uid         = usr_details['uid']
-        mcuser.id         = usr_details['uid']
         mcuser.username    = usr_details['username']
         mcuser.displayName = usr_details['displayname']
         mcuser.email       = usr_details['email']
@@ -162,8 +161,8 @@ class mcUser(AbstractBaseUser, models.Model):
         #-------------------------#
         # mcUser class attributes #
         #-------------------------#
-        self.ident = None
-        self.password = None # TAKEN FROM LOGIN POST FORM, OR NONE
+#        self.ident = None
+#        self.password = 'notapassword'
         self.authenticated = False
         self.ldap_user = LDAPData() # populated on authentication or empty.
         self.conn = LDAPComm.LDAPComm() 
@@ -171,7 +170,7 @@ class mcUser(AbstractBaseUser, models.Model):
     # mcUser model fields #
     #---------------------#
     uid            = models.CharField(('uid'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'))#, primary_key=True)
-    id             = models.IntegerField(('id'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'), primary_key=True)
+#    id             = models.IntegerField(('id'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'), primary_key=True)
     USERNAME_FIELD =  'uid'
     username       = models.CharField(('username'), max_length=30, unique=False, help_text=('Non-unique id identifies user in django DB, used to create unique LDAP/django sqlite ID'))
     is_staff       = models.BooleanField(('Member of Staff'), default=False, help_text=('Allows admin access') )
@@ -181,7 +180,7 @@ class mcUser(AbstractBaseUser, models.Model):
 #    last_login      = models.DateTimeField(('date joined'), default=timezone.now )
     displayName     = models.CharField(('Nickname'), max_length=10, unique=True, help_text=('The name that is displayed during the session.') )
     email           = models.EmailField(('e-mail address'))
-    REQUIRED_FIELDS = ['uid', 'is_staff', 'is_active', 'last_login', 'displayName', 'email']
+    REQUIRED_FIELDS = ['is_staff', 'is_active', 'last_login', 'displayName', 'email']
 
     objects = mcUserManager()
     class Meta:
@@ -291,8 +290,8 @@ class mcUser(AbstractBaseUser, models.Model):
                 raise SiteProfileNotAvailable
         return self._profile_cache
 
-    def __str__():
-        return str(self.id)+":"+uid+":"+username
+    def __str__(self):
+        return str(self.id)+":"+self.uid+":"+self.username
     # instatiation handling
 #    if get_full_name():
 #       self.conn.log("mcUser Opened Connection: %s" % get_full_name())
