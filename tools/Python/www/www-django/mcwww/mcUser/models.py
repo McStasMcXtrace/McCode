@@ -83,7 +83,7 @@ class mcBackend(object):
             import base64
             print "in models:authenticate, UID=", UID
             dn = None
-            ldap_data = self.conn.ldapQuery('cn=DummyUser,ou=person,dc=fysik,dc=dtu,dc=dk',    # TEMPLATE LINE
+            ldap_data = self.conn.ldapQuery('cn=DummyUser,ou=person,dc=branch',    # TEMPLATE LINE
                                             'DPW',                                             # TEMPLATE LINE
                                             "uid=%s"%UID)            
             print "ldap_data:\n",ldap_data
@@ -245,7 +245,7 @@ class mcUser(AbstractBaseUser, models.Model):
                     self.ldap_user.setldif_file("temp/%spw.ldif" % self.ldap_user.cn())
                     self.ldap_user.setpassword(pwd)
                     changepwLDIF(self.ldap_user)
-                    self.conn.ldapMod(self.ldap_user.ldif(), '''POST_FORM_USER_dc=fysik,dc=dtu,dc=dk''', '''POST_FORM_USER_PW''')
+                    self.conn.ldapMod(self.ldap_user.ldif(), '''POST_FORM_USER_dc=branch''', '''POST_FORM_USER_PW''')
                     self.conn.log("uid:%s password changed." % uid)                
                     remove(self.ldap_user.ldif())
                     self.ldap_user.setldif_file(None)

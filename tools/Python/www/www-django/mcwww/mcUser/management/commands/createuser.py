@@ -93,10 +93,10 @@ def main(args):
     # - Check permissions
     LDAP_admin_cn = raw_input('Enter your LDAP authentication cn (not your uid): ')
     LDAP_admin_pw = getpass('Enter your LDAP authentication pwd: ')
-    if LDAP_admin_cn == 'cn=admin,dc=fysik,dc=dtu,dc=dk' :
+    if LDAP_admin_cn == 'cn=admin,dc=branch' :
         LDAP_admin_dn = LDAP_admin_cn
     else:
-        LDAP_admin_dn = "cn=%s,ou=person,dc=fysik,dc=dtu,dc=dk" % LDAP_admin_cn
+        LDAP_admin_dn = "cn=%s,ou=person,dc=branch" % LDAP_admin_cn
         if(not comm.ldapAdminGroupQuery(LDAP_admin_cn, LDAP_auth_pw)): 
             print "Insufficient LDAP privs, your cn may not be what you have supplied.\nPlease contact admin.\n"
             sys.exit(1)

@@ -25,7 +25,7 @@ until [[ $RPW1 == $RPW2 ]]; do
     warn=", ensure passwords match."
     echo " "
 done
-ROOTPW=`slappasswd -s $RPW1`
+ROOTPW=`/usr/sbin/slappasswd -s $RPW1`
 warn="."
 BPW1="."
 until [[ $BPW1 == $BPW2 ]]; do
@@ -36,7 +36,7 @@ until [[ $BPW1 == $BPW2 ]]; do
     warn=", ensure passwords match."
     echo " "
 done
-BINDPW=`slappasswd -s $BPW1`
+BINDPW=`/usr/sbin/slappasswd -s $BPW1`
 warn="."
 until [[ ${LDAPOP:0:1} == "d" ]]; do
     echo "Please input your LDAP DB admin password"$warn

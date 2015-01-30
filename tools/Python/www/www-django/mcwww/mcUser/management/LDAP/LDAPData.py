@@ -96,7 +96,7 @@ class LDAPDataPopulator:
         self.data = LDAPData()
         conn = LDAPComm()
         query = "cn=\"%s\"" % cn
-        dn = "dn=\"cn=%s,ou=person,dc=fysik,dc=dtu,dc=dk\"" % cn
+        dn = "dn=\"cn=%s,ou=person,dc=branch\"" % cn
         usr_details = conn.ldapQuery(dn, pw, query)
         for line in usr_details:
             if 'uid' in line:
