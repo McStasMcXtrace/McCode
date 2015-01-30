@@ -27,7 +27,7 @@ def main(args):
     for i in range(4):
         for in_file in os.listdir(in_dirs[i]):
             if '.py' in in_file or '.ldif' in in_file:
-                print "Replacing keywords in :", in_dirs[i], in_file
+#                print "Replacing keywords in :", in_dirs[i], in_file
                 outfile = open('%s%s'%(out_dirs[i],in_file),'w')
                 for line in open("%s%s"%(in_dirs[i],in_file), 'r'):
                     for (kwd, replacement) in kwds.iteritems():
