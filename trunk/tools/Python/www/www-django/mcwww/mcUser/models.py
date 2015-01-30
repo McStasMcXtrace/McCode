@@ -134,7 +134,7 @@ class mcBackend(object):
 #=====================#
 # mcUserManager CLASS #
 #=====================#
-class mcUserManager(BaseUserManager): #models.Manager):
+class mcUserManager(BaseUserManager): 
     def createMcUser(self, usr_details):
         mcuser = self.model()
         mcuser.uid         = usr_details['uid']
@@ -146,12 +146,12 @@ class mcUserManager(BaseUserManager): #models.Manager):
         mcuser.last_login  = timezone.now()
         mcuser.save(using=self._db) 
         return mcuser
+    
+    def create_superuser(self, username, email, password, **extra_fields):
+        print "username: "+username+" email: "+email+" pwd:"+pwd+"\nextra: "+extrafields
+        return self._create_user(username, email, password, True, True,
+                                 **extra_fields)
 
-    # def get_by_natural_key(self, uid):
-    #     try:
-    #         return mcUser.objects.get(UID=uid) # have to build the django DB first
-    #     except UserModel.DoesNotExist:
-    #         return None
         
 #=========================#
 # END mcUserManager CLASS #
@@ -162,7 +162,7 @@ class mcUserManager(BaseUserManager): #models.Manager):
 #==============#
 # mcUser CLASS #
 #==============#
-class mcUser(AbstractBaseUser, models.Model):
+class mcUser(AbstractBaseUser):
     def __init__(self, *args, **kwargs):
         super(mcUser, self).__init__(*args, **kwargs)
         #-------------------------#
