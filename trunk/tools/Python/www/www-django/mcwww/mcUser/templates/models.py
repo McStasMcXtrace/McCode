@@ -33,7 +33,7 @@ from django.utils import timezone
 #====================#
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import Group, AbstractBaseUser#, AbstractUser #, User
+from django.contrib.auth.models import Group, AbstractBaseUser, BaseUserManager
 #==============#
 # LDAP imports #
 #==============#
@@ -69,7 +69,7 @@ class mcBackend(object):
         # Need to put the LDAP details in the mcUser model at this stage
         try:
             return mcUser.objects.get(UID=uid) # have to build the django DB first
-        except User.DoesNotExist:
+        except UserModel.DoesNotExist:
             return None
 
     def authenticate(self, uid, pw):
@@ -134,7 +134,7 @@ class mcBackend(object):
 #=====================#
 # mcUserManager CLASS #
 #=====================#
-class mcUserManager(models.Manager):
+class mcUserManager(BaseUserManager): #models.Manager):
     def createMcUser(self, usr_details):
         mcuser = self.model()
         mcuser.uid         = usr_details['uid']
@@ -146,6 +146,13 @@ class mcUserManager(models.Manager):
         mcuser.last_login  = timezone.now()
         mcuser.save(using=self._db) 
         return mcuser
+
+    # def get_by_natural_key(self, uid):
+    #     try:
+    #         return mcUser.objects.get(UID=uid) # have to build the django DB first
+    #     except UserModel.DoesNotExist:
+    #         return None
+        
 #=========================#
 # END mcUserManager CLASS #
 #=========================#
