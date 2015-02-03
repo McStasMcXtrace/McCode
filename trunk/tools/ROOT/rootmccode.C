@@ -58,7 +58,7 @@ class Mccoderun {
   Mccoderun(string instrument="instrument.instr",unsigned long long n=1000000, string outdir="", string args="", int help=0, int mpi=0, int fc=0, int ft=0, int trace=0);
   Mccoderun(string,unsigned long long n=1000000,string);
   Mccoderun(string);
-  void set_flavour;
+  int set_flavour();
   int run();
   int exec();
   int generate_c();
