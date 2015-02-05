@@ -10,7 +10,7 @@
 * %I
 * Written by: Henrik Bo Hoffmann Carlsen and Mads Bertelsen
 * Date: 27 Aug 2012
-* Version: 0.89
+* Version: 0.91
 * Origin: NBI
 * Release: McStas 2.1
 *
@@ -563,13 +563,13 @@ int guide_elliptical_handleGuideIntersection(
 		else 		currentCollision->side = LeftSide;
 	}
 	if (tside < 1e-15) printf("low time is: %e\n",tside);
-	if (boolean == 0){
-		printf("boolean is 0, B:%dV:%e,%d -- H:%e,%d\n",
+	//if (boolean == 0){
+	//	printf("boolean is 0, B:%dV:%e,%d -- H:%e,%d\n",
 			boolean,solutionV,booleanV,solutionH,booleanH);
 		//currentCollision->delta_time_to_next_collision = solutionV;
 		//currentCollision->side = RightSide;
-		return 1;
-	}
+        //	return 1;
+	//}
 
 	return boolean;
 }
