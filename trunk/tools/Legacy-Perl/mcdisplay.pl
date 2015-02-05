@@ -1649,6 +1649,10 @@ if ($plotter =~ /VRML/i && !($MCSTAS::mcstas_config{'VRMLVIEW'} eq "no")) {
     }
 }
 
+if ($plotter =~ /Mantid/i ) {
+  print STDOUT "\n\nDONE generating IDF file ".$sim.".instr.xml for use with Mantid.\n";
+}
+
 # Properly close any open files etc.
 if ($plotter =~ /McStas|PGPLOT/i) {
   if (defined(&close_window)) { close_window(); }
