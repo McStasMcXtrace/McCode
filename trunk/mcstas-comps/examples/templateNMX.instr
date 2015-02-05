@@ -45,7 +45,7 @@ COMPONENT slit = Slit(
 AT (0,0,5) RELATIVE source
 
 SPLIT REPS COMPONENT sample = Single_crystal(
-          xwidth=0.001, yheight=0.001, zdepth=0.001,
+          xwidth=0.001, yheight=0.001, zdepth=0.001, mosaic=1e-4,
           reflections=reflections)
 AT (0,0,0.10) RELATIVE slit
 EXTEND %{
@@ -56,4 +56,3 @@ COMPONENT det= PSD_monitor_4PI(radius=1, nx=360,ny=180,filename="psd")
 AT (0,0,0) RELATIVE sample
 
 END
-
