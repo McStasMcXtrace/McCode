@@ -10,7 +10,7 @@
 * %I
 * Written by: Henrik Bo Hoffmann Carlsen and Mads Bertelsen
 * Date: 27 Aug 2012
-* Version: 0.88
+* Version: 0.89
 * Origin: NBI
 * Release: McStas 2.1
 *
@@ -871,22 +871,22 @@ INITIALIZE
 	// Lower or equal to zero
 	if(l <= 0) inputErrors += 
 				guide_elliptical_illegalInputLessThanZero("length",guideInfo.verboseSetting);
-	if(guideInfo.alphaArr[TopSide] <= 0) inputErrors += 
+	if(guideInfo.alphaArr[TopSide] < 0) inputErrors += 
 				guide_elliptical_illegalInputLessThanZero("alphatop",guideInfo.verboseSetting);
 	if(guideInfo.mArr[TopSide] < 0)      inputErrors += 
 				guide_elliptical_illegalInputLessThanZero("mtop",guideInfo.verboseSetting);
 	
-	if(guideInfo.alphaArr[BottomSide] <= 0) inputErrors += 
+	if(guideInfo.alphaArr[BottomSide] < 0) inputErrors += 
 				guide_elliptical_illegalInputLessThanZero("alphabottom",guideInfo.verboseSetting);
 	if(guideInfo.mArr[BottomSide] < 0)       inputErrors += 
 				guide_elliptical_illegalInputLessThanZero("mbottom",guideInfo.verboseSetting);
 
-	if(guideInfo.alphaArr[RightSide] <= 0) inputErrors += 
+	if(guideInfo.alphaArr[RightSide] < 0) inputErrors += 
 				guide_elliptical_illegalInputLessThanZero("alpharight",guideInfo.verboseSetting);
 	if(guideInfo.mArr[RightSide] < 0)       inputErrors += 
 				guide_elliptical_illegalInputLessThanZero("mright",guideInfo.verboseSetting);
 	
-	if(guideInfo.alphaArr[LeftSide] <= 0) inputErrors += 
+	if(guideInfo.alphaArr[LeftSide] < 0) inputErrors += 
 				guide_elliptical_illegalInputLessThanZero("alphaleft",guideInfo.verboseSetting);
 	if(guideInfo.mArr[LeftSide] < 0)      inputErrors += 
 				guide_elliptical_illegalInputLessThanZero("mleft",guideInfo.verboseSetting);
