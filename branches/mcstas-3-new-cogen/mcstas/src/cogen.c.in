@@ -1905,7 +1905,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   
   coutf("int   %sdefaultmain         = %d;", ID_PRE, instr->use_default_main);
   coutf("char  %sinstrument_name[]   = \"%s\";", ID_PRE, instr->name);
-  coutf("char  %sinstrument_source[] = \"%s\";", ID_PRE, instr->source);
+  coutf("char  %sinstrument_source[] = \"%s\";", ID_PRE, instr->quoted_source);
   coutf("char *%sinstrument_exe      = NULL; /* will be set to argv[0] in main */", ID_PRE);
   
   /* embed instrument file if requested with --source option */
@@ -1933,7 +1933,7 @@ cogen_header(struct instr_def *instr, char *output_name)
   if (!index)
     coutf("char  mcinstrument_code[]   = "
     "\"Instrument %s source code %s is not embedded in this executable.\\n"
-    "  Use --source option when running " MCCODE_NAME ".\\n\";", instr->name, instr->source);
+    "  Use --source option when running " MCCODE_NAME ".\\n\";", instr->name, instr->quoted_source);
   
   cout("");
   if(instr->use_default_main)
