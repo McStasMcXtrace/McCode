@@ -1,6 +1,11 @@
-"""
-Management utility to create superusers.
-"""
+#==========================================#
+# createsuperuser.py                       #
+# ------------------                       #
+# Management utility to create superusers. #
+# Templated from django.auth commands      #
+# ---------------                          #
+# Edited by: Mark Lewis                    #
+#==========================================#
 from __future__ import unicode_literals
 
 import getpass
@@ -21,68 +26,75 @@ from  mcUser.models import *
 class NotRunningInTTYException(Exception):
     pass
 
-
 class Command(BaseCommand):
-
     def __init__(self, *args, **kwargs):
-        print '-----------------------------------------------------------------'
-        print 'WE ARE IN <project>/mcUser/management/commands/createsuperuser.py'
-        print '-----------------------------------------------------------------'
         # Options are defined in an __init__ method to support swapping out
-        # custom user models in tests.
         super(Command, self).__init__(*args, **kwargs)
         self.UserModel = get_user_model()
         self.username_field = self.UserModel._meta.get_field(self.UserModel.USERNAME_FIELD)
 
         print "User model is: "+str(self.UserModel)+"\nRequesting data from model now."
 
-        self.option_list = BaseCommand.option_list + (
-            make_option('--%s' % self.UserModel.USERNAME_FIELD, dest=self.UserModel.USERNAME_FIELD, default=None,
-                help='Specifies the login for the superuser.'),
-            make_option('--noinput', action='store_false', dest='interactive', default=True,
-                help=('Tells Django to NOT prompt the user for input of any kind. '
-                    'You must use --%s with --noinput, along with an option for '
-                    'any other required field. Superusers created with --noinput will '
-                    ' not be able to log in until they\'re given a valid password.' %
-                    self.UserModel.USERNAME_FIELD)),
-            make_option('--database', action='store', dest='database',
-                default=DEFAULT_DB_ALIAS, help='Specifies the database to use. Default is "default".'),
-        ) + tuple(
-            make_option('--%s' % field, dest=field, default=None,
-                help='Specifies the %s for the superuser.' % field)
-            for field in self.UserModel.REQUIRED_FIELDS
-        )
-
-    option_list = BaseCommand.option_list
-    help = 'Used to create a superuser.'
-
+        self.option_list = BaseCommand.option_list + 
+        (make_option('--%s' % self.UserModel.USERNAME_FIELD, 
+                     dest=self.UserModel.USERNAME_FIELD, 
+                     default=None,
+                     help='Specifies the login for the superuser.'
+                     ),
+         make_option('--noinput', 
+                     action='store_false', 
+                     dest='interactive', 
+                     default=True,
+                     help=('Tells Django to NOT prompt the user for input of any kind. '
+                           'You must use --%s with --noinput, along with an option for '
+                           'any other required field. Superusers created with --noinput will '
+                           ' not be able to log in until they\'re given a valid password.' % self.UserModel.USERNAME_FIELD)
+                     ),
+         make_option('--database', 
+                     action='store', 
+                     dest='database',
+                     default=DEFAULT_DB_ALIAS, 
+                     help='Specifies the database to use. Default is "default".'
+                     ),
+         ) + 
+        tuple(make_option('--%s' % field, 
+                          dest=field, 
+                          default=None,
+                          help='Specifies the %s for the superuser.' % field
+                          ) for field in self.UserModel.REQUIRED_FIELDS
+              )
+        option_list = BaseCommand.option_list
+        help = 'Used to create a superuser.'
+        
     def execute(self, *args, **options):
         self.stdin = options.get('stdin', sys.stdin)  # Used for testing
-#        print "In execute. stdin: "+str(self.stdin)+"\n"
-#        print "return from command about to be passed:\n"
-#        print str(super(Command, self).execute(*args, **options))
         return super(Command, self).execute(*args, **options)
 
+
+#=====================================================#
+# handle()                                            #
+# --------                                            #
+# REIMPLEMENT THIS FOR LDAP AND SuperMcUser CREATION. #
+#=====================================================#
     def handle(self, *args, **options):
         username = options.get(self.UserModel.USERNAME_FIELD, None)
         interactive = options.get('interactive')
         verbosity = int(options.get('verbosity', 1))
         database = options.get('database')
-        
-        print "in createsuperuser::handle()\n"
-
         # If not provided, create the user with an unusable password
         password = None
         user_data = {}
-
-        # Do quick and dirty validation if --noinput
+        #--------------------------------------------#
+        # Fairly pointless block for our use         #
+        # Do quick and dirty validation if --noinput #
+        # Should take the --noinput flag out.        #
+        #--------------------------------------------#
         if not interactive:
             try:
                 if not username:
-                    raise CommandError("You must use --%s with --noinput." %
-                            self.UserModel.USERNAME_FIELD)
-                username = self.username_field.clean(username, None)
-
+                    raise CommandError("You must use --%s with --noinput." % self.UserModel.USERNAME_FIELD)
+                username = self.username_field.clean(username, None)      
+                # Work out what this does -  but it will be interactive
                 for field_name in self.UserModel.REQUIRED_FIELDS:
                     if options.get(field_name):
                         field = self.UserModel._meta.get_field(field_name)
@@ -92,27 +104,27 @@ class Command(BaseCommand):
             except exceptions.ValidationError as e:
                 raise CommandError('; '.join(e.messages))
 
+
+
+        #---------------------#
+        # Actual code we need #
+        #---------------------#
         else:
-            # Prompt for username/password, and any other required fields.
-            # Enclose this whole thing in a try/except to trap for a
-            # keyboard interrupt and exit gracefully.
             default_username = get_default_username()
             try:
-
-                if hasattr(self.stdin, 'isatty') and not self.stdin.isatty():
-                    raise NotRunningInTTYException("Not running in a TTY")
+                if hasattr(self.stdin, 'isatty') and not self.stdin.isatty(): raise NotRunningInTTYException("Not running in a TTY")
                 # Get a username
                 verbose_field_name = self.username_field.verbose_name
+                #---------------------#
+                # NEED ONLY LDAP DATA #
+                #---------------------#
                 while username is None:
                     if not username:
                         input_msg = capfirst(verbose_field_name)
                         if default_username:
-                            input_msg = "%s (leave blank to use '%s')" % (
-                                input_msg, default_username)
+                            input_msg = "%s (leave blank to use '%s')" % (input_msg, default_username)
                         raw_value = input(force_str('%s: ' % input_msg))
-
-                    if default_username and raw_value == '':
-                        raw_value = default_username
+                    if default_username and raw_value == '': raw_value = default_username
                     try:
                         username = self.username_field.clean(raw_value, None)
                     except exceptions.ValidationError as e:
@@ -120,14 +132,18 @@ class Command(BaseCommand):
                         username = None
                         continue
                     try:
+                        # check LDAP DB here
                         self.UserModel._default_manager.db_manager(database).get_by_natural_key(username)
                     except self.UserModel.DoesNotExist:
                         pass
                     else:
-                        self.stderr.write("Error: That %s is already taken." %
-                                verbose_field_name)
+                        self.stderr.write("Error: That %s is already taken." % verbose_field_name)
                         username = None
-
+                #------------------------------------------#
+                # New attribute: LDAP_FIELDS               #
+                # to populate LDAP DB, other fields can be #
+                # automatically filled.                    #
+                #------------------------------------------#
                 for field_name in self.UserModel.REQUIRED_FIELDS:
                     field = self.UserModel._meta.get_field(field_name)
                     user_data[field_name] = options.get(field_name)
@@ -138,8 +154,9 @@ class Command(BaseCommand):
                         except exceptions.ValidationError as e:
                             self.stderr.write("Error: %s" % '; '.join(e.messages))
                             user_data[field_name] = None
-                print "PASSWORD prompt."
-
+                # Remember:
+                #     slappasswd
+                #     no passwd in mcUser sqlite DB
                 while password is None:
                     if not password:
                         password = getpass.getpass()
@@ -152,6 +169,11 @@ class Command(BaseCommand):
                         self.stderr.write("Error: Blank passwords aren't allowed.")
                         password = None
                         continue
+            #------------------#
+            # End code we need #
+            #------------------#
+
+
             # I LIKE THIS.
             except KeyboardInterrupt:
                 self.stderr.write("\nOperation cancelled.")
@@ -163,18 +185,21 @@ class Command(BaseCommand):
                     "You can run `manage.py createsuperuser` in your project "
                     "to create one manually."
                 )
+
         if username:
             user_data[self.UserModel.USERNAME_FIELD] = username
             user_data['password'] = password
 
             print "usermodel: "+str(self.UserModel)
             print "manager: "+str(self.UserModel._default_manager)
-            print "db_manager: "+str(self.UserModel._default_manager.db_manager(database)) # <--- this line is a bitch.
+#           print "db_manager: "+str(self.UserModel._default_manager.db_manager(database)) # don't need this access
             print "user_data: "+str(user_data)
 
 #            self.UserModel = mcUser.objects.createMcUser(user_data)
 #            self.UserModel.save()
-
+            # call mcUserManager.createsuperuser() directly instead.
             self.UserModel._default_manager.db_manager(database).create_superuser(**user_data)
+            
+
             if verbosity >= 1:
                 self.stdout.write("Superuser created successfully.")
