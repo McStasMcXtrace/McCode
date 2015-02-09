@@ -563,13 +563,6 @@ int guide_elliptical_handleGuideIntersection(
 		else 		currentCollision->side = LeftSide;
 	}
 	if (tside < 1e-15) printf("low time is: %e\n",tside);
-	//if (boolean == 0){
-	//	printf("boolean is 0, B:%dV:%e,%d -- H:%e,%d\n",
-			boolean,solutionV,booleanV,solutionH,booleanH);
-		//currentCollision->delta_time_to_next_collision = solutionV;
-		//currentCollision->side = RightSide;
-        //	return 1;
-	//}
 
 	return boolean;
 }
