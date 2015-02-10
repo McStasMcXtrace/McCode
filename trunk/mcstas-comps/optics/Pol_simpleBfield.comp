@@ -51,11 +51,12 @@
 * 1. const_magnetic_field: Constant field (Bx,By,Bz) within the region
 * 2. rot_magnetic_field: Field is initially (0,By,0) but after a length of zdepth has rotated to (By,0,0)
 * 3. majorana_magnetic_field: Field is initially (Bx,By,0) liearly transforms to (-Bx,By,0) after zdepth
-*    where By<<Bx
+*      where By<<Bx
 * 4. table_magnetic_field: The magnetic field is read from a file where it is specified as a point cloud
-*    Assuming N is the number of points in the cloud, the file format is;
-*      N
-*      x y z Bx By Bz
+*      The file format is a 6-column text file with each row as:
+*        x y z Bx By Bz
+*      The parameters Bx, By and Bz are not used.
+* 5. resampled_3to3_magnetic_field
 * Users may specify any other function with the required footprint to have any other field. Note that coordinates refer
 * the coordinate system defined by this component.
 *
@@ -151,11 +152,13 @@ INITIALIZE
     /*initialize the interpolation vertex structure*/
     int r=-1;
     vertices=kdtree_loadPoints(filename, &r);
-    printf("rows read %d\n",r);
-    if (vertices==NULL || r < 0) {
-      fprintf(stderr, "Error (%s): Failed to read magnetic field table file (r=%d): %s. Aborting\n",NAME_CURRENT_COMP,r, filename);
+    printf("%s: Rows read %d\n", NAME_CURRENT_COMP, r);
+    if (vertices==NULL || r <= 0) {
+      fprintf(stderr, "Pol_simpleBfield: %s: Failed to read magnetic field table file (r=%d): %s. Aborting.\n",NAME_CURRENT_COMP,r, filename);
       exit(1);
     }
+    /* determine x,y,z limits */
+    
     /*resampling to double number of points*/
     int steps[] = { Stepx, 0, 0 };
     vertices2 = resample(vertices, r, steps);
@@ -177,7 +180,7 @@ INITIALIZE
     gz = 0;
 
   if ((xwidth<=0) || (yheight<=0) || (zdepth<=0)) {
-    fprintf(stderr, "Pol_filter: %s: Null or negative volume!\n"
+    fprintf(stderr, "Pol_simpleBfield: %s: Null or negative volume!\n"
 	    "ERROR      (xwidth, yheight, zdepth). Exiting\n",
 	    NAME_CURRENT_COMP);
     exit(1);
