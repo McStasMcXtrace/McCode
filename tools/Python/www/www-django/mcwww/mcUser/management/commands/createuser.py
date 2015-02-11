@@ -26,7 +26,7 @@ from getpass import getpass
 from mcUser.management.LDAP.LDAPUserCreation import *
 from mcUser.management.LDAP.LDAPComm import *
 from mcUser.models import *
-
+from creation_helpers import makeuid, usrCheck, checkLDAPperms
 
 #---------#
 # Helpers #
@@ -55,6 +55,18 @@ def usrCheck():
             if n > 10: return 'break'
         return inputCheck(count+1)
     return input_dict.get(inputCheck(), 'Input not caught')
+
+def checkLDAPperms():
+    LDAP_admin_cn = raw_input('Enter your LDAP authentication cn (not your uid): ')
+    LDAP_admin_pw = getpass('Enter your LDAP authentication pwd: ')
+    if LDAP_admin_cn == 'cn=admin,dc=branch' :
+        LDAP_admin_dn = LDAP_admin_cn
+    else:
+        LDAP_admin_dn = "cn=%s,ou=person,dc=branch" % LDAP_admin_cn
+        if(not comm.ldapAdminGroupQuery(LDAP_admin_cn, LDAP_auth_pw)): 
+            print "Insufficient LDAP privs, your cn may not be what you have supplied.\nPlease contact admin.\n"
+            sys.exit(1)
+
 
 #==================================
 # User creation                                    TODO LIST
@@ -91,15 +103,7 @@ def main(args):
     # --------------------
     #
     # - Check permissions
-    LDAP_admin_cn = raw_input('Enter your LDAP authentication cn (not your uid): ')
-    LDAP_admin_pw = getpass('Enter your LDAP authentication pwd: ')
-    if LDAP_admin_cn == 'cn=admin,dc=branch' :
-        LDAP_admin_dn = LDAP_admin_cn
-    else:
-        LDAP_admin_dn = "cn=%s,ou=person,dc=branch" % LDAP_admin_cn
-        if(not comm.ldapAdminGroupQuery(LDAP_admin_cn, LDAP_auth_pw)): 
-            print "Insufficient LDAP privs, your cn may not be what you have supplied.\nPlease contact admin.\n"
-            sys.exit(1)
+    check_LDAP_perms()
     # - Check for duplicates
     uid_n = 0
     usr_details['uid'] = ""

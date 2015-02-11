@@ -147,10 +147,11 @@ class mcUserManager(BaseUserManager):
         mcuser.save(using=self._db) 
         return mcuser
     
-    def create_superuser(self, username, email, password, **extra_fields):
+
+
+    def create_superuser(self, usr_details):
         print "username: "+username+" email: "+email+" pwd:"+pwd+"\nextra: "+extrafields
-        return self._create_user(username, email, password, True, True,
-                                 **extra_fields)
+        return self._create_user(usr_details)
 
         
 #=========================#
