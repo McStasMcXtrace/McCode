@@ -33,6 +33,16 @@ from creation_helpers import makeuid, usrCheck, checkLDAPperms
 class NotRunningInTTYException(Exception):
     pass
 
+#
+# - self.UserModel -> mcUser EVERYTIME, this is non-negotiable. (plus makes life easier)
+#   - get_user_model can go
+#   - get_default_user_name : does this implementation have to change?
+#   - DEFAULT_DB_ALIAS      :           "
+# - capfirst uneccessary : mcUser fields are what they are
+# - make create mcUser complete class to be called by createuser and createsuperuser? <- this most probably
+# !!! MOAR REFACTORING REQUIRED !!!
+
+
 class Command(BaseCommand):
     def __init__(self, *args, **kwargs):
         # Options are defined in an __init__ method to support swapping out
@@ -84,6 +94,7 @@ class Command(BaseCommand):
 # REIMPLEMENT THIS FOR LDAP AND SuperMcUser CREATION. #
 #=====================================================#
     def handle(self,  *args, **options):
+        checkLDAPperms()
         usr_details = {}
         usr_details['username'] = options.get(self.UserModel.USERNAME_FIELD, None)
         interactive = options.get('interactive')
@@ -110,20 +121,15 @@ class Command(BaseCommand):
                         raise CommandError("You must use --%s with --noinput." % field_name)
             except exceptions.ValidationError as e:
                 raise CommandError('; '.join(e.messages))
-
+            
         #---------------------#
         # Actual code we need #
         #---------------------#
         else:
-            checkLDAPperms()
             default_username = get_default_username()
             try:
                 if hasattr(self.stdin, 'isatty') and not self.stdin.isatty(): raise NotRunningInTTYException("Not running in a TTY")
-                # Get a username
                 verbose_field_name = self.username_field.verbose_name
-                #---------------------#
-                # NEED ONLY LDAP DATA #
-                #---------------------#
                 while usr_details['username'] is None:
                     if not usr_details['username']:
                         input_msg = capfirst(verbose_field_name)
@@ -145,13 +151,7 @@ class Command(BaseCommand):
                     else:
                         self.stderr.write("Error: That %s is already taken." % verbose_field_name)
                         usr_details['username'] = None
-
-
-
-
-
-
-
+                usr_details['uid'] = makeuid(usr_details['username'])
                 #------------------------------------------#
                 # New attribute: LDAP_FIELDS               #
                 # to populate LDAP DB, other fields can be #
