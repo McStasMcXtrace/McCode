@@ -37,7 +37,6 @@ class NotRunningInTTYException(Exception):
 # - self.UserModel -> mcUser EVERYTIME, this is non-negotiable. (plus makes life easier)
 #   - get_user_model can go
 #   - get_default_user_name : does this implementation have to change?
-#   - DEFAULT_DB_ALIAS      :           "
 # - capfirst uneccessary : mcUser fields are what they are
 # - make create mcUser complete class to be called by createuser and createsuperuser? <- this most probably
 # !!! MOAR REFACTORING REQUIRED !!!
@@ -47,13 +46,21 @@ class Command(BaseCommand):
     def __init__(self, *args, **kwargs):
         # Options are defined in an __init__ method to support swapping out
         super(Command, self).__init__(*args, **kwargs)
-        self.UserModel = get_user_model()
+
+
+
+        # this is always going to be mcUser
+        #        self.UserModel = get_user_model()
+        self.User = mcUser.new()
+        # this is always going to be mcUser.uid
         self.username_field = self.UserModel._meta.get_field(self.UserModel.USERNAME_FIELD)
 
         print "User model is: "+str(self.UserModel)+"\n"
 
+
+
         self.option_list = BaseCommand.option_list + 
-        (make_option('--%s' % self.UserModel.USERNAME_FIELD, 
+        (make_option('--%s' % self.UserModel.USERNAME_FIELD, # this is mcUser::uid
                      dest=self.UserModel.USERNAME_FIELD, 
                      default=None,
                      help='Specifies the login for the superuser.'
@@ -67,15 +74,15 @@ class Command(BaseCommand):
                            'any other required field. Superusers created with --noinput will '
                            ' not be able to log in until they\'re given a valid password.' % self.UserModel.USERNAME_FIELD)
                      ),
-         make_option('--database', 
+         make_option('--database',                           # this is mcwww.sqlite, but std way to treat.
                      action='store', 
                      dest='database',
                      default=DEFAULT_DB_ALIAS, 
                      help='Specifies the database to use. Default is "default".'
                      ),
          ) + 
-        tuple(make_option('--%s' % field, 
-                          dest=field, 
+        tuple(make_option('--%s' % field,                    # this will be used because it's an easy way to
+                          dest=field,                        # make a form from the admin site....don't hate me :(
                           default=None,
                           help='Specifies the %s for the superuser.' % field
                           ) for field in self.UserModel.REQUIRED_FIELDS
@@ -84,7 +91,7 @@ class Command(BaseCommand):
         help = 'Used to create a superuser.'
         
     def execute(self, *args, **options):
-        self.stdin = options.get('stdin', sys.stdin)  # Used for testing
+        self.stdin = options.get('stdin', sys.stdin)
         return super(Command, self).execute(*args, **options)
 
 
@@ -96,7 +103,10 @@ class Command(BaseCommand):
     def handle(self,  *args, **options):
         checkLDAPperms()
         usr_details = {}
-        usr_details['username'] = options.get(self.UserModel.USERNAME_FIELD, None)
+        usr_details['staff'] = True
+        usr_details['email'] = None
+        usr_details['username'] = options.get(self.User.uid, None)
+        #        usr_details['username'] = options.get(self.UserModel.USERNAME_FIELD, None)
         interactive = options.get('interactive')
         verbosity = int(options.get('verbosity', 1))
         database = options.get('database')
@@ -112,11 +122,12 @@ class Command(BaseCommand):
                 if not usr_details['username']:
                     raise CommandError("You must use --%s with --noinput." % self.UserModel.USERNAME_FIELD)
                 usr_details['username'] = self.username_field.clean(usr_details['username'], None)      
-                # Work out what this does -  but it will be interactive
+                # Work out what this does -  but it will be interactive unless I popoulate it
+                #                            with a form....
                 for field_name in self.UserModel.REQUIRED_FIELDS:
                     if options.get(field_name):
                         field = self.UserModel._meta.get_field(field_name)
-                        user_data[field_name] = field.clean(options[field_name], None)
+                        usr_details[field_name] = field.clean(options[field_name], None)
                     else:
                         raise CommandError("You must use --%s with --noinput." % field_name)
             except exceptions.ValidationError as e:
@@ -126,13 +137,17 @@ class Command(BaseCommand):
         # Actual code we need #
         #---------------------#
         else:
+            # now I have to find out how this works and if I can cirumvent it...
             default_username = get_default_username()
             try:
                 if hasattr(self.stdin, 'isatty') and not self.stdin.isatty(): raise NotRunningInTTYException("Not running in a TTY")
                 verbose_field_name = self.username_field.verbose_name
+                #-------------------#
+                # Username creation #
+                #-------------------#
                 while usr_details['username'] is None:
                     if not usr_details['username']:
-                        input_msg = capfirst(verbose_field_name)
+                        input_msg = verbose_field_name
                         if default_username:
                             input_msg = "%s (leave blank to use '%s')" % (input_msg, default_username)
                         raw_value = input(force_str('%s: ' % input_msg))
@@ -143,36 +158,44 @@ class Command(BaseCommand):
                         self.stderr.write("Error: %s" % '; '.join(e.messages))
                         usr_details['username'] = None
                         continue
+                    # testing user existence in sqlite db - could employ this in createuser.py?
                     try:
-                        # check LDAP DB here
+                        # which of these?
+                        # ---------------
+                        # mcUser.objects. get_by_natural_key(... ?
+                        # mcUser.objects. db_manager(database).get_by_natural_key(... ?
                         self.UserModel._default_manager.db_manager(database).get_by_natural_key(usr_details['username'])
                     except self.UserModel.DoesNotExist:
                         pass
                     else:
-                        self.stderr.write("Error: That %s is already taken." % verbose_field_name)
-                        usr_details['username'] = None
-                usr_details['uid'] = makeuid(usr_details['username'])
-                #------------------------------------------#
-                # New attribute: LDAP_FIELDS               #
-                # to populate LDAP DB, other fields can be #
-                # automatically filled.                    #
-                #------------------------------------------#
-                for field_name in self.UserModel.LDAP_DATA:
-                    field = self.UserModel._meta.get_field(field_name)
-                    user_data[field_name] = options.get(field_name)
-                    while user_data[field_name] is None:
-                        raw_value = input(force_str('%s: ' % capfirst(field.verbose_name)))
-                        try:
-                            user_data[field_name] = field.clean(raw_value, None)
-                        except exceptions.ValidationError as e:
-                            self.stderr.write("Error: %s" % '; '.join(e.messages))
-                            user_data[field_name] = None
+                        self.stderr.write("Error: That uid is already taken.") # figured a way round this in createuser
+                        usr_details['username'] = None                         # DO THAT, IT'S NICER --------^
+                usr_details['uid']   = makeuid(usr_details['username'])
+                #-----------------------#
+                # end Username creation #
+                #-----------------------#
 
+                #----------------#
+                # email creation # seems to be the only one I need to get them to input
+                #----------------#
+                while user_data['email'] is None:
+                    raw_value = input(force_str('email: '))
+                    try:
+                        user_data['email'] = field.clean(raw_value, None)
+                    except exceptions.ValidationError as e:
+                        self.stderr.write("Error: %s" % '; '.join(e.messages))
+                        user_data['email'] = None
+                #--------------------#
+                # end email creation #
+                #--------------------#
 
-
-                # Remember:
-                #     slappasswd
-                #     no passwd in mcUser sqlite DB
+                #-------------------------------------#
+                # Password creation                   #
+                # -----------------                   #
+                # Remember:                           #
+                #     slappasswd                      #
+                #     no passwd in mcUser sqlite DB!! #
+                #-------------------------------------#
                 while usr_details['password'] is None:
                     if not usr_details['password']:
                         usr_details['password'] = getpass.getpass()
@@ -185,6 +208,10 @@ class Command(BaseCommand):
                         self.stderr.write("Error: Blank passwords aren't allowed.")
                         usr_details['password'] = None
                         continue
+                #-----------------------#
+                # end password creation #
+                #-----------------------#
+
             #------------------#
             # End code we need #
             #------------------#
