@@ -12,7 +12,6 @@
 #===================================================================#
 import sys
 from sys import stdin
-from subprocess import Popen, PIPE
 import re
 from django.core.management.base import BaseCommand, make_option
 #---------------------#
@@ -24,9 +23,7 @@ from getpass import getpass
 # App imports #
 #-------------#
 from mcUser.management.LDAP.LDAPUserCreation import *
-from mcUser.management.LDAP.LDAPComm import *
-from mcUser.models import *
-from creation_helpers import makeuid, usrCheck, checkLDAPperms
+from creation_helpers import makeuid, check_LDAP_perms, duplicate_user_check, encrypt_password
 
 #==================================
 # User creation                                    TODO LIST
@@ -62,26 +59,11 @@ def main(args):
     # --------------------
     #
     check_LDAP_perms()
-    uid_n = 0
     usr_details['uid'] = ""
     # - Check for duplicates
-    while True:
-        usr_details['uid'] = makeuid(usr_details['username'], uid_n)
-        if mcUser.objects.filter(uid=usr_details['uid']).count() > 0:
-            print mcUser.objects.filter(uid=usr_details['uid']), "\n\n"
-            if usrCheck():
-                print "\n  User already exists, exiting.\n"
-                sys.exit(1)
-        else: break
+    duplicate_user_check(usr_details)
     # - Set pwd
-    fid = Popen(["slappasswd", "-s", usr_details['password']],
-                stdout=PIPE,
-                stderr=PIPE)
-    stdout,stderr = fid.communicate()
-    if "{SSHA}" in stdout: usr_details['password'] = stdout
-    else: 
-        print "Error in password creation."
-        sys.exit(1)
+    encrypt_password(usr_details)
     # - LDAPUserCreation call
     entity = LDAPUserCreation(usr_details)
     print "Calling: processLDIF(", LDAP_admin_dn, ",", LDAP_admin_pw, ")"
