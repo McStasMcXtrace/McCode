@@ -1784,8 +1784,18 @@ FILE *mcsiminfo_init(FILE *f)
   /* check format */      
   if (!mcformat || !strlen(mcformat) 
    || !strcasecmp(mcformat, "MCSTAS") || !strcasecmp(mcformat, "MCXTRACE") 
-   || !strcasecmp(mcformat, "PGPLOT"))
+   || !strcasecmp(mcformat, "PGPLOT") || !strcasecmp(mcformat, "GNUPLOT") || !strcasecmp(mcformat, "MCCODE")
+   || !strcasecmp(mcformat, "MATLAB")) {
     mcformat="McCode";
+#ifdef USE_NEXUS
+  } else if (strcasestr(mcformat, "NeXus")) {
+    /* Do nothing */
+#endif
+  } else {
+    fprintf(stderr,
+	    "Warning: You have requested the output format %s which is unsupported by this binary. Resetting to standard %s format.\n",mcformat ,"McCode");
+    mcformat="McCode";
+  }
   
   /* open the SIM file if not defined yet */
   if (mcsiminfo_file || mcdisable_output_files) 
