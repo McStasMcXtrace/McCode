@@ -24,7 +24,11 @@ find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
-    cd meta-pkgs/windows
+    cd meta-pkgs/windows/Support
+    if [ ! -f PPDs.zip ]; 
+	wget http://ppds.mccode.org/PPDs.zip
+    fi
+    cd ..
 
     sed s/@VERSION@/${1}/g McXtrace-metapackage32.iss > McXtrace-${1}-metapackage32.iss
     ./iscc McXtrace-${1}-metapackage32.iss
