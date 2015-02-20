@@ -26,49 +26,15 @@ from getpass import getpass
 from mcUser.management.LDAP.LDAPUserCreation import *
 from mcUser.management.LDAP.LDAPComm import *
 from mcUser.models import *
+from creation_helpers import duplicate_user_check, encrypt_password, check_LDAP_perms, get_mail
 
 
-#---------#
-# Helpers #
-#---------#
-def makeuid(username, n=0):
-    retname = ""
-    if n==0:
-        retname = username[:4]
-    elif len(username) > 5:
-        retname = username[:3] + str(n-1)
-    return retname
-
-def usrCheck():
-    def quitter():
-        "\n Trying to avoid duplicates in the database:\n     Please put \'y\' or \'n\' in next time.\n"
-        sys.exit(1)
-    input_dict = {'y': True,
-                  'n': False,
-                  'break': quitter()
-                  }
-    def inputCheck(n=0):
-        if n >0: print "Input not understood:\n   "
-        chk = raw_input("Is this your user? (y/n)") 
-        for key in input_dict.keys():
-            if chk == key: return chk
-            if n > 10: return 'break'
-        return inputCheck(count+1)
-    return input_dict.get(inputCheck(), 'Input not caught')
-
-#==================================
-# User creation                                    TODO LIST
-# -------------                                    ---------
-# - Get user name from command line
-# - Check for user id in sqlitedb              <-- need to change this to UID - DONE
-# - Get password from cmd line or
-#   request input                              <-- slappwd this bit
-# - Make LDAP modifications (working)
-# - Write new user information to sqlitebd     <-- need to access mcUserDB instead NB: no password to be stored in sqlite DB
-# - Save user in sqlitedb      
-# - Add group                                  <-- should do this first for entry to LDAP
+#=================================#
+# User creation                   #                TODO LIST
+# -------------                   #                ---------
+# Creates an sqlite and LDAP user #
+#=================================#                - Add groups in both DBs
 def main(args):
-    comm = LDAPComm.LDAPComm()
     usr_details = {}
     #-----------------------#
     # username and password #
@@ -85,44 +51,22 @@ def main(args):
         usr_details['password'] = args[1]
     else:
         usr_details['password'] = getpass('Enter password: ')    
-
+    encrypt_password(usr_details)
+    usr_details['staff'] = False
+    get_mail(usr_details)
     #======================#
     # LDAP DB Modification #
     # --------------------
     #
     # - Check permissions
     LDAP_admin_cn = raw_input('Enter your LDAP authentication cn (not your uid): ')
+    check_LDAP_perms(LDAP_admin_cn)
     LDAP_admin_pw = getpass('Enter your LDAP authentication pwd: ')
-    if LDAP_admin_cn == 'cn=admin,dc=branch' :
-        LDAP_admin_dn = LDAP_admin_cn
-    else:
-        LDAP_admin_dn = "cn=%s,ou=person,dc=branch" % LDAP_admin_cn
-        if(not comm.ldapAdminGroupQuery(LDAP_admin_cn, LDAP_auth_pw)): 
-            print "Insufficient LDAP privs, your cn may not be what you have supplied.\nPlease contact admin.\n"
-            sys.exit(1)
     # - Check for duplicates
-    uid_n = 0
-    usr_details['uid'] = ""
-    while True:
-        usr_details['uid'] = makeuid(usr_details['username'], uid_n)
-        if mcUser.objects.filter(uid=usr_details['uid']).count() > 0:
-            print mcUser.objects.filter(uid=usr_details['uid']), "\n\n"
-            if usrCheck():
-                print "\n  User already exists, exiting.\n"
-                sys.exit(1)
-        else: break
-    # - Set pwd
-    fid = Popen(["slappasswd", "-s", usr_details['password']],
-                stdout=PIPE,
-                stderr=PIPE)
-    stdout,stderr = fid.communicate()
-    if "{SSHA}" in stdout: usr_details['password'] = stdout
-    else: 
-        print "Error in password creation."
-        sys.exit(1)
+    duplicate_user_check(usr_details)
     # - LDAPUserCreation call
     entity = LDAPUserCreation(usr_details)
-    print "Calling: processLDIF(", LDAP_admin_dn, ",", LDAP_admin_pw, ")"
+    print "Calling: processLDIF(", LDAP_admin_cn, ",", LDAP_admin_pw, ")"
     entity.processLDIF(LDAP_admin_dn, LDAP_admin_pw)                                             # Nice to report success or not (later! get it comitted!!)
     print "LDAP User Added"
     #
@@ -136,8 +80,9 @@ def main(args):
     user = mcUser.objects.createMcUser(usr_details)
     print "\nMCUSER: ", user, "\n\n"
     user.save()
-    
-    # Add to groups implied in the args
+    #==================================#
+    # This part should be done better. #
+    #==================================#
     if len(args) > 2:
         for idx in range(2,len(args)):
             print '- adding user to group '+args[idx]
@@ -151,8 +96,6 @@ def main(args):
 class Command(BaseCommand):
     username = 'username'
     password = 'password'
-
     help = "Whatever you want to print here"
-
     def handle(self, *args, **options):
         main(args)

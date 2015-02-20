@@ -88,7 +88,8 @@ class Command(BaseCommand):
 # REIMPLEMENT THIS FOR LDAP AND SuperMcUser CREATION. #
 #=====================================================#
     def handle(self,  *args, **options):
-        check_LDAP_perms()
+        LDAP_admin_dn = raw_input('Enter your LDAP authentication cn (not your uid): ')
+        check_LDAP_perms(LDAP_admin_dn)
         usr_details = {}
         usr_details['staff'] = True
         usr_details['email'] = None
@@ -141,7 +142,7 @@ class Command(BaseCommand):
                 while not usr_details['email']:
                     raw_value = input(force_str('email: '))
                     try:
-                        usr_details['email'] = mcUser.email.clean(raw_value, None)
+                        usr_details['email'] = mcUser._meta.get_field('email').clean(raw_value, None)
                     except exceptions.ValidationError as e:
                         self.stderr.write("Error: %s" % '; '.join(e.messages))
                         usr_details['email'] = None
@@ -159,11 +160,6 @@ class Command(BaseCommand):
                         usr_details['password'] = None
                         continue
                     else: encrypt_password(usr_details)
-                # LDAP user creation
-                entity = LDAPUserCreation(usr_details)
-                print "Calling: processLDIF(", LDAP_admin_dn, ",", LDAP_admin_pw, ")"
-                entity.processLDIF(LDAP_admin_dn, LDAP_admin_pw)
-                print "LDAP User Added"
 
             # I LIKE THIS.
             except KeyboardInterrupt:
@@ -178,7 +174,11 @@ class Command(BaseCommand):
                 )
 
         if usr_details['username']:
+            LDAP_admin_pw = getpass.getpass('Enter your LDAP authentication pwd: ')
+            entity = LDAPUserCreation(usr_details)
+            print "Calling: processLDIF(", LDAP_admin_dn, ",", LDAP_admin_pw, ")"
+            entity.processLDIF(LDAP_admin_dn, LDAP_admin_pw)
+            print "LDAP user added, adding django user."
             mcUser.objects.create_superuser(usr_details)
-            
-            if verbosity >= 1:
-                self.stdout.write("Superuser created successfully.")
+            print "Super user created."
+

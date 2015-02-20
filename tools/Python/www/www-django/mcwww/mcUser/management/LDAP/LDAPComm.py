@@ -133,7 +133,7 @@ class LDAPComm:
                 self.log("LDAP privs insufficient: %s" % ben)
                 return False
         except:
-            self.log("Incorrect search profile: %s => %s" % query, sys.exc_info()[0])
+            self.log("Incorrect search profile: %s => %s" % (query, sys.exc_info()[0]))
             return False
 #=====================#
 # User Identification #
