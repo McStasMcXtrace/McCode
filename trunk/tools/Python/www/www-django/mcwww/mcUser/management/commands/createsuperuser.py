@@ -34,7 +34,7 @@ from django.utils.text import capfirst
 #-------------#
 from mcUser.management.LDAP.LDAPUserCreation import *
 from mcUser.models import *
-from creation_helpers import user_check, check_LDAP_perms, duplicate_user_check#, makeuid
+from creation_helpers import user_check, check_LDAP_perms, duplicate_user_check, get_email
 
 class NotRunningInTTYException(Exception):
     pass
@@ -82,95 +82,87 @@ class Command(BaseCommand):
         return super(Command, self).execute(*args, **options)
 
 
-#=====================================================#
-# handle()                                            #
-# --------                                            #
-# REIMPLEMENT THIS FOR LDAP AND SuperMcUser CREATION. #
-#=====================================================#
+    #==========#
+    # handle() #
+    # -------- #
+    #==========#
     def handle(self,  *args, **options):
         LDAP_admin_dn = raw_input('Enter your LDAP authentication cn (not your uid): ')
         check_LDAP_perms(LDAP_admin_dn)
-        usr_details = {}
-        usr_details['staff'] = True
-        usr_details['email'] = None
-        usr_details['username'] = None
-        usr_details['password'] = None        
+        usr_details = {'staff':    True,
+                       'username': None,
+                       'password': None}
 
         interactive = options.get('interactive')
         verbosity = int(options.get('verbosity', 1))
         database = options.get('database')
         #------------------------#
-        # usr_details Form setup #
+        # usr_details Form setup # - NOT DELETING THIS FOR FUTURE ADMIN SITE VIEW USE.
         # 
-        if not interactive:
-            try:
-                if not usr_details['username']:
-                    raise CommandError("You must use --%s with --noinput." % mcUser.USERNAME_FIELD)
-                usr_details['username'] = self.username_field.clean(usr_details['username'], None)      
-                for field_name in mcUser.REQUIRED_FIELDS:
-                    if options.get(field_name):
-                        field = mcUser._meta.get_field(field_name)
-                        usr_details[field_name] = field.clean(options[field_name], None)
-                    else:
-                        raise CommandError("You must use --%s with --noinput." % field_name)
-            except exceptions.ValidationError as e:
-                raise CommandError('; '.join(e.messages))
+        #        if not interactive:
+        #            print "in here."
+        #            try:
+        #                if not usr_details['username']:
+        #                    raise CommandError("You must use --%s with --noinput." % mcUser.USERNAME_FIELD)
+        #                usr_details['username'] = self.username_field.clean(usr_details['username'], None)      
+        #                for field_name in mcUser.REQUIRED_FIELDS:
+        #                    if options.get(field_name):
+        #                        field = mcUser._meta.get_field(field_name)
+        #                        usr_details[field_name] = field.clean(options[field_name], None)
+        #                    else:
+        #                        raise CommandError("You must use --%s with --noinput." % field_name)
+        #            except exceptions.ValidationError as e:
+        #                raise CommandError('; '.join(e.messages))
         #
         # End Form setup #
         #----------------#
-        else:
-            default_username = get_default_username()
-            try:
-                if hasattr(self.stdin, 'isatty') and not self.stdin.isatty(): raise NotRunningInTTYException("Not running in a TTY")
-                # Username creation
-                while not usr_details['username']:
-                    input_msg = 'Username'
-                    if not usr_details['username']:
-                        if default_username:
-                            input_msg = input_msg + " (leave blank to use '%s')" % default_username
-                        raw_value = input(force_str('%s: ' % input_msg))
-                    if default_username and raw_value == '': raw_value = default_username
-                    try:
-                        usr_details['username'] = raw_value
-                    except exceptions.ValidationError as e:
-                        self.stderr.write("Error: %s" % '; '.join(e.messages))
-                        usr_details['username'] = None
-                        continue
-                # Check duplicates, create uid
-                duplicate_user_check(usr_details)                
-                # email creation
-                while not usr_details['email']:
-                    raw_value = input(force_str('email: '))
-                    try:
-                        usr_details['email'] = mcUser._meta.get_field('email').clean(raw_value, None)
-                    except exceptions.ValidationError as e:
-                        self.stderr.write("Error: %s" % '; '.join(e.messages))
-                        usr_details['email'] = None
-                # Password creation
-                while not usr_details['password']:
-                    if not usr_details['password']:                        
-                        usr_details['password'] = getpass.getpass()
-                        password2 = getpass.getpass(force_str('Password (again): '))
-                        if usr_details['password'] != password2:
-                            self.stderr.write("Error: Your passwords didn't match.")
-                            usr_details['password'] = None
-                            continue
-                    elif usr_details['password'].strip() == '':
-                        self.stderr.write("Error: Blank passwords aren't allowed.")
+        #        else:
+        default_username = get_default_username()
+        try:
+            if hasattr(self.stdin, 'isatty') and not self.stdin.isatty(): raise NotRunningInTTYException("Not running in a TTY")
+            # Username creation
+            while not usr_details['username']:
+                input_msg = 'Username'
+                if not usr_details['username']:
+                    if default_username:
+                        input_msg = input_msg + " (leave blank to use '%s')" % default_username
+                    raw_value = input(force_str('%s: ' % input_msg))
+                if default_username and raw_value == '': raw_value = default_username
+                try:
+                    usr_details['username'] = raw_value
+                except exceptions.ValidationError as e:
+                    self.stderr.write("Error: %s" % '; '.join(e.messages))
+                    usr_details['username'] = None
+                    continue
+            # Check duplicates, create uid
+            duplicate_user_check(usr_details)
+            # email creation
+            get_email(usr_details)
+            # Password creation
+            while not usr_details['password']:
+                if not usr_details['password']:                        
+                    usr_details['password'] = getpass.getpass()
+                    password2 = getpass.getpass(force_str('Password (again): '))
+                    if usr_details['password'] != password2:
+                        self.stderr.write("Error: Your passwords didn't match.")
                         usr_details['password'] = None
                         continue
-                    else: encrypt_password(usr_details)
+                elif usr_details['password'].strip() == '':
+                    self.stderr.write("Error: Blank passwords aren't allowed.")
+                    usr_details['password'] = None
+                    continue
+                else: encrypt_password(usr_details)
 
             # I LIKE THIS.
-            except KeyboardInterrupt:
-                self.stderr.write("\nOperation cancelled.")
-                sys.exit(1)
+        except KeyboardInterrupt:
+            self.stderr.write("\nOperation cancelled.")
+            sys.exit(1)
 
-            except NotRunningInTTYException:
-                self.stdout.write(
-                    "Superuser creation skipped due to not running in a TTY. "
-                    "You can run `manage.py createsuperuser` in your project "
-                    "to create one manually."
+        except NotRunningInTTYException:
+            self.stdout.write(
+                "Superuser creation skipped due to not running in a TTY. "
+                "You can run `manage.py createsuperuser` in your project "
+                "to create one manually."
                 )
 
         if usr_details['username']:

@@ -26,7 +26,7 @@ from getpass import getpass
 from mcUser.management.LDAP.LDAPUserCreation import *
 from mcUser.management.LDAP.LDAPComm import *
 from mcUser.models import *
-from creation_helpers import duplicate_user_check, encrypt_password, check_LDAP_perms
+from creation_helpers import duplicate_user_check, encrypt_password, check_LDAP_perms, get_email
 
 
 #=================================#
@@ -35,7 +35,7 @@ from creation_helpers import duplicate_user_check, encrypt_password, check_LDAP_
 # Creates an sqlite and LDAP user #
 #=================================#                - Add groups in both DBs
 def main(args):
-    usr_details = {}
+    usr_details = {'staff':False}
     #-----------------------#
     # username and password #
     #-----------------------#
@@ -52,6 +52,7 @@ def main(args):
     else:
         usr_details['password'] = getpass('Enter password: ')    
     encrypt_password(usr_details)
+    get_email(usr_details)
     #======================#
     # LDAP DB Modification #
     # --------------------

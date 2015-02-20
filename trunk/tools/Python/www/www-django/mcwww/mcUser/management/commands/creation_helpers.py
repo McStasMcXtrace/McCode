@@ -9,6 +9,11 @@
 #----------------#
 import getpass
 from subprocess import Popen, PIPE
+#----------------#
+# django imports #
+#----------------#
+from django.utils.six.moves import input
+from django.utils.encoding import force_str
 #-------------#
 # app imports #
 #-------------#
@@ -87,6 +92,15 @@ def encrypt_password(usr_details):
 # - uses the django field to ensure email #
 #  is correctly formatted                 #
 #=========================================#
+def get_email(usr_details):
+    usr_details['email'] = None
+    while not usr_details['email']:
+        raw_value = input(force_str('email: '))
+        try:
+            usr_details['email'] = mcUser._meta.get_field('email').clean(raw_value, None)
+        except exceptions.ValidationError as e:
+            self.stderr.write("Error: %s" % '; '.join(e.messages))
+            usr_details['email'] = None
 #============================================#
 # check_LDAP_perms                           #
 # ----------------                           #
