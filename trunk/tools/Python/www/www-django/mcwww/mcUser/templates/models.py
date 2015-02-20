@@ -52,7 +52,7 @@ def update_last_login(sender, user, **kwargs):
     """
     user.last_login = timezone.now()
     user.save()
-user_logged_in.connect(update_last_login) # called as soon as this file is included.
+user_logged_in.connect(update_last_login)
 #==========================#
 # END mcUser login Updater #
 #==========================#
@@ -66,9 +66,8 @@ class mcBackend(object):
     conn = LDAPComm.LDAPComm()
     supports_interactive_user = True
     def get_user(self, uid):
-        # Need to put the LDAP details in the mcUser model at this stage
         try:
-            return mcUser.objects.get(UID=uid) # have to build the django DB first
+            return mcUser.objects.get(UID=uid)
         except UserModel.DoesNotExist:
             return None
 
@@ -83,8 +82,8 @@ class mcBackend(object):
             import base64
             print "in models:authenticate, UID=", UID
             dn = None
-            ldap_data = self.conn.ldapQuery('cn=DummyUser,ou=person,DN',    # TEMPLATE LINE
-                                            'DPW',                                             # TEMPLATE LINE
+            ldap_data = self.conn.ldapQuery('cn=DummyUser,ou=person,DN',
+                                            'DPW',
                                             "uid=%s"%UID)            
             print "ldap_data:\n",ldap_data
             for line in ldap_data:
@@ -147,13 +146,9 @@ class mcUserManager(BaseUserManager):
         mcuser.save(using=self._db) 
         return mcuser
     
-    def create_superuser(self, username, email, password, **extra_fields):
-        for k,v in usr_details.items():
-            print k, ":", v
-        return self._create_user(username, email, password, True, True,
-                                 **extra_fields)
-
-        
+    def create_superuser(self, usr_details):
+        usr_details['staff'] = True
+        return self.createMcUser(usr_details)
 #=========================#
 # END mcUserManager CLASS #
 #=========================#
@@ -175,8 +170,8 @@ class mcUser(AbstractBaseUser):
     #---------------------#
     # mcUser model fields #
     #---------------------#
-    uid            = models.CharField(('uid'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'))#, primary_key=True)
-    USERNAME_FIELD =  'uid'
+    uid            = models.CharField(('uid'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'))
+    USERNAME_FIELD = 'uid'
     username       = models.CharField(('username'), max_length=30, unique=False, help_text=('Non-unique id identifies user in django DB, used to create unique LDAP/django sqlite ID'))
     is_staff       = models.BooleanField(('Member of Staff'), default=False, help_text=('Allows admin access') )
     is_active      = models.BooleanField(('Enrolled on VNT Course'), default=True, help_text=('Currently enrolled on VNT course.'

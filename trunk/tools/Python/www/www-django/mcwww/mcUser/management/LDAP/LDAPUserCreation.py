@@ -39,16 +39,11 @@ class LDAPUserCreation:
         def collectData():
             FN   = raw_input('Enter Forename         : ')
             SN   = raw_input('Enter Surname          : ')
-            G    = raw_input('Is user staff (y/n)?   : ')
-            MAIL = raw_input('Enter Contact mail     : ')
             self.ldap_user.setnames(FN, SN)
-            self.ldap_user.setmail(MAIL)
-            if G == 'y':
-                usr_details['staff'] = True
-                self.ldap_user.setgroup('courseStaff')
-            else: usr_details['staff'] = False
+            self.ldap_user.setmail(usr_details['email'])
+            if usr_details['staff']: self.ldap_user.setgroup('courseStaff')
+            else:                    self.ldap_user.setgroup('Students')
             usr_details['username']    = self.ldap_user.cn()
-            usr_details['email']       = MAIL
             usr_details['displayname'] = FN
 
 

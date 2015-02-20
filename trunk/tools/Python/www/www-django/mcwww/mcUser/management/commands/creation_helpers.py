@@ -81,6 +81,12 @@ def encrypt_password(usr_details):
     else:                                                                  # make and throw LDAPpwdCreationError
         print "Error in password creation."
         sys.exit(1)
+#=========================================#
+# get_email                               #
+# ---------                               #
+# - uses the django field to ensure email #
+#  is correctly formatted                 #
+#=========================================#
 #============================================#
 # check_LDAP_perms                           #
 # ----------------                           #
@@ -88,15 +94,13 @@ def encrypt_password(usr_details):
 # and tests to see if these have admin group #
 # permissions ussing the LDAPComm object     #
 #============================================#
-def check_LDAP_perms():
+def check_LDAP_perms(cn):
     comm = LDAPComm.LDAPComm()
-    LDAP_admin_cn = raw_input('Enter your LDAP authentication cn (not your uid): ')
-    LDAP_admin_pw = getpass.getpass('Enter your LDAP authentication pwd: ')
-    if LDAP_admin_cn == 'cn=admin,dc=branch' :
-        LDAP_admin_dn = LDAP_admin_cn
+    if cn == 'cn=admin,dc=branch' :
+        LDAP_admin_dn = cn
     else:
-        LDAP_admin_dn = "cn=%s,ou=person,dc=branch" % LDAP_admin_cn
-        if(not comm.ldapAdminGroupQuery(LDAP_admin_cn)):     # make and throw InsufficientLDAPPrivsError
+        LDAP_admin_dn = "cn=%s,ou=person,dc=branch" % cn
+        if(not comm.ldapAdminGroupQuery(LDAP_admin_dn)):     # make and throw InsufficientLDAPPrivsError
             print "Insufficient LDAP privs, your cn may not be what you have supplied.\nPlease contact admin.\n"
             sys.exit(1)
 
