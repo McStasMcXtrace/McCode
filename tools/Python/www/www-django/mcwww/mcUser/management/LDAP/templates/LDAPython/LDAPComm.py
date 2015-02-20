@@ -115,9 +115,10 @@ class LDAPComm:
 # Check existence in group #
 #==========================#
     def ldapAdminGroupQuery(self, auth_cn):
-        cn = "cn=%s" % auth_cn
+        if not 'cn=' in auth_cn:
+            auth_cn = "cn=%s" % auth_cn
         query = "(|(cn=itStaff)(cn=courseStaff))"
-        self.log("%s AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b ou=groups,DN -D cn=DummyUser,ou=person,DN -w DummyPW %s\n" % (cn, query) )
+        self.log("%s AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b ou=groups,DN -D cn=DummyUser,ou=person,DN -w DummyPW %s\n" % (auth_cn, query) )
         try:
             fid = Popen(
                 ["ldapsearch", "-LLL", "-b", "DN", "-D", "cn=DummyUser,ou=person,DN", "-w", "DummyPW", query],
