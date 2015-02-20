@@ -147,11 +147,11 @@ class mcUserManager(BaseUserManager):
         mcuser.save(using=self._db) 
         return mcuser
     
-
-
-    def create_superuser(self, usr_details):
-        print "username: "+username+" email: "+email+" pwd:"+pwd+"\nextra: "+extrafields
-        return self._create_user(usr_details)
+    def create_superuser(self, username, email, password, **extra_fields):
+        for k,v in usr_details.items():
+            print k, ":", v
+        return self._create_user(username, email, password, True, True,
+                                 **extra_fields)
 
         
 #=========================#
@@ -182,7 +182,6 @@ class mcUser(AbstractBaseUser):
     is_active      = models.BooleanField(('Enrolled on VNT Course'), default=True, help_text=('Currently enrolled on VNT course.'
                                                                                               'Making this false instead of deleting keeps the user in the DB',
                                                                                               'but stops them accessing the course.'))
-    last_login      = models.DateTimeField(('date joined'), default=timezone.now )
     displayName     = models.CharField(('Nickname'), max_length=10, unique=True, help_text=('The name that is displayed during the session.') )
     email           = models.EmailField(('e-mail address'))
     REQUIRED_FIELDS = ['is_staff', 'is_active', 'last_login', 'displayName', 'email']

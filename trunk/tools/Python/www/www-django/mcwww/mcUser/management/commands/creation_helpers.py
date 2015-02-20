@@ -4,12 +4,16 @@
 # -------------------             #
 # Author: Mark Lewis              #
 #=================================#
-# python imports
+#----------------#
+# python imports #
+#----------------#
+import getpass
 from subprocess import Popen, PIPE
-# app imports
+#-------------#
+# app imports #
+#-------------#
 from mcUser.management.LDAP.LDAPComm import *
 from mcUser.models import *
-
 #=============================#
 # makeuid                     #
 # -------                     #
@@ -31,7 +35,8 @@ def makeuid(username, n=0):
 #===================================================#
 def user_check():
     def quitter():
-        "\n Trying to avoid duplicates in the database:\n     Please put \'y\' or \'n\' in next time.\n"
+        print "\n Trying to avoid duplicates in the database:\n"           # make this a UserAlreadyExistsError
+        print "Please put \'y\' or \'n\' in next time.\n"
         sys.exit(1)
     input_dict = {'y': True,
                   'n': False,
@@ -73,7 +78,7 @@ def encrypt_password(usr_details):
                 stderr=PIPE)
     stdout,stderr = fid.communicate()
     if "{SSHA}" in stdout: usr_details['password'] = stdout
-    else: 
+    else:                                                                  # make and throw LDAPpwdCreationError
         print "Error in password creation."
         sys.exit(1)
 #============================================#
@@ -86,12 +91,12 @@ def encrypt_password(usr_details):
 def check_LDAP_perms():
     comm = LDAPComm.LDAPComm()
     LDAP_admin_cn = raw_input('Enter your LDAP authentication cn (not your uid): ')
-    LDAP_admin_pw = getpass('Enter your LDAP authentication pwd: ')
+    LDAP_admin_pw = getpass.getpass('Enter your LDAP authentication pwd: ')
     if LDAP_admin_cn == 'cn=admin,dc=branch' :
         LDAP_admin_dn = LDAP_admin_cn
     else:
         LDAP_admin_dn = "cn=%s,ou=person,dc=branch" % LDAP_admin_cn
-        if(not comm.ldapAdminGroupQuery(LDAP_admin_cn, LDAP_auth_pw)): 
+        if(not comm.ldapAdminGroupQuery(LDAP_admin_cn)):     # make and throw InsufficientLDAPPrivsError
             print "Insufficient LDAP privs, your cn may not be what you have supplied.\nPlease contact admin.\n"
             sys.exit(1)
 

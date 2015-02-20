@@ -148,7 +148,8 @@ class mcUserManager(BaseUserManager):
         return mcuser
     
     def create_superuser(self, username, email, password, **extra_fields):
-        print "username: "+username+" email: "+email+" pwd:"+pwd+"\nextra: "+extrafields
+        for k,v in usr_details.items():
+            print k, ":", v
         return self._create_user(username, email, password, True, True,
                                  **extra_fields)
 
@@ -168,8 +169,6 @@ class mcUser(AbstractBaseUser):
         #-------------------------#
         # mcUser class attributes #
         #-------------------------#
-#        self.ident = None
-#        self.password = 'notapassword'
         self.authenticated = False
         self.ldap_user = LDAPData() # populated on authentication or empty.
         self.conn = LDAPComm.LDAPComm() 
@@ -177,14 +176,12 @@ class mcUser(AbstractBaseUser):
     # mcUser model fields #
     #---------------------#
     uid            = models.CharField(('uid'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'))#, primary_key=True)
-#    id             = models.IntegerField(('id'), max_length=5, unique=True, help_text=('Unique id identifies user in LDAP and django sqlite DBs.'), primary_key=True)
     USERNAME_FIELD =  'uid'
     username       = models.CharField(('username'), max_length=30, unique=False, help_text=('Non-unique id identifies user in django DB, used to create unique LDAP/django sqlite ID'))
     is_staff       = models.BooleanField(('Member of Staff'), default=False, help_text=('Allows admin access') )
     is_active      = models.BooleanField(('Enrolled on VNT Course'), default=True, help_text=('Currently enrolled on VNT course.'
                                                                                               'Making this false instead of deleting keeps the user in the DB',
                                                                                               'but stops them accessing the course.'))
-#    last_login      = models.DateTimeField(('date joined'), default=timezone.now )
     displayName     = models.CharField(('Nickname'), max_length=10, unique=True, help_text=('The name that is displayed during the session.') )
     email           = models.EmailField(('e-mail address'))
     REQUIRED_FIELDS = ['is_staff', 'is_active', 'last_login', 'displayName', 'email']
