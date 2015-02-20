@@ -28,6 +28,7 @@
 # Author: Mark Lewis                                                                    #
 #=======================================================================================#
 from subprocess import call,check_output,Popen,PIPE
+import traceback
 from re import split
 import sys
 from cStringIO import StringIO
@@ -56,7 +57,7 @@ class LDAPComm:
         try:
             check_output(["ldapadd", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw])
         except:
-            self.log("Error: %s" % sys.exc_info()[0])
+            self.log("Error: %s" % traceback.format_exc()) #sys.exc_info())
 #=================#
 # General ldapMod #
 #=================#

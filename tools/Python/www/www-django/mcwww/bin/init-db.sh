@@ -52,6 +52,7 @@ echo " "
 #---------------------#
 # Calling DB builders #
 #---------------------#
+python ./bin/build-templates.py $DN $ROOTPW $BINDPW
 python manage.py syncdb
 python ./bin/ldap-build.py $DN $ROOTPW $BINDPW $TREEPW $RPW1
 
