@@ -39,10 +39,14 @@
 * with '#' character).
 * A table rebinning and linear interpolation are performed.
 *
-* EXAMPLE : in order to simulate a PG filter, using the lib/data/HOPG.trm filename
-*      Filter_gen(xmin = -0.1, xmax = 0.1,
-*       ymin = -0.1, ymax = 0.1,
-*       filename="HOPG.trm")
+* EXAMPLE : in order to simulate a PG filter, using the lib/data/HOPG.trm file
+*      Filter_gen(xwidth=.1 yheight=.1, filename="HOPG.trm")
+* A Sapphire filter, using the lib/data/Al2O3_sapphire.trm file
+*      Filter_gen(xwidth=.1 yheight=.1, filename="Al2O3_sapphire.trm")
+* A Berylium filter, using the lib/data/Be.trm file
+*      Filter_gen(xwidth=.1 yheight=.1, filename="Be.trm")
+*   an other possibility to simulate a Be filter is to use the PowderN component:
+*      PowderN(xwidth=.1, yheight=.1, zdepth=.1, reflections="Be.laz", p_inc=1e-4)
 *
 * in this filename, the comment line
 *     # wavevector multiply
