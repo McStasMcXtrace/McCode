@@ -308,12 +308,6 @@ sub mcdoc_compman {
     system("$cmd");
 }
 
-sub mcdoc_tutorial {
-    my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'}$suffix --tutorial $background";
-    putmsg($cmdwin, "Opening Tutorial: $cmd\n", 'msg');
-    system("$cmd");
-}
-
 sub mcdoc_components {
     my $cmd = "$prefix $MCSTAS::mcstas_config{'DOCCMD'}$suffix $background";
     putmsg($cmdwin, "Opening Library help: $cmd\n", 'msg');
@@ -1667,8 +1661,6 @@ sub setup_menu {
     $helpmenu->command(-label => 'McXtrace web page (web)',
                        -underline => 7,
                        -command => sub {mcdoc_web()});
-    $helpmenu->command(-label => 'McXtrace tutorial',
-                       -command => sub {mcdoc_tutorial()});
     $helpmenu->command(-label => 'Current instrument info',
                        -command => sub {mcdoc_current()});
     $helpmenu->separator;
