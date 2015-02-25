@@ -518,7 +518,6 @@ my $file;
 my $show_website  = 0;
 my $show_manual   = 0;
 my $show_compman  = 0;
-my $show_tutorial = 0;
 
 for($i = 0; $i < @ARGV; $i++) {
   $_ = $ARGV[$i];
@@ -533,8 +532,6 @@ for($i = 0; $i < @ARGV; $i++) {
         $show_manual = 1;
   } elsif(/^--comp$/i || /^-c$/i) {
         $show_compman = 1;
-  } elsif(/^--tutorial$/i) {
-        $show_tutorial = 1;
   } elsif(/^--local$/i) {
         $use_local = 1;
   } elsif(/^--force$/i || /^-f$/i) {
@@ -552,7 +549,6 @@ for($i = 0; $i < @ARGV; $i++) {
       print "   -c    --comp     Open the $pkgname Component manual\n";
       print "   -t    --text     For single component, display as text\n";
       print "   -w    --web      Open the $pkgname web page http://www.mcstas.org/\n";
-      print "         --tutorial Open the $pkgname tutorial from the local $pkgname library\n";
       if($pkgname=~/^mcstas/i){
         print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
         print "DOC:      Please visit http://www.mcstas.org/\n";
@@ -629,13 +625,6 @@ if ($show_compman) {
   die "$0: Component manual done.\n";
 }
 
-if ($show_tutorial) {
-  # open the tutorial
-  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $HTTP_SYSDIR/doc/tutorial/html/tutorial.html";
-  print "$0: Starting $cmd\n"; system("$cmd\n");
-  die "$0: Tutorial done.\n";
-}
-
 # if 'file' is given
 if ($index > 0) {
   if (-d $file) { $lib_dir = $file; } # get doc of the given dir
@@ -709,7 +698,6 @@ my @tblist = map "<A href=\"#$_\">$_</A>", @sections;
 my $toolbar = "<P ALIGN=CENTER>\n [ " . join("\n | ", @tblist) . " ]\n</P>\n";
 $toolbar .= "<P ALIGN=CENTER>\n [ <a href=\"$HTTP_SYSDIR/doc/manuals/$MCSTAS::mcstas_config{'MCCODE'}-manual.pdf\">User Manual</a>
 | <a href=\"$HTTP_SYSDIR/doc/manuals/$MCSTAS::mcstas_config{'MCCODE'}-components.pdf\">Component Manual</a>
-| <a href=\"$HTTP_SYSDIR/doc/tutorial/html/tutorial.html\">$MCSTAS::mcstas_config{'PKGNAME'}-tutorial</a>
 | <a href=\"$HTTP_SYSDIR/data\">Data files</a> | <a href=\"$HTTP_SYSDIR\">$lib_dir</a> ]\n</P>\n";
 
 if ($filehandle) {
