@@ -51,7 +51,7 @@
 * Cu       220 DM=1.278 AA
 * Cu       111 DM=2.095 AA
 * Take-off:       39-65 deg
-* flux at sample: 5e5 n/s/cm2
+* flux at sample: 5e5 n/s/cm2 (at 1.1 Angs)
 *
 * Secondary spectrometer
 *
@@ -66,9 +66,11 @@
 * time-of-flight spectra measured at various angles are further treated in order
 * to obtain the scattering function S(Q,w) using e.g. LAMP.
 *
-* In this model, the sample is an Incoherent scatterer (e.g. Vanadium).
+* In this model, the sample is a cylindrical liquid/powder/glass scatterer 
+* surrounded by a container and an Al cryostat.
 *
-* %Example: lambda=2.2
+* %Example: lambda=1.1 DM=1.607 Detector: sample_flux_I=5e+06
+* %Example: lambda=2.2          Detector: sample_flux_I=4.7e+06
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -80,6 +82,8 @@
 *   ratio:         [1]    Disk Chopper ratio (nu=nu_FC/ratio)
 *   dE:            [meV]  Inelastic energy for time focusing
 *   Sapphire_present: [1] Flag, when 1 the Al2O3 filter is active
+*   sample_coh:    [str]  Sample coherent dynamic structure factor (.sqw) or NULL
+*   sample_inc:    [str]  Sample incoherent dynamic structure factor (.sqw) or NULL
 *
 * %Link
 * H. Mutka, Nucl. Instr. and Meth. A 338 (1994) 144
@@ -89,13 +93,24 @@
 *******************************************************************************/
 
 DEFINE INSTRUMENT ILL_IN4(lambda=1.1, dlambda=1, DM=3.355, 
-  ETAM=35, RMH=-1, ratio=4, dE=0, Sapphire_present=0)
+  ETAM=35, RMH=-1, ratio=4, dE=0, Sapphire_present=1,
+  string sample_coh="V.laz", string sample_inc="NULL")
 
 DECLARE %{
-  double A1, RMH, Frequency, LOM, phase;
+  double A1, RMH, LOM, phase;
   double LFS       = 0.675; /* FC to Sample distance */
   double LSD       = 2;     /* Sample to Detector distance */
   double LVS       = 0.583; /* BC1 to VS distance */
+  double flag_sample=0;     /* flag set to 1 when sample scatters */
+  double flag_env  = 0;     /* flag set to 1 when sample environment scatters */
+  double sample_width          = 0.05;
+  double sample_thickness      = 1e-3;
+  double sample_height         = 0.05;
+  double environment_radius    = 0.05;
+  double environment_thickness = 1e-3;
+  double container_thickness   = 5e-4;
+  char   environment[]         = "Al.laz";
+  char   container[]           = "V.laz";
   
   /* the following variables are computed in the IN4 configuration */
   double d0, d2; /* IN4c distances used in NoMad/IN4 doc (Ross/Rols) */
@@ -156,7 +171,6 @@ INITIALIZE %{
     RMH= 2*L/sin(DEG2RAD*A1);  /* RH = 2*L/sin(DEG2RAD*A1); */
   }
     
-  Frequency= nu;
   LOM      = LSM - 5.2; /* from Obt1 to Monok */
   
   if (dlambda >= lambda)
@@ -220,7 +234,8 @@ COMPONENT Obt1_lambda = Monitor_nD(xwidth=0.1, yheight=0.1, options="lambda limi
  */
 
 COMPONENT SapphireFilter = Filter_gen(xwidth=0.12, yheight=0.12, 
-  filename="Al2O3_sapphire.trm", thickness=2)
+  filename="Al2O3_sapphire.trm")
+  WHEN (Sapphire_present)
   AT (0,0,0.2) RELATIVE Obt1
 
 COMPONENT Win1 = Monitor_nD(
@@ -276,30 +291,95 @@ AT (0,0,0) RELATIVE FC_Pos
 EXTEND %{
     if (!SCATTERED) ABSORB;
   %}
-  
+
+/* sample position */
 COMPONENT Sample_pos = Arm()
   AT (0,0,LMS) RELATIVE Mono_out
-
-COMPONENT sample_flux = Monitor_nD(
-    xwidth = 0.1, yheight = 0.1, options = "x y", 
-    restore_neutron=1, bins=100)
-  AT (0, 0, 0) RELATIVE Sample_pos
   
-COMPONENT sample_tof = COPY(sample_flux)(options = "x, auto time")
-  AT (0, 0, 0) RELATIVE Sample_pos
-  
-COMPONENT sample_lambda = COPY(sample_flux)(options = "lambda limits=[.1 3]")
-  AT (0, 0, 0) RELATIVE Sample_pos
-  
-SPLIT COMPONENT Sample = Incoherent(radius=0.01/2, yheight=0.05, focus_ah=RAD2DEG*atan2(2, 2.5))
+COMPONENT Sample_rot = Arm()
   AT (0,0,0) RELATIVE Sample_pos
+  ROTATED (0,45,0) RELATIVE Sample_pos
+
+SPLIT COMPONENT sample_flux = Monitor_nD(
+    xwidth = 0.06, yheight = 0.06, options = "x y", 
+    restore_neutron=1, bins=60)
+  AT (0, 0, 0) RELATIVE Sample_pos
   EXTEND %{
-    if (!SCATTERED) ABSORB;
+    flag_sample = flag_env = 0;
   %}
   
-COMPONENT Detector = Monitor_nD(radius=2.5, yheight=2,
+COMPONENT sample_tof = Monitor_nD(
+  xwidth = 0.1, yheight = 0.1, options = "x, auto time", 
+  bins=100, restore_neutron=1)
+  AT (0, 0, 0) RELATIVE Sample_pos
+  
+COMPONENT sample_lambda = Monitor_nD(
+  xwidth = 0.1, yheight = 0.1, options = "lambda limits=[.1 3]", 
+  bins=100, restore_neutron=1)
+  AT (0, 0, 0) RELATIVE Sample_pos
+  
+/* sample environment and cell */
+
+/* external shield */
+COMPONENT Environment_in=Isotropic_Sqw(
+  radius = environment_radius, yheight = 0.1, thickness=environment_thickness,
+  Sqw_coh=environment, concentric=1, verbose=0
+) WHEN (environment_thickness > 0)
+AT (0, 0, 0) RELATIVE Sample_rot
+EXTEND %{
+  flag_env += SCATTERED;
+%}
+
+/* sample container */
+COMPONENT Container_in=Isotropic_Sqw(
+  xwidth  = sample_width+1e-4+container_thickness, 
+  zdepth  = sample_thickness+1e-4+container_thickness,
+  yheight = sample_height, thickness=container_thickness,
+  Sqw_coh=container, concentric=1, verbose=0
+  ) WHEN(container_thickness > 0)
+AT (0, 0, 0) RELATIVE Sample_rot
+EXTEND
+%{
+  flag_env += SCATTERED;
+%}
+
+COMPONENT Sample_in=Isotropic_Sqw(
+  xwidth = sample_width, zdepth=sample_thickness, yheight = sample_height,
+  Sqw_coh= sample_coh, Sqw_inc= sample_inc, p_interact=0.9,
+  d_phi=RAD2DEG*atan2(2, LSD), order=1
+) AT (0, 0, 0)   RELATIVE Sample_rot
+EXTEND
+%{
+  flag_sample += SCATTERED;
+%}
+
+COMPONENT Container_out=COPY(Container_in)(concentric=0)
+WHEN(container_thickness > 0)
+AT (0, 0, 0) RELATIVE Sample_rot
+EXTEND
+%{
+  flag_env += SCATTERED;
+%}
+
+/* external shield */
+COMPONENT Environment_out=COPY(Environment_in)(concentric=0)
+WHEN (environment_thickness > 0)
+AT (0, 0, 0) RELATIVE Sample_rot
+EXTEND %{
+  flag_env += SCATTERED;
+%}
+  
+COMPONENT Detector = Monitor_nD(radius=LSD, yheight=2,
   options="theta limits=[-15 135] bins=300, y bins=100, banana")
   AT (0,0,0) RELATIVE Sample_pos
+  
+COMPONENT Detector_sample = COPY(Detector)
+  WHEN (flag_sample)
+  AT (0,0,0) RELATIVE Sample_pos
+  
+COMPONENT Detector_env = COPY(Detector)
+  WHEN (flag_env)
+  AT (0,0,0) RELATIVE Sample_pos 
 
 END
 
