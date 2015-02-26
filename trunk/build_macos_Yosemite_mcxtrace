@@ -20,7 +20,7 @@ fi
 ./mkdist mcxtrace-tools-python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" mac_yosemite "" -- OSXpkg
-./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" mac "" -- OSXpkg
+./mkdist mcxtrace-tools-python-mxdisplay-x3d $1 tools/Python/mcdisplay/x3d/ "" mac "" -- OSXpkg
 ./mkdist mcxtrace-tools-python-mxdisplay-r $1 tools/Python/mcdisplay/R/ "" mac "" -- OSXpkg
 ./mkdist mcxtrace-tools-python-mxdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac "" -- OSXpkg
 ./mkdist mcxtrace-tools-python-mxdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac "" -- OSXpkg
