@@ -3,7 +3,7 @@
 # Thickness: 0.081 [m] (3x2.7 cm plates, c-axis along beam).
 # From: DFR Mildner et al, J Appl Cryst 26 (1993) 438 ; see also DC Tennant, Rev. Sci. Instrum., 59 (1988) 380.
 # [ lambda(Angs) Transmission(% in 0-1) ]
-# wavelenght multiply
+# wavelength multiply
     0.1340    0.1153
     0.2034    0.1168
     0.2866    0.1199
