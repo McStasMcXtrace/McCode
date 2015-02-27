@@ -3,6 +3,8 @@
 # ------------------         #
 # Templated file manipulator #
 #============================#
+import sys
+import os
 def main(args):
     # - dirs and kwds
     kwds = {'DN':args[1], 'RPW':args[2],'BPW':args[3]}

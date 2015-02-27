@@ -14,6 +14,7 @@ from subprocess import Popen, PIPE
 #----------------#
 from django.utils.six.moves import input
 from django.utils.encoding import force_str
+from django.core import exceptions
 #-------------#
 # app imports #
 #-------------#
@@ -32,29 +33,6 @@ def makeuid(username, n=0):
     elif len(username) > 5:
         retname = username[:3] + str(n-1)
     return retname
-#===================================================#
-# user_check                                        #
-# ----------                                        #
-# I'm pretty proud of the dictionary switch in this #
-# so you can work out how it works yourself :p      #
-#===================================================#
-def user_check():
-    def quitter():
-        print "\n Trying to avoid duplicates in the database:\n"           # make this a UserAlreadyExistsError
-        print "Please put \'y\' or \'n\' in next time.\n"
-        sys.exit(1)
-    input_dict = {'y': True,
-                  'n': False,
-                  'break': quitter()
-                  }
-    def inputCheck(n=0):
-        if n >0: print "Input not understood:\n   "
-        chk = raw_input("Is this your user? (y/n)") 
-        for key in input_dict.keys():
-            if chk == key: return chk
-            if n > 10: return 'break'
-        return inputCheck(count+1)
-    return input_dict.get(inputCheck(), 'Input not caught')
 #====================================================#
 # duplicate_user_check                               #
 # --------------------                               #
@@ -66,10 +44,8 @@ def duplicate_user_check(usr_details):
     while True:
         usr_details['uid'] = makeuid(usr_details['username'], uid_n)
         if mcUser.objects.filter(uid=usr_details['uid']).count() > 0:
-            print mcUser.objects.filter(uid=usr_details['uid']), "\n\n"
-            if user_check():
-                print "\n  User already exists, exiting.\n"
-                sys.exit(1)
+            print "\n  Username %s already exists, exiting.\n"% usr_details['username']
+            sys.exit(1)
         else: return True
 #==================================================#
 # encrypt_password                                 #
