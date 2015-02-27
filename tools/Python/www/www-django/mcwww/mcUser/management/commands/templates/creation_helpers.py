@@ -33,6 +33,22 @@ def makeuid(username, n=0):
     elif len(username) > 5:
         retname = username[:3] + str(n-1)
     return retname
+#==================================#
+# get_cn                           #
+# ------                           #
+# queries user for their LDAP      #
+# credentials and offers a default #
+# option.                          #
+# Returns the captured cn.         #
+#==================================#
+def get_cn():
+    default = 'cn=admin,DN'
+    print "{default_dn: %s}"% default
+    LDAP_admin_cn = raw_input('Enter your LDAP authentication username (cn=...,DN)\n (enter for default): ')
+    if not LDAP_admin_cn: 
+        return default
+    if check_LDAP_perms(LDAP_admin_cn):
+        return LDAP_admin_cn
 #====================================================#
 # duplicate_user_check                               #
 # --------------------                               #
@@ -71,11 +87,11 @@ def encrypt_password(usr_details):
 def get_email(usr_details):
     usr_details['email'] = None
     while not usr_details['email']:
-        raw_value = input(force_str('email: '))
+        email = input(force_str('email: '))
         try:
-            usr_details['email'] = mcUser._meta.get_field('email').clean(raw_value, None)
+            usr_details['email'] = mcUser._meta.get_field('email').clean(email, None)
         except exceptions.ValidationError as e:
-            self.stderr.write("Error: %s" % '; '.join(e.messages))
+            print "Error: %s" % '; '.join(e.messages)
             usr_details['email'] = None
 #============================================#
 # check_LDAP_perms                           #
@@ -87,11 +103,12 @@ def get_email(usr_details):
 def check_LDAP_perms(cn):
     comm = LDAPComm.LDAPComm()
     if cn == 'cn=admin,dc=branch' :
-        LDAP_admin_dn = cn
+        return True
     else:
         LDAP_admin_dn = "cn=%s,ou=person,dc=branch" % cn
         if(not comm.ldapAdminGroupQuery(LDAP_admin_dn)):     # make and throw InsufficientLDAPPrivsError
             print "Insufficient LDAP privs, your cn may not be what you have supplied.\nPlease contact admin.\n"
             sys.exit(1)
+        return True
 
 

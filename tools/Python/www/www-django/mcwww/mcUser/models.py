@@ -138,7 +138,6 @@ class mcUserManager(BaseUserManager):
         mcuser = self.model()
         mcuser.uid         = usr_details['uid']
         mcuser.username    = usr_details['username']
-        mcuser.displayName = usr_details['displayname']
         mcuser.email       = usr_details['email']
         mcuser.is_staff    = usr_details['staff']
         mcuser.is_active   = True
@@ -177,9 +176,8 @@ class mcUser(AbstractBaseUser):
     is_active      = models.BooleanField(('Enrolled on VNT Course'), default=True, help_text=('Currently enrolled on VNT course.'
                                                                                               'Making this false instead of deleting keeps the user in the DB',
                                                                                               'but stops them accessing the course.'))
-    displayName     = models.CharField(('Nickname'), max_length=10, unique=True, help_text=('The name that is displayed during the session.') )
     email           = models.EmailField(('e-mail address'))
-    REQUIRED_FIELDS = ['is_staff', 'is_active', 'last_login', 'displayName', 'email']
+    REQUIRED_FIELDS = ['is_staff', 'is_active', 'last_login', 'email']
 
     objects = mcUserManager()
     class Meta:

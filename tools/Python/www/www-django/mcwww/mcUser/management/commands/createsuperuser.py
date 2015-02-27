@@ -34,7 +34,7 @@ from django.utils.text import capfirst
 #-------------#
 from mcUser.management.LDAP.LDAPUserCreation import *
 from mcUser.models import *
-from creation_helpers import check_LDAP_perms, duplicate_user_check, get_email
+from creation_helpers import get_cn, duplicate_user_check, get_email
 
 class NotRunningInTTYException(Exception):
     pass
@@ -87,12 +87,10 @@ class Command(BaseCommand):
     # -------- #
     #==========#
     def handle(self,  *args, **options):
-        LDAP_admin_dn = raw_input('Enter your LDAP authentication cn (not your uid): ')
-        check_LDAP_perms(LDAP_admin_dn)
+        LDAP_admin_dn = get_cn()
         usr_details = {'staff':    True,
                        'username': None,
                        'password': None}
-
         interactive = options.get('interactive')
         verbosity = int(options.get('verbosity', 1))
         database = options.get('database')

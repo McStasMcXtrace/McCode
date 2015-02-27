@@ -26,8 +26,7 @@ from getpass import getpass
 from mcUser.management.LDAP.LDAPUserCreation import *
 from mcUser.management.LDAP.LDAPComm import *
 from mcUser.models import *
-from creation_helpers import duplicate_user_check, encrypt_password, check_LDAP_perms, get_email
-
+from creation_helpers import duplicate_user_check, encrypt_password, get_cn, get_email
 
 #=================================#
 # User creation                   #                TODO LIST
@@ -58,8 +57,7 @@ def main(args):
     # --------------------
     #
     # - Check permissions
-    LDAP_admin_cn = raw_input('Enter your LDAP authentication cn (not your uid): ')
-    check_LDAP_perms(LDAP_admin_cn)
+    LDAP_admin_cn = get_cn()
     LDAP_admin_pw = getpass('Enter your LDAP authentication pwd: ')
     # - Check for duplicates
     duplicate_user_check(usr_details)
