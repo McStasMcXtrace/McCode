@@ -66,7 +66,7 @@ def main(args):
     # - LDAPUserCreation call
     entity = LDAPUserCreation(usr_details)
     print "Calling: processLDIF(", LDAP_admin_cn, ",", LDAP_admin_pw, ")"
-    entity.processLDIF(LDAP_admin_dn, LDAP_admin_pw)                                             # Nice to report success or not (later! get it comitted!!)
+    entity.processLDIF(LDAP_admin_cn, LDAP_admin_pw)                                             # Nice to report success or not (later! get it comitted!!)
     print "LDAP User Added"
     #
     # ---------------------

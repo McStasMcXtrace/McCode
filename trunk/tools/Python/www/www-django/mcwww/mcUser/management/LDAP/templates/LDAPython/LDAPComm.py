@@ -53,11 +53,18 @@ class LDAPComm:
 #=================#
     def ldapAdd(self, ldif_file, auth_dn, auth_pw):
         cn = split(",", auth_dn)[0]
-        self.log("%s ADDED ENTRY : ldapadd -x -D %s -f %s -w PASSWORD" % (cn, auth_dn, ldif_file))
         try:
-            check_output(["ldapadd", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw])
+            Popen(["ldapadd", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw],
+                  stdout = PIPE,
+                  stderr = PIPE)
+            stdout, stderr = fid.communicate()
+            if 'adding' in stdout:
+                self.log("%s ADDED ENTRY : ldapadd -x -D %s -f %s -w PASSWORD" % (cn, auth_dn, ldif_file))
+            else:
+                self.log("Error adding %s: %s" % (cn,stderr))
         except:
-            self.log("Error: %s" % traceback.format_exc()) #sys.exc_info())
+            self.log("Backtrace: %s" % traceback.format_exc()) #sys.exc_info())
+            
 #=================#
 # General ldapMod #
 #=================#
@@ -65,9 +72,17 @@ class LDAPComm:
         cn = split(",", auth_dn)[0]
         self.log("%s MODIFICATION with: ldapmodify -x -D %s -f %s -w PASSWORD" % cn, auth_dn, ldif_file) 
         try:
-            check_output(["ldapmodify", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw])
+            Popen(["ldapmodify", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw],
+                  stdout=PIPE,
+                  stderr=PIPE)
+            if 'modifying' in stdout:
+                self.log("%s MODIFIED: ldapadd -x -D %s -f %s -w PASSWORD" % (cn, auth_dn, ldif_file))
+            else:
+                self.log("Error modifying %s: %s" % (cn,stderr))
+                print "Error:%s \n Backtrace:%s" % (stderr, traceback.format_exc())
         except:
             self.log("ldapMod Error: %s" % sys.exc_info()[0])
+
 #=================#
 # Verbose ldapMod #
 #=================#
@@ -95,23 +110,20 @@ class LDAPComm:
 #===============#
     def ldapQuery(self, auth_dn, auth_pw, query):
         cn = split(",", auth_dn)[0]
-        ret_val = None
-        pipe = PIPE
         self.query_num += 1
         log_str = cn + " QUERY with: ldapsearch -LLL -b DN -D" + auth_dn + "-w PASSWORD " + query+"\n"
         self.log(log_str)
         try:
             fid  = Popen(["ldapsearch", "-LLL", "-b", "DN", "-D", auth_dn, "-w", auth_pw, query],
-                         stdout=pipe,
-                         stderr=pipe)
+                         stdout=PIPE,
+                         stderr=PIPE)
             stdout,stderr = fid.communicate()
-            ret_val = stdout
         except:
             self.log("Error:")
             for err_item in sys.exc_info():
                 self.log(err_item)
             pass
-        return ret_val.split("\n")
+        return stdout.split("\n")
 #==========================#
 # Check existence in group #
 #==========================#
@@ -126,12 +138,10 @@ class LDAPComm:
                 stdout=PIPE,
                 stderr=PIPE)
             stdout,stderr = fid.communicate()
-            bill = stdout
-            ben = stderr
-            if cn in bill:
+            if cn in stdout:
                 return True
             else:
-                self.log("LDAP privs insufficient: %s" % ben)
+                self.log("LDAP privs insufficient: %s" % stderr)
                 return False
         except:
             self.log("Incorrect search profile: %s => %s" % (query, sys.exc_info()[0]))
@@ -146,12 +156,12 @@ class LDAPComm:
                         stdout=PIPE,
                         stderr=PIPE)
             stdout,stderr = fid.communicate()
-            bill = stdout
-            ben = stderr
-            if "Success" in bill:
+#            bill = stdout
+#            ben = stderr
+            if "Success" in stdout:
                 return True
             else:
-                self.log("Access attempt by %s failed: %s" % (dn, ben) )
+                self.log("Access attempt by %s failed: %s" % (dn, stderr))
                 return False
         except:
             log_str = "Access attempt by" + dn + "failed: " + str(sys.exc_info()[0])

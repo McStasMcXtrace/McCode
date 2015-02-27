@@ -34,7 +34,7 @@ from django.utils.text import capfirst
 #-------------#
 from mcUser.management.LDAP.LDAPUserCreation import *
 from mcUser.models import *
-from creation_helpers import user_check, check_LDAP_perms, duplicate_user_check, get_email
+from creation_helpers import check_LDAP_perms, duplicate_user_check, get_email
 
 class NotRunningInTTYException(Exception):
     pass
