@@ -26,13 +26,6 @@
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <layout class="QGridLayout" name="gridLayout">
-         <item row="1" column="2">
-          <widget class="QLineEdit" name="edtWorkingDir">
-           <property name="toolTip">
-            <string>Update path and press enter</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="0">
           <widget class="QLabel" name="label_2">
            <property name="text">
@@ -47,16 +40,6 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="3">
-          <widget class="QToolButton" name="tbtnWorkDir">
-           <property name="toolTip">
-            <string>Browse work dir...</string>
-           </property>
-           <property name="text">
-            <string>...</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="3">
           <widget class="QToolButton" name="tbtnInstrument">
            <property name="toolTip">
@@ -67,12 +50,55 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
+         <item row="2" column="4">
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="3" column="0">
           <widget class="QLabel" name="label">
            <property name="text">
             <string>Work dir.:</string>
            </property>
           </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QLabel" name="lblWorkDir">
+           <property name="text">
+            <string>&lt;not defined&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3">
+          <widget class="QToolButton" name="tbtnWorkDir">
+           <property name="toolTip">
+            <string>Browse work dir...</string>
+           </property>
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="4">
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </item>
@@ -112,6 +138,7 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen_instrument"/>
+    <addaction name="actionChange_Working_Dir"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -119,8 +146,8 @@
     <property name="title">
      <string>Simulation</string>
     </property>
-    <addaction name="actionCompile_Instrument"/>
     <addaction name="actionRun_Simulation"/>
+    <addaction name="actionCompile_Instrument"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -189,8 +216,8 @@
   <action name="actionRS">
    <property name="icon">
     <iconset>
-     <normalon>../../GIMP/run-icon.png</normalon>
-    </iconset>
+     <normaloff>run-icon.png</normaloff>
+     <normalon>../../GIMP/run-icon.png</normalon>run-icon.png</iconset>
    </property>
    <property name="text">
     <string>RS</string>
@@ -202,8 +229,8 @@
   <action name="actionCS">
    <property name="icon">
     <iconset>
-     <normalon>../../GIMP/compile-icon.png</normalon>
-    </iconset>
+     <normaloff>compile-icon.png</normaloff>
+     <normalon>../../GIMP/compile-icon.png</normalon>compile-icon.png</iconset>
    </property>
    <property name="text">
     <string>CS</string>
@@ -225,7 +252,17 @@
     <string>mcstas Component Manual</string>
    </property>
   </action>
+  <action name="actionChange_Working_Dir">
+   <property name="text">
+    <string>Change Work Dir...</string>
+   </property>
+  </action>
  </widget>
+ <tabstops>
+  <tabstop>textBrowser</tabstop>
+  <tabstop>tbtnInstrument</tabstop>
+  <tabstop>tbtnWorkDir</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
