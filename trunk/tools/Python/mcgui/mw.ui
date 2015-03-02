@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>mcgui-py</string>
+  </property>
+  <property name="toolTip">
+   <string/>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="title">
+       <string>mcstas Files:</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="1" column="2">
+          <widget class="QLineEdit" name="edtWorkingDir">
+           <property name="toolTip">
+            <string>Update path and press enter</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Instrument file: </string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QLabel" name="lblInstrument">
+           <property name="text">
+            <string>&lt;Instrument file&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QToolButton" name="tbtnWorkDir">
+           <property name="toolTip">
+            <string>Browse work dir...</string>
+           </property>
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
+          <widget class="QToolButton" name="tbtnInstrument">
+           <property name="toolTip">
+            <string>Browse instrument...</string>
+           </property>
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Work dir.:</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+      <zorder></zorder>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>mcstas Log:</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QTextBrowser" name="textBrowser"/>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionOpen_instrument"/>
+    <addaction name="separator"/>
+    <addaction name="actionQuit"/>
+   </widget>
+   <widget class="QMenu" name="menuSimulation">
+    <property name="title">
+     <string>Simulation</string>
+    </property>
+    <addaction name="actionCompile_Instrument"/>
+    <addaction name="actionRun_Simulation"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionMcstas_User_Manual"/>
+    <addaction name="actionMcstas_Component_Manual"/>
+    <addaction name="actionMcstas_Web_Page"/>
+    <addaction name="separator"/>
+    <addaction name="actionAbout"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuSimulation"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>RightToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionRS"/>
+   <addaction name="actionCS"/>
+   <addaction name="actionPS"/>
+  </widget>
+  <action name="actionOpen_instrument">
+   <property name="text">
+    <string>Load Instrument...</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionRun_Simulation">
+   <property name="text">
+    <string>Run Simulation...</string>
+   </property>
+  </action>
+  <action name="actionCompile_Instrument">
+   <property name="text">
+    <string>Compile Instrument</string>
+   </property>
+  </action>
+  <action name="actionMcstas_User_Manual">
+   <property name="text">
+    <string>mcstas User Manual</string>
+   </property>
+  </action>
+  <action name="actionMcstas_Web_Page">
+   <property name="text">
+    <string>mcstas Web Page</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About...</string>
+   </property>
+  </action>
+  <action name="actionRS">
+   <property name="icon">
+    <iconset>
+     <normalon>../../GIMP/run-icon.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>RS</string>
+   </property>
+   <property name="toolTip">
+    <string>Run simulation...</string>
+   </property>
+  </action>
+  <action name="actionCS">
+   <property name="icon">
+    <iconset>
+     <normalon>../../GIMP/compile-icon.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>CS</string>
+   </property>
+   <property name="toolTip">
+    <string>Compile instrument</string>
+   </property>
+  </action>
+  <action name="actionPS">
+   <property name="text">
+    <string>PS</string>
+   </property>
+   <property name="toolTip">
+    <string>Plot results...</string>
+   </property>
+  </action>
+  <action name="actionMcstas_Component_Manual">
+   <property name="text">
+    <string>mcstas Component Manual</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
