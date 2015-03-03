@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 '''mgcui 
 
 Initial version written during Winter/spring of 2015
