@@ -3,7 +3,6 @@
 LIB="@TOOLS_LIB@"
 TOOL="mcgui"
 VERS="@MCCODE_VERSION@"
-PYTHONPATH=${LIB}
 
 canrun() {
     if ! [ -x ${LIB}/main.py ]; then
