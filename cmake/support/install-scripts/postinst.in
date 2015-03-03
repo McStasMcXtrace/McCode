@@ -32,6 +32,24 @@ else
 	BINTARGET="/usr/bin"
 	APPTARGET="/usr/share/applications"
 	LOGOTARGET="/usr/share/pixmaps"
+	# - Check for possibly existing links in /usr/local/bin and remove them...
+	if [ -h /usr/local/bin/@FLAVOR@ ]; then
+	    # McCode itself
+	    rm /usr/local/bin/@FLAVOR@
+	    # mcrun variants
+	    rm /usr/local/bin/@MC@run
+	    rm /usr/local/bin/@MC@run-py
+	    # mcplot 
+	    rm /usr/local/bin/@MC@plot
+	    rm /usr/local/bin/@MC@plot-chaco-py
+	    rm /usr/local/bin/@MC@plot-matplotlib-py
+	    # mcdisplay
+	    rm /usr/local/bin/@MC@display
+	    rm /usr/local/bin/@MC@display-py
+	    rm /usr/local/bin/@MC@display-x3d-py
+	    rm /usr/local/bin/@MC@display-matplotlib-py
+	    rm /usr/local/bin/@MC@display-vtk-py
+	fi
     elif [[ ${PREFIX} = /Applications* ]]
     then
 	# Looks like a Mac - dump links in /usr/local/bin
