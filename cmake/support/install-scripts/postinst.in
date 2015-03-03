@@ -35,7 +35,7 @@ else
     elif [[ ${PREFIX} = /Applications* ]]
     then
 	# Looks like a Mac - dump links in /usr/local/bin
-	BINTARGET="/usr/local/bin"
+	BINTARGET="/usr/bin"
 	APPTARGET="none"
 	LOGOTARGET="none"
        	# Also drop a link to the mccode "system folder" as it may otherwise be hard to find for "expert users"
@@ -45,6 +45,24 @@ else
 	    if [ ! -h /usr/local/${FLAVOR}/${VERSION} ]; then
 		ln -sf ${PREFIX}/${FLAVOR}/${VERSION} /usr/local/${FLAVOR}/${VERSION}
 	    fi
+	fi
+	# - Check for possibly existing links in /usr/local/bin and remove them...
+	if [ -h /usr/local/bin/@FLAVOR@ ]; then
+	    # McCode itself
+	    rm /usr/local/bin/@FLAVOR@
+	    # mcrun variants
+	    rm /usr/local/bin/@MC@run
+	    rm /usr/local/bin/@MC@run-py
+	    # mcplot 
+	    rm /usr/local/bin/@MC@plot
+	    rm /usr/local/bin/@MC@plot-chaco-py
+	    rm /usr/local/bin/@MC@plot-matplotlib-py
+	    # mcdisplay
+	    rm /usr/local/bin/@MC@display
+	    rm /usr/local/bin/@MC@display-py
+	    rm /usr/local/bin/@MC@display-x3d-py
+	    rm /usr/local/bin/@MC@display-matplotlib-py
+	    rm /usr/local/bin/@MC@display-vtk-py
 	fi
     else
 	# OK - nothing clever then
