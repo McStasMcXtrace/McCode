@@ -23,18 +23,23 @@
 * use of the 'q' and 'w' user variables. The neutrons are restored in their previous 
 * state after neing detected (restore_neutron=1).
 *
-* The monitor records the intensity as a function of q=kf-ki and w=Ef-Ei were the 
+* The monitor records the intensity as a function of q=|kf-ki| and w=Ef-Ei were the 
 * 'f' refers to the component location, and the 'i' refers to the component located 
-* at 'index' relative to the component location.
+* at 'index' relative to the component location. The 'q' value is the normn of the 
+* momentum transfer, but is sensitive to the scattering sense in the horizontal plane.
+* The 'abs' keyword can be used to record the absolute value, as shown below.
 *
 * The component uses automatic limits, and is thus not recommended with MPI/multiprocessing.
-* In this case, the limits should be set manually, e.g. user1=q and user2=w
-*   options="user1 limits=[0 10] bins=100, user2 limits=[-50 50] bins=200"
+* In this case, the limits should be set manually, with user1=q and user2=w
+*   options="user1 limits=[-10 10], user2 limits=[-50 50]"
 *
 * A usage example is for instance:
 *   COMPONENT sample = Isotropic_Sqw(...)
 *
 *   COMPONENT sqw = Monitor_Sqw(index=-1, radius=2, yheight=2, bins=128)
+* or
+*   COMPONENT sqw = Monitor_Sqw(index=-1, radius=2, yheight=2
+*     options="abs user1 limits=[0 10], user2 limits=[-50 50]")
 *
 * This component can be used to generate dynamic structure factors comvolved with 
 * the instrument response, and compare with molecular dynamics results (using e.g. nMoldyn).
@@ -82,7 +87,7 @@ DEFINE COMPONENT Monitor_Sqw
 DEFINITION PARAMETERS (string options=0, string filename=0,string geometry=0, user3=FLT_MAX, username3=0)
 SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, 
   xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, radius=0,
-  bins=0, min=-1e40, max=1e40,
+  bins=128, min=-1e40, max=1e40,
   int index=-1)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, detector)
@@ -246,6 +251,7 @@ TRACE %{
     Ei = VS2E*(rvx*rvx+rvy*rvy+rvz*rvz);
       
     Vars.UserVariable1=V2K*sqrt( (vx-rvx)*(vx-rvx)+(vy-rvy)*(vy-rvy)+(vz-rvz)*(vz-rvz) ); // Q
+    Vars.UserVariable1 *= (x > 0 ? 1 : -1);
     Vars.UserVariable2=Ef-Ei;                                                             // E
     
     /* send current neutron state to Monitor_nD_Trace */
