@@ -44,7 +44,7 @@ def makeuid(username, n=0):
 def get_cn():
     default = 'cn=admin,DN'
     print "{USING default_dn: %s}"% default
-    return defaut
+    return default
     #--------------------------------#
     # PUT THIS BACK IN ONCE THE LDAP #
     # GROUP ADMIN AUTH CHECK THING   #
