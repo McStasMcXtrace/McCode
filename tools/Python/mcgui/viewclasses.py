@@ -14,8 +14,6 @@ class McView(object):
     def __init__(self):
         self.__mw = McMainWindow()
         self.mwui = self.__mw.ui
-        
-    def initMainWindow(self):
         self.mwui.lblInstrument.setText("")
         self.mwui.lblWorkDir.setText("")
         
@@ -24,8 +22,9 @@ class McView(object):
         
     ''' Update UI data
     '''
-    def updateInstrumentFile(self, instrumentFile):
-        self.mwui.lblInstrument.setText(instrumentFile)
+    def updateLabels(self, labels):
+        self.mwui.lblInstrument.setText(labels[0])
+        self.mwui.lblWorkDir.setText(labels[1])
         
     def updateWorkDir(self, workDir):
         self.mwui.lblWorkDir.setText(workDir)
@@ -33,20 +32,27 @@ class McView(object):
     def updateStatus(self, text=''):
         self.mwui.statusbar.showMessage(text)
         
-    def appendToMessages(self, text=''):
+    def updateLog(self, text=''):
         self.mwui.textBrowser.append(text)
+        
+    def updateSimState(self, state=[]):
+        self.mwui.actionRS.setEnabled(state[0]=='True')
+        self.mwui.actionCS.setEnabled(state[1]=='True')
+        self.mwui.actionPS.setEnabled(state[2]=='True')
         
     ''' UI push actions - open dialogs
     '''
-    def showOpenInstrumentDlg(self):
+    def showOpenInstrumentDlg(self, lookDir):
         dlg = QtGui.QFileDialog()
+        dlg.setDirectory(lookDir)
         dlg.setNameFilter("mcstas instruments (*.instr)");
         if dlg.exec_():
             return dlg.selectedFiles()[0]
     
-    def showChangeWorkDirDlg(self):
+    def showChangeWorkDirDlg(self, lookDir):
         dlg = QtGui.QFileDialog()
         dlg.setFileMode(QtGui.QFileDialog.Directory)
+        dlg.setDirectory(lookDir)
         if dlg.exec_():
             return dlg.selectedFiles()[0]
 

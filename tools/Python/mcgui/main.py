@@ -9,6 +9,9 @@ Initial version written during Winter/spring of 2015
 import sys
 import os
 import webbrowser
+import subprocess
+import time
+import threading
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 from viewclasses import McView
@@ -17,62 +20,151 @@ from viewclasses import McView
 ''' State
 Holds unique state values.
 '''
-class McGuiState(QtCore.QObject):
-    instrFile = ''
-    instrFileUpdated = QtCore.pyqtSignal(QtCore.QString)
-    workDir = './'
-    workDirUpdated = QtCore.pyqtSignal(QtCore.QString)
+class McGuiState(QtCore.QObject):    
+    def initState(self):
+        self.setWorkDir(os.getcwd())
+        self.fireSimStateUpdate()
+    
     status = ''
     statusUpdated = QtCore.pyqtSignal(QtCore.QString)
-    
-    def loadInstument(self, instrFile):
-        self.instrFile = instrFile
-        self.instrFileUpdated.emit(self.instrFile) 
-        self.setStatus("Instrument: " + instrFile)
-    
-    def setWorkDir(self, workDir):
-        self.workDir = workDir
-        self.workDirUpdated.emit(self.workDir)
-        self.setStatus("Work dir: " + workDir)
-    
     def setStatus(self, status):
         self.status = status
         self.statusUpdated.emit(self.status)
         
-    def initState(self):
-        self.setWorkDir(os.getcwd())
-        
+    logUpdated = QtCore.pyqtSignal(QtCore.QString)
+    def __logLine(self, logline):
+        if logline != None:
+            self.logUpdated.emit(logline)
     
+        
+    __instrFile = ''
+    filesUpdated = QtCore.pyqtSignal(QtCore.QStringList)
+    def fireFilesUpdate(self):
+        self.filesUpdated.emit([self.__instrFile, self.getWorkDir()])
+    def getInstrumentFile(self):
+        return self.__instrFile
+    def loadInstument(self, instrFile):
+        if not os.path.isfile(instrFile):
+            if os.path.splitext(instrFile) != '.instr':
+                raise Exception('Invalid instrument file.')
+        
+        self.__instrFile = str(instrFile)
+        self.fireFilesUpdate() 
+        self.setStatus("Instrument: " + instrFile)
+        self.fireSimStateUpdate()
+    def getWorkDir(self):
+        return os.getcwd()
+    def setWorkDir(self, newdir):
+        if not os.path.isdir(newdir):
+            raise Exception('Invalid work dir.')
+        
+        olddir = os.getcwd()
+        os.chdir(newdir)
+        
+        if newdir != olddir:
+            self.__binaryFile = ''
+            self.__cFile = ''
+        
+        self.setStatus("Work dir: " + newdir)
+        self.fireFilesUpdate()
+    
+    __cFile = ""
+    __binaryFile = ""
+    __resultFile = ""
+    def canCompile(self):
+        return self.__instrFile != ""
+    def canRun(self):
+        return self.__binaryFile != ""
+    def canPlot(self):
+        return self.__resultFile != ""
+    # [<canRun>, <canCompile>, <canPlot>] each can be 'True' or 'False'
+    simStateUpdated = QtCore.pyqtSignal(QtCore.QStringList)
+    def fireSimStateUpdate(self):
+        self.simStateUpdated.emit([str(self.canRun()), str(self.canCompile()), str(self.canPlot())])
+    
+    def compile(self):
+        # create mcstas .c file from instrument
+        nf = self.__instrFile
+        process = subprocess.Popen(['mcstas', nf], 
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT)
+        self.setStatus('Compiling instrument to c ...')
+        #process.wait()
+        while process.poll() <> 0:
+            for l in process.communicate():
+                self.__logLine(l)
+            time.sleep(0.1)
+        
+        spl = os.path.splitext(os.path.basename(str(nf)))
+        basef = os.path.join(self.getWorkDir(), spl[0])
+        cf = basef + '.c'
+        if os.path.isfile(cf):
+            self.__cFile = cf
+        else:
+            raise Exception('C file not found')
+        
+        # compile binary from mcstas .c file 
+        bf = basef + '.out'
+        process = subprocess.Popen(['cc', '-O', '-o', bf, cf, '-lm'], 
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT)
+        self.setStatus('Compiling instrument to binary ...')
+        process.wait()
+        stdout_stderr_lines = process.communicate()
+        for l in stdout_stderr_lines:
+            self.__logLine(l)
+        
+        if os.path.isfile(bf):
+            self.__binaryFile = bf
+        else:
+            raise Exception('Binary not found.')
+        
+        self.setStatus('Instrument compiled (' + self.__binaryFile + ')')
+        self.fireSimStateUpdate()
+    def run(self, pars):
+        # run simulation in a background thread
+        thread = threading.Thread(target=self.runSimAsync)
+        thread.start()
+        
+    def runSimAsync(self):
+        process = subprocess.Popen(['./' + os.path.basename(self.__binaryFile)], 
+                                   stdout=subprocess.PIPE, 
+                                   stderr=subprocess.STDOUT)
+        self.__logLine('sim started (' + './' + os.path.basename(self.__binaryFile) + ')')
+        # TODO: implement communication
+        #stdout_stderr_lines = process.communicate()
+        #for l in stdout_stderr_lines:
+        #    self.__logLine(l)
+        #while process.poll() <> 0:
+        #    self.__logLine('process returncode:    ' + str(process.poll()))
+        #    time.sleep(0.5)
+
 ''' Controller
 Implements ui and data callbacks.
 '''
 class McGuiAppController():
+    def __init__(self):
+        self.view = McView()
+        self.state = McGuiState()
+        self.connectAllCallbacks()    
+        self.state.initState()
     
     ''' UI callbacks
     '''
     def handleLoadInstrument(self):
-        instrFile = self.view.showOpenInstrumentDlg()
+        instrFile = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
         if instrFile:
             self.state.loadInstument(instrFile)
             
     def handleChangeWorkDir(self):
-        workDir = self.view.showChangeWorkDirDlg()
+        workDir = self.view.showChangeWorkDirDlg(self.state.getWorkDir())
         if workDir:
             self.state.setWorkDir(workDir)
         
     def handleExit(self):
         sys.exit()
-    
-    def handleRunSim(self):
-        print("not implemented")
-        
-    def handleCompileSim(self):
-        print("not implemented")
         
     def handlePlotResults(self):
-        print("not implemented")
-        
-    def handleSetWorkDir(self):
         print("not implemented")
         
     def handleHelpWeb(self):
@@ -92,13 +184,11 @@ class McGuiAppController():
         
     def handleHelpAbout(self):
         print("not implemented")
-        
-    ''' Connect ui callbacks 
+      
+      
+    ''' Connect UI and state callbacks 
     '''
-    def setupView(self):
-        # setup view
-        self.view = McView()
-        
+    def connectAllCallbacks(self):        
         # connect UI widget signals to our handlers/logics
         # WARNING: NEVER update ui widget state from this class, always delegate to view. This explicit widget access is AN EXCEPTION
         mwui = self.view.mwui
@@ -109,38 +199,31 @@ class McGuiAppController():
         mwui.tbtnInstrument.clicked.connect(self.handleLoadInstrument)
         mwui.tbtnWorkDir.clicked.connect(self.handleChangeWorkDir)
         
-        mwui.actionCompile_Instrument.triggered.connect(self.handleCompileSim)
-        mwui.actionRun_Simulation.triggered.connect(self.handleRunSim)
+        mwui.actionCompile_Instrument.triggered.connect(self.state.compile)
+        mwui.actionRun_Simulation.triggered.connect(self.state.run)
         
+        mwui.actionCS.triggered.connect(self.state.compile)
+        mwui.actionRS.triggered.connect(self.state.run)
         mwui.actionPS.triggered.connect(self.handlePlotResults)
-        mwui.actionCS.triggered.connect(self.handleCompileSim)
-        mwui.actionRS.triggered.connect(self.handleRunSim)
         
         mwui.actionMcstas_Web_Page.triggered.connect(self.handleHelpWeb)
         mwui.actionMcstas_User_Manual.triggered.connect(self.handleHelpPdf)
         mwui.actionMcstas_Component_Manual.triggered.connect(self.handleHelpPdfComponents)
         mwui.actionAbout.triggered.connect(self.handleHelpAbout)
-        
-        self.view.initMainWindow()
-    
-    ''' Connect State callbacks.
-    ''' 
-    def setupState(self):
-        self.state = McGuiState()
-        st = self.state
-        st.instrFileUpdated.connect(self.view.updateInstrumentFile)
-        st.workDirUpdated.connect(self.view.updateWorkDir)
-        st.statusUpdated.connect(self.view.updateStatus)
-        st.initState()
 
+        st = self.state
+        st.filesUpdated.connect(self.view.updateLabels)
+        st.statusUpdated.connect(self.view.updateStatus)
+        st.logUpdated.connect(self.view.updateLog)
+        st.simStateUpdated.connect(self.view.updateSimState)
+        
+        
 ''' Program execution
 '''
 def main():
     mcguiApp = QtGui.QApplication(sys.argv)
     
     ctr = McGuiAppController()
-    ctr.setupView()
-    ctr.setupState()
     ctr.view.showMainWindow()
     
     sys.exit(mcguiApp.exec_())
