@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 '''mgcui 
 
 Initial version written during Winter/spring of 2015
@@ -35,19 +34,27 @@ class McGuiState(QtCore.QObject):
     status = ''
     statusUpdated = QtCore.pyqtSignal(QtCore.QString)
     def setStatus(self, status):
+        self.comLock.acquire()
         self.status = status
         self.statusUpdated.emit(self.status)
+        self.comLock.release()
         
     logUpdated = QtCore.pyqtSignal(QtCore.QString)
-    def __logLine(self, logline):
+    comLock = threading.Lock()
+    def __logLine(self, logline, mcgui=False):
+        if mcgui:
+            logline = 'mcgui:      ' + logline
+        self.comLock.acquire()
         if logline != None:
             self.logUpdated.emit(logline)
-    
+        self.comLock.release()
         
     __instrFile = ''
     filesUpdated = QtCore.pyqtSignal(QtCore.QStringList)
     def fireFilesUpdate(self):
+        self.comLock.acquire()
         self.filesUpdated.emit([self.__instrFile, self.getWorkDir()])
+        self.comLock.release()
     def getInstrumentFile(self):
         return self.__instrFile
     def loadInstument(self, instrFile):
@@ -81,7 +88,7 @@ class McGuiState(QtCore.QObject):
     def canCompile(self):
         return self.__instrFile != ""
     def canRun(self):
-        return self.__binaryFile != ""
+        return self.__instrFile != ""
     def canPlot(self):
         return self.__resultFile != ""
     # [<canRun>, <canCompile>, <canPlot>] each can be 'True' or 'False'
@@ -90,18 +97,26 @@ class McGuiState(QtCore.QObject):
         self.simStateUpdated.emit([str(self.canRun()), str(self.canCompile()), str(self.canPlot())])
     
     def compile(self):
+        # compile simulation in a background thread (non safe)
+        thread = threading.Thread(target=self.compileAsync)
+        thread.start()
+        
+    def compileAsync(self):
         # create mcstas .c file from instrument
         nf = self.__instrFile
         process = subprocess.Popen(['mcstas', nf], 
                                    stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT)
+                                   stderr=subprocess.STDOUT,
+                                   shell=True)
+        self.__logLine('Compiling instrument to c ...', mcgui=True)
         self.setStatus('Compiling instrument to c ...')
-        #process.wait()
         while process.poll() <> 0:
-            for l in process.communicate():
+            for l in process.stdout:
                 self.__logLine(l)
             time.sleep(0.1)
+        process.wait()
         
+        # paths and filenames
         spl = os.path.splitext(os.path.basename(str(nf)))
         basef = os.path.join(self.getWorkDir(), spl[0])
         cf = basef + '.c'
@@ -114,38 +129,73 @@ class McGuiState(QtCore.QObject):
         bf = basef + '.out'
         process = subprocess.Popen(['cc', '-O', '-o', bf, cf, '-lm'], 
                                    stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT)
+                                   stderr=subprocess.STDOUT,
+                                   shell=True)
+        self.__logLine('Compiling instrument to binary ...', mcgui=True)
         self.setStatus('Compiling instrument to binary ...')
+        while process.poll() <> 0:
+            for l in process.stdout:
+                self.__logLine(l)
+            time.sleep(0.1)
         process.wait()
-        stdout_stderr_lines = process.communicate()
-        for l in stdout_stderr_lines:
-            self.__logLine(l)
         
+        # check
         if os.path.isfile(bf):
             self.__binaryFile = bf
         else:
             raise Exception('Binary not found.')
         
+        self.__logLine('Instrument compiled: ' + self.__binaryFile, mcgui=True)
         self.setStatus('Instrument compiled (' + self.__binaryFile + ')')
         self.fireSimStateUpdate()
+    
     def run(self, pars):
-        # run simulation in a background thread
-        thread = threading.Thread(target=self.runSimAsync)
+        # run simulation in a background thread (non safe)
+        thread = threading.Thread(target=self.runAsync)
         thread.start()
         
-    def runSimAsync(self):
-        process = subprocess.Popen(['./' + os.path.basename(self.__binaryFile)], 
+    def runAsync(self):
+        process = subprocess.Popen(['mcrun ' + self.__instrFile], 
                                    stdout=subprocess.PIPE, 
-                                   stderr=subprocess.STDOUT)
-        self.__logLine('sim started (' + './' + os.path.basename(self.__binaryFile) + ')')
-        # TODO: implement communication
-        #stdout_stderr_lines = process.communicate()
-        #for l in stdout_stderr_lines:
-        #    self.__logLine(l)
-        #while process.poll() <> 0:
-        #    self.__logLine('process returncode:    ' + str(process.poll()))
-        #    time.sleep(0.5)
-
+                                   stderr=subprocess.PIPE,
+                                   shell=True)
+        self.__logLine('mcrun started', mcgui=True)
+        ## read program output
+        while True:
+            for l in process.stdout:
+                self.__logLine(l.rstrip('\n'))
+            for l in process.stderr:
+                self.__logLine(l.rstrip('\n'))
+            if process.poll() == 0:
+                break
+            time.sleep(0.1)
+        process.wait()
+        self.__logLine('mcrun complete', mcgui=True)
+        
+    def getInstrParams(self):
+        # get mcrun to print '--info' containing instrument parameter info
+        process = subprocess.Popen(['mcrun ' + self.__instrFile + ' --info'], 
+                                   stdout=subprocess.PIPE, 
+                                   stderr=subprocess.STDOUT,
+                                   shell=True)
+        # get std out info
+        info = []
+        while True:
+            for l in process.stdout:
+                info.append(l.rstrip('\n'))
+            if process.poll() == 0:
+                break
+            time.sleep(0.1)
+        process.wait()
+        
+        # get parameters from info
+        params = []
+        for l in info:
+            if 'Param:' in l:
+                s = l.split()
+                params.append(s[1])
+        return params
+        
 ''' Controller
 Implements ui and data callbacks.
 '''
