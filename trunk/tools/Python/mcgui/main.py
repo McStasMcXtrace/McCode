@@ -23,6 +23,13 @@ Holds unique state values.
 class McGuiState(QtCore.QObject):    
     def initState(self):
         self.setWorkDir(os.getcwd())
+        
+        for a in sys.argv:
+            if os.path.splitext(a)[1] == '.instr':
+                instr_file = os.path.abspath(a)
+                self.loadInstument(instr_file)
+                break
+        
         self.fireSimStateUpdate()
     
     status = ''
@@ -45,7 +52,7 @@ class McGuiState(QtCore.QObject):
         return self.__instrFile
     def loadInstument(self, instrFile):
         if not os.path.isfile(instrFile):
-            if os.path.splitext(instrFile) != '.instr':
+            if os.path.splitext(instrFile)[1] != '.instr':
                 raise Exception('Invalid instrument file.')
         
         self.__instrFile = str(instrFile)
@@ -184,8 +191,7 @@ class McGuiAppController():
         
     def handleHelpAbout(self):
         print("not implemented")
-      
-      
+        
     ''' Connect UI and state callbacks 
     '''
     def connectAllCallbacks(self):        
