@@ -210,8 +210,10 @@ INITIALIZE
   { VarsInc.tx = target_x; VarsInc.ty = target_y; VarsInc.tz = target_z; }
 
   if (!(VarsInc.tx || VarsInc.ty || VarsInc.tz)) {
+    MPI_MASTER(
     printf("Incoherent: %s: The target is not defined. Using direct beam (Z-axis).\n",
       NAME_CURRENT_COMP);
+    );
     VarsInc.tz=1;
   }
 
@@ -222,8 +224,10 @@ INITIALIZE
   if (focus_aw) { VarsInc.aw = DEG2RAD*focus_aw; }
   if (focus_ah) { VarsInc.ah = DEG2RAD*focus_ah; }
   
+  MPI_MASTER(
   printf("Incoherent: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn]\n",
       NAME_CURRENT_COMP, Vc, VarsInc.sigma_a, VarsInc.sigma_i);
+  );
 
 %}
 
