@@ -50,7 +50,7 @@
 #define VS2E     5.22703725e-6     /* Convert (v[m/s])**2 to E[meV] */
 
 #define SCATTER do {DEBUG_SCATTER(); SCATTERED++;} while(0)
-#define RESTORE_NEUTRON(index, ...) RESTORE=1;
+#define RESTORE_NEUTRON(index, ...) RESTORE=index;
 
 #define MAGNET_ON \
   do { \
