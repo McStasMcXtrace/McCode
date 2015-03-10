@@ -507,8 +507,8 @@ DECLARE
 
   double Qminl,Qmaxl,l10;      /* logarithms of Qmind, Qmaxd and constant ln(10) */
 
-  double Qtab[511];
-  double Itab[511];
+  double Qtab[512];
+  double Itab[512];
 %}
 
 INITIALIZE

@@ -1,3 +1,3 @@
-@SET PATH=@CPACK_NSIS_INSTALL_ROOT@\\lib\\@FLAVOR@-tools-python-@MCCODE_PREFIX@run-@MCCODE_VERSION@;%PATH%
+@SET PATH=@CPACK_NSIS_INSTALL_ROOT@\\lib\\tools\\Python\\@MCCODE_PREFIX@run;%PATH%
 @REM Isn't windows a lovely place???
 @mcrun.py %*

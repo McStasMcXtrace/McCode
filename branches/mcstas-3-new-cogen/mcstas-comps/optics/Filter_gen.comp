@@ -39,10 +39,14 @@
 * with '#' character).
 * A table rebinning and linear interpolation are performed.
 *
-* EXAMPLE : in order to simulate a PG filter, using the lib/data/HOPG.trm filename
-*      Filter_gen(xmin = -0.1, xmax = 0.1,
-*       ymin = -0.1, ymax = 0.1,
-*       filename="HOPG.trm")
+* EXAMPLE : in order to simulate a PG filter, using the lib/data/HOPG.trm file
+*      Filter_gen(xwidth=.1 yheight=.1, filename="HOPG.trm")
+* A Sapphire filter, using the lib/data/Al2O3_sapphire.trm file
+*      Filter_gen(xwidth=.1 yheight=.1, filename="Al2O3_sapphire.trm")
+* A Berylium filter, using the lib/data/Be.trm file
+*      Filter_gen(xwidth=.1 yheight=.1, filename="Be.trm")
+*   an other possibility to simulate a Be filter is to use the PowderN component:
+*      PowderN(xwidth=.1, yheight=.1, zdepth=.1, reflections="Be.laz", p_inc=1e-4)
 *
 * in this filename, the comment line
 *     # wavevector multiply
@@ -55,7 +59,7 @@
 *           data D should rather be sorted (ascending order) and monotonic
 *           filename may contain options (see below) as comment
 * options: [str] string that can contain:
-*          "[ k p ]"      or "wavector" for filename type,
+*          "[ k p ]"      or "wavevector" for filename type,
 *          "[ omega p]"   or "energy",
 *          "[ lambda p ]" or "wavelength",
 *          "set"          to set the weight according to the table,
@@ -78,7 +82,7 @@
 DEFINE COMPONENT Filter_gen
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, string options=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
-  xwidth=0, yheight=0, thickness=1, scaling=1)
+  xwidth=0, yheight=0, thickness=1, scaling=1, verbose=0)
 OUTPUT PARAMETERS (pTable, Mode_Table, Type_Table)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
@@ -94,7 +98,7 @@ SHARE
 #define FLUX_ADAPT_MULT  1
 #define FLUX_ADAPT_ADD   2
 
-char FilterGen_Mode(char *str, char *Mode, char *Type, char *verbose)
+char FilterGen_Mode(char *str, char *Mode, char *Type, double *verbose)
 {
   long i;
   char *c;
@@ -131,26 +135,30 @@ DECLARE
 
 INITIALIZE
 %{
-  char verbose = 0;
   
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+  
+  
 
   FilterGen_Mode(options, &Mode_Table, &Type_Table, &verbose);
+  
   if (filename != NULL)
   {
     if (Table_Read(&pTable, filename, 1) <= 0) /* read 1st block data from filename into pTable */
       exit(fprintf(stderr,"Filter_gen: %s: can not read filename %s\n", NAME_CURRENT_COMP, filename));
 
     Table_Rebin(&pTable);         /* rebin as evenly, increasing array */
-    if (pTable.rows < 2 || !pTable.step_x) Table_Free(&pTable);
+    if (pTable.rows < 2 || !pTable.step_x) {
+      Table_Free(&pTable);
+    }
     if (pTable.data)
     {
       FilterGen_Mode(pTable.header, &Mode_Table, &Type_Table, &verbose);
       if (verbose)
       {
         Table_Info(pTable);
-        printf("Filter_gen : %s : Filter data [", NAME_CURRENT_COMP);
+        printf("Filter_gen: %s: Filter data [", NAME_CURRENT_COMP);
         if (Type_Table == ENERGY_TABLE) printf("Energy");
         if (Type_Table == WAVEVECTOR_TABLE) printf("Wavevector");
         if (Type_Table == WAVELENGTH_TABLE) printf("Wavelength");
@@ -161,7 +169,7 @@ INITIALIZE
         else printf("set");
         printf(" mode\n");
       }
-    }
+    } else fprintf(stderr,"Filter_gen: %s: file %s contains no data.\n", NAME_CURRENT_COMP, filename);
 
   } else pTable.data = NULL;
 %}

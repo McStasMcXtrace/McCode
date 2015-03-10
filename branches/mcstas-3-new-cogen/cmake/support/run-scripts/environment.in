@@ -1,6 +1,6 @@
 #!/bin/sh
 export @FLAVOR_UPPER@=@CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@
-export @FLAVOR_UPPER@_TOOLS=@CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/@FLAVOR@-tools-perl-@MCCODE_VERSION@
+export @FLAVOR_UPPER@_TOOLS=@CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/tools/Perl/
 export PATH=@CMAKE_INSTALL_PREFIX@/@FLAVOR@/@MCCODE_VERSION@/bin:/opt/mccode/openmpi/bin:/opt/mccode/gcc/bin:$PATH
 echo
 echo The new shell started here is now set up for running this version of @FLAVOR@:

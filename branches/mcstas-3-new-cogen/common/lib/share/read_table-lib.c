@@ -488,8 +488,7 @@
     /* performs linear interpolation on X axis (0-th column) */
 
     if (!Table) return(-1);
-    if (!Table->data
-    || Table->rows*Table->columns == 0 || !Table->step_x)
+    if (!Table->data || Table->rows*Table->columns == 0)
       return(0);
     Table_Stat(Table); /* recompute statitstics and minimal step */
     new_step = Table->step_x; /* minimal step in 1st column */
@@ -896,10 +895,11 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
       if (X < min_x) min_x = X;
       if (X > max_x) max_x = X;
     } /* for */
+    
     /* test for monotonicity and constant step if the table is an XY or single vector */
     if (n > 1) {
       /* mean step */
-      step = (max_x - min_x)/(n-1);
+      Table->step_x = step = (max_x - min_x)/(n-1);
       /* now test if table is monotonic on first column, and get minimal step size */
       for (i=0; i < n-1; i++) {
         double X, diff;;
@@ -907,27 +907,24 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
                     : Table_Index(*Table,0,  i));
         diff = (row ? Table_Index(*Table,i+1,0)
                     : Table_Index(*Table,0,  i+1)) - X;
-        if (fabs(diff) < fabs(step)) step = diff;
+        if (0 < fabs(diff) && fabs(diff) < fabs(step)) step = diff;
         /* change sign ? */
         if ((max_x - min_x)*diff < 0 && monotonic)
-          monotonic = 0;
+          monotonic = constantstep = 0;
       } /* end for */
+      
       /* now test if steps are constant within READ_TABLE_STEPTOL */
-      if(!step){
-        /*means there's a disconitnuity -> not constantstep*/
-        constantstep=0;
-      }else if (monotonic) {
-        for (i=0; i < n-1; i++) {
-          double X, diff;
-          X    = (row ? Table_Index(*Table,i  ,0)
-              : Table_Index(*Table,0,  i));
-          diff = (row ? Table_Index(*Table,i+1,0)
-              : Table_Index(*Table,0,  i+1)) - X;
-          if ( fabs(step)*(1+READ_TABLE_STEPTOL) < fabs(diff) ||
-                fabs(diff) < fabs(step)*(1-READ_TABLE_STEPTOL) )
-          { constantstep = 0; break; }
-        }
+      for (i=0; i < n-1; i++) {
+        double X, diff;
+        X    = (row ? Table_Index(*Table,i  ,0)
+            : Table_Index(*Table,0,  i));
+        diff = (row ? Table_Index(*Table,i+1,0)
+            : Table_Index(*Table,0,  i+1)) - X;
+        if ( fabs(step)*(1+READ_TABLE_STEPTOL) < fabs(diff) ||
+              fabs(diff) < fabs(step)*(1-READ_TABLE_STEPTOL) )
+        { constantstep = 0; break; }
       }
+
     }
     Table->step_x= step;
     Table->max_x = max_x;

@@ -308,12 +308,6 @@ sub mcdoc_compman {
     system("$cmd");
 }
 
-sub mcdoc_tutorial {
-    my $cmd = "$prefix mcdoc$suffix --tutorial $background";
-    putmsg($cmdwin, "Opening Tutorial: $cmd\n", 'msg');
-    system("$cmd");
-}
-
 sub mcdoc_components {
     my $cmd = "$prefix mcdoc$suffix $background";
     putmsg($cmdwin, "Opening Library help: $cmd\n", 'msg');
@@ -1671,8 +1665,6 @@ sub setup_menu {
     $helpmenu->command(-label => 'McStas web page (web)',
                        -underline => 7,
                        -command => sub {mcdoc_web()});
-    $helpmenu->command(-label => 'McStas tutorial',
-                       -command => sub {mcdoc_tutorial()});
     $helpmenu->command(-label => 'Current instrument info',
                        -command => sub {mcdoc_current()});
     $helpmenu->separator;

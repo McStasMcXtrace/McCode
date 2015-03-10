@@ -105,7 +105,7 @@ sub read_instrument {
               if ($last)  { write_process("INSTRUMENT.lastcomp ='$last';\n");  }
             }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
-
+	      # Header for the IDF file
 	      my $last_mod_time = (stat ($sim_cmd))[9];
 	      write_process("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 	      write_process("<!-- IDF generated using McStas McDisplay and the Mantid backend -->\n");
@@ -318,26 +318,28 @@ Transform {
               # Component position for mantid:
 	      my $type = "Othercomp";
 	      my $isa ="";
-	      if ($comp =~ /source/i) {
+	      if ($comp =~ /sourceMantid/i) {
 	      	$isa = "is=\"Source\"";
 	      	$type = "source";
 	      }
-	      if ($comp =~ /sample/i) {
+	      if ($comp =~ /sampleMantid/i) {
 	      	$isa = "is=\"SamplePos\"";
 	      	$type = "some-sample-holder";
 	      }
 	      if (!($comp =~ /nD_Mantid/i)) {
-	      	 # Component position for mantid - but not Monitor_nD case:
-	      	my $angle = (180/pi)*acos(($T[3]+$T[7]+$T[11]-1)/2);
-	      	my $d21=$T[8]-$T[10]; my $d02=$T[9]-$T[5]; my $d10=$T[4]-$T[6];
-	      	my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);
-	      	my $rota="";
-	      	if($d!=0){
-	      	  $rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
-	      	}
-	      	$type="$comp-type";
-	      	write_process("<component type=\"".$type."\" name=\"$comp\">\n");
-	      	write_process("<location x=\"".$T[0]."\" y=\"".$T[1]."\" z=\"".$T[2]."\" $rota />\n</component>\n\n");
+	      	 # Component position for mantid - but not Monitor_nD case - and only in case of the $complete==1 flag...:
+		if ($complete==1 || (!($type eq "Othercomp"))) {
+		    my $angle = (180/pi)*acos(($T[3]+$T[7]+$T[11]-1)/2);
+		  my $d21=$T[8]-$T[10]; my $d02=$T[9]-$T[5]; my $d10=$T[4]-$T[6];
+		  my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);
+		  my $rota="";
+		  if($d!=0){
+		    $rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
+		  }
+		  $type="$comp-type";
+		  write_process("<component type=\"".$type."\" name=\"$comp\">\n");
+		  write_process("<location x=\"".$T[0]."\" y=\"".$T[1]."\" z=\"".$T[2]."\" $rota />\n</component>\n\n");
+		}
 	      }
             }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /vrml/i) {
@@ -524,8 +526,12 @@ Transform {
 		$type="$comp-type";
 	      }
 	      if (!($comp =~ /nD_Mantid/i)) {
-		$mantidlines="\n<type name=\"".$comp."-type\" $isa >\n";
-		$mantidlinecount=0;
+		if ($complete==1 || !($type eq "Othercomp")) {
+		  $mantidlines="\n<type name=\"".$comp."-type\" $isa >\n";
+		  $mantidlinecount=0;
+		} else {
+		  $mantidlines="";
+		}
 	      } else {
 		$mantidlines="";
 		# For now, do niente...
@@ -555,27 +561,31 @@ Transform {
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
 	      # Line elements for Mantid
 	      if (!($comp =~ /nD_Mantid/i)) {
-		my $looper;
-		for ($looper =  0; $looper < $count-1; $looper++) {
-		  # Coordinates to look at
-		  my $x0, $y0, $z0, $x1, $y1, $z1, $dx, $dy, $dz, $length;
-		  $x0 = $coords[3*$looper  ]; $y0 = $coords[3*$looper+1]; $z0 = $coords[3*$looper+2];
-		  $x1 = $coords[3*$looper+3]; $y1 = $coords[3*$looper+4]; $z1 = $coords[3*$looper+5];
-		  $dx = $x1-$x0; $dy = $y1-$y0; $dz = $z1-$z0;
-		  $length = sqrt($dx*$dx + $dy*$dy + $dz*$dz);
-		  write_process("\n");
-		  write_process("<type name=\"line-$comp-$mantidlinecount\" >\n");
-		  write_process("\t<cylinder id=\"dummy\" >\n");
-		  write_process("\t\t<centre-of-bottom-base x=\"".$x0."\" y=\"".$y0."\" z=\"".$z0."\" />\n");
-		  write_process("\t\t<axis x=\"".$dx."\" y=\"".$dy."\" z=\"".$dz."\" />\n");
-		  write_process("\t\t<radius val=\"0.005\" />\n"); # Hard-coded dimension of 0.5cm
-		  write_process("\t\t<height val=\"".$length."\" />\n");
-		  write_process("\t</cylinder >\n");
-		  write_process("</type>\n");
-		  $mantidlines=$mantidlines."\t<component type=\"line-$comp-".${mantidlinecount}."\" >\n";
-		  $mantidlines=$mantidlines."\t\t<location x=\"0\" y=\"0\" z=\"0\" />\n";
-		  $mantidlines=$mantidlines."\t</component >\n";
-		  $mantidlinecount++;
+		if (($comp =~ /sourceMantid/i) || ($comp =~ /sampleMantid/i) || $complete==1 ) {
+		  my $looper;
+		  for ($looper =  0; $looper < $count-1; $looper++) {
+		    # Coordinates to look at
+		    my $x0, $y0, $z0, $x1, $y1, $z1, $dx, $dy, $dz, $length;
+		    $x0 = $coords[3*$looper  ]; $y0 = $coords[3*$looper+1]; $z0 = $coords[3*$looper+2];
+		    $x1 = $coords[3*$looper+3]; $y1 = $coords[3*$looper+4]; $z1 = $coords[3*$looper+5];
+		    $dx = $x1-$x0; $dy = $y1-$y0; $dz = $z1-$z0;
+		    $length = sqrt($dx*$dx + $dy*$dy + $dz*$dz);
+		    write_process("\n");
+		    write_process("<type name=\"line-$comp-$mantidlinecount\" >\n");
+		    write_process("\t<cylinder id=\"dummy\" >\n");
+		    write_process("\t\t<centre-of-bottom-base x=\"".$x0."\" y=\"".$y0."\" z=\"".$z0."\" />\n");
+		    write_process("\t\t<axis x=\"".$dx."\" y=\"".$dy."\" z=\"".$dz."\" />\n");
+		    write_process("\t\t<radius val=\"0.005\" />\n"); # Hard-coded dimension of 0.5cm
+		    write_process("\t\t<height val=\"".$length."\" />\n");
+		    write_process("\t</cylinder >\n");
+		    write_process("</type>\n");
+		    $mantidlines=$mantidlines."\t<component type=\"line-$comp-".${mantidlinecount}."\" >\n";
+		    $mantidlines=$mantidlines."\t\t<location x=\"0\" y=\"0\" z=\"0\" />\n";
+		    $mantidlines=$mantidlines."\t</component >\n";
+		    $mantidlinecount++;
+		  }
+		} else {
+		  $mantidlines="";
 		}
 	      }
 	    }
@@ -627,7 +637,7 @@ Transform {
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
 	      # Circle elements for Mantid
 	      if (!($comp =~ /nD_Mantid/i) &&  !($comp =~ /sample/i) &&  !($comp =~ /source/i)) {
-		if (!($comp =~ /nD_Mantid/i) &&  !($comp =~ /sample/i) &&  !($comp =~ /source/i)) {
+		if ($complete==1) {
 		  my $looper;
 		  for ($looper =  0; $looper <24 ; $looper++) {
 		    # Coordinates to look at
@@ -1369,6 +1379,7 @@ undef $sim;
 undef $TOF;
 undef $tmax;
 undef $keep;
+$complete=0;
 undef $PGINIT;
 undef $paramfile;
 my $plotter;
@@ -1406,6 +1417,8 @@ for($i = 0; $i < @ARGV; $i++) {
               ($ARGV[$i] =~ /^--plotter=([a-zA-Z0-9_\"]+)$/) ||
               ($ARGV[$i] =~ /^--format=([a-zA-Z0-9_\"]+)$/)) {
         $plotter = $1;
+    } elsif($ARGV[$i] eq "--complete") {
+        $complete = 1;
    } elsif(($ARGV[$i] =~ /^-f([a-zA-Z0-9_\-\/\ \.\:\"]+)$/) ||
               ($ARGV[$i] =~ /^--file=([a-zA-Z0-9_\-\/\ \.\:]+)$/)) {
         $file_output = $1;
@@ -1442,6 +1455,7 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
            --param=FILE      Read input parameters from parameter file
  -pPLOTTER --plotter=PLOTTER Output graphics using {PGPLOT,VRML,Matlab,Mantid/NeXus}
  --format=PLOTTER            --\"-- 
+ --complete                  Flag to include ALL instrument geometry in Mantid IDF generation
  -fFNAME   --file=FNAME      Output graphics commands to file FNAME
                              (Only used when PLOTTER = {Matlab})
            --first=COMP      First component to visualize {Matlab}
@@ -1647,6 +1661,10 @@ if ($plotter =~ /VRML/i && !($MCSTAS::mcstas_config{'VRMLVIEW'} eq "no")) {
 	    open(VRML, "$MCSTAS::mcstas_config{'VRMLVIEW'} $file_output|");
 	}
     }
+}
+
+if ($plotter =~ /Mantid/i ) {
+  print STDOUT "\n\nDONE generating IDF file ".$sim.".instr.xml for use with Mantid.\n";
 }
 
 # Properly close any open files etc.

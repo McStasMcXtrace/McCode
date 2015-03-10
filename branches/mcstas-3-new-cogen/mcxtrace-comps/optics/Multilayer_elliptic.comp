@@ -60,7 +60,8 @@ OUTPUT PARAMETERS (prms_m, a,b,c,M,Z0,Y0,xi,cost0)
 SHARE 
 %{
 #include <complex.h>
-   %include "read_table-lib"
+  %include "read_table-lib"
+  
   /*something that would be relevant for ALL elliptical mirrors*/
   /* coordinate transformation McXtrace-Ellipse (ME) and Ellipse-McXtrace(EM) functions */
   void CoordTransME(double *x_el, double *y_el, double *z_el, 

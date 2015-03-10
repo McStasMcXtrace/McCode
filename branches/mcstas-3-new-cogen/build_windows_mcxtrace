@@ -1,5 +1,7 @@
 #!/bin/sh
 
+PATH=$PATH:$PWD/tools/download-tool
+
 if [ "x$1" = "x" ]; then
     # No arguments
     echo Please provide one argument,e.g : $0 2.0
@@ -25,7 +27,7 @@ find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also
     cd meta-pkgs/windows/Support
-    if [ ! -f PPDs.zip ]; 
+    if [ ! -f PPDs.zip ]; then
 	wget http://ppds.mccode.org/PPDs.zip
     fi
     cd ..

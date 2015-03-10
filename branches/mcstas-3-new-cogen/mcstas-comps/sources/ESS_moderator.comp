@@ -303,7 +303,7 @@ TRACE
   
   /* In case of 2014 source, solid angle correction is done internally in the brill fcts */
   if (strcasestr(sourcedef,"2014")) {
-    w_focus=focus_xw*focus_yh/sqrt(tx*tx+ty*ty+tz*tz);
+    w_focus=focus_xw*focus_yh/(tx*tx+ty*ty+tz*tz);
   }
   
   dx = xf-x;

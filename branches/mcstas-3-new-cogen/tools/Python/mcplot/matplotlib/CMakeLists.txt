@@ -32,7 +32,8 @@ else()
   set(P "mx")
 endif()
 
-set(TOOLS_NAME "${FLAVOR}-tools-python-${P}plot-matplotlib-${MCCODE_VERSION}")
+set(TOOLS_NAME "tools/Python/${P}plot/matplotlib")
+
 if(WINDOWS)
   set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
 else()
@@ -45,7 +46,7 @@ set(CC "${CMAKE_C_COMPILER}")
 set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${TOOLS_NAME}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}plot-matplotlib-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 

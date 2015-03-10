@@ -30,6 +30,13 @@ System Setup
 				       python-django
 				       python-dev
 				       libopenmpi-dev (if you need MPI. (Yes, you need it.))
+   Now you will need to get the correct version of django from the debian backports.
+   add:
+      deb http://http.debian.net/debian wheezy-backports main
+   to your /etc/apt/sources.list
+   run:
+      apt-get wheezy-backports -t install python-django
+   to get django version 1.7
 
 3) Enable non-free repos:
       sudo apt-add-repository 'deb http://ftp.debian.org/debian/ wheezy main contrib non-free'
