@@ -12,13 +12,21 @@ ALL explicit ui widget updates MUST be handled by this class
 '''
 class McView(object):
     def __init__(self):
+        # create main window
         self.__mw = McMainWindow()
         self.mwui = self.__mw.ui
         self.mwui.lblInstrument.setText("")
         self.mwui.lblWorkDir.setText("")
         
+        # create start simulation window
+        self.__ssw = McStartSimWindow()
+        self.sswui = self.__ssw.ui
+        
     def showMainWindow(self):
         self.__mw.show()
+        
+    def showStartSimWindow(self):
+        self.__ssw.show()
         
     ''' Update UI data
     '''
@@ -57,7 +65,7 @@ class McView(object):
             return dlg.selectedFiles()[0]
 
 
-''' Main Window widgets wrapper class
+''' Main Window widgets class
 '''
 class McMainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -66,8 +74,19 @@ class McMainWindow(QtGui.QMainWindow):
         self.ui.setupUi(self)
 
 
-''' Auto-generated view created with QtCreator.
-Generate this from .ui source with pyside-uic. Do not edit.
+''' Start simulation widgets class
+'''
+class McStartSimWindow(QtGui.QWidget):
+    def __init__(self, parent=None):
+        super(McStartSimWindow, self).__init__(parent)
+        self.ui = Ui_dlgStartSim()
+        self.ui.setupUi(self)
+
+
+''' Main window ui widget setup.
+Auto-generated view created with QtCreator.
+Generate from .ui source with pyside-uic. 
+Do not edit.
 '''
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -223,3 +242,150 @@ class Ui_MainWindow(object):
         self.actionMcstas_Component_Manual.setText(QtGui.QApplication.translate("MainWindow", "mcstas Component Manual", None, QtGui.QApplication.UnicodeUTF8))
         self.actionChange_Working_Dir.setText(QtGui.QApplication.translate("MainWindow", "Change Work Dir...", None, QtGui.QApplication.UnicodeUTF8))
 
+
+''' Start simulation dialog widget
+Auto-generated view created with QtCreator.
+Generate from .ui source with pyside-uic. 
+Do not edit.
+'''
+class Ui_dlgStartSim(object):
+    def setupUi(self, dlgStartSim):
+        dlgStartSim.setObjectName("dlgStartSim")
+        dlgStartSim.setWindowModality(QtCore.Qt.ApplicationModal)
+        dlgStartSim.resize(549, 506)
+        self.verticalLayout_4 = QtGui.QVBoxLayout(dlgStartSim)
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
+        self.verticalLayout = QtGui.QVBoxLayout()
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.gbxGrid = QtGui.QGroupBox(dlgStartSim)
+        self.gbxGrid.setObjectName("gbxGrid")
+        self.verticalLayout_2 = QtGui.QVBoxLayout(self.gbxGrid)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.gridLayout = QtGui.QGridLayout()
+        self.gridLayout.setObjectName("gridLayout")
+        self.lblGridDummy = QtGui.QLabel(self.gbxGrid)
+        self.lblGridDummy.setObjectName("lblGridDummy")
+        self.gridLayout.addWidget(self.lblGridDummy, 0, 0, 1, 1)
+        self.edtGridDummy2 = QtGui.QLineEdit(self.gbxGrid)
+        self.edtGridDummy2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.edtGridDummy2.setObjectName("edtGridDummy2")
+        self.gridLayout.addWidget(self.edtGridDummy2, 0, 3, 1, 1)
+        self.lblGridDummy2 = QtGui.QLabel(self.gbxGrid)
+        self.lblGridDummy2.setObjectName("lblGridDummy2")
+        self.gridLayout.addWidget(self.lblGridDummy2, 0, 2, 1, 1)
+        self.lblGridDummy3 = QtGui.QLabel(self.gbxGrid)
+        self.lblGridDummy3.setObjectName("lblGridDummy3")
+        self.gridLayout.addWidget(self.lblGridDummy3, 0, 4, 1, 1)
+        self.edtGridDummy = QtGui.QLineEdit(self.gbxGrid)
+        self.edtGridDummy.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.edtGridDummy.setObjectName("edtGridDummy")
+        self.gridLayout.addWidget(self.edtGridDummy, 0, 1, 1, 1)
+        self.edtGridDummy3 = QtGui.QLineEdit(self.gbxGrid)
+        self.edtGridDummy3.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.edtGridDummy3.setObjectName("edtGridDummy3")
+        self.gridLayout.addWidget(self.edtGridDummy3, 0, 5, 1, 1)
+        self.verticalLayout_2.addLayout(self.gridLayout)
+        self.verticalLayout.addWidget(self.gbxGrid)
+        self.gbxSim = QtGui.QGroupBox(dlgStartSim)
+        self.gbxSim.setObjectName("gbxSim")
+        self.verticalLayout_3 = QtGui.QVBoxLayout(self.gbxSim)
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.gridLayout_2 = QtGui.QGridLayout()
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.cbxSimTrace = QtGui.QComboBox(self.gbxSim)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.cbxSimTrace.sizePolicy().hasHeightForWidth())
+        self.cbxSimTrace.setSizePolicy(sizePolicy)
+        self.cbxSimTrace.setObjectName("cbxSimTrace")
+        self.cbxSimTrace.addItem("")
+        self.cbxSimTrace.addItem("")
+        self.gridLayout_2.addWidget(self.cbxSimTrace, 1, 0, 1, 1)
+        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.gridLayout_2.addItem(spacerItem, 1, 6, 1, 1)
+        self.cbxClustering = QtGui.QComboBox(self.gbxSim)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.cbxClustering.sizePolicy().hasHeightForWidth())
+        self.cbxClustering.setSizePolicy(sizePolicy)
+        self.cbxClustering.setObjectName("cbxClustering")
+        self.cbxClustering.addItem("")
+        self.cbxClustering.addItem("")
+        self.cbxClustering.addItem("")
+        self.gridLayout_2.addWidget(self.cbxClustering, 6, 0, 1, 1)
+        self.edtNeutronCnt = QtGui.QLineEdit(self.gbxSim)
+        self.edtNeutronCnt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.edtNeutronCnt.setObjectName("edtNeutronCnt")
+        self.gridLayout_2.addWidget(self.edtNeutronCnt, 1, 2, 1, 1)
+        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.gridLayout_2.addItem(spacerItem1, 2, 6, 1, 1)
+        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.gridLayout_2.addItem(spacerItem2, 6, 6, 1, 1)
+        self.label_3 = QtGui.QLabel(self.gbxSim)
+        self.label_3.setObjectName("label_3")
+        self.gridLayout_2.addWidget(self.label_3, 6, 1, 1, 1)
+        self.lineEdit = QtGui.QLineEdit(self.gbxSim)
+        self.lineEdit.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.lineEdit.setObjectName("lineEdit")
+        self.gridLayout_2.addWidget(self.lineEdit, 4, 2, 1, 1)
+        self.label = QtGui.QLabel(self.gbxSim)
+        self.label.setObjectName("label")
+        self.gridLayout_2.addWidget(self.label, 2, 1, 1, 1)
+        self.label_5 = QtGui.QLabel(self.gbxSim)
+        self.label_5.setObjectName("label_5")
+        self.gridLayout_2.addWidget(self.label_5, 4, 1, 1, 1)
+        self.edtSteps = QtGui.QLineEdit(self.gbxSim)
+        self.edtSteps.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.edtSteps.setObjectName("edtSteps")
+        self.gridLayout_2.addWidget(self.edtSteps, 2, 2, 1, 1)
+        self.edtNodes = QtGui.QLineEdit(self.gbxSim)
+        self.edtNodes.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.edtNodes.setObjectName("edtNodes")
+        self.gridLayout_2.addWidget(self.edtNodes, 6, 2, 1, 1)
+        self.label_4 = QtGui.QLabel(self.gbxSim)
+        self.label_4.setObjectName("label_4")
+        self.gridLayout_2.addWidget(self.label_4, 1, 1, 1, 1)
+        self.checkBox = QtGui.QCheckBox(self.gbxSim)
+        self.checkBox.setObjectName("checkBox")
+        self.gridLayout_2.addWidget(self.checkBox, 3, 1, 1, 1)
+        self.verticalLayout_3.addLayout(self.gridLayout_2)
+        self.verticalLayout.addWidget(self.gbxSim)
+        self.horizontalLayout_3 = QtGui.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.btnStart = QtGui.QPushButton(dlgStartSim)
+        self.btnStart.setObjectName("btnStart")
+        self.horizontalLayout_3.addWidget(self.btnStart)
+        spacerItem3 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_3.addItem(spacerItem3)
+        self.btnCancel = QtGui.QPushButton(dlgStartSim)
+        self.btnCancel.setObjectName("btnCancel")
+        self.horizontalLayout_3.addWidget(self.btnCancel)
+        self.verticalLayout.addLayout(self.horizontalLayout_3)
+        self.verticalLayout_4.addLayout(self.verticalLayout)
+
+        self.retranslateUi(dlgStartSim)
+        QtCore.QMetaObject.connectSlotsByName(dlgStartSim)
+
+    def retranslateUi(self, dlgStartSim):
+        dlgStartSim.setWindowTitle(QtGui.QApplication.translate("dlgStartSim", "Start simulation", None, QtGui.QApplication.UnicodeUTF8))
+        self.gbxGrid.setTitle(QtGui.QApplication.translate("dlgStartSim", "Instrument parameters (D=floating point, I=integer, S=string):", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblGridDummy.setText(QtGui.QApplication.translate("dlgStartSim", "lambda (D):", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblGridDummy2.setText(QtGui.QApplication.translate("dlgStartSim", "R (D):", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblGridDummy3.setText(QtGui.QApplication.translate("dlgStartSim", "R_curve (D):", None, QtGui.QApplication.UnicodeUTF8))
+        self.gbxSim.setTitle(QtGui.QApplication.translate("dlgStartSim", "Simulation:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbxSimTrace.setItemText(0, QtGui.QApplication.translate("dlgStartSim", "Simulation", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbxSimTrace.setItemText(1, QtGui.QApplication.translate("dlgStartSim", "Trace", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbxClustering.setItemText(0, QtGui.QApplication.translate("dlgStartSim", "No clustering (single CPU)", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbxClustering.setItemText(1, QtGui.QApplication.translate("dlgStartSim", "MPI clustering", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbxClustering.setItemText(2, QtGui.QApplication.translate("dlgStartSim", "SSH clustering (grid)", None, QtGui.QApplication.UnicodeUTF8))
+        self.edtNeutronCnt.setText(QtGui.QApplication.translate("dlgStartSim", "1000000", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_3.setText(QtGui.QApplication.translate("dlgStartSim", "# nodes:", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("dlgStartSim", "Steps:", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_5.setText(QtGui.QApplication.translate("dlgStartSim", "Random seed:", None, QtGui.QApplication.UnicodeUTF8))
+        self.edtSteps.setText(QtGui.QApplication.translate("dlgStartSim", "0", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_4.setText(QtGui.QApplication.translate("dlgStartSim", "Neutron count:", None, QtGui.QApplication.UnicodeUTF8))
+        self.checkBox.setText(QtGui.QApplication.translate("dlgStartSim", "Gravity", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnStart.setText(QtGui.QApplication.translate("dlgStartSim", "Start", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnCancel.setText(QtGui.QApplication.translate("dlgStartSim", "Cancel", None, QtGui.QApplication.UnicodeUTF8))

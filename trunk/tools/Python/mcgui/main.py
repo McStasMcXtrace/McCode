@@ -205,6 +205,9 @@ class McGuiAppController():
         self.state = McGuiState()
         self.connectAllCallbacks()    
         self.state.initState()
+        self.view.showMainWindow()
+        self.view.showStartSimWindow()
+    
     
     ''' UI callbacks
     '''
@@ -280,7 +283,6 @@ def main():
     mcguiApp = QtGui.QApplication(sys.argv)
     
     ctr = McGuiAppController()
-    ctr.view.showMainWindow()
     
     sys.exit(mcguiApp.exec_())
 
