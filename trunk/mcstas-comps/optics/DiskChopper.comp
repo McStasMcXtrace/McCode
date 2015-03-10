@@ -146,13 +146,13 @@ TRACE
     if (isfirst)
       {
         /* all events are put in the transmitted time frame */
-        t=atan2(x,yprime)/omega + To*randpm1()/2.0 + delay + jitter*randnorm() + (n_pulse > 1 ? floor(n_pulse*rand01())*Tg : 0);
+        t=atan2(x,yprime)/omega + To*randpm1()/2.0 + delay + jitter ? jitter*randnorm():0 + (n_pulse > 1 ? floor(n_pulse*rand01())*Tg : 0);
         /* correction: chopper slits transmission opening/full disk */
         p *= nslit*theta_0/2.0/PI; 
       }
     else 
       {
-        toff=fabs(t-atan2(x,yprime)/omega - delay - jitter*randnorm());
+        toff=fabs(t-atan2(x,yprime)/omega - delay - jitter ? jitter*randnorm():0);
 
         /* does neutron hit outside slit? */
         if (fmod(toff+To/2.0,Tg)>To) ABSORB; 
