@@ -205,13 +205,11 @@ class McGuiState(QtCore.QObject):
         self.__logLine('mcrun started (' + runstr + ')', mcgui_msg=True)
         
         ## read program output
-        while True:
+        while process.poll() == None:
             for l in process.stdout:
                 self.__logLine(l.rstrip('\n'))
             for l in process.stderr:
                 self.__logLine(l.rstrip('\n'), err=True)
-            if process.poll() != None:
-                break
             time.sleep(0.1)
         process.wait()
         
@@ -225,11 +223,9 @@ class McGuiState(QtCore.QObject):
                                    shell=True)
         # get std out info
         info = []
-        while True:
+        while process.poll() == None:
             for l in process.stdout:
                 info.append(l.rstrip('\n'))
-            if process.poll() == 0:
-                break
             time.sleep(0.1)
         process.wait()
         
@@ -262,7 +258,7 @@ class McGuiAppController():
         if fixed_params != None:
             self.state.run(fixed_params, new_instr_params)
         
-    def handleLoadInstrument(self):
+    def handleOpenInstrument(self):
         instrFile = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
         if instrFile:
             self.state.loadInstument(instrFile)        
@@ -303,18 +299,16 @@ class McGuiAppController():
         # WARNING: NEVER update ui widget state from this class, always delegate to view. This explicit widget access is AN EXCEPTION
         mwui = self.view.mwui
         mwui.actionQuit.triggered.connect(self.handleExit)
-        mwui.actionOpen_instrument.triggered.connect(self.handleLoadInstrument)
+        mwui.actionOpen_instrument.triggered.connect(self.handleOpenInstrument)
         mwui.actionChange_Working_Dir.triggered.connect(self.handleChangeWorkDir)
         
-        mwui.tbtnInstrument.clicked.connect(self.handleLoadInstrument)
-        mwui.tbtnWorkDir.clicked.connect(self.handleChangeWorkDir)
+        mwui.tbtnInstrument.clicked.connect(self.handleOpenInstrument)
+        
+        mwui.btnRun.clicked.connect(self.handleRunSim)
+        mwui.btnPlot.clicked.connect(self.handlePlotResults)
         
         mwui.actionCompile_Instrument.triggered.connect(self.state.compile)
         mwui.actionRun_Simulation.triggered.connect(self.state.run)
-        
-        mwui.actionCS.triggered.connect(self.state.compile)
-        mwui.actionRS.triggered.connect(self.handleRunSim)
-        mwui.actionPS.triggered.connect(self.handlePlotResults)
         
         mwui.actionMcstas_Web_Page.triggered.connect(self.handleHelpWeb)
         mwui.actionMcstas_User_Manual.triggered.connect(self.handleHelpPdf)
