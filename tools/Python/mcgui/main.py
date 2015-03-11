@@ -41,8 +41,8 @@ class McGuiState(QtCore.QObject):
         
     logUpdated = QtCore.pyqtSignal(QtCore.QString)
     comLock = threading.Lock()
-    def __logLine(self, logline, mcgui=False):
-        if mcgui:
+    def __logLine(self, logline, mcgui_msg=False, err=False):
+        if mcgui_msg:
             logline = 'mcgui:      ' + logline
         self.comLock.acquire()
         if logline != None:
@@ -90,7 +90,8 @@ class McGuiState(QtCore.QObject):
     def canRun(self):
         return self.__instrFile != ""
     def canPlot(self):
-        return self.__resultFile != ""
+        return True
+        #return self.__resultFile != ""
     # [<canRun>, <canCompile>, <canPlot>] each can be 'True' or 'False'
     simStateUpdated = QtCore.pyqtSignal(QtCore.QStringList)
     def fireSimStateUpdate(self):
@@ -108,7 +109,7 @@ class McGuiState(QtCore.QObject):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
                                    shell=True)
-        self.__logLine('Compiling instrument to c ...', mcgui=True)
+        self.__logLine('Compiling instrument to c ...', mcgui_msg=True)
         self.setStatus('Compiling instrument to c ...')
         while process.poll() <> 0:
             for l in process.stdout:
@@ -131,7 +132,7 @@ class McGuiState(QtCore.QObject):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
                                    shell=True)
-        self.__logLine('Compiling instrument to binary ...', mcgui=True)
+        self.__logLine('Compiling instrument to binary ...', mcgui_msg=True)
         self.setStatus('Compiling instrument to binary ...')
         while process.poll() <> 0:
             for l in process.stdout:
@@ -145,32 +146,76 @@ class McGuiState(QtCore.QObject):
         else:
             raise Exception('Binary not found.')
         
-        self.__logLine('Instrument compiled: ' + self.__binaryFile, mcgui=True)
+        self.__logLine('Instrument compiled: ' + self.__binaryFile, mcgui_msg=True)
         self.setStatus('Instrument compiled (' + self.__binaryFile + ')')
         self.fireSimStateUpdate()
     
-    def run(self, pars):
+    def run(self, fixed_params, params):
+        ''' fixed_params[]:
+                simulation = 0, trace = 1
+                neutron count (int)
+                steps count (int)
+                gravity (bool)
+                random seed (int)
+                no clustering = 0, MPI clustering = 1, SSH clustering = 2
+            params[]:
+                [<name>, <value>] pairs
+        '''
+        runstr = 'mcrun ' + self.__instrFile
+        
+        # parse fixed params
+        simtrace = fixed_params[0]
+        # TODO: support trace
+        
+        ncount = fixed_params[1]
+        if ncount > 0:
+            runstr = runstr + ' -n ' + str(ncount)
+        
+        nsteps = fixed_params[2]
+        if nsteps > 1:
+            runstr = runstr + ' -N ' + str(nsteps)
+        
+        if str(fixed_params[3]) == "True":
+            gravity = True
+            # TODO: append runstr with the gravity option
+        
+        
+        random_seed = fixed_params[4]
+        # TODO: support random seed
+            
+        clustering = fixed_params[5]
+        # TODO: support clustering
+        
+        # parse instrument params        
+        for p in params:
+            s = p[0] + '=' + p[1]
+            runstr = runstr + ' ' + s
+        
+        print(runstr)
+        
         # run simulation in a background thread (non safe)
-        thread = threading.Thread(target=self.runAsync)
+        thread = threading.Thread(target=self.runAsync(runstr))
         thread.start()
         
-    def runAsync(self):
-        process = subprocess.Popen(['mcrun ' + self.__instrFile], 
+    def runAsync(self, runstr):
+        process = subprocess.Popen([runstr], 
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.PIPE,
                                    shell=True)
-        self.__logLine('mcrun started', mcgui=True)
+        self.__logLine('mcrun started (' + runstr + ')', mcgui_msg=True)
+        
         ## read program output
         while True:
             for l in process.stdout:
                 self.__logLine(l.rstrip('\n'))
             for l in process.stderr:
-                self.__logLine(l.rstrip('\n'))
-            if process.poll() == 0:
+                self.__logLine(l.rstrip('\n'), err=True)
+            if process.poll() != None:
                 break
             time.sleep(0.1)
         process.wait()
-        self.__logLine('mcrun complete', mcgui=True)
+        
+        self.__logLine('mcrun complete', mcgui_msg=True)
         
     def getInstrParams(self):
         # get mcrun to print '--info' containing instrument parameter info
@@ -192,8 +237,9 @@ class McGuiState(QtCore.QObject):
         params = []
         for l in info:
             if 'Param:' in l:
-                s = l.split()
-                params.append(s[1])
+                s = l.split()[1]
+                s = s.split('=')
+                params.append(s)
         return params
         
 ''' Controller
@@ -206,24 +252,29 @@ class McGuiAppController():
         self.connectAllCallbacks()    
         self.state.initState()
         self.view.showMainWindow()
-        self.view.showStartSimWindow()
-    
     
     ''' UI callbacks
     '''
+    def handleRunSim(self):
+        instr_params = self.state.getInstrParams()
+        fixed_params, new_instr_params = self.view.showStartSimDialog(instr_params)
+        
+        if fixed_params != None:
+            self.state.run(fixed_params, new_instr_params)
+        
     def handleLoadInstrument(self):
         instrFile = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
         if instrFile:
-            self.state.loadInstument(instrFile)
-            
+            self.state.loadInstument(instrFile)        
+    
     def handleChangeWorkDir(self):
         workDir = self.view.showChangeWorkDirDlg(self.state.getWorkDir())
         if workDir:
             self.state.setWorkDir(workDir)
-        
+    
     def handleExit(self):
         sys.exit()
-        
+    
     def handlePlotResults(self):
         print("not implemented")
         
@@ -231,17 +282,17 @@ class McGuiAppController():
         '''open the mcstas homepage'''
         mcurl = 'http://www.mcstas.org'
         webbrowser.open_new_tab(mcurl)
-        
+    
     def handleHelpPdf(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ..)
         mcman = '/usr/share/mcstas/2.1/doc/manuals/mcstas-manual.pdf'
         webbrowser.open_new_tab(mcman)
-        
+    
     def handleHelpPdfComponents(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ...)
         mcman = '/usr/share/mcstas/2.1/doc/manuals/mcstas-components.pdf'
         webbrowser.open_new_tab(mcman)
-        
+    
     def handleHelpAbout(self):
         print("not implemented")
         
@@ -262,7 +313,7 @@ class McGuiAppController():
         mwui.actionRun_Simulation.triggered.connect(self.state.run)
         
         mwui.actionCS.triggered.connect(self.state.compile)
-        mwui.actionRS.triggered.connect(self.state.run)
+        mwui.actionRS.triggered.connect(self.handleRunSim)
         mwui.actionPS.triggered.connect(self.handlePlotResults)
         
         mwui.actionMcstas_Web_Page.triggered.connect(self.handleHelpWeb)

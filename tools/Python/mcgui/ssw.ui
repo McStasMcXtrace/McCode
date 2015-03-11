@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>dlgStartSim</class>
- <widget class="QWidget" name="dlgStartSim">
-  <property name="windowModality">
-   <enum>Qt::ApplicationModal</enum>
-  </property>
+ <widget class="QDialog" name="dlgStartSim">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>549</width>
-    <height>506</height>
+    <width>504</width>
+    <height>386</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -102,19 +99,6 @@
             </item>
            </widget>
           </item>
-          <item row="1" column="6">
-           <spacer name="horizontalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
           <item row="6" column="0">
            <widget class="QComboBox" name="cbxClustering">
             <property name="sizePolicy">
@@ -125,7 +109,7 @@
             </property>
             <item>
              <property name="text">
-              <string>No clustering (single CPU)</string>
+              <string>No clustering</string>
              </property>
             </item>
             <item>
@@ -135,7 +119,7 @@
             </item>
             <item>
              <property name="text">
-              <string>SSH clustering (grid)</string>
+              <string>SSH clustering</string>
              </property>
             </item>
            </widget>
@@ -149,32 +133,6 @@
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
-          </item>
-          <item row="2" column="6">
-           <spacer name="horizontalSpacer_3">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="6" column="6">
-           <spacer name="horizontalSpacer_4">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
           </item>
           <item row="6" column="1">
            <widget class="QLabel" name="label_3">
@@ -190,6 +148,13 @@
             </property>
            </widget>
           </item>
+          <item row="4" column="1">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Random seed:</string>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="1">
            <widget class="QLabel" name="label">
             <property name="text">
@@ -197,10 +162,10 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="1">
-           <widget class="QLabel" name="label_5">
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_4">
             <property name="text">
-             <string>Random seed:</string>
+             <string>Neutron count:</string>
             </property>
            </widget>
           </item>
@@ -214,20 +179,6 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="2">
-           <widget class="QLineEdit" name="edtNodes">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="label_4">
-            <property name="text">
-             <string>Neutron count:</string>
-            </property>
-           </widget>
-          </item>
           <item row="3" column="1">
            <widget class="QCheckBox" name="checkBox">
             <property name="text">
@@ -235,10 +186,30 @@
             </property>
            </widget>
           </item>
+          <item row="6" column="2">
+           <widget class="QLineEdit" name="edtNodes">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
        </layout>
       </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
