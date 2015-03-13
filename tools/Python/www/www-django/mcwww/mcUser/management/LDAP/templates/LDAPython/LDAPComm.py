@@ -125,8 +125,8 @@ class LDAPComm:
     def ldapQuery(self, auth_dn, auth_pw, query):
         cn = split(",", auth_dn)[0]
         self.query_num += 1
-        log_str = cn+" \#"+self.query_num+" QUERY with: ldapsearch -LLL -b DN -D "+auth_dn+" -w PASSWORD "+query+"\n"
-        self.log("\n%s"%slog_str)
+        log_str = cn+" #"+str(self.query_num)+" QUERY with: ldapsearch -LLL -b DN -D "+auth_dn+" -w PASSWORD "+query+"\n"
+        self.log("\n%s" % log_str)
         try:
             fid = Popen(["ldapsearch", "-LLL", "-b", "DN", "-D", auth_dn, "-w", auth_pw, query],
                         stdout=PIPE,
@@ -146,7 +146,7 @@ class LDAPComm:
         if not 'cn=' in auth_cn:
             auth_cn = "cn=%s" % auth_cn
         query = "(|(cn=itStaff)(cn=courseStaff))"
-        self.log("\n%s \#%s AUTH ACCESS QUERY: %s\n" % (auth_cn, self.query_num, query) )
+        self.log("\n%s #%s AUTH ACCESS QUERY: %s\n" % (auth_cn, str(self.query_num), query) )
         try:
             fid = Popen(
                 ["ldapsearch", "-LLL", "-b", "DN", "-D", "cn=DummyUser,ou=person,DN", "-w", "DummyPW", query],
@@ -165,19 +165,22 @@ class LDAPComm:
 # User Identification #
 #=====================#
     def ldapAuthenticate(self, auth_cn, auth_pw):
-        dn = "cn=" + auth_cn + ",ou=person,DN"
         try:
-            fid = Popen(["ldapwhoami", "-vvv", "-D", dn, "-x", "-w", auth_pw],
-                        stdout=PIPE,
-                        stderr=PIPE)
-            stdout,stderr = fid.communicate()
-            if "Success" in stdout:
-                return True
-            else:
-                self.log("Access attempt by %s failed: %s" % (dn, stderr))
+            dn = "cn=\"" + auth_cn + "\",ou=person,DN"
+            try:
+                fid = Popen(["ldapwhoami", "-vvv", "-D", dn, "-x", "-w", auth_pw],
+                            stdout=PIPE,
+                            stderr=PIPE)
+                stdout,stderr = fid.communicate()
+                if "Success" in stdout:
+                    self.log("%s exists.\n"%dn)
+                    return True
+                else:
+                    self.log("Access attempt by %s unsuccessful: %s\n" % (dn, stderr))
+                    return False
+            except:
+                self.log("Access attempt by %s exception: %s\n" % (dn, str(sys.exc_info())))
+                ''' MESSAGE BOX SUGGESTING ERROR '''
                 return False
         except:
-            log_str = "Access attempt by" + dn + "failed: " + str(sys.exc_info()[0])
-            self.log(log_str)
-            ''' MESSAGE BOX SUGGESTING ERROR '''
-            return False
+            self.log("ERROR: cn not supplied.\n")
