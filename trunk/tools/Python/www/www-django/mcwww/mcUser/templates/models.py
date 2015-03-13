@@ -33,7 +33,7 @@ from django.utils import timezone
 #====================#
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import Group, AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import Group, AbstractBaseUser, BaseUserManager, PermissionsMixin
 #==============#
 # LDAP imports #
 #==============#
@@ -64,8 +64,7 @@ def authentihelp(uid, pw, in_log):
     def get_dn(UID):
         import base64
         dn = None
-        ldap_data = conn.ldapQuery('cn=DummyUser,ou=person,DN', 'DPW', "uid=%s"%UID)            
-        print "ldap_data:\n",ldap_data
+        ldap_data = conn.ldapQuery('cn=DummyUser,ou=person,DN', 'DPW', "uid=%s"%UID)
         for line in ldap_data:
             if 'uid::' in line:
                 data.setuid(base64.standard_b64decode(split(" ", line)[1]).strip())
@@ -94,7 +93,7 @@ def authentihelp(uid, pw, in_log):
 #=================#
 # mcBackend CLASS # -  mcBackend: Gets and Authenticates users from the LDAP DB. 
 #=================#               Queries LDAP DB for uid and retrieves corresponding user from the sqlite DB. 
-class mcBackend(object):
+class mcBackend: #(object):
     supports_interactive_user = True
     def get_user(self, uid):
         try:
@@ -112,7 +111,6 @@ class mcBackend(object):
             try:
                 user = mcUser.objects.get(uid=uid)
                 user.ldap_user = data
-#                user.ldap_user = authentihelp(uid,pw,in_log) # take the try out of the conditional to test this. STILL NOT JSON SERIALIZABLE.
                 update_last_login(self, user)
                 in_log.write("%s authenticated.\n"%uid)
                 in_log.close()
@@ -137,12 +135,12 @@ class mcBackend(object):
 class mcUserManager(BaseUserManager): 
     def createMcUser(self, usr_details):
         mcuser = self.model()
-        mcuser.uid         = usr_details['uid']
-        mcuser.username    = usr_details['username']
-        mcuser.email       = usr_details['email']
-        mcuser.is_staff    = usr_details['staff']
-        mcuser.is_active   = True
-        mcuser.last_login  = timezone.now()
+        mcuser.uid          = usr_details['uid']
+        mcuser.username     = usr_details['username']
+        mcuser.email        = usr_details['email']
+        mcuser.is_superuser = mcuser.is_staff = usr_details['staff']
+        mcuser.is_active    = True
+        mcuser.last_login   = timezone.now()
         mcuser.save(using=self._db) 
         return mcuser
     
@@ -155,10 +153,18 @@ class mcUserManager(BaseUserManager):
 
 #----------------------------------------------------------------------------------------------#
 
-#==============#
-# mcUser CLASS #
-#==============#
-class mcUser(AbstractBaseUser):
+#===========================#
+# mcUser CLASS              # see: /usr/lib/python2.7/dist-packages/django/contrib/auth/models.py
+# ------------              #
+# AbstractBaseUser provides #
+# functionality associated  #
+# with ordinary Django User #
+#                           #
+# PermissionsMixin provides #
+# the access to the group   #
+# and superuser permissions #
+#===========================#
+class mcUser(AbstractBaseUser, PermissionsMixin):
     def __init__(self, *args, **kwargs):
         super(mcUser, self).__init__(*args, **kwargs)
         #-------------------------#
