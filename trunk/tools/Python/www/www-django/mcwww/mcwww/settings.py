@@ -11,8 +11,9 @@ SESSION_COOKIE_AGE              = 10*60
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_SAVE_EVERY_REQUEST      = True
 LDIF_DIR                        = 'mcUser/management/LDAP/LDIFs/temp/'
-SESSION_FILE_PATH               = './sqlite3_DB/session_data' # trace of logged in sessions
-# SESSION_ENGINE                  = 'mcUser.mcSession'        # may make if AbstactBaseUser inherit not work
+SESSION_FILE_PATH               = './DB/session_data'                     # trace of logged in sessions
+SESSION_ENGINE                  = "django.contrib.sessions.backends.file" # 'mcUser.mcSession'        # may make if AbstactBaseUser inherit not work
+SESSION_SERIALIZER              = 'django.contrib.sessions.serializers.PickleSerializer'
 #============#
 # McUser END #
 #============#

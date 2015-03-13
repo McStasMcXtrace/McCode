@@ -37,7 +37,7 @@ from django.contrib.auth.models import Group, AbstractBaseUser, BaseUserManager
 #==============#
 # LDAP imports #
 #==============#
-from mcUser.management.LDAP import LDAPComm
+from mcUser.management.LDAP.LDAPComm import LDAPComm
 from mcUser.management.LDAP.LDAPData import *
 from mcUser.management.LDAP.LDAPldiffer import changepwLDIF
 
@@ -58,12 +58,43 @@ user_logged_in.connect(update_last_login)
 #==========================#
 
 #----------------------------------------------------------------------------------------------#
+def authentihelp(uid, pw, in_log):
+    conn = LDAPComm()
+    data = LDAPData()
+    def get_dn(UID):
+        import base64
+        dn = None
+        ldap_data = conn.ldapQuery('cn=DummyUser,ou=person,DN', 'DPW', "uid=%s"%UID)            
+        print "ldap_data:\n",ldap_data
+        for line in ldap_data:
+            if 'uid::' in line:
+                data.setuid(base64.standard_b64decode(split(" ", line)[1]).strip())
+            if 'cn::' in line:
+                data.setcn(base64.standard_b64decode(split(" ", line)[1]).strip())
+            if 'sn::' in line:
+                data.setsn(base64.standard_b64decode(split(" ", line)[1]).strip())
+            if 'mail::' in line:
+                data.setmail(base64.standard_b64decode(split(" ", line)[1]).strip())
+            if line: in_log.write("%s\n"%line)
+            if 'dn:' in line:
+                in_log.write("Found data: %s \n"% split(",|=", line)[1])
+                dn = split(",|=", line)[1].strip()
+        if dn: 
+            return dn,ldap_data
+        in_log.write("Usr not found from uid: %s\n"%UID)
+        return None
+    dn,ldap_data = get_dn(uid)
+    in_log.write("dn obtained: %s\n"%dn)
+    if conn.ldapAuthenticate(dn, pw):
+        return ldap_data
+    return None
+
+
 
 #=================#
 # mcBackend CLASS # -  mcBackend: Gets and Authenticates users from the LDAP DB. 
 #=================#               Queries LDAP DB for uid and retrieves corresponding user from the sqlite DB. 
 class mcBackend(object):
-    conn = LDAPComm.LDAPComm()
     supports_interactive_user = True
     def get_user(self, uid):
         try:
@@ -76,49 +107,19 @@ class mcBackend(object):
         t = time.time()
         in_log.write("\nTimestamp: %s:%s\n" % (str(date.fromtimestamp(t)), str(t)) )
         in_log.write("Finding data from uid: "+ uid +"\n")
-        self.data = LDAPData()
-
-        def get_cn(UID):
-            import base64
-            print "in models:authenticate, UID=", UID
-            dn = None
-            ldap_data = self.conn.ldapQuery('cn=DummyUser,ou=person,DN',
-                                            'DPW',
-                                            "uid=%s"%UID)            
-            print "ldap_data:\n",ldap_data
-            for line in ldap_data:
-                print "evaluating %s"%line
-                if 'uid::' in line:
-                    self.data.setuid(base64.standard_b64decode(split(" ", line)[1]).strip())
-                if 'cn::' in line:
-                    self.data.setcn(base64.standard_b64decode(split(" ", line)[1]).strip())
-                if 'sn::' in line:
-                    self.data.setsn(base64.standard_b64decode(split(" ", line)[1]).strip())
-                if 'mail::' in line:
-                    self.data.setmail(base64.standard_b64decode(split(" ", line)[1]).strip())
-                if 'displayname::' in line:
-                    self.data.setdisplayname(base64.standard_b64decode(split(" ", line)[1]).strip())
-                if line: in_log.write("%s\n"%line)
-                if "dn:" in line:
-                    in_log.write("Found data: %s \n"% split(",|=", line)[1])
-                    dn = split(",|=", line)[1].strip()
-            if dn: 
-                in_log.close()
-                return dn
-            in_log.write("Usr not found from uid: %s\n"%UID)
-            in_log.close()
-            return None
-
-        cn = get_cn(uid)
-        print "uid: ", uid
-        print "cn: ", cn
-        if self.conn.ldapAuthenticate(cn, pw):
+        data = authentihelp(uid,pw,in_log)
+        if data:
             try:
-                user = mcUser.objects.get(uid=self.data.uid())
-                user.ldap_user = self.data
+                user = mcUser.objects.get(uid=uid)
+                user.ldap_user = data
+#                user.ldap_user = authentihelp(uid,pw,in_log) # take the try out of the conditional to test this. STILL NOT JSON SERIALIZABLE.
                 update_last_login(self, user)
+                in_log.write("%s authenticated.\n"%uid)
+                in_log.close()
                 return user 
-            except User.DoesNotExist:
+            except:
+                in_log.write("%s did not authenticate.\nSys Error: %s\n"%(uid, str(sys.exc_info()[0]) ) )
+                in_log.close()
                 return None
         return None
 
@@ -165,7 +166,6 @@ class mcUser(AbstractBaseUser):
         #-------------------------#
         self.authenticated = False
         self.ldap_user = LDAPData() # populated on authentication or empty.
-        self.conn = LDAPComm.LDAPComm() 
     #---------------------#
     # mcUser model fields #
     #---------------------#
@@ -180,6 +180,7 @@ class mcUser(AbstractBaseUser):
     REQUIRED_FIELDS = ['is_staff', 'is_active', 'last_login', 'email']
 
     objects = mcUserManager()
+    backend = mcBackend()
     class Meta:
         verbose_name = ('mcUser')
         verbose_name_plural = ('mcUsers')
@@ -233,7 +234,8 @@ class mcUser(AbstractBaseUser):
                 pwd = stdout
                 err_msg = stderr
                 if err_msg:
-                    self.conn.log("There was an error creating the password: %s" % err_msg)
+#                    self.conn.log("There was an error creating the password: %s" % err_msg)
+                    conn.log("There was an error creating the password: %s" % err_msg)
                     ''' RETURN TO POST PAGE '''
                 elif self.ident:
                     self.conn.log("LDAP user not set up: %s" % self.ident)
@@ -242,8 +244,10 @@ class mcUser(AbstractBaseUser):
                     self.ldap_user.setldif_file("temp/%spw.ldif" % self.ldap_user.cn())
                     self.ldap_user.setpassword(pwd)
                     changepwLDIF(self.ldap_user)
-                    self.conn.ldapMod(self.ldap_user.ldif(), '''POST_FORM_USER_DN''', '''POST_FORM_USER_PW''')
-                    self.conn.log("uid:%s password changed." % uid)                
+#                    self.conn.ldapMod(self.ldap_user.ldif(), '''POST_FORM_USER_DN''', '''POST_FORM_USER_PW''')
+#                    self.conn.log("uid:%s password changed." % uid)                
+                    conn.ldapMod(self.ldap_user.ldif(), '''POST_FORM_USER_DN''', '''POST_FORM_USER_PW''')
+                    conn.log("uid:%s password changed." % uid)                
                     remove(self.ldap_user.ldif())
                     self.ldap_user.setldif_file(None)
                     self.ldap_user.setpassword(None)
@@ -255,7 +259,8 @@ class mcUser(AbstractBaseUser):
                                       # RETURN TO POST PAGE
                 
     def check_password(self, pw):
-        self.conn.authenticateMcUser(self.ldap_user.cn(), pw)
+#        self.conn.authenticateMcUser(self.ldap_user.cn(), pw)
+        conn.authenticateMcUser(self.ldap_user.cn(), pw)
 
     def authenticate(self):
         self.authenticated = mcBackend.authenticate(self.ldap_user.cn(), pwd)
