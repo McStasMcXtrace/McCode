@@ -173,7 +173,7 @@ class LDAPComm:
                             stderr=PIPE)
                 stdout,stderr = fid.communicate()
                 if "Success" in stdout:
-                    self.log("%s exists.\n"%dn)
+                    self.log("%s may access LDAP.\n"%dn)
                     return True
                 else:
                     self.log("Access attempt by %s unsuccessful: %s\n" % (dn, stderr))
