@@ -248,6 +248,7 @@ class McGuiAppController():
         self.connectAllCallbacks()    
         self.state.initState()
         self.view.showMainWindow()
+        self.view.showCodeEditor()
     
     ''' UI callbacks
     '''
@@ -326,8 +327,7 @@ class McGuiAppController():
 '''
 def main():
     mcguiApp = QtGui.QApplication(sys.argv)
-    
-    ctr = McGuiAppController()
+    mcguiApp.ctr = McGuiAppController()
     
     sys.exit(mcguiApp.exec_())
 
