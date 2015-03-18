@@ -45,11 +45,12 @@ Source: "dist\mcxtrace-tools-python-mxplot-matplotlib-NSIS-@VERSION@-mingw32.exe
 Source: "dist\mcxtrace-tools-python-mxdisplay-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 
 [Run]
-Filename: "msiexec"; Parameters: "/i {tmp}\strawberry-perl-5.18.2.1-32bit.msi"
+;Filename: "msiexec"; Parameters: "/i {tmp}\strawberry-perl-5.18.2.1-32bit.msi"
 Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\PPDs.zip"
 Filename: "{tmp}\PPDs\postsetup.bat"
 Filename: "{tmp}\mcxtrace-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-comps-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
+Filename: "{tmp}\mcxtrace-manuals-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-tools-perl-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-tools-python-mxrun-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-tools-python-mxplot-chaco-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
