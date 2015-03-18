@@ -1,0 +1,76 @@
+/*******************************************************************************
+*
+* McStas, X-ray tracing package
+*         Copyright (C) 2015, All rights reserved
+*         DTU Physics,  Kgs. Lyngby, Denmark
+*
+* Component: Semi_miror
+*
+* %I
+*
+* Written by: Erik B Knudsen
+* Date: 
+* Version: $Revision: 0.1$
+* Release: McXtrace manual
+* Origin: DTU Physics
+*
+* Simple flat semi-reflecting mirror with constant reflectivity
+*
+* %D
+* A perfectly flat plane mirror example, intended as an example of a very simple component.
+* It also illustrates the concept of MC-choice.
+*
+* %P
+* Input parameters:
+* xwidth: (m) Width of the mirror.
+* yheight: (m) Height of the mirror.
+* reflectivy: ( ) Constant scalar reflectivity of mirror
+* frac_reflect: ( ) fraction of statistics to be used fro reflecting branch 
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Semi_mirror
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xwidth, yheight, reflectivity, frac_reflect)
+
+SHARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+%{
+  PROP_Z0;
+  if( x>-xwidth/2.0 && x<xwidth/2.0 && y>-yheight/2.0 && y<yheight/2.0){
+    double r;
+    r=rand01();
+    SCATTER;
+    if(r<frac_reflect){
+      vz=-vz;
+      p*=reflectivity/frac_reflect;
+      internal_color=1;
+    }else{
+      internal_color=0;
+      p*=(1-reflectivity)/(1-frac_reflect);
+    }
+  }
+  else{
+    RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+  }
+%}
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. */
+  magnify("");
+  multiline(5, -xwidth/2.0, -yheight/2.0, 0.0,
+               xwidth/2.0, -yheight/2.0, 0.0,
+               xwidth/2.0, yheight/2.0, 0.0,
+               -xwidth/2.0, yheight/2.0, 0.0,
+               -xwidth/2.0, -yheight/2.0, 0.0);
+%}
+
+END
