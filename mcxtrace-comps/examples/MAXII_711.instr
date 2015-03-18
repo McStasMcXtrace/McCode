@@ -1,28 +1,31 @@
 /*******************************************************************************
-*         McXtrace instrument definition URL=http://www.mcstas.org
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
 * Instrument: MAXII_711
 *
 * %Identification
-* Written by: Your name (email)
-* Date: Current Date
-* Origin: Your institution
-* Release: McStas 1.0
-* Version: 0.2
-* %INSTRUMENT_SITE: Institution_name_as_a_single word
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
+* Date: Sep 2013
+* Origin: DTU Physics
+* Release: McXtrace 1.2
+* Version: 1.0
+* %INSTRUMENT_SITE: MAXII
 *
-* Instrument short description
+* Powder diffraction beamline
 *
 * %Description
-* Instrument longer description (type, elements, usage...)
-*
-* Example: mcrun test.instr <parameters=values>
+* A simple beamline setup consisting of a single focusing mirror,
+* a monochromator, and a four-circle goniometer at the sample stage.
+* The beamline is et to work best at 
 *
 * %Parameters
-* Par1: [unit] Parameter1 description
-*
-* %Link
-* A reference/HTML link for more information
+* R: [m] Radius of curvature of the focusing mirror. N.b. a negative curvature simply means the mirror curves towards negative x
+* phi_mirror: [m] Set angle of incidence of the focusing mirror
+* phi_mono: [deg] Set angle of incidence of Monochromator crystal.
+* ome: [deg] 1st rotation of four circle, around Y.
+* chi: [deg] 2nd rotation of four circle, around X.
+* phi: [deg] 3rd rotation of four circle, around Y'.
+* tth: [deg] 4th rotation of four circle, i.e. detector arm. Around Y.
 *
 * %End
 *******************************************************************************/
