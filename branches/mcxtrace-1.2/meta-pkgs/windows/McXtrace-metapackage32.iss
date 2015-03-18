@@ -52,9 +52,9 @@ Filename: "{tmp}\mcxtrace-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-comps-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-manuals-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-tools-perl-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
-Filename: "{tmp}\mcxtrace-tools-python-mxrun-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
-Filename: "{tmp}\mcxtrace-tools-python-mxplot-chaco-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
-Filename: "{tmp}\mcxtrace-tools-python-mxplot-matplotlib-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
-Filename: "{tmp}\mcxtrace-tools-python-mxdisplay-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
+Filename: "{tmp}\mcxtrace-tools-python-mxrun-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
+Filename: "{tmp}\mcxtrace-tools-python-mxplot-chaco-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
+Filename: "{tmp}\mcxtrace-tools-python-mxplot-matplotlib-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
+Filename: "{tmp}\mcxtrace-tools-python-mxdisplay-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
