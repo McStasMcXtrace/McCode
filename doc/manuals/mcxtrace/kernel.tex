@@ -763,9 +763,9 @@ state of the incoming x-ray, the
 component definition calculates the state of the x-ray when it leaves
 the component.  The calculation of the effect of the component on the
 x-ray is performed by a block of embedded C code.
-One example of a component definition is given in \cref{s:slit}, and all
+One example of a component definition is given in \cref{s:semi-mirror}. All other
 component definitions can be found on the \MCX
-web-page~\cite{mcxtrace_webpage} and described in the \MCX component manual.
+web-page~\cite{mcxtrace_webpage} and are also described in the \MCX component manual.
 
 A large number of functions and constants are available in
 order to write efficient components. See \cref{c:kernelcalls}
@@ -1309,8 +1309,13 @@ This marks the end of the component definition.
 
 \subsection{A component example: Semi-transparent mirror}
 \label{s:semi-mirror}
+Below is an example of a complete component.
 A simple example of the component \texttt{Semi\_mirror} is given.
-\lstinputlisting[language=mccode]{Semi_mirror.comp}
+\lstinputlisting[language={[mccode]c}, caption={Complete listing of a
+semi-transparent mirror component. The component implements a Monte Carlo
+choice which lets the user decide how much of the available statistics should
+be used for the reflected and tranmitted branches
+respectively.}]{Semi_mirror.comp}
 
 \section{Extending component definitions}
 \label{s:compdefs-extend}
@@ -1320,7 +1325,11 @@ Suppose you are interested in one component in the \MCX library, but you would l
 \subsection{Extending from the instrument definition file}
 \index{Keyword!EXTEND}
 
-If you only want to \emph{add} something on top of the component existing behaviour, the simplest is to work from the instrument definition \texttt{TRACE} section, using the \texttt{EXTEND} modifier (see section \ref{s:instrdefs-extend-group}). You do not need to write a new component definition, but only add a piece of code to execute.
+If you only want to \emph{add} something on top of the component existing
+behaviour, the simplest is to work from the instrument definition
+\texttt{TRACE} section, using the \texttt{EXTEND} modifier (see section
+\ref{s:instrdefs-extend}). You do not need to write a new component
+definition, but only add a piece of code to execute.
 
 \subsection{Explicitly modify an existing library component}
 Copy the interesting component definition from the \MCX library location (e.g. \verb+/usr/local/mcxtrace/1.2/...+ or \verb+c:\mcxtrace\1.2\...+) into your working directory next to
@@ -1332,7 +1341,7 @@ development team concerning the options for contributing. Rest assured that copy
 \subsection{Component heritage and duplication}
 \index{Keyword!COPY}
 
-There is a heritage mechanism to create childs of existing components. These are exact duplicates of the parent component, but one may override/extend original definitions of any section.
+There is a heritage mechanism to create children of existing components. These are exact duplicates of the parent component, but one may override/extend original definitions of any section.
 
 The syntax for a full component child is
 \begin{quote}

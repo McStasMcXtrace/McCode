@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 
-# This will install McStas components
+# This will install McXtrace user and component manuals.
 set(FLAVOR mcxtrace)
 project(${FLAVOR}_manuals)
 
@@ -54,6 +54,7 @@ foreach(NAME ${LIST})
   file(COPY ${NAME} DESTINATION "${WORK}")
 endforeach()
 
+file(COPY Semi_mirror.comp DESTINATION "${WORK}")
 
 file(COPY figures DESTINATION "${WORK}")
 
