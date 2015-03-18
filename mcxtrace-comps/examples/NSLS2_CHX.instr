@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: NSLS2_CHX_beamline
+* Instrument: NSLS2_CHX
 *
 * %Identification
 * Written by: Jana Baltser
@@ -33,7 +33,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT NSLS2_CHX_beamline(L=33.5,L2=35.3,L3=44,Energy=10)
+DEFINE INSTRUMENT NSLS2_CHX(L=33.5,L2=35.3,L3=44,Energy=10)
 
 DECLARE
 %{
@@ -56,52 +56,29 @@ COMPONENT Origin = Progress_bar()
 AT (0,0,0) ABSOLUTE
 
 COMPONENT Source = Source_gaussian(sig_x=source_h,sig_y=source_v,sigPr_x=div_h,sigPr_y=div_v,E0=Energy,dE=0,dist=L,flux=4e18)
-   AT (0, 0, 0) RELATIVE Origin
+AT (0, 0, 0) RELATIVE Origin
 
    
-//COMPONENT Det0=PSD_monitor(filename="psd0.dat",xwidth=1e-3,yheight=1e-3,restore_xray=1,nx=500,ny=500)
-//AT (0,0,1e-6) RELATIVE Origin
-
-COMPONENT Det=PSD_monitor(filename="psd.dat",xwidth=5e-3,yheight=5e-3,restore_xray=1,nx=500,ny=500)
+COMPONENT Det=PSD_monitor(filename="psd.dat",xwidth=5e-3,yheight=5e-3,restore_xray=1,nx=200,ny=200)
 AT (0,0,L) RELATIVE Origin
 
 COMPONENT Slit=Slit(xwidth=slit_x,yheight=slit_y)
 AT (0,0,10e-4) RELATIVE PREVIOUS
 
-COMPONENT Det1=PSD_monitor(filename="psd1.dat",xwidth=.4e-3,yheight=2e-3,restore_xray=1,nx=500,ny=500)
+COMPONENT Det1=PSD_monitor(filename="psd1.dat",xwidth=.4e-3,yheight=2e-3,restore_xray=1,nx=200,ny=200)
 AT (0,0,L2-1e-3) RELATIVE Origin
   
 COMPONENT CRL=Lens_parab_Cyl(r=.5e-3,yheight=1e-3,xwidth=1e-3,d=.05e-3,N=9, material_datafile="Be.txt")
 AT (0,0,L2) RELATIVE Origin
 
-COMPONENT Det_f=PSD_monitor(filename="psd_f.dat",xwidth=.4e-3,yheight=.4e-3, restore_xray=1, nx=500, ny=500)
+COMPONENT Det_f=PSD_monitor(filename="psd_f.dat",xwidth=.4e-3,yheight=.4e-3, restore_xray=1, nx=200, ny=200)
 AT (0,0,43.98) RELATIVE Origin
 
 COMPONENT Kinoform=Lens_parab_Cyl(r=.5e-3,yheight=1.3e-3,xwidth=1.3e-3,d=.1e-3,N=21, material_datafile="Be.txt")
 AT (0,0,L3) RELATIVE Origin
 ROTATED (0,0 ,90) RELATIVE Origin
 
-COMPONENT Det_ff=PSD_monitor(filename="psd_ff.dat",xwidth=.08e-3,yheight=.08e-3, restore_xray=1, nx=500, ny=500)
+COMPONENT Det_ff=PSD_monitor(filename="psd_ff.dat",xwidth=.08e-3,yheight=.08e-3, restore_xray=1, nx=200, ny=200)
 AT (0,0,48.5) RELATIVE Origin
 
-
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
