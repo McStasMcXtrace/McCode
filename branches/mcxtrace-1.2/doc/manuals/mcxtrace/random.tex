@@ -62,9 +62,10 @@ $\Psi_\theta=\sin(\theta)$ (for $\theta \in [0; \pi ]$),
 whence by eq.~(\ref{e:randtrans}) $\theta=\cos^{-1}(x)$.
 
 \paragraph{Exponential decay}
-In a simple time-of-flight source, the neutron flux decays exponentially
-after the initial activation at $t=0$. We thus want to pick an initial
-neutron emission time from the normalised distribution
+
+In a simple 2-state model a molecule may be said to relax into its ground state
+at a time which is exponetially distributed after the initial excitation at $t=0$. 
+We thus want to pick a relaxation time from the normalised distribution
 $\Psi(t) = \exp(-t/\tau) / \tau$.
 Use of Eq.~(\ref{e:randtrans}) gives
 $x = 1 - \exp(-t/\tau)$. For convenience we now use the random variable
@@ -79,6 +80,6 @@ numbers with this distribution.
 
 \section{Random generators}
 \index{Monte Carlo method!Random number, Mersenne Twister}
-Even though there is the possibility to use the system random generator, as well as the initial \MCX\ random generator, the default algorithm is the so-called "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. See \\ \verb+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html+ for original source.
+Even though there is the possibility to use the system random generator, as well as the initial \MCX\ random generator, the default algorithm is the so-called "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura\cite{matsumoto1998mersenne}. See \\ \verb+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html+ for original source.
 
 It is considered today to be by far the best random generator, which means that both its period is extremely large $2^{19937}-1$, and cross-correlations are negligible, i.e distributions are homogeneous and independent up to 623 dimensions. It is also extremely fast.
