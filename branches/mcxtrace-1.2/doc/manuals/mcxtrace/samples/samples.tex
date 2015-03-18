@@ -3,8 +3,6 @@
 \index{Samples|textbf}
 \label{c:samples}
 
-%FIXME This needs!!!!! to be reworked urgently
-
 This class of components models the sample of the experiment.
 This is by far the most challenging part of a neutron scattering
 instrument to model. However, for purpose of simulating
@@ -14,24 +12,24 @@ virtual experiments it is of importance to have realistic and
 detailed sample descriptions. \MCX\ contains both simple and detailed
 samples.
 
-%We first consider incoherent scattering. The simple component \textbf{V-sample}
-%performs both incoherent scattering and absorption.
-
 An important component class is elastic Bragg scattering from an ideal powder.
 The component \textbf{PowderN} models a powder scatterer with reflections
 given in an input file. 
-%To scatter on a single Bragg peak, the \textbf{Powder1} component may be used.
 The component includes absorption, incoherent scattering, direct beam
 transmission and can assume \emph{concentric} shape, i.e. can be used
 for modelling sample enviroments.
 
-Next type is Bragg scattering from single crystals.
-The simplest single crystals are in fact the monochromator components
-like \textbf{Monochromator\_flat}, presented in section \ref{s:monochromator_flat}.
-The monochromators are models of a thin mosaic crystal
-with a single scattering vector perpendicular to the surface.
-Much more advanced, the component \textbf{Single\_crystal}
-is a general single crystal sample (with multiple scattering) that allows
+Next type is Bragg scattering from single crystals. Two types of single crystal exist in \MCX
+at present: The \textbf{Perfect\_crystal} and \textbf{Single\_crystal} components.
+\textbf{Perfect\_crystal} is in fact most often used as a monchromator crystal. It models a 
+crystal where peak broadening is dominated by the Darwin width. Currently it only handles a
+single defined reflection. If more than one is wanted this could be
+accomplished by using two instances in a \texttt{GROUP} and dynamically choose between
+them with a \texttt{WHEN}-statement. For details on the \texttt{GROUP} and \texttt{WHEN} constructs see the
+main \MCX user manual~\cite{mcxtracemanual}
+
+Much more general, the component \textbf{Single\_crystal}
+is a single crystal sample (with multiple scattering) that allows
 the input of an arbitrary unit cell and a list of structure factors, read
 from a LAZY / Crystallographica file.
 This component also allows anisotropic mosaicity
@@ -39,44 +37,8 @@ and $\Delta d/d$ lattice space variation.
 
 Isotropic small-angle scattering is simulated in \textbf{Saxs\_Spheres},
 which models scattering from a collection of hard spheres (dilute colloids).
-
-%Inelastic scattering from a dispersion is exemplified by
-%the component \textbf{Phonon\_simple}, which models
-%scattering from a single acoustic phonon branch.
-
-%For a more general sample model, the \textbf{Isotropic\_Sqw} component
-%is able to simulate all kinds of isotropic materials:
-%Liquids, glasses, polymers, powders, etc, with $S(q,\omega)$ table
-%specified by an input file.
-%Physical processes include coherent/incoherent scattering,
-%both elastic and inelastic, with absorption and multiple scattering.
-%Moreover, this component may be used concentrically,
-%to model a sample environment.
-%Thus it may handle most samples except single crystals.
-
-%\begin{table}
-%  \begin{center}
-%  {\let\my=\\
-%    \begin{tabular}{|c|cc|cc|c|c|}
-%    \hline
-%    Sample        & \multicolumn{2}{c|}{Coherent} & \multicolumn{2}{c|}{Incoherent} &&\\
-%    Process       & Elastic & Inelastic & Elastic & Inelastic & Absorption & Multi. Scatt.\\
-%    \hline
-%    Phonon\_simple&         & X         &         &           & 1 & \\
-%    Isotropic\_Sqw&  X      & X         & X       & X         & 2 & X \\
-%    Powder1       &  1 line &           & X       &           & 1 & \\
-%    PowderN       &  N lines&           & X       &           & 1 & \\
-%    Sans\_spheres &  colloid&           &         &           & 1 & \\
-%    Single\_crystal& X      &           & X       &           & 2 & X \\
-%    V\_sample     &         &           & X       & QE broad. & 1 & \\
-%    Tunneling\_sample &     & X         & X       & QE broad. & 1 & \\
-%    \hline
-%    \end{tabular}
-%    \caption{Processes implemented in sample components. Absorption: 1=single only, 2=with secondary}
-%    \label{t:sample-process}
-%  }
-%  \end{center}
-%\end{table}
+Furthermore, a whole series of sample components modelling various SAXS standard 
+sample types are available in the  \texttt{contrib} component library section.
 
 \subsection{Scattering notation}
 In sample components, we use a notation common for scattering experiments,
