@@ -1,6 +1,6 @@
 %define name			mcxtrace-suite-python
 %define summary			A metapackage for McXtrace + python tools
-%define version			1.1
+%define version			@VERSION@
 %define release			1
 %define license			GPL
 %define group			Documentation
@@ -17,7 +17,7 @@ Summary:   %{summary}
 Group:     %{group}
 URL:       http://www.mccode.org
 Buildroot: %{buildroot}
-Requires:  mcxtrace-1.1 mcxtrace-comps-1.1 mcxtrace-tools-python-mxplot-chaco-1.1 mcxtrace-tools-python-mxplot-matplotlib-1.1 mcxtrace-tools-python-mxrun-1.1
+Requires:  mcxtrace-@VERSION@ mcxtrace-comps-@VERSION@ mcxtrace-tools-python-mxplot-chaco-@VERSION@ mcxtrace-tools-python-mxplot-matplotlib-@VERSION@ mcxtrace-tools-python-mxrun-@VERSION@
 
 %description
 A metapackage for McXtrace + python tools

@@ -16,11 +16,23 @@ fi
 ./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux64 "" -- deb
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" linux64 "o" -- deb
 # 32-bit
-./mkdist mcxtrace $1 "" "" linux32 "" -- deb
-./mkdist mcxtrace-comps $1 "" "" linux32 "" -- deb
-./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" linux32 "" -- deb
-./mkdist mcxtrace-tools-python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" linux32 "" -- deb
-./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux32 "" -- deb
-./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" linux32 "" -- deb
-./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 "" -- deb
-./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" linux32 "o" -- deb
+#./mkdist mcxtrace $1 "" "" linux32 "" -- deb
+#./mkdist mcxtrace-comps $1 "" "" linux32 "" -- deb
+#./mkdist mcxtrace-tools-perl $1 tools/Legacy-Perl/ "" linux32 "" -- deb
+#./mkdist mcxtrace-tools-python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" linux32 "" -- deb
+#./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux32 "" -- deb
+#./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" linux32 "" -- deb
+#./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 "" -- deb
+#./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" linux32 "o" -- deb
+
+#build metapackages?
+if [ "x$2" != "x" ]; then
+  cd meta-pkgs/deb
+
+  for controlfile in `ls control.mcxtrace*`
+  do
+    sed -i.bak s/@VERSION@/${1}/g $controlfile
+    equivs-build $controlfile
+    mv $controlfile.bak $controlfile
+  done
+fi
