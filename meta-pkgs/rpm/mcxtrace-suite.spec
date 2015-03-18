@@ -1,11 +1,11 @@
 %define name			mcxtrace-suite
 %define summary			A metapackage for McXtrace + perl and python tools
-%define version			1.1
+%define version			@VERSION@
 %define release			1
 %define license			GPL
 %define group			Documentation
 %define vendor			mccode.org
-%define packager		Peter willendrup
+%define packager		Erik B Knudsen
 
 Name:      %{name}
 Version:   %{version}
