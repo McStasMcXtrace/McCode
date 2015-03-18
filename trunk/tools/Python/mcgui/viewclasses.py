@@ -17,34 +17,60 @@ class McView(object):
         self.__mw = McMainWindow()
         self.mwui = self.__mw.ui
         self.mwui.lblInstrument.setText("")
-        
-        self.__ew = McCodeEditorWindow()
-        self.ewui = self.__ew.ui
-        
+                
+        #if self.ew == None:
+        self.ew = McCodeEditorWindow()
+            
     def showMainWindow(self):
         self.__mw.show()
 
-    def showCodeEditor(self):
-        self.__ew.show()
+    def showCodeEditorWindow(self, instr=''):
+        self.ew.initCodeEditor(instr)
+        self.ew.show()
+    
+    def closeCodeEditorWindow(self):
+        self.ew.close()
         
     ''' Update UI data
     '''
-    def updateLabels(self, labels):
+    def updateInstrumentLabel(self, labels):
         self.mwui.lblInstrument.setText(labels[0])
-        
-    def updateWorkDir(self, workDir):
-        self.mwui.lblWorkDir.setText(workDir)
         
     def updateStatus(self, text=''):
         self.mwui.statusbar.showMessage(text)
         
-    def updateLog(self, text=''):
-        self.mwui.textBrowser.append(text)
-        
+    def updateLog(self, text='', guiMsg=False, error=False):
+        if guiMsg:
+            if error:
+                self.mwui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
+            else:
+                self.mwui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
+            self.mwui.txtbrwMcgui.append(text)
+        else:
+            if error:
+                self.mwui.txtbrwSim.setTextColor(QtGui.QColor('red'))
+            else:
+                self.mwui.txtbrwSim.setTextColor(QtGui.QColor('black'))
+            self.mwui.txtbrwSim.append(text)
+            
     def updateSimState(self, state=[]):
-        self.mwui.actionRS.setEnabled(state[0]=='True')
-        self.mwui.actionCS.setEnabled(state[1]=='True')
-        self.mwui.actionPS.setEnabled(state[2]=='True')
+        canRun = state[0] == 'True'
+        canPlot = state[1] == 'True'
+        
+        ui = self.mwui
+        ui.btnRun.setEnabled(canRun)
+        ui.btnEdit.setEnabled(canRun)
+        ui.btnPlot.setEnabled(canPlot)
+        if canRun:
+            ui.lblInstrument.setStyleSheet('color: black')
+        else:
+            ui.lblInstrument.setStyleSheet('color: red')
+        ui.actionClose_Instrument.setEnabled(canRun)
+        ui.actionPlot.setEnabled(canPlot)
+        ui.actionRun_Simulation.setEnabled(canRun)
+        ui.actionSave_As.setEnabled(canRun)
+        ui.actionEdit_Instrument.setEnabled(canRun)
+        ui.actionCompile_Instrument.setEnabled(canRun)
         
     ''' UI actions
     '''
@@ -69,6 +95,18 @@ class McView(object):
             return dlg.getValues()
         else: 
             return None, None
+    
+    def showNewInstrDialog(self, lookdir):
+        dlg = QtGui.QFileDialog()
+        dlg.setDirectory(lookdir)
+        dlg.setNameFilter("mcstas instruments (*.instr)");
+        tuple = dlg.getSaveFileNameAndFilter(parent=None, caption=QtCore.QString('Create new instrument file...'))
+        return tuple[0]
+        
+    def showSaveAsDialog(self, instr):
+        dlg = QtGui.QFileDialog()
+        dlg.setFileMode(QtGui.QFileDialog.AnyFile)
+        return dlg.getSaveFileNameAndFilter(parent=None, caption=QtCore.QString('Save instrument As...'), directory=instr)[0]
 
 ''' Main Window widgets wrapper class
 Events callbacks are hooked elsewhere.
@@ -78,6 +116,115 @@ class McMainWindow(QtGui.QMainWindow):
         super(McMainWindow, self).__init__(parent)
         self.ui =  Ui_MainWindow()
         self.ui.setupUi(self)
+        
+        
+''' Code editor window widgets wrapper class
+'''
+class McCodeEditorWindow(QtGui.QMainWindow):
+    def __init__(self, parent=None):
+        super(McCodeEditorWindow, self).__init__(parent)
+        self.ui =  Ui_EditorWindow()
+        self.ui.setupUi(self)
+        self.__initScintilla()
+        self.__initCallbacks()
+        
+    def __initScintilla(self):
+        # delete text editor placeholder 
+        scintilla = Qsci.QsciScintilla(self)
+        
+        lexer = QsciLexerPython()
+        scintilla.setLexer(lexer)
+        scintilla.__myLexer = lexer # save reference to retain scope
+        
+        api = Qsci.QsciAPIs(lexer)
+        api.add("aLongString")
+        api.add("aLongerString")
+        api.add("aDifferentString")
+        api.add("sOmethingElse")
+        api.prepare()
+        scintilla.__myApi = api # save reference to retain scope
+        
+        scintilla.setAutoCompletionThreshold(1)
+        scintilla.setAutoCompletionSource(Qsci.QsciScintilla.AcsAPIs)
+        
+        self.setCentralWidget(scintilla)
+
+        self.__scintilla = scintilla
+    
+    def __initCallbacks(self):
+        # connect menu items to corresponding scintilla slots
+        ui = self.ui 
+        ui.actionUndo.triggered.connect(self.__scintilla.undo)
+        ui.actionRedo.triggered.connect(self.__scintilla.redo)
+        ui.actionSelect_All.triggered.connect(self.__scintilla.selectAll) 
+        ui.actionCopy.triggered.connect(self.__scintilla.copy)
+        ui.actionCut.triggered.connect(self.__scintilla.cut)
+        ui.actionPaste.triggered.connect(self.__scintilla.paste)
+        ui.actionSave.triggered.connect(self.__handleSaveAction)
+        ui.actionClose_Instrument_Editor.triggered.connect(self.close)
+        
+        # connect "text changed" signal to our handler to detect unsaved changes
+        self.__scintilla.textChanged.connect(self.__handleTextChanged)
+        
+        self.volatileDataTransition.connect(self.__handleVolatileDataPresent)
+ 
+    def closeEvent(self, event):
+        ''' hook to display a "save changes?" dialog if there are unsaved changes 
+        '''
+        if self.volatileDataExists:
+            reply = QtGui.QMessageBox.question(self, 
+                                               'Message', 
+                                               'Are you sure you want to exit the program?',
+                                               'Save',      # default button, reply == 0
+                                               'Discard',   # reply == 1
+                                               'Cancel')    # reply == 2
+            if reply == 0:
+                self.saveRequest.emit(self.__scintilla.text())
+                self.assumeDataSaved()
+                event.accept()
+            elif reply == 1:
+                event.accept()
+            elif reply == 2:
+                event.ignore()
+        else:
+            event.accept()
+            
+    volatileDataExists = False
+    volatileDataTransition = QtCore.pyqtSignal(bool)
+    def __handleTextChanged(self):
+        if not self.volatileDataExists:
+            self.volatileDataTransition.emit(True)
+    
+    saveRequest = QtCore.pyqtSignal(QtCore.QString)
+    def __handleSaveAction(self):
+        self.saveRequest.emit(self.__scintilla.text())
+        
+    def __handleVolatileDataPresent(self, volatileDataExists=False):
+        if volatileDataExists:
+            title = self.windowTitle()
+            self.setWindowTitle('*' + title)
+        else:
+            title = str(self.windowTitle())
+            self.setWindowTitle(title.replace('*', ''))
+        self.volatileDataExists = volatileDataExists
+        self.ui.actionSave.setEnabled(volatileDataExists)
+        
+    def __handleExit(self):
+        if self.volatileDataExists:
+            return
+            # TODO: make a "save changes?" dialog
+            #dlg = QtGui.QDialogButtonBox()
+        
+    def initCodeEditor(self, instr):
+        if instr != '':
+            self.__scintilla.setText(open(instr).read())
+        else:
+            self.__scintilla.setText('')
+        self.setWindowTitle("mcstas: " + instr)
+        self.assumeDataSaved()
+        
+    def assumeDataSaved(self):
+        self.volatileDataTransition.emit(False)
 
 
 ''' Start simulation widgets wrapper class
@@ -172,6 +319,7 @@ class McStartSimDialog(QtGui.QDialog):
             self.ui.gridLayout.addWidget(edt, y, x, 1, 1)
             
             self.__wParams.append([lbl, edt])
+        self.ui.btnStart.setFocus()
 
 class SimTraceEnum:
     SIM = 0
@@ -181,41 +329,7 @@ class ClusteringEnum:
     SINGLE = 0 
     MPI = 1
     SSH = 2
-
-
-''' Code editor window widgets wrapper class
-'''
-class McCodeEditorWindow(QtGui.QMainWindow):
-    def __init__(self, parent=None):
-        super(McCodeEditorWindow, self).__init__(parent)
-        self.ui =  Ui_EditorWindow()
-        self.ui.setupUi(self)
-        self.initCodeEditor()
-        
-    def initCodeEditor(self):
-        
-        # delete text editor placeholder 
-        scintilla = Qsci.QsciScintilla(self)
-        
-        lexer = QsciLexerPython()
-        scintilla.setLexer(lexer)
-        scintilla.myLex = lexer # save reference to retain scope
-        
-        api = Qsci.QsciAPIs(lexer)
-        api.add("aLongString")
-        api.add("aLongerString")
-        api.add("aDifferentString")
-        api.add("sOmethingElse")
-        api.prepare()
-        scintilla.myApi = api # save reference to retain scope
-        
-        scintilla.setAutoCompletionThreshold(1)
-        scintilla.setAutoCompletionSource(Qsci.QsciScintilla.AcsAPIs)
-        
-        scintilla.setText(open("main.py").read())
-     
-        self.setCentralWidget(scintilla)
-
+    
 
 ''' Main window ui widget setup.
 Auto-generated view created with QtCreator.
@@ -235,32 +349,37 @@ class Ui_MainWindow(object):
         self.gbxInstrument.setObjectName("gbxInstrument")
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.gbxInstrument)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.gridLayout = QtGui.QGridLayout()
-        self.gridLayout.setObjectName("gridLayout")
+        self.grdInstrument = QtGui.QGridLayout()
+        self.grdInstrument.setObjectName("grdInstrument")
         self.lblInstrument = QtGui.QLabel(self.gbxInstrument)
         self.lblInstrument.setObjectName("lblInstrument")
-        self.gridLayout.addWidget(self.lblInstrument, 2, 1, 1, 1)
-        self.tbtnInstrument = QtGui.QToolButton(self.gbxInstrument)
-        self.tbtnInstrument.setObjectName("tbtnInstrument")
-        self.gridLayout.addWidget(self.tbtnInstrument, 2, 2, 1, 1)
+        self.grdInstrument.addWidget(self.lblInstrument, 2, 1, 1, 1)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.gridLayout.addItem(spacerItem, 2, 3, 1, 1)
+        self.grdInstrument.addItem(spacerItem, 0, 1, 1, 5)
         self.btnRun = QtGui.QPushButton(self.gbxInstrument)
         self.btnRun.setObjectName("btnRun")
-        self.gridLayout.addWidget(self.btnRun, 2, 4, 1, 1)
+        self.grdInstrument.addWidget(self.btnRun, 0, 6, 1, 1)
         self.btnPlot = QtGui.QPushButton(self.gbxInstrument)
         self.btnPlot.setObjectName("btnPlot")
-        self.gridLayout.addWidget(self.btnPlot, 2, 5, 1, 1)
-        self.verticalLayout_2.addLayout(self.gridLayout)
+        self.grdInstrument.addWidget(self.btnPlot, 0, 7, 1, 1)
+        self.btnEdit = QtGui.QPushButton(self.gbxInstrument)
+        self.btnEdit.setObjectName("btnEdit")
+        self.grdInstrument.addWidget(self.btnEdit, 2, 7, 1, 1)
+        self.btnOpenInstrument = QtGui.QPushButton(self.gbxInstrument)
+        self.btnOpenInstrument.setObjectName("btnOpenInstrument")
+        self.grdInstrument.addWidget(self.btnOpenInstrument, 2, 6, 1, 1)
+        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.grdInstrument.addItem(spacerItem1, 2, 2, 1, 4)
+        self.verticalLayout_2.addLayout(self.grdInstrument)
         self.verticalLayout.addWidget(self.gbxInstrument)
-        self.horizontalLayout_2 = QtGui.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.hlyMessages = QtGui.QHBoxLayout()
+        self.hlyMessages.setObjectName("hlyMessages")
         self.gbxMessages = QtGui.QGroupBox(self.centralwidget)
         self.gbxMessages.setObjectName("gbxMessages")
         self.verticalLayout_3 = QtGui.QVBoxLayout(self.gbxMessages)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.tbxOutput = QtGui.QTabWidget(self.gbxMessages)
-        self.tbxOutput.setObjectName("tbxOutput")
+        self.tbxMessages = QtGui.QTabWidget(self.gbxMessages)
+        self.tbxMessages.setObjectName("tbxMessages")
         self.tabMcgui = QtGui.QWidget()
         self.tabMcgui.setObjectName("tabMcgui")
         self.verticalLayout_4 = QtGui.QVBoxLayout(self.tabMcgui)
@@ -268,7 +387,7 @@ class Ui_MainWindow(object):
         self.txtbrwMcgui = QtGui.QTextBrowser(self.tabMcgui)
         self.txtbrwMcgui.setObjectName("txtbrwMcgui")
         self.verticalLayout_4.addWidget(self.txtbrwMcgui)
-        self.tbxOutput.addTab(self.tabMcgui, "")
+        self.tbxMessages.addTab(self.tabMcgui, "")
         self.tabSim = QtGui.QWidget()
         self.tabSim.setObjectName("tabSim")
         self.verticalLayout_5 = QtGui.QVBoxLayout(self.tabSim)
@@ -276,10 +395,10 @@ class Ui_MainWindow(object):
         self.txtbrwSim = QtGui.QTextBrowser(self.tabSim)
         self.txtbrwSim.setObjectName("txtbrwSim")
         self.verticalLayout_5.addWidget(self.txtbrwSim)
-        self.tbxOutput.addTab(self.tabSim, "")
-        self.verticalLayout_3.addWidget(self.tbxOutput)
-        self.horizontalLayout_2.addWidget(self.gbxMessages)
-        self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.tbxMessages.addTab(self.tabSim, "")
+        self.verticalLayout_3.addWidget(self.tbxMessages)
+        self.hlyMessages.addWidget(self.gbxMessages)
+        self.verticalLayout.addLayout(self.hlyMessages)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 25))
@@ -308,33 +427,30 @@ class Ui_MainWindow(object):
         self.actionMcstas_Web_Page.setObjectName("actionMcstas_Web_Page")
         self.actionAbout = QtGui.QAction(MainWindow)
         self.actionAbout.setObjectName("actionAbout")
-        self.actionRS = QtGui.QAction(MainWindow)
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("run-icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        icon.addPixmap(QtGui.QPixmap("../../GIMP/run-icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        self.actionRS.setIcon(icon)
-        self.actionRS.setObjectName("actionRS")
-        self.actionCS = QtGui.QAction(MainWindow)
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap("compile-icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        icon1.addPixmap(QtGui.QPixmap("../../GIMP/compile-icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        self.actionCS.setIcon(icon1)
-        self.actionCS.setObjectName("actionCS")
-        self.actionPS = QtGui.QAction(MainWindow)
-        self.actionPS.setObjectName("actionPS")
         self.actionMcstas_Component_Manual = QtGui.QAction(MainWindow)
         self.actionMcstas_Component_Manual.setObjectName("actionMcstas_Component_Manual")
-        self.actionChange_Working_Dir = QtGui.QAction(MainWindow)
-        self.actionChange_Working_Dir.setObjectName("actionChange_Working_Dir")
         self.actionNew_Instrument = QtGui.QAction(MainWindow)
         self.actionNew_Instrument.setObjectName("actionNew_Instrument")
+        self.actionEdit_Instrument = QtGui.QAction(MainWindow)
+        self.actionEdit_Instrument.setObjectName("actionEdit_Instrument")
+        self.actionClose_Instrument = QtGui.QAction(MainWindow)
+        self.actionClose_Instrument.setObjectName("actionClose_Instrument")
+        self.actionPlot = QtGui.QAction(MainWindow)
+        self.actionPlot.setObjectName("actionPlot")
+        self.actionSave_As = QtGui.QAction(MainWindow)
+        self.actionSave_As.setObjectName("actionSave_As")
         self.menuFile.addAction(self.actionNew_Instrument)
         self.menuFile.addAction(self.actionOpen_instrument)
-        self.menuFile.addAction(self.actionChange_Working_Dir)
+        self.menuFile.addSeparator()
+        self.menuFile.addAction(self.actionEdit_Instrument)
+        self.menuFile.addAction(self.actionSave_As)
+        self.menuFile.addAction(self.actionClose_Instrument)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionQuit)
         self.menuSimulation.addAction(self.actionRun_Simulation)
         self.menuSimulation.addAction(self.actionCompile_Instrument)
+        self.menuSimulation.addSeparator()
+        self.menuSimulation.addAction(self.actionPlot)
         self.menuHelp.addAction(self.actionMcstas_User_Manual)
         self.menuHelp.addAction(self.actionMcstas_Component_Manual)
         self.menuHelp.addAction(self.actionMcstas_Web_Page)
@@ -345,39 +461,169 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuHelp.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.tbxOutput.setCurrentIndex(0)
+        self.tbxMessages.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "mcgui-py", None, QtGui.QApplication.UnicodeUTF8))
         self.gbxInstrument.setTitle(QtGui.QApplication.translate("MainWindow", "Instrument:", None, QtGui.QApplication.UnicodeUTF8))
         self.lblInstrument.setText(QtGui.QApplication.translate("MainWindow", "<Instrument file>", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbtnInstrument.setToolTip(QtGui.QApplication.translate("MainWindow", "Browse instrument...", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbtnInstrument.setText(QtGui.QApplication.translate("MainWindow", "...", None, QtGui.QApplication.UnicodeUTF8))
         self.btnRun.setText(QtGui.QApplication.translate("MainWindow", "Run...", None, QtGui.QApplication.UnicodeUTF8))
         self.btnPlot.setText(QtGui.QApplication.translate("MainWindow", "Plot", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnEdit.setText(QtGui.QApplication.translate("MainWindow", "Edit", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnOpenInstrument.setToolTip(QtGui.QApplication.translate("MainWindow", "Browse instrument...", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnOpenInstrument.setText(QtGui.QApplication.translate("MainWindow", "Open...", None, QtGui.QApplication.UnicodeUTF8))
         self.gbxMessages.setTitle(QtGui.QApplication.translate("MainWindow", "Messages:", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbxOutput.setTabText(self.tbxOutput.indexOf(self.tabMcgui), QtGui.QApplication.translate("MainWindow", "mcgui", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbxOutput.setTabText(self.tbxOutput.indexOf(self.tabSim), QtGui.QApplication.translate("MainWindow", "Simulations", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbxMessages.setTabText(self.tbxMessages.indexOf(self.tabMcgui), QtGui.QApplication.translate("MainWindow", "mcgui", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbxMessages.setTabText(self.tbxMessages.indexOf(self.tabSim), QtGui.QApplication.translate("MainWindow", "Simulations", None, QtGui.QApplication.UnicodeUTF8))
         self.menuFile.setTitle(QtGui.QApplication.translate("MainWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
         self.menuSimulation.setTitle(QtGui.QApplication.translate("MainWindow", "Simulation", None, QtGui.QApplication.UnicodeUTF8))
         self.menuHelp.setTitle(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionOpen_instrument.setText(QtGui.QApplication.translate("MainWindow", "Open Instrument...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionOpen_instrument.setText(QtGui.QApplication.translate("MainWindow", "Open...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionOpen_instrument.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+O", None, QtGui.QApplication.UnicodeUTF8))
         self.actionQuit.setText(QtGui.QApplication.translate("MainWindow", "Quit", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionQuit.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+Q", None, QtGui.QApplication.UnicodeUTF8))
         self.actionRun_Simulation.setText(QtGui.QApplication.translate("MainWindow", "Run Simulation...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionRun_Simulation.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+R", None, QtGui.QApplication.UnicodeUTF8))
         self.actionCompile_Instrument.setText(QtGui.QApplication.translate("MainWindow", "Compile Instrument", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionCompile_Instrument.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+Shift+R", None, QtGui.QApplication.UnicodeUTF8))
         self.actionMcstas_User_Manual.setText(QtGui.QApplication.translate("MainWindow", "mcstas User Manual", None, QtGui.QApplication.UnicodeUTF8))
         self.actionMcstas_Web_Page.setText(QtGui.QApplication.translate("MainWindow", "mcstas Web Page", None, QtGui.QApplication.UnicodeUTF8))
         self.actionAbout.setText(QtGui.QApplication.translate("MainWindow", "About...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionRS.setText(QtGui.QApplication.translate("MainWindow", "RS", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionRS.setToolTip(QtGui.QApplication.translate("MainWindow", "Compile/Run simulation...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionCS.setText(QtGui.QApplication.translate("MainWindow", "CS", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionCS.setToolTip(QtGui.QApplication.translate("MainWindow", "Compile instrument", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionPS.setText(QtGui.QApplication.translate("MainWindow", "PS", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionPS.setToolTip(QtGui.QApplication.translate("MainWindow", "Plot results...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionAbout.setShortcut(QtGui.QApplication.translate("MainWindow", "F1", None, QtGui.QApplication.UnicodeUTF8))
         self.actionMcstas_Component_Manual.setText(QtGui.QApplication.translate("MainWindow", "mcstas Component Manual", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionChange_Working_Dir.setText(QtGui.QApplication.translate("MainWindow", "Change Work Dir...", None, QtGui.QApplication.UnicodeUTF8))
         self.actionNew_Instrument.setText(QtGui.QApplication.translate("MainWindow", "New Instrument...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionNew_Instrument.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+N", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionEdit_Instrument.setText(QtGui.QApplication.translate("MainWindow", "Edit...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionEdit_Instrument.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+E", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionClose_Instrument.setText(QtGui.QApplication.translate("MainWindow", "Close Instrument", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionClose_Instrument.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+W", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionPlot.setText(QtGui.QApplication.translate("MainWindow", "Plot", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionPlot.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+P", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave_As.setText(QtGui.QApplication.translate("MainWindow", "Save As...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave_As.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+Shift+S", None, QtGui.QApplication.UnicodeUTF8))
+
+
+''' Edit instrument window
+Auto-generated view created with QtCreator.
+Generate from .ui source with pyside-uic. 
+Do not edit. 
+'''
+class Ui_EditorWindow(object):
+    def setupUi(self, EditorWindow):
+        EditorWindow.setObjectName("EditorWindow")
+        EditorWindow.resize(600, 800)
+        self.centralwidget = QtGui.QWidget(EditorWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.verticalLayout_2 = QtGui.QVBoxLayout(self.centralwidget)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        EditorWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtGui.QMenuBar(EditorWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 600, 25))
+        self.menubar.setObjectName("menubar")
+        self.menuFile = QtGui.QMenu(self.menubar)
+        self.menuFile.setObjectName("menuFile")
+        self.menuEdit = QtGui.QMenu(self.menubar)
+        self.menuEdit.setObjectName("menuEdit")
+        self.menuView = QtGui.QMenu(self.menubar)
+        self.menuView.setObjectName("menuView")
+        self.menuInsert = QtGui.QMenu(self.menubar)
+        self.menuInsert.setObjectName("menuInsert")
+        self.menuSource = QtGui.QMenu(self.menuInsert)
+        self.menuSource.setObjectName("menuSource")
+        self.menuOptics = QtGui.QMenu(self.menuInsert)
+        self.menuOptics.setObjectName("menuOptics")
+        EditorWindow.setMenuBar(self.menubar)
+        self.statusbar = QtGui.QStatusBar(EditorWindow)
+        self.statusbar.setObjectName("statusbar")
+        EditorWindow.setStatusBar(self.statusbar)
+        self.actionComponent_Browser = QtGui.QAction(EditorWindow)
+        self.actionComponent_Browser.setObjectName("actionComponent_Browser")
+        self.actionSource_Maxwell_3 = QtGui.QAction(EditorWindow)
+        self.actionSource_Maxwell_3.setObjectName("actionSource_Maxwell_3")
+        self.actionSource_Optimize = QtGui.QAction(EditorWindow)
+        self.actionSource_Optimize.setObjectName("actionSource_Optimize")
+        self.actionGuide = QtGui.QAction(EditorWindow)
+        self.actionGuide.setObjectName("actionGuide")
+        self.actionMirror = QtGui.QAction(EditorWindow)
+        self.actionMirror.setObjectName("actionMirror")
+        self.actionV_Selector = QtGui.QAction(EditorWindow)
+        self.actionV_Selector.setObjectName("actionV_Selector")
+        self.actionUndo = QtGui.QAction(EditorWindow)
+        self.actionUndo.setObjectName("actionUndo")
+        self.actionRedo = QtGui.QAction(EditorWindow)
+        self.actionRedo.setObjectName("actionRedo")
+        self.actionCopy = QtGui.QAction(EditorWindow)
+        self.actionCopy.setObjectName("actionCopy")
+        self.actionCut = QtGui.QAction(EditorWindow)
+        self.actionCut.setObjectName("actionCut")
+        self.actionPaste = QtGui.QAction(EditorWindow)
+        self.actionPaste.setObjectName("actionPaste")
+        self.actionSelect_All = QtGui.QAction(EditorWindow)
+        self.actionSelect_All.setObjectName("actionSelect_All")
+        self.actionSave = QtGui.QAction(EditorWindow)
+        self.actionSave.setObjectName("actionSave")
+        self.actionClose_Instrument_Editor = QtGui.QAction(EditorWindow)
+        self.actionClose_Instrument_Editor.setObjectName("actionClose_Instrument_Editor")
+        self.menuFile.addAction(self.actionSave)
+        self.menuFile.addSeparator()
+        self.menuFile.addAction(self.actionClose_Instrument_Editor)
+        self.menuEdit.addAction(self.actionUndo)
+        self.menuEdit.addAction(self.actionRedo)
+        self.menuEdit.addSeparator()
+        self.menuEdit.addAction(self.actionCopy)
+        self.menuEdit.addAction(self.actionCut)
+        self.menuEdit.addAction(self.actionPaste)
+        self.menuEdit.addSeparator()
+        self.menuEdit.addAction(self.actionSelect_All)
+        self.menuSource.addAction(self.actionSource_Maxwell_3)
+        self.menuSource.addAction(self.actionSource_Optimize)
+        self.menuOptics.addSeparator()
+        self.menuOptics.addAction(self.actionGuide)
+        self.menuOptics.addAction(self.actionMirror)
+        self.menuOptics.addAction(self.actionV_Selector)
+        self.menuInsert.addAction(self.actionComponent_Browser)
+        self.menuInsert.addSeparator()
+        self.menuInsert.addAction(self.menuSource.menuAction())
+        self.menuInsert.addAction(self.menuOptics.menuAction())
+        self.menubar.addAction(self.menuFile.menuAction())
+        self.menubar.addAction(self.menuEdit.menuAction())
+        self.menubar.addAction(self.menuView.menuAction())
+        self.menubar.addAction(self.menuInsert.menuAction())
+
+        self.retranslateUi(EditorWindow)
+        QtCore.QMetaObject.connectSlotsByName(EditorWindow)
+
+    def retranslateUi(self, EditorWindow):
+        EditorWindow.setWindowTitle(QtGui.QApplication.translate("EditorWindow", "Instrument Editor", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuFile.setTitle(QtGui.QApplication.translate("EditorWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuEdit.setTitle(QtGui.QApplication.translate("EditorWindow", "Edit", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuView.setTitle(QtGui.QApplication.translate("EditorWindow", "View", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuInsert.setTitle(QtGui.QApplication.translate("EditorWindow", "Insert", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuSource.setTitle(QtGui.QApplication.translate("EditorWindow", "Source", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuOptics.setTitle(QtGui.QApplication.translate("EditorWindow", "Optics", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionComponent_Browser.setText(QtGui.QApplication.translate("EditorWindow", "Component Browser...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSource_Maxwell_3.setText(QtGui.QApplication.translate("EditorWindow", "Source_Maxwell_3...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSource_Optimize.setText(QtGui.QApplication.translate("EditorWindow", "Source_Optimize...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionGuide.setText(QtGui.QApplication.translate("EditorWindow", "Guide...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionMirror.setText(QtGui.QApplication.translate("EditorWindow", "Mirror...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionV_Selector.setText(QtGui.QApplication.translate("EditorWindow", "V_selector...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionUndo.setText(QtGui.QApplication.translate("EditorWindow", "Undo", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionUndo.setShortcut(QtGui.QApplication.translate("EditorWindow", "Ctrl+Z", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionRedo.setText(QtGui.QApplication.translate("EditorWindow", "Redo", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionRedo.setShortcut(QtGui.QApplication.translate("EditorWindow", "Ctrl+Shift+Z", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionCopy.setText(QtGui.QApplication.translate("EditorWindow", "Copy", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionCopy.setShortcut(QtGui.QApplication.translate("EditorWindow", "Ctrl+C", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionCut.setText(QtGui.QApplication.translate("EditorWindow", "Cut", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionCut.setShortcut(QtGui.QApplication.translate("EditorWindow", "Ctrl+X", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionPaste.setText(QtGui.QApplication.translate("EditorWindow", "Paste", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionPaste.setShortcut(QtGui.QApplication.translate("EditorWindow", "Ctrl+V", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSelect_All.setText(QtGui.QApplication.translate("EditorWindow", "Select All", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSelect_All.setShortcut(QtGui.QApplication.translate("EditorWindow", "Ctrl+A", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave.setText(QtGui.QApplication.translate("EditorWindow", "Save", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave.setShortcut(QtGui.QApplication.translate("EditorWindow", "Ctrl+S", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionClose_Instrument_Editor.setText(QtGui.QApplication.translate("EditorWindow", "Close Instrument Editor", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionClose_Instrument_Editor.setShortcut(QtGui.QApplication.translate("EditorWindow", "Ctrl+W", None, QtGui.QApplication.UnicodeUTF8))
 
 
 ''' Start simulation dialog widget
@@ -487,6 +733,7 @@ class Ui_dlgStartSim(object):
         self.horizontalLayout_3 = QtGui.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.btnStart = QtGui.QPushButton(dlgStartSim)
+        self.btnStart.setDefault(True)
         self.btnStart.setObjectName("btnStart")
         self.horizontalLayout_3.addWidget(self.btnStart)
         spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
@@ -521,129 +768,3 @@ class Ui_dlgStartSim(object):
         self.checkBox.setText(QtGui.QApplication.translate("dlgStartSim", "Gravity", None, QtGui.QApplication.UnicodeUTF8))
         self.btnStart.setText(QtGui.QApplication.translate("dlgStartSim", "Start", None, QtGui.QApplication.UnicodeUTF8))
         self.btnCancel.setText(QtGui.QApplication.translate("dlgStartSim", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
-
-
-''' Edit instrument window
-Auto-generated view created with QtCreator.
-Generate from .ui source with pyside-uic. 
-Do not edit. 
-'''
-
-class Ui_EditorWindow(object):
-    def setupUi(self, EditorWindow):
-        EditorWindow.setObjectName("EditorWindow")
-        EditorWindow.resize(800, 600)
-        self.centralwidget = QtGui.QWidget(EditorWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        EditorWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtGui.QMenuBar(EditorWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 25))
-        self.menubar.setObjectName("menubar")
-        self.menuFile = QtGui.QMenu(self.menubar)
-        self.menuFile.setObjectName("menuFile")
-        self.menuEdit = QtGui.QMenu(self.menubar)
-        self.menuEdit.setObjectName("menuEdit")
-        self.menuView = QtGui.QMenu(self.menubar)
-        self.menuView.setObjectName("menuView")
-        self.menuInsert = QtGui.QMenu(self.menubar)
-        self.menuInsert.setObjectName("menuInsert")
-        self.menuSource = QtGui.QMenu(self.menuInsert)
-        self.menuSource.setObjectName("menuSource")
-        self.menuOptics = QtGui.QMenu(self.menuInsert)
-        self.menuOptics.setObjectName("menuOptics")
-        EditorWindow.setMenuBar(self.menubar)
-        self.statusbar = QtGui.QStatusBar(EditorWindow)
-        self.statusbar.setObjectName("statusbar")
-        EditorWindow.setStatusBar(self.statusbar)
-        self.actionInstrument_template = QtGui.QAction(EditorWindow)
-        self.actionInstrument_template.setObjectName("actionInstrument_template")
-        self.actionComponent_Browser = QtGui.QAction(EditorWindow)
-        self.actionComponent_Browser.setObjectName("actionComponent_Browser")
-        self.actionSource_Maxwell_3 = QtGui.QAction(EditorWindow)
-        self.actionSource_Maxwell_3.setObjectName("actionSource_Maxwell_3")
-        self.actionSource_Optimize = QtGui.QAction(EditorWindow)
-        self.actionSource_Optimize.setObjectName("actionSource_Optimize")
-        self.actionGuide = QtGui.QAction(EditorWindow)
-        self.actionGuide.setObjectName("actionGuide")
-        self.actionMirror = QtGui.QAction(EditorWindow)
-        self.actionMirror.setObjectName("actionMirror")
-        self.actionV_Selector = QtGui.QAction(EditorWindow)
-        self.actionV_Selector.setObjectName("actionV_Selector")
-        self.actionUndo = QtGui.QAction(EditorWindow)
-        self.actionUndo.setObjectName("actionUndo")
-        self.actionRedo = QtGui.QAction(EditorWindow)
-        self.actionRedo.setObjectName("actionRedo")
-        self.actionCopy = QtGui.QAction(EditorWindow)
-        self.actionCopy.setObjectName("actionCopy")
-        self.actionCut = QtGui.QAction(EditorWindow)
-        self.actionCut.setObjectName("actionCut")
-        self.actionPaste = QtGui.QAction(EditorWindow)
-        self.actionPaste.setObjectName("actionPaste")
-        self.actionSelect_All = QtGui.QAction(EditorWindow)
-        self.actionSelect_All.setObjectName("actionSelect_All")
-        self.actionOpen = QtGui.QAction(EditorWindow)
-        self.actionOpen.setObjectName("actionOpen")
-        self.actionSave = QtGui.QAction(EditorWindow)
-        self.actionSave.setObjectName("actionSave")
-        self.actionSave_As = QtGui.QAction(EditorWindow)
-        self.actionSave_As.setObjectName("actionSave_As")
-        self.actionClose_Instrument_Editor = QtGui.QAction(EditorWindow)
-        self.actionClose_Instrument_Editor.setObjectName("actionClose_Instrument_Editor")
-        self.menuFile.addAction(self.actionOpen)
-        self.menuFile.addAction(self.actionSave)
-        self.menuFile.addAction(self.actionSave_As)
-        self.menuFile.addSeparator()
-        self.menuFile.addAction(self.actionClose_Instrument_Editor)
-        self.menuEdit.addAction(self.actionUndo)
-        self.menuEdit.addAction(self.actionRedo)
-        self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionCopy)
-        self.menuEdit.addAction(self.actionCut)
-        self.menuEdit.addAction(self.actionPaste)
-        self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionSelect_All)
-        self.menuSource.addAction(self.actionSource_Maxwell_3)
-        self.menuSource.addAction(self.actionSource_Optimize)
-        self.menuOptics.addSeparator()
-        self.menuOptics.addAction(self.actionGuide)
-        self.menuOptics.addAction(self.actionMirror)
-        self.menuOptics.addAction(self.actionV_Selector)
-        self.menuInsert.addAction(self.actionInstrument_template)
-        self.menuInsert.addAction(self.actionComponent_Browser)
-        self.menuInsert.addSeparator()
-        self.menuInsert.addAction(self.menuSource.menuAction())
-        self.menuInsert.addAction(self.menuOptics.menuAction())
-        self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuEdit.menuAction())
-        self.menubar.addAction(self.menuView.menuAction())
-        self.menubar.addAction(self.menuInsert.menuAction())
-
-        self.retranslateUi(EditorWindow)
-        QtCore.QMetaObject.connectSlotsByName(EditorWindow)
-
-    def retranslateUi(self, EditorWindow):
-        EditorWindow.setWindowTitle(QtGui.QApplication.translate("EditorWindow", "Instrument Editor", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuFile.setTitle(QtGui.QApplication.translate("EditorWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuEdit.setTitle(QtGui.QApplication.translate("EditorWindow", "Edit", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuView.setTitle(QtGui.QApplication.translate("EditorWindow", "View", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuInsert.setTitle(QtGui.QApplication.translate("EditorWindow", "Insert", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuSource.setTitle(QtGui.QApplication.translate("EditorWindow", "Source", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuOptics.setTitle(QtGui.QApplication.translate("EditorWindow", "Optics", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionInstrument_template.setText(QtGui.QApplication.translate("EditorWindow", "Instrument Template", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionComponent_Browser.setText(QtGui.QApplication.translate("EditorWindow", "Component Browser...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionSource_Maxwell_3.setText(QtGui.QApplication.translate("EditorWindow", "Source_Maxwell_3...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionSource_Optimize.setText(QtGui.QApplication.translate("EditorWindow", "Source_Optimize...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionGuide.setText(QtGui.QApplication.translate("EditorWindow", "Guide...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionMirror.setText(QtGui.QApplication.translate("EditorWindow", "Mirror...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionV_Selector.setText(QtGui.QApplication.translate("EditorWindow", "V_selector...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionUndo.setText(QtGui.QApplication.translate("EditorWindow", "Undo", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionRedo.setText(QtGui.QApplication.translate("EditorWindow", "Redo", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionCopy.setText(QtGui.QApplication.translate("EditorWindow", "Copy", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionCut.setText(QtGui.QApplication.translate("EditorWindow", "Cut", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionPaste.setText(QtGui.QApplication.translate("EditorWindow", "Paste", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionSelect_All.setText(QtGui.QApplication.translate("EditorWindow", "Select All", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionOpen.setText(QtGui.QApplication.translate("EditorWindow", "Open Instrument...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionSave.setText(QtGui.QApplication.translate("EditorWindow", "Save", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionSave_As.setText(QtGui.QApplication.translate("EditorWindow", "Save As...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionClose_Instrument_Editor.setText(QtGui.QApplication.translate("EditorWindow", "Close Instrument Editor", None, QtGui.QApplication.UnicodeUTF8))
-
