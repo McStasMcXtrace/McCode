@@ -30,8 +30,8 @@ if(WINDOWS)
   set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/")
   set(MANDEST "${lib}/doc/manuals")
 else()
-  set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${MCCODE_NAME}")
-  set(MANDEST "${lib}/${MCCODE_NAME}/doc/manuals")
+  set(MCCODE_LIB "${CMAKE_INSTALL_PREFIX}/${MCCODE_NAME}")
+  set(MANDEST "${FLAVOR}/${MCCODE_VERSION}/doc/manuals")
 endif()
 
 
