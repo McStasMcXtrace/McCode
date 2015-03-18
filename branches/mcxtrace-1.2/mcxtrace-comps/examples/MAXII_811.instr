@@ -4,12 +4,12 @@
 * Instrument: MAXII_811
 *
 * %Identification
-* Written by: Erik B Knudsen (erkn@risoe.dtu.dk)
+* Written by: Erik B Knudsen (erkn@fysik.dtu.dk)
 * Date: Jan 23, 2011
 * Origin: Your institution
 * Release: McXtrace 
 * Version: 1.0
-* %INSTRUMENT_SITE: MAX-lab
+* %INSTRUMENT_SITE: MAXII
 *
 * XAFS and surface diffraction, Materials Science Beamline 811 at MAX-lab.
 *
@@ -137,7 +137,7 @@ AT (0,0,0) ABSOLUTE
 COMPONENT wiggler = Source_gaussian(
  sigPr_x=7e-6*FWHM2RMS, sigPr_y=0.3e-6*FWHM2RMS,
  sig_x=250e-6*FWHM2RMS, sig_y=50e-6*FWHM2RMS,
- spectrum_file="characteristics.dc0",E0=(Emin+Emax)/2.0,dE=(Emax-Emin)/2.0,
+ spectrum_file="characteristics_wiggler811.dc0",E0=(Emin+Emax)/2.0,dE=(Emax-Emin)/2.0,
 // E0=8.045,dE=1e-3,
  dist=4.454,dlambda=0)
 AT(0,0,0) RELATIVE Origin
