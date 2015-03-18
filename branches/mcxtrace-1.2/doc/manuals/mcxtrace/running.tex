@@ -58,77 +58,59 @@ output formats including NeXus and XML are available, see section \ref{s:analyze
 %\verb+Samples_vanadium.instr+ file supplied in the \verb+examples/+
 %directory of the \MCX distribution. %, see appendix~\ref{a:Samples_vanadium.instr}.
 %
-%To start the graphical user interface of \MCX , run the command
-%\verb+mxgui+ (\verb+mxgui.pl+ on Windows). This will open a window
-%with a number of menus,
-%see figure~\ref{fig:mxgui}. \index{Tools!mxgui}
-%\begin{figure}[htb!]
-%  \begin{center}
-%    \includegraphics[width=0.55\textwidth]{figures/mxgui.eps}
-%  \end{center}
-%\caption{The graphical user interface \texttt{mxgui}.}
-%\label{fig:mxgui}
-%\end{figure}
-%\label{p:x-raysite}
-%To load an instrument, select ``Tutorial'' from the ``x-ray site''
-%menu and open the file \verb+Samples_vanadium+. Next, check that the current plotting backend setting
-%(select ``Choose backend'' from the ``Simulation'' menu) corresponds
-%to your system setup. The default setting can be adjusted as explained in Chapter \ref{installing}
-%\begin{itemize}
-%\item{by editing
-%the \verb+tools/perl/mcstas_config.perl+ setup file of your
-%installation}
-%\item{by setting the \verb+MCXTRACE_FORMAT+ environment
-%variable.}
-%\end{itemize} \index{Environment variable!MCXTRACE\_FORMAT}
-%Next, select ``Run simulation'' from the ``Simulation'' menu.
-%\MCX  will translate the definition into an executable program and pop
-%up a dialog window. Type a value for the ``ROT'' parameter ({\em e.g.}
-%90), check the ``Plot results'' option, and select ``Start''. The
-%simulation will run, and when it finishes after a while the results will
-%be plotted in a window. Depending on your chosen plotting backend, the
-%presented graphics will resemble one of those shown in figure \ref{fig:mxplot_figs}.\index{Tools!mxplot}
+To start the graphical user interface of \MCX , run the command
+\verb+mxgui+ (\verb+mxgui.pl+ on Windows). This will open a window
+with a number of menus,
+see figure~\ref{fig:mxgui}. \index{Tools!mxgui}
 \begin{figure}[htb!]
   \begin{center}
-%    \includegraphics[angle=-90,width=0.49\textwidth]{figures/mxplot_PGPLOT.ps}
-%    \includegraphics[angle=-90,width=0.49\textwidth]{figures/mxplot_Scilab.eps}
-%    \includegraphics[width=0.49\textwidth]{figures/mxplot_Matlab.eps}
+    \includegraphics[width=0.55\textwidth]{figures/mxgui.png}
   \end{center}
-\caption{Output from \texttt{mxplot} with PGPLOT, Scilab and Matlab backends}
+\caption{The graphical user interface \texttt{mxgui.pdf}.}
+\label{fig:mxgui}
+\end{figure}
+\label{p:x-raysite}
+
+To load an instrument, select ``Maxlab'' from the ``x-ray site''
+menu and open the file  \verb+MAXII_711.instr+. Next click the ``Run'' button to
+start the simulation. This triggers a compilation of the instrument file and pops up a dialog window.
+For instance type a value for the ``R''-parameter (This corresponds to the curvature of the focusing mirror),
+check the ``Plot results'' option, and select ``Start''. The
+simulation will run, and when it finishes after a while the results will
+be plotted in a window. If you use the default PGPLOT plotting back-end, the
+presented graphics will resemble that shown in figure \ref{fig:mxplot_figs}.\index{Tools!mxplot}
+\begin{figure}[htb!]
+  \begin{center}
+    \includegraphics[width=0.49\textwidth]{figures/mxplotPGPLOT.png}
+\caption{Output from \texttt{mxplot} with the PGPLOT backend}
+  \end{center}
 \label{fig:mxplot_figs}
 \end{figure}
-%When using the Scilab or Matlab backends, full 3D view of plots and
-%different display possibilities are available. Use the attached \MCX
-%window menus to control these. Features are quite self
-%explanatory. For other options, execute \verb+mxplot --help+
-%(\verb+mxplot.pl --help+ on windows) to get help.
-%
-%\index{Tools!PGPLOT} \index{Tools!Scilab} \index{Tools!Matlab}
-%To visualize or debug the simulation graphically, repeat the
-%steps but check the ``Trace'' option instead of the ``Simulate'' option.
-%A window will pop up showing a sketch of the instrument.
-%Depending on your
-%chosen plotting backend, the presented graphics will resemble one of
-%those shown in figures \ref{fig:mcdisp_PGPLOT}-\ref{fig:mcdisp_Matlab}.
+
+To visualize or debug the simulation graphically, repeat the
+steps but check the ``Trace'' option instead of the ``Simulate'' option.
+A window will pop up showing a sketch of the instrument.
+Depending on your
+chosen plotting backend, the presented graphics will resemble one of
+those shown in figures \ref{fig:mcdisp_PGPLOT}-\ref{fig:mcdisp_Matlab}.
 \begin{figure}[htb!]
   \begin{center}
-%    \includegraphics[width=0.48\textwidth]{figures/mxdisplay_PGPLOT.ps}
-%    \includegraphics[width=0.48\textwidth]{figures/mxdisplay_TOF.ps}
-  \end{center}
-\caption{Left: Output from \texttt{mxdisplay} with PGPLOT backend.
+    \includegraphics[width=0.48\textwidth]{figures/mxdisplayPGPLOT.png}
+  \caption{Output from \texttt{mxdisplay} with PGPLOT backend.
   The left mouse button starts a new photon ray, the middle button zooms, and
   the right button resets the zoom. The Q key quits the
-  program. Right: The new PGPLOT time-of-flight option. See section \ref{s:mxdisplay} for details.}
+  program. See \cref{s:mxdisplay} for details.}
 \label{fig:mcdisp_PGPLOT}
+  \end{center}
 \end{figure}
 
 \begin{figure}[htb!]
   \begin{center}
-%    \includegraphics[width=0.55\textwidth]{figures/mxdisplay_Matlab.eps}
-  \end{center}
+    \includegraphics[width=0.55\textwidth]{figures/mxdisplayMATLAB.png}
 \caption{Output from \texttt{mxdisplay} with Matlab backend. Display
   can be adjusted using the window buttons.}
 \label{fig:mcdisp_Matlab}
+  \end{center}
 \end{figure}
 
 %For a slightly longer gentle introduction to \MCX, see the \MCX
@@ -154,7 +136,7 @@ output formats including NeXus and XML are available, see section \ref{s:analyze
 
 This section describes how to run the \MCX compiler manually. Often,
 it will be more convenient to use the front-end program \verb+mxgui+
-(section~\ref{s:mxgui}) or \verb+mxrun+ (section~\ref{s:mxrun}). These
+ or \verb+mxrun+ (section~\ref{s:mxrun}). These
 front-ends will compile and run the simulations automatically.
 \index{Tools!mxgui} \index{Tools!mxrun}
 
@@ -1273,6 +1255,44 @@ Additionally, the options \verb+--web+, \verb+--manual+ and \verb+--comp+ will o
 See section~\ref{s:mxdoc} for more details about the McDoc usage and header format.
 To use the \verb+mxdoc+ front-end, the program Perl should be available.
 
+\subsection{Translating and merging \MCX result files (all text formats)}
+\label{s:mxformat}
+%\index{mxformat}{textbf}
+\index{Tools!Matlab}
+\index{Data formats}
+\index{Grid computing}
+
+If you have been running a \MCX simulation with a given text format output, but
+finally plan to look at the results with an other plotter (e.g. you ran a
+simulation with PGPLOT output and want to view it using Matlab), you may use
+% FIXME syntax check!
+\begin{lstlisting}
+mcformat {file|dir} -d target_dir --format=TARGET_FORMAT
+\end{lstlisting}
+to translate files into format TARGET\_FORMAT (e.g. NeXus). When given a directory, the
+translation works recursively. The conversion works only for text files.
+
+The \verb+--merge+ option may be used to merge similar files, e.g. obtained from
+grid systems, just as if a longer run was achieved.
+
+The \verb+--scan+ option may be used to reconstruct the scan data from a set of
+directories which vary by instrument parameters. For instance, you ran a scan,
+but finally realized you should have prolonged it. Then simply simulate the
+missing bits, and apply
+\verb+mcformat -d scan_data --format=PGPLOT --scan step0 .. stepN+. The
+resulting scan data is compatible with \verb+mcplot+ only when generating
+PGPLOT/McStas format.\index{Tools!mxplot}
+You may conjugate this option with the
+\verb+--merge+ in order to add/merge similar data sets before re-building the
+scan.
+
+The data files are analyzed by searching keywords inside data files
+(e.g. 'Source' for the source instrument description file). If some file names or
+component names match these keywords (e.g. using a file 'Source.psd'), the
+extracted metadata information may be wrong, even though the data itself will be
+correct.\index{Bugs!wrong metadata in translating and merging results files}
+
+
 \section{Data formats - Analyzing and visualizing the simulation results}
 \label{s:analyze}
 \index{Data formats}
@@ -1389,7 +1409,10 @@ photons simulated. As a result, \MCX generates two kinds of data sets:
 \end{itemize}
 
 Last but not least, you may run simulations manually on a number of machines.
-Once the distributed simulation have been completed, you may merge their results using \verb+mxformat+ (see \cref{s:mxformat}) \index{Tools!mxformat} in order to obtain a set of files just as if it had been executed on a single machine.
+Once the distributed simulation have been completed, you may merge their
+results using \verb+mxformat+ (see \cref{s:mxformat}) \index{Tools!mxformat} in
+order to obtain a set of files just as if it had been executed on a single
+machine.
 
 All of these methods can be used, when available, from \texttt{mxgui}.
 
