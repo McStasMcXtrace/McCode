@@ -25,7 +25,7 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <layout class="QGridLayout" name="gridLayout">
+        <layout class="QGridLayout" name="grdInstrument">
          <item row="2" column="1">
           <widget class="QLabel" name="lblInstrument">
            <property name="text">
@@ -33,18 +33,8 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="2">
-          <widget class="QToolButton" name="tbtnInstrument">
-           <property name="toolTip">
-            <string>Browse instrument...</string>
-           </property>
-           <property name="text">
-            <string>...</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="3">
-          <spacer name="hspacer">
+         <item row="0" column="1" colspan="5">
+          <spacer name="hSpacerRunPlot">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -56,19 +46,49 @@
            </property>
           </spacer>
          </item>
-         <item row="2" column="4">
+         <item row="0" column="6">
           <widget class="QPushButton" name="btnRun">
            <property name="text">
             <string>Run...</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="5">
+         <item row="0" column="7">
           <widget class="QPushButton" name="btnPlot">
            <property name="text">
             <string>Plot</string>
            </property>
           </widget>
+         </item>
+         <item row="2" column="7">
+          <widget class="QPushButton" name="btnEdit">
+           <property name="text">
+            <string>Edit</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="6">
+          <widget class="QPushButton" name="btnOpenInstrument">
+           <property name="toolTip">
+            <string>Browse instrument...</string>
+           </property>
+           <property name="text">
+            <string>Open...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2" colspan="4">
+          <spacer name="hSpacerOpenEdit">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </item>
@@ -77,7 +97,7 @@
      </widget>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <layout class="QHBoxLayout" name="hlyMessages">
       <item>
        <widget class="QGroupBox" name="gbxMessages">
         <property name="title">
@@ -85,7 +105,7 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <widget class="QTabWidget" name="tbxOutput">
+          <widget class="QTabWidget" name="tbxMessages">
            <property name="currentIndex">
             <number>0</number>
            </property>
@@ -133,7 +153,10 @@
     </property>
     <addaction name="actionNew_Instrument"/>
     <addaction name="actionOpen_instrument"/>
-    <addaction name="actionChange_Working_Dir"/>
+    <addaction name="separator"/>
+    <addaction name="actionEdit_Instrument"/>
+    <addaction name="actionSave_As"/>
+    <addaction name="actionClose_Instrument"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -143,6 +166,8 @@
     </property>
     <addaction name="actionRun_Simulation"/>
     <addaction name="actionCompile_Instrument"/>
+    <addaction name="separator"/>
+    <addaction name="actionPlot"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -161,22 +186,34 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen_instrument">
    <property name="text">
-    <string>Open Instrument...</string>
+    <string>Open...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actionQuit">
    <property name="text">
     <string>Quit</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
   </action>
   <action name="actionRun_Simulation">
    <property name="text">
     <string>Run Simulation...</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
   </action>
   <action name="actionCompile_Instrument">
    <property name="text">
     <string>Compile Instrument</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+R</string>
    </property>
   </action>
   <action name="actionMcstas_User_Manual">
@@ -193,39 +230,8 @@
    <property name="text">
     <string>About...</string>
    </property>
-  </action>
-  <action name="actionRS">
-   <property name="icon">
-    <iconset>
-     <normaloff>run-icon.png</normaloff>
-     <normalon>../../GIMP/run-icon.png</normalon>run-icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>RS</string>
-   </property>
-   <property name="toolTip">
-    <string>Compile/Run simulation...</string>
-   </property>
-  </action>
-  <action name="actionCS">
-   <property name="icon">
-    <iconset>
-     <normaloff>compile-icon.png</normaloff>
-     <normalon>../../GIMP/compile-icon.png</normalon>compile-icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>CS</string>
-   </property>
-   <property name="toolTip">
-    <string>Compile instrument</string>
-   </property>
-  </action>
-  <action name="actionPS">
-   <property name="text">
-    <string>PS</string>
-   </property>
-   <property name="toolTip">
-    <string>Plot results...</string>
+   <property name="shortcut">
+    <string>F1</string>
    </property>
   </action>
   <action name="actionMcstas_Component_Manual">
@@ -233,20 +239,47 @@
     <string>mcstas Component Manual</string>
    </property>
   </action>
-  <action name="actionChange_Working_Dir">
-   <property name="text">
-    <string>Change Work Dir...</string>
-   </property>
-  </action>
   <action name="actionNew_Instrument">
    <property name="text">
     <string>New Instrument...</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionEdit_Instrument">
+   <property name="text">
+    <string>Edit...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="actionClose_Instrument">
+   <property name="text">
+    <string>Close Instrument</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="actionPlot">
+   <property name="text">
+    <string>Plot</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="actionSave_As">
+   <property name="text">
+    <string>Save As...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
+   </property>
   </action>
  </widget>
- <tabstops>
-  <tabstop>tbtnInstrument</tabstop>
- </tabstops>
  <resources/>
  <connections/>
 </ui>
