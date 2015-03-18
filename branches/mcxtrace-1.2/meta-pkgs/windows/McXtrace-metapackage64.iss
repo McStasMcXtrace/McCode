@@ -31,12 +31,13 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "Support\strawberry-perl-5.18.2.1-64bit.msi"; DestDir: "{tmp}"
+;Source: "Support\strawberry-perl-5.18.2.1-64bit.msi"; DestDir: "{tmp}"
 Source: "Support\PPDs.zip"; DestDir: "{tmp}"
 Source: "Support\unzip.exe"; DestDir: "{tmp}"
 Source: "Support\unzip32.dll"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-comps-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
+Source: "dist\mcxtrace-manuals-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-tools-perl-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-tools-python-mxrun-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-tools-python-mxplot-chaco-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
