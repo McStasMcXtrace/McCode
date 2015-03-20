@@ -3678,7 +3678,9 @@ void sighandler(int sig)
   {
     fflush(stdout);
     perror("# Last I/O Error");
-    printf("# " MCCODE_STRING ": Simulation stop (abort)\n");
+    printf("# " MCCODE_STRING ": Simulation stop (abort).\n");
+    signal(sig, SIG_DFL); /* force to use default sighandler now */
+    kill(getpid(), sig);  /* and trigger it with the current signal */
     exit(-1);
   }
 #undef SIG_SAVE
