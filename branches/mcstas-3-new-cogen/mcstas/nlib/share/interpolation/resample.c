@@ -3,7 +3,7 @@
 #include<math.h>
 
 
-
+/* compute product of dimensions: prod(size) */
 int calcSamples(int *steps) {
   int samples = 1;
   int dim;
@@ -136,7 +136,10 @@ vertex **resample_f(vertex **p, int rows, int *steps,
                    mesh);
 
     p[i] = v;
-  }
+    MPI_MASTER(
+    printf("interpolation/resample: Resampling: %d%%.\n%c[1A", (int)((i+1)/(double)new_points *100),27);
+    );
+  } /* end for */
 
   delaunay_freeMesh(mesh);
 
@@ -171,19 +174,33 @@ void interpolate3x3(treeNode *tree,
 
 void dump_table(vertex **points, int rows, char *output_path) {
   FILE *file = fopen(output_path, "w");
+  time_t t=time(NULL);
 
-  char line[256];
-  snprintf(line, 256, "# %d\n", rows);
-  fputs(line, file);
+  char line[1024*32];
+  fprintf(file, "# File:       %s\n",     output_path);
+  fprintf(file, "# Date:       %s", ctime(&t)); /* includes \n */
+  fprintf(file, "# Format:     %s%s\n", MCCODE_NAME, " with text headers");
+  fprintf(file, "# URL:        %s\n",      "http://www.mccode.org");
+  fprintf(file, "# Creator:    %s\n",  MCCODE_STRING);
+  fprintf(file, "# Instrument: %s\n",   mcinstrument_source);
+  fprintf(file, "# type: array_2d(%d, 6)\n", rows);
+  fprintf(file, "# title:      [x y z Bx By Bz] magnetic field map\n");
+  fprintf(file, "# xvar: xyzBxByBz\n");
+  fprintf(file, "# yvar: vertex\n");
+  fprintf(file, "# xlabel: x y z Bx By Bz\n");
+  fprintf(file, "# ylabel: vertex index\n");
+  fprintf(file, "# xylimits: %d %d %d %d\n", 1, 6, 1, rows);
+  fprintf(file, "# variables: x y z Bx By Bz\n");
+  fprintf(file, "# Data [%s] B:\n", output_path);
 
   int i;
   for(i = 0; i < rows; i++) {
     vertex *p = points[i];
 
-    int size = snprintf(line, 256, "%lf %lf %lf %lf %lf %lf\n",
+    int size = snprintf(line, 1024*32, "%lf %lf %lf %lf %lf %lf\n",
                         p->X, p->Y, p->Z, p->U, p->V, p->W);
-    if(size >= 256) {
-      fprintf(stderr, "WARNING: Line was truncated in resample, dump_tables!\n");
+    if(size >= 1024*32) {
+      fprintf(stderr, "WARNING: Line was truncated in resample:dump_tables!\n");
     }
 
     fputs(line, file);
@@ -211,7 +228,7 @@ vertex **resample_file(char *input_path, int *rows,
   vertex **points = kdtree_loadPoints(input_path, rows);
 
   if (points == NULL || rows <= 0) {
-    fprintf(stderr, "Failed to read table (rows=%d): %s\n", *rows, input_path);
+    fprintf(stderr, "interpolation/resample: Failed to read table (rows=%d): %s\n", *rows, input_path);
     return NULL;
   }
 

@@ -70,7 +70,7 @@
 * Constants to reset time of flight:
 * zero_time:(1)   set time to zero: 0=no,  1=once per half cycle, 2=auto adjust phase
 * phase:    (deg) chopper phase at t=0
-* time:     (s)   sets phase so that transmision is centered on 'time'
+* delay:    (s)   sets phase so that transmision is centered on 'delay'
 *
 * OUTPUT PARAMETERS:
 * FCVars :  (-)     structure
@@ -94,7 +94,7 @@ SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
   w=0.00022475, nslit=200, R0=0.0,
   Qc=0.02176, alpha=2.33, m=0.0, W=2e-3, length=0.012, eff=0.95,
   zero_time=0, xwidth=0, verbose=0, yheight=0.08,
-  curvature=0,time=0)
+  curvature=0,delay=0)
 OUTPUT PARAMETERS(FCVars)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
@@ -296,8 +296,8 @@ INITIALIZE
   strcpy(FCVars.compcurname, NAME_CURRENT_COMP);
   
   FCVars.omega    = 2*PI*nu;
-  if (!phase && time) {
-     FCVars.ph0= fmod(-time*nu*360,360)*DEG2RAD;
+  if (!phase && delay) {
+     FCVars.ph0= fmod(-delay*nu*360,360)*DEG2RAD;
   } else FCVars.ph0      = phase*DEG2RAD;
   FCVars.sum_t=FCVars.sum_v=FCVars.sum_N=FCVars.sum_N_pass=0;
 

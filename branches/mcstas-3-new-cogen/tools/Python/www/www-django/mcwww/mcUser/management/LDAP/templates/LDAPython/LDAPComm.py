@@ -31,6 +31,7 @@ from subprocess import call,check_output,Popen,PIPE
 import traceback
 from re import split
 import sys
+
 from cStringIO import StringIO
 
 class LDAPComm:
@@ -38,8 +39,10 @@ class LDAPComm:
 # Builds an access log file and sets the query counter to zero.
 #=======================================================================================#
     def __init__(self):
+        from time import strftime as t
         file_loc = "mcUser/management/LDAP/LDAP_access/access.txt"
         self.access_file = open(file_loc, 'a+')
+        self.access_file.write("LDAPComm instantiated: %s @ %s\n"% (t("%H:%M:%S"), t("%d/%m/%Y")))
         self.query_num = 0
 #================#
 # Access logging #
@@ -54,17 +57,14 @@ class LDAPComm:
     def ldapAdd(self, ldif_file, auth_dn, auth_pw):
         cn = split(",", auth_dn)[0]
         try:
-            Popen(["ldapadd", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw],
-                  stdout = PIPE,
-                  stderr = PIPE)
+            fid = Popen(["ldapadd", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw],
+                        stdout = PIPE,
+                        stderr = PIPE)
             stdout, stderr = fid.communicate()
-            if 'adding' in stdout:
-                self.log("%s ADDED ENTRY : ldapadd -x -D %s -f %s -w PASSWORD" % (cn, auth_dn, ldif_file))
-            else:
-                self.log("Error adding %s: %s" % (cn,stderr))
+            self.log("%s ADDED from : %s\nstdout:\n%s" % (cn, ldif_file, stdout))
         except:
+            self.log("Error adding %s: %s" % (ldif_file,stderr))
             self.log("Backtrace: %s" % traceback.format_exc()) #sys.exc_info())
-            
 #=================#
 # General ldapMod #
 #=================#
@@ -72,9 +72,29 @@ class LDAPComm:
         cn = split(",", auth_dn)[0]
         self.log("%s MODIFICATION with: ldapmodify -x -D %s -f %s -w PASSWORD" % cn, auth_dn, ldif_file) 
         try:
-            Popen(["ldapmodify", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw],
-                  stdout=PIPE,
-                  stderr=PIPE)
+            fid = Popen(["ldapmodify", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw],
+                        stdout=PIPE,
+                        stderr=PIPE)
+            stdout,stderr = fid.communicate()
+            if 'modifying' in stdout:
+                self.log("%s MODIFIED: ldapadd -x -D %s -f %s -w PASSWORD" % (cn, auth_dn, ldif_file))
+            else:
+                self.log("Error modifying %s: %s" % (cn,stderr))
+                print "Error:%s \n Backtrace:%s" % (stderr, traceback.format_exc())
+        except:
+            self.log("ldapMod Error: %s" % str(sys.exc_info()))
+
+#=================#
+# Verbose ldapMod #
+#=================#
+    def ldapModV(self, ldif_file, auth_dn, auth_pw):
+        cn = split(",", auth_dn)[0]
+        self.log("%s MODIFY attempt with: %s" % ldif_file)
+        try:
+            fid = Popen(["ldapmodify", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw, "-v"],
+                        stdout=PIPE,
+                        stderr=PIPE)
+            stdout,stderr = fid.communicate()
             if 'modifying' in stdout:
                 self.log("%s MODIFIED: ldapadd -x -D %s -f %s -w PASSWORD" % (cn, auth_dn, ldif_file))
             else:
@@ -82,27 +102,21 @@ class LDAPComm:
                 print "Error:%s \n Backtrace:%s" % (stderr, traceback.format_exc())
         except:
             self.log("ldapMod Error: %s" % sys.exc_info()[0])
-
-#=================#
-# Verbose ldapMod #
-#=================#
-    def ldapModV(self, ldif_file, auth_dn, auth_pw):
-        cn = split(",", auth_dn)[0]
-        self.log("%s MODIFICATION with: ldapmodify -x -D %s -f %s -v -w PASSWORD" % (cn, auth_dn, ldif_file) )
-        try:
-            call(["ldapmodify", "-x", "-D", auth_dn, "-f", ldif_file, "-v", "-w", auth_pw]) 
-        except:
-            self.log("Error: %s" % sys.exc_info()[0])
 #=======================================================================================#
 # This is a bit of a powerful thing to put in the build script but it should be ok. 
 # As it's going to go in the build script then we should actually remove the sudo later
 #=======================================================================================#
     def ldapSYSROOTmod(self, ldif_file):
-        self.log("sudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif")
+        self.log("\nsudo ldapadd -Y EXTERNAL -H ldapi:/// -f config_pw_slapadd.ldif")
         try:
-            call(["sudo", "ldapadd", "-Y", "EXTERNAL", "-H", "ldapi:///", "-f", ldif_file, "-v"])
+            self.log("MODIFICATION attempt of ROOTPWD: %s" % ldif_file)
+            fid = Popen(["sudo", "ldapadd", "-Y", "EXTERNAL", "-H", "ldapi:///", "-f", ldif_file, "-v"],
+                        stdout=PIPE,
+                        stderr=PIPE)
+            stdout,stderr = fid.communicate()
+            self.log("stdout: %s" % stdout)
         except:
-            self.log("Error: %s" % sys.exc_info()[0])
+            self.log("Error creating LDAP ROOT user pswd: %s \n" % str(sys.exc_info()))
 #=======================================================================================#
 # Query Methods
 #=======================================================================================#
@@ -111,12 +125,12 @@ class LDAPComm:
     def ldapQuery(self, auth_dn, auth_pw, query):
         cn = split(",", auth_dn)[0]
         self.query_num += 1
-        log_str = cn + " QUERY with: ldapsearch -LLL -b DN -D" + auth_dn + "-w PASSWORD " + query+"\n"
-        self.log(log_str)
+        log_str = cn+" #"+str(self.query_num)+" QUERY with: ldapsearch -LLL -b DN -D "+auth_dn+" -w PASSWORD "+query+"\n"
+        self.log("\n%s" % log_str)
         try:
-            fid  = Popen(["ldapsearch", "-LLL", "-b", "DN", "-D", auth_dn, "-w", auth_pw, query],
-                         stdout=PIPE,
-                         stderr=PIPE)
+            fid = Popen(["ldapsearch", "-LLL", "-b", "DN", "-D", auth_dn, "-w", auth_pw, query],
+                        stdout=PIPE,
+                        stderr=PIPE)
             stdout,stderr = fid.communicate()
         except:
             self.log("Error:")
@@ -128,10 +142,11 @@ class LDAPComm:
 # Check existence in group #
 #==========================#
     def ldapAdminGroupQuery(self, auth_cn):
+        self.query_num += 1
         if not 'cn=' in auth_cn:
             auth_cn = "cn=%s" % auth_cn
         query = "(|(cn=itStaff)(cn=courseStaff))"
-        self.log("%s AUTHORITY ACCESS QUERY with: ldapsearch -LLL -b ou=groups,DN -D cn=DummyUser,ou=person,DN -w DummyPW %s\n" % (auth_cn, query) )
+        self.log("\n%s #%s AUTH ACCESS QUERY: %s\n" % (auth_cn, str(self.query_num), query) )
         try:
             fid = Popen(
                 ["ldapsearch", "-LLL", "-b", "DN", "-D", "cn=DummyUser,ou=person,DN", "-w", "DummyPW", query],
@@ -150,21 +165,22 @@ class LDAPComm:
 # User Identification #
 #=====================#
     def ldapAuthenticate(self, auth_cn, auth_pw):
-        dn = "cn=" + auth_cn + ",ou=person,DN"
         try:
-            fid = Popen(["ldapwhoami", "-vvv", "-D", dn, "-x", "-w", auth_pw],
-                        stdout=PIPE,
-                        stderr=PIPE)
-            stdout,stderr = fid.communicate()
-#            bill = stdout
-#            ben = stderr
-            if "Success" in stdout:
-                return True
-            else:
-                self.log("Access attempt by %s failed: %s" % (dn, stderr))
+            dn = "cn=\"" + auth_cn + "\",ou=person,DN"
+            try:
+                fid = Popen(["ldapwhoami", "-vvv", "-D", dn, "-x", "-w", auth_pw],
+                            stdout=PIPE,
+                            stderr=PIPE)
+                stdout,stderr = fid.communicate()
+                if "Success" in stdout:
+                    self.log("%s may access LDAP.\n"%dn)
+                    return True
+                else:
+                    self.log("Access attempt by %s unsuccessful: %s\n" % (dn, stderr))
+                    return False
+            except:
+                self.log("Access attempt by %s exception: %s\n" % (dn, str(sys.exc_info())))
+                ''' MESSAGE BOX SUGGESTING ERROR '''
                 return False
         except:
-            log_str = "Access attempt by" + dn + "failed: " + str(sys.exc_info()[0])
-            self.log(log_str)
-            ''' MESSAGE BOX SUGGESTING ERROR '''
-            return False
+            self.log("ERROR: cn not supplied.\n")

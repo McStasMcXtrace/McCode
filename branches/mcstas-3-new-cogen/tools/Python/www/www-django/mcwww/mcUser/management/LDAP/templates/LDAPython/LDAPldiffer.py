@@ -33,6 +33,7 @@ class addUserLDIF:
         out_file.write("mail: %s \n" % ldap_user.mail())
         out_file.write("userpassword: %s \n" % ldap_user.password())
         out_file.write("ou: person\n")
+#        out_file.write("memberof: cn=%s,ou=groups,DN\n" % ldap_user.group()) # get this working for admin group permissions checking
         out_file.write("\n")
         out_file.write("dn: cn=%s,ou=groups,DN\n" % ldap_user.group())
         out_file.write("changeType: modify\n")

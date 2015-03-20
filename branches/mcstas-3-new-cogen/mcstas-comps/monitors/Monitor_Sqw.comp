@@ -38,6 +38,7 @@
 *
 * This component can be used to generate dynamic structure factors comvolved with 
 * the instrument response, and compare with molecular dynamics results (using e.g. nMoldyn).
+* The incoming beam (e.g. at the sample) must be monochromatic.
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -49,7 +50,7 @@
 * options: [str]  String that specifies the configuration of the monitor
 *                 The general syntax is "[x] options..." (see <b>Descr.</b>).
 * index:   [1]  Index of the component where scattering occurs with respect to
-*                 the location of the Monitor_nM location in the instrument description.
+*                 the location of the Monitor_Sqw location in the instrument description.
 *                 The index is usually negative, and should point to e.g. a 
 *                 Isotropic_Sqw, , PowderN, or Single_crystal instance.
 *                 index=-1 for the previous component.
@@ -85,7 +86,7 @@ SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0,
   bins=0, min=-1e40, max=1e40,
   int index=-1)
 /* these are protected C variables */
-OUTPUT PARAMETERS (DEFS, Vars, detector)
+OUTPUT PARAMETERS (DEFS, Vars, detector, mean_vx, mean_vy, mean_vz, sum_p)
 
 SHARE
 %{
@@ -98,6 +99,7 @@ DECLARE
   MonitornD_Variables_type Vars;
   MCDETECTOR detector;
   off_struct offdata;
+  double mean_vx, mean_vy, mean_vz, sum_p;
 %}
 
 INITIALIZE %{
@@ -158,7 +160,8 @@ INITIALIZE %{
   
   Vars.Flag_parallel=1;
   detector.m = 0;
-
+  
+  mean_vx=0; mean_vy=0; mean_vz=0; sum_p=0;
 %}
 
 TRACE %{
@@ -240,13 +243,22 @@ TRACE %{
     SCATTER;
  
     Ef = VS2E*(vx*vx+vy*vy+vz*vz);
-
+    
+    /* get incoming beam velocity in 'initial' coordinate frame */
     RESTORE_NEUTRON(INDEX_CURRENT_COMP+index,
       rx,ry,rz,rvx,rvy,rvz,rt,rsx,rsy,rsz,rp);
-    Ei = VS2E*(rvx*rvx+rvy*rvy+rvz*rvz);
+    mean_vx += rvx*rp; mean_vy += rvy*rp; mean_vz += rvz*rp;
+    sum_p   += rp;
+    
+    /* compute mean incoming energy and mean beam direction */
+    rvx = mean_vx/sum_p; rvy = mean_vy/sum_p; rvz = mean_vz/sum_p;
+    Ei  =  VS2E*(rvx*rvx+rvy*rvy+rvz*rvz);
       
-    Vars.UserVariable1=V2K*sqrt( (vx-rvx)*(vx-rvx)+(vy-rvy)*(vy-rvy)+(vz-rvz)*(vz-rvz) ); // Q
-    Vars.UserVariable2=Ef-Ei;                                                             // E
+    Vars.UserVariable1=V2K*sqrt( (vx-rvx)*(vx-rvx)
+                                +(vy-rvy)*(vy-rvy)
+                                +(vz-rvz)*(vz-rvz) ); // Q = |Kf - Ki| with left/right sign
+    Vars.UserVariable1 *= (x >= 0 ? 1 : -1);
+    Vars.UserVariable2  = Ef-Ei;                      // E = Ef-Ei
     
     /* send current neutron state to Monitor_nD_Trace */
     Vars.cp  = p;

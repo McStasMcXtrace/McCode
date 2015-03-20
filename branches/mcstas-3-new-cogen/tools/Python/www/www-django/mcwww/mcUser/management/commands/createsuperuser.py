@@ -4,11 +4,11 @@
 # Management utility to create superusers. #
 # Templated from django.auth commands      #
 # ---------------                          #
-# Edited by: Mark Lewis                    #
+# Author: Mark Lewis                       #
 # 
 # FUTURE IMPROVEMENTS:
-# - Move a lot more from user/superuser
-#   creation into the creation_helper.
+# - Get the LDAP group and sqlite group
+#   (completely different func) working
 #   
 #==========================================#
 from __future__ import unicode_literals
@@ -151,7 +151,6 @@ class Command(BaseCommand):
                     continue
                 else: encrypt_password(usr_details)
 
-            # I LIKE THIS.
         except KeyboardInterrupt:
             self.stderr.write("\nOperation cancelled.")
             sys.exit(1)

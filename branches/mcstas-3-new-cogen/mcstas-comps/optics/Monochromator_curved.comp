@@ -44,7 +44,7 @@
 *
 * Monochromator lattice parameter
 * PG       002 DM=3.355 AA (Highly Oriented Pyrolythic Graphite)
-* PG       004 DM=1.607 AA
+* PG       004 DM=1.677 AA
 * Heusler  111 DM=3.362 AA (Cu2MnAl)
 * CoFe         DM=1.771 AA (Co0.92Fe0.08)
 * Ge       111 DM=3.266 AA
@@ -104,7 +104,7 @@ SETTING PARAMETERS (string reflect="NULL", string transmit="NULL",
   gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=1.0,Q=1.8734, 
   RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0, order=0)
 OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q,
-  SlabWidth,SlabHeight,rTable, tTable, row, col)
+  SlabWidth,SlabHeight,rTable, tTable, row, col,tiltH,tiltV)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
@@ -142,10 +142,14 @@ DECLARE
   double SlabWidth, SlabHeight;
   t_Table rTable, tTable;
   double row,col;
+  double* tiltH;
+  double* tiltV;
 %}
 
 INITIALIZE
 %{
+  int i;
+  
   if (mosaic != 0) {
     mos_rms_y = MIN2RAD*mosaic/sqrt(8*log(2));
     mos_rms_z = mos_rms_y; }
@@ -203,6 +207,24 @@ INITIALIZE
   else SlabWidth = (width+gap)/NH - gap;
   if (height == 0) SlabHeight = yheight;
   else SlabHeight = (height+gap)/NV - gap;
+  
+  tiltH=malloc((int)(NH+1)*sizeof(double));
+  tiltV=malloc((int)(NV+1)*sizeof(double));
+  
+  if (!tiltH) printf("Monochromator_curved: %s: Warning: not enough memory to allocate tilts (NH=%g).\n", NAME_CURRENT_COMP, NH);
+  else if (RH) { /* pre-compute tilts */
+    for (i=0;i<=NH;i++)
+    {
+      tiltH[i]=asin((i-(NH+1)/2)*(SlabWidth+gap)/RH);
+    }
+  }
+  if (!tiltV) printf("Monochromator_curved: %s: Warning: not enough memory to allocate tilts (NV=%g).\n", NAME_CURRENT_COMP, NV);
+  else if (RV) {
+    for (i=0;i<=NV;i++) 
+    {
+      tiltV[i]=-asin((i-(NV+1)/2)*(SlabHeight+gap)/RV);
+    }
+  }
 
 %}
 
@@ -230,11 +252,11 @@ TRACE
       double kix,kiy,kiz;
       int    do_transmit = 0;
 
-      col = ceil ( (z-zmin)/(SlabWidth+gap));  /* which slab hit ? */
+      col = ceil ( (z-zmin)/(SlabWidth +gap));  /* which slab hit ? */
       row = ceil ( (y-ymin)/(SlabHeight+gap));
-      if (RH != 0) tilth = asin((col-(NH+1)/2)*(SlabWidth+gap)/RH);
+      if (RH != 0) tilth = tiltH ? tiltH[(int)col] :  asin((col-(NH+1)/2)*(SlabWidth+gap)/RH);
       else tilth=0;
-      if (RV != 0) tiltv = -asin((row-(NV+1)/2)*(SlabHeight+gap)/RV);
+      if (RV != 0) tiltv = tiltV ? tiltV[(int)row] : -asin((row-(NV+1)/2)*(SlabHeight+gap)/RV);
       else tiltv=0;
 
       /* restore neutron in order to transform to slab coordinates */
@@ -436,6 +458,8 @@ FINALLY
 %{
   Table_Free(&rTable);
   Table_Free(&tTable);
+  if (tiltH) free(tiltH); 
+  if (tiltV) free(tiltV);
 %}
 
 MCDISPLAY

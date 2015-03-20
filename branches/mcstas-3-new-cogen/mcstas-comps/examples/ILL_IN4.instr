@@ -9,7 +9,7 @@
 *
 * %Identification
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
-* Date: 2015.
+* Date: March 5th 2015.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 2.1
 * Version: $Revision: 5055 $
@@ -46,7 +46,7 @@
 * 
 * Monochromators: 
 * PG       002 DM=3.355 AA (Highly Oriented Pyrolythic Graphite)
-* PG       004 DM=1.607 AA (used for lambda=1.1)
+* PG       004 DM=1.677 AA (used for lambda=1.1)
 * PG       006 DM=1.118 AA
 * Cu       220 DM=1.278 AA
 * Cu       111 DM=2.095 AA
@@ -69,8 +69,7 @@
 * In this model, the sample is a cylindrical liquid/powder/glass scatterer 
 * surrounded by a container and an Al cryostat.
 *
-* %Example: lambda=1.1 DM=1.607 Detector: sample_flux_I=5e+06
-* %Example: lambda=2.2          Detector: sample_flux_I=4.7e+06
+* %Example: lambda=1.2 DM=1.677 Detector: sample_flux_I=1.8e+06
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -84,6 +83,7 @@
 *   Sapphire_present: [1] Flag, when 1 the Al2O3 filter is active
 *   sample_coh:    [str]  Sample coherent dynamic structure factor (.sqw) or NULL
 *   sample_inc:    [str]  Sample incoherent dynamic structure factor (.sqw) or NULL
+*   order:         [1]    The number of multiple orders at the monochromator
 *
 * %Link
 * H. Mutka, Nucl. Instr. and Meth. A 338 (1994) 144
@@ -92,12 +92,12 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT ILL_IN4(lambda=1.1, dlambda=1, DM=3.355, 
+DEFINE INSTRUMENT ILL_IN4(lambda=1.1, dlambda=0.1, DM=3.355, 
   ETAM=35, RMH=-1, ratio=4, dE=0, Sapphire_present=1,
-  string sample_coh="V.laz", string sample_inc="NULL")
+  string sample_coh="Dirac2D.sqw", string sample_inc="NULL", order=1)
 
 DECLARE %{
-  double A1, RMH, LOM, phase;
+  double A1, RMH, RMV=-1.9;
   double LFS       = 0.675; /* FC to Sample distance */
   double LSD       = 2;     /* Sample to Detector distance */
   double LVS       = 0.583; /* BC1 to VS distance */
@@ -114,21 +114,129 @@ DECLARE %{
   
   /* the following variables are computed in the IN4 configuration */
   double d0, d2; /* IN4c distances used in NoMad/IN4 doc (Ross/Rols) */
-  double phase2F   = 0;
+  double phase1F   = 0;
   double nu        = 0;
   double LMS       = 0; /* [m]    Mono-sample distance (aka d1) */
-  double LSM       = 0; /* [m]    Distance from source to monochromator. */
+  double LRM       = 0; /* [m]    Distance from source to monochromator. */
   double bctr      = 0; /* [m]    background chopper BC2 translation from BC1 */
   double phase12   = 0; /* [deg]  Chopper phase BC2 wrt BC1 */
+  char   mon_sqw[1024];
+  char   mon_qe[1024];
+  
+  double Lmin, Lmax;
+  
+  char   flag_sample_choice=0;
+  double flag_source_order =0;
+  double order_extend;
+  
+  double t1F=0;
+  double t12=0;
+  
+  double Ei=0;
+  
+  /* Write_Sqw: writes an Sqw file for Isotropic_Sqw as a Dirac 2D array
+     INPUT:
+       dq:        [1]   momentum binning between adjacent Dirac peaks. 0 to get bins/10.
+       dw         [1]   energy   binning between adjacent Dirac peaks. 0 to get bins/10.
+       max_q:     [Angs] maximum momentum transfer to generate [Angs]
+       max_w:     [meV] maximum energy transfer to generate [meV]
+       bins:      [1]   S(q,w) size is bins x bins.
+       filename:  [str] output filename
+     OUTPUT:
+       a file containing S(q,w)
+       the return value is the number of Durac peaks generated
+       
+     Simple usage: Write_Sqw_Dirac(0, 0, 20, 500, 1000, "Dirac2D.sqw") */
+     
+  long Write_Sqw_Dirac(long dq, long dw, 
+    double max_q, double max_w, long bins, char *filename)
+  {
+  
+    double index_q, index_w;
+    double min_q=0,    min_w=0;
+    long   bin_q=0,    bin_w=0;
+    long   count=0;
+    
+    FILE *fid = NULL;
+    
+    fid = fopen(filename, "w+");
+    if (!fid) return(0);
+    
+    /* check binning */
+    if (bins <= 0) bins=1000; /* 1000x1000 makes a 8 Mb array */
+    if(dq <= 0)    dq=bins/10;
+    if(dw <= 0)    dw=bins/10;
+    bin_q=bins; bin_w=bins;
+    
+    /* write header */
+    fprintf(fid, 
+      "# Sqw data file for Isotropic_Sqw\n"
+      "# model S(q,w) as a set of Dirac peaks, to obtain the 2D resolution function\n"
+      "# on a (q,w) grid. (q,w) grid=%g Angs, %g meV.\n"
+      "# filename: %s\n"
+      "#\n"
+      "# Physical parameters:\n"
+      "# sigma_coh 1    coherent scattering cross section in [barn]\n"
+      "# sigma_inc 0    incoherent scattering cross section in [barn]\n"
+      "# sigma_abs 0    absorption scattering cross section in [barn]\n"
+      "# density   1    in [g/cm^3.5]\n"
+      "# weight    1    in [g/mol]\n"
+      "# nb_atoms  1    in [atoms/unit cell]\n"
+      "#\n", (max_q-min_q)/bin_q, (max_w-min_w)/bin_w, filename);
+    
+    /* write q axis */
+    fprintf(fid, 
+      "# WAVEVECTOR vector of m=%i values %g:%g in [Angstroem-1]: q\n",
+      bin_q, min_q, max_q);
+    for (index_q=0; index_q < bin_q; index_q++) {
+      double q = min_q+index_q*(max_q-min_q)/bin_q;
+      fprintf(fid, "%g ", q);
+    }
+    fprintf(fid, "\n");
+    
+    /* write w axis */
+    fprintf(fid, 
+      "# ENERGY vector of n=%i values %g:%g in [meV]: w\n",
+      bin_w, min_w, max_w);
+    for (index_w=0; index_w < bin_w; index_w++) {
+      double w = min_w+index_w*(max_w-min_w)/bin_w;
+      fprintf(fid, "%g ", w);
+    }
+    fprintf(fid, "\n");
+    
+    /* write Sqw matrix as zero except when on grid */
+    fprintf(fid, 
+      "# matrix of S(q,w) values (m=%i rows x n=%i columns), one row per q value: sqw\n",
+      bin_q, bin_w);
+    for (index_q=0; index_q < bin_q; index_q++) {
+      for (index_w=0; index_w < bin_w; index_w++) {
+        double sqw = 0;
+        if (fmod(index_q, dq) == 0 && fmod(index_w, dw) == 0) { 
+          sqw=1; count++; }
+        fprintf(fid, "%g ", sqw);
+      }
+      fprintf(fid, "\n");
+    }
+    fprintf(fid, "\n");
+    fprintf(fid, "# end of Sqw file %s\n", filename);
+    
+    fclose(fid);
+    return(count); /* size of S(q,w) generated */
+  } /* Write_Sqw_Dirac */
 %}
 
 INITIALIZE %{
-  double Ei, Vi, Ki;
-  double t2F=0;
-  double t12=0;
+  double Vi, Ki;
   double thetaB;
   double dSx=5.556;   /* BC1 to sample along beam tube axis */
   double dSy=1.3;     /* lateral position of sample */
+  double L1F, L1M, LMF;
+  
+  if (DM <= 0) {
+    if      (lambda < 1.0) DM=1.118;
+    else if (lambda < 1.8) DM=1.677;
+    else                   DM=3.355;
+  }
   
   thetaB = -asin(lambda/DM/2);
   A1     = thetaB*RAD2DEG;
@@ -136,7 +244,7 @@ INITIALIZE %{
   Ki = 2*PI/lambda;
   Vi = K2V*fabs(Ki);
   Ei = VS2E*Vi*Vi;
-  
+
   /* IN4c configuration */
   
   
@@ -146,10 +254,13 @@ INITIALIZE %{
   d0 = dSx - d2 - LVS;    /* VS to Monok */ 
   
   /* set distances for IN4c */
-  LSM = 6.1 + LVS + d0;
+  LRM = 6.1 + LVS + d0;
+  L1M= LRM - 6.1;      /* BC1 to Monok */
+  LMF= LMS-LFS;        /* Monok to Fermi */
+  L1F= L1M + LMF;      /* BC1 to Fermi */
   
   /* FC rotation frequency (Master) */
-  nu  = K2V/( fabs(DM*cos(thetaB)) * (LFS+LSD*pow( 1-dE/Ei, -3/2)) *(1-LMS/d0) );
+  nu  = K2V/( fabs(DM*cos(thetaB)) * (LFS+LSD*pow( 1-dE/Ei, -1.5)) *(1-LMS/d0) );
 
   phase12 = 22.5;
   /* compute position of BC2 and phases */
@@ -161,46 +272,63 @@ INITIALIZE %{
   }
 
   /* compute back the phases (in case bctr has changed) */
-  phase12 = bctr*360*(nu/ratio)/Vi;
-  /* distance BC2-FC */
-  t2F     = ((LMS-LFS)+(LSM-6.1-bctr))/Vi;
-  phase2F = t2F*360*nu;
+  phase12 = -bctr*360*(nu/ratio)/Vi;
+  /* distance BC1-FC */
+  t1F     = ((LMS-LFS)+(LRM-6.1))/Vi;
+  phase1F = -t1F*360*nu;
   
   if (RMH < 0) {
     double L = 1/(1/d0+1/LMS); /* Monok optical focusing distance */
     RMH= 2*L/sin(DEG2RAD*A1);  /* RH = 2*L/sin(DEG2RAD*A1); */
   }
-    
-  LOM      = LSM - 5.2; /* from Obt1 to Monok */
   
-  if (dlambda >= lambda)
-    dlambda = lambda*.95;
+  if (dlambda <= 0) dlambda = lambda*.95;
+    
+  Lmin = lambda-dlambda;
+  Lmax = lambda+dlambda;
+  if (Lmin < 0)   Lmin = 0.1;
+  if (Lmax > 3.5) Lmax = 3.5;
 
   MPI_MASTER(
   /* print some information when starting */
   printf("%s: Thermal ToF spectrometer\n", NAME_CURRENT_COMP);
-  printf("  Divergence at the lead shutter: %g [deg]\n", atan2(0.2,5.2)*RAD2DEG);
-  printf("  Take-off at monochromator:      %g [deg] (A1)\n", A1);
-  printf("  Incident energy:                %g [meV] (Ei)\n", Ei);
-  printf("  Incident velocity:              %g [m/s] (Vi)\n", Vi);
-  printf("  Source-Mono distance:           %g [m] (LSM)\n", LSM);
-  printf("  Virtual Source-Mono distance:   %g [m] (d0)\n", d0);
-  printf("  Mono-Sample distance:           %g [m] (d1=LMS)\n", LMS);
-  printf("  Curvature at monochromator:     %g [m] (RMH)\n", RMH);
-  printf("  Fermi Chopper Frequency:        %g [Hz] (nu) %g [rpm]\n", nu, nu*60);
-  printf("  BC1-BC2 distance:               %g [m] (BCTR)\n", bctr);
-  printf("  BC2 phase wrt BC1:              %g [deg] (deltaPhi)\n", phase12);
-  printf("  FC phase wrt BC1:               %g [deg]\n", phase12+phase2F);
-  );
+  printf("  Divergence at the lead shutter: dX    =%g [deg]\n", atan2(0.2,5.2)*RAD2DEG);
+  printf("  Take-off at monochromator:      A1    =%g [deg] ; DM=%g [Angs]\n", A1, DM);
+  printf("  Incident energy:                Ei    =%g [meV] ; Ki=%g [Angs-1]\n", Ei, Ki);
+  printf("  Incident velocity:              Vi    =%g [m/s]\n", Vi);
+  printf("  Source-Mono distance:           LRM   =%g [m]\n", LRM);
+  printf("  Virtual Source-Mono distance:   d0    =%g [m]\n", d0);
+  printf("  Mono-Sample distance:           LMS   =%g [m] (d1)\n", LMS);
+  printf("  Curvature at monochromator:     RMH   =%g [m] ; RMV=%g [m]\n", RMH, RMV);
+  printf("  Fermi Chopper Frequency:        nu    =%g [Hz] ; rpm=%g [rpm]\n", nu, nu*60);
+  printf("  BC2 phase wrt BC1:              PhiBC2=%g [deg] L12=%g [m] delay t12=%g [s] (BCTR)\n", 
+    phase12, bctr, t12);
+  printf("  FC phase wrt BC1:               PhiFC =%g [deg] L1F=%g [m] delay t1F=%g [s]\n", 
+    phase1F, L1F, t1F);
   
   /* print a visual representation of distances */
-  printf("[H12] %g [BC1] %g [VS] %g [BC2] %g [PG] %g [FC] %g [Spl]\n",
-    6.1, LVS, bctr - LVS, LSM - (6.1 + bctr), LMS - LFS, LFS);
+  printf("Distances: in [m]\n");
+  printf("[H12] %g [BC1] %g [VS] %g [BC2] %g [PG] %g [FC] %g [Spl] %g [Det]\n",
+    6.1, LVS, bctr - LVS, LRM - (6.1 + bctr), LMS - LFS, LFS, LSD);
     
+  /* generate Sqw Dirac array */
+  printf("\nGenerate %li Dirac peaks on (q,w) grid.\n",
+    Write_Sqw_Dirac(0, 0, 3*Ki, 5*Ei, 1000, "Dirac2D.sqw"));
+  );
+  
   /* tests for consistency */
-  if (nu < 0 || nu > 700) exit(printf("Invalid: Fermi master frequency. Change DM ?\n"));
-  if (fabs(A1) < 15)      exit(printf("Invalid: mono take-off angle. Change DM ?\n"));
-  if (bctr < 0)           exit(printf("Invalid: BC1-BC2 distance. Change DM ?\n"));
+  if (order <= 0 || order > 4) order = 4;
+  order_extend = order;
+  
+  if (nu < 0 || nu > 700) exit(printf("ERROR: Invalid: Fermi master frequency nu=%g [Hz]. Change DM ?\n", nu));
+  if (fabs(A1) < 5)      exit(printf("ERROR: Invalid: mono take-off angle A1=%g [deg]. Change DM ?\n", A1));
+  if (bctr < 0)           exit(printf("Invalid: BC1-BC2 distance bctr=%g [m]. Change DM ?\n", bctr));
+  if (fmod(phase12, 45.0) < 22 )
+    printf("%s: WARNING: The choppers are NOT in closed position phase12=%g [deg].\n",
+     NAME_CURRENT_COMP, phase12);
+     
+  sprintf(mon_sqw, "user1 limits=[0 %g], user2 limits=[%g %g]", 3*Ki, -Ei, 4*Ei);
+  sprintf(mon_qe,  "banana, angle limits=[-150 150], energy limits=[0 %g]", 4*Ei);
   
 %}
 
@@ -209,24 +337,47 @@ TRACE
 
 COMPONENT Origin = Progress_bar()
   AT (0, 0, 0) ABSOLUTE
+  EXTEND %{
+    flag_source_order = floor(rand01()*order_extend*.99);
+  %}
 
 COMPONENT Thermal = Source_gen(
   radius   = 0.10/2,
   focus_xw = 0.1,
   focus_yh = 0.1,
-  target_index=+1,
-  lambda0  = lambda,
-  dlambda  = dlambda,
+  dist  =5.2,
+  lambda0=lambda, dlambda=dlambda,
   T1=683.7,I1=0.5874e+13,T2=257.7,I2=2.5099e+13,T3=16.7 ,I3=1.0343e+12,
   verbose  = 1)
+  WHEN (flag_source_order == 0)
   AT (0, 0, 0) RELATIVE Origin
+  
+COMPONENT Thermal2 = COPY(Thermal)
+  (lambda0=lambda/2)
+  WHEN (flag_source_order == 1)
+  AT (0, 0, 0) RELATIVE Origin
+  
+COMPONENT Thermal3 = COPY(Thermal)
+  (lambda0=lambda/3)
+  WHEN (flag_source_order == 2)
+  AT (0, 0, 0) RELATIVE Origin
+  
+COMPONENT Thermal4 = COPY(Thermal)
+  (lambda0=lambda/4)
+  WHEN (flag_source_order >= 3)
+  AT (0, 0, 0) RELATIVE Origin
+  
+/* could we put a guide in pile ? max l=2 */
 
-/* bouchon barillet Phi=100mm */
+/* bouchon barillet Phi=100mm, at 5.2 m */
 COMPONENT Obt1 = Monitor_nD(
   xwidth=0.1, yheight=0.1, options="disk, slit, x y", bins=100)
   AT (0, 0, 5.2) RELATIVE Thermal
+  EXTEND %{
+    p *= order_extend;
+  %}
   
-COMPONENT Obt1_lambda = Monitor_nD(xwidth=0.1, yheight=0.1, options="lambda limits=[.1 3]", bins=100)
+COMPONENT Obt1_lambda = Monitor_nD(xwidth=0.1, yheight=0.1, options="lambda limits=[.1 3.5]", bins=100)
   AT (0, 0, 0.01) RELATIVE Obt1
 
 /* sapphire filter to remove fast neutrons
@@ -241,13 +392,13 @@ COMPONENT SapphireFilter = Filter_gen(xwidth=0.12, yheight=0.12,
 COMPONENT Win1 = Monitor_nD(
   xwidth=0.12, yheight=0.12, options="disk, slit, x y", bins=100)
   AT (0,0, 0.4) RELATIVE Obt1
-  
-COMPONENT Win1_lambda = Monitor_nD(xwidth=0.1, yheight=0.1, options="lambda limits=[.1 3]", bins=100)
+ 
+COMPONENT Win1_lambda = Monitor_nD(xwidth=0.06, yheight=0.1, options="lambda limits=[.1 3.5]", bins=100)
   AT (0, 0, 0.01) RELATIVE Win1
 
 /* BC1 should be as early as possible. Opening of slits: 22.5 deg i.e. 6 cm */
-COMPONENT BC1  = DiskChopper(radius=0.65/2, nslit=8, isfirst=1, 
-  theta_0=22.5, nu=nu/ratio, yheight=0.12)
+COMPONENT BC1  = DiskChopper(radius=0.603/2, nslit=8, isfirst=1, 
+  theta_0=22.5, nu=nu/ratio, yheight=0.10, phase=0)
   AT (0,0, 6.1) RELATIVE Thermal
  
 /* the "Virtual Source" (which is just a slit) */
@@ -255,37 +406,63 @@ COMPONENT BC1  = DiskChopper(radius=0.65/2, nslit=8, isfirst=1,
 COMPONENT VS   = Slit(xwidth=0.08, yheight=0.20)
 AT (0,0, 0.583) RELATIVE BC1
 
-COMPONENT BC2  = DiskChopper(radius=.75/2, nslit=8, theta_0=22.5, 
-  nu=nu/ratio, phase=phase12, yheight=0.12)
-AT (0,0, bctr) RELATIVE VS
+COMPONENT BC2_slit = Slit(xwidth=0.07, yheight=.12)
+  AT (0,0, bctr-0.02) RELATIVE BC1
+
+COMPONENT BC2_t = Monitor_nD(
+  xwidth=0.07, yheight=0.12, options="auto t", bins=100)
+  AT (0,0, bctr-0.01) RELATIVE BC1
+  
+COMPONENT BC2  = DiskChopper(radius=.643/2, nslit=8, theta_0=22.5, 
+  nu=nu/ratio, delay=t12, yheight=0.14)
+AT (0,0, bctr) RELATIVE BC1
+
+COMPONENT BC2_t_post = COPY(BC2_t)
+  AT (0,0, 0.01) RELATIVE BC2
 
 COMPONENT Cradle = Monitor_nD(
   options="x y", bins=50, xwidth=.25, yheight=.25, restore_neutron=1)
-  AT (0,0,LSM) RELATIVE Thermal
+  AT (0,0,LRM) RELATIVE Thermal
 
 COMPONENT Cradle_lambda = Monitor_nD(
-  options="lambda limits=[.1 3]", bins=100, xwidth=.25, yheight=.25, restore_neutron=1)
-  AT (0,0,LSM+0.01) RELATIVE Thermal
-
-SPLIT COMPONENT Mono = Monochromator_curved(
-  width=0.22, height=0.2, NH=5, NV=11, RV=-1.9, RH=RMH,
-  DM=DM, mosaic=ETAM)
+  options="lambda limits=[.1 3.5]", bins=100, xwidth=.25, yheight=.25, restore_neutron=1)
+  AT (0,0,LRM+0.01) RELATIVE Thermal
+  
+COMPONENT Cradle_t = Monitor_nD(
+  options="auto t", bins=100, xwidth=.25, yheight=.25, 
+  restore_neutron=1)
+  AT (0,0,LRM) RELATIVE Thermal
+  
+COMPONENT Mono_xy = Monitor_nD(
+  options="x y", bins=50, xwidth=.22, yheight=.2, restore_neutron=1)
   AT (0,0,0) RELATIVE Cradle
   ROTATED (0, A1, 0) RELATIVE Cradle
+
+SPLIT COMPONENT Mono = Monochromator_curved(
+  width=0.22, height=0.2, NH=11, NV=5, RV=RMV, RH=RMH,
+  DM=DM, mosaic=ETAM, reflect="HOPG.rfl", transmit="HOPG.trm")
+  AT (0,0,0) RELATIVE Cradle
+  ROTATED (0, A1, 0) RELATIVE Cradle
+  EXTEND %{
+    if (!SCATTERED) ABSORB; /* remove transmitted beam */
+  %}
   
 COMPONENT Mono_out = Arm()
   AT (0,0,0) RELATIVE Cradle
   ROTATED (0, 2*A1, 0) RELATIVE Cradle
   
-COMPONENT FC_Pos = Arm()
-AT (0,0,LMS-0.675) RELATIVE Mono_out
-
-COMPONENT Mon_FC_Pos = Monitor_nD(
-  xwidth = 0.05, yheight = 0.064,
-  options="t slit, all auto", bins=512)
-AT (0,0,-0.025-0.001) RELATIVE FC_Pos
+COMPONENT Mono_t = COPY(Cradle_t)
+  AT (0,0,0) RELATIVE Mono_out
   
-COMPONENT Fermi = FermiChopper(phase=phase12+phase2F, radius=0.025, nu=nu,
+COMPONENT FC_Pos = Monitor_nD(
+  yheight=0.064, xwidth=0.03, options="auto t", bins=100,
+  restore_neutron=1)
+AT (0,0,LMS-LFS) RELATIVE Mono_out
+
+COMPONENT FC_Slit = Slit(yheight=0.064, xwidth=0.03)
+AT (0,0,-0.03) RELATIVE FC_Pos
+  
+COMPONENT Fermi = FermiChopper(delay=t1F, radius=0.025, nu=-nu,
    yheight=0.064, xwidth=0.023, nslit=50, length=0.025)
 AT (0,0,0) RELATIVE FC_Pos
 EXTEND %{
@@ -300,12 +477,14 @@ COMPONENT Sample_rot = Arm()
   AT (0,0,0) RELATIVE Sample_pos
   ROTATED (0,45,0) RELATIVE Sample_pos
 
-SPLIT COMPONENT sample_flux = Monitor_nD(
+SPLIT 100 COMPONENT sample_flux = Monitor_nD(
     xwidth = 0.06, yheight = 0.06, options = "x y", 
     restore_neutron=1, bins=60)
   AT (0, 0, 0) RELATIVE Sample_pos
   EXTEND %{
     flag_sample = flag_env = 0;
+    flag_sample_choice = (rand01() > 0.5 ? 1 : 2);
+    p *= 2; /* compensate for MC choice on 2 samples */
   %}
   
 COMPONENT sample_tof = Monitor_nD(
@@ -314,7 +493,17 @@ COMPONENT sample_tof = Monitor_nD(
   AT (0, 0, 0) RELATIVE Sample_pos
   
 COMPONENT sample_lambda = Monitor_nD(
-  xwidth = 0.1, yheight = 0.1, options = "lambda limits=[.1 3]", 
+  xwidth = 0.1, yheight = 0.1, options = "lambda limits=[.1 3.5]", 
+  bins=300, restore_neutron=1)
+  AT (0, 0, 0) RELATIVE Sample_pos
+  
+COMPONENT sample_w = Monitor_nD(
+  xwidth = 0.1, yheight = 0.1, options = "energy", min=0, max=2*Ei,
+  bins=100, restore_neutron=1)
+  AT (0, 0, 0) RELATIVE Sample_pos
+  
+COMPONENT sample_qxy = Monitor_nD(
+  xwidth = 0.1, yheight = 0.1, options = "kx ky, all auto", 
   bins=100, restore_neutron=1)
   AT (0, 0, 0) RELATIVE Sample_pos
   
@@ -323,7 +512,7 @@ COMPONENT sample_lambda = Monitor_nD(
 /* external shield */
 COMPONENT Environment_in=Isotropic_Sqw(
   radius = environment_radius, yheight = 0.1, thickness=environment_thickness,
-  Sqw_coh=environment, concentric=1, verbose=0
+  Sqw_coh=environment, concentric=1, verbose=0, order=1, d_phi=2*RAD2DEG*atan2(1, LSD)
 ) WHEN (environment_thickness > 0)
 AT (0, 0, 0) RELATIVE Sample_rot
 EXTEND %{
@@ -335,7 +524,7 @@ COMPONENT Container_in=Isotropic_Sqw(
   xwidth  = sample_width+1e-4+container_thickness, 
   zdepth  = sample_thickness+1e-4+container_thickness,
   yheight = sample_height, thickness=container_thickness,
-  Sqw_coh=container, concentric=1, verbose=0
+  Sqw_coh=container, concentric=1, verbose=0, order=1, d_phi=2*RAD2DEG*atan2(1, LSD)
   ) WHEN(container_thickness > 0)
 AT (0, 0, 0) RELATIVE Sample_rot
 EXTEND
@@ -343,11 +532,21 @@ EXTEND
   flag_env += SCATTERED;
 %}
 
-COMPONENT Sample_in=Isotropic_Sqw(
+COMPONENT SampleS=Isotropic_Sqw(
   xwidth = sample_width, zdepth=sample_thickness, yheight = sample_height,
   Sqw_coh= sample_coh, Sqw_inc= sample_inc, p_interact=0.9,
-  d_phi=RAD2DEG*atan2(2, LSD), order=1
-) AT (0, 0, 0)   RELATIVE Sample_rot
+  d_phi=2*RAD2DEG*atan2(1, LSD), order=1)
+WHEN (flag_sample_choice == 1)
+AT (0, 0, 0)   RELATIVE Sample_rot
+EXTEND
+%{
+  flag_sample += SCATTERED;
+%}
+
+COMPONENT SampleV=Incoherent(xwidth = sample_width, zdepth=sample_thickness, yheight = sample_height,
+  focus_ah = 2*RAD2DEG*atan2(1, LSD), focus_aw=150.0)
+WHEN (flag_sample_choice == 2)
+AT (0, 0, 0)   RELATIVE Sample_rot
 EXTEND
 %{
   flag_sample += SCATTERED;
@@ -369,7 +568,7 @@ EXTEND %{
   flag_env += SCATTERED;
 %}
   
-COMPONENT Detector = Monitor_nD(radius=LSD, yheight=2,
+COMPONENT Detector = Monitor_nD(radius=LSD, yheight=2, restore_neutron=1,
   options="theta limits=[-15 135] bins=300, y bins=100, banana")
   AT (0,0,0) RELATIVE Sample_pos
   
@@ -379,7 +578,59 @@ COMPONENT Detector_sample = COPY(Detector)
   
 COMPONENT Detector_env = COPY(Detector)
   WHEN (flag_env)
-  AT (0,0,0) RELATIVE Sample_pos 
+  AT (0,0,0) RELATIVE Sample_pos
 
+COMPONENT Detector_Sqw = Monitor_Sqw(
+  radius=LSD, yheight=2, bins=1000, index=-9,
+  options=mon_sqw)
+  WHEN (flag_sample && flag_sample_choice == 1)
+  /* "user1 limits=[0 10], user2 limits=[-50 50]" */
+  AT (0,0,0) RELATIVE Sample_pos
+  
+COMPONENT Detector_qe = Monitor_nD(
+  radius=LSD, yheight=2, bins=500, restore_neutron=1,
+  options=mon_qe)
+  WHEN (flag_sample && flag_sample_choice == 1)
+  /* "banana, angle limits=[-150 150], energy limits=[0 50]" */
+  AT (0,0,0) RELATIVE Sample_pos
+  
+COMPONENT Detector_SqwV = COPY(Detector_Sqw)
+  WHEN (flag_sample && flag_sample_choice == 2)
+  AT (0,0,0) RELATIVE Sample_pos
+  
+COMPONENT Detector_qeV = COPY(Detector_qe)
+  WHEN (flag_sample && flag_sample_choice == 2)
+  AT (0,0,0) RELATIVE Sample_pos
+  
+/* display static shapes for viz puposes only =============================== */
+COMPONENT Fuel_centre = Arm()
+  AT (0.47, 0, -0.22) RELATIVE Thermal
+
+COMPONENT H12_tube = Shape(radius=0.1/2, yheight=5)
+  AT (0, 0, 2.5)     RELATIVE Thermal
+  ROTATED (90, 0, 0) RELATIVE Thermal
+  
+COMPONENT Fuel = Shape(radius=.2, yheight=1.3)
+  AT (0, 0, 0) RELATIVE Fuel_centre
+  
+COMPONENT D2O_vessel = Shape(radius=1.3, yheight=1)
+  AT (0, 0, 0) RELATIVE Fuel_centre
+  
+COMPONENT ILL5_wall = Shape(xwidth=4, yheight=3, zdepth=.5)
+  AT (0,0,27) RELATIVE Fuel_centre
+  
+COMPONENT H2O_vessel = Shape(radius=3, yheight=1)
+  AT (0, 0, 0) RELATIVE Fuel_centre
+  
+COMPONENT Concrete_wall = Shape(radius=4.75, yheight=1)
+  AT (0, 0, 0) RELATIVE Fuel_centre
+  
+COMPONENT Barillet = Shape(radius=0.5, yheight=0.5)
+  AT (0,0, 4.7+0.5/2) RELATIVE Thermal
+  ROTATED (90, 0, 0)  RELATIVE Thermal
+  
+COMPONENT Pillar = Shape(xwidth=0.5, yheight=2, zdepth=0.5)
+  AT (1.5, 0, 17.5)   RELATIVE Thermal
+  
 END
 

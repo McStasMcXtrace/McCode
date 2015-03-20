@@ -43,12 +43,18 @@ def makeuid(username, n=0):
 #==================================#
 def get_cn():
     default = 'cn=admin,DN'
-    print "{default_dn: %s}"% default
-    LDAP_admin_cn = raw_input('Enter your LDAP authentication username (cn=...,DN)\n (enter for default): ')
-    if not LDAP_admin_cn: 
-        return default
-    if check_LDAP_perms(LDAP_admin_cn):
-        return LDAP_admin_cn
+    print "{USING default_dn: %s}"% default
+    return default
+    #--------------------------------#
+    # PUT THIS BACK IN ONCE THE LDAP #
+    # GROUP ADMIN AUTH CHECK THING   #
+    # WORKS!                         #
+    #--------------------------------#
+    #    LDAP_admin_cn = raw_input('Enter your LDAP authentication username (cn=...,DN)\n (enter for default): ')
+    #    if not LDAP_admin_cn: 
+    #        return default
+    #    if check_LDAP_perms(LDAP_admin_cn):
+    #        return LDAP_admin_cn
 #====================================================#
 # duplicate_user_check                               #
 # --------------------                               #

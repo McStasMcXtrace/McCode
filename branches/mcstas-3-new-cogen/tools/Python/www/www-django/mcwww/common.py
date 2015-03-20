@@ -1,7 +1,8 @@
 ''' A collection of stand-alone utility functions '''
 
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseForbidden
-from django.utils import crypto, simplejson
+from django.utils import crypto
+import simplejson
 from django.core.context_processors import csrf
 
 from django.shortcuts import get_object_or_404, render_to_response, redirect

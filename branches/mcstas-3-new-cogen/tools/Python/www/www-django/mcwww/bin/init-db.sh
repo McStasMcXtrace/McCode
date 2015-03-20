@@ -3,12 +3,7 @@ export PYTHONPATH=$PYTHONPATH:./
 #------------------------------------------#
 # Get host name for populating .ldif files #
 #------------------------------------------#
-DN=`sed '2q;d' /etc/hosts`
-NAME=`cat /etc/hostname`
-DN=${DN%$NAME*}                     # all before (repeated) NAME
-DN=${DN##*$NAME.}                   # get after first NAME on line 
-DN=$(echo $DN | sed 's/ *$//')      # trim whitespace at end
-DN="dc=${DN//./,dc=}"               # replacing '.' with ',dc=' and putting dc= in front.
+DN=`sudo slapcat | grep "dn: cn=admin" |cut -f2- -d,`
 echo Obtained LDAP database DN: $DN
 echo " "
 #---------------#

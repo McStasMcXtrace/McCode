@@ -257,7 +257,7 @@ EXTEND %{
   
 /* Dist: Monochromator – Fermi chopper 5540 mm */
 COMPONENT FC=FermiChopper(xwidth=.031, yheight=.101, nslit=136, nu=Frequency, 
-  phase=0, radius=.135/2,length=0.013,time=DELAY)
+  phase=0, radius=.135/2,length=0.013,delay=DELAY)
   AT (0, 0, LME-LCE) RELATIVE MonokOut ROTATED (0,0,90) RELATIVE MonokOut
 /* Dist: Fermi chopper – Sample 1000 mm */
 

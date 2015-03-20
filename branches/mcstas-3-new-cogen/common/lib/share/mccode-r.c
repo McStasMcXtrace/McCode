@@ -3704,7 +3704,9 @@ void sighandler(int sig)
   {
     fflush(stdout);
     perror("# Last I/O Error");
-    printf("# " MCCODE_STRING ": Simulation stop (abort)\n");
+    printf("# " MCCODE_STRING ": Simulation stop (abort).\n");
+    signal(sig, SIG_DFL); /* force to use default sighandler now */
+    kill(getpid(), sig);  /* and trigger it with the current signal */
     exit(-1);
   }
 #undef SIG_SAVE
@@ -3721,7 +3723,8 @@ void sighandler(int sig)
 int mccode_main(int argc, char *argv[])
 {
 /*  double run_num = 0; */
-  time_t t;
+  time_t  t;
+  clock_t ct;
 #ifdef USE_MPI
   char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
   int  mpi_node_name_len;
@@ -3739,6 +3742,9 @@ int mccode_main(int argc, char *argv[])
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
 #endif /* USE_MPI */
 
+ct = clock();    /* we use clock rather than time to set the default seed */
+mcseed=(long)ct;
+
 #ifdef USE_MPI
 /* *** print number of nodes *********************************************** */
   if (mpi_node_count > 1) {
@@ -3746,15 +3752,12 @@ int mccode_main(int argc, char *argv[])
     printf("Simulation '%s' (%s): running on %i nodes (master is '%s', MPI version %i.%i).\n",
       mcinstrument_name, mcinstrument_source, mpi_node_count, mpi_node_name, MPI_VERSION, MPI_SUBVERSION);
     );
-    /* adapt random seed for each node */
-    mcseed=(long)(time(&t) + mpi_node_rank);
-    srandom(mcseed);
-    t += mpi_node_rank;
-  } else
-#else /* !USE_MPI */
-  mcseed=(long)time(&t);
-  srandom(mcseed);
+    /* share the same seed, then adapt random seed for each node */
+    MPI_Bcast(&mcseed, 1, MPI_LONG, 0, MPI_COMM_WORLD); /* root sends its seed to slaves */
+    mcseed += mpi_node_rank; /* make sure we use different seeds per noe */
+  }
 #endif /* USE_MPI */
+  srandom(mcseed);
   mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
 
 /* *** parse options ******************************************************* */

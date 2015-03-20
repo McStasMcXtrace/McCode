@@ -550,8 +550,8 @@ INITIALIZE
 */
   };
 
-  fclose(f1);
-  fclose(f2);
+  if(o1) fclose(f1);
+  if(o2) fclose(f2);
 
   Qminl = log10(Qmind);
   Qmaxl = log10(Qmaxd);
