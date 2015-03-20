@@ -174,6 +174,15 @@ void interpolate3_3( double  x, double  y, double  z,
   neighbours          = newArrayList();
   neighbourSimplicies = newArrayList();
   lastNaturalNeighbours(&p, m, neighbours, neighbourSimplicies);
+  
+  if (!arrayListSize(neighbours) || !arrayListSize(neighbourSimplicies)) {
+    *u = value[0];
+    *v = value[1];
+    *w = value[2];
+    freeArrayList(neighbours,          NULL);
+    freeArrayList(neighbourSimplicies, NULL);
+    return;
+  }
 
   // Calculate the volumes of the Voronoi Cells of the natural neighbours.
   neighbourVolumes = malloc(arrayListSize(neighbours) * sizeof(double));
