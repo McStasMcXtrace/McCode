@@ -43,7 +43,7 @@ ssh ${LINUSER}@${LINHOST} cd ${LINPATH} \&\& rm -rf dist
 ssh ${WINUSER}@${WINHOST} del Downloads\\\*.exe
 # Step 1 - McStas
 echo Step 1
-ssh ${LINUSER}@${LINHOST} cd ${LINPATH} \&\& git fetch --all \&\& ./build_debs_mcstas ${VER} \&\& ./build_windows_mcstas ${VER} 
+ssh ${LINUSER}@${LINHOST} cd ${LINPATH} \&\& git pull \&\& ./build_debs_mcstas ${VER} \&\& ./build_windows_mcstas ${VER} 
 ssh ${LINUSER}@${LINHOST} cd ${LINPATH}/dist \&\& tar cfz mccode-linux-${VER}.tgz \*.deb  \&\& tar cfz mccode-windows-${VER}.tgz \*.exe
 echo Step 2
 # Step 2 - McXtrace
@@ -72,7 +72,7 @@ echo Clean, build, install Mac
 # Step 0 - cleanup
 ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH} \&\& rm -rf dist 
 # Step 1 - McStas
-ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH} \&\& git fetch --all \&\& ./build_macos_Yosemite_mcstas ${VER} 
+ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH} \&\& git pull \&\& ./build_macos_Yosemite_mcstas ${VER} 
 # Step 2 - McXtrace
 ssh ${OSXUSER}@${OSXHOST} cd ${OSXPATH} \&\& ./build_macos_Yosemite_mcxtrace ${VER} 
 # Step 3 Install McStas & McXtrace
