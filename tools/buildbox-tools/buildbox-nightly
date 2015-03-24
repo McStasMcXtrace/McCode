@@ -22,7 +22,7 @@
 cd /Users/mccode/McCode/
 
 VER=svn_`date "+%Y-%m-%d"`
-SVNREL="Git..."
+SVNREL=`git rev-list -n 1 HEAD`
 
 WINHOST=172.16.97.10
 LINHOST=172.16.97.11
