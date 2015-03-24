@@ -146,8 +146,9 @@ scp ${LINUSER}@${LINHOST}:${LINPATH}/dist/mccode-windows-${VER}.tgz mcstas@mcc-0
 scp ${LINUSER}@${LINHOST}:${LINPATH}/dist/mccode-linux-${VER}.tgz  mcstas@mcc-01.risoe.dk:/srv/web/mccode.org/nightly/Current/Linux
 scp ${OSXUSER}@${OSXHOST}:${OSXPATH}/dist/mccode-OSX-${VER}.tgz mcstas@mcc-01.risoe.dk:/srv/web/mccode.org/nightly/Current/OSX
 
-
-ssh mcstas@mcc-01.risoe.dk cd Builds/Nightly/Logs \&\& echo ${GITREV} \> gitrev.txt
+echo \<a href="https://github.com/McStasMcXtrace/McCode/commit/${GITREV}" \>${GITREV}\</a\>  > gitrev.txt
+scp gitrev.text mcstas@mcc-01.risoe.dk:Builds/Nightly/Logs
+#ssh mcstas@mcc-01.risoe.dk cd Builds/Nightly/Logs \&\& echo ${GITREV} \> gitrev.txt
 ssh mcstas@mcc-01.risoe.dk touch /usr/local/build/Nightly
 
 ssh mcstas@mcc-01.risoe.dk touch /usr/local/build/Nightly
