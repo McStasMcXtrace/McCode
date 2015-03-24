@@ -54,6 +54,9 @@
 * srcarea:   Source area (cm^2)
 * tofcuts:   Flag to generate TOF-distributions as function of wavelength (1)
 * toflambda: Flag to generate TOF-lambda distribution output ´ (1)
+* source_dist: Distance from source. Beware when transporting through neutron optics! (m)
+* xwidth:      width of monitor (m)
+* yheight:     height of monitor (m)
 * 
 * OUTPUT PARAMETERS:
 *
@@ -65,7 +68,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Brilliance_monitor
 DEFINITION PARAMETERS (nlam=101, nt=1001, string filename, t_0=0, t_1=20000, srcarea=1)
-  SETTING PARAMETERS (lambda_0=0, lambda_1=20, restore_neutron=0, Freq, int tofcuts=0, int toflambda=0)
+  SETTING PARAMETERS (lambda_0=0, lambda_1=20, restore_neutron=0, Freq, int tofcuts=0, int toflambda=0, xwidth = 0.01, yheight=0.01, source_dist=1)
   OUTPUT PARAMETERS (tt_0, tt_1, BRIL_N, BRIL_p, BRIL_p2, BRIL_mean, BRIL_peak, BRIL_meanN, BRIL_peakN, BRIL_meanE, BRIL_peakE, xmin, xmax, ymin, ymax, ster, prsec, dlam, dt)
 //STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 //POLARISATION PARAMETERS (sx,sy,sz)
@@ -86,8 +89,8 @@ DECLARE
     double BRIL_shapeE[nt];
 
     double tt_0, tt_1;
-    double xmin=-0.005, xmax=0.005, ymin=-0.005, ymax=0.005;
-    double ster=1e-4;
+    double xmin, xmax, ymin, ymax;
+    double ster;
     double prsec=1e-6;
     double dlam;
     double dt;
@@ -120,6 +123,14 @@ INITIALIZE
 	    }
 	  }
       }
+
+    xmax = xwidth/2.0;
+    ymax = yheight/2.0;
+    xmin = -xmax;
+    ymin = -ymax;
+    
+    ster = xwidth * yheight/(source_dist*source_dist);
+
   %}
 TRACE
   %{
