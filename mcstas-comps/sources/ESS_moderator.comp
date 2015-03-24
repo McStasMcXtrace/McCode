@@ -31,6 +31,7 @@
 * 2012 MCNPX calculations by ESS neutronics group. Corrections calculated by K Lieutenant (Vitess) and 
 * implemented here by E Klinkby. NOTE: uses the 2001 brilliance for the thermal moderator!
 * <li>sourcedef="2014", updated brilliance using formulation by Troels Schoenfeldt, including support for the "pancacke", i.e. flat geometry.
+* <li>sourcedef="2015", updated brilliance using formulation by Troels Schoenfeldt, new butterfly baseline.
 *</ul>
 * <li>The component can use target_index for focusing to a given beam port. Use an Arm() and ROTATED to position 
 * relatively to the moderator.
@@ -77,7 +78,7 @@ DEFINE COMPONENT ESS_moderator
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (isleft=0.9,
 		    Lmin, Lmax, cold_frac=1.0, dist=0, focus_xw, focus_yh, int target_index=0, tmax_multiplier=3,yheight_c=0.12, yheight_t=0.12,
-		    int n_pulses=1, acc_power=5, beamport_angle=-1, string sourcedef="2014", xwidth_c=0.23, xwidth_t=0.12, extraction_opening=120)
+		    int n_pulses=1, acc_power=5, beamport_angle=-1, string sourcedef="2015", xwidth_c=0.23, xwidth_t=0.12, extraction_opening=120)
 OUTPUT PARAMETERS (cold_bril, thermal_bril, l_range, w_mult, w_geom, w_geom, w_geom_t, cold)
 SHARE
 %{
@@ -197,6 +198,22 @@ INITIALIZE
     thermal_bril=ESS_2013_Schoenfeldt_thermal;
   /* ESS-2014 definition: */  
   } else if (strcasestr(sourcedef,"2014")) {
+    if (xwidth_c!=0.23 || xwidth_t!=0.12 || extraction_opening!=120) {
+      fprintf(stderr,"FATAL: sourcedef %s only allows xwidth_c=0.23, xwidth_t=0.12 and extraction_opening=120 !\n",sourcedef);
+      exit(-1);
+    }
+    /* Specify brilliance fct.'s */
+    cold_bril=ESS_2014_Schoenfeldt_cold;
+    thermal_bril=ESS_2014_Schoenfeldt_thermal;
+    /* Cold moderator geometry */
+    /* In this mode of operation, the emission is from the x-y plane*/
+    cx = 0; cy=0; cz=-0.12; cyl_radius=0.12;
+    /* 120 degree beam extraction opening, defining thermal moderator directions */
+    t1x=sin(DEG2RAD*120/2);t1z=cos(DEG2RAD*120/2);
+    t2x=-sin(DEG2RAD*120/2);t2z=cos(DEG2RAD*120/2);
+    t1y=0; t2y=0;
+    /* ESS-2015 definition: */  
+   } else if (strcasestr(sourcedef,"2015")) {
     if (xwidth_c!=0.23 || xwidth_t!=0.12 || extraction_opening!=120) {
       fprintf(stderr,"FATAL: sourcedef %s only allows xwidth_c=0.23, xwidth_t=0.12 and extraction_opening=120 !\n",sourcedef);
       exit(-1);

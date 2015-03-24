@@ -58,6 +58,8 @@ double ESS_2013_Schoenfeldt_cold_spectrum(double I_SD, double alpha_SD, double l
 double ESS_2013_Schoenfeldt_thermal_spectrum(double I_th, double T, double I_SD, double alpha, double lambda_cf, double lambda);
 double ESS_2014_Schoenfeldt_cold_spectrum(double lambda,double height);
 double ESS_2014_Schoenfeldt_thermal_spectrum(double lambda, double height);
+double ESS_2015_Schoenfeldt_cold_spectrum(double lambda,double height);
+double ESS_2015_Schoenfeldt_thermal_spectrum(double lambda, double height);
 double ESS_2014_Schoenfeldt_cold_Geom_120_over_60=1;
 double ESS_2014_Schoenfeldt_thermal_Geom_120_over_60=1;
 
@@ -70,6 +72,8 @@ double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
 double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras);
 double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
 double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras);
+double ESS_2015_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras); 
+double ESS_2015_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras);
 
 /* List of pulse-shape definitions */
 double ESS_2014_Schoenfeldt_cold_timedist(double t, double lambda, double height, double pulselength);
@@ -84,6 +88,14 @@ double ESS_2014_Schoenfeldt_cold_Y(double x0,double height);
 double ESS_2014_Schoenfeldt_thermal_Y(double y0,double height);
 double ESS_2014_Schoenfeldt_cold_Theta120(double x0,double height);
 double ESS_2014_Schoenfeldt_thermal_Theta120(double beamportangle,int isleft);
+double ESS_2015_Schoenfeldt_cold_y0(double y0,double height);
+double ESS_2015_Schoenfeldt_cold_x0(double x0,double height, double width);
+double ESS_2015_Schoenfeldt_thermal_y0(double y0,double height);
+double ESS_2015_Schoenfeldt_thermal_x0(double x0,double height, double width);
+double ESS_2015_Schoenfeldt_cold_Y(double x0,double height);
+double ESS_2015_Schoenfeldt_thermal_Y(double y0,double height);
+double ESS_2015_Schoenfeldt_cold_Theta120(double x0,double height);
+double ESS_2015_Schoenfeldt_thermal_Theta120(double beamportangle,int isleft);
 
 /* List of geometry definitions - mainly for mcdisplay... */
 void ESS_mcdisplay_flat(double geometry);
