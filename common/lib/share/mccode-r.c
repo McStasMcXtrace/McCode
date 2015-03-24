@@ -3679,8 +3679,11 @@ void sighandler(int sig)
     fflush(stdout);
     perror("# Last I/O Error");
     printf("# " MCCODE_STRING ": Simulation stop (abort).\n");
+// This portion of the signal handling only works on UNIX
+#if defined(__unix__) || defined(__APPLE__)
     signal(sig, SIG_DFL); /* force to use default sighandler now */
     kill(getpid(), sig);  /* and trigger it with the current signal */
+#endif
     exit(-1);
   }
 #undef SIG_SAVE
