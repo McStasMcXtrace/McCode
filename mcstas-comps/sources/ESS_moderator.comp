@@ -78,7 +78,7 @@ DEFINE COMPONENT ESS_moderator
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (isleft=0.9,
 		    Lmin, Lmax, cold_frac=1.0, dist=0, focus_xw, focus_yh, int target_index=0, tmax_multiplier=3,yheight_c=0.12, yheight_t=0.12,
-		    int n_pulses=1, acc_power=5, beamport_angle=-1, string sourcedef="2015", xwidth_c=0.23, xwidth_t=0.12, extraction_opening=120)
+		    int n_pulses=1, acc_power=5, beamport_angle=-1, string sourcedef="2014", xwidth_c=0.23, xwidth_t=0.12, extraction_opening=120)
 OUTPUT PARAMETERS (cold_bril, thermal_bril, l_range, w_mult, w_geom, w_geom, w_geom_t, cold)
 SHARE
 %{
