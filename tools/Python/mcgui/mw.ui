@@ -48,6 +48,12 @@
          </item>
          <item row="0" column="6">
           <widget class="QPushButton" name="btnRun">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>Run...</string>
            </property>
@@ -55,6 +61,12 @@
          </item>
          <item row="0" column="7">
           <widget class="QPushButton" name="btnPlot">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>Plot</string>
            </property>
@@ -62,6 +74,12 @@
          </item>
          <item row="2" column="7">
           <widget class="QPushButton" name="btnEdit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>Edit</string>
            </property>
@@ -69,6 +87,12 @@
          </item>
          <item row="2" column="6">
           <widget class="QPushButton" name="btnOpenInstrument">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="toolTip">
             <string>Browse instrument...</string>
            </property>
@@ -151,7 +175,14 @@
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuNew_From_Template">
+     <property name="title">
+      <string>New From Template...</string>
+     </property>
+     <addaction name="actionTempl_submenu"/>
+    </widget>
     <addaction name="actionNew_Instrument"/>
+    <addaction name="menuNew_From_Template"/>
     <addaction name="actionOpen_instrument"/>
     <addaction name="separator"/>
     <addaction name="actionEdit_Instrument"/>
@@ -277,6 +308,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionTempl_submenu">
+   <property name="text">
+    <string>new_from_templ_submenu</string>
    </property>
   </action>
  </widget>

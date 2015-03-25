@@ -20,7 +20,10 @@ class McView(object):
                 
         #if self.ew == None:
         self.ew = McCodeEditorWindow()
-            
+    
+    def initMainWindowDynamicElements(self, args, callback):
+        self.__mw.initDynamicElements(args, callback)
+     
     def showMainWindow(self):
         self.__mw.show()
 
@@ -100,13 +103,19 @@ class McView(object):
         dlg = QtGui.QFileDialog()
         dlg.setDirectory(lookdir)
         dlg.setNameFilter("mcstas instruments (*.instr)");
-        tuple = dlg.getSaveFileNameAndFilter(parent=None, caption=QtCore.QString('Create new instrument file...'))
+        tuple = dlg.getSaveFileNameAndFilter(parent=None, caption=QtCore.QString('Create Instrument file...'))
+        return tuple[0]
+    
+    def showNewInstrFromTemplateDialog(self, instr):
+        dlg = QtGui.QFileDialog()
+        tuple = dlg.getSaveFileNameAndFilter(parent=None, caption=QtCore.QString('Create Instrument file...'), directory=instr)
         return tuple[0]
         
     def showSaveAsDialog(self, instr):
         dlg = QtGui.QFileDialog()
         dlg.setFileMode(QtGui.QFileDialog.AnyFile)
-        return dlg.getSaveFileNameAndFilter(parent=None, caption=QtCore.QString('Save instrument As...'), directory=instr)[0]
+        return dlg.getSaveFileNameAndFilter(parent=None, caption=QtCore.QString('Save Instrument As...'), directory=instr)[0]
+
 
 ''' Main Window widgets wrapper class
 Events callbacks are hooked elsewhere.
@@ -116,8 +125,27 @@ class McMainWindow(QtGui.QMainWindow):
         super(McMainWindow, self).__init__(parent)
         self.ui =  Ui_MainWindow()
         self.ui.setupUi(self)
+        self.ui.dynamicMenuClicked = QtCore.pyqtSignal(QtCore.QString)
+    
+    def initDynamicElements(self, args, callback):
+        ''' - args: list of doublets consisting of site name, [instrument names], [instrument file paths] 
+            - callback: function which takes a single string parameter, call with full path name of selected instrument 
+        '''
+        self.ui.menuNew_From_Template.clear()
         
-        
+        for i in range(len(args)):
+            site = args[i][0]
+            instruments = args[i][1]
+            instruments_fulpath = args[i][2]
+            
+            menu = self.ui.menuNew_From_Template.addMenu(site)
+            
+            for j in range(len(instruments)):
+                action = menu.addAction(instruments[j])
+                action.triggered[()].connect(
+                    lambda item=instruments_fulpath[j]: callback(item))
+    
+
 ''' Code editor window widgets wrapper class
 '''
 class McCodeEditorWindow(QtGui.QMainWindow):
@@ -357,15 +385,35 @@ class Ui_MainWindow(object):
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.grdInstrument.addItem(spacerItem, 0, 1, 1, 5)
         self.btnRun = QtGui.QPushButton(self.gbxInstrument)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btnRun.sizePolicy().hasHeightForWidth())
+        self.btnRun.setSizePolicy(sizePolicy)
         self.btnRun.setObjectName("btnRun")
         self.grdInstrument.addWidget(self.btnRun, 0, 6, 1, 1)
         self.btnPlot = QtGui.QPushButton(self.gbxInstrument)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btnPlot.sizePolicy().hasHeightForWidth())
+        self.btnPlot.setSizePolicy(sizePolicy)
         self.btnPlot.setObjectName("btnPlot")
         self.grdInstrument.addWidget(self.btnPlot, 0, 7, 1, 1)
         self.btnEdit = QtGui.QPushButton(self.gbxInstrument)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btnEdit.sizePolicy().hasHeightForWidth())
+        self.btnEdit.setSizePolicy(sizePolicy)
         self.btnEdit.setObjectName("btnEdit")
         self.grdInstrument.addWidget(self.btnEdit, 2, 7, 1, 1)
         self.btnOpenInstrument = QtGui.QPushButton(self.gbxInstrument)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btnOpenInstrument.sizePolicy().hasHeightForWidth())
+        self.btnOpenInstrument.setSizePolicy(sizePolicy)
         self.btnOpenInstrument.setObjectName("btnOpenInstrument")
         self.grdInstrument.addWidget(self.btnOpenInstrument, 2, 6, 1, 1)
         spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
@@ -405,6 +453,8 @@ class Ui_MainWindow(object):
         self.menubar.setObjectName("menubar")
         self.menuFile = QtGui.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
+        self.menuNew_From_Template = QtGui.QMenu(self.menuFile)
+        self.menuNew_From_Template.setObjectName("menuNew_From_Template")
         self.menuSimulation = QtGui.QMenu(self.menubar)
         self.menuSimulation.setObjectName("menuSimulation")
         self.menuHelp = QtGui.QMenu(self.menubar)
@@ -439,7 +489,11 @@ class Ui_MainWindow(object):
         self.actionPlot.setObjectName("actionPlot")
         self.actionSave_As = QtGui.QAction(MainWindow)
         self.actionSave_As.setObjectName("actionSave_As")
+        self.actionTempl_submenu = QtGui.QAction(MainWindow)
+        self.actionTempl_submenu.setObjectName("actionTempl_submenu")
+        self.menuNew_From_Template.addAction(self.actionTempl_submenu)
         self.menuFile.addAction(self.actionNew_Instrument)
+        self.menuFile.addAction(self.menuNew_From_Template.menuAction())
         self.menuFile.addAction(self.actionOpen_instrument)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionEdit_Instrument)
@@ -477,6 +531,7 @@ class Ui_MainWindow(object):
         self.tbxMessages.setTabText(self.tbxMessages.indexOf(self.tabMcgui), QtGui.QApplication.translate("MainWindow", "mcgui", None, QtGui.QApplication.UnicodeUTF8))
         self.tbxMessages.setTabText(self.tbxMessages.indexOf(self.tabSim), QtGui.QApplication.translate("MainWindow", "Simulations", None, QtGui.QApplication.UnicodeUTF8))
         self.menuFile.setTitle(QtGui.QApplication.translate("MainWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuNew_From_Template.setTitle(QtGui.QApplication.translate("MainWindow", "New From Template...", None, QtGui.QApplication.UnicodeUTF8))
         self.menuSimulation.setTitle(QtGui.QApplication.translate("MainWindow", "Simulation", None, QtGui.QApplication.UnicodeUTF8))
         self.menuHelp.setTitle(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
         self.actionOpen_instrument.setText(QtGui.QApplication.translate("MainWindow", "Open...", None, QtGui.QApplication.UnicodeUTF8))
@@ -502,6 +557,7 @@ class Ui_MainWindow(object):
         self.actionPlot.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+P", None, QtGui.QApplication.UnicodeUTF8))
         self.actionSave_As.setText(QtGui.QApplication.translate("MainWindow", "Save As...", None, QtGui.QApplication.UnicodeUTF8))
         self.actionSave_As.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+Shift+S", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionTempl_submenu.setText(QtGui.QApplication.translate("MainWindow", "new_from_templ_submenu", None, QtGui.QApplication.UnicodeUTF8))
 
 
 ''' Edit instrument window

@@ -11,90 +11,51 @@ import webbrowser
 import subprocess
 import time
 import threading
-from PyQt4 import QtGui
-from PyQt4 import QtCore
+from PyQt4 import QtGui, QtCore
 from viewclasses import McView
 
 
-''' State
-Holds unique state values.
+''' Utils
+Static functions related to handling mcstas files and more.
 '''
-class McGuiState(QtCore.QObject):    
-    def initState(self):
-        self.setWorkDir(os.getcwd())
-        
-        # load instrument file from command line pars
-        for a in sys.argv:
-            if os.path.splitext(a)[1] == '.instr':
-                instr_file = os.path.abspath(a)
-                self.loadInstument(instr_file)
-                break
-        
-        self.fireSimStateUpdate()
-    
-    status = ''
-    statusUpdated = QtCore.pyqtSignal(QtCore.QString)
-    def setStatus(self, status):
-        self.msgLock.acquire()
-        self.status = status
-        self.statusUpdated.emit(self.status)
-        self.msgLock.release()
-        
-    logMessage = QtCore.pyqtSignal(QtCore.QString, bool, bool)
-    msgLock = threading.Lock()
-    def __logLine(self, logline, mcguiMsg=False, errorMsg=False):
-        if mcguiMsg:
-            logline = 'mcgui:      ' + logline
-        self.msgLock.acquire()
-        if logline != None:
-            self.logMessage.emit(logline, mcguiMsg, errorMsg)
-        self.msgLock.release()
-        
-    __instrFile = ''
-    instrumentUpdated = QtCore.pyqtSignal(QtCore.QStringList)
-    def __fireInstrUpdate(self):
-        self.instrumentUpdated.emit([self.getInstrumentFile(), self.getWorkDir()])
-    
-    def getInstrumentFile(self):
-        return self.__instrFile
-    
-    def getInstrContents(self):
-        instr = self.getInstrumentFile()
-        if os.path.exists(str(instr)):
-            f = open(instr, 'r')
-            text = f.read()
-            f.close()
-            return text
-    
-    def loadInstument(self, instrFile, unload=False):
-        if not unload:
-            if not os.path.exists(str(instrFile)):
-                return False
-                #TODO: make exception error messages work
-                #raise Exception('Invalid instrument file.')
-                
-        self.__instrFile = str(instrFile)
-        self.__fireInstrUpdate() 
-        if not unload:
-            self.setStatus("Instrument opened: " + instrFile)
-        else:
-            self.setStatus("Instrument closed")
-        self.fireSimStateUpdate()
-        return True
-    
-    def saveInstrumentIfFileExists(self, text):
-        instr = self.getInstrumentFile()
-        if not os.path.exists(instr):
-            return False
-        
-        # TODO: add try-finally and error handling
-        f = open(instr, 'w')
-        f.write(text)
+class McGuiUtils(object):
+    @staticmethod
+    def getInstrumentSite(instr_file):
+        ''' extracts and returns the rest of the line, from the text file instr_file, containing "%INSTRUMENT_SITE:" '''
+        f = open(instr_file, 'r')
+        text = f.read()
         f.close()
         
-        return True
+        site = '("%INSTRUMENT_SITE:" tag not found)'
+        
+        start = text.find('%INSTRUMENT_SITE:')
+        if start > -1:
+            end = text.find('\n', start)
+            site = text[start+17:end].strip()
+            
+        return site
     
-    def createNewInstrumentFile(self, instr, text):
+    @staticmethod
+    def getInstrumentAndComponentFiles(mydir):
+        ''' returns list of filename with path of all .instr and .comp recursively from dir "mydir" ''' 
+        files_instr = [] 
+        files_comp = []
+        
+        for (dirpath, dirname, files) in os.walk(mydir):
+            for f in files:
+                if os.path.splitext(f)[1] == '.instr':
+                    files_instr.append(dirpath + '/' + f)
+                if os.path.splitext(f)[1] == '.comp':
+                    files_comp.append(dirpath + '/' + f)
+        
+        return files_instr, files_comp
+
+    @staticmethod
+    def saveInstrumentFile(instr, text):
+        ''' 
+        Creates and/or saves instrument file, makes sure the file extension is .instr.
+        Returns file name, or empty string if no file was saved/created.
+        '''
         if instr == '':
             return ''
         
@@ -110,6 +71,92 @@ class McGuiState(QtCore.QObject):
         f.close()
         
         return instr
+    
+    @staticmethod
+    def getFileContents(filepath):
+        ''' returns file contents if file exists '''
+        if os.path.exists(str(filepath)):
+            f = open(filepath, 'r')
+            text = f.read()
+            f.close()
+            return text
+        else:
+            return ''
+    
+
+''' State
+Holds unique state values and mediates some low-level actions.
+'''
+class McGuiState(QtCore.QObject):    
+    def initState(self):
+        self.setWorkDir(os.getcwd())
+        
+        # load instrument file from command line pars
+        for a in sys.argv:
+            if os.path.splitext(a)[1] == '.instr':
+                instr_file = os.path.abspath(a)
+                self.loadInstrument(instr_file)
+                break
+        
+        self.fireSimStateUpdate()
+    
+    status = ''
+    statusUpdated = QtCore.pyqtSignal(QtCore.QString)
+    def setStatus(self, status):
+        self.__msgLock.acquire()
+        self.status = status
+        self.statusUpdated.emit(self.status)
+        self.__msgLock.release()
+        
+    logMessage = QtCore.pyqtSignal(QtCore.QString, bool, bool)
+    __msgLock = threading.Lock()
+    def __logLine(self, logline, mcguiMsg=False, errorMsg=False):
+        self.__msgLock.acquire()
+        if logline != None:
+            self.logMessage.emit(logline, mcguiMsg, errorMsg)
+        self.__msgLock.release()
+        
+    __instrFile = ''
+    instrumentUpdated = QtCore.pyqtSignal(QtCore.QStringList)
+    def __fireInstrUpdate(self):
+        self.instrumentUpdated.emit([self.getInstrumentFile(), self.getWorkDir()])
+    
+    def getInstrumentFile(self):
+        return self.__instrFile
+    
+    def getInstrContents(self):
+        return McGuiUtils.getFileContents(self.getInstrumentFile())
+    
+    def loadInstrument(self, instrFile):
+        if not os.path.exists(str(instrFile)):
+            return False
+            #TODO: make exception error messages work
+            #raise Exception('Invalid instrument file.')
+                
+        self.__instrFile = str(instrFile)
+        self.__fireInstrUpdate() 
+    
+        self.setStatus("Instrument opened: " + instrFile)
+        self.fireSimStateUpdate()
+        
+        return True
+    
+    def unloadInstrument(self):
+        self.__instrFile = ''
+        self.__fireInstrUpdate() 
+        self.setStatus("Instrument closed")
+        self.fireSimStateUpdate()
+    
+    def saveInstrumentIfFileExists(self, text):
+        instr = self.getInstrumentFile()
+        if not os.path.exists(instr):
+            return False
+        McGuiUtils.saveInstrumentFile(instr, text)
+                
+        return True
+    
+    def createNewInstrumentFile(self, instr, text):
+        return McGuiUtils.saveInstrumentFile(instr, text)
     
     def getWorkDir(self):
         return os.getcwd()
@@ -227,7 +274,6 @@ class McGuiState(QtCore.QObject):
             gravity = True
             # TODO: append runstr with the gravity option
         
-        
         random_seed = fixed_params[4]
         # TODO: support random seed
             
@@ -250,9 +296,8 @@ class McGuiState(QtCore.QObject):
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.PIPE,
                                    shell=True)
-        self.__logLine('mcrun started (' + runstr + ')', mcguiMsg=True)
+        self.__logLine('mcrun started: ' + runstr, mcguiMsg=True)
         self.setStatus('Running simulation ...')
-
         
         ## read program output
         while process.poll() == None:
@@ -263,7 +308,7 @@ class McGuiState(QtCore.QObject):
             time.sleep(0.1)
         process.wait()
         
-        self.__logLine('mcrun complete', mcguiMsg=True)
+        self.__logLine('mcrun completed', mcguiMsg=True)
         self.setStatus('Simulation complete.')
 
     def getInstrParams(self):
@@ -287,8 +332,10 @@ class McGuiState(QtCore.QObject):
                 s = l.split()[1]
                 s = s.split('=')
                 params.append(s)
+                
         return params
-        
+
+
 ''' Controller
 Implements ui and data callbacks.
 '''
@@ -297,8 +344,45 @@ class McGuiAppController():
         self.view = McView()
         self.state = McGuiState()
         self.connectAllCallbacks()    
+        
         self.state.initState()
+        
+        self.initDynamicElements()
+        
         self.view.showMainWindow()
+    
+    def initDynamicElements(self):
+        
+        # construct args = [ [site, instr_lst, cb_lst] ]
+        args = []
+        
+        files_instr, files_comp = McGuiUtils.getInstrumentAndComponentFiles('/usr/share/mcstas/2.1')
+        
+        # instrument files with site names: 
+        files_instr_and_site = []
+        for f in files_instr:
+            files_instr_and_site.append([f, McGuiUtils.getInstrumentSite(f)])
+        
+        # select instrument files by site:
+        sites = {s for s in map(lambda f: f[1], files_instr_and_site)}
+        for s in sites:
+            instr_lst = map(lambda f: f[0], filter(lambda f: f[1] in [s], files_instr_and_site))
+            instr_name_lst = map(lambda i: os.path.splitext(os.path.basename(i))[0], instr_lst)
+            arg = []
+            arg.append(s)
+            arg.append(instr_name_lst)
+            arg.append(instr_lst)
+            args.append(arg)        
+        
+        self.view.initMainWindowDynamicElements(args, self.handleNewFromTemplate)
+    
+    def handleNewFromTemplate(self, instr=''):
+        new_instr = self.view.showNewInstrFromTemplateDialog(self.state.getWorkDir() + '/' + os.path.basename(instr))
+        if new_instr != '':
+            # TODO: close any previous instrument
+            # TODO: save new instrument with data from template
+            # TODO: load new instrument
+            self.state.loadInstrument(instrFile)
     
     ''' UI callbacks
     '''
@@ -312,7 +396,7 @@ class McGuiAppController():
     def handleOpenInstrument(self):
         instrFile = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
         if instrFile:
-            self.state.loadInstument(instrFile)        
+            self.state.loadInstrument(instrFile)        
     
     def handleChangeWorkDir(self):
         workDir = self.view.showChangeWorkDirDlg(self.state.getWorkDir())
@@ -348,7 +432,7 @@ class McGuiAppController():
         self.view.showCodeEditorWindow(instr)
         
     def handleCloseInstrument(self):
-        self.state.loadInstument('', unload=True)
+        self.state.unloadInstrument()
         self.view.closeCodeEditorWindow()
     
     def handleSaveInstrument(self, text):
@@ -364,13 +448,13 @@ class McGuiAppController():
         if newinstr != '':
             text = self.state.getInstrContents()
             self.state.createNewInstrumentFile(newinstr, text)
-            self.state.loadInstument(newinstr)
+            self.state.loadInstrument(newinstr)
     
     def handleNewInstrument(self):
         newinstr = self.view.showNewInstrDialog(self.state.getWorkDir())
         instr = self.state.createNewInstrumentFile(newinstr, '')
         if instr != '':
-            self.state.loadInstument(instr)
+            self.state.loadInstrument(instr)
     
     ''' Connect UI and state callbacks 
     '''
@@ -408,7 +492,7 @@ class McGuiAppController():
         st.statusUpdated.connect(self.view.updateStatus)
         st.logMessage.connect(self.view.updateLog)
         
-        
+            
 ''' Program execution
 '''
 def main():
