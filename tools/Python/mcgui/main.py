@@ -352,10 +352,8 @@ class McGuiAppController():
         self.view.showMainWindow()
     
     def initDynamicElements(self):
-        
-        # construct args = [ [site, instr_lst, cb_lst] ]
+        # construct args = [ [site, instr_lst, instr_fullpath] ]
         args = []
-        
         files_instr, files_comp = McGuiUtils.getInstrumentAndComponentFiles('/usr/share/mcstas/2.1')
         
         # instrument files with site names: 
@@ -379,11 +377,12 @@ class McGuiAppController():
     def handleNewFromTemplate(self, instr=''):
         new_instr = self.view.showNewInstrFromTemplateDialog(self.state.getWorkDir() + '/' + os.path.basename(instr))
         if new_instr != '':
-            # TODO: close any previous instrument
-            # TODO: save new instrument with data from template
-            # TODO: load new instrument
-            self.state.loadInstrument(instrFile)
-    
+            # load "template" instrument contents
+            text = McGuiUtils.getFileContents(instr)
+            new_instr = McGuiUtils.saveInstrumentFile(new_instr, text)
+            self.state.unloadInstrument()
+            self.state.loadInstrument(new_instr)
+            
     ''' UI callbacks
     '''
     def handleRunSim(self):

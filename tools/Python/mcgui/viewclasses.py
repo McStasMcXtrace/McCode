@@ -128,22 +128,23 @@ class McMainWindow(QtGui.QMainWindow):
         self.ui.dynamicMenuClicked = QtCore.pyqtSignal(QtCore.QString)
     
     def initDynamicElements(self, args, callback):
-        ''' - args: list of doublets consisting of site name, [instrument names], [instrument file paths] 
-            - callback: function which takes a single string parameter, call with full path name of selected instrument 
+        ''' - args ([str, [], []]): list of triplets consisting of site name, 
+                                    [instrument names], [instrument file paths] 
+            - callback (func(str)): function which takes a single string parameter, call with full path 
+                                    name of selected instrument 
         '''
         self.ui.menuNew_From_Template.clear()
         
         for i in range(len(args)):
             site = args[i][0]
-            instruments = args[i][1]
-            instruments_fulpath = args[i][2]
+            instrs = args[i][1]
+            instrs_fulpath = args[i][2]
             
             menu = self.ui.menuNew_From_Template.addMenu(site)
             
-            for j in range(len(instruments)):
-                action = menu.addAction(instruments[j])
-                action.triggered[()].connect(
-                    lambda item=instruments_fulpath[j]: callback(item))
+            for j in range(len(instrs)):
+                action = menu.addAction(instrs[j])
+                action.triggered[()].connect(lambda item=instrs_fulpath[j]: callback(item))
     
 
 ''' Code editor window widgets wrapper class
