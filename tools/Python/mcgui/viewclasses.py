@@ -32,7 +32,7 @@ class McView(object):
         self.ew.show()
     
     def closeCodeEditorWindow(self):
-        self.ew.close()
+        return self.ew.close()
         
     ''' Update UI data
     '''
@@ -202,8 +202,8 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         '''
         if self.volatileDataExists:
             reply = QtGui.QMessageBox.question(self, 
-                                               'Message', 
-                                               'Are you sure you want to exit the program?',
+                                               'The instrument has been modified.', 
+                                               'Do you want to save changes?',
                                                'Save',      # default button, reply == 0
                                                'Discard',   # reply == 1
                                                'Cancel')    # reply == 2

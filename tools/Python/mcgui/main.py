@@ -124,15 +124,12 @@ class McGuiState(QtCore.QObject):
     def getInstrumentFile(self):
         return self.__instrFile
     
-    def getInstrContents(self):
-        return McGuiUtils.getFileContents(self.getInstrumentFile())
-    
     def loadInstrument(self, instrFile):
         if not os.path.exists(str(instrFile)):
             return False
             #TODO: make exception error messages work
             #raise Exception('Invalid instrument file.')
-                
+        self.setWorkDir(os.path.dirname(str(instrFile)))
         self.__instrFile = str(instrFile)
         self.__fireInstrUpdate() 
     
@@ -155,25 +152,14 @@ class McGuiState(QtCore.QObject):
                 
         return True
     
-    def createNewInstrumentFile(self, instr, text):
-        return McGuiUtils.saveInstrumentFile(instr, text)
-    
     def getWorkDir(self):
         return os.getcwd()
     
     def setWorkDir(self, newdir):
         if not os.path.isdir(newdir):
             raise Exception('Invalid work dir.')
-        
-        olddir = os.getcwd()
+
         os.chdir(newdir)
-        
-        if newdir != olddir:
-            self.__binaryFile = ''
-            self.__cFile = ''
-        
-        self.setStatus("Work dir: " + newdir)
-        self.__fireInstrUpdate()
     
     __cFile = ""
     __binaryFile = ""
@@ -431,8 +417,8 @@ class McGuiAppController():
         self.view.showCodeEditorWindow(instr)
         
     def handleCloseInstrument(self):
-        self.state.unloadInstrument()
-        self.view.closeCodeEditorWindow()
+        if self.view.closeCodeEditorWindow():
+            self.state.unloadInstrument()
     
     def handleSaveInstrument(self, text):
         result = self.state.saveInstrumentIfFileExists(text)
@@ -445,15 +431,19 @@ class McGuiAppController():
             newinstr = self.view.showSaveAsDialog(oldinstr)
         
         if newinstr != '':
-            text = self.state.getInstrContents()
-            self.state.createNewInstrumentFile(newinstr, text)
-            self.state.loadInstrument(newinstr)
+            self.state.unloadInstrument()
+            text = McGuiUtils.getFileContents(oldinstr)
+            created_instr = McGuiUtils.saveInstrumentFile(newinstr, text)
+            if created_instr != '':
+                self.state.loadInstrument(created_instr)
     
     def handleNewInstrument(self):
         newinstr = self.view.showNewInstrDialog(self.state.getWorkDir())
-        instr = self.state.createNewInstrumentFile(newinstr, '')
-        if instr != '':
-            self.state.loadInstrument(instr)
+        if newinstr != '':
+            instr = McGuiUtils.saveInstrumentFile(newinstr, '')
+            if instr != '':
+                self.state.unloadInstrument()
+                self.state.loadInstrument(instr)
     
     ''' Connect UI and state callbacks 
     '''
