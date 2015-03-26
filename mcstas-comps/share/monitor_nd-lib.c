@@ -1613,6 +1613,10 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
             
             y0 = -radius*cos(theta0);            /* z with Z vertical */
             y1 = -radius*cos(theta1);
+            if (y0 < ymin) y0=ymin;
+            if (y0 > ymax) y0=ymax;
+            if (y1 < ymin) y1=ymin;
+            if (y1 > ymax) y1=ymax;
           } else {
             y0 = ymin;
             y1 = ymax;
