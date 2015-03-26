@@ -276,7 +276,7 @@ INITIALIZE
     username3 : "", 128);
   if (radius) { 
     xwidth = zdepth = 2*radius;
-    if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana")) 
+    if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana") && !strstr(Vars.option, "sphere")) 
       strcat(Vars.option, " banana");
     else if (!yheight && !strstr(Vars.option ,"sphere")) {
       strcat(Vars.option, " sphere");
@@ -361,7 +361,8 @@ TRACE
   }
   else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) /* box */
   {
-    intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, fabs(Vars.mxmax-Vars.mxmin), fabs(Vars.mymax-Vars.mymin), fabs(Vars.mzmax-Vars.mzmin));
+    intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, 
+                              fabs(Vars.mxmax-Vars.mxmin), fabs(Vars.mymax-Vars.mymin), fabs(Vars.mzmax-Vars.mzmin));
   }
   else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_PREVIOUS) /* previous comp */
   { intersect = 1; }
@@ -390,12 +391,18 @@ TRACE
         PROP_DT(t1); /* t1 outgoing beam */
       else
         PROP_DT(t0); /* t0 incoming beam */
-      /* Final test if we are on lid / bottom of banana */
-      if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) {
-	if (fabs(y) >= Vars.Cylinder_Height/2*0.99) ABSORB;
+      /* Final test if we are on lid / bottom of banana/sphere */
+      if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA || abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) {
+        if (fabs(y) >= Vars.Cylinder_Height/2*0.99) {
+          intersect=0;
+          Flag_Restore=1;
+        }
       }
     }
-
+  }
+  
+  if (intersect)
+  {
     /* Now get the data to monitor: current or keep from PreMonitor */
     if (Vars.Flag_UsePreMonitor != 1)
     {

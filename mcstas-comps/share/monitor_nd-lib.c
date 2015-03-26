@@ -1529,7 +1529,7 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
     double zmin;
     double zmax;
     int    i;
-    double hdiv_min=-180, hdiv_max=180, vdiv_min=-180, vdiv_max=180;
+    double hdiv_min=-180, hdiv_max=180, vdiv_min=-90, vdiv_max=90;
     char   restricted = 0;
 
     radius = Vars->Sphere_Radius;
@@ -1586,38 +1586,49 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
       int issphere;
       issphere = (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE);
       width = (hdiv_max-hdiv_min)/NH;
-      if (!issphere) NV=1;
+      if (!issphere) NV=1; /* cylinder has vertical axis */
       else height= (vdiv_max-vdiv_min)/NV;
+      
+      /* check width and height of elements (sphere) to make sure the nb
+         of plates remains limited */
+      if (width < 10  && NH > 1) { width = 10;  NH=(hdiv_max-hdiv_min)/width; }
+      if (height < 10 && NV > 1) { height = 10; NV=(vdiv_max-vdiv_min)/height; }
+      
       mcdis_magnify("xyz");
       for(ih = 0; ih < NH; ih++)
         for(iv = 0; iv < NV; iv++)
         {
-          double theta0, phi0, theta1, phi1;
-          double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3;
-          phi0 = (hdiv_min+ width*ih)*DEG2RAD; /* in xz plane */
-          phi1 = (hdiv_min+ width*(ih+1))*DEG2RAD;
+          double theta0, phi0, theta1, phi1;          /* angles in spherical coordinates */
+          double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3; /* vertices at plate edges */
+          phi0 = (hdiv_min+ width*ih-90)*DEG2RAD;        /* in xz plane */
+          phi1 = (hdiv_min+ width*(ih+1)-90)*DEG2RAD;
           if (issphere)
           {
-            theta0= (90-vdiv_min+height* iv)   *DEG2RAD;
-            theta1= (90-vdiv_min+height*(iv+1))*DEG2RAD;
-            y0    = radius*cos(theta0);
-            y1    = radius*cos(theta1);
+            theta0= (vdiv_min+height* iv + 90)   *DEG2RAD; /* in vertical plane */
+            theta1= (vdiv_min+height*(iv+1) + 90)*DEG2RAD;
+            if (y0 < ymin) y0=ymin; 
+            if (y0 > ymax) y0=ymax;
+            if (y1 < ymin) y1=ymin; 
+            if (y1 > ymax) y1=ymax;
+            
+            y0 = -radius*cos(theta0);            /* z with Z vertical */
+            y1 = -radius*cos(theta1);
           } else {
             y0 = ymin;
             y1 = ymax;
             theta0=theta1=90*DEG2RAD;
           }
 
-          z0 = radius*sin(theta0)*cos(phi0);
-          x0 = radius*sin(theta0)*sin(phi0);
-          z1 = radius*sin(theta1)*cos(phi0);
-          x1 = radius*sin(theta1)*sin(phi0);
-          z2 = radius*sin(theta1)*cos(phi1);
-          x2 = radius*sin(theta1)*sin(phi1);
-          y2 = y1;
-          z3 = radius*sin(theta0)*cos(phi1);
-          x3 = radius*sin(theta0)*sin(phi1);
-          y3 = y0;
+          x0 = radius*sin(theta0)*cos(phi0); /* x with Z vertical */
+          z0 =-radius*sin(theta0)*sin(phi0); /* y with Z vertical */
+          x1 = radius*sin(theta1)*cos(phi0); 
+          z1 =-radius*sin(theta1)*sin(phi0);
+          x2 = radius*sin(theta1)*cos(phi1); 
+          z2 =-radius*sin(theta1)*sin(phi1);
+          x3 = radius*sin(theta0)*cos(phi1); 
+          z3 =-radius*sin(theta0)*sin(phi1);
+          y2 = y1; y3 = y0;
+
           mcdis_multiline(5,
             x0,y0,z0,
             x1,y1,z1,
