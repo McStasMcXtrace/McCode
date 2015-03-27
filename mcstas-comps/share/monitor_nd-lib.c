@@ -1564,6 +1564,12 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
         hdiv_min = vdiv_min = angle;
         hdiv_max = vdiv_max = angle;
         restricted = 1; }
+      else if (Set_Vars_Coord_Type == DEFS->COORD_Y && abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE)
+      {
+        vdiv_min = atan2(ymin,radius)*RAD2DEG;
+        vdiv_max = atan2(ymax,radius)*RAD2DEG;
+        restricted = 1;
+      }
     }
     /* full sphere */
     if ((!restricted && (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE))
