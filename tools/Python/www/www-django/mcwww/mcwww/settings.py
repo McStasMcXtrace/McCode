@@ -37,24 +37,30 @@ SECRET_KEY     = 'gaeh@565h%=7)gw#625*ag82am#*55xnb40xa769yaxq-^ukj*'           
 DEBUG          =  True # False                                                           <----  THIS NEEDS TO BE SET TO FALSE. (css broken if false!!!!)
 TEMPLATE_DEBUG = DEBUG
 INSTALLED_APPS = (
-    # mcApps
+    # mcApps #
+    # ------ #
     'mcsimulator',
     'mcwww',
     'mcUser',
-    # djangApps
+    # django Apps #
+    # ----------- #
+    # Admin Site
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    # Std
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.admin',
+
     # 'django.contrib.admindocs',
 )
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    # Admin Site #
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',     # Uncomment for clickjack protection
@@ -82,8 +88,19 @@ DATABASES  = {                                            # keys not read by sql
 #--------------#
 WSGI_APPLICATION = 'mcwww.wsgi.application' # path to WSGI app used by runserver.
 ROOT_URLCONF     = 'mcwww.urls'             # File holding URLs to be served.
+TEMPLATE_CONTEXT_PROCESSORS = (
+    # Admin Site
+    'django.contrib.messages.contex_prcessors.messages',
+    )
 TEMPLATE_DIRS    = (                        # Absolute paths to template.htmls
     PROJECT_PATH + '/templates/',
+    # Admin Site Templates # No need to actually define but this is where they are.
+    # -------------------- #
+    #    PROJECT_PATH + '/templates/admin',
+    #    PROJECT_PATH + '/templates/mcUser',
+    #    PROJECT_PATH + '/templates/mcsimulator',
+    #    PROJECT_PATH + '/templates/mcwww',
+    
     )
 TEMPLATE_LOADERS = (                        # Callables that import templates.
     'django.template.loaders.filesystem.Loader',
