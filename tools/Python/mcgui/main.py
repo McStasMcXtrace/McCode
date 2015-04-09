@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-'''mgcui 
+'''
+mgcui program 
 
 Initial version written during Winter/spring of 2015
 
@@ -11,78 +12,12 @@ import webbrowser
 import subprocess
 import time
 import threading
+import re
 from PyQt4 import QtGui, QtCore
 from viewclasses import McView
+from mcguiutils import McGuiUtils
+from mcfileutils import McComponentParser
 
-
-''' Utils
-Static functions related to handling mcstas files and more.
-'''
-class McGuiUtils(object):
-    @staticmethod
-    def getInstrumentSite(instr_file):
-        ''' extracts and returns the rest of the line, from the text file instr_file, containing "%INSTRUMENT_SITE:" '''
-        f = open(instr_file, 'r')
-        text = f.read()
-        f.close()
-        
-        site = '("%INSTRUMENT_SITE:" tag not found)'
-        
-        start = text.find('%INSTRUMENT_SITE:')
-        if start > -1:
-            end = text.find('\n', start)
-            site = text[start+17:end].strip()
-            
-        return site
-    
-    @staticmethod
-    def getInstrumentAndComponentFiles(mydir):
-        ''' returns list of filename with path of all .instr and .comp recursively from dir "mydir" ''' 
-        files_instr = [] 
-        files_comp = []
-        
-        for (dirpath, dirname, files) in os.walk(mydir):
-            for f in files:
-                if os.path.splitext(f)[1] == '.instr':
-                    files_instr.append(dirpath + '/' + f)
-                if os.path.splitext(f)[1] == '.comp':
-                    files_comp.append(dirpath + '/' + f)
-        
-        return files_instr, files_comp
-
-    @staticmethod
-    def saveInstrumentFile(instr, text):
-        ''' 
-        Creates and/or saves instrument file, makes sure the file extension is .instr.
-        Returns file name, or empty string if no file was saved/created.
-        '''
-        if instr == '':
-            return ''
-        
-        if str(instr).find('.') >= 0:
-            if os.path.splitext(str(instr))[1] != '.instr':
-                instr = instr + '.instr'
-        else:
-            instr = instr + '.instr'
-        
-        # TODO: add try-finally and error handling
-        f = open(instr, 'w')
-        f.write(text)
-        f.close()
-        
-        return instr
-    
-    @staticmethod
-    def getFileContents(filepath):
-        ''' returns file contents if file exists '''
-        if os.path.exists(str(filepath)):
-            f = open(filepath, 'r')
-            text = f.read()
-            f.close()
-            return text
-        else:
-            return ''
-    
 
 ''' State
 Holds unique state values and mediates some low-level actions.
@@ -240,7 +175,7 @@ class McGuiState(QtCore.QObject):
                 random seed (int)
                 no clustering = 0, MPI clustering = 1, SSH clustering = 2
             params[]:
-                [<name>, <value>] pairs
+                [<par_name>, <value>] pairs
         '''
         runstr = 'mcrun ' + self.__instrFile
         
@@ -338,28 +273,53 @@ class McGuiAppController():
         self.view.showMainWindow()
     
     def initDynamicElements(self):
-        # construct args = [ [site, instr_lst, instr_fullpath] ]
+        # construct args = [site, instr_fullpath[], instr_path_lst[]]
         args = []
         files_instr, files_comp = McGuiUtils.getInstrumentAndComponentFiles('/usr/share/mcstas/2.1')
         
-        # instrument files with site names: 
+        # temporary list consisting of instrument files with site names: 
         files_instr_and_site = []
         for f in files_instr:
             files_instr_and_site.append([f, McGuiUtils.getInstrumentSite(f)])
         
-        # select instrument files by site:
+        # order instrument files by site:
         sites = {s for s in map(lambda f: f[1], files_instr_and_site)}
         for s in sites:
-            instr_lst = map(lambda f: f[0], filter(lambda f: f[1] in [s], files_instr_and_site))
-            instr_name_lst = map(lambda i: os.path.splitext(os.path.basename(i))[0], instr_lst)
+            instr_path_lst = map(lambda f: f[0], filter(lambda f: f[1] in [s], files_instr_and_site))
+            instr_name_lst = map(lambda i: os.path.splitext(os.path.basename(i))[0], instr_path_lst)
             arg = []
             arg.append(s)
             arg.append(instr_name_lst)
-            arg.append(instr_lst)
-            args.append(arg)        
-        
+            arg.append(instr_path_lst)
+            args.append(arg)
+            
         self.view.initMainWindowDynamicElements(args, self.handleNewFromTemplate)
-    
+        
+        # TODO: create component data structure / args
+        # args - [category, comp_names[], comp_parsers[]]
+        args = []
+        categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6 : 'Obsolete'}
+        dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6 : 'obsolete'}
+        i = 0
+        while i < 7:
+            arg = [] # arg - category, comp_names[], comp_parsers[]
+            compnames = []
+            parsers = []
+            
+            for f in files_comp:
+                if re.search(r'/' + dirnames[i] + r'/', f):
+                    compnames.append(os.path.splitext(os.path.basename(f))[0]) # get filename without extension - this is the comp name
+                    parsers.append(McComponentParser(f)) # append a parser, for ease of parsing on-the-fly
+            
+            arg.append(categories[i])
+            arg.append(compnames)
+            arg.append(parsers)
+            args.append(arg)
+            
+            i += 1
+        
+        self.view.initCodeEditorComponentMenu(args)
+        
     def handleNewFromTemplate(self, instr=''):
         new_instr = self.view.showNewInstrFromTemplateDialog(self.state.getWorkDir() + '/' + os.path.basename(instr))
         if new_instr != '':
