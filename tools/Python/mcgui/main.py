@@ -295,7 +295,6 @@ class McGuiAppController():
             
         self.view.initMainWindowDynamicElements(args, self.handleNewFromTemplate)
         
-        # TODO: create component data structure / args
         # args - [category, comp_names[], comp_parsers[]]
         args = []
         categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6 : 'Obsolete'}
@@ -308,7 +307,7 @@ class McGuiAppController():
             
             for f in files_comp:
                 if re.search(r'/' + dirnames[i] + r'/', f):
-                    compnames.append(os.path.splitext(os.path.basename(f))[0]) # get filename without extension - this is the comp name
+                    compnames.append(os.path.splitext(os.path.basename(f))[0]) # get filename without extension - this is the component name
                     parsers.append(McComponentParser(f)) # append a parser, for ease of parsing on-the-fly
             
             arg.append(categories[i])

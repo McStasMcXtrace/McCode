@@ -167,9 +167,18 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         self.__initCallbacks()
     
     def initComponentMenu(self, args):
-        ''' args - 
+        ''' args - [category, comp_names[], comp_parsers[]]
         '''
-        print('not implemented')
+        for i in range(len(args)):
+            category = args[i][0]
+            comp_names = args[i][1]
+            comp_parsers = args[i][2]
+            
+            menu = self.ui.menuInsert.addMenu(category)
+            
+            for j in range(len(comp_names)):
+                action = menu.addAction(comp_names[j])
+                action.triggered[()].connect(lambda comp_parser=comp_parsers[j]: self.__handleComponentClicked(comp_parser))
         
     def initCodeEditor(self, instr):
         if instr != '':
@@ -202,6 +211,10 @@ class McCodeEditorWindow(QtGui.QMainWindow):
                 event.ignore()
         else:
             event.accept()
+            
+    def __handleComponentClicked(self, comp_parser):
+        comp_parser.parse()
+        print(comp_parser.name)
         
     def __initScintilla(self):
         # delete text editor placeholder 
@@ -597,8 +610,6 @@ class Ui_EditorWindow(object):
         self.menuView.setObjectName("menuView")
         self.menuInsert = QtGui.QMenu(self.menubar)
         self.menuInsert.setObjectName("menuInsert")
-        self.menuCompCatDummy = QtGui.QMenu(self.menuInsert)
-        self.menuCompCatDummy.setObjectName("menuCompCatDummy")
         EditorWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(EditorWindow)
         self.statusbar.setObjectName("statusbar")
@@ -642,10 +653,8 @@ class Ui_EditorWindow(object):
         self.menuEdit.addAction(self.actionPaste)
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionSelect_All)
-        self.menuCompCatDummy.addAction(self.actionCompDummy)
         self.menuInsert.addAction(self.actionComponent_Browser)
         self.menuInsert.addSeparator()
-        self.menuInsert.addAction(self.menuCompCatDummy.menuAction())
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuEdit.menuAction())
         self.menubar.addAction(self.menuView.menuAction())
@@ -660,7 +669,6 @@ class Ui_EditorWindow(object):
         self.menuEdit.setTitle(QtGui.QApplication.translate("EditorWindow", "Edit", None, QtGui.QApplication.UnicodeUTF8))
         self.menuView.setTitle(QtGui.QApplication.translate("EditorWindow", "View", None, QtGui.QApplication.UnicodeUTF8))
         self.menuInsert.setTitle(QtGui.QApplication.translate("EditorWindow", "Insert", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuCompCatDummy.setTitle(QtGui.QApplication.translate("EditorWindow", "menu_component_category", None, QtGui.QApplication.UnicodeUTF8))
         self.actionComponent_Browser.setText(QtGui.QApplication.translate("EditorWindow", "Component Browser...", None, QtGui.QApplication.UnicodeUTF8))
         self.actionCompDummy.setText(QtGui.QApplication.translate("EditorWindow", "component_of_this_category", None, QtGui.QApplication.UnicodeUTF8))
         self.actionSource_Optimize.setText(QtGui.QApplication.translate("EditorWindow", "Source_Optimize...", None, QtGui.QApplication.UnicodeUTF8))
