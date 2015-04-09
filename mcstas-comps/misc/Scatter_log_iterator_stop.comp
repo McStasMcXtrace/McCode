@@ -30,7 +30,7 @@
 * %P
 * Input parameters:
 *
-* iterator [ ] Instance name of the Scatter_log_iterator log component preceeding this one.
+* iterator: [ ] Instance name of the Scatter_log_iterator log component preceeding this one.
 *
 * %E
 *******************************************************************************/

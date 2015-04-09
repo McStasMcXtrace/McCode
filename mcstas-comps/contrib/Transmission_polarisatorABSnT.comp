@@ -1,5 +1,6 @@
 /*******************************************************************************
 *
+* %I
 * Component: Transmission_polarisatorABSnT
 *
 * Written by: Andreas Ostermann
@@ -17,7 +18,9 @@
 *                                        mleft=1.2, mright=1.2, mtop=1.2, mbottom=1.2,
 *                                        R0_up=0.99, Qc_up=0.014, alpha_up=2.25, W_up=0.0025, mup=1.0,
 *                                        R0_down=0.99, Qc_down=0.02174, alpha_down=3.8, W_down=0.00235, mdown=2.5)
-*
+* 
+* %D
+* 
 * %P
 * INPUT PARAMETERS:
 *
@@ -34,9 +37,9 @@
 * mright:     (1)     m-value of material for right.  vert. mirror of the outer guide
 * mtop:       (1)     m-value of material for top.    horz. mirror of the outer guide
 * mbottom:    (1)     m-value of material for bottom. horz. mirror of the outer guide
-* waferD      (m)     Thickness of Si wafer
-* Si_i        (barns) Scattering cross section per atom (barns)
-* Si_a        (barns) Absorption cross section per atom (barns) at 2200m/s
+* waferD:     (m)     Thickness of Si wafer
+* Si_i:       (barns) Scattering cross section per atom (barns)
+* Si_a:       (barns) Absorption cross section per atom (barns) at 2200m/s
 * R0_up:      (1)     Low-angle reflectivity of the Fe/Si-wafer for spin up neutrons
 * Qc_up:      (AA-1)  Critical scattering vector of the Fe/Si-wafer for spin up neutrons
 * W_up:       (AA-1)  Width of supermirror cut-off of the Fe/Si-wafer for spin up neutrons
@@ -47,9 +50,7 @@
 * W_down:     (AA-1)  Width of supermirror cut-off of the Fe/Si-wafer for spin down neutrons
 * alpha_down: (AA)    Slope of reflectivity of the Fe/Si-wafer for spin down neutrons
 * mdown:      (1)     m-value of the Fe/Si-wafer for spin down neutrons
-* %D
 * 
-*
 * %E
 *******************************************************************************/
 

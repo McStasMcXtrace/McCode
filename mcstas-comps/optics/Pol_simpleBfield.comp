@@ -83,17 +83,17 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:  [m]       Width of opening.
-* yheight: [m]       Height of opening.
-* zdepth:  [m]       Length of field.
-* Bx:      [T]       Parameter used for x composant of field.
-* By:      [T]       Parameter used for y composant of field.
-* Bz:      [T]       Parameter used for z composant of field.
-* fieldFunction [pointer] Function describing the magnetic field.
-* filename []        file where the magnetic field is tabulated.
-* Stepx    []        Number of points in x to use during resampling (increases precision in x dimension)
-* Stepy    []        Number of points in y to use during resampling (increases precision in y dimension)
-* Stepz    []        Number of points in z to use during resampling (increases precision in z dimension)
+* xwidth:   [m]       Width of opening.
+* yheight:  [m]       Height of opening.
+* zdepth:   [m]       Length of field.
+* Bx:       [T]       Parameter used for x composant of field.
+* By:       [T]       Parameter used for y composant of field.
+* Bz:       [T]       Parameter used for z composant of field.
+* fieldFunction: [pointer] Function describing the magnetic field.
+* filename: []        file where the magnetic field is tabulated.
+* Stepx:    []        Number of points in x to use during resampling (increases precision in x dimension)
+* Stepy:    []        Number of points in y to use during resampling (increases precision in y dimension)
+* Stepz:    []        Number of points in z to use during resampling (increases precision in z dimension)
 *
 * OUTPUT PARAMETERS:
 *

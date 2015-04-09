@@ -53,9 +53,9 @@
 * INPUT PARAMETERS
 *
 * filename: [str] Name of neutron file to write. Default is standard
-*           output [string]. If not given, a unique name will be used.
-* bufsize:[1] Size of neutron output buffer
-*           default is 0, i.e. save all - recommended.
+*                 output [string]. If not given, a unique name will be used.
+* bufsize:  [1]   Size of neutron output buffer
+*                 default is 0, i.e. save all - recommended.
 *
 * %E
 *******************************************************************************/

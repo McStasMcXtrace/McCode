@@ -41,7 +41,7 @@
 * length:      (m)          Length of the foils / collimator
 * h_in:        (m)          Input  window height
 * h_out:       (m)          Output window height
-* d            (m)          Thickness of the absorbing foils
+* d:           (m)          Thickness of the absorbing foils
 * verbose:     (0/1)        Gives additional information
 *
 * %E

@@ -57,7 +57,7 @@
 * nx:      [1]       Number of field points to draw along x axis.
 * ny:      [1]       Number of field points to draw along y axis.
 * nz:      [1]       Number of field points to draw along z axis.
-* fieldFunction [pointer] Function describing the magnetic field.
+* fieldFunction: [pointer] Function describing the magnetic field.
 *
 * OUTPUT PARAMETERS:
 *

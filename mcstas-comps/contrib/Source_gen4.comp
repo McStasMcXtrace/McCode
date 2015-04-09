@@ -80,9 +80,9 @@
 *               are generated. You may also use 'h' and 'w' for a square source
 * dist:   [m]   Distance to target along z axis.
 * xw:     [m]   Width(x) of target.
-*                 If dist=0.0, xw = full horz. div  in deg
+*               If dist=0.0, xw = full horz. div  in deg
 * yh:     [m]   Height(y) of target.
-*                 If dist=0.0, yh = full vert. div in deg
+*               If dist=0.0, yh = full vert. div in deg
 *
 * Energy or wavelength range must be defined by giving min and max value or
 * average and spread:
@@ -96,36 +96,36 @@
 * dLambda:  [AA]  Wavelength spread of neutrons,half width
 *
 * Optional parameters:
-* h:        [m]   Source y-height, then does not use radius parameter
-* w:        [m]   Source x-width, then does not use radius parameter
-* length:   [m]   Source z-length, not anymore flat
-* T1:       [K]   Temperature of the Maxwellian source, 0=none
-* I1:       [1/(cm**2*st*AA)] Source flux per solid angle, area and Angstrom
-* T2:       [K]   Second Maxwellian source Temperature, 0=none
-* I2:       [1/(cm**2*st*AA)] Second Maxwellian Source flux
-* T3:       [K]   Third Maxwellian source Temperature, 0=none
-* I3:       [1/(cm**2*st*AA)] Third Maxwellian Source flux
-* HEtailA:  [1/(cm**2*st*AA**2)] Amplitude of heigh energy tail
-* HEtailL0  [AA]  Offset of heigh energy tail
-* phi_init: [degrees]  Angle abowe the x-z-plan that the source is amied at
+* h:         [m]   Source y-height, then does not use radius parameter
+* w:         [m]   Source x-width, then does not use radius parameter
+* length:    [m]   Source z-length, not anymore flat
+* T1:        [K]   Temperature of the Maxwellian source, 0=none
+* I1:        [1/(cm**2*st*AA)] Source flux per solid angle, area and Angstrom
+* T2:        [K]   Second Maxwellian source Temperature, 0=none
+* I2:        [1/(cm**2*st*AA)] Second Maxwellian Source flux
+* T3:        [K]   Third Maxwellian source Temperature, 0=none
+* I3:        [1/(cm**2*st*AA)] Third Maxwellian Source flux
+* HEtailA:   [1/(cm**2*st*AA**2)] Amplitude of heigh energy tail
+* HEtailL0:  [AA]  Offset of heigh energy tail
+* phi_init:  [degrees]  Angle abowe the x-z-plan that the source is amied at
 * theta_init:[degrees]  Angle from the z-axis in the x-z-plan that the source is amied at
-* flux_file:[str] Name of a two columns [lambda flux] text file that contains
-*                 the wavelength distribution of the flux in [1/(s*cm**2*st*AA)].
-*                 Comments (#) and further columns are ignored. Format is
-*                 compatible with McStas/PGPLOT wavelength monitor files.
-*                 When specified, temperature and intensity values are ignored.
-* flux_file_perAA:[1] When true (1), indicates that flux file data is already per
-*                 Angstroem. If false, file data is per wavelength bin.
-* flux_file_log:[1]   When true, will transform the flux table in log scale to
-*                 improve the sampling. This may also cause
-* xdiv_file:[str] Name of the x-horiz. divergence distribution file, given as a
-*                 free format text matrix, preceeded with a line
-*                   '# xylimits: xmin xmax xdiv_min xdiv_max'
-* ydiv_file:[str] Name of the y-vert. divergence distribution file, given as a
-*                 free format text matrix, preceeded with a line
-*                   '# xylimits: ymin ymax ydiv_min ydiv_max'
-* gaussian: [0/1] Use gaussian divergence beam, normal distributions
-* verbose:  [0/1] display info about the source. -1 unactivate source.
+* flux_file: [str] Name of a two columns [lambda flux] text file that contains
+*                  the wavelength distribution of the flux in [1/(s*cm**2*st*AA)].
+*                  Comments (#) and further columns are ignored. Format is
+*                  compatible with McStas/PGPLOT wavelength monitor files.
+*                  When specified, temperature and intensity values are ignored.
+* flux_file_perAA: [1] When true (1), indicates that flux file data is already per
+*                      Angstroem. If false, file data is per wavelength bin.
+* flux_file_log:   [1] When true, will transform the flux table in log scale to
+*                      improve the sampling. This may also cause
+* xdiv_file: [str] Name of the x-horiz. divergence distribution file, given as a
+*                  free format text matrix, preceeded with a line
+*                    '# xylimits: xmin xmax xdiv_min xdiv_max'
+* ydiv_file: [str] Name of the y-vert. divergence distribution file, given as a
+*                  free format text matrix, preceeded with a line
+*                    '# xylimits: ymin ymax ydiv_min ydiv_max'
+* gaussian:  [0/1] Use gaussian divergence beam, normal distributions
+* verbose:   [0/1] display info about the source. -1 unactivate source.
 *
 * %L
 * <a href="http://www.ill.fr/Yellowbook">The ILL Yellow book</a>

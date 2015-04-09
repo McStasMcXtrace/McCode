@@ -7,7 +7,7 @@
 *
 * Component: TOF_PSD_monitor_q
 *
-* %Identification
+* %I
 * Based on:   Henrich Frielinghaus, FZJuelich
 * Date:       Apr 2013
 * Origin:     xxx
@@ -26,36 +26,36 @@
 *
 * %P
 * INPUT PARAMETERS:
-* plenght   pulse lenght (s)
-* ssdist    Source-Sample distance for TOF calculation.
-* coldis    Collimation length
-* Sthckn    sample thickness (cm)
-* ds1       distance of detector 1
-* xw1       width  of detector 1 (0 for off)
-* yh1       height of detector 1 (0 for off)
-* hl1       w/h of hole in det 1 (0 for off), full width
-* ds2       distance...........2
-* xw2       width..............2
-* yh2       heigth.............2
-* hl2       hole...............2
-* ds1       distance...........3
-* xw3       width..............3
-* yh3       height.............3
-* hl3       hole...............3 (beam stop, used for primary beam detection)
-* vx3       vertical extension of beam stop down (in case of gravity off set 0.0, otherwise value larger than 1.0)
-* tmin      Beginning of time window (s)
-* tmax      End of time window (s)
-* Nx        Number of horizontal detector pixels (detector 1,2,3) better leave unchanged
-* Ny        Number of vertical   detector pixels (detector 1,2,3) better leave unchanged
-* Nt        Number of time bins                  (detector 1,2,3) better leave unchanged
-* qmin:     Lower limit of q-range (1/A)
-* qmax:     Upper limit of q-range (1/A)
-* Nq:       Number of q-bins (1)
-* fname     file name (first part without extensions)
-* rstneu    restore neutron after treatment ??? (0.0 = no)
-* centol    tolerance of center determination (if center larger than centol*calculated_center then set back to theory)
-* inttol    tolerance of intensity            (if primary beam intensity smaller than inttol*max_intensity then discard data)
-* qcal      calibration of intensity (cps) to width of q-bin (non_zero = yes, zero = no)
+* plenght:   pulse lenght (s)
+* ssdist:    Source-Sample distance for TOF calculation.
+* coldis:    Collimation length
+* Sthckn:    sample thickness (cm)
+* ds1:       distance of detector 1
+* xw1:       width  of detector 1 (0 for off)
+* yh1:       height of detector 1 (0 for off)
+* hl1:       w/h of hole in det 1 (0 for off), full width
+* ds2:       distance...........2
+* xw2:       width..............2
+* yh2:       heigth.............2
+* hl2:       hole...............2
+* ds1:       distance...........3
+* xw3:       width..............3
+* yh3:       height.............3
+* hl3:       hole...............3 (beam stop, used for primary beam detection)
+* vx3:       vertical extension of beam stop down (in case of gravity off set 0.0, otherwise value larger than 1.0)
+* tmin:      Beginning of time window (s)
+* tmax:      End of time window (s)
+* Nx:        Number of horizontal detector pixels (detector 1,2,3) better leave unchanged
+* Ny:        Number of vertical   detector pixels (detector 1,2,3) better leave unchanged
+* Nt:        Number of time bins                  (detector 1,2,3) better leave unchanged
+* qmin:      Lower limit of q-range (1/A)
+* qmax:      Upper limit of q-range (1/A)
+* Nq:        Number of q-bins (1)
+* fname:     file name (first part without extensions)
+* rstneu:    restore neutron after treatment ??? (0.0 = no)
+* centol:    tolerance of center determination (if center larger than centol*calculated_center then set back to theory)
+* inttol:    tolerance of intensity            (if primary beam intensity smaller than inttol*max_intensity then discard data)
+* qcal:      calibration of intensity (cps) to width of q-bin (non_zero = yes, zero = no)
 *
 * OUTPUT PARAMETERS:
 *

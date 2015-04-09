@@ -41,16 +41,16 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:          Lower x bound of detector opening (m)
-* xmax:          Upper x bound of detector opening (m)
-* ymin:          Lower y bound of detector opening (m)
-* ymax:          Upper y bound of detector opening (m)
-* zmin:          Lower z bound of detector opening (m)
-* zmax:          Upper z bound of detector opening (m)
-* filename:      Name of output file. If unset, use automatic name (string)
+* xmin:            Lower x bound of detector opening (m)
+* xmax:            Upper x bound of detector opening (m)
+* ymin:            Lower y bound of detector opening (m)
+* ymax:            Upper y bound of detector opening (m)
+* zmin:            Lower z bound of detector opening (m)
+* zmax:            Upper z bound of detector opening (m)
+* filename:        Name of output file. If unset, use automatic name (string)
 * res_sample_comp: Name of Res_sample component in the instrument
-*                    definition [no quotes]
-* bufsize:       Number of events to store. Use 0 to store all [1]
+*                  definition [no quotes]
+* bufsize  :       Number of events to store. Use 0 to store all [1]
 *
 * OPTIONAL PARAMETERS (derived from Monitor_nD)
 *

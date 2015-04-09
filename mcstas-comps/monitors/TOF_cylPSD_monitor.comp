@@ -16,6 +16,8 @@
 * Modified by: Kim Lefmann, October 9, 2001
 *
 * Cylindrical (2pi) PSD Time-of-flight monitor.
+* 
+* %D
 *
 * %P
 * INPUT PARAMETERS:
