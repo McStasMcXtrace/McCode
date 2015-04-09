@@ -55,26 +55,15 @@
     <property name="title">
      <string>Insert</string>
     </property>
-    <widget class="QMenu" name="menuSource">
+    <widget class="QMenu" name="menuCompCatDummy">
      <property name="title">
-      <string>Source</string>
+      <string>menu_component_category</string>
      </property>
-     <addaction name="actionSource_Maxwell_3"/>
-     <addaction name="actionSource_Optimize"/>
-    </widget>
-    <widget class="QMenu" name="menuOptics">
-     <property name="title">
-      <string>Optics</string>
-     </property>
-     <addaction name="separator"/>
-     <addaction name="actionGuide"/>
-     <addaction name="actionMirror"/>
-     <addaction name="actionV_Selector"/>
+     <addaction name="actionCompDummy"/>
     </widget>
     <addaction name="actionComponent_Browser"/>
     <addaction name="separator"/>
-    <addaction name="menuSource"/>
-    <addaction name="menuOptics"/>
+    <addaction name="menuCompCatDummy"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -87,9 +76,9 @@
     <string>Component Browser...</string>
    </property>
   </action>
-  <action name="actionSource_Maxwell_3">
+  <action name="actionCompDummy">
    <property name="text">
-    <string>Source_Maxwell_3...</string>
+    <string>component_of_this_category</string>
    </property>
   </action>
   <action name="actionSource_Optimize">
