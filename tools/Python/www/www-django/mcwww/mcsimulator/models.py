@@ -9,7 +9,6 @@
 #   as dict in other relevent objects.                     #
 # - Reformulate the admin sites in                         #
 #   admin.py                                               #
-# - MAKE THE CODE READABLE ARGRGRGRGG!                     #
 # ------------------                                       #
 # Author: Mark Lewis                                       #
 #==========================================================#
