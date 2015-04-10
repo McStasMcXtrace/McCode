@@ -100,24 +100,6 @@ class TabbedSim(admin.TabularInline):
         ('Sim Name',     {'list_display' : ['name']}),
         ('Parameters',   {'inlines'      : ['TabbedParams']}),
         ]
-#--------------------------------------------#
-# Simulation DB Handling                     #
-# ----------------------                     #
-# - NEEDS TO BE EXTENDED WHEN PARAM          #
-#   IMPLEMENTATION CHANGED                   #
-#--------------------------------------------#
-class SimulationAdmin(admin.ModelAdmin):
-    exclude = ('displayname', 'simgroup')
-    readonly_fields =  ('name',)
-    inlines = [TabbedParams]
-    # File System access goes here
-    def delete(self, *args, **kwargs):
-        super(SimulationAdmin, self).delete(*args, **kwargs)
-        # have to remove from DBs:
-        #   Params                       - Changing this.
-        #   Simulation (done via super)
-        # non-DB tasks:
-        #   move instrument files to trash (do not physically delete)
 #====================================================================#
 # Sim/Job/SimRunAdmins - Compile into one OverlordAdmin              #
 # --------------------                                               #
@@ -135,6 +117,30 @@ class SimulationAdmin(admin.ModelAdmin):
 #         Removing Job from stack (server side clean up)             #
 #         Pause (server side clean up and rebuild) *                 #
 #====================================================================#
+#-----------------------------------#
+# SimulationAdmin                  #
+# ----------------                  #
+# - NEEDS TO BE EXTENDED WHEN PARAM #
+#   IMPLEMENTATION CHANGED          #
+#-----------------------------------#
+class SimulationAdmin(admin.ModelAdmin):
+    exclude = ('displayname', 'simgroup')
+    readonly_fields =  ('name',)
+    inlines = [TabbedParams]
+    # File System access goes here
+    def delete(self, *args, **kwargs):
+        super(SimulationAdmin, self).delete(*args, **kwargs)
+        # have to remove from DBs:
+        #   Params                       - Changing this.
+        #   Simulation (done via super)
+        # non-DB tasks:
+        #   move instrument files to trash (do not physically delete)
+#----------------------------------------#
+# Job/SimRunAdmin                        #
+# ---------------                        #
+# Need to be careful with these.         #
+# Too much power in deleting and adding. #
+#----------------------------------------#
 class JobAdmin(admin.ModelAdmin):
     exclude         = ('samples', 'npoints', 'seed')
     readonly_fields = ('ref', 'created', 'sim')
@@ -144,7 +150,6 @@ class JobAdmin(admin.ModelAdmin):
         return False
     def __init__(self, *args, **kwargs):
         super(JobAdmin, self).__init__(*args, **kwargs)
-
 class SimRunAdmin(admin.ModelAdmin):
     exclude         = ('str_params', 'str_result')
     readonly_fields = ('user', 'status', 'completed', 'ref', 'job', 'sim')
@@ -153,13 +158,20 @@ class SimRunAdmin(admin.ModelAdmin):
     list_filter     = ('status',)
     class Meta:
         ordering = ['user', 'created']
+#===========================#
+# OverlordAdmin             #
+# -------------             #
+# Combines the above admins #
+#===========================#
+class Overlord(JobAdmin, SimRunAdmin, SimulationAdmin):
+    print "Put the composite admin here"
+    print "make a view that deals with this admin."
 
-# Want to get a class here that inherits from UserAdmin and adds a little functionality, like filters by on/off-line etc.
-
-for model, modelA in (
-    (Job,        JobAdmin),
-    (Simulation, None),
-    (SimRun,     SimRunAdmin),
-    (Param,      None), #ParamAdmin),
-    (ParamValue, None)):
+# Want to get a class here that inherits from UserAdmin and adds a little functionality, 
+# like filters by on/off-line etc.
+for model, modelA in ( (Job,        JobAdmin),
+                       (Simulation, None),
+                       (SimRun,     SimRunAdmin),
+                       (Param,      None), #ParamAdmin),
+                       (ParamValue, None)):
     admin.site.register(model, modelA)
