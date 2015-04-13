@@ -216,7 +216,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         comp_parser.parse()
         print(comp_parser.name)
         
-        dlg = McInsertComponentDialog()
+        dlg = McInser  tComponentDialog()
         dlg.initComponentData(comp_parser)
         if dlg.exec_():
             return dlg.getValues()
@@ -408,41 +408,6 @@ class McInsertComponentDialog(QtGui.QDialog):
     def initComponentData(self, comp_parser):
         # clear the containing grid
         print('McInsertComponentDialog.initComponentData')
-        #grd = self.ui.gridLayout
-        #for i in reversed(range(grd.count())): 
-        #    grd.itemAt(i).widget().setParent(None)
-        #    
-        #self.__wParams = None
-        #self.__wParams = []
-        ## insert custom params widgets
-        #i = -1
-        #x = 0
-        #y = 0
-        #for p in params:
-        #    name = QtCore.QString(p[0])
-        #    value = QtCore.QString(p[1])
-        #    
-        #    i = i + 1
-        #    x = i % 6
-        #    y = i / 6
-        #    
-        #    lbl = QtGui.QLabel(self.ui.gbxGrid)
-        #    lbl.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        #    lbl.setObjectName("lbl" + name)
-        #    lbl.setText(name + ':')
-        #    self.ui.gridLayout.addWidget(lbl, y, x, 1, 1)
-        #    
-        #    i = i + 1
-        #    x = i % 6
-        #    
-        #    edt = QtGui.QLineEdit(self.ui.gbxGrid)
-        #    edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        #    edt.setObjectName("edt" + name)
-        #    edt.setText(value)
-        #    self.ui.gridLayout.addWidget(edt, y, x, 1, 1)
-        #    
-        #    self.__wParams.append([lbl, edt])
-        #self.ui.btnStart.setFocus()
 
 
 ''' Main window ui widget setup.
