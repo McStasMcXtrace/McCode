@@ -28,15 +28,15 @@
 * yheight: (m)      Slit height (if = 0, equal to radius). Auto centering of beam at half height.
 * radius:  (m)      Radius of the disc
 * nu:      (Hz)     Frequency of the Chopper, omega=2*PI*nu
-*                     (algebraic sign defines the direction of rotation)
+*                   (algebraic sign defines the direction of rotation)
 * sequence:(str)    Slit sequence around disk, with 0=closed, 1=open positions.
-*                     NULL or "" will set a default sequence.
+*                   NULL or "" will set a default sequence.
 *
 * Optional parameters:
 * isfirst: (0/1)    Set it to 1 for the first chopper position in a cw source
-*                     (it then spreads the neutron time distribution)
+*                   (it then spreads the neutron time distribution)
 * n_pulse: (1)      Number of pulses (Only if isfirst)
-* jitter   (s)      Jitter in the time phase
+* jitter:  (s)      Jitter in the time phase
 * abs_out: (0/1)    Absorb neutrons hitting outside of chopper radius?
 * delay:   (s)      Time 'delay'.
 * phase:   (deg)    Angular 'delay' (overrides delay)

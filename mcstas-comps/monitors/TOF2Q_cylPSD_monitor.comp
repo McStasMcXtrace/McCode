@@ -10,7 +10,7 @@
 * %I
 * Written by: Anette Vickery, derived from Lefmann TOF_cylPSD
 * Date: October 2000
-* Version: $Revision$
+* Version: $Revision: 4553 $
 * Origin: Risoe
 * Release: McStas 1.12c
 * Modified by: Anette Vickery, October 9, 2012
@@ -19,7 +19,9 @@
 * Calculates Q from TOF and known nominal grazing angle theta:
 * E = VS2E*(L_flight/(t-T_zero))*(L_flight/(t-T_zero));
 *    Q=2*sqrt(E/2.072)*sin(theta);
-*
+* 
+* %D
+* 
 * %P
 * INPUT PARAMETERS:
 *

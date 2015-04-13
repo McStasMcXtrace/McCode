@@ -30,7 +30,7 @@
 * %P
 * Input parameters:
 *
-* compute_func [ ] : Address of the function that computes a psuedo neutron from before and after scatter states.
+* compute_func: [ ] Address of the function that computes a psuedo neutron from before and after scatter states.
 *
 * %E
 *******************************************************************************/

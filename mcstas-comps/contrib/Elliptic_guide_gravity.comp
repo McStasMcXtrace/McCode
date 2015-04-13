@@ -180,7 +180,7 @@ SETTING PARAMETERS (l,
 		curvature=0	)
 
 OUTPUT PARAMETERS (
-	guideInfo,Gx,Gy,Gz,dynamicalSegLength,
+	Circ, guideInfo,Gx,Gy,Gz,dynamicalSegLength,
 	inputErrors, directDefination,
 	xinput,xarray,
 	yinput,yarray,

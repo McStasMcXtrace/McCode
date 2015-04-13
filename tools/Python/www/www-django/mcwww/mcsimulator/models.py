@@ -9,29 +9,27 @@
 #   as dict in other relevent objects.                     #
 # - Reformulate the admin sites in                         #
 #   admin.py                                               #
-# - MAKE THE CODE READABLE ARGRGRGRGG!                     #
 # ------------------                                       #
 # Author: Mark Lewis                                       #
 #==========================================================#
 # python imports
 from json import dumps, loads
 from datetime import datetime
-from jsonfield import JSONfield                                           # this needs to be in the dependencies!!! BEEP!
+from jsonfield import JSONfield       # this needs to be in the dependencies!!! BEEP!
 # django imports
-from django.db import models                               # required to be imported when Parameter handling is moved to another file
+from django.db import models          # required to be imported when Parameter handling is moved to another file
 from django.db.models import related
 from django.contrib import admin
 from django.utils.timezone import now
 # app imports
-from  mcwww import settings
+from mcwww import settings
 from mcsimulator import model_objects
-
-#=============================#
+#-----------------------------#
 # Job model                   #
 # ---------                   #
 # - refers to simulation      #
 # - contains basic sim params #
-#=============================#
+#-----------------------------#
 class Job(models.Model):
     # Unique permanent reference (for use in links)
     ref = models.CharField(max_length=64, db_index=True)
@@ -50,8 +48,7 @@ class Job(models.Model):
         return ("Simulation [name, id]: [%s, %s]") % (self.sim.name, self.sim.id)
     def __unicode__(self):
         return "Job Details [ref, sim name]: [%s, %s]" % (self.ref, self.sim.name)
-
-#==========================================#
+#------------------------------------------#
 # Simulation Model                         #
 # ----------------                         #
 # - This must point to a file or something #
@@ -64,16 +61,22 @@ class Job(models.Model):
 #   2 Make a char field that holds the     #
 #     Simulation parameters.               #
 #     Have Job or SimRun handle the values #
-#     from a dictionary.
-#==========================================#
+#     from a dictionary.                   #
+#------------------------------------------#
 class Simulation(models.Model):
     # Simulation name (see Param/sim.param_set() for parameters)
     name = models.CharField(max_length=64, unique=True, db_index=True)
     simgroup = models.CharField(max_length=64, unique=False, db_index=True)
     displayname = models.CharField(max_length=64, unique=False, db_index=True)
-    # Parameters should be assigned to params in a dictionary type way.
+    #--------------------------------------#
+    # Simulation Parameters                #
+    # - dict format:                       #
+    #     params[<name>] = (priority,      #
+    #                       default value, #
+    #                       unit,          #
+    #                       message)       #
+    #--------------------------------------#
     params = JSONField(null=True, blank=True)
-
     def shortname(self):
         return self.displayname
     def __repr__(self):
@@ -83,11 +86,11 @@ class Simulation(models.Model):
         return Simulation(None, *args, **kwargs)
     def __unicode__(self):
         return u'<Sim %s>' % self.name
-#========================================================#
+#--------------------------------------------------------#
 # SimRun Model                                           #
 # ------------                                           #
 # - A particular run of a simulation (configured by Job) #
-#========================================================#
+#--------------------------------------------------------#
 class SimRun(models.Model):
     # Unique reference (for use in urls)
     ref = models.CharField(max_length=64, db_index=True)
@@ -96,17 +99,14 @@ class SimRun(models.Model):
     # Dates for creation and completion
     created   = models.DateTimeField(db_index=True, editable=False)
     completed = models.DateTimeField(db_index=True, editable=False, null=True)
-    
     # Current status (waiting, running, completed)
     status = models.CharField(max_length=32, db_index=True)
-
     # Job to run
     job = models.ForeignKey('Job')
     sim = models.ForeignKey('Simulation')
     # Parameters and result as JSON
     str_params = models.TextField()
     str_result = models.TextField()
-
     @staticmethod
     def new(user, job, sim, params):
         ref = job.ref + "__" + str(datetime.now()).replace(' ', '_')
@@ -128,11 +128,13 @@ class SimRun(models.Model):
     def result(self, r):
         self.str_result = dumps(r)
     def __unicode__(self):
-        return "SimRun Details [ref, job ref, sim name]: [%s, %s, %s]" % (self.ref, self.job.ref, self.sim.name)
-
-
-
-#========================================================#
+        return "SimRun Details [ref, job ref, sim name]: [%s, %s, %s]" % (self.ref, 
+                                                                          self.job.ref, 
+                                                                          self.sim.name)
+#===============#
+# TO BE REMOVED #
+#===============#
+#--------------------------------------------------------#
 # Param Model                                            #
 # -----------                                            #
 # - Incorporate into the Simulation Model as Dictionary  #
@@ -142,7 +144,7 @@ class SimRun(models.Model):
 #     - Unit                                             #
 #     - Message                                          #
 #     - What is the str_default?                         #
-#========================================================#
+#--------------------------------------------------------#
 class Param(models.Model):
     # Where to show the parameter in a listing (e.g. on configure page)
     priority = models.IntegerField()
@@ -170,14 +172,6 @@ class Param(models.Model):
         self.str_default = dumps(val)
     def __unicode__(self):
         return '<Param: %s, %s %s>' % (self.name, self.default_value, self.unit)
-
-
-
-
-
-
-
-
 #========================================================#
 # ParamValue Model
 # ----------------

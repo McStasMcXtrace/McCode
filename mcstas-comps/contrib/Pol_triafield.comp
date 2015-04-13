@@ -6,13 +6,15 @@
 *         Institut Laue Langevin, Grenoble, France
 *
 * Component: Pol_triafield
-*
+* 
+* %I
 * Written by: Morten Sales, based on Pol_constBfield by Peter Christiansen
 * Date: 2013
 * Version: $Revision: 0.1 $
 * Origin: Helmholtz-Zentrum Berlin
 * Release: McStas 2.0
 *
+* %D
 * Constant magnetic field in a isosceles triangular coil
 *
 *
@@ -38,7 +40,7 @@
 *
 * Example: Pol_triafield(xwidth=0.1, yheight=0.1, zdepth=0.2, B=1e-3, Bguide=0.0)
 *
-* 
+* %P
 * INPUT PARAMETERS:
 *
 * xwidth:     Width of opening [m]. 
@@ -49,7 +51,7 @@
 *
 * OUTPUT PARAMETERS:
 *
-* 
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_triafield

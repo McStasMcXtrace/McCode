@@ -34,7 +34,7 @@
 * xwidth:   Width of detector. Overrides xmin,xmax. (m)
 * yheight:  Height of detector. Overrides ymin,ymax. (m)
 * nh:       Number of pixel rows (1)
-* h_maxdiv  Maximal vertical divergence detected (degrees)
+* h_maxdiv: Maximal vertical divergence detected (degrees)
 * filename: Name of file in which to store the detector image (text)
 * restore_neutron: If set, the monitor does not influence the neutron state (1)
 *
