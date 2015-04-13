@@ -216,6 +216,13 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         comp_parser.parse()
         print(comp_parser.name)
         
+        dlg = McInsertComponentDialog()
+        dlg.initComponentData(comp_parser)
+        if dlg.exec_():
+            return dlg.getValues()
+        else: 
+            return None, None
+        
     def __initScintilla(self):
         # delete text editor placeholder 
         scintilla = Qsci.QsciScintilla(self)
@@ -382,7 +389,61 @@ class ClusteringEnum:
     SINGLE = 0 
     MPI = 1
     SSH = 2
-    
+
+
+''' Start simulation widgets wrapper class
+Programatically alters the dialog to match current instrument.
+Supports reuse of widgets from sim to sim, to retain input values.
+Works as a dialog - call _exec(), probe for return behavior and
+state to proceed.
+'''
+class McInsertComponentDialog(QtGui.QDialog):
+    def __init__(self, parent=None):
+        super(McInsertComponentDialog, self).__init__(parent)
+        self.ui = Ui_dlgInsertComponent()
+        self.ui.setupUi(self)
+        #self.ui.btnStart.clicked.connect(self.accept)
+        #self.ui.btnCancel.clicked.connect(self.reject)
+        
+    def initComponentData(self, comp_parser):
+        # clear the containing grid
+        print('McInsertComponentDialog.initComponentData')
+        #grd = self.ui.gridLayout
+        #for i in reversed(range(grd.count())): 
+        #    grd.itemAt(i).widget().setParent(None)
+        #    
+        #self.__wParams = None
+        #self.__wParams = []
+        ## insert custom params widgets
+        #i = -1
+        #x = 0
+        #y = 0
+        #for p in params:
+        #    name = QtCore.QString(p[0])
+        #    value = QtCore.QString(p[1])
+        #    
+        #    i = i + 1
+        #    x = i % 6
+        #    y = i / 6
+        #    
+        #    lbl = QtGui.QLabel(self.ui.gbxGrid)
+        #    lbl.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        #    lbl.setObjectName("lbl" + name)
+        #    lbl.setText(name + ':')
+        #    self.ui.gridLayout.addWidget(lbl, y, x, 1, 1)
+        #    
+        #    i = i + 1
+        #    x = i % 6
+        #    
+        #    edt = QtGui.QLineEdit(self.ui.gbxGrid)
+        #    edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        #    edt.setObjectName("edt" + name)
+        #    edt.setText(value)
+        #    self.ui.gridLayout.addWidget(edt, y, x, 1, 1)
+        #    
+        #    self.__wParams.append([lbl, edt])
+        #self.ui.btnStart.setFocus()
+
 
 ''' Main window ui widget setup.
 Auto-generated view created with QtCreator.
@@ -835,3 +896,164 @@ class Ui_dlgStartSim(object):
         self.checkBox.setText(QtGui.QApplication.translate("dlgStartSim", "Gravity", None, QtGui.QApplication.UnicodeUTF8))
         self.btnStart.setText(QtGui.QApplication.translate("dlgStartSim", "Start", None, QtGui.QApplication.UnicodeUTF8))
         self.btnCancel.setText(QtGui.QApplication.translate("dlgStartSim", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
+
+
+''' Insert component dialog widget
+Auto-generated view created with QtCreator.
+Generate from .ui source with pyside-uic. 
+Do not edit.
+'''
+class Ui_dlgInsertComponent(object):
+    def setupUi(self, Dialog):
+        Dialog.setObjectName("Dialog")
+        Dialog.resize(515, 474)
+        self.verticalLayout_4 = QtGui.QVBoxLayout(Dialog)
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
+        self.vlMaster = QtGui.QVBoxLayout()
+        self.vlMaster.setObjectName("vlMaster")
+        self.horizontalLayout_5 = QtGui.QHBoxLayout()
+        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
+        self.label_14 = QtGui.QLabel(Dialog)
+        font = QtGui.QFont()
+        font.setWeight(75)
+        font.setBold(True)
+        self.label_14.setFont(font)
+        self.label_14.setObjectName("label_14")
+        self.horizontalLayout_5.addWidget(self.label_14)
+        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_5.addItem(spacerItem)
+        self.btnHelp = QtGui.QToolButton(Dialog)
+        self.btnHelp.setObjectName("btnHelp")
+        self.horizontalLayout_5.addWidget(self.btnHelp)
+        self.vlMaster.addLayout(self.horizontalLayout_5)
+        self.horizontalLayout_6 = QtGui.QHBoxLayout()
+        self.horizontalLayout_6.setObjectName("horizontalLayout_6")
+        self.tbInfoDescr = QtGui.QTextBrowser(Dialog)
+        self.tbInfoDescr.setObjectName("tbInfoDescr")
+        self.horizontalLayout_6.addWidget(self.tbInfoDescr)
+        self.vlMaster.addLayout(self.horizontalLayout_6)
+        self.groupBox_2 = QtGui.QGroupBox(Dialog)
+        self.groupBox_2.setObjectName("groupBox_2")
+        self.verticalLayout = QtGui.QVBoxLayout(self.groupBox_2)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.gridLayout = QtGui.QGridLayout()
+        self.gridLayout.setObjectName("gridLayout")
+        self.label = QtGui.QLabel(self.groupBox_2)
+        self.label.setObjectName("label")
+        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+        self.label_10 = QtGui.QLabel(self.groupBox_2)
+        self.label_10.setObjectName("label_10")
+        self.gridLayout.addWidget(self.label_10, 0, 2, 1, 1)
+        self.lineEdit_9 = QtGui.QLineEdit(self.groupBox_2)
+        self.lineEdit_9.setObjectName("lineEdit_9")
+        self.gridLayout.addWidget(self.lineEdit_9, 0, 1, 1, 1)
+        self.label_11 = QtGui.QLabel(self.groupBox_2)
+        self.label_11.setObjectName("label_11")
+        self.gridLayout.addWidget(self.label_11, 1, 0, 1, 1)
+        self.label_12 = QtGui.QLabel(self.groupBox_2)
+        self.label_12.setObjectName("label_12")
+        self.gridLayout.addWidget(self.label_12, 1, 2, 1, 1)
+        self.lineEdit_10 = QtGui.QLineEdit(self.groupBox_2)
+        self.lineEdit_10.setObjectName("lineEdit_10")
+        self.gridLayout.addWidget(self.lineEdit_10, 1, 1, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout)
+        self.vlMaster.addWidget(self.groupBox_2)
+        self.groupBox = QtGui.QGroupBox(Dialog)
+        self.groupBox.setObjectName("groupBox")
+        self.verticalLayout_2 = QtGui.QVBoxLayout(self.groupBox)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.gridLayout_2 = QtGui.QGridLayout()
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.label_7 = QtGui.QLabel(self.groupBox)
+        self.label_7.setObjectName("label_7")
+        self.gridLayout_2.addWidget(self.label_7, 0, 2, 1, 1)
+        self.label_9 = QtGui.QLabel(self.groupBox)
+        self.label_9.setObjectName("label_9")
+        self.gridLayout_2.addWidget(self.label_9, 0, 6, 1, 1)
+        self.lineEdit_8 = QtGui.QLineEdit(self.groupBox)
+        self.lineEdit_8.setObjectName("lineEdit_8")
+        self.gridLayout_2.addWidget(self.lineEdit_8, 0, 7, 1, 1)
+        self.label_6 = QtGui.QLabel(self.groupBox)
+        self.label_6.setObjectName("label_6")
+        self.gridLayout_2.addWidget(self.label_6, 0, 0, 1, 1)
+        self.lineEdit_6 = QtGui.QLineEdit(self.groupBox)
+        self.lineEdit_6.setObjectName("lineEdit_6")
+        self.gridLayout_2.addWidget(self.lineEdit_6, 0, 3, 1, 1)
+        self.lineEdit_5 = QtGui.QLineEdit(self.groupBox)
+        self.lineEdit_5.setObjectName("lineEdit_5")
+        self.gridLayout_2.addWidget(self.lineEdit_5, 0, 1, 1, 1)
+        self.label_8 = QtGui.QLabel(self.groupBox)
+        self.label_8.setObjectName("label_8")
+        self.gridLayout_2.addWidget(self.label_8, 0, 4, 1, 1)
+        self.lineEdit_7 = QtGui.QLineEdit(self.groupBox)
+        self.lineEdit_7.setObjectName("lineEdit_7")
+        self.gridLayout_2.addWidget(self.lineEdit_7, 0, 5, 1, 1)
+        self.label_2 = QtGui.QLabel(self.groupBox)
+        self.label_2.setObjectName("label_2")
+        self.gridLayout_2.addWidget(self.label_2, 1, 0, 1, 1)
+        self.lineEdit = QtGui.QLineEdit(self.groupBox)
+        self.lineEdit.setObjectName("lineEdit")
+        self.gridLayout_2.addWidget(self.lineEdit, 1, 1, 1, 1)
+        self.lineEdit_2 = QtGui.QLineEdit(self.groupBox)
+        self.lineEdit_2.setObjectName("lineEdit_2")
+        self.gridLayout_2.addWidget(self.lineEdit_2, 1, 3, 1, 1)
+        self.lineEdit_3 = QtGui.QLineEdit(self.groupBox)
+        self.lineEdit_3.setObjectName("lineEdit_3")
+        self.gridLayout_2.addWidget(self.lineEdit_3, 1, 5, 1, 1)
+        self.lineEdit_4 = QtGui.QLineEdit(self.groupBox)
+        self.lineEdit_4.setObjectName("lineEdit_4")
+        self.gridLayout_2.addWidget(self.lineEdit_4, 1, 7, 1, 1)
+        self.label_5 = QtGui.QLabel(self.groupBox)
+        self.label_5.setObjectName("label_5")
+        self.gridLayout_2.addWidget(self.label_5, 1, 6, 1, 1)
+        self.label_3 = QtGui.QLabel(self.groupBox)
+        self.label_3.setObjectName("label_3")
+        self.gridLayout_2.addWidget(self.label_3, 1, 2, 1, 1)
+        self.label_4 = QtGui.QLabel(self.groupBox)
+        self.label_4.setObjectName("label_4")
+        self.gridLayout_2.addWidget(self.label_4, 1, 4, 1, 1)
+        self.verticalLayout_2.addLayout(self.gridLayout_2)
+        self.vlMaster.addWidget(self.groupBox)
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.btnInsert = QtGui.QPushButton(Dialog)
+        self.btnInsert.setDefault(True)
+        self.btnInsert.setObjectName("btnInsert")
+        self.horizontalLayout.addWidget(self.btnInsert)
+        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem1)
+        self.btnCancel = QtGui.QPushButton(Dialog)
+        self.btnCancel.setObjectName("btnCancel")
+        self.horizontalLayout.addWidget(self.btnCancel)
+        self.vlMaster.addLayout(self.horizontalLayout)
+        self.verticalLayout_4.addLayout(self.vlMaster)
+
+        self.retranslateUi(Dialog)
+        QtCore.QMetaObject.connectSlotsByName(Dialog)
+
+    def retranslateUi(self, Dialog):
+        Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Dialog", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_14.setText(QtGui.QApplication.translate("Dialog", "Component Description", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnHelp.setText(QtGui.QApplication.translate("Dialog", " ? ", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbInfoDescr.setHtml(QtGui.QApplication.translate("Dialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'Ubuntu\'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">&lt;instrument info and description&gt;</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.groupBox_2.setTitle(QtGui.QApplication.translate("Dialog", "Name and Parameters", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("Dialog", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_10.setText(QtGui.QApplication.translate("Dialog", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_11.setText(QtGui.QApplication.translate("Dialog", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_12.setText(QtGui.QApplication.translate("Dialog", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
+        self.groupBox.setTitle(QtGui.QApplication.translate("Dialog", "Placement", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_7.setText(QtGui.QApplication.translate("Dialog", ",", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_9.setText(QtGui.QApplication.translate("Dialog", ") RELATIVE ", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_6.setText(QtGui.QApplication.translate("Dialog", "AT (", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_8.setText(QtGui.QApplication.translate("Dialog", ",", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(QtGui.QApplication.translate("Dialog", "ROTATED (", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_5.setText(QtGui.QApplication.translate("Dialog", ") RELATIVE ", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_3.setText(QtGui.QApplication.translate("Dialog", ",", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_4.setText(QtGui.QApplication.translate("Dialog", ",", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnInsert.setToolTip(QtGui.QApplication.translate("Dialog", "Insert component into instrument definition", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnInsert.setText(QtGui.QApplication.translate("Dialog", "Insert", None, QtGui.QApplication.UnicodeUTF8))
+        self.btnCancel.setText(QtGui.QApplication.translate("Dialog", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
