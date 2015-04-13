@@ -216,7 +216,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         comp_parser.parse()
         print(comp_parser.name)
         
-        dlg = McInser  tComponentDialog()
+        dlg = McInsertComponentDialog()
         dlg.initComponentData(comp_parser)
         if dlg.exec_():
             return dlg.getValues()
