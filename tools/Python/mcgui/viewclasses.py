@@ -299,12 +299,25 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         ui.actionPaste.triggered.connect(self.__scintilla.paste)
         ui.actionSave.triggered.connect(self.__handleSaveAction)
         ui.actionClose_Instrument_Editor.triggered.connect(self.close)
+        ui.actionComponent_Browser.triggered.connect(self.__handleComponentBrowser)
         
         # connect "text changed" signal to our handler to detect unsaved changes
         self.__scintilla.textChanged.connect(self.__handleTextChanged)
         
         self.volatileDataTransition.connect(self.__handleVolatileDataPresent)
-            
+    
+    def __handleComponentBrowser(self):
+        # TODO: get home dir in a sys-indep way
+        homeDir = '/usr/share/mcstas/2.1/'
+        
+        dlg = QtGui.QFileDialog()
+        dlg.setDirectory(homeDir)
+        dlg.setNameFilter("mcstas component files (*.comp)");
+        if dlg.exec_():
+            comp_file = dlg.selectedFiles()[0]
+            parser = McComponentParser(comp_file)
+            self.__handleComponentClicked(parser)
+    
     def __handleTextChanged(self):
         if not self.volatileDataExists:
             self.volatileDataTransition.emit(True)
