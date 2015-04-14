@@ -19,8 +19,6 @@ class McView(object):
         self.__mw = McMainWindow()
         self.mwui = self.__mw.ui
         self.mwui.lblInstrument.setText("")
-                
-        #if self.ew == None:
         self.ew = McCodeEditorWindow()
     
     def initMainWindowDynamicElements(self, args, callback):
@@ -216,9 +214,29 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         dlg = McInsertComponentDialog()
         dlg.initComponentData(comp_parser)
         if dlg.exec_():
-            return dlg.getValues()
+            comp_type, inst_name, params, atrel = dlg.getValues()
         else: 
-            return None, None
+            return
+        
+        text = "COMPONENT " + inst_name + " = " + comp_type + "( "
+        i_max = len(params)-1
+        for i in range(len(params)):
+            p = params[i]
+            text += "\n    " + p[0] + "=" + p[1]
+            if i < i_max:
+                text += ", "
+
+        text += ")"
+        text += "\nAT (" + atrel[0] + "," + atrel[1] + ", " + atrel[2] + ") RELATIVE " + atrel[3] 
+        text += "\nROTATED (" + atrel[4] + ", " + atrel[5] + ", " + atrel[6] + ") RELATIVE " + atrel[7]
+        
+        self.__scintilla.insert(text)
+        
+        # set cursor position
+        i, j = self.__scintilla.getCursorPosition()
+        pos = self.__scintilla.positionFromLineIndex(i, j)
+        k, l = self.__scintilla.lineIndexFromPosition(pos + len(text))
+        self.__scintilla.setCursorPosition(k, l)
         
     def __initScintilla(self):
         # delete text editor placeholder 
@@ -276,12 +294,6 @@ class McCodeEditorWindow(QtGui.QMainWindow):
             self.setWindowTitle(title.replace('*', ''))
         self.volatileDataExists = volatileDataExists
         self.ui.actionSave.setEnabled(volatileDataExists)
-        
-    def __handleExit(self):
-        if self.volatileDataExists:
-            return
-            # TODO: make a "save changes?" dialog
-            #dlg = QtGui.QDialogButtonBox()
 
 
 ''' Start simulation widgets wrapper class
@@ -299,6 +311,19 @@ class McStartSimDialog(QtGui.QDialog):
         self.ui.btnCancel.clicked.connect(self.reject)
         
     def getValues(self):
+        ''' Return values:
+        
+            fixed_params[]:
+                simulation = 0, trace = 1
+                neutron count (int)
+                steps count (int)
+                gravity (bool)
+                random seed (int)
+                no clustering = 0, MPI clustering = 1, SSH clustering = 2
+                
+            params[]:
+                [<par_name>, <value>] pairs
+        '''
         # simulation or trace option
         p0 = None
         if self.ui.cbxSimTrace.currentIndex() == 0:
@@ -329,7 +354,7 @@ class McStartSimDialog(QtGui.QDialog):
         
         fixed_params =[p0, p1, p2, p3, p4, p5]
         
-        # get values of text boxes matching params
+        # get dynamic params
         params = []
         for w in self.__wParams:
             p = []
@@ -395,13 +420,44 @@ Works as a dialog - call _exec(), probe for return behavior and
 state to proceed.
 '''
 class McInsertComponentDialog(QtGui.QDialog):
+    __standard_le_style = None
     def __init__(self, parent=None):
         super(McInsertComponentDialog, self).__init__(parent)
         self.ui = Ui_dlgInsertComponent()
         self.ui.setupUi(self)
         self.ui.btnInsert.clicked.connect(self.accept)
         self.ui.btnCancel.clicked.connect(self.reject)
+        self.__standard_le_style = self.ui.tbxInstanceName.styleSheet()
         
+    def accept(self):
+        # detect missing default values
+        dirty = False
+        
+        # mark/unmark params dynamic lineedits
+        first_params_hit = True
+        for w in self.__wParams:
+            if w[1].text() == '':
+                w[1].setStyleSheet("border: 3px solid red;")
+                dirty = True
+                if first_params_hit:
+                    w[1].setFocus()
+                    first_params_hit = False
+            else:
+                w[1].setStyleSheet(self.__standard_le_style)
+        
+        # mark/unmark instance name lineedit
+        if self.ui.tbxInstanceName.text() == '':
+            self.ui.tbxInstanceName.setStyleSheet("border: 3px solid red;")
+            if not dirty:
+                self.ui.tbxInstanceName.setFocus()
+            dirty = True
+        else:
+            self.ui.tbxInstanceName.setStyleSheet(self.__standard_le_style)
+                
+        # exit if all lineedit text boxes are filled out 
+        if not dirty:
+            super(McInsertComponentDialog, self).accept()
+    
     __wParams = []
     def initComponentData(self, comp_parser):
         # parse component info
@@ -425,30 +481,29 @@ class McInsertComponentDialog(QtGui.QDialog):
         for i in range(len(comp_parser.pars)):
             par = McComponentParser.McComponentParInfo(comp_parser.pars[i])
             
-            x = 0
+            # i'th line/row of the UI
             y = i
             
-            #lbl = QtGui.QLabel(self.ui.vlayoutNameParams)
+            # parameter name label
+            x = 0
             lbl = QtGui.QLabel()
             lbl.setObjectName("lbl" + par.par_name)
             lbl.setText(par.par_name + ':')
             self.ui.gridParameters.addWidget(lbl, y, x, 1, 1)
             
+            # parameter value line-edit
             x = 1
-            
-            #edt = QtGui.QLineEdit(self.ui.vlayoutNameParams)
             edt = QtGui.QLineEdit()
             edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
             edt.setObjectName("edt" + par.par_name)
             edt.setText(par.default_value)
             self.ui.gridParameters.addWidget(edt, y, x, 1, 1)
             
-            # save widget reference for value extraction
-            self.__wParams.append(edt)
+            # save name, value widget references for use in self.getValues
+            self.__wParams.append([lbl, edt])
             
+            # parameter docstring label
             x = 2
-            
-            #lbl = QtGui.QLabel(self.ui.vlayoutNameParams)
             lbl = QtGui.QLabel()
             lbl.setWordWrap(True)
             lbl.setObjectName("lbl" + par.par_name + "_doc")
@@ -458,7 +513,7 @@ class McInsertComponentDialog(QtGui.QDialog):
         # fix tab-order
         q = self.ui.btnInsert 
         for i in range(len(self.__wParams)):
-            w = self.__wParams[i]
+            w = self.__wParams[i][1]
             self.setTabOrder(q, w)
             q = w
         self.setTabOrder(q, self.ui.tbxAtX)
@@ -468,6 +523,36 @@ class McInsertComponentDialog(QtGui.QDialog):
         tbx.setText(str.lower(comp_parser.name))
         tbx.setFocus()
         tbx.selectAll()
+        
+    def getValues(self):
+        ''' 
+        inst_name : contents of instance name field 
+        params : list of [name, value] pairs matching component parameters
+        '''
+        # instance name
+        inst_name = self.ui.tbxInstanceName.text()
+        comp_type = str(self.windowTitle()).lstrip('Component: ')
+        
+        # get dynamic params
+        params = []
+        for w in self.__wParams:
+            p = []
+            p.append(str(w[0].text()).rstrip(':'))
+            p.append(str(w[1].text()))
+            params.append(p)
+        
+        # get values for AT(x,y,z), RELATIVE <posrel>, ROTATED(x,y,z), RELATIVE <rotrel> 
+        atrel = []
+        atrel.append(self.ui.tbxAtX.text())
+        atrel.append(self.ui.tbxAtY.text())
+        atrel.append(self.ui.tbxAtZ.text())
+        atrel.append(self.ui.tbxAtRel.text())
+        atrel.append(self.ui.tbxRotX.text())
+        atrel.append(self.ui.tbxRotY.text())
+        atrel.append(self.ui.tbxRotZ.text())
+        atrel.append(self.ui.tbxRotRel.text())
+        
+        return comp_type, inst_name, params, atrel
         
 
 ''' Main window ui widget setup.
