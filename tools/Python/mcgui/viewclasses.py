@@ -15,19 +15,18 @@ ALL explicit ui widget updates MUST be handled by this class
 class McView(object):
     def __init__(self):
         # create main window
-        self.__mw = McMainWindow()
-        self.mwui = self.__mw.ui
-        self.mwui.lblInstrument.setText("")
+        self.mw = McMainWindow()
+        self.mw.ui.lblInstrument.setText("")
         self.ew = McCodeEditorWindow()
     
     def initMainWindowDynamicElements(self, args, callback):
-        self.__mw.initDynamicElements(args, callback)
+        self.mw.initDynamicView(args, callback)
         
     def initCodeEditorComponentMenu(self, args):
         self.ew.initComponentMenu(args)
      
     def showMainWindow(self):
-        self.__mw.show()
+        self.mw.show()
 
     def showCodeEditorWindow(self, instr=''):
         self.ew.initCodeEditor(instr)
@@ -39,30 +38,30 @@ class McView(object):
     ''' Update UI data
     '''
     def updateInstrumentLabel(self, labels):
-        self.mwui.lblInstrument.setText(labels[0])
+        self.mw.ui.lblInstrument.setText(labels[0])
         
     def updateStatus(self, text=''):
-        self.mwui.statusbar.showMessage(text)
+        self.mw.ui.statusbar.showMessage(text)
         
     def updateLog(self, text='', guiMsg=False, error=False):
         if guiMsg:
             if error:
-                self.mwui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
+                self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
             else:
-                self.mwui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
-            self.mwui.txtbrwMcgui.append(text)
+                self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
+            self.mw.ui.txtbrwMcgui.append(text)
         else:
             if error:
-                self.mwui.txtbrwSim.setTextColor(QtGui.QColor('red'))
+                self.mw.ui.txtbrwSim.setTextColor(QtGui.QColor('red'))
             else:
-                self.mwui.txtbrwSim.setTextColor(QtGui.QColor('black'))
-            self.mwui.txtbrwSim.append(text)
+                self.mw.ui.txtbrwSim.setTextColor(QtGui.QColor('black'))
+            self.mw.ui.txtbrwSim.append(text)
             
     def updateSimState(self, state=[]):
         canRun = state[0] == 'True'
         canPlot = state[1] == 'True'
         
-        ui = self.mwui
+        ui = self.mw.ui
         ui.btnRun.setEnabled(canRun)
         ui.btnEdit.setEnabled(canRun)
         ui.btnPlot.setEnabled(canPlot)
@@ -129,7 +128,7 @@ class McMainWindow(QtGui.QMainWindow):
         self.ui.setupUi(self)
         self.ui.dynamicMenuClicked = QtCore.pyqtSignal(QtCore.QString)
     
-    def initDynamicElements(self, args, callback):
+    def initDynamicView(self, args, callback):
         ''' - args ([str, [], []]): list of triplets consisting of site name, 
                                     [instrument names], [instrument file paths] 
             - callback (func(str)): function which takes a single string parameter, call with full path 
@@ -293,7 +292,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         ui = self.ui 
         ui.actionUndo.triggered.connect(self.__scintilla.undo)
         ui.actionRedo.triggered.connect(self.__scintilla.redo)
-        ui.actionSelect_All.triggered.connect(self.__scintilla.selectAll) 
+        ui.actionSelect_All.triggered.connect(lambda: self.__scintilla.selectAll()) # why is l. expr. needed here?
         ui.actionCopy.triggered.connect(self.__scintilla.copy)
         ui.actionCut.triggered.connect(self.__scintilla.cut)
         ui.actionPaste.triggered.connect(self.__scintilla.paste)

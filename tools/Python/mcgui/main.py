@@ -18,73 +18,85 @@ from viewclasses import McView
 from mcguiutils import McGuiUtils
 from mcfileutils import McComponentParser
 
+''' Message emitter
+Status and message log and signalling.
+'''
+class McMessageEmitter(QtCore.QObject):
+    statusUpdate = QtCore.pyqtSignal(QtCore.QString)
+    __statusLog = []
+    __statusLock = threading.Lock()
+    
+    logMessageUpdate = QtCore.pyqtSignal(QtCore.QString, bool, bool)
+    __msgLog = []
+    __msgLock = threading.Lock()
+    
+    def status(self, status):
+        ''' status / current general state info
+        '''
+        self.__statusLock.acquire()
+        self.statusUpdate.emit(status)
+        self.__statusLog.append(status)
+        self.__statusLock.release()
+    
+    def message(self, msg, mcguiMsg=False, errorMsg=False):
+        ''' message log messages (simulation progress etc.)
+        '''
+        self.__msgLock.acquire()
+        if msg != None:
+            self.logMessageUpdate.emit(msg, mcguiMsg, errorMsg)
+            self.__msgLog.append(msg)
+        self.__msgLock.release()
+    
 
 ''' State
 Holds unique state values and mediates some low-level actions.
 '''
-class McGuiState(QtCore.QObject):    
-    def initState(self):
-        self.setWorkDir(os.getcwd())
-        
-        # load instrument file from command line pars
-        for a in sys.argv:
-            if os.path.splitext(a)[1] == '.instr':
-                instr_file = os.path.abspath(a)
-                self.loadInstrument(instr_file)
-                break
-        
-        self.fireSimStateUpdate()
-    
-    status = ''
-    statusUpdated = QtCore.pyqtSignal(QtCore.QString)
-    def setStatus(self, status):
-        self.__msgLock.acquire()
-        self.status = status
-        self.statusUpdated.emit(self.status)
-        self.__msgLock.release()
-        
-    logMessage = QtCore.pyqtSignal(QtCore.QString, bool, bool)
-    __msgLock = threading.Lock()
-    def __logLine(self, logline, mcguiMsg=False, errorMsg=False):
-        self.__msgLock.acquire()
-        if logline != None:
-            self.logMessage.emit(logline, mcguiMsg, errorMsg)
-        self.__msgLock.release()
-        
+class McGuiState(QtCore.QObject):
     __instrFile = ''
+    __emitter = None
+    
     instrumentUpdated = QtCore.pyqtSignal(QtCore.QStringList)
+    # [<canRun>, <canPlot>] each can be str 'True' or 'False'
+    simStateUpdated = QtCore.pyqtSignal(QtCore.QStringList)
+    
+    __cFile = ""
+    __binaryFile = ""
+    __resultFile = ""
+    
+    def __init__(self, emitter):
+        super(McGuiState, self).__init__()
+        self.setWorkDir(os.getcwd())
+        self.__fireSimStateUpdate()
+        self.__emitter = emitter
+        
     def __fireInstrUpdate(self):
         self.instrumentUpdated.emit([self.getInstrumentFile(), self.getWorkDir()])
+        
+    def __fireSimStateUpdate(self):
+        self.simStateUpdated.emit([str(self.canRun()), str(self.canPlot())])
     
     def getInstrumentFile(self):
         return self.__instrFile
     
     def loadInstrument(self, instrFile):
         if not os.path.exists(str(instrFile)):
-            return False
-            #TODO: make exception error messages work
-            #raise Exception('Invalid instrument file.')
+            raise Exception("McGuiState.loadInstrument: Error.")
         self.setWorkDir(os.path.dirname(str(instrFile)))
         self.__instrFile = str(instrFile)
-        self.__fireInstrUpdate() 
-    
-        self.setStatus("Instrument opened: " + instrFile)
-        self.fireSimStateUpdate()
-        
-        return True
+        self.__fireInstrUpdate()
+        self.__fireSimStateUpdate()
     
     def unloadInstrument(self):
         self.__instrFile = ''
-        self.__fireInstrUpdate() 
-        self.setStatus("Instrument closed")
-        self.fireSimStateUpdate()
+        self.__fireInstrUpdate()
+        self.__fireSimStateUpdate()
+        return True
     
     def saveInstrumentIfFileExists(self, text):
         instr = self.getInstrumentFile()
         if not os.path.exists(instr):
             return False
         McGuiUtils.saveInstrumentFile(instr, text)
-                
         return True
     
     def getWorkDir(self):
@@ -92,13 +104,9 @@ class McGuiState(QtCore.QObject):
     
     def setWorkDir(self, newdir):
         if not os.path.isdir(newdir):
-            raise Exception('Invalid work dir.')
-
+            raise Exception('McGuiState.setWorkDir: Invalid work dir.')
         os.chdir(newdir)
     
-    __cFile = ""
-    __binaryFile = ""
-    __resultFile = ""
     def canCompile(self):
         return self.__instrFile != ""
     
@@ -107,11 +115,6 @@ class McGuiState(QtCore.QObject):
     
     def canPlot(self):
         return False
-        
-    # [<canRun>, <canPlot>] each can be str 'True' or 'False'
-    simStateUpdated = QtCore.pyqtSignal(QtCore.QStringList)
-    def fireSimStateUpdate(self):
-        self.simStateUpdated.emit([str(self.canRun()), str(self.canPlot())])
     
     def compile(self):
         # compile simulation in a background thread (non safe)
@@ -125,8 +128,8 @@ class McGuiState(QtCore.QObject):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
                                    shell=True)
-        self.__logLine('Compiling instrument to c ...', mcguiMsg=True)
-        self.setStatus('Compiling instrument to c ...')
+        self.__emitter.message('Compiling instrument to c ...', mcguiMsg=True)
+        self.__emitter.status('Compiling instrument to c ...')
         while process.poll() <> 0:
             for l in process.stdout:
                 self.__logLine(l)
@@ -148,8 +151,8 @@ class McGuiState(QtCore.QObject):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
                                    shell=True)
-        self.__logLine('Compiling instrument to binary ...', mcguiMsg=True)
-        self.setStatus('Compiling instrument to binary ...')
+        self.__emitter.message('Compiling instrument to binary ...', mcguiMsg=True)
+        self.__emitter.status('Compiling instrument to binary ...')
         while process.poll() <> 0:
             for l in process.stdout:
                 self.__logLine(l)
@@ -162,9 +165,9 @@ class McGuiState(QtCore.QObject):
         else:
             raise Exception('Binary not found.')
         
-        self.__logLine('Instrument compiled: ' + self.__binaryFile, mcguiMsg=True)
-        self.setStatus('Instrument compiled (' + self.__binaryFile + ')')
-        self.fireSimStateUpdate()
+        self.__emitter.message('Instrument compiled: ' + self.__binaryFile, mcguiMsg=True)
+        self.__emitter.status('Instrument compiled (' + self.__binaryFile + ')')
+        self.__fireSimStateUpdate()
     
     def run(self, fixed_params, params):
         ''' fixed_params[]:
@@ -217,22 +220,24 @@ class McGuiState(QtCore.QObject):
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.PIPE,
                                    shell=True)
-        self.__logLine('mcrun started: ' + runstr, mcguiMsg=True)
-        self.setStatus('Running simulation ...')
+        self.__emitter.message('mcrun started: ' + runstr, mcguiMsg=True)
+        self.__emitter.status('Running simulation ...')
         
         ## read program output
         while process.poll() == None:
             for l in process.stdout:
-                self.__logLine(l.rstrip('\n'))
+                self.__emitter.message(l.rstrip('\n'))
             for l in process.stderr:
-                self.__logLine(l.rstrip('\n'), errorMsg=True)
+                self.__emitter.message(l.rstrip('\n'), errorMsg=True)
             time.sleep(0.1)
         process.wait()
         
-        self.__logLine('mcrun completed', mcguiMsg=True)
-        self.setStatus('Simulation complete.')
+        self.__emitter.message('mcrun completed', mcguiMsg=True)
+        self.__emitter.status('Simulation complete.')
 
     def getInstrParams(self):
+        self.__emitter.status("Getting instrument params...")
+        
         # get mcrun to print '--info' containing instrument parameter info
         process = subprocess.Popen(['mcrun ' + self.__instrFile + ' --info'], 
                                    stdout=subprocess.PIPE, 
@@ -262,17 +267,25 @@ Implements ui and data callbacks.
 '''
 class McGuiAppController():
     def __init__(self):
+        self.emitter = McMessageEmitter()
         self.view = McView()
-        self.state = McGuiState()
-        self.connectAllCallbacks()    
+        self.state = McGuiState(self.emitter)
+    
+        self.connectCallbacks()
+        self.initDynamicView()
         
-        self.state.initState()
-        
-        self.initDynamicElements()
+        # load instrument file from command line pars
+        for a in sys.argv:
+            if os.path.splitext(a)[1] == '.instr':
+                instr_file = os.path.abspath(a)
+                self.state.loadInstrument(instr_file)        
+                self.emitter.status("Opened instrument: " + os.path.basename(str(instr_file)))
+                break
         
         self.view.showMainWindow()
     
-    def initDynamicElements(self):
+    def initDynamicView(self):
+        # load installed mcstas instruments:
         # construct args = [site, instr_fullpath[], instr_path_lst[]]
         args = []
         files_instr, files_comp = McGuiUtils.getInstrumentAndComponentFiles('/usr/share/mcstas/2.1')
@@ -293,8 +306,10 @@ class McGuiAppController():
             arg.append(instr_path_lst)
             args.append(arg)
             
+        # hand on for menu generation
         self.view.initMainWindowDynamicElements(args, self.handleNewFromTemplate)
         
+        # load installed mcstas components:
         # args - [category, comp_names[], comp_parsers[]]
         args = []
         categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6 : 'Obsolete'}
@@ -317,31 +332,19 @@ class McGuiAppController():
             
             i += 1
         
+        # hand on for menu generation
         self.view.initCodeEditorComponentMenu(args)
-        
-    def handleNewFromTemplate(self, instr=''):
-        new_instr = self.view.showNewInstrFromTemplateDialog(self.state.getWorkDir() + '/' + os.path.basename(instr))
-        if new_instr != '':
-            # load "template" instrument contents
-            text = McGuiUtils.getFileContents(instr)
-            new_instr = McGuiUtils.saveInstrumentFile(new_instr, text)
-            self.state.unloadInstrument()
-            self.state.loadInstrument(new_instr)
-            
+
     ''' UI callbacks
     '''
     def handleRunSim(self):
         instr_params = self.state.getInstrParams()
+        self.emitter.status("")
         fixed_params, new_instr_params = self.view.showStartSimDialog(instr_params)
         
         if fixed_params != None:
             self.state.run(fixed_params, new_instr_params)
         
-    def handleOpenInstrument(self):
-        instrFile = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
-        if instrFile:
-            self.state.loadInstrument(instrFile)        
-    
     def handleChangeWorkDir(self):
         workDir = self.view.showChangeWorkDirDlg(self.state.getWorkDir())
         if workDir:
@@ -374,15 +377,18 @@ class McGuiAppController():
     def handleEditInstrument(self):
         instr = self.state.getInstrumentFile()
         self.view.showCodeEditorWindow(instr)
+        self.emitter.status("Editing instrument: " + os.path.basename(str(instr)))
         
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
             self.state.unloadInstrument()
+            self.emitter.status("Instrument closed")
     
     def handleSaveInstrument(self, text):
         result = self.state.saveInstrumentIfFileExists(text)
         if result:
             self.view.ew.assumeDataSaved()
+            self.emitter.status("Instrument saved: " + os.path.basename(self.state.getInstrumentFile()))
             
     def handleSaveAs(self):
         oldinstr = self.state.getInstrumentFile()
@@ -395,22 +401,42 @@ class McGuiAppController():
             created_instr = McGuiUtils.saveInstrumentFile(newinstr, text)
             if created_instr != '':
                 self.state.loadInstrument(created_instr)
+                self.emitter.status("Instrument saved as: " + newinstr)
     
     def handleNewInstrument(self):
-        newinstr = self.view.showNewInstrDialog(self.state.getWorkDir())
-        if newinstr != '':
-            instr = McGuiUtils.saveInstrumentFile(newinstr, '')
-            if instr != '':
+        new_instr_req = self.view.showNewInstrDialog(self.state.getWorkDir())
+        if new_instr_req != '':
+            new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, '')
+            if new_instr != '':
+                self.state.unloadInstrument()
+                # TODO: insert instrument template into the new instrument
+                self.state.loadInstrument(new_instr)
+                self.view.showCodeEditorWindow(new_instr)
+                self.emitter.status("Editing new instrument: " + os.path.basename(new_instr))
+    
+    def handleNewFromTemplate(self, instr_templ=''):
+        new_instr_req = self.view.showNewInstrFromTemplateDialog(self.state.getWorkDir() + '/' + os.path.basename(str(instr_templ)))
+        if new_instr_req != '':
+            text = McGuiUtils.getFileContents(instr_templ)
+            new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, text)
+            self.state.loadInstrument(new_instr)
+            self.emitter.status("Instrument created from template: " + os.path.basename(str(new_instr)))
+        
+    def handleOpenInstrument(self):
+        instr = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
+        if instr:
+            if self.view.closeCodeEditorWindow():
                 self.state.unloadInstrument()
                 self.state.loadInstrument(instr)
-    
+                self.emitter.status("Opened instrument: " + os.path.basename(str(instr)))
+            
     ''' Connect UI and state callbacks 
     '''
-    def connectAllCallbacks(self):        
+    def connectCallbacks(self):        
         # connect UI widget signals to our handlers/logics
         # NOTICE: This explicit widget access is exceptional - all widget access is otherwise handled by the view classes
         
-        mwui = self.view.mwui
+        mwui = self.view.mw.ui
         mwui.actionQuit.triggered.connect(self.handleExit)
         mwui.actionOpen_instrument.triggered.connect(self.handleOpenInstrument)
         mwui.actionClose_Instrument.triggered.connect(self.handleCloseInstrument)
@@ -437,8 +463,10 @@ class McGuiAppController():
         st = self.state
         st.simStateUpdated.connect(self.view.updateSimState)
         st.instrumentUpdated.connect(self.view.updateInstrumentLabel)
-        st.statusUpdated.connect(self.view.updateStatus)
-        st.logMessage.connect(self.view.updateLog)
+        
+        emitter = self.emitter
+        emitter.statusUpdate.connect(self.view.updateStatus)
+        emitter.logMessageUpdate.connect(self.view.updateLog)
         
             
 ''' Program execution
