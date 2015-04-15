@@ -13,6 +13,7 @@ import subprocess
 import time
 import threading
 import re
+import config
 from PyQt4 import QtGui, QtCore
 from viewclasses import McView
 from mcguiutils import McGuiUtils
@@ -66,7 +67,6 @@ class McGuiState(QtCore.QObject):
     def __init__(self, emitter):
         super(McGuiState, self).__init__()
         self.setWorkDir(os.getcwd())
-        self.__fireSimStateUpdate()
         self.__emitter = emitter
         
     def __fireInstrUpdate(self):
@@ -74,6 +74,11 @@ class McGuiState(QtCore.QObject):
         
     def __fireSimStateUpdate(self):
         self.simStateUpdated.emit([str(self.canRun()), str(self.canPlot())])
+    
+    def init(self):
+        ''' must be called after construction to emit events used for sync'ing to initial state '''
+        self.__fireInstrUpdate()
+        self.__fireSimStateUpdate()
     
     def getInstrumentFile(self):
         return self.__instrFile
@@ -274,6 +279,8 @@ class McGuiAppController():
         self.connectCallbacks()
         self.initDynamicView()
         
+        self.state.init()
+        
         # load instrument file from command line pars
         for a in sys.argv:
             if os.path.splitext(a)[1] == '.instr':
@@ -288,7 +295,7 @@ class McGuiAppController():
         # load installed mcstas instruments:
         # construct args = [site, instr_fullpath[], instr_path_lst[]]
         args = []
-        files_instr, files_comp = McGuiUtils.getInstrumentAndComponentFiles('/usr/share/mcstas/2.1')
+        files_instr, files_comp = McGuiUtils.getInstrumentAndComponentFiles(config.MCSTAS_COMP_LOCATION)
         
         # temporary list consisting of instrument files with site names: 
         files_instr_and_site = []
@@ -363,12 +370,12 @@ class McGuiAppController():
     
     def handleHelpPdf(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ..)
-        mcman = '/usr/share/mcstas/2.1/doc/manuals/mcstas-manual.pdf'
+        mcman = config.MCSTAS_COMP_LOCATION + '/doc/manuals/mcstas-manual.pdf'
         webbrowser.open_new_tab(mcman)
     
     def handleHelpPdfComponents(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ...)
-        mcman = '/usr/share/mcstas/2.1/doc/manuals/mcstas-components.pdf'
+        mcman = config.MCSTAS_COMP_LOCATION + '/doc/manuals/mcstas-components.pdf'
         webbrowser.open_new_tab(mcman)
     
     def handleHelpAbout(self):
