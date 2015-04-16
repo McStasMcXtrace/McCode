@@ -308,7 +308,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
     def __handleComponentBrowser(self):
         # TODO: get home dir in a sys-indep way
         dlg = QtGui.QFileDialog()
-        dlg.setDirectory(config.MCSTAS_COMP_LOCATION)
+        dlg.setDirectory(config.MCCODE_LIB_DIR)
         dlg.setNameFilter("mcstas component files (*.comp)");
         if dlg.exec_():
             comp_file = dlg.selectedFiles()[0]

@@ -295,7 +295,7 @@ class McGuiAppController():
         # load installed mcstas instruments:
         # construct args = [site, instr_fullpath[], instr_path_lst[]]
         args = []
-        files_instr, files_comp = McGuiUtils.getInstrumentAndComponentFiles(config.MCSTAS_COMP_LOCATION)
+        files_instr, files_comp = McGuiUtils.getInstrumentAndComponentFiles(config.MCCODE_LIB_DIR)
         
         # temporary list consisting of instrument files with site names: 
         files_instr_and_site = []
@@ -370,12 +370,12 @@ class McGuiAppController():
     
     def handleHelpPdf(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ..)
-        mcman = config.MCSTAS_COMP_LOCATION + '/doc/manuals/mcstas-manual.pdf'
+        mcman = config.MCCODE_LIB_DIR + '/doc/manuals/mcstas-manual.pdf'
         webbrowser.open_new_tab(mcman)
     
     def handleHelpPdfComponents(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ...)
-        mcman = config.MCSTAS_COMP_LOCATION + '/doc/manuals/mcstas-components.pdf'
+        mcman = config.MCCODE_LIB_DIR + '/doc/manuals/mcstas-components.pdf'
         webbrowser.open_new_tab(mcman)
     
     def handleHelpAbout(self):
