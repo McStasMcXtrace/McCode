@@ -14,6 +14,7 @@ import time
 import threading
 import re
 import config
+import imp
 from PyQt4 import QtGui, QtCore
 from viewclasses import McView
 from mcguiutils import McGuiUtils
@@ -479,6 +480,10 @@ class McGuiAppController():
 ''' Program execution
 '''
 def main():
+    userconfig=os.path.expandvars("$HOME/.mcstas/config.py")
+    if os.path.isfile(userconfig):
+        print "Loading user configuration from "+userconfig
+        imp.load_source('config', userconfig)
     mcguiApp = QtGui.QApplication(sys.argv)
     mcguiApp.ctr = McGuiAppController()
     
