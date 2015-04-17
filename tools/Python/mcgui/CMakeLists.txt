@@ -87,7 +87,7 @@ endif()
 
 if(WINDOWS)
   # Python files
-  foreach(name mw.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py)
+  foreach(name mw.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py mcfileutils.py config.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${lib}/${TOOLS_NAME}"
@@ -106,7 +106,7 @@ endif()
 
 if(NOT WINDOWS)
   # Python files
-  foreach(name mw.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py)
+  foreach(name mw.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py mcfileutils.py config.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
