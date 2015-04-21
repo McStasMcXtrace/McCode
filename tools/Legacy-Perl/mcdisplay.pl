@@ -369,9 +369,9 @@ Transform {
 		$comp = "";
 	      }
 	} elsif (/^MANTID_RECTANGULAR_DET:(.*)$/) {
-	  # Rectangular detector, widthlims, heightlims, nx, ny
+	  # Rectangular detector, widthlims, heightlims, nx, ny, first pixel id
 	  $mantidcount2++;
-	  my ($xmin, $xmax, $ymin, $ymax, $nx, $ny)  = split ",", $1;
+	  my ($xmin, $xmax, $ymin, $ymax, $nx, $ny, $pixelmin)  = split ",", $1;
 	  my $dx,$dy;
 	  $dx = ($xmax-$xmin)/($nx-1);
 	  $dy = ($ymax-$ymin)/($ny-1);
@@ -386,7 +386,7 @@ Transform {
 		$rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
 	      }
 	      write_process("<component type=\"".$type."\" name=\"$comp\" idstart=\"");
-	      write_process(${mantidcount2}*1000000);
+	      write_process(${pixelmin+0});
 	      write_process("\" idfillbyfirst=\"x\" idstepbyrow=\"".$nx."\">\n");
 	      write_process("\t<location x=\"".$transformations{$comp}[0]."\" y=\"".$transformations{$comp}[1]."\" z=\"".$transformations{$comp}[2]."\" $rota />\n</component>\n\n");
 
@@ -406,10 +406,10 @@ Transform {
 	      write_process("\t<algebra val=\"pixel-shape-$mantidcount2\" />\n");
 	      write_process("</type>\n\n");
 	    }
-	  	} elsif (/^MANTID_BANANA_DET:(.*)$/) {
-	  # Banana detector: radius, theta-lims, y-lims, ntheta, ny
+	} elsif (/^MANTID_BANANA_DET:(.*)$/) {
+	  # Banana detector: radius, theta-lims, y-lims, ntheta, ny, first pixel id
 	  $mantidcount2++;
-	  my ($radius, $tmin, $tmax, $ymin, $ymax, $nt, $ny) = split ",", $1;
+	  my ($radius, $tmin, $tmax, $ymin, $ymax, $nt, $ny, $pixelmin) = split ",", $1;
 	  
 	  my $dx,$dt,$dy, $j, $yval;
 	  $dt = ($tmax-$tmin)/($nt-1);
@@ -426,11 +426,11 @@ Transform {
 	      if($d!=0){
 		$rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
 	      }
-	      write_process("<component type=\"".$type."\" name=\"$comp\" idlist=\"".$type."-list\">\n"); #(${mantidcount2}*1000000)."\">\n");
+	      write_process("<component type=\"".$type."\" name=\"$comp\" idlist=\"".$type."-list\">\n"); 
 	      write_process("\t<locations x=\"".$transformations{$comp}[0]."\" y=\"".($transformations{$comp}[1]+$ymin)."\" y-end=\"".($transformations{$comp}[1]+$ymax)."\" n-elements=\"".$ny."\" z=\"".$transformations{$comp}[2]."\" $rota /> \n");
 	      write_process("</component>\n\n");
 	      write_process("<type name=\"".$type."\">\n");
-	      write_process("\t<component type=\"pixel-".$mantidcount2."\">\n"); #(${mantidcount2}*1000000)."\">\n");
+	      write_process("\t<component type=\"pixel-".$mantidcount2."\">\n");
 	      write_process("\t\t<locations r=\"".$radius."\" t=\"".$tmin."\" t-end=\"".$tmax."\" n-elements=\"".$nt."\" rot=\"".$tmin."\" rot-end=\"".$tmax."\" axis-x=\"0.0\" axis-y=\"1.0\" axis-z=\"0.0\"/>\n");
 	      write_process("\t</component>\n\n");
 	      write_process("</type>\n\n");
@@ -446,59 +446,10 @@ Transform {
 	      write_process("\t<algebra val=\"pixel-shape-$mantidcount2\" />\n");
 	      write_process("</type>\n\n");
 	      write_process("<idlist idname=\"".$type."-list\">\n");
-	      write_process("\t<id start=\"".(${mantidcount2}*1000000)."\" end=\"".(${mantidcount2}*1000000+$nt*$ny-1)."\"/>");
+	      write_process("\t<id start=\"".(${pixelmin}+0)."\" end=\"".(${pixelmin}+$nt*$ny-1)."\"/>");
 	      write_process("</idlist>\n");
 	    }
-	} elsif (/^MANTID_PIXEL_SIZE:(.*)$/) {
-	  my @T;
-	  @T = split ",", $1;
-
-	  $mantidcount2++;
-
-	  my @PIXELDATA=@T;
-	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
-	      write_process("<type name=\"pixel-$mantidcount2\" is=\"detector\">\n");
-	      write_process("\t<cuboid id=\"shape\">\n");
-	      write_process("\t\t<left-front-bottom-point x=\"".$PIXELDATA[0]/(2.0)."\" y=\"".-($PIXELDATA[1]/2.0)."\" z=\"0.0\" />\n");
-	      write_process("\t\t<left-front-top-point x=\"".$PIXELDATA[0]/(2.0)."\" y=\"".-($PIXELDATA[1]/2.0)."\" z=\"0.00005\" />\n");
-	      write_process("\t\t<left-back-bottom-point x=\"".$PIXELDATA[0]/(-2.0)."\" y=\"".-($PIXELDATA[1]/2.0)."\" z=\"0.0\" />\n");
-	      write_process("\t\t<right-front-bottom-point x=\"".$PIXELDATA[0]/(2.0)."\" y=\"".($PIXELDATA[1]/2.0)."\" z=\"0.0\" />\n");
-	      write_process("\t</cuboid>\n");
-	      write_process("\t<algebra val=\"shape\" />\n");
-	      write_process("</type>\n\n");
-	      write_process("<idlist idname=\"nD_Mantid_$mantidcount2\" >\n");
-	      write_process("<id start=\"");
-	      write_process(${mantidcount2}*1000000);
-	      write_process("\" end=\"");
-	      write_process(${mantidcount2}*1000000+($PIXELDATA[2]-1));
-	      write_process("\" />\n");
-	      write_process("</idlist>\n\n");
-
-	    }
-	} elsif (/^MANTID_PIXEL:(.*)$/) {
-	  my @T;
-	  @T = split ",", $1;
-#            $transformations{$comp} = \@T;
-	  my @PIXELDATA=@T;
-	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
-	      if ($mantidfirst) {
-		$mantidfirst=0;
-		write_process("<type name=\"MonNDtype-$mantidcount2\">\n<properties/>\n<component type=\"pixel-$mantidcount2\">\n");
-	      }
-	      my $pixnum = $mantidcount2*1000000+$PIXELDATA[0];
-	      write_process("<location x=\"".$PIXELDATA[1]."\" y=\"".$PIXELDATA[2]."\" z=\"".$PIXELDATA[3]."\" name=\"pixel".$pixnum."\"/>\n");
-	    } else {
-	      next;
-	    }
-	} elsif (/^MANTID_PIXELS_END/) {
-	  if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
-	    $mantidfirst=1;
-	    $mantidcount++;
-#	    write_process("</component>\n</type>\n");
-	  } else {
-	    next;
-	  }
-        } elsif($st == 1 && /^MCDISPLAY: start$/) {
+	}  elsif($st == 1 && /^MCDISPLAY: start$/) {
             $st = 2;                # Start of component graphics representation
 	} elsif($st == 2 && /^MCDISPLAY: component ([a-zA-Z0-9_]+)/) {
             $comp = $1;
