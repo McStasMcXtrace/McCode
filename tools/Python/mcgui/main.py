@@ -35,19 +35,26 @@ class McMessageEmitter(QtCore.QObject):
     def status(self, status):
         ''' status / current general state info
         '''
+        if status == None:
+            return
+        
         self.__statusLock.acquire()
         self.statusUpdate.emit(status)
         self.__statusLog.append(status)
         self.__statusLock.release()
+        QtGui.QApplication.processEvents()
     
     def message(self, msg, mcguiMsg=False, errorMsg=False):
         ''' message log messages (simulation progress etc.)
         '''
+        if msg == None:
+            return
+        
         self.__msgLock.acquire()
-        if msg != None:
-            self.logMessageUpdate.emit(msg, mcguiMsg, errorMsg)
-            self.__msgLog.append(msg)
+        self.logMessageUpdate.emit(msg, mcguiMsg, errorMsg)
+        self.__msgLog.append(msg)
         self.__msgLock.release()
+        QtGui.QApplication.processEvents()
     
 
 ''' State
@@ -120,7 +127,7 @@ class McGuiState(QtCore.QObject):
         return self.__instrFile != ""
     
     def canPlot(self):
-        return False
+        return self.__instrFile != ""
     
     def compile(self):
         # compile simulation in a background thread (non safe)
@@ -134,11 +141,12 @@ class McGuiState(QtCore.QObject):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
                                    shell=True)
-        self.__emitter.message('Compiling instrument to c ...', mcguiMsg=True)
         self.__emitter.status('Compiling instrument to c ...')
-        while process.poll() <> 0:
+        self.__emitter.message('Compiling instrument to c ...', mcguiMsg=True)
+        self.__emitter.message('    mcstas ' + nf, mcguiMsg=True)
+        while process.poll() == None:
             for l in process.stdout:
-                self.__logLine(l)
+                self.__emitter.message(l)
             time.sleep(0.1)
         process.wait()
         
@@ -146,8 +154,11 @@ class McGuiState(QtCore.QObject):
         spl = os.path.splitext(os.path.basename(str(nf)))
         basef = os.path.join(self.getWorkDir(), spl[0])
         cf = basef + '.c'
+        
+        # check
         if os.path.isfile(cf):
             self.__cFile = cf
+            self.__emitter.message('    ' + self.__cFile, mcguiMsg=True)
         else:
             raise Exception('C file not found')
         
@@ -157,22 +168,23 @@ class McGuiState(QtCore.QObject):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
                                    shell=True)
-        self.__emitter.message('Compiling instrument to binary ...', mcguiMsg=True)
         self.__emitter.status('Compiling instrument to binary ...')
-        while process.poll() <> 0:
+        self.__emitter.message('Compiling instrument to binary ...', mcguiMsg=True)
+        self.__emitter.message('    cc -O -o ' + bf + ' ' + cf + ' -lm', mcguiMsg=True)
+        while process.poll() == None:
             for l in process.stdout:
-                self.__logLine(l)
+                self.__emitter.message(l)
             time.sleep(0.1)
         process.wait()
         
         # check
         if os.path.isfile(bf):
             self.__binaryFile = bf
+            self.__emitter.message('    ' + self.__binaryFile + '\n', mcguiMsg=True)
+            self.__emitter.status('Instrument compiled')
         else:
             raise Exception('Binary not found.')
         
-        self.__emitter.message('Instrument compiled: ' + self.__binaryFile, mcguiMsg=True)
-        self.__emitter.status('Instrument compiled (' + self.__binaryFile + ')')
         self.__fireSimStateUpdate()
     
     def run(self, fixed_params, params):
@@ -226,7 +238,7 @@ class McGuiState(QtCore.QObject):
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.PIPE,
                                    shell=True)
-        self.__emitter.message('mcrun started: ' + runstr, mcguiMsg=True)
+        self.__emitter.message(runstr, mcguiMsg=True)
         self.__emitter.status('Running simulation ...')
         
         ## read program output
@@ -238,16 +250,14 @@ class McGuiState(QtCore.QObject):
             time.sleep(0.1)
         process.wait()
         
-        self.__emitter.message('mcrun completed', mcguiMsg=True)
+        self.__emitter.message('', mcguiMsg=True)
         self.__emitter.status('Simulation complete.')
 
     def getInstrParams(self):
-        self.__emitter.status("Getting instrument params...")
-        
         # get mcrun to print '--info' containing instrument parameter info
         process = subprocess.Popen(['mcrun ' + self.__instrFile + ' --info'], 
                                    stdout=subprocess.PIPE, 
-                                   stderr=subprocess.STDOUT,
+                                   stderr=subprocess.STDOUT, 
                                    shell=True)
         # get std out info
         info = []
@@ -287,7 +297,7 @@ class McGuiAppController():
             if os.path.splitext(a)[1] == '.instr':
                 instr_file = os.path.abspath(a)
                 self.state.loadInstrument(instr_file)        
-                self.emitter.status("Opened instrument: " + os.path.basename(str(instr_file)))
+                self.emitter.status("Instrument: " + os.path.basename(str(instr_file)))
                 break
         
         self.view.showMainWindow()
@@ -346,8 +356,9 @@ class McGuiAppController():
     ''' UI callbacks
     '''
     def handleRunSim(self):
+        self.emitter.status("Getting instrument params...")
+        
         instr_params = self.state.getInstrParams()
-        self.emitter.status("")
         fixed_params, new_instr_params = self.view.showStartSimDialog(instr_params)
         
         if fixed_params != None:
@@ -362,7 +373,17 @@ class McGuiAppController():
         sys.exit()
     
     def handlePlotResults(self):
-        print("not implemented")
+        self.emitter.status('')
+        instrname = os.path.splitext(os.path.basename(self.state.getInstrumentFile()))[0]
+        dirname = self.state.getWorkDir()
+        resultdirs = McGuiUtils.getResultSubdirsChronologically(dirname, instrname)
+        callstr = 'mcplot ' + resultdirs[0]
+        subprocess.Popen([callstr], 
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT,
+                         shell=True)
+        self.emitter.message(callstr, mcguiMsg=True)
+        self.emitter.message('', mcguiMsg=True)
         
     def handleHelpWeb(self):
         '''open the mcstas homepage'''
@@ -428,7 +449,7 @@ class McGuiAppController():
             text = McGuiUtils.getFileContents(instr_templ)
             new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, text)
             self.state.loadInstrument(new_instr)
-            self.emitter.status("Instrument created from template: " + os.path.basename(str(new_instr)))
+            self.emitter.status("Instrument created: " + os.path.basename(str(new_instr)))
         
     def handleOpenInstrument(self):
         instr = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
@@ -436,7 +457,7 @@ class McGuiAppController():
             if self.view.closeCodeEditorWindow():
                 self.state.unloadInstrument()
                 self.state.loadInstrument(instr)
-                self.emitter.status("Opened instrument: " + os.path.basename(str(instr)))
+                self.emitter.status("Instrument: " + os.path.basename(str(instr)))
             
     ''' Connect UI and state callbacks 
     '''
@@ -451,14 +472,14 @@ class McGuiAppController():
         mwui.actionEdit_Instrument.triggered.connect(self.handleEditInstrument)
         mwui.actionSave_As.triggered.connect(self.handleSaveAs)
         mwui.actionNew_Instrument.triggered.connect(self.handleNewInstrument)
-                
+        
         mwui.btnRun.clicked.connect(self.handleRunSim)
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
         mwui.btnEdit.clicked.connect(self.handleEditInstrument)
         mwui.btnOpenInstrument.clicked.connect(self.handleOpenInstrument)
         
         mwui.actionCompile_Instrument.triggered.connect(self.state.compile)
-        mwui.actionRun_Simulation.triggered.connect(self.state.run)
+        mwui.actionRun_Simulation.triggered.connect(self.handleRunSim)
         
         mwui.actionMcstas_Web_Page.triggered.connect(self.handleHelpWeb)
         mwui.actionMcstas_User_Manual.triggered.connect(self.handleHelpPdf)

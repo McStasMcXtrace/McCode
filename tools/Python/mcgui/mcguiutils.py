@@ -4,6 +4,7 @@ Utility functions used by mcgui. Should be static.
 @author: jaga
 '''
 import os
+import re
 
 
 ''' Static functions related to handling mcstas files and more.
@@ -39,6 +40,36 @@ class McGuiUtils(object):
                     files_comp.append(dirpath + '/' + f)
         
         return files_instr, files_comp
+    
+    @staticmethod
+    def getResultSubdirsChronologically(mydir, prefix):
+        subdirs = []
+        for fileordir in os.listdir(mydir):
+            if os.path.isdir(fileordir):
+                if prefix in fileordir:
+                    subdirs.append(fileordir)
+        subdirs.sort(cmp=lambda x,y: McGuiUtils.chronoSort(x,y))
+        return subdirs
+    
+    @staticmethod
+    def chronoSort(word1, word2):
+        result1 = re.search('.*_([0-9]+)_([0-9]+)', word1)
+        result2 = re.search('.*_([0-9]+)_([0-9]+)', word2)
+        date1 = int(result1.group(1))
+        date2 = int(result2.group(1))
+        time1 = int(result1.group(2))
+        time2 = int(result2.group(2))
+        if date1 < date2:
+            return 1
+        elif date1 > date2:
+            return -1
+        if date1 == date2:
+            if time1 < time2:
+                return 1
+            elif time1 > time2:
+                return -1
+            else:
+                return 0
     
     @staticmethod
     def saveInstrumentFile(instr, text):
