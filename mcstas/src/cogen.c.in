@@ -1507,7 +1507,7 @@ cogen_runtime(struct instr_def *instr)
     embed_file("mcxtrace-r.h");
 #endif
     /* NeXus support, only active with -DUSE_NEXUS */
-    if (verbose) printf("Specify             -DUSE_NEXUS -lNeXus to enable NeXus support\n");
+    if (verbose) printf("Specify             -DUSE_NEXUS -lNeXus in the CFLAGS (dependency) to enable NeXus support\n");
     embed_file("mccode-r.c");
 #if MCCODE_PROJECT == 1     /* neutron */
     embed_file("mcstas-r.c");
@@ -1524,14 +1524,14 @@ cogen_runtime(struct instr_def *instr)
     coutf("#include \"%s%sshare%smcxtrace-r.h\"",  sysdir_new, pathsep, pathsep);
 #endif
 
-    fprintf(stderr,"Dependency: %s.o\n", "mccode-r");
+    fprintf(stderr,"Dependency: '%s.o' (add it to CFLAGS)\n", "mccode-r");
 #if MCCODE_PROJECT == 1     /* neutron */
-    fprintf(stderr,"Dependency: %s.o\n", "mcstas-r");
+    fprintf(stderr,"Dependency: '%s.o' (add it to CFLAGS)\n", "mcstas-r");
 #elif MCCODE_PROJECT == 2   /* xray */
-    fprintf(stderr,"Dependency: %s.o\n", "mcxtrace-r");
+    fprintf(stderr,"Dependency: '%s.o' (add it to CFLAGS)\n", "mcxtrace-r");
 #endif
-    fprintf(stderr,"Dependency: %s.o\n", "mcstas-r");
-    fprintf(stderr,"Dependency: '-DUSE_NEXUS -lNeXus' to enable NeXus support\n");
+    fprintf(stderr,"Dependency: '%s.o' (add it to CFLAGS)\n", "mcstas-r");
+    fprintf(stderr,"Dependency: '-DUSE_NEXUS -lNeXus' (add it to CFLAGS) to enable NeXus support\n");
     fprintf(stderr,"To build instrument %s, compile and link with these libraries (in %s%sshare)\n", instrument_definition->quoted_source, sysdir_new, pathsep);
   }
 
@@ -1588,6 +1588,15 @@ cogen(char *output_name, struct instr_def *instr)
   coutf(" * Instrument: %s (%s)", instr->source, instr->name);
   coutf(" * Date:       %s", date);
   coutf(" * File:       %s", output_name);
+  coutf(" * Compile:    cc -o %s.%s %s %s\n", 
+    instr->name, 
+#ifdef WIN32
+    "exe",
+#else
+    "out",
+#endif
+    output_name, instr->dependency);
+    coutf(" * CFLAGS=%s\n", instr->dependency);
   cout(" */\n");
   cout("");
   coutf("#define MCCODE_STRING \"%s\"", MCCODE_STRING);
