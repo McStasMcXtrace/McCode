@@ -137,7 +137,16 @@ class McStas:
         cflags = ['-lm']  # math library
         cflags += [self.options.mpi and '-DUSE_MPI' or '-UUSE_MPI']  # MPI
         cflags += options.no_cflags and ['-O0'] or config.CFLAGS.split()  # cflags
+        # Look for CFLAGS in the generated C code
+        ccode = open(self.cpath)
+        for line in ccode:
+            line = line.rstrip()
+            if re.search('CFLAGS=', line) :
+                label,flags = line.split('=',1)
+                flags = flags.split(' ')
+                cflags += flags
 
+        
         # Compiler optimisation
         args = ['-o', self.binpath, self.cpath] + cflags
         Process(options.cc).run(args)
