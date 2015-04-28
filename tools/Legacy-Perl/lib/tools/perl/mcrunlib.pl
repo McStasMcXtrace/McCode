@@ -281,6 +281,13 @@ sub get_out_file_next {
     my $cc     = $MCSTAS::mcstas_config{CC};
     my $mcstas_cflags = "";
     if ($cflags) { $mcstas_cflags = $MCSTAS::mcstas_config{CFLAGS}; }
+    # Check for existing c-dependencies in the generated C-file
+    open(my $fh, "<", $c_name);
+    while (<$fh>) {
+      if (/CFLAGS=(.*)/) {
+	$mcstas_cflags .= " ".$1;
+      }
+    }
     my $libs = "-lm ";
     if ($v->{'mpi'} && $MCSTAS::mcstas_config{MPICC} ne "no") {
       $libs .= " -DUSE_MPI ";

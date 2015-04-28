@@ -1588,7 +1588,7 @@ cogen(char *output_name, struct instr_def *instr)
   coutf(" * Instrument: %s (%s)", instr->source, instr->name);
   coutf(" * Date:       %s", date);
   coutf(" * File:       %s", output_name);
-  coutf(" * Compile:    cc -o %s.%s %s %s\n", 
+  coutf(" * Compile:    cc -o %s.%s %s %s", 
     instr->name, 
 #ifdef WIN32
     "exe",
@@ -1596,7 +1596,7 @@ cogen(char *output_name, struct instr_def *instr)
     "out",
 #endif
     output_name, instr->dependency);
-    coutf(" * CFLAGS=%s\n", instr->dependency);
+  coutf(" * CFLAGS=%s", instr->dependency);
   cout(" */\n");
   cout("");
   coutf("#define MCCODE_STRING \"%s\"", MCCODE_STRING);
