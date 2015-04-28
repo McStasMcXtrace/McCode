@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# launcher for matlab/octave/ifit data plotter
+
 LIB="@TOOLS_LIB@"
 TOOL="mcplot"
 VERS="@MCCODE_VERSION@"
@@ -26,11 +28,24 @@ canrun_i() {
     fi
 }
 
+canrun_o() {
+    if ! [ -x ${LIB}/${TOOL}.m ]; then
+        exit 127;
+    fi
+    
+    # is octave on the path?
+    if ! [ `which octave` ]; then
+            exit 127;
+    fi
+}
+
 
 if ( canrun_m ); then
     matlab -nosplash -nodesktop -r "addpath('${LIB}');${TOOL} $*"
 elif ( canrun_i ); then
     ifit -r $*
+elif ( canrun_o ); then
+    octave --eval "addpath('${LIB}');${TOOL} $*"
 else
     echo ":: Failed to run Python ${TOOL}, trying old Perl version."
     echo ":: If this fails too, consider reinstalling ${TOOL}."
