@@ -1,0 +1,29 @@
+#!/bin/sh
+
+LIB="@TOOLS_LIB@"
+TOOL="mcplot"
+VERS="@MCCODE_VERSION@"
+cmd="matlab"
+
+canrun() {
+    
+    
+    if ! [ -x ${LIB}/${TOOL}.m ]; then
+        exit 127;
+    fi
+    
+    if ! [ `which $cmd` ]; then
+        exit 127;
+    fi
+}
+
+if ( canrun ); then
+    $cmd -nosplash -nodesktop -r "${LIB}/${TOOL}.m $*"
+else
+    echo ":: Failed to run Python ${TOOL}, trying old Perl version."
+    echo ":: If this fails too, consider reinstalling ${TOOL}."
+    echo ""
+
+    # Try old Perl-version of mcplot if Python version cannot run
+    ${TOOL} $*
+fi
