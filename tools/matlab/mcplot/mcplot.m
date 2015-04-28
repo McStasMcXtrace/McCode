@@ -312,12 +312,12 @@ function structure=mcplot_load_mccode(filename)
   if fid == -1, return; end % also returns when filename is empty
   
   % read header
-  if ~exist('textscan')
+  if ~exist('textscan') || exist ('OCTAVE_VERSION', 'builtin')
     [header, data] = mcplot_textscan(fid);
   else
     header = textscan(fid,'#%s','endOfLine','\n','delimiter','\n');
   end
-  if iscellstr(header{1}) & length(header)==1
+  if iscellstr(header{1}) && length(header)==1
     header = header{1};
   end
   
@@ -377,13 +377,13 @@ function structure=mcplot_load_mccode(filename)
   end
   
   % load data block
-  if exist('textscan')
+  if exist('textscan') && ~exist ('OCTAVE_VERSION', 'builtin')
     frewind(fid);
     data     = textscan(fid,'%f','CommentStyle','#');
   end % else was obtained in one call to mcplot_textscan
   
   fclose(fid);
-  if iscell(data) & length(data)==1
+  if iscell(data) && length(data)==1
     data = data{1};
   end
   
@@ -405,7 +405,7 @@ function structure=mcplot_load_mccode(filename)
     len      = prod(structure.size);
     structure.errors=[];
     structure.events=[];
-    if exist('textscan')  % Matlab read file and produces a single vector to be re-organized
+    if exist('textscan') && ~exist ('OCTAVE_VERSION', 'builtin')  % Matlab read file and produces a single vector to be re-organized
       this_data        = structure.data;
       structure.data   = transpose(reshape(this_data(1:len),structure.size));
       if prod(size(this_data)) >= 2*len
@@ -420,10 +420,10 @@ function structure=mcplot_load_mccode(filename)
       this_data        = structure.data;
       structure.data = this_data(1:l,1:structure.size(2));
       
-      if prod(size(data)) >= 2*len
+      if prod(size(structure.data)) >= 2*len
         structure.errors = this_data((l+1):(2*l),1:structure.size(2));
       end
-      if prod(size(data)) >= 3*len
+      if prod(size(structure.data)) >= 3*len
         structure.events = this_data((2*l+1):(3*l),1:structure.size(2));
       end
     end
@@ -555,7 +555,7 @@ function [data,parameters]=mcplot_load_structure(s,parameters)
   
   if ~isstruct(s), return; end
   
-  if isfield(s,'data') & isnumeric(s.data)                  % found 'data': we keep that
+  if isfield(s,'data') && isnumeric(s.data)                  % found 'data': we keep that
     data = s;
     data.Param = parameters;
     disp([ 'Loading ' data.filename ]);
@@ -711,7 +711,6 @@ function data = mcplot_display(data, fig)
   if nargin < 2, fig = []; end
   if fig == 0,   fig = []; end
   if isempty(fig), fig = figure; end  % create a new figure if required
-  
   if iscell(data)
     m = floor(sqrt(length(data)));
     n = ceil(length(data)/m);
@@ -725,7 +724,7 @@ function data = mcplot_display(data, fig)
   
   % handle a single plot (a structure)
   if isempty(data), return; end
-
+  
   set(fig, 'Name', [ data.title ':' data.filename ]);
   S = size(data.data);
   if isfield(data,'xylimits')
@@ -786,7 +785,7 @@ function data = mcplot_display(data, fig)
   set(h, 'UserData', data, 'Tag',[ 'mcplot_data_' data.filename ]);
   
   % add contextual menu on each plot
-  if exist('uicontextmenu')
+  if exist('uicontextmenu') && ~exist ('OCTAVE_VERSION', 'builtin')
     hm = uicontextmenu;
     uimenu(hm, 'Label',['About ' data.filename ],'Callback', ...
       [ 'h=get(gco,''userdata''); t=evalc(''data=h''); p=evalc(''parameters=h.Param'',[]); msgbox([ h.title '': '' h.filename, t, p ], [ h.title '': '' h.filename ],''help'');' ])
@@ -837,7 +836,7 @@ function data = mcplot_display(data, fig)
     pathname = fileparts(data.filename);
     filename = fullfile(pathname, 'mccode');
   end
-  if exist('uimenu') && (~isfield(data,'subplot') || data.subplot==1)
+  if exist('uimenu') && (~isfield(data,'subplot') || data.subplot==1) && ~exist ('OCTAVE_VERSION', 'builtin')
     % in case of nojvm, we create a small button to attach the menu on
     if ~usejava('jvm')
       button = uicontrol(gcf, 'style','pushbutton', 'position', [ 5 5 20 20 ], 'String','>',...
