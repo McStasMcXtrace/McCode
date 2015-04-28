@@ -255,21 +255,15 @@ class McGuiState(QtCore.QObject):
 
     def getInstrParams(self):
         # get mcrun to print '--info' containing instrument parameter info
-        process = subprocess.Popen(['mcrun ' + self.__instrFile + ' --info'], 
+        process = subprocess.Popen(["mcrun", self.__instrFile, "--info"], 
                                    stdout=subprocess.PIPE, 
-                                   stderr=subprocess.STDOUT, 
-                                   shell=True)
-        # get std out info
-        info = []
-        while process.poll() == None:
-            for l in process.stdout:
-                info.append(l.rstrip('\n'))
-            time.sleep(0.1)
+                                   stderr=subprocess.STDOUT)
         process.wait()
+        (stdoutdata, stderrdata) = process.communicate()
         
         # get parameters from info
         params = []
-        for l in info:
+        for l in stdoutdata.splitlines():
             if 'Param:' in l:
                 s = l.split()[1]
                 s = s.split('=')
