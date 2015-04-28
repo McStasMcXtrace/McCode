@@ -135,9 +135,9 @@ class McGuiState(QtCore.QObject):
         thread.start()
         
     def compileAsync(self):
-        # create mcstas .c file from instrument
+        # generate mcstas .c file from instrument
         nf = self.__instrFile
-        process = subprocess.Popen(['mcstas', nf], 
+        process = subprocess.Popen(['mcstas ' + nf], 
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
                                    shell=True)
@@ -145,10 +145,9 @@ class McGuiState(QtCore.QObject):
         self.__emitter.message('Compiling instrument to c ...', mcguiMsg=True)
         self.__emitter.message('    mcstas ' + nf, mcguiMsg=True)
         while process.poll() == None:
-            for l in process.stdout:
-                self.__emitter.message(l)
-            time.sleep(0.1)
-        process.wait()
+            data = process.stdout.readline().rstrip('\n')
+            self.__emitter.message(data)
+            time.sleep(0.05)
         
         # paths and filenames
         spl = os.path.splitext(os.path.basename(str(nf)))
@@ -158,13 +157,13 @@ class McGuiState(QtCore.QObject):
         # check
         if os.path.isfile(cf):
             self.__cFile = cf
-            self.__emitter.message('    ' + self.__cFile, mcguiMsg=True)
+            self.__emitter.message('    --> ' + self.__cFile, mcguiMsg=True)
         else:
             raise Exception('C file not found')
         
         # compile binary from mcstas .c file 
         bf = basef + '.out'
-        process = subprocess.Popen(['cc', '-O', '-o', bf, cf, '-lm'], 
+        process = subprocess.Popen(['cc -O -o ' + bf + ' ' + cf + ' -lm'], 
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
                                    shell=True)
@@ -172,15 +171,14 @@ class McGuiState(QtCore.QObject):
         self.__emitter.message('Compiling instrument to binary ...', mcguiMsg=True)
         self.__emitter.message('    cc -O -o ' + bf + ' ' + cf + ' -lm', mcguiMsg=True)
         while process.poll() == None:
-            for l in process.stdout:
-                self.__emitter.message(l)
-            time.sleep(0.1)
-        process.wait()
+            data = process.stdout.readline().rstrip('\n')
+            self.__emitter.message(data)
+            time.sleep(0.05)
         
         # check
         if os.path.isfile(bf):
             self.__binaryFile = bf
-            self.__emitter.message('    ' + self.__binaryFile + '\n', mcguiMsg=True)
+            self.__emitter.message('    --> ' + self.__binaryFile + '\n', mcguiMsg=True)
             self.__emitter.status('Instrument compiled')
         else:
             raise Exception('Binary not found.')
@@ -234,6 +232,8 @@ class McGuiState(QtCore.QObject):
         thread.start()
         
     def runAsync(self, runstr):
+        # open a subprocess with shell=True, otherwise stdout will be buffered and thus 
+        # not readable live
         process = subprocess.Popen([runstr], 
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.PIPE,
@@ -243,22 +243,19 @@ class McGuiState(QtCore.QObject):
         
         ## read program output
         while process.poll() == None:
-            for l in process.stdout:
-                self.__emitter.message(l.rstrip('\n'))
-            for l in process.stderr:
-                self.__emitter.message(l.rstrip('\n'), errorMsg=True)
-            time.sleep(0.1)
-        process.wait()
+            data = process.stdout.readline().rstrip('\n')
+            self.__emitter.message(data)
+            time.sleep(0.05)
         
         self.__emitter.message('', mcguiMsg=True)
         self.__emitter.status('Simulation complete.')
 
     def getInstrParams(self):
-        # get mcrun to print '--info' containing instrument parameter info
+        # get instrument params using 'mcrun [instr] --info'
         process = subprocess.Popen(["mcrun", self.__instrFile, "--info"], 
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.STDOUT)
-        process.wait()
+        # synchronous
         (stdoutdata, stderrdata) = process.communicate()
         
         # get parameters from info
