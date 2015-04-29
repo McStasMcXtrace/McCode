@@ -81,9 +81,9 @@ configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/mcgui" @ONLY)
 configure_file("${CMAKE_SOURCE_DIR}/config.py.in" "${WORK}/config.py" @ONLY)
 
 if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/main.py")
+  set(BINS "${PROJECT_SOURCE_DIR}/main.py" "${WORK}/config.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/main.py" "${WORK}/mcgui")
+  set(BINS "${PROJECT_SOURCE_DIR}/main.py" "${WORK}/mcgui" "${WORK}/config.py")
 endif()
 
 
