@@ -172,7 +172,7 @@ class McGuiState(QtCore.QObject):
             raise Exception('C file not found')
         
         # compile binary from mcstas .c file 
-        bf = basef + '.out'
+        bf = basef + '.' + config.EXESUFFIX 
         cmd = config.CC + ' -o ' + bf + ' ' + cf + ' -lm ' + config.CFLAGS
        
         process = subprocess.Popen(cmd, 

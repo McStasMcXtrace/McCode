@@ -19,3 +19,7 @@ MPICC = 'mpicc'
 MPIRUN = 'mpirun'
 MPINODES = '4'
 
+'''
+Platform settings
+'''
+EXESUFFIX = 'out'

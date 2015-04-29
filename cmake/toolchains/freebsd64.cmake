@@ -14,3 +14,6 @@ set(GNUPLOT "gnuplot")
 set(PLOTTER "PGPLOT")
 set(PGDEV "/xserv")
 set(GNUDEV "wxt")
+
+# Suffix for executables
+set(EXE "out")

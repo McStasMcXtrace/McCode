@@ -20,3 +20,7 @@ MPICC = '@MPICC@'
 MPIRUN = '@MPIRUN@'
 MPINODES = '4'
 
+'''
+Platform settings
+'''
+EXESUFFIX = '@EXE@'
