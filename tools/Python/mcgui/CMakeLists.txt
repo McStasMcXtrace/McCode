@@ -77,6 +77,8 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/mcgui" @ONLY)
 
+# Configure config file
+configure_file("${CMAKE_SOURCE_DIR}/config.py.in" "${WORK}/config.py" @ONLY)
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/main.py")
@@ -87,7 +89,7 @@ endif()
 
 if(WINDOWS)
   # Python files
-  foreach(name mw.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py mcfileutils.py config.py)
+  foreach(name mw.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py mcfileutils.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${lib}/${TOOLS_NAME}"
@@ -106,7 +108,7 @@ endif()
 
 if(NOT WINDOWS)
   # Python files
-  foreach(name mw.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py mcfileutils.py config.py)
+  foreach(name mw.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py mcfileutils.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"

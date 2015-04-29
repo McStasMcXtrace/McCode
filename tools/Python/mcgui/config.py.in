@@ -1,0 +1,21 @@
+'''
+mcstas/mcxtrace configuration.
+'''
+MCCODE_LIB_DIR = '@MCCODE_LIB@'
+MCCODE = '@FLAVOR@'
+MCRUN = '@MC@run'
+MCPLOT = '@MC@plot'
+MCDISPLAY = '@MC@display'
+TOOL_NAME = '@MC@gui'
+PARTICLE = '@MCCODE_PARTICLE'
+
+'''
+Compilation, parallelisation etc.
+'''
+CFLAGS = '-g lm -O2'
+NEXUSFLAGS = '-DUSE_NEXUS -lNeXus'
+CC = '@CC@'
+MPICC = '@MPICC@'
+MPIRUN = '@MPIRUN@'
+MPINODES = '4'
+
