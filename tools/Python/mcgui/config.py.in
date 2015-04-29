@@ -3,11 +3,12 @@ mcstas/mcxtrace configuration.
 '''
 MCCODE_LIB_DIR = '@MCCODE_LIB@'
 MCCODE = '@FLAVOR@'
-MCRUN = '@MC@run'
-MCPLOT = '@MC@plot'
-MCDISPLAY = '@MC@display'
-TOOL_NAME = '@MC@gui'
-PARTICLE = '@MCCODE_PARTICLE'
+MCRUN = '@MCCODE_PREFIX@run'
+MCPLOT = '@MCCODE_PREFIX@plot'
+MCDISPLAY = '@MCCODE_PREFIX@display'
+TOOL_NAME = '@MCCODE_PREFIX@gui'
+PARTICLE = '@MCCODE_PARTICLE@'
+
 
 '''
 Compilation, parallelisation etc.
