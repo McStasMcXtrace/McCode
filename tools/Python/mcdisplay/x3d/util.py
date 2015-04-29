@@ -23,27 +23,28 @@ def rotate(point, (origin, rotm)):
     return dot(point, rotm) + origin
 
 
-POINTS_IN_CIRCLE = 10
-def draw_circle(plane, pos, radius, comp, out):
+POINTS_IN_CIRCLE = 128
+def draw_circle(plane, pos, radius, comp):
     ''' Draw a circle in plane, at pos and with r radius, rotated by comp '''
-    points = []
     first = None
+    p0=[]
+    points=[]
     for i in xrange(0, POINTS_IN_CIRCLE):
         walk = 2 * pi * i / POINTS_IN_CIRCLE
         xyz = array(pos)
-        xyz[plane[0]] = cos(walk) * radius
-        xyz[plane[1]] = sin(walk) * radius
+        xyz[plane[0]] += cos(walk) * radius
+        xyz[plane[1]] += sin(walk) * radius
         # rotate
         xyz = rotate(xyz, comp)
-        # make sure lines are contiguous
-        if first is None:
-            first = array(xyz)
-        for i in xrange(i == 0 and 1 or 2):
-            points.append(xyz)
-    # tie the knot
-    points.append(first)
-    out(points)
-
+        p = (xyz[0], xyz[1],xyz[2])
+        points.append(p)
+        # Store first point
+        if i == 0:
+            p0 = p
+    # Tie the knot
+    points.append(p0)
+    return points
+    
 
 
 def get_line(fp):

@@ -2096,10 +2096,6 @@ mcsetseed(char *arg)
 {
   mcseed = atol(arg);
   if(mcseed) {
-#ifdef USE_MPI
-    if (mpi_node_count > 1) srandom(mcseed+mpi_node_rank);
-    else
-#endif
     srandom(mcseed);
   } else {
     fprintf(stderr, "Error: seed must not be zero (mcsetseed)\n");
@@ -3729,12 +3725,9 @@ mcseed=(long)ct;
     printf("Simulation '%s' (%s): running on %i nodes (master is '%s', MPI version %i.%i).\n",
       mcinstrument_name, mcinstrument_source, mpi_node_count, mpi_node_name, MPI_VERSION, MPI_SUBVERSION);
     );
-    /* share the same seed, then adapt random seed for each node */
-    MPI_Bcast(&mcseed, 1, MPI_LONG, 0, MPI_COMM_WORLD); /* root sends its seed to slaves */
-    mcseed += mpi_node_rank; /* make sure we use different seeds per noe */
   }
 #endif /* USE_MPI */
-  srandom(mcseed);
+  
   mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
 
 /* *** parse options ******************************************************* */
@@ -3744,6 +3737,15 @@ mcseed=(long)ct;
   mcinstrument_exe = argv[0]; /* store the executable path */
   /* read simulation parameters and options */
   mcparseoptions(argc, argv); /* sets output dir and format */
+  
+#ifdef USE_MPI
+  if (mpi_node_count > 1) {
+    /* share the same seed, then adapt random seed for each node */
+    MPI_Bcast(&mcseed, 1, MPI_LONG, 0, MPI_COMM_WORLD); /* root sends its seed to slaves */
+    mcseed += mpi_node_rank; /* make sure we use different seeds per node */
+  }
+#endif
+  srandom(mcseed);
 
 /* *** install sig handler, but only once !! after parameters parsing ******* */
 #ifndef NOSIGNALS

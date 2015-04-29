@@ -8,7 +8,7 @@ import sys
 import numpy as np
 
 import x3d
-from util import parse_multiline, rotate, get_line, debug
+from util import parse_multiline, rotate, get_line, debug, draw_circle
 
 
 UC_COMP = 'COMPONENT:'
@@ -116,15 +116,15 @@ def parse_trace(world, fp=sys.stdin, inspectComp=None):
 
         # process circle
         elif line.startswith(MC_CIRCLE):
+            xyz = 'xyz'
             items = line[len(MC_CIRCLE):].strip('()').split(',')
             # plane
-            pla = items[0].strip("''")
+            pla = [xyz.find(a) for a in items[0].strip("''")]
             # center and radius
             pos = [float(x) for x in items[1:4]]
             rad = float(items[4])
-            # draw circle when positive radius
-            if rad > 0:
-                world.drawCircle(rotate(pos, comp), rad, pla, color=getColor(color))
+            points = draw_circle(pla, pos, rad, comp)
+            world.drawLine(points, color=getColor(color))
 
         # activate neutron when it enters
         elif line.startswith(MC_ENTER):

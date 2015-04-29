@@ -1,8 +1,8 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2006, All rights reserved
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2015, All rights reserved
+*         Technical University of Denmark, Kongens Lyngby, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
 * Documentation: README
@@ -68,10 +68,10 @@ available from the McStas WWW home page:
     http://www.mcstas.org
 
 Contacts for McStas are:
-  Kim Lefmann <lefmann@fys.ku.dk> (KL)
+  Kim Lefmann <lefmann@nbi.dk> (KL)
   Emmanuel Farhi <farhi@ill.fr> (EF)
-  Peter Kjaer Willendrup <peter.willendrup@risoe.dk> (PW)
-  Erik Knudsen <erik.knudsen@risoe.dk> (EK)
+  Peter Kjaer Willendrup <pkwi@fysik.dtu.dk> (PW)
+  Erik Knudsen <erkn@fysik.dtu.dk> (EK)
 
 Previous authors are:
   Kristian Nielsen, email <kristian.nielsen@risoe.dk> (KN)

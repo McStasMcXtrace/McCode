@@ -61,7 +61,7 @@ set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python, python-qscintilla2")
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
@@ -77,17 +77,19 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/mcgui" @ONLY)
 
+# Configure config file
+configure_file("${CMAKE_SOURCE_DIR}/config.py.in" "${WORK}/config.py" @ONLY)
 
 if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/main.py")
+  set(BINS "${PROJECT_SOURCE_DIR}/main.py" "${WORK}/config.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/main.py" "${WORK}/mcgui")
+  set(BINS "${PROJECT_SOURCE_DIR}/main.py" "${WORK}/mcgui" "${WORK}/config.py")
 endif()
 
 
 if(WINDOWS)
   # Python files
-  foreach(name mw.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py mcfileutils.py config.py)
+  foreach(name mw.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py mcfileutils.py mcguiutils.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${lib}/${TOOLS_NAME}"
@@ -106,7 +108,7 @@ endif()
 
 if(NOT WINDOWS)
   # Python files
-  foreach(name mw.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py mcfileutils.py config.py)
+  foreach(name mw.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py mcfileutils.py mcguiutils.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
