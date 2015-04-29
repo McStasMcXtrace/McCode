@@ -27,11 +27,16 @@
 # ------------------                                                                    #
 # Author: Mark Lewis                                                                    #
 #=======================================================================================#
-from subprocess import call,check_output,Popen,PIPE
+#----------------#
+# system imports #
+#----------------#
 import traceback
-from re import split
 import sys
-
+#----------------#
+# python imports #
+#----------------#
+from re import split
+from subprocess import call,check_output,Popen,PIPE
 from cStringIO import StringIO
 
 class LDAPComm:
@@ -184,3 +189,4 @@ class LDAPComm:
                 return False
         except:
             self.log("ERROR: cn not supplied.\n")
+            return False
