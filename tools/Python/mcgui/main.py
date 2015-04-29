@@ -19,6 +19,7 @@ from PyQt4 import QtGui, QtCore
 from viewclasses import McView
 from mcguiutils import McGuiUtils
 from mcfileutils import McComponentParser
+from datetime import datetime
 
 ''' Message emitter
 Status and message log and signalling.
@@ -114,6 +115,9 @@ class McGuiState(QtCore.QObject):
     
     def getWorkDir(self):
         return os.getcwd()
+
+    def getDataDir(self):
+        return self.__DataDir
     
     def setWorkDir(self, newdir):
         if not os.path.isdir(newdir):
@@ -137,18 +141,24 @@ class McGuiState(QtCore.QObject):
     def compileAsync(self):
         # generate mcstas .c file from instrument
         nf = self.__instrFile
-        process = subprocess.Popen(['mcstas ' + nf], 
+        cmd = config.MCCODE  + nf
+        process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
                                    shell=True)
         self.__emitter.status('Compiling instrument to c ...')
         self.__emitter.message('Compiling instrument to c ...', mcguiMsg=True)
-        self.__emitter.message('    mcstas ' + nf, mcguiMsg=True)
+        self.__emitter.message(cmd, mcguiMsg=True)
+
+        # read program output while the process is active
         while process.poll() == None:
-            data = process.stdout.readline().rstrip('\n')
-            self.__emitter.message(data)
+            stdoutdata = process.stdout.readline().rstrip('\n')
+            self.__emitter.message(stdoutdata)
             time.sleep(0.05)
-        
+        ## flush until EOF
+        for stdoutdata in process.stdout:
+            self.__emitter.message(stdoutdata.rstrip('\n'))
+            
         # paths and filenames
         spl = os.path.splitext(os.path.basename(str(nf)))
         basef = os.path.join(self.getWorkDir(), spl[0])
@@ -163,18 +173,25 @@ class McGuiState(QtCore.QObject):
         
         # compile binary from mcstas .c file 
         bf = basef + '.out'
-        process = subprocess.Popen(['cc -O -o ' + bf + ' ' + cf + ' -lm'], 
+        cmd = config.CC + ' -o ' + bf + ' ' + cf + ' -lm ' + config.CFLAGS
+       
+        process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
                                    shell=True)
         self.__emitter.status('Compiling instrument to binary ...')
         self.__emitter.message('Compiling instrument to binary ...', mcguiMsg=True)
-        self.__emitter.message('    cc -O -o ' + bf + ' ' + cf + ' -lm', mcguiMsg=True)
+        self.__emitter.message(cmd, mcguiMsg=True)
+
+        # read program output while the process is active
         while process.poll() == None:
-            data = process.stdout.readline().rstrip('\n')
-            self.__emitter.message(data)
+            stdoutdata = process.stdout.readline().rstrip('\n')
+            self.__emitter.message(stdoutdata)
             time.sleep(0.05)
-        
+        ## flush until EOF
+        for stdoutdata in process.stdout:
+            self.__emitter.message(stdoutdata.rstrip('\n'))
+                
         # check
         if os.path.isfile(bf):
             self.__binaryFile = bf
@@ -196,8 +213,14 @@ class McGuiState(QtCore.QObject):
             params[]:
                 [<par_name>, <value>] pairs
         '''
-        runstr = 'mcrun ' + self.__instrFile
+        DATE_FORMAT_PATH = "%Y%d%m_%H%M%S"
+        dir = "%s_%s" % \
+                      (self.__instrFile,
+                       datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
         
+        runstr = config.MCRUN + ' ' + self.__instrFile + ' -d ' + dir
+        self.__DataDir = dir
+
         # parse fixed params
         simtrace = fixed_params[0]
         # TODO: support trace
@@ -241,18 +264,21 @@ class McGuiState(QtCore.QObject):
         self.__emitter.message(runstr, mcguiMsg=True)
         self.__emitter.status('Running simulation ...')
         
-        ## read program output
+        # read program output while the process is active
         while process.poll() == None:
-            data = process.stdout.readline().rstrip('\n')
-            self.__emitter.message(data)
+            stdoutdata = process.stdout.readline().rstrip('\n')
+            self.__emitter.message(stdoutdata)
             time.sleep(0.05)
-        
+        ## flush until EOF
+        for stdoutdata in process.stdout:
+            self.__emitter.message(stdoutdata.rstrip('\n'))
+
         self.__emitter.message('', mcguiMsg=True)
         self.__emitter.status('Simulation complete.')
 
     def getInstrParams(self):
         # get instrument params using 'mcrun [instr] --info'
-        process = subprocess.Popen(["mcrun", self.__instrFile, "--info"], 
+        process = subprocess.Popen([config.MCRUN, self.__instrFile, "--info"], 
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.STDOUT)
         # synchronous
@@ -367,8 +393,8 @@ class McGuiAppController():
         self.emitter.status('')
         instrname = os.path.splitext(os.path.basename(self.state.getInstrumentFile()))[0]
         dirname = self.state.getWorkDir()
-        resultdirs = McGuiUtils.getResultSubdirsChronologically(dirname, instrname)
-        callstr = 'mcplot ' + resultdirs[0]
+        resultdir = self.state.getDataDir()
+        callstr = config.MCPLOT + ' ' + resultdir
         subprocess.Popen([callstr], 
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
