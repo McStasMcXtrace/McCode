@@ -12,7 +12,7 @@ PARTICLE = 'neutron'
 '''
 Compilation, parallelisation etc.
 '''
-CFLAGS = '-g lm -O2'
+CFLAGS = '-g -lm -O2'
 NEXUSFLAGS = '-DUSE_NEXUS -lNeXus'
 CC = 'gcc'
 MPICC = 'mpicc'
