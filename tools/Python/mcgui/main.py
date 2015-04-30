@@ -72,6 +72,7 @@ class McGuiState(QtCore.QObject):
     __cFile = ""
     __binaryFile = ""
     __resultFile = ""
+    __DataDir = ""
     
     def __init__(self, emitter):
         super(McGuiState, self).__init__()
@@ -277,9 +278,11 @@ class McGuiState(QtCore.QObject):
 
     def getInstrParams(self):
         # get instrument params using 'mcrun [instr] --info'
-        process = subprocess.Popen([config.MCRUN, self.__instrFile, "--info"], 
+        cmd = config.MCRUN + ' ' + self.__instrFile + " --info"
+        process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE, 
-                                   stderr=subprocess.STDOUT)
+                                   stderr=subprocess.STDOUT,
+                                   shell=True)
         # synchronous
         (stdoutdata, stderrdata) = process.communicate()
         
@@ -390,11 +393,9 @@ class McGuiAppController():
     
     def handlePlotResults(self):
         self.emitter.status('')
-        instrname = os.path.splitext(os.path.basename(self.state.getInstrumentFile()))[0]
-        dirname = self.state.getWorkDir()
         resultdir = self.state.getDataDir()
-        callstr = config.MCPLOT + ' ' + resultdir
-        subprocess.Popen([callstr], 
+        cmd = config.MCPLOT + ' ' + resultdir
+        subprocess.Popen(cmd, 
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
                          shell=True)
