@@ -4,7 +4,7 @@ This document lists build dependencies and explains use of the ./build_* scripts
 build_debs_mcstas <release name>
 build_debs_mcxtrace <release name>
 Dependencies:
-cmake cpack texlive latexmk bibtex gcc flex bison libc6-dev etoolbox poppler-utils biblatex (Check on clean system if this is enough!!)
+cmake cpack texlive gcc flex bison build-essentials etoolbox poppler-utils texlive-latex-extra (Check on clean system if this is enough!!)
 Configuration - dpkg-reconfigure dash, select not to use dash as /bin/sh
 
 
@@ -39,8 +39,10 @@ cmake cpack texlive/MacTeX Xcode with commandline tools PackageMaker.app  (Check
 !! If need for any MacPorts / Fink / Brew software on the build machine - please add to END OF THE PATH variable rather than front... !!
 
 
-* Windows packages for 32bit and 64bit systems. Input parameters - 1) release "name", i.e. 2.1 2) flag to indicate if we are building a 'meta' package. Built on Linux!!
+* Windows packages for 32bit (and 64bit - running the 32bit version) systems. Input parameters - 1) release "name", i.e. 2.1 2) flag to indicate if we are building a 'meta' package. Built on Linux!!
 build_windows_mcstas  <release name> <meta> 
 build_windows_mcxtrace  <release name> <meta> 
 Dependencies:
-cmake cpack texlive latexmk bibtex mingw-w64 flex bison libc6-dev (Check on clean system if this is enough!!)
+
+(run dpkg --add-architecture i386)
+cmake cpack texlive latexmk bibtex mingw-w64 flex bison libc6-dev wine-bin:i386 (Check on clean system if this is enough!!)
