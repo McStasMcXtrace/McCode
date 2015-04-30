@@ -13,7 +13,7 @@ PARTICLE = '@MCCODE_PARTICLE@'
 '''
 Compilation, parallelisation etc.
 '''
-CFLAGS = '-g lm -O2'
+CFLAGS = '-g -lm -O2'
 NEXUSFLAGS = '-DUSE_NEXUS -lNeXus'
 CC = '@CC@'
 MPICC = '@MPICC@'
