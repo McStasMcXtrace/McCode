@@ -174,7 +174,7 @@ class McGuiState(QtCore.QObject):
         
         # compile binary from mcstas .c file 
         bf = basef + '.' + config.EXESUFFIX 
-        cmd = config.CC + ' -o ' + bf + ' ' + cf + ' -lm ' + config.CFLAGS
+        cmd = config.CC + ' -o ' + bf + ' ' + cf + ' ' + config.CFLAGS
        
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE,
