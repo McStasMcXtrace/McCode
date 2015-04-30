@@ -43,4 +43,4 @@ cmake cpack texlive/MacTeX Xcode with commandline tools PackageMaker.app  (Check
 build_windows_mcstas  <release name> <meta> 
 build_windows_mcxtrace  <release name> <meta> 
 Dependencies:
-cmake cpack texlive latexmk bibtex mingw-w64 flex bison libc6-dev (Check on clean system if this is enough!!)
+cmake cpack nsis texlive latexmk bibtex mingw-w64 flex bison libc6-dev (Check on clean system if this is enough!!)
