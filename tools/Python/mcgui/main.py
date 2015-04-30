@@ -141,7 +141,7 @@ class McGuiState(QtCore.QObject):
     def compileAsync(self):
         # generate mcstas .c file from instrument
         nf = self.__instrFile
-        cmd = config.MCCODE  + nf
+        cmd = config.MCCODE + ' '  + nf
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
@@ -245,8 +245,7 @@ class McGuiState(QtCore.QObject):
         
         # parse instrument params        
         for p in params:
-            s = p[0] + '=' + p[1]
-            runstr = runstr + ' ' + s
+            runstr = runstr + ' ' + p[0] + '=' + p[1]
         
         print(runstr)
         
@@ -257,7 +256,7 @@ class McGuiState(QtCore.QObject):
     def runAsync(self, runstr):
         # open a subprocess with shell=True, otherwise stdout will be buffered and thus 
         # not readable live
-        process = subprocess.Popen([runstr], 
+        process = subprocess.Popen(runstr, 
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.PIPE,
                                    shell=True)
