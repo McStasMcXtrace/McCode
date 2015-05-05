@@ -358,7 +358,7 @@ class McGuiAppController():
             parsers = []
             
             for f in files_comp:
-                if re.search(config.SLASHCHAR + dirnames[i] + config.SLASHCHAR, f):
+                if re.search(dirnames[i], f):
                     compnames.append(os.path.splitext(os.path.basename(f))[0]) # get filename without extension - this is the component name
                     parsers.append(McComponentParser(f)) # append a parser, for ease of parsing on-the-fly
             
@@ -409,12 +409,12 @@ class McGuiAppController():
     
     def handleHelpPdf(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ..)
-        mcman = config.MCCODE_LIB_DIR + '/doc/manuals/mcstas-manual.pdf'
+        mcman = os.path.join(config.MCCODE_LIB_DIR, "doc", "manuals", "mcstas-manual.pdf")
         webbrowser.open_new_tab(mcman)
     
     def handleHelpPdfComponents(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ...)
-        mcman = config.MCCODE_LIB_DIR + '/doc/manuals/mcstas-components.pdf'
+        mcman = os.path.join(config.MCCODE_LIB_DIR, "doc", "manuals", "mcstas-components.pdf")
         webbrowser.open_new_tab(mcman)
     
     def handleHelpAbout(self):
@@ -461,7 +461,7 @@ class McGuiAppController():
                 self.emitter.status("Editing new instrument: " + os.path.basename(new_instr))
     
     def handleNewFromTemplate(self, instr_templ=''):
-        new_instr_req = self.view.showNewInstrFromTemplateDialog(self.state.getWorkDir() + config.SLASHCHAR + os.path.basename(str(instr_templ)))
+        new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(str(instr_templ))))
         if new_instr_req != '':
             text = McGuiUtils.getFileContents(instr_templ)
             new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, text)

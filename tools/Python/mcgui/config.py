@@ -23,4 +23,3 @@ MPINODES = '4'
 Platform settings
 '''
 EXESUFFIX = 'out'
-SLASHCHAR = '/'
