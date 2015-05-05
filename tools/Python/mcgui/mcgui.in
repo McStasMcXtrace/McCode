@@ -9,7 +9,7 @@ canrun() {
         exit 127;
     fi
 
-    modules="yaml"
+    modules="PyQt4.Qsci"
     cmd=""
     for name in ${modules}; do
         cmd="${cmd}import ${name}; "
