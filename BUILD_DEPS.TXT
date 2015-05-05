@@ -45,4 +45,4 @@ build_windows_mcxtrace  <release name> <meta>
 Dependencies:
 
 (run dpkg --add-architecture i386)
-cmake cpack texlive latexmk bibtex mingw-w64 flex bison libc6-dev wine-bin:i386 (Check on clean system if this is enough!!)
+cmake cpack nsis texlive latexmk bibtex mingw-w64 flex bison libc6-dev wine-bin:i386 (Check on clean system if this is enough!!)
