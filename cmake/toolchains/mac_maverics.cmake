@@ -18,4 +18,4 @@ set(GNUDEV "wxt")
 
 # Suffix for executables
 set(EXE "out")
-set(SLASH "/")
+

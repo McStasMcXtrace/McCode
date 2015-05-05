@@ -29,4 +29,4 @@ set(GNUDEV "windows")
 
 # Suffix for executables
 set(EXE "exe")
-set(SLASH "")
+
