@@ -13,8 +13,7 @@ import subprocess
 import time
 import threading
 import re
-import config
-import imp
+import mccode_config
 from PyQt4 import QtGui, QtCore
 from viewclasses import McView
 from mcguiutils import McGuiUtils
@@ -142,7 +141,7 @@ class McGuiState(QtCore.QObject):
     def compileAsync(self):
         # generate mcstas .c file from instrument
         nf = self.__instrFile
-        cmd = config.MCCODE + ' '  + nf
+        cmd = mccode_config.configuration["MCCODE"] + ' '  + nf
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
@@ -173,8 +172,8 @@ class McGuiState(QtCore.QObject):
             raise Exception('C file not found')
         
         # compile binary from mcstas .c file 
-        bf = basef + '.' + config.EXESUFFIX 
-        cmd = config.CC + ' -o ' + bf + ' ' + cf + ' ' + config.CFLAGS
+        bf = basef + '.' + mccode_config.platform["EXESUFFIX"] 
+        cmd = mccode_config.compilation["CC"] + ' -o ' + bf + ' ' + cf + ' ' + mccode_config.compilation["CFLAGS"]
        
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE,
@@ -219,7 +218,7 @@ class McGuiState(QtCore.QObject):
                       (self.__instrFile,
                        datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
         
-        runstr = config.MCRUN + ' ' + self.__instrFile + ' -d ' + dir
+        runstr = mccode_config.configuration["MCRUN"] + ' ' + self.__instrFile + ' -d ' + dir
         self.__DataDir = dir
 
         # parse fixed params
@@ -278,7 +277,7 @@ class McGuiState(QtCore.QObject):
 
     def getInstrParams(self):
         # get instrument params using 'mcrun [instr] --info'
-        cmd = config.MCRUN + ' ' + self.__instrFile + " --info"
+        cmd = mccode_config.configuration["MCRUN"] + ' ' + self.__instrFile + " --info"
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.STDOUT,
@@ -325,7 +324,7 @@ class McGuiAppController():
         # load installed mcstas instruments:
         # construct args = [site, instr_fullpath[], instr_path_lst[]]
         args = []
-        files_instr, files_comp = McGuiUtils.getInstrumentAndComponentFiles(config.MCCODE_LIB_DIR)
+        files_instr, files_comp = McGuiUtils.getInstrumentAndComponentFiles(mccode_config.configuration["MCCODE_LIB_DIR"])
         
         # temporary list consisting of instrument files with site names: 
         files_instr_and_site = []
@@ -383,6 +382,9 @@ class McGuiAppController():
         if fixed_params != None:
             self.state.run(fixed_params, new_instr_params)
         
+    def handleConfiguration(self):
+        self.view.showConfigDialog()
+        
     def handleChangeWorkDir(self):
         workDir = self.view.showChangeWorkDirDlg(self.state.getWorkDir())
         if workDir:
@@ -394,7 +396,7 @@ class McGuiAppController():
     def handlePlotResults(self):
         self.emitter.status('')
         resultdir = self.state.getDataDir()
-        cmd = config.MCPLOT + ' ' + resultdir
+        cmd = mccode_config.configuration["MCPLOT"] + ' ' + resultdir
         subprocess.Popen(cmd, 
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
@@ -409,12 +411,12 @@ class McGuiAppController():
     
     def handleHelpPdf(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ..)
-        mcman = os.path.join(config.MCCODE_LIB_DIR, "doc", "manuals", "mcstas-manual.pdf")
+        mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", "mcstas-manual.pdf")
         webbrowser.open_new_tab(mcman)
     
     def handleHelpPdfComponents(self):
         # TODO: make it cross-platform (e.g. os.path.realpath(__file__) +  ...)
-        mcman = os.path.join(config.MCCODE_LIB_DIR, "doc", "manuals", "mcstas-components.pdf")
+        mcman = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "doc", "manuals", "mcstas-components.pdf")
         webbrowser.open_new_tab(mcman)
     
     def handleHelpAbout(self):
@@ -475,7 +477,7 @@ class McGuiAppController():
                 self.state.unloadInstrument()
                 self.state.loadInstrument(instr)
                 self.emitter.status("Instrument: " + os.path.basename(str(instr)))
-            
+    
     ''' Connect UI and state callbacks 
     '''
     def connectCallbacks(self):        
@@ -489,6 +491,7 @@ class McGuiAppController():
         mwui.actionEdit_Instrument.triggered.connect(self.handleEditInstrument)
         mwui.actionSave_As.triggered.connect(self.handleSaveAs)
         mwui.actionNew_Instrument.triggered.connect(self.handleNewInstrument)
+        mwui.actionConfiguration.triggered.connect(self.handleConfiguration)
         
         mwui.btnRun.clicked.connect(self.handleRunSim)
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
@@ -518,10 +521,8 @@ class McGuiAppController():
 ''' Program execution
 '''
 def main():
-    userconfig=os.path.expandvars("$HOME/.mcstas/config.py")
-    if os.path.isfile(userconfig):
-        print "Loading user configuration from "+userconfig
-        imp.load_source('config', userconfig)
+    McGuiUtils.loadUserConfig()
+    
     mcguiApp = QtGui.QApplication(sys.argv)
     mcguiApp.ctr = McGuiAppController()
     

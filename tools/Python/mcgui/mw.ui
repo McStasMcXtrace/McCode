@@ -189,6 +189,8 @@
     <addaction name="actionSave_As"/>
     <addaction name="actionClose_Instrument"/>
     <addaction name="separator"/>
+    <addaction name="actionConfiguration"/>
+    <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuSimulation">
@@ -313,6 +315,14 @@
   <action name="actionTempl_submenu">
    <property name="text">
     <string>new_from_templ_submenu</string>
+   </property>
+  </action>
+  <action name="actionConfiguration">
+   <property name="text">
+    <string>Configuration...</string>
+   </property>
+   <property name="toolTip">
+    <string>mccode configuration</string>
    </property>
   </action>
  </widget>
