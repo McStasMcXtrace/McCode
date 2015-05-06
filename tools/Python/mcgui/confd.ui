@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>dlgConfig</class>
+ <widget class="QDialog" name="dlgConfig">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>328</width>
+    <height>499</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>mccode-py configuration</string>
+  </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridApps">
+     <item row="2" column="0">
+      <widget class="QLabel" name="lblMcplot">
+       <property name="text">
+        <string>mcplot</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="lblMcdisplay">
+       <property name="text">
+        <string>mcdisplay</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QComboBox" name="cbxMcPlot"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QComboBox" name="cbxMcrun"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="lblMcrun">
+       <property name="text">
+        <string>mcrun</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QComboBox" name="cbxMcdisplay"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridFlags">
+     <item row="2" column="0">
+      <widget class="QLabel" name="lblCflags">
+       <property name="text">
+        <string>C flags</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="lblMpirun">
+       <property name="text">
+        <string>MPIrun</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLineEdit" name="edtCC"/>
+     </item>
+     <item row="10" column="0">
+      <widget class="QLabel" name="lblNumnodes">
+       <property name="text">
+        <string># nodes</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="lblCc">
+       <property name="text">
+        <string>cc</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLineEdit" name="edtMPIrun"/>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLineEdit" name="edtCflags"/>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLineEdit" name="edtNumNodes"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="lblMpicc">
+       <property name="text">
+        <string>MPIcc</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLineEdit" name="edtMpicc"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="hlayoutButtons">
+     <item>
+      <widget class="QPushButton" name="btnOk">
+       <property name="toolTip">
+        <string>Keep for this session</string>
+       </property>
+       <property name="text">
+        <string>Ok</string>
+       </property>
+       <property name="default">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnSave">
+       <property name="toolTip">
+        <string>Keep &amp; save configuration to disk</string>
+       </property>
+       <property name="text">
+        <string>Save</string>
+       </property>
+       <property name="default">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>cbxMcrun</tabstop>
+  <tabstop>cbxMcPlot</tabstop>
+  <tabstop>cbxMcdisplay</tabstop>
+  <tabstop>edtCC</tabstop>
+  <tabstop>edtCflags</tabstop>
+  <tabstop>edtMpicc</tabstop>
+  <tabstop>edtMPIrun</tabstop>
+  <tabstop>edtNumNodes</tabstop>
+  <tabstop>btnOk</tabstop>
+  <tabstop>btnSave</tabstop>
+  <tabstop>btnCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

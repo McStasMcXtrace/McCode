@@ -5,6 +5,7 @@ Utility functions used by mcgui. Should be static.
 '''
 import os
 import re
+import imp
 
 
 ''' Static functions related to handling mcstas files and more.
@@ -42,17 +43,17 @@ class McGuiUtils(object):
         return files_instr, files_comp
     
     @staticmethod
-    def getResultSubdirsChronologically(mydir, prefix):
+    def __getResultSubdirsChronologically(mydir, prefix):
         subdirs = []
         for fileordir in os.listdir(mydir):
             if os.path.isdir(fileordir):
                 if prefix in fileordir:
                     subdirs.append(fileordir)
-        subdirs.sort(cmp=lambda x,y: McGuiUtils.chronoSort(x,y))
+        subdirs.sort(cmp=lambda x,y: McGuiUtils.__chronoSort(x,y))
         return subdirs
     
     @staticmethod
-    def chronoSort(word1, word2):
+    def __chronoSort(word1, word2):
         result1 = re.search('.*_([0-9]+)_([0-9]+)', word1)
         result2 = re.search('.*_([0-9]+)_([0-9]+)', word2)
         date1 = int(result1.group(1))
@@ -103,3 +104,50 @@ class McGuiUtils(object):
             return text
         else:
             return ''
+    
+    @staticmethod
+    def loadUserConfig():
+        userconfig=os.path.expandvars("$HOME/.mcstas/mccode_config.py")
+        if os.path.isfile(userconfig):
+            print "Loading user configuration from "+userconfig
+            imp.load_source('mccode_config', userconfig)
+        
+    @staticmethod
+    def saveUserConfig(config_module):
+        # overrides previous config by creating a mccode_config.py file in the $HOME/.mcstas folder
+        
+        conf_text_lines = [
+            '# ',
+            '\n' + '# mcstas/mcxtrace configuration.',
+            '\n' + '# ',
+            '\n' + 'configuration = {',
+            McGuiUtils.__getIndentedDictLines(config_module.configuration),
+            '\n' + '}',
+            '\n',
+            '\n' + '# ',
+            '\n' + '# Compilation, parallelisation etc.',
+            '\n' + '# ',
+            '\n' + 'compilation = {',
+            McGuiUtils.__getIndentedDictLines(config_module.compilation),
+            '\n' + '}',
+            '\n',
+            '\n' + '# ',
+            '\n' + '# Compilation, parallelisation etc.',
+            '\n' + '# ',
+            '\n' + 'platform = {',
+            McGuiUtils.__getIndentedDictLines(config_module.platform),
+            '\n' + '}',
+            '\n']
+        
+        conf_text = ''.join(conf_text_lines)
+        
+        f = open(os.path.expandvars("$HOME/.mcstas/mccode_config.py"), 'w')
+        f.write(conf_text)
+        f.close()
+        
+    @staticmethod
+    def __getIndentedDictLines(config_dict):
+        lines = ''
+        for name in config_dict:
+            lines += '\n' + '    \"' + name + '\"' + ': \"' + config_dict[name] + '\",'
+        return lines
