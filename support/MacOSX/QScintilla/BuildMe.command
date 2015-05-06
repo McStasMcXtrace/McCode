@@ -26,8 +26,11 @@ then
 else
    echo "We need write acces for installation, using sudo below..."
 fi
-echo sudo is $SUDO
-echo Unpacking the code...
+# First, install PyQt via conda
+echo ---
+$SUDO conda install pyqt
+echo ---
+echo Unpacking QScintilla code...
 tar xzf QScintilla-gpl-2.9.tar.gz
 cd QScintilla-gpl-2.9
 # Build and install c++ bindings 
