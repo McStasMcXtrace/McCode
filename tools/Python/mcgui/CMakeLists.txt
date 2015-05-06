@@ -78,18 +78,18 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/mcgui" @ONLY)
 
 # Configure config file
-configure_file("${CMAKE_SOURCE_DIR}/config.py.in" "${WORK}/config.py" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.py" @ONLY)
 
 if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/main.py" "${WORK}/config.py")
+  set(BINS "${PROJECT_SOURCE_DIR}/main.py" "${WORK}/mccode_config.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/main.py" "${WORK}/mcgui" "${WORK}/config.py")
+  set(BINS "${PROJECT_SOURCE_DIR}/main.py" "${WORK}/mcgui" "${WORK}/mccode_config.py")
 endif()
 
 
 if(WINDOWS)
   # Python files
-  foreach(name mw.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py mcfileutils.py mcguiutils.py)
+  foreach(name mw.ui confd.ui ew.ui icd.ui mw.ui ssd.ui viewclasses.py run-icon.png compile-icon.png ui-pywrap.py mcfileutils.py mcguiutils.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${lib}/${TOOLS_NAME}"

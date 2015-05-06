@@ -1,0 +1,31 @@
+'''
+mcstas/mcxtrace configuration.
+'''
+configuration = {
+    "MCCODE_LIB_DIR": '@MCCODE_LIB@',
+    "MCCODE": '@FLAVOR@',
+    "MCRUN": '@MCCODE_PREFIX@run',
+    "MCPLOT": '@MCCODE_PREFIX@plot',
+    "MCDISPLAY": '@MCCODE_PREFIX@display',
+    "TOOL_NAME": '@MCCODE_PREFIX@gui',
+    "PARTICLE": '@MCCODE_PARTICLE@',
+}
+
+'''
+Compilation, parallelisation etc.
+'''
+compilation = {
+"CFLAGS": '-g -lm -O2',
+    "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
+    "CC": 'gcc',
+    "MPICC": '@MPICC@',
+    "MPIRUN": '@MPIRUN@',
+    "MPINODES": '4',
+}
+
+'''
+Platform settings
+'''
+platform = {
+    "EXESUFFIX": '@EXE@',
+}
