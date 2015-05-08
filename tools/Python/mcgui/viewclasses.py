@@ -611,23 +611,44 @@ class McConfigDialog(QtGui.QDialog):
         self.ui.btnCancel.clicked.connect(self.reject)
     
     def initConfigData(self, args):
-        # TODO: add items to cbx and set INDEX to match current value
+        # comboboxes
+        mcrun_lst, mcplot_lst, mcdisplay_lst = McGuiUtils.getMcCodeConfigOptions()
         
-        # checkboxes
-        self.ui.cbxMcrun.addItem(mccode_config.configuration["MCRUN"])
+        # mcrun combobox
+        selected_val = mccode_config.configuration["MCRUN"]
+        i = 0
+        for val in mcrun_lst: 
+            self.ui.cbxMcrun.addItem(val)
+            if val == selected_val:
+                self.ui.cbxMcrun.setCurrentIndex(i)
+            i += 1
         self.ui.cbxMcrun.conf_var = "MCRUN"
         self.ui.cbxMcrun.conf_org_value = mccode_config.configuration["MCRUN"]
-        # TODO: set index
+        self.ui.cbxMcrun.conf_options_lst = mcrun_lst
         
-        self.ui.cbxMcPlot.addItem(mccode_config.configuration["MCPLOT"])
+        # mcplot combobox
+        selected_val = mccode_config.configuration["MCPLOT"]
+        i = 0
+        for val in mcplot_lst: 
+            self.ui.cbxMcPlot.addItem(val)
+            if val == selected_val:
+                self.ui.cbxMcPlot.setCurrentIndex(i)
+            i += 1
         self.ui.cbxMcPlot.conf_var = "MCPLOT"
         self.ui.cbxMcPlot.conf_org_value = mccode_config.configuration["MCPLOT"]
-        # TODO: set index
+        self.ui.cbxMcPlot.conf_options_lst = mcplot_lst
         
-        self.ui.cbxMcdisplay.addItem(mccode_config.configuration["MCDISPLAY"])
+        # mcdisplay combobox
+        selected_val = mccode_config.configuration["MCDISPLAY"]
+        i = 0
+        for val in mcdisplay_lst: 
+            self.ui.cbxMcdisplay.addItem(val)
+            if val == selected_val:
+                self.ui.cbxMcdisplay.setCurrentIndex(i)
+            i += 1
         self.ui.cbxMcdisplay.conf_var = "MCDISPLAY"
         self.ui.cbxMcdisplay.conf_org_value = mccode_config.configuration["MCDISPLAY"]
-        # TODO: set index
+        self.ui.cbxMcdisplay.conf_options_lst = mcdisplay_lst
         
         # line edits
         self.ui.edtCC.setText(mccode_config.compilation["CC"])
@@ -646,9 +667,19 @@ class McConfigDialog(QtGui.QDialog):
         self.ui.edtNumNodes.conf_var = "MPINODES"
     
     def __pullValuesTo_mccode_config(self):
-        # TODO: pull values from cbx's
-        print("TODO: pull values from cbx's and add to configuration")
+        # mcrun combobox
+        i = self.ui.cbxMcrun.currentIndex()
+        mccode_config.configuration["MCRUN"] = self.ui.cbxMcrun.conf_options_lst[i]
         
+        # mcrun combobox
+        i = self.ui.cbxMcPlot.currentIndex()
+        mccode_config.configuration["MCPLOT"] = self.ui.cbxMcPlot.conf_options_lst[i]
+        
+        # mcrun combobox
+        i = self.ui.cbxMcdisplay.currentIndex()
+        mccode_config.configuration["MCDISPLAY"] = self.ui.cbxMcdisplay.conf_options_lst[i]
+        
+        # line edits
         mccode_config.compilation[str(self.ui.edtCC.conf_var)] = str(self.ui.edtCC.text())
         mccode_config.compilation[str(self.ui.edtCflags.conf_var)] = str(self.ui.edtCflags.text())
         mccode_config.compilation[str(self.ui.edtMpicc.conf_var)] = str(self.ui.edtMpicc.text())
@@ -1455,3 +1486,4 @@ class Ui_dlgConfig(object):
         self.btnSave.setToolTip(QtGui.QApplication.translate("dlgConfig", "Keep & save configuration to disk", None, QtGui.QApplication.UnicodeUTF8))
         self.btnSave.setText(QtGui.QApplication.translate("dlgConfig", "Save", None, QtGui.QApplication.UnicodeUTF8))
         self.btnCancel.setText(QtGui.QApplication.translate("dlgConfig", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
+

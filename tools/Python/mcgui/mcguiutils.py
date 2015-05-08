@@ -104,7 +104,17 @@ class McGuiUtils(object):
             return text
         else:
             return ''
-    
+        
+    @staticmethod
+    def getMcCodeConfigOptions():
+        mcrun_lst =     ["mcrun", "mcrun-py"]
+        mcplot_lst =    ["mcplot", "mcplot -format=Gnuplot", "mcplot --format=Matlab", 
+                         "mcplot-matlab", "mcplot-matplotlib-py", "mcplot-chaco-py"]
+        mcdisplay_lst = ["mcdisplay", "mcdisplay --format=Matlab", "mcdisplay --format=VRML", 
+                         "mcdisplay --format=Mantid", "mcdisplay-matplotlib-py", "mcdisplay-py", 
+                         "mcdisplay-r-py", "mcdisplay-vtk-py"]
+        return mcrun_lst, mcplot_lst, mcdisplay_lst
+
     @staticmethod
     def loadUserConfig():
         userconfig=os.path.expandvars("$HOME/.mcstas/mccode_config.py")
@@ -115,7 +125,6 @@ class McGuiUtils(object):
     @staticmethod
     def saveUserConfig(config_module):
         # overrides previous config by creating a mccode_config.py file in the $HOME/.mcstas folder
-        
         conf_text_lines = [
             '# ',
             '\n' + '# mcstas/mcxtrace configuration.',
