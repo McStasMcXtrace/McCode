@@ -8,10 +8,24 @@
 #=====================================#
 # system imports
 # python imports
+from functools import update_wrapper
 # django imports
+from django.http import Http404, HttpResponseRedirect
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.cache import never_cache
+from django.template.response import TemplateResponse
+from django.db.models.base import ModelBase
+from django.apps import apps
+from django.core.exceptions import ImproperlyConfigured, PermissionDenied
+from django.core.urlresolvers import reverse, NoReverseMatch
+from django.utils import six
+from django.utils.text import capfirst
+from django.utils.translation import ugettext_lazy, ugettext as _
+from django.conf import settings
 from django.conf.urls import patterns, include
-from django.contrib.admin import AdminSite
 from django.contrib import admin
+from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.admin import ModelAdmin, actions, AdminSite
 # app imports
 from mcsimulator.models import Simulation, SimRun, Job
 from mcUser.models import mcUser
@@ -24,13 +38,13 @@ from mcUser.models import mcUser
 #
 # Overwritten Methods      Ignored Methods
 # -------------------      ---------------
-# - __init__()             - register()
+#                          - register()
 # - has_permission()       - unregister()
 # - admin_view()*          - add_action()
 # - get_urls()             - disable_action()
 # - urls                   - get_action()
 # - passwqord_change       - actions()
-# - password_change_done   
+# - password_change_done   - __init__()
 # - logout
 # - login
 # - index
@@ -71,12 +85,6 @@ class Overlord(AdminSite):
     app_index_template = None                  
     password_change_template = None
     password_change_done_template = None
-
-    def __init__(self, name='admin', app_name='admin'):
-        super.__init__(name=name, app_name=app_name) ;
-        self._registry = {}  # model_class class -> admin_class instance
-        self._actions = {'delete_selected': actions.delete_selected}
-        self._global_actions = self._actions.copy()
 
     def has_permission(self, request):
         """
@@ -189,36 +197,45 @@ class Overlord(AdminSite):
             defaults['template_name'] = self.logout_template
         return logout(request, **defaults)
 
+    #======================================================================#
+    # login                                                                #
+    # -----                                                                #
+    # Displays the login form for the given HttpRequest.                   #
+    # if Already logged-in, redirect to admin index                        #
+    #                                                                      #
+    # Since this module gets imported in the application's root package,   # - YEAH, THIS IS WHY, IT IMPORTS USER
+    # it cannot import models from other applications at the module level, #   WHY IS THIS NOT IN THE DOCUMENTATION???
+    # and django.contrib.admin.forms eventually imports User.              #
+    
     @never_cache
     def login(self, request, extra_context=None):
-        """
-        Displays the login form for the given HttpRequest.
-        """
+        req_file = open("reqs.out", "w")
+        req_file.print( "LOGGIN IN: ", request)
+        req_file.close
         if request.method == 'GET' and self.has_permission(request):
-            # Already logged-in, redirect to admin index
+            print "in the if#1"
             index_path = reverse('admin:index', current_app=self.name)
             return HttpResponseRedirect(index_path)
 
         from django.contrib.auth.views import login
-        # Since this module gets imported in the application's root package,
-        # it cannot import models from other applications at the module level,
-        # and django.contrib.admin.forms eventually imports User.
         from django.contrib.admin.forms import AdminAuthenticationForm
+        
         context = dict(self.each_context(),
             title=_('Log in'),
             app_path=request.get_full_path(),
         )
-        if (REDIRECT_FIELD_NAME not in request.GET and
-                REDIRECT_FIELD_NAME not in request.POST):
+        if (REDIRECT_FIELD_NAME not in request.GET
+            and
+            REDIRECT_FIELD_NAME not in request.POST):
+            print "in the if#2"
             context[REDIRECT_FIELD_NAME] = request.get_full_path()
+        
         context.update(extra_context or {})
-
-        defaults = {
-            'extra_context': context,
-            'current_app': self.name,
-            'authentication_form': self.login_form or AdminAuthenticationForm,
-            'template_name': self.login_template or 'admin/login.html',
-        }
+        defaults = {'extra_context': context,
+                    'current_app': self.name,
+                    'authentication_form': self.login_form or AdminAuthenticationForm,
+                    'template_name': self.login_template or 'admin/login.html',
+                }
         return login(request, **defaults)
 
     @never_cache

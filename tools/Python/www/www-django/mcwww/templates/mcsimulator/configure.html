@@ -2,84 +2,86 @@
 {% load static %}
 
 {% block title %}Simulations{% endblock %}
+
 {% block head_extra %}
 <style type="text/css">
   p { color: #336699; }
 </style>
 
-  <form method="GET" action="/logout">
-    {% csrf_token %}
-    <input type="hidden" name="next" value="{{ next }}" />
-    <ol>
-      <input type=submit id="btn_logout" value="logout" onclick="logout_user()" />
-    </ol>
-  </form>
+<form method="GET" action="/logout">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}" />
+  <ol>
+    <input type=submit id="btn_logout" value="logout" onclick="logout_user()" />
+  </ol>
+</form>
 
 {% endblock %}
+
 {% block content %}
-  <h1>Configure your simulation</h1>
+<h1>Configure your simulation</h1>
 
-  <p>Select the simulation and its parameters.
-    <a id='latestLink' onclick='switchLatest()'>
-      [List latest simulations]</a></p>
+<p>Select the simulation and its parameters.
+  <a id='latestLink' onclick='switchLatest()'>
+    [List latest simulations]</a></p>
 
-  <div id='latest'></div>
+<div id='latest'></div>
 
-  <script type="text/javascript" src="{% static 'configure.js' %}"></script>
-  <script language="javascript">
-    var jobid = "{{ jobid }}";
+<script type="text/javascript" src="{% static 'configure.js' %}"></script>
+<script language="javascript">
+  var jobid = "{{ jobid }}";
+  
+  var max_samples = {{ max_samples }},
+  max_npoints = {{ max_npoints }};
+  
+  // parameters and default values
+  var defaults = { {% for sim in sims %}
+  "{{ sim.name|escapejs|safe }}": {
+  {% for param in sim.param_set.all %}
+  "{{ param.name|escapejs|safe }}": {
+  "value": "{{ param.default_value|escapejs|safe }}",
+  "unit" : "{{ param.unit|escapejs|safe }}",
+  "msg"  : "{{ param.msg|escapejs|safe }}" },
+  {% endfor %}
+  },{% endfor %} };
+  
+  var chosen = {
+  {% if job %}
+  "{{ job.sim.name|escapejs|safe }}": {
+  {% for param in job.paramvalue_set.all %}
+  "{{ param.param.name|escapejs|safe }}": "{{ param.value|escapejs|safe }}",
+  {% endfor %}
+  }{% endif %}
+  };
+  
+  
+  {% if job %}
+  var defaultSim = "{{ job.sim.name|escapejs|safe }}";
+  {% else %}
+  var defaultSim = "{{ sims.0.name|escapejs|safe }}";
+  {% endif %}
+  
+  window.addEventListener("load", function () {
+  update_defaults(defaultSim);
+  params = document.getElementById("sim").children;
+  for(var i = 0; i < params.length; i++) {
+		     if(params[i].value == defaultSim) {
+		     params[i].selected = true;
+		     break;
+		     }
+		     }
+		     // update list of latest simulations
+		     setLatest();
+		     }, false);
+		     
+		     </script>
 
-    var max_samples = {{ max_samples }},
-        max_npoints = {{ max_npoints }};
-
-    // parameters and default values
-    var defaults = { {% for sim in sims %}
-      "{{ sim.name|escapejs|safe }}": {
-      {% for param in sim.param_set.all %}
-        "{{ param.name|escapejs|safe }}": {
-          "value": "{{ param.default_value|escapejs|safe }}",
-          "unit" : "{{ param.unit|escapejs|safe }}",
-          "msg"  : "{{ param.msg|escapejs|safe }}" },
-      {% endfor %}
-    },{% endfor %} };
-
-    var chosen = {
-      {% if job %}
-      "{{ job.sim.name|escapejs|safe }}": {
-         {% for param in job.paramvalue_set.all %}
-         "{{ param.param.name|escapejs|safe }}": "{{ param.value|escapejs|safe }}",
-         {% endfor %}
-      }{% endif %}
-    };
 
 
-    {% if job %}
-    var defaultSim = "{{ job.sim.name|escapejs|safe }}";
-    {% else %}
-    var defaultSim = "{{ sims.0.name|escapejs|safe }}";
-    {% endif %}
-
-    window.addEventListener("load", function () {
-      update_defaults(defaultSim);
-      params = document.getElementById("sim").children;
-      for(var i = 0; i < params.length; i++) {
-        if(params[i].value == defaultSim) {
-          params[i].selected = true;
-          break;
-        }
-      }
-      // update list of latest simulations
-      setLatest();
-    }, false);
-
-  </script>
-
-
-
-  <form method=post action="/job/update/{{ jobid }}/"
-        onsubmit="return false;" id="form">
+<form method=post action="/job/update/{{ jobid }}/"
+      onsubmit="return false;" id="form">
     {% csrf_token %}
-
+    
     <fieldset>
       <legend>Step 1: Select simulation</legend>
       <ol>
@@ -122,14 +124,14 @@
         </li>
       </ol>
     </fieldset>
-
+    
     <fieldset>
       <input type=submit id="btnSave"
              value="Save" onclick="save();" />
       <input type=submit id="btnRun" style="float:right"
              value="Run this config!" onclick="run();" />
     </fieldset>
-  </form>
-  <br>
-  <div style="display:none" id="hiddenDiv"></div>
+</form>
+<br>
+<div style="display:none" id="hiddenDiv"></div>
 {% endblock %}

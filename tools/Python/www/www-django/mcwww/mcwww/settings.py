@@ -45,7 +45,8 @@ INSTALLED_APPS = (
     # django Apps #
     # ----------- #
     # Admin Site
-    'django.contrib.admin',
+    #    'django.contrib.admin',
+    'django.contrib.admin.apps.SimpleAdminConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     # Std
@@ -56,6 +57,11 @@ INSTALLED_APPS = (
 
     # 'django.contrib.admindocs',
 )
+TEMPLATE_CONTEXT_PROCESSORS = (
+    # Admin Site
+    'django.contrib.messages.context_processors.messages',
+    'django.contrib.auth.context_processors.auth',
+    )
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -88,18 +94,14 @@ DATABASES  = {                                            # keys not read by sql
 #--------------#
 WSGI_APPLICATION = 'mcwww.wsgi.application' # path to WSGI app used by runserver.
 ROOT_URLCONF     = 'mcwww.urls'             # File holding URLs to be served.
-TEMPLATE_CONTEXT_PROCESSORS = (
-    # Admin Site
-    'django.contrib.messages.contex_prcessors.messages',
-    )
 TEMPLATE_DIRS    = (                        # Absolute paths to template.htmls
     PROJECT_PATH + '/templates/',
-    # Admin Site Templates # No need to actually define but this is where they are.
+    # Admin Site Templates #
     # -------------------- #
-    #    PROJECT_PATH + '/templates/admin',
-    #    PROJECT_PATH + '/templates/mcUser',
-    #    PROJECT_PATH + '/templates/mcsimulator',
-    #    PROJECT_PATH + '/templates/mcwww',
+    PROJECT_PATH + '/templates/admin',
+    #PROJECT_PATH + '/templates/mcUser',
+    #PROJECT_PATH + '/templates/mcsimulator',
+    #PROJECT_PATH + '/templates/mcwww',
     
     )
 TEMPLATE_LOADERS = (                        # Callables that import templates.

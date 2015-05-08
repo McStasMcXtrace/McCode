@@ -21,44 +21,12 @@ from django.forms.models import BaseInlineFormSet # Form customisation
 from django.contrib import admin
 # app imports
 from mcsimulator.models import *
-#-----------------------------------------#
-# Param and ParamValue Admin declarations # THESE SHOULD BE MADE REDUNDANT
-#-----------------------------------------#
-class ParamAdmin(admin.ModelAdmin):
-    def has_add_permission(self, request, obj=None):
-        return False
-class ParamValueAdmin(admin.ModelAdmin):
-    def has_add_permission(self, request, obj=None):
-        return False
-
 #---------------------------------------------#
 # Please forgive me for the below code - Mark #
 #---------------------------------------------#
-
 #=======================#
 # Admin Site Formatting #
 #=======================#
-#---------------------------------#
-# TabbedParams                    #
-# ------------                    #
-# - This should be made redundant #
-#---------------------------------#
-class TabbedParams(admin.TabularInline):     
-    model = Param                            
-    exclude = ('priority',)
-    readonly_fields = ('name', 'unit')
-    fields = ('name', 'msg', 'str_default', 'unit')
-    actions = None
-    extra = 0
-    # remove add permission
-    def has_add_permission(self, request, obj=None):
-        return False
-    # remove del permission
-    def has_delete_permission(self, request, obj=Param):
-        return False
-    def __init__(self, *args, **kwargs):
-        super(TabbedParams, self).__init__(*args, **kwargs)
-        self.list_display_links = (None,)
 #----------------------------#
 # TabbedJob                  #
 # ---------                  #
@@ -126,7 +94,6 @@ class TabbedSim(admin.TabularInline):
 class SimulationAdmin(admin.ModelAdmin):
     exclude = ('displayname', 'simgroup')
     readonly_fields =  ('name',)
-    inlines = [TabbedParams]
     # File System access goes here
     def delete(self, *args, **kwargs):
         super(SimulationAdmin, self).delete(*args, **kwargs)
@@ -159,19 +126,23 @@ class SimRunAdmin(admin.ModelAdmin):
     class Meta:
         ordering = ['user', 'created']
 #===========================#
-# OverlordAdmin             #
+# OverlordAdmin             # - I am 100% surprised this heredity worked...
 # -------------             #
 # Combines the above admins #
 #===========================#
-class Overlord(JobAdmin, SimRunAdmin, SimulationAdmin):
-    print "Put the composite admin here"
-    print "make a view that deals with this admin."
+# class Overlord(JobAdmin, SimRunAdmin, SimulationAdmin):
+#     readonly_fields = ('JobAdmin.samples', 'JobAdmin.npoints', 'JobAdmin.seed',)
+#     print "Put the composite admin here"
+#     print "make a view that deals with this admin."
 
 # Want to get a class here that inherits from UserAdmin and adds a little functionality, 
 # like filters by on/off-line etc.
 for model, modelA in ( (Job,        JobAdmin),
-                       (Simulation, None),
-                       (SimRun,     SimRunAdmin),
-                       (Param,      None), #ParamAdmin),
-                       (ParamValue, None)):
+                       (Simulation, SimulationAdmin),
+                       (SimRun,     SimRunAdmin)):
     admin.site.register(model, modelA)
+#admin.site.register(Overlord)
+#for model, modelA in ( (Job,        Overlord),
+#                       (Simulation, Overlord),
+#                       (SimRun,     Overlord)):
+#    admin.site.register(model, modelA)

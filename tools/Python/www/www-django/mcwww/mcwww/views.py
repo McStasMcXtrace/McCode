@@ -1,6 +1,11 @@
-#--------------------------#
-# Edited : Mark Lewis 2015 #
-#--------------------------#
+#=================================#
+# views.py                        #
+# --------                        #
+# - should really move the logon  #
+#   view to mcuser                #
+# -------------------             #
+# Edited : Mark Lewis             #
+#=================================#
 #------------------#
 # django imports   #
 #------------------#
@@ -36,7 +41,6 @@ def loginPOST(req):
     UID = form.get('uid', '')
     PW = form.get('password', '')
     if PW == None: return redirect('/login/')
-
     checker = mcBackend()
     user = checker.authenticate(UID, PW)
     if user is None or not user.is_active:

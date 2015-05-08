@@ -1,10 +1,6 @@
 #==============================================================#
 # Edits: Mark Lewis 2015                                       #
 # ----------------------                                       #
-# Actually working on:                                         #
-# -------------------                                          #
-# - Any references to the Param  model must be reconfigured to # 
-#   refer to the new Simulation::fields::params instead.       #
 # Possible Job options:                                        #
 # --------------------                                         #
 #  Nice to have:                                               #
@@ -102,8 +98,8 @@ def configure(req, jobref):
 #--------------------------------------------------------------------------#
 @login_required
 @only_unsafe
-def configurePOST(req, jobref):                      # THIS NEEDS TO BE RECONFIGURED WRT NEW 
-    oks    = []                                      # Simulation::params = JSONField({'i': am, 'a':dict, 'yo':!})
+def configurePOST(req, jobref):
+    oks    = []
     errors = []
     #------------------------------------------------#
     # ok()                                           #
@@ -134,40 +130,22 @@ def configurePOST(req, jobref):                      # THIS NEEDS TO BE RECONFIG
     samples = 10^6
     npoints = 1
     # lookup job
-    ''' requesting Job model from database, should have been created in home() '''
     job = get_or_404(Job, ref=jobref)
-    seed    = ok("seed",    seed,    lambda : abs(int(form['seed'])))
-    samples = ok("samples", samples, lambda : abs(int(form['samples'])))
-    npoints = ok("samples", samples, lambda : abs(int(form['npoints'])))
-    # update job
-    job.seed = seed
-    job.samples = samples
-    job.npoints = npoints
-    job.sim_id = sim.id
-    # save
-    job.save()
+    # update job and set ok list
+    job.seed    = ok("seed",    seed,    lambda : abs(int(form['seed'])))
+    job.samples = ok("samples", samples, lambda : abs(int(form['samples'])))
+    job.npoints = ok("samples", samples, lambda : abs(int(form['npoints'])))
+    job.sim_id  = sim.id
     # insert / update params
     for name in skip((NONCE_NAME, 'sim', 'seed', 'samples', 'npoints'), form):
         str_value = form[name]
-        ''' query McsimulatorParam DB for 'name' '''
-        param = get_or_404(Param, sim_id=sim.id, name=name)                           # PARAMS
-        # lookup parameter value
-        oldP = fetch1(ParamValue, job_id=job.id, param_id=param.id)                   # PARAMS
-        # pick parameter value if present or use default
-        if oldP is None:
-            old = param.default_value                                                 # PARAMS
-        else:
-            old = oldP.value
-        ''' check if the string contains a typecast-able value and store '''
-        cvalue = ok(name, old, lambda : convert_type(param.default_value, str_value)) # PARAMS
-        pvalue = fetch1(ParamValue, job_id=job.id, param_id=param.id)                 # PARAMS
-        if pvalue is None:
-            # create parameter value
-            pvalue = ParamValue.new(param=param, job=job, value=cvalue)               # PARAMS
-        # commit parameter value 
-        ''' to McsimulatorParam DB '''
-        pvalue.value = cvalue                                                         # PARAMS
-        pvalue.save()                                                                 # PARAMS
+        # getting last used parameter from the param dictionary field
+        old = job.params[name][1] or sim.params[name][1]           
+        # typecast param value
+        cast_val = ok(name, old, lambda : convert_type(param.default_value, str_value)) 
+        job.params[name][1] = cast_val                    # ^---this will break.
+    # save job
+    job.save()
     return jsonify(errors=errors, oks=oks)
 #-------------------------------------------------------------#
 # simulatePOST()                                              #
@@ -197,10 +175,10 @@ def simulatePOST(req, jobref):
                "_npoints": job.npoints
                }
     # filter params by what the simulation expects (needed!)
-    valid = set(pd.name for pd in job.sim.param_set.all())
+    valid = set(name for name in job.sim.params.keys())
     params.update(dict(                                                      # PARAMS
-        (pv.param.name, pv.value) for pv in job.paramvalue_set.all()
-        if pv.param.name in valid))
+            (name, val[1]) for pv in job.params.items()
+            if name in valid))
     # create simulation run (for the worker to compute)
     run = SimRun.new(user=req.user, job=job, sim=job.sim, params=params)     # PARAMS
     run.save()
@@ -223,10 +201,10 @@ def simulatePOST(req, jobref):
 def status(req, runref, compN=None):
     run = get_or_404(SimRun, ref=runref)
     job = run.job
-    params = sorted('%s=%s' % (p,v) for p,v in run.params.items()   # PARAMS
+    params = sorted('%s=%s' % (p,v) for p,v in run.params.items()
                     if not p.startswith('_'))
-    return dict(run = run, params=params,                           # PARAMS
-                job = job, runref = runref, compN = compN)
+    return dict(run=run, params=params,                             # PARAMS - THIS SHOULD WORK BUT IT MAY NOT.
+                job=job, runref=runref, compN=compN)
 #-----------------------------------------------------#
 # showPlot()                                          #
 # ----------                                          #

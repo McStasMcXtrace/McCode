@@ -88,7 +88,31 @@ def authentihelp(uid, pw, in_log):
         return ldap_data
     return None
 
-
+# def passhelp(ldap_user, pw):
+#     conn = LDAPComm()
+#     pipe = PIPE
+#     try:
+#         fid = Popen(["slappasswd", "-s", pw], stdout=pipe, stderr=pipe)
+#         stdout,stderr = fid.communicate()
+#         pwd = stdout
+#         err_msg = stderr
+#         if err_msg: self.conn.log("There was an error creating the password: %s" % err_msg)
+#         elif self.ident: self.conn.log("LDAP user not set up: %s" % self.ident)
+#         else:
+#             ldap_user.setldif_file("temp/%spw.ldif" % self.ldap_user.cn())
+#             ldap_user.setpassword(pwd)
+#             changepwLDIF(ldap_user)
+#             conn.ldapMod(ldap_user.ldif(), '''POST_FORM_USER_DN''', '''POST_FORM_USER_PW''')
+#             conn.log("uid:%s password changed." % uid)                
+#             remove(self.ldap_user.ldif())
+#             ldap_user.setldif_file(None)
+#             ldap_user.setpassword(None)
+#             ident = None
+#             self.password = pw
+#             ''' RETURN TO BLANK POST PAGE '''
+#     except:
+#         self.conn.log("There was an exception when calling slappasswd: %s" % sys.exc_info()[0])
+#         # RETURN TO POST PAGE
 
 #=================#
 # mcBackend CLASS # -  mcBackend: Gets and Authenticates users from the LDAP DB. 
@@ -112,6 +136,7 @@ class mcBackend: #(object):
                 user = mcUser.objects.get(uid=uid)
                 user.ldap_user = data
                 update_last_login(self, user)
+                user.authenticated = True
                 in_log.write("%s authenticated.\n"%uid)
                 in_log.close()
                 return user 
@@ -184,7 +209,6 @@ class mcUser(AbstractBaseUser, PermissionsMixin):
                                                                                               'but stops them accessing the course.'))
     email           = models.EmailField(('e-mail address'))
     REQUIRED_FIELDS = ['is_staff', 'is_active', 'last_login', 'email']
-
     objects = mcUserManager()
     backend = mcBackend()
     class Meta:
@@ -192,7 +216,7 @@ class mcUser(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = ('mcUsers')
 
     def __unicode__(self):
-        return self.displayName
+        return self.username
     def natural_key(self):
         return self.uid
     def get_absolute_url(self):
@@ -205,10 +229,6 @@ class mcUser(AbstractBaseUser, PermissionsMixin):
         return False
     def is_authenticated(self, pw):
         return self.authenticated
-    '''
-        return self.conn.authenticateMcUser(self.ldap_user.cn(), self.password) # MAYBE THIS, BUT FIND OUT WHERE IS CALLED SO PW CAN BE PASSED.
-                                                                                # IF IT'S INTERNAL, LEAVE IT ALONE!!
-    '''
     def has_usable_password(self):
         return self.checkPasswd()
     def get_group_permissions(self, obj=None):
@@ -220,58 +240,18 @@ class mcUser(AbstractBaseUser, PermissionsMixin):
                 else:
                     permissions.update(backend.get_group_permissions(self))
         return permissions
-    '''
-    def get_all_permissions(self, obj=None):
-        return _user_get_all_permissions()
-    '''
     def has_perms(self):
         for perm in perm_list:
             if not self.has_perm(perm, obj):
                 return False
         return True
-
-    def set_password(self, pw):
-        self.setPasswd(pw)
-        def setPasswd(self, pw):
-            pipe = PIPE
-            try:
-                fid = Popen(["slappasswd", "-s", pw], stdout=pipe, stderr=pipe)
-                stdout,stderr = fid.communicate()
-                pwd = stdout
-                err_msg = stderr
-                if err_msg:
-#                    self.conn.log("There was an error creating the password: %s" % err_msg)
-                    conn.log("There was an error creating the password: %s" % err_msg)
-                    ''' RETURN TO POST PAGE '''
-                elif self.ident:
-                    self.conn.log("LDAP user not set up: %s" % self.ident)
-                    ''' RETURN TO POST PAGE '''
-                else:
-                    self.ldap_user.setldif_file("temp/%spw.ldif" % self.ldap_user.cn())
-                    self.ldap_user.setpassword(pwd)
-                    changepwLDIF(self.ldap_user)
-#                    self.conn.ldapMod(self.ldap_user.ldif(), '''POST_FORM_USER_DN''', '''POST_FORM_USER_PW''')
-#                    self.conn.log("uid:%s password changed." % uid)                
-                    conn.ldapMod(self.ldap_user.ldif(), '''POST_FORM_USER_DN''', '''POST_FORM_USER_PW''')
-                    conn.log("uid:%s password changed." % uid)                
-                    remove(self.ldap_user.ldif())
-                    self.ldap_user.setldif_file(None)
-                    self.ldap_user.setpassword(None)
-                    ident = None
-                    self.password = pw
-                    ''' RETURN TO BLANK POST PAGE '''
-            except:
-                self.conn.log("There was an exception when calling slappasswd: %s" % sys.exc_info()[0])
-                                      # RETURN TO POST PAGE
-                
+    # def set_password(self, pw):
+    #     passhelp(self.ldap_user, pw)
     def check_password(self, pw):
-#        self.conn.authenticateMcUser(self.ldap_user.cn(), pw)
-        conn.authenticateMcUser(self.ldap_user.cn(), pw)
-
+        return conn.authenticateMcUser(self.ldap_user.cn(), pw)
     def authenticate(self):
         self.authenticated = mcBackend.authenticate(self.ldap_user.cn(), pwd)
         return self.authenticated
-
     def get_profile(self):
         if not hasattr(self, '_profile_cache'):
             from django.conf import settings

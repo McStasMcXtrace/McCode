@@ -114,9 +114,10 @@ def build_params(bin):
         filter(lambda x: 'Param:' in x, lines))                                       # (c)
     for param in sorted(types.keys()):                                                # (d)
         priority, unit, msg = infos[param.lower()]
-        params[param] = (priority, 
-                         convertfns[types[param]](defaults[param]),
-                         unit, msg)
+        try: params[param] = (priority,
+                              convertfns[types[param]](defaults[param]),
+                              unit, msg)
+        except KeyError: params[param] = "NO DEFAULT DEFINED"
     return params
 #--------------------------------------------------#
 # info                                             #

@@ -15,32 +15,32 @@
 # python imports
 from json import dumps, loads
 from datetime import datetime
-from jsonfield import JSONfield       # this needs to be in the dependencies!!! BEEP!
+from jsonfield import JSONField       # this needs to be in the dependencies!!! BEEP! BEEP! DANGER WILL ROGERS!!
 # django imports
-from django.db import models          # required to be imported when Parameter handling is moved to another file
+from django.db import models
 from django.db.models import related
 from django.contrib import admin
 from django.utils.timezone import now
 # app imports
 from mcwww import settings
-from mcsimulator import model_objects
-#-----------------------------#
-# Job model                   #
-# ---------                   #
-# - refers to simulation      #
-# - contains basic sim params #
-#-----------------------------#
+from mcsimulator.models import *
+#--------------------------------------#
+# Job model                            #
+# ---------                            #
+# - refers to specific simulation      #
+# - params: last used parameters       #
+# - ref : Unique permanent reference   #
+# - sim : Simulation Relation (1-to-1) #
+# - created :  Date and time created   #
+#--------------------------------------#
 class Job(models.Model):
-    # Unique permanent reference (for use in links)
     ref = models.CharField(max_length=64, db_index=True)
-    # Simulation Relation (1-to-1)
     sim     = models.ForeignKey('Simulation')
-    # Date and time created - not sure we need this
     created = models.DateTimeField(db_index=True, editable=False) 
-    # Basic Sim Parameters
     seed    = models.IntegerField()
     samples = models.IntegerField()
     npoints = models.IntegerField()
+    params = JSONField(null=True, blank=True)
     @staticmethod 
     def new(ref, sim, seed=0, samples=1000000, npoints=1):
         return Job(None, ref, seed, samples, npoints, sim.id, created=now())
@@ -51,31 +51,23 @@ class Job(models.Model):
 #------------------------------------------#
 # Simulation Model                         #
 # ----------------                         #
-# - This must point to a file or something #
-# - Ideas:                                 #
-#   1 Put in ParamDict that holds          #
-#     parameters for the Simulation.       #
-#     Have default values held here.       #
-#     Have Job or SimRun deal with user    #
-#     defined values.                      #
-#   2 Make a char field that holds the     #
-#     Simulation parameters.               #
-#     Have Job or SimRun handle the values #
-#     from a dictionary.                   #
+# - Refers to a particular simulation      #
+#  file that can be run by memebers of the #
+#  correct group (simgroup)                #
+# #--------------------------------------# # 
+# # Simulation Parameters                # #
+# # - dict format:                       # #
+# #     params[<name>] = (priority,      # #
+# #                       default value, # # 
+# #                       unit,          # # 
+# #                       message)       # #
+# #--------------------------------------# #
 #------------------------------------------#
 class Simulation(models.Model):
     # Simulation name (see Param/sim.param_set() for parameters)
     name = models.CharField(max_length=64, unique=True, db_index=True)
     simgroup = models.CharField(max_length=64, unique=False, db_index=True)
     displayname = models.CharField(max_length=64, unique=False, db_index=True)
-    #--------------------------------------#
-    # Simulation Parameters                #
-    # - dict format:                       #
-    #     params[<name>] = (priority,      #
-    #                       default value, #
-    #                       unit,          #
-    #                       message)       #
-    #--------------------------------------#
     params = JSONField(null=True, blank=True)
     def shortname(self):
         return self.displayname
@@ -86,33 +78,32 @@ class Simulation(models.Model):
         return Simulation(None, *args, **kwargs)
     def __unicode__(self):
         return u'<Sim %s>' % self.name
-#--------------------------------------------------------#
-# SimRun Model                                           #
-# ------------                                           #
-# - A particular run of a simulation (configured by Job) #
-#--------------------------------------------------------#
+#---------------------------------------------------------#
+# SimRun Model                                            #
+# ------------                                            #
+# - A particular run of a simulation (configured by Job)  #
+# - ref : Unique reference (for use in urls)              #
+# - created/completed : Dates for creation and completion #
+# - status : Current status (waiting, running, completed) #
+# - user, job, sim : foreign keys to other app models     #
+#---------------------------------------------------------#
 class SimRun(models.Model):
-    # Unique reference (for use in urls)
     ref = models.CharField(max_length=64, db_index=True)
-    # Creator / owner
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
-    # Dates for creation and completion
     created   = models.DateTimeField(db_index=True, editable=False)
     completed = models.DateTimeField(db_index=True, editable=False, null=True)
-    # Current status (waiting, running, completed)
     status = models.CharField(max_length=32, db_index=True)
-    # Job to run
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
     job = models.ForeignKey('Job')
     sim = models.ForeignKey('Simulation')
-    # Parameters and result as JSON
+    # Parameters and result as JSON - Do we need the str_params?
     str_params = models.TextField()
     str_result = models.TextField()
     @staticmethod
-    def new(user, job, sim, params):
+    def new(user, job, sim):
         ref = job.ref + "__" + str(datetime.now()).replace(' ', '_')
         run = SimRun(None, ref, user.id, job.id, sim.id,
                      'waiting', 'null', 'null', now(), None)
-        run.params = params
+        run.params = sim.params
         run.result = None
         return run
     @property
@@ -131,68 +122,3 @@ class SimRun(models.Model):
         return "SimRun Details [ref, job ref, sim name]: [%s, %s, %s]" % (self.ref, 
                                                                           self.job.ref, 
                                                                           self.sim.name)
-#===============#
-# TO BE REMOVED #
-#===============#
-#--------------------------------------------------------#
-# Param Model                                            #
-# -----------                                            #
-# - Incorporate into the Simulation Model as Dictionary  #
-#   - Make an object (not model)                         #
-#     - Priority (maybe array position)                  #
-#     - Name     (maybe dictionary key)                  #
-#     - Unit                                             #
-#     - Message                                          #
-#     - What is the str_default?                         #
-#--------------------------------------------------------#
-class Param(models.Model):
-    # Where to show the parameter in a listing (e.g. on configure page)
-    priority = models.IntegerField()
-    # Name, unit and help message
-    name = models.CharField(max_length=128)
-    unit = models.CharField(max_length=128)
-    msg  = models.CharField(max_length=128)
-    # JSON-encoded default value
-    str_default = models.CharField(max_length=256)
-    # The simulation this parameter belongs to
-    sim = models.ForeignKey('Simulation')
-    # value_set() gives the ParamValue's that use this parameter
-    @staticmethod
-    def new(sim, name, unit, value=None, msg=''):
-        param = Param(None, sim.id, name, unit, msg, 'null')
-        param.default_value = value
-        return param
-    def simulation(self):
-        return Simulation.query.filter_by(id=self.sim_id).one()
-    @property
-    def default_value(self):
-        return loads(self.str_default)
-    @default_value.setter
-    def default_value(self, val):
-        self.str_default = dumps(val)
-    def __unicode__(self):
-        return '<Param: %s, %s %s>' % (self.name, self.default_value, self.unit)
-#========================================================#
-# ParamValue Model
-# ----------------
-# - A parameter value tied to a specific job
-#
-#========================================================#
-class ParamValue(models.Model):
-    param     = models.ForeignKey('Param')
-    job       = models.ForeignKey('Job')
-    str_value = models.TextField()
-    @staticmethod
-    def new(param, job, value):
-        pv = ParamValue(None, param.id, job.id)
-        pv.value = value
-        return pv
-    @property
-    def value(self):
-        return loads(self.str_value)
-    @value.setter
-    def value(self, val):
-        self.str_value = dumps(val)
-    def __unicode__(self):
-        return self.param.name
-
