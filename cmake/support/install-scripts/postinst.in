@@ -37,31 +37,35 @@ else
 	    # McCode itself
 	    rm /usr/local/bin/@FLAVOR@
 	    # mcrun variants
-	    rm /usr/local/bin/@MC@run
-	    rm /usr/local/bin/@MC@run-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@run
+	    rm /usr/local/bin/@MCCODE_PREFIX@run-py
+	    # mcgui variants
+	    rm /usr/local/bin/@MCCODE_PREFIX@gui
+	    rm /usr/local/bin/@MCCODE_PREFIX@gui-py
 	    # mcplot 
-	    rm /usr/local/bin/@MC@plot
-	    rm /usr/local/bin/@MC@plot-chaco-py
-	    rm /usr/local/bin/@MC@plot-matplotlib-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@plot
+	    rm /usr/local/bin/@MCCODE_PREFIX@plot-chaco-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@plot-matplotlib-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@plot-matlab
 	    # mcdisplay
-	    rm /usr/local/bin/@MC@display
-	    rm /usr/local/bin/@MC@display-py
-	    rm /usr/local/bin/@MC@display-x3d-py
-	    rm /usr/local/bin/@MC@display-matplotlib-py
-	    rm /usr/local/bin/@MC@display-vtk-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@display
+	    rm /usr/local/bin/@MCCODE_PREFIX@display-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@display-x3d-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@display-matplotlib-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@display-vtk-py
 	fi
     elif [[ ${PREFIX} = /Applications* ]]
     then
-	# Looks like a Mac - dump links in /usr/local/bin
+	# Looks like a Mac - dump links in /usr/bin
 	BINTARGET="/usr/bin"
 	APPTARGET="none"
 	LOGOTARGET="none"
        	# Also drop a link to the mccode "system folder" as it may otherwise be hard to find for "expert users"
-	mkdir -p /usr/local/${FLAVOR}
+	mkdir -p /usr/share/${FLAVOR}
 	# - Should not be done if called from the 'app bundle' installer - and only once
 	if [[ ${PREFIX} = */Contents/Resources ]]; then
 	    if [ ! -h /usr/local/${FLAVOR}/${VERSION} ]; then
-		ln -sf ${PREFIX}/${FLAVOR}/${VERSION} /usr/local/${FLAVOR}/${VERSION}
+		ln -sf ${PREFIX}/${FLAVOR}/${VERSION} /usr/share/${FLAVOR}/${VERSION}
 	    fi
 	fi
 	# - Check for possibly existing links in /usr/local/bin and remove them...
@@ -69,18 +73,22 @@ else
 	    # McCode itself
 	    rm /usr/local/bin/@FLAVOR@
 	    # mcrun variants
-	    rm /usr/local/bin/@MC@run
-	    rm /usr/local/bin/@MC@run-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@run
+	    rm /usr/local/bin/@MCCODE_PREFIX@run-py
+	    # mcgui variants
+	    rm /usr/local/bin/@MCCODE_PREFIX@gui
+	    rm /usr/local/bin/@MCCODE_PREFIX@gui-py
 	    # mcplot 
-	    rm /usr/local/bin/@MC@plot
-	    rm /usr/local/bin/@MC@plot-chaco-py
-	    rm /usr/local/bin/@MC@plot-matplotlib-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@plot
+	    rm /usr/local/bin/@MCCODE_PREFIX@plot-chaco-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@plot-matplotlib-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@plot-matlab
 	    # mcdisplay
-	    rm /usr/local/bin/@MC@display
-	    rm /usr/local/bin/@MC@display-py
-	    rm /usr/local/bin/@MC@display-x3d-py
-	    rm /usr/local/bin/@MC@display-matplotlib-py
-	    rm /usr/local/bin/@MC@display-vtk-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@display
+	    rm /usr/local/bin/@MCCODE_PREFIX@display-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@display-x3d-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@display-matplotlib-py
+	    rm /usr/local/bin/@MCCODE_PREFIX@display-vtk-py
 	fi
     else
 	# OK - nothing clever then

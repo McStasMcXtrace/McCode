@@ -15,3 +15,7 @@ set(PERL "/usr/bin/perl5.12")
 set(PLOTTER "PGPLOT")
 set(PGDEV "/xserv")
 set(GNUDEV "wxt")
+
+# Suffix for executables
+set(EXE "out")
+

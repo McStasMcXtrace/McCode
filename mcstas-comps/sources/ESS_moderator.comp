@@ -78,8 +78,8 @@ DEFINE COMPONENT ESS_moderator
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (isleft=0.9,
 		    Lmin, Lmax, cold_frac=1.0, dist=0, focus_xw, focus_yh, int target_index=0, tmax_multiplier=3,yheight_c=0.12, yheight_t=0.12,
-		    int n_pulses=1, acc_power=5, beamport_angle=-1, string sourcedef="2014", xwidth_c=0.23, xwidth_t=0.12, extraction_opening=120)
-OUTPUT PARAMETERS (cold_bril, thermal_bril, l_range, w_mult, w_geom, w_geom, w_geom_t, cold)
+		    int n_pulses=1, acc_power=5, beamport_angle=-1, string sourcedef="2014", xwidth_c=0.1, xwidth_t=0.18, extraction_opening=120)
+  OUTPUT PARAMETERS (cold_bril, thermal_bril, l_range, w_mult, w_geom, w_geom, w_geom_t, cold, lambda)
 SHARE
 %{
   %include "ess_source-lib"
@@ -111,6 +111,7 @@ DECLARE
   double tfocus_width,  tfocus_time,  dt;
   /* radius of vacated zone around the moderator */
   double r_empty=2;
+  double lambda,xprime,yprime,zprime;
 %}
 
 INITIALIZE
@@ -214,13 +215,13 @@ INITIALIZE
     t1y=0; t2y=0;
     /* ESS-2015 definition: */  
    } else if (strcasestr(sourcedef,"2015")) {
-    if (xwidth_c!=0.23 || xwidth_t!=0.12 || extraction_opening!=120) {
-      fprintf(stderr,"FATAL: sourcedef %s only allows xwidth_c=0.23, xwidth_t=0.12 and extraction_opening=120 !\n",sourcedef);
+    if (xwidth_c!=0.1 || xwidth_t!=0.18 || extraction_opening!=120) {
+      fprintf(stderr,"FATAL: sourcedef %s only allows xwidth_c=0.1, xwidth_t=0.18 and extraction_opening=120 !\n",sourcedef);
       exit(-1);
     }
     /* Specify brilliance fct.'s */
-    cold_bril=ESS_2014_Schoenfeldt_cold;
-    thermal_bril=ESS_2014_Schoenfeldt_thermal;
+    cold_bril=ESS_2015_Schoenfeldt_cold;
+    thermal_bril=ESS_2015_Schoenfeldt_thermal;
     /* Cold moderator geometry */
     /* In this mode of operation, the emission is from the x-y plane*/
     cx = 0; cy=0; cz=-0.12; cyl_radius=0.12;
@@ -239,8 +240,12 @@ INITIALIZE
   modextras.tmultiplier=tmax_multiplier;
   modextras.extractionangle=extraction_opening;
   
-  if (strcasestr(sourcedef,"2014") && beamport_angle != modextras.extractionangle/2.0) {
+  if ((strcasestr(sourcedef,"2014")) && beamport_angle != modextras.extractionangle/2.0) {
     printf("%s: WARNING: beamport_angle is not at central slot. With sourcedef %s this means application of a partially analytical brightness model for B(\\theta) \n",NAME_CURRENT_COMP,sourcedef);
+  }
+  if ((strcasestr(sourcedef,"2015")) && (beamport_angle!=5.0 && beamport_angle!=15.0 && beamport_angle!=25.0 && beamport_angle!=35.0 && beamport_angle!=45.0 && beamport_angle!=55.0)) {
+    printf("%s: FATAL: beamport_angle is not at a defined value. Allowed are: (5, 15, ...) and < 60  \n",NAME_CURRENT_COMP);
+    exit(-1);
   }
   modextras.beamportangle=beamport_angle;
   
@@ -253,7 +258,7 @@ INITIALIZE
 TRACE
 %{
   p=1;
-  double v,E,lambda,k,r,xf,yf,dx,dy,dz,w_focus,tail_flag,cor,dt,xprime,yprime,zprime;
+  double v,E,k,r,xf,yf,dx,dy,dz,w_focus,tail_flag,cor,dt;
 
   /* Bispectral source - choice of spectrum and initial position */
   cold = ( rand01() < cold_frac );
@@ -282,6 +287,24 @@ TRACE
       cosine = 0;
       w_geom = w_geom_t;
     } 
+  } else if (strcasestr(sourcedef,"2015")) {
+    if (cold) { //case: cold moderator
+      xprime = -(0.06 + 0.1*rand01());
+      yprime = 0.5*randpm1()*yheight_c;
+      zprime = TSC2015_z0_BF3cm(100*xprime)/100.0;
+      cosine = 0;
+      w_geom = w_geom_c;
+    }  else  { //case: thermal moderator
+      xprime = -(0.09*randpm1());
+      yprime = 0.5*randpm1()*yheight_t;
+      zprime = TSC2015_z0_BF3cm(100*xprime)/100.0;
+      cosine = 0;
+      w_geom = w_geom_t;
+    } 
+    y = yprime;
+    x = cos(-beamport_angle*DEG2RAD)*xprime - sin(-beamport_angle*DEG2RAD)*zprime;
+    z = cos(-beamport_angle*DEG2RAD)*zprime + sin(-beamport_angle*DEG2RAD)*xprime;
+    
   } else {
     if (cold) {          //case: cold moderator
       //choose random point on cylinder surface
@@ -319,7 +342,7 @@ TRACE
 			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, cosine);
   
   /* In case of 2014 source, solid angle correction is done internally in the brill fcts */
-  if (strcasestr(sourcedef,"2014")) {
+  if (strcasestr(sourcedef,"2014") || strcasestr(sourcedef,"2015")) {
     w_focus=focus_xw*focus_yh/(tx*tx+ty*ty+tz*tz);
   }
   
@@ -337,28 +360,38 @@ TRACE
   vy = v*dy/r;
   vx = v*dx/r;
   
-  modextras.X=x; modextras.Y=y; modextras.Z=z; modextras.Wasleft=wasleft;
+  if (strcasestr(sourcedef,"2015")) {
+    modextras.X=xprime; modextras.Y=yprime; modextras.Z=zprime; //modextras.Wasleft=1;
+  } else {
+    modextras.X=x; modextras.Y=y; modextras.Z=z; modextras.Wasleft=wasleft;
+  }
   
   if (cold) {          //case: cold moderator
     cold_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
   }  else  {                      //case: thermal moderator
     thermal_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
   }
-  
+  //printf("Source weight factors: w_stat %g, w_focus %g, w_geom %g, w_mult %g\n",w_stat,w_focus,w_geom,w_mult);
+
   p*=w_stat*w_focus*w_geom*w_mult;
   t+=(double)floor((n_pulses)*rand01())/ESS_SOURCE_FREQUENCY;   /* Select a random pulse */
-
+  
   /* Correct weight for sampling of cold vs. thermal events. */
   if (cold) {
     p /=cold_frac;
   } else {
     p/=(1-cold_frac);
-    if (wasleft) {
-      p/=(isleft);
-    } else {
-      p/=(1-isleft);
+    // In the 2015 case we only describe one thermal emission area
+    if (!strcasestr(sourcedef,"2015")) {
+      if (wasleft) {
+	p/=(isleft);
+      } else {
+	p/=(1-isleft);
+      }
     }
   }
+  //printf("Neutron is at %g %g %g\n",x,y,z);
+  //SCATTER;
 
 %}
 
@@ -367,15 +400,16 @@ MCDISPLAY
   /* if (planar==0) { */
   /* Draw cold moderator as cylinder */
   magnify("xz");
-  circle("xz", cx,  cy+yheight_c/2.0, cz, cyl_radius);
-  circle("xz", cx,  cy-yheight_c/2.0, cz, cyl_radius);
-  line(cx, cy-yheight_c/2.0, cz+cyl_radius, cx, cy+yheight_c/2.0, cz+cyl_radius);
-  line(cx, cy-yheight_c/2.0, cz-cyl_radius, cx, cy+yheight_c/2.0, cz-cyl_radius);
-  line(cx+cyl_radius, cy-yheight_c/2.0, cz, cx+cyl_radius, cy+yheight_c/2.0, cz);
-  line(cx-cyl_radius, cy-yheight_c/2.0, cz, cx-cyl_radius, cy+yheight_c/2.0, cz);
-  
+  if (!strcasestr(sourcedef,"2015")) {
+    circle("xz", cx,  cy+yheight_c/2.0, cz, cyl_radius);
+    circle("xz", cx,  cy-yheight_c/2.0, cz, cyl_radius);
+    line(cx, cy-yheight_c/2.0, cz+cyl_radius, cx, cy+yheight_c/2.0, cz+cyl_radius);
+    line(cx, cy-yheight_c/2.0, cz-cyl_radius, cx, cy+yheight_c/2.0, cz-cyl_radius);
+    line(cx+cyl_radius, cy-yheight_c/2.0, cz, cx+cyl_radius, cy+yheight_c/2.0, cz);
+    line(cx-cyl_radius, cy-yheight_c/2.0, cz, cx-cyl_radius, cy+yheight_c/2.0, cz);
+    
     /* Draw thermal moderators as a couple of squares + some lines */
-
+    
     // Left
     multiline(5, cx+t1x*cyl_radius, cy-yheight_t/2.0, cz+t1z*cyl_radius,
   	      cx+t1x*cyl_radius + t1x*xwidth_t, cy-yheight_t/2.0, cz+t1z*cyl_radius + t1z*xwidth_t,
@@ -403,22 +437,27 @@ MCDISPLAY
     circle("xz", cx, cy-focus_yh/2.0 , cz, 6);
     circle("xz", cx,  cy+2, cz, 6);
     circle("xz", cx, cy-2, cz, 6);
+  } else {
+    //line(
+  }
+  
+  
+  
+  /* This last bit is relevant only in connection with 2014 source definition */
+  if (strcasestr(sourcedef,"2014") || strcasestr(sourcedef,"2015") ) {
+    /* Arrow indicating proton beam direction */
+    line(cx-5.9,cy,cz,cx-cyl_radius-0.1,cy,cz);
+    line(cx-cyl_radius-0.2*cos(10*DEG2RAD),cy,cz+0.2*sin(10*DEG2RAD),cx-cyl_radius-0.1,cy,cz);
+    line(cx-cyl_radius-0.2*cos(10*DEG2RAD),cy,cz-0.2*sin(10*DEG2RAD),cx-cyl_radius-0.1,cy,cz);
     
-    /* This last bit is relevant only in connection with 2014 source definition */
-    if (strcasestr(sourcedef,"2014")) {
-      /* Arrow indicating proton beam direction */
-      line(cx-5.9,cy,cz,cx-cyl_radius-0.1,cy,cz);
-      line(cx-cyl_radius-0.2*cos(10*DEG2RAD),cy,cz+0.2*sin(10*DEG2RAD),cx-cyl_radius-0.1,cy,cz);
-      line(cx-cyl_radius-0.2*cos(10*DEG2RAD),cy,cz-0.2*sin(10*DEG2RAD),cx-cyl_radius-0.1,cy,cz);
-      
-      /* Rectangle indicating the chosen focus rectangle - where the optics starts... */
-      rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
-      rectangle("xy",0,0,0,xwidth_c,yheight_c);
-      rectangle("xy",-xwidth_c/2-xwidth_t/2,0,0,xwidth_t,yheight_t);
-      rectangle("xy",xwidth_c/2+xwidth_t/2,0,0,xwidth_t,yheight_t);
-      rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
-      
-    }
+    /* Rectangle indicating the chosen focus rectangle - where the optics starts... */
+    rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
+    rectangle("xy",0,0,0,xwidth_c,yheight_c);
+    rectangle("xy",-xwidth_c/2-xwidth_t/2,0,0,xwidth_t,yheight_t);
+    rectangle("xy",xwidth_c/2+xwidth_t/2,0,0,xwidth_t,yheight_t);
+    rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
+    
+  }
 %}
 
 END

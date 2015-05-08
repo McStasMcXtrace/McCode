@@ -26,3 +26,7 @@ set(GNUPLOT "gnuplot.exe")
 set(PLOTTER "PGPLOT")
 set(PGDEV "/gw")
 set(GNUDEV "windows")
+
+# Suffix for executables
+set(EXE "exe")
+
