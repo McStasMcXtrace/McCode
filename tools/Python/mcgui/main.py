@@ -141,7 +141,7 @@ class McGuiState(QtCore.QObject):
     def compileAsync(self):
         # generate mcstas .c file from instrument
         nf = self.__instrFile
-        cmd = mccode_config.configuration["MCCODE"] + ' '  + nf
+        cmd = mccode_config.configuration["MCCODE"] + ' -t '  + nf
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
@@ -217,13 +217,15 @@ class McGuiState(QtCore.QObject):
         dir = "%s_%s" % \
                       (self.__instrFile,
                        datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
-        
-        runstr = mccode_config.configuration["MCRUN"] + ' ' + self.__instrFile + ' -d ' + dir
-        self.__DataDir = dir
 
         # parse fixed params
         simtrace = fixed_params[0]
-        # TODO: support trace
+        if simtrace == 0:
+            runstr = mccode_config.configuration["MCRUN"] + ' ' + self.__instrFile + ' -d ' + dir
+            self.__DataDir = dir
+        else:
+            runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + self.__instrFile + ' --no-output-files '
+            self.__DataDir = "None"
         
         ncount = fixed_params[1]
         if ncount > 0:
