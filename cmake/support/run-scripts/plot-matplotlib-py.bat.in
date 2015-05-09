@@ -1,4 +1,4 @@
 @SET PATH=@CPACK_NSIS_INSTALL_ROOT@\\lib\\tools\\Python\\@MCCODE_PREFIX@plot\\matplotlib;%PATH%
 @REM Isn't windows a lovely place???
-@mcplot.py %*
+@python @CPACK_NSIS_INSTALL_ROOT@\\lib\\tools\\Python\\@MCCODE_PREFIX@plot\\matplotlib\\mcplot.py %*
 @exit
