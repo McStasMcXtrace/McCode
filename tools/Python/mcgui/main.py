@@ -218,38 +218,43 @@ class McGuiState(QtCore.QObject):
                       (self.__instrFile,
                        datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
 
+        mcrunparms = ' '
+        # assemble mpi-related options
+        clustering = fixed_params[4]
+        if clustering == 1:
+            mcrunparms = ' --mpi=' + fixed_params[5] + ' '
         # parse fixed params
         simtrace = fixed_params[0]
         if simtrace == 0:
-            runstr = mccode_config.configuration["MCRUN"] + ' ' + self.__instrFile + ' -d ' + dir
+            runstr = mccode_config.configuration["MCRUN"] + mcrunparms + self.__instrFile + ' -d ' + dir
             self.__DataDir = dir
         else:
             runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + self.__instrFile + ' --no-output-files '
             self.__DataDir = "None"
         
         ncount = fixed_params[1]
-        if ncount > 0:
+        if int(ncount) > 0:
             runstr = runstr + ' -n ' + str(ncount)
         
         nsteps = fixed_params[2]
-        if nsteps > 1:
+        if int(nsteps) > 1:
+            print 'Nsteps is ' + nsteps
             runstr = runstr + ' -N ' + str(nsteps)
-        
-        if str(fixed_params[3]) == "True":
+
+        if fixed_params[3]:
             gravity = True
-            # TODO: append runstr with the gravity option
-        
-        random_seed = fixed_params[4]
-        # TODO: support random seed
-            
-        clustering = fixed_params[5]
-        # TODO: support clustering
+            runstr = runstr + ' --gravity '
+
+        random_seed = fixed_params[6]
+        if (random_seed):
+            if int(random_seed) > 0:
+                runstr = runstr + ' -s ' + str(random_seed)
         
         # parse instrument params        
         for p in params:
             runstr = runstr + ' ' + p[0] + '=' + p[1]
         
-        print(runstr)
+        print('Running: '+runstr)
         
         # run simulation in a background thread (non safe)
         thread = threading.Thread(target=self.runAsync(runstr))

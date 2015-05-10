@@ -393,8 +393,11 @@ class McStartSimDialog(QtGui.QDialog):
             
         # clustring option
         p5 = self.ui.edtNodes.text()
+
+        # seed
+        p6 = self.ui.lineEdit.text()
         
-        fixed_params =[p0, p1, p2, p3, p4, p5]
+        fixed_params =[p0, p1, p2, p3, p4, p5, p6]
         
         # get dynamic params
         params = []
