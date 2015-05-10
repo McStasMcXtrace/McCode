@@ -437,14 +437,43 @@ MCDISPLAY
     circle("xz", cx, cy-focus_yh/2.0 , cz, 6);
     circle("xz", cx,  cy+2, cz, 6);
     circle("xz", cx, cy-2, cz, 6);
-  } else {
-    //line(
+  } else { // 2015
+    double dx = (0.09 + 0.16)/25;
+    double xp0, yp0, zp0, xp1, yp1, zp1;
+    double xr0, yr0, zr0, xr1, yr1, zr1;    
+    xp0 = -0.16;
+    yp0 = -yheight_c/2.0;
+    int k,j;
+    for (k=0; k<2; k++) {
+      for (j=0; j<26; j++) {
+	xp1 = xp0 + dx;
+	printf("xp0 %g xp1 %g\n", xp0,xp1);
+	yp1 = yp0;
+	zp0 = TSC2015_z0_BF3cm(100*xp0)/100.0;
+	zp1 = TSC2015_z0_BF3cm(100*xp1)/100.0;
+	xr0 = cos(-beamport_angle*DEG2RAD)*xp0 - sin(-beamport_angle*DEG2RAD)*zp0;
+	zr0 = cos(-beamport_angle*DEG2RAD)*zp0 + sin(-beamport_angle*DEG2RAD)*xp0;	
+	xr1 = cos(-beamport_angle*DEG2RAD)*xp1 - sin(-beamport_angle*DEG2RAD)*zp1;
+	zr1 = cos(-beamport_angle*DEG2RAD)*zp1 + sin(-beamport_angle*DEG2RAD)*xp1;
+	if (j==0 || j==8 || j==11) {
+	  line(xr0, -yheight_c/2.0, zr0, xr0, yheight_c/2.0, zr0);
+	}
+	if (j==25) {
+	  line(xr1, -yheight_c/2.0, zr1, xr1, yheight_c/2.0, zr1);
+	}
+	line(xr0, yp0, zr0, xr1, yp1, zr1);
+	xp0 = xp1;
+      }
+      yp1 = yp0;
+      yp0 = yp0 + yheight_c;
+      xp0 = -0.16;
+    }
+    /* Rectangle indicating the chosen focus rectangle - where the optics starts... */
+    rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
   }
   
-  
-  
   /* This last bit is relevant only in connection with 2014 source definition */
-  if (strcasestr(sourcedef,"2014") || strcasestr(sourcedef,"2015") ) {
+  if (strcasestr(sourcedef,"2014")) {
     /* Arrow indicating proton beam direction */
     line(cx-5.9,cy,cz,cx-cyl_radius-0.1,cy,cz);
     line(cx-cyl_radius-0.2*cos(10*DEG2RAD),cy,cz+0.2*sin(10*DEG2RAD),cx-cyl_radius-0.1,cy,cz);
@@ -455,9 +484,8 @@ MCDISPLAY
     rectangle("xy",0,0,0,xwidth_c,yheight_c);
     rectangle("xy",-xwidth_c/2-xwidth_t/2,0,0,xwidth_t,yheight_t);
     rectangle("xy",xwidth_c/2+xwidth_t/2,0,0,xwidth_t,yheight_t);
-    rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
-    
   }
+  
 %}
 
 END
