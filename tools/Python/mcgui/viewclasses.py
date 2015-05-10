@@ -1151,6 +1151,7 @@ class Ui_dlgStartSim(object):
         self.cbxClustering.setItemText(1, QtGui.QApplication.translate("dlgStartSim", "MPI clustering", None, QtGui.QApplication.UnicodeUTF8))
         self.cbxClustering.setItemText(2, QtGui.QApplication.translate("dlgStartSim", "SSH clustering", None, QtGui.QApplication.UnicodeUTF8))
         self.edtNeutronCnt.setText(QtGui.QApplication.translate("dlgStartSim", "1000000", None, QtGui.QApplication.UnicodeUTF8))
+        self.edtNodes.setText(mccode_config.compilation["MPINODES"])
         self.label_3.setText(QtGui.QApplication.translate("dlgStartSim", "# nodes:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_5.setText(QtGui.QApplication.translate("dlgStartSim", "Random seed:", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("dlgStartSim", "Steps:", None, QtGui.QApplication.UnicodeUTF8))
