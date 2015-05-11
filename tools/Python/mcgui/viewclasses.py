@@ -361,7 +361,7 @@ class McStartSimDialog(QtGui.QDialog):
                 steps count (int)
                 gravity (bool)
                 random seed (int)
-                no clustering = 0, MPI clustering = 1, SSH clustering = 2
+                no clustering = 0, MPI clustering = 1
                 
             params[]:
                 [<par_name>, <value>] pairs
@@ -388,13 +388,14 @@ class McStartSimDialog(QtGui.QDialog):
             p4 = ClusteringEnum.SINGLE
         if self.ui.cbxClustering.currentIndex() == 1:
             p4 = ClusteringEnum.MPI
-        if self.ui.cbxClustering.currentIndex() == 2:
-            p4 = ClusteringEnum.SSH
             
         # clustring option
         p5 = self.ui.edtNodes.text()
+
+        # seed
+        p6 = self.ui.lineEdit.text()
         
-        fixed_params =[p0, p1, p2, p3, p4, p5]
+        fixed_params =[p0, p1, p2, p3, p4, p5, p6]
         
         # get dynamic params
         params = []
@@ -452,7 +453,6 @@ class SimTraceEnum:
 class ClusteringEnum:
     SINGLE = 0 
     MPI = 1
-    SSH = 2
 
 
 ''' Start simulation widgets wrapper class
@@ -1081,7 +1081,6 @@ class Ui_dlgStartSim(object):
         self.cbxClustering.setObjectName("cbxClustering")
         self.cbxClustering.addItem("")
         self.cbxClustering.addItem("")
-        self.cbxClustering.addItem("")
         self.gridLayout_2.addWidget(self.cbxClustering, 6, 0, 1, 1)
         self.edtNeutronCnt = QtGui.QLineEdit(self.gbxSim)
         self.edtNeutronCnt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -1146,8 +1145,8 @@ class Ui_dlgStartSim(object):
         self.cbxSimTrace.setItemText(1, QtGui.QApplication.translate("dlgStartSim", "Trace", None, QtGui.QApplication.UnicodeUTF8))
         self.cbxClustering.setItemText(0, QtGui.QApplication.translate("dlgStartSim", "No clustering", None, QtGui.QApplication.UnicodeUTF8))
         self.cbxClustering.setItemText(1, QtGui.QApplication.translate("dlgStartSim", "MPI clustering", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbxClustering.setItemText(2, QtGui.QApplication.translate("dlgStartSim", "SSH clustering", None, QtGui.QApplication.UnicodeUTF8))
         self.edtNeutronCnt.setText(QtGui.QApplication.translate("dlgStartSim", "1000000", None, QtGui.QApplication.UnicodeUTF8))
+        self.edtNodes.setText(mccode_config.compilation["MPINODES"])
         self.label_3.setText(QtGui.QApplication.translate("dlgStartSim", "# nodes:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_5.setText(QtGui.QApplication.translate("dlgStartSim", "Random seed:", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("dlgStartSim", "Steps:", None, QtGui.QApplication.UnicodeUTF8))

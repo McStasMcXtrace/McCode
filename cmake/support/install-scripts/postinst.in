@@ -11,6 +11,46 @@ NO_ALTERNATIVES="@NO_ALTERNATIVES@"
 export PATH=${PREFIX}/${FLAVOR}/${VERSION}/bin:${PATH}
 MCCODE=${FLAVOR}
 
+# Function to check if link exists, then remove it
+function checklinkrm {
+    if [ -h $1 ]; then
+	echo Removing link $1
+	rm $1
+    fi
+}
+
+# Function probing / removing old links
+function checklinks {
+    # - Check for possibly existing links in /usr/local/bin and remove them...
+        # McCode itself
+    checklinkrm /usr/local/bin/@FLAVOR@
+        # mcrun variants
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@run
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@run-py
+	# mcgui variants
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@gui
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@gui-py
+	# mcplot 
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot-chaco-py
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot-matplotlib-py
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot-matlab
+	# mcdisplay
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@display
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-py
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-x3d-py
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-matplotlib-py
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-vtk-py
+        # other stuff
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@daemon
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@doc
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@format
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@formatgui
+    checklinkrm /usr/local/bin/@MCCODE_PREFIX@resplot
+    checklinkrm /usr/local/bin/@FLAVOR@tovitess
+}
+
+
 # If this Unix has "modulefiles" installed in /etc, dump environment config there,
 # else a simple set of links will do...
 if [ -d /etc/modulefiles ]; 
@@ -32,28 +72,7 @@ else
 	BINTARGET="/usr/bin"
 	APPTARGET="/usr/share/applications"
 	LOGOTARGET="/usr/share/pixmaps"
-	# - Check for possibly existing links in /usr/local/bin and remove them...
-	if [ -h /usr/local/bin/@FLAVOR@ ]; then
-	    # McCode itself
-	    rm /usr/local/bin/@FLAVOR@
-	    # mcrun variants
-	    rm /usr/local/bin/@MCCODE_PREFIX@run
-	    rm /usr/local/bin/@MCCODE_PREFIX@run-py
-	    # mcgui variants
-	    rm /usr/local/bin/@MCCODE_PREFIX@gui
-	    rm /usr/local/bin/@MCCODE_PREFIX@gui-py
-	    # mcplot 
-	    rm /usr/local/bin/@MCCODE_PREFIX@plot
-	    rm /usr/local/bin/@MCCODE_PREFIX@plot-chaco-py
-	    rm /usr/local/bin/@MCCODE_PREFIX@plot-matplotlib-py
-	    rm /usr/local/bin/@MCCODE_PREFIX@plot-matlab
-	    # mcdisplay
-	    rm /usr/local/bin/@MCCODE_PREFIX@display
-	    rm /usr/local/bin/@MCCODE_PREFIX@display-py
-	    rm /usr/local/bin/@MCCODE_PREFIX@display-x3d-py
-	    rm /usr/local/bin/@MCCODE_PREFIX@display-matplotlib-py
-	    rm /usr/local/bin/@MCCODE_PREFIX@display-vtk-py
-	fi
+	checklinks
     elif [[ ${PREFIX} = /Applications* ]]
     then
 	# Looks like a Mac - dump links in /usr/bin
@@ -68,33 +87,13 @@ else
 		ln -sf ${PREFIX}/${FLAVOR}/${VERSION} /usr/share/${FLAVOR}/${VERSION}
 	    fi
 	fi
-	# - Check for possibly existing links in /usr/local/bin and remove them...
-	if [ -h /usr/local/bin/@FLAVOR@ ]; then
-	    # McCode itself
-	    rm /usr/local/bin/@FLAVOR@
-	    # mcrun variants
-	    rm /usr/local/bin/@MCCODE_PREFIX@run
-	    rm /usr/local/bin/@MCCODE_PREFIX@run-py
-	    # mcgui variants
-	    rm /usr/local/bin/@MCCODE_PREFIX@gui
-	    rm /usr/local/bin/@MCCODE_PREFIX@gui-py
-	    # mcplot 
-	    rm /usr/local/bin/@MCCODE_PREFIX@plot
-	    rm /usr/local/bin/@MCCODE_PREFIX@plot-chaco-py
-	    rm /usr/local/bin/@MCCODE_PREFIX@plot-matplotlib-py
-	    rm /usr/local/bin/@MCCODE_PREFIX@plot-matlab
-	    # mcdisplay
-	    rm /usr/local/bin/@MCCODE_PREFIX@display
-	    rm /usr/local/bin/@MCCODE_PREFIX@display-py
-	    rm /usr/local/bin/@MCCODE_PREFIX@display-x3d-py
-	    rm /usr/local/bin/@MCCODE_PREFIX@display-matplotlib-py
-	    rm /usr/local/bin/@MCCODE_PREFIX@display-vtk-py
-	fi
+	checklinks
     else
 	# OK - nothing clever then
 	BINTARGET=${PREFIX}/bin
 	APPTARGET="/usr/share/applications"
 	LOGOTARGET="/usr/share/pixmaps"
+	checklinks
     fi
     if [ -d ${BINTARGET} ];
     then
