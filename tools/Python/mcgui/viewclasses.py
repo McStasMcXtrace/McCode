@@ -77,6 +77,7 @@ class McView(object):
         ui.actionSave_As.setEnabled(canRun)
         ui.actionEdit_Instrument.setEnabled(canRun)
         ui.actionCompile_Instrument.setEnabled(canRun)
+        ui.actionCompile_Instrument_MPI.setEnabled(canRun)
         
     ''' UI actions
     '''
