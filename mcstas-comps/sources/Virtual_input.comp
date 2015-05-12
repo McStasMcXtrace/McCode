@@ -64,7 +64,7 @@
 
 DEFINE COMPONENT Virtual_input
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string filename=0, verbose=0,repeat_count=1,smooth=1)
+SETTING PARAMETERS (string filename=0, verbose=0,repeat_count=1,smooth=1,display=1)
 OUTPUT PARAMETERS (read_block,pos,nrows,Offset,rTable,repeat_number,filename_ncount,
                    mean_vx, mean_vy, mean_vz, mean_dx, mean_dy, mean_dz, n_neutrons,
                    min_x, min_y, min_z, max_x, max_y, max_z, min_vx, min_vy, min_vz,
@@ -326,9 +326,11 @@ FINALLY
 
 MCDISPLAY 
 %{
-  mcdis_box(mean_x, mean_y, mean_z, max_x-min_x, max_y-min_y, max_z-min_z);
-  /* a line in the main beam direction */ 
-  line(mean_x, mean_y, mean_z,mean_dx,mean_dy,mean_dz);
+  if (display) {
+    mcdis_box(mean_x, mean_y, mean_z, max_x-min_x, max_y-min_y, max_z-min_z);
+    /* a line in the main beam direction */ 
+    line(mean_x, mean_y, mean_z,mean_dx,mean_dy,mean_dz);
+  }
 %}
 
 END

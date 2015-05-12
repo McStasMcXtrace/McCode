@@ -210,7 +210,7 @@ double angleGuideCurved;
 double R = 0.88;
 double R0 = 0.995;
 double Qc = 0.0217;
-double W = 1/334;
+double W = 0;
 double  M= 2.15;
 double ALPHA;
 
@@ -574,7 +574,7 @@ if (VIRTUALIN || VIRTUALOUT) {
 /* Guide parameters */
 angleGuideCurved=20.0/2408.0;
 /* calculate mirror reflectivity slope */
-ALPHA=(R0-R)/(Qc*(M-1));
+ ALPHA=0;//(R0-R)/(Qc*(M-1));
 printf("* GUIDE MIRROR ALPHA=%g [AA]\n", ALPHA);
 
 /* Monochromator parameters */
@@ -1285,12 +1285,12 @@ WHEN (!VIRTUALIN)  AT (0,0,dmv) RELATIVE a2
 
 
 /* If the virtual output is generated the secondary spectrometer IS NOT simulated */
-COMPONENT virtualout = Virtual_output(filename=SOURCEFILE, bufsize=0)
+  COMPONENT virtualout = Virtual_output(filename=SOURCEFILE, bufsize=0, display=0)
 WHEN (!VIRTUALIN && VIRTUALOUT)  AT (0, 0, 0) RELATIVE aa2
 
 
 COMPONENT virtualsource = Virtual_input(filename=SOURCEFILE, verbose=1, repeat_count=REP)
-   WHEN (VIRTUALIN && !VIRTUALOUT) AT (0,0,0) RELATIVE aa2
+WHEN (VIRTUALIN && !VIRTUALOUT) AT (0,0,0) RELATIVE aa2
 
 
 COMPONENT OrderMon = Monitor_nD(
@@ -1318,7 +1318,7 @@ COMPONENT slitMonochromator = Slit(
 	ymin = -MSB/1000.0, ymax = MST/1000.0)
 WHEN(!VIRTUALOUT) AT (0, 0, 0.285) RELATIVE aa2
 
-COMPONENT Perspex = V_sample(V0=1,sig_a=0.019,sig_i=4.7, xwidth = 0.1, yheight = 0.1, zthick = PTHICK, frac=1e-2)
+COMPONENT Perspex = Incoherent(Vc=1,sigma_abs=0.019,sigma_inc=4.7, xwidth = 0.1, yheight = 0.1, zdepth = PTHICK, p_interact=1e-2)
  WHEN (PERSPEX>0 && !VIRTUALOUT) AT (0, 0, 0.3) RELATIVE aa2
 
 COMPONENT psd_samplepos_1cm2 = PSD_monitor( xwidth = 0.01, yheight = 0.01, restore_neutron=1,filename="psd_samplepos_1cm2.dat")
@@ -1345,9 +1345,9 @@ WHEN(!VIRTUALOUT) AT (0,0,0) RELATIVE a3
  ROTATED (0, 0, TILT) RELATIVE a3
 
 
-COMPONENT incohSample = V_sample( // The size is the standard  V_sample at RITA
+COMPONENT incohSample = Incoherent( // The size is the standard  V_sample at RITA
 /*      V0=1,sig_a=0,sig_i=4.70,radius_i=0, radius_o=0.0025, h=0.068,target_index=10, // perspex sample  */
-    V0=13.827,sig_a=5.08,sig_i=5.08,radius_i=0.0149/2, radius_o=0.0201/2, h=0.0187,target_index=10, // vanadium sample
+    Vc=13.827,sigma_abs=5.08,sigma_inc=5.08,thickness=0.0201/2-0.0149/2, radius=0.0201/2, yheight=0.0187,target_index=10, // vanadium sample
     focus_xw=0.16,focus_yh=0.16) // focus on ana_slit1.
   WHEN (SAMPLE==1 && !VIRTUALOUT)
   AT (0, 0, 0) RELATIVE aa3
