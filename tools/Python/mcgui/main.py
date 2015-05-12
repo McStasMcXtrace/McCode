@@ -179,12 +179,21 @@ class McGuiState(QtCore.QObject):
         else:
             raise Exception('C file not found')
         
+        # look for CFLAGS in the generated C code
+        cflags = mccode_config.compilation["CFLAGS"] 
+        ccode = open(self.__cFile)
+        for line in ccode:
+            line = line.rstrip()
+            if re.search('CFLAGS=', line) :
+                label,flags = line.split('=',1)
+                cflags = cflags + ' ' + flags
+        
         # compile binary from mcstas .c file 
         bf = basef + '.' + mccode_config.platform["EXESUFFIX"] 
         if mpi:
-            cmd = mccode_config.compilation["MPICC"] + ' -o ' + bf + ' ' + cf + ' ' + mccode_config.compilation["CFLAGS"] + ' ' + mccode_config.compilation["MPIFLAGS"]
+            cmd = mccode_config.compilation["MPICC"] + ' -o ' + bf + ' ' + cf + ' ' + cflags + ' ' + mccode_config.compilation["MPIFLAGS"]
         else:
-            cmd = mccode_config.compilation["CC"] + ' -o ' + bf + ' ' + cf + ' ' + mccode_config.compilation["CFLAGS"]
+            cmd = mccode_config.compilation["CC"] + ' -o ' + bf + ' ' + cf + ' ' + cflags
        
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE,
