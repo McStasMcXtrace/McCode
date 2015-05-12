@@ -269,6 +269,9 @@ class McGuiState(QtCore.QObject):
             runstr = runstr + ' ' + p[0] + '=' + p[1]
         
         print('Running: '+runstr)
+
+        # Ensure assembled runstr is a string - QStrings breaks the runAsync execution!
+        runstr = str(runstr)
         
         # run simulation in a background thread (non safe)
         thread = threading.Thread(target=self.runAsync(runstr))
