@@ -63,7 +63,7 @@ COMPONENT coll2 = Slit(
 
 SPLIT COMPONENT sample = Sans_spheres(
   R=r, Phi=PHI, Delta_rho=Delta_Rho, sigma_abs=sigma_abs, 
-  xwidth=0.01, yheight=0.01, zdepth=0.005)
+  xwidth=0.01, yheight=0.01, zdepth=0.005, focus_xw=0.6, focus_yh=0.6, target_index=2)
    AT (0,0,0.2) RELATIVE coll2
 
 
