@@ -388,6 +388,8 @@ class McStartSimDialog(QtGui.QDialog):
             p4 = ClusteringEnum.SINGLE
         if self.ui.cbxClustering.currentIndex() == 1:
             p4 = ClusteringEnum.MPI
+        if self.ui.cbxClustering.currentIndex() == 2:
+            p4 = ClusteringEnum.MPI_RC
             
         # clustring option
         p5 = self.ui.edtNodes.text()
@@ -453,6 +455,7 @@ class SimTraceEnum:
 class ClusteringEnum:
     SINGLE = 0 
     MPI = 1
+    MPI_RC = 2
 
 
 ''' Start simulation widgets wrapper class
@@ -834,6 +837,8 @@ class Ui_MainWindow(object):
         self.actionTempl_submenu.setObjectName("actionTempl_submenu")
         self.actionConfiguration = QtGui.QAction(MainWindow)
         self.actionConfiguration.setObjectName("actionConfiguration")
+        self.actionCompile_Instrument_MPI = QtGui.QAction(MainWindow)
+        self.actionCompile_Instrument_MPI.setObjectName("actionCompile_Instrument_MPI")
         self.menuNew_From_Template.addAction(self.actionTempl_submenu)
         self.menuFile.addAction(self.actionNew_Instrument)
         self.menuFile.addAction(self.menuNew_From_Template.menuAction())
@@ -848,6 +853,7 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionQuit)
         self.menuSimulation.addAction(self.actionRun_Simulation)
         self.menuSimulation.addAction(self.actionCompile_Instrument)
+        self.menuSimulation.addAction(self.actionCompile_Instrument_MPI)
         self.menuSimulation.addSeparator()
         self.menuSimulation.addAction(self.actionPlot)
         self.menuHelp.addAction(self.actionMcstas_User_Manual)
@@ -904,6 +910,8 @@ class Ui_MainWindow(object):
         self.actionSave_As.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+Shift+S", None, QtGui.QApplication.UnicodeUTF8))
         self.actionTempl_submenu.setText(QtGui.QApplication.translate("MainWindow", "new_from_templ_submenu", None, QtGui.QApplication.UnicodeUTF8))
         self.actionConfiguration.setText(QtGui.QApplication.translate("MainWindow", "Configuration...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionConfiguration.setToolTip(QtGui.QApplication.translate("MainWindow", "mccode configuration", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionCompile_Instrument_MPI.setText(QtGui.QApplication.translate("MainWindow", "Compile Instrument (MPI)", None, QtGui.QApplication.UnicodeUTF8))
 
 
 ''' Edit instrument window
@@ -1081,6 +1089,7 @@ class Ui_dlgStartSim(object):
         self.cbxClustering.setObjectName("cbxClustering")
         self.cbxClustering.addItem("")
         self.cbxClustering.addItem("")
+        self.cbxClustering.addItem("")
         self.gridLayout_2.addWidget(self.cbxClustering, 6, 0, 1, 1)
         self.edtNeutronCnt = QtGui.QLineEdit(self.gbxSim)
         self.edtNeutronCnt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -1145,8 +1154,8 @@ class Ui_dlgStartSim(object):
         self.cbxSimTrace.setItemText(1, QtGui.QApplication.translate("dlgStartSim", "Trace", None, QtGui.QApplication.UnicodeUTF8))
         self.cbxClustering.setItemText(0, QtGui.QApplication.translate("dlgStartSim", "No clustering", None, QtGui.QApplication.UnicodeUTF8))
         self.cbxClustering.setItemText(1, QtGui.QApplication.translate("dlgStartSim", "MPI clustering", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbxClustering.setItemText(2, QtGui.QApplication.translate("dlgStartSim", "MPI clustering (recompile)", None, QtGui.QApplication.UnicodeUTF8))
         self.edtNeutronCnt.setText(QtGui.QApplication.translate("dlgStartSim", "1000000", None, QtGui.QApplication.UnicodeUTF8))
-        self.edtNodes.setText(mccode_config.compilation["MPINODES"])
         self.label_3.setText(QtGui.QApplication.translate("dlgStartSim", "# nodes:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_5.setText(QtGui.QApplication.translate("dlgStartSim", "Random seed:", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("dlgStartSim", "Steps:", None, QtGui.QApplication.UnicodeUTF8))

@@ -133,12 +133,20 @@ class McGuiState(QtCore.QObject):
     def canPlot(self):
         return self.__instrFile != ""
     
-    def compile(self):
+    def compile(self, mpi=False):
         # compile simulation in a background thread (non safe)
         thread = threading.Thread(target=self.compileAsync)
         thread.start()
         
-    def compileAsync(self):
+    def compile_mpi(self):
+        # compile simulation in a background thread (non safe) - with MPI flags
+        thread = threading.Thread(target=self.compileAsync_mpi)
+        thread.start()
+        
+    def compileAsync_mpi(self):
+        self.compileAsync(mpi=True)
+        
+    def compileAsync(self, mpi=False):
         # generate mcstas .c file from instrument
         nf = self.__instrFile
         cmd = mccode_config.configuration["MCCODE"] + ' -t '  + nf
@@ -149,7 +157,7 @@ class McGuiState(QtCore.QObject):
         self.__emitter.status('Compiling instrument to c ...')
         self.__emitter.message('Compiling instrument to c ...', mcguiMsg=True)
         self.__emitter.message(cmd, mcguiMsg=True)
-
+        
         # read program output while the process is active
         while process.poll() == None:
             stdoutdata = process.stdout.readline().rstrip('\n')
@@ -173,7 +181,10 @@ class McGuiState(QtCore.QObject):
         
         # compile binary from mcstas .c file 
         bf = basef + '.' + mccode_config.platform["EXESUFFIX"] 
-        cmd = mccode_config.compilation["CC"] + ' -o ' + bf + ' ' + cf + ' ' + mccode_config.compilation["CFLAGS"]
+        if mpi:
+            cmd = mccode_config.compilation["MPICC"] + ' -o ' + bf + ' ' + cf + ' ' + mccode_config.compilation["CFLAGS"] + ' ' + mccode_config.compilation["MPIFLAGS"]
+        else:
+            cmd = mccode_config.compilation["CC"] + ' -o ' + bf + ' ' + cf + ' ' + mccode_config.compilation["CFLAGS"]
        
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE,
@@ -209,7 +220,7 @@ class McGuiState(QtCore.QObject):
                 steps count (int)
                 gravity (bool)
                 random seed (int)
-                no clustering = 0, MPI clustering = 1, SSH clustering = 2
+                no clustering = 0, MPI = 1, MPI and recompile = 2
             params[]:
                 [<par_name>, <value>] pairs
         '''
@@ -223,6 +234,9 @@ class McGuiState(QtCore.QObject):
         clustering = fixed_params[4]
         if clustering == 1:
             mcrunparms = ' --mpi=' + fixed_params[5] + ' '
+        elif clustering == 2:
+            mcrunparms = ' -c --mpi=' + fixed_params[5] + ' '
+        
         # parse fixed params
         simtrace = fixed_params[0]
         if simtrace == 0:
@@ -506,6 +520,7 @@ class McGuiAppController():
         mwui.btnOpenInstrument.clicked.connect(self.handleOpenInstrument)
         
         mwui.actionCompile_Instrument.triggered.connect(self.state.compile)
+        mwui.actionCompile_Instrument_MPI.triggered.connect(self.state.compile_mpi)
         mwui.actionRun_Simulation.triggered.connect(self.handleRunSim)
         
         mwui.actionMcstas_Web_Page.triggered.connect(self.handleHelpWeb)

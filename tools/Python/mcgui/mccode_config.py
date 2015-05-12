@@ -17,6 +17,7 @@ Compilation, parallelisation etc.
 compilation = {
     "CFLAGS": '-g -lm -O2',
     "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
+    "MPIFLAGS": '-DUSE_MPI -lmpi',
     "CC": 'gcc',
     "MPICC": 'mpicc',
     "MPIRUN": 'mpirun',

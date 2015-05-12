@@ -199,6 +199,7 @@
     </property>
     <addaction name="actionRun_Simulation"/>
     <addaction name="actionCompile_Instrument"/>
+    <addaction name="actionCompile_Instrument_MPI"/>
     <addaction name="separator"/>
     <addaction name="actionPlot"/>
    </widget>
@@ -323,6 +324,11 @@
    </property>
    <property name="toolTip">
     <string>mccode configuration</string>
+   </property>
+  </action>
+  <action name="actionCompile_Instrument_MPI">
+   <property name="text">
+    <string>Compile Instrument (MPI)</string>
    </property>
   </action>
  </widget>

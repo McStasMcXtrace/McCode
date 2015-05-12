@@ -119,7 +119,7 @@
             </item>
             <item>
              <property name="text">
-              <string>SSH clustering</string>
+              <string>MPI clustering (recompile)</string>
              </property>
             </item>
            </widget>
