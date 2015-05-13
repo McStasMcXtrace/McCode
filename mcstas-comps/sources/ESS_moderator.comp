@@ -210,7 +210,7 @@ INITIALIZE
     /* In this mode of operation, the emission is from the x-y plane*/
     cx = 0; cy=0; cz=-0.12; cyl_radius=0.12;
     /* 120 degree beam extraction opening, defining thermal moderator directions */
-    t1x=sin(DEG2RAD*120/2);t1z=cos(DEG2RAD*120/2);
+    t1x=sin(DEG2RAD*(120/2-beamport_angle));t1z=cos(DEG2RAD*120/2);
     t2x=-sin(DEG2RAD*120/2);t2z=cos(DEG2RAD*120/2);
     t1y=0; t2y=0;
     /* ESS-2015 definition: */  
@@ -222,12 +222,11 @@ INITIALIZE
     /* Specify brilliance fct.'s */
     cold_bril=ESS_2015_Schoenfeldt_cold;
     thermal_bril=ESS_2015_Schoenfeldt_thermal;
-    /* Cold moderator geometry */
-    /* In this mode of operation, the emission is from the x-y plane*/
-    cx = 0; cy=0; cz=-0.12; cyl_radius=0.12;
-    /* 120 degree beam extraction opening, defining thermal moderator directions */
-    t1x=sin(DEG2RAD*120/2);t1z=cos(DEG2RAD*120/2);
-    t2x=-sin(DEG2RAD*120/2);t2z=cos(DEG2RAD*120/2);
+    /* Moderator geometry */
+    cx = 0; cy=0; cz=0; cyl_radius=0;
+    /* 120 degree beam extraction opening */
+    t1x=sin(DEG2RAD*(120/2+beamport_angle));t1z=cos(DEG2RAD*(120/2+beamport_angle));
+    t2x=-sin(DEG2RAD*(120/2-beamport_angle));t2z=cos(DEG2RAD*(120/2-beamport_angle));
     t1y=0; t2y=0;
    } else {
     fprintf(stderr,"FATAL: sourcedef %s is not defined!\n",sourcedef);
@@ -390,8 +389,7 @@ TRACE
       }
     }
   }
-  //printf("Neutron is at %g %g %g\n",x,y,z);
-  //SCATTER;
+  SCATTER;
 
 %}
 
@@ -442,6 +440,7 @@ MCDISPLAY
     double xp0, yp0, zp0, xp1, yp1, zp1;
     double xr0, yr0, zr0, xr1, yr1, zr1;
     double dxp0, dzp0, dxr0, dzr0, dxr1, dzr1;
+    double ax,az,bbx,bbz,ccx,ccz;
     /* Drawing the "emission planes" of the cold and thermal moderators */
     xp0 = -0.16;
     yp0 = -yheight_c/2.0;
@@ -467,52 +466,79 @@ MCDISPLAY
 	}
 	xp0 = xp1;
       }
+      /* Drawing a sketch-version of the butterfly "cross" and wing(s).... */
+      /* Thermal cross: */
+      xp0 = 0.0827; xp1 = -xp0;
+      zp0 = TSC2015_z0_BF3cm(100*xp0)/100.0;
+      zp1 = zp0;
+      dxp0 = 0.01; dzp0=0.01;
+      xr0 = cos(-beamport_angle*DEG2RAD)*xp0 - sin(-beamport_angle*DEG2RAD)*zp0;
+      zr0 = cos(-beamport_angle*DEG2RAD)*zp0 + sin(-beamport_angle*DEG2RAD)*xp0;	
+      xr1 = cos(-beamport_angle*DEG2RAD)*xp1 - sin(-beamport_angle*DEG2RAD)*zp1;
+      zr1 = cos(-beamport_angle*DEG2RAD)*zp1 + sin(-beamport_angle*DEG2RAD)*xp1;
+      dxr0 = cos(-beamport_angle*DEG2RAD)*dxp0;
+      dzr0 = sin(-beamport_angle*DEG2RAD)*dxp0;	
+      dxr1 = - sin(-beamport_angle*DEG2RAD)*dzp0;
+      dzr1 = cos(-beamport_angle*DEG2RAD)*dzp0;
+      
+      line(xr0+dxr0, yp0, zr0+dzr0, -xr0+dxr0, yp0, -zr0+dzr0);
+      line(xr1+dxr0, yp0, zr1+dzr0, -xr1+dxr0, yp0, -zr1+dzr0);
+      line(xr0-dxr0, yp0, zr0-dzr0, -xr0-dxr0, yp0, -zr0-dzr0);
+      line(xr1-dxr0, yp0, zr1-dzr0, -xr1-dxr0, yp0, -zr1-dzr0);
+      line(xr0+dxr0, yp0, zr0+dzr0, xr0-dxr0, yp0, zr0-dzr0);
+      line(xr1+dxr0, yp0, zr1+dzr0, xr1-dxr0, yp0, zr1-dzr0);
+      line(-xr0+dxr0, yp0, -zr0+dzr0, -xr0-dxr0, yp0, -zr0-dzr0);
+      line(-xr1+dxr0, yp0, -zr1+dzr0, -xr1-dxr0, yp0, -zr1-dzr0);
+      
+      /* Wings: */
+      line(xr0+2*dxr0, yp0, zr0+2*dzr0, 2*dxr0, yp0, 2*dzr0);
+      line(-xr1+2*dxr0, yp0, -zr1+2*dzr0, 2*dxr0, yp0, 2*dzr0);
+      line(xr0+2*dxr0, yp0, zr0+2*dzr0,-xr1+2*dxr0, yp0, -zr1+2*dzr0);
+      
+      line(-xr0-2*dxr0, yp0, -zr0-2*dzr0, -2*dxr0, yp0, -2*dzr0);
+      line(xr1-2*dxr0, yp0, zr1-2*dzr0, -2*dxr0, yp0, -2*dzr0);
+      line(xr1-2*dxr0, yp0, zr1-2*dzr0,-xr0-2*dxr0, yp0, -zr0-2*dzr0);
+      /* Back to drawing the emission planes... */
       yp1 = yp0;
       yp0 = yp0 + yheight_c;
       xp0 = -0.16;
+      
     }
-    /* Drawing a sketch-version of the butterfly "cross" and wing(s).... */
-    /* Thermal cross: */
-    xp0 = 0.0827; xp1 = -xp0;
-    zp0 = TSC2015_z0_BF3cm(100*xp0)/100.0;
-    zp1 = zp0;
-    dxp0 = 0.01; dzp0=0.01;
-    xr0 = cos(-beamport_angle*DEG2RAD)*xp0 - sin(-beamport_angle*DEG2RAD)*zp0;
-    zr0 = cos(-beamport_angle*DEG2RAD)*zp0 + sin(-beamport_angle*DEG2RAD)*xp0;	
-    xr1 = cos(-beamport_angle*DEG2RAD)*xp1 - sin(-beamport_angle*DEG2RAD)*zp1;
-    zr1 = cos(-beamport_angle*DEG2RAD)*zp1 + sin(-beamport_angle*DEG2RAD)*xp1;
-    dxr0 = cos(-beamport_angle*DEG2RAD)*dxp0;
-    dzr0 = sin(-beamport_angle*DEG2RAD)*dxp0;	
-    dxr1 = - sin(-beamport_angle*DEG2RAD)*dzp0;
-    dzr1 = cos(-beamport_angle*DEG2RAD)*dzp0;
     
-    line(xr0+dxr0, 0.0, zr0+dzr0, -xr0+dxr0, 0.0, -zr0+dzr0);
-    line(xr1+dxr0, 0.0, zr1+dzr0, -xr1+dxr0, 0.0, -zr1+dzr0);
-    line(xr0-dxr0, 0.0, zr0-dzr0, -xr0-dxr0, 0.0, -zr0-dzr0);
-    line(xr1-dxr0, 0.0, zr1-dzr0, -xr1-dxr0, 0.0, -zr1-dzr0);
-    line(xr0+dxr0, 0.0, zr0+dzr0, xr0-dxr0, 0.0, zr0-dzr0);
-    line(xr1+dxr0, 0.0, zr1+dzr0, xr1-dxr0, 0.0, zr1-dzr0);
-    line(-xr0+dxr0, 0.0, -zr0+dzr0, -xr0-dxr0, 0.0, -zr0-dzr0);
-    line(-xr1+dxr0, 0.0, -zr1+dzr0, -xr1-dxr0, 0.0, -zr1-dzr0);
+    /* Dashed lines for indicating "beam extraction" area... */
+    dashed_line(cx+t1x*0.2,cy-yheight_c/2.0, cz+t1z*0.2, cx+t1x*r_empty, cy-yheight_c/2.0, cz+t1z*r_empty,10);
+    dashed_line(cx+t1x*0.2, cy+yheight_c/2.0, cz+t1z*0.2, cx+t1x*r_empty, cy+yheight_c/2.0, cz+t1z*r_empty,10);
+    dashed_line(cx+t2x*0.2, cy-yheight_c/2.0, cz+t2z*0.2, cx+t2x*r_empty, cy-yheight_c/2.0, cz+t2z*r_empty,5);
+    dashed_line(cx+t2x*0.2, cy+yheight_c/2.0, cz+t2z*0.2, cx+t2x*r_empty, cy+yheight_c/2.0, cz+t2z*r_empty,5);
     
-    line(xr0+2*dxr0, 0.0, zr0+2*dzr0, 2*dxr0, 0.0, 2*dzr0);
-    line(-xr1+2*dxr0, 0.0, -zr1+2*dzr0, 2*dxr0, 0.0, 2*dzr0);
-    line(xr0+2*dxr0, 0.0, zr0+2*dzr0,-xr1+2*dxr0, 0.0, -zr1+2*dzr0);
+    /* Rectangle indicating the chosen focus rectangle - where the optics starts... */
+    rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
 
-    line(-xr0-2*dxr0, 0.0, -zr0-2*dzr0, -2*dxr0, 0.0, -2*dzr0);
-    line(xr1-2*dxr0, 0.0, zr1-2*dzr0, -2*dxr0, 0.0, -2*dzr0);
-    line(xr1-2*dxr0, 0.0, zr1-2*dzr0,-xr0-2*dxr0, 0.0, -zr0-2*dzr0);
+    /* Circles indicating extent of the "empty" zone where optics is not allowed */
+    circle("xz", cx,  cy+yheight_c/2.0, cz, r_empty);
+    circle("xz", cx,  cy-yheight_c/2.0, cz, r_empty);
     
-    /* Wing: */
-    
-    
+    /* Circles indicating the builk shielding of the target monolith at 6 m */
+    circle("xz", cx,  cy+focus_yh/2.0 , cz, 6);
+    circle("xz", cx, cy-focus_yh/2.0 , cz, 6);
+    circle("xz", cx,  cy+2, cz, 6);
+    circle("xz", cx, cy-2, cz, 6);
+
+    /* Arrow indicating proton beam direction */
+    ax=sin(DEG2RAD*(90+beamport_angle));az=cos(DEG2RAD*(90+beamport_angle));
+    bbx=sin(DEG2RAD*(110+beamport_angle));bbz=cos(DEG2RAD*(110+beamport_angle));
+    ccx=sin(DEG2RAD*(70+beamport_angle));ccz=cos(DEG2RAD*(70+beamport_angle));
+    line(-0.15*ax,0,-0.15*az,-5.9*ax,0,-5.9*az);
+    line(-0.15*ax,0,-0.15*az,-0.15*ax-0.1*bbx,0,-0.15*az-0.1*bbz);
+    line(-0.15*ax,0,-0.15*az,-0.15*ax-0.1*ccx,0,-0.15*az-0.1*ccz);
+        
     /* Rectangle indicating the chosen focus rectangle - where the optics starts... */
     rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
   }
   
   /* This last bit is relevant only in connection with 2014 source definition */
   if (strcasestr(sourcedef,"2014")) {
-    /* Arrow indicating proton beam direction */
+   
     line(cx-5.9,cy,cz,cx-cyl_radius-0.1,cy,cz);
     line(cx-cyl_radius-0.2*cos(10*DEG2RAD),cy,cz+0.2*sin(10*DEG2RAD),cx-cyl_radius-0.1,cy,cz);
     line(cx-cyl_radius-0.2*cos(10*DEG2RAD),cy,cz-0.2*sin(10*DEG2RAD),cx-cyl_radius-0.1,cy,cz);
