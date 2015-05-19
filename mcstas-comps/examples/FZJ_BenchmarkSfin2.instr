@@ -9,6 +9,7 @@
 *
 * %INSTRUMENT_SITE: FZ_Juelich
 * 
+* %End
 *******************************************************************************/
 DEFINE INSTRUMENT BenderTest (lbdmin=2.00, lbdmax=8.5, NGbend=0.053,
                               NGblen=0.03, Clen = 8.0, SampD=0.01,
