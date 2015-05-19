@@ -58,3 +58,10 @@ sed -ibak 's/=\ g++/=\ \/usr\/bin\/g++/' Makefile
 make
 $SUDO make install
 echo DONE building and installing QScintilla!
+echo
+CONDA_LIB=`conda info |grep "default environment" | cut -f2 -d: | sed s+\ ++g`
+CONDA_QTLIBS="$CONDA_LIB/lib/libQt*"
+echo A final required step is linking $CONDA_LIB/lib/libQt\* to /usr/lib - please provide your password if needed:
+cd /usr/lib
+sudo ln -sf $CONDA_QTLIBS .
+echo ALL done
