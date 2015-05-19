@@ -33,10 +33,57 @@
 * Modified by: PW December 2012: version 2.0RC2 (pre-release)
 * Modified by: PW December 2012: version 2.0
 * Modified by: PW February-July 2014: version 2.1 (and the 2.1RC1 pre-release)
-* This file is part of McStas  version 2.1, released September 2014.
+* Modified by: PW and JG May 2015: version 2.2
+* This file is part of McStas  version 2.2, released May 2015.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v2.2, May, 2015
+
+ McStas 2.2 is the third release in the 2.x series and fixes various minor issues with McStas 2.1,
+ plus provide important new developments.
+
+ IMPORTANT: Please ensure to use our "migration scripts" for McStas 2.0 and 1.12c if you want
+ these to co-exist with 2.2. See https://github.com/McStasMcXtrace/McCode/tree/master/tools/migration-tool
+ Also, please read the platform-specific notes below!
+
+ Thanks:
+ - Thanks to all contributors of components, instruments etc.! This is what Open Source
+   and McStas is all about!
+ - Thanks to Joachim Wuttke from FZ Jülich / MLZ for helping us update the TeX documentation!
+
+ General:
+ - The new component/instrument keyword DEPENDENCY allows to automatically require / compile instruments
+   with external libraries, such as GSL in the case of Multilayer_sample (see ISIS_CRISP.instr). We foresee
+   that this extension will see many great applications in the future.
+ - The Mantid-IDF generation through our Perl mcdisplay tool has been optimized.
+   For a "compact" i.e. source/sample/detector IDF use
+       mcdisplay --format=Mantid ILL_H16_IN5_Mantid.instr -n0
+   For a "full" IDF (also including visualisation of neutron optics etc use
+       mcdisplay --format=Mantid --complete ILL_H16_IN5_Mantid.instr -n0
+
+ Components:
+ - A new model for the ESS butterfly moderator - see documentation for the ESS_moderator.comp. Developed by
+   Peter Willendrup in close collaboration with Troels Schoenfeldt DTU Nutech/ESS.
+ 
+ Instruments:
+ - ILL_IN13 backscattering instrument contributed by Emmanuel Farhi
+ 
+ Datafiles:
+ - Improved water Sqw data files contributed by Emmanuel Farhi (- see also JNST 2015)
+
+ Tools:
+ - McStas 2.2 is the first release to include a first version of our new mcgui-py tool, based on Python, 
+   QT and Scintilla, work done by new McStas team member Jakob Garde. To install/try it, please follow 
+   the instructions listed below.
+   * Debian Linux systems: 
+     Simply apt-get install mcstas-tools-python-mcgui and dependencies should be resolved
+   * OS X:
+     ...
+   * Windows:
+     ...
+
+
 Changes in McStas v2.1, September, 2014
 
  McStas 2.1 is the second release in the 2.x series and fixes various issues with McStas 2.0,
