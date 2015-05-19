@@ -35,23 +35,22 @@
 *</ul>
 * <li>The component can use target_index for focusing to a given beam port. Use an Arm() and ROTATED to position 
 * relatively to the moderator.
-* <li>Time focusing option: Adjusts neutron departure time to match a 'first chopper' defined by parameters tfocus_dist, tfocus_time, tfocus_width (K Lefmann).
-* NOTE: Currently only applies to the Mezei-moderator.
 * <li>The component relies on the new ess_source-lib which is expected to become further enriched during design-finaliziation and construciton of the ESS.
 * </ol>
 *
 * Derived from ESS_moderator_long which was debugged intensively against Mezei note (4/12 2000) and VitESS @ Rencurel 2006.
 *
 * %VALIDATION 
-* Validated against VitESS and Mezei note (4/12 2000) @ Rencurel 2006
+* Mezei-modererators validated against VitESS and Mezei note (4/12 2000) @ Rencurel 2006
+* Benchmarked against multiple versions of ESS moderator group simulation data 2013-2015
 *
 * %P
 * Input parameters:
 *
-* yheight_c: (m)    Height of the cylindershaped cold source
-* yheight_t: (m)    Height of the rectangular thermal source
-* xwidth_t: (m)    Edge of cube shaped thermal source
-* xwidth_c: (m)    Arc-length opening of cylindershaped cold source. 
+* yheight_c: (m)    Height of the cold source
+* yheight_t: (m)    Height of the thermal source
+* xwidth_t: (m)    Edge of thermal source
+* xwidth_c: (m)    Width / arc-length opening of the cold source. 
 * Lmin:   (AA)   Lower edge of wavelength distribution
 * Lmax:   (AA)   Upper edge of wavelength distribution
 * dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
@@ -64,12 +63,12 @@
 * cold_frac: (1) Fraction of neutron statistics from cold source. It is implicitely assumed 
 *                that supermirror allows each beamline to choose the desired fraction
 *                of cold and thermal neutrons (i.e. extreme idealization).
-* tmax_multiplier: (1) Defined maximum emission time at moderator, tmax= tmax_multiplier * ESS_PULSE_DURATION. Only in combination with sourcedef="2013" or "2014"
-* beamport_angle: (deg) Direction within the beamport sector (0 < angle < extraction_width) to direct neutrons. If set to -1, is recalculated to extraction_width/2.
-* extraction_opening: (deg) Width of extraction-area in degrees (60 or 120 degrees). 120 deg only in combination with sourcedef="2014"
+* tmax_multiplier: (1) Defined maximum emission time at moderator, tmax= tmax_multiplier * ESS_PULSE_DURATION. Only in combination with sourcedef="2013", "2014" or "2015"
+* beamport_angle: (deg) Direction within the beamport sector (0 < angle < extraction_opening for 2014, -extraction_opening/2 < angle < extraction_opening/2 for 2015) to direct neutrons. For sourcedef="2015", the only allowed values are 5,15,...,55 degrees measured from the central point.
+* extraction_opening: (deg) Width of extraction-area in degrees (60 or 120 degrees). 120 deg only in combination with sourcedef="2014" and "2015". 
 * acc_power: (MW) Accelerator power in MW
-* sourcedef: (string) ESS source "database", values: "TDR", "2001", "2013", "2014"
-* isleft: (1) Fraction of thermal neutrons generated at the "left" moderator slab.
+* sourcedef: (string) ESS source "database", values: "TDR", "2001", "2013", "2014", "2015"
+* isleft: (1) Fraction of thermal neutrons generated at the "left" moderator slab in case of "2013" or "2014"
 *
 * %E
 *******************************************************************************/
