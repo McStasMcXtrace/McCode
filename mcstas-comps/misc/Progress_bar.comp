@@ -40,7 +40,7 @@
 DEFINE COMPONENT Progress_bar
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string profile="NULL", percent=10,flag_save=0,minutes=0)
-OUTPUT PARAMETERS (IntermediateCnts,StartTime,EndTime)
+OUTPUT PARAMETERS (IntermediateCnts,StartTime,EndTime,CurrentTime)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
 %{
@@ -50,14 +50,19 @@ DECLARE
 #error Only one Progress_bar component may be used in an instrument definition.
 #endif
 
-  double IntermediateCnts=0;
-  time_t StartTime       =0;
-  time_t EndTime         =0;
-  time_t CurrentTime     =0;
+  double IntermediateCnts;
+  time_t StartTime       ;
+  time_t EndTime         ;
+  time_t CurrentTime     ;
 %}
 
 INITIALIZE
 %{
+  IntermediateCnts=0;
+  StartTime       =0;
+  EndTime         =0;
+  CurrentTime     =0;
+  
   fprintf(stdout, "[%s] Initialize\n", mcinstrument_name);
   if (percent*mcget_ncount()/100 < 1e5) {
     percent=1e5*100.0/mcget_ncount();
@@ -77,7 +82,7 @@ TRACE
   /* compute initial estimate of computation duration */
   if (!EndTime && ncount >= IntermediateCnts) {
     CurrentTime = NowTime;
-    if (difftime(NowTime,StartTime) > 10) { /* wait 10 sec before writing ETA */
+    if (difftime(NowTime,StartTime) > 10 && ncount) { /* wait 10 sec before writing ETA */
       EndTime = StartTime + (time_t)(difftime(NowTime,StartTime)
 				     *(double)mcget_ncount()/ncount);
       IntermediateCnts = 0;
@@ -93,7 +98,7 @@ TRACE
   }
   
   /* display percentage when percent or minutes have reached step */
-  if (EndTime &&
+  if (EndTime && mcget_ncount() &&
     (    (minutes && difftime(NowTime,CurrentTime) > minutes*60)
       || (percent && !minutes && ncount >= IntermediateCnts))   )
   {
@@ -131,7 +136,7 @@ FINALLY
 %{
   time_t NowTime;
   time(&NowTime);
-  fprintf(stdout, "\nFinally [%s/%s]. Time: ", mcinstrument_name, mcdirname ? mcdirname : ".");
+  fprintf(stdout, "\nFinally [%s:%s]. Time: ", mcinstrument_name, mcdirname ? mcdirname : ".");
   if (difftime(NowTime,StartTime) < 60.0)
     fprintf(stdout, "%g [s] ", difftime(NowTime,StartTime));
   else if (difftime(NowTime,StartTime) > 3600.0)
