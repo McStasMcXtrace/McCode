@@ -13,6 +13,7 @@ fi
 ./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" linux64 "" -- rpm
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 "" -- rpm
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" linux64 "" -- rpm
+./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcgui/ "" linux64 "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" linux64 "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" linux64 "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" linux64 "" -- rpm
@@ -26,6 +27,7 @@ fi
 ./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" linux32 "" -- rpm
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux32 "" -- rpm
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" linux32 "" -- rpm
+./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcgui/ "" linux32 "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" linux32 "" -- rpm
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" linux32 "" -- rpm
