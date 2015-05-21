@@ -65,7 +65,7 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python, python-qs
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, python, qscintilla"
+  "${FLAVOR}-${MCCODE_VERSION}, python, qscintilla, PyQt4, qscintilla-python"
   )
 
 
