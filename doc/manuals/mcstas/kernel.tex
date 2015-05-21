@@ -139,6 +139,7 @@ as C variable names. The list of these reserved keywords is shown in table~\ref{
       \texttt{DECLARE} & I,C & Declares C internal variables. \\
       \texttt{DEFINE} & I,C & Starts an INSTRUMENT or COMPONENT definition. \\
       \texttt{DEFINITION} & C & Defines component parameters that are constants (\#define). \\
+      \texttt{DEPENDENCY} & C,I & Indicates any library dependency required to create the instrument. \\
       \texttt{END} & I,C & Ends the instrument or component definition. \\
       \texttt{SPLIT} & I & Enhance incoming statistics by event repetition. \\
       \texttt{EXTEND} & I & Extends a component TRACE section (plug-in). \\
@@ -293,6 +294,29 @@ signification to the user. Also, if all instrument parameters have default
 values, then the simple command \verb+mcdisplay+ \verb+test.instr+ will show the
 instrument view without requesting any other input, which is usually a good
 starting point to study the instrument design.
+
+%-------------------------------------------------------------------------------
+\subsection{The \texttt{DEPENDENCY} line}
+\indexKW{DEPENDENCY}
+\label{s:dependency}
+\begin{mcstas}
+DEPENDENCY "-lLIB1 -lLIB2 .."
+\end{mcstas}
+
+If you make use of external library calls in your instrument, you may indicate 
+the dependency list to be used for the compilation of the instrument, as a single 
+DEPENDENCY keyword and a string argument, all on a single line such as:
+\begin{mcstas}
+DEPENDENCY "-lgsl -lgslcblas"
+\end{mcstas}
+The concatenation of all found dependencies from the instrument, but also from 
+all used components, will be printed to the terminal (stdout) as
+\begin{mcstas}
+CFLAGS=-lgsl -lgslcblas
+\end{mcstas}
+This line is interpreted by \verb+mcrun+ (see section \ref{s:mcrun}) and passed 
+to the compiler. It must be indicated just before the \texttt{DECLARE} section.
+This line is optional, and if omitted you may need to manually link the instrument with the libraries and add the proper library names to the MCSTAS_CFLAGS or CFLAGS environment variables.
 
 %-------------------------------------------------------------------------------
 \subsection{The \texttt{DECLARE} section}
@@ -919,7 +943,7 @@ produce the same outgoing event. In this case, you may use the \verb+SPLIT+
 keyword with the syntax
 
 \begin{mcstas}
-  SPLIT r COMPONENT name = comp(...)$
+  SPLIT r COMPONENT name = comp(...)
 \end{mcstas}
 
 where the optional number $r$ specifies the number of repetitions for each
@@ -1084,6 +1108,18 @@ explicitly, ``1'' will be used. In contrast, if no value is
   messages that should be given in the common case of a user forgetting to set
   an important parameter.
 
+%-------------------------------------------------------------------------------
+\subsection{The \texttt{DEPENDENCY} line}
+\indexKW{DEPENDENCY}
+\label{s:comp-dependency}
+\begin{mcstas}
+DEPENDENCY "-lLIB1 -lLIB2 .."
+\end{mcstas}
+This optional line indicates any external library which are needed by the component.
+It should be used when the component code calls external functions and routines
+which should be available when compiling the instrument. 
+This line must be indicated just before the \texttt{SHARE} and \texttt{DECLARE} sections.
+Refer to the section \ref{s:dependency} for more information.
 
 %-------------------------------------------------------------------------------
 \subsection{The \texttt{DECLARE} section}
@@ -1167,7 +1203,7 @@ functions, type and structure definitions that may be used from the component
 \texttt{TRACE} section. For an example of \texttt{SHARE}, see the
 samples/Single\_crystal component. The \verb+%include "file"+ keyword may be
 used to import
-a shared library. The \texttt{SHARE} section is optional.
+a shared library. The \texttt{SHARE} section is optional and should be located {\it before} the \texttt{DECLARE} section.
 
 %-------------------------------------------------------------------------------
 \subsection{The \texttt{INITIALIZE} section}
