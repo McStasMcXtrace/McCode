@@ -41,8 +41,18 @@
 * and Isotroic_sqw (has the side-effect that back-scattered neutrons are absorbed):
 *
 *   mcrun Samples_Incoherent -d Some_third_directory -N4 SAMPLE=2,5 STOP=0 DB=1
-
-
+*
+* The sample type selection is:
+*   box:      1=Vanadium 
+*             2=PowderN 
+*             3=Single_Crystal 
+*             4=Isotropic_Sqw 
+*             5=Incoherent
+*            10=Isotropic_Sqw with V.laz
+*   cube.off: 6=PowderN, 
+*             7=Single_Crystal 
+*             8=Isotropic_Sqw 
+*             9=Incoherent
 *
 * %Example: SAMPLE=1 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.2321e+06
 * %Example: SAMPLE=2 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.2324e+06
@@ -120,7 +130,7 @@ COMPONENT IncS = Incoherent(order=Order,
   xwidth=0.005, yheight=0.005, zdepth=0.005)
 WHEN (SAMPLE==5) AT (0, 0, 0) RELATIVE Coord
 
-/* set of samples with OFF geometry ********************************************/
+/* set of samples with OFF geometry *******************************************/
 
 COMPONENT PowNg = PowderN(reflections="", d_phi=0, Vc = 13.827, p_transmit = 0.5, p_inc = 0.5,
   sigma_abs=ABS, sigma_inc=INC,
@@ -142,7 +152,11 @@ COMPONENT IncSg=Incoherent(order=Order,
   geometry="cube.off", xwidth=0.005)
 WHEN (SAMPLE==9) AT (0, 0, 0) RELATIVE Coord
 
+/* other Sqw tests *************************************************************/
 
+COMPONENT SqwV= Isotropic_Sqw(Sqw_coh="V.laz",
+  xwidth=0.005, yheight=0.005, zdepth=0.005)
+WHEN (SAMPLE==10) AT (0,0,0) RELATIVE Coord
 
 /* end of samples *************************************************************/
 
