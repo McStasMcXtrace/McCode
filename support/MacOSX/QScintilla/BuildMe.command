@@ -30,6 +30,15 @@ fi
 echo ---
 $SUDO conda install pyqt
 echo ---
+# Ensure we will be building using the system-given gcc and g++
+# This is done via a crazy link-hack to allow the combination of
+# default OS X compilers in /usr/bin together with anaconda's 
+# qmake... (Which could be overwritten by a simple /usr/bin first
+# on the path...
+mkdir -p bin
+ln -sf /usr/bin/gcc bin/
+ln -sf /usr/bin/g++ bin/
+export PATH=$PWD/bin:$PATH
 echo Unpacking QScintilla code...
 tar xzf QScintilla-gpl-2.9.tar.gz
 cd QScintilla-gpl-2.9
@@ -38,10 +47,7 @@ echo ---
 echo Starting build of the c++ code
 echo NOTE: You may be prompted for your password at install time!!
 cd Qt4Qt5
-qmake -spec macx-g++ 
-# Ensure we are building using the system-given gcc and g++
-sed -ibak 's/=\ gcc/=\ \/usr\/bin\/gcc/' Makefile
-sed -ibak 's/=\ g++/=\ \/usr\/bin\/g++/' Makefile
+qmake -spec macx-g++ qscintilla.pro
 make
 $SUDO make install
 echo Done building c++ code
