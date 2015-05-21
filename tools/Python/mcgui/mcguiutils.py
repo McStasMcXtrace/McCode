@@ -150,6 +150,10 @@ class McGuiUtils(object):
         
         conf_text = ''.join(conf_text_lines)
         
+        if (os.path.isdir(os.path.expandvars("$HOME/.mcstas/")) == False):
+            # We use os.makedirs here because of missing os.path.mkdir on OS X... :-(
+            os.makedirs(os.path.expandvars("$HOME/.mcstas/"))
+        
         f = open(os.path.expandvars("$HOME/.mcstas/mccode_config.py"), 'w')
         f.write(conf_text)
         f.close()
