@@ -22,7 +22,7 @@
 * with monitoring of the scattering in angular (diffraction) and energy modes 
 * (for spectroscopy).
 %
-* %Example: lambda=4.5 Detector: D22_Detector_I=6.7e6
+* %Example: lambda=4.5 Detector: D22_Detector_I=9.03584e+06
 *
 * %Parameters
 *      lambda:  central wavelength band for guide illumination and
@@ -334,7 +334,7 @@ COMPONENT H51_D22_Sample_L = Monitor_nD(xwidth=0.02, yheight=0.05,
 AT (0,0,0) RELATIVE D22_Sample_Pos
 
 SPLIT COMPONENT H51_D22_Sample = Isotropic_Sqw(radius=0.005,yheight=0.05, 
-  Sqw_coh=D22_sample, Sqw_inc=NULL, d_phi=20)
+  Sqw_coh=D22_sample, Sqw_inc=NULL, d_phi=RAD2DEG*atan2(1, D22_collimation))
 AT (0,0,0) RELATIVE D22_Sample_Pos
 EXTEND %{
   if (!SCATTERED) ABSORB;

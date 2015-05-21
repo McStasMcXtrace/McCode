@@ -6,11 +6,8 @@
 * Written by: E. Farhi, J. Ollivier, Celia Castan Guerrero
 * Date: Jan 2004-2009
 * Origin: ILL
+*
 * %INSTRUMENT_SITE: Mantid
-*
-* The IN5B instrument adapted for use with Mantid-friendly NeXus output.
-*
-* %Description
 *
 *   The IN5B instrument: chopper system + sample + PSD and tof detector, adapted for
 *   use with Mantid-friendly NeXus output. To compile and run, use these steps:
@@ -30,14 +27,15 @@
 *       <li>mcrun ILL_IN5_Mantid.instr --format=NeXus
 *     </ul>
 *   </ol>
-
+*
+* %Description
 *
 *  The ILL IN5@ILL TOF spectrometer from chopper system to final detector, with sample.
 *  The detector model includes Fe housing and tube cross talk absorbing masks 
 *  with angle restriction (neutrons that scatter in Fe in front of a tube and 
 *  enter a different tube are absorbed). This model does not include the H16 guide.
 *
-* Example: lambda=4.5 Detector: Det_PSD_I=1.3e6
+* %Example: lambda=4.5 Detector: Det_PSD_I=1.34931e+07
 *
 * %Parameters
 * lambda:   [AA]     mean incident wavelength

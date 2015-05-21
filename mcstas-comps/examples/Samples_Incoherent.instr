@@ -63,6 +63,7 @@
 * %Example: SAMPLE=7 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3225e+06
 * %Example: SAMPLE=8 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3233e+06
 * %Example: SAMPLE=9 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.3239e+06
+* %Example: SAMPLE=10 STOP=1 V_multiples=0 -n 1e5 Detector: PSD_Sphere_4pi_I=1.28905e+06
 *
 * %Parameters
 * L_min:    [AA] Minimum wavelength of neutrons

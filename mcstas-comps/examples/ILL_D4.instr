@@ -27,7 +27,7 @@
 * Cu       002 DM=1.807 AA
 * Cu       220 DM=1.278 AA
 * 
-* Example: lambda=0.7 Detector: BananaTheta_I=980654
+* %Example: lambda=0.7 Detector: BananaTheta_I=1.44351e+06
 *
 * %Parameters
 * lambda: [Angs] Wavelength at monochromator

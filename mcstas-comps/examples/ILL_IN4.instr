@@ -69,7 +69,7 @@
 * In this model, the sample is a cylindrical liquid/powder/glass scatterer 
 * surrounded by a container and an Al cryostat.
 *
-* %Example: lambda=1.2 DM=1.677 Detector: sample_flux_I=1.8e+06
+* %Example: lambda=1.2 DM=1.677 Detector: sample_flux_I=1.88784e+07
 *
 * %Parameters
 * INPUT PARAMETERS:
