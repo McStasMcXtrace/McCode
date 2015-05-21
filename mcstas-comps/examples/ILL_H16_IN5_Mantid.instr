@@ -1,13 +1,16 @@
 /********************************************************************
 * 
-* Instrument: ILL_H16_IN5
+* Instrument: ILL_H16_IN5_Mantid
 *
 * %Identification
 * Written by: E. Farhi, J. Ollivier, Celia Castan Guerrero
 * Date: Jan 2004-2009
 * Origin: Mantid
+* %INSTRUMENT_SITE: Mantid
 *
- * %INSTRUMENT_SITE: ILL
+* The full ILL IN5B ToF spectrometer adapted for use with Mantid-friendly NeXus output.
+*
+* %Description
 *
 *   The full ILL IN5B: H16 guide & chopper system + sample + PSD and tof detector, adapted for
 *   use with Mantid-friendly NeXus output. To compile and run, use these steps:
@@ -27,8 +30,6 @@
 *       <li>mcrun ILL_H16_IN5_Mantid.instr --format=NeXus
 *     </ul>
 *   </ol>
-*
-* %Description
 *
 *  The IN5@ILL TOF spectrometer from cold source to final detector, with sample.
 *  The detector model includes Fe housing and tube cross talk absorbing masks 

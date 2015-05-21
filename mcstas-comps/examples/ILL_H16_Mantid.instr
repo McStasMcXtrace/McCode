@@ -6,10 +6,9 @@
 * Written by: E. Farhi, J. Ollivier, Celia Castan Guerrero
 * Date: Jan 2004-2009
 * Origin: ILL
+* %INSTRUMENT_SITE: Mantid
 *
- * %INSTRUMENT_SITE: Mantid
-*
-* The ILL H16 cold guide (feeding IN5)
+* The ILL H16 cold guide (feeding IN5) for use with mantid
 *
 * %Description
 *
