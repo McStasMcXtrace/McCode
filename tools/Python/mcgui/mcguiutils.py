@@ -108,7 +108,7 @@ class McGuiUtils(object):
     @staticmethod
     def getMcCodeConfigOptions():
         mcrun_lst =     ["mcrun", "mcrun-py"]
-        mcplot_lst =    ["mcplot", "mcplot -format=Gnuplot", "mcplot --format=Matlab", 
+        mcplot_lst =    ["mcplot", "mcplot --format=Gnuplot", "mcplot --format=Matlab",
                          "mcplot-matlab", "mcplot-matplotlib-py", "mcplot-chaco-py"]
         mcdisplay_lst = ["mcdisplay", "mcdisplay --format=Matlab", "mcdisplay --format=VRML", 
                          "mcdisplay --format=Mantid", "mcdisplay-matplotlib-py", "mcdisplay-py", 
