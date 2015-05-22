@@ -83,7 +83,8 @@ Changes in McStas v2.2, May, 2015
    QT and Scintilla, work done by new McStas team member Jakob Garde. We think it is a very nice start
    at this long-awaited replacement of mcgui (Perl) and want you to try it out even though a few edges
    may still be rough here and there. We therefore make it available across platforms, but without (yet)
-   making it the default GUI application for McStas.
+   making it the default GUI application for McStas. Therefore, a few manual steps may be required to
+   getting mcgui-py running on your platform:
 
    To install/try the new mcgui-py tool, please follow 
    the instructions listed below.
@@ -93,7 +94,8 @@ Changes in McStas v2.2, May, 2015
      ...
    * Windows:
      ...
-
+ - McStas 2.2 further includes a simple mcplot plotter for Unix platforms (Linux, OS X) based solely on 
+   shell-script + Matlab/iFit/Octave, no need for Perl or Python with this plotter, called mcplot-matplotlib
 
 Changes in McStas v2.1, September, 2014
 
