@@ -80,6 +80,9 @@ configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/mcgui" @ONLY)
 # Configure config file
 configure_file("${CMAKE_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.py" @ONLY)
 
+# Configure launcher
+configure_file("${CMAKE_SOURCE_DIR}/McCode-py.desktop.in" work/@NAME@-py.desktop @ONLY)
+
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/main.py" "${WORK}/mccode_config.py")
 else()
@@ -141,4 +144,10 @@ if(NOT WINDOWS)
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}gui-py${DOT_PYTHON_SUFFIX}"
     )
+
+  install(
+    FILES "${WORK}/@NAME@-py.desktop" "@FLAVOR@-py.png"
+    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/launchers/"
+  ) 
+
 endif()

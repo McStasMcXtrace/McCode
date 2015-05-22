@@ -198,6 +198,7 @@ macro(setupMCCODE FLAVOR)
       ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools/Python
       ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools/Python/mcplot
       ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools/Python/mcdisplay
+      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/launchers
       )
     
     # Add "-VERSION" to all program files (executbles)

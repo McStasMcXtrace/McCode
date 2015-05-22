@@ -3,7 +3,7 @@
 [Desktop Entry]
 Comment=Monte-Carlo @MCCODE_PARTICLE@ instrument simulation (@FLAVOR@.org)
 Exec=@MCCODE_PREFIX@gui
-Icon=/usr/share/pixmaps/@FLAVOR@.png
+Icon=/usr/share/pixmaps/@FLAVOR@-pl.png
 MimeType=
 Name=@NAME@ (@FLAVOR@.org)
 StartupNotify=true
