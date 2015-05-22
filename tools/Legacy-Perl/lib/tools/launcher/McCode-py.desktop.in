@@ -1,0 +1,16 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Comment=Monte-Carlo @MCCODE_PARTICLE@ instrument simulation (@FLAVOR@.org)
+Exec=@MCCODE_PREFIX@gui-py
+Icon=/usr/share/pixmaps/@FLAVOR@.png
+MimeType=
+Name=@NAME@-py (@FLAVOR@.org)
+StartupNotify=true
+Terminal=false
+TerminalOptions=
+Type=Application
+X-DCOP-ServiceType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=
+Categories=Education;Applications;
