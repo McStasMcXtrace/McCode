@@ -9,7 +9,7 @@
 * Origin: Your institution
 * Release: McStas CVS-080208
 * Version: 0.2
-* %INSTRUMENT_SITE: Templates (replace with Institution_name_as_a_single_word)
+* %INSTRUMENT_SITE: Templates
 *
 * Instrument short description
 *
@@ -17,6 +17,13 @@
 * Instrument longer description (type, elements, usage...)
 *
 * Example: mcrun test.instr <parameters=values>
+*
+* once your instrument is written and functional:
+* - replace INSTRUMENT_SITE entry above with your Institution name as a single word
+* - rename the instrument name after DEFINE INSTRUMENT below
+* - update the parameter help in the following Parameters section
+* - update the instrument description, and better add a usage example with a
+*     sensible parameter set.
 *
 * %Parameters
 * Par1: [unit] Parameter1 description
