@@ -9,7 +9,7 @@
 * Origin: LLB
 * Release: McStas CVS_080624
 * Version: $Revision: 4621 $
-* %INSTRUMENT_SITE: Test_optics
+* %INSTRUMENT_SITE: Tests_optics
 *
 * A test of the PreMonitor_nD component
 *

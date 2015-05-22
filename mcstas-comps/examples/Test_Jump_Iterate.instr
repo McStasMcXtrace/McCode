@@ -9,7 +9,7 @@
 * Origin:ILL
 * Release: McStas 2.2
 * Version: $Revision: 1.4 $
-* %INSTRUMENT_SITE: Test_grammar
+* %INSTRUMENT_SITE: Tests_grammar
 *
 * A test of the JUMP ITERATE keyword to describe a long curved guide in a concise way.
 *
