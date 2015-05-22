@@ -156,7 +156,7 @@ if(NOT WINDOWS)
   )
   
   install(
-    FILES "${WORK}/@NAME@.desktop" "lib/tools/launcher/@FLAVOR@.png"
+    FILES "${WORK}/@NAME@.desktop" "lib/tools/launcher/@FLAVOR@-pl.png"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/launchers/"
   ) 
 
