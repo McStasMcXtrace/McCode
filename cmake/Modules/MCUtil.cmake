@@ -188,7 +188,19 @@ macro(setupMCCODE FLAVOR)
 
     set(CPACK_RPM_PACKAGE_RELOCATABLE TRUE)
 
-    # Add "-VERSION" to all program files (executables)
+    # Avoid e.g. /usr/local being "part" of the RPMs
+    set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST
+      ${CMAKE_INSTALL_PREFIX}
+      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}
+      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}
+      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/bin
+      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools
+      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools/Python
+      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools/Python/mcplot
+      ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/tools/Python/mcdisplay
+      )
+    
+    # Add "-VERSION" to all program files (executbles)
     set(PROGRAM_SUFFIX "-${MCCODE_VERSION}")
 
     # Run postinst and postrm scripts for various platforms
