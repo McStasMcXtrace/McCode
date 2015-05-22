@@ -16,6 +16,7 @@ fi
 ./mkdist mcstas $1 "" "" mac_maverics "" -- OSXpkg
 ./mkdist mcstas-comps $1 "" "" mac_maverics "" -- OSXpkg
 ./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" mac_maverics "" -- OSXpkg
+./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" mac_maverics "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_maverics "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_maverics "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac_maverics "" -- OSXpkg

@@ -13,6 +13,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas $1 "" "" linux64 "" -- deb
 ./mkdist mcstas-comps $1 "" "" linux64 "" -- deb
 ./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" linux64 "" -- deb
+./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" linux64 "" -- deb
@@ -27,6 +28,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas $1 "" "" linux32 "" -- deb
 ./mkdist mcstas-comps $1 "" "" linux32 "" -- deb
 ./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" linux32 "" -- deb
+./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" linux32 "" -- deb
 ./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" linux32 "" -- deb
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux32 "" -- deb
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" linux32 "" -- deb
