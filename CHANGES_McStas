@@ -74,7 +74,12 @@ Changes in McStas v2.2, May, 2015
 
  Tools:
  - McStas 2.2 is the first release to include a first version of our new mcgui-py tool, based on Python, 
-   QT and Scintilla, work done by new McStas team member Jakob Garde. To install/try it, please follow 
+   QT and Scintilla, work done by new McStas team member Jakob Garde. We think it is a very nice start
+   at this long-awaited replacement of mcgui (Perl) and want you to try it out even though a few edges
+   may still be rough here and there. We therefore make it available across platforms, but without (yet)
+   making it the default GUI application for McStas.
+
+   To install/try the new mcgui-py tool, please follow 
    the instructions listed below.
    * Debian Linux systems: 
      Simply apt-get install mcstas-tools-python-mcgui and dependencies should be resolved
