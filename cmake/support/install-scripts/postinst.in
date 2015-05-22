@@ -71,59 +71,58 @@ then
 	    ln -sf ${RPM_INSTALL_PREFIX}/${FLAVOR}/${VERSION}/bin/* /usr/local/bin/
 	fi
     fi
-else    
-    # Try to figure out if this is a Debian package, a Mac OS X bundle or a generic unix...
-    if [[ ${PREFIX} = /usr/share* ]]; 
-    then
-	# Looks like a Debian package - should really be handled via update-alternatives...
-	BINTARGET="/usr/bin"
-	APPTARGET="/usr/share/applications"
-	LOGOTARGET="/usr/share/pixmaps"
-	checklinks
-    elif [[ ${PREFIX} = /Applications* ]]
-    then
-	# Looks like a Mac - dump links in /usr/bin
-	BINTARGET="/usr/bin"
-	APPTARGET="none"
-	LOGOTARGET="none"
-       	# Also drop a link to the mccode "system folder" as it may otherwise be hard to find for "expert users"
-	mkdir -p /usr/share/${FLAVOR}
-	# - Should not be done if called from the 'app bundle' installer - and only once
-	if [[ ${PREFIX} = */Contents/Resources ]]; then
-	    if [ ! -h /usr/local/${FLAVOR}/${VERSION} ]; then
-		ln -sf ${PREFIX}/${FLAVOR}/${VERSION} /usr/share/${FLAVOR}/${VERSION}
-	    fi
+fi
+# Try to figure out if this is a Debian package, a Mac OS X bundle or a generic unix...
+if [[ ${PREFIX} = /usr/share* ]]; 
+then
+    # Looks like a Debian package - should really be handled via update-alternatives...
+    BINTARGET="/usr/bin"
+    APPTARGET="/usr/share/applications"
+    LOGOTARGET="/usr/share/pixmaps"
+    checklinks
+elif [[ ${PREFIX} = /Applications* ]]
+then
+    # Looks like a Mac - dump links in /usr/bin
+    BINTARGET="/usr/bin"
+    APPTARGET="none"
+    LOGOTARGET="none"
+    # Also drop a link to the mccode "system folder" as it may otherwise be hard to find for "expert users"
+    mkdir -p /usr/share/${FLAVOR}
+    # - Should not be done if called from the 'app bundle' installer - and only once
+    if [[ ${PREFIX} = */Contents/Resources ]]; then
+	if [ ! -h /usr/local/${FLAVOR}/${VERSION} ]; then
+	    ln -sf ${PREFIX}/${FLAVOR}/${VERSION} /usr/share/${FLAVOR}/${VERSION}
 	fi
-	checklinks
-    else
-	# OK - nothing clever then
-	BINTARGET=${PREFIX}/bin
-	APPTARGET="/usr/share/applications"
-	LOGOTARGET="/usr/share/pixmaps"
-	checklinks
     fi
-    if [ -d ${BINTARGET} ];
-    then
-	cd ${BINTARGET}
-	ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/bin/* .
-	ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/environment ${FLAVOR}-${VERSION}-environment
-    else
-	echo "Sorry, your ${BINTARGET} folder does not exist, dropping link creation"
-    fi
-    if [ -d ${APPTARGET} ];
-    then
-	cd ${APPTARGET}
-	ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/launchers/*.desktop .
-    else
-	echo "Sorry, your ${APPTARGET} folder does not exist, dropping link creation"
-    fi
-    if [ -d ${LOGOTARGET} ];
-    then
-	cd ${LOGOTARGET}
-	ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/launchers/*.png .
-    else
-	echo "Sorry, your ${LOGOTARGET} folder does not exist, dropping link creation"
-    fi
+    checklinks
+else
+    # OK - nothing clever then
+    BINTARGET=${PREFIX}/bin
+    APPTARGET="/usr/share/applications"
+    LOGOTARGET="/usr/share/pixmaps"
+    checklinks
+fi
+if [ -d ${BINTARGET} ];
+then
+    cd ${BINTARGET}
+    ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/bin/* .
+    ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/environment ${FLAVOR}-${VERSION}-environment
+else
+    echo "Sorry, your ${BINTARGET} folder does not exist, dropping link creation"
+fi
+if [ -d ${APPTARGET} ];
+then
+    cd ${APPTARGET}
+    ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/launchers/*.desktop .
+else
+    echo "Sorry, your ${APPTARGET} folder does not exist, dropping link creation"
+fi
+if [ -d ${LOGOTARGET} ];
+then
+    cd ${LOGOTARGET}
+    ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/launchers/*.png .
+else
+    echo "Sorry, your ${LOGOTARGET} folder does not exist, dropping link creation"
 fi
 
 # Check if mcdoc is installed and if it needs to run
