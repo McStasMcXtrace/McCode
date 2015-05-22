@@ -61,8 +61,15 @@ then
     then
 	cp ${PREFIX}/${FLAVOR}/${VERSION}/module /etc/modulefiles/${FLAVOR}/${VERSION}
     else
-	sed -i.bak s+/usr/local+${RPM_INSTALL_PREFIX}+g ${RPM_INSTALL_PREFIX}/${FLAVOR}/${VERSION}/module
-	cp ${RPM_INSTALL_PREFIX}/${FLAVOR}/${VERSION}/module /etc/modulefiles/${FLAVOR}/${VERSION}
+	if [ -e ${RPM_INSTALL_PREFIX}/${FLAVOR}/${VERSION}/module ];
+	then
+	    sed -i.bak s+/usr/local+${RPM_INSTALL_PREFIX}+g ${RPM_INSTALL_PREFIX}/${FLAVOR}/${VERSION}/module
+	    cp ${RPM_INSTALL_PREFIX}/${FLAVOR}/${VERSION}/module /etc/modulefiles/${FLAVOR}/${VERSION}
+	fi
+	if [ ${RPM_INSTALL_PREFIX} == /usr/local ];
+	then
+	    ln -sf ${RPM_INSTALL_PREFIX}/${FLAVOR}/${VERSION}/bin/* /usr/local/bin/
+	fi
     fi
 else    
     # Try to figure out if this is a Debian package, a Mac OS X bundle or a generic unix...
