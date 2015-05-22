@@ -12,7 +12,7 @@ canrun_m() {
     fi
     
     # is matlab on the path?
-    if ! [ `which matlab` ]; 
+    if ! [ `which matlab` ]; then
             exit 127;
     fi
 }
