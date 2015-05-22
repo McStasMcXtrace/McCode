@@ -13,9 +13,8 @@ Configuration - dpkg-reconfigure dash, select not to use dash as /bin/sh
 build_rpms_mcstas <release name>
 build_rpms_mcxtrace <release name>
 Dependencies:
-cmake cpack texlive latexmk bibtex gcc flex bison libc6-dev etoolbox (Check on clean system if this is enough!!)
+cmake cpack texlive texlive-imakeidx texlive-biblatex texlive-idxlayout gcc flex bison libc6-dev etoolbox (Check on clean system if this is enough!!)
 Configuration - dpkg-reconfigure dash, select not to use dash as /bin/sh
-
 
 
 * "Generic Unix" == Linux 32bit and 64bit, tgz packages. Input parameters - 1) release "name", i.e. 2.1
