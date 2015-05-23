@@ -46,9 +46,8 @@ if [ "x$2" != "x" ]; then
     DISTDIR=$PWD
     # Use the Tk for perl5.18 for Yosemite
     unzip ../support/MacOSX/Perl-Tk/Tk-*10_10*zip
-    # Use the McCode pgplot packages for Yosemite
-    unzip ../support/MacOSX/pgplot/mccode_pgplot-10_10.pkg.zip
-    unzip ../support/MacOSX/Perl/build/PGPLOT_PDL_MacOSX_10_10_Perl_5_18.pkg.zip
+    # Use the SciPDL package for Yosemite
+    unzip ../support/MacOSX/SciPDL/SciPDL-v2.5-Yosemite.pkg.zip
     cd -
     # A hack for creating a metapackage
     cp -rp meta-pkgs/OSX/McStas-Metapackage_10_10.pmdoc dist/McStas-Metapackage.pmdoc
