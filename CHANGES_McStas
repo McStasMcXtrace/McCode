@@ -61,7 +61,16 @@ Changes in McStas v2.2, May, 2015
        mcdisplay --format=Mantid ILL_H16_IN5_Mantid.instr -n0
    For a "full" IDF (also including visualisation of neutron optics etc use
        mcdisplay --format=Mantid --complete ILL_H16_IN5_Mantid.instr -n0
- - The use of WHEN with EXTEND code only considered the first statement (reoprt by M. Appel). Fixed.
+ - The use of WHEN with EXTEND code only considered the first statement (report by M. Appel). Fixed.
+
+ Infrastructure:
+ - McStas (and its X-ray counterpart McXtrace) are now on GitHub, see
+   https://github.com/McStasMcXtrace/McCode
+ - We will continually provide various bits of "missing information" on the related Wiki at
+   https://github.com/McStasMcXtrace/McCode/wiki
+ - If you want to contribute instrument models or components, the future way of doing that is to
+   fork / clone our GitHub repo, make your changes and send us a pull-request
+ - We will later provide a "cheat sheet" - McStas and GitHub for physicist... :-)
 
  Components:
  - A new model for the ESS butterfly moderator - see documentation for the ESS_moderator.comp. Developed by
