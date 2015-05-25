@@ -465,7 +465,15 @@ class McGuiAppController():
         webbrowser.open_new_tab(mcman)
     
     def handleHelpAbout(self):
-        print("not implemented")
+        # get mcstas version using 'mcstas -v'
+        process = subprocess.Popen('mcstas -v', 
+                                   stdout=subprocess.PIPE, 
+                                   stderr=subprocess.STDOUT,
+                                   shell=True)
+        # synchronous
+        (stdoutdata, stderrdata) = process.communicate()
+        
+        self.view.showAboutBox(stdoutdata)
         
     def handleEditInstrument(self):
         instr = self.state.getInstrumentFile()

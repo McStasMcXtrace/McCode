@@ -123,6 +123,9 @@ class McView(object):
         dlg = McConfigDialog()
         dlg.initConfigData(None)
         dlg.exec_()
+        
+    def showAboutBox(self, text):
+        QtGui.QMessageBox.about(self.mw, 'mcgui-py: About', text)
             
 ''' Main Window widgets wrapper class
 Events callbacks are hooked elsewhere.
