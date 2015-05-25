@@ -94,7 +94,7 @@ class McGuiState(QtCore.QObject):
     
     def loadInstrument(self, instrFile):
         if not os.path.exists(str(instrFile)):
-            raise Exception("McGuiState.loadInstrument: Error.")
+            raise Exception("McGuiState.loadInstrument: Error. File: " + instrFile)
         self.setWorkDir(os.path.dirname(str(instrFile)))
         self.__instrFile = str(instrFile)
         self.__fireInstrUpdate()
@@ -306,7 +306,7 @@ class McGuiState(QtCore.QObject):
             self.__emitter.message(stdoutdata.rstrip('\n'))
 
         self.__emitter.message('', mcguiMsg=True)
-        self.__emitter.status('Simulation complete.')
+        self.__emitter.status('')
 
     def getInstrParams(self):
         # get instrument params using 'mcrun [instr] --info'
@@ -367,14 +367,21 @@ class McGuiAppController():
         # order instrument files by site:
         sites = {s for s in map(lambda f: f[1], files_instr_and_site)}
         for s in sites:
+            # extract instruments file paths of this site
             instr_path_lst = map(lambda f: f[0], filter(lambda f: f[1] in [s], files_instr_and_site))
-            instr_name_lst = map(lambda i: os.path.splitext(os.path.basename(i))[0], instr_path_lst)
+            # sort instrument of this site by file name
+            instr_path_lst.sort(key=lambda instrpath: os.path.splitext(os.path.basename(instrpath))[0])
+            # extract file names
+            instr_name_lst = map(lambda instrpath: os.path.splitext(os.path.basename(instrpath))[0], instr_path_lst)
             arg = []
             arg.append(s)
             arg.append(instr_name_lst)
             arg.append(instr_path_lst)
             args.append(arg)
-            
+        
+        # sort sites 
+        args.sort(key=lambda arg: arg[0])    
+        
         # hand on for menu generation
         self.view.initMainWindowDynamicElements(args, self.handleNewFromTemplate)
         
@@ -400,6 +407,11 @@ class McGuiAppController():
             args.append(arg)
             
             i += 1
+        
+        # sort components in each category (using Python default string sort on filename)
+        for arg in args:
+            arg[1].sort()
+            arg[2].sort(key=lambda parser: os.path.splitext(os.path.basename(parser.file))[0])
         
         # hand on for menu generation
         self.view.initCodeEditorComponentMenu(args)
@@ -463,6 +475,7 @@ class McGuiAppController():
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
             self.state.unloadInstrument()
+            self.emitter.message("Instrument closed", mcguiMsg=True)
             self.emitter.status("Instrument closed")
     
     def handleSaveInstrument(self, text):
@@ -487,13 +500,13 @@ class McGuiAppController():
     def handleNewInstrument(self):
         new_instr_req = self.view.showNewInstrDialog(self.state.getWorkDir())
         if new_instr_req != '':
-            new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, '')
+            template_text = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template.instr")).read()
+            new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, template_text)
             if new_instr != '':
                 self.state.unloadInstrument()
-                # TODO: insert instrument template into the new instrument
                 self.state.loadInstrument(new_instr)
                 self.view.showCodeEditorWindow(new_instr)
-                self.emitter.status("Editing new instrument: " + os.path.basename(new_instr))
+                self.emitter.status("Editing new instrument: " + os.path.basename(str(new_instr)))
     
     def handleNewFromTemplate(self, instr_templ=''):
         new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(str(instr_templ))))
@@ -509,6 +522,7 @@ class McGuiAppController():
             if self.view.closeCodeEditorWindow():
                 self.state.unloadInstrument()
                 self.state.loadInstrument(instr)
+                self.emitter.message("Instrument opened: " + os.path.basename(str(instr)), mcguiMsg=True)
                 self.emitter.status("Instrument: " + os.path.basename(str(instr)))
     
     ''' Connect UI and state callbacks 

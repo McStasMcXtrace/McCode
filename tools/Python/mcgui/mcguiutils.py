@@ -88,7 +88,7 @@ class McGuiUtils(object):
             instr = instr + '.instr'
         
         # TODO: add try-finally and error handling
-        f = open(instr, 'w')
+        f = open(str(instr), 'w')
         f.write(text)
         f.close()
         
