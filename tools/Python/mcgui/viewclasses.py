@@ -843,6 +843,8 @@ class Ui_MainWindow(object):
         self.actionConfiguration.setObjectName("actionConfiguration")
         self.actionCompile_Instrument_MPI = QtGui.QAction(MainWindow)
         self.actionCompile_Instrument_MPI.setObjectName("actionCompile_Instrument_MPI")
+        self.actionMcdoc = QtGui.QAction(MainWindow)
+        self.actionMcdoc.setObjectName("actionMcdoc")
         self.menuNew_From_Template.addAction(self.actionTempl_submenu)
         self.menuFile.addAction(self.actionNew_Instrument)
         self.menuFile.addAction(self.menuNew_From_Template.menuAction())
@@ -860,6 +862,8 @@ class Ui_MainWindow(object):
         self.menuSimulation.addAction(self.actionCompile_Instrument_MPI)
         self.menuSimulation.addSeparator()
         self.menuSimulation.addAction(self.actionPlot)
+        self.menuHelp.addAction(self.actionMcdoc)
+        self.menuHelp.addSeparator()
         self.menuHelp.addAction(self.actionMcstas_User_Manual)
         self.menuHelp.addAction(self.actionMcstas_Component_Manual)
         self.menuHelp.addAction(self.actionMcstas_Web_Page)
@@ -916,6 +920,8 @@ class Ui_MainWindow(object):
         self.actionConfiguration.setText(QtGui.QApplication.translate("MainWindow", "Configuration...", None, QtGui.QApplication.UnicodeUTF8))
         self.actionConfiguration.setToolTip(QtGui.QApplication.translate("MainWindow", "mccode configuration", None, QtGui.QApplication.UnicodeUTF8))
         self.actionCompile_Instrument_MPI.setText(QtGui.QApplication.translate("MainWindow", "Compile Instrument (MPI)", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionMcdoc.setText(QtGui.QApplication.translate("MainWindow", "mcdoc Component Reference", None, QtGui.QApplication.UnicodeUTF8))
+
 
 
 ''' Edit instrument window

@@ -207,6 +207,8 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionMcdoc"/>
+    <addaction name="separator"/>
     <addaction name="actionMcstas_User_Manual"/>
     <addaction name="actionMcstas_Component_Manual"/>
     <addaction name="actionMcstas_Web_Page"/>
@@ -329,6 +331,11 @@
   <action name="actionCompile_Instrument_MPI">
    <property name="text">
     <string>Compile Instrument (MPI)</string>
+   </property>
+  </action>
+  <action name="actionMcdoc">
+   <property name="text">
+    <string>mcdoc Component Reference</string>
    </property>
   </action>
  </widget>

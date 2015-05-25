@@ -450,7 +450,7 @@ class McGuiAppController():
         self.emitter.message('', mcguiMsg=True)
         
     def handleHelpWeb(self):
-        '''open the mcstas homepage'''
+        # open the mcstas homepage
         mcurl = 'http://www.mcstas.org'
         webbrowser.open_new_tab(mcurl)
     
@@ -532,6 +532,9 @@ class McGuiAppController():
                 self.state.loadInstrument(instr)
                 self.emitter.message("Instrument opened: " + os.path.basename(str(instr)), mcguiMsg=True)
                 self.emitter.status("Instrument: " + os.path.basename(str(instr)))
+        
+    def handleMcdoc(self):
+        subprocess.Popen('mcdoc', shell=True)
     
     ''' Connect UI and state callbacks 
     '''
@@ -557,6 +560,7 @@ class McGuiAppController():
         mwui.actionCompile_Instrument_MPI.triggered.connect(self.state.compile_mpi)
         mwui.actionRun_Simulation.triggered.connect(self.handleRunSim)
         
+        mwui.actionMcdoc.triggered.connect(self.handleMcdoc)
         mwui.actionMcstas_Web_Page.triggered.connect(self.handleHelpWeb)
         mwui.actionMcstas_User_Manual.triggered.connect(self.handleHelpPdf)
         mwui.actionMcstas_Component_Manual.triggered.connect(self.handleHelpPdfComponents)
