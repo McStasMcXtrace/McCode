@@ -17,7 +17,7 @@
 * A test of the PreMonitor_nD component showing the effective usable part
 * reflected from a monochromator.
 *
-* %Example: ETA=1 lambda=1 Detector: Mon_Sample=1.36e+08
+* %Example: ETA=1 lambda=1 Detector: Mon_SampleXY=1.36e+08
 *
 * %Parameters
 * lambda: [Angs] Wavelength at monochromator, computed from DM and THETA_M if left as 0.
