@@ -116,14 +116,14 @@ class McGuiUtils(object):
         return mcrun_lst, mcplot_lst, mcdisplay_lst
 
     @staticmethod
-    def loadUserConfig():
-        userconfig=os.path.expandvars("$HOME/.mcstas/mccode_config.py")
+    def loadUserConfig(MCCODE_VERSION):
+        userconfig=os.path.expandvars("$HOME/.mcstas/"+MCCODE_VERSION+"/mccode_config.py")
         if os.path.isfile(userconfig):
             print "Loading user configuration from "+userconfig
             imp.load_source('mccode_config', userconfig)
         
     @staticmethod
-    def saveUserConfig(config_module):
+    def saveUserConfig(config_module,MCCODE_VERSION):
         # overrides previous config by creating a mccode_config.py file in the $HOME/.mcstas folder
         conf_text_lines = [
             '# ',
@@ -153,8 +153,12 @@ class McGuiUtils(object):
         if (os.path.isdir(os.path.expandvars("$HOME/.mcstas/")) == False):
             # We use os.makedirs here because of missing os.path.mkdir on OS X... :-(
             os.makedirs(os.path.expandvars("$HOME/.mcstas/"))
-        
-        f = open(os.path.expandvars("$HOME/.mcstas/mccode_config.py"), 'w')
+            
+        if (os.path.isdir(os.path.expandvars("$HOME/.mcstas/"+MCCODE_VERSION)) == False):
+            # We use os.makedirs here because of missing os.path.mkdir on OS X... :-(
+            os.makedirs(os.path.expandvars("$HOME/.mcstas/"+MCCODE_VERSION))
+            
+        f = open(os.path.expandvars("$HOME/.mcstas/"+MCCODE_VERSION+"/mccode_config.py"), 'w')
         f.write(conf_text)
         f.close()
         

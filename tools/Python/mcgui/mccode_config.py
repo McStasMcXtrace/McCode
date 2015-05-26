@@ -2,6 +2,7 @@
 mcstas/mcxtrace configuration.
 '''
 configuration = {
+    "MCCODE_VERSION": '2.1',
     "MCCODE_LIB_DIR": '/usr/share/mcstas/2.1/',
     "MCCODE": 'mcstas',
     "MCRUN": 'mcrun',

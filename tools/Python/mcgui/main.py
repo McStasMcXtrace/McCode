@@ -581,7 +581,7 @@ class McGuiAppController():
 ''' Program execution
 '''
 def main():
-    McGuiUtils.loadUserConfig()
+    McGuiUtils.loadUserConfig(mccode_config.configuration["MCCODE_VERSION"])
     
     mcguiApp = QtGui.QApplication(sys.argv)
     mcguiApp.ctr = McGuiAppController()

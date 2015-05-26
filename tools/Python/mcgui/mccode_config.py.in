@@ -2,6 +2,7 @@
 mcstas/mcxtrace configuration.
 '''
 configuration = {
+    "MCCODE_VERSION": '@MCCODE_VERSION@',
     "MCCODE_LIB_DIR": '@MCCODE_LIB@',
     "MCCODE": '@FLAVOR@',
     "MCRUN": '@MCCODE_PREFIX@run',
