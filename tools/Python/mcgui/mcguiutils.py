@@ -116,15 +116,15 @@ class McGuiUtils(object):
         return mcrun_lst, mcplot_lst, mcdisplay_lst
 
     @staticmethod
-    def loadUserConfig(MCCODE_VERSION):
-        userconfig=os.path.expandvars("$HOME/.mcstas/"+MCCODE_VERSION+"/mccode_config.py")
+    def loadUserConfig(MCCODE,MCCODE_VERSION):
+        userconfig=os.path.expandvars("$HOME/."+MCCODE+"/"+MCCODE_VERSION+"/mccode_config.py")
         if os.path.isfile(userconfig):
             print "Loading user configuration from "+userconfig
             imp.load_source('mccode_config', userconfig)
         
     @staticmethod
-    def saveUserConfig(config_module,MCCODE_VERSION):
-        # overrides previous config by creating a mccode_config.py file in the $HOME/.mcstas folder
+    def saveUserConfig(config_module,MCCODE,MCCODE_VERSION):
+        # overrides previous config by creating a mccode_config.py file in the $HOME/.MCCODE folder
         conf_text_lines = [
             '# ',
             '\n' + '# mcstas/mcxtrace configuration.',
@@ -150,15 +150,15 @@ class McGuiUtils(object):
         
         conf_text = ''.join(conf_text_lines)
         
-        if (os.path.isdir(os.path.expandvars("$HOME/.mcstas/")) == False):
+        if (os.path.isdir(os.path.expandvars("$HOME/."+MCCODE+"/")) == False):
             # We use os.makedirs here because of missing os.path.mkdir on OS X... :-(
-            os.makedirs(os.path.expandvars("$HOME/.mcstas/"))
+            os.makedirs(os.path.expandvars("$HOME/."+MCCODE+"/"))
             
-        if (os.path.isdir(os.path.expandvars("$HOME/.mcstas/"+MCCODE_VERSION)) == False):
+        if (os.path.isdir(os.path.expandvars("$HOME/."+MCCODE+"/"+MCCODE_VERSION)) == False):
             # We use os.makedirs here because of missing os.path.mkdir on OS X... :-(
-            os.makedirs(os.path.expandvars("$HOME/.mcstas/"+MCCODE_VERSION))
+            os.makedirs(os.path.expandvars("$HOME/."+MCCODE+"/"+MCCODE_VERSION))
             
-        f = open(os.path.expandvars("$HOME/.mcstas/"+MCCODE_VERSION+"/mccode_config.py"), 'w')
+        f = open(os.path.expandvars("$HOME/."+MCCODE+"/"+MCCODE_VERSION+"/mccode_config.py"), 'w')
         f.write(conf_text)
         f.close()
         

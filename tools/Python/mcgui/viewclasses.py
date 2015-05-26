@@ -701,7 +701,7 @@ class McConfigDialog(QtGui.QDialog):
     
     def save(self):
         self.__pullValuesTo_mccode_config()
-        McGuiUtils.saveUserConfig(mccode_config,mccode_config.configuration["MCCODE_VERSION"])
+        McGuiUtils.saveUserConfig(mccode_config,mccode_config.configuration["MCCODE"],mccode_config.configuration["MCCODE_VERSION"])
         
         # finally
         super(McConfigDialog, self).accept()
