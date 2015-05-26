@@ -1,8 +1,6 @@
 
-import atexit
 import os
 import re
-import tempfile
 import shutil
 import yaml
 
@@ -61,11 +59,12 @@ class Process:
         # Redirect stdout and stderr?
         pipe = pipe and PIPE or None
 
-        # Run executable
+        # Run executable as shell
         LOG.debug('CMD: %s %s', self.executable, ' '.join(args))
-        fid = Popen([self.executable] + args,
+        fid = Popen(self.executable + ' ' + ' '.join(args),
                     stdout=pipe,
-                    stderr=pipe)
+                    stderr=pipe,
+                    shell=True)
         stdout, stderr = fid.communicate()
 
         # Check if process terminated correctly
