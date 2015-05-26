@@ -456,7 +456,7 @@ COMPONENT DetectorMount = Arm()
   
 COMPONENT Detector = Monitor_nD(
   xwidth=0.1, yheight=.25, user1=RotateNeutronX, username1="Angle [deg]",
-  options="user1 limits=[-60 120], y, banana", restore_neutron=1, bins=100)
+  options="user1 limits=[-60 120], y", restore_neutron=1, bins=100)
   AT (0, 0, 0)       RELATIVE DetectorMount
   
 COMPONENT DetectorEnergy = Monitor_nD(
