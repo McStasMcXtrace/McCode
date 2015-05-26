@@ -98,19 +98,28 @@ Changes in McStas v2.2, May, 2015
    To install/try the new mcgui-py tool, please follow 
    the instructions listed below.
    * Debian Linux systems: 
-     Simply apt-get install mcstas-tools-python-mcgui and dependencies should be resolved
+     Simply apt-get install mcstas-tools-python-mcgui and dependencies should be autmatically resolved
+   * RPM-based Linux systems:
+     Use yum to install mcstas-tools-python-mcgui and dependencies should be autmatically resolved 
+     (Tested to work for Fedora Core 21)
    * OS X:
-     - Download and install Anaconda Python (using the "for me only" option).
-     - When installation is done, start a new terminal and locate the mcstas install directory - usually 
-       /usr/share/mcstas/<version>/. Enter the subfolder support/MacOSX/QScintilla/.
+     - Download and install Anaconda Python 2.7 (using the "for me only" option).
+     - When installation is done, start a new terminal and locate the folder where you downloaded
+       and unpacked the McStas installation bundle. Inside the extras/ folder you will find a subfolder
+       called QScintilla/. 
      - Run the script BuildMe.command by typing "./BuildMe.command".
+       (Browsing your way using Finder and double-clicking the BuildMe.command icon should also work)
      - NOTE: If your system prompts you to install command line tools: Accept to install. Afterwards, 
        run the script "BuildMe.command" again.
      - "mcgui-py" should now be available.
    * Windows:
-     ...
+     - Download and install Anaconda Python 2.7 and let it register as the default Python of your windows
+       system. All dependencies should be included.
+   
+
  - McStas 2.2 further includes a simple mcplot plotter for Unix platforms (Linux, OS X) based solely on 
    shell-script + Matlab/iFit/Octave, no need for Perl or Python with this plotter, called mcplot-matplotlib
+
 
 Changes in McStas v2.1, September, 2014
 
