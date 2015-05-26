@@ -18,7 +18,7 @@ Actions=Help
 
 [Desktop Action Help]
 Name=Open @FLAVOR@ Help
-Exec=mcdoc
+Exec=@MCCODE_PREFIX@doc
 OnlyShowIn=Unity;Gnome;
 
 
