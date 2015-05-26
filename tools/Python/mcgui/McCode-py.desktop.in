@@ -14,3 +14,11 @@ X-DCOP-ServiceType=
 X-KDE-SubstituteUID=false
 X-KDE-Username=
 Categories=Education;Applications;
+Actions=Help
+
+[Desktop Action Help]
+Name=Open @FLAVOR@ Help
+Exec=mcdoc
+OnlyShowIn=Unity;Gnome;
+
+
