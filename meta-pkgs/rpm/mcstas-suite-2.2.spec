@@ -17,7 +17,7 @@ Summary:   %{summary}
 Group:     %{group}
 URL:       http://www.mccode.org
 Buildroot: %{buildroot}
-Requires:  mcstas-suite-perl-2.2 mcstas-suite-python-2.2
+Requires:  mcstas-suite-perl mcstas-suite-python
 
 %description
 A metapackage for McStas + perl and python tools
