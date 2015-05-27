@@ -141,6 +141,12 @@ class McMainWindow(QtGui.QMainWindow):
         self.ui.setupUi(self)
         self.ui.dynamicMenuClicked = QtCore.pyqtSignal(QtCore.QString)
     
+        # set main window title depending on flavour
+        if mccode_config.configuration["MCCODE"] == "mcstas": 
+            self.setWindowTitle('mcgui-py') 
+        else: 
+            self.setWindowTitle('mxgui-py')
+    
     def initDynamicView(self, args, callback):
         ''' - args ([str, [], []]): list of triplets consisting of site name, 
                                     [instrument names], [instrument file paths] 
@@ -882,11 +888,7 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        if mccode_config.configuration["MCCODE"] == "mcstas":
-            prefix = "mc"
-        else:
-            prefix = "mx"
-        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", prefix+"gui-py", None, QtGui.QApplication.UnicodeUTF8))
+        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "mcgui-py", None, QtGui.QApplication.UnicodeUTF8))
         self.gbxInstrument.setTitle(QtGui.QApplication.translate("MainWindow", "Instrument:", None, QtGui.QApplication.UnicodeUTF8))
         self.lblInstrument.setText(QtGui.QApplication.translate("MainWindow", "<Instrument file>", None, QtGui.QApplication.UnicodeUTF8))
         self.btnRun.setText(QtGui.QApplication.translate("MainWindow", "Run...", None, QtGui.QApplication.UnicodeUTF8))
@@ -895,7 +897,7 @@ class Ui_MainWindow(object):
         self.btnOpenInstrument.setToolTip(QtGui.QApplication.translate("MainWindow", "Browse instrument...", None, QtGui.QApplication.UnicodeUTF8))
         self.btnOpenInstrument.setText(QtGui.QApplication.translate("MainWindow", "Open...", None, QtGui.QApplication.UnicodeUTF8))
         self.gbxMessages.setTitle(QtGui.QApplication.translate("MainWindow", "Messages:", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbxMessages.setTabText(self.tbxMessages.indexOf(self.tabMcgui), QtGui.QApplication.translate("MainWindow", prefix+"gui", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbxMessages.setTabText(self.tbxMessages.indexOf(self.tabMcgui), QtGui.QApplication.translate("MainWindow", "mcgui", None, QtGui.QApplication.UnicodeUTF8))
         self.tbxMessages.setTabText(self.tbxMessages.indexOf(self.tabSim), QtGui.QApplication.translate("MainWindow", "Simulations", None, QtGui.QApplication.UnicodeUTF8))
         self.menuFile.setTitle(QtGui.QApplication.translate("MainWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
         self.menuNew_From_Template.setTitle(QtGui.QApplication.translate("MainWindow", "New From Template...", None, QtGui.QApplication.UnicodeUTF8))
