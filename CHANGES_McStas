@@ -118,7 +118,7 @@ Changes in McStas v2.2, May 27th, 2015
        system. All dependencies should be included.
 
  - McStas 2.2 further includes a simple mcplot plotter for Unix platforms (Linux, OS X) based solely on 
-   shell-script + Matlab/iFit/Octave, no need for Perl or Python with this plotter, called mcplot-matplotlib
+   shell-script + Matlab/iFit/Octave, no need for Perl or Python with this plotter, called mcplot-matlab
 
 
 Changes in McStas v2.1, September, 2014
