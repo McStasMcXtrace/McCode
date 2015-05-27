@@ -84,7 +84,7 @@ class McView(object):
     def showOpenInstrumentDlg(self, lookDir):
         dlg = QtGui.QFileDialog()
         dlg.setDirectory(lookDir)
-        dlg.setNameFilter("mcstas instruments (*.instr)");
+        dlg.setNameFilter(mccode_config.configuration["MCCODE"]+" instruments (*.instr)");
         if dlg.exec_():
             return dlg.selectedFiles()[0]
     
@@ -106,7 +106,7 @@ class McView(object):
     def showNewInstrDialog(self, lookdir):
         dlg = QtGui.QFileDialog()
         dlg.setDirectory(lookdir)
-        dlg.setNameFilter("mcstas instruments (*.instr)");
+        dlg.setNameFilter(mccode_config.configuration["MCCODE"]+" instruments (*.instr)");
         return dlg.getSaveFileNameAndFilter(parent=None, caption=QtCore.QString('Create Instrument file...'))[0]
         
     
@@ -125,7 +125,11 @@ class McView(object):
         dlg.exec_()
         
     def showAboutBox(self, text):
-        QtGui.QMessageBox.about(self.mw, 'mcgui-py: About', text)
+        if mccode_config.configuration["MCCODE"] == "mcstas":
+            prefix = "mc"
+        else:
+            prefix = "mx"
+        QtGui.QMessageBox.about(self.mw, prefix+'gui-py: About', text)
             
 ''' Main Window widgets wrapper class
 Events callbacks are hooked elsewhere.
@@ -190,7 +194,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
             self.__scintilla.setText(open(instr).read())
         else:
             self.__scintilla.setText('')
-        self.setWindowTitle("mcstas: " + instr)
+        self.setWindowTitle(mccode_config.configuration["MCCODE"] + ": " + instr)
         self.assumeDataSaved()
         
     def assumeDataSaved(self):
@@ -318,7 +322,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         # TODO: get home dir in a sys-indep way
         dlg = QtGui.QFileDialog()
         dlg.setDirectory(mccode_config.configuration["MCCODE_LIB_DIR"])
-        dlg.setNameFilter("mcstas component files (*.comp)");
+        dlg.setNameFilter(mccode_config.configuration["MCCODE"]+"component files (*.comp)");
         if dlg.exec_():
             comp_file = dlg.selectedFiles()[0]
             parser = McComponentParser(comp_file)
@@ -619,7 +623,7 @@ class McConfigDialog(QtGui.QDialog):
     
     def initConfigData(self, args):
         # comboboxes
-        mcrun_lst, mcplot_lst, mcdisplay_lst = McGuiUtils.getMcCodeConfigOptions()
+        mcrun_lst, mcplot_lst, mcdisplay_lst = McGuiUtils.getMcCodeConfigOptions(mccode_config.configuration["MCCODE"])
         
         # mcrun combobox
         selected_val = mccode_config.configuration["MCRUN"]
@@ -878,7 +882,11 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "mcgui-py", None, QtGui.QApplication.UnicodeUTF8))
+        if mccode_config.configuration["MCCODE"] == "mcstas":
+            prefix = "mc"
+        else:
+            prefix = "mx"
+        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", prefix+"gui-py", None, QtGui.QApplication.UnicodeUTF8))
         self.gbxInstrument.setTitle(QtGui.QApplication.translate("MainWindow", "Instrument:", None, QtGui.QApplication.UnicodeUTF8))
         self.lblInstrument.setText(QtGui.QApplication.translate("MainWindow", "<Instrument file>", None, QtGui.QApplication.UnicodeUTF8))
         self.btnRun.setText(QtGui.QApplication.translate("MainWindow", "Run...", None, QtGui.QApplication.UnicodeUTF8))
@@ -887,7 +895,7 @@ class Ui_MainWindow(object):
         self.btnOpenInstrument.setToolTip(QtGui.QApplication.translate("MainWindow", "Browse instrument...", None, QtGui.QApplication.UnicodeUTF8))
         self.btnOpenInstrument.setText(QtGui.QApplication.translate("MainWindow", "Open...", None, QtGui.QApplication.UnicodeUTF8))
         self.gbxMessages.setTitle(QtGui.QApplication.translate("MainWindow", "Messages:", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbxMessages.setTabText(self.tbxMessages.indexOf(self.tabMcgui), QtGui.QApplication.translate("MainWindow", "mcgui", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbxMessages.setTabText(self.tbxMessages.indexOf(self.tabMcgui), QtGui.QApplication.translate("MainWindow", prefix+"gui", None, QtGui.QApplication.UnicodeUTF8))
         self.tbxMessages.setTabText(self.tbxMessages.indexOf(self.tabSim), QtGui.QApplication.translate("MainWindow", "Simulations", None, QtGui.QApplication.UnicodeUTF8))
         self.menuFile.setTitle(QtGui.QApplication.translate("MainWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
         self.menuNew_From_Template.setTitle(QtGui.QApplication.translate("MainWindow", "New From Template...", None, QtGui.QApplication.UnicodeUTF8))
@@ -901,11 +909,11 @@ class Ui_MainWindow(object):
         self.actionRun_Simulation.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+R", None, QtGui.QApplication.UnicodeUTF8))
         self.actionCompile_Instrument.setText(QtGui.QApplication.translate("MainWindow", "Compile Instrument", None, QtGui.QApplication.UnicodeUTF8))
         self.actionCompile_Instrument.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+Shift+R", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionMcstas_User_Manual.setText(QtGui.QApplication.translate("MainWindow", "mcstas User Manual", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionMcstas_Web_Page.setText(QtGui.QApplication.translate("MainWindow", "mcstas Web Page", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionMcstas_User_Manual.setText(QtGui.QApplication.translate("MainWindow", mccode_config.configuration["MCCODE"]+" User Manual", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionMcstas_Web_Page.setText(QtGui.QApplication.translate("MainWindow", mccode_config.configuration["MCCODE"]+" Web Page", None, QtGui.QApplication.UnicodeUTF8))
         self.actionAbout.setText(QtGui.QApplication.translate("MainWindow", "About...", None, QtGui.QApplication.UnicodeUTF8))
         self.actionAbout.setShortcut(QtGui.QApplication.translate("MainWindow", "F1", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionMcstas_Component_Manual.setText(QtGui.QApplication.translate("MainWindow", "mcstas Component Manual", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionMcstas_Component_Manual.setText(QtGui.QApplication.translate("MainWindow", mccode_config.configuration["MCCODE"]+" Component Manual", None, QtGui.QApplication.UnicodeUTF8))
         self.actionNew_Instrument.setText(QtGui.QApplication.translate("MainWindow", "New Instrument...", None, QtGui.QApplication.UnicodeUTF8))
         self.actionNew_Instrument.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+N", None, QtGui.QApplication.UnicodeUTF8))
         self.actionEdit_Instrument.setText(QtGui.QApplication.translate("MainWindow", "Edit...", None, QtGui.QApplication.UnicodeUTF8))

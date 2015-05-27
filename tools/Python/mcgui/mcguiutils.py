@@ -106,13 +106,17 @@ class McGuiUtils(object):
             return ''
         
     @staticmethod
-    def getMcCodeConfigOptions():
-        mcrun_lst =     ["mcrun", "mcrun-py"]
-        mcplot_lst =    ["mcplot", "mcplot --format=Gnuplot", "mcplot --format=Matlab",
-                         "mcplot-matlab", "mcplot-matplotlib-py", "mcplot-chaco-py"]
-        mcdisplay_lst = ["mcdisplay", "mcdisplay --format=Matlab", "mcdisplay --format=VRML", 
-                         "mcdisplay --format=Mantid", "mcdisplay-matplotlib-py", "mcdisplay-py", 
-                         "mcdisplay-r-py", "mcdisplay-vtk-py"]
+    def getMcCodeConfigOptions(MCCODE):
+        if MCCODE == "mcstas":
+            prefix = "mc"
+        else:
+            prefix = "mx"
+        mcrun_lst =     [prefix+"run", prefix+"run-py"]
+        mcplot_lst =    [prefix+"plot", prefix+"plot --format=Gnuplot", prefix+"plot --format=Matlab",
+                         prefix+"plot-matlab", prefix+"plot-matplotlib-py", prefix+"plot-chaco-py"]
+        mcdisplay_lst = [prefix+"display", prefix+"display --format=Matlab", prefix+"display --format=VRML", 
+                         prefix+"display --format=Mantid", prefix+"display-matplotlib-py", prefix+"display-py", 
+                         prefix+"display-r-py", prefix+"display-vtk-py"]
         return mcrun_lst, mcplot_lst, mcdisplay_lst
 
     @staticmethod
