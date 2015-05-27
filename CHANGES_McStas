@@ -38,7 +38,7 @@
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v2.2, May, 2015
+Changes in McStas v2.2, May 27th, 2015
 
  McStas 2.2 is the third release in the 2.x series and fixes various minor issues with McStas 2.1,
  plus provide important new developments.
@@ -116,7 +116,6 @@ Changes in McStas v2.2, May, 2015
    * Windows:
      - Download and install Anaconda Python 2.7 and let it register as the default Python of your windows
        system. All dependencies should be included.
-   
 
  - McStas 2.2 further includes a simple mcplot plotter for Unix platforms (Linux, OS X) based solely on 
    shell-script + Matlab/iFit/Octave, no need for Perl or Python with this plotter, called mcplot-matplotlib
