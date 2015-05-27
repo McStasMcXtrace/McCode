@@ -75,6 +75,7 @@ Changes in McStas v2.2, May, 2015
  Components:
  - A new model for the ESS butterfly moderator - see documentation for the ESS_moderator.comp. Developed by
    Peter Willendrup in close collaboration with Troels Schoenfeldt DTU Nutech/ESS.
+   ** A separate document with recommended settings for this component will be released later **
  - the Isotropic_Sqw component was broken in McStas 2.1. The expected behaviour has been restored. 
    Users of this component should upgrade to McStas 2.2 asap. Sorry for the inconvenience.
  
