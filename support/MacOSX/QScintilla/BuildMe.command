@@ -4,6 +4,9 @@
 # Mac OS X with Anaconda 2.2.0 previously installed
 #
 
+# First, ensure that we are in the right location
+cd `dirname $0`
+
 # Find out if the globally available Python is an Anaconda
 PYTHON=`which python`
 PYVER=`$PYTHON --version 2>&1`
