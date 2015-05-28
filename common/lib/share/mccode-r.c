@@ -3697,7 +3697,6 @@ int mccode_main(int argc, char *argv[])
 {
 /*  double run_num = 0; */
   time_t  t;
-  clock_t ct;
 #ifdef USE_MPI
   char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
   int  mpi_node_name_len;
@@ -3715,8 +3714,8 @@ int mccode_main(int argc, char *argv[])
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
 #endif /* USE_MPI */
 
-ct = clock();    /* we use clock rather than time to set the default seed */
-mcseed=(long)ct;
+
+mcseed = t = (long)time(NULL);
 
 #ifdef USE_MPI
 /* *** print number of nodes *********************************************** */
