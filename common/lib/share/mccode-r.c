@@ -3714,8 +3714,8 @@ int mccode_main(int argc, char *argv[])
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
 #endif /* USE_MPI */
 
-
-mcseed = t = (long)time(NULL);
+t = time(NULL);
+mcseed = (long)t+(long)getpid();
 
 #ifdef USE_MPI
 /* *** print number of nodes *********************************************** */
