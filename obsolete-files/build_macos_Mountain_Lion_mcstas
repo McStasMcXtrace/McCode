@@ -18,7 +18,9 @@ fi
 ./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" mac "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mac "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac "" -- OSXpkg
+./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" mac "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac "" -- OSXpkg
+./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mac "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mac "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mac "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac "" -- OSXpkg
