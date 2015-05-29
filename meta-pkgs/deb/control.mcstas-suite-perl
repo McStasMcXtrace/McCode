@@ -1,9 +1,9 @@
 Package: mcstas-suite-perl
-Version: 2.2
+Version: 2.2a
 Section: main
 Priority: optional
 Architecture: all
-Depends: mcstas-2.2, mcstas-comps-2.2, mcstas-tools-perl-2.2, mcstas-manuals-2.2
+Depends: mcstas-2.2a, mcstas-comps-2.2a, mcstas-tools-perl-2.2a, mcstas-manuals-2.2a
 Installed-Size:
 Maintainer: Peter Willendrup
 Description: A metapackage for McStas + perl tools

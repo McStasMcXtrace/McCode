@@ -1,9 +1,9 @@
 Package: mcstas-suite-python
-Version: 2.2
+Version: 2.2a
 Section: main
 Priority: optional
 Architecture: all
-Depends: mcstas-2.2, mcstas-comps-2.2, mcstas-tools-python-mcplot-matplotlib-2.2, mcstas-tools-python-mcdisplay-matplotlib-2.2, mcstas-tools-python-mcrun-2.2, mcstas-tools-python-mcgui-2.2, mcstas-manuals-2.2
+Depends: mcstas-2.2a, mcstas-comps-2.2a, mcstas-tools-python-mcplot-matplotlib-2.2a, mcstas-tools-python-mcdisplay-matplotlib-2.2a, mcstas-tools-python-mcrun-2.2a, mcstas-tools-python-mcgui-2.2a, mcstas-manuals-2.2a
 Installed-Size:
 Maintainer: Peter Willendrup
 Description: A metapackage for McStas + python tools
