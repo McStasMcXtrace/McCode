@@ -310,7 +310,6 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         
         # remove horizontal scrollbar
         scintilla.SendScintilla(Qsci.QsciScintilla.SCI_SETHSCROLLBAR, 0)
-        
     
     def __initCallbacks(self):
         # connect menu items to corresponding scintilla slots
@@ -551,9 +550,10 @@ class McInsertComponentDialog(QtGui.QDialog):
         # window title
         self.setWindowTitle("Component: " + comp_parser.name)
         
-        # info & description docstrings
+        # info & description docstrings - make sure newlines work in case doc includes html
         info_description = comp_parser.info + '\n\n' + comp_parser.description
-        self.ui.lblDescr.setText(info_description)
+        info_description_html = str(info_description).replace('\n', '<br>')
+        self.ui.lblDescr.setText(info_description_html)
         
         # clear params grd
         grd = self.ui.gridParameters
