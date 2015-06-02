@@ -508,8 +508,9 @@ class McGuiAppController():
     def handleNewInstrument(self):
         new_instr_req = self.view.showNewInstrDialog(self.state.getWorkDir())
         if new_instr_req != '':
-            template_text = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template.instr")).read()
-            new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, template_text)
+            template_text_header = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_header_simple.instr")).read()
+            template_text_body = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_body_simple.instr")).read()
+            new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, template_text_header + template_text_body)
             if new_instr != '':
                 self.state.unloadInstrument()
                 self.state.loadInstrument(new_instr)

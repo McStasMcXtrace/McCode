@@ -55,6 +55,9 @@
     <property name="title">
      <string>Insert</string>
     </property>
+    <addaction name="actionInsert_Header"/>
+    <addaction name="actionInsert_Body"/>
+    <addaction name="separator"/>
     <addaction name="actionComponent_Browser"/>
     <addaction name="separator"/>
    </widget>
@@ -156,6 +159,16 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="actionInsert_Header">
+   <property name="text">
+    <string>Template Header</string>
+   </property>
+  </action>
+  <action name="actionInsert_Body">
+   <property name="text">
+    <string>Template Body</string>
    </property>
   </action>
  </widget>
