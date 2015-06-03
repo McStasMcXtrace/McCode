@@ -224,19 +224,18 @@ class McGuiState(QtCore.QObject):
     
     def run(self, fixed_params, params):
         ''' fixed_params[]:
-                simulation = 0, trace = 1
-                neutron count (int)
-                steps count (int)
-                gravity (bool)
-                random seed (int)
-                no clustering = 0, MPI = 1, MPI and recompile = 2
+                0 - simulation = 0, trace = 1
+                1 - neutron count (int)
+                2 - steps count (int)
+                3 - gravity (bool)
+                4 - clustering 0/1/2 (single/MPI/MPIrecompile) (int)
+                5 - clustering # nodes (int)
+                6 - random seed (int)
+                7 - output directory (str)
             params[]:
                 [<par_name>, <value>] pairs
         '''
-        DATE_FORMAT_PATH = "%Y%d%m_%H%M%S"
-        dir = "%s_%s" % \
-                      (self.__instrFile,
-                       datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
+        
 
         mcrunparms = ' '
         # assemble mpi-related options
@@ -246,34 +245,47 @@ class McGuiState(QtCore.QObject):
         elif clustering == 2:
             mcrunparms = ' -c --mpi=' + fixed_params[5] + ' '
         
-        # parse fixed params
+        
+        # sim/trace and output directory
         simtrace = fixed_params[0]
         if simtrace == 0:
-            runstr = mccode_config.configuration["MCRUN"] + mcrunparms + self.__instrFile + ' -d ' + dir
-            self.__DataDir = dir
+            output_dir = str(fixed_params[7])
+            if output_dir == '':
+                DATE_FORMAT_PATH = "%Y%d%m_%H%M%S"
+                dir = "%s_%s" % \
+                              (self.__instrFile,
+                               datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
+                              
+            runstr = mccode_config.configuration["MCRUN"] + mcrunparms + self.__instrFile + ' -d ' + output_dir
+            self.__DataDir = output_dir
         else:
             runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + self.__instrFile + ' --no-output-files '
             self.__DataDir = "None"
         
+        # neutron count
         ncount = fixed_params[1]
         if int(ncount) > 0:
             runstr = runstr + ' -n ' + str(ncount)
         
+        # steps count
         nsteps = fixed_params[2]
-        if int(nsteps) > 1:
-            print 'Nsteps is ' + nsteps
-            runstr = runstr + ' -N ' + str(nsteps)
-
+        if nsteps != '':
+            if int(nsteps) > 1:
+                print 'Nsteps is ' + nsteps
+                runstr = runstr + ' -N ' + str(nsteps)
+        
+        # gravity
         if fixed_params[3]:
             gravity = True
             runstr = runstr + ' --gravity '
-
+        
+        # random seed
         random_seed = fixed_params[6]
         if (random_seed):
             if int(random_seed) > 0:
                 runstr = runstr + ' -s ' + str(random_seed)
         
-        # parse instrument params        
+        # parse instrument params
         for p in params:
             runstr = runstr + ' ' + p[0] + '=' + p[1]
         
