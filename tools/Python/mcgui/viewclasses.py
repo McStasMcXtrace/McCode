@@ -64,6 +64,11 @@ class McView(object):
         canRun = state[0] == 'True'
         canPlot = state[1] == 'True'
         
+        # clear start simulation dialog
+        if not canRun:
+            self.__ssd = None
+        
+        # set enabled/disabled states on menus and buttons
         ui = self.mw.ui
         ui.btnRun.setEnabled(canRun)
         ui.btnEdit.setEnabled(canRun)
@@ -97,10 +102,11 @@ class McView(object):
             return dlg.selectedFiles()[0]
 
     def showStartSimDialog(self, params):
-        dlg = McStartSimDialog()
-        dlg.createParamsWidgets(params)
-        if dlg.exec_():
-            return dlg.getValues()
+        if self.__ssd == None:
+            self.__ssd = McStartSimDialog()
+        self.__ssd.createParamsWidgets(params)
+        if self.__ssd.exec_():
+            return self.__ssd.getValues()
         else: 
             return None, None
     
@@ -454,6 +460,9 @@ class McStartSimDialog(QtGui.QDialog):
     
     __wParams = []
     def createParamsWidgets(self, params):
+        
+        # TODO: write logics that will only reset existing non-dummy widgets if instrument parameters have changed 
+        
         # clear the containing grid
         grd = self.ui.gridGrid
         for i in reversed(range(grd.count())): 
@@ -1259,7 +1268,7 @@ class Ui_dlgStartSim(object):
         self.cbxClustering.setItemText(1, QtGui.QApplication.translate("dlgStartSim", "MPI clustering", None, QtGui.QApplication.UnicodeUTF8))
         self.cbxClustering.setItemText(2, QtGui.QApplication.translate("dlgStartSim", "MPI clustering (recompile)", None, QtGui.QApplication.UnicodeUTF8))
         self.lblMpiNodes.setText(QtGui.QApplication.translate("dlgStartSim", "MPI node count:", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblOutputDir.setText(QtGui.QApplication.translate("dlgStartSim", "Output subdir (optional):s", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblOutputDir.setText(QtGui.QApplication.translate("dlgStartSim", "Output subdir (optional):", None, QtGui.QApplication.UnicodeUTF8))
         self.gbxAdvanced.setTitle(QtGui.QApplication.translate("dlgStartSim", "Advanced", None, QtGui.QApplication.UnicodeUTF8))
         self.lblRandomSeed.setText(QtGui.QApplication.translate("dlgStartSim", "Random seed:", None, QtGui.QApplication.UnicodeUTF8))
         self.lblGravity.setText(QtGui.QApplication.translate("dlgStartSim", "Gravity:", None, QtGui.QApplication.UnicodeUTF8))

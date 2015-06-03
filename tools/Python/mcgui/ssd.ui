@@ -196,7 +196,7 @@
         <item row="2" column="1">
          <widget class="QLabel" name="lblOutputDir">
           <property name="text">
-           <string>Output subdir (optional):s</string>
+           <string>Output subdir (optional):</string>
           </property>
          </widget>
         </item>
