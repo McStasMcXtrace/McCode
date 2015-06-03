@@ -236,7 +236,6 @@ class McGuiState(QtCore.QObject):
                 [<par_name>, <value>] pairs
         '''
         
-
         mcrunparms = ' '
         # assemble mpi-related options
         clustering = fixed_params[4]
@@ -245,14 +244,13 @@ class McGuiState(QtCore.QObject):
         elif clustering == 2:
             mcrunparms = ' -c --mpi=' + fixed_params[5] + ' '
         
-        
         # sim/trace and output directory
         simtrace = fixed_params[0]
         if simtrace == 0:
             output_dir = str(fixed_params[7])
             if output_dir == '':
                 DATE_FORMAT_PATH = "%Y%d%m_%H%M%S"
-                dir = "%s_%s" % \
+                output_dir = "%s_%s" % \
                               (self.__instrFile,
                                datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
                               
