@@ -93,12 +93,14 @@ class McGuiState(QtCore.QObject):
         return self.__instrFile
     
     def loadInstrument(self, instr_file):
+        # makes sure this is not a qstring
+        instr_file = str(instr_file)
         # file must exists and be .instr file:
         if os.path.exists(str(instr_file)) and (os.path.splitext(instr_file)[1] == '.instr'):
-            self.setWorkDir(os.path.dirname(str(instr_file)))
-            self.__instrFile = str(instr_file)
+            self.setWorkDir(os.path.dirname(instr_file))
+            self.__instrFile = instr_file
             self.__fireInstrUpdate()
-            self.__emitter.status("Instrument: " + os.path.basename(str(instr_file)))
+            self.__emitter.status("Instrument: " + os.path.basename(instr_file))
             self.__fireSimStateUpdate()
         else:
             # TODO: throw exception
