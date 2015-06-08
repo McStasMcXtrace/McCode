@@ -11,7 +11,6 @@ import os
 import webbrowser
 import subprocess
 import time
-import threading
 import re
 import mccode_config
 from PyQt4 import QtGui, QtCore
@@ -40,16 +39,53 @@ class McMessageEmitter(QtCore.QObject):
         self.__statusLog.append(status)
         QtGui.QApplication.processEvents()
     
-    def message(self, msg, mcguiMsg=False, errorMsg=False):
+    def message(self, msg, gui_msg=False, err_msg=False):
         ''' message log messages (simulation progress etc.)
         '''
         if msg == None:
             return
         
-        self.logMessageUpdate.emit(msg, mcguiMsg, errorMsg)
+        self.logMessageUpdate.emit(msg, gui_msg, err_msg)
         self.__msgLog.append(msg)
         QtGui.QApplication.processEvents()
+
+
+''' Asynchronous process execution QThread
+'''        
+class McRunQThread(QtCore.QThread):
+    thread_exception = QtCore.pyqtSignal(QtCore.QString)
+    error = QtCore.pyqtSignal(QtCore.QString)
+    message = QtCore.pyqtSignal(QtCore.QString)
+    cmd = ''
     
+    def run(self, *args, **kwargs):
+        try:
+            # check cmd is set
+            if self.cmd == '':
+                raise Exception('McRunQThread: Set cmd before running Start()')
+            
+            # open a subprocess with shell=True, otherwise stdout will be buffered and thus 
+            # not readable live
+            process = subprocess.Popen(self.cmd, 
+                                       stdout=subprocess.PIPE, 
+                                       stderr=subprocess.STDOUT,
+                                       shell=True)
+            
+            # read program output while the process is active
+            while process.poll() == None:
+                stdoutdata = process.stdout.readline().rstrip('\n')
+                self.message.emit(stdoutdata)
+                time.sleep(0.05)
+            # flush until EOF
+            for stdoutdata in process.stdout:
+                self.message.emit(stdoutdata.rstrip('\n'))
+            
+            # TODO: implement error() messaging from stderr
+            
+        except:
+            (type, value, traceback) = sys.exc_info()
+            self.thread_exception.emit(value.message)
+            
 
 ''' State
 Holds unique state values and mediates some low-level actions.
@@ -65,7 +101,7 @@ class McGuiState(QtCore.QObject):
     __cFile = ""
     __binaryFile = ""
     __resultFile = ""
-    __DataDir = ""
+    __dataDir = ""
     
     def __init__(self, emitter):
         super(McGuiState, self).__init__()
@@ -121,7 +157,7 @@ class McGuiState(QtCore.QObject):
         return os.getcwd()
 
     def getDataDir(self):
-        return self.__DataDir
+        return self.__dataDir
     
     def setWorkDir(self, newdir):
         if not os.path.isdir(newdir):
@@ -137,88 +173,97 @@ class McGuiState(QtCore.QObject):
     def canPlot(self):
         return self.__instrFile != ""
     
+    __thread_exc_signal = QtCore.pyqtSignal(QtCore.QString)
     def compile(self, mpi=False):
-        # compile simulation in a background thread (non safe)
+        # using Qt in-built cross-thread signaling
+        self.__thread_exc_signal.connect(handleExceptionMsg)
+        
+        # compile simulation in a background thread
         self.compilethread = QtCore.QThread()
-        self.compilethread.run = lambda: self.compileAsync(mpi)
-        self.compilethread.finished.connect(lambda: self.__emitter.message('Compile thread finished'))
+        self.compilethread.run = lambda: self.compileAsync(mpi, self.__thread_exc_signal)
+        self.compilethread.finished.connect(lambda: self.__emitter.message('compile thread done \n', gui_msg=True))
         self.compilethread.start()
         
-    def compileAsync(self, mpi):
-        # generate mcstas .c file from instrument
-        nf = self.__instrFile
-        cmd = mccode_config.configuration["MCCODE"] + ' -t '  + nf
-        process = subprocess.Popen(cmd, 
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT,
-                                   shell=True)
-        self.__emitter.status('Compiling instrument to c ...')
-        self.__emitter.message('Compiling instrument to c ...', mcguiMsg=True)
-        self.__emitter.message(cmd, mcguiMsg=True)
-        
-        # read program output while the process is active
-        while process.poll() == None:
-            stdoutdata = process.stdout.readline().rstrip('\n')
-            self.__emitter.message(stdoutdata)
-            time.sleep(0.05)
-        ## flush until EOF
-        for stdoutdata in process.stdout:
-            self.__emitter.message(stdoutdata.rstrip('\n'))
+    def compileAsync(self, mpi, thread_exc_signal):
+        try:
+            # generate mcstas .c file from instrument
+            nf = self.__instrFile
+            cmd = mccode_config.configuration["MCCODE"] + ' -t '  + nf
+            process = subprocess.Popen(cmd, 
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.STDOUT,
+                                       shell=True)
+            self.__emitter.status('Compiling instrument to c ...')
+            self.__emitter.message('Compiling instrument to c ...', gui_msg=True)
+            self.__emitter.message(cmd, gui_msg=True)
             
-        # paths and filenames
-        spl = os.path.splitext(os.path.basename(str(nf)))
-        basef = os.path.join(self.getWorkDir(), spl[0])
-        cf = basef + '.c'
-        
-        # check
-        if os.path.isfile(cf):
-            self.__cFile = cf
-            self.__emitter.message('    --> ' + self.__cFile, mcguiMsg=True)
-        else:
-            raise Exception('C file not found')
-        
-        # look for CFLAGS in the generated C code
-        cflags = mccode_config.compilation["CFLAGS"] 
-        ccode = open(self.__cFile)
-        for line in ccode:
-            line = line.rstrip()
-            if re.search('CFLAGS=', line) :
-                label,flags = line.split('=',1)
-                cflags = cflags + ' ' + flags
-        
-        # compile binary from mcstas .c file 
-        bf = basef + '.' + mccode_config.platform["EXESUFFIX"] 
-        if mpi:
-            cmd = mccode_config.compilation["MPICC"] + ' -o ' + bf + ' ' + cf + ' ' + cflags + ' ' + mccode_config.compilation["MPIFLAGS"]
-        else:
-            cmd = mccode_config.compilation["CC"] + ' -o ' + bf + ' ' + cf + ' ' + cflags
-       
-        process = subprocess.Popen(cmd, 
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT,
-                                   shell=True)
-        self.__emitter.status('Compiling instrument to binary ...')
-        self.__emitter.message('Compiling instrument to binary ...', mcguiMsg=True)
-        self.__emitter.message(cmd, mcguiMsg=True)
-
-        # read program output while the process is active
-        while process.poll() == None:
-            stdoutdata = process.stdout.readline().rstrip('\n')
-            self.__emitter.message(stdoutdata)
-            time.sleep(0.05)
-        ## flush until EOF
-        for stdoutdata in process.stdout:
-            self.__emitter.message(stdoutdata.rstrip('\n'))
+            # read program output while the process is active
+            while process.poll() == None:
+                stdoutdata = process.stdout.readline().rstrip('\n')
+                self.__emitter.message(stdoutdata)
+                time.sleep(0.05)
+            ## flush until EOF
+            for stdoutdata in process.stdout:
+                self.__emitter.message(stdoutdata.rstrip('\n'))
                 
-        # check
-        if os.path.isfile(bf):
-            self.__binaryFile = bf
-            self.__emitter.message('    --> ' + self.__binaryFile + '\n', mcguiMsg=True)
-            self.__emitter.status('Instrument compiled')
-        else:
-            raise Exception('Binary not found.')
+            # paths and filenames
+            spl = os.path.splitext(os.path.basename(str(nf)))
+            basef = os.path.join(self.getWorkDir(), spl[0])
+            cf = basef + '.c'
+            
+            # check
+            if os.path.isfile(cf):
+                self.__cFile = cf
+                self.__emitter.message('    --> ' + self.__cFile, gui_msg=True)
+            else:
+                raise Exception('C file not found')
+            
+            # look for CFLAGS in the generated C code
+            cflags = mccode_config.compilation["CFLAGS"] 
+            ccode = open(self.__cFile)
+            for line in ccode:
+                line = line.rstrip()
+                if re.search('CFLAGS=', line) :
+                    label, flags = line.split('=', 1)
+                    cflags = cflags + ' ' + flags
+            
+            # compile binary from mcstas .c file 
+            bf = basef + '.' + mccode_config.platform["EXESUFFIX"] 
+            if mpi:
+                cmd = mccode_config.compilation["MPICC"] + ' -o ' + bf + ' ' + cf + ' ' + cflags + ' ' + mccode_config.compilation["MPIFLAGS"]
+            else:
+                cmd = mccode_config.compilation["CC"] + ' -o ' + bf + ' ' + cf + ' ' + cflags
+           
+            process = subprocess.Popen(cmd, 
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.STDOUT,
+                                       shell=True)
+            self.__emitter.status('Compiling instrument to binary ...')
+            self.__emitter.message('Compiling instrument to binary ...', gui_msg=True)
+            self.__emitter.message(cmd, gui_msg=True)
+    
+            # read program output while the process is active
+            while process.poll() == None:
+                stdoutdata = process.stdout.readline().rstrip('\n')
+                self.__emitter.message(stdoutdata)
+                time.sleep(0.05)
+            # flush until EOF
+            for stdoutdata in process.stdout:
+                self.__emitter.message(stdoutdata.rstrip('\n'))
+                    
+            # check
+            if os.path.isfile(bf):
+                self.__binaryFile = bf
+                self.__emitter.message('    --> ' + self.__binaryFile, gui_msg=True)
+                self.__emitter.status('Instrument compiled')
+            else:
+                raise Exception('compileAsync: Binary not found.')
+            
+            self.__fireSimStateUpdate()
         
-        self.__fireSimStateUpdate()
+        except: 
+            (type, value, traceback) = sys.exc_info()
+            thread_exc_signal.emit(value.message)
     
     def run(self, fixed_params, params):
         ''' fixed_params[]:
@@ -253,10 +298,10 @@ class McGuiState(QtCore.QObject):
                                datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
                               
             runstr = mccode_config.configuration["MCRUN"] + mcrunparms + self.__instrFile + ' -d ' + output_dir
-            self.__DataDir = output_dir
+            self.__dataDir = output_dir
         else:
             runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + self.__instrFile + ' --no-output-files '
-            self.__DataDir = "None"
+            self.__dataDir = "None"
         
         # neutron count
         ncount = fixed_params[1]
@@ -290,32 +335,23 @@ class McGuiState(QtCore.QObject):
         # Ensure assembled runstr is a string - QStrings breaks the runAsync execution!
         runstr = str(runstr)
         
-        # run simulation in a background thread (non safe)
-        self.runthread = QtCore.QThread()
-        self.runthread.run = lambda: self.runAsync(runstr)
-        self.runthread.finished.connect(lambda: self.__emitter.message('Run thread finished'))
+        # run simulation in a background thread
+        self.runthread = McRunQThread()
+        self.runthread.cmd = runstr
+        self.runthread.finished.connect(self.__runFinished)
+        self.runthread.thread_exception.connect(handleExceptionMsg)
+        self.runthread.error.connect(lambda msg: self.__emitter.message(msg, err_msg=True))
+        self.runthread.message.connect(lambda msg: self.__emitter.message(msg))
         self.runthread.start()
         
-    def runAsync(self, runstr):
-        # open a subprocess with shell=True, otherwise stdout will be buffered and thus 
-        # not readable live
-        process = subprocess.Popen(runstr, 
-                                   stdout=subprocess.PIPE, 
-                                   stderr=subprocess.STDOUT,
-                                   shell=True)
-        self.__emitter.message(runstr, mcguiMsg=True)
+        self.__emitter.message(runstr, gui_msg=True)
         self.__emitter.status('Running simulation ...')
         
-        # read program output while the process is active
-        while process.poll() == None:
-            stdoutdata = process.stdout.readline().rstrip('\n')
-            self.__emitter.message(stdoutdata)
-            time.sleep(0.05)
-        ## flush until EOF
-        for stdoutdata in process.stdout:
-            self.__emitter.message(stdoutdata.rstrip('\n'))
-
-        self.__emitter.message('', mcguiMsg=True)
+    def __runFinished(self):
+        # sim tab:
+        self.__emitter.message('simulation done', gui_msg=True)
+        self.__emitter.message('', gui_msg=True)
+        self.__emitter.message('')
         self.__emitter.status('')
 
     def getInstrParams(self):
@@ -454,8 +490,8 @@ class McGuiAppController():
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
                          shell=True)
-        self.emitter.message(cmd, mcguiMsg=True)
-        self.emitter.message('', mcguiMsg=True)
+        self.emitter.message(cmd, gui_msg=True)
+        self.emitter.message('', gui_msg=True)
         
     def handleHelpWeb(self):
         # open the mcstas homepage
@@ -491,7 +527,7 @@ class McGuiAppController():
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
             self.state.unloadInstrument()
-            self.emitter.message("Instrument closed", mcguiMsg=True)
+            self.emitter.message("Instrument closed", gui_msg=True)
             self.emitter.status("Instrument closed")
     
     def handleSaveInstrument(self, text):
@@ -524,7 +560,7 @@ class McGuiAppController():
                 self.state.loadInstrument(new_instr)
                 self.view.showCodeEditorWindow(new_instr)
                 self.emitter.status("Editing new instrument: " + os.path.basename(str(new_instr)))
-    
+        
     def handleNewFromTemplate(self, instr_templ=''):
         new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(str(instr_templ))))
         if new_instr_req != '':
@@ -539,7 +575,7 @@ class McGuiAppController():
             if self.view.closeCodeEditorWindow():
                 self.state.unloadInstrument()
                 self.state.loadInstrument(instr)
-                self.emitter.message("Instrument opened: " + os.path.basename(str(instr)), mcguiMsg=True)
+                self.emitter.message("Instrument opened: " + os.path.basename(str(instr)), gui_msg=True)
                 self.emitter.status("Instrument: " + os.path.basename(str(instr)))
         
     def handleMcdoc(self):
@@ -549,7 +585,7 @@ class McGuiAppController():
     '''
     def connectCallbacks(self):        
         # connect UI widget signals to our handlers/logics
-        # NOTICE: This explicit widget access is exceptional - all widget access is otherwise handled by the view classes
+        # NOTICE: This explicit widget access is an exception - all widget access is otherwise handled by the view classes
         
         mwui = self.view.mw.ui
         mwui.actionQuit.triggered.connect(self.handleExit)
@@ -586,17 +622,28 @@ class McGuiAppController():
         emitter.statusUpdate.connect(self.view.updateStatus)
         emitter.logMessageUpdate.connect(self.view.updateLog)
         
-            
+
+''' Last resort exception handler
+'''
+def handleExceptionMsg(msg):
+    print(msg)
+    
+
 ''' Program execution
 '''
 def main():
-    McGuiUtils.loadUserConfig(mccode_config.configuration["MCCODE"],mccode_config.configuration["MCCODE_VERSION"])
-    
-    mcguiApp = QtGui.QApplication(sys.argv)
-    mcguiApp.ctr = McGuiAppController()
-    
-    sys.exit(mcguiApp.exec_())
+    try:
+        McGuiUtils.loadUserConfig(mccode_config.configuration["MCCODE"],mccode_config.configuration["MCCODE_VERSION"])
+        
+        mcguiApp = QtGui.QApplication(sys.argv)
+        mcguiApp.ctr = McGuiAppController()
+        
+        sys.exit(mcguiApp.exec_())
 
+    except Exception, e: 
+        handleExceptionMsg(e.message)
+        
+        
 if __name__ == '__main__':
     main()
 
