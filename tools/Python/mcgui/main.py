@@ -26,11 +26,9 @@ Status and message log and signalling.
 class McMessageEmitter(QtCore.QObject):
     statusUpdate = QtCore.pyqtSignal(QtCore.QString)
     __statusLog = []
-    __statusLock = threading.Lock()
     
     logMessageUpdate = QtCore.pyqtSignal(QtCore.QString, bool, bool)
     __msgLog = []
-    __msgLock = threading.Lock()
     
     def status(self, status):
         ''' status / current general state info
@@ -38,10 +36,8 @@ class McMessageEmitter(QtCore.QObject):
         if status == None:
             return
         
-        self.__statusLock.acquire()
         self.statusUpdate.emit(status)
         self.__statusLog.append(status)
-        self.__statusLock.release()
         QtGui.QApplication.processEvents()
     
     def message(self, msg, mcguiMsg=False, errorMsg=False):
@@ -50,10 +46,8 @@ class McMessageEmitter(QtCore.QObject):
         if msg == None:
             return
         
-        self.__msgLock.acquire()
         self.logMessageUpdate.emit(msg, mcguiMsg, errorMsg)
         self.__msgLog.append(msg)
-        self.__msgLock.release()
         QtGui.QApplication.processEvents()
     
 
@@ -97,6 +91,9 @@ class McGuiState(QtCore.QObject):
         instr_file = str(instr_file)
         # file must exists and be .instr file:
         if os.path.exists(str(instr_file)) and (os.path.splitext(instr_file)[1] == '.instr'):
+            # handle .instr files loaded without full path
+            if os.path.dirname(instr_file) == '':
+                instr_file = os.path.join(self.getWorkDir(), instr_file)
             self.setWorkDir(os.path.dirname(instr_file))
             self.__instrFile = instr_file
             self.__fireInstrUpdate()
@@ -128,7 +125,7 @@ class McGuiState(QtCore.QObject):
     
     def setWorkDir(self, newdir):
         if not os.path.isdir(newdir):
-            raise Exception('McGuiState.setWorkDir: Invalid work dir.')
+            raise Exception('McGuiState.setWorkDir, invalid work dir: "' + newdir + '"')
         os.chdir(newdir)
     
     def canCompile(self):
@@ -142,18 +139,12 @@ class McGuiState(QtCore.QObject):
     
     def compile(self, mpi=False):
         # compile simulation in a background thread (non safe)
-        thread = threading.Thread(target=self.compileAsync)
-        thread.start()
+        self.compilethread = QtCore.QThread()
+        self.compilethread.run = lambda: self.compileAsync(mpi)
+        self.compilethread.finished.connect(lambda: self.__emitter.message('Compile thread finished'))
+        self.compilethread.start()
         
-    def compile_mpi(self):
-        # compile simulation in a background thread (non safe) - with MPI flags
-        thread = threading.Thread(target=self.compileAsync_mpi)
-        thread.start()
-        
-    def compileAsync_mpi(self):
-        self.compileAsync(mpi=True)
-        
-    def compileAsync(self, mpi=False):
+    def compileAsync(self, mpi):
         # generate mcstas .c file from instrument
         nf = self.__instrFile
         cmd = mccode_config.configuration["MCCODE"] + ' -t '  + nf
@@ -300,15 +291,17 @@ class McGuiState(QtCore.QObject):
         runstr = str(runstr)
         
         # run simulation in a background thread (non safe)
-        thread = threading.Thread(target=self.runAsync(runstr))
-        thread.start()
+        self.runthread = QtCore.QThread()
+        self.runthread.run = lambda: self.runAsync(runstr)
+        self.runthread.finished.connect(lambda: self.__emitter.message('Run thread finished'))
+        self.runthread.start()
         
     def runAsync(self, runstr):
         # open a subprocess with shell=True, otherwise stdout will be buffered and thus 
         # not readable live
         process = subprocess.Popen(runstr, 
                                    stdout=subprocess.PIPE, 
-                                   stderr=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
                                    shell=True)
         self.__emitter.message(runstr, mcguiMsg=True)
         self.__emitter.status('Running simulation ...')
@@ -573,7 +566,7 @@ class McGuiAppController():
         mwui.btnOpenInstrument.clicked.connect(self.handleOpenInstrument)
         
         mwui.actionCompile_Instrument.triggered.connect(self.state.compile)
-        mwui.actionCompile_Instrument_MPI.triggered.connect(self.state.compile_mpi)
+        mwui.actionCompile_Instrument_MPI.triggered.connect(lambda: self.state.compile(mpi=True))
         mwui.actionRun_Simulation.triggered.connect(self.handleRunSim)
         
         mwui.actionMcdoc.triggered.connect(self.handleMcdoc)
