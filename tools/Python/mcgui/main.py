@@ -92,14 +92,19 @@ class McGuiState(QtCore.QObject):
     def getInstrumentFile(self):
         return self.__instrFile
     
-    def loadInstrument(self, instrFile):
-        if not os.path.exists(str(instrFile)):
-            raise Exception("McGuiState.loadInstrument: Error. File: " + instrFile)
-        self.setWorkDir(os.path.dirname(str(instrFile)))
-        self.__instrFile = str(instrFile)
-        self.__fireInstrUpdate()
-        self.__fireSimStateUpdate()
-    
+    def loadInstrument(self, instr_file):
+        # file must exists and be .instr file:
+        if os.path.exists(str(instr_file)) and (os.path.splitext(instr_file)[1] == '.instr'):
+            self.setWorkDir(os.path.dirname(str(instr_file)))
+            self.__instrFile = str(instr_file)
+            self.__fireInstrUpdate()
+            self.__emitter.status("Instrument: " + os.path.basename(str(instr_file)))
+            self.__fireSimStateUpdate()
+        else:
+            # TODO: throw exception
+            self.__emitter.status('Could not load file: ' + instr_file)
+            #raise Exception("McGuiState.loadInstrument: Error. File: " + instr_file)
+        
     def unloadInstrument(self):
         self.__instrFile = ''
         self.__fireInstrUpdate()
@@ -354,12 +359,10 @@ class McGuiAppController():
         self.state.init()
         
         # load instrument file from command line pars
+        # TODO: make a try-catch to allow program continuation if this fails
         for a in sys.argv:
-            if os.path.splitext(a)[1] == '.instr':
-                instr_file = os.path.abspath(a)
-                self.state.loadInstrument(instr_file)        
-                self.emitter.status("Instrument: " + os.path.basename(str(instr_file)))
-                break
+            if self.state.getInstrumentFile() == '':
+                self.state.loadInstrument(a)
         
         self.view.showMainWindow()
     
