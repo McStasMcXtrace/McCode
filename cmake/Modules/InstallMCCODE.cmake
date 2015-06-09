@@ -33,7 +33,7 @@ macro(installMCCODE)
   ## CPack configuration
   set(CPACK_PACKAGE_NAME          "${FLAVOR}-${MCCODE_VERSION}")
   set(CPACK_RESOURCE_FilE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../COPYING")
-  set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
+  set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
   ## Package versioning
   set(MAJOR "1")
@@ -144,9 +144,9 @@ macro(installMCCODE)
 
 
   # Check for math
-  check_library_exists(m sqrt "" HAVE_MATH)
-  if(NOT HAVE_MATH)
-    message(FATAL_ERROR "Error: Cannot find sqrt in math library [m]")
+  check_include_files("math.h" HAVE_MATH_H)
+  if(NOT HAVE_MATH_H)
+    message(FATAL_ERROR "Error: Cannot find math.h [m]")
   endif()
 
 

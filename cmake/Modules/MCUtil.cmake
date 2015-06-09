@@ -40,13 +40,13 @@ macro(setupMCCODE FLAVOR)
   endif()
 
   # Set 32-bit flags
-  if(ARCH EQUAL 32)
+  if(ARCH EQUAL "i386")
     set(CMAKE_C_FLAGS  "-m32")
     set(CMAKE_C_LFLAGS "${CMAKE_C_LFLAGS} -m32")
   endif()
 
   if(DEFINED ARCH)
-    message(STATUS "Compiling for ${ARCH}-bit ${CMAKE_SYSTEM_NAME}")
+    message(STATUS "Compiling for ${ARCH} ${CMAKE_SYSTEM_NAME}")
   else()
     message(STATUS "Compiling for ${CMAKE_SYSTEM_NAME}")
   endif()
@@ -224,15 +224,16 @@ macro(setupMCCODE FLAVOR)
       @ONLY)
 
     # Set architecture
-    if(ARCH EQUAL 64)
+    if(ARCH EQUAL "amd64")
       set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
       set(CPACK_RPM_PACKAGE_ARCHITECTURE    "x86_64")
-    else()
+    elseif(ARCH EQUAL "i386")
       set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
       set(CPACK_RPM_PACKAGE_ARCHITECTURE    "i686")
+    else()
+      set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${ARCH}")
+      set(CPACK_RPM_PACKAGE_ARCHITECTURE    "${ARCH}")
     endif()
 
   endif()
-
-
 endmacro()

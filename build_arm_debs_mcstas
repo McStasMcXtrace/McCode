@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if [ "x$1" = "x" ]; then
+    # No arguments
+    echo Please provide one argument,e.g : $0 2.0
+    exit 1;
+fi
+
+# From 2.1 onwards, let McStas reside in /usr/share on Debian-like systems
+export MCINSTALL_PREFIX=/usr/share/
+
+# 32-bit
+./mkdist mcstas $1 "" "" armlinux32 "" -- deb
+./mkdist mcstas-comps $1 "" "" armlinux32 "" -- deb
+./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" armlinux32 "" -- deb
+./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" armlinux32 "" -- deb
+./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" armlinux32 "" -- deb
+./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" armlinux32 "" -- deb
+./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" armlinux32 "" -- deb
+./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" armlinux32 "" -- deb
+./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" armlinux32 "" -- deb
+./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" armlinux32 "" -- deb
+./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" armlinux32 "" -- deb
+./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" armlinux32 "" -- deb
+./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" armlinux32 "o" -- deb
