@@ -509,8 +509,8 @@ class McGuiAppController():
         webbrowser.open_new_tab(mcman)
     
     def handleHelpAbout(self):
-        # get mcstas version using 'mcstas -v'
-        process = subprocess.Popen('mcstas -v', 
+        # get mcstas version using 'mcstas/mcxtrace -v'
+        process = subprocess.Popen(mccode_config.configuration["MCCODE"] +' -v', 
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.STDOUT,
                                    shell=True)
