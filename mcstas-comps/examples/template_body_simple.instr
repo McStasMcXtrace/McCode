@@ -26,10 +26,5 @@ FINALLY
 %{
 %}
 
-/* the SAVE section is used to save custom data files (optional) */
-SAVE
-%{
-%}
-
 /* The END token marks the instrument definition end */
 END
