@@ -1,6 +1,6 @@
 # the name of the target operating system
 SET(CMAKE_SYSTEM_NAME "FreeBSD")
-SET(ARCH   64)
+SET(ARCH   "amd64")
 
 # Commands for running various external tools
 set(BROWSER "xdg-open")

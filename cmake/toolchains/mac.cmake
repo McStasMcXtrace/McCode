@@ -1,6 +1,6 @@
 # the name of the target operating system
 set(CMAKE_SYSTEM_NAME "Darwin")
-set(ARCH   64)
+set(ARCH   "amd64")
 
 # Commands for running various external tools
 set(BROWSER "open")
