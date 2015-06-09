@@ -604,6 +604,7 @@ class McGuiAppController():
         mwui.actionCompile_Instrument.triggered.connect(self.state.compile)
         mwui.actionCompile_Instrument_MPI.triggered.connect(lambda: self.state.compile(mpi=True))
         mwui.actionRun_Simulation.triggered.connect(self.handleRunSim)
+        mwui.actionPlot.triggered.connect(self.handlePlotResults)
         
         mwui.actionMcdoc.triggered.connect(self.handleMcdoc)
         mwui.actionMcstas_Web_Page.triggered.connect(self.handleHelpWeb)

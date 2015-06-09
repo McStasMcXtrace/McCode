@@ -8,7 +8,7 @@ import mccode_config
 from widgets import *
 from mcguiutils import McGuiUtils
 from mcfileutils import McComponentParser
-from PyQt4 import QtCore, QtGui, Qsci
+from PyQt4 import Qsci
 
 
 ''' View class containing all windows and dialogs.
@@ -20,6 +20,8 @@ class McView(object):
         self.mw = McMainWindow()
         self.mw.ui.lblInstrument.setText("")
         self.ew = McCodeEditorWindow()
+        # a hack to enable mw to close ew
+        self.mw.ew = self.ew
     
     def initMainWindowDynamicElements(self, args, callback):
         self.mw.initDynamicView(args, callback)
@@ -137,6 +139,7 @@ class McView(object):
             prefix = "mx"
         QtGui.QMessageBox.about(self.mw, prefix+'gui-py: About', text)
             
+
 ''' Main Window widgets wrapper class
 Events callbacks are hooked elsewhere.
 '''
@@ -177,7 +180,10 @@ class McMainWindow(QtGui.QMainWindow):
                 action = menu.addAction(instrs[j])
                 action.triggered[()].connect(lambda item=instrs_fulpath[j]: callback(item))
     
-
+    def closeEvent(self, event):
+        self.ew.close()
+    
+        
 ''' Code editor window widgets wrapper class
 '''
 class McCodeEditorWindow(QtGui.QMainWindow):    
