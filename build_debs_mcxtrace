@@ -6,6 +6,9 @@ if [ "x$1" = "x" ]; then
     exit 1;
 fi
 
+# From 1.2 onwards, let McXtrace reside in /usr/share on Debian-like systems
+export MCINSTALL_PREFIX=/usr/share/
+
 # 64-bit
 ./mkdist mcxtrace $1 "" "" linux64 "" -- deb
 ./mkdist mcxtrace-comps $1 "" "" linux64 "" -- deb
