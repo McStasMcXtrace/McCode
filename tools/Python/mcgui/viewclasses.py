@@ -38,15 +38,15 @@ class McView(object):
         self.ew.show()
     
     def closeCodeEditorWindow(self):
-        return self.ew.close()   
-    
-    def resetStartSimDlg(self):
-        self.__ssd = None 
+        return self.ew.close()
     
     ''' Update UI data
     '''
-    def updateInstrumentLabel(self, labels):
+    def updateInstrument(self, labels):
+        ''' labels: <instrument path>, <work dir> '''
         self.mw.ui.lblInstrument.setText(labels[0])
+        if str(labels[0]) == '':
+            self.__ssd = None
         
     def updateStatus(self, text=''):
         self.mw.ui.statusbar.showMessage(text)

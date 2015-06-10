@@ -94,6 +94,7 @@ class McGuiState(QtCore.QObject):
     __instrFile = ''
     __emitter = None
     
+    # <instrument>, <work dir>
     instrumentUpdated = QtCore.pyqtSignal(QtCore.QStringList)
     # [<canRun>, <canPlot>] each can be str 'True' or 'False'
     simStateUpdated = QtCore.pyqtSignal(QtCore.QStringList)
@@ -527,7 +528,6 @@ class McGuiAppController():
         
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
-            self.view.resetStartSimDlg()
             self.state.unloadInstrument()
             self.emitter.message("Instrument closed", gui_msg=True)
             self.emitter.status("Instrument closed")
@@ -619,7 +619,7 @@ class McGuiAppController():
         
         st = self.state
         st.simStateUpdated.connect(self.view.updateSimState)
-        st.instrumentUpdated.connect(self.view.updateInstrumentLabel)
+        st.instrumentUpdated.connect(self.view.updateInstrument)
         
         emitter = self.emitter
         emitter.statusUpdate.connect(self.view.updateStatus)
