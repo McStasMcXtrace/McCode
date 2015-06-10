@@ -356,6 +356,7 @@ class McGuiState(QtCore.QObject):
 
     def getInstrParams(self):
         # get instrument params using 'mcrun [instr] --info'
+        # returns: params: a list of [name, value] pairs 
         cmd = mccode_config.configuration["MCRUN"] + ' ' + self.__instrFile + " --info"
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE, 
@@ -526,6 +527,7 @@ class McGuiAppController():
         
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
+            self.view.resetStartSimDlg()
             self.state.unloadInstrument()
             self.emitter.message("Instrument closed", gui_msg=True)
             self.emitter.status("Instrument closed")

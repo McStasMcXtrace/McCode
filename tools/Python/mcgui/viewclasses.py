@@ -5,6 +5,7 @@ mcgui UI.
 '''
 import os
 import mccode_config
+import re
 from widgets import *
 from mcguiutils import McGuiUtils
 from mcfileutils import McComponentParser
@@ -37,7 +38,10 @@ class McView(object):
         self.ew.show()
     
     def closeCodeEditorWindow(self):
-        return self.ew.close()    
+        return self.ew.close()   
+    
+    def resetStartSimDlg(self):
+        self.__ssd = None 
     
     ''' Update UI data
     '''
@@ -464,24 +468,43 @@ class McStartSimDialog(QtGui.QDialog):
         return fixed_params, params
     
     __wParams = []
+    __oldParams = []
     def createParamsWidgets(self, params):
         
-        # TODO: write logics that will only reset existing non-dummy widgets if instrument parameters have changed 
+        # this logics keeps params values of existing/previous non-dummy widgets, for value reuse 
+        self.__oldParams = []
+        for w in self.__wParams:
+            old_name = 'no_re_match'
+            name_match = re.search('(.*):', w[0].text())
+            if name_match:
+                old_name = name_match.group(1)
+            old_value = w[1].text()
+            self.__oldParams.append([old_name, old_value])
         
         # clear the containing grid
         grd = self.ui.gridGrid
         for i in reversed(range(grd.count())): 
             grd.itemAt(i).widget().setParent(None)
-            
-        self.__wParams = None
+        
+        # prepare new params widgets
         self.__wParams = []
+        
         # insert custom params widgets
         i = -1
         x = 0
         y = 0
+        p_index = 0
         for p in params:
+            # get param name, value
             name = QtCore.QString(p[0])
             value = QtCore.QString(p[1])
+            
+            # reuse old param values, if matching position in grid (p_index) and param name
+            if len(self.__oldParams) > p_index:
+                old_name = self.__oldParams[p_index][0]
+                old_value = self.__oldParams[p_index][1]
+                if str(old_name) == str(name):
+                    value = QtCore.QString(old_value)
             
             i = i + 1
             x = i % 6
@@ -503,6 +526,8 @@ class McStartSimDialog(QtGui.QDialog):
             self.ui.gridGrid.addWidget(edt, y, x, 1, 1)
             
             self.__wParams.append([lbl, edt])
+            
+            p_index += 1
             
         self.ui.btnStart.setFocus()
 
