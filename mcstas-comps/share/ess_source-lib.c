@@ -112,7 +112,7 @@ double ESS_2015_Schoenfeldt_thermal_spectrum(double lambda, double theta){
 
 
 /* This is the cold Mezei moderator from 2012 (updated I0 and I2) */
-double ESS_Mezei_cold_2012(double *t, double *p, double lambda, double tfocus_width, double tfocus_time, double dt, ess_moderator_struct extras) 
+void ESS_Mezei_cold_2012(double *t, double *p, double lambda, double tfocus_width, double tfocus_time, double dt, ess_moderator_struct extras) 
 {
   // Spectrum related constants - ESS 2001 Cold moderator
   double T=50, tau=287e-6, tau1=0, tau2=20e-6, chi2=0.9, I0=8.21e11, I2=3.29e11, branch1=1, branch2=0.5, n2=5, n=20;
@@ -217,7 +217,7 @@ double ESS_Mezei_cold_2012(double *t, double *p, double lambda, double tfocus_wi
 } /* end of ESS_Mezei_cold_2012 */
 
 /* This is the cold Mezei moderator from 2001 (Original I0 and I2) */
-double ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_width, double tfocus_time, double dt, ess_moderator_struct extras) 
+void ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_width, double tfocus_time, double dt, ess_moderator_struct extras) 
 {
   // Spectrum related constants - ESS 2001 Cold moderator
   double T=50, tau=287e-6, tau1=0, tau2=20e-6, chi2=0.9, I0=6.9e11, I2=27.6e10, branch1=1, branch2=0.5, n2=5, n=20;
@@ -325,7 +325,7 @@ double ESS_Mezei_cold(double *t, double *p, double lambda, double tfocus_width, 
 } /* end of ESS_Mezei_cold */
 
 /* This is the thermal Mezei moderator from 2001 - also used in 2012 - TDR */
-double ESS_Mezei_thermal(double *t, double *p, double lambda, double tfocus_width, double tfocus_time, double dt, ess_moderator_struct extras)
+void ESS_Mezei_thermal(double *t, double *p, double lambda, double tfocus_width, double tfocus_time, double dt, ess_moderator_struct extras)
 {
   // Spectrum related constants - ESS 2001 Thermal moderator       
   double T=325, tau=80e-6, tau1=400e-6, tau2=12e-6, chi2=2.5, I0=13.5e11, I2=27.6e10, branch1=0.5, branch2=0.5, n2=5, n=20;
@@ -431,7 +431,7 @@ double ESS_Mezei_thermal(double *t, double *p, double lambda, double tfocus_widt
 
 
 /* This is the Mezei moderator with a correction term from Klaus Lieutenant */
-double ESS_2012_Lieutenant_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
+void ESS_2012_Lieutenant_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
   ESS_Mezei_cold_2012(t, p,  lambda,  tfocus_w,  tfocus_t, tfocus_dt, extras);
   
@@ -449,7 +449,7 @@ double ESS_2012_Lieutenant_cold(double *t, double *p, double lambda, double tfoc
 
 /* This is the cold moderator with 2013 updates, fits from Troels Schoenfeldt */
 /* Parametrization including moderator height for the "pancake" moderator */
-double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
+void ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
     /* From the forthcoming Schoenfeldt et al.
        S_cold(\lambda) = (I_1*exp(-\alpha_1*lambda)  + I_2*exp(-\alpha_2*\lambda)) * 1/(1+exp(\alpha_l * (\lambda-lambda_l)))^(1/\gamma)
@@ -502,7 +502,7 @@ double ESS_2013_Schoenfeldt_cold(double *t, double *p, double lambda, double tfo
 
 /* This is the cold moderator with 2014 updates, fits from Troels Schoenfeldt */
 /* Parametrization including moderator height for the "pancake" moderator */
-double ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
+void ESS_2014_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
    if ((extras.height_c <= 0.12) && (extras.height_c >= 0.01)) {
     *p = ESS_2014_Schoenfeldt_cold_spectrum(lambda,100*extras.height_c);
@@ -613,7 +613,7 @@ double ESS_2014_Schoenfeldt_thermal_timedist(double time,double lambda,double he
 
 
 /* This is the thermal moderator with 2013 updates, fits from Troels Schoenfeldt */
-double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
+void ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
   /*  From the forthcoming Schoenfeldt et al.
      S_Th(\lambda) = I_Th * exp(k_Th/(T*\lambda^2))*(2*k_Th^2)/(T^2*\lambda^5) + I_SD * \lambda^-1 * 1/(1+exp(\alpha*(\lambda - \lambda_cf))
@@ -659,7 +659,7 @@ double ESS_2013_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
 } /* end of ESS_2013_Schoenfeldt_thermal */
 
 /* This is the thermal moderator with 2014 updates, fits from Troels Schoenfeldt */
-double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
+void ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
   if ((extras.height_t <= 0.12) && (extras.height_t >= 0.01)) {
     *p = ESS_2014_Schoenfeldt_thermal_spectrum(lambda, 100*extras.height_t);
@@ -681,7 +681,7 @@ double ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
 /* 2015 start */
 
 /* This is the thermal moderator with 2015 updates, fits from Troels Schoenfeldt */
-double ESS_2015_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
+void ESS_2015_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
   if ((extras.height_t <= 0.12) && (extras.height_t >= 0.01)) {
     *p = ESS_2015_Schoenfeldt_thermal_spectrum(lambda, extras.beamportangle);
@@ -704,7 +704,7 @@ double ESS_2015_Schoenfeldt_thermal(double *t, double *p, double lambda, double 
 
 /* This is the cold moderator with 2015 updates, fits from Troels Schoenfeldt */
 /* Parametrization including moderator height for the "pancake" moderator */
-double ESS_2015_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
+void ESS_2015_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
    if ((extras.height_c <= 0.12) && (extras.height_c >= 0.01)) {
     *p = ESS_2015_Schoenfeldt_cold_spectrum(lambda,extras.beamportangle);
@@ -764,7 +764,7 @@ double ESS_2015_Schoenfeldt_cold_x0(double x0,double theta){
     double par2=-4-.75*i;
     if(i==0)par2=-20;
     double par3=-14.9402-0.178369*i+0.0367007*i*i;
-    if(i==0)par3-14.27;
+    if(i==0)par3=-14.27;
     double par4=-15;
     if(i==3)par4=-3.5;
     if(i==5)par4=-1.9;
