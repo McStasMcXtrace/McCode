@@ -1,30 +1,25 @@
-/* instrument definition: name, parameters & default values */
 DEFINE INSTRUMENT template_body_simple(Par1=1)
 
-/* declare variables and functions in C syntax */
 DECLARE
 %{
 %}
 
-/* any C code here is executed when the simulation starts */
 INITIALIZE
 %{
 %}
 
-/* define the instrument as a sequence of components */
 TRACE
 
-/* Progress_bar() is an Arm() displaying simulation progress */
 COMPONENT origin = Progress_bar()
-AT (0, 0, 0) ABSOLUTE
+AT (0, 0, 0) RELATIVE ABSOLUTE
 
-/* define components here (e.g. Insert -> Source -> Source_Maxwell_3) */
+// insert components here (e.g. Insert -> Source -> ...)
 
 
-/* any C code here is executed when the simulation ends */
+
+
 FINALLY
 %{
 %}
 
-/* The END token marks the instrument definition end */
 END
