@@ -20,7 +20,7 @@
 * polarisation along a given normalized m-vector (mx, my, mz) as a
 * function of wavelength.
 *
-* Example: Pollambda_monitor(xwidth=0.1, yheight=0.1, npol=11, 
+* Example: Pollambda_monitor(Lmin=1, Lmax=20, nL=20, xwidth=0.1, yheight=0.1, npol=11, 
                              mx=0, my=1, mz=0, filename="pollambdaMon.data")
 *
 * %P

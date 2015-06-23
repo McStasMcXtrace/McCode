@@ -22,7 +22,7 @@
 * The measured quantity is: sx*mx+sy*my+mz*sz
 *
 * Example: Pol_monitor(xwidth=0.1, yheight=0.1, nchan=11, 
-*                      mx=0, my=1, mz=0, filename="polMon.data")
+*                      mx=0, my=1, mz=0)
 *
 * %P
 * INPUT PARAMETERS:
