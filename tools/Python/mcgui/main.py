@@ -127,7 +127,7 @@ class McGuiState(QtCore.QObject):
         # makes sure this is not a qstring
         instr_file = str(instr_file)
         # file must exists and be .instr file:
-        if os.path.exists(str(instr_file)) and (os.path.splitext(instr_file)[1] == '.instr'):
+        if os.path.exists(instr_file) and (os.path.splitext(instr_file)[1] == '.instr'):
             # handle .instr files loaded without full path
             if os.path.dirname(instr_file) == '':
                 instr_file = os.path.join(self.getWorkDir(), instr_file)
@@ -263,6 +263,8 @@ class McGuiState(QtCore.QObject):
             self.__fireSimStateUpdate()
         
         except: 
+            self.__emitter.status("")
+
             (type, value, traceback) = sys.exc_info()
             thread_exc_signal.emit(value.message)
     
@@ -361,10 +363,15 @@ class McGuiState(QtCore.QObject):
         cmd = mccode_config.configuration["MCRUN"] + ' ' + self.__instrFile + " --info"
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE, 
-                                   stderr=subprocess.STDOUT,
+                                   stderr=subprocess.PIPE,
                                    shell=True)
         # synchronous
         (stdoutdata, stderrdata) = process.communicate()
+        
+        if stderrdata:
+            self.__emitter.message(stderrdata)
+            self.__emitter.status("Instrument compile error.")
+            raise Exception("Error in instrument file...")
         
         # get parameters from info
         params = []
@@ -469,6 +476,8 @@ class McGuiAppController():
         
         instr_params = self.state.getInstrParams()
         fixed_params, new_instr_params = self.view.showStartSimDialog(instr_params)
+        
+        self.emitter.status("")
         
         if fixed_params != None:
             self.state.run(fixed_params, new_instr_params)
