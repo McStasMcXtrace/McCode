@@ -1784,8 +1784,18 @@ FILE *mcsiminfo_init(FILE *f)
   /* check format */      
   if (!mcformat || !strlen(mcformat) 
    || !strcasecmp(mcformat, "MCSTAS") || !strcasecmp(mcformat, "MCXTRACE") 
-   || !strcasecmp(mcformat, "PGPLOT"))
+   || !strcasecmp(mcformat, "PGPLOT") || !strcasecmp(mcformat, "GNUPLOT") || !strcasecmp(mcformat, "MCCODE")
+   || !strcasecmp(mcformat, "MATLAB")) {
     mcformat="McCode";
+#ifdef USE_NEXUS
+  } else if (strcasestr(mcformat, "NeXus")) {
+    /* Do nothing */
+#endif
+  } else {
+    fprintf(stderr,
+	    "Warning: You have requested the output format %s which is unsupported by this binary. Resetting to standard %s format.\n",mcformat ,"McCode");
+    mcformat="McCode";
+  }
   
   /* open the SIM file if not defined yet */
   if (mcsiminfo_file || mcdisable_output_files) 
@@ -2094,10 +2104,6 @@ mcsetseed(char *arg)
 {
   mcseed = atol(arg);
   if(mcseed) {
-#ifdef USE_MPI
-    if (mpi_node_count > 1) srandom(mcseed+mpi_node_rank);
-    else
-#endif
     srandom(mcseed);
   } else {
     fprintf(stderr, "Error: seed must not be zero (mcsetseed)\n");
@@ -3676,7 +3682,12 @@ void sighandler(int sig)
   {
     fflush(stdout);
     perror("# Last I/O Error");
-    printf("# " MCCODE_STRING ": Simulation stop (abort)\n");
+    printf("# " MCCODE_STRING ": Simulation stop (abort).\n");
+// This portion of the signal handling only works on UNIX
+#if defined(__unix__) || defined(__APPLE__)
+    signal(sig, SIG_DFL); /* force to use default sighandler now */
+    kill(getpid(), sig);  /* and trigger it with the current signal */
+#endif
     exit(-1);
   }
 #undef SIG_SAVE
@@ -3693,7 +3704,7 @@ void sighandler(int sig)
 int mccode_main(int argc, char *argv[])
 {
 /*  double run_num = 0; */
-  time_t t;
+  time_t  t;
 #ifdef USE_MPI
   char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
   int  mpi_node_name_len;
@@ -3711,6 +3722,9 @@ int mccode_main(int argc, char *argv[])
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
 #endif /* USE_MPI */
 
+t = time(NULL);
+mcseed = (long)t+(long)getpid();
+
 #ifdef USE_MPI
 /* *** print number of nodes *********************************************** */
   if (mpi_node_count > 1) {
@@ -3718,15 +3732,9 @@ int mccode_main(int argc, char *argv[])
     printf("Simulation '%s' (%s): running on %i nodes (master is '%s', MPI version %i.%i).\n",
       mcinstrument_name, mcinstrument_source, mpi_node_count, mpi_node_name, MPI_VERSION, MPI_SUBVERSION);
     );
-    /* adapt random seed for each node */
-    mcseed=(long)(time(&t) + mpi_node_rank);
-    srandom(mcseed);
-    t += mpi_node_rank;
-  } else
-#else /* !USE_MPI */
-  mcseed=(long)time(&t);
-  srandom(mcseed);
+  }
 #endif /* USE_MPI */
+  
   mcstartdate = (long)t;  /* set start date before parsing options and creating sim file */
 
 /* *** parse options ******************************************************* */
@@ -3736,6 +3744,15 @@ int mccode_main(int argc, char *argv[])
   mcinstrument_exe = argv[0]; /* store the executable path */
   /* read simulation parameters and options */
   mcparseoptions(argc, argv); /* sets output dir and format */
+  
+#ifdef USE_MPI
+  if (mpi_node_count > 1) {
+    /* share the same seed, then adapt random seed for each node */
+    MPI_Bcast(&mcseed, 1, MPI_LONG, 0, MPI_COMM_WORLD); /* root sends its seed to slaves */
+    mcseed += mpi_node_rank; /* make sure we use different seeds per node */
+  }
+#endif
+  srandom(mcseed);
 
 /* *** install sig handler, but only once !! after parameters parsing ******* */
 #ifndef NOSIGNALS
