@@ -2015,6 +2015,14 @@ mcuse_dir(char *dir)
       fprintf(stderr, "Error: unable to create directory '%s' (mcuse_dir)\n", dir);
       fprintf(stderr, "(Maybe the directory already exists?)\n");
 #endif
+<<<<<<< HEAD
+#ifdef USE_MPI
+    MPI_Abort(MPI_COMM_WORLD, -1);
+#endif
+    exit(-1);
+    }
+=======
+>>>>>>> ad58134... Correcting misplaced curlies...
 #ifdef USE_MPI
     MPI_Abort(MPI_COMM_WORLD, -1);
 #endif
