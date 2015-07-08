@@ -52,34 +52,9 @@
 #include <math.h>
 #include <string.h>
 
-
-
 /*******************************************************************************
  * begin k-D tree section
  ******************************************************************************/
-
-typedef struct
-{
-  // This is the location of this point (space).
-  short  space_dimensionality;
-  double *v;    // e.g. double []
-  
-  // These are the values for our field at this location.
-  double *data; // e.g. double []
-
-  // This is the point index in the point list.
-  int    index;
-
-} vertex;
- 
-/* This struct will store each node of our kdtree. */
-typedef struct _treeNode {
-  vertex   *point;
-  int       depth;
-  struct _treeNode *rChild;
-  struct _treeNode *lChild;
-} treeNode;
-
 
 #define R_SQR(x)        ((x) * (x))
 #define R_SWAP(x, y, t) {t tmp; tmp=x; x=y; y=tmp;}
@@ -274,22 +249,8 @@ vertex* kdtree_nearestNeighbour(vertex* v, treeNode *tree) {
  * begin interpolator section
  ******************************************************************************/
  
- #define INTERPOLATOR_DIMENSIONS 10
-  
-struct interpolator_struct {
-  char  method[256];
-  long  space_dimensionality; // [x,y,z...]
-  long  field_dimensionality; // [bx,by,bz...]
-  long  points;
-  char  filename[1024];
-  treeNode *kdtree;    /* for k-d tree */
-  double  *grid[INTERPOLATOR_DIMENSIONS];  /* each grid contains a component of the field */
-  double   min[INTERPOLATOR_DIMENSIONS];
-  double   max[INTERPOLATOR_DIMENSIONS];
-  long     bin[INTERPOLATOR_DIMENSIONS];
-  double   step[INTERPOLATOR_DIMENSIONS];
-  long     constant_step[INTERPOLATOR_DIMENSIONS];
-};
+#define INTERPOLATOR_DIMENSIONS 10
+
 
 /******************************************************************************/
 /* interpolator_double_vector_compare: comparator for double qsort */
@@ -612,4 +573,6 @@ double *interpolator_interpolate3_3(struct interpolator_struct *interpolator,
   *bx = field[0]; *by = field[1]; *bz = field[2];
   return(ret);
 } /* interpolator_interpolate3_3 */
+
+#undef INTERPOLATOR_DIMENSIONS
 

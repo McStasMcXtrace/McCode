@@ -111,7 +111,7 @@ OUTPUT PARAMETERS(magnet, parPtr)
 SHARE
 %{
   %include "read_table-lib"
-  %include "interpolation.c"
+  %include "interpolation"
   %include "pol-lib"
   double fmax(double, double);
   double fmin(double, double);
