@@ -12,7 +12,7 @@
 * Date: August, 2006
 * Origin: RISOE
 * Release: McStas 1.10
-* Version: $Revision$
+* Version: $Revision: 4382 $
 *
 * This file is to be imported by polarisation components.
 * It handles some shared functions.
@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 #ifndef POL_LIB_H
-#define POL_LIB_H "$Revision$"
+#define POL_LIB_H "$Revision: 4382 $"
 
 // Constant used 
 #define mc_pol_omegaL (-2 * PI * 29.16e6) /* MHz*rad/Tesla */
@@ -115,6 +115,9 @@ void *mcmagnet_pop(void);
 int const_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
 int rot_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
 int majorana_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data);
+int table_magnetic_field(double x, double y, double z, double t,
+                         double *bx, double *by, double *bz,
+                         void *data);
 
 /* Routines used for Monochromator and guides/mirrors 
  * in the special (usual) case where

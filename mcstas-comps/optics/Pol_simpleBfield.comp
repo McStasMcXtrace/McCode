@@ -10,7 +10,7 @@
 * %I
 * Written by: Erik B Knudsen, Peter Christiansen and Peter Willendrup
 * Date: July 2011
-* Version: $Revision$
+* Version: $Revision: 4382 $
 * Origin: RISOE
 * Release: McStas 1.12
 *
@@ -83,17 +83,14 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth:   [m]       Width of opening.
-* yheight:  [m]       Height of opening.
-* zdepth:   [m]       Length of field.
-* Bx:       [T]       Parameter used for x composant of field.
-* By:       [T]       Parameter used for y composant of field.
-* Bz:       [T]       Parameter used for z composant of field.
-* fieldFunction: [pointer] Function describing the magnetic field.
-* filename: []        file where the magnetic field is tabulated.
-* Stepx:    []        Number of points in x to use during resampling (increases precision in x dimension)
-* Stepy:    []        Number of points in y to use during resampling (increases precision in y dimension)
-* Stepz:    []        Number of points in z to use during resampling (increases precision in z dimension)
+* xwidth:  [m]       Width of opening.
+* yheight: [m]       Height of opening.
+* zdepth:  [m]       Length of field.
+* Bx:      [T]       Parameter used for x composant of field.
+* By:      [T]       Parameter used for y composant of field.
+* Bz:      [T]       Parameter used for z composant of field.
+* fieldFunction [pointer] Function describing the magnetic field.
+* filename []        file where the magnetic field is tabulated.
 *
 * OUTPUT PARAMETERS:
 *
@@ -107,20 +104,23 @@ DEFINE COMPONENT Pol_simpleBfield
 DEFINITION PARAMETERS (fieldFunction=const_magnetic_field)
 SETTING PARAMETERS (xwidth, yheight,zdepth,
                     Bx, By, Bz,
-                    string filename="bfield.dat",
-                    Stepx=100, Stepy=0, Stepz=0)
-OUTPUT PARAMETERS(gz, magnet, parPtr)
+                    string filename="bfield.dat")
+OUTPUT PARAMETERS(magnet, parPtr)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 SHARE
 %{
+  %include "read_table-lib"
+  %include "interpolation.c"
   %include "pol-lib"
   double fmax(double, double);
   double fmin(double, double);
 
+/*
   int table_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data){
-    interpolate3x3( (treeNode *) data, x,y,z, bx, by, bz); /*for now just ignore time*/
+    interpolate3x3( (treeNode *) data, x,y,z, bx, by, bz); 
   }
+  */
 
 %}
 
@@ -128,15 +128,12 @@ SHARE
 DECLARE
 %{
   /*   Larmor frequency and scalar product threshold*/
-  double gz;
   void *parPtr;
   mcmagnet_field_info *magnet;
 %}
 
 INITIALIZE
 %{
-  double gx, gy;
-  Coords localG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0));
 
   if (fieldFunction==const_magnetic_field){
     double *t=malloc(3*sizeof(double));
@@ -157,63 +154,10 @@ INITIALIZE
     parPtr=(void *)t;
   } else if (fieldFunction==table_magnetic_field){
     /*initialize the interpolation vertex structure*/
-    vertex   **vertices=NULL;
-    treeNode  *tree=NULL;
-    int        r=-1;
-    
-    vertices=kdtree_loadPoints(filename, &r);
-    if (vertices==NULL || r < 0) {
-      fprintf(stderr, "%s: ERROR: Failed to read magnetic field table file %s (r=%d). Aborting\n",NAME_CURRENT_COMP, filename, r);
-      exit(1);
-    }
-    printf("%s: Read %d rows from file %s.\n", NAME_CURRENT_COMP, r, filename);
-    /*resampling to specified number of points*/
-    if (Stepx || Stepy || Stepz) {
-      vertex **vertices2=NULL;
-      if (!Stepy) Stepy=1;
-      if (!Stepz) Stepz=1;
-      if (!Stepx) Stepx=1;
-      Stepx = Stepx*Stepy*Stepz;
-      int steps[] = { Stepx, 0, 0 };
-      printf("%s: Resampling to %g points and building mesh.\n", NAME_CURRENT_COMP, Stepx);
-      vertices2 = resample(vertices, r, steps);
-      if (vertices2) {
-        free(vertices);
-        vertices  = vertices2;
-      }
-    } else {
-      /* re-use table as is, but make sure it is sorted */
-      printf("%s: Sorting mesh.\n", NAME_CURRENT_COMP);
-      qsort(vertices, r, sizeof(vertex*), x_compare);
-      Stepx = r;
-      
-      /* save current B field table */
-      char tmp_path[256];
-      
-      snprintf(tmp_path, 256, "%s%c%s.Bxyz", mcdirname ? mcdirname : ".", MC_PATHSEP_C, filename);
-      dump_table(vertices, Stepx, tmp_path);
-    }
-    printf("%s: Adding mesh to k-d tree.\n", NAME_CURRENT_COMP);
-    tree = kdtree_addToTree(vertices, 0, Stepx-1, 0);
-    
-    free(vertices);
-    parPtr=(void *) tree;
-  } else if (fieldFunction==resampled_3to3_magnetic_field){
-    /* initialize the interpolation data */
-    resampled_opts *opts = calloc(1, sizeof(resampled_opts));
-    if (Stepx && !Stepy) Stepy=Stepx;
-    if (Stepx && !Stepz) Stepz=Stepx;
-    opts->steps[0] = Stepx;
-    opts->steps[1] = Stepy;
-    opts->steps[2] = Stepz;
-    opts->table_path = filename;
-    opts->between = betweenG;
-    parPtr = (void*) opts;
+    struct interpolator_struct *interpolator = interpolator_load(filename, 3, 3, NULL);
+    interpolator_info(interpolator);
+    parPtr=(void *)interpolator;
   }
-
-  coords_get(localG, &gx, &gy, &gz);
-  if(!mcgravitation)
-    gz = 0;
 
   if ((xwidth<=0) || (yheight<=0) || (zdepth<=0)) {
     fprintf(stderr, "Pol_filter: %s: Null or negative volume!\n"

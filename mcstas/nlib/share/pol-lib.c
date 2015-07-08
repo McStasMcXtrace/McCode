@@ -12,7 +12,7 @@
 * Date: Oct 08
 * Origin: RISOE
 * Release: McStas 1.12
-* Version: $Revision$
+* Version: $Revision: 4466 $
 *
 * This file is to be imported by polarisation components.
 * It handles some shared functions.
@@ -33,9 +33,6 @@
 
 
 %include "read_table-lib"
-
-%include "interpolation/resample.h"
-%include "interpolation/resample.c"
 
 
 enum {MCMAGNET_STACKSIZE=12} mcmagnet_constants;
@@ -226,6 +223,7 @@ void mcmagnet_print_stack(){
 int const_magnetic_field(double x, double y, double z, double t,
     double *bx, double *by, double *bz, void *data) {
   int stat=1;
+  if (!data) return 0;
   *bx=((double *)data)[0];
   *by=((double *)data)[1];
   *bz=((double *)data)[2];
@@ -235,6 +233,8 @@ int const_magnetic_field(double x, double y, double z, double t,
 int rot_magnetic_field(double x, double y, double z, double t,
     double *bx, double *by, double *bz, void *data) {
   /* Field of magnitude By that rotates to x in magnetLength m*/
+  
+  if (!data) return 0;
   double Bmagnitude=((double *)data)[0];//   = mcMagnetData[1];
   double magnetLength=((double *)data)[1];// = mcMagnetData[5];
   *bx =  Bmagnitude * sin(PI/2*z/magnetLength);
@@ -249,6 +249,7 @@ int majorana_magnetic_field(double x, double y, double z, double t,
   /* Large linearly decreasing (from +Bx to -Bx in magnetLength) component along x axis,
    * small constant component along y axis
    */
+  if (!data) return 0;
   double Blarge       = ((double *)data)[0];
   double Bsmall       = ((double *)data)[1];
   double magnetLength = ((double *)data)[2];
@@ -258,147 +259,13 @@ int majorana_magnetic_field(double x, double y, double z, double t,
   return 1;
 }
 
-
-typedef struct {
-  // Options set before using
-  // step is the number of samples to use (steps[0-2]). When sampling only
-  // requires one number of samples put this in steps[0] (like betweenH/R).
-  int steps[3];
-  char* table_path;
-  double (*between)(int i, int *steps, int dim, double a, double b);
-
-  // State used by the resampled_3to3_magnetic_field function
-  // (just leave this as NULL / calloc'ed)
-  t_Table *table;
-  void* tree;
-
-  vertex *min;
-  vertex *max;
-
-} resampled_opts ;
-
-
-int resampled_3to3_magnetic_field(double x, double y, double z, double t,
-                                  double *bx, double *by, double *bz,
-                                  void *data)
+int table_magnetic_field(double x, double y, double z, double t,
+                         double *bx, double *by, double *bz,
+                         void *data)
 {
-  resampled_opts *opts = (resampled_opts*) data;
-
-  int *steps       = opts->steps;
-  char *table_path = opts->table_path;
-
-  t_Table *table   = opts->table;
-  treeNode *tree   = opts->tree;
-
-  if (NULL == table && NULL == tree) {
-    // There's no in-memory table or tree, so we have to read it from disk
-
-    char cache_path[256];
-    snprintf(cache_path, 256, "%s.rs-%dx%dx%d-cache", table_path,
-             MAX(1, steps[0]), MAX(1, steps[1]), MAX(1, steps[2]));
-
-    vertex **points = NULL;
-    int rows = 0;
-
-    // Rebuild cache file if not present
-    // TODO: Consider invalidating cache file if too old
-    struct stat cachestat;
-    while(stat(cache_path, &cachestat) < 0) {
-
-      #ifdef USE_MPI
-      // only the MPI master node (root) rebuilds the cache
-      int rebuild = 0;
-      MPI_MASTER(rebuild = 1);
-      #else
-      int rebuild = 1;
-      #endif
-
-      if (1 == rebuild) {
-        // rebuild the file (no mpi or mpi master/root)
-        printf("Rebuilding interpolation cache file: %s..\n", cache_path);
-        opts->min = malloc(sizeof(vertex));
-        opts->max = malloc(sizeof(vertex));
-
-        points = resample_file(table_path, &rows, steps, cache_path,
-                               opts->between, opts->min, opts->max);
-
-        printf("Done.\n");
-        if(points == NULL) {
-          exit(1);
-        }
-      } else {
-        // wait until some other node has rebuild the file
-        printf("Waiting for cache file ...\n");
-        usleep(250000);
-      }
-    }
-
-    if (opts->between == betweenG) {
-      if (NULL == points || 0 == rows) {
-        printf("Loading interpolated data from cache.. ");
-      }
-      table = opts->table = malloc(sizeof(t_Table));
-      Table_Init(table, 100, 6);
-      int r = Table_Read(table, cache_path, 0);
-      if (r < 0) {
-        fprintf(stderr, "Error: Could not read table '%s'", cache_path);
-        exit(1);
-      }
-      if (NULL == opts->min || NULL == opts->max) {
-        opts->min = malloc(sizeof(vertex));
-        opts->max = malloc(sizeof(vertex));
-        int row;
-        for(row = 0; row < table->rows; row++) {
-          int col;
-          for(col = 0; col < 3; col++) {
-            double value = Table_Index(*table, row, col);
-            opts->min->v[col] = MIN(opts->min->v[col], value);
-            opts->max->v[col] = MAX(opts->max->v[col], value);
-          }
-        }
-      }
-      printf("Done\n");
-    }
-    else {
-      // the cached table is now either in memory or on disk
-      // use it to rebuild the kd-tree for nearest-neighbour queries
-      if (NULL == points || 0 == rows) {
-        // the resampled table is on disk; read it into memory
-        printf("loading from cache..\n");
-        points = load_table(cache_path, &rows);
-      }
-    }
-
-    if(opts->between == betweenG) {
-      // betweenG chooses fixed points that doesn't need a kd-tree
-      // We don't do anything here
-    } else {
-      // resampled points are now in memory, so build the kd-tree
-      tree = kdtree_addToTree(points, 0, rows-1, 0);
-      opts->tree = tree;
-    }
-
-  }
-
-  // betweenG uses the table directly (and only the kd-tree during resampling)
-  // other point-selectors use the kd-tree
-  if (NULL != opts->table) {
-    int N = table->rows;
-    vertex tmpv = { x, y, z};
-    int index = reverseG(steps, opts->min, opts->max, &tmpv);
-    *bx = Table_Index(*table, index, 3);
-    *by = Table_Index(*table, index, 4);
-    *bz = Table_Index(*table, index, 5);
-    /* fprintf(stderr, "Error: Not ready for table-data yet! (%f, %f, %f -> %f, %f, %f)\n", x, y, z, *bx, *by, *bz); */
-    /* exit(1); */
-  } else if (NULL != opts->tree) {
-    interpolate3x3(tree, x, y, z, bx, by, bz);
-  } else {
-    fprintf(stderr, "%s\n", "Error: No interpolation data!");
-    exit(1);
-  }
-
-  return 1;
+  if (!data) return 0;
+  struct interpolator_struct *interpolator = (struct interpolator_struct*)data;
+  return(interpolator_interpolate3_3(interpolator, x,y,z, bx,by,bz) != NULL);
 }
 
 
