@@ -521,7 +521,7 @@ MCDETECTOR mcdetector_statistics(
   double sum_xz = 0, sum_yz = 0, sum_x = 0, sum_y = 0, sum_x2z = 0, sum_y2z = 0;
   int    i,j;
   char   hasnan=0, hasinf=0;
-  char   israw = (strcasestr(detector.format,"raw") != NULL);
+  char   israw = ((char*)strcasestr(detector.format,"raw") != NULL);
   double *this_p1=NULL; /* new 1D McCode array [x I E N]. Freed after writing data */
 
   /* if McCode/PGPLOT and rank==1 we create a new m*4 data block=[x I E N] */

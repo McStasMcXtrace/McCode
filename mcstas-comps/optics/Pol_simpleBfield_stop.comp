@@ -61,7 +61,6 @@
 *
 * OUTPUT PARAMETERS:
 *
-* gz:             z-component of gravity (m/s/s)
 * parPtr:         Pointer to component magnet parameters (pointer)
 *
 * %E
@@ -70,7 +69,7 @@
 DEFINE COMPONENT Pol_simpleBfield_stop
 DEFINITION PARAMETERS (magnet_comp_stop)
 SETTING PARAMETERS ()
-  OUTPUT PARAMETERS()
+OUTPUT PARAMETERS()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
@@ -80,52 +79,10 @@ SHARE
   double fmin(double, double);
 %}
 
-
-DECLARE
-%{
-  /*   Larmor frequency and scalar product threshold*/
-  double gz;
-  //double length;
-  double *parPtr;
-  mcmagnet_field_info *magnet;  
-%}
-
-INITIALIZE
-%{  
-  //length=MC_GETPAR(magnet_comp_stop,length);
-  gz=MC_GETPAR(magnet_comp_stop,gz); 
-%}
-
 TRACE
 %{
-  double dt = 0;
- 
-  /*get the "old" magnet to restore*/ 
-  //magnet=MC_GETPAR(magnet_comp_stop,magnet);
-  
-  //solve_2nd_order(&dt, -gz/2, -vz, length-z);
-  //printf("%s dt: %g ,length: %g, z:%g\n",NAME_CURRENT_COMP,dt,length,z); 
-  //PROP_DT(dt);
   PROP_Z0;
   mcmagnet_pop();
-  /*mcmagnet_set_active(magnet);
-  if (magnet==NULL || magnet->func==NULL) {
-    MAGNET_OFF;
-  }*/
-%}
-
-/* This section is executed when the simulation ends (C code). Other    */
-/* optional sections are : SAVE                                         */
-FINALLY
-%{
-/*  parPtr=MC_GETPAR(magnet_comp_stop,parPtr);
-  free(parPtr);
-*/
-%}
-
-
-MCDISPLAY
-%{
 %}
 
 END
