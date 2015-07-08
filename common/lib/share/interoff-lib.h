@@ -63,6 +63,7 @@ typedef struct off_struct {
     Coords* vtxArray;
     Coords* normalArray;
     unsigned long* faceArray;
+    char *filename;
 } off_struct;
 
 /*******************************************************************************

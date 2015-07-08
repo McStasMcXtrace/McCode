@@ -187,41 +187,14 @@ int off_intersectPoly(intersection *inter, Coords a, Coords b, polygon p)
 line 1  OFF
 line 2  nbVertex nbFaces nbEdges
 */
-long off_getBlocksIndex(char* filename, long* vtxIndex, long* vtxSize, long* faceIndex, long* polySize )
+FILE *off_getBlocksIndex(char* filename, long* vtxSize, long* polySize )
 {
-  if (!filename)             return(0);
-  if (strlen(filename) == 0) return (0);
-  if (!strcmp(filename,"NULL") || !strcmp(filename,"0"))  return(0);
-  FILE* f = fopen(filename,"r");
-  if (!f) {
-    char mc_rt_path[CHAR_BUF_LENGTH];
-    char mc_rt_dir[CHAR_BUF_LENGTH];
-
-    if (!f)
-    {
-      strcpy(mc_rt_dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
-      sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, filename);
-      f = fopen(mc_rt_path, "r");
-    }
-    if (!f)
-    {
-      strcpy(mc_rt_dir, getenv(FLAVOR_UPPER) ? getenv(FLAVOR_UPPER) : MCSTAS);
-      sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, filename);
-      f = fopen(mc_rt_path, "r");
-    }
-    if (!f)
-    {
-      fprintf(stderr, "Error: Could not open input file '%s' (interoff/off_getBlocksIndex)\n", filename);
-      return (0);
-    }
-  }
-  MPI_MASTER(
-  printf("Loading geometry file (OFF/PLY): %s\n", filename);
-  );
+  FILE* f = Open_File(filename,"r", NULL); /* from read_table-lib: FILE *Open_File(char *name, char *Mode, char *path) */
+  if (!f) return (f);
   
   char line[CHAR_BUF_LENGTH];
   char *ret=0;
-  *vtxIndex = *vtxSize = *faceIndex = *polySize = 0;
+  *vtxSize = *polySize = 0;
 
   /* **************** start to read the file header */
   /* OFF file:
@@ -240,10 +213,9 @@ long off_getBlocksIndex(char* filename, long* vtxIndex, long* vtxSize, long* fac
     fprintf(stderr, "Error: %s is probably not an OFF, NOFF or PLY file (interoff/off_getBlocksIndex).\n"
                     "       Requires first line to be 'OFF', '3' or 'ply'.\n",filename);
     fclose(f);
-    return(0);
+    return(NULL);
   }
 
-  *vtxIndex+= strlen(line);
   if (!strncmp(line,"OFF",3) || !strncmp(line,"3",1)) {
     do  /* OFF file: skip # comments which may be there */
     {
@@ -253,7 +225,6 @@ long off_getBlocksIndex(char* filename, long* vtxIndex, long* vtxSize, long* fac
         fprintf(stderr, "Error: Can not read line in file %s (interoff/off_getBlocksIndex)\n", filename);
         exit(1);
       }
-      *vtxIndex+= strlen(line);
     } while (line[0]=='#');
     //line = nblines of vertex,faces and edges arrays
     sscanf(line,"%lu %lu",vtxSize,polySize);
@@ -275,29 +246,13 @@ long off_getBlocksIndex(char* filename, long* vtxIndex, long* vtxSize, long* fac
         exit(fprintf(stderr,
           "Error: Can not read binary PLY file %s, only 'format ascii' (interoff/off_getBlocksIndex)\n%s\n",
           filename, line));
-      *vtxIndex+= strlen(line);
     } while (strncmp(line,"end_header",10));
   }
+  
+  /* The FILE is left opened ready to read 'vtxSize' vertices (vtxSize *3 numbers)
+     and then polySize polygons (rows) */
 
-  /* **************** read the vertices and polygons */
-  *faceIndex=*vtxIndex;
-  int i=0;
-  for (i=0; i<*vtxSize; )
-  {
-    ret=fgets(line,CHAR_BUF_LENGTH,f);
-    if (ret == NULL)
-    {
-      fprintf(stderr,
-        "Error: Can not read vertex %i in file %s (interoff/off_getBlocksIndex)\n",
-        i, filename);
-      exit(1);
-    }
-    *faceIndex+=strlen(line);
-    if (line[0]!='#' && strncmp(line,"comment",7)) i++;   /* do not count comments */
-  }
-
-  fclose(f);
-  return(*vtxIndex);
+  return(f);
 } /* off_getBlocksIndex */
 
 // off_init_planes *************************************************************
@@ -514,42 +469,44 @@ int off_cleanInOut(intersection* t, int* t_size)
 long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
                 int notcenter, off_struct* data)
 {
-  //data to be initialized
-  long faceSize=0, vtxSize =0, polySize=0, vtxIndex=0, faceIndex=0;
+  // data to be initialized
+  long    vtxSize =0, polySize=0, i=0, ret=0, faceSize=0;
   Coords* vtxArray        =NULL;
   Coords* normalArray     =NULL;
   unsigned long* faceArray=NULL;
-  t_Table vtxTable, faceTable;
-
+  FILE*   f               =NULL; /* the FILE with vertices and polygons */
   double minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
 
   // get the indexes
-  if (!data || off_getBlocksIndex(offfile,&vtxIndex,&vtxSize,&faceIndex, &polySize) <=0)
-    return(0);
-
-  //read vertex table = [x y z | x y z | ...]
-  Table_Read_Offset(&vtxTable, offfile, 0, &vtxIndex, vtxSize);
-
-  //read face table = [nbvertex v1 v2 vn nbvertex v1 v2 vn ...]
-  Table_Read_Offset(&faceTable, offfile, 0, &faceIndex, 0);
-
-  //initialize Arrays
-  faceSize   = faceTable.columns;
+  if (!data) return(0);
+  
   MPI_MASTER(
-  printf("  Number of polygons: %ld\n", polySize);
+  printf("Loading geometry file (OFF/PLY): %s\n", offfile);
+  );
+  
+  f=off_getBlocksIndex(offfile,&vtxSize,&polySize);
+  if (!f) return(0);
+  
+  // read vertex table = [x y z | x y z | ...] =================================
+  // now we read the vertices as 'vtxSize*3' numbers and store it in vtxArray 
+  MPI_MASTER(
   printf("  Number of vertices: %ld\n", vtxSize);
   );
-
   vtxArray   = malloc(vtxSize*sizeof(Coords));
-  normalArray= malloc(polySize*sizeof(Coords));
-  if (!vtxArray || !normalArray) return(0);
+  if (!vtxArray) return(0);
 
-  long i=0,j=0;
   for(i=0; i<vtxSize; ++i)
   {
-    vtxArray[i].x=Table_Index(vtxTable, i,0);
-    vtxArray[i].y=Table_Index(vtxTable, i,1);
-    vtxArray[i].z=Table_Index(vtxTable, i,2);
+    double x,y,z;
+    ret=fscanf(f, "%lg%lg%lg", &x,&y,&z);
+    if (ret != 3) {
+      fprintf(stderr, "Error: can not read [xyz] coordinates for vertex %li in file %s (interoff/off_init)\n", 
+        i, offfile);
+      exit(2);
+    }
+    vtxArray[i].x=x;
+    vtxArray[i].y=y;
+    vtxArray[i].z=z;
 
     //bounding box
     if (vtxArray[i].x<minx) minx=vtxArray[i].x;
@@ -560,7 +517,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     if (vtxArray[i].z>maxz) maxz=vtxArray[i].z;
   }
 
-  //resizing and repositioning params
+  // resizing and repositioning params
   double centerx=0, centery=0, centerz=0;
   if (!notcenter) {
     centerx=(minx+maxx)*0.5;
@@ -606,32 +563,40 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     vtxArray[i].y=(vtxArray[i].y-centery)*ratioy+(!notcenter ? 0 : centery);
     vtxArray[i].z=(vtxArray[i].z-centerz)*ratioz+(!notcenter ? 0 : centerz);
   }
-
-  //table_read create a table on one line if the number of columns is not constant, so there are 2 cases :
-  if (faceTable.rows==1)
-  {
-    //copy the table in a 1-row array
-    faceArray=malloc(faceSize*sizeof(unsigned long));
-    if (!faceArray) return(0);
-    for (i=0; i<faceSize; ++i)
-    {
-      faceArray[i]=Table_Index(faceTable, 0, i);
+  
+  // read face table = [nbvertex v1 v2 vn | nbvertex v1 v2 vn ...] =============
+  MPI_MASTER(
+  printf("  Number of polygons: %ld\n", polySize);
+  );
+  normalArray= malloc(polySize*sizeof(Coords));
+  faceArray  = malloc(polySize*10*sizeof(unsigned long)); // we assume polygons have less than 9 vertices
+  if (!normalArray || !faceArray) return(0);
+  
+  // fill faces
+  faceSize=0;
+  for(i=0; i<polySize; ++i) {
+    int  nbVertex=0, j=0;
+    // read the length of this polygon
+    ret=fscanf(f, "%d", &nbVertex);
+    if (ret != 1) {
+      fprintf(stderr, "Error: can not read polygon %i length in file %s (interoff/off_init)\n", 
+        i, offfile);
+      exit(3);
+    }
+    if (faceSize > polySize*10) {
+      fprintf(stderr, "Error: %li exceeded allocated polygon array[%li] in file %s (interoff/off_init)\n", 
+        faceSize, polySize*10, offfile);
+    }
+    faceArray[faceSize++] = nbVertex; // length of the polygon/face
+    // then read the vertex ID's
+    for (j=0; j<nbVertex; j++) {
+      double vtx=0;
+      fscanf(f, "%lg", &vtx);
+      faceArray[faceSize++] = vtx;   // add vertices index after length of polygon
     }
   }
-  else
-  {
-    //read each row of the table and concatenate in a 1-row array
-    faceArray=malloc(polySize*(faceSize)*sizeof(unsigned long));
-    if (!faceArray) return(0);
-    for(i=0; i<polySize; ++i)
-    {
-      for(j=0; j<faceSize; ++j)
-        faceArray[i*(faceSize)+j]=Table_Index(faceTable, i, j);
-    }
-    faceSize*=polySize;
-  }
 
-  //precomputes normals
+  // precomputes normals
   long indNormal=0;//index in polyArray
   i=0;    //index in faceArray
   while (i<faceSize)
@@ -659,12 +624,14 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     indNormal++;
 
   }
+  
   MPI_MASTER(
   if (ratiox!=ratioy || ratiox!=ratioz || ratioy!=ratioz)
-    printf("Warning: Aspect ratio of the sample was modified.\n"
-           "         If you want to keep the original proportions, specifiy only one of the dimensions.\n");
+    printf("Warning: Aspect ratio of the geometry %s was modified.\n"
+           "         If you want to keep the original proportions, specifiy only one of the dimensions.\n",
+           offfile);
   
-  printf("  Bounding box dimensions:\n");
+  printf("  Bounding box dimensions for geometry %s:\n", offfile);
   printf("    Length=%f (%.3f%%)\n", rangex, ratiox*100);
   printf("    Width= %f (%.3f%%)\n", rangey, ratioy*100);
   printf("    Depth= %f (%.3f%%)\n", rangez, ratioz*100);
@@ -676,6 +643,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   data->vtxSize    = vtxSize;
   data->polySize   = polySize;
   data->faceSize   = faceSize;
+  data->filename   = offfile;
   return(polySize);
 } /* off_init */
 
