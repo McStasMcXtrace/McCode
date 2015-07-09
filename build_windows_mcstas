@@ -35,6 +35,7 @@ if [ "x$2" != "x" ]; then
 	download.sh http://ppds.mccode.org/PPDs.zip
     fi
     cd ..
+    
     sed s/@VERSION@/${1}/g McStas-metapackage32.iss > McStas-${1}-metapackage32.iss
     ./iscc McStas-${1}-metapackage32.iss
     mv Output/setup.exe dist/McStas-Metapackage-${1}-win32.exe

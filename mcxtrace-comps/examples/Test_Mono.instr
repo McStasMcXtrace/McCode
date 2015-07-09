@@ -8,7 +8,7 @@
 * Date: July 2011.
 * Origin: NBI,Ris&oslash; DTU
 * Release: McXtrace 1.0
-* %INSTRUMENT_SITE: Tests_optics
+* %INSTRUMENT_SITE: Tests
 *
 * Compares intensities of Monochromator components.
 *

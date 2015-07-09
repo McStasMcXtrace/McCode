@@ -11,7 +11,7 @@
 * Origin: Your institution
 * Release: McXtrace 1.0
 * Version: 0.2
-* %INSTRUMENT_SITE: None
+* %INSTRUMENT_SITE: Tests
 *
 * Unit-test instrument for the PowderN sample component.
 *

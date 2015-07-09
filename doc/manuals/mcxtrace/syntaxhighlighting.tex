@@ -27,6 +27,15 @@ escapeinside={\%*}{*)} % if you want to add a comment within your code
 {\lstset{language=bash}}
 {}
 
+%define a listing language
+\lstdefinelanguage[mccode]{c}[ANSI]{c}{
+  morekeywords=[1]{
+    DECLARE, DEFINE, END, FINALLY, INITIALIZE, MCDISPLAY, SAVE, SHARE,
+    TRACE, DEFINITION, PARAMETERS, POLARISATION, SETTING,
+    OUTPUT, INSTRUMENT, include,
+    ABSOLUTE,AT,COMPONENT,EXTEND,GROUP,PREVIOUS,NEXT,MYSELF,RELATIVE,ROTATED,WHEN,JUMP,ITERATE,SPLIT,COPY,
+    RESTORE_NEUTRON,RESTORE_XRAY
+ }}    
 
 \lstnewenvironment{mcstas}
 {\lstset{ %

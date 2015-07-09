@@ -790,10 +790,7 @@ true (non null).
   WHEN condition
 \end{mcstas}
 The condition has the same scope as the EXTEND modifier, i.e. may use component
-internal variables as well as all the \texttt{DECLARE} instrument variables,
-\emph{except} instrument parameters. To use instrument parameters, you should
-copy them into global variables in the DECLARE instrument section, and refer to
-these latter.  It is evaluated before the component TRACE section.
+internal variables as well as all the \texttt{DECLARE} instrument variables.
 
 Usage examples could be to have specific monitors only sensitive to selected
 processes, or to have components which are only present under given

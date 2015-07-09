@@ -24,7 +24,7 @@ component C code block, (usually SHARE or DECLARE):
     %include "read_table-lib"
 \end{lstlisting}
 will include the 'read\_table-lib.h' file, and the 'read\_table-lib.c'
-(unless the \verb+--no-runtime+ option is used with \verb+mcstas+).
+(unless the \verb+--no-runtime+ option is used with \verb+mcxtrace+).
 Similarly,
 \begin{lstlisting}
     %include "read_table-lib.h"
@@ -73,7 +73,7 @@ the x-rays which have negative propagation lengths are removed automatically.
 
 \item {\bfseries PROP\_DL}$(dl)$. Propagates the x-ray by the length $dl$, adjusting $(x,y,z)$, $\phi$, $t$ accordingly,
   from knowledge of the x-ray wavevector.
-\item {\bfseries ALLOW\_BACKPROP}. Indicates that the next propagation routine
+\item {\bfseries ALLOW\_BACKPROP}. Indicates that the \emph{next} propagation routine
   will not remove the x-ray, even if negative propagation lengths
   are found. Subsequent propagations are not affected.\index{Removed x-ray events}
 \item {\bfseries SCATTER}. This macro is used to denote a scattering event
@@ -82,9 +82,8 @@ the x-rays which have negative propagation lengths are removed automatically.
   It should be used
   to indicate that a component has interacted with the x-ray
   (e.g. scattered or detected).
-  This does not affect the simulation (see, however, {\bfseries Beamstop}),
-  and it is mainly used by the
-  \verb+MCDISPLAY+ section and the \verb+GROUP+ modifier
+  This does not affect the x-ray state (see, however, {\bfseries Beamstop}),
+  and it is mainly used by the \verb+MCDISPLAY+ section and the \verb+GROUP+ modifier.
 %(see~\ref{s:trace} and \ref{s:comp-mcdisplay}).
   See also the SCATTERED variable (below).
   \index{Keyword!GROUP} \index{Keyword!MCDISPLAY} \index{Keyword!EXTEND}
@@ -204,9 +203,10 @@ resulting Coord structure.
 \item {\bfseries normal\_vec}(\&$n_x$, \&$n_y$, \&$n_z$, $x$, $y$, $z$).
   Computes a unit vector $(n_x, n_y, n_z)$ normal to the vector
   $(x,y,z)$.
-\item {\bfseries solve\_2nd\_order}(*$t$, $A$,  $B$,  $C$).
-  Solves the 2$^{nd}$ order equation $At^2 + Bt + C = 0$ and returns
-  the smallest positive solution into pointer *$t$.
+\item {\bfseries solve\_2nd\_order}(*$t_0$,*$t_1$, $A$,  $B$,  $C$).
+  Solves the 2$^{nd}$ order equation $At^2 + Bt + C = 0$ and puts the solutions in
+  *$t_0$ and *$t_1$. The smallest positive solution into pointer *$t_0$. If $t_1$=\texttt{NULL}
+  it is ignored and the second solution is discarded.
 \end{itemize}
 
 \subsection{Output from detectors}
@@ -222,16 +222,16 @@ Details about using these functions are given in the \MCX\ User Manual.
   one-dimensional detector. Integrated intensities error etc. is also
   reported as for DETECTOR\_OUT\_0D.
 %See section~\ref{s:comp-finally} for details.
-\item {\bfseries DETECTOR\_OUT\_2D}$(...)$. Used to output the results from a
+\item {\bfseries DETECTOR\_OUT\_2D}$(\dots...)$. Used to output the results from a
   two-dimentional detector. Integrated intensities error etc. is also
   reported as for DETECTOR\_OUT\_0D.
 %See section~\ref{s:comp-finally} for details.
-\item {\bfseries DETECTOR\_OUT\_3D}$(...)$. Used to output
-  the results from a three-dimentional detector. Arguments are the same as
-  in DETECTOR\_OUT\_2D, but with an additional $z$ axis.
-  Resulting data files are treated as 2D data, but the 3rd dimension is
-  specified in the $type$ field. Integrated intensities error etc. is also
-  reported as for DETECTOR\_OUT\_0D.
+%\item {\bfseries DETECTOR\_OUT\_3D}$(...)$. Used to output
+%  the results from a three-dimentional detector. Arguments are the same as
+%  in DETECTOR\_OUT\_2D, but with an additional $z$ axis.
+%  Resulting data files are treated as 2D data, but the 3rd dimension is
+%  specified in the $type$ field. Integrated intensities error etc. is also
+%  reported as for DETECTOR\_OUT\_0D.
 \item {\bfseries mcinfo\_simulation}\textit{(FILE *f, mcformat,
   char *pre, char *name)} is used to append the simulation parameters into file $f$
   (see for instance {\bfseries Res\_monitor}).
@@ -241,7 +241,7 @@ Details about using these functions are given in the \MCX\ User Manual.
 
 \subsection{Ray-geometry intersections}
 \begin{itemize}
-\item {\bfseries inside\_rectangle}(\&$x$, \&$y$, $x$, $xw$, $yh$).
+\item {\bfseries inside\_rectangle}($x$, $y$, $xw$, $yh$).
   Return 1 if $-xw/2 \leq x \leq xw/2$ AND $-yh/2 \leq y \leq yh/2$.
   Else return 0.
 \item {\bfseries box\_intersect}(\&$l_1$, \&$l_2$, $x$, $y$, $z$, $k_x$, $k_y$, $k_z$,
@@ -265,7 +265,7 @@ Details about using these functions are given in the \MCX\ User Manual.
 \end{itemize}
 
 \subsection{Random numbers}
-By default  \MCX uses the included Mersenne Twister\cite{} algorithm for generating pseudo random numbers.
+By default  \MCX uses the included Mersenne Twister\cite{matsumoto1998mersenne} algorithm for generating pseudo random numbers.
 \begin{itemize}
 \item {\bfseries rand01}(). Returns a random number distributed uniformly between 0 and 1.
 \item {\bfseries randnorm}(). Returns a random number from a normal
@@ -298,7 +298,7 @@ By default  \MCX uses the included Mersenne Twister\cite{} algorithm for generat
 \section{Reading a data file into a vector/matrix (Table input, \texttt{read\_table-lib})}
 \label{s:read-table}
 \index{Library!read\_table-lib (Read\_Table)|textbf}
-  The \verb+read_table-lib+ provides functionalities for reading text
+  The \verb+read_table-lib+ library provides functionalities for reading text
   (and binary) data files. To use this library,
   add a \verb+%include "read_table-lib"+ in your component definition
   DECLARE or SHARE section. Tables are structures of type \verb+t_Table+
@@ -361,15 +361,40 @@ The number of blocks is put into $n$.
 \item {\bfseries Table\_Info\_Array}(\&$Table$) display information about all data blocks.
 \end{itemize}
 
-The format of text files is free. Lines starting by '\verb+# ; % /+' characters are considered to be comments, and stored in $Table.header$. Data blocks are vectors and matrices. Block numbers are counted starting from 1, and changing when a comment is found, or the column number changes. For instance, the file 'MCXTRACE/data/BeO.trm' (Transmission of a Berylium filter) looks like:
+The format of text files is free. Lines starting by '\verb+# ; % /+' characters are considered to be comments, and stored in $Table.header$. Data blocks are vectors and matrices. Block numbers are counted starting from 1, and changing when a comment is found, or the column number changes. For instance, the file 'MCXTRACE/data/Rh.txt' (Material data for Rhodium) looks like:
 \begin{lstlisting}
-  # BeO transmission, as measured on IN12
-  # Thickness: 0.05 [m]
-  # [ k(Angs-1) Transmission (0-1) ]
-  # wavevector multiply
-  1.0500  0.74441
-  1.0750  0.76727
-  1.1000  0.80680
+#Rh (Z  45) 
+#Atomic weight: A[r]  102.9055 
+#Nominal density: rho 1.2390E+01
+#    σ[a](barns/atom) = [μ/ρ](cm\^2 g\^-1)  ×  1.70879E+02
+#    E(eV) [μ/ρ](cm\^2 g\^-1) = f[2](e atom\^-1)  ×  4.08922E+05
+#    14 edges. Edge energies (keV):
+#
+#
+#      K      2.32199E+01  L I    3.41190E+00  L II   3.14610E+00  L III  3.00380E+00
+#      M I    6.27100E-01  M II   5.21000E-01  M III  4.96200E-01  M IV   3.11700E-01
+#      M V    3.07000E-01  N I    8.10000E-02  N II   4.79000E-02  N III  4.79000E-02
+#      N IV   2.50000E-03  N V    2.50000E-03
+#
+#    Relativistic correction estimate f[rel] (H82,3/5CL) = -4.0814E-01,
+#    -2.5440E-01 e atom\^-1
+#    Nuclear Thomson correction f[NT] = -1.0795E-02 e atom\^-1
+#
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#Form Factors, Attenuation and Scattering Cross-sections
+#Z=45, E = 0.001 - 433 keV
+#
+#      E            f[1]          f[2]        [mu/rho]      [sigma/rho]      [mu/rho]      [mu/rho][K]      lambda
+#                                      Photoelectric Coh+inc      Total
+#     keV        e atom\^-1      e atom\^-1   cm\^2 g\^-1       cm\^2 g\^-1      cm\^2 g\^-1   cm\^2 g\^-1     nm
+1.069000E-02  1.89417E+00  4.8055E+00  1.8382E+05  1.1514E-04  1.8382E+05  0.000E+00  1.160E+02
+1.142761E-02  2.09662E+00  5.1028E+00  1.8260E+05  1.5865E-04  1.8260E+05  0.000E+00  1.085E+02
+1.221612E-02  2.32705E+00  5.4019E+00  1.8082E+05  2.1741E-04  1.8082E+05  0.000E+00  1.015E+02
+1.305903E-02  2.58575E+00  5.6998E+00  1.7848E+05  2.9628E-04  1.7848E+05  0.000E+00  9.494E+01
+1.396010E-02  2.87263E+00  5.9931E+00  1.7555E+05  4.0158E-04  1.7555E+05  0.000E+00  8.881E+01
+1.492335E-02  3.18714E+00  6.2786E+00  1.7204E+05  5.4136E-04  1.7204E+05  0.000E+00  8.308E+01
+1.595306E-02  3.52819E+00  6.5531E+00  1.6797E+05  7.2588E-04  1.6797E+05  0.000E+00  7.772E+01
+1.705382E-02  3.89415E+00  6.8134E+00  1.6337E+05  9.6809E-04  1.6337E+05  0.000E+00  7.270E+01
   ...
 \end{lstlisting}
 Binary files should be of type "float" (i.e. REAL*32) and "double" (i.e. REAL*64),
@@ -382,7 +407,7 @@ The $filename$ is first searched into the current directory (and all user additi
 A usage example for this library part may be:
 \begin{lstlisting}[language=C]
   t_Table Table;       // declare a t_Table structure
-  char file[]="BeO.trm";  // a file name
+  char file[]="Rh.txt";  // a file name
   double x,y;
 
   Table_Read(&Table, file, 1);  // initialize and read the first numerical block
@@ -472,12 +497,15 @@ Name & Value & Conversion from & Conversion to \\ \hline
   & Planck constant, $\hbar$ & \\
 \textvb{PI} & $3.14159265...$
   & $\pi$ & \\
-\textvb{FLT\_MAX} & 3.40282347E+38F
-  & a big float value & \\
+%\textvb{FLT\_MAX} & 3.40282347E+38F
+%         & a big float value & \\
 \textvb{CELE} & 1.602176487e-19 & Elementary charge (C) &\\
 \textvb{M\_C} & 299792458 & Speed of light in vacuum (m/s) &\\
+\textvb{NA} & 6.02214179e23 &  Avogadro's number (\#atoms/g$\cdot$mole)&\\
+\textvb{RE} & 2.8179402894e-5 &  Thomson scattering length (AA)&\\
 \textvb{E2K} & 0.506773091264796 & Wavenumber (1/AA) & Energy (keV)\\
 \textvb{K2E} & 1.97326972808327  & Energy (keV) & Wavenumber (1/AA)\\
+
 
 \hline
 \end{tabular}

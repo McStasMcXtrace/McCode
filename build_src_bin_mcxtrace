@@ -26,3 +26,26 @@ fi
 ./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 "" -- src bin
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" linux32 "o" -- src bin
 
+#build metapackages?
+if [ "x$2" != "x" ]; then
+  cd meta-pkgs/src
+        
+  outfile=mcxtrace-${1}-UNIX-src.tar
+  if [ -e $outfile ]; then
+    rm $outfile;
+  fi
+  if [ -e ${outfile}.gz ]; then
+    rm ${outfile}.gz;
+  fi
+
+  ln -s ../../dist ${outfile%.tar}
+  echo  ${outfile%.tar}
+
+  for subpkg in `ls ${outfile%.tar}/mcxtrace*-${1}-src.tar.gz`
+  do
+    tar -h -rf $outfile $subpkg
+  done
+  tar -tf $outfile
+  gzip $outfile
+  rm mcxtrace-${1}-UNIX-src
+fi

@@ -20,9 +20,9 @@ AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 CreateAppDir=no
-LicenseFile=license_etc\COPYING.rtf
-InfoBeforeFile=license_etc\Description.rtf
-InfoAfterFile=license_etc\Description.rtf
+LicenseFile=license_mcx\COPYING.txt
+InfoBeforeFile=license_mcx\Welcome.txt
+InfoAfterFile=license_mcx\Description.txt
 OutputBaseFilename=setup
 Compression=lzma
 SolidCompression=yes
@@ -31,12 +31,13 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "Support\strawberry-perl-5.18.2.1-64bit.msi"; DestDir: "{tmp}"
+;Source: "Support\strawberry-perl-5.18.2.1-64bit.msi"; DestDir: "{tmp}"
 Source: "Support\PPDs.zip"; DestDir: "{tmp}"
 Source: "Support\unzip.exe"; DestDir: "{tmp}"
 Source: "Support\unzip32.dll"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-comps-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
+Source: "dist\mcxtrace-manuals-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-tools-perl-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-tools-python-mxrun-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 Source: "dist\mcxtrace-tools-python-mxplot-chaco-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
@@ -44,11 +45,12 @@ Source: "dist\mcxtrace-tools-python-mxplot-matplotlib-NSIS-@VERSION@-mingw64.exe
 Source: "dist\mcxtrace-tools-python-mxdisplay-NSIS-@VERSION@-mingw64.exe"; DestDir: "{tmp}"
 
 [Run]
-Filename: "msiexec"; Parameters: "/i {tmp}\strawberry-perl-5.18.2.1-64bit.msi"
+;Filename: "msiexec"; Parameters: "/i {tmp}\strawberry-perl-5.18.2.1-64bit.msi"
 Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\PPDs.zip"
 Filename: "{tmp}\PPDs\postsetup.bat"
 Filename: "{tmp}\mcxtrace-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-comps-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
+Filename: "{tmp}\mcxtrace-manuals-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-tools-perl-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-tools-python-mxrun-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"
 Filename: "{tmp}\mcxtrace-tools-python-mxplot-chaco-NSIS-@VERSION@-mingw64.exe"; Parameters: "/S"

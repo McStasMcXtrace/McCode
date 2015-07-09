@@ -7,17 +7,17 @@ As a complement to this chapter and the
 detailed description in the \MCX component manual,
 you may use the \verb+mxdoc -s+ command to obtain the on-line
 component documentation and refer to the McXtrace web-page~\cite{mcxtrace_webpage}
-where all components are documented using the MxDoc system.
+where all components are documented using the MxDoc\index{Tools!mxdoc} system.
 
 \section{A short overview of the \MCX\ component library}
 \label{s:comp-overview}
 
 The table in this section gives a quick overview of available \MCX\ components
-provided with the distribution, in the \verb+MCXTAS+ library. The
+provided with the distribution, in the \verb+MCXTRACE+ library. The
 location of this library is detailed in section~\ref{s:files}.
 All of them are believed to be reliable, and some amount of systematic
 tests have been carried out.
-However, no absolute guaranty may be given concerning their accuracy.\index{Environment variable!MCXTAS}
+However, no absolute guarantee be given concerning their accuracy.\index{Environment variable!MCXTAS}
 
 The \verb+contrib+ directory of the library contains components
 that were submitted by \MCX users,
@@ -37,7 +37,7 @@ as well as the documentation of specific components, e.g with:
   \verb|mxdoc --text| \textit{name} \\
   \verb|mxdoc| \textit{file.comp}
 \end{quote}
-The first line will search for all components matching the \textit{name}, and display their help section as text, where as the second example will display the help corresponding to the \textit{file.comp} component, using your BROWSER\index{Environment variable!BROWSER} setting, or as text if unset. The \verb+--help+ option will display the command help, as usual.
+The first line will search for all components matching \textit{name}, and display their help section as text, where as the second example will display the help corresponding to the \textit{file.comp} component, using your BROWSER\index{Environment variable!BROWSER} setting, or as text if unset. The \verb+--help+ option will display the command help, as usual.
 
 \begin{table}
   \begin{center}
@@ -70,7 +70,7 @@ Source\_lab & Full featured model of a laboratory X-ray source.\\
        \hline
  Arm                &  Arm/optical bench. \\
  Beamstop          &   Rectangular/circular beam stop. \\
- Filter        &   A general absorption filterm which can be any material. \\
+ Filter        &   A general absorption filter which can be any material. \\
  Lens\_simple & Model of a thin compound refractive lens\\
  Lens\_parab  & Detailed model of a parabolic compound refractive lens of any material\\
  Mirror\_curved & Cylindrically curved mirror with scalar reflectivity\\
@@ -120,19 +120,17 @@ Source\_lab & Full featured model of a laboratory X-ray source.\\
        {\bfseries McXtrace/monitors} & Description \\
        \hline
 %DivLambda\_monitor &  Divergence/wavelength monitor. \\
-DivPos\_monitor  &    Divergence/position monitor (acceptance diagram). \\
-Divergence\_monitor &  Horizontal+vertical
-                    divergence monitor (2D). \\
-%EPSD\_monitor    &    A monitor measuring neutron intensity vs. position, x,
-%                    and neutron energy, E. \\
+%DivPos\_monitor  &    Divergence/position monitor (acceptance diagram). \\
+%Divergence\_monitor &  Horizontal+vertical divergence monitor (2D). \\
+EPSD\_monitor    &    A monitor measuring x-ray intensity vs. position,\\
+       &but restricted to a particular energy interval.\\
 E\_monitor       &    Energy-sensitive monitor. \\
 %Hdiv\_monitor    &    Horizontal divergence monitor \\
 L\_monitor        &  Wavelength-sensitive monitor. \\
 Monitor          &   Simple single detector/monitor. \\
-%Monitor\_4PI     &    Monitor that detects ALL non-absorbed neutron rays. \\
-%Monitor\_nD      &   General monitor that can output
-%                    0/1/2D signals (Intensity or signal vs. [something]
-%                    and vs. [something] ...). \\
+Monitor\_nD      &   General monitor that can output
+                    0/1/2D signals (Intensity or signal vs. [something]
+                    and vs. [something] ...). \\
 PSD\_monitor     &    Position-sensitive monitor. \\
 PSD\_monitor\_4PI  &   Spherical position-sensitive detector. \\
 %PSDcyl\_monitor  &    A 2D position-sensitive monitor. The shape is
@@ -227,8 +225,11 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
       \hline
        {\bfseries \MCX/data} & Description \\
        \hline
- Al.txt, Al.txt, Be.txt, Cu.txt, Fe.txt, I.txt, Mo.txt, Si.txt, Sn.txt & Data files from the NIST-database to be used for absorption and refraction.\\
- get\_xray\_db\_data & script to access NIST-database.\\  
+       Al.txt, He.txt, etc. & Data files from the NIST-database (covering the elements with $Z\in[1..92]$) to be used for absorption and refraction.\\
+       Fe\_bpy\_ES\_DFT.txt, Fe\_bpy\_GS\_DFT.txt & Ground- and excited state atom positions of Iron tris bipyridine for use with \verb+Molecule\_2state+.\\
+       FormFactors.txt & Atomic form factors for elements with $Z\in[1..92]$.\\
+       Ref\_W\_B4C.txt & Reflectivity of a W-B4C multilayer.\\
+       Ref\_W\_Si.txt &  Reflectivity of a W-Si multilayer.\\
 \hline
     \end{tabular}
     \caption{Data files of the \MCX library.}
@@ -245,10 +246,18 @@ TOF\_monitor     &    Rectangular Time-of-flight monitor. \\
       \hline
        {\bfseries \MCX/examples} & Description \\
       \hline
-      *.instr & This directory contains example instruments, accessible throught the \verb+mxgui+ ``X-ray site'' menu. \\
+%      Test\_*.instr & Unit test instrument models designed to verify the workings of various component models. Also they are useful as a starting point for figuring out how to use a particular component.\\
+      JJ\_SAXS.instr & A model of the SAXSlab laboratory SAXS-system which was a prototype of the one currently sold by SAXSlab.\\
+      Pump\_probe & Generic pump-probe experiment instrument.\\
+      NSLS2\_CHX.instr & Model of the CHX hard X-ray beamline at NSLS2.\\
+      MAXII\_811.instr & Surface diffraction and EXAFS-bealine at MAXlab\\
+      MAXII\_711.instr & Powder diffraction beamline at MAXlab.\\
+      ESRF\_ID11.instr & The ESRF ID11 3DXRD beamline.\\
+      Be\_BM\_beamline.instr & Design study of a bending magnet beamline using refractive lenses and a slit as monochromator.\\
+      XFEL\_SPB.instr & Model of the beamtransport system of the SPB beamline at XFEL.\\ 
       \hline
     \end{tabular}
-    \caption{Instrument example files of the \MCX library.}
+    \caption{Instrument example files of the \MCX library. These example instruments are accessible through the \texttt{mxgui} ``X-ray site'' menu.}
     \label{t:comp-instr}
     \index{Library!Instruments}
     }

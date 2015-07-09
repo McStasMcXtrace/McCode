@@ -31,3 +31,15 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" linux32 "" -- deb
 ./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 "" -- deb
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" linux32 "o" -- deb
+
+#build metapackages?
+if [ "x$2" != "x" ]; then
+  cd meta-pkgs/deb
+
+  for controlfile in `ls control.mcxtrace*`
+  do
+    sed -i.bak s/@VERSION@/${1}/g $controlfile
+    equivs-build $controlfile
+    mv $controlfile.bak $controlfile
+  done
+fi

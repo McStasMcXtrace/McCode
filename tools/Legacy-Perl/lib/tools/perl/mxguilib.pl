@@ -530,7 +530,7 @@ sub plot_dialog {
     }
     push @plot_cmd, "$plotcmd$suffix";
     push @plot_cmd, $sim_file_name;
-    push @plot_cmd, "--format=$MCSTAS::mcstas_config{'PLOTTER'}"
+    push @plot_cmd, "--format=$MCSTAS::mcstas_config{'PLOTTER'}";
     my $cmd=join(' ',@plot_cmd);
     spawn_external($w, $cmd);
 

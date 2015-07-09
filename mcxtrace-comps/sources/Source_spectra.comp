@@ -1,0 +1,287 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         University of Copenhagen, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Source_spectra
+*
+* %I
+* Written by: Erik Knudsen 
+* Date: November 11, 2009
+* Version: $Revision$
+* Origin: Risoe
+* Release: McXtrace 0.1
+*
+* Specialized X-ray source for reading in SPECTRA source definitions
+*
+* %D
+*
+* This is a source component for connecting SPECTRA -output files with McXtrace.
+* 
+* Example: Source_spectra(xwidth=0.1, yheight=0.1, focus_aw=2, focus_ah=2, E0=14, dE=2, gauss=0)
+*
+* %VALIDATION
+*
+* %BUGS
+*
+* %P
+* xwidth:   (m)  Width of source.
+* yheight:  (m)  Height of source.
+* focus_aw:(rd) Standard deviation (Gaussian) or maximal (uniform) horz. width divergence.
+* focus_ah:(rd) Standard deviation (Gaussian) or maximal (uniform) vert. height divergence.
+* E0:      (keV) Mean energy of X-rays.
+* dE:      (keV) Energy spread of X-rays.
+* lambda0: (AA) Mean wavelength of X-rays (only relevant for E0=0).
+* dlambda: (AA) Wavelength half spread of X-rays.
+* gauss:  (1)  Criterion: 0: uniform, 1: Gaussian distribution of energy/wavelength.
+* gauss_a:   (1) Criterion: 0: uniform, 1: Gaussian divergence distribution.
+* flux:   (1/(s * mm**2 *mrad**2 * energy unit)) flux per energy unit, Angs or keV.
+* incoherent (1) Deprecated, please use randomphase instead.
+* randomphase (1) If !=0 the photon phase is chosen randomly.
+* phase (1) Value of the photon phase (only used if randomphase!=0).
+* verbose (1) If non-zero output more warning messages. 
+*
+* OUTPUT PARAMETERS:
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Source_spectra
+DEFINITION PARAMETERS (int brilliance_column=2, int nE, string spectra_stem_x="", string spectra_stem_y="", string spectra_suffix="dsc", verbose=0)
+SETTING PARAMETERS ( 
+    E0=0, dE=0, Emin,Emax, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, incoherent=1, randomphase=1, phase=0,
+    nx=51,ny=51,npx=51,npy=51)
+OUTPUT PARAMETERS (prms, dist)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+SHARE
+%{
+  %include "read_table-lib";
+
+  int source_spectra_find_offset(char * fn){
+    /*find the first line that starts with [-0-9], i.e. can be considered a number*/
+    char line[512];
+    long pos;
+    double tmp;
+    FILE *fs;
+
+    fs=fopen(fn,"rb");
+
+    line[0]='\0';
+    pos=ftell(fs);
+    fgets(line,512,fs);
+    while ( !(sscanf(line,"%f",&tmp)) ){
+      pos=ftell(fs);
+      fgets(line,512,fs);
+      if (feof(fs)){
+        fprintf(stderr,"Error (Source_spectra): Could not strip header from file %s\n");
+        exit(-1);
+      }
+    }
+    fclose(fs);
+    return pos;
+  }
+
+%}
+
+DECLARE
+%{
+  char *spectra_init_calc="" "";
+
+  double  dist;
+  struct {
+    double K,dK,pmul,pint;
+    t_Table xproj[nE],yproj[nE];
+    double Ix[nE],Iy[nE];
+    double xmin,xmax,ymin,ymax,xpmin,xpmax,ypmin,ypmax;
+    double xstep,ystep,xpstep,ypstep;
+  } prms;
+
+%}
+
+INITIALIZE
+%{
+
+
+  /*read the bunch of spectra files i fthey exist - if not try to call spectra to generate them.*/
+  /*They might be big - assume them to be x-y-projections*/
+  int num,status,offset;
+  char fn[256]="";
+  if (strlen(spectra_stem_x)==0 || strlen(spectra_stem_y)==0){
+    fprintf(stderr,"Error (%s): No generic path/s to the spectra file/s given. Aborting.\n",NAME_CURRENT_COMP);
+    exit(-1);
+  }
+  for (num=0;num<nE;num++){
+    sprintf(fn,"%s-%d.%s",spectra_stem_x,num+1,spectra_suffix);
+    if(num==0){
+      /*find the offset fpr the spectra files*/
+      offset=source_spectra_find_offset(fn);
+    }
+    if ( (status=Table_Read(&(prms.xproj[num]),fn,0))==-1){
+      fprintf(stderr,"Source_spectra(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,fn);
+      exit(-1);
+    }
+    sprintf(fn,"%s-%d.%s",spectra_stem_y,num+1,spectra_suffix);
+    if ( (status=Table_Read(&(prms.yproj[num]),fn,0))==-1){
+      fprintf(stderr,"Source_spectra(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,fn);
+      exit(-1);
+    }
+    
+    prms.Ix[num]=prms.Iy[num]=0;
+    /*sum the brilliances to get something to normalize to*/
+    int r;
+    for (r=0;r<prms.xproj[num].rows;r++){
+      prms.Ix[num]+=Table_Index(prms.xproj[num],r,brilliance_column);//prms.xproj.data[r*prms.xproj.columns+ brilliance_column];
+
+    }
+    for (r=0;r<prms.yproj[num].rows;r++){
+      prms.Iy[num]+=Table_Index(prms.yproj[num],r,brilliance_column);//prms.yproj.data[r*prms.yproj.columns+ brilliance_column];
+    }
+    if (verbose && prms.Ix[num]!=prms.Iy[num]){
+      fprintf(stderr,"Warning (%s): Integrated intensities do not match up for x and y projections at num %d\n",NAME_CURRENT_COMP,num);
+    }
+    printf("\\int I [%d] = (%g,%g)\n",num,prms.Ix[num],prms.Iy[num]); 
+
+  }
+  /*find limits in x,x',y, and y', assuming they're the same across all source files.*/
+  /*these would be relevant for a search*/
+  //prms.xmin=prms.xpmin=prms.ymin=prms.ypmin=FLT_MAX;
+  //prms.xmax=prms.xpmax=prms.ymax=prms.ypmax=FLT_MIN;
+  t_Table *xptr=&(prms.xproj[0]);
+  t_Table *yptr=&(prms.yproj[0]);
+  prms.xmin=Table_Index(*xptr,0,0);
+  prms.xpmin=Table_Index(*xptr,0,1);
+  prms.ymin=Table_Index(*yptr,0,0);
+  prms.ypmin=Table_Index(*yptr,0,1);
+  prms.xmax=Table_Index(*xptr,nx-1,0);
+  prms.xpmax=Table_Index(*xptr,nx*npx-1,1);
+  prms.ymax=Table_Index(*yptr,ny-1,0);
+  prms.ypmax=Table_Index(*yptr,ny*npy-1,1);
+  prms.xstep=Table_Index(*xptr,1,0)-Table_Index(*xptr,0,0);
+  prms.xpstep=Table_Index(*xptr,nx,1)-Table_Index(*xptr,0,1);
+  prms.ystep=Table_Index(*yptr,1,0)-Table_Index(*yptr,0,0);
+  prms.ypstep=Table_Index(*yptr,ny,1)-Table_Index(*yptr,0,1);
+
+  if (incoherent!=randomphase){
+    fprintf(stderr,"Warning(%s): Parameter incoherent=%d overridden by randomphase=%d\n",NAME_CURRENT_COMP,(int)incoherent, (int) randomphase);
+    incoherent=randomphase;
+  }
+
+  if(E0-dE<Emin || E0+dE>Emax){
+    fprintf(stderr,"Warning(%s): Sampled energy interval (%g+-%g keV) reaches outside what\'s defined by datafiles (%g+-%g keV)\n",NAME_CURRENT_COMP,E0,dE,(Emin+Emax)*0.5,(Emax-Emin)*0.5);
+  }
+
+
+%}
+
+TRACE
+%{
+  double kk,theta_x,theta_y,l,e,k,xp,yp;
+  int num,ix,ipx,iy,ipy;
+  double alpha,beta,Iinterpx,Iinterpy;
+  t_Table *xptr,*yptr;
+  
+  p=prms.pmul;
+  theta_x=(prms.xpmin + rand01()*(prms.xpmax-prms.xpmin))*1e-3;
+  theta_y=(prms.ypmin + rand01()*(prms.ypmax-prms.ypmin))*1e-3;
+  
+  x=(prms.xmin+rand01()*(prms.xmax-prms.xmin))*1e-3;
+  y=(prms.ymin+rand01()*(prms.ymax-prms.ymin))*1e-3;
+
+  /*So now interpolate to get at Brilliance values*/
+  /*Need to normalize to something*/
+  
+  /*pick an energy randomly*/
+  e=rand01()*2*dE+(E0-dE);
+
+  num=floor( (e-Emin)/(Emax-Emin)*(nE-1) + 0.5);
+  if (num<0) num=0;
+  if (num>nE-1) num=nE-1;
+  if ( prms.Ix[num]==0 || prms.Iy[num]==0 ){
+    ABSORB;
+  }
+
+  /*downweight for not using the full energy window. Don't do this for deterministic energy (dE=0).*/
+  if(dE && ( (E0-dE>Emin) || E0+dE<Emax) ){
+    p=2*dE/(Emax-Emin);
+  }else{
+    p=1;
+  }
+
+  k=E2K*e;
+
+  kx=tan(theta_x);
+  ky=tan(theta_y);
+  kz=1;
+  NORM(kx,ky,kz);
+
+  kx*=k;
+  ky*=k;
+  kz*=k;
+  /*compute xp and yp*/
+  xp=kx/kz*1e3;/*spectra output is in millirad*/
+  yp=ky/kz*1e3;
+  double xx=x*1e3;/*spectra output is in mm*/
+  double yy=y*1e3;
+
+
+  ix  = (int)floor((xx - prms.xmin)*nx/(prms.xmax - prms.xmin));
+  ipx = (int)floor((xp- prms.xpmin)*npx/(prms.xpmax-prms.xpmin));
+  iy  = (int)floor((yy - prms.ymin)*ny/(prms.ymax - prms.ymin));
+  ipy = (int)floor((yp- prms.ypmin)*npy/(prms.ypmax-prms.ypmin));
+  xptr=&(prms.xproj[num]);
+  yptr=&(prms.yproj[num]);
+
+  alpha=( (xx - Table_Index(*xptr,ix,0)) /prms.xstep);/*regular grid so no need to do ix + ipx*nx*/
+  beta=( (xp - Table_Index(*xptr,ipx*nx,1)) /prms.xpstep) ;
+
+  double t0,t1;
+  t0=(1-alpha)*Table_Index(*xptr,ix+ipx*nx,2) + alpha*Table_Index(*xptr,(ix+1)+ipx*nx,2);
+  t1=(1-alpha)*Table_Index(*xptr,ix+(ipx+1)*nx,2) + alpha*Table_Index(*xptr,(ix+1)+(ipx+1)*nx,2);
+  Iinterpx = (1-beta)*t0+beta*t1;
+  
+  alpha=( (yy - Table_Index(*yptr,iy,0)) /prms.ystep);/*regular grid so no need to do ix + ipx*nx*/
+  beta=( (yp - Table_Index(*yptr,ipy*ny,1)) /prms.ypstep) ;
+
+  t0=(1-alpha)*Table_Index(*yptr,iy+ipy*ny,2) + alpha*Table_Index(*yptr,(iy+1)+ipy*ny,2);
+  t1=(1-alpha)*Table_Index(*yptr,iy+(ipy+1)*ny,2) + alpha*Table_Index(*yptr,(iy+1)+(ipy+1)*ny,2);
+  Iinterpy = (1-beta)*t0+beta*t1;
+
+  p*=Iinterpx/prms.Ix[num] * Iinterpy/prms.Iy[num] * (prms.Ix[num]+prms.Iy[num])*0.5;
+
+
+
+  /*set polarization and phase to something known*/
+  Ex=0;Ey=0;Ez=0;
+  if (!randomphase){
+    phi=0;
+  }else{
+    phi=rand01()*M_2_PI;
+  }
+
+  /*set polarization vector*/
+  Ex=0;Ey=0;Ez=0;
+
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  double dist=1;
+  multiline(5, prms.xmin, prms.ymin, 0.0,
+      prms.xmax, prms.ymin, 0.0,
+      prms.xmax, prms.ymax, 0.0,
+      prms.xmin, prms.ymax, 0.0,
+      prms.ymin, prms.ymin, 0.0);
+
+  dashed_line(0,0,0, tan(prms.xpmax)*dist,0,dist,4);
+  dashed_line(0,0,0, tan(prms.xpmin)*dist,0,dist,4);
+    
+  dashed_line(0,0,0, 0,tan(prms.ypmax)*dist,dist,4);
+  dashed_line(0,0,0, 0,tan(prms.ypmin)*dist,dist,4);
+%}
+
+END
