@@ -494,14 +494,20 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   );
   vtxArray   = malloc(vtxSize*sizeof(Coords));
   if (!vtxArray) return(0);
-
-  for(i=0; i<vtxSize; ++i)
+  i=0;
+  while (i<vtxSize && ~feof(f))
   {
     double x,y,z;
     ret=fscanf(f, "%lg%lg%lg", &x,&y,&z);
+    if (!ret) { 
+      // invalid line: we skip it (probably a comment)
+      char line[CHAR_BUF_LENGTH];
+      fgets(line, CHAR_BUF_LENGTH, f);
+      continue; 
+    }
     if (ret != 3) {
-      fprintf(stderr, "Error: can not read [xyz] coordinates for vertex %li in file %s (interoff/off_init)\n", 
-        i, offfile);
+      fprintf(stderr, "Error: can not read [xyz] coordinates for vertex %li in file %s (interoff/off_init). Read %i values.\n", 
+        i, offfile, ret);
       exit(2);
     }
     vtxArray[i].x=x;
@@ -515,6 +521,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     if (vtxArray[i].y>maxy) maxy=vtxArray[i].y;
     if (vtxArray[i].z<minz) minz=vtxArray[i].z;
     if (vtxArray[i].z>maxz) maxz=vtxArray[i].z;
+    i++; // inquire next vertex
   }
 
   // resizing and repositioning params
@@ -574,10 +581,17 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
   
   // fill faces
   faceSize=0;
-  for(i=0; i<polySize; ++i) {
+  i=0;
+  while (i<polySize && ~feof(f)) {
     int  nbVertex=0, j=0;
     // read the length of this polygon
     ret=fscanf(f, "%d", &nbVertex);
+    if (!ret) { 
+      // invalid line: we skip it (probably a comment)
+      char line[CHAR_BUF_LENGTH];
+      fgets(line, CHAR_BUF_LENGTH, f);
+      continue; 
+    }
     if (ret != 1) {
       fprintf(stderr, "Error: can not read polygon %i length in file %s (interoff/off_init)\n", 
         i, offfile);
@@ -594,6 +608,7 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
       fscanf(f, "%lg", &vtx);
       faceArray[faceSize++] = vtx;   // add vertices index after length of polygon
     }
+    i++;
   }
 
   // precomputes normals
