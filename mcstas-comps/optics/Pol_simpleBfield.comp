@@ -89,8 +89,8 @@
 * Bx:      [T]       Parameter used for x composant of field.
 * By:      [T]       Parameter used for y composant of field.
 * Bz:      [T]       Parameter used for z composant of field.
-* fieldFunction [pointer] Function describing the magnetic field.
-* filename []        file where the magnetic field is tabulated.
+* fieldFunction: [pointer] Function describing the magnetic field.
+* filename: []        file where the magnetic field is tabulated.
 *
 * OUTPUT PARAMETERS:
 *
@@ -110,18 +110,9 @@ OUTPUT PARAMETERS(magnet, parPtr)
 
 SHARE
 %{
-  %include "read_table-lib"
-  %include "interpolation"
   %include "pol-lib"
   double fmax(double, double);
   double fmin(double, double);
-
-/*
-  int table_magnetic_field(double x, double y, double z, double t, double *bx, double *by, double *bz, void *data){
-    interpolate3x3( (treeNode *) data, x,y,z, bx, by, bz); 
-  }
-  */
-
 %}
 
 
@@ -134,7 +125,7 @@ DECLARE
 
 INITIALIZE
 %{
-
+  /* these default field functions are part of pol-lib */
   if (fieldFunction==const_magnetic_field){
     double *t=malloc(3*sizeof(double));
     t[0]=Bx;

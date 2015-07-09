@@ -32,7 +32,7 @@
 #include<sys/stat.h>
 
 %include "read_table-lib"
-%include "interpolation"
+%include "interpolation-lib"
 
 enum {MCMAGNET_STACKSIZE=12} mcmagnet_constants;
 

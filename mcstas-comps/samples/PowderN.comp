@@ -301,7 +301,7 @@ SHARE
     int    list_count=0;
 
     if (!SC_file || !strlen(SC_file) || !strcmp(SC_file, "NULL")) {
-      printf("PowderN: %s: Using incoherent elastic scattering only\n",
+      printf("PowderN: %s: Using incoherent elastic scattering only.\n",
           info->compname);
       info->count = 0;
       return(0);

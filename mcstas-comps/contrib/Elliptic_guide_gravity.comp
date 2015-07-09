@@ -323,7 +323,7 @@ void guide_elliptical_callCriticalWarning(char func[],int verbose){
 		printf("A CRITICAL WARNING has been called inside %s by function %s." 
 			"This is most likely due to a programming error \
 			inside the component. \n",
-			NAME_CURRENT_COMP,func,NAME_CURRENT_COMP);
+			NAME_CURRENT_COMP,func);
 	}
 
 ///////////////////////////////////////////////////////////////////////////

@@ -48,20 +48,7 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xw:      [m]       Width of opening. 
-* yh:      [m]       Height of opening. 
-* length:  [m]       Length of field.
-* Bx:      [T]       Parameter used for x composant of field.
-* By:      [T]       Parameter used for y composant of field.
-* Bz:      [T]       Parameter used for z composant of field.
-* nx:      [1]       Number of field points to draw along x axis.
-* ny:      [1]       Number of field points to draw along y axis.
-* nz:      [1]       Number of field points to draw along z axis.
-* fieldFunction: [pointer] Function describing the magnetic field.
-*
-* OUTPUT PARAMETERS:
-*
-* parPtr:         Pointer to component magnet parameters (pointer)
+* magnet_comp_stop: [no quotes] name of the component indicating start of the magnet volume.
 *
 * %E
 ****************************************************************************/
@@ -75,8 +62,6 @@ OUTPUT PARAMETERS()
 SHARE
 %{
   %include "pol-lib"
-  double fmax(double, double);
-  double fmin(double, double);
 %}
 
 TRACE
