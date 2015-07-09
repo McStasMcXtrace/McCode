@@ -32,7 +32,7 @@ if [ "x$2" != "x" ]; then
     # Build the meta-packages also
     cd meta-pkgs/windows/Support
     if [ ! -f PPDs.zip ]; then
-	download.sh http://ppds.mccode.org/PPDs.zip
+	wget http://ppds.mccode.org/PPDs.zip
     fi
     cd ..
     
