@@ -16,7 +16,7 @@
 * Table interpolation routines
 *
 * Usage: Automatically embbeded in the c code whenever required, with e.g.:
-*   %include "interpolation.c"
+*   %include "interpolation-lib"
 *
 * public function:
 * interpolator = interpolator_load(filename, 0, 0, NULL);
@@ -25,7 +25,7 @@
 *
 * interpolator_info(interpolator);
 * 
-* interpolator_interpolate(interpolator, {x,y,z...}, &{bx,by,bz...});
+* interpolator_interpolate(interpolator, {x,y,z...}, {bx,by,bz...});
 *   or 
 * interpolator_interpolate3_3(interpolator, x,y,z, &bx,&by,&bz);
 * 
