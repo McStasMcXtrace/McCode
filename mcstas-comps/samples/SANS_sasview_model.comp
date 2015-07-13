@@ -87,8 +87,8 @@
 * my_a:         Attenuation factor due to absorbtion (m^-1)
 *
 * %Link
-* <link to sasview models documentation>
-*
+* http://www.sasview.org/sasview/user/models/model_functions.html
+* 
 * %E
 *******************************************************************************/
 
