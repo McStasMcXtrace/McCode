@@ -31,10 +31,33 @@
 *               to it.
 *
 *               Models:
-*               0 - None 
-*               1 - sas_sphere32_MsCEvQ.c    (IQ_PARAMETER_DECLARATIONS) 
-*               2 - sas_cylinder32_W1213X.c    (sld, solvent_sld, radius, length) 
-*               3 - sas_bcc_paracrystal32_IffCrP.c    (dnn, d_factor, radius, sld, solvent_sld) 
+*                0 - None 
+*                1 - sas_core_shell_cylinder32_7dsS5z.c (core_sld, shell_sld, solvent_sld, radius, thickness, length) 
+*                2 - sas_lamellarCailleHG32_YMPxp7.c    (tail_length, head_length, Nlayers, dd, Cp, tail_sld, head_sld, solvent_sld) 
+*                3 - sas_lamellar32_6RVlIH.c            (sld, solvent_sld, thickness) 
+*                4 - sas_parallelepiped32_4bSc95.c      (sld, solvent_sld, a_side, b_side, c_side) 
+*                5 - sas_bcc_paracrystal32_m6mbhn.c     (dnn, d_factor, radius, sld, solvent_sld) 
+*                6 - sas_lamellarPC32_uZ9el7.c          (th, Nlayers, davg, pd, sld, solvent_sld) 
+*                7 - sas_barbell32_kbqWfA.c             (sld, solvent_sld, bell_radius, radius, length) 
+*                8 - sas_sphere32_MsCEvQ.c              (sld, solvent_sld, radius) 
+*                9 - sas_bcc_paracrystal32_qJBt8P.c     (dnn, d_factor, radius, sld, solvent_sld) 
+*               10 - sas_fcc_paracrystal32_XguHmt.c     (dnn, d_factor, radius, sld, solvent_sld) 
+*               11 - sas_barbell32_0zkew9.c             (sld, solvent_sld, bell_radius, radius, length) 
+*               12 - sas_capped_cylinder32_gnYw8c.c     (sld, solvent_sld, radius, cap_radius, length) 
+*               13 - sas_triaxial_ellipsoid32_7ZHc5D.c  (sld, solvent_sld, req_minor, req_major, rpolar) 
+*               14 - sas_cylinder32_VxZ4PD.c            (sld, solvent_sld, radius, length) 
+*               15 - sas_HayterMSAsq32_J3F_Y2.c         (effect_radius, zz, VolFrac, Temp, csalt, dialec) 
+*               16 - sas_cylinder32_W1213X.c            (sld, solvent_sld, radius, length) 
+*               17 - sas_bcc_paracrystal32_IffCrP.c     (dnn, d_factor, radius, sld, solvent_sld) 
+*               18 - sas_HayterMSAsq32_zO1ror.c         (effect_radius, zz, VolFrac, Temp, csalt, dialec) 
+*               19 - sas_lamellarPS32_hjLemS.c          (del, Nlayers, dd, Cp, sld, solvent_sld) 
+*               20 - sas_sphere32_EK1MLR.c              (sld, solvent_sld, radius) 
+*               21 - sas_hardsphere32_9U9Ub7.c          (effect_radius, volfraction) 
+*               22 - sas_gaussian_peak32_yZtN6R.c       (q0, sigma) 
+*               23 - sas_ellipsoid32_fTHLZo.c           (sld, solvent_sld, rpolar, requatorial) 
+*               24 - sas_stickyhardsphere32_qzzAA4.c    (effect_radius, volfraction, perturb, stickiness) 
+*               25 - sas_sphere32_H4n7Yt.c              (sld, solvent_sld, radius) 
+*               26 - sas_dab32_5OZC_6.c                 (length) 
 * 
 * model_pars:   The sasview model parameters. These must be ordered correctly wrt. the sasview 
 *               documentation, and be called on the form (ex.): model_pars={1.0, 2.0, 3.0, ...}
@@ -101,13 +124,82 @@ DECLARE
   // include the appropriate sasview model file
   // AUTOGEN_A
   #if model_index == 1 
-    #include _org_model_files/sas_sphere32_MsCEvQ.c 
+    #include SANS_sasview_model_files/sas_core_shell_cylinder32_7dsS5z.c 
   #endif 
   #if model_index == 2 
-    #include _org_model_files/sas_cylinder32_W1213X.c 
+    #include SANS_sasview_model_files/sas_lamellarCailleHG32_YMPxp7.c 
   #endif 
   #if model_index == 3 
-    #include _org_model_files/sas_bcc_paracrystal32_IffCrP.c 
+    #include SANS_sasview_model_files/sas_lamellar32_6RVlIH.c 
+  #endif 
+  #if model_index == 4 
+    #include SANS_sasview_model_files/sas_parallelepiped32_4bSc95.c 
+  #endif 
+  #if model_index == 5 
+    #include SANS_sasview_model_files/sas_bcc_paracrystal32_m6mbhn.c 
+  #endif 
+  #if model_index == 6 
+    #include SANS_sasview_model_files/sas_lamellarPC32_uZ9el7.c 
+  #endif 
+  #if model_index == 7 
+    #include SANS_sasview_model_files/sas_barbell32_kbqWfA.c 
+  #endif 
+  #if model_index == 8 
+    #include SANS_sasview_model_files/sas_sphere32_MsCEvQ.c 
+  #endif 
+  #if model_index == 9 
+    #include SANS_sasview_model_files/sas_bcc_paracrystal32_qJBt8P.c 
+  #endif 
+  #if model_index == 10 
+    #include SANS_sasview_model_files/sas_fcc_paracrystal32_XguHmt.c 
+  #endif 
+  #if model_index == 11 
+    #include SANS_sasview_model_files/sas_barbell32_0zkew9.c 
+  #endif 
+  #if model_index == 12 
+    #include SANS_sasview_model_files/sas_capped_cylinder32_gnYw8c.c 
+  #endif 
+  #if model_index == 13 
+    #include SANS_sasview_model_files/sas_triaxial_ellipsoid32_7ZHc5D.c 
+  #endif 
+  #if model_index == 14 
+    #include SANS_sasview_model_files/sas_cylinder32_VxZ4PD.c 
+  #endif 
+  #if model_index == 15 
+    #include SANS_sasview_model_files/sas_HayterMSAsq32_J3F_Y2.c 
+  #endif 
+  #if model_index == 16 
+    #include SANS_sasview_model_files/sas_cylinder32_W1213X.c 
+  #endif 
+  #if model_index == 17 
+    #include SANS_sasview_model_files/sas_bcc_paracrystal32_IffCrP.c 
+  #endif 
+  #if model_index == 18 
+    #include SANS_sasview_model_files/sas_HayterMSAsq32_zO1ror.c 
+  #endif 
+  #if model_index == 19 
+    #include SANS_sasview_model_files/sas_lamellarPS32_hjLemS.c 
+  #endif 
+  #if model_index == 20 
+    #include SANS_sasview_model_files/sas_sphere32_EK1MLR.c 
+  #endif 
+  #if model_index == 21 
+    #include SANS_sasview_model_files/sas_hardsphere32_9U9Ub7.c 
+  #endif 
+  #if model_index == 22 
+    #include SANS_sasview_model_files/sas_gaussian_peak32_yZtN6R.c 
+  #endif 
+  #if model_index == 23 
+    #include SANS_sasview_model_files/sas_ellipsoid32_fTHLZo.c 
+  #endif 
+  #if model_index == 24 
+    #include SANS_sasview_model_files/sas_stickyhardsphere32_qzzAA4.c 
+  #endif 
+  #if model_index == 25 
+    #include SANS_sasview_model_files/sas_sphere32_H4n7Yt.c 
+  #endif 
+  #if model_index == 26 
+    #include SANS_sasview_model_files/sas_dab32_5OZC_6.c 
   #endif 
   // AUTOGEN_END_A
   
@@ -210,18 +302,87 @@ TRACE
     
     // call the appropriate Iq(...)
     // AUTOGEN_B
-    float Iq_answer = 1
+    float Iq_answer = 1 
     #if SASVIEW_MODEL == 0 
       //Iq_answer = NaN; 
     #endif 
     #ifdef model_index == 1 
-      //Iq(q, model_pars[0]) 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]) 
     #endif 
     #ifdef model_index == 2 
-      //Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3]) 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5], model_pars[6], model_pars[7]) 
     #endif 
     #ifdef model_index == 3 
-      //Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+      //Iq_answer = Iq(q, model_pars[0]) 
+    #endif 
+    #ifdef model_index == 4 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #endif 
+    #ifdef model_index == 5 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #endif 
+    #ifdef model_index == 6 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]) 
+    #endif 
+    #ifdef model_index == 7 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #endif 
+    #ifdef model_index == 8 
+      //Iq_answer = Iq(q, model_pars[0]) 
+    #endif 
+    #ifdef model_index == 9 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #endif 
+    #ifdef model_index == 10 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #endif 
+    #ifdef model_index == 11 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #endif 
+    #ifdef model_index == 12 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #endif 
+    #ifdef model_index == 13 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #endif 
+    #ifdef model_index == 14 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3]) 
+    #endif 
+    #ifdef model_index == 15 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]) 
+    #endif 
+    #ifdef model_index == 16 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3]) 
+    #endif 
+    #ifdef model_index == 17 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #endif 
+    #ifdef model_index == 18 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]) 
+    #endif 
+    #ifdef model_index == 19 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]) 
+    #endif 
+    #ifdef model_index == 20 
+      //Iq_answer = Iq(q, model_pars[0]) 
+    #endif 
+    #ifdef model_index == 21 
+      //Iq_answer = Iq(q, model_pars[0]) 
+    #endif 
+    #ifdef model_index == 22 
+      //Iq_answer = Iq(q, model_pars[0]) 
+    #endif 
+    #ifdef model_index == 23 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3]) 
+    #endif 
+    #ifdef model_index == 24 
+      //Iq_answer = Iq(q, model_pars[0]) 
+    #endif 
+    #ifdef model_index == 25 
+      //Iq_answer = Iq(q, model_pars[0]) 
+    #endif 
+    #ifdef model_index == 26 
+      //Iq_answer = Iq(q, model_pars[0]) 
     #endif 
     // AUTOGEN_END_B
     
