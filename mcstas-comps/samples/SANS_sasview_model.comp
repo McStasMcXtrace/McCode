@@ -124,82 +124,82 @@ DECLARE
   // include the appropriate sasview model file
   // AUTOGEN_A
   #if model_index == 1 
-    #include SANS_sasview_model_files/sas_core_shell_cylinder32_7dsS5z.c 
+    #include "SANS_sasview_model_files/sas_core_shell_cylinder32_7dsS5z.c" 
   #endif 
   #if model_index == 2 
-    #include SANS_sasview_model_files/sas_lamellarCailleHG32_YMPxp7.c 
+    #include "SANS_sasview_model_files/sas_lamellarCailleHG32_YMPxp7.c" 
   #endif 
   #if model_index == 3 
-    #include SANS_sasview_model_files/sas_lamellar32_6RVlIH.c 
+    #include "SANS_sasview_model_files/sas_lamellar32_6RVlIH.c" 
   #endif 
   #if model_index == 4 
-    #include SANS_sasview_model_files/sas_parallelepiped32_4bSc95.c 
+    #include "SANS_sasview_model_files/sas_parallelepiped32_4bSc95.c" 
   #endif 
   #if model_index == 5 
-    #include SANS_sasview_model_files/sas_bcc_paracrystal32_m6mbhn.c 
+    #include "SANS_sasview_model_files/sas_bcc_paracrystal32_m6mbhn.c" 
   #endif 
   #if model_index == 6 
-    #include SANS_sasview_model_files/sas_lamellarPC32_uZ9el7.c 
+    #include "SANS_sasview_model_files/sas_lamellarPC32_uZ9el7.c" 
   #endif 
   #if model_index == 7 
-    #include SANS_sasview_model_files/sas_barbell32_kbqWfA.c 
+    #include "SANS_sasview_model_files/sas_barbell32_kbqWfA.c" 
   #endif 
   #if model_index == 8 
-    #include SANS_sasview_model_files/sas_sphere32_MsCEvQ.c 
+    #include "SANS_sasview_model_files/sas_sphere32_MsCEvQ.c" 
   #endif 
   #if model_index == 9 
-    #include SANS_sasview_model_files/sas_bcc_paracrystal32_qJBt8P.c 
+    #include "SANS_sasview_model_files/sas_bcc_paracrystal32_qJBt8P.c" 
   #endif 
   #if model_index == 10 
-    #include SANS_sasview_model_files/sas_fcc_paracrystal32_XguHmt.c 
+    #include "SANS_sasview_model_files/sas_fcc_paracrystal32_XguHmt.c" 
   #endif 
   #if model_index == 11 
-    #include SANS_sasview_model_files/sas_barbell32_0zkew9.c 
+    #include "SANS_sasview_model_files/sas_barbell32_0zkew9.c" 
   #endif 
   #if model_index == 12 
-    #include SANS_sasview_model_files/sas_capped_cylinder32_gnYw8c.c 
+    #include "SANS_sasview_model_files/sas_capped_cylinder32_gnYw8c.c" 
   #endif 
   #if model_index == 13 
-    #include SANS_sasview_model_files/sas_triaxial_ellipsoid32_7ZHc5D.c 
+    #include "SANS_sasview_model_files/sas_triaxial_ellipsoid32_7ZHc5D.c" 
   #endif 
   #if model_index == 14 
-    #include SANS_sasview_model_files/sas_cylinder32_VxZ4PD.c 
+    #include "SANS_sasview_model_files/sas_cylinder32_VxZ4PD.c" 
   #endif 
   #if model_index == 15 
-    #include SANS_sasview_model_files/sas_HayterMSAsq32_J3F_Y2.c 
+    #include "SANS_sasview_model_files/sas_HayterMSAsq32_J3F_Y2.c" 
   #endif 
   #if model_index == 16 
-    #include SANS_sasview_model_files/sas_cylinder32_W1213X.c 
+    #include "SANS_sasview_model_files/sas_cylinder32_W1213X.c" 
   #endif 
   #if model_index == 17 
-    #include SANS_sasview_model_files/sas_bcc_paracrystal32_IffCrP.c 
+    #include "SANS_sasview_model_files/sas_bcc_paracrystal32_IffCrP.c" 
   #endif 
   #if model_index == 18 
-    #include SANS_sasview_model_files/sas_HayterMSAsq32_zO1ror.c 
+    #include "SANS_sasview_model_files/sas_HayterMSAsq32_zO1ror.c" 
   #endif 
   #if model_index == 19 
-    #include SANS_sasview_model_files/sas_lamellarPS32_hjLemS.c 
+    #include "SANS_sasview_model_files/sas_lamellarPS32_hjLemS.c" 
   #endif 
   #if model_index == 20 
-    #include SANS_sasview_model_files/sas_sphere32_EK1MLR.c 
+    #include "SANS_sasview_model_files/sas_sphere32_EK1MLR.c" 
   #endif 
   #if model_index == 21 
-    #include SANS_sasview_model_files/sas_hardsphere32_9U9Ub7.c 
+    #include "SANS_sasview_model_files/sas_hardsphere32_9U9Ub7.c" 
   #endif 
   #if model_index == 22 
-    #include SANS_sasview_model_files/sas_gaussian_peak32_yZtN6R.c 
+    #include "SANS_sasview_model_files/sas_gaussian_peak32_yZtN6R.c" 
   #endif 
   #if model_index == 23 
-    #include SANS_sasview_model_files/sas_ellipsoid32_fTHLZo.c 
+    #include "SANS_sasview_model_files/sas_ellipsoid32_fTHLZo.c" 
   #endif 
   #if model_index == 24 
-    #include SANS_sasview_model_files/sas_stickyhardsphere32_qzzAA4.c 
+    #include "SANS_sasview_model_files/sas_stickyhardsphere32_qzzAA4.c" 
   #endif 
   #if model_index == 25 
-    #include SANS_sasview_model_files/sas_sphere32_H4n7Yt.c 
+    #include "SANS_sasview_model_files/sas_sphere32_H4n7Yt.c" 
   #endif 
   #if model_index == 26 
-    #include SANS_sasview_model_files/sas_dab32_5OZC_6.c 
+    #include "SANS_sasview_model_files/sas_dab32_5OZC_6.c" 
   #endif 
   // AUTOGEN_END_A
   
@@ -302,87 +302,87 @@ TRACE
     
     // call the appropriate Iq(...)
     // AUTOGEN_B
-    float Iq_answer = 1 
+    float Iq_answer = 1; 
     #if SASVIEW_MODEL == 0 
       //Iq_answer = NaN; 
     #endif 
-    #ifdef model_index == 1 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]) 
+    #if model_index == 1 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]); 
     #endif 
-    #ifdef model_index == 2 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5], model_pars[6], model_pars[7]) 
+    #if model_index == 2 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5], model_pars[6], model_pars[7]); 
     #endif 
-    #ifdef model_index == 3 
-      //Iq_answer = Iq(q, model_pars[0]) 
+    #if model_index == 3 
+      //Iq_answer = Iq(q, model_pars[0]); 
     #endif 
-    #ifdef model_index == 4 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #if model_index == 4 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
     #endif 
-    #ifdef model_index == 5 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #if model_index == 5 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
     #endif 
-    #ifdef model_index == 6 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]) 
+    #if model_index == 6 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]); 
     #endif 
-    #ifdef model_index == 7 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #if model_index == 7 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
     #endif 
-    #ifdef model_index == 8 
-      //Iq_answer = Iq(q, model_pars[0]) 
+    #if model_index == 8 
+      //Iq_answer = Iq(q, model_pars[0]); 
     #endif 
-    #ifdef model_index == 9 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #if model_index == 9 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
     #endif 
-    #ifdef model_index == 10 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #if model_index == 10 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
     #endif 
-    #ifdef model_index == 11 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #if model_index == 11 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
     #endif 
-    #ifdef model_index == 12 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #if model_index == 12 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
     #endif 
-    #ifdef model_index == 13 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #if model_index == 13 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
     #endif 
-    #ifdef model_index == 14 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3]) 
+    #if model_index == 14 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3]); 
     #endif 
-    #ifdef model_index == 15 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]) 
+    #if model_index == 15 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]); 
     #endif 
-    #ifdef model_index == 16 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3]) 
+    #if model_index == 16 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3]); 
     #endif 
-    #ifdef model_index == 17 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]) 
+    #if model_index == 17 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
     #endif 
-    #ifdef model_index == 18 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]) 
+    #if model_index == 18 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]); 
     #endif 
-    #ifdef model_index == 19 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]) 
+    #if model_index == 19 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]); 
     #endif 
-    #ifdef model_index == 20 
-      //Iq_answer = Iq(q, model_pars[0]) 
+    #if model_index == 20 
+      //Iq_answer = Iq(q, model_pars[0]); 
     #endif 
-    #ifdef model_index == 21 
-      //Iq_answer = Iq(q, model_pars[0]) 
+    #if model_index == 21 
+      //Iq_answer = Iq(q, model_pars[0]); 
     #endif 
-    #ifdef model_index == 22 
-      //Iq_answer = Iq(q, model_pars[0]) 
+    #if model_index == 22 
+      //Iq_answer = Iq(q, model_pars[0]); 
     #endif 
-    #ifdef model_index == 23 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3]) 
+    #if model_index == 23 
+      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3]); 
     #endif 
-    #ifdef model_index == 24 
-      //Iq_answer = Iq(q, model_pars[0]) 
+    #if model_index == 24 
+      //Iq_answer = Iq(q, model_pars[0]); 
     #endif 
-    #ifdef model_index == 25 
-      //Iq_answer = Iq(q, model_pars[0]) 
+    #if model_index == 25 
+      //Iq_answer = Iq(q, model_pars[0]); 
     #endif 
-    #ifdef model_index == 26 
-      //Iq_answer = Iq(q, model_pars[0]) 
+    #if model_index == 26 
+      //Iq_answer = Iq(q, model_pars[0]); 
     #endif 
     // AUTOGEN_END_B
     

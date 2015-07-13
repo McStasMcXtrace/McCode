@@ -25,7 +25,7 @@ def get_include_section(c_files, model_index_par_name):
     i = 1
     for f in c_files:
         text += '  #if %s == %d \n' % (model_index_par_name, i) 
-        text += '    #include %s \n' % f 
+        text += '    #include "%s" \n' % f 
         text += '  #endif \n' 
         i += 1 
     return text
@@ -55,15 +55,15 @@ def get_call_section(c_files, model_index_par_name, model_pars_name, return_par_
     # null value:
     text = ''
     
-    text += '    float %s = 1 \n' % return_par_name
+    text += '    float %s = 1; \n' % return_par_name
     text += '    #if SASVIEW_MODEL == 0 \n'
     text += '      //%s = NaN; \n' % return_par_name
     text += '    #endif \n'
     
     i = 1
     for f in c_files:
-        text += '    #ifdef %s == %d \n' % (model_index_par_name, i) 
-        text += '      //%s = Iq(%s) \n' % (return_par_name, get_Iq_sign(f, model_pars_name)) 
+        text += '    #if %s == %d \n' % (model_index_par_name, i) 
+        text += '      //%s = Iq(%s); \n' % (return_par_name, get_Iq_sign(f, model_pars_name)) 
         text += '    #endif \n' 
         i += 1 
         
@@ -89,7 +89,6 @@ def mod_comp_file(comp_file, docs_section, include_section, call_section):
 
 def get_define_Iq_sign(c_file):
     text = open(c_file).read() 
-    # #define IQ_PARAMETER_DECLARATIONS float sld, float solvent_sld, float thickness
     m = re.search('#define IQ_PARAMETER_DECLARATIONS ([\w\s,]*)\#', text)
     if m:
         sign = re.sub('\s+', ' ', m.group(1))
