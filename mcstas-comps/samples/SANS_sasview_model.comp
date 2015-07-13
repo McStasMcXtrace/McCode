@@ -307,82 +307,82 @@ TRACE
       //Iq_answer = NaN; 
     #endif 
     #if model_index == 1 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4], model_pars_ptr[5]); 
     #endif 
     #if model_index == 2 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5], model_pars[6], model_pars[7]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4], model_pars_ptr[5], model_pars_ptr[6], model_pars_ptr[7]); 
     #endif 
     #if model_index == 3 
-      //Iq_answer = Iq(q, model_pars[0]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0]); 
     #endif 
     #if model_index == 4 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4]); 
     #endif 
     #if model_index == 5 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4]); 
     #endif 
     #if model_index == 6 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4], model_pars_ptr[5]); 
     #endif 
     #if model_index == 7 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4]); 
     #endif 
     #if model_index == 8 
-      //Iq_answer = Iq(q, model_pars[0]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0]); 
     #endif 
     #if model_index == 9 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4]); 
     #endif 
     #if model_index == 10 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4]); 
     #endif 
     #if model_index == 11 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4]); 
     #endif 
     #if model_index == 12 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4]); 
     #endif 
     #if model_index == 13 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4]); 
     #endif 
     #if model_index == 14 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3]); 
     #endif 
     #if model_index == 15 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4], model_pars_ptr[5]); 
     #endif 
     #if model_index == 16 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3]); 
     #endif 
     #if model_index == 17 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4]); 
     #endif 
     #if model_index == 18 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4], model_pars_ptr[5]); 
     #endif 
     #if model_index == 19 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3], model_pars[4], model_pars[5]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3], model_pars_ptr[4], model_pars_ptr[5]); 
     #endif 
     #if model_index == 20 
-      //Iq_answer = Iq(q, model_pars[0]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0]); 
     #endif 
     #if model_index == 21 
-      //Iq_answer = Iq(q, model_pars[0]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0]); 
     #endif 
     #if model_index == 22 
-      //Iq_answer = Iq(q, model_pars[0]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0]); 
     #endif 
     #if model_index == 23 
-      //Iq_answer = Iq(q, model_pars[0], model_pars[1], model_pars[2], model_pars[3]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0], model_pars_ptr[1], model_pars_ptr[2], model_pars_ptr[3]); 
     #endif 
     #if model_index == 24 
-      //Iq_answer = Iq(q, model_pars[0]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0]); 
     #endif 
     #if model_index == 25 
-      //Iq_answer = Iq(q, model_pars[0]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0]); 
     #endif 
     #if model_index == 26 
-      //Iq_answer = Iq(q, model_pars[0]); 
+      //Iq_answer = Iq(q, model_pars_ptr[0]); 
     #endif 
     // AUTOGEN_END_B
     

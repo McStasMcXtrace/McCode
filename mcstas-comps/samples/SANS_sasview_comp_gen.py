@@ -151,7 +151,7 @@ def main(args):
         logging.info('c file to integrate: %s', f) 
     
     model_index_par_name = 'model_index' 
-    model_pars_name = 'model_pars'
+    model_pars_name = 'model_pars_ptr'
     return_par_name = 'Iq_answer' 
     
     # construct AUTOGEN sections
@@ -175,8 +175,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('compfile', nargs='+', help='Component input filename. Mmust be a version of SANS_sasview_model.comp.')
-    parser.add_argument('cdir', nargs='+', help='Directory containing sasview model .c files. Must be a subdirectory of the component.')
-    #parser.add_argument('ofile', help='Output file name')
+    parser.add_argument('cdir', nargs='+', help='Directory containing sasview model .c files.')
     
     args = parser.parse_args()
 
