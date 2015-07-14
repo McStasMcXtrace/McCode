@@ -54,11 +54,7 @@ def get_Iq_sign(c_file, array_call_name = None):
 def get_call_section(c_files, model_index_par_name, model_pars_name, return_par_name):
     # null value:
     text = ''
-    
     text += '    float %s = 1; \n' % return_par_name
-    text += '    #if SASVIEW_MODEL == 0 \n'
-    text += '      //%s = NaN; \n' % return_par_name
-    text += '    #endif \n'
     
     i = 1
     for f in c_files:
@@ -73,8 +69,8 @@ def mod_comp_file(comp_file, docs_section, include_section, call_section):
     logging.info('component file: ' + comp_file)
     text = open(comp_file).read()
     
-    pos_D = text.find("Models:")
-    pos_end_D = text.find('model_pars: ')
+    pos_D = text.find("MDOC")
+    pos_end_D = text.find('MDOC_END')
     pos_A = text.find("AUTOGEN_A")
     pos_end_A = text.find("AUTOGEN_END_A")
     pos_B = text.find("AUTOGEN_B")
@@ -83,7 +79,7 @@ def mod_comp_file(comp_file, docs_section, include_section, call_section):
     if pos_D == -1 or pos_end_D == -1 or pos_A == -1 or pos_end_A == -1 or pos_B == -1 or pos_end_B == -1:
         logging.exception('mod_comp_file: AUTOGEN flag error.')
     
-    ret_text = text[:pos_D+7] + '\n' + docs_section + text[pos_end_D-2:pos_A+9] + '\n' + include_section + '  // ' 
+    ret_text = text[:pos_D+4] + '\n' + docs_section + text[pos_end_D-2:pos_A+9] + '\n' + include_section + '  // ' 
     ret_text += text[pos_end_A:pos_B+9] + '\n' + call_section + '    // ' + text[pos_end_B:]
     return ret_text
 
@@ -96,7 +92,7 @@ def get_define_Iq_sign(c_file):
         return m.group(1)
     return 'define resolved string'
 
-def get_docs_section(c_files, left_padding = 16, log_num_models = 2):
+def get_docs_section(c_files, left_padding = 2, log_num_models = 2):
     
     pad_format_str = '{:<' + str(left_padding) + '}' # e.g. '{:<16}'
     int_format_str = '{:>' + str(log_num_models) + '}' # e.g. '{:>2}'
@@ -155,7 +151,7 @@ def main(args):
     return_par_name = 'Iq_answer' 
     
     # construct AUTOGEN sections
-    docs_section = get_docs_section(c_files, 16)
+    docs_section = get_docs_section(c_files, 4, 2)
     
     include_section = get_include_section(c_files, model_index_par_name)
     logging.debug('\n' + include_section)
