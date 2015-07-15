@@ -2,8 +2,8 @@
 mcstas/mcxtrace configuration.
 '''
 configuration = {
-    "MCCODE_VERSION": '2.1',
-    "MCCODE_LIB_DIR": '/usr/share/mcstas/2.1/',
+    "MCCODE_VERSION": '2.2a',
+    "MCCODE_LIB_DIR": '/usr/share/mcstas/2.2a/',
     "MCCODE": 'mcstas',
     "MCRUN": 'mcrun',
     "MCPLOT": 'mcplot',

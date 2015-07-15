@@ -179,6 +179,16 @@ class McGuiState(QtCore.QObject):
         # using Qt in-built cross-thread signaling
         self.__thread_exc_signal.connect(handleExceptionMsg)
         
+        # clear any existing .c and .out files
+        if self.__binaryFile:
+            if os.path.isfile(self.__binaryFile):
+                os.remove(self.__binaryFile)
+                self.__binaryFile = ''
+        if self.__cFile:
+            if os.path.isfile(self.__cFile):
+                os.remove(self.__cFile)
+                self.__cFile = ''
+        
         # compile simulation in a background thread
         self.compilethread = QtCore.QThread()
         self.compilethread.run = lambda: self.compileAsync(mpi, self.__thread_exc_signal)
@@ -266,7 +276,10 @@ class McGuiState(QtCore.QObject):
             self.__emitter.status("")
 
             (type, value, traceback) = sys.exc_info()
-            thread_exc_signal.emit(value.message)
+            if thread_exc_signal:
+                thread_exc_signal.emit(value.message)
+            else:
+                raise
     
     def run(self, fixed_params, params):
         ''' fixed_params[]:
@@ -363,15 +376,15 @@ class McGuiState(QtCore.QObject):
         cmd = mccode_config.configuration["MCRUN"] + ' ' + self.__instrFile + " --info"
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE, 
-                                   stderr=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, 
                                    shell=True)
         # synchronous
         (stdoutdata, stderrdata) = process.communicate()
         
         if stderrdata:
             self.__emitter.message(stderrdata)
-            self.__emitter.status("Instrument compile error.")
-            raise Exception("Error in instrument file...")
+            self.__emitter.status("Instrument compile error (if c-flags are required, use Shift+Ctrl+R).")
+            raise Exception("Instrument compile error (if c-flags are required, use Shift+Ctrl+R).")
         
         # get parameters from info
         params = []
@@ -475,6 +488,7 @@ class McGuiAppController():
         self.emitter.status("Getting instrument params...")
         
         instr_params = self.state.getInstrParams()
+        
         fixed_params, new_instr_params = self.view.showStartSimDialog(instr_params)
         
         self.emitter.status("")
