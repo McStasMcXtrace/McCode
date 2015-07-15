@@ -25,7 +25,7 @@ def get_include_section(c_files, model_index_par_name):
     i = 1
     for f in c_files:
         text += '  #if %s == %d \n' % (model_index_par_name, i) 
-        text += '    #include "%s" \n' % f 
+        text += '    #include "%s" \n' % os.path.basename(f) 
         text += '  #endif \n' 
         i += 1 
     return text
@@ -93,7 +93,6 @@ def get_define_Iq_sign(c_file):
     return 'define resolved string'
 
 def get_docs_section(c_files, left_padding = 2, log_num_models = 2):
-    
     pad_format_str = '{:<' + str(left_padding) + '}' # e.g. '{:<16}'
     int_format_str = '{:>' + str(log_num_models) + '}' # e.g. '{:>2}'
     
@@ -135,7 +134,7 @@ def get_docs_section(c_files, left_padding = 2, log_num_models = 2):
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
-        
+    
     logging.info('component file: %s', args.compfile)
     logging.info('directory of C files: %s', args.cdir[0])
     
