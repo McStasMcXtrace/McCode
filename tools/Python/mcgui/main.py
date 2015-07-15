@@ -113,7 +113,7 @@ class McGuiState(QtCore.QObject):
         self.instrumentUpdated.emit([self.getInstrumentFile(), self.getWorkDir()])
         
     def __fireSimStateUpdate(self):
-        self.simStateUpdated.emit([str(self.canRun()), str(self.canPlot())])
+        self.simStateUpdated.emit([str(self.canRun()), str(self.canPlot()), str(self.isSimRunning())])
     
     def init(self):
         ''' must be called after construction to emit events used for sync'ing to initial state '''
@@ -175,7 +175,7 @@ class McGuiState(QtCore.QObject):
         return self.__instrFile != ""
     
     def canPlot(self):
-        return self.__instrFile != ""
+        return ((self.__instrFile != "") and (not self.isSimRunning()))
     
     __thread_exc_signal = QtCore.pyqtSignal(QtCore.QString)
     def compile(self, mpi=False):
@@ -284,6 +284,21 @@ class McGuiState(QtCore.QObject):
             else:
                 raise
     
+    __runthread = None
+    def isSimRunning(self):
+        if self.__runthread != None:
+            return self.__runthread.isRunning()
+        else:
+            return False
+    
+    def interrupt(self):
+        # interrupt any running simulation
+        if self.__runthread:
+            if self.__runthread.isRunning():
+                self.__runthread.terminate()
+        else:
+            raise Exception('State.interrupt: no __runthread')
+    
     def run(self, fixed_params, params):
         ''' fixed_params[]:
                 0 - simulation = 0, trace = 1
@@ -315,7 +330,7 @@ class McGuiState(QtCore.QObject):
                 output_dir = "%s_%s" % \
                               (self.__instrFile,
                                datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
-                              
+                
             runstr = mccode_config.configuration["MCRUN"] + mcrunparms + self.__instrFile + ' -d ' + output_dir
             self.__dataDir = output_dir
         else:
@@ -355,24 +370,38 @@ class McGuiState(QtCore.QObject):
         runstr = str(runstr)
         
         # run simulation in a background thread
-        self.runthread = McRunQThread()
-        self.runthread.cmd = runstr
-        self.runthread.finished.connect(self.__runFinished)
-        self.runthread.thread_exception.connect(handleExceptionMsg)
-        self.runthread.error.connect(lambda msg: self.__emitter.message(msg, err_msg=True))
-        self.runthread.message.connect(lambda msg: self.__emitter.message(msg))
-        self.runthread.start()
+        self.__runthread = McRunQThread()
+        self.__runthread.cmd = runstr
+        self.__runthread.finished.connect(self.__runFinished)
+        self.__runthread.terminated.connect(self.__runTerminated)
+        self.__runthread.thread_exception.connect(handleExceptionMsg)
+        self.__runthread.error.connect(lambda msg: self.__emitter.message(msg, err_msg=True))
+        self.__runthread.message.connect(lambda msg: self.__emitter.message(msg))
+        self.__runthread.start()
         
         self.__emitter.message(runstr, gui_msg=True)
         self.__emitter.status('Running simulation ...')
+        self.__fireSimStateUpdate()
         
     def __runFinished(self):
-        # sim tab:
-        self.__emitter.message('simulation done', gui_msg=True)
-        self.__emitter.message('', gui_msg=True)
-        self.__emitter.message('')
-        self.__emitter.status('')
-
+        if not self.__interrupted:
+            self.__fireSimStateUpdate()
+            self.__emitter.message('simulation done', gui_msg=True)
+            self.__emitter.message('', gui_msg=True)
+            self.__emitter.message('')
+            self.__emitter.status('')
+        else: 
+            self.__fireSimStateUpdate()
+            self.__emitter.message('simulation interrupted', gui_msg=True)
+            self.__emitter.message('', gui_msg=True)
+            self.__emitter.message('')
+            self.__emitter.status('Simulation interrupted')
+        self.__interrupted = False
+    
+    __interrupted = False
+    def __runTerminated(self):
+        self.__interrupted = True
+    
     def getInstrParams(self):
         # get instrument params using 'mcrun [instr] --info'
         # returns: params: a list of [name, value] pairs 
@@ -385,7 +414,7 @@ class McGuiState(QtCore.QObject):
         (stdoutdata, stderrdata) = process.communicate()
         
         if stderrdata:
-            self.__emitter.message(stderrdata)
+            self.__emitter.message(stderrdata, err_msg=True)
             self.__emitter.status("Instrument compile error (if c-flags are required, use Shift+Ctrl+R).")
             raise Exception("Instrument compile error (if c-flags are required, use Shift+Ctrl+R).")
         
@@ -487,17 +516,19 @@ class McGuiAppController():
 
     ''' UI callbacks
     '''
-    def handleRunSim(self):
-        self.emitter.status("Getting instrument params...")
-        
-        instr_params = self.state.getInstrParams()
-        
-        fixed_params, new_instr_params = self.view.showStartSimDialog(instr_params)
-        
-        self.emitter.status("")
-        
-        if fixed_params != None:
-            self.state.run(fixed_params, new_instr_params)
+    def handleRunOrInterruptSim(self):
+        if self.state.isSimRunning():
+            self.state.interrupt()
+        else:
+            self.emitter.status("Getting instrument params...")
+            
+            instr_params = self.state.getInstrParams()
+            fixed_params, new_instr_params = self.view.showStartSimDialog(instr_params)
+            
+            self.emitter.status("")
+            
+            if fixed_params != None:
+                self.state.run(fixed_params, new_instr_params)
         
     def handleConfiguration(self):
         self.view.showConfigDialog()
@@ -624,14 +655,14 @@ class McGuiAppController():
         mwui.actionNew_Instrument.triggered.connect(self.handleNewInstrument)
         mwui.actionConfiguration.triggered.connect(self.handleConfiguration)
         
-        mwui.btnRun.clicked.connect(self.handleRunSim)
+        mwui.btnRun.clicked.connect(self.handleRunOrInterruptSim)
         mwui.btnPlot.clicked.connect(self.handlePlotResults)
         mwui.btnEdit.clicked.connect(self.handleEditInstrument)
         mwui.btnOpenInstrument.clicked.connect(self.handleOpenInstrument)
         
         mwui.actionCompile_Instrument.triggered.connect(self.state.compile)
         mwui.actionCompile_Instrument_MPI.triggered.connect(lambda: self.state.compile(mpi=True))
-        mwui.actionRun_Simulation.triggered.connect(self.handleRunSim)
+        mwui.actionRun_Simulation.triggered.connect(self.handleRunOrInterruptSim)
         mwui.actionPlot.triggered.connect(self.handlePlotResults)
         
         mwui.actionMcdoc.triggered.connect(self.handleMcdoc)

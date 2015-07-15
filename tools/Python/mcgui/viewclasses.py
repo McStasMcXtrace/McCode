@@ -51,8 +51,8 @@ class McView(object):
     def updateStatus(self, text=''):
         self.mw.ui.statusbar.showMessage(text)
         
-    def updateLog(self, text='', guiMsg=False, error=False):
-        if guiMsg:
+    def updateLog(self, text='', gui_msg=False, error=False):
+        if gui_msg:
             if error:
                 self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
             else:
@@ -66,29 +66,51 @@ class McView(object):
             self.mw.ui.txtbrwSim.append(text)
             
     def updateSimState(self, state=[]):
-        canRun = state[0] == 'True'
-        canPlot = state[1] == 'True'
+        enableRun = state[0] == 'True'
+        enablePlot = state[1] == 'True'
+        enableInterrupt = False;
+        if len(state)>2:
+            enableInterrupt = state[2] == 'True'
         
         # clear start simulation dialog
-        if not canRun:
+        if not enableRun:
             self.__ssd = None
         
         # set enabled/disabled states on menus and buttons
         ui = self.mw.ui
-        ui.btnRun.setEnabled(canRun)
-        ui.btnEdit.setEnabled(canRun)
-        ui.btnPlot.setEnabled(canPlot)
-        if canRun:
+        ui.btnRun.setEnabled(enableRun)
+        ui.btnEdit.setEnabled(enableRun)
+        ui.btnPlot.setEnabled(enablePlot)
+        if enableRun:
             ui.lblInstrument.setStyleSheet('color: black')
         else:
             ui.lblInstrument.setStyleSheet('color: red')
-        ui.actionClose_Instrument.setEnabled(canRun)
-        ui.actionPlot.setEnabled(canPlot)
-        ui.actionRun_Simulation.setEnabled(canRun)
-        ui.actionSave_As.setEnabled(canRun)
-        ui.actionEdit_Instrument.setEnabled(canRun)
-        ui.actionCompile_Instrument.setEnabled(canRun)
-        ui.actionCompile_Instrument_MPI.setEnabled(canRun)
+        ui.actionClose_Instrument.setEnabled(enableRun)
+        ui.actionPlot.setEnabled(enablePlot)
+        ui.actionRun_Simulation.setEnabled(enableRun)
+        ui.actionSave_As.setEnabled(enableRun)
+        ui.actionOpen_instrument.setEnabled(True)
+        ui.actionNew_Instrument.setEnabled(True)
+        ui.menuNew_From_Template.setEnabled(True)
+        ui.actionEdit_Instrument.setEnabled(enableRun)
+        ui.actionCompile_Instrument.setEnabled(enableRun)
+        ui.actionCompile_Instrument_MPI.setEnabled(enableRun)
+        
+        # set action of run button:
+        if enableInterrupt: 
+            ui.btnRun.setText('Halt')
+            ui.btnRun.setToolTip('Interrupt current simulation')
+            ui.actionRun_Simulation.setEnabled(False)
+            ui.actionCompile_Instrument.setEnabled(False)
+            ui.actionCompile_Instrument_MPI.setEnabled(False)
+            ui.actionClose_Instrument.setEnabled(False)
+            ui.actionSave_As.setEnabled(False)
+            ui.actionOpen_instrument.setEnabled(False)
+            ui.actionNew_Instrument.setEnabled(False)
+            ui.menuNew_From_Template.setEnabled(False)
+        else: 
+            ui.btnRun.setText('Run...')
+            ui.btnRun.setToolTip('')
         
     ''' UI actions
     '''
