@@ -129,9 +129,12 @@ class McGuiState(QtCore.QObject):
         # file must exists and be .instr file:
         if os.path.exists(instr_file) and (os.path.splitext(instr_file)[1] == '.instr'):
             # handle .instr files loaded without full path
-            if os.path.dirname(instr_file) == '':
-                instr_file = os.path.join(self.getWorkDir(), instr_file)
-            self.setWorkDir(os.path.dirname(instr_file))
+            if os.path.dirname(instr_file) != '':
+                realdir = os.path.dirname(os.path.abspath(instr_file))
+                print(realdir)
+                self.setWorkDir(realdir)
+                
+            instr_file = os.path.join(self.getWorkDir(), os.path.basename(instr_file))
             self.__instrFile = instr_file
             self.__fireInstrUpdate()
             self.__emitter.status("Instrument: " + os.path.basename(instr_file))
@@ -162,7 +165,7 @@ class McGuiState(QtCore.QObject):
     
     def setWorkDir(self, newdir):
         if not os.path.isdir(newdir):
-            raise Exception('McGuiState.setWorkDir, invalid work dir: "' + newdir + '"')
+            raise Exception('McGuiState.setWorkDir: invalid work dir - "' + newdir + '"')
         os.chdir(newdir)
     
     def canCompile(self):
