@@ -77,7 +77,7 @@ class McComponentParser(object):
         
     @staticmethod
     def __parseComponentName(text):
-        re_out = re.search('DEFINE\s+COMPONENT\s+([a-zA-Z0-9_]*)', text)
+        re_out = re.search('DEFINE\s+COMPONENT\s+(\w*)', text)
         if re_out:
             return re_out.group(1)
     
@@ -87,31 +87,60 @@ class McComponentParser(object):
         '''
         # get definition parameters
         result_1 = []
-        re_out = re.search(r'DEFINITION\s+PARAMETERS\s*\([-+.a-zA-Z0-9_ \t\n\r=,/*{}\"]+\)', text)
+        re_out = re.search(r'DEFINITION\s+PARAMETERS\s*\([-+.\w\s=,/*{}\"]+\)', text)
         if re_out:
-            result_1 = McComponentParser.__parseParLine(re_out.group(0))
+            result_sub, substituted_text = McComponentParser.__substituteCurlyPars(re_out.group(0))
+            result_1 = McComponentParser.__parseParLine(substituted_text)
+            # restitute curly pars default values
+            for r in result_1:
+                for s in result_sub:
+                    if r.par_name == s.par_name:
+                        r.default_value = s.default_value
         
         # get setting parameters
         result_2 = []
-        re_out = re.search(r'SETTING\s+PARAMETERS\s*\([-+.a-zA-Z0-9_ \t\n\r=,/*\"]+\)', text)
+        re_out = re.search(r'SETTING\s+PARAMETERS\s*\([-+.\w\s=,/*\"]+\)', text)
         if re_out:
             result_2 = McComponentParser.__parseParLine(re_out.group(0))
         
         return result_1 + result_2
-                
+    
+    @staticmethod
+    def __substituteCurlyPars(text):
+        # Extract stuff like def_par={1.0, 2.0, 3.0} which contains commas inside a curly bracket.
+        # Returns curly bracket (name, default value), and text with such values replaced by placeholder string
+        
+        curly = re.findall(r'(\w+)=(\{[-+.\w\s,/*\"]*\})', text)
+        result = []
+        substituted_text = str(text)
+        
+        # get par_info into the par info par_info structure: 
+        for p in curly:
+            par_info = McComponentParser.McComponentParInfo()
+            par_info.par_name = p[0]
+            par_info.default_value = p[1]
+            result.append(par_info)
+            
+            # reduce
+            substituted_text = substituted_text.replace(par_info.par_name + '=' + par_info.default_value, par_info.par_name + '=' + par_info.par_name + '_substituted')
+        
+        return result, substituted_text
+    
     @staticmethod 
     def __parseParLine(text):
+        # assuming no curly brackets - these must have been processed and removed from text
         # always return something 
         result = []
+        allowed = r'[-+.\w\s=,/*{}\"]'
         
         # get the text in parenthesis
-        out1 = re.search(r'\(([-+.\w\s\t\n\r=,/*\"]+)\)', text)
+        out1 = re.search(r'\(([-+.\w\s=,/*{}\"]+)\)', text)
         if not out1:
             return result
             # TODO: error handling
         
         # get comma separated sections
-        comma_sep = re.findall(r'([-+.\w\s\t\n\r=/*\"]+),*', out1.group(1))
+        comma_sep = re.findall(r'([-+.\w\s=/*\"]+),*', out1.group(1))
         
         # get par_info into the par info par_info structure: 
         for p in comma_sep:
