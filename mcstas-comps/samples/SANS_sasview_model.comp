@@ -121,82 +121,82 @@ DECLARE
   // include the appropriate sasview model file
   // AUTOGEN_A
   #if model_index == 1 
-    #include "sas_core_shell_cylinder32_7dsS5z.c" 
+    %include "sas_core_shell_cylinder32_7dsS5z.c" 
   #endif 
   #if model_index == 2 
-    #include "sas_lamellarCailleHG32_YMPxp7.c" 
+    %include "sas_lamellarCailleHG32_YMPxp7.c" 
   #endif 
   #if model_index == 3 
-    #include "sas_lamellar32_6RVlIH.c" 
+    %include "sas_lamellar32_6RVlIH.c" 
   #endif 
   #if model_index == 4 
-    #include "sas_parallelepiped32_4bSc95.c" 
+    %include "sas_parallelepiped32_4bSc95.c" 
   #endif 
   #if model_index == 5 
-    #include "sas_bcc_paracrystal32_m6mbhn.c" 
+    %include "sas_bcc_paracrystal32_m6mbhn.c" 
   #endif 
   #if model_index == 6 
-    #include "sas_lamellarPC32_uZ9el7.c" 
+    %include "sas_lamellarPC32_uZ9el7.c" 
   #endif 
   #if model_index == 7 
-    #include "sas_barbell32_kbqWfA.c" 
+    %include "sas_barbell32_kbqWfA.c" 
   #endif 
   #if model_index == 8 
-    #include "sas_sphere32_MsCEvQ.c" 
+    %include "sas_sphere32_MsCEvQ.c" 
   #endif 
   #if model_index == 9 
-    #include "sas_bcc_paracrystal32_qJBt8P.c" 
+    %include "sas_bcc_paracrystal32_qJBt8P.c" 
   #endif 
   #if model_index == 10 
-    #include "sas_fcc_paracrystal32_XguHmt.c" 
+    %include "sas_fcc_paracrystal32_XguHmt.c" 
   #endif 
   #if model_index == 11 
-    #include "sas_barbell32_0zkew9.c" 
+    %include "sas_barbell32_0zkew9.c" 
   #endif 
   #if model_index == 12 
-    #include "sas_capped_cylinder32_gnYw8c.c" 
+    %include "sas_capped_cylinder32_gnYw8c.c" 
   #endif 
   #if model_index == 13 
-    #include "sas_triaxial_ellipsoid32_7ZHc5D.c" 
+    %include "sas_triaxial_ellipsoid32_7ZHc5D.c" 
   #endif 
   #if model_index == 14 
-    #include "sas_cylinder32_VxZ4PD.c" 
+    %include "sas_cylinder32_VxZ4PD.c" 
   #endif 
   #if model_index == 15 
-    #include "sas_HayterMSAsq32_J3F_Y2.c" 
+    %include "sas_HayterMSAsq32_J3F_Y2.c" 
   #endif 
   #if model_index == 16 
-    #include "sas_cylinder32_W1213X.c" 
+    %include "sas_cylinder32_W1213X.c" 
   #endif 
   #if model_index == 17 
-    #include "sas_bcc_paracrystal32_IffCrP.c" 
+    %include "sas_bcc_paracrystal32_IffCrP.c" 
   #endif 
   #if model_index == 18 
-    #include "sas_HayterMSAsq32_zO1ror.c" 
+    %include "sas_HayterMSAsq32_zO1ror.c" 
   #endif 
   #if model_index == 19 
-    #include "sas_lamellarPS32_hjLemS.c" 
+    %include "sas_lamellarPS32_hjLemS.c" 
   #endif 
   #if model_index == 20 
-    #include "sas_sphere32_EK1MLR.c" 
+    %include "sas_sphere32_EK1MLR.c" 
   #endif 
   #if model_index == 21 
-    #include "sas_hardsphere32_9U9Ub7.c" 
+    %include "sas_hardsphere32_9U9Ub7.c" 
   #endif 
   #if model_index == 22 
-    #include "sas_gaussian_peak32_yZtN6R.c" 
+    %include "sas_gaussian_peak32_yZtN6R.c" 
   #endif 
   #if model_index == 23 
-    #include "sas_ellipsoid32_fTHLZo.c" 
+    %include "sas_ellipsoid32_fTHLZo.c" 
   #endif 
   #if model_index == 24 
-    #include "sas_stickyhardsphere32_qzzAA4.c" 
+    %include "sas_stickyhardsphere32_qzzAA4.c" 
   #endif 
   #if model_index == 25 
-    #include "sas_sphere32_H4n7Yt.c" 
+    %include "sas_sphere32_H4n7Yt.c" 
   #endif 
   #if model_index == 26 
-    #include "sas_dab32_5OZC_6.c" 
+    %include "sas_dab32_5OZC_6.c" 
   #endif 
   // AUTOGEN_END_A
   

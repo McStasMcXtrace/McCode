@@ -25,7 +25,7 @@ def get_include_section(c_files, model_index_par_name):
     i = 1
     for f in c_files:
         text += '  #if %s == %d \n' % (model_index_par_name, i) 
-        text += '    #include "%s" \n' % os.path.basename(f) 
+        text += '    %%include "%s" \n' % os.path.basename(f) 
         text += '  #endif \n' 
         i += 1 
     return text
