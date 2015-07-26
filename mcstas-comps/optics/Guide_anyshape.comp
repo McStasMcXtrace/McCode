@@ -95,7 +95,7 @@ SHARE
 DECLARE
 %{
   off_struct offdata;
-  t_Table    pTable;
+  t_Table pTable;
 %}
 
 INITIALIZE

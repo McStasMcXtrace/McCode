@@ -57,6 +57,7 @@ DECLARE
     double TOF_p2[nt];
     double t_min, t_max, delta_t;
   %}
+
 INITIALIZE
   %{
     int i;
@@ -90,6 +91,7 @@ INITIALIZE
      t_max=nt*dt+tmin;
     }
   %}
+
 TRACE
   %{
     int i;
@@ -109,6 +111,7 @@ TRACE
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
   %}
+
 SAVE
   %{
     DETECTOR_OUT_1D(

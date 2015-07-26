@@ -118,7 +118,7 @@ SHARE
 
 DECLARE
 %{
-  /*   Larmor frequency and scalar product threshold*/
+  /* Larmor frequency and scalar product threshold*/
   void *parPtr;
   mcmagnet_field_info *magnet;
 %}

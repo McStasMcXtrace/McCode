@@ -75,7 +75,7 @@ SHARE
 DECLARE
 %{
   char type[10];
-  MonitornD_Defines_type   DEFS;
+  MonitornD_Defines_type DEFS;
   MonitornD_Variables_type Vars;
 %}
 

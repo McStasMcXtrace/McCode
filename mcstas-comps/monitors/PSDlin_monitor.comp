@@ -47,12 +47,14 @@ DEFINITION PARAMETERS (nx=20)
     xwidth=0, yheight=0, restore_neutron=0)
 OUTPUT PARAMETERS (PSDlin_N, PSDlin_p, PSDlin_p2)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
 DECLARE
   %{
     double PSDlin_N[nx];
     double PSDlin_p[nx];
     double PSDlin_p2[nx];
   %}
+
 INITIALIZE
   %{
     int i;
@@ -74,6 +76,7 @@ INITIALIZE
       PSDlin_p2[i] = 0;
     }
   %}
+
 TRACE
   %{
     int i;
@@ -95,6 +98,7 @@ TRACE
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
   %}
+
 SAVE
   %{
     DETECTOR_OUT_1D(

@@ -54,17 +54,21 @@
 *******************************************************************************/
 
 DEFINE COMPONENT DiskChopper
+
 DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (theta_0=0, radius=0.5, yheight, nu, nslit=3, jitter=0, delay=0, isfirst=0, n_pulse=1, abs_out=1, phase=0, xwidth=0, verbose=0)
+
 OUTPUT PARAMETERS (Tg, To, delta_y, height,omega)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
 DECLARE
- %{
+%{
   double Tg,To,delta_y,height,omega;
- %}
+%}
 
 INITIALIZE
- %{
+%{
       /* If slit height 'unset', assume full opening */
       if (yheight == 0) {
         height=radius;
@@ -124,10 +128,10 @@ INITIALIZE
         printf("             %g slits, angle=%g [deg] height=%g [m], width=%g [m] at radius=%g [m]\n",
           nslit, theta_0*RAD2DEG, height, xwidth, delta_y);
       }
- %}
+%}
 
 TRACE
- %{
+%{
     double toff;
     double yprime;
     PROP_Z0;
@@ -159,7 +163,7 @@ TRACE
       }
     SCATTER;
     
- %}
+%}
 
 MCDISPLAY
 %{

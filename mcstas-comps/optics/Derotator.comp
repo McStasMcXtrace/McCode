@@ -44,7 +44,6 @@ SETTING PARAMETERS ()
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
-
 TRACE
 %{
   double angle = MC_GETPAR(rotator, angle);
@@ -59,7 +58,6 @@ TRACE
     /* rotate speed */
     coords_get(rot_apply(R, coords_set(vx,vy,vz)), &vx, &vy, &vz);
   }
-  
 %}
 
 MCDISPLAY

@@ -48,11 +48,13 @@ SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,
     xwidth=0, yheight=0, restore_neutron=0)
 OUTPUT PARAMETERS (Nsum, psum, p2sum)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
 DECLARE
   %{
     double Nsum;
     double psum, p2sum;
   %}
+
 INITIALIZE
   %{
     psum = 0;
@@ -69,6 +71,7 @@ INITIALIZE
       exit(0);
     }
   %}
+
 TRACE
   %{
     PROP_Z0;
@@ -83,6 +86,7 @@ TRACE
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
   %}
+
 SAVE
   %{
     DETECTOR_OUT_0D("Single monitor " NAME_CURRENT_COMP, Nsum, psum, p2sum);

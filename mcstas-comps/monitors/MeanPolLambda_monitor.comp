@@ -48,8 +48,11 @@
 *******************************************************************************/
 
 DEFINE COMPONENT MeanPolLambda_monitor
+
 DEFINITION PARAMETERS (xwidth=0.1, yheight=0.1, nL=20, restore_neutron=0)
+
 SETTING PARAMETERS (string filename, mx=0, my=0, mz=0, Lmin, Lmax)
+
 OUTPUT PARAMETERS (PolL_N, PolL_p, PolL_p2, HelpArray)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
      
@@ -59,7 +62,7 @@ DECLARE
   double PolL_p[nL];
   double PolL_p2[nL];
   double HelpArray[nL];
-  %}
+%}
 
 INITIALIZE
 %{
@@ -99,7 +102,7 @@ INITIALIZE
       PolL_p2[i] = 0;
       HelpArray[i] = 0;
   }
-  %}
+%}
 
 TRACE
 %{
@@ -127,7 +130,7 @@ TRACE
   if (restore_neutron) {
     RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   }
-  %}
+%}
 
 SAVE
 %{
@@ -154,12 +157,12 @@ SAVE
 		  "Wavelength", Lmin, Lmax, nL,
 		  &PolL_N[0],&PolL_p[0],&PolL_p2[0],
 		  filename);
-  %}
+%}
 
 MCDISPLAY
 %{
   magnify("xy");
   rectangle("xy", 0, 0, 0, xwidth, yheight);
-  %}
+%}
 
 END

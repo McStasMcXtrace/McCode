@@ -42,17 +42,20 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS(Nsum, psum, p2sum)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
 DECLARE
   %{
     double Nsum;
     double psum,p2sum;
   %}
+
 INITIALIZE
   %{
     Nsum = 0;
     psum = 0;
     p2sum = 0;
   %}
+
 TRACE
   %{
     Nsum++;
@@ -60,6 +63,7 @@ TRACE
     p2sum += p*p;
     SCATTER;
   %}
+
 SAVE
   %{
     DETECTOR_OUT_0D("4PI monitor " NAME_CURRENT_COMP, Nsum, psum, p2sum);

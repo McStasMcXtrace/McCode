@@ -82,7 +82,8 @@ SHARE
     };
 %}
 
-DECLARE %{
+DECLARE 
+%{
   struct Res_sample_struct res_struct;
 %}
 

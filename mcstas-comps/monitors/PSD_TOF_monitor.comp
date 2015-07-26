@@ -57,17 +57,17 @@ SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, tmin=0,
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, PSD_Ns, PSD_ps, PSD_p2s)
 
 DECLARE
-  %{
-    double PSD_N[nt][nx][ny];
-    double PSD_p[nt][nx][ny];
-    double PSD_p2[nt][nx][ny];
-    double PSD_Ns[nx][ny];
-    double PSD_ps[nx][ny];
-    double PSD_p2s[nx][ny];
+%{
+  double PSD_N[nt][nx][ny];
+  double PSD_p[nt][nx][ny];
+  double PSD_p2[nt][nx][ny];
+  double PSD_Ns[nx][ny];
+  double PSD_ps[nx][ny];
+  double PSD_p2s[nx][ny];
+%}
 
-  %}
 INITIALIZE
-  %{
+%{
   int i,j,k;
 
     if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
@@ -123,9 +123,10 @@ TRACE
     if (restore_neutron) {
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
-  %}
+%}
+
 SAVE
-  %{
+%{
   int kk;
   char ff[256];
   char tt[256];
@@ -151,7 +152,7 @@ SAVE
         &PSD_N[kk][0][0],&PSD_p[kk][0][0],&PSD_p2[kk][0][0],
         ff);
   }
-  %}
+%}
 
 MCDISPLAY
 %{

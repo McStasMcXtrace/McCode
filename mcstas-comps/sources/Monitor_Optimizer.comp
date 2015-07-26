@@ -61,11 +61,10 @@ OUTPUT PARAMETERS (This_Monitor_id)
 DECLARE
 %{
 #ifndef Source_Optimizer_Here
-#error McStas : Source_Optimizer component has to be used before Monitor_Optimizer
+  #error McStas : Source_Optimizer component has to be used before Monitor_Optimizer
 #endif
 
-int This_Monitor_id;
-
+  int This_Monitor_id;
 %}
 
 INITIALIZE
@@ -77,7 +76,6 @@ INITIALIZE
 
   Vars->Monitor_Number++;
   This_Monitor_id = Vars->Monitor_Number;
-
 %}
 
 TRACE

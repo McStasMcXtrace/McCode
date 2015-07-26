@@ -53,12 +53,14 @@ DEFINE COMPONENT TOF2Q_cylPSD_monitor
 DEFINITION PARAMETERS (nQ, string filename, ny)
 SETTING PARAMETERS (radius, yheight,  Qmin, Qmax, ymin=0, ymax=0, T_zero, L_flight, restore_neutron=0,theta)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
+
 DECLARE
   %{
     double TOF_N[nQ][ny];
     double TOF_p[nQ][ny];
     double TOF_p2[nQ][ny];
   %}
+
 INITIALIZE
   %{
     int i,j;
@@ -74,6 +76,7 @@ INITIALIZE
       }
 
   %}
+
 TRACE
   %{
     int i,j;
@@ -108,6 +111,7 @@ TRACE
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
   %}
+
 SAVE
   %{
     DETECTOR_OUT_2D(

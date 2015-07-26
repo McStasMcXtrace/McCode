@@ -103,7 +103,7 @@ DECLARE
     double aw,ah;       /* rectangular angular dimensions */
     double xw,yh;       /* rectangular metrical dimensions */
     double tx,ty,tz;    /* target coords */
-    } VarsV;
+  } VarsV;
   double ftun, fQE;
 %}
 

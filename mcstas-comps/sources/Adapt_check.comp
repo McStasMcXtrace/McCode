@@ -39,6 +39,7 @@ DEFINITION PARAMETERS (source_comp)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
 DECLARE
 %{
 #ifndef ADAPT_TREE_LIB_H

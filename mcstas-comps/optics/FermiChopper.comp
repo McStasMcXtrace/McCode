@@ -89,24 +89,28 @@
  */
 
 DEFINE COMPONENT FermiChopper
+
 DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
   w=0.00022475, nslit=200, R0=0.0,
   Qc=0.02176, alpha=2.33, m=0.0, W=2e-3, length=0.012, eff=0.95,
   zero_time=0, xwidth=0, verbose=0, yheight=0.08,
   curvature=0,delay=0)
+
 OUTPUT PARAMETERS(FCVars)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
 SHARE
 %{
 %include "ref-lib"
 #ifndef FermiChopper_TimeAccuracy
-#define FermiChopper_TimeAccuracy 1e-9
-#define FermiChopper_MAXITER      100
+  #define FermiChopper_TimeAccuracy 1e-9
+  #define FermiChopper_MAXITER      100
 
   /* Definition of internal variable structure: all counters */
-  struct FermiChopper_struct {
-
+  struct FermiChopper_struct 
+  {  
     double omega, ph0, t0;  /* chopper rotation */
     double C_slit;          /* slit curvature radius in [m] */
     double L_slit;          /* slit package length [m] */
@@ -142,26 +146,27 @@ SHARE
 /*****************************************************************************
  * FC_zrot: returns Z' in rotating frame, from X,Z and t,omega,ph0
  ****************************************************************************/
-double FC_zrot(double X, double Z, double T, struct FermiChopper_struct FCs){
+double FC_zrot(double X, double Z, double T, struct FermiChopper_struct FCs)
+{
   double omega =FCs.omega;
   double ph0   =FCs.ph0;
-
+    
   return( Z*cos(omega*T+ph0)-X*sin(omega*T+ph0) );
 }
-
 
 /*****************************************************************************
  * FC_xrot: returns X' in rotating frame, from X,Z and omega,t,ph0
  *          additional coordinate shift in case of curved slits
  ****************************************************************************/
-double FC_xrot(double X, double Z, double T, struct FermiChopper_struct FCs){
+double FC_xrot(double X, double Z, double T, struct FermiChopper_struct FCs)
+{
   double omega =FCs.omega;
   double ph0   =FCs.ph0;
   double C_slit=FCs.C_slit;
   double ret, tmp;
-
+  
   ret = X*cos(omega*T+ph0)+Z*sin(omega*T+ph0);
-
+    
   if (C_slit) {
     tmp  = fabs(FC_zrot(X, Z, T, FCs));
     if (tmp < FCs.L_slit/2) {
@@ -178,7 +183,8 @@ double FC_xrot(double X, double Z, double T, struct FermiChopper_struct FCs){
  *              taking into account propagation with velocity during time dt
  ****************************************************************************/
 double FC_xzrot_dt(double x, double z, double vx, double vz,
-                   double t, double dt, char type, struct FermiChopper_struct FCs) {
+                   double t, double dt, char type, struct FermiChopper_struct FCs) 
+{
   if (dt) /* with propagation */
     return( (type == 'x' ? FC_xrot(x+vx*dt, z+vz*dt, t+dt, FCs)
                          : FC_zrot(x+vx*dt, z+vz*dt, t+dt, FCs)) );
@@ -197,8 +203,8 @@ double FC_xzrot_dt(double x, double z, double vx, double vz,
  ****************************************************************************/
 double FC_xzbrent(double x, double z, double vx, double vz,
                   double t, double dt,
-                  char type, double d, struct FermiChopper_struct FCs) {
-
+                  char type, double d, struct FermiChopper_struct FCs) 
+{
   int iter;
   double a=0,b=dt;
   double c,dd,e,min1,min2;
@@ -267,26 +273,25 @@ double FC_xzbrent(double x, double z, double vx, double vz,
 /*****************************************************************************
  * Wrappers to intersection algorithms 
  ****************************************************************************/
-
 double FC_xintersect(double x, double z, double vx, double vz,
                    double t, double dt,
-                   double d, struct FermiChopper_struct FCs) {
+                   double d, struct FermiChopper_struct FCs) 
+{
   return(FC_xzbrent(x, z, vx, vz, t, dt, 'x', d, FCs));
 }
-
 double FC_zintersect(double x, double z, double vx, double vz,
                    double t, double dt,
-                   double d, struct FermiChopper_struct FCs) {
+                   double d, struct FermiChopper_struct FCs) 
+{
   return(FC_xzbrent(x, z, vx, vz, t, dt, 'z', d, FCs));
 }
 
 #endif
-
 %}
 
 DECLARE
 %{
-        struct FermiChopper_struct FCVars;
+  struct FermiChopper_struct FCVars;
 %}
 
 INITIALIZE
@@ -390,14 +395,14 @@ TRACE
   double t1=0,t2=0; /* cylinder intersection time (at entry and exit of slit pack - n1 n2 - or cylinder) */
   double dt;        /* interaction intervals (e.g. time for exiting slit pack) */
 
-/************************ TIME OF FLIGHT RESET ************************/
+  /************************ TIME OF FLIGHT RESET ************************/
   if (zero_time == 1 && nu)
     t -= floor( (t+1/(4*nu))*(2*nu) )/(2*nu);
     
-/* zero arrays used to store positions */
+  /* zero arrays used to store positions */
   for (loopcounter=0; loopcounter < 5; FCVars.X[loopcounter] = FCVars.Z[loopcounter++]=0);
 
-/************** test, if the neutron interacts with the cylinder ***/
+  /************** test, if the neutron interacts with the cylinder ***/
   if (cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, yheight))
   {
     if (t1 <= 0) { /* Neutron started inside the cylinder */
@@ -756,13 +761,15 @@ TRACE
     zp1 = FC_zrot(x,z, t,FCVars);
     FCVars.X[3] = xp1; FCVars.Z[3] = zp1; /* slit exit */
     
-    if (fabs(xp1) >= nslit*w/2) { 
+    if (fabs(xp1) >= nslit*w/2) 
+    { 
       if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron X is outside slit package, x'=%8.3g (slit exit).\n", 
         NAME_CURRENT_COMP, xp1);
       FCVars.absorb_slitcoating++; ABSORB; 
     }
 
-    if (loopcounter >= FermiChopper_MAXITER) {
+    if (loopcounter >= FermiChopper_MAXITER) 
+    {
       if (verbose > 1 && FCVars.absorb_maxiterations < FermiChopper_MAXITER)
       printf("FermiChopper: %s: Max iterations %i reached inside slit. Absorb.\n",
         NAME_CURRENT_COMP, FermiChopper_MAXITER);
@@ -781,7 +788,8 @@ TRACE
       FCVars.absorb_exitslitpack++;  
       ABSORB; } 
 
-    if (t1 > 0) {
+    if (t1 > 0) 
+    {
       if (verbose > 1 && FCVars.absorb_wrongdirection < FermiChopper_MAXITER)
       printf("FermiChopper: %s: Neutrons are leaving chopper\n"
              "              in the wrong direction. Absorb.\n", NAME_CURRENT_COMP);
@@ -789,7 +797,8 @@ TRACE
       ABSORB;
     }
 
-    if (t2 <= 0 && FCVars.absorb_nocontrol < FermiChopper_MAXITER) {
+    if (t2 <= 0 && FCVars.absorb_nocontrol < FermiChopper_MAXITER) 
+    {
       if (verbose > 1)
       printf("FermiChopper: %s: Neutrons are leaving chopper\n"
              "              without any control. Absorb.\n", NAME_CURRENT_COMP);
@@ -810,14 +819,16 @@ TRACE
            NAME_CURRENT_COMP, t1, t2, x,y,z, zp1);
 
     /* Check if the neutron left the cylinder by its top or bottom */
-    if (fabs(y) >= yheight/2) { 
+    if (fabs(y) >= yheight/2) 
+    { 
       if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron hits top/bottom of cylinder, y=%8.3g (exiting)\n", 
         NAME_CURRENT_COMP, y);
       FCVars.absorb_topbottom++; ABSORB; 
     }
 
     /* must have X'< slit package width at package Z'=cylinder output */
-    if (fabs(xp1) >= nslit*w/2) { 
+    if (fabs(xp1) >= nslit*w/2) 
+    { 
       if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron X is outside slit package cylinder, xp1=%8.3g (exiting).\n", 
         NAME_CURRENT_COMP, xp1);
       FCVars.absorb_cylexit++; ABSORB; 

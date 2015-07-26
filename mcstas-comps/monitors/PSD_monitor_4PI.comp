@@ -58,6 +58,7 @@ DECLARE
   double PSD_p[nx][ny];
   double PSD_p2[nx][ny];
 %}
+
 INITIALIZE
 %{
   int i,j;
@@ -70,6 +71,7 @@ INITIALIZE
       PSD_p2[i][j] = 0;
     }
 %}
+
 TRACE
 %{
   double t0, t1, phi, theta;

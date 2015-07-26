@@ -48,55 +48,60 @@
 * %E
 *******************************************************************************/
 
-
 DEFINE COMPONENT V_selector
+
 DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (xwidth=0.03, yheight=0.05, zdepth=0.30, radius=0.12, alpha=48.298, length=0.25, d=0.0004, nu=300, nslit=72)
+
 OUTPUT PARAMETERS(omega, alpha_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f, A, d_s_alpha)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
 DECLARE
 %{
   double omega, alpha_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f, A, d_s_alpha;
 %}
+
 INITIALIZE
 %{
-    omega=nu*2*PI;
-    alpha_rad = alpha*DEG2RAD;
-    if (zdepth < length) zdepth=length;
+  omega=nu*2*PI;
+  alpha_rad = alpha*DEG2RAD;
+  if (zdepth < length) zdepth=length;
 %}
+
 TRACE
 %{
-    if (vz == 0)
-      ABSORB;
-    dt1= (-zdepth/2.0 - z)/vz;
-    PROP_DT(dt1); /* Propagate to the entry aperture */
-    if (x<(-xwidth/2.0) || x>(xwidth/2.0) || y<(-yheight/2.0) || y>(yheight/2.0))
-      ABSORB;
+  if (vz == 0)
+    ABSORB;
+  dt1= (-zdepth/2.0 - z)/vz;
+  PROP_DT(dt1); /* Propagate to the entry aperture */
+  if (x<(-xwidth/2.0) || x>(xwidth/2.0) || y<(-yheight/2.0) || y>(yheight/2.0))
+    ABSORB;
 
-    dt0 = (zdepth-length)/(2.0*vz); /* Propagate to the cylinder start */ 
-    PROP_DT(dt0);
-    r_i = sqrt(x*x+(y+radius)*(y+radius));
-    theta_i = atan2(x,y+radius);
+  dt0 = (zdepth-length)/(2.0*vz); /* Propagate to the cylinder start */ 
+  PROP_DT(dt0);
+  r_i = sqrt(x*x+(y+radius)*(y+radius));
+  theta_i = atan2(x,y+radius);
 
-    dt1 = length/vz; /* Propagate along the cylinder length */
-    PROP_DT(dt1);
-    r_f = sqrt(x*x+(y+radius)*(y+radius));
-    theta_f = atan2(x,y+radius);
+  dt1 = length/vz; /* Propagate along the cylinder length */
+  PROP_DT(dt1);
+  r_f = sqrt(x*x+(y+radius)*(y+radius));
+  theta_f = atan2(x,y+radius);
 
-    dt0 = (zdepth-length)/(2.0*vz); /* Propagate to the exit aperture */ 
-    PROP_DT(dt0);
-    if (x<(-xwidth/2.0) || x>(xwidth/2.0) || y<(-yheight/2.0) || y>(yheight/2.0))
-      ABSORB;
+  dt0 = (zdepth-length)/(2.0*vz); /* Propagate to the exit aperture */ 
+  PROP_DT(dt0);
+  if (x<(-xwidth/2.0) || x>(xwidth/2.0) || y<(-yheight/2.0) || y>(yheight/2.0))
+    ABSORB;
 
-    /* Calculate analytical transmission assuming continuous source */
+  /* Calculate analytical transmission assuming continuous source */
     
-    r_mean = (r_i + r_f)/2.0;          /* Approximation using mean radius */
-    d_s_alpha = theta_f-theta_i;
-    A = nslit/(2*PI)*( d/r_mean + fabs(alpha_rad+d_s_alpha-omega*length/vz) ); 
-    if (A >= 1)
-      ABSORB;
-    p*= (1-A);
-    SCATTER;
+  r_mean = (r_i + r_f)/2.0;          /* Approximation using mean radius */
+  d_s_alpha = theta_f-theta_i;
+  A = nslit/(2*PI)*( d/r_mean + fabs(alpha_rad+d_s_alpha-omega*length/vz) ); 
+  if (A >= 1)
+    ABSORB;
+  p*= (1-A);
+  SCATTER;
 %}
 
 MCDISPLAY

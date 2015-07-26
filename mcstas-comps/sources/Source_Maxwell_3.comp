@@ -70,12 +70,11 @@ DECLARE
   double w_source, h_source;
 
   double M(double l, double temp)
-/* A normalised Maxwellian distribution : Integral over all l = 1 */
-    {
-      double a=949.0/temp;
-      return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
-    }
-
+  /* A normalised Maxwellian distribution : Integral over all l = 1 */
+  {
+    double a=949.0/temp;
+    return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
+  }
 %}
 
 INITIALIZE

@@ -58,7 +58,7 @@ DECLARE
   double PolL_N[nL][npol];
   double PolL_p[nL][npol];
   double PolL_p2[nL][npol];
-  %}
+%}
 
 INITIALIZE
 %{
@@ -99,7 +99,7 @@ INITIALIZE
       PolL_p2[j][i] = 0;
     }
   }
-  %}
+%}
 
 TRACE
 %{
@@ -131,7 +131,7 @@ TRACE
   if (restore_neutron) {
     RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   }
-  %}
+%}
 
 SAVE
 %{
@@ -141,12 +141,12 @@ SAVE
 		  nL, npol,
 		  &PolL_N[0][0],&PolL_p[0][0],&PolL_p2[0][0],
 		  filename);
-  %}
+%}
 
 MCDISPLAY
 %{
   magnify("xy");
   rectangle("xy", 0, 0, 0, xwidth, yheight);
-  %}
+%}
 
 END

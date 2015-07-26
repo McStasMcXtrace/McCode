@@ -63,6 +63,7 @@ DECLARE
     double TOFPSDr_av_p[nt][nr];
     double TOFPSDr_av_p2[nt][nr];
   %}
+
 INITIALIZE
   %{
     int i,j;
@@ -77,6 +78,7 @@ INITIALIZE
         TOFPSDr_p2[i][j] = 0;
       }
   %}
+
 TRACE
   %{
     int i,j;
@@ -100,6 +102,7 @@ TRACE
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
   %}
+
 SAVE
   %{
     int i,j;

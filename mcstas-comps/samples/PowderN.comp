@@ -212,6 +212,7 @@ SETTING PARAMETERS (string reflections="NULL", string geometry="NULL",
                     concentric=0, density=0, weight=0, barns=1, Strain=0)
 OUTPUT PARAMETERS (line_info, columns, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
 SHARE
 %{
   /* used for reading data table from file */
@@ -364,17 +365,18 @@ SHARE
     if (!sTable.rows)
       exit(fprintf(stderr, "PowderN: %s: Error: The number of rows in %s "
        "should be at least %d\n", info->compname, SC_file, 1));
-    else size = sTable.rows;
+    else 
+      size = sTable.rows;
     Table_Info(sTable);
     printf("PowderN: %s: Reading %d rows from %s\n",
           info->compname, size, SC_file);
 
     if (info->column_order[0] == 4 && info->flag_barns !=0)
-    printf("PowderN: %s: Powder file probably of type Crystallographica/Fullprof (lau)\n"
+      printf("PowderN: %s: Powder file probably of type Crystallographica/Fullprof (lau)\n"
            "WARNING: but F2 unit is set to barns=1 (barns). Intensity might be 100 times too high.\n",
            info->compname);
-  if (info->column_order[0] == 17 && info->flag_barns == 0)
-    printf("PowderN: %s: Powder file probably of type Lazy Pulver (laz)\n"
+    if (info->column_order[0] == 17 && info->flag_barns == 0)
+      printf("PowderN: %s: Powder file probably of type Lazy Pulver (laz)\n"
            "WARNING: but F2 unit is set to barns=0 (fm^2). Intensity might be 100 times too low.\n",
            info->compname);
     /* allocate line_data array */
@@ -531,13 +533,14 @@ int calc_xsect(double v, double *qv, double *my_sv2, int count, double *sum,
 DECLARE
 %{
   struct line_info_struct line_info;
-
-  int    columns[9] = format;
-
+  int columns[9];
   off_struct offdata;
 %}
+
 INITIALIZE
 %{
+  columns = format;
+
   int i=0;
   struct line_data *L;
   line_info.Dd       = delta_d_d;

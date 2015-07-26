@@ -61,6 +61,7 @@ DECLARE
     double PSD_p[nx][ny];
     double PSD_p2[nx][ny];
   %}
+
 INITIALIZE
   %{
     int i,j;
@@ -83,6 +84,7 @@ INITIALIZE
       PSD_p2[i][j] = 0;
      }
   %}
+
 TRACE
   %{
     int i,j;
@@ -106,6 +108,7 @@ TRACE
     RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
   %}
+
 SAVE
   %{
     DETECTOR_OUT_2D(

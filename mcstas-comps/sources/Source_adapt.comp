@@ -104,19 +104,20 @@ SHARE
 DECLARE
 %{
   struct source_adapt
-    {
-      struct adapt_tree *atree; /* Adaptive search tree */
-      int idx;                  /* Index of current bin */
-      double *psi, *n;          /* Arrays of weight sums, neutron counts */
-      double psi_tot;           /* Total weight sum */
-      double pi, num;           /* Initial p, number of bins in tree */
-      double factor;            /* Adaption quality factor */
-      double a_beta;            /* Adaption agression factor */
-    } adpt;
+  {
+    struct adapt_tree *atree; /* Adaptive search tree */
+    int idx;                  /* Index of current bin */
+    double *psi, *n;          /* Arrays of weight sums, neutron counts */
+    double psi_tot;           /* Total weight sum */
+    double pi, num;           /* Initial p, number of bins in tree */
+    double factor;            /* Adaption quality factor */
+    double a_beta;            /* Adaption agression factor */
+  } adpt;
   double count;                 /* Neutron counter */
   double y_0, C, r_0;
   double p_in;
 %}
+
 INITIALIZE
 %{
   int i;
@@ -170,6 +171,7 @@ INITIALIZE
   r_0 = 1/(double)alpha*log((1 - y_0)/y_0)/(double)mcget_ncount();
   C = 1/(1 + log(y_0 + (1 - y_0)*exp(-r_0*mcget_ncount()))/(r_0*mcget_ncount()));
 %}
+
 TRACE
 %{
   double thmin,thmax,phmin,phmax,theta,phi,v,r,E,lambda;
@@ -278,6 +280,7 @@ FINALLY
   }
   adapt_tree_free(adpt.atree);
 %}
+
 MCDISPLAY
 %{
   magnify("xy");
