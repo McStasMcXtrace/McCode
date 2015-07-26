@@ -54,17 +54,25 @@ SHARE
 
 DECLARE
 %{
-char *file=NULL;                 /* path + filename */
-FILE *hfile  =NULL;			/* Neutron input filename handle */
-Neutron *ibuf=NULL;			/* Neutron input buffer */
-int size=0;			/* Number of neutrons currently in buffer */
-int pos=0;			/* Current position in buffer */
-int rep=0;			/* Neutron repeat count */
-int finished=0;			/* Set to 1 when last neutron read */
+  char *file;		/* path + filename */
+  FILE *hfile;		/* Neutron input filename handle */
+  Neutron *ibuf;	/* Neutron input buffer */
+  int size;		/* Number of neutrons currently in buffer */
+  int pos;		/* Current position in buffer */
+  int rep;		/* Neutron repeat count */
+  int finished;		/* Set to 1 when last neutron read */
 %}
 
 INITIALIZE
 %{
+  file=NULL;
+  hfile=NULL;
+  ibuf=NULL;
+  size=0;
+  pos=0;
+  rep=0;
+  finished=0;
+
   /* Open neutron input filename. */
   if (!filename || !strcmp(filename,"NULL") || !strcmp(filename,"0") || !strcmp(filename,"stdin")) {
     hfile = stdin;

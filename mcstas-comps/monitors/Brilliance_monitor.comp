@@ -72,6 +72,7 @@ SETTING PARAMETERS (lambda_0=0, lambda_1=20, restore_neutron=0, Freq, int tofcut
 OUTPUT PARAMETERS (tt_0, tt_1, BRIL_N, BRIL_p, BRIL_p2, BRIL_mean, BRIL_meanN, BRIL_meanE, BRIL_peak, BRIL_peakN,  BRIL_peakE, BRIL_shape, BRIL_shapeN,  BRIL_shapeE, xmin, xmax, ymin, ymax, ster, prsec, dlam, dt)
 //STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 //POLARISATION PARAMETERS (sx,sy,sz)
+
 DECLARE
   %{
     double BRIL_N[nt][nlam];
@@ -91,12 +92,15 @@ DECLARE
     double tt_0, tt_1;
     double xmin, xmax, ymin, ymax;
     double ster;
-    double prsec=1e-6;
+    double prsec;
     double dlam;
     double dt;
   %}
+
 INITIALIZE
   %{
+    prsec=1e-6;
+    
     int i,j;
 
     tt_0 = t_0*prsec;
@@ -132,6 +136,7 @@ INITIALIZE
     ster = xwidth * yheight/(source_dist*source_dist);
 
   %}
+
 TRACE
   %{
     int i,j;
@@ -163,8 +168,9 @@ TRACE
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }  
   %}
+
 SAVE
-  %{
+%{
   /* First, dump the 2D monitor */
   
   /* For each Wavelength channel, find peak brilliance */
@@ -234,10 +240,10 @@ SAVE
 		    &BRIL_N[0][0],&BRIL_p[0][0],&BRIL_p2[0][0],
 		    filename);
   }
-  %}
+%}
 
 MCDISPLAY
-  %{
+%{
     magnify("xy");
     multiline(5, (double)xmin, (double)ymin, 0.0,
                  (double)xmax, (double)ymin, 0.0,

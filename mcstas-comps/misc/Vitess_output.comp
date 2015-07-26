@@ -49,22 +49,24 @@ OUTPUT PARAMETERS (hfile, obuf, pos, p_out, p2_out)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{
-%include "general"
-%include "vitess-lib"
+  %include "general"
+  %include "vitess-lib"
 %}
 
 DECLARE
 %{
-char *file=NULL;                 /* path + filename             */
-FILE *hfile=NULL;			/* Neutron output filename handle  */
-Neutron *obuf;			/* Neutron output buffer       */
-int pos;			/* Current position in buffer  */
-double p_out;                   /* sum of output weight        */
-double p2_out;                  /* square sum of output weight */
+  char *file;			/* path + filename             */
+  FILE *hfile;			/* Neutron output filename handle  */
+  Neutron *obuf;			/* Neutron output buffer       */
+  int pos;			/* Current position in buffer  */
+  double p_out;                   /* sum of output weight        */
+  double p2_out;                  /* square sum of output weight */
 %}
 
 INITIALIZE
 %{
+  file=NULL;
+  hfile=NULL;
 
 #if defined (USE_MPI)
     if (mpi_node_count > 1) {

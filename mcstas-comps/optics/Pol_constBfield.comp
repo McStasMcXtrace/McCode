@@ -63,17 +63,18 @@ SHARE
     else 
       return (-wallpos-pos)/vel;
   }
-  %}
-
+%}
 
 DECLARE
 %{
-  /*   Larmor frequency */
-  double omegaL = 0;  
-  %}
+  // Larmor frequency
+  double omegaL;
+%}
 
 INITIALIZE
 %{
+  omegaL = 0;
+
   double velocity = 0, time = 0;
   
   if ((xwidth<=0) || (yheight<=0) || (length<=0)) {
@@ -148,13 +149,14 @@ TRACE
   
   sz = cos(omegaL*deltaT)*sz_in - sin(omegaL*deltaT)*sx_in;
   sx = sin(omegaL*deltaT)*sz_in + cos(omegaL*deltaT)*sx_in;
-  %}
+%}
 
 MCDISPLAY
 %{
   magnify("xy");
   
   box(0, 0, length/2, xwidth, yheight, length);
-  %}
+%}
 
 END
+

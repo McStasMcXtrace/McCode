@@ -77,21 +77,26 @@ SETTING PARAMETERS (xwidth=0, yheight=.3, length=.35,
                     roc=0, verbose=0, approx=0)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
 DECLARE
 %{
-  double width_of_slit=0, width_of_Soller=0, slit_theta=0;
+  double width_of_slit;
+  double width_of_Soller;
+  double slit_theta;
 %}
+
 INITIALIZE
 %{
+  width_of_slit=0;
+  width_of_Soller=0;
+  slit_theta=0;
+
   if (radius <= 0)
-    exit(printf("Collimator_radial: %s: incorrect radius=%g\n", 
-      NAME_CURRENT_COMP, radius));
+    exit(printf("Collimator_radial: %s: incorrect radius=%g\n", NAME_CURRENT_COMP, radius));
   if (length <= 0)
-    exit(printf("Collimator_radial: %s: invalid collimator length=%g\n", 
-      NAME_CURRENT_COMP, length));
+    exit(printf("Collimator_radial: %s: invalid collimator length=%g\n", NAME_CURRENT_COMP, length));
   if (transmission <= 0 || transmission >1)
-    exit(printf("Collimator_radial: %s: invalid transmission=%g\n", 
-      NAME_CURRENT_COMP, transmission));
+    exit(printf("Collimator_radial: %s: invalid transmission=%g\n", NAME_CURRENT_COMP, transmission));
   
   theta_max *= DEG2RAD;
   theta_min *= DEG2RAD;

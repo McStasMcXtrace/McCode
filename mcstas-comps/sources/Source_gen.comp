@@ -148,6 +148,7 @@ SETTING PARAMETERS (string flux_file="NULL", string xdiv_file="NULL", string ydi
                     Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,zdepth=0, int target_index=+1)
 OUTPUT PARAMETERS (p_in, lambda1, lambda2, lambda3, pTable, pTable_x, pTable_y,pTable_xmin, pTable_xmax, pTable_xsum, pTable_ymin, pTable_ymax, pTable_ysum, pTable_dxmin, pTable_dxmax, pTable_dymin, pTable_dymax,M)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
 SHARE
 %{
 %include "read_table-lib"
@@ -186,35 +187,38 @@ char *str_dup_numeric(char *orig)
 
 DECLARE
 %{
- double p_in;
- double lambda1;  /* first Maxwellian source */
- double lambda2;  /* second Maxwellian source */
- double lambda3;  /* third Maxwellian source */
- t_Table pTable;
- t_Table pTable_x;
- t_Table pTable_y;
- double  pTable_xmin;
- double  pTable_xmax;
- double  pTable_xsum=0;
- double  pTable_ymin;
- double  pTable_ymax;
- double  pTable_ysum=0;
- double  pTable_dxmin;
- double  pTable_dxmax;
- double  pTable_dymin;
- double  pTable_dymax;
- 
- double M(double l, double temp)
-/* A normalised Maxwellian distribution : Integral over all l = 1 */
-    {
-      double a=949.0/temp;
-      return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
-    }
+  double p_in;
+  double lambda1;  /* first Maxwellian source */
+  double lambda2;  /* second Maxwellian source */
+  double lambda3;  /* third Maxwellian source */
+  t_Table pTable;
+  t_Table pTable_x;
+  t_Table pTable_y;
+  double pTable_xmin;
+  double pTable_xmax;
+  double pTable_xsum;
+  double pTable_ymin;
+  double pTable_ymax;
+  double pTable_ysum;
+  double pTable_dxmin;
+  double pTable_dxmax;
+  double pTable_dymin;
+  double pTable_dymax;
 
+  /* A normalised Maxwellian distribution : Integral over all l = 1 */
+  double M(double l, double temp)
+  {
+    double a=949.0/temp;
+    return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
+  }
 %}
 
 INITIALIZE
 %{
+  pTable_xsum=0;
+  pTable_ysum=0;
+
+
   double source_area, k;
   
   if (target_index && !dist)

@@ -109,12 +109,14 @@ DECLARE
   /* Time-focusing parameters - currently unused */
   double tfocus_width,  tfocus_time,  dt;
   /* radius of vacated zone around the moderator */
-  double r_empty=2;
+  double r_empty;
   double lambda,xprime,yprime,zprime;
 %}
 
 INITIALIZE
 %{
+  r_empty=2;
+
   /* Weight multipliers */
   w_mult=acc_power/5;
   w_geom=1;

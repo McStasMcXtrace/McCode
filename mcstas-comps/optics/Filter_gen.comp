@@ -89,57 +89,54 @@ OUTPUT PARAMETERS (pTable, Mode_Table, Type_Table)
 SHARE
 %{
 #ifndef FILTER_GEN
-#define FILTER_GEN $Revision$
-#define UNKNOWN_TABLE    0
-#define ENERGY_TABLE     1
-#define WAVEVECTOR_TABLE 2
-#define WAVELENGTH_TABLE 3
-#define FLUX_ADAPT_SET   0
-#define FLUX_ADAPT_MULT  1
-#define FLUX_ADAPT_ADD   2
+  #define FILTER_GEN $Revision$
+  #define UNKNOWN_TABLE    0
+  #define ENERGY_TABLE     1
+  #define WAVEVECTOR_TABLE 2
+  #define WAVELENGTH_TABLE 3
+  #define FLUX_ADAPT_SET   0
+  #define FLUX_ADAPT_MULT  1
+  #define FLUX_ADAPT_ADD   2
 
-char FilterGen_Mode(char *str, char *Mode, char *Type, double *verbose)
-{
-  long i;
-  char *c;
-  if (!str || !strlen(str)) return(0);
-  c = malloc(strlen(str));
-  for (i=0; i<strlen(str); i++) c[i] = tolower(str[i]);
-  /* setup options */
-  if (strstr(str," k ") || strstr(str," q ") || strstr(str,"wavevector"))
-    *Type = WAVEVECTOR_TABLE;
-  if (strstr(str,"omega") || strstr(str," e ") || strstr(str,"energy"))
-    *Type = ENERGY_TABLE;
-  if (strstr(str,"lambda") || strstr(str,"wavelength") || strstr(str," L "))
-    *Type = WAVELENGTH_TABLE;
-  if (strstr(str,"set")) *Mode  = FLUX_ADAPT_SET;
-  if (strstr(str,"add")) *Mode  = FLUX_ADAPT_ADD;
-  if (strstr(str,"multiply")) *Mode  = FLUX_ADAPT_MULT;
-  if (strstr(str,"verbose")) *verbose = 1;
+  char FilterGen_Mode(char *str, char *Mode, char *Type, double *verbose)
+  {
+    long i;
+    char *c;
+    if (!str || !strlen(str)) return(0);
+    c = malloc(strlen(str));
+    for (i=0; i<strlen(str); i++) c[i] = tolower(str[i]);
+    /* setup options */
+    if (strstr(str," k ") || strstr(str," q ") || strstr(str,"wavevector"))
+      *Type = WAVEVECTOR_TABLE;
+    if (strstr(str,"omega") || strstr(str," e ") || strstr(str,"energy"))
+      *Type = ENERGY_TABLE;
+    if (strstr(str,"lambda") || strstr(str,"wavelength") || strstr(str," L "))
+      *Type = WAVELENGTH_TABLE;
+    if (strstr(str,"set")) *Mode  = FLUX_ADAPT_SET;
+    if (strstr(str,"add")) *Mode  = FLUX_ADAPT_ADD;
+    if (strstr(str,"multiply")) *Mode  = FLUX_ADAPT_MULT;
+    if (strstr(str,"verbose")) *verbose = 1;
 
-  return(*Mode);
-}
-
-%include "read_table-lib"
-
+    return(*Mode);
+  }
+  %include "read_table-lib"
 #endif
-
 %}
 
 DECLARE
 %{
-  char   Mode_Table  = FLUX_ADAPT_MULT;
-  char   Type_Table  = UNKNOWN_TABLE;
+  char Mode_Table;
+  char Type_Table;
   t_Table pTable;
 %}
 
 INITIALIZE
 %{
+  Mode_Table = FLUX_ADAPT_MULT;
+  Type_Table = UNKNOWN_TABLE;
   
   if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
-  
-  
 
   FilterGen_Mode(options, &Mode_Table, &Type_Table, &verbose);
   

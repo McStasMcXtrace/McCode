@@ -115,19 +115,52 @@ DECLARE
   t_Table rTable;
 
   /* statistics on first block */
-  double mean_x =0, mean_y =0, mean_z =0;
-  double mean_vx=0, mean_vy=0, mean_vz=0;
-  double mean_dx=0, mean_dy=0, mean_dz=0;
-  double min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
-  double max_x =-FLT_MAX, max_y =-FLT_MAX, max_z =-FLT_MAX;
-  double min_vx= FLT_MAX, min_vy= FLT_MAX, min_vz= FLT_MAX;
-  double max_vx=-FLT_MAX, max_vy=-FLT_MAX, max_vz=-FLT_MAX;
-  double n_count_extrapolated=0;
+  double mean_x, mean_y, mean_z;
+  double mean_vx, mean_vy, mean_vz;
+  double mean_dx, mean_dy, mean_dz;
+  double min_x, min_y, min_z;
+  double max_x, max_y, max_z;
+  double min_vx, min_vy, min_vz;
+  double max_vx, max_vy, max_vz;
+  double n_count_extrapolated;
   char type[10];
 %}
 
 INITIALIZE
 %{
+  repeat_number=1;
+  pos=0;
+  nrows=0;
+  Offset=0;
+  filename_ncount=0;
+  n_neutrons=0;
+  read_block=1;
+  first_block=1;
+  end_reading=0;
+  mean_x=0;
+  mean_y=0;
+  mean_z=0;
+  mean_vx=0;
+  mean_vy=0;
+  mean_vz=0;
+  mean_dx=0;
+  mean_dy=0;
+  mean_dz=0;
+  min_x=FLT_MAX;
+  min_y=FLT_MAX;
+  min_z=FLT_MAX;
+  max_x=-FLT_MAX;
+  max_y=-FLT_MAX;
+  max_z=-FLT_MAX;
+  min_vx=FLT_MAX;
+  min_vy=FLT_MAX;
+  min_vz=FLT_MAX;
+  max_vx=-FLT_MAX;
+  max_vy=-FLT_MAX;
+  max_vz=-FLT_MAX;
+  n_count_extrapolated=0;
+
+
   sprintf(type,"text");
   Table_Init(&rTable, 0, 0);
 

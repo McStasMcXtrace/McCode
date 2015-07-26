@@ -44,17 +44,78 @@ OUTPUT PARAMETERS (mean_vx, mean_vy, mean_vz, mean_dx, mean_dy, mean_dz,
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
 %{
-  double n_neutrons=0;
-  double n_neutrons_p=0;
-  double n_neutrons_p2=0;
-  double mean_x =0, mean_y =0, mean_z =0;
-  double mean_vx=0, mean_vy=0, mean_vz=0;
-  double mean_dx=0, mean_dy=0, mean_dz=0;
-  double mean_t =0, mean_v=0;
-  double min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
-  double max_x =-FLT_MAX, max_y =-FLT_MAX, max_z =-FLT_MAX;
-  double min_vx= FLT_MAX, min_vy= FLT_MAX, min_vz= FLT_MAX;
-  double max_vx=-FLT_MAX, max_vy=-FLT_MAX, max_vz=-FLT_MAX;
+  double n_neutrons;
+  double n_neutrons_p;
+  double n_neutrons_p2;
+
+  double mean_x;
+  double mean_y; 
+  double mean_z;
+  
+  double mean_vx;
+  double mean_vy; 
+  double mean_vz;
+
+  double mean_dx; 
+  double mean_dy; 
+  double mean_dz;
+
+  double mean_t; 
+  double mean_v;
+
+  double min_x;
+  double min_y; 
+  double min_z;
+  
+  double max_x; 
+  double max_y; 
+  double max_z;
+  
+  double min_vx; 
+  double min_vy;
+  double min_vz;
+
+  double max_vx;
+  double max_vy;
+  double max_vz;
+%}
+
+INITIALIZE
+%{
+  n_neutrons=0;
+  n_neutrons_p=0;
+  n_neutrons_p2=0;
+
+  mean_x=0;
+  mean_y=0; 
+  mean_z=0;
+  
+  mean_vx=0;
+  mean_vy=0; 
+  mean_vz=0;
+
+  mean_dx=0; 
+  mean_dy=0; 
+  mean_dz=0;
+
+  mean_t=0; 
+  mean_v=0;
+
+  min_x=FLT_MAX;
+  min_y=FLT_MAX; 
+  min_z=FLT_MAX;
+  
+  max_x=-FLT_MAX; 
+  max_y=-FLT_MAX; 
+  max_z=-FLT_MAX;
+  
+  min_vx=FLT_MAX; 
+  min_vy=FLT_MAX;
+  min_vz=FLT_MAX;
+
+  max_vx=-FLT_MAX;
+  max_vy=-FLT_MAX;
+  max_vz=-FLT_MAX;
 %}
 
 TRACE

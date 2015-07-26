@@ -1968,11 +1968,9 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
 
 DECLARE
 %{
-
   struct Sqw_sample_struct VarSqw;
-  int    columns[9] = powder_format;
+  int columns[9];
   off_struct offdata;
-/* end DECLARE */
 %}
 
 /*****************************************************************************/
@@ -1980,6 +1978,8 @@ DECLARE
 
 INITIALIZE
 %{
+  columns = powder_format;
+
   int i;
   /* check for parameters */
 

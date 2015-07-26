@@ -129,26 +129,30 @@ OUTPUT PARAMETERS (Option, CurvGeomOption, TOF, WL, radius_of_curv,
 
 SHARE
 %{
- %include "general.c"
- %include "intersection.c"
- %include "vitess-lib"
+  %include "general.c"
+  %include "intersection.c"
+  %include "vitess-lib"
 %}
 
 DECLARE
 %{
- %include "chopper_fermi.h"   /* instance variables */
-
-  double     omega      = 0.0,     /* rotation frequency */
-             optimal_wl = 0.0;     /* optimal wavelength */
-  VectorType pos_ch={0.0,0.0,0.0}; /* centre pos. of the FC in the frame of the exit of the prev. comp. [cm] */
-
- #define  MCSTAS_SHARE
- %include "chopper_fermi.c"   /* include functions */
- #undef   MCSTAS_SHARE
+  %include "chopper_fermi.h"   /* instance variables */
+  
+  double omega;      /* rotation frequency */
+  double optimal_wl; /* optimal wavelength */
+  VectorType pos_ch; /* centre pos. of the FC in the frame of the exit of the prev. comp. [cm] */
+  
+  #define MCSTAS_SHARE
+  %include "chopper_fermi.c" /* include functions */
+  #undef MCSTAS_SHARE
 %}
 
 INITIALIZE
 %{
+  omega = 0.0;
+  optimal_wl = 0.0;
+  pos_ch = {0.0, 0.0, 0.0};
+
   double x,y,z;
   coords_get(POS_R_COMP_INDEX(INDEX_CURRENT_COMP), &x, &y, &z);
   pos_ch[0] = -100.0 * z;
@@ -170,9 +174,12 @@ INITIALIZE
   /* checks and completion of input data */
   CurvGeomOption = (int) GeomOption;
   if (GeomOption > 0 && omega*r_curv==0)
-  { printf("Error: 'omega*r_curv' must not be zero for curved Fermi chopper"); exit(-1);}
+  { 
+    printf("Error: 'omega*r_curv' must not be zero for curved Fermi chopper"); exit(-1);
+  }
   switch(GeomOption)
-  { case 0: Option=1; optimal_wl=0.0;    break;
+  {
+    case 0: Option=1; optimal_wl=0.0;    break;
     case 1: Option=2; optimal_wl=LAMBDA_FROM_V(2.0*omega*r_curv); break;
     case 2: Option=2; optimal_wl=LAMBDA_FROM_V(2.0*omega*r_curv); break;
     default: printf("Wrong option! Good options: 0-straight, 1-parabolic, 2-circular");

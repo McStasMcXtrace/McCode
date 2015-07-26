@@ -81,18 +81,20 @@ OUTPUT PARAMETERS (DEFS, Vars, buffer_index)
 
 SHARE
 %{
-%include "monitor_nd-lib"
+  %include "monitor_nd-lib"
 %}
 
 DECLARE
 %{
   MonitornD_Defines_type DEFS;
   MonitornD_Variables_type Vars;
-  long   buffer_index=0;
+  long buffer_index;
 %}
 
 INITIALIZE
 %{
+  long buffer_index=0;
+  
   int i;
   char tmp[1024];
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);

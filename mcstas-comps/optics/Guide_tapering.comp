@@ -112,8 +112,9 @@ OUTPUT PARAMETERS(w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf,h1_in,h2_out,w1_in,w2_
 
 SHARE
 %{
-%include "ref-lib"
+  %include "ref-lib"
 %}
+
 DECLARE
 %{
   double *w1c;
@@ -131,11 +132,14 @@ DECLARE
   char file_name[1024];
   char *ep;
   FILE *num;
-  double rotation_h=0, rotation_v=0;
+  double rotation_h, rotation_v;
 %}
 
 INITIALIZE
 %{
+  rotation_h=0;
+  rotation_v=0;
+
   // dynamic memory allocation is good
   w1c = (double*)malloc(sizeof(double)*segno);
   w2c = (double*)malloc(sizeof(double)*segno);
