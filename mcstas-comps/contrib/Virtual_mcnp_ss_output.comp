@@ -91,11 +91,12 @@ DECLARE
 
   double to_mcstas[8];
   double from_mcstas[8];
-  unsigned int counterout = 0;
-  %}
+  unsigned int counterout;
+%}
 
 INITIALIZE
 %{
+  counterout = 0;
 
   char  exit_flag=0;  /* set to 1 if end of simulation */
   long   filesize  =0;

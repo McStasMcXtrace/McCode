@@ -72,18 +72,21 @@ SHARE
     else 
       return (-wallpos-pos)/vel;
   }
-  %}
-
+%}
 
 DECLARE
 %{
-  /*   Larmor frequency */
-  double omegaL = 0;  
-  double omegaLguide = 0;  
-  %}
+  /* Larmor frequency */
+  double omegaL;
+  double omegaLguide;
+%}
 
 INITIALIZE
 %{
+  omegaL = 0;  
+  omegaLguide = 0;  
+
+
   double velocity = 0, time = 0;
   
   if ((xwidth<=0) || (yheight<=0) || (zdepth<=0)) {

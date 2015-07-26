@@ -70,12 +70,13 @@ OUTPUT PARAMETERS (hfile,previous_batch)
 
 DECLARE
 %{
-long  previous_batch=0;
-FILE *hfile;
+  long previous_batch;
+  FILE *hfile;
 %}
 
 INITIALIZE
 %{
+  previous_batch=0;
   int i;
   char ** head;
   long nl;

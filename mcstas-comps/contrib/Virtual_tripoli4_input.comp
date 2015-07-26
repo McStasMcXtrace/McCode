@@ -220,30 +220,58 @@ char **tripoli_get_header(FILE *hfile,long *nl){
 
 DECLARE
 %{
-  int   rep=1;                    /* Neutron repeat count */
-  int     repeat_cnt;             /* Repeat count, MPI taken into account */
-  FILE *hfile;                    /* Neutron input file handle */
-  char **head;                    /*Tripol4 header*/
-  long  nl;                       /* Number of lines in header*/
-  long  first_batch=0;                /* position in file of first batch */
-  long  begin_batch=0, end_batch=0;   /* current batch numbers */
-  char  do_rotate=0, do_translate=0;
-  double mean_x =0, mean_y =0, mean_z =0;
+  int rep;                       /* Neutron repeat count */
+  int repeat_cnt;                /* Repeat count, MPI taken into account */
+  FILE *hfile;                   /* Neutron input file handle */
+  char **head;                   /* Tripol4 header*/
+  long nl;                       /* Number of lines in header*/
+  long first_batch;              /* position in file of first batch */
+  long begin_batch, end_batch;   /* current batch numbers */
+  char do_rotate, do_translate;
+  double mean_x, mean_y, mean_z;
   double bx,by,bz;
-  double angle2z=0;
-  long   nbatch=0;
-  long   nsize =0;
-  double intensity_extrapolated=0;
+  double angle2z;
+  long nbatch;
+  long nsize;
+  double intensity_extrapolated;
 
-  double min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
-  double max_x =-FLT_MAX, max_y =-FLT_MAX, max_z =-FLT_MAX;
-  double min_vx= FLT_MAX, min_vy= FLT_MAX, min_vz= FLT_MAX;
-  double max_vx=-FLT_MAX, max_vy=-FLT_MAX, max_vz=-FLT_MAX;
-  double n_count_extrapolated=0;
+  double min_x, min_y, min_z;
+  double max_x, max_y, max_z;
+  double min_vx, min_vy, min_vz;
+  double max_vx, max_vy, max_vz;
+  double n_count_extrapolated;
 %}
 
 INITIALIZE
 %{
+  rep=1;
+  first_batch=0;
+  begin_batch=0;
+  end_batch=0;
+  do_rotate=0;
+  do_translate=0;
+  mean_x=0;
+  mean_y=0;
+  mean_z=0;
+  angle2z=0;
+  nbatch=0;
+  nsize=0;
+  intensity_extrapolated=0;
+  min_x=FLT_MAX;
+  min_y=FLT_MAX;
+  min_z=FLT_MAX;
+  max_x=-FLT_MAX;
+  max_y=-FLT_MAX;
+  max_z=-FLT_MAX;
+  min_vx=FLT_MAX;
+  min_vy=FLT_MAX;
+  min_vz=FLT_MAX;
+  max_vx=-FLT_MAX;
+  max_vy=-FLT_MAX;
+  max_vz=-FLT_MAX;
+  n_count_extrapolated=0;
+
+
   char  word[T4_WORDSIZE];
   char  exit_flag=0;  /* set to 1 if end of simulation */
   int   result_read;

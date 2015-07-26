@@ -77,12 +77,14 @@ char *get_current_time(){
 %}
 DECLARE
 %{
-int n_neutron=1;
-FILE *hfile;
+  int n_neutron;
+  FILE *hfile;
 %}
 
 INITIALIZE
 %{
+  n_neutron=1;
+  
   int i;
   char ** head;
   long nl;

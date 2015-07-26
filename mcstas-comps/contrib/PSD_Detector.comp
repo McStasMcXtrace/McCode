@@ -247,34 +247,42 @@ DECLARE
     double *PHSpectrum0; // 1 for each neutron
     double *PHSpectrum;  // Pulse height spectrum procuced in the detector, 1 keV/channel
     double *PHSpectrum2; // 2nd order moments
-    long   PHSpectrum_n;
+    long PHSpectrum_n;
     double CrossSectionHe; // cross section for 0.18 nm neutrons in the converter
 
-    double CountNeutrons=0; // counter over all neutrons to pass the component
-    double GeomCumul = 0; /* 'geometric' cumulative probability that
+    double CountNeutrons; // counter over all neutrons to pass the component
+    double GeomCumul; /* 'geometric' cumulative probability that
              simulated neutrons will encounter the detector on their path */
-    double AbsCumul = 0; /* cumulative probability that
+    double AbsCumul; /* cumulative probability that
              simulated neutrons that encounter the detector on their path
              will be absorbed */
-    double SensVolCumul = 0; /* cumulative probability that
+    double SensVolCumul; /* cumulative probability that
              simulated neutrons that encounter the detector on their path
              will produce a signal (perhaps small) with COG in the
        sensitive volume of the detector */
-    double DetCumul = 0; /* cumulative probability that
+    double DetCumul; /* cumulative probability that
              simulated neutrons will be absorbed *and* produce a signal
              that will cross the threshold */
     long nH_p; // number of table elements for the proton in Helium-3
     long nH_t; // number of table elements for the triton in Helium-3
     double FullEnergyP;
     double FullEnergyT;
-    long   VariousErrors=0; /* container for the occurrence of various
+    long VariousErrors; /* container for the occurrence of various
              errors, so that the algorithm gives the matching error
              messages only once each */
-    long   DetectorType=0; // 1 for box, 2 for tube, 4 for cylinder ('banana'). Anything else gives an error.
+    long DetectorType; // 1 for box, 2 for tube, 4 for cylinder ('banana'). Anything else gives an error.
   %}
 
 INITIALIZE
 %{
+  CountNeutrons=0;
+  GeomCumul=0; 
+  AbsCumul=0;
+  SensVolCumul=0;
+  DetCumul=0; 
+  VariousErrors=0;
+  DetectorType=0;
+
   long  i,j;
 
   t_Table Part_He_3_p;

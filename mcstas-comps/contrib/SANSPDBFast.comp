@@ -65,7 +65,7 @@ DECLARE
 	double Absorption;
 	double q;
 	double NumberDensity;
-	const int OrderOfHarmonics = 21;
+	const int OrderOfHarmonics;
 
 	// Arrays for storing q and I(q)
 	double * qArray;
@@ -79,6 +79,8 @@ DECLARE
 
 INITIALIZE
 %{
+	OrderOfHarmonics = 21;
+
 	// Rescale concentration into number of aggregates per m^3 times 10^-4
 	NumberDensity = Concentration * 6.02214129e19;
 

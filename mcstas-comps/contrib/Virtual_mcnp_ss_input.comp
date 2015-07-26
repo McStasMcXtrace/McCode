@@ -91,13 +91,18 @@ DECLARE
 
   double to_mcstas[8];
   double from_mcstas[8];
-  unsigned int ntrk = 0;
-  unsigned int nhis = 0;
-  unsigned int counter = 0;
-  %}
+  unsigned int ntrk;
+  unsigned int nhis;
+  unsigned int counter;
+%}
 
 INITIALIZE
 %{
+  ntrk = 0;
+  nhis = 0;
+  counter = 0;
+
+
   char  exit_flag=0;  /* set to 1 if end of simulation */
   long   filesize  =0;
 

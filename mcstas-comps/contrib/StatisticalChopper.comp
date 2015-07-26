@@ -56,14 +56,20 @@ OUTPUT PARAMETERS (delta_y, height,omega, Sequence,SequenceIndex,nslit,m)
 DECLARE 
 %{
   double delta_y,height,omega;
-  int   *Sequence=NULL; /* Array containing 0=closed and 1=opened*/
-  int   *SequenceIndex=NULL; /* index of '1' in the sequence */
-  int    nslit=0;
-  int    m=0;           /* sum of opened slits ('1' in sequence) */
+  int *Sequence;      /* Array containing 0=closed and 1=opened*/
+  int *SequenceIndex; /* index of '1' in the sequence */
+  int nslit;
+  int m;              /* sum of opened slits ('1' in sequence) */
 %}
 
 INITIALIZE 
 %{
+  Sequence=NULL;
+  SequenceIndex=NULL;
+  nslit=0;
+  m=0;
+
+
   /* If slit height 'unset', assume full opening */
   if (yheight == 0) {
     height=radius;

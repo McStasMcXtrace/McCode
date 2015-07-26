@@ -502,10 +502,10 @@ return out;
 DECLARE
 %{
   double Idsdw[31][19];
-  double Qmind  = 0.0001;            /* AA-1 somehow SANS limit -- the total range should be reasonably large, so Qmind close enough to ZERO        */
-  double Qmaxd  = 2.1544346900319;   /* AA-1 approx. model Q-limit, where coh. scatt. becomes zero -- practical limit -- 1.0 for most SANS problems */
+  double Qmind;            /* AA-1 somehow SANS limit -- the total range should be reasonably large, so Qmind close enough to ZERO        */
+  double Qmaxd;            /* AA-1 approx. model Q-limit, where coh. scatt. becomes zero -- practical limit -- 1.0 for most SANS problems */
 
-  double Qminl,Qmaxl,l10;      /* logarithms of Qmind, Qmaxd and constant ln(10) */
+  double Qminl, Qmaxl, l10;  /* logarithms of Qmind, Qmaxd and constant ln(10) */
 
   double Qtab[512];
   double Itab[512];
@@ -513,9 +513,14 @@ DECLARE
 
 INITIALIZE
 %{
-    if (!xwidth || !yheight || !zthick) {
-	exit(fprintf(stderr,"SANS_DebyeS: %s:	 sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
-    }
+  Qmind = 0.0001;
+  Qmaxd = 2.1544346900319;
+
+
+  if (!xwidth || !yheight || !zthick) 
+  {
+    exit(fprintf(stderr,"SANS_DebyeS: %s:	 sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+  }
 
   int iii,jjj,kkk;
 
