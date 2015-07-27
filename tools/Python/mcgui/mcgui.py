@@ -446,7 +446,7 @@ class McGuiAppController():
         # load instrument file from command line pars
         for a in sys.argv:
             if os.path.isfile(a):
-                if os.path.splitext(a)[1] == 'instr':
+                if os.path.splitext(a)[1] == '.instr':
                     if self.state.getInstrumentFile() == '':
                         self.state.loadInstrument(a)
         
