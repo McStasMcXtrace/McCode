@@ -444,10 +444,11 @@ class McGuiAppController():
         self.state.init()
         
         # load instrument file from command line pars
-        # TODO: make a try-catch to allow program continuation if this fails
         for a in sys.argv:
-            if self.state.getInstrumentFile() == '':
-                self.state.loadInstrument(a)
+            if os.path.isfile(a):
+                if os.path.splitext(a)[1] == 'instr':
+                    if self.state.getInstrumentFile() == '':
+                        self.state.loadInstrument(a)
         
         self.view.showMainWindow()
     
