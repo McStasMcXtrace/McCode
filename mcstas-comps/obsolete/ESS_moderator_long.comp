@@ -143,6 +143,21 @@ DEFINITION PARAMETERS ()
 		    branch2_t=0.5, int src_2012=1, tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0, beamport_angle=30)
 OUTPUT PARAMETERS (M, F, l_range, w_mult, w_geom, w_geom, w_geom_t)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
+SHARE
+%{
+  double M(double l, double temp)
+  {
+    double a=949.0/temp;
+    return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
+  }
+
+  double F(double t, double tau, int n)
+  {
+    return (exp(-t/tau)-exp(-n*t/tau))*n/(n-1)/tau;
+  }
+%}
+
 DECLARE
 %{
   double l_range, w_mult, w_geom, w_geom_c, w_geom_t;
@@ -150,17 +165,6 @@ DECLARE
   double t1x,t1y,t1z,t2x,t2y,t2z;
   /* Neutron-specific distribution-shape variables */
   double T_n, tau_n, tau1_n, tau2_n, chi2_n, I0_n, I2_n, branch1_n, branch2_n;
-  
-  double M(double l, double temp)
-    {
-      double a=949.0/temp;
-      return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
-    }
-
-  double F(double t, double tau, int n)
-    {
-      return (exp(-t/tau)-exp(-n*t/tau))*n/(n-1)/tau;
-    }
   
   /* Target station geometry... */
   double r_empty = 2.0; /* two meters from moderator surface and out... */
@@ -246,6 +250,7 @@ INITIALIZE
   NORM(t2x,t2y,t2z);
   
 %}
+
 TRACE
 %{
   double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus,tail_flag,cor,dt,xprime,yprime,zprime;
@@ -267,7 +272,9 @@ TRACE
     //T=50, tau=287e-6, tau1=0, tau2=20e-6, chi2=0.9, I0=6.9e11, I2=27.6e10, branch1=0, branch2=0.5;
     T_n=T; tau_n=tau; tau1_n=tau1; tau2_n=tau2; chi2_n=chi2; I0_n=I0; I2_n=I2; branch1_n=branch1; branch2_n=branch2;
     w_geom = w_geom_c;
-  }  else  {                      //case: thermal moderator
+  }
+  else //case: thermal moderator
+  {
     /* choose "left" or "right" thermal wing */
     int isleft = ( rand01() < 0.5 ) ? 1 : 0;
     double poshorz, posvert;
@@ -294,9 +301,8 @@ TRACE
     w_geom = w_geom_t;
   }
 
-  randvec_target_rect_real(&xf, &yf, &r, &w_focus,
-			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
- 
+  randvec_target_rect_real(&xf, &yf, &r, &w_focus, tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+
   dx = xf-x;
   dy = yf-y;
   r = sqrt(dx*dx+dy*dy+dist*dist);
@@ -314,115 +320,123 @@ TRACE
     dt = tfocus_dist/vz;			/* Flight time to time window (chopper) */
   }
   tail_flag = (rand01()<branch_tail);   /* Choose tail/bulk */
- if (tail_flag)
- {
-  if (rand01() < branch2_n)
+  if (tail_flag)
   {
-    if (tau1_n>0)
-      if (rand01() < branch1_n)     /* Quick and dirty non-general solution */
-      {  /* FIRST CASE a */
-        tau_l = tau_n;
-        p = 1/(branch1_n*branch2_n*branch_tail); /* Correct for switching prob. */
+    if (rand01() < branch2_n)
+    {
+      if (tau1_n>0)
+      {
+        if (rand01() < branch1_n)     /* Quick and dirty non-general solution */
+        {  /* FIRST CASE a */
+          tau_l = tau_n;
+          p = 1/(branch1_n*branch2_n*branch_tail); /* Correct for switching prob. */
+        }
+        else
+        {  /* FIRST CASE b */
+          tau_l = tau1_n;
+          p = 1/((1-branch1_n)*branch2_n*branch_tail); /* Correct for switching prob. */
+        }
       }
       else
-      {  /* FIRST CASE b */
-        tau_l = tau1_n;
-        p = 1/((1-branch1_n)*branch2_n*branch_tail); /* Correct for switching prob. */
-      }
-    else
       {
         tau_l = tau_n;
         p = 1/(branch2_n*branch_tail); /* Correct for switching prob. */
       }
-    t = -tau_l*log(1e-12+rand01());       /* Sample from long-time tail a */
-    /* Correct for true pulse shape */
-    p *= w_focus;                         /* Correct for target focusing */
-    p *= tau_l/d;                         /* Correct for tail part */
-    p *= I0_n*w_mult*w_geom*M(lambda,T_n);           /* Calculate true intensity */
-  }
-  else
-  {
-    /* SECOND CASE */
-    tau_l = tau2_n*lambda;
-    t = -tau_l*log(1e-12+rand01());       /* Sample from long-time tail */
-    p = n2/(n2-1)*((1-exp(-d/tau_l))-(1-exp(-n2*d/tau_l))*exp(-(n2-1)*t/tau_l)/n);
-                                          /* Correct for true pulse shape */
-    p /= (1-branch2_n)*branch_tail;          /* Correct for switching prob. */
-    p *= tau_l/d;                         /* Correct for tail part */
-    p *= w_focus;                         /* Correct for target focusing */
-    p *= I2_n*w_mult*w_geom/(1+exp(chi2_n*lambda-2.2))/lambda;                                         /* Calculate true intensity */
-  }
-  t += d;                                 /* Add pulse length */
- }
- else /* Tail-flag */
- {
-   if (tfocus_width>0) {
-     t = tfocus_time-dt;                    /* Set time to hit time window center */
-     t += randpm1()*tfocus_width/2.0;       /* Add random time within window width */
-   } else {
-     t = d*rand01();                        /* Sample from bulk pulse */
-   }
-  if (t<0) ABSORB;                       /* Kill neutron if outside pulse duration */
-  if (t>d) ABSORB;
-  if (rand01() < branch2_n)
-  {
-    if (rand01() < branch1_n)     /* Quick and dirty non-general solution */
-    {  /* FIRST CASE a */
-      tau_l = tau_n;
-      p = 1/(branch1_n*branch2_n*(1-branch_tail)); /* Correct for switching prob. */
+      t = -tau_l*log(1e-12+rand01());       /* Sample from long-time tail a */
+      /* Correct for true pulse shape */
+      p *= w_focus;                         /* Correct for target focusing */
+      p *= tau_l/d;                         /* Correct for tail part */
+      p *= I0_n*w_mult*w_geom*M(lambda,T_n);           /* Calculate true intensity */
     }
     else
-    {  /* FIRST CASE b */
-      tau_l = tau1_n;
-      p = 1/((1-branch1_n)*branch2_n*(1-branch_tail)); /* Correct for switching prob. */
+    {
+      /* SECOND CASE */
+      tau_l = tau2_n*lambda;
+      t = -tau_l*log(1e-12+rand01());       /* Sample from long-time tail */
+      p = n2/(n2-1)*((1-exp(-d/tau_l))-(1-exp(-n2*d/tau_l))*exp(-(n2-1)*t/tau_l)/n);
+                                            /* Correct for true pulse shape */
+      p /= (1-branch2_n)*branch_tail;          /* Correct for switching prob. */
+      p *= tau_l/d;                         /* Correct for tail part */
+      p *= w_focus;                         /* Correct for target focusing */
+      p *= I2_n*w_mult*w_geom/(1+exp(chi2_n*lambda-2.2))/lambda; /* Calculate true intensity */
     }
-    p *= 1-n/(n-1)*(exp(-t/tau_l)-exp(-n*t/tau_l)/n); /* Correct for true pulse shape */
-    p *= w_focus;                         /* Correct for target focusing */
-    if (tfocus_width>0) {
-      p *= tfocus_width/d;    	  	  /* Correct for time focusing */
-    }
-    p *= I0_n*w_mult*w_geom*M(lambda,T_n);       /* Calculate true intensity */
-   }
-  else
-  {
-    /* SECOND CASE */
-    tau_l = tau2_n*lambda;
-    p = 1-n2/(n2-1)*(exp(-t/tau_l)-exp(-n2*t/tau_l)/n2); /* Correct for true pulse shape */
-    p /= (1-branch2_n)*(1-branch_tail);   /* Correct for switching prob. */
-    p *= w_focus;                         /* Correct for target focusing */
-    if (tfocus_width) {
-      p *= tfocus_width/d;    		  /* Correct for time focusing */
-    }
-    p *= I2_n*w_mult*w_geom/(1+exp(chi2_n*lambda-2.2))/lambda;    /* Calculate true intensity */
+    t += d;                                 /* Add pulse length */
   }
- }
+  else /* Tail-flag */
+  {
+    if (tfocus_width>0) 
+    {
+      t = tfocus_time-dt;                    /* Set time to hit time window center */
+      t += randpm1()*tfocus_width/2.0;       /* Add random time within window width */
+    } 
+    else 
+    {
+      t = d*rand01();                        /* Sample from bulk pulse */
+    }
+    if (t<0) ABSORB;                       /* Kill neutron if outside pulse duration */
+    if (t>d) ABSORB;
+    if (rand01() < branch2_n)
+    {
+      if (rand01() < branch1_n)     /* Quick and dirty non-general solution */
+      {  /* FIRST CASE a */
+        tau_l = tau_n;
+        p = 1/(branch1_n*branch2_n*(1-branch_tail)); /* Correct for switching prob. */
+      }
+      else
+      {  /* FIRST CASE b */
+        tau_l = tau1_n;
+        p = 1/((1-branch1_n)*branch2_n*(1-branch_tail)); /* Correct for switching prob. */
+      }
+      p *= 1-n/(n-1)*(exp(-t/tau_l)-exp(-n*t/tau_l)/n); /* Correct for true pulse shape */
+      p *= w_focus;                         /* Correct for target focusing */
+      if (tfocus_width>0) {
+        p *= tfocus_width/d;    	  	  /* Correct for time focusing */
+      }
+      p *= I0_n*w_mult*w_geom*M(lambda,T_n);       /* Calculate true intensity */
+    }
+    else
+    {
+      /* SECOND CASE */
+      tau_l = tau2_n*lambda;
+      p = 1-n2/(n2-1)*(exp(-t/tau_l)-exp(-n2*t/tau_l)/n2); /* Correct for true pulse shape */
+      p /= (1-branch2_n)*(1-branch_tail);   /* Correct for switching prob. */
+      p *= w_focus;                         /* Correct for target focusing */
+      if (tfocus_width) {
+        p *= tfocus_width/d;    		  /* Correct for time focusing */
+      }
+      p *= I2_n*w_mult*w_geom/(1+exp(chi2_n*lambda-2.2))/lambda;    /* Calculate true intensity */
+    }
+  }
 
- if (cold && src_2012) {
-   /* Correction factors to converts 'predicted' spectrum from cold moderator to the one observed in MCNPX */
-   if (lambda<=2.5) cor=log(1.402+0.898*lambda)*(2.0776-4.1093*lambda+4.8836*pow(lambda,2)-2.4715*pow(lambda,3)+0.4521*pow(lambda,4));
-   else if (lambda <= 3.5) cor = log(1.402 + 0.898*lambda)*(4.3369 - 1.8367*lambda + 0.2524*pow(lambda,2) );
-   else if (lambda  > 3.5) cor = log(1.402 + 0.898*lambda);
- } else {
-   /* Thermal (pre-)moderator, i.e. no correction */
-   cor = 1.0;
- }
- p *= cor;
- 
- /* Correct weight for sampling of cold vs. thermal events. */
- if (cold) {
-   p /=cold_frac;
- } else {
-   p/=(1-cold_frac);
- }
- 
- t+=(double)floor((n_pulses)*rand01())/nu;   /* Select a random pulse */
+  if (cold && src_2012) 
+  {
+    /* Correction factors to converts 'predicted' spectrum from cold moderator to the one observed in MCNPX */
+    if (lambda<=2.5) 
+      cor=log(1.402+0.898*lambda)*(2.0776-4.1093*lambda+4.8836*pow(lambda,2)-2.4715*pow(lambda,3)+0.4521*pow(lambda,4));
+    else if (lambda <= 3.5) 
+      cor = log(1.402 + 0.898*lambda)*(4.3369 - 1.8367*lambda + 0.2524*pow(lambda,2) );
+    else if (lambda  > 3.5) 
+      cor = log(1.402 + 0.898*lambda);
+  } 
+  else 
+  {
+    /* Thermal (pre-)moderator, i.e. no correction */
+    cor = 1.0;
+  }
+  p *= cor;
 
+  /* Correct weight for sampling of cold vs. thermal events. */
+  if (cold) {
+    p /=cold_frac;
+  } else {
+    p/=(1-cold_frac);
+  }
  
+  t+=(double)floor((n_pulses)*rand01())/nu;   /* Select a random pulse */
 %}
 
 MCDISPLAY
 %{
-
   /* Draw cold moderator as cylinder */
   magnify("xz");
   circle("xz", 0,  yheight/2.0, 0, cyl_radius);
@@ -461,7 +475,6 @@ MCDISPLAY
   
   /* Rectangle indicating the chosen focus rectangle - where the optics starts... */
   rectangle("xy",tx,ty,tz,focus_xw,focus_yh);
-
 %}
 
 END

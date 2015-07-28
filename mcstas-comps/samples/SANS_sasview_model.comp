@@ -202,15 +202,21 @@ DECLARE
   
   float model_pars_ptr[] = model_pars;
 
-  double R=100;
-  double Phi=1e-3;
-  double Delta_rho=0.6;
-  double sigma_abs=0.50;
+  double R;
+  double Phi;
+  double Delta_rho;
+  double sigma_abs;
   double my_s_pre, my_a_v, q_v, q, shape;
 %}
 
 INITIALIZE
 %{
+  R=100;
+  Phi=1e-3;
+  Delta_rho=0.6;
+  sigma_abs=0.50;
+
+
   shape=-1;  /* -1:no shape, 0:cyl, 1:box, 2:sphere  */
   if (xwidth && yheight && zdepth)  
     shape=1; 

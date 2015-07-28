@@ -90,19 +90,19 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_adapt
+
 DEFINITION PARAMETERS (N_E=20, N_xpos=20, N_xdiv=20)
+
 SETTING PARAMETERS (xmin=0,xmax=0,ymin=0,ymax=0, xwidth=0, yheight=0, string filename=0,
   dist=0, focus_xw=0.05, focus_yh=0.1, 
   E0=0, dE=0, lambda0=0, dlambda=0, flux=1e13, int target_index=+1, alpha=0.25, beta=0.25)
+
 OUTPUT PARAMETERS (p_in, y_0, C, r_0, count, adpt)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
 SHARE
 %{
-%include "adapt_tree-lib"
-%}
-
-DECLARE
-%{
+  %include "adapt_tree-lib"
   struct source_adapt
   {
     struct adapt_tree *atree; /* Adaptive search tree */
@@ -112,7 +112,12 @@ DECLARE
     double pi, num;           /* Initial p, number of bins in tree */
     double factor;            /* Adaption quality factor */
     double a_beta;            /* Adaption agression factor */
-  } adpt;
+  }
+%}
+
+DECLARE
+%{
+  source_adapt adpt;
   double count;                 /* Neutron counter */
   double y_0, C, r_0;
   double p_in;

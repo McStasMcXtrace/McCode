@@ -134,201 +134,203 @@ Mar 10 2000 : v0.07.2 gathered all variables into 2 structures
  /* PB : the use of 's2' in a component makes a conflict with McStas kernel */
 
 DEFINE COMPONENT Source_Optimizer
+
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (bins=10, step=0.1, keep=0.1, string options=0)
+
+SETTING PARAMETERS (bins=10, step=0.1, keep=0.1, string options=0)
+
 OUTPUT PARAMETERS (DEFS, Vars)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
-DECLARE
+SHARE
 %{
-#ifndef Source_Optimizer_Here        /* McStas General optimizer ID */
-#define Source_Optimizer_Here
 
-#ifndef FLT_MAX
-#define FLT_MAX 1e37
-#endif
-
-/* here we define a structure of constants (some kind of DEFINES) */
+  /* here we define a structure of constants (some kind of DEFINES) */
   struct Optim_Defines
   {
-    char PHASE_UNACTIVATE ; /* to unactivate Optimizer */
-    char PHASE_SET_LIMITS ; /* set array limits to 0, then ask for GET_LIMITS */
-    char PHASE_GET_LIMITS ; /* compute array limits, then ask for SET_REF */
-    char PHASE_SET_REF    ; /* set Ref and New_Source to to 0, then ask for GET_REF */
-    char PHASE_GET_REF    ; /* compute Ref (and New_Source in Monitor), then ask for SET_SOURCE */
-    char PHASE_SET_SOURCE ; /* set Source to Ref*x%+New_Source, normalize to Ref, Passing to 0, then ask for OPTIM */
-    char PHASE_OPTIM      ; /* Optimize and get New_Source (continuous optimization), then reask SET_SOURCE when required */
+    char PHASE_UNACTIVATE; /* to unactivate Optimizer */
+    char PHASE_SET_LIMITS; /* set array limits to 0, then ask for GET_LIMITS */
+    char PHASE_GET_LIMITS; /* compute array limits, then ask for SET_REF */
+    char PHASE_SET_REF;    /* set Ref and New_Source to to 0, then ask for GET_REF */
+    char PHASE_GET_REF;    /* compute Ref (and New_Source in Monitor), then ask for SET_SOURCE */
+    char PHASE_SET_SOURCE; /* set Source to Ref*x%+New_Source, normalize to Ref, Passing to 0, then ask for OPTIM */
+    char PHASE_OPTIM;      /* Optimize and get New_Source (continuous optimization), then reask SET_SOURCE when required */
 
-    char MOD_X            ; /* what was modified in last optim */
-    char MOD_Y            ;
-    char MOD_VX           ;
-    char MOD_VY           ;
-    char MOD_VZ           ;
-    char MOD_SX           ;
-    char MOD_SY           ;
-    char MOD_SZ           ;
+    char MOD_X;            /* what was modified in last optim */
+    char MOD_Y;
+    char MOD_VX;
+    char MOD_VY;
+    char MOD_VZ;
+    char MOD_SX;
+    char MOD_SY;
+    char MOD_SZ;
 
-    char DO_XY            ; /* what to optimize */
-    char DO_V             ;
-    char DO_S             ;
-    char DO_DIVV          ; /* (overrides with DO_V) */
-    char DO_DIVS          ; /* (overrides with DO_S) */
+    char DO_XY;            /* what to optimize */
+    char DO_V;
+    char DO_S;
+    char DO_DIVV;          /* (overrides with DO_V) */
+    char DO_DIVS;          /* (overrides with DO_S) */
 
     /* token modifiers */
-    char COORD_VAR              ; /* normal token */
-    char COORD_STEP             ; /* next token is a min value */
-    char COORD_KEEP             ; /* next token is a max value */
-    char COORD_DIM              ; /* next token is a bin value */
-    char COORD_FIL              ; /* next token is a filename */
+    char COORD_VAR;        /* normal token */
+    char COORD_STEP;       /* next token is a min value */
+    char COORD_KEEP;       /* next token is a max value */
+    char COORD_DIM;        /* next token is a bin value */
+    char COORD_FIL;        /* next token is a filename */
 
-    char TOKEN_DEL[32]    ; /* token separators */
-  } DEFS;
+    char TOKEN_DEL[32];    /* token separators */
+  }
 
-/* here we define a structure containing all informations */
+  /* here we define a structure containing all informations */
   struct Optim_Variables
   {
-/* These are distribution arrays[bins] within limits
- * flux is kept during optimisation
- * NOT stored : z is the position of previous component
- *              t time (related to z)
- */
+    /* These are distribution arrays[bins] within limits
+     * flux is kept during optimisation
+     * NOT stored : z is the position of previous component
+     *              t time (related to z)
+     */
 
-/* initial Reference distribution arrays (for weights) */
-  double *Reference_x;
-  double *Reference_y;
-  double *Reference_vx; /* will be used either as 'v' or divergence on x,y */
-  double *Reference_vy;
-  double *Reference_vz;
-  double *Reference_sx;
-  double *Reference_sy;
-  double *Reference_sz;
+    /* initial Reference distribution arrays (for weights) */
+    double *Reference_x;
+    double *Reference_y;
+    double *Reference_vx; /* will be used either as 'v' or divergence on x,y */
+    double *Reference_vy;
+    double *Reference_vz;
+    double *Reference_sx;
+    double *Reference_sy;
+    double *Reference_sz;
 
-/* optimized Source distribution arrays (to reach) */
-  double *Source_x;
-  double *Source_y;
-  double *Source_vx;    /* will be used either as 'v' or divergence on x,y */
-  double *Source_vy;
-  double *Source_vz;
-  double *Source_sx;
-  double *Source_sy;
-  double *Source_sz;
+    /* optimized Source distribution arrays (to reach) */
+    double *Source_x;
+    double *Source_y;
+    double *Source_vx;    /* will be used either as 'v' or divergence on x,y */
+    double *Source_vy;
+    double *Source_vz;
+    double *Source_sx;
+    double *Source_sy;
+    double *Source_sz;
 
-/* optimized New_Source distribution arrays (to reach in next step, passed to Source) */
-  double *New_Source_x;
-  double *New_Source_y;
-  double *New_Source_vx;  /* will be used either as 'v' or divergence on x,y */
-  double *New_Source_vy;
-  double *New_Source_vz;
-  double *New_Source_sx;
-  double *New_Source_sy;
-  double *New_Source_sz;
+    /* optimized New_Source distribution arrays (to reach in next step, passed to Source) */
+    double *New_Source_x;
+    double *New_Source_y;
+    double *New_Source_vx;  /* will be used either as 'v' or divergence on x,y */
+    double *New_Source_vy;
+    double *New_Source_vz;
+    double *New_Source_sx;
+    double *New_Source_sy;
+    double *New_Source_sz;
 
-/* Passing distribution arrays (should grow to reach Source) */
-  double *Passing_x;
-  double *Passing_y;
-  double *Passing_vx; /* will be used either as 'v' or divergence on x,y */
-  double *Passing_vy;
-  double *Passing_vz;
-  double *Passing_sx;
-  double *Passing_sy;
-  double *Passing_sz;
+    /* Passing distribution arrays (should grow to reach Source) */
+    double *Passing_x;
+    double *Passing_y;
+    double *Passing_vx; /* will be used either as 'v' or divergence on x,y */
+    double *Passing_vy;
+    double *Passing_vz;
+    double *Passing_sx;
+    double *Passing_sy;
+    double *Passing_sz;
 
-/* limits for state parameters */
+    /* limits for state parameters */
 
-/* x and y are Optimizer dimensions (input parameters) */
-  double x_min,  x_max;
-  double y_min,  y_max;
-  double vx_min, vx_max;  /* will be used either as 'v' or divergence on x,y */
-  double vy_min, vy_max;
-  double vz_min, vz_max;
-  double sx_min, sx_max;
-  double sy_min, sy_max;
-  double sz_min, sz_max;
+    /* x and y are Optimizer dimensions (input parameters) */
+    double x_min,  x_max;
+    double y_min,  y_max;
+    double vx_min, vx_max;  /* will be used either as 'v' or divergence on x,y */
+    double vy_min, vy_max;
+    double vz_min, vz_max;
+    double sx_min, sx_max;
+    double sy_min, sy_max;
+    double sz_min, sz_max;
 
-  int    good_x           ; /* indexes for last 'good' neutron that passed through */
-  int    good_y           ;
-  int    good_vx          ; /* will be used either as 'v' or divergence on x,y */
-  int    good_vy          ;
-  int    good_vz          ;
-  int    good_sx          ;
-  int    good_sy          ;
-  int    good_sz          ;
+    int good_x; /* indexes for last 'good' neutron that passed through */
+    int good_y;
+    int good_vx; /* will be used either as 'v' or divergence on x,y */
+    int good_vy;
+    int good_vz;
+    int good_sx;
+    int good_sy;
+    int good_sz;
 
-  int    nbins                  ;
-  long   n_redirect;             /* number of consecutive ABSORB */
-  int    Phase;              /* Optimizer function */
-  long   Phase_Counts          ;  /* neutron counts to achieve in each Phase */
-  long   Phase_Counts_L   ;  /* neutron counts to achieve in Limits Phase */
-  long   Phase_Counts_R   ;  /* neutron counts to achieve in Reference Phase */
-  char   Flag_Continuous  ;  /* 1 : continuous Source optimization */
-  char   Flag_Verbose          ;  /* displays optimization informations */
-  char   Flag_Smooth          ;  /* 1 means that first steps non optimized neutrons are smoothed */
-  char   Flag_Auto          ;  /* 1 is for minimum counts in 2 first steps */
-  char   Flag_Type          ;  /* what to act on */
-  long   Limits_Counts    ;  /* passing neutron counts in each Phase */
-  long   Reference_Counts ;
-  long   Passing_Counts   ;
-  double Monitor_Counts   ;
+    int nbins;
+    long n_redirect;             /* number of consecutive ABSORB */
+    int Phase;              /* Optimizer function */
+    long Phase_Counts;  /* neutron counts to achieve in each Phase */
+    long Phase_Counts_L;  /* neutron counts to achieve in Limits Phase */
+    long Phase_Counts_R;  /* neutron counts to achieve in Reference Phase */
+    char Flag_Continuous;  /* 1 : continuous Source optimization */
+    char Flag_Verbose;  /* displays optimization informations */
+    char Flag_Smooth;  /* 1 means that first steps non optimized neutrons are smoothed */
+    char Flag_Auto;  /* 1 is for minimum counts in 2 first steps */
+    char Flag_Type;  /* what to act on */
+    long Limits_Counts;  /* passing neutron counts in each Phase */
+    long Reference_Counts;
+    long Passing_Counts;
+    double Monitor_Counts;
 
-  double Limits_Flux      ;   /* passing neutron flux in each Phase */
-  double Reference_Flux   ;
-  double Passing_Flux     ;
-  double Monitor_Flux     ;
-  double Smoothed_Weigth  ;
+    double Limits_Flux;   /* passing neutron flux in each Phase */
+    double Reference_Flux;
+    double Passing_Flux;
+    double Monitor_Flux;
+    double Smoothed_Weigth;
 
-  float  dkeep             ;   /* percent of kept reference source */
-  float  keep_target      ;   /* to be reached */
-  float  dstep             ;
-  long   Normal_Monitor_Counts ;     /* counts without optim */
-  long   Total_Monitor_Counts  ;     /* final monitor counts */
+    float dkeep;   /* percent of kept reference source */
+    float keep_target;   /* to be reached */
+    float dstep;
+    long Normal_Monitor_Counts;     /* counts without optim */
+    long Total_Monitor_Counts;     /* final monitor counts */
 
-  double  cur_vx;        /* save neutron characteristics for Monitor and ABSORDed->Redirected neutrons */
-  double  cur_vy;       /* will be used either as 'v' or divergence on x,y */
-  double  cur_vz;
-  double  cur_x;
-  double  cur_y;
-  double  cur_sx;
-  double  cur_sy;
-  double  cur_sz;
-  double  cur_p;
+    double cur_vx;        /* save neutron characteristics for Monitor and ABSORDed->Redirected neutrons */
+    double cur_vy;       /* will be used either as 'v' or divergence on x,y */
+    double cur_vz;
+    double cur_x;
+    double cur_y;
+    double cur_sx;
+    double cur_sy;
+    double cur_sz;
+    double cur_p;
 
-  double  dvx, dvy, dvz;  /* for divergence x,y + v2, or velocity */
-  double  dsx, dsy, dsz;  /* for divergence sx,sy + s2, or spin */
+    double dvx, dvy, dvz;  /* for divergence x,y + v2, or velocity */
+    double dsx, dsy, dsz;  /* for divergence sx,sy + s2, or spin */
 
-  char    file[64];        /* output file name */
+    char file[64];        /* output file name */
 
-  double  t1;          /* tempo vars */
-  double  t2;
-  double  t3;
-  double  u1;          /* tempo vars */
-  double  u2;
-  double  u3;
-  int     i1;          /* tempo vars */
-  int     i2;
-  int     i3;
+    double t1;          /* tempo vars */
+    double t2;
+    double t3;
+    double u1;          /* tempo vars */
+    double u2;
+    double u3;
+    int i1;          /* tempo vars */
+    int i2;
+    int i3;
 
-  int     index;      /* a running Vars.index */
+    int index;      /* a running Vars.index */
 
-  int     index_x ;   /* indexes for last neutron that passed through */
-  int     index_y ;
-  int     index_vx;   /* will be used either as 'v' or divergence on x,y */
-  int     index_vy;
-  int     index_vz;
-  int     index_sx;
-  int     index_sy;
-  int     index_sz;
+    int index_x ;   /* indexes for last neutron that passed through */
+    int index_y ;
+    int index_vx;   /* will be used either as 'v' or divergence on x,y */
+    int index_vy;
+    int index_vz;
+    int index_sx;
+    int index_sy;
+    int index_sz;
 
-  double  v2;
-  double  S2;
-  char    Flag_Recycle     ;    /* record of neutron state changes : DEFS.MOD_xx */
+    double v2;
+    double S2;
+    char Flag_Recycle;    /* record of neutron state changes : DEFS.MOD_xx */
 
-  int     Monitor_Number   ;
-  } Vars;
-  /* end of structure definition */
+    int Monitor_Number;
+  }
+%}
 
-#endif /* if not defined yet */
+DECLARE
+%{
+  #ifndef FLT_MAX
+    #define FLT_MAX 1e37
+  #endif
 
-/* end declare */
+  Optim_Defines DEFS;
+  Optim_Variables Vars;
 %}
 
 INITIALIZE

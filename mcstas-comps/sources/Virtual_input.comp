@@ -102,16 +102,16 @@ long Virtual_input_Read_Input(char *aFile, char *aType, t_Table *aTable, long *a
 
 DECLARE
 %{
-  int     repeat_number=1; /* Neutron repeat of the filename */
-  int     repeat_cnt;     /* Repeat count, MPI taken into account */
-  long    pos=0;        /* current pos in block */
-  long    nrows=0;      /* total nrows in block */
-  long    Offset=0;     /* offset in filename */
-  double  filename_ncount=0;  /* total number of neutrons in filename */
-  double  n_neutrons=0;
-  char    read_block=1; /* flag to start by reading block */
-  char    first_block=1;
-  char    end_reading=0;
+  int repeat_number;      /* Neutron repeat of the filename */
+  int repeat_cnt;         /* Repeat count, MPI taken into account */
+  long pos;               /* current pos in block */
+  long nrows;             /* total nrows in block */
+  long Offset;            /* offset in filename */
+  double filename_ncount; /* total number of neutrons in filename */
+  double n_neutrons;
+  char read_block;        /* flag to start by reading block */
+  char first_block;
+  char end_reading;
   t_Table rTable;
 
   /* statistics on first block */

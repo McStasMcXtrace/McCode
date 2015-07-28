@@ -57,24 +57,31 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_Maxwell_3
+
 DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (size=0, yheight=0, xwidth=0, Lmin, Lmax, dist, 
   focus_xw, focus_yh,
   T1, T2=300, T3=300, I1, I2=0, I3=0, 
   int target_index=+1,lambda0=0, dlambda=0)
+
 OUTPUT PARAMETERS (M,l_range,w_mult,w_source,h_source)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
-DECLARE
-%{
-  double l_range, w_mult;
-  double w_source, h_source;
 
-  double M(double l, double temp)
+SHARE
+%{
   /* A normalised Maxwellian distribution : Integral over all l = 1 */
+  double M(double l, double temp)
   {
     double a=949.0/temp;
     return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
   }
+%}
+
+DECLARE
+%{
+  double l_range, w_mult;
+  double w_source, h_source;
 %}
 
 INITIALIZE

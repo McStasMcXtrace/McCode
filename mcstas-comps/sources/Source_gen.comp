@@ -155,34 +155,41 @@ SHARE
 
 #ifndef SOURCE_GEN_DEF
 #define SOURCE_GEN_DEF
-/*******************************************************************************
-* str_dup_numeric: replaces non 'valid name' chars with spaces
-*******************************************************************************/
-char *str_dup_numeric(char *orig)
-{
-  long i;
-
-  if (!orig || !strlen(orig)) return(NULL);
-
-  for (i=0; i < strlen(orig); i++)
+  /*******************************************************************************
+  * str_dup_numeric: replaces non 'valid name' chars with spaces
+  *******************************************************************************/
+  char *str_dup_numeric(char *orig)
   {
-    if ( (orig[i] > 122)
-      || (orig[i] < 32)
-      || (strchr("!\"#$%&'()*,:;<=>?@[\\]^`/ ", orig[i]) != NULL) )
-    {
-      orig[i] = ' ';
-    }
-  }
-  orig[i] = '\0';
-  /* now skip spaces */
-  for (i=0; i < strlen(orig); i++) {
-    if (*orig == ' ') orig++;
-    else break;
-  }
+    long i;
 
-  return(orig);
-} /* str_dup_numeric */
+    if (!orig || !strlen(orig)) return(NULL);
+
+    for (i=0; i < strlen(orig); i++)
+    {
+      if ( (orig[i] > 122)
+        || (orig[i] < 32)
+        || (strchr("!\"#$%&'()*,:;<=>?@[\\]^`/ ", orig[i]) != NULL) )
+      {
+        orig[i] = ' ';
+      }
+    }
+    orig[i] = '\0';
+    /* now skip spaces */
+    for (i=0; i < strlen(orig); i++) {
+      if (*orig == ' ') orig++;
+      else break;
+    }
+
+    return(orig);
+  } /* str_dup_numeric */
 #endif
+
+  /* A normalised Maxwellian distribution : Integral over all l = 1 */
+  double M(double l, double temp)
+  {
+    double a=949.0/temp;
+    return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
+  }
 %}
 
 DECLARE
@@ -204,13 +211,6 @@ DECLARE
   double pTable_dxmax;
   double pTable_dymin;
   double pTable_dymax;
-
-  /* A normalised Maxwellian distribution : Integral over all l = 1 */
-  double M(double l, double temp)
-  {
-    double a=949.0/temp;
-    return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
-  }
 %}
 
 INITIALIZE

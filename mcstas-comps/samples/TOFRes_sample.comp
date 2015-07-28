@@ -69,26 +69,35 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOFRes_sample
+
 DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (thickness=0,radius=0.01,yheight=0.05,focus_r=0.05,
     time_bin=20000, time_width=10,
     target_x=0, target_y=0, target_z=.5, focus_xw=0, focus_yh=0,
     focus_aw=0, focus_ah=0, xwidth=0, zdepth=0, int target_index=0)
+
 OUTPUT PARAMETERS (res_struct, f, E0, dE)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
+SHARE 
+%{
+  struct Res_sample_struct
+  {
+    double ki_x,ki_y,ki_z,kf_x,kf_y,kf_z;
+    double rx,ry,rz,pi;
+    char   isrect;      /* true when sample is a box */
+    double distance;    /* when non zero, gives rect target distance */
+    double aw,ah;       /* rectangular angular dimensions */
+    double xw,yh;       /* rectangular metrical dimensions */
+    double tx,ty,tz;    /* target coords */
+  }
+%}
+
 DECLARE
 %{
   double f, E0, dE;
-  struct Res_sample_struct
-    {
-      double ki_x,ki_y,ki_z,kf_x,kf_y,kf_z;
-      double rx,ry,rz,pi;
-      char   isrect;      /* true when sample is a box */
-      double distance;    /* when non zero, gives rect target distance */
-      double aw,ah;       /* rectangular angular dimensions */
-      double xw,yh;       /* rectangular metrical dimensions */
-      double tx,ty,tz;    /* target coords */
-    } res_struct;
+  Res_sample_struct res_struct;
 %}
 
 INITIALIZE
