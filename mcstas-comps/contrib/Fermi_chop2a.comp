@@ -29,92 +29,105 @@
 *
 * %End
 *******************************************************************/
+
 DEFINE COMPONENT Fermi_chop2a
+
 DEFINITION PARAMETERS (len, w, nu, delta, tc, ymin, ymax, nchan, bw, blader)
+
 SETTING PARAMETERS ()
+
 OUTPUT PARAMETERS (omega, r_blade, x_width, nn, tdr)
 /*STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)*/
+
 SHARE
 %{
 #ifndef FERMI_CHOP_DEFS
 #define FERMI_CHOP_DEFS   
-    /* routine to calculate acos in proper quadrant  range = 0 to 2PI*/ 
-    double acos0_2pi(double x,double y)
-     {
-       if (y>0.0){ 
-         return acos(x);
-       }
-         return 2.0*PI-acos(x);
-     }
-   /*routine to calculate x and y positions of a neutron in a fermi chopper */
-   void neutxypos(double *x, double *y, double phi, double inrad,double c[])
-    {      
-        *x=c[0]+inrad*cos(phi);
-        *y=c[1]+inrad*sin(phi);
+  /* routine to calculate acos in proper quadrant  range = 0 to 2PI*/ 
+  double acos0_2pi(double x,double y)
+  {
+    if (y>0.0)
+    { 
+      return acos(x);
     }
-    /* routine to calculate the origin of a circle that describes the neutron path through the chopper */  
-    void calccenter(double c[],double zr[], double xr[]){
-      double denom, A,B,C,D,a,b;
-      denom=2*(-zr[0]*xr[2] +zr[0]*xr[1]+ zr[1]*xr[2]+xr[0]*zr[2]-xr[0]*zr[1] - xr[1]*zr[2]);
-       A=xr[1]-xr[2];B=xr[0]-xr[1];C=zr[2]-zr[1];D=zr[1]-zr[0];
-       a=zr[0]*zr[0]-zr[1]*zr[1]+xr[0]*xr[0]-xr[1]*xr[1];
-       b=zr[2]*zr[2]-zr[1]*zr[1]+xr[2]*xr[2]-xr[1]*xr[1];
-       c[0]=1.0/denom*(A*a+B*b);
-       c[1]=1.0/denom*(C*a+D*b);  
-    }
+    return 2.0*PI-acos(x);
+  }
 
+  /*routine to calculate x and y positions of a neutron in a fermi chopper */
+  void neutxypos(double *x, double *y, double phi, double inrad,double c[])
+  {      
+    *x=c[0]+inrad*cos(phi);
+    *y=c[1]+inrad*sin(phi);
+  }
+
+  /* routine to calculate the origin of a circle that describes the neutron path through the chopper */  
+  void calccenter(double c[],double zr[], double xr[])
+  {
+    double denom, A, B, C, D, a, b;
+    denom=2*(-zr[0]*xr[2] +zr[0]*xr[1]+ zr[1]*xr[2]+xr[0]*zr[2]-xr[0]*zr[1] - xr[1]*zr[2]);
+    A=xr[1]-xr[2];
+    B=xr[0]-xr[1];
+    C=zr[2]-zr[1];
+    D=zr[1]-zr[0];
+    a=zr[0]*zr[0]-zr[1]*zr[1]+xr[0]*xr[0]-xr[1]*xr[1];
+    b=zr[2]*zr[2]-zr[1]*zr[1]+xr[2]*xr[2]-xr[1]*xr[1];
+    c[0]=1.0/denom*(A*a+B*b);
+    c[1]=1.0/denom*(C*a+D*b);  
+  }
 #endif
+
+  /* function that describes the shape of the blades */
+  double blades(double zin,double rin,double off)
+  {
+    if (rin!=0.0)
+      return rin*(1-cos(asin(zin/fabs(rin))))+off;
+    else
+      return 0;
+  }
+
+  /* function to calculate which channel the neturon is in and to check if it is in a blade 
+   * or outside the slit package 
+   * return 0 if neutron does not transmit return 1 with channel number if neutron will pass */
+  int checkabsorb(double phi,int *chan_num, double inrad,double inw, double insw, double inbw, double c[])
+  {
+    double xtmp,neuzr,neuxr;
+    neutxypos(&neuzr,&neuxr,phi,inrad,c);
+    // printf("xr:%g zr:%g phi: %g r: %g c[0]: %g c[1]: %g\n",neuxr,neuzr,phi,inrad,c[0],c[1]);
+    if (fabs(neuxr)>inw/2.0) // check if neutron x position is outside of slit package
+      return 0;
+    xtmp=neuxr+inw/2.0;  // move origin to side of slit package 
+    *chan_num=ceil((xtmp-blades(neuzr,blader,off))/(inbw+insw)); //calculate channel number
+    //check if neutron is in blade 
+    if (xtmp >*chan_num*(inbw+insw)+blades(neuzr,blader,off))
+      return 0;
+    return 1;
+  }
 %}
 
-    DECLARE
+DECLARE
 %{
-
-    double omega,off,splen,rad,sw,tw;
-    /* function that describes the shape of the blades */
-    double blades(double zin,double rin,double off){
-        if (rin!=0.0)
-         return rin*(1-cos(asin(zin/fabs(rin))))+off;
-        else
-           return 0;
-    }
-    /* function to calculate which channel the neturon is in and to check if it is in a blade 
-     *  or outside the slit package 
-     * return 0 if neutron does not transmit return 1 with channel number if neutron will pass*/
-    int checkabsorb(double phi,int *chan_num, double inrad,double inw, double insw, double inbw, double c[]){
-     double xtmp,neuzr,neuxr;
-     neutxypos(&neuzr,&neuxr,phi,inrad,c);
-  // printf("xr:%g zr:%g phi: %g r: %g c[0]: %g c[1]: %g\n",neuxr,neuzr,phi,inrad,c[0],c[1]);
-     if (fabs(neuxr)>inw/2.0) // check if neutron x position is outside of slit package
-         return 0;
-     xtmp=neuxr+inw/2.0;  // move origin to side of slit package 
-     *chan_num=ceil((xtmp-blades(neuzr,blader,off))/(inbw+insw)); //calculate channel number
-      //check if neutron is in blade 
-     if (xtmp >*chan_num*(inbw+insw)+blades(neuzr,blader,off))
-         return 0;
-     return 1;
-    }
-  
+  double omega,off,splen,rad,sw,tw;
 %}
+
 INITIALIZE
 %{
-   splen=len/2.0;
-   omega=2.0*PI*nu;
-   off=blader*(1-cos(asin(splen/fabs(blader))));// the additional width needed to accomodate the curvature of the blade
-   tw=(w+2.0*off);  //the total width needed to contain the slit package
-   rad=sqrt(tw*tw/4.0+splen*splen); //radius of cylinder containing slit package.
-   sw=(w-bw)/nchan-bw;
-   printf("sw: %g rad: %g\n",sw,rad);
-
+  splen=len/2.0;
+  omega=2.0*PI*nu;
+  off=blader*(1-cos(asin(splen/fabs(blader))));// the additional width needed to accomodate the curvature of the blade
+  tw=(w+2.0*off);  //the total width needed to contain the slit package
+  rad=sqrt(tw*tw/4.0+splen*splen); //radius of cylinder containing slit package.
+  sw=(w-bw)/nchan-bw;
+  printf("sw: %g rad: %g\n",sw,rad);
 %}
+
 TRACE
 %{
- 
   double t0,t1,dphi,dt2,tneuzr,tneuxr,nrad;
   double phivec[200],tpt[3],xpt[3],ypt[3],zpt[3],zr[3],xr[3],yr[3],theta[3],c[2];
   int chan_num,chan_num0,idx1,idx3;
   if (cylinder_intersect (&t0, &t1, x, y, z, vx, vy, vz, rad, ymax-ymin)){
     if (t0 < 0)      /*Neutron started inside cylinder */
-        ABSORB;
+      ABSORB;
     dt2=t1-t0;  
     PROP_DT(t0);                /*propagate neutron to edge of chopper*/
     /*calculate neutron position and velocity in chopper frame 
@@ -131,80 +144,80 @@ TRACE
     zpt[1]=-sqrt(rad*rad-x*x);  xpt[1]=x; ypt[1]=y;   /* point where neutron intersects chopper */
     zpt[2]=zpt[1]+vz*(dt2); xpt[2]=xpt[1]+vx*(dt2); ypt[2]=ypt[1]+vy*(dt2);  /* point where neutron leaves the chopper */
     xpt[0]=xpt[1]+vx*(dt2/2.0); ypt[0]=ypt[1]+vy*(dt2/2.0); zpt[0]=zpt[1]+vz*(dt2/2.0); /*point half way between in time */
-   /* do the rotation */ 
-   for(idx3=0;idx3<3;idx3++){
+    /* do the rotation */ 
+    for(idx3=0;idx3<3;idx3++){
        rotate(xr[idx3],yr[idx3],zr[idx3],xpt[idx3],ypt[idx3],zpt[idx3],theta[idx3],0,1,0);     
     }       
     calccenter(c,zr,xr); /* calculate the center */
     nrad=sqrt((zr[0]-c[0])*(zr[0]-c[0])+(xr[0]-c[1])*(xr[0]-c[1])); /*calculate the radius of curvature for the neutron path */
-   /* calculate points along path of neutron through cylinder quit on absorption
-    * or transmit neutron if 200 points are calculated 
-    * calculate phi for first and last points */
-   phivec[0]=acos0_2pi((zr[1]-c[0])/nrad,xr[1]-c[1]);phivec[1]=acos0_2pi((zr[2]-c[0])/nrad,xr[2]-c[1]);
-   neutxypos(&tneuzr,&tneuxr,phivec[0],nrad,c);
- /* reset phi[0] and phi[1] to match the length of the slit package rather than cylinder radius*/
-   if(tneuzr<-splen){
-       phivec[0]=acos0_2pi((-c[0]-splen)/nrad,-c[1]);
+    /* calculate points along path of neutron through cylinder quit on absorption
+     * or transmit neutron if 200 points are calculated 
+     * calculate phi for first and last points */
+    phivec[0]=acos0_2pi((zr[1]-c[0])/nrad,xr[1]-c[1]);phivec[1]=acos0_2pi((zr[2]-c[0])/nrad,xr[2]-c[1]);
+    neutxypos(&tneuzr,&tneuxr,phivec[0],nrad,c);
+    /* reset phi[0] and phi[1] to match the length of the slit package rather than cylinder radius*/
+    if(tneuzr<-splen){
+      phivec[0]=acos0_2pi((-c[0]-splen)/nrad,-c[1]);
     }
-   neutxypos(&tneuzr,&tneuxr,phivec[1],nrad,c);
-   if(tneuzr>splen){
-       phivec[1]=acos0_2pi((-c[0]+splen/2.0)/nrad,-c[1]);
+    neutxypos(&tneuzr,&tneuxr,phivec[1],nrad,c);
+    if(tneuzr>splen){
+      phivec[1]=acos0_2pi((-c[0]+splen/2.0)/nrad,-c[1]);
     }
-   dphi=phivec[1]-phivec[0];  /* initial dphi */
-   idx1=2;
-   phivec[idx1]=phivec[0]+dphi/2.0;  /* calculate center point */
-   if (!checkabsorb(phivec[idx1],&chan_num,nrad,tw,sw,bw,c))
+    dphi=phivec[1]-phivec[0];  /* initial dphi */
+    idx1=2;
+    phivec[idx1]=phivec[0]+dphi/2.0;  /* calculate center point */
+    if (!checkabsorb(phivec[idx1],&chan_num,nrad,tw,sw,bw,c))
       ABSORB;
-   chan_num0=chan_num;
-   while (idx1<129){
-     dphi=phivec[1]-phivec[idx1];
-     idx1++;
-     phivec[idx1]=phivec[0]+dphi/2.0;
-     if (!checkabsorb(phivec[idx1],&chan_num,nrad,tw,sw,bw,c))
-      ABSORB;
-     if ((chan_num!=chan_num0) || (chan_num>nchan))
-       ABSORB;
+    chan_num0=chan_num;
+    while (idx1<129){
+      dphi=phivec[1]-phivec[idx1];
+      idx1++;
+      phivec[idx1]=phivec[0]+dphi/2.0;
+      if (!checkabsorb(phivec[idx1],&chan_num,nrad,tw,sw,bw,c))
+        ABSORB;
+      if ((chan_num!=chan_num0) || (chan_num>nchan))
+        ABSORB;
      /*  If the current dphi is positive calcualte points until a point is beyond phivec[1]
                     Check to see if the point is absorbed after each new point is generated stop if more than 129 iterations are performed
             */
-     if (dphi>0){
-       while ((phivec[idx1]<phivec[1])&&(idx1<129)){
-        /* printf("phivec[%i]: %g dphi: %g phivec[1]: %g\n", idx1,phivec[idx1],dphi,phivec[1]);*/
-         idx1++;
-         phivec[idx1]=phivec[idx1-1]+dphi;
-         if (!checkabsorb(phivec[idx1],&chan_num,nrad,tw,sw,bw,c))
-           ABSORB;
-     //   printf("chan_num0: %i chan_num: %i\n",chan_num0,chan_num);
-         if ((chan_num!=chan_num0) || (chan_num>nchan))
-           ABSORB;
+      if (dphi>0){
+        while ((phivec[idx1]<phivec[1])&&(idx1<129)){
+          /* printf("phivec[%i]: %g dphi: %g phivec[1]: %g\n", idx1,phivec[idx1],dphi,phivec[1]);*/
+          idx1++;
+          phivec[idx1]=phivec[idx1-1]+dphi;
+          if (!checkabsorb(phivec[idx1],&chan_num,nrad,tw,sw,bw,c))
+            ABSORB;
+          //   printf("chan_num0: %i chan_num: %i\n",chan_num0,chan_num);
+          if ((chan_num!=chan_num0) || (chan_num>nchan))
+            ABSORB;
            
-       }
-       if (phivec[idx1]>=phivec[1]) idx1--; //remove the point that is beyond phivec[1]
-     }
-     /*  If the current dphi is negative calculatete points until a point is beyond phivec[1]
+        }
+        if (phivec[idx1]>=phivec[1]) idx1--; //remove the point that is beyond phivec[1]
+      }
+      /*  If the current dphi is negative calculatete points until a point is beyond phivec[1]
                     Check to see if the point is absorbed after each new point is generated stop if more than 129 iterations are performed
             */
-     else if (dphi<0){
-       while ((phivec[idx1]>phivec[1])&&(idx1<129)){
+      else if (dphi<0){
+        while ((phivec[idx1]>phivec[1])&&(idx1<129)){
         /* printf("phivec[%i]: %g\n", idx1,phivec[idx1]);*/
-         idx1++;
-         phivec[idx1]=phivec[idx1-1]+dphi;
-         if (!checkabsorb(phivec[idx1],&chan_num,nrad,tw,sw,bw,c))
-           ABSORB;
-      //   printf("chan_num0: %i chan_num: %i\n",chan_num0,chan_num);
-         if ((chan_num!=chan_num0) || (chan_num>nchan))
-           ABSORB;                  
-       }
-       if (phivec[idx1]<=phivec[1]) idx1--; //remove the point that is beyond phivec[1]
-     }
-     else
+          idx1++;
+          phivec[idx1]=phivec[idx1-1]+dphi;
+          if (!checkabsorb(phivec[idx1],&chan_num,nrad,tw,sw,bw,c))
+            ABSORB;
+          //   printf("chan_num0: %i chan_num: %i\n",chan_num0,chan_num);
+          if ((chan_num!=chan_num0) || (chan_num>nchan))
+            ABSORB;                  
+        }
+        if (phivec[idx1]<=phivec[1]) idx1--; //remove the point that is beyond phivec[1]
+      }
+      else
         ABSORB; /* dphi =0? */
-   }      
+    }      
   }
   else        /* The neutron failed to even hit the chopper */
     ABSORB;
-
 %}
+
 MCDISPLAY
 %{
 double zstep,x1,x2,x3,x4,z1,z2;

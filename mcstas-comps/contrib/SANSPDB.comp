@@ -24,18 +24,15 @@
 * The component must have a valid .pdb-file as an argument.
 *
 * %P
-* RhoSolvent  			    : [AA]		Scattering length density of the buffer.
-* Concentration		  	    : [mM]		Concentration of sample.
-* AbsorptionCrosssection    : [1/m]		Absorption cross section of the sample.
-* xwidth    			    : [m]  		Dimension of component in the x-direction.
-* yheight   			    : [m]		Dimension of component in the y-direction.
-* zdepth    			    : [m]		Dimension of component in the z-direction.
-* SampleToDetectorDistance	: [m]		Distance from sample to detector (for 
-*										focusing the scattered neutrons).
-* DetectorRadius          	: [m] 		Radius of the detector (for focusing the 
-*										scattered neutrons).
-* PDBFilepath			    : []		Path to the file describing the high resolution
-*										structure of the protein.
+* RhoSolvent  			: [AA]		Scattering length density of the buffer.
+* Concentration		  	: [mM]		Concentration of sample.
+* AbsorptionCrosssection    	: [1/m]		Absorption cross section of the sample.
+* xwidth    			: [m]  		Dimension of component in the x-direction.
+* yheight   			: [m]		Dimension of component in the y-direction.
+* zdepth    			: [m]		Dimension of component in the z-direction.
+* SampleToDetectorDistance	: [m]		Distance from sample to detector (for focusing the scattered neutrons).
+* DetectorRadius          	: [m] 		Radius of the detector (for focusing the scattered neutrons).
+* PDBFilepath			: []		Path to the file describing the high resolution structure of the protein.
 *
 * %E
 *******************************************************************************/
@@ -45,28 +42,17 @@ DEFINE COMPONENT SANSPDB
 DEFINITION PARAMETERS (NumberOfQBins = 200)
 
 SETTING PARAMETERS (RhoSolvent = 6.4e-14, Concentration = 0.01, AbsorptionCrosssection = 0.0,
-		    		xwidth, yheight, zdepth, 
-					SampleToDetectorDistance, DetectorRadius,
-					string PDBFilepath = "PDBfile.pdb")
+		    	xwidth, yheight, zdepth, 
+			SampleToDetectorDistance, DetectorRadius,
+			string PDBFilepath = "PDBfile.pdb")
 
 OUTPUT PARAMETERS ()
 
-DECLARE
+SHARE
 %{
-	// Declarations
-	double Absorption;
-	double NumberDensity;
-	#define OrderOfHarmonics 21
-
-	// GSL libraries
-	#include <gsl/gsl_sf_legendre.h>
-	#include <gsl/gsl_sf_bessel.h>
-	#include <complex.h>
-
 	// Simple mathematical functions
 	int Sign(double x) {
 		int Sign;
-
 		if (x > 0) {
 			Sign = 1;
 		} else if (x < 0) {
@@ -74,46 +60,16 @@ DECLARE
 		} else {
 			Sign = 0;
 		} 
-
 		return Sign;
 	}
-
-	double complex Polar(double R, double Concentration) {
+	double complex Polar(double R, double Concentration) 
+	{
 		double complex Polar;
 		
 		Polar = R * (cos(Concentration) + _Complex_I * sin(Concentration));
 
 		return Polar;
-	} 
-
-	// Protein structs
-	struct Bead
-	{
-		double x;
-		double y;
-		double z;
-
-		double xv;
-		double yv;
-		double zv;
-
-		double xa;
-		double ya;
-		double za; 
-
-		char *NameOfResidue;
-
-		double Volume;
-		double ScatteringLength;
-	};
-	typedef struct Bead BeadStruct;
-
-	struct Protein
-	{
-		BeadStruct *Beads;
-		int NumberOfResidues;
-	};
-	typedef struct Protein ProteinStruct;
+	}
 
 	// Function used to compute scattering from protein
 	void ExpandStructure(double complex ** Matrix, ProteinStruct *Protein, int ResidueID, double q, double RhoSolvent) 
@@ -129,15 +85,9 @@ DECLARE
 		// Residue information
 		const double Volume = Protein->Beads[ResidueID].Volume;
 		const double DeltaRhoProtein = Protein->Beads[ResidueID].ScatteringLength - Volume * RhoSolvent;
-
-		const double x = (Protein->Beads[ResidueID].x * Protein->Beads[ResidueID].ScatteringLength - 
-						  RhoSolvent * Volume * Protein->Beads[ResidueID].xv) / DeltaRhoProtein;
-
-		const double y = (Protein->Beads[ResidueID].y * Protein->Beads[ResidueID].ScatteringLength - 
-						  RhoSolvent * Volume * Protein->Beads[ResidueID].yv) / DeltaRhoProtein;
-
-		const double z = (Protein->Beads[ResidueID].z * Protein->Beads[ResidueID].ScatteringLength - 
-						  RhoSolvent * Volume * Protein->Beads[ResidueID].zv) / DeltaRhoProtein;
+		const double x = (Protein->Beads[ResidueID].x * Protein->Beads[ResidueID].ScatteringLength - RhoSolvent * Volume * Protein->Beads[ResidueID].xv) / DeltaRhoProtein;
+		const double y = (Protein->Beads[ResidueID].y * Protein->Beads[ResidueID].ScatteringLength - RhoSolvent * Volume * Protein->Beads[ResidueID].yv) / DeltaRhoProtein;
+		const double z = (Protein->Beads[ResidueID].z * Protein->Beads[ResidueID].ScatteringLength - RhoSolvent * Volume * Protein->Beads[ResidueID].zv) / DeltaRhoProtein;
 
 		// Convert bead position to spherical coordinates
 		const double Radius = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
@@ -163,15 +113,12 @@ DECLARE
 		int i;
 		int j;		
 		double Intensity = 0.0;
-
 		// Computation
 		for (i = 0; i <= OrderOfHarmonics; ++i) {
-
 		    for (j = 0; j <= i; ++j) {
 		        Intensity += ((j > 0) + 1.0) * pow(cabs(Matrix[i][j]), 2);
 		    }
 		}
-
 		return Intensity;
 	}
 
@@ -180,14 +127,57 @@ DECLARE
 	{
 		int i;
 		int j;
-
 		for (i = 0; i <= Size; ++i) {
-
 		    for (j = 0; j <= Size; ++j) {
 		        Matrix[i][j] = 0.0;
 		    }
 		}
 	}
+
+	// Protein structs
+	struct Bead
+	{
+		double x;
+		double y;
+		double z;
+
+		double xv;
+		double yv;
+		double zv;
+
+		double xa;
+		double ya;
+		double za; 
+
+		char *NameOfResidue;
+
+		double Volume;
+		double ScatteringLength;
+	};
+
+	struct Protein
+	{
+		BeadStruct *Beads;
+		int NumberOfResidues;
+	};
+%}
+
+DECLARE
+%{
+	// Declarations
+	double Absorption;
+	double NumberDensity;
+	#define OrderOfHarmonics 21
+
+	// GSL libraries
+	#include <gsl/gsl_sf_legendre.h>
+	#include <gsl/gsl_sf_bessel.h>
+	#include <complex.h>
+
+	typedef struct Bead;
+	Bead BeadStruct;
+	typedef struct Protein;
+	Protein ProteinStruct;
 
 	// Protein properties
 	double complex ** Matrix;

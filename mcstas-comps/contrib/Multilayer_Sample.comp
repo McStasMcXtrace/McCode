@@ -79,9 +79,10 @@ DECLARE
   double sigmaParPtr[] = sigmaPar;
   double xmin, xmax, zmin, zmax;
   double tx, ty, tz;
- %}
+%}
 
-INITIALIZE %{
+INITIALIZE 
+%{
   if (frac_inc>0) {
     if (!(ythick) || !(mu_inc)) {
       fprintf(stderr,"Multilayer: error: %s: You requested a non-meaningful combination of frac_inc, ythick, mu_inc. EXIT\n", NAME_CURRENT_COMP);

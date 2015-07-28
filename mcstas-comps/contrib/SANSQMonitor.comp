@@ -48,15 +48,15 @@ OUTPUT PARAMETERS (Nofq, Iofq, IofqSquared, NofR, IofR, IofRSquared)
 
 DECLARE
 %{
-	// Declarations
+    // Declarations
     double TwoThetaMax;
     double qMax;
 
-	double Nofq[NumberOfBins];
+    double Nofq[NumberOfBins];
     double Iofq[NumberOfBins];
     double IofqSquared[NumberOfBins];
 
-	double NofR[NumberOfBins];
+    double NofR[NumberOfBins];
     double IofR[NumberOfBins];
     double IofRSquared[NumberOfBins];
 %}

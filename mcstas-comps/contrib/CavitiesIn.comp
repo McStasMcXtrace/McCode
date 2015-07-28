@@ -34,9 +34,10 @@
 * %E
 *******************************************************************************/
 
-
 DEFINE COMPONENT CavitiesIn
+
 DEFINITION PARAMETERS ()
+
 SETTING PARAMETERS (xw=0.05, yw=0.05, xc=1, yc=1)
 
 DECLARE

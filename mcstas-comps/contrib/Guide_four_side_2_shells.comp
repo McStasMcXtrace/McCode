@@ -583,82 +583,7 @@ OUTPUT PARAMETERS(w1rwt,w1lwt,h1uwt,h1dwt,w2rwt,w2lwt,h2uwt,h2dwt,
 
 SHARE
 %{	
-%include "read_table-lib"
-%}
-
-
-DECLARE
-%{
-  double w1rwt,w1lwt,h1uwt,h1dwt,w2rwt,w2lwt,h2uwt,h2dwt;					/* entrance and exit width for th OUTER walls of the guide*/
-  double pawr,pawl,pbwr,pbwl,pahu,pahd,pbhu,pbhd;						/* parameter a and b of the parabolic curves (INNER walls)*/
-  double awl,bwl,awr,bwr,ahu,bhu,ahd,bhd;							/* long and short axis a and b auf the ellipses (INNER walls)*/
-  double awlwt,bwlwt,awrwt,bwrwt,ahuwt,bhuwt,ahdwt,bhdwt;					/* long and short axis a and b auf the ellipses (OUTER walls)*/
-  double pawrwt,pawlwt,pbwrwt,pbwlwt,pahuwt,pahdwt,pbhuwt,pbhdwt;				/* parameter a and b of the parabolic curves for the OUTER wall*/
-  double t1,t2w1r,t2w1l,t2h1u,t2h1d;								/* time variables (INNER walls)*/
-  double t2w1rwt,t2w1lwt,t2h1uwt,t2h1dwt;							/* time variables (OUTER walls)*/
-
-
-  double a2wlwt,b2wlwt,a2wrwt,b2wrwt,a2huwt,b2huwt,a2hdwt,b2hdwt;				/* square of long and short axis a and b auf the ellipses (OUTER walls) */
-  double a2wl,b2wl,a2wr,b2wr,a2hu,b2hu,a2hd,b2hd;						/* square of long and short axis a and b auf the ellipses (INNER walls)*/
-  double mru1,mru2,nru1,nru2,mrd1,mrd2,nrd1,nrd2,mlu1,mlu2,nlu1,nlu2,mld1,mld2,nld1,nld2;	/* variables the calculated the guide geometrie in the entrance and exit plane (absorbing mask given by the walls)*/
-  double z0wr,z0wl,z0hu,z0hd;									/* z-component of the center of the ellipse (x-component is allways zero) */
-
-  double p2parawr,p2parawl,p2parahu,p2parahd;							/* help variables to calculate the parabolic curve parameters a and b (INNER walls)*/
-  double p2parawrwt,p2parawlwt,p2parahuwt,p2parahdwt;						/* help variables to calculate the parabolic curve parameters a and b for (OUTER wall)*/
-
-
-  double m,n;											/* zcomponent of the intersection point of the neutron trajectory and the ellipse (INNER walls)*/
-  double nz,nx,ny,n2;										/* component and length of the surfaces normal vector at the intersection point */
-  double pf;											/* prefactor to calculate the velocity vector after the interaction */
-  double vxin,vyin,vzin;									/* velocity vector components before the interaction*/
-  double q;											/* q-vector for the interaction */
-  double xlimitr,xlimitrwt,xlimitl,xlimitlwt,ylimitd,ylimitdwt,ylimitu,ylimituwt;		/* limit variables to determine the interaction position given by the time relative to the guide walls*/
-  double xtest,ytest;										/* interaction position of the neutron given by the interaction time; crosscheck with limit variables*/
-
-
-  t_Table riTable,liTable,uiTable,diTable;
-  t_Table roTable,loTable,uoTable,doTable;
-
-  double w1rwt1,w1lwt1,h1uwt1,h1dwt1,w2rwt1,w2lwt1,h2uwt1,h2dwt1;
-  double pawr1,pawl1,pbwr1,pbwl1,pahu1,pahd1,pbhu1,pbhd1;
-  double awl1,bwl1,awr1,bwr1,ahu1,bhu1,ahd1,bhd1;
-  double awlwt1,bwlwt1,awrwt1,bwrwt1,ahuwt1,bhuwt1,ahdwt1,bhdwt1;
-  double pawrwt1,pawlwt1,pbwrwt1,pbwlwt1,pahuwt1,pahdwt1,pbhuwt1,pbhdwt1;
-  double t2w1r1,t2w1l1,t2h1u1,t2h1d1;
-  double t2w1rwt1,t2w1lwt1,t2h1uwt1,t2h1dwt1;
-
-  double a2wlwt1,b2wlwt1,a2wrwt1,b2wrwt1,a2huwt1,b2huwt1,a2hdwt1,b2hdwt1;
-  double a2wl1,b2wl1,a2wr1,b2wr1,a2hu1,b2hu1,a2hd1,b2hd1;
-  double mru11,mru21,nru11,nru21,mrd11,mrd21,nrd11,nrd21,mlu11,mlu21,nlu11,nlu21,mld11,mld21,nld11,nld21;
-  double z0wr1,z0wl1,z0hu1,z0hd1;
-
-
-  double p2parawr1,p2parawl1,p2parahu1,p2parahd1;
-  double p2parawrwt1,p2parawlwt1,p2parahuwt1,p2parahdwt1;
-
-
-  t_Table riTable1,liTable1,uiTable1,diTable1;
-  t_Table roTable1,loTable1,uoTable1,doTable1;
-
-  double w1rwt2,w1lwt2,h1uwt2,h1dwt2,w2rwt2,w2lwt2,h2uwt2,h2dwt2;
-  double pawr2,pawl2,pbwr2,pbwl2,pahu2,pahd2,pbhu2,pbhd2;
-  double awl2,bwl2,awr2,bwr2,ahu2,bhu2,ahd2,bhd2;
-  double awlwt2,bwlwt2,awrwt2,bwrwt2,ahuwt2,bhuwt2,ahdwt2,bhdwt2;
-  double pawrwt2,pawlwt2,pbwrwt2,pbwlwt2,pahuwt2,pahdwt2,pbhuwt2,pbhdwt2;
-  double t2w1r2,t2w1l2,t2h1u2,t2h1d2;
-  double t2w1rwt2,t2w1lwt2,t2h1uwt2,t2h1dwt2;
-
-  double a2wlwt2,b2wlwt2,a2wrwt2,b2wrwt2,a2huwt2,b2huwt2,a2hdwt2,b2hdwt2;
-  double a2wl2,b2wl2,a2wr2,b2wr2,a2hu2,b2hu2,a2hd2,b2hd2;
-  double mru12,mru22,nru12,nru22,mrd12,mrd22,nrd12,nrd22,mlu12,mlu22,nlu12,nlu22,mld12,mld22,nld12,nld22;
-  double z0wr2,z0wl2,z0hu2,z0hd2;
-
-
-  double p2parawr2,p2parawl2,p2parahu2,p2parahd2;
-  double p2parawrwt2,p2parawlwt2,p2parahuwt2,p2parahdwt2;
-
-  t_Table riTable2, liTable2, uiTable2, diTable2;
-  t_Table roTable2, loTable2, uoTable2, doTable2;
+  %include "read_table-lib"
 
 
 
@@ -1123,7 +1048,81 @@ void TEST_LEFT_RIGHT(double t,double vzin, double zin,double vxin,double xin, do
    }
   *xtest=vxin*t+xin;
 };
+%}
 
+
+DECLARE
+%{
+  double w1rwt,w1lwt,h1uwt,h1dwt,w2rwt,w2lwt,h2uwt,h2dwt;					/* entrance and exit width for th OUTER walls of the guide*/
+  double pawr,pawl,pbwr,pbwl,pahu,pahd,pbhu,pbhd;						/* parameter a and b of the parabolic curves (INNER walls)*/
+  double awl,bwl,awr,bwr,ahu,bhu,ahd,bhd;							/* long and short axis a and b auf the ellipses (INNER walls)*/
+  double awlwt,bwlwt,awrwt,bwrwt,ahuwt,bhuwt,ahdwt,bhdwt;					/* long and short axis a and b auf the ellipses (OUTER walls)*/
+  double pawrwt,pawlwt,pbwrwt,pbwlwt,pahuwt,pahdwt,pbhuwt,pbhdwt;				/* parameter a and b of the parabolic curves for the OUTER wall*/
+  double t1,t2w1r,t2w1l,t2h1u,t2h1d;								/* time variables (INNER walls)*/
+  double t2w1rwt,t2w1lwt,t2h1uwt,t2h1dwt;							/* time variables (OUTER walls)*/
+
+
+  double a2wlwt,b2wlwt,a2wrwt,b2wrwt,a2huwt,b2huwt,a2hdwt,b2hdwt;				/* square of long and short axis a and b auf the ellipses (OUTER walls) */
+  double a2wl,b2wl,a2wr,b2wr,a2hu,b2hu,a2hd,b2hd;						/* square of long and short axis a and b auf the ellipses (INNER walls)*/
+  double mru1,mru2,nru1,nru2,mrd1,mrd2,nrd1,nrd2,mlu1,mlu2,nlu1,nlu2,mld1,mld2,nld1,nld2;	/* variables the calculated the guide geometrie in the entrance and exit plane (absorbing mask given by the walls)*/
+  double z0wr,z0wl,z0hu,z0hd;									/* z-component of the center of the ellipse (x-component is allways zero) */
+
+  double p2parawr,p2parawl,p2parahu,p2parahd;							/* help variables to calculate the parabolic curve parameters a and b (INNER walls)*/
+  double p2parawrwt,p2parawlwt,p2parahuwt,p2parahdwt;						/* help variables to calculate the parabolic curve parameters a and b for (OUTER wall)*/
+
+
+  double m,n;											/* zcomponent of the intersection point of the neutron trajectory and the ellipse (INNER walls)*/
+  double nz,nx,ny,n2;										/* component and length of the surfaces normal vector at the intersection point */
+  double pf;											/* prefactor to calculate the velocity vector after the interaction */
+  double vxin,vyin,vzin;									/* velocity vector components before the interaction*/
+  double q;											/* q-vector for the interaction */
+  double xlimitr,xlimitrwt,xlimitl,xlimitlwt,ylimitd,ylimitdwt,ylimitu,ylimituwt;		/* limit variables to determine the interaction position given by the time relative to the guide walls*/
+  double xtest,ytest;										/* interaction position of the neutron given by the interaction time; crosscheck with limit variables*/
+
+
+  t_Table riTable,liTable,uiTable,diTable;
+  t_Table roTable,loTable,uoTable,doTable;
+
+  double w1rwt1,w1lwt1,h1uwt1,h1dwt1,w2rwt1,w2lwt1,h2uwt1,h2dwt1;
+  double pawr1,pawl1,pbwr1,pbwl1,pahu1,pahd1,pbhu1,pbhd1;
+  double awl1,bwl1,awr1,bwr1,ahu1,bhu1,ahd1,bhd1;
+  double awlwt1,bwlwt1,awrwt1,bwrwt1,ahuwt1,bhuwt1,ahdwt1,bhdwt1;
+  double pawrwt1,pawlwt1,pbwrwt1,pbwlwt1,pahuwt1,pahdwt1,pbhuwt1,pbhdwt1;
+  double t2w1r1,t2w1l1,t2h1u1,t2h1d1;
+  double t2w1rwt1,t2w1lwt1,t2h1uwt1,t2h1dwt1;
+
+  double a2wlwt1,b2wlwt1,a2wrwt1,b2wrwt1,a2huwt1,b2huwt1,a2hdwt1,b2hdwt1;
+  double a2wl1,b2wl1,a2wr1,b2wr1,a2hu1,b2hu1,a2hd1,b2hd1;
+  double mru11,mru21,nru11,nru21,mrd11,mrd21,nrd11,nrd21,mlu11,mlu21,nlu11,nlu21,mld11,mld21,nld11,nld21;
+  double z0wr1,z0wl1,z0hu1,z0hd1;
+
+
+  double p2parawr1,p2parawl1,p2parahu1,p2parahd1;
+  double p2parawrwt1,p2parawlwt1,p2parahuwt1,p2parahdwt1;
+
+
+  t_Table riTable1,liTable1,uiTable1,diTable1;
+  t_Table roTable1,loTable1,uoTable1,doTable1;
+
+  double w1rwt2,w1lwt2,h1uwt2,h1dwt2,w2rwt2,w2lwt2,h2uwt2,h2dwt2;
+  double pawr2,pawl2,pbwr2,pbwl2,pahu2,pahd2,pbhu2,pbhd2;
+  double awl2,bwl2,awr2,bwr2,ahu2,bhu2,ahd2,bhd2;
+  double awlwt2,bwlwt2,awrwt2,bwrwt2,ahuwt2,bhuwt2,ahdwt2,bhdwt2;
+  double pawrwt2,pawlwt2,pbwrwt2,pbwlwt2,pahuwt2,pahdwt2,pbhuwt2,pbhdwt2;
+  double t2w1r2,t2w1l2,t2h1u2,t2h1d2;
+  double t2w1rwt2,t2w1lwt2,t2h1uwt2,t2h1dwt2;
+
+  double a2wlwt2,b2wlwt2,a2wrwt2,b2wrwt2,a2huwt2,b2huwt2,a2hdwt2,b2hdwt2;
+  double a2wl2,b2wl2,a2wr2,b2wr2,a2hu2,b2hu2,a2hd2,b2hd2;
+  double mru12,mru22,nru12,nru22,mrd12,mrd22,nrd12,nrd22,mlu12,mlu22,nlu12,nlu22,mld12,mld22,nld12,nld22;
+  double z0wr2,z0wl2,z0hu2,z0hd2;
+
+
+  double p2parawr2,p2parawl2,p2parahu2,p2parahd2;
+  double p2parawrwt2,p2parawlwt2,p2parahuwt2,p2parahdwt2;
+
+  t_Table riTable2, liTable2, uiTable2, diTable2;
+  t_Table roTable2, loTable2, uoTable2, doTable2;
 %}
 
 

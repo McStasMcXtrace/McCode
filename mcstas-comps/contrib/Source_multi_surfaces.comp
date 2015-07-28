@@ -127,12 +127,11 @@ char *get_token(char **src, char *token_sep)
 
 DECLARE
 %{
-       
- double delta_lambda;
- double p_in;
- t_Table Tables[49];                             
-  
+  double delta_lambda;
+  double p_in;
+  t_Table Tables[49];
 %}
+
 INITIALIZE
 %{
   int n_surf=1,c_surf=1;                  	/*numbers of subsurfaces*/

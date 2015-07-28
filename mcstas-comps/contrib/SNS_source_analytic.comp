@@ -98,17 +98,8 @@ SETTING PARAMETERS (xwidth=0.10,
                     n_pulses=1.0)
 OUTPUT PARAMETERS (hdiv,vdiv,p_in)
 
-DECLARE
+SHARE
 %{
-  double hdiv, vdiv;   
-  double p_in, CL, CU;
-  double para_sp[14];
-  double para_a[10];
-  double para_b[10];
-  double para_R[10];
-  double para_to[10];
-  double csfE[1001], CItot;
-
 /*############################################################################################
 #
 #      slowing-down spectrum and two Maxwellians joined by a modified Wescott function
@@ -762,8 +753,20 @@ double pade_function (double para[10], double E)
     return(a*pow(E,b)*(1+c*E+d*E*E+pow(E/f,g))/(1+h*E+i*E*E+pow(E/j,k)));
 }
 
-
 %}
+
+DECLARE
+%{
+  double hdiv, vdiv;   
+  double p_in, CL, CU;
+  double para_sp[14];
+  double para_a[10];
+  double para_b[10];
+  double para_R[10];
+  double para_to[10];
+  double csfE[1001], CItot;
+%}
+
 INITIALIZE
 %{  
   char line[1000];

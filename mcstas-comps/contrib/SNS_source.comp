@@ -46,28 +46,12 @@ DEFINE COMPONENT SNS_source
 DEFINITION PARAMETERS (filename)
 SETTING PARAMETERS (xwidth=0.1, yheight=0.12, dist, focus_xw, focus_yh, Emin, Emax)
 OUTPUT PARAMETERS (hdiv,vdiv,p_in)
-DECLARE
+
+SHARE 
 %{
-  double xonly(double);
-  double Pfunc(double,double);
-  double txonly(double);
-  double tPfunc(double,double);
-  double hdiv,vdiv;
-  double p_in;
-  double *inxvec,*inyvec,*Pvec;
-  int xylength;
-  double *tcol, *Ecol;
-  double *txval, *tyval;
-  double *tPvec;
-  double **Ptmat;
-  double EPmax, EPmin,INorm,INorm2;
-  int ntvals,idxstart,idxstop,tidxstart,tidxstop,nEvals;
-  #define Maxlength 200
-  #define MAXCOLS 500
   /* ----------------------------------------------------------------
       routine to load E, I and t I data from SNS source files
   -----------------------------------------------------------------*/
-
   void sns_source_load(char fname[], double *xvec, double *yvec, int xcol, int ycol, int *veclenptr, double *tcol, double *Ecol, double **Imat,int *ntvals, int *nEvals)
   {
     FILE *fp;
@@ -379,6 +363,7 @@ void tPcalc(double (*func)(double),double llim, double hlim, double *xvec, doubl
     }
   }
 }
+
 /*-----------------------------------------------------------------
 Functions for random energy generation
 ------------------------------------------------------------------*/
@@ -390,6 +375,7 @@ double Pfunc(double x, double y)
 {
   return quadfuncint(x,xylength,inxvec,Pvec)-y;
 }
+
 /*----------------------------------------------------------------
 Functions for random time generation
 ------------------------------------------------------------------*/
@@ -401,8 +387,28 @@ double tPfunc(double t,double y)
 {
   return quadfuncint(t,ntvals,txval,tyval)-y;
 }
-
 %}
+
+DECLARE
+%{
+  double xonly(double);
+  double Pfunc(double,double);
+  double txonly(double);
+  double tPfunc(double,double);
+  double hdiv,vdiv;
+  double p_in;
+  double *inxvec,*inyvec,*Pvec;
+  int xylength;
+  double *tcol, *Ecol;
+  double *txval, *tyval;
+  double *tPvec;
+  double **Ptmat;
+  double EPmax, EPmin,INorm,INorm2;
+  int ntvals,idxstart,idxstop,tidxstart,tidxstop,nEvals;
+  #define Maxlength 200
+  #define MAXCOLS 500
+%}
+
 INITIALIZE
 %{  
   FILE *fp;
@@ -463,6 +469,7 @@ INITIALIZE
     free(Imat[idx1]);
   }
   free(Imat);
+
 printf("Finished calculating probability distribution\n");
 
 %}

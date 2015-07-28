@@ -321,104 +321,67 @@ OUTPUT PARAMETERS(w1rwt,w1lwt,h1uwt,h1dwt,w2rwt,w2lwt,h2uwt,h2dwt,
 )
 
 SHARE
-%{	
-%include "read_table-lib"
-%}
-
-
-DECLARE
 %{
-  double w1rwt,w1lwt,h1uwt,h1dwt,w2rwt,w2lwt,h2uwt,h2dwt;					/* entrance and exit width for th OUTER walls of the guide*/
-  double pawr,pawl,pbwr,pbwl,pahu,pahd,pbhu,pbhd;						/* parameter a and b of the parabolic curves (INNER walls)*/
-  double awl,bwl,awr,bwr,ahu,bhu,ahd,bhd;							/* long and short axis a and b auf the ellipses (INNER walls)*/
-  double awlwt,bwlwt,awrwt,bwrwt,ahuwt,bhuwt,ahdwt,bhdwt;					/* long and short axis a and b auf the ellipses (OUTER walls)*/
-  double pawrwt,pawlwt,pbwrwt,pbwlwt,pahuwt,pahdwt,pbhuwt,pbhdwt;				/* parameter a and b of the parabolic curves for the OUTER wall*/
-  double t1,t2w1r,t2w1l,t2h1u,t2h1d;								/* time variables (INNER walls)*/
-  double t2w1rwt,t2w1lwt,t2h1uwt,t2h1dwt;							/* time variables (OUTER walls)*/
+  %include "read_table-lib"
 
-
-  double a2wlwt,b2wlwt,a2wrwt,b2wrwt,a2huwt,b2huwt,a2hdwt,b2hdwt;				/* square of long and short axis a and b auf the ellipses (OUTER walls) */
-  double a2wl,b2wl,a2wr,b2wr,a2hu,b2hu,a2hd,b2hd;						/* square of long and short axis a and b auf the ellipses (INNER walls)*/
-  double mru1,mru2,nru1,nru2,mrd1,mrd2,nrd1,nrd2,mlu1,mlu2,nlu1,nlu2,mld1,mld2,nld1,nld2;	/* variables the calculated the guide geometrie in the entrance and exit plane (absorbing mask given by the walls)*/
-  double z0wr,z0wl,z0hu,z0hd;									/* z-component of the center of the ellipse (x-component is allways zero) */
-
-  double p2parawr,p2parawl,p2parahu,p2parahd;							/* help variables to calculate the parabolic curve parameters a and b (INNER walls)*/
-  double p2parawrwt,p2parawlwt,p2parahuwt,p2parahdwt;						/* help variables to calculate the parabolic curve parameters a and b for (OUTER wall)*/
-
-
-  double m,n;											/* zcomponent of the intersection point of the neutron trajectory and the ellipse (INNER walls)*/
-  double nz,nx,ny,n2;										/* component and length of the surfaces normal vector at the intersection point */
-  double pf;											/* prefactor to calculate the velocity vector after the interaction */
-  double vxin,vyin,vzin;									/* velocity vector components before the interaction*/
-  double q;											/* q-vector for the interaction */
-  double xlimitr,xlimitrwt,xlimitl,xlimitlwt,ylimitd,ylimitdwt,ylimitu,ylimituwt;		/* limit variables to determine the interaction position given by the time relative to the guide walls*/
-  double xtest,ytest;										/* interaction position of the neutron given by the interaction time; crosscheck with limit variables*/
-
-
-  t_Table riTable,liTable,uiTable,diTable;
-  t_Table roTable,loTable,uoTable,doTable;
-
-
-
-
-void TEST_INPUT(char name[20])
+  void TEST_INPUT(char name[20])
   {
     fprintf(stderr,"Component: %s (Guide_four_side) %s should  \n", NAME_CURRENT_COMP, name);
     fprintf(stderr,"           NOT be negative \n");
     fprintf(stderr,"           (for negative values use the global guide position !) \n");
     exit(-1);
- };
+  };
 
-void TEST_INPUT_1(char name[20])
- {
-  fprintf(stderr,"Component: %s (Guide_four_side) %s must \n", NAME_CURRENT_COMP, name);
+  void TEST_INPUT_1(char name[20])
+  {
+    fprintf(stderr,"Component: %s (Guide_four_side) %s must \n", NAME_CURRENT_COMP, name);
     fprintf(stderr,"           be -1 (transperent) or \n");
     fprintf(stderr,"           be  0 (absorbing) or \n");
     fprintf(stderr,"           be  > 0 (reflecting) \n");
     exit(-1);
- };
+  };
 
-void TEST_INPUT_2(char name[20])
- {
+  void TEST_INPUT_2(char name[20])
+  {
     fprintf(stderr,"Component: %s (Guide_four_side) %s can  \n", NAME_CURRENT_COMP, name);
     fprintf(stderr,"           NOT be negative \n");
     exit(-1);
- };
+  };
 
-void TEST_INPUT_3(char name[20])
- {
+  void TEST_INPUT_3(char name[20])
+  {
     fprintf(stderr,"Component: %s (Guide_four_side) %sr must \n", NAME_CURRENT_COMP, name);
     fprintf(stderr,"           be positive\n");
     exit(-1);
   };
 
-void TEST_INPUT_4(char name[20],char name1[20], double inputname, double inputname1)
- {
+  void TEST_INPUT_4(char name[20],char name1[20], double inputname, double inputname1)
+  {
     fprintf(stderr,"Component: %s (Guide_four_side) \n", NAME_CURRENT_COMP);
     fprintf(stderr,"           %s have to be bigger or equal %s  \n", name, name1);
     printf(" %s = %f \n",name, inputname );
     printf(" %s = %f \n",name1, inputname1  );
     fprintf(stderr,"           check curve parameter and wallthicknesses! \n");
     exit(-1);
- };
+  };
 
 
 												/* function to calculate the needed parameters for an elliptic wall*/
 
   void ELLIPSE(double w1,double length, double lin, double lout, double wallthick, double *a, double *b, double *a2, double *b2, double *z0, double *w2, double *awt, double *a2wt, double *bwt, double *b2wt, double *w2wt, double *w1wt)
-   { 
-     double DIV1, lb, u1, u2, u1wt, u2wt, dx, dz;
-     lb=lin+length+lout;									/* lenght between the two focal points of the wall */
-    *z0=(lin-length-lout)/2.0;
-     u1=sqrt((lin*lin)+(w1*w1));								/* length between entrance focal point and starting point of the wall (INNER side)*/
-     u2=sqrt((w1*w1)+((length+lout)*(length+lout)));						/* length between exit focal point and end point of the  wall (INNER side) */
-    *a=(u1+u2)/2.0;										/* long half axis a of the ellipse (INNER  side)*/
-    *a2=*a*(*a);										/* square of the long axis a (INNER side)*/
-    *b=sqrt(*a2-(lb*(lb)/4.0));									/* short half axis b of the ellipse  (INNER side)*/
-    *b2=*b*(*b);										/* square of short half axis b of the ellipse  (INNER side)*/
-    DIV1=sqrt(1.0-((lb/2.0-lout)*(lb/2.0-lout)/(*a2)));						/* help variable to calculated the exit width (INNER side)*/
-    *w2=*b*(DIV1);										/* exit width (INNER side)*/
-    if(length<(lb)/2-lout){									/* if the maximum opening of the guide is smaller than the small half axis b, the OUTER side is defined by: */
+    { 
+      double DIV1, lb, u1, u2, u1wt, u2wt, dx, dz;
+      lb=lin+length+lout;									/* lenght between the two focal points of the wall */
+      *z0=(lin-length-lout)/2.0;
+      u1=sqrt((lin*lin)+(w1*w1));								/* length between entrance focal point and starting point of the wall (INNER side)*/
+      u2=sqrt((w1*w1)+((length+lout)*(length+lout)));						/* length between exit focal point and end point of the  wall (INNER side) */
+      *a=(u1+u2)/2.0;										/* long half axis a of the ellipse (INNER  side)*/
+      *a2=*a*(*a);										/* square of the long axis a (INNER side)*/
+      *b=sqrt(*a2-(lb*(lb)/4.0));									/* short half axis b of the ellipse  (INNER side)*/
+      *b2=*b*(*b);										/* square of short half axis b of the ellipse  (INNER side)*/
+      DIV1=sqrt(1.0-((lb/2.0-lout)*(lb/2.0-lout)/(*a2)));						/* help variable to calculated the exit width (INNER side)*/
+      *w2=*b*(DIV1);										/* exit width (INNER side)*/
+      if(length<(lb)/2-lout){									/* if the maximum opening of the guide is smaller than the small half axis b, the OUTER side is defined by: */
          dx=wallthick * sin(atan(*a2 * w1/(*b2 * (*z0))));
          dz=wallthick * cos(atan(*a2 * w1/(*b2 * (*z0))));
     	 u1wt=sqrt(((lin+dz)*(lin+dz))+((w1+dx)*(w1+dx)));					/* length between entrance focal point and starting point of the wall (OUTER side)*/
@@ -429,15 +392,15 @@ void TEST_INPUT_4(char name[20],char name1[20], double inputname, double inputna
     	*b2wt=*bwt*(*bwt);									/* square of short half axis b of the ellipse  (OUTER side)*/
     	*w2wt=*bwt*sqrt(1.0-((lb/2.0-lout)*(lb/2.0-lout)/(*a2wt)));				/* exit width for OUTER side */
         *w1wt=*bwt*sqrt(1.0-((lb/2.0-lout-length)*(lb/2.0-lout-length)/(*a2wt)));		/* entrance width for OUTER side */
-    }else{											/* if the maximum opening of the guide is the small half axis b the OUTER wall is defined by:*/
+      } else {											/* if the maximum opening of the guide is the small half axis b the OUTER wall is defined by:*/
 	*bwt=*b+wallthick;									/* short half axis b of the ellipse  (OUTER side)*/
         *b2wt=*bwt*(*bwt);									/* square of the long axis a (OUTER side)*/
         *awt=sqrt(*b2wt+(lb*lb/4.0));								/* long half axis a of the ellipse  (OUTER  side)*/
         *a2wt=*b2wt+(lb*lb/4.0);								/* square of short half axis b of the ellipse  (OUTER side)*/
         *w2wt=*bwt*sqrt(1.0-((lb/2.0-lout)*(lb/2.0-lout)/(*a2wt)));				/* exit width for OUTER side */
         *w1wt=*bwt*sqrt(1.0-((lb/2.0-lin)*(lb/2.0-lin)/(*a2wt)));				/* entrance width for OUTER side */
+      }
     }
-  }
 
 											 	/* function to calculate the needed parameters for a parabolical focusing wall*/
 
@@ -822,7 +785,40 @@ void TEST_LEFT_RIGHT(double t,double vzin, double zin,double vxin,double xin, do
    }
   *xtest=vxin*t+xin;
 };
+%}
 
+
+DECLARE
+%{
+  double w1rwt,w1lwt,h1uwt,h1dwt,w2rwt,w2lwt,h2uwt,h2dwt;					/* entrance and exit width for th OUTER walls of the guide*/
+  double pawr,pawl,pbwr,pbwl,pahu,pahd,pbhu,pbhd;						/* parameter a and b of the parabolic curves (INNER walls)*/
+  double awl,bwl,awr,bwr,ahu,bhu,ahd,bhd;							/* long and short axis a and b auf the ellipses (INNER walls)*/
+  double awlwt,bwlwt,awrwt,bwrwt,ahuwt,bhuwt,ahdwt,bhdwt;					/* long and short axis a and b auf the ellipses (OUTER walls)*/
+  double pawrwt,pawlwt,pbwrwt,pbwlwt,pahuwt,pahdwt,pbhuwt,pbhdwt;				/* parameter a and b of the parabolic curves for the OUTER wall*/
+  double t1,t2w1r,t2w1l,t2h1u,t2h1d;								/* time variables (INNER walls)*/
+  double t2w1rwt,t2w1lwt,t2h1uwt,t2h1dwt;							/* time variables (OUTER walls)*/
+
+
+  double a2wlwt,b2wlwt,a2wrwt,b2wrwt,a2huwt,b2huwt,a2hdwt,b2hdwt;				/* square of long and short axis a and b auf the ellipses (OUTER walls) */
+  double a2wl,b2wl,a2wr,b2wr,a2hu,b2hu,a2hd,b2hd;						/* square of long and short axis a and b auf the ellipses (INNER walls)*/
+  double mru1,mru2,nru1,nru2,mrd1,mrd2,nrd1,nrd2,mlu1,mlu2,nlu1,nlu2,mld1,mld2,nld1,nld2;	/* variables the calculated the guide geometrie in the entrance and exit plane (absorbing mask given by the walls)*/
+  double z0wr,z0wl,z0hu,z0hd;									/* z-component of the center of the ellipse (x-component is allways zero) */
+
+  double p2parawr,p2parawl,p2parahu,p2parahd;							/* help variables to calculate the parabolic curve parameters a and b (INNER walls)*/
+  double p2parawrwt,p2parawlwt,p2parahuwt,p2parahdwt;						/* help variables to calculate the parabolic curve parameters a and b for (OUTER wall)*/
+
+
+  double m,n;											/* zcomponent of the intersection point of the neutron trajectory and the ellipse (INNER walls)*/
+  double nz,nx,ny,n2;										/* component and length of the surfaces normal vector at the intersection point */
+  double pf;											/* prefactor to calculate the velocity vector after the interaction */
+  double vxin,vyin,vzin;									/* velocity vector components before the interaction*/
+  double q;											/* q-vector for the interaction */
+  double xlimitr,xlimitrwt,xlimitl,xlimitlwt,ylimitd,ylimitdwt,ylimitu,ylimituwt;		/* limit variables to determine the interaction position given by the time relative to the guide walls*/
+  double xtest,ytest;										/* interaction position of the neutron given by the interaction time; crosscheck with limit variables*/
+
+
+  t_Table riTable,liTable,uiTable,diTable;
+  t_Table roTable,loTable,uoTable,doTable;
 %}
 
 

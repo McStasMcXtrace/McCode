@@ -76,36 +76,8 @@ SETTING PARAMETERS (AxisRatio = 1.4, NumberOfLipids = 130.0, AreaPerLipidHeadgro
 
 OUTPUT PARAMETERS ()
 
-DECLARE
+SHARE
 %{
-	// Declarations	
-	double Absorption;
-	double q;
-	double NumberDensity;
-
-	// Scattering lengths
-	double RhoBelt;
-	double RhoHead;
-	double RhoCH2Tail;
-	double RhoCH3Tail;
-	double RhoTag;
-
-	double DeltaRhoHead;
-	double DeltaRhoBelt;
-	double DeltaRhoCH2Tail;
-	double DeltaRhoCH3Tail;
-	double DeltaRhoTag;
-
-	// Geometric properties
-	double MajorSemiAxis; 
-	double MinorSemiAxis;
-	double ThicknessOfBelt;
-
-	double HeightOfBelt;
-	double HeightOfLipids; 
-	double HeightOfTails; 
-	double HeightOfCH3;
-
 	// Functions used for compution the formfactor of a cylinder
 	double FormfactorCylinder(double q, double MajorSemiAxis, double MinorSemiAxis, double Height, double Alpha, double Beta) 
 	{
@@ -159,9 +131,22 @@ DECLARE
 	}
 
 	// Computation of the intensity from a given nanodisc
-	double IntensityOfEmptyNanodiscsWithTags(double q, double MajorSemiAxis, double MinorSemiAxis, double ThicknessOfBelt, 
-											 double HeightOfBelt, double HeightOfLipids, double HeightOfTails, double HeightOfCH3, double RadiusOfGyrationForHisTag, double VolumeOfOneHisTag,
-											 double DeltaRhoBelt, double DeltaRhoHead, double DeltaRhoCH2Tail, double DeltaRhoCH3Tail, double DeltaRhoTag)
+	double IntensityOfEmptyNanodiscsWithTags(
+		double q, 
+		double MajorSemiAxis, 
+		double MinorSemiAxis, 
+		double ThicknessOfBelt, 
+		double HeightOfBelt, 
+		double HeightOfLipids, 
+		double HeightOfTails, 
+		double HeightOfCH3, 
+		double RadiusOfGyrationForHisTag, 
+		double VolumeOfOneHisTag, 
+		double DeltaRhoBelt, 
+		double DeltaRhoHead, 
+		double DeltaRhoCH2Tail, 
+		double DeltaRhoCH3Tail, 
+		double DeltaRhoTag)
 	{
 		// Declarations
 		double Intensity;
@@ -257,9 +242,39 @@ DECLARE
 				Intensity += 2 / PI * sin(Alpha) * IntensityPart * AlphaStep * BetaStep;
 			}
 		}
-
 		return Intensity;
 	}
+%}
+
+DECLARE
+%{
+	// Declarations	
+	double Absorption;
+	double q;
+	double NumberDensity;
+
+	// Scattering lengths
+	double RhoBelt;
+	double RhoHead;
+	double RhoCH2Tail;
+	double RhoCH3Tail;
+	double RhoTag;
+
+	double DeltaRhoHead;
+	double DeltaRhoBelt;
+	double DeltaRhoCH2Tail;
+	double DeltaRhoCH3Tail;
+	double DeltaRhoTag;
+
+	// Geometric properties
+	double MajorSemiAxis; 
+	double MinorSemiAxis;
+	double ThicknessOfBelt;
+
+	double HeightOfBelt;
+	double HeightOfLipids; 
+	double HeightOfTails; 
+	double HeightOfCH3;
 %}
 
 INITIALIZE

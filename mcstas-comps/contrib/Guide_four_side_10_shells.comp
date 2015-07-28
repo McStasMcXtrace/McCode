@@ -861,7 +861,467 @@ OUTPUT PARAMETERS(w1rwt,w1lwt,h1uwt,h1dwt,w2rwt,w2lwt,h2uwt,h2dwt,
 
 SHARE
 %{	
-%include "read_table-lib"
+  %include "read_table-lib"
+
+  void TEST_INPUT(char name[20])
+  {
+    fprintf(stderr,"Component: %s (Guide_four_side) %s should  \n", NAME_CURRENT_COMP, name);
+    fprintf(stderr,"           NOT be negative \n");
+    fprintf(stderr,"           (for negative values use the global guide position !) \n");
+    exit(-1);
+  }
+
+  void TEST_INPUT_1(char name[20])
+  {
+    fprintf(stderr,"Component: %s (Guide_four_side) %s must \n", NAME_CURRENT_COMP, name);
+    fprintf(stderr,"           be -1 (transperent) or \n");
+    fprintf(stderr,"           be  0 (absorbing) or \n");
+    fprintf(stderr,"           be  > 0 (reflecting) \n");
+    exit(-1);
+  }
+
+  void TEST_INPUT_2(char name[20])
+  {
+    fprintf(stderr,"Component: %s (Guide_four_side) %s can  \n", NAME_CURRENT_COMP, name);
+    fprintf(stderr,"           NOT be negative \n");
+    exit(-1);
+  }
+
+  void TEST_INPUT_3(char name[20])
+  {
+    fprintf(stderr,"Component: %s (Guide_four_side) %sr must \n", NAME_CURRENT_COMP, name);
+    fprintf(stderr,"           be positive\n");
+    exit(-1);
+  }
+
+  void TEST_INPUT_4(char name[20],char name1[20], double inputname, double inputname1)
+  {
+    fprintf(stderr,"Component: %s (Guide_four_side) \n", NAME_CURRENT_COMP);
+    fprintf(stderr,"           %s have to be bigger or equal %s  \n", name, name1);
+    printf(" %s = %f \n",name, inputname );
+    printf(" %s = %f \n",name1, inputname1  );
+    fprintf(stderr,"           check curve parameter and wallthicknesses! \n");
+    exit(-1);
+  }
+
+
+  /* function to calculate the needed parameters for an elliptic wall*/
+  void ELLIPSE(double w1,double length, double lin, double lout, double wallthick, double *a, double *b, double *a2, double *b2, double *z0, double *w2, double *awt, double *a2wt, double *bwt, double *b2wt, double *w2wt, double *w1wt)
+   { 
+     double DIV1, lb, u1, u2, u1wt, u2wt, dx, dz;
+     lb=lin+length+lout;									/* lenght between the two focal points of the wall */
+    *z0=(lin-length-lout)/2.0;
+     u1=sqrt((lin*lin)+(w1*w1));								/* length between entrance focal point and starting point of the wall (INNER side)*/
+     u2=sqrt((w1*w1)+((length+lout)*(length+lout)));						/* length between exit focal point and end point of the  wall (INNER side) */
+    *a=(u1+u2)/2.0;										/* long half axis a of the ellipse (INNER  side)*/
+    *a2=*a*(*a);										/* square of the long axis a (INNER side)*/
+    *b=sqrt(*a2-(lb*(lb)/4.0));									/* short half axis b of the ellipse  (INNER side)*/
+    *b2=*b*(*b);										/* square of short half axis b of the ellipse  (INNER side)*/
+    DIV1=sqrt(1.0-((lb/2.0-lout)*(lb/2.0-lout)/(*a2)));						/* help variable to calculated the exit width (INNER side)*/
+    *w2=*b*(DIV1);										/* exit width (INNER side)*/
+    if(length<(lb)/2-lout){									/* if the maximum opening of the guide is smaller than the small half axis b, the OUTER side is defined by: */
+         dx=wallthick * sin(atan(*a2 * w1/(*b2 * (*z0))));
+         dz=wallthick * cos(atan(*a2 * w1/(*b2 * (*z0))));
+    	 u1wt=sqrt(((lin+dz)*(lin+dz))+((w1+dx)*(w1+dx)));					/* length between entrance focal point and starting point of the wall (OUTER side)*/
+    	 u2wt=sqrt(((w1+dx)*(w1+dx))+((length+lout-dz)*(length+lout-dz)));			/* length between exit focal point and end point of the wall (OUTER side) */
+    	*awt=(u1wt+u2wt)/2.0;									/* long half axis a of the ellipse  (OUTER side)*/
+    	*a2wt=*awt*(*awt);									/* square of the long axis a (OUTER side)*/
+    	*bwt=sqrt(*a2wt-(lb*lb/4.0));								/* short half axis b of the ellipse  (OUTER side)*/
+    	*b2wt=*bwt*(*bwt);									/* square of short half axis b of the ellipse  (OUTER side)*/
+    	*w2wt=*bwt*sqrt(1.0-((lb/2.0-lout)*(lb/2.0-lout)/(*a2wt)));				/* exit width for OUTER side */
+        *w1wt=*bwt*sqrt(1.0-((lb/2.0-lout-length)*(lb/2.0-lout-length)/(*a2wt)));		/* entrance width for OUTER side */
+    }else{											/* if the maximum opening of the guide is the small half axis b the OUTER wall is defined by:*/
+	*bwt=*b+wallthick;									/* short half axis b of the ellipse  (OUTER side)*/
+        *b2wt=*bwt*(*bwt);									/* square of the long axis a (OUTER side)*/
+        *awt=sqrt(*b2wt+(lb*lb/4.0));								/* long half axis a of the ellipse  (OUTER  side)*/
+        *a2wt=*b2wt+(lb*lb/4.0);								/* square of short half axis b of the ellipse  (OUTER side)*/
+        *w2wt=*bwt*sqrt(1.0-((lb/2.0-lout)*(lb/2.0-lout)/(*a2wt)));				/* exit width for OUTER side */
+        *w1wt=*bwt*sqrt(1.0-((lb/2.0-lin)*(lb/2.0-lin)/(*a2wt)));				/* entrance width for OUTER side */
+    }
+  }
+
+  /* function to calculate the needed parameters for a parabolical focusing wall*/
+  void PARABEL_FOCUS(double w1,double length , double lout, double wallthick, double *p2para, double *w2, double *pb , double *pa, double *p2parawt, double *pbwt, double *pawt, double *w2wt, double *w1wt)
+  {
+     double DIV1,DIV1wt, dx, dz;													
+     DIV1=(length+lout)*(length+lout);								/* help variable to calculate the curve parameters (INNER side) */
+    *p2para=2.0*(sqrt(DIV1+(w1*w1))-sqrt(DIV1));						/* help variable to calculate the curve parameters (INNER side) */
+    *w2=sqrt(*p2para*(lout+*p2para/4.0));							/* exit width (INNER side) */
+    *pb=length+lout+*p2para/4.0;								/* parameter b for parabolic equation to define the wall (INNER side)*/
+    *pa=1.0/(*p2para);										/* parameter a for parabolic equation to define the wall (INNER side)*/
+     dx= wallthick*sin(atan(w1*2*(*pa)));							/* help variable dx; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
+     dz= wallthick*cos(atan(w1*2*(*pa)));							/* help variable dz; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
+     DIV1wt=(length+lout-dz)*(length+lout-dz);							/* help variable to calculate the curve parameters (OUTER side) */
+    *p2parawt=2.0*(sqrt(DIV1wt+((w1+dx)*(w1+dx)))-sqrt(DIV1wt));				/* help variable to calculate the curve parameters (OUTER side) */
+    *pbwt=length+lout+*p2parawt/4.0;								/* parameter b for parabolic equation to define the wall (OUTER side)*/
+    *pawt=1.0/(*p2parawt);									/* parameter a for parabolic equation to define the wall (OUTER side)*/
+    *w2wt=sqrt(*p2parawt*(lout+ *p2parawt/4.0));						/* exit width (OUTER side) */
+    *w1wt=sqrt(*p2parawt*(lout+l+ *p2parawt/4.0));						/* entrance width (OUTER side) */
+  }
+
+
+											 	/* function to calculate the needed parameters for a parabolical defocusing wall*/
+
+  void PARABEL_DEFOCUS(double w1,double length, double lin, double wallthick, double *p2para, double *w2, double *pb , double *pa, double *p2parawt, double *pbwt, double *pawt, double *w2wt, double *w1wt)
+      {
+       double DIV1,DIV1wt, dx, dz;
+       DIV1=lin*lin;										/* help variable to calculate the curve parameters (INNER side) */
+      *p2para=2.0*(sqrt(DIV1+(w1*w1))-sqrt(DIV1));						/* help variable to calculate the curve parameters (INNER side) */
+      *w2=sqrt(*p2para*(length+lin+*p2para/4.0));						/* exit width (INNER side) */
+      *pb=-(lin+*p2para/4.0);									/* parameter b for parabolic equation to define the wall (INNER side)*/
+      *pa=-1.0/(*p2para);									/* parameter a for parabolic equation to define the wall (INNER side)*/
+       dx=wallthick*sin(atan(-*w2*2*(*pa)));							/* help variable dx; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
+       dz=wallthick*cos(atan(-*w2*2*(*pa)));							/* help variable dz; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
+       DIV1wt=(lin+length-dz)*(lin+length-dz);							/* help variable to calculate the curve parameters (OUTER side) */
+      *p2parawt=2.0*(sqrt(DIV1wt+((*w2+dx)*(*w2+dx)))-sqrt(DIV1wt));				/* help variable to calculate the curve parameters (OUTER side) */
+      *w1wt=sqrt(*p2parawt*(lin+*p2parawt/4.0));						/* entrance width for right focusing parabolic wall (OUTER side) */
+      *w2wt=sqrt(*p2parawt*(lin+length+*p2parawt/4.0));						/* exit width (OUTER side) */
+      *pbwt=-(lin+*p2parawt/4.0);								/* parameter b for parabolic equation to define the wall (OUTER side)*/
+      *pawt=-1.0/(*p2parawt);									/* parameter a for parabolic equation to define the wall (OUTER side)*/
+    }
+
+
+												/* function to calculate the needed parameters for a linear wall*/
+
+  void LINEAR(double w1, double w2, double length, double wallthick, double *w1wt, double *w2wt)
+  {										
+    *w1wt=w1+wallthick/(cos(atan((w1-w2)/length)));						/* entrance width (OUTER side) */
+    *w2wt=w2+wallthick/(cos(atan((w1-w2)/length)));						/* exit width  (OUTER side) */
+  }
+
+
+										/* function to calculate the intersection time with a linear wall at an negative axis*/
+
+  void TIME_LINEAR(double t1in, double w1, double w2, double length, double xin, double zin, double vxin1, double vzin1, double w1wt, double *t2, double *t2wt)
+  { 
+   double anstieg;
+   anstieg=(-w2+w1)/length;
+  *t2=(anstieg*zin-w1-xin)/(vxin1-anstieg*vzin1);				/* time untill next interaction with this wall (INNER side)*/
+  *t2wt=(anstieg*zin-w1wt-xin)/(vxin1-anstieg*vzin1);			/* time untill next interaction with this wall (OUTER side)*/
+   if(*t2<1e-15)								/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
+    *t2=t1in+2.0;								/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
+   if(*t2wt<1e-15)								/* see comments above*/
+    *t2wt=t1in+2.0; 
+  }
+
+
+										/* function to calculate the intersection time with a linear wall at an positive axis*/
+
+  void TIME_LINEAR_1(double t1in, double w1, double w2, double length, double xin, double zin, double vxin1, double vzin1, double w1wt, double *t2, double *t2wt)
+  { 
+   double anstieg;
+   anstieg=(w2-w1)/length;
+  *t2=(anstieg*zin+w1-xin)/(vxin1-anstieg*vzin1);
+  *t2wt=(anstieg*zin+w1wt-xin)/(vxin1-anstieg*vzin1);
+   if(*t2<1e-15)
+    *t2=t1in+2.0;
+   if(*t2wt<1e-15)
+    *t2wt=t1in+2.0; 
+  }
+
+
+										/* function to calculate the intersection time with an elliptical wall at a negative axis*/
+
+  void TIME_ELLIPSE(double vxin, double vzin, double xin, double zin, double a2, double b2, double z0, double t1in, double a2wt, double b2wt, double *t2w1, double *t2w1wt)
+    { 										
+										/* solving the elliptic equation in respect to z and the straight neutron trajectoty, only two z values possible! */
+
+     double m,n,q,p,z1,z2,qwt,pwt, xintersec, z1wt, z2wt, xintersecwt,t2w2,t2w2wt; 
+
+     m=vxin/vzin;								/* m parameter of the neutron trajectory*/
+     n=-m*zin+xin;								/* n parameter of the neutron trajectory */
+     p=2.0*(a2*m*n+b2*z0)/(a2*m*m+b2);						/* p parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (INNER side)*/
+     q=(a2*n*n+b2*z0*z0-a2*b2)/(a2*m*m+b2);					/* q parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (INNER side)*/ 
+    if ((p*p/4.0)-q<0){							
+    *t2w1=t1in+2.0;								/* if the neutron never touch the ellipse the time is set to be bigger than the time (t1) needed to pass the component */
+    }else{
+         z1=-p/2.0+sqrt(((p)*(p)/4.0)-q);					/* first solution for z (INNER side)*/
+         z2=-p/2.0-sqrt(((p)*(p)/4.0)-q);					/* second solution for z (INNER side)*/
+        *t2w1=(z1-zin)/vzin;							/* interaction time for first z value (INNER side)*/
+         t2w2=(z2-zin)/vzin;							/* interactime time for second z value (INNER side)*/
+        if(*t2w1<1e-15)								/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
+        *t2w1=t1in+2.0;								/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
+        if(t2w2<1e-15)								/* see comments above*/
+        t2w2=t1in+2.0;
+        if(t2w2<*t2w1)								/* choosing the smaller positive time solution (INNER side)*/
+        *t2w1=t2w2;
+         xintersec=m*(vzin*(*t2w1)+zin)+n;					/* crosscheck of the x-coordinate of the intersection point */
+        if (xintersec>0)							/* for the right wall x-coordinate of the intersection point have to be negative */
+        *t2w1=t1in+2.0;								/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
+        }
+    pwt=2.0*(a2wt*m*n+b2wt*z0)/(a2wt*m*m+b2wt);					/* p parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (OUTER side)*/
+    qwt=(a2wt*n*n+b2wt*z0*z0-a2wt*b2wt)/(a2wt*m*m+b2wt);			/* q parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (OUTER side)*/
+    if ((pwt*pwt/4.0)-qwt<0){							
+    *t2w1wt=t1in+2.0;								/* if the neutron never touch the ellipse the time is set bigger than need to pass the component */
+    }else{
+         z1wt=-pwt/2.0+sqrt((pwt*pwt/4.0)-qwt);					/* first solution for z (OUTER side) */
+         z2wt=-pwt/2.0-sqrt((pwt*pwt/4.0)-qwt);					/* second solution for z (OUTER side)*/
+        *t2w1wt=(z1wt-zin)/vzin;						/* interaction time for first z value (OUTER side)*/
+         t2w2wt=(z2wt-zin)/vzin;							/* interactime time for second z value (OUTER side)*/
+        if(*t2w1wt<1e-15)							/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
+        *t2w1wt=t1in+2.0;							/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
+        if(t2w2wt<1e-15)							/* see comments above*/
+         t2w2wt=t1in+2.0;
+        if(t2w2wt<*t2w1wt)							/* choosing the smaller positive time solution (OUTER side)*/
+        *t2w1wt=t2w2wt;
+         xintersecwt=m*(vzin*(*t2w1wt)+zin)+n;					/* crosscheck of the x-coordinate of the intersection point */
+        if (xintersecwt>0)							/* x-coordinate of the intersection point have to be negative */
+        *t2w1wt=t1in+2.0;							/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
+        }
+    }
+
+
+
+										/* function to calculate the intersection time with an elliptical wall at a positive  axis*/
+
+void TIME_ELLIPSE_1(double vxin, double vzin, double xin, double zin, double a2, double b2, double z0, double t1in, double a2wt, double b2wt, double *t2w1, double *t2w1wt)
+{ 
+     double m,n,q,p,z1,z2,qwt,pwt, xintersec, z1wt, z2wt, xintersecwt,t2w2,t2w2wt; 
+   
+     m=vxin/vzin;
+     n=-m*zin+xin;
+     p=2.0*(a2*m*n+b2*z0)/(a2*m*m+b2);
+     q=(a2*n*n+b2*z0*z0-a2*b2)/(a2*m*m+b2);
+    if ((p*p/4.0)-q<0){	
+    *t2w1=t1in+2.0;
+    }else{
+         z1=-p/2.0+sqrt(((p)*(p)/4.0)-q);
+         z2=-p/2.0-sqrt(((p)*(p)/4.0)-q);
+        *t2w1=(z1-zin)/vzin;
+         t2w2=(z2-zin)/vzin;
+        if(*t2w1<1e-15)
+        *t2w1=t1in+2.0;
+        if(t2w2<1e-15)
+         t2w2=t1in+2.0;
+        if(t2w2<*t2w1)
+        *t2w1=t2w2;
+         xintersec=m*(vzin*(*t2w1)+zin)+n;
+        if (xintersec<0){
+        *t2w1=t1in+2.0;}
+        }
+    pwt=2.0*(a2wt*m*n+b2wt*z0)/(a2wt*m*m+b2wt);
+    qwt=(a2wt*n*n+b2wt*z0*z0-a2wt*b2wt)/(a2wt*m*m+b2wt);
+    if ((pwt*pwt/4.0)-qwt<0){
+    *t2w1wt=t1in+2.0;
+    }else{
+         z1wt=-pwt/2.0+sqrt((pwt*pwt/4.0)-qwt);
+         z2wt=-pwt/2.0-sqrt((pwt*pwt/4.0)-qwt);
+        *t2w1wt=(z1wt-zin)/vzin;
+         t2w2wt=(z2wt-zin)/vzin;	
+        if(*t2w1wt<1e-15)
+        *t2w1wt=t1in+2.0;
+        if(t2w2wt<1e-15)
+         t2w2wt=t1in+2.0;
+        if(t2w2wt<*t2w1wt)
+        *t2w1wt=t2w2wt;
+         xintersecwt=m*(vzin*(*t2w1wt)+zin)+n;
+        if (xintersecwt<0)
+        *t2w1wt=t1in+2.0;
+        }
+  }
+
+
+
+									/* function to calculate the intersection time with a parabolical wall at an negative axis*/
+
+   void TIME_PARABEL(double vxin, double vzin, double xin, double zin, double pa, double pb, double t1in, double pawt, double pbwt, double *t2w1, double *t2w1wt)
+   {
+    double m,n,p,q,z1,z2,t2w2,xintersec,pwt,qwt,t2w2wt,z1wt,z2wt,xintersecwt;
+
+    m=vxin/vzin;							/* m parameter of the neutron trajectory*/
+    n=-m*zin+xin;							/* n parameter of the neutron trajectory */
+    p=(2.0*m*n*pa+1.0)/(pa*m*m);					/* p parameter of quadratic equation (INNER side) */
+    q=n*n/(m*m)-pb/(pa*m*m);						/* q parameter of quadratic equation (INNER side) */
+    if(q>0 && q>(p*p/4)) {						/* in the very special case of no intersection the quadratic equation has no solution (negative square root) the time is set to t1+2.0 */
+    *t2w1=t1in+2.0;
+    }else{
+    if(vxin==0)								/* in the special case of vx = 0 is x a constant */
+    {
+      if(xin<0){							/* only neutron with a negativ x-component can hit the RIGHT wall (INNER side)*/
+      *t2w1=(pb-pa*xin*xin-zin)/vzin;
+      }else{
+      *t2w1=t1in+2.0; 							/* the time solution for neutron with a positive x component is set to a time long behind the exit of the guide */
+									/* (means will not  scatter with the right wall)*/
+      }
+    }else{								/* if vx is not zero and x is a real variable*/
+      z1=-p/2.0+sqrt(p*p/4.0-q);					/* first z-solution for intersection (INNER side)*/
+      z2=-p/2.0-sqrt(p*p/4.0-q);					/* second z-solution for intersection (INNER side)*/
+      *t2w1=(z1-zin)/vzin;						/* first time solution (INNER side)*/
+      t2w2=(z2-zin)/vzin;						/* second time solution (INNER side)*/
+      if(*t2w1<1e-15)							/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
+      *t2w1=t1in+2.0;							/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
+      if(t2w2<1e-15)							/* see comments above*/
+      t2w2=t1in+2.0;
+      if(t2w2<*t2w1)							/* choosing the smaller positive time solution (INNER side)*/	
+      *t2w1=t2w2;
+    }
+    xintersec=m*(vzin*(*t2w1)+zin)+n;					/* crosscheck of the x-coordinate of the intersection point */
+    if (xintersec>0){							/* the x-coordinate of the intersection point have to be negative */
+    *t2w1=t1in+2.0;}							/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
+    }
+    pwt=(2.0*m*n*pawt+1.0)/(pawt*m*m);					/* p parameter of quadratic equation (OUTER side)*/
+    qwt=n*n/(m*m)-pbwt/(pawt*m*m);					/* q parameter of quadratic equation (OUTER side)*/
+    if(qwt>0 && qwt>(pwt*pwt/4)){					/* in the very special case of no intersection the quadratic equation has no solution (negative square root) and the time is set to t1+2.0 */
+    *t2w1wt=t1in+2.0;
+    }else{
+    if(vxin==0)								/* in the special case of vx = 0 is x a constant */
+    {
+      if(xin<0){
+      *t2w1wt=(pbwt-pawt*xin*xin-zin)/vzin;				/* only neutron with a negativ x-component can hit the RIGHT wall (OUTER wall)*/
+      }else{
+      *t2w1wt=t1in+2.0; 
+      }
+    }else{								/* if vx is not zero */
+      z1wt=-pwt/2.0+sqrt(pwt*pwt/4.0-qwt);				/* first z-solution for intersection (OUTER side)*/
+      z2wt=-pwt/2.0-sqrt(pwt*pwt/4.0-qwt);				/* second z-solution for intersection (OUTER side)*/
+      *t2w1wt=(z1wt-zin)/vzin;						/* first time solution (OUTER side)*/
+      t2w2wt=(z2wt-zin)/vzin;						/* second time solution (OUTER side)*/
+      if(*t2w1wt<1e-15)							/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
+      *t2w1wt=t1in+2.0;							/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
+      if(t2w2wt<1e-15)							/* see comments above*/
+      t2w2wt=t1in+2.0;
+      if(t2w2wt<*t2w1wt)						/* choosing the smaller positive time solution (OUTER wall)*/
+      *t2w1wt=t2w2wt;
+    }
+    xintersecwt=m*(vzin*(*t2w1wt)+zin)+n;				/* crosscheck of the x-coordinate of the intersection point */
+    if (xintersecwt>0)							/* x-coordinate of the intersection point have to be negative */
+    *t2w1wt=t1in+2.0;							/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
+  }
+}
+
+
+									/* function to calculate the intersection time with a parabolical wall at an positive axis*/
+
+ void TIME_PARABEL_1(double vxin, double vzin, double xin, double zin, double pa, double pb, double t1in, double pawt, double pbwt, double *t2w1, double *t2w1wt)
+   {
+    double m,n,p,q,z1,z2,t2w2,xintersec,pwt,qwt,t2w2wt,z1wt,z2wt,xintersecwt;
+
+    m=vxin/vzin;
+    n=-m*zin+xin;
+    p=(2.0*m*n*pa+1.0)/(pa*m*m);
+    q=n*n/(m*m)-pb/(pa*m*m);
+    if(q>0 && q>(p*p/4)) {
+    *t2w1=t1in+2.0;
+    }else{
+    if(vxin==0)
+    {
+      if(xin<0){
+      *t2w1=(pb-pa*xin*xin-zin)/vzin;
+      }else{
+      *t2w1=t1in+2.0;
+      }
+    }else{
+      z1=-p/2.0+sqrt(p*p/4.0-q);
+      z2=-p/2.0-sqrt(p*p/4.0-q);
+      *t2w1=(z1-zin)/vzin;
+      t2w2=(z2-zin)/vzin;
+      if(*t2w1<1e-15)
+      *t2w1=t1in+2.0;
+      if(t2w2<1e-15)
+      t2w2=t1in+2.0;
+      if(t2w2<*t2w1)
+      *t2w1=t2w2;
+    }
+    xintersec=m*(vzin*(*t2w1)+zin)+n;
+    if (xintersec<0){
+    *t2w1=t1in+2.0;}
+    }
+    pwt=(2.0*m*n*pawt+1.0)/(pawt*m*m);
+    qwt=n*n/(m*m)-pbwt/(pawt*m*m);
+    if(qwt>0 && qwt>(pwt*pwt/4)){
+    *t2w1wt=t1in+2.0;
+    }else{
+    if(vxin==0)
+    {
+      if(xin<0){
+      *t2w1wt=(pbwt-pawt*xin*xin-zin)/vzin;
+      }else{
+      *t2w1wt=t1in+2.0; 
+      }
+    }else{
+      z1wt=-pwt/2.0+sqrt(pwt*pwt/4.0-qwt);
+      z2wt=-pwt/2.0-sqrt(pwt*pwt/4.0-qwt);
+      *t2w1wt=(z1wt-zin)/vzin;
+       t2w2wt=(z2wt-zin)/vzin;
+      if(*t2w1wt<1e-15) *t2w1wt=t1in+2.0;
+      if(t2w2wt<1e-15) t2w2wt=t1in+2.0;
+      if(t2w2wt<*t2w1wt) *t2w1wt=t2w2wt;
+    }
+    xintersecwt=m*(vzin*(*t2w1wt)+zin)+n;
+    if (xintersecwt<0) *t2w1wt=t1in+2.0;
+  }
+}
+
+
+													/* test if the left or right scattered neutron in the upper and lower limits defined by TOP und BOTTOM walls */
+
+void TEST_UP_DOWN(double t,double vzin, double zin,double vyin,double yin, double length,
+                  double linhdin, double louthdin, double linhuin, double louthuin,
+                  double h2din, double h1din, double h2uin, double h1uin,
+                  double bhdin, double z0hdin, double a2hdin,double bhuin, double z0huin, double a2huin,
+                  double pbhdin, double pahdin, double pbhuin, double pahuin,
+                  double *ylimitd, double *ylimitu, double *ytest)
+{											
+   if(linhdin==0 && louthdin==0)
+   {
+      *ylimitd=(-h2din+h1din)/length*(vzin*t+zin)-h1din;						/* calculation of the lower y-limit given by a linear bottom wall and the interaction time*/
+    }else{
+      if(linhdin!=0 && louthdin!=0)
+      {
+      *ylimitd=-bhdin*sqrt(1-((z0hdin+(vzin*t+zin))*(z0hdin+(vzin*t+zin)))/a2hdin);			/* calculation of the lower y-limit given by a elliptic bottom wall and the interaction time*/
+      }else{
+      *ylimitd=-sqrt(((vzin*t+zin)-pbhdin)/-pahdin);							/* calculation of the lower y-limit given by a parabolic bottom wall and the interaction time*/
+      }
+   }
+   if(linhuin==0 && louthuin==0)
+    {
+     *ylimitu=(h2uin-h1uin)/length*(vzin*t+zin)+h1uin;							/* calculation of the upper y-limit given by a linear top wall and the interaction time*/
+    }
+    else{
+     if(linhuin!=0 && louthuin!=0)
+     {
+     *ylimitu=bhuin*sqrt(1-((z0huin+(vzin*t+zin))*(z0huin+(vzin*t+zin)))/a2huin);			/* calculation of the upper y-limit given by a elliptic top wall and the interaction time*/
+     }else{
+     *ylimitu=sqrt(((vzin*t+zin)-pbhuin)/-pahuin);							/* calculation of the upper y-limit given by a parabolic top wall and the interaction time*/
+    }
+    }
+  *ytest=vyin*t+yin;											/* calculation of the y coordinate of the neutron at the interaction time */
+}
+
+
+													/* test if the up or down scattered neutron in the right and left limits defined by RIGHT und LEFT walls */
+
+void TEST_LEFT_RIGHT(double t,double vzin, double zin,double vxin,double xin, double length,
+                     double linwrin, double loutwrin, double linwlin, double loutwlin,
+                     double w2rin, double w1rin, double w2lin, double w1lin,
+                     double bwrin, double z0wrin, double a2wrin,double bwlin, double z0wlin, double a2wlin,
+                     double pbwrin, double pawrin, double pbwlin, double pawlin,
+                     double *xlimitr, double *xlimitl, double *xtest)
+{											
+  if(linwrin==0 && loutwrin==0)
+  {
+    *xlimitr=(-w2rin+w1rin)/length*(vzin*t+zin)-w1rin;
+  }else{
+    if(linwrin!=0 && loutwrin!=0)
+    {
+    *xlimitr=-bwrin*sqrt(1-((z0wrin+(vzin*t+zin))*(z0wrin+(vzin*t+zin)))/a2wrin);
+    }else{
+    *xlimitr=-sqrt(((vzin*t+zin)-pbwrin)/-pawrin);
+    }
+  }
+  if(linwlin==0 && loutwlin == 0)
+   {
+     *xlimitl=(w2lin-w1lin)/length*(vzin*t+zin)+w1lin;
+   }else{
+      if(linwlin!=0 && loutwlin != 0)
+      {
+      *xlimitl=bwlin*sqrt(1-((z0wlin+(vzin*t+zin))*(z0wlin+(vzin*t+zin)))/a2wlin);
+      }else{
+      *xlimitl=sqrt(((vzin*t+zin)-pbwlin)/-pawlin);
+      }
+   }
+  *xtest=vxin*t+xin;
+}
 %}
 
 
@@ -1098,470 +1558,6 @@ DECLARE
 
   t_Table riTable10,liTable10,uiTable10,diTable10;
   t_Table roTable10,loTable10,uoTable10,doTable10;
-
-
-void TEST_INPUT(char name[20])
-  {
-    fprintf(stderr,"Component: %s (Guide_four_side) %s should  \n", NAME_CURRENT_COMP, name);
-    fprintf(stderr,"           NOT be negative \n");
-    fprintf(stderr,"           (for negative values use the global guide position !) \n");
-    exit(-1);
- };
-
-void TEST_INPUT_1(char name[20])
- {
-  fprintf(stderr,"Component: %s (Guide_four_side) %s must \n", NAME_CURRENT_COMP, name);
-    fprintf(stderr,"           be -1 (transperent) or \n");
-    fprintf(stderr,"           be  0 (absorbing) or \n");
-    fprintf(stderr,"           be  > 0 (reflecting) \n");
-    exit(-1);
- };
-
-void TEST_INPUT_2(char name[20])
- {
-    fprintf(stderr,"Component: %s (Guide_four_side) %s can  \n", NAME_CURRENT_COMP, name);
-    fprintf(stderr,"           NOT be negative \n");
-    exit(-1);
- };
-
-void TEST_INPUT_3(char name[20])
- {
-    fprintf(stderr,"Component: %s (Guide_four_side) %sr must \n", NAME_CURRENT_COMP, name);
-    fprintf(stderr,"           be positive\n");
-    exit(-1);
-  };
-
-void TEST_INPUT_4(char name[20],char name1[20], double inputname, double inputname1)
- {
-    fprintf(stderr,"Component: %s (Guide_four_side) \n", NAME_CURRENT_COMP);
-    fprintf(stderr,"           %s have to be bigger or equal %s  \n", name, name1);
-    printf(" %s = %f \n",name, inputname );
-    printf(" %s = %f \n",name1, inputname1  );
-    fprintf(stderr,"           check curve parameter and wallthicknesses! \n");
-    exit(-1);
- };
-
-
-												/* function to calculate the needed parameters for an elliptic wall*/
-
-  void ELLIPSE(double w1,double length, double lin, double lout, double wallthick, double *a, double *b, double *a2, double *b2, double *z0, double *w2, double *awt, double *a2wt, double *bwt, double *b2wt, double *w2wt, double *w1wt)
-   { 
-     double DIV1, lb, u1, u2, u1wt, u2wt, dx, dz;
-     lb=lin+length+lout;									/* lenght between the two focal points of the wall */
-    *z0=(lin-length-lout)/2.0;
-     u1=sqrt((lin*lin)+(w1*w1));								/* length between entrance focal point and starting point of the wall (INNER side)*/
-     u2=sqrt((w1*w1)+((length+lout)*(length+lout)));						/* length between exit focal point and end point of the  wall (INNER side) */
-    *a=(u1+u2)/2.0;										/* long half axis a of the ellipse (INNER  side)*/
-    *a2=*a*(*a);										/* square of the long axis a (INNER side)*/
-    *b=sqrt(*a2-(lb*(lb)/4.0));									/* short half axis b of the ellipse  (INNER side)*/
-    *b2=*b*(*b);										/* square of short half axis b of the ellipse  (INNER side)*/
-    DIV1=sqrt(1.0-((lb/2.0-lout)*(lb/2.0-lout)/(*a2)));						/* help variable to calculated the exit width (INNER side)*/
-    *w2=*b*(DIV1);										/* exit width (INNER side)*/
-    if(length<(lb)/2-lout){									/* if the maximum opening of the guide is smaller than the small half axis b, the OUTER side is defined by: */
-         dx=wallthick * sin(atan(*a2 * w1/(*b2 * (*z0))));
-         dz=wallthick * cos(atan(*a2 * w1/(*b2 * (*z0))));
-    	 u1wt=sqrt(((lin+dz)*(lin+dz))+((w1+dx)*(w1+dx)));					/* length between entrance focal point and starting point of the wall (OUTER side)*/
-    	 u2wt=sqrt(((w1+dx)*(w1+dx))+((length+lout-dz)*(length+lout-dz)));			/* length between exit focal point and end point of the wall (OUTER side) */
-    	*awt=(u1wt+u2wt)/2.0;									/* long half axis a of the ellipse  (OUTER side)*/
-    	*a2wt=*awt*(*awt);									/* square of the long axis a (OUTER side)*/
-    	*bwt=sqrt(*a2wt-(lb*lb/4.0));								/* short half axis b of the ellipse  (OUTER side)*/
-    	*b2wt=*bwt*(*bwt);									/* square of short half axis b of the ellipse  (OUTER side)*/
-    	*w2wt=*bwt*sqrt(1.0-((lb/2.0-lout)*(lb/2.0-lout)/(*a2wt)));				/* exit width for OUTER side */
-        *w1wt=*bwt*sqrt(1.0-((lb/2.0-lout-length)*(lb/2.0-lout-length)/(*a2wt)));		/* entrance width for OUTER side */
-    }else{											/* if the maximum opening of the guide is the small half axis b the OUTER wall is defined by:*/
-	*bwt=*b+wallthick;									/* short half axis b of the ellipse  (OUTER side)*/
-        *b2wt=*bwt*(*bwt);									/* square of the long axis a (OUTER side)*/
-        *awt=sqrt(*b2wt+(lb*lb/4.0));								/* long half axis a of the ellipse  (OUTER  side)*/
-        *a2wt=*b2wt+(lb*lb/4.0);								/* square of short half axis b of the ellipse  (OUTER side)*/
-        *w2wt=*bwt*sqrt(1.0-((lb/2.0-lout)*(lb/2.0-lout)/(*a2wt)));				/* exit width for OUTER side */
-        *w1wt=*bwt*sqrt(1.0-((lb/2.0-lin)*(lb/2.0-lin)/(*a2wt)));				/* entrance width for OUTER side */
-    }
-  }
-
-											 	/* function to calculate the needed parameters for a parabolical focusing wall*/
-
-  void PARABEL_FOCUS(double w1,double length , double lout, double wallthick, double *p2para, double *w2, double *pb , double *pa, double *p2parawt, double *pbwt, double *pawt, double *w2wt, double *w1wt)
-  {
-     double DIV1,DIV1wt, dx, dz;													
-     DIV1=(length+lout)*(length+lout);								/* help variable to calculate the curve parameters (INNER side) */
-    *p2para=2.0*(sqrt(DIV1+(w1*w1))-sqrt(DIV1));						/* help variable to calculate the curve parameters (INNER side) */
-    *w2=sqrt(*p2para*(lout+*p2para/4.0));							/* exit width (INNER side) */
-    *pb=length+lout+*p2para/4.0;								/* parameter b for parabolic equation to define the wall (INNER side)*/
-    *pa=1.0/(*p2para);										/* parameter a for parabolic equation to define the wall (INNER side)*/
-     dx= wallthick*sin(atan(w1*2*(*pa)));							/* help variable dx; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
-     dz= wallthick*cos(atan(w1*2*(*pa)));							/* help variable dz; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
-     DIV1wt=(length+lout-dz)*(length+lout-dz);							/* help variable to calculate the curve parameters (OUTER side) */
-    *p2parawt=2.0*(sqrt(DIV1wt+((w1+dx)*(w1+dx)))-sqrt(DIV1wt));				/* help variable to calculate the curve parameters (OUTER side) */
-    *pbwt=length+lout+*p2parawt/4.0;								/* parameter b for parabolic equation to define the wall (OUTER side)*/
-    *pawt=1.0/(*p2parawt);									/* parameter a for parabolic equation to define the wall (OUTER side)*/
-    *w2wt=sqrt(*p2parawt*(lout+ *p2parawt/4.0));						/* exit width (OUTER side) */
-    *w1wt=sqrt(*p2parawt*(lout+l+ *p2parawt/4.0));						/* entrance width (OUTER side) */
-   }
-
-
-											 	/* function to calculate the needed parameters for a parabolical defocusing wall*/
-
-  void PARABEL_DEFOCUS(double w1,double length, double lin, double wallthick, double *p2para, double *w2, double *pb , double *pa, double *p2parawt, double *pbwt, double *pawt, double *w2wt, double *w1wt)
-      {
-       double DIV1,DIV1wt, dx, dz;
-       DIV1=lin*lin;										/* help variable to calculate the curve parameters (INNER side) */
-      *p2para=2.0*(sqrt(DIV1+(w1*w1))-sqrt(DIV1));						/* help variable to calculate the curve parameters (INNER side) */
-      *w2=sqrt(*p2para*(length+lin+*p2para/4.0));						/* exit width (INNER side) */
-      *pb=-(lin+*p2para/4.0);									/* parameter b for parabolic equation to define the wall (INNER side)*/
-      *pa=-1.0/(*p2para);									/* parameter a for parabolic equation to define the wall (INNER side)*/
-       dx=wallthick*sin(atan(-*w2*2*(*pa)));							/* help variable dx; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
-       dz=wallthick*cos(atan(-*w2*2*(*pa)));							/* help variable dz; needed because the wall is not paralell to the z-axis or the wallthickness is not perpendicular to z*/
-       DIV1wt=(lin+length-dz)*(lin+length-dz);							/* help variable to calculate the curve parameters (OUTER side) */
-      *p2parawt=2.0*(sqrt(DIV1wt+((*w2+dx)*(*w2+dx)))-sqrt(DIV1wt));				/* help variable to calculate the curve parameters (OUTER side) */
-      *w1wt=sqrt(*p2parawt*(lin+*p2parawt/4.0));						/* entrance width for right focusing parabolic wall (OUTER side) */
-      *w2wt=sqrt(*p2parawt*(lin+length+*p2parawt/4.0));						/* exit width (OUTER side) */
-      *pbwt=-(lin+*p2parawt/4.0);								/* parameter b for parabolic equation to define the wall (OUTER side)*/
-      *pawt=-1.0/(*p2parawt);									/* parameter a for parabolic equation to define the wall (OUTER side)*/
-    }
-
-
-												/* function to calculate the needed parameters for a linear wall*/
-
-  void LINEAR(double w1, double w2, double length, double wallthick, double *w1wt, double *w2wt)
-  {										
-    *w1wt=w1+wallthick/(cos(atan((w1-w2)/length)));						/* entrance width (OUTER side) */
-    *w2wt=w2+wallthick/(cos(atan((w1-w2)/length)));						/* exit width  (OUTER side) */
-    }
-
-
-										/* function to calculate the intersection time with a linear wall at an negative axis*/
-
-  void TIME_LINEAR(double t1in, double w1, double w2, double length, double xin, double zin, double vxin1, double vzin1, double w1wt, double *t2, double *t2wt)
-  { 
-   double anstieg;
-   anstieg=(-w2+w1)/length;
-  *t2=(anstieg*zin-w1-xin)/(vxin1-anstieg*vzin1);				/* time untill next interaction with this wall (INNER side)*/
-  *t2wt=(anstieg*zin-w1wt-xin)/(vxin1-anstieg*vzin1);			/* time untill next interaction with this wall (OUTER side)*/
-   if(*t2<1e-15)								/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
-    *t2=t1in+2.0;								/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
-   if(*t2wt<1e-15)								/* see comments above*/
-    *t2wt=t1in+2.0; 
-  }
-
-
-										/* function to calculate the intersection time with a linear wall at an positive axis*/
-
-  void TIME_LINEAR_1(double t1in, double w1, double w2, double length, double xin, double zin, double vxin1, double vzin1, double w1wt, double *t2, double *t2wt)
-  { 
-   double anstieg;
-   anstieg=(w2-w1)/length;
-  *t2=(anstieg*zin+w1-xin)/(vxin1-anstieg*vzin1);
-  *t2wt=(anstieg*zin+w1wt-xin)/(vxin1-anstieg*vzin1);
-   if(*t2<1e-15)
-    *t2=t1in+2.0;
-   if(*t2wt<1e-15)
-    *t2wt=t1in+2.0; 
-  }
-
-
-										/* function to calculate the intersection time with an elliptical wall at a negative axis*/
-
-  void TIME_ELLIPSE(double vxin, double vzin, double xin, double zin, double a2, double b2, double z0, double t1in, double a2wt, double b2wt, double *t2w1, double *t2w1wt)
-    { 										
-										/* solving the elliptic equation in respect to z and the straight neutron trajectoty, only two z values possible! */
-
-     double m,n,q,p,z1,z2,qwt,pwt, xintersec, z1wt, z2wt, xintersecwt,t2w2,t2w2wt; 
-
-     m=vxin/vzin;								/* m parameter of the neutron trajectory*/
-     n=-m*zin+xin;								/* n parameter of the neutron trajectory */
-     p=2.0*(a2*m*n+b2*z0)/(a2*m*m+b2);						/* p parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (INNER side)*/
-     q=(a2*n*n+b2*z0*z0-a2*b2)/(a2*m*m+b2);					/* q parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (INNER side)*/ 
-    if ((p*p/4.0)-q<0){							
-    *t2w1=t1in+2.0;								/* if the neutron never touch the ellipse the time is set to be bigger than the time (t1) needed to pass the component */
-    }else{
-         z1=-p/2.0+sqrt(((p)*(p)/4.0)-q);					/* first solution for z (INNER side)*/
-         z2=-p/2.0-sqrt(((p)*(p)/4.0)-q);					/* second solution for z (INNER side)*/
-        *t2w1=(z1-zin)/vzin;							/* interaction time for first z value (INNER side)*/
-         t2w2=(z2-zin)/vzin;							/* interactime time for second z value (INNER side)*/
-        if(*t2w1<1e-15)								/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
-        *t2w1=t1in+2.0;								/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
-        if(t2w2<1e-15)								/* see comments above*/
-        t2w2=t1in+2.0;
-        if(t2w2<*t2w1)								/* choosing the smaller positive time solution (INNER side)*/
-        *t2w1=t2w2;
-         xintersec=m*(vzin*(*t2w1)+zin)+n;					/* crosscheck of the x-coordinate of the intersection point */
-        if (xintersec>0)							/* for the right wall x-coordinate of the intersection point have to be negative */
-        *t2w1=t1in+2.0;								/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
-        }
-    pwt=2.0*(a2wt*m*n+b2wt*z0)/(a2wt*m*m+b2wt);					/* p parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (OUTER side)*/
-    qwt=(a2wt*n*n+b2wt*z0*z0-a2wt*b2wt)/(a2wt*m*m+b2wt);			/* q parameter of quadratic equation for calulation the z component of the intersection point with respect to the neutron trajectory (OUTER side)*/
-    if ((pwt*pwt/4.0)-qwt<0){							
-    *t2w1wt=t1in+2.0;								/* if the neutron never touch the ellipse the time is set bigger than need to pass the component */
-    }else{
-         z1wt=-pwt/2.0+sqrt((pwt*pwt/4.0)-qwt);					/* first solution for z (OUTER side) */
-         z2wt=-pwt/2.0-sqrt((pwt*pwt/4.0)-qwt);					/* second solution for z (OUTER side)*/
-        *t2w1wt=(z1wt-zin)/vzin;						/* interaction time for first z value (OUTER side)*/
-         t2w2wt=(z2wt-zin)/vzin;							/* interactime time for second z value (OUTER side)*/
-        if(*t2w1wt<1e-15)							/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
-        *t2w1wt=t1in+2.0;							/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
-        if(t2w2wt<1e-15)							/* see comments above*/
-         t2w2wt=t1in+2.0;
-        if(t2w2wt<*t2w1wt)							/* choosing the smaller positive time solution (OUTER side)*/
-        *t2w1wt=t2w2wt;
-         xintersecwt=m*(vzin*(*t2w1wt)+zin)+n;					/* crosscheck of the x-coordinate of the intersection point */
-        if (xintersecwt>0)							/* x-coordinate of the intersection point have to be negative */
-        *t2w1wt=t1in+2.0;							/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
-        }
-    };
-
-
-
-										/* function to calculate the intersection time with an elliptical wall at a positive  axis*/
-
-void TIME_ELLIPSE_1(double vxin, double vzin, double xin, double zin, double a2, double b2, double z0, double t1in, double a2wt, double b2wt, double *t2w1, double *t2w1wt)
-{ 
-     double m,n,q,p,z1,z2,qwt,pwt, xintersec, z1wt, z2wt, xintersecwt,t2w2,t2w2wt; 
-   
-     m=vxin/vzin;
-     n=-m*zin+xin;
-     p=2.0*(a2*m*n+b2*z0)/(a2*m*m+b2);
-     q=(a2*n*n+b2*z0*z0-a2*b2)/(a2*m*m+b2);
-    if ((p*p/4.0)-q<0){	
-    *t2w1=t1in+2.0;
-    }else{
-         z1=-p/2.0+sqrt(((p)*(p)/4.0)-q);
-         z2=-p/2.0-sqrt(((p)*(p)/4.0)-q);
-        *t2w1=(z1-zin)/vzin;
-         t2w2=(z2-zin)/vzin;
-        if(*t2w1<1e-15)
-        *t2w1=t1in+2.0;
-        if(t2w2<1e-15)
-         t2w2=t1in+2.0;
-        if(t2w2<*t2w1)
-        *t2w1=t2w2;
-         xintersec=m*(vzin*(*t2w1)+zin)+n;
-        if (xintersec<0){
-        *t2w1=t1in+2.0;}
-        }
-    pwt=2.0*(a2wt*m*n+b2wt*z0)/(a2wt*m*m+b2wt);
-    qwt=(a2wt*n*n+b2wt*z0*z0-a2wt*b2wt)/(a2wt*m*m+b2wt);
-    if ((pwt*pwt/4.0)-qwt<0){
-    *t2w1wt=t1in+2.0;
-    }else{
-         z1wt=-pwt/2.0+sqrt((pwt*pwt/4.0)-qwt);
-         z2wt=-pwt/2.0-sqrt((pwt*pwt/4.0)-qwt);
-        *t2w1wt=(z1wt-zin)/vzin;
-         t2w2wt=(z2wt-zin)/vzin;	
-        if(*t2w1wt<1e-15)
-        *t2w1wt=t1in+2.0;
-        if(t2w2wt<1e-15)
-         t2w2wt=t1in+2.0;
-        if(t2w2wt<*t2w1wt)
-        *t2w1wt=t2w2wt;
-         xintersecwt=m*(vzin*(*t2w1wt)+zin)+n;
-        if (xintersecwt<0)
-        *t2w1wt=t1in+2.0;
-        }
-  }
-
-
-
-									/* function to calculate the intersection time with a parabolical wall at an negative axis*/
-
-   void TIME_PARABEL(double vxin, double vzin, double xin, double zin, double pa, double pb, double t1in, double pawt, double pbwt, double *t2w1, double *t2w1wt)
-   {
-    double m,n,p,q,z1,z2,t2w2,xintersec,pwt,qwt,t2w2wt,z1wt,z2wt,xintersecwt;
-
-    m=vxin/vzin;							/* m parameter of the neutron trajectory*/
-    n=-m*zin+xin;							/* n parameter of the neutron trajectory */
-    p=(2.0*m*n*pa+1.0)/(pa*m*m);					/* p parameter of quadratic equation (INNER side) */
-    q=n*n/(m*m)-pb/(pa*m*m);						/* q parameter of quadratic equation (INNER side) */
-    if(q>0 && q>(p*p/4)) {						/* in the very special case of no intersection the quadratic equation has no solution (negative square root) the time is set to t1+2.0 */
-    *t2w1=t1in+2.0;
-    }else{
-    if(vxin==0)								/* in the special case of vx = 0 is x a constant */
-    {
-      if(xin<0){							/* only neutron with a negativ x-component can hit the RIGHT wall (INNER side)*/
-      *t2w1=(pb-pa*xin*xin-zin)/vzin;
-      }else{
-      *t2w1=t1in+2.0; 							/* the time solution for neutron with a positive x component is set to a time long behind the exit of the guide */
-									/* (means will not  scatter with the right wall)*/
-      }
-    }else{								/* if vx is not zero and x is a real variable*/
-      z1=-p/2.0+sqrt(p*p/4.0-q);					/* first z-solution for intersection (INNER side)*/
-      z2=-p/2.0-sqrt(p*p/4.0-q);					/* second z-solution for intersection (INNER side)*/
-      *t2w1=(z1-zin)/vzin;						/* first time solution (INNER side)*/
-      t2w2=(z2-zin)/vzin;						/* second time solution (INNER side)*/
-      if(*t2w1<1e-15)							/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
-      *t2w1=t1in+2.0;							/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
-      if(t2w2<1e-15)							/* see comments above*/
-      t2w2=t1in+2.0;
-      if(t2w2<*t2w1)							/* choosing the smaller positive time solution (INNER side)*/	
-      *t2w1=t2w2;
-    }
-    xintersec=m*(vzin*(*t2w1)+zin)+n;					/* crosscheck of the x-coordinate of the intersection point */
-    if (xintersec>0){							/* the x-coordinate of the intersection point have to be negative */
-    *t2w1=t1in+2.0;}							/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
-    }
-    pwt=(2.0*m*n*pawt+1.0)/(pawt*m*m);					/* p parameter of quadratic equation (OUTER side)*/
-    qwt=n*n/(m*m)-pbwt/(pawt*m*m);					/* q parameter of quadratic equation (OUTER side)*/
-    if(qwt>0 && qwt>(pwt*pwt/4)){					/* in the very special case of no intersection the quadratic equation has no solution (negative square root) and the time is set to t1+2.0 */
-    *t2w1wt=t1in+2.0;
-    }else{
-    if(vxin==0)								/* in the special case of vx = 0 is x a constant */
-    {
-      if(xin<0){
-      *t2w1wt=(pbwt-pawt*xin*xin-zin)/vzin;				/* only neutron with a negativ x-component can hit the RIGHT wall (OUTER wall)*/
-      }else{
-      *t2w1wt=t1in+2.0; 
-      }
-    }else{								/* if vx is not zero */
-      z1wt=-pwt/2.0+sqrt(pwt*pwt/4.0-qwt);				/* first z-solution for intersection (OUTER side)*/
-      z2wt=-pwt/2.0-sqrt(pwt*pwt/4.0-qwt);				/* second z-solution for intersection (OUTER side)*/
-      *t2w1wt=(z1wt-zin)/vzin;						/* first time solution (OUTER side)*/
-      t2w2wt=(z2wt-zin)/vzin;						/* second time solution (OUTER side)*/
-      if(*t2w1wt<1e-15)							/* solving the precision problem for the intersection times given by double variable type, to small times (<1e-15) gives scattering events */
-      *t2w1wt=t1in+2.0;							/* at the same postion again (time is set to zero). this results in a sign change in the velocity components, which results in a wall tunneling.*/
-      if(t2w2wt<1e-15)							/* see comments above*/
-      t2w2wt=t1in+2.0;
-      if(t2w2wt<*t2w1wt)						/* choosing the smaller positive time solution (OUTER wall)*/
-      *t2w1wt=t2w2wt;
-    }
-    xintersecwt=m*(vzin*(*t2w1wt)+zin)+n;				/* crosscheck of the x-coordinate of the intersection point */
-    if (xintersecwt>0)							/* x-coordinate of the intersection point have to be negative */
-    *t2w1wt=t1in+2.0;							/* if this is not the case the time is set to t1+2.0 (time point behind the component) */
-  }
-  };
-
-
-									/* function to calculate the intersection time with a parabolical wall at an positive axis*/
-
- void TIME_PARABEL_1(double vxin, double vzin, double xin, double zin, double pa, double pb, double t1in, double pawt, double pbwt, double *t2w1, double *t2w1wt)
-   {
-    double m,n,p,q,z1,z2,t2w2,xintersec,pwt,qwt,t2w2wt,z1wt,z2wt,xintersecwt;
-
-    m=vxin/vzin;
-    n=-m*zin+xin;
-    p=(2.0*m*n*pa+1.0)/(pa*m*m);
-    q=n*n/(m*m)-pb/(pa*m*m);
-    if(q>0 && q>(p*p/4)) {
-    *t2w1=t1in+2.0;
-    }else{
-    if(vxin==0)
-    {
-      if(xin<0){
-      *t2w1=(pb-pa*xin*xin-zin)/vzin;
-      }else{
-      *t2w1=t1in+2.0;
-      }
-    }else{
-      z1=-p/2.0+sqrt(p*p/4.0-q);
-      z2=-p/2.0-sqrt(p*p/4.0-q);
-      *t2w1=(z1-zin)/vzin;
-      t2w2=(z2-zin)/vzin;
-      if(*t2w1<1e-15)
-      *t2w1=t1in+2.0;
-      if(t2w2<1e-15)
-      t2w2=t1in+2.0;
-      if(t2w2<*t2w1)
-      *t2w1=t2w2;
-    }
-    xintersec=m*(vzin*(*t2w1)+zin)+n;
-    if (xintersec<0){
-    *t2w1=t1in+2.0;}
-    }
-    pwt=(2.0*m*n*pawt+1.0)/(pawt*m*m);
-    qwt=n*n/(m*m)-pbwt/(pawt*m*m);
-    if(qwt>0 && qwt>(pwt*pwt/4)){
-    *t2w1wt=t1in+2.0;
-    }else{
-    if(vxin==0)
-    {
-      if(xin<0){
-      *t2w1wt=(pbwt-pawt*xin*xin-zin)/vzin;
-      }else{
-      *t2w1wt=t1in+2.0; 
-      }
-    }else{
-      z1wt=-pwt/2.0+sqrt(pwt*pwt/4.0-qwt);
-      z2wt=-pwt/2.0-sqrt(pwt*pwt/4.0-qwt);
-      *t2w1wt=(z1wt-zin)/vzin;
-       t2w2wt=(z2wt-zin)/vzin;
-      if(*t2w1wt<1e-15) *t2w1wt=t1in+2.0;
-      if(t2w2wt<1e-15) t2w2wt=t1in+2.0;
-      if(t2w2wt<*t2w1wt) *t2w1wt=t2w2wt;
-    }
-    xintersecwt=m*(vzin*(*t2w1wt)+zin)+n;
-    if (xintersecwt<0) *t2w1wt=t1in+2.0;
-  }
-  };
-
-
-													/* test if the left or right scattered neutron in the upper and lower limits defined by TOP und BOTTOM walls */
-
-void TEST_UP_DOWN(double t,double vzin, double zin,double vyin,double yin, double length,
-                  double linhdin, double louthdin, double linhuin, double louthuin,
-                  double h2din, double h1din, double h2uin, double h1uin,
-                  double bhdin, double z0hdin, double a2hdin,double bhuin, double z0huin, double a2huin,
-                  double pbhdin, double pahdin, double pbhuin, double pahuin,
-                  double *ylimitd, double *ylimitu, double *ytest)
-{											
-   if(linhdin==0 && louthdin==0)
-   {
-      *ylimitd=(-h2din+h1din)/length*(vzin*t+zin)-h1din;						/* calculation of the lower y-limit given by a linear bottom wall and the interaction time*/
-    }else{
-      if(linhdin!=0 && louthdin!=0)
-      {
-      *ylimitd=-bhdin*sqrt(1-((z0hdin+(vzin*t+zin))*(z0hdin+(vzin*t+zin)))/a2hdin);			/* calculation of the lower y-limit given by a elliptic bottom wall and the interaction time*/
-      }else{
-      *ylimitd=-sqrt(((vzin*t+zin)-pbhdin)/-pahdin);							/* calculation of the lower y-limit given by a parabolic bottom wall and the interaction time*/
-      }
-   }
-   if(linhuin==0 && louthuin==0)
-    {
-     *ylimitu=(h2uin-h1uin)/length*(vzin*t+zin)+h1uin;							/* calculation of the upper y-limit given by a linear top wall and the interaction time*/
-    }
-    else{
-     if(linhuin!=0 && louthuin!=0)
-     {
-     *ylimitu=bhuin*sqrt(1-((z0huin+(vzin*t+zin))*(z0huin+(vzin*t+zin)))/a2huin);			/* calculation of the upper y-limit given by a elliptic top wall and the interaction time*/
-     }else{
-     *ylimitu=sqrt(((vzin*t+zin)-pbhuin)/-pahuin);							/* calculation of the upper y-limit given by a parabolic top wall and the interaction time*/
-    }
-    }
-  *ytest=vyin*t+yin;											/* calculation of the y coordinate of the neutron at the interaction time */
-  };
-
-
-													/* test if the up or down scattered neutron in the right and left limits defined by RIGHT und LEFT walls */
-
-void TEST_LEFT_RIGHT(double t,double vzin, double zin,double vxin,double xin, double length,
-                     double linwrin, double loutwrin, double linwlin, double loutwlin,
-                     double w2rin, double w1rin, double w2lin, double w1lin,
-                     double bwrin, double z0wrin, double a2wrin,double bwlin, double z0wlin, double a2wlin,
-                     double pbwrin, double pawrin, double pbwlin, double pawlin,
-                     double *xlimitr, double *xlimitl, double *xtest)
-{											
-  if(linwrin==0 && loutwrin==0)
-  {
-    *xlimitr=(-w2rin+w1rin)/length*(vzin*t+zin)-w1rin;
-  }else{
-    if(linwrin!=0 && loutwrin!=0)
-    {
-    *xlimitr=-bwrin*sqrt(1-((z0wrin+(vzin*t+zin))*(z0wrin+(vzin*t+zin)))/a2wrin);
-    }else{
-    *xlimitr=-sqrt(((vzin*t+zin)-pbwrin)/-pawrin);
-    }
-  }
-  if(linwlin==0 && loutwlin == 0)
-   {
-     *xlimitl=(w2lin-w1lin)/length*(vzin*t+zin)+w1lin;
-   }else{
-      if(linwlin!=0 && loutwlin != 0)
-      {
-      *xlimitl=bwlin*sqrt(1-((z0wlin+(vzin*t+zin))*(z0wlin+(vzin*t+zin)))/a2wlin);
-      }else{
-      *xlimitl=sqrt(((vzin*t+zin)-pbwlin)/-pawlin);
-      }
-   }
-  *xtest=vxin*t+xin;
-};
-
 %}
 
 

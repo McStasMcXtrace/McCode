@@ -63,6 +63,39 @@ SETTING PARAMETERS (Radius = 800.0, Thickness = 38.89, SigmaRadius = 0.20,
 
 OUTPUT PARAMETERS ()
 
+SHARE
+%{
+	// Functions used for compution the intensity from a given liposome
+	double FormfactorSphere(double q, double R) 
+	{
+		return 3 * (sin(q * R) - q * R * cos(q * R)) / pow(q * R, 3);
+	}
+
+	double IntensityOfLiposome(double q, double R, double ThicknessHead, double ThicknessTail, double ThicknessCH3, double DeltaRhoHead, double DeltaRhoCH2, double DeltaRhoCH3) 
+	{
+		const double RHeadOut = R + ThicknessHead + ThicknessTail + ThicknessCH3;
+		const double RTailOut = R + ThicknessTail + ThicknessCH3;
+		const double RCH3Out  = R + ThicknessCH3;
+		const double RCH3In   = R - ThicknessCH3;
+		const double RTailIn  = R - ThicknessTail - ThicknessCH3;
+		const double RHeadIn  = R - ThicknessHead - ThicknessTail - ThicknessCH3;
+
+		const double VolumeHeadOut = 4.0 / 3.0 * PI * pow(RHeadOut, 3) - 4.0 / 3.0 * PI * pow(RTailOut, 3);
+		const double VolumeTailOut = 4.0 / 3.0 * PI * pow(RTailOut, 3) - 4.0 / 3.0 * PI * pow(RCH3Out, 3);
+		const double VolumeCH3     = 4.0 / 3.0 * PI * pow(RCH3Out, 3)  - 4.0 / 3.0 * PI * pow(RCH3In, 3);
+		const double VolumeTailIn  = 4.0 / 3.0 * PI * pow(RCH3In, 3)   - 4.0 / 3.0 * PI * pow(RTailIn, 3);
+		const double VolumeHeadIn  = 4.0 / 3.0 * PI * pow(RTailIn, 3)  - 4.0 / 3.0 * PI * pow(RHeadIn, 3);
+
+		const double AmplitudeHeadOut = DeltaRhoHead * VolumeHeadOut * (pow(RHeadOut, 3) * FormfactorSphere(q, RHeadOut) - pow(RTailOut, 3) * FormfactorSphere(q, RTailOut)) / (pow(RHeadOut, 3) - pow(RTailOut, 3));
+		const double AmplitudeTailOut = DeltaRhoCH2  * VolumeTailOut * (pow(RTailOut, 3) * FormfactorSphere(q, RTailOut) - pow(RCH3Out, 3) * FormfactorSphere(q, RCH3Out)) / (pow(RTailOut, 3) - pow(RCH3Out, 3));
+		const double AmplitudeCH3     = DeltaRhoCH3  * VolumeCH3 * (pow(RCH3Out, 3) * FormfactorSphere(q, RCH3Out) - pow(RCH3In, 3) * FormfactorSphere(q, RCH3In)) / (pow(RCH3Out, 3) - pow(RCH3In, 3));
+		const double AmplitudeTailIn  = DeltaRhoCH2  * VolumeTailIn * (pow(RCH3In, 3) * FormfactorSphere(q, RCH3In) - pow(RTailIn, 3) * FormfactorSphere(q, RTailIn)) / (pow(RCH3In, 3) - pow(RTailIn, 3));
+		const double AmplitudeHeadIn  = DeltaRhoHead * VolumeHeadIn * (pow(RTailIn, 3) * FormfactorSphere(q, RTailIn) - pow(RHeadIn, 3) * FormfactorSphere(q, RHeadIn)) / (pow(RTailIn, 3) - pow(RHeadIn, 3));
+		const double Intensity = pow(AmplitudeHeadOut + AmplitudeTailOut + AmplitudeCH3 + AmplitudeTailIn + AmplitudeHeadIn, 2);
+		return Intensity;
+	}
+%}
+
 DECLARE
 %{
 	// Declarations	
@@ -85,47 +118,6 @@ DECLARE
 	double ThicknessOfHead;
 	double ThicknessOfCH2Tail;
 	double ThicknessOfCH3Tail;
-
-	// Functions used for compution the intensity from a given liposome
-	double FormfactorSphere(double q, double R) 
-	{
-		return 3 * (sin(q * R) - q * R * cos(q * R)) / pow(q * R, 3);
-	}
-
-    double IntensityOfLiposome(double q, double R, double ThicknessHead, double ThicknessTail, double ThicknessCH3, double DeltaRhoHead, double DeltaRhoCH2, double DeltaRhoCH3) 
-	{
-		const double RHeadOut = R + ThicknessHead + ThicknessTail + ThicknessCH3;
-		const double RTailOut = R + ThicknessTail + ThicknessCH3;
-		const double RCH3Out  = R + ThicknessCH3;
-		const double RCH3In   = R - ThicknessCH3;
-		const double RTailIn  = R - ThicknessTail - ThicknessCH3;
-		const double RHeadIn  = R - ThicknessHead - ThicknessTail - ThicknessCH3;
-
-		const double VolumeHeadOut = 4.0 / 3.0 * PI * pow(RHeadOut, 3) - 4.0 / 3.0 * PI * pow(RTailOut, 3);
-		const double VolumeTailOut = 4.0 / 3.0 * PI * pow(RTailOut, 3) - 4.0 / 3.0 * PI * pow(RCH3Out, 3);
-		const double VolumeCH3     = 4.0 / 3.0 * PI * pow(RCH3Out, 3)  - 4.0 / 3.0 * PI * pow(RCH3In, 3);
-		const double VolumeTailIn  = 4.0 / 3.0 * PI * pow(RCH3In, 3)   - 4.0 / 3.0 * PI * pow(RTailIn, 3);
-		const double VolumeHeadIn  = 4.0 / 3.0 * PI * pow(RTailIn, 3)  - 4.0 / 3.0 * PI * pow(RHeadIn, 3);
-
-		const double AmplitudeHeadOut = DeltaRhoHead * VolumeHeadOut * 
-										(pow(RHeadOut, 3) * FormfactorSphere(q, RHeadOut) - pow(RTailOut, 3) * FormfactorSphere(q, RTailOut)) / (pow(RHeadOut, 3) - pow(RTailOut, 3));
-
-		const double AmplitudeTailOut = DeltaRhoCH2  * VolumeTailOut *  
-										(pow(RTailOut, 3) * FormfactorSphere(q, RTailOut) - pow(RCH3Out, 3) * FormfactorSphere(q, RCH3Out)) / (pow(RTailOut, 3) - pow(RCH3Out, 3));
-
-		const double AmplitudeCH3     = DeltaRhoCH3  * VolumeCH3 *  
-										(pow(RCH3Out, 3) * FormfactorSphere(q, RCH3Out) - pow(RCH3In, 3) * FormfactorSphere(q, RCH3In)) / (pow(RCH3Out, 3) - pow(RCH3In, 3));
-
-		const double AmplitudeTailIn  = DeltaRhoCH2  * VolumeTailIn *  
-										(pow(RCH3In, 3) * FormfactorSphere(q, RCH3In) - pow(RTailIn, 3) * FormfactorSphere(q, RTailIn)) / (pow(RCH3In, 3) - pow(RTailIn, 3));
-
-		const double AmplitudeHeadIn  = DeltaRhoHead * VolumeHeadIn *  
-										(pow(RTailIn, 3) * FormfactorSphere(q, RTailIn) - pow(RHeadIn, 3) * FormfactorSphere(q, RHeadIn)) / (pow(RTailIn, 3) - pow(RHeadIn, 3));
-
-		const double Intensity = pow(AmplitudeHeadOut + AmplitudeTailOut + AmplitudeCH3 + AmplitudeTailIn + AmplitudeHeadIn, 2);
-
-		return Intensity;
-    }
 %}
 
 INITIALIZE
