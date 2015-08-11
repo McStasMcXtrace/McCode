@@ -1,0 +1,139 @@
+/*****************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Test_capillary
+*
+* %Identification
+* Written by: E. B: Knudsen
+* Date: July 2015.
+* Origin: DTU Physics
+* Release: McXtrace 1.2
+* %INSTRUMENT_SITE: Tests
+*
+* Unit test instrument for the capillary tube component.
+*
+* %Description
+*
+* Very simple setup to compare intensities diffracted by Monochromators. 
+* It shows that implementations are equivalent.
+*
+* %Example: Test_capillary -n 1e6 TL=3 TR=0.001 L1=0.4 Detector: psd14_I=7.34669e-08
+*
+* %Parameters
+* INPUT PARAMETERS:
+* TR [m] radius of capillary tube
+* TL [m] length of capillary tube
+* L1 [m] disatnce from source to capillary tube entrance
+*
+* %Link
+*
+* %End
+****************************************************************************/
+
+DEFINE INSTRUMENT Test_capillary(TL=0.1, TR=1e-4, L1=3)
+
+DECLARE
+%{
+    int reflecs;
+%}
+/* end of DECLARE */
+
+INITIALIZE
+%{
+%}
+/* end of INITIALIZE */
+
+TRACE
+/* Source description */
+
+COMPONENT Origin = Progress_bar()
+     AT (0,0,0) ABSOLUTE
+EXTEND
+%{
+    reflecs=0;
+%}
+
+/* a flat constant source */
+
+COMPONENT generic_source=Source_flat(
+    E0=30.05, dE=7.1,
+    xwidth=1.0e-3, yheight=1.0e-3, 
+    focus_xw=2*TR,focus_yh=2*TR, dist=L1
+)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT psd_pre = 
+PSD_monitor(xwidth = 3*TR, yheight = 3*TR,
+	    nx=100, ny=100, filename="psdpre.dat")
+AT (0, 0, L1-1e-9) RELATIVE generic_source 
+
+COMPONENT emon_pre = E_monitor(nE=200, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,  
+				xwidth=0, yheight=0, nE=200, Emin=30.05-7.1,Emax=30.05+7.1, restore_xray=1,filename="emon_pre.dat") 
+AT (0, 0, L1-1e-10) RELATIVE generic_source  
+
+
+COMPONENT tube = Capillary(
+        radius=TR,length=TL, R0=0, coating="Rh.txt")
+AT(0,0,L1) RELATIVE generic_source
+EXTEND
+%{
+    if (SCATTERED) {
+        reflecs=mcScattered;
+    }
+%}
+
+COMPONENT tube_out = Arm()
+AT(0,0,TL+1e-9) RELATIVE tube
+
+
+COMPONENT psd0 = 
+PSD_monitor(xwidth = 3*TR, yheight = 3*TR,
+	    nx=100, ny=100, filename="psd0.dat")
+AT (0, 0, 0) RELATIVE tube_out
+
+COMPONENT psd00 = COPY(psd0)(
+        filename="psd00.dat")
+WHEN (reflecs==0) AT(0,0,0) RELATIVE tube_out
+COMPONENT psd01 = COPY(psd0)(
+        filename="psd01.dat")
+WHEN (reflecs==1) AT(0,0,0) RELATIVE tube_out
+COMPONENT psd02 = COPY(psd0)(
+        filename="psd02.dat")
+WHEN (reflecs==2) AT(0,0,0) RELATIVE tube_out
+COMPONENT psd03 = COPY(psd0)(
+        filename="psd03.dat")
+WHEN (reflecs==3) AT(0,0,0) RELATIVE tube_out
+COMPONENT psd04 = COPY(psd0)(
+        filename="psd04.dat")
+WHEN (reflecs==4) AT(0,0,0) RELATIVE tube_out
+
+COMPONENT psd1 = 
+PSD_monitor(xwidth = 3*TR, yheight = 3*TR,
+	    nx=100, ny=100, filename="psd1.dat")
+AT (0, 0, 1) RELATIVE tube_out
+COMPONENT psd10 = COPY(psd1)(
+        filename="psd10.dat")
+WHEN (reflecs==0) AT(0,0,1) RELATIVE tube_out
+COMPONENT psd11 = COPY(psd0)(
+        filename="psd11.dat")
+WHEN (reflecs==1) AT(0,0,1) RELATIVE tube_out
+COMPONENT psd12 = COPY(psd1)(
+        filename="psd12.dat")
+WHEN (reflecs==2) AT(0,0,1) RELATIVE tube_out
+COMPONENT psd13 = COPY(psd1)(
+        filename="psd13.dat")
+WHEN (reflecs==3) AT(0,0,1) RELATIVE tube_out
+COMPONENT psd14 = COPY(psd1)(
+        filename="psd14.dat")
+WHEN (reflecs==4) AT(0,0,1) RELATIVE tube_out
+
+COMPONENT emon = E_monitor(nE=200, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
+			   xwidth=0, yheight=0, nE=200, Emin=30.05-7.1,Emax=30.05+7.1, restore_xray=1,filename="emon.dat")
+AT (0, 0, 1.1) RELATIVE tube_out
+
+COMPONENT emon_zm = E_monitor(nE=50, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
+			   xwidth=0, yheight=0, nE=200, Emin=30.05-1.1,Emax=30.05+1.1, restore_xray=1,filename="emonzm.dat")
+AT (0, 0, 1.1) RELATIVE tube_out
+
+END
+

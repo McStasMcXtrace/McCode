@@ -1,0 +1,156 @@
+/************************************************
+*
+* %I
+* Written by: Erik B Knudsen
+* Date: July 2015
+* Version: $Revision$
+* Origin: DTU Physics
+* Release: McXtrace 1.2
+*
+* A capillary tube
+*
+* %D
+*
+* A Capillary tube allowing for reflections along the tube. A material coating can be applied. No multilayer yet.
+* 
+* %P
+* radius: [m]   Radius of curvature.
+* length: [m]   Length of the unbent mirror.
+* coating: []   Name of file containing the material data (i.e. f1 and f2) for the coating
+* R0: [ ] Fixed constant reflectivity
+*
+* %E
+***********************************************************************/
+
+DEFINE COMPONENT Capillary
+DEFINITION PARAMETERS (string coating="Be.txt")
+SETTING PARAMETERS ( radius=1, length=0.2, R0=0)
+OUTPUT PARAMETERS(prms,prmsp)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+DECLARE
+%{
+#include <complex.h>
+  %include "read_table-lib"
+  struct {
+    int Z;
+    double At, rho;
+    t_Table T;
+  } prms,*prmsp;
+%}
+
+INITIALIZE
+%{
+  int status;
+
+  if (coating && !R0){
+    if ( coating && (status=Table_Read(&(prms.T),coating,0))==-1){
+      fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,coating);
+      exit(-1);
+    }
+    char **header_parsed;
+    header_parsed=Table_ParseHeader(prms.T.header,"Z","A[r]","rho","Z/A","sigma[a]",NULL);
+    if(header_parsed[2]){prms.rho=strtod(header_parsed[2],NULL);}
+    if(header_parsed[0]){prms.Z=strtod(header_parsed[0],NULL);}
+    if(header_parsed[1]){prms.At=strtod(header_parsed[1],NULL);}
+    prmsp=&prms;
+  }else{
+    if (R0<0 || R0>1){
+      fprintf(stderr,"Error(%s) reflectivity (%g) is specified but is not in [0:1]\n",NAME_CURRENT_COMP,R0);
+      exit(-1);
+    }
+    prmsp=NULL;
+  }
+
+%}
+
+TRACE
+%{
+    double l0,l1,dl,alpha,n,nx,ny,nz,s,k,knx,knz;
+    int hit,scatterc=0;
+
+    /*Do we hit the cylindrical aperture.*/
+    PROP_Z0;
+    if(x*x+y*y <radius*radius){
+        hit=cylinder_intersect(&l0,&l1,y,z-length*0.5,x,ky,kz,kx,radius,length);
+        while (hit){
+            /*if x-ray exits through the cylinder top break from loop.*/
+            if (hit & 010) {
+                break;
+            }
+            PROP_DL(l1);
+                
+            nx=x;ny=y;nz=0;
+            NORM(nx,ny,nz);
+            s=scalar_prod(kx,ky,kz,nx,ny,0);
+            if(s!=0){
+                kx-=2*s*nx;
+                ky-=2*s*ny;
+            }
+            scatterc++;
+            SCATTER;
+            hit=cylinder_intersect(&l0,&l1,y,z-length*0.5,x,ky,kz,kx,radius,length);
+        }
+        if (!prmsp){
+            /*apply constant reflectivity*/
+            p*=pow(R0,scatterc);
+        }else{
+            /*compute reflectivity from material data*/
+
+            /*adjust p according to reflectivity*/
+            double Qc,Q,f1,f2,delta,beta,na,e,k2,rho;
+            /*length of wavevector transfer may be compute from s and n_ above*/
+            Q=fabs(2*s*sqrt(nx*nx+ny*ny));
+
+            /*interpolate in material data*/
+            k2=scalar_prod(kx,ky,kz,kx,ky,kz);
+            e=K2E*sqrt(k2);
+            f1=Table_Value(prms.T,e,1); 
+
+            /*the conversion factor in  the end is to transform the atomic density from cm^-3 to AA^-3
+              -> therefore we get Q in AA^-1*/
+            na=NA*prms.rho/prms.At*1e-24;
+            Qc=4*sqrt(M_PI*na*RE*f1);
+            if (Q>Qc){ 
+                complex double qp;
+                double q,b_mu,R;
+
+                q=Q/Qc;
+                /*delta=na*r0*2*M_PI/k2*f1;*/  
+                f2=Table_Value(prms.T,e,2); 
+                /*beta=na*r0*2*M_PI/k2*f2;*/
+                /*b_mu=beta*(2*k)^2 / Qc^2*/
+                b_mu=4*M_PI*na*RE*f2/(Qc*Qc);
+                if(q==1){
+                    qp=sqrt(b_mu)*(1+I);
+                }else if (q<1) {
+                    double qi=sqrt( (q-1)/2 + sqrt( (q-1)*(q-1)/4 + b_mu*b_mu) );
+                    qp=b_mu/qi + qi*I;
+                }else{
+                    double qi=sqrt( (1-q)/2 + sqrt( (1-q)*(1-q)/4 + b_mu*b_mu) );
+                    qp=b_mu/qi + qi*I;
+                }
+                /*and from this compute the reflectivity*/
+                R=cabs((q-qp)/(q+qp));
+                p*=pow(R,scatterc);
+                /*now also set the phase*/
+                phi+=carg((q-qp)/(q+qp))*scatterc;
+            }
+        }
+    }else{
+        ABSORB;
+        //RESTORE_XRAY(INDEX_CURRENT_COMP,x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p);
+    }
+%}
+
+MCDISPLAY
+%{
+    circle("xy",0,0,0,radius);
+    circle("xy",0,0,length,radius);
+    line(radius,0,0,radius,0,length);
+    line(0,radius,0,0,radius,length);
+    line(-radius,0,0,-radius,0,length);
+    line(0,-radius,0,0,-radius,length);
+%}
+
+END
