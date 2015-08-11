@@ -219,7 +219,7 @@ cylinder_intersect(double *l0, double *l1, double x, double y, double z,
   double A,B,C,D,k2,k;
   double dl1p=0,dl0p=0,dl1c=0,dl0c=0,y0,y1;
   int ret=1,stat=0,plane_stat=0;
-  enum {HIT_CYL=01,ENTER_TOP=02,ENTER_BOT=04,EXIT_TOP=010,EXIT_BOT=020,ENTER_MASK=060,EXIT_MASK=030};
+  enum {HIT_CYL=01,ENTER_TOP=02,ENTER_BOT=04,EXIT_TOP=010,EXIT_BOT=020,ENTER_MASK=06,EXIT_MASK=030};
   k2=(kx*kx + ky*ky + kz*kz);
   k=sqrt(k2);
 
