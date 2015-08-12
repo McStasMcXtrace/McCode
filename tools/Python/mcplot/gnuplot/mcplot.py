@@ -12,40 +12,34 @@ from mcgnuplotter import McGnuplotter
 def main_noqt(args):
     logging.basicConfig(level=logging.INFO)
     
-    if args.noqt:
-        # 0 - handle sim file
-        sim_file = "mccode.sim"
-        if args.simulation:
-            simulation = args.simulation[0]
-            logging.debug('simulation file/dir: %s', simulation)
-            
-            if os.path.isdir(simulation):
-                simulation = os.path.join(simulation, 'mccode.sim')
-                
-            if os.path.splitext(simulation)[1] == '.sim':
-                sim_file = simulation
-            else:
-                # 1 - plot single
-                print('Plot single monitor')
-                dat_file = simulation
-                plotter = McGnuplotter(dat_file)
-                plotter.plot()
-                exit()
-    
-        # check sim file
-        if not os.path.isfile(sim_file):
-            print('Sim file not found')
-            exit()
-    
-        # 2 - multiplot
-        print('Using sim file: %s' % os.path.abspath(sim_file)) 
-        plotter = McGnuplotter(sim_file)
-        plotter.plot()
+    if args.simulation:
+        simulation = args.simulation[0]
     else:
-        print('loading qt gui...')
-        exec('import mcgnuview')
-        exec('mcgnuview.startGui()')
+        simulation = 'mccode.sim'
+    logging.debug('simulation file/dir: %s', simulation)
+    
+    if os.path.isdir(simulation):
+        simulation = os.path.join(simulation, 'mccode.sim')
+    
+    if not os.path.isfile(simulation):
+        print('Sim file not found')
+        exit()
         
+    if os.path.splitext(simulation)[1] == '.sim':
+        print('Using sim file: %s' % os.path.abspath(simulation)) 
+        plotter = McGnuplotter(simulation)
+    else:
+        dat_file = simulation
+        print('Plot single monitor')
+        plotter = McGnuplotter(dat_file)
+    
+    if args.noqt:
+        plotter.plot()
+        exit()
+    else:
+        print('Loading qt gui...')
+        exec('import mcgnuview')
+        exec('mcgnuview.startGui(plotter)')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
