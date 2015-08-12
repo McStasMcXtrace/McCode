@@ -10,12 +10,82 @@ import numpy
 import re
 import os
 
-class McGnuplotProcessor():
-    def __init__(self, main_file):
+class McGnuplotter():
+    __sim_file = ''
+    __data_file_dict = {}
+    
+    def __init__(self, input_file):
         """
         constructor - takes a .sim file or a .dat file name (for single vs. multiplot usage)
         """
-        self.__main_file = main_file
+        # check input file type & setup if sim file
+        file_ext = os.path.splitext(input_file)[1]
+        if file_ext == '.sim':
+            self.__sim_file = input_file
+            data_file_lst = McGnuplotter.__get_overview_files(self.__sim_file)
+            for data_file in data_file_lst:
+                data_struct = McGnuplotter.__get_monitor(data_file)
+                self.__data_file_dict[data_struct['file']] = data_struct
+        elif file_ext == '.dat':
+            data_struct = McGnuplotter.__get_monitor(input_file)
+            self.__data_file_dict[data_struct['file']] = data_struct
+        else:
+            raise Exception('McGnuPlotter: input file must be .sim or .dat')
+    
+    def plot(self):
+        """
+        plots the file that was handed to the constructor -  .sim or .dat
+        """
+        if os.path.splitext(os.path.basename(self.__sim_file))[1] == '.sim':
+            file_struct_list = []
+            for key in self.__data_file_dict:
+                file_struct_list.append(self.__data_file_dict[key])
+            self.__plot_multiple(file_struct_list)
+        else:
+            for key in self.__data_file_dict:
+                data_struct = self.__data_file_dict[key]
+                self.__plot_single(data_struct)
+    
+    def get_data_keys(self):
+        key_lst = []
+        for key in self.__data_file_dict:
+            key_lst.append(key)
+        return key_lst
+    
+    def plot_single(self, data_key):
+        data_struct = self.__data_file_dict[data_key]
+        self.__plot_single(data_struct)
+
+    @staticmethod
+    def __plot_single(data_struct):
+        """
+        plots single file (array_1d or array_2d)
+            data_file: single .dat file (absolute path)
+        """
+        array_2d = re.search('array_2d.*', data_struct['type'])
+        if array_2d:
+            McGnuplotter.__plot_array_2d(data_struct['fullpath'], data_struct['title'], data_struct['xlabel'], data_struct['ylabel'])
+        else:
+            McGnuplotter.__plot_array_1d_struct(data_struct)
+    
+    @staticmethod
+    def __plot_multiple(file_struct_lst):
+        """
+        plots all files to a singe window as multiplot (individually as array_1d or array_2d)
+        """
+        (nx, ny) = McGnuplotter.__calc_panel_size(len(file_struct_lst))
+        
+        gp = Gnuplot.Gnuplot(persist=1)
+        
+        cmd1 = 'set multiplot layout %d,%d columnsfirst' % (nx, ny)
+        logging.debug(cmd1)
+        gp('set multiplot layout %d,%d rowsfirst' % (ny, nx))        
+        for data_struct in file_struct_lst:
+            array_2d = re.search('array_2d.*', data_struct['type'])
+            if array_2d:
+                McGnuplotter.__plot_array_2d(data_struct['fullpath'], data_struct['title'], data_struct['xlabel'], data_struct['ylabel'], gp)
+            else:
+                McGnuplotter.__plot_array_1d_struct(data_struct, gp)
 
     @staticmethod
     def __plot_array_1d_struct(data_struct, gp=None):
@@ -24,6 +94,7 @@ class McGnuplotProcessor():
         """
         if gp == None: 
             gp = Gnuplot.Gnuplot(persist=1)
+        
         data = Gnuplot.Data(data_struct['data'],
                             using='1:2:3',
                             with_='errorbars')
@@ -71,65 +142,23 @@ class McGnuplotProcessor():
                 if d < fit:
                     fit = d; nx = panel[0]; ny = panel[1]
         return nx, ny
-    
-    def plot_single(self):
-        if os.path.splitext(os.path.basename(self.__main_file))[1] != '.dat':
-            print('plot_single: exiting, .dat file not given')
-        self.__plot_single(self.__main_file)
 
     @staticmethod
-    def __plot_single(data_file):
-		"""
-		plots single file (array_1d or array_2d)
-		    data_file: single .dat file (absolute path)
-		"""
-        data_struct = McGnuplotProcessor.__get_monitor(data_file)
-        type = data_struct['type']
-        array_2d = re.search('array_2d.*', type)
-        if array_2d:
-            McGnuplotProcessor.__plot_array_2d(data_file, data_struct['title'], data_struct['xlabel'], data_struct['ylabel'])
-        else:
-            McGnuplotProcessor.__plot_array_1d_struct(data_struct)
-    
-    def plot_multiple(self):
-        if os.path.splitext(os.path.basename(self.__main_file))[1] != '.sim':
-            print('plot_multiple: exiting, .sim file not given')
-        self.__plot_multiple(self.__main_file)
-    
-    @staticmethod
-    def __plot_multiple(sim_file):
-        """
-        plots all files to a singe window as multiplot (individually as array_1d or array_2d)
-        """
-        data_files = McGnuplotProcessor.__get_overview(sim_file)
-        (nx, ny) = McGnuplotProcessor.__calc_panel_size(len(data_files))
-        
-        gp = Gnuplot.Gnuplot(persist=1)
-        cmd1 = 'set multiplot layout %d,%d columnsfirst' % (nx, ny)
-        logging.debug(cmd1)
-        gp('set multiplot layout %d,%d rowsfirst' % (ny, nx))
-        
-        for f in data_files:
-            data_struct = McGnuplotProcessor.__get_monitor(f)
-            type = data_struct['type']
-            array_2d = re.search('array_2d.*', type)
-            if array_2d:
-                McGnuplotProcessor.__plot_array_2d(f, data_struct['title'], data_struct['xlabel'], data_struct['ylabel'], gp)
-            else:
-                McGnuplotProcessor.__plot_array_1d_struct(data_struct, gp)
-
-    @staticmethod
-    def __get_overview(sim_file):
+    def __get_overview_files(sim_file):
         """
         returns a list of data files associated with the "mccode.sim" file (full paths)
         """
-        sim_file = os.path.abspath(sim_file)
-        if os.path.dirname(sim_file) != '':
-            os.chdir(os.path.dirname(sim_file))
-            sim_file = os.path.basename(sim_file)
-        
-        monitor_files = filter(lambda line: (line.strip()).startswith('filename:'), open(sim_file).readlines())
-        monitor_files = map(lambda f: os.path.abspath(f.rstrip('\n').split(':')[1].strip()), monitor_files)
+        org_dir = os.getcwd()
+        try:
+            sim_file = os.path.abspath(sim_file)
+            if os.path.dirname(sim_file) != '':
+                os.chdir(os.path.dirname(sim_file))
+                sim_file = os.path.basename(sim_file)
+            
+            monitor_files = filter(lambda line: (line.strip()).startswith('filename:'), open(sim_file).readlines())
+            monitor_files = map(lambda f: os.path.abspath(f.rstrip('\n').split(':')[1].strip()), monitor_files)
+        finally:
+            os.chdir(org_dir)
         
         return monitor_files
     
@@ -141,7 +170,7 @@ class McGnuplotProcessor():
         is_header = lambda line: line.startswith('#')
         header_lines = filter(is_header, open(mon_file).readlines())
         
-        str ="{"
+        file_struct_str ="{"
         for j in range(0, len(header_lines)):
             # Field name and data
             Line = header_lines[j]; Line = Line[2:len(Line)].strip()
@@ -149,21 +178,21 @@ class McGnuplotProcessor():
             Field = Line[0]
             Value = ""
             Value = string.join(string.join(Line[1:len(Line)], ':').split("'"), '')
-            str = str + "'" + Field + "':'" + Value + "'"
+            file_struct_str = file_struct_str + "'" + Field + "':'" + Value + "'"
             if j<len(header_lines)-1:
-                str = str + ","
-        str = str + "}"
-        file_struct = eval(str)
+                file_struct_str = file_struct_str + ","
+        file_struct_str = file_struct_str + "}"
+        file_struct = eval(file_struct_str)
         
         # Add the data block:
         file_struct['data'] = numpy.loadtxt(mon_file)
         file_struct['fullpath'] = mon_file
-        file_struct['File'] = mon_file
+        file_struct['file'] = os.path.basename(mon_file)
         print("Loading " + mon_file)
         return file_struct
 
 
-def main(args):
+def main_noqt(args):
     logging.basicConfig(level=logging.INFO)
     
     # 0 - handle sim file
@@ -177,11 +206,12 @@ def main(args):
             
         if os.path.splitext(simulation)[1] == '.sim':
             sim_file = simulation
-        else:    
+        else:
             # 1 - plot single
             print('Plot single monitor')
-            plotter = McGnuplotProcessor(simulation)
-            plotter.plot_single()
+            dat_file = simulation
+            plotter = McGnuplotter(dat_file)
+            plotter.plot()
             exit()
 
     # check sim file
@@ -191,12 +221,12 @@ def main(args):
 
     # 2 - multiplot
     print('Using sim file: %s' % os.path.abspath(sim_file)) 
-    plotter = McGnuplotProcessor(sim_file)
-    plotter.plot_multiple()
+    plotter = McGnuplotter(sim_file)
+    plotter.plot()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('simulation', nargs='*', help='simulation (.sim) or monitor (.dat) file, or directory')
     args = parser.parse_args()
 
-    main(args)
+    main_noqt(args)
