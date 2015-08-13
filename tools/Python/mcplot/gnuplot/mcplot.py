@@ -9,7 +9,7 @@ import argparse
 import logging
 from mcgnuplotter import McGnuplotter
 
-def main_noqt(args):
+def main(args):
     logging.basicConfig(level=logging.INFO)
     
     if args.simulation:
@@ -27,11 +27,11 @@ def main_noqt(args):
         
     if os.path.splitext(simulation)[1] == '.sim':
         print('Using sim file: %s' % os.path.abspath(simulation)) 
-        plotter = McGnuplotter(simulation)
+        plotter = McGnuplotter(simulation, noqt=args.noqt)
     else:
         dat_file = simulation
         print('Plot single monitor')
-        plotter = McGnuplotter(dat_file)
+        plotter = McGnuplotter(dat_file, noqt=args.noqt)
     
     if args.noqt:
         plotter.plot()
@@ -47,4 +47,4 @@ if __name__ == '__main__':
     parser.add_argument('--noqt', action="store_true", default=False)
     args = parser.parse_args()
 
-    main_noqt(args)
+    main(args)

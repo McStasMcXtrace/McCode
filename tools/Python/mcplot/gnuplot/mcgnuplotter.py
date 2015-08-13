@@ -9,13 +9,21 @@ import re
 import os
 
 class McGnuplotter():
-    __sim_file = ''
-    __data_file_dict = {}
+    # static members
+    __gp_persist = 0
     
-    def __init__(self, input_file):
+    def __init__(self, input_file, noqt = False):
         """
         constructor - takes a .sim file or a .dat file name (for single vs. multiplot usage)
         """
+        if noqt:
+            McGnuplotter.__gp_persist = 1
+
+        # dynamic members
+        self.__sim_file = ''
+        self.__data_file_dict = {}
+        self.__gp_lst = []
+        
         # check input file type & setup if sim file
         file_ext = os.path.splitext(input_file)[1]
         if file_ext == '.sim':
@@ -30,29 +38,40 @@ class McGnuplotter():
         else:
             raise Exception('McGnuPlotter: input file must be .sim or .dat')
     
+    def closeAllGnuplots(self):
+        for gp in self.__gp_lst:
+            print('closing gnuplot window...')
+            gp.close()
+    
     def plot(self):
         """
-        plots the file that was handed to the constructor -  .sim or .dat
+        plots the file that was handed to the constructor -  .sim or .dat. The only way to plot overview data.
         """
         if os.path.splitext(os.path.basename(self.__sim_file))[1] == '.sim':
             file_struct_list = []
             for key in self.__data_file_dict:
                 file_struct_list.append(self.__data_file_dict[key])
-            self.__plot_multiple(file_struct_list)
+            gp = self.__plot_multiple(file_struct_list)
+            self.__gp_lst.append(gp)
         else:
             for key in self.__data_file_dict:
                 data_struct = self.__data_file_dict[key]
-                self.__plot_single(data_struct)
+                gp = self.__plot_single(data_struct)
+                self.__gp_lst.append(gp)
+    
+    def plot_single(self, data_key):
+        """
+        plots .dat file corresponding to data_key
+        """
+        data_struct = self.__data_file_dict[data_key]
+        gp = self.__plot_single(data_struct)
+        self.__gp_lst.append(gp)
     
     def get_data_keys(self):
         key_lst = []
         for key in self.__data_file_dict:
             key_lst.append(key)
         return key_lst
-    
-    def plot_single(self, data_key):
-        data_struct = self.__data_file_dict[data_key]
-        self.__plot_single(data_struct)
 
     @staticmethod
     def __plot_single(data_struct):
@@ -62,9 +81,11 @@ class McGnuplotter():
         """
         array_2d = re.search('array_2d.*', data_struct['type'])
         if array_2d:
-            McGnuplotter.__plot_array_2d(data_struct['fullpath'], data_struct['title'], data_struct['xlabel'], data_struct['ylabel'])
+            gp = McGnuplotter.__plot_array_2d(data_struct['fullpath'], data_struct['title'], data_struct['xlabel'], data_struct['ylabel'])
         else:
-            McGnuplotter.__plot_array_1d_struct(data_struct)
+            gp = McGnuplotter.__plot_array_1d_struct(data_struct)
+        
+        return gp
     
     @staticmethod
     def __plot_multiple(file_struct_lst):
@@ -73,7 +94,7 @@ class McGnuplotter():
         """
         (nx, ny) = McGnuplotter.__calc_panel_size(len(file_struct_lst))
         
-        gp = Gnuplot.Gnuplot(persist=1)
+        gp = Gnuplot.Gnuplot(persist=McGnuplotter.__gp_persist)
         
         gp('set multiplot layout %d,%d rowsfirst' % (ny, nx))        
         for data_struct in file_struct_lst:
@@ -82,6 +103,8 @@ class McGnuplotter():
                 McGnuplotter.__plot_array_2d(data_struct['fullpath'], data_struct['title'], data_struct['xlabel'], data_struct['ylabel'], gp)
             else:
                 McGnuplotter.__plot_array_1d_struct(data_struct, gp)
+        
+        return gp
 
     @staticmethod
     def __plot_array_1d_struct(data_struct, gp=None):
@@ -89,7 +112,7 @@ class McGnuplotter():
         plots a single 1d array with errorbars (compatible with multiplot if a GnuPlot is passed as gp)
         """
         if gp == None: 
-            gp = Gnuplot.Gnuplot(persist=1)
+            gp = Gnuplot.Gnuplot(persist=McGnuplotter.__gp_persist)
         
         data = Gnuplot.Data(data_struct['data'],
                             using='1:2:3',
@@ -98,6 +121,8 @@ class McGnuplotter():
                 title=data_struct['title'], 
                 xlabel=data_struct['xlabel'],
                 ylabel=data_struct['ylabel'])
+        
+        return gp
     
     @staticmethod
     def __plot_array_2d(data_file, title, xlabel, ylabel, gp=None):
@@ -105,12 +130,15 @@ class McGnuplotter():
         plots a single 2d array (compatible with multiplot if a GnuPlot is passed as gp)
         """
         if gp == None:
-            gp = Gnuplot.Gnuplot(persist=1)
+            gp = Gnuplot.Gnuplot(persist=McGnuplotter.__gp_persist)
+        
         gp("set view map")
         gp.title(title)
         gp.xlabel(xlabel)
         gp.ylabel(ylabel)
         gp("splot '%s' matrix using 1:2:3 index 0 w image notitle" % data_file)
+        
+        return gp
     
     @staticmethod
     def __calc_panel_size(num):

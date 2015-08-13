@@ -26,6 +26,8 @@ class McGnuMediator():
     
     def setupCallbacks(self):
         self.__mcgv.ui.lstvMonitors.clicked.connect(self.itemMouseClick)
+        self.__mcgv.ui.btnCloseAll.clicked.connect(lambda: self.__plotter.closeAllGnuplots())
+        self.__mcgv.ui.btnSaveAs.clicked.connect(lambda: self.__mcgv.ui.statusBar.showMessage('Save not implemented'))
 
     def showUi(self):
         self.__mcgv.show()
@@ -33,13 +35,15 @@ class McGnuMediator():
         
     def itemMouseClick(self, idx):
         # idx: a QtCore.QModelIndex object that was just clicked
+        
+        self.__mcgv.ui.statusBar.showMessage('Plotting: %s' % idx.data().toPyObject())
         if idx.row() == 0:
             self.__plotter.plot()
         else:
             key = str(idx.data().toPyObject())
             print(key)
             self.__plotter.plot_single(key)
-        
+    
 class McGnuView(QtGui.QMainWindow):
     def __init__(self, parent=None):
         super(McGnuView, self).__init__(parent)
@@ -47,7 +51,7 @@ class McGnuView(QtGui.QMainWindow):
         self.ui.setupUi(self)
     
     def initUi(self, keys):
-        self.ui.lstvMonitors.addItem(QtGui.QListWidgetItem('<overview plot>'))
+        self.ui.lstvMonitors.addItem(QtGui.QListWidgetItem('< overview >'))
         for k in keys:
             self.ui.lstvMonitors.addItem(QtGui.QListWidgetItem(QtCore.QString(k)))
         

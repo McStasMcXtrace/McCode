@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>418</width>
-    <height>307</height>
+    <width>403</width>
+    <height>276</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -32,7 +32,7 @@
          </sizepolicy>
         </property>
         <property name="title">
-         <string>Plot</string>
+         <string>Monitors</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
@@ -66,6 +66,29 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
+       <widget class="QGroupBox" name="gbxSave">
+        <property name="title">
+         <string>Menu</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QPushButton" name="btnCloseAll">
+           <property name="text">
+            <string>Close All</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnSaveAs">
+           <property name="text">
+            <string>Save As...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
        <widget class="QGroupBox" name="gbxOptions">
         <property name="title">
          <string>Options</string>
@@ -75,50 +98,6 @@
           <widget class="QCheckBox" name="cbxLogScale">
            <property name="text">
             <string>Log scale (l)</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item>
-       <widget class="QGroupBox" name="gbxSave">
-        <property name="title">
-         <string>Save</string>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <item>
-          <widget class="QPushButton" name="btnSave_2">
-           <property name="text">
-            <string>ps</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="btnSave_1">
-           <property name="text">
-            <string>psc</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="btnSave_3">
-           <property name="text">
-            <string>gif</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="btnSave_4">
-           <property name="text">
-            <string>png</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="btnSaveAs">
-           <property name="text">
-            <string>Save As...</string>
            </property>
           </widget>
          </item>
