@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Implements functionality for mcplot-gnuplot.
+#  Implements functionality for mcplot-gnuplot.
 #
 import Gnuplot
 import string
