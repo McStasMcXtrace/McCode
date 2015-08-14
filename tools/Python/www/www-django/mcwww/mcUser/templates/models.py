@@ -1,4 +1,4 @@
-# ==================================#
+#===================================#
 # mcUser model, Backend and Manager #
 # ------------                      #
 # Provides authentication through   #
@@ -59,12 +59,13 @@ user_logged_in.connect(update_last_login)
 
 #----------------------------------------------------------------------------------------------#
 def authentihelp(uid, pw, in_log):
+    print "authentihelp\n"
     conn = LDAPComm()
     data = LDAPData()
     def get_dn(UID):
         import base64
         dn = None
-        ldap_data = conn.ldapQuery('cn=DummyUser,ou=person,DN', 'DPW', "uid=%s"%UID)
+        ldap_data = conn.ldapQuery('cn=DummyUser,ou=person,D_N', 'DPW', "uid=%s"%UID)
         for line in ldap_data:
             if 'uid::' in line:
                 data.setuid(base64.standard_b64decode(split(" ", line)[1]).strip())
@@ -83,6 +84,9 @@ def authentihelp(uid, pw, in_log):
         in_log.write("Usr not found from uid: %s\n"%UID)
         return None
     dn,ldap_data = get_dn(uid)
+    print "dn: ", dn, " ldap_data: "
+    for d in ldap_data:
+        print d
     in_log.write("dn obtained: %s\n"%dn)
     if conn.ldapAuthenticate(dn, pw):
         return ldap_data
@@ -126,11 +130,13 @@ class mcBackend: #(object):
             return None
 
     def authenticate(self, uid, pw):
+        print "authenticate\n"
         in_log = open("in.log", 'a')
         t = time.time()
         in_log.write("\nTimestamp: %s:%s\n" % (str(date.fromtimestamp(t)), str(t)) )
         in_log.write("Finding data from uid: "+ uid +"\n")
         data = authentihelp(uid,pw,in_log)
+        print "LDAP data:\n",data
         if data:
             try:
                 user = mcUser.objects.get(uid=uid)

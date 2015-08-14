@@ -1,5 +1,18 @@
  #!/bin/sh
 export PYTHONPATH=$PYTHONPATH:./
+#--------------------------------------#
+# Refreshing DBs if they are installed #
+#--------------------------------------#
+if [ -d /etc/ldap/slapd.d ]; then
+    sudo apt-get purge -y ldap-utils slapd
+    sudo apt-get install -y ldap-utils slapd
+fi
+if [ -f DB/mcwww.sqlite3 ] ; then
+    rm DB/mcwww.sqlite3
+fi
+# if [ -f mcUser/management/LDAP/LDAP_access/access.txt ] ; then
+#    rm mcUser/management/LDAP/LDAP_access/access.txt
+# fi
 #------------------------------------------#
 # Get host name for populating .ldif files #
 #------------------------------------------#
@@ -41,7 +54,10 @@ until [[ ${LDAPOP:0:1} == "d" ]]; do
     echo Testing LDAP accesses.
     LDAPOP=`ldapwhoami -D cn=admin,$DN -w $TREEPW`
 done
-echo Access by admin accepted.
+echo "Access by admin accepted."
+echo "Getting LDAP auth structure."
+sudo cp /etc/ldap/slapd.d/cn\=config/olcDatabase={1}hdb.ldif ./mcUser/management/LDAP/templates/
+sudo chmod +r ./mcUser/management/LDAP/templates/olcDatabase={1}hdb.ldif
 echo " "
 
 #---------------------#
@@ -50,5 +66,4 @@ echo " "
 python ./bin/build-templates.py $DN $ROOTPW $BINDPW
 python ./bin/ldap-build.py $DN $ROOTPW $BINDPW $TREEPW $RPW1
 python manage.py syncdb
-
-
+python manage.py populate_db

@@ -42,7 +42,7 @@ def makeuid(username, n=0):
 # Returns the captured cn.         #
 #==================================#
 def get_cn():
-    default = 'cn=admin,DN'
+    default = 'cn=admin,D_N'
     print "{USING default_dn: %s}"% default
     return default
     #--------------------------------#
@@ -50,7 +50,7 @@ def get_cn():
     # GROUP ADMIN AUTH CHECK THING   #
     # WORKS!                         #
     #--------------------------------#
-    #    LDAP_admin_cn = raw_input('Enter your LDAP authentication username (cn=...,DN)\n (enter for default): ')
+    #    LDAP_admin_cn = raw_input('Enter your LDAP authentication username (cn=...,D_N)\n (enter for default): ')
     #    if not LDAP_admin_cn: 
     #        return default
     #    if check_LDAP_perms(LDAP_admin_cn):

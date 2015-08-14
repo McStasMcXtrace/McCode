@@ -27,10 +27,11 @@
 {% endif %}
 
 <div id="content-main">
-<form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
+  <form action="/login/try/" method="post" id="login-form">
+    {% csrf_token %}
   <div class="form-row">
-    {{ form.username.errors }}
-    <label for="id_username" class="required">{{ form.username.label }}:</label> {{ form.username }}
+    {{ form.uid.errors }}
+    <label for="id_uid" class="required">{{ form.username.label }}:</label> {{ form.username }}
   </div>
   <div class="form-row">
     {{ form.password.errors }}
@@ -40,7 +41,7 @@
   {% url 'admin_password_reset' as password_reset_url %}
   {% if password_reset_url %}
   <div class="password-reset-link">
-    <a href="{{ password_reset_url }}">{% trans 'Forgotten your password or username?' %}</a>
+    <a href="{{ password_reset_url }}">{% trans 'Forgotten your password or uid?' %}</a>
   </div>
   {% endif %}
   <div class="submit-row">

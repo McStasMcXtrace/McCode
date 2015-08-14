@@ -24,7 +24,7 @@ from LDAPData import *
 class addUserLDIF:
     def __init__(self, ldap_user):
         out_file = open(ldap_user.ldif(), 'w')
-        out_file.write("dn: cn=%s,ou=person,DN\n" % ldap_user.cn())
+        out_file.write("dn: cn=%s,ou=person,D_N\n" % ldap_user.cn())
         out_file.write("objectClass: inetorgperson\n")
         out_file.write("cn: %s \n" % ldap_user.cn())
         out_file.write("sn: %s \n" % ldap_user.sn())
@@ -33,12 +33,12 @@ class addUserLDIF:
         out_file.write("mail: %s \n" % ldap_user.mail())
         out_file.write("userpassword: %s \n" % ldap_user.password())
         out_file.write("ou: person\n")
-#        out_file.write("memberof: cn=%s,ou=groups,DN\n" % ldap_user.group()) # get this working for admin group permissions checking
+#        out_file.write("memberof: cn=%s,ou=groups,D_N\n" % ldap_user.group()) # get this working for admin group permissions checking
         out_file.write("\n")
-        out_file.write("dn: cn=%s,ou=groups,DN\n" % ldap_user.group())
+        out_file.write("dn: cn=%s,ou=groups,D_N\n" % ldap_user.group())
         out_file.write("changeType: modify\n")
         out_file.write("add: member\n")
-        out_file.write("member: cn=%s,ou=person,DN\n" % ldap_user.cn())
+        out_file.write("member: cn=%s,ou=person,D_N\n" % ldap_user.cn())
         out_file.close()
 #=================================================#
 # addUserLdif                                     #
@@ -54,7 +54,7 @@ class addUserLDIF:
 class changepwLDIF:
     def __init__(self, ldap_user):
         out_file = open(ldap_user.ldif(), 'w')
-        out_file.write("dn: cn=%s,ou=person,DN\n" % ldap_user.cn())
+        out_file.write("dn: cn=%s,ou=person,D_N\n" % ldap_user.cn())
         out_file.write("changetype: modify")
         out_file.write("replace: userpassword")
         out_file.write("userpassword: %s" % ldap_user.password())

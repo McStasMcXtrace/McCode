@@ -19,12 +19,13 @@ class LDAPBuilder:
         self.access = LDAPData()
         self.buildWith = data
 # DB modification files
-
         print "BUILDER IS RUNNING IN: ", os.getcwd()
         self.ldif_build_path = './mcUser/management/LDAP/LDIFs/'
         self.rootPW = "RPW.ldif"
         self.tree = "DIT.ldif"
-        self.acl = "ACL.ldif"
+        self.acl_del = "ACL_del.ldif"
+        self.acl_add = "ACL_add.ldif"
+        
 # ROOTPW insertion (Backend Modification)
     def insertRootPW(self):
         print "adding olcRootPW to olcDatabase={0}config"
@@ -40,12 +41,19 @@ class LDAPBuilder:
         print self.buildWith.tree_dn()
         self.pipe.ldapAdd(ldif_file, self.buildWith.tree_dn(), self.buildWith.tree_pw())
 
-# Set up group access control (Backend Modification).
+# Set up group access control (Backend Modification). modification: Verbose, Debug level 5.
     def buildAcl(self):
+        print "\n\n!! buildAcl !!\n\n   dn: %s\n   pwd: %s\n\n"%( self.buildWith.root_dn(), self.buildWith.root_pw() )
+                                                               #( self.buildWith.tree_dn(), self.buildWith.tree_pw() )
         print "Building access control in olcDatabase={1}hdb"
-        ldif_file = self.ldif_build_path + self.acl
-        self.pipe.ldapAdd(ldif_file, self.buildWith.root_dn(), self.buildWith.root_pw())
-
+        # remove acl from olcDatabase{1}hdb.ldif
+        ldif_file = self.ldif_build_path + self.acl_del
+        self.pipe.ldapMod(ldif_file, self.buildWith.root_dn(), self.buildWith.root_pw())
+                                   # self.buildWith.tree_dn(), self.buildWith.tree_pw())
+        # add acl to olcDatabase{0}config,cn=config
+        ldif_file = self.ldif_build_path + self.acl_add
+        self.pipe.ldapMod(ldif_file, self.buildWith.root_dn(), self.buildWith.root_pw())
+        
 # User population : may/may not be necc (Frontend Modification).
     def insertPopulation(self):
         print "Adding Users to olcDatabase={1}hdb"

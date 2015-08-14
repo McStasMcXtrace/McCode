@@ -10,7 +10,8 @@ from glob import glob
 import json
 import re
 # django imports
-from django.core.management.base import NoArgsCommand, make_option
+from django.core.management.base import NoArgsCommand
+from optparse import make_option
 from django.contrib.auth.models import User,Group
 # app imports
 from mcsimulator.models import Simulation

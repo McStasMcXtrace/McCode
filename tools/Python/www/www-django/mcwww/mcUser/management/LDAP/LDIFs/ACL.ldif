@@ -1,12 +1,25 @@
-#=========================#
-# Dummy, Moodle and Admin #
-#=========================#
+#========================#
+# Deleting Old olcAccess #
+#========================#
+# dn: olcDatabase={1}hdb
 dn: olcDatabase={0}config,cn=config
 changetype: modify
 delete: olcAccess
+olcAccess: to attrs=userPassword,shadowLastChange
+  by self write
+  by anonymous auth
+  by dn="cn=admin,dc=nodomain" write
+  by * none
+-
+delete: olcAccess
+olcAccess: to dn.base=""
+  by * read
+-
+delete: olcAccess
 olcAccess: to *
-  by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage
-  by * break
+  by self write
+  by dn="cn=admin,dc=nodomain" write
+  by * read
 -
 #===========#
 # DummyUser # Should really get rid of this guy...it does nothing

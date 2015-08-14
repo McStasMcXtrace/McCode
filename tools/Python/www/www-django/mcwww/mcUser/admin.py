@@ -1,5 +1,5 @@
 #=====================================#
-# AdminSite Overwrite                 #
+# AdminSite Overwrite & mcUserAdmin   #
 # -------------------                 #
 # - Provide a new admin site to login #
 #   using the LDAP login method.      #
@@ -9,11 +9,12 @@
 # system imports
 # python imports
 from functools import update_wrapper
-# django imports
+# django imports - go through this and remove unecc ones, this needs to be trimmed
 from django.http import Http404, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
 from django.template.response import TemplateResponse
+from django.db import models
 from django.db.models.base import ModelBase
 from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
@@ -29,6 +30,24 @@ from django.contrib.admin import ModelAdmin, actions, AdminSite
 # app imports
 from mcsimulator.models import Simulation, SimRun, Job
 from mcUser.models import mcUser
+#----------------------------------------------------------------------------------------------#
+#==============#
+# mcUser Admin # - the views will offer the change pwd etc as LDAP access necc.
+#==============#
+class mcUserAdmin(admin.ModelAdmin):
+    exclude         = ('is_active')
+    readonly_fields = ('uid')
+    list_filter     = ('is_staff', 'is_active')
+    def has_add_permission(self, reqwuest, obj=None):
+        return False
+    def __init__(self, *args, **kwargs):
+        super(mcUserAdmin, self).__init__(*args, **kwargs)
+    class Meta:
+        ordering = ['username']
+#==================#
+# END mcUser Admin #
+#==================#
+#----------------------------------------------------------------------------------------------#
 #===================================================================#
 # Overlord
 # --------
@@ -85,11 +104,11 @@ class Overlord(AdminSite):
     app_index_template = None                  
     password_change_template = None
     password_change_done_template = None
-
+    app_name = "McStas"
+    
     def has_permission(self, request):
         """
-        Returns True if the given HttpRequest has permission to view
-        *at least one* page in the admin site.
+        Returns True if the given HttpRequest has permission to view *at least one* page in the admin site.
         """
         return request.user.is_active and request.user.is_staff
 
@@ -117,9 +136,6 @@ class Overlord(AdminSite):
 
     def get_urls(self):
         from django.conf.urls import patterns, url, include
-        # Since this module gets imported in the application's root package,
-        # it cannot import models from other applications at the module level,
-        # and django.contrib.contenttypes.views imports ContentType.
         from django.contrib.contenttypes import views as contenttype_views
 
         if settings.DEBUG: self.check_dependencies()
@@ -128,25 +144,33 @@ class Overlord(AdminSite):
             def wrapper(*args, **kwargs):
                 return self.admin_view(view, cacheable)(*args, **kwargs)
             return update_wrapper(wrapper, view)
-        # Admin-site-wide views.
-        urlpatterns = patterns('',
-            url(r'^$', wrap(self.index), name='index'),
-            url(r'^login/$', self.login, name='login'),
-            url(r'^logout/$', wrap(self.logout), name='logout'),
-            url(r'^password_change/$', wrap(self.password_change, cacheable=True), name='password_change'),
-            url(r'^password_change/done/$', wrap(self.password_change_done, cacheable=True), name='password_change_done'),
-            url(r'^jsi18n/$', wrap(self.i18n_javascript, cacheable=True), name='jsi18n'),
-            url(r'^r/(?P<content_type_id>\d+)/(?P<object_id>.+)/$', wrap(contenttype_views.shortcut), name='view_on_site'),
-        )
+        #---------------------------------------------------#
+        # Admin-site-wide views                             # WE NEED TO LINK THIS WITH CORRECT LOGIN VIEWS TO BEGIN WITH.
+        # ---------------------                             #
+        # Add urls here, build the page and make the views. #
+        #
+        urlpatterns = patterns( '',
+                                url(r'^$', wrap(self.index), name='index'),
+                                url(r'^login/$', self.login, name='login'),
+                                url(r'^login/try/$', 'mcwww.views.loginPOST', name='loginPOST'),
+                                url(r'^logout/$', wrap(self.logout), name='logout'),
+                                url(r'^password_change/$', wrap(self.password_change, cacheable=True), name='password_change'),
+                                url(r'^password_change/done/$', wrap(self.password_change_done, cacheable=True), name='password_change_done'),
+                                url(r'^jsi18n/$', wrap(self.i18n_javascript, cacheable=True), name='jsi18n'),
+                                url(r'^r/(?P<content_type_id>\d+)/(?P<object_id>.+)/$', wrap(contenttype_views.shortcut), name='view_on_site'),
+                            )
         # Add in each model's views, and create a list of valid URLS for the
         # app_index
         valid_app_labels = []
         for model, model_admin in six.iteritems(self._registry):
+            print "model: ", model, ", model_admin: ", model_admin
             urlpatterns += patterns('',
                 url(r'^%s/%s/' % (model._meta.app_label, model._meta.model_name), include(model_admin.urls))
             )
-            if model._meta.app_label not in valid_app_labels:
-                valid_app_labels.append(model._meta.app_label)
+            if model._meta.app_label not in valid_app_labels: valid_app_labels.append(model._meta.app_label)
+        #
+        # End Admin-site-wide views
+        #---------------------------------------------------#
 
         # If there were ModelAdmins registered, we should have a list of app
         # labels for which we need to allow access to the app_index view,
@@ -163,13 +187,11 @@ class Overlord(AdminSite):
 
     def each_context(self):
         """
-        Returns a dictionary of variables to put in the template context for
-        *every* page in the admin site.
+        Returns a dictionary of variables to put in the template context for *every* page in the admin site.
         """
-        return {
-            'site_title': self.site_title,
-            'site_header': self.site_header,
-        }
+        return { 'site_title': self.site_title,
+                 'site_header': self.site_header,
+             }
 
     def password_change(self, request):
         super.password_change(request)
@@ -184,14 +206,11 @@ class Overlord(AdminSite):
     @never_cache
     def logout(self, request, extra_context=None):
         """
-        Logs out the user for the given HttpRequest.
-
-        This should *not* assume the user is already logged in.
+        Logs out the user for the given HttpRequest. This should *not* assume the user is already logged in.
         """
         from django.contrib.auth.views import logout
-        defaults = {
-            'current_app': self.name,
-            'extra_context': dict(self.each_context(), **(extra_context or {})),
+        defaults = { 'current_app': self.name,
+                     'extra_context': dict(self.each_context(), **(extra_context or {})),
         }
         if self.logout_template is not None:
             defaults['template_name'] = self.logout_template
@@ -206,24 +225,32 @@ class Overlord(AdminSite):
     # Since this module gets imported in the application's root package,   # - YEAH, THIS IS WHY, IT IMPORTS USER
     # it cannot import models from other applications at the module level, #   WHY IS THIS NOT IN THE DOCUMENTATION???
     # and django.contrib.admin.forms eventually imports User.              #
-    
     @never_cache
     def login(self, request, extra_context=None):
-        req_file = open("reqs.out", "w")
-        req_file.print( "LOGGIN IN: ", request)
-        req_file.close
+        # CHASING LOGIN OF ADMIN
+        from req_logs.logger import log_this
+        log_this(request, 'admin_login_check', [request.method, self.has_permission(request), REDIRECT_FIELD_NAME])
+        print "req method: %s"%request.method
+        print "permission: %s"%self.has_permission(request)
+        #     request.method = POST        -> first condition not made.
+        #     self.has_permission = False! -> second condition not made.
+        # this is for already logged in users I think.
+        # END OF CHASING
         if request.method == 'GET' and self.has_permission(request):
             print "in the if#1"
             index_path = reverse('admin:index', current_app=self.name)
             return HttpResponseRedirect(index_path)
 
-        from django.contrib.auth.views import login
+        from django.contrib.auth.views import login # login functionality import - just import correctly?
         from django.contrib.admin.forms import AdminAuthenticationForm
         
         context = dict(self.each_context(),
-            title=_('Log in'),
-            app_path=request.get_full_path(),
-        )
+                       title=_('Log in'),
+                       app_path=request.get_full_path(),
+                   )
+        # MORE LOGIN CHASING
+        print "REDIRECT_FIELD_NAME: ", REDIRECT_FIELD_NAME
+        # END OF CHASING
         if (REDIRECT_FIELD_NAME not in request.GET
             and
             REDIRECT_FIELD_NAME not in request.POST):
@@ -231,13 +258,14 @@ class Overlord(AdminSite):
             context[REDIRECT_FIELD_NAME] = request.get_full_path()
         
         context.update(extra_context or {})
-        defaults = {'extra_context': context,
-                    'current_app': self.name,
-                    'authentication_form': self.login_form or AdminAuthenticationForm,
-                    'template_name': self.login_template or 'admin/login.html',
-                }
+        defaults = { 'extra_context': context,
+                     'current_app': self.name,
+                     'authentication_form': self.login_form or AdminAuthenticationForm,
+                     'template_name': self.login_template or 'admin/login.html',
+                 }
+        # this is where the LDAP login should be implemented.
         return login(request, **defaults)
-
+    
     @never_cache
     def index(self, request, extra_context=None):
         """
@@ -257,11 +285,10 @@ class Overlord(AdminSite):
                 # If so, add the module to the model_list.
                 if True in perms.values():
                     info = (app_label, model._meta.model_name)
-                    model_dict = {
-                        'name': capfirst(model._meta.verbose_name_plural),
-                        'object_name': model._meta.object_name,
-                        'perms': perms,
-                    }
+                    model_dict = { 'name': capfirst(model._meta.verbose_name_plural),
+                                   'object_name': model._meta.object_name,
+                                   'perms': perms,
+                               }
                     if perms.get('change', False):
                         try:
                             model_dict['admin_url'] = reverse('admin:%s_%s_changelist' % info, current_app=self.name)
@@ -275,13 +302,12 @@ class Overlord(AdminSite):
                     if app_label in app_dict:
                         app_dict[app_label]['models'].append(model_dict)
                     else:
-                        app_dict[app_label] = {
-                            'name': apps.get_app_config(app_label).verbose_name,
-                            'app_label': app_label,
-                            'app_url': reverse('admin:app_list', kwargs={'app_label': app_label}, current_app=self.name),
-                            'has_module_perms': has_module_perms,
-                            'models': [model_dict],
-                        }
+                        app_dict[app_label] = { 'name': apps.get_app_config(app_label).verbose_name,
+                                                'app_label': app_label,
+                                                'app_url': reverse('admin:app_list', kwargs={'app_label': app_label}, current_app=self.name),
+                                                'has_module_perms': has_module_perms,
+                                                'models': [model_dict],
+                                            }
 
         # Sort the apps alphabetically.
         app_list = list(six.itervalues(app_dict))
@@ -291,15 +317,15 @@ class Overlord(AdminSite):
         for app in app_list:
             app['models'].sort(key=lambda x: x['name'])
 
-        context = dict(
-            self.each_context(),
-            title=self.index_title,
-            app_list=app_list,
-        )
+        context = dict( self.each_context(),
+                        title=self.index_title,
+                        app_list=app_list,
+                    )
         context.update(extra_context or {})
-        return TemplateResponse(request, self.index_template or
-                                'admin/index.html', context,
-                                current_app=self.name)
+        return TemplateResponse( request,
+                                 self.index_template or 'admin/index.html',
+                                 context,
+                                 current_app=self.name )
 
     def app_index(self, request, app_label, extra_context=None):
         user = request.user
@@ -350,27 +376,21 @@ class Overlord(AdminSite):
         app_dict['models'].sort(key=lambda x: x['name'])
         context = dict(self.each_context(),
             title=_('%(app)s administration') % {'app': app_name},
-            app_list=[app_dict],
-            app_label=app_label,
-        )
+                       app_list=[app_dict],
+                       app_label=app_label,
+                   )
         context.update(extra_context or {})
 
-        return TemplateResponse(request, self.app_index_template or [
-            'admin/%s/app_index.html' % app_label,
-            'admin/app_index.html'
-        ], context, current_app=self.name)
+        return TemplateResponse(request,
+                                self.app_index_template or ['admin/%s/app_index.html' % app_label,
+                                                            'admin/app_index.html'
+                                                        ],
+                                context,
+                                current_app=self.name)
 
-
-
-
-
-
-
-
-
-    
-
+#===================================#
+# Setting up and registering Admins #
+#===================================#
 admin_site = Overlord(name='overlord_admin')
-
-for model in (Simulation, SimRun, Job):
+for model in (Simulation, SimRun, Job, mcUser):
     admin_site.register(model)

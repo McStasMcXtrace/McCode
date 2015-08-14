@@ -26,8 +26,8 @@ from common import templated
 def login_form(req):
     return dict(next = req.GET.get('next', '/'))
 #----------------------------------#
-# loginPOST                        #
-# ---------                        #
+# loginPOST                        # # couldn't find how the username variable is set in the admin loging form
+# ---------                        # # not happy about this hack to requery the dict if it's not got uid key.
 # Processes POST form passed to it #
 # from login.html                  #
 # authenticates user (using LDAP   #
@@ -37,11 +37,14 @@ def login_form(req):
 #----------------------------------#
 def loginPOST(req):
     form = req.POST
+    for key,val in form.items():
+        print key, ":", val
     nexturl = form.get('next', '/')
-    UID = form.get('uid', '')
+    UID = form.get('uid', '') or form.get('username', '')
     PW = form.get('password', '')
     if PW == None: return redirect('/login/')
     checker = mcBackend()
+    print "UID:,",UID,", PW: ", PW,"\n\n"
     user = checker.authenticate(UID, PW)
     if user is None or not user.is_active:
         return redirect('/login/Invalid_credentials')

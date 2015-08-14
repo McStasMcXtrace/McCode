@@ -41,6 +41,7 @@ urlpatterns = patterns(
 
     # Uncomment the next line to enable the std django admin:
     # url(r'^admin/', include(admin.site.urls)),
+    # this line referes to the new admin site for logiun purposes.
     url(r'^admin/', include(admin_site.urls)),
     
 )

@@ -28,7 +28,7 @@
         <div id="user-tools">
             {% block welcome-msg %}
                 {% trans 'Welcome,' %}
-                <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+                <strong>{% firstof user.get_short_name user.get_uid %}</strong>.
             {% endblock %}
             {% block userlinks %}
                 {% url 'django-admindocs-docroot' as docsroot %}
