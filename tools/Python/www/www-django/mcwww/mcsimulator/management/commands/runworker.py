@@ -191,24 +191,27 @@ def processJob(run, workdir):
     tarfile.open(tarf, 'w:gz').add(workdir % "mcstas", arcname=tarname)
 
     def process_components(sim_path):
-        # dump components
-        comps = re.findall(r'filename:[ \t]*([^\s]+)',
-                           file(sim_path).read())
-        file(dirname(sim_path) + "/comps.json", "w").write(json.dumps(comps))
+        if os.path.isfile(sim_path):
+            # Dump components
+            comps = re.findall(r'filename:[ \t]*([^\s]+)',
+                               file(sim_path).read())
+            file(dirname(sim_path) + "/comps.json", "w").write(json.dumps(comps))
         # plot components
-        for comp in comps:
-            for mode in ("lin", "log"):
-                plot(dirname(sim_path) + '/' + comp,
-                     outfile=dirname(sim_path) + ('/plot-%s-%s.png' % (comp, mode)), # gif -> png
-                     logger=appendLog,
-                     logy=(mode == "log"))
-
+            for comp in comps:
+                for mode in ("lin", "log"):
+                    plot(dirname(sim_path) + '/' + comp,
+                         outfile=dirname(sim_path) + ('/plot-%s-%s.png' % (comp, mode)), # gif -> png
+                         logger=appendLog,
+                         logy=(mode == "log"))
+    
     os.path.walk(workdir % 'mcstas',
                  lambda _arg, folder, files:
                  process_components(folder + "/mccode.sim"),
                  [])
-
-
+    os.path.walk(workdir % 'mcstas',
+                 lambda _arg, folder, files:
+                 process_components(folder + "/mcstas.sim"),
+                 [])
 
 class Command(NoArgsCommand):
     help = "Whatever you want to print here"
