@@ -84,9 +84,9 @@ configure_file("${CMAKE_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.
 configure_file("${CMAKE_SOURCE_DIR}/McCode-py.desktop.in" work/@NAME@-py.desktop @ONLY)
 
 if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/main.py" "${WORK}/mccode_config.py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mccode_config.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/main.py" "${WORK}/mcgui" "${WORK}/mccode_config.py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mcgui" "${WORK}/mccode_config.py")
 endif()
 
 
