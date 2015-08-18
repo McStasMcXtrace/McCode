@@ -7,14 +7,14 @@ from PyQt4 import QtGui, QtCore
 from mcgnuwidgets import Ui_McGnuWindow
 
 # setup and start the gnuplot app
-def startGui(plotter):
+def startGui(plotter, log_scale=False):
     app = QtGui.QApplication(sys.argv)
     
     gnuview = McGnuView()
     app.installEventFilter(gnuview)
     
     mediator = McGnuMediator(plotter, gnuview)
-    mediator.initUi()
+    mediator.initUi(log_scale)
     mediator.setupCallbacks()
     mediator.showUi()
     
@@ -26,9 +26,10 @@ class McGnuMediator():
         self.__plotter = plotter
         self.__mcgv = gnuview
 
-    def initUi(self):
-        self.__mcgv.initUi(self.__plotter.get_data_keys())
+    def initUi(self, log_scale):
+        self.__mcgv.initUi(self.__plotter.get_data_keys(), log_scale)
 
+    # limit widget access by McGnuMediator to callback setup
     def setupCallbacks(self):
         self.__mcgv.ui.lstvMonitors.clicked.connect(self.itemMouseClick)
         self.__mcgv.ui.btnCloseAll.clicked.connect(lambda: self.__plotter.closeAllGnuplots())
@@ -37,20 +38,20 @@ class McGnuMediator():
 
     def logScaleCommand(self, checked_state):
         if checked_state == 0:
-            self.__mcgv.ui.statusBar.showMessage('')
+            self.__mcgv.showMessage('')
         elif checked_state == 2:
-            self.__mcgv.ui.statusBar.showMessage('Log scale enabled')
+            self.__mcgv.showMessage('Log scale enabled')
         
     def showUi(self):
         self.__mcgv.show()
-        self.__plotter.plot(self.__plotter.get_data_keys()[0])
+        self.__plotter.plot(self.__plotter.get_data_keys()[0], self.__mcgv.isLogscaleEnabled())
         
     # callback for list item mouse click
     def itemMouseClick(self, idx):
         # idx: a QtCore.QModelIndex object that was just clicked
         key = str(idx.data().toPyObject())
-        self.__mcgv.ui.statusBar.showMessage('Plotting: %s' % key)
-        self.__plotter.plot(key)
+        self.__mcgv.showMessage('Plotting: %s' % key)
+        self.__plotter.plot(key, self.__mcgv.isLogscaleEnabled())
 
 # Widget wrapper class. Install as app-wide event filter to receive all keypress events.
 class McGnuView(QtGui.QMainWindow):
@@ -59,10 +60,17 @@ class McGnuView(QtGui.QMainWindow):
         self.ui = Ui_McGnuWindow()
         self.ui.setupUi(self)
 
-    def initUi(self, keys):
+    def initUi(self, keys, log_scale):
         for k in keys:
             self.ui.lstvMonitors.addItem(QtGui.QListWidgetItem(QtCore.QString(k)))
-
+        self.ui.cbxLogScale.setChecked(log_scale)
+    
+    def isLogscaleEnabled(self):
+        return self.ui.cbxLogScale.isChecked()
+    
+    def showMessage(self, msg):
+        self.ui.statusBar.showMessage(msg)
+    
     # enables this class as an event filter
     def eventFilter(self,  obj,  event):
         if event.type() == QtCore.QEvent.KeyPress:

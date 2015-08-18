@@ -35,17 +35,18 @@ def main(args):
     
     if args.noqt:
         keys = plotter.get_data_keys()
-        plotter.plot(keys[0])
+        plotter.plot(keys[0], args.logscale)
         exit()
     else:
         print('Loading qt gui...')
         exec('import mcgnuview')
-        exec('mcgnuview.startGui(plotter)')
+        exec('mcgnuview.startGui(plotter, args.logscale)')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('simulation', nargs='*', help='simulation (.sim) or monitor (.dat) file, or directory')
-    parser.add_argument('--noqt', action="store_true", default=False)
+    parser.add_argument('simulation', nargs='*', help='simulation file (.sim), monitor file (.dat), directory, or none (current dir)')
+    parser.add_argument('-n', '--noqt', action="store_true", default=False, help='plot simulation in gnuplot and exit')
+    parser.add_argument('-l','--logscale',  action="store_true", default=False, help='enables log scale as default')
     args = parser.parse_args()
 
     main(args)

@@ -23,7 +23,7 @@ class McGnuplotObject():
     
     @staticmethod
     # override this to support inclusion innnnn overview plots
-    def plot_impl(gp, data, log_scale=False):
+    def plot_impl(gp, data, log_scale):
         """implement gnuplot commands"""
         print('McGnuPlotObject: plot_impl not implemented')
         return
@@ -37,7 +37,7 @@ class McGnuplotOverview(McGnuplotObject):
         McGnuplotOverview.__siblings = siblings
         return McGnuplotObject.__init__(self, key, None, gp)
     
-    def plot(self, log_scale=False):
+    def plot(self, log_scale):
         """plots all files to a singe window as multiplot (individually as array_1d or array_2d)"""
         (nx, ny) = McGnuplotOverview.__calc_panel_size(len(self.__siblings))
         self.gp('set multiplot layout %d,%d rowsfirst' % (ny, nx))
@@ -76,11 +76,17 @@ class McGnuplotPSD(McGnuplotObject):
         return McGnuplotObject.__init__(self, key, data_struct, gp)
     
     @staticmethod
-    def plot_impl(gp, data, log_scale=False):
+    def plot_impl(gp, data, log_scale):
         gp("set view map")
         gp.title(data['title'])
         gp.xlabel(data['xlabel'])
         gp.ylabel(data['ylabel'])
+        
+        if log_scale:
+            gp('set logscale cb')
+        else:
+            gp('unset logscale')
+            
         gp("splot '%s' matrix using 1:2:3 index 0 w image notitle" % data['fullpath'])
 
 # implements 1D plotting
@@ -89,10 +95,16 @@ class McGnuplot1D(McGnuplotObject):
         return McGnuplotObject.__init__(self, key, data_struct, gp)
         
     @staticmethod
-    def plot_impl(gp, data, log_scale=False):
+    def plot_impl(gp, data, log_scale):
         plot_data = Gnuplot.Data(data['data'],
                     using='1:2:3',
                     with_='errorbars')
+        
+        if log_scale:
+            gp('set logscale y')
+        else:
+            gp('unset logscale')
+            
         gp.plot(plot_data,
                 title=data['title'], 
                 xlabel=data['xlabel'],
