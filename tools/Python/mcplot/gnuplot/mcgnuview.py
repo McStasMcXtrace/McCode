@@ -43,18 +43,14 @@ class McGnuMediator():
         
     def showUi(self):
         self.__mcgv.show()
-        self.__plotter.plot()
+        self.__plotter.plot(self.__plotter.get_data_keys()[0])
         
     # callback for list item mouse click
     def itemMouseClick(self, idx):
         # idx: a QtCore.QModelIndex object that was just clicked
-        self.__mcgv.ui.statusBar.showMessage('Plotting: %s' % idx.data().toPyObject())
-        if idx.row() == 0:
-            self.__plotter.plot()
-        else:
-            key = str(idx.data().toPyObject())
-            print(key)
-            self.__plotter.plot_single(key)
+        key = str(idx.data().toPyObject())
+        self.__mcgv.ui.statusBar.showMessage('Plotting: %s' % key)
+        self.__plotter.plot(key)
 
 # Widget wrapper class. Install as app-wide event filter to receive all keypress events.
 class McGnuView(QtGui.QMainWindow):
@@ -64,7 +60,6 @@ class McGnuView(QtGui.QMainWindow):
         self.ui.setupUi(self)
 
     def initUi(self, keys):
-        self.ui.lstvMonitors.addItem(QtGui.QListWidgetItem('< overview >'))
         for k in keys:
             self.ui.lstvMonitors.addItem(QtGui.QListWidgetItem(QtCore.QString(k)))
 
