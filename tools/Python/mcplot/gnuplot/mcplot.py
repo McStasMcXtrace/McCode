@@ -34,7 +34,8 @@ def main(args):
         plotter = McGnuplotter(dat_file, noqt=args.noqt)
     
     if args.noqt:
-        plotter.plot()
+        keys = plotter.get_data_keys()
+        plotter.plot(keys[0])
         exit()
     else:
         print('Loading qt gui...')
