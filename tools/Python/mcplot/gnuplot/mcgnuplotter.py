@@ -47,7 +47,7 @@ class McGnuplotOverview(McGnuplotObject):
     @staticmethod
     def __calc_panel_size(num):
         """given the number of monitors to display as multiplot, return rows/cols"""
-        from pylab import sqrt
+        from math import sqrt
         Panels = ( [1,1], [2,1], [2,2], [3,2], [3,3], [4,3], [5,3], [4,4],
                    [5,4], [6,4], [5,5], [6,5], [7,5], [6,6], [8,5], [7,6],
                    [9,5], [8,6], [7,7], [9,6], [8,7], [9,7], [8,8], [10,7],
