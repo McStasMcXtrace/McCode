@@ -11,20 +11,20 @@ import os
 # base class for mcstas gnuplot objects
 class McGnuplotObject():
     def __init__(self, key, data_struct, gp):
-        """set key, data for this instance"""
+        """ set key, data for this instance """
         self.gp = gp
         self.key = key
         self.data = data_struct
         return
     
     def plot(self, log_scale=False):
-        """hand data to plot_impl"""
+        """ hand data to plot_impl """
         self.plot_impl(self.gp, self.data, log_scale=log_scale)
     
     @staticmethod
-    # override this to support inclusion innnnn overview plots
+    # override this to support inclusion in overview plots
     def plot_impl(gp, data, log_scale):
-        """implement gnuplot commands"""
+        """ implement gnuplot commands """
         print('McGnuPlotObject: plot_impl not implemented')
         return
 
@@ -38,12 +38,25 @@ class McGnuplotOverview(McGnuplotObject):
         return McGnuplotObject.__init__(self, key, None, gp)
     
     def plot(self, log_scale):
-        """plots all files to a singe window as multiplot (individually as array_1d or array_2d)"""
+        """ plots all files to a singe window as multiplot (individually as array_1d or array_2d) """
         (nx, ny) = McGnuplotOverview.__calc_panel_size(len(self.__siblings))
+        
         self.gp('set multiplot layout %d,%d rowsfirst' % (ny, nx))
+        
+        font_size = 6
+        if max(nx,ny)>4:
+            font_size = 2
+        
+        self.gp('set xtics font ",%s"' % font_size)
+        self.gp('set ytics font ",%s"' % font_size)
+        self.gp('set cbtics font ",%s"' % font_size)
+        self.gp('set title font ",%s"' % font_size)
+        self.gp('set xlabel font ",%s"' % font_size)
+        self.gp('set ylabel font ",%s"' % font_size)
+        
         for sib in self.__siblings:
             sib.plot_impl(self.gp, sib.data, log_scale=log_scale)
-
+        
     @staticmethod
     def __calc_panel_size(num):
         """given the number of monitors to display as multiplot, return rows/cols"""
@@ -56,11 +69,11 @@ class McGnuplotOverview(McGnuplotObject):
         # default size about sqrt($num) x sqrt($num).
         ny = int(sqrt(num))
         nx = int(num/ny)
+
         if nx*ny < num:
             nx = nx+1;
-        
+
         fit = nx*ny - num
-    
         for j in range(0, 31):
             panel = Panels[j]
             d = panel[0]*panel[1] - num
@@ -82,6 +95,10 @@ class McGnuplotPSD(McGnuplotObject):
         gp.xlabel(data['xlabel'])
         gp.ylabel(data['ylabel'])
         
+        gp('set xtics format "%.1e"')
+        gp('set ytics format "%.1e"')
+        gp('set cbtics format "%.1e"')
+        
         if log_scale:
             gp('set logscale cb')
         else:
@@ -98,7 +115,12 @@ class McGnuplot1D(McGnuplotObject):
     def plot_impl(gp, data, log_scale):
         plot_data = Gnuplot.Data(data['data'],
                     using='1:2:3',
-                    with_='errorbars')
+                    with_='errorlines')
+        
+        gp('set linetype 1 lw 1 lc rgb "dark-spring-green" pointtype 2')
+        
+        gp('set xtics format "%.1e"')
+        gp('set ytics format "%.1e"')
         
         if log_scale:
             gp('set logscale y')
@@ -115,9 +137,7 @@ class McGnuplotter():
     __overview_key = '< overview >'
 
     def __init__(self, input_file, noqt=False):
-        """
-        constructor - takes a .sim file or a .dat file name (for single vs. multiplot usage)
-        """
+        """ constructor - takes a .sim file or a .dat file name (for single vs. multiplot usage) """
         gp_persist = 0
         if noqt:
             gp_persist = 1
@@ -152,25 +172,19 @@ class McGnuplotter():
             raise Exception('McGnuPlotter: input file must be .sim or .dat')
     
     def plot(self, key, log_scale=False):
-        """
-        plots .dat file corresponding to key
-        """
+        """ plots .dat file corresponding to key """
         if key in self.__gnuplot_objs:
             self.__gnuplot_objs[key].plot(log_scale)
         else:
             raise Exception('McGnuplotter.plot: no such key')
         
     def get_data_keys(self):
-        """
-        returns an alpha-num sorted list of all McGnuplotObject instances installed at construction time by key
-        """
+        """ returns an alpha-num sorted list of all McGnuplotObject instances installed at construction time by key """
         return sorted(self.__gnuplot_objs.keys(), key=lambda item: (int(item.partition(' ')[0])
                                                                     if item[0].isdigit() else float('inf'), item))
 
 def get_overview_files(sim_file):
-    """
-    returns a list of data files associated with the "mccode.sim" file (full paths)
-    """
+    """ returns a list of data files associated with the "mccode.sim" file (full paths) """
     org_dir = os.getcwd()
     try:
         sim_file = os.path.abspath(sim_file)
@@ -186,9 +200,7 @@ def get_overview_files(sim_file):
     return monitor_files
 
 def get_monitor(mon_file):
-    """
-    returns monitor .dat file info structured as a python dict
-    """
+    """ returns monitor .dat file info structured as a python dict """
     is_header = lambda line: line.startswith('#')
     header_lines = filter(is_header, open(mon_file).readlines())
     

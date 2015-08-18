@@ -59,7 +59,7 @@ class McGnuView(QtGui.QMainWindow):
         super(McGnuView, self).__init__(parent)
         self.ui = Ui_McGnuWindow()
         self.ui.setupUi(self)
-
+    
     def initUi(self, keys, log_scale):
         for k in keys:
             self.ui.lstvMonitors.addItem(QtGui.QListWidgetItem(QtCore.QString(k)))
