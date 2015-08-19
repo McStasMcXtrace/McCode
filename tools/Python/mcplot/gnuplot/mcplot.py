@@ -20,13 +20,14 @@ def main(args):
     
     if os.path.isdir(simulation):
         simulation = os.path.join(simulation, 'mccode.sim')
+        simulation = os.path.abspath(simulation)
     
     if not os.path.isfile(simulation):
         print('Sim file not found')
         exit()
         
     if os.path.splitext(simulation)[1] == '.sim':
-        print('Using sim file: %s' % os.path.abspath(simulation)) 
+        print('Using sim file: %s' % simulation) 
         plotter = McGnuplotter(simulation, noqt=args.noqt, log_scale=args.logscale)
     else:
         dat_file = simulation
