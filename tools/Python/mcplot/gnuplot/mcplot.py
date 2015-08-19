@@ -27,20 +27,20 @@ def main(args):
         
     if os.path.splitext(simulation)[1] == '.sim':
         print('Using sim file: %s' % os.path.abspath(simulation)) 
-        plotter = McGnuplotter(simulation, noqt=args.noqt)
+        plotter = McGnuplotter(simulation, noqt=args.noqt, log_scale=args.logscale)
     else:
         dat_file = simulation
         print('Plot single monitor')
-        plotter = McGnuplotter(dat_file, noqt=args.noqt)
+        plotter = McGnuplotter(dat_file, noqt=args.noqt, log_scale=args.logscale)
     
     if args.noqt:
         keys = plotter.get_data_keys()
-        plotter.plot(keys[0], args.logscale)
+        plotter.plot(keys[0])
         exit()
     else:
         print('Loading qt gui...')
         exec('import mcgnuview')
-        exec('mcgnuview.startGui(plotter, args.logscale)')
+        exec('mcgnuview.startGui(plotter, log_scale=args.logscale)')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)

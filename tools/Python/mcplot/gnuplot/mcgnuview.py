@@ -26,32 +26,35 @@ class McGnuMediator():
         self.__plotter = plotter
         self.__mcgv = gnuview
 
+    # must be called before setupCallbacks
     def initUi(self, log_scale):
         self.__mcgv.initUi(self.__plotter.get_data_keys(), log_scale)
 
-    # limit widget access by McGnuMediator to callback setup
+    # strictly limit widget access by McGnuMediator to this method
     def setupCallbacks(self):
         self.__mcgv.ui.lstvMonitors.clicked.connect(self.itemMouseClick)
         self.__mcgv.ui.btnCloseAll.clicked.connect(lambda: self.__plotter.closeAllGnuplots())
         self.__mcgv.ui.btnSaveAs.clicked.connect(lambda: self.__mcgv.ui.statusBar.showMessage('not implemented'))
-        self.__mcgv.ui.cbxLogScale.stateChanged.connect(self.logScaleCommand)
+        self.__mcgv.ui.cbxLogScale.stateChanged.connect(self.setLog)
 
-    def logScaleCommand(self, checked_state):
+    def setLog(self, checked_state):
         if checked_state == 0:
+            self.__plotter.setLog(False)
             self.__mcgv.showMessage('')
         elif checked_state == 2:
+            self.__plotter.setLog(True)
             self.__mcgv.showMessage('Log scale enabled')
-        
+
     def showUi(self):
         self.__mcgv.show()
-        self.__plotter.plot(self.__plotter.get_data_keys()[0], self.__mcgv.isLogscaleEnabled())
-        
+        self.__plotter.plot(self.__plotter.get_data_keys()[0])
+
     # callback for list item mouse click
     def itemMouseClick(self, idx):
         # idx: a QtCore.QModelIndex object that was just clicked
         key = str(idx.data().toPyObject())
         self.__mcgv.showMessage('Plotting: %s' % key)
-        self.__plotter.plot(key, self.__mcgv.isLogscaleEnabled())
+        self.__plotter.plot(key)
 
 # Widget wrapper class. Install as app-wide event filter to receive all keypress events.
 class McGnuView(QtGui.QMainWindow):
@@ -64,9 +67,6 @@ class McGnuView(QtGui.QMainWindow):
         for k in keys:
             self.ui.lstvMonitors.addItem(QtGui.QListWidgetItem(QtCore.QString(k)))
         self.ui.cbxLogScale.setChecked(log_scale)
-    
-    def isLogscaleEnabled(self):
-        return self.ui.cbxLogScale.isChecked()
     
     def showMessage(self, msg):
         self.ui.statusBar.showMessage(msg)

@@ -15,29 +15,37 @@ class McGnuplotObject():
         self.gp = gp
         self.key = key
         self.data = data_struct
+        self.log_scale = False
         return
     
-    def plot(self, log_scale=False):
-        """ hand data to plot_impl """
-        self.plot_impl(self.gp, self.data, log_scale=log_scale)
+    def plot(self):
+        """ give data member to plot_impl """
+        self.plot_impl(self.gp, self.data)
     
     @staticmethod
-    # override this to support inclusion in overview plots
-    def plot_impl(gp, data, log_scale):
-        """ implement gnuplot commands """
+    def plot_impl(gp, data):
+        """ override and implement gnuplot commands """
         print('McGnuPlotObject: plot_impl not implemented')
         return
-
-# implements overview plotting (NOTE: overrides plot() rather than plot_impl())
-class McGnuplotOverview(McGnuplotObject):
-    # set at construction time
-    __siblings = None
-
-    def __init__(self, key, gp, siblings):
-        McGnuplotOverview.__siblings = siblings
-        return McGnuplotObject.__init__(self, key, None, gp)
     
-    def plot(self, log_scale):
+    def setLog(self, log_scale=True):
+        self.setLog_impl(self.gp, log_scale)
+        self.log_scale = log_scale
+ 
+    @staticmethod
+    def setLog_impl(gp, log_scale):
+        """ override to implement set/unset log scale """
+        return
+
+# implements overview plotting 
+# NOTE: overrides plot() and setLog() rather than the standard plot_impl() and setLog_impl()
+class McGnuplotOverview(McGnuplotObject):
+    def __init__(self, key, gp, siblings):
+        self.__setLogOnce = True
+        self.__siblings = siblings
+        return McGnuplotObject.__init__(self, key, None, gp)
+
+    def plot(self):
         """ plots all files to a singe window as multiplot (individually as array_1d or array_2d) """
         (nx, ny) = McGnuplotOverview.__calc_panel_size(len(self.__siblings))
         
@@ -55,8 +63,9 @@ class McGnuplotOverview(McGnuplotObject):
         self.gp('set ylabel font ",%s"' % font_size)
         
         for sib in self.__siblings:
-            sib.plot_impl(self.gp, sib.data, log_scale=log_scale)
-        
+            sib.setLog_impl(self.gp, self.log_scale)
+            sib.plot_impl(self.gp, sib.data)
+
     @staticmethod
     def __calc_panel_size(num):
         """given the number of monitors to display as multiplot, return rows/cols"""
@@ -89,7 +98,7 @@ class McGnuplotPSD(McGnuplotObject):
         return McGnuplotObject.__init__(self, key, data_struct, gp)
     
     @staticmethod
-    def plot_impl(gp, data, log_scale):
+    def plot_impl(gp, data):
         gp("set view map")
         gp.title(data['title'])
         gp.xlabel(data['xlabel'])
@@ -98,21 +107,25 @@ class McGnuplotPSD(McGnuplotObject):
         gp('set xtics format "%.1e"')
         gp('set ytics format "%.1e"')
         gp('set cbtics format "%.1e"')
-        
-        if log_scale:
-            gp('set logscale cb')
-        else:
-            gp('unset logscale')
             
         gp("splot '%s' matrix using 1:2:3 index 0 w image notitle" % data['fullpath'])
+
+    @staticmethod
+    def setLog_impl(gp, log_scale):
+        if log_scale:
+            gp('unset logscale y')
+            gp('set logscale cb')
+        else:
+            gp('unset logscale y')
+            gp('unset logscale cb')
 
 # implements 1D plotting
 class McGnuplot1D(McGnuplotObject):
     def __init__(self, key, data_struct, gp):
         return McGnuplotObject.__init__(self, key, data_struct, gp)
-        
+
     @staticmethod
-    def plot_impl(gp, data, log_scale):
+    def plot_impl(gp, data):
         plot_data = Gnuplot.Data(data['data'],
                     using='1:2:3',
                     with_='errorlines')
@@ -122,21 +135,23 @@ class McGnuplot1D(McGnuplotObject):
         gp('set xtics format "%.1e"')
         gp('set ytics format "%.1e"')
         
-        if log_scale:
-            gp('set logscale y')
-        else:
-            gp('unset logscale')
-            
         gp.plot(plot_data,
                 title=data['title'], 
                 xlabel=data['xlabel'],
                 ylabel=data['ylabel'])
 
+    @staticmethod
+    def setLog_impl(gp, log_scale):
+        if log_scale:
+            gp('set logscale y')
+        else:
+            gp('unset logscale y')
+
 # mcgnuplot proxy and constructor
 class McGnuplotter():
     __overview_key = '< overview >'
 
-    def __init__(self, input_file, noqt=False):
+    def __init__(self, input_file, noqt=False, log_scale=False):
         """ constructor - takes a .sim file or a .dat file name (for single vs. multiplot usage) """
         gp_persist = 0
         if noqt:
@@ -170,18 +185,25 @@ class McGnuplotter():
             self.__gnuplot_objs[gpo.key] = gpo
         else:
             raise Exception('McGnuPlotter: input file must be .sim or .dat')
-    
-    def plot(self, key, log_scale=False):
+        
+        # execute set/unset logscale
+        self.setLog(log_scale)
+
+    def plot(self, key):
         """ plots .dat file corresponding to key """
         if key in self.__gnuplot_objs:
-            self.__gnuplot_objs[key].plot(log_scale)
+            self.__gnuplot_objs[key].plot()
         else:
             raise Exception('McGnuplotter.plot: no such key')
-        
+
     def get_data_keys(self):
         """ returns an alpha-num sorted list of all McGnuplotObject instances installed at construction time by key """
         return sorted(self.__gnuplot_objs.keys(), key=lambda item: (int(item.partition(' ')[0])
                                                                     if item[0].isdigit() else float('inf'), item))
+        
+    def setLog(self, log_scale):
+        for key in self.__gnuplot_objs:
+            self.__gnuplot_objs[key].setLog(log_scale)
 
 def get_overview_files(sim_file):
     """ returns a list of data files associated with the "mccode.sim" file (full paths) """
