@@ -33,16 +33,21 @@ class McGnuMediator():
     # strictly limit widget access by McGnuMediator to this method
     def setupCallbacks(self):
         self.__mcgv.ui.lstvMonitors.clicked.connect(self.itemMouseClick)
-        self.__mcgv.ui.btnCloseAll.clicked.connect(lambda: self.__plotter.closeAllGnuplots())
+        self.__mcgv.ui.btnCloseAll.clicked.connect(self.handleCloseAll)
         self.__mcgv.ui.btnSaveAs.clicked.connect(lambda: self.__mcgv.ui.statusBar.showMessage('not implemented'))
-        self.__mcgv.ui.cbxLogScale.stateChanged.connect(self.setLog)
+        self.__mcgv.ui.cbxLogScale.stateChanged.connect(self.setLogscale)
 
-    def setLog(self, checked_state):
+    def handleCloseAll(self):
+        self.__plotter.closeAll()
+        self.__plotter = self.__plotter.getSimilarInstance()
+        self.__plotter.setLogscale(self.__mcgv.isLogScaleEnabled())
+
+    def setLogscale(self, checked_state):
         if checked_state == 0:
-            self.__plotter.setLog(False)
+            self.__plotter.setLogscale(False)
             self.__mcgv.showMessage('')
         elif checked_state == 2:
-            self.__plotter.setLog(True)
+            self.__plotter.setLogscale(True)
             self.__mcgv.showMessage('Log scale enabled')
 
     def showUi(self):
@@ -70,6 +75,9 @@ class McGnuView(QtGui.QMainWindow):
     
     def showMessage(self, msg):
         self.ui.statusBar.showMessage(msg)
+    
+    def isLogScaleEnabled(self):
+        return self.ui.cbxLogScale.isChecked()
     
     # enables this class as an event filter
     def eventFilter(self,  obj,  event):

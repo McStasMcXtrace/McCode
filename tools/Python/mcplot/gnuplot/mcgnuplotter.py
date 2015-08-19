@@ -153,6 +153,11 @@ class McGnuplotter():
 
     def __init__(self, input_file, noqt=False, log_scale=False):
         """ constructor - takes a .sim file or a .dat file name (for single vs. multiplot usage) """
+        # remember construction args
+        self.arg_input_file = input_file
+        self.arg_noqt = noqt
+        self.arg_log_scale = log_scale
+        
         gp_persist = 0
         if noqt:
             gp_persist = 1
@@ -187,7 +192,7 @@ class McGnuplotter():
             raise Exception('McGnuPlotter: input file must be .sim or .dat')
         
         # execute set/unset logscale
-        self.setLog(log_scale)
+        self.setLogscale(log_scale)
 
     def plot(self, key):
         """ plots .dat file corresponding to key """
@@ -201,9 +206,18 @@ class McGnuplotter():
         return sorted(self.__gnuplot_objs.keys(), key=lambda item: (int(item.partition(' ')[0])
                                                                     if item[0].isdigit() else float('inf'), item))
         
-    def setLog(self, log_scale):
+    def setLogscale(self, log_scale):
         for key in self.__gnuplot_objs:
             self.__gnuplot_objs[key].setLog(log_scale)
+    
+    def getSimilarInstance(self):
+        """ returns a plotter instance with the same construction args """
+        return McGnuplotter(self.arg_input_file, self.arg_noqt, self.arg_log_scale)
+    
+    def closeAll(self):
+        """ elliminates all gp instances WARNING: you can not plot afterwards """
+        for key in self.__gnuplot_objs:
+            self.__gnuplot_objs[key].gp.close()
 
 def get_overview_files(sim_file):
     """ returns a list of data files associated with the "mccode.sim" file (full paths) """
