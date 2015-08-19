@@ -84,5 +84,7 @@ class McGnuView(QtGui.QMainWindow):
         if event.type() == QtCore.QEvent.KeyPress:
             if event.key() == QtCore.Qt.Key_L:
                 self.ui.cbxLogScale.setChecked(not self.ui.cbxLogScale.isChecked())
+            if event.key() == QtCore.Qt.Key_Q:
+                self.close()
             return True
         return False
