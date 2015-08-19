@@ -8,6 +8,12 @@ import numpy
 import re
 import os
 
+# supported file save terminals and the corresponding file extensions
+class McGnuplotFileTerminals():
+    png = ['png', 'png']
+    gif = ['gif', 'gif']
+    postscript = ['postscript', 'ps']
+
 # base class for mcstas gnuplot objects
 class McGnuplotObject():
     def __init__(self, key, data_struct, gp):
@@ -18,6 +24,16 @@ class McGnuplotObject():
         self.log_scale = False
         return
     
+    def save(self, term):
+        """ saves to file depending on term: [<gnuplot terminal>, <file extension>] """
+        self.gp('set terminal %s' % term[0])
+        out_file_noext = '%s' % os.path.splitext(self.data['fullpath'])[0]
+        if self.log_scale: 
+            out_file_noext = out_file_noext + '_log'
+        self.gp('set output "%s.%s"' % (out_file_noext, term[1]))
+        self.plot()
+        self.gp('set term pop')
+
     def plot(self):
         """ give data member to plot_impl """
         self.plot_impl(self.gp, self.data)
@@ -40,10 +56,10 @@ class McGnuplotObject():
 # implements overview plotting 
 # NOTE: overrides plot() and setLog() rather than the standard plot_impl() and setLog_impl()
 class McGnuplotOverview(McGnuplotObject):
-    def __init__(self, key, gp, siblings):
+    def __init__(self, key, data_struct, gp, siblings):
         self.__setLogOnce = True
         self.__siblings = siblings
-        return McGnuplotObject.__init__(self, key, None, gp)
+        return McGnuplotObject.__init__(self, key, data_struct, gp)
 
     def plot(self):
         """ plots all files to a singe window as multiplot (individually as array_1d or array_2d) """
@@ -65,6 +81,8 @@ class McGnuplotOverview(McGnuplotObject):
         for sib in self.__siblings:
             sib.setLog_impl(self.gp, self.log_scale)
             sib.plot_impl(self.gp, sib.data)
+        
+        self.gp('unset multiplot')
 
     @staticmethod
     def __calc_panel_size(num):
@@ -147,12 +165,12 @@ class McGnuplot1D(McGnuplotObject):
         else:
             gp('unset logscale y')
 
-# mcgnuplot proxy and constructor
+# mediator for all gnuplot objects associated to a .sim file (or of a single .dat file) - see mcplot.py, gnuplot version
 class McGnuplotter():
     __overview_key = '< overview >'
 
     def __init__(self, input_file, noqt=False, log_scale=False):
-        """ constructor - takes a .sim file or a .dat file name (for single vs. multiplot usage) """
+        """ constructor - takes a .sim file or a .dat file name (for single vs. multiplot usage) NOTE: must be absolute file """
         # remember construction args
         self.arg_input_file = input_file
         self.arg_noqt = noqt
@@ -178,8 +196,9 @@ class McGnuplotter():
                 else:
                     gpo = McGnuplot1D(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
                     siblings.append(gpo)
-            
-            overview = McGnuplotOverview(McGnuplotter.__overview_key, Gnuplot.Gnuplot(persist=gp_persist), siblings)
+            overview_data_struct = {}
+            overview_data_struct['fullpath'] = input_file
+            overview = McGnuplotOverview(McGnuplotter.__overview_key, overview_data_struct, Gnuplot.Gnuplot(persist=gp_persist), siblings)
             self.__gnuplot_objs[overview.key] = overview
             for gpo in siblings:
                 self.__gnuplot_objs[gpo.key] = gpo
@@ -200,12 +219,19 @@ class McGnuplotter():
             self.__gnuplot_objs[key].plot()
         else:
             raise Exception('McGnuplotter.plot: no such key')
+    
+    def save(self, key):
+        """ like plot, but saves to file """
+        if key in self.__gnuplot_objs:
+            self.__gnuplot_objs[key].save(McGnuplotFileTerminals.png)
+        else:
+            raise Exception('McGnuplotter.save: no such key: %s' % key)
 
     def get_data_keys(self):
         """ returns an alpha-num sorted list of all McGnuplotObject instances installed at construction time by key """
         return sorted(self.__gnuplot_objs.keys(), key=lambda item: (int(item.partition(' ')[0])
                                                                     if item[0].isdigit() else float('inf'), item))
-        
+    
     def setLogscale(self, log_scale):
         for key in self.__gnuplot_objs:
             self.__gnuplot_objs[key].setLog(log_scale)

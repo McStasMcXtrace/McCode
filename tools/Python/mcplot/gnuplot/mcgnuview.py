@@ -34,7 +34,7 @@ class McGnuMediator():
     def setupCallbacks(self):
         self.__mcgv.ui.lstvMonitors.clicked.connect(self.itemMouseClick)
         self.__mcgv.ui.btnCloseAll.clicked.connect(self.handleCloseAll)
-        self.__mcgv.ui.btnSaveAs.clicked.connect(lambda: self.__mcgv.ui.statusBar.showMessage('not implemented'))
+        self.__mcgv.ui.btnSaveAs.clicked.connect(lambda: self.__plotter.save(self.__mcgv.getSelectedKey()))
         self.__mcgv.ui.cbxLogScale.stateChanged.connect(self.setLogscale)
 
     def handleCloseAll(self):
@@ -78,6 +78,12 @@ class McGnuView(QtGui.QMainWindow):
     
     def isLogScaleEnabled(self):
         return self.ui.cbxLogScale.isChecked()
+    
+    def getSelectedKey(self):
+        selected_items = self.ui.lstvMonitors.selectedItems()
+        if len(selected_items)==0:
+            return str(self.ui.lstvMonitors.item(0).text())
+        return str(self.ui.lstvMonitors.selectedItems()[0].text())
     
     # enables this class as an event filter
     def eventFilter(self,  obj,  event):
