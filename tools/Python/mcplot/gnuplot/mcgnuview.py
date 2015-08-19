@@ -34,8 +34,13 @@ class McGnuMediator():
     def setupCallbacks(self):
         self.__mcgv.ui.lstvMonitors.clicked.connect(self.itemMouseClick)
         self.__mcgv.ui.btnCloseAll.clicked.connect(self.handleCloseAll)
-        self.__mcgv.ui.btnSaveAs.clicked.connect(lambda: self.__plotter.save(self.__mcgv.getSelectedKey()))
+        self.__mcgv.ui.btnSave.clicked.connect(self.handleSave)
         self.__mcgv.ui.cbxLogScale.stateChanged.connect(self.setLogscale)
+
+    def handleSave(self):
+        key = self.__mcgv.getSelectedKey()
+        self.__plotter.save(key)
+        self.__mcgv.showMessage('Saved: %s' % key)
 
     def handleCloseAll(self):
         self.__plotter.closeAll()
