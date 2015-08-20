@@ -3,6 +3,8 @@
 #  Implements ui-independent functionality for mcplot-gnuplot.
 #
 import Gnuplot
+# This is how we would control the default terminal:
+# Gnuplot.GnuplotOpts.default_term = 'x11'
 import string
 import numpy
 import re
