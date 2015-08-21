@@ -139,12 +139,8 @@ TRACE
           b_mu=4*M_PI*na*RE*f2/(Qc*Qc);
           if(q==1){
             qp=sqrt(b_mu)*(1+I);
-          }else if (q<1) {
-            double qi=sqrt( (q-1)/2 + sqrt( (q-1)*(q-1)/4 + b_mu*b_mu) );
-            qp=b_mu/qi + qi*I;
-          }else{
-            double qi=sqrt( (1-q)/2 + sqrt( (1-q)*(1-q)/4 + b_mu*b_mu) );
-            qp=b_mu/qi + qi*I;
+          }else {
+              qp=csqrt(q*q-1+2*I*b_mu);
           }
           /*and from this compute the reflectivity*/
           R=cabs((q-qp)/(q+qp));

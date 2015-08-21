@@ -5,7 +5,7 @@ TOOL="mcgui"
 VERS="@MCCODE_VERSION@"
 
 canrun() {
-    if ! [ -x ${LIB}/main.py ]; then
+    if ! [ -x ${LIB}/mcgui.py ]; then
         exit 127;
     fi
 
@@ -18,7 +18,7 @@ canrun() {
 }
 
 if ( canrun ); then
-    ${LIB}/main.py $*
+    ${LIB}/mcgui.py $*
 else
     echo ":: Failed to run Python ${TOOL}, trying old Perl version."
     echo ":: If this fails too, consider reinstalling ${TOOL}."
