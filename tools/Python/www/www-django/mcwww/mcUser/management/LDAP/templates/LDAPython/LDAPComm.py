@@ -66,9 +66,6 @@ class LDAPComm:
     def ldapAdd(self, ldif_file, auth_dn, auth_pw):
         cn = split(",", auth_dn)[0]
         log_str = ""
-        
-        log_str += "auth_dn: %s, auth_pw: %s, ldif_file: %s\n"%(auth_dn, auth_pw, ldif_file)
-        
         try:
             fid = Popen(["ldapadd", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw],
                         stdout = PIPE,
@@ -86,9 +83,6 @@ class LDAPComm:
     def ldapMod(self, ldif_file, auth_dn, auth_pw):
         cn = split(",", auth_dn)[0]
         log_str =""
-        
-        log_str += "auth_dn: %s, auth_pw: %s, ldif_file: %s\n"%(auth_dn, auth_pw, ldif_file)
-        
         log_str += "%s MODIFICATION with: ldapmodify -x -D %s -f %s -w PASSWORD\n" % (cn, auth_dn, ldif_file)
         try:
             fid = Popen(["ldapmodify", "-x", "-D", auth_dn, "-f", ldif_file, "-w", auth_pw], #, "-v", "-d5"],
@@ -100,8 +94,7 @@ class LDAPComm:
                 log_str += " stdout: \n%s\n"%(stdout)
                 log_str += " stderr: \n%s\n"%(stderr)
             else:
-                log_str += " Error modifying %s: \n stderr:\n%s" % (cn,stderr)
-                print " Error:\n%s \n Backtrace:\n%s" % (stderr, traceback.format_exc())
+                log_str+=  " Error:\n StdError:\n%s \n Backtrace:\n%s" % (stderr, traceback.format_exc())
             self.log(log_str)
         except:
             log_str += " ldapMod Error:\n %s\n" % str(sys.exc_info())
@@ -111,9 +104,6 @@ class LDAPComm:
 #=================#
     def ldapModV(self, ldif_file, auth_dn, auth_pw):
         log_str = ""
-        
-        log_str += "auth_dn: %s, auth_pw: %s, ldif_file: %s\n"%(auth_dn, auth_pw, ldif_file)
-        
         cn = split(",", auth_dn)[0]
         log_str = "%s MODIFY attempt with: %s\n" % (cn, ldif_file)
         try:
@@ -125,8 +115,7 @@ class LDAPComm:
                 log_str += "%s MODIFIED: ldapadd -x -D %s -f %s -w PASSWORD\n" % (cn, auth_dn, ldif_file)
                 self.log(log_str) 
             else:
-                log_str += " Error modifying %s:\n%s" % (cn,stderr)
-                print "Error:%s \n Backtrace:%s" % (stderr, traceback.format_exc())
+                log_str += " Error:%s \n Backtrace:%s" % (stderr, traceback.format_exc())
             self.log(log_str)
         except:
             log_str += "ldapMod Error: %s\n" % sys.exc_info()[0]
@@ -137,9 +126,7 @@ class LDAPComm:
 #=======================================================================================#
     def ldapSYSROOTmod(self, ldif_file):
         log_str = ""
-
-        log_str += "EXTERNAL AUTHENTICATION, ldif_file: %s\n"%(ldif_file)
-        
+        #        log_str += "sudo ldapmodify -Y EXTERNAL -H ldapi:/// -f %s\n"% ldif_file
         log_str += "sudo ldapmodify -Y EXTERNAL -H ldapi:/// -f %s\n"% ldif_file
         try:
             log_str += ("MODIFICATION attempt of ROOTPWD: %s\n" % ldif_file)
@@ -158,9 +145,6 @@ class LDAPComm:
 #===============#
     def ldapQuery(self, auth_dn, auth_pw, query):
         log_str = ""
-
-        log_str += "auth_dn: %s, auth_pw: %s, ldif_file: %s\n"%(auth_dn, auth_pw, ldif_file)
-        
         cn = split(",", auth_dn)[0]
         self.query_num += 1
         log_str += cn+" #"+str(self.query_num)+" QUERY with: ldapsearch -LLL -b D_N -D "+auth_dn+" -w PASSWORD "+query+"\n"
@@ -183,9 +167,6 @@ class LDAPComm:
 #==========================#
     def ldapAdminGroupQuery(self, auth_cn):
         log_str = ""
-
-        log_str += "auth_dn: %s, auth_pw: %s, ldif_file: %s\n"%(auth_dn, auth_pw, ldif_file)
-
         self.query_num += 1
         if not 'cn=' in auth_cn:
             auth_cn = "cn=%s" % auth_cn
@@ -217,15 +198,7 @@ class LDAPComm:
         f = Popen(["ldapwhoami", "-vvv", "-D", dn, "-x", "-w", auth_pw],
                   stdout=PIPE,
                   stderr=PIPE)
-        print "auth_cn: ", auth_cn
-        print "auth_pw: ", auth_pw
-        print "dn: ", dn
-
         stdout,stderr = f.communicate()
-        print "stdout: ",stdout
-        print "stderr: ", stderr
-
-        
         try:
             dn = "cn=\"" + auth_cn + "\",ou=person,D_N"
             try:
@@ -233,17 +206,16 @@ class LDAPComm:
                             stdout=PIPE,
                             stderr=PIPE)
                 stdout,stderr = fid.communicate()
-                print "stdout: ", stdout
                 if "Success" in stdout:
-                    log_str += "%s may access LDAP.\n"%dn
+                    log_str += "%s LDAP authenticated.\n"%dn
                     self.log(log_str)
                     return True
                 else:
-                    log_str += "Access attempt by %s unsuccessful: %s\n" % (dn, stderr)
+                    log_str += "Authentication attempt by %s unsuccessful: %s\n" % (dn, stderr)
                     self.log(log_str)
                     return False
             except:
-                log_str += "Access attempt by %s exception: %s\n" % (dn, str(sys.exc_info()))
+                log_str += "Authentication attempt by %s exception: %s\n" % (dn, str(sys.exc_info()))
                 self.log(log_str)
                 ''' MESSAGE BOX SUGGESTING ERROR '''
                 return False

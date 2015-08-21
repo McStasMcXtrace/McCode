@@ -98,7 +98,6 @@ class Command(BaseCommand):
         # usr_details Form setup # - NOT DELETING THIS FOR FUTURE ADMIN SITE VIEW USE.
         # 
         #        if not interactive:
-        #            print "in here."
         #            try:
         #                if not usr_details['username']:
         #                    raise CommandError("You must use --%s with --noinput." % mcUser.USERNAME_FIELD)
@@ -165,7 +164,6 @@ class Command(BaseCommand):
         if usr_details['username']:
             LDAP_admin_pw = getpass.getpass('Enter your LDAP authentication pwd: ')
             entity = LDAPUserCreation(usr_details)
-            print "Calling: processLDIF(", LDAP_admin_dn, ",", LDAP_admin_pw, ")"
             entity.processLDIF(LDAP_admin_dn, LDAP_admin_pw)
             print "LDAP user added, adding django user."
             mcUser.objects.create_superuser(usr_details)

@@ -1,6 +1,4 @@
 #================================#
-# Being Modified to account for  #
-# the parameter reimplementation #
 # Editor: Mark Lewis             #
 #================================#
 # python imports
@@ -131,16 +129,18 @@ def info(bin):
     sim_name = basename(bin)[:-1*len('.out')]
     sim_group = basename(dirname(bin))
     Group.objects.get_or_create(name=sim_group)
-    full_sim_name = sim_group+'/'+sim_name
+    sim_id = sim_group+'_'+sim_name
     sim = None
-    if exist(Simulation, name=sim_name, simgroup=sim_group, displayname=sim_name):
+
+    if exist(Simulation, name=sim_id, simgroup=sim_group, displayname=sim_name):
         print 'Updating existing simulation: ' + sim_name
-        sim = fetch(Simulation, name=sim_name)[0]
+        sim = fetch(Simulation, name=sim_id)[0]
     else:
-        sim = Simulation(name=sim_group+"_"+sim_name, simgroup=sim_group, displayname=sim_name,
+        print "Inserting new simulation: %s"%sim_name
+        sim = Simulation(name=sim_id, simgroup=sim_group, displayname=sim_name,
                          params=build_params(bin))
         sim.save()
-    print sim.id, sim_name
+    print "db_id: %s\n sim_id: %s\n simulalation: %s "%(sim.id, sim_id, sim_name)
 #======================#
 # Command line binding #
 #======================#

@@ -20,7 +20,6 @@ def main(args):
                 if line[0] == " ": current_line = current_line[:-1] + line[1:]
                 else             : check_for_more = False
             if current_line and not check_for_more:
-                print "inserting ", current_line
                 check_for_more = False
                 access_lines.append(current_line)
                 current_line = ""
@@ -33,21 +32,13 @@ def main(args):
         access_lines[i] = re.sub(' by', "\n  by", access_lines[i])
     # building ACL template
     del_chunk = open('./mcUser/management/LDAP/templates/ACL_del.ldif','r').readlines()
-#    add_chunk = open('./mcUser/management/LDAP/templates/ACL_add.ldif','r').readlines()
     with open('./mcUser/management/LDAP/templates/LDIFs/ACL_del.ldif', 'w') as ACL_file:
-        print "delete chunk:"
         for line in del_chunk:
             ACL_file.write(line)
         for line in access_lines:
             ACL_file.write('delete: olcAccess\n')
             ACL_file.write(line)
             ACL_file.write('-\n')
-    # with open('./mcUser/management/LDAP/templates/LDIFs/ACL_add.ldif', 'w') as ACL_file:
-    #     print "add chunk: "
-    #     for line in add_chunk:
-    #         ACL_file.write(line)
-    #          print line
-
     #-------------------------#
     # Replacing template kwds #
     #-------------------------#
