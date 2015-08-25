@@ -59,7 +59,6 @@ user_logged_in.connect(update_last_login)
 
 #----------------------------------------------------------------------------------------------#
 def authentihelp(uid, pw, in_log):
-    print "authentihelp\n"
     conn = LDAPComm()
     data = LDAPData()
     def get_dn(UID):
@@ -84,9 +83,11 @@ def authentihelp(uid, pw, in_log):
         in_log.write("Usr not found from uid: %s\n"%UID)
         return None
     dn,ldap_data = get_dn(uid)
+    # DEBUG
     print "dn: ", dn, " ldap_data: "
     for d in ldap_data:
         print d
+    # DEBUG END
     in_log.write("dn obtained: %s\n"%dn)
     if conn.ldapAuthenticate(dn, pw):
         return ldap_data
