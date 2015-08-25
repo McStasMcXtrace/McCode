@@ -17,19 +17,21 @@ def getFiles(look_dir, extension):
         for f in filenames:
             if os.path.splitext(f)[1] == '.' + extension:
                 if re.match(r'sas_', os.path.basename(f)):
-                    file_list.append(dirpath + '/' + f)
+                    file_list.append(os.path.abspath(dirpath + '/' + f))
         break
-    return file_list
+    
+    return sorted(file_list, key=lambda item: (int(item.lower().partition(' ')[0])
+                                               if item.lower()[0].isdigit() else float('inf'), item.lower()))
 
 def get_include_section(c_files, model_index_par_name):
     # null value (i == 0) is not actualized
     text = ''
     i = 1
     for f in c_files:
-        text += '  #if %s == %d \n' % (model_index_par_name, i) 
-        text += '    %%include "%s" \n' % os.path.basename(f) 
-        text += '  #endif \n' 
-        i += 1 
+        text += '  #if %s == %d\n' % (model_index_par_name, i)
+        text += '    %%include "%s"\n' % os.path.basename(f)
+        text += '  #endif\n'
+        i += 1
     return text
 
 def get_Iq_sign(c_file, array_call_name = None): 
@@ -56,19 +58,18 @@ def get_Iq_sign(c_file, array_call_name = None):
 def get_call_section(c_files, model_index_par_name, model_pars_name, return_par_name):
     # null value:
     text = ''
-    text += '    float %s = 1; \n' % return_par_name
+    text += '    float %s = 1;\n' % return_par_name
     
     i = 1
     for f in c_files:
-        text += '    #if %s == %d \n' % (model_index_par_name, i) 
-        text += '      //%s = Iq(%s); \n' % (return_par_name, get_Iq_sign(f, model_pars_name)) 
-        text += '    #endif \n' 
+        text += '    #if %s == %d\n' % (model_index_par_name, i) 
+        text += '      %s = Iq(%s);\n' % (return_par_name, get_Iq_sign(f, model_pars_name)) 
+        text += '    #endif\n' 
         i += 1 
         
     return text
 
 def mod_comp_file(comp_file, docs_section, include_section, call_section):
-    logging.info('component file: ' + comp_file)
     text = open(comp_file).read()
     
     pos_D = text.find("MDOC")
@@ -99,19 +100,22 @@ def get_docs_section(c_files, left_padding = 2, log_num_models = 2):
     int_format_str = '{:>' + str(log_num_models) + '}' # e.g. '{:>2}'
     
     max_name_len = 0
+    c_files_neat = []
     for f in c_files:
-        f = os.path.basename(f)
-        if len(f) > max_name_len:
-            max_name_len = len(f)
+        f_neat = re.search(r'sas_(.*).c', os.path.basename(f)).group(1)
+        c_files_neat.append(f_neat)
+        if len(f_neat) > max_name_len:
+            max_name_len = len(f_neat)
     name_format_str = '{:<' + str(max_name_len) + '}' # e.g. '{:<35}'
     
     text = pad_format_str.format('*')
     text += int_format_str.format(str(0)) + ' - None \n'
     
-    i = 1
+    i = 0
     for f in c_files:
         text += pad_format_str.format('*')
-        name = os.path.basename(f)
+        name = c_files_neat[i]
+        i += 1
         
         sign = get_Iq_sign(f)
         if re.search(r'IQ_PARAMETER_DECLARATIONS', sign):
@@ -130,26 +134,25 @@ def get_docs_section(c_files, left_padding = 2, log_num_models = 2):
             logging.exception(f + ': neither q, qval or QQ as first arg')
         
         text += int_format_str.format(str(i)) + ' - ' + name_format_str.format(name) + ' (' + sign + ') \n'
-        i += 1
     
     return text + '* \n'
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
-    logging.info('component file: %s', args.compfile)
-    logging.info('directory of C files: %s', args.cdir[0])
+    logging.info('input comp file: %s', args.compfile[0])
+    logging.info('model source dir: %s', args.cdir[0])
     
     # get info
     comp_file = args.compfile[0] 
     c_dir = args.cdir[0].rstrip('/') 
     c_files = getFiles(c_dir, "c") 
     for f in c_files: 
-        logging.info('c file to integrate: %s', f) 
+        logging.info('integrating: %s', f) 
     
     model_index_par_name = 'model_index' 
-    model_pars_name = 'model_pars_ptr'
-    return_par_name = 'Iq_answer' 
+    model_pars_name = 'pars'
+    return_par_name = 'Iq_out' 
     
     # construct AUTOGEN sections
     docs_section = get_docs_section(c_files, 4, 2)
@@ -165,7 +168,9 @@ def main(args):
     logging.debug('\n' + text)
     
     # save new component file 
-    f = open(os.path.splitext(os.path.basename(comp_file))[0] + '_new.comp', 'w')
+    comp_file_new = os.path.splitext(os.path.basename(comp_file))[0] + '_new.comp'
+    logging.info('output comp file: %s' % comp_file_new)
+    f = open(comp_file_new, 'w')
     f.write(text)
     f.close()
 
