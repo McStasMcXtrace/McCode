@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 '''
 This script outputs a modified mcstas component file, containing links and calls to specified sasview .c model files. 
-The input component file must contain AUTOGEN flags, which are used to clear and insert the generated code.
+The output filename is the same as the input filename, postfixed by "_new".
+The input component file must contain appropriate AUTOGEN flags, which are used to clear and insert the generated code.
 '''
 import os
 import logging
@@ -15,7 +16,8 @@ def getFiles(look_dir, extension):
     for (dirpath, dirnames, filenames) in os.walk(look_dir):
         for f in filenames:
             if os.path.splitext(f)[1] == '.' + extension:
-                file_list.append(dirpath + '/' + f)
+                if re.match(r'sas_', os.path.basename(f)):
+                    file_list.append(dirpath + '/' + f)
         break
     return file_list
 
