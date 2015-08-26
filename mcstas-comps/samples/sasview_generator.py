@@ -10,6 +10,95 @@ import logging
 import re
 import argparse
 
+class SasViewModelFileInfo():
+    '''
+    Takes a sas_<modelname>.c file and parses include, function call and doc hint (non-q model parameter names). 
+    Construct and then use the objects string properties to construct the desired C code or docs.
+    '''
+    def __init__(self, model_file_fulpath, pars_array_name):
+        # check input
+        # TODO: implement: throw exception on fail (user should use try-catch)
+        
+        # generate static info
+        self.input_str = model_file_fulpath
+        self.text = open(model_file_fulpath).read()
+        self.pars_array_name = pars_array_name
+        self.model_name = re.search(r'sas_(.*).c', os.path.basename(model_file_fulpath)).group(1)
+        
+        self.percent_include = '%%include %s;' % os.path.basename(model_file_fulpath)
+        self.hash_include = '#include %s;' % os.path.basename(model_file_fulpath)
+        
+        self.sign_non_q = self.__getSignNonQ(self.text, False)
+        self.sign_xy_non_q = self.__getSignNonQ(self.text, True)
+        
+        self.__num_model_pars = self.__getNumPars(self.sign_non_q)
+        self.__num_model_pars_xy = self.__getNumPars(self.sign_xy_non_q)
+        
+        self.Iq_hint = self.__getHint(self.sign_non_q)
+        self.Iq_xy_hint = self.__getHint(self.sign_xy_non_q)
+        
+        self.Iq_call = self.__getIqCall(pars_array_name, self.__num_model_pars, xy=False)
+        self.Iqxy_call = self.__getIqCall(pars_array_name, self.__num_model_pars_xy, xy=True)
+    
+    @staticmethod
+    def __getNumPars(sign):
+        c = 1
+        for comma in re.finditer(',', sign):
+            c += 1
+        return c
+    
+    @staticmethod
+    def __getSignNonQ(text, xy=False):
+        # get all cases covered
+        define_str = r'#define\s+IQ_PARAMETER_DECLARATIONS\s+([\w\s,^\#^\\]*)'
+        if xy:
+            define_str = r'#define\s+IQXY_PARAMETER_DECLARATIONS\s+([\w\s,^\#^\\]*)'
+        
+        sign_str = r'float\s+Iq\(\s*float\s+q\s*,([\w\s,]*)\)'
+        sign_str_2 = r'float\s+Iq\(\s*float\s+qval\s*,([\w\s,]*)\)'
+        sign_str_3 = r'float\s+Iq\(\s*float\s+QQ\s*,([\w\s,]*)\)'
+        if xy:
+            sign_str = r'float\s+Iqxy\(\s*float\s+qx\s*,\s*float\s+qy\s*,([\w\s,]*)\)'
+            # LOOK UP IN FILES:
+            sign_str_2 = r'float\s+Iqxy\(\s*float\s+qx\s*,\s*float\s+qy\s*,([\w\s,]*)\)'
+            sign_str_3 = r'float\s+Iqxy\(\s*float\s+qx\s*,\s*float\s+qy\s*,([\w\s,]*)\)'
+        
+        # logics to extract signature
+        m = re.search(define_str, text)
+        if m:
+            # entire non-q sign is contained in the define
+            sign = re.sub('\s+', ' ', m.group(1))
+            sign = sign.strip(' ')
+            return m.group(1)
+        else:
+            # entire sign is contained in the function declaration
+            m = re.search(sign_str, text)
+            if not m:
+                m = re.search(sign_str_2, text)
+            if not m:
+                m = re.search(sign_str_3, text)
+            if m: 
+                return m.group(1)
+            else:
+                raise Exception("Iq(...) function signature not found")
+
+    @staticmethod
+    def __getHint(sign):
+        sign = re.sub('float', '', sign)
+        sign = re.sub('\s+', ' ', sign)
+        return '(' + sign.strip(' ') + ')'
+
+    @staticmethod
+    def __getIqCall(pars_array_name, numpars, xy=False):
+        # Iq(...) function begins with "float q" and Iqxy begins with "float qx, float qy"
+        sign = 'q'
+        if xy:
+            sign = 'qx, qy'
+        for i in range(numpars):
+            sign += ', %s[%i]' % (pars_array_name, i)
+        if xy:
+            return 'Iqxy(%s);' % sign
+        return 'Iq(%s);' % sign
 
 def getFiles(look_dir, extension):
     file_list = []
@@ -137,6 +226,20 @@ def get_docs_section(c_files, left_padding = 2, log_num_models = 2):
     
     return text + '* \n'
 
+def test(args):
+    logging.basicConfig(level=logging.INFO)
+    
+    logging.info('input comp file: %s', args.compfile[0])
+    logging.info('model source dir: %s', args.cdir[0])
+    
+    comp_file = args.compfile[0] 
+    c_dir = args.cdir[0].rstrip('/') 
+    c_files = getFiles(c_dir, "c") 
+    for f in c_files: 
+        logging.info('integrating: %s', f)
+        info = SasViewModelFileInfo(f)
+        print(info)
+
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
@@ -180,5 +283,6 @@ if __name__ == '__main__':
     parser.add_argument('cdir', nargs='+', help='Directory containing sasview model .c files.')
     
     args = parser.parse_args()
-
+    
+    #test(args)
     main(args)
