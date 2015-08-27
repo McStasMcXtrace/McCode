@@ -40,6 +40,14 @@ class SasViewModelFileInfo():
         self.Iq_call = self.__getIqCall(pars_array_name, self.__num_model_pars, xy=False)
         self.Iqxy_call = self.__getIqCall(pars_array_name, self.__num_model_pars_xy, xy=True)
     
+    def printMe(self):
+        text = 'input: %s\ntext: %s\npars_name: %s\nmodel_name: %s\n%s\n%s\nsign_non_q: %s\nsign_xy_non_q: %s\nIq_hint: %s\nIq_xy_hint: %s\nIq_call: %s\nIqxy_call: %s\n' % (
+                                            self.input_str, '(not shown)', self.pars_array_name, 
+                                            self.model_name, self.percent_include, self.hash_include,
+                                            self.sign_non_q, self.sign_xy_non_q,
+                                            self.Iq_hint, self.Iq_xy_hint, self.Iq_call, self.Iqxy_call)
+        return '#####\n' + text + '#####\n'
+    
     @staticmethod
     def __getNumPars(sign):
         c = 1
@@ -50,9 +58,9 @@ class SasViewModelFileInfo():
     @staticmethod
     def __getSignNonQ(text, xy=False):
         # get all cases covered
-        define_str = r'#define\s+IQ_PARAMETER_DECLARATIONS\s+([\w\s,^\#^\\]*)'
+        define_str = r'#define\s+IQ_PARAMETER_DECLARATIONS\s+([\w\s,]*\n)'
         if xy:
-            define_str = r'#define\s+IQXY_PARAMETER_DECLARATIONS\s+([\w\s,^\#^\\]*)'
+            define_str = r'#define\s+IQXY_PARAMETER_DECLARATIONS\s+([\w\s,]*)\n'
         
         sign_str = r'float\s+Iq\(\s*float\s+q\s*,([\w\s,]*)\)'
         sign_str_2 = r'float\s+Iq\(\s*float\s+qval\s*,([\w\s,]*)\)'
@@ -69,7 +77,7 @@ class SasViewModelFileInfo():
             # entire non-q sign is contained in the define
             sign = re.sub('\s+', ' ', m.group(1))
             sign = sign.strip(' ')
-            return m.group(1)
+            return sign
         else:
             # entire sign is contained in the function declaration
             m = re.search(sign_str, text)
@@ -78,7 +86,9 @@ class SasViewModelFileInfo():
             if not m:
                 m = re.search(sign_str_3, text)
             if m: 
-                return m.group(1)
+                sign = re.sub('\s+', ' ', m.group(1))
+                sign = sign.strip(' ')
+                return sign
             else:
                 raise Exception("Iq(...) function signature not found")
 
@@ -108,7 +118,6 @@ def getFiles(look_dir, extension):
                 if re.match(r'sas_', os.path.basename(f)):
                     file_list.append(os.path.abspath(dirpath + '/' + f))
         break
-    
     return sorted(file_list, key=lambda item: (int(item.lower().partition(' ')[0])
                                                if item.lower()[0].isdigit() else float('inf'), item.lower()))
 
@@ -227,20 +236,37 @@ def get_docs_section(c_files, left_padding = 2, log_num_models = 2):
     return text + '* \n'
 
 def test(args):
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     
     logging.info('input comp file: %s', args.compfile[0])
     logging.info('model source dir: %s', args.cdir[0])
-    
-    comp_file = args.compfile[0] 
-    c_dir = args.cdir[0].rstrip('/') 
-    c_files = getFiles(c_dir, "c") 
-    for f in c_files: 
-        logging.info('integrating: %s', f)
-        info = SasViewModelFileInfo(f)
-        print(info)
 
-def main(args):
+    # get model file info
+    info_lst = []
+    for f in getFiles(args.cdir[0].rstrip('/'), "c") : 
+        logging.info('integrating: %s', f)
+        info_lst.append(SasViewModelFileInfo(f, 'pars'))
+        
+    # print debug info if enabled    
+    if logging.DEBUG:
+        text = ''
+        for info in info_lst:
+            text = text + info.printMe()
+            print(info.printMe())
+        debug_file = os.path.splitext(os.path.basename(args.compfile[0]))[0] + '_modelinfo.txt'
+        logging.info('output comp file: %s' % debug_file)
+        f = open(debug_file, 'w')
+        f.write(text)
+        f.close()
+        exit()
+    
+    # assemble proxy file
+    # 3 functions needed: 1) generate docs, 2) generate includes, 3) generate call
+    #model_pars_name = 'pars'
+    #return_par_name = 'Iq_out' 
+    
+
+def main_org(args):
     logging.basicConfig(level=logging.INFO)
     
     logging.info('input comp file: %s', args.compfile[0])
@@ -285,4 +311,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     #test(args)
-    main(args)
+    main_org(args)
