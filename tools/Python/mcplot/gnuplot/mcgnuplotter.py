@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#  Implements ui-independent functionality for mcplot-gnuplot.
+#  Implements functionality for mcplot-gnuplot. Independent of ui.
 #
 import Gnuplot
 # This is how we would control the default terminal:
@@ -15,6 +15,10 @@ class McGnuplotFileTerminals():
     png = ['png', 'png']
     gif = ['gif', 'gif']
     postscript = ['postscript', 'ps']
+
+class McGnuplotGuiTerminals():
+    x11 = 'x11'
+    wxt = 'wxt'
 
 # base class for mcstas gnuplot objects
 class McGnuplotObject():
@@ -235,6 +239,7 @@ class McGnuplotter():
                                                                     if item[0].isdigit() else float('inf'), item))
     
     def setLogscale(self, log_scale):
+        """ set log scale on all McGnuplotObject instances """
         for key in self.__gnuplot_objs:
             self.__gnuplot_objs[key].setLog(log_scale)
     
@@ -243,7 +248,7 @@ class McGnuplotter():
         return McGnuplotter(self.arg_input_file, self.arg_noqt, self.arg_log_scale)
     
     def closeAll(self):
-        """ elliminates all gp instances WARNING: you can not plot afterwards """
+        """ elliminates all gp instances WARNING: you can not plot after calling this, new instances must be created first """
         for key in self.__gnuplot_objs:
             self.__gnuplot_objs[key].gp.close()
 
