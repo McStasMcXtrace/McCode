@@ -24,6 +24,7 @@ class SasViewModelFileInfo():
         self.text = open(model_file_fulpath).read()
         self.pars_array_name = pars_array_name
         self.model_name = re.search(r'sas_(.*).c', os.path.basename(model_file_fulpath)).group(1)
+        self.model_name_xy = self.model_name + '_xy'
         
         self.percent_include = '%%include %s;' % os.path.basename(model_file_fulpath)
         self.hash_include = '#include %s;' % os.path.basename(model_file_fulpath)
@@ -107,8 +108,8 @@ class SasViewModelFileInfo():
         for i in range(numpars):
             sign += ', %s[%i]' % (pars_array_name, i)
         if xy:
-            return 'Iqxy(%s);' % sign
-        return 'Iq(%s);' % sign
+            return 'Iqxy(%s)' % sign
+        return 'Iq(%s)' % sign
 
 def getFiles(look_dir, extension):
     file_list = []
@@ -235,6 +236,56 @@ def get_docs_section(c_files, left_padding = 2, log_num_models = 2):
     
     return text + '* \n'
 
+def get_formatted_docs_text(info_lst, left_padding = 2, log_num_models = 2):
+    # padding (asterisk-plus-whitespace indentation)
+    pad_format_str = '{:<' + str(left_padding) + '}' # e.g. '{:<16}'
+    
+    # width of index count (1's 10's or 100's?)
+    index_format_str = '{:>' + str(log_num_models) + '}' # e.g. '{:>2}'
+    
+    # width of model name
+    max_len = 0
+    for info in info_lst:
+        if len(info.model_name) > max_len:
+            max_len = len(len(info.model_name))
+        if len(info.model_name_xy) > max_len:
+            max_len = len(len(info.model_name_xy))
+    name_format_str = '{:<' + str(max_len) + '}' # e.g. '{:<35}'
+    
+    # make and return the doc lines
+    text = pad_format_str.format('*')
+    text += index_format_str.format(str(0)) + ' - None \n'
+    i = 0
+    for info in info_lst:
+        text += pad_format_str.format('*')
+        text += index_format_str.format(str(i)) + ' - ' + name_format_str.format(info.model_name) + info.Iq_hint + '\n'
+        i += 1
+        text += index_format_str.format(str(i)) + ' - ' + name_format_str.format(info.model_name_xy) + info.Iq_xy_hin + '\n'
+        i += 1
+    return text
+
+def get_proxy_file_text(info_lst, par_array_name, return_par_name):
+    include_section = ''
+    i = 1
+    for info  in info_lst:
+        include_section =  '  #if model_index == %d\n' % i
+        include_section += '    %s\n' % info.percent_include
+        include_section += '  #endif\n'
+        i += 1
+
+    call_section =  '  float getIq(float q, float qx, float qy, float pars[])\n'
+    call_section += '  \{\n'
+    call_section += '    float %s = 1;\n' % return_par_name
+    i = 1
+    for info in info_lst:
+        call_section += '    #if model_index == %d\n' % i
+        call_section += '      %s = %s\n' % (return_par_name, info.Iq_call)
+        call_section += '      %s = %s\n' % (return_par_name, info.Iqxy_call)
+        call_section += '    #endif'
+        i+=1
+    call_section +=  '    return Iq_out;\n'
+    call_section +=  '  }\n'
+
 def test(args):
     logging.basicConfig(level=logging.DEBUG)
     
@@ -247,7 +298,7 @@ def test(args):
         logging.info('integrating: %s', f)
         info_lst.append(SasViewModelFileInfo(f, 'pars'))
         
-    # print debug info if enabled    
+    # print debug info if enabled
     if logging.DEBUG:
         text = ''
         for info in info_lst:
@@ -261,9 +312,18 @@ def test(args):
         exit()
     
     # assemble proxy file
-    # 3 functions needed: 1) generate docs, 2) generate includes, 3) generate call
-    #model_pars_name = 'pars'
-    #return_par_name = 'Iq_out' 
+    pars_array_name = 'pars'
+    return_par_name = 'Iq_out' 
+    proxy_file_text = get_proxy_file_text(info_lst, pars_array_name, return_par_name)
+    
+    # save proxy file
+    # TODO: impl
+    
+    # get docs section for .comp file
+    docs_section_text = get_formatted_docs_text(info_lst, 2, 2)
+    
+    # mod .comp file
+    # TODO: impl
     
 
 def main_org(args):
