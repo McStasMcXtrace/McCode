@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-This script outputs a modified mcstas component file, containing links and calls to specified sasview .c model files. 
-The output filename is the same as the input filename, postfixed by "_new".
-The input component file must contain appropriate AUTOGEN flags, which are used to clear and insert the generated code.
+SasView_generator.py analyzes C-files prefixed "sas_" in the specified directory. 
+It the C-files contain valid sasmodels, it generates a file bassed on these - "sasview_proxy.c".
+This file is written to the same directory as the C-files (and thus may overwrite any previous version of the file).
+It also generates rudimentary, but necessary, documentation and inserts it into the mcstas component.
+The modified component is output as a new file. The input component file must contain MCDOC and MCDOC_END flags in the header.
+The new component file has the same base name, except that it is postfixed by "_new".
 '''
 import os
 import logging
@@ -185,6 +188,17 @@ def mod_comp_file(comp_file, docs_section, include_section, call_section):
     ret_text += text[pos_end_A:pos_B+9] + '\n' + call_section + '    // ' + text[pos_end_B:]
     return ret_text
 
+def mod_comp_file_docs(comp_file, docs_section):
+    text = open(comp_file).read()
+    
+    pos_D = text.find("MDOC")
+    pos_end_D = text.find('MDOC_END')
+    
+    if pos_D == -1 or pos_end_D == -1:
+        logging.exception('MDOC or MDOC_END flag error. positions: %d, %d' % (pos_D, pos_end_D))
+    
+    return text[:pos_D+4] + '\n' + docs_section + text[pos_end_D-2:]
+
 def get_define_Iq_sign(c_file):
     text = open(c_file).read() 
     m = re.search('#define IQ_PARAMETER_DECLARATIONS ([\w\s,]*)\#', text)
@@ -236,7 +250,7 @@ def get_docs_section(c_files, left_padding = 2, log_num_models = 2):
     
     return text + '* \n'
 
-def get_formatted_docs_text(info_lst, left_padding = 2, log_num_models = 2):
+def get_formatted_docs_text(info_lst, left_padding = 4, log_num_models = 2):
     # padding (asterisk-plus-whitespace indentation)
     pad_format_str = '{:<' + str(left_padding) + '}' # e.g. '{:<16}'
     
@@ -247,47 +261,57 @@ def get_formatted_docs_text(info_lst, left_padding = 2, log_num_models = 2):
     max_len = 0
     for info in info_lst:
         if len(info.model_name) > max_len:
-            max_len = len(len(info.model_name))
+            max_len = len(info.model_name)
         if len(info.model_name_xy) > max_len:
-            max_len = len(len(info.model_name_xy))
-    name_format_str = '{:<' + str(max_len) + '}' # e.g. '{:<35}'
+            max_len = len(info.model_name_xy)
+    name_format_str = '{:<' + str(max_len + 1) + '}' # e.g. '{:<35}'
     
     # make and return the doc lines
     text = pad_format_str.format('*')
     text += index_format_str.format(str(0)) + ' - None \n'
-    i = 0
+    i = 1
     for info in info_lst:
         text += pad_format_str.format('*')
         text += index_format_str.format(str(i)) + ' - ' + name_format_str.format(info.model_name) + info.Iq_hint + '\n'
         i += 1
-        text += index_format_str.format(str(i)) + ' - ' + name_format_str.format(info.model_name_xy) + info.Iq_xy_hin + '\n'
+        text += pad_format_str.format('*')
+        text += index_format_str.format(str(i)) + ' - ' + name_format_str.format(info.model_name_xy) + info.Iq_xy_hint + '\n'
         i += 1
     return text
 
-def get_proxy_file_text(info_lst, par_array_name, return_par_name):
+def get_proxy_file_text(info_lst):
     include_section = ''
     i = 1
     for info  in info_lst:
-        include_section =  '  #if model_index == %d\n' % i
+        include_section += '  #if model_index == %d\n' % i
+        include_section += '    %s\n' % info.percent_include
+        include_section += '  #endif\n'
+        i += 1
+        include_section += '  #if model_index == %d\n' % i
         include_section += '    %s\n' % info.percent_include
         include_section += '  #endif\n'
         i += 1
 
     call_section =  '  float getIq(float q, float qx, float qy, float pars[])\n'
-    call_section += '  \{\n'
-    call_section += '    float %s = 1;\n' % return_par_name
+    call_section += '  {\n'
+    call_section += '    float Iq_out = 1;\n'
     i = 1
     for info in info_lst:
         call_section += '    #if model_index == %d\n' % i
-        call_section += '      %s = %s\n' % (return_par_name, info.Iq_call)
-        call_section += '      %s = %s\n' % (return_par_name, info.Iqxy_call)
-        call_section += '    #endif'
+        call_section += '      Iq_out = %s;\n' % info.Iq_call
+        call_section += '    #endif\n'
+        i+=1
+        call_section += '    #if model_index == %d\n' % i
+        call_section += '      Iq_out = %s;\n' % info.Iqxy_call
+        call_section += '    #endif\n'
         i+=1
     call_section +=  '    return Iq_out;\n'
     call_section +=  '  }\n'
+    
+    return include_section + '\n' + call_section
 
 def test(args):
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     
     logging.info('input comp file: %s', args.compfile[0])
     logging.info('model source dir: %s', args.cdir[0])
@@ -299,7 +323,7 @@ def test(args):
         info_lst.append(SasViewModelFileInfo(f, 'pars'))
         
     # print debug info if enabled
-    if logging.DEBUG:
+    if False:
         text = ''
         for info in info_lst:
             text = text + info.printMe()
@@ -312,18 +336,19 @@ def test(args):
         exit()
     
     # assemble proxy file
-    pars_array_name = 'pars'
-    return_par_name = 'Iq_out' 
-    proxy_file_text = get_proxy_file_text(info_lst, pars_array_name, return_par_name)
     
     # save proxy file
-    # TODO: impl
+    f = open(os.path.join(os.path.abspath(args.cdir[0]), 'sasview_proxy.c'), 'w')
+    f.write(get_proxy_file_text(info_lst))
+    f.close()
     
     # get docs section for .comp file
-    docs_section_text = get_formatted_docs_text(info_lst, 2, 2)
+    docs_section_text = get_formatted_docs_text(info_lst)
     
     # mod .comp file
-    # TODO: impl
+    f = open(os.path.splitext(os.path.basename(args.compfile[0]))[0] + '_new.comp', 'w')
+    f.write(mod_comp_file_docs(args.compfile[0], docs_section_text))
+    f.close()
     
 
 def main_org(args):
@@ -365,10 +390,10 @@ def main_org(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('compfile', nargs='+', help='Component input filename. Mmust be a version of SANS_sasview_model.comp.')
-    parser.add_argument('cdir', nargs='+', help='Directory containing sasview model .c files.')
+    parser.add_argument('compfile', nargs='+', help='the SasView model component')
+    parser.add_argument('cdir', nargs='+', help='directory containing sasmodel C-files, prefixed by "sas_"')
     
     args = parser.parse_args()
     
-    #test(args)
-    main_org(args)
+    test(args)
+    #main_org(args)
