@@ -1,0 +1,6 @@
+#========================#
+# Deleting Old olcAccess #
+#========================#
+# dn: olcDatabase={0}config,cn=config
+dn: olcDatabase={1}hdb
+changetype: modify
