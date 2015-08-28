@@ -1,16 +1,42 @@
  #!/bin/sh
 export PYTHONPATH=$PYTHONPATH:./
+
+# PUT A .gitignore IN sim FOLDER.
+# CHECK FOR SECURITY UPDATES IN DJANGO 1.7
+# CHANGE ERROR MESSAGES
+# BETTER PASSWORD PROMPTS - lable each pwd something simple 'level 1, 2, 3'
+# READ ME FOR EACH .LDIF TEMPLATE
+# TRY TO PUT THE SAME USERNAME PROMPT FOR LDAP AND SQLITE
+
+# NB: $i = ith argument, $# = tot num args
+
+# Need flags to direct DB builds
+#   - Put into existing DB
+#     - for this we need to scheck if olcRootDN and olcRootPW exist and to check if they are ok.
+#   - Tear donw and rebuild
+#   - Dump LDAP DB and rebuild
+# - for all above options we need to change the DIT in the LDAPldiffer so that we have a McCode branch
+#   so no possible interference with any existent DBs exist.
+
+
+
 #--------------------------------------#
 # Refreshing DBs if they are installed #
 #--------------------------------------#
+sudo apt-get install python-dev python-pip sqlite3
+sudo pip install django==1.7 jsonfield
 if [ -d /etc/ldap/slapd.d ]; then
     sudo apt-get purge -y ldap-utils slapd
+    sudo apt-get install -y ldap-utils slapd
+else
     sudo apt-get install -y ldap-utils slapd
 fi
 if [ -f DB/mcwww.sqlite3 ] ; then
     rm DB/mcwww.sqlite3
 fi
+
 # if [ -f mcUser/management/LDAP/LDAP_access/access.txt ] ; then
+#    cat mcUser/management/LDAP/LDAP_access/access.txt >> mcUser/management/LDAP/LDAP_access/access.bak
 #    rm mcUser/management/LDAP/LDAP_access/access.txt
 # fi
 #------------------------------------------#

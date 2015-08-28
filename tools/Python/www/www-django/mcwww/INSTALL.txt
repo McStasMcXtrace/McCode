@@ -25,18 +25,15 @@ System Setup
      	  	  	      	       xbase-clients 
                                        build-essential 
 				       emacs 
-				       subversion 
+				       subversion
 				       nginx-full 
-				       python-django
 				       python-dev
 				       libopenmpi-dev (if you need MPI. (Yes, you need it.))
-   Now you will need to get the correct version of django from the debian backports.
-   add:
-      deb http://http.debian.net/debian wheezy-backports main
-   to your /etc/apt/sources.list
-   run:
-      apt-get wheezy-backports -t install python-django
-   to get django version 1.7
+				       python-pip            (the python package manager)
+   and:
+     sudo pip install python-django==1.7
+
+*** I am here on my vm ***
 
 3) Enable non-free repos:
       sudo apt-add-repository 'deb http://ftp.debian.org/debian/ wheezy main contrib non-free'
@@ -80,11 +77,11 @@ sidenote_1: You will need to login to <IP ADDRESS>:<PORT>/admin (after creating 
 sidenote_2: Ensure your keyboard is set to a locale that the python scripts are happy with:
      	    	   export LC_ALL="en_US.UTF-8"  
 
-8) Run:
-     # apt-get install -f slapd ldap-utils
-     REMEMBER THE PASSWORD, IT IS REQUESTED AGAIN NEXT:
+8) ### THERE SHOULD BE FLAGS FOR THE VARIOUS MODES OF INSTALLATION ###
+   REMEMBER THE NEW LDAP PASSWORD, IT IS REQUESTED AGAIN!
+   Run:
      ./bin/init-db.sh
-   This will set up the LDAP authentication DB, the sqlite simulation DBs, and, the file uploading DB (upon completion).
+   set up the LDAP authentication DB, the sqlite simulation DBs, and, the file uploading DB (upon completion).
    you will be prompted for some information to set up the LDAP DB, this is important to keep hold of.                    
 
 9) Follow the prompts, you should set up a superuser to start with, step (10)a) shows how to create new users:
@@ -97,7 +94,6 @@ sidenote_2: Ensure your keyboard is set to a locale that the python scripts are 
 
 10) Run the following commands (put the runworker in the background with '&' or open a new terminal):
    a)  ./manage.py createuser <USERNAME> <PASSWORD>
-   b)  ./bin/update-simulations.sh ; ./manage.py populate_db
    c)  sudo ./manage.py runworker &
    d)  sudo ./manage.py runserver <IP ADDRESS>:<PORT> (80 is a good listening port)
 
