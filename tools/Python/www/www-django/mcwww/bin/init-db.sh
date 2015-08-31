@@ -114,7 +114,9 @@ echo " "
 #---------------------#
 python ./bin/build-templates.py $DN $ROOTPW $BINDPW
 python ./bin/ldap-build.py $DN $ROOTPW $BINDPW $TREEPW $RPW1
-./bin/update-simulations.sh
-python manage.py populate_db
+
 python manage.py syncdb
+python manage.py populate_db
+./bin/update-simulations.sh
+
 

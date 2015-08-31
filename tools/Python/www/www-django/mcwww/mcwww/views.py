@@ -42,10 +42,19 @@ def loginPOST(req):
     nexturl = form.get('next', '/')
     UID = form.get('uid', '') or form.get('username', '')
     PW = form.get('password', '')
+
+    print "\n"
+    print "NEXT URL:%s"%nexturl
+
     if PW == None: return redirect('/login/')
     checker = mcBackend()
     print "UID:,",UID,", PW: ", PW,"\n\n"
     user = checker.authenticate(UID, PW)
+    
+    
+    print "USER: %s"%user
+    print "\n"
+
     if user is None or not user.is_active:
         return redirect('/login/Invalid_credentials')
     else: 

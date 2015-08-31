@@ -230,13 +230,15 @@ class Overlord(AdminSite):
         # CHASING LOGIN OF ADMIN
         from req_logs.logger import log_this
         log_this(request, 'admin_login_check', [request.method, self.has_permission(request), REDIRECT_FIELD_NAME])
+        print "\n"
         print "req method: %s"%request.method
         print "permission: %s"%self.has_permission(request)
+        print "\n"
         #     request.method = POST        -> first condition not made.
         #     self.has_permission = False! -> second condition not made.
         # this is for already logged in users I think.
         # END OF CHASING
-        if request.method == 'GET' and self.has_permission(request):
+        if request.method == 'GET': # and self.has_permission(request):
             print "in the if#1"
             index_path = reverse('admin:index', current_app=self.name)
             return HttpResponseRedirect(index_path)
@@ -263,7 +265,9 @@ class Overlord(AdminSite):
                      'authentication_form': self.login_form or AdminAuthenticationForm,
                      'template_name': self.login_template or 'admin/login.html',
                  }
+
         # this is where the LDAP login should be implemented.
+
         return login(request, **defaults)
     
     @never_cache
