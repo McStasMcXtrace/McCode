@@ -78,9 +78,11 @@ def home(req):
 #------------------------------------------------------------#
 @login_required
 @only_safe
-@templated('mcsimulator/configure')
-def configure(req, jobref):
+@templated('mcsimulator/configure') 
+def configure(req, jobref): # This needs to be fixed so the user can access whatever simulation is available, relies on a job existing and being directed to.
+
     job = get_or_404(Job, ref=jobref)
+
     sims = Simulation.objects.all().filter(simgroup__in=req.user.groups.values_list('name',flat=True))
     return dict(job=job, jobid=job.ref, sims=sims, 
                 max_samples=MAX_RAY_SAMPLES, max_npoints=MAX_SCAN_POINTS)

@@ -20,7 +20,6 @@ urlpatterns = patterns(
 
     url(r'^$', 'mcsimulator.views.home', name='home'),
 
-    url(r'^job/(?P)$',                        'mcsimulator.views.configure',     name='configure'),
     url(r'^job/(?P<jobref>\w+)/$',        'mcsimulator.views.configure',     name='configure'),
     url(r'^job/update/(?P<jobref>\w+)/$', 'mcsimulator.views.configurePOST', name='configurePOST'),
 
