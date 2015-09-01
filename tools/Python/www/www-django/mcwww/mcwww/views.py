@@ -9,15 +9,17 @@
 #------------------#
 # django imports   #
 #------------------#
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.backends import ModelBackend, RemoteUserBackend
 from django.shortcuts import redirect
 from django.conf.urls import include
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 #-------------#
 # app imports #
 #-------------#
 from common import *
-from mcUser.models import *
+# from mcUser.models import *
 from common import templated
 #---------------#
 #  login_form() #
@@ -37,29 +39,19 @@ def login_form(req):
 #----------------------------------#
 def loginPOST(req):
     form = req.POST
-    for key,val in form.items():
-        print key, ":", val
     nexturl = form.get('next', '/')
-    UID = form.get('uid', '') or form.get('username', '')
-    PW = form.get('password', '')
-
-    print "\n"
-    print "NEXT URL:%s"%nexturl
-
-    if PW == None: return redirect('/login/')
-    checker = mcBackend()
-    print "UID:,",UID,", PW: ", PW,"\n\n"
-    user = checker.authenticate(UID, PW)
-    
-    
-    print "USER: %s"%user
-    print "\n"
+    kwds = {}
+    kwds['username'] = form.get('uid', '') or form.get('username', '')
+    kwds['password'] = form.get('password', '')
+    if kwds['password'] == None: return redirect('/login/')
+    objects = ModelBackend()
+    user = objects.authenticate(kwds['username'], kwds['password'])
 
     if user is None or not user.is_active:
         return redirect('/login/Invalid_credentials')
     else: 
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
         login(req, user)
-        # checker.session_login(user)
         return redirect(nexturl)
 #----------------------------------------------------#
 #  logout_user()                                     #

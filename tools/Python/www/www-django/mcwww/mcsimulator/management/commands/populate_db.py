@@ -50,12 +50,11 @@ def main():
 #          <kwd> are read from instr file.             #
 # nb. match objects are pretty nice.                   #
 #------------------------------------------------------#
-def read_params(instr_file):                             
+def read_params(instr_file):                
     simf = file(instr_file)
     # Skip lines up to parameters
     for line in simf:
-        if line.lstrip('*').strip().lower().startswith('%parameters'):
-            break
+        if line.lstrip('*').strip().lower().startswith('%parameters'): break
     # Read parameters
     params = {}
     priority = 0

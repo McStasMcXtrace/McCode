@@ -5,8 +5,10 @@ PROJECT_PATH = os.path.realpath(os.path.dirname(os.path.dirname(__file__)))
 # McUser CONFIG #
 #===============#
 LOGIN_URL                       = '/login'
-AUTHENTICATION_BACKENDS         = ('mcUser.models.mcBackend',)
-AUTH_USER_MODEL                 = ('mcUser.mcUser')
+# AUTHENTICATION_BACKENDS         = ('mcUser.models.mcBackend',)
+# AUTH_USER_MODEL                 = ('mcUser.mcUser')
+# AUTHENTICATION_BACKENDS         = ('auth.RemoteUserBackend',)
+AUTH_USER_MODEL                 = ('auth.User')
 SESSION_COOKIE_AGE              = 10*60
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_SAVE_EVERY_REQUEST      = True
@@ -41,7 +43,8 @@ INSTALLED_APPS = (
     # ------ #
     'mcsimulator',
     'mcwww',
-    'mcUser',
+    #    'mcUser',
+
     # django Apps #
     # ----------- #
     # Admin Site
