@@ -31,11 +31,11 @@ set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING} Components")
 
 include(CPack)
 
-add_library(nxslib libs/nxslib/nxs.c libs/nxslib/sgclib.c libs/nxslib/sgfind.c libs/nxslib/sghkl.c libs/nxslib/sgio.c libs/nxslib/sgsi.c)
+add_library(nxs "SHARED" libs/nxslib/nxs.c libs/nxslib/sgclib.c libs/nxslib/sgfind.c libs/nxslib/sghkl.c libs/nxslib/sgio.c libs/nxslib/sgsi.c)
 
 # Include mcstas-comp files
 foreach(name contrib data examples misc monitors obsolete optics samples share sources editors libs)
   installLib("${PROJECT_SOURCE_DIR}/${name}")
 endforeach()
 
-install(TARGETS nxslib DESTINATION "${MCCODE_LIB}/libs/nxslib/")
+install(TARGETS nxs DESTINATION "${MCCODE_LIB}/libs/libnxs/")
