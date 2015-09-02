@@ -1,0 +1,11 @@
+This is nxslib from Mirko Boin, HZB.
+
+These compilation instructions should become a CMakelists.txt...
+
+1) Create the object files by
+gcc -c nxs.c sg*.c
+
+2) Link the shared library
+gcc -dynamiclib -undefined suppress -flat_namespace *.o -o libnxs.so
+
+
