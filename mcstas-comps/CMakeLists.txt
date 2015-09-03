@@ -38,4 +38,9 @@ foreach(name contrib data examples misc monitors obsolete optics samples share s
   installLib("${PROJECT_SOURCE_DIR}/${name}")
 endforeach()
 
-install(TARGETS nxs DESTINATION "${MCCODE_LIB}/libs/libnxs/")
+if(WINDOWS)
+  install(TARGETS nxs DESTINATION "${lib}/libs/libnxs/")
+else()
+  install(TARGETS nxs DESTINATION "${MCCODE_LIB}/libs/libnxs/")
+endif()
+
