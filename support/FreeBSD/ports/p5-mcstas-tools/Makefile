@@ -4,14 +4,12 @@
 PORTNAME=	p5-mcstas-tools
 PORTVERSION=	2.2a
 
-METANAME=	McStas-${PORTVERSION}-UNIX-src
-
 CATEGORIES=	science
 MASTER_SITES=	http://download.mcstas.org/mcstas-${PORTVERSION}/unix/McStas-${PORTVERSION}-UNIX-src/
 DISTNAME=	mcstas-tools-perl-${PORTVERSION}-src
 
 MAINTAINER=	erkn@fysik.dtu.dk
-COMMENT=	Component Library for the McStas Monte Carlo neutron ray tracing package.
+COMMENT=	Perl based tools and utilituy scripts for the McStas Monte Carlo neutron ray tracing package.
 
 LICENSE=	GPLv2
 
