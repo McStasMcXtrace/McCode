@@ -142,9 +142,12 @@ class McStas:
             line = line.rstrip()
             if re.search('CFLAGS=', line) :
                 label,flags = line.split('=',1)
+                flags = re.sub(r'\s\@MCCODE_LIB\@\s',self.options.mccode_lib,flags)
+                print "BLAH"
+                print flags
                 flags = flags.split(' ')
                 cflags += flags
-
+                
         
         # Compiler optimisation
         args = ['-o', self.binpath, self.cpath] + cflags

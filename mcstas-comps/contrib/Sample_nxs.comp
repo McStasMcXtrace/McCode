@@ -125,7 +125,7 @@ DEFINE COMPONENT Sample_nxs
 DEFINITION PARAMETERS ( int TransOnly=0, int IncohScat=1, int MultiScat=1 )
 SETTING PARAMETERS ( xwidth=0.05, yheight=0.05, zthick=0.05, radius=0.0, string nxsFileName="", int max_hkl=8, d_phi=0, string strainFileName="" )
 OUTPUT PARAMETERS (isrect)
-DEPENDENCY "-I@MCCODE_LIB@/share/ -L@MCCODE_LIB@/libs/libnxs/ -lnxs"
+DEPENDENCY "-I@MCCODE_LIB@/share/ @MCCODE_LIB@/libs/libnxs/libnxs.a"
 
 
 SHARE

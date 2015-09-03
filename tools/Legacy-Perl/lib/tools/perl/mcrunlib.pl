@@ -287,6 +287,8 @@ sub get_out_file_next {
       if (/CFLAGS=(.*)/) {
 	$mcstas_cflags .= " ".$1;
       }
+      # Replace any @MCCODE_LIB@ by the McStas system path
+      $mcstas_cflags =~ s/\@MCCODE_LIB\@/${MCSTAS::sys_dir}/g;
     }
     my $libs = "-lm ";
     if ($v->{'mpi'} && $MCSTAS::mcstas_config{MPICC} ne "no") {
