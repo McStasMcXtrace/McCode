@@ -1,7 +1,7 @@
 from django.core.management.base import NoArgsCommand, make_option
 from django.db import transaction
 
-from django.utils import simplejson as json
+import simplejson as json
 
 
 from mcsimulator.models import *
