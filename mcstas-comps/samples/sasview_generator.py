@@ -29,8 +29,8 @@ class SasViewModelFileInfo():
         self.model_name = re.search(r'sas_(.*).c', os.path.basename(model_file_fulpath)).group(1)
         self.model_name_xy = self.model_name + '_xy'
         
-        self.percent_include = '%%include %s;' % os.path.basename(model_file_fulpath)
-        self.hash_include = '#include %s;' % os.path.basename(model_file_fulpath)
+        self.percent_include = '%%include "%s"' % os.path.basename(model_file_fulpath)
+        self.hash_include = '#include <%s>' % os.path.basename(model_file_fulpath)
         
         self.sign_non_q = self.__getSignNonQ(self.text, False)
         self.sign_xy_non_q = self.__getSignNonQ(self.text, True)

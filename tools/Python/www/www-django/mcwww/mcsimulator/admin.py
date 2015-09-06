@@ -114,9 +114,10 @@ class JobAdmin(admin.ModelAdmin):
     search_field    = ['ref']
     list_display    = ('sim_details',)
     def has_add_permission(self, request, obj=None):
-        return False
+        return True
     def __init__(self, *args, **kwargs):
         super(JobAdmin, self).__init__(*args, **kwargs)
+
 class SimRunAdmin(admin.ModelAdmin):
     exclude         = ('str_params', 'str_result')
     readonly_fields = ('user', 'status', 'completed', 'ref', 'job', 'sim')

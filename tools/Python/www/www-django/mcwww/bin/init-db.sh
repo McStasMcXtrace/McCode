@@ -30,4 +30,3 @@ fi
 #-------------------------------#
 python manage.py syncdb
 ./bin/update-simulations.sh
-python manage.py populate_db
