@@ -69,7 +69,7 @@
 * Definition parameters:
 * 
 * model_index:  Index of the applied sasview model. Recompile instrument for changes to take effect.
-* model_pars:   Model parameters are given as a set of comma-separated values enclosed by {}. 
+* model_pars:   Model parameters are given as a set of comma-separated values enclosed by {}, e.g. {1, 2, 60} for model 31. 
 *               Consult the sasview docs for further info. 
 * 
 * Input parameters:
@@ -105,8 +105,9 @@
 DEFINE COMPONENT SasView_model
 
 DEFINITION PARAMETERS (
-    model_index=5,
-    model_pars={220, 0.06, 40, 3e-6, 6.3e-6})
+    model_index=31,
+    model_pars={1,2,60}
+    )
 
 SETTING PARAMETERS (
     xwidth=0, 
