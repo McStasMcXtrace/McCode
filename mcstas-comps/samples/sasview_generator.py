@@ -126,69 +126,6 @@ def getFiles(look_dir, extension):
     return sorted(file_list, key=lambda item: (int(item.lower().partition(' ')[0])
                                                if item.lower()[0].isdigit() else float('inf'), item.lower()))
 
-def get_include_section(c_files, model_index_par_name):
-    # null value (i == 0) is not actualized
-    text = ''
-    i = 1
-    for f in c_files:
-        text += '  #if %s == %d\n' % (model_index_par_name, i)
-        text += '    %%include "%s"\n' % os.path.basename(f)
-        text += '  #endif\n'
-        i += 1
-    return text
-
-def get_Iq_sign(c_file, array_call_name = None): 
-    # TODO: fix for  Iq(...) determined by #define IQ_PARAMETER_DECLARATIONS
-    text = open(c_file).read() 
-    m = re.search(r'float\s+Iq\(([\w\s,]*)\)', text)
-    i = 0
-    if m: 
-        commas = re.finditer(',', m.group(1))  
-        for c in commas: 
-            i += 1 # i becomes the number of non-q parameters in Iq(...) (the first parameter is always q) 
-    else: 
-        logging.exception('something is wrong: m result not returned by file >>> %s' % c_file) 
-    # Iq(...) function signature always starts with a "float q"
-    sign = 'q'
-    if array_call_name != None:
-        for j in range(i):
-            sign += ', %s[%i]' % (array_call_name, j)
-    else:
-        sign = m.group(1)
-    
-    return sign
-
-def get_call_section(c_files, model_index_par_name, model_pars_name, return_par_name):
-    # null value:
-    text = ''
-    text += '    float %s = 1;\n' % return_par_name
-    
-    i = 1
-    for f in c_files:
-        text += '    #if %s == %d\n' % (model_index_par_name, i) 
-        text += '      %s = Iq(%s);\n' % (return_par_name, get_Iq_sign(f, model_pars_name)) 
-        text += '    #endif\n' 
-        i += 1 
-        
-    return text
-
-def mod_comp_file(comp_file, docs_section, include_section, call_section):
-    text = open(comp_file).read()
-    
-    pos_D = text.find("MDOC")
-    pos_end_D = text.find('MDOC_END')
-    pos_A = text.find("AUTOGEN_A")
-    pos_end_A = text.find("AUTOGEN_END_A")
-    pos_B = text.find("AUTOGEN_B")
-    pos_end_B = text.find("AUTOGEN_END_B")
-    
-    if pos_D == -1 or pos_end_D == -1 or pos_A == -1 or pos_end_A == -1 or pos_B == -1 or pos_end_B == -1:
-        logging.exception('mod_comp_file: AUTOGEN flag error.')
-    
-    ret_text = text[:pos_D+4] + '\n' + docs_section + text[pos_end_D-2:pos_A+9] + '\n' + include_section + '  // ' 
-    ret_text += text[pos_end_A:pos_B+9] + '\n' + call_section + '    // ' + text[pos_end_B:]
-    return ret_text
-
 def mod_comp_file_docs(comp_file, docs_section):
     text = open(comp_file).read()
     
@@ -199,57 +136,6 @@ def mod_comp_file_docs(comp_file, docs_section):
         logging.exception('MDOC or MDOC_END flag error. positions: %d, %d' % (pos_D, pos_end_D))
     
     return text[:pos_D+4] + '\n' + docs_section + text[pos_end_D-2:]
-
-def get_define_Iq_sign(c_file):
-    text = open(c_file).read() 
-    m = re.search('#define IQ_PARAMETER_DECLARATIONS ([\w\s,]*)\#', text)
-    if m:
-        sign = re.sub('\s+', ' ', m.group(1))
-        sign = sign.strip(' ')
-        return m.group(1)
-    return 'define resolved string'
-
-def get_docs_section(c_files, left_padding = 2, log_num_models = 2):
-    pad_format_str = '{:<' + str(left_padding) + '}' # e.g. '{:<16}'
-    int_format_str = '{:>' + str(log_num_models) + '}' # e.g. '{:>2}'
-    
-    max_name_len = 0
-    c_files_neat = []
-    for f in c_files:
-        f_neat = re.search(r'sas_(.*).c', os.path.basename(f)).group(1)
-        c_files_neat.append(f_neat)
-        if len(f_neat) > max_name_len:
-            max_name_len = len(f_neat)
-    name_format_str = '{:<' + str(max_name_len) + '}' # e.g. '{:<35}'
-    
-    text = pad_format_str.format('*')
-    text += int_format_str.format(str(0)) + ' - None \n'
-    
-    i = 0
-    for f in c_files:
-        text += pad_format_str.format('*')
-        name = c_files_neat[i]
-        i += 1
-        
-        sign = get_Iq_sign(f)
-        if re.search(r'IQ_PARAMETER_DECLARATIONS', sign):
-            sign = sign.replace('IQ_PARAMETER_DECLARATIONS', get_define_Iq_sign(f))
-        
-        m = re.search(r'float\s+q\s*,([\w\s,]*)', sign)
-        if not m: 
-            m = re.search(r'float\s+qval\s*,([\w\s,]*)', sign)
-        if not m: 
-            m = re.search(r'float\s+QQ\s*,([\w\s,]*)', sign)
-        if m: 
-            sign = m.group(1).replace('float', '')
-            sign = re.sub('\s+', ' ', sign)
-            sign = sign.strip(' ')
-        else:
-            logging.exception(f + ': neither q, qval or QQ as first arg')
-        
-        text += int_format_str.format(str(i)) + ' - ' + name_format_str.format(name) + ' (' + sign + ') \n'
-    
-    return text + '* \n'
 
 def get_formatted_docs_text(info_lst, left_padding = 4, log_num_models = 2):
     # padding (asterisk-plus-whitespace indentation)
@@ -312,7 +198,7 @@ def get_proxy_file_text(info_lst):
     
     return include_section + '\n' + call_section
 
-def test(args):
+def main(args):
     logging.basicConfig(level=logging.INFO)
     
     logging.info('input comp file: %s', args.compfile[0])
@@ -324,7 +210,7 @@ def test(args):
         logging.info('integrating: %s', f)
         info_lst.append(SasViewModelFileInfo(f, 'pars'))
         
-    # print debug info if enabled
+    # enable to print debug info
     if False:
         text = ''
         for info in info_lst:
@@ -352,44 +238,6 @@ def test(args):
     f.write(mod_comp_file_docs(args.compfile[0], docs_section_text))
     f.close()
     
-
-def main_org(args):
-    logging.basicConfig(level=logging.INFO)
-    
-    logging.info('input comp file: %s', args.compfile[0])
-    logging.info('model source dir: %s', args.cdir[0])
-    
-    # get info
-    comp_file = args.compfile[0] 
-    c_dir = args.cdir[0].rstrip('/') 
-    c_files = getFiles(c_dir, "c") 
-    for f in c_files: 
-        logging.info('integrating: %s', f) 
-    
-    model_index_par_name = 'model_index' 
-    model_pars_name = 'pars'
-    return_par_name = 'Iq_out' 
-    
-    # construct AUTOGEN sections
-    docs_section = get_docs_section(c_files, 4, 2)
-    
-    include_section = get_include_section(c_files, model_index_par_name)
-    logging.debug('\n' + include_section)
-    
-    call_section = get_call_section(c_files, model_index_par_name, model_pars_name, return_par_name)
-    logging.debug('\n' + call_section)
-    
-    # modify text
-    text = mod_comp_file(comp_file, docs_section, include_section, call_section)
-    logging.debug('\n' + text)
-    
-    # save new component file 
-    comp_file_new = os.path.splitext(os.path.basename(comp_file))[0] 
-    logging.info('output comp file: %s' % comp_file_new)
-    f = open(comp_file_new, 'w')
-    f.write(text)
-    f.close()
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('compfile', nargs='+', help='the SasView model component')
@@ -397,5 +245,4 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
-    test(args)
-    #main_org(args)
+    main(args)
