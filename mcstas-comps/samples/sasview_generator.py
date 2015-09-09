@@ -273,10 +273,10 @@ def get_formatted_docs_text(info_lst, left_padding = 4, log_num_models = 2):
     i = 1
     for info in info_lst:
         text += pad_format_str.format('* <tr><td>')
-        text += index_format_str.format(str(i)) + '</td><td>' + '<a href="http://www.sasview.org/sasview/user/models/model_functions.html#'+ name_format_str.format(info.model_name).replace(" ", "") + 'model">' + name_format_str.format(info.model_name).replace(" ", "") + '</a></td><td>' + info.Iq_hint + '</td></tr>\n'
+        text += index_format_str.format(str(i)) + '</td><td>' + '<a href="http://www.sasview.org/sasview/user/models/model_functions.html#'+ name_format_str.format(info.model_name).replace(" ", "").replace("_", "") + 'model">' + name_format_str.format(info.model_name).replace(" ", "") + '</a></td><td>' + info.Iq_hint + '</td></tr>\n'
         i += 1
         text += pad_format_str.format('* <tr><td>')
-        text += index_format_str.format(str(i)) + '</td><td>' + '<a href="http://www.sasview.org/sasview/user/models/model_functions.html#'+ name_format_str.format(info.model_name_xy).replace(" ", "") + 'model">' + name_format_str.format(info.model_name_xy).replace(" ", "") + '</a></td><td>' + info.Iq_xy_hint + '</td></tr>\n'
+        text += index_format_str.format(str(i)) + '</td><td>' + '<a href="http://www.sasview.org/sasview/user/models/model_functions.html#'+ name_format_str.format(info.model_name_xy).replace(" ", "").replace(" ", "").replace("_xy", "") + 'model">' + name_format_str.format(info.model_name_xy).replace(" ", "") + '</a></td><td>' + info.Iq_xy_hint + '</td></tr>\n'
         i += 1
     text += '* </table>\n'
     return text
