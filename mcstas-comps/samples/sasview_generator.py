@@ -5,8 +5,9 @@ SasView_generator.py analyzes C-files prefixed "sas_" in the specified directory
 It the C-files contain valid sasmodels, it generates a file bassed on these - "sasview_proxy.c".
 This file is written to the same directory as the C-files (and thus may overwrite any previous version of the file).
 It also generates rudimentary, but necessary, documentation and inserts it into the mcstas component.
-The modified component is output as a new file. The input component file must contain MCDOC and MCDOC_END flags in the header.
-The new component file has the same base name, except that it is postfixed by "_new".
+The modified component template (suffix .Template) is output as a new file. The input component template must contain 
+MCDOC and MCDOC_END flags in the header.
+The new component file has the same base name, except that the .Template suffix is removed.
 '''
 import os
 import logging
@@ -267,16 +268,17 @@ def get_formatted_docs_text(info_lst, left_padding = 4, log_num_models = 2):
     name_format_str = '{:<' + str(max_len + 1) + '}' # e.g. '{:<35}'
     
     # make and return the doc lines
-    text = pad_format_str.format('*')
-    text += index_format_str.format(str(0)) + ' - None \n'
+    text = pad_format_str.format('* ')
+    text += '\n* <table border=1><tr><td><b>Model no.</b></td><td><b>Model name</b></td><td><b>Parameters</b></td></tr>\n* <tr><td>' + index_format_str.format(str(0)) + '</td><td>None</td><td>None</td></tr>\n'
     i = 1
     for info in info_lst:
-        text += pad_format_str.format('*')
-        text += index_format_str.format(str(i)) + ' - ' + name_format_str.format(info.model_name) + info.Iq_hint + '\n'
+        text += pad_format_str.format('* <tr><td>')
+        text += index_format_str.format(str(i)) + '</td><td>' + '<a href="http://www.sasview.org/sasview/user/models/model_functions.html#'+ name_format_str.format(info.model_name).replace(" ", "") + 'model">' + name_format_str.format(info.model_name).replace(" ", "") + '</a></td><td>' + info.Iq_hint + '</td></tr>\n'
         i += 1
-        text += pad_format_str.format('*')
-        text += index_format_str.format(str(i)) + ' - ' + name_format_str.format(info.model_name_xy) + info.Iq_xy_hint + '\n'
+        text += pad_format_str.format('* <tr><td>')
+        text += index_format_str.format(str(i)) + '</td><td>' + '<a href="http://www.sasview.org/sasview/user/models/model_functions.html#'+ name_format_str.format(info.model_name_xy).replace(" ", "") + 'model">' + name_format_str.format(info.model_name_xy).replace(" ", "") + '</a></td><td>' + info.Iq_xy_hint + '</td></tr>\n'
         i += 1
+    text += '* </table>\n'
     return text
 
 def get_proxy_file_text(info_lst):
@@ -346,7 +348,7 @@ def test(args):
     docs_section_text = get_formatted_docs_text(info_lst)
     
     # mod .comp file
-    f = open(os.path.splitext(os.path.basename(args.compfile[0]))[0] + '_new.comp', 'w')
+    f = open(os.path.splitext(os.path.basename(args.compfile[0]))[0] , 'w')
     f.write(mod_comp_file_docs(args.compfile[0], docs_section_text))
     f.close()
     
@@ -382,7 +384,7 @@ def main_org(args):
     logging.debug('\n' + text)
     
     # save new component file 
-    comp_file_new = os.path.splitext(os.path.basename(comp_file))[0] + '_new.comp'
+    comp_file_new = os.path.splitext(os.path.basename(comp_file))[0] 
     logging.info('output comp file: %s' % comp_file_new)
     f = open(comp_file_new, 'w')
     f.write(text)
