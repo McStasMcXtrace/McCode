@@ -22,7 +22,9 @@
 *      SANS_sasview_model(model_index=31, model_pars={1, 2, 60}, 
 *                         xwidth=0.01, yheight=0.01, zdepth=0.005)
 * 
-* Available models:
+* Available <a href="http://www.sasview.org/sasview/user/models/model_functions.html#model">SasView models</a> are found in the table below
+* (A few models may require manual documentation lookup using the above link to the SasView site) 
+*
 * MDOC
 *    0 - None 
 *    1 - barbell                (sld, solvent_sld, bell_radius, radius, length)
@@ -126,6 +128,7 @@ OUTPUT PARAMETERS (
     my_a_v, 
     shape)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+DEPENDENCY "-std=c99"
 
 DECLARE
 %{
