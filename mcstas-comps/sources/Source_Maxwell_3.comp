@@ -71,7 +71,7 @@ OUTPUT PARAMETERS (M,l_range,w_mult,w_source,h_source)
 SHARE
 %{
   /* A normalised Maxwellian distribution : Integral over all l = 1 */
-  double M(double l, double temp)
+  double SM3_Maxwell(double l, double temp)
   {
     double a=949.0/temp;
     return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
@@ -150,7 +150,7 @@ TRACE
   printf("l %g, w_focus %g \n", lambda, w_focus);  */
 
   p *= w_mult*w_focus;                /* Correct for target focusing etc */
-  p *= I1*M(lambda,T1)+I2*M(lambda,T2)+I3*M(lambda,T3);
+  p *= I1*SM3_Maxwell(lambda,T1)+I2*SM3_Maxwell(lambda,T2)+I3*SM3_Maxwell(lambda,T3);
                                         /* Calculate true intensity */
 %}
 

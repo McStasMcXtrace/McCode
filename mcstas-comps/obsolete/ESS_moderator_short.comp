@@ -100,18 +100,18 @@ SETTING PARAMETERS (size, Lmin, Lmax, dist, focus_xw, focus_yh,
                     nu=50, T=325, tau=22e-6, tau1=0, tau2=7e-6, n=5, n2=5, 
                     chi2=2.5, I0=9e10, I2=4.6e10, branch1=0, branch2=0.5 ,
                     branchframe=0, int target_index=+1)
-OUTPUT PARAMETERS (M, F, l_range, w_mult)
+OUTPUT PARAMETERS (l_range, w_mult)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
 %{
-  double M(double l, double temp)
+  double Mezei_M_fct(double l, double temp)
   {
     double a=949.0/temp;
     return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
   }
 
-  double F(double t, double tau, int n)
+  double Mezei_F_fct(double t, double tau, int n)
   {
     return (exp(-t/tau)-exp(-n*t/tau))*n/(n-1)/tau;
   }
@@ -198,7 +198,7 @@ TRACE
     t = -tau_l*log(1e-12+rand01());       /* Sample from long-time tail a */
     p *= n/(n-1)*(1-exp(-(n-1)*t/tau_l)); /* Correct for true pulse shape */
     p *= w_focus;                         /* Correct for target focusing */
-    p *= I0*w_mult*M(lambda,T);           /* Calculate true intensity */
+    p *= I0*w_mult*Mezei_M_fct(lambda,T);           /* Calculate true intensity */
   }
   else
   {

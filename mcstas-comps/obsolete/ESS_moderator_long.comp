@@ -141,18 +141,18 @@ DEFINITION PARAMETERS ()
 		    int n_pulses=1, width_t=0.12, T_t=325, tau_t=80e-6, tau1_t=400e-6,
 		    tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5,
 		    branch2_t=0.5, int src_2012=1, tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0, beamport_angle=30)
-OUTPUT PARAMETERS (M, F, l_range, w_mult, w_geom, w_geom, w_geom_t)
+OUTPUT PARAMETERS (l_range, w_mult, w_geom, w_geom, w_geom_t)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
 %{
-  double M(double l, double temp)
+  double Mezei_M_fct(double l, double temp)
   {
     double a=949.0/temp;
     return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
   }
 
-  double F(double t, double tau, int n)
+  double Mezei_F_fct(double t, double tau, int n)
   {
     return (exp(-t/tau)-exp(-n*t/tau))*n/(n-1)/tau;
   }
@@ -346,7 +346,7 @@ TRACE
       /* Correct for true pulse shape */
       p *= w_focus;                         /* Correct for target focusing */
       p *= tau_l/d;                         /* Correct for tail part */
-      p *= I0_n*w_mult*w_geom*M(lambda,T_n);           /* Calculate true intensity */
+      p *= I0_n*w_mult*w_geom*Mezei_M_fct(lambda,T_n);           /* Calculate true intensity */
     }
     else
     {
@@ -392,7 +392,7 @@ TRACE
       if (tfocus_width>0) {
         p *= tfocus_width/d;    	  	  /* Correct for time focusing */
       }
-      p *= I0_n*w_mult*w_geom*M(lambda,T_n);       /* Calculate true intensity */
+      p *= I0_n*w_mult*w_geom*Mezei_M_fct(lambda,T_n);       /* Calculate true intensity */
     }
     else
     {

@@ -94,17 +94,17 @@ SETTING PARAMETERS (size=0.12, l_low, l_high, dist=0, xw, yh, freq=50.0/3.0,
                     T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2e-3, n=20,
 		    n2=5, chi2=0.9, I0=6.9e11, I2=27.6e10,
                     branch1=1, branch2=0.5, branch_tail=0.14350, twopulses=0, int target_index=0)
-OUTPUT PARAMETERS (M, F, l_range, w_mult)
+OUTPUT PARAMETERS (l_range, w_mult)
 
 SHARE
 %{
-  double M(double l, double temp)
+  double Mezei_M_fct(double l, double temp)
   {
     double a=949.0/temp;
     return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
   }
 
-  double F(double t, double tau, int n)
+  double Mezei_F_fct(double t, double tau, int n)
   {
     return (exp(-t/tau)-exp(-n*t/tau))*n/(n-1)/tau;
   }
@@ -215,7 +215,7 @@ TRACE
  /* Correct for true pulse shape */
     p *= w_focus;                         /* Correct for target focusing */
     p *= tau_l/d;                         /* Correct for tail part */
-    p *= I0*w_mult*M(lambda,T);           /* Calculate true intensity */
+    p *= I0*w_mult*Mezei_M_fct(lambda,T);           /* Calculate true intensity */
   }
   else
   {
@@ -249,7 +249,7 @@ TRACE
     }
     p *= 1-n/(n-1)*(exp(-t/tau_l)-exp(-n*t/tau_l)/n); /* Correct for true pulse shape */
     p *= w_focus;                         /* Correct for target focusing */
-    p *= I0*w_mult*M(lambda,T);           /* Calculate true intensity */
+    p *= I0*w_mult*Mezei_M_fct(lambda,T);           /* Calculate true intensity */
   }
   else
   {
