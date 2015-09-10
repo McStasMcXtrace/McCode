@@ -46,7 +46,10 @@ Dependencies:
 (run dpkg --add-architecture i386)
 cmake cpack nsis texlive latexmk bibtex mingw-w64 flex bison libc6-dev wine-bin:i386 (Check on clean system if this is enough!!)
 
-To build the windows 'metapackage' from Linux, you need to install wine and inno setup (within wine), following these instructions:
+To build the windows 'metapackage' from Linux, you need to install wine:i386 and inno setup (within wine), following the below instructions.
+
+IMPORTANT: The i386 suffix for the wine package is important as the inno setup nbinary will be installed in a wrong location otherwise...
+
 - https://katastrophos.net/andre/blog/2009/03/16/setting-up-the-inno-setup-compiler-on-debian/
 
 ( Along the lines of:
