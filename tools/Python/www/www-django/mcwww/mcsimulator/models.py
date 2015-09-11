@@ -34,13 +34,13 @@ from mcsimulator.models import *
 # - created :  Date and time created   #
 #--------------------------------------#
 class Job(models.Model):
-    ref = models.CharField(max_length=64, db_index=True)
+    ref     = models.CharField(max_length=64, db_index=True)
     sim     = models.ForeignKey('Simulation')
     created = models.DateTimeField(db_index=True, editable=False) 
     seed    = models.IntegerField()
     samples = models.IntegerField()
     npoints = models.IntegerField()
-    params = JSONField(null=True, blank=True)
+    params  = JSONField(null=True, blank=True)
     @staticmethod 
     def new(ref, sim, seed=0, samples=1000000, npoints=1):
         return Job(None, ref, seed, samples, npoints, sim.id, created=now())

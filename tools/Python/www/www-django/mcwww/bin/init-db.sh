@@ -30,3 +30,5 @@ fi
 #-------------------------------#
 python manage.py syncdb
 ./bin/update-simulations.sh
+# this is just for debug
+./manage.py createuser mark 1
