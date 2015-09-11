@@ -68,7 +68,7 @@ def loginPOST(req):
         print "     key:%s, val:%s"%(k,v)
     # got a simulation that is relevent to the user now build and save a job for them
         
-    job = Job::new()
+#    job = Job::new()
 
     # then pass this job to the redirect
 

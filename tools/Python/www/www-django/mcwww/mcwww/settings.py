@@ -35,7 +35,7 @@ DATA_FILES      = ('sim/datafiles',) # performs: ln <simulation folder>/datafile
 #===============#
 # Django Config #
 #===============#
-DJANGO_SETTINGS_MODULE = 'mcwww/settings.py'
+# DJANGO_SETTINGS_MODULE = 'mcwww/settings.py'
 SECRET_KEY     = 'gaeh@565h%=7)gw#625*ag82am#*55xnb40xa769yaxq-^ukj*'                    # THIS SHOULD BE SECRET! REGENERATE IT A LOT BECAUSE OF THE SERIALIZER USED. ----^
 DEBUG          =  True # False                                                           <----  THIS NEEDS TO BE SET TO FALSE. (css broken if false!!!!)
 TEMPLATE_DEBUG = DEBUG
