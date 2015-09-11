@@ -1,0 +1,165 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: Pump_probe
+*
+* %Identification
+* Written by: Erik B Knudsen
+* Date: \today
+* Origin: DTU Fysik
+* Release: McXtrace 1.1
+* Version: 0.2
+* %INSTRUMENT_SITE: DTU-Fysik
+*
+* Design study of a pump and probe type instrument. The sample is an excitable molecule
+*
+* Instrument short description
+*
+* %Description
+* Instrument longer description (type, elements, usage...)
+*
+* Example: mxrun Pump_probe.instr Dt=2e-9 Detector: 1dpsd_I=2.78312e-26
+*
+* %Parameters
+* excitation_prob: [1] Fraction of the molecules in solution that are excited at t=0.
+* Dt: [1] Time delay between laser pulse exciting the sample and the x-ray pulse.
+* PMN: [deg.] Minimum scattering angle to be sampled
+* PMX: [deg.] Maximum scattering angle to be sampled
+* fsolv: [ ] Volume fraction of solvent to solute. ( =1 means only solvent, =0 only solute)
+* JITTER: 
+* 
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Pump_probe_solvent(excitation_prob=0.2, Dt=100e-9, PSIMIN=0, 
+        PSIMAX=50, fsolv=0, JITTER=0, ETAMIN=-180,ETAMAX=180)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+  int scattered;
+  double rr,fsolvent;
+  double tjit,jitter;
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  fsolvent=fsolv;
+  jitter=JITTER;
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+AT (0,0,0) ABSOLUTE
+EXTEND
+%{
+    if(jitter!=0){
+        tjit=(rand01()-0.5)*100e-12*jitter;
+    }else{
+        tjit=0;
+    }
+%}
+
+COMPONENT src=Source_flat(xwidth=1e-9,yheight=1e-9,focus_xw=1e-10,focus_yh=1e-10,dist=1,E0=7.5, dE=0.000005, gauss=1,
+      flux=1e33)
+AT(0,0,0) RELATIVE Origin
+
+COMPONENT emon_src=E_monitor(filename="emon_src",xwidth=0.01,yheight=0.01,Emin=7.49,Emax=7.51)
+AT(0,0,1e-3) RELATIVE PREVIOUS
+
+COMPONENT lmon_src=L_monitor(filename="lmon_src",xwidth=0.01,yheight=0.01, Lmin=0.8,Lmax=10)
+AT(0,0,1e-3) RELATIVE PREVIOUS
+
+COMPONENT ap1 = Arm()
+AT (0,0,10) RELATIVE  src
+
+COMPONENT pulse_shape_chop = Chopper_simple(
+    t0 = -0.5/M_C, T = 20e-6, tau = 100e-12, xwidth = 1e-4,
+    yheight = 1e-4, isfirst = 1, tjit=JITTER)
+AT (0, 0, 0.5) RELATIVE ap1
+
+COMPONENT sample_pos = Arm()
+  AT (0,0,0.5) RELATIVE PREVIOUS
+EXTEND
+%{
+  rr=rand01();
+  scattered=0;
+%}
+
+COMPONENT sampsd= PSD_monitor(
+      xwidth=0.05,yheight=0.01, filename="sampsd", restore_xray=1)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT sample=Molecule_2state(
+  nq=512,state_0_file="Fe_bpy_GS_DFT.txt",state_1_file="Fe_bpy_ES_DFT.txt",xwidth=0.05,
+  yheight=0.01, zdepth=0.001,
+  psimin=PSIMIN*DEG2RAD, psimax=PSIMAX*DEG2RAD, etamin=ETAMIN*DEG2RAD,etamax=ETAMAX*DEG2RAD,
+  t_relax=600e-12, delta_t=Dt, excitation_yield=excitation_prob,
+  material_datafile="noabs.txt"
+)
+WHEN (rr>fsolvent) AT(0,0,0) RELATIVE sample_pos
+EXTEND
+%{
+  if (SCATTERED){
+    scattered=1;
+    p*=1.0;
+  }
+%}
+
+COMPONENT solvent=Molecule_2state(
+  nq=512,state_0_file="H2O_hot.txt",state_1_file="H2O_cold.txt",xwidth=0.05,
+  yheight=0.01, zdepth=0.001,initial_state=1,
+  psimin=PSIMIN*DEG2RAD, psimax=PSIMAX*DEG2RAD, etamin=ETAMIN*DEG2RAD,etamax=ETAMAX*DEG2RAD,
+  t_relax=2e-12, delta_t=Dt, q_parametric=1, excitation_yield=1,
+  material_datafile="noabs.txt"
+)
+WHEN (rr<fsolvent) AT(0,0,0) RELATIVE sample_pos
+EXTEND
+%{
+  if (SCATTERED){
+    scattered=1;
+    p*=1.0;
+  }
+%}
+
+COMPONENT beamstop = Arm()
+AT(0,0,0) RELATIVE sample_pos
+EXTEND
+%{
+  if (!scattered) ABSORB;
+%}
+
+COMPONENT psd4pi=PSD_monitor_4PI(
+  restore_xray=1,radius=0.3,filename="4pi.dat")
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT bananapsd=Monitor_nD(
+        restore_xray=1,options="banana theta limits=[0,45] bins=201", filename="bananapsd", radius=0.49, yheight=0.02)
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT det_ccd = PSD_monitor(
+        nx=200, ny=200, filename="det_ccd")
+AT(0,0,0.055) RELATIVE sample_pos
+
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
