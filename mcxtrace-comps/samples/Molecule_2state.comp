@@ -19,17 +19,48 @@
 * Disordered optical-excitable molecule sample.
 *
 * %D
-* A sample model for pump probe experiments
+* A sample model for pump probe experiments which models disordered molecules in a volume (rectangular,
+* cylindrical, or spherical). Molecules can be in one of two states (0 and 1).
+* Scattering is either specified through F vs. q scattering curves or as a set of atom positions from which
+* F vs. q is computed.
+* At t=-delta_t, a fraction of the molecules are put in state 1, from which they decay exponentially,
+* with time constant t_relax, into state 0. For t<-delta_t
+* all of the molecules are in the state specified by <i>initial_state</i>.
+* To improve statistics, scattering may be limited to a "forward" cone with opening angle in [psimin, psimax].
+* Furthermore, scatterging may be restricted to the azimuthal segment between [etamin,etamax].
+* 
 *
 * %P
 * Input parameters:
-* initial_state: ( ) Which state is Molecule_2state in for t<Dt? Useful for modelling something that chnages state slowly.
-*
+* initial_state: ( ) Which state is Molecule_2state in for t<delta_t? Useful for modelling something that changes state slowly.
+* form_factors:  ( ) File from which to read atomic form factors. Defualt amounts to use the one shipped with McXtrace.
+* state_0_file:  ( ) Isotropic scattering factors (parameterized by q), or atom positions are specified for state 0.
+* state_1_file:  ( ) Isotropic scattering factors (parameterized by q), or atom positions are specified for state 1.
+* nq:            ( ) Number of q-bins if F is to be computed from atom positions (Debye formalism).
+* material_datafile: ( ) Where to read f1 and f2 factors from in order to handle absorption.
+* delta_t:       (s) Delay between the exciting event t=0. delay is negative, i.e. delta_t>0 means the exciting event happens before t=0.
+* excitation_yield: ( ) Mean fraction of molecules that get excited.
+* t_relax:       (s) Mean relaxation time (into state 0) of excited molecules.
+* initial_state: ( ) The state of the molecule for t<0.
+* psimin:         (rad) Minimum scattering angle off the optical axis.
+* psimax:         (rad) Maximum scattering angle off the optical axis.
+* etamin:         (rad) Minimum scattering angle around the optical axis.
+* etamax:         (rad) Maximum scattering angle around the optical axis.
+* radius:         (m) Radius of cylindrical of spherical sample.
+* xwidth:         (m) Width of rectangular sample.
+* yheight:        (m) Height of rectangular or cylindrical sample.
+* zdepth:         (m) Depth (thickness) of rectangular sample.
+* concentration:  (m) Concentration or packing factor of sample.
+* p_transmit:     (m) Fraction of statistics devoted to sample direct (unscattered) beam.
+* q_parametric:   ( ) 0: Assume that datafiles contains atom positions. 1: datafiles contains F vs. q data.
+* Emax:           ( ) Maximal energy for which scattering factors are computed. Must be larger than the maximal impinging energy.
+*  
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Molecule_2state
-DEFINITION PARAMETERS (string form_factors="FormFactors.txt",string state_0_file=NULL,string state_1_file=NULL, nq=201, string material_datafile="Be.txt")
+DEFINITION PARAMETERS (string form_factors="FormFactors.txt",string state_0_file=NULL,string state_1_file=NULL, nq=201, 
+        string material_datafile="Be.txt")
 SETTING PARAMETERS (delta_t=100e-9,excitation_yield=0.2,t_relax=100e-9,initial_state=0,
     psimin=0,psimax=M_PI_2, etamin=0, etamax=2*M_PI,
     radius=0, yheight=0, xwidth=0, zdepth=0,
