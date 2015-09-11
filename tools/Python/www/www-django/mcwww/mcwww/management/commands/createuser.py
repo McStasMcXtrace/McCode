@@ -76,8 +76,8 @@ def main(args):
     #======================#
     #    user = User.objects.createMcUser(usr_details)
     user = User.objects.create_user(usr_details['username'],
-                                    usr_details['password'],
-                                    usr_details['email']    )
+                                    usr_details['email'],
+                                    usr_details['password'])
     print "\nMCUSER: ", user, "\n\n"
     user.save()
     #==================================#
