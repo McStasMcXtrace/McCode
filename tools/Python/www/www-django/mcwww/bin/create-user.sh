@@ -1,3 +1,3 @@
 #!/bin/sh
 
-python mcUser/management/commands/createuser.py $*
+python manage.py mcwww/management/commands/createuser.py $*

@@ -46,6 +46,37 @@ def loginPOST(req):
     if kwds['password'] == None: return redirect('/login/')
     objects = ModelBackend()
     user = objects.authenticate(kwds['username'], kwds['password'])
+    
+    # Hack to open a job page on login
+    from mcsimulator.models import Job, Simulation
+    
+    creation   = user.date_joined
+    last_login = user.last_login
+    first_login = last_login == creation
+    print "created: %s, last_login: %s"%(creation, last_login)
+
+    group = user.groups.all().first()
+    print "GROUP: %s"%(group)
+    simulations = Simulation.objects
+    sim = simulations.get(name__startswith=group)
+    print "SIM:%s"%sim
+    print "   name:        %s"%sim.name
+    print "   simgroup:    %s"%sim.simgroup
+    print "   displayname: %s"%sim.displayname
+    print "   params:      %s"%sim.params
+    for k,v in sim.params.items():
+        print "     key:%s, val:%s"%(k,v)
+    # got a simulation that is relevent to the user now build and save a job for them
+        
+    job = Job::new()
+
+    # then pass this job to the redirect
+
+
+
+    #    for m in [method for method in dir(OBJECT) if callable(getattr(OBJECT,method))]:
+    #      if(m[0]!="_"):print m
+    # End of Job ref hack
 
     if user is None or not user.is_active:
         return redirect('/login/Invalid_credentials')
