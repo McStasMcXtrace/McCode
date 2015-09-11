@@ -28,7 +28,7 @@ class McGnuMediator():
 
     # must be called before setupCallbacks
     def initUi(self, log_scale):
-        self.__mcgv.initUi(self.__plotter.get_data_keys(), log_scale)
+        self.__mcgv.initUi(self.__plotter.getDataKeys(), log_scale)
 
     # strictly limit widget access by McGnuMediator to this method
     def setupCallbacks(self):
@@ -57,7 +57,7 @@ class McGnuMediator():
 
     def showUi(self):
         self.__mcgv.show()
-        self.__plotter.plot(self.__plotter.get_data_keys()[0])
+        self.__plotter.plot(self.__plotter.getDataKeys()[0])
 
     # callback for list item mouse click
     def itemMouseClick(self, idx):

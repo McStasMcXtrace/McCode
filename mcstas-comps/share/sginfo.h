@@ -1,0 +1,1 @@
+../libs/nxslib/sginfo.h

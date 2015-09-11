@@ -2322,7 +2322,7 @@ int CompleteSgInfo(T_SgInfo *SgInfo)
   if (ApplyOriginShift(SgInfo) < 0)
     return -1;
 
-  if (SgInfo->nList > sizeof List_iList / sizeof (*List_iList)) {
+  if (SgInfo->nList >  ((int)sizeof List_iList) / ((int)sizeof(*List_iList))) {
     SetSgError("Internal Error: CompleteSgInfo()");
     return -1;
   }

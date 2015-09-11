@@ -112,12 +112,13 @@ SHARE
     double pi, num;           /* Initial p, number of bins in tree */
     double factor;            /* Adaption quality factor */
     double a_beta;            /* Adaption agression factor */
-  }
+  } source_adapt;
+
 %}
 
 DECLARE
 %{
-  source_adapt adpt;
+  struct source_adapt adpt;
   double count;                 /* Neutron counter */
   double y_0, C, r_0;
   double p_in;

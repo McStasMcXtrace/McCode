@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # This will install McStas components
-project(mcstas-comps NONE)
+project(mcstas-comps C)
 
 # Set module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -31,8 +31,16 @@ set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING} Components")
 
 include(CPack)
 
+add_library(nxs "STATIC" libs/libnxs/nxs.c libs/libnxs/sgclib.c libs/libnxs/sgfind.c libs/libnxs/sghkl.c libs/libnxs/sgio.c libs/libnxs/sgsi.c)
 
 # Include mcstas-comp files
-foreach(name contrib data examples misc monitors obsolete optics samples share sources editors)
+foreach(name contrib data examples misc monitors obsolete optics samples share sources editors libs)
   installLib("${PROJECT_SOURCE_DIR}/${name}")
 endforeach()
+
+if(WINDOWS)
+  install(TARGETS nxs DESTINATION "${lib}/libs/libnxs/")
+else()
+  install(TARGETS nxs DESTINATION "${MCCODE_LIB}/libs/libnxs/")
+endif()
+

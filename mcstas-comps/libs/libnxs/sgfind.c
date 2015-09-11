@@ -605,6 +605,8 @@ static int FixAxes(const T_SgInfo *SgInfo,
   int        nTrV, iTrV;
   const int  *TrV;
 
+  icActive[0]=icActive[1]=icActive[2]=0;
+  irActive[0]=irActive[1]=irActive[2]=0;
 
   if (FreeMx == NULL) {
     for (i = 0; i < 3; i++) {

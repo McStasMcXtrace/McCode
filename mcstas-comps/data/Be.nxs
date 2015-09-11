@@ -1,0 +1,15 @@
+#Beryllium unit cell file by T. Kittelmann Fall 2014. Inspired by parameters
+#in comment in McStas Be.laz file. Debye temperature taken from
+#http://chemistry.about.com/od/elementfacts/a/beryllium.htm.
+
+space_group = 194
+lattice_a = 2.2858
+lattice_b = 2.2858
+lattice_c = 3.5843
+lattice_alpha = 90.0
+lattice_beta = 90.0
+lattice_gamma = 120.0
+debye_temp = 1000.0
+
+# label  b_coherent  sigma_inc  sigma_abs  molar_mass  x  y  z
+add_atom = Be 7.79 0.0018 0.0076 9.01 0.0 0.0 0.0

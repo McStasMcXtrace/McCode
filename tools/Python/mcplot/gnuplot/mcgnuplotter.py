@@ -10,16 +10,6 @@ import numpy
 import re
 import os
 
-# supported file save terminals and the corresponding file extensions
-class McGnuplotFileTerminals():
-    png = ['png', 'png']
-    gif = ['gif', 'gif']
-    postscript = ['postscript', 'ps']
-
-class McGnuplotGuiTerminals():
-    x11 = 'x11'
-    wxt = 'wxt'
-
 # base class for mcstas gnuplot objects
 class McGnuplotObject():
     def __init__(self, key, data_struct, gp):
@@ -39,6 +29,10 @@ class McGnuplotObject():
         self.gp('set output "%s.%s"' % (out_file_noext, term[1]))
         self.plot()
         self.gp('set term pop')
+    
+    def set_term(self, term):
+        """ set gnuplot term on this instance """
+        self.gp('set term %s' % term)
 
     def plot(self):
         """ give data member to plot_impl """
@@ -226,14 +220,26 @@ class McGnuplotter():
         else:
             raise Exception('McGnuplotter.plot: no such key')
     
-    def save(self, key):
-        """ like plot, but saves to file """
+    def save(self, key, term=None, ext=None):
+        """ like plot, but saves to file (default: png). 'term' and 'ext' are gnuplot term_lst and file extension strings """
         if key in self.__gnuplot_objs:
-            self.__gnuplot_objs[key].save(McGnuplotFileTerminals.png)
+            term_lst = ['png', 'png']
+            if term:
+                term_lst[0] = term
+            if ext:
+                term_lst[1] = ext
+            self.__gnuplot_objs[key].save(term_lst)
         else:
             raise Exception('McGnuplotter.save: no such key: %s' % key)
-
-    def get_data_keys(self):
+    
+    def setTerm(self, key, term):
+        """ sets the gnuplot terminal 'term' on the instance associated with 'key', if it exists """
+        if key in self.__gnuplot_objs:
+            self.__gnuplot_objs[key].set_term(term)
+        else:
+            raise Exception('McGnuplotter.save: no such key: %s' % key)
+    
+    def getDataKeys(self):
         """ returns an alpha-num sorted list of all McGnuplotObject instances installed at construction time by key """
         return sorted(self.__gnuplot_objs.keys(), key=lambda item: (int(item.partition(' ')[0])
                                                                     if item[0].isdigit() else float('inf'), item))
