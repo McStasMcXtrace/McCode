@@ -99,21 +99,26 @@ INITIALIZE
   t_Table T[2],f0;
   int status;
 
+  if( psimin>psimax || psimin<0 || psimax>2*M_PI ||etamin>etamax || etamin<-M_PI ||etamax>M_PI ){
+      fprintf(stderr,"Error (%s): Nonsensical angle defs psi=[%g,%g] eta=[%g,%g]\n",NAME_CURRENT_COMP,psimin,psimax,etamin,etamax);
+      exit(-1); 
+  }
+
   if ( state_0_file && (status=Table_Read(&(T[0]),state_0_file,0))==-1){
-    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",state_0_file,NAME_CURRENT_COMP);
+      fprintf(stderr,"Error (%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP, state_0_file);
       exit(-1);
   }
   if ( state_1_file && (status=Table_Read(&(T[1]),state_1_file,0))==-1){
-    fprintf(stderr,"Error: Could not parse file \"%s\" in COMP %s\n",state_1_file,NAME_CURRENT_COMP);
-    fprintf(stderr,"Proceeding as a single state sample\n");
-    T[1]=T[0];
+      fprintf(stderr,"Error (%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,state_1_file);
+      fprintf(stderr,"Proceeding as a single state sample\n");
+      T[1]=T[0];
   }
 
   if(form_factors){
-    if (status=Table_Read(&(f0),form_factors,0)==-1){
-      fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,form_factors);
-      exit(-1);
-    }
+      if (status=Table_Read(&(f0),form_factors,0)==-1){
+          fprintf(stderr,"Error(%s): Could not parse file \"%s\"\n",NAME_CURRENT_COMP,form_factors);
+          exit(-1);
+      }
   }
 
   if (!q_parametric){
@@ -313,15 +318,19 @@ TRACE
       PROP_DL(dl);
       SCATTER;
 
-	/*Absorption before scattering*/
+      /*Absorption before scattering*/
       p*=exp(-mu*dl);
 
 
-      /*figure out accessible q for the incident wavelength*/
-      double psi,eta,q,alpha,f2,rr;
-      eta=rand01()*(etamax-etamin)+ etamin;
-      psi=rand01()*(psimax-psimin)+ psimin;
-      q=k*M_SQRT2*sqrt(1-cos(psi));
+      double q,alpha,f2,rr;
+      /*choose a random scattering direction*/
+      double kfx,kfy,kfz,solid_angle;
+      randvec_target_circle(&kfx, &kfy, &kfz, &solid_angle, 0, 0, 1, atan(psimax) );
+      NORM(kfx,kfy,kfz);
+      kfx*=k;kfy*=k;kfz*=k;
+      q=sqrt( scalar_prod(kx-kfx,ky-kfy,kz-kfz,kx-kfx,ky-kfy,kz-kfz));
+      /*apply new vector*/
+      kx=kfx;ky=kfy;kz=kfz;
 
       /*find f2 for this q by interpolation*/
       int r;
@@ -337,20 +346,8 @@ TRACE
       alpha=(q-prms[state].q[r-1])/(prms[state].q[r]-prms[state].q[r-1]);
       f2=(1-alpha)*prms[state].f2[r-1] + alpha*prms[state].f2[r];
       if (f2<0) f2=0;
-      /*apply psi and eta rotations to k to get the new vector*/
-      /*first find a vector to rotate psi around - this is the
-projection of y
-       * onto the plane normal to k*/
-      double ktx,kty,ktz;
-      double ax,ay,az;
-      ax= 0 - ky/k * kx/k;
-      ay= 1 - ky/k * ky/k;
-      az= 0 - ky/k * kz*k;
-      rotate(ktx,kty,ktz,kx,ky,kz,psi,ax,ay,az);
-      /*now rotate eta around the initial k-vector*/
-      rotate(kx,ky,kz, ktx,kty,ktz, eta, kx,ky,kz);
 
-      /*using this new vector, recompute the intersections to find length to go to correct for multiple scattering and absorption*/
+      /*using the new kf-vector, recompute the intersections to find length to go to correct for multiple scattering and absorption*/
       if (shape==CYLINDER){
         hit=cylinder_intersect(&l0,&l1,x,y,z,kx,ky,kz,radius,yheight);
         /*sample is a cylinder*/
@@ -363,7 +360,8 @@ projection of y
       }
 
       /*scale p according to F2 and \int_0_inf F2*/
-      p*=(f2/prms[state].f2sum) * (psimax-psimin)/M_PI * (etamax-etamin)/(2*M_PI) *  p_s/(1-p_transmit);
+      //p*=(f2/prms[state].f2sum) * (psimax-psimin)/M_PI * (etamax-etamin)/(2*M_PI) *  p_s/(1-p_transmit);
+      p*=(f2/prms[state].f2sum) * solid_angle * p_s/(1-p_transmit);
       //p*=prms[state].f2mcsum/prms[state].f2sum * (etamax-etamin)/(2*M_PI) *  p_s/(1-p_transmit);
 
 	/*Absorption after scattering*/
