@@ -171,6 +171,10 @@ class McGnuplotter():
 
     def __init__(self, input_file, noqt=False, log_scale=False):
         """ constructor - takes a .sim file or a .dat file name (for single vs. multiplot usage) NOTE: must be absolute file """
+        
+        # potentially set the gnuplot command that is supported by gnuplot 5+ on all platforms
+        #Gnuplot._Gnuplot.gp.GnuplotOpts.gnuplot_command = r'gnuplot'
+        
         # remember construction args
         self.arg_input_file = input_file
         self.arg_noqt = noqt
