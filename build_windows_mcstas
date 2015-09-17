@@ -18,6 +18,7 @@ find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 ./mkdist mcstas $1 "" "" mingw32 "" -- nsis
 ./mkdist mcstas-comps $1 mcstas-comps-win "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-perl $1 tools/Legacy-Perl-win "" mingw32 "" -- nsis
+./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mingw32 "" -- nsis
