@@ -20,8 +20,8 @@
 * %D
 *
 * This is a source component for connecting SPECTRA -output files with McXtrace.
-* 
-* Example: Source_spectra(xwidth=0.1, yheight=0.1, focus_aw=2, focus_ah=2, E0=14, dE=2, gauss=0)
+*
+*  
 *
 * %VALIDATION
 *
@@ -43,6 +43,8 @@
 * randomphase (1) If !=0 the photon phase is chosen randomly.
 * phase (1) Value of the photon phase (only used if randomphase!=0).
 * verbose (1) If non-zero output more warning messages. 
+* initial_serial (1) First serial number that the series of spectra files.
+* target_harmonic (1) Scaling factor for the fundamental wavelength.
 *
 * OUTPUT PARAMETERS:
 *
@@ -53,7 +55,7 @@ DEFINE COMPONENT Source_spectra
 DEFINITION PARAMETERS (int brilliance_column=2, int nE, string spectra_stem_x="", string spectra_stem_y="", string spectra_suffix="dsc", verbose=0)
 SETTING PARAMETERS ( 
     E0=0, dE=0, Emin,Emax, lambda0=0, dlambda=0, flux=0, gauss=0, gauss_a=0, incoherent=1, randomphase=1, phase=0,
-    nx=51,ny=51,npx=51,npy=51)
+    nx=51,ny=51,npx=51,npy=51, int initial_serial=1)
 OUTPUT PARAMETERS (prms, dist)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -62,34 +64,49 @@ SHARE
   %include "read_table-lib";
 
   int source_spectra_find_offset(char * fn){
-    /*find the first line that starts with [-0-9], i.e. can be considered a number*/
-    char line[512];
-    long pos;
-    double tmp;
-    FILE *fs;
+      /*find the first line that starts with [-0-9], i.e. can be considered a number*/
+      char line[512];
+      long pos,done=0;
+      FILE *fs;
 
-    fs=fopen(fn,"rb");
-
-    line[0]='\0';
-    pos=ftell(fs);
-    fgets(line,512,fs);
-    while ( !(sscanf(line,"%f",&tmp)) ){
-      pos=ftell(fs);
-      fgets(line,512,fs);
-      if (feof(fs)){
-        fprintf(stderr,"Error (Source_spectra): Could not strip header from file %s\n");
-        exit(-1);
+      if( (fs=fopen(fn,"rb"))==NULL){
+          fprintf(stderr,"Error (%s): Could not open file %s\n","Source_spectra",fn);
+          exit(-1);
       }
-    }
-    fclose(fs);
-    return pos;
-  }
+
+      line[0]='\0';
+      do {
+          pos=ftell(fs);
+          fgets(line,512,fs);
+          switch (line[0]){
+              case '-':
+              case '0':
+              case '1':
+              case '2':
+              case '3':
+              case '4':
+              case '5':
+              case '6':
+              case '7':
+              case '8':
+              case '9':
+                  done=1;
+                  break;
+              default:
+                  if (feof(fs)){
+                      fprintf(stderr,"Error (%s): Could not strip header from file %s\n"NAME_CURRENT_COMP, fn);
+                      exit(-1);
+                  }
+          }
+      } while (!done);
+      fclose(fs);
+      return pos;
+  }  
 
 %}
 
 DECLARE
 %{
-  char *spectra_init_calc="" "";
 
   double  dist;
   struct {
@@ -106,30 +123,34 @@ INITIALIZE
 %{
 
 
-  /*read the bunch of spectra files i fthey exist - if not try to call spectra to generate them.*/
-  /*They might be big - assume them to be x-y-projections*/
-  int num,status,offset;
-  char fn[256]="";
-  if (strlen(spectra_stem_x)==0 || strlen(spectra_stem_y)==0){
-    fprintf(stderr,"Error (%s): No generic path/s to the spectra file/s given. Aborting.\n",NAME_CURRENT_COMP);
-    exit(-1);
-  }
+    /*read the bunch of spectra files i fthey exist - if not try to call spectra to generate them.*/
+    /*They might be big - assume them to be x-y-projections*/
+    int num,status;
+    long offset, orig_offset;
+    char fn[256]="";
+    printf("%u %s\n",initial_serial,spectra_suffix);
+    if (strlen(spectra_stem_x)==0 || strlen(spectra_stem_y)==0){
+        fprintf(stderr,"Error (%s): No generic path/s to the spectra file/s given. Aborting.\n",NAME_CURRENT_COMP);
+        exit(-1);
+    }
+        
+    sprintf(fn,"%s-%d.%s",spectra_stem_x,initial_serial,spectra_suffix);
+    printf("%s\n",fn);
+    orig_offset=source_spectra_find_offset(fn);
+
   for (num=0;num<nE;num++){
-    sprintf(fn,"%s-%d.%s",spectra_stem_x,num+1,spectra_suffix);
-    if(num==0){
-      /*find the offset fpr the spectra files*/
-      offset=source_spectra_find_offset(fn);
-    }
-    if ( (status=Table_Read(&(prms.xproj[num]),fn,0))==-1){
+    sprintf(fn,"%s-%d.%s",spectra_stem_x,num+initial_serial,spectra_suffix);
+    offset=orig_offset;/*Table_Read_Offset overwrites offset*/
+    if ( (status=Table_Read_Offset(&(prms.xproj[num]),fn,0,&offset,0))==-1){
       fprintf(stderr,"Source_spectra(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,fn);
       exit(-1);
     }
-    sprintf(fn,"%s-%d.%s",spectra_stem_y,num+1,spectra_suffix);
-    if ( (status=Table_Read(&(prms.yproj[num]),fn,0))==-1){
+    sprintf(fn,"%s-%d.%s",spectra_stem_y,num+initial_serial,spectra_suffix);
+    offset=orig_offset;/*Table_Read_Offset overwrites offset*/
+    if ( (status=Table_Read_Offset(&(prms.yproj[num]),fn,0,&offset,0))==-1){
       fprintf(stderr,"Source_spectra(%s) Error: Could not parse file \"%s\"\n",NAME_CURRENT_COMP,fn);
       exit(-1);
     }
-    
     prms.Ix[num]=prms.Iy[num]=0;
     /*sum the brilliances to get something to normalize to*/
     int r;
@@ -143,9 +164,11 @@ INITIALIZE
     if (verbose && prms.Ix[num]!=prms.Iy[num]){
       fprintf(stderr,"Warning (%s): Integrated intensities do not match up for x and y projections at num %d\n",NAME_CURRENT_COMP,num);
     }
-    printf("\\int I [%d] = (%g,%g)\n",num,prms.Ix[num],prms.Iy[num]); 
+    if (verbose) printf("\\int I [%d] = (%g,%g)\n",num,prms.Ix[num],prms.Iy[num]); 
+    printf("%d %g %g\n",num,prms.Ix[num],prms.Iy[num]);
 
   }
+
   /*find limits in x,x',y, and y', assuming they're the same across all source files.*/
   /*these would be relevant for a search*/
   //prms.xmin=prms.xpmin=prms.ymin=prms.ypmin=FLT_MAX;
@@ -201,7 +224,7 @@ TRACE
   if (num<0) num=0;
   if (num>nE-1) num=nE-1;
   if ( prms.Ix[num]==0 || prms.Iy[num]==0 ){
-    ABSORB;
+      ABSORB;
   }
 
   /*downweight for not using the full energy window. Don't do this for deterministic energy (dE=0).*/
