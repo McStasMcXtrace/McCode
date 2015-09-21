@@ -333,7 +333,7 @@ Mcplot::Mcplot(string infilename="mccode.sim", bool verbose=0, bool doplot=1) {
     return NULL;
   }
   /*So we've now caught a single file*/
-  int n=infilename.find("/");
+  int n=infilename.find_last_of('/');
   if( n==string::npos){
     workdir="./";
   }else{
