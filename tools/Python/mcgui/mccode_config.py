@@ -5,10 +5,10 @@ configuration = {
     "MCCODE_VERSION": '2.2a',
     "MCCODE_LIB_DIR": '/usr/share/mcstas/2.2a/',
     "MCCODE": 'mcstas',
-    "MCRUN": 'mcrun',
-    "MCPLOT": 'mcplot',
-    "MCDISPLAY": 'mcdisplay',
-    "TOOL_NAME": 'mcgui',
+    "MCRUN": 'mcrun-py',
+    "MCPLOT": 'mcplot-gnuplot-py',
+    "MCDISPLAY": 'mcdisplay-matplotlib-py',
+    "TOOL_NAME": 'mcgui-py',
     "PARTICLE": 'neutron',
 }
 

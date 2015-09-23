@@ -5,10 +5,10 @@ configuration = {
     "MCCODE_VERSION": '@MCCODE_VERSION@',
     "MCCODE_LIB_DIR": '@MCCODE_LIB@',
     "MCCODE": '@FLAVOR@',
-    "MCRUN": '@MCCODE_PREFIX@run',
-    "MCPLOT": '@MCCODE_PREFIX@plot',
-    "MCDISPLAY": '@MCCODE_PREFIX@display',
-    "TOOL_NAME": '@MCCODE_PREFIX@gui',
+    "MCRUN": '@MCCODE_PREFIX@run-py',
+    "MCPLOT": '@MCCODE_PREFIX@plot-gnuplot-py',
+    "MCDISPLAY": '@MCCODE_PREFIX@display-matplotlib-py',
+    "TOOL_NAME": '@MCCODE_PREFIX@gui-py',
     "PARTICLE": '@MCCODE_PARTICLE@',
 }
 
