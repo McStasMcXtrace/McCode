@@ -64,7 +64,7 @@ TRACE
 %{
   double prob_up;
   /*the probablilty for having spin "up" along the quantization driection m*/
-  prob_up=(1+scalar_prod(sx,sy,sz,mx,my,mx))/2.0;
+  prob_up=(1+scalar_prod(sx,sy,sz,mx,my,mz))/2.0;
   /*adjust weight accordingly (i.e. monte carlo choice with prob. 1)*/
   p*=prob_up;
   sx=mx;sy=my;sz=mz;
