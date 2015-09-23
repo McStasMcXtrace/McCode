@@ -173,7 +173,7 @@ TRACE
 MCDISPLAY
 %{
   magnify("xy");
-  rectangle(0,0,0,xwidth,yheight,0);
+  rectangle("xy",0,0,0,xwidth,yheight);
 %}
 
 END
