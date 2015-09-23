@@ -1,0 +1,269 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: my_component
+*
+* %IDENTIFICATION
+* Written by: Erik B Knudsen
+* Date: Sep. 2015
+* Version: $Revision: 0.01 $
+* Origin: DTU Physics
+* Release: McStas 2.1
+* Modified by: 
+*
+* %DESCRIPTION
+* A magnet with a spin-flip foil inside
+* 
+* This component models a magnet with a constant magnetic field and a slanted 
+* magnetized foil inside acting as a spin-flipper. This arrangement may be used to
+* target the geometry of a Spin-Echo SANS instrument (Rekveldt, NIMB, 1997 || Rekveldt, Rev Sci Instr. 2005).
+* In its most basic form a SE-SANS instrument nrelies  on inclined field regions of
+* constant magnetic field, which can be difficult to realize. Instead it is possible to emulate
+* such regions using a magnetized foil.
+*
+* In this component th emagntzied foil is modelled as a canted (by the angle phi) mathematical plane inside a region
+* of constant magnetic field of dimensions (xwidth,yheight,zdepth). Furthermore, exponetially decaying stray fields from
+* the constant field region may be specified by giving parameters (Bxwidth,Byheight,Bzdepth) > (xwidth,yheight,zdepth).
+*
+*
+* %PARAMETERS
+* xwidth: width of the magnet [m]
+* yheight: height of the magnet [m]
+* zdepth: thickness of the magnet [m]
+* Bxwidth: width of the B-field of thev component [m]
+* Byheight: height of the B-field of the component [m]
+* Bzdepth: thickness of the B-field of the component [m]
+* phi: angle (from the xz-plane) of the foil-spinflipper inside the magnet [rd]
+* Bx:      [T]       Parameter used for x composant of field.
+* By:      [T]       Parameter used for y composant of field.
+* Bz:      [T]       Parameter used for z composant of field.
+* fieldFunction [pointer] Function describing the magnetic field.
+*
+* %LINKS
+*
+* %END
+****************************************************************************/
+
+/*
+  This comment will not be exported to mcdoc 
+*/
+
+DEFINE COMPONENT Foil_flipper_magnet
+DEFINITION PARAMETERS(field_function=const_magnetic_field, stray_field_function=NULL)
+SETTING PARAMETERS(xwidth, yheight, zdepth, Bxwidth=-1, Byheight=-1, Bzdepth=-1, phi=0.0, Bx,By,Bz,foil_in=1, verbose=0)
+OUTPUT PARAMETERS(stray_fields,instray_magnet,outstray_magnet,inside_magnet)
+//STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+
+SHARE
+%{
+/* Declare structures and functions only once in each instrument. */
+#ifndef POL_LIB_H
+  %include "pol-lib"
+#endif
+    void foil_spin_flip(double *sx, double *sy, double *sz, double lambda, double phi){
+      /*the spin flip is actually a precession around the field vector - in this case this vector is
+       * in the foil plane, perp. to X, i.e. Z rotated by phi.*/ 
+      double ux,uy,uz,s;
+      ux=0;uy=sin(phi);uz=cos(phi);
+      /*Rodigues formula for roatating a vector around a unit vector.
+       * v_rot=v*cos(theta) + uxv * sin(theta) + (u dot v)u(1-cos(theta)
+       * theta=180 deg. => v_rot =-v + 2*(u dot v)u*/
+      s=scalar_prod(ux,uy,uz,*sx,*sy,*sz);
+      *sx=-*sx+2*s*ux;
+      *sy=-*sy+2*s*uy;
+      *sz=-*sz+2*s*uz;
+    }
+
+  int exp_dec_magnetic_field (double x, double y, double z, double t, double *Bx, double *By, double *Bz, void *data){
+
+    double *prms = (double *)data;
+    double b;
+    /*parameters are in the order, Bx0,By0,Bz0,z0, where z0 is the point from which B is decaying*/
+    b=exp(- fabs(z-prms[3]));
+    *Bx=prms[0]*b;
+    *By=prms[1]*b;
+    *Bz=prms[2]*b;
+  }
+
+%}
+
+DECLARE
+%{
+  /*Declarations of variables used in the whole of the component*/
+  void *magnet_prms;
+  double foil_n[3];
+  Rotation spin_flip;
+  double inside_magnet[6],instray_magnet[6],outstray_magnet[6];
+  int stray_fields=0;
+%}
+
+INITIALIZE
+%{
+
+  /*default is to have the foil horizontal*/
+  Rotation foil_rot;
+  Coords n,tmp;
+
+  n.x=0;n.y=1;n.z=0;
+  rot_set_rotation(foil_rot,phi,0,0);
+  tmp=rot_apply(foil_rot,n);
+  foil_n[0]=tmp.x;foil_n[1]=tmp.y; foil_n[2]=tmp.z;
+  /*setup spin-flip rotation. This is equivalent to mirroring in the foil plane.*/
+  printf("foil normal (%s) %g %g %g\n",NAME_CURRENT_COMP, foil_n[0],foil_n[1],foil_n[2]); 
+  /*copy-paste from simpleBfield.comp*/
+  /*this should be a store_magnet type function in pol-lib i think*/
+  Coords localG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0));
+  
+  double *t=malloc(sizeof(double)*4);
+  /*limits of magnetic field definition is currently set to 0, i.e. turned off.
+    This means that collection of fields should be done manually*/
+  if (field_function==const_magnetic_field){
+    t[0]=Bx;
+    t[1]=By;
+    t[2]=Bz;
+  } else if (field_function==rot_magnetic_field){
+    double *t=malloc(3*sizeof(double));
+  }
+  magnet_prms=(void *)t;
+  /*magnet_prms=mcmagnet_init_par(Bx,By,Bz,xwidth,yheight,zdepth);*/
+  instray_magnet[0]=Bx;
+  instray_magnet[1]=By;
+  instray_magnet[2]=Bz;
+  instray_magnet[5]=-zdepth/2.0;
+  
+  outstray_magnet[0]=Bx;
+  outstray_magnet[1]=By;
+  outstray_magnet[2]=Bz;
+  outstray_magnet[5]=zdepth/2.0;
+
+  inside_magnet[0]=Bx;
+  inside_magnet[1]=By;
+  inside_magnet[2]=Bz;
+
+  /*if the magnetic field dimensions are not given, we assume there are no stray fields.
+    I.e. the magnetic field does not extend beyond the magnet gap*/
+  if (Bxwidth!=-1 && Byheight!=-1 && Bzdepth!=-1){
+    stray_fields=1;
+  }
+  if (Bxwidth==-1) Bxwidth=xwidth;
+  if (Byheight==-1) Byheight=yheight;
+  if (Bzdepth==-1) Bzdepth=zdepth;
+  if (verbose){
+      printf("%s: xw,yh,zd=(%g %g %g), (Bxw,Byh,Bzd)=(%g %g %g)\n",NAME_CURRENT_COMP,xwidth,yheight,zdepth,Bxwidth,Byheight,Bzdepth);
+      if (foil_in)  printf("Foil is IN\n");
+      else printf("Foil is OUT\n");
+  }
+%}
+
+TRACE
+%{
+  double t1,t2,t3,t4,dt;
+  double sp,v;
+  mcmagnet_field_info *old_magnet,*outer_magnet;
+  double *dd;
+
+  /*check if we hit component at all*/
+  if (plane_intersect(&t1,x,y,z,vx,vy,vz,0,0,1,0,0,-Bzdepth/2.0)==0){
+      if(verbose) fprintf(stderr,"missed the magnetic field plane of %s\n",NAME_CURRENT_COMP);
+      ABSORB;
+  }
+  v=sqrt(vx*vx + vy*vy + vz*vz);
+  if ( (box_intersect(&t1, &t2, x, y, z, vx, vy, vz, Bxwidth, Byheight, Bzdepth))==0){
+  /*propagate to the start of the component (which is -Bzdepth/2)*/
+      if(verbose) fprintf(stderr,"missed the magnetic field of %s, %g %g %g\n",NAME_CURRENT_COMP,t1,t2,v);
+      ABSORB;
+  }
+  if (t1<0){
+      if(verbose) fprintf(stderr,"warning: neutron is already inside component %s on entry. t1=%g t2=%g\n",NAME_CURRENT_COMP,t1,t2);
+  }else{
+      PROP_DT(t1);
+      t2=t2-t1;
+  }
+  
+  if (stray_field_function){
+      /*neutron is now at the start of our b-field description*/
+      /*this would be the place to push the magnetic field description from the magnet stack*/
+      /*inject our magnet description into the propagation and remember the old one*/
+      mcmagnet_push(stray_field_function,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,(void *)instray_magnet);
+      /*do we hit the magnet opening assuming the magnet gap "tunnel" is rectangular*/
+      /*n.b this is not GRAVITY-enabled*/
+  }
+  if ( (box_intersect(&t3, &t4, x, y, z, vx, vy, vz,xwidth, yheight, zdepth))==0){
+      if(verbose) fprintf(stderr,"missed the magnet %s gap\n",NAME_CURRENT_COMP);
+      ABSORB;
+  }
+  /* t3 is the time for intersecting the first part of the area under the magnet - propagate to that*/
+  if (t3>1e-9){
+      PROP_DT(t3);
+      t4=t4-t3;
+      t2=t2-t3;
+  }
+  /*pop out the stray field description if necessary*/
+  if(stray_field_function) mcmagnet_pop();//this could be done with a stop bit in the magnet parameters
+  
+  /*inject another field description for the magnetic field betweeen pole shoes.*/
+  mcmagnet_push(const_magnetic_field,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),1,(void *)inside_magnet);
+  
+  /*see if we hit the magnet walls before we exit*/
+  if (plane_intersect(&dt,x,y,z,vx,vy,vz,0,0,1,0,0,zdepth/2.0)==0){
+      fprintf(stderr,"missed the end plane of the magnet %s - this should not be\n",NAME_CURRENT_COMP);
+      exit(-1);
+      ABSORB;
+  }
+  if (fabs(dt-t4)>FLT_EPSILON) {
+      if(verbose) fprintf(stderr,"hit magnet from inside gap %g %g %s\n",dt,t4,NAME_CURRENT_COMP);
+      ABSORB;
+  }
+
+  /*neutron is inside magnet gap - propagate to the foil plane or leave the neutron if it does not hit the plane
+    while inside the gap*/
+  if (foil_in){
+      if (plane_intersect(&dt,x,y,z,vx,vy,vz,foil_n[0],foil_n[1],foil_n[2],0,0,0)==0 || dt<0 || dt>t4 ){
+          if(verboise) fprintf(stderr,"missed the foil flipper plane of %s (dt=%g)\n",NAME_CURRENT_COMP,dt);
+          ABSORB;
+          dt=dt;
+      }
+      else{
+          PROP_DT(dt);
+          t4=t4-dt;
+          t2=t2-dt;
+          /* at the foil - so flip spin/polarization*/
+          foil_spin_flip(&sx,&sy,&sz,0.0,phi);
+      }
+  }
+  /*propagate to the other end of the magnet gap*/
+  PROP_DT(t4);
+  t2=t2-t4;
+
+  /*pop the "inner" magnetic field*/
+  mcmagnet_pop();
+  
+  if(stray_field_function)
+      mcmagnet_push(stray_field_function,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,(void *)outstray_magnet);
+  if (t2>1e-9){
+      /*propagate to the end of the component*/
+      PROP_DT(t2);
+  }
+  /*pop the 2nd stray field*/
+  if(stray_field_function){
+      mcmagnet_pop();
+  }
+
+%}
+
+MCDISPLAY
+%{
+  double y=atan(phi)*zdepth/2.0;
+  magnify("xy");
+  box(0.0,0.0,0.0,Bxwidth,Byheight,Bzdepth);
+  if (Bxwidth!=xwidth || Byheight!=yheight || Bzdepth!=zdepth){
+    box(0,0,0,xwidth,yheight,zdepth);
+  }
+  /*draw the foil plane*/
+  multiline(5,-xwidth/2.0,-y,-zdepth/2.0, xwidth/2.0,-y,-zdepth/2.0, xwidth/2.0,y,zdepth/2.0, -xwidth/2.0,y,zdepth/2.0, -xwidth/2.0,-y,-zdepth/2.0);
+%}
+END
