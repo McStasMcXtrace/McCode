@@ -30,10 +30,6 @@ find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 ./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" mingw32 "o" -- nsis
 
 if [ "x$2" != "x" ]; then
-    cd support/Win32
-    ./iscc gnuplot-py-1.8.iss
-    cd ../..
-
     # Build the meta-packages also
     cd meta-pkgs/windows/Support
     if [ ! -f PPDs.zip ]; then
@@ -44,5 +40,4 @@ if [ "x$2" != "x" ]; then
     sed s/@VERSION@/${1}/g McStas-metapackage32.iss > McStas-${1}-metapackage32.iss
     ./iscc McStas-${1}-metapackage32.iss
     mv Output/setup.exe dist/McStas-Metapackage-${1}-win32.exe
-
 fi

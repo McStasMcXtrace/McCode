@@ -1,0 +1,123 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+          "http://www.w3.org/TR/html40/loose.dtd">
+
+<html>
+         
+  <head>
+    <title>HappyDoc Generated Documentation</title>
+  </head>
+
+  <body bgcolor="#ffffff">
+        
+        
+        <table border="0" cellpadding="5" cellspacing="0" width="100%">
+        <tr>
+            <th rowspan="2"
+                valign="top"
+                align="left"
+                width="10%"
+                bgcolor="#88bbee"><font color="#000000">HappyDoc Generated Documentation</font>
+            </th>
+            <th bgcolor="#88bbee"
+                width="90%"
+                align="right"><font color="#000000">Gnuplot/ANNOUNCE.txt</font>
+            </th>
+        </tr>
+        <tr>
+        <td>
+        <!-- breadcrumbs -->
+<p><small>
+/&nbsp;<a href="../Gnuplot/index.html">Gnuplot</a>&nbsp;/&nbsp;ANNOUNCE.txt&nbsp;</small></p>
+
+<!-- /breadcrumbs -->
+
+<p>This is to announce the release of version 1.8 of Gnuplot.py.</p>
+<p>Gnuplot.py is a Python <a href="#1"><a href="#ref1">[1]</a></a> package that allows you to create graphs
+from within Python using the gnuplot <a href="#2"><a href="#ref2">[2]</a></a> plotting program.</p>
+<h3>Gnuplot.py can be obtained from</h3>
+<p>    http://gnuplot-py.sourceforge.net/</p>
+<p>Prerequisites (see footnotes):
+    the Python interpreter <a href="#1"><a href="#ref1">[1]</a></a>
+    the Python numpy module <a href="#3"><a href="#ref3">[3]</a></a>
+    the gnuplot program <a href="#2"><a href="#ref2">[2]</a></a></p>
+<p>or, to use it under Java (experimental):
+    a Java interpreter
+    the Jython interpreter <a href="#4"><a href="#ref4">[4]</a></a>
+    the Jython version of the Numeric module <a href="#5"><a href="#ref5">[5]</a></a>
+    the gnuplot program <a href="#2"><a href="#ref2">[2]</a></a></p>
+<p>Some ways this package can be used:</p>
+
+<ol>
+<li> Interactive data processing: Use Python's excellent numpy package
+   to create and manipulate arrays of numbers, and use Gnuplot.py to
+   visualize the results.
+2. Web graphics: write CGI scripts in Python that use gnuplot to
+   output plots in (for example) PNG format and return them to the
+   client.
+3. Glue for numerical applications (this is my favorite): wrap your
+   C++/C/Fortran subroutines so that they are callable from Python,
+   then you can perform numerical computations interactively from
+   scripts or from the command line and use Gnuplot.py to plot the
+   output on the fly.
+4. Compute a series of datasets in Python and plot them one after the
+   other using Gnuplot.py to produce a crude animation.</li>
+
+</ol>
+<p>New features in this version:
+  + Various bug fixes
+  + an option "filename" to Data and GridDat
+    This allows saving the data to a permanent, rather than temporary
+  + pdf terminal definition</p>
+<h3>Features already present in older versions:</h3>
+<p>  +  Two and three-dimensional plots.
+  +  Plot data from memory, from a file, or from an expression.
+  +  Support for multiple simultaneous gnuplot sessions.
+  +  Can pass arbitrary commands to the gnuplot program.
+  +  Object oriented, extensible design with several built-in types
+     of plot items.
+  +  Portable and easy to install (nothing to compile except on
+     Windows).
+  +  Support for Unix (including Linux and Mac OS X), MS Windows, and
+     Mac OS.  The platform-dependent layer is fairly well abstracted
+     out, so it shouldn't be too difficult to add support for other
+     platforms.
+  +  Support for sending data to gnuplot as `inline' or `binary' data.
+     These are optimizations that also remove the need for temporary
+     files.
+  +  Partly table-driven to make it easy to extend.  New terminal
+     types can be supported easily by adding data to a table.
+  +  Install via distutils.
+  +  LGPL license .
+  +  Support for sending data to gnuplot via FIFOs (named pipes, linux only).
+  + Preliminary support for running Gnuplot.py under Jython</p>
+<p>Footnotes:
+----------
+<a href="#1"><a href="#ref1">[1]</a></a> Python <http://www.python.org> is an excellent object-oriented
+    scripting/rapid development language that is also especially good
+    at gluing programs together.
+<a href="#2"><a href="#ref2">[2]</a></a> gnuplot <http://www.gnuplot.info/> is a free, popular, very
+    portable plotting program with a command-line interface.  It can
+    make 2-d and 3-d plots and can output to myriad printers and
+    graphics terminals.
+<a href="#3"><a href="#ref3">[3]</a></a> The numpy Python extension <http://www.scipy.org> is a
+    Python module that adds fast and convenient array manipulations to
+    the Python language.
+<a href="#4"><a href="#ref4">[4]</a></a> Jython <http://www.jython.org> is a Python interpreter that runs
+    within a Java virtual machine.
+<a href="#5"><a href="#ref5">[5]</a></a> JNumeric <http://jnumerical.sourceforge.net/> is a version of the
+    Numeric module that runs under Java/Jython.</p>
+
+        </td>
+        </tr>
+        </table>
+
+    <hr>
+
+    <font size="-2"><i>This document was automatically generated
+    Fri May  2 16:59:07 2008 by <a
+    href="http://happydoc.sourceforge.net">HappyDoc</a> version
+    3.1</i></font>
+        
+  </body>
+</html>
+        

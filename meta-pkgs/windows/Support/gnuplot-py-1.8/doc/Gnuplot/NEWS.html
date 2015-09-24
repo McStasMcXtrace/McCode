@@ -1,0 +1,256 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+          "http://www.w3.org/TR/html40/loose.dtd">
+
+<html>
+         
+  <head>
+    <title>HappyDoc Generated Documentation</title>
+  </head>
+
+  <body bgcolor="#ffffff">
+        
+        
+        <table border="0" cellpadding="5" cellspacing="0" width="100%">
+        <tr>
+            <th rowspan="2"
+                valign="top"
+                align="left"
+                width="10%"
+                bgcolor="#88bbee"><font color="#000000">HappyDoc Generated Documentation</font>
+            </th>
+            <th bgcolor="#88bbee"
+                width="90%"
+                align="right"><font color="#000000">Gnuplot/NEWS.txt</font>
+            </th>
+        </tr>
+        <tr>
+        <td>
+        <!-- breadcrumbs -->
+<p><small>
+/&nbsp;<a href="../Gnuplot/index.html">Gnuplot</a>&nbsp;/&nbsp;NEWS.txt&nbsp;</small></p>
+
+<!-- /breadcrumbs -->
+
+<p>$Id: NEWS.txt 302 2008-01-14 22:15:19Z bmcage $</p>
+<p>This file describes the changes introduced in each version of the
+Gnuplot.py package.</p>
+<p>Version ?.?</p>
+<p>Version 1.8:</p>
+
+<ul>
+<li>hardcopy allows for terminal=<code>svg</code> (using a patch from Spyros Blanas)</li>
+<li>Use with_ instead of with as that will be a python keyword in the
+  future.</li>
+<li>Added an option "filename" to Data and GridData in PlotItems.py.
+  This allows saving the data to a permanent, rather than temporary,
+  file.  (Patch contributed by Matthew Fulmer.)</li>
+<li>Added a <code>pdf</code> terminal definition (using a patch from Jim Kleckner).</li>
+<li>Added close() and __del__() methods to the Gnuplot class.  This
+  might help with some cases of premature temporary file deletion.
+  (Suggested by Jim Kleckner.)</li>
+
+</ul>
+<p>Version 1.7:</p>
+
+<ul>
+<li>Relaxed license from GPL to LGPL.</li>
+<li>Significant reorganization of PlotItem.py:<p>  + Deleted the AnyFile classes from PlotItem: AnyFile, TempFile,
+    ArrayFile, and TempArrayFile.  Those classes weren't pulling their
+    weight.</p>
+<p>  + Added a new _FileItem class to represent all forms of data that
+    gnuplot treats as a file.</p>
+<p>  + Added a new _TempFileItem class to represent PlotItems that are
+    based on a temporary file.</p>
+<p>  + Added a new _InlineFileItem class to represent PlotItems whose
+    data is passed to gnuplot inline.</p>
+<p>  + Changed PlotItems.File() and PlotItems.Data from classes into
+    factory functions that produce instances of the classes mentioned
+    above.</p>
+</li>
+<li>Slightly changed the PlotItem interface to support the new derived
+  classes:<p>  + Removed the basecommand argument to the constructor.  Instead
+    added a get_base_command_string() method to retrieve that string.
+    This function is not defined in PlotItem so it is added to the
+    derived classes.  (This function is used by _FIFOFileItem as the
+    hook where _FIFOWriters are created.</p>
+<p>  + Added a new get_command_option_string() method which abstracts out
+    the construction of the option part of the command() method.</p>
+</li>
+<li>Added support for sending data to gnuplot via FIFOs (named pipes)
+  via a new _FIFOFileItem class.  This mechanism removes the ambiguity
+  about when temporary files should be deleted, therefore making it
+  easier to use Gnuplot.py in script environments, etc.  This feature
+  is only implemented under <em>nix because Python doesn't implement the
+  required threading module and os.mkfifo() on other operating
+  systems.  Added two new configuration options, support_fifo and
+  prefer_fifo<u>data, to the gp</u></em>.py files to switch the new feature on
+  and off.</li>
+<li>Started adding support for running Gnuplot.py under Jython/Java.
+  Added gp_java.py, which is a functioning low-level interface to
+  gnuplot via java.lang.Process objects.  The rest might work, too, if
+  you have JNumeric <http://jnumerical.sourceforge.net/> installed.
+  (Gnuplot.py relies on the Numeric library; JNumeric is the Jython
+  equivalent.)  If I find the time I might try to produce a version
+  that doesn't require Numeric at all, under either Python or Jython.</li>
+<li>Removed the oldplot.py module: (1) I doubt anybody is still using
+  it. (2) It seems to be broken anyway. (3) I don't have the energy to
+  fix or maintain it.  Let me know if I'm wrong about point 1.</li>
+<li>Started a new FAQ.txt file and added an answer to the single most
+  frequently asked question.</li>
+
+</ul>
+<p>Version 1.6:</p>
+
+<ul>
+<li>Introduced a general mechanism to make it easy to support multiple
+  gnuplot terminal types in the Gnuplot.hardcopy() function.  Added
+  definitions for <code>postscript</code>, <code>png</code>, <code>fig</code>, and <code>cgm</code>.  Other
+  terminal types can now be added easily.</li>
+<li>Changed names of Exceptions to be more consistent with other
+  modules: OptionException -> OptionError and DataException ->
+  DataError.  Moved both to Errors.py and derive both from
+  Errors.Error.</li>
+<li>Incorporated several changes for Mac OS suggested by Jon Moody.</li>
+<li>Added a gp_macosx.py file to support Mac OS X.  The only difference
+  between this and gp_unix.py is the default terminal selection.</li>
+<li>Moved import statement in demo.py to global scope for Python 2.2.</li>
+<li>Removed claims that demo.py can be run before installing Gnuplot.py.</li>
+
+</ul>
+<p>Version 1.5:</p>
+
+<ul>
+<li>Broke up the module a bit for better maintainability.  The most
+  commonly-used facilities are still available through "import
+  Gnuplot", but a few more specialized things have been moved to
+  separate modules, in particular funcutils.py and PlotItems.py.
+  __init__.py now just imports things from other modules.</li>
+<li>funcutils.tabulate_function() can be used to evaluate a function
+  on a 1-D or 2-D grid of points (this replaces grid_function,
+  which only worked with 2-D grids).</li>
+<li>Added two helper functions, funcutils.compute_Data and
+  funcutils.compute_GridData, which compute a function's values on
+  a set of points and package the results into a PlotItem.</li>
+<li>GridFunc is no longer an independent class; it is now a factory
+  function that returns a GridData.  GridFunc is deprecated in
+  favor of funcutils.compute_GridData.</li>
+<li>Changed set_option to work from a table, so that it doesn't need to
+  be overloaded so often.</li>
+<li>Made changes like those submitted by Matthew Martin
+  <r47854@email.sps.mot.com> to allow the `smooth' option.</li>
+<li>Implemented test_persist for each platform to make it easier for
+  users to determine whether the `-persist' option is supported.</li>
+<li>Added a prefer_persist option to serve as the default `persist'
+  choice.</li>
+<li>Following a suggestion by Jannie Hofmeyr <jhsh@iafrica.com>, use
+  "from os import popen" for Python 2.0 under Windows.  I don't use
+  Windows, so let me know how this works.</li>
+<li>Added a setup.py file so that Gnuplot.py can be installed using
+  Python distutils.</li>
+<li>Added support for the `axes' parameter of the `plot' command.</li>
+<li>Reworked the comment strings in an effort to make them work nicely
+  with happydoc.</li>
+
+</ul>
+<p>Version 1.4:</p>
+
+<ul>
+<li>Added support for the Macintosh, thanks to help from Tony Ingraldi.</li>
+<li>Split the platform-dependent code, including the configuration
+  options, into separate modules: gp.py, gp_mac.py, and gp_win32.py.
+  The GnuplotProcess class defined in those files is a lightweight
+  interface to the gnuplot program that could also conceivably be
+  useful to somebody.</li>
+<li>Allow access to all of the postscript printer driver options through
+  the hardcopy() method.</li>
+<li>Fixed an import problem in test.py.</li>
+
+</ul>
+<p>Version 1.3:</p>
+
+<ul>
+<li>Converted to package format.  The main file is now called
+  __init__.py, so that it can be loaded by typing <code>import Gnuplot</code>.</li>
+<li>Passing GridData a callable function was basically broken because of
+  the kludgey way of overloading the argument.  Instead of trying to
+  fix it, I moved that functionality to a new type of PlotItem
+  called <code>GridFunc</code>.</li>
+<li>Added a new keyword argument, <code>ufunc</code>, to grid_function and to
+  GridFunc.  If that argument is nonzero, then the function is
+  evaluated matrix-wise (in that case it must be composed only of
+  ufunctions or ufunction-like routines).</li>
+<li>Fixed a <code>typecode</code> problem with grid_function (typecode is
+  apparently a positional, not a keyword, argument in the Numeric
+  library).</li>
+<li>Separated the demonstration code into a separate file, demo.py, to
+  shorten __init__.py a bit.</li>
+
+</ul>
+<p>Version 1.2 (8 Aug 1999):</p>
+
+<ul>
+<li>Support for MS Windows, using the `pgnuplot.exe' program.
+  Thanks go especially to Craig Schardt for help with this.</li>
+<li>Support for using binary files to send grid data to splot.
+  This saves a lot of time and usually saves space compared with
+  the old text files.  (Only works with recent versions of
+  gnuplot.)</li>
+<li>Support for sending data to gnuplot as `inline data' (i.e., "plot
+  '-'").  This method should be faster than the alternate method,
+  temporary files.  (Only works with recent versions of gnuplot.)</li>
+<li>Allows PlotItem options to be modified after the PlotItem is
+  constructed.</li>
+<li>Simplified the PlotItem inheritance hierarchy (Data and GridData are
+  no longer derived from File).</li>
+<li>Added several configuration options (see top of Gnuplot.py).</li>
+<li>Separated function-based interface into a separate file
+  (Gnuplot_plot.py).</li>
+<li>Added a test module, Gnuplot_test.py, which tests most of the
+  features of Gnuplot.py.</li>
+<li>A README file, lots of documentation changes, etc.</li>
+
+</ul>
+<p>Version 1.1a (9 Apr 1999):</p>
+<p>This version just addresses a couple of minor portability issues.</p>
+<p>Version 1.1 (31 Jan 1999):</p>
+
+<ul>
+<li>3-D plots are now supported through the new <code>splot</code> method:
+  + To create a scatter plot, pass splot a 2-D array containing
+    (x,y,z) triplets;
+  + To create a grid plot, pass a 3-D array consisting of a 2-D array
+    of (x,y,z) triplets; or
+  + Use the new `GridData' PlotItem to plot gridded data (data
+    tabulated on a rectangular grid).</li>
+<li>It is now easier to pass data to gnuplot.  The <code>Data</code> PlotItem now
+  accepts multiple arguments representing subsequent <code>columns</code> of the
+  dataset; e.g., what used to be written as<p>      g = Gnuplot.Gnuplot()
+      x = numpy.arange(100)/10.0
+      y = x**2
+      # Create an array of (x,y) pairs:
+      g.plot(Gnuplot.Data(numpy.transpose((x, y))))</p>
+<h3>  can now be shortened to</h3>
+<p>      # Plot y vs. x directly:
+      g.plot(Gnuplot.Data(x, y))</p>
+<p>  (both examples plot x squared vs. x).  Similarly, splot can be
+  passed three arrays representing the values of x, y, and z.
+  Note that the old interpretation is still used if a single
+  argument is passed to `Data'.</p>
+</li>
+
+</ul>
+
+        </td>
+        </tr>
+        </table>
+
+    <hr>
+
+    <font size="-2"><i>This document was automatically generated
+    Fri May  2 16:59:06 2008 by <a
+    href="http://happydoc.sourceforge.net">HappyDoc</a> version
+    3.1</i></font>
+        
+  </body>
+</html>
+        

@@ -1,0 +1,47 @@
+CREDITS:
+
+Gnuplot.py was written by Michael Haggerty <mhagger@alum.mit.edu>,
+inspired by and partly derived from an earlier version by Konrad
+Hinsen.  I maintain it and continue to develop it, though by now it
+has most of the features that I had planned for it.
+
+I would like to acknowledge and express my appreciation to the
+following people for their contributions:
+
+Konrad Hinsen <hinsen@ibs.ibs.fr> wrote the first, procedural
+interface version of Gnuplot.py.  His code is still present in many
+components of the current version.  The oldplot.py module, which used
+to be included in Gnuplot.py for backwards compatibility with his
+version, hasn't been supported for a while so I deleted it.
+
+Berthold Hoellmann <bhoel@starship.python.net> introduced me to the
+helpful `pythondoc' package, and contributed some docstring changes to
+allow web documentation to be generated from the Gnuplot.py source.
+He also submitted a setup.py file to be used with Python distutils.
+
+Craig Schardt <lazrnerd@ufl.edu> and Francois Ladouceur
+<f.ladouceur@virtualphotonics.com> contributed changes to enable
+Gnuplot.py to work under MS-Windows.
+
+Tony Ingraldi <a.m.ingraldi@larc.nasa.gov> got Gnuplot.py to work on
+the Macintosh and Noburu Yamamoto also contributed to this code.
+
+Stuard Reynolds <S.I.Reynolds@cs.bham.ac.uk> made some helpful
+suggestions for automating the tabulation of function values.
+
+Jannie Hofmeyr <jhsh@iafrica.com> suggested using "from os import
+popen" in gp_win32.py for versions of Python subsequent to 2.0.
+
+Daehyok Shin <sdhyok@email.unc.edu> pointed out that support for the
+`axes' keyword was missing.
+
+Jon Moody suggested some changes for Mac OS.
+
+Andy Main contributed terminal_opts for metapost output.
+
+Matthew Fulmer contributed a patch to add the "filename" argument to
+Data and GridData.
+
+Benny Malengier will push out new versions if the need arises starting
+from 1.8
+

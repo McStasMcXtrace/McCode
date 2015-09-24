@@ -1,0 +1,35 @@
+$Id: TODO.txt 294 2006-11-07 02:33:08Z parejkoj $
+
+Some ideas for future work.  I don't know whether I'll get around to
+any of these items; some of them are probably better left undone
+anyway.  Of course if anybody else wants to take one up...
+
+* Implement missing values.  Gnuplot allows you to specify that values
+  are missing from data files via the `set missing' command.  This
+  should probably be implemented via Numeric's masked arrays.
+  (Comments?)  The real benefit of dealing with values is that (I
+  think) gnuplot can still put a mesh on a surface even if the surface
+  has holes.
+
+* Figure out how to suck gnuplot error messages back into Python and
+  turn them into exceptions.  This would be tricky: for one thing, not
+  all gnuplot output is indicative of an error.  Moreover,
+  implementation on Windows and Mac would require additional effort to
+  change their GnuplotProcess classes.  The output from the 'show'
+  command could be processed in a similar manner.
+
+* Implement multiple graphs on a single page.  I haven't used this
+  feature of gnuplot much myself, so I'm not sure how difficult it
+  would be to build it into the Gnuplot.py framework.  Ideally one
+  would like to be able to spawn multiple GnuplotWindow's from a
+  single Gnuplot instance, each one behaving much like a Gnuplot
+  object.  Or maybe treat sub-windows as a kind of meta-PlotItem that
+  can itself contain PlotItems.
+
+* Add a way to use Gnuplot.py without Numeric.  This would probably
+  not require too much work, and would also be convenient for Jython
+  users since JNumeric is not as far along as Numeric.
+
+* Support gnuplot's new abilities to allow user interaction via the
+  mouse.  I believe this will require 2-way communication between
+  Gnuplot.py and gnuplot.

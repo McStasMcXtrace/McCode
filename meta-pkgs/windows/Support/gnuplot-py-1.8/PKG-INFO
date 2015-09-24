@@ -1,0 +1,12 @@
+Metadata-Version: 1.0
+Name: gnuplot-py
+Version: 1.8
+Summary: A Python interface to the gnuplot plotting program.
+Home-page: http://gnuplot-py.sourceforge.net
+Author: Michael Haggerty
+Author-email: mhagger@alum.mit.edu
+License: LGPL
+Description: Gnuplot.py is a Python package that allows you to create graphs from
+        within Python using the gnuplot plotting program.
+        
+Platform: UNKNOWN

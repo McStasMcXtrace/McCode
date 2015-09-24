@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+          "http://www.w3.org/TR/html40/loose.dtd">
+
+<html>
+         
+  <head>
+    <title>HappyDoc Generated Documentation</title>
+  </head>
+
+  <body bgcolor="#ffffff">
+        
+        
+        <table border="0" cellpadding="5" cellspacing="0" width="100%">
+        <tr>
+            <th rowspan="2"
+                valign="top"
+                align="left"
+                width="10%"
+                bgcolor="#88bbee"><font color="#000000">HappyDoc Generated Documentation</font>
+            </th>
+            <th bgcolor="#88bbee"
+                width="90%"
+                align="right"><font color="#000000">Gnuplot/RELEASES.txt</font>
+            </th>
+        </tr>
+        <tr>
+        <td>
+        <!-- breadcrumbs -->
+<p><small>
+/&nbsp;<a href="../Gnuplot/index.html">Gnuplot</a>&nbsp;/&nbsp;RELEASES.txt&nbsp;</small></p>
+
+<!-- /breadcrumbs -->
+
+<p># $Id: RELEASES.txt 306 2008-05-02 01:09:02Z alford $</p>
+<p>These are my notes about the steps to make a new release of
+Gnuplot.py.</p>
+
+<ol>
+<li> Edit the following files for the release:<dl>
+<dt>   NEWS.txt</dt>
+<dd>add the version number at the top of the file and make
+       sure that the comments are up-to-date.</dd>
+<dt>   ANNOUNCE.txt</dt>
+<dd>add the version number at the top of the file and
+       update the blurbs as appropriate.</dd>
+<dt>   Gnuplot.html</dt>
+<dd>update the version number where it appears.  Update
+       the "News" section.</dd>
+<dt>   __init__.py</dt>
+<dd>increment the __version__ string. No "+" on the end.</dd>
+</dl>
+</li>
+<li> Check the changes into Subversion.
+   $ svn commit  -m "Official version 1.8"</li>
+<li> Tag the release in Subversion:
+   $ svn cp https://gnuplot-py.svn.sourceforge.net/svnroot/gnuplot-py/trunk \
+            https://gnuplot-py.svn.sourceforge.net/svnroot/gnuplot-py/tags/release-1.8 -m "Adding tag for release 1.8."</li>
+<li> Create new documentation using happydoc:<p>   $ rm -rf doc
+   $ ( cd .. ; 
+       happydoc -d Gnuplot/doc -t <code>Gnuplot.py</code> \
+         --author=<code>Michael Haggerty &lt;mhagger@alum.mit.edu&gt;</code> Gnuplot )</p>
+</li>
+<li> Generate the source distributions:<p>   $ python2 ./setup.py sdist --formats=gztar,zip</p>
+</li>
+<li> [OMIT THIS] Generate the binary distributions.  [I don't think a binary
+   distribution is worthwhile because the place that the files need to
+   be installed is dependent on the version of python being used.]<p>   $ python2 ./setup.py bdist --format=gztar,zip,rpm,wininst</p>
+</li>
+<li> Release the files on SourceForge:
+<ol>
+<li> Go to the "Admin" page.</li>
+<li> Go to the "File release system" page.</li>
+<li> Click on "Add Release" for package Gnuplot-py.</li>
+<li> Type a release name of the form "1.8".</li>
+<li> Paste the "New features in this version" section of ANNOUNCE.txt
+      into the "release notes" text box.</li>
+<li> Follow the instructions to release the files.</li>
+<li> Send an email to people monitoring the project with the button
+      at the bottom of the release page.</li>
+
+</ol>
+</li>
+<li> Send an announcement to gnuplot-py-users.</li>
+<li> Send an announcement to comp.lang.python.</li>
+<li> Append a <code>+</code> to the __version__ string in __init__.py to
+    distinguish intermediate Subversion releases from official
+    releases.  Add a "Version ?.?:" line to NEWS.txt to receive future
+    change notes.  Check the changes into Subversion.</li>
+
+</ol>
+
+        </td>
+        </tr>
+        </table>
+
+    <hr>
+
+    <font size="-2"><i>This document was automatically generated
+    Fri May  2 16:59:06 2008 by <a
+    href="http://happydoc.sourceforge.net">HappyDoc</a> version
+    3.1</i></font>
+        
+  </body>
+</html>
+        

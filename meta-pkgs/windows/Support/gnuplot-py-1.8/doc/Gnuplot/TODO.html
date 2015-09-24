@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+          "http://www.w3.org/TR/html40/loose.dtd">
+
+<html>
+         
+  <head>
+    <title>HappyDoc Generated Documentation</title>
+  </head>
+
+  <body bgcolor="#ffffff">
+        
+        
+        <table border="0" cellpadding="5" cellspacing="0" width="100%">
+        <tr>
+            <th rowspan="2"
+                valign="top"
+                align="left"
+                width="10%"
+                bgcolor="#88bbee"><font color="#000000">HappyDoc Generated Documentation</font>
+            </th>
+            <th bgcolor="#88bbee"
+                width="90%"
+                align="right"><font color="#000000">Gnuplot/TODO.txt</font>
+            </th>
+        </tr>
+        <tr>
+        <td>
+        <!-- breadcrumbs -->
+<p><small>
+/&nbsp;<a href="../Gnuplot/index.html">Gnuplot</a>&nbsp;/&nbsp;TODO.txt&nbsp;</small></p>
+
+<!-- /breadcrumbs -->
+
+<p>$Id: TODO.txt 294 2006-11-07 02:33:08Z parejkoj $</p>
+<p>Some ideas for future work.  I don't know whether I'll get around to
+any of these items; some of them are probably better left undone
+anyway.  Of course if anybody else wants to take one up...</p>
+
+<ul>
+<li>Implement missing values.  Gnuplot allows you to specify that values
+  are missing from data files via the `set missing' command.  This
+  should probably be implemented via Numeric's masked arrays.
+  (Comments?)  The real benefit of dealing with values is that (I
+  think) gnuplot can still put a mesh on a surface even if the surface
+  has holes.</li>
+<li>Figure out how to suck gnuplot error messages back into Python and
+  turn them into exceptions.  This would be tricky: for one thing, not
+  all gnuplot output is indicative of an error.  Moreover,
+  implementation on Windows and Mac would require additional effort to
+  change their GnuplotProcess classes.  The output from the <code>show</code>
+  command could be processed in a similar manner.</li>
+<li>Implement multiple graphs on a single page.  I haven't used this
+  feature of gnuplot much myself, so I'm not sure how difficult it
+  would be to build it into the Gnuplot.py framework.  Ideally one
+  would like to be able to spawn multiple GnuplotWindow's from a
+  single Gnuplot instance, each one behaving much like a Gnuplot
+  object.  Or maybe treat sub-windows as a kind of meta-PlotItem that
+  can itself contain PlotItems.</li>
+<li>Add a way to use Gnuplot.py without Numeric.  This would probably
+  not require too much work, and would also be convenient for Jython
+  users since JNumeric is not as far along as Numeric.</li>
+<li>Support gnuplot's new abilities to allow user interaction via the
+  mouse.  I believe this will require 2-way communication between
+  Gnuplot.py and gnuplot.</li>
+
+</ul>
+
+        </td>
+        </tr>
+        </table>
+
+    <hr>
+
+    <font size="-2"><i>This document was automatically generated
+    Fri May  2 16:59:06 2008 by <a
+    href="http://happydoc.sourceforge.net">HappyDoc</a> version
+    3.1</i></font>
+        
+  </body>
+</html>
+        

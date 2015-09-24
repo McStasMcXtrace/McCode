@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+          "http://www.w3.org/TR/html40/loose.dtd">
+
+<html>
+         
+  <head>
+    <title>HappyDoc Generated Documentation</title>
+  </head>
+
+  <body bgcolor="#ffffff">
+        
+        
+        <table border="0" cellpadding="5" cellspacing="0" width="100%">
+        <tr>
+            <th rowspan="2"
+                valign="top"
+                align="left"
+                width="10%"
+                bgcolor="#88bbee"><font color="#000000">HappyDoc Generated Documentation</font>
+            </th>
+            <th bgcolor="#88bbee"
+                width="90%"
+                align="right"><font color="#000000">Gnuplot/FAQ.txt</font>
+            </th>
+        </tr>
+        <tr>
+        <td>
+        <!-- breadcrumbs -->
+<p><small>
+/&nbsp;<a href="../Gnuplot/index.html">Gnuplot</a>&nbsp;/&nbsp;FAQ.txt&nbsp;</small></p>
+
+<!-- /breadcrumbs -->
+
+<p># $Id: FAQ.txt 294 2006-11-07 02:33:08Z parejkoj $</p>
+<p>Frequently Asked Questions</p>
+<p>This file is meant to answer the most frequently asked questions about
+the Gnuplot.py package.  If you want to suggest additional questions
+(with or without answers!) please mail them to the Gnuplot.py users
+mailing list, <gnuplot-py-users@lists.sourceforge.net>.</p>
+<p>======================================================================</p>
+<p>Q1:</p>
+<p>When running the following script</p>
+<p>------------------------------------------------
+#! /usr/bin/python2</p>
+<p>import Gnuplot, Gnuplot.funcutils
+from numpy import *</p>
+<p>g = Gnuplot.Gnuplot()
+g.plot([<a href="#ref0,1.1">[0,1.1]</a>, <a href="#ref1,5.8">[1,5.8]</a>, <a href="#ref2,3.3">[2,3.3]</a>, <a href="#ref3,4.2">[3,4.2]</a>])
+------------------------------------------------</p>
+<h3>I get the error</h3>
+<p>    gnuplot> plot  <code>/tmp/@24463.2</code>
+                   ^
+             can't read data file "/tmp/@24463.2"
+             line 0: (No such file or directory)</p>
+<p>However, the same commands work fine if I type them into the
+interpreter!  What's wrong?</p>
+<p>A1:</p>
+<p>The problem is that in many cases Gnuplot.py sends data to gnuplot via
+a temporary file.  But Gnuplot.py has no way of knowing when it is
+safe to delete the temporary file.  So it deletes it when the
+corresponding PlotItem object is deleted, which is typically when the
+next Gnuplot.plot() command is executed or when the python script
+ends.  (Until you plot something else, the Gnuplot object keeps a
+reference to all of the old plot items to prevent their being garbage
+collected.)</p>
+<p>To prevent this problem, there are several possibilities:</p>
+
+<ol>
+<li> Switch to Unix.  On that platform, Gnuplot.py now uses FIFOs (named
+   pipes) by default to send data to gnuplot.  This seems to provide a
+   robust and somewhat elegant solution to this problem.</li>
+<li> Use "inline data" instead of temporary files to communicate with
+   gnuplot.  This is already available in gnuplot for most plotting
+   modes if you specify the "inline=1" option to the constructor of
+   the Data object, or if you set GnuplotOpts.prefer_inline_data=1.
+   Since inline data doesn't involve temporary files, the problem goes
+   away.</li>
+<li> Introduce a delay between the time you plot and the time you allow
+   the Data object to be deleted.  You could just use time.sleep(), or
+   if you are producing a graphics file you might watch for the
+   creation of the output file and at that point assume that gnuplot
+   is done with the temporary file.  One idea is to explicitly create
+   a PlotItem to represent the data, and keep a reference to the
+   PlotItem for some time after the plot() command is executed; e.g.,<p>       data = Gnuplot.Data([<a href="#ref0,1.1">[0,1.1]</a>, <a href="#ref1,5.8">[1,5.8]</a>, <a href="#ref2,3.3">[2,3.3]</a>, <a href="#ref3,4.2">[3,4.2]</a>])
+       g.plot(data)
+       # ... do something guaranteed to last a couple seconds
+       del data # temporary file is deleted at this moment</p>
+</li>
+<li> Change Gnuplot.py itself to implement two-way communication between
+   gnuplot and Gnuplot.py.  Then, for example, Gnuplot.py could delete
+   temporary files when the next gnuplot prompt appears.  This would
+   be a lot of work but it would allow other new features such as
+   detecting gnuplot errors, reading gnuplot fit command output back
+   to python, etc.</li>
+
+</ol>
+<p>======================================================================</p>
+<p>Q2:</p>
+<p>Does Gnuplot.py work under Jython/Java?</p>
+<p>A2:</p>
+<p>Partly.  Version 1.7 added the low-level interface gp_java.py for
+communicating with gnuplot using the Java libraries, and that part
+seems to work.</p>
+<p>However, Gnuplot.py relies on the Python Numeric library, which is a C
+library.  The Jython equivalent, called JNumeric
+<http://jnumerical.sourceforge.net/>, therefore has to be installed.
+However, JNumeric is still at beta level, and operation under Jython
+hasn't been tested much at all, so feedback is welcome!</p>
+<p>======================================================================</p>
+<p>Q3:</p>
+<p>[from Tate Wilson]</p>
+<p>I am trying to set up your gnuplot/python package on my mac (osX).
+The readme file says I need to convert the files to mac text files.
+The coverter I usually use, maclink, won't handle these files.  Can
+you give me a hint how to convert the files or where to look for help?</p>
+<p>A3:</p>
+<p>I don't know.  But the same user later reported what worked for him:</p>
+<p>I did have to convert the files.  It may not be true for all mac
+Python users, but I suspect it is.  I'm using a graphical Python
+development environment called "Python IDE for mac" which may have its
+own pickiness, but still, it wouldn't even recognize the files in your
+package as being the type it could open.  I tried a few different file
+converters with no luck.  Then I just opened all the files with
+BBedit, changed something so I would be prompted to save it on closing
+(like add and remove a letter), and closed BBedit.  Then all the files
+were <code>mac</code> files and the Python interpreter recognised them.</p>
+<p>======================================================================</p>
+<p>Q4:</p>
+<p>I am using Windows and I get an error like</p>
+<p>> Traceback (most recent call last):
+> <a href="#ref...">[...]</a>
+>   File "C:\Python23\Lib\site-packages\Gnuplot\gp_win32.py",
+> line 125, in __call__
+>     self.write(s + <code>\n</code>)
+> IOError: [Errno 22] Invalid argument</p>
+<p>What is the problem?</p>
+<p>A4:</p>
+<p>This is apparently the error that results when Gnuplot.py cannot start
+the pgnuplot.exe executable under Windows.  It could be that gnuplot
+(the plotting program, as opposed to Gnuplot.py) is not installed, or
+that it is not in your PATH.  If your pgnuplot.exe executable is named
+differently, or you do not want to add its directory to your PATH, you
+can change gnuplot_command in gp_win32.py to indicate the precise path
+to the executable.</p>
+
+        </td>
+        </tr>
+        </table>
+
+    <hr>
+
+    <font size="-2"><i>This document was automatically generated
+    Fri May  2 16:59:06 2008 by <a
+    href="http://happydoc.sourceforge.net">HappyDoc</a> version
+    3.1</i></font>
+        
+  </body>
+</html>
+        

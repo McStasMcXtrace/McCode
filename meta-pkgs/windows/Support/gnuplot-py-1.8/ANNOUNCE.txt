@@ -1,0 +1,83 @@
+This is to announce the release of version 1.8 of Gnuplot.py.
+
+Gnuplot.py is a Python [1] package that allows you to create graphs
+from within Python using the gnuplot [2] plotting program.
+
+Gnuplot.py can be obtained from
+
+    http://gnuplot-py.sourceforge.net/
+
+Prerequisites (see footnotes):
+    the Python interpreter [1]
+    the Python numpy module [3]
+    the gnuplot program [2]
+
+or, to use it under Java (experimental):
+    a Java interpreter
+    the Jython interpreter [4]
+    the Jython version of the Numeric module [5]
+    the gnuplot program [2]
+
+Some ways this package can be used:
+
+1. Interactive data processing: Use Python's excellent numpy package
+   to create and manipulate arrays of numbers, and use Gnuplot.py to
+   visualize the results.
+2. Web graphics: write CGI scripts in Python that use gnuplot to
+   output plots in (for example) PNG format and return them to the
+   client.
+3. Glue for numerical applications (this is my favorite): wrap your
+   C++/C/Fortran subroutines so that they are callable from Python,
+   then you can perform numerical computations interactively from
+   scripts or from the command line and use Gnuplot.py to plot the
+   output on the fly.
+4. Compute a series of datasets in Python and plot them one after the
+   other using Gnuplot.py to produce a crude animation.
+
+New features in this version:
+  + Various bug fixes
+  + an option "filename" to Data and GridDat
+    This allows saving the data to a permanent, rather than temporary
+  + pdf terminal definition
+
+Features already present in older versions:
+
+  +  Two and three-dimensional plots.
+  +  Plot data from memory, from a file, or from an expression.
+  +  Support for multiple simultaneous gnuplot sessions.
+  +  Can pass arbitrary commands to the gnuplot program.
+  +  Object oriented, extensible design with several built-in types
+     of plot items.
+  +  Portable and easy to install (nothing to compile except on
+     Windows).
+  +  Support for Unix (including Linux and Mac OS X), MS Windows, and
+     Mac OS.  The platform-dependent layer is fairly well abstracted
+     out, so it shouldn't be too difficult to add support for other
+     platforms.
+  +  Support for sending data to gnuplot as `inline' or `binary' data.
+     These are optimizations that also remove the need for temporary
+     files.
+  +  Partly table-driven to make it easy to extend.  New terminal
+     types can be supported easily by adding data to a table.
+  +  Install via distutils.
+  +  LGPL license .
+  +  Support for sending data to gnuplot via FIFOs (named pipes, linux only).
+  + Preliminary support for running Gnuplot.py under Jython
+
+Footnotes:
+----------
+[1] Python <http://www.python.org> is an excellent object-oriented
+    scripting/rapid development language that is also especially good
+    at gluing programs together.
+[2] gnuplot <http://www.gnuplot.info/> is a free, popular, very
+    portable plotting program with a command-line interface.  It can
+    make 2-d and 3-d plots and can output to myriad printers and
+    graphics terminals.
+[3] The numpy Python extension <http://www.scipy.org> is a
+    Python module that adds fast and convenient array manipulations to
+    the Python language.
+[4] Jython <http://www.jython.org> is a Python interpreter that runs
+    within a Java virtual machine.
+[5] JNumeric <http://jnumerical.sourceforge.net/> is a version of the
+    Numeric module that runs under Java/Jython.
+
