@@ -36,6 +36,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Source: "Support\PPDs.zip"; DestDir: "{tmp}"
 Source: "Support\unzip.exe"; DestDir: "{tmp}"
 Source: "Support\unzip32.dll"; DestDir: "{tmp}"
+Source: "Support\gp501-win32-mingw.zip"; DestDir: "{tmp}"
 Source: "Support\gnuplot-py-installer.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
 Source: "dist\mcstas-comps-NSIS-@VERSION@-mingw32.exe"; DestDir: "{tmp}"
@@ -55,7 +56,7 @@ Source: "dist\mcstas-tools-python-mcdisplay-vtk-NSIS-@VERSION@-mingw32.exe"; Des
 ;Filename: "msiexec"; Parameters: "/i {tmp}\strawberry-perl-5.18.2.1-32bit.msi"
 Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\PPDs.zip"
 Filename: "{tmp}\PPDs\postsetup.bat"
-FileName: "{tmp}\gnuplot-py-installer.exe"; Parameters: "/S"
+FileName: "{tmp}\gnuplot-py-installer.exe"; Parameters: "/VERYSILENT"
 Filename: "{tmp}\mcstas-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-comps-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-manuals-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
@@ -69,5 +70,6 @@ Filename: "{tmp}\mcstas-tools-python-mcdisplay-NSIS-@VERSION@-mingw32.exe"; Para
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-r-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-matplotlib-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
 Filename: "{tmp}\mcstas-tools-python-mcdisplay-vtk-NSIS-@VERSION@-mingw32.exe"; Parameters: "/S"
+Filename: "{tmp}\unzip.exe"; Parameters: "{tmp}\gp501-win32-mingw.zip -d C:\\mcstas-@VERSION@\\lib\\"
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 

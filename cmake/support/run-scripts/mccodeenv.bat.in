@@ -3,7 +3,7 @@
 @REM First, set up various environment variables
 @REM
 @REM Path related:
-@SET PATH=@CPACK_NSIS_INSTALL_ROOT@\\bin;c:\\strawberry\\perl\\bin;c:\\Program Files\\MPICH2\\bin;%PATH%
+@SET PATH=@CPACK_NSIS_INSTALL_ROOT@\\bin;@CPACK_NSIS_INSTALL_ROOT@\\lib\\gnuplot\\bin;c:\\strawberry\\perl\\bin;c:\\Program Files\\MPICH2\\bin;%PATH%
 @SET PATHEXT=%PATHEXT%;.pl;.py
 @REM
 @REM McStas related:

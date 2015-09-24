@@ -8,6 +8,9 @@ AppPublisherURL=mcstas.org
 DefaultDirName=gnuplot-py
 OutputBaseFilename=gnuplot-py-installer
 OutputDir=.
+DisableReadyPage=yes
+DisableDirPage=yes
+DisableFinishedPage=yes
 
 [Files]
 Source: "gnuplot-py-1.8\*"; DestDir: "{app}"; Flags: recursesubdirs;
