@@ -1,0 +1,30 @@
+#!/bin/sh
+
+LIB="@TOOLS_LIB@"
+TOOL="mcplot"
+VERS="@MCCODE_VERSION@"
+
+
+canrun() {
+    if ! [ -x ${LIB}/${TOOL}.py ]; then
+        exit 127;
+    fi
+
+    modules="Gnuplot"
+    cmd=""
+    for name in ${modules}; do
+        cmd="${cmd}import ${name}; "
+    done
+    python -c "${cmd}"
+}
+
+if ( canrun ); then
+    ${LIB}/${TOOL}.py $*
+else
+    echo ":: Failed to run Python ${TOOL}, trying old Perl version."
+    echo ":: If this fails too, consider reinstalling ${TOOL}."
+    echo ""
+
+    # Try old Perl-version of mcplot if Python version cannot run
+    ${TOOL} $*
+fi

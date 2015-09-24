@@ -104,7 +104,7 @@ endif()
 
 if(NOT WINDOWS)
   # Python files
-  foreach(name mcdata.py plotting.py)
+  foreach(name mcgnuplotter.py mcgnuview.py mcgnuwidgets.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
