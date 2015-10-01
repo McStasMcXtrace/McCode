@@ -713,11 +713,11 @@ sub putmsg {
 }
 
 sub run_dialog_create {
-    use Text::Wrap
-    $Text::Wrap::columns = 72;
-
     my ($w, $title, $text, $cancel_cmd, $update_cmd) = @_;
     my $dlg = $w->Toplevel(-title => $title);
+    # Ad-hoc "wrapping" of the tooltip text, without use of string limit + Text::Wrap
+    $title =~ s/\ /\n/g;
+
     $dlg->transient($dlg->Parent->toplevel);
     $dlg->withdraw;
     $dlg->protocol("WM_DELETE_WINDOW" => sub { } );
@@ -726,7 +726,7 @@ sub run_dialog_create {
     my $text_label = $dlg->Label(-text => $text,
                 -anchor => 'w',
                 -justify => 'left')->pack(-fill => 'x');
-    $b->attach($text_label, -balloonmsg => wrap('','',$title));
+    $b->attach($text_label, -balloonmsg => $title);
     my $bot_frame = $dlg->Frame(-relief => "raised", -bd => 1);
     $bot_frame->pack(-side => "top", -fill => "both",
                      -ipady => 3, -ipadx => 3);
