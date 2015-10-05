@@ -683,22 +683,29 @@ void ESS_2014_Schoenfeldt_thermal(double *t, double *p, double lambda, double tf
 /* This is the thermal moderator with 2015 updates, fits from Troels Schoenfeldt */
 void ESS_2015_Schoenfeldt_thermal(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
-  if ((extras.height_t <= 0.12) && (extras.height_t >= 0.01)) {
+  if ((extras.height_t == 0.03) || (extras.height_t == 0.06)) {
     *p = ESS_2015_Schoenfeldt_thermal_spectrum(lambda, extras.beamportangle);
   } else {
-    printf("Sorry! Moderator height must be between %g and %g cm\n",0.12,0.01);
+    printf("Sorry! Moderator height must be either %g or %g m\n",0.03,0.06);
     exit(-1);
   }
+
  
   /* Next is time structure... */
   *t=0;
   *t = extras.tmultiplier*ESS_SOURCE_DURATION*(rand01());
   /* Troels Schoenfeldt function for timestructure */
   *p *= extras.tmultiplier*ESS_2015_Schoenfeldt_thermal_timedist(*t, lambda, 3 /* cm height */, ESS_SOURCE_DURATION);  
-  *p *= ESS_2015_Schoenfeldt_thermal_y0(100*extras.Y) * ESS_2015_Schoenfeldt_thermal_x0(100*extras.X, extras.beamportangle);
-  /* *p *= ESS_2015_Schoenfeldt_thermal_Theta120(extras.beamportangle,extras.Wasleft); */
-  //printf("%g\n",ESS_2015_Schoenfeldt_thermal_Theta120(extras.beamportangle,extras.Wasleft));
-  // FIXME: 2014 numbers are inhere...
+  if (extras.height_c == 0.03) {
+    // 3cm case
+    *p *= ESS_2015_Schoenfeldt_thermal_y0(100*extras.Y) * ESS_2015_Schoenfeldt_thermal_x0(100*extras.X, extras.beamportangle);
+  } else {
+    // 6cm case
+    // Downscale brightness by factor from 
+    // "New ESS Moderator Baseline", Ken Andersen, 9/4/2015
+    *p *= (6.2e14/9.0e14);
+    *p *= ESS_2014_Schoenfeldt_thermal_y0(100*extras.Y, 100*extras.height_c) * ESS_2015_Schoenfeldt_thermal_x0(100*extras.X, extras.beamportangle);
+  }
 } /* end of ESS_2015_Schoenfeldt_thermal */
 
 
@@ -706,10 +713,10 @@ void ESS_2015_Schoenfeldt_thermal(double *t, double *p, double lambda, double tf
 /* Parametrization including moderator height for the "pancake" moderator */
 void ESS_2015_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocus_w, double tfocus_t, double tfocus_dt, ess_moderator_struct extras)
 {
-   if ((extras.height_c <= 0.12) && (extras.height_c >= 0.01)) {
+   if ((extras.height_c == 0.03) || (extras.height_c == 0.06)) {
     *p = ESS_2015_Schoenfeldt_cold_spectrum(lambda,extras.beamportangle);
   } else {
-    printf("Sorry! Moderator height must be between %g and %g m\n",0.12,0.01);
+    printf("Sorry! Moderator height must be either %g or %g m\n",0.03,0.06);
     exit(-1);
   }
 
@@ -725,8 +732,18 @@ void ESS_2015_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocu
   //}
   
   *p *= pt;
-  if (extras.Uniform==0) *p *= ESS_2015_Schoenfeldt_cold_y0(100*extras.Y) * ESS_2015_Schoenfeldt_cold_x0(100*extras.X, extras.beamportangle);
-  // FIXME: 2014 numbers are inhere...
+  if (extras.Uniform==0) {
+    if (extras.height_c == 0.03) {
+      // 3cm case
+      *p *= ESS_2015_Schoenfeldt_cold_y0(100*extras.Y) * ESS_2015_Schoenfeldt_cold_x0(100*extras.X, extras.beamportangle);
+    } else {
+      // 6cm case
+      // Downscale brightness by factor from 
+      // "New ESS Moderator Baseline", Ken Andersen, 9/4/2015
+      *p *= (10.1e14/16.0e14);
+      *p *= ESS_2014_Schoenfeldt_cold_y0(100*extras.Y, 100*extras.height_c) * ESS_2015_Schoenfeldt_cold_x0(100*extras.X, extras.beamportangle);
+    }
+  }
 } /* end of ESS_2015_Schoenfeldt_cold */
 
 /* This is ESS_2015_Schoenfeldt_cold_y0 - vertical intensity distribution for the 2015 Schoenfeldt cold moderator */
