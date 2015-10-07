@@ -201,7 +201,7 @@ macro(setupMCCODE FLAVOR)
       ${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/launchers
       )
     
-    # Add "-VERSION" to all program files (executbles)
+    # Add "-VERSION" to all program files (executables)
     set(PROGRAM_SUFFIX "-${MCCODE_VERSION}")
 
     # Run postinst and postrm scripts for various platforms
