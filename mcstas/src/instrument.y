@@ -1535,7 +1535,7 @@ Symtab read_components = NULL;
 static void
 print_usage(void)
 {
-  fprintf(stderr, MCCODE_NAME " version " MCCODE_STRING " (" MCCODE_DATE ")\n");
+  fprintf(stderr, MCCODE_NAME " version " MCCODE_VERSION " (" MCCODE_DATE ")\n");
   fprintf(stderr, "Compiler of the " MCCODE_NAME " ray-trace simulation package\n");
   fprintf(stderr, "Usage:\n"
     "  " MCCODE_NAME " [-o file] [-I dir1 ...] [-t] [-p] [-v] "
