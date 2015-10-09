@@ -1500,7 +1500,7 @@ Symtab read_components = NULL;
 static void
 print_usage(void)
 {
-  fprintf(stderr, MCCODE_NAME " version " MCCODE_STRING " (" MCCODE_DATE ")\n");
+  fprintf(stderr, MCCODE_NAME " version " MCCODE_VERSION " (" MCCODE_DATE ")\n");
   fprintf(stderr, "Compiler of the " MCCODE_NAME " ray-trace simulation package\n");
   fprintf(stderr, "Usage:\n"
     "  " MCCODE_NAME " [-o file] [-I dir1 ...] [-t] [-p] [-v] "
@@ -1517,9 +1517,9 @@ print_usage(void)
   fprintf(stderr, "    them (.c -> .o) before assembling the program.\n");
   fprintf(stderr, "  The default component search list is usually defined by the environment\n");
   fprintf(stderr, "    variable '" MCCODE_NAME "' (default is " MCSTAS ") \n");
-  fprintf(stderr, "  Use 'mcrun' to both run " MCCODE_NAME " and the C compiler.\n");
-  fprintf(stderr, "  Use 'mcgui' to run the " MCCODE_NAME " GUI.\n");
-  fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui, mcformat, mcdoc\n");
+  fprintf(stderr, "  Use 'mxrun' to both run " MCCODE_NAME " and the C compiler.\n");
+  fprintf(stderr, "  Use 'mxgui' to run the " MCCODE_NAME " GUI.\n");
+  fprintf(stderr, "SEE ALSO: mxrun, mxplot, mxdisplay, mxgui, mxformat, mxdoc\n");
   fprintf(stderr, "DOC:      Please visit " MCCODE_BUGREPORT "\n");
   exit(1);
 }

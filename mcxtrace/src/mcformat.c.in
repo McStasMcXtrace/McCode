@@ -1695,7 +1695,7 @@ void mcformat_usage(char *pgmname)
 {
   int i;
 
-  fprintf(stderr, "mcformat version %s format conversion tool (" MCCODE_STRING ")\n", MCFORMAT);
+  fprintf(stderr, "%s version %s format conversion tool (" MCCODE_STRING ")\n",pgmname, MCFORMAT);
   fprintf(stderr, "Usage: %s [options] file1|dir1 file2|dir2 ...\n", pgmname);
   fprintf(stderr,
 "Convert/merge files and directories from McStas format to an other specified format\n"

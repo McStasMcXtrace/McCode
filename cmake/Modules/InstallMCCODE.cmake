@@ -62,7 +62,7 @@ macro(installMCCODE)
 	AppendDef(MCCODE_TARNAME="${MCCODE_TARNAME}")
 	AppendDef(MCCODE_VERSION="${MCCODE_VERSION}")
 	AppendDef(MCCODE_STRING="${MCCODE_STRING}")
-	AppendDef(MCCODE_BUGREPORT="www.mcstas.org")
+        AppendDef(MCCODE_BUGREPORT="www.${MCCODE_TARNAME}.org")
 	AppendDef(MCCODE_URL="")
 
 	# -DCC_HAS_PROTOS=1
