@@ -83,15 +83,15 @@ then
 elif [[ ${PREFIX} = /Applications* ]]
 then
     # Looks like a Mac - dump links in /usr/bin
-    BINTARGET="/usr/bin"
+    BINTARGET="/usr/local/bin"
     APPTARGET="none"
     LOGOTARGET="none"
     # Also drop a link to the mccode "system folder" as it may otherwise be hard to find for "expert users"
-    mkdir -p /usr/share/${FLAVOR}
+    mkdir -p /usr/local/${FLAVOR}
     # - Should not be done if called from the 'app bundle' installer - and only once
     if [[ ${PREFIX} = */Contents/Resources ]]; then
 	if [ ! -h /usr/local/${FLAVOR}/${VERSION} ]; then
-	    ln -sf ${PREFIX}/${FLAVOR}/${VERSION} /usr/share/${FLAVOR}/${VERSION}
+	    ln -sf ${PREFIX}/${FLAVOR}/${VERSION} /usr/local/${FLAVOR}/${VERSION}
 	fi
     fi
     checklinks
