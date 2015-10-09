@@ -1,0 +1,803 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Guide_gravity_psd
+*
+* %I
+* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
+* Date: Aug 03 2001
+* Version: $Revision$
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>.
+* Release: McStas CVS_080902
+* Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
+* Modified by: E. Farhi, focusing channels are now ok (Sept 4th, 2001).
+* Modified by: E. Farhi, 2D channel array. Correct focus bug (Dec 14th 2002)
+* Modified by: E. Farhi, Waviness+chamfers+nelements (Aug 19th 2003)
+* Modified by: P. Link, included side wall psd's for neutron loss registration (Oct 9th 2015)
+*
+* Neutron straight guide with gravity. Can be channeled and focusing.
+* Waviness may be specified, as well as side chamfers (on substrate).
+*
+* %D
+* Models a rectangular straight guide tube centered on the Z axis, with
+* gravitation handling. The entrance lies in the X-Y plane.
+* The guide can be channeled (nslit,d,nhslit parameters). The guide coating
+* specifications may be entered via different ways (global, or for
+* each wall m-value).
+*
+* Waviness (random) may be specified either globally or for each mirror type.
+* Side chamfers (due to substrate processing) may be specified the same way.
+* In order to model a realistic straight guide assembly, a long guide of
+* length 'l' may be splitted into 'nelements' between which chamfers/gaps are
+* positioned.
+*
+* The reflectivity may be specified either using an analytical mode (see
+* Component manual) or as a text file in free format, with 1st
+* column as q[Angs-1] and 2nd column as the reflectivity R in [0-1].
+* For details on the geometry calculation see the description in the McStas
+* component manual.
+*
+* There is a special rotating mode in order to approximate a Fermi Chopper
+* behaviour, in the case the neutron trajectory is nearly linear inside the
+* chopper slits, i.e. the neutrons are fast w/r/ to the chopper speed.
+* Slits are straight, but may be super-mirror coated. In this case, the
+* component is NOT centered, but located at its entry window. It should then 
+* be shifted by -l/2.
+*
+* Example: Guide_gravity_psd(w1=0.1, h1=0.1, w2=0.1, h2=0.1, l=12,
+*           R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003)
+*
+* %VALIDATION
+* May 2005: extensive internal test, all problems solved
+* Validated by: K. Lieutenant
+*
+* %P
+* INPUT PARAMETERS:
+*
+* w1:      (m)    Width at the guide entry
+* h1:      (m)    Height at the guide entry
+* w2:      (m)    Width at the guide exit. If 0, use w1.
+* h2:      (m)    Height at the guide exit. If 0, use h1.
+* l:       (m)    length of guide
+* R0:      (1)    Low-angle reflectivity
+* Qc:      (AA-1) Critical scattering vector
+* alpha:   (AA)   Slope of reflectivity
+* m:       (1)    m-value of material. Zero means completely absorbing. m=0.65 
+*                     glass/SiO2 Si   Ni  Ni58  supermirror Be    Diamond 
+*                 m=  0.65       0.47 1   1.18  2-6         1.01  1.12
+*                 for glass/SiO2, m=1 for Ni, 1.2 for Ni58, m=2-6 for supermirror.
+*                 m=0.47 for Si
+* W:       (AA-1) Width of supermirror cut-off
+* d:       (m)    Thickness of subdividing walls
+* nslit:   (1)    Number of vertical channels in the guide (>= 1)
+*                 (nslit-1 vertical dividing walls).
+*
+* Optional input parameters: (different ways for m-specifications)
+*
+* mleft:   (1)    m-value of material for left.   vert. mirror
+* mright:  (1)    m-value of material for right.  vert. mirror
+* mtop:    (1)    m-value of material for top.    horz. mirror
+* mbottom: (1)    m-value of material for bottom. horz. mirror
+* aleft:   (1)    alpha-value of left  vert. mirror
+* aright:  (1)    alpha-value of right vert. mirror
+* atop:    (1)    alpha-value of top   horz. mirror
+* abottom: (1)    alpha-value of left  horz. mirror
+* nhslit:  (1)    Number of horizontal channels in the guide (>= 1).
+*                 (nhslit-1 horizontal dividing walls).
+*                 this enables to have nslit*nhslit rectangular channels
+* G:       (m/s2) Gravitation norm. 0 value disables G effects.
+* wavy:    (deg)  Global guide waviness
+* wavy_z:  (deg)  Partial waviness along propagation axis
+* wavy_tb: (deg)  Partial waviness in transverse direction for top/bottom mirrors
+* wavy_lr: (deg)  Partial waviness in transverse direction for left/right mirrors
+* chamfers:(m)    Global chamfers specifications (in/out/mirror sides).
+* chamfers_z: (m) Input and output chamfers
+* chamfers_lr:(m) Chamfers on left/right mirror sides
+* chamfers_tb:(m) Chamfers on top/bottom mirror sides
+* nelements:(1)   Number of sections in the guide (length l/nelements).
+* reflect: (str)  Reflectivity file name. Format [q(Angs-1) R(0-1)]
+* nu:      (Hz)   Rotation frequency (round/s) for Fermi Chopper approximation
+* phase:   (deg)  Phase shift for the Fermi Chopper approximation
+*
+* OUTPUT PARAMETERS
+*
+* GVars:              (1) internal variables.
+* GVars.N_reflection: (1) Array of the cumulated Number of reflections.
+*                   N_reflection[0] total nb of reflections,
+*                   N_reflection[1,2,3,4] l/r/t/b reflections,
+*                   N_reflection[5] total nb neutrons exiting guide,
+*                   N_reflection[6] total nb neutrons entering guide.
+*
+* %D
+* Example values: m=4 Qc=0.02 W=1/300 alpha=6.49 R0=1
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Guide_gravity_psd
+DEFINITION PARAMETERS (nxpsd, filenameT, filenameB, filenameL, filenameR)
+SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
+  R0=0.995, Qc=0.0218, alpha=4.38, m=1.0, W=0.003, nslit=1, d=0.0005,
+  mleft=-1, mright=-1, mtop=-1, mbottom=-1, nhslit=1, G=0,
+  aleft=-1, aright=-1, atop=-1, abottom=-1,
+  wavy=0, wavy_z=0, wavy_tb=0, wavy_lr=0,
+  chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
+  nu=0, phase=0, string reflect="NULL")
+OUTPUT PARAMETERS (GVars, pTable,PSDlin_Nxp, PSDlin_pxp, PSDlin_p2xp, PSDlin_Nyp, PSDlin_pyp, PSDlin_p2yp, PSDlin_Nxn, PSDlin_pxn, PSDlin_p2xn, PSDlin_Nyn, PSDlin_pyn, PSDlin_p2yn)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+SHARE
+%{
+%include "ref-lib"
+#ifndef Gravity_guide_Version
+#define Gravity_guide_Version "$Revision$"
+
+#ifndef PROP_GRAV_DT
+#error McStas : You need PROP_GRAV_DT (McStas >= 1.4.3) to run this component
+#endif
+
+/*
+* G:       (m/s^2) Gravitation acceleration along y axis [-9.81]
+* Gx:      (m/s^2) Gravitation acceleration along x axis [0]
+* Gy:      (m/s^2) Gravitation acceleration along y axis [-9.81]
+* Gz:      (m/s^2) Gravitation acceleration along z axis [0]
+* mh:      (1)    m-value of material for left/right vert. mirrors
+* mv:      (1)    m-value of material for top/bottom horz. mirrors
+* mx:      (1)    m-value of material for left/right vert. mirrors
+* my:      (1)    m-value of material for top/bottom horz. mirrors
+*/
+
+  typedef struct Gravity_guide_Vars
+  {
+    double gx;
+    double gy;
+    double gz;
+    double nx[6], ny[6], nz[6];
+    double wx[6], wy[6], wz[6];
+    double A[6], norm_n2[6], norm_n[6];
+    long   N_reflection[7];
+    double w1c, h1c;
+    double w2c, h2c;
+    double M[5];
+    double Alpha[5];
+    double nzC[5], norm_n2xy[5], Axy[5];
+    double wav_lr, wav_tb, wav_z;
+    double chamfer_z, chamfer_lr, chamfer_tb;
+    char   compcurname[256];
+    double fc_freq, fc_phase;
+    double warnings;
+  } Gravity_guide_Vars_type;
+
+  void Gravity_guide_Init(Gravity_guide_Vars_type *aVars,
+    MCNUM a_w1, MCNUM a_h1, MCNUM a_w2, MCNUM a_h2, MCNUM a_l, MCNUM a_R0,
+    MCNUM a_Qc, MCNUM a_alpha, MCNUM a_m, MCNUM a_W, MCNUM a_nslit, MCNUM a_d,
+    MCNUM a_Gx, MCNUM a_Gy, MCNUM a_Gz,
+    MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom, MCNUM a_nhslit,
+    MCNUM a_wavy_lr, MCNUM a_wavy_tb, MCNUM a_wavy_z, MCNUM a_wavy,
+    MCNUM a_chamfers_z, MCNUM a_chamfers_lr, MCNUM a_chamfers_tb, MCNUM a_chamfers,
+    MCNUM a_nu, MCNUM a_phase, MCNUM a_aleft, MCNUM a_aright, MCNUM a_atop, MCNUM a_abottom)
+  {
+    int i;
+
+    for (i=0; i<7; aVars->N_reflection[i++] = 0);
+    for (i=0; i<5; aVars->M[i++] = 0);
+    for (i=0; i<5; aVars->Alpha[i++] = 0);
+    
+    aVars->gx = a_Gx; /* The gravitation vector in the current component axis system */
+    aVars->gy = a_Gy;
+    aVars->gz = a_Gz;
+    aVars->warnings=0;
+
+    if (a_nslit <= 0 || a_nhslit <= 0) { fprintf(stderr,"%s: Fatal: no channel in this guide (nhslit or nslit=0).\n", aVars->compcurname); exit(-1); }
+    if (a_d < 0) { fprintf(stderr,"%s: Fatal: subdividing walls have negative thickness in this guide (d<0).\n", aVars->compcurname); exit(-1); }
+    aVars->w1c = (a_w1 - (a_nslit-1) *a_d)/(double)a_nslit;
+    aVars->w2c = (a_w2 - (a_nslit-1) *a_d)/(double)a_nslit;
+    aVars->h1c = (a_h1 - (a_nhslit-1)*a_d)/(double)a_nhslit;
+    aVars->h2c = (a_h2 - (a_nhslit-1)*a_d)/(double)a_nhslit;
+
+    for (i=0; i <= 4;   aVars->M[i++]=a_m);
+    for (i=0; i <= 4;   aVars->Alpha[i++]=a_alpha);
+    if (a_mleft   >= 0) aVars->M[1] =a_mleft  ;
+    if (a_mright  >= 0) aVars->M[2] =a_mright ;
+    if (a_mtop    >= 0) aVars->M[3] =a_mtop   ;
+    if (a_mbottom >= 0) aVars->M[4] =a_mbottom;
+    if (a_aleft   >= 0) aVars->Alpha[1] =a_aleft  ;
+    if (a_aright  >= 0) aVars->Alpha[2] =a_aright ;
+    if (a_atop    >= 0) aVars->Alpha[3] =a_atop   ;
+    if (a_abottom >= 0) aVars->Alpha[4] =a_abottom;
+    
+    /* n: normal vectors to surfaces */
+    aVars->nx[1] =  a_l; aVars->ny[1] =  0;   aVars->nz[1] =  0.5*(aVars->w2c-aVars->w1c);  /* 1:+X left       */
+    aVars->nx[2] = -a_l; aVars->ny[2] =  0;   aVars->nz[2] = -aVars->nz[1];             /* 2:-X right      */
+    aVars->nx[3] =  0;   aVars->ny[3] =  a_l; aVars->nz[3] =  0.5*(aVars->h2c-aVars->h1c);  /* 3:+Y top        */
+    aVars->nx[4] =  0;   aVars->ny[4] = -a_l; aVars->nz[4] = -aVars->nz[3];             /* 4:-Y bottom     */
+    aVars->nx[5] =  0;   aVars->ny[5] =  0;   aVars->nz[5] =  a_l;                      /* 5:+Z exit       */
+    aVars->nx[0] =  0;   aVars->ny[0] =  0;   aVars->nz[0] = -a_l;                      /* 0:Z0 input      */
+    /* w: a point on these surfaces */
+    aVars->wx[1] = +(aVars->w1c)/2; aVars->wy[1] =  0;              aVars->wz[1] = 0;   /* 1:+X left       */
+    aVars->wx[2] = -(aVars->w1c)/2; aVars->wy[2] =  0;              aVars->wz[2] = 0;   /* 2:-X right      */
+    aVars->wx[3] =  0;              aVars->wy[3] = +(aVars->h1c)/2; aVars->wz[3] = 0;   /* 3:+Y top        */
+    aVars->wx[4] =  0;              aVars->wy[4] = -(aVars->h1c)/2; aVars->wz[4] = 0;   /* 4:-Y bottom     */
+    aVars->wx[5] =  0;              aVars->wy[5] =  0;              aVars->wz[5] = a_l; /* 5:+Z exit       */
+    aVars->wx[0] =  0;              aVars->wy[0] =  0;              aVars->wz[0] = 0;   /* 0:Z0 input      */
+
+    for (i=0; i <= 5; i++)
+    {
+      aVars->A[i] = scalar_prod(aVars->nx[i], aVars->ny[i], aVars->nz[i], aVars->gx, aVars->gy, aVars->gz)/2;
+      aVars->norm_n2[i] = aVars->nx[i]*aVars->nx[i] + aVars->ny[i]*aVars->ny[i] + aVars->nz[i]*aVars->nz[i];
+      if (aVars->norm_n2[i] <= 0)
+        { fprintf(stderr,"%s: Fatal: normal vector norm %i is null/negative ! check guide dimensions.\n", aVars->compcurname, i); exit(-1); } /* should never occur */
+      else
+        aVars->norm_n[i] = sqrt(aVars->norm_n2[i]);
+    }
+    /* partial computations for l/r/t/b sides, to save computing time */
+    for (i=1; i <= 4; i++)
+    { /* stores nz that changes in case non box element (focus/defocus) */
+      aVars->nzC[i]      =  aVars->nz[i]; /* partial xy terms */
+      aVars->norm_n2xy[i]=  aVars->nx[i]*aVars->nx[i] + aVars->ny[i]*aVars->ny[i];
+      aVars->Axy[i]      = (aVars->nx[i]*aVars->gx    + aVars->ny[i]*aVars->gy)/2;
+    }
+    /* handle waviness init */
+    if (a_wavy && (!a_wavy_tb && !a_wavy_lr && !a_wavy_z))
+    { aVars->wav_tb=aVars->wav_lr=aVars->wav_z=a_wavy; }
+    else
+    { aVars->wav_tb=a_wavy_tb; aVars->wav_lr=a_wavy_lr; aVars->wav_z=a_wavy_z; }
+    aVars->wav_tb *= DEG2RAD/(sqrt(8*log(2)));   /* Convert from deg FWHM to rad Gaussian sigma */
+    aVars->wav_lr *= DEG2RAD/(sqrt(8*log(2)));
+    aVars->wav_z  *= DEG2RAD/(sqrt(8*log(2)));
+    /* handle chamfers init */
+    if (a_chamfers && (!a_chamfers_z && !a_chamfers_lr && !a_chamfers_tb))
+    { aVars->chamfer_z=aVars->chamfer_lr=aVars->chamfer_tb=a_chamfers; }
+    else
+    {
+      aVars->chamfer_z=a_chamfers_z;
+      aVars->chamfer_lr=a_chamfers_lr;
+      aVars->chamfer_tb=a_chamfers_tb;
+    }
+
+    aVars->fc_freq  = a_nu;
+    aVars->fc_phase = a_phase;
+  }
+
+  int Gravity_guide_Trace(double *dt,
+        Gravity_guide_Vars_type *aVars,
+        double cx, double cy, double cz,
+        double cvx, double cvy, double cvz,
+        double cxnum, double cxk, double cynum, double cyk,
+        double *cnx, double *cny,double *cnz)
+  {
+    double B, C;
+    int    ret=0;
+    int    side=0;
+    double n1;
+    double dt0, dt_min=0;
+    int    i;
+    double loc_num, loc_nslit;
+    int    i_slope=3;
+
+    /* look if there is a previous intersection with guide sides */
+    /* A = 0.5 n.g; B = n.v; C = n.(r-W); */
+    /* 5=+Z side: n=(0, 0, -l) ; W = (0, 0, l) (at z=l, guide exit)*/
+    B = aVars->nz[5]*cvz; C = aVars->nz[5]*(cz - aVars->wz[5]);
+    ret = solve_2nd_order(&dt0, NULL, aVars->A[5], B, C);
+    if (ret && dt0>1e-10) { dt_min = dt0; side=5; }
+
+    loc_num = cynum; loc_nslit = cyk;
+    for (i=4; i>0; i--)
+    {
+      if (i == 2) { i_slope=1; loc_num = cxnum; loc_nslit = cxk; }
+
+      if (aVars->nzC[i_slope] != 0) {
+        n1 = loc_nslit - 2*(loc_num);  /* slope of l/r/u/d sides depends on the channel ! */
+        loc_num++; /* use partial computations to alter nz and A */
+        aVars->nz[i]= aVars->nzC[i]*n1;
+        aVars->A[i] = aVars->Axy[i] + aVars->nz[i]*aVars->gz/2;
+      }
+      if (i < 3)
+      {      B = aVars->nx[i]*cvx + aVars->nz[i]*cvz; C = aVars->nx[i]*(cx-aVars->wx[i]) + aVars->nz[i]*cz; }
+      else { B = aVars->ny[i]*cvy + aVars->nz[i]*cvz; C = aVars->ny[i]*(cy-aVars->wy[i]) + aVars->nz[i]*cz; }
+      ret = solve_2nd_order(&dt0, NULL, aVars->A[i], B, C);
+      if (ret && dt0>1e-10 && (dt0<dt_min || !dt_min))
+      { dt_min = dt0; side=i;
+        if (aVars->nzC[i] != 0)
+        { aVars->norm_n2[i] = aVars->norm_n2xy[i] + aVars->nz[i]*aVars->nz[i];
+          aVars->norm_n[i]  = sqrt(aVars->norm_n2[i]); }
+      }
+     }
+
+    *dt = dt_min;
+    /* handles waviness: rotate n vector */
+    if (side > 0 && side < 5 && (aVars->wav_z || aVars->wav_lr || aVars->wav_tb))
+    {
+      double nt_x, nt_y, nt_z;  /* transverse vector */
+      double nn_x, nn_y, nn_z;  /* normal vector (tmp) */
+      double phi;
+      /* normal vector n_z = [ 0,0,1], n_t = n x n_z; */
+      vec_prod(nt_x,nt_y,nt_z, aVars->nx[side],aVars->ny[side],aVars->nz[side], 0,0,1);
+      /* rotate n with angle wavy_z around n_t -> nn */
+      if (aVars->wav_z) {
+        phi = aVars->wav_z;
+        rotate(nn_x,nn_y,nn_z, aVars->nx[side],aVars->ny[side],aVars->nz[side], aVars->wav_z*randnorm(), nt_x,nt_y,nt_z);
+      } else { nn_x=aVars->nx[side]; nn_y=aVars->ny[side]; nn_z=aVars->nz[side]; }
+      /* rotate n with angle wavy_{x|y} around n_z -> nt */
+      phi = (side <=2) ? aVars->wav_lr : aVars->wav_tb;
+      if (phi) {
+        rotate(nt_x,nt_y,nt_z, nn_x,nn_y,nn_z, phi*randnorm(), 0,0,1);
+      } else { nt_x=nn_x; nt_y=nn_y; nt_z=nn_z; }
+      *cnx=nt_x; *cny=nt_y; *cnz=nt_z;
+    } else
+    { *cnx=aVars->nx[side]; *cny=aVars->ny[side]; *cnz=aVars->nz[side]; }
+    return (side);
+  }
+
+
+
+%include "read_table-lib"
+
+#endif
+
+#ifndef Gravity_psdguide_Version
+#define Gravity_psdguide_Version "$Revision$"
+  void update_detectors(int i, double p, double *detN, double *detp, double *detp2)
+  {
+       detN[i]++;
+       detp[i] += p;
+       detp2[i] += p*p;
+  }
+
+  void Gravity_guide_Absorb(int side, int nxpsd, double z, double l, double p,
+      double *N1, double *p1, double *p1_2, 
+      double *N2, double *p2, double *p2_2, 
+      double *N3, double *p3, double *p3_2, 
+      double *N4, double *p4, double *p4_2)
+  { 
+      int i;
+      i = floor(nxpsd*(z)/(l));              /* Bin number */
+      /* i = (int)(nxpsd*z/l); */
+      if (i == nxpsd)
+      {
+            i -= 1; /* end of guide belongs to last bin */
+            printf("WARNING: hit i==nxpsd \n");
+            
+      }
+      else if( i > nxpsd || i<0 )
+      {
+            printf("WARNING: wrong positioning in linear PSD. i= %i \n",i);
+            printf("nxpsd = %i, z = %.3f, l = %.3f\n",nxpsd, z, l);
+            printf("Ignore event\n");
+            return;
+      }
+      if (side == 1) 
+          update_detectors(i, p, N1, p1, p1_2);
+      else if (side == 2)
+            update_detectors(i, p, N2, p2, p2_2);
+      else if (side == 3)
+            update_detectors(i, p, N3, p3, p3_2);
+      else if (side == 4)
+            update_detectors(i, p, N4, p4, p4_2);
+  }
+
+#endif
+
+%}
+
+DECLARE
+%{
+  Gravity_guide_Vars_type GVars;
+  /* added  four PSD monitors */
+  double PSDlin_Nxp[nxpsd];
+  double PSDlin_pxp[nxpsd];
+  double PSDlin_p2xp[nxpsd];
+
+  double PSDlin_Nxn[nxpsd];
+  double PSDlin_pxn[nxpsd];
+  double PSDlin_p2xn[nxpsd];
+
+  double PSDlin_Nyp[nxpsd];
+  double PSDlin_pyp[nxpsd];
+  double PSDlin_p2yp[nxpsd];
+
+  double PSDlin_Nyn[nxpsd];
+  double PSDlin_pyn[nxpsd];
+  double PSDlin_p2yn[nxpsd];
+
+  double currentPOS;
+
+
+  
+  t_Table pTable;
+%}
+
+INITIALIZE
+%{
+  double Gx=0, Gy=-GRAVITY, Gz=0;
+  Coords mcLocG;
+  int i;
+
+  if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0")) {
+    if (Table_Read(&pTable, reflect, 1) <= 0) /* read 1st block data from file into pTable */
+      exit(fprintf(stderr,"Guide_gravity: %s: can not read file %s\n", NAME_CURRENT_COMP, reflect));
+  } else {
+    if (W < 0 || R0 < 0 || Qc < 0)
+    { fprintf(stderr,"Guide_gravity: %s: W R0 Qc must be >0.\n", NAME_CURRENT_COMP);
+      exit(-1); }
+  }
+
+  if (nslit <= 0 || nhslit <= 0)
+  { fprintf(stderr,"Guide_gravity: %s: nslit nhslit must be >0.\n", NAME_CURRENT_COMP);
+    exit(-1); }
+
+  if (!w1 || !h1)
+  { fprintf(stderr,"Guide_gravity: %s: input window is closed (w1=h1=0).\n", NAME_CURRENT_COMP);
+    exit(-1); }
+    
+  if (d*nslit > w1) exit(fprintf(stderr, "Guide_gravity: %s: absorbing walls fill input window. No space left for transmission (d*nslit > w1).\n", NAME_CURRENT_COMP));
+
+  if (!w2) w2=w1;
+  if (!h2) h2=h1;
+
+  if (mcgravitation) G=-GRAVITY;
+  mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,G,0));
+  coords_get(mcLocG, &Gx, &Gy, &Gz);
+
+  strcpy(GVars.compcurname, NAME_CURRENT_COMP);
+
+  if (l > 0 && nelements > 0) {
+
+    Gravity_guide_Init(&GVars,
+      w1, h1, w2, h2, l, R0,
+      Qc, alpha, m, W, nslit, d,
+      Gx, Gy, Gz, mleft, mright, mtop,
+      mbottom, nhslit, wavy_lr, wavy_tb, wavy_z, wavy,
+      chamfers_z, chamfers_lr, chamfers_tb, chamfers,nu,phase,aleft,aright,atop,abottom);
+    if (!G) for (i=0; i<5; GVars.A[i++] = 0);
+    if (GVars.fc_freq != 0 || GVars.fc_phase != 0) {
+      if (w1 != w2 || h1 != h2)
+      exit(fprintf(stderr,"Guide_gravity: %s: rotating slit pack must be straight (w1=w2 and h1=h2).\n", NAME_CURRENT_COMP));
+      printf("Guide_gravity: %s: Fermi Chopper mode: frequency=%g [Hz] phase=%g [deg]\n",
+        NAME_CURRENT_COMP, GVars.fc_freq, GVars.fc_phase);
+    }
+  } else printf("Guide_gravity: %s: unactivated (l=0 or nelements=0)\n", NAME_CURRENT_COMP);
+
+  
+  /* added lines 417 - 432 to init PSD's */
+  /* int i; */
+
+  for (i=0; i<nxpsd; i++) {
+      PSDlin_Nxp[i] = 0;
+      PSDlin_pxp[i] = 0;
+      PSDlin_p2xp[i] = 0;
+      PSDlin_Nxn[i] = 0;
+      PSDlin_pxn[i] = 0;
+      PSDlin_p2xn[i] = 0;
+      PSDlin_Nyp[i] = 0;
+      PSDlin_pyp[i] = 0;
+      PSDlin_p2yp[i] = 0;
+      PSDlin_Nyn[i] = 0;
+      PSDlin_pyn[i] = 0;
+      PSDlin_p2yn[i] = 0;
+  }
+
+  
+  
+%}
+
+TRACE
+%{
+  if (l > 0 && nelements > 0) {
+    double B, C, dt;
+    int    ret, bounces = 0, i=0;
+    double this_width, this_height;
+    double angle=0;
+    double Rtemp;
+
+    if (GVars.fc_freq != 0 || GVars.fc_phase != 0) { /* rotate neutron w/r to guide element */
+      /* approximation of rotating straight Fermi Chopper */
+      Coords   X = coords_set(x,y,z-l/2);  /* current coordinates of neutron in centered static frame */
+      Rotation R;
+      double dt=(-z+l/2)/vz; /* time shift to each center of slit package */
+      angle=fmod(360*GVars.fc_freq*(t+dt)+GVars.fc_phase, 360); /* in deg */
+      /* modify angle so that Z0 guide side is always in front of incoming neutron */
+      if (angle > 90 && angle < 270) { angle -= 180; }
+      angle *= DEG2RAD;
+      rot_set_rotation(R, 0, -angle, 0); /* will rotate neutron instead of comp: negative side */
+      /* apply rotation to centered coordinates */
+      Coords   RX = rot_apply(R, X);
+      coords_get(RX, &x, &y, &z);
+      z = z+l/2;
+      /* rotate speed */
+      X  = coords_set(vx,vy,vz);
+      RX = rot_apply(R, X);
+      coords_get(RX, &vx, &vy, &vz);
+    }
+    
+    for (i=0; i<7; GVars.N_reflection[i++] = 0);
+
+    /* propagate to box input (with gravitation) in comp local coords */
+    /* A = 0.5 n.g; B = n.v; C = n.(r-W); */
+    /* 0=Z0 side: n=(0, 0, -l) ; W = (0, 0, 0) (at z=0, guide input)*/
+    B = -l*vz; C = -l*z;
+
+    ret = solve_2nd_order(&dt, NULL, GVars.A[0], B, C);
+    if (ret==0) ABSORB;
+
+    if (dt>0.0) PROP_GRAV_DT(dt, GVars.gx, GVars.gy, GVars.gz); else if (angle) ABSORB;
+    GVars.N_reflection[6]++;
+
+    this_width  = w1;
+    this_height = h1;
+
+  /* check if we are in the box input, else absorb */
+    if (fabs(x) > this_width/2 || fabs(y) > this_height/2)
+      ABSORB;
+    else
+    {
+      double w_edge, w_adj; /* Channel displacement on X */
+      double h_edge, h_adj; /* Channel displacement on Y */
+      double w_chnum,h_chnum; /* channel indexes */
+      
+      SCATTER;
+
+      /* X: Shift origin to center of channel hit (absorb if hit dividing walls) */
+      x += w1/2.0;
+      w_chnum = floor(x/(GVars.w1c+d));  /* 0= right side, nslit+1=left side  */
+      w_edge  = w_chnum*(GVars.w1c+d);
+      if(x - w_edge > GVars.w1c)
+      {
+        x -= w1/2.0; /* Re-adjust origin */
+        ABSORB;
+      }
+      w_adj = w_edge + (GVars.w1c)/2.0;
+      x -= w_adj; w_adj -=  w1/2.0;
+
+      /* Y: Shift origin to center of channel hit (absorb if hit dividing walls) */
+      y += h1/2.0;
+      h_chnum = floor(y/(GVars.h1c+d));  /* 0= lower side, nslit+1=upper side  */
+      h_edge  = h_chnum*(GVars.h1c+d);
+      if(y - h_edge > GVars.h1c)
+      {
+        y -= h1/2.0; /* Re-adjust origin */
+        ABSORB;
+      }
+      h_adj = h_edge + (GVars.h1c)/2.0;
+      y -= h_adj; h_adj -=  h1/2.0;
+
+      /* neutron is now in the input window of the guide */
+      /* do loops on reflections in the box */
+      for(;;)
+      {
+        /* get intersections for all box sides */
+        double q, nx,ny,nz;
+        double this_length;
+        int side=0;
+
+        bounces++;
+        /* now look for intersection with guide sides and exit */
+        side = Gravity_guide_Trace(&dt, &GVars, x, y, z,
+            vx, vy, vz, w_chnum, nslit, h_chnum, nhslit,
+            &nx, &ny, &nz);
+
+        /* only positive dt are valid */
+        /* exit reflection loops if no intersection (neutron is after box) */
+        if (side == 0 || dt <= 0)
+          { if (GVars.warnings < 100)
+              fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", GVars.compcurname);
+            GVars.warnings++;
+            x += w_adj; y += h_adj; ABSORB; } /* should never occur */
+
+        /* propagate to dt */
+        PROP_GRAV_DT(dt, GVars.gx, GVars.gy, GVars.gz);
+
+        /* do reflection on speed for l/r/u/d sides */
+        if (side == 5) /* neutron reaches end of guide: end loop and exit comp */
+          { GVars.N_reflection[side]++; x += w_adj; y += h_adj; SCATTER; x -= w_adj; y -= h_adj; break; }
+        /* else reflection on a guide wall */
+        if(GVars.M[side] == 0 || Qc == 0 || R0 == 0)  /* walls are absorbing */
+          { x += w_adj; y += h_adj; 
+          Gravity_guide_Absorb(side, nxpsd, z, l,p,
+                          PSDlin_Nxp, PSDlin_pxp, PSDlin_p2xp, 
+                          PSDlin_Nxn, PSDlin_pxn, PSDlin_p2xn, 
+                          PSDlin_Nyp, PSDlin_pyp, PSDlin_p2yp, 
+                          PSDlin_Nyn, PSDlin_pyn, PSDlin_p2yn); 
+          
+          ABSORB; 
+          }
+        
+        /* handle chamfers */
+        this_width = w1+(w2-w1)*z/l;
+        this_height= h1+(h2-h1)*z/l;
+        this_length= fmod(z, l/nelements);
+        /* absorb on input/output of element parts */
+        if (GVars.chamfer_z && (this_length<GVars.chamfer_z || this_length>l/nelements-GVars.chamfer_z))
+        { x += w_adj; y += h_adj; ABSORB; }
+        /* absorb on l/r/t/b sides */
+        if (GVars.chamfer_lr && (side==1 || side==2) && (fabs(y+h_adj)>this_height/2-GVars.chamfer_lr))
+        { x += w_adj; y += h_adj; ABSORB; }
+        if (GVars.chamfer_tb && (side==3 || side==4) && (fabs(x+w_adj)>this_width/2- GVars.chamfer_tb))
+        { x += w_adj; y += h_adj; ABSORB; }
+        /* change/mirror velocity: h_f = v - n.2*n.v/|n|^2 */
+        GVars.N_reflection[side]++; /* GVars.norm_n2 > 0 was checked at INIT */
+        /* compute n.v using current values */
+        B = scalar_prod(vx,vy,vz,nx,ny,nz);
+        dt = 2*B/GVars.norm_n2[side]; /* 2*n.v/|n|^2 */
+        vx -= nx*dt;
+        vy -= ny*dt;
+        vz -= nz*dt;
+
+        /* compute q and modify neutron weight */
+        /* scattering q=|n_i-n_f| = V2Q*|vf - v| = V2Q*2*n.v/|n| */
+        q = 2*V2Q*fabs(B)/GVars.norm_n[side];
+
+        if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0"))
+          TableReflecFunc(q, &pTable, &B);
+        else {
+          double par[] = {R0, Qc, GVars.Alpha[side], GVars.M[side], W};
+          StdReflecFunc(q, par, &B);
+        }
+        
+        if (B <= 0) { 
+          x += w_adj; y += h_adj; 
+          Gravity_guide_Absorb(side, nxpsd, z, l, p,
+                        PSDlin_Nxp, PSDlin_pxp, PSDlin_p2xp, 
+                        PSDlin_Nxn, PSDlin_pxn, PSDlin_p2xn, 
+                        PSDlin_Nyp, PSDlin_pyp, PSDlin_p2yp, 
+                        PSDlin_Nyn, PSDlin_pyn, PSDlin_p2yn); 
+          ABSORB; 
+          }
+          
+        else {
+          Rtemp = rand01();                             /* count for substrate psd with probability 1-B */
+          if(Rtemp > B)  {
+             Gravity_guide_Absorb(side, nxpsd, z, l, p,
+                          PSDlin_Nxp, PSDlin_pxp, PSDlin_p2xp, 
+                          PSDlin_Nxn, PSDlin_pxn, PSDlin_p2xn, 
+                          PSDlin_Nyp, PSDlin_pyp, PSDlin_p2yp, 
+                          PSDlin_Nyn, PSDlin_pyn, PSDlin_p2yn); 
+          }
+             
+          p *= B;
+          }
+        
+        x += w_adj; y += h_adj; SCATTER; x -= w_adj; y -= h_adj;
+        GVars.N_reflection[0]++;
+        /* go to the next reflection */
+        if (bounces > 1000) {
+          /* psd block 3 */
+          
+          ABSORB;
+          }
+      } /* end for */
+      x += w_adj; y += h_adj; /* Re-adjust origin after SCATTER */
+    }
+
+    if (GVars.fc_freq != 0 || GVars.fc_phase != 0) { /* rotate back neutron w/r to guide element */
+      /* approximation of rotating straight Fermi Chopper */
+      Coords   X = coords_set(x,y,z-l/2);  /* current coordinates of neutron in centered static frame */
+      Rotation R;
+      rot_set_rotation(R, 0, angle, 0); /* will rotate back neutron: positive side */
+      /* apply rotation to centered coordinates */
+      Coords   RX = rot_apply(R, X);
+      coords_get(RX, &x, &y, &z);
+      z = z+l/2;
+      /* rotate speed */
+      X  = coords_set(vx,vy,vz);
+      RX = rot_apply(R, X);
+      coords_get(RX, &vx, &vy, &vz);
+    }
+
+  } /* if l */
+%}
+
+
+SAVE
+  %{
+    currentPOS = POS_A_CURRENT_COMP.z;
+    DETECTOR_OUT_1D(
+        "Linear PSD monitor X+",
+        "Position [m]",
+        "Intensity",
+        "z", currentPOS,(currentPOS+l), nxpsd,
+        &PSDlin_Nxp[0],&PSDlin_pxp[0],&PSDlin_p2xp[0],
+        filenameL);
+
+    DETECTOR_OUT_1D(
+        "Linear PSD monitor X-",
+        "Position [m]",
+        "Intensity",
+        "z", currentPOS,(currentPOS+l), nxpsd,
+        &PSDlin_Nxn[0],&PSDlin_pxn[0],&PSDlin_p2xn[0],
+        filenameR);
+
+    DETECTOR_OUT_1D(
+        "Linear PSD monitor Y+",
+        "Position [m]",
+        "Intensity",
+        "z", currentPOS,(currentPOS+l), nxpsd,
+        &PSDlin_Nyp[0],&PSDlin_pyp[0],&PSDlin_p2yp[0],
+        filenameT);
+
+    DETECTOR_OUT_1D(
+        "Linear PSD monitor Y-",
+        "Position [m]",
+        "Intensity",
+        "z", currentPOS,(currentPOS+l), nxpsd,
+        &PSDlin_Nyn[0],&PSDlin_pyn[0],&PSDlin_p2yn[0],
+        filenameB);
+  %}
+
+FINALLY
+%{
+if (GVars.warnings > 100) {
+  fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", GVars.compcurname);
+  fprintf(stderr,"%s: warning: This message has been repeated %g times\n", GVars.compcurname, GVars.warnings);
+}
+%}
+
+MCDISPLAY
+%{
+
+  if (l > 0 && nelements > 0) {
+    int i,j,n;
+    double x1,x2,x3,x4;
+    double y1,y2,y3,y4;
+    double nel = (nelements > 11 ? 11 : nelements);
+
+    magnify("xy");
+    for (n=0; n<nel; n++)
+    {
+      double z0, z1;
+      z0 =     n*(l/nel);
+      z1 = (n+1)*(l/nel);
+
+      for(j = 0; j < nhslit; j++)
+      {
+        y1 = j*(GVars.h1c+d)         - h1/2.0;
+        y2 = j*(GVars.h2c+d)         - h2/2.0;
+        y3 = (j+1)*(GVars.h1c+d) - d - h1/2.0;
+        y4 = (j+1)*(GVars.h2c+d) - d - h2/2.0;
+        for(i = 0; i < nslit; i++)
+        {
+          x1 = i*(GVars.w1c+d)         - w1/2.0;
+          x2 = i*(GVars.w2c+d)         - w2/2.0;
+          x3 = (i+1)*(GVars.w1c+d) - d - w1/2.0;
+          x4 = (i+1)*(GVars.w2c+d) - d - w2/2.0;
+          multiline(5,
+                    x1, y1, z0,
+                    x2, y2, z1,
+                    x2, y4, z1,
+                    x1, y3, z0,
+                    x1, y1, z0);
+          multiline(5,
+                    x3, y1, z0,
+                    x4, y2, z1,
+                    x4, y4, z1,
+                    x3, y3, z0,
+                    x3, y1, z0);
+        }
+        line(-w1/2.0, y1, z0, w1/2.0, y1, z0);
+        line(-w2/2.0, y2, z1, w2/2.0, y2, z1);
+      }
+    }
+
+    if (nu || phase) {
+      double radius = sqrt(w1*w1+l*l);
+      /* cylinder top/center/bottom  */
+      circle("xz", 0,-h1/2,l/2,radius);
+      circle("xz", 0,0    ,l/2,radius);
+      circle("xz", 0, h1/2,l/2,radius);
+    }
+  }
+  else {
+    /* A bit ugly; hard-coded dimensions. */
+    magnify("");
+    line(0,0,0,0.2,0,0);
+    line(0,0,0,0,0.2,0);
+    line(0,0,0,0,0,0.2);
+  }
+
+%}
+
+END
