@@ -1,1 +1,1 @@
-../libs/nxslib/sginfo.h
+../libs/libnxs/sginfo.h

@@ -1,1 +1,1 @@
-../libs/nxslib/nxs.h
+../libs/libnxs/nxs.h
