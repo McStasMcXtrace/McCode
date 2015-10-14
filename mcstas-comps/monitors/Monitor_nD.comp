@@ -290,6 +290,10 @@ INITIALIZE
              "            Defaulting to normal Monitor dimensions.\n", 
              NAME_CURRENT_COMP, geometry);
       strcpy(geometry, "");
+    } else if ( xwidth==0 && yheight==0 && zdepth==0 ) {
+      printf("Monitor_nD: %s Warning: Neither xwidth, yheight or zdepth are defined.\n"
+	      "           The file-defined (non-scaled) geometry the OFF geometry %s were applied!\n", 
+             NAME_CURRENT_COMP, geometry);
     }
   
   if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax && 
@@ -473,7 +477,12 @@ FINALLY
 
 MCDISPLAY
 %{
-  Monitor_nD_McDisplay(&DEFS, &Vars);
+  if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
+  {
+    off_display(offdata);
+  } else {
+    Monitor_nD_McDisplay(&DEFS, &Vars);
+  }
 %}
 
 END
