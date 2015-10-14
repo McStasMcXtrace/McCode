@@ -51,19 +51,12 @@ class McView(object):
     def updateStatus(self, text=''):
         self.mw.ui.statusbar.showMessage(text)
         
-    def updateLog(self, text='', gui_msg=False, error=False):
-        if gui_msg:
-            if error:
-                self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
-            else:
-                self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
-            self.mw.ui.txtbrwMcgui.append(text)
+    def updateLog(self, text='', error=False):
+        if error:
+            self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
         else:
-            if error:
-                self.mw.ui.txtbrwSim.setTextColor(QtGui.QColor('red'))
-            else:
-                self.mw.ui.txtbrwSim.setTextColor(QtGui.QColor('black'))
-            self.mw.ui.txtbrwSim.append(text)
+            self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
+        self.mw.ui.txtbrwMcgui.append(text)
             
     def updateSimState(self, state=[]):
         enableRun = state[0] == 'True'
@@ -181,7 +174,6 @@ class McMainWindow(QtGui.QMainWindow):
         if mccode_config.configuration["MCCODE"] == "mcstas": 
             prefix = 'mc'
         self.setWindowTitle(prefix + 'gui-py') 
-        self.ui.tbxMessages.setTabText(self.ui.tbxMessages.indexOf(self.ui.tabMcgui), prefix + 'gui-py')
         self.ui.actionMcdoc.setText(prefix + "doc Component Reference")
         self.ui.actionMcstas_User_Manual.setText(prefix + "stas User Manual")
         self.ui.actionMcstas_Component_Manual.setText(prefix + "stas Component Manual")
