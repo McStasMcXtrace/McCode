@@ -645,7 +645,11 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
     printf("Warning: Aspect ratio of the geometry %s was modified.\n"
            "         If you want to keep the original proportions, specifiy only one of the dimensions.\n",
            offfile);
-  
+  if ( xwidth==0 && yheight==0 && zdepth==0 ) {
+    printf("Warning: Neither xwidth, yheight or zdepth are defined.\n"
+	   "           The file-defined (non-scaled) geometry the OFF geometry %s will be applied!\n", 
+           offfile);
+  }
   printf("  Bounding box dimensions for geometry %s:\n", offfile);
   printf("    Length=%f (%.3f%%)\n", rangex, ratiox*100);
   printf("    Width= %f (%.3f%%)\n", rangey, ratioy*100);
