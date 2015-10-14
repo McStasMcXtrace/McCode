@@ -26,7 +26,7 @@ class McMessageEmitter(QtCore.QObject):
     statusUpdate = QtCore.pyqtSignal(QtCore.QString)
     __statusLog = []
     
-    logMessageUpdate = QtCore.pyqtSignal(QtCore.QString, bool, bool)
+    logMessageUpdate = QtCore.pyqtSignal(QtCore.QString, bool)
     __msgLog = []
     
     def status(self, status):
@@ -39,13 +39,13 @@ class McMessageEmitter(QtCore.QObject):
         self.__statusLog.append(status)
         QtGui.QApplication.processEvents()
     
-    def message(self, msg, gui_msg=False, err_msg=False):
+    def message(self, msg, err_msg=False):
         ''' message log messages (simulation progress etc.)
         '''
         if msg == None:
             return
         
-        self.logMessageUpdate.emit(msg, gui_msg, err_msg)
+        self.logMessageUpdate.emit(msg, err_msg)
         self.__msgLog.append(msg)
         QtGui.QApplication.processEvents()
 
@@ -200,7 +200,7 @@ class McGuiState(QtCore.QObject):
         # compile simulation in a background thread
         self.compilethread = QtCore.QThread()
         self.compilethread.run = lambda: self.compileAsync(mpi, self.__thread_exc_signal)
-        self.compilethread.finished.connect(lambda: self.__emitter.message('compile thread done \n', gui_msg=True))
+        self.compilethread.finished.connect(lambda: self.__emitter.message('compile thread done \n'))
         self.compilethread.start()
         
     def compileAsync(self, mpi, thread_exc_signal):
@@ -213,8 +213,8 @@ class McGuiState(QtCore.QObject):
                                        stderr=subprocess.PIPE,
                                        shell=True)
             self.__emitter.status('Compiling instrument to c ...')
-            self.__emitter.message('Compiling instrument to c ...', gui_msg=True)
-            self.__emitter.message(cmd, gui_msg=True)
+            self.__emitter.message('Compiling instrument to c ...')
+            self.__emitter.message(cmd)
             
             # read program output while the process is active
             while process.poll() == None:
@@ -237,7 +237,7 @@ class McGuiState(QtCore.QObject):
             # check
             if os.path.isfile(cf):
                 self.__cFile = cf
-                self.__emitter.message('    --> ' + self.__cFile, gui_msg=True)
+                self.__emitter.message('    --> ' + self.__cFile)
             else:
                 raise Exception('C file not found')
             
@@ -262,8 +262,8 @@ class McGuiState(QtCore.QObject):
                                        stderr=subprocess.PIPE,
                                        shell=True)
             self.__emitter.status('Compiling instrument to binary ...')
-            self.__emitter.message('Compiling instrument to binary ...', gui_msg=True)
-            self.__emitter.message(cmd, gui_msg=True)
+            self.__emitter.message('Compiling instrument to binary ...')
+            self.__emitter.message(cmd)
     
             # read program output while the process is active
             while process.poll() == None:
@@ -281,7 +281,7 @@ class McGuiState(QtCore.QObject):
             # check
             if os.path.isfile(bf):
                 self.__binaryFile = bf
-                self.__emitter.message('    --> ' + self.__binaryFile, gui_msg=True)
+                self.__emitter.message('    --> ' + self.__binaryFile)
                 self.__emitter.status('Instrument compiled')
             else:
                 raise Exception('compileAsync: Binary not found.')
@@ -392,7 +392,7 @@ class McGuiState(QtCore.QObject):
         self.__runthread.message.connect(lambda msg: self.__emitter.message(msg))
         self.__runthread.start()
         
-        self.__emitter.message(runstr, gui_msg=True)
+        self.__emitter.message(runstr)
         self.__emitter.status('Running simulation ...')
         self.__fireSimStateUpdate()
         
@@ -400,14 +400,12 @@ class McGuiState(QtCore.QObject):
         if not self.__interrupted:
             self.__fireSimStateUpdate()
             if process_returncode == 0:
-                self.__emitter.message('simulation done', gui_msg=True)
-            self.__emitter.message('', gui_msg=True)
+                self.__emitter.message('simulation done')
             self.__emitter.message('')
             self.__emitter.status('')
         else: 
             self.__fireSimStateUpdate()
-            self.__emitter.message('simulation interrupted', gui_msg=True)
-            self.__emitter.message('', gui_msg=True)
+            self.__emitter.message('simulation interrupted')
             self.__emitter.message('')
             self.__emitter.status('Simulation interrupted')
         self.__interrupted = False
@@ -571,8 +569,8 @@ class McGuiAppController():
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
                          shell=True)
-        self.emitter.message(cmd, gui_msg=True)
-        self.emitter.message('', gui_msg=True)
+        self.emitter.message(cmd)
+        self.emitter.message('')
         
     def handleHelpWeb(self):
         # open the mcstas homepage
@@ -608,7 +606,7 @@ class McGuiAppController():
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
             self.state.unloadInstrument()
-            self.emitter.message("Instrument closed", gui_msg=True)
+            self.emitter.message("Instrument closed")
             self.emitter.status("Instrument closed")
     
     def handleSaveInstrument(self, text):
@@ -656,7 +654,7 @@ class McGuiAppController():
             if self.view.closeCodeEditorWindow():
                 self.state.unloadInstrument()
                 self.state.loadInstrument(instr)
-                self.emitter.message("Instrument opened: " + os.path.basename(str(instr)), gui_msg=True)
+                self.emitter.message("Instrument opened: " + os.path.basename(str(instr)))
                 self.emitter.status("Instrument: " + os.path.basename(str(instr)))
         
     def handleMcdoc(self):
