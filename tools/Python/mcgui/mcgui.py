@@ -57,6 +57,7 @@ class McRunQThread(QtCore.QThread):
     error = QtCore.pyqtSignal(QtCore.QString)
     message = QtCore.pyqtSignal(QtCore.QString)
     cmd = ''
+    process_returncode = None
     
     def run(self, *args, **kwargs):
         try:
@@ -68,20 +69,24 @@ class McRunQThread(QtCore.QThread):
             # not readable live
             process = subprocess.Popen(self.cmd, 
                                        stdout=subprocess.PIPE, 
-                                       stderr=subprocess.STDOUT,
+                                       stderr=subprocess.PIPE,
                                        shell=True)
             
             # read program output while the process is active
             while process.poll() == None:
                 stdoutdata = process.stdout.readline().rstrip('\n')
                 self.message.emit(stdoutdata)
+                stderrdata = process.stderr.readline().rstrip('\n')
+                self.error.emit(stderrdata)
                 time.sleep(0.05)
             # flush until EOF
             for stdoutdata in process.stdout:
                 self.message.emit(stdoutdata.rstrip('\n'))
+            for stderrdata in process.stderr:
+                self.error.emit(stderrdata.rstrip('\n'))
             
-            # TODO: implement error() messaging from stderr
-            
+            self.process_returncode = process.returncode
+                        
         except:
             (type, value, traceback) = sys.exc_info()
             self.thread_exception.emit(value.message)
@@ -205,7 +210,7 @@ class McGuiState(QtCore.QObject):
             cmd = mccode_config.configuration["MCCODE"] + ' -t '  + nf
             process = subprocess.Popen(cmd, 
                                        stdout=subprocess.PIPE,
-                                       stderr=subprocess.STDOUT,
+                                       stderr=subprocess.PIPE,
                                        shell=True)
             self.__emitter.status('Compiling instrument to c ...')
             self.__emitter.message('Compiling instrument to c ...', gui_msg=True)
@@ -215,10 +220,14 @@ class McGuiState(QtCore.QObject):
             while process.poll() == None:
                 stdoutdata = process.stdout.readline().rstrip('\n')
                 self.__emitter.message(stdoutdata)
+                stderrdata = process.stderr.readline().rstrip('\n')
+                self.__emitter.message(stderrdata, err_msg=True)
                 time.sleep(0.05)
             ## flush until EOF
             for stdoutdata in process.stdout:
                 self.__emitter.message(stdoutdata.rstrip('\n'))
+            for stderrdata in process.stderr:
+                self.__emitter.message(stderrdata.rstrip('\n'), err_msg=True)
                 
             # paths and filenames
             spl = os.path.splitext(os.path.basename(str(nf)))
@@ -250,7 +259,7 @@ class McGuiState(QtCore.QObject):
            
             process = subprocess.Popen(cmd, 
                                        stdout=subprocess.PIPE,
-                                       stderr=subprocess.STDOUT,
+                                       stderr=subprocess.PIPE,
                                        shell=True)
             self.__emitter.status('Compiling instrument to binary ...')
             self.__emitter.message('Compiling instrument to binary ...', gui_msg=True)
@@ -260,10 +269,14 @@ class McGuiState(QtCore.QObject):
             while process.poll() == None:
                 stdoutdata = process.stdout.readline().rstrip('\n')
                 self.__emitter.message(stdoutdata)
+                stderrdata = process.stderr.readline().rstrip('\n')
+                self.__emitter.message(stderrdata, err_msg=True)
                 time.sleep(0.05)
             # flush until EOF
             for stdoutdata in process.stdout:
                 self.__emitter.message(stdoutdata.rstrip('\n'))
+            for stderrdata in process.stderr:
+                self.__emitter.message(stderrdata.rstrip('\n'), err_msg=True)
                     
             # check
             if os.path.isfile(bf):
@@ -372,7 +385,7 @@ class McGuiState(QtCore.QObject):
         # run simulation in a background thread
         self.__runthread = McRunQThread()
         self.__runthread.cmd = runstr
-        self.__runthread.finished.connect(self.__runFinished)
+        self.__runthread.finished.connect(lambda: self.__runFinished(self.__runthread.process_returncode))
         self.__runthread.terminated.connect(self.__runTerminated)
         self.__runthread.thread_exception.connect(handleExceptionMsg)
         self.__runthread.error.connect(lambda msg: self.__emitter.message(msg, err_msg=True))
@@ -383,10 +396,11 @@ class McGuiState(QtCore.QObject):
         self.__emitter.status('Running simulation ...')
         self.__fireSimStateUpdate()
         
-    def __runFinished(self):
+    def __runFinished(self, process_returncode):
         if not self.__interrupted:
             self.__fireSimStateUpdate()
-            self.__emitter.message('simulation done', gui_msg=True)
+            if process_returncode == 0:
+                self.__emitter.message('simulation done', gui_msg=True)
             self.__emitter.message('', gui_msg=True)
             self.__emitter.message('')
             self.__emitter.status('')
@@ -408,15 +422,17 @@ class McGuiState(QtCore.QObject):
         cmd = mccode_config.configuration["MCRUN"] + ' ' + self.__instrFile + " --info"
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE, 
-                                   stderr=subprocess.PIPE, 
+                                   stderr=subprocess.PIPE,
                                    shell=True)
-        # synchronous
+        # synchronous call
         (stdoutdata, stderrdata) = process.communicate()
+        # note: communicate() always sets a process exit code
         
         if stderrdata:
             self.__emitter.message(stderrdata, err_msg=True)
-            self.__emitter.status("Instrument compile error (if c-flags are required, use Shift+Ctrl+R).")
-            raise Exception("Instrument compile error (if c-flags are required, use Shift+Ctrl+R).")
+            
+        if process.returncode != 0:
+            raise Exception('Instrument compile error.')
         
         # get parameters from info
         params = []
@@ -523,7 +539,12 @@ class McGuiAppController():
         else:
             self.emitter.status("Getting instrument params...")
             
-            instr_params = self.state.getInstrParams()
+            try:
+                instr_params = self.state.getInstrParams()
+            except:
+                self.emitter.status("Instrument compile error")
+                raise
+                
             fixed_params, new_instr_params = self.view.showStartSimDialog(instr_params)
             
             self.emitter.status("")
