@@ -30,6 +30,11 @@
 
 // Constant used 
 #define mc_pol_omegaL (-2 * PI * 29.16e6) /* MHz*rad/Tesla */
+/*Threshold below which two magnetic fields are considered to be
+ * in the same direction.*/
+#define mc_pol_angular_accuracy 1.0*DEG2RAD /*rad.*/
+/*The maximal timestep taken by neutrons in a const field*/
+#define mc_pol_initial_timestep 1e-5 /*s*/
 
 /*example field functions should have a variable set of arguments*/
 #include <stdarg.h>
@@ -38,6 +43,7 @@
 #ifndef MCSTAS_R_H
 #include <mcstas-r.h>
 #endif
+
 
 typedef int mcmagnet_field_func (double, double, double, double, double *, double *, double *, void *);
 typedef void mcmagnet_prec_func (double, double, double, double, double, double, double, double*, double*, double*, double, Coords, Rotation);
