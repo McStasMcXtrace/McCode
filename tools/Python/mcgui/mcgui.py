@@ -701,13 +701,7 @@ class McGuiAppController():
         emitter = self.emitter
         emitter.statusUpdate.connect(self.view.updateStatus)
         emitter.logMessageUpdate.connect(self.view.updateLog)
-        
 
-''' Last resort exception handler
-'''
-def handleExceptionMsg(msg):
-    print(msg)
-    
 
 ''' Program execution
 '''
@@ -721,7 +715,8 @@ def main():
         sys.exit(mcguiApp.exec_())
 
     except Exception, e: 
-        handleExceptionMsg(e.message)
+        print(e.message)
+        raise
         
         
 if __name__ == '__main__':
