@@ -64,6 +64,8 @@ typedef struct off_struct {
     Coords* normalArray;
     unsigned long* faceArray;
     char *filename;
+    int mantidflag;
+    long mantidoffset;
 } off_struct;
 
 /*******************************************************************************

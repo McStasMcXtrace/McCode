@@ -756,6 +756,7 @@ void off_display(off_struct data)
 {
   unsigned int i;
   double ratio=(double)(N_VERTEX_DISPLAYED)/(double)data.faceSize;
+  unsigned int pixel=0;
   for (i=0; i<data.faceSize-1; i++) {
     int j;
     int nbVertex = data.faceArray[i];
@@ -763,17 +764,28 @@ void off_display(off_struct data)
     x0 = data.vtxArray[data.faceArray[i+1]].x;
     y0 = data.vtxArray[data.faceArray[i+1]].y;
     z0 = data.vtxArray[data.faceArray[i+1]].z;
-    if (ratio > 1 || rand01() < ratio) {
-      double x1=x0,y1=y0,z1=z0;
-      for (j=2; j<=nbVertex; j++) {
-        double x2,y2,z2;
-        x2 = data.vtxArray[data.faceArray[i+j]].x;
-        y2 = data.vtxArray[data.faceArray[i+j]].y;
-        z2 = data.vtxArray[data.faceArray[i+j]].z;
-        mcdis_line(x1,y1,z1,x2,y2,z2);
-        x1 = x2; y1 = y2; z1 = z2;
+    double x1=x0,y1=y0,z1=z0;
+
+    char pixelinfo[128];    
+    sprintf(pixelinfo, "%u, %i, %g, %g, %g,", data.mantidoffset+pixel, nbVertex, (double)x1, (double)y1, (double)z1);
+    int drawthis = rand01() < ratio;
+    for (j=2; j<=nbVertex; j++) {
+      double x2,y2,z2;
+      x2 = data.vtxArray[data.faceArray[i+j]].x;
+      y2 = data.vtxArray[data.faceArray[i+j]].y;
+      z2 = data.vtxArray[data.faceArray[i+j]].z;
+      sprintf(pixelinfo, "%s %g, %g, %g", pixelinfo, x2, y2, z2); 
+      if (ratio > 1 || drawthis) {
+	mcdis_line(x1,y1,z1,x2,y2,z2);
       }
-      mcdis_line(x1,y1,z1,x0,y0,z0);
+      x1 = x2; y1 = y2; z1 = z2;
+    }
+    if (ratio > 1 || drawthis) {
+	mcdis_line(x1,y1,z1,x0,y0,z0);
+      }
+    if (data.mantidflag) {
+      printf("MANTID_PIXEL: %s\n", pixelinfo);
+      pixel++;
     }
     i += nbVertex;
   }
