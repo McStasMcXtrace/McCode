@@ -40,7 +40,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
   MCNUM ymin,
   MCNUM ymax,
   MCNUM zmin,
-  MCNUM zmax)
+  MCNUM zmax,
+  int offflag)
   {
     long carg = 1;
     char *option_copy, *token;
@@ -126,6 +127,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     DEFS->SHAPE_BANANA =4;
     DEFS->SHAPE_BOX    =5;
     DEFS->SHAPE_PREVIOUS=6;
+    DEFS->SHAPE_OFF=7;
 
     Vars->Sphere_Radius     = 0;
     Vars->Cylinder_Height   = 0;
@@ -186,6 +188,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     else
       Vars->Flag_Shape        = DEFS->SHAPE_BOX;
 
+    if (offflag) {
+      Vars->Flag_Shape        = DEFS->SHAPE_OFF;
+    }
+    
     /* parse option string */
 
     option_copy = (char*)malloc(strlen(Vars->option)+1);
@@ -432,6 +438,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
         if (Set_Vars_Coord_Type != DEFS->COORD_NONE)
         {
           int Coord_Number = Vars->Coord_Number;
+	  printf("Number of coords: %i\n",Coord_Number);
           if (Vars->Flag_log) { Set_Vars_Coord_Type |= DEFS->COORD_LOG; Vars->Flag_log = 0; }
           if (Flag_abs) { Set_Vars_Coord_Type |= DEFS->COORD_ABS; Flag_abs = 0; }
           if (Flag_auto != 0) { Set_Vars_Coord_Type |= DEFS->COORD_AUTO; 
@@ -602,6 +609,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     if (Vars->Flag_Shape == DEFS->SHAPE_BANANA) strcat(Vars->Monitor_Label, " (Banana)");
     if (Vars->Flag_Shape == DEFS->SHAPE_BOX)    strcat(Vars->Monitor_Label, " (Box)");
     if (Vars->Flag_Shape == DEFS->SHAPE_PREVIOUS) strcat(Vars->Monitor_Label, " (on PREVIOUS)");
+    if (Vars->Flag_Shape == DEFS->SHAPE_OFF) strcat(Vars->Monitor_Label, " (OFF geometry)");
     if ((Vars->Flag_Shape == DEFS->SHAPE_CYLIND) || (Vars->Flag_Shape == DEFS->SHAPE_BANANA) || (Vars->Flag_Shape == DEFS->SHAPE_SPHERE) || (Vars->Flag_Shape == DEFS->SHAPE_BOX))
     {
       if (strstr(Vars->option, "incoming"))
@@ -706,8 +714,13 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     {
       Vars->area = PI*Vars->Sphere_Radius*Vars->Sphere_Radius*1E4; /* disk shapes */
     }
-    if (Vars->area == 0 && abs(Vars->Flag_Shape) != DEFS->SHAPE_PREVIOUS)
-      Vars->Coord_Number = 0;
+
+    
+    if (Vars->area == 0 && abs(Vars->Flag_Shape) != DEFS->SHAPE_PREVIOUS ) {
+      if (abs(Vars->Flag_Shape) != DEFS->SHAPE_OFF) {  
+	Vars->Coord_Number = 0;
+      }
+    }
     if (Vars->Coord_Number == 0 && Vars->Flag_Verbose)
       printf("Monitor_nD: %s is unactivated (0D)\n", Vars->compcurname);
     Vars->Cylinder_Height = fabs(Vars->mymax - Vars->mymin);

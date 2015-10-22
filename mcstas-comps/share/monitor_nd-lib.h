@@ -91,6 +91,7 @@
     char SHAPE_BANANA; /* cylinder without top/bottom, on restricted angular area */
     char SHAPE_BOX   ;
     char SHAPE_PREVIOUS;
+    char SHAPE_OFF;
 
   } MonitornD_Defines_type;
 
@@ -165,7 +166,7 @@
 /* monitor_nd-lib function prototypes */
 /* ========================================================================= */
 
-void Monitor_nD_Init(MonitornD_Defines_type *, MonitornD_Variables_type *, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM);
+void Monitor_nD_Init(MonitornD_Defines_type *, MonitornD_Variables_type *, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, int);
 double Monitor_nD_Trace(MonitornD_Defines_type *, MonitornD_Variables_type *);
 MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *, MonitornD_Variables_type *);
 void Monitor_nD_Finally(MonitornD_Defines_type *, MonitornD_Variables_type *);

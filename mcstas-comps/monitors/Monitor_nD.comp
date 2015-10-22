@@ -285,7 +285,7 @@ INITIALIZE
   }
   int offflag=0;
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
-    if (!off_init(  geometry, xwidth, yheight, zdepth, 0, &offdata )) {
+    if (!off_init(  geometry, xwidth, yheight, zdepth, 1, &offdata )) {
       printf("Monitor_nD: %s could not initiate the OFF geometry %s. \n"
              "            Defaulting to normal Monitor dimensions.\n", 
              NAME_CURRENT_COMP, geometry);
@@ -298,7 +298,7 @@ INITIALIZE
     !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
     exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
 
-  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax);
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,offflag);
 
   if (offflag) {
     printf("Flag: %i, offset %g\n",Vars.Flag_mantid,Vars.Coord_Min[2]);

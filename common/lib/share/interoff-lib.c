@@ -767,14 +767,14 @@ void off_display(off_struct data)
     double x1=x0,y1=y0,z1=z0;
 
     char pixelinfo[128];    
-    sprintf(pixelinfo, "%u, %i, %g, %g, %g,", data.mantidoffset+pixel, nbVertex, (double)x1, (double)y1, (double)z1);
+    sprintf(pixelinfo, "%u,%i,%g,%g,%g", data.mantidoffset+pixel, nbVertex, (double)x1, (double)y1, (double)z1);
     int drawthis = rand01() < ratio;
     for (j=2; j<=nbVertex; j++) {
       double x2,y2,z2;
       x2 = data.vtxArray[data.faceArray[i+j]].x;
       y2 = data.vtxArray[data.faceArray[i+j]].y;
       z2 = data.vtxArray[data.faceArray[i+j]].z;
-      sprintf(pixelinfo, "%s %g, %g, %g", pixelinfo, x2, y2, z2); 
+      sprintf(pixelinfo, "%s,%g,%g,%g", pixelinfo, x2, y2, z2); 
       if (ratio > 1 || drawthis) {
 	mcdis_line(x1,y1,z1,x2,y2,z2);
       }
