@@ -667,6 +667,60 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
 } /* off_init */
 
 /*******************************************************************************
+* int off_intersect_all(double* t0, double* t3,
+     Coords *n0, Coords *n3,
+     double x, double y, double z,
+     double vx, double vy, double vz,
+     off_struct *data )
+* ACTION: computes intersection of neutron trajectory with an object.
+* INPUT:  x,y,z and vx,vy,vz are the position and velocity of the neutron
+*         data points to the OFF data structure
+* RETURN: the number of polyhedra which trajectory intersects
+*         t0 and t3 are the smallest incoming and outgoing intersection times
+*         n0 and n3 are the corresponding normal vectors to the surface
+*         data is the full OFF structure, including a list intersection type
+*******************************************************************************/
+int off_intersect_all(double* t0, double* t3,
+     Coords *n0, Coords *n3,
+     double x,  double y,  double z,
+     double vx, double vy, double vz,
+     off_struct *data )
+{
+    Coords A={x, y, z};
+    Coords B={x+vx, y+vy, z+vz};
+    int t_size=off_clip_3D_mod(data->intersects, A, B,
+      data->vtxArray, data->vtxSize, data->faceArray, data->faceSize, data->normalArray );
+    qsort(data->intersects, t_size, sizeof(intersection),  off_compare);
+    off_cleanDouble(data->intersects, &t_size);
+    off_cleanInOut(data->intersects,  &t_size);
+
+    /*find intersections "closest" to 0 (favouring positive ones)*/
+    if(t_size>0){
+      int i=0;
+      if(t_size>1) {
+        for (i=1; i < t_size-1; i++){
+          if (data->intersects[i-1].time > 0 && data->intersects[i].time > 0)
+            break;
+        }
+	
+	data->nextintersect=i-1;
+	data->numintersect=t_size;
+
+        if (t0) *t0 = data->intersects[i-1].time;
+        if (n0) *n0 = data->intersects[i-1].normal;
+        if (t3) *t3 = data->intersects[i].time;
+        if (n3) *n3 = data->intersects[i].normal;
+      } else {
+        if (t0) *t0 = data->intersects[0].time; 	 
+	      if (n0) *n0 = data->intersects[0].normal;
+      }
+      /* should also return t[0].index and t[i].index as polygon ID */
+      return t_size;
+    }
+    return 0;
+} /* off_intersect */
+
+/*******************************************************************************
 * int off_intersect(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x, double y, double z,
@@ -679,43 +733,14 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
 *         t0 and t3 are the smallest incoming and outgoing intersection times
 *         n0 and n3 are the corresponding normal vectors to the surface
 *******************************************************************************/
-int off_intersect(double* t0, double* t3,
+inline int off_intersect(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x,  double y,  double z,
      double vx, double vy, double vz,
      off_struct data )
 {
-    intersection t[CHAR_BUF_LENGTH];
-    Coords A={x, y, z};
-    Coords B={x+vx, y+vy, z+vz};
-    int t_size=off_clip_3D_mod(t, A, B,
-      data.vtxArray, data.vtxSize, data.faceArray, data.faceSize, data.normalArray );
-    qsort(t, t_size, sizeof(intersection),  off_compare);
-    off_cleanDouble(t, &t_size);
-    off_cleanInOut(t,  &t_size);
-
-    /*find intersections "closest" to 0 (favouring positive ones)*/
-    if(t_size>0){
-      int i=0;
-      if(t_size>1) {
-        for (i=1; i < t_size-1; i++){
-          if (t[i-1].time > 0 && t[i].time > 0)
-            break;
-        }
-        if (t0) *t0 = t[i-1].time;
-        if (n0) *n0 = t[i-1].normal;
-        if (t3) *t3 = t[i].time;
-        if (n3) *n3 = t[i].normal;
-      } else {
-        if (t0) *t0 = t[0].time; 	 
-	      if (n0) *n0 = t[0].normal;
-      }
-      /* should also return t[0].index and t[i].index as polygon ID */
-      return t_size;
-    }
-    return 0;
+  return off_intersect_all(t0, t3, n0, n3, x, y, z, vx, vy, vz, &data );
 } /* off_intersect */
-
 
 /*****************************************************************************
 * int off_x_intersect(double* l0, double* l3,

@@ -154,6 +154,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Flag_capture      = 0;
     Vars->Flag_signal       = DEFS->COORD_P;
     Vars->Flag_mantid       = 0;
+    Vars->Flag_OFF          = offflag;
+    Vars->OFF_polyidx       = -1;
     Vars->mean_dx=Vars->mean_dy=0;
     Vars->min_x = Vars->max_x  =0;
     Vars->min_y = Vars->max_y  =0;
@@ -188,7 +190,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     else
       Vars->Flag_Shape        = DEFS->SHAPE_BOX;
 
-    if (offflag) {
+    if (Vars->Flag_OFF) {
       Vars->Flag_Shape        = DEFS->SHAPE_OFF;
     }
     
@@ -845,7 +847,6 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
                 break;
               }
               Coord[i] += Coord_Index[j]*Vars->Coord_BinProd[j-1];
-              
             }
             if (!flag_outside) {
               Vars->Mon2D_Buffer[i+While_Buffer*(Vars->Coord_Number+1)] = Coord[i];
@@ -987,6 +988,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
             }
             XY += Coord_Index[j]*Vars->Coord_BinProd[j-1];
           }
+	  if (Vars->Flag_OFF && Vars->OFF_polyidx >=0) XY=Vars->OFF_polyidx;
           if (!flag_outside) XY += Vars->Coord_Min[i];
         }
         
@@ -1150,7 +1152,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
       }
       Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
       Vars->Buffer_Block = Vars->Buffer_Counter;
-
+      
       while (!While_End)
       { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) */
         /* simulation ended before Buffer was filled. Limits have to be computed, and stored events must be sent into histograms */
@@ -1193,7 +1195,6 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
                   break;
                 }
                 Coord[i] += Coord_Index[j]*Vars->Coord_BinProd[j-1];
-                
               }
               if (!outsidebounds) {
                 Vars->Mon2D_Buffer[i+While_Buffer*(Vars->Coord_Number+1)] = Coord[i];

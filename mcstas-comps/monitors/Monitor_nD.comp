@@ -300,9 +300,9 @@ INITIALIZE
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,offflag);
 
-  if (offflag) {
+  if (Vars.Flag_OFF) {
     printf("Flag: %i, offset %g\n",Vars.Flag_mantid,Vars.Coord_Min[2]);
-    offdata.mantidflag=1;//Vars.Flag_mantid;
+    offdata.mantidflag=Vars.Flag_mantid;
     offdata.mantidoffset=Vars.Coord_Min[2];
   }
 
@@ -346,8 +346,15 @@ TRACE
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
   {
     /* determine intersections with object */
-    intersect = off_intersect(&t0, &t1, NULL, NULL,
-       x,y,z, vx, vy, vz, offdata );
+    intersect = off_intersect_all(&t0, &t1, NULL, NULL,
+       x,y,z, vx, vy, vz, &offdata );
+    if (Vars.Flag_mantid) {
+      if(intersect) {
+	Vars.OFF_polyidx=(offdata.intersects[offdata.nextintersect]).index;
+      } else {
+	Vars.OFF_polyidx=-1;
+      }
+    }
   }
   else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
   {
