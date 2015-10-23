@@ -988,7 +988,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
             }
             XY += Coord_Index[j]*Vars->Coord_BinProd[j-1];
           }
-	  if (Vars->Flag_OFF && Vars->OFF_polyidx >=0) XY=Vars->OFF_polyidx;
+	  if (Vars->Flag_mantid && Vars->Flag_OFF && Vars->OFF_polyidx >=0) XY=Vars->OFF_polyidx;
           if (!flag_outside) XY += Vars->Coord_Min[i];
         }
         
