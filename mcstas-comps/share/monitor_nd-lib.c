@@ -440,7 +440,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
         if (Set_Vars_Coord_Type != DEFS->COORD_NONE)
         {
           int Coord_Number = Vars->Coord_Number;
-	  printf("Number of coords: %i\n",Coord_Number);
           if (Vars->Flag_log) { Set_Vars_Coord_Type |= DEFS->COORD_LOG; Vars->Flag_log = 0; }
           if (Flag_abs) { Set_Vars_Coord_Type |= DEFS->COORD_ABS; Flag_abs = 0; }
           if (Flag_auto != 0) { Set_Vars_Coord_Type |= DEFS->COORD_AUTO; 

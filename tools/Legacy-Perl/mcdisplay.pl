@@ -385,8 +385,8 @@ Transform {
 	      if($d!=0){
 		$rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
 	      }
-	      write_process("<component type=\"".$type."\" name=\"$comp\" idstart=\"");
-	      write_process(${pixelmin+0});
+	      write_process("\n<component type=\"".$type."\" name=\"$comp\" idstart=\"");
+	      write_process(${pixelmin}+0);
 	      write_process("\" idfillbyfirst=\"x\" idstepbyrow=\"".$nx."\">\n");
 	      write_process("\t<location x=\"".$transformations{$comp}[0]."\" y=\"".$transformations{$comp}[1]."\" z=\"".$transformations{$comp}[2]."\" $rota />\n</component>\n\n");
 
@@ -426,7 +426,7 @@ Transform {
 	      if($d!=0){
 		$rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
 	      }
-	      write_process("<component type=\"".$type."\" name=\"$comp\" idlist=\"".$type."-list\">\n"); 
+	      write_process("\n<component type=\"".$type."\" name=\"$comp\" idlist=\"".$type."-list\">\n"); 
 	      write_process("\t<locations x=\"".$transformations{$comp}[0]."\" y=\"".($transformations{$comp}[1]+$ymin)."\" y-end=\"".($transformations{$comp}[1]+$ymax)."\" n-elements=\"".$ny."\" z=\"".$transformations{$comp}[2]."\" $rota /> \n");
 	      write_process("</component>\n\n");
 	      write_process("<type name=\"".$type."\">\n");
@@ -449,6 +449,79 @@ Transform {
 	      write_process("\t<id start=\"".(${pixelmin}+0)."\" end=\"".(${pixelmin}+$nt*$ny-1)."\"/>");
 	      write_process("</idlist>\n");
 	    }
+	} elsif (/^MANTID_PIXEL:(.*)$/) {
+	    # OFF-geometry, individual pixels defined for Mantid use
+	    my ($pixID, $firstpix, $lastpix, $polyrank, $posx, $posy, $posz, $x0, $y0, $z0, $x1, $y1, $z1, $x2, $y2, $z2, $x3, $y3, $z3) = split ",", $1;
+	    $pixID =~ s/\s//g; 
+	    
+	    if ($polyrank != 4) {
+		print STDERR "Sorry - only rank 4 polygons are supported, this rank was given:" + $polyrank + "\n";
+		exit(1);
+	    } else {
+		if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+		    if ($pixID == $firstpix) {
+			# First pixel
+			$mantidcount2++;
+						
+			# Overall component placement
+			my $type = "MonNDtype-$mantidcount2";
+			my $angle = (180/pi)*acos(($transformations{$comp}[3]+$transformations{$comp}[7]+$transformations{$comp}[11]-1)/2);
+			my $d21=$transformations{$comp}[8]-$transformations{$comp}[10]; my $d02=$transformations{$comp}[9]-$transformations{$comp}[5]; my $d10=$T[4]-$T[6];
+			my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);
+			my $rota="";
+			if($d!=0){
+			    $rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
+			}
+			write_process("\n<component type=\"".$type."\" name=\"$comp\" idlist=\"".$type."-list\">\n"); 
+			write_process("\t<location x=\"".$transformations{$comp}[0]."\" y=\"".$transformations{$comp}[1]."\" z=\"".$transformations{$comp}[2]."\" $rota />\n</component>\n\n");
+			
+			# Start writing the ID list
+			write_process("<idlist idname=\"".$type."-list\">\n");
+			write_process("\t<id start=\"".(${firstpix}+0)."\" end=\"".(${lastpix}+0)."\"/>\n");
+			write_process("</idlist>\n");
+
+			# Start writing the related type...
+			$mantidtypebuffer = "\n<type name=\"".$type."\">\n\t<properties />\n";
+			#." end=\"".(${lastpix}+0)."\"/>");
+			#write_process("</idlist>\n");
+		    }
+		    # Define a hexahedron
+		    my $type = "MonNDtype-pix-$pixID";
+		    write_process("\n<type name=\"$type\" is=\"detector\">\n");
+		    write_process("\t<hexahedron id=\"hexapix-".$pixID."\">\n");
+		    write_process("\t\t<left-back-bottom-point  x=\"".$x0."\" y=\"".$y0."\" z=\"".($z0+0.0005)."\"  />\n");
+		    write_process("\t\t<left-front-bottom-point x=\"".$x0."\" y=\"".$y0."\" z=\"".$z0."\"  />\n");
+		    write_process("\t\t<right-front-bottom-point x=\"".$x3."\" y=\"".$y3."\" z=\"".$z3."\"  />\n");
+		    write_process("\t\t<right-back-bottom-point  x=\"".$x3."\" y=\"".$y3."\" z=\"".($z3+0.0005)."\"  />\n");
+		    write_process("\t\t<left-back-top-point  x=\"".$x1."\" y=\"".$y1."\" z=\"".$z1."\"  />\n");
+		    write_process("\t\t<left-front-top-point  x=\"".$x1."\" y=\"".$y1."\" z=\"".($z1+0.0005)."\"  />\n");
+		    write_process("\t\t<right-front-top-point  x=\"".$x2."\" y=\"".$y2."\" z=\"".$z2."\"  />\n");
+		    write_process("\t\t<right-back-top-point   x=\"".$x2."\" y=\"".$y2."\" z=\"".($z2+0.0005)."\"  />\n");
+		    write_process("\t</hexahedron>\n");
+		    write_process("\t<algebra val=\"hexapix-".$pixID."\" />\n");
+		    write_process("</type>\n\n");
+		    
+		    $mantidtypebuffer = $mantidtypebuffer."<component type=\"".$type."\">\n\t<location x=\"$posx\" y=\"$posy\" z=\"$posz\" />\n</component>\n";
+
+		    if ($pixID == $lastpix) {
+			write_process($mantidtypebuffer);
+			write_process("</type>\n\n");
+		    }
+		    # write_process("<idlist idname=\"nD_Mantid_$pixID\" >\n");
+		    # write_process("<id start=\"");
+		    # write_process($pixID);
+		    # write_process("\" end=\"");
+		    # write_process($pixID);
+		    # write_process("\" />\n");
+		    # write_process("</idlist>\n\n");
+		    
+
+		    # write_process("<type name=\"MonNDtype-".$pixID."\">\n<properties/>\n<component type=\"$type\">\n");
+		    # write_process("<location x=\"0\" y=\"0\" z=\"0\" name=\"pixel".$pixID."\"/>\n");
+		} else {
+		    next;
+		}
+	      }
 	}  elsif($st == 1 && /^MCDISPLAY: start$/) {
             $st = 2;                # Start of component graphics representation
 	} elsif($st == 2 && /^MCDISPLAY: component ([a-zA-Z0-9_]+)/) {

@@ -41,7 +41,7 @@
 
 //#include <float.h>
 
-#define N_VERTEX_DISPLAYED    2000
+#define N_VERTEX_DISPLAYED    200000
 
 typedef struct intersection {
 	MCNUM time;  	  //time of the intersection

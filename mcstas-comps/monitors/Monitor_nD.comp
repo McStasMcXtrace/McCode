@@ -301,7 +301,6 @@ INITIALIZE
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,offflag);
 
   if (Vars.Flag_OFF) {
-    printf("Flag: %i, offset %g\n",Vars.Flag_mantid,Vars.Coord_Min[2]);
     offdata.mantidflag=Vars.Flag_mantid;
     offdata.mantidoffset=Vars.Coord_Min[2];
   }
