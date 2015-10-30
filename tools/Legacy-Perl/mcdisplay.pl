@@ -466,8 +466,9 @@ Transform {
 			# Overall component placement
 			my $type = "MonNDtype-$mantidcount2";
 			my $angle = (180/pi)*acos(($transformations{$comp}[3]+$transformations{$comp}[7]+$transformations{$comp}[11]-1)/2);
-			my $d21=$transformations{$comp}[8]-$transformations{$comp}[10]; my $d02=$transformations{$comp}[9]-$transformations{$comp}[5]; my $d10=$T[4]-$T[6];
+			my $d21=$transformations{$comp}[8]-$transformations{$comp}[10]; my $d02=$transformations{$comp}[9]-$transformations{$comp}[5]; my $d10=$transformations{$comp}[4]-$transformations{$comp}[6];
 			my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);
+
 			my $rota="";
 			if($d!=0){
 			    $rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
@@ -486,7 +487,7 @@ Transform {
 			#write_process("</idlist>\n");
 		    }
 		    # Define a hexahedron
-		    my $type = "MonNDtype-pix-$pixID";
+		    my $type = "MonNDtype-$mantidcount2-pix-$pixID";
 		    write_process("\n<type name=\"$type\" is=\"detector\">\n");
 		    write_process("\t<hexahedron id=\"hexapix-".$pixID."\">\n");
 		    write_process("\t\t<left-back-bottom-point  x=\"".$x0."\" y=\"".$y0."\" z=\"".($z0+0.0005)."\"  />\n");
@@ -507,17 +508,6 @@ Transform {
 			write_process($mantidtypebuffer);
 			write_process("</type>\n\n");
 		    }
-		    # write_process("<idlist idname=\"nD_Mantid_$pixID\" >\n");
-		    # write_process("<id start=\"");
-		    # write_process($pixID);
-		    # write_process("\" end=\"");
-		    # write_process($pixID);
-		    # write_process("\" />\n");
-		    # write_process("</idlist>\n\n");
-		    
-
-		    # write_process("<type name=\"MonNDtype-".$pixID."\">\n<properties/>\n<component type=\"$type\">\n");
-		    # write_process("<location x=\"0\" y=\"0\" z=\"0\" name=\"pixel".$pixID."\"/>\n");
 		} else {
 		    next;
 		}
