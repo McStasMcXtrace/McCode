@@ -420,7 +420,7 @@ Transform {
 	      # First define a panel, cf. http://www.mantidproject.org/IDF#Creating_Rectangular_Area_Detectors
 	      my $type = "MonNDtype-$mantidcount2";
 	      my $angle = (180/pi)*acos(($transformations{$comp}[3]+$transformations{$comp}[7]+$transformations{$comp}[11]-1)/2);
-	      my $d21=$transformations{$comp}[8]-$transformations{$comp}[10]; my $d02=$transformations{$comp}[9]-$transformations{$comp}[5]; my $d10=$T[4]-$T[6];
+	      my $d21=$transformations{$comp}[8]-$transformations{$comp}[10]; my $d02=$transformations{$comp}[9]-$transformations{$comp}[5]; my $d10=$transformations{$comp}[4]-$transformations{$comp}[6];
 	      my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);
 	      my $rota="";
 	      if($d!=0){
