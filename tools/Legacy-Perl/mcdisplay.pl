@@ -483,21 +483,19 @@ Transform {
 
 			# Start writing the related type...
 			$mantidtypebuffer = "\n<type name=\"".$type."\">\n\t<properties />\n";
-			#." end=\"".(${lastpix}+0)."\"/>");
-			#write_process("</idlist>\n");
 		    }
 		    # Define a hexahedron
 		    my $type = "MonNDtype-$mantidcount2-pix-$pixID";
 		    write_process("\n<type name=\"$type\" is=\"detector\">\n");
 		    write_process("\t<hexahedron id=\"hexapix-".$pixID."\">\n");
-		    write_process("\t\t<left-back-bottom-point  x=\"".$x0."\" y=\"".$y0."\" z=\"".($z0+0.0005)."\"  />\n");
-		    write_process("\t\t<left-front-bottom-point x=\"".$x0."\" y=\"".$y0."\" z=\"".$z0."\"  />\n");
-		    write_process("\t\t<right-front-bottom-point x=\"".$x3."\" y=\"".$y3."\" z=\"".$z3."\"  />\n");
-		    write_process("\t\t<right-back-bottom-point  x=\"".$x3."\" y=\"".$y3."\" z=\"".($z3+0.0005)."\"  />\n");
-		    write_process("\t\t<left-back-top-point  x=\"".$x1."\" y=\"".$y1."\" z=\"".$z1."\"  />\n");
-		    write_process("\t\t<left-front-top-point  x=\"".$x1."\" y=\"".$y1."\" z=\"".($z1+0.0005)."\"  />\n");
-		    write_process("\t\t<right-front-top-point  x=\"".$x2."\" y=\"".$y2."\" z=\"".$z2."\"  />\n");
-		    write_process("\t\t<right-back-top-point   x=\"".$x2."\" y=\"".$y2."\" z=\"".($z2+0.0005)."\"  />\n");
+		    write_process("\t\t<left-back-bottom-point  x=\"".$x0."\" y=\"".$y0."\" z=\"".$z0."\"  />\n");
+		    write_process("\t\t<left-front-bottom-point x=\"".$x1."\" y=\"".$y1."\" z=\"".$z1."\"  />\n");
+		    write_process("\t\t<right-front-bottom-point x=\"".$x2."\" y=\"".$y2."\" z=\"".$z2."\"  />\n");
+		    write_process("\t\t<right-back-bottom-point  x=\"".$x3."\" y=\"".$y3."\" z=\"".$z3."\"  />\n");
+		    write_process("\t\t<left-back-top-point  x=\"".$x0."\" y=\"".$y0."\" z=\"".($z0+0.001)."\"  />\n");
+		    write_process("\t\t<left-front-top-point  x=\"".$x1."\" y=\"".$y1."\" z=\"".($z1+0.001)."\"  />\n");
+		    write_process("\t\t<right-front-top-point  x=\"".$x2."\" y=\"".$y2."\" z=\"".($z2+0.001)."\"  />\n");
+		    write_process("\t\t<right-back-top-point   x=\"".$x3."\" y=\"".$y3."\" z=\"".($z3+0.001)."\"  />\n");
 		    write_process("\t</hexahedron>\n");
 		    write_process("\t<algebra val=\"hexapix-".$pixID."\" />\n");
 		    write_process("</type>\n\n");
