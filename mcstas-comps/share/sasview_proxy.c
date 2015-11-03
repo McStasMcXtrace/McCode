@@ -220,3 +220,117 @@
     #endif
     return Iq_out;
   }
+
+  float getFormVol(float pars[])
+  {
+    float form_vol;
+    #if model_index == 1
+      form_vol = form_volume(pars[2], pars[3], pars[4]);
+    #endif
+    #if model_index == 2
+      form_vol = form_volume(pars[2], pars[3], pars[4]);
+    #endif
+    #if model_index == 3
+      form_vol = form_volume(pars[2]);
+    #endif
+    #if model_index == 4
+      form_vol = form_volume(pars[2]);
+    #endif
+    #if model_index == 5
+      form_vol = form_volume(pars[2], pars[3], pars[4]);
+    #endif
+    #if model_index == 6
+      form_vol = form_volume(pars[2], pars[3], pars[4]);
+    #endif
+    #if model_index == 7
+      form_vol = form_volume(pars[3], pars[4], pars[5]);
+    #endif
+    #if model_index == 8
+      form_vol = form_volume(pars[3], pars[4], pars[5]);
+    #endif
+    #if model_index == 9
+      form_vol = form_volume(pars[2], pars[3]);
+    #endif
+    #if model_index == 10
+      form_vol = form_volume(pars[2], pars[3]);
+    #endif
+    #if model_index == 11
+      form_vol = 1;
+    #endif
+    #if model_index == 12
+      form_vol = 1;
+    #endif
+    #if model_index == 13
+      form_vol = form_volume(pars[2], pars[3]);
+    #endif
+    #if model_index == 14
+      form_vol = form_volume(pars[2], pars[3]);
+    #endif
+    #if model_index == 15
+      form_vol = form_volume(pars[2]);
+    #endif
+    #if model_index == 16
+      form_vol = form_volume(pars[2]);
+    #endif
+    #if model_index == 17
+      form_vol = form_volume();
+    #endif
+    #if model_index == 18
+      form_vol = form_volume();
+    #endif
+    #if model_index == 19
+      form_vol = form_volume(pars[0]);
+    #endif
+    #if model_index == 20
+      form_vol = form_volume(pars[0]);
+    #endif
+    #if model_index == 21
+      form_vol = form_volume(pars[0]);
+    #endif
+    #if model_index == 22
+      form_vol = form_volume(pars[0]);
+    #endif
+    #if model_index == 23
+      form_vol = form_volume(pars[2]);
+    #endif
+    #if model_index == 24
+      form_vol = form_volume(pars[2]);
+    #endif
+    #if model_index == 25
+      form_vol = 1;
+    #endif
+    #if model_index == 26
+      form_vol = 1;
+    #endif
+    #if model_index == 27
+      form_vol = 1;
+    #endif
+    #if model_index == 28
+      form_vol = 1;
+    #endif
+    #if model_index == 29
+      form_vol = form_volume(pars[2], pars[3], pars[4]);
+    #endif
+    #if model_index == 30
+      form_vol = form_volume(pars[2], pars[3], pars[4]);
+    #endif
+    #if model_index == 31
+      form_vol = form_volume(pars[2]);
+    #endif
+    #if model_index == 32
+      form_vol = form_volume(pars[2]);
+    #endif
+    #if model_index == 33
+      form_vol = form_volume(pars[0]);
+    #endif
+    #if model_index == 34
+      form_vol = form_volume(pars[0]);
+    #endif
+    #if model_index == 35
+      form_vol = form_volume(pars[2], pars[3], pars[4]);
+    #endif
+    #if model_index == 36
+      form_vol = form_volume(pars[2], pars[3], pars[4]);
+    #endif
+    return form_vol;
+  }

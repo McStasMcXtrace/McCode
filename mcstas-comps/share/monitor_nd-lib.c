@@ -40,7 +40,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
   MCNUM ymin,
   MCNUM ymax,
   MCNUM zmin,
-  MCNUM zmax)
+  MCNUM zmax,
+  int offflag)
   {
     long carg = 1;
     char *option_copy, *token;
@@ -126,6 +127,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     DEFS->SHAPE_BANANA =4;
     DEFS->SHAPE_BOX    =5;
     DEFS->SHAPE_PREVIOUS=6;
+    DEFS->SHAPE_OFF=7;
 
     Vars->Sphere_Radius     = 0;
     Vars->Cylinder_Height   = 0;
@@ -152,6 +154,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     Vars->Flag_capture      = 0;
     Vars->Flag_signal       = DEFS->COORD_P;
     Vars->Flag_mantid       = 0;
+    Vars->Flag_OFF          = offflag;
+    Vars->OFF_polyidx       = -1;
     Vars->mean_dx=Vars->mean_dy=0;
     Vars->min_x = Vars->max_x  =0;
     Vars->min_y = Vars->max_y  =0;
@@ -186,6 +190,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     else
       Vars->Flag_Shape        = DEFS->SHAPE_BOX;
 
+    if (Vars->Flag_OFF) {
+      Vars->Flag_Shape        = DEFS->SHAPE_OFF;
+    }
+    
     /* parse option string */
 
     option_copy = (char*)malloc(strlen(Vars->option)+1);
@@ -602,6 +610,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     if (Vars->Flag_Shape == DEFS->SHAPE_BANANA) strcat(Vars->Monitor_Label, " (Banana)");
     if (Vars->Flag_Shape == DEFS->SHAPE_BOX)    strcat(Vars->Monitor_Label, " (Box)");
     if (Vars->Flag_Shape == DEFS->SHAPE_PREVIOUS) strcat(Vars->Monitor_Label, " (on PREVIOUS)");
+    if (Vars->Flag_Shape == DEFS->SHAPE_OFF) strcat(Vars->Monitor_Label, " (OFF geometry)");
     if ((Vars->Flag_Shape == DEFS->SHAPE_CYLIND) || (Vars->Flag_Shape == DEFS->SHAPE_BANANA) || (Vars->Flag_Shape == DEFS->SHAPE_SPHERE) || (Vars->Flag_Shape == DEFS->SHAPE_BOX))
     {
       if (strstr(Vars->option, "incoming"))
@@ -706,8 +715,13 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     {
       Vars->area = PI*Vars->Sphere_Radius*Vars->Sphere_Radius*1E4; /* disk shapes */
     }
-    if (Vars->area == 0 && abs(Vars->Flag_Shape) != DEFS->SHAPE_PREVIOUS)
-      Vars->Coord_Number = 0;
+
+    
+    if (Vars->area == 0 && abs(Vars->Flag_Shape) != DEFS->SHAPE_PREVIOUS ) {
+      if (abs(Vars->Flag_Shape) != DEFS->SHAPE_OFF) {  
+	Vars->Coord_Number = 0;
+      }
+    }
     if (Vars->Coord_Number == 0 && Vars->Flag_Verbose)
       printf("Monitor_nD: %s is unactivated (0D)\n", Vars->compcurname);
     Vars->Cylinder_Height = fabs(Vars->mymax - Vars->mymin);
@@ -832,7 +846,6 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
                 break;
               }
               Coord[i] += Coord_Index[j]*Vars->Coord_BinProd[j-1];
-              
             }
             if (!flag_outside) {
               Vars->Mon2D_Buffer[i+While_Buffer*(Vars->Coord_Number+1)] = Coord[i];
@@ -974,6 +987,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
             }
             XY += Coord_Index[j]*Vars->Coord_BinProd[j-1];
           }
+	  if (Vars->Flag_mantid && Vars->Flag_OFF && Vars->OFF_polyidx >=0) XY=Vars->OFF_polyidx;
           if (!flag_outside) XY += Vars->Coord_Min[i];
         }
         
@@ -1137,7 +1151,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
       }
       Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
       Vars->Buffer_Block = Vars->Buffer_Counter;
-
+      
       while (!While_End)
       { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) */
         /* simulation ended before Buffer was filled. Limits have to be computed, and stored events must be sent into histograms */
@@ -1180,7 +1194,6 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
                   break;
                 }
                 Coord[i] += Coord_Index[j]*Vars->Coord_BinProd[j-1];
-                
               }
               if (!outsidebounds) {
                 Vars->Mon2D_Buffer[i+While_Buffer*(Vars->Coord_Number+1)] = Coord[i];

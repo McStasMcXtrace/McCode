@@ -91,6 +91,7 @@
     char SHAPE_BANANA; /* cylinder without top/bottom, on restricted angular area */
     char SHAPE_BOX   ;
     char SHAPE_PREVIOUS;
+    char SHAPE_OFF;
 
   } MonitornD_Defines_type;
 
@@ -113,6 +114,9 @@
     char   Flag_capture      ;   /* lambda monitor with lambda/lambda(2200m/s = 1.7985 Angs) weightening */
     int    Flag_signal       ;   /* 0:monitor p, else monitor a mean value */
     int    Flag_mantid       ;   /* 0:normal monitor, else do mantid-event specifics */
+    int    Flag_OFF          ;   /* Flag to indicate external geometry from OFF file */
+    unsigned long OFF_polyidx;   /* When intersection is done externally by off_intersect, this gives the 
+				    polygon number, i.e. pixel index */
 
     unsigned long Coord_Number      ;   /* total number of variables to monitor, plus intensity (0) */
     unsigned long Coord_NumberNoPixel;  /* same but without counting PixelID */
@@ -165,7 +169,7 @@
 /* monitor_nd-lib function prototypes */
 /* ========================================================================= */
 
-void Monitor_nD_Init(MonitornD_Defines_type *, MonitornD_Variables_type *, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM);
+void Monitor_nD_Init(MonitornD_Defines_type *, MonitornD_Variables_type *, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, int);
 double Monitor_nD_Trace(MonitornD_Defines_type *, MonitornD_Variables_type *);
 MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *, MonitornD_Variables_type *);
 void Monitor_nD_Finally(MonitornD_Defines_type *, MonitornD_Variables_type *);

@@ -129,31 +129,7 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <widget class="QTabWidget" name="tbxMessages">
-           <property name="currentIndex">
-            <number>0</number>
-           </property>
-           <widget class="QWidget" name="tabMcgui">
-            <attribute name="title">
-             <string>mcgui</string>
-            </attribute>
-            <layout class="QVBoxLayout" name="verticalLayout_4">
-             <item>
-              <widget class="QTextBrowser" name="txtbrwMcgui"/>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="tabSim">
-            <attribute name="title">
-             <string>Simulations</string>
-            </attribute>
-            <layout class="QVBoxLayout" name="verticalLayout_5">
-             <item>
-              <widget class="QTextBrowser" name="txtbrwSim"/>
-             </item>
-            </layout>
-           </widget>
-          </widget>
+          <widget class="QTextBrowser" name="txtbrwMcgui"/>
          </item>
         </layout>
        </widget>

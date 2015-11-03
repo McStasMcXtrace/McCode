@@ -389,8 +389,8 @@ void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
   double mc_pol_BxStart, mc_pol_ByStart, mc_pol_BzStart, mc_pol_Bstart;
   double mc_pol_BxTemp, mc_pol_ByTemp, mc_pol_BzTemp, mc_pol_Btemp;
   double mc_pol_Bstep, mc_pol_timeStep, mc_pol_sp;
-  const double mc_pol_spThreshold  = cos(1.0*DEG2RAD);
-  const double mc_pol_startTimeStep = 1e-5; // s
+  const double mc_pol_spThreshold  = cos(mc_pol_angular_accuracy);
+  const double mc_pol_startTimeStep = mc_pol_initial_timestep; // s
   double dummy1, dummy2;
   Rotation mc_pol_rotBack;
 

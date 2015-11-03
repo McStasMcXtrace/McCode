@@ -35,22 +35,27 @@ class SasViewModelFileInfo():
         
         self.sign_non_q = self.__getSignNonQ(self.text, False)
         self.sign_xy_non_q = self.__getSignNonQ(self.text, True)
+        self.sign_form_vol = self.__getFormVolumeSign(self.text)
         
         self.__num_model_pars = self.__getNumPars(self.sign_non_q)
         self.__num_model_pars_xy = self.__getNumPars(self.sign_xy_non_q)
+        self.__num_form_vol_pars = self.__getNumPars(self.sign_form_vol)
         
         self.Iq_hint = self.__getHint(self.sign_non_q)
         self.Iq_xy_hint = self.__getHint(self.sign_xy_non_q)
+        self.form_volume_hint = self.__getHint(self.sign_form_vol)
         
         self.Iq_call = self.__getIqCall(pars_array_name, self.__num_model_pars, xy=False)
         self.Iqxy_call = self.__getIqCall(pars_array_name, self.__num_model_pars_xy, xy=True)
+        self.form_volume_call = self.__getFormVolCall(pars_array_name, self.__num_form_vol_pars, self.sign_non_q, self.sign_form_vol)
     
     def printMe(self):
-        text = 'input: %s\ntext: %s\npars_name: %s\nmodel_name: %s\n%s\n%s\nsign_non_q: %s\nsign_xy_non_q: %s\nIq_hint: %s\nIq_xy_hint: %s\nIq_call: %s\nIqxy_call: %s\n' % (
+        text = 'input: %s\ntext: %s\npars_name: %s\nmodel_name: %s\n%s\n%s\nsign_non_q: %s\nsign_xy_non_q: %s\nsign_form_vol: %s\nIq_hint: %s\nIq_xy_hint: %s\nIq_call: %s\nIqxy_call: %s\nform_volume_call: %s\n' % (
                                             self.input_str, '(not shown)', self.pars_array_name, 
                                             self.model_name, self.percent_include, self.hash_include,
-                                            self.sign_non_q, self.sign_xy_non_q,
-                                            self.Iq_hint, self.Iq_xy_hint, self.Iq_call, self.Iqxy_call)
+                                            self.sign_non_q, self.sign_xy_non_q, self.sign_form_vol,
+                                            self.Iq_hint, self.Iq_xy_hint, 
+                                            self.Iq_call, self.Iqxy_call, self.form_volume_call)
         return '#####\n' + text + '#####\n'
     
     @staticmethod
@@ -95,7 +100,38 @@ class SasViewModelFileInfo():
                 sign = sign.strip(' ')
                 return sign
             else:
-                raise Exception("Iq(...) function signature not found")
+                raise Exception('no "float Iq(...)" or "float Iqxy(...)" function signature found')
+            
+    @staticmethod
+    def __getFormVolumeSign(text):
+        # get all cases covered
+        define_str_ver1 = r'#define\s+VOLUME_PARAMETER_DECLARATIONS\s+([\w\s,]*\n)'
+        define_str_ver2 = r'#define\s+VOLUME_PARAMETERS\s+([\w\s,]*\n)'
+        
+        sign_str = r'float\s+form_volume\(([\w\s,]*)\)'
+        sign_str_2 = r'float\s+form_volume\(([\w\s,]*)\)'
+        
+        # NOTE: sometimes VOLUME_PARAMETER_DECLARATIONS turns out "void" 
+        
+        # logics to extract signature
+        m = re.search(define_str_ver1, text)
+        if m:
+            # entire non-q sign is contained in the define
+            sign = re.sub('\s+', ' ', m.group(1))
+            sign = sign.strip(' ')
+            return sign
+        else:
+            # entire sign is contained in the function declaration
+            m = re.search(sign_str, text)
+            if not m:
+                m = re.search(sign_str_2, text)
+            if m: 
+                sign = re.sub('\s+', ' ', m.group(1))
+                sign = sign.strip(' ')
+                return sign
+            else:
+                return ''
+                #raise Exception('float "form_volume(...)" function signature found')
 
     @staticmethod
     def __getHint(sign):
@@ -114,6 +150,52 @@ class SasViewModelFileInfo():
         if xy:
             return 'Iqxy(%s)' % sign
         return 'Iq(%s)' % sign
+    
+    @staticmethod
+    def __getFormVolCall(pars_array_name, num_form_vol_pars, real_iq_sign, form_vol_sign):
+        
+        # special case: form_volume signature is "void" 
+        if re.search('void', form_vol_sign):
+            return 'form_volume()'
+        
+        # assemble form_volume call string as we go
+        call_str = 'form_volume('
+        
+        # remove excess whitespace and "float"
+        real_iq_sign = SasViewModelFileInfo.__getHint(real_iq_sign)
+        form_vol_sign = SasViewModelFileInfo.__getHint(form_vol_sign)
+        
+        pars_iq = []
+        m = re.finditer('(\w*)[,)]', real_iq_sign)
+        for par in m:
+            pars_iq.append(par.group(1))
+        
+        pars_fv = []
+        m = re.finditer('(\w*)[,)]', form_vol_sign)
+        for par in m:
+            pars_fv.append(par.group(1))
+        
+        right_par_idcs = []
+        for i in range(len(pars_fv)):
+            for j in range(len(pars_iq)):
+                if re.match(pars_fv[i], pars_iq[j]) and re.match(pars_iq[j], pars_fv[i]):
+                    right_par_idcs.append(j)
+        
+            # error case: no match found for this form_volume parameter - exit (function returns unity)
+            if len(right_par_idcs) == i:
+                return '1'
+            
+            i += 1
+        
+        for idx in range(len(pars_fv)):
+            call_str = call_str + 'pars[%d]' % right_par_idcs[idx]
+            if idx != len(pars_fv)-1:
+                call_str = call_str + ', '
+            else:
+                call_str = call_str + ')'
+        
+        return call_str
+
 
 def getFiles(look_dir, extension):
     file_list = []
@@ -179,24 +261,43 @@ def get_proxy_file_text(info_lst):
         include_section += '    %s\n' % info.percent_include
         include_section += '  #endif\n'
         i += 1
-
-    call_section =  '  float getIq(float q, float qx, float qy, float pars[])\n'
-    call_section += '  {\n'
-    call_section += '    float Iq_out = 1;\n'
+    
+    # Iq interface
+    Iq_call_section =      '  float getIq(float q, float qx, float qy, float pars[])\n'
+    Iq_call_section +=     '  {\n'
+    Iq_call_section +=     '    float Iq_out = 1;\n'
     i = 1
     for info in info_lst:
-        call_section += '    #if model_index == %d\n' % i
-        call_section += '      Iq_out = %s;\n' % info.Iq_call
-        call_section += '    #endif\n'
+        Iq_call_section += '    #if model_index == %d\n' % i
+        Iq_call_section += '      Iq_out = %s;\n' % info.Iq_call
+        Iq_call_section += '    #endif\n'
         i+=1
-        call_section += '    #if model_index == %d\n' % i
-        call_section += '      Iq_out = %s;\n' % info.Iqxy_call
-        call_section += '    #endif\n'
+        Iq_call_section += '    #if model_index == %d\n' % i
+        Iq_call_section += '      Iq_out = %s;\n' % info.Iqxy_call
+        Iq_call_section += '    #endif\n'
         i+=1
-    call_section +=  '    return Iq_out;\n'
-    call_section +=  '  }\n'
+    Iq_call_section +=     '    return Iq_out;\n'
+    Iq_call_section +=     '  }\n'
     
-    return include_section + '\n' + call_section
+    # form_volume interface
+    form_vol_call_section =      '  float getFormVol(float pars[])\n'
+    form_vol_call_section +=     '  {\n'
+    form_vol_call_section +=     '    float form_vol;\n'
+    i = 1
+    for info in info_lst:
+        form_vol_call_section += '    #if model_index == %d\n' % i
+        form_vol_call_section += '      form_vol = %s;\n' % info.form_volume_call
+        form_vol_call_section += '    #endif\n'
+        i+=1
+        form_vol_call_section += '    #if model_index == %d\n' % i
+        form_vol_call_section += '      form_vol = %s;\n' % info.form_volume_call
+        form_vol_call_section += '    #endif\n'
+        i+=1
+    form_vol_call_section +=     '    return form_vol;\n'
+    form_vol_call_section +=     '  }\n'
+    
+    
+    return include_section + '\n' + Iq_call_section + '\n' + form_vol_call_section
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
@@ -216,6 +317,10 @@ def main(args):
         for info in info_lst:
             text = text + info.printMe()
             print(info.printMe())
+        
+        for info in info_lst:
+            print(info.sign_form_vol)
+        
         debug_file = os.path.splitext(os.path.basename(args.compfile[0]))[0] + '_modelinfo.txt'
         logging.info('output comp file: %s' % debug_file)
         f = open(debug_file, 'w')

@@ -325,10 +325,11 @@ TRACE
       double q,alpha,f2,rr;
       /*choose a random scattering direction*/
       double kfx,kfy,kfz,solid_angle;
-      randvec_target_circle(&kfx, &kfy, &kfz, &solid_angle, 0, 0, 1, atan(psimax) );
+      randvec_target_circle(&kfx, &kfy, &kfz, &solid_angle, 0, 0, 1, tan(psimax) );
       NORM(kfx,kfy,kfz);
       kfx*=k;kfy*=k;kfz*=k;
       q=sqrt( scalar_prod(kx-kfx,ky-kfy,kz-kfz,kx-kfx,ky-kfy,kz-kfz));
+
       /*apply new vector*/
       kx=kfx;ky=kfy;kz=kfz;
 
@@ -364,7 +365,7 @@ TRACE
       p*=(f2/prms[state].f2sum) * solid_angle * p_s/(1-p_transmit);
       //p*=prms[state].f2mcsum/prms[state].f2sum * (etamax-etamin)/(2*M_PI) *  p_s/(1-p_transmit);
 
-	/*Absorption after scattering*/
+      /*Absorption after scattering*/
       p*=exp(-mu*l1);
       //printf("ATT: %g %g %g\n",l1,mu,exp(-mu*l1));
 

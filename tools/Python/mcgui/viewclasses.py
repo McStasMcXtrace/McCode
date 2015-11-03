@@ -51,19 +51,12 @@ class McView(object):
     def updateStatus(self, text=''):
         self.mw.ui.statusbar.showMessage(text)
         
-    def updateLog(self, text='', gui_msg=False, error=False):
-        if gui_msg:
-            if error:
-                self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
-            else:
-                self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
-            self.mw.ui.txtbrwMcgui.append(text)
+    def updateLog(self, text='', error=False):
+        if error:
+            self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
         else:
-            if error:
-                self.mw.ui.txtbrwSim.setTextColor(QtGui.QColor('red'))
-            else:
-                self.mw.ui.txtbrwSim.setTextColor(QtGui.QColor('black'))
-            self.mw.ui.txtbrwSim.append(text)
+            self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
+        self.mw.ui.txtbrwMcgui.append(text)
             
     def updateSimState(self, state=[]):
         enableRun = state[0] == 'True'
@@ -181,7 +174,6 @@ class McMainWindow(QtGui.QMainWindow):
         if mccode_config.configuration["MCCODE"] == "mcstas": 
             prefix = 'mc'
         self.setWindowTitle(prefix + 'gui-py') 
-        self.ui.tbxMessages.setTabText(self.ui.tbxMessages.indexOf(self.ui.tabMcgui), prefix + 'gui-py')
         self.ui.actionMcdoc.setText(prefix + "doc Component Reference")
         self.ui.actionMcstas_User_Manual.setText(prefix + "stas User Manual")
         self.ui.actionMcstas_Component_Manual.setText(prefix + "stas Component Manual")
@@ -227,9 +219,12 @@ class McCodeEditorWindow(QtGui.QMainWindow):
     def initComponentMenu(self, args):
         ''' args - [category, comp_names[], comp_parsers[]]
         '''
+        all_comp_names = []
         for i in range(len(args)):
             category = args[i][0]
             comp_names = args[i][1]
+            for name in comp_names:
+                all_comp_names.append(name)
             comp_parsers = args[i][2]
             
             menu = self.ui.menuInsert.addMenu(category)
@@ -237,6 +232,8 @@ class McCodeEditorWindow(QtGui.QMainWindow):
             for j in range(len(comp_names)):
                 action = menu.addAction(comp_names[j])
                 action.triggered[()].connect(lambda comp_parser=comp_parsers[j]: self.__handleComponentClicked(comp_parser))
+        
+        self.setLexerComps(self.__scintilla.__myApi, all_comp_names)
         
     def initCodeEditor(self, instr):
         if instr != '':
@@ -302,20 +299,16 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         # delete text editor placeholder 
         scintilla = Qsci.QsciScintilla(self)
         
-        # setup styles & behavior
-        self.__setupScintilla(scintilla)
-        
-        # insert widget
-        self.setCentralWidget(scintilla)
-        self.__scintilla = scintilla
-    
-    @staticmethod
-    def __setupScintilla(scintilla):
+        ########################
+        # setup scintilla
         # set default font
         font = QtGui.QFont()
         font.setFamily('Deja Vu Sans Mono')
         font.setFixedPitch(True)
         font.setPointSize(11)
+        
+        # brace matching
+        scintilla.setBraceMatching(Qsci.QsciScintilla.SloppyBraceMatch)
         
         # set lexer
         lexer = Qsci.QsciLexerCPP()
@@ -326,28 +319,64 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         scintilla.setLexer(lexer)
         scintilla.__myLexer = lexer # save reference to retain scope
         
-        # brace matching
-        scintilla.setBraceMatching(Qsci.QsciScintilla.SloppyBraceMatch)
-        
-        # auto-completion example
-        api = Qsci.QsciAPIs(lexer)
-        api.add("COMPONENT")
-        api.add("AT")
-        api.add("RELATIVE")
-        api.add("ROTATED")
-        api.add("INSTRUMENT")
-        api.add("DEFINE")
-        api.add("DEFINITION")
-        api.add("Arm")
-        api.prepare()
-        scintilla.__myApi = api # retain scope of api to avoid garbage collection
+        # auto-completion api
+        scintilla.__myApi = Qsci.QsciAPIs(lexer)
         
         scintilla.setAutoCompletionThreshold(1)
         scintilla.setAutoCompletionSource(Qsci.QsciScintilla.AcsAPIs)
         
         # remove horizontal scrollbar
         scintilla.SendScintilla(Qsci.QsciScintilla.SCI_SETHSCROLLBAR, 0)
+        ########################
+        
+        # insert widget
+        self.setCentralWidget(scintilla)
+        self.__scintilla = scintilla
     
+    @staticmethod
+    def setLexerComps(api, all_comp_names):
+        api.clear()
+        
+        # add mcstas meta keywords
+        api.add("ABSOLUTE")
+        api.add("AT")
+        api.add("COMPONENT")
+        api.add("DECLARE")
+        api.add("DEFINE")
+        api.add("DEFINITION")
+        api.add("END")
+        api.add("MCDISPLAY")
+        api.add("FINALLY")
+        api.add("INITIALIZE")
+        api.add("INSTRUMENT")
+        api.add("OUTPUT")
+        api.add("PARAMETERS")
+        api.add("RELATIVE")
+        api.add("ROTATED")
+        api.add("PREVIOUS")
+        api.add("SETTING")
+        api.add("STATE")
+        api.add("POLARISATION")
+        api.add("TRACE")
+        api.add("SHARE")
+        api.add("EXTEND")
+        api.add("GROUP")
+        api.add("SAVE")
+        api.add("JUMP")
+        api.add("WHEN")
+        api.add("NEXT")
+        api.add("ITERATE")
+        api.add("MYSELF")
+        api.add("COPY")
+        api.add("SPLIT")
+        api.add("REMOVABLE")
+        api.add("DEPENDENCY")
+        # add components
+        for name in all_comp_names:
+            api.add(name)
+        
+        api.prepare()
+            
     def __initCallbacks(self):
         # connect menu items to corresponding scintilla slots
         ui = self.ui 

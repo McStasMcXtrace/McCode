@@ -283,21 +283,29 @@ INITIALIZE
       yheight=2*radius;
     }
   }
-  
+  int offflag=0;
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
-    if (!off_init(  geometry, xwidth, yheight, zdepth, 0, &offdata )) {
+    if (!off_init(  geometry, xwidth, yheight, zdepth, 1, &offdata )) {
       printf("Monitor_nD: %s could not initiate the OFF geometry %s. \n"
              "            Defaulting to normal Monitor dimensions.\n", 
              NAME_CURRENT_COMP, geometry);
       strcpy(geometry, "");
+    } else {
+      offflag=1;
     }
-  
+      
   if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax && 
     !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
     exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
 
-  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax);
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,offflag);
 
+  if (Vars.Flag_OFF) {
+    offdata.mantidflag=Vars.Flag_mantid;
+    offdata.mantidoffset=Vars.Coord_Min[2];
+  }
+
+  
   if (filename && strcmp(filename,"NULL") && strcmp(filename,"0") && strlen(filename))
     strncpy(Vars.Mon_File, filename, 128);
 
@@ -337,8 +345,15 @@ TRACE
   if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
   {
     /* determine intersections with object */
-    intersect = off_intersect(&t0, &t1, NULL, NULL,
-       x,y,z, vx, vy, vz, offdata );
+    intersect = off_intersect_all(&t0, &t1, NULL, NULL,
+       x,y,z, vx, vy, vz, &offdata );
+    if (Vars.Flag_mantid) {
+      if(intersect) {
+	Vars.OFF_polyidx=(offdata.intersects[offdata.nextintersect]).index;
+      } else {
+	Vars.OFF_polyidx=-1;
+      }
+    }
   }
   else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
   {
@@ -473,7 +488,12 @@ FINALLY
 
 MCDISPLAY
 %{
-  Monitor_nD_McDisplay(&DEFS, &Vars);
+  if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
+  {
+    off_display(offdata);
+  } else {
+    Monitor_nD_McDisplay(&DEFS, &Vars);
+  }
 %}
 
 END
