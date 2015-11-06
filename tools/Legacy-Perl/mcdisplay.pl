@@ -77,6 +77,21 @@ $zooming = 0;
 
 my (%transformations, @components);
 
+sub max {
+    my ($max, @vars) = @_;
+    for (@vars) {
+        $max = $_ if $_ > $max;
+    }
+    return $max;
+}
+
+sub min {
+    my ($min, @vars) = @_;
+    for (@vars) {
+        $min = $_ if $_ < $max;
+    }
+    return $min;
+}
 
 sub read_instrument {
     my ($in) = @_;
@@ -497,6 +512,14 @@ Transform {
 		    write_process("\t\t<right-front-top-point  x=\"".$x2."\" y=\"".$y2."\" z=\"".($z2+0.001)."\"  />\n");
 		    write_process("\t\t<right-back-top-point   x=\"".$x3."\" y=\"".$y3."\" z=\"".($z3+0.001)."\"  />\n");
 		    write_process("\t</hexahedron>\n");
+		    write_process("\t<bounding-box>\n");
+		    write_process("\t\t<x-min val=\"".min($x0,$x1,$x2,$x3)."\"/>\n");
+		    write_process("\t\t<x-max val=\"".max($x0,$x1,$x2,$x3)."\"/>\n");
+		    write_process("\t\t<y-min val=\"".min($y0,$y1,$y2,$y3)."\"/>\n");
+		    write_process("\t\t<y-max val=\"".max($y0,$y1,$y2,$y3)."\"/>\n");
+		    write_process("\t\t<z-min val=\"".min($z0,$z1,$z2,$z3)."\"/>\n");
+		    write_process("\t\t<z-max val=\"".(max($y0,$y1,$y2,$y3)+0.01)."\"/>\n");
+		    write_process("\t</bounding-box>\n");
 		    write_process("\t<algebra val=\"hexapix-".$pixID."\" />\n");
 		    write_process("</type>\n\n");
 		    
