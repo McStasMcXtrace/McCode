@@ -733,7 +733,7 @@ int off_intersect_all(double* t0, double* t3,
 *         t0 and t3 are the smallest incoming and outgoing intersection times
 *         n0 and n3 are the corresponding normal vectors to the surface
 *******************************************************************************/
-inline int off_intersect(double* t0, double* t3,
+int off_intersect(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x,  double y,  double z,
      double vx, double vy, double vz,
