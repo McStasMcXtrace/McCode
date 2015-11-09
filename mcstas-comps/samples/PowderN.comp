@@ -533,13 +533,12 @@ int calc_xsect(double v, double *qv, double *my_sv2, int count, double *sum,
 DECLARE
 %{
   struct line_info_struct line_info;
-  int columns[9];
+  int columns[9] = format;
   off_struct offdata;
 %}
 
 INITIALIZE
 %{
-  columns = format;
 
   int i=0;
   struct line_data *L;
