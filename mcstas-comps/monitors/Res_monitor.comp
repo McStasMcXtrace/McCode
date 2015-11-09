@@ -113,7 +113,7 @@ INITIALIZE
     
   if (radius) xwidth = 2*radius;
 
-  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax);
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,0);
 
   if (Vars.Coord_Number != 10) exit(fprintf(stderr,"Res_monitor: %s: Error: Invalid number of variables to monitor (%li).\n", NAME_CURRENT_COMP, Vars.Coord_Number+1));
   /* set the labels */

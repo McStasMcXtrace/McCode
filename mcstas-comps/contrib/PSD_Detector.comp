@@ -623,7 +623,7 @@ INITIALIZE
     else strcpy(Vars.option, "list all");
     strcat(Vars.option,", borders, x y z vx vy vz t sx sy sz");
 
-    Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0); /* dims for mcdisplay */
+    Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0,0); /* dims for mcdisplay */
     if (filename != NULL)
       strncpy(Vars.Mon_File, filename, 128);
 
