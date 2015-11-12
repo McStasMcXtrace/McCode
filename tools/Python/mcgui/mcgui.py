@@ -702,10 +702,10 @@ class McGuiAppController():
         emitter.statusUpdate.connect(self.view.updateStatus)
         emitter.logMessageUpdate.connect(self.view.updateLog)
 
--''' Last resort exception handler
--'''
--def handleExceptionMsg(msg):
--    print(msg)
+''' Last resort exception handler
+'''
+def handleExceptionMsg(msg):
+    print(msg)
 
 ''' Program execution
 '''
