@@ -1,0 +1,989 @@
+/***************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: OSIRIS
+*
+* %Identification
+* Written by: Peter Christiansen with input from Mark Telling, updates by P Willendrup
+* Date: November 2015
+* Origin: DTU Fysik, RISOE and ISIS
+* Release: McStas 2.3
+* Version: $Revision: $
+* %INSTRUMENT_SITE: ISIS
+*
+* A simulation of the indirect TOF geometry part of the OSIRIS instrument.
+*
+* %Description
+*
+* If LAMBDA = 0, the choppers are disabled, else the choppers are
+* centered to chop around this wavelength and the source is studied in the 
+* interval LAMBDA +- DLAMBDA.
+*
+* IMPORTANT NOTES:
+*
+* 1) Monchromator is not realistic in the sense that it does NOT
+*    smear the beam out according to the mosaicity, only does the N=1 
+*    reflection, and the d-spread is handled in a simple way
+*
+* 2) The instrument is not validated or certified by ISIS. Is only put in
+*    McStas for completeness.
+*
+* %Parameters
+*
+* LAMBDA  : Central wavelength of source and chopper wavelength  [AA]
+* DLAMBDA : Source interval [LAMBDA-DLAMBDA; LAMBDA+DLAMBDA] [AA]
+* GUIDEREFLECTIVITY : Max reflectivity of guide [1]
+*
+* %Link
+*
+* %End
+****************************************************************************/
+DEFINE INSTRUMENT ISIS_OSIRIS(double LAMBDA=6.66, double DLAMBDA=0.1,
+			 double GUIDEREFLECTIVITY=1.0)
+     
+     /* The DECLARE section allows us to declare variables or  small      */
+     /* functions in C syntax. Thesemay be used in the whole instrument. */
+DECLARE
+%{
+  double calcAlpha(double length, double radius) {
+    // calculate angle of arm after curved guide
+    return RAD2DEG * length/radius;
+  }	
+  
+  double calcX(double length, double radius) {
+    // calculate position and angle of arm after curved guide
+    double alpha = DEG2RAD * calcAlpha(length, radius);
+    return radius*(1.0-cos(alpha));
+  }	
+  
+  double calcZ(double length, double radius) {
+    // calculate position and angle of arm after curved guide
+    double alpha = DEG2RAD * calcAlpha(length, radius);
+    return radius*sin(alpha);
+  }	
+  
+  double calcT0(double lambda, double distance) {
+    // calculate phaseoffset in s of chopper
+    double k = 0;
+    
+    if(lambda<=0)
+      return 0;
+    
+    k = 2*PI/lambda;
+    return distance/(k*K2V);
+  }	
+
+  // BEAM PARAMETERS
+  const double MODSIZEX = 0.; // m (use default)
+  const double MODSIZEY = 0.; // m (use default)
+  double LAMBDAMIN  =   1.0; // - means use wavelength (AA)
+  double LAMBDAMAX  =  22.0; // - means use wavelength (AA)
+  
+  // GUIDE SECTION PARAMETERS
+  const double GUIDEWIDTH      =     0.043; // m
+  const double GUIDEHEIGHT     =     0.065; // m
+  const double GUIDEENDWIDTH   =     0.022; // m
+  const double GUIDEENDHEIGHT  =     0.044; // m
+
+  const double DMODGUIDE       =    1.6980; // m
+  const double DSTRAIGHTGUIDE1 =    4.5440; // m (include 6.6 cm space window)
+  const double DCHOPPER1       =    0.0404; // m
+  const double DCURVEDGUIDE1   =    3.6800; // m
+  const double DCHOPPER2       =    0.0404; // m
+  const double DCURVEDGUIDE2   =   21.2977; // m
+  const double CURVERADIUS     = 2050.0000; // m
+  const double DSTRAIGHTGUIDE2 =    0.8656; // m (include 8.76cm+17.8cm space windows)
+  const double DSUPERGUIDE     =    1.5063; // m
+  const double DGUIDETARGET    =    0.2500; // m
+  double DMODTARGET;
+
+  // chopper parameters
+  const double CHOPPERRADIUS  =     0.308; // m
+  const double CHOPPERHEIGHT  =     0.091; // m
+  
+  double CHOPPER1OMEGA  =  50*2*PI; // rad/s
+  double CHOPPER1WINDOW =       66; // deg
+  
+  double CHOPPER2OMEGA  = -50*2*PI; // rad/s
+  double CHOPPER2WINDOW =       98; // deg
+  
+  // TARGET SECTION PARAMETERS
+  const double VANADIUMHEIGHT      =  0.07; // m
+  /* This variable helps us select which target to interact with*/
+  double probTarget;
+
+  // ANALYZER SECTION PARAMETERS
+  const double ANARADIUS     = 0.9068; // m
+  const double ANAHEIGHT     = 0.01; // m
+  const double ANAWIDTH      = 0.01; // m
+  const double ANAMOSAIC     = 0.8*60; // arc minutes 
+  //  const double anad          = 3.354; // 
+  const double ANAQ          = 2*PI/3.354; // AA-1
+  
+  // He DETECTOR PARAMETERS
+  const double DETECTORDISTANCE = 0.67; //m  
+  // effective detectorwidth and height: sqrt(3.141*((1.27/2.0)**2))=1.125cm
+  const double DETECTORWIDTH  = 0.01125; //m (half inch)  
+  const double DETECTORHEIGHT = 0.01125; //m (half inch)
+
+  // Variable to help classify hits from different analyzer crystals
+  int groupNumber = 0;
+  %}
+
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+  
+  DMODTARGET = DMODGUIDE+DSTRAIGHTGUIDE1+DCHOPPER1+DCURVEDGUIDE1+
+    DCHOPPER2+DCURVEDGUIDE2+DSTRAIGHTGUIDE2+DSUPERGUIDE+DGUIDETARGET; // m   
+
+  if(LAMBDA > 0) {
+
+    // make a narrow interval around the selected LAMBDA
+    
+    LAMBDAMIN =  LAMBDA - DLAMBDA;
+    LAMBDAMAX =  LAMBDA + DLAMBDA;
+    if (LAMBDAMIN < 1.0)
+      LAMBDAMIN = 1.0;
+    
+  }
+  
+  printf("\nParameters:\nLambda: %f AA", LAMBDA);
+  printf("\nLambdamin, max: %f AA, %f AA", LAMBDAMIN, LAMBDAMAX);
+  printf("\nDistance from moderator to target", DMODTARGET);
+  printf("\nChopper1 - omega: %f rad/s, window: %f deg", 
+	 CHOPPER1OMEGA, CHOPPER1WINDOW);
+  printf("\nChopper2 - omega: %f rad/s, window: %f deg\n\n", 
+	 CHOPPER2OMEGA, CHOPPER2WINDOW);
+
+  %}
+
+TRACE
+
+//
+// MODERATOR/SOURCE
+//
+
+COMPONENT armStart = Arm()
+     AT (0,0,0) ABSOLUTE
+
+COMPONENT isis_mod = 
+ISIS_moderator(Face="iris", Emin = -LAMBDAMIN, Emax = -LAMBDAMAX, dist = DMODGUIDE,
+	       focus_xw = GUIDEWIDTH, focus_yh = GUIDEHEIGHT, xwidth = MODSIZEX, 
+	       yheight = MODSIZEY, CAngle = 0.0, SAC = 1)
+     AT (0, 0, 0) RELATIVE armStart
+
+COMPONENT tofSource =
+TOF_monitor(nt=200, tmin=0, tmax=2000, filename = "tofSource.dat", 
+	    xwidth = 0.20, yheight = 0.20)
+     AT (0, 0, 0) RELATIVE isis_mod
+
+//
+// FIRST STRAIGHT GUIDE SECTION
+//
+
+COMPONENT armStraight1 = Arm()
+     AT (0, 0, DMODGUIDE) RELATIVE armStart
+
+COMPONENT lamStart = 
+L_monitor(nL = 120, filename = "lambdaStart.dat", 
+	  xwidth = 0.10, yheight = 0.10, 
+	  Lmin = 0.98*LAMBDAMIN, Lmax = 1.02*LAMBDAMAX)
+     AT (0, 0, 0) RELATIVE armStraight1
+
+COMPONENT psdStart = 
+PSD_monitor(nx=60, ny=60, filename = "psdStart.dat", 
+	    xwidth = 0.10, yheight = 0.10)
+     AT (0, 0, 0) RELATIVE armStraight1
+
+COMPONENT guide_straight_1 = 
+Guide(w1 = GUIDEWIDTH, h1 = GUIDEHEIGHT, 
+      w2 = GUIDEWIDTH, h2 = GUIDEHEIGHT, 
+      l = DSTRAIGHTGUIDE1, m = 2.0, R0=GUIDEREFLECTIVITY)
+     AT (0, 0, 0) RELATIVE armStraight1
+
+//
+// FIRST CHOPPER
+//
+COMPONENT armChopper1 = Arm()
+     AT (0, 0, DSTRAIGHTGUIDE1) RELATIVE armStraight1
+  
+/* COMPONENT tofLambda1 = */
+/* TOFLambda_monitor(nlam = 24, nt = 500, filename = "tofLambda1.dat", */
+/* 		  t_0 = 0, t_1 = 25000, xwidth = 0.2, yheight = 0.2, */
+/* 		  lambda_0 = 0, lambda_1 = 12) */
+/*      AT (0, 0, 0) RELATIVE armChopper1 */
+
+/* COMPONENT lamChopper1 = */
+/* L_monitor(nchan = 120, filename = "lambdaChopper1.dat",  */
+/* 	  xwidth = 0.1, yheight = 0.10,  */
+/* 	  Lmin = 0.98*LAMBDAMIN, Lmax = 1.02*LAMBDAMAX) */
+/*      AT (0, 0, 0) RELATIVE armChopper1 */
+
+/* COMPONENT psdChopper1 = */
+/* PSD_monitor(nx=60, ny=60, filename = "psdChopper1.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      AT (0, 0, 0) RELATIVE armChopper1 */
+
+COMPONENT chopper1 =
+DiskChopper(theta_0 = CHOPPER1WINDOW, radius = CHOPPERRADIUS, yheight = CHOPPERHEIGHT,
+	    nu = CHOPPER1OMEGA/(2*PI), nslit = 1,
+	    delay = calcT0(LAMBDA, DMODGUIDE+DSTRAIGHTGUIDE1))
+     WHEN (LAMBDA > 0) AT (0, 0, 0) RELATIVE armChopper1
+
+/* COMPONENT tofLambda2 = */
+/* TOFLambda_monitor(nlam = 24, nt = 500, filename = "tofLambda2.dat", */
+/* 		  t_0 = 0, t_1 = 25000, xwidth = 0.2, yheight = 0.2, */
+/* 		  lambda_0 = 0, lambda_1 = 12) */
+/*      AT (0, 0, 0) RELATIVE armChopper1 */
+
+//
+// FIRST CURVED GUIDE SECTION
+//
+
+COMPONENT armCurved1 = Arm()
+     AT (0, 0, DCHOPPER1) RELATIVE armChopper1
+
+/* COMPONENT lamCurved1 =  */
+/* L_monitor(nchan = 120, filename = "lambdaCurved1.dat",  */
+/* 	  xwidth = 0.10, yheight = 0.10,  */
+/* 	  Lmin = 0.98*LAMBDAMIN, Lmax = 1.02*LAMBDAMAX) */
+/*      AT (0, 0, 0) RELATIVE armCurved1 */
+
+/* COMPONENT psdCurved1 =  */
+/* PSD_monitor(nx=60, ny=60, filename = "psdCurved1.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      AT (0, 0, 0) RELATIVE armCurved1 */
+
+COMPONENT guide_curved1 = 
+Guide_curved(w1 = GUIDEWIDTH, h1 = GUIDEHEIGHT, l = DCURVEDGUIDE1, m = 2.0, 
+	     curvature = CURVERADIUS, R0=GUIDEREFLECTIVITY)
+     AT (0, 0, 0) RELATIVE armCurved1
+
+//
+// SECOND CHOPPER
+//
+COMPONENT armChopper2 = Arm()
+     AT (calcX(DCURVEDGUIDE1, CURVERADIUS), 0, calcZ(DCURVEDGUIDE1, CURVERADIUS)) RELATIVE armCurved1
+ROTATED (0, calcAlpha(DCURVEDGUIDE1, CURVERADIUS), 0) RELATIVE armCurved1
+  
+/* COMPONENT tofLambda3 = */
+/* TOFLambda_monitor(nlam = 24, nt = 500, filename = "tofLambda3.dat", */
+/* 		  t_0 = 0, t_1 = 25000, xwidth = 0.2, yheight = 0.2, */
+/* 		  lambda_0 = 0, lambda_1 = 12) */
+/*      AT (0, 0, 0) RELATIVE armChopper2 */
+
+/* COMPONENT lamChopper2 = */
+/* L_monitor(nchan = 120, filename = "lambdaChopper2.dat",  */
+/* 	  xwidth = 0.1,yheight = 0.10,  */
+/* 	  Lmin = 0.98*LAMBDAMIN, Lmax = 1.02*LAMBDAMAX) */
+/*      AT (0, 0, 0) RELATIVE armChopper2 */
+
+/* COMPONENT psdChopper2 = */
+/* PSD_monitor(nx=60, ny=60, filename = "psdChopper2.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      AT (0, 0, 0) RELATIVE armChopper2 */
+
+COMPONENT chopper2 =
+DiskChopper(theta_0 = CHOPPER2WINDOW, radius = CHOPPERRADIUS, yheight = CHOPPERHEIGHT,
+	    nu = CHOPPER2OMEGA/(2*PI), nslit = 1,
+	    delay= calcT0(LAMBDA, DMODGUIDE+DSTRAIGHTGUIDE1+DCHOPPER1+DCURVEDGUIDE1))
+     WHEN (LAMBDA > 0) AT (0, 0, 0) RELATIVE armChopper2
+
+/* COMPONENT tofLambda4 = */
+/* TOFLambda_monitor(nlam = 24, nt = 500, filename = "tofLambda4.dat", */
+/* 		  t_0 = 0, t_1 = 25000, xwidth = 0.2, yheight = 0.2, */
+/* 		  lambda_0 = 0, lambda_1 = 12) */
+/*      AT (0, 0, 0) RELATIVE armChopper2 */
+
+
+//
+// SECOND CURVED GUIDE SECTION
+//
+
+COMPONENT armCurved2 = Arm()
+     AT (0, 0, DCHOPPER2) RELATIVE armChopper2
+
+/* COMPONENT lamCurved2 =  */
+/* L_monitor(nchan = 120, filename = "lambdaCurved2.dat",  */
+/* 	  xwidth = 0.1,yheight = 0.10,  */
+/* 	  Lmin = 0.98*LAMBDAMIN, Lmax = 1.02*LAMBDAMAX) */
+/*      AT (0, 0, 0) RELATIVE armCurved2 */
+
+/* COMPONENT psdCurved2 =  */
+/* PSD_monitor(nx=60, ny=60, filename = "psdCurved2.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      AT (0, 0, 0) RELATIVE armCurved2 */
+
+COMPONENT guide_curved2 = 
+Guide_curved(w1 = GUIDEWIDTH, h1 = GUIDEHEIGHT, l = DCURVEDGUIDE2, 
+	     m = 2.0, curvature = CURVERADIUS, R0=GUIDEREFLECTIVITY)
+     AT (0, 0, 0) RELATIVE armCurved2
+
+//
+// SECOND STRAIGHT GUIDE SECTION
+//
+
+COMPONENT armStraight2 = Arm()
+     AT (calcX(DCURVEDGUIDE2, CURVERADIUS), 0, calcZ(DCURVEDGUIDE2, CURVERADIUS)) RELATIVE armCurved2
+ROTATED (0, calcAlpha(DCURVEDGUIDE2, CURVERADIUS), 0) RELATIVE armCurved2 
+
+/* COMPONENT lamStraight2 =  */
+/* L_monitor(nchan = 120, filename = "lambdaStraight2.dat",  */
+/* 	  xwidth = 0.10, yheight = 0.10,  */
+/* 	  Lmin = 0.98*LAMBDAMIN, Lmax = 1.02*LAMBDAMAX) */
+/*      AT (0, 0, 0.0) RELATIVE armStraight2 */
+
+/* COMPONENT psdStraight2 =  */
+/* PSD_monitor(nx=60, ny=60, filename = "psdStraight2.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      AT (0, 0, 0.0) RELATIVE armStraight2 */
+
+COMPONENT guide_straight_2 = 
+Guide(w1 = GUIDEWIDTH, h1 = GUIDEHEIGHT, 
+      w2 = GUIDEWIDTH, h2 = GUIDEHEIGHT, 
+      l = DSTRAIGHTGUIDE2, m = 2.0, R0=GUIDEREFLECTIVITY)
+     AT (0, 0, 0) RELATIVE armStraight2
+
+
+//
+// SUPER GUIDE SECTION
+//
+
+COMPONENT armSuper = Arm()
+     AT (0, 0, DSTRAIGHTGUIDE2) RELATIVE armStraight2
+
+/* COMPONENT lamSuper =  */
+/* L_monitor(nchan = 120, filename = "lambdaSuper.dat",  */
+/* 	  xwidth = 0.10, yheight = 0.10,  */
+/* 	  Lmin = 0.98*LAMBDAMIN, Lmax = 1.02*LAMBDAMAX) */
+/*      AT (0, 0, 0.0) RELATIVE armSuper */
+
+/* COMPONENT psdSuper =  */
+/* PSD_monitor(nx=60, ny=60, filename = "psdSuper.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      AT (0, 0, 0.0) RELATIVE armSuper */
+	
+COMPONENT guide_super = 
+Guide(w1 = GUIDEWIDTH, h1 = GUIDEHEIGHT, 
+      w2 = GUIDEENDWIDTH, h2 = GUIDEENDHEIGHT, 
+      l = DSUPERGUIDE, m = 3.6, R0=GUIDEREFLECTIVITY)
+     AT (0, 0, 0) RELATIVE armSuper
+
+//
+// TARGET SECTION
+//
+
+COMPONENT armTarget = Arm()
+     AT (0, 0, DSUPERGUIDE+DGUIDETARGET) RELATIVE armSuper
+EXTEND
+%{
+  probTarget = rand01();
+%}
+
+COMPONENT lamTarget = 
+L_monitor(nL = 120, filename = "lambdaTarget.dat", 
+	  xwidth = 0.10, yheight = 0.10, 
+	  Lmin = 0.98*LAMBDAMIN, Lmax = 1.02*LAMBDAMAX)
+     WHEN (LAMBDA==0) AT (0, 0, 0) RELATIVE armTarget
+
+COMPONENT psdTarget = 
+PSD_monitor(nx=100, ny=100, filename = "psdTarget.dat", 
+	    xwidth = 0.10, yheight = 0.10)
+     WHEN (LAMBDA==0) AT (0, 0, 0) RELATIVE armTarget
+
+COMPONENT vsample1 = 
+Incoherent(thickness=0.00004, radius = 0.02, 
+	 yheight = VANADIUMHEIGHT,
+	 target_x=-ANARADIUS, target_y=0, target_z=0, 
+	 focus_aw=0.7, focus_ah=30.0)
+     WHEN (LAMBDA > 0 && probTarget<1.0/3.0) AT (0, 0, 0) RELATIVE armTarget
+
+COMPONENT vsample2 = 
+Incoherent(thickness=0.00004, radius = 0.016, 
+	 yheight = VANADIUMHEIGHT,
+	 target_x=-ANARADIUS, target_y=0, target_z=0, 
+	 focus_aw=0.7, focus_ah=30.0)
+     WHEN (LAMBDA > 0 && probTarget>=1.0/3.0 && probTarget<2.0/3.0) AT (0, 0, 0) RELATIVE armTarget
+
+COMPONENT vsample3 = 
+Incoherent(thickness=0.00004, radius = 0.01, 
+	 yheight = VANADIUMHEIGHT,
+	 target_x=-ANARADIUS, target_y=0, target_z=0, 
+	 focus_aw=0.7, focus_ah=30.0)
+     WHEN (LAMBDA > 0 && probTarget>=2.0/3.0) AT (0, 0, 0) RELATIVE armTarget
+
+
+COMPONENT beamStop =
+Beamstop(radius=0.1)
+     AT (0, 0, 0.1) RELATIVE armTarget
+
+COMPONENT armAnalyzer = Arm()
+     AT (0, 0, 0) RELATIVE armTarget
+ROTATED (0, -90, 0) RELATIVE armTarget
+EXTEND
+%{
+  // Multiply probability by 3 because we have 3 targets
+  p*=3.0;
+%}
+
+/* COMPONENT lamAnalyzer =  */
+/* L_monitor(nchan = 120, filename = "lambdaAnalyzer.dat",  */
+/* 	  xwidth = 0.10, yheight = 0.10,  */
+/* 	  Lmin = 0.98*LAMBDAMIN, Lmax = 1.02*LAMBDAMAX) */
+/*      AT (0, 0, ANARADIUS-0.2) RELATIVE armAnalyzer */
+
+/* COMPONENT psdAnalyzer =  */
+/* PSD_monitor(nx=60, ny=60, filename = "psdAnalyzer.dat",  */
+/* 	    xwidth = 0.10, yheight = 1.0) */
+/*      AT (0, 0, ANARADIUS-0.2) RELATIVE armAnalyzer */
+
+//
+// Marks analyzer
+//
+
+COMPONENT graphite_analyser0  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.195, 0.899629) RELATIVE armAnalyzer
+     ROTATED (0, 90, 8.928) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 0;
+%}
+
+COMPONENT graphite_analyser1  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.185, 0.9012) RELATIVE armAnalyzer
+     ROTATED (0, 90, 8.928) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 0;
+%}
+
+COMPONENT graphite_analyser2  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.175, 0.902637) RELATIVE armAnalyzer
+     ROTATED (0, 90, 8.1305) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 0;
+%}
+
+COMPONENT graphite_analyser3  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.165, 0.903887) RELATIVE armAnalyzer
+     ROTATED (0, 90, 7.062) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 0;
+%}
+
+COMPONENT graphite_analyser4  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.155, 0.905081) RELATIVE armAnalyzer
+     ROTATED (0, 90, 6.791) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 0;
+%}
+
+COMPONENT graphite_analyser5  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.145, 0.906123) RELATIVE armAnalyzer
+     ROTATED (0, 90, 5.898) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 0;
+%}
+
+COMPONENT graphite_analyser6  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.135, 0.90698) RELATIVE armAnalyzer
+     ROTATED (0, 90, 4.8325) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 0;
+%}
+
+COMPONENT graphite_analyser7  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.125, 0.907797) RELATIVE armAnalyzer
+     ROTATED (0, 90, 4.66) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 0;
+%}
+
+COMPONENT graphite_analyser8  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.115, 0.90845) RELATIVE armAnalyzer
+     ROTATED (0, 90, 3.6815) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 0;
+%}
+
+COMPONENT graphite_analyser9  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.105, 0.908918) RELATIVE armAnalyzer
+     ROTATED (0, 90, 2.6165) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 0;
+%}
+
+COMPONENT graphite_analyser10  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.095, 0.90936) RELATIVE armAnalyzer
+     ROTATED (0, 90, 2.53) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 1;
+%}
+
+COMPONENT graphite_analyser11  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.085, 0.909628) RELATIVE armAnalyzer
+     ROTATED (0, 90, 1.465) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 1;
+%}
+
+COMPONENT graphite_analyser12  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.075, 0.90971) RELATIVE armAnalyzer
+     ROTATED (0, 90, 0.4) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 1;
+%}
+
+COMPONENT graphite_analyser13  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.065, 0.90977) RELATIVE armAnalyzer
+     ROTATED (0, 90, 0.339) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 1;
+%}
+
+COMPONENT graphite_analyser14  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.055, 0.909655) RELATIVE armAnalyzer
+     ROTATED (0, 90, -0.724) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 1;
+%}
+
+COMPONENT graphite_analyser15  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.045, 0.909363) RELATIVE armAnalyzer
+     ROTATED (0, 90, -1.726) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 1;
+%}
+
+COMPONENT graphite_analyser16  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.035, 0.909041) RELATIVE armAnalyzer
+     ROTATED (0, 90, -1.854) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 1;
+%}
+
+COMPONENT graphite_analyser17  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.025, 0.908542) RELATIVE armAnalyzer
+     ROTATED (0, 90, -2.9185) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 1;
+%}
+
+COMPONENT graphite_analyser18  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.015, 0.907878) RELATIVE armAnalyzer
+     ROTATED (0, 90, -3.855) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 1;
+%}
+
+COMPONENT graphite_analyser19  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, -0.005, 0.907171) RELATIVE armAnalyzer
+     ROTATED (0, 90, -4.0525) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 1;
+%}
+
+COMPONENT graphite_analyser20  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.005, 0.906285) RELATIVE armAnalyzer
+     ROTATED (0, 90, -5.1175) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 2;
+%}
+
+COMPONENT graphite_analyser21  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.015, 0.905246) RELATIVE armAnalyzer
+     ROTATED (0, 90, -5.985) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 2;
+%}
+
+COMPONENT graphite_analyser22  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.025, 0.904153) RELATIVE armAnalyzer
+     ROTATED (0, 90, -6.2575) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 2;
+%}
+
+COMPONENT graphite_analyser23  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.035, 0.902877) RELATIVE armAnalyzer
+     ROTATED (0, 90, -7.325) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 2;
+%}
+
+COMPONENT graphite_analyser24  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.045, 0.901459) RELATIVE armAnalyzer
+     ROTATED (0, 90, -8.12) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 2;
+%}
+
+COMPONENT graphite_analyser25  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.055, 0.899973) RELATIVE armAnalyzer
+     ROTATED (0, 90, -8.4745) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 2;
+%}
+
+COMPONENT graphite_analyser26  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.065, 0.898303) RELATIVE armAnalyzer
+     ROTATED (0, 90, -9.5425) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 2;
+%}
+
+COMPONENT graphite_analyser27  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.075, 0.8965) RELATIVE armAnalyzer
+     ROTATED (0, 90, -10.256) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 2;
+%}
+
+COMPONENT graphite_analyser28  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.085, 0.894614) RELATIVE armAnalyzer
+     ROTATED (0, 90, -10.704) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 2;
+%}
+
+COMPONENT graphite_analyser29  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.095, 0.892542) RELATIVE armAnalyzer
+     ROTATED (0, 90, -11.768) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 2;
+%}
+
+COMPONENT graphite_analyser30  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.105, 0.890353) RELATIVE armAnalyzer
+     ROTATED (0, 90, -12.384) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 3;
+%}
+
+COMPONENT graphite_analyser31  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.115, 0.88806) RELATIVE armAnalyzer
+     ROTATED (0, 90, -12.948) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 3;
+%}
+
+COMPONENT graphite_analyser32  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.125, 0.885575) RELATIVE armAnalyzer
+     ROTATED (0, 90, -14.015) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 3;
+%}
+
+COMPONENT graphite_analyser33  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.135, 0.882991) RELATIVE armAnalyzer
+     ROTATED (0, 90, -14.518) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 3;
+%}
+
+COMPONENT graphite_analyser34  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.145, 0.880194) RELATIVE armAnalyzer
+     ROTATED (0, 90, -15.2215) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 3;
+%}
+
+COMPONENT graphite_analyser35  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.155, 0.877283) RELATIVE armAnalyzer
+     ROTATED (0, 90, -16.2955) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 3;
+%}
+
+COMPONENT graphite_analyser36  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.165, 0.874375) RELATIVE armAnalyzer
+     ROTATED (0, 90, -16.666) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 3;
+%}
+
+COMPONENT graphite_analyser37  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.175, 0.871225) RELATIVE armAnalyzer
+     ROTATED (0, 90, -17.5315) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 3;
+%}
+
+COMPONENT graphite_analyser38  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.185, 0.867897) RELATIVE armAnalyzer
+     ROTATED (0, 90, -18.604) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 3;
+%}
+
+COMPONENT graphite_analyser39  =
+Monochromator_pol(zwidth=ANAWIDTH, yheight=ANAHEIGHT, mosaic=ANAMOSAIC,
+                   Rup=1.0,Rdown=1.0, Q=ANAQ, pThreshold=0.001, dspread=0.0025)
+     WHEN (LAMBDA>0) AT (0, 0.195, 0.864474) RELATIVE armAnalyzer
+     ROTATED (0, 90, -18.811) RELATIVE armAnalyzer
+     GROUP graphiteAnalyzer
+EXTEND
+%{
+   groupNumber = 3;
+%}
+
+/* COMPONENT graphite_analyser  = */
+/* Monochromator_pol(zmin=-ANAWIDTH/2, zmax=ANAWIDTH/2, */
+/*                    ymin=-ANAHEIGHT/2, ymax=ANAHEIGHT/2, */
+/*                    mosaich=ANAMOSAICH, mosaicv=ANAMOSAICV, */
+/*                    Rup=1.0,Rdown=1.0, Q=ANAQ) */
+/*      WHEN (LAMBDA>0) AT (0, 0, anaRadius) RELATIVE armAnalyzer */
+/*      ROTATED (0, 90, -4.25) RELATIVE armAnalyzer */
+
+
+
+//
+// Detector
+//
+
+
+COMPONENT armHelp = Arm()
+     AT (0, 0, ANARADIUS) RELATIVE armAnalyzer
+ROTATED (0, 180, 0) RELATIVE armAnalyzer
+
+COMPONENT armDetector = Arm()
+     AT (0, 0, 0) RELATIVE armHelp
+ROTATED (2.0*4.6526, 0, 0) RELATIVE armHelp
+
+COMPONENT lamDetector =
+L_monitor(nL = 120, filename = "lambdaDetector.dat", 
+	  xwidth = 0.10, yheight = 0.10, 
+	  Lmin = 0.99*LAMBDA, Lmax = 1.01*LAMBDA)
+     WHEN (LAMBDA>0) AT (0, 0, DETECTORDISTANCE) RELATIVE armDetector
+
+COMPONENT psdDetector =
+PSD_monitor(nx=50, ny=50, filename = "psdDetector.dat", 
+	    xwidth = 0.10, yheight = 0.10)
+     WHEN (LAMBDA>0) AT (0, 0, DETECTORDISTANCE) RELATIVE armDetector
+
+/* COMPONENT psdDetector0 = */
+/* PSD_monitor(nx=50, ny=50, filename = "psdDetector0.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      WHEN (LAMBDA>0&&groupNumber==0) AT (0, 0, DETECTORDISTANCE) RELATIVE armDetector */
+
+/* COMPONENT psdDetector1 = */
+/* PSD_monitor(nx=50, ny=50, filename = "psdDetector1.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      WHEN (LAMBDA>0&&groupNumber==1) AT (0, 0, DETECTORDISTANCE) RELATIVE armDetector */
+
+/* COMPONENT psdDetector2 = */
+/* PSD_monitor(nx=50, ny=50, filename = "psdDetector2.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      WHEN (LAMBDA>0&&groupNumber==2) AT (0, 0, DETECTORDISTANCE) RELATIVE armDetector */
+
+/* COMPONENT psdDetector3 = */
+/* PSD_monitor(nx=50, ny=50, filename = "psdDetector3.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      WHEN (LAMBDA>0&&groupNumber==3) AT (0, 0, DETECTORDISTANCE) RELATIVE armDetector */
+
+/* COMPONENT tofDetectorSmall = */
+/* TOF_monitor(nchan=120, */
+/* 	    t0=calcT0(LAMBDA, DMODTARGET+ANARADIUS+DETECTORDISTANCE-1.5)*1e6, */
+/* 	    t1=calcT0(LAMBDA, DMODTARGET+ANARADIUS+DETECTORDISTANCE+1.5)*1e6, */
+/* 	    filename = "tofDetectorSmall.dat",  */
+/* 	    xwidth = DETECTORWIDTH, yheight = DETECTORHEIGHT) */
+/*      WHEN (LAMBDA>0) AT (0, 0, DETECTORDISTANCE) RELATIVE armDetector */
+
+COMPONENT tofDetector =
+TOF_monitor(nt=120,
+	    tmin=calcT0(LAMBDA, DMODTARGET+ANARADIUS+DETECTORDISTANCE-1.5)*1e6,
+	    tmax=calcT0(LAMBDA, DMODTARGET+ANARADIUS+DETECTORDISTANCE+1.5)*1e6,
+	    filename = "tofDetector.dat", 
+	    xwidth = 0.10, yheight = 0.10)
+     WHEN (LAMBDA>0) AT (0, 0, DETECTORDISTANCE) RELATIVE armDetector
+
+/* COMPONENT tofDetector0 = */
+/* TOF_monitor(nchan=60, */
+/* 	    t0=calcT0(LAMBDA, DMODTARGET+ANARADIUS+DETECTORDISTANCE-1.5)*1e6, */
+/* 	    t1=calcT0(LAMBDA, DMODTARGET+ANARADIUS+DETECTORDISTANCE+1.5)*1e6, */
+/* 	    filename = "tofDetector0.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      WHEN (LAMBDA>0&&groupNumber==0) AT (0, 0, DETECTORDISTANCE+0.001) RELATIVE armDetector */
+
+/* COMPONENT tofDetector1 = */
+/* TOF_monitor(nchan=60, */
+/* 	    t0=calcT0(LAMBDA, DMODTARGET+ANARADIUS+DETECTORDISTANCE-1.5)*1e6, */
+/* 	    t1=calcT0(LAMBDA, DMODTARGET+ANARADIUS+DETECTORDISTANCE+1.5)*1e6, */
+/* 	    filename = "tofDetector1.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      WHEN (LAMBDA>0&&groupNumber==1) AT (0, 0, DETECTORDISTANCE+0.001) RELATIVE armDetector */
+
+/* COMPONENT tofDetector2 = */
+/* TOF_monitor(nchan=60, */
+/* 	    t0=calcT0(LAMBDA, DMODTARGET+ANARADIUS+DETECTORDISTANCE-1.5)*1e6, */
+/* 	    t1=calcT0(LAMBDA, DMODTARGET+ANARADIUS+DETECTORDISTANCE+1.5)*1e6, */
+/* 	    filename = "tofDetector2.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      WHEN (LAMBDA>0&&groupNumber==2) AT (0, 0, DETECTORDISTANCE+0.001) RELATIVE armDetector */
+
+/* COMPONENT tofDetector3 = */
+/* TOF_monitor(nchan=60, */
+/* 	    t0=calcT0(LAMBDA, DMODTARGET+ANARADIUS+DETECTORDISTANCE-1.5)*1e6, */
+/* 	    t1=calcT0(LAMBDA, DMODTARGET+ANARADIUS+DETECTORDISTANCE+1.5)*1e6, */
+/* 	    filename = "tofDetector3.dat",  */
+/* 	    xwidth = 0.10, yheight = 0.10) */
+/*      WHEN (LAMBDA>0&&groupNumber==3) AT (0, 0, DETECTORDISTANCE+0.001) RELATIVE armDetector */
+
+END
