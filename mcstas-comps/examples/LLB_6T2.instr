@@ -192,7 +192,7 @@ AT (0,0,b_length) RELATIVE PREVIOUS
 COMPONENT activation_flux=L_monitor(
     xwidth=0.01, yheight=0.01,
     nL=401, filename="activation_flux.txt", Lmin=lambda-dlambda0, Lmax=lambda+dlambda0)
-WHEN(monok=5)
+WHEN(monok==5)
 AT (0,0,0.02) RELATIVE Bar_out
 
 /****************************************************************
