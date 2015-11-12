@@ -19,6 +19,7 @@ fi
 ./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_yosemite "" -- OSXpkg
+./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-x3d $1 tools/Python/mcdisplay/x3d/ "" mac_yosemite "" -- OSXpkg
