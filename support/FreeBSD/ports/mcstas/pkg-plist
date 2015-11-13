@@ -1,72 +1,72 @@
-mcstas/2.2a/LGPL
-mcstas/2.2a/LICENSE.LIB
-mcstas/2.2a/NOMENCLATURE
-mcstas/2.2a/README
-mcstas/2.2a/bin/mcformat
-mcstas/2.2a/bin/mcstas
-mcstas/2.2a/data/Al.nxs
-mcstas/2.2a/data/Cu.nxs
-mcstas/2.2a/doc/man/man1/mcformat-2.2a.1
-mcstas/2.2a/doc/man/man1/mcstas-2.2a.1
-mcstas/2.2a/environment
-mcstas/2.2a/module
-mcstas/2.2a/share/adapt_tree-lib.c
-mcstas/2.2a/share/adapt_tree-lib.h
-mcstas/2.2a/share/general.c
-mcstas/2.2a/share/general.h
-mcstas/2.2a/share/interoff-lib.c
-mcstas/2.2a/share/interoff-lib.h
-mcstas/2.2a/share/interpolation/array-utils.c
-mcstas/2.2a/share/interpolation/array-utils.h
-mcstas/2.2a/share/interpolation/natural/README
-mcstas/2.2a/share/interpolation/natural/delaunay.c
-mcstas/2.2a/share/interpolation/natural/delaunay.h
-mcstas/2.2a/share/interpolation/natural/example.c
-mcstas/2.2a/share/interpolation/natural/natural.c
-mcstas/2.2a/share/interpolation/natural/natural.h
-mcstas/2.2a/share/interpolation/natural/predicates.c
-mcstas/2.2a/share/interpolation/natural/utils-extra.c
-mcstas/2.2a/share/interpolation/natural/utils-extra.h
-mcstas/2.2a/share/interpolation/natural/vertex.h
-mcstas/2.2a/share/interpolation/nearest/README
-mcstas/2.2a/share/interpolation/nearest/example.c
-mcstas/2.2a/share/interpolation/nearest/kdtree.c
-mcstas/2.2a/share/interpolation/nearest/kdtree.h
-mcstas/2.2a/share/interpolation/nearest/vertex.h
-mcstas/2.2a/share/interpolation/resample.c
-mcstas/2.2a/share/interpolation/resample.h
-mcstas/2.2a/share/intersection.c
-mcstas/2.2a/share/intersection.h
-mcstas/2.2a/share/mccode-r.c
-mcstas/2.2a/share/mccode-r.h
-mcstas/2.2a/share/mcstas-r.c
-mcstas/2.2a/share/mcstas-r.h
-mcstas/2.2a/share/nxslib/README.TXT
-mcstas/2.2a/share/nxslib/nxs.c
-mcstas/2.2a/share/nxslib/nxs.h
-mcstas/2.2a/share/nxslib/sgclib.c
-mcstas/2.2a/share/nxslib/sgfind.c
-mcstas/2.2a/share/nxslib/sghkl.c
-mcstas/2.2a/share/nxslib/sginfo.h
-mcstas/2.2a/share/nxslib/sgio.c
-mcstas/2.2a/share/nxslib/sgsi.c
-mcstas/2.2a/share/pol-lib.c
-mcstas/2.2a/share/pol-lib.h
-mcstas/2.2a/share/read_table-lib.c
-mcstas/2.2a/share/read_table-lib.h
-mcstas/2.2a/share/ref-lib.c
-mcstas/2.2a/share/ref-lib.h
-mcstas/2.2a/share/vitess-lib.c
-mcstas/2.2a/share/vitess-lib.h
-@dirrmtry mcstas/2.2a/bin
-@dirrmtry mcstas/2.2a/data
-@dirrmtry mcstas/2.2a/doc/man/man1
-@dirrmtry mcstas/2.2a/doc/man
-@dirrmtry mcstas/2.2a/doc
-@dirrmtry mcstas/2.2a/share/interpolation/natural
-@dirrmtry mcstas/2.2a/share/interpolation/nearest
-@dirrmtry mcstas/2.2a/share/interpolation
-@dirrmtry mcstas/2.2a/share/nxslib
-@dirrmtry mcstas/2.2a/share
-@dirrmtry mcstas/2.2a
-@dirrmtry mcstas
+mcstas/%%PORTVERSION%%/LGPL
+mcstas/%%PORTVERSION%%/LICENSE.LIB
+mcstas/%%PORTVERSION%%/NOMENCLATURE
+mcstas/%%PORTVERSION%%/README
+mcstas/%%PORTVERSION%%/bin/mcformat
+mcstas/%%PORTVERSION%%/bin/mcstas
+mcstas/%%PORTVERSION%%/data/Al.nxs
+mcstas/%%PORTVERSION%%/data/Cu.nxs
+mcstas/%%PORTVERSION%%/doc/man/man1/mcformat-%%PORTVERSION%%.1
+mcstas/%%PORTVERSION%%/doc/man/man1/mcstas-%%PORTVERSION%%.1
+mcstas/%%PORTVERSION%%/environment
+mcstas/%%PORTVERSION%%/module
+mcstas/%%PORTVERSION%%/share/adapt_tree-lib.c
+mcstas/%%PORTVERSION%%/share/adapt_tree-lib.h
+mcstas/%%PORTVERSION%%/share/general.c
+mcstas/%%PORTVERSION%%/share/general.h
+mcstas/%%PORTVERSION%%/share/interoff-lib.c
+mcstas/%%PORTVERSION%%/share/interoff-lib.h
+mcstas/%%PORTVERSION%%/share/interpolation/array-utils.c
+mcstas/%%PORTVERSION%%/share/interpolation/array-utils.h
+mcstas/%%PORTVERSION%%/share/interpolation/natural/README
+mcstas/%%PORTVERSION%%/share/interpolation/natural/delaunay.c
+mcstas/%%PORTVERSION%%/share/interpolation/natural/delaunay.h
+mcstas/%%PORTVERSION%%/share/interpolation/natural/example.c
+mcstas/%%PORTVERSION%%/share/interpolation/natural/natural.c
+mcstas/%%PORTVERSION%%/share/interpolation/natural/natural.h
+mcstas/%%PORTVERSION%%/share/interpolation/natural/predicates.c
+mcstas/%%PORTVERSION%%/share/interpolation/natural/utils-extra.c
+mcstas/%%PORTVERSION%%/share/interpolation/natural/utils-extra.h
+mcstas/%%PORTVERSION%%/share/interpolation/natural/vertex.h
+mcstas/%%PORTVERSION%%/share/interpolation/nearest/README
+mcstas/%%PORTVERSION%%/share/interpolation/nearest/example.c
+mcstas/%%PORTVERSION%%/share/interpolation/nearest/kdtree.c
+mcstas/%%PORTVERSION%%/share/interpolation/nearest/kdtree.h
+mcstas/%%PORTVERSION%%/share/interpolation/nearest/vertex.h
+mcstas/%%PORTVERSION%%/share/interpolation/resample.c
+mcstas/%%PORTVERSION%%/share/interpolation/resample.h
+mcstas/%%PORTVERSION%%/share/intersection.c
+mcstas/%%PORTVERSION%%/share/intersection.h
+mcstas/%%PORTVERSION%%/share/mccode-r.c
+mcstas/%%PORTVERSION%%/share/mccode-r.h
+mcstas/%%PORTVERSION%%/share/mcstas-r.c
+mcstas/%%PORTVERSION%%/share/mcstas-r.h
+mcstas/%%PORTVERSION%%/share/nxslib/README.TXT
+mcstas/%%PORTVERSION%%/share/nxslib/nxs.c
+mcstas/%%PORTVERSION%%/share/nxslib/nxs.h
+mcstas/%%PORTVERSION%%/share/nxslib/sgclib.c
+mcstas/%%PORTVERSION%%/share/nxslib/sgfind.c
+mcstas/%%PORTVERSION%%/share/nxslib/sghkl.c
+mcstas/%%PORTVERSION%%/share/nxslib/sginfo.h
+mcstas/%%PORTVERSION%%/share/nxslib/sgio.c
+mcstas/%%PORTVERSION%%/share/nxslib/sgsi.c
+mcstas/%%PORTVERSION%%/share/pol-lib.c
+mcstas/%%PORTVERSION%%/share/pol-lib.h
+mcstas/%%PORTVERSION%%/share/read_table-lib.c
+mcstas/%%PORTVERSION%%/share/read_table-lib.h
+mcstas/%%PORTVERSION%%/share/ref-lib.c
+mcstas/%%PORTVERSION%%/share/ref-lib.h
+mcstas/%%PORTVERSION%%/share/vitess-lib.c
+mcstas/%%PORTVERSION%%/share/vitess-lib.h
+@dir mcstas/%%PORTVERSION%%/bin
+@dir mcstas/%%PORTVERSION%%/data
+@dir mcstas/%%PORTVERSION%%/doc/man/man1
+@dir mcstas/%%PORTVERSION%%/doc/man
+@dir mcstas/%%PORTVERSION%%/doc
+@dir mcstas/%%PORTVERSION%%/share/interpolation/natural
+@dir mcstas/%%PORTVERSION%%/share/interpolation/nearest
+@dir mcstas/%%PORTVERSION%%/share/interpolation
+@dir mcstas/%%PORTVERSION%%/share/nxslib
+@dir mcstas/%%PORTVERSION%%/share
+@dir mcstas/%%PORTVERSION%%
+@dir mcstas
