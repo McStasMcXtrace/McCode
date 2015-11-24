@@ -1414,6 +1414,7 @@ undef $sim;
 undef $TOF;
 undef $tmax;
 undef $keep;
+my $STDIN=0;
 $complete=0;
 undef $PGINIT;
 undef $paramfile;
@@ -1459,6 +1460,9 @@ for($i = 0; $i < @ARGV; $i++) {
         $file_output = $1;
    } elsif($ARGV[$i] =~ /^--param=([a-zA-Z0-9_\ \"\.\-\:]+)$/) {
 	$paramfile = $1;
+   } elsif($ARGV[$i] eq "--stdin") {
+       $STDIN = 1;
+       $sim_cmd = "stdin";
    } elsif($ARGV[$i] eq "--TOF" || $ARGV[$i] eq "-T") {
        $TOF = 1;
    } elsif($ARGV[$i] eq "--keep" || $ARGV[$i] eq "-k") {
@@ -1503,6 +1507,9 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
                              instrument. With PGPLOT, --save is nonfunctional.
                              With VRML, --save disables spaw of VRML viewer.
  -gif|-ps|-psc               Export figure as gif/b&w ps/color ps and exit
+           --stdin           Do not start a simulation, instead take neutron / instrument 
+                             data directly from standard input
+                             
  When using -ps -psc -gif, the program writes the hardcopy file and exits.
  SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess
  DOC:      Please visit http://www.mcstas.org/\n"
@@ -1638,10 +1645,15 @@ if ($plotter =~ /McStas|PGPLOT/i) { # PGPLOT is plotter!
 
 my ($numcomp, %neutron, %instr);
 
-$args = join(" ", @cmdline);
-$cmdline = "$sim_cmd --trace --no-output-files $args";
-printf STDERR "Starting simulation '$cmdline' ...\n";
-open(IN, "$cmdline |") || die "mcdisplay: Could not run simulation\n";
+if ($STDIN==1) {
+  printf STDERR "Taking simulation data from STDIN ...\n";
+  open(IN,"-");
+} else {
+  $args = join(" ", @cmdline);
+  $cmdline = "$sim_cmd --trace --no-output-files $args";
+  printf STDERR "Starting simulation '$cmdline' ...\n";
+  open(IN, "$cmdline |") || die "mcdisplay: Could not run simulation\n";
+}
 
 $numcomp = read_instrument(IN);
 $inspect_pos = get_inspect_pos($inspect, @components);
