@@ -141,7 +141,10 @@ DEFINITION PARAMETERS ()
 		    int n_pulses=1, width_t=0.12, T_t=325, tau_t=80e-6, tau1_t=400e-6,
 		    tau2_t=12e-6, chi2_t=2.5, I0_t=13.5e11, I2_t=27.6e10, branch1_t=0.5,
 		    branch2_t=0.5, int src_2012=1, tfocus_dist=0.1, tfocus_time=0.0, tfocus_width=0.0, beamport_angle=30)
-OUTPUT PARAMETERS (l_range, w_mult, w_geom, w_geom, w_geom_t)
+OUTPUT PARAMETERS (l_range, w_mult, w_geom, w_geom_c, w_geom_t,
+  tx,ty,tz,t1x,t1y,t1z,t2x,t2y,t2z,
+  T_n, tau_n, tau1_n, tau2_n, chi2_n, I0_n, I2_n, branch1_n, branch2_n,
+  r_empty,r_optics)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
@@ -167,13 +170,14 @@ DECLARE
   double T_n, tau_n, tau1_n, tau2_n, chi2_n, I0_n, I2_n, branch1_n, branch2_n;
   
   /* Target station geometry... */
-  double r_empty = 2.0; /* two meters from moderator surface and out... */
+  double r_empty; /* two meters from moderator surface and out... */
   double r_optics;
 %}
 
 INITIALIZE
 %{
   n_pulses=(double)floor(n_pulses);
+  r_empty = 2.0;
   if (n_pulses == 0) n_pulses=1;
  
   if (target_index && !dist)

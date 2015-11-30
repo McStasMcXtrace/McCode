@@ -81,6 +81,13 @@ TRACE COPY Monitor_nD
 
 SAVE
 %{
+  // avoid name clash with Detector structure members and component parameters.
+  #undef min
+  #undef xmin
+  #undef xmax
+  #undef ymin
+  #undef ymax
+  
   /* the detector file written by the Monitor_nD is stored in a 'MCDETECTOR detector' structure */
 
   /* get back information from the StatisticalChopper */

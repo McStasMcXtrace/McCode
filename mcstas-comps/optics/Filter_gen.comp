@@ -140,7 +140,7 @@ INITIALIZE
 
   FilterGen_Mode(options, &Mode_Table, &Type_Table, &verbose);
   
-  if (filename != NULL)
+  if (filename != NULL && strlen(filename) && strcmp(filename,"NULL") && strcmp(filename,"0"))
   {
     if (Table_Read(&pTable, filename, 1) <= 0) /* read 1st block data from filename into pTable */
       exit(fprintf(stderr,"Filter_gen: %s: can not read filename %s\n", NAME_CURRENT_COMP, filename));

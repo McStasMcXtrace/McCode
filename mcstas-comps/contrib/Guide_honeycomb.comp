@@ -270,8 +270,8 @@ TRACE
 %{
   double B, C, dt;
   int    ret, bounces = 0;
-  float    n,m,nv,mv;
-  int    nup=-1, mright=-1;
+  float    n,m1,nv,mv;
+  int    nup=-1, mright1=-1;
   double xhole,yhole, y_min;
   double cn;
   double inside;
@@ -299,18 +299,18 @@ TRACE
     if(x-xhole>0)  nup=1;
     y_min=1.732*(GVars.w1c+d);
 
-    for(m=0;y>((2*m+1)*y_min); m++); mv=m;
-    if (m==0) { for (m=0; y<((2*m-1)*(y_min)); m--); mv=m; }
+    for(m1=0;y>((2*m1+1)*y_min); m1++); mv=m1;
+    if (m1==0) { for (m1=0; y<((2*m1-1)*(y_min)); m1--); mv=m1; }
 
-    yhole=2*m*1.732*(GVars.w1c+d);
-    if(y-yhole>0)  mright=1;
+    yhole=2*m1*1.732*(GVars.w1c+d);
+    if(y-yhole>0)  mright1=1;
 
     cn=1.1547*(GVars.w1c+d);
     inside=(fabs(y-yhole)+0.577351*fabs(x-xhole)-cn);
     if(inside>0)
     {
       xhole +=nup*(GVars.w1c+d);
-      yhole +=mright*(1.732*(GVars.w1c+d));
+      yhole +=mright1*(1.732*(GVars.w1c+d));
     }
 
     /*   double w_chnum,h_chnum;*/ /* channel indexes  */

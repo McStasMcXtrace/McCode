@@ -170,7 +170,7 @@ INITIALIZE
     exit(-1);
   }
 
-  if (filename && strlen(filename) && repeat_count>0) {
+  if (filename && strlen(filename) && strcmp(filename, "NULL") && strcmp(filename,"0") && repeat_count>0) {
     if (type && strstr(type, "Vitess"))
     { fprintf(stderr, "Virtual_input: %s: Vitess files may be read using the Vitess_input component\n", NAME_CURRENT_COMP); exit(-1); }
 
@@ -202,7 +202,7 @@ INITIALIZE
 
 TRACE
 %{
-  if (filename && strlen(filename)) {
+  if (filename && strlen(filename) && strcmp(filename, "NULL") && strcmp(filename,"0")) {
     while (read_block && !end_reading) {
       /* read block and increase Offset for next reading */
       nrows = Virtual_input_Read_Input(filename, type, &rTable, &Offset);

@@ -122,7 +122,7 @@ TRACE
   double y1,z1,t1,dt,kix,kiy,kiz,ratio,order,q0x,k,q0,theta;
   double bx,by,bz,kux,kuy,kuz,ax,ay,az,phi;
   double cos_2theta,k_sin_2theta,cos_phi,sin_phi,q_x,q_y,q_z;
-  double delta,p_reflect,total,c1x,c1y,c1z,zwidth,mos_sample;
+  double delta,p_reflect,total,c1x,c1y,c1z,width,mos_sample;
   int i;
 
   if(vx != 0.0 && (dt = -x/vx) >= 0.0)
@@ -179,27 +179,27 @@ TRACE
           vec_prod(ax, ay, az, bx, by, bz, kux, kuy, kuz);
           /* Compute the total scattering probability at this ki */
           total = 0;
-          /* Choose zwidth of Gaussian distribution to sample the angle
+          /* Choose width of Gaussian distribution to sample the angle
            * phi on the Debye-Scherrer cone for the scattered neutron.
            * The radius of the Debye-Scherrer cone is smaller by a
            * factor 1/cos(theta) than the radius of the (partial) sphere
            * describing the possible orientations of Q due to mosaicity, so we
-           * start with a zwidth 1/cos(theta) greater than the largest of
+           * start with a width 1/cos(theta) greater than the largest of
            * the two mosaics. */
           mos_sample = mos_rms_max/cos(theta);
           c1x = kix*(cos_2theta-1);
           c1y = kiy*(cos_2theta-1);
           c1z = kiz*(cos_2theta-1);
-          /* Loop, repeatedly reducing the sample zwidth until it is small
+          /* Loop, repeatedly reducing the sample width until it is small
            * enough to avoid sampling scattering directions with
            * ridiculously low scattering probability.
-           * Use a cut-off at 5 times the gauss zwidth for considering
+           * Use a cut-off at 5 times the gauss width for considering
            * scattering probability as well as for integration limits
            * when integrating the sampled distribution below. */
           for(i=0; i<100; i++) {
-            zwidth = 5*mos_sample;
-            cos_phi = cos(zwidth);
-            sin_phi = sin(zwidth);
+            width = 5*mos_sample;
+            cos_phi = cos(width);
+            sin_phi = sin(width);
             q_x = c1x + cos_phi*ax + sin_phi*bx;
             q_y = (c1y + cos_phi*ay + sin_phi*by)/mos_rms_y;
             q_z = (c1z + cos_phi*az + sin_phi*bz)/mos_rms_z;
@@ -212,7 +212,7 @@ TRACE
            * cut-off at five times sigma. */
           for(i = 0; i < (sizeof(Gauss_X)/sizeof(double)); i++)
           {
-            phi = zwidth*Gauss_X[i];
+            phi = width*Gauss_X[i];
             cos_phi = cos(phi);
             sin_phi = sin(phi);
             q_x = c1x + cos_phi*ax + sin_phi*bx;
@@ -222,9 +222,9 @@ TRACE
                         GAUSS((q_z/q_x),0,mos_rms_z);
             total += Gauss_W[i]*p_reflect;
           }
-          total *= zwidth;
+          total *= width;
           /* Choose point on Debye-Scherrer cone. Sample from a Gaussian of
-           * zwidth 1/cos(theta) greater than the mosaic and correct for any
+           * width 1/cos(theta) greater than the mosaic and correct for any
            * error by adjusting the neutron weight later. */
           phi = mos_sample*randnorm();
           /* Compute final wave vector kf and scattering vector q = ki - kf */

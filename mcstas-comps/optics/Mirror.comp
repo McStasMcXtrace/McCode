@@ -73,7 +73,7 @@ DECLARE
 
 INITIALIZE
 %{
-  if (reflect && strlen(reflect)) {
+  if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0")) {
     if (Table_Read(&pTable, reflect, 1) <= 0) /* read 1st block data from file into pTable */
       exit(fprintf(stderr,"Mirror: %s: can not read file %s\n", NAME_CURRENT_COMP, reflect));
   }
@@ -100,7 +100,7 @@ TRACE
       q = fabs(2*vz*V2Q);
       vz = -vz;
       /* Reflectivity (see component Guide). */
-      if (reflect && strlen(reflect))
+      if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0"))
         TableReflecFunc(q, &pTable, &B);
       else {
         double par[] = {R0, Qc, alpha, m, W};

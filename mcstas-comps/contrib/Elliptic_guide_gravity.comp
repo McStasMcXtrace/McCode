@@ -180,11 +180,8 @@ SETTING PARAMETERS (l,
 		curvature=0	)
 
 OUTPUT PARAMETERS (
-	Circ, guideInfo,Gx,Gy,Gz,dynamicalSegLength,
-	inputErrors, directDefination,
-	xinput,xarray,
-	yinput,yarray,
-	zinput,zarray
+	guideInfo,latestParticleCollision,Gx,Gy,Gz,
+	Gx0, Gy0, Gz0,Circ,dynamicalSegLength
 	)
 
 SHARE
@@ -288,7 +285,7 @@ struct SGI
 int guide_elliptical_illegalInputLessThanZero(char var[],int verbose){
 	if (verbose)
 		printf("The user defined variable %s in %s has an illegal value"
-				" less than zero\n",var,NAME_CURRENT_COMP);
+				" less than zero\n",var,"Elliptic_guide_gravity");
 	return 1;
 }
 
@@ -323,7 +320,7 @@ void guide_elliptical_callCriticalWarning(char func[],int verbose){
 		printf("A CRITICAL WARNING has been called inside %s by function %s." 
 			"This is most likely due to a programming error \
 			inside the component. \n",
-			NAME_CURRENT_COMP,func);
+			"Elliptic_guide_gravity",func);
 	}
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1607,13 +1604,13 @@ MCDISPLAY
 			  
 			  
 	// find boardest place on the guide and draw a band around the guide
-	int m;
+	int m0;
 	double boardestPlace = 0;
 	int boardestPlaceNumber = 0;
-	for(m=0; m<ApproximationMirrors; m++){
-		if( boardestPlace <= fabs(yplus[m]) ){
-			boardestPlace = fabs(yplus[m]);
-			boardestPlaceNumber = m;
+	for(m0=0; m0<ApproximationMirrors; m0++){
+		if( boardestPlace <= fabs(yplus[m0]) ){
+			boardestPlace = fabs(yplus[m0]);
+			boardestPlaceNumber = m0;
 		}
 	}
 	j = boardestPlaceNumber;

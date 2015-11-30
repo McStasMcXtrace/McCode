@@ -97,9 +97,9 @@ DECLARE
   t_Table *rUpParPtr   = 0;
   t_Table *rDownParPtr = 0;
 #else 
-  double rParPtr[]     = rPar;
-  double rUpParPtr[]   = rUpPar;
-  double rDownParPtr[] = rDownPar;
+  double rParPtr[]     = (double [])rPar;
+  double rUpParPtr[]   = (double [])rUpPar;
+  double rDownParPtr[] = (double [])rDownPar;
 #endif
   %}
 

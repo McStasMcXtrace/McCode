@@ -89,7 +89,9 @@ TRACE
 
 SAVE
   %{
-    DETECTOR_OUT_0D("Single monitor " NAME_CURRENT_COMP, Nsum, psum, p2sum);
+    char title[1024];
+    sprintf(title, "Single monitor %s", NAME_CURRENT_COMP);
+    DETECTOR_OUT_0D(title, Nsum, psum, p2sum);
   %}
 
 MCDISPLAY

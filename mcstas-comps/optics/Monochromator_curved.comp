@@ -75,8 +75,8 @@
 * optional parameters
 * DM:      monochromator d-spacing instead of Q=2*pi/DM (Angstrom)
 * mosaic:  sets mosaich=mosaicv (arc minutes)
-* width:   total width of monochromator (m)
-* height:  total height of monochromator (m)
+* width:   total width of monochromator, along Z (m)
+* height:  total height of monochromator, along Y (m)
 * verbose: verbosity level (0/1)
 * reflect: reflectivity file name of text file as 2 columns [k, R] [str]
 * transmit:transmission file name of text file as 2 columns [k, T] [str]
@@ -332,7 +332,7 @@ TRACE
           if(rand01() <= p_reflect) { /* Reflect */
             double bx,by,bz,ax,ay,az,phi;
             double cos_2theta,k_sin_2theta,cos_phi,sin_phi,q_x,q_y,q_z;
-            double total,c1x,c1y,c1z,width,mos_sample;
+            double total,c1x,c1y,c1z,w,mos_sample;
             int i=0;
 
             cos_2theta   = cos(2*theta);
@@ -365,9 +365,9 @@ TRACE
             * scattering probability as well as for integration limits
             * when integrating the sampled distribution below. */
             for(i=0; i<100; i++) {
-              width = 5*mos_sample;
-              cos_phi = cos(width);
-              sin_phi = sin(width);
+              w = 5*mos_sample;
+              cos_phi = cos(w);
+              sin_phi = sin(w);
               q_x =  c1x + cos_phi*ax + sin_phi*bx;
               q_y = (c1y + cos_phi*ay + sin_phi*by)/mos_rms_z;
               q_z = (c1z + cos_phi*az + sin_phi*bz)/mos_rms_y;
@@ -380,7 +380,7 @@ TRACE
             * cut-off at five times sigma. */
             for(i = 0; i < (sizeof(Gauss_X)/sizeof(double)); i++)
             {
-              phi = width*Gauss_X[i];
+              phi = w*Gauss_X[i];
               cos_phi = cos(phi);
               sin_phi = sin(phi);
               q_x = c1x + cos_phi*ax + sin_phi*bx;
@@ -390,7 +390,7 @@ TRACE
                           GAUSS((q_y/q_x),0,mos_rms_z);
               total += Gauss_W[i]*p_reflect;
             }
-            total *= width;
+            total *= w;
             /* Choose point on Debye-Scherrer cone. Sample from a Gaussian of
              * width 1/cos(theta) greater than the mosaic and correct for any
              * error by adjusting the neutron weight later. */
