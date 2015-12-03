@@ -54,7 +54,7 @@
 * OUTPUT PARAMETERS:
 * V_rho:  [AA^-3] Atomic density
 * V_my_s: [m^-1]  Attenuation factor due to incoherent scattering
-* V_my_a: [m^-1]  Attenuation factor due to absorbtion
+* V_my_a_v: [m^-1]  Attenuation factor due to absorbtion
 *
 * %L
 * The test/example instrument <a href="../examples/Test_Phonon.instr">Test_Phonon.instr</a>.
@@ -66,7 +66,7 @@ DEFINE COMPONENT Phonon_simple
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius,yheight,sigma_abs,sigma_inc,a,b,M,c,DW,T,
   target_x=0, target_y=0, target_z=0, int target_index=0,focus_r=0,focus_xw=0,focus_yh=0,focus_aw=0,focus_ah=0)
-OUTPUT PARAMETERS (V_rho, V_my_s, V_my_a, DV, parms)
+OUTPUT PARAMETERS (V_rho, V_my_s, V_my_a_v, DV, parms)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{

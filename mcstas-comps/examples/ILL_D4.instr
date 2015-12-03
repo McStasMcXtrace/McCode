@@ -36,7 +36,7 @@
 * L1:     [m]    Source-Monochromator distance
 * L2:     [m]    Monochromator-Sample distance
 * L3:     [m]    Sample-Detector distance
-* sample: [str]  File name for powder description
+* sample: [str]  File name for powder/liquid description LAU/LAZ/qSq/Sqw
 * verbose:[1]    Print DIF configuration. 0 to be quiet
 *
 * %Link

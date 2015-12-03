@@ -102,8 +102,8 @@ DECLARE
   t_Table *rUpParPtr   = 0;
   t_Table *rDownParPtr = 0;
 #else 
-  double rUpParPtr[]   = rUpPar;
-  double rDownParPtr[] = rDownPar;
+  double rUpParPtr[]   = (double[])rUpPar;
+  double rDownParPtr[] = (double[])rDownPar;
 #endif
 %}
 

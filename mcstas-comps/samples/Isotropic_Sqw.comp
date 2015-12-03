@@ -1144,7 +1144,6 @@ struct Sqw_Data_struct *Sqw_readfile(
   long   w_bins;
 
   double alpha=0;
-  double Ei_max_q=0;
 
   double M1          = 0;
   double M1_cl       = 0;
@@ -1539,7 +1538,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (T) {
     if (Sqw->Temperature < 0)    Sqw->Temperature = fabs(T);
     MPI_MASTER(
-    if (Sqw->verbose_output > 0) {
+    if (Sqw->verbose_output > 0 && T < 3000) {
       printf(  "Isotropic_Sqw: %s: Temperature computed from S(q,w) data from %s is T=%g [K] (not set here).\n",
         Sqw->compname, file, T);
       if (Sqw->Temperature == 0)
@@ -1562,10 +1561,11 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   /* (6) apply detailed balance on Sqw_full for classical or quantum S(q,w) */
   /* compute the \int q^2 S(q) for normalisation */
+  MPI_MASTER(
   if (Sqw->sqw_classical && Sqw->verbose_output > 0 && Sqw->Temperature > 0)
-    printf("Isotropic_Sqw: %s: Applying exp(hw/2kT) factor on %s file (classical/symmetric).\n",
-      Sqw->compname, file);
-
+    printf("Isotropic_Sqw: %s: Applying exp(hw/2kT) factor with T=%g [K] on %s file (classical/symmetric).\n",
+      Sqw->compname, Sqw->Temperature, file);
+  );
   for   (index_q=0; index_q < q_bins; index_q++) {
     double sq          = 0;
     double q           = index_q*q_step;  /* q value in Sqw_full ; q_min = 0 */
@@ -1843,7 +1843,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       Sqw_Data->SQW[index_w][index_q].Q     = q;
 
       /* compute cumulated probability and take into account Jacobian with additional 'q' factor */
-      Sqw_Data->SQW[index_w][index_q].cumul_proba = Table_Index(Sqw_full, index_q, index_w); /* q*S(q,w) */
+      Sqw_Data->SQW[index_w][index_q].cumul_proba = q*Table_Index(Sqw_full, index_q, index_w); /* q*S(q,w) */
       if (index_q) Sqw_Data->SQW[index_w][index_q].cumul_proba += Sqw_Data->SQW[index_w][index_q-1].cumul_proba;
       else Sqw_Data->SQW[index_w][index_q].cumul_proba = 0;
     }
@@ -1969,7 +1969,7 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
 DECLARE
 %{
   struct Sqw_sample_struct VarSqw;
-  int columns[9] = powder_format;
+  int *columns;
   off_struct offdata;
 %}
 
@@ -1980,6 +1980,7 @@ INITIALIZE
 %{
   int i;
   /* check for parameters */
+  columns = (int[])powder_format;
 
   VarSqw.verbose_output= verbose;
   VarSqw.shape = -1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
@@ -2428,6 +2429,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
       for (index_counter=VarSqw.maxloop; index_counter > 0 ; index_counter--) {
         double randmax;
         /* MC choice: energy transfer w=Ei-Ef in the S(w) = SW */
+        omega = 0;
         /* limit energy transfer range in -w_max:Ei */
         index_w  = (long)floor((1+Ei/Data_sqw.w_max)/2*Data_sqw.w_bins);
         if (index_w >= Data_sqw.w_bins) index_w = Data_sqw.w_bins-1;
@@ -2464,7 +2466,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
             printf("Isotropic_Sqw: %s: Warning: No suitable w transfer for index_w=%li.\n",
               NAME_CURRENT_COMP, index_w);
-          continue; /* no W value */
+          continue; /* no W value: try again with an other energy transfer */
         }
 
         /* MC choice: momentum transfer Q in P(Q|w) */

@@ -127,14 +127,14 @@ DECLARE
   t_Table *rRightUpParPtr   = 0;
   t_Table *rRightDownParPtr = 0;
 #else 
-  double rTopUpParPtr[]     = rTopUpPar;
-  double rTopDownParPtr[]   = rTopDownPar;
-  double rBotUpParPtr[]     = rBotUpPar;
-  double rBotDownParPtr[]   = rBotDownPar;
-  double rLeftUpParPtr[]    = rLeftUpPar;
-  double rLeftDownParPtr[]  = rLeftDownPar;
-  double rRightUpParPtr[]   = rRightUpPar;
-  double rRightDownParPtr[] = rRightDownPar;
+  double rTopUpParPtr[]     = (double [])rTopUpPar;
+  double rTopDownParPtr[]   = (double [])rTopDownPar;
+  double rBotUpParPtr[]     = (double [])rBotUpPar;
+  double rBotDownParPtr[]   = (double [])rBotDownPar;
+  double rLeftUpParPtr[]    = (double [])rLeftUpPar;
+  double rLeftDownParPtr[]  = (double [])rLeftDownPar;
+  double rRightUpParPtr[]   = (double [])rRightUpPar;
+  double rRightDownParPtr[] = (double [])rRightDownPar;
 #endif
 %}
 
@@ -201,7 +201,7 @@ INITIALIZE
   }
   
   if (drawOption<1 || drawOption>3) {
-    fprintf(stderr, "Pol_bender: %s: drawOption %d not supported. Exiting.\n",
+    fprintf(stderr, "Pol_bender: %s: drawOption %ld not supported. Exiting.\n",
 	    NAME_CURRENT_COMP, drawOption);
     exit(1);
   }  

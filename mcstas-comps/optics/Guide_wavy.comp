@@ -109,7 +109,7 @@ TRACE
   double vdotn_v1,vdotn_v2,vdotn_h1,vdotn_h2;   /* Dot products. */
   double vdotn;
   double d_xy, d_z;                             /* Random angles */
-  double m, alpha, W;
+  double m0, alpha0, W;
   int i;                                        /* Which mirror hit? */
   double q;                                     /* Q [1/AA] of reflection */
   double dvx, dvy, dvz;                         /* Velocity change */
@@ -211,7 +211,7 @@ and the rotated bottom normal vector is { -l d_xy,  l + f_v d_z,  f_v + l d_z }
     switch(i)
     {
       case 1:                   /* Left vertical mirror */
-        m=m1; W=W1; alpha=alpha1;
+        m0=m1; W=W1; alpha0=alpha1;
         norm_n2 =  (-l+d_z*f_h)*(-l+d_z*f_h)+(d_xy*l)*(d_xy*l)
                   +(f_h-d_z*l)*(f_h-d_z*l); /* Square of length of n vector */
         vdotn = (vx*(-l+f_h*d_z)+ vy*(l*d_xy)+ vz*(f_h-l*d_z) );
@@ -221,7 +221,7 @@ and the rotated bottom normal vector is { -l d_xy,  l + f_v d_z,  f_v + l d_z }
         dvz = -2*(f_h-l*d_z)*vdotn/norm_n2;
         break;
       case 2:                   /* Right vertical mirror */
-        m=m2; W=W2; alpha=alpha2;
+        m0=m2; W=W2; alpha0=alpha2;
         norm_n2 =  (l+d_z*f_h)*(l+d_z*f_h)+(-d_xy*l)*(-d_xy*l)
                   +(f_h+d_z*l)*(f_h+d_z*l); /* Square of length of n vector */
         vdotn = (vx*(l+f_h*d_z)+ vy*(-l*d_xy)+ vz*(f_h+l*d_z) );
@@ -231,7 +231,7 @@ and the rotated bottom normal vector is { -l d_xy,  l + f_v d_z,  f_v + l d_z }
         dvz = -2*(f_h+l*d_z)*vdotn/norm_n2;
         break;
       case 3:                   /* Lower horizontal mirror */
-        m=m3; W=W3; alpha=alpha3;
+        m0=m3; W=W3; alpha0=alpha3;
         norm_n2 =  (d_xy*l)*(d_xy*l)+(-l+d_z*f_v)*(-l+d_z*f_v)
                   +(f_v-d_z*l)*(f_v-d_z*l); /* Square of length of n vector */
         vdotn = (vx*(l*d_xy)+ vy*(-l+f_v*d_z)+ vz*(f_v-l*d_z) );
@@ -241,7 +241,7 @@ and the rotated bottom normal vector is { -l d_xy,  l + f_v d_z,  f_v + l d_z }
         dvz = -2*(f_v-l*d_z)*vdotn/norm_n2;
         break;
       case 4:                   /* Upper horizontal mirror */
-        m=m4; W=W4; alpha=alpha4;
+        m0=m4; W=W4; alpha0=alpha4;
         norm_n2 =  (-d_xy*l)*(-d_xy*l)+(l+d_z*f_v)*(l+d_z*f_v)
                   +(f_v+d_z*l)*(f_v+d_z*l); /* Square of length of n vector */
         vdotn = (vx*(-l*d_xy)+ vy*(l+f_v*d_z)+ vz*(f_v+l*d_z) );
@@ -256,7 +256,7 @@ and the rotated bottom normal vector is { -l d_xy,  l + f_v d_z,  f_v + l d_z }
     }
     /* Now compute reflectivity. */
     {
-        double par[] = {R0, Qc, alpha, m, W};
+        double par[] = {R0, Qc, alpha0, m0, W};
         StdReflecFunc(q, par, &R);
         if (R > 0)
           p *= R;

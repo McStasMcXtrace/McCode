@@ -1,0 +1,690 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Refractor
+*
+* %I
+* Written by: E. Farhi, B. Cubitt
+* Date: Oct 2014
+* Version: $Revision: 4382 $
+* Origin: ILL
+* Release: McStas 2.1
+*
+* A refractor material/shape, which can be used to model e.g. lenses and prisms.
+*
+* %D
+* Single bulk material shape that can be used as a prism or lens.
+*
+* NEUTRON INTERACTION PROCESSES:
+* The bulk material can reflect, refract, scatter and absorb neutrons, depending 
+* on the material cross sections and incident angles. 
+*
+* The refracting material is specified from its molar weight, density, coherent 
+* scattering cross section. The refractive index is computed as:
+*   n   = sqrt(1-(lambda*lambda*rho*bc/PI)) is the refraction index
+*
+* The surface can be coated when specifying a critical wavevector Qc, with e.g. 
+* Qc=m*0.0219 for a super mirror coating. The mirror coating can be suppressed 
+* by setting Qc=0. The critical wavevector is then set to 
+*   Qc = 4*sqrt(PI*rho*bc);                                             with
+*   rho= density*6.02214179*1e23*1e-24/weight; 
+*   bc = sqrt(fabs(sigma_coh)*100/4/PI)*1e-5;
+*
+* COMPONENT GEOMETRY:
+* The component shape can be a sphere, box, cylinder, biconcave spherical lens 
+* or any other shape defined from an external OFF/PLY file.
+*   sphere:      radius
+*   cylinder:    radius, yheight
+*   box:         xwidth, yheight, zdepth
+*   OFF/PLY:     geometry="filename.off or ply", xwidth, yheight, zdepth (bounding box)
+*   lens_sphere:   geometry="lens_sphere", radius, zdepth (thickness)
+*
+* The lens_sphere geometry is composed of two concave half spheres of same radius,
+* separated with a minimal thickness zdepth along the Z axis.
+*
+* Optionally, you can specify the 'geometry' parameter as a OFF/PLY file name.
+*   The complex geometry option handles any closed non-convex polyhedra.
+*   It computes the intersection points of the neutron ray with the object  
+*   transparently, so that it can be used like a regular sample object.
+*   It supports the PLY, OFF and NOFF file format but not COFF (colored faces). 
+*   Such files may be generated from XYZ data using:
+*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off 
+*   or
+*     powercrust coordinates.xyz
+*   and viewed with geomview or java -jar jroff.jar (see below).
+*
+* All geometries are centred. The bulk material fills the shape, but can be 
+* set 'outside' when density is given a negative value. In this case, the material
+* outside the bulk is void (vacuum).
+*
+* Usually, you should stack more than one of these to get a significant effect 
+* on the neutron beam, so-called 'compound refractive lens'.
+* The focal length for N lenses with focal 'f' is f/N, where f=R/(1-n) 
+*   and R = r/2   for a spherical lens with curvature radius 'r' 
+*
+* COMMON MATERIALS: 
+* Should have high coherent, and low incoherent and absorption cross sections
+*   Be:            density=1.85,  weight=9.0121, sigma_coh=7.63,  sigma_inc=0.0018,sigma_abs=0.0076
+*   Pb:            density=11.115,weight=207.2,  sigma_coh=11.115,sigma_inc=0.003, sigma_abs=0.171
+*     Pb206:                                     sigma_coh=10.68, sigma_inc=0    , sigma_abs=0.03
+*     Pb208:                                     sigma_coh=11.34, sigma_inc=0    , sigma_abs=0.00048
+*   Zr:            density=6.52,  weight=91.224, sigma_coh=6.44,  sigma_inc=0.02,  sigma_abs=0.185
+*     Zr90:                                      sigma_coh=5.1,   sigma_inc=0    , sigma_abs=0.011
+*     Zr94:                                      sigma_coh=8.4,   sigma_inc=0    , sigma_abs=0.05
+*   Bi:            density=9.78,  weight=208.98, sigma_coh=9.148, sigma_inc=0.0084,sigma_abs=0.0338
+*   Mg:            density=1.738, weight=24.3,   sigma_coh=3.631, sigma_inc=0.08,  sigma_abs=0.063
+*   MgF2:          density=3.148, weight=62.3018,sigma_coh=11.74, sigma_inc=0.0816,sigma_abs=0.0822
+*   diamond:       density=3.52,  weight=12.01,  sigma_coh=5.551, sigma_inc=0.001, sigma_abs=0.0035
+*   Quartz/silica: density=2.53,  weight=60.08,  sigma_coh=10.625,sigma_inc=0.0056,sigma_abs=0.1714
+*   Si:            density=2.329, weight=28.0855,sigma_coh=2.1633,sigma_inc=0.004, sigma_abs=0.171
+*   Al:            density=2.7,   weight=26.98,  sigma_coh=1.495, sigma_inc=0.0082,sigma_abs=0.231
+*   Ni:            density=8.908, weight=58.69,  sigma_coh=13.3,  sigma_inc=5.2,   sigma_abs=4.49
+*   Mn: (bc < 0)   density=7.21,  weight=54.94,  sigma_coh=-1.75, sigma_inc=0.4,   sigma_abs=13.3 
+*   perfluoropolymer(PTFE/Teflon/CF2): 
+*                  density=2.2,   weight=50.007, sigma_coh=13.584,sigma_inc=0.0026,sigma_abs=0.0227
+*   Organic molecules with C,O,H,F
+*
+*   Among the most commonly available and machinable materials are MgF2, SiO2, Si, and Al.
+* %P
+* INPUT PARAMETERS:
+*
+* xwidth:  (m)    width of box
+* yheight: (m)    height of box/cylinder
+* zdepth:  (m)    depth of box
+* radius:  (m)    radius of sphere/cylinder
+* R0:      (1)    Low-angle reflectivity
+* Qc:      (Angs-1)  critical scattering vector, e.g. Qc=0.0219 for Ni coating.
+*                    Set Qc=0 to use the bulk critical grazing angles.
+* sigma_coh: (barn)  coherent cross section of refracting material. Use negative 
+*                    value to indicate a negative coherent scattering length
+* sigma_inc: (barn)  incoherent cross section
+* sigma_abs: (barn)  thermal absorption cross section
+* density:   (g/cm3) density of the refracting material. density < 0 means the
+*                    material is outside/before the shape.
+* weight:    (g/mol) molar mass of the refracting material
+* geometry:  (str)   OFF/PLY geometry file name, or NULL to use simple shape
+*                    A spherical bi-concave lens can be obtained with 
+*                      geometry="lens_sphere" and given radius and zdepth
+* p_interact:(1)     MC Probability for scattering the ray; otherwise transmit.
+*                      Use 0 to compute true probability, or specify it as e.g. 0.05
+* focus_scatter:  (deg) angle in which to scatter in bulk, with probability 'p_interact'
+* RMS:       (Angs)  root mean square wavyness of the surface
+* verbose:   (1)     flag to display detailed component behaviour
+* p_scatter: (1)     flag to allow scattering in the refractor bulk
+* p_reflect: (1)     flag to allow reflection (grazing angle) at the surface
+* p_refract: (1)     flag to allow refraction at the refractor surface
+*
+* OUTPUT PARAMETERS:
+* theta1:    (deg)   incoming angle to the surface
+* theta2:    (deg)   outgoing angle to the surface
+* SCATTERED: 0=transmitted, 1=scattered in bulk, 2=refracted, 3=reflected
+*
+* %L
+* M. L. Goldberger et al, Phys. Rev. 71, 294 - 310 (1947)
+* %L
+* Sears V.F. Neutron optics. An introduction to the theory of neutron optical phenomena and their applications. Oxford University Press, 1989.
+* %L
+* H. Park et al. Measured operational neutron energies of compound refractive lenses. Nuclear Instruments and Methods B, 251:507-511, 2006.
+* %L
+* J. Feinstein and R. H. Pantell. Characteristics of the thick, compound refractive lens. Applied Optics, 42 No. 4:719-723, 2001.
+* %L
+* <a href="http://www.geomview.org">Geomview and Object File Format (OFF)</a>
+* %L
+* Java version of Geomview (display only) <a href="http://www.holmes3d.net/graphics/roffview/">jroff.jar</a>
+* %L
+* <a hrefp="http://meshlab.sourceforge.net/">Meshlab</a> can view OFF and PLY files
+* %L
+* <a href="http://qhull.org">qhull</a> for points to OFF conversion
+* %L
+* <a href="http://www.cs.ucdavis.edu/~amenta/powercrust.html">powercrust</a> for points to OFF conversion
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Refractor
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (
+  xwidth=0, yheight=0, zdepth=0, radius=0,
+  string geometry="NULL",
+  R0=0.99, sigma_coh=11.74, density=3.148, weight=62.3018, 
+  sigma_inc=0, sigma_abs=0, Qc=0,
+  p_interact=0.05, RMS=0, focus_scatter=10, verbose=0,
+  p_scatter=1, p_reflect=1, p_refract=1)
+
+OUTPUT PARAMETERS (rho, bc, offdata, theta1, theta2, mean_n, events)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
+SHARE
+%{
+  %include "read_table-lib"
+  %include "interoff-lib"
+  %include "ref-lib"
+  
+  // two sphere separated with a given thickness
+  int lens_sphere_intersect_n(double *t0, double *t1, 
+    double x, double y, double z,
+    double vx, double vy, double vz, 
+    double r, double dz,
+    double *nx, double *ny, double *nz) {
+    /* two spherical lenses, concave, with given radius, thickness=zdepth at meniscus, 
+       plus cross section=xwidth*yheight */
+    int    intersect1 = 0, intersect2 = 0;
+    double nx1=0,nx2=0,ny1=0,ny2=0,nz1=0,nz2=0;
+    double t2=0,t3=0;
+    
+    *t0=*t1=0;
+    
+    intersect1 = sphere_intersect_n(t0, t1, x,y,z+r+dz/2, 
+      vx,vy,vz, -r, &nx1,&ny1,&nz1); /* -r: use the further intersection with sphere */
+    
+    intersect2 = sphere_intersect_n(&t2, &t3, x,y,z-r-dz/2, 
+      vx,vy,vz, r, &nx2,&ny2,&nz2);
+    
+    /* usual case with 4 intersections: return t1 and t2 */
+    if (intersect1 || intersect2) {
+      if (intersect1) *t0=*t1;
+      if (intersect2) *t1= t2;
+    }
+    
+    if (!intersect1 && !intersect2)
+      return(0);
+      
+    if (!intersect1 || !intersect2) {
+      if (!intersect1) {
+        /* intersection with the 2st sphere: return t2 and some other external 
+           intersection (container box entrance) t0 */
+        intersect1 = box_intersect_n(t0,&t3, x,y,z, vx,vy,vz, 
+          2*r, 2*r, 2*r+dz, &nx1,&ny1,&nz1);
+      } else {
+        /* intersection with the 1st sphere: return t1 and some other external 
+           intersection (container box exit) t3 */
+        intersect2 = box_intersect_n(&t2,t1, x,y,z, vx,vy,vz, 
+          2*r, 2*r, 2*r+dz, &nx2,&ny2,&nz2);
+      }
+    }
+    
+    /* the normal vector corresponds to the first forward intersection */
+    if (intersect1 || intersect2) {
+      if (*t0 < 0) {
+        *nx = nx2; *ny = ny2; *nz = nz2;
+      } else {
+        *nx = nx1; *ny = ny1; *nz = nz1;
+      }
+    }
+    
+    /* no intersection: use intersection with container box */
+    return(intersect1+intersect2);
+  } // lens_sphere_intersect_n
+
+  /* wrappers to intersection routines which also return the normal vector */
+  int box_intersect_n(double *t0, double *t1, 
+    double x, double y, double z,
+    double vx, double vy, double vz, 
+    double dx, double dy, double dz,
+    double *nx, double *ny, double *nz) {
+    
+    double dt=0;
+    int    intersect = box_intersect(t0, t1, x,y,z, vx,vy,vz, dx,dy,dz);
+    /* determine normal vector depending on hit face */
+    if (intersect) {
+      dt = *t0 <= 0 || *t0 > *t1 ? *t1 : *t0;
+      if (dt < 0) intersect = 0;
+    }
+    if (intersect && dx && dy && dz) {
+      x += vx*dt; y += vy*dt; z += vz*dt;
+      /* determine hit face: difference to plane is closest to 0 */
+      *nx = trunc(2.002*x/dx);
+      *ny = trunc(2.002*y/dy);
+      *nz = trunc(2.002*z/dz);
+    }
+    return(intersect);
+  } // box_intersect_n
+
+  /* sphere: when radius < 0 we always use the further intersection point to determine the normal vector */
+  int sphere_intersect_n(double *t0, double *t1, 
+    double x, double y, double z,
+    double vx, double vy, double vz, 
+    double r,
+    double *nx, double *ny, double *nz) {
+    
+    double dt=0;
+    int    intersect = sphere_intersect(t0, t1, x,y,z, vx,vy,vz, r);
+    if (intersect) { 
+      if (r >0) /* First intersection in positive time */
+        dt = *t0 <= 0 || *t0 > *t1 ? *t1 : *t0;
+      else      /* always second intersection */
+        dt = *t1;
+      if (dt < 0) intersect = 0;
+    }
+    if (intersect && r) {
+      /* must propagate locally to determine normal vector. */
+      x += vx*dt; y += vy*dt; z += vz*dt;
+      *nx  = x;
+      *ny  = y;
+      *nz  = z;
+    }
+    return(intersect);
+  } // sphere_intersect_n
+
+  int cylinder_intersect_n(double *t0, double *t1, 
+    double x, double y, double z,
+    double vx, double vy, double vz, 
+    double r, double h,
+    double *nx, double *ny, double *nz) {
+    
+    double dt=0;
+    int    intersect = cylinder_intersect(t0, t1,
+      x,y,z, vx,vy,vz, r,h);
+    if (intersect) { 
+      if (r >0) /* First intersection in positive time */
+        dt = *t0 <= 0 || *t0 > *t1 ? *t1 : *t0;
+      else      /* always second intersection */
+        dt = *t1;
+      if (dt < 0) intersect = 0;
+    }
+    if (intersect && r) {
+      /* must propagate locally to determine normal vector */
+      x += vx*dt; z += vz*dt;
+      *nx  = x;
+      *ny  = 0; /* cylinder is vertical */
+      *nz  = z;
+    }
+    return(intersect);
+  } // cylinder_intersect_n
+  
+  /* Surface_wavyness: function to rotate normal vector around axis for roughness 
+   *                 with specified tilt angle (rad)
+   * RETURNS: rotated nx,ny,nz coordinates
+   */
+  void Surface_wavyness(double *nx, double *ny, double *nz, double tilt)
+  {
+    double nt_x, nt_y, nt_z;  /* transverse vector */
+    double n1_x, n1_y, n1_z;  /* normal vector (tmp) */
+
+    /* normal vector n_z = [ 0,1,0], n_t = n x n_z; */
+    vec_prod(nt_x,nt_y,nt_z, *nx,*ny,*nz, 0,1,0);
+
+    /* rotate n with angle wav_z around n_t -> n1 */
+    tilt  /= (sqrt(8*log(2)))*randnorm();
+    rotate(n1_x,n1_y,n1_z, *nx,*ny,*nz, tilt, nt_x,nt_y,nt_z);
+
+    /* rotate n1 with angle phi around n -> nt */
+    rotate(nt_x,nt_y,nt_z, n1_x,n1_y,n1_z, 2*PI*rand01(), *nx,*ny,*nz);
+    
+    *nx=nt_x;
+    *ny=nt_y;
+    *nz=nt_z;
+  }
+%}
+
+DECLARE
+%{
+  double rho, bc;
+  off_struct offdata;
+  double mean_n=0, events=0;
+  double theta1=0, theta2=0;
+%}
+
+INITIALIZE
+%{
+  /* set geometry from input geometry parameters */
+  if (!geometry || !strlen(geometry) || !strcmp(geometry, "NULL") || !strcmp(geometry, "0")) {
+    if (radius && yheight && !xwidth)                  strcpy(geometry, "cylinder");
+    else if (xwidth && yheight && zdepth && !radius)   strcpy(geometry, "box");
+    else if (radius && !yheight && !xwidth && !zdepth) strcpy(geometry, "sphere");
+  } else if (radius && zdepth && !strcmp(geometry, "lens_sphere")) {
+    /* NOP: OK */
+  } else if (strcmp(geometry, "NULL") && strcmp(geometry, "0") && xwidth && yheight && zdepth) {
+    /* off/ply case */
+    if (!off_init(geometry, xwidth, yheight, zdepth, 0, &offdata))
+      exit(printf("Refractor: %s: FATAL: invalid OFF/PLY geometry specification for file '%s'.\n", 
+      NAME_CURRENT_COMP, geometry));
+  }
+  else exit(printf("Refractor: %s: FATAL: invalid geometry specification.\n"
+                   "  Check geometry,xwidth,yheight,zdepth,radius\n", 
+      NAME_CURRENT_COMP));
+  
+  /* compute refraction parameters, if needed */
+  if (density==0 || weight<=0)
+    exit(printf("Refractor: %s: FATAL: invalid material density or molar weight: density=%g weight=%g\n", 
+      NAME_CURRENT_COMP, density, weight));
+  rho= fabs(density)*6.02214179*1e23*1e-24/weight; /* per at/Angs^3 */
+  if (sigma_coh==0)
+    exit(printf("Refractor: %s: FATAL: invalid material coherent cross section: sigma_coh=%g\n", 
+      NAME_CURRENT_COMP, sigma_coh));
+  bc=sqrt(fabs(sigma_coh)*100/4/PI)*1e-5;      /* bound coherent scattering length */
+  if (sigma_coh<0) bc *= -1;
+  
+  /* use bulk to compute reflectivity critical angle/wavevector */
+  if (Qc <=0)
+    Qc = 4*sqrt(PI*rho*fabs(bc));
+  MPI_MASTER(
+  printf("Refractor: %s: rho.bc=%g [10-6 Angs-2] Qc=%g [Angs-1]. geometry=%s\n",
+    NAME_CURRENT_COMP, rho*bc*1e6, Qc, geometry);
+  );
+%}
+
+TRACE
+%{
+  int    intersect = 0;
+  int    iterations= 0;
+  char   event[256];
+  
+  theta1=theta2=0;
+  
+  do {
+    double nx=0, ny=0, nz=0;
+    double t0=0, t1=0, dt=0;
+    
+    intersect = 0;
+    iterations++;
+    strcpy(event, "                                               ");
+    
+    /* determine intersection times and normal vector with geometry */
+    if (!strcmp(geometry, "sphere")) {
+      intersect = sphere_intersect_n(&t0, &t1, x,y,z, vx,vy,vz, 
+        radius, &nx,&ny,&nz);
+    } else if (!strcmp(geometry, "lens_sphere")) {
+      intersect = lens_sphere_intersect_n(&t0, &t1, x,y,z, vx,vy,vz, 
+        radius, zdepth, &nx,&ny,&nz);
+    } else if (!strcmp(geometry, "cylinder")) {
+      intersect = cylinder_intersect_n(&t0, &t1, x,y,z, vx,vy,vz, 
+        radius, yheight, &nx,&ny,&nz);
+    } else if (!strcmp(geometry, "box")) {
+      intersect = box_intersect_n(&t0, &t1, x,y,z, vx,vy,vz, 
+        xwidth, yheight, zdepth, &nx,&ny,&nz);
+    } else if (geometry && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
+      Coords n0, n1;
+      intersect = off_intersect(&t0, &t1, &n0, &n1, x, y, z, vx, vy, vz, offdata );
+      if (intersect) {
+        coords_get(t0 <= 0 || t0 > t1 ? n1 : n0, &nx, &ny, &nz);
+      }
+    }
+      
+    if (intersect) {
+      if (t1 < t0) { double tmp=t0; t0=t1; t1=tmp; }
+      dt = t0 <= 1e-10 ? t1 : t0; /* full propagation time inside geometry */
+      if (dt < 0) dt=0;
+    } 
+    if (dt<=0) break;
+    
+    strcpy(event, "none");
+    if (verbose)
+    printf("%s:%i: [neutron=%li iteration=%i] intersect %s=%i t0=%g t1=%g dt=%g event=(intersect) %s\n",
+      NAME_CURRENT_COMP, __LINE__, mcget_run_num(), iterations, geometry, intersect, t0,t1, dt, event);
+    
+    /* scattering/absorption in bulk, refraction/reflection at interface */
+    if (intersect) {
+      char   scatter_me=0, refract_me=0;
+      double my_t=0, d_path=0;
+      double v=0,lambda=0;
+      char   inbulk = t0 < 0 && t1 > 0;
+      
+      /* when density is given negative, we assume bulk refractive material is 
+         'outside' or 'before' the shape */
+      if (density < 0) inbulk = !inbulk;
+      
+      v      = sqrt(vx*vx+vy*vy+vz*vz);
+      if (!v) ABSORB;
+      lambda = 3956.0032/v;
+      d_path = v*dt;         /* full length in material */
+      
+      /* compute probability to scatter/absorb inside bulk */
+      if (inbulk) { /* scatter inside bulk */
+        double ws     = 0;
+        double p_trans= 0, p_scatt=0, mc_trans=0, mc_scatt=0;
+        int    flag   = 0;
+        double my_a_v = (rho * 100 * sigma_abs);
+        double my_a   = my_a_v*2200/v; 
+        double my_s   = rho * 100 *(sigma_inc+sigma_coh);
+        
+        my_t = my_a + my_s;
+        ws   = my_s/my_t;  /* (inc+coh)/(inc+coh+abs) */
+
+        /* Proba of transmission along length d_path */
+        p_trans = exp(-my_t*d_path);
+        p_scatt = 1 - p_trans;
+
+        flag = 0; /* flag used for propagation to exit point before ending */
+        /* are we next to the exit ? probably no scattering (avoid rounding errors) */
+        if (my_s*d_path <= 4e-7) {
+          flag = 1;           /* No interaction before the exit */
+        }
+
+        /* force a given fraction of the beam to scatter */
+        if (p_interact>0 && p_interact<=1) {
+          /* we force a portion of the beam to interact */
+          /* This is used to improve statistics on single scattering (and multiple) */
+          mc_trans = 1-p_interact;
+        } else {
+          mc_trans = p_trans; /* 1 - p_scatt */
+        }
+
+        mc_scatt = 1 - mc_trans; /* portion of beam to scatter (or force to) */
+        if (mc_scatt <= 0 || mc_scatt>1) flag=1;
+
+        /* MC choice: Interaction or transmission ? */
+        scatter_me = !flag && ws && p_scatt && mc_scatt > 0 && (mc_scatt >= 1 || rand01() < mc_scatt);
+        
+        /* account for absorption and retain scattered fraction */
+        /* we have chosen portion mc_scatt of beam instead of p_scatt, so we compensate */
+        if (scatter_me) 
+          p *= ws * fabs(p_scatt/mc_scatt);
+        else if (p_trans && mc_trans)
+          p *= fabs(p_trans/mc_trans);  /* attenuate beam by portion which is scattered (and left along) */
+        
+        if (verbose)
+        printf("%s:%i: [neutron=%li iteration=%i] intersect %s=%i t0=%g t1=%g dt=%g event=(inbulk) %s scatter_me=%i\n",
+          NAME_CURRENT_COMP, __LINE__, mcget_run_num(), iterations, geometry, intersect, t0,t1, dt, event, scatter_me);
+      } /* if inbulk */
+      
+      /* handle absorption and scattering in material */
+      /* req: my_t, d_path, focus_ah, focus_aw */
+      if (p_scatter && scatter_me) {
+        double dl=0, solid_angle=0;
+        double vx2=0, vy2=0, vz2=0;
+        
+        if (my_t*d_path < 1e-6){
+          /* For very weak scattering, use simple uniform sampling of scattering
+             point to avoid rounding errors. */
+          dl = rand0max(d_path); /* length */
+        } else {
+          double a = rand0max((1 - exp(-my_t*d_path)));
+          dl = -log(1 - a) / my_t; /* length */
+        }
+        
+        PROP_DT(dl/v); dt = 0;  // we propagate in the bulk
+        SCATTER; /* 1 */
+        
+        /* scatter randomly in cone to take into account material sigma */
+        randvec_target_circle(&vx2, &vy2, &vz2, 
+          &solid_angle, vx,vy,vz, focus_scatter*DEG2RAD);
+        vx=vx2; vy=vy2; vz=vz2;
+        
+        if (solid_angle) {
+          p *= solid_angle/4/PI;
+          NORM(vx, vy, vz);
+          vx*=v; vy*=v; vz*=v; /* scattering is elastic */
+        }
+        /* force to recompute intersection with new neutron direction/position */
+        refract_me = 0;
+        
+        strcpy(event, "scatter");
+        if (verbose)
+        printf("%s:%i: [neutron=%li iteration=%i] intersect %s=%i t0=%g t1=%g dt=%g event=(scatter) %s\n",
+          NAME_CURRENT_COMP, __LINE__, mcget_run_num(), iterations, geometry, intersect, t0,t1, dl/v, event);
+        
+      } else {
+        refract_me = 1;
+      } /* if scatter */
+      
+      if ((p_refract||p_reflect) && refract_me) { // refract or reflect on the surface
+        double n=0; /* refractive index */
+        double n1=0, n2=0;
+        
+        double q=0, R=0;
+        double par[]  = {R0, Qc, 6.0, 1.0, 1.0/300.0};
+        
+      
+        /* propagate to surface */
+        PROP_DT(dt); dt=0;
+        SCATTER; SCATTER; /* 2 */
+        
+        /* compute refraction index */
+        n   = sqrt(1-(lambda*lambda*rho*bc/PI));
+        mean_n += n;
+        events++;
+        
+        /* compute incoming angle */
+        if (inbulk) { n1=n; n2=1; } /* from bulk to void */
+        else        { n1=1; n2=n; } /* from void to bulk */
+        
+        /* compute reflectivity */
+        q = fabs(2*vz*V2Q);
+      
+        /* Reflectivity (see component Guide). */
+        StdReflecFunc(q, par, &R);
+        
+        /* tilt normal vector for roughness, in cone theta_RMS */
+        NORM(nx,ny,nz);
+        /* cone angle from RMS roughness = atan(2*RMS/lambda) */
+        if (RMS>0) Surface_wavyness(&nx, &ny, &nz, atan(2*RMS/lambda));
+        
+        /* Snell-Descartes formula for refraction n1 sin(theta1) = n2 sin(theta2) */
+        /*   https://en.wikipedia.org/wiki/Snell's_law                            */
+        Coords N = coords_set(nx,ny,nz);  // normal vector to surface
+        Coords V = coords_set(vx,vy,vz);  // incoming velocity
+        Coords I = coords_scale(V, 1/v);  // normalised ray = v/|v|
+        
+        // theta1: incident angle to the surface normal
+        double cos_theta1 = -coords_sp(N,I); // cos(theta1) = -N.I
+        
+        if (fabs(cos_theta1) > 1) ABSORB; // should never occur...
+        theta1 = acos(cos_theta1)*RAD2DEG;
+        
+        // reflected ray: probability R
+        // reflected beam:     I + 2cos(theta1).N
+        Coords I_reflect = coords_add(I, coords_scale(N, 2*cos_theta1));
+        // reflected velocity: I_reflect.v
+        Coords V_reflect = coords_scale(I_reflect, v);
+        
+        // compute refracted angle theta2...
+        double sqr_cos_theta2 = 1-(n1/n2)*(n1/n2)*(1-cos_theta1*cos_theta1);
+        
+        // now choose which one to use, and compute outgoing velocity
+        if (0 < sqr_cos_theta2 && sqr_cos_theta2 < 1) {
+          // refraction is possible
+          
+          // theta2: refracted angle to the surface normal
+          double cos_theta2= sqrt(sqr_cos_theta2);
+          
+          // select reflection (or refraction) from Monte-Carlo choice with probability R
+          // in this case we expect R to be small (q > Qc)
+          if (p_reflect && 0 < R && R < 1 && rand01() < R) {
+            // choose reflection from MC
+            theta2 = theta1;
+            coords_get(V_reflect, &vx, &vy, &vz);
+            strcpy(event, "reflect");
+          } else if (p_refract) {
+            // compute refracted ray
+            theta2 = acos(cos_theta2)*RAD2DEG;
+            
+            Coords I_refract = coords_add(coords_scale(I, n1/n2),
+                                          coords_scale(N, n1/n2*cos_theta1 + (cos_theta1  < 0 ? cos_theta2 : -cos_theta2) ));
+            Coords V_refract = coords_scale(I_refract, v);
+            
+            coords_get(V_refract, &vx, &vy, &vz);
+            strcpy(event, "refract");
+            SCATTER; /* 3 */
+          }
+        } else if (p_reflect) {
+          // only reflection: below total reflection
+          theta2 = theta1;
+          if (0 < R && R < 1) p *= R; // should be R0
+          coords_get(V_reflect, &vx, &vy, &vz);
+          strcpy(event, "reflect");
+        }
+        
+        /* propagate by a small time so that we leave the surface */
+        PROP_DT(1e-9);
+        
+        if (verbose)
+        printf("%s:%i: [neutron=%li iteration=%i] intersect %s=%i t0=%g t1=%g dt=%g event=(reflect/refract) %s theta1=%g theta2=%g 1-n=%g |xy|=%g nz=%g\n",
+          NAME_CURRENT_COMP, __LINE__, mcget_run_num(), iterations, geometry, intersect, t0,t1, dt, event,
+          theta1, theta2, 1-n, sqrt(x*x+y*y), nz);
+      } /* if reflect/refract */
+
+    } /* if intersect */
+    else break;
+    
+    if (verbose)
+    printf("%s:%i: [neutron=%li iteration=%i] intersect %s=%i t0=%g t1=%g dt=%g event=%s\n",
+      NAME_CURRENT_COMP, __LINE__, mcget_run_num(), iterations, geometry, intersect, t0,t1, dt, event);
+  } while (intersect && iterations<100);
+
+%}
+
+FINALLY %{
+/*
+ * The focal length for N lenses with focal 'f' is f/N, where f=R/(1-n) 
+ *   and R = r/2   for a spherical lens with curvature radius 'r' 
+ */
+  
+  if (radius && !strcmp(geometry, "lens_sphere") ) {
+  
+    double focus, R;
+    mean_n /= events;
+    R       = radius/2;
+    focus   = R/(1-mean_n);
+    MPI_MASTER(
+    printf("Refractor: %s: %s focal length f=%g [m]. Focal length for N lenses is f/N.\n"
+        "mean n=%g, events=%g\n", NAME_CURRENT_COMP, geometry, focus, mean_n , events);
+    );
+  }
+
+%}
+
+MCDISPLAY
+%{
+  /* show geometry */
+  if (!strcmp(geometry, "sphere")) {
+    circle("xy", 0, 0, 0, radius);
+    circle("xz", 0, 0, 0, radius);
+    circle("yz", 0, 0, 0, radius);  
+  } else if (!strcmp(geometry, "cylinder")) {
+    circle("xz", 0,  yheight/2.0, 0, radius);
+    circle("xz", 0, -yheight/2.0, 0, radius);
+    line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
+    line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
+    line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
+    line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
+  } else if (!strcmp(geometry, "box")) {
+    box(0,0,0, xwidth, yheight, zdepth);
+  } else if (!strcmp(geometry, "lens_sphere")) {
+    // sphere: x^2+y^2+z^2=radius. In 2D: radius^2=z^2+r^2
+    int index;
+    for (index=0; index<=3; index++) {
+      double z=radius*(index == 3 ? 0.95 : index/3.0);
+      double r=sqrt(radius*radius-z*z);
+      circle("xy", 0, 0, z-(radius+zdepth/2), r);
+      circle("xy", 0, 0,-z+(radius+zdepth/2), r);
+    }
+    box(0,0,0, 2*radius, 2*radius, 2*radius+zdepth);
+  } else if (!strcmp(geometry, "lens_parabola")) {
+    // parabola: z  = (x^2+y^2)/4/radius. In 2D: z = r^2/4/radius
+    int index;
+    for (index=0; index<=3; index++) {
+      double z=radius*(index == 3 ? 0.95 : index/3.0);
+      double r=sqrt(z*4*radius);
+      circle("xy", 0, 0,-z-(zdepth/2), r);
+      circle("xy", 0, 0, z+(zdepth/2), r);
+    }
+    box(0,0,0, 4*radius, 4*radius, 2*radius+zdepth);
+  } else if (geometry && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
+    off_display(offdata);
+  }
+%}
+END

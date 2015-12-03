@@ -667,6 +667,60 @@ long off_init(  char *offfile, double xwidth, double yheight, double zdepth,
 } /* off_init */
 
 /*******************************************************************************
+* int off_intersect_all(double* t0, double* t3,
+     Coords *n0, Coords *n3,
+     double x, double y, double z,
+     double vx, double vy, double vz,
+     off_struct *data )
+* ACTION: computes intersection of neutron trajectory with an object.
+* INPUT:  x,y,z and vx,vy,vz are the position and velocity of the neutron
+*         data points to the OFF data structure
+* RETURN: the number of polyhedra which trajectory intersects
+*         t0 and t3 are the smallest incoming and outgoing intersection times
+*         n0 and n3 are the corresponding normal vectors to the surface
+*         data is the full OFF structure, including a list intersection type
+*******************************************************************************/
+int off_intersect_all(double* t0, double* t3,
+     Coords *n0, Coords *n3,
+     double x,  double y,  double z,
+     double vx, double vy, double vz,
+     off_struct *data )
+{
+    Coords A={x, y, z};
+    Coords B={x+vx, y+vy, z+vz};
+    int t_size=off_clip_3D_mod(data->intersects, A, B,
+      data->vtxArray, data->vtxSize, data->faceArray, data->faceSize, data->normalArray );
+    qsort(data->intersects, t_size, sizeof(intersection),  off_compare);
+    off_cleanDouble(data->intersects, &t_size);
+    off_cleanInOut(data->intersects,  &t_size);
+
+    /*find intersections "closest" to 0 (favouring positive ones)*/
+    if(t_size>0){
+      int i=0;
+      if(t_size>1) {
+        for (i=1; i < t_size-1; i++){
+          if (data->intersects[i-1].time > 0 && data->intersects[i].time > 0)
+            break;
+        }
+	
+	data->nextintersect=i-1;
+	data->numintersect=t_size;
+
+        if (t0) *t0 = data->intersects[i-1].time;
+        if (n0) *n0 = data->intersects[i-1].normal;
+        if (t3) *t3 = data->intersects[i].time;
+        if (n3) *n3 = data->intersects[i].normal;
+      } else {
+        if (t0) *t0 = data->intersects[0].time; 	 
+	      if (n0) *n0 = data->intersects[0].normal;
+      }
+      /* should also return t[0].index and t[i].index as polygon ID */
+      return t_size;
+    }
+    return 0;
+} /* off_intersect */
+
+/*******************************************************************************
 * int off_intersect(double* t0, double* t3,
      Coords *n0, Coords *n3,
      double x, double y, double z,
@@ -685,37 +739,8 @@ int off_intersect(double* t0, double* t3,
      double vx, double vy, double vz,
      off_struct data )
 {
-    intersection t[CHAR_BUF_LENGTH];
-    Coords A={x, y, z};
-    Coords B={x+vx, y+vy, z+vz};
-    int t_size=off_clip_3D_mod(t, A, B,
-      data.vtxArray, data.vtxSize, data.faceArray, data.faceSize, data.normalArray );
-    qsort(t, t_size, sizeof(intersection),  off_compare);
-    off_cleanDouble(t, &t_size);
-    off_cleanInOut(t,  &t_size);
-
-    /*find intersections "closest" to 0 (favouring positive ones)*/
-    if(t_size>0){
-      int i=0;
-      if(t_size>1) {
-        for (i=1; i < t_size-1; i++){
-          if (t[i-1].time > 0 && t[i].time > 0)
-            break;
-        }
-        if (t0) *t0 = t[i-1].time;
-        if (n0) *n0 = t[i-1].normal;
-        if (t3) *t3 = t[i].time;
-        if (n3) *n3 = t[i].normal;
-      } else {
-        if (t0) *t0 = t[0].time; 	 
-	      if (n0) *n0 = t[0].normal;
-      }
-      /* should also return t[0].index and t[i].index as polygon ID */
-      return t_size;
-    }
-    return 0;
+  return off_intersect_all(t0, t3, n0, n3, x, y, z, vx, vy, vz, &data );
 } /* off_intersect */
-
 
 /*****************************************************************************
 * int off_x_intersect(double* l0, double* l3,
@@ -756,6 +781,7 @@ void off_display(off_struct data)
 {
   unsigned int i;
   double ratio=(double)(N_VERTEX_DISPLAYED)/(double)data.faceSize;
+  unsigned int pixel=0;
   for (i=0; i<data.faceSize-1; i++) {
     int j;
     int nbVertex = data.faceArray[i];
@@ -763,17 +789,39 @@ void off_display(off_struct data)
     x0 = data.vtxArray[data.faceArray[i+1]].x;
     y0 = data.vtxArray[data.faceArray[i+1]].y;
     z0 = data.vtxArray[data.faceArray[i+1]].z;
-    if (ratio > 1 || rand01() < ratio) {
-      double x1=x0,y1=y0,z1=z0;
-      for (j=2; j<=nbVertex; j++) {
-        double x2,y2,z2;
-        x2 = data.vtxArray[data.faceArray[i+j]].x;
-        y2 = data.vtxArray[data.faceArray[i+j]].y;
-        z2 = data.vtxArray[data.faceArray[i+j]].z;
-        mcdis_line(x1,y1,z1,x2,y2,z2);
-        x1 = x2; y1 = y2; z1 = z2;
+    double x1=x0,y1=y0,z1=z0;
+    double cmx=0,cmy=0,cmz=0;
+    
+    int drawthis = rand01() < ratio;
+    // First pass, calculate center of mass location...
+    for (j=1; j<=nbVertex; j++) {
+      cmx = cmx+data.vtxArray[data.faceArray[i+j]].x;
+      cmy = cmy+data.vtxArray[data.faceArray[i+j]].y;
+      cmz = cmz+data.vtxArray[data.faceArray[i+j]].z;
+    }
+    cmx /= nbVertex;
+    cmy /= nbVertex;
+    cmz /= nbVertex;
+    
+    char pixelinfo[1024];    
+    sprintf(pixelinfo, "%u,%u,%u,%i,%g,%g,%g,%g,%g,%g", data.mantidoffset+pixel, data.mantidoffset, data.mantidoffset+data.polySize-1, nbVertex, cmx, cmy, cmz, x1-cmx, y1-cmy, z1-cmz);
+    for (j=2; j<=nbVertex; j++) {
+      double x2,y2,z2;
+      x2 = data.vtxArray[data.faceArray[i+j]].x;
+      y2 = data.vtxArray[data.faceArray[i+j]].y;
+      z2 = data.vtxArray[data.faceArray[i+j]].z;
+      sprintf(pixelinfo, "%s,%g,%g,%g", pixelinfo, x2-cmx, y2-cmy, z2-cmz); 
+      if (ratio > 1 || drawthis) {
+	mcdis_line(x1,y1,z1,x2,y2,z2);
       }
-      mcdis_line(x1,y1,z1,x0,y0,z0);
+      x1 = x2; y1 = y2; z1 = z2;
+    }
+    if (ratio > 1 || drawthis) {
+	mcdis_line(x1,y1,z1,x0,y0,z0);
+      }
+    if (data.mantidflag) {
+      printf("MANTID_PIXEL: %s\n", pixelinfo);
+      pixel++;
     }
     i += nbVertex;
   }

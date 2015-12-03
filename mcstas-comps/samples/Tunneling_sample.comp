@@ -86,7 +86,7 @@ SETTING PARAMETERS (thickness=0, radius=0.01, focus_r = 0,
 		    p_interact = 1, f_QE=0, f_tun=0, gamma=0, E_tun=0, 
   target_x = 0, target_y = 0, target_z = 0.235, focus_xw=0, focus_yh=0,
   focus_aw=0, focus_ah=0, xwidth=0, yheight=0.05, zdepth=0, sigma_abs=5.08, sigma_inc=4.935, Vc=13.827, int target_index=0)
-OUTPUT PARAMETERS(StructVarsV, VarsV)
+OUTPUT PARAMETERS(ftun, fQE, VarsV)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
@@ -103,12 +103,12 @@ SHARE
     double aw,ah;       /* rectangular angular dimensions */
     double xw,yh;       /* rectangular metrical dimensions */
     double tx,ty,tz;    /* target coords */
-  }
+  };
 %}
 
 DECLARE
 %{
-  StructVarsV VarsV;
+  struct StructVarsV VarsV;
   double ftun, fQE;
 %}
 

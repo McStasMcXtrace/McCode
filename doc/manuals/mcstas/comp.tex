@@ -106,7 +106,7 @@ may access all \MCS data files without making local copies.
 Of course, you are welcome to define your own data files,
 and eventually contribute to \MCS if you find them useful.
 
-File extensions are not compulsory but help in identifying relevant files per application. We list powder and liquid data files from the \MCS library in Tables \ref{t:powders-data} and \ref{t:liquids-data}. These files contain an extensive header describing physical properties with references, and are specially suited for the PowderN (see \ref{powder}) and Isotropic\_Sqw components (see \ref{s:isotropic-sqw}).
+File extensions are not compulsory but help in identifying relevant files per application. We list powder and liquid data files from the \MCS library in Tables \ref{t:powders-data} and \ref{t:liquids-data}. These files contain an extensive header describing physical properties with references, and are specially suited for the PowderN (see \ref{powder}) and Isotropic\_Sqw components (see \ref{s:isotropic-sqw}). Whenever using any $S(q,\omega)$ data for the Isotropic\_Sqw component, we kindly request to cite the corresponding reference.
 
 \begin{table}
   \begin{center}
@@ -209,12 +209,19 @@ Zr.laz             & 6.44      & 0.02     &0.185     &2128      &3800&\\
       {\bf MCSTAS/data} & $\sigma_{coh}$&$\sigma_{inc}$&$\sigma_{abs}$&$T_m$       & $c$    & Note \\
           File name     & [barns]     & [barns]    & [barns]    & [K]        & [m/s] & \\
       \hline
-Cs\_liq\_tot.sqw                      & 3.69      & 0.21     &29.0      &301.6     &{\bf 1090}  & Measured \\
-Ge\_liq\_coh.sqw and Ge\_liq\_inc.sqw & 8.42      & 0.18     &2.2       &1211.4    &5400  & Ab-initio MD \\
-He4\_liq\_coh.sqw                     & 1.34      & 0        &0.00747   &0         &{\bf 240}   & Measured\\
-Ne\_liq\_tot.sqw                      & 2.62      & 0.008    &0.039     &24.56     &{\bf 591}   & Measured\\
-Rb\_liq\_coh.sqw and Rb\_liq\_inc.sqw & 6.32      & 0.5      &0.38      &312.46    &{\bf 1300}  & Classical MD \\
-Rb\_liq\_tot.sqw                      & 6.32      & 0.5      &0.38      &312.46    &{\bf 1300}  & Measured \\
+Cs\_liq\_tot.sqw                      & 3.69      & 0.21     &29.0      &301.6     &{\bf 1090}  & liquid cesium. Bodensteiner et al, Phys. Rev. A, 45 (1992) 5709 and 46 (1992) 3574.\\
+D2\_liq\_21\_tot.sqw                  & 7.64      & 0        &0.00052   &21        &      & liquid deuterium. Measured. Frei et al, PHYSICAL REVIEW B 80 (2009) 064301 \\
+D2\_pow\_21\_tot.sqw                  & 7.64      & 0        &0.00052   &12        &      & powder deuterium. Measured. Frei et al, PHYSICAL REVIEW B 80 (2009) 064301 \\
+D2O\_liq\_290\_coh and D\_liq\_290\_inc &15.4     & 4.1      &0.0012    &290       &      & liquid heavy water. Classical MD. E. Farhi et al, J. Nucl. Sci. Tech. (2015) \\
+D2O\_liq\_290\_tot                    &15.4       & 4.1      &0.0012    &290       &      & liquid heavy water. Measured. E. Farhi et al, J. Nucl. Sci. Tech. (2015) \\
+Ge\_liq\_coh.sqw and Ge\_liq\_inc.sqw & 8.42      & 0.18     &2.2       &1211.4    &5400  & liquid germanium. Ab-initio MD. Hugouvieux V, Farhi E, Johnson MR, et al., PRB 75 (2007) 104208 \\
+H2O\_liq\_290\_coh and H2O\_liq\_290\_inc &7.75   & 161      &0.665     &290       &1530  & liquid water. Classical MD. E. Farhi et al, J. Nucl. Sci. Tech. (2015) \\
+H2O\_liq\_290\_tot                    &7.75       & 161      &0.665     &290       &1530  & liquid water. Measured. E. Farhi et al, J. Nucl. Sci. Tech. (2015) \\
+He4\_liq\_coh.sqw                     & 1.34      & 0        &0.00747   &2         &{\bf 240}   & liquid helium. Measured (constant width). R.J. Donnelly et al., J. Low Temp. Phys., 44 (1981) 471\\
+He4\_liq\_1\_coh.sqw                  & 1.34      & 0        &0.00747   &1         &{\bf 240}   & liquid helium. Measured. K. Andersen et al, J Phys Cond Mat, 6 (1994) 821\\
+Ne\_liq\_tot.sqw                      & 2.62      & 0.008    &0.039     &24.56     &{\bf 591}   & liquid neon. Measured. Buyers, Sears et al, Phys Rev A 11 (1975) 697\\
+Rb\_liq\_coh.sqw and Rb\_liq\_inc.sqw & 6.32      & 0.5      &0.38      &312.46    &{\bf 1300}  & liquid rubidium. Classical MD. E. Farhi, V. Hugouvieux, M.R. Johnson, W. Kob, Journal of Computational Physics 228 (2009) 5251-5261 \\
+Rb\_liq\_tot.sqw                      & 6.32      & 0.5      &0.38      &312.46    &{\bf 1300}  & liquid rubidium. Measured. J. Copley et al, PRA 9 (1974) 1656 and PRL 32 (1974) 49 \\
       \hline
     \end{tabular}\end{small}
     \caption{Liquids of the \MCS library \cite{icsd_ill,ILLblue}. Low $c$ and high $\sigma_{abs}$ materials are highlighted.}

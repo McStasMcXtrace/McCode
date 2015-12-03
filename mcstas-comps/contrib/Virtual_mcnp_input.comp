@@ -331,7 +331,7 @@ INITIALIZE
     exit(printf("MCNP_input: %s: Empty file given, doing nothing!. Stop.\n", NAME_CURRENT_COMP));
  
  
-  if (filename) {
+  if (filename && strlen(filename) && strcmp(filename, "NULL") && strcmp(filename, "0")) {
     stat(filename,&stfile);
     filesize = stfile.st_size;
     hfile = fopen(filename, "r");
@@ -568,7 +568,7 @@ TRACE
 
 FINALLY
 %{
-  if (filename && strcmp(filename,"") && strcmp(filename,"0") && strcmp(filename,"NULL")) {
+  if (filename && strlen(filename) && strcmp(filename,"0") && strcmp(filename,"NULL")) {
     if (hfile) fclose(hfile);
     if (verbose) {
       printf("MCNP_input: %s: file %s\n", NAME_CURRENT_COMP, filename);

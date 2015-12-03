@@ -62,14 +62,14 @@
 * detector bank covers scattering angles of up to 120°. In addition to the 3He
 * detector tubes (length 300 mm, width 30 mm, elliptical section, pressure 6
 * bar) a 3He filled multidetector (eight sectors with 12 radial cells each;
-* outer diameter Å 60 cm) will allow us to observe forward scattering. The
+* outer diameter Phi 60 cm) will allow us to observe forward scattering. The
 * time-of-flight spectra measured at various angles are further treated in order
 * to obtain the scattering function S(Q,w) using e.g. LAMP.
 *
 * In this model, the sample is a cylindrical liquid/powder/glass scatterer 
 * surrounded by a container and an Al cryostat.
 *
-* %Example: lambda=1.2 DM=1.677 Detector: sample_flux_I=2.31399e+07
+* %Example: lambda=1.2 DM=1.677 Detector: sample_flux_I=2.2e6
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -92,7 +92,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT ILL_IN4(lambda=1.1, dlambda=0.1, DM=3.355, 
+DEFINE INSTRUMENT ILL_IN4(lambda=2.2, dlambda=0.1, DM=3.355, 
   ETAM=35, RMH=-1, ratio=4, dE=0, Sapphire_present=1,
   string sample_coh="Dirac2D.sqw", string sample_inc="NULL", order=1)
 

@@ -53,7 +53,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (theta_min=-5, theta_max=5, nslit=100,
                     radius=1.0, length=.5, h_in=.3, h_out=.4,
                     d=0.0001, verbose=0)
-OUTPUT PARAMETERS (alpha_in, alpha_out, out_radius, beta_in, beta_out, divergence)
+OUTPUT PARAMETERS (alpha_in, alpha_out, out_radius, beta_in, beta_out, iw, ow,divergence,theta)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
 %{

@@ -89,7 +89,7 @@ INITIALIZE
   if (bufsize > 0) sprintf(Vars.option, "list=%g borders", bufsize);
   else strcpy(Vars.option, "list all borders");
 
-  if (type && strlen(type))
+  if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type,"0"))
   {
     if (strstr(type, "Vitess"))
     { fprintf(stderr, "Virtual_output: %s: Vitess files may be generated using the Vitess_output component\n", NAME_CURRENT_COMP); exit(-1); }
@@ -103,10 +103,10 @@ INITIALIZE
   }
 
   strcat(Vars.option,", x y z vx vy vz t sx sy sz");
-  Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0); /* dims for mcdisplay */
+  Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0,0); /* dims for mcdisplay */
   Vars.compcurpos = POS_A_CURRENT_COMP;
   
-  if (filename && strcmp(filename,"NULL") && strcmp(filename,"0") && strlen(filename))
+  if (filename && strlen(filename) && strcmp(filename,"NULL") && strcmp(filename,"0"))
     strncpy(Vars.Mon_File, filename, 128);
 
   if (bufsize > 0)

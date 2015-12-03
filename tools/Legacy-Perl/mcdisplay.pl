@@ -77,6 +77,21 @@ $zooming = 0;
 
 my (%transformations, @components);
 
+sub max {
+    my ($max, @vars) = @_;
+    for (@vars) {
+        $max = $_ if $_ > $max;
+    }
+    return $max;
+}
+
+sub min {
+    my ($min, @vars) = @_;
+    for (@vars) {
+        $min = $_ if $_ < $max;
+    }
+    return $min;
+}
 
 sub read_instrument {
     my ($in) = @_;
@@ -385,8 +400,8 @@ Transform {
 	      if($d!=0){
 		$rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
 	      }
-	      write_process("<component type=\"".$type."\" name=\"$comp\" idstart=\"");
-	      write_process(${pixelmin+0});
+	      write_process("\n<component type=\"".$type."\" name=\"$comp\" idstart=\"");
+	      write_process(${pixelmin}+0);
 	      write_process("\" idfillbyfirst=\"x\" idstepbyrow=\"".$nx."\">\n");
 	      write_process("\t<location x=\"".$transformations{$comp}[0]."\" y=\"".$transformations{$comp}[1]."\" z=\"".$transformations{$comp}[2]."\" $rota />\n</component>\n\n");
 
@@ -420,13 +435,13 @@ Transform {
 	      # First define a panel, cf. http://www.mantidproject.org/IDF#Creating_Rectangular_Area_Detectors
 	      my $type = "MonNDtype-$mantidcount2";
 	      my $angle = (180/pi)*acos(($transformations{$comp}[3]+$transformations{$comp}[7]+$transformations{$comp}[11]-1)/2);
-	      my $d21=$transformations{$comp}[8]-$transformations{$comp}[10]; my $d02=$transformations{$comp}[9]-$transformations{$comp}[5]; my $d10=$T[4]-$T[6];
+	      my $d21=$transformations{$comp}[8]-$transformations{$comp}[10]; my $d02=$transformations{$comp}[9]-$transformations{$comp}[5]; my $d10=$transformations{$comp}[4]-$transformations{$comp}[6];
 	      my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);
 	      my $rota="";
 	      if($d!=0){
 		$rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
 	      }
-	      write_process("<component type=\"".$type."\" name=\"$comp\" idlist=\"".$type."-list\">\n"); 
+	      write_process("\n<component type=\"".$type."\" name=\"$comp\" idlist=\"".$type."-list\">\n"); 
 	      write_process("\t<locations x=\"".$transformations{$comp}[0]."\" y=\"".($transformations{$comp}[1]+$ymin)."\" y-end=\"".($transformations{$comp}[1]+$ymax)."\" n-elements=\"".$ny."\" z=\"".$transformations{$comp}[2]."\" $rota /> \n");
 	      write_process("</component>\n\n");
 	      write_process("<type name=\"".$type."\">\n");
@@ -449,6 +464,75 @@ Transform {
 	      write_process("\t<id start=\"".(${pixelmin}+0)."\" end=\"".(${pixelmin}+$nt*$ny-1)."\"/>");
 	      write_process("</idlist>\n");
 	    }
+	} elsif (/^MANTID_PIXEL:(.*)$/) {
+	    # OFF-geometry, individual pixels defined for Mantid use
+	    my ($pixID, $firstpix, $lastpix, $polyrank, $posx, $posy, $posz, $x0, $y0, $z0, $x1, $y1, $z1, $x2, $y2, $z2, $x3, $y3, $z3) = split ",", $1;
+	    $pixID =~ s/\s//g; 
+	    
+	    if ($polyrank != 4) {
+		print STDERR "Sorry - only rank 4 polygons are supported, this rank was given:" + $polyrank + "\n";
+		exit(1);
+	    } else {
+		if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mantid/i) {
+		    if ($pixID == $firstpix) {
+			# First pixel
+			$mantidcount2++;
+						
+			# Overall component placement
+			my $type = "MonNDtype-$mantidcount2";
+			my $angle = (180/pi)*acos(($transformations{$comp}[3]+$transformations{$comp}[7]+$transformations{$comp}[11]-1)/2);
+			my $d21=$transformations{$comp}[8]-$transformations{$comp}[10]; my $d02=$transformations{$comp}[9]-$transformations{$comp}[5]; my $d10=$transformations{$comp}[4]-$transformations{$comp}[6];
+			my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);
+
+			my $rota="";
+			if($d!=0){
+			    $rota=" rot=\"".$angle."\" axis-x=\"".$d21/$d."\" axis-y=\"".$d02/$d."\" axis-z=\"".$d10/$d."\"";
+			}
+			write_process("\n<component type=\"".$type."\" name=\"$comp\" idlist=\"".$type."-list\">\n"); 
+			write_process("\t<location x=\"".$transformations{$comp}[0]."\" y=\"".$transformations{$comp}[1]."\" z=\"".$transformations{$comp}[2]."\" $rota />\n</component>\n\n");
+			
+			# Start writing the ID list
+			write_process("<idlist idname=\"".$type."-list\">\n");
+			write_process("\t<id start=\"".(${firstpix}+0)."\" end=\"".(${lastpix}+0)."\"/>\n");
+			write_process("</idlist>\n");
+
+			# Start writing the related type...
+			$mantidtypebuffer = "\n<type name=\"".$type."\">\n\t<properties />\n";
+		    }
+		    # Define a hexahedron
+		    my $type = "MonNDtype-$mantidcount2-pix-$pixID";
+		    write_process("\n<type name=\"$type\" is=\"detector\">\n");
+		    write_process("\t<hexahedron id=\"hexapix-".$pixID."\">\n");
+		    write_process("\t\t<left-back-bottom-point  x=\"".$x0."\" y=\"".$y0."\" z=\"".$z0."\"  />\n");
+		    write_process("\t\t<left-front-bottom-point x=\"".$x1."\" y=\"".$y1."\" z=\"".$z1."\"  />\n");
+		    write_process("\t\t<right-front-bottom-point x=\"".$x2."\" y=\"".$y2."\" z=\"".$z2."\"  />\n");
+		    write_process("\t\t<right-back-bottom-point  x=\"".$x3."\" y=\"".$y3."\" z=\"".$z3."\"  />\n");
+		    write_process("\t\t<left-back-top-point  x=\"".$x0."\" y=\"".$y0."\" z=\"".($z0+0.001)."\"  />\n");
+		    write_process("\t\t<left-front-top-point  x=\"".$x1."\" y=\"".$y1."\" z=\"".($z1+0.001)."\"  />\n");
+		    write_process("\t\t<right-front-top-point  x=\"".$x2."\" y=\"".$y2."\" z=\"".($z2+0.001)."\"  />\n");
+		    write_process("\t\t<right-back-top-point   x=\"".$x3."\" y=\"".$y3."\" z=\"".($z3+0.001)."\"  />\n");
+		    write_process("\t</hexahedron>\n");
+		    write_process("\t<bounding-box>\n");
+		    write_process("\t\t<x-min val=\"".min($x0,$x1,$x2,$x3)."\"/>\n");
+		    write_process("\t\t<x-max val=\"".max($x0,$x1,$x2,$x3)."\"/>\n");
+		    write_process("\t\t<y-min val=\"".min($y0,$y1,$y2,$y3)."\"/>\n");
+		    write_process("\t\t<y-max val=\"".max($y0,$y1,$y2,$y3)."\"/>\n");
+		    write_process("\t\t<z-min val=\"".min($z0,$z1,$z2,$z3)."\"/>\n");
+		    write_process("\t\t<z-max val=\"".(max($y0,$y1,$y2,$y3)+0.01)."\"/>\n");
+		    write_process("\t</bounding-box>\n");
+		    write_process("\t<algebra val=\"hexapix-".$pixID."\" />\n");
+		    write_process("</type>\n\n");
+		    
+		    $mantidtypebuffer = $mantidtypebuffer."<component type=\"".$type."\">\n\t<location x=\"$posx\" y=\"$posy\" z=\"$posz\" />\n</component>\n";
+
+		    if ($pixID == $lastpix) {
+			write_process($mantidtypebuffer);
+			write_process("</type>\n\n");
+		    }
+		} else {
+		    next;
+		}
+	      }
 	}  elsif($st == 1 && /^MCDISPLAY: start$/) {
             $st = 2;                # Start of component graphics representation
 	} elsif($st == 2 && /^MCDISPLAY: component ([a-zA-Z0-9_]+)/) {
@@ -1330,6 +1414,7 @@ undef $sim;
 undef $TOF;
 undef $tmax;
 undef $keep;
+my $STDIN=0;
 $complete=0;
 undef $PGINIT;
 undef $paramfile;
@@ -1375,6 +1460,9 @@ for($i = 0; $i < @ARGV; $i++) {
         $file_output = $1;
    } elsif($ARGV[$i] =~ /^--param=([a-zA-Z0-9_\ \"\.\-\:]+)$/) {
 	$paramfile = $1;
+   } elsif($ARGV[$i] eq "--stdin") {
+       $STDIN = 1;
+       $sim_cmd = "stdin";
    } elsif($ARGV[$i] eq "--TOF" || $ARGV[$i] eq "-T") {
        $TOF = 1;
    } elsif($ARGV[$i] eq "--keep" || $ARGV[$i] eq "-k") {
@@ -1419,6 +1507,9 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
                              instrument. With PGPLOT, --save is nonfunctional.
                              With VRML, --save disables spaw of VRML viewer.
  -gif|-ps|-psc               Export figure as gif/b&w ps/color ps and exit
+           --stdin           Do not start a simulation, instead take neutron / instrument 
+                             data directly from standard input
+                             
  When using -ps -psc -gif, the program writes the hardcopy file and exits.
  SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess
  DOC:      Please visit http://www.mcstas.org/\n"
@@ -1554,10 +1645,15 @@ if ($plotter =~ /McStas|PGPLOT/i) { # PGPLOT is plotter!
 
 my ($numcomp, %neutron, %instr);
 
-$args = join(" ", @cmdline);
-$cmdline = "$sim_cmd --trace --no-output-files $args";
-printf STDERR "Starting simulation '$cmdline' ...\n";
-open(IN, "$cmdline |") || die "mcdisplay: Could not run simulation\n";
+if ($STDIN==1) {
+  printf STDERR "Taking simulation data from STDIN ...\n";
+  open(IN,"-");
+} else {
+  $args = join(" ", @cmdline);
+  $cmdline = "$sim_cmd --trace --no-output-files $args";
+  printf STDERR "Starting simulation '$cmdline' ...\n";
+  open(IN, "$cmdline |") || die "mcdisplay: Could not run simulation\n";
+}
 
 $numcomp = read_instrument(IN);
 $inspect_pos = get_inspect_pos($inspect, @components);

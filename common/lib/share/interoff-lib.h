@@ -37,9 +37,11 @@
 #define EPSILON 1e-13
 #endif
 
+#define OFF_INTERSECT_MAX 100
+
 //#include <float.h>
 
-#define N_VERTEX_DISPLAYED    2000
+#define N_VERTEX_DISPLAYED    200000
 
 typedef struct intersection {
 	MCNUM time;  	  //time of the intersection
@@ -64,6 +66,11 @@ typedef struct off_struct {
     Coords* normalArray;
     unsigned long* faceArray;
     char *filename;
+    int mantidflag;
+    long mantidoffset;
+    intersection intersects[OFF_INTERSECT_MAX]; // After a call to off_intersect_all contains the list of intersections.
+    int nextintersect;                 // 'Next' intersection (first t>0) solution after call to off_intersect_all
+    int numintersect;               // Number of intersections after call to off_intersect_all
 } off_struct;
 
 /*******************************************************************************
@@ -77,6 +84,26 @@ typedef struct off_struct {
 *******************************************************************************/
 long off_init(  char *offfile, double xwidth, double yheight, double zdepth, 
                 int notcenter, off_struct* data);
+
+/*******************************************************************************
+* int off_intersect_all(double* t0, double* t3, 
+     Coords *n0, Coords *n3,
+     double x, double y, double z, 
+     double vx, double vy, double vz, 
+     off_struct *data )
+* ACTION: computes intersection of neutron trajectory with an object. 
+* INPUT:  x,y,z and vx,vy,vz are the position and velocity of the neutron
+*         data points to the OFF data structure
+* RETURN: the number of polyhedra which trajectory intersects
+*         t0 and t3 are the smallest incoming and outgoing intersection times
+*         n0 and n3 are the corresponding normal vectors to the surface
+*         data is the full OFF structure, including a list intersection type
+*******************************************************************************/
+int off_intersect_all(double* t0, double* t3, 
+     Coords *n0, Coords *n3,
+     double x, double y, double z, 
+     double vx, double vy, double vz, 
+     off_struct *data );
 
 /*******************************************************************************
 * int off_intersect(double* t0, double* t3, 

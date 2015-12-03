@@ -157,7 +157,7 @@ TRACE
         v=sqrt(vx*vx+vy*vy+vz*vz);
         q = fabs(2*sin(angle)*v*V2Q);
         /* Reflectivity (see component Guide). */
-        if (reflect && strlen(reflect))
+        if (reflect && strlen(reflect) && strcmp(reflect, "NULL") && strcmp(reflect,"0"))
           TableReflecFunc(q, &pTable, &B);
         else {
           double par[] = {R0, Qc, alpha, m, W};
@@ -194,14 +194,14 @@ FINALLY
 
 MCDISPLAY
 %{
-  double delta,xi,xf,zi,zf;
+  double delta0,xi,xf,zi,zf;
   
-  delta = xwidth/99;
+  delta0 = xwidth/99;
   xi = xwidth+xshift;
   line (xi,-yheight,0, xi,yheight,0);
   do
   {
-       xf = xi - delta;
+       xf = xi - delta0;
        zi = gamma1*xi*xi+beta1;
        zf = gamma1*xf*xf+beta1;
        line (xi,yheight,zi, xf,yheight,zf);

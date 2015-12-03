@@ -61,21 +61,22 @@
 *      t = rand0max(1e-3); // set time from 0 to 1 ms for TOF instruments.
 *   %}
 *
-* <b>Some sources parameters:</b>
+* <b>Some neutron facility parameters:</b>
 * PSI cold source     T1=296.2,I1=8.5E11, T2=40.68,I2=5.2E11
 * ILL VCS cold source T1=216.8,I1=1.24e+13,T2=33.9,I2=1.02e+13
-*        (H1)         T3=16.7 ,I3=3.0423e+12
+*        (H1, 58 MW)  T3=16.7 ,I3=3.0423e+12
 * ILL HCS cold source T1=413.5,I1=10.22e12,T2=145.8,I2=3.44e13
-*        (H5)         T3=40.1 ,I3=2.78e13
+*        (H5, 58 MW)  T3=40.1 ,I3=2.78e13
 * ILL Thermal tube    T1=683.7,I1=0.5874e+13,T2=257.7,I2=2.5099e+13
-*        (H12)        T3=16.7 ,I3=1.0343e+12
-* ILL Hot source      T1=1695, I1=1.74e13,T2=708,  I2=3.9e12
-* HZB cold source     T1=43.7 ,I1=1.4e12, T2=137.2,I2=2.08e12,radius=.155
+*        (H12, 58 MW) T3=16.7 ,I3=1.0343e+12
+* ILL Hot source      T1=1695, I1=1.74e13,T2=708,  I2=3.9e12 (58MW)
+* HZB cold source     T1=43.7 ,I1=1.4e12, T2=137.2,I2=2.08e12,radius=.155 (10MW)
 * HZB bi-spectral     T1=43.7, I1=1.4e12, T2=137.2,I2=2.08e12,T3=293.0,I3=1.77e12
-* HZB thermal tube    T1=293.0,I1=2.64e12
-* FRM2 cold           T1=35.0, I1=9.38e12,T2=547.5,I2=2.23e12,T3=195.4,I3=1.26e13
-* FRM2 thermal        T1=285.6,I1=3.06e13,T2=3000, I2=1.68e12,T3=429.9,I3=6.77e12
-* LLB cold            T1=220,  I1=2.09e12,T2=60,   I2=3.83e12;T3=20,   I3=1.04e12
+* HZB thermal tube    T1=293.0,I1=2.64e12 (10MW)
+* FRM2 cold,20MW      T1=35.0, I1=9.38e12,T2=547.5,I2=2.23e12,T3=195.4,I3=1.26e13
+* FRM2 thermal,20MW   T1=285.6,I1=3.06e13,T2=300.0,I2=1.68e12,T3=429.9,I3=6.77e12
+* LLB cold,14MW       T1=220,  I1=2.09e12,T2=60,   I2=3.83e12,T3=20,   I3=1.04e12
+* TRIGA thermal 1MW   T1=300,  I1=3.5e11 (scale by thermal power in MW)
 *
 * %VALIDATION
 * Feb 2005: output cross-checked for 3 Maxwellians against VITESS source

@@ -140,7 +140,7 @@ DECLARE
   
   double omega;      /* rotation frequency */
   double optimal_wl; /* optimal wavelength */
-  VectorType pos_ch; /* centre pos. of the FC in the frame of the exit of the prev. comp. [cm] */
+  VectorType pos_ch = {0.0, 0.0, 0.0};; /* centre pos. of the FC in the frame of the exit of the prev. comp. [cm] */
   
   #define MCSTAS_SHARE
   %include "chopper_fermi.c" /* include functions */
@@ -151,7 +151,6 @@ INITIALIZE
 %{
   omega = 0.0;
   optimal_wl = 0.0;
-  pos_ch = {0.0, 0.0, 0.0};
 
   double x,y,z;
   coords_get(POS_R_COMP_INDEX(INDEX_CURRENT_COMP), &x, &y, &z);

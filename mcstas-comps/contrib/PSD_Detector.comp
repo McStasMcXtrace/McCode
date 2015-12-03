@@ -205,7 +205,7 @@ SETTING PARAMETERS (xwidth=0, radius=0, awidth=0, yheight=0, zdepth=0.03,
   yChDivRelSigma=0, bufsize=0, restore_neutron=0, angle=0,
   string type=0, string filename=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, EAP,M1P1,PosAP, EAT,M1T1,PosAT,
-  CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, SensVolCumul, DetCumul, PHSpectrum,
+  CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, SensVolCumul, DetCumul, PHSpectrum, PHSpectrum0,
   PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors,
   DetectorType, 
   DEFS, Vars)
@@ -623,8 +623,8 @@ INITIALIZE
     else strcpy(Vars.option, "list all");
     strcat(Vars.option,", borders, x y z vx vy vz t sx sy sz");
 
-    Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0); /* dims for mcdisplay */
-    if (filename != NULL)
+    Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0,0); /* dims for mcdisplay */
+    if (filename != NULL && strlen(filename) && strcmp(filename, "NULL") && strcmp(filename, "0"))
       strncpy(Vars.Mon_File, filename, 128);
 
     if (bufsize > 0)

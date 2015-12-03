@@ -58,7 +58,7 @@ DEFINE COMPONENT ISIS_moderator
 DEFINITION PARAMETERS (string Face="hydrogen")
 SETTING PARAMETERS (Emin = 49.0,Emax = 51.0, dist = 1.0, focus_xw = 0.01,
 		    focus_yh = 0.01, xwidth = 0.074, yheight = 0.074, CAngle = 0.0,SAC= 1, Lmin=0, Lmax=0, int target_index=+1, verbose=0)
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (p_in,Tnpts,scaleSize,angleArea,Nsim,Ncount,TS,rtE0,rtE1,rtmodX,rtmodY,TargetStation,CurrentWeight)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 
 SHARE
@@ -83,12 +83,12 @@ SHARE
   double polInterp(double*,double*,int,double);
   FILE* openFile(char*);
   FILE* openFileTest(char*);
-  int readHtable(FILE*,const double,const double);
+  int readHtable(FILE*,const double,const double, Source*);
   int timeStart(char*);
   int timeEnd(char*);
   int energyBin(char*,double,double,double*,double*);
   int notComment(char*);
-  double strArea();
+  double strArea(double dist, double rtmodX, double rtmodY, double focus_xw, double focus_yh);
 
 
 double** matrix(const int m,const int n)
@@ -365,7 +365,7 @@ double calcFraction(double EI,double EE,double Ea,double Eb)
   return frac;
 }
 
-int readHtable(FILE* TFile,const double Einit,const double Eend)
+int readHtable(FILE* TFile,const double Einit,const double Eend, Source *TS)
      /*!
        Process a general h.o file to create an integrated
        table of results from Einit -> Eend
@@ -383,7 +383,7 @@ int readHtable(FILE* TFile,const double Einit,const double Eend)
   double Tsum;           // Running integration
   double Efraction;      // Amount to use for an energy/time bin
 
-  extern Source TS;
+  // extern Source TS;
 
   int DebugCnt;
   int i;
@@ -404,8 +404,8 @@ int readHtable(FILE* TFile,const double Einit,const double Eend)
   DebugCnt=0;
   Ftime=0;
   tIndex=0;
-  TS.nTime=0;
-  TS.nEnergy=0;
+  TS->nTime=0;
+  TS->nEnergy=0;
   // Read file and get time bins
   while(fgets(ss,255,TFile) && Eend>Ea)
     {
@@ -417,7 +417,7 @@ int readHtable(FILE* TFile,const double Einit,const double Eend)
 	      if (energyBin(ss,Einit,Eend,&Ea,&Eb))
 		{
 		  if (eIndex==0)
-		    TS.nTime=tIndex;
+		    TS->nTime=tIndex;
 		  eIndex++;
 		}
 	      else if (timeStart(ss))
@@ -433,7 +433,7 @@ int readHtable(FILE* TFile,const double Einit,const double Eend)
 	      else
 		{
 		  // Need to read the line in the case of first run
-		  if (TS.nTime==0)
+		  if (TS->nTime==0)
 		    {
 		      if (cmdnumberD(ss,&T) &&
 			  cmdnumberD(ss,&D))
@@ -444,18 +444,18 @@ int readHtable(FILE* TFile,const double Einit,const double Eend)
 	}
     }
   // Plus 2 since we have a 0 counter and we have missed the last line.
-  TS.nEnergy=eIndex+2;
-  if (!TS.nTime && tIndex)
-    TS.nTime=tIndex;
-  // printf("tIndex %d %d %d %d \n",tIndex,eIndex,TS.nEnergy,TS.nTime);
+  TS->nEnergy=eIndex+2;
+  if (!TS->nTime && tIndex)
+    TS->nTime=tIndex;
+  // printf("tIndex %d %d %d %d \n",tIndex,eIndex,TS->nEnergy,TS->nTime);
 
   /* SECOND TIME THROUGH:: */
   rewind(TFile);
 
-  TS.Flux=matrix(TS.nEnergy,TS.nTime);
-  TS.EInt=(double*) malloc(TS.nEnergy*sizeof(double));
-  TS.TimeBin=(double*) malloc(TS.nTime*sizeof(double));
-  TS.EnergyBin=(double*) malloc(TS.nEnergy*sizeof(double));
+  TS->Flux=matrix(TS->nEnergy,TS->nTime);
+  TS->EInt=(double*) malloc(TS->nEnergy*sizeof(double));
+  TS->TimeBin=(double*) malloc(TS->nTime*sizeof(double));
+  TS->EnergyBin=(double*) malloc(TS->nEnergy*sizeof(double));
 
   Tsum=0.0;
   Ea=0.0;
@@ -464,7 +464,7 @@ int readHtable(FILE* TFile,const double Einit,const double Eend)
   DebugCnt=0;
   Ftime=0;
   tIndex=0;
-  TS.EInt[0]=0.0;
+  TS->EInt[0]=0.0;
   // Read file and get time bins
   while(fgets(ss,255,TFile) && Eend>Ea)
     {
@@ -476,7 +476,7 @@ int readHtable(FILE* TFile,const double Einit,const double Eend)
 	      if (energyBin(ss,Einit,Eend,&Ea,&Eb))
 		{
 		  eIndex++;
-		  TS.EnergyBin[eIndex]=(Einit>Ea) ? Einit : Ea;
+		  TS->EnergyBin[eIndex]=(Einit>Ea) ? Einit : Ea;
 		  Efraction=calcFraction(Einit,Eend,Ea,Eb);
 		  Ftime++;
 		}
@@ -495,7 +495,7 @@ int readHtable(FILE* TFile,const double Einit,const double Eend)
 	      if (timeEnd(ss))     // Found "total"
 		{
 		  Ftime=0;
-		  TS.EInt[eIndex+1]=Tsum;
+		  TS->EInt[eIndex+1]=Tsum;
 		}
 	      else
 		{
@@ -503,9 +503,9 @@ int readHtable(FILE* TFile,const double Einit,const double Eend)
 		  if (cmdnumberD(ss,&T) &&
 		      cmdnumberD(ss,&D))
 		    {
-		      TS.TimeBin[tIndex]=T/1e8;     // convert Time into second (from shakes)
+		      TS->TimeBin[tIndex]=T/1e8;     // convert Time into second (from shakes)
 		      Tsum+=D*Efraction;
-		      TS.Flux[eIndex][tIndex]=Tsum;
+		      TS->Flux[eIndex][tIndex]=Tsum;
 		      tIndex++;
 		    }
 		}
@@ -513,17 +513,17 @@ int readHtable(FILE* TFile,const double Einit,const double Eend)
 	}
     }
 
-  TS.EnergyBin[eIndex+1]=Eend;
-  TS.Total=Tsum;
+  TS->EnergyBin[eIndex+1]=Eend;
+  TS->Total=Tsum;
 
   //  printf("tIndex %d %d %d \n",tIndex,eIndex,TS.nTime);
   //printf("Tsum %g \n",Tsum);
   //fprintf(stderr,"ebin1 ebinN %g %g\n",TS.EnergyBin[0],TS.EnergyBin[TS.nEnergy-1]);
 
   return 1;
-}
+} // readHtable
 
-void getPoint(double* TV,double* EV,double* lim1, double* lim2)
+void getPoint(double* TV,double* EV,double* lim1, double* lim2, Source TS)
  /*!
    Calculate the Time and Energy
    by sampling the file.
@@ -536,7 +536,7 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2)
 {
   int i;
 
-  extern Source TS;
+  // extern Source TS;
   double R0,R1,R,Rend;
   int Epnt;       ///< Points to the next higher index of the neutron integral
   int Tpnt;
@@ -655,7 +655,7 @@ void getPoint(double* TV,double* EV,double* lim1, double* lim2)
       //  fprintf(stderr,"TFlux == %12.6e %12.6e %12.6e \n",TS.Flux[Epnt-1][Tpnt-1],Rend,TS.Flux[Epnt-1][Tpnt]);
     }
   return;
-}
+} // getPoint
 
 int cmdnumberI(char *mc,int* num,const int len)
   /*!
@@ -764,7 +764,7 @@ int cmdnumberI(char *mc,int* num,const int len)
       return efile;
     }
 
-  double strArea()
+  double strArea(double dist, double rtmodX, double rtmodY, double focus_xw, double focus_yh)
     {
       /*
 	 Returns the mean Str view of the viewport
@@ -1029,7 +1029,7 @@ INITIALIZE
 
   TFile=openFile(fname);
   
-  if (!readHtable(TFile,rtE0,rtE1))
+  if (!readHtable(TFile,rtE0,rtE1,&TS))
     {
       fprintf(stderr,"Failed to read the Hzone from file %s\n", fname);
       exit(1);
@@ -1041,7 +1041,7 @@ INITIALIZE
   /* Do solid angle correction if required */
   // if SAC=0/1 solid angle is determined
   if (SAC)
-    angleArea=(dist>0.0) ? strArea() : 2*3.141592654;
+    angleArea=(dist>0.0) ? strArea(dist, rtmodX, rtmodY, focus_xw, focus_yh) : 2*3.141592654;
   else
     angleArea=1.0;
   
@@ -1092,7 +1092,7 @@ TRACE
       Ddist=1.0;
     }
 
-  getPoint(&Tval,&Eval,&rtE0,&rtE1);
+  getPoint(&Tval,&Eval,&rtE0,&rtE1, TS);
 
   //fprintf(stderr,"outside %g mev\n", TS.Total );
   if(Eval>rtE1 || Eval<rtE0)

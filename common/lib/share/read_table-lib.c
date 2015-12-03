@@ -879,11 +879,11 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
     char   monotonic=1;
     char   constantstep=1;
     double step=0;
-    double n;
+    long n;
 
     if (!Table) return;
     if (!Table->rows || !Table->columns) return;
-    if (Table->rows == 1) row=0;
+    if (Table->rows == 1) row=0; // single row
     max_x = -FLT_MAX;
     min_x =  FLT_MAX;
     n     = (row ? Table->rows : Table->columns);
@@ -908,7 +908,7 @@ MCDETECTOR Table_Write(t_Table Table, char *file, char *xl, char *yl,
                     : Table_Index(*Table,0,  i));
         diff = (row ? Table_Index(*Table,i+1,0)
                     : Table_Index(*Table,0,  i+1)) - X;
-        if (fabs(diff) < fabs(step)) step = diff;
+        if (diff && fabs(diff) < fabs(step)) step = diff;
         /* change sign ? */
         if ((max_x - min_x)*diff < 0 && monotonic)
           monotonic = 0;

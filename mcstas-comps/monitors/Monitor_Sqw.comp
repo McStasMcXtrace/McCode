@@ -80,13 +80,13 @@
 * %End
 ******************************************************************************/
 DEFINE COMPONENT Monitor_Sqw 
-DEFINITION PARAMETERS (string options=0, string filename=0,string geometry=0, user3=FLT_MAX, username3=0)
+DEFINITION PARAMETERS ( user3=FLT_MAX)
 SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, 
   xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, radius=0,
   bins=0, min=-1e40, max=1e40,
-  int index=-1)
+  int index=-1,string options=0, string filename=0,string geometry=0,string username3=0)
 /* these are protected C variables */
-OUTPUT PARAMETERS (DEFS, Vars, detector, mean_vx, mean_vy, mean_vz, sum_p)
+OUTPUT PARAMETERS (DEFS, Vars, detector, mean_vx, mean_vy, mean_vz, sum_p, offdata)
 
 SHARE
 %{
@@ -142,20 +142,22 @@ INITIALIZE
       yheight=2*radius;
     }
   }
-  
-  if (geometry && strlen(geometry))
+  int offflag=0;
+  if (geometry && strlen(geometry) && strcmp(geometry,"NULL") && strcmp(geometry,"0"))
     if (!off_init(  geometry, xwidth, yheight, zdepth, 0, &offdata )) {
       printf("Monitor_Sqw: %s could not initiate the OFF geometry. \n"
              "            Defaulting to normal Monitor dimensions.\n", NAME_CURRENT_COMP);
       strcpy(geometry, "");
+    } else {
+      offflag=1;
     }
   
   if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax && !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
     exit(printf("Monitor_Sqw: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
 
-  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax);
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,offflag);
 
-  if (filename && strcmp(filename,"NULL") && strcmp(filename,"0") && strlen(filename))
+  if (filename && strlen(filename) && strcmp(filename,"NULL") && strcmp(filename,"0"))
     strncpy(Vars.Mon_File, filename, 128);
   
   Vars.Flag_parallel=1;
@@ -174,7 +176,7 @@ TRACE
   
   if (user3 != FLT_MAX) Vars.UserVariable3 = user3;
 
-  if (geometry && strlen(geometry))
+  if (geometry && strlen(geometry) && strcmp(geometry,"NULL") && strcmp(geometry,"0"))
   {
     /* determine intersections with object */
     intersect = off_intersect(&t0, &t1, NULL, NULL,
@@ -215,7 +217,7 @@ TRACE
     
     if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) 
      || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)
-     || (geometry && strlen(geometry)) )
+     || (geometry && strlen(geometry) && strcmp(geometry,"NULL") && strcmp(geometry,"0")) )
     {
       /* check if we have to remove the top/bottom with BANANA shape */
       if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) {

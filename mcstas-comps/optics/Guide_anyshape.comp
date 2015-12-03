@@ -104,7 +104,7 @@ INITIALIZE
   if (!off_init( geometry, xwidth, yheight, zdepth, !center, &offdata )) exit(-1);
   
   /* optionally initialize reflectivity curves */
-  if (reflect && strlen(reflect)) {
+  if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0")) {
     if (Table_Read(&pTable, reflect, 1) <= 0) /* read 1st block data from file into pTable */
       exit(fprintf(stderr,"Guide_anyshape: %s: can not read file %s. Aborting.\n", NAME_CURRENT_COMP, reflect));
     else 
@@ -145,7 +145,7 @@ TRACE
     /* handle surface intersection */
     double R=0;
     /* Reflectivity (see component Guide). */
-    if (reflect && strlen(reflect))
+    if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0"))
       TableReflecFunc(q, &pTable, &R);
     else {
       double par[] = {R0, Qc, alpha, m, W};

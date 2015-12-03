@@ -48,7 +48,8 @@ DEFINE COMPONENT Mirror_Elliptic
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string reflect=0, focus=6.6e-4,interfocus=8.2, yheight=2e-4, zmin=0, zmax=0,
   R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003)
-OUTPUT PARAMETERS (beta1, alpha1,beta2, alpha2, err)
+OUTPUT PARAMETERS (beta1, alpha1,beta2, alpha2, a, b,                        
+  delta,angle,pTable,old_x,old_y,old_z,err)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 SHARE
 %{
@@ -178,7 +179,7 @@ TRACE
         v=sqrt(vx*vx+vy*vy+vz*vz);
         q = fabs(2*sin(angle)*v*V2Q);
         /* Reflectivity (see component Guide). */
-        if (reflect && strlen(reflect))
+        if (reflect && strlen(reflect) && strcmp(reflect,"NULL") && strcmp(reflect,"0"))
           TableReflecFunc(q, &pTable, &B);
         else {
           double par[] = {R0, Qc, alpha, m, W};
