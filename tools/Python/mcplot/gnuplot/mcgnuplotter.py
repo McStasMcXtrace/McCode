@@ -209,7 +209,10 @@ class McGnuplotter():
             
         elif file_ext == '.dat':
             data_struct = get_monitor(input_file)
-            gpo = McGnuplot1D(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
+            if re.search('array_2d.*', data_struct['type']):
+                gpo = McGnuplotPSD(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
+            else:
+                gpo = McGnuplot1D(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
             self.__gnuplot_objs[gpo.key] = gpo
         else:
             raise Exception('McGnuPlotter: input file must be .sim or .dat')
