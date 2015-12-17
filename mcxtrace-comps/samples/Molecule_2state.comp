@@ -326,6 +326,16 @@ TRACE
       /*choose a random scattering direction*/
       double kfx,kfy,kfz,solid_angle;
       randvec_target_circle(&kfx, &kfy, &kfz, &solid_angle, 0, 0, 1, tan(psimax) );
+      if( (etamax-etamin)!=2*M_PI){
+          kfx=sqrt(kfx*kfx+kfy*kfy);
+          kfy=0;
+          double eta=rand01()*(etamax-etamin)+etamin;
+          /*rotate kf round 0,0,1 by eta, and reassign to kf*/
+          rotate(kfx,kfy,kfz, kfx,kfy,kfz,eta,0,0,1);
+          /*downweight since we're not using the full eta range*/
+          p*=(etamax-etamin)/(2*M_PI);
+      }
+
       NORM(kfx,kfy,kfz);
       kfx*=k;kfy*=k;kfz*=k;
       q=sqrt( scalar_prod(kx-kfx,ky-kfy,kz-kfz,kx-kfx,ky-kfy,kz-kfz));
