@@ -27,7 +27,7 @@
 * with time constant t_relax, into state 0. For t<-delta_t
 * all of the molecules are in the state specified by <i>initial_state</i>.
 * To improve statistics, scattering may be limited to a "forward" cone with opening angle in [psimin, psimax].
-* Furthermore, scatterging may be restricted to the azimuthal segment between [etamin,etamax].
+* Furthermore, scattering may be restricted to the azimuthal segment between [etamin,etamax].
 * 
 *
 * %P
@@ -59,12 +59,12 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Molecule_2state
-DEFINITION PARAMETERS (string form_factors="FormFactors.txt",string state_0_file=NULL,string state_1_file=NULL, nq=201, 
+DEFINITION PARAMETERS (string form_factors="FormFactors.txt",string state_0_file=NULL,string state_1_file=NULL, nq=512,
         string material_datafile="Be.txt")
 SETTING PARAMETERS (delta_t=100e-9,excitation_yield=0.2,t_relax=100e-9,initial_state=0,
     psimin=0,psimax=M_PI_2, etamin=0, etamax=2*M_PI,
     radius=0, yheight=0, xwidth=0, zdepth=0,
-    concentration=1,p_transmit=0.1,q_parametric=0, Emax=12.5)
+    concentration=1,p_transmit=0.1,q_parametric=0, Emax=80)
 OUTPUT PARAMETERS (delta_q,prms,shape)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 
@@ -135,7 +135,7 @@ INITIALIZE
 
     printf("%s: Computing F2(q) for two states:\n", NAME_CURRENT_COMP);
     int r,n,m,states;/*do this for two states*/
-    double dq= 6.0/(nq-1);
+    double dq= prms[0].qnmax/(nq-1);
     for (states=0;states<2;states++){
       for (r=0;r<nq;r++){
         double f2=0;
@@ -346,11 +346,11 @@ TRACE
       /*find f2 for this q by interpolation*/
       int r;
       if (!q_parametric){
-          for(r=1;r<nq;r++){
+          for(r=1;r<nq-1;r++){
               if (prms[state].q[r]>q) break;
           }
       }else{
-          for(r=1;r<prms[state].rows;r++){
+          for(r=1;r<prms[state].rows-1;r++){
               if (prms[state].q[r]>q) break;
           }
       }
