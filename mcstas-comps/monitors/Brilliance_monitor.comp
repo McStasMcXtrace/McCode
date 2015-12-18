@@ -12,7 +12,7 @@
 * Origin: DTU Physics
 * Release: McStas 1.12c
 *
-* Special "Brilliance" monitor of FIXED size 1x1cm. 
+* Special "Brilliance" monitor. 
 *
 * %D
 * If used in the right setting, will output "instantaneous" and "mean" brilliances in units of Neutrons/cm^2/ster/AA/s. Conditions for proper units:
