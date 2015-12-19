@@ -16,6 +16,7 @@
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
 * Modified by: M. Schulz, March 2012 : allow to curve the crystal planes
 * Modified by: EF, PW, May 2014: code efficiency improvement when SPLIT is used
+* Modified by: EF, PW, 2015: powder/PG and texture mode
 *
 * Mosaic single crystal with multiple scattering vectors, optimised for speed
 * with large crystals and many reflections.
@@ -170,8 +171,12 @@
 * RX:        Radius of horizontal along X lattice curvature. flat for 0 (m)
 * RY:        Radius of vertical lattice curvature. flat for 0 (m)
 * RZ:        Radius of horizontal along Z lattice curvature. flat for 0 (m)
-* powder:    Flag to indicate powder mode, for simulation of Debye-Scherrer cones via random crystallite orientation (1)
-* PG:        Flag to indicate "Pyrolytic Graphite" mode, only meaningful with choice of Graphite.lau, models PG crystal (1)
+* powder:    Flag to indicate powder mode, for simulation of Debye-Scherrer cones
+*              via random crystallite orientation. A powder texture can be 
+*              approximated with 0<powder<1 (1)
+* PG:        Flag to indicate "Pyrolytic Graphite" mode, only meaningful with 
+*              choice of Graphite.lau, models PG crystal. A powder texture can be 
+*              approximated with 0<PG<1 with main axis on 'c' (1)
 *
 * OUTPUT PARAMETERS:
 *
@@ -1118,12 +1123,12 @@ TRACE
 
       /* (1). Compute incoming wave vector ki */
       if (powder) { /* orientation of crystallite is random */
-	Alpha = randpm1()*PI;
+	Alpha = randpm1()*PI*powder;
 	Beta = randpm1()*PI/2;
 	randrotate(&vx, &vy, &vz, Alpha, Beta);
       }
       if (PG) { /* orientation of crystallite is random */
-	Alpha = rand01()*2*PI;
+	Alpha = rand01()*2*PI*PG;
 	PGrotate(&vx, &vy, &vz, Alpha, hkl_info.csx, hkl_info.csy, hkl_info.csz);
       }
 
