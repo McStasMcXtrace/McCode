@@ -13,27 +13,47 @@
 *
 * Design study of a pump and probe type instrument. The sample is an excitable molecule
 *
-* Instrument short description
-*
 * %Description
-* Instrument longer description (type, elements, usage...)
+* This is an example instrument for simulating time resolved scattering from
+* optically excitable, disordered molecules in solution, including scattering
+* signal from the solvent. By FSOLV it is possible to change the concentration of
+* solute.
+*
+* This is to be considered a concept instrument model, i.e. it is _not_ a model of
+* an existing real instrument. A simple flat source emitting photons impinge on a chopper,
+* defining an X-ray pulse. Timing jitter in the chopper may be included through the JITTER
+* parameter which introduces a random uncertainty in the timing of the pulse.
+*
+* The X-ray pulse is allowed to propagate to the sample which is excited by an instantaneous laser
+* pulse at t=0. The whole sample is assumed to be excited uniformly.
+* A Monte Carlo choice between interacting with solvent or solute is performed at the sample position.
+* The chopper is set such that the X-ray pulse front will arive at the sample at t=Dt. Thus,
+* setting Dt<-tau (chopper opening time) will simulate the "laser-off" setting.
+*
+* The sampling of the scattered signal may be controlled by PSIMAX,PSIMIN and ETAMAX,ETAMIN
+* parameters. Please be aware the by restricting the azimuthal range it is not uncommon to underfill
+* the acceptance area of subsequent components. This is particularly the case for small psi.
 *
 * Example: mxrun Pump_probe.instr Dt=2e-9 Detector: 1dpsd_I=2.78312e-26
 *
 * %Parameters
 * excitation_prob: [1] Fraction of the molecules in solution that are excited at t=0.
 * Dt: [1] Time delay between laser pulse exciting the sample and the x-ray pulse.
-* PMN: [deg.] Minimum scattering angle to be sampled
-* PMX: [deg.] Maximum scattering angle to be sampled
-* fsolv: [ ] Volume fraction of solvent to solute. ( =1 means only solvent, =0 only solute)
-* JITTER: 
+* PSIMAX: [deg.] Maximum scattering angle to be simulated.
+* PSIMIN: [deg.] Minimum scattering angle to be simulated.
+* ETAMAX: [deg.] Maximum azimuthal angle for scattered photons.
+* ETAMIN: [deg.] Minimum azimuthal angle for scattered photons.
+* NOSOLVENT: [ ] If nonzero - ignore scattering from solvent.
+* NOSOLUTE: [ ] If nonzeor - ignore scattering from solute.
+* FSOLV: [ ] Volume fraction of solvent to solute. ( =1 means only solvent, =0 only solute)
+* JITTER: [s] Jitter in chopper.
 * 
 * %End
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT Pump_probe_solvent(excitation_prob=0.2, Dt=100e-9, PSIMIN=0, 
-        PSIMAX=50, fsolv=0, JITTER=0, ETAMIN=-180,ETAMAX=180)
+        PSIMAX=50, FSOLV=0, JITTER=0, ETAMIN=-180,ETAMAX=180, NOSOLVENT=0, NOSOLUTE=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -42,14 +62,28 @@ DECLARE
   int scattered;
   double rr,fsolvent;
   double tjit,jitter;
+  int nosolvent,nosolute;
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-  fsolvent=fsolv;
+  fsolvent=FSOLV;
   jitter=JITTER;
+  nosolvent=NOSOLVENT;
+  nosolute=NOSOLUTE;
+
+  /*sanity check*/
+  if(FSOLV==0 && NOSOLUTE){
+      fprintf(stderr,"Warning (Pump_probe_solvent): You have disabled solute scattering"
+              "(NOSOLUTE!=0) and set a solute volume fraction of 1 (FSOLV==0).\n");
+  }
+  if(NOSOLUTE && NOSOLVENT){
+      fprintf(stderr,"Warning (Pump_probe_solvent): You have disabled solute and solvent scattering.\nAborting to avoid wasting your time.");
+      exit(0);
+  }
+
 %}
 
 /* Here comes the TRACE section, where the actual      */
@@ -74,7 +108,7 @@ EXTEND
     }
 %}
 
-COMPONENT src=Source_flat(xwidth=1e-9,yheight=1e-9,focus_xw=1e-10,focus_yh=1e-10,dist=1,E0=7.5, dE=0.000005, gauss=1,
+COMPONENT src=Source_flat(xwidth=1e-9,yheight=1e-9,focus_xw=1e-10,focus_yh=1e-10,dist=1,E0=15.5, dE=0.000005, gauss=1,
       flux=1e33)
 AT(0,0,0) RELATIVE Origin
 
@@ -109,14 +143,15 @@ COMPONENT sample=Molecule_2state(
   yheight=0.01, zdepth=0.001,
   psimin=PSIMIN*DEG2RAD, psimax=PSIMAX*DEG2RAD, etamin=ETAMIN*DEG2RAD,etamax=ETAMAX*DEG2RAD,
   t_relax=600e-12, delta_t=Dt, excitation_yield=excitation_prob,
-  material_datafile="noabs.txt"
+  material_datafile="noabs.txt",Emax=1000
 )
-WHEN (rr>fsolvent) AT(0,0,0) RELATIVE sample_pos
+WHEN (rr>0.5) AT(0,0,0) RELATIVE sample_pos
 EXTEND
 %{
+  if (nosolute) ABSORB;
   if (SCATTERED){
     scattered=1;
-    p*=1.0;
+    p*=(1.0-fsolvent)/0.5;
   }
 %}
 
@@ -125,14 +160,15 @@ COMPONENT solvent=Molecule_2state(
   yheight=0.01, zdepth=0.001,initial_state=1,
   psimin=PSIMIN*DEG2RAD, psimax=PSIMAX*DEG2RAD, etamin=ETAMIN*DEG2RAD,etamax=ETAMAX*DEG2RAD,
   t_relax=2e-12, delta_t=Dt, q_parametric=1, excitation_yield=1,
-  material_datafile="noabs.txt"
+  material_datafile="noabs.txt",Emax=100
 )
-WHEN (rr<fsolvent) AT(0,0,0) RELATIVE sample_pos
+WHEN (rr<0.5) AT(0,0,0) RELATIVE sample_pos
 EXTEND
 %{
+  if (nosolvent) ABSORB;
   if (SCATTERED){
     scattered=1;
-    p*=1.0;
+    p*=fsolvent/0.5;
   }
 %}
 
@@ -148,12 +184,20 @@ COMPONENT psd4pi=PSD_monitor_4PI(
 AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT bananapsd=Monitor_nD(
-        restore_xray=1,options="banana theta limits=[0,45] bins=201", filename="bananapsd", radius=0.49, yheight=0.02)
+        restore_xray=1, options="banana theta limits=[0,45] bins=201", filename="bananapsd", radius=0.49, yheight=0.001)
 AT(0,0,0) RELATIVE PREVIOUS
 
+COMPONENT det_ccd_rad1 = Monitor_nD(
+        restore_xray=1, xwidth=0.05, yheight=0.05,options="angle, limits=[0,45], bins=120", filename="det_ccd_angle")
+AT(0,0,0.02) RELATIVE sample_pos
+
+COMPONENT det_ccd_rad = PSD_monitor(
+        nr=200,radius=0.025, filename="det_ccd_rad")
+AT(0,0,0.02) RELATIVE sample_pos
+
 COMPONENT det_ccd = PSD_monitor(
-        nx=200, ny=200, filename="det_ccd")
-AT(0,0,0.055) RELATIVE sample_pos
+        nx=200, ny=200, xwidth=0.05, yheight=0.05, filename="det_ccd")
+AT(0,0,0.02) RELATIVE sample_pos
 
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */
@@ -162,4 +206,5 @@ FINALLY
 %}
 /* The END token marks the instrument definition end */
 END
+
 

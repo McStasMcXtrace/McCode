@@ -199,21 +199,28 @@ resulting Coord structure.
 \subsection{Mathematical routines}
 \begin{itemize}
 \item \textbfMCCH{NORM}$(x,y,z)$. Normalizes the vector $(x,y,z)$ to have
-  length 1.
+  length 1 $^*$.
 \item \textbfMCCC{scalar\_prod}$(a_x,a_y,a_z, b_x,b_y,b_z)$. Returns the scalar
   product of the two vectors $(a_x,a_y,a_z)$ and $(b_x,b_y,b_z)$.
-\item \textbfMCCC{vec\_prod}(\&$a_x$,\&$a_y$,\&$a_z$, $b_x$,$b_y$,$b_z$, $c_x$,$c_y$,$c_z$). Sets
-  $(a_x,a_y,a_z)$ equal to the vector product $(b_x,b_y,b_z) \times (c_x,c_y,c_z)$.
-\item \textbfMCCH{rotate}(\&$x$,\&$y$,\&$z$, $v_x$,$v_y$,$v_z$, $\varphi$, $a_x$,$a_y$,$a_z$). Set
+\item \textbfMCCC{vec\_prod}($a_x$,$a_y$,$a_z$, $b_x$,$b_y$,$b_z$, $c_x$,$c_y$,$c_z$). Sets
+  $(a_x,a_y,a_z)$ equal to the vector product $(b_x,b_y,b_z) \times
+  (c_x,c_y,c_z)$  $^*$.
+\item \textbfMCCH{rotate}($x$,$y$,$z$, $v_x$,$v_y$,$v_z$, $\varphi$, $a_x$,$a_y$,$a_z$). Set
   $(x,y,z)$ to the result of rotating the vector $(v_x,v_y,v_z)$
-  the angle $\varphi$ (in radians) around the vector $(a_x,a_y,a_z)$.
-\item \textbfMCCC{normal\_vec}(\&$n_x$, \&$n_y$, \&$n_z$, $x$, $y$, $z$).
+  the angle $\varphi$ (in radians) around the vector $(a_x,a_y,a_z)$  $^*$.
+\item \textbfMCCC{normal\_vec}($n_x$, $n_y$, $n_z$, $x$, $y$, $z$).
   Computes a unit vector $(n_x, n_y, n_z)$ normal to the vector
-  $(x,y,z)$.
-\item \textbfMCCC{solve\_2nd\_order}(*$t$, $A$,  $B$,  $C$).
+  $(x,y,z)$.$^*$
+\item \textbfMCCC{solve\_2nd\_order}(\&$t_1$, \&$t_2$ $A$,  $B$,  $C$).
   Solves the 2$^{nd}$ order equation $At^2 + Bt + C = 0$ and returns
-  the smallest positive solution into pointer *$t$.
+  the solutions into pointers *$t_1$ and  *$t_2$. if $t_2$ is
+  specified as \verb+NULL+, only the smallest positive solution is
+  returned in $t_1$.
 \end{itemize}
+($^*$ The experienced c-programmer may be puzzled that these routines
+can return information without the use of \emph{pass by reference},
+the reason is that these calls are implemented as macros /
+\verb+#define+ wrapped functions.)
 
 %-------------------------------------------------------------------------------
 \subsection{Output from detectors}

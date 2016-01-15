@@ -200,9 +200,9 @@ resulting Coord structure.
 \item {\bfseries rotate}(\&$x$,\&$y$,\&$z$,$v_x$,$v_y$,$v_z$,$\varphi$,$a_x$,$a_y$,$a_z$). Set
   $(x,y,z)$ to the result of rotating the vector $(v_x,v_y,v_z)$
   the angle $\varphi$ (in radians) around the vector $(a_x,a_y,a_z)$.
-\item {\bfseries normal\_vec}(\&$n_x$, \&$n_y$, \&$n_z$, $x$, $y$, $z$).
+\item {\bfseries normal\_vec}($n_x$, $n_y$, $n_z$, $x$, $y$, $z$).
   Computes a unit vector $(n_x, n_y, n_z)$ normal to the vector
-  $(x,y,z)$.
+  $(x,y,z)$.$^*$
 \item {\bfseries solve\_2nd\_order}(*$t_0$,*$t_1$, $A$,  $B$,  $C$).
   Solves the 2$^{nd}$ order equation $At^2 + Bt + C = 0$ and puts the solutions in
   *$t_0$ and *$t_1$. The smallest positive solution into pointer *$t_0$. If $t_1$=\texttt{NULL}

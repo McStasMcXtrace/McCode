@@ -546,7 +546,7 @@ SHARE
       list[i].u1z = list[i].tau_z/list[i].tau;
       list[i].sig1 = FWHM2RMS*info->m_delta_d_d*list[i].tau;
       /* Find two arbitrary axes perpendicular to tau and each other. */
-      normal_vec(&b1[0], &b1[1], &b1[2],
+      normal_vec(b1[0], b1[1], b1[2],
                  list[i].u1x, list[i].u1y, list[i].u1z);
       vec_prod(b2[0], b2[1], b2[2],
                list[i].u1x, list[i].u1y, list[i].u1z,
@@ -979,7 +979,7 @@ TRACE
           T[j].oy = oy;
           T[j].oz = oz;
           /* Compute unit vectors b1 and b2 that span the tangent plane. */
-          normal_vec(&b1x, &b1y, &b1z, T[j].nx, T[j].ny, T[j].nz);
+          normal_vec(b1x, b1y, b1z, T[j].nx, T[j].ny, T[j].nz);
           vec_prod(b2x, b2y, b2z, T[j].nx, T[j].ny, T[j].nz, b1x, b1y, b1z);
           T[j].b1x = b1x;
           T[j].b1y = b1y;

@@ -45,6 +45,7 @@
 #include <errno.h>
 #include <time.h>
 #include <float.h>
+#include <inttypes.h>
 
 /* If the runtime is embedded in the simulation program, some definitions can
    be made static. */
@@ -436,8 +437,9 @@ mcstatic inline void norm_func(double *x, double *y, double *z) {
 		*z /= temp;
 	}
 }
-
-void normal_vec(double *nx, double *ny, double *nz,
+#define normal_vec(nx, ny, nz, x, y, z) \
+    normal_vec_func(&(nx), &(ny), &(nz), x, y, z)
+mcstatic inline void normal_vec_func(double *nx, double *ny, double *nz,
     double x, double y, double z);
 
 /**

@@ -33,7 +33,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT ESS_Brilliance_2015(frac=0.5, power=5, Yheight=0.03, np=1, ISleft=0.5, lambdamin=0, lambdamax=20, ANGLE=15)
+DEFINE INSTRUMENT ESS_Brilliance_2015(frac=0.5, power=5, Yheight=0.03, np=1, lambdamin=0, lambdamax=20, ANGLE=15)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -80,16 +80,13 @@ TRACE
 COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
-  COMPONENT Source=ESS_moderator(yheight_t=Yheight,yheight_c=Yheight,dist=1,focus_xw=0.01,focus_yh=0.01,Lmin=0.1,Lmax=19, cold_frac=frac, sourcedef=srcdef, acc_power=power, n_pulses=np, isleft=ISleft, beamport_angle=ANGLE)
+  COMPONENT Source=ESS_moderator(yheight_t=Yheight,yheight_c=Yheight,dist=1,focus_xw=0.01,focus_yh=0.01,Lmin=0.1,Lmax=19, cold_frac=frac, sourcedef=srcdef, acc_power=power, n_pulses=np, beamport_angle=ANGLE)
   AT (0, 0, 0) RELATIVE Origin
 EXTEND %{
   IsCold=cold;
   SrcX=xprime;SrcY=yprime;SrcZ=zprime;
   WL=lambda;
 %}
-
-  COMPONENT Dummy_coll = Monitor(xwidth=0.03,yheight=0.03, restore_neutron=1)
-  WHEN(fabs(SrcX)<=0.03 && fabs(SrcY)<=0.015 && 0.9 <= WL <= 2 ) AT (0, 0, 1) RELATIVE Source
 
   COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
@@ -106,8 +103,6 @@ EXTEND %{
   COMPONENT MonND4 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Emission position / [m]", user2=SrcZ, username2="bvlah position / [m]", options="user1 bins=201 limits=[-0.3,0.3], user2 bins=201 limits=[-0.3,0.3]", restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
 
- /*  COMPONENT MonND5 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", user2=SrcY,username2="Vertical position / [m]", options=options2, restore_neutron=1) */
- /* WHEN ((!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.15 && fabs(SrcX)>0.12) AT (0, 0, 1) RELATIVE Source */
 
 COMPONENT BrillmonCOLD = Brilliance_monitor(
     nlam = 101, nt = 101, filename = "brillCOLD", t_0 = -1000,
@@ -143,10 +138,8 @@ COMPONENT BrillmonTHRM_COLL_Ken = Brilliance_monitor(
     nlam = 101, nt = 11, filename = "brillTHRM_COLL_Ken", t_0 = -1000,
     t_1 =4e4, lambda_0 = 0.905, lambda_1 = 2.02,
     Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.06*100*2*Yheight/2.5), restore_neutron=1)
-  WHEN ((!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.03)  AT (0, 0, 1) RELATIVE Source 
+  WHEN ((!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.03)  AT (0, 0, 1) RELATIVE Source
 
-  COMPONENT Sphere=PSD_monitor_4PI(filename="sphere.dat", radius=1)
-  AT (0,0,0) RELATIVE Source
 
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */
