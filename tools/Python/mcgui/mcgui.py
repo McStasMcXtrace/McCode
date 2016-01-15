@@ -535,8 +535,10 @@ class McGuiAppController():
         if self.state.isSimRunning():
             self.state.interrupt()
         else:
-            self.emitter.status("Getting instrument params...")
+            # auto-save instrument file 
+            self.view.ew.save()
             
+            self.emitter.status("Getting instrument params...")
             try:
                 instr_params = self.state.getInstrParams()
             except:
@@ -559,7 +561,8 @@ class McGuiAppController():
             self.state.setWorkDir(workDir)
     
     def handleExit(self):
-        sys.exit()
+        if self.view.closeCodeEditorWindow():
+            sys.exit()
     
     def handlePlotResults(self):
         self.emitter.status('')
@@ -635,18 +638,20 @@ class McGuiAppController():
             template_text_body = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_body_simple.instr")).read()
             new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, template_text_header + template_text_body)
             if new_instr != '':
-                self.state.unloadInstrument()
-                self.state.loadInstrument(new_instr)
-                self.view.showCodeEditorWindow(new_instr)
-                self.emitter.status("Editing new instrument: " + os.path.basename(str(new_instr)))
+                if self.view.closeCodeEditorWindow():
+                    self.state.unloadInstrument()
+                    self.state.loadInstrument(new_instr)
+                    self.view.showCodeEditorWindow(new_instr)
+                    self.emitter.status("Editing new instrument: " + os.path.basename(str(new_instr)))
         
     def handleNewFromTemplate(self, instr_templ=''):
         new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(str(instr_templ))))
         if new_instr_req != '':
-            text = McGuiUtils.getFileContents(instr_templ)
-            new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, text)
-            self.state.loadInstrument(new_instr)
-            self.emitter.status("Instrument created: " + os.path.basename(str(new_instr)))
+            if self.view.closeCodeEditorWindow():
+                text = McGuiUtils.getFileContents(instr_templ)
+                new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, text)
+                self.state.loadInstrument(new_instr)
+                self.emitter.status("Instrument created: " + os.path.basename(str(new_instr)))
         
     def handleOpenInstrument(self):
         instr = self.view.showOpenInstrumentDlg(self.state.getWorkDir())

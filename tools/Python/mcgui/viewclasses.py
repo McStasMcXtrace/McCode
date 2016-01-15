@@ -199,7 +199,9 @@ class McMainWindow(QtGui.QMainWindow):
                 action.triggered[()].connect(lambda item=instrs_fulpath[j]: callback(item))
     
     def closeEvent(self, event):
-        self.ew.close()
+        ''' allow close down only if editor window did not reject '''
+        if not self.ew.close():
+            event.ignore()
     
         
 ''' Code editor window widgets wrapper class
@@ -245,6 +247,10 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         
     def assumeDataSaved(self):
         self.volatileDataTransition.emit(False)
+    
+    def save(self):
+        ''' external save text hook '''
+        self.__handleSaveAction()
  
     def closeEvent(self, event):
         ''' hook to display a "save changes?" dialog if there are unsaved changes 
