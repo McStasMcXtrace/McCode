@@ -208,9 +208,9 @@ resulting Coord structure.
 \item \textbfMCCH{rotate}($x$,$y$,$z$, $v_x$,$v_y$,$v_z$, $\varphi$, $a_x$,$a_y$,$a_z$). Set
   $(x,y,z)$ to the result of rotating the vector $(v_x,v_y,v_z)$
   the angle $\varphi$ (in radians) around the vector $(a_x,a_y,a_z)$  $^*$.
-\item \textbfMCCC{normal\_vec}(\&$n_x$, \&$n_y$, \&$n_z$, $x$, $y$, $z$).
+\item \textbfMCCC{normal\_vec}($n_x$, $n_y$, $n_z$, $x$, $y$, $z$).
   Computes a unit vector $(n_x, n_y, n_z)$ normal to the vector
-  $(x,y,z)$.
+  $(x,y,z)$.$^*$
 \item \textbfMCCC{solve\_2nd\_order}(\&$t_1$, \&$t_2$ $A$,  $B$,  $C$).
   Solves the 2$^{nd}$ order equation $At^2 + Bt + C = 0$ and returns
   the solutions into pointers *$t_1$ and  *$t_2$. if $t_2$ is

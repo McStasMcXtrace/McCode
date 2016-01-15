@@ -2561,8 +2561,8 @@ mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz)
 
 /* SECTION: vector math  ==================================================== */
 
-/* normal_vec: Compute normal vector to (x,y,z). */
-void normal_vec(double *nx, double *ny, double *nz,
+/* normal_vec_func: Compute normal vector to (x,y,z). */
+mcstatic inline void normal_vec_func(double *nx, double *ny, double *nz,
                 double x, double y, double z)
 {
   double ax = fabs(x);
