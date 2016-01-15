@@ -1232,7 +1232,8 @@ cogen_trace(struct instr_def *instr)
       if (!strcmp(comp->name, comp->group->last_comp)) {
 	/* last comp of GROUP: restore default ABSORB */
 	coutf("/* end of GROUP %s */", comp->group->name);
-	coutf("  if (!%sGroup%s) ABSORB; /* absorb @MCCODE_PARTICLE@ non scattered in GROUP */", ID_PRE, comp->group->name);
+        coutf("  if (!%sGroup%s) ABSORB; /* absorb @MCCODE_PARTICLE@ non scattered in GROUP */", ID_PRE, comp->group->name);
+        coutf("  %sGroup%s=0; /* reset group scattered flag */", ID_PRE, comp->group->name);
       }
     }
 
