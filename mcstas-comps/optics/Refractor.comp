@@ -324,12 +324,14 @@ DECLARE
 %{
   double rho, bc;
   off_struct offdata;
-  double mean_n=0, events=0;
-  double theta1=0, theta2=0;
+  double mean_n, events;
+  double theta1, theta2;
 %}
 
 INITIALIZE
 %{
+  mean_n=0; events=0;
+  theta1=0; theta2=0;
   /* set geometry from input geometry parameters */
   if (!geometry || !strlen(geometry) || !strcmp(geometry, "NULL") || !strcmp(geometry, "0")) {
     if (radius && yheight && !xwidth)                  strcpy(geometry, "cylinder");
