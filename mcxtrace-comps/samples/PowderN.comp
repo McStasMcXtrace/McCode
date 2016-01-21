@@ -269,7 +269,9 @@ SHARE
         (*abs)[i].E=table.data[i*table.columns];
         (*abs)[i].k=(*abs)[i].E*E2K;
         // get from cox_76 abs_info.data[i].sigma_a=aba_info.data[i]*
-        (*abs)[i].mu=table.data[i*table.columns + 7];
+        (*abs)[i].mu=100*table.data[i*table.columns + 3];
+        /* column 4 (but 0-indexed) is photoabsorption in cm^2 / g
+         * density is in g / cm^3 ->factor 100 to get mu in m^-1.*/
       }
       (*abs)[i].E=-1;
       (*abs)[i].k=-1;
