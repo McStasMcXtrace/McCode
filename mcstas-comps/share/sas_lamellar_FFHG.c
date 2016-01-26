@@ -66,135 +66,76 @@
 #endif
 
 
-#define VOLUME_PARAMETERS thickness
-#define VOLUME_WEIGHT_PRODUCT thickness_w
-#define VOLUME_PARAMETER_DECLARATIONS float thickness
-#define IQ_KERNEL_NAME lamellarPC_Iq
-#define IQ_PARAMETERS thickness, Nlayers, spacing, spacing_polydisp, sld, solvent_sld
+#define VOLUME_PARAMETERS tail_length,head_length
+#define VOLUME_WEIGHT_PRODUCT tail_length_w*head_length_w
+#define VOLUME_PARAMETER_DECLARATIONS float tail_length, float head_length
+#define IQ_KERNEL_NAME lamellar_FFHG_Iq
+#define IQ_PARAMETERS tail_length, head_length, sld, head_sld, solvent_sld
 #define IQ_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
-    const float Nlayers, \
-    const float spacing, \
-    const float spacing_polydisp, \
     const float sld, \
+    const float head_sld, \
     const float solvent_sld
-#define IQ_WEIGHT_PRODUCT thickness_w
-#define IQ_DISPERSION_LENGTH_DECLARATIONS const int Nthickness
-#define IQ_DISPERSION_LENGTH_SUM Nthickness
-#define IQ_OPEN_LOOPS     for (int thickness_i=0; thickness_i < Nthickness; thickness_i++) { \
-      const float thickness = loops[2*(thickness_i)]; \
-      const float thickness_w = loops[2*(thickness_i)+1];
-#define IQ_CLOSE_LOOPS     }
-#define IQXY_KERNEL_NAME lamellarPC_Iqxy
-#define IQXY_PARAMETERS thickness, Nlayers, spacing, spacing_polydisp, sld, solvent_sld
+#define IQ_WEIGHT_PRODUCT tail_length_w*head_length_w
+#define IQ_DISPERSION_LENGTH_DECLARATIONS const int Ntail_length, \
+    const int Nhead_length
+#define IQ_DISPERSION_LENGTH_SUM Ntail_length+Nhead_length
+#define IQ_OPEN_LOOPS     for (int tail_length_i=0; tail_length_i < Ntail_length; tail_length_i++) { \
+      const float tail_length = loops[2*(tail_length_i)]; \
+      const float tail_length_w = loops[2*(tail_length_i)+1]; \
+      for (int head_length_i=0; head_length_i < Nhead_length; head_length_i++) { \
+        const float head_length = loops[2*(head_length_i+Ntail_length)]; \
+        const float head_length_w = loops[2*(head_length_i+Ntail_length)+1];
+#define IQ_CLOSE_LOOPS       } \
+    }
+#define IQ_PARAMETER_DECLARATIONS float tail_length, float head_length, float sld, float head_sld, float solvent_sld
+#define IQXY_KERNEL_NAME lamellar_FFHG_Iqxy
+#define IQXY_PARAMETERS tail_length, head_length, sld, head_sld, solvent_sld
 #define IQXY_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
-    const float Nlayers, \
-    const float spacing, \
-    const float spacing_polydisp, \
     const float sld, \
+    const float head_sld, \
     const float solvent_sld
-#define IQXY_WEIGHT_PRODUCT thickness_w
-#define IQXY_DISPERSION_LENGTH_DECLARATIONS const int Nthickness
-#define IQXY_DISPERSION_LENGTH_SUM Nthickness
-#define IQXY_OPEN_LOOPS     for (int thickness_i=0; thickness_i < Nthickness; thickness_i++) { \
-      const float thickness = loops[2*(thickness_i)]; \
-      const float thickness_w = loops[2*(thickness_i)+1];
-#define IQXY_CLOSE_LOOPS     }
-#define IQXY_PARAMETER_DECLARATIONS float thickness, float Nlayers, float spacing, float spacing_polydisp, float sld, float solvent_sld
-
-/*	Lamellar_ParaCrystal - Pedersen's model
-
-*/
-float Iq(float qval,
-      float th,
-      float Nlayers, 
-	  float davg, 
-	  float pd,
-      float sld,
-      float solvent_sld);
-float paraCryst_sn(float ww, float qval, float davg, long Nlayers, float an);
-float paraCryst_an(float ww, float qval, float davg, long Nlayers);
-
-float Iq(float qval,
-      float th,
-      float Nlayers, 
-	  float davg, 
-	  float pd,
-      float sld,
-      float solvent_sld)
-{
-    
-	float inten,contr,xn;
-	float xi,ww,Pbil,Znq,Snq,an;
-	long n1,n2;
-	
-	contr = sld - solvent_sld;
-	//get the fractional part of Nlayers, to determine the "mixing" of N's
-	
-	n1 = (long)trunc(Nlayers);		//rounds towards zero
-	n2 = n1 + 1;
-	xn = (float)n2 - Nlayers;			//fractional contribution of n1
-	
-	ww = exp(-qval*qval*pd*pd*davg*davg/2.0f);
-
-	//calculate the n1 contribution
-	an = paraCryst_an(ww,qval,davg,n1);
-	Snq = paraCryst_sn(ww,qval,davg,n1,an);
-	
-	Znq = xn*Snq;
-	
-	//calculate the n2 contribution
-	an = paraCryst_an(ww,qval,davg,n2);
-	Snq = paraCryst_sn(ww,qval,davg,n2,an);
-
-	Znq += (1.0f-xn)*Snq;
-	
-	//and the independent contribution
-	Znq += (1.0f-ww*ww)/(1.0f+ww*ww-2.0f*ww*cos(qval*davg));
-	
-	//the limit when Nlayers approaches infinity
-//	Zq = (1-ww^2)/(1+ww^2-2*ww*cos(qval*davg))
-	
-	xi = th/2.0f;		//use 1/2 the bilayer thickness
-	Pbil = (sin(qval*xi)/(qval*xi))*(sin(qval*xi)/(qval*xi));
-	
-	inten = 2.0f*M_PI*contr*contr*Pbil*Znq/(qval*qval);
-	inten *= 1.0e-04f;
-//printf("q=%.7fe wwm1=%g ww=%.5fe an=% 12.5fe Snq=% 12.5fe Znq=% 12.5fe Pbil=% 12.5fe\n",qval,wwm1,ww,an,Snq,Znq,Pbil);
-	return(inten);
-}
-
-// functions for the lamellar paracrystal model
-float
-paraCryst_sn(float ww, float qval, float davg, long Nlayers, float an) {
-	
-	float Snq;
-
-	Snq = an/( (float)Nlayers*pow((1.0f+ww*ww-2.0f*ww*cos(qval*davg)),2) );
-	
-	return(Snq);
-}
-
-float
-paraCryst_an(float ww, float qval, float davg, long Nlayers) {
-	
-	float an;
-	
-	an = 4.0f*ww*ww - 2.0f*(ww*ww*ww+ww)*cos(qval*davg);
-	an -= 4.0f*pow(ww,(Nlayers+2))*cos((float)Nlayers*qval*davg);
-	an += 2.0f*pow(ww,(Nlayers+3))*cos((float)(Nlayers-1)*qval*davg);
-	an += 2.0f*pow(ww,(Nlayers+1))*cos((float)(Nlayers+1)*qval*davg);
-	
-	return(an);
-}
-
-
+#define IQXY_WEIGHT_PRODUCT tail_length_w*head_length_w
+#define IQXY_DISPERSION_LENGTH_DECLARATIONS const int Ntail_length, \
+    const int Nhead_length
+#define IQXY_DISPERSION_LENGTH_SUM Ntail_length+Nhead_length
+#define IQXY_OPEN_LOOPS     for (int tail_length_i=0; tail_length_i < Ntail_length; tail_length_i++) { \
+      const float tail_length = loops[2*(tail_length_i)]; \
+      const float tail_length_w = loops[2*(tail_length_i)+1]; \
+      for (int head_length_i=0; head_length_i < Nhead_length; head_length_i++) { \
+        const float head_length = loops[2*(head_length_i+Ntail_length)]; \
+        const float head_length_w = loops[2*(head_length_i+Ntail_length)+1];
+#define IQXY_CLOSE_LOOPS       } \
+    }
+#define IQXY_PARAMETER_DECLARATIONS float tail_length, float head_length, float sld, float head_sld, float solvent_sld
 
 float form_volume(VOLUME_PARAMETER_DECLARATIONS);
 float form_volume(VOLUME_PARAMETER_DECLARATIONS) {
     
     return 1.0f;
+    
+}
+
+
+float Iq(float q, IQ_PARAMETER_DECLARATIONS);
+float Iq(float q, IQ_PARAMETER_DECLARATIONS) {
+    
+    const float qsq = q*q;
+    const float drh = head_sld - solvent_sld;
+    const float drt = sld - solvent_sld;    //correction 13FEB06 by L.Porcar
+    const float qT = q*tail_length;
+    float Pq, inten;
+    Pq = drh*(sin(q*(head_length+tail_length))-sin(qT)) + drt*sin(qT);
+    Pq *= Pq;
+    Pq *= 4.0f/(qsq);
+
+    inten = 2.0e-4f*M_PI*Pq/qsq;
+
+    // normalize by the bilayer thickness
+    inten /= 2.0f*(head_length+tail_length);
+
+    return inten;
     
 }
 

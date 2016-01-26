@@ -5,6 +5,8 @@
 # define USE_OPENCL
 #endif
 
+#define USE_KAHAN_SUMMATION 0
+
 // If opencl is not available, then we are compiling a C function
 // Note: if using a C++ compiler, then define kernel as extern "C"
 #ifndef USE_OPENCL
@@ -493,15 +495,20 @@ float _BCC_Integrand(float q, float dnn, float d_factor, float theta, float phi)
 
 float _BCCeval(float Theta, float Phi, float temp1, float temp3) {
 
-	float temp6,temp7,temp8,temp9,temp10;
 	float result;
+	float sin_theta,cos_theta,sin_phi,cos_phi;
+	SINCOS(Theta, sin_theta, cos_theta);
+	SINCOS(Phi, sin_phi, cos_phi);
 
-	temp6 = sin(Theta);
-	temp7 = sin(Theta)*cos(Phi)+sin(Theta)*sin(Phi)+cos(Theta);
-	temp8 = -1.0f*sin(Theta)*cos(Phi)-sin(Theta)*sin(Phi)+cos(Theta);
-	temp9 = -1.0f*sin(Theta)*cos(Phi)+sin(Theta)*sin(Phi)-cos(Theta);
-	temp10 = exp((-1.0f/8.0f)*temp1*((temp7*temp7)+(temp8*temp8)+(temp9*temp9)));
-	result = pow(1.0f-(temp10*temp10),3)*temp6/((1.0f-2.0f*temp10*cos(0.5f*temp3*(temp7))+(temp10*temp10))*(1.0f-2.0f*temp10*cos(0.5f*temp3*(temp8))+(temp10*temp10))*(1.0f-2.0f*temp10*cos(0.5f*temp3*(temp9))+(temp10*temp10)));
+	const float temp6 =  sin_theta;
+	const float temp7 =  sin_theta*cos_phi + sin_theta*sin_phi + cos_theta;
+	const float temp8 = -sin_theta*cos_phi - sin_theta*sin_phi + cos_theta;
+	const float temp9 = -sin_theta*cos_phi + sin_theta*sin_phi - cos_theta;
+	const float temp10 = exp((-1.0f/8.0f)*temp1*(temp7*temp7 + temp8*temp8 + temp9*temp9));
+	result = pow(1.0f-(temp10*temp10),3)*temp6
+	    / ( (1.0f - 2.0f*temp10*cos(0.5f*temp3*temp7) + temp10*temp10)
+	      * (1.0f - 2.0f*temp10*cos(0.5f*temp3*temp8) + temp10*temp10)
+	      * (1.0f - 2.0f*temp10*cos(0.5f*temp3*temp9) + temp10*temp10));
 
 	return (result);
 }
@@ -701,7 +708,8 @@ kernel void IQ_KERNEL_NAME(
     const float weight = IQ_WEIGHT_PRODUCT;
     if (weight > cutoff) {
       const float scattering = Iq(qi, IQ_PARAMETERS);
-      if (scattering >= 0.0f) { // scattering cannot be negative
+      // allow kernels to exclude invalid regions by returning NaN
+      if (!isnan(scattering)) {
         ret += weight*scattering;
         norm += weight;
       #ifdef VOLUME_PARAMETERS
@@ -760,6 +768,9 @@ kernel void IQXY_KERNEL_NAME(
   {
     const float qxi = qx[i];
     const float qyi = qy[i];
+    #if USE_KAHAN_SUMMATION
+    float accumulated_error = 0.0f;
+    #endif
 #ifdef IQXY_OPEN_LOOPS
     float ret=0.0f, norm=0.0f;
     #ifdef VOLUME_PARAMETERS
@@ -774,7 +785,8 @@ kernel void IQXY_KERNEL_NAME(
     if (weight > cutoff) {
 
       const float scattering = Iqxy(qxi, qyi, IQXY_PARAMETERS);
-      if (scattering >= 0.0f) { // scattering cannot be negative
+      if (!isnan(scattering)) { // if scattering is bad, exclude it from sum
+      //if (scattering >= 0.0f) { // scattering cannot be negative
         // TODO: use correct angle for spherical correction
         // Definition of theta and phi are probably reversed relative to the
         // equation which gave rise to this correction, leading to an
@@ -782,12 +794,20 @@ kernel void IQXY_KERNEL_NAME(
         // reverse the meanings of phi and theta in the forms, or use phi
         // rather than theta in this correction.  Current code uses cos(theta)
         // so that values match those of sasview.
-      #ifdef IQXY_HAS_THETA
+      #if defined(IQXY_HAS_THETA) // && 0
         const float spherical_correction
           = (Ntheta>1 ? fabs(cos(M_PI_180*theta))*M_PI_2:1.0f);
-        ret += spherical_correction * weight * scattering;
+        const float next = spherical_correction * weight * scattering;
       #else
-        ret += weight * scattering;
+        const float next = weight * scattering;
+      #endif
+      #if USE_KAHAN_SUMMATION
+        const float y = next - accumulated_error;
+        const float t = ret + y;
+        accumulated_error = (t - ret) - y;
+        ret = t;
+      #else
+        ret += next;
       #endif
         norm += weight;
       #ifdef VOLUME_PARAMETERS

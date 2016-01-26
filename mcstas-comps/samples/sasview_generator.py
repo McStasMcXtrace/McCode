@@ -247,6 +247,14 @@ def get_formatted_docs_text(info_lst, left_padding = 4, log_num_models = 2):
         text += index_format_str.format(str(i)) + '</td><td>' + '<a href="http://www.sasview.org/sasview/user/models/model_functions.html#'+ name_format_str.format(info.model_name_xy).replace(" ", "").replace(" ", "").replace("_xy", "") + 'model">' + name_format_str.format(info.model_name_xy).replace(" ", "") + '</a></td><td>' + info.Iq_xy_hint + '</td></tr>\n'
         i += 1
     text += '* </table>\n'
+
+    # Include sasmodel parameter descriptions - exclude html header etc. 
+    sasdoc=open(args.cdir[0] + "/" +"docs_sasmodels.html")
+    html_list = ['<!DOCTYPE html>','<html>','<body>', '</body>','</html>']
+    for line in iter(sasdoc):
+      if line not in html_list:
+         text += "* " + line
+
     return text
 
 def get_proxy_file_text(info_lst):
@@ -304,6 +312,7 @@ def main(args):
     
     logging.info('input comp file: %s', args.compfile[0])
     logging.info('model source dir: %s', args.cdir[0])
+
 
     # get model file info
     info_lst = []

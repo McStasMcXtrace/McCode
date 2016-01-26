@@ -66,127 +66,118 @@
 #endif
 
 
-#define VOLUME_PARAMETERS thickness
-#define VOLUME_WEIGHT_PRODUCT thickness_w
-#define VOLUME_PARAMETER_DECLARATIONS float thickness
-#define IQ_KERNEL_NAME lamellarPC_Iq
-#define IQ_PARAMETERS thickness, Nlayers, spacing, spacing_polydisp, sld, solvent_sld
+#define VOLUME_PARAMETERS thickness,spacing
+#define VOLUME_WEIGHT_PRODUCT thickness_w*spacing_w
+#define VOLUME_PARAMETER_DECLARATIONS float thickness, float spacing
+#define IQ_KERNEL_NAME lamellarPS_Iq
+#define IQ_PARAMETERS thickness, Nlayers, spacing, Caille_parameter, sld, solvent_sld
 #define IQ_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
     const float Nlayers, \
-    const float spacing, \
-    const float spacing_polydisp, \
+    const float Caille_parameter, \
     const float sld, \
     const float solvent_sld
-#define IQ_WEIGHT_PRODUCT thickness_w
-#define IQ_DISPERSION_LENGTH_DECLARATIONS const int Nthickness
-#define IQ_DISPERSION_LENGTH_SUM Nthickness
+#define IQ_WEIGHT_PRODUCT thickness_w*spacing_w
+#define IQ_DISPERSION_LENGTH_DECLARATIONS const int Nthickness, \
+    const int Nspacing
+#define IQ_DISPERSION_LENGTH_SUM Nthickness+Nspacing
 #define IQ_OPEN_LOOPS     for (int thickness_i=0; thickness_i < Nthickness; thickness_i++) { \
       const float thickness = loops[2*(thickness_i)]; \
-      const float thickness_w = loops[2*(thickness_i)+1];
-#define IQ_CLOSE_LOOPS     }
-#define IQXY_KERNEL_NAME lamellarPC_Iqxy
-#define IQXY_PARAMETERS thickness, Nlayers, spacing, spacing_polydisp, sld, solvent_sld
+      const float thickness_w = loops[2*(thickness_i)+1]; \
+      for (int spacing_i=0; spacing_i < Nspacing; spacing_i++) { \
+        const float spacing = loops[2*(spacing_i+Nthickness)]; \
+        const float spacing_w = loops[2*(spacing_i+Nthickness)+1];
+#define IQ_CLOSE_LOOPS       } \
+    }
+#define IQXY_KERNEL_NAME lamellarPS_Iqxy
+#define IQXY_PARAMETERS thickness, Nlayers, spacing, Caille_parameter, sld, solvent_sld
 #define IQXY_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
     const float Nlayers, \
-    const float spacing, \
-    const float spacing_polydisp, \
+    const float Caille_parameter, \
     const float sld, \
     const float solvent_sld
-#define IQXY_WEIGHT_PRODUCT thickness_w
-#define IQXY_DISPERSION_LENGTH_DECLARATIONS const int Nthickness
-#define IQXY_DISPERSION_LENGTH_SUM Nthickness
+#define IQXY_WEIGHT_PRODUCT thickness_w*spacing_w
+#define IQXY_DISPERSION_LENGTH_DECLARATIONS const int Nthickness, \
+    const int Nspacing
+#define IQXY_DISPERSION_LENGTH_SUM Nthickness+Nspacing
 #define IQXY_OPEN_LOOPS     for (int thickness_i=0; thickness_i < Nthickness; thickness_i++) { \
       const float thickness = loops[2*(thickness_i)]; \
-      const float thickness_w = loops[2*(thickness_i)+1];
-#define IQXY_CLOSE_LOOPS     }
-#define IQXY_PARAMETER_DECLARATIONS float thickness, float Nlayers, float spacing, float spacing_polydisp, float sld, float solvent_sld
+      const float thickness_w = loops[2*(thickness_i)+1]; \
+      for (int spacing_i=0; spacing_i < Nspacing; spacing_i++) { \
+        const float spacing = loops[2*(spacing_i+Nthickness)]; \
+        const float spacing_w = loops[2*(spacing_i+Nthickness)+1];
+#define IQXY_CLOSE_LOOPS       } \
+    }
+#define IQXY_PARAMETER_DECLARATIONS float thickness, float Nlayers, float spacing, float Caille_parameter, float sld, float solvent_sld
 
-/*	Lamellar_ParaCrystal - Pedersen's model
+/*	LamellarCaille kernel - allows for name changes of passed parameters ...
 
 */
-float Iq(float qval,
-      float th,
-      float Nlayers, 
-	  float davg, 
-	  float pd,
-      float sld,
-      float solvent_sld);
-float paraCryst_sn(float ww, float qval, float davg, long Nlayers, float an);
-float paraCryst_an(float ww, float qval, float davg, long Nlayers);
 
 float Iq(float qval,
-      float th,
+      float del,
       float Nlayers, 
-	  float davg, 
-	  float pd,
+      float dd,
+	  float Cp, 
+      float sld,
+      float solvent_sld);
+
+float Iq(float qval,
+      float del,
+      float Nlayers, 
+      float dd,
+	  float Cp, 
       float sld,
       float solvent_sld)
 {
-    
-	float inten,contr,xn;
-	float xi,ww,Pbil,Znq,Snq,an;
-	long n1,n2;
-	
-	contr = sld - solvent_sld;
-	//get the fractional part of Nlayers, to determine the "mixing" of N's
-	
-	n1 = (long)trunc(Nlayers);		//rounds towards zero
-	n2 = n1 + 1;
-	xn = (float)n2 - Nlayers;			//fractional contribution of n1
-	
-	ww = exp(-qval*qval*pd*pd*davg*davg/2.0f);
+  float contr,NN;   //local variables of coefficient wave
+  float inten,Pq,Sq,alpha,temp,t2;
+  //float dQ, dQDefault, t1, t3;
+  int ii,NNint;
+  // from wikipedia 0.577215664901532860606512090082402431042159335f
+  const float Euler = 0.577215664901533f;   // Euler's constant, increased sig figs for new models Feb 2015
+  //dQDefault = 0.0f;    //[=] 1/A, q-resolution, default value
+  //dQ = dQDefault; // REMOVED UNUSED dQ calculations for new models Feb 2015
 
-	//calculate the n1 contribution
-	an = paraCryst_an(ww,qval,davg,n1);
-	Snq = paraCryst_sn(ww,qval,davg,n1,an);
-	
-	Znq = xn*Snq;
-	
-	//calculate the n2 contribution
-	an = paraCryst_an(ww,qval,davg,n2);
-	Snq = paraCryst_sn(ww,qval,davg,n2,an);
+  NN = trunc(Nlayers);    //be sure that NN is an integer
+  
+  contr = sld - solvent_sld;
 
-	Znq += (1.0f-xn)*Snq;
-	
-	//and the independent contribution
-	Znq += (1.0f-ww*ww)/(1.0f+ww*ww-2.0f*ww*cos(qval*davg));
-	
-	//the limit when Nlayers approaches infinity
-//	Zq = (1-ww^2)/(1+ww^2-2*ww*cos(qval*davg))
-	
-	xi = th/2.0f;		//use 1/2 the bilayer thickness
-	Pbil = (sin(qval*xi)/(qval*xi))*(sin(qval*xi)/(qval*xi));
-	
-	inten = 2.0f*M_PI*contr*contr*Pbil*Znq/(qval*qval);
-	inten *= 1.0e-04f;
-//printf("q=%.7fe wwm1=%g ww=%.5fe an=% 12.5fe Snq=% 12.5fe Znq=% 12.5fe Pbil=% 12.5fe\n",qval,wwm1,ww,an,Snq,Znq,Pbil);
-	return(inten);
-}
+  Pq = 2.0f*contr*contr/qval/qval*(1.0f-cos(qval*del));
 
-// functions for the lamellar paracrystal model
-float
-paraCryst_sn(float ww, float qval, float davg, long Nlayers, float an) {
-	
-	float Snq;
+  NNint = (int)NN;    //cast to an integer for the loop
+  ii=0;
+  Sq = 0.0f;
+  // the vital "=" in ii<=  added March 2015
+  for(ii=1;ii<=(NNint-1);ii+=1) {
 
-	Snq = an/( (float)Nlayers*pow((1.0f+ww*ww-2.0f*ww*cos(qval*davg)),2) );
-	
-	return(Snq);
-}
+    //fii = (float)ii;   //do I really need to do this? - unused variable, removed 18Feb2015
 
-float
-paraCryst_an(float ww, float qval, float davg, long Nlayers) {
-	
-	float an;
-	
-	an = 4.0f*ww*ww - 2.0f*(ww*ww*ww+ww)*cos(qval*davg);
-	an -= 4.0f*pow(ww,(Nlayers+2))*cos((float)Nlayers*qval*davg);
-	an += 2.0f*pow(ww,(Nlayers+3))*cos((float)(Nlayers-1)*qval*davg);
-	an += 2.0f*pow(ww,(Nlayers+1))*cos((float)(Nlayers+1)*qval*davg);
-	
-	return(an);
+    temp = 0.0f;
+    alpha = Cp/4.0f/M_PI/M_PI*(log(M_PI*ii) + Euler);
+    //t1 = 2.0f*dQ*dQ*dd*dd*alpha;
+    t2 = 2.0f*qval*qval*dd*dd*alpha;
+    //t3 = dQ*dQ*dd*dd*ii*ii;
+
+    temp = 1.0f-ii/NN;
+    //temp *= cos(dd*qval*ii/(1.0f+t1));
+    temp *= cos(dd*qval*ii);
+    //temp *= exp(-1.0f*(t2 + t3)/(2.0f*(1.0f+t1)) );
+    temp *= exp(-t2/2.0f );
+    //temp /= sqrt(1.0f+t1);
+
+    Sq += temp;
+  }
+
+  Sq *= 2.0f;
+  Sq += 1.0f;
+
+  inten = 2.0f*M_PI*Pq*Sq/(dd*qval*qval);
+
+  inten *= 1.0e-04f;   // 1/A to 1/cm
+
+  return(inten);
 }
 
 

@@ -66,51 +66,61 @@
 #endif
 
 
-#define VOLUME_PARAMETERS rpolar,requatorial
-#define VOLUME_WEIGHT_PRODUCT rpolar_w*requatorial_w
-#define IQ_KERNEL_NAME ellipsoid_Iq
-#define IQ_PARAMETERS sld, solvent_sld, rpolar, requatorial
+#define VOLUME_PARAMETERS radius,core_radius,length
+#define VOLUME_WEIGHT_PRODUCT radius_w*core_radius_w*length_w
+#define IQ_KERNEL_NAME hollow_cylinder_Iq
+#define IQ_PARAMETERS radius, core_radius, length, sld, solvent_sld
 #define IQ_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
     const float sld, \
     const float solvent_sld
-#define IQ_WEIGHT_PRODUCT rpolar_w*requatorial_w
-#define IQ_DISPERSION_LENGTH_DECLARATIONS const int Nrpolar, \
-    const int Nrequatorial
-#define IQ_DISPERSION_LENGTH_SUM Nrpolar+Nrequatorial
-#define IQ_OPEN_LOOPS     for (int rpolar_i=0; rpolar_i < Nrpolar; rpolar_i++) { \
-      const float rpolar = loops[2*(rpolar_i)]; \
-      const float rpolar_w = loops[2*(rpolar_i)+1]; \
-      for (int requatorial_i=0; requatorial_i < Nrequatorial; requatorial_i++) { \
-        const float requatorial = loops[2*(requatorial_i+Nrpolar)]; \
-        const float requatorial_w = loops[2*(requatorial_i+Nrpolar)+1];
-#define IQ_CLOSE_LOOPS       } \
+#define IQ_WEIGHT_PRODUCT radius_w*core_radius_w*length_w
+#define IQ_DISPERSION_LENGTH_DECLARATIONS const int Nradius, \
+    const int Ncore_radius, \
+    const int Nlength
+#define IQ_DISPERSION_LENGTH_SUM Nradius+Ncore_radius+Nlength
+#define IQ_OPEN_LOOPS     for (int radius_i=0; radius_i < Nradius; radius_i++) { \
+      const float radius = loops[2*(radius_i)]; \
+      const float radius_w = loops[2*(radius_i)+1]; \
+      for (int core_radius_i=0; core_radius_i < Ncore_radius; core_radius_i++) { \
+        const float core_radius = loops[2*(core_radius_i+Nradius)]; \
+        const float core_radius_w = loops[2*(core_radius_i+Nradius)+1]; \
+        for (int length_i=0; length_i < Nlength; length_i++) { \
+          const float length = loops[2*(length_i+Nradius+Ncore_radius)]; \
+          const float length_w = loops[2*(length_i+Nradius+Ncore_radius)+1];
+#define IQ_CLOSE_LOOPS         } \
+      } \
     }
-#define IQXY_KERNEL_NAME ellipsoid_Iqxy
-#define IQXY_PARAMETERS sld, solvent_sld, rpolar, requatorial, theta, phi
+#define IQXY_KERNEL_NAME hollow_cylinder_Iqxy
+#define IQXY_PARAMETERS radius, core_radius, length, sld, solvent_sld, theta, phi
 #define IQXY_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
     const float sld, \
     const float solvent_sld
-#define IQXY_WEIGHT_PRODUCT rpolar_w*requatorial_w*theta_w*phi_w
-#define IQXY_DISPERSION_LENGTH_DECLARATIONS const int Nrpolar, \
-    const int Nrequatorial, \
+#define IQXY_WEIGHT_PRODUCT radius_w*core_radius_w*length_w*theta_w*phi_w
+#define IQXY_DISPERSION_LENGTH_DECLARATIONS const int Nradius, \
+    const int Ncore_radius, \
+    const int Nlength, \
     const int Ntheta, \
     const int Nphi
-#define IQXY_DISPERSION_LENGTH_SUM Nrpolar+Nrequatorial+Ntheta+Nphi
-#define IQXY_OPEN_LOOPS     for (int rpolar_i=0; rpolar_i < Nrpolar; rpolar_i++) { \
-      const float rpolar = loops[2*(rpolar_i)]; \
-      const float rpolar_w = loops[2*(rpolar_i)+1]; \
-      for (int requatorial_i=0; requatorial_i < Nrequatorial; requatorial_i++) { \
-        const float requatorial = loops[2*(requatorial_i+Nrpolar)]; \
-        const float requatorial_w = loops[2*(requatorial_i+Nrpolar)+1]; \
-        for (int theta_i=0; theta_i < Ntheta; theta_i++) { \
-          const float theta = loops[2*(theta_i+Nrpolar+Nrequatorial)]; \
-          const float theta_w = loops[2*(theta_i+Nrpolar+Nrequatorial)+1]; \
-          for (int phi_i=0; phi_i < Nphi; phi_i++) { \
-            const float phi = loops[2*(phi_i+Nrpolar+Nrequatorial+Ntheta)]; \
-            const float phi_w = loops[2*(phi_i+Nrpolar+Nrequatorial+Ntheta)+1];
-#define IQXY_CLOSE_LOOPS           } \
+#define IQXY_DISPERSION_LENGTH_SUM Nradius+Ncore_radius+Nlength+Ntheta+Nphi
+#define IQXY_OPEN_LOOPS     for (int radius_i=0; radius_i < Nradius; radius_i++) { \
+      const float radius = loops[2*(radius_i)]; \
+      const float radius_w = loops[2*(radius_i)+1]; \
+      for (int core_radius_i=0; core_radius_i < Ncore_radius; core_radius_i++) { \
+        const float core_radius = loops[2*(core_radius_i+Nradius)]; \
+        const float core_radius_w = loops[2*(core_radius_i+Nradius)+1]; \
+        for (int length_i=0; length_i < Nlength; length_i++) { \
+          const float length = loops[2*(length_i+Nradius+Ncore_radius)]; \
+          const float length_w = loops[2*(length_i+Nradius+Ncore_radius)+1]; \
+          for (int theta_i=0; theta_i < Ntheta; theta_i++) { \
+            const float theta = loops[2*(theta_i+Nradius+Ncore_radius+Nlength)]; \
+            const float theta_w = loops[2*(theta_i+Nradius+Ncore_radius+Nlength)+1]; \
+            for (int phi_i=0; phi_i < Nphi; phi_i++) { \
+              const float phi = loops[2*(phi_i+Nradius+Ncore_radius+Nlength+Ntheta)]; \
+              const float phi_w = loops[2*(phi_i+Nradius+Ncore_radius+Nlength+Ntheta)+1];
+#define IQXY_CLOSE_LOOPS             } \
+          } \
         } \
       } \
     }
@@ -325,72 +335,147 @@ constant float Gauss76Z[76]={
 };
 
 
-float form_volume(float rpolar, float requatorial);
-float Iq(float q, float sld, float solvent_sld, float rpolar, float requatorial);
-float Iqxy(float qx, float qy, float sld, float solvent_sld,
-    float rpolar, float requatorial, float theta, float phi);
+static float _hollow_cylinder_kernel(float q, float core_radius, float radius, 
+	float length, float dum);
+static float hollow_cylinder_analytical_2D_scaled(float q, float q_x, float q_y, float radius, float core_radius, float length, float sld,
+	float solvent_sld, float theta, float phi);
+static float hollow_cylinder_scaling(float integrand, float delrho, float volume);
+	
+float form_volume(float radius, float core_radius, float length);
 
-float _ellipsoid_kernel(float q, float rpolar, float requatorial, float sin_alpha);
-float _ellipsoid_kernel(float q, float rpolar, float requatorial, float sin_alpha)
-{
-    float sn, cn;
-    float ratio = rpolar/requatorial;
-    const float u = q*requatorial*sqrt(1.0f
-                   + sin_alpha*sin_alpha*(ratio*ratio - 1.0f));
-    SINCOS(u, sn, cn);
-    //const float f = ( u==0.0f ? 1.0f : 3.0f*(sn-u*cn)/(u*u*u) );
-    const float usq = u*u;
-    const float f = (u < 1.e-1f)
-        ? 1.0f + usq*(-3.f/30.f + usq*(3.f/840.f + usq*(-3.f/45360.f)))// + qrsq*(3.f/3991680.f))))
-        : 3.0f*(sn/u - cn)/usq;
-    return f*f;
-}
+float Iq(float q, float radius, float core_radius, float length, float sld,
+	float solvent_sld);
+float Iqxy(float qx, float qy, float radius, float core_radius, float length, float sld,
+	float solvent_sld, float theta, float phi);
 
-float form_volume(float rpolar, float requatorial)
+// From Igor library
+static float _hollow_cylinder_kernel(float q, float core_radius, float radius, 
+	float length, float dum)
 {
-    return 1.333333333333333f*M_PI*rpolar*requatorial*requatorial;
-}
-
-float Iq(float q,
-    float sld,
-    float solvent_sld,
-    float rpolar,
-    float requatorial)
-{
-    //const float lower = 0.0f;
-    //const float upper = 1.0f;
-    float total = 0.0f;
-    for (int i=0;i<76;i++) {
-        //const float sin_alpha = (Gauss76Z[i]*(upper-lower) + upper + lower)/2;
-        const float sin_alpha = 0.5f*(Gauss76Z[i] + 1.0f);
-        total += Gauss76Wt[i] * _ellipsoid_kernel(q, rpolar, requatorial, sin_alpha);
+    float gamma,arg1,arg2,lam1,lam2,psi,sinarg,t2,retval;		//local variables
+    
+    gamma = core_radius/radius;
+    arg1 = q*radius*sqrt(1.0f-dum*dum);		//1=shell (outer radius)
+    arg2 = q*core_radius*sqrt(1.0f-dum*dum);			//2=core (inner radius)
+    if (arg1 == 0.0f){
+    	lam1 = 1.0f;
+    }else{
+    	lam1 = 2.0f*J1(arg1)/arg1;
     }
-    //const float form = (upper-lower)/2*total;
-    const float form = 0.5f*total;
-    const float s = (sld - solvent_sld) * form_volume(rpolar, requatorial);
-    return 1.0e-4f * form * s * s;
-}
+    if (arg2 == 0.0f){
+    	lam2 = 1.0f;
+    }else{
+    	lam2 = 2.0f*J1(arg2)/arg2;
+    }
+    //Todo: Need to check psi behavior as gamma goes to 1.f
+    psi = (lam1 -  gamma*gamma*lam2)/(1.0f-gamma*gamma);		//SRK 10/19/00
+    sinarg = q*length*dum/2.0f;
+    if (sinarg == 0.0f){
+    	t2 = 1.0f;
+    }else{
+    	t2 = sin(sinarg)/sinarg;
+    }
 
-float Iqxy(float qx, float qy,
-    float sld,
-    float solvent_sld,
-    float rpolar,
-    float requatorial,
-    float theta,
-    float phi)
+    retval = psi*psi*t2*t2;
+    
+    return(retval);
+}
+static float hollow_cylinder_analytical_2D_scaled(float q, float q_x, float q_y, float radius, float core_radius, float length, float sld,
+	float solvent_sld, float theta, float phi) {
+	float cyl_x, cyl_y; //, cyl_z
+	//float q_z;
+	float vol, cos_val, delrho;
+	float answer;
+	//convert angle degree to radian
+	float pi = 4.0f*atan(1.0f);
+	theta = theta * pi/180.0f;
+	phi = phi * pi/180.0f;
+	delrho = solvent_sld - sld;
+
+	// Cylinder orientation
+	cyl_x = cos(theta) * cos(phi);
+	cyl_y = sin(theta);
+	//cyl_z = -cos(theta) * sin(phi);
+
+	// q vector
+	//q_z = 0;
+
+	// Compute the angle btw vector q and the
+	// axis of the cylinder
+	cos_val = cyl_x*q_x + cyl_y*q_y;// + cyl_z*q_z;
+
+	// The following test should always pass
+	if (fabs(cos_val)>1.0f) {
+		//printf("core_shell_cylinder_analytical_2D: Unexpected error: cos(alpha)=%g\n", cos_val);
+		return NAN;
+	}
+
+	answer = _hollow_cylinder_kernel(q, core_radius, radius, length, cos_val);
+
+	vol = form_volume(radius, core_radius, length);
+	answer = hollow_cylinder_scaling(answer, delrho, vol);
+
+	return answer;
+}
+static float hollow_cylinder_scaling(float integrand, float delrho, float volume)
 {
-    float sn, cn;
+	float answer;
+	// Multiply by contrast^2
+	answer = integrand*delrho*delrho;
 
-    const float q = sqrt(qx*qx + qy*qy);
-    SINCOS(theta*M_PI_180, sn, cn);
-    // TODO: check if this is actually sin(alpha), not cos(alpha)
-    const float cos_alpha = cn*cos(phi*M_PI_180)*(qx/q) + sn*(qy/q);
-    const float form = _ellipsoid_kernel(q, rpolar, requatorial, cos_alpha);
-    const float s = (sld - solvent_sld) * form_volume(rpolar, requatorial);
+	//normalize by cylinder volume
+	answer *= volume*volume;
 
-    return 1.0e-4f * form * s * s;
+	//convert to [cm-1]
+	answer *= 1.0e-4f;
+	
+	return answer;
 }
 
+
+float form_volume(float radius, float core_radius, float length)
+{
+	float pi = 4.0f*atan(1.0f);
+	float v_shell = pi*length*(radius*radius-core_radius*core_radius);
+	return(v_shell);
+}
+
+
+float Iq(float q, float radius, float core_radius, float length, float sld,
+	float solvent_sld)
+{
+    int i;
+	int nord=76;			//order of integration
+	float lower,upper,zi, inter;		//upper and lower integration limits
+	float summ,answer,delrho;			//running tally of integration
+	float norm,volume;	//final calculation variables
+	
+	delrho = solvent_sld - sld;
+	lower = 0.0f;
+	upper = 1.0f;		//limits of numerical integral
+
+	summ = 0.0f;			//initialize intergral
+	for(i=0;i<nord;i++) {
+		zi = ( Gauss76Z[i] * (upper-lower) + lower + upper )/2.0f;
+		inter = Gauss76Wt[i] * _hollow_cylinder_kernel(q, core_radius, radius, length, zi);
+		summ += inter;
+	}
+ 	
+	norm = summ*(upper-lower)/2.0f;
+	volume = form_volume(radius, core_radius, length);
+	answer = hollow_cylinder_scaling(norm, delrho, volume);
+	
+	return(answer);
+}
+
+//FIXME: Factor of two difference
+float Iqxy(float qx, float qy, float radius, float core_radius, float length, float sld,
+	float solvent_sld, float theta, float phi)
+{
+	float q;
+	q = sqrt(qx*qx+qy*qy);
+	return hollow_cylinder_analytical_2D_scaled(q, qx/q, qy/q, radius, core_radius, length, sld, solvent_sld, theta, phi);
+}
 
 
 /*
