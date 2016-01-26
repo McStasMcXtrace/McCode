@@ -741,6 +741,7 @@ TRACE
 //        SCATTER;
       } else if (type >= p_transmit + p_inc) {
         type = 3;
+        l=dl;
         PROP_DL(dl+l0); /* Point of scattering */
         SCATTER;
       } else {
