@@ -249,7 +249,7 @@ def get_formatted_docs_text(info_lst, left_padding = 4, log_num_models = 2):
     text += '* </table>\n'
 
     # Include sasmodel parameter descriptions - exclude html header etc.
-    sasdoc=open(args.cdir[0] + "/" +"docs_sasmodels.html")
+    sasdoc = open( os.path.join(args.cdir[0], "docs_sasmodels.html") )
     html_list = ['<!DOCTYPE html>','<html>','<body>', '</body>','</html>']
     for line in iter(sasdoc):
       if line not in html_list:
