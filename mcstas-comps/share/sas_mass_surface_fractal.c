@@ -66,69 +66,65 @@
 #endif
 
 
-#define IQ_KERNEL_NAME surface_fractal_Iq
-#define IQ_PARAMETERS radius, surface_dim, cutoff_length
+#define IQ_KERNEL_NAME mass_surface_fractal_Iq
+#define IQ_PARAMETERS mass_dim, surface_dim, cluster_rg, primary_rg
 #define IQ_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
-    const float radius, \
+    const float mass_dim, \
     const float surface_dim, \
-    const float cutoff_length
-#define IQXY_KERNEL_NAME surface_fractal_Iqxy
-#define IQXY_PARAMETERS radius, surface_dim, cutoff_length
+    const float cluster_rg, \
+    const float primary_rg
+#define IQXY_KERNEL_NAME mass_surface_fractal_Iqxy
+#define IQXY_PARAMETERS mass_dim, surface_dim, cluster_rg, primary_rg
 #define IQXY_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
-    const float radius, \
+    const float mass_dim, \
     const float surface_dim, \
-    const float cutoff_length
+    const float cluster_rg, \
+    const float primary_rg
 
 float form_volume(float radius);
 
-float Iq(float q, float radius, float surface_dim, float cutoff_length);
-float Iqxy(float qx, float qy, float radius, float surface_dim, float cutoff_length);
+float Iq(float q,
+          float mass_dim,
+          float surface_dim,
+          float cluster_rg,
+          float primary_rg);
 
-static float _gamln(float q)
+float Iqxy(float qx, float qy,
+          float mass_dim,
+          float surface_dim,
+          float cluster_rg,
+          float primary_rg);
+
+
+static float _mass_surface_fractal_kernel(float q,
+          float mass_dim,
+          float surface_dim,
+          float cluster_rg,
+          float primary_rg)
 {
-    // Lanczos approximation to the Gamma function.
-    // Should be refactored out to lib/, if used elsewhere.
-    float x,y,tmp,ser;
-    float coeff[6]=
-        {76.18009172947146f,     -86.50532032941677f,
-         24.01409824083091f,     -1.231739572450155f,
-          0.1208650973866179e-2f,-0.5395239384953e-5f};
-    int j;
+     //computation
+    float tot_dim = 6.0f - surface_dim - mass_dim;
+    mass_dim /= 2.0f;
+    tot_dim /= 2.0f;
 
-    y=x=q;
-    tmp  = x+5.5f;
-    tmp -= (x+0.5f)*log(tmp);
-    ser  = 1.000000000190015f;
-    for (j=0; j<=5; j++) {
-        y+=1.0f;
-        ser += coeff[j]/y;
-    }
-    return -tmp+log(2.5066282746310005f*ser/x);
-}
+    float rc_norm = cluster_rg * cluster_rg / (3.0f * mass_dim);
+    float rp_norm = primary_rg * primary_rg / (3.0f * tot_dim);
 
-static float surface_fractal_kernel(float q,
-    float radius,
-    float surface_dim,
-    float cutoff_length)
-{
-    float pq, sq, mmo, result;
+    //x for P
+    float x_val1 = 1.0f +  q * q * rc_norm;
+    float x_val2 = 1.0f +  q * q * rp_norm;
 
-    //calculate P(q) for the spherical subunits; not normalized
-	pq = pow((3.0f*(sin(q*radius) - q*radius*cos(q*radius))/pow((q*radius),3)),2);
+    float inv_form = pow(x_val1, mass_dim) * pow(x_val2, tot_dim);
 
-    //calculate S(q)
-    mmo = 5.0f - surface_dim;
-    sq  = exp(_gamln(mmo))*sin(-(mmo)*atan(q*cutoff_length));
-    sq *= pow(cutoff_length, mmo);
-    sq /= pow((1.0f + (q*cutoff_length)*(q*cutoff_length)),(mmo/2.0f));
-    sq /= q;
+    //another singular
+    if (inv_form == 0.0f) return 0.0f;
 
-    //combine and return
-    result = pq * sq;
+    float form_factor = 1.0f;
+    form_factor /= inv_form;
 
-    return result;
+    return (form_factor);
 }
 float form_volume(float radius){
 
@@ -136,22 +132,31 @@ float form_volume(float radius){
 }
 
 float Iq(float q,
-    float radius,
-    float surface_dim,
-    float cutoff_length
-    )
+          float mass_dim,
+          float surface_dim,
+          float cluster_rg,
+          float primary_rg)
 {
-    return surface_fractal_kernel(q, radius, surface_dim, cutoff_length);
+    return _mass_surface_fractal_kernel(q,
+            mass_dim,
+            surface_dim,
+            cluster_rg,
+            primary_rg);
 }
 
 // Iqxy is never called since no orientation or magnetic parameters.
 float Iqxy(float qx, float qy,
-    float radius,
-    float surface_dim,
-    float cutoff_length)
+          float mass_dim,
+          float surface_dim,
+          float cluster_rg,
+          float primary_rg)
 {
     float q = sqrt(qx*qx + qy*qy);
-    return surface_fractal_kernel(q, radius, surface_dim, cutoff_length);
+    return _mass_surface_fractal_kernel(q,
+           mass_dim,
+           surface_dim,
+           cluster_rg,
+           primary_rg);
 }
 
 

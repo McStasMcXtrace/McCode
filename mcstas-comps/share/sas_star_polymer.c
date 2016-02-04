@@ -66,112 +66,56 @@
 #endif
 
 
-#define VOLUME_PARAMETERS radius
-#define VOLUME_WEIGHT_PRODUCT radius_w
-#define VOLUME_PARAMETER_DECLARATIONS float radius
-#define IQ_KERNEL_NAME sphere_Iq
-#define IQ_PARAMETERS sld, solvent_sld, radius
+#define IQ_KERNEL_NAME star_polymer_Iq
+#define IQ_PARAMETERS radius2, arms
 #define IQ_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
-    const float sld, \
-    const float solvent_sld
-#define IQ_WEIGHT_PRODUCT radius_w
-#define IQ_DISPERSION_LENGTH_DECLARATIONS const int Nradius
-#define IQ_DISPERSION_LENGTH_SUM Nradius
-#define IQ_OPEN_LOOPS     for (int radius_i=0; radius_i < Nradius; radius_i++) { \
-      const float radius = loops[2*(radius_i)]; \
-      const float radius_w = loops[2*(radius_i)+1];
-#define IQ_CLOSE_LOOPS     }
-#define IQ_PARAMETER_DECLARATIONS float sld, float solvent_sld, float radius
-#define IQXY_KERNEL_NAME sphere_Iqxy
-#define IQXY_PARAMETERS sld, solvent_sld, radius
+    const float radius2, \
+    const float arms
+#define IQXY_KERNEL_NAME star_polymer_Iqxy
+#define IQXY_PARAMETERS radius2, arms
 #define IQXY_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
-    const float sld, \
-    const float solvent_sld
-#define IQXY_WEIGHT_PRODUCT radius_w
-#define IQXY_DISPERSION_LENGTH_DECLARATIONS const int Nradius
-#define IQXY_DISPERSION_LENGTH_SUM Nradius
-#define IQXY_OPEN_LOOPS     for (int radius_i=0; radius_i < Nradius; radius_i++) { \
-      const float radius = loops[2*(radius_i)]; \
-      const float radius_w = loops[2*(radius_i)+1];
-#define IQXY_CLOSE_LOOPS     }
-#define IQXY_PARAMETER_DECLARATIONS float sld, float solvent_sld, float radius
+    const float radius2, \
+    const float arms
 
-/**
-* Spherical Bessel function 3*j1(x)/x
-*
-* Used for low q to avoid cancellation error.
-* Note that the values differ from sasview ~ 5e-12 rather than 5e-14, but
-* in this case it is likely cancellation errors in the original expression
-* using float precision that are the source.  Single precision only
-* requires the first 3 terms.  Double precision requires the 4th term.
-* The fifth term is not needed, and is commented out.
-* Taylor expansion:
-*      1.0f + q2*(-3.f/30.f + q2*(3.f/840.f))+ q2*(-3.f/45360.f + q2*(3.f/3991680.f))))
-* Expression returned from Herbie (herbie.uwpise.org/demo):
-*      const float t = ((1.f + 3.f*q2*q2/5600.f) - q2/20.f);
-*      return t*t;
-*/
+float form_volume(void);
 
-float sph_j1c(float q);
-float sph_j1c(float q)
+float Iq(float q, float radius2, float arms);
+
+float Iqxy(float qx, float qy, float radius2, float arms);
+
+
+static float _mass_fractal_kernel(float q, float radius2, float arms)
 {
-    const float q2 = q*q;
-    float sin_q, cos_q;
 
-    SINCOS(q, sin_q, cos_q);
+    float u_2 = radius2 * pow(q,2);
+    float v = u_2 * arms / (3.0f * arms - 2.0f);
 
-    const float bessel = (q < 0.384038453352533f)
-        ? (1.0f + q2*(-3.f/30.f + q2*(3.f/840.f)))
-        : 3.0f*(sin_q/q - cos_q)/q2;
+    float term1 = v - 1.0f + exp(-v);
+    float term2 = ((arms - 1.0f)/2.0f)* pow((1.0f - exp(-v)),2.0f);
 
-    return bessel;
+    return (2.0f * (term1 + term2)) / (arms * pow(v,2.0f));
 
- /*
-    // Code to test various expressions
-    if (sizeof(q2) > 4) {
-        return 3.0f*(sin_q/q - cos_q)/q2;
-    } else if (q < 0.384038453352533f) {
-        //const float t = ((1.f + 3.f*q2*q2/5600.f) - q2/20.f); return t*t;
-        return 1.0f + q2*q2*(3.f/840.f) - q2*(3.f/30.f);
-        //return 1.0f + q2*(-3.f/30.f + q2*(3.f/840.f));
-        //return 1.0f + q2*(-3.f/30.f + q2*(3.f/840.f + q2*(-3.f/45360.f)));
-        //return 1.0f + q2*(-3.f/30.f + q2*(3.f/840.f + q2*(-3.f/45360.f + q2*(3.f/3991680.f))));
-    } else {
-        return 3.0f*(sin_q/q - cos_q)/q2;
-    }
-*/
 }
 
-
-float form_volume(VOLUME_PARAMETER_DECLARATIONS);
-float form_volume(VOLUME_PARAMETER_DECLARATIONS) {
-    
-    return 1.333333333333333f*M_PI*radius*radius*radius;
-    
+float form_volume(void)
+{
+    return 1.0f;
 }
 
-
-float Iq(float q, IQ_PARAMETER_DECLARATIONS);
-float Iq(float q, IQ_PARAMETER_DECLARATIONS) {
-    
-    const float qr = q*radius;
-    const float bes = sph_j1c(qr);
-    const float fq = bes * (sld - solvent_sld) * form_volume(radius);
-    return 1.0e-4f*fq*fq;
-    
+float Iq(float q, float radius2, float arms)
+{
+    return _mass_fractal_kernel(q, radius2, arms);
 }
 
-
-float Iqxy(float qx, float qy, IQXY_PARAMETER_DECLARATIONS);
-float Iqxy(float qx, float qy, IQXY_PARAMETER_DECLARATIONS) {
-    
-    // never called since no orientation or magnetic parameters.
-    //return -1.0f;
-    return Iq(sqrt(qx*qx + qy*qy), sld, solvent_sld, radius);
-    
+// Iqxy is never called since no orientation or magnetic parameters.
+float Iqxy(float qx, float qy, float radius2, float arms)
+{
+    float q = sqrt(qx*qx + qy*qy);
+    return _mass_fractal_kernel(q, radius2, arms);
 }
+
 
 
 /*

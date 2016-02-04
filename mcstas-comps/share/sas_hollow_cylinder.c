@@ -450,6 +450,10 @@ float Iq(float q, float radius, float core_radius, float length, float sld,
 	float summ,answer,delrho;			//running tally of integration
 	float norm,volume;	//final calculation variables
 	
+	if (core_radius >= radius || radius >= length) {
+		return NAN;
+	}
+	
 	delrho = solvent_sld - sld;
 	lower = 0.0f;
 	upper = 1.0f;		//limits of numerical integral
@@ -468,7 +472,6 @@ float Iq(float q, float radius, float core_radius, float length, float sld,
 	return(answer);
 }
 
-//FIXME: Factor of two difference
 float Iqxy(float qx, float qy, float radius, float core_radius, float length, float sld,
 	float solvent_sld, float theta, float phi)
 {
@@ -476,7 +479,6 @@ float Iqxy(float qx, float qy, float radius, float core_radius, float length, fl
 	q = sqrt(qx*qx+qy*qy);
 	return hollow_cylinder_analytical_2D_scaled(q, qx/q, qy/q, radius, core_radius, length, sld, solvent_sld, theta, phi);
 }
-
 
 /*
     ##########################################################

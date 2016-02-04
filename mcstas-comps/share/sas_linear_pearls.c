@@ -66,100 +66,148 @@
 #endif
 
 
-#define IQ_KERNEL_NAME gel_fit_Iq
-#define IQ_PARAMETERS guinier_scale, lorentzian_scale, gyration_radius, fractal_exp, cor_length
+#define IQ_KERNEL_NAME linear_pearls_Iq
+#define IQ_PARAMETERS radius, edge_sep, num_pearls, pearl_sld, solvent_sld
 #define IQ_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
-    const float guinier_scale, \
-    const float lorentzian_scale, \
-    const float gyration_radius, \
-    const float fractal_exp, \
-    const float cor_length
-#define IQXY_KERNEL_NAME gel_fit_Iqxy
-#define IQXY_PARAMETERS guinier_scale, lorentzian_scale, gyration_radius, fractal_exp, cor_length
+    const float radius, \
+    const float edge_sep, \
+    const float num_pearls, \
+    const float pearl_sld, \
+    const float solvent_sld
+#define IQXY_KERNEL_NAME linear_pearls_Iqxy
+#define IQXY_PARAMETERS radius, edge_sep, num_pearls, pearl_sld, solvent_sld
 #define IQXY_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
-    const float guinier_scale, \
-    const float lorentzian_scale, \
-    const float gyration_radius, \
-    const float fractal_exp, \
-    const float cor_length
+    const float radius, \
+    const float edge_sep, \
+    const float num_pearls, \
+    const float pearl_sld, \
+    const float solvent_sld
 
-float form_volume(void);
-
-float Iq(float q,
-          float guinier_scale,
-          float lorentzian_scale,
-          float gyration_radius,
-          float fractal_exp,
-          float cor_length);
-
-float Iqxy(float qx, float qy,
-          float guinier_scale,
-          float lorentzian_scale,
-          float gyration_radius,
-          float fractal_exp,
-          float cor_length);
-
-static float _gel_fit_kernel(float q,
-          float guinier_scale,
-          float lorentzian_scale,
-          float gyration_radius,
-          float fractal_exp,
-          float cor_length)
-{
-    // Lorentzian Term
-    ////////////////////////float a(x[i]*x[i]*zeta*zeta);
-    float lorentzian_term = q*q*cor_length*cor_length;
-    lorentzian_term = 1.0f + ((fractal_exp + 1.0f)/3.0f)*lorentzian_term;
-    lorentzian_term = pow(lorentzian_term, (fractal_exp/2.0f) );
-
-    // Exponential Term
-    ////////////////////////float d(x[i]*x[i]*rg*rg);
-    float exp_term = q*q*gyration_radius*gyration_radius;
-    exp_term = exp(-1.0f*(exp_term/3.0f));
-
-    // Scattering Law
-    float result = lorentzian_scale/lorentzian_term + guinier_scale*exp_term;
-    return result;
-}
-float form_volume(void){
-    // Unused, so free to return garbage.
-    return NAN;
-}
+float form_volume(float radius, float num_pearls);
 
 float Iq(float q,
-          float guinier_scale,
-          float lorentzian_scale,
-          float gyration_radius,
-          float fractal_exp,
-          float cor_length)
-{
-    return _gel_fit_kernel(q,
-                          guinier_scale,
-                          lorentzian_scale,
-                          gyration_radius,
-                          fractal_exp,
-                          cor_length);
-}
+            float radius,
+            float edge_sep,
+            float num_pearls,
+            float pearl_sld,
+            float solvent_sld);
 
-// Iqxy is never called since no orientation or magnetic parameters.
 float Iqxy(float qx, float qy,
-          float guinier_scale,
-          float lorentzian_scale,
-          float gyration_radius,
-          float fractal_exp,
-          float cor_length)
+            float radius,
+            float edge_sep,
+            float num_pearls,
+            float pearl_sld,
+            float solvent_sld);
+
+float linear_pearls_kernel(float q,
+            float radius,
+            float edge_sep,
+            float num_pearls,
+            float pearl_sld,
+            float solvent_sld);
+
+
+float form_volume(float radius, float num_pearls)
 {
-    float q = sqrt(qx*qx + qy*qy);
-    return _gel_fit_kernel(q,
-                          guinier_scale,
-                          lorentzian_scale,
-                          gyration_radius,
-                          fractal_exp,
-                          cor_length);
+    // Pearl volume
+    float pearl_vol = 4.0f /3.0f * M_PI * pow(radius, 3.0f);
+    // Return total volume
+    return num_pearls * pearl_vol;;
 }
 
+// If used elsewhere - factor out to lib/
+static
+float sinc(float x)
+{
+  if (x==0.0f){
+    return 1.0f;
+  }
+  return sin(x)/x;
+}
+
+float linear_pearls_kernel(float q,
+            float radius,
+            float edge_sep,
+            float num_pearls,
+            float pearl_sld,
+            float solvent_sld)
+{
+    float n_contrib;
+    //relative sld
+    float contrast_pearl = pearl_sld - solvent_sld;
+    //each volume
+    float pearl_vol = 4.0f /3.0f * M_PI * pow(radius, 3.0f);
+    //total volume
+    float tot_vol = num_pearls * pearl_vol;
+    //mass
+    float m_s = contrast_pearl * pearl_vol;
+    //center to center distance between the neighboring pearls
+    float separation = edge_sep + 2.0f * radius;
+
+    float x=q*radius;
+
+    // Try Taylor on x*xos(x)
+	// float out_cos = x - pow(x,3)/2 + pow(x,5)/24 - pow(x,7)/720 + pow(x,9)/40320;
+    // psi -= x*out_cos;
+
+    //sine functions of a pearl
+    float psi = sin(q * radius);
+    psi -= x * cos(x);
+    psi /= pow((q * radius), 3.0f);
+
+    // N pearls contribution
+    int n_max = num_pearls - 1;
+    n_contrib = num_pearls;
+    for(int num=1; num<=n_max; num++) {
+        n_contrib += (2.0f*(num_pearls-num)*sinc(q*separation*num));
+    }
+    // form factor for num_pearls
+    float form_factor = n_contrib;
+    form_factor *= pow((m_s*psi*3.0f), 2.0f);
+    form_factor /= (tot_vol * 1.0e4f);
+
+    return form_factor;
+}
+
+float Iq(float q,
+            float radius,
+            float edge_sep,
+            float num_pearls,
+            float pearl_sld,
+            float solvent_sld)
+{
+
+	float result = linear_pearls_kernel(q,
+                    radius,
+                    edge_sep,
+                    num_pearls,
+                    pearl_sld,
+                    solvent_sld);
+
+	return result;
+}
+
+float Iqxy(float qx, float qy,
+            float radius,
+            float edge_sep,
+            float num_pearls,
+            float pearl_sld,
+            float solvent_sld)
+{
+	float q;
+	q = sqrt(qx*qx+qy*qy);
+
+	float result = linear_pearls_kernel(q,
+                    radius,
+                    edge_sep,
+                    num_pearls,
+                    pearl_sld,
+                    solvent_sld);
+
+	return result;
+}
 
 
 /*

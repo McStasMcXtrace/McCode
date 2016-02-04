@@ -171,6 +171,53 @@ float J1(float x)
 }
 
 
+/**
+* Spherical Bessel function 3*j1(x)/x
+*
+* Used for low q to avoid cancellation error.
+* Note that the values differ from sasview ~ 5e-12 rather than 5e-14, but
+* in this case it is likely cancellation errors in the original expression
+* using float precision that are the source.  Single precision only
+* requires the first 3 terms.  Double precision requires the 4th term.
+* The fifth term is not needed, and is commented out.
+* Taylor expansion:
+*      1.0f + q2*(-3.f/30.f + q2*(3.f/840.f))+ q2*(-3.f/45360.f + q2*(3.f/3991680.f))))
+* Expression returned from Herbie (herbie.uwpise.org/demo):
+*      const float t = ((1.f + 3.f*q2*q2/5600.f) - q2/20.f);
+*      return t*t;
+*/
+
+float sph_j1c(float q);
+float sph_j1c(float q)
+{
+    const float q2 = q*q;
+    float sin_q, cos_q;
+
+    SINCOS(q, sin_q, cos_q);
+
+    const float bessel = (q < 0.384038453352533f)
+        ? (1.0f + q2*(-3.f/30.f + q2*(3.f/840.f)))
+        : 3.0f*(sin_q/q - cos_q)/q2;
+
+    return bessel;
+
+ /*
+    // Code to test various expressions
+    if (sizeof(q2) > 4) {
+        return 3.0f*(sin_q/q - cos_q)/q2;
+    } else if (q < 0.384038453352533f) {
+        //const float t = ((1.f + 3.f*q2*q2/5600.f) - q2/20.f); return t*t;
+        return 1.0f + q2*q2*(3.f/840.f) - q2*(3.f/30.f);
+        //return 1.0f + q2*(-3.f/30.f + q2*(3.f/840.f));
+        //return 1.0f + q2*(-3.f/30.f + q2*(3.f/840.f + q2*(-3.f/45360.f)));
+        //return 1.0f + q2*(-3.f/30.f + q2*(3.f/840.f + q2*(-3.f/45360.f + q2*(3.f/3991680.f))));
+    } else {
+        return 3.0f*(sin_q/q - cos_q)/q2;
+    }
+*/
+}
+
+
 /*
  *  GaussWeights.c
  *  SANSAnalysis
@@ -361,7 +408,7 @@ float Iq(float q,
     // if (req_minor > req_major || req_major > rpolar) return NAN;  // Exclude invalid region
 
     float sn, cn;
-    float st, ct;
+    //float st, ct;
     //const float lower = 0.0f;
     //const float upper = 1.0f;
     float outer = 0.0f;
@@ -377,12 +424,7 @@ float Iq(float q,
         for (int j=0;j<76;j++) {
             const float y = 0.5f*(Gauss76Z[j] + 1.0f);
             const float t = q*sqrt(acosx2 + bsinx2*(1.0f-y*y) + c2*y*y);
-            SINCOS(t, st, ct);
-            //const float fq = ( t==0.0f ? 1.0f : 3.0f*(st-t*ct)/(t*t*t) );
-            const float tsq = t*t;
-            const float fq = (t < 1.e-1f)
-                ? 1.0f + tsq*(-3.f/30.f + tsq*(3.f/840.f + tsq*(-3.f/45360.f)))// + tsq*(3.f/3991680.f))))
-                : 3.0f*(st/t - ct)/tsq;
+            const float fq = sph_j1c(t);
             inner += Gauss76Wt[j] * fq * fq ;
         }
         outer += Gauss76Wt[i] * 0.5f * inner;

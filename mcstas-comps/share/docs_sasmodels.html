@@ -4,7 +4,7 @@
 <p><font size="24">Available SasView sasmodels - Extended parameters description</font></p> 
 <table border=1>
   <tr>
-     <td>Model name</td>
+     <td>sasmodels name</td>
      <td>Parameters </td>
      <td>Units</td>
      <td>Range</td>
@@ -556,6 +556,72 @@
      <td>&nbsp;</td>
   </tr>
   <tr>
+     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#flexiblecylinderexmodel">flexible_cylinder_ex</a></td>
+     <td> { 1000.0, 100.0, 20.0, 1.5, 1.0, 6.3 }</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#flexiblecylinderexmodel">flexible_cylinder_ex_xy</a></td>
+     <td> { 1000.0, 100.0, 20.0, 1.5, 1.0, 6.3 }</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Parameters:</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Length of the flexible cylinder</td>
+     <td>Ang</td>
+     <td>[0, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Kuhn length of the flexible cylinder</td>
+     <td>Ang</td>
+     <td>[0, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Radius of the flexible cylinder</td>
+     <td>Ang</td>
+     <td>[0, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Axis_ratio (major_radius/radius</td>
+     <td>&nbsp;</td>
+     <td>[0, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Cylinder scattering length density</td>
+     <td>1e-6/Ang^2</td>
+     <td>[-inf, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Solvent scattering length density</td>
+     <td>1e-6/Ang^2</td>
+     <td>[-inf, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
      <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#peakgaussmodel">gaussian_peak</a></td>
      <td> { 0.05, 0.005 }</td>
      <td>&nbsp;</td>
@@ -589,66 +655,6 @@
      <td>&nbsp;</td>
      <td>Peak width (standard deviation)</td>
      <td>1/Ang</td>
-     <td>[0, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#gelfitmodel">gel_fit</a></td>
-     <td> { 1.7, 3.5, 104.0, 2.0, 16.0 }</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#gelfitmodel">gel_fit_xy</a></td>
-     <td> { 1.7, 3.5, 104.0, 2.0, 16.0 }</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Parameters:</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Guinier length scale</td>
-     <td>cm^{-1}</td>
-     <td>[-inf, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Lorentzian length scale</td>
-     <td>cm^{-1}</td>
-     <td>[-inf, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Radius of gyration</td>
-     <td>Ang</td>
-     <td>[2, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Fractal exponent</td>
-     <td>&nbsp;</td>
-     <td>[0, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Correlation length</td>
-     <td>Ang</td>
      <td>[0, inf]</td>
   </tr>
   <tr>
@@ -1192,6 +1198,66 @@
      <td>&nbsp;</td>
   </tr>
   <tr>
+     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#linearpearlsmodel">linear_pearls</a></td>
+     <td> { 80.0, 350.0, 3.0, 1.0, 6.3 }</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#linearpearlsmodel">linear_pearls_xy</a></td>
+     <td> { 80.0, 350.0, 3.0, 1.0, 6.3 }</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Parameters:</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Radius of the pearls</td>
+     <td>Ang</td>
+     <td>[0, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Length of the string segment - surface to surface</td>
+     <td>Ang</td>
+     <td>[0, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Number of the pearls</td>
+     <td>&nbsp;</td>
+     <td>[0, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>SLD of the pearl spheres</td>
+     <td>1e-6/Ang^2</td>
+     <td>[-inf, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>SLD of the solvent</td>
+     <td>1e-6/Ang^2</td>
+     <td>[-inf, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
      <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#lorentzmodel">lorentz</a></td>
      <td> { 50.0 }</td>
      <td>&nbsp;</td>
@@ -1220,6 +1286,108 @@
      <td>Screening length</td>
      <td>Ang</td>
      <td>[0, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#massfractalmodel">mass_fractal</a></td>
+     <td> { 10.0, 1.9, 100.0 }</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#massfractalmodel">mass_fractal_xy</a></td>
+     <td> { 10.0, 1.9, 100.0 }</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Parameters:</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Particle radius</td>
+     <td>Ang</td>
+     <td>[0.0, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Mass fractal dimension</td>
+     <td>&nbsp;</td>
+     <td>[1.0, 6.0]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Cut-off length</td>
+     <td>Ang</td>
+     <td>[0.0, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#masssurfacefractalmodel">mass_surface_fractal</a></td>
+     <td> { 1.8, 2.3, 86.7, 4000.0 }</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#masssurfacefractalmodel">mass_surface_fractal_xy</a></td>
+     <td> { 1.8, 2.3, 86.7, 4000.0 }</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Parameters:</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Mass fractal dimension</td>
+     <td>&nbsp;</td>
+     <td>[1e-16, 6.0]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Surface fractal dimension</td>
+     <td>&nbsp;</td>
+     <td>[1e-16, 6.0]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Cluster radius of gyration</td>
+     <td>Ang</td>
+     <td>[0.0, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Primary particle radius of gyration</td>
+     <td>Ang</td>
+     <td>[0.0, inf]</td>
   </tr>
   <tr>
      <td>&nbsp;</td>
@@ -1378,198 +1546,6 @@
      <td>&nbsp;</td>
   </tr>
   <tr>
-     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#rpamodel">rpa</a></td>
-     <td> { 0, 1000.0, 0.25, 100.0, 10.0, 5.0, 1000.0, 0.25, 100.0, 10.0, 5.0, 1000.0, 0.25, 100.0, 10.0, 5.0, 1000.0, 0.25, 100.0, 10.0, 5.0, -0.0004, -0.0004, -0.0004, -0.0004, -0.0004, -0.0004 }</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#rpamodel">rpa_xy</a></td>
-     <td> { 0, 1000.0, 0.25, 100.0, 10.0, 5.0, 1000.0, 0.25, 100.0, 10.0, 5.0, 1000.0, 0.25, 100.0, 10.0, 5.0, 1000.0, 0.25, 100.0, 10.0, 5.0, -0.0004, -0.0004, -0.0004, -0.0004, -0.0004, -0.0004 }</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Parameters:</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Component organization</td>
-     <td>['C+D binary mixture', 'C:D diblock copolymer', 'B+C+D ternary mixture', 'B+C:D binary mixture', 'B:C:D triblock copolymer', 'A+B+C+D quaternary mixture', 'A+B+C:D ternary mixture', 'A+B:C:D binary mixture', 'A:B+C:D binary mixture', 'A:B:C:D quadblock copolymer']</td>
-     <td>[0, 10]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Degree of polymerization</td>
-     <td>&nbsp;</td>
-     <td>[1, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>volume fraction</td>
-     <td>&nbsp;</td>
-     <td>[0, 1]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>specific volume</td>
-     <td>mL/mol</td>
-     <td>[0, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>scattering length</td>
-     <td>fm</td>
-     <td>[-inf, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>segment length</td>
-     <td>Ang</td>
-     <td>[0, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Degree of polymerization</td>
-     <td>&nbsp;</td>
-     <td>[1, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>volume fraction</td>
-     <td>&nbsp;</td>
-     <td>[0, 1]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>specific volume</td>
-     <td>mL/mol</td>
-     <td>[0, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>scattering length</td>
-     <td>fm</td>
-     <td>[-inf, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>segment length</td>
-     <td>Ang</td>
-     <td>[0, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Degree of polymerization</td>
-     <td>&nbsp;</td>
-     <td>[1, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>volume fraction</td>
-     <td>&nbsp;</td>
-     <td>[0, 1]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>specific volume</td>
-     <td>mL/mol</td>
-     <td>[0, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>scattering length</td>
-     <td>fm</td>
-     <td>[-inf, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>segment length</td>
-     <td>Ang</td>
-     <td>[0, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Degree of polymerization</td>
-     <td>&nbsp;</td>
-     <td>[1, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>volume fraction</td>
-     <td>&nbsp;</td>
-     <td>[0, 1]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>specific volume</td>
-     <td>mL/mol</td>
-     <td>[0, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>scattering length</td>
-     <td>fm</td>
-     <td>[-inf, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>segment length</td>
-     <td>Ang</td>
-     <td>[0, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Interaction parameter</td>
-     <td>&nbsp;</td>
-     <td>[-inf, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Interaction parameter</td>
-     <td>&nbsp;</td>
-     <td>[-inf, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Interaction parameter</td>
-     <td>&nbsp;</td>
-     <td>[-inf, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Interaction parameter</td>
-     <td>&nbsp;</td>
-     <td>[-inf, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Interaction parameter</td>
-     <td>&nbsp;</td>
-     <td>[-inf, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Interaction parameter</td>
-     <td>&nbsp;</td>
-     <td>[-inf, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
      <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#spheremodel">sphere</a></td>
      <td> { 1, 6, 50 }</td>
      <td>&nbsp;</td>
@@ -1610,6 +1586,48 @@
      <td>Sphere radius</td>
      <td>Ang</td>
      <td>[0, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#starpolymermodel">star_polymer</a></td>
+     <td> { 100.0, 3 }</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#starpolymermodel">star_polymer_xy</a></td>
+     <td> { 100.0, 3 }</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Parameters:</td>
+     <td>&nbsp;</td>
+     <td>&nbsp;</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Ensemble radius of gyration squared of an arm</td>
+     <td>Ang</td>
+     <td>[0.0, inf]</td>
+  </tr>
+  <tr>
+     <td>&nbsp;</td>
+     <td>Number of arms in the model</td>
+     <td>&nbsp;</td>
+     <td>[1.0, 6.0]</td>
   </tr>
   <tr>
      <td>&nbsp;</td>
@@ -1664,54 +1682,6 @@
      <td>stickiness, tau</td>
      <td>&nbsp;</td>
      <td>[-inf, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#surfacefractalmodel">surface_fractal</a></td>
-     <td> { 10.0, 2.0, 500.0 }</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td><a href="http://www.sasview.org/sasview/user/models/model_functions.html#surfacefractalmodel">surface_fractal_xy</a></td>
-     <td> { 10.0, 2.0, 500.0 }</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Parameters:</td>
-     <td>&nbsp;</td>
-     <td>&nbsp;</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Particle radius</td>
-     <td>Ang</td>
-     <td>[0, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Surface fractal dimension</td>
-     <td>&nbsp;</td>
-     <td>[0, inf]</td>
-  </tr>
-  <tr>
-     <td>&nbsp;</td>
-     <td>Cut-off Length</td>
-     <td>Ang</td>
-     <td>[0.0, inf]</td>
   </tr>
   <tr>
      <td>&nbsp;</td>
@@ -1796,6 +1766,251 @@
      <td>&nbsp;</td>
      <td>&nbsp;</td>
      <td>&nbsp;</td>
+  </tr>
+</table>
+<p> </p> 
+<p> </p> 
+<p><font size="24">Name convention: SasView  - sasmodels </font></p> 
+<table border=1>
+  <tr>
+     <td>SasView name</td>
+     <td>sasmodels name </td>
+     <td>P(Q) </td>
+     <td>S(Q)</td>
+     <td>Multiply</td>
+     <td>Multiplicity</td>
+  </tr>
+  <tr>
+     <td>BarBell</td>
+     <td>barbell </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>BCCrystal</td>
+     <td>bcc </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>CappedCylinder</td>
+     <td>capped_cylinder </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>CoreShellCylinder</td>
+     <td>core_shell_cylinder </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>Cylinder</td>
+     <td>cylinder </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>DAB</td>
+     <td>dab </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>Ellipsoid</td>
+     <td>ellipsoid </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>FCCrystal</td>
+     <td>fcc </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>FlexCylEllipX</td>
+     <td>flexible_cylinder_ex </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>PeakGauss</td>
+     <td>gaussian_peak </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>Guinier</td>
+     <td>guinier </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>HardsphereStructure</td>
+     <td>hardsphere </td>
+     <td>- </td>
+     <td> Y </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>HayterMSAStructure</td>
+     <td>HayterMSAsq </td>
+     <td>- </td>
+     <td> Y </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>HollowCylinder</td>
+     <td>hollow_cylinder </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>Lamellar</td>
+     <td>lamellar </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>LamellarPS</td>
+     <td>lamellarCaille </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>LamellarPSHG</td>
+     <td>lamellarCailleHG </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>LamellarFFHG</td>
+     <td>lamellarFFHG </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>LamellarPCrystal</td>
+     <td>lamellarPC </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>LinearPearls</td>
+     <td>linear_pearls </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>Lorentz</td>
+     <td>lorentz </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>MassFractal</td>
+     <td>mass_fractal </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>MassSurfaceFractal</td>
+     <td>mass_surface_fractal </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>Parallelepiped</td>
+     <td>parallelepiped </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>PearlNecklace</td>
+     <td>pearl_necklace </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>Sphere</td>
+     <td>sphere </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>StarPolymer</td>
+     <td>star_polymer </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>StickyHSStructure</td>
+     <td>stickyhardsphere </td>
+     <td>- </td>
+     <td> Y </td>
+     <td>-</td>
+     <td>-</td>
+  </tr>
+  <tr>
+     <td>TriaxialEllipsoid</td>
+     <td>triaxial_ellipsoid </td>
+     <td>- </td>
+     <td> - </td>
+     <td>-</td>
+     <td>-</td>
   </tr>
 </table>
 </body>
