@@ -92,8 +92,8 @@ sub read_instrument {
             $st = 1;
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
               # Initialize matlab struct...
-              write_process("if ~exist('mcdisplay'), addpath('$MCSTAS::perl_dir/../matlab'); end\n");
-              write_process("mcdisplay('Init');\n");
+              write_process("if ~exist('mxdisplay'), addpath('$MCSTAS::perl_dir/../matlab'); end\n");
+              write_process("mxdisplay('Init');\n");
               write_process("global INSTRUMENT;\n");
               write_process("INSTRUMENT.descr='$sim';\n");
               # Possibly, set firstcomp + lastcomp
@@ -133,7 +133,7 @@ sub read_instrument {
 # Output from mxdisplay from the McXtrace package, see http://www.mcxtrace.org
 # use freeWRL, openvrml, vrmlview, CosmoPlayer, Cortona, Octaga... to view file
 #\n# Instrument used was $sim_cmd. Full cmdline was:\n#
-# mcdisplay @ARGV
+# mxdisplay @ARGV
 #\n# Please rerun instrument with -i option to get more info.\n#\n
 WorldInfo {
   title \"McXtrace: $sim_cmd instrument\"
@@ -521,7 +521,7 @@ Transform {
                     $y1 += $a;
                     $z1 += $b;
                 } else {
-                    die "mcdisplay: Bad plane specifier in circle: '$plane'";
+                    die "mxdisplay: Bad plane specifier in circle: '$plane'";
                 }
                 push @coords, $x1, $y1, $z1;
             }
@@ -555,7 +555,7 @@ Transform {
             $st = 1;  # End of component graphics representation
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
               # Matlab 'End of instrument'
-              write_process("mcdisplay('Load');\n");
+              write_process("mxdisplay('Load');\n");
               write_process("PlotInstrument('init');\n");
               # Check if we were called with --save option, output matlab figure if so...
               if ($save) {
@@ -907,11 +907,11 @@ sub plot_neutron {
       # Matlab (split across multiple lines - otherwise sometimes
       # crashes with component-rich instrs.)
       # - Unless on Win32 where this will not work with the OLE connection
-      $retval=write_process("mcdisplay('Timeout');\n");
+      $retval=write_process("mxdisplay('Timeout');\n");
       if ($Config{'osname'} eq 'MSWin32' && (!$file_output)) {
-	$retval=write_process("mcdisplay('PlotNeutron',[@$x],[@$y],[@$z]);\n");
+	$retval=write_process("mxdisplay('PlotNeutron',[@$x],[@$y],[@$z]);\n");
       } else {
-	$retval=write_process("mcdisplay('PlotNeutron', ");
+	$retval=write_process("mxdisplay('PlotNeutron', ");
 	$retval=write_process("[@$x], ");
 	$retval=write_process("[@$y], ");
 	$retval=write_process("[@$z]);\n");
@@ -1344,8 +1344,8 @@ die "Usage: mxdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
  unless $sim_cmd;
 
 if($paramfile) {
-    open(IN, "<$paramfile") || die "mcdisplay: Failed to open parameter file '$paramfile'";
-    print "\nmcdisplay: Parameters specified using file \"$paramfile\"\n";
+    open(IN, "<$paramfile") || die "mxdisplay: Failed to open parameter file '$paramfile'";
+    print "\nmxdisplay: Parameters specified using file \"$paramfile\"\n";
     while(<IN>) {
         my $p;
         for $p (split) {
@@ -1408,11 +1408,11 @@ if ($plotter =~ /McXtrace|PGPLOT/i && $MCSTAS::mcstas_config{'PGPLOT'} eq "no") 
   print STDERR "Default / selected PLOTTER is PGPLOT - Problems:\n\n";
   print STDERR "PGPLOT.pm not found on Perl \@INC path\n\nSolution:\n\n";
   print STDERR "1) Install pgplot + pgperl packages (Unix/Linux/Cygwin) \n";
-  print STDERR "2) Rerun mcdisplay with -p/--plotter set to Matlab or VRML\n";
+  print STDERR "2) Rerun mxdisplay with -p/--plotter set to Matlab or VRML\n";
   print STDERR "3) Modify $MCSTAS::perl_dir/mccode_config.perl\n";
   print STDERR "   to set a different default plotter\n\n";
   print STDERR "******************************************************\n\n";
-  die "mcdisplay: PGPLOT problems...\n";
+  die "mxdisplay: PGPLOT problems...\n";
 }
 
 $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
@@ -1431,7 +1431,7 @@ if ($plotter =~ /McXtrace|PGPLOT/i) { # PGPLOT is plotter!
     }
   $global_device = get_device($pg_devname);
   if($global_device < 0) {
-    print STDERR "mcdisplay: Failed to open PGPLOT device $pg_devname\n";
+    print STDERR "mxdisplay: Failed to open PGPLOT device $pg_devname\n";
     exit 1;
   }
   my $seq = "";                        # Sequence number for multiple hardcopy
@@ -1457,10 +1457,10 @@ if ($plotter =~ /McXtrace|PGPLOT/i) { # PGPLOT is plotter!
   # Matlab is plotter - open a pipe / OLE connection
   if ($Config{'osname'} eq 'MSWin32') {
     $pid=0;
-    $ML = Win32::OLE->new('Matlab.Application') || die "mcdisplay: Could not start Matlab\n";
+    $ML = Win32::OLE->new('Matlab.Application') || die "mxdisplay: Could not start Matlab\n";
   } else {
     my $cmd = "$MCSTAS::mcstas_config{'MATLAB'} $MCSTAS::mcstas_config{'MATLAB_COMMAND'} > /dev/null";
-    $pid=open2(READER,WRITER, $cmd) || die "mcdisplay: Could not start Matlab\n$cmd\n";
+    $pid=open2(READER,WRITER, $cmd) || die "mxdisplay: Could not start Matlab\n$cmd\n";
   }
   print STDERR "Opened up pipe to matlab - pid is $pid\n";
   print STDERR "Building Matlab INSTRUMENT struct, please have patience...\n";
@@ -1471,7 +1471,7 @@ my ($numcomp, %neutron, %instr);
 $args = join(" ", @cmdline);
 $cmdline = "$sim_cmd --trace --no-output-files $args";
 printf STDERR "Starting simulation '$cmdline' ...\n";
-open(IN, "$cmdline |") || die "mcdisplay: Could not run simulation\n";
+open(IN, "$cmdline |") || die "mxdisplay: Could not run simulation\n";
 
 $numcomp = read_instrument(IN);
 $inspect_pos = get_inspect_pos($inspect, @components);
@@ -1500,7 +1500,7 @@ while(!eof(IN)) {
             my $tmpdev=0;
             $tmpdev = get_device($tmp_pg_devname);
             if($tmpdev < 0) {
-              print STDERR "mcdisplay: Warning: could not open PGPLOT output \"$tmp_pg_devname\" for hardcopy output\n";
+              print STDERR "mxdisplay: Warning: could not open PGPLOT output \"$tmp_pg_devname\" for hardcopy output\n";
             } else {
               plot_instrument(1, \%instr, \%neutron);
               print STDERR "Wrote \"$tmp_pg_devname\"\n";
