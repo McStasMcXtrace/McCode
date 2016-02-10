@@ -363,7 +363,7 @@ ellipsoid_intersect(double *l0, double *l1, double x, double y, double z,
 
 /*******************************************************************************
  * plane_intersect: Calculate intersection between a plane (with normal n including the point w)
- * and a line thourhg x along the direction k.
+ * and a line through x along the direction k.
  * returns 0 when no intersection is found (i.e. line is parallel to the plane)
  * returns 1 or -1 when intersection length is positive and negative, respectively
  *******************************************************************************/
