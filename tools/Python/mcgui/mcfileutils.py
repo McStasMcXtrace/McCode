@@ -65,8 +65,14 @@ class McComponentParser(object):
         pos_E = text.find('%E')
         
         # validate match for %I, %D, %P and %E positions
-        if pos_I == -1 or pos_D == -1 or pos_P == -1 or pos_E == -1:
-            raise Exception('parseComponentHeader: Missing %I, %D, %P or %E tag.')
+        if pos_I == -1:
+            raise Exception('parseComponentHeader: Missing %I tag.')
+        if pos_D == -1:
+            raise Exception('parseComponentHeader: Missing %D tag.')
+        if pos_P == -1:
+            raise Exception('parseComponentHeader: Missing %P tag.')
+        if pos_E == -1:
+            raise Exception('parseComponentHeader: Missing %E tag.')
         
         # extract strings for I, D and P sections
         text_I = McComponentParser.__removeStarsFromLines(text[pos_I+2: pos_D])
