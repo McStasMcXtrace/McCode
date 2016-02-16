@@ -34,7 +34,6 @@ class McView(object):
         self.mw.show()
 
     def showCodeEditorWindow(self, instr=''):
-        self.ew.initCodeEditor(instr)
         self.ew.show()
     
     def closeCodeEditorWindow(self):
@@ -42,11 +41,12 @@ class McView(object):
     
     ''' Update UI data
     '''
-    def updateInstrument(self, labels):
+    def updateInstrument(self, labels, instr):
         ''' labels: <instrument path>, <work dir> '''
         self.mw.ui.lblInstrument.setText(labels[0])
         if str(labels[0]) == '':
             self.__ssd = None
+        self.ew.initCodeEditor(instr)
         
     def updateStatus(self, text=''):
         self.mw.ui.statusbar.showMessage(text)

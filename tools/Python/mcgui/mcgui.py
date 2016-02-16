@@ -100,7 +100,7 @@ class McGuiState(QtCore.QObject):
     __emitter = None
     
     # <instrument>, <work dir>
-    instrumentUpdated = QtCore.pyqtSignal(QtCore.QStringList)
+    instrumentUpdated = QtCore.pyqtSignal(QtCore.QStringList, QtCore.QString)
     # [<canRun>, <canPlot>] each can be str 'True' or 'False'
     simStateUpdated = QtCore.pyqtSignal(QtCore.QStringList)
     
@@ -115,7 +115,7 @@ class McGuiState(QtCore.QObject):
         self.__emitter = emitter
         
     def __fireInstrUpdate(self):
-        self.instrumentUpdated.emit([self.getInstrumentFile(), self.getWorkDir()])
+        self.instrumentUpdated.emit([self.getInstrumentFile(), self.getWorkDir()], self.getInstrumentFile())
         
     def __fireSimStateUpdate(self):
         self.simStateUpdated.emit([str(self.canRun()), str(self.canPlot()), str(self.isSimRunning())])
