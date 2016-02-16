@@ -14,16 +14,15 @@
 * Origin: Risoe
 * Release: McStas 1.6
 *
-* Rectangular/circular slit with optional insignificance cut
+* Rectangular/circular slit 
 *
 * %D
 * A simple rectangular or circular slit. You may either
 * specify the radius (circular shape), or the rectangular bounds.
 * No transmission around the slit is allowed.
-* If cutting option is used, low-weight neutron rays are ABSORBED
 *
 * Example: Slit(xmin=-0.01, xmax=0.01, ymin=-0.01, ymax=0.01)
-*          Slit(radius=0.01, cut=1e-10)
+*          Slit(radius=0.01)
 *
 * %P
 * INPUT PARAMETERS
@@ -36,17 +35,14 @@
 * xwidth: Width of slit. Overrides xmin,xmax. (m)
 * yheight:Height of slit. Overrides ymin,ymax. (m)
 *
-* Optional parameters:
-* cut:  Lower limit for allowed weight (1)
-*
+* *
 * %E
 *******************************************************************************/
 
 
 DEFINE COMPONENT Slit
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xmin=-0.01, xmax=0.01, ymin=-0.01, ymax=0.01, radius=0, 
-  cut=0, xwidth=0, yheight=0)
+SETTING PARAMETERS (xmin=-0.01, xmax=0.01, ymin=-0.01, ymax=0.01, radius=0, xwidth=0, yheight=0)
 OUTPUT PARAMETERS ()
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 INITIALIZE
@@ -65,9 +61,6 @@ TRACE
     || ((radius != 0) && (x*x + y*y > radius*radius)))
       ABSORB;
     else
-      if (p < cut)
-        ABSORB;
-      else
         SCATTER;
 %}
 
