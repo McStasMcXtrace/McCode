@@ -304,9 +304,18 @@ sub get_out_file_next {
       $c_name="\"$c_name\"";
     }
     if ($ccopts) { $libs .= $ccopts; }
-    my $cmd = [$cc, split(' ', $mcstas_cflags), "-o",
-               $out_name, $c_name, split(' ', $libs)];
-    $v->{'cc_cmd'} = join(" ", @$cmd);           
+
+    # assemble compile cmd
+    my $cmd = [];
+    if ($MCSTAS::mcstas_config{'CFLAGS_PLACEMENT'} ne "1") {
+        $cmd = [$cc, split(' ', $mcstas_cflags), "-o",
+                $out_name, $c_name, split(' ', $libs)];
+    } else {
+        $cmd = [$cc, "-o",
+                $out_name, $c_name, split(' ', $libs), split(' ', $mcstas_cflags)];
+    }
+
+    $v->{'cc_cmd'} = join(" ", @$cmd);
     if(($file_type eq MCSTAS || $file_type eq C) &&
        ($force || !defined($out_age) || $out_age > $c_age)) {
       &$printer("Compiling C source '$c_name' ...");
@@ -405,7 +414,7 @@ sub do_test {
   if (!@paths) { return "$MCSTAS::mcstas_config{'RUNCMD'}: no test instruments found. Aborting.\n"; }
   # go into the selftest directory
   chdir($tmpdir) or return "$MCSTAS::mcstas_config{'RUNCMD'}: Can not go into $tmpdir: $!\n";
-  
+
   # Initialize test
   my $now = localtime;
   my $start_sec = time();
@@ -433,15 +442,15 @@ sub do_test {
     my @val_val=@{$data->{'validation_val'}};
     my ($base, $dirname, $ext) = fileparse($paths[$j],".instr");
     my $k;
-    if (!@val_par) { 
-    	&$printer("Instrument without test: $base"); 
+    if (!@val_par) {
+    	&$printer("Instrument without test: $base");
     	my $this_cmd = "$MCSTAS::mcstas_config{'RUNCMD'} -c -n0 --no-cflags $base";
     	&$printer("Executing: $this_cmd");
     	my $res = qx/$this_cmd/;
     	if ($child_error_code) {
     	  &$printer("[FAILED] $base: ($child_error_code): $child_error_text");
         $test_abstract .= "[FAILED] $base". "_$index (compilation/execution)\n";
-        $error_flag++; 
+        $error_flag++;
       } else {
     		$test_abstract .= "[notest] $base (no test procedure)\n";
     	}
@@ -452,13 +461,13 @@ sub do_test {
       $index++;
       # check command
       if ($this_cmd !~ m/$base/) { $this_cmd = "$base $this_cmd"; } # only parameters ?
-      if ($this_cmd !~ m/$MCSTAS::mcstas_config{'RUNCMD'}/ && $this_cmd !~ m/$MCSTAS::mcstas_config{'PLOTCMD'}/ && $this_cmd !~ m/$MCSTAS::mcstas_config{'TRACECMD'}/) 
+      if ($this_cmd !~ m/$MCSTAS::mcstas_config{'RUNCMD'}/ && $this_cmd !~ m/$MCSTAS::mcstas_config{'PLOTCMD'}/ && $this_cmd !~ m/$MCSTAS::mcstas_config{'TRACECMD'}/)
                                  { $this_cmd = "$MCSTAS::mcstas_config{'RUNCMD'} $this_cmd"; } # omitted $MCSTAS::mcstas_config{'RUNCMD'} ?
       if ($this_cmd !~ m/mpi/ && $mpi) { $this_cmd .= $mpi; }              # add mpi
       if ($this_cmd !~ m/-n/ && $this_cmd !~ m/--ncount/) { $this_cmd.= " -n $n_single"; }
       if ($this_cmd !~ m/--format/) { $this_cmd.= " --format=$plotter"; }
       if ($this_cmd !~ m/-d/ && $this_cmd !~ m/--dir/) { $this_cmd.= " -d $base" . "_$index"; }
-      
+
       if ($this_cmd =~ m/$MCSTAS::mcstas_config{'RUNCMD'}/) { $this_cmd .= " --no-cflags"; }
       &$printer("Executing: $this_cmd");
       my $res = qx/$this_cmd/;
@@ -467,7 +476,7 @@ sub do_test {
       if ($child_error_code) {
         &$printer("[FAILED] $base: ($child_error_code): $child_error_text");
         $test_abstract .= "[FAILED] $base". "_$index (compilation/execution)\n";
-        $error_flag++; 
+        $error_flag++;
         last; # go to next instrument (exit for $k)
       } else {
         #Analyse test output if reference value is available
@@ -489,13 +498,13 @@ sub do_test {
           if ($sim_E) { # found monitor for this test, either below 1 % or within Error bar
             my $diff = int(abs($sim_I/$val_val[$k]-1)*100+0.99);
             if (abs($sim_I/$sim_E) < 2) { # error is higher than half signal: stats too low
-              &$printer("[OK] $base: $val_det[$k] = $sim_I +/- $sim_E (statistics too low for testing, increase ncount)"); 
+              &$printer("[OK] $base: $val_det[$k] = $sim_I +/- $sim_E (statistics too low for testing, increase ncount)");
               $test_abstract .= "[OK]     $base". "_$index (statistics too low for testing, increase ncount)\n";
-            } elsif (abs($val_val[$k]-$sim_I) < abs($val_val[$k]*0.05) || abs($val_val[$k]-$sim_I) < 3*$sim_E)  { 
-              &$printer("[OK] $base: $val_det[$k] = $sim_I +/- $sim_E, equals $val_val[$k] within $diff \%"); 
+            } elsif (abs($val_val[$k]-$sim_I) < abs($val_val[$k]*0.05) || abs($val_val[$k]-$sim_I) < 3*$sim_E)  {
+              &$printer("[OK] $base: $val_det[$k] = $sim_I +/- $sim_E, equals $val_val[$k] within $diff \%");
               $test_abstract .= "[OK]     $base". "_$index (accuracy, $diff \%)\n";
-            } elsif (abs($val_val[$k]-$sim_I) < abs($val_val[$k]*0.2))  { 
-              &$printer("[OK] $base: $val_det[$k] = $sim_I +/- $sim_E, equals $val_val[$k] within $diff \%"); 
+            } elsif (abs($val_val[$k]-$sim_I) < abs($val_val[$k]*0.2))  {
+              &$printer("[OK] $base: $val_det[$k] = $sim_I +/- $sim_E, equals $val_val[$k] within $diff \%");
               $test_abstract .= "[OK]     $base". "_$index (accuracy, fair $diff \%)\n";
             } else {
               $accuracy_flag++;
@@ -503,11 +512,11 @@ sub do_test {
               $test_abstract .= "[FAILED] $base". "_$index (accuracy off by $diff \%)\n";
             }
           } else {
-            &$printer("[???] $base: $val_det[$k] = $sim_I (may have failed, reference not found)"); 
+            &$printer("[???] $base: $val_det[$k] = $sim_I (may have failed, reference not found)");
             $test_abstract .= "[??????] $base". "_$index (reference not found)\n";
           }
         }  else {   # no reference value
-          &$printer("[OK] $base: $val_det[$k] = $sim_I (accuracy not checked)"); 
+          &$printer("[OK] $base: $val_det[$k] = $sim_I (accuracy not checked)");
           $test_abstract .= "[OK]     $base". "_$index (accuracy not checked)\n";
         }
       } # end else $child_error_code (execution)
@@ -588,11 +597,11 @@ sub parse_header {
         } elsif(/\%EXAMPLE: (.*) Detector: *([^ =]+_I|[^ =]+) *= *([^ =]+)/i) {
                   push @val_det, "$2";
                   push @val_val,  $3;
-                  push @val_par, "$1";       
+                  push @val_par, "$1";
         } elsif(/\%EXAMPLE: (.*)/i) {
                   push @val_det, "";
                   push @val_val, 0;
-                  push @val_par, "$1";    
+                  push @val_par, "$1";
         } elsif(/\%E[a-z]*/i) {
             last;
         } else {
@@ -863,6 +872,3 @@ sub parse_instrument {
 }
 
 1;
-
-
-

@@ -4,6 +4,7 @@
 # used by the McStas perl tools.
 #
 # CFLAGS   - compiler flags (should not require changes)
+# CFLAGS_PLACEMENT - if 1, compiler flags are added to the end of the compile cmd
 # LDFLAGS  - linker flags (should not require changes)
 # MCCODE   - code generator to run (mcstas/mcxtrace)
 # CC       - c compiler command (should not requrire changes)
@@ -59,6 +60,7 @@ use Config;
 
 %MCSTAS::mcstas_config = (
      CFLAGS => '@CFLAGS@',
+     CFLAGS_PLACEMENT => '0',
      LDFLAGS => '@LDFLAGS@',
      MCCODE => '@FLAVOR@',
      PKGNAME => '@MCCODE_NAME@',
@@ -260,7 +262,7 @@ if ($Config{'osname'} ne 'MSWin32') { # Unix systems
       $hostfile = "$HOME/.@FLAVOR@/hosts";
     } else {
       $hostfile = "$HOME/.@FLAVOR@-hosts"
-    } 
+    }
   }
   else { $hostfile = ".@FLAVOR@-hosts"; }
   if (!-e $hostfile) {
