@@ -253,7 +253,7 @@ class McGuiState(QtCore.QObject):
             # compile binary from mcstas .c file 
             bf = basef + '.' + mccode_config.platform["EXESUFFIX"] 
             if mpi:
-                cmd = mccode_config.compilation["MPICC"] + ' -o ' + bf + ' ' + cf + ' ' + cflags + ' ' + mccode_config.compilation["MPIFLAGS"]
+                cmd = mccode_config.compilation["MPICC"] + ' -o ' + bf + ' ' + cf + ' ' + mccode_config.compilation["MPIFLAGS"] + ' ' + cflags
             else:
                 cmd = mccode_config.compilation["CC"] + ' -o ' + bf + ' ' + cf + ' ' + cflags
            
