@@ -2,20 +2,19 @@
 # -*- coding: utf-8 -*-
 import logging
 import argparse
-import sys
-from os.path import join, dirname
+import guiutils
+import fileutils
+import traceback
 
 # get access to mcgui folder
-sys.path.append(join(dirname(__file__), '..'))
-from mcgui import mcguiutils, mcfileutils
 
-def parsecomps_test(comproot, mcdisplay):
+def parse_displaysection(comproot, mcdisplay):
     ''' parse components in comproot and (optinally) print mcdisplay section  '''
-    instr, comp = mcguiutils.McGuiUtils.getInstrumentAndComponentFiles(comproot)
+    instr, comp = guiutils.McGuiUtils.getInstrumentAndComponentFiles(comproot)
     # '/home/jaga/source/McCode/mcstas-comps'
     errors = []
-    for c in comp: 
-        parser = mcfileutils.McComponentParser(c)
+    for c in comp:
+        parser = fileutils.McComponentParser(c)
         try:
             parser.parse()
             parser.parseDisplaySection()
@@ -31,11 +30,35 @@ def parsecomps_test(comproot, mcdisplay):
     for e in errors:
         print e
 
+def parse_comps():
+    ''' parse componens and print info '''
+    files_instr, files_comp = guiutils.McGuiUtils.getInstrumentAndComponentFiles('/usr/share/mcstas/2.1')
+    for f in files_comp:
+        parser = fileutils.McComponentParser(f)
+        try:
+            parser.parse()
+        except Exception, e:
+            traceback.print_stack()
+            print('exception: ', e)
+        
+        print('*****')
+        print('component file:        \n' + parser.file)
+        print('          name: :      \n' + parser.name)
+        print('          info:        \n' + parser.info)
+        print('          description: \n' + parser.description)
+        for p in parser.pars:
+            par = fileutils.McComponentParser.McComponentParInfo(p)
+            print('--> parameter name:          ' + par.par_name)
+            print('-->           default value: ' + par.default_value)
+            print('-->           type:          ' + par.type)
+            print('-->           docstring:     ' + par.doc_and_unit)
+        print('*****')
+
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
     # TODO: log test sequence
-    parsecomps_test(args.comproot[0], args.mcdisplay)
+    parse_displaysection(args.comproot[0], args.mcdisplay)
     
 
 if __name__ == '__main__':
