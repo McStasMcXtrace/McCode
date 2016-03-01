@@ -15,9 +15,12 @@ import re
 import mccode_config
 from PyQt4 import QtGui, QtCore
 from viewclasses import McView
-from mcguiutils import McGuiUtils
-from mcfileutils import McComponentParser
 from datetime import datetime
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from mclib.guiutils import McGuiUtils
+from mclib.fileutils import McComponentParser
+
 
 ''' Message emitter
 Status and message log and signalling.

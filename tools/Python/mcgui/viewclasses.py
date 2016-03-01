@@ -3,13 +3,16 @@ mcgui UI.
 
 @author: jaga
 '''
+import sys
 import os
 import mccode_config
 import re
 from widgets import *
-from mcguiutils import McGuiUtils
-from mcfileutils import McComponentParser
+from mclib.fileutils import McComponentParser
 from PyQt4 import Qsci
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from mclib.guiutils import McGuiUtils
 
 
 ''' View class containing all windows and dialogs.
