@@ -18,9 +18,8 @@ from viewclasses import McView
 from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from mclib.guiutils import McGuiUtils
-from mclib.fileutils import McComponentParser
-
+from mclib import McGuiUtils
+from mclib import McComponentParser
 
 ''' Message emitter
 Status and message log and signalling.

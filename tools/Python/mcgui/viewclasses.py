@@ -12,7 +12,7 @@ from mclib.fileutils import McComponentParser
 from PyQt4 import Qsci
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from mclib.guiutils import McGuiUtils
+from mclib import McGuiUtils
 
 
 ''' View class containing all windows and dialogs.
