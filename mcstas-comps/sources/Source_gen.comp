@@ -110,12 +110,12 @@
 * focus_aw: (deg) maximal (uniform) horz. width divergence
 * focus_ah: (deg) maximal (uniform) vert. height divergence
 * T1:       [K]   Temperature of the Maxwellian source, 0=none
-* I1:       [1/(cm**2*sr*AA)] Source flux per solid angle, area and Angstrom
+* I1:       [1/(cm**2*sr)] Source flux per solid angle, area and Angstrom
 *                 if I1=0, the source emits 1 in 4*PI whole space.
 * T2:       [K]   Second Maxwellian source Temperature, 0=none
-* I2:       [1/(cm**2*sr*AA)] Second Maxwellian Source flux
+* I2:       [1/(cm**2*sr)] Second Maxwellian Source flux
 * T3:       [K]   Third Maxwellian source Temperature, 0=none
-* I3:       [1/(cm**2*sr*AA)] Third Maxwellian Source flux
+* I3:       [1/(cm**2*sr)] Third Maxwellian Source flux
 * flux_file:[str] Name of a two columns [lambda flux] text file that contains
 *                 the wavelength distribution of the flux in <b>either</b> [1/(s*cm**2*st)] <b>or</b> [1/(s*cm**2*st*AA)] (see flux_file_perAA flag)
 *                 Comments (#) and further columns are ignored. Format is

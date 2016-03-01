@@ -53,9 +53,6 @@
 * </ul>
 * %Parameters
 * INPUT PARAMETERS:
-*******************************************
-* Spectrometer settings
-*******************************************
 * ITAR: Relative neutron yield from the spallation target. Value relative to 2009 [mA]
 * KI:   Incoming neutron wavevector. If set EI is automatically calculated [Angs-1]
 * KF:   Outgoing neutron wavevector. If set EI is automatically calculated [Angs-1]
@@ -119,9 +116,6 @@
 * VIRTUALIN: If set, flag to indicates that Virtual source is used after the monochromator collimator [1]
 * SOURCEFILE: Name of file to be used/genereated as virtual input/output [string]
 * verbose: print TAS configuration. 0 to be quiet [1]
-*********************************************
-* Sample parameters:
-*********************************************
 * SAMPLE: 1 is incoherent scatterer, 2 is powder, 3 is single crystal.[1]
 * SAMPLEFILE: Name of samplefile (with reflectionlist etc) [string]
 * SAMPLESIZE: Length, height and width of single crystal sample, or radius and height of phonon sample [m]
@@ -153,8 +147,7 @@
 * CCZ: 
 * TILT: Tilt angle out of plane of the sample scattering vector out of plane (rotation around z of the A3 arm)  [deg]
 * BARNS: If set the flag indicates that reflection list structure factors are in units of barns, otherwise fm^2 [1]
-*************************************************
-
+*
 * %Link
 * Rescal for Matlab at http://www.ill.fr/tas/matlab
 * %Link
@@ -162,29 +155,29 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT RITA_II( ITAR=1.0,L0=4.045,BPL=0.97,BPH=1.03,
-			  MONO_N=1,MONOFORCE=0,MONO_MOS_H=37, MONO_MOS_V=37,
-			  EI=0,EF=0,EN=0,
-			  SM=1,SS=-1,SA=1,
-			  QH=0, QK=0, QL=0, QM=1.8051,
-			  AS=4.95, BS=4.95, CS=4.95,
-			  AA=90, BB=90, CC=90,
-			  AH=0, AK=1, AL=0,
-			  BH=1, BK=0, BL=0,
+        MONO_N=1,MONOFORCE=0,MONO_MOS_H=37, MONO_MOS_V=37,
+        EI=0,EF=0,EN=0,
+        SM=1,SS=-1,SA=1,
+        QH=0, QK=0, QL=0, QM=1.8051,
+        AS=4.95, BS=4.95, CS=4.95,
+        AA=90, BB=90, CC=90,
+        AH=0, AK=1, AL=0,
+        BH=1, BK=0, BL=0,
 
-			  INFILTER=0, string INFILTERFILE="Be.trm",
-			  COLL_MS=80, MST=40, MSB=40, MSL=40, MSR=40,
-			  PTHICK=1e-3,PERSPEX=0,
-			  SAMPLE=1, string SAMPLEFILE="default",MOS=100,DD_D=1e-3, SAMPLESIZE=0.01,BARNS=1, 
-			  AAX=-4.95, AAY=0, AAZ=0, 
-			  BBX=0, BBY=0, BBZ=4.95, 
-			  CCX=0, CCY=4.95, CCZ=0,
-			  A1=0,A2=0,A3=0,A4=0,AA5=0,A6=0,TILT=0, 
+        INFILTER=0, string INFILTERFILE="Be.trm",
+        COLL_MS=80, MST=40, MSB=40, MSL=40, MSR=40,
+        PTHICK=1e-3,PERSPEX=0,
+        SAMPLE=1, string SAMPLEFILE="default",MOS=100,DD_D=1e-3, SAMPLESIZE=0.01,BARNS=1, 
+        AAX=-4.95, AAY=0, AAZ=0, 
+        BBX=0, BBY=0, BBZ=4.95, 
+        CCX=0, CCY=4.95, CCZ=0,
+        A1=0,A2=0,A3=0,A4=0,AA5=0,A6=0,TILT=0, 
 
-			  SST=100, SSB=100, SSL=100, SSR=100,
-			  OUTFILTER=1, string OUTFILTERFILE="Be.trm",
-			  ANAFORCE=0, AA5=0,C1=0,C2=0,C3=0,C4=0,C5=0,C6=0,C7=0,C8=0,C9=0,
-			  COARSE=1,LC=4, RC=3,
-			  REP=1,VIRTUALOUT=0, VIRTUALIN=0, string SOURCEFILE="Vin_default.dat",verbose=1
+        SST=100, SSB=100, SSL=100, SSR=100,
+        OUTFILTER=1, string OUTFILTERFILE="Be.trm",
+        ANAFORCE=0, AA5=0,C1=0,C2=0,C3=0,C4=0,C5=0,C6=0,C7=0,C8=0,C9=0,
+        COARSE=1,LC=4, RC=3,
+        REP=1,VIRTUALOUT=0, VIRTUALIN=0, string SOURCEFILE="Vin_default.dat",verbose=1
 )
 
 DECLARE
@@ -222,8 +215,8 @@ double mono_mosaic_h;
 double mono_mosaic_v;
 /* Monochromator curvature parmeters */
 //double u,v;
-double dms;	/* Target vector for focusing */
-double tx,tz;  	/* Target vector for focusing */
+double dms;  /* Target vector for focusing */
+double tx,tz;    /* Target vector for focusing */
 double sintm,sinta;
 double rv; /* Mono focusing parameter */
 /* Monochromator geometrical parameters */
@@ -496,8 +489,8 @@ int BinY;
             -atan2(machine_real.qt[1],machine_real.qt[0])
             -acos( (machine_hkl.kf*machine_hkl.kf-machine_real.qs-machine_hkl.ki*machine_hkl.ki)
                   /(-2*machine_real.qm*machine_hkl.ki) );
-        machine_real.a3 *= RAD2DEG*(machine_real.a4 > 0 ? 1 : -1 );	
-	//machine_real.a3 = machine_real.a3 -90;// Add by PW & LU
+        machine_real.a3 *= RAD2DEG*(machine_real.a4 > 0 ? 1 : -1 );  
+  //machine_real.a3 = machine_real.a3 -90;// Add by PW & LU
 
 
       }
@@ -523,7 +516,7 @@ printf("(RITA Analyzer Angle between blades: DA4=%.4g[deg])\n", machine_real.da4
  machine_real.c8= -machine_real.aa5+machine_real.a5-(8-5)*machine_real.da4;
  machine_real.c9= -machine_real.aa5+machine_real.a5-(9-5)*machine_real.da4;
 
-    return machine_real;	
+    return machine_real;  
   }
 /* END declaring stuff for the HKL calculator adapted from templateTAS */
 
@@ -823,10 +816,10 @@ if (verbose) {
     machine_real.a3, machine_real.a4,
     machine_real.a5, machine_real.a6);
     printf("(RITA Analyzer Angles: AA5=%.4g C1=%.4g C2=%.4g C3=%.4g C4=%.4g C5=%.4g C6=%.4g C7=%.4g C8=%.4g C9=%.4g [deg])\n",
-	 machine_real.aa5,
-	 machine_real.c1,machine_real.c2,machine_real.c3,
-	 machine_real.c4,machine_real.c5,machine_real.c6,
-	 machine_real.c7,machine_real.c8,machine_real.c9);
+   machine_real.aa5,
+   machine_real.c1,machine_real.c2,machine_real.c3,
+   machine_real.c4,machine_real.c5,machine_real.c6,
+   machine_real.c7,machine_real.c8,machine_real.c9);
 }
  
 /* END HKL calculator adapted from templateTAS */
@@ -852,7 +845,7 @@ if (SAMPLE == 2){
   PowderFile="";
 } else if (SAMPLE==4){
   /* Phonon sample */
- printf("Phonon sample used - no elastic contribution. \n");	
+ printf("Phonon sample used - no elastic contribution. \n");  
 }else {
   /* Purely incoherent scatterer, relevant WHEN at sample position */
   SingleXFile="";
@@ -937,8 +930,8 @@ COMPONENT source = Source_gen4 (
 
 
 COMPONENT slitGuideBegin = Slit(
-	xmin = -0.015, xmax = 0.015,
-	ymin = -0.06, ymax = 0.06)
+  xmin = -0.015, xmax = 0.015,
+  ymin = -0.06, ymax = 0.06)
   WHEN (!VIRTUALIN)  AT (0,0,1.464999) RELATIVE armSource
 
 
@@ -1212,8 +1205,8 @@ COMPONENT slitGuideEnd = Slit(xmin=-0.016,xmax=0.016, ymin=-0.061,ymax=0.061)
 WHEN (!VIRTUALIN)  AT (0,0,5.2001) RELATIVE guide3
 
 COMPONENT psd_guide_end = PSD_monitor(
-	xwidth=0.04, yheight=0.15,
-	nx=64, ny=64, filename="psd_guide_end.dat", restore_neutron = 1)
+  xwidth=0.04, yheight=0.15,
+  nx=64, ny=64, filename="psd_guide_end.dat", restore_neutron = 1)
 WHEN (!VIRTUALIN)  AT (0, 0, 0.04) RELATIVE slitGuideEnd
 
 COMPONENT emon_guide_end = E_monitor(
@@ -1221,7 +1214,7 @@ COMPONENT emon_guide_end = E_monitor(
   AT (0, 0, 0.05) RELATIVE slitGuideEnd
 
 COMPONENT lmon_guide_end = L_monitor(
-	nL = 100, filename = "lmon_guide_end.dat", xwidth=0.04, yheight=0.15,Lmin = lmin, Lmax = lmax, restore_neutron = 1)
+  nL = 100, filename = "lmon_guide_end.dat", xwidth=0.04, yheight=0.15,Lmin = lmin, Lmax = lmax, restore_neutron = 1)
 WHEN (!VIRTUALIN)  AT (0, 0, 0.06) RELATIVE slitGuideEnd
 
 COMPONENT divmon_guide_end = Divergence_monitor(
@@ -1254,8 +1247,8 @@ WHEN (!VIRTUALIN)  AT (0,0,0) RELATIVE focus_mono
 
 
 COMPONENT slitShutter = Slit(
-	xmin = -0.02, xmax = 0.02,
-	ymin = -0.075, ymax = 0.075)
+  xmin = -0.02, xmax = 0.02,
+  ymin = -0.075, ymax = 0.075)
 WHEN (!VIRTUALIN)  AT (0, 0, 0.2) RELATIVE a2
   ROTATED (0,0,0) RELATIVE a2
 
@@ -1285,7 +1278,7 @@ WHEN (!VIRTUALIN)  AT (0,0,dmv) RELATIVE a2
 
 
 /* If the virtual output is generated the secondary spectrometer IS NOT simulated */
-  COMPONENT virtualout = Virtual_output(filename=SOURCEFILE, bufsize=0, display=0)
+  COMPONENT virtualout = Virtual_output(filename=SOURCEFILE, bufsize=0)
 WHEN (!VIRTUALIN && VIRTUALOUT)  AT (0, 0, 0) RELATIVE aa2
 
 
@@ -1314,8 +1307,8 @@ WHEN (Mono_order==3 && !VIRTUALOUT) AT (0, 0, 0.170) RELATIVE aa2
 
 
 COMPONENT slitMonochromator = Slit(
-	xmin = -MSL/1000.0, xmax = MSR/1000.0,
-	ymin = -MSB/1000.0, ymax = MST/1000.0)
+  xmin = -MSL/1000.0, xmax = MSR/1000.0,
+  ymin = -MSB/1000.0, ymax = MST/1000.0)
 WHEN(!VIRTUALOUT) AT (0, 0, 0.285) RELATIVE aa2
 
 COMPONENT Perspex = Incoherent(Vc=1,sigma_abs=0.019,sigma_inc=4.7, xwidth = 0.1, yheight = 0.1, zdepth = PTHICK, p_interact=1e-2)
@@ -1386,13 +1379,13 @@ COMPONENT a4 = Arm()
 
 
 COMPONENT slitSample = Slit(
-	xmin = -SSL/1000.0, xmax = SSR/1000.0,
-	ymin = -SSB/1000.0, ymax = SST/1000.0)
+  xmin = -SSL/1000.0, xmax = SSR/1000.0,
+  ymin = -SSB/1000.0, ymax = SST/1000.0)
   WHEN (!VIRTUALOUT) AT (0, 0, d_sample_slit) RELATIVE a4
 
 
 COMPONENT filter_coll=Exact_radial_coll(
-	radius=0.4525, nslit=9, d=0.000125,verbose=1,h_in=0.2,h_out=0.2,length=0.0988,theta_min=-10.26/2,theta_max=10.26/2
+  radius=0.4525, nslit=9, d=0.000125,verbose=1,h_in=0.2,h_out=0.2,length=0.0988,theta_min=-10.26/2,theta_max=10.26/2
 )
 WHEN (OUTFILTER>0 && !VIRTUALOUT)
 AT (0, 0, d_sample_filter-0.4525-0.0988/2) RELATIVE a4
@@ -1405,21 +1398,21 @@ COMPONENT filter = Filter_gen(
 
 
 COMPONENT ana_slit1 = Slit(
-	xmin = -0.158/2, xmax = 0.158/2,
-	ymin = -0.08/2, ymax = 0.08/2)
+  xmin = -0.158/2, xmax = 0.158/2,
+  ymin = -0.08/2, ymax = 0.08/2)
 WHEN (!VIRTUALOUT)  AT (0, 0, d_sample_filter+0.13) RELATIVE a4
   ROTATED (0,0,0) RELATIVE a4
 
 COMPONENT ana_slit2 = Slit(
-	xmin = -0.158/2, xmax = 0.158/2,
-	ymin = -0.103/2, ymax = 0.103/2)
+  xmin = -0.158/2, xmax = 0.158/2,
+  ymin = -0.103/2, ymax = 0.103/2)
 WHEN (!VIRTUALOUT)  AT (0, 0, d_sample_filter+0.33) RELATIVE a4
   ROTATED (0,0,0) RELATIVE a4
 
 
 COMPONENT emon_before_ana = E_monitor(
-	xmin = -0.060, xmax = 0.060, ymin = -0.085, ymax = 0.085,
-	Emin=eminf, Emax=emaxi, nE=100, filename="emon_before_ana.dat", restore_neutron=1)
+  xmin = -0.060, xmax = 0.060, ymin = -0.085, ymax = 0.085,
+  Emin=eminf, Emax=emaxi, nE=100, filename="emon_before_ana.dat", restore_neutron=1)
 WHEN (!VIRTUALOUT)  AT (0, 0, dsa-5*ana_d) RELATIVE a4
 
 COMPONENT psd_before_ana = PSD_monitor(
@@ -1441,9 +1434,9 @@ EXTEND %{
 %}
 
 COMPONENT an1l= Monochromator_flat(// The mosaic values for this blade have not been checked!
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
-	mosaich=40, mosaicv=40,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
+  mosaich=40, mosaicv=40,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, -4*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c1, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1452,9 +1445,9 @@ EXTEND %{
 %}
 
 COMPONENT an1u= Monochromator_flat( // The mosaic values for this blade have not been checked!
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
-	mosaich=40, mosaicv=40,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
+  mosaich=40, mosaicv=40,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, -4*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c1, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1464,9 +1457,9 @@ EXTEND %{
 
 
 COMPONENT an2l= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
-	mosaich=38.7, mosaicv=38.7,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
+  mosaich=38.7, mosaicv=38.7,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, -3*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c2, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1475,9 +1468,9 @@ EXTEND %{
 %}
 
 COMPONENT an2u= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
-	mosaich=43.0, mosaicv=43.0,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
+  mosaich=43.0, mosaicv=43.0,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, -3*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c2, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1486,9 +1479,9 @@ EXTEND %{
 %}
 
 COMPONENT an3l= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
-	mosaich=31.1, mosaicv=31.1,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
+  mosaich=31.1, mosaicv=31.1,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, -2*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c3, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1497,9 +1490,9 @@ EXTEND %{
 %}
 
 COMPONENT an3u= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
-	mosaich=35.5, mosaicv=35.5,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
+  mosaich=35.5, mosaicv=35.5,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, -2*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c3, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1509,9 +1502,9 @@ EXTEND %{
 
 
 COMPONENT an4l= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
-	mosaich=27.2, mosaicv=27.2,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
+  mosaich=27.2, mosaicv=27.2,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, -1*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c4, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1520,9 +1513,9 @@ EXTEND %{
 %}
 
 COMPONENT an4u= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
-	mosaich=30.4, mosaicv=30.4,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
+  mosaich=30.4, mosaicv=30.4,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT) AT (0, 0, -1*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c4, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1531,9 +1524,9 @@ EXTEND %{
 %}
 
 COMPONENT an5l= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
-	mosaich=36.6, mosaicv=36.6,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
+  mosaich=36.6, mosaicv=36.6,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, 0) RELATIVE focus_ana
   ROTATED (0, machine_real.c5, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1542,9 +1535,9 @@ EXTEND %{
 %}
 
 COMPONENT an5u= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
-	mosaich=35.9, mosaicv=35.9,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
+  mosaich=35.9, mosaicv=35.9,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, 0) RELATIVE focus_ana
   ROTATED (0, machine_real.c5, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1553,9 +1546,9 @@ EXTEND %{
 %}
 
 COMPONENT an6l= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
-	mosaich=31.5, mosaicv=31.5,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
+  mosaich=31.5, mosaicv=31.5,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c6, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1564,9 +1557,9 @@ EXTEND %{
 %}
 
 COMPONENT an6u= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
-	mosaich=36.1, mosaicv=36.1,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
+  mosaich=36.1, mosaicv=36.1,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c6, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1576,9 +1569,9 @@ EXTEND %{
 
 
 COMPONENT an7l= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
-	mosaich=33.1, mosaicv=33.1,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
+  mosaich=33.1, mosaicv=33.1,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, 2*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c7, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1587,9 +1580,9 @@ EXTEND %{
 %}
 
 COMPONENT an7u= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
-	mosaich=37.2, mosaicv=37.2,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
+  mosaich=37.2, mosaicv=37.2,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, 2*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c7, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1598,9 +1591,9 @@ EXTEND %{
 %}
 
 COMPONENT an8l= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
-	mosaich=46.8, mosaicv=46.8,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
+  mosaich=46.8, mosaicv=46.8,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, 3*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c8, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1609,9 +1602,9 @@ EXTEND %{
 %}
 
 COMPONENT an8u= Monochromator_flat(
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
-	mosaich=51.3, mosaicv=51.3,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
+  mosaich=51.3, mosaicv=51.3,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, 3*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c8, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1620,9 +1613,9 @@ EXTEND %{
 %}
 
 COMPONENT an9l= Monochromator_flat(// The mosaic values for this blade have not been checked!
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
-	mosaich=40, mosaicv=40,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=-ana_h/2.0, ymax=0,
+  mosaich=40, mosaicv=40,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, 4*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c9, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1631,9 +1624,9 @@ EXTEND %{
 %}
 
 COMPONENT an9u= Monochromator_flat( // The mosaic values for this blade have not been checked!
-	zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
-	mosaich=40, mosaicv=40,
-	r0=ana_r0, Q=ana_q)
+  zmin=-wan/2.0, zmax=wan/2.0, ymin=0, ymax=ana_h/2.0,
+  mosaich=40, mosaicv=40,
+  r0=ana_r0, Q=ana_q)
 WHEN (!VIRTUALOUT)  AT (0, 0, 4*ana_d) RELATIVE focus_ana
   ROTATED (0, machine_real.c9, 0) RELATIVE focus_ana
 //GROUP ANA
@@ -1665,11 +1658,11 @@ WHEN (!VIRTUALOUT) AT (-WindowSize/2,0,dad-0.005) RELATIVE a6
 ROTATED (0,-RC/9,0) RELATIVE a6
 
 COMPONENT BladeR1 = Absorber(xmin=-BladeThickness/2, xmax=BladeThickness/2,
-			     ymin=-BladeHeight/2, ymax=BladeHeight/2,
-			     zmin=-BladeLength,zmax=0)
+           ymin=-BladeHeight/2, ymax=BladeHeight/2,
+           zmin=-BladeLength,zmax=0)
 WHEN (COARSE>0 && !VIRTUALOUT) AT (0,0,0) RELATIVE ArmR1
 EXTEND %{
-	if (SCATTERED) printf("Absorption in R1\n");
+  if (SCATTERED) printf("Absorption in R1\n");
 %}
 
 COMPONENT ArmR2 = Arm()
@@ -1677,8 +1670,8 @@ COMPONENT ArmR2 = Arm()
 ROTATED (0,-3*RC/9,0) RELATIVE a6
 
 COMPONENT BladeR2 = Absorber(xmin=-BladeThickness/2, xmax=BladeThickness/2,
-			     ymin=-BladeHeight/2, ymax=BladeHeight/2,
-			     zmin=-BladeLength,zmax=0)
+           ymin=-BladeHeight/2, ymax=BladeHeight/2,
+           zmin=-BladeLength,zmax=0)
 WHEN (COARSE>0 && !VIRTUALOUT) AT (0,0,0) RELATIVE ArmR2
 
 COMPONENT ArmR3 = Arm()
@@ -1686,8 +1679,8 @@ WHEN (!VIRTUALOUT) AT (-5*WindowSize/2,0,dad-0.005) RELATIVE a6
 ROTATED (0,-5*RC/9,0) RELATIVE a6
 
 COMPONENT BladeR3 = Absorber(xmin=-BladeThickness/2, xmax=BladeThickness/2,
-			     ymin=-BladeHeight/2, ymax=BladeHeight/2,
-			     zmin=-BladeLength,zmax=0)
+           ymin=-BladeHeight/2, ymax=BladeHeight/2,
+           zmin=-BladeLength,zmax=0)
      WHEN (COARSE>0) AT (0,0,0) RELATIVE ArmR3
 
 COMPONENT ArmR4 = Arm()
@@ -1695,8 +1688,8 @@ WHEN (!VIRTUALOUT) AT (-7*WindowSize/2,0,dad-0.005) RELATIVE a6
 ROTATED (0,-7*RC/9,0) RELATIVE a6
 
 COMPONENT BladeR4 = Absorber(xmin=-BladeThickness/2, xmax=BladeThickness/2,
-			     ymin=-BladeHeight/2, ymax=BladeHeight/2,
-			     zmin=-BladeLength,zmax=0)
+           ymin=-BladeHeight/2, ymax=BladeHeight/2,
+           zmin=-BladeLength,zmax=0)
      WHEN (COARSE>0) AT (0,0,0) RELATIVE ArmR4
 
 COMPONENT ArmR5 = Arm()
@@ -1704,8 +1697,8 @@ WHEN (!VIRTUALOUT) AT (-9*WindowSize/2,0,dad-0.005) RELATIVE a6
 ROTATED (0,-9*RC/9,0) RELATIVE a6
 
 COMPONENT BladeR5 = Absorber(xmin=-BladeThickness/2, xmax=BladeThickness/2,
-			     ymin=-BladeHeight/2, ymax=BladeHeight/2,
-			     zmin=-BladeLength,zmax=0)
+           ymin=-BladeHeight/2, ymax=BladeHeight/2,
+           zmin=-BladeLength,zmax=0)
      WHEN (COARSE>0) AT (0,0,0) RELATIVE ArmR5
 
 
@@ -1715,8 +1708,8 @@ WHEN (!VIRTUALOUT) AT (WindowSize/2,0,dad-0.005) RELATIVE a6
 ROTATED (0,LC/9,0) RELATIVE a6
 
 COMPONENT BladeL1 = Absorber(xmin=-BladeThickness/2, xmax=BladeThickness/2,
-			     ymin=-BladeHeight/2, ymax=BladeHeight/2,
-			     zmin=-BladeLength,zmax=0)
+           ymin=-BladeHeight/2, ymax=BladeHeight/2,
+           zmin=-BladeLength,zmax=0)
 WHEN (COARSE>0 && !VIRTUALOUT) AT (0,0,0) RELATIVE ArmL1
 
 
@@ -1725,8 +1718,8 @@ COMPONENT ArmL2 = Arm()
 ROTATED (0,3*LC/9,0) RELATIVE a6
 
 COMPONENT BladeL2 = Absorber(xmin=-BladeThickness/2, xmax=BladeThickness/2,
-			     ymin=-BladeHeight/2, ymax=BladeHeight/2,
-			     zmin=-BladeLength,zmax=0)
+           ymin=-BladeHeight/2, ymax=BladeHeight/2,
+           zmin=-BladeLength,zmax=0)
 WHEN (COARSE>0  && !VIRTUALOUT) AT (0,0,0) RELATIVE ArmL2
 
 COMPONENT ArmL3 = Arm()
@@ -1734,8 +1727,8 @@ COMPONENT ArmL3 = Arm()
 ROTATED (0,5*LC/9,0) RELATIVE a6
 
 COMPONENT BladeL3 = Absorber(xmin=-BladeThickness/2, xmax=BladeThickness/2,
-			     ymin=-BladeHeight/2, ymax=BladeHeight/2,
-			     zmin=-BladeLength,zmax=0)
+           ymin=-BladeHeight/2, ymax=BladeHeight/2,
+           zmin=-BladeLength,zmax=0)
 WHEN (COARSE>0  && !VIRTUALOUT) AT (0,0,0) RELATIVE ArmL3
 
 COMPONENT ArmL4 = Arm()
@@ -1743,8 +1736,8 @@ WHEN (!VIRTUALOUT) AT (7*WindowSize/2,0,dad-0.005) RELATIVE a6
 ROTATED (0,7*LC/9,0) RELATIVE a6
 
 COMPONENT BladeL4 = Absorber(xmin=-BladeThickness/2, xmax=BladeThickness/2,
-			     ymin=-BladeHeight/2, ymax=BladeHeight/2,
-			     zmin=-BladeLength,zmax=0)
+           ymin=-BladeHeight/2, ymax=BladeHeight/2,
+           zmin=-BladeLength,zmax=0)
 WHEN (COARSE>0 && !VIRTUALOUT) AT (0,0,0) RELATIVE ArmL4
 
 COMPONENT ArmL5 = Arm()
@@ -1755,13 +1748,13 @@ EXTEND %{
 %}
 
 COMPONENT BladeL5 = Absorber(xmin=-BladeThickness/2, xmax=BladeThickness/2,
-			     ymin=-BladeHeight/2, ymax=BladeHeight/2,
-			     zmin=-BladeLength,zmax=0)
+           ymin=-BladeHeight/2, ymax=BladeHeight/2,
+           zmin=-BladeLength,zmax=0)
 WHEN (COARSE>0 && !VIRTUALOUT) AT (0,0,0) RELATIVE ArmL5
 
   COMPONENT psd_detector = PSD_monitor_psf_eff(eff=0.8, k0=1.553,
- 	xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
- 	ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_detector.dat",restore_neutron=0) // restore_neutron needs to be 0 to propagate the netrons in use for EXTEND section
+   xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
+   ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_detector.dat",restore_neutron=0) // restore_neutron needs to be 0 to propagate the netrons in use for EXTEND section
  WHEN (!VIRTUALOUT) AT (0, 0, dad+0.0215) RELATIVE a6
  ROTATED (0,180,0) RELATIVE a6
 EXTEND %{
@@ -1775,8 +1768,8 @@ EXTEND %{
 ROTATED (0,180,0) RELATIVE a6
 
   COMPONENT psd_window1 = PSD_monitor_psf_eff(eff=0.8, k0=1.553,
-  	xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
-  	ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window1.dat",restore_neutron=1)
+    xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
+    ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window1.dat",restore_neutron=1)
  WHEN (BinX >= XwinMin[1] && BinX <= XwinMax[1] && BinY >= YwinMin[1] && BinY <= YwinMax[1] && !VIRTUALOUT)  AT (0, 0, dad+0.0215) RELATIVE a6
    ROTATED (0,180,0) RELATIVE a6
 
@@ -1786,8 +1779,8 @@ ROTATED (0,180,0) RELATIVE a6
   ROTATED (0,180,0) RELATIVE a6
 
   COMPONENT psd_window2 = PSD_monitor_psf_eff(eff=0.8, k0=1.553,
-  	xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
-  	ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window2.dat",restore_neutron=1)
+    xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
+    ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window2.dat",restore_neutron=1)
  WHEN (BinX >= XwinMin[2] && BinX <= XwinMax[2] && BinY >= YwinMin[2] && BinY <= YwinMax[2] && !VIRTUALOUT)  AT (0, 0, dad+0.0215) RELATIVE a6
    ROTATED (0,180,0) RELATIVE a6
 
@@ -1798,8 +1791,8 @@ ROTATED (0,180,0) RELATIVE a6
   ROTATED (0,180,0) RELATIVE a6
 
   COMPONENT psd_window3 = PSD_monitor_psf_eff(eff=0.8, k0=1.553,
-  	xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
-  	ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window3.dat",restore_neutron=1)
+    xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
+    ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window3.dat",restore_neutron=1)
  WHEN (BinX >= XwinMin[3] && BinX <= XwinMax[3] && BinY >= YwinMin[3] && BinY <= YwinMax[3]  && !VIRTUALOUT)  AT (0, 0, dad+0.0215) RELATIVE a6
    ROTATED (0,180,0) RELATIVE a6
 
@@ -1810,8 +1803,8 @@ ROTATED (0,180,0) RELATIVE a6
   ROTATED (0,180,0) RELATIVE a6
 
  COMPONENT psd_window4 = PSD_monitor_psf_eff(eff=0.8, k0=1.553,
- 	xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
-  	ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window4.dat",restore_neutron=1)
+   xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
+    ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window4.dat",restore_neutron=1)
  WHEN (BinX >= XwinMin[4] && BinX <= XwinMax[4] && BinY >= YwinMin[4] && BinY <= YwinMax[4] &&  !VIRTUALOUT)  AT (0, 0, dad+0.0215) RELATIVE a6
    ROTATED (0,180,0) RELATIVE a6
 
@@ -1822,8 +1815,8 @@ ROTATED (0,180,0) RELATIVE a6
   ROTATED (0,180,0) RELATIVE a6
 
   COMPONENT psd_window5 = PSD_monitor_psf_eff(eff=0.8, k0=1.553,
- 	xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
-  	ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window5.dat",restore_neutron=1)
+   xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
+    ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window5.dat",restore_neutron=1)
  WHEN (BinX >= XwinMin[5] && BinX <= XwinMax[5] && BinY >= YwinMin[5] && BinY <= YwinMax[5] &&  !VIRTUALOUT)    AT (0, 0, dad+0.0215) RELATIVE a6
    ROTATED (0,180,0) RELATIVE a6
 
@@ -1835,8 +1828,8 @@ ROTATED (0,180,0) RELATIVE a6
 
 
    COMPONENT psd_window6 = PSD_monitor_psf_eff(eff=0.8, k0=1.553,
-   	xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
-   	ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window6.dat",restore_neutron=1)
+     xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
+     ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window6.dat",restore_neutron=1)
  WHEN (BinX >= XwinMin[6] && BinX <= XwinMax[6] && BinY >= YwinMin[6] && BinY <= YwinMax[6]  && !VIRTUALOUT)  AT (0, 0, dad+0.0215) RELATIVE a6
    ROTATED (0,180,0) RELATIVE a6
 
@@ -1847,8 +1840,8 @@ ROTATED (0,180,0) RELATIVE a6
   ROTATED (0,180,0) RELATIVE a6
 
  COMPONENT psd_window7 = PSD_monitor_psf_eff(eff=0.8, k0=1.553,
- 	xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
- 	ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window7.dat",restore_neutron=1)
+   xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
+   ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window7.dat",restore_neutron=1)
  WHEN (BinX >= XwinMin[7] && BinX <= XwinMax[7] && BinY >= YwinMin[7] && BinY <= YwinMax[7]  && !VIRTUALOUT)  AT (0, 0, dad+0.0215) RELATIVE a6
    ROTATED (0,180,0) RELATIVE a6
 
@@ -1859,8 +1852,8 @@ ROTATED (0,180,0) RELATIVE a6
   ROTATED (0,180,0) RELATIVE a6
 
  COMPONENT psd_window8 = PSD_monitor_psf_eff(eff=0.8, k0=1.553,
- 	xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
- 	ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window8.dat",restore_neutron=1)
+   xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
+   ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window8.dat",restore_neutron=1)
  WHEN (BinX >= XwinMin[8] && BinX <= XwinMax[8] && BinY >= YwinMin[8] && BinY <= YwinMax[8]  && !VIRTUALOUT)  AT (0, 0, dad+0.0215) RELATIVE a6
    ROTATED (0,180,0) RELATIVE a6
 
@@ -1871,8 +1864,8 @@ ROTATED (0,180,0) RELATIVE a6
   ROTATED (0,180,0) RELATIVE a6
 
  COMPONENT psd_window9 = PSD_monitor_psf_eff(eff=0.8, k0=1.553,
- 	xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
- 	ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window9.dat",restore_neutron=1)
+   xmin = -det_width/2.0, xmax = det_width/2.0, ymin = -det_height/2.0,
+   ymax = det_height/2.0, nx = 128, ny = 128, psf = PSF, filename = "psd_window9.dat",restore_neutron=1)
  WHEN (BinX >= XwinMin[9] && BinX <= XwinMax[9] && BinY >= YwinMin[9] && BinY <= YwinMax[9]  && !VIRTUALOUT)  AT (0, 0, dad+0.0215) RELATIVE a6
    ROTATED (0,180,0) RELATIVE a6
 

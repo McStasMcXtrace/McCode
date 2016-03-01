@@ -100,12 +100,12 @@
 * w:         [m]   Source x-width, then does not use radius parameter
 * length:    [m]   Source z-length, not anymore flat
 * T1:        [K]   Temperature of the Maxwellian source, 0=none
-* I1:        [1/(cm**2*st*AA)] Source flux per solid angle, area and Angstrom
+* I1:        [1/(cm**2*st)] Source flux per solid angle, area and Angstrom
 * T2:        [K]   Second Maxwellian source Temperature, 0=none
-* I2:        [1/(cm**2*st*AA)] Second Maxwellian Source flux
+* I2:        [1/(cm**2*st)] Second Maxwellian Source flux
 * T3:        [K]   Third Maxwellian source Temperature, 0=none
-* I3:        [1/(cm**2*st*AA)] Third Maxwellian Source flux
-* HEtailA:   [1/(cm**2*st*AA**2)] Amplitude of heigh energy tail
+* I3:        [1/(cm**2*st)] Third Maxwellian Source flux
+* HEtailA:   [1/(cm**2*st*AA)] Amplitude of heigh energy tail
 * HEtailL0:  [AA]  Offset of heigh energy tail
 * phi_init:  [degrees]  Angle abowe the x-z-plan that the source is amied at
 * theta_init:[degrees]  Angle from the z-axis in the x-z-plan that the source is amied at
