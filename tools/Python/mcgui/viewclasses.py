@@ -8,11 +8,11 @@ import os
 import mccode_config
 import re
 from widgets import *
-from mclib.fileutils import McComponentParser
 from PyQt4 import Qsci
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mclib import McGuiUtils
+from mclib import McComponentParser
 
 
 ''' View class containing all windows and dialogs.
