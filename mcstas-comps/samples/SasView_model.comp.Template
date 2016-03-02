@@ -1,30 +1,41 @@
 /*******************************************************************************
 *
-* Component: SANS_sasview_model
+* Component: SasView_model
 *
 * %I
-* Written by: Jakob Garde
-* Date: 14.07.2015
-* Version: 0.4
-* Origin: SasView, ESS, DTU
-* Release: n/a
+* Written by: Jakob Garde, Torben Nielsen, Peter Willendrup
+* Date: 03.02.2016
+* Version: 0.5
+* Origin: SasView, DTU, European Spallation Source ERIC 
+* Release: McStas 2.3 
 *
-* This sample component applies sasview models as scattering kernels.
-* NOTE: add the flag "-std=c99" to "C flags" in the mcgui or mcgui-py config.
+* This SANS sample exposes <a href="http://www.sasview.org">SasView's</a> scattering kernels to McStas. In this way SasView's monodisperse scattering kernels can be call from McStas.
 *
 * %D
+* Sample for use in SANS instruments. The models describe mono disperse particles in thin solution. The sample geometry may have the shape:
+*
 * Shape:        - A filled box with dimensions xwidth, yheight and zdepth. 
 *               - A cylinder with dimensions radius and yheight.
 *               - A filled sphere given by radius. 
+*
 * These parameters are mutually exclusive.
 *
-* Example (spheres in thin solution:
-*      SANS_sasview_model(model_index=31, model_pars={1, 2, 60}, 
-*                         xwidth=0.01, yheight=0.01, zdepth=0.005)
+* Example using spheres in thin solution, with radius=200 AA and a delta_sld=0.6 fm/AA^3:
+*      SasView_model(model_index=47, model_scale=1.0, model_pars={1, 7, 200}, model_abs=0.0,
+                         xwidth=0.01, yheight=0.01, zdepth=0.005,)
 * 
-* Available <a href="http://www.sasview.org/sasview/user/models/model_functions.html#model">SasView models</a> are found in the table below
-* (A few models may require manual documentation lookup using the above link to the SasView site) 
 *
+* The algorithm of this component requires use of the ISO C standard c99. You could use MCSTAS_CFLAGS like MCSTAS_CFLAGS = -std=c99 -g -O2 -lm. 
+* Or, add the flag "-std=c99" to "C flags" in the mcgui or mcgui-py config. 
+*
+* The list of scattering models in SasView is called sasmodels. The list of McStas available <a href="http://www.sasview.org/sasview/user/models/model_functions.html#model">SasView sasmodels</a> are found in the table below.
+*
+* A few models may require manual documentation lookup using the above link to the SasView site. 
+*
+* McStas does currently not support multiplication of formfactor models with structure factor models. 
+* 
+* The 2D scattering scattering kernels are denoted by modelname_xy. I.e. to evalulate scattering from aligned cylinders use model_index=10 to use cylinder_xy. 
+* 
 * MDOC
 *    0 - None 
 *    1 - barbell                (sld, solvent_sld, bell_radius, radius, length)
@@ -69,8 +80,11 @@
 * Definition parameters:
 * 
 * model_index:  Index of the applied sasview model. Recompile instrument for changes to take effect.
-* model_pars:   Model parameters are given as a set of comma-separated values enclosed by {}, e.g. {1, 2, 60} for model 31. 
+* model_scale:  Global scale factor for scattering kernel. For systems without inter-particle interference, the form factors  can be related
+*               to the scattering intensity by the particle volume fraction.
+* model_pars:   Model parameters are given as a set of comma-separated values enclosed by {}, e.g. {60} for the model index 21 (the guinier model).
 *               Consult the sasview docs for further info. 
+* model_abs:    Absorption cross section density at 2200 m/s (1/m)
 * 
 * Input parameters:
 * 
@@ -105,8 +119,10 @@
 DEFINE COMPONENT SasView_model
 
 DEFINITION PARAMETERS (
-    model_index=31,
-    model_pars={1,2,60}
+    model_index=21,
+    model_scale= 1.0,
+    model_pars={60},
+    model_abs=0.5
     )
 
 SETTING PARAMETERS (
@@ -124,8 +140,7 @@ SETTING PARAMETERS (
     focus_ah=0, 
     focus_r=0)
 
-OUTPUT PARAMETERS (
-    my_s_v2, 
+OUTPUT PARAMETERS ( 
     my_a_v, 
     shape)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
@@ -137,19 +152,11 @@ DECLARE
 
   float model_pars_ptr[] = model_pars;
 
-  double R;
-  double Phi;
-  double Delta_rho;
-  double sigma_abs;
-  double my_s_pre, my_a_v, q_v, q, shape;
+  double my_a_v, q_v, q, shape;
 %}
 
 INITIALIZE
 %{
-  R=100;
-  Phi=1e-3;
-  Delta_rho=0.6;
-  sigma_abs=0.50;
 
   shape=-1;  /* -1:no shape, 0:cyl, 1:box, 2:sphere  */
   if (xwidth && yheight && zdepth)  
@@ -178,8 +185,7 @@ INITIALIZE
     target_z=1;
   }
 
-  my_a_v = sigma_abs*2200*100; /* Is not yet divided by v. 100: Convert barns -> fm^2 */
-  my_s_pre = Phi * 4*PI*R*R*R/3 * Delta_rho*Delta_rho;
+  my_a_v = model_abs*2200*100; /* Is not yet divided by v. 100: Convert barns -> fm^2 */
 %}
 
 TRACE
@@ -237,6 +243,11 @@ TRACE
     
     float Iq_out;
     Iq_out = getIq(q, qx, qy, model_pars_ptr);
+
+    float vol;
+    vol=getFormVol(model_pars_ptr);
+    // Scale by 1.0E2 [SasView: 1/cm  ->   McStas: 1/m]
+    Iq_out = model_scale*Iq_out / vol * 1.0E2;
     
     l_1 = v*t1;
     p *= l_full*solid_angle/(4*PI)*Iq_out*exp(-my_a_v*(l+l_1)/v);

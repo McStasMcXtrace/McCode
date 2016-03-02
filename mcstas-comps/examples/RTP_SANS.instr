@@ -30,7 +30,7 @@
 *
 * %Parameters
 * lambda:           [Angs] monochromator selected wavelength
-
+* dlambda:          [Angs] monochromator wavelength spread
 * DM:               [Angs] d-spacing for the monochromator reflection
 * Be_filter_depth:  [m]    thickness of the Be filter
 * Mono_tilt:        [deg]  angle tilt between the 3 monochromator layers

@@ -9,7 +9,7 @@
 *
 * %I
 * Written by: P Willendrup and E Klinkby, February 2014, derived from K Lefmann ESS_moderator_long
-* Modified by: 
+* Modified by: J. Saroun (saroun@ujf.cas.cz)
 * Version: $Revision$
 * Origin: DTU
 * Release: McStas 2.1
@@ -39,6 +39,12 @@
 * </ol>
 *
 * Derived from ESS_moderator_long which was debugged intensively against Mezei note (4/12 2000) and VitESS @ Rencurel 2006.
+*
+*-----------------------------------------------
+* Correction by J. Saroun, NPI Rez:
+* 1) version 2015: accepts negative port angles
+* 2) version 2015: weight by cosine of the port angle
+* Warning: The negative beamport angle is not taken into acccount by mcplot
 *
 * %VALIDATION 
 * Mezei-modererators validated against VitESS and Mezei note (4/12 2000) @ Rencurel 2006
@@ -103,7 +109,7 @@ DECLARE
   // Vectors giving direction of the thermal slabs
   double t1x,t1y,t1z,t2x,t2y,t2z;
   
-  /* Struct for transfer to ess-source-lib funcs */
+  /* Struct for transfer to ess-source-lib funcs  */
   ess_moderator_struct modextras;
   /* Cold and thermal function pointers */
   functype cold_bril;
@@ -113,10 +119,30 @@ DECLARE
   /* radius of vacated zone around the moderator */
   double r_empty;
   double lambda,xprime,yprime,zprime;
+  double abs_beamport_angle,cos_beamport_angle,sin_beamport_angle;
+  /* variables needed to correct for the emission surface angle*/
+  double cos_thermal,cos_cold, edge_thermal;
+  int sgnport;
 %}
 
 INITIALIZE
 %{
+	
+  sgnport=(beamport_angle>0 ? 1:-1);
+  if (sgnport<0) {
+	printf("WARNING, %s: beamport angle < 0, experimental option\n", NAME_CURRENT_COMP);  
+  }
+	
+/* ESS 2015 - variables needed to correct for the emission surface angle */
+  abs_beamport_angle=fabs(beamport_angle);
+  cos_beamport_angle=cos(beamport_angle*DEG2RAD);
+  sin_beamport_angle=sin(beamport_angle*DEG2RAD);
+  /* correction for projection along the beam / projection on the z=0 plane */
+  cos_thermal=cos_beamport_angle;
+  cos_cold=cos((abs_beamport_angle-24.24)*DEG2RAD)/cos(24.24*DEG2RAD);
+  /* cross-section between the z=const and tilted surfaces [m] */
+  edge_thermal=-0.0716;
+  
   r_empty=2;
 
   /* Weight multipliers */
@@ -137,6 +163,7 @@ INITIALIZE
     ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
     ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
     coords_get(ToTarget, &tx, &ty, &tz);
+	printf("%s: Focusing on a window centered at [%g, %g, %g]\n", NAME_CURRENT_COMP,tx,ty,tz);
     dist=sqrt(tx*tx+ty*ty+tz*tz);
   } else if (target_index && !dist) {
     printf("ESS_moderator: %s: Please choose to set either the dist parameter or specify a target_index.\nExit\n", NAME_CURRENT_COMP);
@@ -159,19 +186,20 @@ INITIALIZE
   /* Calculate cold cylinder radius from extraction_opening */
   cyl_radius = 360*xwidth_c/(2*PI*extraction_opening);
   
-  /* Is beamport_angle set at a meaningful angle - otherwise recalc */
-  if ( beamport_angle<0 || beamport_angle>extraction_opening){
+  /* Is abs_beamport_angle set at a meaningful angle - otherwise recalc */
+  if ( abs_beamport_angle<0 || abs_beamport_angle>extraction_opening){
     beamport_angle = extraction_opening/2.0;
+	abs_beamport_angle=beamport_angle;
     printf("%s: WARNING: Resetting your beamport_angle to %g (%g/2) - central beamslot\n",NAME_CURRENT_COMP,beamport_angle,extraction_opening);
   }
   
   /* Calculate positioning of thermal slabs and cold cylinder - NOTE: overwritten in case of ESS 2014 */
-  t1z = cyl_radius*cos(-DEG2RAD*beamport_angle);
-  t1x = cyl_radius*sin(-DEG2RAD*beamport_angle);
+  t1z = cyl_radius*cos(-DEG2RAD*abs_beamport_angle);
+  t1x = cyl_radius*sin(-DEG2RAD*abs_beamport_angle);
   t1y = 0;
   /* Wing 2 (right) is at extraction_width-beamport_angle */
-  t2z = cyl_radius*cos(DEG2RAD*(extraction_opening-beamport_angle));
-  t2x = cyl_radius*sin(DEG2RAD*(extraction_opening-beamport_angle));
+  t2z = cyl_radius*cos(DEG2RAD*(extraction_opening-abs_beamport_angle));
+  t2x = cyl_radius*sin(DEG2RAD*(extraction_opening-abs_beamport_angle));
   t2y = 0;
   /* We want unit vectors... */
   NORM(t1x,t1y,t1z);
@@ -213,7 +241,7 @@ INITIALIZE
     /* In this mode of operation, the emission is from the x-y plane*/
     cx = 0; cy=0; cz=-0.12; cyl_radius=0.12;
     /* 120 degree beam extraction opening, defining thermal moderator directions */
-    t1x=sin(DEG2RAD*(120/2-beamport_angle));t1z=cos(DEG2RAD*120/2);
+    t1x=sin(DEG2RAD*(120/2-abs_beamport_angle));t1z=cos(DEG2RAD*120/2);
     t2x=-sin(DEG2RAD*120/2);t2z=cos(DEG2RAD*120/2);
     t1y=0; t2y=0;
     /* ESS-2015 definition: */  
@@ -228,8 +256,8 @@ INITIALIZE
     /* Moderator geometry */
     cx = 0; cy=0; cz=0; cyl_radius=0;
     /* 120 degree beam extraction opening */
-    t1x=sin(DEG2RAD*(120/2+beamport_angle));t1z=cos(DEG2RAD*(120/2+beamport_angle));
-    t2x=-sin(DEG2RAD*(120/2-beamport_angle));t2z=cos(DEG2RAD*(120/2-beamport_angle));
+    t1x=sin(DEG2RAD*(120/2+abs_beamport_angle));t1z=cos(DEG2RAD*(120/2+abs_beamport_angle));
+    t2x=-sin(DEG2RAD*(120/2-abs_beamport_angle));t2z=cos(DEG2RAD*(120/2-abs_beamport_angle));
     t1y=0; t2y=0;
    } else {
     fprintf(stderr,"FATAL: sourcedef %s is not defined!\n",sourcedef);
@@ -242,14 +270,14 @@ INITIALIZE
   modextras.tmultiplier=tmax_multiplier;
   modextras.extractionangle=extraction_opening;
   
-  if ((strcasestr(sourcedef,"2014")) && beamport_angle != modextras.extractionangle/2.0) {
+  if ((strcasestr(sourcedef,"2014")) && abs_beamport_angle != modextras.extractionangle/2.0) {
     printf("%s: WARNING: beamport_angle is not at central slot. With sourcedef %s this means application of a partially analytical brightness model for B(\\theta) \n",NAME_CURRENT_COMP,sourcedef);
   }
-  if ((strcasestr(sourcedef,"2015")) && (beamport_angle!=5.0 && beamport_angle!=15.0 && beamport_angle!=25.0 && beamport_angle!=35.0 && beamport_angle!=45.0 && beamport_angle!=55.0)) {
+  if ((strcasestr(sourcedef,"2015")) && (abs_beamport_angle!=5.0 && abs_beamport_angle!=15.0 && abs_beamport_angle!=25.0 && abs_beamport_angle!=35.0 && abs_beamport_angle!=45.0 && abs_beamport_angle!=55.0)) {
     printf("%s: FATAL: beamport_angle is not at a defined value. Allowed are: (5, 15, ...) and < 60  \n",NAME_CURRENT_COMP);
     exit(-1);
   }
-  modextras.beamportangle=beamport_angle;
+  modextras.beamportangle=abs_beamport_angle;
   
   l_range = Lmax-Lmin;
   w_geom_c  = xwidth_c*yheight_c*1.0e4;     /* source area correction */
@@ -304,13 +332,20 @@ TRACE
       w_geom = w_geom_t;
     } 
     y = yprime;
-    x = cos(-beamport_angle*DEG2RAD)*xprime - sin(-beamport_angle*DEG2RAD)*zprime;
-    z = cos(-beamport_angle*DEG2RAD)*zprime + sin(-beamport_angle*DEG2RAD)*xprime;
+    x = sgnport*xprime*cos_beamport_angle + zprime*sin_beamport_angle;
+    z = cos_beamport_angle*zprime - sgnport*xprime*sin_beamport_angle;
+	/* the position was projected in the beamport direction - we must multiply by cosine*/
+	if (xprime>edge_thermal) {
+		w_geom *=cos_thermal;
+	} else {
+		w_geom *=cos_cold;
+	}
+	
     
   } else {
     if (cold) {          //case: cold moderator
       //choose random point on cylinder surface
-      double theta_tmp = (rand01()*extraction_opening - beamport_angle)*DEG2RAD;
+      double theta_tmp = (rand01()*extraction_opening - abs_beamport_angle)*DEG2RAD;
       x     = cyl_radius * sin(theta_tmp);
       y     = 0.5*randpm1()*yheight_c;
       z     = cyl_radius * cos(theta_tmp);
@@ -343,7 +378,7 @@ TRACE
   randvec_target_rect_real(&xf, &yf, &r, &w_focus,
 			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, cosine);
   
-  /* In case of 2014 source, solid angle correction is done internally in the brill fcts */
+  /* In case of 2014 source, solid angle correction is done internally  in the brill fcts */
   if (strcasestr(sourcedef,"2014") || strcasestr(sourcedef,"2015")) {
     w_focus=focus_xw*focus_yh/(tx*tx+ty*ty+tz*tz);
   }
@@ -454,10 +489,10 @@ MCDISPLAY
 	yp1 = yp0;
 	zp0 = TSC2015_z0_BF3cm(100*xp0)/100.0;
 	zp1 = TSC2015_z0_BF3cm(100*xp1)/100.0;
-	xr0 = cos(-beamport_angle*DEG2RAD)*xp0 - sin(-beamport_angle*DEG2RAD)*zp0;
-	zr0 = cos(-beamport_angle*DEG2RAD)*zp0 + sin(-beamport_angle*DEG2RAD)*xp0;	
-	xr1 = cos(-beamport_angle*DEG2RAD)*xp1 - sin(-beamport_angle*DEG2RAD)*zp1;
-	zr1 = cos(-beamport_angle*DEG2RAD)*zp1 + sin(-beamport_angle*DEG2RAD)*xp1;
+	xr0 = cos(-abs_beamport_angle*DEG2RAD)*xp0 - sin(-abs_beamport_angle*DEG2RAD)*zp0;
+	zr0 = cos(-abs_beamport_angle*DEG2RAD)*zp0 + sin(-abs_beamport_angle*DEG2RAD)*xp0;	
+	xr1 = cos(-abs_beamport_angle*DEG2RAD)*xp1 - sin(-abs_beamport_angle*DEG2RAD)*zp1;
+	zr1 = cos(-abs_beamport_angle*DEG2RAD)*zp1 + sin(-abs_beamport_angle*DEG2RAD)*xp1;
 	if (j==0 || j==8 || j==11) {
 	  line(xr0, -yheight_c/2.0, zr0, xr0, yheight_c/2.0, zr0);
 	}
@@ -475,14 +510,14 @@ MCDISPLAY
       zp0 = TSC2015_z0_BF3cm(100*xp0)/100.0;
       zp1 = zp0;
       dxp0 = 0.01; dzp0=0.01;
-      xr0 = cos(-beamport_angle*DEG2RAD)*xp0 - sin(-beamport_angle*DEG2RAD)*zp0;
-      zr0 = cos(-beamport_angle*DEG2RAD)*zp0 + sin(-beamport_angle*DEG2RAD)*xp0;	
-      xr1 = cos(-beamport_angle*DEG2RAD)*xp1 - sin(-beamport_angle*DEG2RAD)*zp1;
-      zr1 = cos(-beamport_angle*DEG2RAD)*zp1 + sin(-beamport_angle*DEG2RAD)*xp1;
-      dxr0 = cos(-beamport_angle*DEG2RAD)*dxp0;
-      dzr0 = sin(-beamport_angle*DEG2RAD)*dxp0;	
-      dxr1 = - sin(-beamport_angle*DEG2RAD)*dzp0;
-      dzr1 = cos(-beamport_angle*DEG2RAD)*dzp0;
+      xr0 = cos(-abs_beamport_angle*DEG2RAD)*xp0 - sin(-abs_beamport_angle*DEG2RAD)*zp0;
+      zr0 = cos(-abs_beamport_angle*DEG2RAD)*zp0 + sin(-abs_beamport_angle*DEG2RAD)*xp0;	
+      xr1 = cos(-abs_beamport_angle*DEG2RAD)*xp1 - sin(-abs_beamport_angle*DEG2RAD)*zp1;
+      zr1 = cos(-abs_beamport_angle*DEG2RAD)*zp1 + sin(-abs_beamport_angle*DEG2RAD)*xp1;
+      dxr0 = cos(-abs_beamport_angle*DEG2RAD)*dxp0;
+      dzr0 = sin(-abs_beamport_angle*DEG2RAD)*dxp0;	
+      dxr1 = - sin(-abs_beamport_angle*DEG2RAD)*dzp0;
+      dzr1 = cos(-abs_beamport_angle*DEG2RAD)*dzp0;
       
       line(xr0+dxr0, yp0, zr0+dzr0, -xr0+dxr0, yp0, -zr0+dzr0);
       line(xr1+dxr0, yp0, zr1+dzr0, -xr1+dxr0, yp0, -zr1+dzr0);
@@ -528,9 +563,9 @@ MCDISPLAY
     circle("xz", cx, cy-2, cz, 6);
 
     /* Arrow indicating proton beam direction */
-    ax=sin(DEG2RAD*(90+beamport_angle));az=cos(DEG2RAD*(90+beamport_angle));
-    bbx=sin(DEG2RAD*(110+beamport_angle));bbz=cos(DEG2RAD*(110+beamport_angle));
-    ccx=sin(DEG2RAD*(70+beamport_angle));ccz=cos(DEG2RAD*(70+beamport_angle));
+    ax=sin(DEG2RAD*(90+abs_beamport_angle));az=cos(DEG2RAD*(90+abs_beamport_angle));
+    bbx=sin(DEG2RAD*(110+abs_beamport_angle));bbz=cos(DEG2RAD*(110+abs_beamport_angle));
+    ccx=sin(DEG2RAD*(70+abs_beamport_angle));ccz=cos(DEG2RAD*(70+abs_beamport_angle));
     line(-0.15*ax,0,-0.15*az,-5.9*ax,0,-5.9*az);
     line(-0.15*ax,0,-0.15*az,-0.15*ax-0.1*bbx,0,-0.15*az-0.1*bbz);
     line(-0.15*ax,0,-0.15*az,-0.15*ax-0.1*ccx,0,-0.15*az-0.1*ccz);

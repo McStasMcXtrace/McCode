@@ -66,144 +66,147 @@
 #endif
 
 
-#define VOLUME_PARAMETERS thickness
-#define VOLUME_WEIGHT_PRODUCT thickness_w
-#define VOLUME_PARAMETER_DECLARATIONS float thickness
-#define IQ_KERNEL_NAME lamellarPC_Iq
-#define IQ_PARAMETERS thickness, Nlayers, spacing, spacing_polydisp, sld, solvent_sld
+#define IQ_KERNEL_NAME linear_pearls_Iq
+#define IQ_PARAMETERS radius, edge_sep, num_pearls, pearl_sld, solvent_sld
 #define IQ_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
-    const float Nlayers, \
-    const float spacing, \
-    const float spacing_polydisp, \
-    const float sld, \
+    const float radius, \
+    const float edge_sep, \
+    const float num_pearls, \
+    const float pearl_sld, \
     const float solvent_sld
-#define IQ_WEIGHT_PRODUCT thickness_w
-#define IQ_DISPERSION_LENGTH_DECLARATIONS const int Nthickness
-#define IQ_DISPERSION_LENGTH_SUM Nthickness
-#define IQ_OPEN_LOOPS     for (int thickness_i=0; thickness_i < Nthickness; thickness_i++) { \
-      const float thickness = loops[2*(thickness_i)]; \
-      const float thickness_w = loops[2*(thickness_i)+1];
-#define IQ_CLOSE_LOOPS     }
-#define IQXY_KERNEL_NAME lamellarPC_Iqxy
-#define IQXY_PARAMETERS thickness, Nlayers, spacing, spacing_polydisp, sld, solvent_sld
+#define IQXY_KERNEL_NAME linear_pearls_Iqxy
+#define IQXY_PARAMETERS radius, edge_sep, num_pearls, pearl_sld, solvent_sld
 #define IQXY_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
-    const float Nlayers, \
-    const float spacing, \
-    const float spacing_polydisp, \
-    const float sld, \
+    const float radius, \
+    const float edge_sep, \
+    const float num_pearls, \
+    const float pearl_sld, \
     const float solvent_sld
-#define IQXY_WEIGHT_PRODUCT thickness_w
-#define IQXY_DISPERSION_LENGTH_DECLARATIONS const int Nthickness
-#define IQXY_DISPERSION_LENGTH_SUM Nthickness
-#define IQXY_OPEN_LOOPS     for (int thickness_i=0; thickness_i < Nthickness; thickness_i++) { \
-      const float thickness = loops[2*(thickness_i)]; \
-      const float thickness_w = loops[2*(thickness_i)+1];
-#define IQXY_CLOSE_LOOPS     }
-#define IQXY_PARAMETER_DECLARATIONS float thickness, float Nlayers, float spacing, float spacing_polydisp, float sld, float solvent_sld
 
-/*	Lamellar_ParaCrystal - Pedersen's model
+float form_volume(float radius, float num_pearls);
 
-*/
-float Iq(float qval,
-      float th,
-      float Nlayers, 
-	  float davg, 
-	  float pd,
-      float sld,
-      float solvent_sld);
-float paraCryst_sn(float ww, float qval, float davg, long Nlayers, float an);
-float paraCryst_an(float ww, float qval, float davg, long Nlayers);
+float Iq(float q,
+            float radius,
+            float edge_sep,
+            float num_pearls,
+            float pearl_sld,
+            float solvent_sld);
 
-float Iq(float qval,
-      float th,
-      float Nlayers, 
-	  float davg, 
-	  float pd,
-      float sld,
-      float solvent_sld)
+float Iqxy(float qx, float qy,
+            float radius,
+            float edge_sep,
+            float num_pearls,
+            float pearl_sld,
+            float solvent_sld);
+
+float linear_pearls_kernel(float q,
+            float radius,
+            float edge_sep,
+            float num_pearls,
+            float pearl_sld,
+            float solvent_sld);
+
+
+float form_volume(float radius, float num_pearls)
 {
-    
-	float inten,contr,xn;
-	float xi,ww,Pbil,Znq,Snq,an;
-	long n1,n2;
-	
-	contr = sld - solvent_sld;
-	//get the fractional part of Nlayers, to determine the "mixing" of N's
-	
-	n1 = (long)trunc(Nlayers);		//rounds towards zero
-	n2 = n1 + 1;
-	xn = (float)n2 - Nlayers;			//fractional contribution of n1
-	
-	ww = exp(-qval*qval*pd*pd*davg*davg/2.0f);
-
-	//calculate the n1 contribution
-	an = paraCryst_an(ww,qval,davg,n1);
-	Snq = paraCryst_sn(ww,qval,davg,n1,an);
-	
-	Znq = xn*Snq;
-	
-	//calculate the n2 contribution
-	an = paraCryst_an(ww,qval,davg,n2);
-	Snq = paraCryst_sn(ww,qval,davg,n2,an);
-
-	Znq += (1.0f-xn)*Snq;
-	
-	//and the independent contribution
-	Znq += (1.0f-ww*ww)/(1.0f+ww*ww-2.0f*ww*cos(qval*davg));
-	
-	//the limit when Nlayers approaches infinity
-//	Zq = (1-ww^2)/(1+ww^2-2*ww*cos(qval*davg))
-	
-	xi = th/2.0f;		//use 1/2 the bilayer thickness
-	Pbil = (sin(qval*xi)/(qval*xi))*(sin(qval*xi)/(qval*xi));
-	
-	inten = 2.0f*M_PI*contr*contr*Pbil*Znq/(qval*qval);
-	inten *= 1.0e-04f;
-//printf("q=%.7fe wwm1=%g ww=%.5fe an=% 12.5fe Snq=% 12.5fe Znq=% 12.5fe Pbil=% 12.5fe\n",qval,wwm1,ww,an,Snq,Znq,Pbil);
-	return(inten);
+    // Pearl volume
+    float pearl_vol = 4.0f /3.0f * M_PI * pow(radius, 3.0f);
+    // Return total volume
+    return num_pearls * pearl_vol;;
 }
 
-// functions for the lamellar paracrystal model
-float
-paraCryst_sn(float ww, float qval, float davg, long Nlayers, float an) {
-	
-	float Snq;
-
-	Snq = an/( (float)Nlayers*pow((1.0f+ww*ww-2.0f*ww*cos(qval*davg)),2) );
-	
-	return(Snq);
-}
-
-float
-paraCryst_an(float ww, float qval, float davg, long Nlayers) {
-	
-	float an;
-	
-	an = 4.0f*ww*ww - 2.0f*(ww*ww*ww+ww)*cos(qval*davg);
-	an -= 4.0f*pow(ww,(Nlayers+2))*cos((float)Nlayers*qval*davg);
-	an += 2.0f*pow(ww,(Nlayers+3))*cos((float)(Nlayers-1)*qval*davg);
-	an += 2.0f*pow(ww,(Nlayers+1))*cos((float)(Nlayers+1)*qval*davg);
-	
-	return(an);
-}
-
-
-
-float form_volume(VOLUME_PARAMETER_DECLARATIONS);
-float form_volume(VOLUME_PARAMETER_DECLARATIONS) {
-    
+// If used elsewhere - factor out to lib/
+static
+float sinc(float x)
+{
+  if (x==0.0f){
     return 1.0f;
-    
+  }
+  return sin(x)/x;
 }
 
+float linear_pearls_kernel(float q,
+            float radius,
+            float edge_sep,
+            float num_pearls,
+            float pearl_sld,
+            float solvent_sld)
+{
+    float n_contrib;
+    //relative sld
+    float contrast_pearl = pearl_sld - solvent_sld;
+    //each volume
+    float pearl_vol = 4.0f /3.0f * M_PI * pow(radius, 3.0f);
+    //total volume
+    float tot_vol = num_pearls * pearl_vol;
+    //mass
+    float m_s = contrast_pearl * pearl_vol;
+    //center to center distance between the neighboring pearls
+    float separation = edge_sep + 2.0f * radius;
 
-float Iqxy(float qx, float qy, IQXY_PARAMETER_DECLARATIONS);
-float Iqxy(float qx, float qy, IQXY_PARAMETER_DECLARATIONS) {
-    
-    return Iq(sqrt(qx*qx+qy*qy), IQ_PARAMETERS);
-    
+    float x=q*radius;
+
+    // Try Taylor on x*xos(x)
+	// float out_cos = x - pow(x,3)/2 + pow(x,5)/24 - pow(x,7)/720 + pow(x,9)/40320;
+    // psi -= x*out_cos;
+
+    //sine functions of a pearl
+    float psi = sin(q * radius);
+    psi -= x * cos(x);
+    psi /= pow((q * radius), 3.0f);
+
+    // N pearls contribution
+    int n_max = num_pearls - 1;
+    n_contrib = num_pearls;
+    for(int num=1; num<=n_max; num++) {
+        n_contrib += (2.0f*(num_pearls-num)*sinc(q*separation*num));
+    }
+    // form factor for num_pearls
+    float form_factor = n_contrib;
+    form_factor *= pow((m_s*psi*3.0f), 2.0f);
+    form_factor /= (tot_vol * 1.0e4f);
+
+    return form_factor;
+}
+
+float Iq(float q,
+            float radius,
+            float edge_sep,
+            float num_pearls,
+            float pearl_sld,
+            float solvent_sld)
+{
+
+	float result = linear_pearls_kernel(q,
+                    radius,
+                    edge_sep,
+                    num_pearls,
+                    pearl_sld,
+                    solvent_sld);
+
+	return result;
+}
+
+float Iqxy(float qx, float qy,
+            float radius,
+            float edge_sep,
+            float num_pearls,
+            float pearl_sld,
+            float solvent_sld)
+{
+	float q;
+	q = sqrt(qx*qx+qy*qy);
+
+	float result = linear_pearls_kernel(q,
+                    radius,
+                    edge_sep,
+                    num_pearls,
+                    pearl_sld,
+                    solvent_sld);
+
+	return result;
 }
 
 

@@ -66,59 +66,59 @@
 #endif
 
 
-#define VOLUME_PARAMETERS bell_radius,radius,length
-#define VOLUME_WEIGHT_PRODUCT bell_radius_w*radius_w*length_w
-#define IQ_KERNEL_NAME barbell_Iq
-#define IQ_PARAMETERS sld, solvent_sld, bell_radius, radius, length
+#define VOLUME_PARAMETERS radius,core_radius,length
+#define VOLUME_WEIGHT_PRODUCT radius_w*core_radius_w*length_w
+#define IQ_KERNEL_NAME hollow_cylinder_Iq
+#define IQ_PARAMETERS radius, core_radius, length, sld, solvent_sld
 #define IQ_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
     const float sld, \
     const float solvent_sld
-#define IQ_WEIGHT_PRODUCT bell_radius_w*radius_w*length_w
-#define IQ_DISPERSION_LENGTH_DECLARATIONS const int Nbell_radius, \
-    const int Nradius, \
+#define IQ_WEIGHT_PRODUCT radius_w*core_radius_w*length_w
+#define IQ_DISPERSION_LENGTH_DECLARATIONS const int Nradius, \
+    const int Ncore_radius, \
     const int Nlength
-#define IQ_DISPERSION_LENGTH_SUM Nbell_radius+Nradius+Nlength
-#define IQ_OPEN_LOOPS     for (int bell_radius_i=0; bell_radius_i < Nbell_radius; bell_radius_i++) { \
-      const float bell_radius = loops[2*(bell_radius_i)]; \
-      const float bell_radius_w = loops[2*(bell_radius_i)+1]; \
-      for (int radius_i=0; radius_i < Nradius; radius_i++) { \
-        const float radius = loops[2*(radius_i+Nbell_radius)]; \
-        const float radius_w = loops[2*(radius_i+Nbell_radius)+1]; \
+#define IQ_DISPERSION_LENGTH_SUM Nradius+Ncore_radius+Nlength
+#define IQ_OPEN_LOOPS     for (int radius_i=0; radius_i < Nradius; radius_i++) { \
+      const float radius = loops[2*(radius_i)]; \
+      const float radius_w = loops[2*(radius_i)+1]; \
+      for (int core_radius_i=0; core_radius_i < Ncore_radius; core_radius_i++) { \
+        const float core_radius = loops[2*(core_radius_i+Nradius)]; \
+        const float core_radius_w = loops[2*(core_radius_i+Nradius)+1]; \
         for (int length_i=0; length_i < Nlength; length_i++) { \
-          const float length = loops[2*(length_i+Nbell_radius+Nradius)]; \
-          const float length_w = loops[2*(length_i+Nbell_radius+Nradius)+1];
+          const float length = loops[2*(length_i+Nradius+Ncore_radius)]; \
+          const float length_w = loops[2*(length_i+Nradius+Ncore_radius)+1];
 #define IQ_CLOSE_LOOPS         } \
       } \
     }
-#define IQXY_KERNEL_NAME barbell_Iqxy
-#define IQXY_PARAMETERS sld, solvent_sld, bell_radius, radius, length, theta, phi
+#define IQXY_KERNEL_NAME hollow_cylinder_Iqxy
+#define IQXY_PARAMETERS radius, core_radius, length, sld, solvent_sld, theta, phi
 #define IQXY_FIXED_PARAMETER_DECLARATIONS const float scale, \
     const float background, \
     const float sld, \
     const float solvent_sld
-#define IQXY_WEIGHT_PRODUCT bell_radius_w*radius_w*length_w*theta_w*phi_w
-#define IQXY_DISPERSION_LENGTH_DECLARATIONS const int Nbell_radius, \
-    const int Nradius, \
+#define IQXY_WEIGHT_PRODUCT radius_w*core_radius_w*length_w*theta_w*phi_w
+#define IQXY_DISPERSION_LENGTH_DECLARATIONS const int Nradius, \
+    const int Ncore_radius, \
     const int Nlength, \
     const int Ntheta, \
     const int Nphi
-#define IQXY_DISPERSION_LENGTH_SUM Nbell_radius+Nradius+Nlength+Ntheta+Nphi
-#define IQXY_OPEN_LOOPS     for (int bell_radius_i=0; bell_radius_i < Nbell_radius; bell_radius_i++) { \
-      const float bell_radius = loops[2*(bell_radius_i)]; \
-      const float bell_radius_w = loops[2*(bell_radius_i)+1]; \
-      for (int radius_i=0; radius_i < Nradius; radius_i++) { \
-        const float radius = loops[2*(radius_i+Nbell_radius)]; \
-        const float radius_w = loops[2*(radius_i+Nbell_radius)+1]; \
+#define IQXY_DISPERSION_LENGTH_SUM Nradius+Ncore_radius+Nlength+Ntheta+Nphi
+#define IQXY_OPEN_LOOPS     for (int radius_i=0; radius_i < Nradius; radius_i++) { \
+      const float radius = loops[2*(radius_i)]; \
+      const float radius_w = loops[2*(radius_i)+1]; \
+      for (int core_radius_i=0; core_radius_i < Ncore_radius; core_radius_i++) { \
+        const float core_radius = loops[2*(core_radius_i+Nradius)]; \
+        const float core_radius_w = loops[2*(core_radius_i+Nradius)+1]; \
         for (int length_i=0; length_i < Nlength; length_i++) { \
-          const float length = loops[2*(length_i+Nbell_radius+Nradius)]; \
-          const float length_w = loops[2*(length_i+Nbell_radius+Nradius)+1]; \
+          const float length = loops[2*(length_i+Nradius+Ncore_radius)]; \
+          const float length_w = loops[2*(length_i+Nradius+Ncore_radius)+1]; \
           for (int theta_i=0; theta_i < Ntheta; theta_i++) { \
-            const float theta = loops[2*(theta_i+Nbell_radius+Nradius+Nlength)]; \
-            const float theta_w = loops[2*(theta_i+Nbell_radius+Nradius+Nlength)+1]; \
+            const float theta = loops[2*(theta_i+Nradius+Ncore_radius+Nlength)]; \
+            const float theta_w = loops[2*(theta_i+Nradius+Ncore_radius+Nlength)+1]; \
             for (int phi_i=0; phi_i < Nphi; phi_i++) { \
-              const float phi = loops[2*(phi_i+Nbell_radius+Nradius+Nlength+Ntheta)]; \
-              const float phi_w = loops[2*(phi_i+Nbell_radius+Nradius+Nlength+Ntheta)+1];
+              const float phi = loops[2*(phi_i+Nradius+Ncore_radius+Nlength+Ntheta)]; \
+              const float phi_w = loops[2*(phi_i+Nradius+Ncore_radius+Nlength+Ntheta)+1];
 #define IQXY_CLOSE_LOOPS             } \
           } \
         } \
@@ -335,130 +335,150 @@ constant float Gauss76Z[76]={
 };
 
 
-float form_volume(float bell_radius, float radius, float length);
-float Iq(float q, float sld, float solvent_sld,
-        float bell_radius, float radius, float length);
-float Iqxy(float qx, float qy, float sld, float solvent_sld,
-        float bell_radius, float radius, float length,
-        float theta, float phi);
+static float _hollow_cylinder_kernel(float q, float core_radius, float radius, 
+	float length, float dum);
+static float hollow_cylinder_analytical_2D_scaled(float q, float q_x, float q_y, float radius, float core_radius, float length, float sld,
+	float solvent_sld, float theta, float phi);
+static float hollow_cylinder_scaling(float integrand, float delrho, float volume);
+	
+float form_volume(float radius, float core_radius, float length);
 
-//barbell kernel - same as dumbell
-float _bell_kernel(float q, float h, float bell_radius,
-        float length, float sin_alpha, float cos_alpha);
-float _bell_kernel(float q, float h, float bell_radius,
-        float length, float sin_alpha, float cos_alpha)
+float Iq(float q, float radius, float core_radius, float length, float sld,
+	float solvent_sld);
+float Iqxy(float qx, float qy, float radius, float core_radius, float length, float sld,
+	float solvent_sld, float theta, float phi);
+
+// From Igor library
+static float _hollow_cylinder_kernel(float q, float core_radius, float radius, 
+	float length, float dum)
 {
-    const float upper = 1.0f;
-    const float lower = -1.0f*h/bell_radius;
-
-    float total = 0.0f;
-    for (int i = 0; i < 76; i++){
-        const float t = 0.5f*(Gauss76Z[i]*(upper-lower)+upper+lower);
-        const float arg1 = q*cos_alpha*(bell_radius*t+h+length*0.5f);
-        const float arg2 = q*bell_radius*sin_alpha*sqrt(1.0f-t*t);
-        const float be = (arg2 == 0.0f ? 0.5f :J1(arg2)/arg2);
-        const float Fq = cos(arg1)*(1.0f-t*t)*be;
-        total += Gauss76Wt[i] * Fq;
+    float gamma,arg1,arg2,lam1,lam2,psi,sinarg,t2,retval;		//local variables
+    
+    gamma = core_radius/radius;
+    arg1 = q*radius*sqrt(1.0f-dum*dum);		//1=shell (outer radius)
+    arg2 = q*core_radius*sqrt(1.0f-dum*dum);			//2=core (inner radius)
+    if (arg1 == 0.0f){
+    	lam1 = 1.0f;
+    }else{
+    	lam1 = 2.0f*J1(arg1)/arg1;
     }
-    const float integral = 0.5f*(upper-lower)*total;
-    return 4.0f*M_PI*bell_radius*bell_radius*bell_radius*integral;
-}
-
-float form_volume(float bell_radius,
-        float radius,
-        float length)
-{
-
-    // bell radius should never be less than radius when this is called
-    const float hdist = sqrt(bell_radius*bell_radius - radius*radius);
-    const float p1 = 2.0f*bell_radius*bell_radius*bell_radius/3.0f;
-    const float p2 = bell_radius*bell_radius*hdist;
-    const float p3 = hdist*hdist*hdist/3.0f;
-
-    return M_PI*radius*radius*length + 2.0f*M_PI*(p1+p2-p3);
-}
-
-float Iq(float q, float sld,
-        float solvent_sld,
-        float bell_radius,
-        float radius,
-        float length)
-{
-    float sn, cn; // slots to hold sincos function output
-
-    if (bell_radius < radius) return NAN;
-
-    const float lower = 0.0f;
-    const float upper = M_PI_2;
-    const float h = sqrt(bell_radius*bell_radius-radius*radius);
-    float total = 0.0f;
-    for (int i = 0; i < 76; i++){
-        const float alpha= 0.5f*(Gauss76Z[i]*(upper-lower) + upper + lower);
-        SINCOS(alpha, sn, cn);
-
-        const float bell_Fq = _bell_kernel(q, h, bell_radius, length, sn, cn);
-
-        const float arg1 = q*length*0.5f*cn;
-        const float arg2 = q*radius*sn;
-        // lim_{x->0} J1(x)/x = 1/2,   lim_{x->0} sin(x)/x = 1
-        const float be = (arg2 == 0.0f ? 0.5f :J1(arg2)/arg2);
-        const float si = (arg1 == 0.0f ? 1.0f :sin(arg1)/arg1);
-        const float cyl_Fq = M_PI*radius*radius*length*si*2.0f*be;
-
-        const float Aq = cyl_Fq + bell_Fq;
-        total += Gauss76Wt[i] * Aq * Aq * sn;
+    if (arg2 == 0.0f){
+    	lam2 = 1.0f;
+    }else{
+    	lam2 = 2.0f*J1(arg2)/arg2;
+    }
+    //Todo: Need to check psi behavior as gamma goes to 1.f
+    psi = (lam1 -  gamma*gamma*lam2)/(1.0f-gamma*gamma);		//SRK 10/19/00
+    sinarg = q*length*dum/2.0f;
+    if (sinarg == 0.0f){
+    	t2 = 1.0f;
+    }else{
+    	t2 = sin(sinarg)/sinarg;
     }
 
-    const float form = total*(upper-lower)*0.5f;
-
-    //Contrast and volume normalization
-    const float s = (sld - solvent_sld);
-    return form*1.0e-4f*s*s; //form_volume(bell_radius,radius,length);
+    retval = psi*psi*t2*t2;
+    
+    return(retval);
 }
+static float hollow_cylinder_analytical_2D_scaled(float q, float q_x, float q_y, float radius, float core_radius, float length, float sld,
+	float solvent_sld, float theta, float phi) {
+	float cyl_x, cyl_y; //, cyl_z
+	//float q_z;
+	float vol, cos_val, delrho;
+	float answer;
+	//convert angle degree to radian
+	float pi = 4.0f*atan(1.0f);
+	theta = theta * pi/180.0f;
+	phi = phi * pi/180.0f;
+	delrho = solvent_sld - sld;
 
+	// Cylinder orientation
+	cyl_x = cos(theta) * cos(phi);
+	cyl_y = sin(theta);
+	//cyl_z = -cos(theta) * sin(phi);
 
+	// q vector
+	//q_z = 0;
 
-float Iqxy(float qx, float qy,
-        float sld,
-        float solvent_sld,
-        float bell_radius,
-        float radius,
-        float length,
-        float theta,
-        float phi)
+	// Compute the angle btw vector q and the
+	// axis of the cylinder
+	cos_val = cyl_x*q_x + cyl_y*q_y;// + cyl_z*q_z;
+
+	// The following test should always pass
+	if (fabs(cos_val)>1.0f) {
+		//printf("core_shell_cylinder_analytical_2D: Unexpected error: cos(alpha)=%g\n", cos_val);
+		return NAN;
+	}
+
+	answer = _hollow_cylinder_kernel(q, core_radius, radius, length, cos_val);
+
+	vol = form_volume(radius, core_radius, length);
+	answer = hollow_cylinder_scaling(answer, delrho, vol);
+
+	return answer;
+}
+static float hollow_cylinder_scaling(float integrand, float delrho, float volume)
 {
-     float sn, cn; // slots to hold sincos function output
+	float answer;
+	// Multiply by contrast^2
+	answer = integrand*delrho*delrho;
 
-    // Exclude invalid inputs.
-    if (bell_radius < radius) return NAN;
+	//normalize by cylinder volume
+	answer *= volume*volume;
 
-    // Compute angle alpha between q and the cylinder axis
-    SINCOS(theta*M_PI_180, sn, cn);
-    // # The following correction factor exists in sasview, but it can't be
-    // # right, so we are leaving it out for now.
-    const float q = sqrt(qx*qx+qy*qy);
-    const float cos_val = cn*cos(phi*M_PI_180)*qx + sn*qy;
-    const float alpha = acos(cos_val); // rod angle relative to q
-    SINCOS(alpha, sn, cn);
-
-    const float h = sqrt(bell_radius*bell_radius - radius*radius); // negative h
-    const float bell_Fq = _bell_kernel(q, h, bell_radius, length, sn, cn)/sn;
-
-    const float besarg = q*radius*sn;
-    const float siarg = q*0.5f*length*cn;
-    // lim_{x->0} J1(x)/x = 1/2,   lim_{x->0} sin(x)/x = 1
-    const float bj = (besarg == 0.0f ? 0.5f : J1(besarg)/besarg);
-    const float si = (siarg == 0.0f ? 1.0f : sin(siarg)/siarg);
-    const float cyl_Fq = M_PI*radius*radius*length*2.0f*bj*si;
-
-    // Volume weighted average F(q)
-    const float Aq = cyl_Fq + bell_Fq;
-
-    // Multiply by contrast^2, normalize by cylinder volume and convert to cm-1
-    const float s = (sld - solvent_sld);
-    return 1.0e-4f * Aq * Aq * s * s; // form_volume(radius, cap_radius, length);
+	//convert to [cm-1]
+	answer *= 1.0e-4f;
+	
+	return answer;
 }
 
+
+float form_volume(float radius, float core_radius, float length)
+{
+	float pi = 4.0f*atan(1.0f);
+	float v_shell = pi*length*(radius*radius-core_radius*core_radius);
+	return(v_shell);
+}
+
+
+float Iq(float q, float radius, float core_radius, float length, float sld,
+	float solvent_sld)
+{
+    int i;
+	int nord=76;			//order of integration
+	float lower,upper,zi, inter;		//upper and lower integration limits
+	float summ,answer,delrho;			//running tally of integration
+	float norm,volume;	//final calculation variables
+	
+	if (core_radius >= radius || radius >= length) {
+		return NAN;
+	}
+	
+	delrho = solvent_sld - sld;
+	lower = 0.0f;
+	upper = 1.0f;		//limits of numerical integral
+
+	summ = 0.0f;			//initialize intergral
+	for(i=0;i<nord;i++) {
+		zi = ( Gauss76Z[i] * (upper-lower) + lower + upper )/2.0f;
+		inter = Gauss76Wt[i] * _hollow_cylinder_kernel(q, core_radius, radius, length, zi);
+		summ += inter;
+	}
+ 	
+	norm = summ*(upper-lower)/2.0f;
+	volume = form_volume(radius, core_radius, length);
+	answer = hollow_cylinder_scaling(norm, delrho, volume);
+	
+	return(answer);
+}
+
+float Iqxy(float qx, float qy, float radius, float core_radius, float length, float sld,
+	float solvent_sld, float theta, float phi)
+{
+	float q;
+	q = sqrt(qx*qx+qy*qy);
+	return hollow_cylinder_analytical_2D_scaled(q, qx/q, qy/q, radius, core_radius, length, sld, solvent_sld, theta, phi);
+}
 
 /*
     ##########################################################

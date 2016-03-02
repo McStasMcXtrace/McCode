@@ -19,8 +19,11 @@
 * Example: mcrun RTP_DIFF.instr lambda=2.36
 *
 * %Parameters
-* lambda: [Angs] Monochromator selected wavelength
-* DM:     [Angs] d-spacing for the monochromator reflection
+* lambda:       [Angs] Monochromator selected wavelength
+* DM:           [Angs] d-spacing for the monochromator reflection
+* Mono_tilt:    [deg]  Tilt angle magnitude for the inner/outer mono slabs
+* powder:       [str]  Filename of the powder sample
+* det_rotation: [deg]  Rotation of the portable detector
 *
 * %Link
 * <a href="http://www.nuclearmalaysia.gov.my/Plant&Facilities/reactor.php">Nuclear Malaysia</a>

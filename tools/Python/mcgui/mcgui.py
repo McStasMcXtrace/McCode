@@ -15,9 +15,11 @@ import re
 import mccode_config
 from PyQt4 import QtGui, QtCore
 from viewclasses import McView
-from mcguiutils import McGuiUtils
-from mcfileutils import McComponentParser
 from datetime import datetime
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from mclib import McGuiUtils
+from mclib import McComponentParser
 
 ''' Message emitter
 Status and message log and signalling.
@@ -100,7 +102,7 @@ class McGuiState(QtCore.QObject):
     __emitter = None
     
     # <instrument>, <work dir>
-    instrumentUpdated = QtCore.pyqtSignal(QtCore.QStringList)
+    instrumentUpdated = QtCore.pyqtSignal(QtCore.QStringList, QtCore.QString)
     # [<canRun>, <canPlot>] each can be str 'True' or 'False'
     simStateUpdated = QtCore.pyqtSignal(QtCore.QStringList)
     
@@ -115,7 +117,7 @@ class McGuiState(QtCore.QObject):
         self.__emitter = emitter
         
     def __fireInstrUpdate(self):
-        self.instrumentUpdated.emit([self.getInstrumentFile(), self.getWorkDir()])
+        self.instrumentUpdated.emit([self.getInstrumentFile(), self.getWorkDir()], self.getInstrumentFile())
         
     def __fireSimStateUpdate(self):
         self.simStateUpdated.emit([str(self.canRun()), str(self.canPlot()), str(self.isSimRunning())])
@@ -253,7 +255,7 @@ class McGuiState(QtCore.QObject):
             # compile binary from mcstas .c file 
             bf = basef + '.' + mccode_config.platform["EXESUFFIX"] 
             if mpi:
-                cmd = mccode_config.compilation["MPICC"] + ' -o ' + bf + ' ' + cf + ' ' + cflags + ' ' + mccode_config.compilation["MPIFLAGS"]
+                cmd = mccode_config.compilation["MPICC"] + ' -o ' + bf + ' ' + cf + ' ' + mccode_config.compilation["MPIFLAGS"] + ' ' + cflags
             else:
                 cmd = mccode_config.compilation["CC"] + ' -o ' + bf + ' ' + cf + ' ' + cflags
            

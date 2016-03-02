@@ -5,6 +5,8 @@
 # define USE_OPENCL
 #endif
 
+#define USE_KAHAN_SUMMATION 0
+
 // If opencl is not available, then we are compiling a C function
 // Note: if using a C++ compiler, then define kernel as extern "C"
 #ifndef USE_OPENCL
@@ -151,6 +153,53 @@ float J1(float x)
     const float ans = sqrt(0.636619772f/ax) * (cn*ans1 - (8.0f/ax)*sn*ans2);
     return (x < 0.0f) ? -ans : ans;
   }
+}
+
+
+/**
+* Spherical Bessel function 3*j1(x)/x
+*
+* Used for low q to avoid cancellation error.
+* Note that the values differ from sasview ~ 5e-12 rather than 5e-14, but
+* in this case it is likely cancellation errors in the original expression
+* using float precision that are the source.  Single precision only
+* requires the first 3 terms.  Double precision requires the 4th term.
+* The fifth term is not needed, and is commented out.
+* Taylor expansion:
+*      1.0f + q2*(-3.f/30.f + q2*(3.f/840.f))+ q2*(-3.f/45360.f + q2*(3.f/3991680.f))))
+* Expression returned from Herbie (herbie.uwpise.org/demo):
+*      const float t = ((1.f + 3.f*q2*q2/5600.f) - q2/20.f);
+*      return t*t;
+*/
+
+float sph_j1c(float q);
+float sph_j1c(float q)
+{
+    const float q2 = q*q;
+    float sin_q, cos_q;
+
+    SINCOS(q, sin_q, cos_q);
+
+    const float bessel = (q < 0.384038453352533f)
+        ? (1.0f + q2*(-3.f/30.f + q2*(3.f/840.f)))
+        : 3.0f*(sin_q/q - cos_q)/q2;
+
+    return bessel;
+
+ /*
+    // Code to test various expressions
+    if (sizeof(q2) > 4) {
+        return 3.0f*(sin_q/q - cos_q)/q2;
+    } else if (q < 0.384038453352533f) {
+        //const float t = ((1.f + 3.f*q2*q2/5600.f) - q2/20.f); return t*t;
+        return 1.0f + q2*q2*(3.f/840.f) - q2*(3.f/30.f);
+        //return 1.0f + q2*(-3.f/30.f + q2*(3.f/840.f));
+        //return 1.0f + q2*(-3.f/30.f + q2*(3.f/840.f + q2*(-3.f/45360.f)));
+        //return 1.0f + q2*(-3.f/30.f + q2*(3.f/840.f + q2*(-3.f/45360.f + q2*(3.f/3991680.f))));
+    } else {
+        return 3.0f*(sin_q/q - cos_q)/q2;
+    }
+*/
 }
 
 
@@ -328,15 +377,14 @@ float Iq(float q, float sld, float solvent_sld, float rpolar, float requatorial)
 float Iqxy(float qx, float qy, float sld, float solvent_sld,
     float rpolar, float requatorial, float theta, float phi);
 
-float _ellipsoid_kernel(float q, float rpolar, float requatorial, float cos_alpha);
-float _ellipsoid_kernel(float q, float rpolar, float requatorial, float cos_alpha)
+float _ellipsoid_kernel(float q, float rpolar, float requatorial, float sin_alpha);
+float _ellipsoid_kernel(float q, float rpolar, float requatorial, float sin_alpha)
 {
-    float sn, cn;
     float ratio = rpolar/requatorial;
     const float u = q*requatorial*sqrt(1.0f
-                   + cos_alpha*cos_alpha*(ratio*ratio - 1.0f));
-    SINCOS(u, sn, cn);
-    const float f = ( u==0.0f ? 1.0f : 3.0f*(sn-u*cn)/(u*u*u) );
+                   + sin_alpha*sin_alpha*(ratio*ratio - 1.0f));
+    const float f = sph_j1c(u);
+
     return f*f;
 }
 
@@ -355,9 +403,9 @@ float Iq(float q,
     //const float upper = 1.0f;
     float total = 0.0f;
     for (int i=0;i<76;i++) {
-        //const float cos_alpha = (Gauss76Z[i]*(upper-lower) + upper + lower)/2;
-        const float cos_alpha = 0.5f*(Gauss76Z[i] + 1.0f);
-        total += Gauss76Wt[i] * _ellipsoid_kernel(q, rpolar, requatorial, cos_alpha);
+        //const float sin_alpha = (Gauss76Z[i]*(upper-lower) + upper + lower)/2;
+        const float sin_alpha = 0.5f*(Gauss76Z[i] + 1.0f);
+        total += Gauss76Wt[i] * _ellipsoid_kernel(q, rpolar, requatorial, sin_alpha);
     }
     //const float form = (upper-lower)/2*total;
     const float form = 0.5f*total;
@@ -377,6 +425,7 @@ float Iqxy(float qx, float qy,
 
     const float q = sqrt(qx*qx + qy*qy);
     SINCOS(theta*M_PI_180, sn, cn);
+    // TODO: check if this is actually sin(alpha), not cos(alpha)
     const float cos_alpha = cn*cos(phi*M_PI_180)*(qx/q) + sn*(qy/q);
     const float form = _ellipsoid_kernel(q, rpolar, requatorial, cos_alpha);
     const float s = (sld - solvent_sld) * form_volume(rpolar, requatorial);
@@ -442,7 +491,8 @@ kernel void IQ_KERNEL_NAME(
     const float weight = IQ_WEIGHT_PRODUCT;
     if (weight > cutoff) {
       const float scattering = Iq(qi, IQ_PARAMETERS);
-      if (scattering >= 0.0f) { // scattering cannot be negative
+      // allow kernels to exclude invalid regions by returning NaN
+      if (!isnan(scattering)) {
         ret += weight*scattering;
         norm += weight;
       #ifdef VOLUME_PARAMETERS
@@ -501,6 +551,9 @@ kernel void IQXY_KERNEL_NAME(
   {
     const float qxi = qx[i];
     const float qyi = qy[i];
+    #if USE_KAHAN_SUMMATION
+    float accumulated_error = 0.0f;
+    #endif
 #ifdef IQXY_OPEN_LOOPS
     float ret=0.0f, norm=0.0f;
     #ifdef VOLUME_PARAMETERS
@@ -515,7 +568,8 @@ kernel void IQXY_KERNEL_NAME(
     if (weight > cutoff) {
 
       const float scattering = Iqxy(qxi, qyi, IQXY_PARAMETERS);
-      if (scattering >= 0.0f) { // scattering cannot be negative
+      if (!isnan(scattering)) { // if scattering is bad, exclude it from sum
+      //if (scattering >= 0.0f) { // scattering cannot be negative
         // TODO: use correct angle for spherical correction
         // Definition of theta and phi are probably reversed relative to the
         // equation which gave rise to this correction, leading to an
@@ -523,12 +577,20 @@ kernel void IQXY_KERNEL_NAME(
         // reverse the meanings of phi and theta in the forms, or use phi
         // rather than theta in this correction.  Current code uses cos(theta)
         // so that values match those of sasview.
-      #ifdef IQXY_HAS_THETA
+      #if defined(IQXY_HAS_THETA) // && 0
         const float spherical_correction
           = (Ntheta>1 ? fabs(cos(M_PI_180*theta))*M_PI_2:1.0f);
-        ret += spherical_correction * weight * scattering;
+        const float next = spherical_correction * weight * scattering;
       #else
-        ret += weight * scattering;
+        const float next = weight * scattering;
+      #endif
+      #if USE_KAHAN_SUMMATION
+        const float y = next - accumulated_error;
+        const float t = ret + y;
+        accumulated_error = (t - ret) - y;
+        ret = t;
+      #else
+        ret += next;
       #endif
         norm += weight;
       #ifdef VOLUME_PARAMETERS

@@ -14,8 +14,11 @@ class McComponentParser(object):
     info = '' # info section all in one string  (multiple lines)
     description = '' # component doc description (multiple lines)
     pars = [] # list of McComponentParInfo
-        
+    
+    display = None # optional MCDISPLAY section
+    
     class McComponentParInfo(object):
+        ''' component parameter info object - appended to the list member McComponentParser.pars '''
         def __init__(self, par_info=None):
             if par_info:
                 self.par_name = par_info.par_name
@@ -35,14 +38,15 @@ class McComponentParser(object):
         self.__hasParsed = False
     
     def parse(self):
+        ''' main parse component for info function '''
+        
         if self.__hasParsed:
             return
         
         # load component from file
         text = open(self.file).read()
         if text == '':
-            return
-            # TODO: raise exception
+            raise Exception('parse: component file is empty.')
         
         # get component info, description and par docs from header section
         self.info, self.description, header_P_section = self.__parseComponentHeader(text)
@@ -55,7 +59,22 @@ class McComponentParser(object):
         self.__matchDocStringsToPars(self.pars, header_P_section)
 
         self.__hasParsed = True
-
+    
+    def parseDisplaySection(self):
+        ''' optional: call to parse MCDISPLAY section and save in member "mcdisplay" '''
+        
+        # load component from file
+        text = open(self.file).read()
+        if text == '':
+            raise Exception('parse: component file is empty.')
+        
+        pat = 'MCDISPLAY\s*\%\{([-+.\w\s=<>,/*{}\"\'()\.&$=?;:*|]*)\%\}'
+        sr = re.search(pat, text)
+        if sr:
+            self.mcdisplay = sr.group()
+        else:
+            self.mcdisplay = 'missing MCDISPLAY string'
+    
     @staticmethod
     def __parseComponentHeader(text):
         # identify the start and end positions of the I, D and P sections
@@ -65,8 +84,14 @@ class McComponentParser(object):
         pos_E = text.find('%E')
         
         # validate match for %I, %D, %P and %E positions
-        if pos_I == -1 or pos_D == -1 or pos_P == -1 or pos_E == -1:
-            raise Exception('parseComponentHeader: Missing %I, %D, %P or %E tag.')
+        if pos_I == -1:
+            raise Exception('parseComponentHeader: Missing %I tag.')
+        if pos_D == -1:
+            raise Exception('parseComponentHeader: Missing %D tag.')
+        if pos_P == -1:
+            raise Exception('parseComponentHeader: Missing %P tag.')
+        if pos_E == -1:
+            raise Exception('parseComponentHeader: Missing %E tag.')
         
         # extract strings for I, D and P sections
         text_I = McComponentParser.__removeStarsFromLines(text[pos_I+2: pos_D])

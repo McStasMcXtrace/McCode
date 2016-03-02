@@ -6,12 +6,15 @@
 *
 *  Component: Fermi_chop2 
 *
-* %Identification
+* %I
 * Written by: Garrett Granroth
 * Date: 6 Feb 2005
 * Origin: SNS Oak Ridge,TN
 * Version: 0.5
-* %Parameters
+* 
+* %D
+* 
+* %P
 *  Input Parameters:
 *  
 *  len:  slit package length (m)
@@ -27,7 +30,7 @@
 *  blader: blade radius (m)
 *  
 *
-* %End
+* %E
 *******************************************************************/
 
 DEFINE COMPONENT Fermi_chop2a

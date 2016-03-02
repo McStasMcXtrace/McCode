@@ -6,12 +6,16 @@
 *
 *  Component: vertical_T0 
 *
-* %Identification
+* %I
+* 
 * Written by: Garrett Granroth
 * Date: 2 NOV 2004
 * Origin: SNS Oak Ridge,TN
 * Version: 0.4
-* %Parameters
+* 
+* %D
+* 
+* %P
 *  Input Parameters:
 *  
 *  len:  length of slot (m)
