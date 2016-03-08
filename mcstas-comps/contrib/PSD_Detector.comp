@@ -197,13 +197,13 @@
 *******************************************************************************/
 
 DEFINE COMPONENT PSD_Detector
-DEFINITION PARAMETERS (nx=128, ny=128, 
-  string FN_Conv="He3inHe.table", string FN_Stop="He3inCF4.table")
+DEFINITION PARAMETERS (nx=128, ny=128)
 SETTING PARAMETERS (xwidth=0, radius=0, awidth=0, yheight=0, zdepth=0.03,
   threshold=100, PressureConv=5, PressureStop=1, interpolate=1, p_interact=0,
   verbose=0, LensOn=1, dc=0, borderx=-1, bordery=-1, xChDivRelSigma=0,
   yChDivRelSigma=0, bufsize=0, restore_neutron=0, angle=0,
-  string type=0, string filename=0)
+  string type=0, string filename=0,
+  string FN_Conv="He3inHe.table", string FN_Stop="He3inCF4.table")
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, EAP,M1P1,PosAP, EAT,M1T1,PosAT,
   CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, SensVolCumul, DetCumul, PHSpectrum, PHSpectrum0,
   PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors,
@@ -412,22 +412,22 @@ INITIALIZE
   /* if Gas tables can not be found, try by pre-pending Gas_tables */
   char tmp[256];
   if (!nH_p) {
-  	sprintf(tmp, "Gas_tables", MC_PATHSEP_S, FN_Conv);
+  	sprintf(tmp, "Gas_tables%s%s", MC_PATHSEP_S, FN_Conv);
   	Table_Read(&Part_He_3_p,tmp,1);
     nH_p = Part_He_3_p.rows;
   }
   if (!nS_p) {
-  	sprintf(tmp, "Gas_tables", MC_PATHSEP_S, FN_Stop);
+  	sprintf(tmp, "Gas_tables%s%s", MC_PATHSEP_S, FN_Stop);
   	Table_Read(&Part_Stop_p,tmp,1);
     nS_p = Part_Stop_p.rows;
   }
   if (!nH_t) {
-    sprintf(tmp, "Gas_tables", MC_PATHSEP_S, FN_Conv);
+    sprintf(tmp, "Gas_tables%s%s", MC_PATHSEP_S, FN_Conv);
   	Table_Read(&Part_He_3_t,tmp,2);
     nH_t  = Part_He_3_t.rows;
   }
   if (!nS_t) {
-    sprintf(tmp, "Gas_tables", MC_PATHSEP_S, FN_Stop);
+    sprintf(tmp, "Gas_tables%s%s", MC_PATHSEP_S, FN_Stop);
   	Table_Read(&Part_Stop_t,tmp,2);
     nS_t = Part_Stop_t.rows;
   }
@@ -574,8 +574,10 @@ INITIALIZE
   if (threshold<0) threshold=0;
 
   Table_Read(&Part_He_3_n,FN_Conv,3); // the absorption cross section for 0.18 nm neutrons in the converter is read from the file
-  if (!Part_He_3_n.rows)
-  	Table_Read(&Part_He_3_n,"Gas_tables" MC_PATHSEP_S FN_Conv,3);
+  if (!Part_He_3_n.rows) {
+    sprintf(tmp, "Gas_tables%s%s", MC_PATHSEP_S, FN_Conv);
+  	Table_Read(&Part_He_3_n,tmp,3);
+  }
   if ( (Part_He_3_n.rows!=1) || (Part_He_3_n.columns!=1) ) {
       fprintf(stderr,"PSD_Detector: %s: Problem: the third part of the converter\n"
                      "              stopping power file should contain only \n"
@@ -584,9 +586,11 @@ INITIALIZE
                      NAME_CURRENT_COMP);
       exit(-1);
   }
-  Table_Read(&Part_Stop_n,FN_Stop,3); // the absorption cross section for 0.18 nm neutrons in the converter is read from the file
-  if (!Part_Stop_n.rows)
-  	Table_Read(&Part_Stop_n,"Gas_tables" MC_PATHSEP_S FN_Stop,3);
+  Table_Read(&Part_Stop_n,FN_Stop,3); // the absorption cross section for 0.18 nm neutrons in the quench is read from the file
+  if (!Part_Stop_n.rows) {
+    sprintf(tmp, "Gas_tables%s%s", MC_PATHSEP_S, FN_Stop);
+  	Table_Read(&Part_Stop_n,tmp,3);
+  }
   if ( (Part_Stop_n.rows!=1) || (Part_Stop_n.columns!=1)) {
       fprintf(stderr,"PSD_Detector: %s: Problem: the third part of the stopping \n"
                      "              gas stopping power file should contain only \n"
@@ -623,8 +627,8 @@ INITIALIZE
     else strcpy(Vars.option, "list all");
     strcat(Vars.option,", borders, x y z vx vy vz t sx sy sz");
 
-    Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0,0); /* dims for mcdisplay */
-    if (filename != NULL && strlen(filename) && strcmp(filename, "NULL") && strcmp(filename, "0"))
+    Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0); /* dims for mcdisplay */
+    if (filename && strlen(filename) && strcmp(filename, "0") && strcmp(filename, "NULL"))
       strncpy(Vars.Mon_File, filename, 128);
 
     if (bufsize > 0)
@@ -1141,16 +1145,21 @@ TRACE
 
 SAVE
 %{
-
+  char   file[128];
   if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
     /* event file */
     Monitor_nD_Save(&DEFS, &Vars);
     DETECTOR_OUT(Vars.Nsum, Vars.psum, Vars.p2sum);
   } else {
     double width;
+    
     if (xwidth>0) width=xwidth;
     if (radius>0) width=2*radius;
     if (awidth>0) width=awidth;
+    if (filename && strlen(filename) && strcmp(filename, "0") && strcmp(filename, "NULL"))
+      strncpy(file, filename, 128);
+    else
+      sprintf(file, "%s.dat", NAME_CURRENT_COMP);
     DETECTOR_OUT_2D(
           "PSD Detector",
           "X position [cm]",
@@ -1158,14 +1167,12 @@ SAVE
           -width/2*100.0, width/2*100.0, -yheight/2*100.0, yheight/2*100.0,
           (double)nx, (double)ny,
           &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
-          filename && strcmp(filename,"0") && strcmp(filename,"NULL") ? 
-            filename : NAME_CURRENT_COMP);
+          file);
   }
   if (verbose) {
-    char file_spectrum[256];
     char xlabelstr[64];
-    snprintf(file_spectrum, 256, "%s.en", 
-      filename && strcmp(filename,"0") && strcmp(filename,"NULL") ? 
+    snprintf(file, 128, "%s.en", 
+      filename && strlen(filename) && strcmp(filename,"0") && strcmp(filename,"NULL") ? 
             filename : NAME_CURRENT_COMP);
     fprintf(stdout,"PSD_Detector: %s: statistics\n", NAME_CURRENT_COMP);
     fprintf(stdout,"  %g neutrons in the simulation, %g encounter the detector.\n",
@@ -1192,7 +1199,7 @@ SAVE
       "E",
       0.0, (double)(PHSpectrum_n-1), PHSpectrum_n,
       PHSpectrum0, PHSpectrum, PHSpectrum2,
-      file_spectrum);
+      file);
   }
 %}
 
