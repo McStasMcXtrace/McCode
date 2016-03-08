@@ -627,7 +627,7 @@ INITIALIZE
     else strcpy(Vars.option, "list all");
     strcat(Vars.option,", borders, x y z vx vy vz t sx sy sz");
 
-    Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0); /* dims for mcdisplay */
+    Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0,0); /* dims for mcdisplay */
     if (filename && strlen(filename) && strcmp(filename, "0") && strcmp(filename, "NULL"))
       strncpy(Vars.Mon_File, filename, 128);
 
@@ -1209,13 +1209,13 @@ FINALLY
   if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
     Monitor_nD_Finally(&DEFS, &Vars);
     if (bufsize) {
-      printf("PSD_Detector: %s: Saved %Li events (from buffer) in file %s\n",
+      printf("PSD_Detector: %s: Saved %lu events (from buffer) in file %s\n",
              NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
       if (bufsize < Vars.Nsum)
         printf("WARNING         When using this source, intensities must be multiplied\n"
                "                by a factor %g\n", (double)Vars.Nsum/bufsize);
     } else
-      printf("PSD_Detector: %s: Saved %Li events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+      printf("PSD_Detector: %s: Saved %lu events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
   }
 %}
 
