@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # This will install McStas components
-project(python-tools-mcgui C)
+project(python-tools-mclib C)
 
 # Choose between McStas or McXtrace
 option(enable_mcstas   "Choose the McStas flavor" off)
@@ -32,7 +32,7 @@ else()
   set(P "mx")
 endif()
 
-set(TOOLS_NAME "tools/Python/${P}gui")
+set(TOOLS_NAME "tools/Python/${P}lib")
 
 if(WINDOWS)
   set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
@@ -46,7 +46,7 @@ set(CC "${CMAKE_C_COMPILER}")
 set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}gui-${MCCODE_VERSION}")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}lib-${MCCODE_VERSION}")
 set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
 
@@ -56,17 +56,17 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # NSIS
-set(NSIS_NAME "Python-based mcgui (mcgui-py), ${MCCODE_STRING}")
+set(NSIS_NAME "Python internal library, ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python, python-qscintilla2")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python")
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, python, qscintilla, PyQt4, qscintilla-python"
-  )
+  "${FLAVOR}-${MCCODE_VERSION}, python"
+)
 
 
 include(CPack)
@@ -75,24 +75,24 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/mcgui" @ONLY)
-
+# configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/mcgui" @ONLY)
+#
 # Configure config file
-configure_file("${CMAKE_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.py" @ONLY)
-
+# configure_file("${CMAKE_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.py" @ONLY)
+#
 # Configure launcher
-configure_file("${CMAKE_SOURCE_DIR}/McCode-py.desktop.in" work/@NAME@-py.desktop @ONLY)
-
-if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mccode_config.py")
-else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mcgui" "${WORK}/mccode_config.py")
-endif()
+# configure_file("${CMAKE_SOURCE_DIR}/McCode-py.desktop.in" work/@NAME@-py.desktop @ONLY)
+#
+# if(WINDOWS)
+#   set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mccode_config.py")
+# else()
+#   set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mcgui" "${WORK}/mccode_config.py")
+# endif()
 
 
 if(WINDOWS)
   # Python files
-  foreach(name viewclasses.py run-icon.png compile-icon.png widgets.py)
+  foreach(name guiutils.py fileutils.py __init__.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${lib}/${TOOLS_NAME}"
@@ -111,7 +111,7 @@ endif()
 
 if(NOT WINDOWS)
   # Python files
-  foreach(name viewclasses.py run-icon.png compile-icon.png widgets.py)
+  foreach(name fileutils.py guiutils.py __init__.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
@@ -126,28 +126,28 @@ if(NOT WINDOWS)
     WORLD_READ WORLD_EXECUTE
   )
 
-  # Symlink to main
-  add_custom_command(
-    OUTPUT "${WORK}/${P}gui-py"
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
-    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}gui-py"
-    COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${TOOLS_LIB}/mcgui" "${WORK}/${P}gui-py"
-    )
+#  # Symlink to main
+#  add_custom_command(
+#    OUTPUT "${WORK}/${P}gui-py"
+#    COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
+#    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}gui-py"
+#    COMMAND "${CMAKE_COMMAND}" -E create_symlink
+#    "${TOOLS_LIB}/mcgui" "${WORK}/${P}gui-py"
+#    )
+#
+#  add_custom_target(
+#    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}gui-py"
+#    )
+#
+#  install(
+#    PROGRAMS "${WORK}/${P}gui-py"
+#    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+#    RENAME "${P}gui-py${DOT_PYTHON_SUFFIX}"
+#    )
 
-  add_custom_target(
-    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}gui-py"
-    )
-
-  install(
-    PROGRAMS "${WORK}/${P}gui-py"
-    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-    RENAME "${P}gui-py${DOT_PYTHON_SUFFIX}"
-    )
-
-  install(
-    FILES "${WORK}/@NAME@-py.desktop" "@FLAVOR@-py.png"
-    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/launchers/"
-  ) 
+#  install(
+#    FILES "${WORK}/@NAME@-py.desktop" "@FLAVOR@-py.png"
+#    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/launchers/"
+#  ) 
 
 endif()
