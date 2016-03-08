@@ -23,6 +23,7 @@ find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mingw32 "" -- nsis
+./mkdist mcstas-tools-python-mclib $1 tools/Python/mclib/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mingw32 "" -- nsis

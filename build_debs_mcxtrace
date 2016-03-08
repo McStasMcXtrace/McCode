@@ -18,6 +18,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" linux64 "" -- deb
+./mkdist mcxtrace-tools-python-mxlib $1 tools/Python/mclib/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux64 "" -- deb
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" linux64 "o" -- deb
 # 32-bit
@@ -29,6 +30,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" linux64 "" -- deb
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" linux32 "" -- deb
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" linux32 "" -- deb
+./mkdist mcxtrace-tools-python-mxlib $1 tools/Python/mclib/ "" linux32 "" -- deb
 ./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 "" -- deb
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" linux32 "o" -- deb
 

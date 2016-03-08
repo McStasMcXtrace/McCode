@@ -22,6 +22,7 @@ fi
 ./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mac_yosemite "" -- OSXpkg
+./mkdist mcstas-tools-python-mclib $1 tools/Python/mclib/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-x3d $1 tools/Python/mcdisplay/x3d/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac_yosemite "" -- OSXpkg
