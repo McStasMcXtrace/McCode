@@ -127,6 +127,12 @@ DECLARE
 
 INITIALIZE
 %{
+
+  if (Lmin>=Lmax) {
+    printf("ESS_moderator: %s: Unmeaningful definition of wavelength range!\n ERROR - Exiting\n",
+           NAME_CURRENT_COMP);
+      exit(0);
+  }
 	
   sgnport=(beamport_angle>0 ? 1:-1);
   if (sgnport<0) {

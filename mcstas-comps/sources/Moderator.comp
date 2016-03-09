@@ -63,7 +63,7 @@ INITIALIZE
     coords_get(ToTarget, &tx, &ty, &tz);
     dist=sqrt(tx*tx+ty*ty+tz*tz);
   }
-  if (radius < 0 || Emin < 0 || Emax < 0 || dist <= 0 || focus_xw < 0 || focus_yh < 0 || Ec < 0 || gamma <= 0) {
+  if (radius < 0 || Emin < 0 || Emax < 0 || dist <= 0 || focus_xw < 0 || focus_yh < 0 || Ec < 0 || gamma <= 0 || Emin>=Emax ) {
       printf("Moderator: %s: Error in input parameter values!\n"
              "ERROR          Exiting\n",
            NAME_CURRENT_COMP);
