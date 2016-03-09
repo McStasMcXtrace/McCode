@@ -711,9 +711,14 @@ Combining EXTEND, GROUP and WHEN can result in unexpected behavior. Please read 
 Often, one has a set of similar component instances in an instrument. These
 could be e.g. a set of identical monochromator blades, or a set of detectors or
 guide elements.  Together with JUMPs (see below), there is a way to copy a
-component instance, duplicating parameter set, as well as any EXTEND, GROUP,
-JUMP and WHEN keyword.  Position (AT) and rotation (ROTATED) specification must
-be explicitly entered in order to avoid component overlapping.
+component instance, duplicating parameter set.
+
+Position (AT) and rotation (ROTATED) specification must
+be explicitly entered in order to avoid component overlapping, and it
+is futher recommended to explicitly set any EXTEND, GROUP, JUMP and
+WHEN keyword to each \emph{mother} or copied instance. But {\bf BEWARE},
+advanced combinations of (many) keywords \emph{may} introduce
+unexpected behaviour.
 
 The syntax for instance copy is
 \begin{mcstas}
@@ -826,7 +831,7 @@ A usage example of the WHEN keyword can be found in the \\
 neutrons depending on their fate.
 
 
-WARNING: Combining WHEN, EXTEND and GROUP can result in unexpected behavior,
+{\bf WARNING:} Combining WHEN, EXTEND and GROUP can result in unexpected behavior,
 please use with caution! Let for instance a GROUP of components all have the
 same WHEN condition, i.e. if the WHEN condition is false, none of the elements
 SCATTER, meaning that all neutrons will be ABSORBed.
