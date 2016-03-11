@@ -34,7 +34,7 @@ if [ "x$2" != "x" ]; then
     export MCINSTALL_PREFIX=/usr/local/
 fi
 ./mkdist mcstas-gcc $1 support/MacOSX/gcc-hpc/10.11 "" mac_el_capitan "" -- OSXpkg
-./mkdist mcstas-openmpi $1 support/MacOSX/openmpi/10.10 "" mac_el_capitan "" -- OSXpkg
+./mkdist mcstas-openmpi $1 support/MacOSX/openmpi/10.11 "" mac_el_capitan "" -- OSXpkg
 
 if [ "x$2" != "x" ]; then
     # Build the App bundle and meta-package also.
