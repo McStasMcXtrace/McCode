@@ -5,7 +5,7 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 
-* Component: Virtual_output
+* Component: MCPL_output
 *
 * %I
 * Written by: Erik B Knudsen 
@@ -14,8 +14,9 @@
 * Origin: DTU Physics
 * Release: McStas 2.3
 *
-* Detector-like component that writes neutron state parameters into an ascci-format 
-* 'virtual source' neutron file.
+* Detector-like component that writes neutron state parameters into an mcpl-format 
+* binary, virtual-source neutron file.
+*
 * %D
 * long description
 * %BUGS
