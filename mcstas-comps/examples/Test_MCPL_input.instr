@@ -1,0 +1,58 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: Test_Sources
+*
+* %Identification
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
+* Date: Mar 2016
+* Origin: 
+* Release: McStas 2.3
+* Version: $Revision$
+* %INSTRUMENT_SITE: Tests_optics
+*
+* A test instrument for MCPL_input
+*
+* %Description
+*
+* This is a unit test for the MCPL_input component.
+*
+* %Example: Detector: m1_I=2.42284e+11
+*
+* %Parameters
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_MCPL_input(string mcplinfilename="voutput.mcpl")
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+/* read neutrons from an mcpl file*/
+
+COMPONENT vin = MCPL_input(
+        filename=mcplinfilename,repeatcount=1)
+AT( 0,0,0) RELATIVE PREVIOUS
+
+
+/* monitors to enable unit tests*/
+COMPONENT m1 = Monitor_nD(
+  xwidth=0.1, yheight=0.1,
+  options="auto lambda", bins=40
+) AT (0,0,1) ABSOLUTE
+
+COMPONENT m2 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto x, auto y, parallel", bins=40
+) AT (0,0,1) ABSOLUTE
+
+
+END
+
+
