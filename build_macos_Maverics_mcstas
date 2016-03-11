@@ -21,6 +21,7 @@ fi
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_maverics "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" mac_maverics "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac_maverics "" -- OSXpkg
+./mkdist mcstas-tools-python-mclib $1 tools/Python/mclib/ "" mac_maverics "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mac_maverics "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-x3d $1 tools/Python/mcdisplay/x3d/ "" mac "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mac "" -- OSXpkg
