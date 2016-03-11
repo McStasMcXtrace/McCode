@@ -111,7 +111,7 @@ INITIALIZE
   w_mult *= l_range;            /* wavelength range correction */
   w_mult *= 1.0/mcget_ncount();   /* correct for # neutron rays */
 
-  if (w_source <0 || h_source < 0 || Lmin <= 0 || Lmax <= 0 || dist <= 0 || T1 <= 0 || T2 <= 0|| T3 <= 0 || Lmax>=Lmin || dlambda<=0 || lambda0<=0 ) {
+  if (w_source <0 || h_source < 0 || Lmin <= 0 || Lmax <= 0 || dist <= 0 || T1 <= 0 || T2 <= 0|| T3 <= 0 || Lmax<=Lmin || dlambda<=0 || lambda0<=0 ) {
       printf("Source_Maxwell_3: %s: Error in input parameter values!\n"
              "ERROR          Exiting\n",
            NAME_CURRENT_COMP);
