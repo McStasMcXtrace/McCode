@@ -304,8 +304,10 @@ SHARE
     int    list_count=0;
 
     if (!SC_file || !strlen(SC_file) || !strcmp(SC_file, "NULL")) {
+      MPI_MASTER(
       printf("PowderN: %s: Using incoherent elastic scattering only.\n",
           info->compname);
+      );
       info->count = 0;
       return(0);
     }
@@ -370,17 +372,23 @@ SHARE
     else 
       size = sTable.rows;
     Table_Info(sTable);
+    MPI_MASTER(
     printf("PowderN: %s: Reading %d rows from %s\n",
           info->compname, size, SC_file);
+    );
 
     if (info->column_order[0] == 4 && info->flag_barns !=0)
+    MPI_MASTER(
       printf("PowderN: %s: Powder file probably of type Crystallographica/Fullprof (lau)\n"
            "WARNING: but F2 unit is set to barns=1 (barns). Intensity might be 100 times too high.\n",
            info->compname);
+    );
     if (info->column_order[0] == 17 && info->flag_barns == 0)
+    MPI_MASTER(
       printf("PowderN: %s: Powder file probably of type Lazy Pulver (laz)\n"
            "WARNING: but F2 unit is set to barns=0 (fm^2). Intensity might be 100 times too low.\n",
            info->compname);
+    );
     /* allocate line_data array */
     list = (struct line_data*)malloc(size*sizeof(struct line_data));
 
@@ -427,8 +435,10 @@ SHARE
       w        = (w>0 ? w : 0); /* this is q and d relative spreading */
       F2       = (F2 >= 0 ? F2 : 0);
       if (j == 0 || q == 0) {
+        MPI_MASTER(
         printf("PowderN: %s: line %i has invalid definition\n"
                "         (mult=0 or q=0 or d=0)\n", info->compname, i);
+        );
         continue;
       }
       list[list_count].j = j;
@@ -457,9 +467,11 @@ SHARE
             && (mult_count == list[list_count-1].j
                 || ((list_count < size) && (i == size - 1)
                     && (mult_count == list[list_count].j))) ) {
+          MPI_MASTER(
           printf("PowderN: %s: Set multiplicity to 1 for lines [%i:%i]\n"
                   "         (d-spacing %g is duplicated %i times)\n",
             info->compname, list_count-mult_count, list_count-1, list[list_count-1].q, mult_count);
+          );
           for (index=list_count-mult_count; index<list_count; list[index++].j = 1);
           mult_count = 1;
           q_count   = q;
@@ -477,8 +489,10 @@ SHARE
     /* sort the list with increasing q */
     qsort(list, list_count, sizeof(struct line_data),  PN_list_compare);
     
+    MPI_MASTER(
     printf("PowderN: %s: Read %i reflections from file '%s'\n", 
       info->compname, list_count, SC_file);
+    );
     
     info->list  = list;
     info->count = list_count;
@@ -582,20 +596,26 @@ INITIALIZE
                         "ERROR    Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
   if (thickness) {
     if (radius && (radius < fabs(thickness))) {
-      fprintf(stderr,"PowderN: %s: hollow sample thickness is larger than its volume (sphere/cylinder).\n"
+      MPI_MASTER(
+      printf("PowderN: %s: hollow sample thickness is larger than its volume (sphere/cylinder).\n"
                      "WARNING  Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
+      );
       thickness=0;
     }
     else if (!radius && (xwidth < 2*fabs(thickness) || yheight < 2*fabs(thickness) || zdepth < 2*fabs(thickness))) {
-      fprintf(stderr,"PowderN: %s: hollow sample thickness is larger than its volume (box).\n"
+      MPI_MASTER(
+      printf("PowderN: %s: hollow sample thickness is larger than its volume (box).\n"
                      "WARNING  Please check parameter values.\n", NAME_CURRENT_COMP);
+      );
     }
   }
 
   if (concentric && thickness==0) {
+    MPI_MASTER(
     printf("PowderN: %s:Can not use concentric mode\n"
            "WARNING     on non hollow shape. Ignoring.\n",
            NAME_CURRENT_COMP);
+    );
     concentric=0;
   }
 
@@ -631,21 +651,29 @@ INITIALIZE
   }
 
   if (p_inc + p_transmit > 1) {
-    fprintf(stderr,"PowderN: %s: You have requested an unmeaningful choice of the 'p_inc' and 'p_transmit' parameters (sum is %g, exeeding 1). Fixing.\n",
+    MPI_MASTER(
+    printf("PowderN: %s: You have requested an unmeaningful choice of the 'p_inc' and 'p_transmit' parameters (sum is %g, exeeding 1). Fixing.\n",
                  NAME_CURRENT_COMP, p_inc+p_transmit);
+    );
     if (p_inc > p_transmit) p_transmit=1-2*p_inc;
     else p_transmit=1-2*p_inc;
   } else if (p_inc + p_transmit == 1) {
+    MPI_MASTER(
     printf("PowderN: %s: You have requested all neutrons be attenuated\n"
            "WARNING  or incoherently scattered!\n", NAME_CURRENT_COMP);
+    );
   }
 
   if (concentric) {
+    MPI_MASTER(
     printf("PowderN: %s: Concentric mode - remember to include the 'opposite' copy of this component !\n"
            "WARNING  The equivalent, 'opposite' comp should have concentric=0\n", NAME_CURRENT_COMP);
+    );
     if (p_transmit == 0) {
+      MPI_MASTER(
       printf("PowderN: %s: Concentric mode and p_transmit==0 !?\n"
              "WARNING  Don't you want any transmitted neutrons?\n", NAME_CURRENT_COMP);
+      );
     }
   }
 
@@ -677,10 +705,14 @@ INITIALIZE
   if (line_info.sigma_i<0) line_info.sigma_i=0;
 
   if (line_info.V_0 <= 0)
-    fprintf(stderr,"PowderN: %s: density/unit cell volume is NULL (Vc). Unactivating component.\n", NAME_CURRENT_COMP);
+  MPI_MASTER(
+    printf("PowderN: %s: density/unit cell volume is NULL (Vc). Unactivating component.\n", NAME_CURRENT_COMP);
+  );
 
-  if (line_info.V_0 && p_inc && !line_info.sigma_i) {
-    printf("PowderN %s WARNING: You have requested statistics for incoherent scattering but not defined sigma_inc!\n", NAME_CURRENT_COMP);
+  if (line_info.V_0 > 0 && p_inc && !line_info.sigma_i) {
+  MPI_MASTER(
+    printf("PowderN: %s: WARNING: You have requested statistics for incoherent scattering but not defined sigma_inc!\n", NAME_CURRENT_COMP);
+  );
   }
 
   if (line_info.flag_barns) { /* Factor 100 to convert from barns to fm^2 */
@@ -689,7 +721,7 @@ INITIALIZE
     line_info.XsectionFactor = 1;
   }
 
-  if (line_info.V_0 && i) {
+  if (line_info.V_0 > 0 && i) {
     L = line_info.list;
 
     line_info.q_v = malloc(line_info.count*sizeof(double));
@@ -708,13 +740,14 @@ INITIALIZE
       line_info.w_v[i] = L[i].w;
     }
   }
-  if (line_info.V_0) {
+  if (line_info.V_0 > 0) {
     /* Is not yet divided by v */
     line_info.my_a_v = pack*line_info.sigma_a/line_info.V_0*2200*100;   // Factor 100 to convert from barns to fm^2
     line_info.my_inc = pack*line_info.sigma_i/line_info.V_0*100;   // Factor 100 to convert from barns to fm^2
-
+    MPI_MASTER(
     printf("PowderN: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn] reflections=%s\n",
       NAME_CURRENT_COMP, line_info.V_0, line_info.sigma_a, line_info.sigma_i, reflections && strlen(reflections) ? reflections : "NULL");
+    );
   }
 
 %}
@@ -729,7 +762,7 @@ TRACE
 
   line_info.type = '\0';
 
-  if (line_info.V_0 && (line_info.count || line_info.my_inc)) {
+  if (line_info.V_0 > 0 && (line_info.count || line_info.my_inc)) {
     if (line_info.shape == 1) {
       intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
       intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, line_info.xwidth_i, line_info.yheight_i, line_info.zdepth_i);
@@ -901,7 +934,7 @@ TRACE
           if (!intersect) {
             /* Strange error: did not hit cylinder */
             if (line_info.flag_warning < 100)
-              fprintf(stderr, "PowderN: %s: FATAL ERROR: Did not hit sample from inside (coh).\n", NAME_CURRENT_COMP);
+              printf("PowderN: %s: WARNING: Did not hit sample from inside (coh). ABSORB.\n", NAME_CURRENT_COMP);
             line_info.flag_warning++;
             ABSORB;
           }
@@ -965,7 +998,7 @@ TRACE
         if (!intersect) {
           /* Strange error: did not hit cylinder */
           if (line_info.flag_warning < 100)
-            fprintf(stderr, "PowderN: %s: FATAL ERROR: Did not hit sample from inside (inc).\n", NAME_CURRENT_COMP);
+            printf("PowderN: %s: WARNING: Did not hit sample from inside (inc). ABSORB.\n", NAME_CURRENT_COMP);
           line_info.flag_warning++;
           ABSORB;
         }
@@ -1015,7 +1048,7 @@ FINALLY
   free(line_info.my_s_v2);
   MPI_MASTER(
   if (line_info.flag_warning)
-    fprintf(stderr, "PowderN: %s: Error message was repeated %i times with absorbed neutrons.\n",
+    printf("PowderN: %s: Error messages were repeated %i times with absorbed neutrons.\n",
       NAME_CURRENT_COMP, line_info.flag_warning);
       
   /* in case this instance is used in a SPLIT, we can recommend the 
