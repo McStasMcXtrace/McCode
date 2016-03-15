@@ -1,9 +1,0 @@
-Package: mcxtrace-suite
-Version: @VERSION@
-Section: main
-Priority: optional
-Architecture: all
-Depends: mcxtrace-suite-perl, mcxtrace-suite-python
-Installed-Size:
-Maintainer: Erik B Knudsen <erkn@fysik.dtu.dk>
-Description: A metapackage for McXtrace + perl and python tools

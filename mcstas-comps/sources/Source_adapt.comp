@@ -156,6 +156,13 @@ INITIALIZE
     delta_lambda = lambda_max - lambda_min;
   }
 
+  if (lambda_min<=0 || lambda_max <=0 || lambda_max<=lambda_min ) {
+      printf("Source_adapt: %s: Error in given wavelength range!\n"
+             "ERROR          Exiting\n",
+           NAME_CURRENT_COMP);
+      exit(0);
+  }
+
   source_area = (xmax - xmin)*(ymax - ymin)*1e4; /* cm^2 */
   p_in = flux/mcget_ncount()*delta_lambda*source_area;
   adpt.atree = adapt_tree_init(adpt.num);

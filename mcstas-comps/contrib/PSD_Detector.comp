@@ -200,7 +200,7 @@ DEFINE COMPONENT PSD_Detector
 DEFINITION PARAMETERS (nx=128, ny=128)
 SETTING PARAMETERS (xwidth=0, radius=0, awidth=0, yheight=0, zdepth=0.03,
   threshold=100, PressureConv=5, PressureStop=1, interpolate=1, p_interact=0,
-  verbose=0, LensOn=1, dc=0, borderx=-1, bordery=-1, xChDivRelSigma=0,
+  verbose=0, LensOn=1, dc=0, borderx=-2, bordery=-2, xChDivRelSigma=0,
   yChDivRelSigma=0, bufsize=0, restore_neutron=0, angle=0,
   string type=0, string filename=0,
   string FN_Conv="He3inHe.table", string FN_Stop="He3inCF4.table")
@@ -627,7 +627,7 @@ INITIALIZE
     else strcpy(Vars.option, "list all");
     strcat(Vars.option,", borders, x y z vx vy vz t sx sy sz");
 
-    Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0); /* dims for mcdisplay */
+    Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0,0); /* dims for mcdisplay */
     if (filename && strlen(filename) && strcmp(filename, "0") && strcmp(filename, "NULL"))
       strncpy(Vars.Mon_File, filename, 128);
 
@@ -1209,13 +1209,13 @@ FINALLY
   if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
     Monitor_nD_Finally(&DEFS, &Vars);
     if (bufsize) {
-      printf("PSD_Detector: %s: Saved %Li events (from buffer) in file %s\n",
+      printf("PSD_Detector: %s: Saved %lu events (from buffer) in file %s\n",
              NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
       if (bufsize < Vars.Nsum)
         printf("WARNING         When using this source, intensities must be multiplied\n"
                "                by a factor %g\n", (double)Vars.Nsum/bufsize);
     } else
-      printf("PSD_Detector: %s: Saved %Li events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+      printf("PSD_Detector: %s: Saved %lu events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
   }
 %}
 
@@ -1254,9 +1254,9 @@ MCDISPLAY
 	    line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
 	    line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
 	    line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
-	    if (zdepth>0){
-	       circle("xz", 0,  h/2.0, 0, radius+zdepth);
-	       circle("xz", 0, -h/2.0, 0, radius+zdepth);
+	    if (borderx>0){
+	       circle("xz", 0,  h/2.0, 0, radius+borderx);
+	       circle("xz", 0, -h/2.0, 0, radius+borderx);
 	    }
     } else {
     	int NH=24;

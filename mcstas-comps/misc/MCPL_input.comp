@@ -1,0 +1,131 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2016, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
+*
+* Component: MCPL_input
+*
+* %I
+* Written by: Erik N Knudsen 
+* Date: Mar 2016
+* Version: $Revision$
+* Origin: DTU Physics
+* Release: McStas 2.3
+*
+* Source-like component that reads neutron state parameters from an mcpl-file.
+* %D
+* long description
+*
+* %BUGS
+*
+* %P
+* INPUT PARAMETERS
+*
+* filename: [str] Name of neutron mcpl file to read.
+* repeatcount: [ ] NUmber of times to read the input file. 
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT MCPL_input
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string filename=0, int repeatcount=1, polarisationuse=1)
+OUTPUT PARAMETERS (inputfile,nparticles,read_neutrons)
+DEPENDENCY "-L. -lmcpl"
+
+SHARE
+%{
+#include "mcpl.h"
+%}
+
+DECLARE
+%{
+    mcpl_file_t inputfile;
+    long long nparticles;
+    long long read_neutrons;
+%}
+
+INITIALIZE
+%{
+    char line[256];
+    long long ncount;
+    inputfile = mcpl_open_file(filename);
+    
+    nparticles=mcpl_hdr_nparticles(inputfile);
+    ncount=mcget_ncount();
+    if (ncount<nparticles){
+        fprintf(stderr,"Warning (%s): You have requested %ld neutrons from a file which contains %ld.\n"
+                "This will probably lead to biased data.\n",NAME_CURRENT_COMP,ncount,nparticles);
+    }
+
+    printf("MCPL file (%s) produced with %s.\n",filename,mcpl_hdr_srcname(inputfile));
+    printf("MCPL file (%s) contains %ld particles.\n",filename,nparticles); 
+
+    read_neutrons=0;
+
+%}
+
+TRACE
+%{
+    double nrm;
+    const mcpl_particle_t *particle;// = (mcpl_particle_t *) calloc(sizeof(mcpl_particle_t),1);
+    particle = mcpl_read(inputfile);
+    if (particle->pdgcode!=2112){
+        /*read particle is not a neutron - get next one instead*/
+        particle = mcpl_read(inputfile);
+    }
+    read_neutrons++;
+
+    x=particle->position[0];
+    y=particle->position[1];
+    z=particle->position[2];
+
+    if(polarisationuse){
+        sx=particle->polarisation[0];
+        sy=particle->polarisation[1];
+        sz=particle->polarisation[2];
+    }
+
+    nrm = particle->ekin *1e-9*SE2V;
+    vx=particle->direction[0]*nrm;
+    vy=particle->direction[1]*nrm;
+    vz=particle->direction[2]*nrm;
+    /*time in ms:*/
+    t=particle->time*1e-3;
+    /*weight in unspecified units:*/
+    p=particle->weight;
+
+    SCATTER;
+%}
+
+SAVE
+%{
+    mcpl_close_file(inputfile);  
+%}
+
+FINALLY
+%{
+    long long ncount;
+
+    ncount=mcget_ncount();
+    if (ncount != read_neutrons){
+        fprintf(stderr,"Warning (%s): You requested %ld neutrons from a file which contains %ld.\n"
+                "Please examine the recorded intensities carefully.\n",NAME_CURRENT_COMP,ncount,nparticles);
+    }
+
+
+%}
+
+MCDISPLAY
+%{
+    multiline(5,0.2,0.2,0, -0.2,0.2,0, 0.2,-0.2,0, -0.2,-0.2,0, 0.2,0.2,0);
+    /*M*/
+    multiline(5,-0.085,-0.085,0, -0.085,0.085,0, -0.045,-0.085,0, -0.005,0.085,0, -0.005,-0.085,0);
+    /*I*/
+    line(0.045,-0.085,0, 0.045, 0.085,0);    
+    line(0.005, 0.085,0, 0.085, 0.085,0);    
+    line(0.005,-0.085,0, 0.085,-0.085,0);    
+%}
+
+END
