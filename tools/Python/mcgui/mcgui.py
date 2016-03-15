@@ -327,14 +327,17 @@ class McGuiState(QtCore.QObject):
             params[]:
                 [<par_name>, <value>] pairs
         '''
-        
         mcrunparms = ' '
-        # assemble mpi-related options
+        
+        # mpi-related
         clustering = fixed_params[4]
+        mpicount = fixed_params[5]
+        if mpicount == '':
+            mpicount = '2'
         if clustering == 1:
-            mcrunparms = ' --mpi=' + fixed_params[5] + ' '
+            mcrunparms = ' --mpi=' + mpicount + ' '
         elif clustering == 2:
-            mcrunparms = ' -c --mpi=' + fixed_params[5] + ' '
+            mcrunparms = ' -c --mpi=' + mpicount + ' '
         
         # sim/trace and output directory
         simtrace = fixed_params[0]

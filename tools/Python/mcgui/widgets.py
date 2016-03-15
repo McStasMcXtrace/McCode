@@ -394,7 +394,7 @@ class Ui_dlgStartSim(object):
         self.edtNeutronCnt.setObjectName("edtNeutronCnt")
         self.gridSim.addWidget(self.edtNeutronCnt, 1, 2, 1, 1)
         self.edtNodes = QtGui.QLineEdit(self.gbxSim)
-        self.edtNodes.setText("")
+        self.edtNodes.setText("2")
         self.edtNodes.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.edtNodes.setObjectName("edtNodes")
         self.gridSim.addWidget(self.edtNodes, 8, 2, 1, 1)

@@ -120,7 +120,7 @@
         <item row="8" column="2">
          <widget class="QLineEdit" name="edtNodes">
           <property name="text">
-           <string/>
+           <string>2</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
