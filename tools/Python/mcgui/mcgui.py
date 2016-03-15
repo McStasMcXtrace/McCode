@@ -537,7 +537,7 @@ class McGuiAppController():
         if self.state.isSimRunning():
             self.state.interrupt()
         else:
-            # auto-save instrument file 
+            # ensure auto-save
             self.view.ew.save()
             
             self.emitter.status("Getting instrument params...")

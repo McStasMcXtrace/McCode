@@ -36,7 +36,8 @@ class McView(object):
     def showMainWindow(self):
         self.mw.show()
 
-    def showCodeEditorWindow(self, instr=''):
+    def showCodeEditorWindow(self, instr):
+        self.ew.initCodeEditor(instr)
         self.ew.show()
     
     def closeCodeEditorWindow(self):
@@ -270,6 +271,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
                 self.assumeDataSaved()
                 event.accept()
             elif reply == 1:
+                self.assumeDataSaved()
                 event.accept()
             elif reply == 2:
                 event.ignore()
@@ -439,7 +441,8 @@ class McCodeEditorWindow(QtGui.QMainWindow):
             self.volatileDataTransition.emit(True)
     
     def __handleSaveAction(self):
-        self.saveRequest.emit(self.__scintilla.text())
+        if self.volatileDataExists:
+            self.saveRequest.emit(self.__scintilla.text())
         
     def __handleVolatileDataPresent(self, volatileDataExists=False):
         if volatileDataExists:
