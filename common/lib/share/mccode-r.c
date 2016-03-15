@@ -1950,24 +1950,27 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
   else strcpy(xvar, "x");
   if (yl && strlen(yl)) { strncpy(yvar, yl, CHAR_BUF_LENGTH); yvar[2]='\0'; }
   else strcpy(yvar, "y");
-  
+
+  MCDETECTOR detector;
+
   /* import and perform basic detector analysis (and handle MPI_Reduce) */
-  if (abs(m) == 1) // n>1 on Y, m==1 on X: 1D, no X axis
-  MCDETECTOR detector = mcdetector_import(mcformat,
-    c, (t ? t : MCCODE_STRING " 1D data"),
-    m, n, 1,
-    yl, xl, "Signal per bin",
-    yvar, xvar, "I",
-    y1, y2, x1, x1, 0, 0, f,
-    p0, p1, p2, posa); /* write Detector: line */
-  else
-  MCDETECTOR detector = mcdetector_import(mcformat,
-    c, (t ? t : MCCODE_STRING " 2D data"),
-    m, n, 1,
-    xl, yl, "Signal per bin",
-    xvar, yvar, "I",
-    x1, x2, y1, y2, 0, 0, f,
-    p0, p1, p2, posa); /* write Detector: line */
+  if (abs(m) == 1) {// n>1 on Y, m==1 on X: 1D, no X axis
+    detector = mcdetector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 1D data"),
+      m, n, 1,
+      yl, xl, "Signal per bin",
+      yvar, xvar, "I",
+      y1, y2, x1, x1, 0, 0, f,
+      p0, p1, p2, posa); /* write Detector: line */
+  } else {
+    detector = mcdetector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 2D data"),
+      m, n, 1,
+      xl, yl, "Signal per bin",
+      xvar, yvar, "I",
+      x1, x2, y1, y2, 0, 0, f,
+      p0, p1, p2, posa); /* write Detector: line */
+  }
 
   if (!detector.p1 || !detector.m) return(detector);
 
