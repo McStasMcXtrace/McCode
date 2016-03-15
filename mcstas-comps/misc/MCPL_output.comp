@@ -36,7 +36,7 @@ DEFINE COMPONENT MCPL_output
 DEFINITION PARAMETERS (polarisationuse=1, doubleprec=1, dump_file=0)
 SETTING PARAMETERS (string filename=0)
 OUTPUT PARAMETERS (outputfile)
-DEPENDENCY "-L. -lmcpl"
+DEPENDENCY "-I@MCCODE_LIB@/share -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
 SHARE
 %{

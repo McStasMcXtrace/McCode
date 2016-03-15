@@ -32,7 +32,7 @@ DEFINE COMPONENT MCPL_input
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string filename=0, int repeatcount=1, polarisationuse=1)
 OUTPUT PARAMETERS (inputfile,nparticles,read_neutrons)
-DEPENDENCY "-L. -lmcpl"
+DEPENDENCY "-I@MCCODE_LIB@/share -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
 SHARE
 %{
