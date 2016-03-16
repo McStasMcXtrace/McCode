@@ -8,11 +8,11 @@
 * Component: Diaphragm (
 *
 * %I
-* Written by: Kim Lefmann and Henrik M. Roennow
-* Date: June 16, 1997
+* Written by: Peter Willendrup
+* Date: February 2016
 * Version: $Revision$
-* Origin: Risoe
-* Release: McStas 1.6
+* Origin: DTU
+* Release: McStas 2.3
 *
 * Rectangular/circular diaphragm (alias of the Slit component)
 *
