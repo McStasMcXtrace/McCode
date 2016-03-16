@@ -1,5 +1,7 @@
 This document lists build dependencies and explains use of the ./build_* scripts:
 
+!!! IMPORTANT !!! When cmake is listed below, it is silently assumed cmake >= cmake 3 which supports the "target_compile_options" directive
+
 * Debian packages for 32bit and 64bit systems. Input parameters - 1) release "name", i.e. 2.1
 build_debs_mcstas <release name>
 build_debs_mcxtrace <release name>
