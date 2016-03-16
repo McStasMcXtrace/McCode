@@ -21,27 +21,47 @@ function checklinkrm {
 
 # Function probing / removing old links
 function checklinks {
-    # - Check for possibly existing links in /usr/local/bin and remove them...
+    # - Check for possibly existing links in /usr/bin or /usr/local/bin and remove them...
         # McCode itself
+    checklinkrm /usr/bin/@FLAVOR@
     checklinkrm /usr/local/bin/@FLAVOR@
         # mcrun variants
+    checklinkrm /usr/bin/@MCCODE_PREFIX@run
+    checklinkrm /usr/bin/@MCCODE_PREFIX@run-py
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@run
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@run-py
 	# mcgui variants
+    checklinkrm /usr/bin/@MCCODE_PREFIX@gui
+    checklinkrm /usr/bin/@MCCODE_PREFIX@gui-py
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@gui
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@gui-py
 	# mcplot 
+    checklinkrm /usr/bin/@MCCODE_PREFIX@plot
+    checklinkrm /usr/bin/@MCCODE_PREFIX@plot-chaco-py
+    checklinkrm /usr/bin/@MCCODE_PREFIX@plot-matplotlib-py
+    checklinkrm /usr/bin/@MCCODE_PREFIX@plot-matlab
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot-chaco-py
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot-matplotlib-py
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@plot-matlab
 	# mcdisplay
+    checklinkrm /usr/bin/@MCCODE_PREFIX@display
+    checklinkrm /usr/bin/@MCCODE_PREFIX@display-py
+    checklinkrm /usr/bin/@MCCODE_PREFIX@display-x3d-py
+    checklinkrm /usr/bin/@MCCODE_PREFIX@display-matplotlib-py
+    checklinkrm /usr/bin/@MCCODE_PREFIX@display-vtk-py
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@display
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-py
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-x3d-py
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-matplotlib-py
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@display-vtk-py
         # other stuff
+    checklinkrm /usr/bin/@MCCODE_PREFIX@daemon
+    checklinkrm /usr/bin/@MCCODE_PREFIX@doc
+    checklinkrm /usr/bin/@MCCODE_PREFIX@format
+    checklinkrm /usr/bin/@MCCODE_PREFIX@formatgui
+    checklinkrm /usr/bin/@MCCODE_PREFIX@resplot
+    checklinkrm /usr/bin/@FLAVOR@tovitess
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@daemon
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@doc
     checklinkrm /usr/local/bin/@MCCODE_PREFIX@format
