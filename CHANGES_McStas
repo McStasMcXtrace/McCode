@@ -34,10 +34,107 @@
 * Modified by: PW December 2012: version 2.0
 * Modified by: PW February-July 2014: version 2.1 (and the 2.1RC1 pre-release)
 * Modified by: PW and JG May 2015: versions 2.2 and 2.2a
-* This file is part of McStas  version 2.2a, released May 2015.
+* Modified by: PW March 2016: version 2.3
+* This file is part of McStas  version 2.3, released March 2016.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v.2.3, March FIXME, 2016
+
+ McStas 2.3 is the fourth release in the 2.x series and fixes various issues with McStas 2.2a, plus 
+ provides important new developments.
+
+ IMPORTANT: Please ensure to use our "migration scripts" for McStas 2.0 and 1.12c if you want
+ these to co-exist with 2.3. See https://github.com/McStasMcXtrace/McCode/tree/master/tools/migration-tool
+ Also, please read the platform-specific notes below!
+
+ Thanks:
+ - Thanks to all contributors of components, instruments etc.! This is what Open Source
+   and McStas is all about!
+
+ General:
+ - As of McStas 2.3, we support a new binary event file format: "MCPL" (Monte Carlo Particle List), developed
+   by Thomas Kittelmann, ESS. The format aims to allow easier interchange of particle event data between monte
+   carlo codes, and read/write functionality has been implemented for MCNP, Geant4 and McStas.
+ - Interoperability with Mantid has been improved, as OFF-based detectors can be used to define detector geometries
+   in Mantid-oriented simulation runs. See https://github.com/McStasMcXtrace/McCode/wiki/McStas-and-Mantid for
+   more documentation on the use.
+
+ Infrastructure:
+ - To build McStas from GitHub, you will now need a CMake version >= 3.0
+ - At the ILL, Emmanuel Farhi has set up a nice web-service called cif2hkl, which allows to generate Laz/Lau
+   structure data files from CIF files. See http://barns.ill.fr/cif2hkl.html
+ - A new e-Learning infrastructure for neutron scattering has been set up at https://www.e-neutrons.org . Among
+   other things, it features a web-simulator powered by McStas. Once you have signed up, you will have access
+   to many interesting things, among these this "close to complete" list of McStas instruments that can be run
+   on the web: https://www.e-neutrons.org/mcstas-distrib
+ - We have started populating the McCode wiki at https://github.com/McStasMcXtrace/McCode/wiki with information
+   for developers and others who want to work on the McStas code at a 'deeper' level.
+
+ Components:
+ - New component SASview_model.comp by Jakob Garde and Torben Nielsen allows to use SASview scattering kernels
+   from within McStas. See also the test instrument templateSasView.instr
+ - New component Diaphragm - an alias of the Slit comoponent
+ - New components MCPL_input and MCPL_output by Erik Knudsen. Used to read and write MCPL binary event files. See
+   corresponding test instruments below.
+ - New component Refractor.comp by Emmanuel Farhi and Bob Cubitt, ILL. Implements a single bulk material shape 
+   that can be used as a prism or lens.
+ - PerfectCrystal.comp by Markus Appel, ILL / FAU Erlangen-Nuernberg. Perfect crystal component, primarily for 
+   use as monochromator and analyzer in backscattering spectrometers. Reflections are simulated using a Darwin, 
+   Ewald or Gaussian profile. Doppler movement of the monochromator is supported.
+ - MultiDiskChopper.comp by Markus Appel, ILL / FAU Erlangen-Nuernberg. Models a disk chopper with a freely 
+   configurable slit pattern. For simple applications, use the DiskChopper component instead.
+ - Bugfixes to numerous components...
+ 
+ Instruments:
+ - New test instrument templateSasView.instr, documenting use of SASview_model.comp
+ - New test instruments Test_MCPL_input.instr and Test_MCPL_output.instr, documenting use of the MCPL components
+ - New test instrument Test_PowderN_Res.instr, demonstrates difference of using 'banana, theta' and 'banana, divergence'
+   in Monitor_nD - and can be used to show influence of sample size on detected line with in diffractometers.
+ - New test instrument LLB_6T2.instr by Xavier Fabreges, LLB. Model of the LLB 6T2 thermal single crystal
+   diffractometer.
+ - New ILL_IN13.instr by E. Farhi and A. Dennison, ILL. Models the IN13 Thermal neutron backscattering spectrometer.
+ - New SAFARI_MPISI.instr by Deon Marais, Necsa. Models the SAFARI instrument 'Materials Probe for Internal Strain 
+   Investigations'
+ - New SAFARI_PITSI.instr by Deon Marais, Necsa. Models the SAFARI instrument 'Powder Instrument for Transition in 
+   Structure Investigations'
+
+ 
+ Datafiles:
+ - cif2hkl
+
+ Tools:
+ - McStas 2.3 is the second release to include a version of our mcgui-py tool, based on Python, 
+   QT and Scintilla. It has been made available across platforms, but without (yet) becoming the 
+   default GUI application for McStas. Therefore, a few manual steps may be required to
+   getting mcgui-py running on your platform:
+
+   To install/try the new mcgui-py tool, please follow 
+   the instructions listed below.
+   * Debian Linux systems: 
+     Simply apt-get install mcstas-tools-python-mcgui and dependencies should be autmatically resolved
+   * RPM-based Linux systems:
+     Use yum to install mcstas-tools-python-mcgui and dependencies should be autmatically resolved 
+     (Tested to work for Fedora Core 21)
+   * OS X:
+     - Download and install Anaconda Python 2.7 (using the "for me only" option).
+     - When installation is done, start a new terminal and locate the folder where you downloaded
+       and unpacked the McStas installation bundle. Inside the extras/ folder you will find a subfolder
+       called QScintilla/. 
+     - Run the script BuildMe.command by typing "./BuildMe.command".
+       (Browsing your way using Finder and double-clicking the BuildMe.command icon should also work)
+     - NOTE: If your system prompts you to install command line tools: Accept to install. Afterwards, 
+       run the script "BuildMe.command" again.
+     - "mcgui-py" should now be available.
+   * Windows:
+     - Download and install Anaconda Python 2.7 and let it register as the default Python of your windows
+       system. All dependencies should be included.
+
+ - McStas 2.3 further includes the optional mcplot-gnuplot-py plotter based on Python and Gnuplot with 
+   a Qt widget for control. On Mac OS X and Windows you need to install Gnuplot yourself, ensuring that the
+   Gnuplot executable is available on the system PATH.
+
+
 Changes in McStas v2.2a, May 29th, 2015
 
  McStas 2.2a is the third release in the 2.x series and fixes various minor issues with McStas 2.1,
