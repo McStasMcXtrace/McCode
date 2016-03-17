@@ -171,7 +171,7 @@ INITIALIZE
     exit(fprintf(stderr,"Incoherent: %s: sample has invalid dimensions.\n"
                         "ERROR       Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
   if (thickness) {
-    if (radius && (radius < thickness || yheight < 2*thickness)) {
+    if (radius && (radius < thickness || ( yheight && (yheight < 2*thickness)))) {
       fprintf(stderr,"Incoherent: %s: hollow sample thickness is larger than its volume (sphere/cylinder).\n"
                      "WARNING     Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
       thickness=0;
