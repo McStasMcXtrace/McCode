@@ -1284,6 +1284,7 @@ dependency:
     }
   | "DEPENDENCY" TOK_STRING
     {
+      strncat(instrument_definition->dependency, " ", 1024);
       strncat(instrument_definition->dependency, $2, 1024);
     }
 
