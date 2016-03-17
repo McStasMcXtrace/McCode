@@ -22,4 +22,4 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" armlinux32 "" -- deb
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" armlinux32 "" -- deb
 ./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" armlinux32 "" -- deb
-./mkdist mcstas-manuals $1 doc/manuals/mcstas/ "" armlinux32 "o" -- deb
+./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" armlinux32 "o" -- deb
