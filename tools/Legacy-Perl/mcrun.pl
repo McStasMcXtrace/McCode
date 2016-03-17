@@ -1187,7 +1187,7 @@ if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
 
 if ($exec_test && $ncount) {
   my $status;
-  $status = do_test(sub { print "$_[0]\n"; }, $force_compile, $MCSTAS::mcstas_config{'PLOTTER'}, $exec_test, $mpi, $ncount, $sim_def);
+  $status = do_test(sub { print "$_[0]\n"; }, $force_compile, $MCSTAS::mcstas_config{'PLOTTER'}, $exec_test, $cflags, $mpi, $ncount, $sim_def);
   if (defined $status) {
     print STDERR "mcrun: $status\n";
     exit(1);
