@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 '''
 Test script for PLY-based translation of mcdisplay --trace output mini language
+
+Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23
 '''
 import logging
 import argparse
@@ -14,12 +16,30 @@ class TraceLexer():
     In addition to the default INITIAL state in the lexer, the 'initialize', 'save' and 'finally' states are
     intended to parse the corresponding stdout as pure lines of comments. 
     This way we can avoid defining a "catchall" token in INITIAL.
-     
-    NOTEWARNING: the order of the token implementations matters
     '''
     
-    # all tokens 
-    tokens = (
+    # these tokens match ID, but are of these types (handled in t_ID)
+    reserved = {
+        'INSTRUMENT' : 'INSTRUMENT',
+        'Instrument' : 'INSTRKW',
+        'COMPONENT'  : 'COMPONENT',
+        'Component'  : 'COMPKW',
+        'POS'        : 'POS',
+        'AT'         : 'AT',
+        'MCDISPLAY'  : 'MCDISPLAY',
+        'end'        : 'ENDKWLC',
+        'component'  : 'COMPKWLC',
+            
+        'ENTER'      : 'ENTER',
+        'COMP'       : 'COMP',
+        'STATE'      : 'STATE',
+        'SCATTER'    : 'SCATTER',
+        'ABSORB'     : 'ABSORB',
+        'LEAVE'      : 'LEAVE',
+    }
+    
+    # tokens 
+    tokens = [
               'INSTRUMENT',
               'INSTRKW',
               'COMPONENT',
@@ -53,7 +73,7 @@ class TraceLexer():
               
               # tokens only used in states "save" and "finally" (comment blocks)
               'COMMENT'
-              )
+              ] + list(reserved.values())
 
     ###############################
     # special states must be implemented before 'ID' below, which would catch the state's "start condition" as an ID
@@ -99,16 +119,6 @@ class TraceLexer():
     # back to INITIAL state impl
     ##################################
     
-    t_INSTRUMENT = r'INSTRUMENT'
-    t_INSTRKW = r'Instrument'
-    t_COMPONENT = r'COMPONENT'
-    t_COMPKW = r'Component'
-    t_POS = r'POS'
-    t_AT = r'AT'
-    t_MCDISPLAY = r'MCDISPLAY'
-    t_ENDKWLC = r'end'
-    t_COMPKWLC = r'component'
-    
     t_LB = r'\('
     t_RB = r'\)'
     t_LSB = r'\['
@@ -122,13 +132,6 @@ class TraceLexer():
         r'\n'
         self.lexer.lineno += 1
         return t
-    
-    t_ENTER = r'ENTER'
-    t_COMP = r'COMP'
-    t_STATE = r'STATE'
-    t_SCATTER = r'SCATTER'
-    t_ABSORB = r'ABSORB'
-    t_LEAVE = r'LEAVE'
 
     def t_ABSPATH(self, t):
         r'/[\w/\.]+'
@@ -139,6 +142,7 @@ class TraceLexer():
     
     def t_ID(self, t):
         r'[a-zA-Z_]\w*'
+        t.type = self.reserved.get(t.value, 'ID')
         return t
     
     # ignore whitespaces and tabs means that we do not tokenize them, but they are still applied in the regex checks defined above for our tokens
