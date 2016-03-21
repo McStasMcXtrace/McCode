@@ -17,7 +17,7 @@
 *
 * This is a unit test for the MCPL_input component.
 *
-* %Example: Detector: m1_I=2.42284e+11
+* %Example: mcplinfilename=voutput.mcpl Detector: m1_I=2.42284e+11
 *
 * %Parameters
 *
