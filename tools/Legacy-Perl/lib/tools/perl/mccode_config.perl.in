@@ -60,7 +60,7 @@ use Config;
 
 %MCSTAS::mcstas_config = (
      CFLAGS => '@CFLAGS@',
-     CFLAGS_PLACEMENT => '0',
+     CFLAGS_PLACEMENT => '1',
      LDFLAGS => '@LDFLAGS@',
      MCCODE => '@FLAVOR@',
      PKGNAME => '@MCCODE_NAME@',
