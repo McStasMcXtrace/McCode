@@ -17,16 +17,28 @@
 *
 * This is a unit test for the MCPL_input component.
 *
-* %Example: mcplinfilename=voutput.mcpl Detector: m1_I=2.42284e+11
+* %Example: -n1e3 dummy=0 Detector: m1_I=2.42284e+11
 *
 * %Parameters
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Test_MCPL_input(string mcplinfilename="voutput.mcpl")
+DEFINE INSTRUMENT Test_MCPL_input(dummy=0)
+DEPENDENCY "-DMCPLPATH=@MCCODE_LIB@/MCPL/voutput.mcpl"
 
 INITIALIZE
 %{
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
+
+#ifndef MCPLPATH
+#define MCPLPATH=/usr/share/mcstas/2.3/MCPL/voutput.mcpl
+#endif
+
+#define MCPLFILE STR(MCPLPATH)
+
+printf("Using the input file: %s\n", MCPLFILE);
+
 %}
 
 TRACE
@@ -37,7 +49,7 @@ AT (0, 0, 0) ABSOLUTE
 /* read neutrons from an mcpl file*/
 
 COMPONENT vin = MCPL_input(
-        filename=mcplinfilename,repeatcount=1)
+        filename=MCPLFILE,repeatcount=1)
 AT( 0,0,0) RELATIVE PREVIOUS
 
 
