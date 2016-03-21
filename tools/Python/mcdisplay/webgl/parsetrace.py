@@ -20,22 +20,30 @@ class TraceLexer():
     
     # these tokens match ID, but are of these types (handled in t_ID)
     reserved = {
-        'INSTRUMENT' : 'INSTRUMENT',
-        'Instrument' : 'INSTRKW',
-        'COMPONENT'  : 'COMPONENT',
-        'Component'  : 'COMPKW',
-        'POS'        : 'POS',
-        'AT'         : 'AT',
-        'MCDISPLAY'  : 'MCDISPLAY',
-        'end'        : 'ENDKWLC',
-        'component'  : 'COMPKWLC',
-            
-        'ENTER'      : 'ENTER',
-        'COMP'       : 'COMP',
-        'STATE'      : 'STATE',
-        'SCATTER'    : 'SCATTER',
-        'ABSORB'     : 'ABSORB',
-        'LEAVE'      : 'LEAVE',
+        'INSTRUMENT'  : 'INSTRUMENT',
+        'Instrument'  : 'INSTRKW',
+        'COMPONENT'   : 'COMPONENT',
+        'Component'   : 'COMPKW',
+        'POS'         : 'POS',
+        'AT'          : 'AT',
+        'MCDISPLAY'   : 'MCDISPLAY',
+        'end'         : 'ENDKWLC',
+        'component'   : 'COMPKWLC',
+        
+        'ENTER'       : 'ENTER',
+        'COMP'        : 'COMP',
+        'STATE'       : 'STATE',
+        'SCATTER'     : 'SCATTER',
+        'ABSORB'      : 'ABSORB',
+        'LEAVE'       : 'LEAVE',
+        
+        'magnify'     : 'DRAWCALL',
+        'line'        : 'DRAWCALL',
+        'dashed_line' : 'DRAWCALL',
+        'multiline'   : 'DRAWCALL',
+        'rectangle'   : 'DRAWCALL',
+        'box'         : 'DRAWCALL',
+        'circle'      : 'DRAWCALL',
     }
     
     # tokens 
