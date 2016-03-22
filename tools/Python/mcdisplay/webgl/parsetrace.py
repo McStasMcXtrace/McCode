@@ -160,15 +160,17 @@ class TraceParser:
     def p_document(self, p):
         'document : instr_open comp_blocks comments draw_lines instr_close comments ray_statements comments'
         print 'parsed a document'
-        print p[7]
+        p[0] = Node(type='document', children=[p[1], p[2], p[4], p[7]], leaf=['comments:', p[3], p[6], p[8]])
     
     def p_instr_open(self, p):
         'instr_open : INSTRUMENT COLON NL INSTRKW SQUOTE instr_name SQUOTE LB ABSPATH RB NL'
         print 'parsed a instr_open'
+        p[0] = Node(type='instrument', children=[p[6], Node(type='abspath', leaf=p[9])])
         
     def p_instr_name(self, p):
         'instr_name : ID'
         print 'parsed a instr_name'
+        p[0] = Node(type='instr_name', leaf=p[1])
     
     def p_comp_blocks(self, p):
         '''comp_blocks : comp_block comp_blocks
@@ -251,6 +253,8 @@ class TraceParser:
     def p_instr_close(self, p):
         'instr_close : INSTRUMENT END COLON NL'
         print 'parsed a instr_close'
+
+    #####################################
     
     rays = Node(type='rays')
     def p_ray_statements(self, p):
