@@ -9,7 +9,19 @@ import logging
 import argparse
 from ply import lex, yacc
 
-class TraceParser():
+class Node:
+    ''' Node objects are used to construct the AST-ish structure (abstract syntax tree) '''
+    def __init__(self, type, children=None, leaf=None):
+        self.type = type
+        if children:
+            self.children = children
+        else:
+            self.children = [ ]
+        self.leaf = leaf
+    def __str__(self):
+        return 'type: %s, leaf: %s, numchildren: %s' % (self.type, str(self.leaf), str(len(self.children)))
+
+class TraceParser:
     ''' 
     Parser for --trace output enabling mcdisplay instrument drawing minilanguage
     
@@ -146,8 +158,9 @@ class TraceParser():
     ##################################
     
     def p_document(self, p):
-        'document : instr_open comp_blocks comments draw_lines instr_close comments ray_blocks comments'
+        'document : instr_open comp_blocks comments draw_lines instr_close comments ray_statements comments'
         print 'parsed a document'
+        print p[7]
     
     def p_instr_open(self, p):
         'instr_open : INSTRUMENT COLON NL INSTRKW SQUOTE instr_name SQUOTE LB ABSPATH RB NL'
@@ -168,7 +181,8 @@ class TraceParser():
     
     def p_comp_name(self, p):
         'comp_name : ID'
-        print 'parsed a comp_name', p[1]
+        print p[1]
+        p[0] = Node(type="comp_name", leaf=p[1])
 
     def p_12dec(self, p):
         '12dec : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC'
@@ -238,20 +252,16 @@ class TraceParser():
         'instr_close : INSTRUMENT END COLON NL'
         print 'parsed a instr_close'
     
-    def p_ray_blocks(self, p):
-        '''ray_blocks : ray_block ray_blocks
-                      | ray_block '''
-        print 'parsed a ray_blocks'
-    
-    def p_ray_block(self, p):
-        'ray_block : ray_statements'
-        print 'parsed a ray_block'
-    
+    rays = Node(type='rays')
     def p_ray_statements(self, p):
         '''ray_statements : ray_statement ray_statements
                           | ray_statement '''
-        print 'parsed a ray_statements'
+        if p[1] != None:
+            self.rays.children.append(p[1])
+            print 'appended ray to rays'
+        p[0] = self.rays
     
+    ray = None
     def p_ray_statement(self, p):
         '''ray_statement : ray_enterstate
                          | ray_compstate
@@ -260,45 +270,54 @@ class TraceParser():
                          | ray_scatter
                          | ray_absorb
                          | ray_leavestate'''
-        print 'parsed a ray_statement'
-    
+        if p[1].type=='ENTER' and self.ray==None:
+            self.ray = Node(type='ray', children=[p[1]])
+            print 'ENTER ray'
+        elif p[1].type=='LEAVE':
+            self.ray.children.append(p[1])
+            p[0] = self.ray
+            self.ray = None
+        elif self.ray==None:
+            raise Exception('p_ray_statement: ray must begin start with a ray_enterstate')
+        else:
+            self.ray.children.append(p[1])
+        
     def p_ray_compstate(self, p):
         'ray_compstate : COMP COLON QUOTE comp_name QUOTE NL STATE COLON 11dec NL'
-        print 'parsed a ray_compstate'
+        p[0] = Node(type='COMP', children=[p[4], p[9]])
     
     def p_ray_compstatestate(self, p):
         'ray_compstatestate : COMP COLON QUOTE comp_name QUOTE NL STATE COLON 11dec NL STATE COLON 11dec NL'
-        print 'parsed a ray_compstatestate'
+        p[0] = Node(type='COMP', children=[p[4], p[9]])
     
     def p_ray_scatterstate(self, p):
         'ray_scatterstate : SCATTER COLON 11dec NL STATE COLON 11dec NL'
-        print 'parsed a ray_scatterstate'
+        p[0] = Node(type='SCATTER', children=[p[3]])
     
     def p_ray_scatter(self, p):
         'ray_scatter : SCATTER COLON 11dec NL'
-        print 'parsed a ray_scatterstate'
+        p[0] = Node(type='SCATTER', leaf=p[3])
     
     def p_ray_absorb(self, p):
         'ray_absorb : ABSORB COLON NL'
-        print 'parsed a ray_absorb'
+        p[0] = Node(type='ABSORB')
     
     def p_ray_enterstate(self, p):
         'ray_enterstate : ENTER COLON NL STATE COLON 11dec NL'
-        print 'parsed a ray_enterstate'
+        p[0] = Node(type='ENTER', leaf=p[6])
     
     def p_ray_leavestate(self, p):
         'ray_leavestate : LEAVE COLON NL STATE COLON 11dec NL'
-        print 'parsed a ray_leavestate'
+        p[0] = Node(type='LEAVE', leaf=p[6])
     
     def p_11dec(self, p):
         '11dec : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC'
-        print 'parsed a 11dec'
+        p[0] = Node(type='11dec', leaf=[p[1],p[3],p[5],p[7],p[9],p[11],p[13],p[15],p[17],p[19],p[21]])
     
     # error rule for syntax errors
     def p_error(self, p):
         print("Syntax error in input!")
         print(p)
-
 
     ##################################
     # build and test 
@@ -329,7 +348,7 @@ def main(args):
     
     parser = TraceParser()
     parser.build_lexer()
-    parser.test_lexer(data)
+    #parser.test_lexer(data)
 
     parser.build_parser()
     parser.parse(data)
