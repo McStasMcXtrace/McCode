@@ -7,11 +7,11 @@ Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23
 '''
 import logging
 import argparse
-from ply import lex
+from ply import lex, yacc
 
-class TraceLexer():
+class TraceParser():
     ''' 
-    Lexer for --trace output enabling mcdisplay instrument drawing minilanguage
+    Parser for --trace output enabling mcdisplay instrument drawing minilanguage
     
     In addition to the default INITIAL state in the lexer, the 'initialize', 'save' and 'finally' states are
     intended to parse the corresponding stdout as pure lines of comments. 
@@ -27,8 +27,10 @@ class TraceLexer():
         'POS'         : 'POS',
         'AT'          : 'AT',
         'MCDISPLAY'   : 'MCDISPLAY',
+        'start'       : 'STARTKWLC',
         'end'         : 'ENDKWLC',
         'component'   : 'COMPKWLC',
+        'END'         : 'END',
         
         'ENTER'       : 'ENTER',
         'COMP'        : 'COMP',
@@ -48,32 +50,13 @@ class TraceLexer():
     
     # tokens 
     tokens = [
-              'INSTRUMENT',
-              'INSTRKW',
-              'COMPONENT',
-              'COMPKW',
-              'POS',
-              'AT',
-              'MCDISPLAY',
-              'ENDKWLC',
-              'COMPKWLC',
-              
               'LB',
               'RB',
-              'LSB',
-              'RSB',
               'COLON',
               'QUOTE',
               'SQUOTE',
               'COMMA',
               'NL',
-              
-              'ENTER',
-              'COMP',
-              'STATE',
-              'SCATTER',
-              'ABSORB',
-              'LEAVE',
               
               'ABSPATH',
               'DEC',
@@ -81,7 +64,7 @@ class TraceLexer():
               
               # tokens only used in states "save" and "finally" (comment blocks)
               'COMMENT'
-              ] + list(reserved.values())
+              ] + list(set(reserved.values()))
 
     ###############################
     # special states must be implemented before 'ID' below, which would catch the state's "start condition" as an ID
@@ -129,8 +112,6 @@ class TraceLexer():
     
     t_LB = r'\('
     t_RB = r'\)'
-    t_LSB = r'\['
-    t_RSB = r'\]'
     t_COLON = r':'
     t_QUOTE = r'"'
     t_SQUOTE = r'\''
@@ -142,7 +123,8 @@ class TraceLexer():
         return t
 
     def t_ABSPATH(self, t):
-        r'/[\w/\.]+'
+        r'/[/\w\.]+'
+        return t
     
     def t_DEC(self, t):
         r'-?[\d.]+(e[+-][0-9]+)?'
@@ -159,28 +141,199 @@ class TraceLexer():
     def t_error(self, t):
         print('error: %s' % t.value)
     
-    ##########################
+    ##################################
+    # parsing rules
+    ##################################
+    
+    def p_document(self, p):
+        'document : instr_open comp_blocks comments draw_lines instr_close comments ray_blocks comments'
+        print 'parsed a document'
+    
+    def p_instr_open(self, p):
+        'instr_open : INSTRUMENT COLON NL INSTRKW SQUOTE instr_name SQUOTE LB ABSPATH RB NL'
+        print 'parsed a instr_open'
+        
+    def p_instr_name(self, p):
+        'instr_name : ID'
+        print 'parsed a instr_name'
+    
+    def p_comp_blocks(self, p):
+        '''comp_blocks : comp_block comp_blocks
+                       | comp_block '''
+        print 'parsed a comp_blocks'
+
+    def p_comp_block(self, p):
+        'comp_block : COMPONENT COLON QUOTE comp_name QUOTE NL POS COLON 12dec NL COMPKW comp_name AT LB 3dec RB NL'
+        print 'parsed a comp_block'
+    
+    def p_comp_name(self, p):
+        'comp_name : ID'
+        print 'parsed a comp_name', p[1]
+
+    def p_12dec(self, p):
+        '12dec : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC'
+        print 'parsed a 12dec'
+        
+    def p_3dec(self, p):
+        '3dec :  DEC COMMA DEC COMMA DEC'
+        print 'parsed a 3dec'
+    
+    def p_comments(self, p):
+        '''comments : comment comments
+                    | empty '''
+        print 'parsed a comments'
+    
+    def p_comment(self, p):
+        '''comment : COMMENT NL
+                   | NL'''
+        print 'parsed a comment'
+    
+    def p_draw_lines(self, p):
+        '''draw_lines : draw_line draw_lines
+                      | draw_line '''
+        print 'parsed draw_lines'
+    
+    def p_draw_line(self, p):
+        '''draw_line : draw_header
+                     | draw_command
+                     | draw_open
+                     | draw_close'''
+        print 'parsed a draw_line'
+    
+    def p_draw_header(self, p):
+        '''draw_header : MCDISPLAY COLON COMPKWLC comp_name NL'''
+        print 'parsed a draw_header'
+    
+    def p_draw_command(self, p):
+        '''draw_command : MCDISPLAY COLON DRAWCALL LB args RB NL
+                        | MCDISPLAY COLON DRAWCALL LB SQUOTE SQUOTE RB NL
+                        | MCDISPLAY COLON DRAWCALL LB SQUOTE arg SQUOTE RB NL
+                        | MCDISPLAY COLON DRAWCALL LB SQUOTE arg SQUOTE COMMA args RB NL
+                        | MCDISPLAY COLON DRAWCALL LB RB NL'''
+        print 'parsed a draw_command', p[3]
+    
+    def p_args(self, p):
+        '''args : arg COMMA args
+                | arg'''
+        print 'parsed an args'
+    
+    def p_arg(self, p):
+        '''arg : DEC
+               | ID'''
+        print 'parsed an arg', p[1]
+    
+    def p_empty(self, p):
+        'empty :'
+        print 'parsed a empty'
+    
+    def p_draw_open(self, p):
+        '''draw_open : MCDISPLAY COLON STARTKWLC NL'''
+        print 'parsed a draw_open'
+    
+    def p_draw_close(self, p):
+        'draw_close : MCDISPLAY COLON ENDKWLC NL'
+        print 'parsed a draw_close'
+    
+    def p_instr_close(self, p):
+        'instr_close : INSTRUMENT END COLON NL'
+        print 'parsed a instr_close'
+    
+    def p_ray_blocks(self, p):
+        '''ray_blocks : ray_block ray_blocks
+                      | ray_block '''
+        print 'parsed a ray_blocks'
+    
+    def p_ray_block(self, p):
+        'ray_block : ray_statements'
+        print 'parsed a ray_block'
+    
+    def p_ray_statements(self, p):
+        '''ray_statements : ray_statement ray_statements
+                          | ray_statement '''
+        print 'parsed a ray_statements'
+    
+    def p_ray_statement(self, p):
+        '''ray_statement : ray_enterstate
+                         | ray_compstate
+                         | ray_compstatestate
+                         | ray_scatterstate
+                         | ray_scatter
+                         | ray_absorb
+                         | ray_leavestate'''
+        print 'parsed a ray_statement'
+    
+    def p_ray_compstate(self, p):
+        'ray_compstate : COMP COLON QUOTE comp_name QUOTE NL STATE COLON 11dec NL'
+        print 'parsed a ray_compstate'
+    
+    def p_ray_compstatestate(self, p):
+        'ray_compstatestate : COMP COLON QUOTE comp_name QUOTE NL STATE COLON 11dec NL STATE COLON 11dec NL'
+        print 'parsed a ray_compstatestate'
+    
+    def p_ray_scatterstate(self, p):
+        'ray_scatterstate : SCATTER COLON 11dec NL STATE COLON 11dec NL'
+        print 'parsed a ray_scatterstate'
+    
+    def p_ray_scatter(self, p):
+        'ray_scatter : SCATTER COLON 11dec NL'
+        print 'parsed a ray_scatterstate'
+    
+    def p_ray_absorb(self, p):
+        'ray_absorb : ABSORB COLON NL'
+        print 'parsed a ray_absorb'
+    
+    def p_ray_enterstate(self, p):
+        'ray_enterstate : ENTER COLON NL STATE COLON 11dec NL'
+        print 'parsed a ray_enterstate'
+    
+    def p_ray_leavestate(self, p):
+        'ray_leavestate : LEAVE COLON NL STATE COLON 11dec NL'
+        print 'parsed a ray_leavestate'
+    
+    def p_11dec(self, p):
+        '11dec : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC'
+        print 'parsed a 11dec'
+    
+    # error rule for syntax errors
+    def p_error(self, p):
+        print("Syntax error in input!")
+        print(p)
+
+
+    ##################################
     # build and test 
-    ##########################
-    def build(self, **kwargs):
+    ##################################
+    
+    def build_lexer(self, **kwargs):
         ''' builds the lexer '''
         self.lexer = lex.lex(module=self, **kwargs)
 
-    def test(self, data):
+    def test_lexer(self, data):
         ''' test built lexer on data '''
         self.lexer.input(data)
         for token in self.lexer:
             print(token)
+    
+    def build_parser(self, **kwargs):
+        ''' builds the lexer '''
+        self.parser = yacc.yacc(module=self, debug=True)
+
+    def parse(self, data):
+        ''' attempts to parse data '''
+        self.parser.parse(data, lexer=self.lexer)
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
     data = open(args.data, 'r').read()
-    lexer = TraceLexer()
-    lexer.build()
-    lexer.test(data)
-
     
+    parser = TraceParser()
+    parser.build_lexer()
+    parser.test_lexer(data)
+
+    parser.build_parser()
+    parser.parse(data)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('data', help='--trace data file.')
