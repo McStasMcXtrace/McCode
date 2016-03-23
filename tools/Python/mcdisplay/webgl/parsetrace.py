@@ -21,12 +21,50 @@ class Node:
     def __str__(self):
         return 'type: %s, leaf: %s, numchildren: %s' % (self.type, str(self.leaf), str(len(self.children)))
 
+class NodeTreePrint:
+    ''' Node tree assumptions: children is a list of Node's, leaf is for data'''
+    def __init__(self, rootnode, printrays=True):
+        self.level = 0
+        self.recurse(rootnode, printrays, self.printfunc, self.inclevel, self.declevel, self.getlevel)
+    
+    def getlevel(self):
+        return self.level
+    
+    def inclevel(self):
+        self.level += 1
+    
+    def declevel(self):
+        self.level -= 1
+    
+    @staticmethod
+    def printfunc(node, level):
+        fs = '{:>' + str(level*4) + '}' # e.g. '{:<16}'
+        type = node.type
+        leaf = ''
+        if node.leaf:
+            leaf = node.leaf
+        print fs.format('') + '%s: %s' % (type, leaf)
+    
+    @staticmethod
+    def recurse(node, printrays, printfunc, inclevel, declevel, getlevel):
+        for c in node.children:
+            # exit if printrays is not set
+            if c.type=='rays' and not printrays:
+                return
+            
+            level = getlevel()
+            printfunc(c, level)
+            if len(c.children) > 0:
+                inclevel()
+                NodeTreePrint.recurse(c, printrays, printfunc, inclevel, declevel, getlevel)
+        declevel()
+
 class TraceParser:
-    ''' 
+    '''
     Parser for --trace output enabling mcdisplay instrument drawing minilanguage
     
     In addition to the default INITIAL state in the lexer, the 'initialize', 'save' and 'finally' states are
-    intended to parse the corresponding stdout as pure lines of comments. 
+    intended to parse the corresponding stdout as pure lines of comments.
     This way we can avoid defining a "catchall" token in INITIAL.
     '''
     
@@ -79,10 +117,12 @@ class TraceParser:
               ] + list(set(reserved.values()))
 
     ###############################
-    # special states must be implemented before 'ID' below, which would catch the state's "start condition" as an ID
+    # special states 
     ##############################
     
-    # 'exclusive' means that no token definitions from INITIAL are carried over
+    # NOTE: these states must be implemented before 'ID' token, which would catch the states' 
+    # "start condition" as an ID.
+    
     states = (
         ('initialize', 'exclusive'),
         ('save', 'exclusive'),
@@ -119,7 +159,7 @@ class TraceParser:
     t_finally_COMMENT = r'.+'
 
     ##################################
-    # back to INITIAL state impl
+    # INITIAL state
     ##################################
     
     t_LB = r'\('
@@ -154,18 +194,18 @@ class TraceParser:
         print('error: %s' % t.value)
     
     ##################################
-    # parsing rules
+    # parsing rules and action code
     ##################################
     
     def p_document(self, p):
         'document : instr_open comp_defs comments draw_lines instr_close comments ray_statements comments'
         print 'mcdisplay document parsed'
-        p[0] = Node(type='document', children=[self.instr, self.comps, self.rays, Node(type='comments', leaf=self.comments)])
+        self.parsetree = Node(type='document', children=[self.instr, self.comps, self.rays, Node(type='comments', leaf=self.comments)])
     
     instr = None
     def p_instr_open(self, p):
         'instr_open : INSTRUMENT COLON NL INSTRKW SQUOTE instr_name SQUOTE LB ABSPATH RB NL'
-        p[0] = Node(type='instrument', children=[p[6], Node(type='abspath', leaf=p[9])])
+        self.instr = Node(type='instrument', children=[p[6], Node(type='abspath', leaf=p[9])])
         
     def p_instr_name(self, p):
         'instr_name : ID'
@@ -230,7 +270,7 @@ class TraceParser:
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE arg SQUOTE COMMA args RB NL
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE SQUOTE RB NL
                         | MCDISPLAY COLON DRAWCALL LB RB NL'''
-        self.commands.children.append(Node(type='draw', children=self.args, leaf=p[3]))
+        self.commands.children.append(Node(type='draw', children=[self.args], leaf=p[3]))
         # reset args after having parsed them all, which is now
         self.args = Node(type='args', leaf=[])
     
@@ -287,19 +327,19 @@ class TraceParser:
         
     def p_ray_compstate(self, p):
         'ray_compstate : COMP COLON QUOTE comp_name QUOTE NL STATE COLON 11dec NL'
-        p[0] = Node(type='COMP', children=[p[4], p[9]])
+        p[0] = Node(type='COMP', children=[p[4]], leaf=p[9].leaf)
     
     def p_ray_compstatestate(self, p):
         'ray_compstatestate : COMP COLON QUOTE comp_name QUOTE NL STATE COLON 11dec NL STATE COLON 11dec NL'
-        p[0] = Node(type='COMP', children=[p[4], p[9]])
+        p[0] = Node(type='COMP', children=[p[4]], leaf=p[9].leaf)
     
     def p_ray_scatterstate(self, p):
         'ray_scatterstate : SCATTER COLON 11dec NL STATE COLON 11dec NL'
-        p[0] = Node(type='SCATTER', children=[p[3]])
+        p[0] = Node(type='SCATTER', leaf=p[3].leaf)
     
     def p_ray_scatter(self, p):
         'ray_scatter : SCATTER COLON 11dec NL'
-        p[0] = Node(type='SCATTER', leaf=p[3])
+        p[0] = Node(type='SCATTER', leaf=p[3].leaf)
     
     def p_ray_absorb(self, p):
         'ray_absorb : ABSORB COLON NL'
@@ -307,11 +347,11 @@ class TraceParser:
     
     def p_ray_enterstate(self, p):
         'ray_enterstate : ENTER COLON NL STATE COLON 11dec NL'
-        p[0] = Node(type='ENTER', leaf=p[6])
+        p[0] = Node(type='ENTER', leaf=p[6].leaf)
     
     def p_ray_leavestate(self, p):
         'ray_leavestate : LEAVE COLON NL STATE COLON 11dec NL'
-        p[0] = Node(type='LEAVE', leaf=p[6])
+        p[0] = Node(type='LEAVE', leaf=p[6].leaf)
     
     def p_11dec(self, p):
         '11dec : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC'
@@ -355,6 +395,9 @@ def main(args):
 
     parser.build_parser()
     parser.parse(data)
+    
+    NodeTreePrint(parser.parsetree, printrays=False)
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
