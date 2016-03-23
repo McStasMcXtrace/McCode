@@ -158,111 +158,111 @@ class TraceParser:
     ##################################
     
     def p_document(self, p):
-        'document : instr_open comp_blocks comments draw_lines instr_close comments ray_statements comments'
-        print 'parsed a document'
-        p[0] = Node(type='document', children=[p[1], p[2], p[4], p[7]], leaf=['comments:', p[3], p[6], p[8]])
+        'document : instr_open comp_defs comments draw_lines instr_close comments ray_statements comments'
+        print 'mcdisplay document parsed'
+        p[0] = Node(type='document', children=[self.instr, self.comps, self.rays, Node(type='comments', leaf=self.comments)])
     
+    instr = None
     def p_instr_open(self, p):
         'instr_open : INSTRUMENT COLON NL INSTRKW SQUOTE instr_name SQUOTE LB ABSPATH RB NL'
-        print 'parsed a instr_open'
         p[0] = Node(type='instrument', children=[p[6], Node(type='abspath', leaf=p[9])])
         
     def p_instr_name(self, p):
         'instr_name : ID'
-        print 'parsed a instr_name'
         p[0] = Node(type='instr_name', leaf=p[1])
     
-    def p_comp_blocks(self, p):
-        '''comp_blocks : comp_block comp_blocks
-                       | comp_block '''
-        print 'parsed a comp_blocks'
+    comps = Node(type='comps')
+    def p_comp_defs(self, p):
+        '''comp_defs : comp_def comp_defs
+                     | comp_def '''
+        self.comps.children.append(p[1])
+        p[0] = self.comps
 
-    def p_comp_block(self, p):
-        'comp_block : COMPONENT COLON QUOTE comp_name QUOTE NL POS COLON 12dec NL COMPKW comp_name AT LB 3dec RB NL'
-        print 'parsed a comp_block'
+    def p_comp_def(self, p):
+        'comp_def : COMPONENT COLON QUOTE comp_name QUOTE NL POS COLON 12dec NL COMPKW comp_name AT LB 3dec RB NL'
+        p[0] = Node(type='comp', children=[p[4], p[9], p[15]])
     
     def p_comp_name(self, p):
         'comp_name : ID'
-        print p[1]
         p[0] = Node(type="comp_name", leaf=p[1])
 
     def p_12dec(self, p):
         '12dec : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC'
-        print 'parsed a 12dec'
+        p[0] = Node(type='12dec', leaf=[p[1], p[3], p[5], p[7], p[9], p[11], p[13], p[15], p[17], p[19], p[21], p[21]])
         
     def p_3dec(self, p):
         '3dec :  DEC COMMA DEC COMMA DEC'
-        print 'parsed a 3dec'
+        p[0] = Node(type='3dec', leaf=[p[1], p[3], p[5]])
     
     def p_comments(self, p):
         '''comments : comment comments
                     | empty '''
-        print 'parsed a comments'
     
+    comments = []
     def p_comment(self, p):
         '''comment : COMMENT NL
                    | NL'''
-        print 'parsed a comment'
+        self.comments.append(p[1]) 
     
     def p_draw_lines(self, p):
         '''draw_lines : draw_line draw_lines
                       | draw_line '''
-        print 'parsed draw_lines'
     
     def p_draw_line(self, p):
         '''draw_line : draw_header
                      | draw_command
                      | draw_open
                      | draw_close'''
-        print 'parsed a draw_line'
     
     def p_draw_header(self, p):
         '''draw_header : MCDISPLAY COLON COMPKWLC comp_name NL'''
-        print 'parsed a draw_header'
+        self.commands = Node(type='draw_commands')
+        for comp in self.comps.children:
+            for c in comp.children:
+                if c.leaf==p[4].leaf:
+                    comp.children.append(self.commands)
+                    break
     
+    commands = None
     def p_draw_command(self, p):
         '''draw_command : MCDISPLAY COLON DRAWCALL LB args RB NL
-                        | MCDISPLAY COLON DRAWCALL LB SQUOTE SQUOTE RB NL
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE arg SQUOTE RB NL
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE arg SQUOTE COMMA args RB NL
+                        | MCDISPLAY COLON DRAWCALL LB SQUOTE SQUOTE RB NL
                         | MCDISPLAY COLON DRAWCALL LB RB NL'''
-        print 'parsed a draw_command', p[3]
+        self.commands.children.append(Node(type='draw', children=self.args, leaf=p[3]))
+        # reset args after having parsed them all, which is now
+        self.args = Node(type='args', leaf=[])
     
+    args = Node(type='args', leaf=[])
     def p_args(self, p):
         '''args : arg COMMA args
                 | arg'''
-        print 'parsed an args'
     
     def p_arg(self, p):
         '''arg : DEC
                | ID'''
-        print 'parsed an arg', p[1]
+        self.args.leaf.append(p[1])
     
     def p_empty(self, p):
         'empty :'
-        print 'parsed a empty'
     
     def p_draw_open(self, p):
         '''draw_open : MCDISPLAY COLON STARTKWLC NL'''
-        print 'parsed a draw_open'
     
     def p_draw_close(self, p):
         'draw_close : MCDISPLAY COLON ENDKWLC NL'
-        print 'parsed a draw_close'
     
     def p_instr_close(self, p):
         'instr_close : INSTRUMENT END COLON NL'
-        print 'parsed a instr_close'
-
-    #####################################
     
     rays = Node(type='rays')
     def p_ray_statements(self, p):
         '''ray_statements : ray_statement ray_statements
                           | ray_statement '''
+        # this function only receives a value in p[1] - the p[0] og p_ray_statement - when a ray is "finished" at that lower level
         if p[1] != None:
             self.rays.children.append(p[1])
-            print 'appended ray to rays'
         p[0] = self.rays
     
     ray = None
@@ -276,7 +276,6 @@ class TraceParser:
                          | ray_leavestate'''
         if p[1].type=='ENTER' and self.ray==None:
             self.ray = Node(type='ray', children=[p[1]])
-            print 'ENTER ray'
         elif p[1].type=='LEAVE':
             self.ray.children.append(p[1])
             p[0] = self.ray
@@ -316,7 +315,7 @@ class TraceParser:
     
     def p_11dec(self, p):
         '11dec : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC'
-        p[0] = Node(type='11dec', leaf=[p[1],p[3],p[5],p[7],p[9],p[11],p[13],p[15],p[17],p[19],p[21]])
+        p[0] = Node(type='11dec', leaf=[p[1], p[3] ,p[5] ,p[7] ,p[9] ,p[11] ,p[13] ,p[15] ,p[17] ,p[19] ,p[21]])
     
     # error rule for syntax errors
     def p_error(self, p):
