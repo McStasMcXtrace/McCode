@@ -35,11 +35,11 @@
 * Modified by: PW February-July 2014: version 2.1 (and the 2.1RC1 pre-release)
 * Modified by: PW and JG May 2015: versions 2.2 and 2.2a
 * Modified by: PW March 2016: version 2.3
-* This file is part of McStas  version 2.3, released March 2016.
+* This file is part of McStas version 2.3, released April 5th 2016.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v.2.3, March FIXME, 2016
+Changes in McStas v.2.3, April 5th, 2016
 
  McStas 2.3 is the fourth release in the 2.x series and fixes various issues with McStas 2.2a, plus 
  provides important new developments.
