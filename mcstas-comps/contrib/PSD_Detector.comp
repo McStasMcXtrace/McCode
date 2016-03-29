@@ -1095,24 +1095,25 @@ TRACE
           if (Energy>threshold) {
             // if the particles have deposited sufficient energy to be
             // recognised as a neutron event (and not a gamma event)
-            x = xCOG; y = yCOG; z = zCOG; p *= pa;
+            double P = p*pa;
+            x = xCOG; y = yCOG; z = zCOG; 
             SCATTER; // show point of detection for 3D view
             PSD_N[i][j] ++;       // one neutron tallied in the appropriate pixel
-            PSD_p[i][j] += p;     // incremented by neutron weight
-            PSD_p2[i][j] += p*p;  // 2nd order moments
+            PSD_p[i][j] += P;     // incremented by neutron weight
+            PSD_p2[i][j] += P*P;  // 2nd order moments
 
-            DetCumul += p; /* probability that a signal was produced in the
+            DetCumul += P; /* probability that a signal was produced in the
               sensitive volume above the energy threshold */
             i = (long)floor(Energy);
             if (i >= 0 &&  i < PHSpectrum_n ) {
               PHSpectrum0[i] ++;     // one neutron tallied per pixel
-              PHSpectrum[i]  += p;   // energy bin in pulse height spectrum incremented by neutron weight
-              PHSpectrum2[i] += p*p; // 2nd order moments
+              PHSpectrum[i]  += P;   // energy bin in pulse height spectrum incremented by neutron weight
+              PHSpectrum2[i] += P*P; // 2nd order moments
             }
             /* save event file if activated */
             if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
               double pp;
-              Vars.cp  = p;
+              Vars.cp  = P;
               Vars.cx  = x;
               Vars.cvx = vx;
               Vars.csx = sx;
@@ -1127,13 +1128,14 @@ TRACE
               pp = Monitor_nD_Trace(&DEFS, &Vars);
 
               Vars.Nsum++;
-              Vars.psum  += p;
-              Vars.p2sum += p*p;
+              Vars.psum  += P;
+              Vars.p2sum += P*P;
             }
             // initial version ABSORB detected neutrons. 
             // This was removed if user wants to analyze the behaviour of the detector
           }
         } /* storage */
+        p *= 1-pa;
       } // end if absorption in case of border effects (left and right) in the banana
     } /* end if p_interact */
   } /* end if (intersect) */
@@ -1160,12 +1162,27 @@ SAVE
       strncpy(file, filename, 128);
     else
       sprintf(file, "%s.dat", NAME_CURRENT_COMP);
+    if (nx > 1 && ny > 1)
     DETECTOR_OUT_2D(
           "PSD Detector",
-          "X position [cm]",
-          "Y position [cm]",
-          -width/2*100.0, width/2*100.0, -yheight/2*100.0, yheight/2*100.0,
+          "X position [m]",
+          "Y position [m]",
+          -width/2, width/2, -yheight/2, yheight/2,
           (double)nx, (double)ny,
+          &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+          file);
+    else if (nx == 1)
+    DETECTOR_OUT_1D(
+          "PSD Detector",
+          "Y position [m]","Counts","Y",
+          -yheight/2, yheight/2, (double)ny,
+          &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+          file);
+    else if (ny == 1)
+    DETECTOR_OUT_1D(
+          "PSD Detector",
+          "X position [m]","Counts","X",
+          -width/2, width/2, (double)nx,
           &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
           file);
   }
@@ -1209,13 +1226,13 @@ FINALLY
   if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
     Monitor_nD_Finally(&DEFS, &Vars);
     if (bufsize) {
-      printf("PSD_Detector: %s: Saved %lu events (from buffer) in file %s\n",
+      printf("PSD_Detector: %s: Saved %Li events (from buffer) in file %s\n",
              NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
       if (bufsize < Vars.Nsum)
         printf("WARNING         When using this source, intensities must be multiplied\n"
                "                by a factor %g\n", (double)Vars.Nsum/bufsize);
     } else
-      printf("PSD_Detector: %s: Saved %lu events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+      printf("PSD_Detector: %s: Saved %Li events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
   }
 %}
 
