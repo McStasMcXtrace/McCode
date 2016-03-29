@@ -19,7 +19,7 @@ def main(args):
     if False: 
         parser = TraceParser()
         parser.build_lexer()
-        parser.test_lexer(data)
+        #parser.test_lexer(data)
     
         parser.build_parser()
         parser.parse(data)

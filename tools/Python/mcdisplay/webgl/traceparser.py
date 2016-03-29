@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 '''
 Implementation of classes involved in the PLY-based translation of the mcdisplay "--trace output" 
 mini language.
@@ -391,3 +389,4 @@ class TraceParser:
     def parse(self, data):
         ''' attempts to parse data '''
         self.parser.parse(data, lexer=self.lexer)
+
