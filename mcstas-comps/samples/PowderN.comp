@@ -371,8 +371,9 @@ SHARE
        "should be at least %d\n", info->compname, SC_file, 1));
     else 
       size = sTable.rows;
-    Table_Info(sTable);
+    
     MPI_MASTER(
+    Table_Info(sTable);
     printf("PowderN: %s: Reading %d rows from %s\n",
           info->compname, size, SC_file);
     );
