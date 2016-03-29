@@ -613,7 +613,10 @@ void mcpl_closeandgzip_outfile(mcpl_outfile_t of)
   char * filename = f->filename;
   f->filename = 0;//prevent free in mcpl_close_file:
   mcpl_close_outfile(of);
+  /* Nasty platform-insufficiency hack ... */
+#ifndef _WIN32
   mcpl_gzip_file(filename);
+#endif
   free(filename);
 }
 
@@ -1545,10 +1548,14 @@ int mcpl_tool(int argc,char** argv) {
 }
 
 #include <sys/types.h>
+#ifndef _WIN32
 #include <sys/wait.h>
+#endif
 #include <unistd.h>
 #include <errno.h>
 
+/* Nasty platform-insufficiency hack ... */
+#ifndef _WIN32
 void mcpl_gzip_file(const char * filename)
 {
   const char * bn = strrchr(filename, '/');
@@ -1573,3 +1580,5 @@ void mcpl_gzip_file(const char * filename)
     exit(1);
   }
 }
+#endif
+

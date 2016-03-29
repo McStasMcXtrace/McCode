@@ -147,7 +147,11 @@ extern "C" {
   int mcpl_tool(int argc,char** argv);
 
   //Attempt to run gzip on a file (does not require MCPL_HASZLIB):
+
+  /* Nasty platform-insufficiency hack ... */
+#ifndef _WIN32
   void mcpl_gzip_file(const char * filename);
+#endif
 
   ////////////////////
   // Error handling //
