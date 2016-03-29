@@ -62,7 +62,7 @@ DEFINE COMPONENT Molecule_2state
 DEFINITION PARAMETERS (string form_factors="FormFactors.txt",string state_0_file=NULL,string state_1_file=NULL, nq=512,
         string material_datafile="Be.txt")
 SETTING PARAMETERS (delta_t=100e-9,excitation_yield=0.2,t_relax=100e-9,initial_state=0,
-    psimin=0,psimax=M_PI_2, etamin=0, etamax=2*M_PI,
+        psimin=0,psimax=M_PI_2, etamin=-M_PI, etamax=M_PI,
     radius=0, yheight=0, xwidth=0, zdepth=0,
     concentration=1,p_transmit=0.1,q_parametric=0, Emax=80)
 OUTPUT PARAMETERS (delta_q,prms,shape)
