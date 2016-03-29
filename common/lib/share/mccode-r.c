@@ -2742,8 +2742,8 @@ randvec_target_circle(double *xo, double *yo, double *zo, double *solid_angle,
 
 /*******************************************************************************
  * randvec_target_rect_angular: Choose random direction towards target at
- * (xi,yi,zi) with given ANGULAR dimension height x width. height=phi_x,
- * width=phi_y (radians)
+ * (xi,yi,zi) with given ANGULAR dimension height x width. height=phi_x=[0,PI],
+ * width=phi_y=[0,2*PI] (radians)
  * If height or width is zero, choose random direction in full 4PI, no target.
  *******************************************************************************/
 void
@@ -2776,11 +2776,11 @@ randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_an
     tmp = rot_apply(Ainverse, tmp);
     coords_get(tmp, &xi, &yi, &zi);
 
-    /* Now choose point uniformly on quadrant within angle theta0/phi0 */
-    theta = width*randpm1()/2.0;
-    phi   = height*randpm1()/2.0;
-    /* Now, to obtain the desired vector rotate (xi,yi,zi) angle phi around
-       n, and then theta around u. */
+    /* Now choose point uniformly on the unit sphere segment with angle theta/phi */
+    phi   = width*randpm1()/2.0;
+    theta = asin(randpm1()*sin(height/2.0));
+    /* Now, to obtain the desired vector rotate (xi,yi,zi) angle theta around
+       n, and then phi around u. */
     if(xi == 0 && zi == 0)
     {
       nx = 1;
@@ -2798,9 +2798,9 @@ randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_an
   /* [xyz]u = [xyz]i x n[xyz] (usually vertical) */
   vec_prod(xu,  yu,  zu, xi, yi, zi,        nx, ny, nz);
   /* [xyz]t = [xyz]i rotated theta around [xyz]u */
-  rotate  (xt,  yt,  zt, xi, yi, zi, phi, nx, ny, nz);
+  rotate  (xt,  yt,  zt, xi, yi, zi, theta, nx, ny, nz);
   /* [xyz]o = [xyz]t rotated phi around n[xyz] */
-  rotate (*xo, *yo, *zo, xt, yt, zt, theta, xu,  yu,  zu);
+  rotate (*xo, *yo, *zo, xt, yt, zt, phi, xu,  yu,  zu);
 
   /* Go back to local coordinate system */
   tmp = coords_set(*xo, *yo, *zo);
