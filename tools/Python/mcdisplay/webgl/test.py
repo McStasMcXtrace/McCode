@@ -12,14 +12,19 @@ def main(args):
     
     data = open(args.data, 'r').read()
     
-    parser = TraceParser()
-    parser.build_lexer()
-    #parser.test_lexer(data)
-
-    parser.build_parser()
-    parser.parse(data)
+    parser = TraceParser(data)
+    NodeTreePrint(parser.parsetree) 
     
-    NodeTreePrint(parser.parsetree, printrays=False)
+    # step-wise test
+    if False: 
+        parser = TraceParser()
+        parser.build_lexer()
+        parser.test_lexer(data)
+    
+        parser.build_parser()
+        parser.parse(data)
+        
+        NodeTreePrint(parser.parsetree, printrays=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)

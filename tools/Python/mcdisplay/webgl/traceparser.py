@@ -21,8 +21,11 @@ class Node:
         return 'type: %s, leaf: %s, numchildren: %s' % (self.type, str(self.leaf), str(len(self.children)))
 
 class NodeTreePrint:
-    ''' Node tree assumptions: children is a list of Node's, leaf is for data'''
-    def __init__(self, rootnode, printrays=True):
+    '''
+    Node tree assumptions: children is a list of Node's, leaf is for data
+    Does not print any rays by default, enable by using printrays=True during construction.
+    '''
+    def __init__(self, rootnode, printrays=False):
         self.level = 0
         self.recurse(rootnode, printrays, self.printfunc, self.inclevel, self.declevel, self.getlevel)
     
@@ -66,6 +69,12 @@ class TraceParser:
     intended to parse the corresponding stdout as pure lines of comments.
     This way we can avoid defining a "catchall" token in INITIAL.
     '''
+    parsetree = None
+    def __init__(self, data=None):
+        if data:
+            self.build_lexer()
+            self.build_parser()
+            self.parse(data)
     
     # these tokens match ID, but are of these types (handled in t_ID)
     reserved = {
