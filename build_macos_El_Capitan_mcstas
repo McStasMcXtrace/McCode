@@ -27,7 +27,7 @@ fi
 ./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mac_el_capitan "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac_el_capitan "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac_el_capitan "" -- OSXpkg
-./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac_el_capitan "o" -- OSXpkg
+./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac_el_capitan "" -- OSXpkg
 
 if [ "x$2" != "x" ]; then
     # If this is a meta-package being built, we should aim for installation in /opt/mccode
