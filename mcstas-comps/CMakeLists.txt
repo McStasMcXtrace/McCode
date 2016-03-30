@@ -42,7 +42,7 @@ foreach(name contrib data examples misc monitors obsolete optics samples share s
 endforeach()
 
 if (NOT WINDOWS)
-  install(TARGETS nxs DESTINATION "${lib}/libs/libnxs/")
-  install(TARGETS mcpl DESTINATION "${lib}/libs/mcpl/")
+  install(TARGETS nxs DESTINATION "${MCCODE_LIB}/libs/libnxs/")
+  install(TARGETS mcpl DESTINATION "${MCCODE_LIB}/libs/mcpl/")
 endif()
 
