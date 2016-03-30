@@ -15,7 +15,13 @@
 *
 * Source-like component that reads neutron state parameters from an mcpl-file.
 * %D
-* long description
+* Source-like component that reads neutron state parameters from a binary mcpl-file.
+*
+* MCPL is short for Monte Carlo Particle List, and is a new format for sharing events
+* between e.g. MCNP(X), Geant4 and McStas.
+*
+* When used with MPI, the --ncount given on the commandline is overwritten by 
+* #MPI nodes x #events in the file.
 *
 * %BUGS
 *
@@ -59,6 +65,11 @@ INITIALIZE
                 "This will probably lead to biased data.\n",NAME_CURRENT_COMP,ncount,nparticles);
     }
 
+#if defined (USE_MPI)
+    mcset_ncount(mpi_node_count*nparticles);
+    MPI_MASTER(fprintf(stdout, "\n\nWARNING: You are using MCPL_input with MPI, hence your ncount is now redefined to:\n   %ld events at each of the %i MPI nodes = %ld events\n\n",nparticles,mpi_node_count,mpi_node_count*nparticles); );
+#endif
+
     printf("MCPL file (%s) produced with %s.\n",filename,mcpl_hdr_srcname(inputfile));
     printf("MCPL file (%s) contains %ld particles.\n",filename,nparticles); 
 
@@ -95,6 +106,11 @@ TRACE
     t=particle->time*1e-3;
     /*weight in unspecified units:*/
     p=particle->weight;
+    
+#if defined USE_MPI
+      /* We always repeat by the number of nodes in an MPI run */
+      p /= mpi_node_count;
+#endif
 
     SCATTER;
 %}

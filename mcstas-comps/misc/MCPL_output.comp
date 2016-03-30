@@ -18,7 +18,14 @@
 * binary, virtual-source neutron file.
 *
 * %D
-* long description
+* Detector-like component that writes neutron state parameters into an mcpl-format 
+* binary, virtual-source neutron file.
+*
+* MCPL is short for Monte Carlo Particle List, and is a new format for sharing events
+* between e.g. MCNP(X), Geant4 and McStas.
+*
+* When used with MPI, the component will output #MPI nodes individual MCPL files that
+* can be merged using the mcpltool.
 * %BUGS
 *
 * %P
@@ -50,6 +57,12 @@ DECLARE
 
 INITIALIZE
 %{
+#if defined (USE_MPI)
+  /* In case of MPI, simply redefine the filename used by each node */
+  MPI_MASTER(fprintf(stdout, "\n\nWARNING: You are using MCPL_output with MPI, hence your will get %i filenames %s_node_#i as output.\n\n",mpi_node_count,filename); );
+  sprintf(filename,"%s.node_%i",filename,mpi_node_rank);
+#endif
+
     char line[256];
     outputfile = mcpl_create_outfile(filename);
     snprintf(line,255,"%s %s %s",MCCODE_NAME,MCCODE_VERSION,mcinstrument_name);
