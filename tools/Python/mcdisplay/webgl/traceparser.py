@@ -5,11 +5,13 @@ mini language.
 Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
 from ply import lex, yacc
-from instrrep import InstrumentConcrete, Component, Vector3d
+from instrrep import InstrumentConcrete, Component, Vector3d, NeutronStory, NeutronState, Matrix3, Matrix3Identity
 from drawcalls import drawclass_factory
 
 class Node(object):
-    ''' Node objects are used to construct the AST-ish structure (abstract syntax tree) '''
+    ''' 
+    Node objects are used to construct the trace parse tree. 
+    '''
     def __init__(self, type, children=None, leaf=None):
         self.type = type
         if children:
@@ -22,6 +24,9 @@ class Node(object):
 
 class NodeTreePrint(object):
     '''
+    Functional-ish programming implementation of node tree operation: iteratively print nodes 
+    in human readable form.
+    
     Node tree assumptions: children is a list of Node's, leaf is for data
     Does not print any rays by default, enable by using printrays=True during construction.
     '''
@@ -105,8 +110,17 @@ class InstrProduction:
                                 name = cc.leaf
                             if cc.type == '12dec':
                                 pos = Vector3d(x=float(cc.leaf[0]), y=float(cc.leaf[1]), z=float(cc.leaf[2]))
-                                rot = Vector3d(x=float(cc.leaf[4]), y=float(cc.leaf[5]), z=float(cc.leaf[6]))
-                        
+                                rot = Matrix3(
+                                        a11=float(cc.leaf[3]),
+                                        a12=float(cc.leaf[4]),
+                                        a13=float(cc.leaf[5]),
+                                        a21=float(cc.leaf[6]),
+                                        a22=float(cc.leaf[7]),
+                                        a23=float(cc.leaf[8]),
+                                        a31=float(cc.leaf[9]),
+                                        a32=float(cc.leaf[10]),
+                                        a33=float(cc.leaf[11])
+                                        )
                         comp = Component(name=name, pos=pos, rot=rot)
                         
                         # get draw commands (please print a parse tree with NodeTreePrint to understand this)
@@ -114,17 +128,12 @@ class InstrProduction:
                             if cc.type == 'draw_commands':
                                 for dc in cc.children:
                                     # get args
-                                    try: 
-                                        #args = []
+                                    try:
                                         if len(dc.children) != 1:
                                             raise Exception()
                                         
                                         argsnode = dc.children[0]
                                         args = argsnode.leaf
-                                        #numargs = int(argsnode[0])
-                                        #
-                                        #for i in range(numargs):
-                                        #    args.append(float(argsnode[i+1]))
                                     except:
                                         raise Exception('InstrProduction: node "comp" -> "draw" -> "args" must be only child')
                                     
@@ -136,18 +145,77 @@ class InstrProduction:
             
             # handle rays
             if dc.type == 'rays':
-                for rc in dc.children:
+                for rayc in dc.children:
                     
-                    if rc.type == '':
-                        pass
-            
-            
+                    # a netron ray's path through the instrument
+                    story = NeutronStory()
+                    
+                    # scope 
+                    state = None
+                    pos = None
+                    rot = None
+                    
+                    for rayevent in rayc.children:
+                        if rayevent.type == 'ENTER':
+                            pos = Vector3d(0, 0, 0)
+                            rot = Matrix3Identity()
+                            state = NeutronState(rayevent.leaf)
+                            
+                        if rayevent.type == 'COMP':
+                            comp_name = rayevent.children[0].leaf
+                            pos, rot = self.getcomp_posrot(comp_name)
+                            
+                            vlst = rayevent.leaf[0:3]
+                            v = Vector3d(vlst[0], vlst[1], vlst[2])
+                            
+                            vg = self.transform_local(v, pos, rot)
+                            state = NeutronState(vg.tolst() + rayevent.leaf[3:])
+                            
+                        if rayevent.type == 'SCATTER':
+                            vlst = rayevent.leaf[0:3]
+                            v = Vector3d(vlst[0], vlst[1], vlst[2])
+                            
+                            vg = self.transform_local(v, pos, rot)
+                            state = NeutronState(vg.tolst() + rayevent.leaf[3:])
+                        
+                        if rayevent.type == 'ABSORB':
+                            pass
+                        
+                        if rayevent.type == 'LEAVE':
+                            vlst = rayevent.leaf[0:3]
+                            v = Vector3d(vlst[0], vlst[1], vlst[2])
+                            
+                            vg = self.transform_local(v, pos, rot)
+                            state = NeutronState(vg.tolst() + rayevent.leaf[3:])
+                        
+                        story.events.append(state)
+                        
+                    self.instrument_tree.rays.append(story)
+                    
             # handle comments
+            # TODO: implement
             if dc.type == 'comments':
                 for cmc in dc.children:
                     
                     if cmc.type == '':
                         pass
+    
+    compdict = None
+    def getcomp_posrot(self, comp_name):
+        ''' returns a 2-tuple containing component pos and rot vectors, given component name '''
+        if not self.compdict:
+            self.compdict = {}
+            for comp in self.instrument_tree.components:
+                self.compdict[comp.name] = (comp.pos, comp.rot)
+                
+        pos, rot = self.compdict[comp_name]
+        return pos, rot
+    
+    def transform_local(self, v, pos, rot):
+        ''' transforms a neutron from local to global coordinates '''
+        rotated = rot.mult(v)
+        return rotated.add(pos)
+
 
 class TraceParser:
     '''
@@ -158,7 +226,7 @@ class TraceParser:
     This way we can avoid defining a "catchall" token in INITIAL.
     
     The grammar rules only partially handles instrument tree construction, and even the "action code"
-    does not enterprit every detail.
+    does not enterprit every detail - a lot of stuff regarding coordinates in hanlded in post-production.
     '''
     parsetree = None
     def __init__(self, data=None):
@@ -272,7 +340,7 @@ class TraceParser:
         r'\n'
         self.lexer.lineno += 1
         return t
-
+    
     def t_ABSPATH(self, t):
         r'/[/\w\.]+'
         return t
