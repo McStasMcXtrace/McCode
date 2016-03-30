@@ -4,6 +4,7 @@ Classes for representing a mcstas instruments and neutron rays.
 class InstrumentConcrete:
     ''' represents a mcstas instrument with params choice '''
     name = ''
+    abspath = ''
     params = []
     params_defaults = []
     

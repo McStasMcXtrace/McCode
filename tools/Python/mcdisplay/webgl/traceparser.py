@@ -5,8 +5,10 @@ mini language.
 Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
 from ply import lex, yacc
+from instrrep import InstrumentConcrete, Component, Vector3d
+from drawcalls import drawclass_factory
 
-class Node:
+class Node(object):
     ''' Node objects are used to construct the AST-ish structure (abstract syntax tree) '''
     def __init__(self, type, children=None, leaf=None):
         self.type = type
@@ -18,7 +20,7 @@ class Node:
     def __str__(self):
         return 'type: %s, leaf: %s, numchildren: %s' % (self.type, str(self.leaf), str(len(self.children)))
 
-class NodeTreePrint:
+class NodeTreePrint(object):
     '''
     Node tree assumptions: children is a list of Node's, leaf is for data
     Does not print any rays by default, enable by using printrays=True during construction.
@@ -59,6 +61,94 @@ class NodeTreePrint:
                 NodeTreePrint.recurse(c, printrays, printfunc, inclevel, declevel, getlevel)
         declevel()
 
+class InstrProduction:
+    '''
+    Completes the instrument and ray reconstruction from the "syntax tree" produced by TraceParser,
+    outputting a wholly interpreted instrument and ray model from the mcdisplay trace output.
+    
+    It is very specific, because the instrument tree structure is very specific and non-recursive.
+    '''
+    instrument_tree = None
+    def __init__(self, parsetreeroot):
+        self.root = parsetreeroot
+        if (type(self.root) is not Node) or (self.root.type != 'traceparsetree'):
+            raise Exception('InstrProduction: parsetreeroot must be a Node of type "traceparsetree"')
+    
+    def build(self):
+        ''' builds the instrument representation class based on the parse tree constructor arg '''
+        
+        # create instrument object
+        self.instrument_tree = InstrumentConcrete(name='', params=[], params_defaults=[])
+        
+        # iterate through parse tree
+        for dc in self.root.children:
+            # handle instrument branch
+            if dc.type == 'instrument':
+                for ic in dc.children:    
+                    if ic.type == 'instr_name':
+                        self.instrument_tree.name = ic.leaf
+                    if ic.type == 'abspath':
+                        self.instrument_tree.abspath = ic.leaf
+            
+            # handle component branch
+            if dc.type == 'comps':
+                for csc in dc.children:
+                    
+                    if csc.type == 'comp':
+                        name = ''
+                        pos = None
+                        rot = None
+                        
+                        # get name, pos and rot
+                        for cc in csc.children:
+                            if cc.type == 'comp_name':
+                                name = cc.leaf
+                            if cc.type == '12dec':
+                                pos = Vector3d(x=float(cc.leaf[0]), y=float(cc.leaf[1]), z=float(cc.leaf[2]))
+                                rot = Vector3d(x=float(cc.leaf[4]), y=float(cc.leaf[5]), z=float(cc.leaf[6]))
+                        
+                        comp = Component(name=name, pos=pos, rot=rot)
+                        
+                        # get draw commands (please print a parse tree with NodeTreePrint to understand this)
+                        for cc in csc.children:
+                            if cc.type == 'draw_commands':
+                                for dc in cc.children:
+                                    # get args
+                                    try: 
+                                        #args = []
+                                        if len(dc.children) != 1:
+                                            raise Exception()
+                                        
+                                        argsnode = dc.children[0]
+                                        args = argsnode.leaf
+                                        #numargs = int(argsnode[0])
+                                        #
+                                        #for i in range(numargs):
+                                        #    args.append(float(argsnode[i+1]))
+                                    except:
+                                        raise Exception('InstrProduction: node "comp" -> "draw" -> "args" must be only child')
+                                    
+                                    commandname = dc.leaf
+                                    draw = drawclass_factory(commandname, args)
+                                    comp.draw_commands.append(draw)
+                        
+                        self.instrument_tree.components.append(comp)
+            
+            # handle rays
+            if dc.type == 'rays':
+                for rc in dc.children:
+                    
+                    if rc.type == '':
+                        pass
+            
+            
+            # handle comments
+            if dc.type == 'comments':
+                for cmc in dc.children:
+                    
+                    if cmc.type == '':
+                        pass
+
 class TraceParser:
     '''
     Parser for --trace output enabling mcdisplay instrument drawing minilanguage
@@ -66,6 +156,9 @@ class TraceParser:
     In addition to the default INITIAL state in the lexer, the 'initialize', 'save' and 'finally' states are
     intended to parse the corresponding stdout as pure lines of comments.
     This way we can avoid defining a "catchall" token in INITIAL.
+    
+    The grammar rules only partially handles instrument tree construction, and even the "action code"
+    does not enterprit every detail.
     '''
     parsetree = None
     def __init__(self, data=None):
@@ -206,7 +299,10 @@ class TraceParser:
     def p_document(self, p):
         'document : instr_open comp_defs comments draw_lines instr_close comments ray_statements comments'
         print 'mcdisplay document parsed'
-        self.parsetree = Node(type='document', children=[self.instr, self.comps, self.rays, Node(type='comments', leaf=self.comments)])
+        # quirky: reverse ordering of components
+        self.comps.children = self.comps.children[::-1]
+        # assemble parse tree
+        self.parsetree = Node(type='traceparsetree', children=[self.instr, self.comps, self.rays, Node(type='comments', leaf=self.comments)])
     
     instr = None
     def p_instr_open(self, p):
@@ -276,6 +372,10 @@ class TraceParser:
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE arg SQUOTE COMMA args RB NL
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE SQUOTE RB NL
                         | MCDISPLAY COLON DRAWCALL LB RB NL'''
+        # special case: remove first argument of args
+        if p[3] == 'multiline':
+            self.args.leaf = self.args.leaf[1:]
+        
         self.commands.children.append(Node(type='draw', children=[self.args], leaf=p[3]))
         # reset args after having parsed them all, which is now
         self.args = Node(type='args', leaf=[])
