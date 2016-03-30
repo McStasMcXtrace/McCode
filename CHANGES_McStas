@@ -55,7 +55,8 @@ Changes in McStas v.2.3, April 5th, 2016
  General:
  - As of McStas 2.3, we support a new binary event file format: "MCPL" (Monte Carlo Particle List), developed
    by Thomas Kittelmann, ESS. The format aims to allow easier interchange of particle event data between monte
-   carlo codes, and read/write functionality has been implemented for MCNP, Geant4 and McStas.
+   carlo codes, and read/write functionality has been implemented for MCNP, Geant4 and McStas. Please be aware
+   that this first version of MCPL for McStas use does NOT support the use of MPI.
  - Interoperability with Mantid has been improved, as OFF-based detectors can be used to define detector geometries
    in Mantid-oriented simulation runs. See https://github.com/McStasMcXtrace/McCode/wiki/McStas-and-Mantid for
    more documentation on the use.
