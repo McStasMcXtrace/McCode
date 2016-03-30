@@ -367,11 +367,18 @@ simple_cpack() {
                 CMD="setarch x86_64";
                 ;;
         esac
-
-        echo ""
-	echo "mkdist: simple_cpack: cd ${DEST} && ${CMD} cpack -G ${GEN}"
-        cd "${DEST}" &&
-            ${CMD} cpack -G "${GEN}";
+	
+	if [ "${GEN}" = "NONE" ]; then
+	  echo ""
+	  echo "mkdist: simple_cpack: cd ${DEST} && ${CMD} make "
+          cd "${DEST}" &&
+              ${CMD} make ;
+        else
+          echo ""
+	  echo "mkdist: simple_cpack: cd ${DEST} && ${CMD} cpack -G ${GEN}"
+          cd "${DEST}" &&
+              ${CMD} cpack -G "${GEN}";
+        fi
     )
 }
 
@@ -444,6 +451,13 @@ sane_toolchain() {
 
 make_bin() {
     simple_cpack_file TGZ "${NAME}" ".tar.gz";
+}
+
+make_NONE() {
+    # Don't package anything and don't remove the work dir
+    CLEANUP="n"
+    CHAIN="noarch"
+    simple_cpack_file NONE "${NAME}" "-not-packaged";
 }
 
 make_deb() {

@@ -66,6 +66,9 @@ ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcxtrace-comps-NSIS-${VER}-mingw32.exe /
 # Are backgrounded immediately, hence a sleep before next cmds
 ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcstas-tools-perl-NSIS-${VER}-mingw32.exe /S
 ssh ${WINUSER}@${WINHOST} .\\Downloads\\mcxtrace-tools-perl-NSIS-${VER}-mingw32.exe /S
+# Compilation of the various extrac c-libs on windows
+ssh ${WINUSER}@${WINHOST} c:\\mcstas-${VER}\\lib\\libs\\libnxs\\compile.bat
+ssh ${WINUSER}@${WINHOST} c:\\mcstas-${VER}\\lib\\libs\\mcpl\\compile.bat
 
 echo Clean, build, install Mac
 # Build the OSX packages at the Mac host

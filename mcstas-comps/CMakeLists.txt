@@ -28,12 +28,9 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}")
 set(CPACK_NSIS_PACKAGE_NAME "${MCCODE_STRING} Components")
 set(CPACK_NSIS_DISPLAY_NAME "${MCCODE_STRING} Components")
 
-
 include(CPack)
 
-if(WINDOWS)
-  add_library(nxs "STATIC" libs/libnxs/nxs.c libs/libnxs/sgclib.c libs/libnxs/sgfind.c libs/libnxs/sghkl.c libs/libnxs/sgio.c libs/libnxs/sgsi.c)
-else()
+if (NOT WINDOWS)
   add_library(nxs "STATIC" libs/libnxs/nxs.c libs/libnxs/sgclib.c libs/libnxs/sgfind.c libs/libnxs/sghkl.c libs/libnxs/sgio.c libs/libnxs/sgsi.c)
   add_library(mcpl "STATIC" libs/mcpl/mcpl.c)
   target_compile_options(mcpl PUBLIC "-std=c99")
@@ -44,7 +41,8 @@ foreach(name contrib data examples misc monitors obsolete optics samples share s
   installLib("${PROJECT_SOURCE_DIR}/${name}")
 endforeach()
 
-
-install(TARGETS nxs DESTINATION "${lib}/libs/libnxs/")
-install(TARGETS mcpl DESTINATION "${MCCODE_LIB}/libs/mcpl/")
+if (NOT WINDOWS)
+  install(TARGETS nxs DESTINATION "${MCCODE_LIB}/libs/libnxs/")
+  install(TARGETS mcpl DESTINATION "${MCCODE_LIB}/libs/mcpl/")
+endif()
 
