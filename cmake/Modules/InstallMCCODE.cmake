@@ -283,6 +283,7 @@ macro(installMCCODE)
 	 work/lib/MCPL/mcpl.c
   )
   target_compile_options(mcpltool PUBLIC "-std=c99")
+  target_link_libraries(mcpltool m)
 
   ## Add install targets
   include(MCUtil)
