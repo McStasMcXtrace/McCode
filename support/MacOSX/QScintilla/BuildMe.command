@@ -51,6 +51,7 @@ echo Starting build of the c++ code
 echo NOTE: You may be prompted for your password at install time!!
 cd Qt4Qt5
 qmake -spec macx-g++ qscintilla.pro
+sed -ibak 's/-mmacosx-version-min=10.5/-mmacosx-version-min=10.9/g' Makefile
 make
 $SUDO make install
 echo Done building c++ code
@@ -64,6 +65,7 @@ $PYTHON configure.py
 # Ensure we are building using the system-given gcc and g++
 sed -ibak 's/=\ gcc/=\ \/usr\/bin\/gcc/' Makefile
 sed -ibak 's/=\ g++/=\ \/usr\/bin\/g++/' Makefile
+sed -ibak 's/-mmacosx-version-min=10.5/-mmacosx-version-min=10.9/g' Makefile
 make
 $SUDO make install
 echo DONE building and installing QScintilla!
@@ -71,6 +73,6 @@ echo
 CONDA_LIB=`conda info |grep "default environment" | cut -f2 -d: | sed s+\ ++g`
 CONDA_QTLIBS="$CONDA_LIB/lib/libQt*"
 echo A final required step is linking $CONDA_LIB/lib/libQt\* to /usr/lib - please provide your password if needed:
-cd /usr/lib
+cd /usr/local/lib
 sudo ln -sf $CONDA_QTLIBS .
 echo ALL done
