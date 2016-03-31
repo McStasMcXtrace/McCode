@@ -24,7 +24,7 @@
 * %End
 *******************************************************************************/
 DEFINE INSTRUMENT Test_MCPL_input(dummy=0)
-DEPENDENCY "-DMCPLPATH=./voutput.mcpl"
+DEPENDENCY "-DMCPLPATH=@MCCODE_LIB@/MCPL/voutput.mcpl"
 
 INITIALIZE
 %{
