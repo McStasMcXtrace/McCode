@@ -29,14 +29,15 @@
 * INPUT PARAMETERS
 *
 * filename: [str] Name of neutron mcpl file to read.
-* repeatcount: [ ] NUmber of times to read the input file. 
+* repeatcount: [1] NUmber of times to read the input file.
+* verbose:  [ ]   Print debugging information for first 10 particles read. 
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_input
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string filename=0, int repeatcount=1, polarisationuse=1)
+SETTING PARAMETERS (string filename=0, int repeatcount=1, polarisationuse=1,verbose=1)
 OUTPUT PARAMETERS (inputfile,nparticles,read_neutrons)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
@@ -67,13 +68,26 @@ INITIALIZE
 
 #if defined (USE_MPI)
     mcset_ncount(mpi_node_count*nparticles);
-    MPI_MASTER(fprintf(stdout, "\n\nWARNING: You are using MCPL_input with MPI, hence your ncount is now redefined to:\n   %ld events at each of the %i MPI nodes = %ld events\n\n",nparticles,mpi_node_count,mpi_node_count*nparticles); );
+    MPI_MASTER(fprintf(stdout, "\n\n Warning: You are using MCPL_input with MPI, hence your ncount is now redefined to:\n   %ld events at each of the %i MPI nodes = %ld events\n\n",nparticles,mpi_node_count,mpi_node_count*nparticles); );
 #endif
 
     printf("MCPL file (%s) produced with %s.\n",filename,mcpl_hdr_srcname(inputfile));
     printf("MCPL file (%s) contains %ld particles.\n",filename,nparticles); 
 
     read_neutrons=0;
+    
+ #if defined (USE_MPI)   
+    MPI_MASTER(
+#endif
+
+      if (verbose==1) {
+        printf("MCPL_input verbose mode - outputting data on the 10 first read neutrons in MCPL units:\n");
+      }
+
+#if defined (USE_MPI) 
+    );
+#endif
+
 
 %}
 
@@ -88,9 +102,25 @@ TRACE
     }
     read_neutrons++;
 
-    x=particle->position[0];
-    y=particle->position[1];
-    z=particle->position[2];
+#if defined (USE_MPI)   
+  MPI_MASTER(
+#endif
+
+    if (verbose==1 && read_neutrons<11) {
+      printf("id=%ld\tpdg=2112\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
+	     read_neutrons, particle->ekin, particle->position[0], particle->position[1], particle->position[2],
+	     particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
+	     particle->polarisation[0], particle->polarisation[1], particle->polarisation[2]);
+    }
+
+#if defined (USE_MPI)   
+	    );
+#endif    
+
+    /*positions are in cm*/
+    x=particle->position[0]/100;
+    y=particle->position[1]/100;
+    z=particle->position[2]/100;
 
     if(polarisationuse){
         sx=particle->polarisation[0];
@@ -98,7 +128,7 @@ TRACE
         sz=particle->polarisation[2];
     }
 
-    nrm = particle->ekin *1e-9*SE2V;
+    nrm = particle->ekin *1e9/VS2E;
     vx=particle->direction[0]*nrm;
     vy=particle->direction[1]*nrm;
     vz=particle->direction[2]*nrm;
