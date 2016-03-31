@@ -362,7 +362,7 @@ macro(installMCCODE)
     )
     install (
       PROGRAMS "${PROJECT_BINARY_DIR}/mcpltool${DOT_EXE_SUFFIX}"
-      DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+      DESTINATION ${bin}
     )
 
     install(PROGRAMS
