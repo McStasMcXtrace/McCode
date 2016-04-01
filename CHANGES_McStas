@@ -76,7 +76,7 @@ Changes in McStas v.2.3, April 5th, 2016
    from within McStas. See also the test instrument templateSasView.instr
  - New component Diaphragm - an alias of the Slit comoponent
  - New components MCPL_input and MCPL_output by Erik Knudsen. Used to read and write MCPL binary event files. See
-   corresponding test instruments below.
+   corresponding test instruments below. 
  - New component Refractor.comp by Emmanuel Farhi and Bob Cubitt, ILL. Implements a single bulk material shape 
    that can be used as a prism or lens.
  - PerfectCrystal.comp by Markus Appel, ILL / FAU Erlangen-Nuernberg. Perfect crystal component, primarily for 
@@ -84,7 +84,9 @@ Changes in McStas v.2.3, April 5th, 2016
    Ewald or Gaussian profile. Doppler movement of the monochromator is supported.
  - MultiDiskChopper.comp by Markus Appel, ILL / FAU Erlangen-Nuernberg. Models a disk chopper with a freely 
    configurable slit pattern. For simple applications, use the DiskChopper component instead.
- - Bugfixes to numerous components...
+ - Updated version of Sample_nxs from Mirko Boin (HZB), including more nxs material definitions.
+ - Bugfix to ESS_moderator from Jan Saroun (RESTRAX/Simres): missing focusing/direction cosine inserted.
+ - Bugfixes to numerous other components...
  
  Instruments:
  - New test instrument templateSasView.instr, documenting use of SASview_model.comp
@@ -101,7 +103,12 @@ Changes in McStas v.2.3, April 5th, 2016
 
  
  Datafiles:
- - cif2hkl
+ - cif2hkl service: At the ILL, Emmanuel Farhi has set up a nice web-service called cif2hkl, which allows to generate 
+   Laz/Lau structure data files from CIF files. See http://barns.ill.fr/cif2hkl.html
+ - New Sqw input data for H2O, D2O, He4, D2 by Emmanuel Farhi
+ - UO2.laz powder definition included by Emmanuel Farhi
+ - Further .nxs material definitions for Sample_nxs included
+ - Furhter moderator defintion files for SNS made available
 
  Tools:
  - McStas 2.3 is the second release to include a version of our mcgui-py tool, based on Python, 

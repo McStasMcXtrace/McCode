@@ -25,6 +25,9 @@ function checklinks {
         # McCode itself
     checklinkrm /usr/bin/@FLAVOR@
     checklinkrm /usr/local/bin/@FLAVOR@
+        # MCPL tool
+    checklinkrm /usr/bin/mcpltool
+    checklinkrm /usr/local/bin/mcpltool  
         # mcrun variants
     checklinkrm /usr/bin/@MCCODE_PREFIX@run
     checklinkrm /usr/bin/@MCCODE_PREFIX@run-py

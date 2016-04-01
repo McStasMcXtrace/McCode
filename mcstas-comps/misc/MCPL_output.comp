@@ -18,7 +18,14 @@
 * binary, virtual-source neutron file.
 *
 * %D
-* long description
+* Detector-like component that writes neutron state parameters into an mcpl-format 
+* binary, virtual-source neutron file.
+*
+* MCPL is short for Monte Carlo Particle List, and is a new format for sharing events
+* between e.g. MCNP(X), Geant4 and McStas.
+*
+* When used with MPI, the component will output #MPI nodes individual MCPL files that
+* can be merged using the mcpltool.
 * %BUGS
 *
 * %P
@@ -28,12 +35,13 @@
 *                 output [string]. If not given, a unique name will be used.
 * bufsize:  [1]   Size of neutron output buffer
 *                 default is 0, i.e. save all - recommended.
+* verbose:  [ ]   Print debugging information for first 10 particles stored.
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_output
-DEFINITION PARAMETERS (polarisationuse=1, doubleprec=1, dump_file=0)
+DEFINITION PARAMETERS (polarisationuse=1, doubleprec=1, dump_file=0, verbose=0)
 SETTING PARAMETERS (string filename=0)
 OUTPUT PARAMETERS (outputfile)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
@@ -50,6 +58,12 @@ DECLARE
 
 INITIALIZE
 %{
+#if defined (USE_MPI)
+  /* In case of MPI, simply redefine the filename used by each node */
+  MPI_MASTER(fprintf(stdout, "\n\nWARNING: You are using MCPL_output with MPI, hence your will get %i filenames %s_node_#i as output.\n\n",mpi_node_count,filename); );
+  sprintf(filename,"%s.node_%i",filename,mpi_node_rank);
+#endif
+
     char line[256];
     outputfile = mcpl_create_outfile(filename);
     snprintf(line,255,"%s %s %s",MCCODE_NAME,MCCODE_VERSION,mcinstrument_name);
@@ -65,15 +79,28 @@ INITIALIZE
         mcpl_enable_doubleprec(outputfile);
     }
 
+#if defined (USE_MPI)   
+  MPI_MASTER(
+#endif
+
+    if (verbose==1) {
+      printf("MCPL_output verbose mode - outputting data on the 10 first stored neutrons in MCPL units:\n");
+    }
+
+#if defined (USE_MPI)   
+	    );
+#endif
+
 %}
 
 TRACE
 %{
     double nrm;
     mcpl_particle_t *particle = (mcpl_particle_t *) calloc(sizeof(mcpl_particle_t),1);
-    particle->position[0]=x;
-    particle->position[1]=y;
-    particle->position[2]=z;
+    /*positions are in cm*/
+    particle->position[0]=x*100;
+    particle->position[1]=y*100;
+    particle->position[2]=z*100;
 
     if(polarisationuse){
         particle->polarisation[0]=sx;
@@ -83,7 +110,7 @@ TRACE
 
     nrm =sqrt(vx*vx + vy*vy + vz*vz);
     /*ekin is in MeV:*/
-    particle->ekin = 1e6*VS2E*nrm;
+    particle->ekin = VS2E*nrm*nrm/1e9; 
     particle->direction[0] = vx/nrm;
     particle->direction[1] = vy/nrm;
     particle->direction[2] = vz/nrm;
@@ -91,6 +118,22 @@ TRACE
     particle->time = t*1e3;
     /*weight in unspecified units:*/
     particle->weight = p;
+
+#if defined (USE_MPI)   
+  MPI_MASTER(
+#endif
+
+    if (verbose==1 && mcrun_num<10) {
+      printf("id=%ld\tpdg=2112\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
+	     mcrun_num, particle->ekin, particle->position[0], particle->position[1], particle->position[2],
+	     particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
+	     particle->polarisation[0], particle->polarisation[1], particle->polarisation[2]);
+    }
+
+#if defined (USE_MPI)   
+	    );
+#endif
+
 
     mcpl_add_particle(outputfile,particle);
     

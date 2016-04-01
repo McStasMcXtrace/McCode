@@ -28,7 +28,7 @@ find tools/Legacy-Perl-win -type f -exec todos \{\} \;
 ./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mingw32 "" -- nsis
 ./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mingw32 "" -- nsis
-./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mingw32 "o" -- nsis
+./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mingw32 "" -- nsis
 
 if [ "x$2" != "x" ]; then
     # Build the meta-packages also

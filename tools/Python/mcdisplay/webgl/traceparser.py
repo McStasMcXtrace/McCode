@@ -1,16 +1,17 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 '''
-Test script for PLY-based translation of mcdisplay --trace output mini language
+Implementation of classes involved in the PLY-based translation of the mcdisplay "--trace output" 
+mini language.
 
-Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23
+Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
-import logging
-import argparse
 from ply import lex, yacc
+from instrrep import InstrumentConcrete, Component, Vector3d, NeutronStory, NeutronState, Matrix3, Matrix3Identity
+from drawcalls import drawclass_factory
 
-class Node:
-    ''' Node objects are used to construct the AST-ish structure (abstract syntax tree) '''
+class Node(object):
+    ''' 
+    Node objects are used to construct the trace parse tree. 
+    '''
     def __init__(self, type, children=None, leaf=None):
         self.type = type
         if children:
@@ -21,9 +22,15 @@ class Node:
     def __str__(self):
         return 'type: %s, leaf: %s, numchildren: %s' % (self.type, str(self.leaf), str(len(self.children)))
 
-class NodeTreePrint:
-    ''' Node tree assumptions: children is a list of Node's, leaf is for data'''
-    def __init__(self, rootnode, printrays=True):
+class NodeTreePrint(object):
+    '''
+    Functional-ish programming implementation of node tree operation: iteratively print nodes 
+    in human readable form.
+    
+    Node tree assumptions: children is a list of Node's, leaf is for data
+    Does not print any rays by default, enable by using printrays=True during construction.
+    '''
+    def __init__(self, rootnode, printrays=False):
         self.level = 0
         self.recurse(rootnode, printrays, self.printfunc, self.inclevel, self.declevel, self.getlevel)
     
@@ -59,6 +66,157 @@ class NodeTreePrint:
                 NodeTreePrint.recurse(c, printrays, printfunc, inclevel, declevel, getlevel)
         declevel()
 
+class InstrProduction:
+    '''
+    Completes the instrument and ray reconstruction from the "syntax tree" produced by TraceParser,
+    outputting a wholly interpreted instrument and ray model from the mcdisplay trace output.
+    
+    It is very specific, because the instrument tree structure is very specific and non-recursive.
+    '''
+    instrument_tree = None
+    def __init__(self, parsetreeroot):
+        self.root = parsetreeroot
+        if (type(self.root) is not Node) or (self.root.type != 'traceparsetree'):
+            raise Exception('InstrProduction: parsetreeroot must be a Node of type "traceparsetree"')
+    
+    def build(self):
+        ''' builds the instrument representation class based on the parse tree constructor arg '''
+        
+        # create instrument object
+        self.instrument_tree = InstrumentConcrete(name='', params=[], params_defaults=[])
+        
+        # iterate through parse tree
+        for dc in self.root.children:
+            # handle instrument branch
+            if dc.type == 'instrument':
+                for ic in dc.children:    
+                    if ic.type == 'instr_name':
+                        self.instrument_tree.name = ic.leaf
+                    if ic.type == 'abspath':
+                        self.instrument_tree.abspath = ic.leaf
+            
+            # handle component branch
+            if dc.type == 'comps':
+                for csc in dc.children:
+                    
+                    if csc.type == 'comp':
+                        name = ''
+                        pos = None
+                        rot = None
+                        
+                        # get name, pos and rot
+                        for cc in csc.children:
+                            if cc.type == 'comp_name':
+                                name = cc.leaf
+                            if cc.type == '12dec':
+                                pos = Vector3d(x=float(cc.leaf[0]), y=float(cc.leaf[1]), z=float(cc.leaf[2]))
+                                rot = Matrix3(
+                                        a11=float(cc.leaf[3]),
+                                        a12=float(cc.leaf[4]),
+                                        a13=float(cc.leaf[5]),
+                                        a21=float(cc.leaf[6]),
+                                        a22=float(cc.leaf[7]),
+                                        a23=float(cc.leaf[8]),
+                                        a31=float(cc.leaf[9]),
+                                        a32=float(cc.leaf[10]),
+                                        a33=float(cc.leaf[11])
+                                        )
+                        comp = Component(name=name, pos=pos, rot=rot)
+                        
+                        # get draw commands (please print a parse tree with NodeTreePrint to understand this)
+                        for cc in csc.children:
+                            if cc.type == 'draw_commands':
+                                for dc in cc.children:
+                                    # get args
+                                    try:
+                                        if len(dc.children) != 1:
+                                            raise Exception()
+                                        
+                                        argsnode = dc.children[0]
+                                        args = argsnode.leaf
+                                    except:
+                                        raise Exception('InstrProduction: node "comp" -> "draw" -> "args" must be only child')
+                                    
+                                    commandname = dc.leaf
+                                    draw = drawclass_factory(commandname, args)
+                                    comp.draw_commands.append(draw)
+                        
+                        self.instrument_tree.components.append(comp)
+            
+            # handle rays
+            if dc.type == 'rays':
+                for rayc in dc.children:
+                    
+                    # a netron ray's path through the instrument
+                    story = NeutronStory()
+                    
+                    # scope 
+                    state = None
+                    pos = None
+                    rot = None
+                    
+                    for rayevent in rayc.children:
+                        if rayevent.type == 'ENTER':
+                            pos = Vector3d(0, 0, 0)
+                            rot = Matrix3Identity()
+                            state = NeutronState(rayevent.leaf)
+                            
+                        if rayevent.type == 'COMP':
+                            comp_name = rayevent.children[0].leaf
+                            pos, rot = self.getcomp_posrot(comp_name)
+                            
+                            vlst = rayevent.leaf[0:3]
+                            v = Vector3d(vlst[0], vlst[1], vlst[2])
+                            
+                            vg = self.transform_local(v, pos, rot)
+                            state = NeutronState(vg.tolst() + rayevent.leaf[3:])
+                            
+                        if rayevent.type == 'SCATTER':
+                            vlst = rayevent.leaf[0:3]
+                            v = Vector3d(vlst[0], vlst[1], vlst[2])
+                            
+                            vg = self.transform_local(v, pos, rot)
+                            state = NeutronState(vg.tolst() + rayevent.leaf[3:])
+                        
+                        if rayevent.type == 'ABSORB':
+                            pass
+                        
+                        if rayevent.type == 'LEAVE':
+                            vlst = rayevent.leaf[0:3]
+                            v = Vector3d(vlst[0], vlst[1], vlst[2])
+                            
+                            vg = self.transform_local(v, pos, rot)
+                            state = NeutronState(vg.tolst() + rayevent.leaf[3:])
+                        
+                        story.events.append(state)
+                        
+                    self.instrument_tree.rays.append(story)
+                    
+            # handle comments
+            # TODO: implement
+            if dc.type == 'comments':
+                for cmc in dc.children:
+                    
+                    if cmc.type == '':
+                        pass
+    
+    compdict = None
+    def getcomp_posrot(self, comp_name):
+        ''' returns a 2-tuple containing component pos and rot vectors, given component name '''
+        if not self.compdict:
+            self.compdict = {}
+            for comp in self.instrument_tree.components:
+                self.compdict[comp.name] = (comp.pos, comp.rot)
+                
+        pos, rot = self.compdict[comp_name]
+        return pos, rot
+    
+    def transform_local(self, v, pos, rot):
+        ''' transforms a neutron from local to global coordinates '''
+        rotated = rot.mult(v)
+        return rotated.add(pos)
+
+
 class TraceParser:
     '''
     Parser for --trace output enabling mcdisplay instrument drawing minilanguage
@@ -66,7 +224,16 @@ class TraceParser:
     In addition to the default INITIAL state in the lexer, the 'initialize', 'save' and 'finally' states are
     intended to parse the corresponding stdout as pure lines of comments.
     This way we can avoid defining a "catchall" token in INITIAL.
+    
+    The grammar rules only partially handles instrument tree construction, and even the "action code"
+    does not enterprit every detail - a lot of stuff regarding coordinates in hanlded in post-production.
     '''
+    parsetree = None
+    def __init__(self, data=None):
+        if data:
+            self.build_lexer()
+            self.build_parser()
+            self.parse(data)
     
     # these tokens match ID, but are of these types (handled in t_ID)
     reserved = {
@@ -173,7 +340,7 @@ class TraceParser:
         r'\n'
         self.lexer.lineno += 1
         return t
-
+    
     def t_ABSPATH(self, t):
         r'/[/\w\.]+'
         return t
@@ -200,7 +367,10 @@ class TraceParser:
     def p_document(self, p):
         'document : instr_open comp_defs comments draw_lines instr_close comments ray_statements comments'
         print 'mcdisplay document parsed'
-        self.parsetree = Node(type='document', children=[self.instr, self.comps, self.rays, Node(type='comments', leaf=self.comments)])
+        # quirky: reverse ordering of components
+        self.comps.children = self.comps.children[::-1]
+        # assemble parse tree
+        self.parsetree = Node(type='traceparsetree', children=[self.instr, self.comps, self.rays, Node(type='comments', leaf=self.comments)])
     
     instr = None
     def p_instr_open(self, p):
@@ -270,6 +440,10 @@ class TraceParser:
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE arg SQUOTE COMMA args RB NL
                         | MCDISPLAY COLON DRAWCALL LB SQUOTE SQUOTE RB NL
                         | MCDISPLAY COLON DRAWCALL LB RB NL'''
+        # special case: remove first argument of args
+        if p[3] == 'multiline':
+            self.args.leaf = self.args.leaf[1:]
+        
         self.commands.children.append(Node(type='draw', children=[self.args], leaf=p[3]))
         # reset args after having parsed them all, which is now
         self.args = Node(type='args', leaf=[])
@@ -384,24 +558,3 @@ class TraceParser:
         ''' attempts to parse data '''
         self.parser.parse(data, lexer=self.lexer)
 
-def main(args):
-    logging.basicConfig(level=logging.INFO)
-    
-    data = open(args.data, 'r').read()
-    
-    parser = TraceParser()
-    parser.build_lexer()
-    #parser.test_lexer(data)
-
-    parser.build_parser()
-    parser.parse(data)
-    
-    NodeTreePrint(parser.parsetree, printrays=False)
-    
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('data', help='--trace data file.')
-
-    args = parser.parse_args()
-    main(args)

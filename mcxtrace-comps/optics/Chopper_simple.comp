@@ -64,7 +64,7 @@ TRACE
   double tjitter=0;
   PROP_Z0;
   if(tjit) tjitter = (rand01()-0.5)*tau*tjit;
-  if ( fabs(x)<xwidth/2.0 || fabs(y)<yheight/2.0){
+  if ( fabs(x)<xwidth/2.0 && fabs(y)<yheight/2.0){
     if (isfirst){
       if (t_rise==0){
         /*this is the first time defining element*/
