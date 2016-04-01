@@ -110,7 +110,7 @@ TRACE
 
     nrm =sqrt(vx*vx + vy*vy + vz*vz);
     /*ekin is in MeV:*/
-    particle->ekin = VS2E*nrm/1e9; 
+    particle->ekin = VS2E*nrm*nrm/1e9; 
     particle->direction[0] = vx/nrm;
     particle->direction[1] = vy/nrm;
     particle->direction[2] = vz/nrm;

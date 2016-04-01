@@ -129,6 +129,7 @@ TRACE
     }
 
     nrm = particle->ekin *1e9/VS2E;
+    nrm = sqrt(nrm);
     vx=particle->direction[0]*nrm;
     vy=particle->direction[1]*nrm;
     vz=particle->direction[2]*nrm;
