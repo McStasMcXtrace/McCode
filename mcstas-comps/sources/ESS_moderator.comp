@@ -89,7 +89,9 @@ SETTING PARAMETERS (isleft=0.9,
 		    int n_pulses=1, acc_power=5, beamport_angle=-1, string sourcedef="2015", xwidth_c=0.1, xwidth_t=0.18, extraction_opening=120)
   OUTPUT PARAMETERS (l_range, w_mult, w_geom, w_geom_c, w_geom_t, w_stat,
   cold,wasleft,cosine,tx,ty,tz,cx,cy,cz,cyl_radius,t1x,t1y,t1z,t2x,t2y,t2z,
-  modextras,cold_bril,thermal_bril,tfocus_width,  tfocus_time,  dt,r_empty,lambda,xprime,yprime,zprime)
+  modextras,cold_bril,thermal_bril,tfocus_width,  tfocus_time,  dt,r_empty,lambda,
+  xprime,yprime,zprime,sgnport, abs_beamport_angle, cos_beamport_angle, edge_thermal, 
+  cos_thermal, cos_cold, sin_beamport_angle)
 SHARE
 %{
   %include "ess_source-lib"
@@ -297,7 +299,7 @@ INITIALIZE
 TRACE
 %{
   p=1;
-  double v,E,k,r,xf,yf,dx,dy,dz,w_focus,tail_flag,cor,dt;
+  double v,E,k,r,xf,yf,dx,dy,dz,w_focus,tail_flag,cor;
 
   /* Bispectral source - choice of spectrum and initial position */
   cold = ( rand01() < cold_frac );
