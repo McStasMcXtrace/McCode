@@ -5,7 +5,7 @@ Test script for PLY-based translation of mcdisplay "--trace output" mini languag
 '''
 import logging
 import argparse
-from traceparser import TraceParser, NodeTreePrint
+from traceparser import TraceParser, NodeTreePrint, InstrProduction
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
@@ -15,6 +15,9 @@ def main(args):
     parser = TraceParser(data)
     NodeTreePrint(parser.parsetree) 
     
+    instrbuilder = InstrProduction(parser.parsetree)
+    instrbuilder.build()
+        
     # step-wise test
     if False: 
         parser = TraceParser()
