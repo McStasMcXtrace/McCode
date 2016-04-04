@@ -20,14 +20,14 @@ WEBUSER=mcstas
 
 echo Clean out selftest dirs on the hosts
 # Build the Linux (deb) and Windows packages at the Linux host
-# Step 0 - cleanup
+# Step 0 - cleanup at remote hosts
 ssh ${LINUSER}@${LINHOST} rm -rf selftest_\*
-ssh ${OSXUSER}@${OSXHOST} rm -rf selftest_\*
 ssh ${WEBUSER}@${WEBHOST} rm -rf /srv/web/mccode.org/nightly/Current/\*
 ssh ${WINUSER}@${WINHOST} del \\users\\Public\\Desktop\\mc*.lnk
 ssh ${WINUSER}@${WINHOST} del \\users\\Public\\Desktop\\mx*.lnk
 ssh ${WINUSER}@${WINHOST} for /d %a in \(selftest*\) do rd /s /q %a
-
+# ... then locally...
+cd && rm -rf selftest_\*
 
 wait
 echo Done cleaning...
