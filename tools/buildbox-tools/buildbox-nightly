@@ -73,20 +73,22 @@ ssh ${WINUSER}@${WINHOST} c:\\mcstas-${VER}\\lib\\libs\\mcpl\\compile.bat
 echo Clean, build, install Mac
 # Build the OSX packages at the Mac host
 # Step 0 - cleanup
-cd $HOME/${OSXPATH} \&\& rm -rf dist 
+cd $HOME/${OSXPATH}
+rm -rf dist 
 # Step 1 - McStas
-git pull \&\& ./build_macos_Yosemite_mcstas ${VER} 
+git pull
+./build_macos_Yosemite_mcstas ${VER} 
 # Step 2 - McXtrace
 ./build_macos_Yosemite_mcxtrace ${VER} 
 cd dist
 # Step 3 Install McStas & McXtrace
-sudo installer -pkg mcstas-OSXpkg-${VER}\*.pkg -target /
-sudo installer -pkg mcstas-comps-OSXpkg-${VER}\*.pkg -target /
-sudo installer -pkg mcstas-tools-perl-OSXpkg-${VER}\*.pkg -target /
-sudo installer -pkg mcxtrace-OSXpkg-${VER}\*.pkg -target /
-sudo installer -pkg mcxtrace-comps-OSXpkg-${VER}\*.pkg -target /
-sudo installer -pkg mcxtrace-tools-perl-OSXpkg-${VER}\*.pkg -target /
-tar cfz mccode-OSX-${VER}.tgz \*.pkg
+sudo installer -pkg mcstas-OSXpkg-${VER}*.pkg -target /
+sudo installer -pkg mcstas-comps-OSXpkg-${VER}*.pkg -target /
+sudo installer -pkg mcstas-tools-perl-OSXpkg-${VER}*.pkg -target /
+sudo installer -pkg mcxtrace-OSXpkg-${VER}*.pkg -target /
+sudo installer -pkg mcxtrace-comps-OSXpkg-${VER}*.pkg -target /
+sudo installer -pkg mcxtrace-tools-perl-OSXpkg-${VER}*.pkg -target /
+tar cfz mccode-OSX-${VER}.tgz *.pkg
 
 # Go to home dir
 cd
