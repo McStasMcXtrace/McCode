@@ -29,7 +29,6 @@
 * INPUT PARAMETERS
 *
 * filename: [str] Name of neutron mcpl file to read.
-* repeatcount: [1] NUmber of times to read the input file.
 * verbose:  [ ]   Print debugging information for first 10 particles read. 
 *
 * %E
@@ -37,7 +36,7 @@
 
 DEFINE COMPONENT MCPL_input
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string filename=0, int repeatcount=1, polarisationuse=1,verbose=1)
+SETTING PARAMETERS (string filename=0, polarisationuse=1,verbose=1)
 OUTPUT PARAMETERS (inputfile,nparticles,read_neutrons)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
