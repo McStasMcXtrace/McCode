@@ -11,6 +11,8 @@
 *
 * %INSTRUMENT_SITE: SNS
 *
+* Simple instrumentfile for estimating SNS brilliance, moderator is a rescaled ESS short-pulsed Mezei description.
+*
 * %DESCRIPTION
 *
 * Simple instrumentfile for estimating SNS brilliance, moderator is a rescaled ESS short-pulsed Mezei description.
