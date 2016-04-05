@@ -43,7 +43,7 @@
 * dlambda:[AA]  Wavelength half spread of x-rays.
 * gauss:  [1]   Gaussian (1) or Flat (0) energy/wavelength distribution
 * flux: [pht/s] total flux radiated from the source
-* incoherent: [] Source is fully incoherent
+* randomphase: [] If nonzero, the phase of the emotted photon is random, i.e. source is fully incoherent. otherwise the value of phase is used.
 * phase: [] Set phase to something given. 
 * %E
 *******************************************************************************/
@@ -52,7 +52,7 @@ DEFINE COMPONENT Source_flat
 DEFINITION PARAMETERS (string spectrum_file=NULL)
   SETTING PARAMETERS (radius=0, yheight=0, xwidth=0,xmin=0,xmax=0, 
   dist=0, focus_xw=.045, focus_yh=.12, 
-  E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,incoherent=1,phase=0)
+  E0=0, dE=0, lambda0=0, dlambda=0, flux=0,gauss=0,randomphase=1,phase=0)
 OUTPUT PARAMETERS (prms,square)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -197,7 +197,7 @@ TRACE
   kz=k*dist/rf;
 
   /*randomly pick phase or set to something real*/
-  if (incoherent){
+  if (randomphase){
     phi=rand01()*2*M_PI;
   }else{
     phi=phase;
