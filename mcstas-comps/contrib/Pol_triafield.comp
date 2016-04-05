@@ -14,9 +14,9 @@
 * Origin: Helmholtz-Zentrum Berlin
 * Release: McStas 2.0
 *
-* %D
 * Constant magnetic field in a isosceles triangular coil
 *
+* %D
 *
 * Rectangular box with constant B field along y-axis (up) in a isosceles triangle. 
 * There is a guide (or precession) field as well. It is along y in the entire rectangular box.
