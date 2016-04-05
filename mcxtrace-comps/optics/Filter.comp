@@ -97,12 +97,19 @@ INITIALIZE
 %{
   int status=0;
  
-  if(!xwidth || !yheight || !zdepth){
+  prms=calloc(1,sizeof(* prms));
+
+  /*if geometry is specified - try to read the off/ply file and set shape*/
+  prms->shape=CUBE; 
+  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
+    if (off_init(geometry, xwidth, yheight, zdepth, 0, &(prms->offdata))) {
+      prms->shape=ANY; 
+    }
+  } else if(!xwidth || !yheight || !zdepth){
     fprintf(stderr,"%s: Filter has zero effective volume\n",NAME_CURRENT_COMP);
     exit(0);
   }
   
-  prms=calloc(1,sizeof(* prms));
   
   //t_Table T;
   if ( (status=Table_Read(&(prms->table),material_datafile,0))==-1){
@@ -131,13 +138,6 @@ INITIALIZE
     printf("done\n");
   }
   
-  /*if wanted, do the thing with off - file*/
-  prms->shape=CUBE; 
-  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-    if (off_init(geometry, xwidth, yheight, zdepth, 0, &(prms->offdata))) {
-      prms->shape=ANY; 
-    }
-  }
 %}
 
 TRACE
