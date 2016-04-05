@@ -1,17 +1,19 @@
 /*******************************************************************************
 *
-* Instrument: TEST vom Polarisator
+* Instrument: FZJ_BenchmarkSfin2
 *
 * %Identification
 * Written by: Henrich Frielinghaus
 * Date: 2013
 * Origin: FZ Juelich
 *
+* Test instrument for the H Frielinghaus SANS_benchmark2 component
+*
 * %INSTRUMENT_SITE: FZ_Juelich
 * 
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT BenderTest (lbdmin=2.00, lbdmax=8.5, NGbend=0.053,
+DEFINE INSTRUMENT FZJ_BenchmarkSfin2 (lbdmin=2.00, lbdmax=8.5, NGbend=0.053,
                               NGblen=0.03, Clen = 8.0, SampD=0.01,
                               bendL = 5.0, bendR = 385.0, bendM = 7.0, bendiM = 7.0, dfltM = 1.5,
                               vorPl = 0.5, PolLen = 0.492, PolTot = 2.30,                          /* for two cavities */
