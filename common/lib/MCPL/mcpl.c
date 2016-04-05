@@ -7,16 +7,45 @@
 //  particle state information, for interchanging and reshooting events between    //
 //  various Monte Carlo simulation applications.                                   //
 //                                                                                 //
-//  Written by Thomas Kittelmann, 2015.                                            //
+//  Client code including mcpl.h does not need any special build flags and can     //
+//  be compiled with any complient compiler and any current C or C++ standard.     //
+//                                                                                 //
+//  Compilation of mcpl.c on the other hand is currently not supported for C89,    //
+//  although this could be revisited. Thus, compilation of mcpl.c can proceed      //
+//  using any complient C-compiler using -std=c99 or -std=c11 or any complient     //
+//  C++ compiler using any version of the C++ standard, and the resulting code     //
+//  must always be linked with libm (using -lm). Furthermore, the following        //
+//  preprocessor flags can be used when compiling mcpl.c to fine tune the build    //
+//  process and the capabilities of the resulting binary.                          //
+//                                                                                 //
+//  MCPL_HASZLIB        : Define if compiling and linking with zlib, to allow      //
+//                        direct reading of .mcpl.gz files.                        //
+//  MCPL_ZLIB_INCPATH   : Specify alternative value if the zlib header is not to   //
+//                        be included as "zlib.h".                                 //
+//  MCPL_HEADER_INCPATH : Specify alternative value if the MCPL header itself is   //
+//                        not to be included as "mcpl.h".                          //
+//  MCPL_NO_EXT_GZIP    : Define to make sure that mcpl_gzip_file will never       //
+//                        compress via a separate process running a system-        //
+//                        provided gzip executable.                                //
+//  MCPL_NO_CUSTOM_GZIP : Define to make sure that mcpl_gzip_file will never       //
+//                        compress via custom zlib-based code.                     //
+//                                                                                 //
+//  Written by Thomas Kittelmann, 2015-2016.                                       //
 //                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////
 
-// Compiles with C99 and C11 (not C89, mainly due to "//" comments).
+#ifdef MCPL_HEADER_INCPATH
+#  include MCPL_HEADER_INCPATH
+#else
+#  include "mcpl.h"
+#endif
 
-#include "mcpl.h"
-
-#if MCPL_HASZLIB
-#include "zlib.h"
+#ifdef MCPL_HASZLIB
+#  ifdef MCPL_ZLIB_INCPATH
+#    include MCPL_ZLIB_INCPATH
+#  else
+#    include "zlib.h"
+#  endif
 #endif
 
 #include <stdio.h>
@@ -42,7 +71,10 @@
 //    want to keep constant-size particles, we might need a flag on all
 //    particles with internal group-id, and a special read method which can be
 //    used to loop over particles in a group. Challenge: support empty events
-//    (fake particle with negative group id?).
+//    (fake particle with negative group id? - a bit wasteful but could at least
+//    contain info about number of empty events represented). Better might be to add
+//    a single unsigned integer at the start of each event with nparticles, but
+//    would loose fast skip-ahead capability.
 //
 // 2) Support chaining of input files (,;: separated + globable wildcards). This
 //    will likely need a pointer to next and previous files and to keep track of
@@ -62,9 +94,17 @@
 //    on osx. Even better would be a "move operator version".
 //
 // 6) merge(file1,file2) should support file2 being gzipped.
+//
+// 7) shave off a few bytes since the numbers in the packed unit vectors are
+//    bounded, and thus not really using the exponent(?). Signed integers would
+//    give higher precision (or allow to use fewer bits).
+//
+// 8) Consider compilation of mcpl.c with C89 standard as well if needed.
+//
+// 9) Consider writing .mcpl.gz files directly (through a large buffer
+//    presumably).
 
-
-#define MCPL_NPARTICLES_POS 8
+#define MCPLIMP_NPARTICLES_POS 8
 
 int mcpl_platform_is_little_endian() {
   // return 0 for big endian, 1 for little endian.
@@ -152,11 +192,11 @@ typedef struct {
   mcpl_particlesingleprec_t * psp;
 } mcpl_outfileinternal_t;
 
-#define MCPL_OUTFILEDECODE mcpl_outfileinternal_t * f = (mcpl_outfileinternal_t *)of.internal; assert(f)
+#define MCPLIMP_OUTFILEDECODE mcpl_outfileinternal_t * f = (mcpl_outfileinternal_t *)of.internal; assert(f)
 
 void mcpl_recalc_sizeoffset(mcpl_outfile_t of)
 {
-  MCPL_OUTFILEDECODE;
+  MCPLIMP_OUTFILEDECODE;
   unsigned fp = f->opt_singleprec ? sizeof(float) : sizeof(double);
   f->particle_offset = 3*fp;
   f->particle_size = 8*fp+1*sizeof(int32_t);
@@ -204,7 +244,7 @@ mcpl_outfile_t mcpl_create_outfile(const char * filename)
     mcpl_error("mcpl_create_outfile called with empty string.");
   if (n>4096)
     mcpl_error("mcpl_create_outfile called with too long string.");
-  char * lastdot = strrchr(filename, '.');
+  const char * lastdot = strrchr(filename, '.');
   if (lastdot==filename && n==5)
     mcpl_error("mcpl_create_outfile called with string with no basename part (\".mcpl\").");
 
@@ -218,12 +258,12 @@ mcpl_outfile_t mcpl_create_outfile(const char * filename)
   assert(f);
 
   if (!lastdot || strcmp(lastdot, ".mcpl") != 0) {
-    f->filename = malloc(n+6);
+    f->filename = (char*)malloc(n+6);
     f->filename[0] = '\0';
     strcat(f->filename,filename);
     strcat(f->filename,".mcpl");
   } else {
-    f->filename = malloc(n+1);
+    f->filename = (char*)malloc(n+1);
     f->filename[0] = '\0';
     strcat(f->filename,filename);
   }
@@ -252,13 +292,13 @@ mcpl_outfile_t mcpl_create_outfile(const char * filename)
 }
 
 const char * mcpl_outfile_filename(mcpl_outfile_t of) {
-  MCPL_OUTFILEDECODE;
+  MCPLIMP_OUTFILEDECODE;
   return f->filename;
 }
 
 void mcpl_hdr_set_srcname(mcpl_outfile_t of,const char * spn)
 {
-  MCPL_OUTFILEDECODE;
+  MCPLIMP_OUTFILEDECODE;
   if (!f->header_notwritten)
     mcpl_error("mcpl_hdr_set_srcname.");
   mcpl_store_string(&(f->hdr_srcprogname),spn);
@@ -266,7 +306,7 @@ void mcpl_hdr_set_srcname(mcpl_outfile_t of,const char * spn)
 
 void mcpl_hdr_add_comment(mcpl_outfile_t of,const char *comment)
 {
-  MCPL_OUTFILEDECODE;
+  MCPLIMP_OUTFILEDECODE;
   if (!f->header_notwritten)
     mcpl_error("mcpl_hdr_add_comment called too late.");
   size_t oldn = f->ncomments;
@@ -282,7 +322,7 @@ void mcpl_hdr_add_comment(mcpl_outfile_t of,const char *comment)
 void mcpl_hdr_add_data(mcpl_outfile_t of, const char * key,
                        unsigned ldata, const char * data)
 {
-  MCPL_OUTFILEDECODE;
+  MCPLIMP_OUTFILEDECODE;
   if (!f->header_notwritten)
     mcpl_error("mcpl_hdr_add_data called too late.");
   size_t oldn = f->nblobs;
@@ -317,7 +357,7 @@ void mcpl_hdr_add_data(mcpl_outfile_t of, const char * key,
 
 void mcpl_enable_userflags(mcpl_outfile_t of)
 {
-  MCPL_OUTFILEDECODE;
+  MCPLIMP_OUTFILEDECODE;
   if (f->opt_userflags)
     return;
   if (!f->header_notwritten)
@@ -328,7 +368,7 @@ void mcpl_enable_userflags(mcpl_outfile_t of)
 
 void mcpl_enable_polarisation(mcpl_outfile_t of)
 {
-  MCPL_OUTFILEDECODE;
+  MCPLIMP_OUTFILEDECODE;
   if (f->opt_polarisation)
     return;
   if (!f->header_notwritten)
@@ -339,7 +379,7 @@ void mcpl_enable_polarisation(mcpl_outfile_t of)
 
 void mcpl_enable_doubleprec(mcpl_outfile_t of)
 {
-  MCPL_OUTFILEDECODE;
+  MCPLIMP_OUTFILEDECODE;
   if (!f->opt_singleprec)
     return;
   if (!f->header_notwritten)
@@ -354,7 +394,7 @@ void mcpl_enable_doubleprec(mcpl_outfile_t of)
 
 void mcpl_enable_universal_pdgcode(mcpl_outfile_t of, int pdgcode)
 {
-  MCPL_OUTFILEDECODE;
+  MCPLIMP_OUTFILEDECODE;
   if (pdgcode==0)
     mcpl_error("mcpl_enable_universal_pdgcode must be called with non-zero pdgcode.");
   if (f->opt_universalpdgcode) {
@@ -371,7 +411,7 @@ void mcpl_enable_universal_pdgcode(mcpl_outfile_t of, int pdgcode)
 
 void mcpl_write_header(mcpl_outfile_t of)
 {
-  MCPL_OUTFILEDECODE;
+  MCPLIMP_OUTFILEDECODE;
   if (!f->header_notwritten)
     mcpl_error("Logical error!");
 
@@ -392,7 +432,7 @@ void mcpl_write_header(mcpl_outfile_t of)
   //Right after the initial 8 bytes, we put the number of particles (0 for now,
   //but important that position is fixed so we can seek and update it later).:
   long int nparticles_pos = ftell(f->file);
-  if (nparticles_pos!=MCPL_NPARTICLES_POS)
+  if (nparticles_pos!=MCPLIMP_NPARTICLES_POS)
     mcpl_error(errmsg);
   nb = fwrite(&f->nparticles, 1, sizeof(f->nparticles), f->file);
   if (nb!=sizeof(f->nparticles))
@@ -527,7 +567,7 @@ void mcpl_unitvect_unpack(const double* in, double* out) {
 
 void mcpl_add_particle(mcpl_outfile_t of,const mcpl_particle_t* particle)
 {
-  MCPL_OUTFILEDECODE;
+  MCPLIMP_OUTFILEDECODE;
   if (f->header_notwritten)
     mcpl_write_header(of);
   f->nparticles += 1;
@@ -585,7 +625,7 @@ void mcpl_update_nparticles(FILE* f, uint64_t n)
   long int savedpos = ftell(f);
   if (savedpos<0)
     mcpl_error(errmsg);
-  if (fseek( f, MCPL_NPARTICLES_POS, SEEK_SET ))
+  if (fseek( f, MCPLIMP_NPARTICLES_POS, SEEK_SET ))
     mcpl_error(errmsg);
   size_t nb = fwrite(&n, 1, sizeof(n), f);
   if (nb != sizeof(n))
@@ -596,7 +636,7 @@ void mcpl_update_nparticles(FILE* f, uint64_t n)
 
 void mcpl_close_outfile(mcpl_outfile_t of)
 {
-  MCPL_OUTFILEDECODE;
+  MCPLIMP_OUTFILEDECODE;
   if (f->header_notwritten)
     mcpl_write_header(of);
   if (f->nparticles)
@@ -609,20 +649,17 @@ void mcpl_close_outfile(mcpl_outfile_t of)
 
 void mcpl_closeandgzip_outfile(mcpl_outfile_t of)
 {
-  MCPL_OUTFILEDECODE;
+  MCPLIMP_OUTFILEDECODE;
   char * filename = f->filename;
-  f->filename = 0;//prevent free in mcpl_close_file:
+  f->filename = 0;//prevent free in mcpl_close_outfile
   mcpl_close_outfile(of);
-  /* Nasty platform-insufficiency hack ... */
-#ifndef _WIN32
   mcpl_gzip_file(filename);
-#endif
   free(filename);
 }
 
 typedef struct {
   FILE * file;
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
   gzFile filegz;
 #else
   void * filegz;
@@ -649,12 +686,12 @@ typedef struct {
   mcpl_particlesingleprec_t * psp;
 } mcpl_fileinternal_t;
 
-#define MCPL_FILEDECODE mcpl_fileinternal_t * f = (mcpl_fileinternal_t *)ff.internal; assert(f)
+#define MCPLIMP_FILEDECODE mcpl_fileinternal_t * f = (mcpl_fileinternal_t *)ff.internal; assert(f)
 
 void mcpl_read_buffer(mcpl_fileinternal_t* f, unsigned* n, char ** buf, const char * errmsg)
 {
   size_t nb;
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
   if (f->filegz)
     nb = gzread(f->filegz, n, sizeof(*n));
   else
@@ -663,7 +700,7 @@ void mcpl_read_buffer(mcpl_fileinternal_t* f, unsigned* n, char ** buf, const ch
   if (nb!=sizeof(*n))
     mcpl_error(errmsg);
   *buf = (char*)calloc(*n,1);
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
   if (f->filegz)
     nb = gzread(f->filegz, *buf, *n);
   else
@@ -677,7 +714,7 @@ void mcpl_read_string(mcpl_fileinternal_t* f, char ** dest, const char* errmsg)
 {
   size_t nb;
   uint32_t n;
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
   if (f->filegz)
     nb = gzread(f->filegz, &n, sizeof(n));
   else
@@ -686,7 +723,7 @@ void mcpl_read_string(mcpl_fileinternal_t* f, char ** dest, const char* errmsg)
   if (nb!=sizeof(n))
     mcpl_error(errmsg);
   char * s = (char*)calloc(n+1,1);
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
   if (f->filegz)
     nb = gzread(f->filegz, s, n);
   else
@@ -717,9 +754,9 @@ mcpl_file_t mcpl_actual_open_file(const char * filename, int * repair_status)
   //open file (with gzopen if filename ends with .gz):
   f->file = 0;
   f->filegz = 0;
-  char * lastdot = strrchr(filename, '.');
+  const char * lastdot = strrchr(filename, '.');
   if (lastdot && strcmp(lastdot, ".gz") == 0) {
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
     f->filegz = gzopen(filename,"rb");
     if (!f->filegz)
       mcpl_error("Unable to open file!");
@@ -735,7 +772,7 @@ mcpl_file_t mcpl_actual_open_file(const char * filename, int * repair_status)
   //First read and check magic word, format version and endianess.
   unsigned char start[8];// = {'M','C','P','L','0','0','0','L'};
   size_t nb;
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
   if (f->filegz)
     nb = gzread(f->filegz, start, sizeof(start));
   else
@@ -756,7 +793,7 @@ mcpl_file_t mcpl_actual_open_file(const char * filename, int * repair_status)
   const char * errmsg = "Errors encountered while attempting to read header";
 
   uint64_t np;
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
   if (f->filegz)
     nb = gzread(f->filegz, &np, sizeof(np));
   else
@@ -768,7 +805,7 @@ mcpl_file_t mcpl_actual_open_file(const char * filename, int * repair_status)
 
   uint32_t arr[8];
   assert(sizeof(arr)==32);
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
   if (f->filegz)
     nb = gzread(f->filegz, arr, sizeof(arr));
   else
@@ -815,7 +852,7 @@ mcpl_file_t mcpl_actual_open_file(const char * filename, int * repair_status)
 
   //At first event now:
   f->current_particle_idx = 0;
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
   if (f->filegz)
     f->first_particle_pos = gztell(f->filegz);
   else
@@ -834,7 +871,7 @@ mcpl_file_t mcpl_actual_open_file(const char * filename, int * repair_status)
       //which we won't since it might stall operations for a long time. But we
       //can at least try to check whether the file is indeed empty or not, and
       //give an error in the latter case:
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
       char testbuf[4];
       nb = gzread(f->filegz, testbuf, sizeof(testbuf));
       if (nb>0) {
@@ -895,7 +932,7 @@ void mcpl_repair(const char * filename)
   unsigned long nparticles2 = mcpl_hdr_nparticles(f);
   mcpl_close_file(f);
   if (repair_status==0&&nparticles==nparticles2) {
-    printf("Succesfully repaired file with %lu particles.\n",nparticles);
+    printf("MCPL: Succesfully repaired file with %lu particles.\n",nparticles);
   } else {
     mcpl_error("Something went wrong while attempting to repair file.");
   }
@@ -903,7 +940,7 @@ void mcpl_repair(const char * filename)
 
 void mcpl_close_file(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
 
   free(f->hdr_srcprogname);
   for (uint32_t i = 0; i < f->ncomments; ++i)
@@ -918,7 +955,7 @@ void mcpl_close_file(mcpl_file_t ff)
   free(f->bloblengths);
   free(f->particle);
   free(f->psp);
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
   if (f->filegz)
     gzclose(f->filegz);
 #endif
@@ -930,25 +967,25 @@ void mcpl_close_file(mcpl_file_t ff)
 
 unsigned mcpl_hdr_version(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return f->format_version;
 }
 
 unsigned long mcpl_hdr_nparticles(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return f->nparticles;
 }
 
 unsigned mcpl_hdr_ncomments(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return f->ncomments;
 }
 
 const char * mcpl_hdr_comment(mcpl_file_t ff, unsigned i)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   if (i>=f->ncomments)
     mcpl_error("Invalid comment requested (index out of bounds)");
   return f->comments[i];
@@ -956,20 +993,20 @@ const char * mcpl_hdr_comment(mcpl_file_t ff, unsigned i)
 
 int mcpl_hdr_nblobs(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return f->nblobs;
 }
 
 const char** mcpl_hdr_blobkeys(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return (const char**)f->blobkeys;
 }
 
 int mcpl_hdr_blob(mcpl_file_t ff, const char* key,
                   unsigned* ldata, const char ** data)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   for (uint32_t i = 0; i < f->nblobs; ++i) {
     if (strcmp(f->blobkeys[i],key)==0) {
       *data = f->blobs[i];
@@ -984,31 +1021,31 @@ int mcpl_hdr_blob(mcpl_file_t ff, const char* key,
 
 const char* mcpl_hdr_srcname(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return f->hdr_srcprogname;
 }
 
 int mcpl_hdr_has_userflags(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return f->opt_userflags;
 }
 
 int mcpl_hdr_has_polarisation(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return f->opt_polarisation;
 }
 
 int mcpl_hdr_has_doubleprec(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return !f->opt_singleprec;
 }
 
 const mcpl_particle_t* mcpl_read(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   f->current_particle_idx += 1;
   if (f->current_particle_idx >= f->nparticles+1)
     return 0;
@@ -1019,7 +1056,7 @@ const mcpl_particle_t* mcpl_read(mcpl_file_t ff)
   unsigned lbuf = f->particle_size;
   if (!f->opt_singleprec) {
     char * buf = (char*)(f->particle) + f->particle_offset;
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
     if (f->filegz)
       nb = gzread(f->filegz, buf, lbuf);
     else
@@ -1027,7 +1064,7 @@ const mcpl_particle_t* mcpl_read(mcpl_file_t ff)
       nb = fread(buf, 1, lbuf, f->file);
   } else {
     char * buf = (char*)(f->psp) + f->particle_offset;
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
     if (f->filegz)
       nb = gzread(f->filegz, buf, lbuf);
     else
@@ -1057,14 +1094,14 @@ const mcpl_particle_t* mcpl_read(mcpl_file_t ff)
 
 int mcpl_skipforward(mcpl_file_t ff,unsigned long n)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   f->current_particle_idx += n;
   int notEOF = f->current_particle_idx<f->nparticles;
   if (n==0)
     return notEOF;
   if (notEOF) {
     int error;
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
     if (f->filegz) {
       long targetpos = f->current_particle_idx*f->particle_size+f->first_particle_pos;
       error = gzseek( f->filegz, targetpos, SEEK_SET )!=targetpos;
@@ -1079,13 +1116,13 @@ int mcpl_skipforward(mcpl_file_t ff,unsigned long n)
 
 int mcpl_rewind(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   int already_there = (f->current_particle_idx==0);
   f->current_particle_idx = 0;
   int notEOF = f->current_particle_idx<f->nparticles;
   if (notEOF&&!already_there) {
     int error;
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
     if (f->filegz) {
       error = gzseek( f->filegz, f->first_particle_pos, SEEK_SET )!=f->first_particle_pos;
     } else
@@ -1099,13 +1136,13 @@ int mcpl_rewind(mcpl_file_t ff)
 
 int mcpl_seek(mcpl_file_t ff,unsigned long ipos)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   int already_there = (f->current_particle_idx==ipos);
   f->current_particle_idx = ipos;
   int notEOF = f->current_particle_idx<f->nparticles;
   if (notEOF&&!already_there) {
     int error;
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
     if (f->filegz) {
       long targetpos = f->current_particle_idx*f->particle_size+f->first_particle_pos;
       error = gzseek( f->filegz, targetpos, SEEK_SET )!=targetpos;
@@ -1120,7 +1157,7 @@ int mcpl_seek(mcpl_file_t ff,unsigned long ipos)
 
 unsigned long mcpl_currentposition(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return f->current_particle_idx;
 }
 
@@ -1133,25 +1170,25 @@ const char * mcpl_basename(const char * filename)
 
 int mcpl_hdr_particle_size(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return f->particle_size;
 }
 
 int mcpl_hdr_header_size(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return f->first_particle_pos;
 }
 
 int mcpl_hdr_universel_pdgcode(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return f->opt_universalpdgcode;
 }
 
 int mcpl_hdr_little_endian(mcpl_file_t ff)
 {
-  MCPL_FILEDECODE;
+  MCPLIMP_FILEDECODE;
   return f->is_little_endian;
 }
 
@@ -1197,7 +1234,12 @@ void mcpl_dump_header(mcpl_file_t f)
   printf("\n");
 }
 
-void mcpl_dump_particles(mcpl_file_t f, unsigned nskip, unsigned nlimit)
+//Not in the public interface, but perhaps it should be to allow custom
+//applications to apply custom filters and see the selected particles. For now,
+//we simply keep the function signature stable, allowing other code to access it
+//by forward declaring it themselves:
+void mcpl_dump_particles(mcpl_file_t f, unsigned nskip, unsigned nlimit,
+                         int(filter)(const mcpl_particle_t*))
 {
   int has_uf = mcpl_hdr_has_userflags(f);
   int has_pol = mcpl_hdr_has_polarisation(f);
@@ -1211,6 +1253,10 @@ void mcpl_dump_particles(mcpl_file_t f, unsigned nskip, unsigned nlimit)
   unsigned count = nlimit;
   const mcpl_particle_t* p;
   while((nlimit==0||count--)&&(p=mcpl_read(f))) {
+    if (filter && !filter(p) ) {
+      ++count;
+      continue;
+    }
     unsigned long idx = mcpl_currentposition(f)-1;//-1 since mcpl_read skipped ahead
     printf("%5lu %11i %11.5g %11.5g %11.5g %11.5g %11.5g %11.5g %11.5g %11.5g %11.5g",
            idx,
@@ -1242,7 +1288,7 @@ void mcpl_dump(const char * filename, int parts, unsigned nskip, unsigned nlimit
   if (parts==0||parts==1)
     mcpl_dump_header(f);
   if (parts==0||parts==2)
-    mcpl_dump_particles(f,nskip,nlimit);
+    mcpl_dump_particles(f,nskip,nlimit,0);
   mcpl_close_file(f);
 }
 
@@ -1333,7 +1379,7 @@ void mcpl_merge(const char * file1, const char* file2)
   //f2->file is already at the position for the first particle.
 
   //buffer for transferring up to 1000 particles at a time:
-  char * buf = malloc(1000*particle_size);
+  char * buf = (char*)malloc(1000*particle_size);
   unsigned long np_remaining = np2;
 
   while(np_remaining) {
@@ -1356,10 +1402,10 @@ void mcpl_merge(const char * file1, const char* file2)
   fclose(f1a);
 }
 
-#define MCPL_TOOL_DEFAULT_NLIMIT 10
-#define MCPL_TOOL_DEFAULT_NSKIP 0
+#define MCPLIMP_TOOL_DEFAULT_NLIMIT 10
+#define MCPLIMP_TOOL_DEFAULT_NSKIP 0
 
-int mcpl_tool_usage( char** argv, char * errmsg ) {
+int mcpl_tool_usage( char** argv, const char * errmsg ) {
   if (errmsg) {
     printf("ERROR: %s\n\n",errmsg);
     printf("Run with -h or --help for usage information\n");
@@ -1373,7 +1419,7 @@ int mcpl_tool_usage( char** argv, char * errmsg ) {
   printf("The default behaviour is to display the contents of the FILE in human readable\n");
   printf("format (see Dump Options below for how to modify what is displayed).\n");
   printf("\n");
-#if MCPL_HASZLIB
+#ifdef MCPL_HASZLIB
   printf("This installation supports direct reading of gzipped files (.mcpl.gz).\n");
   printf("\n");
 #endif
@@ -1387,12 +1433,12 @@ int mcpl_tool_usage( char** argv, char * errmsg ) {
   printf("Dump Options:\n");
   printf("  By default include the info in the FILE header plus the first ten contained\n");
   printf("  particles. Modify with the following options:\n");
-  assert(MCPL_TOOL_DEFAULT_NLIMIT==10);
+  assert(MCPLIMP_TOOL_DEFAULT_NLIMIT==10);
   printf("  -j, --justhead  : Dump just header info and no particle info.\n");
   printf("  -n, --nohead    : Dump just particle info and no header info.\n");
-  printf("  -lN             : Dump up to N particles from the file (default %i). You\n",MCPL_TOOL_DEFAULT_NLIMIT);
+  printf("  -lN             : Dump up to N particles from the file (default %i). You\n",MCPLIMP_TOOL_DEFAULT_NLIMIT);
   printf("                    can specify -l0 to disable this limit.\n");
-  printf("  -sN             : Skip past the first N particles in the file (default %i).\n",MCPL_TOOL_DEFAULT_NSKIP);
+  printf("  -sN             : Skip past the first N particles in the file (default %i).\n",MCPLIMP_TOOL_DEFAULT_NSKIP);
   printf("\n");
   printf("Merge Options:\n");
   printf("  -m, --merge FILE1 FILE2\n");
@@ -1534,8 +1580,8 @@ int mcpl_tool(int argc,char** argv) {
   if (opt_justhead&&(opt_num_limit!=-1||opt_num_skip!=-1))
     return mcpl_tool_usage(argv,"Do not specify -l or -s with --justhead");
 
-  if (opt_num_limit<0) opt_num_limit = MCPL_TOOL_DEFAULT_NLIMIT;
-  if (opt_num_skip<0) opt_num_skip = MCPL_TOOL_DEFAULT_NSKIP;
+  if (opt_num_limit<0) opt_num_limit = MCPLIMP_TOOL_DEFAULT_NLIMIT;
+  if (opt_num_skip<0) opt_num_skip = MCPLIMP_TOOL_DEFAULT_NSKIP;
 
   if (opt_justhead&&opt_nohead)
     return mcpl_tool_usage(argv,"Do not supply both --justhead and --nohead.");
@@ -1547,15 +1593,19 @@ int mcpl_tool(int argc,char** argv) {
   return 0;
 }
 
-#include <sys/types.h>
-#ifndef _WIN32
-#include <sys/wait.h>
+#if defined(MCPL_HASZLIB) && !defined(Z_SOLO) && !defined(MCPL_NO_CUSTOM_GZIP)
+#  define MCPLIMP_HAS_CUSTOM_GZIP
+int _mcpl_custom_gzip(const char *file, const char *mode);//return 1 if successful, 0 if not
 #endif
-#include <unistd.h>
-#include <errno.h>
 
-/* Nasty platform-insufficiency hack ... */
-#ifndef _WIN32
+#if (defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))) && !defined(MCPL_NO_EXT_GZIP)
+//Platform is unix-like enough that we assume gzip is installed and we can
+//include posix headers.
+#  include <sys/types.h>
+#  include <sys/wait.h>
+#  include <unistd.h>
+#  include <errno.h>
+
 void mcpl_gzip_file(const char * filename)
 {
   const char * bn = strrchr(filename, '/');
@@ -1569,8 +1619,17 @@ void mcpl_gzip_file(const char * filename)
     //main proc
     int chld_state = 0;
     pid_t ret = waitpid(gzip_pid,&chld_state,0);
-    if (ret!=gzip_pid||chld_state!=0)
-      mcpl_error("ERROR encountered while attempting to invoke gzip\n");
+    if (ret!=gzip_pid||chld_state!=0) {
+#  ifdef MCPLIMP_HAS_CUSTOM_GZIP
+      printf("MCPL WARNING: Problems invoking gzip - will revert to a custom zlib based compression\n");
+      if (!_mcpl_custom_gzip(filename,"wb"))
+        mcpl_error("Problems encountered while attempting to compress file");
+      else
+        printf("MCPL: Succesfully compressed file into %s.gz\n",bn);
+#  else
+      mcpl_error("Problems encountered while attempting to invoke gzip");
+#  endif
+    }
     else
       printf("MCPL: Succesfully compressed file into %s.gz\n",bn);
   } else {
@@ -1580,5 +1639,84 @@ void mcpl_gzip_file(const char * filename)
     exit(1);
   }
 }
+#else
+//Non unix-y platform (like windows). We could use e.g. windows-specific calls
+//instead of the fork() and waitpid() used above, but gzip likely not present on
+//the system anyway, so we either resort to using zlib directly to gzip, or we
+//disable the feature and print a warning.
+#  ifndef MCPLIMP_HAS_CUSTOM_GZIP
+void mcpl_gzip_file(const char * filename)
+{
+  const char * bn = strrchr(filename, '/');
+  bn = bn ? bn + 1 : filename;
+  printf("MCPL WARNING: Requested compression of %s to %s.gz is not supported in this build.\n",bn,bn);
+}
+#  else
+void mcpl_gzip_file(const char * filename)
+{
+  const char * bn = strrchr(filename, '/');
+  bn = bn ? bn + 1 : filename;
+  printf("MCPL: Attempting to compress file %s with zlib\n",bn);
+  if (!_mcpl_custom_gzip(filename,"wb"))
+    printf("MCPL ERROR: Problems encountered while compressing file %s.\n",bn);
+  else
+    printf("MCPL: Succesfully compressed file into %s.gz\n",bn);
+}
+#  endif
 #endif
 
+#ifdef MCPLIMP_HAS_CUSTOM_GZIP
+
+#include <unistd.h>
+#if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__)
+#  include <fcntl.h>
+#  include <io.h>
+#endif
+
+int _mcpl_custom_gzip(const char *filename, const char *mode)
+{
+  //Open input file:
+  FILE *handle_in = fopen(filename, "rb");
+  if (!handle_in)
+    return 0;
+
+  //Construct output file name by appending .gz:
+  char * outfn = (char*)malloc(strlen(filename) + 4);
+  outfn[0] = '\0';
+  strcat(outfn,filename);
+  strcat(outfn,".gz");
+
+  //Open output file:
+  gzFile handle_out = gzopen(outfn, mode);
+
+  free(outfn);
+
+  if (!handle_out) {
+    fclose(handle_in);
+    return 0;
+  }
+
+  //Compress input to output:
+  char buf[16384];
+  size_t len;
+  while (1) {
+    len = (int)fread(buf, 1, sizeof(buf), handle_in);
+    if (ferror(handle_in))
+      return 0;
+    if (!len)
+      break;
+    if ((size_t)gzwrite(handle_out, buf, (unsigned)len) != len)
+      return 0;
+  }
+
+  //close file:
+  fclose(handle_in);
+  if (gzclose(handle_out) != Z_OK)
+    return 0;
+
+  //remove input file and return success:
+  unlink(filename);
+  return 1;
+}
+
+#endif
