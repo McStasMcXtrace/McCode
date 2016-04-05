@@ -8,24 +8,26 @@
 * Component: Pi_2_rotator
 *
 * %IDENTIFICATION
-* Written by: Erik Knudsen (erik.knudsen@risoe.dk)
+* Written by: Erik Knudsen (erkn@fysik.dtu.dk)
 * Date: 8/4-2008
 * Version: $Revision: 0.01 $
 * Origin: Risoe
 * Release: McStas 1.12b
-* %DESCRIPTION
-* Simple, idelized, component that turns the polarization exactly pi_2 around the specified unit vector
-* vector (rx,ry,rx)
+*
+* Ideal &pi;/2-rotator
+*
+* %Description
+* Simple, idelized, component that turns the polarization exactly &pi;/2 around the specified vector
+* vector (rx,ry,rx).
 * The geometry of the component is realized as a box, where the the spin is rotated at the z-midpoint.
 *
 * %PARAMETERS
 * xwidth: width of the component [m]
 * yheight: height of the component [m]
-* zthick: thickness of the component [m] 
+* zdepth: thickness of the component [m] 
 * rx: x-component of the rotation axis
 * ry: y-component of the rotation axis
 * rz: z-component of the rotation axis
-* angle: 
 *
 * %LINKS
 *
@@ -34,7 +36,7 @@
 
 DEFINE COMPONENT Pol_pi_2_rotator
 DEFINITION PARAMETERS()
-  SETTING PARAMETERS(xwidth, yheight, zdepth, rx,ry,rz, angle=0)
+SETTING PARAMETERS(xwidth, yheight, zdepth, rx,ry,rz)
 OUTPUT PARAMETERS()
 
 SHARE

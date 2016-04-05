@@ -85,7 +85,10 @@ Changes in McStas v.2.3, April 5th, 2016
  - MultiDiskChopper.comp by Markus Appel, ILL / FAU Erlangen-Nuernberg. Models a disk chopper with a freely 
    configurable slit pattern. For simple applications, use the DiskChopper component instead.
  - Updated version of Sample_nxs from Mirko Boin (HZB), including more nxs material definitions.
- - Bugfix to ESS_moderator from Jan Saroun (RESTRAX/Simres): missing focusing/direction cosine inserted.
+ - Bugfix to ESS_moderator from Jan Saroun (RESTRAX/Simres): missing focusing/direction cosine inserted. Please
+   note that this component does not implement "engineering reality" and currently uses a coordinate system 
+   centered on the moderator assembly. An updated moderator component which references the "Moderator focus 
+   coordinate system" will be released later during the spring of 2016.
  - Bugfixes to numerous other components...
  
  Instruments:

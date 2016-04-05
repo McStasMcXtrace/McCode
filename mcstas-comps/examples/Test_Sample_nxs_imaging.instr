@@ -11,14 +11,14 @@
 * Version: $Revision$
 * %INSTRUMENT_SITE: HZB
 *
+* Test TOF-imaging instrument for the Sample_nxs.comp component.
 * %Description
-* Test TOF-imaging instrument for the Sample_nxs.comp component. See documentation for the component plus the references in the Link section below.
 *
-* This component/instrument relies on the 'nxs' library that is provided with McStas as of release 2.0.
-* Please see further instructions in your MCSTAS/lib/share/nxslib/README.TXT
+* This instrument relies on the 'nxs' library that is provided with McStas as of release 2.0.
+* Please see in your MCSTAS/lib/share/nxslib/README.TXT and the links in the section below for
+* further instructions and more details.
 *
-* Example:
-* mcrun Test_Sample_nsx_imaging.instr
+* %Example: Test_Sample_nsx_imaging.instr
 *
 * %Parameters
 * lambda1: Lower bound of wavelength band  [AA]

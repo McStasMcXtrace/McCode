@@ -11,8 +11,11 @@
 * Release: McStas 1.12c
 * %INSTRUMENT_SITE: Templates
 *
+* Template instrument for a suite of SANS sample models.
+*
 * %Description
-* Toy model used for testing various sample components for solution-SANS.
+* Model instrument with test use-cases for a suite of SANS-sample components modelling
+* a set of in-solution SANS samples.
 *
 * %Parameters
 * DistSrcPin1 : [m]	Distance to first pinhole from source.
