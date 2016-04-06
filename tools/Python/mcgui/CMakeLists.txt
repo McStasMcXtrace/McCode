@@ -92,7 +92,7 @@ endif()
 
 if(WINDOWS)
   # Python files
-  foreach(name viewclasses.py run-icon.png compile-icon.png widgets.py)
+  foreach(name viewclasses.py run-icon.png compile-icon.png widgets.py ${FLAVOR}-py.png)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${lib}/${TOOLS_NAME}"
@@ -111,7 +111,7 @@ endif()
 
 if(NOT WINDOWS)
   # Python files
-  foreach(name viewclasses.py run-icon.png compile-icon.png widgets.py)
+  foreach(name viewclasses.py run-icon.png compile-icon.png widgets.py ${FLAVOR}-py.png)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
@@ -148,6 +148,6 @@ if(NOT WINDOWS)
   install(
     FILES "${WORK}/@NAME@-py.desktop" "@FLAVOR@-py.png"
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/launchers/"
-  ) 
+  )
 
 endif()
