@@ -1752,6 +1752,11 @@ sub setup_cmdwin {
     for $l (split "\n", `$MCSTAS::mcstas_config{'MCCODE'} --version`) {
         $cmdwin->insert('end', "$l\n", 'msg');
     }
+    # Insert contents of component lib revision file in window
+    open(COMPREV,File::Spec->catfile($MCSTAS::sys_dir,'revision'));
+    while (<COMPREV>) {
+	$cmdwin->insert('end', "$_", 'msg');
+    }
 
     my $text="";
     if ($MCSTAS::mcstas_config{'MATLAB'} ne "no")   { $text .= "Matlab "; }
