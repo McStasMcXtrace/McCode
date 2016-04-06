@@ -139,7 +139,7 @@ class InstrProduction:
                                     
                                     commandname = dc.leaf
                                     draw = drawclass_factory(commandname, args)
-                                    comp.draw_commands.append(draw)
+                                    comp.drawcommands.append(draw)
                         
                         self.instrument_tree.components.append(comp)
             
