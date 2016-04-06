@@ -177,11 +177,14 @@ class McMainWindow(QtGui.QMainWindow):
         prefix = 'mx'
         if mccode_config.configuration["MCCODE"] == "mcstas": 
             prefix = 'mc'
-        self.setWindowTitle(prefix + 'gui-py') 
+        self.setWindowTitle(prefix + 'gui-py')
         self.ui.actionMcdoc.setText(prefix + "doc Component Reference")
-        self.ui.actionMcstas_User_Manual.setText(prefix + "stas User Manual")
-        self.ui.actionMcstas_Component_Manual.setText(prefix + "stas Component Manual")
-        self.ui.actionMcstas_Web_Page.setText(prefix + "stas Web Page")
+        
+        mccode = mccode_config.configuration["MCCODE"]
+        self.ui.actionMcstas_User_Manual.setText(mccode + " User Manual")
+        self.ui.actionMcstas_Component_Manual.setText(mccode + " Component Manual")
+        self.ui.actionMcstas_Web_Page.setText(mccode + " Web Page")
+        self.ui.lblIcon.setPixmap(QtGui.QPixmap(mccode + "-py.png"))
         
     def initDynamicView(self, args, callback):
         ''' - args ([str, [], []]): list of triplets consisting of site name, 

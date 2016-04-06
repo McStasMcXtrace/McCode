@@ -59,6 +59,7 @@ class McRunQThread(QtCore.QThread):
     error = QtCore.pyqtSignal(QtCore.QString)
     message = QtCore.pyqtSignal(QtCore.QString)
     cmd = ''
+    cwd = ''
     process_returncode = None
     
     def run(self, *args, **kwargs):
@@ -72,7 +73,8 @@ class McRunQThread(QtCore.QThread):
             process = subprocess.Popen(self.cmd, 
                                        stdout=subprocess.PIPE, 
                                        stderr=subprocess.PIPE,
-                                       shell=True)
+                                       shell=True,
+                                       cwd=self.cwd)
             
             # read program output while the process is active
             while process.poll() == None:
@@ -208,12 +210,13 @@ class McGuiState(QtCore.QObject):
     def compileAsync(self, mpi, thread_exc_signal):
         try:
             # generate mcstas .c file from instrument
-            nf = self.__instrFile
+            nf = os.path.basename(self.__instrFile)
             cmd = mccode_config.configuration["MCCODE"] + ' -t '  + nf
             process = subprocess.Popen(cmd, 
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
-                                       shell=True)
+                                       shell=True,
+                                       cwd=os.path.dirname(self.__instrFile))
             self.__emitter.status('Compiling instrument to c ...')
             self.__emitter.message('Compiling instrument to c ...')
             self.__emitter.message(cmd)
@@ -230,11 +233,11 @@ class McGuiState(QtCore.QObject):
                 self.__emitter.message(stdoutdata.rstrip('\n'))
             for stderrdata in process.stderr:
                 self.__emitter.message(stderrdata.rstrip('\n'), err_msg=True)
-                
+            
             # paths and filenames
             spl = os.path.splitext(os.path.basename(str(nf)))
-            basef = os.path.join(self.getWorkDir(), spl[0])
-            cf = basef + '.c'
+            basenoext = spl[0]
+            cf = basenoext + '.c'
             
             # check
             if os.path.isfile(cf):
@@ -253,7 +256,7 @@ class McGuiState(QtCore.QObject):
                     cflags = cflags + ' ' + flags
             
             # compile binary from mcstas .c file 
-            bf = basef + '.' + mccode_config.platform["EXESUFFIX"] 
+            bf = basenoext + '.' + mccode_config.platform["EXESUFFIX"] 
             if mpi:
                 cmd = mccode_config.compilation["MPICC"] + ' -o ' + bf + ' ' + cf + ' ' + mccode_config.compilation["MPIFLAGS"] + ' ' + cflags
             else:
@@ -262,7 +265,8 @@ class McGuiState(QtCore.QObject):
             process = subprocess.Popen(cmd, 
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
-                                       shell=True)
+                                       shell=True,
+                                       cwd=os.path.dirname(self.__instrFile))
             self.__emitter.status('Compiling instrument to binary ...')
             self.__emitter.message('Compiling instrument to binary ...')
             self.__emitter.message(cmd)
@@ -349,10 +353,10 @@ class McGuiState(QtCore.QObject):
                               (self.__instrFile,
                                datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
                 
-            runstr = mccode_config.configuration["MCRUN"] + mcrunparms + self.__instrFile + ' -d ' + output_dir
+            runstr = mccode_config.configuration["MCRUN"] + mcrunparms + os.path.basename(self.__instrFile) + ' -d ' + output_dir
             self.__dataDir = output_dir
         else:
-            runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + self.__instrFile + ' --no-output-files '
+            runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files '
             self.__dataDir = "None"
         
         # neutron count
@@ -390,6 +394,7 @@ class McGuiState(QtCore.QObject):
         # run simulation in a background thread
         self.__runthread = McRunQThread()
         self.__runthread.cmd = runstr
+        self.__runthread.cwd = os.path.dirname(self.__instrFile)
         self.__runthread.finished.connect(lambda: self.__runFinished(self.__runthread.process_returncode))
         self.__runthread.terminated.connect(self.__runTerminated)
         self.__runthread.thread_exception.connect(handleExceptionMsg)

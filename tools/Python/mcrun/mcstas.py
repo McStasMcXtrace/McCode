@@ -87,7 +87,10 @@ class McStas:
         self.params = {}
 
         # Setup paths
-        self.cpath = './%s.c' % self.name
+        if os.name == 'nt':
+            self.cpath = '%s.c' % self.name
+        else:
+            self.cpath = './%s.c' % self.name
 
     def set_parameter(self, key, value):
         ''' Set the value of an experiment parameter '''
@@ -106,7 +109,10 @@ class McStas:
             shutil.copy2(self.path, ".")  # also copies stat information
 
         # Create the path for the binary
-        self.binpath = './%s.%s' % (self.name, config.OUT_SUFFIX)
+        if os.name == 'nt':
+            self.binpath = '%s.%s' % (self.name, config.OUT_SUFFIX)
+        else:
+            self.binpath = './%s.%s' % (self.name, config.OUT_SUFFIX)
 
         # Check if instrument code has changed since last compilation
         existingBin = findReusableFile(self.path,
