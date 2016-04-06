@@ -323,7 +323,7 @@ sub mcdoc_generate {
 sub mcdoc_test {
     my $status;
     my $printer = sub { putmsg($cmdwin, "$_[0]\n", 'msg'); $main_window->update;};
-    $status = do_test($printer, 1, $MCSTAS::mcstas_config{'PLOTTER'}, 'compatible graphics');
+    $status = do_test($printer, 1, $MCSTAS::mcstas_config{'PLOTTER'}, 'compatible graphics','',0,'1e6','BNL_H8.instr');
     if (defined $status) { putmsg($cmdwin, "$status", 'msg'); }
 }
 
@@ -1668,7 +1668,7 @@ sub setup_menu {
     $helpmenu->command(-label => 'Current instrument info',
                        -command => sub {mcdoc_current()});
     $helpmenu->separator;
-    $helpmenu->command(-label => 'Test McStas installation',
+    $helpmenu->command(-label => 'Test McStas installation (BNL_H8)',
                        -command => sub {mcdoc_test($w)});
     $helpmenu->command(-label => 'Generate component index',
                        -command => sub {mcdoc_generate()});
