@@ -12,12 +12,17 @@ def main(args):
     
     data = open(args.data, 'r').read()
     
+    # build trace output parser
     parser = TraceParser(data)
     NodeTreePrint(parser.parsetree) 
     
+    # build instrument data object from parsetree
     instrbuilder = InstrProduction(parser.parsetree)
     instrbuilder.build()
-        
+    
+    # build html template
+    
+    
     # step-wise test
     if False: 
         parser = TraceParser()

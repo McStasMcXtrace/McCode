@@ -19,7 +19,7 @@ class InstrumentConcrete(object):
 class Component(object):
     ''' represents a mcstas component, in context-free form '''
     name = ''
-    draw_commands = []
+    drawcommands = []
     pos = None
     rot = None
     def __init__(self, name, pos, rot):

@@ -21,7 +21,91 @@ def drawclass_factory(commandname, args):
     except:
         raise Exception('DrawCommandFactory: error with commandname: %s, args: %s' % (commandname, args))
 
-class DrawCommand(object):
+class DrawCommandVisitor(object):
+    ''' implements visitor interface for drawcalls '''
+    def visit(self, data_obj):
+        for key in drawcommands:
+            # get type object from draw command dict
+            klass = globals()[drawcommands[key]]
+            # check for match with data_obj
+            if isinstance(data_obj, klass):
+                if key == 'magnify':
+                    self.visit_DrawMagnify(data_obj)
+                elif key == 'line':
+                    self.visit_DrawLine(data_obj)
+                elif key == 'dashed_line':
+                    self.visit_DrawDashedLine(data_obj)
+                elif key == 'multiline':
+                    self.visit_DrawMultiline(data_obj)
+                elif key == 'rectangle':
+                    self.visit_DrawRectangle(data_obj)
+                elif key == 'box':
+                    self.visit_DrawBox(data_obj)
+                elif key == 'circle':
+                    self.visit_DrawCircle(data_obj)
+    
+    def throwabstracterror(self):
+        raise Exception('DrawCommandVisitor: Abstract fct called, subclass and implement.')
+    
+    # subclass and implement draw call action functions below
+    def visit_DrawMagnify(self, data_obj):
+        self.throwabstracterror()
+    
+    def visit_DrawLine(self, data_obj):
+        self.throwabstracterror()
+    
+    def visit_DrawDashedLine(self, data_obj):
+        self.throwabstracterror()
+    
+    def visit_DrawMultiline(self, data_obj):
+        self.throwabstracterror()
+    
+    def visit_DrawRectangle(self, data_obj):
+        self.throwabstracterror()
+    
+    def visit_DrawBox(self, data_obj):
+        self.throwabstracterror()
+    
+    def visit_DrawCircle(self, data_obj):
+        self.throwabstracterror()
+    
+class DjangoVisitor(DrawCommandVisitor):
+    ''' implements translation from data object to django template readable '''
+    
+    dct = {}
+    def __init__(self, dct):
+        self.dct = dct
+    
+    def visit_DrawMagnify(self, data_obj):
+        pass
+    
+    def visit_DrawLine(self, data_obj):
+        pass
+    
+    def visit_DrawDashedLine(self, data_obj):
+        pass
+    
+    def visit_DrawMultiline(self, data_obj):
+        ''' implement '''
+        return ''
+    
+    def visit_DrawRectangle(self, data_obj):
+        pass
+    
+    def visit_DrawBox(self, data_obj):
+        pass
+    
+    def visit_DrawCircle(self, data_obj):
+        ''' implement '''
+        return ''
+    
+
+class Visited(object):
+    ''' visitor interface '''
+    def accept(self, visitor):
+        visitor.visit(self)
+
+class DrawCommand(Visited):
     ''' superclass of all draw commands '''
 
 class DrawNeutronRayStory(DrawCommand):
@@ -33,7 +117,7 @@ class DrawNeutronRayStory(DrawCommand):
             self.story.append(s)
 
 class DrawMagnify(DrawCommand):
-    ''' '''
+    ''' not implemented, a placeholder '''
     def __init__(self, args):
         pass
 
