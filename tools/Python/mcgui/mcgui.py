@@ -462,6 +462,22 @@ class McGuiAppController():
         
         self.state.init()
         
+        # Print MCCODE version info in main window
+        cmd = mccode_config.configuration["MCCODE"] + ' -v '
+        process = subprocess.Popen(cmd, 
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   shell=True)
+
+        (stdoutdata, stderrdata) = process.communicate()
+        self.emitter.message(stdoutdata.rstrip('\n'))
+        self.emitter.message(stderrdata.rstrip('\n'))
+        # Print MCCODE revision data if these exist
+        comprev = os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "revision")
+        if os.path.exists(comprev):
+            self.emitter.message(open(comprev).read())
+        
+        
         # load instrument file from command line pars
         for a in sys.argv:
             if os.path.isfile(a):
