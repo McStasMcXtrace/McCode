@@ -7,33 +7,33 @@ if [ "x$1" = "x" ]; then
 fi
 
 # 64-bit
-./mkdist mcstas $1 "" "" linux64 "" -- rpm
-./mkdist mcstas-comps $1 "" "" linux64 "" -- rpm
-./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" linux64 "" -- rpm
-./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" linux64 "" -- rpm
-./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" linux64 "" -- rpm
-./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 "" -- rpm
-./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" linux64 "" -- rpm
-./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" linux64 "" -- rpm
-./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" linux64 "" -- rpm
-./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" linux64 "" -- rpm
-./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" linux64 "" -- rpm
-./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" linux64 "" -- rpm
-./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" linux64 "" -- rpm
-./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" linux64 "" -- rpm
+./mkdist mcstas $1 "" "" rpm64 "" -- rpm
+./mkdist mcstas-comps $1 "" "" rpm64 "" -- rpm
+./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" rpm64 "" -- rpm
+./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" rpm64 "" -- rpm
+./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" rpm64 "" -- rpm
+./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" rpm64 "" -- rpm
+./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" rpm64 "" -- rpm
+./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" rpm64 "" -- rpm
+./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" rpm64 "" -- rpm
+./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" rpm64 "" -- rpm
+./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" rpm64 "" -- rpm
+./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" rpm64 "" -- rpm
+./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" rpm64 "" -- rpm
+./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" rpm64 "" -- rpm
 
 # 32-bit
-./mkdist mcstas $1 "" "" linux32 "" -- rpm
-./mkdist mcstas-comps $1 "" "" linux32 "" -- rpm
-./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" linux32 "" -- rpm
-./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" linux32 "" -- rpm
-./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" linux32 "" -- rpm
-./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux32 "" -- rpm
-./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" linux32 "" -- rpm
-./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" linux32 "" -- rpm
-./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" linux32 "" -- rpm
-./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 "" -- rpm
-./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" linux32 "" -- rpm
-./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" linux32 "" -- rpm
-./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" linux32 "" -- rpm
-./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" linux32 "" -- rpm
+./mkdist mcstas $1 "" "" rpm32 "" -- rpm
+./mkdist mcstas-comps $1 "" "" rpm32 "" -- rpm
+./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" rpm32 "" -- rpm
+./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" rpm32 "" -- rpm
+./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" rpm32 "" -- rpm
+./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" rpm32 "" -- rpm
+./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" rpm32 "" -- rpm
+./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" rpm32 "" -- rpm
+./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" rpm32 "" -- rpm
+./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" rpm32 "" -- rpm
+./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" rpm32 "" -- rpm
+./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" rpm32 "" -- rpm
+./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" rpm32 "" -- rpm
+./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" rpm32 "" -- rpm
