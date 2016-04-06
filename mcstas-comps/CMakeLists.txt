@@ -9,7 +9,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 # Set McCode values (from mkdist or defaults)
 include(MCUtil)
 setupMCCODE("mcstas")
-
+set(WORK "${PROJECT_BINARY_DIR}/work")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-comps-${MCCODE_VERSION}")
@@ -40,6 +40,21 @@ endif()
 foreach(name contrib data examples misc monitors obsolete optics samples share sources editors libs)
   installLib("${PROJECT_SOURCE_DIR}/${name}")
 endforeach()
+
+# Include mcstas-comp revision tag file
+configure_file("${CMAKE_SOURCE_DIR}/revision.in" "${WORK}/revision" @ONLY)
+
+if(WINDOWS)
+  install(
+    FILES "${WORK}/revision"
+    DESTINATION "${lib}"
+  )
+else()
+  install(
+    FILES "${WORK}/revision"
+    DESTINATION "${FLAVOR}/${MCCODE_VERSION}"
+  )
+endif()
 
 if (NOT WINDOWS)
   install(TARGETS nxs DESTINATION "${MCCODE_LIB}/libs/libnxs/")
