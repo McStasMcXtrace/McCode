@@ -37,18 +37,19 @@
  * dE: (kev) Half-width (or std. dev.) of emitted energy spectrum.
  * lambda0: (AA) Centre of emitted wavelength spectrum. 
  * dlambda: (AA) Half-width (or std. dev.) of emitted wavelength spectrum.
- * phase: ( ) The initial phase of the photons (default corresponds to a random phase (incoherent radiation).
+ * phase: ( ) The initial phase of the photons.
  * flux: ( ) Scaling factor to set the total emitted unrestricted flux.
  * focus_xw: (m) Width of sampling window dist m downstream from source to allow focused sampling.
  * focus_yh: (m) Height of sampling window dist m downstream from source to allow focused sampling.
  * dist: (m) Distance from source plane to sampling window.
  * brilliance: ( ) Unit in spectrum_file is Brilliance - apply corrections to get to raw flux.
  * gauss: ( ) Gaussian (1) or uniform (0) spectrum profile. 
+ * randomphase: ( ) If nonzero phase is random (incoherent radiation), otherwise it is set to the value of phase 
 */
 
 DEFINE COMPONENT Source_gaussian
 DEFINITION PARAMETERS (string spectrum_file=NULL)
-SETTING PARAMETERS (sig_x=1,sig_y=0,sigPr_x=0,sigPr_y=0,flux=1,brilliance=0,dist=1,gauss=0,focus_xw=0,focus_yh=0,E0=0, dE=0, lambda0=0,dlambda=-1,phase=-1)
+SETTING PARAMETERS (sig_x=1,sig_y=0,sigPr_x=0,sigPr_y=0,flux=1,brilliance=0,dist=1,gauss=0,focus_xw=0,focus_yh=0,E0=0, dE=0, lambda0=0,dlambda=-1,phase=0, randomphase=1)
 OUTPUT PARAMETERS (prms,spX,spY)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
@@ -229,7 +230,7 @@ TRACE
   kz=(k*dist)/dz;
   
   /*randomly pick phase*/
-  if (phase==-1){
+  if (randomphase){
     phi=rand01()*2*M_PI;
   }else{
     phi=phase;
