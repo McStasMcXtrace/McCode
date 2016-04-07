@@ -25,9 +25,13 @@
 *       For use with Single_crystal, PowderN, and Isotropic_Sqw.
 *       Data: [ h   k   l Mult. d-space 2Theta   F-squared ]
 *       Identifier in header: "Format parameters: Crystallographica"
+*       Single crystal files may be generated from CIF files via the cif2hkl
+*       service at: http://barns.ill.fr/cif2hkl.html
 * laz : Powder pattern file, as obtained from Lazy/ICSD.
 *       For use with PowderN, Isotropic_Sqw and possibly Single_crystal.
 *       Identifier in header: "Format parameters: Lazy"
+*       Powder files may be generated from CIF files via the cif2hkl
+*       service at: http://barns.ill.fr/cif2hkl.html
 * trm : transmission file, typically for monochromator crystals and filters.
 *       Data: [ k (Angs-1) , Transmission (0-1) ]
 *       Identifier in header: "Format: McStas Reflectivity file"
