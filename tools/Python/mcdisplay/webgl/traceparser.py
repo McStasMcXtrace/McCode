@@ -169,14 +169,14 @@ class InstrProduction:
                             v = Vector3d(vlst[0], vlst[1], vlst[2])
                             
                             vg = self.transform_local(v, pos, rot)
-                            state = NeutronState(vg.tolst() + rayevent.leaf[3:])
+                            state = NeutronState(vg.to_lst() + rayevent.leaf[3:])
                             
                         if rayevent.type == 'SCATTER':
                             vlst = rayevent.leaf[0:3]
                             v = Vector3d(vlst[0], vlst[1], vlst[2])
                             
                             vg = self.transform_local(v, pos, rot)
-                            state = NeutronState(vg.tolst() + rayevent.leaf[3:])
+                            state = NeutronState(vg.to_lst() + rayevent.leaf[3:])
                         
                         if rayevent.type == 'ABSORB':
                             pass
@@ -186,7 +186,7 @@ class InstrProduction:
                             v = Vector3d(vlst[0], vlst[1], vlst[2])
                             
                             vg = self.transform_local(v, pos, rot)
-                            state = NeutronState(vg.tolst() + rayevent.leaf[3:])
+                            state = NeutronState(vg.to_lst() + rayevent.leaf[3:])
                         
                         story.events.append(state)
                         
