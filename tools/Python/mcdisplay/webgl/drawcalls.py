@@ -1,8 +1,11 @@
 '''
 Classes used for organizing component drawing calls.
 '''
+from django.template import Context, Template
+from django.conf import settings
 from instrrep import Vector3d
 
+# links mcstas draw api to the corresponding python class names '''
 drawcommands = {
     'magnify'     : 'DrawMagnify',
     'line'        : 'DrawLine',
@@ -208,3 +211,28 @@ class DrawCircle(DrawCommand):
         self.plane = str(args[0])
         self.center = Vector3d(float(args[1]), float(args[2]), float(args[3]))
         self.radius = float(args[4])
+
+
+class TemplateWebGLWrite(object):
+    ''' writes the django template from the instrument representation '''
+    instr_tree = None
+    text = ''
+    
+    def __init__(self, instr_tree):
+        self.instr_tree = instr_tree
+        settings.configure()
+    
+    def build(self):
+        templ = open('mcdisplaytemplate.html').read()
+        t = Template(templ)
+        c = Context({'instrument': self.instr_tree})
+        self.text = t.render(c)
+
+    def save(self, filename):
+        ''' save template to disk '''
+        try:
+            f = open(filename, 'w')
+            f.write(self.text)
+        finally:
+            f.close()
+

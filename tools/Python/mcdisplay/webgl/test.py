@@ -6,24 +6,30 @@ Test script for PLY-based translation of mcdisplay "--trace output" mini languag
 import logging
 import argparse
 from traceparser import TraceParser, NodeTreePrint, InstrProduction
+from drawcalls import TemplateWebGLWrite
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
+    # build trace parser and parse data
     data = open(args.data, 'r').read()
-    
-    # build trace output parser
     parser = TraceParser(data)
-    NodeTreePrint(parser.parsetree) 
     
-    # build instrument data object from parsetree
+    # print the parse tree as a test
+    treeprint = NodeTreePrint(parser.parsetree) 
+    treeprint.print_tree()
+    
+    # build instrument data object
     instrbuilder = InstrProduction(parser.parsetree)
     instrbuilder.build()
     
-    # build html template
+    # build html
+    writer = TemplateWebGLWrite(instrbuilder.instrument_tree)
+    writer.build()
+    #print writer.text
+    #writer.save('mymultilines.html')
     
-    
-    # step-wise test
+    # step-wise trace parser test
     if False: 
         parser = TraceParser()
         parser.build_lexer()
