@@ -30,9 +30,13 @@ class NodeTreePrint(object):
     Node tree assumptions: children is a list of Node's, leaf is for data
     Does not print any rays by default, enable by using printrays=True during construction.
     '''
-    def __init__(self, rootnode, printrays=False):
+    rootnode = None
+    def __init__(self, rootnode):
+        self.rootnode = rootnode
+    
+    def print_tree(self, printrays=False):
         self.level = 0
-        self.recurse(rootnode, printrays, self.printfunc, self.inclevel, self.declevel, self.getlevel)
+        self.recurse(self.rootnode, printrays, self.printfunc, self.inclevel, self.declevel, self.getlevel)
     
     def getlevel(self):
         return self.level
