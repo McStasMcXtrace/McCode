@@ -1,8 +1,11 @@
 '''
 Classes used for organizing component drawing calls.
 '''
+from django.template import Context, Template
+from django.conf import settings
 from instrrep import Vector3d
 
+# links mcstas draw api to the corresponding python class names '''
 drawcommands = {
     'magnify'     : 'DrawMagnify',
     'line'        : 'DrawLine',
@@ -99,7 +102,6 @@ class DjangoVisitor(DrawCommandVisitor):
         ''' implement '''
         return ''
     
-
 class Visited(object):
     ''' visitor interface '''
     def accept(self, visitor):
@@ -107,26 +109,29 @@ class Visited(object):
 
 class DrawCommand(Visited):
     ''' superclass of all draw commands '''
-
-class DrawNeutronRayStory(DrawCommand):
-    ''' just input a NeutronRayStory here '''
-    events = []
-    def __init__(self, story):
-        for s in story.events:
-            # TODO: should s be cloned?
-            self.story.append(s)
+    args_str = ''
+    key = ''
+    def __init__(self, args):
+        if len(args) > 0:
+            self.args_str = str(args[0])
+            for i in range(len(args)-1):
+                self.args_str = self.args_str + ', ' + str(args[i+1])
 
 class DrawMagnify(DrawCommand):
     ''' not implemented, a placeholder '''
     def __init__(self, args):
-        pass
+        super(DrawMagnify, self).__init__(args)
+        self.key = 'magnify'
 
 class DrawLine(DrawCommand):
     ''' '''
     point_1 = None
     point_2 = None
     # x_1, y_1, z_1, x_2, y_2, z_2
-    def __init__(self, *args):
+    def __init__(self, args):
+        super(DrawLine, self).__init__(args)
+        self.key = 'line'
+        
         self.point_1 = Vector3d(float(args[0]), float(args[1]), float(args[2]))
         self.point_2 = Vector3d(float(args[3]), float(args[4]), float(args[5]))
 
@@ -136,6 +141,9 @@ class DrawDashedLine(DrawCommand):
     point_2 = None
     # x_1, y_1, z_1, x_2, y_2, z_2
     def __init__(self, args):
+        super(DrawDashedLine, self).__init__(args)
+        self.key = 'dashed_line'
+        
         self.point_1 = Vector3d(float(args[0]), float(args[1]), float(args[2]))
         self.point_2 = Vector3d(float(args[3]), float(args[4]), float(args[5]))
 
@@ -143,6 +151,9 @@ class DrawMultiline(DrawCommand):
     ''' '''
     points = []
     def __init__(self, args):
+        super(DrawMultiline, self).__init__(args)
+        self.key = 'multiline'
+        
         l = len(args)
         try:
             if not ((l % 3) == 0):
@@ -153,7 +164,7 @@ class DrawMultiline(DrawCommand):
                 z = float(args[i*3+2])
                 self.points.append(Vector3d(x, y, z))
         except:
-            raise Exception('DrawMultiline: *args must contain a whole number of tripples.')
+            raise Exception('DrawMultiline: args must contain a whole number of tripples.')
 
 class DrawRectangle(DrawCommand):
     ''' '''
@@ -163,6 +174,9 @@ class DrawRectangle(DrawCommand):
     height = None
     # plane, x, y, z, width, height
     def __init__(self, args):
+        super(DrawRectangle, self).__init__(args)
+        self.key = 'rectangle'
+        
         self.plane = str(args[0])
         self.center = Vector3d(float(args[1]), float(args[2]), float(args[3]))
         self.width = float(args[4])
@@ -176,6 +190,9 @@ class DrawBox(DrawCommand):
     zlength = None
     # x, y, z, xwidth, yheight, zlength
     def __init__(self, args):
+        super(DrawBox, self).__init__(args)
+        self.key = 'box'
+        
         self.center = Vector3d(float(args[0]), float(args[1]), float(args[2]))
         self.xwidth = float(args[3])
         self.yheight = float(args[4])
@@ -188,6 +205,34 @@ class DrawCircle(DrawCommand):
     radius = None
     # plane, x, y, z, radius
     def __init__(self, args):
+        super(DrawCircle, self).__init__(args)
+        self.key = 'circle'
+        
         self.plane = str(args[0])
         self.center = Vector3d(float(args[1]), float(args[2]), float(args[3]))
         self.radius = float(args[4])
+
+
+class TemplateWebGLWrite(object):
+    ''' writes the django template from the instrument representation '''
+    instr_tree = None
+    text = ''
+    
+    def __init__(self, instr_tree):
+        self.instr_tree = instr_tree
+        settings.configure()
+    
+    def build(self):
+        templ = open('mcdisplaytemplate.html').read()
+        t = Template(templ)
+        c = Context({'instrument': self.instr_tree})
+        self.text = t.render(c)
+
+    def save(self, filename):
+        ''' save template to disk '''
+        try:
+            f = open(filename, 'w')
+            f.write(self.text)
+        finally:
+            f.close()
+

@@ -26,6 +26,7 @@ class Component(object):
         self.name = name
         self.pos = pos
         self.rot = rot
+        self.drawcommands = []
 
 class NeutronStory(object):
     events = []
@@ -33,6 +34,7 @@ class NeutronStory(object):
         self.events= []
 
 class NeutronState(object):
+    args_str = ''
     position = None
     velocity = None
     time = None
@@ -40,6 +42,12 @@ class NeutronState(object):
     intensity = None
     def __init__(self, args):
         ''' x, y, z, vx, vy, vz, t, sx, sy, sz, intensity '''
+        self.args_str = str(args[0])
+        if len(args) > 0:
+            self.args_str = str(args[0])
+            for i in range(len(args)-1):
+                self.args_str = self.args_str + ', ' + str(args[i+1])
+        
         self.position = Vector3d(float(args[0]), float(args[1]), float(args[2]))
         self.velocity = Vector3d(float(args[3]), float(args[4]), float(args[5]))
         self.time = float(args[6])
@@ -56,8 +64,11 @@ class Vector3d(object):
         ''' just add another vector to this one and return the result '''
         return Vector3d(x=v.x+self.x, y=v.y+self.y, z=v.z+self.z)
     
-    def tolst(self):
+    def to_lst(self):
         return [self.x, self.y, self.z]
+    
+    def to_args_str(self):
+        return '%s, %s, %s' % (str(self.x), str(self.y), str(self.z))
 
 class Matrix3(object):
     def __init__(self, a11, a12, a13, a21, a22, a23, a31, a32, a33):
