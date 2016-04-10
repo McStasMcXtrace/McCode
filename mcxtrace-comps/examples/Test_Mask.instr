@@ -65,7 +65,7 @@ COMPONENT Origin = Progress_bar()
 
 COMPONENT src = Source_div(
     xwidth = 0.1, yheight = 0.1, focus_aw = 0, focus_ah = 0,
-    E0 = 12.5, dE = 10, gauss = 1, incoherent = 0, phase = 0)
+    E0 = 12.5, dE = 10, gauss = 1, randomphase = 0, phase = 0)
   AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT psd0 = PSD_monitor(
