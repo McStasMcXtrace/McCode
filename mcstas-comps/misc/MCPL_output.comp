@@ -142,7 +142,7 @@ TRACE
 
 SAVE
 %{
-    mcpl_close_outfile(outputfile);  
+    mcpl_closeandgzip_outfile(outputfile);  
 %}
 
 FINALLY
