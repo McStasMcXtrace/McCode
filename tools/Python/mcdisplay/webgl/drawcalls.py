@@ -223,7 +223,7 @@ class TemplateWebGLWrite(object):
         settings.configure()
     
     def build(self):
-        templ = open('mcdisplaytemplate.html').read()
+        templ = open('template.html').read()
         t = Template(templ)
         c = Context({'instrument': self.instr_tree})
         self.text = t.render(c)

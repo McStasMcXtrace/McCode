@@ -11,19 +11,30 @@
 	<script src="js/three.min.js"></script>
 	<script src="js/OrbitControls.js"></script>
 	<script>
+		var currentComp = new THREE.Object3D();
 		// add multiline
 		// 		arrVector3 - an array of THREE.Vector3 instances
 		var addMultiLineV3 = function(arrVector3)
 		{
 			var multilinematerial = new THREE.LineBasicMaterial({color: 0x0000ff});
 			var multilinegeometry = new THREE.Geometry();
-
 			for (var i = 0; i < arrVector3.length; i++)
 			{
 				multilinegeometry.vertices.push(arrVector3[i]);
 			}
 			var multiline = new THREE.Line(multilinegeometry, multilinematerial);
-			scene.add(multiline);
+			currentComp.children.push(multiline);
+		}
+		// add a component origo
+		//
+		var addComp = function(pos)//, rot)
+		{
+			var comp = new THREE.Object3D();
+			comp.position = pos;
+			comp.updateMatrix();
+			//comp.rotation = rot;
+			currentComp.children.push(comp);
+			currentComp = comp;
 		}
 		// add multiline proxy method
 		//		points - array of single points
@@ -35,9 +46,7 @@
 				points[i];
 				v = new THREE.Vector3(points[i*3], points[i*3+1], points[i*3+2]);
 				vectors.push(v);
-				console.log(v)
 			}
-			console.log(vectors);
 			addMultiLineV3(vectors);
 		}
 		// add circle to xy plane
@@ -89,10 +98,14 @@
 		camera.position.z = 1;
 		controls = new THREE.OrbitControls( camera );
 		addLight(new THREE.Vector3(10, 50, 130))
+		scene.add(currentComp);
 
 		// component rendering calls
-		{% for comp in instrument.components %}{% for drawcall in comp.drawcommands %}{% if drawcall.key == 'multiline' %}
-		addMultiLineProxy([{{ drawcall.args_str }}]);{% endif %}{% endfor %}{% endfor %}
+		{% for comp in instrument.components %}
+		
+		addComp(new THREE.Vector3({{ comp.pos.x }}, {{ comp.pos.y }}, {{ comp.pos.z }}));
+		{% for drawcall in comp.drawcommands %}{% if drawcall.key == 'multiline' %}
+		addMultiLineProxy([{{drawcall.args_str}}]);{% endif %}{% endfor %}{% endfor %}
 
 		// neutron ray data calls
 		{% for ray in instrument.rays %}{% endfor %}

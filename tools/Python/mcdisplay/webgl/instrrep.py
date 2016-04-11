@@ -17,7 +17,7 @@ class InstrumentConcrete(object):
         self.params_defaults = params_defaults
 
 class Component(object):
-    ''' represents a mcstas component, in context-free form '''
+    ''' represents a mcstas component in some context '''
     name = ''
     drawcommands = []
     pos = None
@@ -71,6 +71,7 @@ class Vector3d(object):
         return '%s, %s, %s' % (str(self.x), str(self.y), str(self.z))
 
 class Matrix3(object):
+    ''' a 3x3 matrix representation '''
     def __init__(self, a11, a12, a13, a21, a22, a23, a31, a32, a33):
         self.a11 = float(a11)
         self.a12 = float(a12)
