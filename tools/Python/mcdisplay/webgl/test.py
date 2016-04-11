@@ -27,7 +27,7 @@ def main(args):
     writer = TemplateWebGLWrite(instrbuilder.instrument_tree)
     writer.build()
     #print writer.text
-    #writer.save('mymultilines.html')
+    writer.save('mymultilines.html')
     
     # step-wise trace parser test
     if False: 
