@@ -18,6 +18,9 @@
 #
 # Next step in the process will be to scp all of the log files to mcc-01 for processing and putting on the web.
 
+# Explicitly set PATH as cron seems not to have a login shell
+export PATH=/Users/mccode/bin:/usr/local/bin:$PATH
+
 # Cd to Git area on buildfarm-master
 cd /Users/mccode/McCode/
 
