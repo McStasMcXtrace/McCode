@@ -1,0 +1,99 @@
+/*****************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Focus
+*
+* %I
+* Written by: Carsten Detlefs, hacked from slit.comp
+* Date: November 6, 2013
+* Version: $Revision: 1.0$
+* Origin: ESRF
+* Release: McXtrace 1.1
+*
+* Turn a photon into a Huygens wavelet. To be used with the SPLIT keyword.
+* 
+* %D
+* Changes direction of the photon to a random direction
+* towards the specified target area.
+* To be used in coherent simulations, preferably with
+* the SPLIT keyword.
+* %P
+* INPUT PARAMETERS
+*
+* dist [m] : distance to target
+* focus_xw [m]: x-width of target
+* focus_yh [m]: y-height of target
+* focus_x0 [m]: x-center of target
+* focus_y0 [m]: y-center of target
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT Focus
+SETTING PARAMETERS (dist=0.0, focus_xw=0.0, focus_yh=0.0, focus_x0=0.0, focus_y0=0.0) 
+OUTPUT PARAMETERS (prms)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+DECLARE
+%{
+ // nothing to declare.
+%}
+
+INITIALIZE
+%{
+  if ((fabs(focus_xw) < 1e-9) || (fabs(focus_yh) < 1e-9)) {
+    fprintf(stderr,"%s: you have to specify a target area\n", NAME_CURRENT_COMP); 
+    exit(0);
+  }
+%}
+
+TRACE
+%{
+  double k;
+
+  PROP_Z0;
+
+  /*
+   * length of wave vector 
+   */
+  k = sqrt(kx*kx + ky*ky + kz*kz);
+
+  /*
+   * "focus" target code stolen from slit.comp
+   */
+  if (fabs(focus_xw) > 1e-9 ){
+     /*
+      * focusing occurs only through the phase shift introduced above
+      */
+     double posx,posy,posz,pdir;
+
+     coords_get(POS_A_CURRENT_COMP,&posx,&posy,&posz);
+
+     /*
+      * we have a target, so we now consider the 
+      * ray a Huygens wavelet.
+      */
+     double xf,yf,zf;
+     randvec_target_rect_real(&xf, &yf, &zf, &pdir,
+         focus_x0-posx,focus_y0-posy,dist, focus_xw, focus_yh, 
+         ROT_A_CURRENT_COMP, x, y, z, 0);
+     
+     kx=(xf-x); ky=(yf-y); kz=(zf-z);
+     NORM(kx,ky,kz);
+     kx*=k;ky*=k;kz*=k;
+  } 
+  SCATTER;
+%}
+
+
+MCDISPLAY
+%{
+ // nothing to display, really
+  magnify("xy");
+  rectangle("xy",0,0,0,2.0,2.0);
+%}
+
+END
