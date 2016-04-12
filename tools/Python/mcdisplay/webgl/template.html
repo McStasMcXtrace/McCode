@@ -100,15 +100,35 @@
 		addLight(new THREE.Vector3(10, 50, 130))
 		scene.add(currentComp);
 
+
+		// TODO: component generation
+		// create comp Object3d
+		// add the comp to last component object (--trace output coordinates sequential local)
+		// create a THREE.Matrix4 from pos & rot
+		// add vertices to component as vertices
+		// use component applyMatrix, this transforms all vertices
+		// create a LineBasicMaterial and a Line from the Object3D and LineBasicMaterial
+
+
 		// component rendering calls
 		{% for comp in instrument.components %}
-		
+
 		addComp(new THREE.Vector3({{ comp.pos.x }}, {{ comp.pos.y }}, {{ comp.pos.z }}));
 		{% for drawcall in comp.drawcommands %}{% if drawcall.key == 'multiline' %}
 		addMultiLineProxy([{{drawcall.args_str}}]);{% endif %}{% endfor %}{% endfor %}
 
+
+		// TODO: neutron ray generation
+		// create one ray object for each ray
+		// add points as vertices to this Object3D (TODAY: ray events are in global coordinates, this should be changed into local, using "component" events (currently not present) )
+		// create a Line as above
+
+
 		// neutron ray data calls
-		{% for ray in instrument.rays %}{% endfor %}
+		{% for ray in instrument.rays %} // TODO: add new Object3D here
+			{% for event in ray.events %} // TODO: add the vertex using the first three coordinates of event.args_str
+			{% endfor %}
+		{% endfor %}
 
 		// renderloop
 		function render() {
