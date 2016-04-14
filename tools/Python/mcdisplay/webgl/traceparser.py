@@ -149,7 +149,7 @@ class InstrProduction:
             
             # handle rays
             if dc.type == 'rays':
-                for rayc in dc.children:
+                for ray in dc.children:
                     
                     # a netron ray's path through the instrument
                     story = NeutronStory()
@@ -159,41 +159,42 @@ class InstrProduction:
                     pos = None
                     rot = None
                     
-                    for rayevent in rayc.children:
-                        if rayevent.type == 'ENTER':
+                    for event in ray.children:
+                        if event.type == 'ENTER':
                             pos = Vector3d(0, 0, 0)
                             rot = Matrix3Identity()
-                            state = NeutronState(rayevent.leaf)
+                            state = None
                             
-                        if rayevent.type == 'COMP':
-                            comp_name = rayevent.children[0].leaf
+                        if event.type == 'COMP':
+                            comp_name = event.children[0].leaf
                             pos, rot = self.getcomp_posrot(comp_name)
                             
-                            vlst = rayevent.leaf[0:3]
+                            vlst = event.leaf[0:3]
                             v = Vector3d(vlst[0], vlst[1], vlst[2])
                             
                             vg = self.transform_local(v, pos, rot)
-                            state = NeutronState(vg.to_lst() + rayevent.leaf[3:])
+                            state = NeutronState(vg.to_lst() + event.leaf[3:])
                             
-                        if rayevent.type == 'SCATTER':
-                            vlst = rayevent.leaf[0:3]
+                        if event.type == 'SCATTER':
+                            vlst = event.leaf[0:3]
                             v = Vector3d(vlst[0], vlst[1], vlst[2])
                             
                             vg = self.transform_local(v, pos, rot)
-                            state = NeutronState(vg.to_lst() + rayevent.leaf[3:])
+                            state = NeutronState(vg.to_lst() + event.leaf[3:])
                         
-                        if rayevent.type == 'ABSORB':
-                            pass
+                        if event.type == 'ABSORB':
+                            state = None
                         
-                        if rayevent.type == 'LEAVE':
-                            vlst = rayevent.leaf[0:3]
+                        if event.type == 'LEAVE':
+                            vlst = event.leaf[0:3]
                             v = Vector3d(vlst[0], vlst[1], vlst[2])
                             
                             vg = self.transform_local(v, pos, rot)
-                            state = NeutronState(vg.to_lst() + rayevent.leaf[3:])
+                            state = NeutronState(vg.to_lst() + event.leaf[3:])
                         
-                        story.events.append(state)
-                        
+                        if state:
+                            story.events.append(state)
+                    
                     self.instrument_tree.rays.append(story)
                     
             # handle comments
