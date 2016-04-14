@@ -22,11 +22,13 @@ class Component(object):
     drawcommands = []
     pos = None
     rot = None
+    m4_str = ''
     def __init__(self, name, pos, rot):
         self.name = name
         self.pos = pos
         self.rot = rot
         self.drawcommands = []
+        self.m4_str = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 0, 0, 0, 1' % (str(rot.a11), str(rot.a12), str(rot.a13), str(pos.x), str(rot.a21), str(rot.a22), str(rot.a23), str(pos.y), str(rot.a31), str(rot.a32), str(rot.a33), str(pos.z))
 
 class NeutronStory(object):
     events = []
@@ -82,7 +84,7 @@ class Matrix3(object):
         self.a31 = float(a31)
         self.a32 = float(a32)
         self.a33 = float(a33)
-        
+
     def mult(self, v):
         ''' multiply a matrix by a vector from the right '''
         x = self.a11*v.x + self.a12*v.y + self.a13*v.z 
