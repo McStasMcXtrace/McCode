@@ -12,49 +12,6 @@
 	<script src="js/OrbitControls.js"></script>
 	<!--<script src="js/TrackballControls.js"></script>-->
 	<script>
-		// add multiline
-		// 		arrVector3 - an array of THREE.Vector3 instances
-		var addMultiLineV3 = function(arrVector3)
-		{
-			var multilinematerial = new THREE.LineBasicMaterial({color: 0x0000ff});
-			var multilinegeometry = new THREE.Geometry();
-			for (var i = 0; i < arrVector3.length; i++)
-			{
-				multilinegeometry.vertices.push(arrVector3[i]);
-			}
-			var multiline = new THREE.Line(multilinegeometry, multilinematerial);
-			lastComp.add(multiline);
-		}
-		// add multiline proxy method
-		//		points - array of single points
-		var addMultiLine = function(points)
-		{
-			vectors = [];
-			for (var i = 0; i < points.length / 3; i++)
-			{
-				points[i];
-				v = new THREE.Vector3(points[i*3], points[i*3+1], points[i*3+2]);
-				vectors.push(v);
-			}
-			addMultiLineV3(vectors);
-		}
-		// add a component origo
-		//		pos - position of component ore
-		var addComponent = function()
-		{
-			var comp = new THREE.Object3D();
-			lastComp.children.push(comp);
-			lastComp = comp;
-		}
-		// finalize by adding and applying position and rotation for this comp and its vertices
-		//
-		var finalizeComponent = function(position, rotation)
-		{
-			var m = new THREE.Matrix4();
-			m.setPosition(position);
-			m.setRotation(rotation)
-			lastComp.applyMatrix(m);
-		}
 		// add circle to xy plane
 		// 		radius
 		// 		center - a THREE.Vector3 instance
@@ -87,12 +44,12 @@
 		// 		center 	- THREE.Vector3 instance
 		var addLight = function(center, scene)
 		{
-	        // pointlight (required to light up sphereMaterial)
-	        var pointLight = new THREE.PointLight(0xFFFFFF);
-	        pointLight.position.x = center.x;
-	        pointLight.position.y = center.y;
-	        pointLight.position.z = center.z;
-	        scene.add(pointLight);
+			// pointlight (required to light up sphereMaterial)
+			var pointLight = new THREE.PointLight(0xFFFFFF);
+			pointLight.position.x = center.x;
+			pointLight.position.y = center.y;
+			pointLight.position.z = center.z;
+			scene.add(pointLight);
 		}
 		// set scene
 		//
@@ -103,13 +60,21 @@
 		var init = function(rootnode)
 		{
 			scene = new THREE.Scene();
+
 			camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 100);
+			camera.position.x = -50;
+			camera.position.y = 0;
+			camera.position.z = 50;
+
 			renderer = new THREE.WebGLRenderer();
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			document.body.appendChild(renderer.domElement);
-			camera.position.z = 1;
 
 			controls = new THREE.OrbitControls(camera);
+			controls.target.x = 1;
+			controls.target.y = 0;
+			controls.target.z = 49;
+
 			//controls = new THREE.TrackballControls(camera);
 
 			//controls.rotateSpeed = 5.0;
@@ -125,38 +90,85 @@
 			addLight(new THREE.Vector3(10, 50, 130), scene)
 			scene.add(rootnode);
 		}
+		// add multiline
+		// 		arrVector3 - an array of THREE.Vector3 instances
+		var addMultiLineV3 = function(arrVector3, parent, linecolor)
+		{
+			console.log(linecolor);
+			var multilinematerial = new THREE.LineBasicMaterial({color: linecolor});
+			var multilinegeometry = new THREE.Geometry();
+			for (var i = 0; i < arrVector3.length; i++)
+			{
+				multilinegeometry.vertices.push(arrVector3[i]);
+			}
+			var multiline = new THREE.Line(multilinegeometry, multilinematerial);
+			parent.add(multiline);
+		}
+		// add multiline proxy method
+		//		points - array of single points
+		var addMultiLine = function(points, parent, linecolor)
+		{
+			vectors = [];
+			for (var i = 0; i < points.length / 3; i++)
+			{
+				points[i];
+				v = new THREE.Vector3(points[i*3], points[i*3+1], points[i*3+2]);
+				vectors.push(v);
+			}
+			addMultiLineV3(vectors, parent, linecolor);
+		}
+		// add a component origo
+		//		pos - position of component ore
+		var addComponent = function(compname, m4_str)
+		{
+			var comp = new THREE.Object3D();
+			root.add(comp);
 
-		var lastComp = new THREE.Object3D();
-		init(lastComp);
+			comps[compname] = comp;
+			return comp;
+		}
+
+		comps = {};
+		var root = new THREE.Object3D();
+		var lastComp = root;
+		init(root);
 
 		// component draw section
 		var m4;
 		{% for comp in instrument.components %}
-		addComponent();
+		lastComp = addComponent("{{comp.name}}", {{comp.m4_str}});
 			{% for drawcall in comp.drawcommands %}
-				{% if drawcall.key == 'multiline' %}addMultiLine([{{drawcall.args_str}}]);{% endif %}
+				{% if drawcall.key == 'multiline' %}addMultiLine([{{drawcall.args_str}}], lastComp, 0x0000ff);{% endif %}
 			{% endfor %}
 		m4 = new THREE.Matrix4();
 		m4.set({{comp.m4_str}});
 		lastComp.applyMatrix(m4);
 		{% endfor %}
 
-		// TODO: neutron ray generation
-		// create one ray object for each ray
-		// add points as vertices to this Object3D (TODAY: ray events are in global coordinates, this should be changed into local, using "component" events (currently not present) )
-		// create a Line as above
+		// TODO: Ray events are in global coordinates from python. This should be changed into local, using "component" events (currently not present)
+		var addRay = function()
+		{
+			var ray = new THREE.Object3D();
+			root.add(ray);
+			return ray;
+		}
 
+		var apos;
+		var rayobj;
 		// neutron ray data calls
-		{% for ray in instrument.rays %} // TODO: add new Object3D here
-			{% for event in ray.events %} // TODO: add the vertex using the first three coordinates of event.args_str
-			{% endfor %}
-		{% endfor %}
+		{% for ray in instrument.rays %}
+			rayobj = addRay();
+			apos = [];
+			{% for event in ray.events %}
+				apos.push(new THREE.Vector3({{event.position.x}}, {{event.position.y}}, {{event.position.z}}));{% endfor %}
+			addMultiLineV3(apos, rayobj, 0x00ffff);
+			console.log(rayobj);{% endfor %}
 
 		// renderloop
 		function render() {
 			//controls.update();
-			requestAnimationFrame( render );
-			renderer.render( scene, camera );
+			requestAnimationFrame(render);
+			renderer.render(scene, camera);
 		}
 		render();
     </script>
