@@ -402,7 +402,7 @@ class TraceParser:
 
     def p_12dec(self, p):
         '12dec : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC'
-        p[0] = Node(type='12dec', leaf=[p[1], p[3], p[5], p[7], p[9], p[11], p[13], p[15], p[17], p[19], p[21], p[21]])
+        p[0] = Node(type='12dec', leaf=[p[1], p[3], p[5], p[7], p[9], p[11], p[13], p[15], p[17], p[19], p[21], p[23]])
         
     def p_3dec(self, p):
         '3dec :  DEC COMMA DEC COMMA DEC'
