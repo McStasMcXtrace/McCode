@@ -10,6 +10,7 @@
 <body>
 	<script src="js/three.min.js"></script>
 	<script src="js/OrbitControls.js"></script>
+	<!--<script src="js/TrackballControls.js"></script>-->
 	<script>
 		// add multiline
 		// 		arrVector3 - an array of THREE.Vector3 instances
@@ -98,6 +99,7 @@
 		var scene;
 		var camera
 		var renderer;
+		var controls;
 		var init = function(rootnode)
 		{
 			scene = new THREE.Scene();
@@ -106,7 +108,20 @@
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			document.body.appendChild(renderer.domElement);
 			camera.position.z = 1;
+
 			controls = new THREE.OrbitControls(camera);
+			//controls = new THREE.TrackballControls(camera);
+
+			//controls.rotateSpeed = 5.0;
+			//controls.zoomSpeed = 5;
+			//controls.panSpeed = 2;
+
+			//controls.noZoom = false;
+			//controls.noPan = false;
+
+			//controls.staticMoving = true;
+			//controls.dynamicDampingFactor = 0.3;
+
 			addLight(new THREE.Vector3(10, 50, 130), scene)
 			scene.add(rootnode);
 		}
@@ -139,6 +154,7 @@
 
 		// renderloop
 		function render() {
+			//controls.update();
 			requestAnimationFrame( render );
 			renderer.render( scene, camera );
 		}
