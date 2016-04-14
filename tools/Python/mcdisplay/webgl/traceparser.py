@@ -112,7 +112,7 @@ class InstrProduction:
                         for cc in csc.children:
                             if cc.type == 'comp_name':
                                 name = cc.leaf
-                            if cc.type == '12dec':
+                            if cc.type == 'm4':
                                 pos = Vector3d(x=float(cc.leaf[0]), y=float(cc.leaf[1]), z=float(cc.leaf[2]))
                                 rot = Matrix3(
                                         a11=float(cc.leaf[3]),
@@ -393,20 +393,20 @@ class TraceParser:
         p[0] = self.comps
 
     def p_comp_def(self, p):
-        'comp_def : COMPONENT COLON QUOTE comp_name QUOTE NL POS COLON 12dec NL COMPKW comp_name AT LB 3dec RB NL'
+        'comp_def : COMPONENT COLON QUOTE comp_name QUOTE NL POS COLON m4 NL COMPKW comp_name AT LB v3 RB NL'
         p[0] = Node(type='comp', children=[p[4], p[9], p[15]])
     
     def p_comp_name(self, p):
         'comp_name : ID'
         p[0] = Node(type="comp_name", leaf=p[1])
 
-    def p_12dec(self, p):
-        '12dec : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC'
-        p[0] = Node(type='12dec', leaf=[p[1], p[3], p[5], p[7], p[9], p[11], p[13], p[15], p[17], p[19], p[21], p[23]])
+    def p_m4(self, p):
+        'm4 : DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC COMMA DEC'
+        p[0] = Node(type='m4', leaf=[p[1], p[3], p[5], p[7], p[9], p[11], p[13], p[15], p[17], p[19], p[21], p[23]])
         
-    def p_3dec(self, p):
-        '3dec :  DEC COMMA DEC COMMA DEC'
-        p[0] = Node(type='3dec', leaf=[p[1], p[3], p[5]])
+    def p_v3(self, p):
+        'v3 :  DEC COMMA DEC COMMA DEC'
+        p[0] = Node(type='v3', leaf=[p[1], p[3], p[5]])
     
     def p_comments(self, p):
         '''comments : comment comments
