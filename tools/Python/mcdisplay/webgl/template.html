@@ -127,6 +127,18 @@
 			comps[compname] = comp;
 			return comp;
 		}
+		//
+		compColors = [0xffd700, 0x00ffff, 0x00ff00, 0x800000, 0xffff00, 0xff7373, 0xffa500, 0xf08080];
+		iColor = -1;
+		var getNextComponentColor = function()
+		{
+			iColor += 1;
+			if (iColor >= compColors.length)
+			{
+				iColor = 0;
+			}
+			return compColors[iColor];
+		}
 
 		comps = {};
 		var root = new THREE.Object3D();
@@ -135,11 +147,12 @@
 
 		// component draw section
 		var m4;
+		var acolor;
 		{% for comp in instrument.components %}
+		// component draw
 		lastComp = addComponent("{{comp.name}}", {{comp.m4_str}});
-			{% for drawcall in comp.drawcommands %}
-				{% if drawcall.key == 'multiline' %}addMultiLine([{{drawcall.args_str}}], lastComp, 0x0000ff);{% endif %}
-			{% endfor %}
+		acolor = getNextComponentColor();{% for drawcall in comp.drawcommands %}{% if drawcall.key == 'multiline' %}
+		addMultiLine([{{drawcall.args_str}}], lastComp, acolor);{% endif %}{% endfor %}
 		m4 = new THREE.Matrix4();
 		m4.set({{comp.m4_str}});
 		lastComp.applyMatrix(m4);
@@ -160,6 +173,7 @@
 			rayobj = addRay();
 			apos = [];
 			{% for event in ray.events %}
+
 				apos.push(new THREE.Vector3({{event.position.x}}, {{event.position.y}}, {{event.position.z}}));{% endfor %}
 			addMultiLineV3(apos, rayobj, 0x00ffff);
 			console.log(rayobj);{% endfor %}
