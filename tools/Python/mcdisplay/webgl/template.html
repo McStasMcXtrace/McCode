@@ -159,30 +159,65 @@
 		{% endfor %}
 
 		// TODO: Ray events are in global coordinates from python. This should be changed into local, using "component" events (currently not present)
-		var addRay = function()
+		var createRay = function()
 		{
 			var ray = new THREE.Object3D();
-			root.add(ray);
 			return ray;
 		}
 
+		var rayColor = 0x00ffff;
 		var apos;
 		var rayobj;
+		var allRays = [];
 		// neutron ray data calls
 		{% for ray in instrument.rays %}
-			rayobj = addRay();
+			rayobj = createRay();
+			allRays.push(rayobj);
 			apos = [];
 			{% for event in ray.events %}
-
 				apos.push(new THREE.Vector3({{event.position.x}}, {{event.position.y}}, {{event.position.z}}));{% endfor %}
-			addMultiLineV3(apos, rayobj, 0x00ffff);
+			addMultiLineV3(apos, rayobj, rayColor);
 			console.log(rayobj);{% endfor %}
+
+		// show all rays in arrayOfRays
+		var showRays = function(arrayOfRays, root)
+		{
+			for (var i = 0; i < arrayOfRays.length; i++)
+			{
+				root.add(arrayOfRays[i]);
+			}
+		}
+		// remove all rays in arrayOfRays from scene tree
+		var hideRays = function(arrayOfRays, root)
+		{
+			for (var i = 0; i < arrayOfRays.length; i++)
+			{
+				root.remove(arrayOfRays[i]);
+			}
+		}
+		//
+		iRay = -1;
+		var showNextRay = function(arrayOfRays, root)
+		{
+			lastRay = iRay
+			iRay += 1;
+			if (iRay >= arrayOfRays.length)
+			{
+				iRay = 0;
+			}
+			root.add(arrayOfRays[iRay]);
+			root.remove(arrayOfRays[lastRay]);
+		}
+
+		//showRays(allRays, root);
 
 		// renderloop
 		function render() {
 			//controls.update();
 			requestAnimationFrame(render);
 			renderer.render(scene, camera);
+
+			showNextRay(allRays, root);
 		}
 		render();
     </script>
