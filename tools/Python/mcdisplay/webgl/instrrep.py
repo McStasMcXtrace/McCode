@@ -28,8 +28,15 @@ class Component(object):
         self.pos = pos
         self.rot = rot
         self.drawcommands = []
-        self.m4_str = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 0, 0, 0, 1' % (str(rot.a11), str(rot.a12), str(rot.a13), str(pos.x), str(rot.a21), str(rot.a22), str(rot.a23), str(pos.y), str(rot.a31), str(rot.a32), str(rot.a33), str(pos.z))
-
+        if pos != None and rot != None:
+            self.m4_str = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 0, 0, 0, 1' % (str(rot.a11), str(rot.a12), str(rot.a13), str(pos.x), str(rot.a21), str(rot.a22), str(rot.a23), str(pos.y), str(rot.a31), str(rot.a32), str(rot.a33), str(pos.z))
+    
+    @classmethod
+    def from_m4_str(cls, name, m4_str):
+        obj = cls(name, None, None)
+        obj.m4_str = m4_str
+        return obj
+        
 class NeutronStory(object):
     events = []
     def __init__(self):
