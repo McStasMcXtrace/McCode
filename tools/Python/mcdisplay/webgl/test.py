@@ -17,7 +17,7 @@ def main(args):
     
     # print the parse tree as a test
     treeprint = NodeTreePrint(parser.parsetree) 
-    treeprint.print_tree()
+    treeprint.print_tree(printrays=True)
     
     # build instrument data object
     instrbuilder = InstrProduction(parser.parsetree)
