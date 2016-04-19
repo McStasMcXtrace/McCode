@@ -40,7 +40,7 @@ class Component(object):
 class NeutronStory(object):
     events = []
     def __init__(self):
-        self.events= []
+        self.events = []
 
 class NeutronState(object):
     args_str = ''

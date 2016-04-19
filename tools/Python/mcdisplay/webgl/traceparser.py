@@ -89,6 +89,10 @@ class InstrProduction:
         # create instrument object
         self.instrument_tree = InstrumentConcrete(name='', params=[], params_defaults=[])
         
+        # for internal use
+        self.compindices = {}
+        comp_idx = 0
+        
         # iterate through parse tree
         for dc in self.root.children:
             # handle instrument branch
@@ -146,56 +150,57 @@ class InstrProduction:
                                     comp.drawcommands.append(draw)
                         
                         self.instrument_tree.components.append(comp)
+                        
+                        # save component in dictionary-by-name for internal use
+                        comp_idx += 1
+                        self.compindices[name] = comp_idx
             
             # handle rays
             if dc.type == 'rays':
                 for ray in dc.children:
                     
-                    # a netron ray's path through the instrument
-                    story = NeutronStory()
+                    # prepare state variables
+                    story = None
+                    point_entries = None
+                    comp_name = None
+                    comp_index = 0
                     
-                    # scope 
-                    state = None
-                    pos = None
-                    rot = None
-                    
+                    # NOTE: the node tree is a bit weird in that there are no COMPEXIT's, these are just SCATTER 
                     for event in ray.children:
                         if event.type == 'ENTER':
-                            pos = Vector3d(0, 0, 0)
-                            rot = Matrix3Identity()
-                            state = None
+                            story = self.new_story()
                             
-                        if event.type == 'COMP':
+                        if event.type == 'COMPENTER' or event.type == 'COMPENTEREXIT':
+                            # get component name
                             comp_name = event.children[0].leaf
-                            pos, rot = self.getcomp_posrot(comp_name)
                             
-                            vlst = event.leaf[0:3]
-                            v = Vector3d(vlst[0], vlst[1], vlst[2])
+                            # check for "jump-backs"
+                            idx = self.get_compindex(comp_name)
+                            if idx < comp_index:
+                                story = self.new_story()
+                            comp_index = idx
                             
-                            vg = self.transform_local(v, pos, rot)
-                            state = NeutronState(vg.to_lst() + event.leaf[3:])
-                            
+                            # record entry
+                            if event.type == 'COMPENTER' or self.iszerovector_str(event.leaf[0:3]):
+                                point_entries = []
+                            else:
+                                point_entries = [NeutronState(event.leaf)]
+                            story.events.append([comp_name, point_entries])
+                        
                         if event.type == 'SCATTER':
-                            vlst = event.leaf[0:3]
-                            v = Vector3d(vlst[0], vlst[1], vlst[2])
-                            
-                            vg = self.transform_local(v, pos, rot)
-                            state = NeutronState(vg.to_lst() + event.leaf[3:])
+                            point_entries.append(NeutronState(event.leaf))
                         
                         if event.type == 'ABSORB':
-                            state = None
+                            # TODO: when --trace has been updated with ABSORB coordinates
+                            #point_entries.append(NeutronState(event.leaf))
+                            pass
                         
                         if event.type == 'LEAVE':
-                            vlst = event.leaf[0:3]
-                            v = Vector3d(vlst[0], vlst[1], vlst[2])
-                            
-                            vg = self.transform_local(v, pos, rot)
-                            state = NeutronState(vg.to_lst() + event.leaf[3:])
-                        
-                        if state:
-                            story.events.append(state)
-                    
-                    self.instrument_tree.rays.append(story)
+                            # append LEAVE state, although equal to SCATTER states, may be the result of COMPENTER, ABSORB
+                            # TODO: read ABSORB todo and accomodate, removing this then completely redundant LEAVE state
+                            point_entries.append(NeutronState(event.leaf))
+                            point_entries = None
+                            story = None
                     
             # handle comments
             # TODO: implement
@@ -205,22 +210,22 @@ class InstrProduction:
                     if cmc.type == '':
                         pass
     
-    compdict = None
-    def getcomp_posrot(self, comp_name):
-        ''' returns a 2-tuple containing component pos and rot vectors, given component name '''
-        if not self.compdict:
-            self.compdict = {}
-            for comp in self.instrument_tree.components:
-                self.compdict[comp.name] = (comp.pos, comp.rot)
-                
-        pos, rot = self.compdict[comp_name]
-        return pos, rot
+    def iszerovector_str(self, v):
+        ''' returns true if v is the zero vector, otherwise false '''
+        if float(v[0]) == 0 and float(v[1]) == 0 and float(v[2]) == 0:
+            return True
+        else:
+            return False
     
-    def transform_local(self, v, pos, rot):
-        ''' transforms a neutron from local to global coordinates '''
-        rotated = rot.mult(v)
-        return rotated.add(pos)
-
+    def get_compindex(self, comp_name):
+        ''' returns index of component by component name '''
+        return self.compindices[comp_name]
+    
+    def new_story(self):
+        ''' appends a new neutron story to the instrument ray bundle '''
+        story = NeutronStory()
+        self.instrument_tree.rays.append(story)
+        return story
 
 class TraceParser:
     '''
@@ -506,11 +511,11 @@ class TraceParser:
         
     def p_ray_compstate(self, p):
         'ray_compstate : COMP COLON QUOTE comp_name QUOTE NL STATE COLON 11dec NL'
-        p[0] = Node(type='COMP', children=[p[4]], leaf=p[9].leaf)
+        p[0] = Node(type='COMPENTER', children=[p[4]], leaf=p[9].leaf)
     
     def p_ray_compstatestate(self, p):
         'ray_compstatestate : COMP COLON QUOTE comp_name QUOTE NL STATE COLON 11dec NL STATE COLON 11dec NL'
-        p[0] = Node(type='COMP', children=[p[4]], leaf=p[9].leaf)
+        p[0] = Node(type='COMPENTEREXIT', children=[p[4]], leaf=p[13].leaf)
     
     def p_ray_scatterstate(self, p):
         'ray_scatterstate : SCATTER COLON 11dec NL STATE COLON 11dec NL'

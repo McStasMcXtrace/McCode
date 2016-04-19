@@ -174,10 +174,11 @@
 			rayobj = createRay();
 			allRays.push(rayobj);
 			apos = [];
-			{% for event in ray.events %}
-				apos.push(new THREE.Vector3({{event.position.x}}, {{event.position.y}}, {{event.position.z}}));{% endfor %}
-			addMultiLineV3(apos, rayobj, rayColor);
-			console.log(rayobj);{% endfor %}
+			{% for comp_points in ray.events %}
+				{% for p in comp_points.1 %}
+					// TODO: here put logic for component coordinate conversions
+					apos.push(new THREE.Vector3({{ p.position.x }}, {{ p.position.y }}, {{ p.position.z }}));{% endfor %}{% endfor %}
+			addMultiLineV3(apos, rayobj, rayColor);{% endfor %}
 
 		// show all rays in arrayOfRays
 		var showRays = function(arrayOfRays, root)
