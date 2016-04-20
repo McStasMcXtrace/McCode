@@ -85,6 +85,13 @@ INITIALIZE
     exit(1);
   }
 
+  /*calculate the X-ray weight from the flux*/
+  if (flux){//pmul=flux;
+    prms.pmul=flux*1.0/(double)mcget_ncount();
+  }else{
+    prms.pmul=1.0/(double)mcget_ncount();
+  }
+
   if (spectrum_file){
     /*read spectrum from file*/
     int status=0;
@@ -94,31 +101,32 @@ INITIALIZE
     }
     /*data is now in table t*/
     /*integrate to get total flux, assuming numbers have been corrected for measuring aperture*/
-    int i;
+    int i,flc,ec;
+    int cols,rows;
     prms.pint=0;
+    flc=1;ec=0;/*flux and energy col numbers*/
+
     t_Table *T=&(prms.T);
-    for (i=0;i<prms.T.rows-1;i++){
+    cols=T->columns;
+    rows=T->rows;
+
+    for (i=0;i<rows-1;i++){
       if (brilliance){
         /*unit is brilliance - not raw flux per unit angle and source area*/
         /*correct for the non-uniform energy binning*/
-        prms.pint+=(1.0/(T->data[i*T->columns]*0.01))*((T->data[i*T->columns+1]+T->data[(i+1)*T->columns+1])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]);
+          double ebw=T->data[i*cols + ec]*1e-3; /*absolute bw in keV (should be the mean energy of the bin edges)*/
+          double ebin=(T->data[(i+1)*cols + ec]-T->data[i*cols + ec]); /*energy bin width in keV*/
+          prms.pint+=T->data[i*cols+flc]/ebw*ebin;
       }else{
-        prms.pint+=((T->data[i*T->columns+2]+T->data[(i+1)*T->columns+2])/2.0)*(T->data[(i+1)*T->columns]-T->data[i*T->columns]);
+          double ebin=(T->data[(i+1)*cols + ec]-T->data[i*cols + ec]); /*energy bin width in keV*/
+          prms.pint+=T->data[i*cols+flc]*ebin;
       }
-
     }
-
     printf("%s: Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
     if(E0) printf("%s: E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
   } else if (!E0 && !lambda0){
     fprintf(stderr,"Error (%s): Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
     exit(1);
-  }
-  /*calculate the X-ray weight from the flux*/
-  if (flux){//pmul=flux;
-    prms.pmul=flux*1.0/(double)mcget_ncount(); 
-  }else{
-    prms.pmul=1.0/(double)mcget_ncount();
   }
 
   /*Beam's footprint at a dist calculation*/
@@ -135,7 +143,12 @@ INITIALIZE
     }
   }
 
-
+  /*corrections for energy range*/
+  if(spectrum_file){
+      prms.pmul*=(prms.T.data[(prms.T.rows-1)*prms.T.columns]-prms.T.data[0]);
+  }else{
+      prms.pmul*=2*dE;
+  }
 %}
 
 
@@ -160,9 +173,9 @@ TRACE
     l=prms.T.data[0]+ (prms.T.data[(prms.T.rows-1)*prms.T.columns] -prms.T.data[0])*rand01();
     if(brilliance){
       /*correct for brilliance being defined in relative wavelength band to get raw flux*/
-      pp=Table_Value(prms.T,l,2)/(Table_Value(prms.T,1,0)*0.01);
+      pp=Table_Value(prms.T,l,1)/(Table_Value(prms.T,l,0)*1e-3);
     }else{
-      pp=Table_Value(prms.T,l,2);
+      pp=Table_Value(prms.T,l,1);
     }
     p*=pp;
     
@@ -178,7 +191,7 @@ TRACE
     }else if (gauss){
       e=E0+dE*randnorm();
     }else{
-      e=randpm1()*dE*0.5 + E0;
+      e=randpm1()*dE + E0;
     }
     k=E2K*e;
   }else if (lambda0){
@@ -187,7 +200,7 @@ TRACE
     }else if (gauss){
       l=lambda0+dlambda*randnorm();
     }else{
-      l=randpm1()*dlambda*0.5 + lambda0;
+      l=randpm1()*dlambda + lambda0;
     }
     k=(2*M_PI/l);
   }
