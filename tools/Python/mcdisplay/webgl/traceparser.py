@@ -163,7 +163,6 @@ class InstrProduction:
                     story = None
                     point_entries = None
                     comp_name = None
-                    comp_index = 0
                     
                     # NOTE: the node tree is a bit weird in that there are no COMPEXIT's, these are just SCATTER 
                     for event in ray.children:
@@ -173,12 +172,6 @@ class InstrProduction:
                         if event.type == 'COMPENTER' or event.type == 'COMPENTEREXIT':
                             # get component name
                             comp_name = event.children[0].leaf
-                            
-                            # check for "jump-backs"
-                            idx = self.get_compindex(comp_name)
-                            if idx < comp_index:
-                                story = self.new_story()
-                            comp_index = idx
                             
                             # record entry
                             if event.type == 'COMPENTER' or self.iszerovector_str(event.leaf[0:3]):
