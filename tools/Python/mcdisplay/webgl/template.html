@@ -82,7 +82,6 @@
 		// 		arrVector3 - an array of THREE.Vector3 instances
 		var addMultiLineV3 = function(arrVector3, parent, linecolor)
 		{
-			console.log(linecolor);
 			var multilinematerial = new THREE.LineBasicMaterial({color: linecolor});
 			var multilinegeometry = new THREE.Geometry();
 			for (var i = 0; i < arrVector3.length; i++)
@@ -90,6 +89,20 @@
 				multilinegeometry.vertices.push(arrVector3[i]);
 			}
 			var multiline = new THREE.Line(multilinegeometry, multilinematerial);
+			parent.add(multiline);
+		}
+		// add multiline
+		// 		arrVector3 - an array of THREE.Vector3 instances
+		var addMultiLineRay = function(arrVector3, parent, transform, linecolor)
+		{
+			var multilinematerial = new THREE.LineBasicMaterial({color: linecolor});
+			var multilinegeometry = new THREE.Geometry();
+			for (var i = 0; i < arrVector3.length; i++)
+			{
+				multilinegeometry.vertices.push(arrVector3[i]);
+			}
+			var multiline = new THREE.Line(multilinegeometry, multilinematerial);
+			multiline.applyMatrix(transform);
 			parent.add(multiline);
 		}
 		// add multiline proxy method
@@ -111,8 +124,7 @@
 		{
 			var comp = new THREE.Object3D();
 			root.add(comp);
-
-			comps[compname] = comp;
+			compnodes[compname] = comp;
 			return comp;
 		}
 		//
@@ -128,45 +140,56 @@
 			return compColors[iColor];
 		}
 
-		comps = {};
+		// COMPONENTS
+
+		var compnodes = {};
 		var root = new THREE.Object3D();
-		var lastComp = root;
+		var comproot = new THREE.Object3D();
+		root.add(comproot);
 		init(root);
 
-		// component draw section
+		var comp;
 		var m4;
 		var acolor;
 		{% for comp in instrument.components %}
-		// component draw
-		lastComp = addComponent("{{comp.name}}", {{comp.m4_str}});
+
+		comp = addComponent("{{comp.name}}", {{comp.m4_str}});
 		acolor = getNextComponentColor();{% for drawcall in comp.drawcommands %}{% if drawcall.key == 'multiline' %}
-		addMultiLine([{{drawcall.args_str}}], lastComp, acolor);{% endif %}{% endfor %}
+		addMultiLine([{{drawcall.args_str}}], comp, acolor);{% endif %}{% endfor %}
 		m4 = new THREE.Matrix4();
 		m4.set({{comp.m4_str}});
-		lastComp.applyMatrix(m4);
+		comp.applyMatrix(m4);
 		{% endfor %}
 
-		// TODO: Ray events are in global coordinates from python. This should be changed into local, using "component" events (currently not present)
-		var createRay = function()
+		// generate coordinate transforms to use on the componen-specific ray segments below
+		var transformPoints = function(apoints, transform)
 		{
-			var ray = new THREE.Object3D();
-			return ray;
+			var geometry = new THREE.Geometry();
+			for (i = 0; i < apoints.length; i++)
+			{
+				geometry.vertices.push(apoints[i]);
+			}
+			geometry.applyMatrix(transform);
+			return geometry.vertices.slice();
 		}
+		// neutron ray data calls
 
 		var rayColor = 0x00ffff;
-		var apos;
+		var aVertices;
+		var aCompVertices
 		var rayobj;
 		var allRays = [];
-		// neutron ray data calls
 		{% for ray in instrument.rays %}
-			rayobj = createRay();
+			rayobj = new THREE.Object3D();
 			allRays.push(rayobj);
-			apos = [];
+			aVertices = [];
 			{% for comp_points in ray.events %}
+				aCompVertices = [];
 				{% for p in comp_points.1 %}
-					// TODO: here put logic for component coordinate conversions
-					apos.push(new THREE.Vector3({{ p.position.x }}, {{ p.position.y }}, {{ p.position.z }}));{% endfor %}{% endfor %}
-			addMultiLineV3(apos, rayobj, rayColor);{% endfor %}
+					aCompVertices.push(new THREE.Vector3({{ p.position.x }}, {{ p.position.y }}, {{ p.position.z }}));{% endfor %}
+				aVertices = aVertices.concat(transformPoints(aCompVertices, compnodes["{{comp_points.0}}"].matrix));{% endfor %}
+				console.log(aVertices);
+				addMultiLineV3(aVertices, rayobj, rayColor);{% endfor %}
 
 		// show all rays in arrayOfRays
 		var showRays = function(arrayOfRays, root)
