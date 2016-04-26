@@ -118,17 +118,19 @@ class InstrProduction:
                                 name = cc.leaf
                             if cc.type == 'm4':
                                 pos = Vector3d(x=float(cc.leaf[0]), y=float(cc.leaf[1]), z=float(cc.leaf[2]))
+                                # transpose rotation to conform from mcstas trans rot convention to 4x4 transform notation
                                 rot = Matrix3(
                                         a11=float(cc.leaf[3]),
-                                        a12=float(cc.leaf[4]),
-                                        a13=float(cc.leaf[5]),
-                                        a21=float(cc.leaf[6]),
+                                        a21=float(cc.leaf[4]),
+                                        a31=float(cc.leaf[5]),
+                                        a12=float(cc.leaf[6]),
                                         a22=float(cc.leaf[7]),
-                                        a23=float(cc.leaf[8]),
-                                        a31=float(cc.leaf[9]),
-                                        a32=float(cc.leaf[10]),
+                                        a32=float(cc.leaf[8]),
+                                        a13=float(cc.leaf[9]),
+                                        a23=float(cc.leaf[10]),
                                         a33=float(cc.leaf[11])
                                         )
+                                
                         comp = Component(name=name, pos=pos, rot=rot)
                         
                         # get draw commands (please print a parse tree with NodeTreePrint to understand this)
