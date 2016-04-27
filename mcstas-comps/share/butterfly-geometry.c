@@ -95,7 +95,8 @@ circle("xz", rAx, 1, rAz, 5.5);
 double w1=0.206/2.0, w2=0.276/2.0, l1=2.0+rAz, l2=2.0+rAz+1.75, l3=2.0+rAz+3.5;
 line(w1, 0, l1, w1, 0, l2);
 line(-w1, 0, l1, -w1, 0, l2);
-
+line(w1, 0, l2, w2, 0, l2);
+line(-w1, 0, l2, -w2, 0, l2);
 line(w2, 0, l2, w2, 0, l3);
 line(-w2, 0, l2, -w2, 0, l3);
 
