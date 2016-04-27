@@ -49,9 +49,22 @@ COMPONENT Arm1 = Arm()
 COMPONENT Arm2 = Arm()
   AT (0,0,3.5) RELATIVE PREVIOUS
 
-// insert components here (e.g. Insert -> Source -> ...)
+/* Uncomment these helper-arms to view "full" monolith */
 
+/* COMPONENT DummyArm1 = Arm() */
+/*   AT (6,0,6) ABSOLUTE */
 
+/* COMPONENT DummyArm2 = Arm() */
+/*   AT (-6,0,6) ABSOLUTE */
+
+/* COMPONENT DummyArm3 = Arm() */
+/*   AT (-6,0,-6) ABSOLUTE */
+
+/* COMPONENT DummyArm4 = Arm() */
+/*   AT (6,0,-6) ABSOLUTE */
+
+/* COMPONENT DummyArm5 = Arm() */
+/*   AT (6,0,6) ABSOLUTE */
 
 
 FINALLY

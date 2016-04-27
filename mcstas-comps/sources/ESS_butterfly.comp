@@ -30,8 +30,8 @@
 
 DEFINE COMPONENT ESS_butterfly
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string sector="N",int beamline=1)
-  OUTPUT PARAMETERS (cx, cz, sign_bl_angle, orientation_angle)
+SETTING PARAMETERS (string sector="N",int beamline=1, yheight=0.03)
+OUTPUT PARAMETERS (cx, cz, sign_bl_angle, orientation_angle)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
 %{
@@ -43,7 +43,7 @@ DECLARE
 
 INITIALIZE
 %{
-  // if (beamline>=1 && beamline <=11) {
+  if (beamline>=1 && beamline <=11) {
     /* Centering-parameters, which sector are we in? */
     if (strcasestr(sector,"N")) {
       cx = 0.117; cz=0.0; sign_bl_angle=1;
@@ -61,10 +61,10 @@ INITIALIZE
       fprintf(stderr,"%s: Sector %s is undefined, please use N, W, S or E!\n", NAME_CURRENT_COMP,sector);
       exit(-1);
     }
-  /* } else { */
-  /*   fprintf(stderr,"%s: beamline no %i is undefined, please use 1 <= beamline <= 11\n", NAME_CURRENT_COMP,beamline); */
-  /*   exit(-1); */
-  /* } */
+  } else {
+    fprintf(stderr,"%s: beamline no %i is undefined, please use 1 <= beamline <= 11\n", NAME_CURRENT_COMP,beamline);
+    exit(-1);
+  }
   printf("Setting up for sector %s, beamline %i, global orientation angle is %g\n",sector,beamline,orientation_angle);
 %}
 
