@@ -60,27 +60,26 @@ rBz = r21*(ccz) + r22*(ccx);
 line(rAx, 0, rAz, rBx, 0, rBz);
 
 /* 120 degree "end of sector" lines */
-bbz = 2 * cos(DEG2RAD*60);
-bbx = 2 * sin(DEG2RAD*60);
-ccz = 2 * cos(-DEG2RAD*60);
-ccx = 2 * sin(-DEG2RAD*60);
+bbz = 2 * cos(DEG2RAD*61);
+bbx = 2 * sin(DEG2RAD*61);
+ccz = 2 * cos(-DEG2RAD*61);
+ccx = 2 * sin(-DEG2RAD*61);
 rBx = r11*(bbz) + r12*(bbx);
 rBz = r21*(bbz) + r22*(bbx);
-dashed_line(rAx, 0, rAz, rBx, 0, rBz,51);
+dashed_line(rAx, 0, rAz, rBx+rAx, 0, rBz+rAz,51);
 rBx = r11*(ccz) + r12*(ccx);
 rBz = r21*(ccz) + r22*(ccx);
-dashed_line(rAx, 0, rAz, rBx, 0, rBz,51);
-bbz = 2 * cos(DEG2RAD*120);
-bbx = 2 * sin(DEG2RAD*120);
-ccz = 2 * cos(-DEG2RAD*120);
-ccx = 2 * sin(-DEG2RAD*120);
+dashed_line(rAx, 0, rAz, rBx+rAx, 0, rBz+rAz,51);
+bbz = 2 * cos(DEG2RAD*119);
+bbx = 2 * sin(DEG2RAD*119);
+ccz = 2 * cos(-DEG2RAD*119);
+ccx = 2 * sin(-DEG2RAD*119);
 rBx = r11*(bbz) + r12*(bbx);
 rBz = r21*(bbz) + r22*(bbx);
-dashed_line(rAx, 0, rAz, rBx, 0, rBz,51);
+dashed_line(rAx, 0, rAz, rBx+rAx, 0, rBz+rAz,51);
 rBx = r11*(ccz) + r12*(ccx);
 rBz = r21*(ccz) + r22*(ccx);
-dashed_line(rAx, 0, rAz, rBx, 0, rBz,51);
-
+dashed_line(rAx, 0, rAz, rBx+rAx, 0, rBz+rAz,51);
 /* Circles indicating extent of the "empty" zone where optics is not allowed */
 circle("xz", rAx, 0, rAz, 2.0);
 circle("xz", rAx, -0.1, rAz, 2.0);
