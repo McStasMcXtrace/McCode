@@ -8,7 +8,7 @@ import os
 import webbrowser
 import logging
 import argparse
-from traceparser import TraceParser, InstrProduction
+from traceparser import TraceParser, InstrProduction, cleanTrace
 from drawcalls import TemplateWebGLWrite
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -19,7 +19,7 @@ def main(args):
     
     # read data from stdin
     print "reading data..."
-    data = read()
+    data = cleanTrace(read())
     
     # build trace parser and parse data
     print "parsing data..."

@@ -5,7 +5,7 @@ mini language.
 Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
 from ply import lex, yacc
-from instrrep import InstrumentConcrete, Component, Vector3d, NeutronStory, NeutronState, Matrix3, Matrix3Identity
+from instrrep import InstrumentConcrete, Component, Vector3d, NeutronStory, NeutronState, Matrix3
 from drawcalls import drawclass_factory
 
 class Node(object):
@@ -562,4 +562,10 @@ class TraceParser:
     def parse(self, data):
         ''' attempts to parse data '''
         self.parser.parse(data, lexer=self.lexer)
+
+def cleanTrace(data):
+    ''' convenience method; returns everything from INSTRUMENT:\n tag and on '''
+    pos = data.find('INSTRUMENT:\n')
+    return data[pos:]
+
 
