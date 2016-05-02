@@ -388,7 +388,7 @@ class McGuiState(QtCore.QObject):
         
         print('Running: '+runstr)
 
-        # Ensure assembled runstr is a string - QStrings breaks the runAsync execution!
+        # Ensure assembled runstr is a string, not a QString 
         runstr = str(runstr)
         
         # run simulation in a background thread
@@ -438,7 +438,7 @@ class McGuiState(QtCore.QObject):
         
         if stderrdata:
             self.__emitter.message(stderrdata, err_msg=True)
-            
+        
         if process.returncode != 0:
             raise Exception('Instrument compile error.')
         
@@ -449,7 +449,7 @@ class McGuiState(QtCore.QObject):
                 s = l.split()[1]
                 s = s.split('=')
                 params.append(s)
-                
+        
         return params
 
 
@@ -600,7 +600,23 @@ class McGuiAppController():
                          shell=True)
         self.emitter.message(cmd)
         self.emitter.message('')
+    
+    def handleMcDisplayWeb(self):
+        params = self.state.getInstrParams()
+        pstr = ''
+        for p in params:
+            pstr = pstr + ' ' + p[0] + '=' + p[1]
         
+        executable = './' + os.path.splitext(os.path.basename(self.state.getInstrumentFile()))[0] + '.out'
+        # TODO: (something else for windows)
+        cmd = executable + ' --ncount=100 ' + pstr + ' --trace | mcdisplay-webgl'
+        self.emitter.message(cmd)
+        self.emitter.message('')
+        subprocess.Popen(cmd,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT,
+                         shell=True)
+    
     def handleHelpWeb(self):
         # open the mcstas homepage
         mcurl = 'http://www.mcstas.org'
@@ -626,12 +642,12 @@ class McGuiAppController():
         (stdoutdata, stderrdata) = process.communicate()
         
         self.view.showAboutBox(stdoutdata)
-        
+    
     def handleEditInstrument(self):
         instr = self.state.getInstrumentFile()
         self.view.showCodeEditorWindow(instr)
         self.emitter.status("Editing instrument: " + os.path.basename(str(instr)))
-        
+    
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
             self.state.unloadInstrument()
@@ -643,7 +659,7 @@ class McGuiAppController():
         if result:
             self.view.ew.assumeDataSaved()
             self.emitter.status("Instrument saved: " + os.path.basename(self.state.getInstrumentFile()))
-            
+    
     def handleSaveAs(self):
         oldinstr = self.state.getInstrumentFile()
         if oldinstr != '':
@@ -669,7 +685,7 @@ class McGuiAppController():
                     self.state.loadInstrument(new_instr)
                     self.view.showCodeEditorWindow(new_instr)
                     self.emitter.status("Editing new instrument: " + os.path.basename(str(new_instr)))
-        
+    
     def handleNewFromTemplate(self, instr_templ=''):
         new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(str(instr_templ))))
         if new_instr_req != '':
@@ -678,7 +694,7 @@ class McGuiAppController():
                 new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, text)
                 self.state.loadInstrument(new_instr)
                 self.emitter.status("Instrument created: " + os.path.basename(str(new_instr)))
-        
+    
     def handleOpenInstrument(self):
         instr = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
         if instr:
@@ -687,7 +703,7 @@ class McGuiAppController():
                 self.state.loadInstrument(instr)
                 self.emitter.message("Instrument opened: " + os.path.basename(str(instr)))
                 self.emitter.status("Instrument: " + os.path.basename(str(instr)))
-        
+    
     def handleMcdoc(self):
         subprocess.Popen('mcdoc', shell=True)
     
@@ -715,6 +731,7 @@ class McGuiAppController():
         mwui.actionCompile_Instrument_MPI.triggered.connect(lambda: self.state.compile(mpi=True))
         mwui.actionRun_Simulation.triggered.connect(self.handleRunOrInterruptSim)
         mwui.actionPlot.triggered.connect(self.handlePlotResults)
+        mwui.actionDisplay.triggered.connect(self.handleMcDisplayWeb)
         
         mwui.actionMcdoc.triggered.connect(self.handleMcdoc)
         mwui.actionMcstas_Web_Page.triggered.connect(self.handleHelpWeb)
@@ -748,12 +765,12 @@ def main():
         mcguiApp.ctr = McGuiAppController()
         
         sys.exit(mcguiApp.exec_())
-
+    
     except Exception, e: 
         print(e.message)
         raise
-        
-        
+    
+
 if __name__ == '__main__':
     main()
 

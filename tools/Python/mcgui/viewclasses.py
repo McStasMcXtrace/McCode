@@ -84,6 +84,7 @@ class McView(object):
             ui.lblInstrument.setStyleSheet('color: red')
         ui.actionClose_Instrument.setEnabled(enableRun)
         ui.actionPlot.setEnabled(enablePlot)
+        ui.actionDisplay.setEnabled(enableRun)
         ui.actionRun_Simulation.setEnabled(enableRun)
         ui.actionSave_As.setEnabled(enableRun)
         ui.actionOpen_instrument.setEnabled(True)

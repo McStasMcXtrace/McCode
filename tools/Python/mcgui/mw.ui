@@ -197,6 +197,7 @@
     <addaction name="actionCompile_Instrument_MPI"/>
     <addaction name="separator"/>
     <addaction name="actionPlot"/>
+    <addaction name="actionDisplay"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -331,6 +332,11 @@
   <action name="actionMcdoc">
    <property name="text">
     <string>mcdoc Component Reference</string>
+   </property>
+  </action>
+  <action name="actionDisplay">
+   <property name="text">
+    <string>Display</string>
    </property>
   </action>
  </widget>
