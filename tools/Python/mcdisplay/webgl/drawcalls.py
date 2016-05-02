@@ -217,13 +217,15 @@ class TemplateWebGLWrite(object):
     ''' writes the django template from the instrument representation '''
     instr_tree = None
     text = ''
+    templatefile = ''
     
-    def __init__(self, instr_tree):
+    def __init__(self, instr_tree, templatefile):
         self.instr_tree = instr_tree
+        self.templatefile = templatefile
         settings.configure()
     
     def build(self):
-        templ = open('template.html').read()
+        templ = open(self.templatefile).read()
         t = Template(templ)
         c = Context({'instrument': self.instr_tree})
         self.text = t.render(c)

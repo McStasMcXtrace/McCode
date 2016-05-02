@@ -8,8 +8,8 @@
 	</style>
 </head>
 <body>
-	<script src="js/three.min.js"></script>
-	<script src="js/OrbitControls.js"></script>
+	<script src="https://sim.e-neutrons.org/static/threejs/three.min.js"></script>
+	<script src="https://sim.e-neutrons.org/static/threejs/OrbitControls.js"></script>
 	<!--<script src="js/TrackballControls.js"></script>-->
 	<script>
 		// add circle to xy plane
@@ -17,9 +17,9 @@
 		// 		center - a THREE.Vector3 instance
 		var addCircle = function(radius, center)
 		{
-			var material = new THREE.MeshBasicMaterial({
-				color: 0x0000ff
-			});
+			var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+			material.side = THREE.DoubleSide;
+
 			var segments = 32;
 			var circleGeometry = new THREE.CircleGeometry( radius, segments );
 			var circle = new THREE.Mesh( circleGeometry, material );
@@ -156,7 +156,8 @@
 
 		comp = addComponent("{{comp.name}}");
 		acolor = getNextComponentColor();{% for drawcall in comp.drawcommands %}{% if drawcall.key == 'multiline' %}
-		addMultiLine([{{drawcall.args_str}}], comp, acolor);{% endif %}{% endfor %}
+		addMultiLine([{{drawcall.args_str}}], comp, acolor);{% endif %}{% if drawcall.key == 'circle' %}
+		addCircle(1, new THREE.Vector3(1, 1, 1)){% endif %}{% endfor %}
 		m4 = new THREE.Matrix4();
 		m4.set({{comp.m4_str}});
 		comp.applyMatrix(m4);{% endfor %}
