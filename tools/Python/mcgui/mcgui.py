@@ -594,7 +594,7 @@ class McGuiAppController():
         self.emitter.status('')
         resultdir = self.state.getDataDir()
         cmd = mccode_config.configuration["MCPLOT"] + ' ' + resultdir
-        subprocess.Popen(cmd, 
+        subprocess.Popen(cmd,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
                          shell=True)
@@ -602,20 +602,24 @@ class McGuiAppController():
         self.emitter.message('')
     
     def handleMcDisplayWeb(self):
-        params = self.state.getInstrParams()
-        pstr = ''
-        for p in params:
-            pstr = pstr + ' ' + p[0] + '=' + p[1]
-        
-        executable = './' + os.path.splitext(os.path.basename(self.state.getInstrumentFile()))[0] + '.out'
-        # TODO: (something else for windows)
-        cmd = executable + ' --ncount=100 ' + pstr + ' --trace | mcdisplay-webgl'
-        self.emitter.message(cmd)
-        self.emitter.message('')
-        subprocess.Popen(cmd,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT,
-                         shell=True)
+        self.emitter.status('Running mcdisplay-webgl...')
+        try:
+            params = self.state.getInstrParams()
+            pstr = ''
+            for p in params:
+                pstr = pstr + ' ' + p[0] + '=' + p[1]
+            
+            executable = './' + os.path.splitext(os.path.basename(self.state.getInstrumentFile()))[0] + '.out'
+            # TODO: (something else for windows)
+            cmd = executable + ' --ncount=100 ' + pstr + ' --trace | mcdisplay-webgl'
+            self.emitter.message(cmd)
+            self.emitter.message('')
+            subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             shell=True)
+        finally:
+            self.emitter.status('')
     
     def handleHelpWeb(self):
         # open the mcstas homepage
