@@ -235,9 +235,9 @@ class TraceParser:
     '''
     parsetree = None
     def __init__(self, data=None):
+        self.build_lexer()
+        self.build_parser()
         if data:
-            self.build_lexer()
-            self.build_parser()
             self.parse(data)
     
     # these tokens match ID, but are of these types (handled in t_ID)
