@@ -4,6 +4,7 @@ mini language.
 
 Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
+import re
 from ply import lex, yacc
 from instrrep import InstrumentConcrete, Component, Vector3d, NeutronStory, NeutronState, Matrix3
 from drawcalls import drawclass_factory
@@ -564,8 +565,68 @@ class TraceParser:
         self.parser.parse(data, lexer=self.lexer)
 
 def cleanTrace(data):
-    ''' convenience method; returns everything from INSTRUMENT:\n tag and on '''
-    pos = data.find('INSTRUMENT:\n')
-    return data[pos:]
+    ''' 
+    splits data into three sections: 
+    
+    instrument definition
+    component draw calls 
+    neutron rays
+    
+    and captures all other text in a tertiary string
+    '''
+    pos_instr = data.find('INSTRUMENT:\n')
+    pos_mcdisplay = data.find('MCDISPLAY: start')
+    pos_neutrons = data.find('ENTER:\n')
+    
+    # get instrument definition
+    lines = data[pos_instr:pos_mcdisplay].splitlines()
+    cont = True
+    lidx = 2
+    while cont:
+        testline = lines[lidx]
+        if re.match('COMPONENT:', testline):
+            lidx += 3
+        else:
+            cont = False
+    instrdeftext = ''
+    for i in range(lidx):
+        instrdeftext = instrdeftext + lines[i] + '\n'
+    remainder = ''
+    for line in lines[lidx:]:
+        remainder = remainder + line + '\n'
+    
+    # get mcdisplay draw calls
+    lines = data[pos_mcdisplay:pos_neutrons].splitlines()
+    cont = True
+    lidx = 0
+    while cont:
+        if re.match('MCDISPLAY:', lines[lidx]):
+            lidx += 1
+        else:
+            cont = False
+    mcdisplaytext = ''
+    for i in range(lidx):
+        mcdisplaytext = mcdisplaytext + lines[i] + '\n'
+    for line in lines[lidx+1:]: # NOTE: the +1 is because of the line "INSTRUMENT END:"
+        remainder = remainder + line + '\n'
+    
+    # get neutron ray section (with trailing comment lines)
+    lines = data[pos_neutrons:].splitlines()
+    cont = True
+    lidx = 0
+    while cont:
+        mat = re.match('(\w+):', lines[lidx])
+        if mat:
+            if mat.group(1) in ['ENTER', 'COMP', 'STATE', 'SCATTER', 'ABSORB', 'LEAVE']:
+                lidx += 1
+                continue
+        cont = False
+    raystext = ''
+    for i in range(lidx):
+        raystext = raystext + lines[i] + '\n'
+    for line in lines[lidx:]:
+        remainder = remainder + line + '\n'
+    
+    return instrdeftext, mcdisplaytext, raystext, remainder
 
 
