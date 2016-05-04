@@ -8,31 +8,40 @@ import os
 import webbrowser
 import logging
 import argparse
-from traceparser import TraceParser, InstrProduction, cleanTrace
+from traceinstrparser import TraceInstrParser, InstrObjectConstructor
+from traceparser import cleanTrace
 from drawcalls import TemplateWebGLWrite
+from traceneutronrayparser import NeutronRayConstructor, TraceNeutronRayParser
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
     # read data from stdin
     print "reading data..."
-    data = cleanTrace(read())
+    instr, display, rays, comments = cleanTrace(read())
     
-    # build trace parser and parse data
+    # parse 
     print "parsing data..."
-    parser = TraceParser(data)
+    instrparser = TraceInstrParser(instr + display)
+    rayparser = TraceNeutronRayParser(rays)
+
+        # build the instrument object
+    instrbuilder = InstrObjectConstructor(instrparser.parsetree)
+    instrument = instrbuilder.build_instr()
     
-    # build instrument data object
-    instrbuilder = InstrProduction(parser.parsetree)
-    instrbuilder.build()
+    # build the neutron ray tree
+    raybuilder = NeutronRayConstructor(rayparser.parsetree)
+    rays = raybuilder.build_rays()
+    
+    instrument.rays = rays
     
     # build html
-    templatefile = os.path.join(os.path.dirname(__file__), "template.html")
     outfile = 'mcdisplay.html'
-    writer = TemplateWebGLWrite(instrbuilder.instrument_tree, templatefile)
+    templatefile = os.path.join(os.path.dirname(__file__), "template.html")
+    
+    writer = TemplateWebGLWrite(instrument, templatefile)
     writer.build()
     writer.save(outfile)
     webbrowser.open_new_tab(outfile)
