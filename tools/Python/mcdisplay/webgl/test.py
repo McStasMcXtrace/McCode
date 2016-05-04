@@ -12,8 +12,20 @@ def main(args):
     logging.basicConfig(level=logging.INFO)
     
     # build trace parser and parse data
-    data = cleanTrace(open(args.data, 'r').read())
-    parser = TraceParser(data)
+    instr, display, rays, comments = cleanTrace(open(args.data, 'r').read())
+    
+    print instr
+    print display
+    print rays
+    print comments
+    
+    data = None
+    exit()
+    
+    #parser = TraceParser(data)
+    parser = TraceParser()
+    parser.test_lexer(data)
+    
     
     # print the parse tree as a test
     treeprint = NodeTreePrint(parser.parsetree) 
@@ -26,7 +38,6 @@ def main(args):
     # build html
     writer = TemplateWebGLWrite(instrbuilder.instrument_tree, 'template.html')
     writer.build()
-    #print writer.text
     writer.save('mymultilines.html')
     
     # step-wise trace parser test
