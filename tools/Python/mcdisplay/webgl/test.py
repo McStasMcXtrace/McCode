@@ -5,8 +5,10 @@ Test script for PLY-based translation of mcdisplay "--trace output" mini languag
 '''
 import logging
 import argparse
-from traceparser import TraceParser, NodeTreePrint, InstrProduction, cleanTrace
+from traceinstrparser import TraceInstrParser, InstrObjectConstructor
+from traceparser import NodeTreePrint, cleanTrace
 from drawcalls import TemplateWebGLWrite
+from traceneutronrayparser import NeutronRayConstructor, TraceNeutronRayParser
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
@@ -14,40 +16,36 @@ def main(args):
     # build trace parser and parse data
     instr, display, rays, comments = cleanTrace(open(args.data, 'r').read())
     
-    print instr
-    print display
-    print rays
-    print comments
-    
-    data = None
-    exit()
-    
-    #parser = TraceParser(data)
-    parser = TraceParser()
-    parser.test_lexer(data)
-    
+    instrparser = TraceInstrParser(instr + display)
+    rayparser = TraceNeutronRayParser(rays)
     
     # print the parse tree as a test
-    treeprint = NodeTreePrint(parser.parsetree) 
-    treeprint.print_tree(printrays=False)
+    #treeprint = NodeTreePrint(instrparser.parsetree)
+    #treeprint = NodeTreePrint(rayparser.parsetree)
     
-    # build instrument data object
-    instrbuilder = InstrProduction(parser.parsetree)
-    instrbuilder.build()
+    # build the instrument object
+    instrbuilder = InstrObjectConstructor(instrparser.parsetree)
+    instrument = instrbuilder.build_instr()
+    
+    # build the neutron ray tree
+    raybuilder = NeutronRayConstructor(rayparser.parsetree)
+    rays = raybuilder.build_rays()
+    
+    instrument.rays = rays
     
     # build html
-    writer = TemplateWebGLWrite(instrbuilder.instrument_tree, 'template.html')
+    writer = TemplateWebGLWrite(instrument, 'template.html')
     writer.build()
     writer.save('mymultilines.html')
     
     # step-wise trace parser test
     if False: 
-        parser = TraceParser()
+        parser = TraceInstrParser()
         parser.build_lexer()
         #parser.test_lexer(data)
-    
+        
         parser.build_parser()
-        parser.parse(data)
+        parser.parse(instr + display)
         
         NodeTreePrint(parser.parsetree, printrays=True)
 
