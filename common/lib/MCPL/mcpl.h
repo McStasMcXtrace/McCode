@@ -17,7 +17,7 @@
 /*                                                                                 */
 /***********************************************************************************/
 
-#define MCPL_VERSION 5       /* Code version (100*MAJOR+MINOR) */
+#define MCPL_VERSION 6       /* Code version (100*MAJOR+MINOR) */
 #define MCPL_FORMATVERSION 2 /* Format version of written files */
 
 #ifdef __cplusplus
@@ -63,11 +63,11 @@ extern "C" {
   void mcpl_hdr_set_srcname(mcpl_outfile_t,const char *);/* Name of the generating application         */
   void mcpl_hdr_add_comment(mcpl_outfile_t,const char *);/* Add one or more human-readable comments    */
   void mcpl_hdr_add_data(mcpl_outfile_t, const char * key,
-                         unsigned ldata, const char * data);/* add binary blobs by key                  */
+                         uint32_t ldata, const char * data);/* add binary blobs by key                  */
   void mcpl_enable_userflags(mcpl_outfile_t);/* to write the "userflags" info                           */
   void mcpl_enable_polarisation(mcpl_outfile_t);/* to write the "polarisation" info                     */
   void mcpl_enable_doubleprec(mcpl_outfile_t);/* use double precision FP numbers in storage             */
-  void mcpl_enable_universal_pdgcode(mcpl_outfile_t, int pdgcode);/* All particles are of the same type */
+  void mcpl_enable_universal_pdgcode(mcpl_outfile_t, int32_t pdgcode);/* All particles are of the same type */
 
   /* Optionally (but rarely skipped) add particles, by updating the info in */
   /* and then passing in a pointer to an mcpl_particle_t instance:          */
@@ -89,20 +89,20 @@ extern "C" {
 
   /* Access header data: */
   unsigned mcpl_hdr_version(mcpl_file_t);/* file format version (not the same as MCPL_VERSION) */
-  unsigned long mcpl_hdr_nparticles(mcpl_file_t);/* number of particles stored in file         */
+  uint64_t mcpl_hdr_nparticles(mcpl_file_t);/* number of particles stored in file         */
   const char* mcpl_hdr_srcname(mcpl_file_t);/* Name of the generating application              */
   unsigned mcpl_hdr_ncomments(mcpl_file_t);/* number of comments stored in file                */
   const char * mcpl_hdr_comment(mcpl_file_t, unsigned icomment);/* access i'th comment         */
   int mcpl_hdr_nblobs(mcpl_file_t);
   const char** mcpl_hdr_blobkeys(mcpl_file_t);/* returns 0 if there are no keys */
   int mcpl_hdr_blob(mcpl_file_t, const char* key,
-                    unsigned* ldata, const char ** data);/* access data (returns 0 if key doesn't exist) */
+                    uint32_t* ldata, const char ** data);/* access data (returns 0 if key doesn't exist) */
   int mcpl_hdr_has_userflags(mcpl_file_t);
   int mcpl_hdr_has_polarisation(mcpl_file_t);
   int mcpl_hdr_has_doubleprec(mcpl_file_t);
-  int mcpl_hdr_header_size(mcpl_file_t);/* bytes consumed by header (uncompressed) */
+  uint64_t mcpl_hdr_header_size(mcpl_file_t);/* bytes consumed by header (uncompressed) */
   int mcpl_hdr_particle_size(mcpl_file_t);/* bytes per particle (uncompressed)     */
-  int mcpl_hdr_universel_pdgcode(mcpl_file_t);
+  int32_t mcpl_hdr_universel_pdgcode(mcpl_file_t);
   int mcpl_hdr_little_endian(mcpl_file_t);
 
   /* Request pointer to particle at current location and skip forward to the next */
@@ -111,10 +111,10 @@ extern "C" {
   const mcpl_particle_t* mcpl_read(mcpl_file_t);
 
   /* Seek and skip in particles (returns 0 when there is no particle at the new position): */
-  int mcpl_skipforward(mcpl_file_t,unsigned long n);
+  int mcpl_skipforward(mcpl_file_t,uint64_t n);
   int mcpl_rewind(mcpl_file_t);
-  int mcpl_seek(mcpl_file_t,unsigned long ipos);
-  unsigned long mcpl_currentposition(mcpl_file_t);
+  int mcpl_seek(mcpl_file_t,uint64_t ipos);
+  uint64_t mcpl_currentposition(mcpl_file_t);
 
   /* Deallocate memory and release file-handle with: */
   void mcpl_close_file(mcpl_file_t);
@@ -127,7 +127,7 @@ extern "C" {
   /*   parts : 0 -> header+particle list, 1 -> just header, 2 -> just particle list. */
   /*   nlimit: maximum number of particles to list (0 for unlimited)                 */
   /*   nskip : index of first particle in the file to list.                          */
-  void mcpl_dump(const char * file, int parts, unsigned nskip, unsigned nlimit);
+  void mcpl_dump(const char * file, int parts, uint64_t nskip, uint64_t nlimit);
 
   /* Merge contents of two files by appending all particles in file2 to the list */
   /* in file1 (thus file1 grows while file2 stays untouched). This results in an */
