@@ -15,18 +15,27 @@
 		// add circle to xy plane
 		// 		radius
 		// 		center - a THREE.Vector3 instance
-		var addCircle = function(radius, center)
+		var addCircle = function(plane, x, y, z, radius, parent, linecolor)
 		{
-			var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+			var wrapper = new THREE.Object3D();
+			var m = new THREE.Matrix4()
+			if (plane == 'xy') { m.makeRotationZ( Math.PI/2 ); }
+			if (plane == 'xz') { m.makeRotationY( Math.PI/2 ); }
+			if (plane == 'yz') { m.makeRotationX( Math.PI/2 ); }
+
+			var segments = 48;
+			var circleGeometry = new THREE.CircleGeometry( radius, segments );
+			circleGeometry.vertices.shift(); // removes center vertex
+			var material = new THREE.MeshBasicMaterial( {color: linecolor} );
 			material.side = THREE.DoubleSide;
 
-			var segments = 32;
-			var circleGeometry = new THREE.CircleGeometry( radius, segments );
-			var circle = new THREE.Mesh( circleGeometry, material );
-			circle.position.x = center.x;
-			circle.position.y = center.y;
-			circle.position.z = center.z;
-			scene.add( circle );
+			var circle = new THREE.Line( circleGeometry, material ); // THREE.Mesh results in solid coloring
+			circle.position.x = x;
+			circle.position.y = y;
+			circle.position.z = z;
+
+			circle.applyMatrix(m);
+			parent.add( circle );
 		}
 		// add sphere
 		//		radius
@@ -157,7 +166,7 @@
 		comp = addComponent("{{comp.name}}");
 		acolor = getNextComponentColor();{% for drawcall in comp.drawcommands %}{% if drawcall.key == 'multiline' %}
 		addMultiLine([{{drawcall.args_str}}], comp, acolor);{% endif %}{% if drawcall.key == 'circle' %}
-		addCircle(1, new THREE.Vector3(1, 1, 1)){% endif %}{% endfor %}
+		addCircle({% autoescape off %}{{drawcall.args_str}}{% endautoescape %}, comp, acolor);{% endif %}{% endfor %}
 		m4 = new THREE.Matrix4();
 		m4.set({{comp.m4_str}});
 		comp.applyMatrix(m4);{% endfor %}
@@ -189,7 +198,6 @@
 		aCompVertices = [];{% for p in comp_points.1 %}
 		aCompVertices.push(new THREE.Vector3({{ p.position.x }}, {{ p.position.y }}, {{ p.position.z }}));{% endfor %}
 		aVertices = aVertices.concat(transformPoints(aCompVertices, compnodes["{{comp_points.0}}"].matrix));{% endfor %}
-		console.log(aVertices);
 		addMultiLineV3(aVertices, rayobj, rayColor);{% endfor %}
 
 		// show all rays in arrayOfRays
@@ -224,8 +232,6 @@
 		}
 
 		showRays(allRays, root);
-
-
 
 		// renderloop
 		function render() {

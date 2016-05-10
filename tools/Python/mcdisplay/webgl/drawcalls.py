@@ -211,7 +211,10 @@ class DrawCircle(DrawCommand):
         self.plane = str(args[0])
         self.center = Vector3d(float(args[1]), float(args[2]), float(args[3]))
         self.radius = float(args[4])
-
+        
+        # override default behavior to ensure quotes around the first arg, plane
+        idx = self.args_str.find(',')
+        self.args_str = '\"' + self.args_str[:idx] + '\"' + self.args_str[idx:]
 
 class TemplateWebGLWrite(object):
     ''' writes the django template from the instrument representation '''
