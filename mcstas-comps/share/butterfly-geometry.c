@@ -8,6 +8,13 @@ double butterfly_z[] = {-1.9922764e-01, -1.8484553e-01, -2.0252845e-01, -2.07951
 
 double butterfly_x[] = {1.4279319e-02, 3.1692034e-10, -1.7654432e-02, -2.5962400e-02, -3.4789615e-02, -4.3876452e-02, -5.1665172e-02, -5.8934642e-02, -6.4646372e-02, -6.9059982e-02, -7.2694722e-02, -7.5031332e-02, -7.6589082e-02, -7.6589082e-02, -7.6848702e-02, -7.6589082e-02, -7.6589082e-02, -7.6589082e-02, -7.6589082e-02, -7.6848702e-02, -7.5290962e-02, -7.2694722e-02, -6.8281112e-02, -6.1790512e-02, -5.3482542e-02, -4.4136082e-02, -3.3491495e-02, -2.5443152e-02, -1.9212176e-02, -1.2981200e-02, -6.2309757e-03, -2.5962368e-04, 1.4538943e-02, 5.8415398e-02, 1.0229185e-01, 1.1709042e-01, 1.3266786e-01, 1.4149508e-01, 1.5213966e-01, 1.6200537e-01, 1.7135184e-01, 1.7888093e-01, 1.8589078e-01, 1.9082364e-01, 1.9290063e-01, 1.9341988e-01, 1.9341988e-01, 1.9341988e-01, 1.9341988e-01, 1.9186213e-01, 1.8822740e-01, 1.8459266e-01, 1.8069830e-01, 1.7602507e-01, 1.6849597e-01, 1.5811101e-01, 1.4928380e-01, 1.3993733e-01, 1.3370636e-01, 1.2981200e-01, 1.1709042e-01, 1.0229185e-01, 5.8415398e-02, 1.4279319e-02};
 
+double butterfly_e_z1[]= {-3.0488e-04,  -5.5017e-02, -3.0488e-04};
+double butterfly_e_x1[]= {-4.3103e-04,   5.8521e-02,  1.1701e-01};
+double butterfly_e_z2[]= {-1.8501e-01, -1.2719e-01, -1.8501e-01};
+double butterfly_e_x2[]= {3.3156e-05,  5.8985e-02,  1.1701e-01};
+   
+
+
 /* Draw the two butterfly shapes at top and bottom level */
 magnify("");
 double y0;
@@ -31,6 +38,28 @@ for (y0=-dy; y0<2*dy; y0+=2*dy) {
 
     line(rAx, y0, rAz, rBx, y0, rBz);
 
+  }
+}
+
+/* Draw the "border" between the thermal and cold areas */
+for (y0=-dy; y0<2*dy; y0+=2*dy) {
+  for (j=0; j<2; j++) {
+    
+    rAx = r11*(butterfly_e_z1[j]-cz) + r12*(butterfly_e_x1[j]-cx);
+    rAz = r21*(butterfly_e_z1[j]-cz) + r22*(butterfly_e_x1[j]-cx);
+
+    rBx = r11*(butterfly_e_z1[j+1]-cz) + r12*(butterfly_e_x1[j+1]-cx);
+    rBz = r21*(butterfly_e_z1[j+1]-cz) + r22*(butterfly_e_x1[j+1]-cx);
+
+    line(rAx, y0, rAz, rBx, y0, rBz);
+
+    rAx = r11*(butterfly_e_z2[j]-cz) + r12*(butterfly_e_x2[j]-cx);
+    rAz = r21*(butterfly_e_z2[j]-cz) + r22*(butterfly_e_x2[j]-cx);
+
+    rBx = r11*(butterfly_e_z2[j+1]-cz) + r12*(butterfly_e_x2[j+1]-cx);
+    rBz = r21*(butterfly_e_z2[j+1]-cz) + r22*(butterfly_e_x2[j+1]-cx);
+
+    line(rAx, y0, rAz, rBx, y0, rBz);
   }
 }
 
