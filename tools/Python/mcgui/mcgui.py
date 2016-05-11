@@ -12,12 +12,12 @@ import webbrowser
 import subprocess
 import time
 import re
-import mccode_config
 from PyQt4 import QtGui, QtCore
 from viewclasses import McView
 from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from mclib import mccode_config
 from mclib import McGuiUtils
 from mclib import McComponentParser
 

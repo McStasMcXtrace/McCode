@@ -2,8 +2,8 @@
 mcstas/mcxtrace configuration.
 '''
 configuration = {
-    "MCCODE_VERSION": '2.2a',
-    "MCCODE_LIB_DIR": '/usr/share/mcstas/2.2a/',
+    "MCCODE_VERSION": '2.3',
+    "MCCODE_LIB_DIR": '/usr/share/mcstas/2.3/',
     "MCCODE": 'mcstas',
     "MCRUN": 'mcrun-py',
     "MCPLOT": 'mcplot-gnuplot-py',
