@@ -70,7 +70,7 @@ class TraceInstrParser:
         return t
     
     def t_ABSPATH(self, t):
-        r'/[/\w\.]+'
+        r'[/\w]+.instr'
         return t
     
     def t_DEC(self, t):

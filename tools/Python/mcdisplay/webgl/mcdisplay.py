@@ -58,7 +58,7 @@ def main(args):
     logging.basicConfig(level=logging.INFO)
     
     # test strings:
-    #data = read('mcrun ESS_Brilliance_2013.instr --trace -n1000')
+    #data = read('mcrun ESS_Brilliance_2013.instr --trace -n100')
     #data = read('mcrun PSI_DMC.instr --trace -n10')
     
     # assemble cmd
@@ -69,7 +69,7 @@ def main(args):
     
     instrument = parse_instrdef(instr, display)
     instrument.rays = parse_rays(rays)
-    #write_oldhtml(instrument)
+    write_oldhtml(instrument)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
