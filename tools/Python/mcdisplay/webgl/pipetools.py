@@ -107,7 +107,7 @@ class McrunPipeMan(object):
     
     def __init__(self, cmd):
         self.cmd = cmd
-        self.linebuffer = LineBuffer(maxlines=1000)
+        self.linebuffer = LineBuffer(maxlines=10000)
         self.thread = McrunPipeThread(cmd=cmd, linebuffer=self.linebuffer, printend=r'INSTRUMENT:\n')
     
     def start_pipe(self):

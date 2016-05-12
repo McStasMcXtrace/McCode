@@ -76,54 +76,107 @@ def cleanTrace(data):
     pos_mcdisplay = data.find('MCDISPLAY: start')
     pos_neutrons = data.find('ENTER:\n')
     
-    # get instrument definition
-    lines = data[pos_instr:pos_mcdisplay].splitlines()
-    cont = True
-    lidx = 2
-    while cont:
-        testline = lines[lidx]
-        if re.match('COMPONENT:', testline):
-            lidx += 3
-        else:
-            cont = False
-    instrdeftext = ''
-    for i in range(lidx):
-        instrdeftext = instrdeftext + lines[i] + '\n'
-    remainder = ''
-    for line in lines[lidx:]:
-        remainder = remainder + line + '\n'
     
-    # get mcdisplay draw calls
-    lines = data[pos_mcdisplay:pos_neutrons].splitlines()
-    cont = True
-    lidx = 0
-    while cont:
-        if re.match('MCDISPLAY:', lines[lidx]):
-            lidx += 1
-        else:
-            cont = False
-    mcdisplaytext = ''
-    for i in range(lidx):
-        mcdisplaytext = mcdisplaytext + lines[i] + '\n'
-    for line in lines[lidx+1:]: # NOTE: the +1 is because of the line "INSTRUMENT END:"
-        remainder = remainder + line + '\n'
-    
-    # get neutron ray section (with trailing comment lines)
-    lines = data[pos_neutrons:].splitlines()
-    cont = True
-    lidx = 0
-    while cont:
-        mat = re.match('(\w+):', lines[lidx])
-        if mat:
-            if mat.group(1) in ['ENTER', 'COMP', 'STATE', 'SCATTER', 'ABSORB', 'LEAVE']:
+    try:
+        # get instrument definition
+        lines = data[pos_instr:pos_mcdisplay].splitlines()
+        cont = True
+        lidx = 2
+        while cont:
+            testline = lines[lidx]
+            if re.match('COMPONENT:', testline):
+                lidx += 3
+            else:
+                cont = False
+        instrdeftext = ''
+        for i in range(lidx):
+            instrdeftext = instrdeftext + lines[i] + '\n'
+        remainder = ''
+        for line in lines[lidx:]:
+            remainder = remainder + line + '\n'
+        
+        # get mcdisplay draw calls
+        lines = data[pos_mcdisplay:pos_neutrons].splitlines()
+        cont = True
+        lidx = 0
+        while cont:
+            if re.match('MCDISPLAY:', lines[lidx]):
                 lidx += 1
-                continue
-        cont = False
-    raystext = ''
-    for i in range(lidx):
-        raystext = raystext + lines[i] + '\n'
-    for line in lines[lidx:]:
-        remainder = remainder + line + '\n'
+            else:
+                cont = False
+        mcdisplaytext = ''
+        for i in range(lidx):
+            mcdisplaytext = mcdisplaytext + lines[i] + '\n'
+        for line in lines[lidx+1:]: # NOTE: the +1 is because of the line "INSTRUMENT END:"
+            remainder = remainder + line + '\n'
+        
+        # get neutron ray section (with trailing comment lines)
+        lines = data[pos_neutrons:].splitlines()
+        
+        # filter datalines
+        raylines = []
+        raycomments = []
+        problem_idxs = []
+        
+        for i in range(len(lines)):
+            mat = re.match('(\w+):', lines[i])
+            if mat and mat.group(1) in ['ENTER', 'COMP', 'STATE', 'SCATTER', 'ABSORB', 'LEAVE']:
+                
+                # theck for corrupted lines 
+                seapos = lines[i].find('Warning: ')
+                if seapos > 0:
+                    # in this case, the whole neutron ray should be removed. Save the comment and the index.
+                    raycomments.append(lines[i][seapos:])
+                    problem_idxs.append(i)
+                    continue
+                
+                raylines.append(lines[i])
+            else:
+                raycomments.append(lines[i])
+        
+        # Handle the problems identified above; raylines interrupted by "Warning: " somewhere in the middle. 
+        # We must exterminate those rays from the data.
+        lineslen = len(raylines)
+        for idx in problem_idxs:
+            # search backwards for "ENTER":
+            i = -1
+            idx_enter = -1
+            idx_leave = -1
+            while True:
+                i += 1
+                
+                # find last ENTER:
+                if idx_enter == -1 and re.match('ENTER:', raylines[idx-i]):
+                    idx_enter = idx-i
+                
+                if idx_leave == -1 and idx+i == lineslen:
+                    idx_leave = lineslen-1
+                elif idx_leave == -1 and re.match('LEAVE:', raylines[idx+i]):
+                    idx_leave = idx+i
+                
+                if idx_enter >= 0 and idx_leave >= 0:
+                    for j in range(idx_enter, idx_leave+1): # NOTE: there should always be a STATE after LEAVE
+                        del raylines[idx_enter] # NOTE: raylines will disappear underway
+                    break
+        
+        # make sure the sequence ends with a LEAVE then a STATE
+        while True:
+            lineslen = len(raylines)
+            last = raylines[lineslen-1]
+            nextlast = raylines[lineslen-2]
+            if (not re.match('LEAVE:', nextlast)) or (not re.match('STATE:', last)):
+                del raylines[lineslen-1]
+            else:
+                break
+        
+        # reconstruct strings from lists
+        raystext = ''
+        for line in raylines:
+            raystext = raystext + line + '\n'
+        for line in raycomments:
+            remainder = remainder + line + '\n'
+        
+        return instrdeftext, mcdisplaytext, raystext, remainder
     
-    return instrdeftext, mcdisplaytext, raystext, remainder
-
+    except Exception as e:
+        print e.message
