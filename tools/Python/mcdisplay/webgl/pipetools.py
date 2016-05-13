@@ -2,16 +2,15 @@
 # -*- coding: utf-8 -*-
 '''
 Tools for piping a process to the terminal for std I/O.
-
-NOTE: Due to limitations inherent in piping (the requirement for 
-intelligent evalueation of stdout to determine the difference 
-between prompt and idle), this code is mcrun specific. 
-A search for ']:' is done in the implementation of McrunPipeThread.
 '''
 from subprocess import Popen, PIPE, STDOUT
 import re
 import argparse
 from threading import Thread
+
+class LineFilter(object):
+    pass
+
 
 class LineBuffer(object):
     '''
@@ -30,10 +29,12 @@ class LineBuffer(object):
         self.idx_w = 0
     
     def add_line(self, line):
+        ''' add a line to the buffer (no overflow check '''
         self.buffer[self.idx_w % self.maxlines] = line
         self.idx_w += 1
     
     def read_line(self):
+        ''' read the next line in the buffer '''
         r = self.idx_r
         w = self.idx_w
         if not r > w:
@@ -43,6 +44,7 @@ class LineBuffer(object):
             return None
     
     def read_all_lines(self):
+        ''' read all new lines, returning a list '''
         r = self.idx_r
         w = self.idx_w
         lines = []
@@ -51,25 +53,44 @@ class LineBuffer(object):
             r += 1
         self.idx_r = r
         return lines
+    
+    def read_all_lines_str(self):
+        ''' read all new lines, returning them as a single string '''
+        r = self.idx_r
+        w = self.idx_w
+        data = ''
+        while not r == w:
+            data = data + self.buffer[r % self.maxlines]
+            r += 1
+        self.idx_r = r
+        return data
 
 class McrunPipeThread(Thread):
     ''' 
     Thread object which handles PIPE I/O. 
     Switches to live buffer writing when printend string is matched in an output line.
     '''
-    linebuffer = None
     cmd = ''
-    printend = ''
-    prompt_phase = True
+    instrbuffer = None
+    neutronbuffer = None
+    instrdef_start = ''
+    neutrondef_start = ''
+    prompt_phase = None
+    neutron_phase = None
     
-    def __init__(self, cmd, linebuffer, printend):
+    def __init__(self, cmd, instrdef_start, neutrondef_start):
+        ''' constructor '''
         self.cmd = cmd
-        self.linebuffer = linebuffer
-        self.printend = printend
+        self.instrbuffer = LineBuffer(maxlines=1000)
+        self.neutronbuffer = LineBuffer(maxlines=10000)
+        self.instrdef_start = instrdef_start
+        self.neutrondef_start = neutrondef_start
         self.prompt_phase = True
+        self.neutron_phase = False
         Thread.__init__(self)
     
     def run(self):
+        ''' create a process given command and read, print and write to it depending on state '''
         process = Popen(self.cmd, shell=True,
                         stdout=PIPE,
                         stderr=STDOUT,
@@ -79,20 +100,29 @@ class McrunPipeThread(Thread):
         while process.poll() == None:
             stdoutdata = process.stdout.readline()
             
-            if self.prompt_phase:
+            if self.prompt_phase or not self.neutron_phase:
                 if re.search('\]:', stdoutdata):
                     data = raw_input()
                     process.stdin.write(data + '\n')
-                if re.match(self.printend, stdoutdata):
+                if re.match(self.instrdef_start, stdoutdata):
                     self.prompt_phase = False
+                if re.match(self.neutrondef_start, stdoutdata):
+                    self.neutron_phase = True
                 
             self.print_or_save(stdoutdata)
-    
+        
+        # empty process buffer 
+        for stdoutdata in process.stdout:
+            self.print_or_save(stdoutdata)
+        
     def print_or_save(self, line):
+        ''' adds lines to print, instbuffer or neutronbuffer depending on state '''
         if self.prompt_phase:
             print line.rstrip('\n')
+        elif self.neutron_phase:
+            self.neutronbuffer.add_line(line)
         else: 
-            self.linebuffer.add_line(line)
+            self.instrbuffer.add_line(line)
 
 class McrunPipeMan(object):
     ''' 
@@ -100,15 +130,13 @@ class McrunPipeMan(object):
     These are intended to provide parallel processing and piping, due to 
     potentially long simulation execution times.
     '''
-    linebuffer = None
     cmd = ''
     instrdef_start = ''
     instrdef_end = ''
     
     def __init__(self, cmd):
         self.cmd = cmd
-        self.linebuffer = LineBuffer(maxlines=10000)
-        self.thread = McrunPipeThread(cmd=cmd, linebuffer=self.linebuffer, printend=r'INSTRUMENT:\n')
+        self.thread = McrunPipeThread(cmd=cmd, instrdef_start=r'INSTRUMENT:\n', neutrondef_start='ENTER:\n')
     
     def start_pipe(self):
         self.thread.start()
@@ -116,17 +144,17 @@ class McrunPipeMan(object):
     def join(self):
         self.thread.join()
 
-    def readall(self):
-        data = ''
-        for line in self.linebuffer.read_all_lines():
-            data = data + line
-        return data
+    def read_neutrons(self):
+        return self.thread.neutronbuffer.read_all_lines_str()
+    
+    def read_instrdef(self):
+        return self.thread.instrbuffer.read_all_lines_str()
 
 def main(args):
     pipeman = McrunPipeMan('mcrun ESS_Brilliance_2013.instr --trace -n1')
     pipeman.start_pipe()
     pipeman.join()
-    data = pipeman.readall()
+    data = pipeman.read_instrdef()
     print 
     print "McrunPipeMan collected trace output:"
     print

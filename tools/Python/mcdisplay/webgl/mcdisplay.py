@@ -47,12 +47,14 @@ def write_oldhtml(instrument):
     writer.save(outfile)
     webbrowser.open_new_tab(outfile)
 
-def read(cmd):
+def readall(cmd):
     ''' reads trace output given by command 'cmd' '''
     pipeman = McrunPipeMan(cmd)
     pipeman.start_pipe()
     pipeman.join()
-    return pipeman.readall()
+    instrdef = pipeman.read_instrdef()
+    neutrons = pipeman.read_neutrons()
+    return instrdef + neutrons
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
@@ -62,7 +64,7 @@ def main(args):
     #data = read('mcrun PSI_DMC.instr --trace -n10')
     
     # assemble cmd
-    data = read('mcrun ' + args.instr + ' --trace -n100')
+    data = readall('mcrun ' + args.instr + ' --trace -n100')
     
     instr, display, rays, comments = cleanTrace(data)
     print comments
