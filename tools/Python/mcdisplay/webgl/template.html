@@ -66,23 +66,27 @@
 		var camera
 		var renderer;
 		var controls;
-		var init = function(rootnode)
+		var init = function(rootnode, campos, controltarget)
 		{
 			scene = new THREE.Scene();
 
 			camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 100);
-			camera.position.x = -50;
-			camera.position.y = 0;
-			camera.position.z = 50;
+			camera.position.x = campos.x; // -50;
+			camera.position.y = campos.y; // 0;
+			camera.position.z = campos.z; // 50;
+
+			// NOTE: initial camera view direction is along the x axis
 
 			renderer = new THREE.WebGLRenderer();
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			document.body.appendChild(renderer.domElement);
 
 			controls = new THREE.OrbitControls(camera);
-			controls.target.x = 1;
-			controls.target.y = 0;
-			controls.target.z = 49;
+			controls.target.x = 0; //1;
+			controls.target.y = 0; //0;
+			controls.target.z = campos.z; //49;
+
+			camera.lookAt(new THREE.Vector3(0, 0, campos.z));
 
 			addLight(new THREE.Vector3(10, 50, 130), scene)
 			scene.add(rootnode);
@@ -156,7 +160,7 @@
 		var root = new THREE.Object3D();
 		var comproot = new THREE.Object3D();
 		root.add(comproot);
-		init(root);
+		init(root, new THREE.Vector3({{campos_x}}, {{campos_y}}, {{campos_z}}), new THREE.Vector3());
 
 		var comp;
 		var m4;

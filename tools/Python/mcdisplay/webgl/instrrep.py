@@ -11,6 +11,7 @@ class InstrumentConcrete(object):
     params_values = []
     components = []
     rays = []
+    
     def __init__(self, name, params, params_defaults):
         self.name = name
         self.params = params
@@ -97,6 +98,34 @@ class Matrix3(object):
         x = self.a11*v.x + self.a12*v.y + self.a13*v.z 
         y = self.a21*v.x + self.a22*v.y + self.a23*v.z
         z = self.a31*v.x + self.a32*v.y + self.a33*v.z
+        return Vector3d(x, y, z)
+
+class Transform(object):
+    ''' a rudimentary matrix4 transform '''
+    def __init__(self, rot, pos):
+        self.a11 = rot.a11
+        self.a12 = rot.a12
+        self.a13 = rot.a13
+        self.a21 = rot.a21
+        self.a22 = rot.a22
+        self.a23 = rot.a23
+        self.a31 = rot.a31
+        self.a32 = rot.a32
+        self.a33 = rot.a33
+        
+        self.a14 = pos.x
+        self.a24 = pos.y
+        self.a34 = pos.z
+        
+        self.a41 = 0
+        self.a42 = 0
+        self.a43 = 0
+        self.a44 = 1
+    
+    def apply(self, v3):
+        x = self.a11*v3.x + self.a12*v3.y + self.a13*v3.z + self.a14
+        y = self.a21*v3.x + self.a22*v3.y + self.a23*v3.z + self.a24
+        z = self.a31*v3.x + self.a32*v3.y + self.a33*v3.z + self.a34
         return Vector3d(x, y, z)
 
 class Matrix3Identity(Matrix3):

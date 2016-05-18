@@ -11,8 +11,9 @@ import argparse
 
 from pipetools import McrunPipeMan, cleanTrace
 from traceinstrparser import TraceInstrParser, InstrObjectConstructor
-from drawcalls import TemplateWebGLWrite
+from drawcalls import TemplateWebGLWrite, calcLargestBoundingVolumeWT
 from traceneutronrayparser import NeutronRayConstructor, TraceNeutronRayParser
+from instrrep import Vector3d, Transform
 
 #sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 #from mclib import mccode_config
@@ -38,10 +39,21 @@ def parse_instrdef(instr_txt, display_txt):
 
 def write_oldhtml(instrument):
     '''  '''
+    # calculate campost by means of the component bounding boxes (mediated by drawcalls)
+    drawcalls = []
+    for comp in instrument.components:
+        transform = Transform(comp.rot, comp.pos)
+        for drawcall in comp.drawcommands:
+            drawcalls.append((drawcall, transform))
+    box = calcLargestBoundingVolumeWT(drawcalls)
+    x = -(box.z2 - box.z1)/2
+    y = 0
+    z = box.z1 + (box.z2 - box.z1)/2
+    
     outfile = 'mcdisplay.html'
     templatefile = os.path.join(os.path.dirname(__file__), "template.html")
     
-    writer = TemplateWebGLWrite(instrument, templatefile)
+    writer = TemplateWebGLWrite(instrument, templatefile, campos=Vector3d(x, y, z))
     writer.build()
     writer.save(outfile)
     webbrowser.open_new_tab(outfile)

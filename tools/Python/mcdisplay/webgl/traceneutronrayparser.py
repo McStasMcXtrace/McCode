@@ -5,7 +5,7 @@ mini language.
 Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
 from ply import lex, yacc
-from traceparser import Node
+from nodetree import Node
 from instrrep import NeutronStory, NeutronState
 
 class TraceNeutronRayParser:

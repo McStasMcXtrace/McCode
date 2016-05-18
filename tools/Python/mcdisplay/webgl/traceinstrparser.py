@@ -5,7 +5,7 @@ mini language.
 Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
 from ply import lex, yacc
-from traceparser import Node
+from nodetree import Node
 from instrrep import InstrumentConcrete, Component, Vector3d, Matrix3
 from drawcalls import drawclass_factory
 
@@ -284,8 +284,9 @@ class InstrObjectConstructor:
                                         raise Exception('TraceObjectConstructor: node "comp" -> "draw" -> "args" must be only child')
                                     
                                     commandname = dc.leaf
-                                    draw = drawclass_factory(commandname, args)
-                                    comp.drawcommands.append(draw)
+                                    draw = drawclass_factory(commandname, args, reduced=True)
+                                    if draw:
+                                        comp.drawcommands.append(draw)
                         
                         instrument_tree.components.append(comp)
                         
