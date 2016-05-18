@@ -9,9 +9,8 @@ import webbrowser
 import logging
 import argparse
 
-from pipetools import McrunPipeMan
+from pipetools import McrunPipeMan, cleanTrace
 from traceinstrparser import TraceInstrParser, InstrObjectConstructor
-from traceparser import cleanTrace
 from drawcalls import TemplateWebGLWrite
 from traceneutronrayparser import NeutronRayConstructor, TraceNeutronRayParser
 
