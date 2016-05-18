@@ -6,7 +6,8 @@ Test script for PLY-based translation of mcdisplay "--trace output" mini languag
 import logging
 import argparse
 from traceinstrparser import TraceInstrParser, InstrObjectConstructor
-from traceparser import NodeTreePrint, cleanTrace
+from nodetree import NodeTreePrint
+from pipetools import cleanTrace
 from drawcalls import TemplateWebGLWrite
 from traceneutronrayparser import NeutronRayConstructor, TraceNeutronRayParser
 
