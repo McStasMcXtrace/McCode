@@ -27,7 +27,7 @@
 * %P
 * Input parameters:
 * sector:       [str] Defines the 'sector' of your instrument position. Valid values are "N","S","E" and "W"
-* beamline:     [1]   Defines the 'beamline number' of your instrument position. Valid values are 1..11
+* beamline:     [1]   Defines the 'beamline number' of your instrument position. Valid values are 1..10 or 1..11 depending on sector
 * yheight:      [m]   Defines the moderator height. Valid values are 0.03 m and 0.06 m
 * cold_frac:    [1]   Defines the statistical fraction of events emitted from the cold part of the moderator
 * target_index: [1]   Relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
@@ -49,6 +49,13 @@ DECLARE
   double cx, cz;
   int sign_bl_angle;
   double orientation_angle;
+  /* 10 beamlines in sector N and E  - plus one location added for drawing */
+  double BeamlinesN[] = {30.0, 36.0, 42.0, 48.0, 54.0, 60.0, 66.0, 72.0, 78.0, 84.0, 90.0};
+  double BeamlinesE[] = {-30.0, -36.0, -42.0, -48.0, -54.0, -60.0, -66.0, -72.0, -78.0, -84.0, -90.0};
+  /* 11 beamlines in sector S and W - plus one location added for drawing */
+  double BeamlinesW[] = {150, 144.7, 138.0, 132.7, 126.0, 120.7, 114.0, 108.7, 102.0, 96.7, 90.0, 84.0};
+  double BeamlinesS[] = {-150, -144.7, -138.0, -132.7, -126.0, -120.7, -114.0, -108.7, -102.0, -96.7, -90.0, -84.0};
+  double* Beamlines;
 %}
 
 INITIALIZE
@@ -57,16 +64,28 @@ INITIALIZE
     /* Centering-parameters, which sector are we in? */
     if (strcasestr(sector,"N")) {
       cx = 0.117; cz=0.0; sign_bl_angle=1;
-      orientation_angle = sign_bl_angle*(30.0 + (beamline-1)*6.0);
+      orientation_angle = BeamlinesN[beamline-1];
+      Beamlines = BeamlinesN;
+      if (beamline>10) {
+	fprintf(stderr,"%s: Sector %s only has beamline 1 <= beamline <= 10, you asked for %i\n", NAME_CURRENT_COMP, sector, beamline);
+	exit(-1);
+      }
     } else if (strcasestr(sector,"W")) {
       cx = 0.0; cz=0.0; sign_bl_angle=-1;
-      orientation_angle = 180 + sign_bl_angle*(30.0 + (beamline-1)*6.0);
+      orientation_angle = BeamlinesW[beamline-1]; 
+      Beamlines = BeamlinesW;
     } else if (strcasestr(sector,"S")) {
       cx = 0.0; cz=-0.185; sign_bl_angle=1;
-      orientation_angle = 180 + sign_bl_angle*(30.0 + (beamline-1)*6.0);
+      orientation_angle = BeamlinesS[beamline-1]; 
+      Beamlines = BeamlinesS;
     } else if (strcasestr(sector,"E")) {
       cx = 0.117; cz=-0.185; sign_bl_angle=-1;
-      orientation_angle = sign_bl_angle*(30.0 + (beamline-1)*6.0);
+      orientation_angle = BeamlinesE[beamline-1]; 
+      Beamlines = BeamlinesE;
+      if (beamline>10) {
+	fprintf(stderr,"%s: Sector %s only has beamline 1 <= beamline <= 10, you asked for %i\n", NAME_CURRENT_COMP, sector, beamline);
+	exit(-1);
+      }
     } else {
       fprintf(stderr,"%s: Sector %s is undefined, please use N, W, S or E!\n", NAME_CURRENT_COMP,sector);
       exit(-1);
