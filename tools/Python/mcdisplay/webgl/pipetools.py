@@ -6,7 +6,7 @@ Tools for piping a process to the terminal for std I/O.
 from subprocess import Popen, PIPE, STDOUT
 import re
 import argparse
-from threading import Thread
+from threading import Thread, Event
 
 class TraceDataCleaner(object):
     pass
@@ -104,8 +104,12 @@ def cleanTrace(data):
         
         # Handle the problems identified above; raylines interrupted by "Warning: " somewhere in the middle. 
         # We must exterminate those rays from the data.
+        
         lineslen = len(raylines)
         for idx in problem_idxs:
+            if idx >= lineslen:
+                continue
+            
             # search backwards for "ENTER":
             i = -1
             idx_enter = -1
@@ -126,7 +130,7 @@ def cleanTrace(data):
                     for j in range(idx_enter, idx_leave+1): # NOTE: there should always be a STATE after LEAVE
                         del raylines[idx_enter] # NOTE: raylines will disappear during process
                     break
-        
+            
         # make sure the sequence ends with a LEAVE then a STATE
         while True:
             lineslen = len(raylines)
@@ -148,8 +152,7 @@ def cleanTrace(data):
     
     except Exception as e:
         print e.message
-
-
+    
 class LineFilter(object):
     pass
 
@@ -218,6 +221,7 @@ class McrunPipeThread(Thread):
     neutrondef_start = ''
     prompt_phase = None
     neutron_phase = None
+    instrdef_finished = None
     
     def __init__(self, cmd, instrdef_start, neutrondef_start):
         ''' constructor '''
@@ -228,6 +232,8 @@ class McrunPipeThread(Thread):
         self.neutrondef_start = neutrondef_start
         self.prompt_phase = True
         self.neutron_phase = False
+        self.instrdef_finished = Event()
+        self.instrdef_finished.clear()
         Thread.__init__(self)
     
     def run(self):
@@ -249,6 +255,7 @@ class McrunPipeThread(Thread):
                     self.prompt_phase = False
                 if re.match(self.neutrondef_start, stdoutdata):
                     self.neutron_phase = True
+                    self.instrdef_finished.set()
                 
             self.print_or_save(stdoutdata)
         
@@ -256,6 +263,10 @@ class McrunPipeThread(Thread):
         for stdoutdata in process.stdout:
             self.print_or_save(stdoutdata)
         
+    def join_instrdef(self):
+        ''' returns when the instrument definition has been read '''
+        self.instrdef_finished.wait()
+    
     def print_or_save(self, line):
         ''' adds lines to print, instbuffer or neutronbuffer depending on state '''
         if self.prompt_phase:
@@ -284,6 +295,9 @@ class McrunPipeMan(object):
     
     def join(self):
         self.thread.join()
+
+    def join_instrdef(self):
+        self.thread.join_instrdef()
 
     def read_neutrons(self):
         return self.thread.neutronbuffer.read_all_lines_str()
