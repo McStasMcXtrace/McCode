@@ -18,25 +18,6 @@ from instrrep import Vector3d, Transform
 #sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 #from mclib import mccode_config
 
-def parse_rays(rays_txt):
-    '''  '''
-    rayparser = TraceNeutronRayParser(rays_txt)
-    
-    # build the neutron ray tree
-    raybuilder = NeutronRayConstructor(rayparser.parsetree)
-    rays = raybuilder.build_rays()
-    return rays
-
-def parse_instrdef(instr_txt, display_txt):
-    '''  '''
-    print "parsing data..."
-    instrparser = TraceInstrParser(instr_txt + display_txt)
-
-    # build the instrument object
-    instrbuilder = InstrObjectConstructor(instrparser.parsetree)
-    instrument = instrbuilder.build_instr()
-    return instrument
-
 def write_oldhtml(instrument):
     '''  '''
     # calculate campost by means of the component bounding boxes (mediated by drawcalls)
@@ -58,35 +39,83 @@ def write_oldhtml(instrument):
     writer.save(outfile)
     webbrowser.open_new_tab(outfile)
 
-def readall(cmd):
-    ''' reads trace output given by command 'cmd' '''
-    pipeman = McrunPipeMan(cmd)
-    pipeman.start_pipe()
-    pipeman.join()
-    instrdef = pipeman.read_instrdef()
-    neutrons = pipeman.read_neutrons()
-    return instrdef + neutrons
+def write_neutrons():
+    '''  '''
+    return
+
+class McMicsplayReader(object):
+    ''' 
+    High-level trace output reader
+    
+    supported args: instr, instr_options
+    '''
+    pipeman = None
+    cmd = ''
+    
+    def __init__(self, args, n=None):
+        if not os.path.exists(args.instr) or not os.path.splitext(args.instr)[1] not in ['instr', 'out']:
+            print "Please supply a valid .instr or .out file."
+            exit()
+        
+        cmd = 'mcrun ' + args.instr + ' --trace'
+        if n: 
+            cmd = cmd + ' -n' + str(n)
+        if args.instr_options: 
+            cmd = cmd + ' ' + args.instr_options
+        
+        self.cmd = cmd
+        self.pipeman = McrunPipeMan(cmd)
+        self.pipeman.start_pipe()
+        
+        self.pipeman.join()
+        print "parsing data..."
+        
+    def read_instrument(self):
+        instrdef = self.pipeman.read_instrdef()
+        
+        instr, display, rays, comments = cleanTrace(instrdef)
+        print comments
+        
+        instrparser = TraceInstrParser(instr + display)
+        instrbuilder = InstrObjectConstructor(instrparser.parsetree)
+        instrument = instrbuilder.build_instr()
+        
+        return instrument
+        
+    def read_neutrons(self):
+        neutrons = self.pipeman.read_neutrons()
+        
+        instr, display, rays_str, comments = cleanTrace(neutrons)
+        print comments
+        rayparser = TraceNeutronRayParser(rays_str)
+    
+        # build the neutron ray tree
+        raybuilder = NeutronRayConstructor(rayparser.parsetree)
+        rays = raybuilder.build_rays()
+        return rays
+
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
-    # test strings:
-    #data = read('mcrun ESS_Brilliance_2013.instr --trace -n100')
-    #data = read('mcrun PSI_DMC.instr --trace -n10')
+    # TODO: implement default (also disables instr_options) 
+    # TODO: implement inspect
+    # TODO: implement first, last
     
-    # assemble cmd
-    data = readall('mcrun ' + args.instr + ' --trace -n100')
+    reader = McMicsplayReader(args, n=100)
     
-    instr, display, rays, comments = cleanTrace(data)
-    print comments
-    
-    instrument = parse_instrdef(instr, display)
-    instrument.rays = parse_rays(rays)
+    instrument = reader.read_instrument()
     write_oldhtml(instrument)
+    
+    exit()
+    
+    rays = reader.read_rays()
+    write_neutrons(rays)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
+    parser.add_argument('--default', '-d', action='store_true', help='use instrument defaults (fast)')
     parser.add_argument('--inspect', help='display only neutrons reaching this component passed to mcrun')
     parser.add_argument('--first', help='zoom range first component')
     parser.add_argument('--last', help='zoom range last component')

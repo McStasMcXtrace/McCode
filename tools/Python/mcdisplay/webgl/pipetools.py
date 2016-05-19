@@ -8,6 +8,9 @@ import re
 import argparse
 from threading import Thread
 
+class TraceDataCleaner(object):
+    pass
+
 def cleanTrace(data):
     ''' 
     splits data into three sections: 
@@ -22,6 +25,10 @@ def cleanTrace(data):
     pos_mcdisplay = data.find('MCDISPLAY: start')
     pos_neutrons = data.find('ENTER:\n')
     
+    # checks
+    # TODO: allow for empty data
+    # TODO: allow for only instrdef
+    # TODO: allow for only neutrons
     
     try:
         # get instrument definition
@@ -48,15 +55,23 @@ def cleanTrace(data):
         while cont:
             if re.match('MCDISPLAY:', lines[lidx]):
                 lidx += 1
+                if lidx == len(lines):
+                    cont = False
             else:
                 cont = False
         mcdisplaytext = ''
         for i in range(lidx):
             mcdisplaytext = mcdisplaytext + lines[i] + '\n'
-        for line in lines[lidx+1:]: # NOTE: the +1 is because of the line "INSTRUMENT END:"
-            remainder = remainder + line + '\n'
+        if not lidx == len(lines):
+            for line in lines[lidx+1:]: # NOTE: the +1 is because of the line "INSTRUMENT END:"
+                remainder = remainder + line + '\n'
         
-        # get neutron ray section (with trailing comment lines)
+        if pos_neutrons == -1:
+            return instrdeftext, mcdisplaytext, '', remainder
+        
+        #
+        # get neutron rays section (with trailing comment lines)
+        #
         lines = data[pos_neutrons:].splitlines()
         
         # filter datalines
@@ -102,7 +117,7 @@ def cleanTrace(data):
                 
                 if idx_enter >= 0 and idx_leave >= 0:
                     for j in range(idx_enter, idx_leave+1): # NOTE: there should always be a STATE after LEAVE
-                        del raylines[idx_enter] # NOTE: raylines will disappear underway
+                        del raylines[idx_enter] # NOTE: raylines will disappear during process
                     break
         
         # make sure the sequence ends with a LEAVE then a STATE
@@ -126,6 +141,7 @@ def cleanTrace(data):
     
     except Exception as e:
         print e.message
+
 
 class LineFilter(object):
     pass
