@@ -39,8 +39,14 @@ def write_oldhtml(instrument):
     writer.save(outfile)
     webbrowser.open_new_tab(outfile)
 
+def write_instrument():
+    ''' writes instrument definitions to html/ js '''
+    # TODO: implement
+    return
+
 def write_neutrons():
     ''' writes neutron ray definitions to html/ js '''
+    # TODO: implement
     return
 
 class McMicsplayReader(object):
@@ -67,12 +73,12 @@ class McMicsplayReader(object):
         self.pipeman = McrunPipeMan(cmd)
         self.pipeman.start_pipe()
         
-        self.pipeman.join()
+        self.pipeman.join_instrdef()
         print "parsing data..."
         
     def read_instrument(self):
+        '''  '''
         instrdef = self.pipeman.read_instrdef()
-        
         instr, display, rays, comments = cleanTrace(instrdef)
         print comments
         
@@ -83,8 +89,9 @@ class McMicsplayReader(object):
         return instrument
         
     def read_neutrons(self):
+        '''  '''
+        self.pipeman.join()
         neutrons = self.pipeman.read_neutrons()
-        
         instr, display, rays_str, comments = cleanTrace(neutrons)
         print comments
         
@@ -94,7 +101,6 @@ class McMicsplayReader(object):
         
         return rays
 
-
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
@@ -102,14 +108,14 @@ def main(args):
     # TODO: implement inspect
     # TODO: implement first, last
     
-    reader = McMicsplayReader(args, n=100)
-    
+    reader = McMicsplayReader(args, n=300)
     instrument = reader.read_instrument()
+    #write_instrument(instrument)
     instrument.rays = reader.read_neutrons()
+    #write_neutrons(rays)
     
     write_oldhtml(instrument)
     
-    #write_neutrons(rays)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)

@@ -90,7 +90,7 @@ def cleanTrace(data):
             mat = re.match('(\w+):', lines[i])
             if mat and mat.group(1) in ['ENTER', 'COMP', 'STATE', 'SCATTER', 'ABSORB', 'LEAVE']:
                 
-                # theck for corrupted lines 
+                # check for corrupted lines 
                 seapos = lines[i].find('Warning: ')
                 if seapos > 0:
                     # in this case, the whole neutron ray should be removed. Save the comment and the index.
@@ -152,7 +152,7 @@ def cleanTrace(data):
     
     except Exception as e:
         print e.message
-    
+
 class LineFilter(object):
     pass
 

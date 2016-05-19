@@ -74,7 +74,7 @@ class TraceNeutronRayParser:
     
     def p_document(self, p):
         'document : ray_statements'
-        print 'neutron ray statements parsed'
+        print 'neutron rays parsed'
         # assemble parse tree
         self.parsetree = Node(type='raystatements', children=[self.rays])
     
