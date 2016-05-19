@@ -19,7 +19,7 @@ from instrrep import Vector3d, Transform
 #from mclib import mccode_config
 
 def write_oldhtml(instrument):
-    '''  '''
+    ''' writes instrument definition to html/js '''
     # calculate campost by means of the component bounding boxes (mediated by drawcalls)
     drawcalls = []
     for comp in instrument.components:
@@ -40,7 +40,7 @@ def write_oldhtml(instrument):
     webbrowser.open_new_tab(outfile)
 
 def write_neutrons():
-    '''  '''
+    ''' writes neutron ray definitions to html/ js '''
     return
 
 class McMicsplayReader(object):
@@ -87,11 +87,11 @@ class McMicsplayReader(object):
         
         instr, display, rays_str, comments = cleanTrace(neutrons)
         print comments
+        
         rayparser = TraceNeutronRayParser(rays_str)
-    
-        # build the neutron ray tree
         raybuilder = NeutronRayConstructor(rayparser.parsetree)
         rays = raybuilder.build_rays()
+        
         return rays
 
 
@@ -105,12 +105,11 @@ def main(args):
     reader = McMicsplayReader(args, n=100)
     
     instrument = reader.read_instrument()
+    instrument.rays = reader.read_neutrons()
+    
     write_oldhtml(instrument)
     
-    exit()
-    
-    rays = reader.read_rays()
-    write_neutrons(rays)
+    #write_neutrons(rays)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)

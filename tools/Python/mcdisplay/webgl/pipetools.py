@@ -31,41 +31,48 @@ def cleanTrace(data):
     # TODO: allow for only neutrons
     
     try:
-        # get instrument definition
-        lines = data[pos_instr:pos_mcdisplay].splitlines()
-        cont = True
-        lidx = 2
-        while cont:
-            testline = lines[lidx]
-            if re.match('COMPONENT:', testline):
-                lidx += 3
-            else:
-                cont = False
-        instrdeftext = ''
-        for i in range(lidx):
-            instrdeftext = instrdeftext + lines[i] + '\n'
         remainder = ''
-        for line in lines[lidx:]:
-            remainder = remainder + line + '\n'
-        
-        # get mcdisplay draw calls
-        lines = data[pos_mcdisplay:pos_neutrons].splitlines()
-        cont = True
-        lidx = 0
-        while cont:
-            if re.match('MCDISPLAY:', lines[lidx]):
-                lidx += 1
-                if lidx == len(lines):
-                    cont = False
-            else:
-                cont = False
+        instrdeftext = ''
         mcdisplaytext = ''
-        for i in range(lidx):
-            mcdisplaytext = mcdisplaytext + lines[i] + '\n'
-        if not lidx == len(lines):
-            for line in lines[lidx+1:]: # NOTE: the +1 is because of the line "INSTRUMENT END:"
-                remainder = remainder + line + '\n'
         
+        # instrument definition section
+        if pos_instr >= 0:
+        
+            # get instrument definition
+            lines = data[pos_instr:pos_mcdisplay].splitlines()
+            cont = True
+            lidx = 2
+            while cont:
+                testline = lines[lidx]
+                if re.match('COMPONENT:', testline):
+                    lidx += 3
+                else:
+                    cont = False
+            
+            for i in range(lidx):
+                instrdeftext = instrdeftext + lines[i] + '\n'
+            
+            for line in lines[lidx:]:
+                remainder = remainder + line + '\n'
+            
+            # get mcdisplay draw calls
+            lines = data[pos_mcdisplay:pos_neutrons].splitlines()
+            cont = True
+            lidx = 0
+            while cont:
+                if re.match('MCDISPLAY:', lines[lidx]):
+                    lidx += 1
+                    if lidx == len(lines):
+                        cont = False
+                else:
+                    cont = False
+            
+            for i in range(lidx):
+                mcdisplaytext = mcdisplaytext + lines[i] + '\n'
+            if not lidx == len(lines):
+                for line in lines[lidx+1:]: # NOTE: the +1 is because of the line "INSTRUMENT END:"
+                    remainder = remainder + line + '\n'
+            
         if pos_neutrons == -1:
             return instrdeftext, mcdisplaytext, '', remainder
         
