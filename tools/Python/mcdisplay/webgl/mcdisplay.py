@@ -57,7 +57,7 @@ class McMicsplayReader(object):
     cmd = ''
     debug = None
     def __init__(self, args, n=None, debug=False):
-        ''' supported args: instr, inspect, instr_options '''
+        ''' supported args: instr, inspect, default, instr_options '''
         if not os.path.exists(args.instr) or not os.path.splitext(args.instr)[1] not in ['instr', 'out']:
             print "Please supply a valid .instr or .out file."
             exit()
@@ -71,9 +71,8 @@ class McMicsplayReader(object):
         self.debug = debug
         
         self.cmd = cmd
-        
-        self.pipeman = McrunPipeMan(cmd, args.inspect)
-        
+        self.pipeman = McrunPipeMan(cmd, inspect=args.inspect, send_enter=args.default)
+    
     def read_instrument(self):
         ''' starts a pipe to mcrun given cmd, waits for instdef and reads, returning the parsed instrument '''
         self.pipeman.start_pipe()
@@ -92,7 +91,7 @@ class McMicsplayReader(object):
             debug_save('\n\nINSTR:\n\n' + instr + '\n\nDISPLAY:\n\n' + display + '\n\nCOMMENTS:\n\n' + comments, 'instrdata_cleaned')
         
         return instrument
-        
+    
     def read_neutrons(self):
         ''' waits for pipeman object to finish, then read and parse neutron data '''
         print "reading neutron data..."

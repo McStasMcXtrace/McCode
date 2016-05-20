@@ -6,7 +6,6 @@ Buffering and low-level filtering. Thread management.
 '''
 from subprocess import Popen, PIPE, STDOUT
 import re
-import argparse
 from threading import Thread, Event
 
 class TraceDataCleaner(object):
@@ -254,18 +253,24 @@ class McrunPipeThread(Thread):
     Switches to live buffer writing when printend string is matched in an output line.
     '''
     cmd = ''
+    
     instrbuffer = None
     neutronbuffer = None
+    
     instrdef_start = ''
     neutrondef_start = ''
+    
+    send_enter = None
+    
     prompt_phase = None
     neutron_phase = None
+    
     instrdef_finished = None
     
-    def __init__(self, cmd, instrdef_start, neutrondef_start, inspect=None):
+    def __init__(self, cmd, instrdef_start, neutrondef_start, inspect=None, send_enter=False):
         ''' constructor '''
         self.cmd = cmd
-        self.instrbuffer = LineBuffer(maxlines=1000)
+        self.instrbuffer = LineBuffer(maxlines=5000)
         
         if inspect:
             self.neutronbuffer = FilterBufferInspect(maxlines=30000, inspect_compname=inspect)
@@ -274,6 +279,8 @@ class McrunPipeThread(Thread):
         
         self.instrdef_start = instrdef_start
         self.neutrondef_start = neutrondef_start
+        
+        self.send_enter = send_enter
         
         self.prompt_phase = True
         self.neutron_phase = False
@@ -295,14 +302,16 @@ class McrunPipeThread(Thread):
             
             if self.prompt_phase or not self.neutron_phase:
                 if re.search('\]:', stdoutdata):
-                    data = raw_input()
-                    process.stdin.write(data + '\n')
+                    if not self.send_enter:
+                        process.stdin.write(raw_input() + '\n')
+                    else:
+                        process.stdin.write('\n')
                 if re.match(self.instrdef_start, stdoutdata):
                     self.prompt_phase = False
                 if re.match(self.neutrondef_start, stdoutdata):
                     self.neutron_phase = True
                     self.instrdef_finished.set()
-                
+            
             self.print_or_save(stdoutdata)
         
         # empty process buffer 
@@ -332,9 +341,9 @@ class McrunPipeMan(object):
     instrdef_start = ''
     instrdef_end = ''
     
-    def __init__(self, cmd, inspect=None):
+    def __init__(self, cmd, inspect=None, send_enter=False):
         self.cmd = cmd
-        self.thread = McrunPipeThread(cmd=cmd, instrdef_start=r'INSTRUMENT:\n', neutrondef_start='ENTER:\n', inspect=inspect)
+        self.thread = McrunPipeThread(cmd=cmd, instrdef_start=r'INSTRUMENT:\n', neutrondef_start='ENTER:\n', inspect=inspect, send_enter=send_enter)
     
     def start_pipe(self):
         self.thread.start()
