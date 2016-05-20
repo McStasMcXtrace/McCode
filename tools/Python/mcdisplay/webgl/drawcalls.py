@@ -147,7 +147,7 @@ def calcLargestBoundingVolumeWT(drawcalls_transforms):
     
         drawcalls_transforms : a list of 2 tuples containing a drawcall and a tranform
     '''
-    box = BoundingBox(0, 0, 0, 0, 0, 0)
+    box = drawcalls_transforms[0][0].get_boundingbox(transform=drawcalls_transforms[0][1])
     for d_t in drawcalls_transforms:
         newbox = d_t[0].get_boundingbox(transform=d_t[1])
         box = box.add(newbox)
