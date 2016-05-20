@@ -52,13 +52,12 @@ def write_neutrons():
 class McMicsplayReader(object):
     ''' 
     High-level trace output reader
-    
-    supported args: instr, instr_options
     '''
     pipeman = None
     cmd = ''
-    
-    def __init__(self, args, n=None):
+    debug = None
+    def __init__(self, args, n=None, debug=False):
+        ''' supported args: instr, inspect, instr_options '''
         if not os.path.exists(args.instr) or not os.path.splitext(args.instr)[1] not in ['instr', 'out']:
             print "Please supply a valid .instr or .out file."
             exit()
@@ -69,15 +68,17 @@ class McMicsplayReader(object):
         if args.instr_options: 
             cmd = cmd + ' ' + args.instr_options
         
-        self.cmd = cmd
-        self.pipeman = McrunPipeMan(cmd)
-        self.pipeman.start_pipe()
+        self.debug = debug
         
-        self.pipeman.join_instrdef()
-        print "parsing data..."
+        self.cmd = cmd
+        
+        self.pipeman = McrunPipeMan(cmd, args.inspect)
         
     def read_instrument(self):
-        '''  '''
+        ''' starts a pipe to mcrun given cmd, waits for instdef and reads, returning the parsed instrument '''
+        self.pipeman.start_pipe()
+        self.pipeman.join_instrdef()
+
         instrdef = self.pipeman.read_instrdef()
         instr, display, rays, comments = cleanTrace(instrdef)
         print comments
@@ -86,14 +87,23 @@ class McMicsplayReader(object):
         instrbuilder = InstrObjectConstructor(instrparser.parsetree)
         instrument = instrbuilder.build_instr()
         
+        if self.debug:
+            debug_save(instrdef, 'instrdata')
+            debug_save('\n\nINSTR:\n\n' + instr + '\n\nDISPLAY:\n\n' + display + '\n\nCOMMENTS:\n\n' + comments, 'instrdata_cleaned')
+        
         return instrument
         
     def read_neutrons(self):
-        '''  '''
+        ''' waits for pipeman object to finish, then read and parse neutron data '''
+        print "reading neutron data..."
         self.pipeman.join()
         neutrons = self.pipeman.read_neutrons()
         instr, display, rays_str, comments = cleanTrace(neutrons)
         print comments
+        
+        if self.debug:
+            debug_save(neutrons, 'neutrondata')
+            debug_save('\n\NEUTRONS:\n\n' + rays_str + '\n\nCOMMENTS:\n\n' + comments, 'neutrondata_cleaned')
         
         rayparser = TraceNeutronRayParser(rays_str)
         raybuilder = NeutronRayConstructor(rayparser.parsetree)
@@ -101,11 +111,16 @@ class McMicsplayReader(object):
         
         return rays
 
+def debug_save(data, filename):
+    ''' saves data for debug purposes '''
+    f = open(filename, 'w')
+    f.write(data)
+    f.close()
+
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
-    # TODO: implement default (also disables instr_options) 
-    # TODO: implement inspect
+    # TODO: implement --default (also disables instr_options)
     # TODO: implement first, last
     
     reader = McMicsplayReader(args, n=300)

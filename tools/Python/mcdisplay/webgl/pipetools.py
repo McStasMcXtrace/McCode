@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 '''
 Tools for piping a process to the terminal for std I/O.
+Buffering and low-level filtering. Thread management.
 '''
 from subprocess import Popen, PIPE, STDOUT
 import re
@@ -21,14 +22,12 @@ def cleanTrace(data):
     
     and captures all other text in a tertiary string
     '''
+    if data == '':
+        return
+    
     pos_instr = data.find('INSTRUMENT:\n')
     pos_mcdisplay = data.find('MCDISPLAY: start')
     pos_neutrons = data.find('ENTER:\n')
-    
-    # checks
-    # TODO: allow for empty data
-    # TODO: allow for only instrdef
-    # TODO: allow for only neutrons
     
     try:
         remainder = ''
@@ -153,9 +152,6 @@ def cleanTrace(data):
     except Exception as e:
         print e.message
 
-class LineFilter(object):
-    pass
-
 class LineBuffer(object):
     '''
     Fixed size FIFO buffer with no overflow warning.
@@ -187,17 +183,6 @@ class LineBuffer(object):
         else:
             return None
     
-    def read_all_lines(self):
-        ''' read all new lines, returning a list '''
-        r = self.idx_r
-        w = self.idx_w
-        lines = []
-        while not r == w:
-            lines.append(self.buffer[r % self.maxlines])
-            r += 1
-        self.idx_r = r
-        return lines
-    
     def read_all_lines_str(self):
         ''' read all new lines, returning them as a single string '''
         r = self.idx_r
@@ -208,6 +193,60 @@ class LineBuffer(object):
             r += 1
         self.idx_r = r
         return data
+
+#class FilterBufferInspect(LineBuffer):
+class FilterBufferInspect(object):
+    '''
+    An extension of LineBuffer implementing --inspect by adding a extra 
+    buffer layer.
+    '''
+    linebuffer = None
+    mini = None
+    
+    reachedcomp = False
+    lastcallwasleave = False
+    isblockend = False
+    inspect_compname = ''
+    def __init__(self, maxlines, inspect_compname):
+        self.linebuffer = LineBuffer(maxlines)
+        self.mini = []
+        
+        self.isblockend = False
+        self.reachedcomp = False
+        self.lastcallwasleave = False
+        self.inspect_compname = inspect_compname
+        #super(FilterBufferInspect, self).__init__(maxlines)
+    
+    def add_line(self, line):
+        '''
+        Adds lines to minibufer until a leave (plus one line) is encountered.
+        '''
+        if not self.reachedcomp:
+            self.reachedcomp = bool(re.match('COMP: "%s"' % self.inspect_compname, line))
+        if self.lastcallwasleave:
+            self.lastcallwasleave = False
+            self.isblockend = True
+        if not self.isblockend and not self.lastcallwasleave:
+            self.lastcallwasleave = bool(re.match('LEAVE:', line))
+            
+        if not self.isblockend:
+            self.mini.append(line)
+        else:
+            self.isblockend = False
+            if self.reachedcomp:
+                self.reachedcomp = False
+                self.mini.append(line)
+                for l in self.mini:
+                    self.linebuffer.add_line(l)
+            # clear this cache
+            self.mini = []
+    
+    def read_line(self):
+        return self.linebuffer.read_line()
+    
+    def read_all_lines_str(self):
+        ''' python inheritance overrides all methods... '''
+        return self.linebuffer.read_all_lines_str()
 
 class McrunPipeThread(Thread):
     ''' 
@@ -223,17 +262,24 @@ class McrunPipeThread(Thread):
     neutron_phase = None
     instrdef_finished = None
     
-    def __init__(self, cmd, instrdef_start, neutrondef_start):
+    def __init__(self, cmd, instrdef_start, neutrondef_start, inspect=None):
         ''' constructor '''
         self.cmd = cmd
         self.instrbuffer = LineBuffer(maxlines=1000)
-        self.neutronbuffer = LineBuffer(maxlines=10000)
+        
+        if inspect:
+            self.neutronbuffer = FilterBufferInspect(maxlines=30000, inspect_compname=inspect)
+        else:
+            self.neutronbuffer = LineBuffer(maxlines=30000)
+        
         self.instrdef_start = instrdef_start
         self.neutrondef_start = neutrondef_start
+        
         self.prompt_phase = True
         self.neutron_phase = False
         self.instrdef_finished = Event()
         self.instrdef_finished.clear()
+        
         Thread.__init__(self)
     
     def run(self):
@@ -277,8 +323,8 @@ class McrunPipeThread(Thread):
             self.instrbuffer.add_line(line)
 
 class McrunPipeMan(object):
-    ''' 
-    Proxy class for setting up the McrunPipeThread thread and LineBuffer. 
+    '''
+    Proxy class for setting up the McrunPipeThread thread and LineBuffer.
     These are intended to provide parallel processing and piping, due to 
     potentially long simulation execution times.
     '''
@@ -286,9 +332,9 @@ class McrunPipeMan(object):
     instrdef_start = ''
     instrdef_end = ''
     
-    def __init__(self, cmd):
+    def __init__(self, cmd, inspect=None):
         self.cmd = cmd
-        self.thread = McrunPipeThread(cmd=cmd, instrdef_start=r'INSTRUMENT:\n', neutrondef_start='ENTER:\n')
+        self.thread = McrunPipeThread(cmd=cmd, instrdef_start=r'INSTRUMENT:\n', neutrondef_start='ENTER:\n', inspect=inspect)
     
     def start_pipe(self):
         self.thread.start()
@@ -304,20 +350,4 @@ class McrunPipeMan(object):
     
     def read_instrdef(self):
         return self.thread.instrbuffer.read_all_lines_str()
-
-def main(args):
-    pipeman = McrunPipeMan('mcrun ESS_Brilliance_2013.instr --trace -n1')
-    pipeman.start_pipe()
-    pipeman.join()
-    data = pipeman.read_instrdef()
-    print 
-    print "McrunPipeMan collected trace output:"
-    print
-    print data
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=__doc__)
-    #parser.add_argument('--test', action='store_true', help='')
-    args = parser.parse_args()
-    main(args)
 
