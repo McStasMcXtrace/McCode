@@ -18,14 +18,31 @@ from instrrep import Vector3d, Transform
 #sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 #from mclib import mccode_config
 
-def write_oldhtml(instrument):
+def write_oldhtml(instrument, first=None, last=None):
     ''' writes instrument definition to html/js '''
     # calculate campost by means of the component bounding boxes (mediated by drawcalls)
     drawcalls = []
+    
+    encountered_first = False
+    encountered_last = False
     for comp in instrument.components:
+        # continue until we reach a component named first
+        if first:
+            if not encountered_first and comp.name == first:
+                encountered_first = True
+            if not encountered_first:
+                continue
+        # continue from encountering a component named last
+        if last:
+            if not encountered_last and comp.name == last:
+                encountered_last = True
+            if encountered_last:
+                continue
+        
         transform = Transform(comp.rot, comp.pos)
         for drawcall in comp.drawcommands:
             drawcalls.append((drawcall, transform))
+    
     box = calcLargestBoundingVolumeWT(drawcalls)
     x = -(box.z2 - box.z1)/2
     y = 0
@@ -128,7 +145,7 @@ def main(args):
     instrument.rays = reader.read_neutrons()
     #write_neutrons(rays)
     
-    write_oldhtml(instrument)
+    write_oldhtml(instrument, first=args.first, last=args.last)
     
 
 if __name__ == '__main__':
