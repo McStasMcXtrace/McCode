@@ -8,6 +8,7 @@ import os
 import webbrowser
 import logging
 import argparse
+from os.path import basename, splitext
 
 from pipetools import McrunPipeMan, cleanTrace
 from traceinstrparser import TraceInstrParser, InstrObjectConstructor
@@ -66,7 +67,7 @@ def write_oldhtml(instrument, first=None, last=None):
     campos = Vector3d(x, y, z)
     
     # render html
-    outfile = 'mcdisplay.html'
+    outfile = '%s.html' % instrument.name
     templatefile = os.path.join(os.path.dirname(__file__), "template.html")
     
     writer = TemplateWebGLWrite(instrument, templatefile, campos=campos)
