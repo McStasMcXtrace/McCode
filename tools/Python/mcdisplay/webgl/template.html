@@ -70,7 +70,7 @@
 		{
 			scene = new THREE.Scene();
 
-			camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 100);
+			camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
 			camera.position.x = campos.x; // -50;
 			camera.position.y = campos.y; // 0;
 			camera.position.z = campos.z; // 50;
@@ -82,11 +82,11 @@
 			document.body.appendChild(renderer.domElement);
 
 			controls = new THREE.OrbitControls(camera);
-			controls.target.x = 0; //1;
+			controls.target.x = - campos.x/2; //1;
 			controls.target.y = 0; //0;
 			controls.target.z = campos.z; //49;
 
-			camera.lookAt(new THREE.Vector3(0, 0, campos.z));
+			camera.lookAt(controls.target);
 
 			addLight(new THREE.Vector3(10, 50, 130), scene)
 			scene.add(rootnode);
@@ -235,14 +235,14 @@
 			root.remove(arrayOfRays[lastRay]);
 		}
 
-		showRays(allRays, root);
+		//showRays(allRays, root);
 
 		// renderloop
 		function render() {
 			requestAnimationFrame(render);
 			renderer.render(scene, camera);
 
-			//showNextRay(allRays, root);
+			showNextRay(allRays, root);
 		}
 		render();
     </script>

@@ -25,6 +25,15 @@ def write_oldhtml(instrument, first=None, last=None):
     
     encountered_first = False
     encountered_last = False
+    
+    # sanity check of first / last:
+    if first: 
+        compnames = []
+        for comp in instrument.components:
+            compnames.append(comp.name)
+        if not first in compnames: 
+            raise Exception('--first must be equal to a component name')
+    
     for comp in instrument.components:
         # continue until we reach a component named first
         if first:
@@ -43,15 +52,24 @@ def write_oldhtml(instrument, first=None, last=None):
         for drawcall in comp.drawcommands:
             drawcalls.append((drawcall, transform))
     
+    # choose camera position
     box = calcLargestBoundingVolumeWT(drawcalls)
-    x = -(box.z2 - box.z1)/2
-    y = 0
-    z = box.z1 + (box.z2 - box.z1)/2
     
+    dx = box.x2 - box.x1
+    dy = box.y2 - box.y1
+    dz = box.z2 - box.z1
+    
+    x = -(box.x1 + max(dx, dz)/2)
+    y = max(dx, dz)/2
+    z = box.z1 + dz/2
+    
+    campos = Vector3d(x, y, z)
+    
+    # render html
     outfile = 'mcdisplay.html'
     templatefile = os.path.join(os.path.dirname(__file__), "template.html")
     
-    writer = TemplateWebGLWrite(instrument, templatefile, campos=Vector3d(x, y, z))
+    writer = TemplateWebGLWrite(instrument, templatefile, campos=campos)
     writer.build()
     writer.save(outfile)
     webbrowser.open_new_tab(outfile)
@@ -67,7 +85,7 @@ def write_neutrons():
     return
 
 class McMicsplayReader(object):
-    ''' 
+    '''
     High-level trace output reader
     '''
     pipeman = None
@@ -80,10 +98,11 @@ class McMicsplayReader(object):
             exit()
         
         cmd = 'mcrun ' + args.instr + ' --trace'
-        if n: 
+        if n:
             cmd = cmd + ' -n' + str(n)
-        if args.instr_options: 
-            cmd = cmd + ' ' + args.instr_options
+        if args.instr_options:
+            for o in args.instr_options:
+                cmd = cmd + ' ' + o
         
         self.debug = debug
         
