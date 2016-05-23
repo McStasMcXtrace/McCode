@@ -604,20 +604,15 @@ class McGuiAppController():
     def handleMcDisplayWeb(self):
         self.emitter.status('Running mcdisplay-webgl...')
         try:
-            params = self.state.getInstrParams()
-            pstr = ''
-            for p in params:
-                pstr = pstr + ' ' + p[0] + '=' + p[1]
-            
-            executable = './' + os.path.splitext(os.path.basename(self.state.getInstrumentFile()))[0] + '.out'
-            # TODO: (something else for windows)
-            cmd = executable + ' --ncount=100 ' + pstr + ' --trace | mcdisplay-webgl'
+            cmd = 'mcdisplay-webgl -d ' + os.path.basename(self.state.getInstrumentFile())
             self.emitter.message(cmd)
             self.emitter.message('')
-            subprocess.Popen(cmd,
+            process = subprocess.Popen(cmd,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT,
                              shell=True)
+            process.wait()
+            
         finally:
             self.emitter.status('')
     
