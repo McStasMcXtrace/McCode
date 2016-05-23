@@ -234,6 +234,7 @@ class DrawMultiline(DrawCommand):
     def __init__(self, args):
         super(DrawMultiline, self).__init__(args)
         self.key = 'multiline'
+        self.points = []
         
         l = len(args)
         try:
