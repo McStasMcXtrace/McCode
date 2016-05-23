@@ -140,11 +140,8 @@ def cleanTrace(data):
                 break
         
         # reconstruct strings from lists
-        raystext = ''
-        for line in raylines:
-            raystext = raystext + line + '\n'
-        for line in raycomments:
-            remainder = remainder + line + '\n'
+        raystext = '\n'.join(raylines) + '\n'
+        remainder = '\n'.join(raycomments) + '\n'
         
         return instrdeftext, mcdisplaytext, raystext, remainder
     
@@ -184,6 +181,7 @@ class LineBuffer(object):
     
     def read_all_lines_str(self):
         ''' read all new lines, returning them as a single string '''
+        # TODO: could be improved performance-wise by the use of '\n'.join()+'\n'
         r = self.idx_r
         w = self.idx_w
         data = ''
@@ -273,9 +271,9 @@ class McrunPipeThread(Thread):
         self.instrbuffer = LineBuffer(maxlines=5000)
         
         if inspect:
-            self.neutronbuffer = FilterBufferInspect(maxlines=30000, inspect_compname=inspect)
+            self.neutronbuffer = FilterBufferInspect(maxlines=50000, inspect_compname=inspect)
         else:
-            self.neutronbuffer = LineBuffer(maxlines=30000)
+            self.neutronbuffer = LineBuffer(maxlines=50000)
         
         self.instrdef_start = instrdef_start
         self.neutrondef_start = neutrondef_start
@@ -293,7 +291,7 @@ class McrunPipeThread(Thread):
         ''' create a process given command and read, print and write to it depending on state '''
         process = Popen(self.cmd, shell=True,
                         stdout=PIPE,
-                        stderr=STDOUT,
+                        stderr=None,
                         stdin=PIPE
                         )
         

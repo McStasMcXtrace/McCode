@@ -8,7 +8,6 @@ import os
 import webbrowser
 import logging
 import argparse
-from os.path import basename, splitext
 
 from pipetools import McrunPipeMan, cleanTrace
 from traceinstrparser import TraceInstrParser, InstrObjectConstructor
@@ -119,13 +118,13 @@ class McMicsplayReader(object):
         instr, display, rays, comments = cleanTrace(instrdef)
         print comments
         
-        instrparser = TraceInstrParser(instr + display)
-        instrbuilder = InstrObjectConstructor(instrparser.parsetree)
-        instrument = instrbuilder.build_instr()
-        
         if self.debug:
             debug_save(instrdef, 'instrdata')
             debug_save('\n\nINSTR:\n\n' + instr + '\n\nDISPLAY:\n\n' + display + '\n\nCOMMENTS:\n\n' + comments, 'instrdata_cleaned')
+        
+        instrparser = TraceInstrParser(instr + display)
+        instrbuilder = InstrObjectConstructor(instrparser.parsetree)
+        instrument = instrbuilder.build_instr()
         
         return instrument
     
@@ -156,10 +155,7 @@ def debug_save(data, filename):
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
-    # TODO: implement --default (also disables instr_options)
-    # TODO: implement first, last
-    
-    reader = McMicsplayReader(args, n=300)
+    reader = McMicsplayReader(args, n=100, debug=False)
     instrument = reader.read_instrument()
     #write_instrument(instrument)
     instrument.rays = reader.read_neutrons()
