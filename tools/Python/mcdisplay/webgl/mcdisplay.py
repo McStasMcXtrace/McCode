@@ -31,9 +31,10 @@ def write_oldhtml(instrument, first=None, last=None):
         compnames = []
         for comp in instrument.components:
             compnames.append(comp.name)
-        if not first in compnames: 
+        if not first in compnames:
             raise Exception('--first must be equal to a component name')
     
+    # construct bounding volume given --first and --last
     for comp in instrument.components:
         # continue until we reach a component named first
         if first:
@@ -51,10 +52,9 @@ def write_oldhtml(instrument, first=None, last=None):
         transform = Transform(comp.rot, comp.pos)
         for drawcall in comp.drawcommands:
             drawcalls.append((drawcall, transform))
-    
-    # choose camera position
     box = calcLargestBoundingVolumeWT(drawcalls)
     
+    # create camera view coordinates given boudinng volume
     dx = box.x2 - box.x1
     dy = box.y2 - box.y1
     dz = box.z2 - box.z1
