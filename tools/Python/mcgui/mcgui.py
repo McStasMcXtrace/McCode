@@ -172,6 +172,12 @@ class McGuiState(QtCore.QObject):
     def getDataDir(self):
         return self.__dataDir
     
+    def checkInstrFileCandidate(self, instr):
+        if ' ' in instr:
+            msg = "WARNING: Please not use directory names containing whitespaces."
+            self.__emitter.status(msg)
+            raise Exception(msg)
+
     def setWorkDir(self, newdir):
         if not os.path.isdir(newdir):
             raise Exception('McGuiState.setWorkDir: invalid work dir - "' + newdir + '"')
@@ -663,6 +669,7 @@ class McGuiAppController():
         oldinstr = self.state.getInstrumentFile()
         if oldinstr != '':
             newinstr = self.view.showSaveAsDialog(oldinstr)
+            self.state.checkInstrFileCandidate(newinstr)
         
         if newinstr != '':
             self.state.unloadInstrument()
@@ -674,6 +681,8 @@ class McGuiAppController():
     
     def handleNewInstrument(self):
         new_instr_req = self.view.showNewInstrDialog(self.state.getWorkDir())
+        self.state.checkInstrFileCandidate(new_instr_req)
+        
         if new_instr_req != '':
             template_text_header = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_header_simple.instr")).read()
             template_text_body = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_body_simple.instr")).read()
@@ -687,6 +696,8 @@ class McGuiAppController():
     
     def handleNewFromTemplate(self, instr_templ=''):
         new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(str(instr_templ))))
+        self.state.checkInstrFileCandidate(new_instr_req)
+        
         if new_instr_req != '':
             if self.view.closeCodeEditorWindow():
                 text = McGuiUtils.getFileContents(instr_templ)
@@ -696,6 +707,8 @@ class McGuiAppController():
     
     def handleOpenInstrument(self):
         instr = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
+        self.state.checkInstrFileCandidate(instr)
+        
         if instr:
             if self.view.closeCodeEditorWindow():
                 self.state.unloadInstrument()
