@@ -692,7 +692,10 @@ class McInsertComponentDialog(QtGui.QDialog):
             edt = QtGui.QLineEdit()
             edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
             edt.setObjectName("edt" + par.par_name)
-            edt.setText(par.default_value)
+            if par.par_name == "filename":
+                edt.setText('"' + par.default_value + '"')
+            else:
+                edt.setText(par.default_value)
             self.ui.gridParameters.addWidget(edt, y, x, 1, 1)
             
             # save name, value widget references for use in self.getValues
