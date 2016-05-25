@@ -9,7 +9,7 @@ import webbrowser
 import logging
 import argparse
 
-from pipetools import McrunPipeMan, cleanTrace
+from pipetools import McrunPipeMan
 from traceinstrparser import TraceInstrParser, InstrObjectConstructor
 from drawcalls import TemplateWebGLWrite, calcLargestBoundingVolumeWT
 from traceneutronrayparser import NeutronRayConstructor, TraceNeutronRayParser
@@ -112,17 +112,14 @@ class McMicsplayReader(object):
     def read_instrument(self):
         ''' starts a pipe to mcrun given cmd, waits for instdef and reads, returning the parsed instrument '''
         self.pipeman.start_pipe()
-        self.pipeman.join_instrdef()
+        self.pipeman.join()
 
         instrdef = self.pipeman.read_instrdef()
-        instr, display, rays, comments = cleanTrace(instrdef)
-        print comments
         
         if self.debug:
             debug_save(instrdef, 'instrdata')
-            debug_save('\n\nINSTR:\n\n' + instr + '\n\nDISPLAY:\n\n' + display + '\n\nCOMMENTS:\n\n' + comments, 'instrdata_cleaned')
         
-        instrparser = TraceInstrParser(instr + display)
+        instrparser = TraceInstrParser(instrdef)
         instrbuilder = InstrObjectConstructor(instrparser.parsetree)
         instrument = instrbuilder.build_instr()
         
@@ -131,16 +128,14 @@ class McMicsplayReader(object):
     def read_neutrons(self):
         ''' waits for pipeman object to finish, then read and parse neutron data '''
         print "reading neutron data..."
-        self.pipeman.join()
         neutrons = self.pipeman.read_neutrons()
-        instr, display, rays_str, comments = cleanTrace(neutrons)
-        print comments
+        
+        print self.pipeman.read_comments()
         
         if self.debug:
             debug_save(neutrons, 'neutrondata')
-            debug_save('\n\NEUTRONS:\n\n' + rays_str + '\n\nCOMMENTS:\n\n' + comments, 'neutrondata_cleaned')
         
-        rayparser = TraceNeutronRayParser(rays_str)
+        rayparser = TraceNeutronRayParser(neutrons)
         raybuilder = NeutronRayConstructor(rayparser.parsetree)
         rays = raybuilder.build_rays()
         
@@ -155,7 +150,7 @@ def debug_save(data, filename):
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
-    reader = McMicsplayReader(args, n=100, debug=False)
+    reader = McMicsplayReader(args, n=100, debug=True)
     instrument = reader.read_instrument()
     #write_instrument(instrument)
     instrument.rays = reader.read_neutrons()

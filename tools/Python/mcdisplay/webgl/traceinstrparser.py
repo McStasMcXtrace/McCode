@@ -23,6 +23,7 @@ class TraceInstrParser:
     # these tokens match ID, but are of these types (handled in t_ID)
     reserved = {
         'INSTRUMENT'  : 'INSTRUMENT',
+        'END'  : 'END',
         'Instrument'  : 'INSTRKW',
         'COMPONENT'   : 'COMPONENT',
         'Component'   : 'COMPKW',
@@ -93,7 +94,7 @@ class TraceInstrParser:
     ##################################
     
     def p_document(self, p):
-        'document : instr_open comp_defs draw_lines'
+        'document : instr_open comp_defs draw_lines instr_end'
         print 'instrument definition parsed'
         # quirky: reverse ordering of components
         self.comps.children = self.comps.children[::-1]
@@ -104,6 +105,9 @@ class TraceInstrParser:
     def p_instr_open(self, p):
         'instr_open : INSTRUMENT COLON NL INSTRKW SQUOTE instr_name SQUOTE LB ABSPATH RB NL'
         self.instr = Node(type='instrument', children=[p[6], Node(type='abspath', leaf=p[9])])
+    
+    def p_instr_end(self, p):
+        'instr_end : INSTRUMENT END COLON NL'
         
     def p_instr_name(self, p):
         'instr_name : ID'
