@@ -708,15 +708,15 @@ class McInsertComponentDialog(QtGui.QDialog):
             lbl.setObjectName("lbl" + par.par_name + "_doc")
             lbl.setText(par.doc_and_unit)
             self.ui.gridParameters.addWidget(lbl, y, x, 1, 1)
-            
+        
         # fix tab-order
-        q = self.ui.btnInsert 
+        q = self.ui.btnInsert
         for i in range(len(self.__wParams)):
             w = self.__wParams[i][1]
             self.setTabOrder(q, w)
             q = w
         self.setTabOrder(q, self.ui.edtAtX)
-            
+        
         # init instance-name field with an example, mark the text
         tbx = self.ui.edtInstanceName
         tbx.setText(str.lower(comp_parser.name))
