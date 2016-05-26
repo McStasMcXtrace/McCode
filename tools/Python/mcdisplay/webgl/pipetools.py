@@ -123,6 +123,8 @@ class NeutronsState(LineHandlerState):
         self.block = []
         self.active = False
         self.leaveflag = False
+        
+        self.inspect = args.get('inspect', None)
         super(NeutronsState, self).__init__(setcurrent, next, databox, args)
     
     def add_line(self, line):
@@ -134,7 +136,18 @@ class NeutronsState(LineHandlerState):
             self.block.append(line)
         elif self.leaveflag:
             self.block.append(line)
-            self.databox.add_neutronblock(''.join(self.block))
+            
+            # inspect
+            accept_block = False
+            if self.inspect:
+                for b in self.block:
+                    if self.inspect in b:
+                        accept_block = True
+            else:
+                accept_block = True
+            if accept_block: 
+                self.databox.add_neutronblock(''.join(self.block))
+            
             self.block = []
             self.leaveflag = False
         elif re.match('ENTER:', line):
