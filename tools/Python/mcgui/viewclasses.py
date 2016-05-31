@@ -223,6 +223,11 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         super(McCodeEditorWindow, self).__init__(parent)
         self.ui =  Ui_EditorWindow()
         self.ui.setupUi(self)
+        
+        sheight = QtGui.QDesktopWidget().availableGeometry().height()
+        if sheight < 1080:
+            self.resize(820, sheight)
+        
         self.__initScintilla()
         self.__initCallbacks()
     
@@ -622,6 +627,7 @@ class McInsertComponentDialog(QtGui.QDialog):
         self.ui.setupUi(self)
         self.ui.btnInsert.clicked.connect(self.accept)
         self.ui.btnCancel.clicked.connect(self.reject)
+        
         self.__standard_le_style = self.ui.edtInstanceName.styleSheet()
         
     def accept(self):
