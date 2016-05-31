@@ -233,7 +233,7 @@ class Ui_MainWindow(object):
 class Ui_EditorWindow(object):
     def setupUi(self, EditorWindow):
         EditorWindow.setObjectName("EditorWindow")
-        EditorWindow.resize(920, 800)
+        EditorWindow.resize(920, 1080)
         self.centralwidget = QtGui.QWidget(EditorWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.centralwidget)
