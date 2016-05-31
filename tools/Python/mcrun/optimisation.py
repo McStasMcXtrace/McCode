@@ -1,14 +1,11 @@
 from os.path import basename
-
-from log import McRunException
-
-from log import getLogger
-LOG = getLogger('optimisation')
-
+from log import McRunException, getLogger
 from datetime import datetime
 from decimal import Decimal
-
 from mcstas import McStasResult
+from os.path import join 
+
+LOG = getLogger('optimisation')
 
 
 def build_header(options, params, intervals, detectors):
@@ -66,9 +63,85 @@ def build_header(options, params, intervals, detectors):
         'filename': basename(options.optimise_file) or 'mcstas.dat',
         'variables': ' '.join(variables),
     }
+    
+    result = (template % values) + '\n'
+    return result
 
-    return (template % values) + '\n'
+def build_mccodesim_header(options, params, intervals, detectors):
+    template = """
+begin instrument: %(instr)s
+  Creator: %(version)s
+  Source: %(instr)s
+  Parameters:  %(xvars)s(%(paramtype)s)
+  Trace_enabled: %(istrace)s
+  Default_main: yes
+  Embedded_runtime: yes
+end instrument
 
+begin simulation
+Date: %(date)s
+Ncount: %(ncount)i
+Numpoints: %(scanpoints)i
+Param: %(params)s
+end simulation
+
+begin data
+type: multiarray_1d(%(scanpoints)i)
+title: Scan of %(xvars)s
+xvars: %(xvars)s
+yvars: %(yvars)s
+xlabel: '%(xvars)s'
+ylabel: 'Intensity'
+xlimits: %(xmin)s %(xmax)s
+filename: %(filename)s
+variables: %(variables)s
+end data
+    """.strip()
+    
+    # Date format: Fri Aug 26 12:21:39 2011
+    date = datetime.strftime(datetime.now(), '%a %b %d %T %Y')
+
+    xvars = ', '.join(params)
+    xmin = min(intervals[params[0]])
+    xmax = max(intervals[params[0]])
+    N = len(intervals[params[0]])
+
+    # TODO: figure out correct scan type
+    title = 'Scan of %s' % xvars
+    scantype = 'multiarray_1d(%d)' % N
+
+    variables = list(params)
+    for detector in detectors:
+        variables += [detector + '_I', detector + '_ERR']
+
+    values = {
+        'instr': options.instr,
+        'date': date,
+
+        'ncount': options.ncount,
+        'scanpoints': N,
+
+        'params': ', '.join('%s = %s' % (xvar, intervals[xvar][0])
+                            for xvar in params),
+        'type': scantype,
+        'title': title,
+
+        'xvars': xvars,
+        'yvars': ' '.join('(%s_I,%s_ERR)' % (d, d) for d in detectors),
+
+        'xmin': xmin,
+        'xmax': xmax,
+
+        'filename': basename(options.optimise_file) or 'mccode.dat',
+        'variables': ' '.join(variables),
+        
+        'version': 'dummyversion',
+        'paramtype': 'dummyparamtype',
+        'istrace': 'dummyistrace'
+    }
+    
+    result = (template % values) + '\n'
+    return result
 
 def point_at(N, key, minmax, step):
     """ Helper to compute the point for key at step """
@@ -120,6 +193,7 @@ class Scanner:
         self.intervals = intervals
         self.points = None
         self.outfile = mcstas.options.optimise_file
+        self.simfile = join(mcstas.options.dir, 'mccode.sim')
 
     def set_points(self, points):
         self.points = points
@@ -132,27 +206,30 @@ class Scanner:
 
         if len(self.intervals) == 0:
             raise InvalidInterval('No interval range specified')
-
-        fid = open(self.outfile, 'w')
+        
+        # get file handles
+        fid = open(self.outfile, 'w')        
+        mccodesim = open(self.simfile, 'w')
+        
         wrote_header = False
-
+        
         # each run will be in "dir/1", "dir/2", ...
         mcstas_dir = self.mcstas.options.dir
-
+        
         for i, point in enumerate(self.points):
             par_values = []
             for key in self.intervals:
                 self.mcstas.set_parameter(key, point[key])
                 LOG.debug("%s: %s", key, point[key])
                 par_values.append(point[key])
-
+            
             is_decimal = lambda x: type(x) == Decimal
             to_string = (lambda x: is_decimal(x)
                          and '%.4f' % x or x)
 
             LOG.info(', '.join('%s: %s' % (a, to_string(b))
                                for (a, b) in point.items()))
-
+            
             # Change sub-directory as an extra option (dir/1 -> dir/2)
             current_dir = '%s/%i' % (mcstas_dir, i)
             out = self.mcstas.run(pipe=True, extra_opts={'dir': current_dir})
@@ -161,7 +238,11 @@ class Scanner:
                           key=lambda x: x.name)
 
             if not wrote_header:
+                
                 fid.write(build_header(self.mcstas.options,
+                                       self.intervals.keys(), self.intervals,
+                                       [det.name for det in dets]))
+                mccodesim.write(build_mccodesim_header(self.mcstas.options,
                                        self.intervals.keys(), self.intervals,
                                        [det.name for det in dets]))
                 wrote_header = True
@@ -172,3 +253,6 @@ class Scanner:
                                 ' '.join(dets_vals))
             fid.write(line)
             fid.flush()
+        
+        fid.close()
+        mccodesim.close()

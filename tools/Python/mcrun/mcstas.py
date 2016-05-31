@@ -1,4 +1,3 @@
-
 import os
 import re
 import shutil
@@ -294,8 +293,7 @@ class McStasInfo:
 
 class McStasResult:
     ''' Parsing of McStas experiment output '''
-
-    DETECTOR_RE = r'Detector: ([^\s]+)_I=([^ ]+) \1_ERR=([^\s]+) \1_N=([^ ]+) "(\1[^"]+)"'
+    DETECTOR_RE = r'Detector: ([^\s]+)_I=([^ ]+) \1_ERR=([^\s]+) \1_N=([^ ]+) "([^"]+)"'
 
     def __init__(self, data):
         self.data = data
