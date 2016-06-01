@@ -226,7 +226,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         
         sheight = QtGui.QDesktopWidget().availableGeometry().height()
         if sheight < 1080:
-            self.resize(820, sheight)
+            self.resize(920, sheight)
         
         self.__initScintilla()
         self.__initCallbacks()
