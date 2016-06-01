@@ -35,18 +35,6 @@
       <property name="spacing">
        <number>0</number>
       </property>
-      <item>
-       <widget class="QLineEdit" name="edtSearch">
-        <property name="font">
-         <font>
-          <italic>true</italic>
-         </font>
-        </property>
-        <property name="text">
-         <string>search...</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </item>
    </layout>
@@ -96,9 +84,16 @@
     <addaction name="actionComponent_Browser"/>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menuSearch">
+    <property name="title">
+     <string>Search</string>
+    </property>
+    <addaction name="actionFind"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
+   <addaction name="menuSearch"/>
    <addaction name="menuInsert"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -204,6 +199,14 @@
   <action name="actionInsert_Body">
    <property name="text">
     <string>Template Body</string>
+   </property>
+  </action>
+  <action name="actionFind">
+   <property name="text">
+    <string>Find...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
    </property>
   </action>
  </widget>

@@ -256,6 +256,8 @@ class Ui_EditorWindow(object):
         self.menuView.setObjectName("menuView")
         self.menuInsert = QtGui.QMenu(self.menubar)
         self.menuInsert.setObjectName("menuInsert")
+        self.menuSearch = QtGui.QMenu(self.menubar)
+        self.menuSearch.setObjectName("menuSearch")
         EditorWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(EditorWindow)
         self.statusbar.setObjectName("statusbar")
@@ -292,6 +294,8 @@ class Ui_EditorWindow(object):
         self.actionInsert_Header.setObjectName("actionInsert_Header")
         self.actionInsert_Body = QtGui.QAction(EditorWindow)
         self.actionInsert_Body.setObjectName("actionInsert_Body")
+        self.actionFind = QtGui.QAction(EditorWindow)
+        self.actionFind.setObjectName("actionFind")
         self.menuFile.addAction(self.actionSave)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionClose_Instrument_Editor)
@@ -308,9 +312,11 @@ class Ui_EditorWindow(object):
         self.menuInsert.addSeparator()
         self.menuInsert.addAction(self.actionComponent_Browser)
         self.menuInsert.addSeparator()
+        self.menuSearch.addAction(self.actionFind)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuEdit.menuAction())
         self.menubar.addAction(self.menuView.menuAction())
+        self.menubar.addAction(self.menuSearch.menuAction())
         self.menubar.addAction(self.menuInsert.menuAction())
 
         self.retranslateUi(EditorWindow)
@@ -322,6 +328,7 @@ class Ui_EditorWindow(object):
         self.menuEdit.setTitle(QtGui.QApplication.translate("EditorWindow", "Edit", None, QtGui.QApplication.UnicodeUTF8))
         self.menuView.setTitle(QtGui.QApplication.translate("EditorWindow", "View", None, QtGui.QApplication.UnicodeUTF8))
         self.menuInsert.setTitle(QtGui.QApplication.translate("EditorWindow", "Insert", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuSearch.setTitle(QtGui.QApplication.translate("EditorWindow", "Search", None, QtGui.QApplication.UnicodeUTF8))
         self.actionComponent_Browser.setText(QtGui.QApplication.translate("EditorWindow", "Component Browser...", None, QtGui.QApplication.UnicodeUTF8))
         self.actionCompDummy.setText(QtGui.QApplication.translate("EditorWindow", "component_of_this_category", None, QtGui.QApplication.UnicodeUTF8))
         self.actionSource_Optimize.setText(QtGui.QApplication.translate("EditorWindow", "Source_Optimize...", None, QtGui.QApplication.UnicodeUTF8))
@@ -346,6 +353,8 @@ class Ui_EditorWindow(object):
         self.actionClose_Instrument_Editor.setShortcut(QtGui.QApplication.translate("EditorWindow", "Ctrl+W", None, QtGui.QApplication.UnicodeUTF8))
         self.actionInsert_Header.setText(QtGui.QApplication.translate("EditorWindow", "Template Header", None, QtGui.QApplication.UnicodeUTF8))
         self.actionInsert_Body.setText(QtGui.QApplication.translate("EditorWindow", "Template Body", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionFind.setText(QtGui.QApplication.translate("EditorWindow", "Find...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionFind.setShortcut(QtGui.QApplication.translate("EditorWindow", "Ctrl+F", None, QtGui.QApplication.UnicodeUTF8))
 
 
 ''' Start simulation dialog.

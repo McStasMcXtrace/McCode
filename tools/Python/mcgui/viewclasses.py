@@ -248,7 +248,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
             edt = QtGui.QLineEdit()
             edt = subject
             # handle focus on
-            if event.type()== QtCore.QEvent.FocusIn:
+            if event.type() == QtCore.QEvent.FocusIn:
                 if edt.text() == 'search...':
                     edt.setText('')
                     font = QtGui.QFont()
@@ -257,7 +257,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
                     edt.setStyleSheet("color: black;")
             
             # handle focus off
-            elif event.type()== QtCore.QEvent.FocusOut:
+            elif event.type() == QtCore.QEvent.FocusOut:
                 if edt.text() == '':
                     font = QtGui.QFont()
                     font.setItalic(True)
@@ -266,7 +266,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
                     edt.setText('search...')
             
             # handle enter keypress (search)
-            elif event.type()== QtCore.QEvent.KeyPress:
+            elif event.type() == QtCore.QEvent.KeyPress:
                 # return & enter
                 if event.key() in [0x01000004, 0x01000005]:
                     self.__search(subject.text())
@@ -498,7 +498,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
             api.add(name)
         
         api.prepare()
-            
+    
     def __initCallbacks(self):
         # connect menu items to corresponding scintilla slots
         ui = self.ui 
@@ -510,12 +510,21 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         ui.actionPaste.triggered.connect(self.__scintilla.paste)
         ui.actionSave.triggered.connect(self.__handleSaveAction)
         ui.actionClose_Instrument_Editor.triggered.connect(self.close)
+        ui.actionFind.triggered.connect(lambda: self.__edtSearch.setFocus())
         ui.actionComponent_Browser.triggered.connect(self.__handleComponentBrowser)
         ui.actionInsert_Header.triggered.connect(self.__handleInsertHeader)
         ui.actionInsert_Body.triggered.connect(self.__handleInsertBody)
         
         # TODO: create a ctr-a on a menu to __scintilla.selectAll(bool select)
-        # TODO: create a ctr-f which also copies current selection to searchbar
+        
+        def __keyEventFilterFct(subject, object, event):
+            if event.type() == QtCore.QEvent.KeyRelease:
+                # return & enter
+                if event.key() == 81:
+                    self.close()
+            return False
+        self.eventFilter = lambda o, e: __keyEventFilterFct(self.ui, o, e)
+        self.installEventFilter(self)
         
         # connect "text changed" signal to our handler to detect unsaved changes
         self.__scintilla.textChanged.connect(self.__handleTextChanged)
