@@ -60,7 +60,7 @@ def build_header(options, params, intervals, detectors):
         'xmin': xmin,
         'xmax': xmax,
 
-        'filename': basename(options.optimise_file) or 'mcstas.dat',
+        'filename': basename(options.optimise_file),
         'variables': ' '.join(variables),
     }
     
@@ -113,7 +113,11 @@ end data
     variables = list(params)
     for detector in detectors:
         variables += [detector + '_I', detector + '_ERR']
-
+    
+    istrace = 'no'
+    if options.trace:
+        istrace = 'yes'
+    
     values = {
         'instr': options.instr,
         'date': date,
@@ -135,7 +139,7 @@ end data
         'variables': ' '.join(variables),
         
         'version': version,
-        'istrace': options.trace
+        'istrace': istrace
     }
     
     result = (template % values) + '\n'

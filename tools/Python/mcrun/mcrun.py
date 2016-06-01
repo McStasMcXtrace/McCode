@@ -91,7 +91,7 @@ def add_mcrun_options(parser):
     add('--optimise-file',
         metavar='FILE',
         help='store optimisation results in FILE '
-             '(defaults to: "mcstas.dat")')
+             '(defaults to: "mccode.dat")')
 
     # Misc options
     add('--test',
@@ -201,8 +201,8 @@ def expand_options(options):
         LOG.info('No output directory specified (--dir)')
     # Output file
     if options.optimise_file is None:
-        # use mcstas.dat when unspecified
-        options.optimise_file = '%s/mcstas.dat' % options.dir
+        # use mccode.dat when unspecified
+        options.optimise_file = '%s/mccode.dat' % options.dir
 
 
 def is_decimal(string):
