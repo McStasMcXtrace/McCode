@@ -349,6 +349,11 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         
         # remove horizontal scrollbar
         scintilla.SendScintilla(Qsci.QsciScintilla.SCI_SETHSCROLLBAR, 0)
+        
+        # display default line numbers
+        fm = QtGui.QFontMetrics(font)
+        scintilla.setMarginWidth(0, fm.width( "00000" ))
+        scintilla.setMarginLineNumbers(0, True)
         ########################
         
         # insert widget
