@@ -236,6 +236,50 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         self.__initSearchbar()
     
     def __initSearchbar(self):
+        ''' set focus, search action events '''
+        def __sbEventFilter(subject, object, event):
+            ''' focus event handler '''
+            
+            #if event.type() == QtCore.QEvent.WindowActivate:
+            #    print "widget window has gained focus"
+            #elif event.type()== QtCore.QEvent.WindowDeactivate:
+            #    print "widget window has lost focus"
+            
+            edt = QtGui.QLineEdit()
+            edt = subject
+            # handle focus on
+            if event.type()== QtCore.QEvent.FocusIn:
+                if edt.text() == 'search...':
+                    edt.setText('')
+                    font = QtGui.QFont()
+                    font.setItalic(False)
+                    self.__edtSearch.setFont(font)
+                    edt.setStyleSheet("color: black;")
+            
+            # handle focus off
+            elif event.type()== QtCore.QEvent.FocusOut:
+                if edt.text() == '':
+                    font = QtGui.QFont()
+                    font.setItalic(True)
+                    self.__edtSearch.setFont(font)
+                    edt.setStyleSheet("color: grey;")
+                    edt.setText('search...')
+            
+            # handle enter keypress (search)
+            elif event.type()== QtCore.QEvent.KeyPress:
+                # return & enter
+                if event.key() in [0x01000004, 0x01000005]:
+                    self.__search(subject.text())
+                # escape
+                elif event.key() == 0x01000000:
+                    subject.setText('')
+                    self.__scintilla.setFocus()
+                # tab
+                #elif event.key() == 0x01000001:
+                #    print "tab"
+        
+            return False
+        
         self.__edtSearch = QtGui.QLineEdit()
         self.__edtSearch.setObjectName("edtSearch")
         font = QtGui.QFont()
@@ -243,13 +287,44 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         self.__edtSearch.setFont(font)
         self.__edtSearch.setText("search...")
         
+        # set events
+        edts = self.__edtSearch
+        edts.eventFilter = lambda o, e: __sbEventFilter(edts, o, e)
+        edts.installEventFilter(edts)
         
-        #if error:
-        #    self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
-        #else:
-        #    self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
+        self.ui.vlayout.addWidget(self.__edtSearch)
+    
+    def __search(self, search):
+        ''' implements a search action in scintilla '''
+        # get cursor position
+        i, j = self.__scintilla.getCursorPosition()
+        curs = self.__scintilla.positionFromLineIndex(i, j)
         
-        #self.ui.vlayout.addWidget(self.__edtSearch)
+        # get match position after cursor
+        text = self.__scintilla.text()
+        pos = str(text)[curs:].find(search)
+        
+        # get match position before cursor
+        if pos == -1:
+            pos = str(text).find(search)
+        else:
+            pos = pos + curs
+        
+        if not pos == -1:
+            self.__setCursorPos(pos + len(search))
+            self.__selectText(pos, pos + len(search))
+    
+    def __setCursorPos(self, pos):
+        k, l = self.__scintilla.lineIndexFromPosition(pos)
+        self.__scintilla.setCursorPosition(k, l)
+    
+    def __selectText(self, pos1, pos2):
+        if not pos1 < pos2:
+            raise Exception('__selectText: pos2 must be larger than pos1.')
+        self.__scintilla.selectAll(False)
+        k1, l1 = self.__scintilla.lineIndexFromPosition(pos1)
+        k2, l2 = self.__scintilla.lineIndexFromPosition(pos2)
+        self.__scintilla.setSelection(k1, l1, k2, l2)
         
     def initComponentMenu(self, args):
         ''' args - [category, comp_names[], comp_parsers[]]
@@ -438,6 +513,9 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         ui.actionComponent_Browser.triggered.connect(self.__handleComponentBrowser)
         ui.actionInsert_Header.triggered.connect(self.__handleInsertHeader)
         ui.actionInsert_Body.triggered.connect(self.__handleInsertBody)
+        
+        # TODO: create a ctr-a on a menu to __scintilla.selectAll(bool select)
+        # TODO: create a ctr-f which also copies current selection to searchbar
         
         # connect "text changed" signal to our handler to detect unsaved changes
         self.__scintilla.textChanged.connect(self.__handleTextChanged)
