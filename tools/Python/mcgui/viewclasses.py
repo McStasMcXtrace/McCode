@@ -295,7 +295,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         else: 
             return
         
-        text = "COMPONENT " + inst_name + " = " + comp_type + "( "
+        text = "COMPONENT " + inst_name + " = " + comp_type + "("
         i_max = len(params)-1
         for i in range(len(params)):
             p = params[i]
@@ -304,8 +304,10 @@ class McCodeEditorWindow(QtGui.QMainWindow):
                 text += ", "
 
         text += ")"
-        text += "\nAT (" + atrel[0] + ", " + atrel[1] + ", " + atrel[2] + ") RELATIVE " + atrel[3] 
-        text += "\nROTATED (" + atrel[4] + ", " + atrel[5] + ", " + atrel[6] + ") RELATIVE " + atrel[7]
+        text += "\nAT (" + atrel[0] + ", " + atrel[1] + ", " + atrel[2] + ") RELATIVE " + atrel[3]
+        # NOTE: the ROTATED line may be missing
+        if len(atrel) > 4:
+            text += "\nROTATED (" + atrel[4] + ", " + atrel[5] + ", " + atrel[6] + ") RELATIVE " + atrel[7]
         
         self.__scintilla.insert(text)
         
@@ -629,7 +631,7 @@ class McInsertComponentDialog(QtGui.QDialog):
         self.ui.btnCancel.clicked.connect(self.reject)
         
         self.__standard_le_style = self.ui.edtInstanceName.styleSheet()
-        
+    
     def accept(self):
         # detect missing default values
         dirty = False
@@ -704,8 +706,8 @@ class McInsertComponentDialog(QtGui.QDialog):
                 edt.setText(par.default_value)
             self.ui.gridParameters.addWidget(edt, y, x, 1, 1)
             
-            # save name, value widget references for use in self.getValues
-            self.__wParams.append([lbl, edt])
+            # save widget references for use in self.getValues (also save the par default value)
+            self.__wParams.append([lbl, edt, edt.text()])
             
             # parameter docstring label
             x = 2
@@ -734,6 +736,9 @@ class McInsertComponentDialog(QtGui.QDialog):
         inst_name : contents of instance name field 
         params : list of [name, value] pairs matching component parameters
         '''
+        if not self.ui.cbxVerbose.isChecked():
+            return self.__getValuesReduced()
+        
         # instance name
         inst_name = self.ui.edtInstanceName.text()
         comp_type = str(self.windowTitle()).lstrip('Component: ')
@@ -756,6 +761,39 @@ class McInsertComponentDialog(QtGui.QDialog):
         atrel.append(self.ui.edtRotY.text())
         atrel.append(self.ui.edtRotZ.text())
         atrel.append(self.ui.edtRotRel.text())
+        
+        return comp_type, inst_name, params, atrel
+
+    def __getValuesReduced(self):
+        ''' 
+        inst_name : contents of instance name field 
+        params : list of [name, value] pairs matching component parameters
+        '''
+        # instance name
+        inst_name = self.ui.edtInstanceName.text()
+        comp_type = str(self.windowTitle()).lstrip('Component: ')
+        
+        # get dynamic params
+        params = []
+        for w in self.__wParams:
+            # proceed if typed value differs from the default value (also counting empty default values)
+            if w[1].text() != w[2]: 
+                p = []
+                p.append(str(w[0].text()).rstrip(':'))
+                p.append(str(w[1].text()))
+                params.append(p)
+        
+        # get values for AT(x,y,z), RELATIVE <posrel>, ROTATED(x,y,z), RELATIVE <rotrel> 
+        atrel = []
+        atrel.append(self.ui.edtAtX.text())
+        atrel.append(self.ui.edtAtY.text())
+        atrel.append(self.ui.edtAtZ.text())
+        atrel.append(self.ui.edtAtRel.text())
+        if self.ui.edtRotX.text() != '0' or self.ui.edtRotY.text() != '0' or self.ui.edtRotZ.text() != '0':
+            atrel.append(self.ui.edtRotX.text())
+            atrel.append(self.ui.edtRotY.text())
+            atrel.append(self.ui.edtRotZ.text())
+            atrel.append(self.ui.edtRotRel.text())
         
         return comp_type, inst_name, params, atrel
 
