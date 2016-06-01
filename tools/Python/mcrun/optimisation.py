@@ -67,12 +67,12 @@ def build_header(options, params, intervals, detectors):
     result = (template % values) + '\n'
     return result
 
-def build_mccodesim_header(options, params, intervals, detectors):
+def build_mccodesim_header(options, params, intervals, detectors, version):
     template = """
-begin instrument: %(instr)s
+begin instrument:
   Creator: %(version)s
   Source: %(instr)s
-  Parameters:  %(xvars)s(%(paramtype)s)
+  Parameters:  %(xvars)s
   Trace_enabled: %(istrace)s
   Default_main: yes
   Embedded_runtime: yes
@@ -121,8 +121,7 @@ end data
         'ncount': options.ncount,
         'scanpoints': N,
 
-        'params': ', '.join('%s = %s' % (xvar, intervals[xvar][0])
-                            for xvar in params),
+        'params': ', '.join('%s = %s' % (xvar, intervals[xvar][i]) for xvar in params for i in range(len(intervals[xvar]))),
         'type': scantype,
         'title': title,
 
@@ -135,9 +134,8 @@ end data
         'filename': basename(options.optimise_file) or 'mccode.dat',
         'variables': ' '.join(variables),
         
-        'version': 'dummyversion',
-        'paramtype': 'dummyparamtype',
-        'istrace': 'dummyistrace'
+        'version': version,
+        'istrace': options.trace
     }
     
     result = (template % values) + '\n'
@@ -240,11 +238,11 @@ class Scanner:
             if not wrote_header:
                 
                 fid.write(build_header(self.mcstas.options,
-                                       self.intervals.keys(), self.intervals,
-                                       [det.name for det in dets]))
+                   self.intervals.keys(), self.intervals,
+                   [det.name for det in dets]))
                 mccodesim.write(build_mccodesim_header(self.mcstas.options,
-                                       self.intervals.keys(), self.intervals,
-                                       [det.name for det in dets]))
+                   self.intervals.keys(), self.intervals,
+                   [det.name for det in dets], version=self.mcstas.version))
                 wrote_header = True
 
             dets_vals = ['%s %s' % (d.intensity, d.error) for d in
