@@ -228,9 +228,29 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         if sheight < 1080:
             self.resize(920, sheight)
         
+        # dynamically added widgets
+        self.__scintilla = None
+        self.__edtSearch = None
         self.__initScintilla()
         self.__initCallbacks()
+        self.__initSearchbar()
     
+    def __initSearchbar(self):
+        self.__edtSearch = QtGui.QLineEdit()
+        self.__edtSearch.setObjectName("edtSearch")
+        font = QtGui.QFont()
+        font.setItalic(True)
+        self.__edtSearch.setFont(font)
+        self.__edtSearch.setText("search...")
+        
+        
+        #if error:
+        #    self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
+        #else:
+        #    self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
+        
+        #self.ui.vlayout.addWidget(self.__edtSearch)
+        
     def initComponentMenu(self, args):
         ''' args - [category, comp_names[], comp_parsers[]]
         '''
@@ -356,8 +376,8 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         scintilla.setMarginLineNumbers(0, True)
         ########################
         
-        # insert widget
-        self.setCentralWidget(scintilla)
+        # insert widget into main vlayout
+        self.ui.vlayout.addWidget(scintilla)
         self.__scintilla = scintilla
     
     @staticmethod
