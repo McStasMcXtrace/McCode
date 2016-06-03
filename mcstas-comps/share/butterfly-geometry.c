@@ -128,12 +128,10 @@ line(-w1, 0, l2, -w2, 0, l2);
 line(w2, 0, l2, w2, 0, l3);
 line(-w2, 0, l2, -w2, 0, l3);
 
-/* plus/minus 6 degree versions of the same... */
-double xx1, zz1, xx2, zz2;
-/* One beamline at "lower"/"higher" beamline no. */
-double delta_omega;
-if (!(beamline == 1)) {
-  delta_omega = Beamlines[beamline-1] - Beamlines[beamline-2];
+/* Draw all the beamlines in "this sector" +1 */
+double xx1, zz1, xx2, zz2, delta_omega;
+for (int j=0; j<jmax+1; j++) {
+  delta_omega = orientation_angle - Beamlines[j];
   r11 = cos(DEG2RAD*delta_omega);
   r12 = -sin(DEG2RAD*delta_omega);
   r21 = sin(DEG2RAD*delta_omega);
@@ -159,31 +157,6 @@ if (!(beamline == 1)) {
   zz2 = r21*(-w2) + r22*(l3);
   dashed_line(xx1, 0, zz1, xx2, 0, zz2, 11);
 }
-delta_omega = Beamlines[beamline-1] - Beamlines[beamline];
-r11 = cos(DEG2RAD*delta_omega);
-r12 = -sin(DEG2RAD*delta_omega);
-r21 = sin(DEG2RAD*delta_omega);
-r22 = cos(DEG2RAD*delta_omega);
-xx1 = r11*(w1) + r12*(l1);
-zz1 = r21*(w1) + r22*(l1);
-xx2 = r11*(w1) + r12*(l2);
-zz2 = r21*(w1) + r22*(l2);
-dashed_line(xx1, 0, zz1, xx2, 0, zz2, 11);
-xx1 = r11*(-w1) + r12*(l1);
-zz1 = r21*(-w1) + r22*(l1);
-xx2 = r11*(-w1) + r12*(l2);
-zz2 = r21*(-w1) + r22*(l2);
-dashed_line(xx1, 0, zz1, xx2, 0, zz2, 11);
-xx1 = r11*(w2) + r12*(l2);
-zz1 = r21*(w2) + r22*(l2);
-xx2 = r11*(w2) + r12*(l3);
-zz2 = r21*(w2) + r22*(l3);
-dashed_line(xx1, 0, zz1, xx2, 0, zz2, 11);
-xx1 = r11*(-w2) + r12*(l2);
-zz1 = r21*(-w2) + r22*(l2);
-xx2 = r11*(-w2) + r12*(l3);
-zz2 = r21*(-w2) + r22*(l3);
-dashed_line(xx1, 0, zz1, xx2, 0, zz2, 11);
 
 /* Show instrument axis... */
 dashed_line(0,0,0,0,0,2+rAz,21);
