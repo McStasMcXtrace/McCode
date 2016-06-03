@@ -90,7 +90,7 @@ INITIALIZE
     fprintf(stderr,"%s: Sector %s is undefined, please use N, W, S or E!\n", NAME_CURRENT_COMP,sector);
     exit(-1);
   }
-  if (beamline > jmax) {
+  if (beamline > jmax || beamline <= 0 ) {
     fprintf(stderr,"%s: beamline no %i is undefined in sector %s, please use 1 <= beamline <= %i\n", NAME_CURRENT_COMP, beamline, sector, jmax);
     exit(-1);
   }
