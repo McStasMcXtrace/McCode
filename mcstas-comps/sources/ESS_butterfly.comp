@@ -1,0 +1,118 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2016, All rights reserved
+*         DTU Physics, Kongens Lyngby, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: ESS_butterfly
+*
+* %I
+*
+* Written by: Peter Willendrup and Esben Klinkby
+* Date: April-May 2016
+* Version: $Revision$
+* Release: McStas 2.3
+* Origin: DTU
+*
+* ESS butterfly moderator, 2016 revision
+*
+* %D
+* ESS butterfly moderator with automatic choice of coordinate system, with origin
+* placed at relevant "Moderator Focus Coordinate System" depending on sector location.
+*
+* Implements current "engineering reality" for geometry and brilliances of the cold 
+* and thermal moderators.
+*
+* %P
+* Input parameters:
+* sector:       [str] Defines the 'sector' of your instrument position. Valid values are "N","S","E" and "W"
+* beamline:     [1]   Defines the 'beamline number' of your instrument position. Valid values are 1..10 or 1..11 depending on sector
+* yheight:      [m]   Defines the moderator height. Valid values are 0.03 m and 0.06 m
+* cold_frac:    [1]   Defines the statistical fraction of events emitted from the cold part of the moderator
+* performance:  [1]   Scalar performance multiplicator 0 < performace <= 1
+* Lmin:         [AA]  Minimum wavelength simulated
+* Lmax:         [AA]  Maximum wavelength simulated
+* target_index: [1]   Relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
+* dist:         [m]   Distance from origin to focusing rectangle; at (0,0,dist) - alternatively use target_index\
+* focus_xw      [m]   Width of focusing rectangle
+* focus_yh	[m]   Height of focusing rectangle
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT ESS_butterfly
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string sector="N",int beamline=1, yheight=0.03, cold_frac=0.5, target_index=0, dist=0, focus_xw=0, focus_yh=0, 
+		      performance=1, Lmin, Lmax)
+OUTPUT PARAMETERS (cx, cz, sign_bl_angle, orientation_angle)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+DECLARE
+%{
+  /* Centering-parameters, which sector are we in? */
+  double cx, cz;
+  int sign_bl_angle;
+  double orientation_angle;
+  /* 10 beamlines in sector N and E  - plus one location added for drawing */
+  double BeamlinesN[] = { 30.0,  36.0,  42.0,  48.0,  54.0,  60.0,  66.0,  72.0,  78.0,  84.0,  90.0};
+  double BeamlinesE[] = {-30.0, -36.0, -42.0, -48.0, -54.0, -60.0, -66.0, -72.0, -78.0, -84.0, -90.0};
+  /* 11 beamlines in sector S and W - plus one location added for drawing */
+  double BeamlinesW[] = { 150.0,  144.7,  138.0,  132.7,  126.0,  120.7,  114.0,  108.7,  102.0,  96.7,  90.0,  84.0};
+  double BeamlinesS[] = {-150.0, -144.7, -138.0, -132.7, -126.0, -120.7, -114.0, -108.7, -102.0, -96.7, -90.0, -84.0};
+  double* Beamlines;
+  int jmax;
+%}
+
+INITIALIZE
+%{
+  /* Centering-parameters, which sector are we in? */
+  if (strcasestr(sector,"N")) {
+    cx = 0.117; cz=0.0; sign_bl_angle=1;
+    orientation_angle = BeamlinesN[beamline-1];
+    Beamlines = BeamlinesN;
+    jmax=10;
+  } else if (strcasestr(sector,"W")) {
+    cx = 0.0; cz=0.0; sign_bl_angle=-1;
+    orientation_angle = BeamlinesW[beamline-1]; 
+    Beamlines = BeamlinesW;
+    jmax=11;
+  } else if (strcasestr(sector,"S")) {
+    cx = 0.0; cz=-0.185; sign_bl_angle=1;
+    orientation_angle = BeamlinesS[beamline-1]; 
+    Beamlines = BeamlinesS;
+    jmax=11;
+  } else if (strcasestr(sector,"E")) {
+    cx = 0.117; cz=-0.185; sign_bl_angle=-1;
+    orientation_angle = BeamlinesE[beamline-1]; 
+    Beamlines = BeamlinesE;
+    jmax=10;
+  } else {
+    fprintf(stderr,"%s: Sector %s is undefined, please use N, W, S or E!\n", NAME_CURRENT_COMP,sector);
+    exit(-1);
+  }
+  if (beamline > jmax || beamline <= 0 ) {
+    fprintf(stderr,"%s: beamline no %i is undefined in sector %s, please use 1 <= beamline <= %i\n", NAME_CURRENT_COMP, beamline, sector, jmax);
+    exit(-1);
+  }
+  printf("Setting up for sector %s, beamline %i, global orientation angle is %g\n",sector,beamline,orientation_angle);
+  if (performance <= 0 || performance > 1) {
+    fprintf(stderr,"%s: performance scalar of %g is not allowed. Please select 0 < performance <= 1\n", NAME_CURRENT_COMP, performance);
+    exit(-1);
+  }
+  if (Lmin>=Lmax || Lmin <= 0 || Lmax < 0) {
+    printf("%s: Unmeaningful definition of wavelength range!\nPlease select Lmin, Lmax > 0 and Lmax > Lmin.\n ERROR - Exiting\n",
+           NAME_CURRENT_COMP);
+    exit(-1);
+  }
+%}
+
+TRACE
+%{
+%}
+
+MCDISPLAY
+%{
+%include "ESS_butterfly-geometry.c"
+%}
+
+END

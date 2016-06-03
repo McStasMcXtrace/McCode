@@ -1,0 +1,74 @@
+/*******************************************************************************
+* Instrument: <instrument name>
+*
+* %I
+* Written by: <your name (email)>
+* Date: <current date>
+* Origin: <your institution>
+* Release: <McStas V.X.X>
+* Version: <instrument version>
+* %INSTRUMENT_SITE: Templates
+*
+* <instrument short description>
+*
+* %D
+* <instrument description>
+*
+* Example: <parameters=values>
+*
+* %P
+* <parameter1>: [<unit>] <parameter1 description>
+* ...
+* 
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT ESS_butterfly(string sector="N",beamline=1,Lmin=0.2,Lmax=20,performance=1)
+
+DECLARE
+%{
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+  COMPONENT Butterfly = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=Lmax,performance=performance)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Arm1 = Arm()
+  AT (0,0,2) RELATIVE PREVIOUS
+
+COMPONENT Arm2 = Arm()
+  AT (0,0,3.5) RELATIVE PREVIOUS
+
+/* Uncomment these helper-arms to view "full" monolith */
+
+COMPONENT DummyArm1 = Arm()
+  AT (6,0,6) ABSOLUTE
+
+COMPONENT DummyArm2 = Arm()
+  AT (-6,0,6) ABSOLUTE
+
+COMPONENT DummyArm3 = Arm()
+  AT (-6,0,-6) ABSOLUTE
+
+COMPONENT DummyArm4 = Arm()
+  AT (6,0,-6) ABSOLUTE
+
+COMPONENT DummyArm5 = Arm()
+  AT (6,0,6) ABSOLUTE
+
+
+FINALLY
+%{
+%}
+
+END

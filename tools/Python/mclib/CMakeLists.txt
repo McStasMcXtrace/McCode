@@ -74,21 +74,9 @@ include(CPack)
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
-# Configure fallback script
-# configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/mcgui" @ONLY)
-#
 # Configure config file
-# configure_file("${CMAKE_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.py" @ONLY)
-#
-# Configure launcher
-# configure_file("${CMAKE_SOURCE_DIR}/McCode-py.desktop.in" work/@NAME@-py.desktop @ONLY)
-#
-# if(WINDOWS)
-#   set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mccode_config.py")
-# else()
-#   set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mcgui" "${WORK}/mccode_config.py")
-# endif()
-
+configure_file("${CMAKE_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.py" @ONLY)
+set(BINS "${WORK}/mccode_config.py")
 
 if(WINDOWS)
   # Python files
@@ -108,7 +96,6 @@ if(WINDOWS)
   )
 endif()
 
-
 if(NOT WINDOWS)
   # Python files
   foreach(name fileutils.py guiutils.py __init__.py)
@@ -125,29 +112,5 @@ if(NOT WINDOWS)
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
-
-#  # Symlink to main
-#  add_custom_command(
-#    OUTPUT "${WORK}/${P}gui-py"
-#    COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
-#    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}gui-py"
-#    COMMAND "${CMAKE_COMMAND}" -E create_symlink
-#    "${TOOLS_LIB}/mcgui" "${WORK}/${P}gui-py"
-#    )
-#
-#  add_custom_target(
-#    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}gui-py"
-#    )
-#
-#  install(
-#    PROGRAMS "${WORK}/${P}gui-py"
-#    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
-#    RENAME "${P}gui-py${DOT_PYTHON_SUFFIX}"
-#    )
-
-#  install(
-#    FILES "${WORK}/@NAME@-py.desktop" "@FLAVOR@-py.png"
-#    DESTINATION "${FLAVOR}/${MCCODE_VERSION}/launchers/"
-#  ) 
 
 endif()

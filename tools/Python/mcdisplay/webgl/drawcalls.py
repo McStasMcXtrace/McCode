@@ -15,10 +15,18 @@ drawcommands = {
     'box'         : 'DrawBox',
     'circle'      : 'DrawCircle',
     }
+# reduced set containing wholly implemented and non-trivial commands
+reduced_drawcommands = {
+    'multiline'   : 'DrawMultiline',
+    'circle'      : 'DrawCircle',
+    }
 
-def drawclass_factory(commandname, args):
+def drawclass_factory(commandname, args, reduced=False):
     ''' a pythonic object factory by command name '''
     try:
+        # return None if we are dealing with a reduced set (mainly a way to get rid of Magnify)
+        if reduced and commandname not in reduced_drawcommands:
+            return None
         klass = globals()[drawcommands[commandname]]
         return klass(args)
     except:
@@ -107,15 +115,88 @@ class Visited(object):
     def accept(self, visitor):
         visitor.visit(self)
 
+class BoundingBox(object):
+    ''' bounding box '''
+    def __init__(self, x1=None, x2=None, y1=None, y2=None, z1=None, z2=None):
+        self.x1 = x1
+        self.x2 = x2
+        self.y1 = y1
+        self.y2 = y2
+        self.z1 = z1
+        self.z2 = z2
+        
+    def add(self, box):
+        x1 = min(self.x1, box.x1)
+        x2 = max(self.x2, box.x2)
+        y1 = min(self.y1, box.y1)
+        y2 = max(self.y2, box.y2)
+        z1 = min(self.z1, box.z1)
+        z2 = max(self.z2, box.z2)
+        return BoundingBox(x1, x2, y1, y2, z1, z2)
+
+def calcLargesBoundingVolume(drawcalls):
+    ''' adds all of the boudning boxes of elements in drawcalls '''
+    box = BoundingBox(0, 0, 0, 0, 0, 0)
+    for drawcal in drawcalls:
+        box = box.add(drawcal.get_boundingbox())
+    return box
+
+def calcLargestBoundingVolumeWT(drawcalls_transforms):
+    ''' 
+    adds all of the boudning boxes of elements in drawcalls
+    
+        drawcalls_transforms : a list of 2 tuples containing a drawcall and a tranform
+    '''
+    box = drawcalls_transforms[0][0].get_boundingbox(transform=drawcalls_transforms[0][1])
+    for d_t in drawcalls_transforms:
+        newbox = d_t[0].get_boundingbox(transform=d_t[1])
+        box = box.add(newbox)
+        
+    return box
+
 class DrawCommand(Visited):
     ''' superclass of all draw commands '''
     args_str = ''
     key = ''
+    boundingbox = None
     def __init__(self, args):
         if len(args) > 0:
             self.args_str = str(args[0])
             for i in range(len(args)-1):
                 self.args_str = self.args_str + ', ' + str(args[i+1])
+    
+    def get_boundingbox(self, transform=None):
+        self._calc_boundingbox(self._get_points(), transform)
+        return self.boundingbox
+    
+    def _get_points(self):
+        return
+    
+    def _calc_boundingbox(self, points, transform=None):
+        ''' override to implement alternative OR implement get_points '''
+        if not points:
+            return
+        
+        box = BoundingBox()
+        x_set = []
+        y_set = []
+        z_set = []
+        
+        for p in points:
+            if transform:
+                p = transform.apply(p)
+            x_set.append(p.x)
+            y_set.append(p.y)
+            z_set.append(p.z)
+        
+        box.x1 = min(x_set)
+        box.x2 = max(x_set)
+        box.y1 = min(y_set)
+        box.y2 = max(y_set)
+        box.z1 = min(z_set)
+        box.z2 = max(z_set)
+        
+        self.boundingbox = box
 
 class DrawMagnify(DrawCommand):
     ''' not implemented, a placeholder '''
@@ -153,6 +234,7 @@ class DrawMultiline(DrawCommand):
     def __init__(self, args):
         super(DrawMultiline, self).__init__(args)
         self.key = 'multiline'
+        self.points = []
         
         l = len(args)
         try:
@@ -165,7 +247,10 @@ class DrawMultiline(DrawCommand):
                 self.points.append(Vector3d(x, y, z))
         except:
             raise Exception('DrawMultiline: args must contain a whole number of tripples.')
-
+    
+    def _get_points(self):
+        return self.points
+    
 class DrawRectangle(DrawCommand):
     ''' '''
     plane = ''
@@ -211,21 +296,38 @@ class DrawCircle(DrawCommand):
         self.plane = str(args[0])
         self.center = Vector3d(float(args[1]), float(args[2]), float(args[3]))
         self.radius = float(args[4])
-
+        
+        # override default behavior to ensure quotes around the first arg, plane
+        idx = self.args_str.find(',')
+        self.args_str = '\"' + self.args_str[:idx] + '\"' + self.args_str[idx:]
+    
+    def _get_points(self):
+        rad = self.radius
+        cen = self.center
+        ne = cen.add(Vector3d(rad, rad, 0))
+        nw = cen.add(Vector3d(-rad, rad, 0))
+        sw = cen.add(Vector3d(-rad, -rad, 0))
+        se = cen.add(Vector3d(rad, -rad, 0))
+        return [ne, nw, se, sw]
 
 class TemplateWebGLWrite(object):
     ''' writes the django template from the instrument representation '''
-    instr_tree = None
+    instrument = None
     text = ''
+    templatefile = ''
+    campos = None
     
-    def __init__(self, instr_tree):
-        self.instr_tree = instr_tree
+    def __init__(self, instrument, templatefile, campos):
+        self.instrument = instrument
+        self.templatefile = templatefile
+        self.campos = campos
         settings.configure()
     
     def build(self):
-        templ = open('mcdisplaytemplate.html').read()
+        templ = open(self.templatefile).read()
         t = Template(templ)
-        c = Context({'instrument': self.instr_tree})
+        c = Context({'instrument': self.instrument, 
+                     'campos_x': self.campos.x, 'campos_y': self.campos.y, 'campos_z': self.campos.z,})
         self.text = t.render(c)
 
     def save(self, filename):

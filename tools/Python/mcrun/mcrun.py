@@ -1,22 +1,25 @@
 #!/usr/bin/env python
-
 from os import mkdir
-from os.path import isfile, isdir, abspath, dirname, basename
+from os.path import isfile, isdir, abspath, dirname, basename, join
 from optparse import OptionParser, OptionGroup, OptionValueError
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 
 from mcstas import McStas
 from optimisation import Scanner, LinearInterval, MultiInterval
-import config
+
+#import config
+import sys
+sys.path.append(join(dirname(__file__), '..'))
+from mclib import mccode_config
 
 from log import getLogger, setupLogger, setLogLevel, McRunException
 from log import DEBUG
+
 LOG = getLogger('main')
 
 # File path friendly date format (avoid ':' and white space)
 DATE_FORMAT_PATH = "%Y%d%m_%H%M%S"
-
 
 # Helper functions
 def build_checker(accept, msg='Invalid value'):
@@ -88,7 +91,7 @@ def add_mcrun_options(parser):
     add('--optimise-file',
         metavar='FILE',
         help='store optimisation results in FILE '
-             '(defaults to: "mcstas.dat")')
+             '(defaults to: "mccode.dat")')
 
     # Misc options
     add('--test',
@@ -157,7 +160,7 @@ def add_mcstas_options(parser):
     add('--format',
         metavar='FORMAT', default='McStas',
         help='output data files using format FORMAT '
-             '(format list obtained from <instr>.%s -h)' % config.OUT_SUFFIX)
+             '(format list obtained from <instr>.%s -h)' % mccode_config.platform["EXESUFFIX"])
 
     add('--no-output-files',
         action='store_true', default=False,
@@ -174,17 +177,17 @@ def add_mcstas_options(parser):
 def expand_options(options):
     ''' Add extra options based on previous choices '''
     # McCode version and library
-    options.mccode_bin = config.MCCODE_BIN
-    options.mccode_lib = config.MCCODE_LIB
+    options.mccode_bin = mccode_config.configuration['MCCODE']
+    options.mccode_lib = mccode_config.configuration['MCCODE_LIB_DIR']
 
     # MPI
     if options.mpi is not None:
         options.use_mpi = True
-        options.cc      = config.MPICC
-        options.mpirun  = config.MPIRUN
+        options.cc      = mccode_config.compilation['MPICC']
+        options.mpirun  = mccode_config.compilation['MPIRUN']
     else:
         options.use_mpi = False
-        options.cc = config.CC
+        options.cc = mccode_config.compilation['CC']
 
     # Output dir
     if options.dir is None:
@@ -198,8 +201,8 @@ def expand_options(options):
         LOG.info('No output directory specified (--dir)')
     # Output file
     if options.optimise_file is None:
-        # use mcstas.dat when unspecified
-        options.optimise_file = '%s/mcstas.dat' % options.dir
+        # use mccode.dat when unspecified
+        options.optimise_file = '%s/mccode.dat' % options.dir
 
 
 def is_decimal(string):
@@ -233,10 +236,10 @@ def get_parameters(options):
 def find_instr_file(instr):
     # Remove [-mpi].out to avoid parsing a binary file
     instr = clean_quotes(instr)
-    if instr.endswith("-mpi." + config.OUT_SUFFIX):
-        instr = instr[:-(5 + len(config.OUT_SUFFIX))]
-    if instr.endswith("." + config.OUT_SUFFIX):
-        instr = instr[:-(1 + len(config.OUT_SUFFIX))]
+    if instr.endswith("-mpi." + mccode_config.platform['EXESUFFIX']):
+        instr = instr[:-(5 + len(mccode_config.platform['EXESUFFIX']))]
+    if instr.endswith("." + mccode_config.platform['EXESUFFIX']):
+        instr = instr[:-(1 + len(mccode_config.platform['EXESUFFIX']))]
 
     # Append ".instr" if needed
     if not isfile(instr) and isfile(instr + ".instr"):
@@ -257,7 +260,7 @@ def main():
     # Add options
     usage = ('usage: %prog [-cpnN] Instr [-sndftgahi] '
              'params={val|min,max|min,guess,max}...')
-    parser = OptionParser(usage, version=config.VERSION)
+    parser = OptionParser(usage, version=mccode_config.configuration['MCCODE_VERSION'])
 
     add_mcrun_options(parser)
     add_mcstas_options(parser)

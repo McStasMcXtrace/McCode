@@ -5,40 +5,37 @@ Test script for PLY-based translation of mcdisplay "--trace output" mini languag
 '''
 import logging
 import argparse
-from traceparser import TraceParser, NodeTreePrint, InstrProduction
+from traceinstrparser import TraceInstrParser, InstrObjectConstructor
+from nodetree import NodeTreePrint
+from pipetools import cleanTrace
 from drawcalls import TemplateWebGLWrite
+from traceneutronrayparser import NeutronRayConstructor, TraceNeutronRayParser
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
     # build trace parser and parse data
-    data = open(args.data, 'r').read()
-    parser = TraceParser(data)
+    instr_txt, display_txt, rays_txt, comments_txt = cleanTrace(open(args.data, 'r').read())
+    
+    instrparser = TraceInstrParser(instr_txt + display_txt)
+    rayparser = TraceNeutronRayParser(rays_txt)
     
     # print the parse tree as a test
-    treeprint = NodeTreePrint(parser.parsetree) 
-    treeprint.print_tree()
+    #treeprint = NodeTreePrint(instrparser.parsetree)
+    #treeprint = NodeTreePrint(rayparser.parsetree)
     
-    # build instrument data object
-    instrbuilder = InstrProduction(parser.parsetree)
-    instrbuilder.build()
+    # build the instrument and neutron ray objects
+    instrbuilder = InstrObjectConstructor(instrparser.parsetree)
+    raybuilder = NeutronRayConstructor(rayparser.parsetree)
+    
+    instrument = instrbuilder.build_instr()
+    instrument.rays = raybuilder.build_rays()
     
     # build html
-    writer = TemplateWebGLWrite(instrbuilder.instrument_tree)
+    writer = TemplateWebGLWrite(instrument, 'template.html')
     writer.build()
-    #print writer.text
-    #writer.save('mymultilines.html')
-    
-    # step-wise trace parser test
-    if False: 
-        parser = TraceParser()
-        parser.build_lexer()
-        #parser.test_lexer(data)
-    
-        parser.build_parser()
-        parser.parse(data)
-        
-        NodeTreePrint(parser.parsetree, printrays=True)
+    writer.save('mymultilines.html')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
