@@ -90,6 +90,7 @@ class McStas:
         self.name = splitext(basename(self.path))[0]
         self.options = None
         self.params = {}
+        self.version = '%s %s' % (mccode_config.configuration['MCCODE'], mccode_config.configuration['MCCODE_VERSION'])
 
         # Setup paths
         if os.name == 'nt':

@@ -226,11 +226,106 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         
         sheight = QtGui.QDesktopWidget().availableGeometry().height()
         if sheight < 1080:
-            self.resize(820, sheight)
+            self.resize(920, sheight)
         
+        # dynamically added widgets
+        self.__scintilla = None
+        self.__edtSearch = None
         self.__initScintilla()
         self.__initCallbacks()
+        self.__initSearchbar()
     
+    def __initSearchbar(self):
+        ''' set focus, search action events '''
+        def __sbEventFilter(subject, object, event):
+            ''' focus event handler '''
+            
+            #if event.type() == QtCore.QEvent.WindowActivate:
+            #    print "widget window has gained focus"
+            #elif event.type()== QtCore.QEvent.WindowDeactivate:
+            #    print "widget window has lost focus"
+            
+            edt = QtGui.QLineEdit()
+            edt = subject
+            # handle focus on
+            if event.type() == QtCore.QEvent.FocusIn:
+                if edt.text() == 'search...':
+                    edt.setText('')
+                    font = QtGui.QFont()
+                    font.setItalic(False)
+                    self.__edtSearch.setFont(font)
+                    edt.setStyleSheet("color: black;")
+            
+            # handle focus off
+            elif event.type() == QtCore.QEvent.FocusOut:
+                if edt.text() == '':
+                    font = QtGui.QFont()
+                    font.setItalic(True)
+                    self.__edtSearch.setFont(font)
+                    edt.setStyleSheet("color: grey;")
+                    edt.setText('search...')
+            
+            # handle enter keypress (search)
+            elif event.type() == QtCore.QEvent.KeyPress:
+                # return & enter
+                if event.key() in [0x01000004, 0x01000005]:
+                    self.__search(subject.text())
+                # escape
+                elif event.key() == 0x01000000:
+                    subject.setText('')
+                    self.__scintilla.setFocus()
+                # tab
+                #elif event.key() == 0x01000001:
+                #    print "tab"
+        
+            return False
+        
+        self.__edtSearch = QtGui.QLineEdit()
+        self.__edtSearch.setObjectName("edtSearch")
+        font = QtGui.QFont()
+        font.setItalic(True)
+        self.__edtSearch.setFont(font)
+        self.__edtSearch.setText("search...")
+        
+        # set events
+        edts = self.__edtSearch
+        edts.eventFilter = lambda o, e: __sbEventFilter(edts, o, e)
+        edts.installEventFilter(edts)
+        
+        self.ui.vlayout.addWidget(self.__edtSearch)
+    
+    def __search(self, search):
+        ''' implements a search action in scintilla '''
+        # get cursor position
+        i, j = self.__scintilla.getCursorPosition()
+        curs = self.__scintilla.positionFromLineIndex(i, j)
+        
+        # get match position after cursor
+        text = self.__scintilla.text()
+        pos = str(text)[curs:].find(search)
+        
+        # get match position before cursor
+        if pos == -1:
+            pos = str(text).find(search)
+        else:
+            pos = pos + curs
+        
+        if not pos == -1:
+            self.__setCursorPos(pos + len(search))
+            self.__selectText(pos, pos + len(search))
+    
+    def __setCursorPos(self, pos):
+        k, l = self.__scintilla.lineIndexFromPosition(pos)
+        self.__scintilla.setCursorPosition(k, l)
+    
+    def __selectText(self, pos1, pos2):
+        if not pos1 < pos2:
+            raise Exception('__selectText: pos2 must be larger than pos1.')
+        self.__scintilla.selectAll(False)
+        k1, l1 = self.__scintilla.lineIndexFromPosition(pos1)
+        k2, l2 = self.__scintilla.lineIndexFromPosition(pos2)
+        self.__scintilla.setSelection(k1, l1, k2, l2)
+        
     def initComponentMenu(self, args):
         ''' args - [category, comp_names[], comp_parsers[]]
         '''
@@ -295,7 +390,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         else: 
             return
         
-        text = "COMPONENT " + inst_name + " = " + comp_type + "( "
+        text = "COMPONENT " + inst_name + " = " + comp_type + "("
         i_max = len(params)-1
         for i in range(len(params)):
             p = params[i]
@@ -304,8 +399,10 @@ class McCodeEditorWindow(QtGui.QMainWindow):
                 text += ", "
 
         text += ")"
-        text += "\nAT (" + atrel[0] + ", " + atrel[1] + ", " + atrel[2] + ") RELATIVE " + atrel[3] 
-        text += "\nROTATED (" + atrel[4] + ", " + atrel[5] + ", " + atrel[6] + ") RELATIVE " + atrel[7]
+        text += "\nAT (" + atrel[0] + ", " + atrel[1] + ", " + atrel[2] + ") RELATIVE " + atrel[3]
+        # NOTE: the ROTATED line may be missing
+        if len(atrel) > 4:
+            text += "\nROTATED (" + atrel[4] + ", " + atrel[5] + ", " + atrel[6] + ") RELATIVE " + atrel[7]
         
         self.__scintilla.insert(text)
         
@@ -347,10 +444,15 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         
         # remove horizontal scrollbar
         scintilla.SendScintilla(Qsci.QsciScintilla.SCI_SETHSCROLLBAR, 0)
+        
+        # display default line numbers
+        fm = QtGui.QFontMetrics(font)
+        scintilla.setMarginWidth(0, fm.width( "00000" ))
+        scintilla.setMarginLineNumbers(0, True)
         ########################
         
-        # insert widget
-        self.setCentralWidget(scintilla)
+        # insert widget into main vlayout
+        self.ui.vlayout.addWidget(scintilla)
         self.__scintilla = scintilla
     
     @staticmethod
@@ -396,7 +498,7 @@ class McCodeEditorWindow(QtGui.QMainWindow):
             api.add(name)
         
         api.prepare()
-            
+    
     def __initCallbacks(self):
         # connect menu items to corresponding scintilla slots
         ui = self.ui 
@@ -408,9 +510,21 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         ui.actionPaste.triggered.connect(self.__scintilla.paste)
         ui.actionSave.triggered.connect(self.__handleSaveAction)
         ui.actionClose_Instrument_Editor.triggered.connect(self.close)
+        ui.actionFind.triggered.connect(lambda: self.__edtSearch.setFocus())
         ui.actionComponent_Browser.triggered.connect(self.__handleComponentBrowser)
         ui.actionInsert_Header.triggered.connect(self.__handleInsertHeader)
         ui.actionInsert_Body.triggered.connect(self.__handleInsertBody)
+        
+        # TODO: create a ctr-a on a menu to __scintilla.selectAll(bool select)
+        
+        def __keyEventFilterFct(subject, object, event):
+            if event.type() == QtCore.QEvent.KeyRelease:
+                # return & enter
+                if event.key() == 81:
+                    self.close()
+            return False
+        self.eventFilter = lambda o, e: __keyEventFilterFct(self.ui, o, e)
+        self.installEventFilter(self)
         
         # connect "text changed" signal to our handler to detect unsaved changes
         self.__scintilla.textChanged.connect(self.__handleTextChanged)
@@ -629,7 +743,7 @@ class McInsertComponentDialog(QtGui.QDialog):
         self.ui.btnCancel.clicked.connect(self.reject)
         
         self.__standard_le_style = self.ui.edtInstanceName.styleSheet()
-        
+    
     def accept(self):
         # detect missing default values
         dirty = False
@@ -704,8 +818,8 @@ class McInsertComponentDialog(QtGui.QDialog):
                 edt.setText(par.default_value)
             self.ui.gridParameters.addWidget(edt, y, x, 1, 1)
             
-            # save name, value widget references for use in self.getValues
-            self.__wParams.append([lbl, edt])
+            # save widget references for use in self.getValues (also save the par default value)
+            self.__wParams.append([lbl, edt, edt.text()])
             
             # parameter docstring label
             x = 2
@@ -734,6 +848,9 @@ class McInsertComponentDialog(QtGui.QDialog):
         inst_name : contents of instance name field 
         params : list of [name, value] pairs matching component parameters
         '''
+        if not self.ui.cbxVerbose.isChecked():
+            return self.__getValuesReduced()
+        
         # instance name
         inst_name = self.ui.edtInstanceName.text()
         comp_type = str(self.windowTitle()).lstrip('Component: ')
@@ -756,6 +873,39 @@ class McInsertComponentDialog(QtGui.QDialog):
         atrel.append(self.ui.edtRotY.text())
         atrel.append(self.ui.edtRotZ.text())
         atrel.append(self.ui.edtRotRel.text())
+        
+        return comp_type, inst_name, params, atrel
+
+    def __getValuesReduced(self):
+        ''' 
+        inst_name : contents of instance name field 
+        params : list of [name, value] pairs matching component parameters
+        '''
+        # instance name
+        inst_name = self.ui.edtInstanceName.text()
+        comp_type = str(self.windowTitle()).lstrip('Component: ')
+        
+        # get dynamic params
+        params = []
+        for w in self.__wParams:
+            # proceed if typed value differs from the default value (also counting empty default values)
+            if w[1].text() != w[2]: 
+                p = []
+                p.append(str(w[0].text()).rstrip(':'))
+                p.append(str(w[1].text()))
+                params.append(p)
+        
+        # get values for AT(x,y,z), RELATIVE <posrel>, ROTATED(x,y,z), RELATIVE <rotrel> 
+        atrel = []
+        atrel.append(self.ui.edtAtX.text())
+        atrel.append(self.ui.edtAtY.text())
+        atrel.append(self.ui.edtAtZ.text())
+        atrel.append(self.ui.edtAtRel.text())
+        if self.ui.edtRotX.text() != '0' or self.ui.edtRotY.text() != '0' or self.ui.edtRotZ.text() != '0':
+            atrel.append(self.ui.edtRotX.text())
+            atrel.append(self.ui.edtRotY.text())
+            atrel.append(self.ui.edtRotZ.text())
+            atrel.append(self.ui.edtRotRel.text())
         
         return comp_type, inst_name, params, atrel
 
