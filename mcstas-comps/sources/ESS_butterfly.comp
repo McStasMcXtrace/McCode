@@ -30,6 +30,9 @@
 * beamline:     [1]   Defines the 'beamline number' of your instrument position. Valid values are 1..10 or 1..11 depending on sector
 * yheight:      [m]   Defines the moderator height. Valid values are 0.03 m and 0.06 m
 * cold_frac:    [1]   Defines the statistical fraction of events emitted from the cold part of the moderator
+* performance:  [1]   Scalar performance multiplicator 0 < performace <= 1
+* Lmin:         [AA]  Minimum wavelength simulated
+* Lmax:         [AA]  Maximum wavelength simulated
 * target_index: [1]   Relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
 * dist:         [m]   Distance from origin to focusing rectangle; at (0,0,dist) - alternatively use target_index\
 * focus_xw      [m]   Width of focusing rectangle
@@ -40,7 +43,8 @@
 
 DEFINE COMPONENT ESS_butterfly
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (string sector="N",int beamline=1, yheight=0.03, cold_frac=0.5, target_index=0, dist=0, focus_xw=0, focus_yh=0)
+SETTING PARAMETERS (string sector="N",int beamline=1, yheight=0.03, cold_frac=0.5, target_index=0, dist=0, focus_xw=0, focus_yh=0, 
+		      performance=1, Lmin, Lmax)
 OUTPUT PARAMETERS (cx, cz, sign_bl_angle, orientation_angle)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
 DECLARE
@@ -91,6 +95,15 @@ INITIALIZE
     exit(-1);
   }
   printf("Setting up for sector %s, beamline %i, global orientation angle is %g\n",sector,beamline,orientation_angle);
+  if (performance <= 0 || performance > 1) {
+    fprintf(stderr,"%s: performance scalar of %g is not allowed. Please select 0 < performance <= 1\n", NAME_CURRENT_COMP, performance);
+    exit(-1);
+  }
+  if (Lmin>=Lmax || Lmin <= 0 || Lmax < 0) {
+    printf("%s: Unmeaningful definition of wavelength range!\nPlease select Lmin, Lmax > 0 and Lmax > Lmin.\n ERROR - Exiting\n",
+           NAME_CURRENT_COMP);
+    exit(-1);
+  }
 %}
 
 TRACE
@@ -99,7 +112,7 @@ TRACE
 
 MCDISPLAY
 %{
-%include "butterfly-geometry.c"
+%include "ESS_butterfly-geometry.c"
 %}
 
 END

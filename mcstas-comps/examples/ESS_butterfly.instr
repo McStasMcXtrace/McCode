@@ -25,7 +25,7 @@
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ESS_butterfly(string sector="N",beamline=1)
+DEFINE INSTRUMENT ESS_butterfly(string sector="N",beamline=1,Lmin=0.2,Lmax=20,performance=1)
 
 DECLARE
 %{
@@ -40,7 +40,7 @@ TRACE
 COMPONENT origin = Progress_bar()
 AT (0, 0, 0) RELATIVE ABSOLUTE
 
-COMPONENT Butterfly = ESS_butterfly(sector=sector,beamline=beamline)
+  COMPONENT Butterfly = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=Lmax,performance=performance)
 AT (0,0,0) ABSOLUTE
 
 COMPONENT Arm1 = Arm()
@@ -51,20 +51,20 @@ COMPONENT Arm2 = Arm()
 
 /* Uncomment these helper-arms to view "full" monolith */
 
-/* COMPONENT DummyArm1 = Arm() */
-/*   AT (6,0,6) ABSOLUTE */
+COMPONENT DummyArm1 = Arm()
+  AT (6,0,6) ABSOLUTE
 
-/* COMPONENT DummyArm2 = Arm() */
-/*   AT (-6,0,6) ABSOLUTE */
+COMPONENT DummyArm2 = Arm()
+  AT (-6,0,6) ABSOLUTE
 
-/* COMPONENT DummyArm3 = Arm() */
-/*   AT (-6,0,-6) ABSOLUTE */
+COMPONENT DummyArm3 = Arm()
+  AT (-6,0,-6) ABSOLUTE
 
-/* COMPONENT DummyArm4 = Arm() */
-/*   AT (6,0,-6) ABSOLUTE */
+COMPONENT DummyArm4 = Arm()
+  AT (6,0,-6) ABSOLUTE
 
-/* COMPONENT DummyArm5 = Arm() */
-/*   AT (6,0,6) ABSOLUTE */
+COMPONENT DummyArm5 = Arm()
+  AT (6,0,6) ABSOLUTE
 
 
 FINALLY
