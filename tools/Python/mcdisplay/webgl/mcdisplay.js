@@ -178,3 +178,48 @@ var aVertices;
 var aCompVertices
 var rayobj;
 var allRays = [];
+
+
+
+
+// show all rays in arrayOfRays
+var showRays = function(arrayOfRays, root)
+{
+	for (var i = 0; i < arrayOfRays.length; i++)
+	{
+		root.add(arrayOfRays[i]);
+	}
+}
+// remove all rays in arrayOfRays from scene tree
+var hideRays = function(arrayOfRays, root)
+{
+	for (var i = 0; i < arrayOfRays.length; i++)
+	{
+		root.remove(arrayOfRays[i]);
+	}
+}
+//
+iRay = -1;
+var showNextRay = function(arrayOfRays, root)
+{
+
+	lastRay = iRay
+	iRay += 1;
+	if (iRay >= arrayOfRays.length)
+	{
+		iRay = 0;
+	}
+	root.add(arrayOfRays[iRay]);
+	root.remove(arrayOfRays[lastRay]);
+}
+
+//showRays(allRays, root);
+
+// renderloop
+function render() {
+	requestAnimationFrame(render);
+	renderer.render(scene, camera);
+
+	showNextRay(allRays, root);
+}
+render();

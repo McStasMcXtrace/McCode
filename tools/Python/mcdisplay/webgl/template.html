@@ -14,7 +14,6 @@
 	<!--<script src="js/TrackballControls.js"></script>-->
 	<script>
 		// INSTRUMENT
-
 		{% for comp in instrument.components %}
 
 		comp = addComponent("{{comp.name}}");
@@ -35,48 +34,6 @@
 		aCompVertices.push(new THREE.Vector3({{ p.position.x }}, {{ p.position.y }}, {{ p.position.z }}));{% endfor %}
 		aVertices = aVertices.concat(transformPoints(aCompVertices, compnodes["{{comp_points.0}}"].matrix));{% endfor %}
 		addMultiLineV3(aVertices, rayobj, rayColor);{% endfor %}
-
-		// show all rays in arrayOfRays
-		var showRays = function(arrayOfRays, root)
-		{
-			for (var i = 0; i < arrayOfRays.length; i++)
-			{
-				root.add(arrayOfRays[i]);
-			}
-		}
-		// remove all rays in arrayOfRays from scene tree
-		var hideRays = function(arrayOfRays, root)
-		{
-			for (var i = 0; i < arrayOfRays.length; i++)
-			{
-				root.remove(arrayOfRays[i]);
-			}
-		}
-		//
-		iRay = -1;
-		var showNextRay = function(arrayOfRays, root)
-		{
-
-			lastRay = iRay
-			iRay += 1;
-			if (iRay >= arrayOfRays.length)
-			{
-				iRay = 0;
-			}
-			root.add(arrayOfRays[iRay]);
-			root.remove(arrayOfRays[lastRay]);
-		}
-
-		//showRays(allRays, root);
-
-		// renderloop
-		function render() {
-			requestAnimationFrame(render);
-			renderer.render(scene, camera);
-
-			showNextRay(allRays, root);
-		}
-		render();
     </script>
 </body>
 </html>
