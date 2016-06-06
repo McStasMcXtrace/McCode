@@ -6,7 +6,7 @@ Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
 from ply import lex, yacc
 from nodetree import Node
-from instrrep import NeutronStory, NeutronState
+from instrrep import NeutronStory, NeutronCompGroup, NeutronState
 
 class TraceNeutronRayParser:
     '''
@@ -194,7 +194,7 @@ class NeutronRayConstructor:
                     
                     # prepare state variables
                     story = None
-                    point_entries = None
+                    comp_group = None
                     comp_name = None
                     
                     # NOTE: the node tree is a bit weird in that there are no COMPEXIT's, these are just SCATTER 
@@ -209,24 +209,25 @@ class NeutronRayConstructor:
                             
                             # record entry
                             if event.type == 'COMPENTER' or self.iszerovector_str(event.leaf[0:3]):
-                                point_entries = []
+                                comp_group = NeutronCompGroup(comp_name)
                             else:
-                                point_entries = [NeutronState(event.leaf)]
-                            story.events.append([comp_name, point_entries])
+                                comp_group = NeutronCompGroup(comp_name)
+                                comp_group.add_event(NeutronState(event.leaf))
+                            story.add_group(comp_group)
                         
                         if event.type == 'SCATTER':
-                            point_entries.append(NeutronState(event.leaf))
+                            comp_group.add_event(NeutronState(event.leaf))
                         
                         if event.type == 'ABSORB':
                             # TODO: when --trace has been updated with ABSORB coordinates
-                            #point_entries.append(NeutronState(event.leaf))
+                            #comp_group.append(NeutronState(event.leaf))
                             pass
                         
                         if event.type == 'LEAVE':
                             # append LEAVE state, although equal to SCATTER states, may be the result of COMPENTER, ABSORB
                             # TODO: read ABSORB todo and accomodate, removing this then completely redundant LEAVE state
-                            point_entries.append(NeutronState(event.leaf))
-                            point_entries = None
+                            comp_group.add_event(NeutronState(event.leaf))
+                            comp_group = None
                             story = None
         
         return rays

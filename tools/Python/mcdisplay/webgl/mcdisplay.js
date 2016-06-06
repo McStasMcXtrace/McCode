@@ -78,6 +78,8 @@ var init = function(rootnode, campos, controltarget)
 // 		arrVector3 - an array of THREE.Vector3 instances
 var addMultiLineV3 = function(arrVector3, parent, linecolor)
 {
+    //console.log(arrVector3);
+
     var multilinematerial = new THREE.LineBasicMaterial({color: linecolor});
     var multilinegeometry = new THREE.Geometry();
     for (var i = 0; i < arrVector3.length; i++)
@@ -109,6 +111,7 @@ var addMultiLine = function(points, parent, linecolor)
     for (var i = 0; i < points.length / 3; i++)
     {
         points[i];
+        //v = new THREE.Vector3(points[i*3], points[i*3+1], points[i*3+2]);
         v = new THREE.Vector3(points[i*3], points[i*3+1], points[i*3+2]);
         vectors.push(v);
     }
@@ -140,8 +143,6 @@ var getNextComponentColor = function()
     return compColors[iColor];
 }
 
-// set scene
-//
 var scene;
 var camera
 var renderer;
@@ -149,17 +150,7 @@ var controls;
 
 var compnodes = {};
 var root = new THREE.Object3D();
-var comproot = new THREE.Object3D();
-root.add(comproot);
 init(root, new THREE.Vector3(-26.2633008742, 26.2833008742, 26.2833008742), new THREE.Vector3());
-
-var comp;
-var m4;
-var acolor;
-
-
-// neutrons
-
 
 // generate coordinate transforms to use on the componen-specific ray segments below
 var transformPoints = function(apoints, transform)
@@ -178,9 +169,6 @@ var aVertices;
 var aCompVertices
 var rayobj;
 var allRays = [];
-
-
-
 
 // show all rays in arrayOfRays
 var showRays = function(arrayOfRays, root)
@@ -213,13 +201,13 @@ var showNextRay = function(arrayOfRays, root)
 	root.remove(arrayOfRays[lastRay]);
 }
 
-//showRays(allRays, root);
+showRays(allRays, root);
 
 // renderloop
 function render() {
 	requestAnimationFrame(render);
 	renderer.render(scene, camera);
 
-	showNextRay(allRays, root);
+	//showNextRay(allRays, root);
 }
 render();

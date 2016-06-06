@@ -8,6 +8,7 @@ import os
 import webbrowser
 import logging
 import argparse
+import json
 
 from pipetools import McrunPipeMan
 from traceinstrparser import TraceInstrParser, InstrObjectConstructor
@@ -50,7 +51,7 @@ def write_oldhtml(instrument, first=None, last=None):
                 continue
         
         transform = Transform(comp.rot, comp.pos)
-        for drawcall in comp.drawcommands:
+        for drawcall in comp.drawcalls:
             drawcalls.append((drawcall, transform))
     box = calcLargestBoundingVolumeWT(drawcalls)
     
@@ -156,8 +157,11 @@ def main(args):
     instrument.rays = reader.read_neutrons()
     #write_neutrons(rays)
     
-    write_oldhtml(instrument, first=args.first, last=args.last)
+    jsonized = instrument.jsonize()
+    debug_save(json.dumps(jsonized, indent=0), 'jsonized.json')
+    #debug_save(json.dumps(jsonized), 'jsonized.json')
     
+    write_oldhtml(instrument, first=args.first, last=args.last)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)

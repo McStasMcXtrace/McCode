@@ -290,7 +290,7 @@ class InstrObjectConstructor:
                                     commandname = dc.leaf
                                     draw = drawclass_factory(commandname, args, reduced=True)
                                     if draw:
-                                        comp.drawcommands.append(draw)
+                                        comp.drawcalls.append(draw)
                         
                         instrument_tree.components.append(comp)
                         

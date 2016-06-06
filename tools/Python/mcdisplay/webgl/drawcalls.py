@@ -3,7 +3,7 @@ Classes used for organizing component drawing calls.
 '''
 from django.template import Context, Template
 from django.conf import settings
-from instrrep import Vector3d
+from instrrep import Vector3d, floatify
 
 # links mcstas draw api to the corresponding python class names '''
 drawcommands = {
@@ -82,7 +82,6 @@ class DrawCommandVisitor(object):
     
 class DjangoVisitor(DrawCommandVisitor):
     ''' implements translation from data object to django template readable '''
-    
     dct = {}
     def __init__(self, dct):
         self.dct = dct
@@ -156,17 +155,18 @@ def calcLargestBoundingVolumeWT(drawcalls_transforms):
 
 class DrawCommand(Visited):
     ''' superclass of all draw commands '''
-    args_str = ''
-    key = ''
-    boundingbox = None
     def __init__(self, args):
+        self.args = floatify(args)
+        self.args_str = ''
+        self.key = ''
+        self.boundingbox = None
         if len(args) > 0:
             self.args_str = str(args[0])
             for i in range(len(args)-1):
                 self.args_str = self.args_str + ', ' + str(args[i+1])
     
     def get_boundingbox(self, transform=None):
-        self._calc_boundingbox(self._get_points(), transform)
+        self.boundingbox = self._calc_boundingbox(self._get_points(), transform)
         return self.boundingbox
     
     def _get_points(self):
@@ -196,7 +196,20 @@ class DrawCommand(Visited):
         box.z1 = min(z_set)
         box.z2 = max(z_set)
         
-        self.boundingbox = box
+        return box
+    
+    def jsonize(self):
+        ''' returns a jsonzied version of this object '''
+        call = {}
+        
+        # properties
+        call['key'] = self.key
+        #call['args_str'] = self.args_str
+        call['args'] = self.args
+        
+        # forget the bounding box for now
+        
+        return call
 
 class DrawMagnify(DrawCommand):
     ''' not implemented, a placeholder '''

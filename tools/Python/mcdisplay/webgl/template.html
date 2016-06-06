@@ -10,19 +10,100 @@
 <body>
 	<script src="https://sim.e-neutrons.org/static/threejs/three.min.js"></script>
 	<script src="https://sim.e-neutrons.org/static/threejs/OrbitControls.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
 	<script src="mcdisplay.js"></script>
-	<!--<script src="js/TrackballControls.js"></script>-->
 	<script>
-		// INSTRUMENT
-		{% for comp in instrument.components %}
+		var instr;
+		$.getJSON('jsonized.json', function(response){
+			instr = response;
+			})
+			.success(function() {
 
-		comp = addComponent("{{comp.name}}");
-		acolor = getNextComponentColor();{% for drawcall in comp.drawcommands %}{% if drawcall.key == 'multiline' %}
-		addMultiLine([{{drawcall.args_str}}], comp, acolor);{% endif %}{% if drawcall.key == 'circle' %}
-		addCircle({% autoescape off %}{{drawcall.args_str}}{% endautoescape %}, comp, acolor);{% endif %}{% endfor %}
-		m4 = new THREE.Matrix4();
-		m4.set({{comp.m4_str}});
-		comp.applyMatrix(m4);{% endfor %}
+				// INSTRUMENT
+				var instname = instr['name'];
+				var abspath = instr['abspath'];
+				// (skip params and that for now)
+
+				// COMPONENTS
+				var comps = instr['components'];
+				var comp;
+				var comp_node;
+				var compname;
+				var m4;
+				var acolor;
+				for (var i = 0; i < comps.length; i++) {
+					comp = comps[i];
+
+					compname = comp['name'];
+					m4 = comp['m4'];
+					comp_node = addComponent(compname);
+					acolor = getNextComponentColor();
+
+					drawcalls = comp['drawcalls']
+					var call;
+					for (var j = 0; j < drawcalls.length; j++) {
+						call = drawcalls[j];
+
+						key = call['key'];
+						args = call['args'];
+
+						if (key == 'multiline') {
+							addMultiLine(args, comp_node, acolor);
+						}
+						if (key == 'circle') {
+							addCircle(args[0], args[1], args[2], args[3], args[4], comp_node, acolor);
+						}
+						//console.log(key, args);
+					}
+
+					comp_matrix = new THREE.Matrix4();
+					comp_matrix.set(m4[0], m4[1], m4[2], m4[3], m4[4], m4[5], m4[6], m4[7], m4[8], m4[9], m4[10], m4[11], m4[12], m4[13], m4[14], m4[15]);
+					comp_node.applyMatrix(comp_matrix);
+
+					console.log(compname, m4);
+					console.log(compname, comp_matrix);
+					console.log(compname, comp_node.matrix);
+				}
+
+				/*
+				// NEUTRON RAYS
+				var rays = instr['rays'];
+				var ray;
+				for (var i = 0; i < rays.length; i++) {
+					ray = rays[i];
+
+					var groups =  ray['groups'];
+					var group;
+					for (var j = 0; j < groups.length; j++) {
+						group = groups[j];
+						var compname = group['compname'];
+
+						// NEUTRON STATES
+						var events = group['events'];
+						var localstate;
+						var args;
+						for (var k = 0; k < events.length; k++) {
+							localstate = events[k];
+
+							args = localstate['args'];
+
+							//console.log(compname + args);
+						}
+					}
+				}
+				*/
+			})
+			.error(function() { consol.log("json load error"); })
+			.complete(function() { console.log("json load complete");
+		});
+
+		var makefloat = function(array){
+			var float_array = [];
+			for (i = 0; i < array.length; i++)
+			{
+				float_array
+			}
+		}
 
 		// NEUTRON RAYS
 		{% for ray in instrument.rays %}
@@ -34,6 +115,7 @@
 		aCompVertices.push(new THREE.Vector3({{ p.position.x }}, {{ p.position.y }}, {{ p.position.z }}));{% endfor %}
 		aVertices = aVertices.concat(transformPoints(aCompVertices, compnodes["{{comp_points.0}}"].matrix));{% endfor %}
 		addMultiLineV3(aVertices, rayobj, rayColor);{% endfor %}
+*/
     </script>
 </body>
 </html>

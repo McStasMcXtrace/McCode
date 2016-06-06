@@ -3,66 +3,143 @@ Classes for representing a mcstas instruments and neutron rays.
 '''
 class InstrumentConcrete(object):
     ''' represents a mcstas instrument with params choice '''
-    name = ''
-    abspath = ''
-    params = []
-    params_defaults = []
-    
-    params_values = []
-    components = []
-    rays = []
-    
     def __init__(self, name, params, params_defaults):
         self.name = name
+        self.abspath = ''
         self.params = params
         self.params_defaults = params_defaults
+        self.params_values = []
+        self.components = []
+        self.rays = []
+    
+    def jsonize(self):
+        ''' returns this object in jsonized form '''
+        instr = {}
+
+        # properties
+        instr['name'] = self.name
+        instr['abspath'] = self.abspath
+        instr['params'] = self.params
+        instr['params_defaults'] = self.params_defaults
+        instr['params_values'] = self.params_values
+        
+        # lists of objects
+        lst = []
+        for c in self.components:
+            lst.append(c.jsonize())
+        instr['components'] = lst
+        
+        lst = []
+        for r in self.rays:
+            lst.append(r.jsonize())
+        instr['rays'] = lst
+        
+        return instr
 
 class Component(object):
     ''' represents a mcstas component in some context '''
-    name = ''
-    drawcommands = []
-    pos = None
-    rot = None
-    m4_str = ''
     def __init__(self, name, pos, rot):
         self.name = name
         self.pos = pos
         self.rot = rot
-        self.drawcommands = []
+        self.m4 = [rot.a11, rot.a12, rot.a13, pos.x, rot.a21, rot.a22, rot.a23, pos.y, rot.a31, rot.a32, rot.a33, pos.z, 0, 0, 0, 1]
+        self.drawcalls = []
         if pos != None and rot != None:
             self.m4_str = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 0, 0, 0, 1' % (str(rot.a11), str(rot.a12), str(rot.a13), str(pos.x), str(rot.a21), str(rot.a22), str(rot.a23), str(pos.y), str(rot.a31), str(rot.a32), str(rot.a33), str(pos.z))
+        else:
+            self.m4_str = ''
+    
+    def jsonize(self):
+        ''' returns a jsonized version of this object '''
+        component = {}
+        
+        # properties
+        component['name'] = self.name
+        component['m4'] = self.m4
+        
+        # lists
+        lst = []
+        for d in self.drawcalls:
+            lst.append(d.jsonize())
+        component['drawcalls'] = lst
+        
+        return component
     
     @classmethod
     def from_m4_str(cls, name, m4_str):
         obj = cls(name, None, None)
         obj.m4_str = m4_str
         return obj
-        
+    
 class NeutronStory(object):
-    events = []
+    ''' represents a whole neutron ray from start to finish '''
     def __init__(self):
+        self.groups = []
+    
+    def add_group(self, group):
+        self.groups.append(group)
+    
+    def jsonize(self):
+        ''' returns a jsonized version of this object '''
+        story = {}
+        
+        lst = []
+        for g in self.groups:
+            lst.append(g.jsonize())
+        story['groups'] = lst
+        
+        return story
+
+class NeutronCompGroup(object):
+    ''' represents neutron events / states within the context of a specific component '''
+    def __init__(self, compname):
+        self.compname = compname
         self.events = []
+    
+    def add_event(self, event):
+        self.events.append(event)
+        
+    def jsonize(self):
+        ''' returns a jsonized version of this object '''
+        group = {}
+        
+        # properties
+        group['compname'] = self.compname
+        
+        # lists
+        lst = []
+        for e in self.events:
+            lst.append(e.jsonize())
+        group['events'] = lst
+        
+        return group
 
 class NeutronState(object):
-    args_str = ''
-    position = None
-    velocity = None
-    time = None
-    spin = None
-    intensity = None
-    def __init__(self, args):
+    ''' represents a single neutron (ray) event, a semiclassical state, used for ray interpolation inferrence '''
+    def __init__(self, args, verbose=False):
         ''' x, y, z, vx, vy, vz, t, sx, sy, sz, intensity '''
+        self.args = floatify(args)
         self.args_str = str(args[0])
         if len(args) > 0:
             self.args_str = str(args[0])
             for i in range(len(args)-1):
                 self.args_str = self.args_str + ', ' + str(args[i+1])
         
-        self.position = Vector3d(float(args[0]), float(args[1]), float(args[2]))
-        self.velocity = Vector3d(float(args[3]), float(args[4]), float(args[5]))
-        self.time = float(args[6])
-        self.spin = Vector3d(float(args[7]), float(args[8]), float(args[9]))
-        self.intensity = float(args[10])
+        if verbose:
+            self.position = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+            self.velocity = Vector3d(float(args[3]), float(args[4]), float(args[5]))
+            self.time = float(args[6])
+            self.spin = Vector3d(float(args[7]), float(args[8]), float(args[9]))
+            self.intensity = float(args[10])
+    
+    def jsonize(self):
+        ''' returns a jsonized version of this object '''
+        state = {}
+        
+        # properties
+        state['args'] = self.args
+        
+        return state
 
 class Vector3d(object):
     def __init__(self, x, y, z):
@@ -132,3 +209,13 @@ class Matrix3Identity(Matrix3):
     def __init__(self):
         Matrix3.__init__(self, 1, 0, 0, 0, 1, 0, 0, 0, 1)
 
+
+def floatify(arr):
+    ''' returns an array with entries converted to floats, if possible '''
+    lst = []
+    for a in arr:
+        try:
+            lst.append(float(a))
+        except:
+            lst.append(a)
+    return lst
