@@ -22,7 +22,6 @@
 				// INSTRUMENT
 				var instname = instr['name'];
 				var abspath = instr['abspath'];
-				// (skip params and that for now)
 
 				// COMPONENTS
 				var comps = instr['components'];
@@ -53,30 +52,32 @@
 						if (key == 'circle') {
 							addCircle(args[0], args[1], args[2], args[3], args[4], comp_node, acolor);
 						}
-						//console.log(key, args);
 					}
 
 					comp_matrix = new THREE.Matrix4();
 					comp_matrix.set(m4[0], m4[1], m4[2], m4[3], m4[4], m4[5], m4[6], m4[7], m4[8], m4[9], m4[10], m4[11], m4[12], m4[13], m4[14], m4[15]);
 					comp_node.applyMatrix(comp_matrix);
-
-					console.log(compname, m4);
-					console.log(compname, comp_matrix);
-					console.log(compname, comp_node.matrix);
 				}
 
-				/*
 				// NEUTRON RAYS
 				var rays = instr['rays'];
 				var ray;
+				var aVertices;
 				for (var i = 0; i < rays.length; i++) {
 					ray = rays[i];
+
+					rayobj = new THREE.Object3D();
+					allRays.push(rayobj);
+					aVertices = [];
+					var aCompVertices;
+					var compname;
 
 					var groups =  ray['groups'];
 					var group;
 					for (var j = 0; j < groups.length; j++) {
 						group = groups[j];
-						var compname = group['compname'];
+						compname = group['compname'];
+						aCompVertices = [];
 
 						// NEUTRON STATES
 						var events = group['events'];
@@ -86,36 +87,19 @@
 							localstate = events[k];
 
 							args = localstate['args'];
-
-							//console.log(compname + args);
+							aCompVertices.push(new THREE.Vector3(args[0], args[1], args[2]));
 						}
+
+						// transform these vertices by component matrix and add to vertex container for this ray
+						aVertices = aVertices.concat(transformPoints(aCompVertices, compnodes[compname].matrix));
 					}
+					// add ray as a multiline
+					addMultiLineV3(aVertices, rayobj, rayColor);
 				}
-				*/
 			})
 			.error(function() { consol.log("json load error"); })
 			.complete(function() { console.log("json load complete");
 		});
-
-		var makefloat = function(array){
-			var float_array = [];
-			for (i = 0; i < array.length; i++)
-			{
-				float_array
-			}
-		}
-
-		// NEUTRON RAYS
-		{% for ray in instrument.rays %}
-
-		rayobj = new THREE.Object3D();
-		allRays.push(rayobj);
-		aVertices = [];{% for comp_points in ray.events %}
-		aCompVertices = [];{% for p in comp_points.1 %}
-		aCompVertices.push(new THREE.Vector3({{ p.position.x }}, {{ p.position.y }}, {{ p.position.z }}));{% endfor %}
-		aVertices = aVertices.concat(transformPoints(aCompVertices, compnodes["{{comp_points.0}}"].matrix));{% endfor %}
-		addMultiLineV3(aVertices, rayobj, rayColor);{% endfor %}
-*/
     </script>
 </body>
 </html>

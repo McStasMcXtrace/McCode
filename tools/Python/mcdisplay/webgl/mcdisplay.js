@@ -78,8 +78,6 @@ var init = function(rootnode, campos, controltarget)
 // 		arrVector3 - an array of THREE.Vector3 instances
 var addMultiLineV3 = function(arrVector3, parent, linecolor)
 {
-    //console.log(arrVector3);
-
     var multilinematerial = new THREE.LineBasicMaterial({color: linecolor});
     var multilinegeometry = new THREE.Geometry();
     for (var i = 0; i < arrVector3.length; i++)
@@ -208,6 +206,6 @@ function render() {
 	requestAnimationFrame(render);
 	renderer.render(scene, camera);
 
-	//showNextRay(allRays, root);
+	showNextRay(allRays, root);
 }
 render();
