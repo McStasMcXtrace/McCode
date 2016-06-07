@@ -13,30 +13,13 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
 	<script src="mcdisplay.js"></script>
 	<script>
-		var main = new Main();
-		main.init(new THREE.Vector3(-26.2633008742, 26.2833008742, 26.2833008742), new THREE.Vector3());
-
-
-		var instr;
-		$.getJSON('jsonized.json', function(response){
-			json_obj = response;
-			})
-			.success(function() {
-				var loader = new TraceLoader(json_obj, main);
-				loader.loadAll();
-
-			    // renderloop
-			    function render() {
-			    	requestAnimationFrame(render);
-			    	main.renderer.render(main.scene, main.camera);
-
-			    	main.showNextRay();
-			    }
-				render();
-			})
-			.error(function() { consol.log("json load error"); })
-			.complete(function() { console.log("json load complete");
-		});
+			var x = -26.3, y = 26.3, z = 26.3;
+			var datafile = "jsonized.json";
+			// INSERT_CAMPOS_HERE: x = XVAL, y = YVAL, z = ZVAL;
+			// INSERT_DATAFILE_HERE: datafile = DATAFILEVAL;
+			//var campos = new THREE.Vector3(x, y, z);
+			var controller = new Controller(datafile, x, y, z);
+			controller.run();
     </script>
 </body>
 </html>

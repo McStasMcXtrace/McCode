@@ -73,7 +73,7 @@ var Main = function ()
 
     // initialize everything
     //
-    Main.prototype.init = function(campos, controltarget)
+    Main.prototype.init = function(campos)
     {
         this.scene = new THREE.Scene();
 
@@ -178,6 +178,11 @@ var Main = function ()
     // iterates rays
     Main.prototype.showNextRay = function()
     {
+        if (this.allRays.length == 0)
+        {
+            return;
+        }
+
     	lastRay = this.iRay;
     	this.iRay += 1;
     	if (this.iRay >= this.allRays.length)
@@ -189,22 +194,36 @@ var Main = function ()
     }
 
 
-var TraceLoader = function(json_obj, main)
+var TraceLoader = function(filename, main)
 {
-    this.json_obj = json_obj;
+    this.filename = filename;
     this.main = main;
+    this.json_obj;
 }
-TraceLoader.prototype.loadAll = function()
+TraceLoader.prototype.loadAsync = function()
+{
+    var loader = this;
+    $.getJSON(this.filename, function(response){
+        loader.json_obj = response;
+    })
+    .success(function() {
+        loader.load();
+    })
+    .error(function() { consol.log("json load error"); })
+    .complete(function() { console.log("json load complete");
+    });
+}
+TraceLoader.prototype.load = function()
 {
     var main = this.main;
-    var instr = this.json_obj
+    var data = this.json_obj
 
     // INSTRUMENT
-    var instname = instr['name'];
-    var abspath = instr['abspath'];
+    var instname = data['name'];
+    var abspath = data['abspath'];
 
     // COMPONENTS
-    var comps = instr['components'];
+    var comps = data['components'];
     var comp;
     var comp_node;
     var compname;
@@ -240,7 +259,7 @@ TraceLoader.prototype.loadAll = function()
     }
 
     // NEUTRON RAYS
-    var rays = instr['rays'];
+    var rays = data['rays'];
     var ray;
     var aVertices;
     for (var i = 0; i < rays.length; i++) {
@@ -276,4 +295,49 @@ TraceLoader.prototype.loadAll = function()
         // add ray as a multiline
         main.addMultiLineV3(aVertices, rayobj, main.rayColor);
     }
+}
+
+// mcdisplay program controller
+//
+var Controller = function(datafile, campos_x, campos_y, campos_z)
+{
+    // include the scripts we need
+    //this.include(src="https://sim.e-neutrons.org/static/threejs/three.min.js");
+    //this.include(src="https://sim.e-neutrons.org/static/threejs/OrbitControls.js");
+    //this.include(src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js");
+    //console.log("includes done");
+
+    this.campos = new THREE.Vector3(campos_x, campos_y, campos_z);
+    this.main = new Main();
+    this.loader = new TraceLoader(datafile, this.main);
+}
+Controller.prototype.include = function(src)
+{
+    var script = document.createElement('script');
+    script.src = src;
+    document.scripts.appendChild(script);
+    console.log("included script scr=" + src);
+}
+Controller.prototype.run = function()
+{
+    // init mcdisplay
+    this.main.init(this.campos);
+    this.loader.loadAsync();
+
+    // define execution loops
+    var main = this.main;
+    function dataLoop()
+    {
+        setTimeout(dataLoop, 200);
+    	main.showNextRay();
+    }
+    function renderLoop()
+    {
+    	requestAnimationFrame(renderLoop);
+    	main.renderer.render(main.scene, main.camera);
+    }
+
+    // initiate timed execution loops
+    renderLoop();
+    dataLoop();
 }
