@@ -12,14 +12,14 @@ import json
 
 from pipetools import McrunPipeMan
 from traceinstrparser import TraceInstrParser, InstrObjectConstructor
-from drawcalls import TemplateWebGLWrite, calcLargestBoundingVolumeWT
+from drawcalls import DjangoWriter, calcLargestBoundingVolumeWT, SimpleWriter
 from traceneutronrayparser import NeutronRayConstructor, TraceNeutronRayParser
 from instrrep import Vector3d, Transform
 
 #sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 #from mclib import mccode_config
 
-def write_oldhtml(instrument, first=None, last=None):
+def write_gluefile_html(instrument, html_filename, data_filename, first=None, last=None):
     ''' writes instrument definition to html/js '''
     # calculate campost by means of the component bounding boxes (mediated by drawcalls)
     drawcalls = []
@@ -67,13 +67,10 @@ def write_oldhtml(instrument, first=None, last=None):
     campos = Vector3d(x, y, z)
     
     # render html
-    outfile = '%s.html' % instrument.name
     templatefile = os.path.join(os.path.dirname(__file__), "template.html")
     
-    writer = TemplateWebGLWrite(instrument, templatefile, campos=campos)
-    writer.build()
-    writer.save(outfile)
-    webbrowser.open_new_tab(outfile)
+    writer = SimpleWriter(templatefile, campos, data_filename, html_filename)
+    writer.write()
 
 def write_instrument():
     ''' writes instrument definitions to html/ js '''
@@ -118,7 +115,7 @@ class McMicsplayReader(object):
         instrdef = self.pipeman.read_instrdef()
         
         if self.debug:
-            debug_save(instrdef, 'instrdata')
+            file_save(instrdef, 'instrdata')
         
         instrparser = TraceInstrParser(instrdef)
         instrbuilder = InstrObjectConstructor(instrparser.parsetree)
@@ -134,7 +131,7 @@ class McMicsplayReader(object):
         print self.pipeman.read_comments()
         
         if self.debug:
-            debug_save(neutrons, 'neutrondata')
+            file_save(neutrons, 'neutrondata')
         
         rayparser = TraceNeutronRayParser(neutrons)
         raybuilder = NeutronRayConstructor(rayparser.parsetree)
@@ -142,7 +139,7 @@ class McMicsplayReader(object):
         
         return rays
 
-def debug_save(data, filename):
+def file_save(data, filename):
     ''' saves data for debug purposes '''
     f = open(filename, 'w')
     f.write(data)
@@ -150,18 +147,26 @@ def debug_save(data, filename):
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
+    debug = False
     
-    reader = McMicsplayReader(args, n=100, debug=True)
+    reader = McMicsplayReader(args, n=100, debug=debug)
     instrument = reader.read_instrument()
     #write_instrument(instrument)
     instrument.rays = reader.read_neutrons()
     #write_neutrons(rays)
     
-    jsonized = instrument.jsonize()
-    debug_save(json.dumps(jsonized, indent=0), 'jsonized.json')
-    #debug_save(json.dumps(jsonized), 'jsonized.json')
+    jsonized = json.dumps(instrument.jsonize(), indent=0)
+    data_filename = '%s.json' % instrument.name
+    file_save(jsonized, data_filename)
     
-    write_oldhtml(instrument, first=args.first, last=args.last)
+    if debug:
+        # this will enable template.html to load directly
+        file_save(jsonized, 'jsonized.json')
+    
+    html_filename = '%s.html' % instrument.name
+    write_gluefile_html(instrument, html_filename, data_filename, first=args.first, last=args.last)
+
+    webbrowser.open_new_tab(html_filename)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
