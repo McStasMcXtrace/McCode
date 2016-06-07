@@ -1,6 +1,7 @@
 // "main" class containing just about everything at this point
 //
-var Main = function () {
+var Main = function ()
+{
     this.scene;
     this.camera;
     this.renderer;
@@ -186,3 +187,93 @@ var Main = function () {
     	this.rootnode.add(this.allRays[this.iRay]);
     	this.rootnode.remove(this.allRays[lastRay]);
     }
+
+
+var TraceLoader = function(json_obj, main)
+{
+    this.json_obj = json_obj;
+    this.main = main;
+}
+TraceLoader.prototype.loadAll = function()
+{
+    var main = this.main;
+    var instr = this.json_obj
+
+    // INSTRUMENT
+    var instname = instr['name'];
+    var abspath = instr['abspath'];
+
+    // COMPONENTS
+    var comps = instr['components'];
+    var comp;
+    var comp_node;
+    var compname;
+    var m4;
+    var acolor;
+    for (var i = 0; i < comps.length; i++) {
+        comp = comps[i];
+
+        compname = comp['name'];
+        m4 = comp['m4'];
+        comp_node = main.addComponent(compname);
+        acolor = main.getNextComponentColor();
+
+        drawcalls = comp['drawcalls']
+        var call;
+        for (var j = 0; j < drawcalls.length; j++) {
+            call = drawcalls[j];
+
+            key = call['key'];
+            args = call['args'];
+
+            if (key == 'multiline') {
+                main.addMultiLine(args, comp_node, acolor);
+            }
+            if (key == 'circle') {
+                main.addCircle(args[0], args[1], args[2], args[3], args[4], comp_node, acolor);
+            }
+        }
+
+        comp_matrix = new THREE.Matrix4();
+        comp_matrix.set(m4[0], m4[1], m4[2], m4[3], m4[4], m4[5], m4[6], m4[7], m4[8], m4[9], m4[10], m4[11], m4[12], m4[13], m4[14], m4[15]);
+        comp_node.applyMatrix(comp_matrix);
+    }
+
+    // NEUTRON RAYS
+    var rays = instr['rays'];
+    var ray;
+    var aVertices;
+    for (var i = 0; i < rays.length; i++) {
+        ray = rays[i];
+
+        rayobj = new THREE.Object3D();
+        main.allRays.push(rayobj);
+        aVertices = [];
+        var aCompVertices;
+        var compname;
+
+        var groups =  ray['groups'];
+        var group;
+        for (var j = 0; j < groups.length; j++) {
+            group = groups[j];
+            compname = group['compname'];
+            aCompVertices = [];
+
+            // NEUTRON STATES
+            var events = group['events'];
+            var localstate;
+            var args;
+            for (var k = 0; k < events.length; k++) {
+                localstate = events[k];
+
+                args = localstate['args'];
+                aCompVertices.push(new THREE.Vector3(args[0], args[1], args[2]));
+            }
+
+            // transform these vertices by component matrix and add to vertex container for this ray
+            aVertices = aVertices.concat(main.transformPoints(aCompVertices, main.compnodes[compname].matrix));
+        }
+        // add ray as a multiline
+        main.addMultiLineV3(aVertices, rayobj, main.rayColor);
+    }
+}
