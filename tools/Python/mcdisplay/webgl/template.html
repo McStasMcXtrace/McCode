@@ -13,6 +13,11 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
 	<script src="mcdisplay.js"></script>
 	<script>
+
+		var main = new Main();
+		main.init(new THREE.Vector3(-26.2633008742, 26.2833008742, 26.2833008742), new THREE.Vector3());
+
+
 		var instr;
 		$.getJSON('jsonized.json', function(response){
 			instr = response;
@@ -35,8 +40,8 @@
 
 					compname = comp['name'];
 					m4 = comp['m4'];
-					comp_node = addComponent(compname);
-					acolor = getNextComponentColor();
+					comp_node = main.addComponent(compname);
+					acolor = main.getNextComponentColor();
 
 					drawcalls = comp['drawcalls']
 					var call;
@@ -47,10 +52,10 @@
 						args = call['args'];
 
 						if (key == 'multiline') {
-							addMultiLine(args, comp_node, acolor);
+							main.addMultiLine(args, comp_node, acolor);
 						}
 						if (key == 'circle') {
-							addCircle(args[0], args[1], args[2], args[3], args[4], comp_node, acolor);
+							main.addCircle(args[0], args[1], args[2], args[3], args[4], comp_node, acolor);
 						}
 					}
 
@@ -67,7 +72,7 @@
 					ray = rays[i];
 
 					rayobj = new THREE.Object3D();
-					allRays.push(rayobj);
+					main.allRays.push(rayobj);
 					aVertices = [];
 					var aCompVertices;
 					var compname;
@@ -91,11 +96,24 @@
 						}
 
 						// transform these vertices by component matrix and add to vertex container for this ray
-						aVertices = aVertices.concat(transformPoints(aCompVertices, compnodes[compname].matrix));
+						aVertices = aVertices.concat(main.transformPoints(aCompVertices, main.compnodes[compname].matrix));
 					}
 					// add ray as a multiline
-					addMultiLineV3(aVertices, rayobj, rayColor);
+					main.addMultiLineV3(aVertices, rayobj, main.rayColor);
 				}
+
+				//main.showAllRays();
+
+			    // renderloop
+			    function render() {
+			    //Main.prototype.render = function() {
+			    	requestAnimationFrame(render);
+			    	main.renderer.render(main.scene, main.camera);
+
+			    	main.showNextRay();
+			    }
+				render();
+
 			})
 			.error(function() { consol.log("json load error"); })
 			.complete(function() { console.log("json load complete");
