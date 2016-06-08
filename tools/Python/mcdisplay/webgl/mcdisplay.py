@@ -3,7 +3,7 @@
 '''
 mcdisplay webgl script.
 '''
-#import sys
+import sys
 import os
 import webbrowser
 import logging
@@ -12,12 +12,73 @@ import json
 
 from pipetools import McrunPipeMan
 from traceinstrparser import TraceInstrParser, InstrObjectConstructor
-from drawcalls import DjangoWriter, calcLargestBoundingVolumeWT, SimpleWriter
 from traceneutronrayparser import NeutronRayConstructor, TraceNeutronRayParser
-from instrrep import Vector3d, Transform
+from instrrep import Vector3d, Transform, calcLargestBoundingVolumeWT
 
-#sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-#from mclib import mccode_config
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from mclib import mccode_config
+
+class SimpleWriter(object):
+    ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''
+    def __init__(self, templatefile, campos, data_filename, html_filename):
+        self.template = templatefile
+        self.campos = campos
+        self.data_filename = data_filename
+        self.html_filename = html_filename
+    
+    def write(self):
+        # load and modify
+        template = open(self.template).read()
+        lines = template.splitlines()
+        for i in range(len(lines)):
+            if 'INSERT_CAMPOS_HERE:' in lines[i]:
+                campos_lidx = i
+                lines[i] = '            x = %s, y = %s, z = %s; // line by SimpleWriter' % (str(self.campos.x), str(self.campos.y), str(self.campos.z))
+            if 'INSERT_DATAFILE_HERE:' in lines[i]:
+                lines[i] = '            datafile = "%s"; // line by SimpleWriter' % self.data_filename
+        self.text = '\n'.join(lines)
+        
+        # write to disk
+        try:
+            f = open(self.html_filename, 'w')
+            f.write(self.text)
+        finally:
+            f.close()
+
+class DjangoWriter(object):
+    ''' writes a django template from the instrument representation '''
+    instrument = None
+    text = ''
+    templatefile = ''
+    campos = None
+    
+    def __init__(self, instrument, templatefile, campos):
+        self.instrument = instrument
+        self.templatefile = templatefile
+        self.campos = campos
+        
+        # django stuff
+        from django.template import Context
+        from django.template import Template
+        self.Context = Context
+        self.Template = Template
+        from django.conf import settings
+        settings.configure()
+    
+    def build(self):
+        templ = open(self.templatefile).read()
+        t = self.Template(templ)
+        c = self.Context({'instrument': self.instrument, 
+            'campos_x': self.campos.x, 'campos_y': self.campos.y, 'campos_z': self.campos.z,})
+        self.text = t.render(c)
+
+    def save(self, filename):
+        ''' save template to disk '''
+        try:
+            f = open(filename, 'w')
+            f.write(self.text)
+        finally:
+            f.close()
 
 def write_gluefile_html(instrument, html_filename, data_filename, first=None, last=None):
     ''' writes instrument definition to html/js '''
@@ -184,4 +245,3 @@ if __name__ == '__main__':
         args.instr_options = unknown
     
     main(args)
-
