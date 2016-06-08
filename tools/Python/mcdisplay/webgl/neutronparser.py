@@ -6,7 +6,7 @@ Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
 from ply import lex, yacc
 from nodetree import Node
-from instrrep import NeutronStory, NeutronCompGroup, NeutronState
+from instrgeom import NeutronStory, NeutronCompGroup, NeutronState
 
 class TraceNeutronRayParser:
     '''

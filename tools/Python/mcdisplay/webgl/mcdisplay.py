@@ -11,9 +11,9 @@ import argparse
 import json
 
 from pipetools import McrunPipeMan
-from traceinstrparser import TraceInstrParser, InstrObjectConstructor
-from traceneutronrayparser import NeutronRayConstructor, TraceNeutronRayParser
-from instrrep import Vector3d, Transform, calcLargestBoundingVolumeWT
+from instrparser import TraceInstrParser, InstrObjectConstructor
+from neutronparser import NeutronRayConstructor, TraceNeutronRayParser
+from instrgeom import Vector3d, Transform, calcLargestBoundingVolumeWT
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from mclib import mccode_config
