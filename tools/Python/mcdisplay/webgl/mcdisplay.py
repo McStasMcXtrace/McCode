@@ -10,13 +10,12 @@ import logging
 import argparse
 import json
 
-from pipetools import McrunPipeMan
-from instrparser import TraceInstrParser, InstrObjectConstructor
-from neutronparser import NeutronRayConstructor, TraceNeutronRayParser
-from instrgeom import Vector3d, Transform, calcLargestBoundingVolumeWT
-
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from mclib import mccode_config
+
+from mclib.pipetools import McrunPipeMan
+from mclib.instrparser import TraceInstrParser, InstrObjectConstructor
+from mclib.neutronparser import NeutronRayConstructor, TraceNeutronRayParser
+from mclib.instrgeom import Vector3d, Transform, calcLargestBoundingVolumeWT
 
 class SimpleWriter(object):
     ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''
