@@ -71,6 +71,19 @@ class Component(object):
         obj = cls(name, None, None)
         obj.m4_str = m4_str
         return obj
+
+class RayBundle(object):
+    ''' represents a bundle of neutrons '''
+    def __init__(self, rays):
+        self.rays = rays
+    
+    def jsonize(self):
+        bundle = {}
+        lst =  []
+        for r in self.rays:
+            lst.append(r.jsonize())
+        bundle['rays'] = lst
+        return bundle
     
 class NeutronStory(object):
     ''' represents a whole neutron ray from start to finish '''

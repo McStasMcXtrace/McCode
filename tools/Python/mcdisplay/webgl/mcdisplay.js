@@ -193,37 +193,25 @@ var Main = function ()
     	this.rootnode.remove(this.allRays[lastRay]);
     }
 
-
-var TraceLoader = function(filename, main)
+// loads json data into the scene graph
+//
+var TraceLoader = function(instrdata, neutrondata, main)
 {
-    this.filename = filename;
     this.main = main;
-    this.json_obj;
-}
-TraceLoader.prototype.loadAsync = function()
-{
-    var loader = this;
-    $.getJSON(this.filename, function(response){
-        loader.json_obj = response;
-    })
-    .success(function() {
-        loader.load();
-    })
-    .error(function() { consol.log("json load error"); })
-    .complete(function() { console.log("json load complete");
-    });
+    this.instrdata = instrdata;
+    this.neutrondata = neutrondata;
 }
 TraceLoader.prototype.load = function()
 {
     var main = this.main;
-    var data = this.json_obj
 
     // INSTRUMENT
-    var instname = data['name'];
-    var abspath = data['abspath'];
+    var instr = this.instrdata;
+    var instname = instr['name'];
+    var abspath = instr['abspath'];
 
     // COMPONENTS
-    var comps = data['components'];
+    var comps = instr['components'];
     var comp;
     var comp_node;
     var compname;
@@ -259,7 +247,7 @@ TraceLoader.prototype.load = function()
     }
 
     // NEUTRON RAYS
-    var rays = data['rays'];
+    var rays = this.neutrondata['rays'];
     var ray;
     var aVertices;
     for (var i = 0; i < rays.length; i++) {
@@ -299,7 +287,7 @@ TraceLoader.prototype.load = function()
 
 // mcdisplay program controller
 //
-var Controller = function(datafile, campos_x, campos_y, campos_z)
+var Controller = function(campos_x, campos_y, campos_z)
 {
     // include the scripts we need
     //this.include(src="https://sim.e-neutrons.org/static/threejs/three.min.js");
@@ -309,7 +297,7 @@ var Controller = function(datafile, campos_x, campos_y, campos_z)
 
     this.campos = new THREE.Vector3(campos_x, campos_y, campos_z);
     this.main = new Main();
-    this.loader = new TraceLoader(datafile, this.main);
+    this.loader = new TraceLoader(MCDATA_instrdata, MCDATA_neutrondata, this.main);
 }
 Controller.prototype.include = function(src)
 {
@@ -322,7 +310,6 @@ Controller.prototype.run = function()
 {
     // init mcdisplay
     this.main.init(this.campos);
-    this.loader.loadAsync();
 
     // define execution loops
     var main = this.main;
@@ -340,4 +327,7 @@ Controller.prototype.run = function()
     // initiate timed execution loops
     renderLoop();
     dataLoop();
+
+    // load data - possibly heavy
+    this.loader.load();
 }

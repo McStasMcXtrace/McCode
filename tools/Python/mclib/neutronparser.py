@@ -6,7 +6,7 @@ Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
 from ply import lex, yacc
 from nodetree import Node
-from instrgeom import NeutronStory, NeutronCompGroup, NeutronState
+from instrgeom import RayBundle, NeutronStory, NeutronCompGroup, NeutronState
 
 class TraceNeutronRayParser:
     '''
@@ -185,6 +185,7 @@ class NeutronRayConstructor:
     def build_rays(self):
         ''' builds the neutron ray representation '''
         rays = []
+        bundle = RayBundle(rays)
         
         # iterate through parse tree
         for dc in self.root.children:
@@ -230,7 +231,7 @@ class NeutronRayConstructor:
                             comp_group = None
                             story = None
         
-        return rays
+        return bundle
     
     def iszerovector_str(self, v):
         ''' returns true if v is the zero vector, otherwise false '''

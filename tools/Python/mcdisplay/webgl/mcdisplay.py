@@ -9,6 +9,7 @@ import webbrowser
 import logging
 import argparse
 import json
+from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -19,10 +20,9 @@ from mclib.instrgeom import Vector3d, Transform, calcLargestBoundingVolumeWT
 
 class SimpleWriter(object):
     ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''
-    def __init__(self, templatefile, campos, data_filename, html_filename):
+    def __init__(self, templatefile, campos, html_filename):
         self.template = templatefile
         self.campos = campos
-        self.data_filename = data_filename
         self.html_filename = html_filename
     
     def write(self):
@@ -33,8 +33,6 @@ class SimpleWriter(object):
             if 'INSERT_CAMPOS_HERE:' in lines[i]:
                 campos_lidx = i
                 lines[i] = '            x = %s, y = %s, z = %s; // line by SimpleWriter' % (str(self.campos.x), str(self.campos.y), str(self.campos.z))
-            if 'INSERT_DATAFILE_HERE:' in lines[i]:
-                lines[i] = '            datafile = "%s"; // line by SimpleWriter' % self.data_filename
         self.text = '\n'.join(lines)
         
         # write to disk
@@ -70,7 +68,7 @@ class DjangoWriter(object):
         c = self.Context({'instrument': self.instrument, 
             'campos_x': self.campos.x, 'campos_y': self.campos.y, 'campos_z': self.campos.z,})
         self.text = t.render(c)
-
+    
     def save(self, filename):
         ''' save template to disk '''
         try:
@@ -79,7 +77,64 @@ class DjangoWriter(object):
         finally:
             f.close()
 
-def write_gluefile_html(instrument, html_filename, data_filename, first=None, last=None):
+class McMicsplayReader(object):
+    ''' High-level trace manager '''
+    def __init__(self, args, n=None, dir=None, debug=False):
+        ''' supported args: instr, inspect, default, instr_options '''
+        if not os.path.exists(args.instr) or not os.path.splitext(args.instr)[1] not in ['instr', 'out']:
+            print "Please supply a valid .instr or .out file."
+            exit()
+        
+        # assemble command
+        cmd = 'mcrun ' + args.instr + ' --trace'
+        if n:
+            cmd = cmd + ' --ncount=' + str(n)
+        if dir:
+            cmd = cmd + ' --dir=' + dir
+        if args.instr_options:
+            for o in args.instr_options:
+                cmd = cmd + ' ' + o
+        
+        self.args = args
+        self.n = n
+        self.dir = dir
+        self.debug = debug
+        self.cmd = cmd
+        self.pipeman = McrunPipeMan(cmd, inspect=args.inspect, send_enter=args.default)
+    
+    def read_instrument(self):
+        ''' starts a pipe to mcrun given cmd, waits for instdef and reads, returning the parsed instrument '''
+        self.pipeman.start_pipe()
+        self.pipeman.join()
+        
+        instrdef = self.pipeman.read_instrdef()
+        
+        if self.debug:
+            file_save(instrdef, 'instrdata')
+        
+        instrparser = TraceInstrParser(instrdef)
+        instrbuilder = InstrObjectConstructor(instrparser.parsetree)
+        instrument = instrbuilder.build_instr()
+        
+        return instrument
+    
+    def read_neutrons(self):
+        ''' waits for pipeman object to finish, then read and parse neutron data '''
+        print "reading neutron data..."
+        neutrons = self.pipeman.read_neutrons()
+        
+        print self.pipeman.read_comments()
+        
+        if self.debug:
+            file_save(neutrons, 'neutrondata')
+        
+        rayparser = TraceNeutronRayParser(neutrons)
+        raybuilder = NeutronRayConstructor(rayparser.parsetree)
+        rays = raybuilder.build_rays()
+        
+        return rays
+
+def write_gluefile_html(instrument, html_filepath, first=None, last=None):
     ''' writes instrument definition to html/js '''
     # calculate campost by means of the component bounding boxes (mediated by drawcalls)
     drawcalls = []
@@ -129,75 +184,32 @@ def write_gluefile_html(instrument, html_filename, data_filename, first=None, la
     # render html
     templatefile = os.path.join(os.path.dirname(__file__), "template.html")
     
-    writer = SimpleWriter(templatefile, campos, data_filename, html_filename)
+    writer = SimpleWriter(templatefile, campos, html_filepath)
     writer.write()
 
-def write_instrument():
+def write_browse(instrument, raybundle, dir):
     ''' writes instrument definitions to html/ js '''
-    # TODO: implement
-    return
-
-def write_neutrons():
-    ''' writes neutron ray definitions to html/ js '''
-    # TODO: implement
-    return
-
-class McMicsplayReader(object):
-    '''
-    High-level trace output reader
-    '''
-    pipeman = None
-    cmd = ''
-    debug = None
-    def __init__(self, args, n=None, debug=False):
-        ''' supported args: instr, inspect, default, instr_options '''
-        if not os.path.exists(args.instr) or not os.path.splitext(args.instr)[1] not in ['instr', 'out']:
-            print "Please supply a valid .instr or .out file."
-            exit()
-        
-        cmd = 'mcrun ' + args.instr + ' --trace'
-        if n:
-            cmd = cmd + ' -n' + str(n)
-        if args.instr_options:
-            for o in args.instr_options:
-                cmd = cmd + ' ' + o
-        
-        self.debug = debug
-        
-        self.cmd = cmd
-        self.pipeman = McrunPipeMan(cmd, inspect=args.inspect, send_enter=args.default)
+    # write mcdisplay.js
+    mcd_filepath = os.path.join(os.path.dirname(__file__), 'mcdisplay.js')
+    file_save(open(mcd_filepath).read(), os.path.join(dir, '_mcdisplay.js'))
     
-    def read_instrument(self):
-        ''' starts a pipe to mcrun given cmd, waits for instdef and reads, returning the parsed instrument '''
-        self.pipeman.start_pipe()
-        self.pipeman.join()
-
-        instrdef = self.pipeman.read_instrdef()
-        
-        if self.debug:
-            file_save(instrdef, 'instrdata')
-        
-        instrparser = TraceInstrParser(instrdef)
-        instrbuilder = InstrObjectConstructor(instrparser.parsetree)
-        instrument = instrbuilder.build_instr()
-        
-        return instrument
+    # write html
+    html_filepath = os.path.join(dir, 'index.html')
+    write_gluefile_html(instrument, html_filepath, first=args.first, last=args.last)
     
-    def read_neutrons(self):
-        ''' waits for pipeman object to finish, then read and parse neutron data '''
-        print "reading neutron data..."
-        neutrons = self.pipeman.read_neutrons()
-        
-        print self.pipeman.read_comments()
-        
-        if self.debug:
-            file_save(neutrons, 'neutrondata')
-        
-        rayparser = TraceNeutronRayParser(neutrons)
-        raybuilder = NeutronRayConstructor(rayparser.parsetree)
-        rays = raybuilder.build_rays()
-        
-        return rays
+    # write instrument
+    json_instr = 'MCDATA_instrdata = %s;' % json.dumps(instrument.jsonize(), indent=0)
+    file_save(json_instr, os.path.join(dir, '_instr.js'))
+    
+    # write neutrons
+    json_neutr = 'MCDATA_neutrondata = %s;' % json.dumps(raybundle.jsonize(), indent=0)
+    file_save(json_neutr, os.path.join(dir, '_neutrons.js'))
+    
+    webbrowser.open_new_tab(html_filepath)
+
+def get_datadirname(instrname):
+    ''' returns an mcrun-like name-date-time string '''
+    return "%s_%s" % (instrname, datetime.strftime(datetime.now(), "%Y%d%m_%H%M%S"))
 
 def file_save(data, filename):
     ''' saves data for debug purposes '''
@@ -209,25 +221,21 @@ def main(args):
     logging.basicConfig(level=logging.INFO)
     debug = False
     
-    reader = McMicsplayReader(args, n=100, debug=debug)
+    dir = get_datadirname(os.path.splitext(os.path.basename(args.instr))[0])
+
+    reader = McMicsplayReader(args, n=100, dir=dir, debug=debug)
+
     instrument = reader.read_instrument()
-    #write_instrument(instrument)
-    instrument.rays = reader.read_neutrons()
-    #write_neutrons(rays)
+    raybundle = reader.read_neutrons()
     
-    jsonized = json.dumps(instrument.jsonize(), indent=0)
-    data_filename = '%s.json' % instrument.name
-    file_save(jsonized, data_filename)
+    write_browse(instrument, raybundle, dir)
     
     if debug:
         # this will enable template.html to load directly
+        jsonized = json.dumps(instrument.jsonize(), indent=0)
         file_save(jsonized, 'jsonized.json')
     
-    html_filename = '%s.html' % instrument.name
-    write_gluefile_html(instrument, html_filename, data_filename, first=args.first, last=args.last)
-
-    webbrowser.open_new_tab(html_filename)
-
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
