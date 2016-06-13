@@ -80,7 +80,7 @@ set(BINS "${WORK}/mccode_config.py")
 
 if(WINDOWS)
   # Python files
-  foreach(name guiutils.py fileutils.py __init__.py)
+  foreach(name guiutils.py fileutils.py __init__.py, instrgeom.py, instrparser.py, neutronparser.py, pipetools.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${lib}/${TOOLS_NAME}"
@@ -98,7 +98,7 @@ endif()
 
 if(NOT WINDOWS)
   # Python files
-  foreach(name fileutils.py guiutils.py __init__.py)
+  foreach(name fileutils.py guiutils.py __init__.py, instrgeom.py, instrparser.py, neutronparser.py, pipetools.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
