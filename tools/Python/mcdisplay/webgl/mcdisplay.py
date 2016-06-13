@@ -9,7 +9,9 @@ import webbrowser
 import logging
 import argparse
 import json
+import subprocess
 from datetime import datetime
+from mclib import mccode_config
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -205,8 +207,11 @@ def write_browse(instrument, raybundle, dir):
     json_neutr = 'MCDATA_neutrondata = %s;' % json.dumps(raybundle.jsonize(), indent=0)
     file_save(json_neutr, os.path.join(dir, '_neutrons.js'))
     
-    webbrowser.open_new_tab(html_filepath)
-
+    try:
+        subprocess.Popen('%s %s' % (mccode_config.configuration['OPEN_CMD'], html_filepath), shell=True)
+    except Exception as e:
+        raise Exception('Os-specific open browser: %s' % e.__str__())
+    
 def get_datadirname(instrname):
     ''' returns an mcrun-like name-date-time string '''
     return "%s_%s" % (instrname, datetime.strftime(datetime.now(), "%Y%d%m_%H%M%S"))
@@ -222,9 +227,9 @@ def main(args):
     debug = False
     
     dir = get_datadirname(os.path.splitext(os.path.basename(args.instr))[0])
-
+    
     reader = McMicsplayReader(args, n=100, dir=dir, debug=debug)
-
+    
     instrument = reader.read_instrument()
     raybundle = reader.read_neutrons()
     
@@ -234,8 +239,7 @@ def main(args):
         # this will enable template.html to load directly
         jsonized = json.dumps(instrument.jsonize(), indent=0)
         file_save(jsonized, 'jsonized.json')
-    
-    
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')

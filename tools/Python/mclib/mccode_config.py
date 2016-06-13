@@ -10,6 +10,7 @@ configuration = {
     "MCDISPLAY": 'mcdisplay-matplotlib-py',
     "TOOL_NAME": 'mcgui-py',
     "PARTICLE": 'neutron',
+    "OPEN_CMD": 'xdg-open',
 }
 
 '''
