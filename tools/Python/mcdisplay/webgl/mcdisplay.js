@@ -21,186 +21,212 @@ var Main = function ()
 
     this.iRay = -1;
 }
+// add circle to xy, xz or yz plane
+//
+Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
+{
+    var wrapper = new THREE.Object3D();
+    var m = new THREE.Matrix4()
+    if (plane == 'xy') { m.makeRotationZ( Math.PI/2 ); }
+    if (plane == 'xz') { m.makeRotationY( Math.PI/2 ); }
+    if (plane == 'yz') { m.makeRotationX( Math.PI/2 ); }
 
-    // add circle to xy plane
-    // 		radius
-    // 		center - a THREE.Vector3 instance
-    Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
+    var segments = 48;
+    var circleGeometry = new THREE.CircleGeometry( radius, segments );
+    circleGeometry.vertices.shift(); // removes center vertex
+    var material = new THREE.MeshBasicMaterial( {color: linecolor} );
+    material.side = THREE.DoubleSide;
+
+    var circle = new THREE.Line( circleGeometry, material ); // THREE.Mesh results in solid coloring
+    circle.position.x = x;
+    circle.position.y = y;
+    circle.position.z = z;
+
+    circle.applyMatrix(m);
+    parent.add( circle );
+}
+// add sphere
+//		radius
+//		wseg 	- width segments
+//		hseg 	- height segments
+Main.prototype.addSphere = function(radius, wseg, hseg)
+{
+    var geometry = new THREE.SphereGeometry(radius, wseg, hseg);
+    var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+    var sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xCC0000 });
+    var sphere = new THREE.Mesh( geometry, sphereMaterial );
+    this.scene.add( sphere );
+}
+// add pointlight
+// 		center 	- THREE.Vector3 instance
+Main.prototype.addLight = function(center)
+{
+    // pointlight (required to light up sphereMaterial)
+    var pointLight = new THREE.PointLight(0xFFFFFF);
+    pointLight.position.x = center.x;
+    pointLight.position.y = center.y;
+    pointLight.position.z = center.z;
+    this.scene.add(pointLight);
+}
+// initialize the scene
+//
+Main.prototype.init = function(campos)
+{
+    this.scene = new THREE.Scene();
+
+    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+    this.camera.position.x = campos.x; // -50;
+    this.camera.position.y = campos.y; // 0;
+    this.camera.position.z = campos.z; // 50;
+
+    // NOTE: initial camera view direction is along the x axis
+
+    this.renderer = new THREE.WebGLRenderer();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+    document.body.appendChild(this.renderer.domElement);
+
+    this.controls = new THREE.OrbitControls(this.camera);
+    this.controls.target.x = - campos.x/2; //1;
+    this.controls.target.y = 0; //0;
+    this.controls.target.z = campos.z; //49;
+
+    this.camera.lookAt(this.controls.target);
+
+    this.addLight(new THREE.Vector3(10, 50, 130))
+    this.scene.add(this.rootnode);
+}
+// add multiline
+// 		arrVector3  -  an array of THREE.Vector3 instances
+Main.prototype.addMultiLineV3 = function(arrVector3, parent, linecolor)
+{
+    var multilinematerial = new THREE.LineBasicMaterial({color: linecolor});
+    var multilinegeometry = new THREE.Geometry();
+    for (var i = 0; i < arrVector3.length; i++)
     {
-        var wrapper = new THREE.Object3D();
-        var m = new THREE.Matrix4()
-        if (plane == 'xy') { m.makeRotationZ( Math.PI/2 ); }
-        if (plane == 'xz') { m.makeRotationY( Math.PI/2 ); }
-        if (plane == 'yz') { m.makeRotationX( Math.PI/2 ); }
-
-        var segments = 48;
-        var circleGeometry = new THREE.CircleGeometry( radius, segments );
-        circleGeometry.vertices.shift(); // removes center vertex
-        var material = new THREE.MeshBasicMaterial( {color: linecolor} );
-        material.side = THREE.DoubleSide;
-
-        var circle = new THREE.Line( circleGeometry, material ); // THREE.Mesh results in solid coloring
-        circle.position.x = x;
-        circle.position.y = y;
-        circle.position.z = z;
-
-        circle.applyMatrix(m);
-        parent.add( circle );
+        multilinegeometry.vertices.push(arrVector3[i]);
     }
-    // add sphere
-    //		radius
-    //		wseg 	- width segments
-    //		hseg 	- height segments
-    Main.prototype.addSphere = function(radius, wseg, hseg)
+    var multiline = new THREE.Line(multilinegeometry, multilinematerial);
+    parent.add(multiline);
+}
+// add multiline proxy method
+//		points  -  array of single points
+Main.prototype.addMultiLine = function(points, parent, linecolor)
+{
+    vectors = [];
+    for (var i = 0; i < points.length / 3; i++)
     {
-        var geometry = new THREE.SphereGeometry(radius, wseg, hseg);
-        var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-        var sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xCC0000 });
-        var sphere = new THREE.Mesh( geometry, sphereMaterial );
-        this.scene.add( sphere );
+        points[i];
+        v = new THREE.Vector3(points[i*3], points[i*3+1], points[i*3+2]);
+        vectors.push(v);
     }
-    // add pointlight
-    // 		center 	- THREE.Vector3 instance
-    Main.prototype.addLight = function(center)
+    this.addMultiLineV3(vectors, parent, linecolor);
+}
+// add a component origo
+//		compname  -  component name for the reference dict
+Main.prototype.addComponent = function(compname)
+{
+    var comp = new THREE.Object3D();
+    this.rootnode.add(comp);
+    this.compnodes[compname] = comp;
+    return comp;
+}
+// returns a cyclically new color intended for a component draw node
+//
+Main.prototype.getNextComponentColor = function()
+{
+    this.iColor += 1;
+    if (this.iColor >= this.compColors.length)
     {
-        // pointlight (required to light up sphereMaterial)
-        var pointLight = new THREE.PointLight(0xFFFFFF);
-        pointLight.position.x = center.x;
-        pointLight.position.y = center.y;
-        pointLight.position.z = center.z;
-        this.scene.add(pointLight);
+        this.iColor = 0;
     }
-
-    // initialize everything
-    //
-    Main.prototype.init = function(campos)
+    return this.compColors[this.iColor];
+}
+// transforms vertices and returns the transformed
+//      apoints  -  an array of vertices
+//      transform  -  matrix4
+Main.prototype.transformPoints = function(apoints, transform)
+{
+    var geometry = new THREE.Geometry();
+    for (i = 0; i < apoints.length; i++)
     {
-        this.scene = new THREE.Scene();
-
-        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
-        this.camera.position.x = campos.x; // -50;
-        this.camera.position.y = campos.y; // 0;
-        this.camera.position.z = campos.z; // 50;
-
-        // NOTE: initial camera view direction is along the x axis
-
-        this.renderer = new THREE.WebGLRenderer();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-
-        document.body.appendChild(this.renderer.domElement);
-
-        this.controls = new THREE.OrbitControls(this.camera);
-        this.controls.target.x = - campos.x/2; //1;
-        this.controls.target.y = 0; //0;
-        this.controls.target.z = campos.z; //49;
-
-        this.camera.lookAt(this.controls.target);
-
-        this.addLight(new THREE.Vector3(10, 50, 130))
-        this.scene.add(this.rootnode);
+        geometry.vertices.push(apoints[i]);
     }
-    // add multiline
-    // 		arrVector3 - an array of THREE.Vector3 instances
-    Main.prototype.addMultiLineV3 = function(arrVector3, parent, linecolor)
-    {
-        var multilinematerial = new THREE.LineBasicMaterial({color: linecolor});
-        var multilinegeometry = new THREE.Geometry();
-        for (var i = 0; i < arrVector3.length; i++)
-        {
-            multilinegeometry.vertices.push(arrVector3[i]);
-        }
-        var multiline = new THREE.Line(multilinegeometry, multilinematerial);
-        parent.add(multiline);
-    }
-    // add multiline proxy method
-    //		points - array of single points
-    Main.prototype.addMultiLine = function(points, parent, linecolor)
-    {
-        vectors = [];
-        for (var i = 0; i < points.length / 3; i++)
-        {
-            points[i];
-            v = new THREE.Vector3(points[i*3], points[i*3+1], points[i*3+2]);
-            vectors.push(v);
-        }
-        this.addMultiLineV3(vectors, parent, linecolor);
-    }
+    geometry.applyMatrix(transform);
+    return geometry.vertices.slice();
+}
+// show all rays in this.allRays
+//
+Main.prototype.showAllRays = function()
+{
+	for (var i = 0; i < this.allRays.length; i++)
+	{
+		this.rootnode.add(this.allRays[i]);
+	}
+}
+// remove all rays in this.allRays from the scene graph
+//
+Main.prototype.hideAllRays = function()
+{
+	for (var i = 0; i < this.allRays.length; i++)
+	{
+		this.rootnode.remove(this.allRays[i]);
+	}
+}
+// iterates to attach the next ray in the global ray sequence
+//
+Main.prototype.showNextRay = function()
+{
+    if (this.allRays.length == 0) { return; }
 
-    // COMPONENTS
+	lastRay = this.iRay;
+	this.iRay += 1;
+	if (this.iRay >= this.allRays.length)
+	{
+		this.iRay = 0;
+	}
+	this.rootnode.add(this.allRays[this.iRay]);
+	this.rootnode.remove(this.allRays[lastRay]);
+}
+// iterates to attach the next ray in the global ray sequence
+//
+Main.prototype.hideRay = function(idx)
+{
+    if (this.allRays.length == 0) { return idx; }
 
-    // add a component origo
-    //		pos - position of component ore
-    Main.prototype.addComponent = function(compname)
-    {
-        var comp = new THREE.Object3D();
-        this.rootnode.add(comp);
-        this.compnodes[compname] = comp;
-        return comp;
-    }
-    Main.prototype.getNextComponentColor = function()
-    {
-        this.iColor += 1;
-        if (this.iColor >= this.compColors.length)
-        {
-            this.iColor = 0;
-        }
-        return this.compColors[this.iColor];
-    }
+	if (idx >= this.allRays.length | idx < 0)
+	{
+		idx = 0;
+	}
+	this.rootnode.remove(this.allRays[idx]);
+    return idx;
+}
+// iterates to attach the next ray in the global ray sequence
+//
+Main.prototype.showRay = function(idx)
+{
+    if (this.allRays.length == 0) { return idx; }
 
-
-    // generate coordinate transforms to use on the componen-specific ray segments below
-    Main.prototype.transformPoints = function(apoints, transform)
-    {
-        var geometry = new THREE.Geometry();
-        for (i = 0; i < apoints.length; i++)
-        {
-            geometry.vertices.push(apoints[i]);
-        }
-        geometry.applyMatrix(transform);
-        return geometry.vertices.slice();
-    }
-    // show all rays in arrayOfRays
-    Main.prototype.showAllRays = function()
-    {
-    	for (var i = 0; i < this.allRays.length; i++)
-    	{
-    		this.rootnode.add(this.allRays[i]);
-    	}
-    }
-    // remove all rays in arrayOfRays from scene tree
-    Main.prototype.hideAllRays = function()
-    {
-    	for (var i = 0; i < this.allRays.length; i++)
-    	{
-    		this.rootnode.remove(this.allRays[i]);
-    	}
-    }
-    // iterates rays
-    Main.prototype.showNextRay = function()
-    {
-        if (this.allRays.length == 0)
-        {
-            return;
-        }
-
-    	lastRay = this.iRay;
-    	this.iRay += 1;
-    	if (this.iRay >= this.allRays.length)
-    	{
-    		this.iRay = 0;
-    	}
-    	this.rootnode.add(this.allRays[this.iRay]);
-    	this.rootnode.remove(this.allRays[lastRay]);
-    }
+	if (idx >= this.allRays.length | idx < 0)
+	{
+		idx = 0;
+	}
+	this.rootnode.add(this.allRays[idx]);
+    return idx;
+}
 
 // loads json data into the scene graph
-//
+//      instrdata    -  json instrument definition data
+//      neutrondata  -  json neutron data
+//      main         -  reference to scene wrapper
 var TraceLoader = function(instrdata, neutrondata, main)
 {
     this.main = main;
     this.instrdata = instrdata;
     this.neutrondata = neutrondata;
 }
+// synchronously load the data references set at construction
+//
 TraceLoader.prototype.load = function()
 {
     var main = this.main;
@@ -286,42 +312,39 @@ TraceLoader.prototype.load = function()
 }
 
 // mcdisplay program controller
-//
+//      campos_x/y/z  -  determines initial camera position, this is used with --inspect
 var Controller = function(campos_x, campos_y, campos_z)
 {
-    // include the scripts we need
-    //this.include(src="https://sim.e-neutrons.org/static/threejs/three.min.js");
-    //this.include(src="https://sim.e-neutrons.org/static/threejs/OrbitControls.js");
-    //this.include(src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js");
-    //console.log("includes done");
-
     this.campos = new THREE.Vector3(campos_x, campos_y, campos_z);
     this.main = new Main();
     this.loader = new TraceLoader(MCDATA_instrdata, MCDATA_neutrondata, this.main);
+    this.viewmodel = new ViewModel();
 }
-Controller.prototype.include = function(src)
-{
-    var script = document.createElement('script');
-    script.src = src;
-    document.scripts.appendChild(script);
-    console.log("included script scr=" + src);
-}
+// main program execution loops are set up here
+//
 Controller.prototype.run = function()
 {
     // init mcdisplay
     this.main.init(this.campos);
 
-    // define execution loops
-    var main = this.main;
-    function dataLoop()
-    {
-        setTimeout(dataLoop, 200);
-    	main.showNextRay();
-    }
-    function renderLoop()
+    // execution loops
+    var _this = this;
+    var renderLoop = function()
     {
     	requestAnimationFrame(renderLoop);
-    	main.renderer.render(main.scene, main.camera);
+    	_this.main.renderer.render(_this.main.scene, _this.main.camera);
+    }
+    var dataLoop = function()
+    {
+        setTimeout(dataLoop, 1000/_this.viewmodel.raysPrSec);
+        if (_this.viewmodel.playBack == PlayBack.RUN)
+        {
+            _this.incSingleRay();
+        }
+        if (_this.viewmodel.playBack == PlayBack.ALL)
+        {
+            _this.main.showAllRays();
+        }
     }
 
     // initiate timed execution loops
@@ -330,4 +353,22 @@ Controller.prototype.run = function()
 
     // load data - possibly heavy
     this.loader.load();
+}
+Controller.prototype.incSingleRay = function()
+{
+    this.main.hideRay(this.viewmodel.currentRayIdx);
+    this.viewmodel.currentRayIdx += 1;
+    // showRay returns actual ray index that was set on the internal array (TODO: abstract this somehow)
+    this.viewmodel.currentRayIdx = this.main.showRay(this.viewmodel.currentRayIdx);
+}
+Controller.prototype.performGuiTasks = function()
+{
+    // TODO: implement
+}
+PlayBack = { RUN : 0, PAUSE : 1, ALL : 3 };
+var ViewModel = function()
+{
+    this.playBack = PlayBack.RUN;
+    this.currentRayIdx = -1;
+    this.raysPrSec = 5;
 }
