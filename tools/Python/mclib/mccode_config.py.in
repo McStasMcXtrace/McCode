@@ -10,7 +10,7 @@ configuration = {
     "MCDISPLAY": '@MCCODE_PREFIX@display-matplotlib-py',
     "TOOL_NAME": '@MCCODE_PREFIX@gui-py',
     "PARTICLE": '@MCCODE_PARTICLE@',
-    "OPEN_CMD": '@OPEN_CMD@',
+    "BROWSER": '@BROWSER@',
 }
 
 '''
