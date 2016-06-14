@@ -61,6 +61,14 @@ DECLARE
   double BeamlinesS[] = {-150.0, -144.7, -138.0, -132.7, -126.0, -120.7, -114.0, -108.7, -102.0, -96.7, -90.0, -84.0};
   double* Beamlines;
   int jmax;
+  /* 'Corner' parametrization, i.e. where are the limits of the moderators */
+  double C1_x,C1_z,C2_x,C2_z;
+  double T1_x,T1_z,T2_x,T2_z;
+  /* - plus rotated versions of the same... */
+  double rC1_x,rC1_z,rC2_x,rC2_z;
+  double rT1_x,rT1_z,rT2_x,rT2_z;
+
+
 %}
 
 INITIALIZE
@@ -71,21 +79,53 @@ INITIALIZE
     orientation_angle = BeamlinesN[beamline-1];
     Beamlines = BeamlinesN;
     jmax=10;
+    C1_x=0;
+    C1_z=0;
+    C2_x=-0.18;
+    C2_z=0;
+    T1_x=0;
+    T1_z=0;
+    T2_x=-0.10*cos(-156*DEG2RAD);
+    T2_z=0.10*sin(-156*DEG2RAD);
   } else if (strcasestr(sector,"W")) {
     cx = 0.0; cz=0.0; sign_bl_angle=-1;
     orientation_angle = BeamlinesW[beamline-1]; 
     Beamlines = BeamlinesW;
     jmax=11;
+    C1_x=0;
+    C1_z=0;
+    C2_x=0.18;
+    C2_z=0;
+    T1_x=0;
+    T1_z=0;
+    T2_x=0.10*cos(-156*DEG2RAD);
+    T2_z=0.10*sin(-156*DEG2RAD);
   } else if (strcasestr(sector,"S")) {
     cx = 0.0; cz=-0.185; sign_bl_angle=1;
     orientation_angle = BeamlinesS[beamline-1]; 
     Beamlines = BeamlinesS;
     jmax=11;
+    C1_x=0;
+    C1_z=0;
+    C2_x=0.18;
+    C2_z=0;
+    T1_x=0;
+    T1_z=0;
+    T2_x=0.10*cos(156*DEG2RAD);
+    T2_z=0.10*sin(156*DEG2RAD);
   } else if (strcasestr(sector,"E")) {
     cx = 0.117; cz=-0.185; sign_bl_angle=-1;
     orientation_angle = BeamlinesE[beamline-1]; 
     Beamlines = BeamlinesE;
     jmax=10;
+    C1_x=0;
+    C1_z=0;
+    C2_x=-0.18;
+    C2_z=0;
+    T1_x=0;
+    T1_z=0;
+    T2_x=-0.10*cos(-156*DEG2RAD);
+    T2_z=-0.10*sin(-156*DEG2RAD);
   } else {
     fprintf(stderr,"%s: Sector %s is undefined, please use N, W, S or E!\n", NAME_CURRENT_COMP,sector);
     exit(-1);

@@ -63,6 +63,28 @@ for (y0=-dy; y0<2*dy; y0+=2*dy) {
   }
 }
 
+rC1_x = r11*C1_z + r12*C1_x;
+rC1_z = r21*C1_z + r22*C1_x;
+rC2_x = r11*C2_z + r12*C2_x;
+rC2_z = r21*C2_z + r22*C2_x;
+rT1_x = r11*T1_z + r12*T1_x;
+rT1_z = r21*T1_z + r22*T1_x;
+rT2_x = r11*T2_z + r12*T2_x;
+rT2_z = r21*T2_z + r22*T2_x;
+
+
+/* Indicate the emission planes of cold/thermal moderator */
+for (y0=-dy; y0<2*dy; y0+=2*dy) {
+  dashed_line(rC1_x, y0, rC1_z, rC2_x, y0, rC2_z, 11);
+  dashed_line(rT1_x, y0, rT1_z, rT2_x, y0, rT2_z, 11);
+
+}
+dashed_line(rC1_x, -dy, rC1_z, rC1_x, dy, rC1_z, 11);
+dashed_line(rC2_x, -dy, rC2_z, rC2_x, dy, rC2_z, 11);
+dashed_line(rT1_x, -dy, rT1_z, rT1_x, dy, rT1_z, 11);
+dashed_line(rT2_x, -dy, rT2_z, rT2_x, dy, rT2_z, 11);
+
+
 /* Arrow indicating proton beam direction */
 double ax,az,bx,bz,bbx,bbz,ccx,ccz;
 az = -0.0925-cz;
