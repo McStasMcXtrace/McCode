@@ -223,7 +223,7 @@ TRACE
     while inside the gap*/
   if (foil_in){
       if (plane_intersect(&dt,x,y,z,vx,vy,vz,foil_n[0],foil_n[1],foil_n[2],0,0,0)==0 || dt<0 || dt>t4 ){
-          if(verboise) fprintf(stderr,"missed the foil flipper plane of %s (dt=%g)\n",NAME_CURRENT_COMP,dt);
+          if(verbose) fprintf(stderr,"missed the foil flipper plane of %s (dt=%g)\n",NAME_CURRENT_COMP,dt);
           ABSORB;
           dt=dt;
       }
