@@ -55,7 +55,7 @@
 DEFINE COMPONENT Foil_flipper_magnet
 DEFINITION PARAMETERS(field_function=const_magnetic_field, stray_field_function=NULL)
 SETTING PARAMETERS(xwidth, yheight, zdepth, Bxwidth=-1, Byheight=-1, Bzdepth=-1, phi=0.0, Bx,By,Bz,foil_in=1, verbose=0)
-OUTPUT PARAMETERS(stray_fields,instray_magnet,outstray_magnet,inside_magnet)
+OUTPUT PARAMETERS(stray_fields,instray_magnet,outstray_magnet,inside_magnet,hit_foil)
 //STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 SHARE
@@ -99,6 +99,7 @@ DECLARE
   Rotation spin_flip;
   double inside_magnet[6],instray_magnet[6],outstray_magnet[6];
   int stray_fields=0;
+  int hit_foil;
 %}
 
 INITIALIZE
@@ -157,6 +158,7 @@ INITIALIZE
       if (foil_in)  printf("Foil is IN\n");
       else printf("Foil is OUT\n");
   }
+
 %}
 
 TRACE
@@ -224,8 +226,8 @@ TRACE
   if (foil_in){
       if (plane_intersect(&dt,x,y,z,vx,vy,vz,foil_n[0],foil_n[1],foil_n[2],0,0,0)==0 || dt<0 || dt>t4 ){
           if(verbose) fprintf(stderr,"missed the foil flipper plane of %s (dt=%g)\n",NAME_CURRENT_COMP,dt);
-          ABSORB;
           dt=dt;
+          hit_foil=0;
       }
       else{
           PROP_DT(dt);
@@ -233,6 +235,7 @@ TRACE
           t2=t2-dt;
           /* at the foil - so flip spin/polarization*/
           foil_spin_flip(&sx,&sy,&sz,0.0,phi);
+          hit_foil=1;
       }
   }
   /*propagate to the other end of the magnet gap*/
