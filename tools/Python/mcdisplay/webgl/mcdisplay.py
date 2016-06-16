@@ -11,10 +11,10 @@ import argparse
 import json
 import subprocess
 from datetime import datetime
-from mclib import mccode_config
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
+from mclib import mccode_config
 from mclib.pipetools import McrunPipeMan
 from mclib.instrparser import TraceInstrParser, InstrObjectConstructor
 from mclib.neutronparser import NeutronRayConstructor, TraceNeutronRayParser
