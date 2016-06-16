@@ -5,7 +5,6 @@ mcdisplay webgl script.
 '''
 import sys
 import os
-import webbrowser
 import logging
 import argparse
 import json
