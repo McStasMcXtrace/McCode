@@ -9,16 +9,53 @@
 </head>
 <body>
 	<script src="https://sim.e-neutrons.org/static/threejs/three.min.js"></script>
+	<script src="https://sim.e-neutrons.org/static/threejs/dat.gui.min.js"></script>
 	<script src="https://sim.e-neutrons.org/static/threejs/OrbitControls.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
 	<script src="_mcdisplay.js"></script>
 	<script src="_instr.js"></script>
 	<script src="_neutrons.js"></script>
+
 	<script>
-			var x = -26.3, y = 26.3, z = 26.3;
-			// INSERT_CAMPOS_HERE: x = XVAL, y = YVAL, z = ZVAL;
-			var controller = new Controller(x, y, z);
-			controller.run();
+		var x = -26.3, y = 26.3, z = 26.3;
+		// INSERT_CAMPOS_HERE: x = XVAL, y = YVAL, z = ZVAL;
+		var controller = new Controller(x, y, z);
+		var viewmodel = controller.viewmodel;
+
+		// UI event handlers interacting only(!!) with the viewmodel.
+		// TODO: implement callbacks
+		var handlePlayPause = function()
+		{
+			if (viewmodel.playBack == PlayBack.RUN)
+			{
+				viewmodel.playBack = PlayBack.PAUSE;
+			}
+			else
+			{
+				viewmodel.playBack = PlayBack.RUN;
+			}
+		}
+		var handleNext = function()
+		{
+			viewmodel.playBack = PlayBack.PAUSE;
+			viewmodel.setRayIdx(viewmodel.getRayIdx() + 1);
+		}
+		var handlePrev = function()
+		{
+			viewmodel.playBack = PlayBack.PAUSE;
+			viewmodel.setRayIdx(viewmodel.getRayIdx() - 1);
+		}
+	</script>
+
+	<div id="gui" style="width: auto; background-color: black;">
+		<button onclick="handlePrev();">previous</button>
+		<button onclick="handlePlayPause();">play/pause</button>
+		<button onclick="handleNext();">next</button>
+	</div>
+	<div id="3dcanvas"></div>
+
+	<script>
+		controller.run();
     </script>
 </body>
 </html>

@@ -84,7 +84,9 @@ Main.prototype.init = function(campos)
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-    document.body.appendChild(this.renderer.domElement);
+    element = document.getElementById("3dcanvas");
+    console.log(element);
+    document.getElementById("3dcanvas").appendChild(this.renderer.domElement);
 
     this.controls = new THREE.OrbitControls(this.camera);
     this.controls.target.x = - campos.x/2; //1;
@@ -311,7 +313,7 @@ TraceLoader.prototype.load = function()
     }
 }
 
-// mcdisplay program controller
+//  program controller
 //      campos_x/y/z  -  determines initial camera position, this is used with --inspect
 var Controller = function(campos_x, campos_y, campos_z)
 {
@@ -320,7 +322,7 @@ var Controller = function(campos_x, campos_y, campos_z)
     this.loader = new TraceLoader(MCDATA_instrdata, MCDATA_neutrondata, this.main);
     this.viewmodel = new ViewModel();
 }
-// main program execution loops are set up here
+//  main program execution loops are set up here
 //
 Controller.prototype.run = function()
 {
@@ -340,10 +342,16 @@ Controller.prototype.run = function()
         if (_this.viewmodel.playBack == PlayBack.RUN)
         {
             _this.incSingleRay();
+            _this.hidePrevRays();
+        }
+        if (_this.viewmodel.playBack == PlayBack.PAUSE)
+        {
+            _this.showCurrentRay();
+            _this.hidePrevRays();
         }
         if (_this.viewmodel.playBack == PlayBack.ALL)
         {
-            _this.main.showAllRays();
+            _this.showAllRays();
         }
     }
 
@@ -354,21 +362,66 @@ Controller.prototype.run = function()
     // load data - possibly heavy
     this.loader.load();
 }
+Controller.prototype.showAllRays = function()
+{
+    this.main.showAllRays();
+}
+Controller.prototype.hidePrevRays = function()
+{
+    var arrLast = this.viewmodel.shiftAllExceptOneRayIdxs();
+    for (var i = 0; i < arrLast.length; i++)
+    {
+        this.main.hideRay(arrLast[i]);
+    }
+}
 Controller.prototype.incSingleRay = function()
 {
-    this.main.hideRay(this.viewmodel.currentRayIdx);
-    this.viewmodel.currentRayIdx += 1;
-    // showRay returns actual ray index that was set on the internal array (TODO: abstract this somehow)
-    this.viewmodel.currentRayIdx = this.main.showRay(this.viewmodel.currentRayIdx);
+    this.viewmodel.setRayIdx(this.viewmodel.getRayIdx() + 1)
+    this.main.showRay(this.viewmodel.getRayIdx());
+}
+Controller.prototype.showCurrentRay = function()
+{
+    this.main.showRay(this.viewmodel.getRayIdx());
 }
 Controller.prototype.performGuiTasks = function()
 {
     // TODO: implement
 }
+
+//  enum for playback state
+//
 PlayBack = { RUN : 0, PAUSE : 1, ALL : 3 };
+
+//  viewmodel for keeping control data free of the gui
+//
 var ViewModel = function()
 {
     this.playBack = PlayBack.RUN;
-    this.currentRayIdx = -1;
+    this.rayIdx = [-1];
     this.raysPrSec = 5;
+}
+ViewModel.prototype.setRayIdx = function(idx)
+{
+    if (idx == -1)
+    {
+        return;
+    }
+    this.rayIdx.push(idx);
+}
+ViewModel.prototype.shiftAllExceptOneRayIdxs = function()
+{
+    if (this.rayIdx.length <= 1)
+    {
+        return [];
+    }
+    var arr = [];
+    for (var i=0; i < this.rayIdx.length -1; i++)
+    {
+        arr.push(this.rayIdx.shift());
+    }
+    return arr;
+}
+ViewModel.prototype.getRayIdx = function(idx)
+{
+    return this.rayIdx[this.rayIdx.length-1];
 }
