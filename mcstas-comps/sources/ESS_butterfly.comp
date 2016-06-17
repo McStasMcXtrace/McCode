@@ -43,7 +43,7 @@
 
 DEFINE COMPONENT ESS_butterfly
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string sector="N",int beamline=1, yheight=0.03, cold_frac=0.5, target_index=0, dist=0, focus_xw=0, focus_yh=0, 
+SETTING PARAMETERS (string sector="N",int beamline=1, yheight=0.03, cold_frac=0.5, int target_index=0, dist=0, focus_xw=0, focus_yh=0, 
 		      performance=1, Lmin, Lmax)
 OUTPUT PARAMETERS (cx, cz, sign_bl_angle, orientation_angle)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
@@ -67,8 +67,14 @@ DECLARE
   /* - plus rotated versions of the same... */
   double rC1_x,rC1_z,rC2_x,rC2_z;
   double rT1_x,rT1_z,rT2_x,rT2_z;
-
-
+  double tx,ty,tz;
+  double r11, r12, r21, r22;
+  int iscold;
+  double xtmp;
+  double dy;
+  double xf, yf, zf;
+  double w_geom, w_focus;
+  double tx,ty,tz;
 %}
 
 INITIALIZE
@@ -79,53 +85,53 @@ INITIALIZE
     orientation_angle = BeamlinesN[beamline-1];
     Beamlines = BeamlinesN;
     jmax=10;
-    C1_x=0;
-    C1_z=0;
-    C2_x=-0.18;
-    C2_z=0;
     T1_x=0;
     T1_z=0;
-    T2_x=-0.10*cos(-156*DEG2RAD);
-    T2_z=0.10*sin(-156*DEG2RAD);
+    T2_x=-0.18;
+    T2_z=0;
+    C1_x=0;
+    C1_z=0;
+    C2_x=-0.10*cos(-156*DEG2RAD);
+    C2_z=0.10*sin(-156*DEG2RAD);
   } else if (strcasestr(sector,"W")) {
     cx = 0.0; cz=0.0; sign_bl_angle=-1;
     orientation_angle = BeamlinesW[beamline-1]; 
     Beamlines = BeamlinesW;
     jmax=11;
-    C1_x=0;
-    C1_z=0;
-    C2_x=0.18;
-    C2_z=0;
     T1_x=0;
     T1_z=0;
-    T2_x=0.10*cos(-156*DEG2RAD);
-    T2_z=0.10*sin(-156*DEG2RAD);
+    T2_x=0.18;
+    T2_z=0;
+    T1_x=0;
+    C1_z=0;
+    C2_x=0.10*cos(-156*DEG2RAD);
+    C2_z=0.10*sin(-156*DEG2RAD);
   } else if (strcasestr(sector,"S")) {
     cx = 0.0; cz=-0.185; sign_bl_angle=1;
     orientation_angle = BeamlinesS[beamline-1]; 
     Beamlines = BeamlinesS;
     jmax=11;
-    C1_x=0;
-    C1_z=0;
-    C2_x=0.18;
-    C2_z=0;
     T1_x=0;
     T1_z=0;
-    T2_x=0.10*cos(156*DEG2RAD);
-    T2_z=0.10*sin(156*DEG2RAD);
+    T2_x=0.18;
+    T2_z=0;
+    C1_x=0;
+    C1_z=0;
+    C2_x=0.10*cos(156*DEG2RAD);
+    C2_z=0.10*sin(156*DEG2RAD);
   } else if (strcasestr(sector,"E")) {
     cx = 0.117; cz=-0.185; sign_bl_angle=-1;
     orientation_angle = BeamlinesE[beamline-1]; 
     Beamlines = BeamlinesE;
     jmax=10;
-    C1_x=0;
-    C1_z=0;
-    C2_x=-0.18;
-    C2_z=0;
     T1_x=0;
     T1_z=0;
-    T2_x=-0.10*cos(-156*DEG2RAD);
-    T2_z=-0.10*sin(-156*DEG2RAD);
+    T2_x=-0.18;
+    T2_z=0;
+    C1_x=0;
+    C1_z=0;
+    C2_x=-0.10*cos(-156*DEG2RAD);
+    C2_z=-0.10*sin(-156*DEG2RAD);
   } else {
     fprintf(stderr,"%s: Sector %s is undefined, please use N, W, S or E!\n", NAME_CURRENT_COMP,sector);
     exit(-1);
@@ -144,10 +150,66 @@ INITIALIZE
            NAME_CURRENT_COMP);
     exit(-1);
   }
+  /* Figure out where to aim */
+  if (target_index && !dist)
+  {
+    Coords ToTarget;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &tx, &ty, &tz);
+    dist=sqrt(tx*tx+ty*ty+tz*tz);
+  } else if (!target_index && !dist) {
+    printf("ESS_butterfly: %s: Please choose to set either the dist parameter or specify a target_index.\nExit\n", NAME_CURRENT_COMP);
+    exit(-1);
+  } else {
+    tx=0; ty=0; tz=dist;
+  }
+  printf("Focusing at rectagle sized %g x %g \n positioned at location %g %g %g (target_index %i and dist %g)\n", focus_xw, focus_yh, tx, ty, tz, target_index, dist);
+  /* Issue warning if dist < 2m - TODO */
+  
+  /* Calculate orientation matrix for the display and calculations */
+  r11 = cos(DEG2RAD*orientation_angle);
+  r12 = -sin(DEG2RAD*orientation_angle);
+  r21 = sin(DEG2RAD*orientation_angle);
+  r22 = cos(DEG2RAD*orientation_angle);
+  
+  /* Rotated corrdinates of the emission areas */
+  rC1_x = r11*C1_z + r12*C1_x;
+  rC1_z = r21*C1_z + r22*C1_x;
+  rC2_x = r11*C2_z + r12*C2_x;
+  rC2_z = r21*C2_z + r22*C2_x;
+  rT1_x = r11*T1_z + r12*T1_x;
+  rT1_z = r21*T1_z + r22*T1_x;
+  rT2_x = r11*T2_z + r12*T2_x;
+  rT2_z = r21*T2_z + r22*T2_x;
+  /* Moderator half-height */
+  dy = yheight/2.0;
 %}
 
 TRACE
 %{
+  
+  /* Cold or thermal event? */
+  xtmp = rand01();
+  if (rand01() < cold_frac) {
+    iscold=1;
+    y = randpm1()*dy;
+    x = rC1_x + (rC2_x - rC1_x)*xtmp;
+    z = rC1_z + (rC2_z - rC1_z)*xtmp;
+  } else {
+    iscold=0;
+    y = randpm1()*dy;
+    x = rT1_x + (rT2_x - rT1_x)*xtmp;
+    z = rT1_z + (rT2_z - rT1_z)*xtmp;
+  }
+  SCATTER;
+  /* Where are we going? */
+  randvec_target_rect_real(&xf, &yf, &zf, NULL,
+			   tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 0);
+  w_focus=focus_xw*focus_yh/(tx*tx+ty*ty+tz*tz);
+  x=xf;y=yf;z=zf;
+  SCATTER;
+  
 %}
 
 MCDISPLAY

@@ -1,7 +1,6 @@
 /* MCDISPLAY-section for the ESS butterfly moderator */
 
 /* Define the positioning of the buttefly sketch */
-double dy = yheight/2.0;
 
 /* Point sets for the butterfly */
 double butterfly_z[] = {-1.9922764e-01, -1.8484553e-01, -2.0252845e-01, -2.0795122e-01, -2.1054471e-01, -2.1030894e-01, -2.0889431e-01, -2.0535772e-01, -2.0134959e-01, -1.9639837e-01, -1.9026829e-01, -1.8390244e-01, -1.7565041e-01, -1.7093496e-01, -1.4617886e-01, -1.2873171e-01, -9.2658537e-02, -4.0552845e-02, -1.7682927e-02, -9.1951221e-03, -2.3577231e-03, 5.1869889e-03, 1.1788619e-02, 1.7918699e-02, 2.3105689e-02, 2.4991869e-02, 2.4756099e-02, 2.2162599e-02, 1.8154469e-02, 1.2731709e-02, 5.6585389e-03, -2.3577214e-04, 1.4146339e-02, -2.9707317e-02, 1.4146339e-02, -4.7154514e-04, 1.5325199e-02, 2.1691059e-02, 2.4991869e-02, 2.4991869e-02, 2.2634149e-02, 1.8154469e-02, 1.1552849e-02, 3.3008089e-03, -6.1300811e-03, -9.1951221e-03, -6.0593496e-02, -9.2658537e-02, -1.7541463e-01, -1.8508130e-01, -1.9309756e-01, -1.9899187e-01, -2.0182114e-01, -2.0582927e-01, -2.0913008e-01, -2.1078049e-01, -2.1007317e-01, -2.0630081e-01, -2.0229268e-01, -1.9828455e-01, -1.8484553e-01, -1.9922764e-01, -1.5584553e-01, -1.9922764e-01};
@@ -19,12 +18,6 @@ double butterfly_e_x2[]= {3.3156e-05,  5.8985e-02,  1.1701e-01};
 magnify("");
 double y0;
 int j;
-double r11, r12, r21, r22;
-r11 = cos(DEG2RAD*orientation_angle);
-r12 = -sin(DEG2RAD*orientation_angle);
-r21 = sin(DEG2RAD*orientation_angle);
-r22 = cos(DEG2RAD*orientation_angle);
-
 double rAx,rAz,rBx,rBz;
 
 for (y0=-dy; y0<2*dy; y0+=2*dy) {
@@ -62,16 +55,6 @@ for (y0=-dy; y0<2*dy; y0+=2*dy) {
     line(rAx, y0, rAz, rBx, y0, rBz);
   }
 }
-
-rC1_x = r11*C1_z + r12*C1_x;
-rC1_z = r21*C1_z + r22*C1_x;
-rC2_x = r11*C2_z + r12*C2_x;
-rC2_z = r21*C2_z + r22*C2_x;
-rT1_x = r11*T1_z + r12*T1_x;
-rT1_z = r21*T1_z + r22*T1_x;
-rT2_x = r11*T2_z + r12*T2_x;
-rT2_z = r21*T2_z + r22*T2_x;
-
 
 /* Indicate the emission planes of cold/thermal moderator */
 for (y0=-dy; y0<2*dy; y0+=2*dy) {

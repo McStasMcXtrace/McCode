@@ -25,7 +25,7 @@
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ESS_butterfly(string sector="N",beamline=1,Lmin=0.2,Lmax=20,performance=1)
+DEFINE INSTRUMENT ESS_butterfly(string sector="N",beamline=1,Lmin=0.2,Lmax=20,performance=1,int index=0,dist=0,cold=1)
 
 DECLARE
 %{
@@ -40,7 +40,8 @@ TRACE
 COMPONENT origin = Progress_bar()
 AT (0, 0, 0) RELATIVE ABSOLUTE
 
-  COMPONENT Butterfly = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=Lmax,performance=performance)
+  COMPONENT Butterfly = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=Lmax,performance=performance,dist=dist,target_index=index,cold_frac=cold,
+				      focus_xw=0.1, focus_yh=0.1)
 AT (0,0,0) ABSOLUTE
 
 COMPONENT Arm1 = Arm()
