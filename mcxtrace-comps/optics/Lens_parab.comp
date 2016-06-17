@@ -8,8 +8,7 @@
 *
 * Component: Lens_parab
 *
-* %
-*
+* %I
 * Written by: Jana Baltser and Erik Knudsen
 * 
 * Date: August 2010, modified July 2011
@@ -25,7 +24,7 @@
 * r: Radius of curvature (circular approximation at the tip of the profile) [m]
 * r_ap: Radius of circular aperture, which also defines the depth of the lens profile. If r_ap==0, yheight/2 will be used instead. [m]
 * yheight: The CRL's dimensions along Y, and if r_ap==0 also the diameter of the aperture [m]
-* d: Distance between two surfaces of the lens along the propagation axis. [m]
+* d: Distance between two surfaces of the lens at the apex, along the propagation axis. [m]
 * N: Number of single lenses in a stack. [ ]
 * T: Obsolete. Ignored but will be removed in next release. [ ]
 * xwidth: Osolete. Ignored but will be removed in next release. [m]
