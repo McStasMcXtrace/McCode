@@ -28,11 +28,11 @@
 		{
 			if (viewmodel.playBack == PlayBack.RUN)
 			{
-				viewmodel.playBack = PlayBack.PAUSE;
+				viewmodel.setPlayBack(PlayBack.PAUSE);
 			}
 			else
 			{
-				viewmodel.playBack = PlayBack.RUN;
+				viewmodel.setPlayBack(PlayBack.RUN);
 			}
 		}
 		var handleNext = function()
@@ -48,13 +48,29 @@
 	</script>
 
 	<div id="gui" style="width: auto; background-color: black;">
-		<button onclick="handlePrev();">previous</button>
-		<button onclick="handlePlayPause();">play/pause</button>
-		<button onclick="handleNext();">next</button>
+		<button id="btnPrev", onclick="handlePrev();">Previous</button>
+		<button id="btnPlayPause", onclick="handlePlayPause();">Play/Pause</button>
+		<button id="btnNext", onclick="handleNext();">Next</button>
 	</div>
 	<div id="3dcanvas"></div>
 
 	<script>
+		var updateGui = function()
+		{
+			var pb = viewmodel.getPlayBack();
+			if (pb == PlayBack.RUN)
+			{
+				btn = document.getElementById("btnPlayPause");
+				btn.innerHTML = "Pause";
+			}
+			if (pb == PlayBack.PAUSE)
+			{
+
+				btn = document.getElementById("btnPlayPause");
+				btn.innerHTML = "Play";
+			}
+		}
+		controller.setUpdateGuiFunc(updateGui);
 		controller.run();
     </script>
 </body>

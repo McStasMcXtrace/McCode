@@ -322,6 +322,10 @@ var Controller = function(campos_x, campos_y, campos_z)
     this.loader = new TraceLoader(MCDATA_instrdata, MCDATA_neutrondata, this.main);
     this.viewmodel = new ViewModel();
 }
+Controller.prototype.setUpdateGuiFunc = function(updateGuiFunc)
+{
+    this.updateGuiFunc = updateGuiFunc;
+}
 //  main program execution loops are set up here
 //
 Controller.prototype.run = function()
@@ -354,10 +358,16 @@ Controller.prototype.run = function()
             _this.showAllRays();
         }
     }
+    var updateGuiLoop = function()
+    {
+        setTimeout(updateGuiLoop, 100);
+        _this.updateGuiFunc();
+    }
 
     // initiate timed execution loops
     renderLoop();
     dataLoop();
+    updateGuiLoop();
 
     // load data - possibly heavy
     this.loader.load();
@@ -383,10 +393,6 @@ Controller.prototype.showCurrentRay = function()
 {
     this.main.showRay(this.viewmodel.getRayIdx());
 }
-Controller.prototype.performGuiTasks = function()
-{
-    // TODO: implement
-}
 
 //  enum for playback state
 //
@@ -408,6 +414,10 @@ ViewModel.prototype.setRayIdx = function(idx)
     }
     this.rayIdx.push(idx);
 }
+ViewModel.prototype.getRayIdx = function(idx)
+{
+    return this.rayIdx[this.rayIdx.length-1];
+}
 ViewModel.prototype.shiftAllExceptOneRayIdxs = function()
 {
     if (this.rayIdx.length <= 1)
@@ -421,7 +431,11 @@ ViewModel.prototype.shiftAllExceptOneRayIdxs = function()
     }
     return arr;
 }
-ViewModel.prototype.getRayIdx = function(idx)
+ViewModel.prototype.setPlayBack = function(playBack)
 {
-    return this.rayIdx[this.rayIdx.length-1];
+    this.playBack = playBack;
+}
+ViewModel.prototype.getPlayBack = function()
+{
+    return this.playBack;
 }
