@@ -55,9 +55,22 @@
 	<div id="3dcanvas"></div>
 
 	<script>
-		var updateGui = function()
+		var UpdateGui = function()
 		{
-			var pb = viewmodel.getPlayBack();
+			this.vm_version = -1;
+			this.viewmodel = viewmodel;
+		}
+
+		UpdateGui.prototype.update = function()
+		{
+			if (this.vm_version == this.viewmodel.softVersion)
+			{
+				return;
+			}
+			this.vm_version = this.viewmodel.softVersion;
+
+			var pb = this.viewmodel.getPlayBack();
+
 			if (pb == PlayBack.RUN)
 			{
 				btn = document.getElementById("btnPlayPause");
@@ -65,12 +78,13 @@
 			}
 			if (pb == PlayBack.PAUSE)
 			{
-
 				btn = document.getElementById("btnPlayPause");
 				btn.innerHTML = "Play";
 			}
 		}
-		controller.setUpdateGuiFunc(updateGui);
+		var upd = new UpdateGui();
+
+		controller.setUpdateGuiFunc(upd.update);
 		controller.run();
     </script>
 </body>

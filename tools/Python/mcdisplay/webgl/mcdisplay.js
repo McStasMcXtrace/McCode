@@ -405,6 +405,11 @@ var ViewModel = function()
     this.playBack = PlayBack.RUN;
     this.rayIdx = [-1];
     this.raysPrSec = 5;
+    this.softVersion = 0; // incremented on update
+}
+ViewModel.prototype.version = function()
+{
+    return this.softVersion;
 }
 ViewModel.prototype.setRayIdx = function(idx)
 {
@@ -413,6 +418,7 @@ ViewModel.prototype.setRayIdx = function(idx)
         return;
     }
     this.rayIdx.push(idx);
+    this.softVersion += 1;
 }
 ViewModel.prototype.getRayIdx = function(idx)
 {
@@ -429,11 +435,13 @@ ViewModel.prototype.shiftAllExceptOneRayIdxs = function()
     {
         arr.push(this.rayIdx.shift());
     }
+    this.softVersion += 1;
     return arr;
 }
 ViewModel.prototype.setPlayBack = function(playBack)
 {
     this.playBack = playBack;
+    this.softVersion += 1;
 }
 ViewModel.prototype.getPlayBack = function()
 {
