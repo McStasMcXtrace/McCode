@@ -51,6 +51,7 @@
 		<button id="btnPrev", onclick="handlePrev();">Previous</button>
 		<button id="btnPlayPause", onclick="handlePlayPause();">Play/Pause</button>
 		<button id="btnNext", onclick="handleNext();">Next</button>
+		<label id="lblRayIdx" style="color: white;">idx</label>
 	</div>
 	<div id="3dcanvas"></div>
 
@@ -81,6 +82,8 @@
 				btn = document.getElementById("btnPlayPause");
 				btn.innerHTML = "Play";
 			}
+			lbl = document.getElementById("lblRayIdx");
+			lbl.innerHTML = this.viewmodel.getRayIdx();
 		}
 		var upd = new UpdateGui();
 
