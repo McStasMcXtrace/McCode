@@ -78,7 +78,7 @@ class DjangoWriter(object):
         finally:
             f.close()
 
-class McMicsplayReader(object):
+class McDisplayReader(object):
     ''' High-level trace manager '''
     def __init__(self, args, n=None, dir=None, debug=False):
         ''' supported args: instr, inspect, default, instr_options '''
@@ -227,7 +227,7 @@ def main(args):
     
     dir = get_datadirname(os.path.splitext(os.path.basename(args.instr))[0])
     
-    reader = McMicsplayReader(args, n=100, dir=dir, debug=debug)
+    reader = McDisplayReader(args, n=100, dir=dir, debug=debug)
     
     instrument = reader.read_instrument()
     raybundle = reader.read_neutrons()

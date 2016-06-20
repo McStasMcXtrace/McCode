@@ -170,7 +170,7 @@ class TraceReader(Thread):
         allstates['neutrons'] = NeutronsState(setcurrent, next=None, databox=databox, args={'inspect': inspect})
         allstates['mcdisplay'] = McdisplayState(setcurrent, next=allstates['neutrons'], databox=databox)
         allstates['instr'] = InstrState(setcurrent, next=allstates['mcdisplay'], databox=databox)
-        allstates['prompt'] = PromptState(setcurrent, next=allstates['instr'], databox=databox, args={'use_defaultpars': True})
+        allstates['prompt'] = PromptState(setcurrent, next=allstates['instr'], databox=databox, args={'use_defaultpars': use_defaultpars})
         
         # remember
         self.current = allstates['prompt']
