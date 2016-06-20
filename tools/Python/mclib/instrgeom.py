@@ -12,6 +12,10 @@ class InstrumentSpecific(object):
         self.params_values = []
         self.components = []
         self.rays = []
+        self.cmd = None
+    
+    def setCmd(self, cmd):
+        self.cmd = cmd
     
     def jsonize(self):
         ''' returns this object in jsonized form '''
@@ -23,6 +27,7 @@ class InstrumentSpecific(object):
         instr['params'] = self.params
         instr['params_defaults'] = self.params_defaults
         instr['params_values'] = self.params_values
+        instr['cmd'] = self.cmd
         
         # lists of objects
         lst = []

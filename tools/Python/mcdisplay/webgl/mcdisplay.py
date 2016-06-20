@@ -10,6 +10,7 @@ import argparse
 import json
 import subprocess
 from datetime import datetime
+import re
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -81,15 +82,26 @@ class DjangoWriter(object):
 class McDisplayReader(object):
     ''' High-level trace manager '''
     def __init__(self, args, n=None, dir=None, debug=False):
-        ''' supported args: instr, inspect, default, instr_options '''
+        '''
+        supported args: instr, inspect, default, instr_options
+        NOTE: n is only applied if neither '-n' nor '--ncount' strings are found in args.instr_options
+        '''
         if not os.path.exists(args.instr) or not os.path.splitext(args.instr)[1] not in ['instr', 'out']:
             print "Please supply a valid .instr or .out file."
             exit()
         
         # assemble command
         cmd = 'mcrun ' + args.instr + ' --trace'
-        if n:
-            cmd = cmd + ' --ncount=' + str(n)
+        b1 = False
+        b2 = False
+        for o in args.instr_options:
+            b1 = bool(re.search('--ncount', o)) or b1
+            b2 = bool(re.search('-n', o)) or b2
+        if not b1 and not b2:
+            if not n:
+                cmd = cmd + ' --ncount=' + str(100)
+            else:
+                cmd = cmd + ' --ncount=' + str(n)
         if dir:
             cmd = cmd + ' --dir=' + dir
         if args.instr_options:
@@ -230,6 +242,7 @@ def main(args):
     reader = McDisplayReader(args, n=100, dir=dir, debug=debug)
     
     instrument = reader.read_instrument()
+    instrument.setCmd(reader.cmd)
     raybundle = reader.read_neutrons()
     
     write_browse(instrument, raybundle, dir)
