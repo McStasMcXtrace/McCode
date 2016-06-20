@@ -2,7 +2,7 @@
 Classes for representing a mcstas instruments and neutron rays,
 and classes used for organizing component drawing calls.
 '''
-class InstrumentConcrete(object):
+class InstrumentSpecific(object):
     ''' represents a mcstas instrument with params choice '''
     def __init__(self, name, params, params_defaults):
         self.name = name
@@ -83,6 +83,7 @@ class RayBundle(object):
         for r in self.rays:
             lst.append(r.jsonize())
         bundle['rays'] = lst
+        bundle['numrays'] = len(lst)
         return bundle
     
 class NeutronStory(object):

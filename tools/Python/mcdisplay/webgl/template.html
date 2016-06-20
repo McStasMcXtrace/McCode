@@ -28,11 +28,11 @@
 		{
 			if (viewmodel.playBack == PlayBack.RUN)
 			{
-				viewmodel.playBack = PlayBack.PAUSE;
+				viewmodel.setPlayBack(PlayBack.PAUSE);
 			}
 			else
 			{
-				viewmodel.playBack = PlayBack.RUN;
+				viewmodel.setPlayBack(PlayBack.RUN);
 			}
 		}
 		var handleNext = function()
@@ -48,13 +48,54 @@
 	</script>
 
 	<div id="gui" style="width: auto; background-color: black;">
-		<button onclick="handlePrev();">previous</button>
-		<button onclick="handlePlayPause();">play/pause</button>
-		<button onclick="handleNext();">next</button>
+		<label id="lblInstrName" style="color: white;">(instr)</label>
+		<button id="btnPrev", onclick="handlePrev();" style="width: 90px;">Previous</button>
+		<button id="btnPlayPause", onclick="handlePlayPause();" style="width: 90px;">Play/Pause</button>
+		<button id="btnNext", onclick="handleNext();" style="width: 90px;">Next</button>
+		<label id="lblRayIdxText" style="color: white;">Ray index: </label>
+		<label id="lblRayIdx" style="color: white; background-color: black; width: 27px; text-align: right; display: inline-block;">(idx)</label>
 	</div>
 	<div id="3dcanvas"></div>
 
 	<script>
+		// gui synchronization class
+		//
+		var UpdateGui = function()
+		{
+			this.vm_version = -1;
+			this.viewmodel = viewmodel;
+		}
+		UpdateGui.prototype.update = function()
+		{
+			if (this.vm_version == this.viewmodel.softVersion)
+			{
+				return;
+			}
+			this.vm_version = this.viewmodel.softVersion;
+
+			var pb = this.viewmodel.getPlayBack();
+
+			if (pb == PlayBack.RUN)
+			{
+				btn = document.getElementById("btnPlayPause");
+				btn.innerHTML = "Pause";
+			}
+			if (pb == PlayBack.PAUSE)
+			{
+				btn = document.getElementById("btnPlayPause");
+				btn.innerHTML = "Play";
+			}
+			lbl = document.getElementById("lblRayIdx");
+			lbl.innerHTML = this.viewmodel.getRayIdx();
+		}
+		var upd = new UpdateGui();
+
+		// set up static ui
+		lblInstr = document.getElementById("lblInstrName");
+		lblInstr.innerHTML = MCDATA_instrdata["name"];
+
+		// call the mcdisplay app!
+		controller.setUpdateGuiFunc(upd.update);
 		controller.run();
     </script>
 </body>

@@ -198,10 +198,9 @@ Main.prototype.hideRay = function(idx)
 
 	if (idx >= this.allRays.length | idx < 0)
 	{
-		idx = 0;
+        throw "idx out of range"
 	}
 	this.rootnode.remove(this.allRays[idx]);
-    return idx;
 }
 // iterates to attach the next ray in the global ray sequence
 //
@@ -211,10 +210,9 @@ Main.prototype.showRay = function(idx)
 
 	if (idx >= this.allRays.length | idx < 0)
 	{
-		idx = 0;
+        throw "idx out of range"
 	}
 	this.rootnode.add(this.allRays[idx]);
-    return idx;
 }
 
 // loads json data into the scene graph
@@ -320,7 +318,11 @@ var Controller = function(campos_x, campos_y, campos_z)
     this.campos = new THREE.Vector3(campos_x, campos_y, campos_z);
     this.main = new Main();
     this.loader = new TraceLoader(MCDATA_instrdata, MCDATA_neutrondata, this.main);
-    this.viewmodel = new ViewModel();
+    this.viewmodel = new ViewModel(numRays = MCDATA_neutrondata["numrays"]);
+}
+Controller.prototype.setUpdateGuiFunc = function(updateGuiFunc)
+{
+    this.updateGuiFunc = updateGuiFunc;
 }
 //  main program execution loops are set up here
 //
@@ -354,10 +356,16 @@ Controller.prototype.run = function()
             _this.showAllRays();
         }
     }
+    var updateGuiLoop = function()
+    {
+        setTimeout(updateGuiLoop, 100);
+        _this.updateGuiFunc();
+    }
 
     // initiate timed execution loops
     renderLoop();
     dataLoop();
+    updateGuiLoop();
 
     // load data - possibly heavy
     this.loader.load();
@@ -377,15 +385,12 @@ Controller.prototype.hidePrevRays = function()
 Controller.prototype.incSingleRay = function()
 {
     this.viewmodel.setRayIdx(this.viewmodel.getRayIdx() + 1)
-    this.main.showRay(this.viewmodel.getRayIdx());
+    var retidx = this.main.showRay(this.viewmodel.getRayIdx());
+    //this.viewmodel.setRayIdx(retidx);
 }
 Controller.prototype.showCurrentRay = function()
 {
     this.main.showRay(this.viewmodel.getRayIdx());
-}
-Controller.prototype.performGuiTasks = function()
-{
-    // TODO: implement
 }
 
 //  enum for playback state
@@ -394,19 +399,28 @@ PlayBack = { RUN : 0, PAUSE : 1, ALL : 3 };
 
 //  viewmodel for keeping control data free of the gui
 //
-var ViewModel = function()
+var ViewModel = function(numRays)
 {
+    this.numRays = numRays;
     this.playBack = PlayBack.RUN;
     this.rayIdx = [-1];
     this.raysPrSec = 5;
+    this.softVersion = 0; // incremented on update
+}
+ViewModel.prototype.version = function()
+{
+    return this.softVersion;
 }
 ViewModel.prototype.setRayIdx = function(idx)
 {
-    if (idx == -1)
-    {
-        return;
-    }
+    // the socalled "js modulus bug" for negative numbers, using ((n % m) + m) % m;
+    idx = ((idx % this.numRays) + this.numRays) % this.numRays;
     this.rayIdx.push(idx);
+    this.softVersion += 1;
+}
+ViewModel.prototype.getRayIdx = function(idx)
+{
+    return this.rayIdx[this.rayIdx.length-1];
 }
 ViewModel.prototype.shiftAllExceptOneRayIdxs = function()
 {
@@ -419,9 +433,15 @@ ViewModel.prototype.shiftAllExceptOneRayIdxs = function()
     {
         arr.push(this.rayIdx.shift());
     }
+    this.softVersion += 1;
     return arr;
 }
-ViewModel.prototype.getRayIdx = function(idx)
+ViewModel.prototype.setPlayBack = function(playBack)
 {
-    return this.rayIdx[this.rayIdx.length-1];
+    this.playBack = playBack;
+    this.softVersion += 1;
+}
+ViewModel.prototype.getPlayBack = function()
+{
+    return this.playBack;
 }
