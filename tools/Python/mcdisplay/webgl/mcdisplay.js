@@ -98,6 +98,13 @@ Main.prototype.init = function(campos)
     this.addLight(new THREE.Vector3(10, 50, 130))
     this.scene.add(this.rootnode);
 }
+//  set a bounding box around the components
+//
+Main.prototype.setBoundingBox = function()
+{
+    var box = new THREE.BoxHelper( this.rootnode, 0x808080 );
+    this.scene.add( box );
+}
 // add multiline
 // 		arrVector3  -  an array of THREE.Vector3 instances
 Main.prototype.addMultiLineV3 = function(arrVector3, parent, linecolor)
@@ -225,9 +232,9 @@ var TraceLoader = function(instrdata, neutrondata, main)
     this.instrdata = instrdata;
     this.neutrondata = neutrondata;
 }
-// synchronously load the data references set at construction
+// synchronously load instrument component draw data
 //
-TraceLoader.prototype.load = function()
+TraceLoader.prototype.loadInstr = function()
 {
     var main = this.main;
 
@@ -271,8 +278,14 @@ TraceLoader.prototype.load = function()
         comp_matrix.set(m4[0], m4[1], m4[2], m4[3], m4[4], m4[5], m4[6], m4[7], m4[8], m4[9], m4[10], m4[11], m4[12], m4[13], m4[14], m4[15]);
         comp_node.applyMatrix(comp_matrix);
     }
+}
+// load neutrons
+//
+TraceLoader.prototype.loadNeutrons = function()
+{
+    var main = this.main;
 
-    // NEUTRON RAYS
+    // RAYS
     var rays = this.neutrondata['rays'];
     var ray;
     var aVertices;
@@ -310,7 +323,6 @@ TraceLoader.prototype.load = function()
         main.addMultiLineV3(aVertices, rayobj, main.rayColor);
     }
 }
-
 //  program controller
 //      campos_x/y/z  -  determines initial camera position, this is used with --inspect
 var Controller = function(campos_x, campos_y, campos_z)
@@ -368,7 +380,9 @@ Controller.prototype.run = function()
     updateGuiLoop();
 
     // load data - possibly heavy
-    this.loader.load();
+    this.loader.loadInstr();
+    this.loader.loadNeutrons();
+    this.main.setBoundingBox();
 }
 Controller.prototype.showAllRays = function()
 {
