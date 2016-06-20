@@ -56,6 +56,7 @@
 		<button id="btnNext", onclick="handleNext();" style="width: 90px;">Next</button>
 		<label id="lblRayIdxText" style="color: white;">Ray index: </label>
 		<label id="lblRayIdx" style="color: white; background-color: black; width: 27px; text-align: right; display: inline-block;">(idx)</label>
+		<label id="lblMaxRayIdx" style="color: white; background-color: black; display: inline-block;">(max_idx)</label>
 	</div>
 	<div id="3dcanvas"></div>
 
@@ -95,6 +96,8 @@
 		// set up static ui
 		lblInstrInfo = document.getElementById("lblInstrInfo");
 		lblInstrInfo.innerHTML = MCDATA_instrdata["cmd"];
+		lblMaxRayIdx = document.getElementById("lblMaxRayIdx");
+		lblMaxRayIdx.innerHTML = '/ ' + (MCDATA_neutrondata["numrays"] - 1);
 
 		// call the mcdisplay app!
 		controller.setUpdateGuiFunc(upd.update);
