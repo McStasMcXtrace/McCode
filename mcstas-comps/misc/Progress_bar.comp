@@ -136,7 +136,7 @@ FINALLY
 %{
   time_t NowTime;
   time(&NowTime);
-  fprintf(stdout, "\nFinally [%s:%s]. Time: ", mcinstrument_name, mcdirname ? mcdirname : ".");
+  fprintf(stdout, "\nFinally [%s: %s]. Time: ", mcinstrument_name, mcdirname ? mcdirname : ".");
   if (difftime(NowTime,StartTime) < 60.0)
     fprintf(stdout, "%g [s] ", difftime(NowTime,StartTime));
   else if (difftime(NowTime,StartTime) > 3600.0)
