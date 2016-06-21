@@ -1,8 +1,6 @@
 '''
 Implementation of classes involved in Python object construction from parsed mcdisplay --trace output.
 '''
-import re
-
 class Node(object):
     '''
     Node objects are used to construct the trace parse tree.
