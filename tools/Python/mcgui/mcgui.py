@@ -356,7 +356,7 @@ class McGuiState(QtCore.QObject):
             if output_dir == '':
                 DATE_FORMAT_PATH = "%Y%d%m_%H%M%S"
                 output_dir = "%s_%s" % \
-                              (self.__instrFile,
+                              (os.path.splitext(self.__instrFile)[0],
                                datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
                 
             runstr = mccode_config.configuration["MCRUN"] + mcrunparms + os.path.basename(self.__instrFile) + ' -d ' + output_dir
