@@ -25,11 +25,17 @@ var Main = function ()
 //
 Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
 {
+    console.log(plane, x, y, z, radius);
+    if (radius == 0)
+    {
+        return;
+    }
+
     var wrapper = new THREE.Object3D();
     var m = new THREE.Matrix4()
-    if (plane == 'xy') { m.makeRotationZ( Math.PI/2 ); }
-    if (plane == 'xz') { m.makeRotationY( Math.PI/2 ); }
-    if (plane == 'yz') { m.makeRotationX( Math.PI/2 ); }
+    if (plane == 'xy') { } // identity
+    if (plane == 'xz') { m.makeRotationX( Math.PI/2 ); }
+    if (plane == 'yz') { m.makeRotationY( Math.PI/2 ); }
 
     var segments = 48;
     var circleGeometry = new THREE.CircleGeometry( radius, segments );
@@ -38,11 +44,13 @@ Main.prototype.addCircle = function(plane, x, y, z, radius, parent, linecolor)
     material.side = THREE.DoubleSide;
 
     var circle = new THREE.Line( circleGeometry, material ); // THREE.Mesh results in solid coloring
+
+    circle.applyMatrix(m);
+
     circle.position.x = x;
     circle.position.y = y;
     circle.position.z = z;
 
-    circle.applyMatrix(m);
     parent.add( circle );
 }
 // add sphere
