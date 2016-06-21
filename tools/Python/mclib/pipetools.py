@@ -66,19 +66,19 @@ class LineHandlerState(object):
 
 class PromptState(LineHandlerState):
     def add_line(self, line):
-        # prompt case
-        if re.search('\]:', line):
-            if not self.args['use_defaultpars']:
-                self.process.stdin.write(raw_input() + '\n')
-            else:
-                self.process.stdin.write('\n')
         # switch case
         if re.match(r'INSTRUMENT:\n', line):
             self.setcurrent(self.next, line)
             return
         
+        # prompt case
         print(line)
         self.databox.add_comment(line)
+        if re.search('\]:', line):
+            if not self.args['use_defaultpars']:
+                self.process.stdin.write(raw_input() + '\n')
+            else:
+                self.process.stdin.write('\n')
     
     def setprocess(self, process):
         self.process = process
