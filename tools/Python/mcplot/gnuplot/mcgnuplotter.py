@@ -192,20 +192,31 @@ class McGnuplotter():
             data_file_lst = get_overview_files(input_file)
             siblings = []
             
-            for data_file in data_file_lst:
-                data_struct = get_monitor(data_file)
-                if re.search('array_2d.*', data_struct['type']):
-                    gpo = McGnuplotPSD(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
-                    siblings.append(gpo)
-                else:
-                    gpo = McGnuplot1D(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
-                    siblings.append(gpo)
-            overview_data_struct = {}
-            overview_data_struct['fullpath'] = input_file
-            overview = McGnuplotOverview(McGnuplotter.__overview_key, overview_data_struct, Gnuplot.Gnuplot(persist=gp_persist), siblings)
-            self.__gnuplot_objs[overview.key] = overview
-            for gpo in siblings:
-                self.__gnuplot_objs[gpo.key] = gpo
+            
+            if 'mccode.dat' in map( lambda f: os.path.basename(f), data_file_lst):
+                # mccode.dat / scan sweep mode
+                print "mccode.dat found"
+                print "Plotting mode not supported, exiting"
+                exit()
+                #dict = get_monitor(os.path.join(os.path.dirname(data_file_lst[0]), 'mccode.dat'))
+                #for key in dict:
+                #    print 'key: %s, value: %s' % (key, dict[key]) 
+            else:
+                # single scan step mode - load multiple monitor files
+                for data_file in data_file_lst:
+                    data_struct = get_monitor(data_file)
+                    if re.search('array_2d.*', data_struct['type']):
+                        gpo = McGnuplotPSD(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
+                        siblings.append(gpo)
+                    else:
+                        gpo = McGnuplot1D(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
+                        siblings.append(gpo)
+                overview_data_struct = {}
+                overview_data_struct['fullpath'] = input_file
+                overview = McGnuplotOverview(McGnuplotter.__overview_key, overview_data_struct, Gnuplot.Gnuplot(persist=gp_persist), siblings)
+                self.__gnuplot_objs[overview.key] = overview
+                for gpo in siblings:
+                    self.__gnuplot_objs[gpo.key] = gpo
             
         elif file_ext == '.dat':
             data_struct = get_monitor(input_file)
