@@ -70,11 +70,11 @@
 		}
 		UpdateGui.prototype.update = function()
 		{
-			if (this.vm_version == this.viewmodel.softVersion)
+			if (this.vm_version == this.viewmodel.getUpdateVersion())
 			{
 				return;
 			}
-			this.vm_version = this.viewmodel.softVersion;
+			this.vm_version = this.viewmodel.getUpdateVersion();
 
 			var pb = this.viewmodel.getPlayBack();
 

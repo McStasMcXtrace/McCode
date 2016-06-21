@@ -419,18 +419,18 @@ var ViewModel = function(numRays)
     this.playBack = PlayBack.RUN;
     this.rayIdx = [-1];
     this.raysPrSec = 5;
-    this.softVersion = 0; // incremented on update
+    this.updateVersion = 0; // incremented on update
 }
-ViewModel.prototype.version = function()
+ViewModel.prototype.getUpdateVersion = function()
 {
-    return this.softVersion;
+    return this.updateVersion;
 }
 ViewModel.prototype.setRayIdx = function(idx)
 {
     // the socalled "js modulus bug" for negative numbers, using ((n % m) + m) % m;
     idx = ((idx % this.numRays) + this.numRays) % this.numRays;
     this.rayIdx.push(idx);
-    this.softVersion += 1;
+    this.updateVersion += 1;
 }
 ViewModel.prototype.getRayIdx = function(idx)
 {
@@ -447,7 +447,7 @@ ViewModel.prototype.shiftAllExceptOneRayIdxs = function()
     {
         arr.push(this.rayIdx.shift());
     }
-    this.softVersion += 1;
+    this.updateVersion += 1;
     return arr;
 }
 ViewModel.prototype.setPlayBack = function(playBack)
