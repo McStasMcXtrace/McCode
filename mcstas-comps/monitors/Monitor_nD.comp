@@ -302,7 +302,7 @@ INITIALIZE
 
   if (Vars.Flag_OFF) {
     offdata.mantidflag=Vars.Flag_mantid;
-    offdata.mantidoffset=Vars.Coord_Min[2];
+    offdata.mantidoffset=Vars.Coord_Min[Vars.Coord_Number-1];
   }
 
   
