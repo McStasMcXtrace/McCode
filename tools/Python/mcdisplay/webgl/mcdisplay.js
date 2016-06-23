@@ -145,6 +145,20 @@ Main.prototype.addMultiLine = function(points, parent, linecolor)
     }
     this.addMultiLineV3(vectors, parent, linecolor);
 }
+Main.prototype.putScatterPoints = function(raynode)
+{
+    var v;
+    var vtx = raynode.vtx;
+    for (var i = 0; i < vtx.length; i++)
+    {
+        var geometry = new THREE.BoxGeometry( 0.007, 0.007, 0.007 );
+        v = vtx[i];
+        geometry.translate(v.x, v.y, v.z);
+        var material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        var cube = new THREE.Mesh( geometry, material );
+        raynode.add( cube );
+    }
+}
 // add a ray node
 //
 Main.prototype.addRayNode = function(rayObj, vertices)
@@ -154,7 +168,11 @@ Main.prototype.addRayNode = function(rayObj, vertices)
     multilinegeometry.vertices = vertices;
     var multiline = new THREE.Line(multilinegeometry, multilinematerial);
     rayObj.add(multiline);
+
+    rayObj.vtx = vertices; // WARNING: this is a hidden field hacky stuff, but only used in the function putScatterPoints
+
     this.raynodes.push(rayObj);
+    rayObj.visible = false;
 }
 // add a component origo
 //		compname  -  component name for the reference dict
@@ -180,19 +198,22 @@ Main.prototype.getNextComponentColor = function()
 //
 Main.prototype.showAllRays = function()
 {
-	for (var i = 0; i < this.raynodes.length; i++)
-	{
-		this.rootnode.add(this.raynodes[i]);
-	}
+    for (var i = 0; i < this.raynodes.length; i++)
+    {
+        node = this.raynodes[i];
+        // NOTE: the following two lines should instead hvae been implemented via a function called "update" and set in a proper manor
+        if (node.parent == null) { this.putScatterPoints(node); this.rootnode.add(node); };
+        this.raynodes[i].visible = true;
+    }
 }
 // remove all rays in this.raynodes from the scene graph
 //
-Main.prototype.hideraynodes = function()
+Main.prototype.hideAllRays = function()
 {
-	for (var i = 0; i < this.raynodes.length; i++)
-	{
-		this.rootnode.remove(this.raynodes[i]);
-	}
+    for (var i = 0; i < this.raynodes.length; i++)
+    {
+        this.raynodes[i].visible = false;
+    }
 }
 // iterates to attach the next ray in the global ray sequence
 //
@@ -200,14 +221,18 @@ Main.prototype.showNextRay = function()
 {
     if (this.raynodes.length == 0) { return; }
 
-	lastRay = this.iRay;
-	this.iRay += 1;
-	if (this.iRay >= this.raynodes.length)
-	{
-		this.iRay = 0;
-	}
-	this.rootnode.add(this.raynodes[this.iRay]);
-	this.rootnode.remove(this.raynodes[lastRay]);
+    lastRay = this.iRay;
+    this.iRay += 1;
+    if (this.iRay >= this.raynodes.length)
+    {
+        this.iRay = 0;
+    }
+    newnode = this.raynodes[this.iRay];
+    // NOTE: the following two lines should instead hvae been implemented via a function called "update" and set in a proper manor
+    if (node.parent == null) { this.putScatterPoints(newnode); this.rootnode.add(newnode); };
+    newnode.visible = true;
+
+    this.raynodes[lastRay].visible = false;
 }
 // iterates to attach the next ray in the global ray sequence
 //
@@ -215,11 +240,11 @@ Main.prototype.hideRay = function(idx)
 {
     if (this.raynodes.length == 0) { return idx; }
 
-	if (idx >= this.raynodes.length | idx < 0)
-	{
+    if (idx >= this.raynodes.length | idx < 0)
+    {
         throw "idx out of range"
-	}
-	this.rootnode.remove(this.raynodes[idx]);
+    }
+    this.raynodes[idx].visible = false;
 }
 // iterates to attach the next ray in the global ray sequence
 //
@@ -227,11 +252,15 @@ Main.prototype.showRay = function(idx)
 {
     if (this.raynodes.length == 0) { return idx; }
 
-	if (idx >= this.raynodes.length | idx < 0)
-	{
+    if (idx >= this.raynodes.length | idx < 0)
+    {
         throw "idx out of range"
-	}
-	this.rootnode.add(this.raynodes[idx]);
+    }
+    //this.rootnode.add(this.raynodes[idx]);
+    node = this.raynodes[idx];
+    // NOTE: the following two lines should instead hvae been implemented via a function called "update" and set in a proper manor
+    if (node.parent == null) { this.putScatterPoints(node); this.rootnode.add(node); };
+    node.visible = true;
 }
 
 // loads json data into the scene graph
@@ -401,9 +430,9 @@ Controller.prototype.run = function()
     this.loader.loadNeutrons();
     this.main.setBoundingBox();
 }
-Controller.prototype.showraynodes = function()
+Controller.prototype.showAllRays = function()
 {
-    this.main.showraynodes();
+    this.main.showAllRays();
 }
 Controller.prototype.hidePrevRays = function()
 {
