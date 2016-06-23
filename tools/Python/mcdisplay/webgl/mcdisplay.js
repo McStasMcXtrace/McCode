@@ -1,4 +1,14 @@
-// "main" class containing just about everything at this point
+// transforms vertices by and returns the transformed
+//      apoints  -  an array of vertices
+//      transform  -  matrix4
+var transformPoints = function(apoints, transform)
+{
+    var geometry = new THREE.Geometry();
+    geometry.vertices = apoints;
+    geometry.applyMatrix(transform);
+    return geometry.vertices.slice();
+}
+// "main" class which is a collection of scene graph setup routives and data objects
 //
 var Main = function ()
 {
@@ -166,16 +176,6 @@ Main.prototype.getNextComponentColor = function()
     }
     return this.compColors[this.iColor];
 }
-// transforms vertices and returns the transformed
-//      apoints  -  an array of vertices
-//      transform  -  matrix4
-Main.prototype.transformPoints = function(apoints, transform)
-{
-    var geometry = new THREE.Geometry();
-    geometry.vertices = apoints;
-    geometry.applyMatrix(transform);
-    return geometry.vertices.slice();
-}
 // show all rays in this.raynodes
 //
 Main.prototype.showAllRays = function()
@@ -328,7 +328,7 @@ TraceLoader.prototype.loadNeutrons = function()
             }
 
             // transform these vertices by component matrix and add to vertex container for this ray
-            aVertices = aVertices.concat(main.transformPoints(aCompVertices, main.compnodes[compname].matrix));
+            aVertices = aVertices.concat(transformPoints(aCompVertices, main.compnodes[compname].matrix));
         }
         // add ray as a multiline
         main.addRayNode(rayobj, aVertices);
