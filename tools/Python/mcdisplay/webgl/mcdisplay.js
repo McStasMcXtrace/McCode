@@ -14,10 +14,9 @@ var Main = function ()
     this.iColor = -1;
 
     this.rayColor = 0x00ffff;
-    this.aVertices;
     this.aCompVertices
     this.rayobj;
-    this.allRays = [];
+    this.raynodes = [];
 
     this.iRay = -1;
 }
@@ -119,10 +118,7 @@ Main.prototype.addMultiLineV3 = function(arrVector3, parent, linecolor)
 {
     var multilinematerial = new THREE.LineBasicMaterial({color: linecolor});
     var multilinegeometry = new THREE.Geometry();
-    for (var i = 0; i < arrVector3.length; i++)
-    {
-        multilinegeometry.vertices.push(arrVector3[i]);
-    }
+    multilinegeometry.vertices = arrVector3;
     var multiline = new THREE.Line(multilinegeometry, multilinematerial);
     parent.add(multiline);
 }
@@ -138,6 +134,17 @@ Main.prototype.addMultiLine = function(points, parent, linecolor)
         vectors.push(v);
     }
     this.addMultiLineV3(vectors, parent, linecolor);
+}
+// add a ray node
+//
+Main.prototype.addRayNode = function(rayObj, vertices)
+{
+    var multilinematerial = new THREE.LineBasicMaterial({color: 0xffffff});
+    var multilinegeometry = new THREE.Geometry();
+    multilinegeometry.vertices = vertices;
+    var multiline = new THREE.Line(multilinegeometry, multilinematerial);
+    rayObj.add(multiline);
+    this.raynodes.push(rayObj);
 }
 // add a component origo
 //		compname  -  component name for the reference dict
@@ -165,69 +172,66 @@ Main.prototype.getNextComponentColor = function()
 Main.prototype.transformPoints = function(apoints, transform)
 {
     var geometry = new THREE.Geometry();
-    for (i = 0; i < apoints.length; i++)
-    {
-        geometry.vertices.push(apoints[i]);
-    }
+    geometry.vertices = apoints;
     geometry.applyMatrix(transform);
     return geometry.vertices.slice();
 }
-// show all rays in this.allRays
+// show all rays in this.raynodes
 //
 Main.prototype.showAllRays = function()
 {
-	for (var i = 0; i < this.allRays.length; i++)
+	for (var i = 0; i < this.raynodes.length; i++)
 	{
-		this.rootnode.add(this.allRays[i]);
+		this.rootnode.add(this.raynodes[i]);
 	}
 }
-// remove all rays in this.allRays from the scene graph
+// remove all rays in this.raynodes from the scene graph
 //
-Main.prototype.hideAllRays = function()
+Main.prototype.hideraynodes = function()
 {
-	for (var i = 0; i < this.allRays.length; i++)
+	for (var i = 0; i < this.raynodes.length; i++)
 	{
-		this.rootnode.remove(this.allRays[i]);
+		this.rootnode.remove(this.raynodes[i]);
 	}
 }
 // iterates to attach the next ray in the global ray sequence
 //
 Main.prototype.showNextRay = function()
 {
-    if (this.allRays.length == 0) { return; }
+    if (this.raynodes.length == 0) { return; }
 
 	lastRay = this.iRay;
 	this.iRay += 1;
-	if (this.iRay >= this.allRays.length)
+	if (this.iRay >= this.raynodes.length)
 	{
 		this.iRay = 0;
 	}
-	this.rootnode.add(this.allRays[this.iRay]);
-	this.rootnode.remove(this.allRays[lastRay]);
+	this.rootnode.add(this.raynodes[this.iRay]);
+	this.rootnode.remove(this.raynodes[lastRay]);
 }
 // iterates to attach the next ray in the global ray sequence
 //
 Main.prototype.hideRay = function(idx)
 {
-    if (this.allRays.length == 0) { return idx; }
+    if (this.raynodes.length == 0) { return idx; }
 
-	if (idx >= this.allRays.length | idx < 0)
+	if (idx >= this.raynodes.length | idx < 0)
 	{
         throw "idx out of range"
 	}
-	this.rootnode.remove(this.allRays[idx]);
+	this.rootnode.remove(this.raynodes[idx]);
 }
 // iterates to attach the next ray in the global ray sequence
 //
 Main.prototype.showRay = function(idx)
 {
-    if (this.allRays.length == 0) { return idx; }
+    if (this.raynodes.length == 0) { return idx; }
 
-	if (idx >= this.allRays.length | idx < 0)
+	if (idx >= this.raynodes.length | idx < 0)
 	{
         throw "idx out of range"
 	}
-	this.rootnode.add(this.allRays[idx]);
+	this.rootnode.add(this.raynodes[idx]);
 }
 
 // loads json data into the scene graph
@@ -301,7 +305,6 @@ TraceLoader.prototype.loadNeutrons = function()
         ray = rays[i];
 
         rayobj = new THREE.Object3D();
-        main.allRays.push(rayobj);
         aVertices = [];
         var aCompVertices;
         var compname;
@@ -328,7 +331,8 @@ TraceLoader.prototype.loadNeutrons = function()
             aVertices = aVertices.concat(main.transformPoints(aCompVertices, main.compnodes[compname].matrix));
         }
         // add ray as a multiline
-        main.addMultiLineV3(aVertices, rayobj, main.rayColor);
+        main.addRayNode(rayobj, aVertices);
+        //main.addMultiLineV3(aVertices, rayobj, main.rayColor);
     }
 }
 //  program controller
@@ -397,9 +401,9 @@ Controller.prototype.run = function()
     this.loader.loadNeutrons();
     this.main.setBoundingBox();
 }
-Controller.prototype.showAllRays = function()
+Controller.prototype.showraynodes = function()
 {
-    this.main.showAllRays();
+    this.main.showraynodes();
 }
 Controller.prototype.hidePrevRays = function()
 {
@@ -432,7 +436,7 @@ DisplayMode = { SINGLE : 0, KEEP : 1 }
 var ViewModel = function(numRays)
 {
     this.playBack = PlayBack.RUN;
-    this.displayMode = DisplayMode.KEEP;
+    this.displayMode = DisplayMode.SINGLE;
 
     this.numRays = numRays;
     this.rayIdx = [-1];
