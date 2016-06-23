@@ -361,19 +361,24 @@ Controller.prototype.run = function()
     var dataLoop = function()
     {
         setTimeout(dataLoop, 1000/_this.viewmodel.raysPrSec);
-        if (_this.viewmodel.playBack == PlayBack.RUN)
-        {
-            _this.incSingleRay();
-            _this.hidePrevRays();
-        }
-        if (_this.viewmodel.playBack == PlayBack.PAUSE)
-        {
-            _this.showCurrentRay();
-            _this.hidePrevRays();
-        }
         if (_this.viewmodel.playBack == PlayBack.ALL)
         {
             _this.showAllRays();
+            return;
+        }
+
+        if (_this.viewmodel.playBack == PlayBack.RUN)
+        {
+            _this.incSingleRay();
+        }
+        if (_this.viewmodel.playBack == PlayBack.PAUSE)
+        {
+            // TODO: use viewmodel.updateVersion to skip this step if needed
+            _this.showCurrentRay();
+        }
+        if (viewmodel.getDisplayMode() == DisplayMode.SINGLE)
+        {
+            _this.hidePrevRays();
         }
     }
     var updateGuiLoop = function()
@@ -398,7 +403,7 @@ Controller.prototype.showAllRays = function()
 }
 Controller.prototype.hidePrevRays = function()
 {
-    var arrLast = this.viewmodel.shiftAllExceptOneRayIdxs();
+    var arrLast = this.viewmodel.shiftNonFirstRayIdxs();
     for (var i = 0; i < arrLast.length; i++)
     {
         this.main.hideRay(arrLast[i]);
@@ -408,7 +413,6 @@ Controller.prototype.incSingleRay = function()
 {
     this.viewmodel.setRayIdx(this.viewmodel.getRayIdx() + 1)
     var retidx = this.main.showRay(this.viewmodel.getRayIdx());
-    //this.viewmodel.setRayIdx(retidx);
 }
 Controller.prototype.showCurrentRay = function()
 {
@@ -419,14 +423,21 @@ Controller.prototype.showCurrentRay = function()
 //
 PlayBack = { RUN : 0, PAUSE : 1, ALL : 3 };
 
+//
+//
+DisplayMode = { SINGLE : 0, KEEP : 1 }
+
 //  viewmodel for keeping control data free of the gui
 //
 var ViewModel = function(numRays)
 {
-    this.numRays = numRays;
     this.playBack = PlayBack.RUN;
+    this.displayMode = DisplayMode.KEEP;
+
+    this.numRays = numRays;
     this.rayIdx = [-1];
     this.raysPrSec = 5;
+
     this.updateVersion = 0; // incremented on update
 }
 ViewModel.prototype.getUpdateVersion = function()
@@ -444,7 +455,7 @@ ViewModel.prototype.getRayIdx = function(idx)
 {
     return this.rayIdx[this.rayIdx.length-1];
 }
-ViewModel.prototype.shiftAllExceptOneRayIdxs = function()
+ViewModel.prototype.shiftNonFirstRayIdxs = function()
 {
     if (this.rayIdx.length <= 1)
     {
@@ -461,9 +472,18 @@ ViewModel.prototype.shiftAllExceptOneRayIdxs = function()
 ViewModel.prototype.setPlayBack = function(playBack)
 {
     this.playBack = playBack;
-    this.softVersion += 1;
+    this.updateVersion += 1;
 }
 ViewModel.prototype.getPlayBack = function()
 {
     return this.playBack;
+}
+ViewModel.prototype.setDisplayMode = function(displayMode)
+{
+    this.displayMode = displayMode;
+    this.updateVersion += 1;
+}
+ViewModel.prototype.getDisplayMode = function()
+{
+    return this.displayMode;
 }
