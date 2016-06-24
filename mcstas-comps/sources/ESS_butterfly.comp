@@ -62,10 +62,10 @@ DECLARE
   double* Beamlines;
   int jmax;
   /* 'Corner' parametrization, i.e. where are the limits of the moderators */
-  double C1_x,C1_z,C2_x,C2_z;
+  double C0_x,C0_z,C1_x,C1_z,C2_x,C2_z;
   double T1_x,T1_z,T2_x,T2_z;
   /* - plus rotated versions of the same... */
-  double rC1_x,rC1_z,rC2_x,rC2_z;
+  double rC0_x,rC0_z,rC1_x,rC1_z,rC2_x,rC2_z;
   double rT1_x,rT1_z,rT2_x,rT2_z;
   double tx,ty,tz;
   double r11, r12, r21, r22;
@@ -89,10 +89,12 @@ INITIALIZE
     T1_z=0;
     T2_x=-0.18;
     T2_z=0;
+    C0_x=-0.03;
+    C0_z=0;
     C1_x=0;
     C1_z=0;
-    C2_x=-0.10*cos(-156*DEG2RAD);
-    C2_z=0.10*sin(-156*DEG2RAD);
+    C2_x=-0.07*cos(-156*DEG2RAD);
+    C2_z=0.07*sin(-156*DEG2RAD);
   } else if (strcasestr(sector,"W")) {
     cx = 0.0; cz=0.0; sign_bl_angle=-1;
     orientation_angle = BeamlinesW[beamline-1]; 
@@ -102,10 +104,12 @@ INITIALIZE
     T1_z=0;
     T2_x=0.18;
     T2_z=0;
-    T1_x=0;
+    C0_x=0.03;
+    C0_z=0;
+    C1_x=0;
     C1_z=0;
-    C2_x=0.10*cos(-156*DEG2RAD);
-    C2_z=0.10*sin(-156*DEG2RAD);
+    C2_x=0.07*cos(-156*DEG2RAD);
+    C2_z=0.07*sin(-156*DEG2RAD);
   } else if (strcasestr(sector,"S")) {
     cx = 0.0; cz=-0.185; sign_bl_angle=1;
     orientation_angle = BeamlinesS[beamline-1]; 
@@ -115,10 +119,12 @@ INITIALIZE
     T1_z=0;
     T2_x=0.18;
     T2_z=0;
+    C0_x=0.03;
+    C0_z=0;
     C1_x=0;
     C1_z=0;
-    C2_x=0.10*cos(156*DEG2RAD);
-    C2_z=0.10*sin(156*DEG2RAD);
+    C2_x=0.07*cos(156*DEG2RAD);
+    C2_z=0.07*sin(156*DEG2RAD);
   } else if (strcasestr(sector,"E")) {
     cx = 0.117; cz=-0.185; sign_bl_angle=-1;
     orientation_angle = BeamlinesE[beamline-1]; 
@@ -128,10 +134,12 @@ INITIALIZE
     T1_z=0;
     T2_x=-0.18;
     T2_z=0;
+    C0_x=-0.03;
+    C0_z=0;
     C1_x=0;
     C1_z=0;
-    C2_x=-0.10*cos(-156*DEG2RAD);
-    C2_z=-0.10*sin(-156*DEG2RAD);
+    C2_x=-0.07*cos(-156*DEG2RAD);
+    C2_z=-0.07*sin(-156*DEG2RAD);
   } else {
     fprintf(stderr,"%s: Sector %s is undefined, please use N, W, S or E!\n", NAME_CURRENT_COMP,sector);
     exit(-1);
@@ -174,6 +182,8 @@ INITIALIZE
   r22 = cos(DEG2RAD*orientation_angle);
   
   /* Rotated corrdinates of the emission areas */
+  rC0_x = r11*C0_z + r12*C0_x;
+  rC0_z = r21*C0_z + r22*C0_x;
   rC1_x = r11*C1_z + r12*C1_x;
   rC1_z = r21*C1_z + r22*C1_x;
   rC2_x = r11*C2_z + r12*C2_x;
@@ -194,8 +204,13 @@ TRACE
   if (rand01() < cold_frac) {
     iscold=1;
     y = randpm1()*dy;
-    x = rC1_x + (rC2_x - rC1_x)*xtmp;
-    z = rC1_z + (rC2_z - rC1_z)*xtmp;
+    if (rand01()<0.7) {
+      x = rC1_x + (rC2_x - rC1_x)*xtmp;
+      z = rC1_z + (rC2_z - rC1_z)*xtmp;
+    } else {
+      x = rC1_x + (rC0_x - rC1_x)*xtmp;
+      z = rC1_z + (rC0_z - rC1_z)*xtmp;
+    }
   } else {
     iscold=0;
     y = randpm1()*dy;
