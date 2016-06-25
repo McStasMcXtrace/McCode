@@ -25,14 +25,33 @@
 *
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ESS_butterfly(string sector="N",beamline=1,Lmin=0.2,Lmax=20,performance=1,int index=0,dist=0,cold=1)
+DEFINE INSTRUMENT ESS_butterfly(string sector="N",beamline=1,Lmin=0.2,Lmax=20,performance=1,int index=0,dist=0,cold=1,Yheight=0.03)
 
 DECLARE
 %{
+  int IsCold;
+  double SrcX, SrcY, SrcZ;
+  double Theta;
+  double MonTransl;
+  double XW, YH;
+  char options1[256],options2[256],options3[256],options4[256];
+  char srcdef[128];
+  double WidthC=0.1,WidthT=0.18;
+  double WL;
+  double lambdamin, lambdamax;
 %}
 
 INITIALIZE
 %{
+  lambdamin=Lmin;
+  lambdamax=Lmax;
+  XW=1.05*(WidthC+2*WidthT);
+  YH=1.05*Yheight;
+  sprintf(options1,"user1 bins=201 limits=[-%g,%g]",XW/2,XW/2);
+  sprintf(options4,"user1 bins=201 limits=[-%g,%g]",YH/2,YH/2);
+  sprintf(options2,"user1 bins=201 limits=[-%g,%g], user2 bins=201 limits=[-%g,%g]",XW/2,XW/2,YH/2,YH/2);
+  sprintf(options3,"user1 bins=201 limits=[-%g,%g], user2 bins=201 limits=[-%g,%g]",1.05*(WidthC/2),1.05*(WidthC/2),1.05*Yheight/2,1.05*Yheight/2);
+  sprintf(srcdef,"2015");
 %}
 
 TRACE
@@ -40,15 +59,80 @@ TRACE
 COMPONENT origin = Progress_bar()
 AT (0, 0, 0) RELATIVE ABSOLUTE
 
-  COMPONENT Butterfly = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=Lmax,performance=performance,dist=dist,target_index=index,cold_frac=cold,
-				      focus_xw=0.1, focus_yh=0.1)
+  COMPONENT Source = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=Lmax,performance=performance,dist=dist,target_index=10,cold_frac=cold, yheight=Yheight,
+				      focus_xw=0.01, focus_yh=0.01)
 AT (0,0,0) ABSOLUTE
+EXTEND %{
+  IsCold=iscold;
+  SrcX=x;SrcY=y;SrcZ=z;
+  WL=lambda;
+%}
+
+  COMPONENT Sphere = PSD_monitor_4PI(filename="sphere.dat", radius=2, restore_neutron=1)
+  AT (0,0,0) ABSOLUTE
+
+  COMPONENT PSD = PSD_monitor(filename="PSD.dat", xwidth=1, yheight=1)
+  AT (0,0,1) ABSOLUTE
+
 
 COMPONENT Arm1 = Arm()
-  AT (0,0,2) RELATIVE PREVIOUS
+  AT (0,0,2) RELATIVE ABSOLUTE
 
 COMPONENT Arm2 = Arm()
-  AT (0,0,3.5) RELATIVE PREVIOUS
+  AT (0,0,3.5) RELATIVE ABSOLUTE
+
+  COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
+ AT (0, 0, 1) RELATIVE Source
+
+  COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position COLD / [m]", options=options4, restore_neutron=1)
+  WHEN(IsCold) AT (0, 0, 1) RELATIVE Source
+
+  COMPONENT MonND2_2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position THERMAL/ [m]", options=options4, restore_neutron=1)
+  WHEN(!IsCold) AT (0, 0, 1) RELATIVE Source
+
+  COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", user2=SrcY,username2="Vertical position / [m]", options=options2, restore_neutron=1)
+ AT (0, 0, 1) RELATIVE Source
+
+  COMPONENT MonND4 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Emission position / [m]", user2=SrcZ, username2="bvlah position / [m]", options="user1 bins=201 limits=[-0.3,0.3], user2 bins=201 limits=[-0.3,0.3]", restore_neutron=1)
+ AT (0, 0, 1) RELATIVE Source
+
+
+COMPONENT BrillmonCOLD = Brilliance_monitor(
+    nlam = 101, nt = 101, filename = "brillCOLD", t_0 = -1000,
+    t_1 =4e4, lambda_0 = lambdamin, lambda_1 = lambdamax,
+    Freq =14, toflambda=1 ,tofcuts=0, srcarea=(100*WidthC*100*Yheight), restore_neutron=1)
+WHEN(IsCold)  AT (0, 0, 1) RELATIVE Source
+
+COMPONENT BrillmonCOLD_COLL = Brilliance_monitor(
+    nlam = 101, nt = 101, filename = "brillCOLD_COLL", t_0 = -1000,
+    t_1 = 4e4, lambda_0 = lambdamin, lambda_1 = lambdamax,
+    Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.04*100*2*Yheight/2.5), restore_neutron=1)
+  WHEN(IsCold && fabs(SrcY)<Yheight/2.5 && fabs(SrcX+0.12) < 0.02)  AT (0, 0, 1) RELATIVE Source
+
+COMPONENT BrillmonCOLD_COLL_Ken = Brilliance_monitor(
+    nlam = 101, nt = 11, filename = "brillCOLD_COLL_Ken", t_0 = -1000,
+    t_1 =4e4, lambda_0 = 2.02, lambda_1 = lambdamax,
+    Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.04*100*2*Yheight/2.5), restore_neutron=1)
+  WHEN(IsCold && fabs(SrcY)<Yheight/2.5 && fabs(SrcX+0.12) < 0.02)  AT (0, 0, 1) RELATIVE Source
+
+COMPONENT BrillmonTHRM = Brilliance_monitor(
+    nlam = 101, nt = 101, filename = "brillTHRM", t_0 = -1000,
+    t_1 =4e4, lambda_0 = lambdamin, lambda_1 = lambdamax,
+    Freq =14, toflambda=1,tofcuts=0, srcarea=(100*WidthT*100*Yheight), restore_neutron=1)
+  WHEN (!IsCold) AT (0, 0, 1) RELATIVE Source
+
+COMPONENT BrillmonTHRM_COLL = Brilliance_monitor(
+    nlam = 101, nt = 101, filename = "brillTHRM_COLL", t_0 = -1000,
+    t_1 =4e4, lambda_0 = lambdamin, lambda_1 = lambdamax,
+    Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.06*100*2*Yheight/2.5), restore_neutron=1)
+  WHEN ((!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.03)  AT (0, 0, 1) RELATIVE Source
+
+COMPONENT BrillmonTHRM_COLL_Ken = Brilliance_monitor(
+    nlam = 101, nt = 11, filename = "brillTHRM_COLL_Ken", t_0 = -1000,
+    t_1 =4e4, lambda_0 = 0.905, lambda_1 = 2.02,
+    Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.06*100*2*Yheight/2.5), restore_neutron=1)
+  WHEN ((!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.03)  AT (0, 0, 1) RELATIVE Source
+
 
 /* Uncomment these helper-arms to view "full" monolith */
 

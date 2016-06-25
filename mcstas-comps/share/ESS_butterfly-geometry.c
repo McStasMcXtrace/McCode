@@ -20,7 +20,7 @@ double y0;
 int j;
 double rAx,rAz,rBx,rBz;
 
-for (y0=-dy; y0<2*dy; y0+=2*dy) {
+for (y0=-delta_y; y0<2*delta_y; y0+=2*delta_y) {
   for (j=0; j<63; j++) {
     
     rAx = r11*(butterfly_z[j]-cz) + r12*(butterfly_x[j]-cx);
@@ -35,7 +35,7 @@ for (y0=-dy; y0<2*dy; y0+=2*dy) {
 }
 
 /* Draw the "border" between the thermal and cold areas */
-for (y0=-dy; y0<2*dy; y0+=2*dy) {
+for (y0=-delta_y; y0<2*delta_y; y0+=2*delta_y) {
   for (j=0; j<2; j++) {
     
     rAx = r11*(butterfly_e_z1[j]-cz) + r12*(butterfly_e_x1[j]-cx);
@@ -57,15 +57,15 @@ for (y0=-dy; y0<2*dy; y0+=2*dy) {
 }
 
 /* Indicate the emission planes of cold/thermal moderator */
-for (y0=-dy; y0<2*dy; y0+=2*dy) {
+for (y0=-delta_y; y0<2*delta_y; y0+=2*delta_y) {
   dashed_line(rC1_x, y0, rC1_z, rC2_x, y0, rC2_z, 11);
   dashed_line(rT1_x, y0, rT1_z, rT2_x, y0, rT2_z, 11);
-
 }
-dashed_line(rC1_x, -dy, rC1_z, rC1_x, dy, rC1_z, 11);
-dashed_line(rC2_x, -dy, rC2_z, rC2_x, dy, rC2_z, 11);
-dashed_line(rT1_x, -dy, rT1_z, rT1_x, dy, rT1_z, 11);
-dashed_line(rT2_x, -dy, rT2_z, rT2_x, dy, rT2_z, 11);
+dashed_line(rC0_x, -delta_y, rC0_z, rC0_x, delta_y, rC0_z, 11);
+dashed_line(rC1_x, -delta_y, rC1_z, rC1_x, delta_y, rC1_z, 11);
+dashed_line(rC2_x, -delta_y, rC2_z, rC2_x, delta_y, rC2_z, 11);
+dashed_line(rT1_x, -delta_y, rT1_z, rT1_x, delta_y, rT1_z, 11);
+dashed_line(rT2_x, -delta_y, rT2_z, rT2_x, delta_y, rT2_z, 11);
 
 
 /* Arrow indicating proton beam direction */
