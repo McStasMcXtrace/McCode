@@ -11,15 +11,16 @@
 	<script src="https://sim.e-neutrons.org/static/threejs/three.min.js"></script>
 	<script src="https://sim.e-neutrons.org/static/threejs/dat.gui.min.js"></script>
 	<script src="https://sim.e-neutrons.org/static/threejs/OrbitControls.js"></script>
+	<script src="https://sim.e-neutrons.org/static/threejs/Lut.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
 	<script src="_mcdisplay.js"></script>
 	<script src="_instr.js"></script>
 	<script src="_neutrons.js"></script>
 
 	<script>
-		var x = -26.3, y = 26.3, z = 26.3;
+		var campos_x = -26.3, campos_y = 26.3, campos_z = 26.3;
 		// INSERT_CAMPOS_HERE: x = XVAL, y = YVAL, z = ZVAL;
-		var controller = new Controller(x, y, z);
+		var controller = new Controller(campos_x, campos_y, campos_z);
 		var viewmodel = controller.viewmodel;
 
 		// UI event handlers interacting only(!!) with the viewmodel.
@@ -56,21 +57,37 @@
 				viewmodel.setDisplayMode(DisplayMode.SINGLE);
 			}
 		}
+		var handleViewTop = function()
+		{
+			controller.setViewTop();
+		}
+		var handleViewSide = function()
+		{
+			controller.setViewSide();
+		}
+		var handleViewHome = function()
+		{
+			controller.setViewHome();
+		}
 	</script>
 
 	<div id="gui" style="width: auto; background-color: black;">
 		<label id="lblInstrInfo" style="color: white;">(instr)</label>
 	</div>
 	<div id="gui" style="width: auto; background-color: black;">
+		<label id="lblKeep" style="color: white; background-color: black; display: inline-block; text-align:right;">
+			Keep rays<input id="cbxKeep" type="checkbox">
+		</label>
 		<button id="btnPrev", onclick="handlePrev();" style="width: 90px;">Previous</button>
 		<button id="btnPlayPause", onclick="handlePlayPause();" style="width: 90px;">Play/Pause</button>
 		<button id="btnNext", onclick="handleNext();" style="width: 90px;">Next</button>
-		<label id="lblRayIdxText" style="color: white;">Ray index: </label>
+		<label id="lblRayIdxText" style="color: white;">Ray index</label>
 		<label id="lblRayIdx" style="color: white; background-color: black; width: 27px; text-align: right; display: inline-block;">(idx)</label>
 		<label id="lblMaxRayIdx" style="color: white; background-color: black; display: inline-block;">(max_idx)</label>
-		<label id="lblKeep" style="color: white; background-color: black; display: inline-block; text-align:right; width: 100px;">
-			Keep:<input id="cbxKeep" type="checkbox">
-		</label>
+		<label id="lblView" style="color: white; background-color: black; display: inline-block; text-align:right; width: 150px;">Reset view</label>
+		<!--<button id="btnTop", onclick="handleViewTop();" style="width: 60px;">Top</button>
+		<button id="btnSide", onclick="handleViewSide();" style="width: 60px;">Side</button>-->
+		<button id="btnHome", onclick="handleViewHome();" style="width: 60px;">Home</button>
 	</div>
 	<div id="3dcanvas"></div>
 
@@ -84,11 +101,9 @@
 		}
 		UpdateGui.prototype.update = function()
 		{
-			// determine if anything has changed
-			if (this.vm_version == this.viewmodel.getUpdateVersion())
-			{
-				return;
-			}
+			// return if viewmodel is constant
+			if (this.vm_version == this.viewmodel.getUpdateVersion()) { return; }
+
 			this.vm_version = this.viewmodel.getUpdateVersion();
 
 			// update playback mode

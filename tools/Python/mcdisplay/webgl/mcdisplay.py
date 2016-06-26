@@ -34,7 +34,7 @@ class SimpleWriter(object):
         for i in range(len(lines)):
             if 'INSERT_CAMPOS_HERE:' in lines[i]:
                 campos_lidx = i
-                lines[i] = '            x = %s, y = %s, z = %s; // line by SimpleWriter' % (str(self.campos.x), str(self.campos.y), str(self.campos.z))
+                lines[i] = '            campos_x = %s, campos_y = %s, campos_z = %s; // line written by SimpleWriter' % (str(self.campos.x), str(self.campos.y), str(self.campos.z))
         self.text = '\n'.join(lines)
         
         # write to disk
@@ -147,7 +147,7 @@ class McDisplayReader(object):
         
         return rays
 
-def write_gluefile_html(instrument, html_filepath, first=None, last=None):
+def write_html(instrument, html_filepath, first=None, last=None):
     ''' writes instrument definition to html/js '''
     # calculate campost by means of the component bounding boxes (mediated by drawcalls)
     drawcalls = []
@@ -208,7 +208,7 @@ def write_browse(instrument, raybundle, dir):
     
     # write html
     html_filepath = os.path.join(dir, 'index.html')
-    write_gluefile_html(instrument, html_filepath, first=args.first, last=args.last)
+    write_html(instrument, html_filepath, first=args.first, last=args.last)
     
     # write instrument
     json_instr = 'MCDATA_instrdata = %s;' % json.dumps(instrument.jsonize(), indent=0)

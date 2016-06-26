@@ -2,6 +2,8 @@
 Classes for representing a mcstas instruments and neutron rays,
 and classes used for organizing component drawing calls.
 '''
+import math
+
 class InstrumentSpecific(object):
     ''' represents a mcstas instrument with params choice '''
     def __init__(self, name, params, params_defaults):
@@ -83,30 +85,61 @@ class RayBundle(object):
         self.rays = rays
     
     def jsonize(self):
+        ''' returns a jsonized version of this object '''
         bundle = {}
+        
+        # rays
         lst =  []
         for r in self.rays:
             lst.append(r.jsonize())
         bundle['rays'] = lst
+        
+        # number of rays
         bundle['numrays'] = len(lst)
+        
+        # min and max neutron ray velocity
+        vmin = None
+        vmax = None
+        for r in self.rays:
+            speed = r.get_speed()
+            #speed = math.sqrt(args[3]*args[3] + args[4]*args[4] + args[5]*args[5])
+            vmin = min(vmin, speed) or speed
+            vmax = max(vmax, speed) or speed
+        bundle['vmin'] = vmin
+        bundle['vmax'] = vmax
+        
+        print vmin, vmax
+
         return bundle
     
 class NeutronStory(object):
     ''' represents a whole neutron ray from start to finish '''
     def __init__(self):
         self.groups = []
+        self.speed = None
     
     def add_group(self, group):
         self.groups.append(group)
+    
+    def get_speed(self):
+        ''' on-demand speed of this neutron ray, which is incorrectly assumed to be constant '''
+        if not self.speed:
+            args = self.groups[len(self.groups)-1].events[0].args
+            self.speed = math.sqrt(args[3]*args[3] + args[4]*args[4] + args[5]*args[5])
+        return self.speed
     
     def jsonize(self):
         ''' returns a jsonized version of this object '''
         story = {}
         
+        # component-coordinate event groups
         lst = []
         for g in self.groups:
             lst.append(g.jsonize())
         story['groups'] = lst
+        
+        # speed
+        story['speed'] = self.get_speed()
         
         return story
 

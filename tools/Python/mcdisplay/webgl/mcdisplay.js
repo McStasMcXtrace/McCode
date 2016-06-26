@@ -29,6 +29,8 @@ var Main = function ()
     this.raynodes = [];
 
     this.iRay = -1;
+
+    this.lut = null;
 }
 // add circle to xy, xz or yz plane
 //
@@ -85,7 +87,7 @@ Main.prototype.addLight = function(center)
     pointLight.position.z = center.z;
     this.scene.add(pointLight);
 }
-// initialize the scene
+//  initialize the scene
 //
 Main.prototype.init = function(campos)
 {
@@ -106,7 +108,7 @@ Main.prototype.init = function(campos)
     document.getElementById("3dcanvas").appendChild(this.renderer.domElement);
 
     this.controls = new THREE.OrbitControls(this.camera);
-    this.controls.target.x = - campos.x/2; //1;
+    this.controls.target.x = -campos.x/2; //1;
     this.controls.target.y = 0; //0;
     this.controls.target.z = campos.z; //49;
 
@@ -114,6 +116,20 @@ Main.prototype.init = function(campos)
 
     this.addLight(new THREE.Vector3(10, 50, 130))
     this.scene.add(this.rootnode);
+}
+//  cat camera view according to campos, a Vector3
+//
+Main.prototype.setCameraView = function(campos)
+{
+    this.camera.position.x = campos.x;
+    this.camera.position.y = campos.y;
+    this.camera.position.z = campos.z;
+
+    this.controls.target.x = -campos.x/2;
+    this.controls.target.y = 0;
+    this.controls.target.z = campos.z;
+
+    this.camera.lookAt(this.controls.target);
 }
 //  set a bounding box around the components
 //
@@ -145,6 +161,8 @@ Main.prototype.addMultiLine = function(points, parent, linecolor)
     }
     this.addMultiLineV3(vectors, parent, linecolor);
 }
+//  adds tiny boxes to each neutron ray scatter point
+//
 Main.prototype.putScatterPoints = function(raynode)
 {
     var v;
@@ -154,16 +172,31 @@ Main.prototype.putScatterPoints = function(raynode)
         var geometry = new THREE.BoxGeometry( 0.007, 0.007, 0.007 );
         v = vtx[i];
         geometry.translate(v.x, v.y, v.z);
-        var material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        var material = new THREE.MeshBasicMaterial({ color: raynode.lut_color });
         var cube = new THREE.Mesh( geometry, material );
         raynode.add( cube );
     }
 }
+
+//  set color lookuptable min/max range
+//  color maps: rainbow, cooltowarm, blackbody, grayscale
+Main.prototype.setLutRange = function(min, max)
+{
+    this.lut = new THREE.Lut( "blackbody", 512 );
+    this.lut.setMin(min);
+    this.lut.setMax(max);
+    console.log("Lut min value: " + min);
+    console.log("Lut max value: " + max);
+}
 // add a ray node
 //
-Main.prototype.addRayNode = function(rayObj, vertices)
+Main.prototype.addRayNode = function(rayObj, vertices, speed)
 {
-    var multilinematerial = new THREE.LineBasicMaterial({color: 0xffffff});
+    var lut_color = this.lut.getColor(speed);
+    rayObj.lut_color = lut_color;
+    console.log("lut_color: " + lut_color);
+
+    var multilinematerial = new THREE.LineBasicMaterial({color: lut_color});
     var multilinegeometry = new THREE.Geometry();
     multilinegeometry.vertices = vertices;
     var multiline = new THREE.Line(multilinegeometry, multilinematerial);
@@ -326,6 +359,9 @@ TraceLoader.prototype.loadNeutrons = function()
 {
     var main = this.main;
 
+    // set Lut stuff
+    main.setLutRange(this.neutrondata['vmin'], this.neutrondata['vmax']);
+
     // RAYS
     var rays = this.neutrondata['rays'];
     var ray;
@@ -337,6 +373,7 @@ TraceLoader.prototype.loadNeutrons = function()
         aVertices = [];
         var aCompVertices;
         var compname;
+        var speed = ray['speed'];
 
         var groups =  ray['groups'];
         var group;
@@ -360,7 +397,7 @@ TraceLoader.prototype.loadNeutrons = function()
             aVertices = aVertices.concat(transformPoints(aCompVertices, main.compnodes[compname].matrix));
         }
         // add ray as a multiline
-        main.addRayNode(rayobj, aVertices);
+        main.addRayNode(rayobj, aVertices, speed);
         //main.addMultiLineV3(aVertices, rayobj, main.rayColor);
     }
 }
@@ -368,7 +405,7 @@ TraceLoader.prototype.loadNeutrons = function()
 //      campos_x/y/z  -  determines initial camera position, this is used with --inspect
 var Controller = function(campos_x, campos_y, campos_z)
 {
-    this.campos = new THREE.Vector3(campos_x, campos_y, campos_z);
+    this.camPosInitial = new THREE.Vector3(campos_x, campos_y, campos_z);
     this.main = new Main();
     this.loader = new TraceLoader(MCDATA_instrdata, MCDATA_neutrondata, this.main);
     this.viewmodel = new ViewModel(numRays = MCDATA_neutrondata["numrays"]);
@@ -382,7 +419,7 @@ Controller.prototype.setUpdateGuiFunc = function(updateGuiFunc)
 Controller.prototype.run = function()
 {
     // init mcdisplay
-    this.main.init(this.campos);
+    this.main.init(this.camPosInitial);
 
     // execution loops
     var _this = this;
@@ -391,9 +428,13 @@ Controller.prototype.run = function()
     	requestAnimationFrame(renderLoop);
     	_this.main.renderer.render(_this.main.scene, _this.main.camera);
     }
+    var busy = false;
     var dataLoop = function()
     {
-        setTimeout(dataLoop, 1000/_this.viewmodel.raysPrSec);
+        // add a single-threaded critical section / lock
+        if (busy == true) { console.log("busy"); return; }
+        busy = true;
+
         if (_this.viewmodel.playBack == PlayBack.ALL)
         {
             _this.showAllRays();
@@ -413,6 +454,9 @@ Controller.prototype.run = function()
         {
             _this.hidePrevRays();
         }
+        setTimeout(dataLoop, 1000/_this.viewmodel.raysPrSec);
+
+        busy = false;
     }
     var updateGuiLoop = function()
     {
@@ -451,12 +495,26 @@ Controller.prototype.showCurrentRay = function()
 {
     this.main.showRay(this.viewmodel.getRayIdx());
 }
+Controller.prototype.setViewTop = function()
+{
+    // TODO: implement
+    console.log("not implemented");
+}
+Controller.prototype.setViewSide = function()
+{
+    // TODO: implement
+    console.log("not implemented");
+}
+Controller.prototype.setViewHome = function()
+{
+    this.main.setCameraView(this.camPosInitial);
+}
 
 //  enum for playback state
 //
 PlayBack = { RUN : 0, PAUSE : 1, ALL : 3 };
 
-//
+//  displaymode e.g. keep rays animated or display one at the time
 //
 DisplayMode = { SINGLE : 0, KEEP : 1 }
 
@@ -494,6 +552,7 @@ ViewModel.prototype.shiftNonFirstRayIdxs = function()
     {
         return [];
     }
+
     var arr = [];
     for (var i=0; i < this.rayIdx.length -1; i++)
     {
