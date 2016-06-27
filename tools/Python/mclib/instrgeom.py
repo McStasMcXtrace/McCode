@@ -108,10 +108,8 @@ class RayBundle(object):
         bundle['vmin'] = vmin
         bundle['vmax'] = vmax
         
-        print vmin, vmax
-
         return bundle
-    
+
 class NeutronStory(object):
     ''' represents a whole neutron ray from start to finish '''
     def __init__(self):

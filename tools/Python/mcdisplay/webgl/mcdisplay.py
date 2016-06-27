@@ -18,13 +18,14 @@ from mclib import mccode_config
 from mclib.pipetools import McrunPipeMan
 from mclib.instrparser import TraceInstrParser, InstrObjectConstructor
 from mclib.neutronparser import NeutronRayConstructor, TraceNeutronRayParser
-from mclib.instrgeom import Vector3d, Transform, calcLargestBoundingVolumeWT
+from mclib.instrgeom import Vector3d, Transform, calcLargestBoundingVolumeWT, BoundingBox
 
 class SimpleWriter(object):
     ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''
-    def __init__(self, templatefile, campos, html_filename):
+    def __init__(self, templatefile, campos, box, html_filename):
         self.template = templatefile
         self.campos = campos
+        self.box = box
         self.html_filename = html_filename
     
     def write(self):
@@ -32,9 +33,10 @@ class SimpleWriter(object):
         template = open(self.template).read()
         lines = template.splitlines()
         for i in range(len(lines)):
-            if 'INSERT_CAMPOS_HERE:' in lines[i]:
-                campos_lidx = i
-                lines[i] = '            campos_x = %s, campos_y = %s, campos_z = %s; // line written by SimpleWriter' % (str(self.campos.x), str(self.campos.y), str(self.campos.z))
+            if 'INSERT_CAMPOS_HERE' in lines[i]:
+                lines[i] = '        campos_x = %s, campos_y = %s, campos_z = %s; // line written by SimpleWriter' % (str(self.campos.x), str(self.campos.y), str(self.campos.z))
+                box = self.box
+                lines[i+1] = '        box_x1 = %s, box_x2 = %s, box_y1 = %s, box_y2 = %s, box_z1 = %s, box_z2 = %s; // line written by SimpleWriter' % (str(box.x1), str(box.x2), str(box.y1), str(box.y2), str(box.z1), str(box.z2))
         self.text = '\n'.join(lines)
         
         # write to disk
@@ -194,10 +196,12 @@ def write_html(instrument, html_filepath, first=None, last=None):
     
     campos = Vector3d(x, y, z)
     
+    # total instrument bounding box (currently an approximation)
+    box_total_appr = BoundingBox(box.x1, box.x2, box.y1, box.y2, 0, box.z2)
+
     # render html
     templatefile = os.path.join(os.path.dirname(__file__), "template.html")
-    
-    writer = SimpleWriter(templatefile, campos, html_filepath)
+    writer = SimpleWriter(templatefile, campos, box_total_appr, html_filepath)
     writer.write()
 
 def write_browse(instrument, raybundle, dir):

@@ -18,10 +18,13 @@
 	<script src="_neutrons.js"></script>
 
 	<script>
-		var campos_x = -26.3, campos_y = 26.3, campos_z = 26.3;
-		// INSERT_CAMPOS_HERE: x = XVAL, y = YVAL, z = ZVAL;
-		var controller = new Controller(campos_x, campos_y, campos_z);
-		var viewmodel = controller.viewmodel;
+        var campos_x = -26.3, campos_y = 26.3, campos_z = 26.3;
+        var box_x1 = 0, box_x2 = 3, box_y1 = -0.3, box_y2 = 0.3, box_z1 = 49, box_z2 = 53;
+        // INSERT_CAMPOS_HERE
+        // INSERT_BOX_HERE
+        var box_lst = [box_x1, box_x2, box_y1, box_y2, box_z1, box_z2];
+        var controller = new Controller(campos_x, campos_y, campos_z, box_lst);
+        var viewmodel = controller.viewmodel;
 
 		// UI event handlers interacting only(!!) with the viewmodel.
 		// TODO: implement callbacks
@@ -85,9 +88,9 @@
 		<label id="lblRayIdx" style="color: white; background-color: black; width: 27px; text-align: right; display: inline-block;">(idx)</label>
 		<label id="lblMaxRayIdx" style="color: white; background-color: black; display: inline-block;">(max_idx)</label>
 		<label id="lblView" style="color: white; background-color: black; display: inline-block; text-align:right; width: 150px;">Reset view</label>
-		<!--<button id="btnTop", onclick="handleViewTop();" style="width: 60px;">Top</button>
-		<button id="btnSide", onclick="handleViewSide();" style="width: 60px;">Side</button>-->
 		<button id="btnHome", onclick="handleViewHome();" style="width: 60px;">Home</button>
+		<button id="btnSide", onclick="handleViewSide();" style="width: 60px;">Side</button>
+		<button id="btnTop", onclick="handleViewTop();" style="width: 60px;">Top</button>
 	</div>
 	<div id="3dcanvas"></div>
 

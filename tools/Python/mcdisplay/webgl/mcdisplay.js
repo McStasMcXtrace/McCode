@@ -125,7 +125,7 @@ Main.prototype.setCameraView = function(campos)
     this.camera.position.y = campos.y;
     this.camera.position.z = campos.z;
 
-    this.controls.target.x = -campos.x/2;
+    this.controls.target.x = 0;
     this.controls.target.y = 0;
     this.controls.target.z = campos.z;
 
@@ -135,8 +135,8 @@ Main.prototype.setCameraView = function(campos)
 //
 Main.prototype.setBoundingBox = function()
 {
-    var box = new THREE.BoxHelper( this.rootnode, 0x808080 );
-    this.scene.add( box );
+    var box = new THREE.BoxHelper(this.rootnode, 0x808080);
+    this.scene.add(box);
 }
 // add multiline
 // 		arrVector3  -  an array of THREE.Vector3 instances
@@ -403,9 +403,10 @@ TraceLoader.prototype.loadNeutrons = function()
 }
 //  program controller
 //      campos_x/y/z  -  determines initial camera position, this is used with --inspect
-var Controller = function(campos_x, campos_y, campos_z)
+var Controller = function(campos_x, campos_y, campos_z, box_lst)
 {
     this.camPosInitial = new THREE.Vector3(campos_x, campos_y, campos_z);
+    this.box_lst = box_lst; // this would be [x_min, x_max, ...]
     this.main = new Main();
     this.loader = new TraceLoader(MCDATA_instrdata, MCDATA_neutrondata, this.main);
     this.viewmodel = new ViewModel(numRays = MCDATA_neutrondata["numrays"]);
@@ -497,13 +498,25 @@ Controller.prototype.showCurrentRay = function()
 }
 Controller.prototype.setViewTop = function()
 {
-    // TODO: implement
-    console.log("not implemented");
+    var box = this.box_lst;
+    var x = - 0.01; // must not be zero due to the euler angle rotation lock stuff
+    var y = (box[5] - box[4])/2;
+    var z = (box[5] - box[4])/2;
+    this.main.camera.up = new THREE.Vector3(1, 0, 0);
+    this.main.setCameraView(new THREE.Vector3(x, y, z));
+    this.main.camera.up = new THREE.Vector3(0, 1, 0);
+    // next line just to be safe
+    this.main.camera.updateMatrix();
 }
 Controller.prototype.setViewSide = function()
 {
-    // TODO: implement
-    console.log("not implemented");
+    var box = this.box_lst;
+    var x = - (box[5] - box[4])/2;
+    var y = 0;
+    var z = (box[5] - box[4])/2;
+    this.main.setCameraView(new THREE.Vector3(x, y, z));
+    // next line just to be safe
+    this.main.camera.updateMatrix();
 }
 Controller.prototype.setViewHome = function()
 {
