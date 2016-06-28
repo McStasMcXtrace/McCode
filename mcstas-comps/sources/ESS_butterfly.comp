@@ -89,6 +89,8 @@ DECLARE
   functype thermal_bril;
   double k,v,r;
   double dx,dy,dz;
+  /* variables needed to correct for the emission surface angle */
+  double internal_angle,cos_thermal,cos_cold, edge_thermal,abs_beamport_angle,cos_beamport_angle,sin_beamport_angle;
   int nearest_angle(double angle) {
     int AngleList[] = {5, 15, 25, 35, 45, 55};
     double diff = 180;
@@ -179,7 +181,8 @@ INITIALIZE
     fprintf(stderr,"%s: beamline no %i is undefined in sector %s, please use 1 <= beamline <= %i\n", NAME_CURRENT_COMP, beamline, sector, jmax);
     exit(-1);
   }
-  modextras.beamportangle=nearest_angle(fabs(90-fabs(orientation_angle)));
+  internal_angle=90-fabs(orientation_angle);
+  modextras.beamportangle=nearest_angle(fabs(internal_angle));
   printf("Setting up for sector %s, beamline %i, global orientation angle is %g, internal angle %g\n",sector,beamline,orientation_angle,modextras.beamportangle);
   if (performance <= 0 || performance > 1) {
     fprintf(stderr,"%s: performance scalar of %g is not allowed. Please select 0 < performance <= 1\n", NAME_CURRENT_COMP, performance);
@@ -248,6 +251,14 @@ INITIALIZE
   w_mult *= l_range;            /* wavelength range correction */
   n_pulses=(double)floor(n_pulses);
   if (n_pulses == 0) n_pulses=1;
+
+  /* ESS 2015 - variables needed to correct for the emission surface angle */
+  abs_beamport_angle=fabs(internal_angle);
+  cos_beamport_angle=cos(internal_angle*DEG2RAD);
+  sin_beamport_angle=sin(internal_angle*DEG2RAD);
+  /* correction for projection along the beam / projection on the z=0 plane */
+  cos_thermal=cos_beamport_angle;
+  cos_cold=cos((abs_beamport_angle-24.24)*DEG2RAD)/cos(24.24*DEG2RAD);
 %}
 
 TRACE
@@ -264,10 +275,12 @@ TRACE
       x = rC1_x + (rC2_x - rC1_x)*xtmp;
       z = rC1_z + (rC2_z - rC1_z)*xtmp;
       modextras.X=((-xtmp*0.07)-0.09);
+      w_geom=w_geom_c*cos_cold;
     } else {
       x = rC1_x + (rC0_x - rC1_x)*xtmp;
       z = rC1_z + (rC0_z - rC1_z)*xtmp;
       modextras.X=((xtmp*0.03)-0.09);
+      w_geom=w_geom_c*cos_thermal;
     }
     cold_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
     w_geom=w_geom_c;
@@ -277,8 +290,9 @@ TRACE
     z = rT1_z + (rT2_z - rT1_z)*xtmp;
     modextras.X=((xtmp*0.18)-0.09);
     thermal_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
-    w_geom=w_geom_t;
+    w_geom=w_geom_t*cos_thermal;
   }
+
   SCATTER;
   /* Where are we going? */
   randvec_target_rect_real(&xf, &yf, &zf, NULL,
@@ -308,14 +322,16 @@ TRACE
 
   p*=w_stat*w_focus*w_geom*w_mult;
   t+=(double)floor((n_pulses)*rand01())/ESS_SOURCE_FREQUENCY;   /* Select a random pulse */
-  //printf("Emitted event %g %g %g / %g %g %g / %g \n",x,y,z,vx,vy,vz,p);
   
+
   /* Correct weight for sampling of cold vs. thermal events. */
   if (iscold) {
     p /=cold_frac;
   } else {
     p/=(1-cold_frac);
   }
+  /* Apply simple engineering reality correction */
+  p *= performance;
   SCATTER;
 
   
