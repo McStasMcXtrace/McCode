@@ -103,7 +103,8 @@ DECLARE
       }
     }
     return AngleList[jmin];
-  } 
+  }
+  double x0,z0;
 %}
 
 INITIALIZE
@@ -122,8 +123,8 @@ INITIALIZE
     C0_z=0;
     C1_x=0;
     C1_z=0;
-    C2_x=-0.07*cos(-156*DEG2RAD);
-    C2_z=0.07*sin(-156*DEG2RAD);
+    C2_x=0.07*cos(24.24*DEG2RAD);
+    C2_z=-0.07*sin(24.24*DEG2RAD);
     isleft=1;
   } else if (strcasestr(sector,"W")) {
     cx = 0.0; cz=0.0; sign_bl_angle=-1;
@@ -138,8 +139,8 @@ INITIALIZE
     C0_z=0;
     C1_x=0;
     C1_z=0;
-    C2_x=0.07*cos(-156*DEG2RAD);
-    C2_z=0.07*sin(-156*DEG2RAD);
+    C2_x=-0.07*cos(24.24*DEG2RAD);
+    C2_z=-0.07*sin(24.24*DEG2RAD);
     isleft=-1;
   } else if (strcasestr(sector,"S")) {
     cx = 0.0; cz=-0.185; sign_bl_angle=1;
@@ -154,8 +155,8 @@ INITIALIZE
     C0_z=0;
     C1_x=0;
     C1_z=0;
-    C2_x=0.07*cos(156*DEG2RAD);
-    C2_z=0.07*sin(156*DEG2RAD);
+    C2_x=-0.07*cos(24.24*DEG2RAD);
+    C2_z=0.07*sin(24.24*DEG2RAD);
     isleft=1;
   } else if (strcasestr(sector,"E")) {
     cx = 0.117; cz=-0.185; sign_bl_angle=-1;
@@ -170,8 +171,8 @@ INITIALIZE
     C0_z=0;
     C1_x=0;
     C1_z=0;
-    C2_x=-0.07*cos(-156*DEG2RAD);
-    C2_z=-0.07*sin(-156*DEG2RAD);
+    C2_x=0.07*cos(24.24*DEG2RAD);
+    C2_z=0.07*sin(24.24*DEG2RAD);
     isleft=-1;
   } else {
     fprintf(stderr,"%s: Sector %s is undefined, please use N, W, S or E!\n", NAME_CURRENT_COMP,sector);
@@ -253,9 +254,9 @@ INITIALIZE
   if (n_pulses == 0) n_pulses=1;
 
   /* ESS 2015 - variables needed to correct for the emission surface angle */
-  abs_beamport_angle=fabs(internal_angle);
-  cos_beamport_angle=cos(internal_angle*DEG2RAD);
-  sin_beamport_angle=sin(internal_angle*DEG2RAD);
+  abs_beamport_angle=modextras.beamportangle;
+  cos_beamport_angle=cos(modextras.beamportangle*DEG2RAD);
+  sin_beamport_angle=sin(modextras.beamportangle*DEG2RAD);
   /* correction for projection along the beam / projection on the z=0 plane */
   cos_thermal=cos_beamport_angle;
   cos_cold=cos((abs_beamport_angle-24.24)*DEG2RAD)/cos(24.24*DEG2RAD);
@@ -274,20 +275,25 @@ TRACE
     if (rand01()<0.7) {
       x = rC1_x + (rC2_x - rC1_x)*xtmp;
       z = rC1_z + (rC2_z - rC1_z)*xtmp;
+      x0 = C1_x + (C2_x - C1_x)*xtmp;
+      z0 = C1_z + (C2_z - C1_z)*xtmp;
       modextras.X=((-xtmp*0.07)-0.09);
       w_geom=w_geom_c*cos_cold;
     } else {
       x = rC1_x + (rC0_x - rC1_x)*xtmp;
       z = rC1_z + (rC0_z - rC1_z)*xtmp;
+      x0 = C1_x + (C0_x - C1_x)*xtmp;
+      z0 = C1_z + (C0_z - C1_z)*xtmp;
       modextras.X=((xtmp*0.03)-0.09);
       w_geom=w_geom_c*cos_thermal;
     }
     cold_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
-    w_geom=w_geom_c;
   } else {
     iscold=0;
     x = rT1_x + (rT2_x - rT1_x)*xtmp;
     z = rT1_z + (rT2_z - rT1_z)*xtmp;
+    x0 = T1_x + (T2_x - T1_x)*xtmp;
+    z0 = T1_z + (T2_z - T1_z)*xtmp;
     modextras.X=((xtmp*0.18)-0.09);
     thermal_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
     w_geom=w_geom_t*cos_thermal;
@@ -318,8 +324,7 @@ TRACE
   }  else  {                      //case: thermal moderator
     thermal_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
   }
-  //printf("Source weight factors: w_stat %g, w_focus %g, w_geom %g, w_mult %g\n",w_stat,w_focus,w_geom,w_mult);
-
+  
   p*=w_stat*w_focus*w_geom*w_mult;
   t+=(double)floor((n_pulses)*rand01())/ESS_SOURCE_FREQUENCY;   /* Select a random pulse */
   
