@@ -82,7 +82,7 @@ DECLARE
   double tx,ty,tz;
   int isleft;
   double  tfocus_width,  tfocus_time,  dt, lambda, l_range;
-  %include "ess_source-lib"
+  %include "ESS_butterfly-lib"
   ess_moderator_struct modextras;
   /* Cold and thermal function pointers */
   functype cold_bril;
