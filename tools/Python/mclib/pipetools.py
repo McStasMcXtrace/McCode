@@ -163,14 +163,13 @@ class TraceReader(Thread):
     
     def __init__(self, cmd, inspect=None, use_defaultpars=False):
         # set up state machine
-        setcurrent = lambda current, line: self._setcurrent(current, line)
         allstates = {}
         databox = DataBox()
         
-        allstates['neutrons'] = NeutronsState(setcurrent, next=None, databox=databox, args={'inspect': inspect})
-        allstates['mcdisplay'] = McdisplayState(setcurrent, next=allstates['neutrons'], databox=databox)
-        allstates['instr'] = InstrState(setcurrent, next=allstates['mcdisplay'], databox=databox)
-        allstates['prompt'] = PromptState(setcurrent, next=allstates['instr'], databox=databox, args={'use_defaultpars': use_defaultpars})
+        allstates['neutrons'] = NeutronsState(self._setcurrent, next=None, databox=databox, args={'inspect': inspect})
+        allstates['mcdisplay'] = McdisplayState(self._setcurrent, next=allstates['neutrons'], databox=databox)
+        allstates['instr'] = InstrState(self._setcurrent, next=allstates['mcdisplay'], databox=databox)
+        allstates['prompt'] = PromptState(self._setcurrent, next=allstates['instr'], databox=databox, args={'use_defaultpars': use_defaultpars})
         
         # remember
         self.current = allstates['prompt']
@@ -193,6 +192,7 @@ class TraceReader(Thread):
         
         while process.poll() == None:
             stdoutdata = process.stdout.readline()
+            #stderrdata = process.stderr.readline()
             self.current.add_line(stdoutdata)
         
         # empty process buffer
