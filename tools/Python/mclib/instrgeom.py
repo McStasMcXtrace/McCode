@@ -20,47 +20,28 @@ class InstrumentSpecific(object):
         self.cmd = cmd
     
     def get_boundingbox(self, first=None, last=None):
-        oldbox = BoundingBox()
-        for c in self.components:
-            box = c.get_tranformed_bb().add(oldbox)
+        components = self.components
+        
+        cnames = map(lambda c: c.name, self.components)
+        if first in cnames and last in cnames:
+            i_first = cnames.index(first)
+            i_last = cnames.index(last)
+            components = filter(lambda c: self.components.index(c) > i_first or self.components.index(c) < i_last, self.components)
+        elif first in cnames:
+            i_first = cnames.index(first)
+            components = filter(lambda c: self.components.index(c) > i_first, self.components)
+        elif last in cnames:
+            i_last = cnames.index(last)
+            components = filter(lambda c: self.components.index(c) < i_last, self.components)
+        
+        # run the bounding box calculation
+        oldbox = None
+        for c in components:
+            box = c.get_tranformed_bb()
+            if oldbox: 
+                box = box.add(oldbox)
             oldbox = box
-        
-        # TODO: implement first/last, this is how it looked before
-        
-        '''
-        drawcalls = []
-        
-        encountered_first = False
-        encountered_last = False
-        
-        # sanity check of first / last:
-        if first: 
-            compnames = []
-            for comp in instrument.components:
-                compnames.append(comp.name)
-            if not first in compnames:
-                raise Exception('--first must be equal to a component name')
-        
-        # construct bounding volume given --first and --last
-        for comp in instrument.components:
-            # continue until we reach a component named first
-            if first:
-                if not encountered_first and comp.name == first:
-                    encountered_first = True
-                if not encountered_first:
-                    continue
-            # continue from encountering a component named last
-            if last:
-                if not encountered_last and comp.name == last:
-                    encountered_last = True
-                if encountered_last:
-                    continue
             
-            transform = Transform(comp.rot, comp.pos)
-            for drawcall in comp.drawcalls:
-                drawcalls.append((drawcall, transform))
-        '''
-        
         return box
     
     def jsonize(self):
@@ -137,6 +118,9 @@ class Component(object):
         component['drawcalls'] = lst
         
         return component
+    
+    def __str__(self):
+        return self.name
     
     @classmethod
     def from_m4_str(cls, name, m4_str):
@@ -260,12 +244,14 @@ class ParticleState(object):
 class BoundingBox(object):
     ''' bounding box '''
     def __init__(self, x1=None, x2=None, y1=None, y2=None, z1=None, z2=None):
-        self.x1 = x1 or 0
-        self.x2 = x2 or 0
-        self.y1 = y1 or 0
-        self.y2 = y2 or 0
-        self.z1 = z1 or 0
-        self.z2 = z2 or 0
+        inf = float("inf")
+        ninf = - inf
+        self.x1 = x1 or inf 
+        self.x2 = x2 or ninf
+        self.y1 = y1 or inf
+        self.y2 = y2 or ninf
+        self.z1 = z1 or inf
+        self.z2 = z2 or ninf
         
     def add(self, box):
         x1 = min(self.x1, box.x1)
@@ -289,6 +275,9 @@ class BoundingBox(object):
         box['zmax'] = self.z2
         
         return box
+    
+    def __str__(self):
+        return '%s, %s, %s, %s, %s, %s' % (self.x1, self.x2, self.y1, self.y2, self.z1, self.z2)
 
 # links mcstas draw api to the corresponding python class names '''
 drawcommands = {
