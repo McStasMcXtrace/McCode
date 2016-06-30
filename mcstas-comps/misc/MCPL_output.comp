@@ -63,8 +63,8 @@ INITIALIZE
 %{
 #if defined (USE_MPI)
   /* In case of MPI, simply redefine the filename used by each node */
-  MPI_MASTER(fprintf(stdout, "\n\nWARNING: You are using MCPL_output with MPI, hence your will get %i filenames %s_node_#i as output.\n\n",mpi_node_count,filename); );
-  sprintf(filename,"%s.node_%i",filename,mpi_node_rank);
+    MPI_MASTER(fprintf(stdout, "Message(%s): You are using MCPL_output with MPI, hence your will get %i filenames %s_node_#i as output.\n",NAME_CURRENT_COMP,mpi_node_count,filename); );
+    sprintf(filename,"%s.node_%i",filename,mpi_node_rank);
 #endif
 
     char line[256];
@@ -74,6 +74,26 @@ INITIALIZE
     mcpl_enable_universal_pdgcode(outputfile,2112);/*all particles are neutrons*/
     snprintf(line,255,"Output by COMPONENT: %s",NAME_CURRENT_COMP);
     mcpl_hdr_add_comment(outputfile,line);
+
+    /*also add the instrument file and the command line as blobs*/
+    FILE *fp;
+    printf("Adding instrument file %s as blob. If possible...\n",mcinstrument_source);
+    if( (fopen(mcinstrument_source,"rb"))!=NULL){
+        unsigned char *buffer;
+        int size,status;
+        /*find the file size by seeking to end, "tell" the position, and then go back again*/
+        fseek(fp, 0L, SEEK_END);
+        size = ftell(fp); // get current file pointer
+        fseek(fp, 0L, SEEK_SET); // seek back to beginning of file
+        if ( size && (buffer=malloc(size))!=NULL){
+            if (size!=(fread(buffer,1,size,fp))){ 
+                fprintf(stderr,"Warning (%s): Source instrument file not read cleanly\n");
+            }
+            mcpl_hdr_add_data(outputfile,  mcinstrument_name, size, buffer);
+            free(buffer);
+        }
+    }
+    fclose(fp);
 
     if (polarisationuse) {
         mcpl_enable_polarisation(outputfile);
