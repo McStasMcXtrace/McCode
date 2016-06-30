@@ -2,8 +2,8 @@
 Tools for piping a process to the terminal for std I/O.
 Buffering and low-level filtering. Thread management.
 '''
-from subprocess import Popen, PIPE
 import re
+from subprocess import Popen, PIPE
 from threading import Thread, Event
 
 class DataBox():
