@@ -15,7 +15,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mclib import mccode_config
 from mclib.mcdisplayutils import McDisplayReader
-from mclib.instrgeom import Vector3d, Transform, calcLargestBoundingVolumeWT, BoundingBox
+from mclib.instrgeom import Vector3d
 
 class SimpleWriter(object):
     ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''
@@ -80,57 +80,21 @@ class DjangoWriter(object):
 
 def write_html(instrument, html_filepath, first=None, last=None):
     ''' writes instrument definition to html/js '''
-    # calculate campost by means of the component bounding boxes (mediated by drawcalls)
-    drawcalls = []
+    box = instrument.get_boundingbox(first, last)
+    box_total = instrument.get_boundingbox()
     
-    encountered_first = False
-    encountered_last = False
-    
-    # sanity check of first / last:
-    if first: 
-        compnames = []
-        for comp in instrument.components:
-            compnames.append(comp.name)
-        if not first in compnames:
-            raise Exception('--first must be equal to a component name')
-    
-    # construct bounding volume given --first and --last
-    for comp in instrument.components:
-        # continue until we reach a component named first
-        if first:
-            if not encountered_first and comp.name == first:
-                encountered_first = True
-            if not encountered_first:
-                continue
-        # continue from encountering a component named last
-        if last:
-            if not encountered_last and comp.name == last:
-                encountered_last = True
-            if encountered_last:
-                continue
-        
-        transform = Transform(comp.rot, comp.pos)
-        for drawcall in comp.drawcalls:
-            drawcalls.append((drawcall, transform))
-    box = calcLargestBoundingVolumeWT(drawcalls)
-    
-    # create camera view coordinates given boudinng volume
+    # create camera view coordinates given the bounding box
     dx = box.x2 - box.x1
     dy = box.y2 - box.y1
     dz = box.z2 - box.z1
-    
     x = -(box.x1 + max(dx, dz)/2)
     y = max(dx, dz)/2
     z = box.z1 + dz/2
-    
     campos = Vector3d(x, y, z)
     
-    # total instrument bounding box (currently an approximation)
-    box_total_appr = BoundingBox(box.x1, box.x2, box.y1, box.y2, 0, box.z2)
-
     # render html
     templatefile = os.path.join(os.path.dirname(__file__), "template.html")
-    writer = SimpleWriter(templatefile, campos, box_total_appr, html_filepath)
+    writer = SimpleWriter(templatefile, campos, box_total, html_filepath)
     writer.write()
 
 def write_browse(instrument, raybundle, dir):

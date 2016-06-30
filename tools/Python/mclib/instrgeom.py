@@ -19,6 +19,50 @@ class InstrumentSpecific(object):
     def setCmd(self, cmd):
         self.cmd = cmd
     
+    def get_boundingbox(self, first=None, last=None):
+        oldbox = BoundingBox()
+        for c in self.components:
+            box = c.get_tranformed_bb().add(oldbox)
+            oldbox = box
+        
+        # TODO: implement first/last, this is how it looked before
+        
+        '''
+        drawcalls = []
+        
+        encountered_first = False
+        encountered_last = False
+        
+        # sanity check of first / last:
+        if first: 
+            compnames = []
+            for comp in instrument.components:
+                compnames.append(comp.name)
+            if not first in compnames:
+                raise Exception('--first must be equal to a component name')
+        
+        # construct bounding volume given --first and --last
+        for comp in instrument.components:
+            # continue until we reach a component named first
+            if first:
+                if not encountered_first and comp.name == first:
+                    encountered_first = True
+                if not encountered_first:
+                    continue
+            # continue from encountering a component named last
+            if last:
+                if not encountered_last and comp.name == last:
+                    encountered_last = True
+                if encountered_last:
+                    continue
+            
+            transform = Transform(comp.rot, comp.pos)
+            for drawcall in comp.drawcalls:
+                drawcalls.append((drawcall, transform))
+        '''
+        
+        return box
+    
     def jsonize(self):
         ''' returns this object in jsonized form '''
         instr = {}
@@ -30,6 +74,9 @@ class InstrumentSpecific(object):
         instr['params_defaults'] = self.params_defaults
         instr['params_values'] = self.params_values
         instr['cmd'] = self.cmd
+        
+        # bounding box
+        instr['bounding_box'] = self.get_boundingbox().jsonize()
         
         # lists of objects
         lst = []
@@ -50,12 +97,30 @@ class Component(object):
         self.name = name
         self.pos = pos
         self.rot = rot
+        self.transform = Transform(rot, pos)
         self.m4 = [rot.a11, rot.a12, rot.a13, pos.x, rot.a21, rot.a22, rot.a23, pos.y, rot.a31, rot.a32, rot.a33, pos.z, 0, 0, 0, 1]
         self.drawcalls = []
         if pos != None and rot != None:
             self.m4_str = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 0, 0, 0, 1' % (str(rot.a11), str(rot.a12), str(rot.a13), str(pos.x), str(rot.a21), str(rot.a22), str(rot.a23), str(pos.y), str(rot.a31), str(rot.a32), str(rot.a33), str(pos.z))
         else:
             self.m4_str = ''
+        self.bounding_box = None
+    
+    def get_bounding_box(self):
+        ''' calculate and return bounding box in naiive/local coordinates '''
+        box = BoundingBox()
+        for d in self.drawcalls:
+            box = d.get_boundingbox().add(box)
+        
+        return box
+    
+    def get_tranformed_bb(self):
+        ''' calculate and return bounding box in transformed coordinates '''
+        box = BoundingBox()
+        for d in self.drawcalls:
+            box = d.get_boundingbox(self.transform).add(box)
+        
+        return box
     
     def jsonize(self):
         ''' returns a jsonized version of this object '''
@@ -75,6 +140,7 @@ class Component(object):
     
     @classmethod
     def from_m4_str(cls, name, m4_str):
+        '''  '''
         obj = cls(name, None, None)
         obj.m4_str = m4_str
         return obj
@@ -102,7 +168,6 @@ class RayBundle(object):
         vmax = None
         for r in self.rays:
             speed = r.get_speed()
-            #speed = math.sqrt(args[3]*args[3] + args[4]*args[4] + args[5]*args[5])
             vmin = min(vmin, speed) or speed
             vmax = max(vmax, speed) or speed
         bundle['vmin'] = vmin
@@ -191,6 +256,39 @@ class ParticleState(object):
         state['args'] = self.args
         
         return state
+    
+class BoundingBox(object):
+    ''' bounding box '''
+    def __init__(self, x1=None, x2=None, y1=None, y2=None, z1=None, z2=None):
+        self.x1 = x1 or 0
+        self.x2 = x2 or 0
+        self.y1 = y1 or 0
+        self.y2 = y2 or 0
+        self.z1 = z1 or 0
+        self.z2 = z2 or 0
+        
+    def add(self, box):
+        x1 = min(self.x1, box.x1)
+        x2 = max(self.x2, box.x2)
+        y1 = min(self.y1, box.y1)
+        y2 = max(self.y2, box.y2)
+        z1 = min(self.z1, box.z1)
+        z2 = max(self.z2, box.z2)
+        
+        return BoundingBox(x1, x2, y1, y2, z1, z2)
+    
+    def jsonize(self):
+        ''' returns a jsonized version of this object '''
+        box = {}
+        
+        box['xmin'] = self.x1
+        box['xmax'] = self.x2
+        box['ymin'] = self.y1
+        box['ymax'] = self.y2
+        box['zmin'] = self.z1
+        box['zmax'] = self.z2
+        
+        return box
 
 # links mcstas draw api to the corresponding python class names '''
 drawcommands = {
@@ -218,45 +316,6 @@ def drawclass_factory(commandname, args, reduced=False):
         return klass(args)
     except:
         raise Exception('DrawCommandFactory: error with commandname: %s, args: %s' % (commandname, args))
-    
-class BoundingBox(object):
-    ''' bounding box '''
-    def __init__(self, x1=None, x2=None, y1=None, y2=None, z1=None, z2=None):
-        self.x1 = x1
-        self.x2 = x2
-        self.y1 = y1
-        self.y2 = y2
-        self.z1 = z1
-        self.z2 = z2
-        
-    def add(self, box):
-        x1 = min(self.x1, box.x1)
-        x2 = max(self.x2, box.x2)
-        y1 = min(self.y1, box.y1)
-        y2 = max(self.y2, box.y2)
-        z1 = min(self.z1, box.z1)
-        z2 = max(self.z2, box.z2)
-        return BoundingBox(x1, x2, y1, y2, z1, z2)
-
-def calcLargesBoundingVolume(drawcalls):
-    ''' adds all of the boudning boxes of elements in drawcalls '''
-    box = BoundingBox(0, 0, 0, 0, 0, 0)
-    for drawcal in drawcalls:
-        box = box.add(drawcal.get_boundingbox())
-    return box
-
-def calcLargestBoundingVolumeWT(drawcalls_transforms):
-    ''' 
-    adds all of the boudning boxes of elements in drawcalls
-    
-        drawcalls_transforms : a list of 2 tuples containing a drawcall and a tranform
-    '''
-    box = drawcalls_transforms[0][0].get_boundingbox(transform=drawcalls_transforms[0][1])
-    for d_t in drawcalls_transforms:
-        newbox = d_t[0].get_boundingbox(transform=d_t[1])
-        box = box.add(newbox)
-        
-    return box
 
 class DrawCommand(object):
     ''' superclass of all draw commands '''
@@ -277,7 +336,8 @@ class DrawCommand(object):
     def _get_points(self):
         return
     
-    def _calc_boundingbox(self, points, transform=None):
+    @classmethod
+    def _calc_boundingbox(self, points, transform):
         ''' override to implement alternative OR implement get_points '''
         if not points:
             return
@@ -300,7 +360,7 @@ class DrawCommand(object):
         box.y2 = max(y_set)
         box.z1 = min(z_set)
         box.z2 = max(z_set)
-        
+                
         return box
     
     def jsonize(self):

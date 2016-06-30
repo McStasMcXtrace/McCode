@@ -81,3 +81,9 @@ class McDisplayReader(object):
         rays = raybuilder.build_rays()
 
         return rays
+
+def file_save(data, filename):
+    ''' saves data for debug purposes '''
+    f = open(filename, 'w')
+    f.write(data)
+    f.close()
