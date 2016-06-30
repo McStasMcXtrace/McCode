@@ -15,7 +15,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
 	<script src="_mcdisplay.js"></script>
 	<script src="_instr.js"></script>
-	<script src="_neutrons.js"></script>
+	<script src="_particles.js"></script>
 
 	<script>
         var campos_x = -26.3, campos_y = 26.3, campos_z = 26.3;
@@ -143,7 +143,7 @@
 		lblInstrInfo = document.getElementById("lblInstrInfo");
 		lblInstrInfo.innerHTML = MCDATA_instrdata["cmd"];
 		lblMaxRayIdx = document.getElementById("lblMaxRayIdx");
-		lblMaxRayIdx.innerHTML = '/ ' + (MCDATA_neutrondata["numrays"] - 1);
+		lblMaxRayIdx.innerHTML = '/ ' + (MCDATA_particledata["numrays"] - 1);
 
 		// set keep checkbox event handler
 		cbxKeep = document.getElementById("cbxKeep");

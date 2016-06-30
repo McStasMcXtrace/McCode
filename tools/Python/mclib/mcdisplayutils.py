@@ -66,17 +66,17 @@ class McDisplayReader(object):
 
         return instrument
 
-    def read_neutrons(self):
+    def read_particles(self):
         ''' waits for pipeman object to finish, then read and parse neutron data '''
         print "reading neutron data..."
-        neutrons = self.pipeman.read_neutrons()
+        particles = self.pipeman.read_particles()
 
         print self.pipeman.read_comments()
 
         if self.debug:
-            file_save(neutrons, 'neutrondata')
+            file_save(particles, 'particledata')
 
-        rayparser = TraceNeutronRayParser(neutrons)
+        rayparser = TraceNeutronRayParser(particles)
         raybuilder = NeutronRayConstructor(rayparser.parsetree)
         rays = raybuilder.build_rays()
 

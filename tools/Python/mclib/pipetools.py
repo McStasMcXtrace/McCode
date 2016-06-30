@@ -11,13 +11,13 @@ class DataBox():
     def __init__(self):
         self.comments = []
         self.instrdef = []
-        self.neutron_blocks = []
+        self.particle_blocks = []
         
         # event objects
         self.instrdone = Event()
         self.instrdone.clear()
-        self.neutronsdone = Event()
-        self.neutronsdone.clear()
+        self.particlesdone = Event()
+        self.particlesdone.clear()
     
     def add_comment(self, line):
         self.comments.append(line)
@@ -25,32 +25,32 @@ class DataBox():
     def add_instrdef(self, line):
         self.instrdef.append(line)
     
-    def add_neutronblock(self, block):
-        self.neutron_blocks.append(block)
+    def add_particleblock(self, block):
+        self.particle_blocks.append(block)
 
     def set_instrdone(self):
         self.instrdone.set()
     
-    def set_neutronsdone(self):
-        self.neutronsdone.set()
+    def set_particlesdone(self):
+        self.particlesdone.set()
     
     def get_instrdef(self):
         self.instrdone.wait()
         return ''.join(self.instrdef)
     
-    def get_neutrons(self):
-        self.neutronsdone.wait()
-        return ''.join(self.neutron_blocks)
+    def get_particles(self):
+        self.particlesdone.wait()
+        return ''.join(self.particle_blocks)
 
     def get_comments(self):
         self.instrdone.wait()
-        self.neutronsdone.wait()
+        self.particlesdone.wait()
         return ''.join(self.comments)
         
 class LineHandlerState(object):
     def __init__(self, setcurrent, next, databox, args=None):
         '''
-        Abstract state for all line handler states - instrdef, neutrons, etc.
+        Abstract state for all line handler states - instrdef, particles, etc.
             setcurrent: a fuction of state, line
             allstates: a dictionary of all states given typename
             databox: global data destination / buffer
@@ -118,14 +118,14 @@ class McdisplayState(LineHandlerState):
         else:
             self.databox.add_comment(line)
 
-class NeutronsState(LineHandlerState):
+class ParticlesTraceState(LineHandlerState):
     def __init__(self, setcurrent, next, databox, args=None):
         self.block = []
         self.active = False
         self.leaveflag = False
         
         self.inspect = args.get('inspect', None)
-        super(NeutronsState, self).__init__(setcurrent, next, databox, args)
+        super(ParticlesTraceState, self).__init__(setcurrent, next, databox, args)
     
     def add_line(self, line):
         if re.match('LEAVE:', line):
@@ -146,7 +146,7 @@ class NeutronsState(LineHandlerState):
             else:
                 accept_block = True
             if accept_block: 
-                self.databox.add_neutronblock(''.join(self.block))
+                self.databox.add_particleblock(''.join(self.block))
             
             self.block = []
             self.leaveflag = False
@@ -166,8 +166,8 @@ class TraceReader(Thread):
         allstates = {}
         databox = DataBox()
         
-        allstates['neutrons'] = NeutronsState(self._setcurrent, next=None, databox=databox, args={'inspect': inspect})
-        allstates['mcdisplay'] = McdisplayState(self._setcurrent, next=allstates['neutrons'], databox=databox)
+        allstates['particles'] = ParticlesTraceState(self._setcurrent, next=None, databox=databox, args={'inspect': inspect})
+        allstates['mcdisplay'] = McdisplayState(self._setcurrent, next=allstates['particles'], databox=databox)
         allstates['instr'] = InstrState(self._setcurrent, next=allstates['mcdisplay'], databox=databox)
         allstates['prompt'] = PromptState(self._setcurrent, next=allstates['instr'], databox=databox, args={'use_defaultpars': use_defaultpars})
         
@@ -199,7 +199,7 @@ class TraceReader(Thread):
         for stdoutdata in process.stdout:
             self.current.add_line(stdoutdata)
         
-        self.databox.set_neutronsdone()
+        self.databox.set_particlesdone()
 
 class McrunPipeMan(object):
     '''
@@ -221,8 +221,8 @@ class McrunPipeMan(object):
     def join(self):
         self.reader.join()
 
-    def read_neutrons(self):
-        return self.reader.databox.get_neutrons()
+    def read_particles(self):
+        return self.reader.databox.get_particles()
     
     def read_instrdef(self):
         return self.reader.databox.get_instrdef()

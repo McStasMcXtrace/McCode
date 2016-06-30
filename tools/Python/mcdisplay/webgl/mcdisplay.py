@@ -148,9 +148,9 @@ def write_browse(instrument, raybundle, dir):
     json_instr = 'MCDATA_instrdata = %s;' % json.dumps(instrument.jsonize(), indent=0)
     file_save(json_instr, os.path.join(dir, '_instr.js'))
     
-    # write neutrons
-    json_neutr = 'MCDATA_neutrondata = %s;' % json.dumps(raybundle.jsonize(), indent=0)
-    file_save(json_neutr, os.path.join(dir, '_neutrons.js'))
+    # write particles
+    json_neutr = 'MCDATA_particledata = %s;' % json.dumps(raybundle.jsonize(), indent=0)
+    file_save(json_neutr, os.path.join(dir, '_particles.js'))
     
     try:
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], html_filepath), shell=True)
@@ -177,7 +177,7 @@ def main(args):
     
     instrument = reader.read_instrument()
     instrument.setCmd(reader.cmd)
-    raybundle = reader.read_neutrons()
+    raybundle = reader.read_particles()
     
     write_browse(instrument, raybundle, dir)
     
@@ -190,7 +190,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
     parser.add_argument('--default', '-d', action='store_true', help='use instrument defaults (fast)')
-    parser.add_argument('--inspect', help='display only neutrons reaching this component passed to mcrun')
+    parser.add_argument('--inspect', help='display only particle rays reaching this component passed to mcrun')
     parser.add_argument('--first', help='zoom range first component')
     parser.add_argument('--last', help='zoom range last component')
     parser.add_argument('instr_options', nargs='*', help='simulation options and instrument params')

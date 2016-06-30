@@ -161,7 +161,7 @@ Main.prototype.addMultiLine = function(points, parent, linecolor)
     }
     this.addMultiLineV3(vectors, parent, linecolor);
 }
-//  adds tiny boxes to each neutron ray scatter point
+//  adds tiny boxes to each particle ray scatter point
 //
 Main.prototype.putScatterPoints = function(raynode)
 {
@@ -298,13 +298,13 @@ Main.prototype.showRay = function(idx)
 
 // loads json data into the scene graph
 //      instrdata    -  json instrument definition data
-//      neutrondata  -  json neutron data
+//      particledata  -  json particle ray data
 //      main         -  reference to scene wrapper
-var TraceLoader = function(instrdata, neutrondata, main)
+var TraceLoader = function(instrdata, particledata, main)
 {
     this.main = main;
     this.instrdata = instrdata;
-    this.neutrondata = neutrondata;
+    this.particledata = particledata;
 }
 // synchronously load instrument component draw data
 //
@@ -353,17 +353,17 @@ TraceLoader.prototype.loadInstr = function()
         comp_node.applyMatrix(comp_matrix);
     }
 }
-// load neutrons
+// load particle rays
 //
-TraceLoader.prototype.loadNeutrons = function()
+TraceLoader.prototype.loadParticles = function()
 {
     var main = this.main;
 
     // set Lut stuff
-    main.setLutRange(this.neutrondata['vmin'], this.neutrondata['vmax']);
+    main.setLutRange(this.particledata['vmin'], this.particledata['vmax']);
 
     // RAYS
-    var rays = this.neutrondata['rays'];
+    var rays = this.particledata['rays'];
     var ray;
     var aVertices;
     for (var i = 0; i < rays.length; i++) {
@@ -382,7 +382,7 @@ TraceLoader.prototype.loadNeutrons = function()
             compname = group['compname'];
             aCompVertices = [];
 
-            // NEUTRON STATES
+            // PARTICLE STATES
             var events = group['events'];
             var localstate;
             var args;
@@ -408,8 +408,8 @@ var Controller = function(campos_x, campos_y, campos_z, box_lst)
     this.camPosInitial = new THREE.Vector3(campos_x, campos_y, campos_z);
     this.box_lst = box_lst; // this would be [x_min, x_max, ...]
     this.main = new Main();
-    this.loader = new TraceLoader(MCDATA_instrdata, MCDATA_neutrondata, this.main);
-    this.viewmodel = new ViewModel(numRays = MCDATA_neutrondata["numrays"]);
+    this.loader = new TraceLoader(MCDATA_instrdata, MCDATA_particledata, this.main);
+    this.viewmodel = new ViewModel(numRays = MCDATA_particledata["numrays"]);
 }
 Controller.prototype.setUpdateGuiFunc = function(updateGuiFunc)
 {
@@ -472,7 +472,7 @@ Controller.prototype.run = function()
 
     // load data - possibly heavy
     this.loader.loadInstr();
-    this.loader.loadNeutrons();
+    this.loader.loadParticles();
     this.main.setBoundingBox();
 }
 Controller.prototype.showAllRays = function()
