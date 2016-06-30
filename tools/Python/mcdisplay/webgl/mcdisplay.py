@@ -189,7 +189,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
-    parser.add_argument('--default', '-d', action='store_true', help='use instrument defaults (fast)')
+    parser.add_argument('--default', action='store_true', help='use instrument defaults (fast)')
     parser.add_argument('--inspect', help='display only particle rays reaching this component passed to mcrun')
     parser.add_argument('--first', help='zoom range first component')
     parser.add_argument('--last', help='zoom range last component')
