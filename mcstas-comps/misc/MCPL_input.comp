@@ -56,10 +56,18 @@ INITIALIZE
 %{
     char line[256];
     long long ncount;
-    inputfile = mcpl_open_file(filename);
-    
-    nparticles=mcpl_hdr_nparticles(inputfile);
+    if ( (inputfile = mcpl_open_file(filename))==NULL){
+        fprintf(stderr,"Error(%s): Could not open MCPL-file %s. Aborting\n",NAME_CURRENT_COMP);
+        exit(-1);
+    }
     ncount=mcget_ncount();
+    if ( !(nparticles=mcpl_hdr_nparticles(inputfile)) ) {
+        fprintf(stderr,"Warning(%s): MCPL-file reports no present particles. Foolishly trying to go on.\n",NAME_CURRENT_COMP);
+        nparticles=ncount;
+    }else{
+        printf("Message(%s): MCPL file (%s) produced with %s.\n",NAME_CURRENT_COMP,filename,mcpl_hdr_srcname(inputfile));
+        printf("Message(%s): MCPL file (%s) contains %ld particles.\n",NAME_CURRENT_COMP,filename,nparticles); 
+    }
     if (ncount<nparticles){
         fprintf(stderr,"Warning (%s): You have requested %ld neutrons from a file which contains %ld.\n"
                 "This will probably lead to biased data.\n",NAME_CURRENT_COMP,ncount,nparticles);
@@ -70,8 +78,6 @@ INITIALIZE
     MPI_MASTER(fprintf(stdout, "\n\n Warning: You are using MCPL_input with MPI, hence your ncount is now redefined to:\n   %ld events at each of the %i MPI nodes = %ld events\n\n",nparticles,mpi_node_count,mpi_node_count*nparticles); );
 #endif
 
-    printf("MCPL file (%s) produced with %s.\n",filename,mcpl_hdr_srcname(inputfile));
-    printf("MCPL file (%s) contains %ld particles.\n",filename,nparticles); 
 
     read_neutrons=0;
     
@@ -95,9 +101,10 @@ TRACE
     double nrm;
     const mcpl_particle_t *particle;// = (mcpl_particle_t *) calloc(sizeof(mcpl_particle_t),1);
     particle = mcpl_read(inputfile);
-    if (particle->pdgcode!=2112){
-        /*read particle is not a neutron - get next one instead*/
-        particle = mcpl_read(inputfile);
+    
+   if (particle && particle->pdgcode!=2112){
+       /*Either no particle read or particle is not a neutron - terminate to trigger next ray*/
+       ABSORB;
     }
     read_neutrons++;
 
