@@ -15,9 +15,7 @@ import re
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mclib import mccode_config
-from mclib.pipetools import McrunPipeMan
-from mclib.instrparser import TraceInstrParser, InstrObjectConstructor
-from mclib.neutronparser import NeutronRayConstructor, TraceNeutronRayParser
+from mclib.mcdisplayutils import McDisplayReader
 from mclib.instrgeom import Vector3d, Transform, calcLargestBoundingVolumeWT, BoundingBox
 
 class SimpleWriter(object):
@@ -80,74 +78,6 @@ class DjangoWriter(object):
             f.write(self.text)
         finally:
             f.close()
-
-class McDisplayReader(object):
-    ''' High-level trace manager '''
-    def __init__(self, args, n=None, dir=None, debug=False):
-        '''
-        supported args: instr, inspect, default, instr_options
-        NOTE: n is only applied if neither '-n' nor '--ncount' strings are found in args.instr_options
-        '''
-        if not os.path.exists(args.instr) or not os.path.splitext(args.instr)[1] not in ['instr', 'out']:
-            print "Please supply a valid .instr or .out file."
-            exit()
-        
-        # assemble command
-        cmd = 'mcrun ' + args.instr + ' --trace'
-        b1 = False
-        b2 = False
-        for o in args.instr_options:
-            b1 = bool(re.search('--ncount', o)) or b1
-            b2 = bool(re.search('-n', o)) or b2
-        if not b1 and not b2:
-            if not n:
-                cmd = cmd + ' --ncount=' + str(100)
-            else:
-                cmd = cmd + ' --ncount=' + str(n)
-        if dir:
-            cmd = cmd + ' --dir=' + dir
-        if args.instr_options:
-            for o in args.instr_options:
-                cmd = cmd + ' ' + o
-        
-        self.args = args
-        self.n = n
-        self.dir = dir
-        self.debug = debug
-        self.cmd = cmd
-        self.pipeman = McrunPipeMan(cmd, inspect=args.inspect, send_enter=args.default)
-    
-    def read_instrument(self):
-        ''' starts a pipe to mcrun given cmd, waits for instdef and reads, returning the parsed instrument '''
-        self.pipeman.start_pipe()
-        self.pipeman.join()
-        
-        instrdef = self.pipeman.read_instrdef()
-        
-        if self.debug:
-            file_save(instrdef, 'instrdata')
-        
-        instrparser = TraceInstrParser(instrdef)
-        instrbuilder = InstrObjectConstructor(instrparser.parsetree)
-        instrument = instrbuilder.build_instr()
-        
-        return instrument
-    
-    def read_neutrons(self):
-        ''' waits for pipeman object to finish, then read and parse neutron data '''
-        print "reading neutron data..."
-        neutrons = self.pipeman.read_neutrons()
-        
-        print self.pipeman.read_comments()
-        
-        if self.debug:
-            file_save(neutrons, 'neutrondata')
-        
-        rayparser = TraceNeutronRayParser(neutrons)
-        raybuilder = NeutronRayConstructor(rayparser.parsetree)
-        rays = raybuilder.build_rays()
-        
-        return rays
 
 def write_html(instrument, html_filepath, first=None, last=None):
     ''' writes instrument definition to html/js '''
