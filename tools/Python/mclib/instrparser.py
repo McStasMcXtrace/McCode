@@ -8,7 +8,7 @@ from ply import lex, yacc
 from nodetree import Node
 from instrgeom import InstrumentSpecific, Component, Vector3d, Matrix3, drawclass_factory
 
-class TraceInstrParser:
+class InstrTraceParser:
     '''
     Parser for the instrument definition section of mcdisplay --trace output.
     '''
@@ -215,7 +215,7 @@ class TraceInstrParser:
 
 class InstrObjectConstructor:
     '''
-    Instrument reconstruction from the syntax tree produced by TraceInstrParser
+    Instrument reconstruction from the syntax tree produced by InstrTraceParser
     '''
     def __init__(self, parsetreeroot):
         self.root = parsetreeroot

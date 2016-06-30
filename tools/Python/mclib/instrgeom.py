@@ -1,5 +1,5 @@
 '''
-Classes for representing a mcstas instruments and neutron rays,
+Classes for representing a mcstas instruments and particle trace rays,
 and classes used for organizing component drawing calls.
 '''
 import math
@@ -80,7 +80,7 @@ class Component(object):
         return obj
 
 class RayBundle(object):
-    ''' represents a bundle of neutrons '''
+    ''' represents a bundle of particles '''
     def __init__(self, rays):
         self.rays = rays
     
@@ -97,7 +97,7 @@ class RayBundle(object):
         # number of rays
         bundle['numrays'] = len(lst)
         
-        # min and max neutron ray velocity
+        # min and max velocity
         vmin = None
         vmax = None
         for r in self.rays:
@@ -110,8 +110,8 @@ class RayBundle(object):
         
         return bundle
 
-class NeutronStory(object):
-    ''' represents a whole neutron ray from start to finish '''
+class ParticleStory(object):
+    ''' represents a whole particle ray from start to finish '''
     def __init__(self):
         self.groups = []
         self.speed = None
@@ -120,7 +120,7 @@ class NeutronStory(object):
         self.groups.append(group)
     
     def get_speed(self):
-        ''' on-demand speed of this neutron ray, which is incorrectly assumed to be constant '''
+        ''' on-demand speed of this particle ray, which is incorrectly assumed to be constant '''
         if not self.speed:
             args = self.groups[len(self.groups)-1].events[0].args
             self.speed = math.sqrt(args[3]*args[3] + args[4]*args[4] + args[5]*args[5])
@@ -141,8 +141,8 @@ class NeutronStory(object):
         
         return story
 
-class NeutronCompGroup(object):
-    ''' represents neutron events / states within the context of a specific component '''
+class ParticleCompGroup(object):
+    ''' represents particle events / states within the context of a specific component '''
     def __init__(self, compname):
         self.compname = compname
         self.events = []
@@ -165,8 +165,8 @@ class NeutronCompGroup(object):
         
         return group
 
-class NeutronState(object):
-    ''' represents a single neutron (ray) event, a semiclassical state, used for ray interpolation inferrence '''
+class ParticleState(object):
+    ''' represents a single particle (ray) event, a semiclassical state, used for ray interpolation inferrence '''
     def __init__(self, args, verbose=False):
         ''' x, y, z, vx, vy, vz, t, sx, sy, sz, intensity '''
         self.args = floatify(args)

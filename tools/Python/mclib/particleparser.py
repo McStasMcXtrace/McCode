@@ -6,11 +6,11 @@ Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
 from ply import lex, yacc
 from nodetree import Node
-from instrgeom import RayBundle, NeutronStory, NeutronCompGroup, NeutronState
+from instrgeom import RayBundle, ParticleStory, ParticleCompGroup, ParticleState
 
-class TraceNeutronRayParser:
+class ParticleTraceParser:
     '''
-    Python lex/yacc parser for the neutron ray section of mcdisplay --trace output
+    Python lex/yacc parser for the particle ray section of mcdisplay --trace output
     '''
     parsetree = None
     def __init__(self, data=None):
@@ -74,7 +74,7 @@ class TraceNeutronRayParser:
     
     def p_document(self, p):
         'document : ray_statements'
-        print 'neutron rays parsed'
+        print 'particle rays parsed'
         # assemble parse tree
         self.parsetree = Node(type='raystatements', children=[self.rays])
     
@@ -171,9 +171,9 @@ class TraceNeutronRayParser:
         self.parser.parse(data, lexer=self.lexer)
 
 
-class NeutronRayConstructor:
+class ParticleBundleRayFactory:
     '''
-    Ray reconstruction from the syntax tree produced by TraceNeutronRayParser,
+    Ray reconstruction from the syntax tree produced by ParticleTraceParser,
     outputting a wholly interpreted instrument and ray model from the mcdisplay trace output.
     '''
     rays = None
@@ -183,7 +183,7 @@ class NeutronRayConstructor:
             raise Exception('TraceObjectConstructor: parsetreeroot must be a Node of type "raystatements"')
     
     def build_rays(self):
-        ''' builds the neutron ray representation '''
+        ''' builds the particle ray representation '''
         rays = []
         bundle = RayBundle(rays)
         
@@ -201,7 +201,7 @@ class NeutronRayConstructor:
                     # NOTE: the node tree is a bit weird in that there are no COMPEXIT's, these are just SCATTER 
                     for event in ray.children:
                         if event.type == 'ENTER':
-                            story = NeutronStory()
+                            story = ParticleStory()
                             rays.append(story)
                         
                         if event.type == 'COMPENTER' or event.type == 'COMPENTEREXIT':
@@ -210,24 +210,24 @@ class NeutronRayConstructor:
                             
                             # record entry
                             if event.type == 'COMPENTER' or self.iszerovector_str(event.leaf[0:3]):
-                                comp_group = NeutronCompGroup(comp_name)
+                                comp_group = ParticleCompGroup(comp_name)
                             else:
-                                comp_group = NeutronCompGroup(comp_name)
-                                comp_group.add_event(NeutronState(event.leaf))
+                                comp_group = ParticleCompGroup(comp_name)
+                                comp_group.add_event(ParticleState(event.leaf))
                             story.add_group(comp_group)
                         
                         if event.type == 'SCATTER':
-                            comp_group.add_event(NeutronState(event.leaf))
+                            comp_group.add_event(ParticleState(event.leaf))
                         
                         if event.type == 'ABSORB':
                             # TODO: when --trace has been updated with ABSORB coordinates
-                            #comp_group.append(NeutronState(event.leaf))
+                            #comp_group.append(ParticleState(event.leaf))
                             pass
                         
                         if event.type == 'LEAVE':
                             # append LEAVE state, although equal to SCATTER states, may be the result of COMPENTER, ABSORB
                             # TODO: read ABSORB todo and accomodate, removing this then completely redundant LEAVE state
-                            comp_group.add_event(NeutronState(event.leaf))
+                            comp_group.add_event(ParticleState(event.leaf))
                             comp_group = None
                             story = None
         

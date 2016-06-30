@@ -5,8 +5,8 @@ import os
 import re
 
 from pipetools import McrunPipeMan
-from instrparser import TraceInstrParser, InstrObjectConstructor
-from neutronparser import NeutronRayConstructor, TraceNeutronRayParser
+from instrparser import InstrTraceParser, InstrObjectConstructor
+from particleparser import ParticleBundleRayFactory, ParticleTraceParser
 
 class McDisplayReader(object):
     ''' High-level trace manager '''
@@ -60,7 +60,7 @@ class McDisplayReader(object):
         if self.debug:
             file_save(instrdef, 'instrdata')
 
-        instrparser = TraceInstrParser(instrdef)
+        instrparser = InstrTraceParser(instrdef)
         instrbuilder = InstrObjectConstructor(instrparser.parsetree)
         instrument = instrbuilder.build_instr()
 
@@ -68,7 +68,7 @@ class McDisplayReader(object):
 
     def read_particles(self):
         ''' waits for pipeman object to finish, then read and parse neutron data '''
-        print "reading neutron data..."
+        print "reading particle data..."
         particles = self.pipeman.read_particles()
 
         print self.pipeman.read_comments()
@@ -76,8 +76,8 @@ class McDisplayReader(object):
         if self.debug:
             file_save(particles, 'particledata')
 
-        rayparser = TraceNeutronRayParser(particles)
-        raybuilder = NeutronRayConstructor(rayparser.parsetree)
+        rayparser = ParticleTraceParser(particles)
+        raybuilder = ParticleBundleRayFactory(rayparser.parsetree)
         rays = raybuilder.build_rays()
 
         return rays
