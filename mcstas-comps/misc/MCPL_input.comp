@@ -116,8 +116,8 @@ TRACE
     const mcpl_particle_t *particle;// = (mcpl_particle_t *) calloc(sizeof(mcpl_particle_t),1);
     particle = mcpl_read(inputfile);
     
-   if (particle && particle->pdgcode!=2112){
-       /*Either no particle read or particle is not a neutron - terminate to trigger next ray*/
+    if (!particle || particle->pdgcode!=2112) {
+        /*Either no particle read, particle is not a neutron, or it has invalid energy - terminate to trigger next ray*/
        ABSORB;
     }
     read_neutrons++;
