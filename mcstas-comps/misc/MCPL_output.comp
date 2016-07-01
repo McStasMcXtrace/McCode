@@ -69,6 +69,11 @@ INITIALIZE
 
     char line[256];
     outputfile = mcpl_create_outfile(filename);
+    /*reset filename to be whatever mcpl actually calls it. It may have added .mcpl*/
+    snprintf(filename,2048,"%s",mcpl_outfile_filename(outputfile));
+    printf("The real filename was: %s\n",filename);
+
+
     snprintf(line,255,"%s %s %s",MCCODE_NAME,MCCODE_VERSION,mcinstrument_name);
     mcpl_hdr_set_srcname(outputfile,line);
     mcpl_enable_universal_pdgcode(outputfile,2112);/*all particles are neutrons*/
