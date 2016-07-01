@@ -37,7 +37,7 @@
 * dist:            [m]   Distance from origin to focusing rectangle; at (0,0,dist) - alternatively use target_index
 * focus_xw:        [m]   Width of focusing rectangle
 * focus_yh:	   [m]   Height of focusing rectangle
-* tmax_multiplier: [1]   Defined maximum emission time at moderator, tmax= tmax_multiplier * ESS_PULSE_DURATION. Only in combination with sourcedef="2013", "2014" or "2015
+* tmax_multiplier: [1]   Defined maximum emission time at moderator, tmax= tmax_multiplier * ESS_PULSE_DURATION.
 * acc_power:       [MW]  Accelerator power in MW
 * n_pulses:        [1]   Number of pulses simulated. 0 and 1 creates one pulse. 
 *
