@@ -163,6 +163,68 @@ class BoundingBox(object):
         
         return [d1, d2, d3, d4, d5, d6]
     
+    def _get_drawcalls_gridticks(self, unit=1):
+        ''' creates the tick marks by drawing a partial grid on the six box faces '''
+        
+        def gridticks(p1, p2, factor=0.1):
+            ''' returns DrawLine objects corresponding to a list of "tickmarks" between p1 and p2 '''
+            p1 = Vector3d(p1[0], p1[1], p1[2])
+            p2 = Vector3d(p2[0], p2[1], p2[2])
+            
+            v = p2.subtract(p1).scalarmult(factor)
+            d1 = DrawLine(args=[p1, p1.add(v)])
+            d2 = DrawLine(args=[p2, p2.add(v).scalarmult(-1)])
+            
+            return [d1, d2]
+        
+        def gridpoints(a1, a2, b1, b2):
+            ''' returns a list of pairs of (a, b) points, the endpoints of a grid line on axes a and b '''
+            unit = 1
+            lst = []
+            
+            # vertical lines 
+            a = a1
+            while a < a2:
+                a = a + unit
+                lst.append( ((a, b1), (a, b2)) )
+            
+            # horizontal lines 
+            b = b1
+            while b < b2:
+                b = b + unit
+                lst.append( ((a1, b), (a2, b)) )
+            
+            return lst
+        
+        # get min/max values shorthand
+        x1 = self.x1
+        x2 = self.x2
+        y1 = self.y1
+        y2 = self.y2
+        z1 = self.z1
+        z2 = self.z2
+        
+        # orientation planes in local 2d coordinates
+        gridlines2d_xy = gridpoints(x1, x2, y1, y2)
+        gridlines2d_xz = gridpoints(x1, x2, z1, z2)
+        gridlines2d_yz = gridpoints(y1, y2, z1, z2)
+        
+        # transform gridlines to 3d coordinates
+        gridlines3d_xy_min = map(lambda p: ( (p[0][0], p[0][1],      z1), (p[1][0], p[1][1],      z1) ), gridlines2d_xy)
+        gridlines3d_xy_max = map(lambda p: ( (p[0][0], p[0][1],      z2), (p[1][0], p[1][1],      z2) ), gridlines2d_xy)
+        gridlines3d_xz_min = map(lambda p: ( (p[0][0],      y1, p[0][1]), (p[1][0],      y1, p[1][1]) ), gridlines2d_xz)
+        gridlines3d_xz_max = map(lambda p: ( (p[0][0],      y2, p[0][1]), (p[1][0],      y2, p[1][1]) ), gridlines2d_xz)
+        gridlines3d_yz_min = map(lambda p: ( (x1,      p[0][0], p[0][1]), (     x1, p[1][0], p[1][1]) ), gridlines2d_yz)
+        gridlines3d_yz_max = map(lambda p: ( (x2,      p[0][0], p[0][1]), (     x2, p[1][0], p[1][1]) ), gridlines2d_yz)
+        
+        # do the gridticks for all six planes:
+        calls = []
+        for gridlines in [gridlines3d_xy_min, gridlines3d_xy_max, gridlines3d_xz_min, gridlines3d_xz_max, gridlines3d_yz_min, gridlines3d_yz_max]:
+            for pair in gridlines:
+                calls = calls + gridticks(pair[0], pair[1])
+        
+        return calls
+    
     def jsonize(self):
         ''' returns a jsonized version of this object '''
         box = {}
@@ -176,7 +238,7 @@ class BoundingBox(object):
         
         # drawcalls
         lst = []
-        drawcalls = self._get_drawcalls()
+        drawcalls = self._get_drawcalls() + self._get_drawcalls_gridticks()
         for d in drawcalls:
             lst.append(d.jsonize())
         box['drawcalls'] = lst
@@ -399,8 +461,14 @@ class DrawLine(DrawCommand):
         super(DrawLine, self).__init__(args)
         self.key = 'line'
         
-        self.point_1 = Vector3d(float(args[0]), float(args[1]), float(args[2]))
-        self.point_2 = Vector3d(float(args[3]), float(args[4]), float(args[5]))
+        if type(args[0]) is Vector3d and type(args[1]) is Vector3d:
+            self.point_1 = args[0]
+            self.point_2 = args[1]
+            self.args = [args[0].x, args[0].y, args[0].z, args[1].x, args[1].y, args[1].z]
+        else:
+            self.point_1 = Vector3d(float(args[0]), float(args[1]), float(args[2]))
+            self.point_2 = Vector3d(float(args[3]), float(args[4]), float(args[5]))
+            self.args = args
 
 class DrawDashedLine(DrawCommand):
     ''' '''
@@ -503,8 +571,20 @@ class Vector3d(object):
         self.z = float(z)
     
     def add(self, v):
-        ''' just add another vector to this one and return the result '''
+        ''' just add another vector to this one and return the result (does not change this instance) '''
         return Vector3d(x=v.x+self.x, y=v.y+self.y, z=v.z+self.z)
+    
+    def subtract(self, v):
+        ''' subtract a vector from this one and return the result (does not change this instance) '''
+        return Vector3d(x = self.x - v.x, y = self.y - v.y, z = self.z - v.z)
+    
+    def scalarmult(self, s):
+        ''' multiply this by a scalar and return the result (does not change this instance) '''
+        return Vector3d(x = self.x*s, y = self.y*s, z = self.x*s)
+    
+    def norm(self):
+        ''' returns the norm of this object '''
+        return math.sqrt(self.x*self.x + self.y*self.y + self.z*self.z)
     
     def to_lst(self):
         return [self.x, self.y, self.z]
