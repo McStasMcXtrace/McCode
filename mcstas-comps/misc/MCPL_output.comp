@@ -71,8 +71,6 @@ INITIALIZE
     outputfile = mcpl_create_outfile(filename);
     /*reset filename to be whatever mcpl actually calls it. It may have added .mcpl*/
     snprintf(filename,2048,"%s",mcpl_outfile_filename(outputfile));
-    printf("The real filename was: %s\n",filename);
-
 
     snprintf(line,255,"%s %s %s",MCCODE_NAME,MCCODE_VERSION,mcinstrument_name);
     mcpl_hdr_set_srcname(outputfile,line);
@@ -82,7 +80,6 @@ INITIALIZE
 
     /*also add the instrument file and the command line as blobs*/
     FILE *fp;
-    printf("Adding instrument file %s as blob. If possible...\n",mcinstrument_source);
     if( (fp=fopen(mcinstrument_source,"rb"))!=NULL){
         unsigned char *buffer;
         int size,status;
