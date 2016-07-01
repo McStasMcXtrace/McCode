@@ -90,7 +90,6 @@ INITIALIZE
     MPI_MASTER(fprintf(stdout, "\n\n Warning: You are using MCPL_input with MPI, hence your ncount is now redefined to:\n   %ld events at each of the %i MPI nodes = %ld events\n\n",nparticles,mpi_node_count,mpi_node_count*nparticles); );
 #endif
 
-
     read_neutrons=0;
     used_neutrons=0;
 
@@ -124,6 +123,7 @@ TRACE
 
     /* check energy range*/
     if ( || particle->ekin<Emin*1e-9 || particle->ekin>Emax*1e-9 ) {
+        /*Particle energy out of range - terminate to trigger next ray*/
         ABSORB;
     }
     used_neutrons++;
@@ -134,7 +134,7 @@ TRACE
   MPI_MASTER(
 #endif
 
-    if (verbose==1 && read_neutrons<11) {
+    if (verbose && used_neutrons<11) {
       printf("id=%ld\tpdg=2112\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
 	     read_neutrons, particle->ekin, particle->position[0], particle->position[1], particle->position[2],
 	     particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
@@ -188,8 +188,8 @@ FINALLY
         fprintf("Message(%s): You have used %ld of %ld neutrons available in the MCPL file.\n",used_neutrons,read_neutrons);
     }
     if (ncount != used_neutrons){
-        fprintf(stderr,"Warning (%s): You requested %ld neutrons from a file which contains %ld in the specified energy interval.\n"
-                "Please examine the recorded intensities carefully.\n",NAME_CURRENT_COMP,ncount,nparticles);
+        fprintf(stderr,"Warning (%s): You requested %ld neutrons from a file which contains %ld particles in general, of which only %ld are neutrons within the given energy interval.\n"
+                "Please examine the recorded intensities carefully.\n",NAME_CURRENT_COMP,ncount,nparticles,used_neutrons);
     }
 
 
