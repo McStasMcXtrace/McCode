@@ -78,7 +78,7 @@ INITIALIZE
     /*also add the instrument file and the command line as blobs*/
     FILE *fp;
     printf("Adding instrument file %s as blob. If possible...\n",mcinstrument_source);
-    if( (fopen(mcinstrument_source,"rb"))!=NULL){
+    if( (fp=fopen(mcinstrument_source,"rb"))!=NULL){
         unsigned char *buffer;
         int size,status;
         /*find the file size by seeking to end, "tell" the position, and then go back again*/
