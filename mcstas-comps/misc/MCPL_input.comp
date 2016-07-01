@@ -30,19 +30,23 @@
 *
 * filename: [str] Name of neutron mcpl file to read.
 * verbose:  [ ]   Print debugging information for first 10 particles read. 
+* polarisationuse: [ ] If !=0 read polarisation vectors from file.
+* Emin: [meV] Lower energy bound. Particles found in the MCPL-file below the limit are skipped.
+* Emax: [meV] Upper energy bound. Particles found in the MCPL-file above the limit are skipped.
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_input
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string filename=0, polarisationuse=1,verbose=1)
-OUTPUT PARAMETERS (inputfile,nparticles,read_neutrons)
+SETTING PARAMETERS (string filename=0, polarisationuse=1,verbose=1, Emin=0, Emax=FLT_MAX)
+OUTPUT PARAMETERS (inputfile,nparticles,read_neutrons,used_neutrons)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
 SHARE
 %{
 #include <mcpl.h>
+
 %}
 
 DECLARE
@@ -50,12 +54,20 @@ DECLARE
     mcpl_file_t inputfile;
     long long nparticles;
     long long read_neutrons;
+    long long used_neutrons;
+
 %}
 
 INITIALIZE
 %{
     char line[256];
     long long ncount;
+
+    if(Emax<Emin){
+        fprintf(stderr,"Warning(%s): Nonsensical energy interval: E=[%g,%g]. Aborting.\n",NAME_CURRENT_COMP,Emin,Emax);
+        exit(-1);
+    }
+
     if ( (inputfile = mcpl_open_file(filename))==NULL){
         fprintf(stderr,"Error(%s): Could not open MCPL-file %s. Aborting\n",NAME_CURRENT_COMP);
         exit(-1);
@@ -80,7 +92,8 @@ INITIALIZE
 
 
     read_neutrons=0;
-    
+    used_neutrons=0;
+
  #if defined (USE_MPI)   
     MPI_MASTER(
 #endif
@@ -92,6 +105,7 @@ INITIALIZE
 #if defined (USE_MPI) 
     );
 #endif
+
 
 
 %}
@@ -107,6 +121,14 @@ TRACE
        ABSORB;
     }
     read_neutrons++;
+
+    /* check energy range*/
+    if ( || particle->ekin<Emin*1e-9 || particle->ekin>Emax*1e-9 ) {
+        ABSORB;
+    }
+    used_neutrons++;
+
+
 
 #if defined (USE_MPI)   
   MPI_MASTER(
@@ -162,8 +184,11 @@ FINALLY
     long long ncount;
 
     ncount=mcget_ncount();
-    if (ncount != read_neutrons){
-        fprintf(stderr,"Warning (%s): You requested %ld neutrons from a file which contains %ld.\n"
+    if (used_neutrons!=read_neutrons){
+        fprintf("Message(%s): You have used %ld of %ld neutrons available in the MCPL file.\n",used_neutrons,read_neutrons);
+    }
+    if (ncount != used_neutrons){
+        fprintf(stderr,"Warning (%s): You requested %ld neutrons from a file which contains %ld in the specified energy interval.\n"
                 "Please examine the recorded intensities carefully.\n",NAME_CURRENT_COMP,ncount,nparticles);
     }
 
