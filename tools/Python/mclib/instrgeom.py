@@ -26,7 +26,7 @@ class InstrumentSpecific(object):
         if first in cnames and last in cnames:
             i_first = cnames.index(first)
             i_last = cnames.index(last)
-            components = filter(lambda c: self.components.index(c) > i_first or self.components.index(c) < i_last, self.components)
+            components = filter(lambda c: self.components.index(c) > i_first and self.components.index(c) < i_last, self.components)
         elif first in cnames:
             i_first = cnames.index(first)
             components = filter(lambda c: self.components.index(c) > i_first, self.components)
