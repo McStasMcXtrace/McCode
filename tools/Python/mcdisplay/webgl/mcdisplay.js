@@ -19,6 +19,8 @@ var Main = function ()
 
     this.compnodes = {};
     this.rootnode = new THREE.Object3D();
+    this.bbnode = new THREE.Object3D();
+    this.rootnode.add(this.bbnode);
 
     this.compColors = [0xffd700, 0x00ffff, 0x00ff00, 0x800000, 0xffff00, 0xff7373, 0xffa500, 0xf08080];
     this.iColor = -1;
@@ -133,7 +135,7 @@ Main.prototype.setCameraView = function(campos)
 }
 //  set a bounding box around the components
 //
-Main.prototype.setBoundingBox = function()
+Main.prototype.setNativeBoundingBox = function()
 {
     var box = new THREE.BoxHelper(this.rootnode, 0x808080);
     this.scene.add(box);
@@ -312,6 +314,23 @@ TraceLoader.prototype.loadInstr = function()
 {
     var main = this.main;
 
+    // utility function
+    var drawFunc = function(call, parentnode, color)
+    {
+        key = call['key'];
+        args = call['args'];
+
+        if (key == 'multiline') {
+            main.addMultiLine(args, parentnode, color);
+        }
+        if (key == 'line') {
+            main.addMultiLine(args, parentnode, color);
+        }
+        if (key == 'circle') {
+            main.addCircle(args[0], args[1], args[2], args[3], args[4], parentnode, color);
+        }
+    }
+
     // INSTRUMENT
     var instr = this.instrdata;
     var instname = instr['name'];
@@ -324,7 +343,9 @@ TraceLoader.prototype.loadInstr = function()
     var compname;
     var m4;
     var acolor;
-    for (var i = 0; i < comps.length; i++) {
+
+    for (var i = 0; i < comps.length; i++)
+    {
         comp = comps[i];
 
         compname = comp['name'];
@@ -337,20 +358,24 @@ TraceLoader.prototype.loadInstr = function()
         for (var j = 0; j < drawcalls.length; j++) {
             call = drawcalls[j];
 
-            key = call['key'];
-            args = call['args'];
-
-            if (key == 'multiline') {
-                main.addMultiLine(args, comp_node, acolor);
-            }
-            if (key == 'circle') {
-                main.addCircle(args[0], args[1], args[2], args[3], args[4], comp_node, acolor);
-            }
+            drawFunc(call, comp_node, acolor);
         }
 
         comp_matrix = new THREE.Matrix4();
         comp_matrix.set(m4[0], m4[1], m4[2], m4[3], m4[4], m4[5], m4[6], m4[7], m4[8], m4[9], m4[10], m4[11], m4[12], m4[13], m4[14], m4[15]);
         comp_node.applyMatrix(comp_matrix);
+    }
+
+    // BOUNDING BOX
+    var bb = instr['boundingbox'];
+    var drawcalls = bb['drawcalls'];
+    var call;
+    for (var i = 0; i < drawcalls.length; i++)
+    {
+        call = drawcalls[i];
+        key = call['key'];
+
+        drawFunc(call, main.bbnode, 0x808080);
     }
 }
 // load particle rays
@@ -398,7 +423,6 @@ TraceLoader.prototype.loadParticles = function()
         }
         // add ray as a multiline
         main.addRayNode(rayobj, aVertices, speed);
-        //main.addMultiLineV3(aVertices, rayobj, main.rayColor);
     }
 }
 //  program controller
@@ -436,12 +460,12 @@ Controller.prototype.run = function()
         if (busy == true) { console.log("busy"); return; }
         busy = true;
 
+        // show/hide ray nodes
         if (_this.viewmodel.playBack == PlayBack.ALL)
         {
             _this.showAllRays();
             return;
         }
-
         if (_this.viewmodel.playBack == PlayBack.RUN)
         {
             _this.incSingleRay();
@@ -455,6 +479,10 @@ Controller.prototype.run = function()
         {
             _this.hidePrevRays();
         }
+
+        // set bounding box visible property
+        _this.main.bbnode.visible = viewmodel.getShowBoundingBox();
+
         setTimeout(dataLoop, 1000/_this.viewmodel.raysPrSec);
 
         busy = false;
@@ -473,7 +501,7 @@ Controller.prototype.run = function()
     // load data - possibly heavy
     this.loader.loadInstr();
     this.loader.loadParticles();
-    this.main.setBoundingBox();
+    //this.main.setNativeBoundingBox();
 }
 Controller.prototype.showAllRays = function()
 {
@@ -538,6 +566,8 @@ var ViewModel = function(numRays)
     this.playBack = PlayBack.RUN;
     this.displayMode = DisplayMode.SINGLE;
 
+    this.showBoundingbox = true;
+
     this.numRays = numRays;
     this.rayIdx = [-1];
     this.raysPrSec = 5;
@@ -547,6 +577,22 @@ var ViewModel = function(numRays)
 ViewModel.prototype.getUpdateVersion = function()
 {
     return this.updateVersion;
+}
+ViewModel.prototype.setShowBoundingBox = function(bbOnOff)
+{
+    if (bbOnOff)
+    {
+        this.showBoundingbox = true;
+    }
+    else
+    {
+        this.showBoundingbox = false;
+    }
+    this.updateVersion += 1;
+}
+ViewModel.prototype.getShowBoundingBox = function(bbOnOff)
+{
+    return this.showBoundingbox;
 }
 ViewModel.prototype.setRayIdx = function(idx)
 {

@@ -57,14 +57,15 @@ class InstrumentSpecific(object):
         instr['cmd'] = self.cmd
         
         # bounding box
-        instr['bounding_box'] = self.get_boundingbox().jsonize()
+        instr['boundingbox'] = self.get_boundingbox().jsonize()
         
-        # lists of objects
+        # components
         lst = []
         for c in self.components:
             lst.append(c.jsonize())
         instr['components'] = lst
         
+        # rays
         lst = []
         for r in self.rays:
             lst.append(r.jsonize())
@@ -81,11 +82,6 @@ class Component(object):
         self.transform = Transform(rot, pos)
         self.m4 = [rot.a11, rot.a12, rot.a13, pos.x, rot.a21, rot.a22, rot.a23, pos.y, rot.a31, rot.a32, rot.a33, pos.z, 0, 0, 0, 1]
         self.drawcalls = []
-        if pos != None and rot != None:
-            self.m4_str = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 0, 0, 0, 1' % (str(rot.a11), str(rot.a12), str(rot.a13), str(pos.x), str(rot.a21), str(rot.a22), str(rot.a23), str(pos.y), str(rot.a31), str(rot.a32), str(rot.a33), str(pos.z))
-        else:
-            self.m4_str = ''
-        self.bounding_box = None
     
     def get_bounding_box(self):
         ''' calculate and return bounding box in naiive/local coordinates '''
@@ -111,7 +107,7 @@ class Component(object):
         component['name'] = self.name
         component['m4'] = self.m4
         
-        # lists
+        # drawcalls
         lst = []
         for d in self.drawcalls:
             lst.append(d.jsonize())
@@ -121,13 +117,74 @@ class Component(object):
     
     def __str__(self):
         return self.name
+
+class BoundingBox(object):
+    ''' bounding box '''
+    def __init__(self, x1=None, x2=None, y1=None, y2=None, z1=None, z2=None):
+        ''' properly initialize the bounding box by infinity/ minus infinity '''
+        inf = float("inf")
+        ninf = - inf
+        self.x1 = x1 or inf 
+        self.x2 = x2 or ninf
+        self.y1 = y1 or inf
+        self.y2 = y2 or ninf
+        self.z1 = z1 or inf
+        self.z2 = z2 or ninf
+        
+        self.m4 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
     
-    @classmethod
-    def from_m4_str(cls, name, m4_str):
-        '''  '''
-        obj = cls(name, None, None)
-        obj.m4_str = m4_str
-        return obj
+    def add(self, box):
+        ''' add and return a combined bounding box '''
+        x1 = min(self.x1, box.x1)
+        x2 = max(self.x2, box.x2)
+        y1 = min(self.y1, box.y1)
+        y2 = max(self.y2, box.y2)
+        z1 = min(self.z1, box.z1)
+        z2 = max(self.z2, box.z2)
+        
+        return BoundingBox(x1, x2, y1, y2, z1, z2)
+    
+    def _get_drawcalls(self):
+        ''' private method used to describe the bounding box in terms of mcdisplay drawcalls '''
+        x1 = self.x1
+        x2 = self.x2
+        y1 = self.y1
+        y2 = self.y2
+        z1 = self.z1
+        z2 = self.z2
+        # the rectangle front and back sides
+        d1 = DrawMultiline(args=[x1, y1, z1, x1, y2, z1, x2, y2, z1, x2, y1, z1, x1, y1, z1])
+        d2 = DrawMultiline(args=[x1, y1, z2, x1, y2, z2, x2, y2, z2, x2, y1, z2, x1, y1, z2])
+        # the four lines connecting
+        d3 = DrawLine(args=[x1, y1, z1, x1, y1, z2])
+        d4 = DrawLine(args=[x2, y1, z1, x2, y1, z2])
+        d5 = DrawLine(args=[x1, y2, z1, x1, y2, z2])
+        d6 = DrawLine(args=[x2, y2, z1, x2, y2, z2])
+        
+        return [d1, d2, d3, d4, d5, d6]
+    
+    def jsonize(self):
+        ''' returns a jsonized version of this object '''
+        box = {}
+        
+        box['xmin'] = self.x1
+        box['xmax'] = self.x2
+        box['ymin'] = self.y1
+        box['ymax'] = self.y2
+        box['zmin'] = self.z1
+        box['zmax'] = self.z2
+        
+        # drawcalls
+        lst = []
+        drawcalls = self._get_drawcalls()
+        for d in drawcalls:
+            lst.append(d.jsonize())
+        box['drawcalls'] = lst
+        
+        return box
+    
+    def __str__(self):
+        return '%s, %s, %s, %s, %s, %s' % (self.x1, self.x2, self.y1, self.y2, self.z1, self.z2)
 
 class RayBundle(object):
     ''' represents a bundle of particles '''
@@ -240,44 +297,6 @@ class ParticleState(object):
         state['args'] = self.args
         
         return state
-    
-class BoundingBox(object):
-    ''' bounding box '''
-    def __init__(self, x1=None, x2=None, y1=None, y2=None, z1=None, z2=None):
-        inf = float("inf")
-        ninf = - inf
-        self.x1 = x1 or inf 
-        self.x2 = x2 or ninf
-        self.y1 = y1 or inf
-        self.y2 = y2 or ninf
-        self.z1 = z1 or inf
-        self.z2 = z2 or ninf
-        
-    def add(self, box):
-        x1 = min(self.x1, box.x1)
-        x2 = max(self.x2, box.x2)
-        y1 = min(self.y1, box.y1)
-        y2 = max(self.y2, box.y2)
-        z1 = min(self.z1, box.z1)
-        z2 = max(self.z2, box.z2)
-        
-        return BoundingBox(x1, x2, y1, y2, z1, z2)
-    
-    def jsonize(self):
-        ''' returns a jsonized version of this object '''
-        box = {}
-        
-        box['xmin'] = self.x1
-        box['xmax'] = self.x2
-        box['ymin'] = self.y1
-        box['ymax'] = self.y2
-        box['zmin'] = self.z1
-        box['zmax'] = self.z2
-        
-        return box
-    
-    def __str__(self):
-        return '%s, %s, %s, %s, %s, %s' % (self.x1, self.x2, self.y1, self.y2, self.z1, self.z2)
 
 # links mcstas draw api to the corresponding python class names '''
 drawcommands = {
