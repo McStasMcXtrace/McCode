@@ -177,6 +177,15 @@ class BoundingBox(object):
             
             return [d1, d2]
         
+        def gridlines(p1, p2):
+            ''' returns DrawLine objects corresponding to all gridlines '''
+            p1 = Vector3d(p1[0], p1[1], p1[2])
+            p2 = Vector3d(p2[0], p2[1], p2[2])
+            
+            d1 = DrawLine(args=[p1, p2])
+            
+            return [d1]
+        
         def gridpoints(a1, a2, b1, b2):
             ''' returns a list of pairs of (a, b) points, the endpoints of a grid line on axes a and b '''
             unit = 1
@@ -184,13 +193,13 @@ class BoundingBox(object):
             
             # vertical lines 
             a = a1
-            while a < a2:
+            while a < a2 - unit:
                 a = a + unit
                 lst.append( ((a, b1), (a, b2)) )
             
             # horizontal lines 
             b = b1
-            while b < b2:
+            while b < b2 - unit:
                 b = b + unit
                 lst.append( ((a1, b), (a2, b)) )
             
@@ -219,9 +228,10 @@ class BoundingBox(object):
         
         # do the gridticks for all six planes:
         calls = []
-        for gridlines in [gridlines3d_xy_min, gridlines3d_xy_max, gridlines3d_xz_min, gridlines3d_xz_max, gridlines3d_yz_min, gridlines3d_yz_max]:
-            for pair in gridlines:
-                calls = calls + gridticks(pair[0], pair[1])
+        for gridlinepoints in [gridlines3d_xy_min, gridlines3d_xy_max, gridlines3d_xz_min, gridlines3d_xz_max, gridlines3d_yz_min, gridlines3d_yz_max]:
+            for pair in gridlinepoints:
+                #calls = calls + gridticks(pair[0], pair[1])
+                calls = calls + gridlines(pair[0], pair[1])
         
         return calls
     
