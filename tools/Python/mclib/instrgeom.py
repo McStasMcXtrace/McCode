@@ -166,14 +166,15 @@ class BoundingBox(object):
     def _get_drawcalls_gridticks(self, unit=1):
         ''' creates the tick marks by drawing a partial grid on the six box faces '''
         
-        def gridticks(p1, p2, factor=0.1):
+        def gridticks(p1, p2, ticksize=0.1):
             ''' returns DrawLine objects corresponding to a list of "tickmarks" between p1 and p2 '''
             p1 = Vector3d(p1[0], p1[1], p1[2])
             p2 = Vector3d(p2[0], p2[1], p2[2])
             
-            v = p2.subtract(p1).scalarmult(factor)
+            v = p2.subtract(p1).normalize()
+            v = v.scalarmult(ticksize)
             d1 = DrawLine(args=[p1, p1.add(v)])
-            d2 = DrawLine(args=[p2, p2.add(v).scalarmult(-1)])
+            d2 = DrawLine(args=[p2, p2.subtract(v)])
             
             return [d1, d2]
         
@@ -230,8 +231,8 @@ class BoundingBox(object):
         calls = []
         for gridlinepoints in [gridlines3d_xy_min, gridlines3d_xy_max, gridlines3d_xz_min, gridlines3d_xz_max, gridlines3d_yz_min, gridlines3d_yz_max]:
             for pair in gridlinepoints:
-                #calls = calls + gridticks(pair[0], pair[1])
-                calls = calls + gridlines(pair[0], pair[1])
+                calls = calls + gridticks(pair[0], pair[1])
+                #calls = calls + gridlines(pair[0], pair[1])
         
         return calls
     
@@ -582,7 +583,7 @@ class Vector3d(object):
     
     def add(self, v):
         ''' just add another vector to this one and return the result (does not change this instance) '''
-        return Vector3d(x=v.x+self.x, y=v.y+self.y, z=v.z+self.z)
+        return Vector3d(x = self.x + v.x, y = self.y + v.y, z = self.z + v.z)
     
     def subtract(self, v):
         ''' subtract a vector from this one and return the result (does not change this instance) '''
@@ -590,11 +591,16 @@ class Vector3d(object):
     
     def scalarmult(self, s):
         ''' multiply this by a scalar and return the result (does not change this instance) '''
-        return Vector3d(x = self.x*s, y = self.y*s, z = self.x*s)
+        return Vector3d(x = self.x*s, y = self.y*s, z = self.z*s)
     
     def norm(self):
         ''' returns the norm of this object '''
         return math.sqrt(self.x*self.x + self.y*self.y + self.z*self.z)
+    
+    def normalize(self):
+        ''' returns the norm of this object '''
+        factor = 1 / self.norm()
+        return self.scalarmult(factor)
     
     def to_lst(self):
         return [self.x, self.y, self.z]
