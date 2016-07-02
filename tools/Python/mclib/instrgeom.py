@@ -567,13 +567,25 @@ class DrawCircle(DrawCommand):
         self.args_str = '\"' + self.args_str[:idx] + '\"' + self.args_str[idx:]
     
     def _get_points(self):
+        ''' returns the corners of a flat sqare around the circle, transformed into the proper plane '''
         rad = self.radius
         cen = self.center
-        ne = cen.add(Vector3d(rad, rad, 0))
-        nw = cen.add(Vector3d(-rad, rad, 0))
-        sw = cen.add(Vector3d(-rad, -rad, 0))
-        se = cen.add(Vector3d(rad, -rad, 0))
-        return [ne, nw, se, sw]
+        
+        ne = Vector3d(rad, rad, 0)
+        nw = Vector3d(-rad, rad, 0)
+        sw = Vector3d(-rad, -rad, 0)
+        se = Vector3d(rad, -rad, 0)
+        
+        square = [ne, nw, sw, se]
+        
+        if self.plane == 'xy':
+            return map(lambda p: cen.add(p), square)
+        elif self.plane == 'xz':
+            return map(lambda p: cen.add(Vector3d(p.x, 0, p.y)), square)
+        elif self.plane == 'yz':
+            return map(lambda p: cen.add(Vector3d(0, p.x, p.y)), square)
+        else:
+            raise Exception('DrawCircle: invalid plane argument')
 
 class Vector3d(object):
     def __init__(self, x, y, z):
