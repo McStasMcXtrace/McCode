@@ -1,0 +1,91 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Your name (email)
+* Date: Current Date
+* Origin: Your institution
+* Release: McXtrace 1.0
+* Version: 0.2
+* %INSTRUMENT_SITE: Institution_name_as_a_single word
+*
+* Unit test instrument to check that Mirrror_toroid is working
+*
+* %Description
+* A mere unit test instrument. Also includes a perfectly flat Mirror as reference.
+*
+* Example: Test_Mirror_toroid.instr gamma=5
+*
+* %Parameters		
+* gamma: [deg] Nominal glancing angle of mirror
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT Test_Mirror_toroid(gamma=5, Tor=1)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding an xray source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT src = Source_flat(
+        radius = 1e-3, dist = 2, focus_xw = 1e-3, focus_yh = 1e-3, E0=12.5, dE=1, gauss=1)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT psd0 = PSD_monitor(filename="psd0", xwidth=1e-1, yheight=1e-1)
+AT(0,0,1e-3) RELATIVE PREVIOUS
+
+COMPONENT mt = Mirror_toroid(
+   radius=0.1, radius_o=1, xwidth=5e-2, zdepth=2e-1,R0=1 
+)
+WHEN (Tor) AT(0,0,2) RELATIVE Origin
+ROTATED (-gamma, 0, 0) RELATIVE Origin
+
+COMPONENT mt2 = Mirror(
+   xwidth=5e-2, zdepth=2e-1,R0=1 
+)
+WHEN (!Tor) AT(0,0,2) RELATIVE Origin
+ROTATED (-gamma, 0, 0) RELATIVE Origin
+
+COMPONENT a1 = Arm()
+AT(0,0,0) RELATIVE mt
+ROTATED (-gamma,0,0) RELATIVE mt
+
+COMPONENT psd1 = COPY(psd0)(filename="psd1")
+AT(0,0,1) RELATIVE PREVIOUS
+
+COMPONENT psd2 = COPY(psd0)(filename="psd2")
+AT(0,0,1) RELATIVE PREVIOUS
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
+FINALLY
+%{
+%}
+/* The END token marks the instrument definition end */
+END
+
