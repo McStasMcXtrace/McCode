@@ -54,14 +54,14 @@ COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT src = Source_flat(
-        radius = 1e-3, dist = 2, focus_xw = 1e-3, focus_yh = 1e-3, E0=12.5, dE=1, gauss=1)
+        radius = 1e-3, dist = 2, focus_xw = .5e-2, focus_yh = 1e-3, E0=12.5, dE=1, gauss=1)
   AT (0, 0, 0) RELATIVE Origin
 
-COMPONENT psd0 = PSD_monitor(filename="psd0", xwidth=1e-1, yheight=1e-1)
+COMPONENT psd0 = PSD_monitor(filename="psd0", xwidth=1e-2, yheight=1e-2, nx=200, ny=200)
 AT(0,0,1e-3) RELATIVE PREVIOUS
 
 COMPONENT mt = Mirror_toroid(
-   radius=0.1, radius_o=1, xwidth=5e-2, zdepth=2e-1,R0=1 
+   radius=0.1, radius_o=20, xwidth=5e-2, zdepth=2e-1,R0=1
 )
 WHEN (Tor) AT(0,0,2) RELATIVE Origin
 ROTATED (-gamma, 0, 0) RELATIVE Origin
@@ -77,9 +77,13 @@ AT(0,0,0) RELATIVE mt
 ROTATED (-gamma,0,0) RELATIVE mt
 
 COMPONENT psd1 = COPY(psd0)(filename="psd1")
+AT(0,0,1.001e-2) RELATIVE PREVIOUS
+
+
+COMPONENT psd2 = COPY(psd0)(xwidth=2e-2, filename="psd2")
 AT(0,0,1) RELATIVE PREVIOUS
 
-COMPONENT psd2 = COPY(psd0)(filename="psd2")
+COMPONENT psd3 = COPY(psd2)(filename="psd3")
 AT(0,0,1) RELATIVE PREVIOUS
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */
