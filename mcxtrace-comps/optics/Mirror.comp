@@ -33,7 +33,7 @@
 * %E
 *******************************************************************************/
 
-DEFINE COMPONENT Mirror_toroid
+DEFINE COMPONENT Mirror
 DEFINITION PARAMETERS ( string reflec="")
 SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, R0=0)
 OUTPUT PARAMETERS (reflec_table, prms)
@@ -96,29 +96,15 @@ TRACE
     int status;
     double l0,l1,l2,l3,tx,ty,tz;
     
-    /*function to make testing a propagation simpler*/
-    inline void Mirror_toroid_NOPROP_DL(double dl,double *tx,double *ty,double *tz){
-        do {
-            double op[12];
-            mcstore_xray(op,0, x,y,z, kx,ky,kz, phi, t, Ex,Ey,Ez, p);
-            mcPROP_DL(dl);
-            (*tx)=x;(*ty)=y; (*tz)=z;
-            mcrestore_xray(op,0, &x,&y,&z, &kx,&ky,&kz, &phi, &t, &Ex,&Ey,&Ez, &p);
-        }while(0);
-    }  
-
     PROP_Y0;
     if(tx<-xwidth/2.0|| tx>xwidth/2.0 || z<-zdepth/2.0 || z>zdepth/2.0){
-        RESTORE_XRAY(x,y,z,kx,ky,kz, phi,t Ex,Ey,Ez, p);
+        RESTORE_XRAY(INDEX_CURRENT_COMP, x,y,z, kx,ky,kz, phi,t, Ex,Ey,Ez, p);
     }else{
-    
         double nx,ny,nz;
         nx=0;
         ny=1;
         nz=0;
 
-
-        /*By definition the normal vector points out from the ellipsoid*/
         double s=scalar_prod(kx,ky,kz,nx,ny,nz);
         double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); 
          
@@ -137,59 +123,7 @@ TRACE
         }else{
             p*=R0;
         }
-
-
-
     }
-
-
-    do {
-        /*TODO check the permutation of coordinates and the actual position of the cylinder.*/ 
-        status= cylinder_intersect(&l0,&l1,x,z,y+radius,kx,kz,ky, radius, zdepth); 
-        if (!status) break;
-        if(status & (02|04)) break;
-        /*if the first intersection is behind the particle - this means the ray is on the wrong side of the mirror*/
-        if(l0<0) break;
-        Mirror_toroid_NOPROP_DL(l0,&tx,&ty,&tz);
-        /*check mirror limits of intersectio point.*/
-        if(tz<-zdepth/2.0 || tz>zdepth/2.0) break;
-        /*check if the width is OK*/
-        double xmax=acos(xwidth/(2.0*radius))*radius;
-        if(tx<-xmax || tx>xmax) break;
-
-        status=ellipsoid_intersect(&l2,&l3,x,y+radius,z,kx,ky,kz,radius,radius,radius_o+radius,NULL);
-        if (!status) break;
-        if(l2<0) break; /*This shouldn't be possible*/
-        /*the mirror is indeed hit*/
-        PROP_DL(l2);
-        SCATTER;
-        
-        double nx,ny,nz;
-        nx=2*x/(radius*radius);
-        ny=2*(y+radius)/(radius*radius);/*ellipsoid is displaced to put Origin on the surface*/
-        nz=2*z/((radius+radius_o)*(radius+radius_o));
-        NORM(nx,ny,nz);
-
-        /*By definition the normal vector points out from the ellipsoid*/
-        double s=scalar_prod(kx,ky,kz,nx,ny,nz);
-        double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); 
-         
-        kx=kx-2*s*nx;
-        ky=ky-2*s*ny;
-        kz=kz-2*s*nz;
-
-        /*find energy, and glancing angle*/ 
-        if (prms.use_reflec_table){
-            /*the get ref. by call to Table_value2d*/
-            double R;
-            double theta=acos(s/k)-M_PI_2;
-            double e=K2E*k;
-            R=Table_Value2d(reflec_table,(e-prms.e_min)/prms.e_step, ((theta-prms.theta_min)/prms.theta_step));
-
-        }else{
-            p*=R0;
-        }
-    }while(0);
 %}
 
 MCDISPLAY
