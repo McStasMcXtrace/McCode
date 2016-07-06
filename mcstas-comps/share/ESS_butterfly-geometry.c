@@ -61,7 +61,6 @@ for (y0=-delta_y; y0<2*delta_y; y0+=2*delta_y) {
   dashed_line(rC1_x, y0, rC1_z, rC2_x, y0, rC2_z, 11);
   dashed_line(rT1_x, y0, rT1_z, rT2_x, y0, rT2_z, 11);
 }
-dashed_line(rC0_x, -delta_y, rC0_z, rC0_x, delta_y, rC0_z, 11);
 dashed_line(rC1_x, -delta_y, rC1_z, rC1_x, delta_y, rC1_z, 11);
 dashed_line(rC2_x, -delta_y, rC2_z, rC2_x, delta_y, rC2_z, 11);
 dashed_line(rT1_x, -delta_y, rT1_z, rT1_x, delta_y, rT1_z, 11);

@@ -49,7 +49,9 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string sector="N",int beamline=1, yheight=0.03, cold_frac=0.5, int target_index=0, dist=0, focus_xw=0, focus_yh=0, 
 		    performance=1, Lmin, Lmax, tmax_multiplier=3, int n_pulses=1, acc_power=5)
 OUTPUT PARAMETERS (cx, cz, sign_bl_angle, orientation_angle,jmax,C0_x,C0_z,C1_x,C1_z,C2_x,C2_z,T1_x,T1_z,T2_x,T2_z,rC0_x,rC0_z,rC1_x,rC1_z,rC2_x,rC2_z,rT1_x,rT1_z,rT2_x,rT2_z,tx,ty,tz,r11,r12,r21,r22,xf,yf,zf,w_mult,w_stat,w_geom,w_focus,w_geom_c,w_geom_t,tx,ty,tz,tfocutmps_width, tfocus_time, dt,lambda,l_range,k,v,r,dx,dy,dz,internal_angle,cos_thermal,cos_cold,edge_thermal,abs_beamport_angle,cos_beamport_angle,sin_beamport_angle,x0,z0)
-/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+DEPENDENCY "-std=c99"
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
 DECLARE
 %{
   /* Centering-parameters, which sector are we in? */
@@ -117,14 +119,12 @@ INITIALIZE
     jmax=10;
     T1_x=0;
     T1_z=0;
-    T2_x=-0.18;
+    T2_x=-0.108;
     T2_z=0;
-    C0_x=-0.03;
-    C0_z=0;
     C1_x=0;
     C1_z=0;
-    C2_x=0.07*cos(24.24*DEG2RAD);
-    C2_z=-0.07*sin(24.24*DEG2RAD);
+    C2_x=0.072;
+    C2_z=-0.072*sin(24.24*DEG2RAD);
     isleft=1;
   } else if (strcasestr(sector,"W")) {
     cx = 0.0; cz=0.0; sign_bl_angle=-1;
@@ -133,14 +133,12 @@ INITIALIZE
     jmax=11;
     T1_x=0;
     T1_z=0;
-    T2_x=0.18;
+    T2_x=0.108;
     T2_z=0;
-    C0_x=0.03;
-    C0_z=0;
     C1_x=0;
     C1_z=0;
-    C2_x=-0.07*cos(24.24*DEG2RAD);
-    C2_z=-0.07*sin(24.24*DEG2RAD);
+    C2_x=-0.072;
+    C2_z=-0.072*sin(24.24*DEG2RAD);
     isleft=-1;
   } else if (strcasestr(sector,"S")) {
     cx = 0.0; cz=-0.185; sign_bl_angle=1;
@@ -149,14 +147,12 @@ INITIALIZE
     jmax=11;
     T1_x=0;
     T1_z=0;
-    T2_x=0.18;
+    T2_x=0.108;
     T2_z=0;
-    C0_x=0.03;
-    C0_z=0;
     C1_x=0;
     C1_z=0;
-    C2_x=-0.07*cos(24.24*DEG2RAD);
-    C2_z=0.07*sin(24.24*DEG2RAD);
+    C2_x=-0.072;
+    C2_z=0.072*sin(24.24*DEG2RAD);
     isleft=1;
   } else if (strcasestr(sector,"E")) {
     cx = 0.117; cz=-0.185; sign_bl_angle=-1;
@@ -165,14 +161,12 @@ INITIALIZE
     jmax=10;
     T1_x=0;
     T1_z=0;
-    T2_x=-0.18;
+    T2_x=-0.108;
     T2_z=0;
-    C0_x=-0.03;
-    C0_z=0;
     C1_x=0;
     C1_z=0;
-    C2_x=0.07*cos(24.24*DEG2RAD);
-    C2_z=0.07*sin(24.24*DEG2RAD);
+    C2_x=0.072;
+    C2_z=0.072*sin(24.24*DEG2RAD);
     isleft=-1;
   } else {
     fprintf(stderr,"%s: Sector %s is undefined, please use N, W, S or E!\n", NAME_CURRENT_COMP,sector);
@@ -218,8 +212,6 @@ INITIALIZE
   r22 = cos(DEG2RAD*orientation_angle);
   
   /* Rotated corrdinates of the emission areas */
-  rC0_x = r11*C0_z + r12*C0_x;
-  rC0_z = r21*C0_z + r22*C0_x;
   rC1_x = r11*C1_z + r12*C1_x;
   rC1_z = r21*C1_z + r22*C1_x;
   rC2_x = r11*C2_z + r12*C2_x;
@@ -247,8 +239,8 @@ INITIALIZE
   /* Weight multipliers */
   w_mult=acc_power/5;
   w_stat=1.0/mcget_ncount();
-  w_geom_c  = 0.1*yheight*1.0e4;     /* source area correction */
-  w_geom_t  = 0.18*yheight*1.0e4;
+  w_geom_c  = 0.072*yheight*1.0e4;     /* source area correction */
+  w_geom_t  = 0.108*yheight*1.0e4;
   w_mult *= l_range;            /* wavelength range correction */
   n_pulses=(double)floor(n_pulses);
   if (n_pulses == 0) n_pulses=1;
@@ -272,21 +264,12 @@ TRACE
   modextras.Y=y;
   if (rand01() < cold_frac) {
     iscold=1;
-    if (rand01()<0.7) {
-      x = rC1_x + (rC2_x - rC1_x)*xtmp;
-      z = rC1_z + (rC2_z - rC1_z)*xtmp;
-      x0 = C1_x + (C2_x - C1_x)*xtmp;
-      z0 = C1_z + (C2_z - C1_z)*xtmp;
-      modextras.X=((-xtmp*0.07)-0.09);
-      w_geom=w_geom_c*cos_cold;
-    } else {
-      x = rC1_x + (rC0_x - rC1_x)*xtmp;
-      z = rC1_z + (rC0_z - rC1_z)*xtmp;
-      x0 = C1_x + (C0_x - C1_x)*xtmp;
-      z0 = C1_z + (C0_z - C1_z)*xtmp;
-      modextras.X=((xtmp*0.03)-0.09);
-      w_geom=w_geom_c*cos_thermal;
-    }
+    x = rC1_x + (rC2_x - rC1_x)*xtmp;
+    z = rC1_z + (rC2_z - rC1_z)*xtmp;
+    x0 = C1_x + (C2_x - C1_x)*xtmp;
+    z0 = C1_z + (C2_z - C1_z)*xtmp;
+    modextras.X=((-xtmp*0.072)-0.0705);
+    w_geom=w_geom_c;//*cos_cold;
     cold_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
   } else {
     iscold=0;
@@ -294,9 +277,9 @@ TRACE
     z = rT1_z + (rT2_z - rT1_z)*xtmp;
     x0 = T1_x + (T2_x - T1_x)*xtmp;
     z0 = T1_z + (T2_z - T1_z)*xtmp;
-    modextras.X=((xtmp*0.18)-0.09);
+    modextras.X=((xtmp*0.108)*14.2/10.8-0.0705);
     thermal_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
-    w_geom=w_geom_t*cos_thermal;
+    w_geom=w_geom_t;//*cos_thermal;
   }
 
   SCATTER;

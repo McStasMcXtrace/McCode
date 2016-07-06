@@ -43,7 +43,7 @@ DECLARE
 
 INITIALIZE
 %{
-  lambdamin=Lmin;
+  lambdamin=Lmin; 
   lambdamax=Lmax;
   XW=1.05*(WidthC+2*WidthT);
   YH=1.05*Yheight;
@@ -59,21 +59,14 @@ TRACE
 COMPONENT origin = Progress_bar()
 AT (0, 0, 0) RELATIVE ABSOLUTE
 
-  COMPONENT Source = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=Lmax,performance=performance,dist=dist,target_index=10,cold_frac=cold, yheight=Yheight,
+  COMPONENT Source = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=Lmax,performance=performance,dist=dist,target_index=8,cold_frac=cold, yheight=Yheight,
 				      focus_xw=0.01, focus_yh=0.01)
 AT (0,0,0) ABSOLUTE
 EXTEND %{
   IsCold=iscold;
-  SrcX=x;SrcY=y;SrcZ=z;
+  SrcX=x0;SrcY=y;SrcZ=z0;
   WL=lambda;
 %}
-
-  COMPONENT Sphere = PSD_monitor_4PI(filename="sphere.dat", radius=2, restore_neutron=1)
-  AT (0,0,0) ABSOLUTE
-
-  COMPONENT PSD = PSD_monitor(filename="PSD.dat", xwidth=1, yheight=1)
-  AT (0,0,1) ABSOLUTE
-
 
 COMPONENT Arm1 = Arm()
   AT (0,0,2) RELATIVE ABSOLUTE
@@ -107,13 +100,13 @@ COMPONENT BrillmonCOLD_COLL = Brilliance_monitor(
     nlam = 101, nt = 101, filename = "brillCOLD_COLL", t_0 = -1000,
     t_1 = 4e4, lambda_0 = lambdamin, lambda_1 = lambdamax,
     Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.04*100*2*Yheight/2.5), restore_neutron=1)
-  WHEN(IsCold && fabs(SrcY)<Yheight/2.5 && fabs(SrcX+0.12) < 0.02)  AT (0, 0, 1) RELATIVE Source
+  WHEN(IsCold && fabs(SrcY)<Yheight/2.5 && fabs((fabs(SrcX)-0.072/2.0)) < 0.02)  AT (0, 0, 1) RELATIVE Source
 
 COMPONENT BrillmonCOLD_COLL_Ken = Brilliance_monitor(
     nlam = 101, nt = 11, filename = "brillCOLD_COLL_Ken", t_0 = -1000,
     t_1 =4e4, lambda_0 = 2.02, lambda_1 = lambdamax,
     Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.04*100*2*Yheight/2.5), restore_neutron=1)
-  WHEN(IsCold && fabs(SrcY)<Yheight/2.5 && fabs(SrcX+0.12) < 0.02)  AT (0, 0, 1) RELATIVE Source
+  WHEN(IsCold && fabs(SrcY)<Yheight/2.5 && fabs((fabs(SrcX)-0.072/2.0)) < 0.02)  AT (0, 0, 1) RELATIVE Source
 
 COMPONENT BrillmonTHRM = Brilliance_monitor(
     nlam = 101, nt = 101, filename = "brillTHRM", t_0 = -1000,
@@ -125,31 +118,31 @@ COMPONENT BrillmonTHRM_COLL = Brilliance_monitor(
     nlam = 101, nt = 101, filename = "brillTHRM_COLL", t_0 = -1000,
     t_1 =4e4, lambda_0 = lambdamin, lambda_1 = lambdamax,
     Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.06*100*2*Yheight/2.5), restore_neutron=1)
-  WHEN ((!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.03)  AT (0, 0, 1) RELATIVE Source
+  WHEN ((!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(fabs(SrcX)-0.054)<0.03)  AT (0, 0, 1) RELATIVE Source
 
 COMPONENT BrillmonTHRM_COLL_Ken = Brilliance_monitor(
     nlam = 101, nt = 11, filename = "brillTHRM_COLL_Ken", t_0 = -1000,
     t_1 =4e4, lambda_0 = 0.905, lambda_1 = 2.02,
     Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.06*100*2*Yheight/2.5), restore_neutron=1)
-  WHEN ((!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)<0.03)  AT (0, 0, 1) RELATIVE Source
+  WHEN ((!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(fabs(SrcX)-0.054)<0.03)  AT (0, 0, 1) RELATIVE Source
 
 
-/* Uncomment these helper-arms to view "full" monolith */
+/* /\* Uncomment these helper-arms to view "full" monolith *\/ */
 
-COMPONENT DummyArm1 = Arm()
-  AT (6,0,6) ABSOLUTE
+/* COMPONENT DummyArm1 = Arm() */
+/*   AT (6,0,6) ABSOLUTE */
 
-COMPONENT DummyArm2 = Arm()
-  AT (-6,0,6) ABSOLUTE
+/* COMPONENT DummyArm2 = Arm() */
+/*   AT (-6,0,6) ABSOLUTE */
 
-COMPONENT DummyArm3 = Arm()
-  AT (-6,0,-6) ABSOLUTE
+/* COMPONENT DummyArm3 = Arm() */
+/*   AT (-6,0,-6) ABSOLUTE */
 
-COMPONENT DummyArm4 = Arm()
-  AT (6,0,-6) ABSOLUTE
+/* COMPONENT DummyArm4 = Arm() */
+/*   AT (6,0,-6) ABSOLUTE */
 
-COMPONENT DummyArm5 = Arm()
-  AT (6,0,6) ABSOLUTE
+/* COMPONENT DummyArm5 = Arm() */
+/*   AT (6,0,6) ABSOLUTE */
 
 
 FINALLY
