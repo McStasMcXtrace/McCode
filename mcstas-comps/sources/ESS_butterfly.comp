@@ -21,8 +21,26 @@
 * ESS butterfly moderator with automatic choice of coordinate system, with origin
 * placed at relevant "Moderator Focus Coordinate System" depending on sector location.
 *
-* Implements current "engineering reality" for geometry and brilliances of the cold 
-* and thermal moderators.
+* To select beamport N 5 simply use 
+*  
+*  COMPONENT Source = ESS_butterfly(sector="N",beamline=5,Lmin=0.1,Lmax=20,dist=2,
+*                                   cold_frac=0.5, yheight=0.03,focus_xw=0.1, focus_yh=0.1)
+*
+* <b>Geometry</b>
+* The geometry corresponds correctly to the latest release of the butterfly moderator,
+* including changes warranted by the ESS CCB in July 2016.
+*
+* <b>Brilliances</b>
+* The internal brilliance-functions are howerver still based on the previous MCNP study
+* by Troels Schoenfeldt as included in the ESS_moderator component, with the so-called BF2 
+* design and performed at beamport positions 5, ..., 55 degrees. A nearest neighbour
+* "interpolation"/discretisation is performed on that basis. In terms of intensity/performance,
+* it agrees with the previous (McStas 2.2a version) of ESS_moderator, within apx. 10%.
+* <b>We expect to release a new set of brilliance functions later in 2016, 
+* 
+* <b>Engineering reality</b>
+* An ad-hoc method for future implementation of "engineering reality" is included, use the
+* "performance" parameter to down-scale performance uniformly across all wavelengths.
 *
 * %P
 * Input parameters:
@@ -48,7 +66,7 @@ DEFINE COMPONENT ESS_butterfly
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string sector="N",int beamline=1, yheight=0.03, cold_frac=0.5, int target_index=0, dist=0, focus_xw=0, focus_yh=0, 
 		    performance=1, Lmin, Lmax, tmax_multiplier=3, int n_pulses=1, acc_power=5)
-OUTPUT PARAMETERS (cx, cz, sign_bl_angle, orientation_angle,jmax,C0_x,C0_z,C1_x,C1_z,C2_x,C2_z,T1_x,T1_z,T2_x,T2_z,rC0_x,rC0_z,rC1_x,rC1_z,rC2_x,rC2_z,rT1_x,rT1_z,rT2_x,rT2_z,tx,ty,tz,r11,r12,r21,r22,xf,yf,zf,w_mult,w_stat,w_geom,w_focus,w_geom_c,w_geom_t,tx,ty,tz,tfocutmps_width, tfocus_time, dt,lambda,l_range,k,v,r,dx,dy,dz,internal_angle,cos_thermal,cos_cold,edge_thermal,abs_beamport_angle,cos_beamport_angle,sin_beamport_angle,x0,z0)
+OUTPUT PARAMETERS (cx, cz, sign_bl_angle, orientation_angle,jmax,C0_x,C0_z,C1_x,C1_z,C2_x,C2_z,T1_x,T1_z,T2_x,T2_z,rC0_x,rC0_z,rC1_x,rC1_z,rC2_x,rC2_z,rT1_x,rT1_z,rT2_x,rT2_z,tx,ty,tz,r11,r12,r21,r22,xf,yf,zf,w_mult,w_stat,w_geom,w_focus,w_geom_c,w_geom_t,tx,ty,tz,tfocutmps_width, tfocus_time, dt,lambda,l_range,k,v,r,dx,dy,dz,internal_angle,x0,z0)
 DEPENDENCY "-std=c99"
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -92,7 +110,7 @@ DECLARE
   double k,v,r;
   double dx,dy,dz;
   /* variables needed to correct for the emission surface angle */
-  double internal_angle,cos_thermal,cos_cold, edge_thermal,abs_beamport_angle,cos_beamport_angle,sin_beamport_angle;
+  double internal_angle;
   int nearest_angle(double angle) {
     int AngleList[] = {5, 15, 25, 35, 45, 55};
     double diff = 180;
@@ -245,13 +263,6 @@ INITIALIZE
   n_pulses=(double)floor(n_pulses);
   if (n_pulses == 0) n_pulses=1;
 
-  /* ESS 2015 - variables needed to correct for the emission surface angle */
-  abs_beamport_angle=modextras.beamportangle;
-  cos_beamport_angle=cos(modextras.beamportangle*DEG2RAD);
-  sin_beamport_angle=sin(modextras.beamportangle*DEG2RAD);
-  /* correction for projection along the beam / projection on the z=0 plane */
-  cos_thermal=cos_beamport_angle;
-  cos_cold=cos((abs_beamport_angle-24.24)*DEG2RAD)/cos(24.24*DEG2RAD);
 %}
 
 TRACE
@@ -269,7 +280,7 @@ TRACE
     x0 = C1_x + (C2_x - C1_x)*xtmp;
     z0 = C1_z + (C2_z - C1_z)*xtmp;
     modextras.X=((-xtmp*0.072)-0.0705);
-    w_geom=w_geom_c;//*cos_cold;
+    w_geom=w_geom_c;
     cold_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
   } else {
     iscold=0;
@@ -279,7 +290,7 @@ TRACE
     z0 = T1_z + (T2_z - T1_z)*xtmp;
     modextras.X=((xtmp*0.108)*14.2/10.8-0.0705);
     thermal_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
-    w_geom=w_geom_t;//*cos_thermal;
+    w_geom=w_geom_t;
   }
 
   SCATTER;
