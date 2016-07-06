@@ -33,10 +33,15 @@
 * <b>Brilliances</b>
 * The internal brilliance-functions are howerver still based on the previous MCNP study
 * by Troels Schoenfeldt as included in the ESS_moderator component, with the so-called BF2 
-* design and performed at beamport positions 5, ..., 55 degrees. A nearest neighbour
-* "interpolation"/discretisation is performed on that basis. In terms of intensity/performance,
-* it agrees with the previous (McStas 2.2a version) of ESS_moderator, within apx. 10%.
-* <b>We expect to release a new set of brilliance functions later in 2016, 
+* design and performed at beamport positions 5, ..., 55 degrees measured from the central
+* position of the beam extraction. A nearest neighbour "interpolation"/discretisation is 
+* performed on that basis. Hence, the performance is symmetric in all sectors for now, 
+* i.e. beamline 3 performs the same in all of N, W, S and E.
+* In terms of intensity/performance the component agrees with the previous ESS_moderator
+* (McStas 2.2a version - 2.3 version had a bug) within apx. 10%.
+* <b>We expect to release a new set of brilliance functions later in 2016. These are 
+* expected to include more realistic brilliances in terms of variation across sectors and
+* potentially also performance losses due to engineering reality. </b>
 * 
 * <b>Engineering reality</b>
 * An ad-hoc method for future implementation of "engineering reality" is included, use the
