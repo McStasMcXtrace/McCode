@@ -80,11 +80,11 @@ INITIALIZE
         } else {
             exit(fprintf(stderr,"Error: %s: wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
         }
-        if (!((int)(prms.e_max-prms.e_min) == (int)((tp->rows-1)*prms.e_step)))
+        if ((prms.e_max-prms.e_min) != ((tp->rows-1)*prms.e_step) )
         {
             exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
         }
-        if (!((int)(prms.theta_max-prms.theta_min) == (int)((tp->columns-1)*prms.theta_step)))
+        if ((prms.theta_max-prms.theta_min) != ((tp->columns-1)*prms.theta_step) )
         {
             exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
         }
@@ -149,10 +149,10 @@ TRACE
         if (prms.use_reflec_table){
             /*the get ref. by call to Table_value2d*/
             double R;
-            double theta=acos(s/k)-M_PI_2;
+            double theta=RAD2DEG*(acos(s/k)-M_PI_2);
             double e=K2E*k;
             R=Table_Value2d(reflec_table,(e-prms.e_min)/prms.e_step, ((theta-prms.theta_min)/prms.theta_step));
-
+            p*=R;
         }else{
             p*=R0;
         }
