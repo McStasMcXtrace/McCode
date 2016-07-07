@@ -315,6 +315,10 @@ TRACE
   }
   
 %}
+FINALLY
+%{
+    free(prms_m);
+%}
 
 MCDISPLAY
 %{
