@@ -89,7 +89,7 @@ TRACE
   kxn=kx/k;kyn=ky/k;kzn=kz/k;
   /*mirror centre may be shifted along z*/
   zt=z-z_offset;
-  /*the reference point is on the ellipsoid surface such that the ellipsoid mass lies on th epositive
+  /*the reference point is on the ellipsoid surface such that the ellipsoid mass lies on the positive
     x-side of the zy-plane*/ 
   xt=x-a;
 

@@ -64,7 +64,7 @@ TRACE
       l0=-B/(2*A) + sqrt(D2);
       l1=-B/(2*A) - sqrt(D2);
       if (l0>0) {
-        fprintf(stderr,"warning: x-ray hitsP mirror %s on back surface\n",NAME_CURRENT_COMP);
+        fprintf(stderr,"warning: x-ray hits Parabolic mirror %s on back surface\n",NAME_CURRENT_COMP);
         PROP_DL(l0);
       }else{
         PROP_DL(l1);
