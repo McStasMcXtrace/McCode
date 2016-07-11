@@ -133,7 +133,7 @@ line(w2, 0, l2, w2, 0, l3);
 line(-w2, 0, l2, -w2, 0, l3);
 
 /* Draw all the beamlines in "this sector" +1 */
-double xx1, zz1, xx2, zz2, delta_omega;
+double xx1, yy1, zz1, xx2, yy2, zz2, delta_omega;
 for (int j=0; j<jmax+1; j++) {
   delta_omega = orientation_angle - Beamlines[j];
   r11 = cos(DEG2RAD*delta_omega);
@@ -164,3 +164,22 @@ for (int j=0; j<jmax+1; j++) {
 
 /* Show instrument axis... */
 dashed_line(0,0,0,0,0,2+rAz,21);
+
+/* Draw up the "focusing rectangle" */ 
+/* Horizontal direction vector @ focusing area */
+vec_prod(xx1,yy1,zz1,tx,ty,tz,0.0,1.0,0.0);
+NORM(xx1,yy1,zz1);
+vec_prod(xx2,yy2,zz2,tx,ty,tz,xx1,yy1,zz1);
+NORM(xx2,yy2,zz2);
+xx1*=focus_xw/2.0; yy1*=focus_xw/2.0; zz1*=focus_xw/2.0;
+xx2*=focus_yh/2.0; yy2*=focus_yh/2.0; zz2*=focus_yh/2.0;
+printf("Normal vectors pointing in directions\n %g %g %g and \n %g %g %g \n",xx1,yy1,zz1,xx2,yy2,zz2);
+dashed_line(tx -xx1 -xx2, ty -yy1 -yy2, tz -zz1 -zz2,
+	    tx +xx1 -xx2, ty +yy1 -yy2, tz +zz1 -zz2,5);
+dashed_line(tx -xx1 +xx2, ty -yy1 +yy2, tz -zz1 +zz2,
+	    tx +xx1 +xx2, ty +yy1 +yy2, tz +zz1 +zz2,5);
+
+dashed_line(tx -xx1 -xx2, ty -yy1 -yy2, tz -zz1 -zz2,
+	    tx -xx1 +xx2, ty -yy1 +yy2, tz -zz1 +zz2,5);
+dashed_line(tx +xx1 -xx2, ty +yy1 -yy2, tz +zz1 -zz2,
+	    tx +xx1 +xx2, ty +yy1 +yy2, tz +zz1 +zz2,5);
