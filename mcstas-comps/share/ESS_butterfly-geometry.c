@@ -134,7 +134,7 @@ line(-w2, 0, l2, -w2, 0, l3);
 
 /* Draw all the beamlines in "this sector" +1 */
 double xx1, yy1, zz1, xx2, yy2, zz2, delta_omega;
-for (int j=0; j<jmax+1; j++) {
+for (j=0; j<jmax+1; j++) {
   delta_omega = orientation_angle - Beamlines[j];
   r11 = cos(DEG2RAD*delta_omega);
   r12 = -sin(DEG2RAD*delta_omega);
