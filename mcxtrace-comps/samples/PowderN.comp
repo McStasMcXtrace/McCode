@@ -224,6 +224,7 @@ SHARE
     double k;       /*wavenumber corresponding to E*/
     double sigma_a; /*absorption cross section for energy E*/
     double mu;      /*absoprtion coefficient for the energy E*/
+    double cohinc;  /*coherent +incoherent scattering coefficient*/
   };
   struct line_info_struct
     {
@@ -272,6 +273,8 @@ SHARE
         (*abs)[i].mu=100*table.data[i*table.columns + 3];
         /* column 4 (but 0-indexed) is photoabsorption in cm^2 / g
          * density is in g / cm^3 ->factor 100 to get mu in m^-1.*/
+        (*abs)[i].cohinc=100*table.data[i*table.columns + 4];
+        /* column 5 contains the coh+inc mean free paths (mus). in cm^2 / g.*/
       }
       (*abs)[i].E=-1;
       (*abs)[i].k=-1;
@@ -467,6 +470,7 @@ DECLARE
   double radius_i=0, xwidth_i=0, yheight_i=0, zdepth_i=0;
 
   off_struct offdata;
+  double  type;
 %}
 INITIALIZE
 %{
@@ -592,9 +596,6 @@ INITIALIZE
   if (line_info.V_0 <= 0)
     fprintf(stderr,"PowderN: %s: density/unit cell volume is NULL (Vc). Unactivating component.\n", NAME_CURRENT_COMP);
 
-  if (line_info.V_0 && p_inc && !line_info.sigma_i) {
-    printf("PowderN %s WARNING: You have requested statistics for incoherent scattering but not defined sigma_inc!\n", NAME_CURRENT_COMP);
-  }
 
   if (line_info.flag_barns) { /* Factor 100 to convert from barns to fm^2 */
     XsectionFactor = 100;
@@ -613,7 +614,7 @@ INITIALIZE
       exit(fprintf(stderr,"PowderN: %s: ERROR allocating memory (init)\n", NAME_CURRENT_COMP));
     for(i=0; i<Nq; i++)
     {
-      my_s_k2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
+        my_s_k2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
                  /(line_info.V_0*line_info.V_0)
                  *(L[i].j * L[i].F2 / L[i].q)*XsectionFactor;
       /* Is not yet divided by k^2 */
@@ -625,20 +626,12 @@ INITIALIZE
   if (!read_abs_data(material,&a_info)){
     fprintf(stderr,"PowderN: %s Error reading absorption data from file %s - will proceed without absorption.\n",NAME_CURRENT_COMP,material);
   }
-//  if (line_info.V_0) {
-//    /* Is not yet divided by v */
-//    my_abs = pack*line_info.sigma_a/line_info.V_0*2200*100;   // Factor 100 to convert from barns to fm^2
-//    my_inc = pack*line_info.sigma_i/line_info.V_0*100;   // Factor 100 to convert from barns to fm^2
-//
-//    printf("PowderN: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn] reflections=%s\n",
-//      NAME_CURRENT_COMP, line_info.V_0, line_info.sigma_a, line_info.sigma_i, reflections && strlen(reflections) ? reflections : "NULL");
-//  }
 
 %}
 TRACE
 %{
-  double l0, l1, l2, l3, k, k1,l_full, l, l_1, dl, alpha0, alpha, theta, my_s, my_s_n;
-  double solid_angle, type;
+  double l0, l1, l2, l3, k, k1,l_full, l, l_1, dl, alpha0, alpha, theta, my_s, my_s_n, my_coh;
+  double solid_angle;//, type;
   double arg, tmp_kx, tmp_ky, tmp_kz, kout_x, kout_y, kout_z, nx, ny, nz, my_abs, pmul=1;
   int    line;
   char   intersect=0;
@@ -686,17 +679,6 @@ TRACE
     k = sqrt(kx*kx + ky*ky + kz*kz);
     l_full =l3 - l2 + l1 - l0;
 
-    /* Calculate total scattering cross section at relevant velocity */
-    my_s_k2_sum=0;
-    for(line=0; line<Nq; line++) {
-      if (my_q[line] <= 2*k) {
-        my_s_k2_sum+=my_s_k2[line];
-      }
-    }
-
-
-
-
     if (l3 < 0) {
       l3=0; /* Already past sample?! */
       if (line_info.flag_warning < 100)
@@ -710,8 +692,14 @@ TRACE
         dl = dl * (l3 - l2) + (l2-l0) ; /* Possibly also 'backside' part */
       }
 
-      my_s = my_s_k2_sum/(k*k);
-      /* Total attenuation from scattering */
+      /* Calculate total coherent scattering cross section at relevant wavevector*/
+      my_s_k2_sum=0;
+      for(line=0; line<Nq; line++) {
+          if (my_q[line] <= 2*k) {
+              my_s_k2_sum+=my_s_k2[line];
+          }
+      }
+      my_coh = my_s_k2_sum/(k*k);
 
       /* Total attenuation from absorption */
       int ii=0;
@@ -721,24 +709,30 @@ TRACE
       }
       if (a_info[ii].k==-1) {
         my_abs=density*a_info[ii-1].mu;
+        my_inc=density*a_info[ii-1].cohinc-my_coh;
       }else{
         delta=(k-a_info[ii-1].k)/(a_info[ii].k-a_info[ii-1].k);
         my_abs=density*( (1-delta)*a_info[ii-1].mu + delta*a_info[ii].mu );
+        my_inc=density*( (1-delta)*a_info[ii-1].cohinc + delta*a_info[ii].cohinc )-my_coh;
       }
-      //printf("myabs=%g, k=%g\n",my_abs,k);
+      if (my_inc<0){
+          my_inc=0;/*this should not happen*/
+      }
+
+      /* Total attenuation from scattering*/
+      my_s=my_coh+my_inc;
 
       type = rand01();
-      p_inc=0; /*is turned off till we fix the Compton scattering code*/
       /* How to handle this one? Transmit (1) / Incoherent (2) / Coherent (3) ? */
       if (type < p_transmit) {
         type = 1;
         l = l_full; /* Passing through, full length */
         PROP_DL(l3);
-//      } else if (type >= p_transmit && type < (p_transmit + p_inc)) {
-//        type = 2;
-//        l = v*dt;       /* Penetration in sample */
-//        PROP_DL(dl+l0); /* Point of scattering */
-//        SCATTER;
+      } else if (type >= p_transmit && type < (p_transmit + p_inc)) {
+        type = 2;
+        l = dl;       /* Penetration in sample */
+        PROP_DL(dl+l0); /* Point of scattering */
+        SCATTER;
       } else if (type >= p_transmit + p_inc) {
         type = 3;
         l=dl;
@@ -761,6 +755,9 @@ TRACE
           if(fabs(arg) > 1)
             ABSORB;                   /* No bragg scattering possible*/
           theta = asin(arg);          /* Bragg scattering law */
+
+          /*also apply the Polarization factor*/
+
 
           /* Choose point on Debye-Scherrer cone */
           if (d_phi)
@@ -848,71 +845,73 @@ TRACE
 
           l_1 = l3 - l2 + l1 - l0; /* Length to exit */
 
+          //printf("MYS: %g %g %g %d %g   %g %g\n", my_abs,my_s,my_s_n,line, my_inc, k,k*K2E);
+
           pmul  = Nq*l_full*my_s_n*exp(-(my_abs+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
           /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
           if (d_phi) pmul *= alpha/PI;
         } /* else transmit <-- No powder lines in file */
       }  /* Coherent scattering event */
-//      else if (type == 2) {  /* Make incoherent scattering event */
-      /*should be replaced by Compton scattering and/or TDS*/
-//        if(d_phi) {
-//          randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
-//                                      0, 0, 1,
-//                                      2*PI, d_phi*DEG2RAD, ROT_A_CURRENT_COMP);
-//        } else {
-//          randvec_target_circle(&vx, &vy, &vz,
-//                                &solid_angle, 0, 0, 1, 0);
-//        }
-//        v1 = sqrt(vx*vx+vy*vy+vz*vz);
-//        vx *= v/v1;
-//        vy *= v/v1;
-//        vz *= v/v1;
-//
-//        /* Since now scattered and new direction given, calculate path to exit */
-//        if (line_info.shape == 1) {
-//          intersect  = box_intersect(&l0, &l3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
-//          intersecti = box_intersect(&l1, &l2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
-//        } else if (line_info.shape == 0) {
-//          intersect  = cylinder_intersect(&l0, &l3, x, y, z, vx, vy, vz, radius, yheight);
-//          intersecti = cylinder_intersect(&l1, &l2, x, y, z, vx, vy, vz, radius_i, yheight_i);
-//        } else if (line_info.shape == 2) {
-//          intersect  = sphere_intersect  (&l0, &l3, x,y,z, vx,vy,vz, radius);
-//          intersecti = sphere_intersect  (&l1, &l2, x,y,z, vx,vy,vz, radius_i);
-//        } else if (line_info.shape == 3) {
-//          intersect  = off_intersect  (&l0, &l3, NULL, NULL, x,y,z, vx,vy,vz, offdata);
-//          intersecti = 0;
-//        }
-//
-//        if (!intersect) {
-//          /* Strange error: did not hit cylinder */
-//          if (line_info.flag_warning < 100)
-//            fprintf(stderr, "PowderN: %s: FATAL ERROR: Did not hit sample from inside (inc).\n", NAME_CURRENT_COMP);
-//          line_info.flag_warning++;
-//          ABSORB;
-//        }
-//
-//        if (!intersecti) {
-//          l1 = (l3 + l0) /2;
-//          l2 = l1;
-//        }
-//
-//        if (concentric && intersecti) {
-//          /* In case of concentricity, 'remove' backward wall of sample */
-//          l2 = l1;
-//          l3 = l1;
-//        }
-//
-//        if(l0 < 0) l0=0; /* already in sample */
-//        if(l1 < 0) l1=0; /* already in inner hollow */
-//        if(l2 < 0) l2=0; /* already past inner hollow */
-//
-//
-//        l_1 = v*(l3 - l2 + l1 - l0); /* Length to exit */
-//
-//        pmul = l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(p_inc);
-//        pmul *= solid_angle/(4*PI);
-//
-//      }  /* Incoherent scattering event */
+      else if (type == 2) {  /* Make incoherent scattering event */
+         /*should be replaced by Compton scattering and/or TDS*/
+        if(d_phi) {
+          randvec_target_rect_angular(&kx, &ky, &kz, &solid_angle,
+                                      0, 0, 1,
+                                      2*PI, d_phi*DEG2RAD, ROT_A_CURRENT_COMP);
+        } else {
+          randvec_target_circle(&kx, &ky, &kz,
+                                &solid_angle, 0, 0, 1, 0);
+        }
+        k1 = sqrt(kx*kx+ky*ky+kz*kz);
+        kx *= k/k1;
+        ky *= k/k1;
+        kz *= k/k1;
+
+        /* Since now scattered and new direction given, calculate path to exit */
+        if (line_info.shape == 1) {
+          intersect  = box_intersect(&l0, &l3, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
+          intersecti = box_intersect(&l1, &l2, x, y, z, kx, ky, kz, xwidth_i, yheight_i, zdepth_i);
+        } else if (line_info.shape == 0) {
+          intersect  = cylinder_intersect(&l0, &l3, x, y, z, kx, ky, kz, radius, yheight);
+          intersecti = cylinder_intersect(&l1, &l2, x, y, z, kx, ky, kz, radius_i, yheight_i);
+        } else if (line_info.shape == 2) {
+          intersect  = sphere_intersect  (&l0, &l3, x,y,z, kx,ky,kz, radius);
+          intersecti = sphere_intersect  (&l1, &l2, x,y,z, kx,ky,kz, radius_i);
+        } else if (line_info.shape == 3) {
+          intersect  = off_intersect  (&l0, &l3, NULL, NULL, x,y,z, kx,ky,kz, offdata);
+          intersecti = 0;
+        }
+
+        if (!intersect) {
+          /* Strange error: did not hit cylinder */
+          if (line_info.flag_warning < 100)
+            fprintf(stderr, "PowderN: %s: FATAL ERROR: Did not hit sample from inside (inc).\n", NAME_CURRENT_COMP);
+          line_info.flag_warning++;
+          ABSORB;
+        }
+
+        if (!intersecti) {
+          l1 = (l3 + l0) /2;
+          l2 = l1;
+        }
+
+        if (concentric && intersecti) {
+          /* In case of concentricity, 'remove' backward wall of sample */
+          l2 = l1;
+          l3 = l1;
+        }
+
+        if(l0 < 0) l0=0; /* already in sample */
+        if(l1 < 0) l1=0; /* already in inner hollow */
+        if(l2 < 0) l2=0; /* already past inner hollow */
+
+
+        l_1 = (l3 - l2 + l1 - l0); /* Length to exit */
+
+        pmul = l_full*my_inc*exp(-(my_abs+my_s)*(l+l_1))/(p_inc);
+        pmul *= solid_angle/(4*PI);
+
+      }  /* Incoherent scattering event */
       else if (type == 1) {
         /* Make transmitted (absorption-corrected) event */
         /* No coordinate changes here, simply change xray weight */
