@@ -2,6 +2,7 @@
 functionality for loading mccode data into suitable data types, 
 and assembling it in a plot-friendly way.
 '''
+from os.path import isfile, isdir
 from flowchart import *
 
 # mcplot
@@ -21,8 +22,9 @@ def load2DMonitor():
     '''  '''
     return Data2D()
 
-# decision functions
+# flowchart decision functions - probe disk contents, does not open files
 def has_filename(args):
+    #os.path.isfile(args['simfile'])
     return False
 
 def is_mccodesim_or_mccodedat(args):
@@ -32,6 +34,8 @@ def is_monitorfile(args):
     return False
 
 def is_sweepfolder(args):
+    #folder = args['simfile']
+    #os.pah.isdir(folder)
     return False
 
 def is_broken_sweepfolder(args):
@@ -69,12 +73,12 @@ def load_monitor_folder(args):
     pass
 
 class McPlotDataLoader():
-    
+    ''' implements the mccode data load cases as a flow chart '''
     def __init__(self, simfile):
         '''  '''
         self.simfile = simfile
     
-    def load(self, simfile):
+    def load(self):
         ''' loads mccode data and assembles the plotable data graph '''
         
         # exit terminals
@@ -98,9 +102,13 @@ class McPlotDataLoader():
         # enter node
         enter_simfile = FCNTerminal(node_next=dec_hasfilename)
         
+        # get the "args" which is just the simfile, a string, which may correspond to a file or a folder
+        args = {}
+        args['simfile'] = self.simfile
+        
         # traverse the flow chart
         control = FlowChartControl(terminal_enter=enter_simfile)
-        exit_node = control.process(args=(simfile))
+        exit_node = control.process(args=(self.simfile))
         
         print exit_node.key
 
