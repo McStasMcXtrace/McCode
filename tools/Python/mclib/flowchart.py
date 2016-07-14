@@ -9,27 +9,27 @@ class FlowChartNode(object):
 
 class FCNDecisionBool(FlowChartNode):
     ''' a boolean decision node '''
-    def __init__(self, eval_fct, node_T, node_F):
-        self.eval_fct = eval_fct
+    def __init__(self, fct, node_T, node_F):
+        self.fct = fct
         self.node_T = node_T
         self.node_F = node_F#
     
     def process(self, args):
-        if self.eval_fct(args):
+        if self.fct(args):
             return self.node_T
         else:
             return self.node_F
 
 class FCNTerminal(FlowChartNode):
     ''' a terminal node '''
-    def __init__(self, eval_fct=None, node_next=None, key=''):
-        self.eval_fct = eval_fct
+    def __init__(self, fct=None, node_next=None, key=''):
+        self.fct = fct
         self.node_next = node_next
         self.key = key
     
     def process(self, args):
-        if self.eval_fct:
-            self.eval_fct(args)
+        if self.fct:
+            self.fct(args)
         
         return self.node_next
     
