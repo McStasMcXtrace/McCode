@@ -2,10 +2,14 @@
 functionality for loading mccode data into suitable data types, 
 and assembling it in a plot-friendly way.
 '''
-from os.path import isfile, isdir
+import glob
+from os.path import isfile, isdir, join, dirname, basename, walk, splitext
+
 from flowchart import *
 
-# mcplot
+'''
+McCode sim output data types, pythonified.
+'''
 class Data1D(object):
     '''  '''
     pass
@@ -22,36 +26,86 @@ def load2DMonitor():
     '''  '''
     return Data2D()
 
-# flowchart decision functions - probe disk contents, does not open files
+''' 
+Flowchart decision functions.
+
+NOTE: These functions probe disk contents, but they do not open any files, so 
+all decisions are based on file exists, folder exists and filename.
+Any errors are therefore encountered only at the actual load data step.
+
+They assume that args['simfilee'] is a string that was input by the user (possibly empty).
+
+They are implemented in a context-dependent way! Each one
+can have assumptions in its implementation depending on its position in the flow chart.
+'''
 def has_filename(args):
-    #os.path.isfile(args['simfile'])
-    return False
+    f = args['simfile']
+    return isfile(f)
 
 def is_mccodesim_or_mccodedat(args):
-    return False
+    f = basename(args['simfile'])
+    return (f == 'mccode.sim' or f == 'mccode.dat') and isfile(f)
 
 def is_monitorfile(args):
-    return False
+    f = args['simfile']
+    ext = splitext(f)[1]
+    return ext == '.dat' and isfile(f)
 
 def is_sweepfolder(args):
-    #folder = args['simfile']
-    #os.pah.isdir(folder)
-    return False
+    folder = args['simfile']
+    if not isdir(folder):
+        return False
+    dotsim = join(folder, 'mccode.sim')
+    dotdat = join(folder, 'mccode.dat')
+    return isfile(dotsim) and isfile(dotdat)
 
 def is_broken_sweepfolder(args):
+    ''' not implemented (returns trivial answer) '''
     return False
 
 def is_sweep_data_present(args):
-    return False
+    ''' not implemented '''
+    raise Exception('is_sweep_data_present has not been not implemented.')
 
 def is_mccodesim_w_monitors(args):
-    return False
+    f = args['simfile']
+    # cover cases where f is a folder without forward slash, in which case dirname returns an empty string
+    if not isfile(f):
+        if not f == '':
+            f = f + '/'
+    # checks mccode.sim existence
+    if not isfile(join(f, 'mccode.sim')):
+        return False
+    # assume f is mccode.sim
+    d = dirname(f)
+    datfiles = glob.glob(join(d, '*.dat'))
+    return len(datfiles) > 0
 
 def has_datfile(args):
-    return False
+    # assume folder
+    d = args['simfile']
+    datfiles = glob.glob(join(d, '*.dat'))
+    return len(datfiles) > 0
 
 def has_multiple_datfiles(args):
-    return False
+    # assume folder
+    d = args['simfile']
+    datfiles = glob.glob(join(d, '*.dat'))
+    return len(datfiles) > 1
+
+def test_decfuncs(simfile):
+    args = {}
+    args['simfile'] = simfile
+    
+    print 'has_filename:              %s' % str(has_filename(args))
+    print 'is_mccodesim_or_mccodedat: %s' % str(is_mccodesim_or_mccodedat(args))
+    print 'is_monitorfile:            %s' % str(is_monitorfile(args))
+    print 'is_sweepfolder:            %s' % str(is_sweepfolder(args))
+    #print 'is_broken_sweepfolder:     %s' % str(is_broken_sweepfolder(args))
+    #print 'is_sweep_data_present:     %s' % str(is_sweep_data_present(args))
+    print 'is_mccodesim_w_monitors:   %s' % str(is_mccodesim_w_monitors(args))
+    print 'has_datfile:               %s' % str(has_datfile(args))
+    print 'has_multiple_datfiles:     %s' % str(has_multiple_datfiles(args))
 
 # terminal functions - loads data files, assembles and returns a plot data graph
 def load_monitor(args):
@@ -73,7 +127,7 @@ def load_monitor_folder(args):
     pass
 
 class McPlotDataLoader():
-    ''' implements the mccode data load cases as a flow chart '''
+    ''' assembly and execution of mccode data loader flowchart '''
     def __init__(self, simfile):
         '''  '''
         self.simfile = simfile
@@ -108,9 +162,10 @@ class McPlotDataLoader():
         
         # traverse the flow chart
         control = FlowChartControl(terminal_enter=enter_simfile)
-        exit_node = control.process(args=(self.simfile))
+        exit_node = control.process(args=args)
         
-        print exit_node.key
+        print
+        print 'flowchart exit terminal: %s' % exit_node.key
 
         # TODO: assemble data graph
         self.data_graph = None
