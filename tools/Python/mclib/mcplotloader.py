@@ -149,13 +149,19 @@ def _load_datfiles(directory):
     return data_lst
 
 def _load_header(simfile):
+    # TODO: implement
+    f = simfile
+    text = open(f).read()
+    return _parse_header(text)
+
+def _load_sweep_header(simfile):
+    # TODO: implement
     f = simfile
     text = open(f).read()
     return _parse_header(text)
 
 def _load_multiplot_1D_lst(f_sim):
-    # TODO: implement!
-    
+    # TODO: implement
     lst = []
     lst.append(Data1D())
     lst.append(Data1D())
@@ -246,7 +252,7 @@ def load_sweep(args):
     
     # load primary data, 1D sweep values
     datalst_sweep1D = _load_multiplot_1D_lst(f_sim)
-    header = _load_header(f_sim)
+    header = _load_sweep_header(f_sim)
     root = PNMultiple(header, datalst_sweep1D)
 
     # primary nodes (zoom on 1D sweep values)

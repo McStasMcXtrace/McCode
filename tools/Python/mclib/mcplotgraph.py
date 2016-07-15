@@ -3,17 +3,17 @@ Generic Node and data types for assembling a graph that can be plotted
 using various mcplot frontend implementations.
 '''
 class Data1D(object):
-    '''  '''
+    ''' not implemented '''
     def __init__(self):
         self.title = ''
 
 class Data2D(object):
-    '''  '''
+    ''' not implemented '''
     def __init__(self):
         self.title = ''
 
 class DataMultiHeader(object):
-    '''  '''
+    ''' not implemented '''
     def __init__(self):
         self.title = ''
 
