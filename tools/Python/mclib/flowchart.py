@@ -29,10 +29,10 @@ class FCNTerminal(FlowChartNode):
     
     def process(self, args):
         if self.fct:
-            self.fct(args)
+            self.result = self.fct(args)
         
         return self.node_next
-    
+
 class FlowChartControl(object):
     ''' implements the flowchart traversal control '''
     def __init__(self, terminal_enter):

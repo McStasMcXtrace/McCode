@@ -4,21 +4,10 @@ and assembling it in a plot-friendly way.
 '''
 import glob
 import re
-from os.path import isfile, isdir, join, dirname, basename, walk, splitext
+from os.path import isfile, isdir, join, dirname, basename, walk, splitext, walk
 
 from flowchart import *
 from mcplotgraph import *
-
-'''
-McCode sim output data types, pythonified.
-'''
-def load1DMonitor(text):
-    '''  '''
-    return Data1D()
-
-def load2DMonitor(text):
-    '''  '''
-    return Data2D()
 
 ''' 
 Flowchart decision functions.
@@ -37,11 +26,20 @@ data loader terminal functions.
 '''
 def has_filename(args):
     f = args['simfile']
-    return isfile(f)
+    if not isfile(f):
+        if not isdir(f):
+            raise Exception('mcplot loader: Invalid input file.')
+        args['directory'] = f
+        args['simfile'] = ''
+        return False
+    else:
+        args['directory'] = dirname(f)
+        return True
 
 def is_mccodesim_or_mccodedat(args):
-    f = basename(args['simfile'])
-    return (f == 'mccode.sim' or f == 'mccode.dat') and isfile(f)
+    f = args['simfile']
+    f_name = basename(f)
+    return (f_name == 'mccode.sim' or f_name == 'mccode.dat') and isfile(f)
 
 def is_monitorfile(args):
     f = args['simfile']
@@ -53,11 +51,12 @@ def is_monitorfile(args):
         return False
 
 def is_sweepfolder(args):
-    folder = args['simfile']
-    if not isdir(folder):
+    d = args['directory']
+    
+    if not isdir(d):
         return False
-    dotsim = join(folder, 'mccode.sim')
-    dotdat = join(folder, 'mccode.dat')
+    dotsim = join(d, 'mccode.sim')
+    dotdat = join(d, 'mccode.dat')
     return isfile(dotsim) and isfile(dotdat)
 
 def is_broken_sweepfolder(args):
@@ -70,28 +69,28 @@ def is_sweep_data_present(args):
 
 def is_mccodesim_w_monitors(args):
     f = args['simfile']
-    # cover cases where f is a folder without forward slash, in which case dirname returns an empty string
-    if not isfile(f):
-        if not f == '':
-            f = f + '/'
+    d = args['directory']
     # checks mccode.sim existence
-    if not isfile(join(f, 'mccode.sim')):
+    if not isfile(join(d, 'mccode.sim')):
         return False
-    # assume f is mccode.sim
-    d = dirname(f)
+    else:
+        f = join(d, 'mccode.sim')
+        args['simfile'] = f
+    # look for .dat files
     datfiles = glob.glob(join(d, '*.dat'))
     return len(datfiles) > 0
 
 def has_datfile(args):
-    # assume folder
-    d = args['simfile']
+    d = args['directory']
     datfiles = glob.glob(join(d, '*.dat'))
-    args['monitorfile'] = datfiles[0]
-    return len(datfiles) > 0
+    if len(datfiles) > 0:
+        args['monitorfile'] = datfiles[0]
+        return True
+    else:
+        return False
 
 def has_multiple_datfiles(args):
-    # assume folder
-    d = args['simfile']
+    d = args['directory']
     datfiles = glob.glob(join(d, '*.dat'))
     return len(datfiles) > 1
 
@@ -103,11 +102,108 @@ def test_decfuncs(simfile):
     print 'is_mccodesim_or_mccodedat: %s' % str(is_mccodesim_or_mccodedat(args))
     print 'is_monitorfile:            %s' % str(is_monitorfile(args))
     print 'is_sweepfolder:            %s' % str(is_sweepfolder(args))
-    #print 'is_broken_sweepfolder:     %s' % str(is_broken_sweepfolder(args))
+    print 'is_broken_sweepfolder:     %s' % str(is_broken_sweepfolder(args))
     #print 'is_sweep_data_present:     %s' % str(is_sweep_data_present(args))
     print 'is_mccodesim_w_monitors:   %s' % str(is_mccodesim_w_monitors(args))
     print 'has_datfile:               %s' % str(has_datfile(args))
     print 'has_multiple_datfiles:     %s' % str(has_multiple_datfiles(args))
+
+'''
+Utility funcitons for loading and parsing mccode output data files 
+'''
+def _parse_1D_monitor(text):
+    ''' not implemented '''
+    return Data1D()
+
+def _parse_2D_monitor(text):
+    ''' not implemented '''
+    return Data2D()
+
+def _parse_header(text):
+    ''' not implemented '''
+    return DataMultiHeader()
+
+def _load_monitor(monitorfile):
+    f = monitorfile
+    text = open(f).read()
+    # determine 1D / 2D data
+    
+    m = re.search('\# type: (array_\wd)', text)
+    typ = m.group(1)
+    if typ == 'array_1d':
+        data = _parse_1D_monitor(text)
+    elif typ == 'array_2d':
+        data = _parse_2D_monitor(text)
+    else:
+        raise Exception('load_monitor: unknown data format.')
+    
+    return data
+
+def _load_datfiles(directory):
+    d = directory
+    datfiles = glob.glob(join(d, '*.dat'))
+    data_lst = []
+    for f in datfiles:
+        data = _load_monitor(f)
+        data_lst.append(data)
+    return data_lst
+
+def _load_header(simfile):
+    f = simfile
+    text = open(f).read()
+    return _parse_header(text)
+
+def _load_multiplot_1D_lst(f_sim):
+    # TODO: implement!
+    
+    lst = []
+    lst.append(Data1D())
+    lst.append(Data1D())
+    lst.append(Data1D())
+    
+    return lst
+
+def _load_sweep_monitors(rootdir):
+    
+    def sortalpha(data):
+        return sorted(data, key=lambda item: (
+                                       int(item.partition(' ')[0])
+                                       if item[0].isdigit() else float('inf'), item)
+               )
+    
+    def walkfunc(arg, dirname, fnames):
+        mnames = []
+        dirsignature = (dirname, mnames)
+        for f in fnames:
+            if splitext(f)[1] == '.dat':
+                if f not in mnames: 
+                    mnames.append(f)
+        arg.append(dirsignature)
+    
+    d = rootdir
+    subdirtuple = []
+    walk(top=d, func=walkfunc, arg=subdirtuple)
+    del subdirtuple[0] # remove root dir
+    
+    subdirs = map(lambda t: t[0], subdirtuple)
+    subdirs = sortalpha(subdirs)
+    monitors = map(lambda t: t[1], subdirtuple)[0]
+    
+    # assemble monitor data
+    sweep_monitors = []
+    for m in monitors:
+        mon_lst = []
+        for s in subdirs:
+            mon_lst.append(_load_monitor(join(s, m)))
+        sweep_monitors.append(mon_lst)
+    
+    sweep_headers = []
+    for m_lst in sweep_monitors:
+        header = DataMultiHeader()
+        header.title = m_lst[0].title
+        sweep_headers.append(header)
+    
+    return sweep_monitors, sweep_headers
 
 ''' 
 Terminal load data functions. 
@@ -116,33 +212,70 @@ Loads data files, then assembles and returns a data graph, which can be plotted.
 '''
 def load_monitor(args):
     # assume monitorfile is present and exists
-    f = args['monitorfile']
-    text = f.open().read()
-    # determine 1D / 2D data
+    data = _load_monitor(args['monitorfile'])
+
+    # plot graph only has one node in this case
+    root = PNSingle(data=data)
     
-    m = re.search('\# type: (\w)', text)
-    typ = m.group(1)
-    if typ == 'array_1d':
-        data = load1DMonitor(text)
-    elif typ == 'array_2d':
-        data = load2DMonitor(text)
-    else:
-        raise Exception('load_monitor: unknown data format.')
-    
-    # TODO: assemble and return the plot-graph
+    return root
 
 def load_simulation(args):
     # assume simfile is mccode.sim
     f = args['simfile']
-    pass
+    d = args['directory']
+
+    # load header and monitor data
+    header = _load_header(f)
+    data_lst = _load_datfiles(d)
+    
+    # construct two-level plot graph
+    root = PNMultiple(header, data_lst)
+    primnodes = []
+    for data in data_lst:
+        node = PNSingle(data)
+        primnodes.append(node)
+    root.set_primaries(primnodes)
+    root.set_secondaries(primnodes) # there is only one way to click here...could also be None
+    
+    return root
 
 def load_sweep(args):
-    # assume simfile is mccode.sim with mccode.dat
-    f = args['simfile']
-    f_dat = join(splitext(f)[0], 'dat')
+    d = args['directory']
+    f_sim = join(d, 'mccode.sim')
+    f_dat = join(d, 'mccode.dat')
     
-    # TODO: implement
+    # load primary data, 1D sweep values
+    datalst_sweep1D = _load_multiplot_1D_lst(f_sim)
+    header = _load_header(f_sim)
+    root = PNMultiple(header, datalst_sweep1D)
 
+    # primary nodes (zoom on 1D sweep values)
+    primnodes_lst = []
+    for data in datalst_sweep1D:
+        primnode = PNSingle(data)
+        primnodes_lst.append(primnode)
+    root.set_primaries(primnodes_lst)
+    
+    # load secondary data, sweep data points organized by monitor
+    monitors, headers = _load_sweep_monitors(d)
+    
+    # secondary modes (individual sweep monitors)
+    secnodes_lst = []
+    for i in range(len(headers)):
+        m_lst = monitors[i]
+        header = headers[i]
+        secnode = PNMultiple(header, m_lst)
+        children = []
+        for m in m_lst:
+            child = PNSingle(m)
+            children.append(child)
+        secnode.set_primaries(children)
+        secnode.set_secondaries(children)
+        secnodes_lst.append(secnode)
+    root.set_secondaries(secnodes_lst)
+    
+    return root
+    
 def load_sweep_b(args):
     raise Exception('load_sweep_b is not implemented.')
 
@@ -153,7 +286,19 @@ def load_monitor_folder(args):
     # assume simfile is folder with multiple dat files
     d = args['simfile']
     
-    # TODO: implement
+    # load monitor files into a list 
+    data_lst = _load_datfiles(d)
+    
+    # construct two-level plot graph
+    root = PNMultiple(DataMultiHeader(), data_lst)
+    primnodes = []
+    for data in data_lst:
+        node = PNSingle(data)
+        primnodes.append(node)
+    root.set_primaries(primnodes)
+    root.set_secondaries(primnodes)
+    
+    return root
 
 def throw_error(args):
     raise Exception('error terminal reached: %s' % args['simfile'])
@@ -163,6 +308,7 @@ class McPlotDataLoader():
     def __init__(self, simfile):
         '''  '''
         self.simfile = simfile
+        self.plot_graph = None
     
     def load(self):
         ''' loads mccode data and assembles the plotable data graph '''
@@ -175,7 +321,7 @@ class McPlotDataLoader():
         exit_case3b                 = FCNTerminal(key="case3b", fct=throw_error)
         exit_case3c                 = FCNTerminal(key="case3c", fct=throw_error)
         exit_case4                  = FCNTerminal(key="case4",  fct=load_monitor_folder)
-        # decision nodes assembled in backwards order
+        # decision nodes (assembled in backwards order)
         dec_multiplefiles           = FCNDecisionBool(fct=has_multiple_datfiles,    node_T=exit_case4,              node_F=exit_case1)
         dec_hasdatfile              = FCNDecisionBool(fct=has_datfile,              node_T=dec_multiplefiles,       node_F=exit_error)
         dec_ismccodesimwmonitors    = FCNDecisionBool(fct=is_mccodesim_w_monitors,  node_T=exit_case2,              node_F=dec_hasdatfile)
@@ -185,7 +331,7 @@ class McPlotDataLoader():
         dec_ismonitor               = FCNDecisionBool(fct=is_monitorfile,           node_T=exit_case1,              node_F=exit_error)
         dec_ismccodesimordat        = FCNDecisionBool(fct=is_mccodesim_or_mccodedat, node_T=dec_issweepfolder,      node_F=dec_ismonitor)
         dec_hasfilename             = FCNDecisionBool(fct=has_filename,             node_T=dec_ismccodesimordat,    node_F=dec_issweepfolder)
-        # enter node
+        # enter terminal node
         enter_simfile               = FCNTerminal(key='enter', node_next=dec_hasfilename)
         
         # get the "args" which is just the simfile, a string, which may correspond to a file or a folder
@@ -196,11 +342,5 @@ class McPlotDataLoader():
         control = FlowChartControl(terminal_enter=enter_simfile)
         exit_node = control.process(args=args)
         
-        print
-        print 'plot case flowchart exit-terminal key: %s' % exit_node.key
-
-        # TODO: assemble data graph
-        self.data_graph = None
-
-
+        self.plot_graph = exit_node.result
 

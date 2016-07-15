@@ -24,6 +24,9 @@ def main(args):
     
     loader = McPlotDataLoader(simfile=simfile)
     loader.load()
+    graph = loader.plot_graph
+    
+    # TODO: plot the generated plot graph
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
