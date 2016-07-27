@@ -26,7 +26,7 @@ def main(args):
     loader.load()
     graph = loader.plot_graph
     
-    # TODO: plot the generated plot graph
+    # TODO: plot the generated plot-graph
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
