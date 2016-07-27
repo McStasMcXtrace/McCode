@@ -112,15 +112,16 @@ def test_decfuncs(simfile):
 Utility funcitons for loading and parsing mccode output data files 
 '''
 def _parse_1D_monitor(text):
-    ''' not implemented '''
-    return Data1D()
+    data = Data1D()
+    data.load(text)
+    return data
 
 def _parse_2D_monitor(text):
-    ''' not implemented '''
+    # TODO: implement
     return Data2D()
 
 def _parse_header(text):
-    ''' not implemented '''
+    # TODO: implement
     return DataMultiHeader()
 
 def _load_monitor(monitorfile):
@@ -149,18 +150,20 @@ def _load_datfiles(directory):
     return data_lst
 
 def _load_header(simfile):
-    # TODO: implement
     f = simfile
     text = open(f).read()
     return _parse_header(text)
 
 def _load_sweep_header(simfile):
-    # TODO: implement
     f = simfile
     text = open(f).read()
     return _parse_header(text)
 
 def _load_multiplot_1D_lst(f_sim):
+    '''
+    loads the one-dimensional 'multiplot' data sets from a mccode.sim scan sweep file, 
+    corresponding to each monitor as a function of the sweep parameter.
+    '''
     # TODO: implement
     lst = []
     lst.append(Data1D())
@@ -170,7 +173,9 @@ def _load_multiplot_1D_lst(f_sim):
     return lst
 
 def _load_sweep_monitors(rootdir):
-    
+    '''
+    loads the files of a scan sweep into plotable datastructures
+    '''
     def sortalpha(data):
         return sorted(data, key=lambda item: (
                                        int(item.partition(' ')[0])
