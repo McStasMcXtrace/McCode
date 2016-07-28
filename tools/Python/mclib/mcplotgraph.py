@@ -14,6 +14,8 @@ class Data1D(object):
         self.xvar = ''
         self.xlimits = () # pair
         
+        self.variables = []
+        
         self.yvar = () # pair
         self.values = () # triplet
         self.statistics = ''
@@ -23,6 +25,32 @@ class Data1D(object):
         self.yvals = []
         self.y_err_vals = []
         self.Nvals = []
+    
+    def clone(self):
+        data = Data1D()
+        
+        data.component = self.component
+        data.filename = self.filename
+        data.title = self.title
+        data.xlabel = self.xlabel
+        data.ylabel = self.ylabel
+        
+        data.xvar = self.xvar
+        data.xlimits = self.xlimits
+        
+        data.variables = self.variables
+        
+        data.yvar = self.yvar
+        data.values = self.values
+        data.statistics = self.statistics
+        
+        # data references
+        data.xvals = self.xvals
+        data.yvals = self.yvals
+        data.y_err_vals = self.y_err_vals
+        data.Nvals = self.Nvals
+        
+        return data
         
     def get_stats_title(self):
         '''I=.... Err=... N=...; X0=...; dX=...;'''
@@ -32,7 +60,6 @@ class Data1D(object):
 class Data2D(object):
     ''' not implemented '''
     def __init__(self):
-        
         self.component = ''
         self.filename = ''
         self.title = ''
@@ -52,7 +79,7 @@ class Data2D(object):
         # data references
         self.zvals = []
         self.counts = []
-        
+    
     def get_stats_title(self):
         '''I=.... Err=... N=...; X0=...; dX=...;'''
         stitle = '%s=%e Err=%e N=%d' % (self.zvar, self.values[0], self.values[1], self.values[2])

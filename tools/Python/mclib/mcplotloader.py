@@ -250,7 +250,6 @@ def _parse_2D_monitor(text):
     except Exception as e:
         print('Data1D load error.')
         raise e
-
     
     return data
 
@@ -296,18 +295,74 @@ def _load_sweep_header(simfile):
     text = open(f).read()
     return _parse_header(text)
 
-def _load_multiplot_1D_lst(f_sim):
+def _load_multiplot_1D_lst(f_dat):
     '''
-    loads the one-dimensional 'multiplot' data sets from a mccode.sim scan sweep file, 
+    loads the one-dimensional 'multiplot' data sets from a mccode.dat scan sweep file, 
     corresponding to each monitor as a function of the sweep parameter.
     '''
-    # TODO: implement
-    lst = []
-    lst.append(Data1D())
-    lst.append(Data1D())
-    lst.append(Data1D())
+    text = open(f_dat).read()
+    data_lst = []
     
-    return lst
+    try:
+        header = Data1D()
+        header.component = ''
+        header.filename = ''
+        '''# title: Scan of lambda'''
+        m = re.search('\# title: ([\w ]+)\n', text)
+        header.title = m.group(1)
+        '''# xlabel: 'lambda\''''
+        m = re.search('\# xlabel: ([\w \[\]\/\^\']+)\n', text)
+        header.xlabel = m.group(1)
+        '''# ylabel: 'Intensity\''''
+        m = re.search('\# ylabel: ([\w \[\]\/\^\']+)\n', text)
+        header.ylabel = m.group(1)
+        
+        # NOTE: this only supports a single xvar
+        '''# xvars: lambda'''
+        m = re.search('\# xvars: ([\w]+)\n', text)
+        header.xvar = m.group(1)
+        '''# xlimits: 6 7'''
+        m = re.search('\# xlimits: ([\d\.\-e]+) ([\d\.\-e]+)\n', text)
+        header.xlimits = (float(m.group(1)), float(m.group(2)))
+        
+        '''# variables: lambda Ldetector_I Ldetector_ERR PSDrad_I PSDrad_ERR PSDrad_I PSDrad_ERR detector_I detector_ERR'''
+        m = re.search('\# variables: ([\w ]+)\n', text)
+        variables = m.group(1).split(' ')
+        
+        # get x and y values (the latter is a list of a list, the infamous yvals_lst which contains yvals values, which are lists)
+        lines = text.splitlines()
+        xvals = []
+        yvals_lst = []
+        yvals_err_lst = []
+
+        yvariables = variables # remember, every second "variable" is an error bar
+        yvariables.pop(0)
+        for l in lines:
+            if '#' in l:
+                continue
+            xvals.append(l.split(' ')[0])
+            
+            for i in range(len(yvariables)/2):
+                yvals_lst.append([])
+                yvals_err_lst.append([])
+                yvals_lst[i].append(l.split(' ')[2*i+1])
+                yvals_err_lst[i].append(l.split(' ')[2*i+2])
+        header.xvals = xvals
+        
+        # create a new instance for each y variable
+        for i in range(len(yvariables)/2):
+            data = header.clone()
+            data.yvals = yvals_lst[i]
+            data.yvar = yvariables[2*i]
+            data.title = '%s - %s' % (data.yvar, data.title)
+            data.y_err_vals = yvals_err_lst[i]
+            data_lst.append(data)
+        
+    except Exception as e:
+        print e.message
+        raise e
+    
+    return data_lst
 
 def _load_sweep_monitors(rootdir):
     '''
@@ -393,7 +448,7 @@ def load_sweep(args):
     f_dat = join(d, 'mccode.dat')
     
     # load primary data, 1D sweep values
-    datalst_sweep1D = _load_multiplot_1D_lst(f_sim)
+    datalst_sweep1D = _load_multiplot_1D_lst(f_dat)
     header = _load_sweep_header(f_sim)
     root = PNMultiple(header, datalst_sweep1D)
 
