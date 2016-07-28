@@ -108,17 +108,150 @@ def test_decfuncs(simfile):
     print 'has_datfile:               %s' % str(has_datfile(args))
     print 'has_multiple_datfiles:     %s' % str(has_multiple_datfiles(args))
 
+
 '''
 Utility funcitons for loading and parsing mccode output data files 
 '''
 def _parse_1D_monitor(text):
+    ''' populates data fields of new Data1D object using the text from a mccode data file '''
     data = Data1D()
-    data.load(text)
+    
+    try:
+        # load essential header data
+        '''# component: Ldetector'''
+        m = re.search('\# component: ([\w]+)\n', text)
+        data.component = m.group(1)
+        '''# filename: Edet.dat'''
+        m = re.search('\# filename: ([\w\.]+)\n', text)
+        data.filename = m.group(1)
+        '''# title: Wavelength monitor'''
+        m = re.search('\# title: ([\w ]+)\n', text)
+        data.title = m.group(1)
+        '''# xlabel: Wavelength [AA]'''
+        m = re.search('\# xlabel: ([\w \[\]\/\^]+)\n', text)
+        data.xlabel = m.group(1)
+        '''# ylabel: Intensity'''
+        m = re.search('\# ylabel: ([\w \[\]\/\^]+)\n', text)
+        data.ylabel = m.group(1)
+        
+        '''# xvar: L'''
+        m = re.search('\# xvar: ([\w]+)\n', text)
+        data.xvar = m.group(1)
+        '''# xlimits: 5.5 6.5'''
+        m = re.search('\# xlimits: ([\d\.\-e]+) ([\d\.\-e]+)\n', text)
+        data.xlimits = (float(m.group(1)), float(m.group(2)))
+        
+        '''# yvar: (I,I_err)'''
+        m = re.search('\# yvar: \(([\w]+),([\w]+)\)\n', text)
+        data.yvar = (m.group(1), m.group(2))
+        '''# values: 6.72365e-17 4.07766e-18 4750'''
+        m = re.search('\# values: ([\d\-\.e]+) ([\d\-\.e]+) ([\d\-\.e]+)\n', text)
+        data.values = (float(m.group(1)), float(m.group(2)), float(m.group(3)))
+        '''# statistics: X0=5.99569; dX=0.0266368;'''
+        m = re.search('\# statistics: X0=([\d\.\-e]+); dX=([\d\.\-e]+);\n', text)
+        data.statistics = 'X0=%f; dX=%f;' % (float(m.group(1)), float(m.group(2)))
+        
+        # load the actual data 
+        lines = text.splitlines()
+        xvals = []
+        yvals = []
+        y_err_vals = []
+        Nvals = []
+        for l in lines:
+            if '#' in l:
+                continue
+            
+            vals = l.split(' ')
+            xvals.append(float(vals[0]))
+            yvals.append(float(vals[1]))
+            y_err_vals.append(float(vals[2]))
+            Nvals.append(float(vals[3]))
+        
+        data.xvals = xvals
+        data.yvals = yvals
+        data.y_err_vals = y_err_vals
+        data.Nvals = Nvals
+        
+    except Exception as e:
+        print('Data1D load error.')
+        raise e
+    
     return data
 
 def _parse_2D_monitor(text):
     data = Data2D()
-    data.load(text)
+    
+    ''' populates data fields using the text from a mccode data file '''
+    try:
+        # load essential header data
+        '''# component: detector'''
+        m = re.search('\# component: ([\w]+)\n', text)
+        data.component = m.group(1)
+        '''# filename: PSD.dat'''
+        m = re.search('\# filename: ([\w\.]+)\n', text)
+        data.filename = m.group(1)
+        '''# title: PSD monitor'''
+        m = re.search('\# title: ([\w ]+)\n', text)
+        data.title = m.group(1)
+        
+        '''# xlabel: X position [cm]'''
+        m = re.search('\# xlabel: ([\w \[\]\/\^]+)\n', text)
+        data.xlabel = m.group(1)
+        '''# ylabel: Y position [cm]'''
+        m = re.search('\# ylabel: ([\w \[\]\/\^]+)\n', text)
+        data.ylabel = m.group(1)
+        
+        '''# xvar: X'''
+        m = re.search('\# xvar: ([\w ]+)\n', text)
+        data.xvar = m.group(1)
+        '''# yvar: Y '''
+        m = re.search('\# yvar: ([\w ]+)\n', text)
+        data.yvar = m.group(1)
+        '''# zvar: I '''
+        m = re.search('\# zvar: ([\w ]+)\n', text)
+        data.zvar = m.group(1)
+        '''# xylimits: -30 30 -30 30'''
+        m = re.search('\# xylimits: ([\d\.\-e]+) ([\d\.\-e]+) ([\d\.\-e]+) ([\d\.\-e]+)\n', text)
+        data.xlimits = (float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)))
+        
+        '''# values: 6.72365e-17 4.07766e-18 4750'''
+        m = re.search('\# values: ([\d\-\.e]+) ([\d\-\.e]+) ([\d\-\.e]+)\n', text)
+        data.values = (float(m.group(1)), float(m.group(2)), float(m.group(3)))
+        '''# statistics: X0=5.99569; dX=0.0266368;'''
+        m = re.search('\# statistics: X0=([\d\.\-e]+); dX=([\d\.\-e]+); Y0=([\d\.\-e]+); dY=([\d\.\-e]+);\n', text)
+        data.statistics = 'X0=%f; dX=%f; Y0=%f; dY=%f;' % (float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)))
+        '''# signal: Min=0; Max=1.20439e-18; Mean=4.10394e-21;'''
+        m = re.search('\# signal: Min=([\d\.\-e]+); Max=([\d\.\-e]+); Mean=([\d\.\-e]+);\n', text)
+        data.signal = 'Min=%f; Max=%f; Mean=%f;' % (float(m.group(1)), float(m.group(2)), float(m.group(3)))
+        
+        '''# Data [detector/PSD.dat] I:'''
+        '''# Events [detector/PSD.dat] N:'''
+        lines = text.splitlines()
+        dat = False
+        events = False
+        for l in lines:
+            if '# Data ' in l:
+                dat = True
+                continue
+            
+            if dat:
+                vals = l.split(' ')
+                data.zvals.append(vals)
+        
+            if '# Events ' in l:
+                dat = False
+                events = True
+                continue
+            
+            if events:
+                vals = l.split(' ')
+                data.counts.append(vals)
+        
+    except Exception as e:
+        print('Data1D load error.')
+        raise e
+
+    
     return data
 
 def _parse_header(text):
@@ -138,6 +271,9 @@ def _load_monitor(monitorfile):
         data = _parse_2D_monitor(text)
     else:
         raise Exception('load_monitor: unknown data format.')
+    
+    if False:
+        print data.get_stats_title()
     
     return data
 
