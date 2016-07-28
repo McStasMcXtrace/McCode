@@ -117,8 +117,9 @@ def _parse_1D_monitor(text):
     return data
 
 def _parse_2D_monitor(text):
-    # TODO: implement
-    return Data2D()
+    data = Data2D()
+    data.load(text)
+    return data
 
 def _parse_header(text):
     # TODO: implement
