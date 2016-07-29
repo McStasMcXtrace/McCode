@@ -191,7 +191,7 @@ class PlotGraphPrint(object):
             print indent*(level+2) + '%s (%d)' % (p, id(p))
         
         print indent*(level+1) + 'secondary children:'
-        for s in node.primaries:
+        for s in node.secondaries:
             #print indent*(level+2) + str(type(s)) + str(id(s))
             print indent*(level+2) + '%s (%d)' % (s, id(s))
         
