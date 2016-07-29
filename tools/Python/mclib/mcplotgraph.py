@@ -210,6 +210,10 @@ class PlotGraphPrint(object):
         for d in node.data:
             print indent*(level+2) + '%s (%d)' % (d, id(d))
         
+        if type(node) is PNMultiple:
+            print indent*(level+1) + 'header:'
+            print indent*(level+2) + '%s (%d)' % (node.header, id(node.header))
+        
         if not len(node.primaries) == 0:
             print indent*(level+1) + 'primary children:'
             for p in node.primaries:
