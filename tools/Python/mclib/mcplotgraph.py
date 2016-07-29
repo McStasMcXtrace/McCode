@@ -20,6 +20,8 @@ class DataMcCode(object):
 class Data1D(DataMcCode):
     ''' 1d plots use this data type '''
     def __init__(self):
+        super(Data1D, self).__init__()
+        
         self.component = ''
         self.filename = ''
         self.title = ''
@@ -81,6 +83,8 @@ class Data1D(DataMcCode):
 class Data2D(DataMcCode):
     ''' PSD data type '''
     def __init__(self):
+        super(Data2D, self).__init__()
+        
         self.component = ''
         self.filename = ''
         self.title = ''
@@ -127,6 +131,8 @@ class PlotNode(object):
     def __init__(self):
         self.parent = None
         self.data = []
+        self.primaries = []
+        self.secondaries = []
     
     def set_primaries(self, node_lst):
         self.primaries = node_lst
@@ -147,6 +153,7 @@ class PlotNode(object):
 
 class PNMultiple(PlotNode):
     def __init__(self, header, data_lst):
+        super(PNMultiple, self).__init__()
         self.header = header
         self.data = data_lst
     
@@ -155,6 +162,7 @@ class PNMultiple(PlotNode):
 
 class PNSingle(PlotNode):
     def __init__(self, data_obj):
+        super(PNSingle, self).__init__()
         self.data = [data_obj]
     
     def __str__(self):
@@ -162,50 +170,55 @@ class PNSingle(PlotNode):
 
 class PlotGraphPrint(object):
     ''' NOTE: iteration logics not yet implemented '''
-    def __init__(self, rootnode, indent_str):
+    def __init__(self, rootnode, indent_str='    '):
         if indent_str == '' or type(indent_str) != str:
             raise Exception('PlotGraphPrint: indent_str must be a non-empty string.')
         self.indent_str = indent_str
-        self.node = rootnode
+        self.root = rootnode
         self.printed_ids = []
+        # execute
+        self.print_recurse(self.root, level=0)
+        
+    def print_recurse(self, node, level):
+        ''' node print recursion '''
+        self.printnode(node, level)
+        children = node.primaries + node.secondaries
+        for c in children:
+            self.print_recurse( c, level+1)                
 
     def printnode(self, node, level=0):
-        ''' prints the node id, its children id's and data reference, respecting indent '''        
+        ''' 
+        Prints the node id, its children id's and data reference, respecting indent and
+        using self.indent_str.
+        '''
         
         # only print nodes once
         if id(node) in self.printed_ids:
-            return None
+            return
+        
         indent = self.indent_str
         
         # print the node
         print
-        #print indent*(level+0) + str(type(node)) + str(id(node)) + ':'
-        print indent*(level+0) + 'node %s (%d):' % (node, id(node))
+        print indent*(level+0) + '%s (%d):' % (node, id(node))
+        
+        if node.parent:
+            print indent*(level+1) + 'parent:'
+            print indent*(level+2) + '%s (%d)' % (node.parent, id(node.parent))
+        
         print indent*(level+1) + 'data objects:'
         for d in node.data:
             print indent*(level+2) + '%s (%d)' % (d, id(d))
         
-        print indent*(level+1) + 'primary children:'
-        for p in node.primaries:
-            #print indent*(level+2) + str(type(p)) + str(id(p))
-            print indent*(level+2) + '%s (%d)' % (p, id(p))
+        if not len(node.primaries) == 0:
+            print indent*(level+1) + 'primary children:'
+            for p in node.primaries:
+                print indent*(level+2) + '%s (%d)' % (p, id(p))
         
-        print indent*(level+1) + 'secondary children:'
-        for s in node.secondaries:
-            #print indent*(level+2) + str(type(s)) + str(id(s))
-            print indent*(level+2) + '%s (%d)' % (s, id(s))
+        if not len(node.secondaries) == 0:
+            print indent*(level+1) + 'secondary children:'
+            for s in node.secondaries:
+                print indent*(level+2) + '%s (%d)' % (s, id(s))
         
         self.printed_ids.append(id(node))
-
-
-
-
-
-
-
-
-
-
-
-
 

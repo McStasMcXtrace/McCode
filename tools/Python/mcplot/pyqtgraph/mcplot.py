@@ -28,8 +28,7 @@ def main(args):
     graph = loader.plot_graph
     
     if args.test:
-        printer = PlotGraphPrint(graph, '  ')
-        printer.printnode(graph)
+        printer = PlotGraphPrint(graph)
     
     # TODO: plot the generated plot-graph
     
