@@ -8,8 +8,9 @@ import os
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from mclib import mccode_config
+#from mclib import mccode_config
 from mclib.mcplotloader import McPlotDataLoader, test_decfuncs
+from mclib.mcplotgraph import PlotGraphPrint
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
@@ -25,6 +26,10 @@ def main(args):
     loader = McPlotDataLoader(simfile=simfile)
     loader.load()
     graph = loader.plot_graph
+    
+    if args.test:
+        printer = PlotGraphPrint(graph, '  ')
+        printer.printnode(graph)
     
     # TODO: plot the generated plot-graph
     
