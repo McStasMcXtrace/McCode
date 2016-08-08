@@ -8,6 +8,7 @@ import socket
 import sys
 import os
 import pickle
+from mcdataservice import RCSimFile
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from mclib.mcplotgraph import PlotGraphPrint
@@ -16,25 +17,31 @@ def main(args):
     logging.basicConfig(level=logging.INFO)
     
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address = ('localhost', 10000)
-    print >>sys.stderr, 'connecting to %s port %s' % server_address
+    server_address = ('localhost', 10004)
+    print 'connecting to %s port %s' % server_address
     sock.connect(server_address)
-    sock.settimeout(0.1)
+    
+    sock.settimeout(0.5)
     
     try:
-        message = 'simfile: %s' % args.simfile
-        print >>sys.stderr, 'sending "%s"' % message
-        sock.sendall(message)
+        request = RCSimFile(simfile=args.simfile)
+        print 'sending request: "%s"' % request
+        
+        text = pickle.dumps(request)
+        sock.sendall(text)
         
         text = ''
-        try:
-            while True:
-                data = sock.recv(256)
-                text = text + data
-        except:
-            print 'timeout reached'
+        while True:
+            try:
+                data = sock.recv(1024)
+                if data == '':
+                    break
+                else:
+                    text = text + data
+            except Exception as e:
+                print 'timeout reached'
         
-        PlotGraphPrint(pickle.loads(text))
+        PlotGraphPrint(pickle.loads(text).plotgraph)
         
     finally:
         sock.close()
