@@ -408,7 +408,7 @@ def _load_sweep_monitors(rootdir):
     
     return sweep_monitors, sweep_headers
 
-''' 
+'''
 Terminal load data functions. 
 
 Loads data files, then assembles and returns a data graph, which can be plotted.
@@ -418,7 +418,7 @@ def load_monitor(args):
     data = _load_monitor(args['monitorfile'])
 
     # plot graph only has one node in this case
-    root = PNSingle(data=data)
+    root = PNSingle(data)
     
     return root
 
