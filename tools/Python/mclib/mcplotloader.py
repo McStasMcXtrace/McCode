@@ -112,57 +112,47 @@ def test_decfuncs(simfile):
 '''
 Utility funcitons for loading and parsing mccode output data files 
 '''
+
+freetext_pat = '[\w \[\]\{\}\(\)\.\+\-\\\/\^]+'
+
 def _parse_1D_monitor(text):
     ''' populates data fields of new Data1D object using the text from a mccode data file '''
     data = Data1D()
     
     try:
-        print "---"
         # load essential header data
         '''# component: Ldetector'''
         m = re.search('\# component: ([\w]+)\n', text)
-        print m
         data.component = m.group(1)
         '''# filename: Edet.dat'''
         m = re.search('\# filename: ([\w\.]+)\n', text)
-        print m        
         data.filename = m.group(1)
-        print data.filename
         '''# title: Wavelength monitor'''
-        m = re.search('\# title: ([\w \[\]\{\}\(\)\.\+\-\\\/]+)\n', text)
-        print m
+        m = re.search('\# title: (%s)\n' % freetext_pat, text)
         data.title = m.group(1)
         '''# xlabel: Wavelength [AA]'''
-        m = re.search('\# xlabel: ([\w \[\]\{\}\(\)\.\+\-\\\/]+)\n', text)
-        print m
+        m = re.search('\# xlabel: (%s)\n' % freetext_pat, text)
         data.xlabel = m.group(1)
         '''# ylabel: Intensity'''
-        m = re.search('\# ylabel: ([\w \[\]\{\}\(\)\.\+\-\\\/]+)\n', text)
-        print m
+        m = re.search('\# ylabel: (%s)\n' % freetext_pat, text)
         data.ylabel = m.group(1)
         
         '''# xvar: L'''
         m = re.search('\# xvar: ([\w]+)\n', text)
-        print m
         data.xvar = m.group(1)
         '''# xlimits: 5.5 6.5'''
         m = re.search('\# xlimits: ([\d\.\-e]+) ([\d\.\-e]+)\n', text)
-        print m
         data.xlimits = (float(m.group(1)), float(m.group(2)))
         
         '''# yvar: (I,I_err)'''
         m = re.search('\# yvar: \(([\w]+),([\w]+)\)\n', text)
-        print m
         data.yvar = (m.group(1), m.group(2))
         '''# values: 6.72365e-17 4.07766e-18 4750'''
         m = re.search('\# values: ([\d\-\+\.e]+) ([\d\-\+\.e]+) ([\d]+)\n', text)
-        print m
         data.values = (float(m.group(1)), float(m.group(2)), float(m.group(3)))
         '''# statistics: X0=5.99569; dX=0.0266368;'''
         m = re.search('\# statistics: X0=([\d\.\-e]+); dX=([\d\.\-e]+);\n', text)
-        print m
         data.statistics = 'X0=%f; dX=%f;' % (float(m.group(1)), float(m.group(2)))
-        print data.statistics
         
         # load the actual data 
         lines = text.splitlines()
@@ -196,58 +186,45 @@ def _parse_2D_monitor(text):
     
     ''' populates data fields using the text from a mccode data file '''
     try:
-        print "+++"
         # load essential header data
         '''# component: detector'''
         m = re.search('\# component: ([\w]+)\n', text)
-        print m
         data.component = m.group(1)
         '''# filename: PSD.dat'''
         m = re.search('\# filename: ([\w\.]+)\n', text)
-        print m
         data.filename = m.group(1)
         '''# title: PSD monitor'''
-        m = re.search('\# title: ([\w \[\]\{\}\(\)\.\+\-\\\/]+)\n', text)
-        print m
+        m = re.search('\# title: (%s)\n' % freetext_pat, text)
         data.title = m.group(1)
         
         '''# xlabel: X position [cm]'''
-        m = re.search('\# xlabel: ([\w \[\]\{\}\(\)\.\+\-\\\/]+)\n', text)
-        print m
+        m = re.search('\# xlabel: (%s)\n' % freetext_pat, text)
         data.xlabel = m.group(1)
         '''# ylabel: Y position [cm]'''
-        m = re.search('\# ylabel: ([\w \[\]\{\}\(\)\.\+\-\\\/]+)\n', text)
-        print m
+        m = re.search('\# ylabel: (%s)\n' % freetext_pat, text)
         data.ylabel = m.group(1)
         
         '''# xvar: X'''
         m = re.search('\# xvar: ([\w ]+)\n', text)
-        print m
         data.xvar = m.group(1)
         '''# yvar: Y '''
         m = re.search('\# yvar: ([\w ]+)\n', text)
-        print m
         data.yvar = m.group(1)
         '''# zvar: I '''
         m = re.search('\# zvar: ([\w ]+)\n', text)
-        print m
         data.zvar = m.group(1)
         '''# xylimits: -30 30 -30 30'''
         m = re.search('\# xylimits: ([\d\.\-e]+) ([\d\.\-e]+) ([\d\.\-e]+) ([\d\.\-e]+)\n', text)
-        print m
         data.xlimits = (float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)))
         
         '''# values: 6.72365e-17 4.07766e-18 4750'''
         m = re.search('\# values: ([\d\+\-\.e]+) ([\d\+\-\.e]+) ([\d]+)\n', text)
-        print m
         data.values = (float(m.group(1)), float(m.group(2)), float(m.group(3)))
         '''# statistics: X0=5.99569; dX=0.0266368;'''
         m = re.search('\# statistics: X0=([\d\.\+\-e]+); dX=([\d\.\+\-e]+); Y0=([\d\.\+\-e]+); dY=([\d\.\+\-e]+);\n', text)
-        print m
         data.statistics = 'X0=%f; dX=%f; Y0=%f; dY=%f;' % (float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)))
         '''# signal: Min=0; Max=1.20439e-18; Mean=4.10394e-21;'''
         m = re.search('\# signal: Min=([\d\.\+\-e]+); Max=([\d\.\+\-e]+); Mean=([\d\.\+\-e]+);\n', text)
-        print m
         data.signal = 'Min=%f; Max=%f; Mean=%f;' % (float(m.group(1)), float(m.group(2)), float(m.group(3)))
         
         '''# Data [detector/PSD.dat] I:'''
