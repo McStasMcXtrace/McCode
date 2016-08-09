@@ -10,9 +10,9 @@
 * %I
 *
 * Written by: Peter Willendrup and Esben Klinkby
-* Date: April-May 2016
+* Date: August 2016
 * Version: $Revision$
-* Release: McStas 2.3
+* Release: McStas 2.4
 * Origin: DTU
 *
 * ESS butterfly moderator, 2016 revision
@@ -31,14 +31,15 @@
 * including changes warranted by the ESS CCB in July 2016.
 *
 * <b>Brilliances</b>
-* The internal brilliance-functions are howerver still based on the previous MCNP study
+* The internal brilliance-functions are howerver still derived from the previous MCNP study
 * by Troels Schoenfeldt as included in the ESS_moderator component, with the so-called BF2 
 * design and performed at beamport positions 5, ..., 55 degrees measured from the central
 * position of the beam extraction. A nearest neighbour "interpolation"/discretisation is 
 * performed on that basis. Hence, the performance is symmetric in all sectors for now, 
 * i.e. beamline 3 performs the same in all of N, W, S and E.
-* In terms of intensity/performance the component agrees with the previous ESS_moderator
-* (McStas 2.2a version - 2.3 version had a bug) within apx. 10%.
+* In terms of intensity/performance the component agrees within apx. 10% with a new set of
+* brilliance curve estimates from Luca Zanini, roughly 0.7 x the performance of the previous 
+* ESS_moderator component (McStas 2.2a version - 2.3 version had a bug) 
 * <b>We expect to release a new set of brilliance functions later in 2016. These are 
 * expected to include more realistic brilliances in terms of variation across sectors and
 * potentially also performance losses due to engineering reality. </b>
@@ -210,7 +211,7 @@ INITIALIZE
   /* correction for projection along the beam / projection on the z=0 plane */
   cos_thermal=cos_beamport_angle;
   cos_cold=cos((modextras.beamportangle-24.24)*DEG2RAD);
-  printf("Setting up for sector %s, beamline %i, global orientation angle is %g, internal angle %g, cosines %g(t) and %g(c)\n",sector,beamline,orientation_angle,modextras.beamportangle,cos_thermal,cos_cold);
+  printf("%s: Setting up for sector %s, beamline %i, global orientation angle is %g, internal angle %g\n", NAME_CURRENT_COMP, sector,beamline,orientation_angle,modextras.beamportangle);
   if (c_performance <= 0) {
     fprintf(stderr,"%s: Cold performance scalar of %g is not allowed. Please select 0 < c_performance\n", NAME_CURRENT_COMP, c_performance);
     exit(-1);
@@ -220,7 +221,7 @@ INITIALIZE
     exit(-1);
   }
   if (Lmin>=Lmax || Lmin <= 0 || Lmax < 0) {
-    printf("%s: Unmeaningful definition of wavelength range!\nPlease select Lmin, Lmax > 0 and Lmax > Lmin.\n ERROR - Exiting\n",
+    fprintf(stderr,"%s: Unmeaningful definition of wavelength range!\nPlease select Lmin, Lmax > 0 and Lmax > Lmin.\n ERROR - Exiting\n",
            NAME_CURRENT_COMP);
     exit(-1);
   }
@@ -233,15 +234,18 @@ INITIALIZE
     coords_get(ToTarget, &tx, &ty, &tz);
     dist=sqrt(tx*tx+ty*ty+tz*tz);
   } else if (!target_index && !dist) {
-    printf("ESS_butterfly: %s: Please choose to set either the dist parameter or specify a target_index.\nExit\n", NAME_CURRENT_COMP);
+    fprintf(stderr,"%s: Please choose to set either the dist parameter or specify a target_index.\nExit\n", NAME_CURRENT_COMP);
     exit(-1);
   } else {
     tx=0; ty=0; tz=dist;
   }
-  printf("Focusing at rectagle sized %g x %g \n positioned at location %g %g %g (target_index %i and dist %g)\n", focus_xw, focus_yh, tx, ty, tz, target_index, dist);
-  /* Issue warning if dist < 2m - TODO */
-  
-  printf("Cold and Thermal brilliance performance multiplicators are c_performance=%g and t_performance=%g\n", c_performance, t_performance);
+  printf("%s: Focusing at rectagle sized %g x %g \n  - positioned at location (x,y,z)=(%g m, %g m, %g m) \n", NAME_CURRENT_COMP, focus_xw, focus_yh, tx, ty, tz);
+  if (target_index) {
+    printf(" ( from target_index %i -> distance %g )\n", target_index, dist);
+  } else {
+    printf(" ( from dist parameter -> distance %g )\n", dist);
+  }
+  printf("%s: Cold and Thermal brilliance performance multiplicators are c_performance=%g and t_performance=%g\n", NAME_CURRENT_COMP, c_performance, t_performance);
   
   /* Calculate orientation matrix for the display and calculations */
   r11 = cos(DEG2RAD*orientation_angle);
@@ -328,7 +332,6 @@ TRACE
   r = sqrt(dx*dx+dy*dy+dz*dz);
   
   lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
-  //printf("Picked wavelength %g, pointing at %g %g %g / vec %g %g %g / distance %g \n",lambda,xf,yf,zf,dx,dy,dz,r);
   k = 2*PI/lambda;
   v = K2V*k;
 
