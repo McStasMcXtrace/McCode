@@ -71,9 +71,9 @@ EXTEND %{
   CCold=cos_cold;
   CThermal=cos_thermal;
   if (iscold) {
-    Xproj=SrcX*=cos_cold;
+    Xproj=SrcX*cos_cold;
   } else {
-    Xproj=SrcX*=cos_thermal;
+    Xproj=SrcX*cos_thermal;
   }
 %}
 
