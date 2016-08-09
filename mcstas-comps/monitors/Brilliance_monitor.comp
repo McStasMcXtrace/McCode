@@ -67,8 +67,8 @@
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Brilliance_monitor
-DEFINITION PARAMETERS (nlam=101, nt=1001)
-SETTING PARAMETERS (lambda_0=0, lambda_1=20, restore_neutron=0, Freq, int tofcuts=0, int toflambda=0, xwidth = 0.01, yheight=0.01, source_dist=1, string filename, t_0=0, t_1=20000, srcarea=1)
+DEFINITION PARAMETERS (nlam=101, nt=1001, srcarea=1)
+SETTING PARAMETERS (lambda_0=0, lambda_1=20, restore_neutron=0, Freq, int tofcuts=0, int toflambda=0, xwidth = 0.01, yheight=0.01, source_dist=1, string filename, t_0=0, t_1=20000)
 OUTPUT PARAMETERS (tt_0, tt_1, BRIL_N, BRIL_p, BRIL_p2, BRIL_mean, BRIL_meanN, BRIL_meanE, BRIL_peak, BRIL_peakN,  BRIL_peakE, BRIL_shape, BRIL_shapeN,  BRIL_shapeE, xmin, xmax, ymin, ymax, ster, prsec, dlam, dt)
 //STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 //POLARISATION PARAMETERS (sx,sy,sz)
