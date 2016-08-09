@@ -53,8 +53,8 @@
 * beamline:        [1]   Defines the 'beamline number' of your instrument position. Valid values are 1..10 or 1..11 depending on sector
 * yheight:         [m]   Defines the moderator height. Valid values are 0.03 m and 0.06 m
 * cold_frac:       [1]   Defines the statistical fraction of events emitted from the cold part of the moderator
-* c_performance:   [1]   Cold brilliance scalar performance multiplicator 0 < c_performance <= 1
-* t_performance:   [1]   Thermal brilliance scalar performance multiplicator 0 < t_performance <= 1
+* c_performance:   [1]   Cold brilliance scalar performance multiplicator c_performance > 0
+* t_performance:   [1]   Thermal brilliance scalar performance multiplicator t_performance > 0
 * Lmin:            [AA]  Minimum wavelength simulated
 * Lmax:            [AA]  Maximum wavelength simulated
 * target_index:    [1]   Relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
@@ -211,12 +211,12 @@ INITIALIZE
   cos_thermal=cos_beamport_angle;
   cos_cold=cos((modextras.beamportangle-24.24)*DEG2RAD);
   printf("Setting up for sector %s, beamline %i, global orientation angle is %g, internal angle %g, cosines %g(t) and %g(c)\n",sector,beamline,orientation_angle,modextras.beamportangle,cos_thermal,cos_cold);
-  if (c_performance <= 0 || c_performance > 1) {
-    fprintf(stderr,"%s: Cold performance scalar of %g is not allowed. Please select 0 < c_performance <= 1\n", NAME_CURRENT_COMP, c_performance);
+  if (c_performance <= 0) {
+    fprintf(stderr,"%s: Cold performance scalar of %g is not allowed. Please select 0 < c_performance\n", NAME_CURRENT_COMP, c_performance);
     exit(-1);
   }
-  if (t_performance <= 0 || t_performance > 1) {
-    fprintf(stderr,"%s: Thermal performance scalar of %g is not allowed. Please select 0 < c_performance <= 1\n", NAME_CURRENT_COMP, t_performance);
+  if (t_performance <= 0) {
+    fprintf(stderr,"%s: Thermal performance scalar of %g is not allowed. Please select 0 < t_performance\n", NAME_CURRENT_COMP, t_performance);
     exit(-1);
   }
   if (Lmin>=Lmax || Lmin <= 0 || Lmax < 0) {
