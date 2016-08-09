@@ -7,6 +7,7 @@ import re
 from pipetools import McrunPipeMan
 from instrparser import InstrTraceParser, InstrObjectConstructor
 from particleparser import ParticleBundleRayFactory, ParticleTraceParser
+from fcparticleparser import FlowChartParticleTraceParser
 
 class McDisplayReader(object):
     ''' High-level trace manager '''
@@ -75,11 +76,10 @@ class McDisplayReader(object):
 
         if self.debug:
             file_save(particles, 'particledata')
-
-        rayparser = ParticleTraceParser(particles)
-        raybuilder = ParticleBundleRayFactory(rayparser.parsetree)
-        rays = raybuilder.build_rays()
-
+        
+        parser = FlowChartParticleTraceParser()
+        rays = parser.execute(particles)
+        
         return rays
 
 def file_save(data, filename):
