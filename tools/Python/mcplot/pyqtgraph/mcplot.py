@@ -15,20 +15,25 @@ from mclib.mcplotgraph import PlotGraphPrint
 def main(args):
     logging.basicConfig(level=logging.INFO)
     
-    if len(args.simulation) == 0:
-        simfile = ''
-    else:
-        simfile = args.simulation[0]
+    try:
+        
+        if len(args.simulation) == 0:
+            simfile = ''
+        else:
+            simfile = args.simulation[0]
     
-    if args.test:
-        test_decfuncs(simfile)
+        if args.test:
+            test_decfuncs(simfile)
+        
+        loader = McPlotDataLoader(simfile=simfile)
+        loader.load()
+        graph = loader.plot_graph
     
-    loader = McPlotDataLoader(simfile=simfile)
-    loader.load()
-    graph = loader.plot_graph
+        if args.test:
+            printer = PlotGraphPrint(graph)
     
-    if args.test:
-        printer = PlotGraphPrint(graph)
+    except Exception as e:
+        print 'mcplot error: %s' % e.message
     
     # TODO: plot the generated plot-graph
     

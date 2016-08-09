@@ -28,7 +28,7 @@ def has_filename(args):
     f = args['simfile']
     if not isfile(f):
         if not isdir(f):
-            raise Exception('mcplot loader: Invalid input file.')
+            raise Exception('Invalid input file.')
         args['directory'] = f
         args['simfile'] = ''
         return False
@@ -507,7 +507,7 @@ def load_monitor_folder(args):
     return root
 
 def throw_error(args):
-    raise Exception('error terminal reached: %s' % args['simfile'])
+    raise Exception('Could not load file "%s".' % args['simfile'])
 
 class McPlotDataLoader():
     ''' assembly and execution of mccode data loader flowchart '''
