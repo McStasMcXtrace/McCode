@@ -53,7 +53,8 @@
 * beamline:        [1]   Defines the 'beamline number' of your instrument position. Valid values are 1..10 or 1..11 depending on sector
 * yheight:         [m]   Defines the moderator height. Valid values are 0.03 m and 0.06 m
 * cold_frac:       [1]   Defines the statistical fraction of events emitted from the cold part of the moderator
-* performance:     [1]   Scalar performance multiplicator 0 < performace <= 1
+* c_performance:   [1]   Cold brilliance scalar performance multiplicator 0 < c_performance <= 1
+* t_performance:   [1]   Thermal brilliance scalar performance multiplicator 0 < t_performance <= 1
 * Lmin:            [AA]  Minimum wavelength simulated
 * Lmax:            [AA]  Maximum wavelength simulated
 * target_index:    [1]   Relative index of component to focus at, e.g. next is +1 this is used to compute 'dist' automatically.
@@ -70,8 +71,8 @@
 DEFINE COMPONENT ESS_butterfly
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string sector="N",int beamline=1, yheight=0.03, cold_frac=0.5, int target_index=0, dist=0, focus_xw=0, focus_yh=0, 
-		    performance=1, Lmin, Lmax, tmax_multiplier=3, int n_pulses=1, acc_power=5)
-OUTPUT PARAMETERS (cx, cz, sign_bl_angle, orientation_angle,jmax,C0_x,C0_z,C1_x,C1_z,C2_x,C2_z,T1_x,T1_z,T2_x,T2_z,rC0_x,rC0_z,rC1_x,rC1_z,rC2_x,rC2_z,rT1_x,rT1_z,rT2_x,rT2_z,tx,ty,tz,r11,r12,r21,r22,xf,yf,zf,w_mult,w_stat,w_geom,w_focus,w_geom_c,w_geom_t,tx,ty,tz,tfocutmps_width, tfocus_time, dt,lambda,l_range,k,v,r,dx,dy,dz,internal_angle,x0,z0)
+		    c_performance=1, t_performance=1, Lmin, Lmax, tmax_multiplier=3, int n_pulses=1, acc_power=5)
+OUTPUT PARAMETERS (cx, cz, sign_bl_angle, orientation_angle,jmax,C0_x,C0_z,C1_x,C1_z,C2_x,C2_z,T1_x,T1_z,T2_x,T2_z,rC0_x,rC0_z,rC1_x,rC1_z,rC2_x,rC2_z,rT1_x,rT1_z,rT2_x,rT2_z,tx,ty,tz,r11,r12,r21,r22,xf,yf,zf,w_mult,w_stat,w_geom,w_focus,w_geom_c,w_geom_t,tx,ty,tz,tfocutmps_width, tfocus_time, dt,lambda,l_range,k,v,r,dx,dy,dz,internal_angle,x0,z0, cos_beamport_angle, sin_beamport_angle, cos_thermal, cos_cold)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
 DECLARE
@@ -131,6 +132,7 @@ DECLARE
   }
   
   double x0,z0;
+  double cos_beamport_angle, sin_beamport_angle, cos_thermal, cos_cold;
 %}
 
 INITIALIZE
@@ -202,9 +204,19 @@ INITIALIZE
   }
   internal_angle=90-fabs(orientation_angle);
   modextras.beamportangle=nearest_angle(fabs(internal_angle));
-  printf("Setting up for sector %s, beamline %i, global orientation angle is %g, internal angle %g\n",sector,beamline,orientation_angle,modextras.beamportangle);
-  if (performance <= 0 || performance > 1) {
-    fprintf(stderr,"%s: performance scalar of %g is not allowed. Please select 0 < performance <= 1\n", NAME_CURRENT_COMP, performance);
+  /* Direction-cosines for use with e.g. Brilliance_monitor */
+  cos_beamport_angle=cos(modextras.beamportangle*DEG2RAD);
+  sin_beamport_angle=sin(modextras.beamportangle*DEG2RAD);
+  /* correction for projection along the beam / projection on the z=0 plane */
+  cos_thermal=cos_beamport_angle;
+  cos_cold=cos((modextras.beamportangle-24.24)*DEG2RAD);
+  printf("Setting up for sector %s, beamline %i, global orientation angle is %g, internal angle %g, cosines %g(t) and %g(c)\n",sector,beamline,orientation_angle,modextras.beamportangle,cos_thermal,cos_cold);
+  if (c_performance <= 0 || c_performance > 1) {
+    fprintf(stderr,"%s: Cold performance scalar of %g is not allowed. Please select 0 < c_performance <= 1\n", NAME_CURRENT_COMP, c_performance);
+    exit(-1);
+  }
+  if (t_performance <= 0 || t_performance > 1) {
+    fprintf(stderr,"%s: Thermal performance scalar of %g is not allowed. Please select 0 < c_performance <= 1\n", NAME_CURRENT_COMP, t_performance);
     exit(-1);
   }
   if (Lmin>=Lmax || Lmin <= 0 || Lmax < 0) {
@@ -228,6 +240,8 @@ INITIALIZE
   }
   printf("Focusing at rectagle sized %g x %g \n positioned at location %g %g %g (target_index %i and dist %g)\n", focus_xw, focus_yh, tx, ty, tz, target_index, dist);
   /* Issue warning if dist < 2m - TODO */
+  
+  printf("Cold and Thermal brilliance performance multiplicators are c_performance=%g and t_performance=%g\n", c_performance, t_performance);
   
   /* Calculate orientation matrix for the display and calculations */
   r11 = cos(DEG2RAD*orientation_angle);
@@ -268,7 +282,6 @@ INITIALIZE
   w_mult *= l_range;            /* wavelength range correction */
   n_pulses=(double)floor(n_pulses);
   if (n_pulses == 0) n_pulses=1;
-
 %}
 
 TRACE
@@ -285,8 +298,10 @@ TRACE
     z = rC1_z + (rC2_z - rC1_z)*xtmp;
     x0 = C1_x + (C2_x - C1_x)*xtmp;
     z0 = C1_z + (C2_z - C1_z)*xtmp;
-    modextras.X=((-xtmp*0.072)-0.0705);
-    w_geom=w_geom_c;
+    /* Geometrical scaling factor - BF2 vs BF1 model */
+    /* 10 cm "truncated" to 7.2 cm. */ 
+    modextras.X=((-xtmp*0.072)-0.08);
+    w_geom=w_geom_c*0.7;
     cold_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
   } else {
     iscold=0;
@@ -294,9 +309,11 @@ TRACE
     z = rT1_z + (rT2_z - rT1_z)*xtmp;
     x0 = T1_x + (T2_x - T1_x)*xtmp;
     z0 = T1_z + (T2_z - T1_z)*xtmp;
+    /* Geometrical scaling factor - BF2 vs BF1 model */
+    /* 18 cm compactified to 10.8 cm. */
     modextras.X=((xtmp*0.108)*14.2/10.8-0.0705);
     thermal_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
-    w_geom=w_geom_t;
+    w_geom=w_geom_t*0.7;
   }
 
   SCATTER;
@@ -321,8 +338,12 @@ TRACE
    
   if (iscold) {          //case: cold moderator
     cold_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
+    /* Apply simple engineering reality correction */
+    p *= c_performance;
   }  else  {                      //case: thermal moderator
     thermal_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
+    /* Apply simple engineering reality correction */
+    p *= t_performance;
   }
   
   p*=w_stat*w_focus*w_geom*w_mult;
@@ -335,8 +356,6 @@ TRACE
   } else {
     p/=(1-cold_frac);
   }
-  /* Apply simple engineering reality correction */
-  p *= performance;
   SCATTER;
 
   
