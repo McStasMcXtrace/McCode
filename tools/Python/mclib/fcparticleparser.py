@@ -27,6 +27,10 @@ def d_isstate(args):
     m = re.match('STATE:', args['linegetter'].current())
     return m is not None
 
+def d_isscatter(args):
+    m = re.match('SCATTER:', args['linegetter'].current())
+    return m is not None
+
 def d_isleave(args):
     m = re.match('LEAVE:', args['linegetter'].current())
     return m is not None
@@ -48,6 +52,8 @@ def d_iskeywd(args):
     m4 = re.match('STATE:', line)
     if m4:
         return 4
+    
+    raise Exception("something's wrong!")
 
 # process nodes implementation  --- NOTE: all process nodes increment line idx by one
 def p_newparticle(args):
@@ -73,17 +79,19 @@ def p_addpoint(args):
     
     linegetter.inc()
 
-def p_closeparticle
+def p_addpointclose(args):
+    linegetter = args['linegetter']
+    args['weaver'].new_point(_get_strcoords(linegetter.current()))
+    
     weaver = args['weaver']
     weaver.close_comp()
     weaver.close_story()
     
-    args['linegetter'].inc()
+    linegetter.inc()
 
 # helper functions implementation
 def _get_strcoords(line):
-    m = re.match('\w+: ([\d\.\+\-e]), ([\d\.\+\-e]), ([\d\.\+\-e]), ([\d\.\+\-e]), ([\d\.\+\-e]), ([\d\.\+\-e]), ([\d\.\+\-e]), ([\d\.\+\-e]), ([\d\.\+\-e]), ([\d\.\+\-e]), ([\d\.\+\-e])\n', line)
-    #return [float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)), float(m.group(5)), float(m.group(6)), float(m.group(7)), float(m.group(8)), float(m.group(9)), float(m.group(10)), float(m.group(11))]
+    m = re.match('\w+: ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+), ([\d\.\+\-e]+)', line)
     return [m.group(1), m.group(2), m.group(3), m.group(4), m.group(5), m.group(6), m.group(7), m.group(8), m.group(9), m.group(10), m.group(11)]
 
 def _get_compname(line):
@@ -110,7 +118,7 @@ class ParticleBundleWeaver(object):
             raise Exception("You must add a particle story before adding a compgroup.")
         if self._compgroup is not None:
             raise Exception("Close the current compgroup before adding a new one.")
-        self._compgroup = ParticleCompGroup(comp_name)
+        self._compgroup = ParticleCompGroup(compname)
         self._story.add_group(self._compgroup)
 
     def new_point(self, point_str):
@@ -123,7 +131,7 @@ class ParticleBundleWeaver(object):
         self._compgroup = None
     
     def close_story(self):
-        sellf._story = None
+        self._story = None
     
     def get_particles(self):
         if self._story == None and self._compgroup == None: 
@@ -137,15 +145,18 @@ class LineGetter(object):
         self.idx = 0
     
     def current(self):
-        return self.lines[self.idx]
+        if not self.idx >= len(self.lines):
+            return self.lines[self.idx]
     
     def inc(self):
         self.idx += 1
+    
+    def isempty(self):
+        return self.idx >= len(self.lines)
 
 # flowchart assembly and execution
 class FlowChartParticleTraceParser(object):
-    def __init__(self, text):
-        
+    def __init__(self):
         # terminal nodes
         t1 = FCNTerminal(key="begin", fct=t_begin)
         t2 = FCNTerminal(key="end", fct=t_end)
@@ -158,6 +169,7 @@ class FlowChartParticleTraceParser(object):
         d3 = FCNDecisionMulti(fct=d_iskeywd)
         d4 = FCNDecisionBool(fct=d_isstate)
         d5 = FCNDecisionBool(fct=d_isstate)
+        d5_b = FCNDecisionBool(fct=d_isscatter)
         d6 = FCNDecisionBool(fct=d_isstate)
         d7 = FCNDecisionBool(fct=d_isstate)
         d8 = FCNDecisionBool(fct=d_isleave)
@@ -167,18 +179,17 @@ class FlowChartParticleTraceParser(object):
         p2 = FCNProcess(fct=p_ignoreline)
         p3 = FCNProcess(fct=p_addcomp)
         p4 = FCNProcess(fct=p_addpoint)
-        p5 = FCNProcess(fct=p_ignoreline)
-        p6 = FCNProcess(fct=p_addpoint)
+        p5 = FCNProcess(fct=p_addpoint)
+        p6 = FCNProcess(fct=p_ignoreline)
         p7 = FCNProcess(fct=p_ignoreline)
         p8 = FCNProcess(fct=p_addpoint)
         p9 = FCNProcess(fct=p_ignoreline)
-        p10 = FCNProcess(fct=p_addpoint)
-        p11 = FCNProcess(fct=p_closeparticle)
+        p10 = FCNProcess(fct=p_addpointclose)
         p12 = FCNProcess(fct=p_ignoreline)
         
         # assemble the flowchart from top
         t1.set_nodenext(node_next=d0)
-        d0.set_nodes(node_T=d1, node_F=t2)
+        d0.set_nodes(node_T=t2, node_F=d1)
         d1.set_nodes(node_T=p1, node_F=t3)
         p1.set_nodenext(node_next=d2)
         d2.set_nodes(node_T=p2, node_F=t3)
@@ -190,28 +201,31 @@ class FlowChartParticleTraceParser(object):
         p4.set_nodenext(node_next=d3)
         
         p5.set_nodenext(node_next=d5)
-        d5.set_nodes(node_T=p6, node_F=t3)
+        d5.set_nodes(node_T=p6, node_F=d5_b)
+        d5_b.set_nodes(node_T=p5, node_F=t3)
         p6.set_nodenext(node_next=d3)
         
         p7.set_nodenext(node_next=d6)
-        d6.set_nodes(node_T=p8, node_F=t3)
-        p8.set_nodenext(node_next=d8)
-        d6.set_nodes(node_T=p9, node_F=t3)
+        d6.set_nodes(node_T=p8, node_F=d3)
+        p8.set_nodenext(node_next=d8) # <-- can this event happen?
         
-        p9.set_nodenext(node_next=d4)
+        p9.set_nodenext(node_next=d7)
         d7.set_nodes(node_T=p10, node_F=t3)
-        p10.set_nodenext(node_next=p11)
-        p11.set_nodenext(node_next=d0)
+        p10.set_nodenext(node_next=d0)
         
         p12.set_nodenext(node_next=d3)
         
+        self.rootnode = t1
+    
+    def execute(self, text):
         # set args according to the above implementation and execute the flowchart
         args = {}
         args['linegetter'] = LineGetter(text)
-        args['weaver'] = ParticleBundleWeaver()
+        weaver = ParticleBundleWeaver()
+        args['weaver'] = weaver
 
-        flowchart = FlowChartControl(t1)
+        flowchart = FlowChartControl(self.rootnode)
         flowchart.process(args)
         
-        return = args['weaver'].get_particles
+        return weaver.get_particles()
 
