@@ -40,6 +40,7 @@ DECLARE
   double WL;
   double lambdamin, lambdamax;
   double CCold,CThermal;
+  double Xproj;
 %}
 
 INITIALIZE
@@ -69,6 +70,11 @@ EXTEND %{
   WL=lambda;
   CCold=cos_cold;
   CThermal=cos_thermal;
+  if (iscold) {
+    Xproj=SrcX*=cos_cold;
+  } else {
+    Xproj=SrcX*=cos_thermal;
+  }
 %}
 
 COMPONENT Arm1 = Arm()
@@ -77,7 +83,7 @@ COMPONENT Arm1 = Arm()
 COMPONENT Arm2 = Arm()
   AT (0,0,3.5) RELATIVE ABSOLUTE
 
-  COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
+  COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=Xproj, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
 
   COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position COLD / [m]", options=options4, restore_neutron=1)
