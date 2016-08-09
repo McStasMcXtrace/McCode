@@ -362,6 +362,12 @@ class ParticleState(object):
             self.spin = Vector3d(float(args[7]), float(args[8]), float(args[9]))
             self.intensity = float(args[10])
     
+    @classmethod
+    def fromcoords(cls, coords):
+        "Initialize from a list of floats"
+        #data = open(filename).readlines()
+        #return cls(data)
+    
     def jsonize(self):
         ''' returns a jsonized version of this object '''
         state = {}

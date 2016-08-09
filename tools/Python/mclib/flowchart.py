@@ -1,7 +1,6 @@
 '''
 A simple flowchart with boolean decision nodes, enter and exit terminals.
 '''
-
 class FlowChartNode(object):
     ''' flow chart abstract node '''
     def process(self, args):
@@ -9,10 +8,15 @@ class FlowChartNode(object):
 
 class FCNDecisionBool(FlowChartNode):
     ''' a boolean decision node '''
-    def __init__(self, fct, node_T, node_F):
+    def __init__(self, fct, node_T=None, node_F=None):
+        ''' fct(args) -> bool '''
         self.fct = fct
         self.node_T = node_T
-        self.node_F = node_F#
+        self.node_F = node_F
+    
+    def set_nodes(self, node_T, node_F):
+        self.node_T = node_T
+        self.node_F = node_F
     
     def process(self, args):
         if self.fct(args):
@@ -20,12 +24,43 @@ class FCNDecisionBool(FlowChartNode):
         else:
             return self.node_F
 
+class FCNDecisionMulti(FlowChartNode):
+    ''' a decision node with multiple (boolean) exits '''
+    def __init__(self, fct, node_lst=None):
+        ''' fct(args) -> node index, as organized in nodes_lst '''
+        self.fct = fct
+        self.nodes = node_lst
+    
+    def set_node_lst(self, node_lst):
+        self.nodes = node_lst
+    
+    def process(self, args):
+        return self.nodes[self.fct(args)]
+
+class FCNProcess(FlowChartNode):
+    ''' action node with a single exit '''
+    def __init__(self, fct, node_next=None):
+        ''' fct(args) -> anything '''
+        self.fct = fct
+        self.node_next = node_next
+    
+    def set_nodenext(self, node_next):
+        self.node_next = node_next
+    
+    def process(self, args):
+        self.fct(args)
+        return self.node_next
+
 class FCNTerminal(FlowChartNode):
     ''' a terminal node '''
     def __init__(self, fct=None, node_next=None, key=''):
+        ''' fct(args) -> anything '''
         self.fct = fct
         self.node_next = node_next
         self.key = key
+    
+    def set_nodenext(self, node_next):
+        self.node_next = node_next
     
     def process(self, args):
         if self.fct:
@@ -33,8 +68,11 @@ class FCNTerminal(FlowChartNode):
         
         return self.node_next
 
+'''
+Control class for traversing the chart, executing functions and so on
+'''
 class FlowChartControl(object):
-    ''' implements the flowchart traversal control '''
+    ''' implements the flowchart graph traversal control '''
     def __init__(self, terminal_enter):
         ''' '''
         self.terminal_enter = terminal_enter
