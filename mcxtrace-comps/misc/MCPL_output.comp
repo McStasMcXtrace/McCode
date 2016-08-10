@@ -1,23 +1,40 @@
 /*******************************************************************************
 *
 * McXtrace, xray-tracing package
-*         Copyright (C) 1997-2016, All rights reserved
-*         Dtu Physics, Kgs. Lyngby, Denmark
+*         Copyright (C) 1997-2007, All rights reserved
+*         DTU Physics, Kgs. Lyngby, Denmark
 
 * Component: MCPL_output
 *
 * %I
 * Written by: Erik B Knudsen 
-* Date: Mar 2016
+* Date: Aug 2016
 * Version: $Revision$
 * Origin: DTU Physics
 * Release: McXtrace 1.3
 *
 * Detector-like component that writes photon state parameters into an mcpl-format 
-* binary photon file.
+* binary, virtual-source photon file.
 *
 * %D
-* long description
+* Detector-like component that writes photon state parameters into an mcpl-format 
+* binary, virtual-source photon file.
+*
+* MCPL is short for Monte Carlo Particle List, and is a new format for sharing events
+* between e.g. MCNP(X), Geant4, and McXtrace.
+*
+* When used with MPI, the component will output #MPI nodes individual MCPL files that
+* can be merged using the mcpltool.
+* 
+* MCPL_output allows a few flags to tweak the output files: 
+* 1. If use_polarisation is unset (default) the polarisation vector will not be stored (saving space)
+* 2. If doubleprec is unset (default) data will be stored as 32 bit floating points, effectively cutting the output file size in half.
+* 3. Extra information may be attached to each ray in the form of a userflag, a user-defined variable wich is packed into 32 bits. If
+* the user variable does not fit in 32 bits the value will be truncated and likely garbage. If more than one variable is to be attached to
+* each photon this must be packed into the 32 bits.  
+* 
+* These features are set this way to keep file sizes as manageable as possible.
+*
 * %BUGS
 *
 * %P
@@ -25,35 +42,70 @@
 *
 * filename: [str] Name of photon file to write. Default is standard
 *                 output [string]. If not given, a unique name will be used.
+* verbose:  [ ]   If 1) Print summary information for created MCPL file. 2) Also print summary of first 10 particles information stored in the MCPL file. >2) Also print information for first 10 particles as they are being stored by McXtrace.
+* polarisationuse: [ ]  Enable storing the polarisation state of the photon.
+* doubleprec: [ ] Use double precision storage
+* userflag [ ] Extra variable to attach to each photon. The value of this variable will be packed into a 32 bit integer.
+* userflagcomment [ ] String variable to describe the userflag.
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_output
-DEFINITION PARAMETERS (polarisationuse=1, doubleprec=1, dump_file=0)
-SETTING PARAMETERS (string filename=0)
-OUTPUT PARAMETERS (outputfile)
-DEPENDENCY "-L. -lmcpl"
+DEFINITION PARAMETERS (polarisationuse=0, doubleprec=0, verbose=0, int userflag=INT_MAX)
+SETTING PARAMETERS (string filename=0, string userflagcomment="")
+OUTPUT PARAMETERS (outputfile,particle,Particle)
+DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
 SHARE
 %{
-#include "mcpl.h"
+#include <mcpl.h>
+
 %}
 
 DECLARE
 %{
     mcpl_outfile_t outputfile;
+    mcpl_particle_t *particle,Particle;
 %}
 
 INITIALIZE
 %{
+#if defined (USE_MPI)
+  /* In case of MPI, simply redefine the filename used by each node */
+    MPI_MASTER(fprintf(stdout, "Message(%s): You are using MCPL_output with MPI, hence your will get %i filenames %s_node_#i as output.\n",NAME_CURRENT_COMP,mpi_node_count,filename); );
+    sprintf(filename,"%s.node_%i",filename,mpi_node_rank);
+#endif
+
     char line[256];
     outputfile = mcpl_create_outfile(filename);
+    /*reset filename to be whatever mcpl actually calls it. It may have added .mcpl*/
+    snprintf(filename,2048,"%s",mcpl_outfile_filename(outputfile));
+
     snprintf(line,255,"%s %s %s",MCCODE_NAME,MCCODE_VERSION,mcinstrument_name);
     mcpl_hdr_set_srcname(outputfile,line);
-    mcpl_enable_universal_pdgcode(outputfile,22);//all particles are photons
+    mcpl_enable_universal_pdgcode(outputfile,22);/*all particles are photons*/
     snprintf(line,255,"Output by COMPONENT: %s",NAME_CURRENT_COMP);
     mcpl_hdr_add_comment(outputfile,line);
+
+    /*also add the instrument file and the command line as blobs*/
+    FILE *fp;
+    if( (fp=fopen(mcinstrument_source,"rb"))!=NULL){
+        unsigned char *buffer;
+        int size,status;
+        /*find the file size by seeking to end, "tell" the position, and then go back again*/
+        fseek(fp, 0L, SEEK_END);
+        size = ftell(fp); // get current file pointer
+        fseek(fp, 0L, SEEK_SET); // seek back to beginning of file
+        if ( size && (buffer=malloc(size))!=NULL){
+            if (size!=(fread(buffer,1,size,fp))){ 
+                fprintf(stderr,"Warning (%s): Source instrument file not read cleanly\n");
+            }
+            mcpl_hdr_add_data(outputfile,  mcinstrument_name, size, buffer);
+            free(buffer);
+        }
+    }
+    fclose(fp);
 
     if (polarisationuse) {
         mcpl_enable_polarisation(outputfile);
@@ -62,15 +114,43 @@ INITIALIZE
         mcpl_enable_doubleprec(outputfile);
     }
 
+#if defined (USE_MPI)   
+  MPI_MASTER(
+#endif
+
+    if (verbose==1) {
+    printf("MCPL_output verbose mode: after generating the mcpl-file it will be reread and a summary printed.\n");
+    }
+
+#if defined (USE_MPI)   
+	    );
+#endif
+
+  /*pointer to the single particle storage area*/
+  particle=&Particle;
+
+  /*Add comments on what the orientation and position of this component is.*/
+  /*Include the instrument file itself as a binary blob in the mcpl file*/
+
+  /*Have the option of including a user-flag like they do at Loki.*/
+  if (userflag!=INT_MAX){
+      mcpl_enable_userflags(outputfile);
+      /*Don't add the comment if it's empty*/
+      if(userflagcomment && strlen(userflagcomment)){
+          snprintf(line,255,"userflags: %s",userflagcomment);
+          mcpl_hdr_add_comment(outputfile,line);
+      }
+  }
+
 %}
 
 TRACE
 %{
     double nrm;
-    mcpl_particle_t *particle = (mcpl_particle_t *) calloc(sizeof(mcpl_particle_t),1);
-    particle->position[0]=x;
-    particle->position[1]=y;
-    particle->position[2]=z;
+    /*positions are in cm*/
+    particle->position[0]=x*100;
+    particle->position[1]=y*100;
+    particle->position[2]=z*100;
 
     if(polarisationuse){
         particle->polarisation[0]=Ex;
@@ -79,8 +159,8 @@ TRACE
     }
 
     nrm =sqrt(kx*kx + ky*ky + kz*kz);
-    /*ekin is in MeV:*/
-    particle->ekin = 1e3*K2E*nrm;
+    /*ekin is in MeV*/
+    particle->ekin = K2E*nrm*1e3; 
     particle->direction[0] = kx/nrm;
     particle->direction[1] = ky/nrm;
     particle->direction[2] = kz/nrm;
@@ -88,6 +168,26 @@ TRACE
     particle->time = t*1e3;
     /*weight in unspecified units:*/
     particle->weight = p;
+    /*if specified also add the userflags*/
+    if(userflag!=0xFFFFFFFF){
+        particle->userflags = (uint32_t) userflag;
+    }
+
+#if defined (USE_MPI)   
+  MPI_MASTER(
+#endif
+
+    if (verbose==3 && mcrun_num<10) {
+      printf("id=%ld\tpdg=22\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
+	     mcrun_num, particle->ekin, particle->position[0], particle->position[1], particle->position[2],
+	     particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
+	     particle->polarisation[0], particle->polarisation[1], particle->polarisation[2]);
+    }
+
+#if defined (USE_MPI)   
+	    );
+#endif
+
 
     mcpl_add_particle(outputfile,particle);
     
@@ -96,26 +196,41 @@ TRACE
 
 SAVE
 %{
-    mcpl_close_outfile(outputfile);  
+    mcpl_closeandgzip_outfile(outputfile);  
 %}
 
 FINALLY
 %{
-    if (dump_file) mcpl_dump(filename,0,0,(int) dump_file);
+    /*TODO check (use fopen?) for existance of .mcpl-file (mcpl_outfile_filename) then .gz*/
+    if (verbose) {
+        char tmpfn[2048],*ptr;
+        FILE *tmp;
+        snprintf(tmpfn,2048,"%s.gz",filename);
+        if( (tmp=fopen(filename,"r"))!=NULL ){
+            ptr=filename;
+        } else if ( (tmp=fopen(tmpfn,"r"))!=NULL ){
+            ptr=tmpfn;
+        } else {
+            ptr=NULL;
+        }
+        fclose(tmp);
+        if(ptr) printf("trying to mcpl_dump %s\n",ptr);
+        mcpl_dump(ptr,(verbose>2?2:verbose),0,10);
+    }
 %}
 
 MCDISPLAY
 %{
     double t,dt;
     int i;
-    multiline(5,0.2,0.2,0.0, -0.2,0.2,0.0, -0.2,-0.2,0.0, 0.2,-0.2,0.0, 0.2,0.2,0.0);
+    multiline(5, 0.2,0.2,0.0, -0.2,0.2,0.0, -0.2,-0.2,0.0, 0.2,-0.2,0.0, 0.2,0.2,0.0);
     /*M*/
-    multiline(5,-0.085,-0.085,0, -0.085,0.085,0, -0.045,-0.085,0, -0.005,0.085,0, -0.005,-0.085,0);
+    multiline(5,-0.085,-0.085,0.0, -0.085,0.085,0.0, -0.045,-0.085,0.0, -0.005,0.085,0.0, -0.005,-0.085,0.0);
     /*O*/
     dt=2*M_PI/32;
     t=0;
     for (i=0;i<32;i++){
-        line(0.04*cos(t)+0.045,0.04*sin(t),0, 0.04*cos(t+dt)+0.045,0.04*sin(t+dt),0);
+        line(0.04*cos(t)+0.045,0.08*sin(t),0, 0.04*cos(t+dt)+0.045,0.08*sin(t+dt),0);
         t+=dt;
     }
 %}
