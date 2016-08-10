@@ -78,7 +78,7 @@ class DjangoWriter(object):
         finally:
             f.close()
 
-def write_html(instrument, html_filepath, first=None, last=None):
+def _write_html(instrument, html_filepath, first=None, last=None):
     ''' writes instrument definition to html/js '''
     box = instrument.get_boundingbox(first, last)
     box_total = instrument.get_boundingbox()
@@ -97,7 +97,7 @@ def write_html(instrument, html_filepath, first=None, last=None):
     writer = SimpleWriter(templatefile, campos, box_total, html_filepath)
     writer.write()
 
-def write_browse(instrument, raybundle, dir):
+def write_browse(instrument, raybundle, dir, nobrowse=False):
     ''' writes instrument definitions to html/ js '''
     # write mcdisplay.js
     mcd_filepath = os.path.join(os.path.dirname(__file__), 'mcdisplay.js')
@@ -105,7 +105,7 @@ def write_browse(instrument, raybundle, dir):
     
     # write html
     html_filepath = os.path.join(dir, 'index.html')
-    write_html(instrument, html_filepath, first=args.first, last=args.last)
+    _write_html(instrument, html_filepath, first=args.first, last=args.last)
     
     # write instrument
     json_instr = 'MCDATA_instrdata = %s;' % json.dumps(instrument.jsonize(), indent=0)
@@ -115,6 +115,11 @@ def write_browse(instrument, raybundle, dir):
     json_neutr = 'MCDATA_particledata = %s;' % json.dumps(raybundle.jsonize(), indent=0)
     file_save(json_neutr, os.path.join(dir, '_particles.js'))
     
+    # exit if nobrowse flag has been set
+    if nobrowse:
+        return
+    
+    # open a web-browser in a cross-platform way
     try:
         subprocess.Popen('%s %s' % (mccode_config.configuration['BROWSER'], html_filepath), shell=True)
     except Exception as e:
@@ -146,7 +151,7 @@ def main(args):
     raybundle = reader.read_particles()
     
     # write output files
-    write_browse(instrument, raybundle, dirname)
+    write_browse(instrument, raybundle, dirname, args.nobrowse)
     
     if debug:
         # this should enable template.html to load directly
@@ -157,6 +162,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
     parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
+    parser.add_argument('--nobrowse', action='store_true', help='do not open a webbrowser viewer')
     parser.add_argument('--dirname', help='name of the output directory requested to mcrun')
     parser.add_argument('--inspect', help='display only particle rays reaching this component passed to mcrun')
     parser.add_argument('--first', help='zoom range first component')
