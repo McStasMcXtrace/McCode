@@ -134,25 +134,30 @@ def main(args):
     logging.basicConfig(level=logging.INFO)
     debug = False
     
-    dir = get_datadirname(os.path.splitext(os.path.basename(args.instr))[0])
+    # output directory
+    dirname = get_datadirname(os.path.splitext(os.path.basename(args.instr))[0])
+    if args.dirname:
+        dirname = args.dirname
     
-    reader = McDisplayReader(args, n=100, dir=dir, debug=debug)
-    
+    # set up a pipe, read and parse the particle trace
+    reader = McDisplayReader(args, n=100, dir=dirname, debug=debug)
     instrument = reader.read_instrument()
     instrument.setCmd(reader.cmd)
     raybundle = reader.read_particles()
     
-    write_browse(instrument, raybundle, dir)
+    # write output files
+    write_browse(instrument, raybundle, dirname)
     
     if debug:
-        # this will enable template.html to load directly
+        # this should enable template.html to load directly
         jsonized = json.dumps(instrument.jsonize(), indent=0)
         file_save(jsonized, 'jsonized.json')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('instr', help='display this instrument file (.instr or .out)')
-    parser.add_argument('--default', action='store_true', help='use instrument defaults (fast)')
+    parser.add_argument('--default', action='store_true', help='automatically use instrument defaults for simulation run')
+    parser.add_argument('--dirname', help='name of the output directory requested to mcrun')
     parser.add_argument('--inspect', help='display only particle rays reaching this component passed to mcrun')
     parser.add_argument('--first', help='zoom range first component')
     parser.add_argument('--last', help='zoom range last component')
