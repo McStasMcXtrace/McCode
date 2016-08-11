@@ -170,7 +170,7 @@ TRACE
     /*weight in unspecified units:*/
     particle->weight = p;
     /*if specified also add the userflags*/
-    if(userflag!=0xFFFFFFFF){
+    if(userflag!=INT_MAX){
         particle->userflags = (uint32_t) userflag;
     }
 
