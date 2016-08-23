@@ -47,15 +47,15 @@
 * polarisationuse: [ ]  Enable storing the polarisation state of the neutron.
 * doubleprec: [ ] Use double precision storage
 * userflag [ ] Extra variable to attach to each neutron. The value of this variable will be packed into a 32 bit integer.
-* userflagcomment [ ] String variable to describe the userflag.
+* userflagcomment [ ] String variable to describe the userflag. If this string is empty (the default) no userflags will be stored.
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_output
-DEFINITION PARAMETERS (polarisationuse=0, doubleprec=0, verbose=0, int userflag=INT_MAX)
+DEFINITION PARAMETERS (polarisationuse=0, doubleprec=0, verbose=0, int userflag=0)
 SETTING PARAMETERS (string filename=0, string userflagcomment="")
-OUTPUT PARAMETERS (outputfile,particle,Particle)
+OUTPUT PARAMETERS (outputfile,particle,Particle, userflagenabled)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
 SHARE
@@ -68,6 +68,7 @@ DECLARE
 %{
     mcpl_outfile_t outputfile;
     mcpl_particle_t *particle,Particle;
+    int userflagenabled;
 %}
 
 INITIALIZE
@@ -77,6 +78,17 @@ INITIALIZE
     MPI_MASTER(fprintf(stdout, "Message(%s): You are using MCPL_output with MPI, hence your will get %i filenames %s_node_#i as output.\n",NAME_CURRENT_COMP,mpi_node_count,filename); );
     sprintf(filename,"%s.node_%i",filename,mpi_node_rank);
 #endif
+
+    int ii,ct;
+    char clr[2048],*clrp;
+    clrp=clr;
+    ct=0;
+    for (ii=0;ii<argc;ii++){
+        int jj;
+        clrp+=snprint(clrp,2048-(clrp-clr),"%s ",argv[ii]);
+        printf("%s, %p %p\n",clr,clr,clrp);
+    }
+
 
     char line[256];
     outputfile = mcpl_create_outfile(filename);
@@ -133,9 +145,11 @@ INITIALIZE
   /*Add comments on what the orientation and position of this component is.*/
   /*Include the instrument file itself as a binary blob in the mcpl file*/
 
+  useflagenabled=0;
   /*Have the option of including a user-flag like they do at Loki.*/
-  if (userflag!=INT_MAX){
+  if (strlen(userflagcomment)!=0){
       mcpl_enable_userflags(outputfile);
+      userflagenabled=1;
       /*Don't add the comment if it's empty*/
       if(userflagcomment && strlen(userflagcomment)){
           snprintf(line,255,"userflags: %s",userflagcomment);
@@ -170,7 +184,7 @@ TRACE
     /*weight in unspecified units:*/
     particle->weight = p;
     /*if specified also add the userflags*/
-    if(userflag!=INT_MAX){
+    if(userflagenabled){
         particle->userflags = (uint32_t) userflag;
     }
 

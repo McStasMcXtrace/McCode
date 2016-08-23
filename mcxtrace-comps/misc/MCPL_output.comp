@@ -52,9 +52,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_output
-DEFINITION PARAMETERS (polarisationuse=0, doubleprec=0, verbose=0, int userflag=INT_MAX)
+DEFINITION PARAMETERS (polarisationuse=0, doubleprec=0, verbose=0, int userflag=0)
 SETTING PARAMETERS (string filename=0, string userflagcomment="")
-OUTPUT PARAMETERS (outputfile,particle,Particle)
+OUTPUT PARAMETERS (outputfile,particle,Particle, userflagenabled)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
 SHARE
@@ -67,6 +67,7 @@ DECLARE
 %{
     mcpl_outfile_t outputfile;
     mcpl_particle_t *particle,Particle;
+    int userflagenabled;
 %}
 
 INITIALIZE
@@ -133,8 +134,9 @@ INITIALIZE
   /*Include the instrument file itself as a binary blob in the mcpl file*/
 
   /*Have the option of including a user-flag like they do at Loki.*/
-  if (userflag!=INT_MAX){
+  if (strlen(userflagcomment)!=0){
       mcpl_enable_userflags(outputfile);
+      userflagenabled=1;
       /*Don't add the comment if it's empty*/
       if(userflagcomment && strlen(userflagcomment)){
           snprintf(line,255,"userflags: %s",userflagcomment);
@@ -169,7 +171,7 @@ TRACE
     /*weight in unspecified units:*/
     particle->weight = p;
     /*if specified also add the userflags*/
-    if(userflag!=0xFFFFFFFF){
+    if(userflagenabled){
         particle->userflags = (uint32_t) userflag;
     }
 
