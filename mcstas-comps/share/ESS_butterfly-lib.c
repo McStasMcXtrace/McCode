@@ -123,13 +123,13 @@ void ESS_2015_Schoenfeldt_thermal(double *t, double *p, double lambda, double tf
   *p *= extras.tmultiplier*ESS_2015_Schoenfeldt_thermal_timedist(*t, lambda, 3 /* cm height */, ESS_SOURCE_DURATION);  
   if (extras.height_c == 0.03) {
     // 3cm case
-    *p *= ESS_2015_Schoenfeldt_thermal_y0(100*extras.Y) * ESS_2015_Schoenfeldt_thermal_x0(100*extras.X, extras.beamportangle);
+    *p *= ESS_2015_Schoenfeldt_thermal_y0(100*extras.Y) * ESS_2015_Schoenfeldt_thermal_x0(100*extras.X, extras.beamportangle, extras.Mwidth_t);
   } else {
     // 6cm case
     // Downscale brightness by factor from 
     // "New ESS Moderator Baseline", Ken Andersen, 9/4/2015
     *p *= (6.2e14/9.0e14);
-    *p *= ESS_2014_Schoenfeldt_thermal_y0(100*extras.Y, 100*extras.height_c) * ESS_2015_Schoenfeldt_thermal_x0(100*extras.X, extras.beamportangle);
+    *p *= ESS_2014_Schoenfeldt_thermal_y0(100*extras.Y, 100*extras.height_c) * ESS_2015_Schoenfeldt_thermal_x0(100*extras.X, extras.beamportangle, extras.Mwidth_t);
   }
 } /* end of ESS_2015_Schoenfeldt_thermal */
 
@@ -160,13 +160,13 @@ void ESS_2015_Schoenfeldt_cold(double *t, double *p, double lambda, double tfocu
   if (extras.Uniform==0) {
     if (extras.height_c == 0.03) {
       // 3cm case
-      *p *= ESS_2015_Schoenfeldt_cold_y0(100*extras.Y) * ESS_2015_Schoenfeldt_cold_x0(100*extras.X, extras.beamportangle);
+      *p *= ESS_2015_Schoenfeldt_cold_y0(100*extras.Y) * ESS_2015_Schoenfeldt_cold_x0(100*extras.X, extras.beamportangle, extras.Mwidth_c);
     } else {
       // 6cm case
       // Downscale brightness by factor from 
       // "New ESS Moderator Baseline", Ken Andersen, 9/4/2015
       *p *= (10.1e14/16.0e14);
-      *p *= ESS_2014_Schoenfeldt_cold_y0(100*extras.Y, 100*extras.height_c) * ESS_2015_Schoenfeldt_cold_x0(100*extras.X, extras.beamportangle);
+      *p *= ESS_2014_Schoenfeldt_cold_y0(100*extras.Y, 100*extras.height_c) * ESS_2015_Schoenfeldt_cold_x0(100*extras.X, extras.beamportangle, extras.Mwidth_c);
     }
   }
 } /* end of ESS_2015_Schoenfeldt_cold */
@@ -192,7 +192,7 @@ double ESS_2015_Schoenfeldt_thermal_y0(double y0){
 } /* end of ESS_2015_Schoenfeldt_thermal_y0 */
 
 /* This is ESS_2015_Schoenfeldt_cold_x0 - horizontal intensity distribution for the 2015 Schoenfeldt cold moderator */
-double ESS_2015_Schoenfeldt_cold_x0(double x0,double theta){
+double ESS_2015_Schoenfeldt_cold_x0(double x0,double theta, double width){
   // GEOMETRY / SAMPLING SPACE
     double i=(theta-5.)/10.;
     double par0=0.0146115+0.00797729*i-0.00279541*i*i;
@@ -206,12 +206,28 @@ double ESS_2015_Schoenfeldt_cold_x0(double x0,double theta){
     double par2=-4-.75*i;
     if(i==0)par2=-20;
     double par3=-14.9402-0.178369*i+0.0367007*i*i;
-    if(i==0)par3=-14.27;
+    if(i==0)par3*=0.95;
     double par4=-15;
     if(i==3)par4=-3.5;
     if(i==5)par4=-1.9;
     double par5=-7.07979+0.0835695*i-0.0546662*i*i;
-    if(i==4)par5=-8.1;
+    if(i==5)par5*=0.85;
+    
+    //printf("Angle %g, width is %g\n",theta,width,cos(theta*DEG2RAD)*width);
+    //if(i==4) width=width+0.3;
+    //if(i==5) width=width-0.7;
+
+    /* Rescaling to achieve a BF1 model */
+    double tmp=(par5-par3)/width;
+    //printf("Cold x0 in BF1 units: %g,",x0);
+    x0=x0*tmp-7.16;
+    //printf("x0 in BF2 units: %g, moderator width is %g from %g\n",x0,width,par5-par3);
+
+    /* if (x0<=par5 && x0>=par3) */
+    /*   return 1; */
+    /* else */
+    /*   return 0; */
+    
 
     double line=par0*(x0+12)+par1;
     double CutLeftCutRight=1./((1+exp(par2*(x0-par3)))*(1+exp(-par4*(x0-par5))));
@@ -220,7 +236,7 @@ double ESS_2015_Schoenfeldt_cold_x0(double x0,double theta){
 } /* end of ESS_2015_Schoenfeldt_cold_x0 */
 
 /* This is ESS_2015_Schoenfeldt_thermal_x0 - horizontal intensity distribution for the 2015 Schoenfeldt cold moderator */
-double ESS_2015_Schoenfeldt_thermal_x0(double x0,double theta){
+double ESS_2015_Schoenfeldt_thermal_x0(double x0,double theta, double width){
     double i=(theta-5.)/10.;
     double par0=-5.54775+0.492804*i;
     double par1=-0.265929-0.711477*i;
@@ -242,6 +258,17 @@ double ESS_2015_Schoenfeldt_thermal_x0(double x0,double theta){
     if(theta==45)par9=7.5;
     if(theta==55)par9=8.2;
 
+    /* Rescaling to achieve a BF1 model */
+    double tmp=(par9-par7)/width;
+    //printf("Thermal x0 in BF1 units: %g,",x0);
+    x0=x0*tmp-7.16;
+    //printf(" x0 in BF2 units: %g, moderator width is %g from %g\n",x0,width,par9-par7);
+    
+    /* if (x0<=par9 && x0>=par7) */
+    /*   return 1; */
+    /* else */
+    /*   return 0; */
+    
     double soften1=1./(1+exp(8.*(x0-par0)));
     double soften2=1./(1+exp(8.*(x0-par1)));
     double CutLeftCutRight=1./((1+exp(par6*(x0-par7)))*(1+exp(-par8*(x0-par9))));
