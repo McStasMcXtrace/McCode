@@ -71,10 +71,12 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
+configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/mcdisplay" @ONLY)
+
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/mcdisplay.py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/mcdisplay")
 endif()
 
 # Program files
@@ -121,7 +123,7 @@ if(NOT WINDOWS)
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
     COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}display-webgl-py"
     COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${TOOLS_LIB}/mcdisplay.py" "${WORK}/${P}display-webgl-py"
+    "${TOOLS_LIB}/mcdisplay" "${WORK}/${P}display-webgl-py"
     )
 
   add_custom_target(
