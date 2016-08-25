@@ -102,7 +102,7 @@ INITIALIZE
             if (size!=(fread(buffer,1,size,fp))){ 
                 fprintf(stderr,"Warning (%s): Source instrument file not read cleanly\n");
             }
-            mcpl_hdr_add_data(outputfile,  mcinstrument_name, size, buffer);
+            mcpl_hdr_add_data(outputfile, "mccode_instr_file", size, buffer);
             free(buffer);
         }
     }
