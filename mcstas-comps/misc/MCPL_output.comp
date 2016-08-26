@@ -145,7 +145,7 @@ INITIALIZE
   /*Add comments on what the orientation and position of this component is.*/
   /*Include the instrument file itself as a binary blob in the mcpl file*/
 
-  useflagenabled=0;
+  userflagenabled=0;
   /*Have the option of including a user-flag like they do at Loki.*/
   if (strlen(userflagcomment)!=0){
       mcpl_enable_userflags(outputfile);
