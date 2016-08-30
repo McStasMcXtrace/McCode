@@ -79,17 +79,6 @@ INITIALIZE
     sprintf(filename,"%s.node_%i",filename,mpi_node_rank);
 #endif
 
-    int ii,ct;
-    char clr[2048],*clrp;
-    clrp=clr;
-    ct=0;
-    for (ii=0;ii<argc;ii++){
-        int jj;
-        clrp+=snprint(clrp,2048-(clrp-clr),"%s ",argv[ii]);
-        printf("%s, %p %p\n",clr,clr,clrp);
-    }
-
-
     char line[256];
     outputfile = mcpl_create_outfile(filename);
     /*reset filename to be whatever mcpl actually calls it. It may have added .mcpl*/
@@ -119,6 +108,16 @@ INITIALIZE
         }
     }
     fclose(fp);
+
+    int ii;
+    char clr[2048],*clrp;
+    clrp=clr;
+    clrp+=snprintf(clrp,2048,"%s",mcinstrument_exe);
+    for (ii=0;ii<mcnumipar;ii++){
+        clrp+=snprintf(clrp,2048-(clrp-clr)," %s=%s",mcinputtable[ii].name,mcinputtable[ii].par);
+    }
+    *(clrp-1)='\0';
+    mcpl_hdr_add_data(outputfile, "mccode_cmd_line" , strlen(clr), clr);
 
     if (polarisationuse) {
         mcpl_enable_polarisation(outputfile);
