@@ -28,18 +28,27 @@
 *
 * <b>Geometry</b>
 * The geometry corresponds correctly to the latest release of the butterfly moderator,
-* including changes warranted by the ESS CCB in July 2016.
+* including changes warranted by the ESS CCB in July 2016, the so called BF1 type moderator.
+* A set of official release documents are available with this component, see the benchmarking
+* website mentioned below.
 *
 * <b>Brilliances</b>
 * The internal brilliance-functions are howerver still derived from the previous MCNP study
 * by Troels Schoenfeldt as included in the ESS_moderator component, with the so-called BF2 
 * design and performed at beamport positions 5, ..., 55 degrees measured from the central
 * position of the beam extraction. A nearest neighbour "interpolation"/discretisation is 
-* performed on that basis. Hence, the performance is symmetric in all sectors for now, 
-* i.e. beamline 3 performs the same in all of N, W, S and E.
-* In terms of intensity/performance the component agrees within apx. 10% with a new set of
-* brilliance curve estimates from Luca Zanini, roughly 0.7 x the performance of the previous 
-* ESS_moderator component (McStas 2.2a version - 2.3 version had a bug) 
+* performed on that basis. 
+* For each beamline, a geometrical stretching of the moderator emmision surfaces has been
+* applied, to ensure that the apparent/observed width of the moderators correspond to the
+* BF1 buttefly design.
+* In terms of intensity/performance, a scaling factor has been applied fo each beamline,
+* to match brilliance curve estimates from Luca Zanini.
+* A set of data benchmarking this component against BF1 MCNP output has been uploaded to
+* <a href="http://ess_butterfly.mcstas.org">http://ess_butterfly.mcstas.org</a>. Here one
+* can find figures showing average brillances, as well as figures showing how apparent width 
+* and brilliance changes with beamport. Figures showing monolith layout, brilliances and 
+* moderator emission profiles are also provided on a per-beamline basis.
+*
 * <b>We expect to release a new set of brilliance functions later in 2016. These are 
 * expected to include more realistic brilliances in terms of variation across sectors and
 * potentially also performance losses due to engineering reality. </b>
@@ -359,7 +368,6 @@ INITIALIZE
   modextras.extractionangle=120;
   /* "Measured" moderator widths in cm scale */
   modextras.Mwidth_c=100.0*ColdWidths[beamline-1]/cos_cold; //Should it be one or the other here?
-  //modextras.Mwidth_c=100.0*W/cos_cold;
   modextras.Mwidth_t=100.0*ThermalWidths[beamline-1]/cos_thermal;
   tfocus_width=0;
   tfocus_time=0;
@@ -468,7 +476,6 @@ TRACE
   }
   SCATTER;
 
-  //printf("Neutron state at %g %g %g weight %g\n",x,y,z,p);
 %}
 
 MCDISPLAY
