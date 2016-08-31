@@ -39,6 +39,8 @@ struct ess_struct {
   double height_c;
   double Width_c;
   double Width_t;
+  double Mwidth_c;
+  double Mwidth_t;
   double tmultiplier;
   double Radius_c;
   double beamportangle;
@@ -69,9 +71,9 @@ double ESS_2014_Schoenfeldt_thermal_y0(double y0,double height);
 double ESS_2014_Schoenfeldt_thermal_x0(double x0,double height, double width);
 
 double ESS_2015_Schoenfeldt_cold_y0(double y0);
-double ESS_2015_Schoenfeldt_cold_x0(double x0,double theta);
+double ESS_2015_Schoenfeldt_cold_x0(double x0, double theta, double width);
 double ESS_2015_Schoenfeldt_thermal_y0(double y0);
-double ESS_2015_Schoenfeldt_thermal_x0(double x0,double theta);
+double ESS_2015_Schoenfeldt_thermal_x0(double x0,double theta, double width);
 double ESS_2015_Schoenfeldt_cold_Y(double x0,double height);
 double ESS_2015_Schoenfeldt_thermal_Y(double y0,double height);
 double ESS_2015_Schoenfeldt_cold_Theta120(double x0,double height);

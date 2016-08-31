@@ -99,17 +99,6 @@ TRACE
     int status;
     double l0,l1,l2,l3,tx,ty,tz;
     
-    /*function to make testing a propagation simpler*/
-    inline void Mirror_toroid_NOPROP_DL(double dl,double *tx,double *ty,double *tz){
-        do {
-            double op[12];
-            mcstore_xray(op,0, x,y,z, kx,ky,kz, phi, t, Ex,Ey,Ez, p);
-            mcPROP_DL(dl);
-            (*tx)=x;(*ty)=y; (*tz)=z;
-            mcrestore_xray(op,0, &x,&y,&z, &kx,&ky,&kz, &phi, &t, &Ex,&Ey,&Ez, &p);
-        }while(0);
-    }  
-
     do {
         /*TODO check the permutation of coordinates and the actual position of the cylinder.*/ 
         status= cylinder_intersect(&l0,&l1,x,z,y+radius,kx,kz,ky, radius, zdepth); 
@@ -117,7 +106,14 @@ TRACE
         if(status & (02|04)) break;
         /*if the first intersection is behind the particle - this means the ray is on the wrong side of the mirror*/
         if(l0<0) break;
-        Mirror_toroid_NOPROP_DL(l0,&tx,&ty,&tz);
+        do {
+            /*this to do a test propagation*/
+            double op[12];
+            mcstore_xray(op,0, x,y,z, kx,ky,kz, phi, t, Ex,Ey,Ez, p);
+            mcPROP_DL(l0);
+            (tx)=x;(ty)=y; (tz)=z;
+            mcrestore_xray(op,0, &x,&y,&z, &kx,&ky,&kz, &phi, &t, &Ex,&Ey,&Ez, &p);
+        }while(0);
         /*check mirror limits of intersectio point.*/
         if(tz<-zdepth/2.0 || tz>zdepth/2.0) break;
         /*check if the width is OK*/

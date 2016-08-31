@@ -39,10 +39,11 @@
 * nx:       (1)
 * ny:       Vector definition of "forward" direction wrt. divergence, to be used e.g. when the monitor is rotated into the horizontal plane.(1)
 * nz:       (1)
-* maxdiv_v: Maximal vertical divergence detected (degrees)
-* maxdiv_h: Maximal vertical divergence detected (degrees)
+* maxdiv_v: Maximal vertical divergence detected (degrees/rad)
+* maxdiv_h: Maximal vertical divergence detected (degrees/rad)
 * filename: Name of file in which to store the detector image (text)
 * restore_xray: If set, the monitor does not influence the xray state (1)
+* rad:   If set - divergence will be measured in radians. (1)
 *
 * OUTPUT PARAMETERS:
 *
@@ -53,7 +54,7 @@
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Divergence_monitor
-DEFINITION PARAMETERS (nh=20, nv=20)
+DEFINITION PARAMETERS (nh=20, nv=20, rad=0)
 SETTING PARAMETERS (string filename=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
 		    xwidth=0, yheight=0, maxdiv_h=1, maxdiv_v=1, restore_xray=0, nx=0, ny=0, nz=1)
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
@@ -98,8 +99,13 @@ TRACE
     {
       /* Find length of projection onto the [nx ny nz] axis */
       kn = scalar_prod(kx, ky, kz, nx, ny, nz);
-      h_div = RAD2DEG*atan2(kx,kn);
-      v_div = RAD2DEG*atan2(ky,kn);
+      if (rad){
+          h_div = atan2(kx,kn);
+          v_div = atan2(ky,kn);
+      }else{
+          h_div = RAD2DEG*atan2(kx,kn);
+          v_div = RAD2DEG*atan2(ky,kn);
+      }
       if (h_div < maxdiv_h && h_div > -maxdiv_h &&
           v_div < maxdiv_v && v_div > -maxdiv_v)
       {
@@ -117,14 +123,25 @@ TRACE
   %}
 SAVE
   %{
-    DETECTOR_OUT_2D(
-        "Divergence monitor",
-        "X divergence [deg]",
-        "Y divergence [deg]",
-        -maxdiv_h, maxdiv_h, -maxdiv_v, maxdiv_v,
-        nh, nv,
-        &Div_N[0][0],&Div_p[0][0],&Div_p2[0][0],
-        filename);
+      if (rad){
+          DETECTOR_OUT_2D(
+                  "Divergence monitor",
+                  "X divergence [rad]",
+                  "Y divergence [rad]",
+                  -maxdiv_h, maxdiv_h, -maxdiv_v, maxdiv_v,
+                  nh, nv,
+                  &Div_N[0][0],&Div_p[0][0],&Div_p2[0][0],
+                  filename);
+      } else {
+          DETECTOR_OUT_2D(
+                  "Divergence monitor",
+                  "X divergence [deg]",
+                  "Y divergence [deg]",
+                  -maxdiv_h, maxdiv_h, -maxdiv_v, maxdiv_v,
+                  nh, nv,
+                  &Div_N[0][0],&Div_p[0][0],&Div_p2[0][0],
+                  filename);
+      }
   %}
 
 MCDISPLAY

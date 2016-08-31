@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # This will install McStas components
-project(python-tools-mclib C)
+project(python-tools-mcdisplay-webgl C)
 
 # Choose between McStas or McXtrace
 option(enable_mcstas   "Choose the McStas flavor" off)
@@ -25,15 +25,13 @@ endif()
 message("Enabling ${FLAVOR} flavor")
 setupMCCODE("${FLAVOR}")
 
+
 # Select prefix
-if(${enable_mcstas})
-  set(P "mc")
-else()
-  set(P "mx")
-endif()
+set(P "${MCCODE_PREFIX}")
 
-set(TOOLS_NAME "tools/Python/${P}lib")
+set(TOOLS_NAME "tools/Python/${P}display/webgl")
 
+# Windows needs special handling of this path...
 if(WINDOWS)
   set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
 else()
@@ -46,9 +44,9 @@ set(CC "${CMAKE_C_COMPILER}")
 set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
 
 # CPack configuration
-set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}lib-${MCCODE_VERSION}")
-set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
-set(CPACK_PACKAGE_CONTACT       "jsbn@fysik.dtu.dk")
+set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}display-webgl-${MCCODE_VERSION}")
+set(CPACK_RESOURCE_FilE_LICENSE "${PROJECT_SOURCE_DIR}/../../COPYING")
+set(CPACK_PACKAGE_CONTACT       "pkwi@fysik.dtu.dk")
 
 set(CPACK_PACKAGE_VERSION       "1.0")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
@@ -56,7 +54,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 
 
 # NSIS
-set(NSIS_NAME "Python internal library, ${MCCODE_STRING}")
+set(NSIS_NAME "Python/webgl -based mcdisplay (mcdisplay-webgl-py), ${MCCODE_STRING}")
 set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
@@ -66,26 +64,31 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python")
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
   "${FLAVOR}-${MCCODE_VERSION}, python"
-)
+  )
 
 
 include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-
-# Configure config file
-configure_file("${CMAKE_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.py" @ONLY)
-set(BINS "${WORK}/mccode_config.py")
+configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/mcdisplay" @ONLY)
 
 if(WINDOWS)
+  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
+else()
+  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/mcdisplay")
+endif()
+
+# Program files
+if(WINDOWS)
   # Python files
-  foreach(name __init__.py fcparticleparser.py fileutils.py flowchart.py guiutils.py instrgeom.py instrparser.py mcdisplayutils.py mcplotgraph.py mcplotloader.py nodetree.py particleparser.py pipetools.py test.py)
+  foreach(name mcdisplay.js template.html __init__.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${lib}/${TOOLS_NAME}"
       )
   endforeach()
+
   install(
     FILES ${BINS}
     DESTINATION "${lib}/${TOOLS_NAME}"
@@ -96,14 +99,16 @@ if(WINDOWS)
   )
 endif()
 
+
 if(NOT WINDOWS)
   # Python files
-  foreach(name __init__.py fcparticleparser.py fileutils.py flowchart.py guiutils.py instrgeom.py instrparser.py mcdisplayutils.py mcplotgraph.py mcplotloader.py nodetree.py particleparser.py pipetools.py test.py)
+  foreach(name mcdisplay.js template.html __init__.py)
     install(
       FILES "${PROJECT_SOURCE_DIR}/${name}"
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
       )
   endforeach()
+
   install(
     FILES ${BINS}
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
@@ -112,5 +117,22 @@ if(NOT WINDOWS)
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
+  # Symlink to main
+  add_custom_command(
+    OUTPUT "${WORK}/${P}display-webgl-py"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
+    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}display-webgl-py"
+    COMMAND "${CMAKE_COMMAND}" -E create_symlink
+    "${TOOLS_LIB}/mcdisplay" "${WORK}/${P}display-webgl-py"
+    )
 
+  add_custom_target(
+    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}display-webgl-py"
+    )
+
+  install(
+    PROGRAMS "${WORK}/${P}display-webgl-py"
+    DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
+    RENAME "${P}display-webgl-py${DOT_PYTHON_SUFFIX}"
+    )
 endif()
