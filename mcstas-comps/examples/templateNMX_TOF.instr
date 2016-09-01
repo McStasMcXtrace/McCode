@@ -27,7 +27,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT templateNMX_TOF(REPS=53, string reflections="Rubredoxin.lau",theta=-40.85,phi=1.5188,xw=0.012,yh=0.012,tmin=0,tmax=2e5)
+DEFINE INSTRUMENT templateNMX_TOF(REPS=53, string reflections="Rubredoxin.lau",theta=-40.85,phi=15.188,xw=0.012,yh=0.012,tmin=0,tmax=2e5)
 
 TRACE
 
