@@ -57,6 +57,7 @@ DECLARE
   double TCollmin;
   double TCollmax;
   double Emin,Emax;
+  double EminTh=20, EmaxTh=100, EminC=0, EmaxC=20;
   double Eneutron;
 %}
 
@@ -103,9 +104,9 @@ EXTEND %{
   CThermal=cos_thermal;
   Eneutron=VS2E*(vx*vx + vy*vy + vz*vz);
   if (IsCold) {
-    Emin=0;Emax=20;
+    Emin=EminC;Emax=EmaxC;
   } else {
-    Emin=20;Emax=100;
+    Emin=EminTh;Emax=EmaxTh;
   }
 %}
 
@@ -120,6 +121,14 @@ COMPONENT Arm2 = Arm()
 /* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
 COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
   WHEN(Eneutron<=Emax && Eneutron>=Emin) AT (0, 0, 1) RELATIVE Source
+
+/* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
+COMPONENT CWidth = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
+  WHEN(Eneutron<=EmaxC && Eneutron>=EminC) AT (0, 0, 1) RELATIVE Source
+
+/* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
+COMPONENT TWidth = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
+  WHEN(Eneutron<=EmaxTh && Eneutron>=EminTh) AT (0, 0, 1) RELATIVE Source
 
 /* Measures the vertical emmision coordinate of cold neutrons */
 COMPONENT MonND2 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcY, username1="Vertical position COLD / [m]", options=options4, restore_neutron=1)
