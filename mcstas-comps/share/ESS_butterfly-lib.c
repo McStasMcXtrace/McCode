@@ -279,7 +279,7 @@ double ESS_2015_Schoenfeldt_thermal_x0(double x0,double theta, double width){
 
 
     return CutLeftCutRight*(
-        (line1+add45degbumb)*soften1
+        (line1)*soften1
         +line2*soften2*(1-soften1)
         +line3*(1-soften2)
         );
