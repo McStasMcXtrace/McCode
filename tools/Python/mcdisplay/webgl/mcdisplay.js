@@ -184,7 +184,7 @@ Main.prototype.putScatterPoints = function(raynode)
 //  color maps: rainbow, cooltowarm, blackbody, grayscale
 Main.prototype.setLutRange = function(min, max)
 {
-    this.lut = new THREE.Lut( "blackbody", 512 );
+    this.lut = new THREE.Lut( "cooltowarm", 512 );
     this.lut.setMin(min);
     this.lut.setMax(max);
     console.log("Lut min value: " + min);
