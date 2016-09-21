@@ -684,9 +684,8 @@ class McGuiAppController():
         self.state.checkInstrFileCandidate(new_instr_req)
         
         if new_instr_req != '':
-            template_text_header = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_header_simple.instr")).read()
-            template_text_body = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_body_simple.instr")).read()
-            new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, template_text_header + template_text_body)
+            template_text = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_simple.instr")).read()
+            new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, template_text)
             if new_instr != '':
                 if self.view.closeCodeEditorWindow():
                     self.state.unloadInstrument()

@@ -512,8 +512,10 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         ui.actionClose_Instrument_Editor.triggered.connect(self.close)
         ui.actionFind.triggered.connect(lambda: self.__edtSearch.setFocus())
         ui.actionComponent_Browser.triggered.connect(self.__handleComponentBrowser)
-        ui.actionInsert_Header.triggered.connect(self.__handleInsertHeader)
-        ui.actionInsert_Body.triggered.connect(self.__handleInsertBody)
+        
+        # TODO: remove these menu options properly
+        #ui.actionInsert_Header.triggered.connect(self.__handleInsertHeader)
+        #ui.actionInsert_Body.triggered.connect(self.__handleInsertBody)
         
         # TODO: create a ctr-a on a menu to __scintilla.selectAll(bool select)
         
