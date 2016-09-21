@@ -259,8 +259,7 @@ class McGnuplotter():
     
     def getDataKeys(self):
         """ returns an alpha-num sorted list of all McGnuplotObject instances installed at construction time by key """
-        return sorted(self.__gnuplot_objs.keys(), key=lambda item: (int(item.partition(' ')[0])
-                                                                    if item[0].isdigit() else float('inf'), item))
+        return sorted(self.__gnuplot_objs.keys(), key=lambda item: (int(item.partition(' ')[0][0]) if item[0].isdigit() else float('inf'), item))
     
     def setLogscale(self, log_scale):
         """ set log scale on all McGnuplotObject instances """
