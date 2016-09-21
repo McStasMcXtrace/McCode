@@ -78,8 +78,6 @@
     <property name="title">
      <string>Insert</string>
     </property>
-    <addaction name="actionInsert_Header"/>
-    <addaction name="actionInsert_Body"/>
     <addaction name="separator"/>
     <addaction name="actionComponent_Browser"/>
     <addaction name="separator"/>
