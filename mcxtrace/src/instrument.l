@@ -411,4 +411,3 @@ push_autoload(FILE *file)
   push_file(file, TRUE, TRUE);
   BEGIN(initial_token);
 }
-

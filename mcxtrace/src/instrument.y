@@ -64,7 +64,6 @@
   List                     jumps;
   struct jump_condition    jumpcondition;
   struct jump_name         jumpname;
-
 }
 
 %token TOK_RESTRICTED TOK_GENERAL
@@ -927,6 +926,7 @@ component: removable split "COMPONENT" instname '=' instref when place orientati
         struct comp_inst *comp;
 
         comp = $6;
+        myself_comp = comp;
         
         if (comp->def != NULL) {
           comp->def->comp_inst_number--;
@@ -1254,7 +1254,6 @@ jumpname: "PREVIOUS"
     }
 ;
 
-
 dependency: 
     {
     }
@@ -1298,7 +1297,7 @@ topatexp:   "PREVIOUS"
       }
     | "MYSELF"
       {
-        $$ = exp_ctoken("mccompcurname");
+        $$ = exp_ctoken(myself_comp->name);
       }
 
     | TOK_ID
@@ -1481,8 +1480,9 @@ struct instr_def *instrument_definition;
 /* Map from names to component instances. */
 Symtab comp_instances;
 
-/* Will store component instance for PREVIOUS reference */
-struct comp_inst *previous_comp=NULL;
+/* Will store component instance for PREVIOUS and MYSELF reference */
+struct comp_inst *previous_comp=NULL
+struct comp_inst *myself_comp=NULL;
 
 /* Map from names to component group instances. */
 Symtab group_instances;
