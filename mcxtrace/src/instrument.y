@@ -99,6 +99,7 @@
 %token TOK_COPY       "COPY"    /* extended McCode grammar */
 %token TOK_SPLIT      "SPLIT"   /* extended McCode grammar */
 %token TOK_REMOVABLE  "REMOVABLE" /* extended McCode grammar with include */
+%token TOK_DEPENDENCY "DEPENDENCY"
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -145,7 +146,7 @@ compdefs:   /* empty */
     | compdefs compdef
 ;
 
-compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trace save finally mcdisplay "END"
+compdef:    "DEFINE" "COMPONENT" TOK_ID parameters dependency share declare initialize trace save finally mcdisplay "END"
       {
         struct comp_def *c;
         palloc(c);
@@ -154,13 +155,13 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         c->def_par = $4.def;
         c->set_par = $4.set;
         c->out_par = $4.out;
-        c->share_code = $5;
-        c->decl_code = $6;
-        c->init_code = $7;
-        c->trace_code = $8;
-        c->save_code = $9;
-        c->finally_code = $10;
-        c->mcdisplay_code = $11;
+        c->share_code = $6;
+        c->decl_code = $7;
+        c->init_code = $8;
+        c->trace_code = $9;
+        c->save_code = $10;
+        c->finally_code = $11;
+        c->mcdisplay_code = $12;
         c->comp_inst_number = 0;
 
         /* Check definition and setting params for uniqueness */
@@ -169,7 +170,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         symtab_add(read_components, c->name, c);
         if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
       }
-    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters share declare initialize trace save finally mcdisplay "END"
+    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters dependency share declare initialize trace save finally mcdisplay "END"
       {
         /* create a copy of a comp, and initiate it with given blocks */
         /* all redefined blocks override */
@@ -190,13 +191,13 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
           c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
           if (list_len($6.out)) list_cat(c->out_par,$6.out);
 
-          c->share_code = ($7->linenum ?  $7  : def->share_code);
-          c->decl_code  = ($8->linenum ?  $8  : def->decl_code);
-          c->init_code  = ($9->linenum ?  $9  : def->init_code);
-          c->trace_code = ($10->linenum ? $10 : def->trace_code);
-          c->save_code  = ($11->linenum ? $11 : def->save_code);
-          c->finally_code = ($12->linenum ? $12 : def->finally_code);
-          c->mcdisplay_code = ($13->linenum ? $13 : def->mcdisplay_code);
+          c->share_code = ($8->linenum ?  $8  : def->share_code);
+          c->decl_code  = ($9->linenum ?  $9  : def->decl_code);
+          c->init_code  = ($10->linenum ?  $10  : def->init_code);
+          c->trace_code = ($11->linenum ? $11 : def->trace_code);
+          c->save_code  = ($12->linenum ? $12 : def->save_code);
+          c->finally_code = ($13->linenum ? $13 : def->finally_code);
+          c->mcdisplay_code = ($14->linenum ? $14 : def->mcdisplay_code);
           c->comp_inst_number = 0;
 
           /* Check definition and setting params for uniqueness */
@@ -619,16 +620,16 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
           instrument_definition->has_included_instr++;
         }
       }
-      declare initialize instr_trace save finally "END"
+      dependency declare initialize instr_trace save finally "END"
       {
-        if (!instrument_definition->decls) instrument_definition->decls = $6;
-        else list_cat(instrument_definition->decls->lines, $6->lines);
-        if (!instrument_definition->inits) instrument_definition->inits = $7;
-        else list_cat(instrument_definition->inits->lines, $7->lines);
-        if (!instrument_definition->saves) instrument_definition->saves = $9;
-        else list_cat(instrument_definition->saves->lines, $9->lines);
-        if (!instrument_definition->finals) instrument_definition->finals = $10;
-        else list_cat(instrument_definition->finals->lines, $10->lines);
+        if (!instrument_definition->decls) instrument_definition->decls = $7;
+        else list_cat(instrument_definition->decls->lines, $7->lines);
+        if (!instrument_definition->inits) instrument_definition->inits = $8;
+        else list_cat(instrument_definition->inits->lines, $8->lines);
+        if (!instrument_definition->saves) instrument_definition->saves = $10;
+        else list_cat(instrument_definition->saves->lines, $10->lines);
+        if (!instrument_definition->finals) instrument_definition->finals = $11;
+        else list_cat(instrument_definition->finals->lines, $11->lines);
         instrument_definition->compmap = comp_instances;
         instrument_definition->groupmap = group_instances;
         instrument_definition->complist = comp_instances_list;
@@ -1253,6 +1254,16 @@ jumpname: "PREVIOUS"
     }
 ;
 
+
+dependency: 
+    {
+    }
+  | "DEPENDENCY" TOK_STRING
+    {
+      strncat(instrument_definition->dependency, " ", 1024);
+      strncat(instrument_definition->dependency, $2, 1024);
+    }
+
 /* C expressions used to give component actual parameters **********************
    Top-level comma (',') operator NOT allowed. */
 exp:      { $<linenum>$ = instr_current_line; } topexp
@@ -1516,7 +1527,7 @@ print_usage(void)
   fprintf(stderr, "  If run-time libraries are not embedded, you will have to pre-compile\n");
   fprintf(stderr, "    them (.c -> .o) before assembling the program.\n");
   fprintf(stderr, "  The default component search list is usually defined by the environment\n");
-  fprintf(stderr, "    variable '" MCCODE_NAME "' (default is " MCSTAS ") \n");
+  fprintf(stderr, "    variable '" MCCODE_STRING "' (default is " MCSTAS ") \n");
   fprintf(stderr, "  Use 'mxrun' to both run " MCCODE_NAME " and the C compiler.\n");
   fprintf(stderr, "  Use 'mxgui' to run the " MCCODE_NAME " GUI.\n");
   fprintf(stderr, "SEE ALSO: mxrun, mxplot, mxdisplay, mxgui, mxformat, mxdoc\n");
@@ -1529,8 +1540,8 @@ static void
 print_version(void)
 {
   printf(MCCODE_NAME " version " MCCODE_VERSION " (" MCCODE_DATE ")\n"
-    "Copyright (C) Risoe National Laboratory, 1997-2010\n"
-    "Additions (C) Institut Laue Langevin, 2003-2010\n"
+    "Copyright (C) DTU Physics, 1997-2016\n"
+    "Additions (C) Institut Laue Langevin, 2003-2016\n"
     "All rights reserved\n");
   exit(0);
 }
@@ -1707,7 +1718,9 @@ main(int argc, char *argv[])
   {
     if (verbose) fprintf(stderr, "Starting to create C code %s\n", output_filename);
     cogen(output_filename, instrument_definition);
-    if (verbose) fprintf(stderr, "Generated          C code %s\n", output_filename);
+    if (verbose) fprintf(stderr, "Generated          C code %s from %s\n",
+      output_filename, instrument_definition->source);
+    fprintf(stderr, "CFLAGS=%s\n", instrument_definition->dependency);
     exit(0);
   }
 }

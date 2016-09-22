@@ -124,16 +124,17 @@ SETTING       return TOK_SETTING;
 TRACE         return TOK_TRACE;
 SHARE         return TOK_SHARE;
 EXTEND        return TOK_EXTEND;
-GROUP         return TOK_GROUP;         /* extended McStas grammar */
+GROUP         return TOK_GROUP;
 SAVE          return TOK_SAVE;
-JUMP          return TOK_JUMP;          /* extended McStas grammar */
-WHEN          return TOK_WHEN;          /* extended McStas grammar */
-NEXT          return TOK_NEXT;          /* extended McStas grammar */
-ITERATE       return TOK_ITERATE;       /* extended McStas grammar */
-MYSELF        return TOK_MYSELF;        /* extended McStas grammar */
-COPY          return TOK_COPY;          /* extended McStas grammar */
-SPLIT         return TOK_SPLIT;         /* extended McStas grammar */
-REMOVABLE     return TOK_REMOVABLE;     /* extended McStas grammar with include */
+JUMP          return TOK_JUMP;
+WHEN          return TOK_WHEN;
+NEXT          return TOK_NEXT;
+ITERATE       return TOK_ITERATE;
+MYSELF        return TOK_MYSELF;
+COPY          return TOK_COPY;
+SPLIT         return TOK_SPLIT;
+REMOVABLE     return TOK_REMOVABLE; 
+DEPENDENCY    return TOK_DEPENDENCY;
 
 "("|")"|"["|"]"|"{"|"}"|"," return yytext[0]; /* Punctuation. */
 "="|"*"       return yytext[0]; /* Operator. */
