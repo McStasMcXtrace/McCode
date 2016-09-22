@@ -1596,6 +1596,7 @@ parse_command_line(int argc, char *argv[])
   instrument_definition->include_runtime = 1;
   instrument_definition->enable_trace = 0;
   instrument_definition->portable = 0;
+  strcmp(instrument_definition->dependency, "-lm");
   for(i = 1; i < argc; i++)
   {
     if(!strcmp("-o", argv[i]) && (i + 1) < argc)
