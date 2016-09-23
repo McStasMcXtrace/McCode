@@ -840,32 +840,32 @@ cogen_init(struct instr_def *instr)
     relcomp = comp->pos->orientation_rel;
     if(relcomp == NULL)
     {                                /* Absolute orientation. */
-      coutf("    rot_set_rotation(%srota%s,", ID_PRE, comp->name);
+      coutf("  rot_set_rotation(%srota%s,", ID_PRE, comp->name);
       code_set_source(instr->quoted_source,
                       exp_getlineno(comp->pos->orientation.x));
-      coutf("      (%s)*%s,", x, d2r);
+      coutf("    (%s)*%s,", x, d2r);
       code_set_source(instr->quoted_source,
                       exp_getlineno(comp->pos->orientation.y));
-      coutf("      (%s)*%s,", y, d2r);
+      coutf("    (%s)*%s,", y, d2r);
       code_set_source(instr->quoted_source,
                       exp_getlineno(comp->pos->orientation.z));
-      coutf("      (%s)*%s);", z, d2r);
+      coutf("    (%s)*%s);", z, d2r);
       code_reset_source();
     }
     else
     {
-      coutf("    rot_set_rotation(%str1,", ID_PRE);
+      coutf("  rot_set_rotation(%str1,", ID_PRE);
       code_set_source(instr->quoted_source,
                       exp_getlineno(comp->pos->orientation.x));
-      coutf("      (%s)*%s,", x, d2r);
+      coutf("    (%s)*%s,", x, d2r);
       code_set_source(instr->quoted_source,
                       exp_getlineno(comp->pos->orientation.y));
-      coutf("      (%s)*%s,", y, d2r);
+      coutf("    (%s)*%s,", y, d2r);
       code_set_source(instr->quoted_source,
                       exp_getlineno(comp->pos->orientation.z));
-      coutf("      (%s)*%s);", z, d2r);
+      coutf("    (%s)*%s);", z, d2r);
       code_reset_source();
-      coutf("    rot_mul(%str1, %srota%s, %srota%s);",
+      coutf("  rot_mul(%str1, %srota%s, %srota%s);",
             ID_PRE, ID_PRE, relcomp->name, ID_PRE, comp->name);
     }
     str_free(z);
@@ -875,13 +875,13 @@ cogen_init(struct instr_def *instr)
     /* Relative rotation. */
     if(last == NULL)
     {                                /* First component. */
-      coutf("    rot_copy(%srotr%s, %srota%s);",
+      coutf("  rot_copy(%srotr%s, %srota%s);",
             ID_PRE, comp->name, ID_PRE, comp->name);
     }
     else
     {
-      coutf("    rot_transpose(%srota%s, %str1);", ID_PRE, last->name, ID_PRE);
-      coutf("    rot_mul(%srota%s, %str1, %srotr%s);",
+      coutf("  rot_transpose(%srota%s, %str1);", ID_PRE, last->name, ID_PRE);
+      coutf("  rot_mul(%srota%s, %str1, %srotr%s);",
             ID_PRE, comp->name, ID_PRE, ID_PRE, comp->name);
     }
 
@@ -892,30 +892,30 @@ cogen_init(struct instr_def *instr)
     relcomp = comp->pos->place_rel;
     if(relcomp == NULL)
     {
-      coutf("    %sposa%s = coords_set(", ID_PRE, comp->name);
+      coutf("  %sposa%s = coords_set(", ID_PRE, comp->name);
       code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
-      coutf("      %s,", x);
+      coutf("    %s,", x);
       code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
-      coutf("      %s,", y);
+      coutf("    %s,", y);
       code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
-      coutf("      %s);", z);
+      coutf("    %s);", z);
       code_reset_source();
     }
     else
     {
-      coutf("    %stc1 = coords_set(", ID_PRE);
+      coutf("  %stc1 = coords_set(", ID_PRE);
       code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
-      coutf("      %s,", x);
+      coutf("    %s,", x);
       code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
-      coutf("      %s,", y);
+      coutf("    %s,", y);
       code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
-      coutf("      %s);", z);
+      coutf("    %s);", z);
       code_reset_source();
-      coutf("    rot_transpose(%srota%s, %str1);",
+      coutf("  rot_transpose(%srota%s, %str1);",
             ID_PRE, relcomp->name, ID_PRE);
-      coutf("    %stc2 = rot_apply(%str1, %stc1);",
+      coutf("  %stc2 = rot_apply(%str1, %stc1);",
             ID_PRE, ID_PRE, ID_PRE);
-      coutf("    %sposa%s = coords_add(%sposa%s, %stc2);",
+      coutf("  %sposa%s = coords_add(%sposa%s, %stc2);",
             ID_PRE, comp->name, ID_PRE, relcomp->name, ID_PRE);
     }
 
