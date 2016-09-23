@@ -470,6 +470,7 @@ struct instr_def
     int enable_trace;         /* If set, enable output of ray traces */
     int portable;             /* If set, emit strictly portable ANSI C */
     int has_included_instr;   /* Flag set when instruments are %included in instr */
+    char dependency[1024];    /* stores all dependencies needed to compile, from comps and instr */
   };
 
 struct jump_struct

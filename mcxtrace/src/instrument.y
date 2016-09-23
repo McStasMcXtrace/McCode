@@ -1481,7 +1481,7 @@ struct instr_def *instrument_definition;
 Symtab comp_instances;
 
 /* Will store component instance for PREVIOUS and MYSELF reference */
-struct comp_inst *previous_comp=NULL
+struct comp_inst *previous_comp=NULL;
 struct comp_inst *myself_comp=NULL;
 
 /* Map from names to component group instances. */
