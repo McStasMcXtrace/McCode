@@ -408,6 +408,9 @@ struct group_inst
     int   index;
     char *first_comp;
     char *last_comp;
+    char  final_absorb_when_all_not_scattered;
+    char  skip_following_when_scattered;
+    char  comp_absorb_sends_to_next;
     CExp  split;
   };
 

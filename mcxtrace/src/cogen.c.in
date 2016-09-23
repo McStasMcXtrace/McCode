@@ -92,6 +92,7 @@
 * ##compcurindex
 * ##absorb          label for ABSORB (goto)
 * ##Scattered       Incremented each time a SCATTER is done
+* ##Restore         Flag indicating that @MCCODE_PARTICLE@ should be restored
 * ##NCounter        Incremented each time a @MCCODE_PARTICLE@ is entering the component
 * ##AbsorbProp      single counter for removed events in PROP calls
 * ##comp_storein    Positions of @MCCODE_PARTICLE@ entering each comp (loc. coords)
@@ -622,9 +623,12 @@ cogen_decls(struct instr_def *instr)
   cout("/* Counter for PROP ABSORB */");
   coutf("MCNUM  %sAbsorbProp[%i];", ID_PRE, list_len(instr->complist)+2);
 
-  /* 8. Declaration of SCATTER flags */
+  /* 8. Declaration of SCATTER and RESTORE flags */
   cout("/* Flag true when previous component acted on the @MCCODE_PARTICLE@ (SCATTER) */");
   coutf("MCNUM %sScattered=0;", ID_PRE);
+
+  cout("/* Flag true when @MCCODE_PARTICLE@ should be restored (RESTORE) */");
+  coutf("MCNUM %sRestore=0;", ID_PRE);
 
   if (list_len(instr->grouplist) > 0)
   {
@@ -831,7 +835,37 @@ cogen_init(struct instr_def *instr)
     struct comp_iformal *par;
 
     coutf("    /* Component %s. */", comp->name);
-    coutf("    SIG_MESSAGE(\"%s (Init:Place/Rotate)\");", comp->name); /* signal handler message */
+
+    coutf("  /* Setting parameters for component %s. */", comp->name);
+    coutf("  SIG_MESSAGE(\"%s (Init:SetPar)\");", comp->name); /* signal handler message */
+    /* Setting parameters of the component */
+    setpar = list_iterate(comp->def->set_par);
+    while((par = list_next(setpar)) != NULL)
+    {
+      char *val;
+      struct Symtab_entry *entry;
+
+      entry = symtab_lookup(comp->setpar, par->id);
+      val = exp_tostring(entry->val);
+      code_set_source(instr->quoted_source, exp_getlineno(entry->val));
+      if (par->type != instr_type_string)
+      {
+        coutf("  %sc%s_%s = %s;", ID_PRE, comp->name, par->id, val);
+      }
+      else
+      {
+        coutf("  if(%s) strncpy(%sc%s_%s, %s ? %s : \"\", 16384); else %sc%s_%s[0]='\\0';",
+          val, ID_PRE, comp->name, par->id, val, val, ID_PRE, comp->name, par->id);
+      }
+      str_free(val);
+    }
+    list_iterate_end(setpar);
+    if(list_len(comp->def->set_par) > 0)
+      code_reset_source();
+    cout("");
+
+
+    coutf("  SIG_MESSAGE(\"%s (Init:Place/Rotate)\");", comp->name); /* signal handler message */
 
     /* Absolute rotation. */
     x = exp_tostring(comp->pos->orientation.x);
@@ -925,50 +959,23 @@ cogen_init(struct instr_def *instr)
 
     /* Relative position. */
     if(last == NULL)
-      coutf("    %stc1 = coords_neg(%sposa%s);", ID_PRE, ID_PRE, comp->name);
+      coutf("  %stc1 = coords_neg(%sposa%s);", ID_PRE, ID_PRE, comp->name);
     else
-      coutf("    %stc1 = coords_sub(%sposa%s, %sposa%s);",
+      coutf("  %stc1 = coords_sub(%sposa%s, %sposa%s);",
             ID_PRE, ID_PRE, last->name, ID_PRE, comp->name);
-    coutf("    %sposr%s = rot_apply(%srota%s, %stc1);",
+    coutf("  %sposr%s = rot_apply(%srota%s, %stc1);",
           ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
 
-    coutf("    %sDEBUG_COMPONENT(\"%s\", %sposa%s, %srota%s)",
+    coutf("  %sDEBUG_COMPONENT(\"%s\", %sposa%s, %srota%s)",
           ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name);
 
-    coutf("    %scomp_posa[%i] = %sposa%s;", ID_PRE, comp->index, ID_PRE, comp->name);
-    coutf("    %scomp_posr[%i] = %sposr%s;", ID_PRE, comp->index, ID_PRE, comp->name);
-    coutf("    %sNCounter[%i]  = %sPCounter[%i] = %sP2Counter[%i] = 0;",
+    coutf("  %scomp_posa[%i] = %sposa%s;", ID_PRE, comp->index, ID_PRE, comp->name);
+    coutf("  %scomp_posr[%i] = %sposr%s;", ID_PRE, comp->index, ID_PRE, comp->name);
+    coutf("  %sNCounter[%i]  = %sPCounter[%i] = %sP2Counter[%i] = 0;",
           ID_PRE, comp->index, ID_PRE, comp->index, ID_PRE, comp->index);
-    coutf("    %sAbsorbProp[%i]= 0;", ID_PRE, comp->index);
+    coutf("  %sAbsorbProp[%i]= 0;", ID_PRE, comp->index);
 
     last = comp;
-
-    coutf("  /* Setting parameters for component %s. */", comp->name);
-    coutf("  SIG_MESSAGE(\"%s (Init:SetPar)\");", comp->name); /* signal handler message */
-    /* Setting parameters of the component setting parameters. */
-    setpar = list_iterate(comp->def->set_par);
-    while((par = list_next(setpar)) != NULL)
-    {
-      char *val;
-      struct Symtab_entry *entry;
-
-      entry = symtab_lookup(comp->setpar, par->id);
-      val = exp_tostring(entry->val);
-      code_set_source(instr->quoted_source, exp_getlineno(entry->val));
-      if (par->type != instr_type_string)
-      {
-        coutf("  %sc%s_%s = %s;", ID_PRE, comp->name, par->id, val);
-      }
-      else
-      {
-        coutf("  if(%s) strncpy(%sc%s_%s,%s, 16384); else %sc%s_%s[0]='\\0';", val, ID_PRE, comp->name, par->id, val, ID_PRE, comp->name, par->id);
-      }
-      str_free(val);
-    }
-    list_iterate_end(setpar);
-    if(list_len(comp->def->set_par) > 0)
-      code_reset_source();
-    cout("");
 
   } /* end while instr->complist */
   list_iterate_end(liter);
@@ -1144,6 +1151,10 @@ cogen_trace(struct instr_def *instr)
     for(i = 0; i < NUM_STATE_PARS; i++)
       coutf("#define %s %snl%s", statepars_all[i], ID_PRE, statepars_all[i]);
 
+    cout("");
+    coutf("#define %sabsorbComp %sabsorbComp%s", ID_PRE, ID_PRE, comp->name);
+
+
 #if MCCODE_PROJECT == 1     /* neutron */
     static char *store  ="STORE_NEUTRON";
     static char *restore="RESTORE_NEUTRON";
@@ -1178,6 +1189,7 @@ cogen_trace(struct instr_def *instr)
     } /* SPLIT handling */
 
     coutf("  %sScattered=0;", ID_PRE);
+    coutf("  %sRestore=0;", ID_PRE);
     coutf("  %sNCounter[%i]++;", ID_PRE, comp->index);
     coutf("  %sPCounter[%i] += p;", ID_PRE, comp->index);
     coutf("  %sP2Counter[%i] += p*p;", ID_PRE, comp->index);
@@ -1200,27 +1212,33 @@ cogen_trace(struct instr_def *instr)
       coutf("#undef %sabsorb", ID_PRE);
       coutf("#define %sabsorb %sabsorbAll", ID_PRE, ID_PRE);
       coutf("  } /* end comp %s in GROUP %s */", comp->name, comp->group->name);
-      coutf("  if (SCATTERED) %sGroup%s=%i;",
+      coutf("  if (SCATTERED) {\n    %sGroup%s=%i;\n  } else {\n    RESTORE=1;\n  }",
         ID_PRE, comp->group->name, comp->index);
-      cout ("  /* Label to skip component instead of ABSORB */");
-      coutf("  %sabsorbComp%s:", ID_PRE, comp->name);
-
-      if (strcmp(comp->name, comp->group->last_comp)) {
-        /* not the last comp of GROUP: check if SCATTERED */
-        coutf("  if (!%sGroup%s) /* restore @MCCODE_PARTICLE@ if was not scattered in GROUP yet */", ID_PRE, comp->group->name);
-        coutf("  { %s(%i,", restore, comp->index); /* RESTORE */
-        for(i = 0; i < NUM_STATE_PARS; i++)
-          if (i < NUM_STATE_PARS-1) coutf("      %snl%s,", ID_PRE, statepars_all[i]);
-          else                      coutf("      %snl%s); }",ID_PRE, statepars_all[i]);
-      } else {
-        /* last comp of GROUP: restore default ABSORB */
-        coutf("/* end of GROUP %s */", comp->group->name);
-        coutf("  if (!%sGroup%s) ABSORB; /* absorb @MCCODE_PARTICLE@ non scattered in GROUP */", ID_PRE, comp->group->name);
-      }
     } /* GROUP */
+    /* mcabsorbComp label for any component */
+    cout ("  /* Label for restoring  @MCCODE_PARTICLE@ */");
+    coutf("  %sabsorbComp%s:", ID_PRE, comp->name);
+    coutf("  if (RESTORE) /* restore if needed */");
+    coutf("  { %s(%i,", restore, comp->index); /* RESTORE */
+    for(i = 0; i < NUM_STATE_PARS; i++) {
+      if (i < NUM_STATE_PARS-1) coutf("      %snl%s,", ID_PRE, statepars_all[i]);
+      else                      coutf("      %snl%s); }",ID_PRE, statepars_all[i]);
+    }
 
+    /* GROUP - last element */
+    if (comp->group) {
+      if (!strcmp(comp->name, comp->group->last_comp)) {
+	/* last comp of GROUP: restore default ABSORB */
+	coutf("/* end of GROUP %s */", comp->group->name);
+        coutf("  if (!%sGroup%s) ABSORB; /* absorb @MCCODE_PARTICLE@ non scattered in GROUP */", ID_PRE, comp->group->name);
+        coutf("  %sGroup%s=0; /* reset group scattered flag */", ID_PRE, comp->group->name);
+      }
+    }
+
+    coutf("#undef %sabsorbComp", ID_PRE);
     for(i = NUM_STATE_PARS-1; i >= 0; i--)
       coutf("#undef %s", statepars_all[i]);
+
     /* Debugging (exit from component). */
     coutf("  %sDEBUG_STATE(", ID_PRE);
     for(i = 0; i < NUM_STATE_PARS; i++)
@@ -1525,7 +1543,7 @@ cogen_runtime(struct instr_def *instr)
   coutf("int %sdefaultmain = %d;", ID_PRE, instr->use_default_main);
   coutf("char %sinstrument_name[] = \"%s\";", ID_PRE, instr->name);
   coutf("char %sinstrument_source[] = \"%s\";", ID_PRE, instr->source);
-  coutf("char *%sinstrument_exe=NULL; /* will be set to argv[0] in main */", ID_PRE); 
+  coutf("char *%sinstrument_exe=NULL; /* will be set to argv[0] in main */", ID_PRE);
   if(instr->use_default_main)
     cout("int main(int argc, char *argv[]){return mccode_main(argc, argv);}");
 } /* cogen_runtime */
