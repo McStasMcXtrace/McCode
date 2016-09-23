@@ -249,6 +249,7 @@ extern Symtab read_components;
 extern char verbose;
 /* Will store component instance for PREVIOUS reference */
 extern struct comp_inst *previous_comp;
+extern struct comp_inst *myself_comp;
 /* current instance index */
 extern long comp_current_index;
 
