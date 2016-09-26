@@ -38,7 +38,7 @@
 * Benchmarking website available at <a href="http://ess_butterfly.mcstas.org">http://ess_butterfly.mcstas.org</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ESS_butterfly_test(string sector="N",beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,int index=8,dist=0,cold=1,Yheight=0.03,delta=0)
+DEFINE INSTRUMENT ESS_butterfly_test(string sector="N",beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,int index=8,dist=0,cold=0.5,Yheight=0.03,delta=0)
 
 DECLARE
 %{
@@ -110,6 +110,14 @@ EXTEND %{
   }
 %}
 
+COMPONENT AutoTOFL0 = Monitor_nD(xwidth=XW, yheight=YH, options="tof limits=[0 5e-3] bins=51, lambda limits=[0.1 20] bins=41", restore_neutron=1)
+ AT (0, 0, 0.08) RELATIVE PREVIOUS
+
+COMPONENT AutoTOF0 = Monitor_nD(xwidth=XW, yheight=YH, options="tof limits=[0 5e-3] bins=51", restore_neutron=1)
+ AT (0, 0, 0.001) RELATIVE PREVIOUS
+
+COMPONENT AutoL0 = Monitor_nD(xwidth=XW, yheight=YH, options="lambda limits=[0.1 20] bins=41", restore_neutron=1)
+ AT (0, 0, 0.001) RELATIVE PREVIOUS
 
 /* These arms are just to ensure we get a good view of the monolith */
 COMPONENT Arm1 = Arm()
@@ -146,11 +154,14 @@ COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Hori
 COMPONENT MonND4 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Emission position / [m]", user2=SrcZ, username2="Z-component of position / [m]", options="user1 bins=201 limits=[-0.3,0.3], user2 bins=201 limits=[-0.3,0.3]", restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
 
+COMPONENT AutoTOFL = Monitor_nD(xwidth=XW, yheight=YH, options="tof limits=[0 15e-3] bins=51, lambda limits=[0.1 20] bins=41", restore_neutron=1)
+ AT (0, 0, 1) RELATIVE Source
+
 /* Measures brilliance of the "full" cold source */
 COMPONENT BrillmonCOLD = Brilliance_monitor(
     nlam = 101, nt = 101, filename = "brillCOLD", t_0 = -1000,
     t_1 =4e4, lambda_0 = lambdamin, lambda_1 = lambdamax,
-    Freq =14, toflambda=1 ,tofcuts=0, srcarea=(100*0.072*100*Yheight)*MC_GETPAR(Source, cos_cold), restore_neutron=1)
+    Freq =14, toflambda=1 ,tofcuts=0, srcarea=(100*0.072*100*Yheight), restore_neutron=1)
 WHEN(IsCold)  AT (0, 0, 1) RELATIVE Source
 
 /* Measures "collimated" brilliance of the cold source over fixed 6 cm wide area x central part vertically. */
@@ -165,7 +176,7 @@ COMPONENT BrillmonCOLD_COLL = Brilliance_monitor(
 COMPONENT BrillmonTHRM = Brilliance_monitor(
     nlam = 101, nt = 101, filename = "brillTHRM", t_0 = -1000,
     t_1 =4e4, lambda_0 = lambdamin, lambda_1 = lambdamax,
-    Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.108*100*Yheight)*MC_GETPAR(Source, cos_thermal), restore_neutron=1)
+    Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.108*100*Yheight), restore_neutron=1)
   WHEN (!IsCold) AT (0, 0, 1) RELATIVE Source
 
 /* Measures "collimated" brilliance of the thermal source over fixed 6 cm wide area (or smaller at beamlines no. 1,2) x central part vertically. */
