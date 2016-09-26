@@ -1,24 +1,23 @@
 /*******************************************************************************
-* Instrument: ESS_butterfly_test
+* Instrument: ESS_butterfly_MCPL_test
 *
 * %I
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
-* Date: 2016-08-24
+* Date: 2016-09-26
 * Origin: ESS
 * Release: McStas 2.4
 * Version: 0.1
 * %INSTRUMENT_SITE: ESS
 *
-* Test instrument for the updated BF1 butterfly moderator design
+* Test instrument for the updated BF1 butterfly moderator design using MCPL input
 *
 * %D
-* Test instrument for the updated BF1 butterfly moderator design.
+* Test instrument for the updated BF1 butterfly moderator design using MCPL input files.
 * 
 * The below example gives a 50-50 (statistics-wise) cold/thermal beam at beamline N10.
-* Example: mcrun -n1e6 ESS_butterfly_test.instr sector=N beamline=10 cold=0.5
+* Example: mcrun -n1e6 ESS_butterfly_MCPL_test.instr sector=N beamline=10 cold=0.5
 *
-* Was used to generate MCNP benchmarked output for the ESS_butterfly.comp - see 
-* <a href="http://ess_butterfly.mcstas.org">http://ess_butterfly.mcstas.org</a>
+* Assumes access to binary MCPL datasets in . named [sector][beamline].mcpl.gz, i.e. W8.mcpl.gz.
 *
 * %P
 * sector:        [str]  Defines the 'sector' of your instrument position. Valid values are "N","S","E" and "W"
@@ -38,7 +37,7 @@
 * Benchmarking website available at <a href="http://ess_butterfly.mcstas.org">http://ess_butterfly.mcstas.org</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ESS_butterfly_test(string sector="N",beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,int index=16,dist=0,cold=0.5,Yheight=0.03,delta=0)
+DEFINE INSTRUMENT ESS_butterfly_MCPL_test(string sector="N",int beamline=1,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,int index=8,dist=0,cold=1,Yheight=0.03,delta=0,thres=0.003,timescale=1)
 
 DECLARE
 %{
@@ -59,6 +58,16 @@ DECLARE
   double Emin,Emax;
   double EminTh=20, EmaxTh=100, EminC=0, EmaxC=20;
   double Eneutron;
+  /* 10 beamlines in sector N and E  - plus one location added for drawing */
+  double iBeamlinesN[] = { 30.0,  36.0,  42.0,  48.0,  54.0,  60.0,  66.0,  72.0,  78.0,  84.0,  90.0};
+  double iBeamlinesE[] = {-30.0, -36.0, -42.0, -48.0, -54.0, -60.0, -66.0, -72.0, -78.0, -84.0, -90.0};
+  /* 11 beamlines in sector S and W - plus one location added for drawing */
+  double iBeamlinesW[] = { 150.0,  144.7,  138.0,  132.7,  126.0,  120.7,  114.0,  108.7,  102.0,  96.7,  90.0,  84.0};
+  double iBeamlinesS[] = {-150.0, -144.7, -138.0, -132.7, -126.0, -120.7, -114.0, -108.7, -102.0, -96.7, -90.0, -84.0};
+  double* iBeamlines;
+  double ANGLE;
+  double DeltaX,DeltaZ;
+  char MCPLfile[128];
 %}
 
 INITIALIZE
@@ -83,35 +92,102 @@ INITIALIZE
     TCollmin=0.011;
     TCollmax=0.071;
   }
+  if (strcasestr(sector,"N")) {
+    iBeamlines=iBeamlinesN;
+    DeltaX=-0.0585; DeltaZ=0.0925;
+  } else if (strcasestr(sector,"W")) {
+    iBeamlines=iBeamlinesW;
+    DeltaX=0.0585; DeltaZ=0.0925;
+  } else if (strcasestr(sector,"S")) {
+    iBeamlines=iBeamlinesS;
+    DeltaX=0.0585; DeltaZ=-0.0925;
+  } else if (strcasestr(sector,"E")) {
+    iBeamlines=iBeamlinesE;
+    DeltaX=-0.0585; DeltaZ=-0.0925;
+  }
+  ANGLE=iBeamlines[beamline-1]-90;
+  sprintf(MCPLfile,"%s%i.mcpl.gz",sector,beamline);
+  printf("MCPLfile is %s\n",MCPLfile);
 %}
 
 TRACE
 
-COMPONENT origin = Progress_bar()
-AT (0, 0, 0) RELATIVE ABSOLUTE
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+COMPONENT Protonbeam1 = Arm ()
+ AT (0,0,0) ABSOLUTE
+ ROTATED (0, -ANGLE, 0) ABSOLUTE
+
+COMPONENT Protonbeam2 = Arm ()
+ AT (-DeltaX,0,-DeltaZ) RELATIVE PREVIOUS
+
+COMPONENT vinROT2 = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+  ROTATED (0,-90,0) RELATIVE PREVIOUS
+
+COMPONENT vinROT1 = Arm()
+AT(0,0,0) RELATIVE PREVIOUS
+  ROTATED (-90,0,0) RELATIVE PREVIOUS
+
+/* The above rotations and the translation of the MCPL_input puts the MCNP point of origin correctly */
+COMPONENT vin = MCPL_input(filename=MCPLfile,verbose=1)
+AT(0,0,-0.137) RELATIVE PREVIOUS
+EXTEND %{
+  if(p>mcipthres) {ABSORB;}
+  else {SCATTER;}
+  t*=mciptimescale;
+%}
+
+/* These two spherical monitors can be used to visualise MCNP and McStas orientation of the beam */
+/* COMPONENT Sphere1 = PSD_monitor_4PI(filename="nonrotated", radius=2.2,restore_neutron=1) */
+/* AT (0,0,0) RELATIVE vin */
+
+/* COMPONENT Sphere0 = PSD_monitor_4PI(filename="rotated", radius=2.2,restore_neutron=1) */
+/* AT (0,0,0) RELATIVE PREVIOUS */
+/*   ROTATED (0,0,0) ABSOLUTE */
 
 /* Focusing for this use of the source is a little unphysical: 1x1cm @ 1m ~ 1e-4 steradian. To be useful in a "proper" instrument, you should of course illuminate your beamport fully!*/
 COMPONENT Source = ESS_butterfly(sector=sector,beamline=beamline,Lmin=Lmin,Lmax=Lmax,c_performance=c_performance,t_performance=t_performance,dist=dist,target_index=index,cold_frac=cold, yheight=Yheight,
 				   focus_xw=0.01, focus_yh=0.01)
-AT (0,0,0) ABSOLUTE
+  WHEN (0==1) AT (0,0,0) ABSOLUTE
+  ROTATED (0, 0, 0) ABSOLUTE
+
+COMPONENT BackTrace = Shape(xwidth=0.3,yheight=0.3)
+  AT (0,0,0.08) RELATIVE Source
 EXTEND %{
-  /* Various logical flags for measuring brilliances etc. below */
-  IsCold=iscold;
-  SurfSign=surf_sign;
+  /* Propagate back to a small rectangle in front of moderators */
+
+  ALLOW_BACKPROP;
+  PROP_Z0;
+  SCATTER;
+  
+  /* Remove neutrons that are not from around the moderators */
+  if (fabs(x)>0.15 || fabs(y)>0.05) {
+    ABSORB;
+  }
+  double myL = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
+  if (myL<mcipLmin || myL>mcipLmax) {
+    ABSORB;
+  }
+  t+=rand01()*ESS_SOURCE_DURATION;
+  if (t>3*ESS_SOURCE_DURATION) {
+    ABSORB;
+  }
+  /* Measure location and energy for later use */
   SrcX=x;SrcY=y;SrcZ=z;
-  WL=lambda;
-  CCold=cos_cold;
-  CThermal=cos_thermal;
   Eneutron=VS2E*(vx*vx + vy*vy + vz*vz);
-  if (IsCold) {
+  if (Eneutron>EminTh) {
     Emin=EminC;Emax=EmaxC;
+    IsCold=0;
   } else {
     Emin=EminTh;Emax=EmaxTh;
+    IsCold=1;
   }
 %}
 
 COMPONENT AutoTOFL0 = Monitor_nD(xwidth=XW, yheight=YH, options="tof limits=[0 5e-3] bins=51, lambda limits=[0.1 20] bins=41", restore_neutron=1)
- AT (0, 0, 0.08) RELATIVE PREVIOUS
+ AT (0, 0, 0.001) RELATIVE PREVIOUS
 
 COMPONENT AutoTOF0 = Monitor_nD(xwidth=XW, yheight=YH, options="tof limits=[0 5e-3] bins=51", restore_neutron=1)
  AT (0, 0, 0.001) RELATIVE PREVIOUS
@@ -119,25 +195,25 @@ COMPONENT AutoTOF0 = Monitor_nD(xwidth=XW, yheight=YH, options="tof limits=[0 5e
 COMPONENT AutoL0 = Monitor_nD(xwidth=XW, yheight=YH, options="lambda limits=[0.1 20] bins=41", restore_neutron=1)
  AT (0, 0, 0.001) RELATIVE PREVIOUS
 
-COMPONENT PSD0= Monitor_nD(filename="flat",xwidth=0.4,yheight=0.15,options="x limits=[-0.2 0.2] bins=90, y limits=[-0.07 0.07] bins=90,", restore_neutron=1)
+COMPONENT PSD0=PSD_monitor(filename="flat",xwidth=0.4,yheight=0.15, restore_neutron=1)
   AT (0,0,0.001) RELATIVE PREVIOUS
 
-COMPONENT PSD1=Monitor_nD(filename="flatC",xwidth=0.4,yheight=0.15,options="x limits=[-0.2 0.2] bins=90, y limits=[-0.07 0.07] bins=90,", restore_neutron=1)
-WHEN (IsCold || Eneutron<=EmaxC) AT (0,0,0.001) RELATIVE PREVIOUS
+  COMPONENT PSD1=PSD_monitor(filename="flatC",xwidth=0.4,yheight=0.15, restore_neutron=1)
+WHEN (Eneutron<EminTh) AT (0,0,0.001) RELATIVE PREVIOUS
 
-COMPONENT PSD2=Monitor_nD(filename="flatT",xwidth=0.4,yheight=0.15,options="x limits=[-0.2 0.2] bins=90, y limits=[-0.07 0.07] bins=90,", restore_neutron=1)
-  WHEN ((!IsCold) || Eneutron>=EminTh) AT (0,0,0.001) RELATIVE PREVIOUS
+  COMPONENT PSD2=PSD_monitor(filename="flatT",xwidth=0.4,yheight=0.15, restore_neutron=1)
+WHEN (Eneutron>=EminTh) AT (0,0,0.001) RELATIVE PREVIOUS
 
 /* These arms are just to ensure we get a good view of the monolith */
 COMPONENT Arm1 = Arm()
-  AT (0,0,2) RELATIVE ABSOLUTE
+  AT (0,0,2) RELATIVE Source
 
 COMPONENT Arm2 = Arm()
-  AT (0,0,3.5) RELATIVE ABSOLUTE
+  AT (0,0,3.5) RELATIVE Source
 
 /* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
 COMPONENT MonND1 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
-  WHEN(Eneutron<=Emax && Eneutron>=Emin) AT (0, 0, 1) RELATIVE Source
+AT (0, 0, 3.5) RELATIVE Source
 
 /* Measures the horizontal emmision coordinate of all neutrons - gives the "apparent width" of the moderators as seen from the beamline */
 COMPONENT CWidth = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Horizontal position / [m]", options=options1, restore_neutron=1)
@@ -162,6 +238,9 @@ COMPONENT MonND3 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Hori
 /* 2D-plot of (x,z) emmision coordinates for all neutrons */
 COMPONENT MonND4 = Monitor_nD(xwidth=XW, yheight=YH, user1=SrcX, username1="Emission position / [m]", user2=SrcZ, username2="Z-component of position / [m]", options="user1 bins=201 limits=[-0.3,0.3], user2 bins=201 limits=[-0.3,0.3]", restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
+  EXTEND %{
+    //printf("Time is %g\n",t);
+%}
 
 COMPONENT AutoTOFL = Monitor_nD(xwidth=XW, yheight=YH, options="tof limits=[0 15e-3] bins=51, lambda limits=[0.1 20] bins=41", restore_neutron=1)
  AT (0, 0, 1) RELATIVE Source
@@ -176,10 +255,10 @@ WHEN(IsCold)  AT (0, 0, 1) RELATIVE Source
 /* Measures "collimated" brilliance of the cold source over fixed 6 cm wide area x central part vertically. */
 /* Used for calibration of performance wrt. MCNP BF1 output, see http://ess_butterfly.mcstas.org */
 COMPONENT BrillmonCOLD_COLL = Brilliance_monitor(
-    nlam = 101, nt = 101, filename = "brillCOLD_COLL", t_0 = -1000,
+    nlam = 101, nt = 101, filename = "brillCOLD_COLL", t_0 = 0,
     t_1 = 4e4, lambda_0 = lambdamin, lambda_1 = lambdamax,
     Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.06*100*2*Yheight/2.5), restore_neutron=1)
-  WHEN(SurfSign==-1 && IsCold && fabs(SrcY)<Yheight/2.5 && fabs(SrcX) < (0.071+delta) && fabs(SrcX) > (0.011+delta))  AT (0, 0, 1) RELATIVE Source
+  WHEN(IsCold && fabs(SrcY)<Yheight/2.5 && fabs(SrcX) < (0.071+delta) && fabs(SrcX) > (0.011+delta))  AT (0, 0, 1) RELATIVE Source
 
 /* Measures brilliance of the "full" thermal source */
 COMPONENT BrillmonTHRM = Brilliance_monitor(
@@ -194,24 +273,24 @@ COMPONENT BrillmonTHRM_COLL = Brilliance_monitor(
     nlam = 101, nt = 101, filename = "brillTHRM_COLL", t_0 = -1000,
     t_1 =4e4, lambda_0 = lambdamin, lambda_1 = lambdamax,
       Freq =14, toflambda=1,tofcuts=0, srcarea=(100*0.06*100*2*Yheight/2.5), restore_neutron=1)
-  WHEN (SurfSign==1 && (!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)>(TCollmin+delta) && fabs(SrcX)<(TCollmax+delta))  AT (0, 0, 1) RELATIVE Source
+  WHEN ((!IsCold) && fabs(SrcY)<Yheight/2.5 && fabs(SrcX)>(TCollmin+delta) && fabs(SrcX)<(TCollmax+delta))  AT (0, 0, 1) RELATIVE Source
 
 /* /\* Uncomment these helper-arms to view "full" monolith *\/ */
 
-/* COMPONENT DummyArm1 = Arm() */
-/*   AT (6,0,6) ABSOLUTE */
+COMPONENT DummyArm1 = Arm()
+  AT (6,0,6) ABSOLUTE
 
-/* COMPONENT DummyArm2 = Arm() */
-/*   AT (-6,0,6) ABSOLUTE */
+COMPONENT DummyArm2 = Arm()
+  AT (-6,0,6) ABSOLUTE
 
-/* COMPONENT DummyArm3 = Arm() */
-/*   AT (-6,0,-6) ABSOLUTE */
+COMPONENT DummyArm3 = Arm()
+  AT (-6,0,-6) ABSOLUTE
 
-/* COMPONENT DummyArm4 = Arm() */
-/*   AT (6,0,-6) ABSOLUTE */
+COMPONENT DummyArm4 = Arm()
+  AT (6,0,-6) ABSOLUTE
 
-/* COMPONENT DummyArm5 = Arm() */
-/*   AT (6,0,6) ABSOLUTE */
+COMPONENT DummyArm5 = Arm()
+  AT (6,0,6) ABSOLUTE
 
 
 FINALLY
