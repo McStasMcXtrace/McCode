@@ -80,7 +80,7 @@ if(WINDOWS)
     WORLD_READ WORLD_EXECUTE
   )
 
-  foreach(NAME "__init__.py" "log.py" "mcstas.py" "optimisation.py")
+  foreach(NAME "__init__.py" "log.py" "mccode.py" "optimisation.py")
     install(
       FILES "${PROJECT_SOURCE_DIR}/${NAME}"
       DESTINATION "${lib}/${TOOLS_NAME}"
@@ -89,7 +89,7 @@ if(WINDOWS)
 endif()
 
 if(NOT WINDOWS)
-  foreach(NAME "__init__.py" "log.py" "mcstas.py" "optimisation.py")
+  foreach(NAME "__init__.py" "log.py" "mccode.py" "optimisation.py")
     install(
       FILES "${PROJECT_SOURCE_DIR}/${NAME}"
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"

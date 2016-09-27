@@ -5,7 +5,7 @@ from optparse import OptionParser, OptionGroup, OptionValueError
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 
-from mcstas import McStas
+from mccode import McStas
 from optimisation import Scanner, LinearInterval, MultiInterval
 
 #import config

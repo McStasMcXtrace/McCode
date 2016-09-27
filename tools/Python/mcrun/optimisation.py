@@ -2,7 +2,7 @@ from os.path import basename
 from log import McRunException, getLogger
 from datetime import datetime
 from decimal import Decimal
-from mcstas import McStasResult
+from mccode import McStasResult
 from os.path import join 
 
 LOG = getLogger('optimisation')
