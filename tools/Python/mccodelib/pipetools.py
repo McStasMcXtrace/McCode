@@ -72,11 +72,12 @@ class PromptState(LineHandlerState):
             return
         
         # prompt case
-        print(line)
+        print(line.rstrip('\n'))
         self.databox.add_comment(line)
         if re.search('\]:', line):
             if not self.args['use_defaultpars']:
-                self.process.stdin.write(raw_input() + '\n')
+                input = raw_input()
+                self.process.stdin.write(input + '\n')
             else:
                 self.process.stdin.write('\n')
     
@@ -156,12 +157,17 @@ class ParticlesTraceState(LineHandlerState):
         else:
             self.databox.add_comment(line)
 
+class ThreadException(Exception):
+    pass
+
 class TraceReader(Thread):
     def _setcurrent(self, current, line):
         self.current = current
         current.add_line(line)
     
     def __init__(self, cmd, inspect=None, use_defaultpars=False):
+        self.exc_obj = None
+        
         # set up state machine
         allstates = {}
         databox = DataBox()
@@ -178,28 +184,37 @@ class TraceReader(Thread):
         self.cmd = cmd
         
         Thread.__init__(self)
-    
+        self.daemon = True
+        
     def run(self):
-        ''' create a process given command and read, print and write to it depending on state '''
-        process = Popen(self.cmd, shell=True,
-                        stdout=PIPE,
-                        stderr=None,
-                        stdin=PIPE
-                        )
-        
-        # a special case: give prompt state access to the process if default_pars are to be used
-        self.allstates['prompt'].setprocess(process)
-        
-        while process.poll() == None:
-            stdoutdata = process.stdout.readline()
-            #stderrdata = process.stderr.readline()
-            self.current.add_line(stdoutdata)
-        
-        # empty process buffer
-        for stdoutdata in process.stdout:
-            self.current.add_line(stdoutdata)
-        
-        self.databox.set_particlesdone()
+        try:
+            ''' create a process given command and read, print and write to it depending on state '''
+            process = Popen(self.cmd, shell=True,
+                            stdout=PIPE,
+                            stderr=PIPE,
+                            stdin=PIPE
+                            )
+            
+            # special case: give the prompt state access to process to allow automation flag
+            self.allstates['prompt'].setprocess(process)
+            
+            while process.poll() == None:
+                stdoutdata = process.stdout.readline()
+                self.current.add_line(stdoutdata)
+            
+            # empty process buffer
+            for stdoutdata in process.stdout:
+                self.current.add_line(stdoutdata)
+            for stderrdata in process.stderr:
+                self.current.add_line(stderrdata)
+            
+            if process.poll() == 0:
+                self.databox.set_particlesdone()
+            else:
+                raise ThreadException()
+            
+        except Exception as e:
+            self.exc_obj = e
 
 class McrunPipeMan(object):
     '''
@@ -218,18 +233,19 @@ class McrunPipeMan(object):
     def start_pipe(self):
         self.reader.start()
     
-    def terminate(self):
-        if self.reader.isRunning():
-            self.reader.terminate()
-    
     def join(self):
-        self.reader.join()
+        self.reader.join(1000)
+        if self.reader.exc_obj:
+            raise self.reader.exc_obj
     
     def read_particles(self):
+        print "hest"
         return self.reader.databox.get_particles()
     
     def read_instrdef(self):
+        print "hest"
         return self.reader.databox.get_instrdef()
     
     def read_comments(self):
+        print "hest"
         return self.reader.databox.get_comments()

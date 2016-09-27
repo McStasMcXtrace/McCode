@@ -43,7 +43,7 @@ class McDisplayReader(object):
         if args.instr_options:
             for o in args.instr_options:
                 cmd = cmd + ' ' + o
-
+        
         self.args = args
         self.n = n
         self.dir = dir
@@ -51,26 +51,22 @@ class McDisplayReader(object):
         self.cmd = cmd
         self.pipeman = McrunPipeMan(cmd, inspect=args.inspect, send_enter=args.default)
     
-    def terminate(self):
-        '''  '''
-        self.pipeman.terminate()
-
     def read_instrument(self):
         ''' starts a pipe to mcrun given cmd, waits for instdef and reads, returning the parsed instrument '''
         self.pipeman.start_pipe()
         self.pipeman.join()
-
+        
         instrdef = self.pipeman.read_instrdef()
-
+        
         if self.debug:
             file_save(instrdef, 'instrdata')
-
+        
         instrparser = InstrTraceParser(instrdef)
         instrbuilder = InstrObjectConstructor(instrparser.parsetree)
         instrument = instrbuilder.build_instr()
-
+        
         return instrument
-
+    
     def read_particles(self):
         ''' waits for pipeman object to finish, then read and parse neutron data '''
         print "reading particle data..."
