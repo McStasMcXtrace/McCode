@@ -773,6 +773,8 @@ class McInsertComponentDialog(QtGui.QDialog):
         self.__wParams = []
         for i in range(len(comp_parser.pars)):
             par = McComponentParser.McComponentParInfo(comp_parser.pars[i])
+            if par.par_name == "string filename":
+                par.par_name = "filename"
 
             # i'th line/row of the UI
             y = i
