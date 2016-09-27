@@ -218,14 +218,18 @@ class McrunPipeMan(object):
     def start_pipe(self):
         self.reader.start()
     
+    def terminate(self):
+        if self.reader.isRunning():
+            self.reader.terminate()
+    
     def join(self):
         self.reader.join()
-
+    
     def read_particles(self):
         return self.reader.databox.get_particles()
     
     def read_instrdef(self):
         return self.reader.databox.get_instrdef()
-
+    
     def read_comments(self):
         return self.reader.databox.get_comments()

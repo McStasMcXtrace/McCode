@@ -175,4 +175,9 @@ if __name__ == '__main__':
     if len(unknown)>0:
         args.instr_options = unknown
     
-    main(args)
+    try:
+        main(args)
+    
+    except Exception as e:
+        print "exception caught"
+

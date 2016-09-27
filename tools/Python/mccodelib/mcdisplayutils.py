@@ -50,6 +50,10 @@ class McDisplayReader(object):
         self.debug = debug
         self.cmd = cmd
         self.pipeman = McrunPipeMan(cmd, inspect=args.inspect, send_enter=args.default)
+    
+    def terminate(self):
+        '''  '''
+        self.pipeman.terminate()
 
     def read_instrument(self):
         ''' starts a pipe to mcrun given cmd, waits for instdef and reads, returning the parsed instrument '''
