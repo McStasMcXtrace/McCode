@@ -361,7 +361,7 @@ class McGuiState(QtCore.QObject):
             runstr = mccode_config.configuration["MCRUN"] + mcrunparms + os.path.basename(self.__instrFile) + ' -d ' + output_dir
             self.__dataDir = output_dir
         else:
-            runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files '
+            runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files'
             self.__dataDir = "None"
         
         # neutron count
@@ -392,6 +392,10 @@ class McGuiState(QtCore.QObject):
             runstr = runstr + ' ' + p[0] + '=' + p[1]
         
         print('Running: '+runstr)
+        
+        # 
+        if simtrace == 1:
+            runstr = runstr + '\&'
 
         # Ensure assembled runstr is a string, not a QString 
         runstr = str(runstr)
@@ -705,6 +709,8 @@ class McGuiAppController():
     
     def handleOpenInstrument(self):
         instr = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
+        if not instr:
+            return
         self.state.checkInstrFileCandidate(instr)
         
         if instr:

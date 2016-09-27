@@ -12,9 +12,9 @@ from mccodelib import mccode_config
 from mccodelib import McGuiUtils
 from mccodelib import McComponentParser
 
-
-''' View class containing all windows and dialogs.
-ALL explicit ui widget updates MUST be handled by this class
+'''
+View class containing windows and dialogs as delegates.
+All ui widget updates are handled here.
 '''
 class McView(object):
     def __init__(self):
