@@ -13,6 +13,8 @@ fi
 ./mkdist mcxtrace-tools-python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" linux64 "" -- src bin
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 "" -- src bin
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" linux64 "" -- src bin
+./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" linux64 "" -- src bin
+./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" linux64 "" -- src bin
 ./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux64 "" -- src bin
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" linux64 "o" -- src bin
 
@@ -23,13 +25,15 @@ fi
 ./mkdist mcxtrace-tools-python-mxplot-chaco $1 tools/Python/mcplot/chaco/ "" linux32 "" -- src bin
 ./mkdist mcxtrace-tools-python-mxplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux32 "" -- src bin
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" linux32 "" -- src bin
+./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" linux32 "" -- src bin
+./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" linux32 "" -- src bin
 ./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 "" -- src bin
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" linux32 "o" -- src bin
 
 #build metapackages?
 if [ "x$2" != "x" ]; then
   cd meta-pkgs/src
-        
+
   outfile=mcxtrace-${1}-UNIX-src.tar
   if [ -e $outfile ]; then
     rm $outfile;

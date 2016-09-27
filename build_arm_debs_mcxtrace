@@ -18,5 +18,6 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcxtrace-tools-matlab-mxplot $1 tools/matlab/mcplot/ "" armlinux32 "" -- deb
 ./mkdist mcxtrace-tools-python-mxrun $1 tools/Python/mcrun/ "" armlinux32 "" -- deb
 ./mkdist mcxtrace-tools-python-mxgui $1 tools/Python/mcgui/ "" armlinux32 "" -- deb
+./mkdist mcxtrace-tools-python-mccodelib $1 tools/Python/mccodelib/ "" armlinux32 "" -- deb
 ./mkdist mcxtrace-tools-python-mxdisplay $1 tools/Python/mcdisplay/x3d/ "" armlinux32 "" -- deb
 ./mkdist mcxtrace-manuals $1 doc/manuals/mcxtrace/ "" armlinux32 "o" -- deb

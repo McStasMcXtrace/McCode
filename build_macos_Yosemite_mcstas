@@ -22,7 +22,7 @@ fi
 ./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mac_yosemite "" -- OSXpkg
-./mkdist mcstas-tools-python-mclib $1 tools/Python/mclib/ "" mac_yosemite "" -- OSXpkg
+./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-x3d $1 tools/Python/mcdisplay/x3d/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mac_yosemite "" -- OSXpkg
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac_yosemite "" -- OSXpkg
@@ -43,7 +43,7 @@ if [ "x$2" != "x" ]; then
     ./mkdist mcstas-app $1 support/MacOSX/McCode.app/ "" mac_yosemite "" -- OSXpkg
 
     OSXVER=`sw_vers -productVersion|cut -f -2 -d.|sed -e 's/\./\_/g'`
-    
+
     cd dist
     DISTDIR=$PWD
     # Use the Tk for perl5.18 for Yosemite
@@ -54,10 +54,10 @@ if [ "x$2" != "x" ]; then
     # A hack for creating a metapackage
     cp -rp meta-pkgs/OSX/McStas-Metapackage_10_10.pmdoc dist/McStas-Metapackage.pmdoc
     cp -rp meta-pkgs/OSX/mcstas_logos_etc dist/logos_etc
-    cd dist/McStas-Metapackage.pmdoc    
+    cd dist/McStas-Metapackage.pmdoc
     REGEX="s/@VERSION@/${1}/g"
     REGEXDIR="s+@DISTDIR@+${DISTDIR}+g"
-    
+
     find . -name \*xml -exec sed -i\.bak $REGEX \{\} \;
     find . -name \*xml -exec sed -i\.bak2 $REGEXDIR \{\} \;
     rm *.bak
