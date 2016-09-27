@@ -11,7 +11,7 @@ from decimal import Decimal
 
 import sys
 sys.path.append(join(dirname(__file__), '..'))
-from mclib import mccode_config
+from mccodelib import mccode_config
 
 
 from log import getLogger

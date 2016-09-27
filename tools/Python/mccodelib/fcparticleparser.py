@@ -3,7 +3,7 @@
 '''
 import re
 from instrgeom import RayBundle, ParticleStory, ParticleCompGroup, ParticleState
-from mclib.flowchart import FCNTerminal, FCNDecisionBool, FCNDecisionMulti, FCNProcess, FlowChartControl
+from flowchart import FCNTerminal, FCNDecisionBool, FCNDecisionMulti, FCNProcess, FlowChartControl
 
 # terminal nodes implementation
 def t_begin(args):

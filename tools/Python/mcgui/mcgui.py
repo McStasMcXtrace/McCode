@@ -2,9 +2,8 @@
 '''
 mgcui program 
 
-Initial version written during Winter/spring of 2015
-
-@author: jaga
+Initial version: spring of 2015.
+Release version: fall 2016.
 '''
 import sys
 import os
@@ -17,9 +16,9 @@ from viewclasses import McView
 from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from mclib import mccode_config
-from mclib import McGuiUtils
-from mclib import McComponentParser
+from mccodelib import mccode_config
+from mccodelib import McGuiUtils
+from mccodelib import McComponentParser
 
 ''' Message emitter
 Status and message log and signalling.

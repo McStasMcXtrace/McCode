@@ -13,9 +13,9 @@ from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from mclib import mccode_config
-from mclib.mcdisplayutils import McDisplayReader
-from mclib.instrgeom import Vector3d
+from mccodelib import mccode_config
+from mccodelib.mcdisplayutils import McDisplayReader
+from mccodelib.instrgeom import Vector3d
 
 class SimpleWriter(object):
     ''' a minimal, django-omiting "glue file" writer tightly coupled to some comments in the file template.html '''
