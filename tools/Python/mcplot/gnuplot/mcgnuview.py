@@ -3,11 +3,15 @@
 #  PyQt-based user interface for mcplot-gnuplot.
 #
 import sys
+import signal
 from PyQt4 import QtGui, QtCore
 from mcgnuwidgets import Ui_McGnuWindow
 
 # setup and start the gnuplot app
 def startGui(plotter, log_scale=False):
+    # enable ctr-C kill
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    
     app = QtGui.QApplication(sys.argv)
     
     gnuview = McGnuView()
