@@ -62,16 +62,16 @@
 *     kxy kyz kxz           [Angs-1] Radial wavevector in xy, yz and xz plane
 *     vxy vyz vxz           [m/s]    Radial velocity in xy, yz and xz plane
 *     t time                [s]      Time of Flight
-*     energy omega          [meV]
-*     lambda wavelength     [Angs]
+*     energy omega          [keV]    energy of photon
+*     lambda wavelength     [Angs]   wavelength of photon
 *     p intensity flux      [n/s] or [n/cm^2/s]
 *     ncounts               [1]
 *     sx sy sz              [1]      Spin
 *     vdiv ydiv dy          [deg]    vertical divergence (y)
 *     hdiv divergence xdiv  [deg]    horizontal divergence (x)
 *     angle                 [deg]    divergence from <z> direction
-*     theta longitude       [deg]    longitude (x/z) [for sphere and cylinder]
-*     phi   lattitude       [deg]    lattitude (y/z) [for sphere and cylinder]
+*     theta longitude       [deg]    longitude (x/z) for sphere and cylinder
+*     phi   lattitude       [deg]    lattitude (y/z) for sphere and cylinder
 *
 *     user user1            will monitor the [Mon_Name]_Vars.UserVariable{1|2|3}
 *     user2 user3           to be assigned in an other component (see below)
@@ -83,7 +83,7 @@
 *     all  {limits|bins|auto}   To set all limits or bins values or auto mode
 *     binary {float|double}     with 'source' option, saves in compact files
 *     bins=[bins=20]            Number of bins in the detector along dimension
-*     borders                   To also count off-limits photon
+*     borders                   To also count off-limits photons
 *                                (X < min or X > max)
 *     capture                   weight by lambda/lambda(2200m/s) capture flux
 *     exclusive                 absorb photon out of monitor limits
@@ -211,11 +211,15 @@
 * %End
 ******************************************************************************/
 DEFINE COMPONENT Monitor_nD
-DEFINITION PARAMETERS (string options=0, string filename=0,string geometry=0, 
-  user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX, username1=0, username2=0,username3=0)
-SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_xray=0, radius=0)
+DEFINITION PARAMETERS (user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX)
+SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, 
+  xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, 
+  bins=0, min=-1e40, max=1e40, restore_xray=0, radius=0,
+  string options="NULL", string filename="NULL",string geometry="NULL",
+  string username1="NULL", string username2="NULL", string username3="NULL"
+  )
 /* these are protected C variables */
-OUTPUT PARAMETERS (DEFS, Vars, detector)
+OUTPUT PARAMETERS (DEFS, Vars, detector,offdata)
   /* Xray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 SHARE
@@ -253,33 +257,49 @@ INITIALIZE
   else if (min > -FLT_MAX) { sprintf(tmp, " all min=%g", min); strcat(Vars.option, tmp); }
   else if (max <  FLT_MAX) { sprintf(tmp, " all max=%g", max); strcat(Vars.option, tmp); }
 
-  strncpy(Vars.UserName1, username1 && strlen(username1) ? username1 : "", 128);
-  strncpy(Vars.UserName2, username2 && strlen(username2) ? username2 : "", 128);
-  strncpy(Vars.UserName3, username3 && strlen(username3) ? username3 : "", 128);
+  strncpy(Vars.UserName1, 
+    username1 && strlen(username1) && strcmp(username1, "0") && strcmp(username1, "NULL") ? 
+    username1 : "", 128);
+  strncpy(Vars.UserName2, 
+    username2 && strlen(username2) && strcmp(username2, "0") && strcmp(username2, "NULL") ? 
+    username2 : "", 128);
+  strncpy(Vars.UserName3, 
+    username3 && strlen(username3) && strcmp(username3, "0") && strcmp(username3, "NULL") ? 
+    username3 : "", 128);
   if (radius) { 
     xwidth = zdepth = 2*radius;
-    if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana")) 
+    if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana") && !strstr(Vars.option, "sphere")) 
       strcat(Vars.option, " banana");
     else if (!yheight && !strstr(Vars.option ,"sphere")) {
       strcat(Vars.option, " sphere");
       yheight=2*radius;
     }
   }
-  
-  if (geometry && strlen(geometry))
-    if (!off_init(  geometry, xwidth, yheight, zdepth, 0, &offdata )) {
-      fprintf(stderr,"Warning(%s): off-intersections are experimental with xrays\n",NAME_CURRENT_COMP);
-      printf("Monitor_nD: %s could not initiate the OFF geometry. \n"
-             "            Defaulting to normal Monitor dimensions.\n", NAME_CURRENT_COMP);
+  int offflag=0;
+  if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
+    if (!off_init(  geometry, xwidth, yheight, zdepth, 1, &offdata )) {
+      printf("Monitor_nD: %s could not initiate the OFF geometry %s. \n"
+             "            Defaulting to normal Monitor dimensions.\n", 
+             NAME_CURRENT_COMP, geometry);
       strcpy(geometry, "");
+    } else {
+      offflag=1;
     }
   
-  if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax && !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
+  if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax && 
+    !strstr(Vars.option, "previous") && (!geometry || !strlen(geometry)))
     exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous, geometry).\n", NAME_CURRENT_COMP));
 
-  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax);
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax,offflag);
 
-  if (filename != NULL) strncpy(Vars.Mon_File, filename, 128);
+  if (Vars.Flag_OFF) {
+    offdata.mantidflag=Vars.Flag_mantid;
+    offdata.mantidoffset=Vars.Coord_Min[Vars.Coord_Number-1];
+  }
+
+  
+  if (filename && strlen(filename) && strcmp(filename,"NULL") && strcmp(filename,"0"))
+    strncpy(Vars.Mon_File, filename, 128);
 
   /* check if user given filename with ext will be used more than once */
   if ( ((Vars.Flag_Multiple && Vars.Coord_Number > 1) || Vars.Flag_List) && strchr(Vars.Mon_File,'.') )
@@ -289,9 +309,11 @@ INITIALIZE
   detector.m = 0;
   
 #ifdef USE_MPI
+MPI_MASTER(
   if (strstr(Vars.option, "auto") && mpi_node_count > 1)
     printf("Monitor_nD: %s is using automatic limits option 'auto' together with MPI.\n"
            "WARNING     this may create incorrect distributions (but integrated flux will be right).\n", NAME_CURRENT_COMP);
+);
 #endif
 %}
 
@@ -308,21 +330,41 @@ TRACE
   if (user2 != FLT_MAX) Vars.UserVariable2 = user2;
   if (user3 != FLT_MAX) Vars.UserVariable3 = user3;
 
-  if (geometry && strlen(geometry))
+  /* this is done automatically
+    STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  */
+  
+  if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
   {
     /* determine intersections with object */
-    intersect = off_intersect(&l0, &l1, NULL, NULL,
+    intersect = off_x_intersect(&l0, &l1, NULL, NULL,
        x,y,z, kx, ky, kz, offdata );
   }
-  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
+  else if ( (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE)
+            || (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK) ) /* square xy or disk xy */
   {
+    // propagate to xy plane and find intersection
+    // make sure the event is recoverable afterwards
+    t0 = t;
+    ALLOW_BACKPROP;
     PROP_Z0;
-    intersect = (x>=Vars.mxmin && x<=Vars.mxmax && y>=Vars.mymin && y<=Vars.mymax);
-  }
-  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK)   /* disk xy */
-  {
-    PROP_Z0;
-    intersect = ((x*x + y*y) <= Vars.Sphere_Radius*Vars.Sphere_Radius);
+    if ( (t>=t0) && (z==0.0) ) // forward propagation to xy plane was successful
+    {
+      if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE)
+      {
+        // square xy
+        intersect = (x>=Vars.mxmin && x<=Vars.mxmax && y>=Vars.mymin && y<=Vars.mymax);
+      }
+      else
+      {
+        // disk xy
+        intersect = (SQR(x) + SQR(y)) <= SQR(Vars.Sphere_Radius);
+      }
+    }
+    else
+    {
+      intersect=0;
+    }
   }
   else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) /* sphere */
   {
@@ -332,11 +374,11 @@ TRACE
   else if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)) /* cylinder */
   {
     intersect = cylinder_intersect(&l0, &l1, x, y, z, kx, ky, kz, Vars.Sphere_Radius, Vars.Cylinder_Height);
-    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) intersect = 0; /* remove top/bottom for banana */
   }
   else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) /* box */
   {
-    intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, fabs(Vars.mxmax-Vars.mxmin), fabs(Vars.mymax-Vars.mymin), fabs(Vars.mzmax-Vars.mzmin));
+    intersect = box_intersect(&l0, &l1, x, y, z, kx, ky, kz, 
+                              fabs(Vars.mxmax-Vars.mxmin), fabs(Vars.mymax-Vars.mymin), fabs(Vars.mzmax-Vars.mzmin));
   }
   else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_PREVIOUS) /* previous comp */
   { intersect = 1; }
@@ -345,8 +387,17 @@ TRACE
   {
     if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) 
      || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)
-     || (geometry && strlen(geometry)) )
+     || (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL")) )
     {
+      /* check if we have to remove the top/bottom with BANANA shape */
+      if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) {
+        double y0,y1;
+        /* propagate to intersection point as temporary variable to check top/bottom */
+        y0 = y+l0; 
+        y1 = y+l1;
+        if (fabs(y0) >= Vars.Cylinder_Height/2*0.99) l0 = l1;
+        if (fabs(y1) >= Vars.Cylinder_Height/2*0.99) l1 = l0;
+      }
       if (l0 < 0 && l1 > 0)
         l0 = 0;  /* photon was already inside ! */
       if (l1 < 0 && l0 > 0) /* photon exit before entering !! */
@@ -356,8 +407,18 @@ TRACE
         PROP_DL(l1); /* l1 outgoing beam */
       else
         PROP_DL(l0); /* l0 incoming beam */
+      /* Final test if we are on lid / bottom of banana/sphere */
+      if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA || abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) {
+        if (fabs(y) >= Vars.Cylinder_Height/2*0.99) {
+          intersect=0;
+          Flag_Restore=1;
+        }
+      }
     }
-
+  }
+  
+  if (intersect)
+  {
     /* Now get the data to monitor: current or keep from PreMonitor */
     if (Vars.Flag_UsePreMonitor != 1)
     {
@@ -399,9 +460,6 @@ TRACE
     { ABSORB;
     }
     else
-    { Vars.Nsum++;
-      Vars.psum += pp;
-      Vars.p2sum += pp*pp;
       SCATTER;
     }
 
@@ -409,7 +467,12 @@ TRACE
       Flag_Restore = 1;
   } /* end if intersection */
   else {
-    if (Vars.Flag_Absorb && !Vars.Flag_parallel) ABSORB;
+    if (Vars.Flag_Absorb && !Vars.Flag_parallel)
+    {
+      // restore x-ray before absorbing for correct mcdisplay
+      RESTORE_XRAY(INDEX_CURRENT_COMP, x, y, z, kx, ky, kz, phi, t, Ex, Ey, Ez, p);
+      ABSORB;
+    }
     else Flag_Restore = 1;  /* no intersection, back to previous state */
   }
 
@@ -433,7 +496,12 @@ FINALLY
 
 MCDISPLAY
 %{
-  Monitor_nD_McDisplay(&DEFS, &Vars);
+  if (geometry && strlen(geometry) && strcmp(geometry,"0") && strcmp(geometry, "NULL"))
+  {
+    off_display(offdata);
+  } else {
+    Monitor_nD_McDisplay(&DEFS, &Vars);
+  }
 %}
 
 END

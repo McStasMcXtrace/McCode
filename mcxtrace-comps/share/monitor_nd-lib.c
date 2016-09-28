@@ -40,7 +40,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
   MCNUM ymin,
   MCNUM ymax,
   MCNUM zmin,
-  MCNUM zmax)
+  MCNUM zmax,
+  int offflag)
   {
     long carg = 1;
     char *option_copy, *token;
@@ -186,6 +187,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     else
       Vars->Flag_Shape        = DEFS->SHAPE_BOX;
 
+    if (Vars->Flag_OFF) {
+      Vars->Flag_Shape        = DEFS->SHAPE_OFF;
+    }
+    
     /* parse option string */
 
     option_copy = (char*)malloc(strlen(Vars->option)+1);
@@ -314,7 +319,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           Vars->Flag_Auto_Limits = 1;
           if (Flag_All) Flag_auto = -1;
           else          Flag_auto = 1;
-          iskeyword=1;  Flag_All=0; }
+          iskeyword=1; Flag_All=0; }
         if (!strcmp(token, "premonitor")) {
           Vars->Flag_UsePreMonitor = 1; iskeyword=1; }
         if (!strcmp(token, "3He_pressure") || !strcmp(token, "pressure")) {
@@ -606,6 +611,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     if (Vars->Flag_Shape == DEFS->SHAPE_BANANA) strcat(Vars->Monitor_Label, " (Banana)");
     if (Vars->Flag_Shape == DEFS->SHAPE_BOX)    strcat(Vars->Monitor_Label, " (Box)");
     if (Vars->Flag_Shape == DEFS->SHAPE_PREVIOUS) strcat(Vars->Monitor_Label, " (on PREVIOUS)");
+    if (Vars->Flag_Shape == DEFS->SHAPE_OFF) strcat(Vars->Monitor_Label, " (OFF geometry)");
     if ((Vars->Flag_Shape == DEFS->SHAPE_CYLIND) || (Vars->Flag_Shape == DEFS->SHAPE_BANANA) || (Vars->Flag_Shape == DEFS->SHAPE_SPHERE) || (Vars->Flag_Shape == DEFS->SHAPE_BOX))
     {
       if (strstr(Vars->option, "incoming"))
@@ -710,8 +716,13 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     {
       Vars->area = PI*Vars->Sphere_Radius*Vars->Sphere_Radius*1E4; /* disk shapes */
     }
-    if (Vars->area == 0 && abs(Vars->Flag_Shape) != DEFS->SHAPE_PREVIOUS)
-      Vars->Coord_Number = 0;
+
+
+    if (Vars->area == 0 && abs(Vars->Flag_Shape) != DEFS->SHAPE_PREVIOUS ) {
+      if (abs(Vars->Flag_Shape) != DEFS->SHAPE_OFF) {  
+	Vars->Coord_Number = 0;
+      }
+    }
     if (Vars->Coord_Number == 0 && Vars->Flag_Verbose)
       printf("Monitor_nD: %s is unactivated (0D)\n", Vars->compcurname);
     Vars->Cylinder_Height = fabs(Vars->mymax - Vars->mymin);
@@ -975,6 +986,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
             }
             XY += Coord_Index[j]*Vars->Coord_BinProd[j-1];
           }
+	  if (Vars->Flag_mantid && Vars->Flag_OFF && Vars->OFF_polyidx >=0) XY=Vars->OFF_polyidx;
           if (!flag_outside) XY += Vars->Coord_Min[i];
         }
         
@@ -1181,7 +1193,6 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
                   break;
                 }
                 Coord[i] += Coord_Index[j]*Vars->Coord_BinProd[j-1];
-                
               }
               if (!outsidebounds) {
                 Vars->Mon2D_Buffer[i+While_Buffer*(Vars->Coord_Number+1)] = Coord[i];
@@ -1587,38 +1598,53 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
       int issphere;
       issphere = (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE);
       width = (hdiv_max-hdiv_min)/NH;
-      if (!issphere) NV=1;
+      if (!issphere) NV=1; /* cylinder has vertical axis */
       else height= (vdiv_max-vdiv_min)/NV;
+      
+      /* check width and height of elements (sphere) to make sure the nb
+         of plates remains limited */
+      if (width < 10  && NH > 1) { width = 10;  NH=(hdiv_max-hdiv_min)/width; }
+      if (height < 10 && NV > 1) { height = 10; NV=(vdiv_max-vdiv_min)/height; }
+      
       mcdis_magnify("xyz");
       for(ih = 0; ih < NH; ih++)
         for(iv = 0; iv < NV; iv++)
         {
-          double theta0, phi0, theta1, phi1;
-          double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3;
-          phi0 = (hdiv_min+ width*ih)*DEG2RAD; /* in xz plane */
-          phi1 = (hdiv_min+ width*(ih+1))*DEG2RAD;
+          double theta0, phi0, theta1, phi1;          /* angles in spherical coordinates */
+          double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3; /* vertices at plate edges */
+          phi0 = (hdiv_min+ width*ih-90)*DEG2RAD;        /* in xz plane */
+          phi1 = (hdiv_min+ width*(ih+1)-90)*DEG2RAD;
           if (issphere)
           {
-            theta0= (90-vdiv_min+height* iv)   *DEG2RAD;
-            theta1= (90-vdiv_min+height*(iv+1))*DEG2RAD;
-            y0    = radius*cos(theta0);
-            y1    = radius*cos(theta1);
+            theta0= (vdiv_min+height* iv + 90)   *DEG2RAD; /* in vertical plane */
+            theta1= (vdiv_min+height*(iv+1) + 90)*DEG2RAD;
+            if (y0 < ymin) y0=ymin; 
+            if (y0 > ymax) y0=ymax;
+            if (y1 < ymin) y1=ymin; 
+            if (y1 > ymax) y1=ymax;
+            
+            y0 = -radius*cos(theta0);            /* z with Z vertical */
+            y1 = -radius*cos(theta1);
+            if (y0 < ymin) y0=ymin;
+            if (y0 > ymax) y0=ymax;
+            if (y1 < ymin) y1=ymin;
+            if (y1 > ymax) y1=ymax;
           } else {
             y0 = ymin;
             y1 = ymax;
             theta0=theta1=90*DEG2RAD;
           }
 
-          z0 = radius*sin(theta0)*cos(phi0);
-          x0 = radius*sin(theta0)*sin(phi0);
-          z1 = radius*sin(theta1)*cos(phi0);
-          x1 = radius*sin(theta1)*sin(phi0);
-          z2 = radius*sin(theta1)*cos(phi1);
-          x2 = radius*sin(theta1)*sin(phi1);
-          y2 = y1;
-          z3 = radius*sin(theta0)*cos(phi1);
-          x3 = radius*sin(theta0)*sin(phi1);
-          y3 = y0;
+          x0 = radius*sin(theta0)*cos(phi0); /* x with Z vertical */
+          z0 =-radius*sin(theta0)*sin(phi0); /* y with Z vertical */
+          x1 = radius*sin(theta1)*cos(phi0); 
+          z1 =-radius*sin(theta1)*sin(phi0);
+          x2 = radius*sin(theta1)*cos(phi1); 
+          z2 =-radius*sin(theta1)*sin(phi1);
+          x3 = radius*sin(theta0)*cos(phi1); 
+          z3 =-radius*sin(theta0)*sin(phi1);
+          y2 = y1; y3 = y0;
+
           mcdis_multiline(5,
             x0,y0,z0,
             x1,y1,z1,
