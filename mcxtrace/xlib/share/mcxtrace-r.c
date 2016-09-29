@@ -298,7 +298,7 @@ sphere_intersect(double *l0, double *l1, double x, double y, double z,
 } /* sphere_intersect */
 
 /******************************************************************************
- * elliosoid_intersect: Calculate intersection between a line and an ellipsoid.
+ * ellipsoid_intersect: Calculate intersection between a line and an ellipsoid.
  * They ellisoid is fixed by a set of half-axis (a,b,c) and a matrix Q, with the
  * columns of Q being the (orthogonal) vectors along which the half-axis lie.
  * This allows for complete freedom in orienting th eellipsoid.

@@ -373,6 +373,11 @@ simple_cpack() {
 	  echo "mkdist: simple_cpack: cd ${DEST} && ${CMD} make "
           cd "${DEST}" &&
               ${CMD} make ;
+	elif [ "${GEN}" = "APP" ]; then
+	  echo ""
+	  echo "mkdist: simple_cpack: cd ${DEST} && ${CMD} make "
+          cd "${DEST}" &&
+              ${CMD} make install;
         else
           echo ""
 	  echo "mkdist: simple_cpack: cd ${DEST} && ${CMD} cpack -G ${GEN}"
@@ -389,19 +394,22 @@ simple_cpack_file() {
         EXT="$3"
         HINT="$4"
 
-        OUT="${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}${EXT}"
-        WORK="${OUT}.work"
+	OUT="${DEST}/${NAME}-${MCCODE_VERSION}-${CHAIN}${EXT}"
+	WORK="${OUT}.work"
 
 	echo "mkdist: simple_cpack_file OUT=${OUT} GEN=${GEN} HINT=${HINT}"
 
         simple_cpack "${GEN}" "${WORK}" || exit 1;
 
+	if [ "${GEN}" = "NONE" ]; then
+	    exit 0;
+	fi
         # Remove old packed version if present
         rm -rf ${OUT}
-
+	
         # Pull out packed file and clean up
         find "${WORK}" -name "*${HINT}${EXT}" -exec mv {} "${OUT}" \;
-
+	
 	# If this is PackageMaker, the postinst script needs special handing
 	if [ "${GEN}" = "PackageMaker" ]; then
 	    POSTINST=`find "${WORK}" -name postinst`;
@@ -476,6 +484,12 @@ make_OSXpkg() {
     # Default to mac toolchain when something else was chosen
     sane_toolchain "grep mac" mac;
     simple_cpack_file PackageMaker "${NAME}-OSXpkg" ".pkg";
+}
+
+make_OSXapp() {
+    # Default to mac toolchain when something else was chosen
+    sane_toolchain "grep mac" mac;
+    simple_cpack_file APP "${NAME}-OSX" ".app";
 }
 
 make_nsis() {

@@ -1,22 +1,20 @@
-''' 
+'''
 mcgui UI.
-
-@author: jaga
 '''
 import sys
 import os
-import mccode_config
 import re
 from widgets import *
 from PyQt4 import Qsci
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from mclib import McGuiUtils
-from mclib import McComponentParser
+from mccodelib import mccode_config
+from mccodelib import McGuiUtils
+from mccodelib import McComponentParser
 
-
-''' View class containing all windows and dialogs.
-ALL explicit ui widget updates MUST be handled by this class
+'''
+View class containing windows and dialogs as delegates.
+All ui widget updates are handled here.
 '''
 class McView(object):
     def __init__(self):
@@ -26,23 +24,23 @@ class McView(object):
         self.ew = McCodeEditorWindow()
         # a hack to enable mw to close ew
         self.mw.ew = self.ew
-    
+
     def initMainWindowDynamicElements(self, args, callback):
         self.mw.initDynamicView(args, callback)
-        
+
     def initCodeEditorComponentMenu(self, args):
         self.ew.initComponentMenu(args)
-     
+
     def showMainWindow(self):
         self.mw.show()
 
     def showCodeEditorWindow(self, instr):
         self.ew.initCodeEditor(instr)
         self.ew.show()
-    
+
     def closeCodeEditorWindow(self):
         return self.ew.close()
-    
+
     ''' Update UI data
     '''
     def updateInstrument(self, labels, instr):
@@ -51,28 +49,28 @@ class McView(object):
         if str(labels[0]) == '':
             self.__ssd = None
         self.ew.initCodeEditor(instr)
-        
+
     def updateStatus(self, text=''):
         self.mw.ui.statusbar.showMessage(text)
-        
+
     def updateLog(self, text='', error=False):
         if error:
             self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('red'))
         else:
             self.mw.ui.txtbrwMcgui.setTextColor(QtGui.QColor('black'))
         self.mw.ui.txtbrwMcgui.append(text)
-            
+
     def updateSimState(self, state=[]):
         enableRun = state[0] == 'True'
         enablePlot = state[1] == 'True'
         enableInterrupt = False;
         if len(state)>2:
             enableInterrupt = state[2] == 'True'
-        
+
         # clear start simulation dialog
         if not enableRun:
             self.__ssd = None
-        
+
         # set enabled/disabled states on menus and buttons
         ui = self.mw.ui
         ui.btnRun.setEnabled(enableRun)
@@ -84,6 +82,7 @@ class McView(object):
             ui.lblInstrument.setStyleSheet('color: red')
         ui.actionClose_Instrument.setEnabled(enableRun)
         ui.actionPlot.setEnabled(enablePlot)
+        ui.actionDisplay.setEnabled(enableRun)
         ui.actionRun_Simulation.setEnabled(enableRun)
         ui.actionSave_As.setEnabled(enableRun)
         ui.actionOpen_instrument.setEnabled(True)
@@ -92,9 +91,9 @@ class McView(object):
         ui.actionEdit_Instrument.setEnabled(enableRun)
         ui.actionCompile_Instrument.setEnabled(enableRun)
         ui.actionCompile_Instrument_MPI.setEnabled(enableRun)
-        
+
         # set action of run button:
-        if enableInterrupt: 
+        if enableInterrupt:
             ui.btnRun.setText('Halt')
             ui.btnRun.setToolTip('Interrupt current simulation')
             ui.actionRun_Simulation.setEnabled(False)
@@ -105,10 +104,10 @@ class McView(object):
             ui.actionOpen_instrument.setEnabled(False)
             ui.actionNew_Instrument.setEnabled(False)
             ui.menuNew_From_Template.setEnabled(False)
-        else: 
+        else:
             ui.btnRun.setText('Run...')
             ui.btnRun.setToolTip('')
-        
+
     ''' UI actions
     '''
     def showOpenInstrumentDlg(self, lookDir):
@@ -117,7 +116,7 @@ class McView(object):
         dlg.setNameFilter(mccode_config.configuration["MCCODE"]+" instruments (*.instr)");
         if dlg.exec_():
             return dlg.selectedFiles()[0]
-    
+
     def showChangeWorkDirDlg(self, lookDir):
         dlg = QtGui.QFileDialog()
         dlg.setFileMode(QtGui.QFileDialog.Directory)
@@ -131,20 +130,20 @@ class McView(object):
         self.__ssd.createParamsWidgets(params)
         if self.__ssd.exec_():
             return self.__ssd.getValues()
-        else: 
+        else:
             return None, None
-    
+
     def showNewInstrDialog(self, lookdir):
         dlg = QtGui.QFileDialog()
         dlg.setDirectory(lookdir)
         dlg.setNameFilter(mccode_config.configuration["MCCODE"]+" instruments (*.instr)");
         return dlg.getSaveFileNameAndFilter(parent=None, caption=QtCore.QString('Create Instrument file...'))[0]
-        
-    
+
+
     def showNewInstrFromTemplateDialog(self, instr):
         dlg = QtGui.QFileDialog()
         return dlg.getSaveFileNameAndFilter(parent=None, caption=QtCore.QString('Create Instrument file from Template...'), directory=instr)[0]
-        
+
     def showSaveAsDialog(self, instr):
         dlg = QtGui.QFileDialog()
         dlg.setFileMode(QtGui.QFileDialog.AnyFile)
@@ -154,77 +153,177 @@ class McView(object):
         dlg = McConfigDialog()
         dlg.initConfigData(None)
         dlg.exec_()
-        
+
     def showAboutBox(self, text):
         if mccode_config.configuration["MCCODE"] == "mcstas":
             prefix = "mc"
         else:
             prefix = "mx"
         QtGui.QMessageBox.about(self.mw, prefix+'gui-py: About', text)
-            
+
 
 ''' Main Window widgets wrapper class
 Events callbacks are hooked elsewhere.
 '''
 class McMainWindow(QtGui.QMainWindow):
-    def __init__(self, parent=None): 
+    def __init__(self, parent=None):
         super(McMainWindow, self).__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.dynamicMenuClicked = QtCore.pyqtSignal(QtCore.QString)
-    
+
         # set main window title depending on flavour
         prefix = 'mx'
-        if mccode_config.configuration["MCCODE"] == "mcstas": 
+        if mccode_config.configuration["MCCODE"] == "mcstas":
             prefix = 'mc'
         self.setWindowTitle(prefix + 'gui-py')
         self.ui.actionMcdoc.setText(prefix + "doc Component Reference")
-        
+
         mccode = mccode_config.configuration["MCCODE"]
         self.ui.actionMcstas_User_Manual.setText(mccode + " User Manual")
         self.ui.actionMcstas_Component_Manual.setText(mccode + " Component Manual")
         self.ui.actionMcstas_Web_Page.setText(mccode + " Web Page")
-        self.ui.lblIcon.setPixmap(QtGui.QPixmap(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"],'tools','Python','mcgui',mccode + "-py.png")))
-        
+        self.ui.lblIcon.setPixmap(QtGui.QPixmap(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"],'tools','Python',prefix + 'gui',mccode + "-py.png")))
+
     def initDynamicView(self, args, callback):
-        ''' - args ([str, [], []]): list of triplets consisting of site name, 
-                                    [instrument names], [instrument file paths] 
-            - callback (func(str)): function which takes a single string parameter, call with full path 
-                                    name of selected instrument 
+        ''' - args ([str, [], []]): list of triplets consisting of site name,
+                                    [instrument names], [instrument file paths]
+            - callback (func(str)): function which takes a single string parameter, call with full path
+                                    name of selected instrument
         '''
         self.ui.menuNew_From_Template.clear()
-        
+
         for i in range(len(args)):
             site = args[i][0]
             instrs = args[i][1]
             instrs_fulpath = args[i][2]
-            
+
             menu = self.ui.menuNew_From_Template.addMenu(site)
-            
+
             for j in range(len(instrs)):
                 action = menu.addAction(instrs[j])
                 action.triggered[()].connect(lambda item=instrs_fulpath[j]: callback(item))
-    
+
     def closeEvent(self, event):
         ''' allow close down only if editor window did not reject '''
         if not self.ew.close():
             event.ignore()
-    
-        
+
+
 ''' Code editor window widgets wrapper class
 '''
-class McCodeEditorWindow(QtGui.QMainWindow):    
+class McCodeEditorWindow(QtGui.QMainWindow):
     volatileDataExists = False
     volatileDataTransition = QtCore.pyqtSignal(bool)
     saveRequest = QtCore.pyqtSignal(QtCore.QString)
-    
+
     def __init__(self, parent=None):
         super(McCodeEditorWindow, self).__init__(parent)
         self.ui =  Ui_EditorWindow()
         self.ui.setupUi(self)
+
+        sheight = QtGui.QDesktopWidget().availableGeometry().height()
+        if sheight < 1080:
+            self.resize(920, sheight)
+
+        # dynamically added widgets
+        self.__scintilla = None
+        self.__edtSearch = None
         self.__initScintilla()
         self.__initCallbacks()
-    
+        self.__initSearchbar()
+
+    def __initSearchbar(self):
+        ''' set focus, search action events '''
+        def __sbEventFilter(subject, object, event):
+            ''' focus event handler '''
+
+            #if event.type() == QtCore.QEvent.WindowActivate:
+            #    print "widget window has gained focus"
+            #elif event.type()== QtCore.QEvent.WindowDeactivate:
+            #    print "widget window has lost focus"
+
+            edt = QtGui.QLineEdit()
+            edt = subject
+            # handle focus on
+            if event.type() == QtCore.QEvent.FocusIn:
+                if edt.text() == 'search...':
+                    edt.setText('')
+                    font = QtGui.QFont()
+                    font.setItalic(False)
+                    self.__edtSearch.setFont(font)
+                    edt.setStyleSheet("color: black;")
+
+            # handle focus off
+            elif event.type() == QtCore.QEvent.FocusOut:
+                if edt.text() == '':
+                    font = QtGui.QFont()
+                    font.setItalic(True)
+                    self.__edtSearch.setFont(font)
+                    edt.setStyleSheet("color: grey;")
+                    edt.setText('search...')
+
+            # handle enter keypress (search)
+            elif event.type() == QtCore.QEvent.KeyPress:
+                # return & enter
+                if event.key() in [0x01000004, 0x01000005]:
+                    self.__search(subject.text())
+                # escape
+                elif event.key() == 0x01000000:
+                    subject.setText('')
+                    self.__scintilla.setFocus()
+                # tab
+                #elif event.key() == 0x01000001:
+                #    print "tab"
+
+            return False
+
+        self.__edtSearch = QtGui.QLineEdit()
+        self.__edtSearch.setObjectName("edtSearch")
+        font = QtGui.QFont()
+        font.setItalic(True)
+        self.__edtSearch.setFont(font)
+        self.__edtSearch.setText("search...")
+
+        # set events
+        edts = self.__edtSearch
+        edts.eventFilter = lambda o, e: __sbEventFilter(edts, o, e)
+        edts.installEventFilter(edts)
+
+        self.ui.vlayout.addWidget(self.__edtSearch)
+
+    def __search(self, search):
+        ''' implements a search action in scintilla '''
+        # get cursor position
+        i, j = self.__scintilla.getCursorPosition()
+        curs = self.__scintilla.positionFromLineIndex(i, j)
+
+        # get match position after cursor
+        text = self.__scintilla.text()
+        pos = str(text)[curs:].find(search)
+
+        # get match position before cursor
+        if pos == -1:
+            pos = str(text).find(search)
+        else:
+            pos = pos + curs
+
+        if not pos == -1:
+            self.__setCursorPos(pos + len(search))
+            self.__selectText(pos, pos + len(search))
+
+    def __setCursorPos(self, pos):
+        k, l = self.__scintilla.lineIndexFromPosition(pos)
+        self.__scintilla.setCursorPosition(k, l)
+
+    def __selectText(self, pos1, pos2):
+        if not pos1 < pos2:
+            raise Exception('__selectText: pos2 must be larger than pos1.')
+        self.__scintilla.selectAll(False)
+        k1, l1 = self.__scintilla.lineIndexFromPosition(pos1)
+        k2, l2 = self.__scintilla.lineIndexFromPosition(pos2)
+        self.__scintilla.setSelection(k1, l1, k2, l2)
+
     def initComponentMenu(self, args):
         ''' args - [category, comp_names[], comp_parsers[]]
         '''
@@ -235,15 +334,15 @@ class McCodeEditorWindow(QtGui.QMainWindow):
             for name in comp_names:
                 all_comp_names.append(name)
             comp_parsers = args[i][2]
-            
+
             menu = self.ui.menuInsert.addMenu(category)
-            
+
             for j in range(len(comp_names)):
                 action = menu.addAction(comp_names[j])
                 action.triggered[()].connect(lambda comp_parser=comp_parsers[j]: self.__handleComponentClicked(comp_parser))
-        
+
         self.setLexerComps(self.__scintilla.__myApi, all_comp_names)
-        
+
     def initCodeEditor(self, instr):
         if instr != '':
             self.__scintilla.setText(open(instr).read())
@@ -251,20 +350,20 @@ class McCodeEditorWindow(QtGui.QMainWindow):
             self.__scintilla.setText('')
         self.setWindowTitle(mccode_config.configuration["MCCODE"] + ": " + instr)
         self.assumeDataSaved()
-        
+
     def assumeDataSaved(self):
         self.volatileDataTransition.emit(False)
-    
+
     def save(self):
         ''' external save text hook '''
         self.__handleSaveAction()
- 
+
     def closeEvent(self, event):
-        ''' hook to display a "save changes?" dialog if there are unsaved changes 
+        ''' hook to display a "save changes?" dialog if there are unsaved changes
         '''
         if self.volatileDataExists:
-            reply = QtGui.QMessageBox.question(self, 
-                                               'The instrument has been modified.', 
+            reply = QtGui.QMessageBox.question(self,
+                                               'The instrument has been modified.',
                                                'Do you want to save changes?',
                                                'Save',      # default button, reply == 0
                                                'Discard',   # reply == 1
@@ -280,16 +379,16 @@ class McCodeEditorWindow(QtGui.QMainWindow):
                 event.ignore()
         else:
             event.accept()
-            
+
     def __handleComponentClicked(self, comp_parser):
         dlg = McInsertComponentDialog()
         dlg.initComponentData(comp_parser)
         if dlg.exec_():
             comp_type, inst_name, params, atrel = dlg.getValues()
-        else: 
+        else:
             return
-        
-        text = "COMPONENT " + inst_name + " = " + comp_type + "( "
+
+        text = "COMPONENT " + inst_name + " = " + comp_type + "("
         i_max = len(params)-1
         for i in range(len(params)):
             p = params[i]
@@ -298,21 +397,23 @@ class McCodeEditorWindow(QtGui.QMainWindow):
                 text += ", "
 
         text += ")"
-        text += "\nAT (" + atrel[0] + ", " + atrel[1] + ", " + atrel[2] + ") RELATIVE " + atrel[3] 
-        text += "\nROTATED (" + atrel[4] + ", " + atrel[5] + ", " + atrel[6] + ") RELATIVE " + atrel[7]
-        
+        text += "\nAT (" + atrel[0] + ", " + atrel[1] + ", " + atrel[2] + ") RELATIVE " + atrel[3]
+        # NOTE: the ROTATED line may be missing
+        if len(atrel) > 4:
+            text += "\nROTATED (" + atrel[4] + ", " + atrel[5] + ", " + atrel[6] + ") RELATIVE " + atrel[7]
+
         self.__scintilla.insert(text)
-        
+
         # set cursor position
         i, j = self.__scintilla.getCursorPosition()
         pos = self.__scintilla.positionFromLineIndex(i, j)
         k, l = self.__scintilla.lineIndexFromPosition(pos + len(text))
         self.__scintilla.setCursorPosition(k, l)
-        
+
     def __initScintilla(self):
-        # delete text editor placeholder 
+        # delete text editor placeholder
         scintilla = Qsci.QsciScintilla(self)
-        
+
         ########################
         # setup scintilla
         # set default font
@@ -320,37 +421,42 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         font.setFamily('Deja Vu Sans Mono')
         font.setFixedPitch(True)
         font.setPointSize(11)
-        
+
         # brace matching
         scintilla.setBraceMatching(Qsci.QsciScintilla.SloppyBraceMatch)
-        
+
         # set lexer
         lexer = Qsci.QsciLexerCPP()
         lexer.setDefaultFont(font)
         lexer.setFont(font)
         scintilla.setLexer(lexer)
-        
+
         scintilla.setLexer(lexer)
         scintilla.__myLexer = lexer # save reference to retain scope
-        
+
         # auto-completion api
         scintilla.__myApi = Qsci.QsciAPIs(lexer)
-        
+
         scintilla.setAutoCompletionThreshold(1)
         scintilla.setAutoCompletionSource(Qsci.QsciScintilla.AcsAPIs)
-        
+
         # remove horizontal scrollbar
         scintilla.SendScintilla(Qsci.QsciScintilla.SCI_SETHSCROLLBAR, 0)
+
+        # display default line numbers
+        fm = QtGui.QFontMetrics(font)
+        scintilla.setMarginWidth(0, fm.width( "00000" ))
+        scintilla.setMarginLineNumbers(0, True)
         ########################
-        
-        # insert widget
-        self.setCentralWidget(scintilla)
+
+        # insert widget into main vlayout
+        self.ui.vlayout.addWidget(scintilla)
         self.__scintilla = scintilla
-    
+
     @staticmethod
     def setLexerComps(api, all_comp_names):
         api.clear()
-        
+
         # add mcstas meta keywords
         api.add("ABSOLUTE")
         api.add("AT")
@@ -388,12 +494,12 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         # add components
         for name in all_comp_names:
             api.add(name)
-        
+
         api.prepare()
-            
+
     def __initCallbacks(self):
         # connect menu items to corresponding scintilla slots
-        ui = self.ui 
+        ui = self.ui
         ui.actionUndo.triggered.connect(self.__scintilla.undo)
         ui.actionRedo.triggered.connect(self.__scintilla.redo)
         ui.actionSelect_All.triggered.connect(lambda: self.__scintilla.selectAll()) # why is l. expr. needed here?
@@ -402,34 +508,25 @@ class McCodeEditorWindow(QtGui.QMainWindow):
         ui.actionPaste.triggered.connect(self.__scintilla.paste)
         ui.actionSave.triggered.connect(self.__handleSaveAction)
         ui.actionClose_Instrument_Editor.triggered.connect(self.close)
+        ui.actionFind.triggered.connect(lambda: self.__edtSearch.setFocus())
         ui.actionComponent_Browser.triggered.connect(self.__handleComponentBrowser)
-        ui.actionInsert_Header.triggered.connect(self.__handleInsertHeader)
-        ui.actionInsert_Body.triggered.connect(self.__handleInsertBody)
-        
+
+        # TODO: create a ctr-a on a menu to __scintilla.selectAll(bool select)
+
+        def __keyEventFilterFct(subject, object, event):
+            if event.type() == QtCore.QEvent.KeyRelease:
+                # return & enter
+                if event.key() == 81:
+                    self.close()
+            return False
+        self.eventFilter = lambda o, e: __keyEventFilterFct(self.ui, o, e)
+        self.installEventFilter(self)
+
         # connect "text changed" signal to our handler to detect unsaved changes
         self.__scintilla.textChanged.connect(self.__handleTextChanged)
-        
+
         self.volatileDataTransition.connect(self.__handleVolatileDataPresent)
-    
-    def __handleInsertHeader(self):
-        text = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_header_simple.instr")).read()
-        
-        # insert template header and set cursor position to be after header text
-        self.__scintilla.setCursorPosition(0, 0)
-        self.__scintilla.insert(text)
-        k, l = self.__scintilla.lineIndexFromPosition(len(text))
-        self.__scintilla.setCursorPosition(k, l)
-    
-    def __handleInsertBody(self):
-        text = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_body_simple.instr")).read()
-        
-        # insert template body at cursor position and reposition curser to be after body text
-        i, j = self.__scintilla.getCursorPosition()
-        pos = self.__scintilla.positionFromLineIndex(i, j)
-        self.__scintilla.insert(text)
-        k, l = self.__scintilla.lineIndexFromPosition(pos + len(text))
-        self.__scintilla.setCursorPosition(k, l)
-    
+
     def __handleComponentBrowser(self):
         dlg = QtGui.QFileDialog()
         dlg.setDirectory(mccode_config.configuration["MCCODE_LIB_DIR"])
@@ -438,15 +535,15 @@ class McCodeEditorWindow(QtGui.QMainWindow):
             comp_file = dlg.selectedFiles()[0]
             parser = McComponentParser(comp_file)
             self.__handleComponentClicked(parser)
-    
+
     def __handleTextChanged(self):
         if not self.volatileDataExists:
             self.volatileDataTransition.emit(True)
-    
+
     def __handleSaveAction(self):
         if self.volatileDataExists:
             self.saveRequest.emit(self.__scintilla.text())
-        
+
     def __handleVolatileDataPresent(self, volatileDataExists=False):
         if volatileDataExists:
             title = self.windowTitle()
@@ -471,10 +568,10 @@ class McStartSimDialog(QtGui.QDialog):
         self.ui.setupUi(self)
         self.ui.btnStart.clicked.connect(self.accept)
         self.ui.btnCancel.clicked.connect(self.reject)
-        
+
     def getValues(self):
         ''' Return values:
-        
+
             fixed_params[]:
                 0 - simulation = 0, trace = 1
                 1 - neutron count (int)
@@ -493,17 +590,17 @@ class McStartSimDialog(QtGui.QDialog):
             p0 = SimTraceEnum.SIM
         else:
             p0 = SimTraceEnum.TRACE
-        
+
         # neutron count
         p1 = self.ui.edtNeutronCnt.text()
-        
+
         # steps
         p2 = self.ui.edtSteps.text()
-        
+
         # gravity
         p3 = self.ui.cbxGravity.currentIndex() == 1
-        
-        # clustering option 
+
+        # clustering option
         p4 = None
         if self.ui.cbxClustering.currentIndex() == 0:
             p4 = ClusteringEnum.SINGLE
@@ -511,18 +608,18 @@ class McStartSimDialog(QtGui.QDialog):
             p4 = ClusteringEnum.MPI
         if self.ui.cbxClustering.currentIndex() == 2:
             p4 = ClusteringEnum.MPI_RC
-            
+
         # clustring option
         p5 = self.ui.edtNodes.text()
 
         # seed
         p6 = self.ui.edtRandomSeed.text()
-        
+
         # output dir
         p7 = str(self.ui.edtOutputDir.text())
-        
+
         fixed_params =[p0, p1, p2, p3, p4, p5, p6, p7]
-        
+
         # get dynamic params
         params = []
         for w in self.__wParams:
@@ -530,14 +627,14 @@ class McStartSimDialog(QtGui.QDialog):
             p.append(str(w[0].text()).rstrip(':'))
             p.append(str(w[1].text()))
             params.append(p)
-        
+
         return fixed_params, params
-    
+
     __wParams = []
     __oldParams = []
     def createParamsWidgets(self, params):
-        
-        # this logics keeps params values of existing/previous non-dummy widgets, for value reuse 
+
+        # this logics keeps params values of existing/previous non-dummy widgets, for value reuse
         self.__oldParams = []
         for w in self.__wParams:
             old_name = 'no_re_match'
@@ -546,15 +643,15 @@ class McStartSimDialog(QtGui.QDialog):
                 old_name = name_match.group(1)
             old_value = w[1].text()
             self.__oldParams.append([old_name, old_value])
-        
+
         # clear the containing grid
         grd = self.ui.gridGrid
-        for i in reversed(range(grd.count())): 
+        for i in reversed(range(grd.count())):
             grd.itemAt(i).widget().setParent(None)
-        
+
         # prepare new params widgets
         self.__wParams = []
-        
+
         # insert custom params widgets
         i = -1
         x = 0
@@ -564,37 +661,37 @@ class McStartSimDialog(QtGui.QDialog):
             # get param name, value
             name = QtCore.QString(p[0])
             value = QtCore.QString(p[1])
-            
+
             # reuse old param values, if matching position in grid (p_index) and param name
             if len(self.__oldParams) > p_index:
                 old_name = self.__oldParams[p_index][0]
                 old_value = self.__oldParams[p_index][1]
                 if str(old_name) == str(name):
                     value = QtCore.QString(old_value)
-            
+
             i = i + 1
             x = i % 6
             y = i / 6
-            
+
             lbl = QtGui.QLabel(self.ui.gbxGrid)
             lbl.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
             lbl.setObjectName("lbl" + name)
             lbl.setText(name + ':')
             self.ui.gridGrid.addWidget(lbl, y, x, 1, 1)
-            
+
             i = i + 1
             x = i % 6
-            
+
             edt = QtGui.QLineEdit(self.ui.gbxGrid)
             edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
             edt.setObjectName("edt" + name)
             edt.setText(value)
             self.ui.gridGrid.addWidget(edt, y, x, 1, 1)
-            
+
             self.__wParams.append([lbl, edt])
-            
+
             p_index += 1
-            
+
         self.ui.btnStart.setFocus()
 
 class SimTraceEnum:
@@ -602,7 +699,7 @@ class SimTraceEnum:
     TRACE = 1
 
 class ClusteringEnum:
-    SINGLE = 0 
+    SINGLE = 0
     MPI = 1
     MPI_RC = 2
 
@@ -621,12 +718,13 @@ class McInsertComponentDialog(QtGui.QDialog):
         self.ui.setupUi(self)
         self.ui.btnInsert.clicked.connect(self.accept)
         self.ui.btnCancel.clicked.connect(self.reject)
+
         self.__standard_le_style = self.ui.edtInstanceName.styleSheet()
-        
+
     def accept(self):
         # detect missing default values
         dirty = False
-        
+
         # mark/unmark params dynamic lineedits
         first_params_hit = True
         for w in self.__wParams:
@@ -638,7 +736,7 @@ class McInsertComponentDialog(QtGui.QDialog):
                     first_params_hit = False
             else:
                 w[1].setStyleSheet(self.__standard_le_style)
-        
+
         # mark/unmark instance name lineedit
         if self.ui.edtInstanceName.text() == '':
             self.ui.edtInstanceName.setStyleSheet("border: 3px solid red;")
@@ -647,56 +745,61 @@ class McInsertComponentDialog(QtGui.QDialog):
             dirty = True
         else:
             self.ui.edtInstanceName.setStyleSheet(self.__standard_le_style)
-                
-        # exit if all lineedit text boxes are filled out 
+
+        # exit if all lineedit text boxes are filled out
         if not dirty:
             super(McInsertComponentDialog, self).accept()
-    
+
     __wParams = []
     def initComponentData(self, comp_parser):
         # parse component info
         comp_parser.parse()
-        
+
         # window title
         self.setWindowTitle("Component: " + comp_parser.name)
-        
+
         # info & description docstrings - make sure newlines work in case doc includes html
         info_description = comp_parser.info + '\n\n' + comp_parser.description
         info_description_html = str(info_description).replace('\n', '<br>')
         self.ui.lblDescr.setText(info_description_html)
-        
+
         # clear params grd
         grd = self.ui.gridParameters
-        for i in reversed(range(grd.count())): 
+        for i in reversed(range(grd.count())):
             grd.itemAt(i).widget().setParent(None)
-        
+
         # populate and init params grd
         self.__wParams = None
         self.__wParams = []
         for i in range(len(comp_parser.pars)):
             par = McComponentParser.McComponentParInfo(comp_parser.pars[i])
-            
+            if par.par_name == "string filename":
+                par.par_name = "filename"
+
             # i'th line/row of the UI
             y = i
-            
+
             # parameter name label
             x = 0
             lbl = QtGui.QLabel()
             lbl.setObjectName("lbl" + par.par_name)
             lbl.setText(par.par_name + ':')
             self.ui.gridParameters.addWidget(lbl, y, x, 1, 1)
-            
+
             # parameter value line-edit
             x = 1
             edt = QtGui.QLineEdit()
             edt.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
             edt.setObjectName("edt" + par.par_name)
-            edt.setText(par.default_value)
+            if par.par_name == "filename":
+                edt.setText('"' + par.default_value + '"')
+            else:
+                edt.setText(par.default_value)
             self.ui.gridParameters.addWidget(edt, y, x, 1, 1)
-            
-            # save name, value widget references for use in self.getValues
-            self.__wParams.append([lbl, edt])
-            
+
+            # save widget references for use in self.getValues (also save the par default value)
+            self.__wParams.append([lbl, edt, edt.text()])
+
             # parameter docstring label
             x = 2
             lbl = QtGui.QLabel()
@@ -704,30 +807,33 @@ class McInsertComponentDialog(QtGui.QDialog):
             lbl.setObjectName("lbl" + par.par_name + "_doc")
             lbl.setText(par.doc_and_unit)
             self.ui.gridParameters.addWidget(lbl, y, x, 1, 1)
-            
+
         # fix tab-order
-        q = self.ui.btnInsert 
+        q = self.ui.btnInsert
         for i in range(len(self.__wParams)):
             w = self.__wParams[i][1]
             self.setTabOrder(q, w)
             q = w
         self.setTabOrder(q, self.ui.edtAtX)
-            
+
         # init instance-name field with an example, mark the text
         tbx = self.ui.edtInstanceName
         tbx.setText(str.lower(comp_parser.name))
         tbx.setFocus()
         tbx.selectAll()
-        
+
     def getValues(self):
-        ''' 
-        inst_name : contents of instance name field 
+        '''
+        inst_name : contents of instance name field
         params : list of [name, value] pairs matching component parameters
         '''
+        if not self.ui.cbxVerbose.isChecked():
+            return self.__getValuesReduced()
+
         # instance name
         inst_name = self.ui.edtInstanceName.text()
         comp_type = str(self.windowTitle()).lstrip('Component: ')
-        
+
         # get dynamic params
         params = []
         for w in self.__wParams:
@@ -735,8 +841,8 @@ class McInsertComponentDialog(QtGui.QDialog):
             p.append(str(w[0].text()).rstrip(':'))
             p.append(str(w[1].text()))
             params.append(p)
-        
-        # get values for AT(x,y,z), RELATIVE <posrel>, ROTATED(x,y,z), RELATIVE <rotrel> 
+
+        # get values for AT(x,y,z), RELATIVE <posrel>, ROTATED(x,y,z), RELATIVE <rotrel>
         atrel = []
         atrel.append(self.ui.edtAtX.text())
         atrel.append(self.ui.edtAtY.text())
@@ -746,7 +852,40 @@ class McInsertComponentDialog(QtGui.QDialog):
         atrel.append(self.ui.edtRotY.text())
         atrel.append(self.ui.edtRotZ.text())
         atrel.append(self.ui.edtRotRel.text())
-        
+
+        return comp_type, inst_name, params, atrel
+
+    def __getValuesReduced(self):
+        '''
+        inst_name : contents of instance name field
+        params : list of [name, value] pairs matching component parameters
+        '''
+        # instance name
+        inst_name = self.ui.edtInstanceName.text()
+        comp_type = str(self.windowTitle()).lstrip('Component: ')
+
+        # get dynamic params
+        params = []
+        for w in self.__wParams:
+            # proceed if typed value differs from the default value (also counting empty default values)
+            if w[1].text() != w[2]:
+                p = []
+                p.append(str(w[0].text()).rstrip(':'))
+                p.append(str(w[1].text()))
+                params.append(p)
+
+        # get values for AT(x,y,z), RELATIVE <posrel>, ROTATED(x,y,z), RELATIVE <rotrel>
+        atrel = []
+        atrel.append(self.ui.edtAtX.text())
+        atrel.append(self.ui.edtAtY.text())
+        atrel.append(self.ui.edtAtZ.text())
+        atrel.append(self.ui.edtAtRel.text())
+        if self.ui.edtRotX.text() != '0' or self.ui.edtRotY.text() != '0' or self.ui.edtRotZ.text() != '0':
+            atrel.append(self.ui.edtRotX.text())
+            atrel.append(self.ui.edtRotY.text())
+            atrel.append(self.ui.edtRotZ.text())
+            atrel.append(self.ui.edtRotRel.text())
+
         return comp_type, inst_name, params, atrel
 
 
@@ -758,19 +897,19 @@ class McConfigDialog(QtGui.QDialog):
         super(McConfigDialog, self).__init__(parent)
         self.ui = Ui_dlgConfig()
         self.ui.setupUi(self)
-        
+
         self.ui.btnOk.clicked.connect(self.accept)
         self.ui.btnSave.clicked.connect(self.save)
         self.ui.btnCancel.clicked.connect(self.reject)
-    
+
     def initConfigData(self, args):
         # comboboxes
         mcrun_lst, mcplot_lst, mcdisplay_lst = McGuiUtils.getMcCodeConfigOptions(mccode_config.configuration["MCCODE"])
-        
+
         # mcrun combobox
         selected_val = mccode_config.configuration["MCRUN"]
         i = 0
-        for val in mcrun_lst: 
+        for val in mcrun_lst:
             self.ui.cbxMcrun.addItem(val)
             if val == selected_val:
                 self.ui.cbxMcrun.setCurrentIndex(i)
@@ -778,11 +917,11 @@ class McConfigDialog(QtGui.QDialog):
         self.ui.cbxMcrun.conf_var = "MCRUN"
         self.ui.cbxMcrun.conf_org_value = mccode_config.configuration["MCRUN"]
         self.ui.cbxMcrun.conf_options_lst = mcrun_lst
-        
+
         # mcplot combobox
         selected_val = mccode_config.configuration["MCPLOT"]
         i = 0
-        for val in mcplot_lst: 
+        for val in mcplot_lst:
             self.ui.cbxMcPlot.addItem(val)
             if val == selected_val:
                 self.ui.cbxMcPlot.setCurrentIndex(i)
@@ -790,11 +929,11 @@ class McConfigDialog(QtGui.QDialog):
         self.ui.cbxMcPlot.conf_var = "MCPLOT"
         self.ui.cbxMcPlot.conf_org_value = mccode_config.configuration["MCPLOT"]
         self.ui.cbxMcPlot.conf_options_lst = mcplot_lst
-        
+
         # mcdisplay combobox
         selected_val = mccode_config.configuration["MCDISPLAY"]
         i = 0
-        for val in mcdisplay_lst: 
+        for val in mcdisplay_lst:
             self.ui.cbxMcdisplay.addItem(val)
             if val == selected_val:
                 self.ui.cbxMcdisplay.setCurrentIndex(i)
@@ -802,53 +941,52 @@ class McConfigDialog(QtGui.QDialog):
         self.ui.cbxMcdisplay.conf_var = "MCDISPLAY"
         self.ui.cbxMcdisplay.conf_org_value = mccode_config.configuration["MCDISPLAY"]
         self.ui.cbxMcdisplay.conf_options_lst = mcdisplay_lst
-        
+
         # line edits
         self.ui.edtCC.setText(mccode_config.compilation["CC"])
         self.ui.edtCC.conf_var = "CC"
-        
+
         self.ui.edtCflags.setText(mccode_config.compilation["CFLAGS"])
         self.ui.edtCflags.conf_var = "CFLAGS"
-        
+
         self.ui.edtMpicc.setText(mccode_config.compilation["MPICC"])
         self.ui.edtMpicc.conf_var = "MPICC"
-        
+
         self.ui.edtMPIrun.setText(mccode_config.compilation["MPIRUN"])
         self.ui.edtMPIrun.conf_var = "MPIRUN"
-        
+
         self.ui.edtNumNodes.setText(mccode_config.compilation["MPINODES"])
         self.ui.edtNumNodes.conf_var = "MPINODES"
-    
+
     def __pullValuesTo_mccode_config(self):
         # mcrun combobox
         i = self.ui.cbxMcrun.currentIndex()
         mccode_config.configuration["MCRUN"] = self.ui.cbxMcrun.conf_options_lst[i]
-        
+
         # mcrun combobox
         i = self.ui.cbxMcPlot.currentIndex()
         mccode_config.configuration["MCPLOT"] = self.ui.cbxMcPlot.conf_options_lst[i]
-        
+
         # mcrun combobox
         i = self.ui.cbxMcdisplay.currentIndex()
         mccode_config.configuration["MCDISPLAY"] = self.ui.cbxMcdisplay.conf_options_lst[i]
-        
+
         # line edits
         mccode_config.compilation[str(self.ui.edtCC.conf_var)] = str(self.ui.edtCC.text())
         mccode_config.compilation[str(self.ui.edtCflags.conf_var)] = str(self.ui.edtCflags.text())
         mccode_config.compilation[str(self.ui.edtMpicc.conf_var)] = str(self.ui.edtMpicc.text())
         mccode_config.compilation[str(self.ui.edtMPIrun.conf_var)] = str(self.ui.edtMPIrun.text())
         mccode_config.compilation[str(self.ui.edtNumNodes.conf_var)] = str(self.ui.edtNumNodes.text())
-    
+
     def accept(self):
         self.__pullValuesTo_mccode_config()
-        
+
         # finally
         super(McConfigDialog, self).accept()
-    
+
     def save(self):
         self.__pullValuesTo_mccode_config()
         McGuiUtils.saveUserConfig(mccode_config,mccode_config.configuration["MCCODE"],mccode_config.configuration["MCCODE_VERSION"])
-        
+
         # finally
         super(McConfigDialog, self).accept()
-        

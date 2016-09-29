@@ -26,6 +26,11 @@
 *******************************************************************************/
 DEFINE INSTRUMENT Test_MCPL_output(dummy=0)
 
+DECLARE
+%{
+    int32_t flag;
+%}
+
 INITIALIZE
 %{
 %}
@@ -44,11 +49,12 @@ COMPONENT sa = Source_Maxwell_3( /* flux in n/s/cm2/st/AA */
 AT (0,0,0) ABSOLUTE
 EXTEND %{
   t=1e-3*rand01();
+  flag=(uint32_t)mcget_run_num();
 %}
 
 /* the output ============================================================== */
 COMPONENT vout = MCPL_output(
-			     filename="voutput.mcpl", dump_file=0,verbose=1)
+     filename="voutput", verbose=1, userflag=flag, userflagcomment="Neutron Id")
 AT(0,0,0) RELATIVE PREVIOUS
 
 COMPONENT m1 = Monitor_nD(

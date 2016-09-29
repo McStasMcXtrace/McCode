@@ -71,14 +71,21 @@
      <item>
       <layout class="QVBoxLayout" name="vlayoutParameters">
        <item>
-        <layout class="QGridLayout" name="gridInstanceName">
-         <item row="0" column="0">
+        <layout class="QHBoxLayout" name="hlayoutInstanceName">
+         <item>
           <widget class="QLineEdit" name="edtInstanceName">
            <property name="toolTip">
             <string>Instance name</string>
            </property>
            <property name="text">
             <string>&lt;instance name&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cbxVerbose">
+           <property name="text">
+            <string>Verbose</string>
            </property>
           </widget>
          </item>

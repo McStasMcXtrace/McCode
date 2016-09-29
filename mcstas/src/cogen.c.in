@@ -628,10 +628,10 @@ cogen_decls(struct instr_def *instr)
   /* 8. Declaration of SCATTER and RESTORE flags */
   cout("/* Flag true when previous component acted on the @MCCODE_PARTICLE@ (SCATTER) */");
   coutf("MCNUM %sScattered=0;", ID_PRE);
-  
+
   cout("/* Flag true when @MCCODE_PARTICLE@ should be restored (RESTORE) */");
   coutf("MCNUM %sRestore=0;", ID_PRE);
-  
+
   if (list_len(instr->grouplist) > 0)
   {
     cout("/* Component group definitions (flags), equals index of scattering comp */");
@@ -837,7 +837,7 @@ cogen_init(struct instr_def *instr)
     struct comp_iformal *par;
 
     coutf("    /* Component %s. */", comp->name);
-    
+
     coutf("  /* Setting parameters for component %s. */", comp->name);
     coutf("  SIG_MESSAGE(\"%s (Init:SetPar)\");", comp->name); /* signal handler message */
     /* Setting parameters of the component */
@@ -856,7 +856,7 @@ cogen_init(struct instr_def *instr)
       }
       else
       {
-        coutf("  if(%s) strncpy(%sc%s_%s, %s ? %s : \"\", 16384); else %sc%s_%s[0]='\\0';", 
+        coutf("  if(%s) strncpy(%sc%s_%s, %s ? %s : \"\", 16384); else %sc%s_%s[0]='\\0';",
           val, ID_PRE, comp->name, par->id, val, val, ID_PRE, comp->name, par->id);
       }
       str_free(val);
@@ -865,8 +865,8 @@ cogen_init(struct instr_def *instr)
     if(list_len(comp->def->set_par) > 0)
       code_reset_source();
     cout("");
-    
-    
+
+
     coutf("  SIG_MESSAGE(\"%s (Init:Place/Rotate)\");", comp->name); /* signal handler message */
 
     /* Absolute rotation. */
@@ -1069,14 +1069,14 @@ cogen_trace(struct instr_def *instr)
   for(i = 0; i < NUM_STATE_PARS; i++)
     coutf("  MCNUM %snl%s = %sn%s;", ID_PRE, statepars_all[i], ID_PRE, statepars_all[i]);
   cout("");
-  
+
   /* Debugging (initial state). */
   coutf("  %sDEBUG_ENTER()", ID_PRE);
   coutf("  %sDEBUG_STATE(" , ID_PRE);
   for(i = 0; i < NUM_STATE_PARS; i++)
     if (i < NUM_STATE_PARS-1) coutf("    %snl%s,", ID_PRE, statepars_all[i]);
     else                      coutf("    %snl%s)", ID_PRE, statepars_all[i]);
-    
+
   /* Set group flags */
   if (list_len(instr->grouplist) > 0)
   {
@@ -1226,7 +1226,7 @@ cogen_trace(struct instr_def *instr)
       if (i < NUM_STATE_PARS-1) coutf("      %snl%s,", ID_PRE, statepars_all[i]);
       else                      coutf("      %snl%s); }",ID_PRE, statepars_all[i]);
     }
-    
+
     /* GROUP - last element */
     if (comp->group) {
       if (!strcmp(comp->name, comp->group->last_comp)) {
@@ -1238,7 +1238,7 @@ cogen_trace(struct instr_def *instr)
     }
 
     coutf("#undef %sabsorbComp", ID_PRE);
-     for(i = NUM_STATE_PARS-1; i >= 0; i--)
+    for(i = NUM_STATE_PARS-1; i >= 0; i--)
       coutf("#undef %s", statepars_all[i]);
 
     /* Debugging (exit from component). */
@@ -1589,8 +1589,8 @@ cogen(char *output_name, struct instr_def *instr)
   coutf(" * Instrument: %s (%s)", instr->source, instr->name);
   coutf(" * Date:       %s", date);
   coutf(" * File:       %s", output_name);
-  coutf(" * Compile:    cc -o %s.%s %s %s", 
-    instr->name, 
+  coutf(" * Compile:    cc -o %s.%s %s %s",
+  instr->name,
 #ifdef WIN32
     "exe",
 #else

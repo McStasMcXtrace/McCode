@@ -192,30 +192,39 @@ class McGnuplotter():
             data_file_lst = get_overview_files(input_file)
             siblings = []
             
-            for data_file in data_file_lst:
-                data_struct = get_monitor(data_file)
-                if re.search('array_2d.*', data_struct['type']):
-                    gpo = McGnuplotPSD(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
-                    siblings.append(gpo)
-                else:
-                    gpo = McGnuplot1D(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
-                    siblings.append(gpo)
-            overview_data_struct = {}
-            overview_data_struct['fullpath'] = input_file
-            overview = McGnuplotOverview(McGnuplotter.__overview_key, overview_data_struct, Gnuplot.Gnuplot(persist=gp_persist), siblings)
-            self.__gnuplot_objs[overview.key] = overview
-            for gpo in siblings:
-                self.__gnuplot_objs[gpo.key] = gpo
             
-        elif file_ext == '.dat':
+            if 'mccode.dat' in map( lambda f: os.path.basename(f), data_file_lst):
+                # mccode.dat / scan sweep mode
+                print "mccode.dat found"
+                print "Plotting mode not supported, exiting"
+                exit()
+                #dict = get_monitor(os.path.join(os.path.dirname(data_file_lst[0]), 'mccode.dat'))
+                #for key in dict:
+                #    print 'key: %s, value: %s' % (key, dict[key]) 
+            else:
+                # single scan step mode - load multiple monitor files
+                for data_file in data_file_lst:
+                    data_struct = get_monitor(data_file)
+                    if re.search('array_2d.*', data_struct['type']):
+                        gpo = McGnuplotPSD(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
+                        siblings.append(gpo)
+                    else:
+                        gpo = McGnuplot1D(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
+                        siblings.append(gpo)
+                overview_data_struct = {}
+                overview_data_struct['fullpath'] = input_file
+                overview = McGnuplotOverview(McGnuplotter.__overview_key, overview_data_struct, Gnuplot.Gnuplot(persist=gp_persist), siblings)
+                self.__gnuplot_objs[overview.key] = overview
+                for gpo in siblings:
+                    self.__gnuplot_objs[gpo.key] = gpo
+            
+        else:
             data_struct = get_monitor(input_file)
             if re.search('array_2d.*', data_struct['type']):
                 gpo = McGnuplotPSD(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
             else:
                 gpo = McGnuplot1D(data_struct['file'], data_struct, Gnuplot.Gnuplot(persist=gp_persist))
             self.__gnuplot_objs[gpo.key] = gpo
-        else:
-            raise Exception('McGnuPlotter: input file must be .sim or .dat')
         
         # execute set/unset logscale
         self.setLogscale(log_scale)
@@ -248,8 +257,7 @@ class McGnuplotter():
     
     def getDataKeys(self):
         """ returns an alpha-num sorted list of all McGnuplotObject instances installed at construction time by key """
-        return sorted(self.__gnuplot_objs.keys(), key=lambda item: (int(item.partition(' ')[0])
-                                                                    if item[0].isdigit() else float('inf'), item))
+        return sorted(self.__gnuplot_objs.keys(), key=lambda item: (int(item.partition(' ')[0][0]) if item[0].isdigit() else float('inf'), item))
     
     def setLogscale(self, log_scale):
         """ set log scale on all McGnuplotObject instances """

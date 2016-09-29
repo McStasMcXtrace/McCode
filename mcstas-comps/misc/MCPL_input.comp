@@ -7,7 +7,7 @@
 * Component: MCPL_input
 *
 * %I
-* Written by: Erik N Knudsen 
+* Written by: Erik B Knudsen
 * Date: Mar 2016
 * Version: $Revision$
 * Origin: DTU Physics
@@ -30,19 +30,23 @@
 *
 * filename: [str] Name of neutron mcpl file to read.
 * verbose:  [ ]   Print debugging information for first 10 particles read. 
+* polarisationuse: [ ] If !=0 read polarisation vectors from file.
+* Emin: [meV] Lower energy bound. Particles found in the MCPL-file below the limit are skipped.
+* Emax: [meV] Upper energy bound. Particles found in the MCPL-file above the limit are skipped.
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT MCPL_input
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string filename=0, polarisationuse=1,verbose=1)
-OUTPUT PARAMETERS (inputfile,nparticles,read_neutrons)
+SETTING PARAMETERS (string filename=0, polarisationuse=1,verbose=1, Emin=0, Emax=FLT_MAX)
+OUTPUT PARAMETERS (inputfile,nparticles,read_neutrons,used_neutrons)
 DEPENDENCY "-I@MCCODE_LIB@/libs/mcpl -L@MCCODE_LIB@/libs/mcpl -lmcpl"
 
 SHARE
 %{
 #include <mcpl.h>
+
 %}
 
 DECLARE
@@ -50,19 +54,30 @@ DECLARE
     mcpl_file_t inputfile;
     long long nparticles;
     long long read_neutrons;
+    long long used_neutrons;
+
 %}
 
 INITIALIZE
 %{
     char line[256];
     long long ncount;
+
+    if(Emax<Emin){
+        fprintf(stderr,"Warning(%s): Nonsensical energy interval: E=[%g,%g]. Aborting.\n",NAME_CURRENT_COMP,Emin,Emax);
+        exit(-1);
+    }
+    /* No need to check if the file opens correctly since mcpl will
+     * abort internally if it cannot open the file.*/
     inputfile = mcpl_open_file(filename);
-    
-    nparticles=mcpl_hdr_nparticles(inputfile);
+
     ncount=mcget_ncount();
-    if (ncount<nparticles){
-        fprintf(stderr,"Warning (%s): You have requested %ld neutrons from a file which contains %ld.\n"
-                "This will probably lead to biased data.\n",NAME_CURRENT_COMP,ncount,nparticles);
+    if ( !(nparticles=mcpl_hdr_nparticles(inputfile)) ) {
+        fprintf(stderr,"Warning(%s): MCPL-file reports no present particles. Foolishly trying to go on.\n",NAME_CURRENT_COMP);
+        nparticles=ncount;
+    }else{
+        printf("Message(%s): MCPL file (%s) produced with %s.\n",NAME_CURRENT_COMP,filename,mcpl_hdr_srcname(inputfile));
+        printf("Message(%s): MCPL file (%s) contains %ld particles.\n",NAME_CURRENT_COMP,filename,nparticles); 
     }
 
 #if defined (USE_MPI)
@@ -70,11 +85,9 @@ INITIALIZE
     MPI_MASTER(fprintf(stdout, "\n\n Warning: You are using MCPL_input with MPI, hence your ncount is now redefined to:\n   %ld events at each of the %i MPI nodes = %ld events\n\n",nparticles,mpi_node_count,mpi_node_count*nparticles); );
 #endif
 
-    printf("MCPL file (%s) produced with %s.\n",filename,mcpl_hdr_srcname(inputfile));
-    printf("MCPL file (%s) contains %ld particles.\n",filename,nparticles); 
-
     read_neutrons=0;
-    
+    used_neutrons=0;
+
  #if defined (USE_MPI)   
     MPI_MASTER(
 #endif
@@ -88,6 +101,7 @@ INITIALIZE
 #endif
 
 
+
 %}
 
 TRACE
@@ -95,17 +109,27 @@ TRACE
     double nrm;
     const mcpl_particle_t *particle;// = (mcpl_particle_t *) calloc(sizeof(mcpl_particle_t),1);
     particle = mcpl_read(inputfile);
-    if (particle->pdgcode!=2112){
-        /*read particle is not a neutron - get next one instead*/
-        particle = mcpl_read(inputfile);
+    
+    if (!particle || particle->pdgcode!=2112) {
+        /*Either no particle read, particle is not a neutron, or it has invalid energy - terminate to trigger next ray*/
+       ABSORB;
     }
     read_neutrons++;
+
+    /* check energy range*/
+    if ( particle->ekin<Emin*1e-9 || particle->ekin>Emax*1e-9 ) {
+        /*Particle energy out of range - terminate to trigger next ray*/
+        ABSORB;
+    }
+    used_neutrons++;
+
+
 
 #if defined (USE_MPI)   
   MPI_MASTER(
 #endif
 
-    if (verbose==1 && read_neutrons<11) {
+    if (verbose && used_neutrons<11) {
       printf("id=%ld\tpdg=2112\tekin=%g MeV\tx=%g cm\ty=%g cm\tz=%g cm\tux=%g\tuy=%g\tuz=%g\tt=%g ms\tweight=%g\tpolx=%g\tpoly=%g\tpolz=%g\n",
 	     read_neutrons, particle->ekin, particle->position[0], particle->position[1], particle->position[2],
 	     particle->direction[0], particle->direction[1], particle->direction[2], particle->time, particle->weight,
@@ -155,9 +179,12 @@ FINALLY
     long long ncount;
 
     ncount=mcget_ncount();
-    if (ncount != read_neutrons){
-        fprintf(stderr,"Warning (%s): You requested %ld neutrons from a file which contains %ld.\n"
-                "Please examine the recorded intensities carefully.\n",NAME_CURRENT_COMP,ncount,nparticles);
+    if (used_neutrons!=read_neutrons){
+        fprintf(stdout,"Message(%s): You have used %ld of %ld neutrons available in the MCPL file.\n",NAME_CURRENT_COMP,used_neutrons,read_neutrons);
+    }
+    if (ncount != used_neutrons){
+        fprintf(stderr,"Warning (%s): You requested %ld neutrons from a file which contains %ld particles in general, of which only %ld are neutrons (within the wanted energy interval).\n"
+                "Please examine the recorded intensities carefully.\n",NAME_CURRENT_COMP,ncount,nparticles,used_neutrons);
     }
 
 

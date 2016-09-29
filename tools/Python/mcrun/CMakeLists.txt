@@ -28,12 +28,7 @@ setupMCCODE("${FLAVOR}")
 # Select prefix
 set(P "${MCCODE_PREFIX}")
 
-
 set(TOOLS_NAME "tools/Python/${P}run/")
-
-# Set some extra options for mccode_config
-set(CC "${CMAKE_C_COMPILER}")
-set(CFLAGS "-g -O2 -lm ${CMAKE_C_FLAGS}")
 
 # CPack configuration
 set(CPACK_PACKAGE_NAME          "${FLAVOR}-tools-python-${P}run-${MCCODE_VERSION}")
@@ -75,9 +70,6 @@ endif()
 # Configure fallback script
 configure_file("${CMAKE_SOURCE_DIR}/mcrun.in" "${WORK}/mcrun" @ONLY)
 
-# Configure Python files
-configure_file(config.py "${WORK}/config.py"  @ONLY)
-
 if(WINDOWS)
   install(
     FILES ${BINS}
@@ -87,7 +79,6 @@ if(WINDOWS)
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
-  install(FILES "${WORK}/config.py" DESTINATION "${lib}/${TOOLS_NAME}")
 
   foreach(NAME "__init__.py" "log.py" "mcstas.py" "optimisation.py")
     install(
@@ -98,8 +89,6 @@ if(WINDOWS)
 endif()
 
 if(NOT WINDOWS)
-  install(FILES "${WORK}/config.py" DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
-
   foreach(NAME "__init__.py" "log.py" "mcstas.py" "optimisation.py")
     install(
       FILES "${PROJECT_SOURCE_DIR}/${NAME}"

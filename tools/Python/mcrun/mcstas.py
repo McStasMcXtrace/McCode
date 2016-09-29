@@ -1,14 +1,19 @@
-
 import os
 import re
 import shutil
 import yaml
 
-from os.path import isfile, dirname, basename, splitext
+from os.path import isfile, dirname, basename, splitext, join
 from subprocess import Popen, PIPE
 from decimal import Decimal
 
-import config
+#import config
+
+import sys
+sys.path.append(join(dirname(__file__), '..'))
+from mccodelib import mccode_config
+
+
 from log import getLogger
 LOG = getLogger('mcstas')
 
@@ -85,6 +90,7 @@ class McStas:
         self.name = splitext(basename(self.path))[0]
         self.options = None
         self.params = {}
+        self.version = '%s %s' % (mccode_config.configuration['MCCODE'], mccode_config.configuration['MCCODE_VERSION'])
 
         # Setup paths
         if os.name == 'nt':
@@ -110,9 +116,9 @@ class McStas:
 
         # Create the path for the binary
         if os.name == 'nt':
-            self.binpath = '%s.%s' % (self.name, config.OUT_SUFFIX)
+            self.binpath = '%s.%s' % (self.name, mccode_config.platform['EXESUFFIX'])
         else:
-            self.binpath = './%s.%s' % (self.name, config.OUT_SUFFIX)
+            self.binpath = './%s.%s' % (self.name, mccode_config.platform['EXESUFFIX'])
 
         # Check if instrument code has changed since last compilation
         existingBin = findReusableFile(self.path,
@@ -141,14 +147,14 @@ class McStas:
         # Setup cflags
         cflags = ['-lm']  # math library
         cflags += [self.options.mpi and '-DUSE_MPI' or '-UUSE_MPI']  # MPI
-        cflags += options.no_cflags and ['-O0'] or config.CFLAGS.split()  # cflags
+        cflags += options.no_cflags and ['-O0'] or mccode_config.compilation['CFLAGS'].split()  # cflags
         # Look for CFLAGS in the generated C code
         ccode = open(self.cpath)
         for line in ccode:
             line = line.rstrip()
             if re.search('CFLAGS=', line) :
                 label,flags = line.split('=',1)
-                flags = re.sub(r'\@MCCODE_LIB\@',self.options.mccode_lib,flags)
+                flags = re.sub(r'\@MCCODE_LIB\@', self.options.mccode_lib, flags)
                 flags = flags.split(' ')
                 cflags += flags
                 
@@ -294,8 +300,7 @@ class McStasInfo:
 
 class McStasResult:
     ''' Parsing of McStas experiment output '''
-
-    DETECTOR_RE = r'Detector: ([^\s]+)_I=([^ ]+) \1_ERR=([^\s]+) \1_N=([^ ]+) "(\1[^"]+)"'
+    DETECTOR_RE = r'Detector: ([^\s]+)_I=([^ ]+) \1_ERR=([^\s]+) \1_N=([^ ]+) "([^"]+)"'
 
     def __init__(self, data):
         self.data = data

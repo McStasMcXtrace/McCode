@@ -2,17 +2,22 @@
 # Included from perl_env_header.pl
 
 {
+    use Cwd 'abs_path';
+    use File::Basename;
     if($ENV{"@FLAVOR_UPPER@"}) {
         $MCSTAS::sys_dir = $ENV{"@FLAVOR_UPPER@"};
     } else {
-        $MCSTAS::sys_dir = "@MCCODE_LIB@";
+        $MCSTAS::sys_dir = dirname(dirname(abs_path($0)));
     }
 
     if($ENV{"@FLAVOR_UPPER@_TOOLS"}) {
         $MCSTAS::perl_dir = "$ENV{'@FLAVOR_UPPER@_TOOLS'}/perl";
     } else {
-        $MCSTAS::perl_dir = "$MCSTAS::sys_dir/perl";
+        $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/Perl/perl";
     }
 
     $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
+    $ENV{"@FLAVOR_UPPER@"}=$MCSTAS::sys_dir;
+    $ENV{"PATH"} = $MCSTAS::sys_dir."/bin".$Config::Config{'path_sep'}.$ENV{"PATH"};
+
 }

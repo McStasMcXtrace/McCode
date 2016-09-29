@@ -77,16 +77,13 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 # Configure fallback script
 configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/mcgui" @ONLY)
 
-# Configure config file
-configure_file("${CMAKE_SOURCE_DIR}/mccode_config.py.in" "${WORK}/mccode_config.py" @ONLY)
-
 # Configure launcher
 configure_file("${CMAKE_SOURCE_DIR}/McCode-py.desktop.in" work/@NAME@-py.desktop @ONLY)
 
 if(WINDOWS)
-  set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mccode_config.py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mcgui" "${WORK}/mccode_config.py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mcgui")
 endif()
 
 

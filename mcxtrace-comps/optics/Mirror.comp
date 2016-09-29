@@ -1,0 +1,139 @@
+/*******************************************************************************
+*
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*         University of Copenhagen, Copenhagen, Denmark
+*
+* Component: Mirror
+*
+* %I
+*
+* Written by: Erik B Knudsen 
+* Date: July 2016
+* Version: 1.3
+* Release: McXtrace 1.3
+* Origin: DTU Physics
+*
+* Perfectly flat mirror
+*
+* %D
+* This is a simple implementation of a perfectly flat mirror. The mirror plane is in the XZ-plane. 
+*
+* %P
+* Input parameters:
+* xwidth [m] The width of the mirror
+* zdepth [m] The length of the mirror
+* R0 [ ]  Constant reflecticity
+* reflec [ ] Filename containing reflectivities in a 2D matrix block parameterized by energy and galcing angle.
+*
+* (none)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Mirror
+DEFINITION PARAMETERS ( string reflec="")
+SETTING PARAMETERS (zdepth=0.1, xwidth=0.01, R0=0)
+OUTPUT PARAMETERS (reflec_table, prms)
+/* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
+
+SHARE
+%{
+%}
+
+DECLARE
+%{  
+    struct {
+        double e_min,e_max,e_step,theta_min,theta_max,theta_step;
+        int use_reflec_table;
+    } prms;
+    t_Table reflec_table;
+
+%}
+
+INITIALIZE
+%{
+    if (reflec && strlen(reflec)) {
+        char **header_parsed;
+        t_Table *tp=&reflec_table;
+        /* read 1st block data from file into tp */
+        if (Table_Read(tp, reflec, 1) <= 0)
+        {
+            exit(fprintf(stderr,"Error: %s: cannot read file %s\n",NAME_CURRENT_COMP, reflec));
+        }
+        header_parsed = Table_ParseHeader(tp->header,
+                "e_min=","e_max=","e_step=","theta_min=","theta_max=","theta_step=",NULL);
+        if (header_parsed[0] && header_parsed[1] && header_parsed[2] &&
+                header_parsed[3] && header_parsed[4] && header_parsed[5])
+        {
+            prms.e_min=strtod(header_parsed[0],NULL);
+            prms.e_max=strtod(header_parsed[1],NULL);
+            prms.e_step=strtod(header_parsed[2],NULL);
+            prms.theta_min=strtod(header_parsed[3],NULL);
+            prms.theta_max=strtod(header_parsed[4],NULL);
+            prms.theta_step=strtod(header_parsed[5],NULL);
+        } else {
+            exit(fprintf(stderr,"Error: %s: wrong/missing header line(s) in file %s\n", NAME_CURRENT_COMP, reflec));
+        }
+        if ((prms.e_max-prms.e_min) != ((tp->rows-1)*prms.e_step) )
+        {
+            exit(fprintf(stderr,"Error: %s: e_step does not match e_min and e_max in file %s\n",NAME_CURRENT_COMP, reflec));
+        }
+        if ((prms.theta_max-prms.theta_min) != ((tp->columns-1)*prms.theta_step) )
+        {
+            exit(fprintf(stderr,"Error: %s: theta_step does not match theta_min and theta_max in file %s\n",NAME_CURRENT_COMP, reflec));
+        }
+        prms.use_reflec_table=1;
+    }else{
+        prms.use_reflec_table=0;
+    }
+%}
+
+TRACE
+%{
+    int status;
+    double l0,l1,l2,l3,tx,ty,tz;
+    
+    PROP_Y0;
+    if(tx<-xwidth/2.0|| tx>xwidth/2.0 || z<-zdepth/2.0 || z>zdepth/2.0){
+        RESTORE_XRAY(INDEX_CURRENT_COMP, x,y,z, kx,ky,kz, phi,t, Ex,Ey,Ez, p);
+    }else{
+        double nx,ny,nz;
+        nx=0;
+        ny=1;
+        nz=0;
+
+        double s=scalar_prod(kx,ky,kz,nx,ny,nz);
+        double k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)); 
+         
+        kx=kx-2*s*nx;
+        ky=ky-2*s*ny;
+        kz=kz-2*s*nz;
+
+        /*find energy, and glancing angle*/ 
+        if (prms.use_reflec_table){
+            /*the get ref. by call to Table_value2d*/
+            double R;
+            double theta=RAD2DEG*(acos(s/k)-M_PI_2);
+            double e=K2E*k;
+            R=Table_Value2d(reflec_table,(e-prms.e_min)/prms.e_step, ((theta-prms.theta_min)/prms.theta_step));
+            p*=R;
+        }else{
+            p*=R0;
+        }
+    }
+%}
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. */
+  magnify("");
+  line(-xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0,-zdepth/2.0);
+  line(-xwidth/2.0,0, zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
+  line(-xwidth/2.0,0,-zdepth/2.0,-xwidth/2.0,0, zdepth/2.0);
+  line( xwidth/2.0,0,-zdepth/2.0, xwidth/2.0,0, zdepth/2.0);
+%}
+
+END

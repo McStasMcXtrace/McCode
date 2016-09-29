@@ -1,0 +1,89 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Arm
+*
+* %I
+*
+* Written by: Kim Lefmann and Kristian Nielsen
+* Date: September 1997
+* Version: $Revision$
+* Release: McStas 1.6
+* Origin: Risoe
+*
+* Box containing a constant magnetic field
+*
+* %D
+*
+* %P
+* Input parameters:
+*
+* (none)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Pol_FieldBox
+DEFINITION PARAMETERS (fieldFunction=const_magnetic_field)
+SETTING PARAMETERS (xwidth,yheight,zdepth, Bx,By,Bz)
+OUTPUT PARAMETERS (field_parameters)
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */ 
+
+SHARE
+%{
+    %include "pol-lib"
+%}
+
+DECLARE
+%{
+    double field_parameters[3];
+    
+%}
+
+TRACE
+%{
+    int hit;
+    double t0,t1;
+    if (hit=box_intersect(&t0,&t1,x,y,z,vx,vy,vz,xwidth,yheight,zdepth)){
+        if(t0>0) PROP_DT(t0);
+        field_parameters[0]=Bx;
+        field_parameters[1]=By;
+        field_parameters[2]=Bz;
+        
+        mcmagnet_push(fieldFunction,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,field_parameters);
+        if(t1-t0>0) PROP_DT(t1-t0);
+        
+        mcmagnet_pop();
+    }
+
+%}
+
+MCDISPLAY
+%{
+  const int nDash = 10;
+  double xw_2,yh_2,zd_2;
+  xw_2=xwidth/2.0;yh_2=yheight/2.0;zd_2=zdepth/2.0;
+  /*entrance*/
+  dashed_line(-xw_2, -yh_2, +zd_2,  xw_2, -yh_2, -zd_2, nDash);
+  dashed_line(-xw_2, -yh_2, +zd_2, -xw_2,  yh_2, +zd_2, nDash);
+  dashed_line( xw_2,  yh_2, -zd_2, -xw_2,  yh_2, +zd_2, nDash);
+  dashed_line( xw_2,  yh_2, -zd_2,  xw_2, -yh_2, -zd_2, nDash);
+
+  /*exit*/
+  dashed_line(-xw_2, -yh_2, zdepth+zd_2,  xw_2, -yh_2, zdepth-zd_2, nDash);
+  dashed_line(-xw_2, -yh_2, zdepth+zd_2, -xw_2,  yh_2, zdepth+zd_2, nDash);
+  dashed_line( xw_2,  yh_2, zdepth-zd_2, -xw_2,  yh_2, zdepth+zd_2, nDash);
+  dashed_line( xw_2,  yh_2, zdepth-zd_2,  xw_2, -yh_2, zdepth-zd_2, nDash);
+
+  /*4 lines to make a box*/
+  dashed_line(-xw_2, -yh_2, +zd_2, -xw_2, -yh_2, zdepth+zd_2, nDash);
+  dashed_line(-xw_2,  yh_2, +zd_2, -xw_2,  yh_2, zdepth+zd_2, nDash);
+  dashed_line( xw_2, -yh_2, -zd_2,  xw_2, -yh_2, zdepth-zd_2, nDash);
+  dashed_line( xw_2,  yh_2, -zd_2,  xw_2,  yh_2, zdepth-zd_2, nDash);
+%}
+
+END

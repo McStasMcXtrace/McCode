@@ -34,7 +34,7 @@ struct List_header
     void **elements;
   };
 
-#define MAX_ELEMENTS 50000
+#define MAX_ELEMENTS 500000
 
 /* Position in a list for doing list traversals. */
 struct List_position

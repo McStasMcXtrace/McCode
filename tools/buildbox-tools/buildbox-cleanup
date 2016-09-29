@@ -5,8 +5,11 @@
 # Requirements - like those of the 'nightly' script
 #
 
+# Explicitly set PATH as cron does not use a login shell
+export PATH=/home/mccode/bin:/usr/local/bin:$PATH
+
 # Cd to Git area on buildfarm-master
-cd /Users/mccode/McCode/trunk
+cd /Users/mccode/McCode/
 
 WINHOST=172.16.97.10
 LINHOST=172.16.97.11

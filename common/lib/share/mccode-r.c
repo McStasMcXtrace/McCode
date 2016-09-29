@@ -2549,9 +2549,9 @@ mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
   *y = b.y;
   *z = b.z;
 
-  if (*vz != 0.0 || *vx != 0.0 || *vy != 0.0) mccoordschange_polarisation(t, vx, vy, vz);
+  if ( (vz && vy  && vx) && (*vz != 0.0 || *vx != 0.0 || *vy != 0.0) ) mccoordschange_polarisation(t, vx, vy, vz);
 
-  if (*sz != 0.0 || *sx != 0.0 || *sy != 0.0) mccoordschange_polarisation(t, sx, sy, sz);
+  if ( (sz && sy  && sx) && (*sz != 0.0 || *sx != 0.0 || *sy != 0.0) ) mccoordschange_polarisation(t, sx, sy, sz);
 
 }
 

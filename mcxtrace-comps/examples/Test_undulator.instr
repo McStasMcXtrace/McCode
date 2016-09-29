@@ -1,0 +1,101 @@
+/*******************************************************************************
+* Instrument: Test_undulator
+*
+* %I
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
+* Date: Aug 2016
+* Origin: DTU Physics
+* Release: McXtrace 2.3
+* Version: 1.0
+* %INSTRUMENT_SITE: Templates
+*
+* <instrument short description>
+*
+* %D
+* <instrument description>
+*
+* Example: <parameters=values>
+*
+* %P
+* <parameter1>: [<unit>] <parameter1 description>
+* ...
+* 
+* %L
+* <reference/HTML link>
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT Test_undulator(int SRC=0, int tgth=1, int minh=1, int maxh=1, FAST=0)
+
+DECLARE
+%{
+    double e0;
+    double de=1e-2;
+
+    double Ee=1.5;
+    double lam_u=3.65e-2;
+    double K=1.0;
+
+    double ee0;
+    double dde;
+%}
+
+INITIALIZE
+%{
+
+
+    e0=0.95*Ee*Ee/((1+K*K/2.0)*lam_u*100.0);/*formula expects Ee in GeV and lam_u in cm (Kim 4.27).*/
+    if (de>e0) de=e0;
+    if(tgth){
+        dde=((tgth*e0+de)-(e0-de))/2.0;
+        ee0=((tgth*e0)+e0)/2.0;
+    }else{
+        double emin=minh*e0-de;
+        double emax=maxh*e0+de;
+        dde=(emax-emin)/2.0;
+        ee0=(emax+emin)/2.0;
+    }
+    printf("energy interval: [ %g +- %g ] = [ %g : %g ]\n",ee0,dde,ee0-dde,ee0+dde);
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) RELATIVE ABSOLUTE
+
+
+/*Undulator is set to have 5th harmonic at 15 keV*/
+COMPONENT src1 = Undulator(Ee=1.5, K=1, E0=ee0, dE=dde, Ie=0.4, B=0, gap=4.2,
+	Nper=134, length=3.65e-2*134, sigex=0.05367e-3, sigey=0.004e-3, focus_xw=10e-3,focus_yh=10e-3, dist=20,
+        quick_integ=FAST)
+AT(0,0,0) RELATIVE Origin
+
+COMPONENT e_monitor = E_monitor(
+    Emin=ee0-dde*2, Emax=ee0+dde*2, nE=1000, filename="emon0",
+    restore_xray=1,
+    xwidth=2e-2, yheight=2e-2)
+AT (0, 0, 1) RELATIVE PREVIOUS
+
+COMPONENT psd_monitor = PSD_monitor(
+    filename="psd0",nx=200,ny=200, 
+    restore_xray=1, xwidth=2e-4, yheight=2e-4)
+AT (0, 0, 0) RELATIVE PREVIOUS
+
+COMPONENT slit = Slit(xwidth=0.6e-3,yheight=0.6e-3)
+    AT(0,0,20) RELATIVE Origin
+
+COMPONENT e_monitor1 = COPY(e_monitor)(filename="emon1")
+AT(0,0,20) RELATIVE Origin
+
+COMPONENT psd_monitor1 = COPY(psd_monitor)(filename="psd1", xwidth=10.1e-3, yheight=10.1e-3)
+AT(0,0,20) RELATIVE Origin
+// insert components here (e.g. Insert -> Source -> ...)
+
+
+
+
+FINALLY
+%{
+%}
+
+END

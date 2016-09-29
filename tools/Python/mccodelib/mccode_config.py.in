@@ -1,0 +1,34 @@
+'''
+mcstas/mcxtrace configuration.
+'''
+configuration = {
+    "MCCODE_VERSION": '@MCCODE_VERSION@',
+    "MCCODE_LIB_DIR": '@MCCODE_LIB@',
+    "MCCODE": '@FLAVOR@',
+    "MCRUN": '@MCCODE_PREFIX@run-py',
+    "MCPLOT": '@MCCODE_PREFIX@@MCPLOT_DEFAULT@',
+    "MCDISPLAY": '@MCCODE_PREFIX@display-matplotlib-py',
+    "TOOL_NAME": '@MCCODE_PREFIX@gui-py',
+    "PARTICLE": '@MCCODE_PARTICLE@',
+    "BROWSER": '@BROWSER@',
+}
+
+'''
+Compilation, parallelisation etc.
+'''
+compilation = {
+    "CFLAGS": '-g -lm -O2',
+    "NEXUSFLAGS": '-DUSE_NEXUS -lNeXus',
+    "MPIFLAGS": '-DUSE_MPI -lmpi',
+    "CC": 'gcc',
+    "MPICC": '@MPICC@',
+    "MPIRUN": '@MPIRUN@',
+    "MPINODES": '4',
+}
+
+'''
+Platform settings
+'''
+platform = {
+    "EXESUFFIX": '@EXE@',
+}

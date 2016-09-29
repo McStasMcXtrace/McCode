@@ -2,9 +2,8 @@
 '''
 mgcui program 
 
-Initial version written during Winter/spring of 2015
-
-@author: jaga
+Initial version: spring of 2015.
+Release version: fall 2016.
 '''
 import sys
 import os
@@ -12,14 +11,14 @@ import webbrowser
 import subprocess
 import time
 import re
-import mccode_config
 from PyQt4 import QtGui, QtCore
 from viewclasses import McView
 from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from mclib import McGuiUtils
-from mclib import McComponentParser
+from mccodelib import mccode_config
+from mccodelib import McGuiUtils
+from mccodelib import McComponentParser
 
 ''' Message emitter
 Status and message log and signalling.
@@ -172,6 +171,12 @@ class McGuiState(QtCore.QObject):
     def getDataDir(self):
         return self.__dataDir
     
+    def checkInstrFileCandidate(self, instr):
+        if ' ' in instr:
+            msg = "WARNING: Please not use directory names containing whitespaces."
+            self.__emitter.status(msg)
+            raise Exception(msg)
+
     def setWorkDir(self, newdir):
         if not os.path.isdir(newdir):
             raise Exception('McGuiState.setWorkDir: invalid work dir - "' + newdir + '"')
@@ -350,13 +355,13 @@ class McGuiState(QtCore.QObject):
             if output_dir == '':
                 DATE_FORMAT_PATH = "%Y%d%m_%H%M%S"
                 output_dir = "%s_%s" % \
-                              (self.__instrFile,
+                              (os.path.splitext(self.__instrFile)[0],
                                datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
                 
             runstr = mccode_config.configuration["MCRUN"] + mcrunparms + os.path.basename(self.__instrFile) + ' -d ' + output_dir
             self.__dataDir = output_dir
         else:
-            runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files '
+            runstr = mccode_config.configuration["MCDISPLAY"] + ' ' + os.path.basename(self.__instrFile) + ' --no-output-files'
             self.__dataDir = "None"
         
         # neutron count
@@ -387,8 +392,12 @@ class McGuiState(QtCore.QObject):
             runstr = runstr + ' ' + p[0] + '=' + p[1]
         
         print('Running: '+runstr)
+        
+        # 
+        if simtrace == 1:
+            runstr = runstr + '\&'
 
-        # Ensure assembled runstr is a string - QStrings breaks the runAsync execution!
+        # Ensure assembled runstr is a string, not a QString 
         runstr = str(runstr)
         
         # run simulation in a background thread
@@ -438,7 +447,7 @@ class McGuiState(QtCore.QObject):
         
         if stderrdata:
             self.__emitter.message(stderrdata, err_msg=True)
-            
+        
         if process.returncode != 0:
             raise Exception('Instrument compile error.')
         
@@ -449,7 +458,7 @@ class McGuiState(QtCore.QObject):
                 s = l.split()[1]
                 s = s.split('=')
                 params.append(s)
-                
+        
         return params
 
 
@@ -594,13 +603,28 @@ class McGuiAppController():
         self.emitter.status('')
         resultdir = self.state.getDataDir()
         cmd = mccode_config.configuration["MCPLOT"] + ' ' + resultdir
-        subprocess.Popen(cmd, 
+        subprocess.Popen(cmd,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
                          shell=True)
         self.emitter.message(cmd)
         self.emitter.message('')
-        
+    
+    def handleMcDisplayWeb(self):
+        self.emitter.status('Running mcdisplay-webgl...')
+        try:
+            cmd = 'mcdisplay-webgl --default ' + os.path.basename(self.state.getInstrumentFile())
+            self.emitter.message(cmd)
+            self.emitter.message('')
+            process = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             shell=True)
+            process.wait()
+            
+        finally:
+            self.emitter.status('')
+    
     def handleHelpWeb(self):
         # open the mcstas homepage
         mcurl = 'http://www.mcstas.org'
@@ -626,12 +650,12 @@ class McGuiAppController():
         (stdoutdata, stderrdata) = process.communicate()
         
         self.view.showAboutBox(stdoutdata)
-        
+    
     def handleEditInstrument(self):
         instr = self.state.getInstrumentFile()
         self.view.showCodeEditorWindow(instr)
         self.emitter.status("Editing instrument: " + os.path.basename(str(instr)))
-        
+    
     def handleCloseInstrument(self):
         if self.view.closeCodeEditorWindow():
             self.state.unloadInstrument()
@@ -643,11 +667,12 @@ class McGuiAppController():
         if result:
             self.view.ew.assumeDataSaved()
             self.emitter.status("Instrument saved: " + os.path.basename(self.state.getInstrumentFile()))
-            
+    
     def handleSaveAs(self):
         oldinstr = self.state.getInstrumentFile()
         if oldinstr != '':
             newinstr = self.view.showSaveAsDialog(oldinstr)
+            self.state.checkInstrFileCandidate(newinstr)
         
         if newinstr != '':
             self.state.unloadInstrument()
@@ -659,35 +684,42 @@ class McGuiAppController():
     
     def handleNewInstrument(self):
         new_instr_req = self.view.showNewInstrDialog(self.state.getWorkDir())
+        self.state.checkInstrFileCandidate(new_instr_req)
+        
         if new_instr_req != '':
-            template_text_header = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_header_simple.instr")).read()
-            template_text_body = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_body_simple.instr")).read()
-            new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, template_text_header + template_text_body)
+            template_text = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_simple.instr")).read()
+            new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, template_text)
             if new_instr != '':
                 if self.view.closeCodeEditorWindow():
                     self.state.unloadInstrument()
                     self.state.loadInstrument(new_instr)
                     self.view.showCodeEditorWindow(new_instr)
                     self.emitter.status("Editing new instrument: " + os.path.basename(str(new_instr)))
-        
+    
     def handleNewFromTemplate(self, instr_templ=''):
         new_instr_req = self.view.showNewInstrFromTemplateDialog(os.path.join(self.state.getWorkDir(), os.path.basename(str(instr_templ))))
+        self.state.checkInstrFileCandidate(new_instr_req)
+        
         if new_instr_req != '':
             if self.view.closeCodeEditorWindow():
                 text = McGuiUtils.getFileContents(instr_templ)
                 new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, text)
                 self.state.loadInstrument(new_instr)
                 self.emitter.status("Instrument created: " + os.path.basename(str(new_instr)))
-        
+    
     def handleOpenInstrument(self):
         instr = self.view.showOpenInstrumentDlg(self.state.getWorkDir())
+        if not instr:
+            return
+        self.state.checkInstrFileCandidate(instr)
+        
         if instr:
             if self.view.closeCodeEditorWindow():
                 self.state.unloadInstrument()
                 self.state.loadInstrument(instr)
                 self.emitter.message("Instrument opened: " + os.path.basename(str(instr)))
                 self.emitter.status("Instrument: " + os.path.basename(str(instr)))
-        
+    
     def handleMcdoc(self):
         subprocess.Popen('mcdoc', shell=True)
     
@@ -715,6 +747,7 @@ class McGuiAppController():
         mwui.actionCompile_Instrument_MPI.triggered.connect(lambda: self.state.compile(mpi=True))
         mwui.actionRun_Simulation.triggered.connect(self.handleRunOrInterruptSim)
         mwui.actionPlot.triggered.connect(self.handlePlotResults)
+        mwui.actionDisplay.triggered.connect(self.handleMcDisplayWeb)
         
         mwui.actionMcdoc.triggered.connect(self.handleMcdoc)
         mwui.actionMcstas_Web_Page.triggered.connect(self.handleHelpWeb)
@@ -748,12 +781,12 @@ def main():
         mcguiApp.ctr = McGuiAppController()
         
         sys.exit(mcguiApp.exec_())
-
+    
     except Exception, e: 
         print(e.message)
         raise
-        
-        
+    
+
 if __name__ == '__main__':
     main()
 

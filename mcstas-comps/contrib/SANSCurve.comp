@@ -62,12 +62,6 @@ DECLARE
 	double Prefactor;
 	int NumberOfDatapoints;
 	double NumberDensity; 
-%}
-
-INITIALIZE
-%{	
-	// Rescale concentration into number of aggregates per m^3 times 10^-4
-	NumberDensity = Concentration * 6.02214129e19;
 
 	// Function used to determine the number of datapoints in the input file
     int CountLines(FILE* File)
@@ -127,6 +121,13 @@ INITIALIZE
 
         return NumberOfDatapoints;
     }
+%}
+
+INITIALIZE
+%{	
+	// Rescale concentration into number of aggregates per m^3 times 10^-4
+	NumberDensity = Concentration * 6.02214129e19;
+
 
 	// Initializing curve from file
     NumberOfDatapoints = LoadCurve(FileWithCurve, &Q, &I);

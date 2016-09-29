@@ -92,6 +92,7 @@
 * ##compcurindex
 * ##absorb          label for ABSORB (goto)
 * ##Scattered       Incremented each time a SCATTER is done
+* ##Restore         Flag indicating that @MCCODE_PARTICLE@ should be restored
 * ##NCounter        Incremented each time a @MCCODE_PARTICLE@ is entering the component
 * ##AbsorbProp      single counter for removed events in PROP calls
 * ##comp_storein    Positions of @MCCODE_PARTICLE@ entering each comp (loc. coords)
@@ -400,8 +401,10 @@ cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
       coutf("/* '%s=%s()' component instance extend code */",comp->name, comp->type);
       coutf("    SIG_MESSAGE(\"%s (Trace:Extend)\");", comp->name); /* signal handler message */
       if (comp->when)
-        coutf("if (%s)\n", exp_tostring(comp->when));
+        coutf("if (%s) {\n", exp_tostring(comp->when));
       codeblock_out(comp->extend);
+      if (comp->when)
+        cout("}\n");
     }
     if (infunc==2 && list_len(comp->jump) > 0) {
       List_handle liter2;
@@ -622,9 +625,12 @@ cogen_decls(struct instr_def *instr)
   cout("/* Counter for PROP ABSORB */");
   coutf("MCNUM  %sAbsorbProp[%i];", ID_PRE, list_len(instr->complist)+2);
 
-  /* 8. Declaration of SCATTER flags */
+  /* 8. Declaration of SCATTER and RESTORE flags */
   cout("/* Flag true when previous component acted on the @MCCODE_PARTICLE@ (SCATTER) */");
   coutf("MCNUM %sScattered=0;", ID_PRE);
+
+  cout("/* Flag true when @MCCODE_PARTICLE@ should be restored (RESTORE) */");
+  coutf("MCNUM %sRestore=0;", ID_PRE);
 
   if (list_len(instr->grouplist) > 0)
   {
@@ -831,121 +837,10 @@ cogen_init(struct instr_def *instr)
     struct comp_iformal *par;
 
     coutf("    /* Component %s. */", comp->name);
-    coutf("    SIG_MESSAGE(\"%s (Init:Place/Rotate)\");", comp->name); /* signal handler message */
-
-    /* Absolute rotation. */
-    x = exp_tostring(comp->pos->orientation.x);
-    y = exp_tostring(comp->pos->orientation.y);
-    z = exp_tostring(comp->pos->orientation.z);
-    relcomp = comp->pos->orientation_rel;
-    if(relcomp == NULL)
-    {                                /* Absolute orientation. */
-      coutf("    rot_set_rotation(%srota%s,", ID_PRE, comp->name);
-      code_set_source(instr->quoted_source,
-                      exp_getlineno(comp->pos->orientation.x));
-      coutf("      (%s)*%s,", x, d2r);
-      code_set_source(instr->quoted_source,
-                      exp_getlineno(comp->pos->orientation.y));
-      coutf("      (%s)*%s,", y, d2r);
-      code_set_source(instr->quoted_source,
-                      exp_getlineno(comp->pos->orientation.z));
-      coutf("      (%s)*%s);", z, d2r);
-      code_reset_source();
-    }
-    else
-    {
-      coutf("    rot_set_rotation(%str1,", ID_PRE);
-      code_set_source(instr->quoted_source,
-                      exp_getlineno(comp->pos->orientation.x));
-      coutf("      (%s)*%s,", x, d2r);
-      code_set_source(instr->quoted_source,
-                      exp_getlineno(comp->pos->orientation.y));
-      coutf("      (%s)*%s,", y, d2r);
-      code_set_source(instr->quoted_source,
-                      exp_getlineno(comp->pos->orientation.z));
-      coutf("      (%s)*%s);", z, d2r);
-      code_reset_source();
-      coutf("    rot_mul(%str1, %srota%s, %srota%s);",
-            ID_PRE, ID_PRE, relcomp->name, ID_PRE, comp->name);
-    }
-    str_free(z);
-    str_free(y);
-    str_free(x);
-
-    /* Relative rotation. */
-    if(last == NULL)
-    {                                /* First component. */
-      coutf("    rot_copy(%srotr%s, %srota%s);",
-            ID_PRE, comp->name, ID_PRE, comp->name);
-    }
-    else
-    {
-      coutf("    rot_transpose(%srota%s, %str1);", ID_PRE, last->name, ID_PRE);
-      coutf("    rot_mul(%srota%s, %str1, %srotr%s);",
-            ID_PRE, comp->name, ID_PRE, ID_PRE, comp->name);
-    }
-
-    /* Absolute position. */
-    x = exp_tostring(comp->pos->place.x);
-    y = exp_tostring(comp->pos->place.y);
-    z = exp_tostring(comp->pos->place.z);
-    relcomp = comp->pos->place_rel;
-    if(relcomp == NULL)
-    {
-      coutf("    %sposa%s = coords_set(", ID_PRE, comp->name);
-      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
-      coutf("      %s,", x);
-      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
-      coutf("      %s,", y);
-      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
-      coutf("      %s);", z);
-      code_reset_source();
-    }
-    else
-    {
-      coutf("    %stc1 = coords_set(", ID_PRE);
-      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
-      coutf("      %s,", x);
-      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
-      coutf("      %s,", y);
-      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
-      coutf("      %s);", z);
-      code_reset_source();
-      coutf("    rot_transpose(%srota%s, %str1);",
-            ID_PRE, relcomp->name, ID_PRE);
-      coutf("    %stc2 = rot_apply(%str1, %stc1);",
-            ID_PRE, ID_PRE, ID_PRE);
-      coutf("    %sposa%s = coords_add(%sposa%s, %stc2);",
-            ID_PRE, comp->name, ID_PRE, relcomp->name, ID_PRE);
-    }
-
-    str_free(z);
-    str_free(y);
-    str_free(x);
-
-    /* Relative position. */
-    if(last == NULL)
-      coutf("    %stc1 = coords_neg(%sposa%s);", ID_PRE, ID_PRE, comp->name);
-    else
-      coutf("    %stc1 = coords_sub(%sposa%s, %sposa%s);",
-            ID_PRE, ID_PRE, last->name, ID_PRE, comp->name);
-    coutf("    %sposr%s = rot_apply(%srota%s, %stc1);",
-          ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
-
-    coutf("    %sDEBUG_COMPONENT(\"%s\", %sposa%s, %srota%s)",
-          ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name);
-
-    coutf("    %scomp_posa[%i] = %sposa%s;", ID_PRE, comp->index, ID_PRE, comp->name);
-    coutf("    %scomp_posr[%i] = %sposr%s;", ID_PRE, comp->index, ID_PRE, comp->name);
-    coutf("    %sNCounter[%i]  = %sPCounter[%i] = %sP2Counter[%i] = 0;",
-          ID_PRE, comp->index, ID_PRE, comp->index, ID_PRE, comp->index);
-    coutf("    %sAbsorbProp[%i]= 0;", ID_PRE, comp->index);
-
-    last = comp;
 
     coutf("  /* Setting parameters for component %s. */", comp->name);
     coutf("  SIG_MESSAGE(\"%s (Init:SetPar)\");", comp->name); /* signal handler message */
-    /* Setting parameters of the component setting parameters. */
+    /* Setting parameters of the component */
     setpar = list_iterate(comp->def->set_par);
     while((par = list_next(setpar)) != NULL)
     {
@@ -961,7 +856,8 @@ cogen_init(struct instr_def *instr)
       }
       else
       {
-        coutf("  if(%s) strncpy(%sc%s_%s,%s, 16384); else %sc%s_%s[0]='\\0';", val, ID_PRE, comp->name, par->id, val, ID_PRE, comp->name, par->id);
+        coutf("  if(%s) strncpy(%sc%s_%s, %s ? %s : \"\", 16384); else %sc%s_%s[0]='\\0';",
+          val, ID_PRE, comp->name, par->id, val, val, ID_PRE, comp->name, par->id);
       }
       str_free(val);
     }
@@ -969,6 +865,119 @@ cogen_init(struct instr_def *instr)
     if(list_len(comp->def->set_par) > 0)
       code_reset_source();
     cout("");
+
+
+    coutf("  SIG_MESSAGE(\"%s (Init:Place/Rotate)\");", comp->name); /* signal handler message */
+
+    /* Absolute rotation. */
+    x = exp_tostring(comp->pos->orientation.x);
+    y = exp_tostring(comp->pos->orientation.y);
+    z = exp_tostring(comp->pos->orientation.z);
+    relcomp = comp->pos->orientation_rel;
+    if(relcomp == NULL)
+    {                                /* Absolute orientation. */
+      coutf("  rot_set_rotation(%srota%s,", ID_PRE, comp->name);
+      code_set_source(instr->quoted_source,
+                      exp_getlineno(comp->pos->orientation.x));
+      coutf("    (%s)*%s,", x, d2r);
+      code_set_source(instr->quoted_source,
+                      exp_getlineno(comp->pos->orientation.y));
+      coutf("    (%s)*%s,", y, d2r);
+      code_set_source(instr->quoted_source,
+                      exp_getlineno(comp->pos->orientation.z));
+      coutf("    (%s)*%s);", z, d2r);
+      code_reset_source();
+    }
+    else
+    {
+      coutf("  rot_set_rotation(%str1,", ID_PRE);
+      code_set_source(instr->quoted_source,
+                      exp_getlineno(comp->pos->orientation.x));
+      coutf("    (%s)*%s,", x, d2r);
+      code_set_source(instr->quoted_source,
+                      exp_getlineno(comp->pos->orientation.y));
+      coutf("    (%s)*%s,", y, d2r);
+      code_set_source(instr->quoted_source,
+                      exp_getlineno(comp->pos->orientation.z));
+      coutf("    (%s)*%s);", z, d2r);
+      code_reset_source();
+      coutf("  rot_mul(%str1, %srota%s, %srota%s);",
+            ID_PRE, ID_PRE, relcomp->name, ID_PRE, comp->name);
+    }
+    str_free(z);
+    str_free(y);
+    str_free(x);
+
+    /* Relative rotation. */
+    if(last == NULL)
+    {                                /* First component. */
+      coutf("  rot_copy(%srotr%s, %srota%s);",
+            ID_PRE, comp->name, ID_PRE, comp->name);
+    }
+    else
+    {
+      coutf("  rot_transpose(%srota%s, %str1);", ID_PRE, last->name, ID_PRE);
+      coutf("  rot_mul(%srota%s, %str1, %srotr%s);",
+            ID_PRE, comp->name, ID_PRE, ID_PRE, comp->name);
+    }
+
+    /* Absolute position. */
+    x = exp_tostring(comp->pos->place.x);
+    y = exp_tostring(comp->pos->place.y);
+    z = exp_tostring(comp->pos->place.z);
+    relcomp = comp->pos->place_rel;
+    if(relcomp == NULL)
+    {
+      coutf("  %sposa%s = coords_set(", ID_PRE, comp->name);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
+      coutf("    %s,", x);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
+      coutf("    %s,", y);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
+      coutf("    %s);", z);
+      code_reset_source();
+    }
+    else
+    {
+      coutf("  %stc1 = coords_set(", ID_PRE);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
+      coutf("    %s,", x);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
+      coutf("    %s,", y);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
+      coutf("    %s);", z);
+      code_reset_source();
+      coutf("  rot_transpose(%srota%s, %str1);",
+            ID_PRE, relcomp->name, ID_PRE);
+      coutf("  %stc2 = rot_apply(%str1, %stc1);",
+            ID_PRE, ID_PRE, ID_PRE);
+      coutf("  %sposa%s = coords_add(%sposa%s, %stc2);",
+            ID_PRE, comp->name, ID_PRE, relcomp->name, ID_PRE);
+    }
+
+    str_free(z);
+    str_free(y);
+    str_free(x);
+
+    /* Relative position. */
+    if(last == NULL)
+      coutf("  %stc1 = coords_neg(%sposa%s);", ID_PRE, ID_PRE, comp->name);
+    else
+      coutf("  %stc1 = coords_sub(%sposa%s, %sposa%s);",
+            ID_PRE, ID_PRE, last->name, ID_PRE, comp->name);
+    coutf("  %sposr%s = rot_apply(%srota%s, %stc1);",
+          ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
+
+    coutf("  %sDEBUG_COMPONENT(\"%s\", %sposa%s, %srota%s)",
+          ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name);
+
+    coutf("  %scomp_posa[%i] = %sposa%s;", ID_PRE, comp->index, ID_PRE, comp->name);
+    coutf("  %scomp_posr[%i] = %sposr%s;", ID_PRE, comp->index, ID_PRE, comp->name);
+    coutf("  %sNCounter[%i]  = %sPCounter[%i] = %sP2Counter[%i] = 0;",
+          ID_PRE, comp->index, ID_PRE, comp->index, ID_PRE, comp->index);
+    coutf("  %sAbsorbProp[%i]= 0;", ID_PRE, comp->index);
+
+    last = comp;
 
   } /* end while instr->complist */
   list_iterate_end(liter);
@@ -1144,6 +1153,10 @@ cogen_trace(struct instr_def *instr)
     for(i = 0; i < NUM_STATE_PARS; i++)
       coutf("#define %s %snl%s", statepars_all[i], ID_PRE, statepars_all[i]);
 
+    cout("");
+    coutf("#define %sabsorbComp %sabsorbComp%s", ID_PRE, ID_PRE, comp->name);
+
+
 #if MCCODE_PROJECT == 1     /* neutron */
     static char *store  ="STORE_NEUTRON";
     static char *restore="RESTORE_NEUTRON";
@@ -1178,6 +1191,7 @@ cogen_trace(struct instr_def *instr)
     } /* SPLIT handling */
 
     coutf("  %sScattered=0;", ID_PRE);
+    coutf("  %sRestore=0;", ID_PRE);
     coutf("  %sNCounter[%i]++;", ID_PRE, comp->index);
     coutf("  %sPCounter[%i] += p;", ID_PRE, comp->index);
     coutf("  %sP2Counter[%i] += p*p;", ID_PRE, comp->index);
@@ -1200,27 +1214,33 @@ cogen_trace(struct instr_def *instr)
       coutf("#undef %sabsorb", ID_PRE);
       coutf("#define %sabsorb %sabsorbAll", ID_PRE, ID_PRE);
       coutf("  } /* end comp %s in GROUP %s */", comp->name, comp->group->name);
-      coutf("  if (SCATTERED) %sGroup%s=%i;",
+      coutf("  if (SCATTERED) {\n    %sGroup%s=%i;\n  } else {\n    RESTORE=1;\n  }",
         ID_PRE, comp->group->name, comp->index);
-      cout ("  /* Label to skip component instead of ABSORB */");
-      coutf("  %sabsorbComp%s:", ID_PRE, comp->name);
-
-      if (strcmp(comp->name, comp->group->last_comp)) {
-        /* not the last comp of GROUP: check if SCATTERED */
-        coutf("  if (!%sGroup%s) /* restore @MCCODE_PARTICLE@ if was not scattered in GROUP yet */", ID_PRE, comp->group->name);
-        coutf("  { %s(%i,", restore, comp->index); /* RESTORE */
-        for(i = 0; i < NUM_STATE_PARS; i++)
-          if (i < NUM_STATE_PARS-1) coutf("      %snl%s,", ID_PRE, statepars_all[i]);
-          else                      coutf("      %snl%s); }",ID_PRE, statepars_all[i]);
-      } else {
-        /* last comp of GROUP: restore default ABSORB */
-        coutf("/* end of GROUP %s */", comp->group->name);
-        coutf("  if (!%sGroup%s) ABSORB; /* absorb @MCCODE_PARTICLE@ non scattered in GROUP */", ID_PRE, comp->group->name);
-      }
     } /* GROUP */
+    /* mcabsorbComp label for any component */
+    cout ("  /* Label for restoring  @MCCODE_PARTICLE@ */");
+    coutf("  %sabsorbComp%s:", ID_PRE, comp->name);
+    coutf("  if (RESTORE) /* restore if needed */");
+    coutf("  { %s(%i,", restore, comp->index); /* RESTORE */
+    for(i = 0; i < NUM_STATE_PARS; i++) {
+      if (i < NUM_STATE_PARS-1) coutf("      %snl%s,", ID_PRE, statepars_all[i]);
+      else                      coutf("      %snl%s); }",ID_PRE, statepars_all[i]);
+    }
 
+    /* GROUP - last element */
+    if (comp->group) {
+      if (!strcmp(comp->name, comp->group->last_comp)) {
+	/* last comp of GROUP: restore default ABSORB */
+	coutf("/* end of GROUP %s */", comp->group->name);
+        coutf("  if (!%sGroup%s) ABSORB; /* absorb @MCCODE_PARTICLE@ non scattered in GROUP */", ID_PRE, comp->group->name);
+        coutf("  %sGroup%s=0; /* reset group scattered flag */", ID_PRE, comp->group->name);
+      }
+    }
+
+    coutf("#undef %sabsorbComp", ID_PRE);
     for(i = NUM_STATE_PARS-1; i >= 0; i--)
       coutf("#undef %s", statepars_all[i]);
+
     /* Debugging (exit from component). */
     coutf("  %sDEBUG_STATE(", ID_PRE);
     for(i = 0; i < NUM_STATE_PARS; i++)
@@ -1488,7 +1508,7 @@ cogen_runtime(struct instr_def *instr)
     embed_file("mcxtrace-r.h");
 #endif
     /* NeXus support, only active with -DUSE_NEXUS */
-    if (verbose) printf("Specify             -DUSE_NEXUS -lNeXus to enable NeXus support\n");
+    if (verbose) printf("Specify             -DUSE_NEXUS -lNeXus in the CFLAGS (dependency) to enable NeXus support\n");
     embed_file("mccode-r.c");
 #if MCCODE_PROJECT == 1     /* neutron */
     embed_file("mcstas-r.c");
@@ -1505,14 +1525,14 @@ cogen_runtime(struct instr_def *instr)
     coutf("#include \"%s%sshare%smcxtrace-r.h\"",  sysdir_new, pathsep, pathsep);
 #endif
 
-    fprintf(stderr,"Dependency: %s.o\n", "mccode-r");
+    fprintf(stderr,"Dependency: '%s.o' (add it to CFLAGS)\n", "mccode-r");
 #if MCCODE_PROJECT == 1     /* neutron */
-    fprintf(stderr,"Dependency: %s.o\n", "mcstas-r");
+    fprintf(stderr,"Dependency: '%s.o' (add it to CFLAGS)\n", "mcstas-r");
 #elif MCCODE_PROJECT == 2   /* xray */
-    fprintf(stderr,"Dependency: %s.o\n", "mcxtrace-r");
+    fprintf(stderr,"Dependency: '%s.o' (add it to CFLAGS)\n", "mcxtrace-r");
 #endif
-    fprintf(stderr,"Dependency: %s.o\n", "mcstas-r");
-    fprintf(stderr,"Dependency: '-DUSE_NEXUS -lNeXus' to enable NeXus support\n");
+    fprintf(stderr,"Dependency: '%s.o' (add it to CFLAGS)\n", "mcstas-r");
+    fprintf(stderr,"Dependency: '-DUSE_NEXUS -lNeXus' (add it to CFLAGS) to enable NeXus support\n");
     fprintf(stderr,"To build instrument %s, compile and link with these libraries (in %s%sshare)\n", instrument_definition->quoted_source, sysdir_new, pathsep);
   }
 
@@ -1525,7 +1545,7 @@ cogen_runtime(struct instr_def *instr)
   coutf("int %sdefaultmain = %d;", ID_PRE, instr->use_default_main);
   coutf("char %sinstrument_name[] = \"%s\";", ID_PRE, instr->name);
   coutf("char %sinstrument_source[] = \"%s\";", ID_PRE, instr->source);
-  coutf("char *%sinstrument_exe=NULL; /* will be set to argv[0] in main */", ID_PRE); 
+  coutf("char *%sinstrument_exe=NULL; /* will be set to argv[0] in main */", ID_PRE);
   if(instr->use_default_main)
     cout("int main(int argc, char *argv[]){return mccode_main(argc, argv);}");
 } /* cogen_runtime */
@@ -1569,6 +1589,15 @@ cogen(char *output_name, struct instr_def *instr)
   coutf(" * Instrument: %s (%s)", instr->source, instr->name);
   coutf(" * Date:       %s", date);
   coutf(" * File:       %s", output_name);
+  coutf(" * Compile:    cc -o %s.%s %s %s",
+  instr->name,
+#ifdef WIN32
+    "exe",
+#else
+    "out",
+#endif
+    output_name, instr->dependency);
+  coutf(" * CFLAGS=%s", instr->dependency);
   cout(" */\n");
   cout("");
   coutf("#define MCCODE_STRING \"%s\"", MCCODE_STRING);

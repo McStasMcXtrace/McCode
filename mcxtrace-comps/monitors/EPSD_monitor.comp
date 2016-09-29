@@ -81,7 +81,7 @@ INITIALIZE
            NAME_CURRENT_COMP);
       exit(0);
     }
-    if (Emax<Emin){
+    if (Emax<=Emin){
         fprintf(stderr,"Error (%s): Unmeaningful energy interval E:[%g,%g]\n Aborting",NAME_CURRENT_COMP,Emin,Emax);
       exit(0);
     }
@@ -164,7 +164,7 @@ SAVE
   
           for (kk=0; kk<nE; kk++) {
               sprintf(ff, "%s_%i",filename,kk);
-              sprintf(tt, "PSD monitor Energy slice %i ~ %g mu-s",kk,kk*(Emax-Emin)/nE);
+              sprintf(tt, "PSD monitor Energy slice %i ~ %g keV",kk,kk*(Emax-Emin)/nE);
               DETECTOR_OUT_2D(
                       tt,
                       "X position [m]",

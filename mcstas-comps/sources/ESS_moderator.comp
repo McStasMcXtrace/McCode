@@ -151,6 +151,7 @@ INITIALIZE
   /* correction for projection along the beam / projection on the z=0 plane */
   cos_thermal=cos_beamport_angle;
   cos_cold=cos((abs_beamport_angle-24.24)*DEG2RAD)/cos(24.24*DEG2RAD);
+  printf("input to cosine %g, output %g\n",abs_beamport_angle, cos_cold);
   /* cross-section between the z=const and tilted surfaces [m] */
   edge_thermal=-0.0716;
   
@@ -346,11 +347,11 @@ TRACE
     x = sgnport*xprime*cos_beamport_angle + zprime*sin_beamport_angle;
     z = cos_beamport_angle*zprime - sgnport*xprime*sin_beamport_angle;
 	/* the position was projected in the beamport direction - we must multiply by cosine*/
-	if (xprime>edge_thermal) {
-		w_geom *=cos_thermal;
-	} else {
-		w_geom *=cos_cold;
-	}
+	/* if (xprime>edge_thermal) { */
+	/* 	w_geom *=cos_thermal; */
+	/* } else { */
+	/* 	w_geom *=cos_cold; */
+	/* } */
 	
     
   } else {
@@ -419,7 +420,6 @@ TRACE
   }  else  {                      //case: thermal moderator
     thermal_bril( &t,  &p,  lambda,  tfocus_width,  tfocus_time,  dt, modextras);
   }
-  //printf("Source weight factors: w_stat %g, w_focus %g, w_geom %g, w_mult %g\n",w_stat,w_focus,w_geom,w_mult);
 
   p*=w_stat*w_focus*w_geom*w_mult;
   t+=(double)floor((n_pulses)*rand01())/ESS_SOURCE_FREQUENCY;   /* Select a random pulse */

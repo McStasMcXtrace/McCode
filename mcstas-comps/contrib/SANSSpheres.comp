@@ -7,6 +7,7 @@
 * Component: SANSSpheres
 *
 * %I
+* 
 * Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
 * Based on a SANS-component in McStas by Peter Willendrup
 * Date: October 17, 2012
@@ -14,7 +15,7 @@
 * Origin: KU-Science
 * Release: McStas 1.12c
 *
-* A sample of monodisperse spherical particles in solution.
+* A sample of mono- or polydisperse spherical particles in solution.
 *
 * %D
 * A simple component simulating the scattering from a box-shaped, thin solution
@@ -22,6 +23,7 @@
 *
 * %P
 * R						    : [AA]		Radius of the spherical particles.
+* dR                                : [AA]  Variance of the radius of spherical particles. Default 0 (monodisperse spheres)
 * Concentration		  	    : [mM]		Concentration of sample.
 * DeltaRho  			    : [cm/AA^3]	Excess scattering length density of the 
 *								   	    particles.
@@ -41,7 +43,7 @@ DEFINE COMPONENT SANSSpheres
 
 DEFINITION PARAMETERS ()
 
-SETTING PARAMETERS (R = 100.0, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0,
+  SETTING PARAMETERS (R = 100.0, dR=0.0, Concentration = 0.01, DeltaRho = 1.0e-14, AbsorptionCrosssection = 0.0,
 		    		xwidth, yheight, zdepth, SampleToDetectorDistance, DetectorRadius)
 
 OUTPUT PARAMETERS ()
@@ -89,7 +91,10 @@ TRACE
 	double vy_i;
 	double vz_i;
 	char Intersect = 0;
-
+	
+	// Set radius if polydisperse spheres
+	R = R + randnorm()*dR;
+	
 	// Computation
 	Intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
 

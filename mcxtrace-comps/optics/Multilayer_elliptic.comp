@@ -220,8 +220,8 @@ TRACE
   C=b*b*z_el*z_el+a*a*y_el*y_el-a*a*b*b;
   D=B*B-4*A*C;
   if (D>=0){
-    t0=(-B+sqrt(D))/(2*A);
-    t1=(-B-sqrt(D))/(2*A);
+    t0=(-B-sqrt(D))/(2*A);
+    t1=(-B+sqrt(D))/(2*A);
     if (t0>=0) { 
 	t=t0;
     } else if (t1>=0){
@@ -314,6 +314,10 @@ TRACE
     }
   }
   
+%}
+FINALLY
+%{
+    free(prms_m);
 %}
 
 MCDISPLAY

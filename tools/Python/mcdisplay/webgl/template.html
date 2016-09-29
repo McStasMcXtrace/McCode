@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset=utf-8>
+	<style>
+		body { margin: 0; }
+		canvas { width: 100%; height: 100% }
+	</style>
+</head>
+<body>
+	<script src="https://sim.e-neutrons.org/static/threejs/three.min.js"></script>
+	<script src="https://sim.e-neutrons.org/static/threejs/dat.gui.min.js"></script>
+	<script src="https://sim.e-neutrons.org/static/threejs/OrbitControls.js"></script>
+	<script src="https://sim.e-neutrons.org/static/threejs/Lut.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+	<script src="_mcdisplay.js"></script>
+	<script src="_instr.js"></script>
+	<script src="_particles.js"></script>
+
+	<script>
+        var campos_x = -26.3, campos_y = 26.3, campos_z = 26.3;
+        var box_x1 = 0, box_x2 = 3, box_y1 = -0.3, box_y2 = 0.3, box_z1 = 49, box_z2 = 53;
+        // INSERT_CAMPOS_HERE
+        // INSERT_BOX_HERE
+        var box_lst = [box_x1, box_x2, box_y1, box_y2, box_z1, box_z2];
+        var controller = new Controller(campos_x, campos_y, campos_z, box_lst);
+        var viewmodel = controller.viewmodel;
+
+		// UI event handlers interacting only(!!) with the viewmodel.
+		// TODO: implement callbacks
+		var handlePlayPause = function()
+		{
+			if (viewmodel.playBack == PlayBack.RUN)
+			{
+				viewmodel.setPlayBack(PlayBack.PAUSE);
+			}
+			else
+			{
+				viewmodel.setPlayBack(PlayBack.RUN);
+			}
+		}
+		var handleNext = function()
+		{
+			viewmodel.setPlayBack(PlayBack.PAUSE);
+			viewmodel.setRayIdx(viewmodel.getRayIdx() + 1);
+		}
+		var handlePrev = function()
+		{
+			viewmodel.setPlayBack(PlayBack.PAUSE);
+			viewmodel.setRayIdx(viewmodel.getRayIdx() - 1);
+		}
+		var handleKeepChanged = function(checked)
+		{
+			if (checked)
+			{
+				viewmodel.setDisplayMode(DisplayMode.KEEP);
+			}
+			else
+			{
+				viewmodel.setDisplayMode(DisplayMode.SINGLE);
+			}
+		}
+		var handleShowBBChanged = function(checked)
+		{
+			console.log("bounding box " + checked);
+			viewmodel.setShowBoundingBox(checked);
+		}
+		var handleViewTop = function()
+		{
+			controller.setViewTop();
+		}
+		var handleViewSide = function()
+		{
+			controller.setViewSide();
+		}
+		var handleViewHome = function()
+		{
+			controller.setViewHome();
+		}
+	</script>
+
+	<div id="gui" style="width: auto; background-color: black;">
+		<label id="lblInstrInfo" style="color: white;">(instr)</label>
+	</div>
+	<div id="gui" style="width: auto; background-color: black;">
+		<label id="lblKeep" style="color: white; background-color: black; display: inline-block; text-align:right;">
+			Keep rays<input id="cbxKeep" type="checkbox">
+		</label>
+		<button id="btnPrev", onclick="handlePrev();" style="width: 90px;">Previous</button>
+		<button id="btnPlayPause", onclick="handlePlayPause();" style="width: 90px;">Play/Pause</button>
+		<button id="btnNext", onclick="handleNext();" style="width: 90px;">Next</button>
+		<label id="lblRayIdxText" style="color: white;">Ray index</label>
+		<label id="lblRayIdx" style="color: white; background-color: black; width: 27px; text-align: right; display: inline-block;">(idx)</label>
+		<label id="lblMaxRayIdx" style="color: white; background-color: black; display: inline-block;">(max_idx)</label>
+		<label id="lblView" style="color: white; background-color: black; display: inline-block; text-align:right; width: 150px;">Reset view</label>
+		<button id="btnHome", onclick="handleViewHome();" style="width: 60px;">Home</button>
+		<button id="btnSide", onclick="handleViewSide();" style="width: 60px;">Side</button>
+		<button id="btnTop", onclick="handleViewTop();" style="width: 60px;">Top</button>
+		<label id="lblView" style="color: white; background-color: black; display: inline-block; text-align:right; width: 150px;">Bounding box</label>
+		<input id="cbxBoundingbox" type="checkbox">
+	</div>
+	<div id="3dcanvas"></div>
+
+	<script>
+		// gui synchronization class
+		//
+		var UpdateGui = function()
+		{
+			this.vm_version = -1;
+			this.viewmodel = viewmodel;
+		}
+		UpdateGui.prototype.update = function()
+		{
+			// return if viewmodel is constant
+			if (this.vm_version == this.viewmodel.getUpdateVersion()) { return; }
+
+			this.vm_version = this.viewmodel.getUpdateVersion();
+
+			// update playback mode
+			var pb = this.viewmodel.getPlayBack();
+			if (pb == PlayBack.RUN)
+			{
+				btn = document.getElementById("btnPlayPause");
+				btn.innerHTML = "Pause";
+			}
+			if (pb == PlayBack.PAUSE)
+			{
+				btn = document.getElementById("btnPlayPause");
+				btn.innerHTML = "Play";
+			}
+			// update ray index
+			lbl = document.getElementById("lblRayIdx");
+			lbl.innerHTML = this.viewmodel.getRayIdx();
+
+			// update keep ckeckbox
+			cbxKeep = document.getElementById("cbxKeep");
+			var dm = this.viewmodel.getDisplayMode();
+			if (dm == DisplayMode.SINGLE)
+			{
+				cbxKeep.checked = false;
+			}
+			else
+			{
+				cbxKeep.checked = true;
+			}
+
+			// update bounding box checkbox
+			cbxBoundingbox = document.getElementById("cbxBoundingbox");
+			cbxBoundingbox.checked = this.viewmodel.getShowBoundingBox();
+		}
+		var upd = new UpdateGui();
+
+		// set up static ui
+		lblInstrInfo = document.getElementById("lblInstrInfo");
+		lblInstrInfo.innerHTML = MCDATA_instrdata["cmd"];
+		lblMaxRayIdx = document.getElementById("lblMaxRayIdx");
+		lblMaxRayIdx.innerHTML = '/ ' + (MCDATA_particledata["numrays"] - 1);
+
+		// set keep checkbox event handler
+		cbxKeep = document.getElementById("cbxKeep");
+		cbxKeep.addEventListener("change", function () { handleKeepChanged(cbxKeep.checked) });
+
+		// set show bounding box event handler
+		cbxBoundingbox = document.getElementById("cbxBoundingbox");
+		cbxBoundingbox.addEventListener("change", function () { handleShowBBChanged(cbxBoundingbox.checked) });
+
+		// call the mcdisplay app!
+		controller.setUpdateGuiFunc(upd.update);
+		controller.run();
+    </script>
+</body>
+</html>

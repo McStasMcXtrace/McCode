@@ -19,7 +19,7 @@
 * Please see MCSTAS/lib/share/nxslib/README.TXT and in the links section below
 * for further instructions and more details.
 *
-* %Example: Test_Sample_nsx_diffraction.instr
+* %Example: Test_Sample_nxs_diffraction.instr
 *
 * %Parameters
 * lambda1: Lower bound of wavelength band  [AA]
