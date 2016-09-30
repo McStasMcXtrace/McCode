@@ -32,7 +32,7 @@ else()
   set(P "mx")
 endif()
 
-set(TOOLS_NAME "tools/Python/${P}lib")
+set(TOOLS_NAME "tools/Python/mccodelib")
 
 if(WINDOWS)
   set(TOOLS_LIB "${lib}/${TOOLS_NAME}")
