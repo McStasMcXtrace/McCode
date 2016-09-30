@@ -7,9 +7,11 @@ if [ "x$1" = "x" ]; then
 fi
 
 # This is an app bundle being built, relocatable.
+export MCINSTALL_PREFIX=$PWD/dist/McStas-$1.app/
+./mkdist mcstas-app $1 support/MacOSX/McCode.app/ "" mac_el_capitan "" -- OSXapp
+
 # For the actual mcstas part, the packages need a 'deep' PREFIX
 export MCINSTALL_PREFIX=$PWD/dist/McStas-$1.app/Contents/Resources/
-
 # 64-bit Mac OS
 ./mkdist mcstas $1 "" "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-comps $1 "" "" mac_el_capitan "" -- OSXapp
@@ -27,7 +29,5 @@ export MCINSTALL_PREFIX=$PWD/dist/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac_el_capitan "" -- OSXapp
-cd dist
-../support/MacOSX/appify/appify McStas-$1.app/Contents/Resources/mcstas/$1/bin/mcgui McStas-$1
-exit
+
 
