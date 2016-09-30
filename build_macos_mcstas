@@ -25,6 +25,7 @@ export MCINSTALL_PREFIX=$PWD/dist/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" mac_el_capitan "" -- OSXapp
+./mkdist mcstas-tools-python-mcdisplay-webgl $1 tools/Python/mcdisplay/webgl/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" mac_el_capitan "" -- OSXapp
 cd dist
 ../support/MacOSX/appify/appify McStas-$1.app/Contents/Resources/mcstas/$1/bin/mcgui McStas-$1
