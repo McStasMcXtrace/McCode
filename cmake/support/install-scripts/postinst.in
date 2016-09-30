@@ -1,12 +1,16 @@
 #!/bin/bash
 
 # Extract CMake macros during configure
-PREFIX="@CMAKE_INSTALL_PREFIX@"
+PREFIX=`dirname $0`
+PREFIX=`dirname $PREFIX`
+PREFIX=`dirname $PREFIX`
+PREFIX=`dirname $PREFIX`
 FLAVOR="@FLAVOR@"
 VERSION="@MCCODE_VERSION@"
 MC="@MCCODE_PREFIX@"
 NO_ALTERNATIVES="@NO_ALTERNATIVES@"
 
+UNAME=`uname -s`
 # Include installation path before any attempt to postconfig
 export PATH=${PREFIX}/${FLAVOR}/${VERSION}/bin:${PATH}
 MCCODE=${FLAVOR}
@@ -103,7 +107,7 @@ then
     APPTARGET="/usr/share/applications"
     LOGOTARGET="/usr/share/pixmaps"
     checklinks
-elif [[ ${PREFIX} = /Applications* ]]
+elif [[ ${UNAME} = Darwin* ]] || [ ${PREFIX} = /Applications* ]]
 then
     # Looks like a Mac - dump links in /usr/bin
     BINTARGET="/usr/local/bin"
@@ -131,21 +135,21 @@ then
     ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/bin/* .
     ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/environment ${FLAVOR}-${VERSION}-environment
 else
-    echo "Sorry, your ${BINTARGET} folder does not exist, dropping link creation"
+    echo "Sorry, your BINTARGET folder \"${BINTARGET}\" does not exist, dropping link creation"
 fi
 if [ -d ${APPTARGET} ];
 then
     cd ${APPTARGET}
     ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/launchers/*.desktop .
 else
-    echo "Sorry, your ${APPTARGET} folder does not exist, dropping link creation"
+    echo "Sorry, your APPTARGET folder \"${APPTARGET}\" does not exist, dropping link creation"
 fi
 if [ -d ${LOGOTARGET} ];
 then
     cd ${LOGOTARGET}
     ln -sf ${PREFIX}/${FLAVOR}/${VERSION}/launchers/*.png .
 else
-    echo "Sorry, your ${LOGOTARGET} folder does not exist, dropping link creation"
+    echo "Sorry, your LOGOTARGET folder \"${LOGOTARGET}\" does not exist, dropping link creation"
 fi
 
 # Check if mcdoc is installed and if it needs to run
