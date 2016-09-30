@@ -4,6 +4,7 @@
 # by Martin Fuhrer (mfuhrer@alumni.ucalgary.ca)
 # Permission to modify and distribute granted.
 #
+PREFIX=`dirname $0`
 
 # program name
 PROGRAM=@GUIPREFIX@gui
@@ -15,7 +16,7 @@ ARGUMENTS=""
 DIRECTORY="~"
 
 # paths
-PATH=@CMAKE_INSTALL_PREFIX@/Contents/Resources/@FLAVOR@/@MCCODE_VERSION@/bin:/opt/mccode/openmpi/bin:/opt/mccode/gcc/bin:/usr/local/bin:/sw/bin:/sw/sbin:/opt/local/bin:/opt/local/sbin:/usr/X11R6/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/bin/X11:/usr/local/bin/X11:$PATH
+PATH=$HOME/anaconda/bin:$PREFIX/@FLAVOR@/@MCCODE_VERSION@/bin:/opt/mccode/openmpi/bin:/opt/mccode/gcc/bin:/usr/local/bin:/sw/bin:/sw/sbin:/opt/local/bin:/opt/local/sbin:/usr/X11R6/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/bin/X11:/usr/local/bin/X11:$PATH
 
 # require X11
 USEX11=1
