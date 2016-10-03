@@ -75,13 +75,13 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/mcplot" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot" @ONLY)
 
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcplot.m")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.m" "${WORK}/mcplot")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.m" "${WORK}/${P}plot")
 endif()
 
 
