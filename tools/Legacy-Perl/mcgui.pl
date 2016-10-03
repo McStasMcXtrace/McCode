@@ -374,6 +374,23 @@ sub tools_shortcuts {
     $w->fontDelete('small');
 }
 
+sub tools_set_default_mcstas {
+  # Runs the packaged "postinst" script which sets up system-wide Unix links to
+  # the McCode version at hand
+  my ($w) = @_;
+  my $msg="Press Yes to use this McStas version from your terminals\n";
+  my $do_dsa=$w->messageBox(-message =>$msg,
+		   -title => "McGUI: Make this McStas system default?",
+		   -type => 'YesNoCancel',
+		   -icon => 'question',
+		   -default => 'yes');
+  if ((lc($do_dsa) eq "no")||(lc($do_dsa) eq "cancel")) {
+    putmsg($cmdwin, "Set as system default cancelled!\n", 'msg');
+    return 0;
+  }
+  system("postinst default");
+}
+
 sub tools_dsa {
     my ($w) = @_;
     my $msg="Press Yes to create DSA key.\n";
@@ -1647,8 +1664,10 @@ sub setup_menu {
     $toolmenu->pack(-side=>'left');
     $toolmenu->command(-label => 'mcgui Shorcut keys',
                        -command => sub {tools_shortcuts($w)});
-    # The following item for now only applies to non-Win32 systems...
+    # The following items for now only applies to non-Win32 systems...
     if (!($Config{'osname'} eq 'MSWin32')) {
+        $toolmenu->command(-label => 'Set this McStas as sys default',
+			   -command => sub {tools_set_default_mcstas($w)});
 	$toolmenu->command(-label => 'Activate MPI/grid (DSA key)',
 			   -command => sub {tools_dsa($w)});
     }
