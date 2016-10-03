@@ -16,11 +16,12 @@
 *
 * %Parameters
 * ANGLE [deg] Rotation (misalignment) of first transfocator 
-* SOURCE [ ] 1) Choose rectangular source with defined divergence. 2) Choose gaussain cross-section source
-* T1_N [ ] Number of Be lenses in transfocator @31.5m
-* T2_N [ ] Number of Al lenses in transfocator @31.5m _currently deactivated by default_
+* SOURCE [ ] 1) Choose rectangular source with defined divergence. 2) Choose Gaussian cross-section source
+* T1_N [ ] Number of Be lenses in 1st IVT transfocator @31.5m
+* T2_N [ ] Number of Al lenses in 1st IVT transfocator @31.5m _currently deactivated by default_
 * T3_N [ ] Number of Al lenses in 2nd IVT transfocator @92.25 m
 * SI_N [ ] Number of Si lenses in Si microfocus chip transfocator @94 m
+* IVT1BE [ ] If nonzero the set of Be-lenses is chosen for the IVT @31.5m. If 0 the Al set is active.
 * 
 * %Example: ESRF_ID11.instr ANGLE=0 Detector: psd_eh3_sample_I=0.285899 
 * %Link
@@ -28,7 +29,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT ESRF_ID11(ANGLE=0,SOURCE=0,T1_N=16,T2_N=16,T3_N=16,SI_N=2)
+DEFINE INSTRUMENT ESRF_ID11(ANGLE=0,SOURCE=0,T1_N=16,T2_N=16,T3_N=16,SI_N=2, IVT1BE=1)
 
 
 DECLARE
@@ -81,16 +82,17 @@ AT (0,0,29.1) RELATIVE Origin
 
   /*in -vacuum transfocator*/
 COMPONENT transfocator1=Lens_simple(
-      xwidth=2e-1,yheight=2e-1,N=T1_N, material_datafile="Be.txt")
-WHEN(1) AT(0,0,31.5) RELATIVE Origin
+    xwidth=2e-1,yheight=2e-1,N=T1_N, material_datafile="Be.txt")
+WHEN(IVT1BE) AT(0,0,31.5) RELATIVE Origin
 ROTATED (0,ANGLE,0) RELATIVE PREVIOUS
+
+COMPONENT transfocator2=Lens_simple(
+    xwidth=2e-3,yheight=2e-3, N=T2_N,material_datafile="Al.txt")
+WHEN (!IVT1BE) AT(0,0,31.5) RELATIVE Origin
 
 COMPONENT psd2 = PSD_monitor(nx=301,ny=301,filename="psd2.dat",xwidth=0.002,yheight=0.002)
 AT (0,0,0.1) RELATIVE PREVIOUS
 
-COMPONENT transfocator2=Lens_simple(
-    xwidth=2e-3,yheight=2e-3, N=T2_N,material_datafile="Al.txt")
-WHEN (0) AT(0,0,31.5) RELATIVE Origin
 
 /*EH1 sample position*/
 COMPONENT eh1_sample_pt =Arm()
