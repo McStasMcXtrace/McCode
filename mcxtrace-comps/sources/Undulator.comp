@@ -98,6 +98,7 @@ DECLARE
     double s1x,s1y; /*beam's size at dist (convolution of sigex/sigey and igamma)*/
     double lu; /*undulator magnetic period*/
     double kc; /*undulator kritical wavenumber*/
+    double pmul; /*initial photon weight*/
     gsl_function Bsig,Bpi;
     gsl_integration_workspace *gsl_int_ws;
   } prms;
@@ -158,6 +159,8 @@ INITIALIZE
   prms.Bpi.function = &mxundulator_Bpi_integrand;
   gsl_set_error_handler_off();
 
+  prms.pmul=1.0/( (double) mcget_ncount());
+
 %}
 
 
@@ -198,7 +201,7 @@ TRACE
         xi=0;psi=0;xo=0;yo=0;
         Omega=1;
     }
-    p=Omega/(4*M_PI);
+    p=prms.pmul*Omega/(4*M_PI);
     xi=fabs(tan(xo/dist));
     //xi=0.05/prms.gamma;
     psi=fabs(tan(yo/dist));
