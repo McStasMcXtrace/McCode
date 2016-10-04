@@ -3,8 +3,8 @@
 # Extract CMake macros during configure
 PREFIX="@CMAKE_INSTALL_PREFIX@"
 
-if [ "x$1" != "x" ]; then
-    # If we are being called with an extra input parameter, this is a call
+if [ "$1" == "default" ]; then
+    # If we are being called with the input parameter default, this is a call
     # for post-configuration using mcgui and the PREFIX value should be
     # defined from the location of this script
     PREFIX=`dirname $0`
@@ -16,9 +16,12 @@ fi
 FLAVOR="@FLAVOR@"
 VERSION="@MCCODE_VERSION@"
 MC="@MCCODE_PREFIX@"
-NO_ALTERNATIVES="@NO_ALTERNATIVES@"
+NO_ALTERNATIVES="@NO_ALTERNATIVES@" 
 
 UNAME=`uname -s`
+
+echo "Post-install configuring $FLAVOR v. $VERSION on $UNAME."
+echo "PREFIX was set to $PREFIX"
 # Include installation path before any attempt to postconfig
 export PATH=${PREFIX}/${FLAVOR}/${VERSION}/bin:${PATH}
 MCCODE=${FLAVOR}
@@ -115,7 +118,7 @@ then
     APPTARGET="/usr/share/applications"
     LOGOTARGET="/usr/share/pixmaps"
     checklinks
-elif [[ ${UNAME} = Darwin* ]] || [ ${PREFIX} = /Applications* ]]
+elif [[ ${UNAME} = Darwin* || ${PREFIX} = /Applications* ]]
 then
     # Looks like a Mac - dump links in /usr/bin
     BINTARGET="/usr/local/bin"
