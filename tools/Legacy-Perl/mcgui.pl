@@ -388,7 +388,7 @@ sub tools_set_default_mcstas {
     putmsg($cmdwin, "Set as system default cancelled!\n", 'msg');
     return 0;
   }
-  system("postinst default");
+  system("postinst set_mccode_default");
 }
 
 sub tools_dsa {
