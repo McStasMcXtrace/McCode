@@ -147,7 +147,11 @@ INITIALIZE
   if(spectrum_file){
       prms.pmul*=(prms.T.data[(prms.T.rows-1)*prms.T.columns]-prms.T.data[0]);
   }else{
-      prms.pmul*=2*dE;
+      if(E0){
+          prms.pmul*=2*dE;
+      }else{
+          prms.pmul*=2*(12.398/(lambda0-dlambda)-12.398/(lambda0+dlambda));
+      }
   }
 %}
 
