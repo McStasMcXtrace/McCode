@@ -1,9 +1,10 @@
+import os
 '''
 mcstas/mcxtrace configuration.
 '''
 configuration = {
     "MCCODE_VERSION": '@MCCODE_VERSION@',
-    "MCCODE_LIB_DIR": '@MCCODE_LIB@',
+    "MCCODE_LIB_DIR": os.path.join(os.path.dirname(__file__),"..","..",".."),
     "MCCODE": '@FLAVOR@',
     "MCRUN": '@MCCODE_PREFIX@run-py',
     "MCPLOT": '@MCCODE_PREFIX@@MCPLOT_DEFAULT@',
