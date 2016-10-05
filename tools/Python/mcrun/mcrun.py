@@ -12,7 +12,7 @@ from optimisation import Scanner, LinearInterval, MultiInterval
 import sys
 sys.path.append(join(dirname(__file__), '..'))
 from mccodelib import mccode_config
-from mccodelib.guiutils import load_user_config
+from mccodelib.uiutils import load_user_config
 
 from log import getLogger, setupLogger, setLogLevel, McRunException
 from log import DEBUG

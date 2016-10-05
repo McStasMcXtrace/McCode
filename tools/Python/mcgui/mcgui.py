@@ -17,7 +17,7 @@ from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import mccode_config
-from mccodelib.guiutils import load_user_config, save_instrfile, get_instr_site, get_mccode_config_options, get_file_contents, get_instr_comp_files
+from mccodelib.uiutils import load_user_config, save_instrfile, get_instr_site, get_mccode_config_options, get_file_contents, get_instr_comp_files
 from mccodelib.fileutils import McComponentParser
 
 ''' Message emitter
