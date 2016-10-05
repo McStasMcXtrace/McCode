@@ -12,6 +12,7 @@ from optimisation import Scanner, LinearInterval, MultiInterval
 import sys
 sys.path.append(join(dirname(__file__), '..'))
 from mccodelib import mccode_config
+from mccodelib.guiutils import load_user_config
 
 from log import getLogger, setupLogger, setLogLevel, McRunException
 from log import DEBUG
@@ -364,6 +365,8 @@ def main():
 
 if __name__ == '__main__':
     try:
+        load_user_config(mccode_config.configuration["MCCODE"], mccode_config.configuration["MCCODE_VERSION"])
+        
         main()
     except KeyboardInterrupt:
         LOG.fatal('User interrupt.')

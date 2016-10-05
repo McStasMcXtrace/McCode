@@ -10,7 +10,7 @@ import traceback
 
 def parse_displaysection(comproot, mcdisplay):
     ''' parse components in comproot and (optinally) print mcdisplay section  '''
-    instr, comp = guiutils.McGuiUtils.getInstrumentAndComponentFiles(comproot)
+    instr, comp = guiutils.McGuiUtils.get_instr_comp_files(comproot)
     # '/home/jaga/source/McCode/mcstas-comps'
     errors = []
     for c in comp:
@@ -32,7 +32,7 @@ def parse_displaysection(comproot, mcdisplay):
 
 def parse_comps():
     ''' parse componens and print info '''
-    files_instr, files_comp = guiutils.McGuiUtils.getInstrumentAndComponentFiles('/usr/share/mcstas/2.1')
+    files_instr, files_comp = guiutils.McGuiUtils.get_instr_comp_files('/usr/share/mcstas/2.1')
     for f in files_comp:
         parser = fileutils.McComponentParser(f)
         try:

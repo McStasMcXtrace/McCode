@@ -9,8 +9,8 @@ from PyQt4 import Qsci
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import mccode_config
-from mccodelib import McGuiUtils
-from mccodelib import McComponentParser
+from mccodelib.guiutils import get_mccode_config_options, save_user_config
+from mccodelib.fileutils import McComponentParser
 
 '''
 View class containing windows and dialogs as delegates.
@@ -904,7 +904,7 @@ class McConfigDialog(QtGui.QDialog):
 
     def initConfigData(self, args):
         # comboboxes
-        mcrun_lst, mcplot_lst, mcdisplay_lst = McGuiUtils.getMcCodeConfigOptions(mccode_config.configuration["MCCODE"])
+        mcrun_lst, mcplot_lst, mcdisplay_lst = get_mccode_config_options(mccode_config.configuration["MCCODE"])
 
         # mcrun combobox
         selected_val = mccode_config.configuration["MCRUN"]
@@ -986,7 +986,7 @@ class McConfigDialog(QtGui.QDialog):
 
     def save(self):
         self.__pullValuesTo_mccode_config()
-        McGuiUtils.saveUserConfig(mccode_config,mccode_config.configuration["MCCODE"],mccode_config.configuration["MCCODE_VERSION"])
+        save_user_config(mccode_config,mccode_config.configuration["MCCODE"], mccode_config.configuration["MCCODE_VERSION"])
 
         # finally
         super(McConfigDialog, self).accept()

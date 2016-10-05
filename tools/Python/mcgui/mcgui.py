@@ -17,8 +17,8 @@ from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import mccode_config
-from mccodelib import McGuiUtils
-from mccodelib import McComponentParser
+from mccodelib.guiutils import load_user_config, save_instrfile, get_instr_site, get_mccode_config_options, get_file_contents, get_instr_comp_files
+from mccodelib.fileutils import McComponentParser
 
 ''' Message emitter
 Status and message log and signalling.
@@ -162,7 +162,7 @@ class McGuiState(QtCore.QObject):
         instr = self.getInstrumentFile()
         if not os.path.exists(instr):
             return False
-        McGuiUtils.saveInstrumentFile(instr, text)
+        save_instrfile(instr, text)
         return True
     
     def getWorkDir(self):
@@ -505,12 +505,12 @@ class McGuiAppController():
         # load installed mcstas instruments:
         # construct args = [site, instr_fullpath[], instr_path_lst[]]
         args = []
-        files_instr, files_comp = McGuiUtils.getInstrumentAndComponentFiles(mccode_config.configuration["MCCODE_LIB_DIR"])
+        files_instr, files_comp = get_instr_comp_files(mccode_config.configuration["MCCODE_LIB_DIR"])
         
         # temporary list consisting of instrument files with site names: 
         files_instr_and_site = []
         for f in files_instr:
-            files_instr_and_site.append([f, McGuiUtils.getInstrumentSite(f)])
+            files_instr_and_site.append([f, get_instr_site(f)])
         
         # order instrument files by site:
         sites = {s for s in map(lambda f: f[1], files_instr_and_site)}
@@ -676,8 +676,8 @@ class McGuiAppController():
         
         if newinstr != '':
             self.state.unloadInstrument()
-            text = McGuiUtils.getFileContents(oldinstr)
-            created_instr = McGuiUtils.saveInstrumentFile(newinstr, text)
+            text = get_file_contents(oldinstr)
+            created_instr = save_instrfile(newinstr, text)
             if created_instr != '':
                 self.state.loadInstrument(created_instr)
                 self.emitter.status("Instrument saved as: " + newinstr)
@@ -688,7 +688,7 @@ class McGuiAppController():
         
         if new_instr_req != '':
             template_text = open(os.path.join(mccode_config.configuration["MCCODE_LIB_DIR"], "examples", "template_simple.instr")).read()
-            new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, template_text)
+            new_instr = save_instrfile(new_instr_req, template_text)
             if new_instr != '':
                 if self.view.closeCodeEditorWindow():
                     self.state.unloadInstrument()
@@ -702,8 +702,8 @@ class McGuiAppController():
         
         if new_instr_req != '':
             if self.view.closeCodeEditorWindow():
-                text = McGuiUtils.getFileContents(instr_templ)
-                new_instr = McGuiUtils.saveInstrumentFile(new_instr_req, text)
+                text = get_file_contents(instr_templ)
+                new_instr = save_instrfile(new_instr_req, text)
                 self.state.loadInstrument(new_instr)
                 self.emitter.status("Instrument created: " + os.path.basename(str(new_instr)))
     
@@ -775,7 +775,7 @@ def handleExceptionMsg(msg):
 '''
 def main():
     try:
-        McGuiUtils.loadUserConfig(mccode_config.configuration["MCCODE"],mccode_config.configuration["MCCODE_VERSION"])
+        load_user_config(mccode_config.configuration["MCCODE"], mccode_config.configuration["MCCODE_VERSION"])
         
         mcguiApp = QtGui.QApplication(sys.argv)
         mcguiApp.ctr = McGuiAppController()
