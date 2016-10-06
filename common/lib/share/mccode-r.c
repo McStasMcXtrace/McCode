@@ -1954,15 +1954,23 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
   MCDETECTOR detector;
 
   /* import and perform basic detector analysis (and handle MPI_Reduce) */
-  if (abs(m) == 1) {// n>1 on Y, m==1 on X: 1D, no X axis
+  if (abs(m) == 1) {/* n>1 on Y, m==1 on X: 1D, no X axis*/
     detector = mcdetector_import(mcformat,
       c, (t ? t : MCCODE_STRING " 1D data"),
-      m, n, 1,
-      yl, xl, "Signal per bin",
-      yvar, xvar, "I",
-      y1, y2, x1, x1, 0, 0, f,
+      n, 1, 1,
+      yl, "", "Signal per bin",
+      yvar, "(I,Ierr)", "I",
+      y1, y2, x1, x2, 0, 0, f,
       p0, p1, p2, posa); /* write Detector: line */
-  } else {
+  } else if (abs(n)==1) {/* m>1 on X, n==1 on Y: 1D, no Y axis*/
+    detector = mcdetector_import(mcformat,
+      c, (t ? t : MCCODE_STRING " 1D data"),
+      m, 1, 1,
+      xl, "", "Signal per bin",
+      xvar, "(I,Ierr)", "I",
+      x1, x2, y1, y2, 0, 0, f,
+      p0, p1, p2, posa); /* write Detector: line */
+  }else {
     detector = mcdetector_import(mcformat,
       c, (t ? t : MCCODE_STRING " 2D data"),
       m, n, 1,
