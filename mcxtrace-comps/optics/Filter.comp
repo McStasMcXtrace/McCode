@@ -27,7 +27,9 @@
 * yheight: Height of block. (m)
 * zdepth:  Thickness of block. (m)
 * material_datafile: Dile where the material parameters for the filter may be found. Format is similar to what may be found off the NISP website. [Be.txt]
-* geometry: File (oof/ply) containing the polygon definition of a general shape object. ( )
+* geometry: File (off/ply) containing the polygon definition of a general shape object. ( )
+* fixed_delta: Use a fixed delta to compute refraction - useful for debugging. ( ) 
+* refraction: If nonzero, refraction is enabled. ( ) 
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Filter
