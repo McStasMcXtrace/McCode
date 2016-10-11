@@ -1,0 +1,357 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: test
+*
+* %Identification
+* Written by: Mads Bertelsen
+* Date: September 2015
+* Origin: University of Copenhagen
+* Version: $Revision: 0.1 $
+* %INSTRUMENT_SITE: Union_demos
+*
+* Simple test instrument for sample component.
+*
+* %Description
+* simple test instrument for sample component.
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT test()
+
+DECLARE
+%{
+int scattered_1;
+int scattered_2;
+int sample_1_index = 4;
+int sample_2_index = 6;
+%}
+
+TRACE
+
+COMPONENT Vanadium_incoherent = Incoherent_process(sigma=6.08,packing_factor=1,unit_cell_volume=13.827)
+AT (0,0,0) ABSOLUTE
+
+//COMPONENT Vanadium_incoherent_2 = Incoherent_process(sigma=5.09,packing_factor=0.9,unit_cell_volume=13.9)
+//AT (0,0,0) ABSOLUTE
+
+COMPONENT Vanadium = Union_make_material(my_absorption=2.1,process_string="Vanadium_incoherent")
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al_incoherent = Incoherent_process(sigma=20,packing_factor=1,unit_cell_volume=66.4)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al = Union_make_material(my_absorption=4)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_div(
+//        xwidth=0.0005, yheight=0.0005,focus_aw=15, focus_ah=15,
+        xwidth=0.0005, yheight=0.0005,focus_aw=1, focus_ah=1,
+        E0 = 10,
+        dE = 0)
+  AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+
+// test
+//COMPONENT start_volume_test = cylinder(radius=0.03,yheight=1.4,priority=99,material_string="Vacuum")
+//AT (0,0,0.7-0.02) RELATIVE a1
+//ROTATED (90,0,0) RELATIVE a1
+
+
+// Sample position
+COMPONENT beam_center = Arm()
+AT (0,0,10.4) RELATIVE a1
+ROTATED (0,0,0) RELATIVE a1
+
+COMPONENT tube_point = Arm()
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+
+/*
+// Children tests
+COMPONENT volume_1 = Union_box(xwidth=0.1,yheight=0.1,zdepth=0.1,priority=10,material_string="Al")
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT volume_2 = Union_box(xwidth=0.09,yheight=0.1,zdepth=0.1,priority=11,material_string="Al")
+AT (0,0.01,0.01) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT mask_1_1 = Union_box(xwidth=0.03,yheight=0.03,zdepth=0.03,priority=12,mask_string="volume_1",mask_setting="ALL")
+AT (0,0.0,0.0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT mask_1_2 = Union_box(xwidth=0.01,yheight=0.01,zdepth=0.05,priority=13,mask_string="volume_1",mask_setting="ALL")
+AT (0,0.0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT mask_2_1 = Union_box(xwidth=0.04,yheight=0.04,zdepth=0.04,priority=14,mask_string="volume_2",mask_setting="ALL")
+AT (0,0.0,0.0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT mask_2_2 = Union_box(xwidth=0.015,yheight=0.015,zdepth=0.055,priority=15,mask_string="volume_2",mask_setting="ALL")
+AT (0,0.0,0.0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+*/
+
+
+/*
+// Overlap tests
+COMPONENT volume_1 = Union_box(xwidth=0.1,yheight=0.1,zdepth=0.1,priority=10,material_string="Al")
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT volume_2 = Union_box(xwidth=0.09,yheight=0.1,zdepth=0.1,priority=11,material_string="Al")
+AT (0,0.08,0.01) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT volume_2_mask = Union_box(xwidth=0.091,yheight=0.11,zdepth=0.11,priority=12,mask_string="volume_2")
+AT (0,0.08,0.01) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT volume_1_sister = Union_box(xwidth=0.08,yheight=0.11,zdepth=0.11,priority=12.5,material_string="Al")
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT volume_1_mask = Union_box(xwidth=0.09,yheight=0.1,zdepth=0.1,priority=13,mask_string="volume_1,volume_1_sister")
+AT (0,-0.08,-0.01) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+*/
+
+
+/*
+// Run test
+COMPONENT volume_1 = Union_box(xwidth=0.1,yheight=0.1,zdepth=0.1,priority=10,material_string="Al")
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT volume_1_mask_1 = Union_box(xwidth=0.1,yheight=0.11,zdepth=0.1,priority=13,mask_string="volume_1")
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,45,0) RELATIVE beam_center
+
+COMPONENT volume_1_mask_2 = Union_box(xwidth=0.09,yheight=0.08,zdepth=0.05,priority=14,mask_string="volume_1",mask_setting="ANY")
+AT (0,0,-0.05) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT volume_2 = Union_box(xwidth=0.1,yheight=0.105,zdepth=0.1,priority=8,material_string="Al")
+AT (0.06,0.01,0.01) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+*/
+
+/*
+// Intersect list check
+COMPONENT volume_1 = Union_box(xwidth=0.1,yheight=0.1,zdepth=0.1,priority=10,material_string="Al")
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT volume_1_mask_1 = Union_box(xwidth=0.05,yheight=0.05,zdepth=0.05,priority=13,mask_string="volume_1")
+AT (0,0.05,0) RELATIVE beam_center
+ROTATED (0,45,0) RELATIVE beam_center
+
+// This box is inside volume 1, but not it's mask. It should thus go on volume 0's normal intersect list
+COMPONENT volume_2 = Union_box(xwidth=0.05,yheight=0.05,zdepth=0.05,priority=8,material_string="Al")
+AT (0.0,-0.02,0.01) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+*/
+
+/*
+// Destinations list check
+COMPONENT volume_1 = Union_box(xwidth=0.1,yheight=0.1,zdepth=0.1,priority=10,material_string="Al")
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT volume_1_mask_1 = Union_box(xwidth=0.05,yheight=0.05,zdepth=0.05,priority=13,mask_string="volume_1")
+AT (0,0.05,0) RELATIVE beam_center
+ROTATED (0,45,0) RELATIVE beam_center
+
+// This box is inside volume 1, but not it's mask. It should thus go on volume 0's normal intersect list
+COMPONENT volume_2 = Union_box(xwidth=0.05,yheight=0.05,zdepth=0.05,priority=8,material_string="Al")
+AT (0.0,-0.02,0.01) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT volume_3 = Union_box(xwidth=0.02,yheight=0.20,zdepth=0.02,priority=16,material_string="Al")
+AT (0.0,0.0,0.0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+*/
+
+
+
+// Current volume / scattering process test
+COMPONENT angled_point = Arm()
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,30,0) RELATIVE beam_center
+
+
+COMPONENT masked_cylinder_1 = Union_cylinder(radius = 0.53, yheight = 0.05,
+                                             priority=6, material_string="Al",visualize=1)
+AT (0,0,-0.5) RELATIVE angled_point
+ROTATED (0,0,90) RELATIVE angled_point
+
+COMPONENT masked_cylinder_2 = Union_cylinder(radius = 0.50, yheight = 0.06,
+                                             priority=7, material_string="Vacuum",visualize=1)
+AT (0,0,-0.5) RELATIVE angled_point
+ROTATED (0,0,90) RELATIVE angled_point
+
+COMPONENT mask = Union_box(xwidth=0.07,yheight=0.24,zdepth=0.07,priority=13,mask_string="masked_cylinder_1,masked_cylinder_2")
+AT (0,0,0) RELATIVE angled_point
+ROTATED (0,0,0) RELATIVE angled_point
+
+COMPONENT extra_volume = Union_box(xwidth=0.04,yheight=0.04,zdepth=0.01,priority=14,material_string="Al")
+AT (0,0,-0.02) RELATIVE angled_point
+ROTATED (0,0,0) RELATIVE angled_point
+
+
+
+/*
+COMPONENT mask_1_1 = Union_box(xwidth=0.03,yheight=0.03,zdepth=0.03,priority=12,mask_string="volume_1",mask_setting="ALL")
+AT (0,0.03,0.0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT mask_1_2 = Union_box(xwidth=0.01,yheight=0.03,zdepth=0.01,priority=13,mask_string="volume_1",mask_setting="ALL")
+AT (0,0.01,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+*/
+
+
+/*
+// 1
+COMPONENT box_tube1 = Union_box(xwidth=0.1, yheight=0.1, xwidth2=0.03, yheight2=0.03, zdepth=0.3, priority=5, material_string="Al")
+AT (0,0,0) RELATIVE tube_point
+ROTATED (0,0,0) RELATIVE tube_point
+
+
+// 2
+COMPONENT cylinder_tube1 = Union_cylinder(radius = 0.05, yheight = 0.15, priority=6, material_string="Vacuum",visualize=0)
+AT (0,0,-0.05) RELATIVE tube_point
+ROTATED (0,0,0) RELATIVE tube_point
+*/
+
+/*
+// 2
+COMPONENT cylinder_tube1 = Union_cylinder(radius = 0.013,yheight = 0.11,priority=6,material_string="Vacuum")
+AT (0,0,0) RELATIVE tube_point
+ROTATED (0,0,0) RELATIVE tube_point
+
+// 3
+COMPONENT cylinder_cross1 = Union_cylinder(radius = 0.003,yheight = 0.05,priority=7,material_string="Al")
+AT (0,0,0) RELATIVE tube_point
+ROTATED (90,0,90) RELATIVE tube_point
+
+// 4
+COMPONENT cylinder_cross2 = Union_cylinder(radius = 0.003,yheight = 0.05,priority=8,material_string="Al")
+AT (0,0,0) RELATIVE tube_point
+ROTATED (90,0,0) RELATIVE tube_point
+*/
+
+/*
+// 5
+COMPONENT box_totem1 = Union_box(xwidth=0.03,yheight=0.03,zdepth=0.03,priority=9,material_string="Vacuum")
+AT (0,-0.01,-0.07) RELATIVE beam_center
+ROTATED (45,0,45) RELATIVE beam_center
+
+// 6
+COMPONENT box_totem2 = Union_box(xwidth=0.03,yheight=0.03,zdepth=0.03,priority=10,material_string="Vacuum")
+AT (0,0.01,-0.065) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// 7
+COMPONENT box_totem3 = Union_box(xwidth=0.03,yheight=0.03,zdepth=0.03,priority=11,material_string="Vacuum")
+AT (0,0.03,-0.06) RELATIVE beam_center
+ROTATED (45,0,45) RELATIVE beam_center
+
+// Mask 1
+COMPONENT box_tube1 = Union_box(xwidth=0.05, yheight=0.07, xwidth2=0.03, yheight2=0.03, zdepth=0.2, priority=5, mask_string="box_totem1,box_totem2", mask_setting="ALL")
+AT (0,0,0) RELATIVE tube_point
+ROTATED (0,0,0) RELATIVE tube_point
+*/
+
+/*
+COMPONENT box_totem3_mask = Union_box(xwidth=0.03,yheight=0.03,zdepth=0.03,priority=11,material_string="Vacuum")
+AT (0,0.03,-0.06) RELATIVE beam_center
+ROTATED (45,0,45) RELATIVE beam_center
+*/
+
+
+/*
+// 2
+COMPONENT box_child = Union_box(xwidth=0.01,yheight=0.01,zdepth=0.01,priority=6,material_string="Al")
+AT (0,0.005,0.01) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+// 3
+COMPONENT box_child_rotated = Union_box(xwidth=0.01,yheight=0.01,zdepth=0.01,priority=7,material_string="Al")
+AT (0,0,-0.01) RELATIVE beam_center
+ROTATED (20,30,10) RELATIVE beam_center
+*/
+
+/*
+// 4
+COMPONENT box_overlap = Union_box(xwidth=0.1,yheight=0.01,zdepth=0.01,priority=8,material_string="Vacuum")
+AT (0,-0.012,-0.02) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+
+// 5
+COMPONENT box_overlap2 = Union_box(xwidth=0.03,yheight=0.03,zdepth=0.03,priority=9,material_string="Vacuum")
+AT (0,0.025,0) RELATIVE beam_center
+ROTATED (45,0,45) RELATIVE beam_center
+
+
+// 6
+COMPONENT parent_cylinder = Union_cylinder(radius = 0.1,yheight = 0.2,priority=4,material_string="Al")
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+
+// 7
+COMPONENT child_cylinder = Union_cylinder(radius = 0.01,yheight = 0.01,priority=10,material_string="Al")
+AT (0,-0.007,0.01) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+*/
+
+
+COMPONENT test_sample = Union_master()
+AT(0,0,0) RELATIVE beam_center
+ROTATED(0,0,0) RELATIVE beam_center
+EXTEND
+%{
+	if (scattered_flag[sample_1_index] > 0) scattered_1 = 1; else scattered_1 = 0;
+	if (scattered_flag[sample_2_index] > 0) scattered_2 = 1; else scattered_2 = 0;
+	
+    // if (SCATTERED) printf("I scatter\n"); else printf("I do not scatter\n");
+%}
+
+
+COMPONENT m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events",restore_neutron=1)
+  AT (0, 0, 0) RELATIVE beam_center
+
+COMPONENT m4pi_1 = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events_1",restore_neutron=1) WHEN (scattered_1)
+  AT (0, 0, 0) RELATIVE beam_center
+
+COMPONENT m4pi_2 = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events_2",restore_neutron=1) WHEN (scattered_2)
+  AT (0, 0, 0) RELATIVE beam_center
+
+COMPONENT arm_1 = Arm()
+  AT (0, 0, 0) RELATIVE beam_center
+EXTEND
+%{
+	if (scattered_1 + scattered_2 != 2) ABSORB;
+%}
+
+
+COMPONENT m4pi_both = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events_12") WHEN (scattered_1 && scattered_2)
+  AT (0, 0, 0) RELATIVE beam_center
+
+
+
+
+END
+

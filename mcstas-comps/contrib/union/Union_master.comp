@@ -1,0 +1,1642 @@
+/*******************************************************************************
+*
+*  McStas, neutron ray-tracing package
+*  Copyright(C) 2007 Risoe National Laboratory.
+*
+* %I
+* Written by: Mads Bertelsen
+* Date: 20.08.15
+* Version: $Revision: 0.8 $
+* Origin: Svanevej 19
+*
+* A sample component to separate geometry and phsysics
+*
+* %D
+* Beta version
+* Allows complicated geometry by combination of simple shapes
+* Excecutes all volumes defined so far with a number_of_activations > 0,
+*  and then subtracts 1 from their number of activations
+*
+* Algorithm:
+* Described elsewhere
+*
+* %P
+* INPUT PARAMETERS:
+*   allow_inside_start: Set to 1 if rays are expected to start inside a volume in this master
+*
+* OUTPUT PARAMETERS:
+*
+* %L
+*
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT Union_master
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS(allow_inside_start=0,history_limit=300000)
+OUTPUT PARAMETERS (verbal, trace_verbal, finally_verbal, starting_volume_warning, global_master_element, previous_master_index, geometry_list_index, intersection_time_table, Volumes, Geometries, starting_lists, r, r_start, v, error_msg, component_error_msg, string_output, number_of_volumes, volume_index, process_index, solutions, max_number_of_processes, limit, solution, min_solution, min_volume, time_found, intersection_time, min_intersection_time, process, process_start, my_trace, p_my_trace, my_trace_fraction_control, k, k_new, v_length, my_sum, my_sum_plus_abs, culmative_probability, mc_prop, time_to_scattering, length_to_scattering, length_to_boundery, time_to_boundery, selected_process, scattering_event, time_propagated_without_scattering, a_next_volume_found, next_volume,  next_volume_priority, done, current_volume, number_of_solutions, number_of_solutions_static, check, start, intersection_with_children, geometry_output, tree_next_volume, pre_allocated1, pre_allocated2, pre_allocated3, ray_position, ray_velocity, volume_0_found, scattered_flag, master_transposed_rotation_matrix, temp_rotation_matrix, non_rotated_position, rotated_position, enable_tagging, stop_tagging_ray, stop_creating_nodes, enable_tagging_check, master_tagging_node_list, current_tagging_node, tagging_leaf_counter, number_of_scattering_events, real_transmission_probability, mc_transmission_probability, number_of_masks, number_of_masked_volumes,need_to_run_within_which_volume, mask_index_main, mask_iterate, mask_status_list, current_mask_intersect_list_status, mask_volume_index_list, geometry_component_index_list,Volume_copies_allocated) // iterate is still needed, but is allways initialized
+
+
+
+
+/* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
+
+SHARE
+%{
+#ifndef Union
+#define Union $Revision: 0.8 $
+
+#include "Union_functions.c"
+
+#endif
+%}
+
+DECLARE
+%{
+  // Setting declare section, setting these at compile time is done to let the compiler optimize easier
+  int verbal = 1;
+  int trace_verbal = 0;
+  int starting_volume_warning = 0;
+  int enable_tagging = 1;
+  int finally_verbal = 0;
+
+  // Declare the global variables (not to be in output parameters)
+  struct global_master_element_struct global_master_element;
+  
+  #ifndef MASTER_DETECTOR
+	struct pointer_to_global_master_list global_master_list = {0,NULL};
+	#define MASTER_DETECTOR dummy
+  #endif
+  
+  // variables used for assigning global information to local variables
+  int previous_master_index,geometry_list_index;
+
+  // The main structures used in this component
+  struct intersection_time_table_struct intersection_time_table;
+  struct Volume_struct **Volumes;
+  struct geometry_struct **Geometries;
+  struct Volume_struct **Volume_copies;
+  struct starting_lists_struct starting_lists;
+  
+  // garbage collection for volume_copies
+  struct pointer_to_1d_int_list Volume_copies_allocated;
+
+  // Vectors in old format (still used by intersect function, will go to Coords in future)
+  double r[3],r_start[3],v[3];
+
+  // Error handling
+  int error_msg, component_error_msg=0;
+  
+  
+  // For verbal output
+  char string_output[128];
+  
+  int number_of_volumes, volume_index, process_index;
+  int iterate,solutions,max_number_of_processes,limit;
+  int solution,min_solution,min_volume,time_found;
+  double intersection_time,min_intersection_time;
+  
+  struct scattering_process_struct *process,*process_start;
+  double *my_trace,*p_my_trace,*my_trace_fraction_control;
+  double k[3],k_new[3],k_rotated[3];
+  double v_length,my_sum,my_sum_plus_abs,culmative_probability,mc_prop,time_to_scattering;
+  double length_to_scattering,length_to_boundery,length_to_boundery_fp,time_to_boundery;
+  int selected_process,scattering_event;
+  double time_propagated_without_scattering;
+  
+  int a_next_volume_found,next_volume;
+  double next_volume_priority;
+  
+  int done,current_volume;
+  int *number_of_solutions;
+  int number_of_solutions_static;
+  int *check,*start;
+  int intersection_with_children,geometry_output;
+  
+  // For within_which_volume
+  int tree_next_volume;
+  int *pre_allocated1,*pre_allocated2,*pre_allocated3;
+  Coords ray_position,ray_velocity,ray_velocity_rotated,wavevector,wavevector_rotated;
+  int volume_0_found=0;
+  
+  int *scattered_flag;
+  
+  // For coordinate transformations
+  Rotation master_transposed_rotation_matrix;
+  Rotation temp_rotation_matrix;
+  Coords non_rotated_position;
+  Coords rotated_position;
+  int non_isotropic_found;
+  
+  // For tagging
+  struct list_of_tagging_tree_node_pointers master_tagging_node_list;
+  struct tagging_tree_node_struct *current_tagging_node;
+  
+  int tagging_leaf_counter=0,stop_tagging_ray,stop_creating_nodes;
+  int number_of_scattering_events;
+  
+  // For geometry p interact
+  double real_transmission_probability,mc_transmission_probability;
+  
+  // Process p interact
+  int number_of_process_interacts_set,index_of_lacking_process;
+  double total_process_interact;
+  
+  // Volume nr -> component index
+  struct pointer_to_1d_int_list geometry_component_index_list;
+  
+  // Masks
+  struct pointer_to_1d_int_list mask_volume_index_list;
+  int number_of_masks=0;
+  int number_of_masked_volumes=0;
+  struct pointer_to_1d_int_list mask_status_list;
+  struct pointer_to_1d_int_list current_mask_intersect_list_status;
+  int mask_index_main,mask_iterate;
+  int *mask_start,*mask_check;
+  int need_to_run_within_which_volume;
+  
+%}
+
+INITIALIZE
+%{
+  // Use sanitation
+  #ifndef ANY_GEOMETRY_DETECTOR_DECLARE
+    printf("\nERROR: Need to define at least one Volume using Union_cylinder or Union_box before using the Union_master component. \n");
+    exit(1);
+  #endif
+  #ifdef ANY_GEOMETRY_DETECTOR_DECLARE
+    if (global_geometry_list.num_elements == 0) {
+      printf("\nERROR: Need to define at least one Volume using Union_cylinder or Union_box before using the Union_master component. \n");
+      printf("       Union_master component named \"%s\" is before any Volumes in the instrument file. At least one Volume need to be defined before\n",NAME_CURRENT_COMP);
+    
+      exit(1);
+    }
+  #endif
+
+  sprintf(global_master_element.name,NAME_CURRENT_COMP);
+  global_master_element.component_index = INDEX_CURRENT_COMP;
+  add_element_to_master_list(&global_master_list,global_master_element);
+  
+  if (global_master_list.num_elements == 1) previous_master_index = 0; // no previous index
+  else previous_master_index = global_master_list.elements[global_master_list.num_elements-2].component_index; // -2 because of zero indexing and needing the previous index.
+  //printf("Assigned previous_master_index = %d \n",previous_master_index);
+  
+  number_of_volumes = 1; // Starting with 1 as the surrounding vacuum is considered a volume
+  number_of_masks = 0;   // Starting with 0 mask volumes
+  for (iterate=0;iterate<global_geometry_list.num_elements;iterate++) {
+    if (global_geometry_list.elements[iterate].component_index < INDEX_CURRENT_COMP && global_geometry_list.elements[iterate].activation_counter > 0) {
+        global_geometry_list.elements[iterate].active = 1;
+        global_geometry_list.elements[iterate].activation_counter--;
+        number_of_volumes++;
+        if (global_geometry_list.elements[iterate].Volume->geometry.is_mask_volume == 1) number_of_masks++;
+        if (global_geometry_list.elements[iterate].Volume->geometry.is_masked_volume == 1) number_of_masked_volumes++;
+    } else global_geometry_list.elements[iterate].active = 0;
+  }
+  //printf("Found number of volumes to be %d \n",number_of_volumes);
+  
+  // Allocation of global lists
+  geometry_component_index_list.num_elements = number_of_volumes;
+  geometry_component_index_list.elements = malloc( geometry_component_index_list.num_elements * sizeof(int));
+  mask_volume_index_list.num_elements = number_of_masks;
+  if (number_of_masks >0) mask_volume_index_list.elements = malloc( number_of_masks * sizeof(int));
+  mask_status_list.num_elements = number_of_masks;
+  if (number_of_masks >0) mask_status_list.elements = malloc( number_of_masks * sizeof(int));
+  current_mask_intersect_list_status.num_elements = number_of_masked_volumes;
+  if (number_of_masked_volumes >0)current_mask_intersect_list_status.elements = malloc( number_of_masked_volumes * sizeof(int));
+  
+  volume_index = 0;
+  for (iterate=0;iterate<global_geometry_list.num_elements;iterate++) {
+    if (global_geometry_list.elements[iterate].active == 1)
+        geometry_component_index_list.elements[++volume_index] = global_geometry_list.elements[iterate].component_index;
+      
+  }
+  geometry_component_index_list.elements[0] = 0; // Volume 0 is never set in the above code, but should never be used.
+  
+
+  MPI_MASTER(
+  // The input for this component is done through a series of input components
+  // All information needed is stored in global lists, which are printed here.
+  
+  printf("---------------------------------------------------------------------\n");
+  printf("global_process_list.num_elements: %d\n",global_process_list.num_elements);
+  for (iterate=0;iterate<global_process_list.num_elements;iterate++) {
+  printf("name of process [%d]: %s \n",iterate,global_process_list.elements[iterate].name);
+  printf("component index [%d]: %d \n",iterate,global_process_list.elements[iterate].component_index);
+  }
+  
+  printf("---------------------------------------------------------------------\n");
+  printf("global_material_list.num_elements: %d\n",global_material_list.num_elements);
+  for (iterate=0;iterate<global_material_list.num_elements;iterate++) {
+  printf("name of material    [%d]: %s \n",iterate,global_material_list.elements[iterate].name);
+  printf("component index     [%d]: %d \n",iterate,global_material_list.elements[iterate].component_index);
+  printf("my_absoprtion       [%d]: %f \n",iterate,global_material_list.elements[iterate].physics->my_a);
+  printf("number of processes [%d]: %d \n",iterate,global_material_list.elements[iterate].physics->number_of_processes);
+  }
+
+  printf("---------------------------------------------------------------------\n");
+  printf("global_geometry_list.num_elements: %d\n",global_material_list.num_elements);
+  for (iterate=0;iterate<global_geometry_list.num_elements;iterate++) {
+    if (global_geometry_list.elements[iterate].active == 1) {
+      printf("\n");
+      printf("name of geometry    [%d]: %s \n",iterate,global_geometry_list.elements[iterate].name);
+      printf("component index     [%d]: %d \n",iterate,global_geometry_list.elements[iterate].component_index);
+      printf("Volume.name         [%d]: %s \n",iterate,global_geometry_list.elements[iterate].Volume->name);
+      if (global_geometry_list.elements[iterate].Volume->geometry.is_mask_volume == 0) {
+      printf("Volume.p_physics.is_vacuum           [%d]: %d \n",iterate,global_geometry_list.elements[iterate].Volume->p_physics->is_vacuum);
+      printf("Volume.p_physics.my_absoprtion       [%d]: %f \n",iterate,global_geometry_list.elements[iterate].Volume->p_physics->my_a);
+      printf("Volume.p_physics.number of processes [%d]: %d \n",iterate,global_geometry_list.elements[iterate].Volume->p_physics->number_of_processes);
+      }
+      printf("Volume.geometry.shape                [%d]: %s \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.shape);
+      printf("Volume.geometry.center.x             [%d]: %f \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.center.x);
+      printf("Volume.geometry.center.y             [%d]: %f \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.center.y);
+      printf("Volume.geometry.center.z             [%d]: %f \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.center.z);
+      printf("Volume.geometry.rotation_matrix[0]           [%d]: [%f %f %f] \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[0][0],global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[0][1],global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[0][2]);
+      printf("Volume.geometry.rotation_matrix[1]           [%d]: [%f %f %f] \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[1][0],global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[1][1],global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[1][2]);
+      printf("Volume.geometry.rotation_matrix[2]           [%d]: [%f %f %f] \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[2][0],global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[2][1],global_geometry_list.elements[iterate].Volume->geometry.rotation_matrix[2][2]);
+      if (strcmp(global_geometry_list.elements[iterate].Volume->geometry.shape,"cylinder") == 0) {
+      printf("Volume.geometry.geometry_parameters.cyl_radius [%d]: %f \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.geometry_parameters.p_cylinder_storage->cyl_radius);
+      printf("Volume.geometry.geometry_parameters.height [%d]: %f \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.geometry_parameters.p_cylinder_storage->height);
+      }
+      printf("Volume.geometry.focus_data.Aim             [%d]: [%f %f %f] \n",iterate,global_geometry_list.elements[iterate].Volume->geometry.focus_data.Aim.x,global_geometry_list.elements[iterate].Volume->geometry.focus_data.Aim.y,global_geometry_list.elements[iterate].Volume->geometry.focus_data.Aim.z);
+    }
+  }
+  printf("---------------------------------------------------------------------\n");
+  printf("number_of_volumes = %d\n",number_of_volumes);
+  printf("number_of_masks = %d\n",number_of_masks);
+  printf("number_of_masked_volumes = %d\n",number_of_masked_volumes);
+  
+  ); // End MPI_MASTER
+
+  
+  // This information is to be stored in one array of structures that is allocated here
+  Volumes = malloc(number_of_volumes * sizeof(struct Volume_struct *)); // BUG, should be Volume_struct *, 23/9/2016
+  scattered_flag = malloc(number_of_volumes*sizeof(int)); // BUG, was sizeof(struct Volume_struct) 23/9/2016
+  
+  // The plotting functions need access to the other geomtries, but can not use the Volumes struct because of order of definition.
+  Geometries = malloc(number_of_volumes * sizeof(struct geometry_struct *));
+  
+  // When activation counter is used to have several copies of one volume, it can become necessary to have soft copies of volumes
+  // Not necessarily all of these will be allocated or used.
+  Volume_copies = malloc(number_of_volumes * sizeof(struct Volume_struct *));
+  Volume_copies_allocated.num_elements = 0;
+  
+  // The central structure is called a "Volume", tt describes a region in space with certain scattering processes and absorption cross section
+
+  // ---  Volume 0 ---------------------------------------------------------------------------------
+  // Volume zero is the vacuum surrounding the experiment (infinite, everywhere)
+  Volumes[0] = malloc(sizeof(struct Volume_struct));
+  strcpy(Volumes[0]->name,"Surrounding vacuum");
+  // Assign geometry
+  
+  // This information is meaningless for vacuum, and should never be acsessed in the logic.
+  Volumes[0]->geometry.priority_value = 0.0;
+  Volumes[0]->geometry.center.x = 0;
+  Volumes[0]->geometry.center.y = 0;
+  Volumes[0]->geometry.center.z = 0;
+  strcpy(Volumes[0]->geometry.shape,"vacuum");
+  Volumes[0]->geometry.within_function = &r_within_surroundings;
+  // No physics struct allocated
+  Volumes[0]->p_physics = NULL;
+  
+  
+  // These are never used for volume 0, but by setting the length to 0 it is automatically skipped in many forloops without the need for a if statement
+  Volumes[0]->geometry.children.num_elements=0;
+  Volumes[0]->geometry.direct_children.num_elements=0;
+  Volumes[0]->geometry.destinations_list.num_elements=0;
+  Volumes[0]->geometry.reduced_destinations_list.num_elements=0;
+  
+  Volumes[0]->geometry.masked_by_list.num_elements = 0;
+  Volumes[0]->geometry.mask_list.num_elements = 0;
+  Volumes[0]->geometry.masked_by_mask_index_list.num_elements = 0;
+  Volumes[0]->geometry.mask_mode=0;
+  Volumes[0]->geometry.is_mask_volume=0;
+  Volumes[0]->geometry.is_masked_volume=0;
+  
+  // The absolute rotation of this component is saved for use in initialization
+  rot_transpose(ROT_A_CURRENT_COMP,master_transposed_rotation_matrix);
+  
+  // A pointer to the geometry structure
+  Geometries[0] = &Volumes[0]->geometry;
+  
+  
+  // Initialize all Volumes that originate from input components
+  max_number_of_processes = 0;
+  volume_index = 0;
+  mask_index_main = 0;
+  for (geometry_list_index=0;geometry_list_index<global_geometry_list.num_elements;geometry_list_index++) {
+    if (global_geometry_list.elements[geometry_list_index].active == 1) {
+      volume_index++;
+      // Connect a volume for each of the geometry.comp instances in the McStas instrument files
+      if (global_geometry_list.elements[geometry_list_index].activation_counter == 0) {
+        // This is the last time this volume is used, use the hard copy from the geometry component
+        Volumes[volume_index] = global_geometry_list.elements[geometry_list_index].Volume;
+        //printf("used hard copy of volume %d \n",volume_index);
+      } else {
+        //printf("\n");
+        //printf("making local copy of volume %d \n",volume_index);
+        // Since this volume is still needed more than this once, we need to make a shallow copy and use instead
+        Volume_copies[volume_index] = malloc(sizeof(struct Volume_struct));
+        *(Volume_copies[volume_index]) = *global_geometry_list.elements[geometry_list_index].Volume; // Makes shallow copy
+        Volumes[volume_index] = Volume_copies[volume_index];
+        add_element_to_int_list(&Volume_copies_allocated,volume_index);
+        // Here I need to test how deep this copy is.
+        //  - Are matrix elements transfered, or are they stored as pointers? YES
+        //  - Are Coords transfered, or are they stored as pointers? YES
+        // Needed hard copy: center (Coords center, Rotation rotation_matrix (+transpose)) ALL WORKS
+        
+        // The geometry storage needs a shallow copy as well (hard copy not necessary for any current geometries)
+        // A simple copy_geometry_parameters function is added to the geometry in each geometry component
+        Volumes[volume_index]->geometry.geometry_parameters = Volumes[volume_index]->geometry.copy_geometry_parameters(&global_geometry_list.elements[geometry_list_index].Volume->geometry.geometry_parameters);
+        
+        
+        
+        
+        
+        /*
+        // These tests show that the shallow copy copes matrices and arrays, but not two layer deep structes, meaning p_physics is the same for the copy and original, which is perfect for our purposes.
+        // Lists are also copied
+        // The main problem is the geometry storage structure, which should be copied, but isn't
+        
+        print_position(Volumes[volume_index]->geometry.center,"Volume copy center");
+        print_position(global_geometry_list.elements[geometry_list_index].Volume->geometry.center,"Volume original center");
+        
+        printf("changed center of original to 0 0 0 \n");
+        global_geometry_list.elements[geometry_list_index].Volume->geometry.center = coords_set(0,0,0);
+        
+        print_position(Volumes[volume_index]->geometry.center,"Volume copy center");
+        print_position(global_geometry_list.elements[geometry_list_index].Volume->geometry.center,"Volume original center");
+        
+        printf("\n");
+        print_rotation(Volumes[volume_index]->geometry.rotation_matrix,"Volume copy rotation_matrix");
+        print_rotation(global_geometry_list.elements[geometry_list_index].Volume->geometry.rotation_matrix,"Volume original rotation_matrix");
+        
+        printf("changed rotation matrix [0][1] original 15 \n");
+        global_geometry_list.elements[geometry_list_index].Volume->geometry.rotation_matrix[0][1] = 15.0;
+        
+        print_rotation(Volumes[volume_index]->geometry.rotation_matrix,"Volume copy rotation_matrix");
+        print_rotation(global_geometry_list.elements[geometry_list_index].Volume->geometry.rotation_matrix,"Volume original rotation_matrix");
+        
+        print_1d_int_list(Volumes[volume_index]->geometry.mask_list,"Volume copy mask_list");
+        print_1d_int_list(global_geometry_list.elements[geometry_list_index].Volume->geometry.mask_list,"Volume original mask_list");
+        
+        printf("Addding element 15 to mask list of volume \n");
+        add_element_to_int_list(&global_geometry_list.elements[geometry_list_index].Volume->geometry.mask_list,15);
+    
+        print_1d_int_list(Volumes[volume_index]->geometry.mask_list,"Volume copy mask_list");
+        print_1d_int_list(global_geometry_list.elements[geometry_list_index].Volume->geometry.mask_list,"Volume original mask_list");
+        
+        printf("my_a copy physical material: %f \n",Volumes[volume_index]->p_physics->my_a);
+        printf("my_a of original physical material: 0: %f \n",global_geometry_list.elements[geometry_list_index].Volume->p_physics->my_a);
+        
+        printf("changeing originals my_a for physical material \n");
+        global_geometry_list.elements[geometry_list_index].Volume->p_physics->my_a = 15.0;
+        
+        printf("my_a copy physical material: %f \n",Volumes[volume_index]->p_physics->my_a);
+        printf("my_a of original physical material: 0: %f \n",global_geometry_list.elements[geometry_list_index].Volume->p_physics->my_a);
+        
+        
+        
+        
+        
+        //printf("name of copy physical process 0: %s \n",Volumes[volume_index]->p_physics->name);
+        //printf("name of original physical process 0: %s \n",(global_geometry_list.elements[geometry_list_index].Volume->p_physics->name);
+        
+        printf("is_exit_volume = %d : is_mask_volume = %d \n",Volumes[volume_index]->geometry.is_exit_volume,Volumes[volume_index]->geometry.is_mask_volume);
+        
+        printf("\n");
+        */
+        
+        
+        /*
+        // Test showing the issue, the geometry_parameters point to the same file, and need to be copied instead
+        
+        // Fixed by adding this line
+        Volumes[volume_index]->geometry.geometry_parameters = Volumes[volume_index]->geometry.copy_geometry_parameters(&global_geometry_list.elements[geometry_list_index].Volume->geometry.geometry_parameters);
+        
+        print_position(Volumes[volume_index]->geometry.geometry_parameters.p_cylinder_storage->direction_vector,"Volume copy geometry_storage.direction_vector");
+        print_position(global_geometry_list.elements[geometry_list_index].Volume->geometry.geometry_parameters.p_cylinder_storage->direction_vector,"Volume original geometry_storage.direction_vector");
+        
+        printf("changed geometry_storage.direction_vector of original to 15 16 17 \n");
+        global_geometry_list.elements[geometry_list_index].Volume->geometry.geometry_parameters.p_cylinder_storage->direction_vector = coords_set(15,16,17);
+        
+        print_position(Volumes[volume_index]->geometry.geometry_parameters.p_cylinder_storage->direction_vector,"Volume copy geometry_storage.direction_vector");
+        print_position(global_geometry_list.elements[geometry_list_index].Volume->geometry.geometry_parameters.p_cylinder_storage->direction_vector,"Volume original geometry_storage.direction_vector");
+        */
+        
+          
+      }
+      
+      // This section identifies the different non isotropic processes in the current volume and give them appropriate transformation matrices
+      // Identify the number of non isotropic processes in a material (this code can be safely executed for the same material many times)
+      non_isotropic_found = 0;
+      for (iterate=0;iterate<Volumes[volume_index]->p_physics->number_of_processes;iterate++) {
+        if (Volumes[volume_index]->p_physics->p_scattering_array[iterate].non_isotropic_rot_index != -1) {
+            Volumes[volume_index]->p_physics->p_scattering_array[iterate].non_isotropic_rot_index = non_isotropic_found;
+            non_isotropic_found++;
+        }
+      }
+      // If there were any, allocate memory to hold all of them in the volume struct
+      if (non_isotropic_found > 0) {
+        if (Volumes[volume_index]->geometry.process_rot_allocated == 0) {
+          Volumes[volume_index]->geometry.process_rot_matrix_array = malloc(non_isotropic_found * sizeof(Rotation));
+          Volumes[volume_index]->geometry.transpose_process_rot_matrix_array = malloc(non_isotropic_found * sizeof(Rotation));
+          Volumes[volume_index]->geometry.process_rot_allocated = 1;
+        }
+      
+        non_isotropic_found = 0;
+        for (iterate=0;iterate<Volumes[volume_index]->p_physics->number_of_processes;iterate++) {
+          if (Volumes[volume_index]->p_physics->p_scattering_array[iterate].non_isotropic_rot_index != -1) {
+            
+            // Create rotation matrix for this specific volume / process combination to transform from master coordinate system to the non-isotropics process coordinate system
+            // This is done by multipling the transpose master component roration matrix, the volume rotation, and then the process rotation matrix onto the velocity / wavevector
+            rot_mul(Volumes[volume_index]->geometry.rotation_matrix,master_transposed_rotation_matrix,temp_rotation_matrix);
+            rot_mul(Volumes[volume_index]->p_physics->p_scattering_array[iterate].rotation_matrix,temp_rotation_matrix,Volumes[volume_index]->geometry.process_rot_matrix_array[non_isotropic_found]);
+            
+            // Need to transpose as well to transform back to the master coordinate system
+            rot_transpose(Volumes[volume_index]->geometry.process_rot_matrix_array[non_isotropic_found],Volumes[volume_index]->geometry.transpose_process_rot_matrix_array[non_isotropic_found]);
+
+            // Debug print
+            //print_rotation(Volumes[volume_index]->geometry.process_rot_matrix_array[non_isotropic_found],"Process rotation matrix");
+            //print_rotation(Volumes[volume_index]->geometry.transpose_process_rot_matrix_array[non_isotropic_found],"Transpose process rotation matrix");
+            
+            non_isotropic_found++;
+          }
+        }
+      }
+      
+      // This component works in its local coordinate system, and thus all information from the input components should be transformed to its coordinate system.
+      // All the input components saved their absolute rotation/position into their Volume structure, and the absolute rotation of the current component is known.
+      // The next section finds the relative rotation and translation of all the volumes and the master component.
+        
+      // transpose(R_V)*R_C
+      rot_mul(ROT_A_CURRENT_COMP,Volumes[volume_index]->geometry.transpose_rotation_matrix,temp_rotation_matrix);
+      // Copy the result back to the volumes structure
+      rot_copy(Volumes[volume_index]->geometry.rotation_matrix,temp_rotation_matrix);
+      // Now update the transpose as well
+      rot_transpose(Volumes[volume_index]->geometry.rotation_matrix,temp_rotation_matrix);
+      rot_copy(Volumes[volume_index]->geometry.transpose_rotation_matrix,temp_rotation_matrix);
+        
+      non_rotated_position.x = Volumes[volume_index]->geometry.center.x - POS_A_CURRENT_COMP.x;
+      non_rotated_position.y = Volumes[volume_index]->geometry.center.y - POS_A_CURRENT_COMP.y;
+      non_rotated_position.z = Volumes[volume_index]->geometry.center.z - POS_A_CURRENT_COMP.z;
+
+      rot_transpose(ROT_A_CURRENT_COMP,temp_rotation_matrix);
+      // This is not right when Volumes[volume_index] is rotated as well this component ??
+      rotated_position = rot_apply(ROT_A_CURRENT_COMP,non_rotated_position);
+      //rotated_position = rot_apply(Volumes[volume_index]->geometry.rotation_matrix,non_rotated_position);
+
+      Volumes[volume_index]->geometry.center.x = rotated_position.x;
+      Volumes[volume_index]->geometry.center.y = rotated_position.y;
+      Volumes[volume_index]->geometry.center.z = rotated_position.z;
+      
+      // Using the same algorithm, the Aim vector of the focus_data struct is transformed as well
+      non_rotated_position.x = Volumes[volume_index]->geometry.focus_data.Aim.x;
+      non_rotated_position.y = Volumes[volume_index]->geometry.focus_data.Aim.y;
+      non_rotated_position.z = Volumes[volume_index]->geometry.focus_data.Aim.z;
+
+      rotated_position = rot_apply(ROT_A_CURRENT_COMP,non_rotated_position);
+
+      Volumes[volume_index]->geometry.focus_data.Aim.x = rotated_position.x;
+      Volumes[volume_index]->geometry.focus_data.Aim.y = rotated_position.y;
+      Volumes[volume_index]->geometry.focus_data.Aim.z = rotated_position.z;
+
+      //sprintf(string_output,"Rotated Aim vector for volume [%d]",volume_index);
+      //print_position(Volumes[volume_index]->geometry.focus_data.Aim,string_output);
+        
+      // To allocate enough memory to hold information on all processes, the maximum of these is found
+      if (Volumes[volume_index]->p_physics->number_of_processes > max_number_of_processes)
+          max_number_of_processes = Volumes[volume_index]->p_physics->number_of_processes;
+        
+      // Normalizing and error checking process interact fraction
+      number_of_process_interacts_set = 0; total_process_interact=0;
+      for (process_index=0;process_index<Volumes[volume_index]->p_physics->number_of_processes;process_index++) {
+        if (Volumes[volume_index]->p_physics->p_scattering_array[process_index].process_p_interact != -1) {
+          number_of_process_interacts_set++;
+          total_process_interact += Volumes[volume_index]->p_physics->p_scattering_array[process_index].process_p_interact;
+        } else {
+          index_of_lacking_process = process_index;
+        }
+      }
+      
+      if (number_of_process_interacts_set == 0) Volumes[volume_index]->p_physics->interact_control = 0;
+      else Volumes[volume_index]->p_physics->interact_control = 1;
+      
+      // If all are set, check if they need renormalization so that the sum is one.
+      if (number_of_process_interacts_set == Volumes[volume_index]->p_physics->number_of_processes) {
+        if (total_process_interact > 1.001 || total_process_interact < 0.999) {
+          for (process_index=0;process_index<Volumes[volume_index]->p_physics->number_of_processes;process_index++) {
+            Volumes[volume_index]->p_physics->p_scattering_array[process_index].process_p_interact = Volumes[volume_index]->p_physics->p_scattering_array[process_index].process_p_interact/total_process_interact;
+          }
+        }
+      } else if ( number_of_process_interacts_set != 0) {
+        if (number_of_process_interacts_set == Volumes[volume_index]->p_physics->number_of_processes - 1) // If all but one is set, it is an easy fix
+          Volumes[volume_index]->p_physics->p_scattering_array[index_of_lacking_process].process_p_interact = 1 - total_process_interact;
+        else {
+            printf("ERROR, material %s needs to have all, all minus one or none of its processes with an interact_fraction \n",Volumes[volume_index]->p_physics->name);
+            exit(1);
+        }
+      }
+      
+      //if (verbal) {
+      //  printf("Process interact fraction for volume_index = %d\n",volume_index);
+      //  for (process_index=0;process_index<Volumes[volume_index]->p_physics->number_of_processes;process_index++) {
+      //      printf("process interact for %d out of %d = %f \n",process_index ,Volumes[volume_index]->p_physics->number_of_processes ,Volumes[volume_index]->p_physics->p_scattering_array[process_index].process_p_interact);
+      //  }
+      //}
+        
+      // Some initialization can only happen after the rotation matrix relative to the master is known
+      // Such initialization is placed in the geometry component, and executed here through a function pointer
+      Volumes[volume_index]->geometry.initialize_from_main_function(&Volumes[volume_index]->geometry);
+      
+      /*
+      Coords simple_vector;
+      Coords cyl_vector;
+      if (strcmp("cylinder",Volumes[volume_index]->geometry.shape) == 0) {
+          
+          // This section should be moved to a initialize_from_main function like for the box volume
+          // Start with vector that points along the cylinder in the simple frame, and rotate to global
+          simple_vector = coords_set(0,1,0);
+
+          // Rotate the position of the neutron around the center of the cylinder
+          cyl_vector = rot_apply(Volumes[volume_index]->geometry.rotation_matrix,simple_vector);
+          NORM(cyl_vector.x,cyl_vector.y,cyl_vector.z);
+          Volumes[volume_index]->geometry.geometry_parameters.p_cylinder_storage->direction_vector.x = cyl_vector.x;
+          Volumes[volume_index]->geometry.geometry_parameters.p_cylinder_storage->direction_vector.y = cyl_vector.y;
+          Volumes[volume_index]->geometry.geometry_parameters.p_cylinder_storage->direction_vector.z = cyl_vector.z;
+          // if (verbal == 1) printf("Cords vector1 = (%f,%f,%f)\n",cyl_vector.x,cyl_vector.y,cyl_vector.z);
+          
+          Volumes[volume_index]->geometry.initialize_from_main_function(&Volumes[volume_index]->geometry);
+      }
+      if (strcmp("box",Volumes[volume_index]->geometry.shape) == 0) {
+          // Sets the vectors in the coordinate system of the main component (this component)
+          Volumes[volume_index]->geometry.initialize_from_main_function(&Volumes[volume_index]->geometry);
+      }
+      */
+      
+      // Add pointer to geometry to Geometries
+      Geometries[volume_index] = &Volumes[volume_index]->geometry;
+      
+      // Initialize mask intersect list
+      Volumes[volume_index]->geometry.mask_intersect_list.num_elements = 0;
+      
+      // Here the mask_list and masked_by_list for the volume is updated from being component index values to being volume indexes
+      for (iterate=0;iterate<Volumes[volume_index]->geometry.mask_list.num_elements;iterate++)
+        Volumes[volume_index]->geometry.mask_list.elements[iterate] = find_on_int_list(geometry_component_index_list,Volumes[volume_index]->geometry.mask_list.elements[iterate]);
+      
+      for (iterate=0;iterate<Volumes[volume_index]->geometry.masked_by_list.num_elements;iterate++)
+        Volumes[volume_index]->geometry.masked_by_list.elements[iterate] = find_on_int_list(geometry_component_index_list,Volumes[volume_index]->geometry.masked_by_list.elements[iterate]);
+        
+
+      // These should maybe be in mask_indices instead, but not before after list generation
+      
+      // If the volume is a mask, it's volume number is added to the mask_volume_index list so volume index can be converted to mask_index.
+      if (Volumes[volume_index]->geometry.is_mask_volume == 1) Volumes[volume_index]->geometry.mask_index = mask_index_main;
+      if (Volumes[volume_index]->geometry.is_mask_volume == 1) mask_volume_index_list.elements[mask_index_main++] = volume_index;
+        
+    }
+  } // Initialization for each volume done
+  
+  
+  
+  my_trace = malloc(max_number_of_processes*sizeof(double));
+  my_trace_fraction_control = malloc(max_number_of_processes*sizeof(double));
+  number_of_solutions = &number_of_solutions_static;
+  component_error_msg = 0;
+  
+  // Pre allocated memory for destination list search
+  pre_allocated1 = malloc(number_of_volumes * sizeof(int));
+  pre_allocated2 = malloc(number_of_volumes * sizeof(int));
+  pre_allocated3 = malloc(number_of_volumes * sizeof(int));
+  
+  // In this function different lists of volume indecies are generated. They are the key to the speed of the component and central for the logic.
+  // They use simple set algebra to generate these lists for each volume:
+  // Children list for volume n: Indicies of volumes that are entirely within the set described by volume n
+  // Overlap list for volume n: Indicies of volume that contains some of the set described by volume n (excluding volume n)
+  // Intersect check list for volume n: Indicies of volumes to check for intersection if a ray originates from volume n (is generated from the children and overlap lists)
+  // Parents list for volume n: Indicies of volumes that contain the entire set of volume n
+  // Grandparents lists for volume n: Indicies of volumes that contain the entire set of at least one parent of volume n
+  // Destination list for volume n: Indicies of volumes that could be the destination volume when a ray leaves volume n
+  // The overlap, parents and grandparents lists are local variables in the function, and not in the main scope.
+  
+  generate_lists(Volumes, &starting_lists, number_of_volumes, verbal);
+  
+  // Generate "safe starting list", which contains all volumes that the ray may enter from other components
+  // These are all volumes without scattering or absorption
+  
+  
+  for (volume_index=0;volume_index<number_of_volumes;volume_index++) {
+    // Updating mask lists from volume index to global_mask_indices
+    // Filling out the masked by list that uses mask indices
+    Volumes[volume_index]->geometry.masked_by_mask_index_list.num_elements = Volumes[volume_index]->geometry.masked_by_list.num_elements;
+    Volumes[volume_index]->geometry.masked_by_mask_index_list.elements = malloc(Volumes[volume_index]->geometry.masked_by_mask_index_list.num_elements * sizeof(int));
+    for (iterate=0;iterate<Volumes[volume_index]->geometry.masked_by_list.num_elements;iterate++)
+        Volumes[volume_index]->geometry.masked_by_mask_index_list.elements[iterate] = find_on_int_list(mask_volume_index_list,Volumes[volume_index]->geometry.masked_by_list.elements[iterate]);
+  }
+  
+  // Optimizing speed of the within_which_volume search algorithm
+  int volume_index_main;
+  /*
+  for (volume_index_main=0;volume_index_main<number_of_volumes;volume_index_main++) {
+    Volumes[volume_index_main]->geometry.destinations_logic_list.elements[0] = 0;
+  }
+  */
+  
+  // Checking for equal priorities
+  for (volume_index_main=0;volume_index_main<number_of_volumes;volume_index_main++) {
+    for (volume_index=0;volume_index<number_of_volumes;volume_index++)
+        if (Volumes[volume_index_main]->geometry.priority_value == Volumes[volume_index]->geometry.priority_value && volume_index_main != volume_index) {
+            if (Volumes[volume_index_main]->geometry.is_mask_volume == 0 && Volumes[volume_index]->geometry.is_mask_volume == 0) {
+              // Priority of masks do not matter
+              printf("ERROR in Union_master with name %s. The volumes named %s and %s have the same priority. Change the priorities so the one present in case of overlap has highest priority.\n",NAME_CURRENT_COMP,Volumes[volume_index_main]->name,Volumes[volume_index]->name);
+              exit(1);
+            }
+        }
+  }
+  
+  
+  
+  MPI_MASTER(
+  if (verbal) printf("\n ---- Overview of the lists generated for each volume ---- \n");
+  
+  for (volume_index_main=0;volume_index_main<number_of_volumes;volume_index_main++) {
+      if (verbal) sprintf(string_output,"Children for Volume                  %d",volume_index_main);
+      if (verbal) print_1d_int_list(Volumes[volume_index_main]->geometry.children,string_output);
+      
+      if (verbal) sprintf(string_output,"Direct_children for Volume           %d",volume_index_main);
+      if (verbal) print_1d_int_list(Volumes[volume_index_main]->geometry.direct_children,string_output);
+      
+      if (verbal) sprintf(string_output,"Intersect_check_list for Volume      %d",volume_index_main);
+      if (verbal) print_1d_int_list(Volumes[volume_index_main]->geometry.intersect_check_list,string_output);
+      
+      if (verbal) sprintf(string_output,"Mask_intersect_list for Volume       %d",volume_index_main);
+      if (verbal) print_1d_int_list(Volumes[volume_index_main]->geometry.mask_intersect_list,string_output);
+      
+      if (verbal) sprintf(string_output,"Destinations_list for Volume         %d",volume_index_main);
+      if (verbal) print_1d_int_list(Volumes[volume_index_main]->geometry.destinations_list,string_output);
+      
+      //if (verbal) sprintf(string_output,"Destinations_logic_list for Volume   %d",volume_index_main);
+      //if (verbal) print_1d_int_list(Volumes[volume_index_main]->geometry.destinations_logic_list,string_output);
+      
+      if (verbal) sprintf(string_output,"Reduced_destinations_list for Volume %d",volume_index_main);
+      if (verbal) print_1d_int_list(Volumes[volume_index_main]->geometry.reduced_destinations_list,string_output);
+      
+      if (verbal) sprintf(string_output,"Next_volume_list for Volume          %d",volume_index_main);
+      if (verbal) print_1d_int_list(Volumes[volume_index_main]->geometry.next_volume_list,string_output);
+      
+      if (verbal) {
+        if (volume_index_main != 0)
+                           printf("      Is_vacuum for Volume                 %d = %d\n",volume_index_main,Volumes[volume_index_main]->p_physics->is_vacuum);
+      }
+      if (verbal) {
+        if (volume_index_main != 0)
+                           printf("      is_mask_volume for Volume            %d = %d\n",volume_index_main,Volumes[volume_index_main]->geometry.is_mask_volume);
+      }
+      if (verbal) {
+        if (volume_index_main != 0)
+                           printf("      is_masked_volume for Volume          %d = %d\n",volume_index_main,Volumes[volume_index_main]->geometry.is_masked_volume);
+      }
+      if (verbal) {
+        if (volume_index_main != 0)
+                           printf("      is_exit_volume for Volume            %d = %d\n",volume_index_main,Volumes[volume_index_main]->geometry.is_exit_volume);
+      }
+      
+      if (verbal) sprintf(string_output,"mask_list for Volume                 %d",volume_index_main);
+      if (verbal) print_1d_int_list(Volumes[volume_index_main]->geometry.mask_list,string_output);
+      
+      if (verbal) sprintf(string_output,"masked_by_list for Volume            %d",volume_index_main);
+      if (verbal) print_1d_int_list(Volumes[volume_index_main]->geometry.masked_by_list,string_output);
+      
+      if (verbal) sprintf(string_output,"masked_by_mask_index_list for Volume %d",volume_index_main);
+      if (verbal) print_1d_int_list(Volumes[volume_index_main]->geometry.masked_by_mask_index_list,string_output);
+      
+                           printf("      mask_mode for Volume                 %d = %d\n",volume_index_main,Volumes[volume_index_main]->geometry.mask_mode);
+      printf("\n");
+  }
+  )
+  
+
+
+  // Initializing intersection_time_table
+  // The intersection time table contains all information on intersection times for the current position/direction, and is cleared everytime a ray changes direction.
+  // Not all entries needs to be calculated, so there is a variable that keeps track of which intersection times have been calculated in order to avoid redoing that.
+  // When the intersections times are calculated for a volume, all future intersections are kept in the time table.
+  // Thus the memory allocation have to take into account how many intersections there can be with each volume, but it is currently set to 2, but can easily be changed.
+  
+  intersection_time_table.num_volumes = number_of_volumes;
+  
+  intersection_time_table.n_elements = (int*) malloc(intersection_time_table.num_volumes * sizeof(int));
+  intersection_time_table.calculated = (int*) malloc(intersection_time_table.num_volumes * sizeof(int));
+  intersection_time_table.intersection_times = (double**) malloc(intersection_time_table.num_volumes * sizeof(double));
+  for (iterate = 0;iterate < intersection_time_table.num_volumes;iterate++){
+      intersection_time_table.n_elements[iterate] = (int) 2; // number of intersection solutions
+      if (iterate == 0) intersection_time_table.n_elements[iterate] = (int) 0; // number of intersection solutions
+      intersection_time_table.calculated[iterate] = (int) 0; // Initializing calculated logic
+      
+      if (iterate == 0) {
+           intersection_time_table.intersection_times[0] = NULL;
+      }
+      else {
+        intersection_time_table.intersection_times[iterate] = (double*) malloc(intersection_time_table.n_elements[iterate]*sizeof(double));
+        for (solutions = 0;solutions < intersection_time_table.n_elements[iterate];solutions++) {
+              intersection_time_table.intersection_times[iterate][solutions] = -1.0;
+        }
+      }
+  }
+  
+  
+  
+  
+  // If enabled, the tagging system tracks all different histories sampled by the program.
+
+  // Initialize the tagging tree
+  // Allocate a list of host nodes with the same length as the number of volumes
+  
+  stop_creating_nodes = 0; stop_tagging_ray = 0; tagging_leaf_counter = 0;
+  if (enable_tagging) {
+    master_tagging_node_list.num_elements = number_of_volumes;
+    master_tagging_node_list.elements = malloc(master_tagging_node_list.num_elements * sizeof(struct tagging_tree_node_struct*));
+  
+    // Initialize
+    for (volume_index=0;volume_index<number_of_volumes;volume_index++) {
+      //if (verbal) printf("Allocating master tagging node for volume number %d \n",volume_index);
+      master_tagging_node_list.elements[volume_index] = initialize_tagging_tree_node(master_tagging_node_list.elements[volume_index], NULL, Volumes[volume_index]);
+      //if (verbal) printf("Allocated master tagging node for volume number %d \n",volume_index);
+    }
+  }
+  
+  MPI_MASTER(
+  printf("Union_master component %s initialized sucessfully\n",NAME_CURRENT_COMP);
+  )
+
+%}
+
+TRACE
+%{
+  
+  done = 0;
+  error_msg = 0;
+  time_propagated_without_scattering = 0;
+  number_of_scattering_events = 0;
+  v_length = sqrt(vx*vx+vy*vy+vz*vz);
+  clear_intersection_table(&intersection_time_table);
+  for (volume_index = 0;volume_index<number_of_volumes;volume_index++) scattered_flag[volume_index] = 0;
+  
+  if (trace_verbal) printf("\n\n\n\n\n----------- NEW RAY -------------------------------------------------\n");
+  if (trace_verbal) printf("Union_master component name: %s \n \n",NAME_CURRENT_COMP);
+  
+  r_start[0] = x; r_start[1] = y; r_start[2] = z;
+  r[0]=x;r[1]=y;r[2]=z;v[0]=vx;v[1]=vy;v[2]=vz;
+  
+  ray_position = coords_set(x,y,z);
+  ray_velocity = coords_set(vx,vy,vz);
+  
+  // Mask update: need to check the mask status for the initial position
+  for (iterate=0;iterate<number_of_masks;iterate++) {
+    if(Volumes[mask_volume_index_list.elements[iterate]]->geometry.within_function(ray_position,&Volumes[mask_volume_index_list.elements[iterate]]->geometry) == 1) {
+      mask_status_list.elements[iterate] = 1;
+    } else {
+      mask_status_list.elements[iterate] = 0;
+    }
+  }
+      
+  if (trace_verbal) print_1d_int_list(mask_status_list,"Initial mask status list");
+  
+  // Now the initial current_volume can be found, which requires the up to date mask_status_list
+  current_volume = within_which_volume(ray_position,starting_lists.reduced_start_list,starting_lists.starting_destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+  
+  // Using the mask_status_list and the current volume, the current_mask_intersect_list_status can be made
+  //  it contains the effective mask status of all volumes on the current volumes mask intersect list, which needs to be calculated,
+  //  but only when the current volume or mask status changes, not under for example scattering inside the current volume
+  update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+  
+  if (trace_verbal) printf("Starting current_volume = %d\n",current_volume);
+  
+  // This error is commented out for testing external components in Union systems
+  if (allow_inside_start == 0 && starting_lists.allowed_starting_volume_logic_list.elements[current_volume] == 0) {
+    printf("ERROR, ray ''teleported'' into Union component %s, if intentional, set allow_inside_start=1\n",NAME_CURRENT_COMP);
+  }
+  if (starting_volume_warning == 0 && current_volume != 0) {
+        printf("WARNING: Ray started in volume ''%s'' rather than the surrounding vacuum in component %s. This warning is only shown once.\n",Volumes[current_volume]->name,NAME_CURRENT_COMP);
+        starting_volume_warning = 1;
+  }
+  
+  // Starting the tagging tree
+  if (enable_tagging) {
+    current_tagging_node = master_tagging_node_list.elements[current_volume];
+    if (tagging_leaf_counter > history_limit) stop_creating_nodes = 1;
+      stop_tagging_ray = 0;
+  }
+  
+  if (trace_verbal && enable_tagging) printf("current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
+  if (trace_verbal && enable_tagging) printf("current_tagging_node->number_of_rays = %d \n",current_tagging_node->number_of_rays);
+  
+  // Multiple scattering loop
+  limit = 100000;
+  while (done == 0) {
+    limit--;
+    
+    /*
+    if (limit < 3) trace_verbal = 1;
+    else trace_verbal = 0;
+    */
+    
+    if (trace_verbal) printf("----------- START OF WHILE LOOP --------------------------------------\n");
+    if (trace_verbal) print_intersection_table(intersection_time_table);
+    if (trace_verbal) printf("current_volume = %d \n",current_volume);
+    
+    
+    /*
+    The first part of the main loop is ripe for being rewritten, as many lines of code are repated, and redundant work is being performed.
+    The current structure is as follows:
+    
+    Calculation of intersections for volumes on the intersection list
+    Calculation of intersections for volumes on active mask list (including work on finding if ALL/ANY is respected for the mask status)
+    Calculation of intersections for the current volume, if no time no time have been found for one of it's children
+    Selection of the lowest time among intersection list
+    Selection of the lowest time among active intersection mask lists
+    Selection of the lowest time for the current volume
+    
+    The most obvious change is that the time selection can be done together with the calculations.
+    It is kept for now as the program needs to work as earlier when doing testing of new features.
+    */
+    
+    // Checking intersections for all volumes in the intersect list.
+    for (start=check=Volumes[current_volume]->geometry.intersect_check_list.elements;check-start<Volumes[current_volume]->geometry.intersect_check_list.num_elements;check++) {
+    // This will leave check as a pointer to the intergers in the intersect_check_list and iccrement nicely
+        if (trace_verbal) printf("Intersect_list = %d being checked \n",*check);
+    
+        if (intersection_time_table.calculated[*check] == 0) {
+             if (trace_verbal) printf("running intersection for intersect_list with *check = %d \n",*check);
+            // if (trace_verbal) printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",r[0],r[1],r[2],v[0],v[1],v[2]);
+            geometry_output = Volumes[*check]->geometry.intersect_function(intersection_time_table.intersection_times[*check],number_of_solutions,r_start,v,&Volumes[*check]->geometry);
+            intersection_time_table.calculated[*check] = 1;
+            // if (trace_verbal) printf("succesfully calculated intersection times for volume *check = %d \n",*check);
+        }
+    }
+    
+    // Mask update: add additional loop for checking intersections with masked volumes depending on mask statuses
+    //for (start=check=Volumes[current_volume]->geometry.mask_intersect_list.elements;check-start<Volumes[current_volume]->geometry.mask_intersect_list.num_elements;check++) {
+    // Can not use this method, as it is not certain the elements are even allocated
+    for (mask_iterate=0;mask_iterate<Volumes[current_volume]->geometry.mask_intersect_list.num_elements;mask_iterate++) {
+      if (current_mask_intersect_list_status.elements[mask_iterate] == 1) {
+        if (trace_verbal) printf("Mask Intersect_list = %d being checked \n",Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]);
+        if (intersection_time_table.calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]] == 0) {
+          if (trace_verbal) printf("running intersection for mask_intersect_list element = %d \n",Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]);
+          // if (trace_verbal) printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",r[0],r[1],r[2],v[0],v[1],v[2]);
+          geometry_output = Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]]->geometry.intersect_function(intersection_time_table.intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]],number_of_solutions,r_start,v,&Volumes[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]]->geometry);
+          intersection_time_table.calculated[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]] = 1;
+          // if (trace_verbal) printf("succesfully calculated intersection times for volume *check = %d \n",*check);
+        }
+      }
+    }
+    
+    // removed this small optimization for debug purpose, and it fixed all problems
+    // Checking if there are intersections with children of current volume, which means there is an intersection before current_volume, and thus can be skipped. But only if they have not been overwritten. In case current_volume is 0, there is no need to do this regardless.
+    if (current_volume != 0 && intersection_time_table.calculated[current_volume] == 0) {
+        if (trace_verbal) printf("Checking if children of current_volume = %d have intersections. \n",current_volume);
+        intersection_with_children = 0;
+        for (start = check = Volumes[current_volume]->geometry.children.elements;check - start < Volumes[current_volume]->geometry.children.num_elements;check++) {
+            if (trace_verbal) printf("Checking if child %d of current_volume = %d have intersections. \n",*check,current_volume);
+            // Not all children will be calculated, but if they are not, there would never be an intersection to begin with
+            // Could also make a list of direct children (removing childrens children), which would cut the search time down when the volumes are nested
+            // Check if there is a viable above time_propagated_without_scattering solution
+            // Only check the first of the two results in the intersection table, as they are ordered, and the second is of no interest
+            if (intersection_time_table.calculated[*check] == 1 && intersection_time_table.intersection_times[*check][0] > time_propagated_without_scattering) {
+                if (trace_verbal) printf("Found and child of current_volume with an intersection. Skips calculating for current_volume \n");
+                intersection_with_children = 1;
+                break; // No need to check more, if there is just one it is not necessary to calculate intersection with current_volume yet
+            }
+        }
+        if (trace_verbal) printf("intersection_with_children = %d \n",intersection_with_children);
+        if (intersection_with_children == 0) {
+            geometry_output = Volumes[current_volume]->geometry.intersect_function(intersection_time_table.intersection_times[current_volume],number_of_solutions,r_start,v,&Volumes[current_volume]->geometry);
+            //geometry_output = Volumes[*check        ]->geometry.intersect_function(intersection_time_table.intersection_times[*check],number_of_solutions,r_start,v,&Volumes[*check        ]->geometry);
+            intersection_time_table.calculated[current_volume] = 1;
+        }
+    }
+
+    // At this point, intersection_time_table is updated with intersection times of all possible intersections.
+    if (trace_verbal) print_intersection_table(intersection_time_table);
+    // done = 1;
+    
+    // Find the lowest non negative intersection time on the intersection time lists (but only look in intersection_check_list and active mask_intersection_lists)
+    // Declare:
+    time_found = 0;
+    for (start=check=Volumes[current_volume]->geometry.intersect_check_list.elements;check-start<Volumes[current_volume]->geometry.intersect_check_list.num_elements;check++) {
+        for (solution = 0;solution<intersection_time_table.n_elements[*check];solution++) {
+            if (time_found) {
+                if ((intersection_time = intersection_time_table.intersection_times[*check][solution]) > time_propagated_without_scattering &&  intersection_time < min_intersection_time) {
+                    min_intersection_time = intersection_time;min_solution = solution;min_volume = *check;
+                }
+            } else {
+                if ((intersection_time = intersection_time_table.intersection_times[*check][solution]) > time_propagated_without_scattering) {
+                    min_intersection_time = intersection_time;min_solution = solution;min_volume = *check;
+                    time_found = 1;
+                }
+            }
+        }
+    }
+    
+    
+    // Check the mask_intersect_list
+    //for (start=check=Volumes[current_volume]->geometry.mask_intersect_list.elements;check-start<Volumes[current_volume]->geometry.mask_intersect_list.num_elements;check++) {
+    // cant use the above line as elements may not even be allocated
+    for (mask_iterate=0;mask_iterate<Volumes[current_volume]->geometry.mask_intersect_list.num_elements;mask_iterate++) {
+      if (current_mask_intersect_list_status.elements[mask_iterate] == 1) {
+        for (solution = 0;solution<intersection_time_table.n_elements[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]];solution++) {
+            if (time_found) {
+                if ((intersection_time = intersection_time_table.intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]][solution]) > time_propagated_without_scattering &&  intersection_time < min_intersection_time) {
+                    min_intersection_time = intersection_time;min_solution = solution;min_volume = Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate];
+                }
+            } else {
+                if ((intersection_time = intersection_time_table.intersection_times[Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate]][solution]) > time_propagated_without_scattering) {
+                    min_intersection_time = intersection_time;min_solution = solution;min_volume = Volumes[current_volume]->geometry.mask_intersect_list.elements[mask_iterate];
+                    time_found = 1;
+                }
+            }
+        }
+      }
+    }
+    
+    // And check the current_volume
+    for (solution = 0;solution<intersection_time_table.n_elements[current_volume];solution++) {
+        if (time_found) {
+            if ((intersection_time = intersection_time_table.intersection_times[current_volume][solution]) > time_propagated_without_scattering && intersection_time < min_intersection_time) {
+                min_intersection_time = intersection_time;min_solution = solution;min_volume = current_volume;
+            }
+        } else {
+            if ((intersection_time = intersection_time_table.intersection_times[current_volume][solution]) > time_propagated_without_scattering) {
+                min_intersection_time = intersection_time;min_solution = solution;min_volume = current_volume;
+                time_found = 1;
+            }
+        }
+    }
+    
+    if (trace_verbal) printf("min_intersection_time = %f \n",min_intersection_time);
+    if (trace_verbal) printf("min_solution          = %d \n",min_solution);
+    if (trace_verbal) printf("min_volume            = %d \n",min_volume);
+    if (trace_verbal) printf("time_found            = %d \n",time_found);
+
+
+    if (time_found) {
+        // Check for errors (debugging phase)
+        // Run physics function (include propagating to scattering point, and new velocity)
+        time_to_boundery = min_intersection_time - time_propagated_without_scattering;
+        scattering_event = 0;
+        if (current_volume != 0) {
+          if (Volumes[current_volume]->p_physics->number_of_processes == 0) {
+            // If there are no processes, the volume could be vacuum or an absorber,
+            if (Volumes[current_volume]->p_physics->is_vacuum == 0)
+              p *= exp(-Volumes[current_volume]->p_physics->my_a*2200*time_to_boundery);
+                    
+            //printf("name of material: %s \n",Volumes[current_volume]->name);
+            //printf("length to boundery  = %f\n",length_to_boundery);
+            //printf("absorption cross section  = %f\n",Volumes[current_volume]->p_physics->my_a);
+            //printf("chance to get through this length of absorber: %f \%\n",100*exp(-Volumes[current_volume]->p_physics->my_a*length_to_boundery));
+                    
+          } else {
+            // Since there is a non-zero number of processes in this material, all the scattering cross section for these are calculated
+            my_sum = 0; k[0] = V2K*vx; k[1] = V2K*vy; k[2] = V2K*vz; p_my_trace = my_trace; wavevector = coords_set(k[0],k[1],k[2]);
+            for (process_start = process = Volumes[current_volume]->p_physics->p_scattering_array;process - process_start < Volumes[current_volume]->p_physics->number_of_processes;process++) {
+            
+              if (Volumes[current_volume]->p_physics->p_scattering_array[process - process_start].non_isotropic_rot_index != -1) {
+                // If the process is not isotropic, the wavevector is transformed into the local coordinate system of the process
+                wavevector_rotated = rot_apply(Volumes[current_volume]->geometry.process_rot_matrix_array[Volumes[current_volume]->p_physics->p_scattering_array[process - process_start].non_isotropic_rot_index],wavevector);
+                
+                coords_get(wavevector_rotated,&k_rotated[0],&k_rotated[1],&k_rotated[2]);
+              } else {
+                k_rotated[0] = k[0]; k_rotated[1] = k[1]; k_rotated[2] = k[2];
+              }
+              
+              // Call the probability for scattering function assighed to this specific procress (the process pointer is updated in the for loop)
+              process->probability_for_scattering_function(p_my_trace,k_rotated,process->data_transfer);
+              
+              my_sum += *p_my_trace;
+              if (trace_verbal) printf("my_trace = %f, my_sum = %f\n",*p_my_trace,my_sum);
+              p_my_trace++;
+            }
+            
+            if (trace_verbal) printf("time_propagated_without_scattering = %f.\n",time_propagated_without_scattering);
+            if (trace_verbal) printf("v_length                           = %f.\n",v_length);
+            
+            length_to_boundery = time_to_boundery * v_length;
+              
+            if (trace_verbal) printf("exp(- length_to_boundery*my_sum) = %f. length_to_boundery = %f. my_sum = %f.\n",exp(-length_to_boundery*my_sum),length_to_boundery,my_sum);
+            //printf("exp(- length_to_boundery*my_sum) = %f. length_to_boundery = %f. my_sum = %f.\n",exp(-length_to_boundery*my_sum),length_to_boundery,my_sum);
+            
+            // Selecting if a scattering takes place, and what scattering process.
+            // This section have too many if statements, and unessecary calculations
+            // Could make seperate functions for p_interact on/off and interact_fraction on/off,
+            //   and set function pointers to these in initialize, thus avoiding many unessecary if statements calculations of x/x.
+            
+            
+            my_sum_plus_abs = my_sum + Volumes[current_volume]->p_physics->my_a*(2200/v_length);
+            
+            // NEW SYSTEM
+            if (my_sum_plus_abs < 1E-18) {
+                // The scattering cross section is basicly zero, no scattering should occur.
+                scattering_event = 0;
+            } else {
+                // The scattering cross section is above zero
+                if (Volumes[current_volume]->geometry.geometry_p_interact != 0) {
+                    // a fraction of the beam (geometry_p_interact) is forced to scatter
+                    //
+                    //real_transmission_probability = exp(-length_to_boundery*my_sum_plus_abs);
+                    real_transmission_probability = exp(-length_to_boundery*my_sum_plus_abs);
+                    mc_transmission_probability = (1 - Volumes[current_volume]->geometry.geometry_p_interact);
+                    if ((scattering_event = (rand01() > mc_transmission_probability))) {
+                        // Scattering event happens, this is the correction for the weight
+                        p *= (1-real_transmission_probability)/(1-mc_transmission_probability);
+                        // Find length to next scattering knowing the ray will scatter.
+                        length_to_scattering = -log(1 - rand0max((1 - exp(-my_sum_plus_abs*length_to_boundery)))) / my_sum_plus_abs;
+                    } else
+                        // Scattering event does not happen, this is the appropriate correction
+                        p *= real_transmission_probability/mc_transmission_probability;
+                    
+                } else {
+                    // probability to scatter is the natural value
+                    if(my_sum*length_to_boundery < 1e-6) {
+                      if (length_to_boundery > 1E-13) {
+                        if (rand01() < exp(-length_to_boundery*my_sum_plus_abs)) {
+                          length_to_scattering = rand0max(length_to_boundery - 1E-14);
+                          p *= length_to_boundery*my_sum*exp(-length_to_scattering*my_sum_plus_abs);
+                          scattering_event = 1;
+                        } else scattering_event = 0;
+                      } else {
+                        // The distance is too short to reliably make a scattering event (in comparison to accuraccy of intersect functions)
+                        p *= exp(-length_to_boundery*my_sum_plus_abs); // Attentuate the beam for the small distance
+                        scattering_event = 0;
+                      }
+                    } else {
+                        length_to_scattering = -log(1 - rand01() ) / my_sum_plus_abs;
+                        if (length_to_scattering < length_to_boundery - 1E-14) scattering_event = 1;
+                        else scattering_event = 0;
+                    }
+                }
+                
+                if (scattering_event == 1) {
+                  // Adjust weight for absorption
+                  p *= my_sum/my_sum_plus_abs;
+                  // Select process
+                  if (Volumes[current_volume]->p_physics->number_of_processes == 1) {
+                    // trivial case
+                    selected_process = 0;
+                  } else {
+                    if (Volumes[current_volume]->p_physics->interact_control == 1) {
+                      // Interact corrected
+                      mc_prop = rand01();culmative_probability=0;total_process_interact=1;
+                  
+                      // If any of the processes have probability 0, they should be excluded from the selection
+                      for (iterate = 0;iterate < Volumes[current_volume]->p_physics->number_of_processes;iterate++) {
+                        //printf("my_trace = %E \n",my_trace[iterate]);
+                        if (my_trace[iterate] < 1E-18) {
+                          //printf("Identified my_trace = 0 \n");
+                          // When this happens, the total force probability is corrected and the probability for this particular instance is set to 0
+                          total_process_interact -= Volumes[current_volume]->p_physics->p_scattering_array[iterate].process_p_interact;
+                          my_trace_fraction_control[iterate] = 0;
+                          // In cases where my_trace is not zero, the forced fraction is still used.
+                        } else my_trace_fraction_control[iterate] = Volumes[current_volume]->p_physics->p_scattering_array[iterate].process_p_interact;
+                      }
+                      for (iterate = 0;iterate < Volumes[current_volume]->p_physics->number_of_processes;iterate++) {
+                        culmative_probability += my_trace_fraction_control[iterate]/total_process_interact;
+                        if (culmative_probability > mc_prop) {
+                          selected_process = iterate;
+                          p *= (my_trace[iterate]/my_sum)*(total_process_interact/my_trace_fraction_control[iterate]);
+                          break;
+                        }
+                      }
+                    
+                    } else {
+                      // Natural probability distribution
+                      mc_prop = rand01();culmative_probability=0;
+                      for (iterate = 0;iterate < Volumes[current_volume]->p_physics->number_of_processes;iterate++) {
+                        culmative_probability += my_trace[iterate]/my_sum;
+                        if (culmative_probability > mc_prop) {
+                          selected_process = iterate;
+                          break;
+                        }
+                      }
+                    }
+                  }
+                } // end of select process
+            }
+            
+          }
+        } // Done checking for scttering event and in case of scattering selecting process
+        
+        // Safty measure for testing
+        // Test shows it was sufficient to stop problems!
+        //if (fabs(length_to_scattering - length_to_boundery) < 1E-15) scattering_event = 0;
+     
+        if (scattering_event) {
+            if (trace_verbal) printf("SCATTERING EVENT \n");
+            if (trace_verbal) printf("current_volume            = %d \n",current_volume);
+            if (trace_verbal) printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",r[0],r[1],r[2],v[0],v[1],v[2]);
+            // printf("did scatter: my_trace = %E = %f \n",my_trace[selected_process],my_trace[selected_process]);
+            
+            // Select time to propagate before scattering (linear)
+            //time_to_scattering = (min_intersection_time - time_propagated_without_scattering) * rand01();
+            
+            // For debugging the true exponential distribution is tested:
+            
+            /*
+            if(my_trace[selected_process]*length_to_boundery < 1e-6)
+                time_to_scattering = rand0max(length_to_boundery);
+            else
+                //time_to_scattering = -log(1 - rand0max((1 - exp(-my_trace[selected_process]*length_to_boundery)))) / my_trace[selected_process];
+                // Updated on the 16/6, as it was noticed the scattering position should depend on the total my, not the one for the selected process
+                // It remains to be investigated if it should even contain the absorption my.
+                time_to_scattering = -log(1 - rand0max((1 - exp(-my_sum*length_to_boundery)))) / my_sum;
+            
+            time_to_scattering /= v_length;
+            */
+            
+            time_to_scattering = length_to_scattering/v_length;
+            
+            // time_to_scattering = (min_intersection_time - time_propagated_without_scattering) * 0.5;
+            if (trace_verbal) printf("time to scattering        = %f \n",time_to_scattering);
+            //length_to_scattering = time_to_scattering*v_length;
+            
+            //printf("length to boundery = %f, length to scattering = %f \n",length_to_boundery,length_to_scattering);
+            
+            // Correcting for using a linear distribution instead of exponential
+            //p *= 5*length_to_boundery*my_trace[selected_process]*exp(-length_to_scattering*my_trace[selected_process]);
+            
+            // Absorption
+            //p *= exp(-Volumes[current_volume]->p_physics->my_a*(2200/v_length)*length_to_scattering);
+            //p *= exp(-Volumes[current_volume]->p_physics->my_a*2200*time_to_scattering);
+            //PROP_DT(time_to_scattering); // May be replace by version without gravity
+            
+            //if (Volumes[current_volume]->geometry.within_function(ray_position,&Volumes[current_volume]->geometry) == 0)
+            //  printf("ERROR, out of volume before propagating to scattering point!\n");
+            
+            //x += time_to_scattering*vx; y += time_to_scattering*vy; z += time_to_scattering*vz; t += time_to_scattering;
+            x += time_to_scattering*vx; y += time_to_scattering*vy; z += time_to_scattering*vz; t += time_to_scattering;
+            r_start[0] = x; r_start[1] = y; r_start[2] = z;
+            r[0] = x; r[1] = y; r[2] = z;
+            ray_position = coords_set(x,y,z);
+            ray_velocity = coords_set(vx,vy,vz);
+            
+            if (Volumes[current_volume]->geometry.within_function(ray_position,&Volumes[current_volume]->geometry) == 0) {
+              printf("ERROR, propagated out of current volume instead of to a point within!\n");
+              printf("length_to_scattering_specified = %2.20f, length propagated = %2.20f, length_to_boundery = %2.20f \n",length_to_scattering,sqrt(time_to_scattering*time_to_scattering*vx*vx+time_to_scattering*time_to_scattering*vy*vy+time_to_scattering*time_to_scattering*vz*vz),length_to_boundery);
+            }
+            
+        
+            
+            // Rotation to local process coordinate system (for non isotropic processes)
+            if (Volumes[current_volume]->p_physics->p_scattering_array[selected_process].non_isotropic_rot_index != -1) {
+                ray_velocity_rotated = rot_apply(Volumes[current_volume]->geometry.process_rot_matrix_array[Volumes[current_volume]->p_physics->p_scattering_array[selected_process].non_isotropic_rot_index],ray_velocity);
+            } else {
+                ray_velocity_rotated = ray_velocity;
+            }
+                
+            // test_physics_scattering(double *k_final, double *k_initial, union data_transfer_union data_transfer) {
+            //k[0] = V2K*ray_velocity.x; k[1] = V2K*ray_velocity.y; k[2] = V2K*ray_velocity.z;
+            coords_get(coords_scalar_mult(ray_velocity_rotated,V2K),&k[0],&k[1],&k[2]);
+            
+            // I may replace a intial and final k with one instance that serves as both input and output
+            if (0 == Volumes[current_volume]->p_physics->p_scattering_array[selected_process].scattering_function(k_new,k,&p,Volumes[current_volume]->p_physics->p_scattering_array[selected_process].data_transfer,&Volumes[current_volume]->geometry.focus_data)) {
+              printf("ERROR: Union_master: %s.Absorbed ray because scattering function returned 0 (error/absorb)\n",NAME_CURRENT_COMP);
+              component_error_msg++;
+              if (component_error_msg > 100) {
+                printf("To many errors encountered, exiting. \n");
+                exit(1);
+              }
+              ABSORB; // PowderN and Single_crystal requires the option of absorbing the neutron, which is weird. If there is a scattering probability, there should be a new direction.
+            }
+            
+            // Update velocity using k
+            ray_velocity_rotated = coords_set(K2V*k_new[0],K2V*k_new[1],K2V*k_new[2]);
+            
+            // Transformation back to main coordinate system (maybe one should only do this when multiple scattering in that volume was over, especially if there is only one non isotropic frame)
+            if (Volumes[current_volume]->p_physics->p_scattering_array[selected_process].non_isotropic_rot_index != -1) {
+                ray_velocity = rot_apply(Volumes[current_volume]->geometry.transpose_process_rot_matrix_array[Volumes[current_volume]->p_physics->p_scattering_array[selected_process].non_isotropic_rot_index],ray_velocity_rotated);
+            } else {
+               ray_velocity = ray_velocity_rotated;
+            }
+            
+            // Write velocity to global variable (temp, only really necessary at final)
+            //vx = ray_velocity.x; vy = ray_velocity.y; vz = ray_velocity.z;
+            coords_get(ray_velocity,&vx,&vy,&vz);
+            
+            // Write velocity in array format as it is still used by intersect functions (temp, they need to be updated to ray_position / ray_velocity)
+            v[0] = vx; v[1] = vy; v[2] = vz;
+            v_length = sqrt(vx*vx+vy*vy+vz*vz);
+            if (verbal) if (v_length < 1) printf("velocity set to less than 1\n");
+            
+            SCATTER;
+            ++scattered_flag[current_volume];
+            ++number_of_scattering_events;
+
+            // Empty intersection time lists
+            clear_intersection_table(&intersection_time_table);
+            time_propagated_without_scattering = 0;
+            if (trace_verbal) printf("SCATTERED SUCSSESFULLY \n");
+            if (trace_verbal) printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",x,y,z,vx,vy,vz);
+            
+            if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("Before new process node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
+            if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("Before new process node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+            
+            if (enable_tagging && stop_tagging_ray == 0)
+                current_tagging_node = goto_process_node(current_tagging_node,selected_process,Volumes[current_volume],&stop_tagging_ray,stop_creating_nodes);
+            
+            if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("After new process node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
+            if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("After new process node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+            
+        } else {
+        
+            if (trace_verbal) printf("Propagate out of volume %d\n", current_volume);
+            if (trace_verbal) printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",x,y,z,vx,vy,vz);
+            // Propagate neutron to found minimum time
+            // PROP_DT(min_intersection_time - time_propagated_without_scattering);
+            //time_to_boundery = min_intersection_time - time_propagated_without_scattering;
+            x += time_to_boundery*vx;
+            y += time_to_boundery*vy;
+            z += time_to_boundery*vz;
+            t += time_to_boundery;
+            r[0] = x; r[1] = y; r[2] = z;
+            ray_position = coords_set(x,y,z);
+            ray_velocity = coords_set(vx,vy,vz);
+            
+            /*
+            // Absorption moved to before testing if scattering occurs
+            if (current_volume != 0) {
+                if (Volumes[current_volume]->p_physics->is_vacuum == 0) {
+                    // Absorption is done explicitly when propagating out of a volume, but between all scattering events is done implicitly
+                   
+                    // Old version
+                    //length_to_boundery = (min_intersection_time - time_propagated_without_scattering) * v_length;
+                    //p *= exp(-Volumes[current_volume]->p_physics->my_a*(2200/v_length)*length_to_boundery);
+                    
+                    if (Volumes[current_volume]->p_physics->number_of_processes == 0) {
+                      // Optimized version
+                      //p *= exp(-Volumes[current_volume]->p_physics->my_a*2200*time_to_boundery);
+                    
+                    //printf("name of material: %s \n",Volumes[current_volume]->name);
+                    //printf("length to boundery  = %f\n",length_to_boundery);
+                    //printf("absorption cross section  = %f\n",Volumes[current_volume]->p_physics->my_a);
+                    //printf("chance to get through this length of absorber: %f \%\n",100*exp(-Volumes[current_volume]->p_physics->my_a*length_to_boundery));
+                    }
+                }
+            }
+            */
+            
+            time_propagated_without_scattering = min_intersection_time;
+            SCATTER; // For debugging purposes
+            if (trace_verbal) printf("r = (%f,%f,%f) v = (%f,%f,%f) \n",x,y,z,vx,vy,vz);
+            // Remove this entry from the intersection_time_table
+            intersection_time_table.intersection_times[min_volume][min_solution] = -1;
+            
+            // Use destination list for corresponding intersection entry n,i) to find next volume
+            if (trace_verbal) printf("PROPAGATION FROM VOLUME %d \n",current_volume);
+            if (min_volume == current_volume) {
+            
+                
+                // List approach to finding the next volume.
+                // When the ray intersects the current volume, the next volume must be on the destination list of the current volume
+                // However, the reduced_destination_list can be investigated first, and depending on the results, the
+                //  direct children of the volumes on the reduced destination list are investigated.
+                // In the worst case, all direct children are investigated, which is eqvivalent to the entire destination list.
+                // There is however a certain overhead in the logic needed to set up this tree, avoid duplicates of direct children, and so on.
+                // This method is only faster than just checking the destination list when there are direct children (nested structures),
+                //  but in general the tree method scales better with complexity, and is only slightly slower in simple cases.
+                
+                if (Volumes[current_volume]->geometry.destinations_list.num_elements == 1)
+                    tree_next_volume = Volumes[current_volume]->geometry.destinations_list.elements[0];
+                else {
+                    ray_position = coords_set(x,y,z);
+                    ray_velocity = coords_set(vx,vy,vz);
+                    tree_next_volume = within_which_volume(ray_position,Volumes[current_volume]->geometry.reduced_destinations_list,Volumes[current_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+                }
+
+                if (trace_verbal) printf("tree method moves from %d to %d\n",current_volume,tree_next_volume);
+                
+                if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("Before new tree volume node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
+                if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("Before new tree volume node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+                
+                if (enable_tagging && stop_tagging_ray == 0)
+                    current_tagging_node = goto_volume_node(current_tagging_node, current_volume, tree_next_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
+                
+                if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("After new tree volume node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
+                if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("After new tree volume node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+                
+                // Set next volume to the solution found in the tree method
+                current_volume = tree_next_volume;
+                update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+                if (trace_verbal) print_1d_int_list(current_mask_intersect_list_status,"Updated current_mask_intersect_list_status");
+                
+                
+                // Debugging phase
+                /*
+                if (tree_next_volume == 0) {
+                    volume_0_found=0;
+                    for (start = check = Volumes[current_volume]->geometry.destinations_list.elements;check - start < Volumes[current_volume]->geometry.destinations_list.num_elements;check++) {
+                        if (*check == 0) {
+                            volume_0_found = 1;
+                        }
+                    }
+                    if (volume_0_found==0) printf("ERROR The within_which_volume function returned 0 for a volume where volume 0 is not on the destination list!\n");
+                }
+                */
+                
+            } else {
+                if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("Before new intersection volume node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
+                if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("Before new intersection volume node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+            
+                //if (enable_tagging) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, min_volume, Volumes);
+                
+                
+                
+                // Mask update: If the min_volume is not a mask, things are simple, current_volume = min_volume.
+                //               however, if it is a mask, the mask status will switch.
+                //               if the mask status becomes one, the masked volumes inside may be the next volume (unless they are children of the mask)
+                //               if the mask status becomes zero (and the current volume is masked by min_volume), the destinations list of the mask is searched
+                //               if the mask status becomes zero (and the current volume is NOT masked by min volume), the current volume doesn't change
+                
+                if (Volumes[min_volume]->geometry.is_mask_volume == 0) {
+                  if (enable_tagging && stop_tagging_ray == 0) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, min_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
+                  current_volume = min_volume;
+                  //update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+                } else {
+                  if (mask_status_list.elements[Volumes[min_volume]->geometry.mask_index] == 1) {
+                    // We are leaving the mask, change the status
+                    mask_status_list.elements[Volumes[min_volume]->geometry.mask_index] = 0;
+                    // If the current volume is masked by this mask, run within_which_volume using the masks destination list, otherwise keep the current volume
+                    //if (on_int_list(Volumes[min_volume]->geometry.mask_list,current_volume))
+                    if (on_int_list(Volumes[current_volume]->geometry.masked_by_list,min_volume) == 1) {
+                      // In case of ANY mode, need to see if another mask on the masked_by list of the current volume is active, and if so, nothing happens
+                      need_to_run_within_which_volume = 1;
+                      if (Volumes[current_volume]->geometry.mask_mode == 2) {
+                        for (mask_start=mask_check=Volumes[current_volume]->geometry.masked_by_mask_index_list.elements;mask_check-mask_start<Volumes[current_volume]->geometry.masked_by_mask_index_list.num_elements;mask_check++) {
+                          if (mask_status_list.elements[*mask_check] == 1) {
+                            // Nothing needs to be done, the effective mask status of the current volume is still 1
+                            need_to_run_within_which_volume = 0;
+                            break;
+                          }
+                        }
+                      }
+                      if (need_to_run_within_which_volume == 1) {
+                        if (Volumes[min_volume]->geometry.destinations_list.num_elements == 1) {
+                          // If there is only one element on the destinations list (quite common) there is no reason to run within_which_volume
+                          // Instead the mask status is calculated here
+                          if (Volumes[Volumes[min_volume]->geometry.destinations_list.elements[0]]->geometry.is_masked_volume == 1) {
+                            // figure out the effective mask status of this volume
+                            if (Volumes[Volumes[min_volume]->geometry.destinations_list.elements[0]]->geometry.mask_mode == 2) { // ANY mask mode
+                              tree_next_volume = 0;
+                              for (mask_start=mask_check=Volumes[Volumes[min_volume]->geometry.destinations_list.elements[0]]->geometry.masked_by_mask_index_list.elements;mask_check-mask_start<Volumes[Volumes[min_volume]->geometry.destinations_list.elements[0]]->geometry.masked_by_mask_index_list.num_elements;mask_check++) {
+                                if (mask_status_list.elements[*mask_check] == 1) {
+                                  tree_next_volume = Volumes[min_volume]->geometry.destinations_list.elements[0];
+                                  break;
+                                }
+                              }
+                            } else { // ALL mask mode
+                              tree_next_volume = Volumes[min_volume]->geometry.destinations_list.elements[0];
+                              for (mask_start=mask_check=Volumes[Volumes[min_volume]->geometry.destinations_list.elements[0]]->geometry.masked_by_mask_index_list.elements;mask_check-mask_start<Volumes[Volumes[min_volume]->geometry.destinations_list.elements[0]]->geometry.masked_by_mask_index_list.num_elements;mask_check++) {
+                                if (mask_status_list.elements[*mask_check] == 0) {
+                                  tree_next_volume = 0;
+                                  break;
+                                }
+                              }
+                            }
+                          } else tree_next_volume = Volumes[min_volume]->geometry.destinations_list.elements[0];
+                          if (enable_tagging && stop_tagging_ray == 0) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, tree_next_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
+                          current_volume = tree_next_volume;
+                          //update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+                        } else {
+                          ray_position = coords_set(x,y,z);
+                          ray_velocity = coords_set(vx,vy,vz);
+                          tree_next_volume = within_which_volume(ray_position,Volumes[min_volume]->geometry.reduced_destinations_list,Volumes[min_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+                        }
+                        if (enable_tagging && stop_tagging_ray == 0) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, tree_next_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
+                        current_volume = tree_next_volume;
+                        //update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+                      }
+                    }
+
+                  } else {
+                    // Here beccause the mask status of the mask that is intersected was 0, and it is thus switched to 1
+                    mask_status_list.elements[Volumes[min_volume]->geometry.mask_index] = 1;
+                    // When entering a mask, the new highest priority volume may be one of the masked volumes, if not we keep the current volume
+                    ray_position = coords_set(x,y,z);
+                    ray_velocity = coords_set(vx,vy,vz);
+                    //tree_next_volume = within_which_volume(ray_position,Volumes[min_volume]->geometry.mask_list,Volumes[min_volume]->geometry.destinations_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+                    // Bug found on the 2/9 2016, the destinations_list of a mask does not contain the volumes inside it. Could make an additional list for this.
+                    // The temporary fix will be to use the mask list for both reduced destinations list and destinations list.
+                    tree_next_volume = within_which_volume(ray_position,Volumes[min_volume]->geometry.mask_list,Volumes[min_volume]->geometry.mask_list,Volumes,&mask_status_list,number_of_volumes,pre_allocated1,pre_allocated2,pre_allocated3);
+                    // if within_which_volume returns 0, no result was found (volume 0 can not be masked, so it could not be on the mask list)
+                    if (tree_next_volume != 0) {
+                      if (Volumes[tree_next_volume]->geometry.priority_value > Volumes[current_volume]->geometry.priority_value) {
+                        // In case the current volume has a higher priority, nothing happens, otherwise change current volume
+                        if (enable_tagging && stop_tagging_ray == 0) current_tagging_node = goto_volume_node(current_tagging_node, current_volume, tree_next_volume, Volumes,&stop_tagging_ray,stop_creating_nodes);
+                        current_volume = tree_next_volume;
+                      }
+                    }
+                    //update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+                  }
+                }
+                
+                // Regardless of the outcome of the above code, either the mask status or current volume have changed, and thus a effective mask update is needed.
+                update_current_mask_intersect_status(&current_mask_intersect_list_status, &mask_status_list, Volumes, &current_volume);
+                if (trace_verbal) print_1d_int_list(mask_status_list,"Updated mask status list");
+                if (trace_verbal) print_1d_int_list(current_mask_intersect_list_status,"Updated current_mask_intersect_list_status");
+                
+                if (trace_verbal && enable_tagging) printf("After new intersection volume node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
+                if (trace_verbal && enable_tagging) printf("After new intersection volume node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+                
+            }
+            if (Volumes[current_volume]->geometry.is_exit_volume==1) {
+                    done = 1; // Exit volumes allow the ray to escape the component
+                    if (enable_tagging && stop_tagging_ray == 0)
+                        add_statistics_to_node(current_tagging_node,&ray_position, &ray_velocity, &p, &tagging_leaf_counter);
+                
+                    x += vx*1E-9; y += vy*1E-9; z += vz*1E-9; t += 1E-9;
+            }
+            if (trace_verbal) printf(" TO VOLUME %d \n",current_volume);
+        }
+    } else { // Here because a shortest time is not found
+        if (current_volume == 0) {
+            done = 1;
+            if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("Before new intersection volume node: current_tagging_nodbe->intensity = %f\n",current_tagging_node->intensity);
+            if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("Before new intersection volume node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+            
+            if (enable_tagging && stop_tagging_ray == 0)
+                add_statistics_to_node(current_tagging_node,&ray_position, &ray_velocity, &p, &tagging_leaf_counter);
+            
+            if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("After new intersection volume node: current_tagging_node->intensity = %f\n",current_tagging_node->intensity);
+            if (trace_verbal && enable_tagging && stop_tagging_ray == 0) printf("After new intersection volume node: current_tagging_node->number_of_rays = %d\n",current_tagging_node->number_of_rays);
+            
+            x += vx*1E-9; y += vy*1E-9; z += vz*1E-9; t += 1E-9;
+            
+        } else { // Check for errors (debugging phase)
+            if (error_msg == 0) {
+              component_error_msg++;
+              done = 1; // stop the loop
+              printf("----------------------------------------------------------------------------------------------------\n");
+              printf("Union_master %s: Somehow reached a situation with no intersection time found, but still inside volume %d instead of 0\n",NAME_CURRENT_COMP,current_volume);
+              for (volume_index = 1; volume_index < number_of_volumes; volume_index++) {
+                if (Volumes[volume_index]->geometry.within_function(ray_position,&Volumes[volume_index]->geometry) == 1)
+                    printf("The ray is in volume       %d\n",volume_index);
+              }
+              
+              print_1d_int_list(mask_status_list,"mask status list");
+              for (iterate=0;iterate<number_of_volumes;iterate++)
+                 printf("%d:%d - ",iterate,scattered_flag[iterate]);
+              printf("\n");
+              
+              printf("Trace error number (%d/1000) \n",component_error_msg);
+              //print_intersection_table(intersection_time_table);
+              
+            }
+            error_msg++;
+            
+            exit(1); // temp for debug
+            
+            if (component_error_msg > 1000) {
+                printf("To many errors encountered, exiting. \n");
+                exit(1);
+            }
+        }
+    }
+    /*
+    */
+    if (limit == 0) {done = 1; printf("Reached limit on number of interactions, and discarded the neutron, was in volume %d\n",current_volume);ABSORB;} //;ABSORB; // TODO bug
+    if (trace_verbal) printf("----------- END OF WHILE LOOP --------------------------------------\n");
+    //printf("This ray did %d iterations in the while loop\n",1000-limit);
+    
+  }
+  
+%}
+
+FINALLY
+%{
+// write out histories from tagging system if enabled
+if (enable_tagging) {
+    if (finally_verbal) printf("Writing tagging tree to disk \n");
+    write_tagging_tree(&master_tagging_node_list, Volumes, tagging_leaf_counter, number_of_volumes);
+}
+if (master_tagging_node_list.num_elements > 0) free(master_tagging_node_list.elements);
+
+
+if (finally_verbal) printf("Freeing variables which are always allocated \n");
+// free allocated arrays specific to this master union component
+free(scattered_flag);
+free(my_trace);
+free(pre_allocated1);
+free(pre_allocated2);
+free(pre_allocated3);
+
+if (finally_verbal) printf("Freeing intersection_time_table \n");
+for (iterate = 1;iterate < intersection_time_table.num_volumes;iterate++){
+    free(intersection_time_table.intersection_times[iterate]);
+}
+
+free(intersection_time_table.n_elements);
+free(intersection_time_table.calculated);
+free(intersection_time_table.intersection_times);
+
+if (finally_verbal) printf("Freeing lists for individual volumes \n");
+for (volume_index=0;volume_index<number_of_volumes;volume_index++) {
+  if (Volumes[volume_index]->geometry.intersect_check_list.num_elements > 0) free(Volumes[volume_index]->geometry.intersect_check_list.elements);
+  if (Volumes[volume_index]->geometry.destinations_list.num_elements > 0) free(Volumes[volume_index]->geometry.destinations_list.elements);
+  if (Volumes[volume_index]->geometry.reduced_destinations_list.num_elements > 0) free(Volumes[volume_index]->geometry.reduced_destinations_list.elements);
+  if (Volumes[volume_index]->geometry.children.num_elements > 0) free(Volumes[volume_index]->geometry.children.elements);
+  if (Volumes[volume_index]->geometry.direct_children.num_elements > 0) free(Volumes[volume_index]->geometry.direct_children.elements);
+  if (Volumes[volume_index]->geometry.masked_by_list.num_elements > 0) free(Volumes[volume_index]->geometry.masked_by_list.elements);
+  if (Volumes[volume_index]->geometry.masked_by_mask_index_list.num_elements > 0) free(Volumes[volume_index]->geometry.masked_by_mask_index_list.elements);
+  if (Volumes[volume_index]->geometry.mask_list.num_elements > 0) free(Volumes[volume_index]->geometry.mask_list.elements);
+  if (Volumes[volume_index]->geometry.mask_intersect_list.num_elements > 0) free(Volumes[volume_index]->geometry.mask_intersect_list.elements);
+  if (enable_tagging)
+    if (Volumes[volume_index]->geometry.next_volume_list.num_elements > 0) free(Volumes[volume_index]->geometry.next_volume_list.elements);
+  
+
+  if (volume_index > 0) { // Volume 0 does not have physical properties allocated
+    if (Volumes[volume_index]->geometry.process_rot_allocated == 1) {
+          free(Volumes[volume_index]->geometry.process_rot_matrix_array);
+          free(Volumes[volume_index]->geometry.transpose_process_rot_matrix_array);
+          Volumes[volume_index]->geometry.process_rot_allocated = 0;
+    }
+    if (on_int_list(Volume_copies_allocated,volume_index))
+      // This is a local copy of a volume, deallocate that local copy (all the allocated memory attachted to it was just deallocated, so this should not leave any leaks)
+      free(Volumes[volume_index]);
+    else
+      // Only free p_physics for vacuum volumes for the original at the end (there is a p_physics allocated for each vacuum volume)
+      if (Volumes[volume_index]->p_physics->is_vacuum == 1 ) free(Volumes[volume_index]->p_physics);
+  }
+  
+}
+
+if (finally_verbal) printf("Freeing starting lists \n");
+if (starting_lists.allowed_starting_volume_logic_list.num_elements > 0) free(starting_lists.allowed_starting_volume_logic_list.elements);
+if (starting_lists.reduced_start_list.num_elements > 0) free(starting_lists.reduced_start_list.elements);
+if (starting_lists.start_logic_list.num_elements > 0) free(starting_lists.start_logic_list.elements);
+
+if (finally_verbal) printf("Freeing mask lists \n");
+if (mask_status_list.num_elements>0) free(mask_status_list.elements);
+if (current_mask_intersect_list_status.num_elements>0) free(current_mask_intersect_list_status.elements);
+if (mask_volume_index_list.num_elements>0) free(mask_volume_index_list.elements);
+
+if (finally_verbal) printf("Freeing component index list \n");
+if (geometry_component_index_list.num_elements>0) free(geometry_component_index_list.elements);
+
+
+if (finally_verbal) printf("Freeing Volumes \n");
+free(Volumes);
+
+// Free global allocated arrays if this is the last master union component in the instrument file
+
+if (global_master_list.elements[global_master_list.num_elements-1].component_index == INDEX_CURRENT_COMP) {
+    if (finally_verbal) printf("Freeing global arrays because this is the last Union master component\n");
+    #ifdef PROCESS_DETECTOR
+        if (finally_verbal) printf("Freeing global process list \n");
+        if (global_process_list.num_elements > 0) free(global_process_list.elements);
+    #endif
+
+    #ifdef MATERIAL_DETECTOR
+        if (finally_verbal) printf("Freeing global material list \n");
+        if (global_material_list.num_elements > 0) free(global_material_list.elements);
+    #endif
+
+    #ifdef ANY_GEOMETRY_DETECTOR_DECLARE
+        if (finally_verbal) printf("Freeing global geometry list \n");
+        if (global_geometry_list.num_elements > 0) free(global_geometry_list.elements);
+    #endif
+    
+    #ifdef MASTER_DETECTOR
+        if (finally_verbal) printf("Freeing global master list \n");
+        if (global_master_list.num_elements > 0) free(global_master_list.elements);
+    #endif
+}
+
+%}
+
+
+MCDISPLAY
+%{
+  // mcdisplay is handled in the component files for each geometry and called here. The line function is only available in this section, and not through functions,
+  //   so all the lines to be drawn for each volume are collected in a structure that is then drawn here.
+  magnify("xyz");
+  struct lines_to_draw lines_to_draw_master;
+  for (volume_index = 1; volume_index < number_of_volumes; volume_index++) {
+        if (Volumes[volume_index]->geometry.visualization_on == 1) {
+            lines_to_draw_master.number_of_lines = 0;
+            
+            Volumes[volume_index]->geometry.mcdisplay_function(&lines_to_draw_master,volume_index,Geometries,number_of_volumes);
+            
+            for (iterate = 0;iterate<lines_to_draw_master.number_of_lines;iterate++) {
+               if (lines_to_draw_master.lines[iterate].number_of_dashes == 1) {
+                 line(lines_to_draw_master.lines[iterate].point1.x,lines_to_draw_master.lines[iterate].point1.y,lines_to_draw_master.lines[iterate].point1.z,lines_to_draw_master.lines[iterate].point2.x,lines_to_draw_master.lines[iterate].point2.y,lines_to_draw_master.lines[iterate].point2.z);
+               }
+               else {
+                 dashed_line(lines_to_draw_master.lines[iterate].point1.x,lines_to_draw_master.lines[iterate].point1.y,lines_to_draw_master.lines[iterate].point1.z,lines_to_draw_master.lines[iterate].point2.x,lines_to_draw_master.lines[iterate].point2.y,lines_to_draw_master.lines[iterate].point2.z,lines_to_draw_master.lines[iterate].number_of_dashes);
+                 printf("made a dashed line! \n");
+               }
+            }
+            
+            if (lines_to_draw_master.number_of_lines>0) free(lines_to_draw_master.lines);
+        }
+   }
+
+%}
+
+END

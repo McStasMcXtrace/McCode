@@ -1,0 +1,117 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: test
+*
+* %Identification
+* Written by: Mads Bertelsen
+* Date: September 2015
+* Origin: University of Copenhagen
+* Version: $Revision: 0.1 $
+* %INSTRUMENT_SITE: Union_demos
+*
+* Simple test instrument for sample component.
+*
+* %Description
+* simple test instrument for sample component.
+*
+* Example: filename="source_sct091_tu_02_1.dat" Detector: det_I=9.89304e+09
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT test()
+
+DECLARE
+%{
+int scattered_1;
+int scattered_2;
+int sample_1_index = 22;
+int sample_2_index = 6;
+%}
+
+TRACE
+
+//COMPONENT Vanadium_incoherent = Incoherent_process(sigma=6.08,packing_factor=1,unit_cell_volume=13.827)
+//AT (0,0,0) ABSOLUTE
+
+//COMPONENT Vanadium = Union_make_material(my_absorption=2.1,process_string="Vanadium_incoherent")
+//AT (0,0,0) ABSOLUTE
+
+COMPONENT Al_incoherent = Incoherent_process(sigma=1.5,packing_factor=1,unit_cell_volume=66.4)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al_powder = Powder_process(reflections="Al.laz") //,format=Lazy)
+AT (0,0,0) ABSOLUTE
+
+COMPONENT Al = Union_make_material(my_absorption=4)
+AT (0,0,0) ABSOLUTE
+
+
+COMPONENT a1 = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT source = Source_div(
+//        xwidth=0.0005, yheight=0.0005,focus_aw=15, focus_ah=15,
+        xwidth=0.0005, yheight=0.0005,focus_aw=3, focus_ah=2,
+        E0 = 100,
+        dE = 0)
+  AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
+
+// Sample position
+COMPONENT beam_center = Arm()
+AT (0,0,1.4) RELATIVE a1
+ROTATED (0,0,0) RELATIVE a1
+
+// 1
+COMPONENT test_powder_sample = Union_cylinder(radius=0.04,yheight=0.03,priority=5,material_string="Al")
+AT (0,0,0) RELATIVE beam_center
+ROTATED (0,0,0) RELATIVE beam_center
+
+COMPONENT test_sample = Union_master()
+AT(0,0,0) RELATIVE beam_center
+ROTATED(0,0,0) RELATIVE beam_center
+EXTEND
+%{
+	//if (scattered_flag[sample_1_index] > 0) scattered_1 = 1; else scattered_1 = 0;
+	//if (scattered_flag[sample_2_index] > 0) scattered_2 = 1; else scattered_2 = 0;
+	
+    // if (SCATTERED) printf("I scatter\n"); else printf("I do not scatter\n");
+%}
+
+
+// COMPONENT small_detector = PSD_monitor(xwidth=0.04, yheight=0.06, nx=100, ny=100, filename="absoprtion_picture.dat", restore_neutron=0)
+  // AT (0,0,0) RELATIVE detector_position
+  // ROTATED (0,0,0) RELATIVE detector_position
+
+
+COMPONENT m4pi = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events",restore_neutron=1)
+  AT (0, 0, 0) RELATIVE beam_center
+
+/*
+COMPONENT m4pi_1 = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events_1",restore_neutron=1) WHEN (scattered_1)
+  AT (0, 0, 0) RELATIVE beam_center
+
+COMPONENT m4pi_2 = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events_2",restore_neutron=1) WHEN (scattered_2)
+  AT (0, 0, 0) RELATIVE beam_center
+
+COMPONENT arm_1 = Arm()
+  AT (0, 0, 0) RELATIVE beam_center
+EXTEND
+%{
+	if (scattered_1 + scattered_2 != 2) ABSORB;
+%}
+
+COMPONENT m4pi_both = PSD_monitor_4PI(radius=1, nx=180, ny=180, filename="Events_12") WHEN (scattered_1 && scattered_2)
+  AT (0, 0, 0) RELATIVE beam_center
+*/
+
+
+
+
+END
+
