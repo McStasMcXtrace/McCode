@@ -536,10 +536,10 @@ class McGuiAppController():
         # load installed mcstas components:
         # args - [category, comp_names[], comp_parsers[]]
         args = []
-        categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6 : 'Obsolete'}
-        dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6 : 'obsolete'}
+        categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6 : 'Contrib/union', 7: 'Obsolete'}
+        dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6 : os.path.join('contrib','union'), 7:'obsolete'}
         i = 0
-        while i < 7:
+        while i < 8:
             arg = [] # arg - category, comp_names[], comp_parsers[]
             compnames = []
             parsers = []

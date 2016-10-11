@@ -1535,6 +1535,7 @@ my @comp_sources =
      ["Monitor", ["$MCSTAS::sys_dir/monitors"]],
      ["Misc", ["$MCSTAS::sys_dir/misc"]],
      ["Contrib", ["$MCSTAS::sys_dir/contrib"]],
+     ["Contrib/union", ["$MCSTAS::sys_dir/contrib/union"]],
      ["Obsolete", ["$MCSTAS::sys_dir/obsolete"]],
      ["Other", ["$MCSTAS::sys_dir", "."]]);
 
