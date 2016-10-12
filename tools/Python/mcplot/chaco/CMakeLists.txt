@@ -73,12 +73,12 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/mcplot" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-gnuplot-py" @ONLY)
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/mcplot")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/${P}plot-gnuplot-py")
 endif()
 
 
@@ -119,15 +119,6 @@ if(NOT WINDOWS)
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
-
-  # Symlink to main
-  add_custom_command(
-    OUTPUT "${WORK}/${P}plot-py"
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
-    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}plot-py"
-    COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${TOOLS_LIB}/mcplot" "${WORK}/${P}plot-py"
-    )
 
   add_custom_target(
     "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}plot-py"

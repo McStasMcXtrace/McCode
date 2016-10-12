@@ -73,15 +73,15 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/mcdisplay" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-x3d-py" @ONLY)
 
 # Configure internal naming and how we call mcrun/mxrun across systems
-configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.py.in" "${CMAKE_SOURCE_DIR}/mcdisplay.py" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.py.in" "${CMAKE_SOURCE_DIR}/${P}display.py" @ONLY)
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/mcdisplay")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/$P{d}isplay-x3d-py")
 endif()
 
 # Program files
@@ -122,17 +122,9 @@ if(NOT WINDOWS)
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
-  # Symlink to main
-  add_custom_command(
-    OUTPUT "${WORK}/${P}display-py"
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
-    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}display-py"
-    COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${TOOLS_LIB}/mcdisplay" "${WORK}/${P}display-py"
-    )
 
   add_custom_target(
-    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}display-py"
+    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}display-x3d-py"
     )
 
   install(

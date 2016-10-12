@@ -71,12 +71,12 @@ include(CPack)
 
 set(WORK "${PROJECT_BINARY_DIR}/work")
 
-configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/mcdisplay" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-webgl-py" @ONLY)
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/mcdisplay")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/${P}display-webgl-py")
 endif()
 
 # Program files
@@ -117,14 +117,6 @@ if(NOT WINDOWS)
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
-  # Symlink to main
-  add_custom_command(
-    OUTPUT "${WORK}/${P}display-webgl-py"
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
-    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}display-webgl-py"
-    COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${TOOLS_LIB}/mcdisplay" "${WORK}/${P}display-webgl-py"
-    )
 
   add_custom_target(
     "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}display-webgl-py"

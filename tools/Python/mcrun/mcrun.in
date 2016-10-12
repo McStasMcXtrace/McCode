@@ -1,4 +1,5 @@
 #!/bin/sh
+# Wrapper script for @P@run-py
 
 # First ensure that we follow symlink if needed
 LINK=`readlink $0`
