@@ -81,7 +81,7 @@ configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.py.in" "${CMAKE_SOURCE_DIR}/${P}di
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/$P{d}isplay-x3d-py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcdisplay.py" "${WORK}/${P}display-x3d-py")
 endif()
 
 # Program files
@@ -123,12 +123,8 @@ if(NOT WINDOWS)
     WORLD_READ WORLD_EXECUTE
   )
 
-  add_custom_target(
-    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}display-x3d-py"
-    )
-
   install(
-    PROGRAMS "${WORK}/${P}display-py"
+    PROGRAMS "${WORK}/${P}display-x3d-py"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}display-x3d-py${DOT_PYTHON_SUFFIX}"
     )

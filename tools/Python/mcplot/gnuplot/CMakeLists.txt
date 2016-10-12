@@ -120,12 +120,8 @@ if(NOT WINDOWS)
     WORLD_READ WORLD_EXECUTE
   )
 
-  add_custom_target(
-    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}plot-py"
-    )
-
   install(
-    PROGRAMS "${WORK}/${P}plot-py"
+    PROGRAMS "${WORK}/${P}plot-gnuplot-py"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}plot-gnuplot-py${DOT_PYTHON_SUFFIX}"
     )

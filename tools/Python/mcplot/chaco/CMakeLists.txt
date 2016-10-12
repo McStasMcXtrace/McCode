@@ -73,12 +73,12 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-gnuplot-py" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcplot.in" "${WORK}/${P}plot-chaco-py" @ONLY)
 
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/${P}plot-gnuplot-py")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcplot.py" "${WORK}/${P}plot-chaco-py")
 endif()
 
 
@@ -120,12 +120,8 @@ if(NOT WINDOWS)
     WORLD_READ WORLD_EXECUTE
   )
 
-  add_custom_target(
-    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}plot-py"
-    )
-
   install(
-    PROGRAMS "${WORK}/${P}plot-py"
+    PROGRAMS "${WORK}/${P}plot-chaco-py"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}plot-chaco-py${DOT_PYTHON_SUFFIX}"
     )

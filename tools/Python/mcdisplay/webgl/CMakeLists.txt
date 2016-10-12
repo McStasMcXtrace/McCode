@@ -118,10 +118,6 @@ if(NOT WINDOWS)
     WORLD_READ WORLD_EXECUTE
   )
 
-  add_custom_target(
-    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}display-webgl-py"
-    )
-
   install(
     PROGRAMS "${WORK}/${P}display-webgl-py"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin

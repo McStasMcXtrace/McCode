@@ -73,7 +73,7 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/mc${P}display-r-py" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.in" "${WORK}/${P}display-r-py" @ONLY)
 
 # Configure internal naming and how we call mcrun/mxrun across systems
 configure_file("${CMAKE_SOURCE_DIR}/mcdisplay.py" "${CMAKE_SOURCE_DIR}/${P}display.py" @ONLY)
@@ -122,12 +122,8 @@ if(NOT WINDOWS)
     WORLD_READ WORLD_EXECUTE
   )
 
-  add_custom_target(
-    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}display-py"
-    )
-
   install(
-    PROGRAMS "${WORK}/${P}display-py"
+    PROGRAMS "${WORK}/${P}display-r-py"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}display-r-py${DOT_PYTHON_SUFFIX}"
     )

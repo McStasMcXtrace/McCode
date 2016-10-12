@@ -122,12 +122,8 @@ if(NOT WINDOWS)
     WORLD_READ WORLD_EXECUTE
   )
 
-  add_custom_target(
-    "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}display-py"
-    )
-
   install(
-    PROGRAMS "${WORK}/${P}display-py"
+    PROGRAMS "${WORK}/${P}display-vtk-py"
     DESTINATION ${FLAVOR}/${MCCODE_VERSION}/bin
     RENAME "${P}display-vtk-py${DOT_PYTHON_SUFFIX}"
     )
