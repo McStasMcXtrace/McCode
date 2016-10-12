@@ -75,7 +75,7 @@ set(WORK "${PROJECT_BINARY_DIR}/work")
 
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/mcgui" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcgui.in" "${WORK}/mcgui-py" @ONLY)
 
 # Configure launcher
 configure_file("${CMAKE_SOURCE_DIR}/McCode-py.desktop.in" work/@NAME@-py.desktop @ONLY)
@@ -83,7 +83,7 @@ configure_file("${CMAKE_SOURCE_DIR}/McCode-py.desktop.in" work/@NAME@-py.desktop
 if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mcgui")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcgui.py" "${WORK}/mcgui-py")
 endif()
 
 
@@ -122,15 +122,6 @@ if(NOT WINDOWS)
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
-
-  # Symlink to main
-  add_custom_command(
-    OUTPUT "${WORK}/${P}gui-py"
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "${WORK}"
-    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}gui-py"
-    COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${TOOLS_LIB}/mcgui" "${WORK}/${P}gui-py"
-    )
 
   add_custom_target(
     "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}gui-py"
