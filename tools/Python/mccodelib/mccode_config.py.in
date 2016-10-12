@@ -14,6 +14,10 @@ configuration = {
     "BROWSER": '@BROWSER@',
 }
 
+# Set environment variables according to the above
+os.environ[configuration["MCCODE"].upper()] = configuration["MCCODE_LIB_DIR"]
+os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pathsep + os.environ["PATH"]
+
 '''
 Compilation, parallelisation etc.
 '''

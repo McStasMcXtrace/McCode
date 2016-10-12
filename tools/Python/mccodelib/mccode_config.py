@@ -14,6 +14,10 @@ configuration = {
     "BROWSER": 'xdg-open',
 }
 
+# Set environment variables according to the above
+os.environ["MCSTAS"] = configuration["MCCODE_LIB_DIR"]
+os.environ["PATH"] = os.path.join(configuration["MCCODE_LIB_DIR"],"bin") + os.pathsep + os.environ["PATH"]
+
 '''
 Compilation, parallelisation etc.
 '''
