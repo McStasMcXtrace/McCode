@@ -63,12 +63,12 @@ if(WINDOWS)
   set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py")
   set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${lib}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
 else()
-  set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py" "${WORK}/mcrun")
+  set(BINS "${PROJECT_SOURCE_DIR}/mcrun.py" "${WORK}/${P}run-py")
   set(TOOLS_LIB "${CMAKE_INSTALL_PREFIX}/${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}")
 endif()
 
 # Configure fallback script
-configure_file("${CMAKE_SOURCE_DIR}/mcrun.in" "${WORK}/mcrun" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/mcrun.in" "${WORK}/${P}run-py" @ONLY)
 
 if(WINDOWS)
   install(
@@ -95,7 +95,7 @@ if(NOT WINDOWS)
       DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
       )
   endforeach()
-
+  
   Install(
     FILES ${BINS}
     DESTINATION "${FLAVOR}/${MCCODE_VERSION}/${TOOLS_NAME}"
@@ -104,13 +104,6 @@ if(NOT WINDOWS)
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE
   )
-  # Symlink to main
-  add_custom_command(
-    OUTPUT "${WORK}/${P}run-py"
-    COMMAND "${CMAKE_COMMAND}" -E remove "${WORK}/${P}run-py"
-    COMMAND "${CMAKE_COMMAND}" -E create_symlink
-    "${TOOLS_LIB}/mcrun" "${WORK}/${P}run-py"
-    )
 
   add_custom_target(
     "CREATE_SYMLINK" ALL DEPENDS "${WORK}/${P}run-py"
