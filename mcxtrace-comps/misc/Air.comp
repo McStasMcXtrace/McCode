@@ -13,7 +13,7 @@
 * Date: 05.02.2015
 * Version: $Revision: beta$
 * Origin: DTU Fysik, NBI
-* Release: McXtrace 1.1
+* Release: McXtrace 1.4
 *
 * Component simulating atmospheric air.
 *
@@ -66,7 +66,7 @@ DEFINE COMPONENT Air
 
 DEFINITION PARAMETERS (R_gas=8.3144621, bond_N=1.0976, bond_O=1.2074, Nitrogen_part=0.781, Oxygen_part=0.21, Argon_part=0.009)
 
-/* antals-densitet (num_den) deklareres og udregnes i TRACE !!! */
+    /* number-density (num_den) is declared and computed in TRACE !!! */
 SETTING PARAMETERS (frac=0.3, pressure=101325, temperature=273.15+21.1,
         xwidth=0, yheight=0, zdepth=0, radius=0,
         target_x=0, target_y=0, target_z=6, int target_index=0, 
@@ -115,7 +115,7 @@ TRACE
 %{
     double l0, l1, l_full, l, dl, ran_var;
     double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
-    double f0, solid_angle, sc_angle, kx_i, ky_i, kz_i, k, q, qx, qy, qz, polarization, Ptot_sc_unpolariezed;
+    double f0, solid_angle, sc_angle, kx_i, ky_i, kz_i, k, q, qx, qy, qz, polarization, Ptot_sc_unpolarized;
     char   intersect=0;
 
     /* Intersection X_ray trajectory / sample (sample surface) */
