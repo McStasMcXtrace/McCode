@@ -162,8 +162,8 @@ TRACE
     }
 
     nrm =sqrt(kx*kx + ky*ky + kz*kz);
-    /*ekin is in MeV*/
-    particle->ekin = K2E*nrm*1e3; 
+    /*ekin is in MeV, in McXtrace we use keV*/
+    particle->ekin = K2E*nrm*1e-3;
     particle->direction[0] = kx/nrm;
     particle->direction[1] = ky/nrm;
     particle->direction[2] = kz/nrm;
