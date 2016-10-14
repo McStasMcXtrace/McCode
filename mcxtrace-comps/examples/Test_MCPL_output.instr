@@ -1,0 +1,84 @@
+/*******************************************************************************
+*         McXtrace instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: Test_MCPL_output
+*
+* %Identification
+* Written by: Erik B Knudsen <erkn@fysik.dtu.dk>
+* Date: Mar 2016
+* Origin: 
+* Release: McStas 2.3
+* Version: $Revision$
+* %INSTRUMENT_SITE: Tests_optics
+*
+* A test instrument for MCPL_output
+*
+* %Description
+*
+* This is a unit test for the MCPL_output component.
+*
+* %Example: -n1e3 dummy=0 Detector: m1_I=2.42284e+11
+*
+*
+* %Parameters
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Test_MCPL_output(dummy=0)
+
+DECLARE
+%{
+    int32_t flag;
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+
+COMPONENT Origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+/* the source ============================================================== */
+COMPONENT sa = Source_flat(
+        lambda0=1, dlambda=0.5,focus_xw=0.01, focus_yh=0.01, dist=10, xwidth=1e-3, yheight=1e-4)
+AT(0,0,0) RELATIVE Origin
+EXTEND %{
+  t=1e-3*rand01();
+  flag=(uint32_t)mcget_run_num();
+%}
+
+/* the output ============================================================== */
+COMPONENT vout = MCPL_output(
+     filename="voutput", verbose=1, userflag=flag, userflagcomment="Photon Id")
+AT(0,0,0) RELATIVE PREVIOUS
+
+COMPONENT m1 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto lambda, parallel", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m2 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto x, auto y, parallel", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m3 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto t parallel", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m4 = Monitor_nD(
+  xwidth=0.2, yheight=0.2,
+  options="auto E, parallel", bins=40
+) AT (0,0,0) ABSOLUTE
+
+COMPONENT m5 = Monitor_nD(
+  xwidth=0.2, yheight=0.2, user1=22,
+  options="parallel, neutron, user1, energy, x, y, z, vx, vy, vz, time, list all photons"
+) AT (0,0,0) ABSOLUTE
+
+END
+
+
