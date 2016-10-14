@@ -164,7 +164,7 @@ SAVE
   
           for (kk=0; kk<nE; kk++) {
               sprintf(ff, "%s_%i",filename,kk);
-              sprintf(tt, "PSD monitor Energy slice %i ~ %g keV",kk,kk*(Emax-Emin)/nE);
+              sprintf(tt, "PSD monitor Energy slice %i ~ %g keV",kk,Emin+kk*(Emax-Emin)/nE);
               DETECTOR_OUT_2D(
                       tt,
                       "X position [m]",
