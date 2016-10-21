@@ -72,7 +72,7 @@ SETTING PARAMETERS (radius_o=0.01, h=0.05, pack = 1,
 OUTPUT PARAMETERS(StructVarsV, VarsV)
 //STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p) removed to go to mcstas version 2
 
-SHARE
+DECLARE
 %{
   struct StructVarsV
   {
@@ -82,22 +82,15 @@ SHARE
     double my_s;
     double my_a_v;
     char   isrect;      /* true when sample is a box */
-  }
-%}
-
-DECLARE
-%{
-  StructVarsV VarsV;
+  } VarsV;
 %}
 
 INITIALIZE
 %{
-
-  if (!radius_o || !h) 
-  {
+ 
+  if (!radius_o || !h) {
     if (!xwidth || !yheight || !zthick) exit(fprintf(stderr,"V_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
-    else VarsV.isrect=1; 
-  }
+    else VarsV.isrect=1; }
   else VarsV.isrect=0;
  
   VarsV.sigma_a=5.08; /* in barns */
