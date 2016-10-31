@@ -37,14 +37,14 @@ for($i = 0; $i < @ARGV; $i++) {
 
 if (@cmdline == 0) { $show_help=1; }
 if ($show_help) {
-die "Usage: mcsub [options] [mcrun params] 
+die "Usage: $0 [options] [mcrun params] 
  -h        --help            Show this help
- -rN      --runtime=N       Specify maximum runtime (hours) [default $runtime]
- -qQNAME  --queue=QNAME     Specify wanted SLURM queue [default '$queue']
- -e<mail> --email=<mail>    Specify address to notify in reg. sim status [default $mailrcpt]
+ -rN       --runtime=N       Specify maximum runtime (hours) [default $runtime]
+ -qQNAME   --queue=QNAME     Specify wanted SLURM queue [default '$queue']
+ -e<mail>  --email=<mail>    Specify address to notify in reg. sim status [default $mailrcpt]
            --nodes=NUM       Specify wanted number of nodes [default $nodes]
-           --name=NAME       Specify openPBS job name [default '$name']
-\n\nAfter running mcsub NAME.batch is ready for submission using the sbatch command\n";
+           --name=NAME       Specify openPBS job name [default \"McSub_<USERNAME>_<TIMESTAMP>\"]
+\n\nAfter running $0 NAME.batch is ready for submission using the sbatch command\n";
 } else {
     # Write slurm script to STDOUT
     open($OUT,"> $name.batch") || die "Could not write to $name.batch!\n";
