@@ -239,13 +239,10 @@ class McrunPipeMan(object):
             raise self.reader.exc_obj
     
     def read_particles(self):
-        print "hest"
         return self.reader.databox.get_particles()
     
     def read_instrdef(self):
-        print "hest"
         return self.reader.databox.get_instrdef()
     
     def read_comments(self):
-        print "hest"
         return self.reader.databox.get_comments()
