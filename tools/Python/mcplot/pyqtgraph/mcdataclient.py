@@ -9,7 +9,7 @@ import os
 from mcdataservice import RCSimFile, RCList, McDataPickleClient
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from mclib.mcplotgraph import PlotGraphPrint
+from mccodelib.mcplotgraph import PlotGraphPrint
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
@@ -20,12 +20,12 @@ def main(args):
     
     if args.list:
         client.ask(RCList())
-        print ''
-        print "server listdir('.') output:\n\n%s\n" % client.reply.text
+        print('')
+        print("server listdir('.') output:\n\n%s\n" % client.reply.text)
     
     elif args.simfile:
         client.ask(RCSimFile(simfile=args.simfile))
-        print ''
+        print('')
         PlotGraphPrint(client.reply.plotgraph)
 
 

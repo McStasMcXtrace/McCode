@@ -155,7 +155,7 @@ def parse_trace():
         elif line.startswith(MC_MAGNIFY) or line.startswith(MC_START) or line.startswith(MC_END) or line.startswith(MC_STOP):
             continue
         else:
-            print line
+            print(line)
 
 
     # A little bit of logic for controlling the aspect ratios/view

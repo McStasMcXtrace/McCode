@@ -54,7 +54,7 @@ def monitor_to_plotdata(it):
 
         return (header, plotdata)
     else:
-        print 'Skipping unknown type:', header['type']
+        print('Skipping unknown type:', header['type'])
         return (header, None)
 
 
@@ -79,7 +79,7 @@ def mcstas_to_plotdescs(path):
     # parse instrument files
     base = dirname(path)
     for fname in files:
-        print fname
+        print(fname)
         header, plotdata = monitor_to_plotdata(file(join(base, fname)))
         if plotdata is not None:
             yield PlotDesc(header['xvar'], 'I', plotdata, title=fname, type='line')

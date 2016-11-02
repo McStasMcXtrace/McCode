@@ -1,5 +1,5 @@
 '''
-
+Flowchart based particle parser.
 '''
 import re
 from instrgeom import RayBundle, ParticleStory, ParticleCompGroup, ParticleState
@@ -7,10 +7,10 @@ from flowchart import FCNTerminal, FCNDecisionBool, FCNDecisionMulti, FCNProcess
 
 # terminal nodes implementation
 def t_begin(args):
-    print "starting particle parsing"
+    print("starting particle parsing")
 
 def t_end(args):
-    print "ended particle parsing"
+    print("ended particle parsing")
 
 def t_error(args):
     raise Exception("error")

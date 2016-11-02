@@ -178,7 +178,7 @@ if __name__ == '__main__':
     try:
         main(args)
     except KeyboardInterrupt:
-        print ''
+        print('')
     except Exception as e:
-        print e.message
+        print(e.message)
 

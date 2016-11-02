@@ -12,7 +12,7 @@ import pickle
 from threading import Thread
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from mclib.mcplotloader import McPlotDataLoader
+from mccodelib.mcplotloader import McPlotDataLoader
 
 '''
 Protocol implementation.
@@ -69,13 +69,13 @@ class McDataPickleClient(object):
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_address = ('localhost', port)
-        print 'connecting to %s port %s' % server_address
+        print('connecting to %s port %s' % server_address)
         self.sock.connect(server_address)
         self.sock.settimeout(0.5)
     
     def ask(self, request):
         try:
-            print 'sending request: "%s"' % request
+            print('sending request: "%s"' % request)
             
             text = pickle.dumps(request)
             self.sock.sendall(text)
@@ -89,7 +89,7 @@ class McDataPickleClient(object):
                     else:
                         text = text + data
                 except Exception as e:
-                    print 'timeout reached'
+                    print('timeout reached')
             
             self.reply = pickle.loads(text)
             
@@ -105,7 +105,7 @@ class McDataPickleServer(object):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_name = 'localhost'
         server_address = (server_name, self.port)
-        print 'starting up on %s port %s' % server_address
+        print('starting up on %s port %s' % server_address)
         self.sock.bind(server_address)
         self.sock.listen(1)
     
@@ -114,9 +114,9 @@ class McDataPickleServer(object):
         
         try:
             while True:
-                print 'waiting for a connection...'
+                print('waiting for a connection...')
                 connection, client_address = self.sock.accept()
-                print 'client connected:', client_address
+                print('client connected:', client_address)
                 text = ''
                 
                 # NOTE: right now we assume, that we can get it all in one chunk with a blocking socket
@@ -125,7 +125,7 @@ class McDataPickleServer(object):
                 
                 # unpickle and dispatch
                 request = pickle.loads(text)
-                print 'received request: "%s"' % request
+                print('received request: "%s"' % request)
                 
                 t = Thread()
                 rsend = ReplyPickleSender(connection)
@@ -142,7 +142,7 @@ class ReplyPickleSender():
         ''' callback for dispatched handlers - sends a reply though the socket '''
         try:
             s = pickle.dumps(reply)
-            print "sending data..."
+            print("sending data...")
             self.connection.sendall(s)
         finally:
             self.connection.close()

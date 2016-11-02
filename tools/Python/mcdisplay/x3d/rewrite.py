@@ -160,5 +160,5 @@ def parse_trace(world, fp=sys.stdin, inspectComp=None):
             xyz = rotate(xyz, comp)
             neutron.append(xyz)
 
-    print 'Neutrons drawed:', neutrons_drawed, (inspectComp and '(reaching %s)' % inspectComp or '(all)')
+    print('Neutrons drawed:', neutrons_drawed, (inspectComp and '(reaching %s)' % inspectComp or '(all)'))
     return world

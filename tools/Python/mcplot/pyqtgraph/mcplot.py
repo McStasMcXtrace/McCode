@@ -9,8 +9,8 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 #from mclib import mccode_config
-from mclib.mcplotloader import McPlotDataLoader, test_decfuncs
-from mclib.mcplotgraph import PlotGraphPrint
+from mccodelib.mcplotloader import McPlotDataLoader, test_decfuncs
+from mccodelib.mcplotgraph import PlotGraphPrint
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
@@ -33,7 +33,7 @@ def main(args):
             printer = PlotGraphPrint(graph)
     
     except Exception as e:
-        print 'mcplot error: %s' % e.message
+        print('mcplot error: %s' % e.message)
     
     # TODO: plot the generated plot-graph
     

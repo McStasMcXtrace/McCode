@@ -51,7 +51,7 @@ def get_line(fp):
     ''' Read a line from file-like object '''
     line = fp.readline()
     if line.startswith('Set value'):
-        print line
+        print(line)
 
     if line != '':
         return line.strip()

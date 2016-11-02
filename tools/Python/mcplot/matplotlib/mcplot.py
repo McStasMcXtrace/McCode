@@ -244,7 +244,7 @@ def read_monitor(this_File):
     Filestruct['data']=loadtxt(this_File)
     Filestruct['fullpath'] = this_File
     Filestruct['File'] = this_File
-    print "Loading " + this_File
+    print("Loading " + this_File)
     
     return Filestruct
     # end read_monitor
@@ -380,7 +380,7 @@ def display_scanstep(this_File, relative_index):
       index = scan_length-1
 
     scan_index = index
-    print "Loading " + os.path.join(this_File, "%i" % index)
+    print("Loading " + os.path.join(this_File, "%i" % index))
     display(os.path.join(this_File, "%i" % index), "/%i" % index)
     # end display_scanstep
 
@@ -396,7 +396,7 @@ def dumpfile(format):
     Filename = "mcplot_" + str(exp_counter) + "." + format
     exp_counter = exp_counter + 1
     savefig(Filename)
-    print "Saved " + Filename
+    print("Saved " + Filename)
     # end dumpfile
 
 def display(this_File, comment):
@@ -427,7 +427,7 @@ def display(this_File, comment):
         this_File = os.path.basename(this_File)
 
     if os.path.isfile(this_File)==0:
-        print os.path.basename(sys.argv[0]) +": Dataset " + File + " does not exist!"
+        print(os.path.basename(sys.argv[0]) +": Dataset " + File + " does not exist!")
         exit()
     
     isBegin = lambda line: (line.strip()).startswith('begin')
@@ -443,7 +443,7 @@ def display(this_File, comment):
             FS=display_single(FS)
             if options.Format!=None: 
                 savefig(this_File + "." + options.Format)
-                print "Saved " + File + "." + options.Format
+                print("Saved " + File + "." + options.Format)
             show()
             exit()
             Datfile = 1
@@ -506,7 +506,7 @@ def display(this_File, comment):
             
     if options.Format!=None:
         savefig(this_File + "." + options.Format)
-        print "Saved " + File + "." + options.Format
+        print("Saved " + File + "." + options.Format)
     else:
         from pylab import get_current_fig_manager
         tb = get_current_fig_manager().toolbar

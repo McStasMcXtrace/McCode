@@ -1,7 +1,5 @@
 '''
 Analysis tools for mcstas component files and instrument files.
-
-@author: jaga
 '''
 import re
 

@@ -271,7 +271,7 @@ def main():
 
     # Extract instrument and parameters
     if len(args) == 0:
-        print parser.get_usage()
+        print(parser.get_usage())
         parser.exit()
 
     # Set path of instrument-file after locating it
@@ -303,7 +303,7 @@ def main():
     LOG.info('===')
 
     if options.info:
-        print 'info!'
+        print('info!')
         mcstas.run(override_mpi=False)
         exit()
 
@@ -370,7 +370,7 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         LOG.fatal('User interrupt.')
-    except OptionValueError, e:
+    except OptionValueError as e:
         LOG.fatal(str(e))
-    except McRunException, e:
+    except McRunException as e:
         LOG.fatal(str(e))

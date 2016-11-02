@@ -195,12 +195,12 @@ class McGnuplotter():
             
             if 'mccode.dat' in map( lambda f: os.path.basename(f), data_file_lst):
                 # mccode.dat / scan sweep mode
-                print "mccode.dat found"
-                print "Plotting mode not supported, exiting"
+                print("mccode.dat found")
+                print("Plotting mode not supported, exiting")
                 exit()
                 #dict = get_monitor(os.path.join(os.path.dirname(data_file_lst[0]), 'mccode.dat'))
                 #for key in dict:
-                #    print 'key: %s, value: %s' % (key, dict[key]) 
+                #    print('key: %s, value: %s' % (key, dict[key]))
             else:
                 # single scan step mode - load multiple monitor files
                 for data_file in data_file_lst:

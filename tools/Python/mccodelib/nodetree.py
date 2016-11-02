@@ -48,7 +48,7 @@ class NodeTreePrint(object):
         leaf = ''
         if node.leaf:
             leaf = node.leaf
-        print fs.format('') + '%s: %s' % (type, leaf)
+        print(fs.format('') + '%s: %s' % (type, leaf))
     
     @staticmethod
     def recurse(node, printfunc, inclevel, declevel, getlevel):

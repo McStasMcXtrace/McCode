@@ -3,7 +3,7 @@ import sys, os
 
 
 def usage():
-    print 'usage: %s [data dir|monitor datafile]' % os.path.basename(sys.argv[0])
+    print('usage: %s [data dir|monitor datafile]' % os.path.basename(sys.argv[0]))
 
 
 def main():

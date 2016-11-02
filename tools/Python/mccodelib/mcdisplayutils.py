@@ -23,7 +23,7 @@ class McDisplayReader(object):
          '-n' nor '--ncount' strings are found in args.instr_options
         '''
         if not os.path.exists(args.instr) or not os.path.splitext(args.instr)[1] not in ['instr', 'out']:
-            print "Please supply a valid .instr or .out file."
+            print("Please supply a valid .instr or .out file.")
             exit()
         
         # assemble command
@@ -69,10 +69,10 @@ class McDisplayReader(object):
     
     def read_particles(self):
         ''' waits for pipeman object to finish, then read and parse neutron data '''
-        print "reading particle data..."
+        print("reading particle data...")
         particles = self.pipeman.read_particles()
 
-        print self.pipeman.read_comments()
+        print(self.pipeman.read_comments())
 
         if self.debug:
             file_save(particles, 'particledata')

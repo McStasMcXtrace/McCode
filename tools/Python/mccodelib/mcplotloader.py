@@ -98,15 +98,15 @@ def test_decfuncs(simfile):
     args = {}
     args['simfile'] = simfile
     
-    print 'has_filename:              %s' % str(has_filename(args))
-    print 'is_mccodesim_or_mccodedat: %s' % str(is_mccodesim_or_mccodedat(args))
-    print 'is_monitorfile:            %s' % str(is_monitorfile(args))
-    print 'is_sweepfolder:            %s' % str(is_sweepfolder(args))
-    print 'is_broken_sweepfolder:     %s' % str(is_broken_sweepfolder(args))
-    #print 'is_sweep_data_present:     %s' % str(is_sweep_data_present(args))
-    print 'is_mccodesim_w_monitors:   %s' % str(is_mccodesim_w_monitors(args))
-    print 'has_datfile:               %s' % str(has_datfile(args))
-    print 'has_multiple_datfiles:     %s' % str(has_multiple_datfiles(args))
+    print('has_filename:              %s' % str(has_filename(args)))
+    print('is_mccodesim_or_mccodedat: %s' % str(is_mccodesim_or_mccodedat(args)))
+    print('is_monitorfile:            %s' % str(is_monitorfile(args)))
+    print('is_sweepfolder:            %s' % str(is_sweepfolder(args)))
+    print('is_broken_sweepfolder:     %s' % str(is_broken_sweepfolder(args)))
+    #print('is_sweep_data_present:     %s' % str(is_sweep_data_present(args)))
+    print('is_mccodesim_w_monitors:   %s' % str(is_mccodesim_w_monitors(args)))
+    print('has_datfile:               %s' % str(has_datfile(args)))
+    print('has_multiple_datfiles:     %s' % str(has_multiple_datfiles(args)))
 
 
 '''
@@ -275,7 +275,7 @@ def _load_monitor(monitorfile):
         raise Exception('load_monitor: unknown data format.')
     
     if False:
-        print data.get_stats_title()
+        print(data.get_stats_title())
     
     return data
 
@@ -362,7 +362,7 @@ def _load_multiplot_1D_lst(f_dat):
             data_lst.append(data)
         
     except Exception as e:
-        print e.message
+        print(e.message)
         raise e
     
     return data_lst

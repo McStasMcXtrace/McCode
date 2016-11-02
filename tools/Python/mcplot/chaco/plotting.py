@@ -120,7 +120,7 @@ class ZoomWithAspectRatio(ZTool):
 
         fx, tx, fy, ty = self._history[-1].next
         w, h = (tx - fx, ty - fy)
-        print w, h
+        print(w, h)
         self.plot.aspect_ratio = float(w) / h
 
 

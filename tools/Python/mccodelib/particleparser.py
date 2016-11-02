@@ -74,7 +74,7 @@ class ParticleTraceParser:
     
     def p_document(self, p):
         'document : ray_statements'
-        print 'particle rays parsed'
+        print('particle rays parsed')
         # assemble parse tree
         self.parsetree = Node(type='raystatements', children=[self.rays])
     

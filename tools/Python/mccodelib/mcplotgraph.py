@@ -199,30 +199,30 @@ class PlotGraphPrint(object):
         indent = self.indent_str
         
         # print the node
-        print
-        print indent*(level+0) + '%s (%d):' % (node, id(node))
+        print()
+        print(indent*(level+0) + '%s (%d):' % (node, id(node)))
         
         if node.parent:
-            print indent*(level+1) + 'parent:'
-            print indent*(level+2) + '%s (%d)' % (node.parent, id(node.parent))
+            print(indent*(level+1) + 'parent:')
+            print(indent*(level+2) + '%s (%d)' % (node.parent, id(node.parent)))
         
-        print indent*(level+1) + 'data objects:'
+        print(indent*(level+1) + 'data objects:')
         for d in node.data:
-            print indent*(level+2) + '%s (%d)' % (d, id(d))
+            print(indent*(level+2) + '%s (%d)' % (d, id(d)))
         
         if type(node) is PNMultiple:
-            print indent*(level+1) + 'header:'
-            print indent*(level+2) + '%s (%d)' % (node.header, id(node.header))
+            print(indent*(level+1) + 'header:')
+            print(indent*(level+2) + '%s (%d)' % (node.header, id(node.header)))
         
         if not len(node.primaries) == 0:
-            print indent*(level+1) + 'primary children:'
+            print(indent*(level+1) + 'primary children:')
             for p in node.primaries:
-                print indent*(level+2) + '%s (%d)' % (p, id(p))
+                print(indent*(level+2) + '%s (%d)' % (p, id(p)))
         
         if not len(node.secondaries) == 0:
-            print indent*(level+1) + 'secondary children:'
+            print(indent*(level+1) + 'secondary children:')
             for s in node.secondaries:
-                print indent*(level+2) + '%s (%d)' % (s, id(s))
+                print(indent*(level+2) + '%s (%d)' % (s, id(s)))
         
         self.printed_ids.append(id(node))
 

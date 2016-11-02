@@ -373,7 +373,7 @@ class McGuiState(QtCore.QObject):
         nsteps = fixed_params[2]
         if nsteps != '':
             if int(nsteps) > 1:
-                print 'Nsteps is ' + nsteps
+                print('Nsteps is ' + nsteps)
                 runstr = runstr + ' -N ' + str(nsteps)
         
         # gravity

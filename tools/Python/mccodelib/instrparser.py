@@ -94,7 +94,7 @@ class InstrTraceParser:
     
     def p_document(self, p):
         'document : instr_open comp_defs draw_lines instr_end'
-        print 'instrument definition parsed'
+        print('instrument definition parsed')
         # quirky: reverse ordering of components
         self.comps.children = self.comps.children[::-1]
         # assemble parse tree
