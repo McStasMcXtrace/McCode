@@ -112,7 +112,7 @@ def get_mccode_config_options(MCCODE):
 def load_user_config(MCCODE,MCCODE_VERSION):
     userconfig=os.path.expandvars("$HOME/."+MCCODE+"/"+MCCODE_VERSION+"/mccode_config.py")
     if os.path.isfile(userconfig):
-        print "Loading user configuration from "+userconfig
+        print("Loading user configuration from " + userconfig)
         imp.load_source('mccode_config', userconfig)
 
 def save_user_config(config_module,MCCODE,MCCODE_VERSION):
