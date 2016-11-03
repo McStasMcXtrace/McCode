@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 #
-# Perl script to generate SLURM submission script for the ESS DMSC cluster
+# Perl script to generate SLURM submission script 
 #
 # Peter Willendrup, 20161031
 
