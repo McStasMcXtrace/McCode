@@ -73,6 +73,8 @@ die "Usage: $0 [options] [mcrun params]
     print $OUT "### Queue name\n";
     print $OUT "#PBS -q $queue\n";
     print $OUT "\n\n";
+    print $OUT "module load mcstas/$mcstas_version\n";    
+    print $OUT "\n";
     print $OUT "### Set up mcrun line\n";
     print $OUT "cd \$PBS_O_WORKDIR\n";
     print $OUT "mcrun --mpi=".$nodes*$coresprnode." --machines=\$PBS_NODEFILE ";
