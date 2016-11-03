@@ -5,6 +5,9 @@
 # Peter Willendrup, 20161031
 
 use POSIX;
+use File::Which;
+use File::Basename;
+use Cwd 'abs_path';
 
 my $nodes = "1";
 my $queue = "express";
@@ -35,6 +38,10 @@ for($i = 0; $i < @ARGV; $i++) {
         push @cmdline, $ARGV[$i]; }
 }
 
+# Figure out which mcstas is currently loaded
+my $mcstas_path = which('mcstas');
+my $mcstas_version =  basename(dirname(dirname(abs_path$mcstas_path)));
+
 if (@cmdline == 0) { $show_help=1; }
 if ($show_help) {
 die "Usage: $0 [options] [mcrun params] 
@@ -58,7 +65,7 @@ die "Usage: $0 [options] [mcrun params]
     print $OUT "# the --exclusive is needed when running OpenMPI\n";
     print $OUT "# it will all cores on the allocated nodes\n";
     print $OUT "#SBATCH --exclusive \n";
-    print $OUT "module load mcstas\n";
+    print $OUT "module load mcstas/$mcstas_version\n";
     print $OUT "\n\n";
     print $OUT "### Set up mcrun line\n";
     print $OUT "mcrun --mpi=auto ";
