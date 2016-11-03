@@ -13,6 +13,7 @@ from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
+from mccodelib import pipetools
 from mccodelib import mccode_config
 from mccodelib.mcdisplayutils import McDisplayReader
 from mccodelib.instrgeom import Vector3d
@@ -127,7 +128,7 @@ def write_browse(instrument, raybundle, dir, nobrowse=False):
     
 def get_datadirname(instrname):
     ''' returns an mcrun-like name-date-time string '''
-    return "%s_%s" % (instrname, datetime.strftime(datetime.now(), "%Y%d%m_%H%M%S"))
+    return "%s_%s" % (instrname, datetime.strftime(datetime.now(), "%Y%m%d_%H%M%S"))
 
 def file_save(data, filename):
     ''' saves data for debug purposes '''
@@ -180,5 +181,6 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print('')
     except Exception as e:
-        print(e.message)
+        print(e)
+        raise e
 

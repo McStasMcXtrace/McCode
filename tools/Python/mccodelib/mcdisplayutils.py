@@ -4,10 +4,10 @@ Intermediary layer for setting up a --trace pipe and interpreting the results.
 import os
 import re
 
-from pipetools import McrunPipeMan
-from instrparser import InstrTraceParser, InstrObjectConstructor
-from particleparser import ParticleBundleRayFactory, ParticleTraceParser
-from fcparticleparser import FlowChartParticleTraceParser
+from .pipetools import McrunPipeMan
+from .instrparser import InstrTraceParser, InstrObjectConstructor
+from .particleparser import ParticleBundleRayFactory, ParticleTraceParser
+from .fcparticleparser import FlowChartParticleTraceParser
 
 class McDisplayReader(object):
     ''' High-level trace manager '''

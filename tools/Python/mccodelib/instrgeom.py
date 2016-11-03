@@ -278,12 +278,13 @@ class RayBundle(object):
         bundle['numrays'] = len(lst)
         
         # min and max velocity
-        vmin = None
-        vmax = None
+        initial_speed = self.rays[0].get_speed()
+        vmin = initial_speed
+        vmax = initial_speed
         for r in self.rays:
             speed = r.get_speed()
-            vmin = min(vmin, speed) or speed
-            vmax = max(vmax, speed) or speed
+            vmin = min(vmin, speed)
+            vmax = max(vmax, speed)
         bundle['vmin'] = vmin
         bundle['vmax'] = vmax
         
@@ -401,8 +402,8 @@ def drawclass_factory(commandname, args, reduced=False):
             return None
         klass = globals()[drawcommands[commandname]]
         return klass(args)
-    except:
-        raise Exception('DrawCommandFactory: error with commandname: %s, args: %s' % (commandname, args))
+    except Exception as e:
+        raise Exception('DrawCommandFactory: error with commandname: %s, args: %s, error: %s' % (commandname, args, e.__str__()))
 
 class DrawCommand(object):
     ''' superclass of all draw commands '''
@@ -510,14 +511,14 @@ class DrawMultiline(DrawCommand):
         l = len(args)
         try:
             if not ((l % 3) == 0):
-                raise Exception()
-            for i in range(l / 3):
+                raise Exception("Tripplets condition not met.")
+            for i in range(l // 3):
                 x = float(args[i*3])
                 y = float(args[i*3+1])
                 z = float(args[i*3+2])
                 self.points.append(Vector3d(x, y, z))
-        except:
-            raise Exception('DrawMultiline: args must contain a whole number of tripples.')
+        except Exception as e:
+            raise Exception('DrawMultiline: %s' % e.__str__())
     
     def _get_points(self):
         return self.points

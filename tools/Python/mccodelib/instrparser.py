@@ -5,8 +5,8 @@ mini language.
 Read the PLY documentation here: http://www.dabeaz.com/ply/ply.html#ply_nn23.
 '''
 from ply import lex, yacc
-from nodetree import Node
-from instrgeom import InstrumentSpecific, Component, Vector3d, Matrix3, drawclass_factory
+from .nodetree import Node
+from .instrgeom import InstrumentSpecific, Component, Vector3d, Matrix3, drawclass_factory
 
 class InstrTraceParser:
     '''

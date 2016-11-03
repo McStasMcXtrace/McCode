@@ -20,13 +20,13 @@ def parse_displaysection(comproot, mcdisplay):
             parser.parseDisplaySection()
         except Exception as e:
             errors.append('error (%s): %s' % (parser.file, e.__str__()))
-        
+
         if mcdisplay:
             print('********************')
             print('* %s' % parser.file)
             print('********************')
             print('\n%s\n' % parser.mcdisplay)
-        
+
     for e in errors:
         print e
 
@@ -37,10 +37,10 @@ def parse_comps():
         parser = fileutils.McComponentParser(f)
         try:
             parser.parse()
-        except Exception, e:
+        except Exception as e:
             traceback.print_stack()
             print('exception: ', e)
-        
+
         print('*****')
         print('component file:        \n' + parser.file)
         print('          name: :      \n' + parser.name)
@@ -56,10 +56,10 @@ def parse_comps():
 
 def main(args):
     logging.basicConfig(level=logging.INFO)
-    
+
     # TODO: log test sequence
     parse_displaysection(args.comproot[0], args.mcdisplay)
-    
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)

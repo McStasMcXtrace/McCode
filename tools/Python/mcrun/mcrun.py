@@ -20,7 +20,7 @@ from log import DEBUG
 LOG = getLogger('main')
 
 # File path friendly date format (avoid ':' and white space)
-DATE_FORMAT_PATH = "%Y%d%m_%H%M%S"
+DATE_FORMAT_PATH = "%Y%m%d_%H%M%S"
 
 # Helper functions
 def build_checker(accept, msg='Invalid value'):

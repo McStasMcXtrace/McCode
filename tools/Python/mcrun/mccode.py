@@ -67,6 +67,7 @@ class Process:
         # Run executable as shell
         LOG.debug('CMD: %s %s', self.executable, ' '.join(args))
         fid = Popen(self.executable + ' ' + ' '.join(args),
+                    universal_newlines=True,
                     stdout=pipe,
                     stderr=pipe,
                     shell=True)

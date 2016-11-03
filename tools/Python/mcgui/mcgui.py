@@ -24,10 +24,12 @@ from mccodelib.fileutils import McComponentParser
 Status and message log and signalling.
 '''
 class McMessageEmitter(QtCore.QObject):
-    statusUpdate = QtCore.pyqtSignal(QtCore.QString)
+    #statusUpdate = QtCore.pyqtSignal(QtCore.QString)
+    statusUpdate = QtCore.pyqtSignal(str)
     __statusLog = []
     
-    logMessageUpdate = QtCore.pyqtSignal(QtCore.QString, bool)
+    #logMessageUpdate = QtCore.pyqtSignal(QtCore.QString, bool)
+    logMessageUpdate = QtCore.pyqtSignal(str, bool)
     __msgLog = []
     
     def status(self, status):
@@ -54,9 +56,12 @@ class McMessageEmitter(QtCore.QObject):
 ''' Asynchronous process execution QThread
 '''        
 class McRunQThread(QtCore.QThread):
-    thread_exception = QtCore.pyqtSignal(QtCore.QString)
-    error = QtCore.pyqtSignal(QtCore.QString)
-    message = QtCore.pyqtSignal(QtCore.QString)
+    #thread_exception = QtCore.pyqtSignal(QtCore.QString)
+    thread_exception = QtCore.pyqtSignal(str)
+    #error = QtCore.pyqtSignal(QtCore.QString)
+    error = QtCore.pyqtSignal(str)
+    #message = QtCore.pyqtSignal(QtCore.QString)
+    message = QtCore.pyqtSignal(str)
     cmd = ''
     cwd = ''
     process_returncode = None
@@ -73,6 +78,7 @@ class McRunQThread(QtCore.QThread):
                                        stdout=subprocess.PIPE, 
                                        stderr=subprocess.PIPE,
                                        shell=True,
+                                       universal_newlines=True,
                                        cwd=self.cwd)
             
             # read program output while the process is active
@@ -103,9 +109,11 @@ class McGuiState(QtCore.QObject):
     __emitter = None
     
     # <instrument>, <work dir>
-    instrumentUpdated = QtCore.pyqtSignal(QtCore.QStringList, QtCore.QString)
+    #instrumentUpdated = QtCore.pyqtSignal(QtCore.QStringList, QtCore.QString)
+    instrumentUpdated = QtCore.pyqtSignal(list, str)
     # [<canRun>, <canPlot>] each can be str 'True' or 'False'
-    simStateUpdated = QtCore.pyqtSignal(QtCore.QStringList)
+    #simStateUpdated = QtCore.pyqtSignal(QtCore.QStringList)
+    simStateUpdated = QtCore.pyqtSignal(list)
     
     __cFile = ""
     __binaryFile = ""
@@ -191,7 +199,8 @@ class McGuiState(QtCore.QObject):
     def canPlot(self):
         return ((self.__instrFile != "") and (not self.isSimRunning()))
     
-    __thread_exc_signal = QtCore.pyqtSignal(QtCore.QString)
+    #__thread_exc_signal = QtCore.pyqtSignal(QtCore.QString)
+    __thread_exc_signal = QtCore.pyqtSignal(str)
     def compile(self, mpi=False):
         # using Qt in-built cross-thread signaling
         self.__thread_exc_signal.connect(handleExceptionMsg)
@@ -221,6 +230,7 @@ class McGuiState(QtCore.QObject):
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
                                        shell=True,
+                                       universal_newlines=True,
                                        cwd=os.path.dirname(self.__instrFile))
             self.__emitter.status('Compiling instrument to c ...')
             self.__emitter.message('Compiling instrument to c ...')
@@ -271,6 +281,7 @@ class McGuiState(QtCore.QObject):
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
                                        shell=True,
+                                       universal_newlines=True,
                                        cwd=os.path.dirname(self.__instrFile))
             self.__emitter.status('Compiling instrument to binary ...')
             self.__emitter.message('Compiling instrument to binary ...')
@@ -353,7 +364,7 @@ class McGuiState(QtCore.QObject):
         if simtrace == 0:
             output_dir = str(fixed_params[7])
             if output_dir == '':
-                DATE_FORMAT_PATH = "%Y%d%m_%H%M%S"
+                DATE_FORMAT_PATH = "%Y%m%d_%H%M%S"
                 output_dir = "%s_%s" % \
                               (os.path.splitext(self.__instrFile)[0],
                                datetime.strftime(datetime.now(), DATE_FORMAT_PATH))
@@ -440,7 +451,8 @@ class McGuiState(QtCore.QObject):
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.PIPE,
-                                   shell=True)
+                                   shell=True,
+                                   universal_newlines=True)
         # synchronous call
         (stdoutdata, stderrdata) = process.communicate()
         # note: communicate() always sets a process exit code
@@ -481,7 +493,8 @@ class McGuiAppController():
         process = subprocess.Popen(cmd, 
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
-                                   shell=True)
+                                   shell=True,
+                                   universal_newlines=True)
 
         (stdoutdata, stderrdata) = process.communicate()
         self.emitter.message(stdoutdata.rstrip('\n'))
@@ -513,14 +526,17 @@ class McGuiAppController():
             files_instr_and_site.append([f, get_instr_site(f)])
         
         # order instrument files by site:
-        sites = {s for s in map(lambda f: f[1], files_instr_and_site)}
+        #sites = {s for s in map(lambda f: f[1], files_instr_and_site)}
+        sites = {s for s in list(map(lambda f: f[1], files_instr_and_site))}
         for s in sites:
             # extract instruments file paths of this site
-            instr_path_lst = map(lambda f: f[0], filter(lambda f: f[1] in [s], files_instr_and_site))
+            #instr_path_lst = map(lambda f: f[0], filter(lambda f: f[1] in [s], files_instr_and_site))
+            instr_path_lst = list(map(lambda f: f[0], filter(lambda f: f[1] in [s], files_instr_and_site)))
             # sort instrument of this site by file name
             instr_path_lst.sort(key=lambda instrpath: os.path.splitext(os.path.basename(instrpath))[0])
             # extract file names
-            instr_name_lst = map(lambda instrpath: os.path.splitext(os.path.basename(instrpath))[0], instr_path_lst)
+            #instr_name_lst = map(lambda instrpath: os.path.splitext(os.path.basename(instrpath))[0], instr_path_lst)
+            instr_name_lst = list(map(lambda instrpath: os.path.splitext(os.path.basename(instrpath))[0], instr_path_lst))
             arg = []
             arg.append(s)
             arg.append(instr_name_lst)
@@ -536,10 +552,10 @@ class McGuiAppController():
         # load installed mcstas components:
         # args - [category, comp_names[], comp_parsers[]]
         args = []
-        categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6 : 'Contrib/union', 7: 'Obsolete'}
-        dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6 : os.path.join('contrib','union'), 7:'obsolete'}
+        categories = {0 : 'Source', 1 : 'Optics', 2 : 'Sample', 3 : 'Monitor', 4 : 'Misc', 5 : 'Contrib', 6 : 'Obsolete'}
+        dirnames = {0 : 'sources', 1 : 'optics', 2 : 'samples', 3 : 'monitors', 4 : 'misc', 5 : 'contrib', 6 : 'obsolete'}
         i = 0
-        while i < 8:
+        while i < 7:
             arg = [] # arg - category, comp_names[], comp_parsers[]
             compnames = []
             parsers = []
@@ -606,7 +622,8 @@ class McGuiAppController():
         subprocess.Popen(cmd,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
-                         shell=True)
+                         shell=True,
+                         universal_newlines=True)
         self.emitter.message(cmd)
         self.emitter.message('')
     
@@ -619,7 +636,8 @@ class McGuiAppController():
             process = subprocess.Popen(cmd,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT,
-                             shell=True)
+                             shell=True,
+                             universal_newlines=True)
             process.wait()
             
         finally:
@@ -645,7 +663,8 @@ class McGuiAppController():
         process = subprocess.Popen(mccode_config.configuration["MCCODE"] +' -v', 
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.STDOUT,
-                                   shell=True)
+                                   shell=True,
+                                   universal_newlines=True)
         # synchronous
         (stdoutdata, stderrdata) = process.communicate()
         
@@ -782,8 +801,9 @@ def main():
         
         sys.exit(mcguiApp.exec_())
     
-    except Exception, e: 
-        print(e.message)
+    except Exception as e: 
+        #print(e.message)
+        print(e)
         raise
     
 
