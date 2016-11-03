@@ -24,11 +24,9 @@ from mccodelib.fileutils import McComponentParser
 Status and message log and signalling.
 '''
 class McMessageEmitter(QtCore.QObject):
-    #statusUpdate = QtCore.pyqtSignal(QtCore.QString)
     statusUpdate = QtCore.pyqtSignal(str)
     __statusLog = []
     
-    #logMessageUpdate = QtCore.pyqtSignal(QtCore.QString, bool)
     logMessageUpdate = QtCore.pyqtSignal(str, bool)
     __msgLog = []
     
@@ -56,11 +54,8 @@ class McMessageEmitter(QtCore.QObject):
 ''' Asynchronous process execution QThread
 '''        
 class McRunQThread(QtCore.QThread):
-    #thread_exception = QtCore.pyqtSignal(QtCore.QString)
     thread_exception = QtCore.pyqtSignal(str)
-    #error = QtCore.pyqtSignal(QtCore.QString)
     error = QtCore.pyqtSignal(str)
-    #message = QtCore.pyqtSignal(QtCore.QString)
     message = QtCore.pyqtSignal(str)
     cmd = ''
     cwd = ''
@@ -109,10 +104,8 @@ class McGuiState(QtCore.QObject):
     __emitter = None
     
     # <instrument>, <work dir>
-    #instrumentUpdated = QtCore.pyqtSignal(QtCore.QStringList, QtCore.QString)
     instrumentUpdated = QtCore.pyqtSignal(list, str)
     # [<canRun>, <canPlot>] each can be str 'True' or 'False'
-    #simStateUpdated = QtCore.pyqtSignal(QtCore.QStringList)
     simStateUpdated = QtCore.pyqtSignal(list)
     
     __cFile = ""
@@ -199,7 +192,6 @@ class McGuiState(QtCore.QObject):
     def canPlot(self):
         return ((self.__instrFile != "") and (not self.isSimRunning()))
     
-    #__thread_exc_signal = QtCore.pyqtSignal(QtCore.QString)
     __thread_exc_signal = QtCore.pyqtSignal(str)
     def compile(self, mpi=False):
         # using Qt in-built cross-thread signaling
@@ -243,7 +235,7 @@ class McGuiState(QtCore.QObject):
                 stderrdata = process.stderr.readline().rstrip('\n')
                 self.__emitter.message(stderrdata, err_msg=True)
                 time.sleep(0.05)
-            ## flush until EOF
+            # flush until EOF
             for stdoutdata in process.stdout:
                 self.__emitter.message(stdoutdata.rstrip('\n'))
             for stderrdata in process.stderr:
@@ -526,16 +518,13 @@ class McGuiAppController():
             files_instr_and_site.append([f, get_instr_site(f)])
         
         # order instrument files by site:
-        #sites = {s for s in map(lambda f: f[1], files_instr_and_site)}
         sites = {s for s in list(map(lambda f: f[1], files_instr_and_site))}
         for s in sites:
             # extract instruments file paths of this site
-            #instr_path_lst = map(lambda f: f[0], filter(lambda f: f[1] in [s], files_instr_and_site))
             instr_path_lst = list(map(lambda f: f[0], filter(lambda f: f[1] in [s], files_instr_and_site)))
             # sort instrument of this site by file name
             instr_path_lst.sort(key=lambda instrpath: os.path.splitext(os.path.basename(instrpath))[0])
             # extract file names
-            #instr_name_lst = map(lambda instrpath: os.path.splitext(os.path.basename(instrpath))[0], instr_path_lst)
             instr_name_lst = list(map(lambda instrpath: os.path.splitext(os.path.basename(instrpath))[0], instr_path_lst))
             arg = []
             arg.append(s)
@@ -802,7 +791,6 @@ def main():
         sys.exit(mcguiApp.exec_())
     
     except Exception as e: 
-        #print(e.message)
         print(e)
         raise
     
