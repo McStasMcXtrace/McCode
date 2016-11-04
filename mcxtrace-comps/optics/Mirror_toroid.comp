@@ -102,8 +102,8 @@ TRACE
     do {
         /*TODO check the permutation of coordinates and the actual position of the cylinder.*/ 
         status= cylinder_intersect(&l0,&l1,x,z,y+radius,kx,kz,ky, radius, zdepth); 
-        if (!status) break;
-        if(status & (02|04)) break;
+        if (!status) break; /* no interaction with the cylinder*/
+        if(status & (02|04)) break; /*we exit the top/bottom of the cylinder*/
         /*if the first intersection is behind the particle - this means the ray is on the wrong side of the mirror*/
         if(l0<0) break;
         do {
