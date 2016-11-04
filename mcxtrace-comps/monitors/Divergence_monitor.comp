@@ -40,7 +40,7 @@
 * ny:       Vector definition of "forward" direction wrt. divergence, to be used e.g. when the monitor is rotated into the horizontal plane.(1)
 * nz:       (1)
 * maxdiv_v: Maximal vertical divergence detected (degrees/rad)
-* maxdiv_h: Maximal vertical divergence detected (degrees/rad)
+* maxdiv_h: Maximal horizontal divergence detected (degrees/rad)
 * filename: Name of file in which to store the detector image (text)
 * restore_xray: If set, the monitor does not influence the xray state (1)
 * rad:   If set - divergence will be measured in radians. (1)
