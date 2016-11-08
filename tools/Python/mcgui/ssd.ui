@@ -150,7 +150,7 @@
         <item row="1" column="1">
          <widget class="QLabel" name="lblNeutronCount">
           <property name="text">
-           <string>Neutron count:</string>
+           <string>Particle count:</string>
           </property>
          </widget>
         </item>

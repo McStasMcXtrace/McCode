@@ -523,7 +523,7 @@ class Ui_dlgStartSim(object):
         self.edtNeutronCnt.setText(QtGui.QApplication.translate("dlgStartSim", "1000000", None, QtGui.QApplication.UnicodeUTF8))
         self.lblSimTrace.setText(QtGui.QApplication.translate("dlgStartSim", "Simulation/Trace: ", None, QtGui.QApplication.UnicodeUTF8))
         self.lblSweepSteps.setText(QtGui.QApplication.translate("dlgStartSim", "Sweep steps (optional):", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblNeutronCount.setText(QtGui.QApplication.translate("dlgStartSim", "Neutron count:", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblNeutronCount.setText(QtGui.QApplication.translate("dlgStartSim", "Particle count:", None, QtGui.QApplication.UnicodeUTF8))
         self.lblMpi.setText(QtGui.QApplication.translate("dlgStartSim", "MPI:", None, QtGui.QApplication.UnicodeUTF8))
         self.cbxClustering.setItemText(0, QtGui.QApplication.translate("dlgStartSim", "No clustering", None, QtGui.QApplication.UnicodeUTF8))
         self.cbxClustering.setItemText(1, QtGui.QApplication.translate("dlgStartSim", "MPI clustering", None, QtGui.QApplication.UnicodeUTF8))
