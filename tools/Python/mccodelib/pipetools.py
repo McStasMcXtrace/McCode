@@ -78,8 +78,10 @@ class PromptState(LineHandlerState):
             if not self.args['use_defaultpars']:
                 input = raw_input()
                 self.process.stdin.write(input + '\n')
+                self.process.stdin.flush()
             else:
                 self.process.stdin.write('\n')
+                self.process.stdin.flush()
     
     def setprocess(self, process):
         self.process = process
@@ -189,7 +191,7 @@ class TraceReader(Thread):
     def run(self):
         try:
             ''' create a process given command and read, print and write to it depending on state '''
-            process = Popen(self.cmd, shell=True,
+            process = Popen(self.cmd, shell=True, universal_newlines=True,
                             stdout=PIPE,
                             stderr=PIPE,
                             stdin=PIPE

@@ -6,8 +6,8 @@ import glob
 import re
 from os.path import isfile, isdir, join, dirname, basename, walk, splitext, walk
 
-from flowchart import *
-from mcplotgraph import *
+from .flowchart import *
+from .mcplotgraph import *
 
 ''' 
 Flowchart decision functions.

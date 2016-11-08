@@ -2,8 +2,8 @@
 Flowchart based particle parser.
 '''
 import re
-from instrgeom import RayBundle, ParticleStory, ParticleCompGroup, ParticleState
-from flowchart import FCNTerminal, FCNDecisionBool, FCNDecisionMulti, FCNProcess, FlowChartControl
+from .instrgeom import RayBundle, ParticleStory, ParticleCompGroup, ParticleState
+from .flowchart import FCNTerminal, FCNDecisionBool, FCNDecisionMulti, FCNProcess, FlowChartControl
 
 # terminal nodes implementation
 def t_begin(args):

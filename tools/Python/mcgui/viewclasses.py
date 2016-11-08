@@ -137,17 +137,17 @@ class McView(object):
         dlg = QtGui.QFileDialog()
         dlg.setDirectory(lookdir)
         dlg.setNameFilter(mccode_config.configuration["MCCODE"]+" instruments (*.instr)");
-        return dlg.getSaveFileNameAndFilter(parent=None, caption=QtCore.QString('Create Instrument file...'))[0]
+        return dlg.getSaveFileNameAndFilter(parent=None, caption='Create Instrument file...')[0]
 
 
     def showNewInstrFromTemplateDialog(self, instr):
         dlg = QtGui.QFileDialog()
-        return dlg.getSaveFileNameAndFilter(parent=None, caption=QtCore.QString('Create Instrument file from Template...'), directory=instr)[0]
+        return dlg.getSaveFileNameAndFilter(parent=None, caption='Create Instrument file from Template...', directory=instr)[0]
 
     def showSaveAsDialog(self, instr):
         dlg = QtGui.QFileDialog()
         dlg.setFileMode(QtGui.QFileDialog.AnyFile)
-        return dlg.getSaveFileNameAndFilter(parent=None, caption=QtCore.QString('Save Instrument As...'), directory=instr)[0]
+        return dlg.getSaveFileNameAndFilter(parent=None, caption='Save Instrument As...', directory=instr)[0]
 
     def showConfigDialog(self):
         dlg = McConfigDialog()
@@ -170,7 +170,7 @@ class McMainWindow(QtGui.QMainWindow):
         super(McMainWindow, self).__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.dynamicMenuClicked = QtCore.pyqtSignal(QtCore.QString)
+        self.ui.dynamicMenuClicked = QtCore.pyqtSignal(str)
 
         # set main window title depending on flavour
         prefix = 'mx'
@@ -215,7 +215,7 @@ class McMainWindow(QtGui.QMainWindow):
 class McCodeEditorWindow(QtGui.QMainWindow):
     volatileDataExists = False
     volatileDataTransition = QtCore.pyqtSignal(bool)
-    saveRequest = QtCore.pyqtSignal(QtCore.QString)
+    saveRequest = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None):
         super(McCodeEditorWindow, self).__init__(parent)
@@ -659,15 +659,15 @@ class McStartSimDialog(QtGui.QDialog):
         p_index = 0
         for p in params:
             # get param name, value
-            name = QtCore.QString(p[0])
-            value = QtCore.QString(p[1])
+            name = p[0]
+            value = p[1]
 
             # reuse old param values, if matching position in grid (p_index) and param name
             if len(self.__oldParams) > p_index:
                 old_name = self.__oldParams[p_index][0]
                 old_value = self.__oldParams[p_index][1]
                 if str(old_name) == str(name):
-                    value = QtCore.QString(old_value)
+                    value = old_value
 
             i = i + 1
             x = i % 6
