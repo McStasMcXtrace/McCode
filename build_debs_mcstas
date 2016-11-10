@@ -17,6 +17,7 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" linux64 "" -- deb
+./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" linux64 "" -- deb
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" linux64 "" -- deb
@@ -26,19 +27,3 @@ export MCINSTALL_PREFIX=/usr/share/
 ./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" linux64 "" -- deb
 ./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" linux64 "" -- deb
 
-# 32-bit
-./mkdist mcstas $1 "" "" linux32 "" -- deb
-./mkdist mcstas-comps $1 "" "" linux32 "" -- deb
-./mkdist mcstas-tools-perl $1 tools/Legacy-Perl/ "" linux32 "" -- deb
-./mkdist mcstas-tools-matlab-mcplot $1 tools/matlab/mcplot/ "" linux32 "" -- deb
-./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" linux32 "" -- deb
-./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" linux32 "" -- deb
-./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" linux32 "" -- deb
-./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" linux32 "" -- deb
-./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" linux32 "" -- deb
-./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" linux32 "" -- deb
-./mkdist mcstas-tools-python-mcdisplay $1 tools/Python/mcdisplay/x3d/ "" linux32 "" -- deb
-./mkdist mcstas-tools-python-mcdisplay-r $1 tools/Python/mcdisplay/R/ "" linux32 "" -- deb
-./mkdist mcstas-tools-python-mcdisplay-matplotlib $1 tools/Python/mcdisplay/matplotlib/ "" linux32 "" -- deb
-./mkdist mcstas-tools-python-mcdisplay-vtk $1 tools/Python/mcdisplay/VTK/ "" linux32 "" -- deb
-./mkdist mcstas-manuals $1 docpkg/manuals/mcstas/ "" linux32 "" -- deb
