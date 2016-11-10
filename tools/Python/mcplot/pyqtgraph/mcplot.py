@@ -8,14 +8,13 @@ import os
 import sys
 
 import PyQt4
-
 import pyqtgraph as pg
-import numpy as np
 from pyqtgraph.Qt import QtGui, QtCore
+
+from plotfuncs import plot_Data1D, plot_Data2D
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-#from mccodelib import mccode_config
 from mccodelib.mcplotloader import McPlotDataLoader, test_decfuncs
 from mccodelib.mcplotgraph import PlotGraphPrint, PNMultiple, Data1D, Data2D
 
@@ -130,17 +129,9 @@ def add_plot(window, data):
     plt = window.addPlot()
     plt.setMenuEnabled(False)
     if type(data) is Data1D:
-        x = np.array(data.xvals)
-        y = np.array(data.yvals)
-        plt.setWindowTitle(data.title)
-        #height = np.array(data1.y_err_vals)
-        #err = pg.ErrorBarItem(x=x, y=y, height=height, beam=0.02)
-        #p1.addItem(err)
-        plt.plot(x, y)
+        plot_Data1D(data, plt)
     else:
-        # TODO: implement 2d plots
-        print("Data2D plots have not been implemented.")
-        pass
+        plot_Data2D(data, plt)
     return plt
 
 def main(args):
