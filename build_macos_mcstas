@@ -20,6 +20,7 @@ export MCINSTALL_PREFIX=/Applications/McStas-$1.app/Contents/Resources/
 ./mkdist mcstas-tools-python-mcplot-chaco $1 tools/Python/mcplot/chaco/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-tools-python-mcplot-matplotlib $1 tools/Python/mcplot/matplotlib/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-tools-python-mcplot-gnuplot $1 tools/Python/mcplot/gnuplot/ "" mac_el_capitan "" -- OSXapp
+./mkdist mcstas-tools-python-mcplot-pyqtgraph $1 tools/Python/mcplot/pyqtgraph/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-tools-python-mcrun $1 tools/Python/mcrun/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-tools-python-mcgui $1 tools/Python/mcgui/ "" mac_el_capitan "" -- OSXapp
 ./mkdist mcstas-tools-python-mccodelib $1 tools/Python/mccodelib/ "" mac_el_capitan "" -- OSXapp
