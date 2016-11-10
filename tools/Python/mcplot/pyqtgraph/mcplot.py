@@ -6,6 +6,7 @@ import argparse
 import logging
 import os
 import sys
+import math
 
 import PyQt4
 import pyqtgraph as pg
@@ -53,8 +54,12 @@ def plot_node(node, window):
     prim_lst = node.primaries
     sec_lst = node.secondaries
     
-    # add plot(s)
-    plt_lst = [add_plot(window, data) for data in data_lst]
+    # add plot(s) NOTE: these four lines might be simplified to one by use of an iterator in place of the fct. call
+    n = len(data_lst)
+    plt_lst = []
+    for i in range(n):
+        plt_lst.append(add_plot(window, data_lst[i], i, n))
+    # get viewbox's
     viewbox_lst = [get_viewbox(plt) for plt in plt_lst]
     
     # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
@@ -123,7 +128,11 @@ def get_viewbox(plt):
     ''' returns the viewbox of a plot object '''
     return plt.getViewBox()
 
-def add_plot(window, data):
+def get_golden_rowlen(n):
+    ''' find rowlength by golden ratio '''
+    return int(math.sqrt(n*1.61803398875))
+
+def add_plot(window, data, i, n):
     ''' constructs a plot from data and adds this to window '''
     plt = window.addPlot()
     plt.setMenuEnabled(False)
@@ -131,6 +140,10 @@ def add_plot(window, data):
         plot_Data1D(data, plt)
     else:
         plot_Data2D(data, plt)
+    
+    if (i+1) % get_golden_rowlen(n) == 0:
+        window.nextRow()
+    
     return plt
 
 def main(args):
@@ -157,7 +170,7 @@ def main(args):
         plotter.runplot()
         
     except Exception as e:
-        print 'mcplot error: %s' % e.message
+        print('mcplot error: %s' % e.__str__())
         raise e
 
 
