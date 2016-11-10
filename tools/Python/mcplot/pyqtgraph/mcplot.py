@@ -42,8 +42,7 @@ class McPyqtgraphPlotter():
 
 def plot_node(node, window):
     '''
-    Event driven recursive plot function.
-    Click events are registerede with each recursion.
+    Event driven recursive plot function. Click events are registered with each recursion.
     '''
     # init
     clear_window_and_handlers(window)
@@ -68,7 +67,7 @@ def plot_node(node, window):
     # if parent exists, all right-clicks are registered to it
     if parent:
         for i in range(len(data_lst)):
-            vn_dict_rclick[viewbox_lst[0]] = parent
+            vn_dict_rclick[viewbox_lst[i]] = parent
     # for each secondary node, a ctrl-click is registered to it
     for i in range(len(sec_lst)):
         vn_dict_ctrlclick[viewbox_lst[i]] = sec_lst[i]
@@ -87,7 +86,7 @@ def get_modifiers(modname):
         return 67108864
     if modname == "shft":
         return 33554432
-    if modname == "ctrl":
+    if modname == "ctrl-shft":
         return 100663296
 
 def clear_window_and_handlers(window):
@@ -159,6 +158,7 @@ def main(args):
         
     except Exception as e:
         print 'mcplot error: %s' % e.message
+        raise e
 
 
 if __name__ == '__main__':
