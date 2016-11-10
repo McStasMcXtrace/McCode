@@ -1,4 +1,4 @@
-make_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.6)
 
 # This will install McStas components
 project(python-tools-mcgui C)
