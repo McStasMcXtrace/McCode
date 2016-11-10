@@ -236,20 +236,26 @@ def _parse_2D_monitor(text):
             if '# Data ' in l:
                 dat = True
                 continue
-            
-            if dat:
-                vals = l.split(' ')
-                data.zvals.append(vals)
         
             if '# Events ' in l:
                 dat = False
                 events = True
                 continue
+        
+            if '# Errors ' in l:
+                # NOTE: error values are not loaded
+                dat = False
+                events = False
+                continue
+            
+            if dat:
+                vals = [float(item) for item in l.strip().split(' ')]
+                data.zvals.append(vals)
             
             if events:
-                vals = l.split(' ')
+                vals = [float(item) for item in l.split(' ')]
                 data.counts.append(vals)
-        
+    
     except Exception as e:
         print('Data2D load error.')
         raise e

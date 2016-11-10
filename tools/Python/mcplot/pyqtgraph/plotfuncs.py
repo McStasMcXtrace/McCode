@@ -2,6 +2,7 @@
 Atomic plot functions for mcplot-pyqtgraph
 '''
 import numpy as np
+import pyqtgraph as pg
 
 def plot_Data1D(data, plt):
     ''' populate plt with data, 1D version '''
@@ -15,4 +16,7 @@ def plot_Data1D(data, plt):
 
 def plot_Data2D(data, plt):
     ''' populate plt with data, 2D version '''
-    print("Data2D plots have not been implemented.")    
+    img = pg.ImageItem()
+    plt.addItem(img)
+    img.setImage(np.array(data.zvals))
+
