@@ -29,7 +29,7 @@ canrun() {
 }
 
 if ( canrun ); then
-    python ${LIB}/${TOOL}.py $*
+    python3 ${LIB}/${TOOL}.py $*
 else
     echo ":: Failed to run Python ${TOOL}, trying old Perl version."
     echo ":: If this fails too, consider reinstalling ${TOOL}."

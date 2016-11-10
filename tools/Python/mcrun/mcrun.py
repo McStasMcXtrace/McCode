@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from os import mkdir
 from os.path import isfile, isdir, abspath, dirname, basename, join
 from optparse import OptionParser, OptionGroup, OptionValueError
