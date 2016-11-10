@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+make_minimum_required(VERSION 2.6)
 
 # This will install McStas components
 project(python-tools-mcdisplay-webgl C)
@@ -59,11 +59,11 @@ set(CPACK_NSIS_PACKAGE_NAME "${NSIS_NAME}")
 set(CPACK_NSIS_DISPLAY_NAME "${NSIS_NAME}")
 
 # Debian
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "${FLAVOR}-${MCCODE_VERSION}, python3, python3-ply")
 
 # RPM
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "${FLAVOR}-${MCCODE_VERSION}, python"
+  "${FLAVOR}-${MCCODE_VERSION}, python, python-ply"
   )
 
 
