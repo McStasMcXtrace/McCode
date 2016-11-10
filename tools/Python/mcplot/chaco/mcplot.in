@@ -6,7 +6,7 @@ LINK=`readlink $0`
 
 # Am I a symlink?
 if [ "x$LINK" != "x" ]; then
-    LIB=`dirname $ME`
+    LIB=`dirname $LINK`
 else
     LIB=`dirname $0`
 fi
