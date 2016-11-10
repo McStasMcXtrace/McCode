@@ -24,7 +24,7 @@ canrun() {
     for name in ${modules}; do
         cmd="${cmd}import ${name}; "
     done
-    python -c "${cmd}"
+    python3 -c "${cmd}"
 }
 
 if ( canrun ); then
