@@ -31,7 +31,7 @@ else
 fi
 # First, install PyQt via conda
 echo ---
-$SUDO conda install pyqt
+$SUDO conda install pyqt=4.11.4
 echo ---
 # Ensure we will be building using the system-given gcc and g++
 # This is done via a crazy link-hack to allow the combination of
