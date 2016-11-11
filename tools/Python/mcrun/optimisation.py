@@ -30,9 +30,10 @@ def build_header(options, params, intervals, detectors):
     date = datetime.strftime(datetime.now(), '%a %b %d %T %Y')
 
     xvars = ', '.join(params)
-    xmin = min(intervals[params[0]])
-    xmax = max(intervals[params[0]])
-    N = len(intervals[params[0]])
+    lst = intervals[list(params)[0]]
+    xmin = min(lst)
+    xmax = max(lst)
+    N = len(lst)
 
     # TODO: figure out correct scan type
     title = 'Scan of %s' % xvars
@@ -102,9 +103,10 @@ end data
     date = datetime.strftime(datetime.now(), '%a %b %d %T %Y')
 
     xvars = ', '.join(params)
-    xmin = min(intervals[params[0]])
-    xmax = max(intervals[params[0]])
-    N = len(intervals[params[0]])
+    lst = intervals[list(params)[0]]
+    xmin = min(lst)
+    xmax = max(lst)
+    N = len(lst)
 
     # TODO: figure out correct scan type
     title = 'Scan of %s' % xvars
@@ -156,13 +158,13 @@ class LinearInterval:
 
     @staticmethod
     def from_range(N, intervals):
-        for step in xrange(N):
+        for step in range(N):
             yield dict((key, point_at(N, key, intervals[key], step))
                        for key in intervals)
 
     @staticmethod
     def from_list(N, intervals):
-        for step in xrange(N):
+        for step in range(N):
             yield dict((key, intervals[key][step]) for key in intervals)
 
 
@@ -178,7 +180,7 @@ class MultiInterval:
         # recursively generate the multi dict
         intervals = intervals.copy()
         key, minmax = intervals.popitem()
-        for step in xrange(N):
+        for step in range(N):
             point = point_at(N, key, minmax, step)
             for dic in MultiInterval.from_range(N, intervals):
                 dic[key] = point
