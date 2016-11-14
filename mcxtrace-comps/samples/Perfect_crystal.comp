@@ -222,7 +222,6 @@ TRACE
   /* make unit vector in the direction of k :*/
   kxu = kx; kyu = ky; kzu = kz;
   NORM(kxu,kyu,kzu);
-/*  printf("incoming kx,ky,kz: %f %f %f: \n", kx,ky,kz);*/
   
   /*intersection calculation*/
   tin = -y/kyu;
@@ -244,8 +243,7 @@ TRACE
         f0h = Table_Value(prms.f0_t,1/(2*d),prms.Z);
         fp  = Table_Value(prms.m_t,E,1)-prms.Z;
         fpp = Table_Value(prms.m_t,E,2);
-//        printf("%g %g %g %g\n",f00,f0h,fp,fpp);    
-	//printf("Thetain for this ray is: %g: \n",Thetain);
+        
         if (ky<0 && kz>0){
           /*4th quadrant - forward hit from above. No change.*/ 
           DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha, h, k, l, M, E, Thetain,pol);
@@ -260,10 +258,8 @@ TRACE
           DarwinReflectivity(&R, &Thetah, &Theta0, &DeltaTheta0, f00, f0h, fp, fpp, V, alpha, h, k, l, M, E, Thetain,pol);
         }
 	Thetaout = Thetah - alpha; 	/* (rad) the angle between the crystal surface and the reflected ray */
-	//printf("Thetaout for this ray is: %g: ref=%g\n", Thetaout, R);
         
         /*reflect ray in normal to crystal planes*/
-        //printf("kin: %g %g %g\n",kx,ky,kz);
         do {
           double ax,ay,az,vnx,vny,vnz;
           ax=0;ay=-sin(alpha);az=cos(alpha);
@@ -275,14 +271,12 @@ TRACE
           ky=ky-2*vny;
           kz=kz-2*vnz;
         }while(0);
-	/* The direction of the reflected ray: */
-       // printf("kout: %g %g %g\n",kx,ky,kz);
 
         /* apply Darwin reflectivity if not is supplied from outside*/
         if (!R0){
           p*=R;
         }else{
-         p*=R0;
+          p*=R0;
         } 
         /*catch dead rays*/
         if (p==0) ABSORB;
