@@ -43,11 +43,11 @@ on the anode surface, and the coodrinate system is oriented such that the $\bold
 the exit aperture.} 
 \end{figure}
 
-For each photon to be generated, a Monte Carlo choice is made to either
-generate either a Bremstrahlung photon or one from one of the x-ray emission
-lines of the material. $\mathit{frac}$ of the photons are generated from characteristic
-emission, and $1-\mathit{frac}$ from Bremsstrahlung. In most cases Bremstrahlung is
-unwanted background, which is why the default is $0.9$. Note that this
+For each photon ray to be generated, a Monte Carlo choice is made to either
+generate either a Bremsstrahlung photon or one from one of the x-ray emission
+lines of the material. $1-\mathit{frac}$ of the rays are generated from characteristic
+emission, and $\mathit{frac}$ from Bremsstrahlung. In most cases Bremsstrahlung is
+unwanted background, which is why the default is $0.1$. Note that this
 \emph{only} governs how much of the available statistics is diverted into
 simulating Bremsstrahlung. It does not have an impact on what intensity is detected
 in subsequent monitors --- only on the errorbars of the detected numbers.
