@@ -135,6 +135,8 @@
 * Optional parameters:
 * d_phi:    Angle corresponding to the vertical angular range
 *             to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
+* d_theta:  Longitudinal angle to focus to, i.e. lateral opening angle.
+*             This means, the maximum scattering angle, 2*theta, is equal to d_theta/2.0  
 * pack:     Packing factor [1]
 * Delta_d:  Global relative Delta_d/d spreading when the 'w' column
 *             is not available. Use 0 if ideal. [Angs]
@@ -184,10 +186,10 @@
 *****************************************************************************/
 DEFINE COMPONENT PowderN
 DEFINITION PARAMETERS (format=Undefined)
-     SETTING PARAMETERS (string reflections=0, string material=0, string geometry=0,
+SETTING PARAMETERS (string reflections=0, string material=0, string geometry=0,
                     radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
                     pack=1, Vc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
-                    DW=0, nb_atoms=1, d_phi=0, p_interact=0,
+                    DW=0, nb_atoms=1, d_phi=0, d_theta=360, p_interact=0,
                     concentric=0, density=0, weight=0, barns=1)
 OUTPUT PARAMETERS (line_info, Nq, my_s_k2, XsectionFactor,
   my_s_k2_sum, my_a_k, my_inc, my_q, my_w, columns,
@@ -694,9 +696,13 @@ TRACE
 
       /* Calculate total coherent scattering cross section at relevant wavevector*/
       my_s_k2_sum=0;
+      /*apply limit in 2 theta*/
+      double sinth=sin(DEG2RAD*d_theta*0.25);
+      int nq=0;
       for(line=0; line<Nq; line++) {
-          if (my_q[line] <= 2*k) {
+          if (my_q[line] <= 2*k*sinth) {
               my_s_k2_sum+=my_s_k2[line];
+              nq++;
           }
       }
       my_coh = my_s_k2_sum/(k*k);
@@ -745,7 +751,7 @@ TRACE
       if (type == 3) { /* Make coherent scattering event */
         if (line_info.count > 0) {
           /* choose line */
-          if (Nq > 1) line=floor(Nq*rand01());  /* Select between Nq powder lines */
+          if (nq > 1) line=floor(nq*rand01());  /* Select between Nq powder lines */
           else line = 0;
           if (my_w[line])
             arg = my_q[line]*(1+my_w[line]*randnorm())/(2.0*k);
