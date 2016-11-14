@@ -24184,7 +24184,7 @@ End Module CFML_GlobalDeps
                              txyz=(/tx,ty,tz/)
                              if(txyz(1) == 0 .and. txyz(2) == 0 .and. txyz(3) == 0) cycle p2
                              do l=1,nlat_t
-                                if(txyz(1) == lat_trans(1,l) .and. txyz(2) == lat_trans(2,l) .and. txyz(3) == lat_trans(3,l)) cycle p2
+                               if(txyz(1)==lat_trans(1,l) .and. txyz(2)==lat_trans(2,l) .and. txyz(3)==lat_trans(3,l)) cycle p2
                              end do
 
                       end select
@@ -24231,7 +24231,7 @@ End Module CFML_GlobalDeps
                              txyz=(/tx,ty,tz/)
                              if(txyz(1) == 0 .and. txyz(2) == 0 .and. txyz(3) == 0) cycle p2
                              do l=1,nlat_t
-                                if(txyz(1) == lat_trans(1,l) .and. txyz(2) == lat_trans(2,l) .and. txyz(3) == lat_trans(3,l)) cycle p2
+                               if(txyz(1)==lat_trans(1,l) .and. txyz(2)==lat_trans(2,l) .and. txyz(3)==lat_trans(3,l)) cycle p2
                              end do
 
                       end select
