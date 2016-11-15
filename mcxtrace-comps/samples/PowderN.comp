@@ -158,6 +158,7 @@
 * weight:   Atomic/molecular weight of material [g/mol]
 * density:  Density of material. rho=density/weight/1e24*N_A. [g/cm^3]
 * nb_atoms: Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell [1]
+* focus_flip: If nonzero, alters the sense of d_phi to correspond a horizontal opening angle [1]. 
 *
 * %L
 * “Validation of a realistic powder sample using data from DMC at PSI” Willendrup P, Filges U, Keller L, Farhi E, Lefmann K, Physica B-Cond Matt 385 (2006) 1032.
@@ -190,7 +191,7 @@ SETTING PARAMETERS (string reflections=0, string material=0, string geometry=0,
                     radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
                     pack=1, Vc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
                     DW=0, nb_atoms=1, d_phi=0, d_theta=360, p_interact=0,
-                    concentric=0, density=0, weight=0, barns=1)
+                    concentric=0, density=0, weight=0, barns=1, focus_flip=0)
 OUTPUT PARAMETERS (line_info, Nq, my_s_k2, XsectionFactor,
   my_s_k2_sum, my_a_k, my_inc, my_q, my_w, columns,
   radius_i, xwidth_i, yheight_i, zdepth_i, offdata)
@@ -781,13 +782,18 @@ TRACE
             /* Trick to get scattering for pos/neg theta's */
             alpha0= 2*rand01()*alpha;
             if (alpha0 > alpha) {
-              alpha0=PI+(alpha0-1.5*alpha);
+              alpha0=M_PI+(alpha0-1.5*alpha);
             } else {
               alpha0=alpha0-0.5*alpha;
             }
+            if(focus_flip){
+                alpha0+=M_PI_2;
+            }
           }
           else
-            alpha0 = PI*randpm1();
+            alpha0 = M_PI*randpm1();
+
+
 
           /* now find a nearly vertical rotation axis:
            * Either
@@ -807,6 +813,7 @@ TRACE
 
           /* tmp_k = rotate k_out by alpha0 around 'k' (Debye-Scherrer cone) */
           rotate(tmp_kx,tmp_ky,tmp_kz, kout_x,kout_y,kout_z, alpha0, kx, ky, kz);
+
           kx = tmp_kx;
           ky = tmp_ky;
           kz = tmp_kz;
