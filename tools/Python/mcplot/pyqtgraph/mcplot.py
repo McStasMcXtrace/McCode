@@ -134,15 +134,18 @@ def get_golden_rowlen(n):
 
 def add_plot(window, data, i, n):
     ''' constructs a plot from data and adds this to window '''
-    plt = window.addPlot()
+    rowlen = get_golden_rowlen(n)
+    
+    plt = window.addPlot(i / rowlen, i % rowlen)
     plt.setMenuEnabled(False)
     if type(data) is Data1D:
         plot_Data1D(data, plt)
     else:
         plot_Data2D(data, plt)
     
-    if (i+1) % get_golden_rowlen(n) == 0:
-        window.nextRow()
+    if (i+1) % rowlen == 0:
+        if i+1 < n:
+            window.nextRow()
     
     return plt
 
