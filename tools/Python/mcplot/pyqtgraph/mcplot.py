@@ -143,10 +143,6 @@ def add_plot(window, data, i, n):
     else:
         plot_Data2D(data, plt)
     
-    if (i+1) % rowlen == 0:
-        if i+1 < n:
-            window.nextRow()
-    
     return plt
 
 def main(args):
