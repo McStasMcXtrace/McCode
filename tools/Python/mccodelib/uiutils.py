@@ -102,9 +102,9 @@ def get_mccode_config_options(MCCODE):
     else:
         prefix = "mx"
     mcrun_lst =     [prefix+"run", prefix+"run-py"]
-    mcplot_lst =    [prefix+"plot", prefix+"plot --format=Gnuplot", prefix+"plot --format=Matlab",
+    mcplot_lst =    [prefix+"plot-pyqtgraph-py",prefix+"plot", prefix+"plot --format=Gnuplot", prefix+"plot --format=Matlab",
                      prefix+"plot-matlab", prefix+"plot-matplotlib-py", prefix+"plot-gnuplot-py", prefix+"plot-chaco-py"]
-    mcdisplay_lst = [prefix+"display", prefix+"display --format=Matlab", prefix+"display --format=VRML", 
+    mcdisplay_lst = [prefix+"display-webgl-py",prefix+"display", prefix+"display --format=Matlab", prefix+"display --format=VRML", 
                      prefix+"display --format=Mantid", prefix+"display-matplotlib-py", prefix+"display-py", 
                      prefix+"display-r-py", prefix+"display-vtk-py"]
     return mcrun_lst, mcplot_lst, mcdisplay_lst
