@@ -54,13 +54,11 @@ def plot_node(node, window):
     prim_lst = node.primaries
     sec_lst = node.secondaries
     
-    # add plot(s) NOTE: these four lines might be simplified to one by use of an iterator in place of the fct. call
+    # add plot instances and record viewbox results
     n = len(data_lst)
-    plt_lst = []
+    viewbox_lst = []
     for i in range(n):
-        plt_lst.append(add_plot(window, data_lst[i], i, n))
-    # get viewbox's
-    viewbox_lst = [get_viewbox(plt) for plt in plt_lst]
+        viewbox_lst.append(add_plot(window, data_lst[i], i, n))
     
     # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
     vn_dict_click = {}
@@ -136,14 +134,14 @@ def add_plot(window, data, i, n):
     ''' constructs a plot from data and adds this to window '''
     rowlen = get_golden_rowlen(n)
     
-    plt = window.addPlot(i / rowlen, i % rowlen)
-    plt.setMenuEnabled(False)
     if type(data) is Data1D:
-        plot_Data1D(data, plt)
+        item, view_box = plot_Data1D(data)
     else:
-        plot_Data2D(data, plt)
+        item, view_box = plot_Data2D(data)
+
+    window.addItem(item, i / rowlen, i % rowlen)
     
-    return plt
+    return view_box
 
 def main(args):
     ''' load data from mcplot backend and send it to the pyqtgraph frontend above '''

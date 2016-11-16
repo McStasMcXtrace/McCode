@@ -4,8 +4,11 @@ Atomic plot functions for mcplot-pyqtgraph
 import numpy as np
 import pyqtgraph as pg
 
-def plot_Data1D(data, plt):
-    ''' populate plt with data, 1D version '''
+def plot_Data1D(data):
+    ''' create a plotItem and populate it with data, Data1D '''
+    # plot item
+    plt = pg.PlotItem()
+    
     # data
     x = np.array(data.xvals).astype(np.float)
     y = np.array(data.yvals).astype(np.float)
@@ -23,9 +26,14 @@ def plot_Data1D(data, plt):
     
     # commit
     plt.plot(x, y)
+    plt.setMenuEnabled(False)
+    vb = plt.getViewBox()
+    # prevent garbage collection
+    #vb.plt = plt
+    return plt, vb
 
-def plot_Data2D(data, plt):
-    ''' populate plt with data, 2D version '''
+def plot_Data2D(data):
+    ''' creat a layout and populate a plotItem with data Data2D, adding a color bar '''
     # data
     img = pg.ImageItem()
     img.setImage(np.array(data.zvals))
@@ -37,12 +45,21 @@ def plot_Data2D(data, plt):
     
     color = np.array([[0, 0, 0, 255], [255, 128, 0, 255], [255, 255, 0, 255]], dtype=np.ubyte)
     
-    cm = pg.ColorMap(pos, color)
-    lut = cm.getLookupTable(pos_min, pos_max, 256)
-    img.setLookupTable(lut=lut)
+    colormap = pg.ColorMap(pos, color)
+    lut = colormap.getLookupTable(pos_min, pos_max, 256)
+    img.setLookupTable(lut)
     
-    # labels
+    # graphics layout with a plotitem and a gradienteditoritem
+    layout = pg.GraphicsLayout()
+
+    plt = layout.addPlot(0, 0)
     plt.setLabels(title=data.title, bottom=data.xlabel, left=data.ylabel)
+    plt.setMenuEnabled(False)
     
-    # commit
     plt.addItem(img)
+    
+    w2 = pg.GradientEditorItem(orientation='right', allowAdd=False)
+    layout.addItem(w2, 0, 1)
+
+    return layout, plt.getViewBox()
+
