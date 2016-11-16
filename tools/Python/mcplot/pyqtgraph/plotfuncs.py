@@ -58,8 +58,11 @@ def plot_Data2D(data):
     
     plt.addItem(img)
     
-    w2 = pg.GradientEditorItem(orientation='right', allowAdd=False)
-    layout.addItem(w2, 0, 1)
-
+    colorbar = pg.GradientEditorItem(orientation='right', allowAdd=False)
+    colorbar.showMenu = lambda ev: None
+    colorbar.removeTick(colorbar.getTick(0), finish=False)
+    colorbar.removeTick(colorbar.getTick(0), finish=False)
+    layout.addItem(colorbar, 0, 1)
+    
     return layout, plt.getViewBox()
 
