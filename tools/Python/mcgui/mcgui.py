@@ -398,7 +398,7 @@ class McGuiState(QtCore.QObject):
         
         # 
         if simtrace == 1:
-            runstr = runstr + '\&'
+            runstr = runstr + ' &'
 
         # Ensure assembled runstr is a string, not a QString 
         runstr = str(runstr)
