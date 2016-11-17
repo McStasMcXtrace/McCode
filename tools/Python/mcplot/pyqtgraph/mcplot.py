@@ -21,7 +21,7 @@ from mccodelib.mcplotgraph import PlotGraphPrint, PNMultiple, Data1D, Data2D
 
 class McPyqtgraphPlotter():
     '''
-    PyQtGraph-based plot wrapper class.
+    PyQtGraph-based plotter class.
     '''
     def __init__(self, plotgraph):
         self.graph = plotgraph
@@ -35,13 +35,26 @@ class McPyqtgraphPlotter():
         window = pg.GraphicsWindow()
         window.resize(1000,600)
         
+        # create the logflipper
+        flipper = LogFlipper()
+        
         # initiate event driven plot recursion
-        plot_node(node, window)
+        plot_node(node, window, flipper)
         
         # start
         QtGui.QApplication.instance().exec_()
 
-def plot_node(node, window):
+class LogFlipper():
+    ''' boolean log state keeper object '''
+    def __init__(self, log=False):
+        self.log = log
+    def flip(self):
+        self.log = not self.log
+        return self.log
+    def state(self):
+        return self.log
+
+def plot_node(node, window, logflipper):
     '''
     Event driven recursive plot function. Click events are registered with each recursion.
     '''
@@ -58,7 +71,7 @@ def plot_node(node, window):
     n = len(data_lst)
     viewbox_lst = []
     for i in range(n):
-        viewbox_lst.append(add_plot(window, data_lst[i], i, n))
+        viewbox_lst.append(add_plot(window, data_lst[i], i, n, logflipper.state()))
     
     # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
     vn_dict_click = {}
@@ -75,11 +88,34 @@ def plot_node(node, window):
     for i in range(len(sec_lst)):
         vn_dict_ctrlclick[viewbox_lst[i]] = sec_lst[i]
     
-    # set handlers on the window
-    plot_node_cb = lambda node: plot_node(node, window=window)
+    # set mouse click handlers on the window
+    plot_node_cb = lambda node: plot_node(node, window=window, logflipper=logflipper)
     set_handler(window.scene(), vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
     set_handler(window.scene(), vn_dict_rclick, plot_node_cb, "rclick", get_modifiers("none"))
     set_handler(window.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))
+    
+    # set keypress handlers 
+    replot_cb = lambda log: plot_node(node, window, logflipper=logflipper)
+    set_keyhandler(window, replot_cb, 'l', get_modifiers("none"), flip_log=logflipper.flip)
+
+def set_keyhandler(window, replot_cb, key, modifier, flip_log):
+    ''' sets a clickhadler according to input '''
+    
+    def keyHandler(ev, cb, flip_log):
+        ''' global keypress handler, cb is a function of log '''
+        if ev.key() == 81: # q
+            quit()
+        elif ev.key() == 76: # l
+            log = flip_log()
+            cb(log)
+        elif ev.key() == 80: # p
+            print("dump pdf")
+        elif ev.key() == 16777268: # F5
+            cb(log=False)
+        elif ev.key() == 16777264: # F1
+            print("print help")
+    
+    window.keyPressEvent = lambda ev: keyHandler(ev=ev, cb=replot_cb, flip_log=flip_log)
 
 def get_modifiers(modname):
     ''' get int codes for keyboardmodifiers '''
@@ -103,24 +139,25 @@ def clear_window_and_handlers(window):
 
 def set_handler(scene, vn_dict, node_cb, click, modifier):
     ''' sets a clickhadler according to input '''
+    
+    def click_handler(event, vn_dict, node_cb, click, mod):
+        ''' generic conditional-branch-tree, catch-all, mouse click event handler  '''
+        # prevent action for modifiers mismatch
+        if int(event.modifiers()) != mod:
+            return
+        # prevent action for mouse button mismatch
+        if click == "rclick" and event.button() != 2:
+            return
+        if click == "click" and event.button() != 1:
+            return
+        
+        node = vn_dict.get(event.currentItem, None)
+        if node:
+            node_cb(node)
+    
     if len(list(vn_dict)) == 0:
         return
     scene.sigMouseClicked.connect(lambda event: click_handler(event, vn_dict=vn_dict, node_cb=node_cb, click=click, mod=modifier))
-
-def click_handler(event, vn_dict, node_cb, click, mod):
-    ''' generic conditional-branch-tree, catch-all, mouse click event handler  '''
-    # prevent action for modifiers mismatch
-    if int(event.modifiers()) != mod:
-        return
-    # prevent action for mouse button mismatch
-    if click == "rclick" and event.button() != 2:
-        return
-    if click == "click" and event.button() != 1:
-        return
-    
-    node = vn_dict.get(event.currentItem, None)
-    if node:
-        node_cb(node)
 
 def get_viewbox(plt):
     ''' returns the viewbox of a plot object '''
@@ -130,14 +167,14 @@ def get_golden_rowlen(n):
     ''' find rowlength by golden ratio '''
     return int(math.sqrt(n*1.61803398875))
 
-def add_plot(window, data, i, n):
+def add_plot(window, data, i, n, log=False):
     ''' constructs a plot from data and adds this to window '''
     rowlen = get_golden_rowlen(n)
     
     if type(data) is Data1D:
-        item, view_box = plot_Data1D(data)
+        item, view_box = plot_Data1D(data, log=log)
     else:
-        item, view_box = plot_Data2D(data)
+        item, view_box = plot_Data2D(data, log=log)
 
     window.addItem(item, i / rowlen, i % rowlen)
     

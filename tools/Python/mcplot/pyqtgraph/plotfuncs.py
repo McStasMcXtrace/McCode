@@ -4,14 +4,17 @@ Atomic plot functions for mcplot-pyqtgraph
 import numpy as np
 import pyqtgraph as pg
 
-def plot_Data1D(data):
+def plot_Data1D(data, log=False):
     ''' create a plotItem and populate it with data, Data1D '''
-    # plot item
     plt = pg.PlotItem()
     
     # data
-    x = np.array(data.xvals).astype(np.float)
-    y = np.array(data.yvals).astype(np.float)
+    if log:
+        x = np.log(np.array(data.xvals).astype(np.float))
+        y = np.log(np.array(data.yvals).astype(np.float))
+    else:
+        x = np.array(data.xvals).astype(np.float)
+        y = np.array(data.yvals).astype(np.float)
     
     # labels
     plt.setLabels(title=data.title, bottom=data.xlabel, left=data.ylabel)
@@ -20,21 +23,30 @@ def plot_Data1D(data):
     beam = 0
     if len(x) > 1:
         beam = (x[1]-x[0])*0.8
-    height = np.array(data.y_err_vals).astype(np.float)
+    if log:
+        height = np.log(np.array(data.y_err_vals).astype(np.float))
+    else:
+        height = np.array(data.y_err_vals).astype(np.float)
     err = pg.ErrorBarItem(x=x, y=y, height=height, beam=beam)
+    
     plt.addItem(err)
     
     # commit
     plt.plot(x, y)
     plt.setMenuEnabled(False)
     vb = plt.getViewBox()
+    
     return plt, vb
 
-def plot_Data2D(data):
+def plot_Data2D(data, log=False):
     ''' create a layout and populate a plotItem with data Data2D, adding a color bar '''
+    
     # data
     img = pg.ImageItem()
-    img.setImage(np.array(data.zvals))
+    img.setImage(np.array(data.zvals))    
+    
+    if log:
+        print("2D log scale not yet implemented")
     
     # color map (by lookup table)
     pos_min = np.min(data.zvals)
@@ -58,8 +70,8 @@ def plot_Data2D(data):
     plt.setLabels(bottom=data.xlabel, left=data.ylabel)
     plt.setMenuEnabled(False)
     plt.addItem(img)
-    plt.axes['bottom']['item'].setRange(100,30)
-    plt.axes['left']['item'].show()
+    #ticks = plt.axes['bottom']['item'].tickValues(0, 128, 16)
+    #plt.axes['bottom']['item'].setTicks(ticks)
     
     # color bar
     cbimg = pg.ImageItem()
@@ -78,6 +90,6 @@ def plot_Data2D(data):
     colorbar.axes['right']['item'].show()
     colorbar.axes['right']['item'].setScale(pos_max-pos_min)
     
-    # return layout so it doesnt get garbage collected, but the proper plot viewBox pointer for click events
+    # return layout so it doesn't get garbage collected, but the proper plot viewBox pointer for click events
     return layout, plt.getViewBox()
 
