@@ -28,12 +28,10 @@ def plot_Data1D(data):
     plt.plot(x, y)
     plt.setMenuEnabled(False)
     vb = plt.getViewBox()
-    # prevent garbage collection
-    #vb.plt = plt
     return plt, vb
 
 def plot_Data2D(data):
-    ''' creat a layout and populate a plotItem with data Data2D, adding a color bar '''
+    ''' create a layout and populate a plotItem with data Data2D, adding a color bar '''
     # data
     img = pg.ImageItem()
     img.setImage(np.array(data.zvals))
@@ -51,18 +49,35 @@ def plot_Data2D(data):
     
     # graphics layout with a plotitem and a gradienteditoritem
     layout = pg.GraphicsLayout()
-
-    plt = layout.addPlot(0, 0)
-    plt.setLabels(title=data.title, bottom=data.xlabel, left=data.ylabel)
+    
+    # title label
+    layout.addLabel(data.title, 0, 0, colspan=2)
+    
+    # plot area
+    plt = layout.addPlot(1, 0)
+    plt.setLabels(bottom=data.xlabel, left=data.ylabel)
     plt.setMenuEnabled(False)
-    
     plt.addItem(img)
+    plt.axes['bottom']['item'].setRange(100,30)
+    plt.axes['left']['item'].show()
     
-    colorbar = pg.GradientEditorItem(orientation='right', allowAdd=False)
-    colorbar.showMenu = lambda ev: None
-    colorbar.removeTick(colorbar.getTick(0), finish=False)
-    colorbar.removeTick(colorbar.getTick(0), finish=False)
-    layout.addItem(colorbar, 0, 1)
+    # color bar
+    cbimg = pg.ImageItem()
+    numsteps = 100
+    arr_1 = (pos_max - pos_min) / pos_max * range(numsteps)
+    arr_2 = np.zeros(numsteps)
+    cbimg.setImage(np.array([arr_1, arr_2]))
+
+    cbimg.setLookupTable(lut)
+    colorbar = layout.addPlot(1, 1)
+    colorbar.addItem(cbimg)
+    colorbar.setFixedWidth(80)
     
+    colorbar.axes['bottom']['item'].hide()
+    colorbar.axes['left']['item'].hide()
+    colorbar.axes['right']['item'].show()
+    colorbar.axes['right']['item'].setScale(pos_max-pos_min)
+    
+    # return layout so it doesnt get garbage collected, but the proper plot viewBox pointer for click events
     return layout, plt.getViewBox()
 
