@@ -9,13 +9,28 @@ def plot_Data1D(data, log=False):
     plt = pg.PlotItem()
     
     # data
+    x = np.array(data.xvals).astype(np.float)
+    y = np.array(data.yvals).astype(np.float)
+    e = np.array(data.y_err_vals).astype(np.float)
+
     if log:
-        x = np.log(np.array(data.xvals).astype(np.float))
-        y = np.log(np.array(data.yvals).astype(np.float))
+        nonzeros=[]
+        zeros=[]
+        for i in range(len(y)):
+            if y[i]>0:
+                nonzeros.append(i)
+            else:
+                zeros.append(i)
+        
+        y[zeros] = np.min(y[nonzeros])/10
+               
+        plt.setLogMode(y=True)
+
     else:
-        x = np.array(data.xvals).astype(np.float)
-        y = np.array(data.yvals).astype(np.float)
-    
+        plt.setLogMode(y=False)
+
+    plt.setXRange(np.min(data.xvals), np.max(data.xvals), padding=0)
+        
     # labels
     plt.setLabels(title=data.title, bottom=data.xlabel, left=data.ylabel)
     
@@ -23,13 +38,13 @@ def plot_Data1D(data, log=False):
     beam = 0
     if len(x) > 1:
         beam = (x[1]-x[0])*0.8
-    if log:
-        height = np.log(np.array(data.y_err_vals).astype(np.float))
-    else:
-        height = np.array(data.y_err_vals).astype(np.float)
-    err = pg.ErrorBarItem(x=x, y=y, height=height, beam=beam)
-    
-    plt.addItem(err)
+
+    height = np.array(data.y_err_vals).astype(np.float)
+
+    # TODO: Find solution for adding errorbars in the log case
+    if not log:
+        err = pg.ErrorBarItem(x=x, y=y, height=e, beam=beam)
+        plt.addItem(err)
     
     # commit
     plt.plot(x, y)
@@ -43,14 +58,23 @@ def plot_Data2D(data, log=False):
     
     # data
     img = pg.ImageItem()
-    img.setImage(np.array(data.zvals))    
-    
+    dataset = np.array(data.zvals)
+       
     if log:
-        print("2D log scale not yet implemented")
+        datashape = dataset.shape
+        datset=np.reshape(dataset, (1, datashape[0]*datashape[1]))
+        ymin = np.min(dataset[dataset>0])/10
+        dataset[dataset<=0] = ymin
+        dataset=np.reshape(dataset, datashape)
+        dataset=np.log(dataset)
+        #        dataset[np.where(np.array(data.zvals) <= 0)]=ymin
+
+    img.setImage(dataset)
     
     # color map (by lookup table)
-    pos_min = np.min(data.zvals)
-    pos_max = np.max(data.zvals)
+    pos_min = np.min(dataset)
+    pos_max = np.max(dataset)
+    
     pos = [pos_min, pos_min + 1/2*(pos_max-pos_min), pos_max]
     
     color = np.array([[0, 0, 0, 255], [255, 128, 0, 255], [255, 255, 0, 255]], dtype=np.ubyte)
@@ -70,25 +94,33 @@ def plot_Data2D(data, log=False):
     plt.setLabels(bottom=data.xlabel, left=data.ylabel)
     plt.setMenuEnabled(False)
     plt.addItem(img)
-    #ticks = plt.axes['bottom']['item'].tickValues(0, 128, 16)
-    #plt.axes['bottom']['item'].setTicks(ticks)
+    plt.getViewBox().autoRange(padding=0)
     
     # color bar
     cbimg = pg.ImageItem()
     numsteps = 100
-    arr_1 = (pos_max - pos_min) / pos_max * range(numsteps)
-    arr_2 = np.zeros(numsteps)
-    cbimg.setImage(np.array([arr_1, arr_2]))
+
+    arr_1 = (pos_max - pos_min) / pos_max * range(numsteps) + pos_min
+    print(pos_max)
+    print(pos_min)
+    print(arr_1)
+    cbimg.setImage(np.array([arr_1]))
 
     cbimg.setLookupTable(lut)
     colorbar = layout.addPlot(1, 1)
     colorbar.addItem(cbimg)
-    colorbar.setFixedWidth(80)
-    
-    colorbar.axes['bottom']['item'].hide()
-    colorbar.axes['left']['item'].hide()
+    colorbar.setFixedWidth(65)
+
+    colorbar.axes['top']['item'].show()
+    colorbar.axes['top']['item'].setStyle(showValues=False)
+    colorbar.axes['bottom']['item'].show()
+    colorbar.axes['bottom']['item'].setStyle(showValues=False)
+    colorbar.axes['left']['item'].show()
+    colorbar.axes['left']['item'].setStyle(showValues=False)
     colorbar.axes['right']['item'].show()
     colorbar.axes['right']['item'].setScale(pos_max-pos_min)
+
+    colorbar.getViewBox().autoRange(padding=0)
     
     # return layout so it doesn't get garbage collected, but the proper plot viewBox pointer for click events
     return layout, plt.getViewBox()
