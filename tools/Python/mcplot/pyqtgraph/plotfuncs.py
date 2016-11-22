@@ -21,11 +21,8 @@ def plot_Data1D(data, log=False):
                 nonzeros.append(i)
             else:
                 zeros.append(i)
-        
         y[zeros] = np.min(y[nonzeros])/10
-               
         plt.setLogMode(y=True)
-
     else:
         plt.setLogMode(y=False)
 
@@ -37,10 +34,8 @@ def plot_Data1D(data, log=False):
     # error bars
     beam = 0
     if len(x) > 1:
-        beam = (x[1]-x[0])*0.8
-
-    height = np.array(data.y_err_vals).astype(np.float)
-
+        beam = (x[1]-x[0])*0.5
+    
     # TODO: Find solution for adding errorbars in the log case
     if not log:
         err = pg.ErrorBarItem(x=x, y=y, height=e, beam=beam)
@@ -59,24 +54,27 @@ def plot_Data2D(data, log=False):
     # data
     img = pg.ImageItem()
     dataset = np.array(data.zvals)
-       
+    datashape = dataset.shape
+    
+    ymin = 1e-19
     if log:
-        datashape = dataset.shape
-        datset=np.reshape(dataset, (1, datashape[0]*datashape[1]))
+        dataset = np.reshape(dataset, (1, datashape[0]*datashape[1]))
         ymin = np.min(dataset[dataset>0])/10
         dataset[dataset<=0] = ymin
-        dataset=np.reshape(dataset, datashape)
-        dataset=np.log(dataset)
-        #        dataset[np.where(np.array(data.zvals) <= 0)]=ymin
+        dataset = np.reshape(dataset, datashape)
+        dataset = np.log(dataset)
 
     img.setImage(dataset)
+    
+    # scale(x,y) is in %, translate(x,y) is in the original units
+    img.scale((data.xlimits[1] - data.xlimits[0])/datashape[0], (data.xlimits[3] - data.xlimits[2])/datashape[1])
+    img.translate(-datashape[0]/2, -datashape[1]/2)
     
     # color map (by lookup table)
     pos_min = np.min(dataset)
     pos_max = np.max(dataset)
     
     pos = [pos_min, pos_min + 1/2*(pos_max-pos_min), pos_max]
-    
     color = np.array([[0, 0, 0, 255], [255, 128, 0, 255], [255, 255, 0, 255]], dtype=np.ubyte)
     
     colormap = pg.ColorMap(pos, color)
@@ -99,18 +97,20 @@ def plot_Data2D(data, log=False):
     # color bar
     cbimg = pg.ImageItem()
     numsteps = 100
-
-    arr_1 = (pos_max - pos_min) / pos_max * range(numsteps) + pos_min
-    print(pos_max)
-    print(pos_min)
-    print(arr_1)
+    if not log:
+        arr_1 = (pos_max - pos_min) / pos_max * range(numsteps) + pos_min
+    else:
+        arr_1 = - (pos_max - pos_min) / pos_max * range(numsteps) + pos_min
     cbimg.setImage(np.array([arr_1]))
-
+    cbimg.scale(1, (pos_max-pos_min)/numsteps)
+    cbimg.translate(0, -pos_min)
+    
     cbimg.setLookupTable(lut)
+    
     colorbar = layout.addPlot(1, 1)
     colorbar.addItem(cbimg)
-    colorbar.setFixedWidth(65)
-
+    colorbar.setFixedWidth(40)
+    
     colorbar.axes['top']['item'].show()
     colorbar.axes['top']['item'].setStyle(showValues=False)
     colorbar.axes['bottom']['item'].show()
@@ -118,8 +118,7 @@ def plot_Data2D(data, log=False):
     colorbar.axes['left']['item'].show()
     colorbar.axes['left']['item'].setStyle(showValues=False)
     colorbar.axes['right']['item'].show()
-    colorbar.axes['right']['item'].setScale(pos_max-pos_min)
-
+    
     colorbar.getViewBox().autoRange(padding=0)
     
     # return layout so it doesn't get garbage collected, but the proper plot viewBox pointer for click events
