@@ -396,8 +396,8 @@ class McGuiState(QtCore.QObject):
         
         print('Running: '+runstr)
         
-        # 
-        if simtrace == 1:
+        # Add & for backgrounding on Unix systems
+        if simtrace == 1 and not os.name == 'nt':
             runstr = runstr + ' &'
 
         # Ensure assembled runstr is a string, not a QString 
