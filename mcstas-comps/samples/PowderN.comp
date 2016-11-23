@@ -181,7 +181,7 @@
 * %L
 * "Validation of a realistic powder sample using data from DMC at PSI" Willendrup P, Filges U, Keller L, Farhi E, Lefmann K, Physica B-Cond Matt 385 (2006) 1032.
 * %L
-* See also: Powder1, Powder2 and PowderN, Single_crystal
+* See also: Powder1, Single_crystal
 * %L
 * See <a href="http://icsd.ill.fr">ICSD</a> Inorganic Crystal Structure Database
 * %L
@@ -866,7 +866,7 @@ TRACE
             arg = line_info.q_v[line]*(1+line_info.w_v[line]*randnorm())/(2.0*v);
           else
             arg = line_info.q_v[line]/(2.0*v);
-            my_s_n = line_info.my_s_v2[line]/(v*v);
+          my_s_n = line_info.my_s_v2[line]/(v*v);
           if(fabs(arg) > 1)
             ABSORB;                   /* No bragg scattering possible*/
           theta = asin(arg);          /* Bragg scattering law */
@@ -1030,7 +1030,7 @@ TRACE
       }  /* Incoherent scattering event */
       else if (neutrontype == 1) {
         /* Make transmitted (absorption-corrected) event */
-        /* No coodinate changes here, simply change neutron weight */
+        /* No coordinate changes here, simply change neutron weight */
         pmul = exp(-(line_info.my_a_v/v+my_s)*(l))/(p_transmit);
 
         line_info.type = 't';
