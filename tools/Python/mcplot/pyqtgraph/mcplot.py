@@ -101,7 +101,7 @@ def plot_node(node, window, logflipper):
 def set_keyhandler(window, replot_cb, key, modifier, flip_log):
     ''' sets a clickhadler according to input '''
     
-    def keyHandler(ev, cb, flip_log):
+    def key_handler(ev, cb, flip_log, debug=False):
         ''' global keypress handler, cb is a function of log '''
         if ev.key() == 81: # q
             quit()
@@ -114,8 +114,11 @@ def set_keyhandler(window, replot_cb, key, modifier, flip_log):
             cb(log=False)
         elif ev.key() == 16777264: # F1
             print("print help")
+        # print debug info
+        if debug: 
+            print("key code: %s" % str(ev.key()))
     
-    window.keyPressEvent = lambda ev: keyHandler(ev=ev, cb=replot_cb, flip_log=flip_log)
+    window.keyPressEvent = lambda ev: key_handler(ev=ev, cb=replot_cb, flip_log=flip_log)
 
 def get_modifiers(modname):
     ''' get int codes for keyboardmodifiers '''
@@ -140,8 +143,12 @@ def clear_window_and_handlers(window):
 def set_handler(scene, vn_dict, node_cb, click, modifier):
     ''' sets a clickhadler according to input '''
     
-    def click_handler(event, vn_dict, node_cb, click, mod):
+    def click_handler(event, vn_dict, node_cb, click, mod, debug=False):
         ''' generic conditional-branch-tree, catch-all, mouse click event handler  '''
+        # print debug info
+        if debug:
+            print("click modifier: %s" % str(int(event.modifiers())))
+            
         # prevent action for modifiers mismatch
         if int(event.modifiers()) != mod:
             return
