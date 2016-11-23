@@ -30,7 +30,7 @@
 * Geometry is a powder filled cylinder, sphere, box or any shape from an OFF file.
 * Incoherent scattering is only provided here to account for a background.
 * The efficient is highly improved when restricting the vertical scattering
-*   range on the Debye-Scherrer cone (with 'd_phi').
+*   range on the Debye-Scherrer cone (with 'd_phi' and 'focus_flip').
 * The unit cell volume Vc may also be computed when giving the density,
 *   the atomic/molecular weight and the number of atoms per unit cell.
 * A simple strain handling is available by mean of either a global Strain parameter,
@@ -211,7 +211,7 @@ SETTING PARAMETERS (string reflections="NULL", string geometry="NULL",
                     radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
                     pack=1, Vc=0, sigma_abs=0, sigma_inc=0, delta_d_d=0, p_inc=0.1, p_transmit=0.1,
                     DW=0, nb_atoms=1, d_phi=0, p_interact=0,
-                    concentric=0, density=0, weight=0, barns=1, Strain=0)
+                    concentric=0, density=0, weight=0, barns=1, Strain=0, focus_flip=0)
 OUTPUT PARAMETERS (line_info, columns, offdata)
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
 
@@ -890,6 +890,9 @@ TRACE
               alpha0=PI+(alpha0-1.5*alpha);
             } else {
               alpha0=alpha0-0.5*alpha;
+            }
+            if(focus_flip){
+                alpha0+=M_PI_2;
             }
           }
           else
