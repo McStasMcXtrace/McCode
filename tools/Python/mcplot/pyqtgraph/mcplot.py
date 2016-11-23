@@ -101,7 +101,7 @@ def plot_node(node, window, logflipper):
 def set_keyhandler(window, replot_cb, key, modifier, flip_log):
     ''' sets a clickhadler according to input '''
     
-    def key_handler(ev, cb, flip_log, debug=False):
+    def key_handler(ev, cb, savefile_cb, flip_log, debug=False):
         ''' global keypress handler, cb is a function of log '''
         if ev.key() == 81: # q
             quit()
@@ -109,16 +109,25 @@ def set_keyhandler(window, replot_cb, key, modifier, flip_log):
             log = flip_log()
             cb(log)
         elif ev.key() == 80: # p
-            print("dump pdf")
+            savefile_cb()
         elif ev.key() == 16777268: # F5
             cb(log=False)
         elif ev.key() == 16777264: # F1
             print("print help")
         # print debug info
-        if debug: 
+        if debug:
             print("key code: %s" % str(ev.key()))
     
-    window.keyPressEvent = lambda ev: key_handler(ev=ev, cb=replot_cb, flip_log=flip_log)
+    savefile_cb = lambda: dumpfile(window=window)
+    
+    window.keyPressEvent = lambda ev: key_handler(ev=ev, cb=replot_cb, savefile_cb=savefile_cb, flip_log=flip_log)
+
+def dumpfile(window, filenamebase='mcplot'):
+    ''' save as png file. Pdf is not supported, althouhg svg kind-of is '''
+    import pyqtgraph.exporters
+    exporter = pg.exporters.ImageExporter(window.scene())
+    #exporter = pg.exporters.SVGExporter(window.scene())
+    exporter.export('%s.png' % filenamebase)
 
 def get_modifiers(modname):
     ''' get int codes for keyboardmodifiers '''
