@@ -24,16 +24,16 @@
 * General powder sample with
 *         many scattering vectors
 *         possibility for intrinsic line broadening
-*         incoherent backgorund ratio is specified by user.
+*         incoherent background ratio is computed from material datafile.
 *         No multiple scattering. No secondary extinction.
 *
 * Based on Powder1/Powder2/Single_crystal.
-* Geometry is a powder filled cylinder or a box.
-* Incoherent scattering is only provided here to account for a background
+* Geometry is a powder filled cylinder, sphere, box or any shape from an OFF file.
+* Incoherent scattering is only provided here to account for a background.
 * The efficient is highly improved when restricting the vertical scattering
-* range on the Debye-Scherrer cone (with 'd_phi').
+*   range on the Debye-Scherrer cone (with 'd_phi' and 'focus_flip').
 * The unit cell volume Vc may also be computed when giving the density,
-* the atomic/molecular weight and the number of atoms per unit cell.
+*   the atomic/molecular weight and the number of atoms per unit cell.
 *
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or any other shape.
@@ -51,6 +51,8 @@
 *   It supports the OFF and NOFF file format but not COFF (colored faces).
 *   Such files may be generated from XYZ data using:
 *     qhull < coordinates.xyz Qx Qv Tv o > geomview.off
+*   or
+*     powercrust coordinates.xyz
 *   and viewed with geomview or java -jar jroff.jar (see below).
 *   The default size of the object depends of the OFF file data, but its
 *   bounding box may be resized using xwidth,yheight and zdepth.
@@ -65,6 +67,8 @@
 * <b>Powder definition file format</b>
 * Powder structure is specified with an ascii data file 'reflections'.
 * The powder data are free-text column based files.
+* The reflection list should be ordered by decreasing d-spacing values.
+*       ... d ... F2
 * Lines begining by '#' are read as comments (ignored) but they may contain
 * the following keywords (in the header):
 *   #Vc           <value of unit cell volume Vc [Angs^3]>
@@ -83,7 +87,7 @@
 * the signification of the columns as a vector of indexes in the order
 *   format={j,d,F2,DW,Delta_d/d,1/2d,q,F}
 * Signification of the symbols is given below. Indexes start at 1.
-* Indexes with zero means that the column is not present, so that:
+* Indices with zero means that the column are not present, so that:
 *   Crystallographica={ 4,5,7,0,0,0,0,0 }
 *   Fullprof         ={ 4,0,8,0,0,5,0,0 }
 *   Lazy             ={17,6,0,0,0,0,0,13}
@@ -120,6 +124,7 @@
 *
 * (The second instance of the cryostat component can also be written out completely
 *  using PowderN(...). In both cases, this second instance needs concentric = 0.)
+* The concentric arrangment can not be used with OFF geometry specification.
 *
 * %P
 * INPUT PARAMETERS
@@ -148,8 +153,8 @@
 * concentric: Indicate that this component has a hollow geometry
 *               and may contain other components. It should then be duplicated
 *               after the inside part (only for box, cylinder, sphere) [1]
-* geometry:   Name of an Object File Format (OFF) file for complex geometry.
-*               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
+* geometry:   Name of an Object File Format (OFF) or PLY file for complex geometry.
+*               The OFF/PLY file may be generated from XYZ coordinates using qhull/powercrust [str]
 * barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2
 *             (barns=1 for laz, barns=0 for lau type files).[1]
 * Vc:       Volume of unit cell=nb atoms per cell/density of atoms [AA^3]
@@ -158,43 +163,47 @@
 * weight:   Atomic/molecular weight of material [g/mol]
 * density:  Density of material. rho=density/weight/1e24*N_A. [g/cm^3]
 * nb_atoms: Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell [1]
-* focus_flip: If nonzero, alters the sense of d_phi to correspond a horizontal opening angle [1]. 
+*
+* OUTPUT PARAMETERS:
+* line_info:      internal structure containing many members/info [struct]
+* line_info.type: interaction type of event 't'=Transmit, 'i'=Incoherent, 'c'=Coherent [char]
+* line_info.dq:   wavevector transfer of last coherent scattering event [Angs-1]
 *
 * %L
-* “Validation of a realistic powder sample using data from DMC at PSI” Willendrup P, Filges U, Keller L, Farhi E, Lefmann K, Physica B-Cond Matt 385 (2006) 1032.
+* "Validation of a realistic powder sample using data from DMC at PSI" Willendrup P, Filges U, Keller L, Farhi E, Lefmann K, Physica B-Cond Matt 385 (2006) 1032.
 * %L
-* See also: Powder1, Powder2 and PowderN
+* See also: Single_crystal
 * %L
 * See <a href="http://icsd.ill.fr">ICSD</a> Inorganic Crystal Structure Database
 * %L
-* Cross sections for single elements: http://www.ncnr.nist.gov/resources/n-lengths/
+* <a href="http://www.ncnr.nist.gov/resources/n-lengths/">Cross sections for single elements</a>
 * %L
-* Cross sections for compounds:       http://www.ncnr.nist.gov/resources/sldcalc.html
+* <a href="http://www.ncnr.nist.gov/resources/sldcalc.html>Cross sections for compounds</a>
 * %L
-* Web Elements                        http://www.webelements.com/
+* <a href="http://www.webelements.com/">Web Elements</a>
 * %L
-* Fullprof powder refinement:         http://www.ill.eu/sites/fullprof/index.html
+* <a href="http://www.ill.eu/sites/fullprof/index.html">Fullprof</a> powder refinement
 * %L
-* Crystallographica software:         http://www.crystallographica.com/
+* <a href="http://www.crystallographica.com/">Crystallographica</a> software (free license)
 * %L
-* Geomview and Object File Format (OFF) <http://www.geomview.org>
+* <a href="http://www.geomview.org">Geomview and Object File Format (OFF)</a>
 * %L
-* Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/>
+* Java version of Geomview (display only) <a href="http://www.holmes3d.net/graphics/roffview/">jroff.jar</a>
 * %L
-* Powercrust/qhull <http://qhull.org>
+* <a href="http://qhull.org">qhull</a>
+* %L
+* <a href="http://www.cs.ucdavis.edu/~amenta/powercrust.html">powercrust</a>
 *
 * %E
 *****************************************************************************/
 DEFINE COMPONENT PowderN
-DEFINITION PARAMETERS (format=Undefined)
+DEFINITION PARAMETERS (format=Undefined, mat_format=mat_Undefined)
 SETTING PARAMETERS (string reflections=0, string material=0, string geometry=0,
                     radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
                     pack=1, Vc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
                     DW=0, nb_atoms=1, d_phi=0, d_theta=360, p_interact=0,
                     concentric=0, density=0, weight=0, barns=1, focus_flip=0)
-OUTPUT PARAMETERS (line_info, Nq, my_s_k2, XsectionFactor,
-  my_s_k2_sum, my_a_k, my_inc, my_q, my_w, columns,
-  radius_i, xwidth_i, yheight_i, zdepth_i, offdata)
+OUTPUT PARAMETERS (line_info,columns,mat_coklumns,offdata)
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */
 SHARE
 %{
@@ -210,6 +219,11 @@ SHARE
 #define Fullprof          { 4,0,8,0,0,5,0,0 }
 #define Lazy              {17,6,0,0,0,0,0,13 }
 #define Undefined         { 0,0,0,0,0,0,0,0 }
+  /*format definitions for material data {E my_abs my_cohinc my_coh}*/
+#define FFAST_element {1, 4, 0, 5, 0}
+#define FFAST_compound {1, 3, 0, 0, 4}
+#define XCOM {1, 4, 3, 0, 0}
+#define mat_Undefined {0,0,0,0,0}
 #endif
 
   struct line_data
@@ -246,9 +260,40 @@ SHARE
       int    shape; /* 0 cylinder, 1 box, 2 sphere, 3 OFF file */
       int    column_order[8]; /* column signification */
       int    flag_warning;
+      char   type;  /* interaction type of event t=Transmit, i=Incoherent, c=Coherent */
+      double dq;    /* wavevector transfer [Angs-1] */
+      double Epsilon; /* global strain in ppm */
+      double XsectionFactor;
+      double my_s_k2_sum;
+      double my_a;
+      double my_inc;
+      double *w,*q, *my_s_k2;
+      double radius_i,xwidth_i,yheight_i,zdepth_i;
+      double k; /* last velocity (cached) */
+      double Nq;
+      int    nb_reuses, nb_refl, nb_refl_count;
+      double k_min, k_max;
+      double xs_Nq[CHAR_BUF_LENGTH];
+      double xs_sum[CHAR_BUF_LENGTH];
+      double photon_passed;
+      long   xs_compute, xs_reuse, xs_calls;
+      t_Table mat_table;
+      int mat_column_order[5]; /*column signification for the coeff. in material data file*/
     };
 
   off_struct offdata;
+
+  // PN_list_compare *****************************************************************
+
+  int PN_list_compare (void const *a, void const *b)
+    {
+     struct line_data const *pa = a;
+     struct line_data const *pb = b;
+     double s = pa->q - pb->q;
+
+     if (!s) return 0;
+     else    return (s < 0 ? -1 : 1);
+  } /* PN_list_compare */
 
   int read_abs_data(char *ABS_file, struct abs_data **abs)
   {
@@ -300,8 +345,10 @@ SHARE
     int    list_count=0;
 
     if (!SC_file || !strlen(SC_file) || !strcmp(SC_file, "NULL")) {
-      printf("PowderN: %s: Using incoherent elastic scattering only\n",
+      MPI_MASTER(
+      printf("PowderN: %s: Using incoherent elastic scattering only.\n",
           info->compname);
+      );
       info->count = 0;
       return(0);
     }
@@ -344,7 +391,7 @@ SHARE
       if (parsing[14])                  info->column_order[7]=atoi(parsing[14]);
       if (parsing[15] && !info->V_0)    info->V_0    =1/atof(parsing[15]);
       if (parsing[16] && !info->rho)    info->rho    =atof(parsing[16]);
-      if (parsing[27] && !info->at_weight)     info->at_weight    =atof(parsing[17]);
+      if (parsing[17] && !info->at_weight)     info->at_weight    =atof(parsing[17]);
       if (parsing[18] && info->at_nb <= 1)  info->at_nb    =atof(parsing[18]);
       if (parsing[19] && info->at_nb <= 1)  info->at_nb    =atof(parsing[19]);
       for (i=0; i<=19; i++) if (parsing[i]) free(parsing[i]);
@@ -354,19 +401,27 @@ SHARE
     if (!sTable.rows)
       exit(fprintf(stderr, "PowderN: %s: Error: The number of rows in %s "
        "should be at least %d\n", info->compname, SC_file, 1));
-    else size = sTable.rows;
+    else
+      size = sTable.rows;
+
+    MPI_MASTER(
     Table_Info(sTable);
     printf("PowderN: %s: Reading %d rows from %s\n",
           info->compname, size, SC_file);
+    );
 
     if (info->column_order[0] == 4 && info->flag_barns !=0)
-    printf("PowderN: %s: Powder file probably of type Crystallographica/Fullprof (lau)\n"
+    MPI_MASTER(
+      printf("PowderN: %s: Powder file probably of type Crystallographica/Fullprof (lau)\n"
            "WARNING: but F2 unit is set to barns=1 (barns). Intensity might be 100 times too high.\n",
            info->compname);
-  if (info->column_order[0] == 17 && info->flag_barns == 0)
-    printf("PowderN: %s: Powder file probably of type Lazy Pulver (laz)\n"
+    );
+    if (info->column_order[0] == 17 && info->flag_barns == 0)
+    MPI_MASTER(
+      printf("PowderN: %s: Powder file probably of type Lazy Pulver (laz)\n"
            "WARNING: but F2 unit is set to barns=0 (fm^2). Intensity might be 100 times too low.\n",
            info->compname);
+    );
     /* allocate line_data array */
     list = (struct line_data*)malloc(size*sizeof(struct line_data));
 
@@ -401,14 +456,17 @@ SHARE
         { F2 = Table_Index(sTable, i, info->column_order[7]-1); F2 *= F2; }
 
       /* assign and check values */
-      j = (j > 0 ? j : 0);
-      q = (d > 0 ? 2*PI/d : 0); /* this is q */
+      j        = (j > 0 ? j : 0);
+      q        = (d > 0 ? 2*PI/d : 0); /* this is q */
+  
       DWfactor = (DWfactor > 0 ? DWfactor : 1);
       w = (w>0 ? w : 0); /* this is q and d relative spreading */
       F2 = (F2 >= 0 ? F2 : 0);
       if (j == 0 || q == 0) {
+        MPI_MASTER(
         printf("PowderN: %s: line %i has invalid definition\n"
                "         (mult=0 or q=0 or d=0)\n", info->compname, i);
+        );
         continue;
       }
       list[list_count].j = j;
@@ -419,8 +477,8 @@ SHARE
 
       /* adjust multiplicity if j-column + multiple d-spacing lines */
       /* if  d = previous d, increase line duplication index */
-      if (!q_count)     q_count = q;
-      if (!j_count)     j_count = j;
+      if (!q_count)      q_count  = q;
+      if (!j_count)      j_count  = j;
       if (!F2_count)     F2_count = F2;
       if (fabs(q_count-q) < 0.0001*fabs(q)
        && fabs(F2_count-F2) < 0.0001*fabs(F2) && j_count == j) {
@@ -432,30 +490,138 @@ SHARE
         if (i == size-1) list_count++;
       /*   if duplication index == previous multiplicity */
       /*      set back multiplicity of previous lines to 1 */
-        if (mult_count && list_count>0 &&
-          (mult_count == list[list_count-1].j
-          || (mult_count == list[list_count].j && i == size-1)) ) {
+        if ((mult_count && list_count>0)
+            && (mult_count == list[list_count-1].j
+                || ((list_count < size) && (i == size - 1)
+                    && (mult_count == list[list_count].j))) ) {
+          MPI_MASTER(
           printf("PowderN: %s: Set multiplicity to 1 for lines [%i:%i]\n"
                   "         (d-spacing %g is duplicated %i times)\n",
             info->compname, list_count-mult_count, list_count-1, list[list_count-1].q, mult_count);
+          );
           for (index=list_count-mult_count; index<list_count; list[index++].j = 1);
-          mult_count   = 1;
-          q_count = q;
-          j_count = j;
-          F2_count = F2;
+          mult_count = 1;
+          q_count   = q;
+          j_count   = j;
+          F2_count  = F2;
         }
         if (i == size-1) list_count--;
         flag=0;
       }
       list_count++;
     } /* end for */
-    printf("PowderN: %s: File %s done (%i valid lines).\n", info->compname, SC_file, list_count);
+
     Table_Free(&sTable);
+
+    /* sort the list with increasing q */
+    qsort(list, list_count, sizeof(struct line_data),  PN_list_compare);
+
+    MPI_MASTER(
+    printf("PowderN: %s: Read %i reflections from file '%s'\n",
+      info->compname, list_count, SC_file);
+    );
+
     info->list  = list;
     info->count = list_count;
 
     return(list_count);
+  } /* read_line_data */
+
+
+/* computes the number of possible reflections (return value), and the total xsection 'sum' */
+/* this routine looks for a pre-computed value in the Nq and sum cache tables               */
+/* when found, the earch starts from the corresponding lower element in the table           */
+int calc_xsect(double k, double *q, double *my_s_k2, int count, double tth_max, double *sum,
+        struct line_info_struct *line_info) {
+  int    Nq = 0, line=0, line0=0;
+  double sinth=sin(DEG2RAD*tth_max*0.5);
+  *sum=0;
+
+  /* check if a line_info element has been recorded already */
+  if (k >= line_info->k_min && k <= line_info->k_max && line_info->photon_passed >= CHAR_BUF_LENGTH) {
+    line = (int)floor(k - line_info->k_min)*CHAR_BUF_LENGTH/(line_info->k_max - line_info->k_min);
+    Nq    = line_info->xs_Nq[line];
+    *sum  = line_info->xs_sum[line];
+    if (!Nq && *sum == 0) {
+      /* not yet set: we compute the sum up to the corresponding wavevector in the table cache */
+      double line_k = line_info->k_min + line*(line_info->k_max - line_info->k_min)/CHAR_BUF_LENGTH;
+      for(line0=0; line0<count; line0++) {
+        if (q[line0] <= 2*line_k*sinth) { /* q < 2*kf: restrict structural range */
+          *sum += my_s_k2[line0];
+          if (Nq < line0+1) Nq=line0+1; /* determine maximum line index which can scatter */
+        } else break;
+      }
+      line_info->xs_Nq[line] = Nq;
+      line_info->xs_sum[line]= *sum;
+      line_info->xs_compute++;
+    } else line_info->xs_reuse++;
+    line0 = Nq - 1;
   }
+
+  line_info->xs_calls++;
+
+  for(line=line0; line<count; line++) {
+      if (q[line] <= 2*k*sinth) { /* q < 2*kf: restrict structural range */
+      *sum += my_s_k2[line];
+      if (Nq < line+1) Nq=line+1; /* determine maximum line index which can scatter */
+    } else break;
+  }
+
+  return(Nq);
+} /* calc_xsect */
+
+int calc_abs_xsect(double k, double *abs, struct line_info_struct *line_info){
+    /* compute the absorption cross section.
+     * amounts to a table lookup in material data_file by energy*/
+    double e=k*K2E;
+    *abs=Table_Value((line_info->mat_table), e, line_info->mat_column_order[1]);
+    *abs*=100*line_info->rho;
+    return 0;
+}
+
+int calc_inc_xsect(double k, double *inc, struct line_info_struct *line_info){
+    /*TODO choose one of these bits*/
+
+    /* compute the incoherent cross section.
+     * amounts to a table lookup in material data_file by energy
+     * In time this should be improved to actually handle Compton scattering.*/
+    double e=k*K2E;
+
+    double correction;
+    int i=2;
+    /* To find the inc. scattergin column in material datafiles,
+     * Find the first non-zero column index (btw. 2..4).*/
+    for (i=2;i<5;i++){
+        if (line_info->mat_column_order[i]) break;
+    }
+
+    switch (i){
+        case 2:
+            /*inc is explicitly in column i - no correction term.*/
+            correction=0;
+            break;
+        case 3:
+            /*inc is given as inc+ćoh in column i*/
+            correction=line_info->my_s_k2_sum/(k*k);
+            break;
+        case 4:
+            /*inc is given as total attenuation = inc+ćoh+abs in column i*/
+            correction=line_info->my_s_k2_sum/(k*k) + line_info->my_a;
+            break;
+        case 5:
+            /*means no non-zero index has been found - set xsect to 0*/
+            *inc=0;
+            return 1;
+    }
+
+    *inc=Table_Value((line_info->mat_table), e, line_info->mat_column_order[i]-1)-correction;
+    if (*inc<0){
+        *inc=0;
+    }
+    *inc*=100*line_info->rho;/*scale by rho and 100 to get in units m^-1*/
+    return 0;
+}
+
 #endif /* !POWDERN_DECL */
 
 %}
@@ -463,20 +629,16 @@ SHARE
 DECLARE
 %{
   struct line_info_struct line_info;
-  struct abs_data *a_info;
-  int Nq=0;
-  double my_s_k2_sum=0;
-  double my_a_k=0, my_inc=0;
-  double *my_w,*my_q, *my_s_k2;
-  int    columns[8] = format;
-  double XsectionFactor;
-  double radius_i=0, xwidth_i=0, yheight_i=0, zdepth_i=0;
-
+  int *columns;
+  int *mat_columns;
   off_struct offdata;
   double  type;
 %}
+
 INITIALIZE
 %{
+  columns = (int[])format;
+  mat_columns = (int[]) mat_format;
   int i=0;
   struct line_data *L;
   line_info.Dd       = Delta_d;
@@ -488,7 +650,15 @@ INITIALIZE
   line_info.flag_barns=barns;
   line_info.shape    = 0;
   line_info.flag_warning=0;
+  line_info.radius_i =line_info.xwidth_i=line_info.yheight_i=line_info.zdepth_i=0;
+  line_info.k  = 0;
+  line_info.Nq = 0;
+  line_info.k_min = FLT_MAX; line_info.k_max = 0;
+  line_info.photon_passed=0;
+  line_info.nb_reuses = line_info.nb_refl = line_info.nb_refl_count = 0;
+  line_info.xs_compute= line_info.xs_reuse= line_info.xs_calls =0;
   for (i=0; i< 8; i++) line_info.column_order[i] = columns[i];
+  for (i=0; i< 4;  i++) line_info.mat_column_order[i] = mat_columns[i];
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
 
   line_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
@@ -506,48 +676,54 @@ INITIALIZE
                         "ERROR    Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
   if (thickness) {
     if (radius && (radius < fabs(thickness))) {
-      fprintf(stderr,"PowderN: %s: hollow sample thickness is larger than its volume (sphere/cylinder).\n"
+      MPI_MASTER(
+      printf("PowderN: %s: hollow sample thickness is larger than its volume (sphere/cylinder).\n"
                      "WARNING  Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
+      );
       thickness=0;
     }
     else if (!radius && (xwidth < 2*fabs(thickness) || yheight < 2*fabs(thickness) || zdepth < 2*fabs(thickness))) {
-      fprintf(stderr,"PowderN: %s: hollow sample thickness is larger than its volume (box).\n"
+      MPI_MASTER(
+      printf("PowderN: %s: hollow sample thickness is larger than its volume (box).\n"
                      "WARNING  Please check parameter values.\n", NAME_CURRENT_COMP);
+      );
     }
   }
 
   if (concentric && thickness==0) {
+    MPI_MASTER(
     printf("PowderN: %s:Can not use concentric mode\n"
            "WARNING     on non hollow shape. Ignoring.\n",
            NAME_CURRENT_COMP);
+    );
     concentric=0;
   }
 
   if (thickness>0) {
     if (radius>thickness) {
-      radius_i=radius-thickness;
+      line_info.radius_i=radius-thickness;
     } else {
-      if (xwidth>2*thickness)  xwidth_i =xwidth -2*thickness;
-      if (yheight>2*thickness) yheight_i=yheight-2*thickness;
-      if (zdepth>2*thickness)  zdepth_i =zdepth -2*thickness;
+      if (xwidth>2*thickness)  line_info.xwidth_i =xwidth -2*thickness;
+      if (yheight>2*thickness) line_info.yheight_i=yheight-2*thickness;
+      if (zdepth>2*thickness)  line_info.zdepth_i =zdepth -2*thickness;
     }
   } else if (thickness<0) {
     thickness = fabs(thickness);
     if (radius) {
-      radius_i=radius;
-      radius=radius_i+thickness;
+      line_info.radius_i=radius;
+      radius=line_info.radius_i+thickness;
     } else {
-      xwidth_i =xwidth;
-      yheight_i=yheight;
-      zdepth_i =zdepth;
+      line_info.xwidth_i =xwidth;
+      line_info.yheight_i=yheight;
+      line_info.zdepth_i =zdepth;
       xwidth   =xwidth +2*thickness;
       yheight  =yheight+2*thickness;
       zdepth   =zdepth +2*thickness;
     }
   }
 
-  if (!yheight_i) {
-    yheight_i = yheight;
+  if (!line_info.yheight_i) {
+    line_info.yheight_i = yheight;
   }
   if (p_interact) {
     if (p_interact < p_inc) { double tmp=p_interact; p_interact=p_inc; p_inc=tmp; }
@@ -555,20 +731,29 @@ INITIALIZE
   }
 
   if (p_inc + p_transmit > 1) {
-    fprintf(stderr,"PowderN: %s: You have requested an unmeaningful choice of the 'p_inc' and 'p_transmit' parameters (sum is %g, exeeding 1). Fixing.\n",
+    MPI_MASTER(
+    printf("PowderN: %s: You have requested an unmeaningful choice of the 'p_inc' and 'p_transmit' parameters (sum is %g, exeeding 1). Fixing.\n",
                  NAME_CURRENT_COMP, p_inc+p_transmit);
+    );
     if (p_inc > p_transmit) p_transmit=1-2*p_inc;
     else p_transmit=1-2*p_inc;
   } else if (p_inc + p_transmit == 1) {
-    printf("PowderN: %s: You have requested all xrays be attenuated\n"
+    MPI_MASTER(
+    printf("PowderN: %s: You have requested all neutrons be attenuated\n"
            "WARNING  or incoherently scattered!\n", NAME_CURRENT_COMP);
+    );
   }
 
   if (concentric) {
-    printf("PowderN: %s WARNING: Concentric mode - remember to include the 'opposite' copy of this component !\n (The equivalent, 'opposite' comp should have concentric=0)\n", NAME_CURRENT_COMP);
+    MPI_MASTER(
+    printf("PowderN: %s: Concentric mode - remember to include the 'opposite' copy of this component !\n"
+           "WARNING  The equivalent, 'opposite' comp should have concentric=0\n", NAME_CURRENT_COMP);
+    );
     if (p_transmit == 0) {
+      MPI_MASTER(
       printf("PowderN: %s: Concentric mode and p_transmit==0 !?\n"
              "WARNING  Don't you want any transmitted xrays?\n", NAME_CURRENT_COMP);
+      );
     }
   }
 
@@ -576,7 +761,7 @@ INITIALIZE
     i = read_line_data(reflections, &line_info);
     if (i == 0)
       exit(fprintf(stderr,"PowderN: %s: reflection file %s is not valid.\n"
-                        "ERROR    Please check file format (laz or lau).\n", NAME_CURRENT_COMP, reflections));
+                          "ERROR    Please check file format (laz or lau).\n", NAME_CURRENT_COMP, reflections));
   }
 
   /* compute the scattering unit density from material weight and density */
@@ -596,60 +781,86 @@ INITIALIZE
     line_info.sigma_a *= line_info.at_nb; line_info.sigma_i *= line_info.at_nb;
   }
 
-  if (line_info.V_0 <= 0)
-    fprintf(stderr,"PowderN: %s: density/unit cell volume is NULL (Vc). Unactivating component.\n", NAME_CURRENT_COMP);
+  if (line_info.sigma_a<0) line_info.sigma_a=0;
+  if (line_info.sigma_i<0) line_info.sigma_i=0;
 
+  if (line_info.V_0 <= 0)
+  MPI_MASTER(
+    printf("PowderN: %s: density/unit cell volume is NULL (Vc). Unactivating component.\n", NAME_CURRENT_COMP);
+  );
+
+  if (line_info.V_0 > 0 && p_inc && !line_info.sigma_i) {
+  MPI_MASTER(
+    printf("PowderN: %s: WARNING: You have requested statistics for incoherent scattering but not defined sigma_inc!\n", NAME_CURRENT_COMP);
+  );
+  }
 
   if (line_info.flag_barns) { /* Factor 100 to convert from barns to fm^2 */
-    XsectionFactor = 100;
+    line_info.XsectionFactor = 100;
   } else {
-    XsectionFactor = 1;
+    line_info.XsectionFactor = 1;
   }
 
-  if (line_info.V_0 && i) {
+  if (line_info.V_0 > 0 && i) {
     L = line_info.list;
 
-    Nq  = line_info.count;
-    my_q = malloc(Nq*sizeof(double));
-    my_w = malloc(Nq*sizeof(double));
-    my_s_k2 = malloc(Nq*sizeof(double));
-    if (!my_q || !my_w || !my_s_k2)
+    line_info.q = malloc(line_info.count*sizeof(double));
+    line_info.w = malloc(line_info.count*sizeof(double));
+    line_info.my_s_k2 = malloc(line_info.count*sizeof(double));
+    if (!line_info.q || !line_info.w || !line_info.my_s_k2)
       exit(fprintf(stderr,"PowderN: %s: ERROR allocating memory (init)\n", NAME_CURRENT_COMP));
-    for(i=0; i<Nq; i++)
+    for(i=0; i<line_info.count; i++)
     {
-        my_s_k2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
+        line_info.my_s_k2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
                  /(line_info.V_0*line_info.V_0)
-                 *(L[i].j * L[i].F2 / L[i].q)*XsectionFactor;
+                 *(L[i].j * L[i].F2 / L[i].q)*line_info.XsectionFactor;
       /* Is not yet divided by k^2 */
       /* Squires [3.103] */
-      my_q[i] = L[i].q;
-      my_w[i] = L[i].w;
+      line_info.q[i] = L[i].q;
+      line_info.w[i] = L[i].w;
     }
   }
-  if (!read_abs_data(material,&a_info)){
-    fprintf(stderr,"PowderN: %s Error reading absorption data from file %s - will proceed without absorption.\n",NAME_CURRENT_COMP,material);
-  }
 
+  if (!material || !strlen(material) || !strcmp(material, "NULL")) {
+      int status;
+      char **parsing;
+      if( (status=Table_Read(&(line_info.mat_table),material,0))!=0){
+          fprintf(stderr,"PowderN: %s Error reading absorption data from file %s - will proceed without absorption.\n",NAME_CURRENT_COMP,material);
+      }
+      parsing=Table_ParseHeader(line_info.mat_table.header,
+              "column_e","column_abs","column_inc","column_cohinc","column_tot",NULL);
+
+      if (parsing){
+          int i;
+          for (i=0;i<5;i++){
+              if (parsing[i]) line_info.mat_column_order[i]=atoi(parsing[i]);
+          }
+      }
+
+  }
 %}
+
 TRACE
 %{
-  double l0, l1, l2, l3, k, k1,l_full, l, l_1, dl, alpha0, alpha, theta, my_s, my_s_n, my_coh;
+  double l0, l1, l2, l3, k, k1,l_full, l, l_1, dl, alpha0, alpha, theta, my_s, my_s_n;
   double solid_angle;//, type;
-  double arg, tmp_kx, tmp_ky, tmp_kz, kout_x, kout_y, kout_z, nx, ny, nz, my_abs, pmul=1;
+  double arg, tmp_kx, tmp_ky, tmp_kz, kout_x, kout_y, kout_z, nx, ny, nz, pmul=1;
   int    line;
   char   intersect=0;
   char   intersecti=0;
 
-  if (line_info.V_0 && (Nq || my_inc)) {
+  line_info.type = '\0';
+
+  if (line_info.V_0 > 0 && (line_info.count || line_info.my_inc)) {
     if (line_info.shape == 1) {
       intersect  = box_intersect(&l0, &l3, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
-      intersecti = box_intersect(&l1, &l2, x, y, z, kx, ky, kz, xwidth_i, yheight_i, zdepth_i);
+      intersecti = box_intersect(&l1, &l2, x, y, z, kx, ky, kz, line_info.xwidth_i, line_info.yheight_i, line_info.zdepth_i);
     } else if (line_info.shape == 0) {
       intersect  = cylinder_intersect(&l0, &l3, x, y, z, kx, ky, kz, radius, yheight);
-      intersecti = cylinder_intersect(&l1, &l2, x, y, z, kx, ky, kz, radius_i, yheight_i);
+      intersecti = cylinder_intersect(&l1, &l2, x, y, z, kx, ky, kz, line_info.radius_i, line_info.yheight_i);
     } else if (line_info.shape == 2) {
       intersect  = sphere_intersect  (&l0, &l3, x,y,z, kx,ky,kz, radius);
-      intersecti = sphere_intersect  (&l1, &l2, x,y,z, kx,ky,kz, radius_i);
+      intersecti = sphere_intersect  (&l1, &l2, x,y,z, kx,ky,kz, line_info.radius_i);
     } else if (line_info.shape == 3) {
       intersect  = off_intersect  (&l0, &l3, NULL, NULL, x,y,z, kx,ky,kz, offdata);
       intersecti = 0;
@@ -682,6 +893,24 @@ TRACE
     k = sqrt(kx*kx + ky*ky + kz*kz);
     l_full =l3 - l2 + l1 - l0;
 
+    if (line_info.photon_passed < CHAR_BUF_LENGTH) {
+      if (k < line_info.k_min) line_info.k_min = k;
+      if (k > line_info.k_max) line_info.k_max = k;
+      line_info.photon_passed++;
+    }
+
+    /* Calculate total scattering cross section at relevant wavevector */
+    if ( fabs(k - line_info.k) < 1e-15) {
+        line_info.nb_reuses++;
+    } else {
+        line_info.Nq = calc_xsect(k, line_info.q, line_info.my_s_k2, line_info.count, d_theta*0.5, &line_info.my_s_k2_sum, &line_info);
+        calc_abs_xsect(k, &line_info.my_a, &line_info);
+        calc_inc_xsect(k, &line_info.my_inc, &line_info);
+        line_info.k = k;
+        line_info.nb_refl += line_info.Nq;
+        line_info.nb_refl_count++;
+    }
+
     if (l3 < 0) {
       l3=0; /* Already past sample?! */
       if (line_info.flag_warning < 100)
@@ -695,39 +924,8 @@ TRACE
         dl = dl * (l3 - l2) + (l2-l0) ; /* Possibly also 'backside' part */
       }
 
-      /* Calculate total coherent scattering cross section at relevant wavevector*/
-      my_s_k2_sum=0;
-      /*apply limit in 2 theta*/
-      double sinth=sin(DEG2RAD*d_theta*0.25);
-      int nq=0;
-      for(line=0; line<Nq; line++) {
-          if (my_q[line] <= 2*k*sinth) {
-              my_s_k2_sum+=my_s_k2[line];
-              nq++;
-          }
-      }
-      my_coh = my_s_k2_sum/(k*k);
-
-      /* Total attenuation from absorption */
-      int ii=0;
-      double delta;
-      while(a_info[ii].k!=-1 && k>a_info[ii].k){
-        ii++;
-      }
-      if (a_info[ii].k==-1) {
-        my_abs=density*a_info[ii-1].mu;
-        my_inc=density*a_info[ii-1].cohinc-my_coh;
-      }else{
-        delta=(k-a_info[ii-1].k)/(a_info[ii].k-a_info[ii-1].k);
-        my_abs=density*( (1-delta)*a_info[ii-1].mu + delta*a_info[ii].mu );
-        my_inc=density*( (1-delta)*a_info[ii-1].cohinc + delta*a_info[ii].cohinc )-my_coh;
-      }
-      if (my_inc<0){
-          my_inc=0;/*this should not happen*/
-      }
-
+      my_s=line_info.my_s_k2_sum/(k*k)+line_info.my_inc;
       /* Total attenuation from scattering*/
-      my_s=my_coh+my_inc;
 
       type = rand01();
       /* How to handle this one? Transmit (1) / Incoherent (2) / Coherent (3) ? */
@@ -752,13 +950,13 @@ TRACE
       if (type == 3) { /* Make coherent scattering event */
         if (line_info.count > 0) {
           /* choose line */
-          if (nq > 1) line=floor(nq*rand01());  /* Select between Nq powder lines */
+          if (line_info.Nq > 1) line=floor(line_info.Nq*rand01());  /* Select between Nq powder lines */
           else line = 0;
-          if (my_w[line])
-            arg = my_q[line]*(1+my_w[line]*randnorm())/(2.0*k);
+          if (line_info.w[line])
+            arg = line_info.q[line]*(1+line_info.w[line]*randnorm())/(2.0*k);
           else
-            arg = my_q[line]/(2.0*k);
-          my_s_n = my_s_k2[line]/(k*k);
+            arg = line_info.q[line]/(2.0*k);
+          my_s_n = line_info.my_s_k2[line]/(k*k);
           if(fabs(arg) > 1)
             ABSORB;                   /* No bragg scattering possible*/
           theta = asin(arg);          /* Bragg scattering law */
@@ -813,20 +1011,20 @@ TRACE
 
           /* tmp_k = rotate k_out by alpha0 around 'k' (Debye-Scherrer cone) */
           rotate(tmp_kx,tmp_ky,tmp_kz, kout_x,kout_y,kout_z, alpha0, kx, ky, kz);
-
           kx = tmp_kx;
           ky = tmp_ky;
           kz = tmp_kz;
+
           /* Since now scattered and new direction given, calculate path to exit */
           if (line_info.shape == 1) {
             intersect  = box_intersect(&l0, &l3, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
-            intersecti = box_intersect(&l1, &l2, x, y, z, kx, ky, kz, xwidth_i, yheight_i, zdepth_i);
+            intersecti = box_intersect(&l1, &l2, x, y, z, kx, ky, kz, line_info.xwidth_i, line_info.yheight_i, line_info.zdepth_i);
           } else if (line_info.shape == 0) {
             intersect  = cylinder_intersect(&l0, &l3, x, y, z, kx, ky, kz, radius, yheight);
-            intersecti = cylinder_intersect(&l1, &l2, x, y, z, kx, ky, kz, radius_i, yheight_i);
+            intersecti = cylinder_intersect(&l1, &l2, x, y, z, kx, ky, kz, line_info.radius_i, line_info.yheight_i);
           } else if (line_info.shape == 2) {
             intersect  = sphere_intersect  (&l0, &l3, x,y,z, kx,ky,kz, radius);
-            intersecti = sphere_intersect  (&l1, &l2, x,y,z, kx,ky,kz, radius_i);
+            intersecti = sphere_intersect  (&l1, &l2, x,y,z, kx,ky,kz, line_info.radius_i);
           } else if (line_info.shape == 3) {
             intersect  = off_intersect  (&l0, &l3, NULL, NULL, x,y,z, kx,ky,kz, offdata);
             intersecti = 0;
@@ -835,7 +1033,7 @@ TRACE
           if (!intersect) {
             /* Strange error: did not hit cylinder */
             if (line_info.flag_warning < 100)
-              fprintf(stderr, "PowderN: %s: FATAL ERROR: Did not hit sample from inside (coh).\n", NAME_CURRENT_COMP);
+              printf("PowderN: %s: WARNING: Did not hit sample from inside (coh). ABSORB.\n", NAME_CURRENT_COMP);
             line_info.flag_warning++;
             ABSORB;
           }
@@ -858,11 +1056,12 @@ TRACE
 
           l_1 = l3 - l2 + l1 - l0; /* Length to exit */
 
-          //printf("MYS: %g %g %g %d %g   %g %g\n", my_abs,my_s,my_s_n,line, my_inc, k,k*K2E);
-
-          pmul  = Nq*l_full*my_s_n*exp(-(my_abs+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
+          pmul  = line_info.Nq*l_full*my_s_n*exp(-(line_info.my_a+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
           /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
           if (d_phi) pmul *= alpha/PI;
+
+          line_info.type = 'c';
+          line_info.dq = line_info.q[line];
         } /* else transmit <-- No powder lines in file */
       }  /* Coherent scattering event */
       else if (type == 2) {  /* Make incoherent scattering event */
@@ -883,13 +1082,13 @@ TRACE
         /* Since now scattered and new direction given, calculate path to exit */
         if (line_info.shape == 1) {
           intersect  = box_intersect(&l0, &l3, x, y, z, kx, ky, kz, xwidth, yheight, zdepth);
-          intersecti = box_intersect(&l1, &l2, x, y, z, kx, ky, kz, xwidth_i, yheight_i, zdepth_i);
+          intersecti = box_intersect(&l1, &l2, x, y, z, kx, ky, kz, line_info.xwidth_i, line_info.yheight_i, line_info.zdepth_i);
         } else if (line_info.shape == 0) {
           intersect  = cylinder_intersect(&l0, &l3, x, y, z, kx, ky, kz, radius, yheight);
-          intersecti = cylinder_intersect(&l1, &l2, x, y, z, kx, ky, kz, radius_i, yheight_i);
+          intersecti = cylinder_intersect(&l1, &l2, x, y, z, kx, ky, kz, line_info.radius_i, line_info.yheight_i);
         } else if (line_info.shape == 2) {
           intersect  = sphere_intersect  (&l0, &l3, x,y,z, kx,ky,kz, radius);
-          intersecti = sphere_intersect  (&l1, &l2, x,y,z, kx,ky,kz, radius_i);
+          intersecti = sphere_intersect  (&l1, &l2, x,y,z, kx,ky,kz, line_info.radius_i);
         } else if (line_info.shape == 3) {
           intersect  = off_intersect  (&l0, &l3, NULL, NULL, x,y,z, kx,ky,kz, offdata);
           intersecti = 0;
@@ -898,7 +1097,7 @@ TRACE
         if (!intersect) {
           /* Strange error: did not hit cylinder */
           if (line_info.flag_warning < 100)
-            fprintf(stderr, "PowderN: %s: FATAL ERROR: Did not hit sample from inside (inc).\n", NAME_CURRENT_COMP);
+            printf("PowderN: %s: WARNING: Did not hit sample from inside (inc). ABSORB.\n", NAME_CURRENT_COMP);
           line_info.flag_warning++;
           ABSORB;
         }
@@ -921,14 +1120,18 @@ TRACE
 
         l_1 = (l3 - l2 + l1 - l0); /* Length to exit */
 
-        pmul = l_full*my_inc*exp(-(my_abs+my_s)*(l+l_1))/(p_inc);
+        pmul = l_full*line_info.my_inc*exp(-(line_info.my_a+my_s)*(l+l_1))/(p_inc);
         pmul *= solid_angle/(4*PI);
+
+        line_info.type = 'i';
 
       }  /* Incoherent scattering event */
       else if (type == 1) {
         /* Make transmitted (absorption-corrected) event */
         /* No coordinate changes here, simply change xray weight */
-        pmul = exp(-(my_abs+my_s)*(l))/(p_transmit);
+          pmul = exp(-(line_info.my_a+my_s)*(l))/(p_transmit);
+
+        line_info.type = 't';
       }
       p *= pmul;
     } /* Neutron leaving since it has passed already */
@@ -939,12 +1142,26 @@ TRACE
 FINALLY
 %{
   free(line_info.list);
-  free(my_q);
-  free(my_w);
-  free(my_s_k2);
+  free(line_info.q);
+  free(line_info.w);
+  free(line_info.my_s_k2);
+  MPI_MASTER(
   if (line_info.flag_warning)
-    fprintf(stderr, "PowderN: %s: Error message was repeated %i times with absorbed xrays.\n",
+    printf("PowderN: %s: Error messages were repeated %i times with absorbed xrays.\n",
       NAME_CURRENT_COMP, line_info.flag_warning);
+
+  /* in case this instance is used in a SPLIT, we can recommend the
+     optimal iteration value */
+  if (line_info.nb_refl_count) {
+    double split_iterations = (double)line_info.nb_reuses/line_info.nb_refl_count + 1;
+    double split_optimal    = (double)line_info.nb_refl/line_info.nb_refl_count;
+    if (split_optimal > split_iterations + 5)
+      printf("PowderN: %s: Info: you may highly improve the computation efficiency by using\n"
+        "    SPLIT %i COMPONENT %s=PowderN(...)\n"
+        "  in the instrument description %s.\n",
+        NAME_CURRENT_COMP, (int)split_optimal, NAME_CURRENT_COMP, mcinstrument_source);
+  }
+  );
 
 %}
 
@@ -989,13 +1206,13 @@ MCDISPLAY
       line(xmax, ymin, zmin, xmax, ymin, zmax);
       line(xmin, ymax, zmin, xmin, ymax, zmax);
       line(xmax, ymax, zmin, xmax, ymax, zmax);
-      if (zdepth_i) {
-        xmin = -0.5*xwidth_i;
-        xmax =  0.5*xwidth_i;
-        ymin = -0.5*yheight_i;
-        ymax =  0.5*yheight_i;
-        zmin = -0.5*zdepth_i;
-        zmax =  0.5*zdepth_i;
+      if (line_info.zdepth_i) {
+        xmin = -0.5*line_info.xwidth_i;
+        xmax =  0.5*line_info.xwidth_i;
+        ymin = -0.5*line_info.yheight_i;
+        ymax =  0.5*line_info.yheight_i;
+        zmin = -0.5*line_info.zdepth_i;
+        zmax =  0.5*line_info.zdepth_i;
         multiline(5, xmin, ymin, zmin,
                   xmax, ymin, zmin,
                   xmax, ymax, zmin,
@@ -1012,10 +1229,10 @@ MCDISPLAY
         line(xmax, ymax, zmin, xmax, ymax, zmax);
       }
     } if (line_info.shape == 2) { /* sphere */
-      if (radius_i) {
-        circle("xy",0,0,0,radius_i);
-        circle("xz",0,0,0,radius_i);
-        circle("yz",0,0,0,radius_i);
+      if (line_info.radius_i) {
+        circle("xy",0,0,0,line_info.radius_i);
+        circle("xz",0,0,0,line_info.radius_i);
+        circle("yz",0,0,0,line_info.radius_i);
       }
       circle("xy",0,0,0,radius);
       circle("xz",0,0,0,radius);
