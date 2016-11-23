@@ -26,7 +26,7 @@ def plot_Data1D(data, log=False):
     else:
         plt.setLogMode(y=False)
 
-    plt.setXRange(np.min(data.xvals), np.max(data.xvals), padding=0)
+    plt.setXRange(np.min(x), np.max(x), padding=0)
         
     # labels
     plt.setLabels(title=data.title, bottom=data.xlabel, left=data.ylabel)
