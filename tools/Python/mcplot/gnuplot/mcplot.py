@@ -10,6 +10,10 @@ import logging
 from mcgnuplotter import McGnuplotter
 
 def main(args):
+    # ensure keyboardinterrupt ctr-c
+    import signal
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    
     logging.basicConfig(level=logging.INFO)
     
     if args.simulation:
