@@ -109,8 +109,11 @@ def set_keyhandler(window, replot_cb, key, modifier, flip_log):
             log = flip_log()
             cb(log)
         elif ev.key() == 80: # p
-            savefile_cb()
+            savefile_cb(format='png')
             print("png file saved")
+        elif ev.key() == 83:
+            savefile_cb(format='svg')
+            print("svg file saved")
         elif ev.key() == 16777268: # F5
             cb(log=False)
         elif ev.key() == 16777264 or 72: # F1 or h
@@ -119,16 +122,21 @@ def set_keyhandler(window, replot_cb, key, modifier, flip_log):
         if debug:
             print("key code: %s" % str(ev.key()))
     
-    savefile_cb = lambda: dumpfile(window=window)
+    savefile_cb = lambda format: dumpfile(window=window, format=format)
     
     window.keyPressEvent = lambda ev: key_handler(ev=ev, cb=replot_cb, savefile_cb=savefile_cb, flip_log=flip_log)
 
-def dumpfile(window, filenamebase='mcplot'):
+def dumpfile(window, filenamebase='mcplot', format='png'):
     ''' save as png file. Pdf is not supported, althouhg svg kind-of is '''
     import pyqtgraph.exporters
-    exporter = pg.exporters.ImageExporter(window.scene())
-    #exporter = pg.exporters.SVGExporter(window.scene())
-    exporter.export('%s.png' % filenamebase)
+    if format=='png':
+        exporter = pg.exporters.ImageExporter(window.scene())
+        exporter.export('%s.png' % filenamebase)
+    elif format=='svg':
+        exporter = pg.exporters.SVGExporter(window.scene())
+        exporter.export('%s.svg' % filenamebase)
+    else:
+        raise Exception('png and svg are the only supported file formats (format=%s)' % format)
 
 def get_modifiers(modname):
     ''' get int codes for keyboardmodifiers '''
