@@ -63,6 +63,7 @@ DECLARE
   struct {
     double l0,dl;
     double pmul,pint;
+    int column_e,column_flux;/*column specifiers for energy and intenisty/brilliance.*/
     t_Table T;
   } prms;
 
@@ -100,27 +101,44 @@ INITIALIZE
       exit(1);
     }
     /*data is now in table t*/
+
     /*integrate to get total flux, assuming numbers have been corrected for measuring aperture*/
-    int i,flc,ec;
+    int i;
     int cols,rows;
     prms.pint=0;
-    flc=1;ec=0;/*flux and energy col numbers*/
 
+    cols=prms.T.columns;
+    rows=prms.T.rows;
+    prms.column_e=0;/*default column specifiers*/
+    prms.column_flux=1;
+
+    /*parse header for column specifiers*/
+    char **parsing;
+    parsing=Table_ParseHeader(prms.T.header,"column_e","column_E", 
+            "column_l", "column_L",
+            "column_bril", "column_flux",NULL);
+    if (parsing){
+            if (parsing[0]) { E0=-1; prms.column_e=strtol(parsing[0],NULL,0); }
+            if (parsing[1]) { E0=-1; prms.column_e=strtol(parsing[1],NULL,10); }
+            if (parsing[2]) { E0=0;  prms.column_e=strtol(parsing[2],NULL,10); }
+            if (parsing[3]) { E0=0;  prms.column_e=strtol(parsing[3],NULL,10); }
+            if (parsing[4]) { brilliance=1; prms.column_flux=strtol(parsing[4],NULL,10); }
+            if (parsing[5]) { brilliance=0; prms.column_flux=strtol(parsing[5],NULL,10); }
+    }
     t_Table *T=&(prms.T);
-    cols=T->columns;
-    rows=T->rows;
 
     for (i=0;i<rows-1;i++){
-      if (brilliance){
-        /*unit is brilliance - not raw flux per unit angle and source area*/
-        /*correct for the non-uniform energy binning*/
-          double ebw=T->data[i*cols + ec]*1e-3; /*absolute bw in keV (should be the mean energy of the bin edges)*/
-          double ebin=(T->data[(i+1)*cols + ec]-T->data[i*cols + ec]); /*energy bin width in keV*/
-          prms.pint+=T->data[i*cols+flc]/ebw*ebin;
-      }else{
-          double ebin=(T->data[(i+1)*cols + ec]-T->data[i*cols + ec]); /*energy bin width in keV*/
-          prms.pint+=T->data[i*cols+flc]*ebin;
-      }
+        int ec=prms.column_e;
+        int flc=prms.column_flux;
+        double ebin=(T->data[(i+1)*cols + ec]-T->data[i*cols + ec]); /*energy bin width in keV*/
+        if (brilliance){
+            /*unit is brilliance - not raw flux per unit angle and source area*/
+            /*correct for the non-uniform energy binning*/
+            double ebw=T->data[i*cols + ec]*1e-3; /*absolute bw in keV (should be the mean energy of the bin edges)*/
+            prms.pint+=T->data[i*cols+flc]/ebw*ebin;
+        }else{
+            prms.pint+=T->data[i*cols+flc]*ebin;
+        }
     }
     printf("%s: Integrated intensity radiated is %g pht/s\n",NAME_CURRENT_COMP,prms.pint);
     if(E0) printf("%s: E0!=0 -> assuming intensity spectrum is parametrized by energy [keV]\n",NAME_CURRENT_COMP);
@@ -177,9 +195,9 @@ TRACE
     l=prms.T.data[0]+ (prms.T.data[(prms.T.rows-1)*prms.T.columns] -prms.T.data[0])*rand01();
     if(brilliance){
       /*correct for brilliance being defined in relative wavelength band to get raw flux*/
-      pp=Table_Value(prms.T,l,1)/(Table_Value(prms.T,l,0)*1e-3);
+      pp=Table_Value(prms.T,l,prms.column_flux)/(Table_Value(prms.T,l,prms.column_e)*1e-3);
     }else{
-      pp=Table_Value(prms.T,l,1);
+      pp=Table_Value(prms.T,l,prms.column_flux);
     }
     p*=pp;
     
