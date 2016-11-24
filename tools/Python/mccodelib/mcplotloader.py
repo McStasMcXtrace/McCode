@@ -11,109 +11,125 @@ from .flowchart import *
 from .mcplotgraph import *
 
 '''
-Flowchart decision functions.
-
-NOTE: These functions probe disk contents, but they do not open any files, so
-all decisions are based on file exists, folder exists and filename.
-Any errors are therefore encountered only at the actual load data step.
-
-They assume that args['simfilee'] is a string that was input by the user (possibly empty).
-
-They are implemented in a context-dependent way! Each one
-can have assumptions in its implementation depending on its position in the flow chart.
-
-Also note the use of implicit data keys, 'monitorfile' etc. which are assumed to exist by the
-data loader terminal functions.
-'''
-def has_filename(args):
-    f = args['simfile']
-    if not isfile(f):
-        if not isdir(f):
-            raise Exception('Invalid input file.')
-        args['directory'] = f
-        args['simfile'] = ''
-        return False
-    else:
-        args['directory'] = dirname(f)
-        return True
-
-def is_mccodesim_or_mccodedat(args):
-    f = args['simfile']
-    f_name = basename(f)
-    return (f_name == 'mccode.sim' or f_name == 'mccode.dat') and isfile(f)
-
-def is_monitorfile(args):
-    f = args['simfile']
-    ext = splitext(f)[1]
-    if ext == '.dat' and isfile(f):
-        args['monitorfile'] = f
-        return True
-    else:
-        return False
-
-def is_sweepfolder(args):
-    d = args['directory']
-
-    if not isdir(d):
-        return False
-    dotsim = join(d, 'mccode.sim')
-    dotdat = join(d, 'mccode.dat')
-    return isfile(dotsim) and isfile(dotdat)
-
-def is_broken_sweepfolder(args):
-    ''' not implemented (returns trivial answer) '''
-    return False
-
-def is_sweep_data_present(args):
-    ''' not implemented '''
-    raise Exception('is_sweep_data_present has not been not implemented.')
-
-def is_mccodesim_w_monitors(args):
-    f = args['simfile']
-    d = args['directory']
-    # checks mccode.sim existence
-    if not isfile(join(d, 'mccode.sim')):
-        return False
-    else:
-        f = join(d, 'mccode.sim')
-        args['simfile'] = f
-    # look for .dat files
-    datfiles = glob.glob(join(d, '*.dat'))
-    return len(datfiles) > 0
-
-def has_datfile(args):
-    d = args['directory']
-    datfiles = glob.glob(join(d, '*.dat'))
-    if len(datfiles) > 0:
-        args['monitorfile'] = datfiles[0]
-        return True
-    else:
-        return False
-
-def has_multiple_datfiles(args):
-    d = args['directory']
-    datfiles = glob.glob(join(d, '*.dat'))
-    return len(datfiles) > 1
-
-def test_decfuncs(simfile):
-    args = {}
-    args['simfile'] = simfile
-
-    print('has_filename:              %s' % str(has_filename(args)))
-    print('is_mccodesim_or_mccodedat: %s' % str(is_mccodesim_or_mccodedat(args)))
-    print('is_monitorfile:            %s' % str(is_monitorfile(args)))
-    print('is_sweepfolder:            %s' % str(is_sweepfolder(args)))
-    print('is_broken_sweepfolder:     %s' % str(is_broken_sweepfolder(args)))
-    #print('is_sweep_data_present:     %s' % str(is_sweep_data_present(args)))
-    print('is_mccodesim_w_monitors:   %s' % str(is_mccodesim_w_monitors(args)))
-    print('has_datfile:               %s' % str(has_datfile(args)))
-    print('has_multiple_datfiles:     %s' % str(has_multiple_datfiles(args)))
-
-
-'''
-Utility funcitons for loading and parsing mccode output data files
+McCode simulation output data types.
 '''
 
+'''
+mccode output data in pythonified form.
+'''
+class DataMcCode(object):
+    ''' base type holding only the data object's title '''
+    def __init__(self, *args, **kwargs):
+        self.title = ''
+
+    def __str__(self, *args, **kwargs):
+        return self.title
+
+class Data1D(DataMcCode):
+    ''' 1d plots use this data type '''
+    def __init__(self):
+        super(Data1D, self).__init__()
+        
+        self.component = ''
+        self.filename = ''
+        self.title = ''
+        self.xlabel = ''
+        self.ylabel = ''
+        
+        self.xvar = ''
+        self.xlimits = () # pair
+        
+        self.variables = []
+        
+        self.yvar = () # pair
+        self.values = () # triplet
+        self.statistics = ''
+        
+        # data references
+        self.xvals = []
+        self.yvals = []
+        self.y_err_vals = []
+        self.Nvals = []
+    
+    def clone(self):
+        data = Data1D()
+        
+        data.component = self.component
+        data.filename = self.filename
+        data.title = self.title
+        data.xlabel = self.xlabel
+        data.ylabel = self.ylabel
+        
+        data.xvar = self.xvar
+        data.xlimits = self.xlimits
+        
+        data.variables = self.variables
+        
+        data.yvar = self.yvar
+        data.values = self.values
+        data.statistics = self.statistics
+        
+        # data references
+        data.xvals = self.xvals
+        data.yvals = self.yvals
+        data.y_err_vals = self.y_err_vals
+        data.Nvals = self.Nvals
+        
+        return data
+        
+    def get_stats_title(self):
+        '''I=.... Err=... N=...; X0=...; dX=...;'''
+        if len(self.values) >= 3:
+            stitle = '%s=%e Err=%e N=%d; %s' % (self.yvar[0], self.values[0], self.values[1], self.values[2], self.statistics)
+        else:
+            stitle = '%s of %s' % (self.yvar[0], self.xvar)
+        return stitle
+    
+    def __str__(self):
+        return 'Data1D, ' + self.get_stats_title()
+
+class Data2D(DataMcCode):
+    ''' PSD data type '''
+    def __init__(self):
+        super(Data2D, self).__init__()
+        
+        self.component = ''
+        self.filename = ''
+        self.title = ''
+        
+        self.xlabel = ''
+        self.ylabel = ''
+        
+        self.xvar = ''
+        self.yvar = ''
+        self.zvar = ''
+        self.xylimits = () # quadruple
+        
+        self.values = () # triplet
+        self.statistics = '' # quadruple
+        self.signal = ''
+        
+        # data references
+        self.zvals = []
+        self.counts = []
+    
+    def get_stats_title(self):
+        '''I=.... Err=... N=...; X0=...; dX=...;'''
+        stitle = '%s=%e Err=%e N=%d' % (self.zvar, self.values[0], self.values[1], self.values[2])
+        return stitle
+    
+    def __str__(self):
+        return 'Data2D, ' + self.get_stats_title()
+
+class DataMultiHeader(DataMcCode):
+    ''' "header" place holder type used in the plot graph '''
+    def __str__(self):
+        return 'DataMultiHeader'
+
+
+''' 
+Utility funcitons for loading and parsing mccode output files
+'''
 freetext_pat = '[\w \[\]\{\}\(\)\.\+\-\\\/\^]+'
 
 def _parse_1D_monitor(text):
@@ -426,10 +442,104 @@ def _load_sweep_monitors(rootdir):
 
     return sweep_monitors, sweep_headers
 
-'''
-Terminal load data functions.
 
-Loads data files, then assembles and returns a data graph, which can be plotted.
+'''
+Flowchart functions for decision and terminal nodes (there are no process nodes in the implemented chart, 
+although a cleaner implementation might include some).
+
+Decision (bool) functions only probe disk contents. Terminal functions will load and interprit data files.
+Therefore, any load errors are encountered at the terminal nodes' load data step.
+
+NOTE: Functions can be context-dependent, according to the corresponding node position.
+The function has_filename must be called first (see test_decfuncs).
+'''
+def has_filename(args):
+    f = args['simfile']
+    if not isfile(f):
+        if not isdir(f):
+            raise Exception('Invalid input file.')
+        args['directory'] = f
+        args['simfile'] = ''
+        return False
+    else:
+        args['directory'] = dirname(f)
+        return True
+
+def is_mccodesim_or_mccodedat(args):
+    f = args['simfile']
+    f_name = basename(f)
+    return (f_name == 'mccode.sim' or f_name == 'mccode.dat') and isfile(f)
+
+def is_monitorfile(args):
+    f = args['simfile']
+    ext = splitext(f)[1]
+    if ext == '.dat' and isfile(f):
+        args['monitorfile'] = f
+        return True
+    else:
+        return False
+
+def is_sweepfolder(args):
+    d = args['directory']
+
+    if not isdir(d):
+        return False
+    dotsim = join(d, 'mccode.sim')
+    dotdat = join(d, 'mccode.dat')
+    return isfile(dotsim) and isfile(dotdat)
+
+def is_broken_sweepfolder(args):
+    ''' not implemented (returns trivial answer) '''
+    return False
+
+def is_sweep_data_present(args):
+    ''' not implemented '''
+    raise Exception('is_sweep_data_present has not been implemented.')
+
+def is_mccodesim_w_monitors(args):
+    f = args['simfile']
+    d = args['directory']
+    # checks mccode.sim existence
+    if not isfile(join(d, 'mccode.sim')):
+        return False
+    else:
+        f = join(d, 'mccode.sim')
+        args['simfile'] = f
+    # look for .dat files
+    datfiles = glob.glob(join(d, '*.dat'))
+    return len(datfiles) > 0
+
+def has_datfile(args):
+    d = args['directory']
+    datfiles = glob.glob(join(d, '*.dat'))
+    if len(datfiles) > 0:
+        args['monitorfile'] = datfiles[0]
+        return True
+    else:
+        return False
+
+def has_multiple_datfiles(args):
+    d = args['directory']
+    datfiles = glob.glob(join(d, '*.dat'))
+    return len(datfiles) > 1
+
+def test_decfuncs(simfile):
+    ''' calls all decision functions in the node tree '''
+    args = {}
+    args['simfile'] = simfile
+
+    print('has_filename:              %s' % str(has_filename(args)))
+    print('is_mccodesim_or_mccodedat: %s' % str(is_mccodesim_or_mccodedat(args)))
+    print('is_monitorfile:            %s' % str(is_monitorfile(args)))
+    print('is_sweepfolder:            %s' % str(is_sweepfolder(args)))
+    print('is_broken_sweepfolder:     %s' % str(is_broken_sweepfolder(args)))
+    #print('is_sweep_data_present:     %s' % str(is_sweep_data_present(args))) # should not be called until implemented
+    print('is_mccodesim_w_monitors:   %s' % str(is_mccodesim_w_monitors(args)))
+    print('has_datfile:               %s' % str(has_datfile(args)))
+    print('has_multiple_datfiles:     %s' % str(has_multiple_datfiles(args)))
+
+'''
+Terminal load functions - calls data load utilities, assembles and returns data graph.
 '''
 def load_monitor(args):
     # assume monitorfile is present and exists

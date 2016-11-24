@@ -16,8 +16,8 @@ from plotfuncs import plot_Data1D, plot_Data2D
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from mccodelib.mcplotloader import McPlotDataLoader, test_decfuncs
-from mccodelib.mcplotgraph import PlotGraphPrint, PNMultiple, Data1D, Data2D
+from mccodelib.mcplotloader import McPlotDataLoader, test_decfuncs, Data1D, Data2D
+from mccodelib.mcplotgraph import PlotGraphPrint
 
 class McPyqtgraphPlotter():
     '''
