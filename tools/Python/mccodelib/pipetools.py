@@ -76,8 +76,8 @@ class PromptState(LineHandlerState):
         self.databox.add_comment(line)
         if re.search('\]:', line):
             if not self.args['use_defaultpars']:
-                input = raw_input()
-                self.process.stdin.write(input + '\n')
+                inpt = input()
+                self.process.stdin.write(inpt + '\n')
                 self.process.stdin.flush()
             else:
                 self.process.stdin.write('\n')
