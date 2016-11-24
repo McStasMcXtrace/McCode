@@ -160,6 +160,7 @@ def _parse_1D_monitor(text):
         '''# yvar: (I,I_err)'''
         m = re.search('\# yvar: \(([\w]+),([\w]+)\)\n', text)
         data.yvar = (m.group(1), m.group(2))
+        
         '''# values: 6.72365e-17 4.07766e-18 4750'''
         m = re.search('\# values: ([\d\-\+\.e]+) ([\d\-\+\.e]+) ([\d]+)\n', text)
         data.values = (float(m.group(1)), float(m.group(2)), float(m.group(3)))
@@ -177,7 +178,7 @@ def _parse_1D_monitor(text):
             if '#' in l:
                 continue
 
-            vals = l.split(' ')
+            vals = l.split()
             xvals.append(float(vals[0]))
             yvals.append(float(vals[1]))
             y_err_vals.append(float(vals[2]))
@@ -223,6 +224,7 @@ def _parse_2D_monitor(text):
         '''# yvar: Y '''
         m = re.search('\# yvar: ([\w ]+)\n', text)
         data.yvar = m.group(1)
+        
         '''# zvar: I '''
         m = re.search('\# zvar: ([\w ]+)\n', text)
         data.zvar = m.group(1)
@@ -263,13 +265,13 @@ def _parse_2D_monitor(text):
 
             if dat:
                 try:
-                    vals = [float(item) for item in l.strip().split(' ')]
+                    vals = [float(item) for item in l.strip().split()]
                     data.zvals.append(vals)
                 except:
                     pass
             if events:
                 try:
-                    vals = [float(item) for item in l.strip().split(' ')]
+                    vals = [float(item) for item in l.strip().split()]
                     data.counts.append(vals)
                 except:
                     pass
@@ -351,10 +353,10 @@ def _load_multiplot_1D_lst(f_dat):
         '''# xlimits: 6 7'''
         m = re.search('\# xlimits: ([\d\.\-e]+) ([\d\.\-e]+)\n', text)
         header.xlimits = (float(m.group(1)), float(m.group(2)))
-
+        
         '''# variables: lambda Ldetector_I Ldetector_ERR PSDrad_I PSDrad_ERR PSDrad_I PSDrad_ERR detector_I detector_ERR'''
         m = re.search('\# variables: ([\w ]+)\n', text)
-        variables = m.group(1).split(' ')
+        variables = m.group(1).split()
 
         # get x and y values (the latter is a list of a list, the infamous yvals_lst which contains yvals values, which are lists)
         lines = text.splitlines()
@@ -363,17 +365,17 @@ def _load_multiplot_1D_lst(f_dat):
         yvals_err_lst = []
 
         yvariables = variables # remember, every second "variable" is an error bar
-        yvariables.pop(0)
+        yvariables.pop(0) # remove xval, which for some reason is the first value
         for l in lines:
             if '#' in l:
                 continue
-            xvals.append(l.split(' ')[0])
+            xvals.append(l.split()[0])
 
             for i in range(len(yvariables)//2):
                 yvals_lst.append([])
                 yvals_err_lst.append([])
-                yvals_lst[i].append(l.split(' ')[2*i+1])
-                yvals_err_lst[i].append(l.split(' ')[2*i+2])
+                yvals_lst[i].append(l.split()[2*i+1])
+                yvals_err_lst[i].append(l.split()[2*i+2])
         header.xvals = xvals
 
         # create a new instance for each y variable
