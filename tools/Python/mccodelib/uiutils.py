@@ -3,10 +3,9 @@ Utility functions used by mcgui. Should be static.
 '''
 import os
 import re
-import imp
 
-
-''' Static functions related to handling mcstas files and more.
+'''
+Static utility functions related to handling mccode files.
 '''
 def get_instr_site(instr_file):
     ''' extracts and returns the rest of the line, from the text file instr_file, containing "%INSTRUMENT_SITE:" '''
@@ -95,67 +94,3 @@ def get_file_contents(filepath):
         return text
     else:
         return ''
-
-def get_mccode_config_options(MCCODE):
-    if MCCODE == "mcstas":
-        prefix = "mc"
-    else:
-        prefix = "mx"
-    mcrun_lst =     [prefix+"run", prefix+"run-py"]
-    mcplot_lst =    [prefix+"plot-pyqtgraph-py",prefix+"plot", prefix+"plot --format=Gnuplot", prefix+"plot --format=Matlab",
-                     prefix+"plot-matlab", prefix+"plot-matplotlib-py", prefix+"plot-gnuplot-py", prefix+"plot-chaco-py"]
-    mcdisplay_lst = [prefix+"display-webgl-py",prefix+"display", prefix+"display --format=Matlab", prefix+"display --format=VRML", 
-                     prefix+"display --format=Mantid", prefix+"display-matplotlib-py", prefix+"display-py", 
-                     prefix+"display-r-py", prefix+"display-vtk-py"]
-    return mcrun_lst, mcplot_lst, mcdisplay_lst
-
-def load_user_config(MCCODE,MCCODE_VERSION):
-    userconfig=os.path.expandvars("$HOME/."+MCCODE+"/"+MCCODE_VERSION+"/mccode_config.py")
-    if os.path.isfile(userconfig):
-        print("Loading user configuration from " + userconfig)
-        imp.load_source('mccode_config', userconfig)
-
-def save_user_config(config_module,MCCODE,MCCODE_VERSION):
-    # overrides previous config by creating a mccode_config.py file in the $HOME/.MCCODE folder
-    conf_text_lines = [
-        '# ',
-        '\n' + '# mcstas/mcxtrace configuration.',
-        '\n' + '# ',
-        '\n' + 'configuration = {',
-        _get_indented_lines(config_module.configuration),
-        '\n' + '}',
-        '\n',
-        '\n' + '# ',
-        '\n' + '# Compilation, parallelisation etc.',
-        '\n' + '# ',
-        '\n' + 'compilation = {',
-        _get_indented_lines(config_module.compilation),
-        '\n' + '}',
-        '\n',
-        '\n' + '# ',
-        '\n' + '# Compilation, parallelisation etc.',
-        '\n' + '# ',
-        '\n' + 'platform = {',
-        _get_indented_lines(config_module.platform),
-        '\n' + '}',
-        '\n']
-    
-    conf_text = ''.join(conf_text_lines)
-    
-    if (os.path.isdir(os.path.expandvars("$HOME/."+MCCODE+"/")) == False):
-        # We use os.makedirs here because of missing os.path.mkdir on OS X... :-(
-        os.makedirs(os.path.expandvars("$HOME/."+MCCODE+"/"))
-        
-    if (os.path.isdir(os.path.expandvars("$HOME/."+MCCODE+"/"+MCCODE_VERSION)) == False):
-        # We use os.makedirs here because of missing os.path.mkdir on OS X... :-(
-        os.makedirs(os.path.expandvars("$HOME/."+MCCODE+"/"+MCCODE_VERSION))
-        
-    f = open(os.path.expandvars("$HOME/."+MCCODE+"/"+MCCODE_VERSION+"/mccode_config.py"), 'w')
-    f.write(conf_text)
-    f.close()
-
-def _get_indented_lines(config_dict):
-    lines = ''
-    for name in config_dict:
-        lines += '\n' + '    \"' + name + '\"' + ': \"' + config_dict[name] + '\",'
-    return lines

@@ -17,7 +17,7 @@ from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import mccode_config
-from mccodelib.uiutils import load_user_config, save_instrfile, get_instr_site, get_mccode_config_options, get_file_contents, get_instr_comp_files
+from mccodelib.uiutils import save_instrfile, get_instr_site, get_file_contents, get_instr_comp_files
 from mccodelib.fileutils import McComponentParser
 
 ''' Message emitter
@@ -788,8 +788,8 @@ def main():
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     
     try:
-        load_user_config(mccode_config.configuration["MCCODE"], mccode_config.configuration["MCCODE_VERSION"])
-        
+        mccode_config.load_user_config()
+                
         mcguiApp = QtGui.QApplication(sys.argv)
         mcguiApp.ctr = McGuiAppController()
         

@@ -9,7 +9,6 @@ from PyQt4 import Qsci
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mccodelib import mccode_config
-from mccodelib.uiutils import get_mccode_config_options, save_user_config
 from mccodelib.fileutils import McComponentParser
 
 '''
@@ -904,7 +903,7 @@ class McConfigDialog(QtGui.QDialog):
 
     def initConfigData(self, args):
         # comboboxes
-        mcrun_lst, mcplot_lst, mcdisplay_lst = get_mccode_config_options(mccode_config.configuration["MCCODE"])
+        mcrun_lst, mcplot_lst, mcdisplay_lst = mccode_config.get_options()
 
         # mcrun combobox
         selected_val = mccode_config.configuration["MCRUN"]
@@ -986,7 +985,7 @@ class McConfigDialog(QtGui.QDialog):
 
     def save(self):
         self.__pullValuesTo_mccode_config()
-        save_user_config(mccode_config,mccode_config.configuration["MCCODE"], mccode_config.configuration["MCCODE_VERSION"])
+        mccode_config.save_user_config()
 
         # finally
         super(McConfigDialog, self).accept()
