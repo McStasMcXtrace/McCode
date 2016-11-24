@@ -135,7 +135,7 @@ TRACE
 	AT (0, 0, 0) ABSOLUTE
 
 
-	COMPONENT Source = Source_gaussian_Fixed(
+	COMPONENT Source = Source_gaussian(
 		sig_x    = 120.0E-6, 
 		sig_y    =  16.0E-6, 
 		sigPr_x  =   1.0E-6,
