@@ -29,7 +29,8 @@ def plot_Data1D(data, log=False):
     plt.setXRange(np.min(x), np.max(x), padding=0)
         
     # labels
-    plt.setLabels(title=data.title, bottom=data.xlabel, left=data.ylabel)
+    title = '%s' % (data.title)
+    plt.setLabels(title=title, bottom=data.xlabel, left=data.ylabel)
     
     # error bars
     beam = 0
@@ -83,6 +84,7 @@ def plot_Data2D(data, log=False):
     
     # graphics layout with a plotitem and a gradienteditoritem
     layout = pg.GraphicsLayout()
+    layout.setContentsMargins(0, 0, 20, 5)
     
     # title label
     layout.addLabel(data.title, 0, 0, colspan=2)

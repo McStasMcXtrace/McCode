@@ -13,10 +13,6 @@ from .mcplotgraph import *
 '''
 McCode simulation output data types.
 '''
-
-'''
-mccode output data in pythonified form.
-'''
 class DataMcCode(object):
     ''' base type holding only the data object's title '''
     def __init__(self, *args, **kwargs):
@@ -674,3 +670,5 @@ class McPlotDataLoader():
         exit_node = control.process(args=args)
 
         self.plot_graph = exit_node.result
+        
+        self.simfile = args['simfile']

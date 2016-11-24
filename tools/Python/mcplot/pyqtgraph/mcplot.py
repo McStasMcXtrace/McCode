@@ -23,26 +23,38 @@ class McPyqtgraphPlotter():
     '''
     PyQtGraph-based plotter class.
     '''
-    def __init__(self, plotgraph):
+    def __init__(self, plotgraph, simfile):
         self.graph = plotgraph
-        self.win = None
+        self.simfile = simfile
         
     def runplot(self):
         node = self.graph
         
         # set up the qt app
         app = QtGui.QApplication([])
-        window = pg.GraphicsWindow()
-        window.resize(1000,600)
+        plt_layout = create_plotwindow(title=self.simfile)
         
         # create the logflipper
         flipper = LogFlipper()
         
         # initiate event driven plot recursion
-        plot_node(node, window, flipper)
+        plot_node(node, plt_layout, flipper)
         
         # start
         QtGui.QApplication.instance().exec_()
+
+def create_plotwindow(title):
+    ''' set up and return a plotlayout "window" '''
+    window = pg.GraphicsWindow()
+    window.resize(1000,600)
+    window.setWindowTitle(title)
+    
+    layout = pg.GraphicsLayout()
+    window.setCentralItem(layout)
+    layout.window = window # keep window to avoid garbage collection
+    layout.setContentsMargins(2, 2, 2, 2) # outermost margin
+    
+    return layout
 
 class LogFlipper():
     ''' boolean log state keeper object '''
@@ -54,12 +66,12 @@ class LogFlipper():
     def state(self):
         return self.log
 
-def plot_node(node, window, logflipper):
+def plot_node(node, layout, logflipper):
     '''
     Event driven recursive plot function. Click events are registered with each recursion.
     '''
     # init
-    clear_window_and_handlers(window)
+    clear_window_and_handlers(layout)
     
     # get references from node
     data_lst = node.data
@@ -71,7 +83,7 @@ def plot_node(node, window, logflipper):
     n = len(data_lst)
     viewbox_lst = []
     for i in range(n):
-        viewbox_lst.append(add_plot(window, data_lst[i], i, n, logflipper.state()))
+        viewbox_lst.append(add_plot(layout, data_lst[i], i, n, logflipper.state()))
     
     # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
     vn_dict_click = {}
@@ -89,16 +101,16 @@ def plot_node(node, window, logflipper):
         vn_dict_ctrlclick[viewbox_lst[i]] = sec_lst[i]
     
     # set mouse click handlers on the window
-    plot_node_cb = lambda node: plot_node(node, window=window, logflipper=logflipper)
-    set_handler(window.scene(), vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
-    set_handler(window.scene(), vn_dict_rclick, plot_node_cb, "rclick", get_modifiers("none"))
-    set_handler(window.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))
+    plot_node_cb = lambda node: plot_node(node, layout=layout, logflipper=logflipper)
+    set_handler(layout.scene(), vn_dict_click, plot_node_cb, "click", get_modifiers("none"))
+    set_handler(layout.scene(), vn_dict_rclick, plot_node_cb, "rclick", get_modifiers("none"))
+    set_handler(layout.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))
     
     # set keypress handlers 
-    replot_cb = lambda log: plot_node(node, window, logflipper=logflipper)
-    set_keyhandler(window, replot_cb, 'l', get_modifiers("none"), flip_log=logflipper.flip)
+    replot_cb = lambda log: plot_node(node, layout, logflipper=logflipper)
+    set_keyhandler(layout.scene(), replot_cb, 'l', get_modifiers("none"), flip_log=logflipper.flip)
 
-def set_keyhandler(window, replot_cb, key, modifier, flip_log):
+def set_keyhandler(scene, replot_cb, key, modifier, flip_log):
     ''' sets a clickhadler according to input '''
     
     def key_handler(ev, cb, savefile_cb, flip_log, debug=False):
@@ -122,18 +134,18 @@ def set_keyhandler(window, replot_cb, key, modifier, flip_log):
         if debug:
             print("key code: %s" % str(ev.key()))
     
-    savefile_cb = lambda format: dumpfile(window=window, format=format)
+    savefile_cb = lambda format: dumpfile(scene=scene, format=format)
     
-    window.keyPressEvent = lambda ev: key_handler(ev=ev, cb=replot_cb, savefile_cb=savefile_cb, flip_log=flip_log)
+    scene.keyPressEvent = lambda ev: key_handler(ev=ev, cb=replot_cb, savefile_cb=savefile_cb, flip_log=flip_log)
 
-def dumpfile(window, filenamebase='mcplot', format='png'):
+def dumpfile(scene, filenamebase='mcplot', format='png'):
     ''' save as png file. Pdf is not supported, althouhg svg kind-of is '''
     import pyqtgraph.exporters
     if format=='png':
-        exporter = pg.exporters.ImageExporter(window.scene())
+        exporter = pg.exporters.ImageExporter(scene)
         exporter.export('%s.png' % filenamebase)
     elif format=='svg':
-        exporter = pg.exporters.SVGExporter(window.scene())
+        exporter = pg.exporters.SVGExporter(scene)
         exporter.export('%s.svg' % filenamebase)
     else:
         raise Exception('png and svg are the only supported file formats (format=%s)' % format)
@@ -192,8 +204,8 @@ def get_golden_rowlen(n):
     ''' find rowlength by golden ratio '''
     return int(math.sqrt(n*1.61803398875))
 
-def add_plot(window, data, i, n, log=False):
-    ''' constructs a plot from data and adds this to window '''
+def add_plot(layout, data, i, n, log=False):
+    ''' constructs a plot from data and adds this to layout '''
     rowlen = get_golden_rowlen(n)
     
     if type(data) is Data1D:
@@ -201,7 +213,7 @@ def add_plot(window, data, i, n, log=False):
     else:
         item, view_box = plot_Data2D(data, log=log)
 
-    window.addItem(item, i / rowlen, i % rowlen)
+    layout.addItem(item, i / rowlen, i % rowlen)
     
     return view_box
 
@@ -225,7 +237,7 @@ def main(args):
         if args.test:
             printer = PlotGraphPrint(graph)
         
-        plotter = McPyqtgraphPlotter(graph)
+        plotter = McPyqtgraphPlotter(graph, loader.simfile)
         plotter.runplot()
         
     except Exception as e:
