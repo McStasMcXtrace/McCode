@@ -30,8 +30,6 @@ class McPyqtgraphPlotter():
     def runplot(self):
         node = self.graph
         
-        # set up the qt app
-        app = QtGui.QApplication([])
         plt_layout = create_plotwindow(title=self.simfile)
         
         # create the logflipper
@@ -39,9 +37,6 @@ class McPyqtgraphPlotter():
         
         # initiate event driven plot recursion
         plot_node(node, plt_layout, flipper)
-        
-        # start
-        QtGui.QApplication.instance().exec_()
 
 def create_plotwindow(title):
     ''' set up and return a plotlayout "window" '''
@@ -221,6 +216,10 @@ def main(args):
     ''' load data from mcplot backend and send it to the pyqtgraph frontend above '''
     logging.basicConfig(level=logging.INFO)
     
+    # ensure keyboardinterrupt ctr-c
+    import signal
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    
     try:
         if len(args.simulation) == 0:
             simfile = ''
@@ -237,9 +236,18 @@ def main(args):
         if args.test:
             printer = PlotGraphPrint(graph)
         
+        # Qt app
+        app = QtGui.QApplication(sys.argv)
+        
+        # set up
         plotter = McPyqtgraphPlotter(graph, loader.simfile)
         plotter.runplot()
         
+        # start
+        sys.exit(app.exec_())
+    
+    except KeyboardInterrupt:
+        print('keyboard interrupt')
     except Exception as e:
         print('mcplot error: %s' % e.__str__())
         raise e
