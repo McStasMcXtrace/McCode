@@ -130,140 +130,136 @@ TRACE
     /**********/
     /* Source */
     /**********/
-	COMPONENT Origin = Progress_bar(
-	) 
-	AT (0, 0, 0) ABSOLUTE
+COMPONENT Origin = Progress_bar(
+) 
+AT (0, 0, 0) ABSOLUTE
 
 
-	COMPONENT Source = Source_gaussian(
-		sig_x    = 120.0E-6, 
-		sig_y    =  16.0E-6, 
-		sigPr_x  =   1.0E-6,
-		sigPr_y  =   1.0E-6, 
-		dist     = DistanceSourceToPrimarySlit2, 
-		gauss    = 1,
-		focus_xw = PrimarySlit2Width, 
-		focus_yh = PrimarySlit2Height, 
-		E0       = NominalEnergy, 
-		dE       = dE
-	) 
-	AT (0, 0, 0) RELATIVE Origin
+COMPONENT Source = Source_gaussian(
+	sig_x    = 120.0E-6, 
+	sig_y    =  16.0E-6, 
+	sigPr_x  =   1.0E-6,
+	sigPr_y  =   1.0E-6, 
+	dist     = DistanceSourceToPrimarySlit2, 
+	gauss    = 1,
+	focus_xw = PrimarySlit2Width, 
+	focus_yh = PrimarySlit2Height, 
+	E0       = NominalEnergy, 
+	dE       = dE
+) 
+AT (0, 0, 0) RELATIVE Origin
 
 
-	/*****************/
-	/* Primary slits */
-    /*****************/
-	COMPONENT PrimarySlit1 = Slit(
-		xwidth  = PrimarySlit1Width, 
-		yheight = PrimarySlit1Height
-	) 
-	AT (0, 0, DistanceSourceToPrimarySlit1) RELATIVE Source
+/*****************/
+/* Primary slits */
+/*****************/
+COMPONENT PrimarySlit1 = Slit(
+	xwidth  = PrimarySlit1Width, 
+	yheight = PrimarySlit1Height
+) 
+AT (0, 0, DistanceSourceToPrimarySlit1) RELATIVE Source
 
 
-	COMPONENT PrimarySlit2 = Slit(
-		xwidth  = PrimarySlit2Width, 
-		yheight = PrimarySlit2Height
-	) 
-	AT (0, 0, DistanceSourceToPrimarySlit2) RELATIVE Source
+COMPONENT PrimarySlit2 = Slit(
+	xwidth  = PrimarySlit2Width, 
+	yheight = PrimarySlit2Height
+) 
+AT (0, 0, DistanceSourceToPrimarySlit2) RELATIVE Source
 
 
-    /***********************/
-    /* First monochromator */
-    /***********************/
-	COMPONENT Monochromator1Arm1 = Arm(
-	)
-	AT (0, 0, DistanceSourceToMonochromator) RELATIVE Source
-	ROTATED (0, AngleMonochromator, 90) RELATIVE Source
+/***********************/
+/* First monochromator */
+/***********************/
+COMPONENT Monochromator1Arm1 = Arm()
+AT (0, 0, DistanceSourceToMonochromator) RELATIVE Source
+ROTATED (0, AngleMonochromator, 90) RELATIVE Source
 
 
-	COMPONENT Monochromator1 = Perfect_crystal(
-		length = Monochromator1Length, 
-		width  = Monochromator1Width
-	) 
-	AT (0, 0, 0) RELATIVE Monochromator1Arm1
+COMPONENT Monochromator1 = Perfect_crystal(
+	length = Monochromator1Length, 
+	width  = Monochromator1Width
+) 
+AT (0, 0, 0) RELATIVE Monochromator1Arm1
 
 
-	COMPONENT Monochromator1Arm2 = Arm(
-	)
-	AT (0, 0, 0) RELATIVE Monochromator1Arm1
-	ROTATED (0, 2.0 * AngleMonochromator, 90) RELATIVE Source
+COMPONENT Monochromator1Arm2 = Arm()
+AT (0, 0, 0) RELATIVE Monochromator1Arm1
+ROTATED (0, 2.0 * AngleMonochromator, 90) RELATIVE Source
 
 
-    /************************/
-	/* Second monochromator */
-    /************************/
-	COMPONENT Monochromator2Arm1 = Arm(
-	)
-	AT (0, 0, DistanceBetweenMonochromators) RELATIVE Monochromator1Arm2
-	ROTATED (0, AngleMonochromator, 90) RELATIVE Source
+/************************/
+/* Second monochromator */
+/************************/
+COMPONENT Monochromator2Arm1 = Arm()
+AT (0, 0, DistanceBetweenMonochromators) RELATIVE Monochromator1Arm2
+ROTATED (0, AngleMonochromator, 90) RELATIVE Source
 
 
-	COMPONENT Monochromator2 = Perfect_crystal(
-		length = Monochromator2Length, 
-		width  = Monochromator2Width
-	)
-	AT (0, 0, 0) RELATIVE Monochromator2Arm1
+COMPONENT Monochromator2 = Perfect_crystal(
+	length = Monochromator2Length, 
+	width  = Monochromator2Width
+)
+AT (0, 0, 0) RELATIVE Monochromator2Arm1
 
 
-	COMPONENT Monochromator2Arm2 = Arm(
-	)
-	AT (0, 0, 0) RELATIVE Monochromator2Arm1
-	ROTATED (0, 0, 90) RELATIVE Source
+COMPONENT Monochromator2Arm2 = Arm()
+AT (0, 0, 0) RELATIVE Monochromator2Arm1
+ROTATED (0, 0, 90) RELATIVE Source
 
 
-	/*******************/
-	/* Secondary slits */
-    /*******************/
-	COMPONENT SecondarySlit1 = Slit(
-		xwidth  = SecondarySlit1Width, 
-		yheight = SecondarySlit1Height
-	) 
-	AT (0, 0, DistanceSourceToSecondarySlit1 - DistanceSourceToMonochromator + DistanceBetweenMonochromators) RELATIVE Monochromator2Arm2
+/*******************/
+/* Secondary slits */
+/*******************/
+COMPONENT SecondarySlit1 = Slit(
+	xwidth  = SecondarySlit1Width, 
+	yheight = SecondarySlit1Height
+) 
+AT (0, 0, DistanceSourceToSecondarySlit1 - DistanceSourceToMonochromator + DistanceBetweenMonochromators) RELATIVE Monochromator2Arm2
 
 
-    COMPONENT SecondarySlit2 = Slit(
-		xwidth  = SecondarySlit2Width, 
-		yheight = SecondarySlit2Height
-	) 
-	AT (0, 0, DistanceSourceToSecondarySlit2 - DistanceSourceToSecondarySlit1) RELATIVE SecondarySlit1
+COMPONENT SecondarySlit2 = Slit(
+	xwidth  = SecondarySlit2Width, 
+	yheight = SecondarySlit2Height
+) 
+AT (0, 0, DistanceSourceToSecondarySlit2 - DistanceSourceToSecondarySlit1) RELATIVE SecondarySlit1
 
 
-    /**********************/
-    /* Fresnel zone plate */
-    /**********************/
-	COMPONENT CentralStop = Beamstop (
-		radius = CentralStopRadius
-	)
-	AT (0, 0, DistanceSourceToFZP - DistanceSourceToSecondarySlit2 - 0.00001) RELATIVE SecondarySlit2
+/**********************/
+/* Fresnel zone plate */
+/**********************/
+COMPONENT CentralStop = Beamstop (
+	radius = CentralStopRadius
+)
+AT (0, 0, DistanceSourceToFZP - DistanceSourceToSecondarySlit2 - 0.00001) RELATIVE SecondarySlit2
 
 
-	COMPONENT FresnelZonePlate = ZonePlate(
-		cut      = 0.0,
-		radius   = FZPRadius, 
-		L        = FZPFocalLength, 
-		lambda0  = 12.39842 / NominalEnergy,
-		//focus_xw = 2.0 * OSARadius, 
-		//focus_yh = 2.0 * OSARadius,
-		focus_xw = 300e-9, 
-		focus_yh = 300e-9,
-		focus_x0 = 0.0,
-		focus_y0 = 0.0,
+COMPONENT FresnelZonePlate = ZonePlate(
+	cut      = 0.0,
+	radius   = FZPRadius, 
+	L        = FZPFocalLength, 
+	lambda0  = 12.39842 / NominalEnergy,
+	//focus_xw = 2.0 * OSARadius, 
+	//focus_yh = 2.0 * OSARadius,
+	focus_xw = 300e-9, 
+	focus_yh = 300e-9,
+	focus_x0 = 0.0,
+	focus_y0 = 0.0,
         //dist     = DistanceSourceToSample - DistanceSourceToFZP - DistanceOSAToSample
         dist     = DistanceSourceToSample - DistanceSourceToFZP
-	)
-	AT (0, 0, DistanceSourceToFZP - DistanceSourceToSecondarySlit2) RELATIVE SecondarySlit2
+)
+AT (0, 0, DistanceSourceToFZP - DistanceSourceToSecondarySlit2) RELATIVE SecondarySlit2
 
 
-	COMPONENT OrderSortingAperture = Slit(
-		radius = OSARadius
-	)
-	AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - DistanceOSAToSample) RELATIVE SecondarySlit2
+COMPONENT OrderSortingAperture = Slit(
+	radius = OSARadius
+)
+AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - DistanceOSAToSample) RELATIVE SecondarySlit2
 
 
-    /***********************/
-    /* Pre-sample monitors */
-    /***********************/
-    /*COMPONENT DivergenceMonitor = Div_monitor(
+/***********************/
+/* Pre-sample monitors */
+/***********************/
+/*COMPONENT DivergenceMonitor = Div_monitor(
         xmin         = -2.0 * OSARadius, 
         xmax         =  2.0 * OSARadius, 
         ymin         = -2.0 * OSARadius, 
@@ -272,11 +268,11 @@ TRACE
         ny           = 100, 
         filename     = "PSDMonitor.mcp",
         restore_xray = 1
-    )
-	AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.003) RELATIVE SecondarySlit2*/
+)
+AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.003) RELATIVE SecondarySlit2*/
 
 
-    /*COMPONENT EnergyMonitor = E_monitor(
+/*COMPONENT EnergyMonitor = E_monitor(
         xmin         = -2.0 * OSARadius, 
         xmax         =  2.0 * OSARadius, 
         ymin         = -2.0 * OSARadius, 
@@ -286,11 +282,11 @@ TRACE
         nE           = 50, 
         filename     = "EnergyMonitor.mcp",
         restore_xray = 1
-	)
-	AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.002) RELATIVE SecondarySlit2*/
+)
+AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.002) RELATIVE SecondarySlit2*/
 
 
-    /*COMPONENT PSDMonitor = PSD_monitor(
+/*COMPONENT PSDMonitor = PSD_monitor(
         xmin         = -2.0 * OSARadius, 
         xmax         =  2.0 * OSARadius, 
         ymin         = -2.0 * OSARadius, 
@@ -299,55 +295,53 @@ TRACE
         ny           = 100, 
         filename     = "PSDMonitor.mcp",
         restore_xray = 1
-    )
-	AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.001) RELATIVE SecondarySlit2*/
+)
+AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.001) RELATIVE SecondarySlit2*/
 
 
-    /***********************/
-    /* Sample and detector */
-    /***********************/
-	COMPONENT SampleArm = Arm(
-	)
-	AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2) RELATIVE SecondarySlit2
-    ROTATED (90.0 - Eta, Phi, 0) RELATIVE Source
+/***********************/
+/* Sample and detector */
+/***********************/
+COMPONENT SampleArm = Arm()
+AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2) RELATIVE SecondarySlit2
+ROTATED (90.0 - Eta, Phi, 0) RELATIVE Source
 
 
-	COMPONENT Sample = Polycrystal(
-		MapFile                   = "PolycrystalID01ESRF.mcp",
+COMPONENT Sample = Polycrystal(
+	MapFile                   = "PolycrystalID01ESRF.mcp",
         OrientationsFile          = "SlightStretch.txt",
         ReflectionsDatafile       = "GeReduced.lau",
         //MaterialDatafile        = "Ge.txt",
-		xwidth                    = SamplexWidth,
-		yheight                   = SampleyHeight,
-		zdepth                    = SamplezDepth,
-		DeltadOverd               = SampleDeltadoverd,
+	xwidth                    = SamplexWidth,
+	yheight                   = SampleyHeight,
+	zdepth                    = SamplezDepth,
+	DeltadOverd               = SampleDeltadoverd,
         Mosaicity                 = SampleMosaicity,
         SigmaAbsorbtion           = 0.0,
         SigmaIncoherent           = 0.0,
-		MaxNumberOfReflections    = 1,
+	MaxNumberOfReflections    = 1,
         ProbabilityOfTransmission = 0.5,
 
         ax = 5.6579, ay = 0.0000, az = 0.0000,
         bx = 0.0000, by = 5.6579, bz = 0.0000,
         cx = 0.0000, cy = 0.0000, cz = 5.6579
-	)
-	AT (Pix * 1e-6, Piy * 1e-6, SamplezDepth) RELATIVE SampleArm
+)
+AT (Pix * 1e-6, Piy * 1e-6, SamplezDepth) RELATIVE SampleArm
 
 
-	COMPONENT DetectorArm = Arm(
-	)
-	AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2) RELATIVE SecondarySlit2
-    ROTATED (-Delta, Nu, 0) RELATIVE Source
+COMPONENT DetectorArm = Arm()
+AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2) RELATIVE SecondarySlit2
+ROTATED (-Delta, Nu, 0) RELATIVE Source
 
 
-	COMPONENT MAXIPix = PSD_monitor(
-		filename     = "DetectorMaxiPix.mcp",
-		xwidth       = 0.0284,
-		yheight      = 0.0284,
-		nx           = 516,
-		ny           = 516
-	)
-	AT (0, 0, DistanceSampleToDetector) RELATIVE DetectorArm
+COMPONENT MAXIPix = PSD_monitor(
+	filename     = "DetectorMaxiPix.mcp",
+	xwidth       = 0.0284,
+	yheight      = 0.0284,
+	nx           = 516,
+	ny           = 516
+)
+AT (0, 0, DistanceSampleToDetector) RELATIVE DetectorArm
 
 
 FINALLY
