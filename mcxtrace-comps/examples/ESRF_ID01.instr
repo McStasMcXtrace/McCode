@@ -1,0 +1,358 @@
+/*******************************************************************************************************************
+*         McXtrace instrument definition URL=http://www.mcxtrace.org
+*
+* Instrument: ID01
+*
+* %Identification
+* Written by: Martin Cramer Pedersen (mcpe@nbi.dk)
+*
+* Date: March, 2015
+* Origin: University of Copenhagen
+* Release: McXtrace 1.0
+* %INSTRUMENT_SITE: ESRF
+*
+* Nano-diffraction imaging beamline at ESRF, Grenoble
+*
+* %Description
+* This model of ID01 is designed specifically to conduct virtual scanning nano-diffraction imaging 
+* experiments such as the one demonstrated Chahine et al., J. Appl. Cryst 47, 762-769. The model 
+* includes beam-defining slits, a double Si111-monochromator, a Fresnel Zone Plate, a polycrystalline  
+* sample designed specifically for this type of virtual experiments, and a detector set up mimicking the  
+* set up at the actual beam-line. The nanodiffraction experiment is performed by locating a suitable peak
+* in the diffraction of the crystal (using the variables NominalEnergy, Delta, and Eta) 
+* and then scan across the sample (using the variables Pix and ySamplePosition). By plotting 
+* e.g. total detector intensity as a function of position, one can map out impurities in the sample by  
+* their scattering properties.
+*
+* %Parameters
+* DistanceSampleToDetector: [m]   Distance from sample to detector
+* NominalEnergy:            [keV] Nominal energy of photons after monochromation
+* Delta:                    [deg] Angle rotating the detector around the sample in the yz-plane
+* Nu:                       [deg] Horizontal plane rotation angle of the detector (for asymmetric peaks)
+* Eta:                      [deg] Angle between the incoming beam and the sample normal in the yz-plane
+* Phi:                      [deg] Horizontal plane rotation angle of the sample (for asymmetric peaks)
+* Pix:                      [um]  Horizontal offset of sample
+* Piy:                      [um]  Vertical offset of sample
+* SampleMosaicity:          [moa] Mosaicity of the sample crystal lattice
+* SampleSampleDeltadoverd:  [1]   Uncertainty in lattice parameter for the sample crystal lattice
+*
+* %Link
+* http://www.esrf.eu/UsersAndScience/Experiments/StructMaterials/ID01
+*
+* %End
+*******************************************************************************************************************/
+
+
+DEFINE INSTRUMENT ESRF_ID01 (
+    DistanceSampleToDetector = 0.5,
+    NominalEnergy            = 8.0,
+    Delta                    = 0.0,
+    Nu                       = 0.0,
+    Eta                      = 0.0,
+    Phi                      = 0.0,
+    Pix                      = 0.0,
+    Piy                      = 0.0,
+    SampleMosaicity          = 1.0,
+    SampleDeltadoverd        = 0.001
+)
+
+
+DECLARE
+%{
+    // Optics
+    double DistanceSourceToPrimarySlit1	= 27.00;
+    double DistanceSourceToPrimarySlit2 = 27.05;
+
+    double DistanceSourceToMonochromator = 34.0;
+    double DistanceBetweenMonochromators = 0.1;
+
+    double DistanceSourceToSecondarySlit1 = 117.70;
+    double DistanceSourceToSecondarySlit2 = 117.75;
+
+    double DistanceSourceToFZP    = 117.85;
+    double DistanceOSAToSample    = 0.02;
+    double DistanceSourceToSample = 118.0;
+
+    // Slits
+    double PrimarySlit1Width  = 0.0005;
+    double PrimarySlit1Height = 0.0006;
+    double PrimarySlit2Width  = 0.0005;
+    double PrimarySlit2Height = 0.0006;
+
+    double SecondarySlit1Width  = 0.0003;
+    double SecondarySlit1Height = 0.0003;
+    double SecondarySlit2Width  = 0.0003;
+    double SecondarySlit2Height = 0.0003; 
+
+    double OSARadius = 0.000025;
+
+    // Mirrors and monochromators
+    double Monochromator1Width  = 0.04;
+    double Monochromator1Length = 0.08;
+    double Monochromator2Width  = 0.04;
+    double Monochromator2Length = 0.08;
+
+    double dSi111 = 3.1356;
+
+    double dE;
+    double AngleMonochromator;
+
+    // Fresnel Zone Plate
+    double CentralStopRadius = 0.00002;
+
+    double FZPRadius      = 0.00015;
+    double FZPFocalLength = 0.15;	
+
+    // Sample
+    double SamplexWidth    = 200e-6;
+    double SampleyHeight   = 200e-6;
+    double SamplezDepth    = 50e-6;
+    //double SamplezDepth    = 20e-9;
+    double SubstratezDepth = 300e-6;
+%}
+
+
+INITIALIZE
+%{
+	// Instrument angles
+	AngleMonochromator = RAD2DEG * asin(M_PI / (NominalEnergy * E2K * dSi111));
+
+	// Convert energy to wavelength
+	fprintf(stderr, "Target wavelength is %g Å. \n", 12.39842 / NominalEnergy);
+	fprintf(stderr, "The monochromators will be rotated by %g degrees. \n", AngleMonochromator);
+
+	// Energy bandwidth
+	dE = 0.001 * NominalEnergy;
+%}
+
+
+TRACE
+    /**********/
+    /* Source */
+    /**********/
+	COMPONENT Origin = Progress_bar(
+	) 
+	AT (0, 0, 0) ABSOLUTE
+
+
+	COMPONENT Source = Source_gaussian_Fixed(
+		sig_x    = 120.0E-6, 
+		sig_y    =  16.0E-6, 
+		sigPr_x  =   1.0E-6,
+		sigPr_y  =   1.0E-6, 
+		dist     = DistanceSourceToPrimarySlit2, 
+		gauss    = 1,
+		focus_xw = PrimarySlit2Width, 
+		focus_yh = PrimarySlit2Height, 
+		E0       = NominalEnergy, 
+		dE       = dE
+	) 
+	AT (0, 0, 0) RELATIVE Origin
+
+
+	/*****************/
+	/* Primary slits */
+    /*****************/
+	COMPONENT PrimarySlit1 = Slit(
+		xwidth  = PrimarySlit1Width, 
+		yheight = PrimarySlit1Height
+	) 
+	AT (0, 0, DistanceSourceToPrimarySlit1) RELATIVE Source
+
+
+	COMPONENT PrimarySlit2 = Slit(
+		xwidth  = PrimarySlit2Width, 
+		yheight = PrimarySlit2Height
+	) 
+	AT (0, 0, DistanceSourceToPrimarySlit2) RELATIVE Source
+
+
+    /***********************/
+    /* First monochromator */
+    /***********************/
+	COMPONENT Monochromator1Arm1 = Arm(
+	)
+	AT (0, 0, DistanceSourceToMonochromator) RELATIVE Source
+	ROTATED (0, AngleMonochromator, 90) RELATIVE Source
+
+
+	COMPONENT Monochromator1 = Perfect_crystal(
+		length = Monochromator1Length, 
+		width  = Monochromator1Width
+	) 
+	AT (0, 0, 0) RELATIVE Monochromator1Arm1
+
+
+	COMPONENT Monochromator1Arm2 = Arm(
+	)
+	AT (0, 0, 0) RELATIVE Monochromator1Arm1
+	ROTATED (0, 2.0 * AngleMonochromator, 90) RELATIVE Source
+
+
+    /************************/
+	/* Second monochromator */
+    /************************/
+	COMPONENT Monochromator2Arm1 = Arm(
+	)
+	AT (0, 0, DistanceBetweenMonochromators) RELATIVE Monochromator1Arm2
+	ROTATED (0, AngleMonochromator, 90) RELATIVE Source
+
+
+	COMPONENT Monochromator2 = Perfect_crystal(
+		length = Monochromator2Length, 
+		width  = Monochromator2Width
+	)
+	AT (0, 0, 0) RELATIVE Monochromator2Arm1
+
+
+	COMPONENT Monochromator2Arm2 = Arm(
+	)
+	AT (0, 0, 0) RELATIVE Monochromator2Arm1
+	ROTATED (0, 0, 90) RELATIVE Source
+
+
+	/*******************/
+	/* Secondary slits */
+    /*******************/
+	COMPONENT SecondarySlit1 = Slit(
+		xwidth  = SecondarySlit1Width, 
+		yheight = SecondarySlit1Height
+	) 
+	AT (0, 0, DistanceSourceToSecondarySlit1 - DistanceSourceToMonochromator + DistanceBetweenMonochromators) RELATIVE Monochromator2Arm2
+
+
+    COMPONENT SecondarySlit2 = Slit(
+		xwidth  = SecondarySlit2Width, 
+		yheight = SecondarySlit2Height
+	) 
+	AT (0, 0, DistanceSourceToSecondarySlit2 - DistanceSourceToSecondarySlit1) RELATIVE SecondarySlit1
+
+
+    /**********************/
+    /* Fresnel zone plate */
+    /**********************/
+	COMPONENT CentralStop = Beamstop (
+		radius = CentralStopRadius
+	)
+	AT (0, 0, DistanceSourceToFZP - DistanceSourceToSecondarySlit2 - 0.00001) RELATIVE SecondarySlit2
+
+
+	COMPONENT FresnelZonePlate = ZonePlate(
+		cut      = 0.0,
+		radius   = FZPRadius, 
+		L        = FZPFocalLength, 
+		lambda0  = 12.39842 / NominalEnergy,
+		//focus_xw = 2.0 * OSARadius, 
+		//focus_yh = 2.0 * OSARadius,
+		focus_xw = 300e-9, 
+		focus_yh = 300e-9,
+		focus_x0 = 0.0,
+		focus_y0 = 0.0,
+        //dist     = DistanceSourceToSample - DistanceSourceToFZP - DistanceOSAToSample
+        dist     = DistanceSourceToSample - DistanceSourceToFZP
+	)
+	AT (0, 0, DistanceSourceToFZP - DistanceSourceToSecondarySlit2) RELATIVE SecondarySlit2
+
+
+	COMPONENT OrderSortingAperture = Slit(
+		radius = OSARadius
+	)
+	AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - DistanceOSAToSample) RELATIVE SecondarySlit2
+
+
+    /***********************/
+    /* Pre-sample monitors */
+    /***********************/
+    /*COMPONENT DivergenceMonitor = Div_monitor(
+        xmin         = -2.0 * OSARadius, 
+        xmax         =  2.0 * OSARadius, 
+        ymin         = -2.0 * OSARadius, 
+        ymax         =  2.0 * OSARadius,
+        nx           = 100, 
+        ny           = 100, 
+        filename     = "PSDMonitor.mcp",
+        restore_xray = 1
+    )
+	AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.003) RELATIVE SecondarySlit2*/
+
+
+    /*COMPONENT EnergyMonitor = E_monitor(
+        xmin         = -2.0 * OSARadius, 
+        xmax         =  2.0 * OSARadius, 
+        ymin         = -2.0 * OSARadius, 
+        ymax         =  2.0 * OSARadius,
+        Emin         = 0.95 * NominalEnergy, 
+        Emax         = 1.05 * NominalEnergy, 
+        nE           = 50, 
+        filename     = "EnergyMonitor.mcp",
+        restore_xray = 1
+	)
+	AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.002) RELATIVE SecondarySlit2*/
+
+
+    /*COMPONENT PSDMonitor = PSD_monitor(
+        xmin         = -2.0 * OSARadius, 
+        xmax         =  2.0 * OSARadius, 
+        ymin         = -2.0 * OSARadius, 
+        ymax         =  2.0 * OSARadius,
+        nx           = 100, 
+        ny           = 100, 
+        filename     = "PSDMonitor.mcp",
+        restore_xray = 1
+    )
+	AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2 - 0.001) RELATIVE SecondarySlit2*/
+
+
+    /***********************/
+    /* Sample and detector */
+    /***********************/
+	COMPONENT SampleArm = Arm(
+	)
+	AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2) RELATIVE SecondarySlit2
+    ROTATED (90.0 - Eta, Phi, 0) RELATIVE Source
+
+
+	COMPONENT Sample = Polycrystal(
+		MapFile                   = "PolycrystalID01ESRF.mcp",
+        OrientationsFile          = "SlightStretch.txt",
+        ReflectionsDatafile       = "GeReduced.lau",
+        //MaterialDatafile        = "Ge.txt",
+		xwidth                    = SamplexWidth,
+		yheight                   = SampleyHeight,
+		zdepth                    = SamplezDepth,
+		DeltadOverd               = SampleDeltadoverd,
+        Mosaicity                 = SampleMosaicity,
+        SigmaAbsorbtion           = 0.0,
+        SigmaIncoherent           = 0.0,
+		MaxNumberOfReflections    = 1,
+        ProbabilityOfTransmission = 0.5,
+
+        ax = 5.6579, ay = 0.0000, az = 0.0000,
+        bx = 0.0000, by = 5.6579, bz = 0.0000,
+        cx = 0.0000, cy = 0.0000, cz = 5.6579
+	)
+	AT (Pix * 1e-6, Piy * 1e-6, SamplezDepth) RELATIVE SampleArm
+
+
+	COMPONENT DetectorArm = Arm(
+	)
+	AT (0, 0, DistanceSourceToSample - DistanceSourceToSecondarySlit2) RELATIVE SecondarySlit2
+    ROTATED (-Delta, Nu, 0) RELATIVE Source
+
+
+	COMPONENT MAXIPix = PSD_monitor(
+		filename     = "DetectorMaxiPix.mcp",
+		xwidth       = 0.0284,
+		yheight      = 0.0284,
+		nx           = 516,
+		ny           = 516
+	)
+	AT (0, 0, DistanceSampleToDetector) RELATIVE DetectorArm
+
+
+FINALLY
+%{
+%}
+
+
+END
