@@ -782,6 +782,11 @@ def handleExceptionMsg(msg):
 ''' Program execution
 '''
 def main():
+    
+    # ensure keyboardinterrupt ctr-c
+    import signal
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    
     try:
         load_user_config(mccode_config.configuration["MCCODE"], mccode_config.configuration["MCCODE_VERSION"])
         
