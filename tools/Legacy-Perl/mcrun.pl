@@ -1037,6 +1037,7 @@ sub do_scan {
                   }
                 }
                 my $Counter;
+		my $Counter2=0;
                 # analyze scan step output
                 while(<SIM>) {
                     chomp;
@@ -1058,10 +1059,14 @@ sub do_scan {
                             push @Errors, $sim_err;
                             push @Rays, $sim_N;
                         } else {
-                            $Intensities[$index] = $sim_I;
-                            $Errors[$index] = $sim_err;
-                            $Rays[$index] = $sim_N;
-                        }
+			    # Heard about this monitor before, likely a secound output
+			    $Counter2++;
+                            push @Monitors, ${1}."_".${Counter2};
+                            push @Monitors_E, $3;
+                            push @Intensities, $sim_I;
+                            push @Errors, $sim_err;
+                            push @Rays, $sim_N;
+			  }
                     } elsif(m'^Error:') { # quote hack '
                         $got_error = 1;
                     } # end while SIM
