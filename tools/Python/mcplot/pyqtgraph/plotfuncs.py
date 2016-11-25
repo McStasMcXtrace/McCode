@@ -63,7 +63,7 @@ def plot_Data2D(data, log=False):
         ymin = np.min(dataset[dataset>0])/10
         dataset[dataset<=0] = ymin
         dataset = np.reshape(dataset, datashape)
-        dataset = np.log(dataset)
+        dataset = np.log10(dataset)
 
     img.setImage(dataset)
     
@@ -74,7 +74,6 @@ def plot_Data2D(data, log=False):
     # color map (by lookup table)
     pos_min = np.min(dataset)
     pos_max = np.max(dataset)
-    
     pos = [pos_min, pos_min + 1/2*(pos_max-pos_min), pos_max]
     colormaps={
         'thermal'  : np.array([[185, 0, 0, 255], [255, 220, 0, 255], [255, 255, 255, 255], [0, 0, 0, 255]], dtype=np.ubyte),
@@ -105,13 +104,13 @@ def plot_Data2D(data, log=False):
     # color bar
     cbimg = pg.ImageItem()
     numsteps = 100
-    if not log:
-        arr_1 = (pos_max - pos_min) / pos_max * range(numsteps) + pos_min
-    else:
-        arr_1 = - (pos_max - pos_min) / pos_max * range(numsteps) + pos_min
+    arr_1 = pos_min + (pos_max - pos_min) * np.arange(numsteps)/(numsteps)
     cbimg.setImage(np.array([arr_1]))
-    cbimg.scale(1, (pos_max-pos_min)/numsteps)
-    cbimg.translate(0, -pos_min)
+    # calculate scaling and translation for the y-axis
+    dy = (pos_max - pos_min) / numsteps
+    ty = (pos_min) / dy
+    cbimg.scale(1, dy)
+    cbimg.translate(0,ty)
     
     cbimg.setLookupTable(lut)
     
