@@ -127,7 +127,11 @@ def set_keyhandler(scene, replot_cb, key, modifier, flip_log):
         elif ev.key() == 16777268: # F5
             cb(log=False)
         elif ev.key() == 16777264 or 72: # F1 or h
-            print("q          - quit\np          - save png\ns          - save svg\nd          - save pdf\nl          - log\nF1/h       - help\nF5         - replot\nclick      - display subplot\nrclick     - back\nctrl-click - sweep monitors")
+            if sys.platform == 'darwin':
+                modifier = 'Meta'
+            else:
+                modifier = 'ctrl'
+            print("q            - quit\np            - save png\ns            - save svg\nd            - save pdf\nl            - log\nF1/h         - help\nF5           - replot\nclick        - display subplot\nrclick       - back\n" + modifier + " + click - sweep monitors")
         # print debug info
         if debug:
             print("key code: %s" % str(ev.key()))
