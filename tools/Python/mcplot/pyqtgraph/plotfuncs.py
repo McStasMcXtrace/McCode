@@ -76,17 +76,17 @@ def plot_Data2D(data, log=False):
     pos_max = np.max(dataset)
     pos = [pos_min, pos_min + 1/2*(pos_max-pos_min), pos_max]
     colormaps={
-        'thermal'  : np.array([[185, 0, 0, 255], [255, 220, 0, 255], [255, 255, 255, 255], [0, 0, 0, 255]], dtype=np.ubyte),
-        'flame'    : np.array([[7, 0, 220, 255], [236, 0, 134, 255], [246, 246, 0, 255], [255, 255, 255, 255], [0, 0, 0, 255]], dtype=np.ubyte),
-        'yellowy'  : np.array([[0, 0, 0, 255], [32, 0, 129, 255], [255, 255, 0, 255], [115, 15, 255, 255], [255, 255, 255, 255]], dtype=np.ubyte),
-        'bipolar'  : np.array([[0, 255, 255, 255], [255, 255, 0, 255], [0, 0, 0, 255], [0, 0, 255, 255], [255, 0, 0, 255]], dtype=np.ubyte),
-        'greyclip' : np.array([[0, 0, 0, 255], [255, 255, 255, 255], [255, 0, 0, 255]], dtype=np.ubyte),
-        'nice'     : np.array([[0, 0, 0, 255], [255, 128, 0, 255], [255, 255, 0, 255]], dtype=np.ubyte),
+        'thermal'  : np.array([[185,   0,   0, 255], [255, 220,   0, 255], [255, 255, 255, 255]], dtype=np.ubyte),
+        'flame'    : np.array([[  7,   0, 220, 255], [236,   0, 134, 255], [246, 246,   0, 255]], dtype=np.ubyte),
+        'yellowy'  : np.array([[  0,   0,   0, 255], [ 32,   0, 129, 255], [255, 255,   0, 255]], dtype=np.ubyte),
+        'bipolar'  : np.array([[  0, 255, 255, 255], [255, 255,   0, 255], [  0,   0,   0, 255]], dtype=np.ubyte),
+        'greyclip' : np.array([[  0,   0,   0, 255], [255, 255, 255, 255], [255,   0,   0, 255]], dtype=np.ubyte),
+        'nice'     : np.array([[  0,   0,   0, 255], [255, 128,   0, 255], [255, 255,   0, 255]], dtype=np.ubyte),
         }
     colormap = pg.ColorMap(pos, colormaps['nice'])
     lut = colormap.getLookupTable(pos_min, pos_max, 256)
     img.setLookupTable(lut)
-    
+
     # graphics layout with a plotitem and a gradienteditoritem
     layout = pg.GraphicsLayout()
     layout.setContentsMargins(0, 0, 20, 5)
