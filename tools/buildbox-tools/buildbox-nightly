@@ -24,7 +24,7 @@ export PATH=/Users/mccode/bin:/usr/local/bin:$PATH
 # Cd to Git area on buildfarm-master
 cd /Users/mccode/McCode/
 
-VER=svn_`date "+%Y-%m-%d"`
+VER=git_`date "+%Y-%m-%d"`
 GITREV=`git rev-list -n 1 HEAD`
 
 WINHOST=172.16.97.10
