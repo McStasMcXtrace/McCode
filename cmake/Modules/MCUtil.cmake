@@ -25,7 +25,7 @@ macro(isMkDist outvar)
 endmacro()
 
 
-# Setup McCode constants using either mkdist or SVN-defaults
+# Setup McCode constants using either mkdist or Git-defaults
 macro(setupMCCODE FLAVOR)
 
   # Check for WINDOWS
@@ -106,10 +106,10 @@ macro(setupMCCODE FLAVOR)
     set(MCCODE_STRING "@MCCODE_STRING@")
     set(MCCODE_TARNAME "@MCCODE_TARNAME@")
   else()
-    ## Set SVN-specific version
-    set(MCCODE_VERSION "2.9999-svn")
+    ## Set Git-specific version
+    set(MCCODE_VERSION "2.9999-git")
     set(MCCODE_NAME "${NAME}")
-    set(MCCODE_DATE "svn")
+    set(MCCODE_DATE "git")
     set(MCCODE_STRING "${NAME} ${MCCODE_VERSION}, ${MCCODE_DATE}")
     set(MCCODE_TARNAME "${FLAVOR}")
   endif()
