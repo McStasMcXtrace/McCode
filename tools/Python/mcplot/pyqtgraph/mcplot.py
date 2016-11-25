@@ -118,13 +118,16 @@ def set_keyhandler(scene, replot_cb, key, modifier, flip_log):
         elif ev.key() == 80: # p
             savefile_cb(format='png')
             print("png file saved")
-        elif ev.key() == 83:
+        elif ev.key() == 60:
             savefile_cb(format='svg')
             print("svg file saved")
+        elif ev.key() == 68:
+            savefile_cb(format='pdf')
+            print("svg and pdf files saved")
         elif ev.key() == 16777268: # F5
             cb(log=False)
         elif ev.key() == 16777264 or 72: # F1 or h
-            print("q          - quit\np          - save png\ns          - save svg\nl          - log\nF1/h       - help\nF5         - replot\nclick      - display subplot\nrclick     - back\nctrl-click - sweep monitors")
+            print("q          - quit\np          - save png\ns          - save svg\nd          - save pdf\nl          - log\nF1/h       - help\nF5         - replot\nclick      - display subplot\nrclick     - back\nctrl-click - sweep monitors")
         # print debug info
         if debug:
             print("key code: %s" % str(ev.key()))
@@ -142,8 +145,18 @@ def dumpfile(scene, filenamebase='mcplot', format='png'):
     elif format=='svg':
         exporter = pg.exporters.SVGExporter(scene)
         exporter.export('%s.svg' % filenamebase)
+    elif format=='pdf':
+        exporter = pg.exporters.SVGExporter(scene)
+        exporter.export('%s.svg' % filenamebase)
+        import subprocess
+        # TODO: error handling
+        process = subprocess.Popen('svg2pdf %s.svg %s.pdf' % (filenamebase, filenamebase), 
+                                   stdout=subprocess.PIPE, 
+                                   stderr=subprocess.PIPE,
+                                   shell=True,
+                                   universal_newlines=True)
     else:
-        raise Exception('png and svg are the only supported file formats (format=%s)' % format)
+        raise Exception('png, svg and pdf (via svg2pdf) are the only supported file formats (format=%s)' % format)
 
 def get_modifiers(modname):
     ''' get int codes for keyboardmodifiers '''
