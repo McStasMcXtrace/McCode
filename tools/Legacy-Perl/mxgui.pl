@@ -752,15 +752,6 @@ sub run_dialog_create {
     if ($text =~ /compil/i || $text =~ /DSA/i || $title =~ /compil/i || $title =~ /DSA/i ) { $buttext="Abort current Job"; }
     $b->attach($but, -balloonmsg => $buttext);
     $but->pack(-side => "left", -expand => 1, -padx => 1, -pady => 1);
-    # can only update when in Single or OpenMP simulation mode (no cluster/grid)
-    # and performing simulation
-    if ($Config{'osname'} ne 'MSWin32' && $update_cmd && $inf_sim->{'Mode'}==0
-      && $MCSTAS::mcstas_config{'CLUSTER'} <= 1 && $text !~ /compil/i && $text !~ /DSA/i
-      && $title !~ /compil/i && $title !~ /DSA/i) {
-      $but = $bot_frame->Button(-text => "Update", -command => $update_cmd);
-      $but->pack(-side => "right");
-      $b->attach($but, -balloonmsg => "Save results\nand continue");
-    }
     return $dlg;
 }
 
