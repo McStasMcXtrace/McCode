@@ -308,6 +308,7 @@ def _load_monitor(monitorfile):
 def _load_datfiles(directory):
     d = directory
     datfiles = glob.glob(join(d, '*.dat'))
+    datfiles.extend(glob.glob(join(d, '*.psd')))
     data_lst = []
     for f in datfiles:
         data = _load_monitor(f)
@@ -505,11 +506,13 @@ def is_mccodesim_w_monitors(args):
         args['simfile'] = f
     # look for .dat files
     datfiles = glob.glob(join(d, '*.dat'))
+    datfiles.extend(glob.glob(join(d, '*.psd')))
     return len(datfiles) > 0
 
 def has_datfile(args):
     d = args['directory']
     datfiles = glob.glob(join(d, '*.dat'))
+    datfiles.extend(glob.glob(join(d, '*.psd')))
     if len(datfiles) > 0:
         args['monitorfile'] = datfiles[0]
         return True
