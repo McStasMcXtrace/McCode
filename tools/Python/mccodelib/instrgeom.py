@@ -38,6 +38,7 @@ class InstrumentSpecific(object):
         oldbox = None
         for c in components:
             box = c.get_tranformed_bb()
+            
             if oldbox: 
                 box = box.add(oldbox)
             oldbox = box
@@ -78,6 +79,7 @@ class Component(object):
     def __init__(self, name, pos, rot):
         self.name = name
         self.pos = pos
+        
         self.rot = rot
         self.transform = Transform(rot, pos)
         self.m4 = [rot.a11, rot.a12, rot.a13, pos.x, rot.a21, rot.a22, rot.a23, pos.y, rot.a31, rot.a32, rot.a33, pos.z, 0, 0, 0, 1]
@@ -124,17 +126,19 @@ class BoundingBox(object):
         ''' properly initialize the bounding box by infinity/ minus infinity '''
         inf = float("inf")
         ninf = - inf
-        self.x1 = x1 or inf 
-        self.x2 = x2 or ninf
-        self.y1 = y1 or inf
-        self.y2 = y2 or ninf
-        self.z1 = z1 or inf
-        self.z2 = z2 or ninf
+        
+        self.x1 = x1 if x1 != None else inf
+        self.x2 = x2 if x2 != None else ninf
+        self.y1 = y1 if y1 != None else inf
+        self.y2 = y2 if y2 != None else ninf
+        self.z1 = z1 if z1 != None else inf
+        self.z2 = z2 if z2 != None else ninf
         
         self.m4 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
     
     def add(self, box):
         ''' add and return a combined bounding box '''
+        
         x1 = min(self.x1, box.x1)
         x2 = max(self.x2, box.x2)
         y1 = min(self.y1, box.y1)
@@ -674,6 +678,9 @@ class Transform(object):
         y = self.a21*v3.x + self.a22*v3.y + self.a23*v3.z + self.a24
         z = self.a31*v3.x + self.a32*v3.y + self.a33*v3.z + self.a34
         return Vector3d(x, y, z)
+    
+    def __str__(self):
+        return "%s %s %s %s\n%s %s %s %s\n%s %s %s %s\n%s %s %s %s" % (self.a11, self.a12, self.a13, self.a14, self.a21, self.a22, self.a23, self.a24, self.a31, self.a32, self.a33, self.a34, self.a41, self.a42, self.a43, self.a44)
 
 class Matrix3Identity(Matrix3):
     def __init__(self):
