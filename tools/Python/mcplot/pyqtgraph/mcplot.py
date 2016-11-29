@@ -126,7 +126,7 @@ def set_keyhandler(scene, replot_cb, key, modifier, flip_log):
             print("svg and pdf files saved")
         elif ev.key() == 16777268: # F5
             cb(log=False)
-        elif ev.key() == 16777264 or 72: # F1 or h
+        elif ev.key() == 16777264 or ev.key() == 72: # F1 or h
             if sys.platform == 'darwin':
                 modifier = 'Meta'
             else:
