@@ -49,6 +49,18 @@ def plot_Data1D(data, log=False):
     
     return plt, vb
 
+def get_color_map(name, pos_min, pos_max):
+    colormaps={
+        'thermal'  : np.array([[185,   0,   0, 255], [255, 220,   0, 255], [255, 255, 255, 255]], dtype=np.ubyte),
+        'flame'    : np.array([[  7,   0, 220, 255], [236,   0, 134, 255], [246, 246,   0, 255]], dtype=np.ubyte),
+        'yellowy'  : np.array([[  0,   0,   0, 255], [ 32,   0, 129, 255], [255, 255,   0, 255]], dtype=np.ubyte),
+        'bipolar'  : np.array([[  0, 255, 255, 255], [255, 255,   0, 255], [  0,   0,   0, 255]], dtype=np.ubyte),
+        'greyclip' : np.array([[  0,   0,   0, 255], [255, 255, 255, 255], [255,   0,   0, 255]], dtype=np.ubyte),
+        'nice'     : np.array([[  0,   0,   0, 255], [255, 128,   0, 255], [255, 255,   0, 255]], dtype=np.ubyte),
+        }
+    pos = np.arange(pos_min, pos_max, 1/len(colormaps[name])*(pos_max-pos_min))
+    return pg.ColorMap(pos, colormaps[name])
+
 def plot_Data2D(data, log=False):
     ''' create a layout and populate a plotItem with data Data2D, adding a color bar '''
     
@@ -74,16 +86,8 @@ def plot_Data2D(data, log=False):
     # color map (by lookup table)
     pos_min = np.min(dataset)
     pos_max = np.max(dataset)
-    pos = [pos_min, pos_min + 1/2*(pos_max-pos_min), pos_max]
-    colormaps={
-        'thermal'  : np.array([[185,   0,   0, 255], [255, 220,   0, 255], [255, 255, 255, 255]], dtype=np.ubyte),
-        'flame'    : np.array([[  7,   0, 220, 255], [236,   0, 134, 255], [246, 246,   0, 255]], dtype=np.ubyte),
-        'yellowy'  : np.array([[  0,   0,   0, 255], [ 32,   0, 129, 255], [255, 255,   0, 255]], dtype=np.ubyte),
-        'bipolar'  : np.array([[  0, 255, 255, 255], [255, 255,   0, 255], [  0,   0,   0, 255]], dtype=np.ubyte),
-        'greyclip' : np.array([[  0,   0,   0, 255], [255, 255, 255, 255], [255,   0,   0, 255]], dtype=np.ubyte),
-        'nice'     : np.array([[  0,   0,   0, 255], [255, 128,   0, 255], [255, 255,   0, 255]], dtype=np.ubyte),
-        }
-    colormap = pg.ColorMap(pos, colormaps['nice'])
+    
+    colormap = get_color_map('nice', pos_min, pos_max)
     lut = colormap.getLookupTable(pos_min, pos_max, 256)
     img.setLookupTable(lut)
 
