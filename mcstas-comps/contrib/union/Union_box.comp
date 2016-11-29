@@ -12,8 +12,25 @@
 * A sample component to separate geometry and phsysics
 *
 * %D
-* Hardcode input to geometry engine
-* Allows complicated geometry by combination of simple shapes
+* Part of the Union components, a set of components that work together and thus
+*  sperates geometry and physics within McStas.
+* The use of this component requires other components to be used.
+*
+* 1) One specifies a number of processes using process components
+* 2) These are gathered into material definitions using Union_make_material
+* 3) Geometries are placed using Union_box/cylinder/sphere, assigned a material
+* 4) A Union_master component placed after all of the above
+*
+* Only in step 4 will any simulation happen, and per default all geometries
+*  defined before this master, but after the previous will be simulated here.
+*
+* There is a dedicated manual available for the Union components
+*
+* The position of this component is the center of the box, zdepth/2 in each direction.
+*
+* It is allowed to overlap components, but it is not allowed to have two
+*  parallel planes that coincides. This will crash the code on run time.
+*
 *
 * Algorithm:
 * Described elsewhere
@@ -25,9 +42,23 @@
 * zdepth:   [m]     depth of the box volume
 * xwidth2:  [m]     optional different width at the +z box face
 * yheight2: [m]     optional different height at the +z box face
-* material_string: material name of this volume, defined using Union_make_material
-* priority    priotiry of the volume (can not be the same as another volume) A high priority is on top of low.
+* material_string:  material name of this volume, defined using Union_make_material
+* priority: [1]     priotiry of the volume (can not be the same as another volume) A high priority is on top of low.
+* p_interact [1]  probability to interact with this geometry [0-1]
+* visualize  [1]  set to 0 if you wish to hide this geometry in mcdisplay
+* number_of_activations [1]  Number of subsequent Union_master components that will simulate this geometry
+* mask_string:   Comma seperated list of geometry names which this geometry should mask
+* mask_setting:  "All" or "Any", should the masked volume be simulated when the ray is in just one mask, or all.
 *
+* Focusing options, if left blank, there will be no focusing.
+* target_x   [m]:
+* target_y   [m]: Position of target to focus at
+* target_z   [m]:
+* focus_aw   [deg] horiz. angular dimension of a rectangular area
+* focus_ah   [deg] vert. angular dimension of a rectangular area
+* focus_xw   [m]   horiz. dimension of a rectangular area
+* focus_xh   [m]   vert. dimension of a rectangular area
+* focus_r    [m]   focusing on circle with this radius
 * OUTPUT PARAMETERS:
 *
 * %L
@@ -48,6 +79,7 @@ SHARE
 #define Union $Revision: 0.8 $
 
 #include "Union_functions.c"
+#include "Union_initialization.c"
 
 #endif
 
@@ -128,6 +160,43 @@ void initialize_box_geometry_from_main_component(struct geometry_struct *box) {
     box->geometry_parameters.p_box_storage->z_vector = rotated_vector;
 };
 
+struct pointer_to_1d_coords_list box_shell_points(struct geometry_struct *geometry,int max_number_of_points) {
+  // This function returns an array of corner positions for the box in the main coordinate system.
+  // Normally one would limit it to a maximum number of points, but as there are only 8 for the box,
+  //  it is hardcoded to 8. Other geometries can be approximated with a variable number of points.
+  
+  struct pointer_to_1d_coords_list corner_points;
+  corner_points.elements = malloc(8*sizeof(Coords));
+  corner_points.num_elements = 8;
+  
+  double depth = geometry->geometry_parameters.p_box_storage->z_depth;
+  double width1 = geometry->geometry_parameters.p_box_storage->x_width1;
+  double width2 = geometry->geometry_parameters.p_box_storage->x_width2;
+  double height1 = geometry->geometry_parameters.p_box_storage->y_height1;
+  double height2 = geometry->geometry_parameters.p_box_storage->y_height2;
+    
+  Coords x_vector = geometry->geometry_parameters.p_box_storage->x_vector;
+  Coords y_vector = geometry->geometry_parameters.p_box_storage->y_vector;
+  Coords z_vector = geometry->geometry_parameters.p_box_storage->z_vector;
+    
+  Coords center = geometry->center;
+    
+  corner_points.elements[0] = coords_add(coords_add(coords_add(center,coords_scalar_mult(z_vector,-0.5*depth)),coords_scalar_mult(x_vector,-0.5*width1)),coords_scalar_mult(y_vector,-0.5*height1));
+    
+  corner_points.elements[1] = coords_add(corner_points.elements[0],coords_scalar_mult(x_vector,width1));
+  corner_points.elements[2] = coords_add(corner_points.elements[1],coords_scalar_mult(y_vector,height1));
+  corner_points.elements[3] = coords_add(corner_points.elements[0],coords_scalar_mult(y_vector,height1));
+    
+  corner_points.elements[4] = coords_add(coords_add(coords_add(center,coords_scalar_mult(z_vector,0.5*depth)),coords_scalar_mult(x_vector,-0.5*width2)),coords_scalar_mult(y_vector,-0.5*height2));
+    
+  corner_points.elements[5] = coords_add(corner_points.elements[4],coords_scalar_mult(x_vector,width2));
+  corner_points.elements[6] = coords_add(corner_points.elements[5],coords_scalar_mult(y_vector,height2));
+  corner_points.elements[7] = coords_add(corner_points.elements[4],coords_scalar_mult(y_vector,height2));
+  
+  return corner_points;
+
+}
+
 %}
 
 DECLARE
@@ -137,7 +206,7 @@ struct global_geometry_element_struct global_geometry_element;
 
 #ifndef ANY_GEOMETRY_DETECTOR_DECLARE
     #define ANY_GEOMETRY_DETECTOR_DECLARE dummy
-	struct pointer_to_global_geometry_list global_geometry_list = {0,NULL};
+	//struct pointer_to_global_geometry_list global_geometry_list = {0,NULL};
 #endif
 
 int loop_index,found_geometries;
@@ -220,7 +289,7 @@ if (mask_string && strlen(mask_string) && strcmp(mask_string, "NULL") && strcmp(
             found_geometries = 1;
         }
     }
-    if (found_process == 0) {
+    if (found_geometries == 0) {
         printf("The mask_string in geometry: %s did not find any of the specified volumes in the mask_string %s \n",NAME_CURRENT_COMP,mask_string);
         exit(1);
     }
@@ -326,6 +395,7 @@ this_box_volume.geometry.intersect_function = &sample_box_intersect_advanced;
 this_box_volume.geometry.within_function = &r_within_box_advanced;
 }
 
+this_box_volume.geometry.shell_points = &box_shell_points;
 this_box_volume.geometry.mcdisplay_function = &mcdisplay_box_function;
 this_box_volume.geometry.initialize_from_main_function = &initialize_box_geometry_from_main_component;
 this_box_volume.geometry.process_rot_allocated = 0;
@@ -334,6 +404,9 @@ this_box_volume.geometry.copy_geometry_parameters = &allocate_box_storage_copy;
 
 rot_copy(this_box_volume.geometry.rotation_matrix,ROT_A_CURRENT_COMP); //check how ROT_R_CURRENT_COMP would work
 rot_transpose(ROT_A_CURRENT_COMP,this_box_volume.geometry.transpose_rotation_matrix);
+
+// Initialize loggers
+this_box_volume.loggers.num_elements = 0;
 
 // packing the information into the global_geometry_element, which is then included in the global_geometry_list.
 sprintf(global_geometry_element.name,NAME_CURRENT_COMP);

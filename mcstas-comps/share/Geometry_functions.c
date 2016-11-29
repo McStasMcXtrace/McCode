@@ -55,6 +55,17 @@ Coords normal_vectors[6]; // In local frame
 };
 
 
+// Function for transforming a ray position / velocity to a local frame
+Coords transform_position(Coords ray_position, Coords component_position, Rotation component_t_rotation) {
+
+    Coords non_rotated_position = coords_sub(ray_position,component_position);
+    
+    // Rotate the position of the neutron around the center of the cylinder
+    Coords rotated_coordinates = rot_apply(component_t_rotation,non_rotated_position);
+    
+    return rotated_coordinates;
+}
+
 
 union geometry_parameter_union allocate_box_storage_copy(union geometry_parameter_union *union_input) {
   union geometry_parameter_union union_output;
@@ -77,14 +88,24 @@ union geometry_parameter_union allocate_cylinder_storage_copy(union geometry_par
   return union_output;
 }
 
+union geometry_parameter_union allocate_sphere_storage_copy(union geometry_parameter_union *union_input) {
+  union geometry_parameter_union union_output;
+  // Allocate the space for a cylinder_storage structe in the new union_output (union as the c structre)
+  union_output.p_sphere_storage = malloc(sizeof(struct sphere_storage));
+  // Copy the input storage to the output
+  *union_output.p_sphere_storage = *union_input->p_sphere_storage;
+  
+  return union_output;
+}
 
-// ---- Surroundings
+
+// -------------    Surroundings  ---------------------------------------------------------------
 int r_within_surroundings(Coords pos,struct geometry_struct *geometry) {
     // The surroundings are EVERYWHERE
         return 1;
     }
 
-
+// -------------    General geometry ------------------------------------------------------------
 
 Coords point_on_circle(Coords center, Coords direction, double radius, int point_nr, int number_of_points) {
 
@@ -136,10 +157,77 @@ void points_on_circle(Coords *output, Coords center, Coords direction, double ra
     }
 };
 
+// -------- Brute force last resorts for within / overlap -------------------------------------
+
+int A_within_B(struct geometry_struct *child, struct geometry_struct *parent, int resolution) {
+  // This function assumes the parent (B) is a convex geoemtry
+  // If all points on the shell of geometry A is within B, so are all lines between them.
+  
+  // Should be done first, but takes so little time and may save a longer computation
+  if (parent->within_function(child->center,parent) == 0) return 0;
+  
+  // resolution selects the number of points to be generated on the shell.
+  struct pointer_to_1d_coords_list shell_points;
+  shell_points = child->shell_points(child,resolution);
+  // Shell_points.elements need to be freed before leaving this function
+  
+  if (shell_points.num_elements > resolution || shell_points.num_elements < 0) {
+    printf("\nERROR: Shell point function used in A_within_B return garbage num_elements. \n");
+    exit(1);
+  }
+  
+  int iterate;
+  
+  for (iterate=0;iterate<shell_points.num_elements;iterate++) {
+    if (parent->within_function(shell_points.elements[iterate],parent) == 0) {
+      free(shell_points.elements);
+      return 0;
+    }
+  }
+  
+  free(shell_points.elements);
+  
+  // If all points are inside, the entire geometry is assumed inside as parent should be convex
+  return 1;
+}
+
+/*
+// Turned out to be harder to generalize the overlap functions, but at least within was doable.
+int A_overlaps_B(struct geometry_struct *child, struct geometry_struct *parent) {
+  // This function assumes the parent (B) is a convex geoemtry
+  // Does not work, need to check lines between points
+  
+  // Starting this system with a simple constant 64 point generation.
+  struct pointer_to_1d_coords_list shell_points;
+  shell_points = child.shell_points(child,64);
+  
+  int iterate;
+  
+  for (iterate=0;iterate<shell_points.num_elements;iterate++) {
+    if (parent.within_function(shell_points.elements[iterate],parent) == 1) return 1;
+  }
+  
+  
+  // This requires that the points on the shell are saved pair wise in such a way that
+  //  the lines between them would cover the entire surface when the resolution goes to
+  //  infinity. NOT GOING TO WORK FOR BOX
+  
+  
+  for (iterate=0;iterate<floor(shell_points.num_elements/2);iterate = iterate + 2) {
+    // check intersections with parent between the two child points
+    if (existence_of_intersection(shell_points.elements[iterate],shell_points.elements[iterate+1],parent) == 1) return 1;
+  }
+  
+  
+  // If no points were inside, the geometries are assumed not to overlap as parent should be convex
+  return 0;
+}
+*/
+
 
 
 // -------------    Functions for box ray tracing used in trace ---------------------------------
-
+// These functions needs to be fast, as they may be used many times for each ray
 int sample_box_intersect_advanced(double *t,int *num_solutions,double *r,double *v,struct geometry_struct *geometry) {
     // possible approaches
     // rotate to a simple coordinate system by rotating the ray (easier to switch to McStas standard)
@@ -320,14 +408,14 @@ void box_corners_local_frame(Coords *corner_points, struct geometry_struct *geom
     Coords z_vector = coords_set(0,0,1);
     Coords origo = coords_set(0,0,0);
 
-    
-    corner_points[0] = coords_add(coords_add(coords_add(center,coords_scalar_mult(z_vector,-0.5*depth)),coords_scalar_mult(x_vector,-0.5*width1)),coords_scalar_mult(y_vector,-0.5*height1));
+    // Bug fixed on 25/11, center was used instead of origo
+    corner_points[0] = coords_add(coords_add(coords_add(origo,coords_scalar_mult(z_vector,-0.5*depth)),coords_scalar_mult(x_vector,-0.5*width1)),coords_scalar_mult(y_vector,-0.5*height1));
     
     corner_points[1] = coords_add(corner_points[0],coords_scalar_mult(x_vector,width1));
     corner_points[2] = coords_add(corner_points[1],coords_scalar_mult(y_vector,height1));
     corner_points[3] = coords_add(corner_points[0],coords_scalar_mult(y_vector,height1));
     
-    corner_points[4] = coords_add(coords_add(coords_add(center,coords_scalar_mult(z_vector,0.5*depth)),coords_scalar_mult(x_vector,0.5*width2)),coords_scalar_mult(y_vector,0.5*height2));
+    corner_points[4] = coords_add(coords_add(coords_add(origo,coords_scalar_mult(z_vector,0.5*depth)),coords_scalar_mult(x_vector,-0.5*width2)),coords_scalar_mult(y_vector,-0.5*height2));
     
     corner_points[5] = coords_add(corner_points[4],coords_scalar_mult(x_vector,width2));
     corner_points[6] = coords_add(corner_points[5],coords_scalar_mult(y_vector,height2));
@@ -423,7 +511,8 @@ int r_within_box_advanced(Coords pos,struct geometry_struct *geometry) {
     return 1;
 };
 
-
+// -------------    Functions for box ray tracing used in initialize ----------------------------
+// These functions does not need to be fast, as they are only used once
 int box_within_box(struct geometry_struct *geometry_child,struct geometry_struct *geometry_parent) {
     // Is geometry child inside geometry parent?
     // For box child to be inside of box parent, all corners of box child must be inside of box parent.
@@ -442,69 +531,6 @@ int box_within_box(struct geometry_struct *geometry_child,struct geometry_struct
     return 1; // If no corner was outside, box 2 is inside box 1
 };
 
-int box_within_cylinder(struct geometry_struct *geometry_child,struct geometry_struct *geometry_parent) {
-    // Is geometry child inside geometry parent?
-    // For box child to be inside of cylinder parent, all corners of box child must be inside of box parent.
-    
-    // Generate coordinates of corners of the box
-    Coords corner_points[8];
-    box_corners_global_frame(corner_points,geometry_child);
-    
-    // Check earch corner seperatly
-    int iterate;
-    for (iterate=0;iterate<8;iterate++) {
-        if (geometry_parent->within_function(corner_points[iterate],geometry_parent) == 0) {
-            return 0; // If a corner is outside, box child is not within cylinder parent
-        }
-    }
-    return 1; // If no corner was outside, the box is inside the cylinder
-};
-
-int cylinder_within_box(struct geometry_struct *geometry_child,struct geometry_struct *geometry_parent) {
-    // Is geometry child inside geometry parent?
-    // For box child to be inside of cylinder parent, all corners of box child must be inside of box parent.
-    
-    Coords cyl_direction = geometry_child->geometry_parameters.p_cylinder_storage->direction_vector;
-    Coords center = geometry_child->center;
-    double radius = geometry_child->geometry_parameters.p_cylinder_storage->cyl_radius;
-    double height = geometry_child->geometry_parameters.p_cylinder_storage->height;
-    
-    Coords cyl_top_point = coords_add(center,coords_scalar_mult(cyl_direction,0.5*height));
-    Coords cyl_bottom_point = coords_add(center,coords_scalar_mult(cyl_direction,-0.5*height));
-    
-    // quick escape: if end points of cylinder not in box, return 0
-    if (geometry_parent->within_function(cyl_top_point,geometry_parent) == 0) return 0;
-    if (geometry_parent->within_function(cyl_bottom_point,geometry_parent) == 0) return 0;
-    
-    // Generate 30 points on the circle describing the top of the cylinder
-    Coords *circle_point_array;
-    int number_of_points = 30;
-    circle_point_array = malloc(number_of_points * sizeof(Coords));
-    
-    points_on_circle(circle_point_array,cyl_top_point,cyl_direction,radius,number_of_points);
-    
-    // Check parts of cylinder top seperatly
-    int iterate;
-    for (iterate=0;iterate<number_of_points;iterate++) {
-        if (geometry_parent->within_function(circle_point_array[iterate],geometry_parent) == 0) {
-            return 0; // If part of the cylinder is outside the box, the cylinder is not inside the box
-        }
-    }
-    
-    // Check parts of cylinder bottom seperatly
-    points_on_circle(circle_point_array,cyl_bottom_point,cyl_direction,radius,number_of_points);
-    for (iterate=0;iterate<number_of_points;iterate++) {
-        if (geometry_parent->within_function(circle_point_array[iterate],geometry_parent) == 0) {
-            return 0; // If part of the cylinder is outside the box, the cylinder is not inside the box
-        }
-    }
-    
-    free(circle_point_array);
-    
-    return 1; // If no part of the cylinders end caps was outside, the cylinder is inside box 1
-};
-
-
 int existence_of_intersection(Coords point1, Coords point2, struct geometry_struct *geometry) {
     Coords vector_between = coords_sub(point2,point1);
     double start_point[3],vector_between_v[3];
@@ -522,29 +548,6 @@ int existence_of_intersection(Coords point1, Coords point2, struct geometry_stru
     }
     return 0;
 };
-
-/*
-int existence_of_intersection_debug(Coords point1, Coords point2, struct geometry_struct *geometry) {
-    Coords vector_between = coords_sub(point2,point1);
-    double start_point[3],vector_between_v[3];
-    double temp_solution[2];
-    int number_of_solutions;
-
-    start_point[0] = point1.x;start_point[1] = point1.y;start_point[2] = point1.z;
-    vector_between_v[0] = vector_between.x;vector_between_v[1] = vector_between.y;vector_between_v[2] = vector_between.z;
-    geometry->intersect_function(temp_solution,&number_of_solutions,start_point,vector_between_v,geometry);
-    if (number_of_solutions > 0) {
-        if (temp_solution[0] > 0 && temp_solution[0] < 1) {printf("solution0 = %f\n",temp_solution[0]);return 1;}
-        if (number_of_solutions == 2) {
-            if (temp_solution[1] > 0 && temp_solution[1] < 1) {printf("solution1 = %f\n",temp_solution[1]);return 1;}
-        }
-    }
-    
-    printf("solution1 = %f, solution2 = %f \n",temp_solution[0],temp_solution[1]);
-    
-    return 0;
-};
-*/
 
 int box_overlaps_box(struct geometry_struct *geometry1,struct geometry_struct *geometry2) {
     // Algorithm for checking if two boxes overlap
@@ -603,85 +606,6 @@ int box_overlaps_box(struct geometry_struct *geometry1,struct geometry_struct *g
     return 0;
 };
 
-int box_overlaps_cylinder(struct geometry_struct *geometry_box,struct geometry_struct *geometry_cyl) {
-    // Checking if the box and cylinder described by geometry_box and geometry_cyl overlaps.
-    // Done in steps:
-    // If any corner points of the box is within the cylinder, they do overlap
-    // If any points on the cylinders end caps are within the box, they do overlap
-    // If any of the lines describing the sides of the box intersect the cylinder, they do overlap
-    // If none of the above are true, they do not overlap
-    
-    // A problem with this algorithm is a lack of a quick exit if the volumes obviously does not overlap
-
-    // Generate coordinates of corners of box
-    Coords corner_points[8];
-    box_corners_global_frame(corner_points,geometry_box);
-    
-    // Check earch corner seperatly
-    int iterate;
-    for (iterate=0;iterate<8;iterate++) {
-        if (geometry_cyl->within_function(corner_points[iterate],geometry_cyl) == 1) {
-            return 1; // If a corner of the box is inside the cylinder, the two volumes overlap
-        }
-    }
-    
-    Coords cyl_direction = geometry_cyl->geometry_parameters.p_cylinder_storage->direction_vector;
-    Coords center = geometry_cyl->center;
-    double radius = geometry_cyl->geometry_parameters.p_cylinder_storage->cyl_radius;
-    double height = geometry_cyl->geometry_parameters.p_cylinder_storage->height;
-    
-    Coords cyl_top_point = coords_add(center,coords_scalar_mult(cyl_direction,0.5*height));
-    Coords cyl_bottom_point = coords_add(center,coords_scalar_mult(cyl_direction,-0.5*height));
-    
-    // Generate 30 points on the circle describing the top of the cylinder
-    Coords *circle_point_array;
-    int number_of_points = 30;
-    circle_point_array = malloc(number_of_points * sizeof(Coords));
-    
-    points_on_circle(circle_point_array,cyl_top_point,cyl_direction,radius,number_of_points);
-    
-    // Check parts of cylinder top seperatly
-    for (iterate=0;iterate<number_of_points;iterate++) {
-        if (geometry_box->within_function(circle_point_array[iterate],geometry_box) == 1) {
-            return 1; // If part of the cylinder is inside the box, the volumes overlap
-        }
-    }
-    
-    // Check parts of cylinder bottom seperatly
-    points_on_circle(circle_point_array,cyl_bottom_point,cyl_direction,radius,number_of_points);
-    for (iterate=0;iterate<number_of_points;iterate++) {
-        if (geometry_box->within_function(circle_point_array[iterate],geometry_box) == 1) {
-            return 1; // If part of the cylinder is inside the box, the volumes overlap
-        }
-    }
-    free(circle_point_array);
-
-    // Check intersections for the lines between the corners of the box and the cylinder
-    // 12 sides to a box, if any one of them intersects, the volumes overlaps
-    for (iterate=0;iterate<3;iterate++) { //
-        if (existence_of_intersection(corner_points[iterate],corner_points[iterate+1],geometry_cyl) == 1) return 1;
-    }
-    if (existence_of_intersection(corner_points[3],corner_points[0],geometry_cyl) == 1) return 1;
-    for (iterate=4;iterate<7;iterate++) {
-        if (existence_of_intersection(corner_points[iterate],corner_points[iterate+1],geometry_cyl) == 1) return 1;
-    }
-    if (existence_of_intersection(corner_points[7],corner_points[4],geometry_cyl) == 1) return 1;
-    for (iterate=0;iterate<4;iterate++) {
-        if (existence_of_intersection(corner_points[iterate],corner_points[iterate+4],geometry_cyl) == 1) return 1;
-    }
-    
-    // Only need to test the intersection between the symetry line of the cylinder and the box
-    if (existence_of_intersection(cyl_top_point,cyl_bottom_point,geometry_box) == 1) return 1;
-    
-    // If all the tests change, the volumes do not overlap
-    return 0;
-};
-
-int cylinder_overlaps_box(struct geometry_struct *geometry_cyl,struct geometry_struct *geometry_box) {
-    // overlap functions are symetrical, but it is convinient to have both defined
-    return box_overlaps_cylinder(geometry_box,geometry_cyl);
-};
-
 
 // -------------    Functions for sphere ray tracing used in trace ------------------------------
 // These functions needs to be fast, as they may be used many times for each ray
@@ -720,7 +644,7 @@ int r_within_sphere(Coords pos,struct geometry_struct *geometry)
     //printf("geometry.x = %f,geometry.y = %f,geometry.z = %f\n",geometry->center.x,geometry->center.y,geometry->center.z);
     //printf("return   = %d\n",(distance <= radius));
     
-    return (distance <= radius);
+    return (distance < radius);
     };
 
 // -------------    Functions for sphere ray tracing used in initialize -------------------------
@@ -751,7 +675,7 @@ int sphere_within_sphere(struct geometry_struct *geometry_child,struct geometry_
 };
 
 // -------------    Functions for cylinder ray tracing used in trace ------------------------------
-
+// These functions needs to be fast, as they may be used many times for each ray
 int sample_cylinder_intersect(double *t,int *num_solutions,double *r,double *v,struct geometry_struct *geometry) {
     double radius = geometry->geometry_parameters.p_cylinder_storage->cyl_radius;
     double height = geometry->geometry_parameters.p_cylinder_storage->height;
@@ -873,7 +797,9 @@ int r_within_cylinder(Coords pos,struct geometry_struct *geometry) {
     if (inside == 0) return 0;
     else return 1;
     };
-    
+
+// -------------    Functions for cylinder ray tracing used in initialize -------------------------
+// These functions does not need to be fast, as they are only used once
 int cylinder_overlaps_cylinder(struct geometry_struct *geometry1,struct geometry_struct *geometry2) {
     // Unpack parameters
     double radius1 = geometry1->geometry_parameters.p_cylinder_storage->cyl_radius;
@@ -1563,4 +1489,383 @@ int cylinder_within_cylinder_backup(struct geometry_struct *geometry_child,struc
     }
 
 };
+
+
+// -------------    Overlap functions for two different geometries --------------------------------
+
+int box_overlaps_cylinder(struct geometry_struct *geometry_box,struct geometry_struct *geometry_cyl) {
+    // Checking if the box and cylinder described by geometry_box and geometry_cyl overlaps.
+    // Done in steps:
+    // If any corner points of the box is within the cylinder, they do overlap
+    // If any points on the cylinders end caps are within the box, they do overlap
+    // If any of the lines describing the sides of the box intersect the cylinder, they do overlap
+    // If none of the above are true, they do not overlap
+    
+    // A problem with this algorithm is a lack of a quick exit if the volumes obviously does not overlap
+
+    // Generate coordinates of corners of box
+    Coords corner_points[8];
+    box_corners_global_frame(corner_points,geometry_box);
+    
+    // Check earch corner seperatly
+    int iterate;
+    for (iterate=0;iterate<8;iterate++) {
+        if (geometry_cyl->within_function(corner_points[iterate],geometry_cyl) == 1) {
+            return 1; // If a corner of the box is inside the cylinder, the two volumes overlap
+        }
+    }
+    
+    Coords cyl_direction = geometry_cyl->geometry_parameters.p_cylinder_storage->direction_vector;
+    Coords center = geometry_cyl->center;
+    double radius = geometry_cyl->geometry_parameters.p_cylinder_storage->cyl_radius;
+    double height = geometry_cyl->geometry_parameters.p_cylinder_storage->height;
+    
+    Coords cyl_top_point = coords_add(center,coords_scalar_mult(cyl_direction,0.5*height));
+    Coords cyl_bottom_point = coords_add(center,coords_scalar_mult(cyl_direction,-0.5*height));
+    
+    // Generate 30 points on the circle describing the top of the cylinder
+    Coords *circle_point_array;
+    int number_of_points = 30;
+    circle_point_array = malloc(number_of_points * sizeof(Coords));
+    
+    points_on_circle(circle_point_array,cyl_top_point,cyl_direction,radius,number_of_points);
+    
+    // Check parts of cylinder top seperatly
+    for (iterate=0;iterate<number_of_points;iterate++) {
+        if (geometry_box->within_function(circle_point_array[iterate],geometry_box) == 1) {
+            return 1; // If part of the cylinder is inside the box, the volumes overlap
+        }
+    }
+    
+    // Check parts of cylinder bottom seperatly
+    points_on_circle(circle_point_array,cyl_bottom_point,cyl_direction,radius,number_of_points);
+    for (iterate=0;iterate<number_of_points;iterate++) {
+        if (geometry_box->within_function(circle_point_array[iterate],geometry_box) == 1) {
+            return 1; // If part of the cylinder is inside the box, the volumes overlap
+        }
+    }
+    free(circle_point_array);
+
+    // Check intersections for the lines between the corners of the box and the cylinder
+    // 12 sides to a box, if any one of them intersects, the volumes overlaps
+    for (iterate=0;iterate<3;iterate++) { //
+        if (existence_of_intersection(corner_points[iterate],corner_points[iterate+1],geometry_cyl) == 1) return 1;
+    }
+    if (existence_of_intersection(corner_points[3],corner_points[0],geometry_cyl) == 1) return 1;
+    for (iterate=4;iterate<7;iterate++) {
+        if (existence_of_intersection(corner_points[iterate],corner_points[iterate+1],geometry_cyl) == 1) return 1;
+    }
+    if (existence_of_intersection(corner_points[7],corner_points[4],geometry_cyl) == 1) return 1;
+    for (iterate=0;iterate<4;iterate++) {
+        if (existence_of_intersection(corner_points[iterate],corner_points[iterate+4],geometry_cyl) == 1) return 1;
+    }
+    
+    // Only need to test the intersection between the symetry line of the cylinder and the box
+    if (existence_of_intersection(cyl_top_point,cyl_bottom_point,geometry_box) == 1) return 1;
+    
+    // If all the tests change, the volumes do not overlap
+    return 0;
+};
+
+int cylinder_overlaps_box(struct geometry_struct *geometry_cyl,struct geometry_struct *geometry_box) {
+    // overlap functions are symetrical, but it is convinient to have both defined
+    return box_overlaps_cylinder(geometry_box,geometry_cyl);
+};
+
+int cylinder_overlaps_sphere(struct geometry_struct *geometry_cyl,struct geometry_struct *geometry_sph) {
+
+    // If the sphere center is inside, one can exit fast
+    Coords sph_center = geometry_sph->center;
+    if (geometry_cyl->within_function(sph_center,geometry_cyl) == 1) return 1;
+    
+    Coords cyl_center = geometry_cyl->center;
+    if (geometry_sph->within_function(cyl_center,geometry_sph) == 1) return 1;
+    
+    double cyl_radius = geometry_cyl->geometry_parameters.p_cylinder_storage->cyl_radius;
+    double cyl_height = geometry_cyl->geometry_parameters.p_cylinder_storage->height;
+    double sph_radius = geometry_sph->geometry_parameters.p_sphere_storage->sph_radius;
+
+    // Calculate distance
+    double distance = distance_between(geometry_cyl->center,geometry_sph->center);
+    
+    // Return 0 if the bounding sphere and the sphere do not overlap, otherwise do brute force
+    if (distance >= sph_radius + sqrt(cyl_radius*cyl_radius+0.25*cyl_height*cyl_height)) return 0;
+    
+    // Brute force
+    struct pointer_to_1d_coords_list shell_points;
+    shell_points = geometry_sph->shell_points(geometry_sph,144); // using 12 rings with 12 points
+    
+    int iterate;
+    for (iterate=0;iterate<shell_points.num_elements;iterate++) {
+      if (geometry_cyl->within_function(shell_points.elements[iterate],geometry_cyl) == 1) {
+        free(shell_points.elements);
+        return 1;
+      }
+    }
+    
+    free(shell_points.elements);
+    return 0;
+  
+};
+
+int box_overlaps_sphere(struct geometry_struct *geometry_box,struct geometry_struct *geometry_sph) {
+    
+    //printf("\n checking sphere center in box\n");
+    // If the sphere center is inside box, one can exit fast
+    Coords sph_center = geometry_sph->center;
+    if (geometry_box->within_function(sph_center,geometry_box) == 1) return 1;
+    
+    //printf("\n checking box center in sphere\n");
+    // If the box center is inside sphere, one can exit fast
+    Coords box_center = geometry_box->center;
+    if (geometry_sph->within_function(box_center,geometry_sph) == 1) return 1;
+    
+    // Can not find elegant solution to this problem. Will use brute force.
+    
+    // Before brute forcing, find negative solutions for obvious cases.
+    // Use circle - circle overlap algorithm, find bounding circle for box.
+    
+    //printf("\n checking bounding sphere approach\n");
+    Coords corner_ps[8];
+    int iterate;
+    double this_length,max_length = 0;
+    
+    box_corners_local_frame(corner_ps,geometry_box); // Local frame: center in (0,0,0)
+    for (iterate=0;iterate<8;iterate++) {
+      this_length = length_of_position_vector(corner_ps[iterate]);
+      if (this_length > max_length) max_length = this_length;
+    }
+    // Box has a bounding circle with radius max_length and it's normal center.
+    //printf("bounding sphere for box has radius = %f \n",max_length);
+    
+    double radius = geometry_sph->geometry_parameters.p_sphere_storage->sph_radius;
+
+    // Calculate distance
+    double distance = distance_between(geometry_box->center,geometry_sph->center);
+    
+    // Return 0 if the bounding sphere and the sphere do not overlap, otherwise do brute force
+    if (distance >= radius + max_length) {
+      //printf("\n Bounding sphere avoided brute force method in sphere / box overlap\n");
+      return 0;
+    }
+    
+    // Could check if the box corners were inside the sphere for faster positive return
+    //printf("\n doing brute force method in box overlaps sphere\n");
+    // Brute force
+    struct pointer_to_1d_coords_list shell_points;
+    shell_points = geometry_sph->shell_points(geometry_sph,144); // using 12 rings with 12 points
+  
+    for (iterate=0;iterate<shell_points.num_elements;iterate++) {
+      if (geometry_box->within_function(shell_points.elements[iterate],geometry_box) == 1) {
+        free(shell_points.elements);
+        return 1;
+      }
+    }
+    
+    free(shell_points.elements);
+    return 0;
+    
+};
+
+
+// sym sphere
+int sphere_overlaps_cylinder(struct geometry_struct *geometry_sph,struct geometry_struct *geometry_cyl) {
+  return cylinder_overlaps_sphere(geometry_cyl,geometry_sph);
+};
+
+int sphere_overlaps_box(struct geometry_struct *geometry_sph,struct geometry_struct *geometry_box) {
+  return box_overlaps_sphere(geometry_box,geometry_sph);
+};
+
+// -------------    Within functions for two different geometries ---------------------------------
+
+double dist_from_point_to_plane(Coords point,Coords plane_p1, Coords plane_p2, Coords plane_p3) {
+
+  /*
+  printf("Dist from point to plane stuff ---- \n");
+  print_position(point,"point");
+  print_position(plane_p1,"plane_p1");
+  print_position(plane_p2,"plane_p2");
+  print_position(plane_p3,"plane_p3");
+  */
+  // transform three points into normal vector
+  Coords vector_1 = coords_sub(plane_p2,plane_p1);
+  Coords vector_2 = coords_sub(plane_p3,plane_p1);
+  
+  Coords normal_vector;
+  
+  vec_prod(normal_vector.x,normal_vector.y,normal_vector.z,vector_1.x,vector_1.y,vector_1.z,vector_2.x,vector_2.y,vector_2.z);
+  
+  double denominator = length_of_position_vector(normal_vector);
+  
+  normal_vector = coords_scalar_mult(normal_vector,1.0/denominator);
+
+  //print_position(normal_vector,"normal vector in dist from point to plane");
+  
+  Coords diff = coords_sub(point,plane_p1);
+  
+  return fabs(scalar_prod(normal_vector.x,normal_vector.y,normal_vector.z,diff.x,diff.y,diff.z));
+};
+
+int box_within_cylinder(struct geometry_struct *geometry_child,struct geometry_struct *geometry_parent) {
+    // Is geometry child inside geometry parent?
+    // For box child to be inside of cylinder parent, all corners of box child must be inside of box parent.
+    
+    // Generate coordinates of corners of the box
+    Coords corner_points[8];
+    box_corners_global_frame(corner_points,geometry_child);
+    
+    // Check earch corner seperatly
+    int iterate;
+    for (iterate=0;iterate<8;iterate++) {
+        if (geometry_parent->within_function(corner_points[iterate],geometry_parent) == 0) {
+            return 0; // If a corner is outside, box child is not within cylinder parent
+        }
+    }
+    return 1; // If no corner was outside, the box is inside the cylinder
+};
+
+int cylinder_within_box(struct geometry_struct *geometry_child,struct geometry_struct *geometry_parent) {
+    // Is geometry child inside geometry parent?
+    // For box child to be inside of cylinder parent, all corners of box child must be inside of box parent.
+    
+    Coords cyl_direction = geometry_child->geometry_parameters.p_cylinder_storage->direction_vector;
+    Coords center = geometry_child->center;
+    double radius = geometry_child->geometry_parameters.p_cylinder_storage->cyl_radius;
+    double height = geometry_child->geometry_parameters.p_cylinder_storage->height;
+    
+    Coords cyl_top_point = coords_add(center,coords_scalar_mult(cyl_direction,0.5*height));
+    Coords cyl_bottom_point = coords_add(center,coords_scalar_mult(cyl_direction,-0.5*height));
+    
+    // quick escape: if end points of cylinder not in box, return 0
+    if (geometry_parent->within_function(cyl_top_point,geometry_parent) == 0) return 0;
+    if (geometry_parent->within_function(cyl_bottom_point,geometry_parent) == 0) return 0;
+    
+    // Generate 30 points on the circle describing the top of the cylinder
+    Coords *circle_point_array;
+    int number_of_points = 30;
+    circle_point_array = malloc(number_of_points * sizeof(Coords));
+    
+    points_on_circle(circle_point_array,cyl_top_point,cyl_direction,radius,number_of_points);
+    
+    // Check parts of cylinder top seperatly
+    int iterate;
+    for (iterate=0;iterate<number_of_points;iterate++) {
+        if (geometry_parent->within_function(circle_point_array[iterate],geometry_parent) == 0) {
+            return 0; // If part of the cylinder is outside the box, the cylinder is not inside the box
+        }
+    }
+    
+    // Check parts of cylinder bottom seperatly
+    points_on_circle(circle_point_array,cyl_bottom_point,cyl_direction,radius,number_of_points);
+    for (iterate=0;iterate<number_of_points;iterate++) {
+        if (geometry_parent->within_function(circle_point_array[iterate],geometry_parent) == 0) {
+            return 0; // If part of the cylinder is outside the box, the cylinder is not inside the box
+        }
+    }
+    
+    free(circle_point_array);
+    
+    return 1; // If no part of the cylinders end caps was outside, the cylinder is inside box 1
+};
+
+int cylinder_within_sphere(struct geometry_struct *geometry_child,struct geometry_struct *geometry_parent) {
+    // Is a cylinder within a sphere?
+    
+    // Reasonable to brute force solution here
+    return A_within_B(geometry_child,geometry_parent,(int) 60); // 30 points on each end cap
+};
+
+int sphere_within_cylinder(struct geometry_struct *geometry_child,struct geometry_struct *geometry_parent) {
+    // Is a sphere (child) within a cylinder (parent)?
+    
+    // If the center is not inside, one can exit fast
+    Coords sph_center = geometry_child->center;
+    if (geometry_parent->within_function(sph_center,geometry_parent) == 0) return 0;
+    
+    // Generate cylinder with height = height - r_s and r_c = r_c - 2*r_s and check if point is within.
+    
+    // Done by modifying parent cylinder.
+    double original_radius = geometry_parent->geometry_parameters.p_cylinder_storage->cyl_radius;
+    double original_height = geometry_parent->geometry_parameters.p_cylinder_storage->height;
+    
+    // Need sphere
+    double sph_radius = geometry_child->geometry_parameters.p_sphere_storage->sph_radius;
+    
+    if (original_radius - sph_radius > 0 && original_height - 2.0*sph_radius > 0) {
+      geometry_parent->geometry_parameters.p_cylinder_storage->cyl_radius = original_radius - sph_radius;
+      geometry_parent->geometry_parameters.p_cylinder_storage->height = original_height - 2.0*sph_radius;
+    } else return 0;
+    
+    int return_value = geometry_parent->within_function(sph_center,geometry_parent);
+    
+    // Reset the cylinder to it's original values (important not to return before)
+    geometry_parent->geometry_parameters.p_cylinder_storage->cyl_radius = original_radius;
+    geometry_parent->geometry_parameters.p_cylinder_storage->height = original_height;
+    
+    return return_value;
+};
+
+int box_within_sphere(struct geometry_struct *geometry_child,struct geometry_struct *geometry_parent) {
+    // If all 8 corners of the box are inside the sphere, the entire box is inside
+    
+    return A_within_B(geometry_child,geometry_parent,8);
+};
+
+int sphere_within_box(struct geometry_struct *geometry_child,struct geometry_struct *geometry_parent) {
+    // Distance from any of the box sides must be greater than radius, and the center inside.
+    
+    // If the center is not inside, one can exit fast
+    Coords sph_center = geometry_child->center;
+    if (geometry_parent->within_function(sph_center,geometry_parent) == 0) {
+      //printf("sphere not child of box because it's center is not in the box \n");
+      return 0;
+    }
+    
+    double radius = geometry_child->geometry_parameters.p_sphere_storage->sph_radius;
+    
+    // 6 planes
+    // +z -z easy as they are not are parallel and simple in the box's coordinate system
+    Coords coordinates = coords_sub(sph_center,geometry_parent->center);
+    
+    // Rotate the position of the position around the center of the box
+    Coords rotated_coordinates;
+    rotated_coordinates = rot_apply(geometry_parent->transpose_rotation_matrix,coordinates);
+    
+    double depth = geometry_parent->geometry_parameters.p_box_storage->z_depth;
+    if (rotated_coordinates.z < -0.5*depth+radius || rotated_coordinates.z > 0.5*depth-radius) {
+      //printf("sphere not child of box because it's center to close to z plane \n");
+      return 0;
+    }
+    
+    Coords corner_ps[8];
+    box_corners_global_frame(corner_ps,geometry_parent);
+    
+    // The first 4 points are in the -z plane, the last 4 in the +z plane.
+    
+    // In the -z plane, 0 has neighbors 1 and 3, in the opposite 4
+    // In the -z plane, 2 has neighbors 1 and 3, in the opposite 6
+    
+    // Then these are the four necessary calls for the two plans described by each group.
+    double debug_dist;
+    if ((debug_dist = dist_from_point_to_plane(sph_center,corner_ps[0],corner_ps[4],corner_ps[1])) < radius ) {
+      //printf("sphere not child of box because it's center too close to plane 1, as distance was %f\n",debug_dist);
+      return 0;
+    }
+    if ((debug_dist = dist_from_point_to_plane(sph_center,corner_ps[0],corner_ps[4],corner_ps[3])) < radius ) {
+      //printf("sphere not child of box because it's center too close to plane 2, as distance was %f\n",debug_dist);
+      return 0;
+    }
+    if ((debug_dist = dist_from_point_to_plane(sph_center,corner_ps[2],corner_ps[6],corner_ps[1])) < radius ) {
+      //printf("sphere not child of box because it's center too close to plane 3, as distance was %f\n",debug_dist);
+      return 0;
+    }
+    if ((debug_dist = dist_from_point_to_plane(sph_center,corner_ps[2],corner_ps[6],corner_ps[3])) < radius ) {
+      //printf("sphere not child of box because it's center too close to plane 4, as distance was %f\n",debug_dist);
+      return 0;
+    }
+    
+    return 1; // If the cylinder center is inside, and more than radius away from all walls, it is inside
+};
+
 
