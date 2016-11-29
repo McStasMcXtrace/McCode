@@ -305,12 +305,21 @@ def _load_monitor(monitorfile):
 
     return data
 
-def _load_datfiles(directory):
-    d = directory
-    datfiles = glob.glob(join(d, '*.dat'))
-    datfiles.extend(glob.glob(join(d, '*.psd')))
+def _get_filenames_from_mccodesim(mccodesim):
+    dir = dirname(mccodesim)
+    
+    text = open(mccodesim).read()
+    data_idx = text.find('begin data')
+    filenames = []
+    for line in text[data_idx:].splitlines():
+        m = re.search(r'filename: ([\w\._\-+]+)\s*', line)
+        if m: 
+            filenames.append(join(dir, m.group(1)))
+    return filenames
+
+def _load_data_from_mcfiles(filenames):
     data_lst = []
-    for f in datfiles:
+    for f in filenames:
         data = _load_monitor(f)
         data_lst.append(data)
     return data_lst
@@ -418,7 +427,6 @@ def _load_sweep_monitors(rootdir):
     for root, dirs, files in walk(top=d):
         walkfunc(subdirtuple, root, files)
 
-
     del subdirtuple[0] # remove root dir
 
     subdirs = map(lambda t: t[0], subdirtuple)
@@ -504,15 +512,24 @@ def is_mccodesim_w_monitors(args):
     else:
         f = join(d, 'mccode.sim')
         args['simfile'] = f
-    # look for .dat files
-    datfiles = glob.glob(join(d, '*.dat'))
-    datfiles.extend(glob.glob(join(d, '*.psd')))
+    
+    # look for any "unkonwn" files, could be data files
+    datfiles = glob.glob(join(d, '*'))
+    if 'mccode.sim' in datfiles: 
+        datfiles.remove('mccode.sim')
+    if 'mccode.dat' in datfiles: 
+        datfiles.remove('mccode.dat')
     return len(datfiles) > 0
 
 def has_datfile(args):
     d = args['directory']
-    datfiles = glob.glob(join(d, '*.dat'))
-    datfiles.extend(glob.glob(join(d, '*.psd')))
+    
+    # look for any "unkonwn" files, could be data files
+    datfiles = glob.glob(join(d, '*'))
+    if 'mccode.sim' in datfiles: 
+        datfiles.remove('mccode.sim')
+    if 'mccode.dat' in datfiles: 
+        datfiles.remove('mccode.dat')
     if len(datfiles) > 0:
         args['monitorfile'] = datfiles[0]
         return True
@@ -521,7 +538,13 @@ def has_datfile(args):
 
 def has_multiple_datfiles(args):
     d = args['directory']
-    datfiles = glob.glob(join(d, '*.dat'))
+    
+    # look for any "unkonwn" files, could be data files
+    datfiles = glob.glob(join(d, '*'))
+    if 'mccode.sim' in datfiles: 
+        datfiles.remove('mccode.sim')
+    if 'mccode.dat' in datfiles: 
+        datfiles.remove('mccode.dat')
     return len(datfiles) > 1
 
 def test_decfuncs(simfile):
@@ -558,7 +581,8 @@ def load_simulation(args):
 
     # load header and monitor data
     header = _load_header(f)
-    data_lst = _load_datfiles(d)
+    #data_lst = _load_datfiles(d)
+    data_lst = _load_data_from_mcfiles(_get_filenames_from_mccodesim(join(d, 'mccode.sim')))
 
     # construct two-level plot graph
     root = PNMultiple(header, data_lst)
@@ -616,10 +640,11 @@ def load_sweep_c(args):
 
 def load_monitor_folder(args):
     # assume simfile is folder with multiple dat files
-    d = args['simfile']
+    d = args['directory']
 
     # load monitor files into a list
-    data_lst = _load_datfiles(d)
+    datfiles = glob.glob(join(d, '*'))
+    data_lst = _load_data_from_mcfiles(datfiles)
 
     # construct two-level plot graph
     root = PNMultiple(DataMultiHeader(), data_lst)
