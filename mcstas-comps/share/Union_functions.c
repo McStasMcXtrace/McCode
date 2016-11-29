@@ -9,27 +9,8 @@
 * Version: $Revision: 0.1 $
 * Origin: Svanevej 19
 *
-* A sample component to separate geometry and phsysics
+* Functions and structure definitons for Union components.
 *
-* %D
-* Alpha version, no input system yet
-* Hardcode input to geometry engine
-* Allows complicated geometry by combination of simple shapes
-*
-* Algorithm:
-* Described elsewhere
-*
-* %P
-* INPUT PARAMETERS:
-* radius:  [m] Outer radius of sample in (x,z) plane
-*
-* OUTPUT PARAMETERS:
-* V_rho:  [AA^-3] Atomic density
-*
-* %L
-* The test/example instrument <a href="../examples/Test_Phonon.instr">Test_Phonon.instr</a>.
-*
-* %E
 ******************************************************************************/
 
 // -------------    Definition of data structures   ---------------------------------------------
@@ -56,6 +37,11 @@ int *elements;
 struct pointer_to_1d_double_list {
 int num_elements;
 double *elements;
+};
+
+struct pointer_to_1d_coords_list {
+int num_elements;
+Coords *elements;
 };
 
 struct lines_to_draw{
@@ -97,14 +83,182 @@ void (*focusing_function)(Coords*, double*, struct focus_data_struct*);
 //                        v_out  , solid_a,
 };
 
-
-/*
-struct indexed_mask_lists_struct {
-int number_of_lists;
-struct pointer_to_1d_int_list mask_indices;
-struct pointer_to_1d_int_list *lists;
+struct Detector_3D_struct {
+  char title_string[256];
+  char string_axis_1[256];
+  char string_axis_2[256];
+  char string_axis_3[256];
+  char Filename[256];
+  double D1min;
+  double D1max;
+  double D2min;
+  double D2max;
+  double D3min;
+  double D3max;
+  double bins_1; // McStas uses doubles for bin numbers for some reason
+  double bins_2;
+  double bins_3;
+  double ***Array_N; // McStas uses doubles for number of rays in each bin for some reason
+  double ***Array_p;
+  double ***Array_p2;
 };
-*/
+
+struct Detector_2D_struct {
+  char title_string[256];
+  char string_axis_1[256];
+  char string_axis_2[256];
+  char Filename[256];
+  double D1min;
+  double D1max;
+  double D2min;
+  double D2max;
+  double bins_1; // McStas uses doubles for bin numbers for some reason
+  double bins_2;
+  double **Array_N; // McStas uses doubles for number of rays in each bin for some reason
+  double **Array_p;
+  double **Array_p2;
+};
+
+struct Detector_1D_struct {
+  char title_string[256];
+  char string_axis[256];
+  char string_axis_short[64];
+  char string_axis_value[256];
+  char Filename[256];
+  double min;
+  double max;
+  double bins; // McStas uses doubles for bin numbers for some reason
+  double *Array_N; // McStas uses doubles for number of rays in each bin for some reason
+  double *Array_p;
+  double *Array_p2;
+};
+
+
+union logger_data_union{
+  struct a_2DQ_storage_struct *p_2DQ_storage;
+  struct a_2DS_storage_struct *p_2DS_storage;
+  struct a_3DS_storage_struct *p_3DS_storage;
+  struct a_1D_storage_struct *p_1D_storage;
+  struct a_2DS_t_storage_struct *p_2DS_t_storage;
+  struct a_2D_kf_t_storage_struct *p_2D_kf_t_storage;
+  // Additional logger storage structs to be addedd
+};
+
+struct logger_with_data_struct {
+  int used_elements;
+  int allocated_elements;
+  struct logger_struct **logger_pointers;
+};
+
+// logger_pointer_struct
+// contains pointers to the different logger functions and it's data union
+
+struct logger_pointer_set_struct {
+  // The logger has two record functions, an active and an inactive. Normally the active one will be to permanent storage,
+  //  but if a conditional has been defined, it can switch the two, making the active one recording to temporary, which
+  //  can then be filtered based on the future path of the ray
+  
+  // function input Coords position, k[3], k_old[3], p, p_old, NV, NPV, N, logger_data_union, logger_with_data_struct
+  void (*active_record_function)(Coords*, double*, double*, double, double, double, int, int, int, struct logger_struct*, struct logger_with_data_struct*);
+  void (*inactive_record_function)(Coords*, double*, double*, double, double, double, int, int, int, struct logger_struct*, struct logger_with_data_struct*);
+  
+  // A clear temporary data function (for new ray)
+  void (*clear_temp)(union logger_data_union*);
+  
+  // Write temporary to permanent is used when the record to temp function is active, and the condition is met.
+  void (*temp_to_perm)(union logger_data_union*);
+  
+  // Write permanent to disk is used at the end of the overall simulation, it will write the results in permanent to disk.
+  // Obsolete, moved to individual logger component files
+  //int (*perm_to_disk)(union logger_data_union*, union detector_pointer_union*);
+  
+};
+
+
+struct conditional_standard_struct{
+  // Data to be transfered to the conditional function
+  double Emax;
+  double Emin;
+  int E_limit;
+  
+  double Tmin;
+  double Tmax;
+  int T_limit;
+  
+  int volume_index;
+  
+  double Total_scat_max;
+  double Total_scat_min;
+  int Total_scat_limit;
+  
+  double exit_volume_index;
+  
+  // Test
+  Coords test_position;
+  Rotation test_rotation;
+  Rotation test_t_rotation;
+};
+
+struct conditional_PSD_struct{
+  double PSD_half_xwidth;
+  double PSD_half_yheight;
+  
+  double Tmin;
+  double Tmax;
+  int T_limit;
+  
+  // Position of the PSD
+  Coords PSD_position;
+  Rotation PSD_rotation;
+  Rotation PSD_t_rotation;
+};
+
+union conditional_data_union {
+  struct conditional_standard_struct *p_standard;
+  struct conditional_PSD_struct *p_PSD;
+  // Add more as conditional components are made
+};
+
+// General input for conditional functions: Position, Velocity/Wavevector, weight, time, total_scat, scattered_flag, scattered_flag_VP,
+// Optional extras: data_union? tree base(s)? tree base for current ray?
+typedef int (*conditional_function_pointer)(union conditional_data_union*,Coords*, Coords*, double*, double*, int*, int*, int*, int**);
+//typedef int (**conditional_function_pointer_array)(union *conditional_data_union,Coords*, Coords*, double*, double*, int*, int*, int**);
+
+struct conditional_list_struct{
+  int num_elements;
+  
+  union conditional_data_union **p_data_unions;
+  conditional_function_pointer *conditional_functions;
+  //int (**conditional_functions)(Coords*, Coords*, double*, double*, int*, int*, int**);
+};
+
+struct logger_struct {
+  char name[256];
+  // Contains ponters to all the functions assosiated with this logger
+  struct logger_pointer_set_struct function_pointers;
+  // Contains hard copy of logger_data_union since the size is the same as a pointer.
+  union logger_data_union data_union;
+  
+  int logger_extend_index; // Contain index conditional_extend_array defined in master that can be acsessed from extend section.
+  
+  struct conditional_list_struct conditional_list;
+};
+
+
+// To be stored in volume, a list of pointers to the relevant loggers corresponding to each process
+struct logger_for_each_process_list {
+  int num_elements;
+  struct logger_struct **p_logger_process;
+};
+
+// List of logger_for_each_process_list
+struct loggers_struct {
+  int num_elements;
+  struct logger_for_each_process_list *p_logger_volume;
+};
+
+
+
 
 struct geometry_struct
 {
@@ -146,6 +300,8 @@ void (*mcdisplay_function)(struct lines_to_draw*,int,struct geometry_struct**,in
 //                                lines          index             Geometries   N
 
 void (*initialize_from_main_function)(struct geometry_struct*);
+
+struct pointer_to_1d_coords_list (*shell_points)(struct geometry_struct*, int maximum_number_of_points);
 
 // List of other volumes to be check when ray starts within this volume.
 struct pointer_to_1d_int_list intersect_check_list;
@@ -199,6 +355,7 @@ char name[256];                // User defined process name
 double process_p_interact;     // double between 0 and 1 that describes the fraction of events forced to undergo this process. -1 for disable
 int non_isotropic_rot_index;   // -1 if process is isotrpic, otherwise is the index of the process rotation matrix in the volume
 Rotation rotation_matrix;      // rotation matrix of process, reported by component in local frame, transformed and moved to volume struct in main
+
 union data_transfer_union data_transfer; // The way to reach the storage space allocated for this process (see examples in process.comp files)
 
 // probability_for_scattering_functions calculates this probability given k_i and parameters
@@ -213,8 +370,9 @@ int (*scattering_function)(double*,double*,double*,union data_transfer_union,str
 struct Volume_struct
 {
 char name[256]; // User defined volume name
-struct geometry_struct geometry;
-struct physics_struct *p_physics;
+struct geometry_struct geometry;   // Geometry properties (including intersect functions, generated lists)
+struct physics_struct *p_physics;  // Physical properties (list of scattering processes, absorption)
+struct loggers_struct loggers; // Loggers assosiated with this volume
 };
 
 // example of calling a scattering process
@@ -227,6 +385,16 @@ struct pointer_to_1d_int_list allowed_starting_volume_logic_list;
 struct pointer_to_1d_int_list reduced_start_list;
 struct pointer_to_1d_int_list start_logic_list;
 struct pointer_to_1d_int_list starting_destinations_list;
+};
+
+struct global_positions_to_transform_list_struct {
+int num_elements;
+Coords **positions;
+};
+
+struct global_rotations_to_transform_list_struct {
+int num_elements;
+Rotation **rotations;
 };
 
 struct global_process_element_struct
@@ -268,10 +436,36 @@ int num_elements;
 struct global_geometry_element_struct *elements;
 };
 
-struct global_master_element_struct
-{
+struct global_logger_element_struct {
 char name[128];
 int component_index;
+struct logger_struct *logger;
+};
+
+struct pointer_to_global_logger_list {
+int num_elements;
+struct global_logger_element_struct *elements;
+};
+
+
+struct global_tagging_conditional_element_struct {
+struct conditional_list_struct conditional_list;
+int extend_index;
+char name[1024];
+int use_status;
+};
+
+struct global_tagging_conditional_list_struct {
+int num_elements;
+int current_index;
+struct global_tagging_conditional_element_struct *elements;
+};
+
+
+struct global_master_element_struct {
+char name[128];
+int component_index;
+struct conditional_list_struct *tagging_conditional_list_pointer;
 };
 
 struct pointer_to_global_master_list {
@@ -345,7 +539,10 @@ void on_both_int_lists(struct pointer_to_1d_int_list *list1, struct pointer_to_1
     };
 
 void remove_element_in_list_by_index(struct pointer_to_1d_int_list *list,int index) {
-    if (index > list->num_elements) printf("ERROR(remove_element_in_list_by_index): trying to remove an index that wasn't allocated to begin with");
+    if (index >= list->num_elements) {
+      printf("ERROR(remove_element_in_list_by_index): trying to remove an index that wasn't allocated to begin with");
+      exit(1);
+    }
     else {
         int iterate;
         int *temp;
@@ -420,6 +617,72 @@ void add_element_to_int_list(struct pointer_to_1d_int_list *list,int value) {
     }
     };
 
+
+void add_to_logger_with_data(struct logger_with_data_struct *logger_with_data, struct logger_struct *logger) {
+    // May reorder the order of the if conditions to avoid checking the == 0 for every single ray
+    if (logger_with_data->allocated_elements == 0) {
+        logger_with_data->allocated_elements = 5;
+        logger_with_data->logger_pointers = malloc(logger_with_data->allocated_elements*sizeof(struct logger_struct*));
+        logger_with_data->used_elements = 1;
+        logger_with_data->logger_pointers[0] = logger;
+    } else if (logger_with_data->used_elements > logger_with_data->allocated_elements-1) {
+        struct logger_with_data_struct temp_logger_with_data;
+        temp_logger_with_data.logger_pointers = malloc((logger_with_data->used_elements)*sizeof(struct logger_struct*));
+        int iterate;
+        for (iterate=0;iterate<logger_with_data->used_elements;iterate++) {
+            temp_logger_with_data.logger_pointers[iterate]  = logger_with_data->logger_pointers[iterate];
+        }
+        free(logger_with_data->logger_pointers);
+        logger_with_data->allocated_elements = logger_with_data->allocated_elements+5;
+        logger_with_data->logger_pointers = malloc(logger_with_data->allocated_elements*sizeof(struct logger_struct*));
+        for (iterate=0;iterate<logger_with_data->used_elements;iterate++) {
+            logger_with_data->logger_pointers[iterate]  = temp_logger_with_data.logger_pointers[iterate];
+        }
+
+        logger_with_data->logger_pointers[logger_with_data->used_elements++] = logger;
+        
+        
+    } else {
+        logger_with_data->logger_pointers[logger_with_data->used_elements++] = logger;
+    }
+    
+};
+
+
+// Used typedef to avoid having to change this function later. May update others to use same phillosphy.
+void add_function_to_conditional_list(struct conditional_list_struct *list,conditional_function_pointer new, union conditional_data_union *data_union) {
+    if (list->num_elements == 0) {
+      list->num_elements++;
+      list->conditional_functions = malloc(list->num_elements*sizeof(conditional_function_pointer));
+      list->p_data_unions = malloc(list->num_elements*sizeof(union conditional_data_union*));
+      list->conditional_functions[0] = new;
+      list->p_data_unions[0] = data_union;
+    }
+    else {
+    conditional_function_pointer temp_fp[list->num_elements];
+    union conditional_data_union *temp_du[list->num_elements];
+    int iterate;
+    // Could even get away with a shallow copy here instead of the loop, but it is not relevant for performance.
+    for (iterate=0;iterate<list->num_elements;iterate++) {
+      temp_fp[iterate] = list->conditional_functions[iterate];
+      temp_du[iterate] = list->p_data_unions[iterate];
+    }
+    free(list->conditional_functions);
+    free(list->p_data_unions);
+    list->num_elements++;
+    list->conditional_functions = malloc(list->num_elements*sizeof(conditional_function_pointer));
+    list->p_data_unions = malloc(list->num_elements*sizeof(union conditional_data_union*));
+    
+    for (iterate=0;iterate<list->num_elements-1;iterate++) {
+      list->conditional_functions[iterate] = temp_fp[iterate];
+      list->p_data_unions[iterate] = temp_du[iterate];
+    }
+    list->conditional_functions[list->num_elements-1] = new;
+    list->p_data_unions[list->num_elements-1] = data_union;
+    }
+};
+
+
 // could make function that removes a element from a 1d_int_list, and have each list generation as a function that takes a copy of an overlap list
 
 void print_1d_int_list(struct pointer_to_1d_int_list list,char *name) {
@@ -481,6 +744,61 @@ void allocate_logic_list_from_temp(int num_elements,struct pointer_to_1d_int_lis
         } else new->elements = NULL;
     };
 
+/*
+struct global_positions_to_transform_list_struct {
+int num_elements;
+Coords **positions;
+}
+
+struct global_rotations_to_transform_list_struct {
+int num_elements;
+Rotation **rotations;
+}
+*/
+
+void add_position_pointer_to_list(struct global_positions_to_transform_list_struct *list, Coords *new_position_pointer) {
+    if (list->num_elements == 0) {
+      list->num_elements++;
+      list->positions = malloc(list->num_elements*sizeof(Coords*));
+      list->positions[0] = new_position_pointer;
+    } else {
+      Coords **temp;
+      temp = malloc(list->num_elements*sizeof(Coords*));
+      int iterate;
+      for (iterate=0;iterate<list->num_elements;iterate++)
+        temp[iterate] = list->positions[iterate];
+      free(list->positions);
+      list->num_elements++;
+      list->positions = malloc(list->num_elements*sizeof(Coords*));
+      
+      for (iterate=0;iterate<list->num_elements-1;iterate++)
+        list->positions[iterate] = temp[iterate];
+      free(temp);
+      list->positions[list->num_elements-1] = new_position_pointer;
+    }
+};
+
+void add_rotation_pointer_to_list(struct global_rotations_to_transform_list_struct *list, Rotation *new_rotation_pointer) {
+    if (list->num_elements == 0) {
+      list->num_elements++;
+      list->rotations = malloc(list->num_elements*sizeof(Rotation*));
+      list->rotations[0] = new_rotation_pointer;
+    } else {
+      Rotation **temp;
+      temp = malloc(list->num_elements*sizeof(Rotation*));
+      int iterate;
+      for (iterate=0;iterate<list->num_elements;iterate++)
+        temp[iterate] = list->rotations[iterate];
+      free(list->rotations);
+      list->num_elements++;
+      list->rotations = malloc(list->num_elements*sizeof(Rotation*));
+      
+      for (iterate=0;iterate<list->num_elements-1;iterate++)
+        list->rotations[iterate] = temp[iterate];
+      free(temp);
+      list->rotations[list->num_elements-1] = new_rotation_pointer;
+    }
+};
 
 void add_element_to_process_list(struct pointer_to_global_process_list *list,struct global_process_element_struct new_element) {
     if (list->num_elements == 0) {
@@ -536,11 +854,47 @@ void add_element_to_geometry_list(struct pointer_to_global_geometry_list *list,s
     }
 };
 
+void add_element_to_logger_list(struct pointer_to_global_logger_list *list,struct global_logger_element_struct new_element) {
+    if (list->num_elements == 0) {
+    list->num_elements++;
+    list-> elements = malloc(list->num_elements*sizeof(struct global_logger_element_struct));
+    list-> elements[0] = new_element;
+    }
+    else {
+    struct global_logger_element_struct temp[list->num_elements];
+    int iterate;
+    for (iterate=0;iterate<list->num_elements;iterate++) temp[iterate] = list->elements[iterate];
+    free(list->elements);
+    list->num_elements++;
+    list-> elements = malloc(list->num_elements*sizeof(struct global_logger_element_struct));
+    for (iterate=0;iterate<list->num_elements-1;iterate++) list->elements[iterate] = temp[iterate];
+    list->elements[list->num_elements-1] = new_element;
+    }
+};
+
+void add_element_to_tagging_conditional_list(struct global_tagging_conditional_list_struct *list,struct global_tagging_conditional_element_struct new_element) {
+    if (list->num_elements == 0) {
+    list->num_elements++;
+    list->elements = malloc(list->num_elements*sizeof(struct global_tagging_conditional_element_struct));
+    list->elements[0] = new_element;
+    }
+    else {
+    struct global_tagging_conditional_element_struct temp[list->num_elements];
+    int iterate;
+    for (iterate=0;iterate<list->num_elements;iterate++) temp[iterate] = list->elements[iterate];
+    free(list->elements);
+    list->num_elements++;
+    list->elements = malloc(list->num_elements*sizeof(struct global_tagging_conditional_element_struct));
+    for (iterate=0;iterate<list->num_elements-1;iterate++) list->elements[iterate] = temp[iterate];
+    list->elements[list->num_elements-1] = new_element;
+    }
+};
+
 void add_element_to_master_list(struct pointer_to_global_master_list *list,struct global_master_element_struct new_element) {
     if (list->num_elements == 0) {
     list->num_elements++;
-    list-> elements = malloc(list->num_elements*sizeof(struct global_master_element_struct));
-    list-> elements[0] = new_element;
+    list->elements = malloc(list->num_elements*sizeof(struct global_master_element_struct));
+    list->elements[0] = new_element;
     }
     else {
     struct global_master_element_struct temp[list->num_elements];
@@ -553,6 +907,34 @@ void add_element_to_master_list(struct pointer_to_global_master_list *list,struc
     list->elements[list->num_elements-1] = new_element;
     }
 };
+
+void add_initialized_logger_in_volume(struct loggers_struct *loggers,int number_of_processes) {
+  int iterate;
+  if (loggers->num_elements == 0) {
+    loggers->num_elements++;
+    loggers->p_logger_volume = malloc(loggers->num_elements * sizeof(struct logger_for_each_process_list));
+    loggers->p_logger_volume[0].num_elements = number_of_processes;
+    loggers->p_logger_volume[0].p_logger_process = malloc(number_of_processes * sizeof(struct logger_struct**));
+    for (iterate=0;iterate<number_of_processes;iterate++)
+      loggers->p_logger_volume[0].p_logger_process[iterate] = NULL;
+  } else {
+    // Already some elements, store them in temp, free main, transfer back and add newest.
+    struct logger_for_each_process_list temp[loggers->num_elements];
+    
+    for (iterate=0;iterate<loggers->num_elements;iterate++) temp[iterate] = loggers->p_logger_volume[iterate];
+    free(loggers->p_logger_volume);
+    loggers->num_elements++;
+    loggers->p_logger_volume = malloc(loggers->num_elements*sizeof(struct logger_for_each_process_list));
+    for (iterate=0;iterate<loggers->num_elements-1;iterate++) loggers->p_logger_volume[iterate] = temp[iterate];
+    loggers->p_logger_volume[loggers->num_elements-1].num_elements = number_of_processes;
+    loggers->p_logger_volume[loggers->num_elements-1].p_logger_process = malloc(number_of_processes * sizeof(struct logger_struct**));
+    for (iterate=0;iterate<number_of_processes;iterate++) {
+      loggers->p_logger_volume[loggers->num_elements-1].p_logger_process[iterate] = NULL;
+    }
+  }
+};
+
+
 
 // -------------    Functions used to shorten master trace    ---------------------------------------------
 
@@ -1514,12 +1896,15 @@ int within_which_volume(Coords pos, struct pointer_to_1d_int_list input_list, st
                     }
             }
     }
+    //printf("Completed first loop, continued in while loop\n");
     if (ListA_length > 0) {
         while (done == 0) {
             for (i=0;i<ListA_length;i++) {
+              //printf("checking element number %d of list A which is volume number %d \n",i,ListA[i]);
                 if (Volumes[ListA[i]]->geometry.within_function(pos,&Volumes[ListA[i]]->geometry) == 1) {
+                  //printf("ray was inside this volume \n");
                     if (Volumes[ListA[i]]->geometry.is_masked_volume == 1) {
-                        
+                      //printf("it is a mask and thus need check of mask status \n");
                         // if the volume is masked, I need to know if it can be a destination volume from the mask_status_list.
                         // if the masked volume is in ANY mode,
                         this_mask_status=1;
@@ -1535,28 +1920,43 @@ int within_which_volume(Coords pos, struct pointer_to_1d_int_list input_list, st
                             }
                         }
                     } else this_mask_status = 1;
-
+                    //printf("the mask status is %d \n",this_mask_status);
                     if (Volumes[ListA[i]]->geometry.priority_value > max_priority && this_mask_status == 1) {
                         max_priority = Volumes[ListA[i]]->geometry.priority_value;
                         residing_volume = ListA[i];
                     }
+                    //printf("Adding direct children to list B \n");
                         for (direct_children_index = 0;direct_children_index < Volumes[ListA[i]]->geometry.direct_children.num_elements;direct_children_index++) {
+                            //printf("Checking direct_child number %d which is %d \n",direct_children_index,Volumes[ListA[i]]->geometry.direct_children.elements[direct_children_index]);
                             if (volume_logic_copy[Volumes[ListA[i]]->geometry.direct_children.elements[direct_children_index]] == 1) {
+                                //printf("It's volume_logic was 1, and it is thus added to listB with index %d \n",ListB_length);
                                 ListB[ListB_length++] = Volumes[ListA[i]]->geometry.direct_children.elements[direct_children_index];
                                 volume_logic_copy[Volumes[ListA[i]]->geometry.direct_children.elements[direct_children_index]] = 0;
                             }
                         }
+                    //printf("List B is now: ");
+                    //for (direct_children_index=0;direct_children_index<ListB_length;direct_children_index++) printf("%d ",ListB[direct_children_index]);
+                    //printf("\n");
+                    
+                    
                 }
             }
             if (ListB_length==0) done = 1;
             else {
+                
+                for (i=0;i<ListB_length;i++) ListA[i] = ListB[i];
+                ListA_length = ListB_length;
+                ListB_length = 0;
+                
+                /*
                 // Could do this with pointers instead to avoid this for loop (and needless copy)
-                // for (i=0;i<ListB_length;i++) ListA[i] = ListB[i];
+                // This code block fails on the cluster in rare circumstances
                 ListA = temp_pointer;
                 ListA = ListB;
                 ListB = temp_pointer;
                 ListA_length=ListB_length;
                 ListB_length=0;
+                */
             }
         }
     }
@@ -1668,6 +2068,18 @@ int inside_function(struct Volume_struct *parent_volume, struct Volume_struct *c
     }
     else if (strcmp("cylinder",parent_volume->geometry.shape) == 0 && strcmp("box",child_volume->geometry.shape) == 0) {
         if (box_within_cylinder(&child_volume->geometry,&parent_volume->geometry)) return 1;
+    }
+    else if (strcmp("box",parent_volume->geometry.shape) == 0 && strcmp("sphere",child_volume->geometry.shape) == 0) {
+        if (sphere_within_box(&child_volume->geometry,&parent_volume->geometry)) return 1;
+    }
+    else if (strcmp("sphere",parent_volume->geometry.shape) == 0 && strcmp("box",child_volume->geometry.shape) == 0) {
+        if (box_within_sphere(&child_volume->geometry,&parent_volume->geometry)) return 1;
+    }
+    else if (strcmp("sphere",parent_volume->geometry.shape) == 0 && strcmp("cylinder",child_volume->geometry.shape) == 0) {
+        if (cylinder_within_sphere(&child_volume->geometry,&parent_volume->geometry)) return 1;
+    }
+    else if (strcmp("cylinder",parent_volume->geometry.shape) == 0 && strcmp("sphere",child_volume->geometry.shape) == 0) {
+        if (sphere_within_cylinder(&child_volume->geometry,&parent_volume->geometry)) return 1;
     }
     else {
         printf("Need within function for type: ");
@@ -1965,6 +2377,18 @@ void generate_overlap_lists(struct pointer_to_1d_int_list **true_overlap_lists, 
         }
         else if (strcmp("cylinder",Volumes[parent]->geometry.shape) == 0 && strcmp("box",Volumes[child]->geometry.shape) == 0) {
             if (cylinder_overlaps_box(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
+        }
+        else if (strcmp("box",Volumes[parent]->geometry.shape) == 0 && strcmp("sphere",Volumes[child]->geometry.shape) == 0) {
+            if (box_overlaps_sphere(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
+        }
+        else if (strcmp("sphere",Volumes[parent]->geometry.shape) == 0 && strcmp("box",Volumes[child]->geometry.shape) == 0) {
+            if (sphere_overlaps_box(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
+        }
+        else if (strcmp("sphere",Volumes[parent]->geometry.shape) == 0 && strcmp("cylinder",Volumes[child]->geometry.shape) == 0) {
+            if (sphere_overlaps_cylinder(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
+        }
+        else if (strcmp("cylinder",Volumes[parent]->geometry.shape) == 0 && strcmp("sphere",Volumes[child]->geometry.shape) == 0) {
+            if (cylinder_overlaps_sphere(&Volumes[parent]->geometry,&Volumes[child]->geometry)) temp_list_local.elements[used_elements++] = child;
         }
         else {
             printf("Need overlap function for type: ");
@@ -2505,9 +2929,16 @@ void generate_intersect_check_lists_experimental(struct pointer_to_1d_int_list *
     
     // 1) Take the true overlap list for volume n
     // Create copy of true_overlap_lists to work with
-    work_list.num_elements = true_overlap_lists[volume_index]->num_elements;
-    work_list.elements = malloc(work_list.num_elements * sizeof(int));
-    for (iterate=0;iterate<work_list.num_elements;iterate++) work_list.elements[iterate] = true_overlap_lists[volume_index]->elements[iterate];
+    
+    if (Volumes[volume_index]->geometry.is_mask_volume == 1) {
+      // Bug fixed on 26/11/2016, do not create intersection lists for masks as they are not used, and affects destinations lists in a problematic way
+      Volumes[volume_index]->geometry.intersect_check_list.num_elements = 0;
+      Volumes[volume_index]->geometry.mask_intersect_list.num_elements = 0;
+      
+    } else {
+      work_list.num_elements = true_overlap_lists[volume_index]->num_elements;
+      work_list.elements = malloc(work_list.num_elements * sizeof(int));
+      for (iterate=0;iterate<work_list.num_elements;iterate++) work_list.elements[iterate] = true_overlap_lists[volume_index]->elements[iterate];
     
     //if (verbal) print_1d_int_list(work_list,"After 1)");
     
@@ -2601,7 +3032,9 @@ void generate_intersect_check_lists_experimental(struct pointer_to_1d_int_list *
       }
     }
     
-    free(work_list.elements);
+    if (work_list.num_elements > 0) free(work_list.elements);
+    }
+    
     
     //if (verbal) print_1d_int_list(Volumes[volume_index]->geometry.mask_intersect_list,"After 7) mask_intersect_list");
     
@@ -2750,9 +3183,11 @@ void generate_destinations_lists_experimental(struct pointer_to_1d_int_list **tr
       if (on_int_list(*true_parents_lists[volume_index],work_list.elements[iterate])){
         // work_list.elements[iterate] is the volume index of a volume that is a true parent of n
         for (iterate2=0;iterate2<work_list.num_elements;iterate2++) {
-          if (on_int_list(*true_parents_lists[volume_index],work_list.elements[iterate2])) {
+          if (on_int_list(*true_parents_lists[volume_index],work_list.elements[iterate2]) && iterate != iterate2) {
             if (Volumes[work_list.elements[iterate]]->geometry.priority_value < Volumes[work_list.elements[iterate2]]->geometry.priority_value) {
+              //printf("Removing element number %d (V%d) because element number %d (V%d) had higher priority \n",iterate,work_list.elements[iterate],iterate2,work_list.elements[iterate2]);
               remove_element_in_list_by_index(&work_list,iterate);
+              break; // Missing break inserted on 14/9/2016
             }
           }
         }
@@ -2810,7 +3245,6 @@ void generate_destinations_list(int N_volume,struct Volume_struct **Volumes,stru
     // 6) remove the grandparents of N
     // 7) remove volumes with lower priority than parents of N still on the list
     // 8) The remaing list is the destinations list
-    
     
     
 

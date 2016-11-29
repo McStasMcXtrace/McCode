@@ -9,10 +9,20 @@
 * Version: $Revision: 0.1 $
 * Origin: Svanevej 19
 *
-* A sample component to separate geometry and phsysics
-*
 * %D
-* Allows complicated geometry by combination of simple shapes
+* Part of the Union components, a set of components that work together and thus
+*  sperates geometry and physics within McStas.
+* The use of this component requires other components to be used.
+*
+* 1) One specifies a number of processes using process components
+* 2) These are gathered into material definitions using this component
+* 3) Geometries are placed using Union_box/cylinder/sphere, assigned a material
+* 4) A Union_master component placed after all of the above
+*
+* Only in step 4 will any simulation happen, and per default all geometries
+*  defined before the master, but after the previous will be simulated here.
+*
+* There is a dedicated manual available for the Union_components
 *
 * Algorithm:
 * Described elsewhere
@@ -20,7 +30,7 @@
 * %P
 * INPUT PARAMETERS:
 * process_string:  [string] Comma seperated names of physical processes
-* my_absorption:   [1/m]    Inverse penetration depth from absorption
+* my_absorption:   [1/m]    Inverse penetration depth from absorption at standard energy
 * absorber:        [0/1]    Control parameter, if set to 1 the material will have no scattering processes
 *
 * OUTPUT PARAMETERS:
@@ -133,60 +143,20 @@ int manual_linking_function(char *name, char *input_string) {
 
 
 
-// I can not get the code to count commas to work. 
-// I think there is something strange with the ingoing string which is a setting parameter
+/*
 int count_commas(char *string) {
   int return_value = 0;
   
-  /*
-  // method 3
-  char comma_string[2];
-  char search_string[2];
-  
-  comma_string[0] = ",";
-  comma_string[1] = "\0";
-  search_string[1] = "\0";
-  
-  int index;
-  for (index=0;index<strlen(string);index++) {
-    search_string[0] = string[index];
-    printf("string 1 = %s and string 2 = %s \n",search_string,comma_string);
-    if (strcmp(search_string,comma_string) == 0) return_value++;
-  }
-   
-  printf("%s \n",string);
-  printf("number_of_commas = %d \n",return_value);
-  return return_value;
-  */
-  
-  /*
-  // Method 2
-  char *remaining_string;
-  printf("%s \n",string);
-  remaining_string = strchr(string,(char)",");
-  printf("%s \n",remaining_string);
-  while (remaining_string != NULL && remaining_string != 0) {
-    return_value++;
-    printf("%s \n",remaining_string);
-    remaining_string++;
-    remaining_string = strchr(remaining_string,(char)",");
-  }
-  
-  printf("number_of_commas = %d \n",return_value);
-  return return_value;
-  */
-  
-  // Method 1
   int index;
   for (index=0;index<strlen(string);index++) {
     printf("%c \n",string[index]);
     if (string[index]==',') return_value++;
   }
     
-  printf("number_of_commas = %d \n",return_value);
+  //printf("number_of_commas = %d \n",return_value);
   return return_value;
-  
 }
+*/
 
 
 %}
@@ -198,7 +168,7 @@ struct global_material_element_struct global_material_element;
 struct physics_struct this_material;
 
 #ifndef MATERIAL_DETECTOR
-	struct pointer_to_global_material_list global_material_list = {0,NULL};
+	//struct pointer_to_global_material_list global_material_list = {0,NULL};
 	#define MATERIAL_DETECTOR dummy
 #endif
 
@@ -208,6 +178,14 @@ int specified_processes;
 char local_string[256];
 
 struct pointer_to_1d_int_list accepted_processes = {0,NULL};
+
+// Add setup for loggers since make_material is called before any volume / master
+#ifndef UNION_LOGGER_DECLARE
+	//struct pointer_to_global_logger_list global_all_volume_logger_list = {0,NULL};
+    //struct pointer_to_global_logger_list global_specific_volumes_logger_list = {0,NULL};
+	#define UNION_LOGGER_DECLARE dummy
+#endif
+
 %}
 
 INITIALIZE

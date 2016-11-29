@@ -9,13 +9,26 @@
 * Version: $Revision: 0.1 $
 * Origin: Svanevej 19
 *
-* A sample component to separate geometry and phsysics
 *
 * %D
-* Alpha version, no input system yet
-* Hardcode input to geometry engine
-* Allows complicated geometry by combination of simple shapes
 *
+* This Union_process is based on the PowderN.comp component originally written
+*  by P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen,
+*  E.M.Lauridsen.
+*
+* Part of the Union components, a set of components that work together and thus
+*  sperates geometry and physics within McStas.
+* The use of this component requires other components to be used.
+*
+* 1) One specifies a number of processes using process components like this one
+* 2) These are gathered into material definitions using Union_make_material
+* 3) Geometries are placed using Union_box / Union_cylinder, assigned a material
+* 4) A Union_master component placed after all of the above
+*
+* Only in step 4 will any simulation happen, and per default all geometries
+*  defined before the master, but after the previous will be simulated here.
+*
+* There is a dedicated manual available for the Union_components*
 * Algorithm:
 * Described elsewhere
 *
@@ -28,8 +41,6 @@
 * OUTPUT PARAMETERS:
 * V_rho:  [AA^-3] Atomic density
 *
-* %L
-* The test/example instrument <a href="../examples/Test_Phonon.instr">Test_Phonon.instr</a>.
 *
 * %E
 ******************************************************************************/
@@ -47,6 +58,7 @@ SHARE
 #define Union $Revision: 0.8 $
 
 #include "Union_functions.c"
+#include "Union_initialization.c"
 
 #endif
 
@@ -608,7 +620,7 @@ struct global_process_element_struct global_process_element;
 struct scattering_process_struct This_process;
 
 #ifndef PROCESS_DETECTOR
-	struct pointer_to_global_process_list global_process_list = {0,NULL};
+	//struct pointer_to_global_process_list global_process_list = {0,NULL};
 	#define PROCESS_DETECTOR dummy
 #endif
 
