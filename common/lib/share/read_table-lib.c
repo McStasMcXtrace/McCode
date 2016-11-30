@@ -44,12 +44,14 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
         case FIND:
             /*interpret data item as a filename, if it is found return a pointer to the table and increment refcount.
              * if not found return the item itself*/
-            i=0;
-            while ( ((tr=&(read_table_file_list[i++]))->table_ref)!=NULL){
-                if ( !strcmp(tr->table_ref->filename,(char *) item) && tr->table_ref->block_number==*((int *)item_modifier) ){
+            tr=read_table_file_list;
+            while ( tr->table_ref!=NULL ){
+                i=*((int*) item_modifier);
+                if ( !strcmp(tr->table_ref->filename,(char *) item) && tr->table_ref->block_number==i ){
                     tr->ref_count++;
                     return (void *) tr;
                 }
+                tr++;
             }
             return NULL;
         case STORE:
@@ -62,19 +64,27 @@ void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, voi
             /* Should this item be garbage collected (freed) - if so scratch the entry and return the address of the item - 
              * else decrement ref_count and return NULL.
              * A non-NULL return expects the item to actually be freed afterwards.*/
-            while ( ((tr=&(read_table_file_list[i++]))->table_ref)!=NULL){
-                if ( tr->table_ref ==(t_Table *)item){
-                    /*item found*/
+            tr=read_table_file_list;
+            while ( tr->table_ref!=NULL ){
+                if ( tr->table_ref->data ==((t_Table *)item)->data && 
+                        tr->table_ref->block_number == ((t_Table *)item)->block_number){
+                    /*matching item found*/
                     if (tr->ref_count>1){
+                        /*the item is found - no garbage collection needed*/
                         tr->ref_count--;
                         return NULL;
                     }else{
-                        tr->table_ref=NULL;
-                        tr->ref_count=0;
+                        /* The item is found - move remaing list items up one slot 
+                         * and return the table for garbage collection by caller*/
+                        while (tr->table_ref!=NULL){
+                            *tr=*(tr+1);
+                            tr++;
+                        }
                         read_table_file_count--;
-                        return (t_Table *)item;
+                        return (t_Table *) item;
                     }
                 }
+                tr++;
             }
             return (void *)0x1 ;/*item not found*/ 
     } 
@@ -236,10 +246,13 @@ void *Table_File_List_store(t_Table *tab){
     else                   strncpy(name, File, 1024);
     
     /* Check if the table has already been read from file.
-     * If so just reuse the table pointer, if not set up a new table and
-     * read the data into it */
-    if ( (Table = Table_File_List_find(name,block_number))!=NULL ){
+     * If so just reuse the table, if not (this is flagged by returning NULL
+     * set up a new table and read the data into it */
+    t_Table *tab_p= Table_File_List_find(name,block_number);/*a helper pointer*/
+    if ( tab_p!=NULL ){
+        /*table was found in the Table_File_List*/
         printf("Reusing input file '%s' (Table_Read)\n", name);
+        *Table=*tab_p;
         return Table->rows*Table->columns;
     }
 
