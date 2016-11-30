@@ -53,13 +53,24 @@ def create_plotwindow(title):
 
 class LogFlipper():
     ''' boolean log state keeper object '''
-    def __init__(self, log=False):
+    def __init__(self, log=False, legend=True):
         self.log = log
+        self.icolormap = 0
+        self.legend = legend
     def flip(self):
         self.log = not self.log
         return self.log
+    def inc_colormap(self):
+        self.icolormap += 1
+    def flip_legend(self):
+        self.legend = not self.legend
+        return self.legend
     def state(self):
         return self.log
+    def legendstate(self):
+        return self.legend
+    def cmapindex(self):
+        return self.icolormap
 
 def plot_node(node, layout, logflipper):
     '''
@@ -78,7 +89,7 @@ def plot_node(node, layout, logflipper):
     n = len(data_lst)
     viewbox_lst = []
     for i in range(n):
-        viewbox_lst.append(add_plot(layout, data_lst[i], i, n, logflipper.state()))
+        viewbox_lst.append(add_plot(layout, data_lst[i], i, n, logflipper.state(), logflipper.legendstate(), logflipper.cmapindex()))
     
     # set up viewbox - node correspondences for each action (click, right-click, ctrl-click, ...)
     vn_dict_click = {}
@@ -102,28 +113,36 @@ def plot_node(node, layout, logflipper):
     set_handler(layout.scene(), vn_dict_ctrlclick, plot_node_cb, "click", get_modifiers("ctrl"))
     
     # set keypress handlers 
-    replot_cb = lambda log: plot_node(node, layout, logflipper=logflipper)
-    set_keyhandler(layout.scene(), replot_cb, 'l', get_modifiers("none"), flip_log=logflipper.flip)
+    replot_cb = lambda: plot_node(node, layout, logflipper=logflipper)
+    set_keyhandler(layout.scene(), replot_cb, 'l', get_modifiers("none"), flip_log=logflipper.flip, flip_legend=logflipper.flip_legend, inc_cmap=logflipper.inc_colormap)
 
-def set_keyhandler(scene, replot_cb, key, modifier, flip_log):
+def set_keyhandler(scene, replot_cb, key, modifier, flip_log, flip_legend, inc_cmap):
     ''' sets a clickhadler according to input '''
     
-    def key_handler(ev, cb, savefile_cb, flip_log, debug=False):
+    def key_handler(ev, cb, savefile_cb, flip_log, flip_legend, inc_cmap, debug=False):
         ''' global keypress handler, cb is a function of log '''
         if ev.key() == 81: # q
             quit()
         elif ev.key() == 76: # l
             log = flip_log()
-            cb(log)
+            cb()
         elif ev.key() == 80: # p
             savefile_cb(format='png')
             print("png file saved")
-        elif ev.key() == 60:
+        elif ev.key() == 83: # s
             savefile_cb(format='svg')
             print("svg file saved")
-        elif ev.key() == 68:
+        elif ev.key() == 68: # d
             savefile_cb(format='pdf')
             print("svg and pdf files saved")
+        elif ev.key() == 84: # t
+            print("Toggle legend visibility")
+            legend=flip_legend()
+            cb()
+        elif ev.key() == 67: # c
+            print("cycle colormap")
+            inc_cmap()
+            cb()
         elif ev.key() == 16777268: # F5
             cb(log=False)
         elif ev.key() == 16777264 or ev.key() == 72: # F1 or h
@@ -131,14 +150,14 @@ def set_keyhandler(scene, replot_cb, key, modifier, flip_log):
                 modifier = 'Meta'
             else:
                 modifier = 'ctrl'
-            print("q            - quit\np            - save png\ns            - save svg\nd            - save pdf\nl            - log\nF1/h         - help\nF5           - replot\nclick        - display subplot\nrclick       - back\n" + modifier + " + click - sweep monitors")
+            print("q            - quit\np            - save png\ns            - save svg\nd            - save pdf\nl            - log toggle\nt            - textinfo toggle\nc            - cycle colormap\nF1/h         - help\nF5           - replot\nclick        - display subplot\nrclick       - back\n" + modifier + " + click - sweep monitors")
         # print debug info
         if debug:
             print("key code: %s" % str(ev.key()))
     
     savefile_cb = lambda format: dumpfile(scene=scene, format=format)
     
-    scene.keyPressEvent = lambda ev: key_handler(ev=ev, cb=replot_cb, savefile_cb=savefile_cb, flip_log=flip_log)
+    scene.keyPressEvent = lambda ev: key_handler(ev=ev, cb=replot_cb, savefile_cb=savefile_cb, flip_log=flip_log, flip_legend=flip_legend, inc_cmap=inc_cmap)
 
 def dumpfile(scene, filenamebase='mcplot', format='png'):
     ''' save as png file. Pdf is not supported, althouhg svg kind-of is '''
@@ -216,14 +235,14 @@ def get_golden_rowlen(n):
     ''' find rowlength by golden ratio '''
     return int(math.sqrt(n*1.61803398875))
 
-def add_plot(layout, data, i, n, log=False):
+def add_plot(layout, data, i, n, log=False, legend=True, icolormap=0):
     ''' constructs a plot from data and adds this to layout '''
     rowlen = get_golden_rowlen(n)
     
     if type(data) is Data1D:
-        item, view_box = plot_Data1D(data, log=log)
+        item, view_box = plot_Data1D(data, log=log, legend=legend, icolormap=icolormap)
     else:
-        item, view_box = plot_Data2D(data, log=log)
+        item, view_box = plot_Data2D(data, log=log, legend=legend, icolormap=icolormap)
 
     layout.addItem(item, i / rowlen, i % rowlen)
     

@@ -1,6 +1,6 @@
 % This Matlab script generates a colormap.txt file for insertion in plotfuncs.py
-maps={'autumn','bone','colorcube','cool','copper','flag','gray', ...
-      'hot','hsv','jet','lines','parula','pink','prism','spring','summer','winter'};
+maps={'jet','autumn','bone','colorcube','cool','copper','flag','gray', ...
+      'hot','hsv','lines','parula','pink','prism','spring','summer','winter'};
 
 imagesc
 fileID = fopen('colormaps.txt','w');
