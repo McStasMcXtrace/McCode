@@ -417,9 +417,9 @@ def _load_sweep_monitors(rootdir):
         mnames = []
         dirsignature = (dirname, mnames)
         for f in fnames:
-            if splitext(f)[1] == '.dat':
-                if f not in mnames:
-                    mnames.append(f)
+            # NOTE: this will attempt to load all files except for mccode.sim
+            if f not in mnames and f != 'mccode.sim':
+                mnames.append(f)
         arg.append(dirsignature)
 
     d = rootdir
