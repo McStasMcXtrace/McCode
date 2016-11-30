@@ -58,7 +58,7 @@ def get_color_map(name, pos_min, pos_max):
         'greyclip' : np.array([[  0,   0,   0, 255], [255, 255, 255, 255], [255,   0,   0, 255]], dtype=np.ubyte),
         'nice'     : np.array([[  0,   0,   0, 255], [255, 128,   0, 255], [255, 255,   0, 255]], dtype=np.ubyte),
         }
-    pos = np.arange(pos_min, pos_max, 1/len(colormaps[name])*(pos_max-pos_min))
+    pos = pos_min + (pos_max - pos_min) * np.arange(len(colormaps[name]))/(len(colormaps[name])-1)
     return pg.ColorMap(pos, colormaps[name])
 
 def plot_Data2D(data, log=False):
