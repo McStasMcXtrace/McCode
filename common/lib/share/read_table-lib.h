@@ -81,6 +81,13 @@
     char    method[32];    /* interpolation method: nearest, linear */
   } t_Table;
 
+typedef struct t_Read_table_file_item {
+    int ref_count;
+    t_Table *table_ref;
+} t_Read_table_file_item;
+
+typedef enum enum_Read_table_file_actions {STORE,FIND,GC}  t_Read_table_file_actions;
+
 /* read_table-lib function prototypes */
 /* ========================================================================= */
 
@@ -102,6 +109,10 @@ long     Table_Init(t_Table *Table, long rows, long columns); /* create a Table 
 double   Table_Value2d(t_Table Table, double X, double Y);    /* same as Table_Index with non-integer indices and 2d interpolation */
 MCDETECTOR Table_Write(t_Table Table, char*file, char*xl, char*yl, 
            double x1, double x2, double y1, double y2); /* write Table to disk */
+void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, void *item_modifier);
+t_Table *Table_File_List_find(char *name, int block);
+int Table_File_List_gc(t_Table *tab);
+void *Table_File_List_store(t_Table *tab);
 
 #define Table_ParseHeader(header, ...) \
   Table_ParseHeader_backend(header,__VA_ARGS__,NULL);
@@ -115,7 +126,7 @@ static void Table_Stat(t_Table *Table);
 double Table_Interp1d(double x, double x1, double y1, double x2, double y2);
 double Table_Interp1d_nearest(double x, double x1, double y1, double x2, double y2);
 double Table_Interp2d(double x, double y, double x1, double y1, double x2, double y2,
-  double z11, double z12, double z21, double z22);
+double z11, double z12, double z21, double z22);
 
 #endif
 

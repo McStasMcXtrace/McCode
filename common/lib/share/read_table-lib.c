@@ -26,6 +26,83 @@
 #include "read_table-lib.h"
 #endif
 
+
+
+void * Table_File_List_Handler(t_Read_table_file_actions action, void *item, void *item_modifier){
+
+    /* logic here is Read_Table should include a call to FIND. If found the return value shoud just be used as
+     * if the table had been read. If not found then read the table and STORE.
+     * Table_Free should include a call to GC. If this returns non-NULL then we shoudl proceed with freeing the memory
+     * associated with the table item - otherwise do nothing since there are more references that may need it.*/ 
+
+    static t_Read_table_file_item read_table_file_list[1024];  
+    static int read_table_file_count=0;
+
+    int i=0;
+    t_Read_table_file_item *tr;
+    switch(action){
+        case FIND:
+            /*interpret data item as a filename, if it is found return a pointer to the table and increment refcount.
+             * if not found return the item itself*/
+            i=0;
+            while ( ((tr=&(read_table_file_list[i++]))->table_ref)!=NULL){
+                if ( !strcmp(tr->table_ref->filename,(char *) item) && tr->table_ref->block_number==*((int *)item_modifier) ){
+                    tr->ref_count++;
+                    return (void *) tr;
+                }
+            }
+            return NULL;
+        case STORE:
+            /*find an available slot and store references to table there*/
+            tr=&(read_table_file_list[++read_table_file_count]);
+            tr->table_ref= (t_Table *) item;
+            tr->ref_count++;
+            return NULL;
+        case GC:
+            /* Should this item be garbage collected (freed) - if so scratch the entry and return the address of the item - 
+             * else decrement ref_count and return NULL.
+             * A non-NULL return expects the item to actually be freed afterwards.*/
+            while ( ((tr=&(read_table_file_list[i++]))->table_ref)!=NULL){
+                if ( tr->table_ref ==(t_Table *)item){
+                    /*item found*/
+                    if (tr->ref_count>1){
+                        tr->ref_count--;
+                        return NULL;
+                    }else{
+                        tr->table_ref=NULL;
+                        tr->ref_count=0;
+                        read_table_file_count--;
+                        return (t_Table *)item;
+                    }
+                }
+            }
+            return (void *)0x1 ;/*item not found*/ 
+    } 
+
+}
+
+/*add access functions to make it simpler*/
+t_Table *Table_File_List_find(char *name, int block){
+    t_Read_table_file_item *item = Table_File_List_Handler(FIND,name, &block);
+    if (item == NULL){
+        return NULL;
+    }else{
+        return item->table_ref;
+    }
+}
+
+int Table_File_List_gc(t_Table *tab){
+    void *rval=Table_File_List_Handler(GC,tab,0);
+    if (rval==NULL) return 0;
+    else return 1;
+}
+
+void *Table_File_List_store(t_Table *tab){
+    Table_File_List_Handler(STORE,tab,0);
+}
+
+/**/
+
 /*******************************************************************************
 * FILE *Open_File(char *name, char *Mode, char *path)
 *   ACTION: search for a file and open it. Optionally return the opened path.
@@ -122,7 +199,7 @@
 * File is opened, read and closed
 * Other lines are interpreted as numerical data, and stored.
 * Data block should be a rectangular matrix or vector.
-* Data block may be rebined with Table_Rebin (also sort in ascending order)
+* Data block may be rebinned with Table_Rebin (also sort in ascending order)
 *******************************************************************************/
   long Table_Read(t_Table *Table, char *File, long block_number)
   { /* reads all or a single data block from 'file' and returns a Table structure  */
@@ -152,9 +229,20 @@
     char  path[1024];
     struct stat stfile;
 
+    /*Need to be able to store the pointer*/
     if (!Table) return(-1);
-    Table_Init(Table, 0, 0);
     
+    if (offset && *offset) snprintf(name, 1024, "%s@%li", File, *offset);
+    else                   strncpy(name, File, 1024);
+    
+    /* Check if the table has already been read from file.
+     * If so just reuse the table pointer, if not set up a new table and
+     * read the data into it */
+    if ( (Table = Table_File_List_find(name,block_number))!=NULL ){
+        printf("Reusing input file '%s' (Table_Read)\n", name);
+        return Table->rows*Table->columns;
+    }
+
     /* open the file */
     hfile = Open_File(File, "r", path);
     if (!hfile) return(-1);
@@ -164,20 +252,23 @@
         printf("Opening input file '%s' (Table_Read)\n", path);
       );
     }
-        
+    
     /* read file state */
     stat(path,&stfile); filesize = stfile.st_size;
     if (offset && *offset) fseek(hfile, *offset, SEEK_SET);
     begin     = ftell(hfile);
-    if (offset && *offset) snprintf(name, 1024, "%s@%li", File, *offset);
-    else                   strncpy(name, File, 1024);
     
+    Table_Init(Table, 0, 0);
+
     /* read file content and set the Table */
     nelements = Table_Read_Handle(Table, hfile, block_number, max_rows, name);
     Table->begin = begin;
     Table->end   = ftell(hfile);
     Table->filesize = (filesize>0 ? filesize : 0);
     Table_Stat(Table);
+    
+    Table_File_List_store(Table);
+
     if (offset) *offset=Table->end;
     fclose(hfile);
     return(nelements);
@@ -727,6 +818,9 @@ double Table_Value(t_Table Table, double X, long j)
 *******************************************************************************/
   void Table_Free(t_Table *Table)
   {
+    if( !Table_File_List_gc(Table) ){
+       return;
+    } 
     if (!Table) return;
     if (Table->data   != NULL) free(Table->data);
     if (Table->header != NULL) free(Table->header);
