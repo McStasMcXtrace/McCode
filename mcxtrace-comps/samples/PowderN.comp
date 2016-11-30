@@ -589,7 +589,7 @@ int calc_inc_xsect(double k, double *inc, struct line_info_struct *line_info){
 
     double correction;
     int i=2;
-    /* To find the inc. scattergin column in material datafiles,
+    /* To find the inc. scattering column in material datafiles,
      * Find the first non-zero column index (btw. 2..4).*/
     for (i=2;i<5;i++){
         if (line_info->mat_column_order[i]) break;
