@@ -25,10 +25,12 @@
 * %P
 * INPUT PARAMETERS
 *
+* Parabola is y = z^2 / a^2 + x^2 / b^2
+* the focal length for the 'z' curve is f=a^2 / 4
+* 
 * R: [1] reflectivity of mirror.
-* a: [m] long half axis (along z).
-* b: [m] 1st short half axis (along x)
-* c: [m] 2nd short half axis (along y)
+* a: [sqrt(m)] (z) primary axis curvature scale
+* b: [sqrt(m)] (x) curvature scale, if zero, flat in x.
 * 
 * %E
 *******************************************************************************/
@@ -36,62 +38,113 @@
 
   DEFINE COMPONENT Mirror_parabolic
 DEFINITION PARAMETERS ()
-  SETTING PARAMETERS (R=1, a=1, b=1, xwidth=1,yheight=1,zdepth=1)
+  SETTING PARAMETERS (R=1, a=1, b=1, xmin=-1, xmax=1, ymin=0, ymax=1, zmin=-1, zmax=1)
 OUTPUT PARAMETERS ()
 /* X-ray parameters: (x,y,z,kx,ky,kz,phi,t,Ex,Ey,Ez,p) */ 
 
 DECLARE
 %{
-  double a2,b2;
+  double a2inv,b2inv, focus;
 %}
 
 INITIALIZE
 %{
-  a2=a*a;
-  b2=b*b;
+  a2inv=1/(a*a);
+  b2inv=(b!=0)?(1.0/(b*b)):0; /* if b==0, it is really infinity */
+  focus=a*a/4.0;
 %}
 
 TRACE
 %{
-  double A,B,C,D2;
+  double A,B,C,D2,kxu, kyu, kzu;
   double l0,l1;
-    A=kz*kz/(a2) + kx*kx/(b2);
-    B=2*(z*kz/(a2) + x*kx/(b2) - ky);
-    C=z*z/a2 + x*x/b2 -y;
-    
-    D2= pow( B/(2*A),2.0)-C;
-    while (D2>0){
-      l0=-B/(2*A) + sqrt(D2);
-      l1=-B/(2*A) - sqrt(D2);
-      if (l0>0) {
-        fprintf(stderr,"warning: x-ray hits Parabolic mirror %s on back surface\n",NAME_CURRENT_COMP);
-        PROP_DL(l0);
-      }else{
-        PROP_DL(l1);
-      }
-      /*check boundaries of mirror, go on if within, restore if not*/
-      if ( (2*x>xwidth || 2*x<-xwidth) || (2*y>yheight || 2*y<-yheight) || (2*z>zdepth || 2*z<-zdepth ) ){
+    do {
+      kxu=kx; kyu=ky; kzu=kz; NORM(kxu, kyu, kzu);
+      A=kzu*kzu*a2inv + kxu*kxu*b2inv;
+      B=2*(z*kzu*a2inv + x*kxu*b2inv) - kyu ;
+      C=z*z*a2inv + x*x*b2inv - y;
+      
+      D2= (B*B-4*A*C); 
+      l0=(-B + sqrt(D2) ) / (2*A);
+      l1=(-B - sqrt(D2) ) / (2*A);
+#ifdef MCDEBUG
+          fprintf(stderr, "\n\nMIRROR \"%s\" k=(%g,%g,%g), x=(%g,%g,%g) \n", NAME_CURRENT_COMP, kx, ky, kz, x, y, z);
+          fprintf(stderr, "mirror computation: A= %g, B=%g, C=%g, D2=%g, l0=%g, l1=%g \n", A, B, C, D2,l0,l1);
+#endif
+
+      double xt0=x+l0*kxu, yt0=y+l0*kyu, zt0=z+l0*kzu; /* l0 intersection with mirror */
+      double xt1=x+l1*kxu, yt1=y+l1*kyu, zt1=z+l1*kzu; /* l1 intersection with mirror */
+      /* now, check given mirror bounds and see which of these is on the mirror */
+      if ( l0 > 0 && (xt0>xmin && xt0<xmax) && (yt0>ymin && yt0<ymax) && (zt0>zmin && zt0<zmax ) ){
+          /* valid solution on this branch */
+          PROP_DL(l0);
+      } else if ( l1 > 0 && (xt1>xmin && xt1<xmax) && (yt1>ymin && yt1<ymax) && (zt1>zmin && zt1<zmax ) ){
+          /* valid solution on this branch  */
+          PROP_DL(l1);
+      } else {
+	RESTORE;
         break;
       }
+#ifdef MCDEBUG
+          fprintf(stderr, "\n\nmirror \"%s\" at surface: k=(%g,%g,%g), x=(%g,%g,%g) \n", NAME_CURRENT_COMP, kx, ky, kz, x, y, z);
+#endif
+       SCATTER;
       /*reflect ray "through" normal vector of tangent plane at x,y,z (as photon is now at the mirror surface)*/
+      /* note that since the mirror surface is defined by x^2/b^2 + z^2/a^2 - y = 0, the gradient (surface normal) is (2x/b^2, -1, 2z/a^2) */
       double nx,ny,nz;
-      nx=2*x/b2;ny=0;nz=2*z/a2;
+      nx=2*x*b2inv;ny=-1;nz=2*z*a2inv;
       NORM(nx,ny,nz);
-      double kdotn=scalar_prod(nx,ny,nz,kx,0,kz);
+      double kdotn=scalar_prod(nx,ny,nz,kx,ky,kz);
       kx-=2*nx*kdotn;
+      ky-=2*ny*kdotn;
       kz-=2*nz*kdotn;
+#ifdef MCDEBUG
+         fprintf(stderr, "kfinal=(%g,%g,%g)\n", kx, ky, kz);
+#endif
 
       /*adjust weight of ray*/
       p*=R;
-    }
+    }  while (D2 > 0); /* keep trying as long as a bounce is available */
 
 %}
 
 MCDISPLAY
 %{
-
-
-
+  int i,j,N=50;
+  double t,xx,yy,zz,xx0,yy0,zz0, boxsize;
+  /* printf("plot params (%f %f %f) (%f %f %f) %f %f\n", x_a, y_b, z_c, a2, b2, c2, width, length); */
+  /* xmin, xmax, ymin and ymax are used to set the bounds to plot */
+  double zzmin=a*sqrt(ymin), zzmax=a*sqrt(ymax), dzz=(zzmax-zzmin);
+  for (j=0;j<N;j++){
+    zz=j*dzz/(N-1)+zzmin;
+    yy=zz*zz*a2inv;
+    if(j && zmax > 0) multiline(5,
+        xmin,yy0,zz0,
+        xmax,yy0,zz0,
+        xmax, yy,zz,
+        xmin, yy,zz,
+        xmin,yy0,zz0); /* draw a rectangular slice of the mirror */
+   if(j && zmin < 0) multiline(5,
+        xmin,yy0,-zz0,
+        xmax,yy0,-zz0,
+        xmax, yy,-zz,
+        xmin, yy,-zz,
+        xmin,yy0,-zz0); /* draw a rectangular slice of the mirror */
+    zz0=zz;
+    yy0=yy; 
+  }
+  /* draw a little box and crosshair at the focus  */
+  boxsize=(xmax-xmin)/20.;
+  multiline(8,
+     0.,  boxsize+focus,  boxsize,
+     0., -boxsize+focus,  boxsize,
+     0., -boxsize+focus, -boxsize,
+     0.,  boxsize+focus, -boxsize,
+     0.,  boxsize+focus,  boxsize,
+     0., -boxsize+focus, -boxsize,
+     0., -boxsize+focus,  boxsize,
+     0.,  boxsize+focus, -boxsize
+     );
 %}
 
 END
