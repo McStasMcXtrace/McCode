@@ -3,22 +3,27 @@ Atomic plot functions for mcplot-pyqtgraph
 '''
 import numpy as np
 import pyqtgraph as pg
+from pyqtgraph.graphicsItems.LegendItem import LegendItem, ItemSample
 
 class ModLegend(pg.LegendItem):
+    """
+    Modified LegendItem to remove the ugly / in the label. Also reduces text size and padding.
+    """
+    def __init__(self, offset, text_size='7pt'):
+        self.text_size = text_size
+        LegendItem.__init__(self, None, offset)
     
     def addItem(self, item, name):
-        """
-        Modified LegendItem to remove the ugly / in the label.
-        """
-        label = pg.LabelItem(name)
-        if isinstance(item, pg.graphicsItems.LegendItem.ItemSample):
+        label = pg.LabelItem(name, size=self.text_size)
+        if isinstance(item, ItemSample):
             sample = item
         else:
-            sample = pg.graphicsItems.LegendItem.ItemSample(item)        
-            row = self.layout.rowCount()
-            self.items.append((sample, label))
-            self.layout.addItem(label, row, 1)
-            self.updateSize()
+            sample = ItemSample(item)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        row = self.layout.rowCount()
+        self.items.append((sample, label))
+        self.layout.addItem(label, row, 1)
+        self.updateSize()
 
 def plot_Data1D(data, log=False, legend=True, icolormap=0):
     ''' create a plotItem and populate it with data, Data1D '''
@@ -59,11 +64,19 @@ def plot_Data1D(data, log=False, legend=True, icolormap=0):
         plt.addItem(err)
     
     # commit
+    lname = ''
     if legend:
         plt.legend = ModLegend(offset=(-1, 1))
         plt.legend.setParentItem(plt.vb)
-        
-    plt.plot(x, y, name='A legend\nwith 2lines')
+        lname1 = '%s [%s]' % (data.component, data.filename)
+        lname2 = '%s' % (data.title)
+        lname3 = 'I = %s Err = %s N = %s; %s' % (data.values[0], data.values[1], data.values[2], data.statistics)
+        # these lines DO NOT plot anything meaningful, but add legend items
+        plt.plot([0], [0], name=lname1)
+        plt.plot([0], [0], name=lname2)
+        plt.plot([0], [0], name=lname3)
+    # this line does not only plot, but also create a legend item by passing 'name' (!)
+    plt.plot(x, y)
         
     plt.setMenuEnabled(False)
     vb = plt.getViewBox()
@@ -146,7 +159,13 @@ def plot_Data2D(data, log=False, legend=True, icolormap=0):
     if legend:
         plt.legend = ModLegend(offset=(-1, 1))
         plt.legend.setParentItem(plt.vb)
-        plt.plot([0], [0], name='A legend\nwith 2lines')
+        lname1 = '%s [%s]' % (data.component, data.filename)
+        lname2 = '%s' % (data.statistics)
+        lname3 = 'I = %s Err = %s N = %s' % (data.values[0], data.values[1], data.values[2])
+        # these line DO NOT plot anything meaningful, but adds a legend item (!)
+        plt.plot([0], [0], name=lname1)
+        plt.plot([0], [0], name=lname2)
+        plt.plot([0], [0], name=lname3)
 
     plt.addItem(img)
     plt.getViewBox().autoRange(padding=0)
