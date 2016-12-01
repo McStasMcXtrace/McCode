@@ -1,4 +1,6 @@
 import os
+import json
+
 '''
 mcstas/mcxtrace configuration.
 '''
@@ -37,3 +39,49 @@ Platform settings
 platform = {
     "EXESUFFIX": '@EXE@',
 }
+
+def load_user_config():
+    ''' loads a json user config to the dictionaries in this module '''
+    userconfig = os.path.expandvars("$HOME/." + configuration['MCCODE'] + "/" + configuration['MCCODE_VERSION'] + "/mccode_config.json")
+    if not os.path.isfile(userconfig):
+        print("user config does not exist: %s" % userconfig)
+        return
+    
+    print("loading user configuration from " + userconfig)
+    text = open(userconfig).read()
+    obj = json.loads(text)
+    global configuration
+    configuration = obj['configuration']
+    global compilation
+    compilation = obj['compilation']
+    global platform
+    platform = obj['platform']
+
+def save_user_config():
+    ''' attempts to save the current values to a local .json file '''
+    userconfig = os.path.expandvars("$HOME/." + configuration['MCCODE'] + "/" + configuration['MCCODE_VERSION'] + "/mccode_config.json")
+    text = json.dumps({'configuration' : configuration, 'compilation' : compilation, 'platform' : platform})
+    try:
+        f = open(str(userconfig), 'w')
+        f.write(text)
+        
+        print("userconfig saved to %s" % userconfig)
+    except Exception as e:
+        print("userconfig could not be saved to %s: %s" % (userconfig, e.__str__()))
+    finally:
+        f.close()
+
+def get_options():
+    ''' values below are not enforced in the dicts, but probably used to populate certain gui menus '''
+    if configuration['MCCODE'] == "mcstas":
+        prefix = "mc"
+    else:
+        prefix = "mx"
+    mcrun_lst =     [prefix+"run", prefix+"run-py"]
+    mcplot_lst =    [prefix+"plot-pyqtgraph-py",prefix+"plot", prefix+"plot --format=Gnuplot", prefix+"plot --format=Matlab",
+                     prefix+"plot-matlab", prefix+"plot-matplotlib-py", prefix+"plot-gnuplot-py", prefix+"plot-chaco-py"]
+    mcdisplay_lst = [prefix+"display-webgl-py",prefix+"display", prefix+"display --format=Matlab", prefix+"display --format=VRML", 
+                     prefix+"display --format=Mantid", prefix+"display-matplotlib-py", prefix+"display-py", 
+                     prefix+"display-r-py", prefix+"display-vtk-py"]
+    return mcrun_lst, mcplot_lst, mcdisplay_lst
+
