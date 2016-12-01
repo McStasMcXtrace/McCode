@@ -75,9 +75,9 @@ class Data1D(DataMcCode):
         
     def get_stats_title(self):
         '''I=.... Err=... N=...; X0=...; dX=...;'''
-        if len(self.values) >= 3:
+        try:
             stitle = '%s=%e Err=%e N=%d; %s' % (self.yvar[0], self.values[0], self.values[1], self.values[2], self.statistics)
-        else:
+        except:
             stitle = '%s of %s' % (self.yvar[0], self.xvar)
         return stitle
     
@@ -345,16 +345,19 @@ def _load_multiplot_1D_lst(f_dat):
     try:
         header = Data1D()
         header.component = ''
-        header.filename = ''
+        header.filename = 'mcstas.dat'
+        
+        # NOTE: title this is overwritten below to be equal to yvar
         '''# title: Scan of lambda'''
         m = re.search('\# title: ([\w ]+)\n', text)
         header.title = m.group(1)
+        
         '''# xlabel: 'lambda\''''
         m = re.search('\# xlabel: ([\w \[\]\/\^\']+)\n', text)
-        header.xlabel = m.group(1)
+        header.xlabel = m.group(1).strip("\'")
         '''# ylabel: 'Intensity\''''
         m = re.search('\# ylabel: ([\w \[\]\/\^\']+)\n', text)
-        header.ylabel = m.group(1)
+        header.ylabel = m.group(1).strip("\'")
 
         # NOTE: this only supports a single xvar
         '''# xvars: lambda'''
@@ -393,7 +396,7 @@ def _load_multiplot_1D_lst(f_dat):
             data = header.clone()
             data.yvals = yvals_lst[i]
             data.yvar = yvariables[2*i]
-            data.title = '%s - %s' % (data.yvar, data.title)
+            data.title = '%s' % (data.yvar)
             data.y_err_vals = yvals_err_lst[i]
             data_lst.append(data)
 

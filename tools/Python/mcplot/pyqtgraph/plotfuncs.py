@@ -68,14 +68,23 @@ def plot_Data1D(data, log=False, legend=True, icolormap=0):
     if legend:
         plt.legend = ModLegend(offset=(-1, 1))
         plt.legend.setParentItem(plt.vb)
-        lname1 = '%s [%s]' % (data.component, data.filename)
-        lname2 = '%s' % (data.title)
-        lname3 = 'I = %s Err = %s N = %s; %s' % (data.values[0], data.values[1], data.values[2], data.statistics)
-        # these lines DO NOT plot anything meaningful, but add legend items
-        plt.plot([0], [0], name=lname1)
-        plt.plot([0], [0], name=lname2)
-        plt.plot([0], [0], name=lname3)
-    # this line does not only plot, but also create a legend item by passing 'name' (!)
+        # this construct reduces the requiremet for header data in Data1D, in case of an error during parsing of the string
+        try:
+            lname1 = '%s [%s]' % (data.component, data.filename)
+            lname2 = '%s' % (data.title)
+            lname3 = 'I = %s Err = %s N = %s; %s' % (data.values[0], data.values[1], data.values[2], data.statistics)
+            # these lines DO NOT plot anything meaningful, but add legend items
+            plt.plot([0], [0], name=lname1)
+            plt.plot([0], [0], name=lname2)
+            plt.plot([0], [0], name=lname3)
+        except:
+            lname1 = '%s [%s]' % (data.component, data.filename)
+            lname2 = '%s' % (data.title)
+            # these lines DO NOT plot anything meaningful, but add legend items
+            plt.plot([0], [0], name=lname1)
+            plt.plot([0], [0], name=lname2)
+    
+    # plots data
     plt.plot(x, y)
         
     plt.setMenuEnabled(False)

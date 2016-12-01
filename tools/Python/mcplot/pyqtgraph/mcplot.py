@@ -241,9 +241,11 @@ def add_plot(layout, data, i, n, log=False, legend=True, icolormap=0):
     
     if type(data) is Data1D:
         item, view_box = plot_Data1D(data, log=log, legend=legend, icolormap=icolormap)
-    else:
+    elif type(data) is Data2D:
         item, view_box = plot_Data2D(data, log=log, legend=legend, icolormap=icolormap)
-
+    else:
+        raise Exception("unknown plot data type")
+    
     layout.addItem(item, i / rowlen, i % rowlen)
     
     return view_box
