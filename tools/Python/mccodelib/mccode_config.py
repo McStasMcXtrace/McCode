@@ -61,6 +61,7 @@ def save_user_config():
     ''' attempts to save the current values to a local .json file '''
     userconfig = os.path.expandvars("$HOME/." + configuration['MCCODE'] + "/" + configuration['MCCODE_VERSION'] + "/mccode_config.json")
     text = json.dumps({'configuration' : configuration, 'compilation' : compilation, 'platform' : platform})
+    f = None
     try:
         f = open(str(userconfig), 'w')
         f.write(text)
@@ -69,7 +70,8 @@ def save_user_config():
     except Exception as e:
         print("userconfig could not be saved to %s: %s" % (userconfig, e.__str__()))
     finally:
-        f.close()
+        if f:
+            f.close()
 
 def get_options():
     ''' values below are not enforced in the dicts, but probably used to populate certain gui menus '''
